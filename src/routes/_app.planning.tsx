@@ -27,10 +27,8 @@ function PlanningPage() {
   const [filterAffaire, setFilterAffaire] = useState<Set<string | number>>(new Set());
   const [filterMetier, setFilterMetier] = useState<Set<string | number>>(new Set());
 
-  const { metiers, employes, affaires, assignations, consommation, loading, error } = usePlanningData(
-    weekStart,
-    weekEnd,
-  );
+  const { metiers, employes, affaires, assignations, consommation, loading, error, refresh } =
+    usePlanningData(weekStart, weekEnd);
 
   const employesCDI = useMemo(
     () => employes.filter((e) => e.type_contrat === "CDI" || e.type_contrat === "CDD"),
