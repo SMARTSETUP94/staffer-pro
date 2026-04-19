@@ -27,6 +27,8 @@ export interface Affaire {
   lieu: string | null;
   client: string | null;
   chef_chantier_id: string | null;
+  date_montage: string | null;
+  date_demontage: string | null;
 }
 
 export interface Assignation {
@@ -66,6 +68,12 @@ export interface Absence {
   valide: boolean;
 }
 
+export interface ChefRef {
+  id: string;
+  prenom: string;
+  nom: string;
+}
+
 export interface PlanningData {
   metiers: Metier[];
   employes: Employe[];
@@ -73,6 +81,7 @@ export interface PlanningData {
   assignations: Assignation[];
   consommation: DevisConsommation[];
   absences: Absence[];
+  chefsById: Map<string, ChefRef>;
   loading: boolean;
   error: string | null;
   refresh: () => void;
@@ -85,6 +94,7 @@ export function usePlanningData(weekStart: Date, weekEnd: Date): PlanningData {
   const [assignations, setAssignations] = useState<Assignation[]>([]);
   const [consommation, setConsommation] = useState<DevisConsommation[]>([]);
   const [absences, setAbsences] = useState<Absence[]>([]);
+  const [chefsById, setChefsById] = useState<Map<string, ChefRef>>(new Map());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
@@ -105,7 +115,7 @@ export function usePlanningData(weekStart: Date, weekEnd: Date): PlanningData {
         .eq("actif", true)
         .eq("non_staffing", false)
         .order("nom"),
-      supabase.from("affaires").select("id, numero, nom, lieu, client, chef_chantier_id"),
+      supabase.from("affaires").select("id, numero, nom, lieu, client, chef_chantier_id, date_montage, date_demontage"),
       supabase
         .from("assignations")
         .select("id, date, demi_journee, heures, affaire_id, employe_id, metier_id, notes")
@@ -118,8 +128,13 @@ export function usePlanningData(weekStart: Date, weekEnd: Date): PlanningData {
         .select("id, employe_id, date_debut, date_fin, type, demi_journee, motif, valide")
         .lte("date_debut", endStr)
         .gte("date_fin", startStr),
+      // Tous les employés actifs (incl. non_staffing) pour résoudre les chefs de chantier
+      supabase
+        .from("employes")
+        .select("id, prenom, nom")
+        .eq("actif", true),
     ])
-      .then(([mRes, eRes, aRes, asRes, cRes, abRes]) => {
+      .then(([mRes, eRes, aRes, asRes, cRes, abRes, chefsRes]) => {
         if (cancelled) return;
         if (mRes.error) throw mRes.error;
         if (eRes.error) throw eRes.error;
@@ -127,12 +142,16 @@ export function usePlanningData(weekStart: Date, weekEnd: Date): PlanningData {
         if (asRes.error) throw asRes.error;
         if (cRes.error) throw cRes.error;
         if (abRes.error) throw abRes.error;
+        if (chefsRes.error) throw chefsRes.error;
         setMetiers((mRes.data ?? []) as Metier[]);
         setEmployes((eRes.data ?? []) as Employe[]);
         setAffaires((aRes.data ?? []) as Affaire[]);
         setAssignations((asRes.data ?? []) as Assignation[]);
         setConsommation((cRes.data ?? []) as DevisConsommation[]);
         setAbsences((abRes.data ?? []) as Absence[]);
+        const cMap = new Map<string, ChefRef>();
+        ((chefsRes.data ?? []) as ChefRef[]).forEach((c) => cMap.set(c.id, c));
+        setChefsById(cMap);
         setLoading(false);
       })
       .catch((e) => {
@@ -153,6 +172,7 @@ export function usePlanningData(weekStart: Date, weekEnd: Date): PlanningData {
     assignations,
     consommation,
     absences,
+    chefsById,
     loading,
     error,
     refresh: () => setTick((t) => t + 1),

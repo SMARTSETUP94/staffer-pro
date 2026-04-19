@@ -35,7 +35,7 @@ function PlanningPage() {
   const [showWeekend, setShowWeekend] = useState(false);
   const [searchEmploye, setSearchEmploye] = useState("");
 
-  const { metiers, employes, affaires, assignations, consommation, absences, loading, error, refresh } =
+  const { metiers, employes, affaires, assignations, consommation, absences, chefsById, loading, error, refresh } =
     usePlanningData(weekStart, weekEnd);
 
   // Filtre recherche employé (prénom + nom, insensible casse/accent)
@@ -254,6 +254,7 @@ function PlanningPage() {
                   metiers={metiers}
                   assignations={assignations}
                   consommation={consommation}
+                  chefsById={chefsById}
                   onSelectAffaire={handleSelectAffaireFromSynthese}
                 />
               </TabsContent>
