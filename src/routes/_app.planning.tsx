@@ -48,18 +48,18 @@ function PlanningPage() {
   }, [employes, searchEmploye]);
 
   const employesCDI = useMemo(
-    () => employes.filter((e) => e.type_contrat === "CDI" || e.type_contrat === "CDD"),
-    [employes],
+    () => employesFiltres.filter((e) => e.type_contrat === "CDI" || e.type_contrat === "CDD"),
+    [employesFiltres],
   );
   // Intérim/Indép. : uniquement ceux qui ont au moins une assignation sur la semaine
   const employesInterim = useMemo(() => {
     const assignedIds = new Set(assignations.map((a) => a.employe_id));
-    return employes.filter(
+    return employesFiltres.filter(
       (e) =>
         (e.type_contrat === "Interim" || e.type_contrat === "Independant") &&
         assignedIds.has(e.id),
     );
-  }, [employes, assignations]);
+  }, [employesFiltres, assignations]);
 
   // Affaires actives cette semaine pour le filtre (toutes celles qui apparaissent dans les assignations OU avec heures budgétées)
   const affairesActivesIds = useMemo(() => {
@@ -102,6 +102,16 @@ function PlanningPage() {
         </div>
 
         <div className="mb-4 flex flex-wrap items-center gap-2">
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Rechercher un employé…"
+              value={searchEmploye}
+              onChange={(e) => setSearchEmploye(e.target.value)}
+              className="h-9 w-[220px] pl-8"
+            />
+          </div>
           <MultiFilter
             label="Affaires"
             options={affairesOptions}
@@ -114,11 +124,22 @@ function PlanningPage() {
             selected={filterMetier}
             onChange={setFilterMetier}
           />
-          {(filterAffaire.size > 0 || filterMetier.size > 0) && (
+          <div className="ml-2 flex items-center gap-2">
+            <Switch
+              id="weekend-toggle"
+              checked={showWeekend}
+              onCheckedChange={setShowWeekend}
+            />
+            <Label htmlFor="weekend-toggle" className="text-xs text-muted-foreground cursor-pointer">
+              Week-end
+            </Label>
+          </div>
+          {(filterAffaire.size > 0 || filterMetier.size > 0 || searchEmploye) && (
             <button
               onClick={() => {
                 setFilterAffaire(new Set());
                 setFilterMetier(new Set());
+                setSearchEmploye("");
               }}
               className="text-xs text-muted-foreground underline-offset-2 hover:underline"
             >
