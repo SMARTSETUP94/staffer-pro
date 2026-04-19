@@ -9,38 +9,174 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as MobileAujourdhuiRouteImport } from './routes/mobile.aujourdhui'
+import { Route as AppValidationHeuresRouteImport } from './routes/_app.validation-heures'
+import { Route as AppPlanningRouteImport } from './routes/_app.planning'
+import { Route as AppParametresRouteImport } from './routes/_app.parametres'
+import { Route as AppExportRouteImport } from './routes/_app.export'
+import { Route as AppEmployesRouteImport } from './routes/_app.employes'
+import { Route as AppAffairesRouteImport } from './routes/_app.affaires'
+import { Route as AppDevisImportRouteImport } from './routes/_app.devis.import'
 
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppRoute = AppRouteImport.update({
+  id: '/_app',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MobileAujourdhuiRoute = MobileAujourdhuiRouteImport.update({
+  id: '/mobile/aujourdhui',
+  path: '/mobile/aujourdhui',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppValidationHeuresRoute = AppValidationHeuresRouteImport.update({
+  id: '/validation-heures',
+  path: '/validation-heures',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPlanningRoute = AppPlanningRouteImport.update({
+  id: '/planning',
+  path: '/planning',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppParametresRoute = AppParametresRouteImport.update({
+  id: '/parametres',
+  path: '/parametres',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppExportRoute = AppExportRouteImport.update({
+  id: '/export',
+  path: '/export',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppEmployesRoute = AppEmployesRouteImport.update({
+  id: '/employes',
+  path: '/employes',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAffairesRoute = AppAffairesRouteImport.update({
+  id: '/affaires',
+  path: '/affaires',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppDevisImportRoute = AppDevisImportRouteImport.update({
+  id: '/devis/import',
+  path: '/devis/import',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/login': typeof LoginRoute
+  '/affaires': typeof AppAffairesRoute
+  '/employes': typeof AppEmployesRoute
+  '/export': typeof AppExportRoute
+  '/parametres': typeof AppParametresRoute
+  '/planning': typeof AppPlanningRoute
+  '/validation-heures': typeof AppValidationHeuresRoute
+  '/mobile/aujourdhui': typeof MobileAujourdhuiRoute
+  '/devis/import': typeof AppDevisImportRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/login': typeof LoginRoute
+  '/affaires': typeof AppAffairesRoute
+  '/employes': typeof AppEmployesRoute
+  '/export': typeof AppExportRoute
+  '/parametres': typeof AppParametresRoute
+  '/planning': typeof AppPlanningRoute
+  '/validation-heures': typeof AppValidationHeuresRoute
+  '/mobile/aujourdhui': typeof MobileAujourdhuiRoute
+  '/devis/import': typeof AppDevisImportRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_app': typeof AppRouteWithChildren
+  '/login': typeof LoginRoute
+  '/_app/affaires': typeof AppAffairesRoute
+  '/_app/employes': typeof AppEmployesRoute
+  '/_app/export': typeof AppExportRoute
+  '/_app/parametres': typeof AppParametresRoute
+  '/_app/planning': typeof AppPlanningRoute
+  '/_app/validation-heures': typeof AppValidationHeuresRoute
+  '/mobile/aujourdhui': typeof MobileAujourdhuiRoute
+  '/_app/devis/import': typeof AppDevisImportRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/affaires'
+    | '/employes'
+    | '/export'
+    | '/parametres'
+    | '/planning'
+    | '/validation-heures'
+    | '/mobile/aujourdhui'
+    | '/devis/import'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/login'
+    | '/affaires'
+    | '/employes'
+    | '/export'
+    | '/parametres'
+    | '/planning'
+    | '/validation-heures'
+    | '/mobile/aujourdhui'
+    | '/devis/import'
+  id:
+    | '__root__'
+    | '/'
+    | '/_app'
+    | '/login'
+    | '/_app/affaires'
+    | '/_app/employes'
+    | '/_app/export'
+    | '/_app/parametres'
+    | '/_app/planning'
+    | '/_app/validation-heures'
+    | '/mobile/aujourdhui'
+    | '/_app/devis/import'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AppRoute: typeof AppRouteWithChildren
+  LoginRoute: typeof LoginRoute
+  MobileAujourdhuiRoute: typeof MobileAujourdhuiRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_app': {
+      id: '/_app'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,11 +184,92 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/mobile/aujourdhui': {
+      id: '/mobile/aujourdhui'
+      path: '/mobile/aujourdhui'
+      fullPath: '/mobile/aujourdhui'
+      preLoaderRoute: typeof MobileAujourdhuiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_app/validation-heures': {
+      id: '/_app/validation-heures'
+      path: '/validation-heures'
+      fullPath: '/validation-heures'
+      preLoaderRoute: typeof AppValidationHeuresRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/planning': {
+      id: '/_app/planning'
+      path: '/planning'
+      fullPath: '/planning'
+      preLoaderRoute: typeof AppPlanningRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/parametres': {
+      id: '/_app/parametres'
+      path: '/parametres'
+      fullPath: '/parametres'
+      preLoaderRoute: typeof AppParametresRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/export': {
+      id: '/_app/export'
+      path: '/export'
+      fullPath: '/export'
+      preLoaderRoute: typeof AppExportRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/employes': {
+      id: '/_app/employes'
+      path: '/employes'
+      fullPath: '/employes'
+      preLoaderRoute: typeof AppEmployesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/affaires': {
+      id: '/_app/affaires'
+      path: '/affaires'
+      fullPath: '/affaires'
+      preLoaderRoute: typeof AppAffairesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/devis/import': {
+      id: '/_app/devis/import'
+      path: '/devis/import'
+      fullPath: '/devis/import'
+      preLoaderRoute: typeof AppDevisImportRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
+interface AppRouteChildren {
+  AppAffairesRoute: typeof AppAffairesRoute
+  AppEmployesRoute: typeof AppEmployesRoute
+  AppExportRoute: typeof AppExportRoute
+  AppParametresRoute: typeof AppParametresRoute
+  AppPlanningRoute: typeof AppPlanningRoute
+  AppValidationHeuresRoute: typeof AppValidationHeuresRoute
+  AppDevisImportRoute: typeof AppDevisImportRoute
+}
+
+const AppRouteChildren: AppRouteChildren = {
+  AppAffairesRoute: AppAffairesRoute,
+  AppEmployesRoute: AppEmployesRoute,
+  AppExportRoute: AppExportRoute,
+  AppParametresRoute: AppParametresRoute,
+  AppPlanningRoute: AppPlanningRoute,
+  AppValidationHeuresRoute: AppValidationHeuresRoute,
+  AppDevisImportRoute: AppDevisImportRoute,
+}
+
+const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AppRoute: AppRouteWithChildren,
+  LoginRoute: LoginRoute,
+  MobileAujourdhuiRoute: MobileAujourdhuiRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
