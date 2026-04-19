@@ -321,7 +321,7 @@ export function PlanningGrid({
 
       {/* Barre flottante sélection multiple */}
       {selected.size > 0 && !readonly && (
-        <div data-export-ignore="true" className="sticky top-2 z-20 mb-3 flex items-center justify-between rounded-lg border-2 border-primary bg-primary/10 px-3 py-2 shadow-md">
+        <div data-export-ignore="true" className="sticky top-16 z-30 mb-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border-2 border-primary bg-primary/10 px-3 py-2 shadow-md backdrop-blur">
           <span className="text-sm font-semibold">
             {selected.size} cellule{selected.size > 1 ? "s" : ""} sélectionnée{selected.size > 1 ? "s" : ""}
           </span>
@@ -371,18 +371,29 @@ export function PlanningGrid({
                   <tr key={emp.id} className="hover:bg-muted/30">
                     <td className="sticky left-0 z-10 border-b bg-card p-2 hover:bg-muted/30">
                       <div className="flex items-center gap-1.5">
-                        <span className="font-semibold">
-                          {emp.prenom} {emp.nom}
-                        </span>
                         {(emp.type_contrat === "CDI" || emp.type_contrat === "CDD") &&
                           !assignedEmployeIds.has(emp.id) && (
-                            <span className="rounded-sm border border-success/40 bg-success/10 px-1 py-px text-[9px] font-medium uppercase tracking-wide text-success">
-                              Disponible
-                            </span>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span
+                                  className="h-1.5 w-1.5 shrink-0 rounded-full bg-success"
+                                  aria-label="Disponible cette semaine"
+                                />
+                              </TooltipTrigger>
+                              <TooltipContent side="right" className="text-xs">
+                                Disponible cette semaine
+                              </TooltipContent>
+                            </Tooltip>
                           )}
+                        <span
+                          className="truncate font-semibold"
+                          title={`${emp.prenom} ${emp.nom}`}
+                        >
+                          {emp.prenom} {emp.nom}
+                        </span>
                       </div>
                       {emp.type_contrat !== "CDI" && (
-                        <div className="mt-0.5 text-[10px] text-muted-foreground">
+                        <div className="mt-0.5 truncate text-[11px] text-muted-foreground">
                           {emp.sous_type_contrat || emp.type_contrat}
                           {emp.agence_interim && ` · ${emp.agence_interim}`}
                         </div>
@@ -412,7 +423,7 @@ export function PlanningGrid({
                           >
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <div className="flex h-full min-h-[44px] cursor-not-allowed items-center justify-center gap-1 p-1 text-center text-[10px] font-medium text-muted-foreground">
+                                <div className="flex h-full min-h-[44px] cursor-not-allowed items-center justify-center gap-1 p-1 text-center text-[11px] font-medium text-muted-foreground">
                                   <span className="text-base">{ABSENCE_ICON[absence.type]}</span>
                                   <span className="truncate">{ABSENCE_LABEL[absence.type]}</span>
                                 </div>

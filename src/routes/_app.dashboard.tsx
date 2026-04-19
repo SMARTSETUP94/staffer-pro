@@ -389,25 +389,39 @@ function DashboardPage() {
             {depassements.length === 0 ? (
               <p className="py-6 text-center text-sm text-muted-foreground">Aucune affaire en tension (≥80% consommé)</p>
             ) : (
-              <ul className="divide-y">
+              <ul className="space-y-3">
                 {depassements.map((d) => {
                   const tone = d.pct >= 100 ? "destructive" : d.pct >= 90 ? "default" : "secondary";
+                  const barColor =
+                    d.pct >= 100 ? "bg-destructive" : d.pct >= 90 ? "bg-primary" : "bg-warning";
                   return (
-                    <li key={d.affaire_id} className="py-2.5 flex items-center justify-between gap-3">
-                      <Link
-                        to="/affaires/$affaireId"
-                        params={{ affaireId: d.affaire_id }}
-                        className="text-sm font-medium hover:text-primary truncate flex-1 min-w-0"
-                      >
-                        {d.numero} — {d.nom}
-                      </Link>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <span className="text-xs text-muted-foreground">
-                          {d.total_assignees}/{d.total_prevues}h
-                        </span>
-                        <Badge variant={tone} className="text-xs">
+                    <li key={d.affaire_id} className="space-y-1.5">
+                      <div className="flex items-center justify-between gap-2">
+                        <Link
+                          to="/affaires/$affaireId"
+                          params={{ affaireId: d.affaire_id }}
+                          className="min-w-0 flex-1 truncate text-sm font-medium hover:text-primary"
+                          title={`${d.numero} — ${d.nom}`}
+                        >
+                          <span className="font-mono text-xs text-primary">{d.numero}</span>
+                          <span className="mx-1 text-muted-foreground">·</span>
+                          <span>{d.nom}</span>
+                        </Link>
+                        <Badge variant={tone} className="shrink-0 text-xs tabular-nums">
                           {d.pct}%
                         </Badge>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
+                          <div
+                            className={`h-full ${barColor}`}
+                            style={{ width: `${Math.min(100, d.pct)}%` }}
+                            aria-hidden
+                          />
+                        </div>
+                        <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground">
+                          {d.total_assignees}/{d.total_prevues}h
+                        </span>
                       </div>
                     </li>
                   );
@@ -436,15 +450,19 @@ function DashboardPage() {
             ) : (
               <ul className="divide-y">
                 {heuresAValider.map((h) => (
-                  <li key={h.id} className="py-2.5 flex items-center justify-between gap-3">
+                  <li key={h.id} className="flex items-center justify-between gap-3 py-2.5">
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium truncate">
+                      <p className="truncate text-sm font-medium">
                         {h.employe?.prenom} {h.employe?.nom}
                       </p>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {h.affaire?.numero ?? "—"} · {fmtDate(h.date)}
+                      <p className="truncate text-xs text-muted-foreground">
+                        <span className="font-mono text-primary">{h.affaire?.numero ?? "—"}</span>
+                        {h.affaire?.nom ? <span> · {h.affaire.nom}</span> : null}
                       </p>
                     </div>
+                    <Badge variant="outline" className="shrink-0 text-[11px] tabular-nums">
+                      {fmtDate(h.date)}
+                    </Badge>
                   </li>
                 ))}
               </ul>
@@ -487,7 +505,7 @@ function DashboardPage() {
                       </div>
                     </div>
                     {!a.valide && (
-                      <Badge variant="outline" className="text-[10px] shrink-0">À valider</Badge>
+                      <Badge variant="outline" className="text-[11px] shrink-0">À valider</Badge>
                     )}
                   </li>
                 ))}
@@ -516,13 +534,15 @@ function KpiCard({
   return (
     <Link
       to={to}
-      className={`rounded-2xl border bg-card p-4 transition-colors hover:border-primary/40 ${emphasize ? "border-primary/40 bg-primary/5" : "border-border"}`}
+      className={`group block rounded-2xl border bg-card p-4 transition-colors hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${emphasize ? "border-primary/40 bg-primary/5" : "border-border"}`}
     >
-      <div className="flex items-center justify-between">
-        <p className="text-xs uppercase tracking-wider text-muted-foreground">{label}</p>
-        <Icon className={`h-4 w-4 ${emphasize ? "text-primary" : "text-muted-foreground"}`} />
+      <div className="flex items-start justify-between gap-2">
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground leading-tight">
+          {label}
+        </p>
+        <Icon className={`h-4 w-4 shrink-0 ${emphasize ? "text-primary" : "text-muted-foreground"}`} aria-hidden />
       </div>
-      <p className="mt-2 text-2xl font-bold">{value}</p>
+      <p className="mt-3 text-3xl font-bold tabular-nums tracking-tight">{value}</p>
     </Link>
   );
 }

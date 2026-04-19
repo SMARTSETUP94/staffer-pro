@@ -110,8 +110,8 @@ export function AppSidebar() {
                       className="rounded-xl data-[active=true]:bg-primary data-[active=true]:text-primary-foreground"
                     >
                       <Link to={item.url}>
-                        <item.icon className="h-4 w-4" />
-                        <span className="text-sm font-medium">{item.title}</span>
+                        <item.icon className="h-4 w-4 shrink-0" />
+                        <span className="truncate text-sm font-medium">{item.title}</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
