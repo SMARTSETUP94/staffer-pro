@@ -1,4 +1,4 @@
-import { Fragment as FragmentGroup, useMemo, useState } from "react";
+import { Fragment as FragmentGroup, useEffect, useMemo, useState } from "react";
 import { addDays, format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { AlertTriangle, CalendarOff, X } from "lucide-react";
@@ -49,6 +49,11 @@ interface Props {
   emptyMessage: string;
   onChanged?: () => void;
   readonly?: boolean;
+  /** Ouvre automatiquement le dialog d'assignation pour cet employé sur la date donnée
+   *  (utilisé par le bouton "Ajouter un intérimaire" du parent). Le parent doit
+   *  remettre la valeur à null après consommation pour pouvoir re-déclencher. */
+  openAssignationFor?: { employe: Employe; date: Date } | null;
+  onAutoOpenConsumed?: () => void;
 }
 
 interface CellKey {
@@ -74,6 +79,8 @@ export function PlanningGrid({
   emptyMessage,
   onChanged,
   readonly,
+  openAssignationFor,
+  onAutoOpenConsumed,
 }: Props) {
   const navigate = useNavigate();
   const days = useMemo(
@@ -179,6 +186,19 @@ export function PlanningGrid({
     employe: Employe | null;
     date: Date | null;
   }>({ open: false, employe: null, date: null });
+
+  // Auto-ouverture déclenchée par le parent (ex: ajout d'un intérimaire depuis le bouton)
+  useEffect(() => {
+    if (openAssignationFor) {
+      setDialogState({
+        open: true,
+        employe: openAssignationFor.employe,
+        date: openAssignationFor.date,
+      });
+      onAutoOpenConsumed?.();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openAssignationFor]);
 
   // Multi-sélection Ctrl/Cmd+click
   const [selected, setSelected] = useState<Set<string>>(new Set());

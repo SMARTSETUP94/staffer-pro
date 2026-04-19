@@ -1,7 +1,7 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
   Calendar, Building2, Users, FileUp, FileDown, ClipboardCheck, Settings, LogOut, Clock, CalendarOff,
-  Smartphone, UserCircle, LayoutDashboard, FileText,
+  Smartphone, UserCircle, LayoutDashboard, FileText, Trophy,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -30,6 +30,7 @@ const items: NavItem[] = [
   { title: "Devis", url: "/devis", icon: FileText, show: (r) => r === "admin" || r === "chef_chantier" },
   { title: "Employés", url: "/employes", icon: Users, show: (r) => r === "admin" || r === "chef_chantier" },
   { title: "Absences", url: "/absences", icon: CalendarOff, show: (r) => r === "admin" || r === "chef_chantier" },
+  { title: "Intérimaires", url: "/interimaires", icon: Trophy, show: (r) => r === "admin" || r === "chef_chantier" },
   { title: "Import employés", url: "/employes/import", icon: FileUp, show: (r) => r === "admin" || r === "chef_chantier" },
   { title: "Import devis", url: "/devis/import", icon: FileUp, show: (r) => r === "admin" || r === "chef_chantier" },
   { title: "Export planning", url: "/export", icon: FileDown, show: (r) => r === "admin" || r === "chef_chantier" },

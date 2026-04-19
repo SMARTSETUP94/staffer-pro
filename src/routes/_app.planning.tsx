@@ -1,19 +1,20 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useRef, useState } from "react";
 import { startOfWeek, addDays } from "date-fns";
-import { Calendar, Loader2, Search, FileDown } from "lucide-react";
+import { Calendar, Loader2, Search, FileDown, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import { usePlanningData } from "@/hooks/use-planning-data";
+import { usePlanningData, type Employe } from "@/hooks/use-planning-data";
 import { WeekPicker } from "@/components/planning/WeekPicker";
 import { PlanningGrid } from "@/components/planning/PlanningGrid";
 import { PlanningSynthese } from "@/components/planning/PlanningSynthese";
 import { HeuresRestantesSidebar } from "@/components/planning/HeuresRestantesSidebar";
 import { MultiFilter } from "@/components/planning/MultiFilter";
+import { AddInterimDialog } from "@/components/planning/AddInterimDialog";
 import { exportPlanningToPDF } from "@/lib/planning-export";
 
 export const Route = createFileRoute("/_app/planning")({
@@ -54,15 +55,25 @@ function PlanningPage() {
     () => employesFiltres.filter((e) => e.type_contrat === "CDI" || e.type_contrat === "CDD"),
     [employesFiltres],
   );
-  // Intérim/Indép. : uniquement ceux qui ont au moins une assignation sur la semaine
+  // Intérim/Indép. : ceux qui ont au moins une assignation sur la semaine
+  // OU ceux ajoutés manuellement via le bouton "Ajouter un intérimaire"
+  const [extraInterims, setExtraInterims] = useState<Employe[]>([]);
+  const [autoOpen, setAutoOpen] = useState<{ employe: Employe; date: Date } | null>(null);
+  const [addInterimOpen, setAddInterimOpen] = useState(false);
+
   const employesInterim = useMemo(() => {
     const assignedIds = new Set(assignations.map((a) => a.employe_id));
-    return employesFiltres.filter(
+    const extraIds = new Set(extraInterims.map((e) => e.id));
+    const baseFiltered = employesFiltres.filter(
       (e) =>
         (e.type_contrat === "Interim" || e.type_contrat === "Independant") &&
-        assignedIds.has(e.id),
+        (assignedIds.has(e.id) || extraIds.has(e.id)),
     );
-  }, [employesFiltres, assignations]);
+    // Ajoute les extras qui ne sont pas dans employesFiltres (filtre recherche par ex)
+    const baseIds = new Set(baseFiltered.map((e) => e.id));
+    const missingExtras = extraInterims.filter((e) => !baseIds.has(e.id));
+    return [...baseFiltered, ...missingExtras];
+  }, [employesFiltres, assignations, extraInterims]);
 
   // Affaires actives cette semaine pour le filtre (toutes celles qui apparaissent dans les assignations OU avec heures budgétées)
   const affairesActivesIds = useMemo(() => {
@@ -230,6 +241,16 @@ function PlanningPage() {
               </TabsContent>
 
               <TabsContent value="interim" className="mt-4">
+                <div className="mb-3 flex items-center justify-between gap-2">
+                  <p className="text-xs text-muted-foreground">
+                    Affiche les intérim. / indép. déjà staffés cette semaine. Utilise « Ajouter »
+                    pour staffer un nouvel intérimaire depuis la base.
+                  </p>
+                  <Button size="sm" onClick={() => setAddInterimOpen(true)}>
+                    <UserPlus className="mr-1.5 h-3.5 w-3.5" />
+                    Ajouter un intérimaire
+                  </Button>
+                </div>
                 <PlanningGrid
                   weekStart={weekStart}
                   employes={employesInterim}
@@ -241,8 +262,10 @@ function PlanningPage() {
                   filterAffaireIds={filterAffaireStr}
                   filterMetierIds={filterMetierNum}
                   showWeekend={showWeekend}
-                  emptyMessage="Aucun employé intérimaire / indépendant actif."
+                  emptyMessage="Aucun employé intérimaire / indépendant staffé cette semaine. Clique sur « Ajouter un intérimaire »."
                   onChanged={refresh}
+                  openAssignationFor={autoOpen}
+                  onAutoOpenConsumed={() => setAutoOpen(null)}
                 />
               </TabsContent>
 
@@ -270,6 +293,22 @@ function PlanningPage() {
           filterAffaireIds={filterAffaireStr}
         />
       </aside>
+
+      <AddInterimDialog
+        open={addInterimOpen}
+        onOpenChange={setAddInterimOpen}
+        alreadyVisibleIds={new Set(employesInterim.map((e) => e.id))}
+        onSelect={(emp) => {
+          // Switch sur l'onglet intérim au cas où on ouvrirait depuis ailleurs
+          setTab("interim");
+          // Ajoute à la liste visible si pas déjà là
+          setExtraInterims((prev) =>
+            prev.some((p) => p.id === emp.id) ? prev : [...prev, emp],
+          );
+          // Ouvre le dialog d'assignation sur le lundi de la semaine
+          setAutoOpen({ employe: emp, date: weekStart });
+        }}
+      />
     </div>
   );
 }
