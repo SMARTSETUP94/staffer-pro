@@ -1,4 +1,5 @@
 import { Eye, X } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { usePreview, type PreviewRole } from "@/lib/preview-context";
 
@@ -11,8 +12,17 @@ const LABELS: Record<PreviewRole, string> = {
 
 export function PreviewBanner() {
   const { previewRole, isPreviewing, setPreviewRole } = usePreview();
+  const navigate = useNavigate();
 
   if (!isPreviewing || !previewRole) return null;
+
+  const handleExit = () => {
+    const wasMobile = previewRole === "employe_mobile";
+    setPreviewRole(null);
+    if (wasMobile) {
+      navigate({ to: "/planning" });
+    }
+  };
 
   return (
     <div className="flex items-center justify-between gap-3 border-b border-primary/30 bg-primary/10 px-4 py-2 text-xs">
@@ -26,7 +36,7 @@ export function PreviewBanner() {
         size="sm"
         variant="ghost"
         className="h-7 gap-1.5 text-xs text-primary hover:bg-primary/15 hover:text-primary"
-        onClick={() => setPreviewRole(null)}
+        onClick={handleExit}
       >
         <X className="h-3 w-3" />
         Revenir admin

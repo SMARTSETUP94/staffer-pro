@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { CalendarDays, Inbox } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { usePreview } from "@/lib/preview-context";
@@ -22,6 +22,12 @@ function formatToday() {
 function MobileAujourdhui() {
   const { user, signOut } = useAuth();
   const { isPreviewing, setPreviewRole } = usePreview();
+  const navigate = useNavigate();
+
+  const handleQuitPreview = () => {
+    setPreviewRole(null);
+    navigate({ to: "/planning" });
+  };
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -39,7 +45,7 @@ function MobileAujourdhui() {
             </p>
           </div>
           {isPreviewing ? (
-            <Button size="sm" variant="outline" onClick={() => setPreviewRole(null)}>
+            <Button size="sm" variant="outline" onClick={handleQuitPreview}>
               Quitter preview
             </Button>
           ) : (
