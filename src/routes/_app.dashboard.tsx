@@ -203,6 +203,10 @@ function DashboardPage() {
     );
   }
 
+  const today = new Date();
+  const weekStartStr = startOfWeek(today).toISOString().slice(0, 10);
+  const weekEndStr = endOfWeek(today).toISOString().slice(0, 10);
+
   return (
     <div className="space-y-6 p-6">
       <PageHeader
