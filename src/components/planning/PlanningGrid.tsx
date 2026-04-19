@@ -75,6 +75,7 @@ export function PlanningGrid({
   onChanged,
   readonly,
 }: Props) {
+  const navigate = useNavigate();
   const days = useMemo(
     () => Array.from({ length: showWeekend ? 7 : 5 }, (_, i) => addDays(weekStart, i)),
     [weekStart.getTime(), showWeekend],
