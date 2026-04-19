@@ -270,6 +270,7 @@ function EmployesPage() {
             <TabsList className="rounded-xl bg-muted">
               <TabsTrigger value="all" className="rounded-lg">Tous</TabsTrigger>
               <TabsTrigger value="CDI" className="rounded-lg">CDI</TabsTrigger>
+              <TabsTrigger value="Apprenti" className="rounded-lg">Apprentis</TabsTrigger>
               <TabsTrigger value="Interim" className="rounded-lg">Intérim</TabsTrigger>
             </TabsList>
           </Tabs>
