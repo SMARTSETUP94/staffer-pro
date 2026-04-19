@@ -34,6 +34,7 @@ export function PlanningGrid({
   metiers,
   affaires,
   assignations,
+  consommation,
   filterAffaireIds,
   filterMetierIds,
   emptyMessage,
@@ -184,6 +185,7 @@ export function PlanningGrid({
           existing={dialogExisting}
           affaires={affaires}
           metiers={metiers}
+          consommation={consommation}
           onSaved={() => onChanged?.()}
         />
       )}
