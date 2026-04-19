@@ -1,17 +1,20 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { startOfWeek, addDays } from "date-fns";
-import { Calendar, Loader2, Search } from "lucide-react";
+import { Calendar, Loader2, Search, FileDown } from "lucide-react";
+import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
 import { usePlanningData } from "@/hooks/use-planning-data";
 import { WeekPicker } from "@/components/planning/WeekPicker";
 import { PlanningGrid } from "@/components/planning/PlanningGrid";
 import { PlanningSynthese } from "@/components/planning/PlanningSynthese";
 import { HeuresRestantesSidebar } from "@/components/planning/HeuresRestantesSidebar";
 import { MultiFilter } from "@/components/planning/MultiFilter";
+import { exportPlanningToPDF } from "@/lib/planning-export";
 
 export const Route = createFileRoute("/_app/planning")({
   head: () => ({
@@ -90,6 +93,29 @@ function PlanningPage() {
   const filterAffaireStr = filterAffaire as Set<string>;
   const filterMetierNum = filterMetier as Set<number>;
 
+  const exportRef = useRef<HTMLDivElement>(null);
+  const [exporting, setExporting] = useState(false);
+
+  async function handleExportPDF() {
+    const root = exportRef.current;
+    if (!root) return;
+    // Cible : la grille de l'onglet actif (ou la zone synthèse complète)
+    const target =
+      (root.querySelector('[data-planning-grid-export]') as HTMLElement | null) ?? root;
+    const tabLabel =
+      tab === "cdi" ? "CDI / CDD" : tab === "interim" ? "Intérim / Indép." : "Synthèse chantier";
+    setExporting(true);
+    try {
+      await exportPlanningToPDF(target, { weekStart, tabLabel });
+      toast.success("PDF généré");
+    } catch (e) {
+      console.error(e);
+      toast.error("Échec de l'export PDF");
+    } finally {
+      setExporting(false);
+    }
+  }
+
   return (
     <div className="flex h-full">
       <div className="flex-1 overflow-y-auto p-6">
@@ -98,7 +124,22 @@ function PlanningPage() {
             <Calendar className="h-6 w-6 text-primary" />
             <h1 className="text-2xl font-bold">Planning hebdomadaire</h1>
           </div>
-          <WeekPicker weekStart={weekStart} onChange={setWeekStart} />
+          <div className="flex items-center gap-2">
+            <WeekPicker weekStart={weekStart} onChange={setWeekStart} />
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleExportPDF}
+              disabled={exporting || loading}
+            >
+              {exporting ? (
+                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <FileDown className="mr-1.5 h-3.5 w-3.5" />
+              )}
+              Exporter PDF
+            </Button>
+          </div>
         </div>
 
         <div className="mb-4 flex flex-wrap items-center gap-2">
@@ -159,63 +200,65 @@ function PlanningPage() {
             <Loader2 className="h-6 w-6 animate-spin text-primary" />
           </div>
         ) : (
-          <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
-            <TabsList>
-              <TabsTrigger value="cdi">
-                CDI / CDD <span className="ml-1.5 text-[10px] opacity-60">({employesCDI.length})</span>
-              </TabsTrigger>
-              <TabsTrigger value="interim">
-                Intérim / Indép. <span className="ml-1.5 text-[10px] opacity-60">({employesInterim.length})</span>
-              </TabsTrigger>
-              <TabsTrigger value="synthese">Synthèse chantier</TabsTrigger>
-            </TabsList>
+          <div ref={exportRef}>
+            <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
+              <TabsList>
+                <TabsTrigger value="cdi">
+                  CDI / CDD <span className="ml-1.5 text-[10px] opacity-60">({employesCDI.length})</span>
+                </TabsTrigger>
+                <TabsTrigger value="interim">
+                  Intérim / Indép. <span className="ml-1.5 text-[10px] opacity-60">({employesInterim.length})</span>
+                </TabsTrigger>
+                <TabsTrigger value="synthese">Synthèse chantier</TabsTrigger>
+              </TabsList>
 
-            <TabsContent value="cdi" className="mt-4">
-              <PlanningGrid
-                weekStart={weekStart}
-                employes={employesCDI}
-                metiers={metiers}
-                affaires={affaires}
-                assignations={assignations}
-                consommation={consommation}
-                absences={absences}
-                filterAffaireIds={filterAffaireStr}
-                filterMetierIds={filterMetierNum}
-                showWeekend={showWeekend}
-                emptyMessage="Aucun employé CDI/CDD actif."
-                onChanged={refresh}
-              />
-            </TabsContent>
+              <TabsContent value="cdi" className="mt-4">
+                <PlanningGrid
+                  weekStart={weekStart}
+                  employes={employesCDI}
+                  metiers={metiers}
+                  affaires={affaires}
+                  assignations={assignations}
+                  consommation={consommation}
+                  absences={absences}
+                  filterAffaireIds={filterAffaireStr}
+                  filterMetierIds={filterMetierNum}
+                  showWeekend={showWeekend}
+                  emptyMessage="Aucun employé CDI/CDD actif."
+                  onChanged={refresh}
+                />
+              </TabsContent>
 
-            <TabsContent value="interim" className="mt-4">
-              <PlanningGrid
-                weekStart={weekStart}
-                employes={employesInterim}
-                metiers={metiers}
-                affaires={affaires}
-                assignations={assignations}
-                consommation={consommation}
-                absences={absences}
-                filterAffaireIds={filterAffaireStr}
-                filterMetierIds={filterMetierNum}
-                showWeekend={showWeekend}
-                emptyMessage="Aucun employé intérimaire / indépendant actif."
-                onChanged={refresh}
-              />
-            </TabsContent>
+              <TabsContent value="interim" className="mt-4">
+                <PlanningGrid
+                  weekStart={weekStart}
+                  employes={employesInterim}
+                  metiers={metiers}
+                  affaires={affaires}
+                  assignations={assignations}
+                  consommation={consommation}
+                  absences={absences}
+                  filterAffaireIds={filterAffaireStr}
+                  filterMetierIds={filterMetierNum}
+                  showWeekend={showWeekend}
+                  emptyMessage="Aucun employé intérimaire / indépendant actif."
+                  onChanged={refresh}
+                />
+              </TabsContent>
 
-            <TabsContent value="synthese" className="mt-4">
-              <PlanningSynthese
-                weekStart={weekStart}
-                affaires={affaires}
-                employes={employes}
-                metiers={metiers}
-                assignations={assignations}
-                consommation={consommation}
-                onSelectAffaire={handleSelectAffaireFromSynthese}
-              />
-            </TabsContent>
-          </Tabs>
+              <TabsContent value="synthese" className="mt-4">
+                <PlanningSynthese
+                  weekStart={weekStart}
+                  affaires={affaires}
+                  employes={employes}
+                  metiers={metiers}
+                  assignations={assignations}
+                  consommation={consommation}
+                  onSelectAffaire={handleSelectAffaireFromSynthese}
+                />
+              </TabsContent>
+            </Tabs>
+          </div>
         )}
       </div>
 
