@@ -56,7 +56,16 @@ interface EmployeOpt {
   type_contrat: "CDI" | "Interim" | "CDD" | "Independant";
 }
 
+interface AbsencesSearch {
+  employe?: string;
+  date?: string;
+}
+
 export const Route = createFileRoute("/_app/absences")({
+  validateSearch: (search: Record<string, unknown>): AbsencesSearch => ({
+    employe: typeof search.employe === "string" ? search.employe : undefined,
+    date: typeof search.date === "string" ? search.date : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Absences — Setup Paris" },
