@@ -450,15 +450,19 @@ function DashboardPage() {
             ) : (
               <ul className="divide-y">
                 {heuresAValider.map((h) => (
-                  <li key={h.id} className="py-2.5 flex items-center justify-between gap-3">
+                  <li key={h.id} className="flex items-center justify-between gap-3 py-2.5">
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium truncate">
+                      <p className="truncate text-sm font-medium">
                         {h.employe?.prenom} {h.employe?.nom}
                       </p>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {h.affaire?.numero ?? "—"} · {fmtDate(h.date)}
+                      <p className="truncate text-xs text-muted-foreground">
+                        <span className="font-mono text-primary">{h.affaire?.numero ?? "—"}</span>
+                        {h.affaire?.nom ? <span> · {h.affaire.nom}</span> : null}
                       </p>
                     </div>
+                    <Badge variant="outline" className="shrink-0 text-[11px] tabular-nums">
+                      {fmtDate(h.date)}
+                    </Badge>
                   </li>
                 ))}
               </ul>
