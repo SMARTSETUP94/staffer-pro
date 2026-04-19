@@ -94,9 +94,9 @@ function JournalPage() {
     const profMap = new Map((profs ?? []).map((p) => [p.id, p as Profile]));
     setComments(
       data.map((c) => ({
-        ...(c as Commentaire),
-        attachments: (c.attachments as Attachment[]) ?? [],
-        mentions: (c.mentions as string[]) ?? [],
+        ...(c as unknown as Commentaire),
+        attachments: ((c.attachments as unknown) as Attachment[]) ?? [],
+        mentions: ((c.mentions as unknown) as string[]) ?? [],
         author: profMap.get(c.author_id),
       })),
     );
@@ -196,7 +196,7 @@ function JournalPage() {
     try {
       const uploaded: Attachment[] = [];
       for (const file of pendingFiles) {
-        const safe = file.name.replace(/[^\w.\-]/g, "_");
+        const safe = file.name.replace(/[^\w.-]/g, "_");
         const path = `${affaireId}/${Date.now()}_${safe}`;
         const { error: upErr } = await supabase.storage
           .from("affaire-attachments")
