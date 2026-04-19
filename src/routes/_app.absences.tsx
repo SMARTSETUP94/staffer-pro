@@ -53,6 +53,7 @@ interface EmployeOpt {
   id: string;
   prenom: string;
   nom: string;
+  type_contrat: "CDI" | "Interim" | "CDD" | "Independant";
 }
 
 export const Route = createFileRoute("/_app/absences")({
