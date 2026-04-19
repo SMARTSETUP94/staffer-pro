@@ -95,7 +95,7 @@ function EmployesPage() {
   const [rows, setRows] = useState<EmployeRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [filterContrat, setFilterContrat] = useState<"all" | ContratType>("all");
+  const [filterContrat, setFilterContrat] = useState<"all" | ContratType | "Apprenti">("all");
   const [filterActif, setFilterActif] = useState<"actifs" | "inactifs" | "tous">("actifs");
   const [viewMode, setViewMode] = useState<"liste" | "tableur">("liste");
   const [open, setOpen] = useState(false);
