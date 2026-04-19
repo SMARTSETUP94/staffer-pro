@@ -505,7 +505,7 @@ function DashboardPage() {
                       </div>
                     </div>
                     {!a.valide && (
-                      <Badge variant="outline" className="text-[10px] shrink-0">À valider</Badge>
+                      <Badge variant="outline" className="text-[11px] shrink-0">À valider</Badge>
                     )}
                   </li>
                 ))}
