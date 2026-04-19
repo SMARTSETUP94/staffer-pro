@@ -89,7 +89,7 @@ function DashboardPage() {
   const { unreadCount } = useNotifications();
   const [loading, setLoading] = useState(true);
   const [affairesActives, setAffairesActives] = useState(0);
-  const [employesActifs, setEmployesActifs] = useState(0);
+  
   const [heuresSemaine, setHeuresSemaine] = useState(0);
   const [evenementsProches, setEvenementsProches] = useState<AffaireEvenement[]>([]);
   const [depassements, setDepassements] = useState<AffaireDepassement[]>([]);
