@@ -88,7 +88,9 @@ function endOfWeek(d: Date) {
 function DashboardPage() {
   const { unreadCount } = useNotifications();
   const [loading, setLoading] = useState(true);
-  const [chantiersSemaineProchaine, setChantiersSemaineProchaine] = useState(0);
+  const [chantiersSemaineProchaine, setChantiersSemaineProchaine] = useState<
+    { id: string; numero: string; nom: string }[]
+  >([]);
   const [heuresSemaine, setHeuresSemaine] = useState(0);
   const [evenementsProches, setEvenementsProches] = useState<AffaireEvenement[]>([]);
   const [depassements, setDepassements] = useState<AffaireDepassement[]>([]);
