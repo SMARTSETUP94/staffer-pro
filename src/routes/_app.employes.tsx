@@ -135,7 +135,9 @@ function EmployesPage() {
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return rows.filter((r) => {
-      if (filterContrat !== "all" && r.type_contrat !== filterContrat) return false;
+      if (filterContrat === "Apprenti") {
+        if (!r.is_apprenti) return false;
+      } else if (filterContrat !== "all" && r.type_contrat !== filterContrat) return false;
       if (filterActif === "actifs" && !r.actif) return false;
       if (filterActif === "inactifs" && r.actif) return false;
       if (!q) return true;
