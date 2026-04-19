@@ -93,6 +93,29 @@ function PlanningPage() {
   const filterAffaireStr = filterAffaire as Set<string>;
   const filterMetierNum = filterMetier as Set<number>;
 
+  const exportRef = useRef<HTMLDivElement>(null);
+  const [exporting, setExporting] = useState(false);
+
+  async function handleExportPDF() {
+    const root = exportRef.current;
+    if (!root) return;
+    // Cible : la grille de l'onglet actif (ou la zone synthèse complète)
+    const target =
+      (root.querySelector('[data-planning-grid-export]') as HTMLElement | null) ?? root;
+    const tabLabel =
+      tab === "cdi" ? "CDI / CDD" : tab === "interim" ? "Intérim / Indép." : "Synthèse chantier";
+    setExporting(true);
+    try {
+      await exportPlanningToPDF(target, { weekStart, tabLabel });
+      toast.success("PDF généré");
+    } catch (e) {
+      console.error(e);
+      toast.error("Échec de l'export PDF");
+    } finally {
+      setExporting(false);
+    }
+  }
+
   return (
     <div className="flex h-full">
       <div className="flex-1 overflow-y-auto p-6">
@@ -101,7 +124,22 @@ function PlanningPage() {
             <Calendar className="h-6 w-6 text-primary" />
             <h1 className="text-2xl font-bold">Planning hebdomadaire</h1>
           </div>
-          <WeekPicker weekStart={weekStart} onChange={setWeekStart} />
+          <div className="flex items-center gap-2">
+            <WeekPicker weekStart={weekStart} onChange={setWeekStart} />
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleExportPDF}
+              disabled={exporting || loading}
+            >
+              {exporting ? (
+                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <FileDown className="mr-1.5 h-3.5 w-3.5" />
+              )}
+              Exporter PDF
+            </Button>
+          </div>
         </div>
 
         <div className="mb-4 flex flex-wrap items-center gap-2">
