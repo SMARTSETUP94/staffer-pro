@@ -88,8 +88,7 @@ function endOfWeek(d: Date) {
 function DashboardPage() {
   const { unreadCount } = useNotifications();
   const [loading, setLoading] = useState(true);
-  const [affairesActives, setAffairesActives] = useState(0);
-  
+  const [chantiersSemaineProchaine, setChantiersSemaineProchaine] = useState(0);
   const [heuresSemaine, setHeuresSemaine] = useState(0);
   const [evenementsProches, setEvenementsProches] = useState<AffaireEvenement[]>([]);
   const [depassements, setDepassements] = useState<AffaireDepassement[]>([]);
@@ -103,19 +102,28 @@ function DashboardPage() {
       const todayStr = today.toISOString().slice(0, 10);
       const weekStart = startOfWeek(today).toISOString().slice(0, 10);
       const weekEnd = endOfWeek(today).toISOString().slice(0, 10);
+      const nextWeekStartDate = startOfWeek(today);
+      nextWeekStartDate.setDate(nextWeekStartDate.getDate() + 7);
+      const nextWeekEndDate = endOfWeek(nextWeekStartDate);
+      const nextWeekStart = nextWeekStartDate.toISOString().slice(0, 10);
+      const nextWeekEnd = nextWeekEndDate.toISOString().slice(0, 10);
       const j7 = new Date(today);
       j7.setDate(j7.getDate() + 7);
       const j7Str = j7.toISOString().slice(0, 10);
 
       const [
-        affairesRes,
+        chantiersNextRes,
         heuresWeekRes,
         montagesRes,
         margesRes,
         soumisesRes,
         absRes,
       ] = await Promise.all([
-        supabase.from("affaires").select("id", { count: "exact", head: true }).eq("statut", "en_cours"),
+        supabase
+          .from("assignations")
+          .select("affaire_id")
+          .gte("date", nextWeekStart)
+          .lte("date", nextWeekEnd),
         supabase.from("assignations").select("heures").gte("date", weekStart).lte("date", weekEnd),
         supabase
           .from("affaires")
@@ -139,7 +147,10 @@ function DashboardPage() {
 
       if (cancelled) return;
 
-      setAffairesActives(affairesRes.count ?? 0);
+      const distinctChantiers = new Set(
+        (chantiersNextRes.data ?? []).map((r) => r.affaire_id as string),
+      );
+      setChantiersSemaineProchaine(distinctChantiers.size);
       setHeuresSemaine(
         (heuresWeekRes.data ?? []).reduce((acc, r) => acc + Number(r.heures ?? 0), 0),
       );
@@ -254,7 +265,7 @@ function DashboardPage() {
 
       {/* KPIs scalaires */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <KpiCard icon={Building2} label="Affaires actives" value={affairesActives} to="/affaires" />
+        <KpiCard icon={Building2} label="Chantiers staffés (S+1)" value={chantiersSemaineProchaine} to="/planning" />
         <KpiCard icon={Calendar} label="Heures cette semaine" value={`${heuresSemaine}h`} to="/planning" />
         <KpiCard icon={ClipboardCheck} label="Heures à valider" value={heuresAValider.length} to="/validation-heures" emphasize={heuresAValider.length > 0} />
       </div>
