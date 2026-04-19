@@ -28,6 +28,7 @@ import { Route as AppDevisImportRouteImport } from './routes/_app.devis.import'
 import { Route as AppAffairesAffaireIdRouteImport } from './routes/_app.affaires.$affaireId'
 import { Route as AppAffairesAffaireIdIndexRouteImport } from './routes/_app.affaires.$affaireId.index'
 import { Route as AppAffairesAffaireIdStaffingRouteImport } from './routes/_app.affaires.$affaireId.staffing'
+import { Route as AppAffairesAffaireIdJournalRouteImport } from './routes/_app.affaires.$affaireId.journal'
 import { Route as AppAffairesAffaireIdDevisRouteImport } from './routes/_app.affaires.$affaireId.devis'
 
 const LoginRoute = LoginRouteImport.update({
@@ -126,6 +127,12 @@ const AppAffairesAffaireIdStaffingRoute =
     path: '/staffing',
     getParentRoute: () => AppAffairesAffaireIdRoute,
   } as any)
+const AppAffairesAffaireIdJournalRoute =
+  AppAffairesAffaireIdJournalRouteImport.update({
+    id: '/journal',
+    path: '/journal',
+    getParentRoute: () => AppAffairesAffaireIdRoute,
+  } as any)
 const AppAffairesAffaireIdDevisRoute =
   AppAffairesAffaireIdDevisRouteImport.update({
     id: '/devis',
@@ -151,6 +158,7 @@ export interface FileRoutesByFullPath {
   '/devis/import': typeof AppDevisImportRoute
   '/employes/import': typeof AppEmployesImportRoute
   '/affaires/$affaireId/devis': typeof AppAffairesAffaireIdDevisRoute
+  '/affaires/$affaireId/journal': typeof AppAffairesAffaireIdJournalRoute
   '/affaires/$affaireId/staffing': typeof AppAffairesAffaireIdStaffingRoute
   '/affaires/$affaireId/': typeof AppAffairesAffaireIdIndexRoute
 }
@@ -171,6 +179,7 @@ export interface FileRoutesByTo {
   '/devis/import': typeof AppDevisImportRoute
   '/employes/import': typeof AppEmployesImportRoute
   '/affaires/$affaireId/devis': typeof AppAffairesAffaireIdDevisRoute
+  '/affaires/$affaireId/journal': typeof AppAffairesAffaireIdJournalRoute
   '/affaires/$affaireId/staffing': typeof AppAffairesAffaireIdStaffingRoute
   '/affaires/$affaireId': typeof AppAffairesAffaireIdIndexRoute
 }
@@ -194,6 +203,7 @@ export interface FileRoutesById {
   '/_app/devis/import': typeof AppDevisImportRoute
   '/_app/employes/import': typeof AppEmployesImportRoute
   '/_app/affaires/$affaireId/devis': typeof AppAffairesAffaireIdDevisRoute
+  '/_app/affaires/$affaireId/journal': typeof AppAffairesAffaireIdJournalRoute
   '/_app/affaires/$affaireId/staffing': typeof AppAffairesAffaireIdStaffingRoute
   '/_app/affaires/$affaireId/': typeof AppAffairesAffaireIdIndexRoute
 }
@@ -217,6 +227,7 @@ export interface FileRouteTypes {
     | '/devis/import'
     | '/employes/import'
     | '/affaires/$affaireId/devis'
+    | '/affaires/$affaireId/journal'
     | '/affaires/$affaireId/staffing'
     | '/affaires/$affaireId/'
   fileRoutesByTo: FileRoutesByTo
@@ -237,6 +248,7 @@ export interface FileRouteTypes {
     | '/devis/import'
     | '/employes/import'
     | '/affaires/$affaireId/devis'
+    | '/affaires/$affaireId/journal'
     | '/affaires/$affaireId/staffing'
     | '/affaires/$affaireId'
   id:
@@ -259,6 +271,7 @@ export interface FileRouteTypes {
     | '/_app/devis/import'
     | '/_app/employes/import'
     | '/_app/affaires/$affaireId/devis'
+    | '/_app/affaires/$affaireId/journal'
     | '/_app/affaires/$affaireId/staffing'
     | '/_app/affaires/$affaireId/'
   fileRoutesById: FileRoutesById
@@ -407,6 +420,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAffairesAffaireIdStaffingRouteImport
       parentRoute: typeof AppAffairesAffaireIdRoute
     }
+    '/_app/affaires/$affaireId/journal': {
+      id: '/_app/affaires/$affaireId/journal'
+      path: '/journal'
+      fullPath: '/affaires/$affaireId/journal'
+      preLoaderRoute: typeof AppAffairesAffaireIdJournalRouteImport
+      parentRoute: typeof AppAffairesAffaireIdRoute
+    }
     '/_app/affaires/$affaireId/devis': {
       id: '/_app/affaires/$affaireId/devis'
       path: '/devis'
@@ -419,12 +439,14 @@ declare module '@tanstack/react-router' {
 
 interface AppAffairesAffaireIdRouteChildren {
   AppAffairesAffaireIdDevisRoute: typeof AppAffairesAffaireIdDevisRoute
+  AppAffairesAffaireIdJournalRoute: typeof AppAffairesAffaireIdJournalRoute
   AppAffairesAffaireIdStaffingRoute: typeof AppAffairesAffaireIdStaffingRoute
   AppAffairesAffaireIdIndexRoute: typeof AppAffairesAffaireIdIndexRoute
 }
 
 const AppAffairesAffaireIdRouteChildren: AppAffairesAffaireIdRouteChildren = {
   AppAffairesAffaireIdDevisRoute: AppAffairesAffaireIdDevisRoute,
+  AppAffairesAffaireIdJournalRoute: AppAffairesAffaireIdJournalRoute,
   AppAffairesAffaireIdStaffingRoute: AppAffairesAffaireIdStaffingRoute,
   AppAffairesAffaireIdIndexRoute: AppAffairesAffaireIdIndexRoute,
 }
@@ -493,3 +515,12 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
