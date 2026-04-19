@@ -1,28 +1,65 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
-import { startOfWeek, addDays, format } from "date-fns";
+import { useMemo, useState } from "react";
+import { startOfWeek, addDays, addWeeks, format, differenceInCalendarWeeks } from "date-fns";
 import { fr } from "date-fns/locale";
-import { FileDown, Loader2, FileSpreadsheet, Users, Briefcase, LayoutGrid } from "lucide-react";
+import {
+  FileDown,
+  Loader2,
+  FileSpreadsheet,
+  Users,
+  Briefcase,
+  LayoutGrid,
+  AlertTriangle,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import { WeekPicker } from "@/components/planning/WeekPicker";
 import { usePlanningData } from "@/hooks/use-planning-data";
-import { exportPlanningExcel } from "@/lib/planning-excel-export";
+import { exportPlanningExcelRange } from "@/lib/planning-excel-export";
 
 export const Route = createFileRoute("/_app/export")({
   head: () => ({ meta: [{ title: "Export planning — Planning chantiers" }] }),
   component: ExportPage,
 });
 
+const MAX_WEEKS = 4;
+
 function ExportPage() {
   const [weekStart, setWeekStart] = useState<Date>(() =>
     startOfWeek(new Date(), { weekStartsOn: 1 }),
   );
-  const weekEnd = addDays(weekStart, 6);
+  const [weekEndStart, setWeekEndStart] = useState<Date>(() =>
+    startOfWeek(new Date(), { weekStartsOn: 1 }),
+  );
   const [exporting, setExporting] = useState(false);
 
-  const data = usePlanningData(weekStart, weekEnd);
+  // Sécurise l'ordre + plafonne à 4 semaines
+  const { rangeStart, weekCount, tooMany } = useMemo(() => {
+    const a = weekStart.getTime();
+    const b = weekEndStart.getTime();
+    const start = a <= b ? weekStart : weekEndStart;
+    const endStart = a <= b ? weekEndStart : weekStart;
+    const count = differenceInCalendarWeeks(endStart, start, { weekStartsOn: 1 }) + 1;
+    return {
+      rangeStart: start,
+      weekCount: count,
+      tooMany: count > MAX_WEEKS,
+    };
+  }, [weekStart, weekEndStart]);
+
+  const effectiveCount = Math.min(weekCount, MAX_WEEKS);
+  const effectiveEndStart = addWeeks(rangeStart, effectiveCount - 1);
+  const rangeEnd = addDays(effectiveEndStart, 6);
+
+  const weekStarts = useMemo(
+    () => Array.from({ length: effectiveCount }, (_, i) => addWeeks(rangeStart, i)),
+    [rangeStart, effectiveCount],
+  );
+
+  // On charge la plage entière en une seule passe
+  const data = usePlanningData(rangeStart, rangeEnd);
 
   const cdiCount = data.employes.filter(
     (e) => e.type_contrat === "CDI" || e.type_contrat === "CDD",
@@ -39,8 +76,8 @@ function ExportPage() {
     if (data.loading) return;
     setExporting(true);
     try {
-      exportPlanningExcel({
-        weekStart,
+      exportPlanningExcelRange({
+        weekStarts,
         metiers: data.metiers,
         employes: data.employes,
         affaires: data.affaires,
@@ -49,7 +86,11 @@ function ExportPage() {
         absences: data.absences,
         chefsById: data.chefsById,
       });
-      toast.success("Export Excel généré");
+      toast.success(
+        weekStarts.length > 1
+          ? `Export Excel généré (${weekStarts.length} semaines)`
+          : "Export Excel généré",
+      );
     } catch (e) {
       console.error(e);
       toast.error("Échec de l'export Excel");
@@ -69,24 +110,55 @@ function ExportPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <FileSpreadsheet className="h-5 w-5 text-primary" />
-            Export hebdomadaire matriciel
+            Export matriciel multi-semaines
           </CardTitle>
           <CardDescription>
-            Génère un classeur Excel avec 3 feuilles : CDI/CDD, Intérim/Indép. et Synthèse chantier.
-            Mise en forme couleur par métier, en-têtes figés et largeurs adaptées.
+            Sélectionne 1 à {MAX_WEEKS} semaines consécutives. Le classeur contient 4 feuilles par
+            semaine (CDI/CDD, Intérim, Synthèse, Heures), suffixées par S{"{n°}"}.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-5">
-          <div>
-            <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              Semaine à exporter
-            </p>
-            <WeekPicker weekStart={weekStart} onChange={setWeekStart} />
-            <p className="mt-2 text-sm text-muted-foreground">
-              Du {format(weekStart, "EEEE d MMMM", { locale: fr })} au{" "}
-              {format(weekEnd, "EEEE d MMMM yyyy", { locale: fr })}
-            </p>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <Label className="mb-2 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Semaine de début
+              </Label>
+              <WeekPicker weekStart={weekStart} onChange={setWeekStart} />
+            </div>
+            <div>
+              <Label className="mb-2 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Semaine de fin
+              </Label>
+              <WeekPicker weekStart={weekEndStart} onChange={setWeekEndStart} />
+            </div>
           </div>
+
+          <div className="rounded-md border bg-muted/20 p-3 text-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground">
+                Du {format(rangeStart, "EEE d MMM", { locale: fr })} au{" "}
+                {format(rangeEnd, "EEE d MMM yyyy", { locale: fr })}
+              </span>
+              <span className="font-medium">
+                {effectiveCount} semaine{effectiveCount > 1 ? "s" : ""} ·{" "}
+                {effectiveCount * 4} feuilles
+              </span>
+            </div>
+          </div>
+
+          {tooMany && (
+            <div className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+              <span>
+                Plage limitée à {MAX_WEEKS} semaines. Seules les {MAX_WEEKS} premières seront
+                exportées (du {format(rangeStart, "d MMM", { locale: fr })} au{" "}
+                {format(addDays(addWeeks(rangeStart, MAX_WEEKS - 1), 6), "d MMM yyyy", {
+                  locale: fr,
+                })}
+                ).
+              </span>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <StatCard icon={Users} label="CDI / CDD" value={cdiCount} loading={data.loading} />
@@ -128,27 +200,32 @@ function ExportPage() {
 
       <Card className="mt-4 max-w-3xl">
         <CardHeader>
-          <CardTitle className="text-base">Contenu du classeur</CardTitle>
+          <CardTitle className="text-base">Contenu du classeur (par semaine)</CardTitle>
         </CardHeader>
         <CardContent>
           <ul className="space-y-2 text-sm">
             <li className="flex gap-2">
-              <span className="font-semibold text-primary">Feuille 1 — CDI/CDD :</span>
+              <span className="font-semibold text-primary">S{"{n°}"} CDI-CDD :</span>
               <span className="text-muted-foreground">
-                Matrice employé × jour (lun → dim) avec affaires et absences (CP, FORM, RTT, AM…)
+                Matrice employé × jour avec affaires et absences (CP, FORM, RTT, AM…).
               </span>
             </li>
             <li className="flex gap-2">
-              <span className="font-semibold text-primary">Feuille 2 — Intérim/Indép. :</span>
+              <span className="font-semibold text-primary">S{"{n°}"} Intérim :</span>
               <span className="text-muted-foreground">
                 Idem, restreint aux intérimaires et indépendants staffés sur la semaine.
               </span>
             </li>
             <li className="flex gap-2">
-              <span className="font-semibold text-primary">Feuille 3 — Synthèse chantier :</span>
+              <span className="font-semibold text-primary">S{"{n°}"} Synthèse :</span>
               <span className="text-muted-foreground">
-                Une ligne par affaire, équipe par jour (initiales par métier), total équipe-jours
-                et heures restantes au budget.
+                Une ligne par affaire, équipe par jour, total équipe-jours et heures restantes.
+              </span>
+            </li>
+            <li className="flex gap-2">
+              <span className="font-semibold text-primary">S{"{n°}"} Heures :</span>
+              <span className="text-muted-foreground">
+                Total heures, demi-journées, absences et taux d'occupation par CDI/CDD.
               </span>
             </li>
           </ul>

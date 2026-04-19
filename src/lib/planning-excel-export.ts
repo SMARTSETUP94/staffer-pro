@@ -628,7 +628,6 @@ export function exportPlanningExcel(opts: BuildOpts): void {
   const { employes, assignations, weekStart } = opts;
 
   const cdiCdd = employes.filter((e) => e.type_contrat === "CDI" || e.type_contrat === "CDD");
-  // Intérim/Indép. : ceux avec assignation cette semaine
   const assignedIds = new Set(assignations.map((a) => a.employe_id));
   const interim = employes.filter(
     (e) => (e.type_contrat === "Interim" || e.type_contrat === "Independant") && assignedIds.has(e.id),
@@ -641,5 +640,70 @@ export function exportPlanningExcel(opts: BuildOpts): void {
   XLSX.utils.book_append_sheet(wb, buildHeuresEmployeSheet(cdiCdd, opts), "Heures par employé");
 
   const filename = `planning-S${format(weekStart, "II")}-${format(weekStart, "yyyy-MM-dd")}.xlsx`;
+  XLSX.writeFile(wb, filename);
+}
+
+/**
+ * Export d'une plage de semaines (1 à 4) — un groupe de 4 feuilles par semaine,
+ * suffixées par S{numéro de semaine}.
+ */
+export function exportPlanningExcelRange(
+  opts: Omit<BuildOpts, "weekStart"> & { weekStarts: Date[] },
+): void {
+  const { weekStarts, employes, assignations, absences, ...rest } = opts;
+  if (weekStarts.length === 0) return;
+
+  const wb = XLSX.utils.book_new();
+  const cdiCdd = employes.filter((e) => e.type_contrat === "CDI" || e.type_contrat === "CDD");
+
+  for (const weekStart of weekStarts) {
+    const weekEnd = addDays(weekStart, 6);
+    const weekStartStr = format(weekStart, "yyyy-MM-dd");
+    const weekEndStr = format(weekEnd, "yyyy-MM-dd");
+    const weekNum = format(weekStart, "II");
+
+    const assignsWeek = assignations.filter((a) => a.date >= weekStartStr && a.date <= weekEndStr);
+    const absencesWeek = absences.filter(
+      (a) => a.date_debut <= weekEndStr && a.date_fin >= weekStartStr,
+    );
+    const assignedIds = new Set(assignsWeek.map((a) => a.employe_id));
+    const interim = employes.filter(
+      (e) =>
+        (e.type_contrat === "Interim" || e.type_contrat === "Independant") &&
+        assignedIds.has(e.id),
+    );
+
+    const weekOpts: BuildOpts = {
+      ...rest,
+      employes,
+      assignations: assignsWeek,
+      absences: absencesWeek,
+      weekStart,
+    };
+
+    XLSX.utils.book_append_sheet(
+      wb,
+      buildEmployeSheet("CDI / CDD", cdiCdd, weekOpts),
+      `S${weekNum} CDI-CDD`,
+    );
+    XLSX.utils.book_append_sheet(
+      wb,
+      buildEmployeSheet("Intérim / Indép.", interim, weekOpts),
+      `S${weekNum} Intérim`,
+    );
+    XLSX.utils.book_append_sheet(wb, buildSyntheseSheet(weekOpts), `S${weekNum} Synthèse`);
+    XLSX.utils.book_append_sheet(
+      wb,
+      buildHeuresEmployeSheet(cdiCdd, weekOpts),
+      `S${weekNum} Heures`,
+    );
+  }
+
+  const first = weekStarts[0];
+  const last = weekStarts[weekStarts.length - 1];
+  const filename =
+    weekStarts.length === 1
+      ? `planning-S${format(first, "II")}-${format(first, "yyyy-MM-dd")}.xlsx`
+      : `planning-S${format(first, "II")}-a-S${format(last, "II")}-${format(first, "yyyy-MM-dd")}.xlsx`;
   XLSX.writeFile(wb, filename);
 }
