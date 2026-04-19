@@ -27,7 +27,7 @@ function PlanningPage() {
   const [filterAffaire, setFilterAffaire] = useState<Set<string | number>>(new Set());
   const [filterMetier, setFilterMetier] = useState<Set<string | number>>(new Set());
 
-  const { metiers, employes, affaires, assignations, consommation, loading, error, refresh } =
+  const { metiers, employes, affaires, assignations, consommation, absences, loading, error, refresh } =
     usePlanningData(weekStart, weekEnd);
 
   const employesCDI = useMemo(
@@ -140,6 +140,7 @@ function PlanningPage() {
                 affaires={affaires}
                 assignations={assignations}
                 consommation={consommation}
+                absences={absences}
                 filterAffaireIds={filterAffaireStr}
                 filterMetierIds={filterMetierNum}
                 emptyMessage="Aucun employé CDI/CDD actif."
@@ -155,6 +156,7 @@ function PlanningPage() {
                 affaires={affaires}
                 assignations={assignations}
                 consommation={consommation}
+                absences={absences}
                 filterAffaireIds={filterAffaireStr}
                 filterMetierIds={filterMetierNum}
                 emptyMessage="Aucun employé intérimaire / indépendant actif."
