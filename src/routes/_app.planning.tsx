@@ -200,63 +200,65 @@ function PlanningPage() {
             <Loader2 className="h-6 w-6 animate-spin text-primary" />
           </div>
         ) : (
-          <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
-            <TabsList>
-              <TabsTrigger value="cdi">
-                CDI / CDD <span className="ml-1.5 text-[10px] opacity-60">({employesCDI.length})</span>
-              </TabsTrigger>
-              <TabsTrigger value="interim">
-                Intérim / Indép. <span className="ml-1.5 text-[10px] opacity-60">({employesInterim.length})</span>
-              </TabsTrigger>
-              <TabsTrigger value="synthese">Synthèse chantier</TabsTrigger>
-            </TabsList>
+          <div ref={exportRef}>
+            <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
+              <TabsList>
+                <TabsTrigger value="cdi">
+                  CDI / CDD <span className="ml-1.5 text-[10px] opacity-60">({employesCDI.length})</span>
+                </TabsTrigger>
+                <TabsTrigger value="interim">
+                  Intérim / Indép. <span className="ml-1.5 text-[10px] opacity-60">({employesInterim.length})</span>
+                </TabsTrigger>
+                <TabsTrigger value="synthese">Synthèse chantier</TabsTrigger>
+              </TabsList>
 
-            <TabsContent value="cdi" className="mt-4">
-              <PlanningGrid
-                weekStart={weekStart}
-                employes={employesCDI}
-                metiers={metiers}
-                affaires={affaires}
-                assignations={assignations}
-                consommation={consommation}
-                absences={absences}
-                filterAffaireIds={filterAffaireStr}
-                filterMetierIds={filterMetierNum}
-                showWeekend={showWeekend}
-                emptyMessage="Aucun employé CDI/CDD actif."
-                onChanged={refresh}
-              />
-            </TabsContent>
+              <TabsContent value="cdi" className="mt-4">
+                <PlanningGrid
+                  weekStart={weekStart}
+                  employes={employesCDI}
+                  metiers={metiers}
+                  affaires={affaires}
+                  assignations={assignations}
+                  consommation={consommation}
+                  absences={absences}
+                  filterAffaireIds={filterAffaireStr}
+                  filterMetierIds={filterMetierNum}
+                  showWeekend={showWeekend}
+                  emptyMessage="Aucun employé CDI/CDD actif."
+                  onChanged={refresh}
+                />
+              </TabsContent>
 
-            <TabsContent value="interim" className="mt-4">
-              <PlanningGrid
-                weekStart={weekStart}
-                employes={employesInterim}
-                metiers={metiers}
-                affaires={affaires}
-                assignations={assignations}
-                consommation={consommation}
-                absences={absences}
-                filterAffaireIds={filterAffaireStr}
-                filterMetierIds={filterMetierNum}
-                showWeekend={showWeekend}
-                emptyMessage="Aucun employé intérimaire / indépendant actif."
-                onChanged={refresh}
-              />
-            </TabsContent>
+              <TabsContent value="interim" className="mt-4">
+                <PlanningGrid
+                  weekStart={weekStart}
+                  employes={employesInterim}
+                  metiers={metiers}
+                  affaires={affaires}
+                  assignations={assignations}
+                  consommation={consommation}
+                  absences={absences}
+                  filterAffaireIds={filterAffaireStr}
+                  filterMetierIds={filterMetierNum}
+                  showWeekend={showWeekend}
+                  emptyMessage="Aucun employé intérimaire / indépendant actif."
+                  onChanged={refresh}
+                />
+              </TabsContent>
 
-            <TabsContent value="synthese" className="mt-4">
-              <PlanningSynthese
-                weekStart={weekStart}
-                affaires={affaires}
-                employes={employes}
-                metiers={metiers}
-                assignations={assignations}
-                consommation={consommation}
-                onSelectAffaire={handleSelectAffaireFromSynthese}
-              />
-            </TabsContent>
-          </Tabs>
+              <TabsContent value="synthese" className="mt-4">
+                <PlanningSynthese
+                  weekStart={weekStart}
+                  affaires={affaires}
+                  employes={employes}
+                  metiers={metiers}
+                  assignations={assignations}
+                  consommation={consommation}
+                  onSelectAffaire={handleSelectAffaireFromSynthese}
+                />
+              </TabsContent>
+            </Tabs>
+          </div>
         )}
       </div>
 
