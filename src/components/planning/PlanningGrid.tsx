@@ -305,6 +305,7 @@ export function PlanningGrid({
   }
 
   return (
+    <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
     <TooltipProvider delayDuration={200}>
       {/* Hint multi-sélection (toujours visible en haut, discret) */}
       {!readonly && selected.size === 0 && (
