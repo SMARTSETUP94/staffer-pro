@@ -15,6 +15,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useNotifications } from "@/hooks/use-notifications";
@@ -88,7 +89,9 @@ function endOfWeek(d: Date) {
 function DashboardPage() {
   const { unreadCount } = useNotifications();
   const [loading, setLoading] = useState(true);
-  const [chantiersSemaineProchaine, setChantiersSemaineProchaine] = useState(0);
+  const [chantiersSemaineProchaine, setChantiersSemaineProchaine] = useState<
+    { id: string; numero: string; nom: string }[]
+  >([]);
   const [heuresSemaine, setHeuresSemaine] = useState(0);
   const [evenementsProches, setEvenementsProches] = useState<AffaireEvenement[]>([]);
   const [depassements, setDepassements] = useState<AffaireDepassement[]>([]);
@@ -121,7 +124,7 @@ function DashboardPage() {
       ] = await Promise.all([
         supabase
           .from("assignations")
-          .select("affaire_id")
+          .select("affaire_id, affaires:affaire_id(id, numero, nom)")
           .gte("date", nextWeekStart)
           .lte("date", nextWeekEnd),
         supabase.from("assignations").select("heures").gte("date", weekStart).lte("date", weekEnd),
@@ -147,10 +150,16 @@ function DashboardPage() {
 
       if (cancelled) return;
 
-      const distinctChantiers = new Set(
-        (chantiersNextRes.data ?? []).map((r) => r.affaire_id as string),
+      const chantiersMap = new Map<string, { id: string; numero: string; nom: string }>();
+      for (const r of (chantiersNextRes.data ?? []) as any[]) {
+        const aff = r.affaires;
+        if (aff && !chantiersMap.has(aff.id)) {
+          chantiersMap.set(aff.id, { id: aff.id, numero: aff.numero, nom: aff.nom });
+        }
+      }
+      setChantiersSemaineProchaine(
+        Array.from(chantiersMap.values()).sort((a, b) => a.numero.localeCompare(b.numero)),
       );
-      setChantiersSemaineProchaine(distinctChantiers.size);
       setHeuresSemaine(
         (heuresWeekRes.data ?? []).reduce((acc, r) => acc + Number(r.heures ?? 0), 0),
       );
@@ -265,7 +274,42 @@ function DashboardPage() {
 
       {/* KPIs scalaires */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <KpiCard icon={Building2} label="Chantiers staffés (S+1)" value={chantiersSemaineProchaine} to="/planning" />
+        <TooltipProvider delayDuration={150}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div>
+                <KpiCard
+                  icon={Building2}
+                  label="Chantiers staffés (S+1)"
+                  value={chantiersSemaineProchaine.length}
+                  to="/planning"
+                />
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" align="start" className="max-w-xs">
+              {chantiersSemaineProchaine.length === 0 ? (
+                <p className="text-xs">Aucun chantier staffé la semaine prochaine</p>
+              ) : (
+                <div className="space-y-1">
+                  <p className="text-xs font-semibold">Chantiers concernés</p>
+                  <ul className="space-y-0.5 text-xs">
+                    {chantiersSemaineProchaine.slice(0, 12).map((c) => (
+                      <li key={c.id} className="truncate">
+                        <span className="font-medium">{c.numero}</span> — {c.nom}
+                      </li>
+                    ))}
+                    {chantiersSemaineProchaine.length > 12 && (
+                      <li className="italic opacity-70">
+                        + {chantiersSemaineProchaine.length - 12} autre
+                        {chantiersSemaineProchaine.length - 12 > 1 ? "s" : ""}…
+                      </li>
+                    )}
+                  </ul>
+                </div>
+              )}
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
         <KpiCard icon={Calendar} label="Heures cette semaine" value={`${heuresSemaine}h`} to="/planning" />
         <KpiCard icon={ClipboardCheck} label="Heures à valider" value={heuresAValider.length} to="/validation-heures" emphasize={heuresAValider.length > 0} />
       </div>
