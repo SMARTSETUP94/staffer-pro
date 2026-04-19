@@ -79,6 +79,8 @@ export function PlanningGrid({
   emptyMessage,
   onChanged,
   readonly,
+  openAssignationFor,
+  onAutoOpenConsumed,
 }: Props) {
   const navigate = useNavigate();
   const days = useMemo(
