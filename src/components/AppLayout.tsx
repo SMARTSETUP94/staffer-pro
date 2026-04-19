@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
 import { PreviewBanner } from "./PreviewBanner";
+import { NotificationBell } from "./NotificationBell";
 import { Toaster } from "@/components/ui/sonner";
 
 export function AppLayout({ children }: { children: ReactNode }) {
@@ -14,6 +15,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
           <header className="flex h-14 items-center gap-3 border-b border-border bg-background/80 px-4 backdrop-blur">
             <SidebarTrigger className="text-foreground" />
             <div className="ml-auto flex items-center gap-2">
+              <NotificationBell />
               <span className="overline hidden sm:inline-block">— Studio</span>
             </div>
           </header>
