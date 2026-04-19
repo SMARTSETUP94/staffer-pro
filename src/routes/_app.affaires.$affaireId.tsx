@@ -32,8 +32,24 @@ function AffaireDetailLayout() {
   const { affaireId } = Route.useParams();
   const routerState = useRouterState();
   const path = routerState.location.pathname;
+  const { isAdmin, isAdminOrChef } = useAuth();
   const [affaire, setAffaire] = useState<AffaireDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [confirmAction, setConfirmAction] = useState<"close" | "reopen" | null>(null);
+  const [savingStatut, setSavingStatut] = useState(false);
+
+  const reload = () => {
+    setLoading(true);
+    supabase
+      .from("affaires")
+      .select("id, numero, nom, client, lieu, statut, date_debut, date_fin_prevue, notes")
+      .eq("id", affaireId)
+      .maybeSingle()
+      .then(({ data }) => {
+        setAffaire(data as AffaireDetail | null);
+        setLoading(false);
+      });
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -50,6 +66,22 @@ function AffaireDetailLayout() {
       });
     return () => { cancelled = true; };
   }, [affaireId]);
+
+  const handleStatut = async () => {
+    if (!affaire || !confirmAction) return;
+    setSavingStatut(true);
+    const newStatut = confirmAction === "close" ? "termine" : "en_cours";
+    const { error } = await supabase
+      .from("affaires").update({ statut: newStatut }).eq("id", affaire.id);
+    setSavingStatut(false);
+    if (error) {
+      toast.error("Action impossible", { description: error.message });
+    } else {
+      toast.success(confirmAction === "close" ? "Affaire clôturée" : "Affaire rouverte");
+      setConfirmAction(null);
+      reload();
+    }
+  };
 
   if (loading) {
     return (
