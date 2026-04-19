@@ -511,5 +511,31 @@ export function PlanningGrid({
         }}
       />
     </TooltipProvider>
+    </DndContext>
+  );
+}
+
+interface DroppableCellProps {
+  employeId: string;
+  date: string;
+  children: React.ReactNode;
+  className?: string;
+  onClick: (e: React.MouseEvent) => void;
+  title?: string;
+}
+
+function DroppableCell({ employeId, date, children, className, onClick, title }: DroppableCellProps) {
+  const { setNodeRef, isOver } = useDroppable({
+    id: `cell::${employeId}::${date}`,
+  });
+  return (
+    <td
+      ref={setNodeRef}
+      className={cn(className, isOver && "bg-primary/20 ring-2 ring-inset ring-primary/60")}
+      onClick={onClick}
+      title={title}
+    >
+      {children}
+    </td>
   );
 }
