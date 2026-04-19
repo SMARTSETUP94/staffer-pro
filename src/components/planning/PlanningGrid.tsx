@@ -49,6 +49,12 @@ export function PlanningGrid({
   const metiersById = useMemo(() => new Map(metiers.map((m) => [m.id, m])), [metiers]);
   const affairesById = useMemo(() => new Map(affaires.map((a) => [a.id, a])), [affaires]);
 
+  // IDs des employés ayant au moins une assignation sur la semaine affichée
+  const assignedEmployeIds = useMemo(
+    () => new Set(assignations.map((a) => a.employe_id)),
+    [assignations],
+  );
+
   const filteredAssignations = useMemo(() => {
     return assignations.filter((a) => {
       if (filterAffaireIds && filterAffaireIds.size > 0 && !filterAffaireIds.has(a.affaire_id)) return false;
@@ -133,8 +139,16 @@ export function PlanningGrid({
                 {emps.map((emp) => (
                   <tr key={emp.id} className="hover:bg-muted/30">
                     <td className="sticky left-0 z-10 border-b bg-card p-2 hover:bg-muted/30">
-                      <div className="font-semibold">
-                        {emp.prenom} {emp.nom}
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-semibold">
+                          {emp.prenom} {emp.nom}
+                        </span>
+                        {(emp.type_contrat === "CDI" || emp.type_contrat === "CDD") &&
+                          !assignedEmployeIds.has(emp.id) && (
+                            <span className="rounded-sm border border-success/40 bg-success/10 px-1 py-px text-[9px] font-medium uppercase tracking-wide text-success">
+                              Disponible
+                            </span>
+                          )}
                       </div>
                       {emp.type_contrat !== "CDI" && (
                         <div className="mt-0.5 text-[10px] text-muted-foreground">
