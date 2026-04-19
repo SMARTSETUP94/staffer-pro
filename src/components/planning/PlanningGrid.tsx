@@ -236,23 +236,20 @@ export function PlanningGrid({
     if (!overId.startsWith("cell::")) return;
     const [, toEmployeId, toDate] = overId.split("::");
 
-    // Pas de move sur la même cellule (sauf si Alt = duplication explicite)
-    const altPressed =
-      (event.activatorEvent as MouseEvent | KeyboardEvent | undefined)?.altKey === true ||
-      (event as unknown as { activatorEvent?: { altKey?: boolean } }).activatorEvent?.altKey === true;
+    const altPressed = (event.activatorEvent as MouseEvent | undefined)?.altKey === true;
 
     const sameCell = toEmployeId === payload.fromEmployeId && toDate === payload.fromDate;
     if (sameCell && !altPressed) return;
 
-    // Cellule cible : occupée par une autre affaire ?
+    // Cellule cible : occupée ?
     const targetExisting = assignations.filter(
       (a) => a.employe_id === toEmployeId && a.date === toDate,
     );
-    // Si on déplace (pas duplique), on ignore les assignations qu'on s'apprête à bouger
+    // En déplacement, on ignore les rangs qu'on s'apprête à bouger
     const targetSlots = new Set(
       targetExisting
         .filter((a) => altPressed || !payload.assignationIds.includes(a.id))
-        .map((a) => a.demi_journee),
+        .map((a) => a.demi_journee as string),
     );
     if (slotsConflict(targetSlots, payload.slot)) {
       toast.error("Cellule occupée — impossible de déposer ici");
@@ -268,18 +265,15 @@ export function PlanningGrid({
 
     try {
       if (altPressed) {
-        // Duplication : INSERT clones
+        // Duplication : INSERT clones (champs essentiels uniquement)
         const sourceRows = assignations.filter((a) => payload.assignationIds.includes(a.id));
         const inserts = sourceRows.map((a) => ({
           affaire_id: a.affaire_id,
-          devis_id: a.devis_id,
           employe_id: toEmployeId,
           metier_id: a.metier_id,
           date: toDate,
           demi_journee: a.demi_journee,
           heures: a.heures,
-          heure_debut: a.heure_debut,
-          heure_fin: a.heure_fin,
           notes: a.notes,
         }));
         const { error } = await supabase.from("assignations").insert(inserts);
