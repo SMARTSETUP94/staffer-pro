@@ -217,7 +217,7 @@ export function PlanningGrid({
     <TooltipProvider delayDuration={200}>
       {/* Hint multi-sélection (toujours visible en haut, discret) */}
       {!readonly && selected.size === 0 && (
-        <div className="mb-2 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+        <div data-export-ignore="true" className="mb-2 flex items-center gap-1.5 text-[11px] text-muted-foreground">
           <kbd className="rounded border bg-muted px-1.5 py-0.5 font-mono text-[10px]">
             {typeof navigator !== "undefined" && navigator.platform.toLowerCase().includes("mac")
               ? "⌘"
@@ -229,7 +229,7 @@ export function PlanningGrid({
 
       {/* Barre flottante sélection multiple */}
       {selected.size > 0 && !readonly && (
-        <div className="sticky top-2 z-20 mb-3 flex items-center justify-between rounded-lg border-2 border-primary bg-primary/10 px-3 py-2 shadow-md">
+        <div data-export-ignore="true" className="sticky top-2 z-20 mb-3 flex items-center justify-between rounded-lg border-2 border-primary bg-primary/10 px-3 py-2 shadow-md">
           <span className="text-sm font-semibold">
             {selected.size} cellule{selected.size > 1 ? "s" : ""} sélectionnée{selected.size > 1 ? "s" : ""}
           </span>
@@ -244,7 +244,7 @@ export function PlanningGrid({
         </div>
       )}
 
-      <div className="overflow-x-auto rounded-lg border bg-card">
+      <div data-planning-grid-export className="overflow-x-auto rounded-lg border bg-card">
         <table className="w-full min-w-[900px] border-collapse text-xs">
           <thead className="bg-muted/50">
             <tr>
