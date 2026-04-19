@@ -371,18 +371,29 @@ export function PlanningGrid({
                   <tr key={emp.id} className="hover:bg-muted/30">
                     <td className="sticky left-0 z-10 border-b bg-card p-2 hover:bg-muted/30">
                       <div className="flex items-center gap-1.5">
-                        <span className="font-semibold">
-                          {emp.prenom} {emp.nom}
-                        </span>
                         {(emp.type_contrat === "CDI" || emp.type_contrat === "CDD") &&
                           !assignedEmployeIds.has(emp.id) && (
-                            <span className="rounded-sm border border-success/40 bg-success/10 px-1 py-px text-[9px] font-medium uppercase tracking-wide text-success">
-                              Disponible
-                            </span>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span
+                                  className="h-1.5 w-1.5 shrink-0 rounded-full bg-success"
+                                  aria-label="Disponible cette semaine"
+                                />
+                              </TooltipTrigger>
+                              <TooltipContent side="right" className="text-xs">
+                                Disponible cette semaine
+                              </TooltipContent>
+                            </Tooltip>
                           )}
+                        <span
+                          className="truncate font-semibold"
+                          title={`${emp.prenom} ${emp.nom}`}
+                        >
+                          {emp.prenom} {emp.nom}
+                        </span>
                       </div>
                       {emp.type_contrat !== "CDI" && (
-                        <div className="mt-0.5 text-[10px] text-muted-foreground">
+                        <div className="mt-0.5 truncate text-[11px] text-muted-foreground">
                           {emp.sous_type_contrat || emp.type_contrat}
                           {emp.agence_interim && ` · ${emp.agence_interim}`}
                         </div>
