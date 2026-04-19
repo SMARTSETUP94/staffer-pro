@@ -337,51 +337,69 @@ export type Database = {
       employes: {
         Row: {
           actif: boolean
+          adresse: string | null
           agence_interim: string | null
           created_at: string
           date_entree: string | null
+          date_naissance: string | null
           date_sortie: string | null
           email: string | null
           id: string
+          is_apprenti: boolean
           metier_principal_id: number
+          mobile: string | null
           nom: string
+          non_staffing: boolean
           notes: string | null
           prenom: string
           profile_id: string | null
+          sous_type_contrat: string | null
           telephone: string | null
           type_contrat: Database["public"]["Enums"]["contrat_type"]
           updated_at: string
         }
         Insert: {
           actif?: boolean
+          adresse?: string | null
           agence_interim?: string | null
           created_at?: string
           date_entree?: string | null
+          date_naissance?: string | null
           date_sortie?: string | null
           email?: string | null
           id?: string
+          is_apprenti?: boolean
           metier_principal_id: number
+          mobile?: string | null
           nom: string
+          non_staffing?: boolean
           notes?: string | null
           prenom: string
           profile_id?: string | null
+          sous_type_contrat?: string | null
           telephone?: string | null
           type_contrat?: Database["public"]["Enums"]["contrat_type"]
           updated_at?: string
         }
         Update: {
           actif?: boolean
+          adresse?: string | null
           agence_interim?: string | null
           created_at?: string
           date_entree?: string | null
+          date_naissance?: string | null
           date_sortie?: string | null
           email?: string | null
           id?: string
+          is_apprenti?: boolean
           metier_principal_id?: number
+          mobile?: string | null
           nom?: string
+          non_staffing?: boolean
           notes?: string | null
           prenom?: string
           profile_id?: string | null
+          sous_type_contrat?: string | null
           telephone?: string | null
           type_contrat?: Database["public"]["Enums"]["contrat_type"]
           updated_at?: string
@@ -638,7 +656,7 @@ export type Database = {
     Enums: {
       affaire_statut: "prospect" | "en_cours" | "termine" | "annule"
       app_role: "admin" | "chef_chantier" | "employe"
-      contrat_type: "CDI" | "Interim"
+      contrat_type: "CDI" | "Interim" | "CDD" | "Independant"
       demi_journee_type: "AM" | "PM" | "JOURNEE"
       devis_statut: "brouillon" | "signe" | "facture"
       heures_statut: "brouillon" | "soumis" | "valide" | "rejete"
@@ -771,7 +789,7 @@ export const Constants = {
     Enums: {
       affaire_statut: ["prospect", "en_cours", "termine", "annule"],
       app_role: ["admin", "chef_chantier", "employe"],
-      contrat_type: ["CDI", "Interim"],
+      contrat_type: ["CDI", "Interim", "CDD", "Independant"],
       demi_journee_type: ["AM", "PM", "JOURNEE"],
       devis_statut: ["brouillon", "signe", "facture"],
       heures_statut: ["brouillon", "soumis", "valide", "rejete"],
