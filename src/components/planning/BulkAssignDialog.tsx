@@ -21,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { AffaireCombobox } from "./AffaireCombobox";
 import { supabase } from "@/integrations/supabase/client";
 import type { Affaire, Employe, Metier } from "@/hooks/use-planning-data";
 
