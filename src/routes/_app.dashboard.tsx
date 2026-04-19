@@ -5,7 +5,6 @@ import {
   CalendarOff,
   ClipboardCheck,
   TrendingUp,
-  Users,
   Calendar,
   AlertTriangle,
   Loader2,
@@ -90,7 +89,7 @@ function DashboardPage() {
   const { unreadCount } = useNotifications();
   const [loading, setLoading] = useState(true);
   const [affairesActives, setAffairesActives] = useState(0);
-  const [employesActifs, setEmployesActifs] = useState(0);
+  
   const [heuresSemaine, setHeuresSemaine] = useState(0);
   const [evenementsProches, setEvenementsProches] = useState<AffaireEvenement[]>([]);
   const [depassements, setDepassements] = useState<AffaireDepassement[]>([]);
@@ -110,7 +109,6 @@ function DashboardPage() {
 
       const [
         affairesRes,
-        employesRes,
         heuresWeekRes,
         montagesRes,
         margesRes,
@@ -118,7 +116,6 @@ function DashboardPage() {
         absRes,
       ] = await Promise.all([
         supabase.from("affaires").select("id", { count: "exact", head: true }).eq("statut", "en_cours"),
-        supabase.from("employes").select("id", { count: "exact", head: true }).eq("actif", true).eq("non_staffing", false),
         supabase.from("assignations").select("heures").gte("date", weekStart).lte("date", weekEnd),
         supabase
           .from("affaires")
@@ -143,7 +140,6 @@ function DashboardPage() {
       if (cancelled) return;
 
       setAffairesActives(affairesRes.count ?? 0);
-      setEmployesActifs(employesRes.count ?? 0);
       setHeuresSemaine(
         (heuresWeekRes.data ?? []).reduce((acc, r) => acc + Number(r.heures ?? 0), 0),
       );
@@ -257,9 +253,8 @@ function DashboardPage() {
       )}
 
       {/* KPIs scalaires */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <KpiCard icon={Building2} label="Affaires actives" value={affairesActives} to="/affaires" />
-        <KpiCard icon={Users} label="Employés actifs" value={employesActifs} to="/employes" />
         <KpiCard icon={Calendar} label="Heures cette semaine" value={`${heuresSemaine}h`} to="/planning" />
         <KpiCard icon={ClipboardCheck} label="Heures à valider" value={heuresAValider.length} to="/validation-heures" emphasize={heuresAValider.length > 0} />
       </div>
