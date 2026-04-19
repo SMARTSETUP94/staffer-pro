@@ -9,11 +9,13 @@ export function AppLayout({ children }: { children: ReactNode }) {
       <div className="flex min-h-screen w-full bg-background">
         <AppSidebar />
         <div className="flex flex-1 flex-col">
-          <header className="flex h-12 items-center gap-2 border-b border-border bg-card px-3">
-            <SidebarTrigger />
-            <div className="ml-auto" />
+          <header className="flex h-14 items-center gap-3 border-b border-border bg-background/80 px-4 backdrop-blur">
+            <SidebarTrigger className="text-foreground" />
+            <div className="ml-auto flex items-center gap-2">
+              <span className="overline hidden sm:inline-block">— Studio</span>
+            </div>
           </header>
-          <main className="flex-1 overflow-auto">{children}</main>
+          <main className="flex-1 overflow-auto bg-background">{children}</main>
         </div>
       </div>
       <Toaster richColors position="top-right" />
