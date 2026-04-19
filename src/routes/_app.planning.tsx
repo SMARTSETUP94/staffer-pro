@@ -254,6 +254,7 @@ function PlanningPage() {
                   metiers={metiers}
                   assignations={assignations}
                   consommation={consommation}
+                  chefsById={chefsById}
                   onSelectAffaire={handleSelectAffaireFromSynthese}
                 />
               </TabsContent>
