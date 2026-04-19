@@ -130,6 +130,44 @@ function ParametresPage() {
     loadUsers();
   }
 
+  async function handleInvite() {
+    if (!inviteEmail.trim()) {
+      toast.error("Email requis");
+      return;
+    }
+    if (inviteRoles.length === 0) {
+      toast.error("Sélectionnez au moins un rôle");
+      return;
+    }
+    setInviting(true);
+    try {
+      await inviteUser({
+        data: {
+          email: inviteEmail.trim(),
+          fullName: inviteFullName.trim() || undefined,
+          roles: inviteRoles,
+        },
+      });
+      toast.success(`Invitation envoyée à ${inviteEmail}`);
+      setInviteOpen(false);
+      setInviteEmail("");
+      setInviteFullName("");
+      setInviteRoles(["employe"]);
+      loadUsers();
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Échec de l'invitation";
+      toast.error(msg);
+    } finally {
+      setInviting(false);
+    }
+  }
+
+  function toggleInviteRole(role: AppRole) {
+    setInviteRoles((prev) =>
+      prev.includes(role) ? prev.filter((r) => r !== role) : [...prev, role],
+    );
+  }
+
   if (loading || !isAdmin) {
     return (
       <div className="flex h-full items-center justify-center">
@@ -147,14 +185,87 @@ function ParametresPage() {
 
       <Card>
         <CardHeader>
-          <div className="flex items-center gap-2">
-            <UserCog className="h-5 w-5 text-primary" />
-            <CardTitle>Utilisateurs &amp; rôles</CardTitle>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <UserCog className="h-5 w-5 text-primary" />
+                <CardTitle>Utilisateurs &amp; rôles</CardTitle>
+              </div>
+              <CardDescription className="mt-1.5">
+                Invitez de nouveaux utilisateurs et gérez leurs rôles. Un utilisateur peut cumuler plusieurs rôles.
+              </CardDescription>
+            </div>
+            <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
+              <DialogTrigger asChild>
+                <Button size="sm" className="gap-1.5 shrink-0">
+                  <UserPlus className="h-4 w-4" />
+                  Inviter un utilisateur
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <Mail className="h-5 w-5 text-primary" />
+                    Inviter un utilisateur
+                  </DialogTitle>
+                  <DialogDescription>
+                    L'utilisateur recevra un email d'invitation pour définir son mot de passe et accéder à l'application.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-2">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="invite-email">Email *</Label>
+                    <Input
+                      id="invite-email"
+                      type="email"
+                      placeholder="prenom.nom@exemple.fr"
+                      value={inviteEmail}
+                      onChange={(e) => setInviteEmail(e.target.value)}
+                      autoComplete="off"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="invite-name">Nom complet (optionnel)</Label>
+                    <Input
+                      id="invite-name"
+                      placeholder="Prénom Nom"
+                      value={inviteFullName}
+                      onChange={(e) => setInviteFullName(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Rôles à attribuer *</Label>
+                    <div className="space-y-2 rounded-md border p-3">
+                      {(["admin", "chef_chantier", "employe"] as AppRole[]).map((r) => (
+                        <label
+                          key={r}
+                          className="flex items-center gap-2 cursor-pointer text-sm"
+                        >
+                          <Checkbox
+                            checked={inviteRoles.includes(r)}
+                            onCheckedChange={() => toggleInviteRole(r)}
+                          />
+                          <span className="flex items-center gap-1.5">
+                            {r === "admin" && <Shield className="h-3.5 w-3.5 text-primary" />}
+                            {ROLE_LABEL[r]}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setInviteOpen(false)} disabled={inviting}>
+                    Annuler
+                  </Button>
+                  <Button onClick={handleInvite} disabled={inviting}>
+                    {inviting && <Loader2 className="h-4 w-4 animate-spin mr-1.5" />}
+                    Envoyer l'invitation
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
-          <CardDescription>
-            Gérez les rôles assignés à chaque utilisateur. Un utilisateur peut cumuler plusieurs rôles.
-            Le rôle <strong>Employé</strong> est attribué automatiquement à l'inscription.
-          </CardDescription>
         </CardHeader>
         <CardContent>
           {loadingUsers ? (
