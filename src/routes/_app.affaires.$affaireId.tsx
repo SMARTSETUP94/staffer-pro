@@ -131,7 +131,24 @@ function AffaireDetailLayout() {
             </span>
           </div>
         </div>
-        <StatutPill statut={affaire.statut} />
+        <div className="flex flex-col items-end gap-2">
+          <StatutPill statut={affaire.statut} />
+          {isAdminOrChef && affaire.statut !== "annule" && (
+            affaire.statut === "termine" ? (
+              isAdmin && (
+                <Button size="sm" variant="outline" className="rounded-xl"
+                  onClick={() => setConfirmAction("reopen")}>
+                  <Unlock className="mr-1.5 h-3.5 w-3.5" /> Rouvrir
+                </Button>
+              )
+            ) : (
+              <Button size="sm" variant="outline" className="rounded-xl"
+                onClick={() => setConfirmAction("close")}>
+                <Lock className="mr-1.5 h-3.5 w-3.5" /> Clôturer
+              </Button>
+            )
+          )}
+        </div>
       </div>
 
       {/* Onglets */}
