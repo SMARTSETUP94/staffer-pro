@@ -56,7 +56,16 @@ interface EmployeOpt {
   type_contrat: "CDI" | "Interim" | "CDD" | "Independant";
 }
 
+interface AbsencesSearch {
+  employe?: string;
+  date?: string;
+}
+
 export const Route = createFileRoute("/_app/absences")({
+  validateSearch: (search: Record<string, unknown>): AbsencesSearch => ({
+    employe: typeof search.employe === "string" ? search.employe : undefined,
+    date: typeof search.date === "string" ? search.date : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Absences — Setup Paris" },
@@ -67,6 +76,8 @@ export const Route = createFileRoute("/_app/absences")({
 });
 
 function AbsencesPage() {
+  const search = Route.useSearch();
+  const navigate = Route.useNavigate();
   const [rows, setRows] = useState<AbsenceRow[]>([]);
   const [employes, setEmployes] = useState<EmployeOpt[]>([]);
   const [loading, setLoading] = useState(true);
@@ -74,6 +85,7 @@ function AbsencesPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [filter, setFilter] = useState<"all" | "future" | "pending">("future");
+  const [prefillHandled, setPrefillHandled] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -99,6 +111,31 @@ function AbsencesPage() {
   useEffect(() => {
     load();
   }, []);
+
+  // Pré-remplissage depuis ?employe=...&date=... (raccourci depuis le planning)
+  useEffect(() => {
+    if (prefillHandled || loading) return;
+    if (!search.employe && !search.date) return;
+    const emp = employes.find((x) => x.id === search.employe);
+    if (!emp) return; // attendre que les employés soient chargés (ou employé inconnu)
+    const today = format(new Date(), "yyyy-MM-dd");
+    const day = search.date ?? today;
+    setEditing({
+      id: "",
+      employe_id: emp.id,
+      date_debut: day,
+      date_fin: day,
+      type: "conges",
+      demi_journee: null,
+      motif: "",
+      valide: true,
+      employes: { prenom: emp.prenom, nom: emp.nom },
+    });
+    setDialogOpen(true);
+    setPrefillHandled(true);
+    // Nettoie les query params pour éviter de re-déclencher
+    navigate({ search: {}, replace: true });
+  }, [employes, loading, search.employe, search.date, prefillHandled, navigate]);
 
   const filtered = useMemo(() => {
     const today = format(new Date(), "yyyy-MM-dd");

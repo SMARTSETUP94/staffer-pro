@@ -1,7 +1,14 @@
 import { Fragment as FragmentGroup, useMemo, useState } from "react";
 import { addDays, format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { AlertTriangle, X } from "lucide-react";
+import { AlertTriangle, CalendarOff, X } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu";
 import {
   DndContext,
   PointerSensor,
@@ -68,6 +75,7 @@ export function PlanningGrid({
   onChanged,
   readonly,
 }: Props) {
+  const navigate = useNavigate();
   const days = useMemo(
     () => Array.from({ length: showWeekend ? 7 : 5 }, (_, i) => addDays(weekStart, i)),
     [weekStart.getTime(), showWeekend],
@@ -445,7 +453,10 @@ export function PlanningGrid({
                         );
                       }
 
-                      return (
+                      const canDeclareAbsence =
+                        !readonly && (emp.type_contrat === "CDI" || emp.type_contrat === "CDD");
+
+                      const cellNode = (
                         <DroppableCell
                           key={d.toISOString()}
                           employeId={emp.id}
@@ -463,7 +474,8 @@ export function PlanningGrid({
                               ? undefined
                               : conflict
                                 ? `⚠ Conflit : ${conflict.detail}`
-                                : "Cliquer pour éditer · Ctrl+click pour sélection multiple · Glisser-déposer pour bouger (Alt = dupliquer)"
+                                : "Cliquer pour éditer · Ctrl+click pour sélection multiple · Glisser-déposer pour bouger (Alt = dupliquer)" +
+                                  (canDeclareAbsence ? " · Clic droit pour déclarer une absence" : "")
                           }
                         >
                           {conflict && (
@@ -488,6 +500,30 @@ export function PlanningGrid({
                             dnd={readonly ? undefined : { employeId: emp.id, date: dayStr }}
                           />
                         </DroppableCell>
+                      );
+
+                      if (!canDeclareAbsence) return cellNode;
+
+                      return (
+                        <ContextMenu key={d.toISOString()}>
+                          <ContextMenuTrigger asChild>{cellNode}</ContextMenuTrigger>
+                          <ContextMenuContent className="w-56">
+                            <ContextMenuItem
+                              onSelect={() =>
+                                navigate({
+                                  to: "/absences",
+                                  search: { employe: emp.id, date: dayStr } as never,
+                                })
+                              }
+                            >
+                              <CalendarOff className="mr-2 h-4 w-4" />
+                              Déclarer une absence
+                              <span className="ml-auto text-[10px] text-muted-foreground">
+                                {format(d, "dd/MM")}
+                              </span>
+                            </ContextMenuItem>
+                          </ContextMenuContent>
+                        </ContextMenu>
                       );
                     })}
                   </tr>
