@@ -20,6 +20,7 @@ import { Route as AppPlanningRouteImport } from './routes/_app.planning'
 import { Route as AppParametresRouteImport } from './routes/_app.parametres'
 import { Route as AppExportRouteImport } from './routes/_app.export'
 import { Route as AppEmployesRouteImport } from './routes/_app.employes'
+import { Route as AppDevisRouteImport } from './routes/_app.devis'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppAffairesRouteImport } from './routes/_app.affaires'
 import { Route as AppAbsencesRouteImport } from './routes/_app.absences'
@@ -85,6 +86,11 @@ const AppEmployesRoute = AppEmployesRouteImport.update({
   path: '/employes',
   getParentRoute: () => AppRoute,
 } as any)
+const AppDevisRoute = AppDevisRouteImport.update({
+  id: '/devis',
+  path: '/devis',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppDashboardRoute = AppDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -106,9 +112,9 @@ const AppEmployesImportRoute = AppEmployesImportRouteImport.update({
   getParentRoute: () => AppEmployesRoute,
 } as any)
 const AppDevisImportRoute = AppDevisImportRouteImport.update({
-  id: '/devis/import',
-  path: '/devis/import',
-  getParentRoute: () => AppRoute,
+  id: '/import',
+  path: '/import',
+  getParentRoute: () => AppDevisRoute,
 } as any)
 const AppAffairesAffaireIdRoute = AppAffairesAffaireIdRouteImport.update({
   id: '/$affaireId',
@@ -146,6 +152,7 @@ export interface FileRoutesByFullPath {
   '/absences': typeof AppAbsencesRoute
   '/affaires': typeof AppAffairesRouteWithChildren
   '/dashboard': typeof AppDashboardRoute
+  '/devis': typeof AppDevisRouteWithChildren
   '/employes': typeof AppEmployesRouteWithChildren
   '/export': typeof AppExportRoute
   '/parametres': typeof AppParametresRoute
@@ -168,6 +175,7 @@ export interface FileRoutesByTo {
   '/absences': typeof AppAbsencesRoute
   '/affaires': typeof AppAffairesRouteWithChildren
   '/dashboard': typeof AppDashboardRoute
+  '/devis': typeof AppDevisRouteWithChildren
   '/employes': typeof AppEmployesRouteWithChildren
   '/export': typeof AppExportRoute
   '/parametres': typeof AppParametresRoute
@@ -191,6 +199,7 @@ export interface FileRoutesById {
   '/_app/absences': typeof AppAbsencesRoute
   '/_app/affaires': typeof AppAffairesRouteWithChildren
   '/_app/dashboard': typeof AppDashboardRoute
+  '/_app/devis': typeof AppDevisRouteWithChildren
   '/_app/employes': typeof AppEmployesRouteWithChildren
   '/_app/export': typeof AppExportRoute
   '/_app/parametres': typeof AppParametresRoute
@@ -215,6 +224,7 @@ export interface FileRouteTypes {
     | '/absences'
     | '/affaires'
     | '/dashboard'
+    | '/devis'
     | '/employes'
     | '/export'
     | '/parametres'
@@ -237,6 +247,7 @@ export interface FileRouteTypes {
     | '/absences'
     | '/affaires'
     | '/dashboard'
+    | '/devis'
     | '/employes'
     | '/export'
     | '/parametres'
@@ -259,6 +270,7 @@ export interface FileRouteTypes {
     | '/_app/absences'
     | '/_app/affaires'
     | '/_app/dashboard'
+    | '/_app/devis'
     | '/_app/employes'
     | '/_app/export'
     | '/_app/parametres'
@@ -364,6 +376,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppEmployesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/devis': {
+      id: '/_app/devis'
+      path: '/devis'
+      fullPath: '/devis'
+      preLoaderRoute: typeof AppDevisRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/dashboard': {
       id: '/_app/dashboard'
       path: '/dashboard'
@@ -394,10 +413,10 @@ declare module '@tanstack/react-router' {
     }
     '/_app/devis/import': {
       id: '/_app/devis/import'
-      path: '/devis/import'
+      path: '/import'
       fullPath: '/devis/import'
       preLoaderRoute: typeof AppDevisImportRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppDevisRoute
     }
     '/_app/affaires/$affaireId': {
       id: '/_app/affaires/$affaireId'
@@ -466,6 +485,18 @@ const AppAffairesRouteWithChildren = AppAffairesRoute._addFileChildren(
   AppAffairesRouteChildren,
 )
 
+interface AppDevisRouteChildren {
+  AppDevisImportRoute: typeof AppDevisImportRoute
+}
+
+const AppDevisRouteChildren: AppDevisRouteChildren = {
+  AppDevisImportRoute: AppDevisImportRoute,
+}
+
+const AppDevisRouteWithChildren = AppDevisRoute._addFileChildren(
+  AppDevisRouteChildren,
+)
+
 interface AppEmployesRouteChildren {
   AppEmployesImportRoute: typeof AppEmployesImportRoute
 }
@@ -482,24 +513,24 @@ interface AppRouteChildren {
   AppAbsencesRoute: typeof AppAbsencesRoute
   AppAffairesRoute: typeof AppAffairesRouteWithChildren
   AppDashboardRoute: typeof AppDashboardRoute
+  AppDevisRoute: typeof AppDevisRouteWithChildren
   AppEmployesRoute: typeof AppEmployesRouteWithChildren
   AppExportRoute: typeof AppExportRoute
   AppParametresRoute: typeof AppParametresRoute
   AppPlanningRoute: typeof AppPlanningRoute
   AppValidationHeuresRoute: typeof AppValidationHeuresRoute
-  AppDevisImportRoute: typeof AppDevisImportRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
   AppAbsencesRoute: AppAbsencesRoute,
   AppAffairesRoute: AppAffairesRouteWithChildren,
   AppDashboardRoute: AppDashboardRoute,
+  AppDevisRoute: AppDevisRouteWithChildren,
   AppEmployesRoute: AppEmployesRouteWithChildren,
   AppExportRoute: AppExportRoute,
   AppParametresRoute: AppParametresRoute,
   AppPlanningRoute: AppPlanningRoute,
   AppValidationHeuresRoute: AppValidationHeuresRoute,
-  AppDevisImportRoute: AppDevisImportRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
@@ -515,3 +546,12 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
