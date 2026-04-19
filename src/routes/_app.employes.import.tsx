@@ -72,37 +72,33 @@ function EmployesImportPage() {
       const existingByNomPrenom = new Map<string, string>();
 
       if (emails.length || noms.length) {
-        const queries: Promise<unknown>[] = [];
+        const tasks: Promise<void>[] = [];
         if (emails.length) {
-          queries.push(
-            supabase
+          tasks.push((async () => {
+            const { data } = await supabase
               .from("employes")
               .select("id, email, nom, prenom, date_naissance")
-              .in("email", emails)
-              .then(({ data }) => {
-                (data ?? []).forEach((e) => {
-                  if (e.email) existingByEmail.set(e.email.toLowerCase(), e.id);
-                });
-              }),
-          );
+              .in("email", emails);
+            (data ?? []).forEach((e) => {
+              if (e.email) existingByEmail.set(e.email.toLowerCase(), e.id);
+            });
+          })());
         }
         if (noms.length) {
-          queries.push(
-            supabase
+          tasks.push((async () => {
+            const { data } = await supabase
               .from("employes")
               .select("id, nom, prenom, date_naissance")
-              .in("nom", noms)
-              .then(({ data }) => {
-                (data ?? []).forEach((e) => {
-                  const k1 = `${e.nom.toLowerCase()}|${e.prenom.toLowerCase()}|${e.date_naissance ?? ""}`;
-                  const k2 = `${e.nom.toLowerCase()}|${e.prenom.toLowerCase()}`;
-                  existingByNomPrenomDdn.set(k1, e.id);
-                  if (!existingByNomPrenom.has(k2)) existingByNomPrenom.set(k2, e.id);
-                });
-              }),
-          );
+              .in("nom", noms);
+            (data ?? []).forEach((e) => {
+              const k1 = `${e.nom.toLowerCase()}|${e.prenom.toLowerCase()}|${e.date_naissance ?? ""}`;
+              const k2 = `${e.nom.toLowerCase()}|${e.prenom.toLowerCase()}`;
+              existingByNomPrenomDdn.set(k1, e.id);
+              if (!existingByNomPrenom.has(k2)) existingByNomPrenom.set(k2, e.id);
+            });
+          })());
         }
-        await Promise.all(queries);
+        await Promise.all(tasks);
       }
 
       const states: RowState[] = parsed.map((r) => {
