@@ -71,6 +71,39 @@ export type Database = {
           },
         ]
       }
+      affaire_commentaires: {
+        Row: {
+          affaire_id: string
+          attachments: Json
+          author_id: string
+          body: string
+          created_at: string
+          id: string
+          mentions: string[]
+          updated_at: string
+        }
+        Insert: {
+          affaire_id: string
+          attachments?: Json
+          author_id: string
+          body: string
+          created_at?: string
+          id?: string
+          mentions?: string[]
+          updated_at?: string
+        }
+        Update: {
+          affaire_id?: string
+          attachments?: Json
+          author_id?: string
+          body?: string
+          created_at?: string
+          id?: string
+          mentions?: string[]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       affaires: {
         Row: {
           chef_chantier_id: string | null
