@@ -27,6 +27,8 @@ export interface Affaire {
   lieu: string | null;
   client: string | null;
   chef_chantier_id: string | null;
+  date_montage: string | null;
+  date_demontage: string | null;
 }
 
 export interface Assignation {
