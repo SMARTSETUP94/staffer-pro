@@ -68,6 +68,12 @@ export interface Absence {
   valide: boolean;
 }
 
+export interface ChefRef {
+  id: string;
+  prenom: string;
+  nom: string;
+}
+
 export interface PlanningData {
   metiers: Metier[];
   employes: Employe[];
@@ -75,6 +81,7 @@ export interface PlanningData {
   assignations: Assignation[];
   consommation: DevisConsommation[];
   absences: Absence[];
+  chefsById: Map<string, ChefRef>;
   loading: boolean;
   error: string | null;
   refresh: () => void;
@@ -87,6 +94,7 @@ export function usePlanningData(weekStart: Date, weekEnd: Date): PlanningData {
   const [assignations, setAssignations] = useState<Assignation[]>([]);
   const [consommation, setConsommation] = useState<DevisConsommation[]>([]);
   const [absences, setAbsences] = useState<Absence[]>([]);
+  const [chefsById, setChefsById] = useState<Map<string, ChefRef>>(new Map());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
