@@ -14,16 +14,634 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      affaires: {
+        Row: {
+          chef_chantier_id: string | null
+          client: string | null
+          created_at: string
+          date_debut: string | null
+          date_fin_prevue: string | null
+          id: string
+          lieu: string | null
+          nom: string
+          notes: string | null
+          numero: string
+          statut: Database["public"]["Enums"]["affaire_statut"]
+          updated_at: string
+        }
+        Insert: {
+          chef_chantier_id?: string | null
+          client?: string | null
+          created_at?: string
+          date_debut?: string | null
+          date_fin_prevue?: string | null
+          id?: string
+          lieu?: string | null
+          nom: string
+          notes?: string | null
+          numero: string
+          statut?: Database["public"]["Enums"]["affaire_statut"]
+          updated_at?: string
+        }
+        Update: {
+          chef_chantier_id?: string | null
+          client?: string | null
+          created_at?: string
+          date_debut?: string | null
+          date_fin_prevue?: string | null
+          id?: string
+          lieu?: string | null
+          nom?: string
+          notes?: string | null
+          numero?: string
+          statut?: Database["public"]["Enums"]["affaire_statut"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affaires_chef_chantier_id_fkey"
+            columns: ["chef_chantier_id"]
+            isOneToOne: false
+            referencedRelation: "employes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      assignations: {
+        Row: {
+          affaire_id: string
+          created_at: string
+          created_by: string | null
+          date: string
+          demi_journee: Database["public"]["Enums"]["demi_journee_type"]
+          devis_id: string | null
+          employe_id: string
+          heure_debut: string | null
+          heure_fin: string | null
+          heures: number
+          id: string
+          metier_id: number
+          notes: string | null
+          updated_at: string
+        }
+        Insert: {
+          affaire_id: string
+          created_at?: string
+          created_by?: string | null
+          date: string
+          demi_journee: Database["public"]["Enums"]["demi_journee_type"]
+          devis_id?: string | null
+          employe_id: string
+          heure_debut?: string | null
+          heure_fin?: string | null
+          heures?: number
+          id?: string
+          metier_id: number
+          notes?: string | null
+          updated_at?: string
+        }
+        Update: {
+          affaire_id?: string
+          created_at?: string
+          created_by?: string | null
+          date?: string
+          demi_journee?: Database["public"]["Enums"]["demi_journee_type"]
+          devis_id?: string | null
+          employe_id?: string
+          heure_debut?: string | null
+          heure_fin?: string | null
+          heures?: number
+          id?: string
+          metier_id?: number
+          notes?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assignations_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "affaires"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assignations_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "v_affaire_consommation"
+            referencedColumns: ["affaire_id"]
+          },
+          {
+            foreignKeyName: "assignations_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assignations_devis_id_fkey"
+            columns: ["devis_id"]
+            isOneToOne: false
+            referencedRelation: "devis"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assignations_devis_id_fkey"
+            columns: ["devis_id"]
+            isOneToOne: false
+            referencedRelation: "v_devis_consommation"
+            referencedColumns: ["devis_id"]
+          },
+          {
+            foreignKeyName: "assignations_employe_id_fkey"
+            columns: ["employe_id"]
+            isOneToOne: false
+            referencedRelation: "employes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assignations_metier_id_fkey"
+            columns: ["metier_id"]
+            isOneToOne: false
+            referencedRelation: "metiers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assignations_metier_id_fkey"
+            columns: ["metier_id"]
+            isOneToOne: false
+            referencedRelation: "v_devis_consommation"
+            referencedColumns: ["metier_id"]
+          },
+        ]
+      }
+      devis: {
+        Row: {
+          affaire_id: string
+          created_at: string
+          date_signature: string | null
+          fichier_source: string | null
+          id: string
+          libelle: string | null
+          montant_ht: number | null
+          numero: string
+          statut: Database["public"]["Enums"]["devis_statut"]
+          updated_at: string
+        }
+        Insert: {
+          affaire_id: string
+          created_at?: string
+          date_signature?: string | null
+          fichier_source?: string | null
+          id?: string
+          libelle?: string | null
+          montant_ht?: number | null
+          numero: string
+          statut?: Database["public"]["Enums"]["devis_statut"]
+          updated_at?: string
+        }
+        Update: {
+          affaire_id?: string
+          created_at?: string
+          date_signature?: string | null
+          fichier_source?: string | null
+          id?: string
+          libelle?: string | null
+          montant_ht?: number | null
+          numero?: string
+          statut?: Database["public"]["Enums"]["devis_statut"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "devis_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "affaires"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "devis_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "v_affaire_consommation"
+            referencedColumns: ["affaire_id"]
+          },
+        ]
+      }
+      devis_postes: {
+        Row: {
+          created_at: string
+          devis_id: string
+          heures_prevues: number
+          id: string
+          libelle_source: string | null
+          metier_id: number
+          montant_ht: number | null
+          notes: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          devis_id: string
+          heures_prevues?: number
+          id?: string
+          libelle_source?: string | null
+          metier_id: number
+          montant_ht?: number | null
+          notes?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          devis_id?: string
+          heures_prevues?: number
+          id?: string
+          libelle_source?: string | null
+          metier_id?: number
+          montant_ht?: number | null
+          notes?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "devis_postes_devis_id_fkey"
+            columns: ["devis_id"]
+            isOneToOne: false
+            referencedRelation: "devis"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "devis_postes_devis_id_fkey"
+            columns: ["devis_id"]
+            isOneToOne: false
+            referencedRelation: "v_devis_consommation"
+            referencedColumns: ["devis_id"]
+          },
+          {
+            foreignKeyName: "devis_postes_metier_id_fkey"
+            columns: ["metier_id"]
+            isOneToOne: false
+            referencedRelation: "metiers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "devis_postes_metier_id_fkey"
+            columns: ["metier_id"]
+            isOneToOne: false
+            referencedRelation: "v_devis_consommation"
+            referencedColumns: ["metier_id"]
+          },
+        ]
+      }
+      employe_metiers: {
+        Row: {
+          employe_id: string
+          id: number
+          metier_id: number
+        }
+        Insert: {
+          employe_id: string
+          id?: number
+          metier_id: number
+        }
+        Update: {
+          employe_id?: string
+          id?: number
+          metier_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employe_metiers_employe_id_fkey"
+            columns: ["employe_id"]
+            isOneToOne: false
+            referencedRelation: "employes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employe_metiers_metier_id_fkey"
+            columns: ["metier_id"]
+            isOneToOne: false
+            referencedRelation: "metiers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employe_metiers_metier_id_fkey"
+            columns: ["metier_id"]
+            isOneToOne: false
+            referencedRelation: "v_devis_consommation"
+            referencedColumns: ["metier_id"]
+          },
+        ]
+      }
+      employes: {
+        Row: {
+          actif: boolean
+          agence_interim: string | null
+          created_at: string
+          date_entree: string | null
+          date_sortie: string | null
+          email: string | null
+          id: string
+          metier_principal_id: number
+          nom: string
+          notes: string | null
+          prenom: string
+          profile_id: string | null
+          telephone: string | null
+          type_contrat: Database["public"]["Enums"]["contrat_type"]
+          updated_at: string
+        }
+        Insert: {
+          actif?: boolean
+          agence_interim?: string | null
+          created_at?: string
+          date_entree?: string | null
+          date_sortie?: string | null
+          email?: string | null
+          id?: string
+          metier_principal_id: number
+          nom: string
+          notes?: string | null
+          prenom: string
+          profile_id?: string | null
+          telephone?: string | null
+          type_contrat?: Database["public"]["Enums"]["contrat_type"]
+          updated_at?: string
+        }
+        Update: {
+          actif?: boolean
+          agence_interim?: string | null
+          created_at?: string
+          date_entree?: string | null
+          date_sortie?: string | null
+          email?: string | null
+          id?: string
+          metier_principal_id?: number
+          nom?: string
+          notes?: string | null
+          prenom?: string
+          profile_id?: string | null
+          telephone?: string | null
+          type_contrat?: Database["public"]["Enums"]["contrat_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employes_metier_principal_id_fkey"
+            columns: ["metier_principal_id"]
+            isOneToOne: false
+            referencedRelation: "metiers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employes_metier_principal_id_fkey"
+            columns: ["metier_principal_id"]
+            isOneToOne: false
+            referencedRelation: "v_devis_consommation"
+            referencedColumns: ["metier_id"]
+          },
+          {
+            foreignKeyName: "employes_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      heures_saisies: {
+        Row: {
+          affaire_id: string
+          assignation_id: string | null
+          commentaire: string | null
+          created_at: string
+          date: string
+          employe_id: string
+          heure_debut: string | null
+          heure_fin: string | null
+          heures_reelles: number | null
+          id: string
+          statut: Database["public"]["Enums"]["heures_statut"]
+          updated_at: string
+          valide_le: string | null
+          valide_par: string | null
+        }
+        Insert: {
+          affaire_id: string
+          assignation_id?: string | null
+          commentaire?: string | null
+          created_at?: string
+          date: string
+          employe_id: string
+          heure_debut?: string | null
+          heure_fin?: string | null
+          heures_reelles?: number | null
+          id?: string
+          statut?: Database["public"]["Enums"]["heures_statut"]
+          updated_at?: string
+          valide_le?: string | null
+          valide_par?: string | null
+        }
+        Update: {
+          affaire_id?: string
+          assignation_id?: string | null
+          commentaire?: string | null
+          created_at?: string
+          date?: string
+          employe_id?: string
+          heure_debut?: string | null
+          heure_fin?: string | null
+          heures_reelles?: number | null
+          id?: string
+          statut?: Database["public"]["Enums"]["heures_statut"]
+          updated_at?: string
+          valide_le?: string | null
+          valide_par?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "heures_saisies_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "affaires"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "heures_saisies_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "v_affaire_consommation"
+            referencedColumns: ["affaire_id"]
+          },
+          {
+            foreignKeyName: "heures_saisies_assignation_id_fkey"
+            columns: ["assignation_id"]
+            isOneToOne: false
+            referencedRelation: "assignations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "heures_saisies_employe_id_fkey"
+            columns: ["employe_id"]
+            isOneToOne: false
+            referencedRelation: "employes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "heures_saisies_valide_par_fkey"
+            columns: ["valide_par"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      metiers: {
+        Row: {
+          code: string
+          couleur: string
+          id: number
+          libelle: string
+          ordre: number
+        }
+        Insert: {
+          code: string
+          couleur: string
+          id?: number
+          libelle: string
+          ordre?: number
+        }
+        Update: {
+          code?: string
+          couleur?: string
+          id?: number
+          libelle?: string
+          ordre?: number
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string
+          full_name: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          full_name?: string | null
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
-      [_ in never]: never
+      v_affaire_consommation: {
+        Row: {
+          affaire_id: string | null
+          nom: string | null
+          numero: string | null
+          total_heures_assignees: number | null
+          total_heures_prevues: number | null
+        }
+        Insert: {
+          affaire_id?: string | null
+          nom?: string | null
+          numero?: string | null
+          total_heures_assignees?: never
+          total_heures_prevues?: never
+        }
+        Update: {
+          affaire_id?: string | null
+          nom?: string | null
+          numero?: string | null
+          total_heures_assignees?: never
+          total_heures_prevues?: never
+        }
+        Relationships: []
+      }
+      v_devis_consommation: {
+        Row: {
+          affaire_id: string | null
+          couleur: string | null
+          devis_id: string | null
+          devis_numero: string | null
+          heures_assignees: number | null
+          heures_prevues: number | null
+          heures_restantes: number | null
+          metier: string | null
+          metier_id: number | null
+          ordre: number | null
+          pct_consomme: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "devis_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "affaires"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "devis_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "v_affaire_consommation"
+            referencedColumns: ["affaire_id"]
+          },
+        ]
+      }
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_admin: { Args: never; Returns: boolean }
+      is_chef_or_admin: { Args: never; Returns: boolean }
     }
     Enums: {
-      [_ in never]: never
+      affaire_statut: "prospect" | "en_cours" | "termine" | "annule"
+      app_role: "admin" | "chef_chantier" | "employe"
+      contrat_type: "CDI" | "Interim"
+      demi_journee_type: "AM" | "PM" | "JOURNEE"
+      devis_statut: "brouillon" | "signe" | "facture"
+      heures_statut: "brouillon" | "soumis" | "valide" | "rejete"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +768,13 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      affaire_statut: ["prospect", "en_cours", "termine", "annule"],
+      app_role: ["admin", "chef_chantier", "employe"],
+      contrat_type: ["CDI", "Interim"],
+      demi_journee_type: ["AM", "PM", "JOURNEE"],
+      devis_statut: ["brouillon", "signe", "facture"],
+      heures_statut: ["brouillon", "soumis", "valide", "rejete"],
+    },
   },
 } as const
