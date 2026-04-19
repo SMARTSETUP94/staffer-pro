@@ -11,6 +11,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import {
@@ -155,6 +158,15 @@ function AffairesPage() {
     fetchAll();
   };
 
+  const handleChangeStatut = async (r: AffaireRow, statut: AffaireStatut) => {
+    if (r.statut === statut) return;
+    const { error } = await supabase.from("affaires").update({ statut }).eq("id", r.id);
+    if (error) { toast.error("Changement de statut impossible", { description: error.message }); return; }
+    const labels: Record<AffaireStatut, string> = { prospect: "Prospect", en_cours: "En cours", termine: "Terminée", annule: "Annulée" };
+    toast.success(`Affaire ${r.numero} → ${labels[statut]}`);
+    fetchAll();
+  };
+
   return (
     <div className="mx-auto max-w-7xl space-y-6 p-6">
       <PageHeader
@@ -234,7 +246,34 @@ function AffairesPage() {
                   <TableCell className="text-xs text-muted-foreground">
                     {formatPeriode(r.date_debut, r.date_fin_prevue)}
                   </TableCell>
-                  <TableCell><StatutPill statut={r.statut} /></TableCell>
+                  <TableCell>
+                    {isAdminOrChef ? (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button type="button" className="cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-full" title="Changer le statut">
+                            <StatutPill statut={r.statut} />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start" className="w-44">
+                          <DropdownMenuLabel className="text-xs">Changer le statut</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          {STATUTS.map((s) => (
+                            <DropdownMenuItem
+                              key={s.value}
+                              onClick={() => handleChangeStatut(r, s.value)}
+                              disabled={s.value === r.statut}
+                              className="gap-2"
+                            >
+                              <StatutPill statut={s.value} />
+                              {s.value === r.statut && <span className="ml-auto text-xs text-muted-foreground">actuel</span>}
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    ) : (
+                      <StatutPill statut={r.statut} />
+                    )}
+                  </TableCell>
                   <TableCell>
                     <div className="flex items-center justify-end gap-1">
                       {isAdminOrChef && isClotured && (
