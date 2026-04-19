@@ -9,6 +9,7 @@ export interface AuthContextValue {
   session: Session | null;
   roles: AppRole[];
   loading: boolean;
+  rolesLoaded: boolean;
   isAdmin: boolean;
   isChef: boolean;
   isAdminOrChef: boolean;
@@ -34,6 +35,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [roles, setRoles] = useState<AppRole[]>([]);
   const [loading, setLoading] = useState(true);
+  const [rolesLoaded, setRolesLoaded] = useState(false);
 
   useEffect(() => {
     // 1. Listener AVANT getSession (règle Supabase)
@@ -41,12 +43,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(newSession);
       setUser(newSession?.user ?? null);
       if (newSession?.user) {
+        setRolesLoaded(false);
         // Defer pour éviter deadlock
         setTimeout(() => {
-          fetchRoles(newSession.user.id).then(setRoles);
+          fetchRoles(newSession.user.id).then((r) => {
+            setRoles(r);
+            setRolesLoaded(true);
+          });
         }, 0);
       } else {
         setRoles([]);
+        setRolesLoaded(true);
       }
     });
 
@@ -57,9 +64,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (s?.user) {
         fetchRoles(s.user.id).then((r) => {
           setRoles(r);
+          setRolesLoaded(true);
           setLoading(false);
         });
       } else {
+        setRolesLoaded(true);
         setLoading(false);
       }
     });
@@ -90,7 +99,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const refreshRoles = async () => {
-    if (user) setRoles(await fetchRoles(user.id));
+    if (user) {
+      const r = await fetchRoles(user.id);
+      setRoles(r);
+      setRolesLoaded(true);
+    }
   };
 
   const isAdmin = roles.includes("admin");
@@ -100,7 +113,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return (
     <AuthContext.Provider
       value={{
-        user, session, roles, loading,
+        user, session, roles, loading, rolesLoaded,
         isAdmin, isChef, isAdminOrChef,
         signIn, signUp, signOut, refreshRoles,
       }}

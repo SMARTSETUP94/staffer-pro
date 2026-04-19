@@ -1,6 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
-  Calendar, Building2, Users, FileUp, FileDown, ClipboardCheck, Settings, LogOut,
+  Calendar, Building2, Users, FileUp, FileDown, ClipboardCheck, Settings, LogOut, Clock,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -8,43 +8,45 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/lib/auth-context";
+import { usePreview } from "@/lib/preview-context";
 import { Button } from "@/components/ui/button";
 import { BrandLogo } from "./BrandLogo";
+import { ViewAsSwitcher } from "./ViewAsSwitcher";
 
 interface NavItem {
   title: string;
   url: string;
   icon: typeof Calendar;
-  adminOnly?: boolean;
-  chefOrAdmin?: boolean;
+  /** Visibilité selon le rôle effectif */
+  show: (role: "admin" | "chef_chantier" | "employe") => boolean;
 }
 
 const items: NavItem[] = [
-  { title: "Planning", url: "/planning", icon: Calendar, chefOrAdmin: true },
-  { title: "Affaires", url: "/affaires", icon: Building2, chefOrAdmin: true },
-  { title: "Employés", url: "/employes", icon: Users, chefOrAdmin: true },
-  { title: "Import employés", url: "/employes/import", icon: FileUp, chefOrAdmin: true },
-  { title: "Import devis", url: "/devis/import", icon: FileUp, chefOrAdmin: true },
-  { title: "Export planning", url: "/export", icon: FileDown, chefOrAdmin: true },
-  { title: "Validation heures", url: "/validation-heures", icon: ClipboardCheck, chefOrAdmin: true },
-  { title: "Paramètres", url: "/parametres", icon: Settings, adminOnly: true },
+  { title: "Mes heures", url: "/mobile/heures", icon: Clock, show: (r) => r === "employe" },
+  { title: "Planning", url: "/planning", icon: Calendar, show: (r) => r === "admin" || r === "chef_chantier" },
+  { title: "Affaires", url: "/affaires", icon: Building2, show: (r) => r === "admin" || r === "chef_chantier" },
+  { title: "Employés", url: "/employes", icon: Users, show: (r) => r === "admin" || r === "chef_chantier" },
+  { title: "Import employés", url: "/employes/import", icon: FileUp, show: (r) => r === "admin" || r === "chef_chantier" },
+  { title: "Import devis", url: "/devis/import", icon: FileUp, show: (r) => r === "admin" || r === "chef_chantier" },
+  { title: "Export planning", url: "/export", icon: FileDown, show: (r) => r === "admin" || r === "chef_chantier" },
+  { title: "Validation heures", url: "/validation-heures", icon: ClipboardCheck, show: (r) => r === "admin" || r === "chef_chantier" },
+  { title: "Paramètres", url: "/parametres", icon: Settings, show: (r) => r === "admin" },
 ];
 
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
-  const { user, roles, isAdmin, isAdminOrChef, signOut } = useAuth();
+  const { user, roles, signOut } = useAuth();
+  const { effectiveRole, isPreviewing } = usePreview();
   const routerState = useRouterState();
   const currentPath = routerState.location.pathname;
 
-  const visibleItems = items.filter((it) => {
-    if (it.adminOnly) return isAdmin;
-    if (it.chefOrAdmin) return isAdminOrChef;
-    return true;
-  });
+  const visibleItems = items.filter((it) => it.show(effectiveRole));
 
   const isActive = (url: string) =>
     currentPath === url || currentPath.startsWith(url + "/");
+
+  const displayedRole = isPreviewing ? `${effectiveRole} (preview)` : (roles[0] ?? "—");
 
   return (
     <Sidebar collapsible="icon">
@@ -56,6 +58,7 @@ export function AppSidebar() {
             <BrandLogo tone="cream" word1="SETUP" word2="PARIS" />
           )}
         </div>
+        <ViewAsSwitcher collapsed={collapsed} />
       </SidebarHeader>
 
       <SidebarContent className="px-1">
@@ -97,7 +100,7 @@ export function AppSidebar() {
               {user.email}
             </p>
             <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">
-              {roles[0] ?? "—"}
+              {displayedRole}
             </p>
           </div>
         )}

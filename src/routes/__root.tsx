@@ -1,5 +1,6 @@
 import { Outlet, createRootRoute, HeadContent, Scripts, Link } from "@tanstack/react-router";
 import { AuthProvider } from "@/lib/auth-context";
+import { PreviewProvider } from "@/lib/preview-context";
 import appCss from "../styles.css?url";
 
 function NotFoundComponent() {
@@ -61,7 +62,9 @@ function RootShell({ children }: { children: React.ReactNode }) {
 function RootComponent() {
   return (
     <AuthProvider>
-      <Outlet />
+      <PreviewProvider>
+        <Outlet />
+      </PreviewProvider>
     </AuthProvider>
   );
 }
