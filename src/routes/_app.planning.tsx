@@ -241,6 +241,16 @@ function PlanningPage() {
               </TabsContent>
 
               <TabsContent value="interim" className="mt-4">
+                <div className="mb-3 flex items-center justify-between gap-2">
+                  <p className="text-xs text-muted-foreground">
+                    Affiche les intérim. / indép. déjà staffés cette semaine. Utilise « Ajouter »
+                    pour staffer un nouvel intérimaire depuis la base.
+                  </p>
+                  <Button size="sm" onClick={() => setAddInterimOpen(true)}>
+                    <UserPlus className="mr-1.5 h-3.5 w-3.5" />
+                    Ajouter un intérimaire
+                  </Button>
+                </div>
                 <PlanningGrid
                   weekStart={weekStart}
                   employes={employesInterim}
@@ -252,8 +262,10 @@ function PlanningPage() {
                   filterAffaireIds={filterAffaireStr}
                   filterMetierIds={filterMetierNum}
                   showWeekend={showWeekend}
-                  emptyMessage="Aucun employé intérimaire / indépendant actif."
+                  emptyMessage="Aucun employé intérimaire / indépendant staffé cette semaine. Clique sur « Ajouter un intérimaire »."
                   onChanged={refresh}
+                  openAssignationFor={autoOpen}
+                  onAutoOpenConsumed={() => setAutoOpen(null)}
                 />
               </TabsContent>
 
