@@ -1,6 +1,7 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
   Calendar, Building2, Users, FileUp, FileDown, ClipboardCheck, Settings, LogOut, Clock, CalendarOff,
+  Smartphone, UserCircle,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -37,12 +38,22 @@ const items: NavItem[] = [
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
-  const { user, roles, signOut } = useAuth();
-  const { effectiveRole, isPreviewing } = usePreview();
+  const { user, roles, signOut, isAdmin } = useAuth();
+  const { effectiveRole, isPreviewing, previewRole } = usePreview();
   const routerState = useRouterState();
   const currentPath = routerState.location.pathname;
 
   const visibleItems = items.filter((it) => it.show(effectiveRole));
+
+  // En preview "employé" (desktop ou mobile), un admin doit pouvoir naviguer
+  // vers les pages mobiles pour QA.
+  const showMobilePreview =
+    isAdmin && (previewRole === "employe_desktop" || previewRole === "employe_mobile");
+  const mobileItems = [
+    { title: "Aujourd'hui", url: "/mobile/aujourdhui", icon: Smartphone },
+    { title: "Mes heures", url: "/mobile/heures", icon: Clock },
+    { title: "Mon profil", url: "/mobile/profil", icon: UserCircle },
+  ];
 
   const isActive = (url: string) =>
     currentPath === url || currentPath.startsWith(url + "/");
@@ -98,6 +109,38 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {showMobilePreview && (
+          <SidebarGroup>
+            {!collapsed && (
+              <SidebarGroupLabel className="overline !text-sidebar-foreground/60">
+                — Vue mobile (preview)
+              </SidebarGroupLabel>
+            )}
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {mobileItems.map((item) => {
+                  const active = isActive(item.url);
+                  return (
+                    <SidebarMenuItem key={item.url}>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={active}
+                        tooltip={item.title}
+                        className="rounded-xl data-[active=true]:bg-primary data-[active=true]:text-primary-foreground"
+                      >
+                        <Link to={item.url}>
+                          <item.icon className="h-4 w-4" />
+                          <span className="text-sm font-medium">{item.title}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border">
