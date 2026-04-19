@@ -172,6 +172,29 @@ function AffaireDetailLayout() {
       <div className="py-6">
         <Outlet />
       </div>
+
+      <AlertDialog open={!!confirmAction} onOpenChange={(o) => !o && setConfirmAction(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {confirmAction === "close" ? `Clôturer l'affaire ${affaire.numero} ?` : `Rouvrir l'affaire ${affaire.numero} ?`}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {confirmAction === "close"
+                ? "Aucune nouvelle assignation ne pourra être créée tant que l'affaire reste clôturée. L'historique reste consultable. Un admin pourra rouvrir si besoin."
+                : "L'affaire repasse en cours. Vous pourrez à nouveau créer des assignations."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="rounded-xl">Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={handleStatut} disabled={savingStatut}
+              className="rounded-xl bg-primary text-primary-foreground hover:bg-primary/90">
+              {savingStatut && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {confirmAction === "close" ? "Clôturer" : "Rouvrir"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
