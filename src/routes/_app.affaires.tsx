@@ -223,8 +223,10 @@ function AffairesPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map((r) => (
-                <TableRow key={r.id}>
+              {filtered.map((r) => {
+                const isClotured = r.statut === "termine";
+                return (
+                <TableRow key={r.id} className={isClotured ? "opacity-60" : undefined}>
                   <TableCell className="font-mono text-xs font-semibold text-primary">{r.numero}</TableCell>
                   <TableCell className="font-semibold text-foreground">{r.nom}</TableCell>
                   <TableCell className="text-sm">{r.client ?? "—"}</TableCell>
@@ -235,6 +237,17 @@ function AffairesPage() {
                   <TableCell><StatutPill statut={r.statut} /></TableCell>
                   <TableCell>
                     <div className="flex items-center justify-end gap-1">
+                      {isAdminOrChef && isClotured && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="rounded-lg text-primary hover:bg-primary/10"
+                          onClick={() => handleReopen(r)}
+                          title="Repasser cette affaire en cours"
+                        >
+                          <RotateCcw className="mr-1 h-3.5 w-3.5" /> Réouvrir
+                        </Button>
+                      )}
                       {isAdminOrChef && (
                         <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg" onClick={() => openEdit(r)}>
                           <Pencil className="h-4 w-4" />
@@ -248,7 +261,8 @@ function AffairesPage() {
                     </div>
                   </TableCell>
                 </TableRow>
-              ))}
+                );
+              })}
             </TableBody>
           </Table>
         )}
