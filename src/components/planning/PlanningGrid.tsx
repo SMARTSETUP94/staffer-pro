@@ -423,7 +423,7 @@ export function PlanningGrid({
                           >
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <div className="flex h-full min-h-[44px] cursor-not-allowed items-center justify-center gap-1 p-1 text-center text-[10px] font-medium text-muted-foreground">
+                                <div className="flex h-full min-h-[44px] cursor-not-allowed items-center justify-center gap-1 p-1 text-center text-[11px] font-medium text-muted-foreground">
                                   <span className="text-base">{ABSENCE_ICON[absence.type]}</span>
                                   <span className="truncate">{ABSENCE_LABEL[absence.type]}</span>
                                 </div>
