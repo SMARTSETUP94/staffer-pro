@@ -389,25 +389,39 @@ function DashboardPage() {
             {depassements.length === 0 ? (
               <p className="py-6 text-center text-sm text-muted-foreground">Aucune affaire en tension (≥80% consommé)</p>
             ) : (
-              <ul className="divide-y">
+              <ul className="space-y-3">
                 {depassements.map((d) => {
                   const tone = d.pct >= 100 ? "destructive" : d.pct >= 90 ? "default" : "secondary";
+                  const barColor =
+                    d.pct >= 100 ? "bg-destructive" : d.pct >= 90 ? "bg-primary" : "bg-warning";
                   return (
-                    <li key={d.affaire_id} className="py-2.5 flex items-center justify-between gap-3">
-                      <Link
-                        to="/affaires/$affaireId"
-                        params={{ affaireId: d.affaire_id }}
-                        className="text-sm font-medium hover:text-primary truncate flex-1 min-w-0"
-                      >
-                        {d.numero} — {d.nom}
-                      </Link>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <span className="text-xs text-muted-foreground">
-                          {d.total_assignees}/{d.total_prevues}h
-                        </span>
-                        <Badge variant={tone} className="text-xs">
+                    <li key={d.affaire_id} className="space-y-1.5">
+                      <div className="flex items-center justify-between gap-2">
+                        <Link
+                          to="/affaires/$affaireId"
+                          params={{ affaireId: d.affaire_id }}
+                          className="min-w-0 flex-1 truncate text-sm font-medium hover:text-primary"
+                          title={`${d.numero} — ${d.nom}`}
+                        >
+                          <span className="font-mono text-xs text-primary">{d.numero}</span>
+                          <span className="mx-1 text-muted-foreground">·</span>
+                          <span>{d.nom}</span>
+                        </Link>
+                        <Badge variant={tone} className="shrink-0 text-xs tabular-nums">
                           {d.pct}%
                         </Badge>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
+                          <div
+                            className={`h-full ${barColor}`}
+                            style={{ width: `${Math.min(100, d.pct)}%` }}
+                            aria-hidden
+                          />
+                        </div>
+                        <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground">
+                          {d.total_assignees}/{d.total_prevues}h
+                        </span>
                       </div>
                     </li>
                   );
