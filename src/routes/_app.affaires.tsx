@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Plus, Search, Loader2, ArrowRight, Pencil } from "lucide-react";
+import { Plus, Search, Loader2, ArrowRight, Pencil, RotateCcw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { PageHeader } from "@/components/PageHeader";
@@ -148,6 +148,13 @@ function AffairesPage() {
     fetchAll();
   };
 
+  const handleReopen = async (r: AffaireRow) => {
+    const { error } = await supabase.from("affaires").update({ statut: "en_cours" }).eq("id", r.id);
+    if (error) { toast.error("Réouverture impossible", { description: error.message }); return; }
+    toast.success(`Affaire ${r.numero} réouverte`);
+    fetchAll();
+  };
+
   return (
     <div className="mx-auto max-w-7xl space-y-6 p-6">
       <PageHeader
@@ -216,8 +223,10 @@ function AffairesPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map((r) => (
-                <TableRow key={r.id}>
+              {filtered.map((r) => {
+                const isClotured = r.statut === "termine";
+                return (
+                <TableRow key={r.id} className={isClotured ? "opacity-60" : undefined}>
                   <TableCell className="font-mono text-xs font-semibold text-primary">{r.numero}</TableCell>
                   <TableCell className="font-semibold text-foreground">{r.nom}</TableCell>
                   <TableCell className="text-sm">{r.client ?? "—"}</TableCell>
@@ -228,6 +237,17 @@ function AffairesPage() {
                   <TableCell><StatutPill statut={r.statut} /></TableCell>
                   <TableCell>
                     <div className="flex items-center justify-end gap-1">
+                      {isAdminOrChef && isClotured && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="rounded-lg text-primary hover:bg-primary/10"
+                          onClick={() => handleReopen(r)}
+                          title="Repasser cette affaire en cours"
+                        >
+                          <RotateCcw className="mr-1 h-3.5 w-3.5" /> Réouvrir
+                        </Button>
+                      )}
                       {isAdminOrChef && (
                         <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg" onClick={() => openEdit(r)}>
                           <Pencil className="h-4 w-4" />
@@ -241,7 +261,8 @@ function AffairesPage() {
                     </div>
                   </TableCell>
                 </TableRow>
-              ))}
+                );
+              })}
             </TableBody>
           </Table>
         )}
