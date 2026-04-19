@@ -172,7 +172,7 @@ function DevisPage() {
       </div>
 
       {/* Table */}
-      <div className="mt-6 overflow-hidden rounded-2xl border border-border bg-card">
+      <div className="mt-6 overflow-x-auto rounded-2xl border border-border bg-card">
         {loading ? (
           <div className="flex justify-center p-10"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>
         ) : filtered.length === 0 ? (

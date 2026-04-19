@@ -293,7 +293,7 @@ function EmployesPage() {
           <EmployesSpreadsheet rows={spreadsheetRows} onSaved={fetchAll} />
         )
       ) : (
-      <div className="overflow-hidden rounded-2xl border border-border bg-card">
+      <div className="overflow-x-auto rounded-2xl border border-border bg-card">
         {loading ? (
           <div className="flex items-center justify-center p-12">
             <Loader2 className="h-5 w-5 animate-spin text-primary" />
