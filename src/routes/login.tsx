@@ -81,7 +81,7 @@ function LoginPage() {
       <main className="flex items-center justify-center bg-background p-6 sm:p-10">
         <div className="w-full max-w-md">
           <div className="mb-6 lg:hidden">
-            <BrandLogo word1="SETUP" word2="PARIS" />
+            <BrandLogo />
           </div>
 
           <p className="overline mb-2">— 02 / Accès</p>
