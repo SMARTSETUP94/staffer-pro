@@ -23,6 +23,7 @@ const items: NavItem[] = [
   { title: "Planning", url: "/planning", icon: Calendar, chefOrAdmin: true },
   { title: "Affaires", url: "/affaires", icon: Building2, chefOrAdmin: true },
   { title: "Employés", url: "/employes", icon: Users, chefOrAdmin: true },
+  { title: "Import employés", url: "/employes/import", icon: FileUp, chefOrAdmin: true },
   { title: "Import devis", url: "/devis/import", icon: FileUp, chefOrAdmin: true },
   { title: "Export planning", url: "/export", icon: FileDown, chefOrAdmin: true },
   { title: "Validation heures", url: "/validation-heures", icon: ClipboardCheck, chefOrAdmin: true },
