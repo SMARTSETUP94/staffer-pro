@@ -158,6 +158,15 @@ function AffairesPage() {
     fetchAll();
   };
 
+  const handleChangeStatut = async (r: AffaireRow, statut: AffaireStatut) => {
+    if (r.statut === statut) return;
+    const { error } = await supabase.from("affaires").update({ statut }).eq("id", r.id);
+    if (error) { toast.error("Changement de statut impossible", { description: error.message }); return; }
+    const labels: Record<AffaireStatut, string> = { prospect: "Prospect", en_cours: "En cours", termine: "Terminée", annule: "Annulée" };
+    toast.success(`Affaire ${r.numero} → ${labels[statut]}`);
+    fetchAll();
+  };
+
   return (
     <div className="mx-auto max-w-7xl space-y-6 p-6">
       <PageHeader
