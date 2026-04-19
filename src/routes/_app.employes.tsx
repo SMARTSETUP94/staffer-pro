@@ -258,6 +258,12 @@ function EmployesPage() {
           />
         </div>
         <div className="flex flex-wrap gap-2">
+          <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as "liste" | "tableur")}>
+            <TabsList className="rounded-xl bg-muted">
+              <TabsTrigger value="liste" className="rounded-lg"><List className="mr-1 h-3.5 w-3.5" />Liste</TabsTrigger>
+              <TabsTrigger value="tableur" className="rounded-lg"><Table2 className="mr-1 h-3.5 w-3.5" />Tableur</TabsTrigger>
+            </TabsList>
+          </Tabs>
           <Tabs value={filterContrat} onValueChange={(v) => setFilterContrat(v as typeof filterContrat)}>
             <TabsList className="rounded-xl bg-muted">
               <TabsTrigger value="all" className="rounded-lg">Tous</TabsTrigger>
@@ -275,7 +281,15 @@ function EmployesPage() {
         </div>
       </div>
 
-      {/* Tableau */}
+      {viewMode === "tableur" ? (
+        loading ? (
+          <div className="flex items-center justify-center rounded-2xl border border-border bg-card p-12">
+            <Loader2 className="h-5 w-5 animate-spin text-primary" />
+          </div>
+        ) : (
+          <EmployesSpreadsheet rows={spreadsheetRows} onSaved={fetchAll} />
+        )
+      ) : (
       <div className="overflow-hidden rounded-2xl border border-border bg-card">
         {loading ? (
           <div className="flex items-center justify-center p-12">
