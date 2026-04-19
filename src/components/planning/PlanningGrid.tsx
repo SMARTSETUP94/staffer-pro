@@ -213,6 +213,18 @@ export function PlanningGrid({
 
   return (
     <TooltipProvider delayDuration={200}>
+      {/* Hint multi-sélection (toujours visible en haut, discret) */}
+      {!readonly && selected.size === 0 && (
+        <div className="mb-2 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+          <kbd className="rounded border bg-muted px-1.5 py-0.5 font-mono text-[10px]">
+            {typeof navigator !== "undefined" && navigator.platform.toLowerCase().includes("mac")
+              ? "⌘"
+              : "Ctrl"}
+          </kbd>
+          <span>+ clic sur plusieurs cellules vides pour assigner un même chantier en groupe.</span>
+        </div>
+      )}
+
       {/* Barre flottante sélection multiple */}
       {selected.size > 0 && !readonly && (
         <div className="sticky top-2 z-20 mb-3 flex items-center justify-between rounded-lg border-2 border-primary bg-primary/10 px-3 py-2 shadow-md">

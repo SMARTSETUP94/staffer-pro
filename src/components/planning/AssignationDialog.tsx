@@ -23,6 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { AffaireCombobox } from "./AffaireCombobox";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -278,18 +279,11 @@ export function AssignationDialog({
           <div className="grid gap-3">
             <div className="grid gap-1.5">
               <Label>Affaire</Label>
-              <Select value={affaireId} onValueChange={setAffaireId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner une affaire" />
-                </SelectTrigger>
-                <SelectContent>
-                  {sortedAffaires.map((a) => (
-                    <SelectItem key={a.id} value={a.id}>
-                      <span className="font-mono font-semibold">{a.numero}</span> — {a.nom}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <AffaireCombobox
+                affaires={sortedAffaires}
+                value={affaireId}
+                onChange={setAffaireId}
+              />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
