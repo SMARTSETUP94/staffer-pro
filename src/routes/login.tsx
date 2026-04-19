@@ -1,19 +1,19 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { HardHat, Loader2 } from "lucide-react";
+import { ArrowRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/lib/auth-context";
 import { toast } from "sonner";
+import { BrandLogo } from "@/components/BrandLogo";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
-      { title: "Connexion — Planning chantiers" },
-      { name: "description", content: "Connectez-vous à l'application de planning chantiers." },
+      { title: "Connexion — Setup Paris" },
+      { name: "description", content: "Connectez-vous à l'application de planning chantiers Setup Paris." },
     ],
   }),
   component: LoginPage,
@@ -57,73 +57,141 @@ function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-muted to-background p-4">
-      <Card className="w-full max-w-md shadow-xl">
-        <CardHeader className="space-y-3 text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-primary">
-            <HardHat className="h-6 w-6 text-primary-foreground" />
-          </div>
-          <div>
-            <CardTitle className="text-2xl">Planning chantiers</CardTitle>
-            <CardDescription>Scénographie & fabrication de décors</CardDescription>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <Tabs value={tab} onValueChange={(v) => setTab(v as "signin" | "signup")}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="signin">Connexion</TabsTrigger>
-              <TabsTrigger value="signup">Créer un compte</TabsTrigger>
-            </TabsList>
+    <div className="grid min-h-screen lg:grid-cols-2">
+      {/* Colonne gauche — pitch marque sur fond ink */}
+      <aside className="relative hidden flex-col justify-between overflow-hidden bg-[var(--ink)] p-10 text-[var(--cream)] lg:flex">
+        <BrandLogo tone="cream" />
 
-            <TabsContent value="signin" className="mt-4">
-              <form onSubmit={onSignIn} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" required value={email}
-                    onChange={(e) => setEmail(e.target.value)} placeholder="vous@entreprise.fr" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="password">Mot de passe</Label>
-                  <Input id="password" type="password" required value={password}
-                    onChange={(e) => setPassword(e.target.value)} />
-                </div>
-                <Button type="submit" className="w-full" disabled={busy}>
-                  {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Se connecter
-                </Button>
-              </form>
-            </TabsContent>
+        <div className="space-y-6">
+          <p className="overline text-primary/90">— 01 / Studio</p>
+          <h1 className="text-5xl font-extrabold leading-none tracking-tight text-[var(--cream)] xl:text-6xl">
+            Le planning de vos chantiers, <span className="text-primary">aligné</span> au studio.
+          </h1>
+          <p className="max-w-md text-sm leading-relaxed text-[var(--cream)]/70">
+            Scénographie, fabrication de décors, structures et installations.
+            Staffing par demi-journée, suivi des heures devis, validation terrain.
+          </p>
+          <div className="flex flex-wrap gap-2 pt-2">
+            <span className="tag-pill !bg-white/5 !text-[var(--cream)]">Scénographie</span>
+            <span className="tag-pill !bg-white/5 !text-[var(--cream)]">Décors</span>
+            <span className="tag-pill !bg-white/5 !text-[var(--cream)]">Structures</span>
+          </div>
+        </div>
 
-            <TabsContent value="signup" className="mt-4">
-              <form onSubmit={onSignUp} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="fullName">Nom complet</Label>
-                  <Input id="fullName" required value={fullName}
-                    onChange={(e) => setFullName(e.target.value)} placeholder="Jean Martin" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email-up">Email</Label>
-                  <Input id="email-up" type="email" required value={email}
-                    onChange={(e) => setEmail(e.target.value)} placeholder="vous@entreprise.fr" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="password-up">Mot de passe</Label>
-                  <Input id="password-up" type="password" required minLength={6} value={password}
-                    onChange={(e) => setPassword(e.target.value)} />
-                  <p className="text-xs text-muted-foreground">Au moins 6 caractères.</p>
-                </div>
-                <Button type="submit" className="w-full" disabled={busy}>
-                  {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Créer mon compte
-                </Button>
-                <p className="text-center text-xs text-muted-foreground">
-                  Les nouveaux comptes sont créés en rôle « Employé » par défaut.
-                </p>
-              </form>
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
+        <p className="text-xs text-[var(--cream)]/40">© Setup Paris — Planning chantiers</p>
+
+        {/* déco indigo */}
+        <div className="pointer-events-none absolute -right-32 -top-32 h-96 w-96 rounded-full bg-primary/20 blur-3xl" />
+      </aside>
+
+      {/* Colonne droite — formulaire sur fond cream */}
+      <main className="flex items-center justify-center bg-background p-6 sm:p-10">
+        <div className="w-full max-w-md">
+          <div className="mb-8 lg:hidden">
+            <BrandLogo />
+          </div>
+
+          <p className="overline mb-3">— 02 / Accès</p>
+          <h2 className="text-4xl font-extrabold leading-none tracking-tight text-foreground sm:text-5xl">
+            Bienvenue.
+          </h2>
+          <p className="mt-3 text-sm text-muted-foreground">
+            Connectez-vous ou créez votre compte pour accéder au planning.
+          </p>
+
+          <div className="mt-8 rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8">
+            <Tabs value={tab} onValueChange={(v) => setTab(v as "signin" | "signup")}>
+              <TabsList className="grid w-full grid-cols-2 rounded-xl bg-muted">
+                <TabsTrigger value="signin" className="rounded-lg">Connexion</TabsTrigger>
+                <TabsTrigger value="signup" className="rounded-lg">Créer un compte</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="signin" className="mt-6">
+                <form onSubmit={onSignIn} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="email" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Email
+                    </Label>
+                    <Input
+                      id="email" type="email" required value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="vous@setup.paris"
+                      className="h-11 rounded-xl"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="password" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Mot de passe
+                    </Label>
+                    <Input
+                      id="password" type="password" required value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="h-11 rounded-xl"
+                    />
+                  </div>
+                  <Button type="submit" disabled={busy}
+                    className="group h-11 w-full rounded-xl bg-primary text-primary-foreground hover:bg-primary/90">
+                    {busy ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : null}
+                    Se connecter
+                    <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                  </Button>
+                </form>
+              </TabsContent>
+
+              <TabsContent value="signup" className="mt-6">
+                <form onSubmit={onSignUp} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="fullName" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Nom complet
+                    </Label>
+                    <Input
+                      id="fullName" required value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      placeholder="Jean Martin"
+                      className="h-11 rounded-xl"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="email-up" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Email
+                    </Label>
+                    <Input
+                      id="email-up" type="email" required value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="vous@setup.paris"
+                      className="h-11 rounded-xl"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="password-up" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Mot de passe
+                    </Label>
+                    <Input
+                      id="password-up" type="password" required minLength={6} value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="h-11 rounded-xl"
+                    />
+                    <p className="text-xs text-muted-foreground">Au moins 6 caractères.</p>
+                  </div>
+                  <Button type="submit" disabled={busy}
+                    className="group h-11 w-full rounded-xl bg-primary text-primary-foreground hover:bg-primary/90">
+                    {busy ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : null}
+                    Créer mon compte
+                    <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                  </Button>
+                  <p className="text-center text-xs text-muted-foreground">
+                    Les nouveaux comptes sont créés en rôle « Employé » par défaut.
+                  </p>
+                </form>
+              </TabsContent>
+            </Tabs>
+          </div>
+        </div>
+      </main>
     </div>
   );
 }
