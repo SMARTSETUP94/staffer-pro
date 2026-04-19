@@ -19,6 +19,7 @@ import { Route as AppParametresRouteImport } from './routes/_app.parametres'
 import { Route as AppExportRouteImport } from './routes/_app.export'
 import { Route as AppEmployesRouteImport } from './routes/_app.employes'
 import { Route as AppAffairesRouteImport } from './routes/_app.affaires'
+import { Route as AppEmployesImportRouteImport } from './routes/_app.employes.import'
 import { Route as AppDevisImportRouteImport } from './routes/_app.devis.import'
 import { Route as AppAffairesAffaireIdRouteImport } from './routes/_app.affaires.$affaireId'
 import { Route as AppAffairesAffaireIdIndexRouteImport } from './routes/_app.affaires.$affaireId.index'
@@ -74,6 +75,11 @@ const AppAffairesRoute = AppAffairesRouteImport.update({
   path: '/affaires',
   getParentRoute: () => AppRoute,
 } as any)
+const AppEmployesImportRoute = AppEmployesImportRouteImport.update({
+  id: '/import',
+  path: '/import',
+  getParentRoute: () => AppEmployesRoute,
+} as any)
 const AppDevisImportRoute = AppDevisImportRouteImport.update({
   id: '/devis/import',
   path: '/devis/import',
@@ -107,7 +113,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/affaires': typeof AppAffairesRouteWithChildren
-  '/employes': typeof AppEmployesRoute
+  '/employes': typeof AppEmployesRouteWithChildren
   '/export': typeof AppExportRoute
   '/parametres': typeof AppParametresRoute
   '/planning': typeof AppPlanningRoute
@@ -115,6 +121,7 @@ export interface FileRoutesByFullPath {
   '/mobile/aujourdhui': typeof MobileAujourdhuiRoute
   '/affaires/$affaireId': typeof AppAffairesAffaireIdRouteWithChildren
   '/devis/import': typeof AppDevisImportRoute
+  '/employes/import': typeof AppEmployesImportRoute
   '/affaires/$affaireId/devis': typeof AppAffairesAffaireIdDevisRoute
   '/affaires/$affaireId/staffing': typeof AppAffairesAffaireIdStaffingRoute
   '/affaires/$affaireId/': typeof AppAffairesAffaireIdIndexRoute
@@ -123,13 +130,14 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/affaires': typeof AppAffairesRouteWithChildren
-  '/employes': typeof AppEmployesRoute
+  '/employes': typeof AppEmployesRouteWithChildren
   '/export': typeof AppExportRoute
   '/parametres': typeof AppParametresRoute
   '/planning': typeof AppPlanningRoute
   '/validation-heures': typeof AppValidationHeuresRoute
   '/mobile/aujourdhui': typeof MobileAujourdhuiRoute
   '/devis/import': typeof AppDevisImportRoute
+  '/employes/import': typeof AppEmployesImportRoute
   '/affaires/$affaireId/devis': typeof AppAffairesAffaireIdDevisRoute
   '/affaires/$affaireId/staffing': typeof AppAffairesAffaireIdStaffingRoute
   '/affaires/$affaireId': typeof AppAffairesAffaireIdIndexRoute
@@ -140,7 +148,7 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
   '/_app/affaires': typeof AppAffairesRouteWithChildren
-  '/_app/employes': typeof AppEmployesRoute
+  '/_app/employes': typeof AppEmployesRouteWithChildren
   '/_app/export': typeof AppExportRoute
   '/_app/parametres': typeof AppParametresRoute
   '/_app/planning': typeof AppPlanningRoute
@@ -148,6 +156,7 @@ export interface FileRoutesById {
   '/mobile/aujourdhui': typeof MobileAujourdhuiRoute
   '/_app/affaires/$affaireId': typeof AppAffairesAffaireIdRouteWithChildren
   '/_app/devis/import': typeof AppDevisImportRoute
+  '/_app/employes/import': typeof AppEmployesImportRoute
   '/_app/affaires/$affaireId/devis': typeof AppAffairesAffaireIdDevisRoute
   '/_app/affaires/$affaireId/staffing': typeof AppAffairesAffaireIdStaffingRoute
   '/_app/affaires/$affaireId/': typeof AppAffairesAffaireIdIndexRoute
@@ -166,6 +175,7 @@ export interface FileRouteTypes {
     | '/mobile/aujourdhui'
     | '/affaires/$affaireId'
     | '/devis/import'
+    | '/employes/import'
     | '/affaires/$affaireId/devis'
     | '/affaires/$affaireId/staffing'
     | '/affaires/$affaireId/'
@@ -181,6 +191,7 @@ export interface FileRouteTypes {
     | '/validation-heures'
     | '/mobile/aujourdhui'
     | '/devis/import'
+    | '/employes/import'
     | '/affaires/$affaireId/devis'
     | '/affaires/$affaireId/staffing'
     | '/affaires/$affaireId'
@@ -198,6 +209,7 @@ export interface FileRouteTypes {
     | '/mobile/aujourdhui'
     | '/_app/affaires/$affaireId'
     | '/_app/devis/import'
+    | '/_app/employes/import'
     | '/_app/affaires/$affaireId/devis'
     | '/_app/affaires/$affaireId/staffing'
     | '/_app/affaires/$affaireId/'
@@ -282,6 +294,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAffairesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/employes/import': {
+      id: '/_app/employes/import'
+      path: '/import'
+      fullPath: '/employes/import'
+      preLoaderRoute: typeof AppEmployesImportRouteImport
+      parentRoute: typeof AppEmployesRoute
+    }
     '/_app/devis/import': {
       id: '/_app/devis/import'
       path: '/devis/import'
@@ -347,9 +366,21 @@ const AppAffairesRouteWithChildren = AppAffairesRoute._addFileChildren(
   AppAffairesRouteChildren,
 )
 
+interface AppEmployesRouteChildren {
+  AppEmployesImportRoute: typeof AppEmployesImportRoute
+}
+
+const AppEmployesRouteChildren: AppEmployesRouteChildren = {
+  AppEmployesImportRoute: AppEmployesImportRoute,
+}
+
+const AppEmployesRouteWithChildren = AppEmployesRoute._addFileChildren(
+  AppEmployesRouteChildren,
+)
+
 interface AppRouteChildren {
   AppAffairesRoute: typeof AppAffairesRouteWithChildren
-  AppEmployesRoute: typeof AppEmployesRoute
+  AppEmployesRoute: typeof AppEmployesRouteWithChildren
   AppExportRoute: typeof AppExportRoute
   AppParametresRoute: typeof AppParametresRoute
   AppPlanningRoute: typeof AppPlanningRoute
@@ -359,7 +390,7 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppAffairesRoute: AppAffairesRouteWithChildren,
-  AppEmployesRoute: AppEmployesRoute,
+  AppEmployesRoute: AppEmployesRouteWithChildren,
   AppExportRoute: AppExportRoute,
   AppParametresRoute: AppParametresRoute,
   AppPlanningRoute: AppPlanningRoute,
@@ -378,3 +409,12 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
