@@ -22,18 +22,19 @@ export function AppLayout({ children }: { children: ReactNode }) {
               <Button
                 variant="outline"
                 size="sm"
-                className="hidden sm:flex h-8 gap-2 text-xs text-muted-foreground"
+                className="hidden h-8 gap-2 text-xs text-muted-foreground md:flex"
                 onClick={() => {
                   const event = new KeyboardEvent("keydown", { key: "k", ctrlKey: true });
                   window.dispatchEvent(event);
                 }}
+                aria-label="Rechercher (Cmd+K)"
               >
                 <Search className="h-3 w-3" />
-                Rechercher
-                <kbd className="ml-1 rounded border bg-muted px-1.5 py-0.5 text-[10px] font-mono">⌘K</kbd>
+                <span>Rechercher</span>
+                <kbd className="ml-1 rounded border bg-muted px-1.5 py-0.5 font-mono text-[10px]">⌘K</kbd>
               </Button>
               <NotificationBell />
-              <span className="overline hidden sm:inline-block">— Studio</span>
+              <span className="overline hidden lg:inline-block">— Studio</span>
             </div>
           </header>
           <main className="flex-1 overflow-auto bg-background">{children}</main>
