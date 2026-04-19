@@ -53,12 +53,26 @@ export interface DevisConsommation {
   pct_consomme: number;
 }
 
+export type AbsenceType = "conges" | "formation" | "arret_maladie" | "rtt" | "autre";
+
+export interface Absence {
+  id: string;
+  employe_id: string;
+  date_debut: string;
+  date_fin: string;
+  type: AbsenceType;
+  demi_journee: "AM" | "PM" | "JOURNEE" | null;
+  motif: string | null;
+  valide: boolean;
+}
+
 export interface PlanningData {
   metiers: Metier[];
   employes: Employe[];
   affaires: Affaire[];
   assignations: Assignation[];
   consommation: DevisConsommation[];
+  absences: Absence[];
   loading: boolean;
   error: string | null;
   refresh: () => void;
