@@ -123,7 +123,7 @@ function DashboardPage() {
       ] = await Promise.all([
         supabase
           .from("assignations")
-          .select("affaire_id")
+          .select("affaire_id, affaires:affaire_id(id, numero, nom)")
           .gte("date", nextWeekStart)
           .lte("date", nextWeekEnd),
         supabase.from("assignations").select("heures").gte("date", weekStart).lte("date", weekEnd),
