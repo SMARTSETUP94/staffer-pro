@@ -435,8 +435,10 @@ export function PlanningGrid({
                       }
 
                       return (
-                        <td
+                        <DroppableCell
                           key={d.toISOString()}
+                          employeId={emp.id}
+                          date={dayStr}
                           className={cn(
                             "relative border-b border-l align-top",
                             isWeekend && "bg-muted/20",
@@ -450,7 +452,7 @@ export function PlanningGrid({
                               ? undefined
                               : conflict
                                 ? `⚠ Conflit : ${conflict.detail}`
-                                : "Cliquer pour éditer · Ctrl+click pour sélection multiple"
+                                : "Cliquer pour éditer · Ctrl+click pour sélection multiple · Glisser-déposer pour bouger (Alt = dupliquer)"
                           }
                         >
                           {conflict && (
@@ -472,8 +474,9 @@ export function PlanningGrid({
                             assignations={dayAssigns}
                             metiersById={metiersById}
                             affairesById={affairesById}
+                            dnd={readonly ? undefined : { employeId: emp.id, date: dayStr }}
                           />
-                        </td>
+                        </DroppableCell>
                       );
                     })}
                   </tr>
