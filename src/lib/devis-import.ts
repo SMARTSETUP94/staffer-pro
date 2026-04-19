@@ -373,6 +373,43 @@ export function parseDevisFromArrayBuffer(
     });
   }
 
+  // Post-traitement : exclure automatiquement les lignes parents qui ont
+  // des enfants détaillés avec heures (évite double comptage).
+  // Une ligne A est parent de B si :
+  //  - A.numero est un préfixe strict de B.numero (ex: "1.2" préfixe de "1.2.3")
+  //  - A apparaît avant B dans le fichier
+  // On détecte les parents qui ont au moins un descendant avec tempsPrevu > 0.
+  const parentsWithChildren = new Set<number>();
+  for (let i = 0; i < lines.length; i++) {
+    const parent = lines[i];
+    if (!parent.numero) continue;
+    const parentParts = parent.numero.match(/^(\d+(?:\.\d+)*)/)?.[1];
+    if (!parentParts) continue;
+    for (let j = i + 1; j < lines.length; j++) {
+      const child = lines[j];
+      if (!child.numero) continue;
+      const childParts = child.numero.match(/^(\d+(?:\.\d+)*)/)?.[1];
+      if (!childParts) continue;
+      // Enfant strict : commence par "parentParts." ET a un temps prévu.
+      if (
+        childParts.length > parentParts.length &&
+        childParts.startsWith(parentParts + ".") &&
+        (child.tempsPrevu ?? 0) > 0
+      ) {
+        parentsWithChildren.add(i);
+        break;
+      }
+    }
+  }
+  for (const idx of parentsWithChildren) {
+    const l = lines[idx];
+    if (!l.excluded) {
+      l.excluded = true;
+      l.isSection = true;
+      l.warnings.push("Ligne parent — heures détaillées dans les sous-postes (évite double comptage)");
+    }
+  }
+
   const totalTempsPrevu = lines.reduce((acc, l) => acc + (!l.excluded && l.tempsPrevu ? l.tempsPrevu : 0), 0);
   const totalMontantHt = lines.reduce((acc, l) => acc + (!l.excluded && l.total ? l.total : 0), 0);
 
