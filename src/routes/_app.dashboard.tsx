@@ -27,13 +27,14 @@ export const Route = createFileRoute("/_app/dashboard")({
   component: DashboardPage,
 });
 
-interface AffaireMontage {
+interface AffaireEvenement {
   id: string;
   numero: string;
   nom: string;
   client: string | null;
-  date_montage: string | null;
+  date: string;
   lieu: string | null;
+  type: "montage" | "demontage";
 }
 
 interface AffaireDepassement {
