@@ -50,6 +50,11 @@ function ParametresPage() {
   const [users, setUsers] = useState<UserRow[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
   const [pendingRoleAdd, setPendingRoleAdd] = useState<Record<string, AppRole>>({});
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteFullName, setInviteFullName] = useState("");
+  const [inviteRoles, setInviteRoles] = useState<AppRole[]>(["employe"]);
+  const [inviting, setInviting] = useState(false);
 
   useEffect(() => {
     if (!loading && !isAdmin) navigate({ to: "/planning" });
