@@ -92,7 +92,7 @@ function DashboardPage() {
   const [affairesActives, setAffairesActives] = useState(0);
   const [employesActifs, setEmployesActifs] = useState(0);
   const [heuresSemaine, setHeuresSemaine] = useState(0);
-  const [montagesProches, setMontagesProches] = useState<AffaireMontage[]>([]);
+  const [evenementsProches, setEvenementsProches] = useState<AffaireEvenement[]>([]);
   const [depassements, setDepassements] = useState<AffaireDepassement[]>([]);
   const [heuresAValider, setHeuresAValider] = useState<HeuresSoumise[]>([]);
   const [absencesSemaine, setAbsencesSemaine] = useState<AbsenceItem[]>([]);
