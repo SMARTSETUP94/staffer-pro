@@ -1,7 +1,7 @@
 import { useMemo } from "react";
-import { addDays, format } from "date-fns";
+import { addDays, format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
-import { MapPin, Users, AlertTriangle } from "lucide-react";
+import { MapPin, Users, AlertTriangle, HardHat, Calendar } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
