@@ -22,7 +22,7 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 
-type ContratType = "CDI" | "Interim";
+type ContratType = "CDI" | "CDD" | "Interim" | "Independant";
 
 interface EmployeRow {
   id: string;
