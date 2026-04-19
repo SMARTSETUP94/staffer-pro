@@ -200,8 +200,18 @@ function findColumnMap(rows: unknown[][]): { headerRow: number; cols: ColumnMap 
         designation: hasDesignation,
         quantite: find([(c) => c === "qte" || c === "qté" || c === "quantite" || c === "quantité"]),
         unite: find([(c) => c === "unite" || c === "unité" || c === "u" || c === "un"]),
-        puHt: find([(c) => c.includes("pu ht") || c.includes("puht") || c === "pu" || c.includes("prix unit")]),
-        total: find([(c) => c === "total" || c.includes("total ht") || c.includes("montant")]),
+        puHt: find([
+          (c) => c.replace(/\./g, "").includes("pu ht") || c.replace(/\./g, "").includes("puht"),
+          (c) => c === "pu" || c.includes("prix unit") || c.includes("p.u"),
+        ]),
+        total: find([
+          (c) => {
+            const k = c.replace(/\./g, "").replace(/\s+/g, " ").trim();
+            return k === "total" || k === "total ht" || k === "totalht"
+              || k.includes("total ht") || k.includes("sous-total") || k.includes("sous total")
+              || k === "montant" || k === "montant ht" || k.includes("montant ht");
+          },
+        ]),
         tva: find([(c) => c === "tva" || c.includes("tva")]),
         tempsPrevu: hasTemps,
       };
