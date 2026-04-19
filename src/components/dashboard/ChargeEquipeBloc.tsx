@@ -191,32 +191,25 @@ export function ChargeEquipeBloc({ weekStart, weekEnd }: Props) {
                 Aucune assignation cette semaine
               </p>
             ) : (
-              <ul className="space-y-2.5">
+              <ul className="space-y-3">
                 {rows.map((r) => {
                   const max = Math.max(...rows.map((x) => x.totalH), 1);
                   const cdiPct = (r.cdiH / max) * 100;
                   const autresPct = (r.autresH / max) * 100;
                   return (
                     <li key={r.metierId} className="space-y-1">
-                      <div className="flex items-center justify-between text-xs">
-                        <div className="flex items-center gap-2 min-w-0">
+                      <div className="flex items-center justify-between gap-2 text-xs">
+                        <div className="flex min-w-0 items-center gap-2">
                           <span
-                            className="h-2 w-2 rounded-full shrink-0"
+                            className="h-2 w-2 shrink-0 rounded-full"
                             style={{ backgroundColor: r.couleur }}
                             aria-hidden
                           />
-                          <span className="font-medium truncate">{r.libelle}</span>
+                          <span className="truncate font-medium">{r.libelle}</span>
                         </div>
-                        <div className="flex items-center gap-2 shrink-0 tabular-nums">
-                          <span className="text-muted-foreground">
-                            CDI <b className="text-foreground">{r.cdiH}h</b>
-                          </span>
-                          <span className="text-muted-foreground">
-                            Autres <b className="text-foreground">{r.autresH}h</b>
-                          </span>
-                        </div>
+                        <span className="shrink-0 font-semibold tabular-nums">{r.totalH}h</span>
                       </div>
-                      <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden flex">
+                      <div className="flex h-1.5 w-full overflow-hidden rounded-full bg-muted">
                         <div
                           className="h-full"
                           style={{
@@ -233,6 +226,14 @@ export function ChargeEquipeBloc({ weekStart, weekEnd }: Props) {
                           }}
                           aria-hidden
                         />
+                      </div>
+                      <div className="flex items-center gap-3 text-[11px] text-muted-foreground tabular-nums">
+                        <span>
+                          CDI <b className="text-foreground">{r.cdiH}h</b>
+                        </span>
+                        <span>
+                          Autres <b className="text-foreground">{r.autresH}h</b>
+                        </span>
                       </div>
                     </li>
                   );
