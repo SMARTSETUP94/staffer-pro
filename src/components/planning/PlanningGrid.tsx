@@ -264,7 +264,7 @@ export function PlanningGrid({
               <FragmentGroup key={metier.id}>
                 <tr>
                   <td
-                    colSpan={8}
+                    colSpan={days.length + 1}
                     className="border-b border-t bg-muted/20 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider"
                     style={{ color: metier.couleur }}
                   >
