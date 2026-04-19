@@ -21,6 +21,8 @@ interface AffaireRecap {
 }
 
 export function HeuresRestantesSidebar({ affaires, consommation, filterAffaireIds }: Props) {
+  const [collapsed, setCollapsed] = useState(false);
+
   const recap: AffaireRecap[] = affaires
     .filter((a) => !filterAffaireIds || filterAffaireIds.size === 0 || filterAffaireIds.has(a.id))
     .map((affaire) => {
@@ -34,12 +36,36 @@ export function HeuresRestantesSidebar({ affaires, consommation, filterAffaireId
     .filter((r) => r.prevues > 0 || r.assignees > 0)
     .sort((a, b) => b.pct - a.pct);
 
+  if (collapsed) {
+    return (
+      <div className="sticky top-4 flex justify-end">
+        <Button
+          size="icon"
+          variant="outline"
+          onClick={() => setCollapsed(false)}
+          aria-label="Ouvrir la sidebar heures restantes"
+        >
+          <PanelRightOpen className="h-4 w-4" />
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <Card className="sticky top-4">
-      <CardHeader className="pb-3">
+      <CardHeader className="flex flex-row items-center justify-between gap-2 pb-3 space-y-0">
         <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
           Heures restantes par affaire
         </CardTitle>
+        <Button
+          size="icon"
+          variant="ghost"
+          className="h-7 w-7"
+          onClick={() => setCollapsed(true)}
+          aria-label="Réduire la sidebar"
+        >
+          <PanelRightClose className="h-4 w-4" />
+        </Button>
       </CardHeader>
       <CardContent className="space-y-3">
         {recap.length === 0 ? (
