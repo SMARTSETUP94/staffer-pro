@@ -23,6 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { AffaireCombobox } from "./AffaireCombobox";
 import {
   AlertDialog,
   AlertDialogAction,
