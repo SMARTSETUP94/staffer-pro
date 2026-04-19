@@ -128,8 +128,13 @@ export function usePlanningData(weekStart: Date, weekEnd: Date): PlanningData {
         .select("id, employe_id, date_debut, date_fin, type, demi_journee, motif, valide")
         .lte("date_debut", endStr)
         .gte("date_fin", startStr),
+      // Tous les employés actifs (incl. non_staffing) pour résoudre les chefs de chantier
+      supabase
+        .from("employes")
+        .select("id, prenom, nom")
+        .eq("actif", true),
     ])
-      .then(([mRes, eRes, aRes, asRes, cRes, abRes]) => {
+      .then(([mRes, eRes, aRes, asRes, cRes, abRes, chefsRes]) => {
         if (cancelled) return;
         if (mRes.error) throw mRes.error;
         if (eRes.error) throw eRes.error;
@@ -137,12 +142,16 @@ export function usePlanningData(weekStart: Date, weekEnd: Date): PlanningData {
         if (asRes.error) throw asRes.error;
         if (cRes.error) throw cRes.error;
         if (abRes.error) throw abRes.error;
+        if (chefsRes.error) throw chefsRes.error;
         setMetiers((mRes.data ?? []) as Metier[]);
         setEmployes((eRes.data ?? []) as Employe[]);
         setAffaires((aRes.data ?? []) as Affaire[]);
         setAssignations((asRes.data ?? []) as Assignation[]);
         setConsommation((cRes.data ?? []) as DevisConsommation[]);
         setAbsences((abRes.data ?? []) as Absence[]);
+        const cMap = new Map<string, ChefRef>();
+        ((chefsRes.data ?? []) as ChefRef[]).forEach((c) => cMap.set(c.id, c));
+        setChefsById(cMap);
         setLoading(false);
       })
       .catch((e) => {
@@ -163,8 +172,12 @@ export function usePlanningData(weekStart: Date, weekEnd: Date): PlanningData {
     assignations,
     consommation,
     absences,
+    chefsById,
     loading,
     error,
+    refresh: () => setTick((t) => t + 1),
+  };
+}
     refresh: () => setTick((t) => t + 1),
   };
 }
