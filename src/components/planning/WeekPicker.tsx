@@ -32,6 +32,11 @@ export function WeekPicker({ weekStart, onChange }: Props) {
             {format(weekStart, "d MMM", { locale: fr })} → {format(weekEnd, "d MMM yyyy", { locale: fr })}
           </span>
         </span>
+        {isCurrent && (
+          <span className="ml-1 rounded bg-primary/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-primary">
+            En cours
+          </span>
+        )}
       </div>
       <Button
         size="icon"

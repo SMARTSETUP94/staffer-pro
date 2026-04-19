@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { Fragment as FragmentGroup, useMemo } from "react";
 import { addDays, format } from "date-fns";
 import { fr } from "date-fns/locale";
 import type { Affaire, Assignation, Employe, Metier } from "@/hooks/use-planning-data";
@@ -85,8 +85,8 @@ export function PlanningGrid({
         </thead>
         <tbody>
           {grouped.map(({ metier, employes: emps }) => (
-            <>
-              <tr key={`h-${metier.id}`}>
+            <FragmentGroup key={metier.id}>
+              <tr>
                 <td
                   colSpan={8}
                   className="border-b border-t bg-muted/20 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider"
@@ -136,7 +136,7 @@ export function PlanningGrid({
                   })}
                 </tr>
               ))}
-            </>
+            </FragmentGroup>
           ))}
         </tbody>
       </table>

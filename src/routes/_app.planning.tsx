@@ -170,7 +170,7 @@ function PlanningPage() {
         )}
       </div>
 
-      <aside className="hidden w-[280px] shrink-0 border-l bg-muted/20 p-4 lg:block">
+      <aside className="hidden w-[260px] shrink-0 overflow-y-auto border-l bg-muted/20 p-4 xl:block">
         <HeuresRestantesSidebar
           affaires={affaires}
           consommation={consommation}
