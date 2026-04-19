@@ -516,13 +516,15 @@ function KpiCard({
   return (
     <Link
       to={to}
-      className={`rounded-2xl border bg-card p-4 transition-colors hover:border-primary/40 ${emphasize ? "border-primary/40 bg-primary/5" : "border-border"}`}
+      className={`group block rounded-2xl border bg-card p-4 transition-colors hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${emphasize ? "border-primary/40 bg-primary/5" : "border-border"}`}
     >
-      <div className="flex items-center justify-between">
-        <p className="text-xs uppercase tracking-wider text-muted-foreground">{label}</p>
-        <Icon className={`h-4 w-4 ${emphasize ? "text-primary" : "text-muted-foreground"}`} />
+      <div className="flex items-start justify-between gap-2">
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground leading-tight">
+          {label}
+        </p>
+        <Icon className={`h-4 w-4 shrink-0 ${emphasize ? "text-primary" : "text-muted-foreground"}`} aria-hidden />
       </div>
-      <p className="mt-2 text-2xl font-bold">{value}</p>
+      <p className="mt-3 text-3xl font-bold tabular-nums tracking-tight">{value}</p>
     </Link>
   );
 }
