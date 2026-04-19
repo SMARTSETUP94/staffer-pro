@@ -325,7 +325,7 @@ function EmployesPage() {
                       {r.notes && <div className="text-xs text-muted-foreground">{r.notes}</div>}
                     </TableCell>
                     <TableCell>
-                      <ContratPill type={r.type_contrat} agence={r.agence_interim} />
+                      <ContratPill type={r.type_contrat} agence={r.agence_interim} isApprenti={r.is_apprenti} />
                     </TableCell>
                     <TableCell>
                       {principal ? (
