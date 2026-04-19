@@ -107,7 +107,7 @@ export function usePlanningData(weekStart: Date, weekEnd: Date): PlanningData {
         .eq("actif", true)
         .eq("non_staffing", false)
         .order("nom"),
-      supabase.from("affaires").select("id, numero, nom, lieu, client, chef_chantier_id"),
+      supabase.from("affaires").select("id, numero, nom, lieu, client, chef_chantier_id, date_montage, date_demontage"),
       supabase
         .from("assignations")
         .select("id, date, demi_journee, heures, affaire_id, employe_id, metier_id, notes")
