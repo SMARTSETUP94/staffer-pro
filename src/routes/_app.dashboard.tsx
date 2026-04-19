@@ -18,6 +18,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useNotifications } from "@/hooks/use-notifications";
 import { ABSENCE_ICON, ABSENCE_LABEL } from "@/lib/absence-helpers";
+import { ChargeEquipeBloc } from "@/components/dashboard/ChargeEquipeBloc";
+import { MeteoChantiersBloc } from "@/components/dashboard/MeteoChantiersBloc";
 
 export const Route = createFileRoute("/_app/dashboard")({
   component: DashboardPage,
@@ -201,6 +203,10 @@ function DashboardPage() {
     );
   }
 
+  const today = new Date();
+  const weekStartStr = startOfWeek(today).toISOString().slice(0, 10);
+  const weekEndStr = endOfWeek(today).toISOString().slice(0, 10);
+
   return (
     <div className="space-y-6 p-6">
       <PageHeader
@@ -230,7 +236,10 @@ function DashboardPage() {
         <KpiCard icon={ClipboardCheck} label="Heures à valider" value={heuresAValider.length} to="/validation-heures" emphasize={heuresAValider.length > 0} />
       </div>
 
+      <MeteoChantiersBloc />
+
       <div className="grid gap-4 lg:grid-cols-2">
+        <ChargeEquipeBloc weekStart={weekStartStr} weekEnd={weekEndStr} />
         {/* Bloc montages J+7 */}
         <Card>
           <CardHeader className="flex-row items-center justify-between space-y-0">
