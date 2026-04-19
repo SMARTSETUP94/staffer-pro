@@ -84,6 +84,7 @@ export function usePlanningData(weekStart: Date, weekEnd: Date): PlanningData {
   const [affaires, setAffaires] = useState<Affaire[]>([]);
   const [assignations, setAssignations] = useState<Assignation[]>([]);
   const [consommation, setConsommation] = useState<DevisConsommation[]>([]);
+  const [absences, setAbsences] = useState<Absence[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
@@ -111,19 +112,27 @@ export function usePlanningData(weekStart: Date, weekEnd: Date): PlanningData {
         .gte("date", startStr)
         .lte("date", endStr),
       supabase.from("v_devis_consommation").select("*"),
+      // Absences chevauchant la semaine : date_debut <= weekEnd ET date_fin >= weekStart
+      supabase
+        .from("absences")
+        .select("id, employe_id, date_debut, date_fin, type, demi_journee, motif, valide")
+        .lte("date_debut", endStr)
+        .gte("date_fin", startStr),
     ])
-      .then(([mRes, eRes, aRes, asRes, cRes]) => {
+      .then(([mRes, eRes, aRes, asRes, cRes, abRes]) => {
         if (cancelled) return;
         if (mRes.error) throw mRes.error;
         if (eRes.error) throw eRes.error;
         if (aRes.error) throw aRes.error;
         if (asRes.error) throw asRes.error;
         if (cRes.error) throw cRes.error;
+        if (abRes.error) throw abRes.error;
         setMetiers((mRes.data ?? []) as Metier[]);
         setEmployes((eRes.data ?? []) as Employe[]);
         setAffaires((aRes.data ?? []) as Affaire[]);
         setAssignations((asRes.data ?? []) as Assignation[]);
         setConsommation((cRes.data ?? []) as DevisConsommation[]);
+        setAbsences((abRes.data ?? []) as Absence[]);
         setLoading(false);
       })
       .catch((e) => {
@@ -143,6 +152,7 @@ export function usePlanningData(weekStart: Date, weekEnd: Date): PlanningData {
     affaires,
     assignations,
     consommation,
+    absences,
     loading,
     error,
     refresh: () => setTick((t) => t + 1),
