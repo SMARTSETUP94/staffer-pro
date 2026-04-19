@@ -212,7 +212,7 @@ function AffairesPage() {
         </Tabs>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-border bg-card">
+      <div className="overflow-x-auto rounded-2xl border border-border bg-card">
         {loading ? (
           <div className="flex items-center justify-center p-12">
             <Loader2 className="h-5 w-5 animate-spin text-primary" />
@@ -222,16 +222,16 @@ function AffairesPage() {
             Aucune affaire ne correspond aux filtres.
           </div>
         ) : (
-          <Table>
+          <Table className="min-w-[820px]">
             <TableHeader>
               <TableRow>
-                <TableHead>N°</TableHead>
-                <TableHead>Nom</TableHead>
-                <TableHead>Client</TableHead>
-                <TableHead>Lieu</TableHead>
-                <TableHead>Période</TableHead>
-                <TableHead>Statut</TableHead>
-                <TableHead className="w-[120px]"></TableHead>
+                <TableHead className="w-[110px]">N°</TableHead>
+                <TableHead className="min-w-[200px]">Nom</TableHead>
+                <TableHead className="min-w-[140px]">Client</TableHead>
+                <TableHead className="min-w-[120px]">Lieu</TableHead>
+                <TableHead className="w-[170px]">Période</TableHead>
+                <TableHead className="w-[110px]">Statut</TableHead>
+                <TableHead className="w-[160px] text-right"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
