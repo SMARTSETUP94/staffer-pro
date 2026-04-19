@@ -32,7 +32,12 @@ export const Route = createRootRoute({
       { title: "Setup Paris — Planning chantiers" },
       { name: "description", content: "Setup Paris : planning chantiers, staffing et import de devis pour la scénographie et fabrication de décors." },
     ],
-    links: [{ rel: "stylesheet", href: appCss }],
+    links: [
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" },
+      { rel: "stylesheet", href: appCss },
+    ],
   }),
   shellComponent: RootShell,
   component: RootComponent,
