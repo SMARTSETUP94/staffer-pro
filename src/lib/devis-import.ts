@@ -200,8 +200,18 @@ function findColumnMap(rows: unknown[][]): { headerRow: number; cols: ColumnMap 
         designation: hasDesignation,
         quantite: find([(c) => c === "qte" || c === "qté" || c === "quantite" || c === "quantité"]),
         unite: find([(c) => c === "unite" || c === "unité" || c === "u" || c === "un"]),
-        puHt: find([(c) => c.includes("pu ht") || c.includes("puht") || c === "pu" || c.includes("prix unit")]),
-        total: find([(c) => c === "total" || c.includes("total ht") || c.includes("montant")]),
+        puHt: find([
+          (c) => c.replace(/\./g, "").includes("pu ht") || c.replace(/\./g, "").includes("puht"),
+          (c) => c === "pu" || c.includes("prix unit") || c.includes("p.u"),
+        ]),
+        total: find([
+          (c) => {
+            const k = c.replace(/\./g, "").replace(/\s+/g, " ").trim();
+            return k === "total" || k === "total ht" || k === "totalht"
+              || k.includes("total ht") || k.includes("sous-total") || k.includes("sous total")
+              || k === "montant" || k === "montant ht" || k.includes("montant ht");
+          },
+        ]),
         tva: find([(c) => c === "tva" || c.includes("tva")]),
         tempsPrevu: hasTemps,
       };
@@ -304,7 +314,12 @@ export function parseDevisFromArrayBuffer(
     const quantite = cols.quantite >= 0 ? toNumber(row[cols.quantite]) : null;
     const unite = cols.unite >= 0 ? String(row[cols.unite] ?? "").trim() : "";
     const puHt = cols.puHt >= 0 ? toNumber(row[cols.puHt]) : null;
-    const total = cols.total >= 0 ? toNumber(row[cols.total]) : null;
+    let total = cols.total >= 0 ? toNumber(row[cols.total]) : null;
+    // Fallback : si Total absent mais quantité × PU disponibles, on calcule.
+    if ((total == null || total === 0) && quantite != null && puHt != null) {
+      const computed = quantite * puHt;
+      if (computed !== 0) total = computed;
+    }
     const tva = cols.tva >= 0 ? toNumber(row[cols.tva]) : null;
     const tempsPrevu = cols.tempsPrevu >= 0 ? toNumber(row[cols.tempsPrevu]) : null;
 
