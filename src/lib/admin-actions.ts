@@ -43,26 +43,90 @@ export const inviteUser = createServerFn({ method: "POST" })
       throw new Error("Action réservée aux administrateurs");
     }
 
-    // Inviter via admin API
-    const { data: invited, error: inviteErr } = await supabaseAdmin.auth.admin.inviteUserByEmail(
-      data.email,
-      {
+    // 1. Générer un lien d'invitation (sans envoyer l'email Supabase par défaut)
+    const { data: linkData, error: linkErr } = await supabaseAdmin.auth.admin.generateLink({
+      type: "invite",
+      email: data.email,
+      options: {
         data: data.fullName ? { full_name: data.fullName } : undefined,
       },
-    );
-    if (inviteErr || !invited?.user) {
-      throw new Error(inviteErr?.message ?? "Échec de l'invitation");
+    });
+    if (linkErr || !linkData?.user) {
+      throw new Error(linkErr?.message ?? "Échec de la génération du lien d'invitation");
     }
 
-    const newUserId = invited.user.id;
+    const newUserId = linkData.user.id;
+    const inviteLink = linkData.properties?.action_link;
+    if (!inviteLink) {
+      throw new Error("Lien d'invitation manquant");
+    }
 
-    // Le trigger handle_new_user crée le profil + rôle 'employe' par défaut.
-    // On nettoie pour ne garder que les rôles demandés.
+    // 2. Nettoyer les rôles par défaut + insérer les rôles demandés
     await supabaseAdmin.from("user_roles").delete().eq("user_id", newUserId);
-
     const rows = data.roles.map((role) => ({ user_id: newUserId, role }));
     const { error: insErr } = await supabaseAdmin.from("user_roles").insert(rows);
-    if (insErr) throw new Error("Utilisateur invité, mais erreur sur les rôles : " + insErr.message);
+    if (insErr) throw new Error("Utilisateur créé, mais erreur sur les rôles : " + insErr.message);
+
+    // 3. Envoyer l'email d'invitation custom via Resend (gateway Lovable)
+    const LOVABLE_API_KEY = process.env.LOVABLE_API_KEY;
+    const RESEND_API_KEY = process.env.RESEND_API_KEY;
+    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY non configuré");
+    if (!RESEND_API_KEY) throw new Error("RESEND_API_KEY non configuré");
+
+    const greeting = data.fullName ? `Bonjour ${data.fullName},` : "Bonjour,";
+    const rolesLabel = data.roles
+      .map((r) => (r === "admin" ? "Admin" : r === "chef_chantier" ? "Chef d'équipe" : "Employé"))
+      .join(", ");
+
+    const html = `<!doctype html>
+<html><body style="margin:0;padding:0;background:#f6f7f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#1a1a1a;">
+  <div style="max-width:560px;margin:40px auto;background:#ffffff;border-radius:12px;padding:32px;border:1px solid #e5e7eb;">
+    <h1 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#0f172a;">Bienvenue sur Setup Paris — Planning chantiers</h1>
+    <p style="margin:0 0 12px;font-size:15px;line-height:1.55;">${greeting}</p>
+    <p style="margin:0 0 12px;font-size:15px;line-height:1.55;">
+      Vous avez été invité(e) à rejoindre l'application de planning chantiers avec le(s) rôle(s) suivant(s) :
+      <strong>${rolesLabel}</strong>.
+    </p>
+    <p style="margin:0 0 24px;font-size:15px;line-height:1.55;">
+      Cliquez sur le bouton ci-dessous pour définir votre mot de passe et accéder à l'application :
+    </p>
+    <p style="text-align:center;margin:0 0 28px;">
+      <a href="${inviteLink}" style="display:inline-block;background:#0f172a;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:8px;font-weight:600;font-size:15px;">
+        Activer mon compte
+      </a>
+    </p>
+    <p style="margin:0 0 8px;font-size:13px;color:#6b7280;line-height:1.5;">
+      Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur :
+    </p>
+    <p style="margin:0 0 24px;font-size:12px;color:#6b7280;word-break:break-all;">${inviteLink}</p>
+    <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0;" />
+    <p style="margin:0;font-size:12px;color:#9ca3af;">
+      Ce lien est valable une seule fois. Si vous n'attendiez pas cette invitation, ignorez cet email.
+    </p>
+  </div>
+</body></html>`;
+
+    const resendRes = await fetch("https://connector-gateway.lovable.dev/resend/emails", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "X-Connection-Api-Key": RESEND_API_KEY,
+      },
+      body: JSON.stringify({
+        from: "Setup Paris <onboarding@resend.dev>",
+        to: [data.email],
+        subject: "Invitation — Planning chantiers Setup Paris",
+        html,
+      }),
+    });
+
+    if (!resendRes.ok) {
+      const errBody = await resendRes.text();
+      throw new Error(
+        `Utilisateur créé, mais échec de l'envoi de l'email Resend [${resendRes.status}]: ${errBody}`,
+      );
+    }
 
     return { success: true, userId: newUserId, email: data.email };
   });
