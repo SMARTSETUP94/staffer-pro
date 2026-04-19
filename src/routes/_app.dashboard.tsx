@@ -268,12 +268,12 @@ function DashboardPage() {
 
       <div className="grid gap-4 lg:grid-cols-2">
         <ChargeEquipeBloc weekStart={weekStartStr} weekEnd={weekEndStr} />
-        {/* Bloc montages J+7 */}
+        {/* Bloc montages & démontages J+7 */}
         <Card>
           <CardHeader className="flex-row items-center justify-between space-y-0">
             <CardTitle className="text-base flex items-center gap-2">
               <Calendar className="h-4 w-4 text-primary" />
-              Prochains montages (J+7)
+              Prochains montages & démontages (J+7)
             </CardTitle>
             <Button asChild variant="ghost" size="sm">
               <Link to="/planning">
@@ -282,29 +282,41 @@ function DashboardPage() {
             </Button>
           </CardHeader>
           <CardContent>
-            {montagesProches.length === 0 ? (
-              <p className="py-6 text-center text-sm text-muted-foreground">Aucun montage prévu dans les 7 jours</p>
+            {evenementsProches.length === 0 ? (
+              <p className="py-6 text-center text-sm text-muted-foreground">Aucun événement prévu dans les 7 jours</p>
             ) : (
               <ul className="divide-y">
-                {montagesProches.map((a) => (
-                  <li key={a.id} className="py-2.5 flex items-center justify-between gap-3">
-                    <div className="min-w-0 flex-1">
-                      <Link
-                        to="/affaires/$affaireId"
-                        params={{ affaireId: a.id }}
-                        className="text-sm font-medium hover:text-primary truncate block"
-                      >
-                        {a.numero} — {a.nom}
-                      </Link>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {a.client ?? "—"}{a.lieu ? ` · ${a.lieu}` : ""}
-                      </p>
-                    </div>
-                    <Badge variant="outline" className="shrink-0 text-xs">
-                      {a.date_montage ? fmtDate(a.date_montage) : "—"}
-                    </Badge>
-                  </li>
-                ))}
+                {evenementsProches.map((e) => {
+                  const isMontage = e.type === "montage";
+                  const Icon = isMontage ? ArrowUpCircle : ArrowDownCircle;
+                  return (
+                    <li key={`${e.id}-${e.type}`} className="py-2.5 flex items-center justify-between gap-3">
+                      <div className="min-w-0 flex-1 flex items-center gap-2">
+                        <Icon
+                          className={`h-4 w-4 shrink-0 ${isMontage ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"}`}
+                          aria-hidden
+                        />
+                        <div className="min-w-0">
+                          <Link
+                            to="/affaires/$affaireId"
+                            params={{ affaireId: e.id }}
+                            className="text-sm font-medium hover:text-primary truncate block"
+                          >
+                            {e.numero} — {e.nom}
+                          </Link>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {isMontage ? "Montage" : "Démontage"}
+                            {e.client ? ` · ${e.client}` : ""}
+                            {e.lieu ? ` · ${e.lieu}` : ""}
+                          </p>
+                        </div>
+                      </div>
+                      <Badge variant="outline" className="shrink-0 text-xs">
+                        {fmtDate(e.date)}
+                      </Badge>
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </CardContent>
