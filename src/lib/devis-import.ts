@@ -314,7 +314,12 @@ export function parseDevisFromArrayBuffer(
     const quantite = cols.quantite >= 0 ? toNumber(row[cols.quantite]) : null;
     const unite = cols.unite >= 0 ? String(row[cols.unite] ?? "").trim() : "";
     const puHt = cols.puHt >= 0 ? toNumber(row[cols.puHt]) : null;
-    const total = cols.total >= 0 ? toNumber(row[cols.total]) : null;
+    let total = cols.total >= 0 ? toNumber(row[cols.total]) : null;
+    // Fallback : si Total absent mais quantité × PU disponibles, on calcule.
+    if ((total == null || total === 0) && quantite != null && puHt != null) {
+      const computed = quantite * puHt;
+      if (computed !== 0) total = computed;
+    }
     const tva = cols.tva >= 0 ? toNumber(row[cols.tva]) : null;
     const tempsPrevu = cols.tempsPrevu >= 0 ? toNumber(row[cols.tempsPrevu]) : null;
 
