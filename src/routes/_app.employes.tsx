@@ -373,15 +373,15 @@ function EmployesPage() {
 
       {/* Dialog création/édition */}
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
+        <DialogContent className="flex max-h-[90vh] max-w-2xl flex-col gap-0 p-0">
+          <DialogHeader className="border-b border-border px-6 py-4">
             <DialogTitle>{form.id ? "Modifier l'employé" : "Nouvel employé"}</DialogTitle>
             <DialogDescription>
               Renseignez les informations de la fiche. Les compétences secondaires permettent de proposer cet employé sur d'autres métiers que son métier principal.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 overflow-y-auto px-6 py-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label>Prénom</Label>
               <Input value={form.prenom} onChange={(e) => setForm({ ...form, prenom: e.target.value })} className="h-10 rounded-xl" />
