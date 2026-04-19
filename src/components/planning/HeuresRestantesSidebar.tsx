@@ -1,6 +1,8 @@
-import { AlertTriangle, CheckCircle2 } from "lucide-react";
+import { AlertTriangle, CheckCircle2, PanelRightClose, PanelRightOpen } from "lucide-react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { Affaire, DevisConsommation } from "@/hooks/use-planning-data";
 
