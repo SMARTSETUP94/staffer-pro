@@ -75,11 +75,15 @@ export function AppSidebar() {
           {collapsed ? (
             <span className="brand-dot mx-auto" aria-label="Staffing by Setup Paris" />
           ) : (
-            <span className="inline-flex items-center gap-2 text-sm font-extrabold uppercase tracking-[0.14em]">
-              <span className="brand-dot" aria-hidden />
-              <span className="text-[var(--cream)]">Staffing</span>
-              <span className="text-[var(--cream)]/60 font-semibold">by</span>
-              <span className="text-primary">SETUP.PARIS</span>
+            <span className="inline-flex items-start gap-2 text-sm font-extrabold uppercase tracking-[0.14em] leading-tight">
+              <span className="brand-dot mt-1.5 shrink-0" aria-hidden />
+              <span className="flex flex-col">
+                <span className="text-[var(--cream)]">Staffing</span>
+                <span>
+                  <span className="text-[var(--cream)]/60 font-semibold">by</span>{" "}
+                  <span className="text-primary">SETUP.PARIS</span>
+                </span>
+              </span>
             </span>
           )}
         </div>
