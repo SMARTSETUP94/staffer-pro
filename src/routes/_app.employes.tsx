@@ -95,7 +95,7 @@ function EmployesPage() {
   const [rows, setRows] = useState<EmployeRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [filterContrat, setFilterContrat] = useState<"all" | ContratType>("all");
+  const [filterContrat, setFilterContrat] = useState<"all" | ContratType | "Apprenti">("all");
   const [filterActif, setFilterActif] = useState<"actifs" | "inactifs" | "tous">("actifs");
   const [viewMode, setViewMode] = useState<"liste" | "tableur">("liste");
   const [open, setOpen] = useState(false);
@@ -135,7 +135,9 @@ function EmployesPage() {
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return rows.filter((r) => {
-      if (filterContrat !== "all" && r.type_contrat !== filterContrat) return false;
+      if (filterContrat === "Apprenti") {
+        if (!r.is_apprenti) return false;
+      } else if (filterContrat !== "all" && r.type_contrat !== filterContrat) return false;
       if (filterActif === "actifs" && !r.actif) return false;
       if (filterActif === "inactifs" && r.actif) return false;
       if (!q) return true;
@@ -268,6 +270,7 @@ function EmployesPage() {
             <TabsList className="rounded-xl bg-muted">
               <TabsTrigger value="all" className="rounded-lg">Tous</TabsTrigger>
               <TabsTrigger value="CDI" className="rounded-lg">CDI</TabsTrigger>
+              <TabsTrigger value="Apprenti" className="rounded-lg">Apprentis</TabsTrigger>
               <TabsTrigger value="Interim" className="rounded-lg">Intérim</TabsTrigger>
             </TabsList>
           </Tabs>
@@ -322,7 +325,7 @@ function EmployesPage() {
                       {r.notes && <div className="text-xs text-muted-foreground">{r.notes}</div>}
                     </TableCell>
                     <TableCell>
-                      <ContratPill type={r.type_contrat} agence={r.agence_interim} />
+                      <ContratPill type={r.type_contrat} agence={r.agence_interim} isApprenti={r.is_apprenti} />
                     </TableCell>
                     <TableCell>
                       {principal ? (
@@ -467,6 +470,17 @@ function EmployesPage() {
             </div>
             <div className="flex items-center justify-between rounded-xl border border-border bg-background p-3 sm:col-span-2">
               <div>
+                <p className="text-sm font-semibold text-foreground">Apprenti</p>
+                <p className="text-xs text-muted-foreground">Identifie les CDI en contrat d'apprentissage.</p>
+              </div>
+              <Switch
+                checked={form.is_apprenti}
+                disabled={form.type_contrat !== "CDI"}
+                onCheckedChange={(v) => setForm({ ...form, is_apprenti: v })}
+              />
+            </div>
+            <div className="flex items-center justify-between rounded-xl border border-border bg-background p-3 sm:col-span-2">
+              <div>
                 <p className="text-sm font-semibold text-foreground">Employé actif</p>
                 <p className="text-xs text-muted-foreground">Décocher pour archiver sans supprimer.</p>
               </div>
@@ -487,11 +501,18 @@ function EmployesPage() {
   );
 }
 
-function ContratPill({ type, agence }: { type: ContratType; agence: string | null }) {
+function ContratPill({ type, agence, isApprenti }: { type: ContratType; agence: string | null; isApprenti?: boolean }) {
   if (type === "CDI") {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-[var(--indigo-soft)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary">
-        CDI
+      <span className="inline-flex items-center gap-1.5">
+        <span className="inline-flex items-center rounded-full bg-[var(--indigo-soft)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary">
+          CDI
+        </span>
+        {isApprenti && (
+          <span className="inline-flex items-center rounded-full border border-warning/40 bg-warning-soft px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-warning-foreground">
+            Apprenti
+          </span>
+        )}
       </span>
     );
   }
