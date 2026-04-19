@@ -36,10 +36,15 @@ function PlanningPage() {
     () => employes.filter((e) => e.type_contrat === "CDI" || e.type_contrat === "CDD"),
     [employes],
   );
-  const employesInterim = useMemo(
-    () => employes.filter((e) => e.type_contrat === "Interim" || e.type_contrat === "Independant"),
-    [employes],
-  );
+  // Intérim/Indép. : uniquement ceux qui ont au moins une assignation sur la semaine
+  const employesInterim = useMemo(() => {
+    const assignedIds = new Set(assignations.map((a) => a.employe_id));
+    return employes.filter(
+      (e) =>
+        (e.type_contrat === "Interim" || e.type_contrat === "Independant") &&
+        assignedIds.has(e.id),
+    );
+  }, [employes, assignations]);
 
   // Affaires actives cette semaine pour le filtre (toutes celles qui apparaissent dans les assignations OU avec heures budgétées)
   const affairesActivesIds = useMemo(() => {
