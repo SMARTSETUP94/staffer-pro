@@ -470,6 +470,17 @@ function EmployesPage() {
             </div>
             <div className="flex items-center justify-between rounded-xl border border-border bg-background p-3 sm:col-span-2">
               <div>
+                <p className="text-sm font-semibold text-foreground">Apprenti</p>
+                <p className="text-xs text-muted-foreground">Identifie les CDI en contrat d'apprentissage.</p>
+              </div>
+              <Switch
+                checked={form.is_apprenti}
+                disabled={form.type_contrat !== "CDI"}
+                onCheckedChange={(v) => setForm({ ...form, is_apprenti: v })}
+              />
+            </div>
+            <div className="flex items-center justify-between rounded-xl border border-border bg-background p-3 sm:col-span-2">
+              <div>
                 <p className="text-sm font-semibold text-foreground">Employé actif</p>
                 <p className="text-xs text-muted-foreground">Décocher pour archiver sans supprimer.</p>
               </div>
