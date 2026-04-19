@@ -187,6 +187,19 @@ export function PlanningGrid({
     date: Date | null;
   }>({ open: false, employe: null, date: null });
 
+  // Auto-ouverture déclenchée par le parent (ex: ajout d'un intérimaire depuis le bouton)
+  useEffect(() => {
+    if (openAssignationFor) {
+      setDialogState({
+        open: true,
+        employe: openAssignationFor.employe,
+        date: openAssignationFor.date,
+      });
+      onAutoOpenConsumed?.();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openAssignationFor]);
+
   // Multi-sélection Ctrl/Cmd+click
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkOpen, setBulkOpen] = useState(false);
