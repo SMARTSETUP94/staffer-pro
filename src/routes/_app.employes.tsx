@@ -365,6 +365,7 @@ function EmployesPage() {
           </Table>
         )}
       </div>
+      )}
 
       {/* Dialog création/édition */}
       <Dialog open={open} onOpenChange={setOpen}>
