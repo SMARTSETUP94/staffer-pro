@@ -45,7 +45,7 @@ function MobileAujourdhui() {
             </p>
           </div>
           {isPreviewing ? (
-            <Button size="sm" variant="outline" onClick={() => setPreviewRole(null)}>
+            <Button size="sm" variant="outline" onClick={handleQuitPreview}>
               Quitter preview
             </Button>
           ) : (
