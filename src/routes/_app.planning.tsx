@@ -139,6 +139,7 @@ function PlanningPage() {
                 metiers={metiers}
                 affaires={affaires}
                 assignations={assignations}
+                consommation={consommation}
                 filterAffaireIds={filterAffaireStr}
                 filterMetierIds={filterMetierNum}
                 emptyMessage="Aucun employé CDI/CDD actif."
@@ -153,6 +154,7 @@ function PlanningPage() {
                 metiers={metiers}
                 affaires={affaires}
                 assignations={assignations}
+                consommation={consommation}
                 filterAffaireIds={filterAffaireStr}
                 filterMetierIds={filterMetierNum}
                 emptyMessage="Aucun employé intérimaire / indépendant actif."

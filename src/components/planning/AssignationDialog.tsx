@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Loader2, Trash2 } from "lucide-react";
@@ -46,10 +47,18 @@ interface Props {
   date: Date;
   /** Employé concerné */
   employe: Employe;
-  /** Assignations existantes pour ce jour + employé (peut contenir AM, PM ou JOURNEE) */
+  /** Assignations existantes pour ce jour + employé */
   existing: Assignation[];
   affaires: Affaire[];
   metiers: Metier[];
+  /** Consommation devis par (affaire+métier) — passée depuis le parent */
+  consommation: {
+    affaire_id: string;
+    metier_id: number;
+    heures_prevues: number;
+    heures_assignees: number;
+    heures_restantes: number;
+  }[];
   onSaved: () => void;
 }
 
@@ -61,6 +70,7 @@ export function AssignationDialog({
   existing,
   affaires,
   metiers,
+  consommation,
   onSaved,
 }: Props) {
   // Édition d'une assignation existante = sélection par id ; sinon création
@@ -89,6 +99,29 @@ export function AssignationDialog({
       [...affaires].sort((a, b) => a.numero.localeCompare(b.numero, "fr", { numeric: true })),
     [affaires],
   );
+
+  // Conso devis pour le couple (affaire + métier) sélectionné
+  const consoCouple = useMemo(() => {
+    if (!affaireId || !metierId) return null;
+    return (
+      consommation.find((c) => c.affaire_id === affaireId && c.metier_id === metierId) ?? null
+    );
+  }, [consommation, affaireId, metierId]);
+
+  // Heures déjà comptabilisées dans la conso pour ce couple — on retranche celles
+  // de l'assignation en cours d'édition (sinon on les compterait deux fois).
+  const heuresEditees = useMemo(() => {
+    if (!editingId) return 0;
+    const ed = existing.find((e) => e.id === editingId);
+    if (!ed) return 0;
+    if (ed.affaire_id !== affaireId || ed.metier_id !== metierId) return 0;
+    return Number(ed.heures || 0);
+  }, [editingId, existing, affaireId, metierId]);
+
+  const restantesApres = consoCouple
+    ? consoCouple.heures_restantes + heuresEditees - heures
+    : null;
+  const depassement = restantesApres !== null && restantesApres < 0;
 
   function loadExisting(a: Assignation) {
     setEditingId(a.id);
@@ -323,6 +356,39 @@ export function AssignationDialog({
               />
             </div>
           </div>
+
+          {affaireId && metierId && (
+            <div
+              className={`rounded-md border p-2 text-[11px] ${
+                !consoCouple
+                  ? "border-muted-foreground/20 bg-muted/30 text-muted-foreground"
+                  : depassement
+                    ? "border-destructive/50 bg-destructive/10 text-destructive"
+                    : "border-primary/30 bg-primary/5"
+              }`}
+            >
+              {!consoCouple ? (
+                <span>Aucun budget devis pour ce métier sur cette affaire.</span>
+              ) : (
+                <div className="space-y-0.5">
+                  <div className="flex items-center justify-between font-semibold">
+                    <span>
+                      {depassement && <AlertTriangle className="mr-1 inline h-3 w-3" />}
+                      Budget devis ({metiers.find((m) => m.id === metierId)?.libelle})
+                    </span>
+                    <span>
+                      {consoCouple.heures_assignees}h / {consoCouple.heures_prevues}h
+                    </span>
+                  </div>
+                  <div>
+                    Restant après cette assignation :{" "}
+                    <strong>{restantesApres?.toFixed(1)}h</strong>
+                    {depassement && " — dépassement budget !"}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           <DialogFooter className="flex-row justify-between sm:justify-between">
             <div>

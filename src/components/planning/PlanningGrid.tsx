@@ -1,7 +1,13 @@
 import { Fragment as FragmentGroup, useMemo, useState } from "react";
 import { addDays, format } from "date-fns";
 import { fr } from "date-fns/locale";
-import type { Affaire, Assignation, Employe, Metier } from "@/hooks/use-planning-data";
+import type {
+  Affaire,
+  Assignation,
+  DevisConsommation,
+  Employe,
+  Metier,
+} from "@/hooks/use-planning-data";
 import { AssignationCell } from "./AssignationCell";
 import { AssignationDialog } from "./AssignationDialog";
 import { cn } from "@/lib/utils";
@@ -12,6 +18,7 @@ interface Props {
   metiers: Metier[];
   affaires: Affaire[];
   assignations: Assignation[];
+  consommation: DevisConsommation[];
   filterAffaireIds?: Set<string>;
   filterMetierIds?: Set<number>;
   emptyMessage: string;
@@ -27,6 +34,7 @@ export function PlanningGrid({
   metiers,
   affaires,
   assignations,
+  consommation,
   filterAffaireIds,
   filterMetierIds,
   emptyMessage,
@@ -177,6 +185,7 @@ export function PlanningGrid({
           existing={dialogExisting}
           affaires={affaires}
           metiers={metiers}
+          consommation={consommation}
           onSaved={() => onChanged?.()}
         />
       )}
