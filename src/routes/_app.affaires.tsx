@@ -176,10 +176,19 @@ function AffairesPage() {
         </div>
         <Tabs value={filter} onValueChange={(v) => setFilter(v as typeof filter)}>
           <TabsList className="rounded-xl bg-muted">
+            <TabsTrigger value="en_cours" className="rounded-lg">
+              En cours ({rows.filter((r) => r.statut === "en_cours").length})
+            </TabsTrigger>
+            <TabsTrigger value="prospect" className="rounded-lg">
+              Prospect ({rows.filter((r) => r.statut === "prospect").length})
+            </TabsTrigger>
+            <TabsTrigger value="termine" className="rounded-lg">
+              Clôturées ({rows.filter((r) => r.statut === "termine").length})
+            </TabsTrigger>
+            <TabsTrigger value="annule" className="rounded-lg">
+              Annulées ({rows.filter((r) => r.statut === "annule").length})
+            </TabsTrigger>
             <TabsTrigger value="all" className="rounded-lg">Toutes</TabsTrigger>
-            <TabsTrigger value="prospect" className="rounded-lg">Prospect</TabsTrigger>
-            <TabsTrigger value="en_cours" className="rounded-lg">En cours</TabsTrigger>
-            <TabsTrigger value="termine" className="rounded-lg">Terminées</TabsTrigger>
           </TabsList>
         </Tabs>
       </div>
