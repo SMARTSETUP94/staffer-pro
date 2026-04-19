@@ -1,11 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Plus, Pencil, Search, Loader2 } from "lucide-react";
+import { Plus, Pencil, Search, Loader2, Table2, List } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useMetiers } from "@/hooks/use-metiers";
 import { useAuth } from "@/lib/auth-context";
 import { PageHeader } from "@/components/PageHeader";
 import { MetierBadge } from "@/components/MetierBadge";
+import { EmployesSpreadsheet, type SpreadsheetRow } from "@/components/employes/EmployesSpreadsheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,10 +31,16 @@ interface EmployeRow {
   nom: string;
   email: string | null;
   telephone: string | null;
+  mobile: string | null;
   type_contrat: ContratType;
+  sous_type_contrat: string | null;
+  is_apprenti: boolean;
   agence_interim: string | null;
   metier_principal_id: number;
   actif: boolean;
+  non_staffing: boolean;
+  date_naissance: string | null;
+  adresse: string | null;
   notes: string | null;
   secondaires: number[];
 }
@@ -44,10 +51,16 @@ interface FormState {
   nom: string;
   email: string;
   telephone: string;
+  mobile: string;
   type_contrat: ContratType;
+  sous_type_contrat: string;
+  is_apprenti: boolean;
   agence_interim: string;
   metier_principal_id: number | null;
   actif: boolean;
+  non_staffing: boolean;
+  date_naissance: string;
+  adresse: string;
   notes: string;
   secondaires: number[];
 }
@@ -57,10 +70,16 @@ const emptyForm: FormState = {
   nom: "",
   email: "",
   telephone: "",
+  mobile: "",
   type_contrat: "CDI",
+  sous_type_contrat: "",
+  is_apprenti: false,
   agence_interim: "",
   metier_principal_id: null,
   actif: true,
+  non_staffing: false,
+  date_naissance: "",
+  adresse: "",
   notes: "",
   secondaires: [],
 };
@@ -78,6 +97,7 @@ function EmployesPage() {
   const [search, setSearch] = useState("");
   const [filterContrat, setFilterContrat] = useState<"all" | ContratType>("all");
   const [filterActif, setFilterActif] = useState<"actifs" | "inactifs" | "tous">("actifs");
+  const [viewMode, setViewMode] = useState<"liste" | "tableur">("liste");
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<FormState>(emptyForm);
   const [saving, setSaving] = useState(false);
@@ -86,8 +106,9 @@ function EmployesPage() {
     setLoading(true);
     const { data: emps, error } = await supabase
       .from("employes")
-      .select("id, prenom, nom, email, telephone, type_contrat, agence_interim, metier_principal_id, actif, notes")
-      .order("nom", { ascending: true });
+      .select("id, prenom, nom, email, telephone, mobile, type_contrat, sous_type_contrat, is_apprenti, agence_interim, metier_principal_id, actif, non_staffing, date_naissance, adresse, notes")
+      .order("nom", { ascending: true })
+      .limit(2000);
     if (error) {
       toast.error("Chargement impossible", { description: error.message });
       setLoading(false);
@@ -123,6 +144,16 @@ function EmployesPage() {
     });
   }, [rows, search, filterContrat, filterActif]);
 
+  const spreadsheetRows: SpreadsheetRow[] = useMemo(
+    () => filtered.map((r) => ({
+      id: r.id, prenom: r.prenom, nom: r.nom, email: r.email,
+      telephone: r.telephone, mobile: r.mobile, type_contrat: r.type_contrat,
+      sous_type_contrat: r.sous_type_contrat, agence_interim: r.agence_interim,
+      metier_principal_id: r.metier_principal_id, actif: r.actif, non_staffing: r.non_staffing,
+    })),
+    [filtered],
+  );
+
   const openCreate = () => {
     setForm({ ...emptyForm, metier_principal_id: metiers[0]?.id ?? null });
     setOpen(true);
@@ -134,10 +165,16 @@ function EmployesPage() {
       nom: row.nom,
       email: row.email ?? "",
       telephone: row.telephone ?? "",
+      mobile: row.mobile ?? "",
       type_contrat: row.type_contrat,
+      sous_type_contrat: row.sous_type_contrat ?? "",
+      is_apprenti: row.is_apprenti,
       agence_interim: row.agence_interim ?? "",
       metier_principal_id: row.metier_principal_id,
       actif: row.actif,
+      non_staffing: row.non_staffing,
+      date_naissance: row.date_naissance ?? "",
+      adresse: row.adresse ?? "",
       notes: row.notes ?? "",
       secondaires: row.secondaires.filter((id) => id !== row.metier_principal_id),
     });
@@ -155,10 +192,16 @@ function EmployesPage() {
       nom: form.nom.trim(),
       email: form.email.trim() || null,
       telephone: form.telephone.trim() || null,
+      mobile: form.mobile.trim() || null,
       type_contrat: form.type_contrat,
+      sous_type_contrat: form.sous_type_contrat.trim() || null,
+      is_apprenti: form.is_apprenti,
       agence_interim: form.type_contrat === "Interim" ? (form.agence_interim.trim() || null) : null,
       metier_principal_id: form.metier_principal_id,
       actif: form.actif,
+      non_staffing: form.non_staffing,
+      date_naissance: form.date_naissance || null,
+      adresse: form.adresse.trim() || null,
       notes: form.notes.trim() || null,
     };
 
@@ -215,6 +258,12 @@ function EmployesPage() {
           />
         </div>
         <div className="flex flex-wrap gap-2">
+          <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as "liste" | "tableur")}>
+            <TabsList className="rounded-xl bg-muted">
+              <TabsTrigger value="liste" className="rounded-lg"><List className="mr-1 h-3.5 w-3.5" />Liste</TabsTrigger>
+              <TabsTrigger value="tableur" className="rounded-lg"><Table2 className="mr-1 h-3.5 w-3.5" />Tableur</TabsTrigger>
+            </TabsList>
+          </Tabs>
           <Tabs value={filterContrat} onValueChange={(v) => setFilterContrat(v as typeof filterContrat)}>
             <TabsList className="rounded-xl bg-muted">
               <TabsTrigger value="all" className="rounded-lg">Tous</TabsTrigger>
@@ -232,7 +281,15 @@ function EmployesPage() {
         </div>
       </div>
 
-      {/* Tableau */}
+      {viewMode === "tableur" ? (
+        loading ? (
+          <div className="flex items-center justify-center rounded-2xl border border-border bg-card p-12">
+            <Loader2 className="h-5 w-5 animate-spin text-primary" />
+          </div>
+        ) : (
+          <EmployesSpreadsheet rows={spreadsheetRows} onSaved={fetchAll} />
+        )
+      ) : (
       <div className="overflow-hidden rounded-2xl border border-border bg-card">
         {loading ? (
           <div className="flex items-center justify-center p-12">
@@ -308,6 +365,7 @@ function EmployesPage() {
           </Table>
         )}
       </div>
+      )}
 
       {/* Dialog création/édition */}
       <Dialog open={open} onOpenChange={setOpen}>

@@ -112,38 +112,57 @@ export function decodeWindows1252(buffer: ArrayBuffer): string {
   return new TextDecoder("windows-1252").decode(buffer);
 }
 
-/** Sépare nom complet "XX- NOM Prénom - Y" → { nom, prenom }. */
+/** Sépare nom complet "[XX-] NOM Prénom [- Y]" → { nom, prenom }.
+ * Tolère : préfixe absent, suffixe collé ("JULIA- C", "Aglae - p", "Brieg -C"),
+ * espaces insécables, suffixes multiples ("- MP - AE"), casse mixte.
+ */
 export function parseNomComplet(input: string): { nom: string; prenom: string } | null {
-  const cleaned = input.replace(/\s+/g, " ").trim();
-  if (!cleaned) return null;
-  // Retire le préfixe "XX-" ou "XX -" en début (2-3 lettres).
-  let s = cleaned.replace(/^[A-Za-z]{1,4}\s*-\s*/, "");
-  // Retire le suffixe "- Y" en fin (séparateur " - " puis du texte).
-  const dashIdx = s.lastIndexOf(" - ");
-  if (dashIdx > 0) s = s.slice(0, dashIdx).trim();
-
-  // Le reste est "NOM EN MAJUSCULES Prénom" — on isole la partie majuscules.
+  let s = (input ?? "")
+    .replace(/\u00a0/g, " ") // NBSP
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!s) return null;
+  // Retire préfixe "XX-" ou "XX - " en début (2-4 lettres alpha).
+  s = s.replace(/^[A-Za-z]{1,4}\s*-\s*/, "");
+  // Retire les suffixes en fin (" - X", "-X", " -X", " - X - Y") jusqu'à 3 fois.
+  // Suffixe = 1-4 caractères alpha (codes métier ou variantes).
+  for (let i = 0; i < 3; i++) {
+    const m = s.match(/\s*-\s*[A-Za-z]{1,4}\s*$/);
+    if (!m) break;
+    s = s.slice(0, m.index!).trim();
+  }
   const tokens = s.split(/\s+/).filter(Boolean);
   if (tokens.length === 0) return null;
 
   const isUpper = (t: string) => {
     const letters = t.replace(/[^A-Za-zÀ-ÿ]/g, "");
-    return letters.length > 0 && letters === letters.toUpperCase();
+    return letters.length >= 2 && letters === letters.toUpperCase();
   };
 
   const nomTokens: string[] = [];
   const prenomTokens: string[] = [];
-  let switched = false;
-  for (const t of tokens) {
-    if (!switched && isUpper(t)) nomTokens.push(t);
-    else {
-      switched = true;
-      prenomTokens.push(t);
+
+  if (tokens.every(isUpper)) {
+    // Tout MAJ : dernier token = prénom (cas "BOUZIDI FARES")
+    nomTokens.push(...tokens.slice(0, -1));
+    prenomTokens.push(tokens[tokens.length - 1]);
+  } else if (tokens.every((t) => !isUpper(t))) {
+    // Tout casse mixte : premier = nom (ex. "Bouzidi Fares", "Carvalho Alberto")
+    nomTokens.push(tokens[0]);
+    prenomTokens.push(...tokens.slice(1));
+  } else {
+    // Mix : tokens MAJ initiaux = nom, le reste = prénom
+    let switched = false;
+    for (const t of tokens) {
+      if (!switched && isUpper(t)) nomTokens.push(t);
+      else {
+        switched = true;
+        prenomTokens.push(t);
+      }
     }
-  }
-  // Cas dégradé : tout en majuscules → on suppose dernier token = prénom.
-  if (prenomTokens.length === 0 && nomTokens.length > 1) {
-    prenomTokens.push(nomTokens.pop()!);
+    if (prenomTokens.length === 0 && nomTokens.length > 1) {
+      prenomTokens.push(nomTokens.pop()!);
+    }
   }
 
   const nom = nomTokens.join(" ").toUpperCase();
