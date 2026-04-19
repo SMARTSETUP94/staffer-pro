@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import type {
   Affaire,
   Assignation,
+  ChefRef,
   DevisConsommation,
   Employe,
   Metier,
@@ -22,6 +23,7 @@ interface Props {
   metiers: Metier[];
   assignations: Assignation[];
   consommation: DevisConsommation[];
+  chefsById: Map<string, ChefRef>;
   onSelectAffaire: (affaireId: string) => void;
 }
 
@@ -32,6 +34,7 @@ export function PlanningSynthese({
   metiers,
   assignations,
   consommation,
+  chefsById,
   onSelectAffaire,
 }: Props) {
   const weekEnd = addDays(weekStart, 6);
