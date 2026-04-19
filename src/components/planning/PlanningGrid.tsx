@@ -28,6 +28,7 @@ interface Props {
   absences: Absence[];
   filterAffaireIds?: Set<string>;
   filterMetierIds?: Set<number>;
+  showWeekend?: boolean;
   emptyMessage: string;
   onChanged?: () => void;
   readonly?: boolean;
@@ -52,13 +53,14 @@ export function PlanningGrid({
   absences,
   filterAffaireIds,
   filterMetierIds,
+  showWeekend = false,
   emptyMessage,
   onChanged,
   readonly,
 }: Props) {
   const days = useMemo(
-    () => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)),
-    [weekStart.getTime()],
+    () => Array.from({ length: showWeekend ? 7 : 5 }, (_, i) => addDays(weekStart, i)),
+    [weekStart.getTime(), showWeekend],
   );
 
   const metiersById = useMemo(() => new Map(metiers.map((m) => [m.id, m])), [metiers]);
@@ -262,7 +264,7 @@ export function PlanningGrid({
               <FragmentGroup key={metier.id}>
                 <tr>
                   <td
-                    colSpan={8}
+                    colSpan={days.length + 1}
                     className="border-b border-t bg-muted/20 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider"
                     style={{ color: metier.couleur }}
                   >
