@@ -148,6 +148,13 @@ function AffairesPage() {
     fetchAll();
   };
 
+  const handleReopen = async (r: AffaireRow) => {
+    const { error } = await supabase.from("affaires").update({ statut: "en_cours" }).eq("id", r.id);
+    if (error) { toast.error("Réouverture impossible", { description: error.message }); return; }
+    toast.success(`Affaire ${r.numero} réouverte`);
+    fetchAll();
+  };
+
   return (
     <div className="mx-auto max-w-7xl space-y-6 p-6">
       <PageHeader
