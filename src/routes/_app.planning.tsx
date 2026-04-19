@@ -181,6 +181,7 @@ function PlanningPage() {
                 absences={absences}
                 filterAffaireIds={filterAffaireStr}
                 filterMetierIds={filterMetierNum}
+                showWeekend={showWeekend}
                 emptyMessage="Aucun employé CDI/CDD actif."
                 onChanged={refresh}
               />
@@ -197,6 +198,7 @@ function PlanningPage() {
                 absences={absences}
                 filterAffaireIds={filterAffaireStr}
                 filterMetierIds={filterMetierNum}
+                showWeekend={showWeekend}
                 emptyMessage="Aucun employé intérimaire / indépendant actif."
                 onChanged={refresh}
               />
