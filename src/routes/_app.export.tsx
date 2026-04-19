@@ -36,7 +36,7 @@ function ExportPage() {
   const [exporting, setExporting] = useState(false);
 
   // Sécurise l'ordre + plafonne à 4 semaines
-  const { rangeStart, rangeEndStart, weekCount, tooMany } = useMemo(() => {
+  const { rangeStart, weekCount, tooMany } = useMemo(() => {
     const a = weekStart.getTime();
     const b = weekEndStart.getTime();
     const start = a <= b ? weekStart : weekEndStart;
@@ -44,7 +44,6 @@ function ExportPage() {
     const count = differenceInCalendarWeeks(endStart, start, { weekStartsOn: 1 }) + 1;
     return {
       rangeStart: start,
-      rangeEndStart: endStart,
       weekCount: count,
       tooMany: count > MAX_WEEKS,
     };
