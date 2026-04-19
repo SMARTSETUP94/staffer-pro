@@ -2,36 +2,34 @@ import { cn } from "@/lib/utils";
 
 interface BrandLogoProps {
   className?: string;
-  /** Premier mot (en noir / cream selon contexte) */
-  word1?: string;
-  /** Second mot (en indigo) */
-  word2?: string;
-  /** Forcer la couleur du premier mot */
   tone?: "ink" | "cream";
 }
 
 /**
- * Logo Setup Paris — pattern : • PROJECT SHIFT
- * Le mot 2 est toujours en indigo, point décoratif indigo à gauche.
+ * Logo Staffing by SETUP.PARIS — affiché sur 2 lignes :
+ *   • Staffing
+ *     by SETUP.PARIS
  */
-export function BrandLogo({
-  className,
-  word1 = "PROJECT",
-  word2 = "SHIFT",
-  tone = "ink",
-}: BrandLogoProps) {
+export function BrandLogo({ className, tone = "ink" }: BrandLogoProps) {
+  const primaryToneClass = tone === "cream" ? "text-[var(--cream)]" : "text-foreground";
+  const secondaryToneClass =
+    tone === "cream" ? "text-[var(--cream)]/60" : "text-foreground/60";
+
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-2 text-sm font-extrabold uppercase tracking-[0.14em]",
+        "inline-flex items-start gap-2 text-sm font-extrabold uppercase tracking-[0.14em] leading-tight",
         className,
       )}
     >
-      <span className="brand-dot" aria-hidden />
-      <span className={tone === "cream" ? "text-[var(--cream)]" : "text-foreground"}>
-        {word1}
+      <span className="brand-dot mt-1.5 shrink-0" aria-hidden />
+      <span className="flex flex-col">
+        <span className={primaryToneClass}>Staffing</span>
+        <span>
+          <span className={cn("font-semibold", secondaryToneClass)}>by</span>{" "}
+          <span className="text-primary">SETUP.PARIS</span>
+        </span>
       </span>
-      <span className="text-primary">{word2}</span>
     </span>
   );
 }

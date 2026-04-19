@@ -60,7 +60,7 @@ function LoginPage() {
     <div className="grid min-h-screen lg:grid-cols-[1fr_1.2fr]">
       {/* Colonne gauche — identité outil, sobre */}
       <aside className="relative hidden flex-col justify-between overflow-hidden bg-[var(--ink)] p-8 text-[var(--cream)] lg:flex">
-        <BrandLogo tone="cream" word1="SETUP" word2="PARIS" />
+        <BrandLogo tone="cream" />
 
         <div className="space-y-3">
           <p className="overline text-primary/90">— 01 / Outil interne</p>
@@ -81,7 +81,7 @@ function LoginPage() {
       <main className="flex items-center justify-center bg-background p-6 sm:p-10">
         <div className="w-full max-w-md">
           <div className="mb-6 lg:hidden">
-            <BrandLogo word1="SETUP" word2="PARIS" />
+            <BrandLogo />
           </div>
 
           <p className="overline mb-2">— 02 / Accès</p>
