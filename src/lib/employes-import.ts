@@ -147,9 +147,12 @@ export function parseNomComplet(input: string): { nom: string; prenom: string } 
   }
 
   const nom = nomTokens.join(" ").toUpperCase();
-  const prenom = prenomTokens
-    .map((t) => t.charAt(0).toUpperCase() + t.slice(1).toLowerCase())
-    .join(" ");
+  const titleCase = (t: string) =>
+    t
+      .split("-")
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+      .join("-");
+  const prenom = prenomTokens.map(titleCase).join(" ");
   if (!nom || !prenom) return null;
   return { nom, prenom };
 }
