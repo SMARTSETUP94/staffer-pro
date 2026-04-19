@@ -306,9 +306,9 @@ function InterimairesPage() {
                           <span
                             className={cn(
                               "inline-flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-bold",
-                              idx === 0 && "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200",
-                              idx === 1 && "bg-slate-200 text-slate-800 dark:bg-slate-700 dark:text-slate-100",
-                              idx === 2 && "bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-200",
+                              idx === 0 && "bg-primary text-primary-foreground",
+                              idx === 1 && "bg-secondary text-secondary-foreground",
+                              idx === 2 && "bg-muted text-foreground",
                             )}
                           >
                             {idx + 1}
