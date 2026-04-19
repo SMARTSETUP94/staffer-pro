@@ -103,7 +103,8 @@ export function PlanningSynthese({
                     )}
                     {(() => {
                       const chef = affaire.chef_chantier_id
-                        ? employesById.get(affaire.chef_chantier_id)
+                        ? chefsById.get(affaire.chef_chantier_id) ??
+                          employesById.get(affaire.chef_chantier_id)
                         : null;
                       return chef ? (
                         <span className="flex items-center gap-1">
