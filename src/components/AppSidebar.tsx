@@ -73,9 +73,14 @@ export function AppSidebar() {
       <SidebarHeader className="border-b border-sidebar-border">
         <div className="flex items-center px-2 py-4">
           {collapsed ? (
-            <span className="brand-dot mx-auto" aria-label="Setup Paris" />
+            <span className="brand-dot mx-auto" aria-label="Staffing by Setup Paris" />
           ) : (
-            <BrandLogo tone="cream" word1="SETUP" word2="PARIS" />
+            <span className="inline-flex items-center gap-2 text-sm font-extrabold uppercase tracking-[0.14em]">
+              <span className="brand-dot" aria-hidden />
+              <span className="text-[var(--cream)]">Staffing</span>
+              <span className="text-[var(--cream)]/60 font-semibold">by</span>
+              <span className="text-primary">SETUP.PARIS</span>
+            </span>
           )}
         </div>
         <ViewAsSwitcher collapsed={collapsed} />
