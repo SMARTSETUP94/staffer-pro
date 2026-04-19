@@ -490,11 +490,18 @@ function EmployesPage() {
   );
 }
 
-function ContratPill({ type, agence }: { type: ContratType; agence: string | null }) {
+function ContratPill({ type, agence, isApprenti }: { type: ContratType; agence: string | null; isApprenti?: boolean }) {
   if (type === "CDI") {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-[var(--indigo-soft)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary">
-        CDI
+      <span className="inline-flex items-center gap-1.5">
+        <span className="inline-flex items-center rounded-full bg-[var(--indigo-soft)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary">
+          CDI
+        </span>
+        {isApprenti && (
+          <span className="inline-flex items-center rounded-full border border-warning/40 bg-warning-soft px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-warning-foreground">
+            Apprenti
+          </span>
+        )}
       </span>
     );
   }
