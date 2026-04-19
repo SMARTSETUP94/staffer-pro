@@ -18,6 +18,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useNotifications } from "@/hooks/use-notifications";
 import { ABSENCE_ICON, ABSENCE_LABEL } from "@/lib/absence-helpers";
+import { ChargeEquipeBloc } from "@/components/dashboard/ChargeEquipeBloc";
+import { MeteoChantiersBloc } from "@/components/dashboard/MeteoChantiersBloc";
 
 export const Route = createFileRoute("/_app/dashboard")({
   component: DashboardPage,
