@@ -1,17 +1,20 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { startOfWeek, addDays } from "date-fns";
-import { Calendar, Loader2, Search } from "lucide-react";
+import { Calendar, Loader2, Search, FileDown } from "lucide-react";
+import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
 import { usePlanningData } from "@/hooks/use-planning-data";
 import { WeekPicker } from "@/components/planning/WeekPicker";
 import { PlanningGrid } from "@/components/planning/PlanningGrid";
 import { PlanningSynthese } from "@/components/planning/PlanningSynthese";
 import { HeuresRestantesSidebar } from "@/components/planning/HeuresRestantesSidebar";
 import { MultiFilter } from "@/components/planning/MultiFilter";
+import { exportPlanningToPDF } from "@/lib/planning-export";
 
 export const Route = createFileRoute("/_app/planning")({
   head: () => ({
