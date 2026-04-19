@@ -246,7 +246,34 @@ function AffairesPage() {
                   <TableCell className="text-xs text-muted-foreground">
                     {formatPeriode(r.date_debut, r.date_fin_prevue)}
                   </TableCell>
-                  <TableCell><StatutPill statut={r.statut} /></TableCell>
+                  <TableCell>
+                    {isAdminOrChef ? (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button type="button" className="cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-full" title="Changer le statut">
+                            <StatutPill statut={r.statut} />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start" className="w-44">
+                          <DropdownMenuLabel className="text-xs">Changer le statut</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          {STATUTS.map((s) => (
+                            <DropdownMenuItem
+                              key={s.value}
+                              onClick={() => handleChangeStatut(r, s.value)}
+                              disabled={s.value === r.statut}
+                              className="gap-2"
+                            >
+                              <StatutPill statut={s.value} />
+                              {s.value === r.statut && <span className="ml-auto text-xs text-muted-foreground">actuel</span>}
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    ) : (
+                      <StatutPill statut={r.statut} />
+                    )}
+                  </TableCell>
                   <TableCell>
                     <div className="flex items-center justify-end gap-1">
                       {isAdminOrChef && isClotured && (
