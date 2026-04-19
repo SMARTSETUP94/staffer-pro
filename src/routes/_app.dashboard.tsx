@@ -236,7 +236,10 @@ function DashboardPage() {
         <KpiCard icon={ClipboardCheck} label="Heures à valider" value={heuresAValider.length} to="/validation-heures" emphasize={heuresAValider.length > 0} />
       </div>
 
+      <MeteoChantiersBloc />
+
       <div className="grid gap-4 lg:grid-cols-2">
+        <ChargeEquipeBloc weekStart={weekStartStr} weekEnd={weekEndStr} />
         {/* Bloc montages J+7 */}
         <Card>
           <CardHeader className="flex-row items-center justify-between space-y-0">
