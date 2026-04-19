@@ -122,11 +122,9 @@ function DashboardPage() {
         supabase.from("assignations").select("heures").gte("date", weekStart).lte("date", weekEnd),
         supabase
           .from("affaires")
-          .select("id, numero, nom, client, date_montage, lieu")
-          .gte("date_montage", todayStr)
-          .lte("date_montage", j7Str)
-          .order("date_montage", { ascending: true })
-          .limit(10),
+          .select("id, numero, nom, client, date_montage, date_demontage, lieu")
+          .or(`and(date_montage.gte.${todayStr},date_montage.lte.${j7Str}),and(date_demontage.gte.${todayStr},date_demontage.lte.${j7Str})`)
+          .limit(20),
         supabase.from("v_affaire_consommation").select("affaire_id, numero, nom, total_heures_prevues, total_heures_assignees"),
         supabase
           .from("heures_saisies")
@@ -149,7 +147,34 @@ function DashboardPage() {
       setHeuresSemaine(
         (heuresWeekRes.data ?? []).reduce((acc, r) => acc + Number(r.heures ?? 0), 0),
       );
-      setMontagesProches(montagesRes.data ?? []);
+
+      const events: AffaireEvenement[] = [];
+      for (const a of montagesRes.data ?? []) {
+        if (a.date_montage && a.date_montage >= todayStr && a.date_montage <= j7Str) {
+          events.push({
+            id: a.id,
+            numero: a.numero,
+            nom: a.nom,
+            client: a.client,
+            lieu: a.lieu,
+            date: a.date_montage,
+            type: "montage",
+          });
+        }
+        if (a.date_demontage && a.date_demontage >= todayStr && a.date_demontage <= j7Str) {
+          events.push({
+            id: a.id,
+            numero: a.numero,
+            nom: a.nom,
+            client: a.client,
+            lieu: a.lieu,
+            date: a.date_demontage,
+            type: "demontage",
+          });
+        }
+      }
+      events.sort((a, b) => a.date.localeCompare(b.date));
+      setEvenementsProches(events);
 
       const dep = (margesRes.data ?? [])
         .filter((r) => Number(r.total_heures_prevues ?? 0) > 0)
