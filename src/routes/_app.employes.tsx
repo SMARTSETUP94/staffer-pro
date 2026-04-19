@@ -1,11 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Plus, Pencil, Search, Loader2 } from "lucide-react";
+import { Plus, Pencil, Search, Loader2, Table2, List } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useMetiers } from "@/hooks/use-metiers";
 import { useAuth } from "@/lib/auth-context";
 import { PageHeader } from "@/components/PageHeader";
 import { MetierBadge } from "@/components/MetierBadge";
+import { EmployesSpreadsheet, type SpreadsheetRow } from "@/components/employes/EmployesSpreadsheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,10 +31,16 @@ interface EmployeRow {
   nom: string;
   email: string | null;
   telephone: string | null;
+  mobile: string | null;
   type_contrat: ContratType;
+  sous_type_contrat: string | null;
+  is_apprenti: boolean;
   agence_interim: string | null;
   metier_principal_id: number;
   actif: boolean;
+  non_staffing: boolean;
+  date_naissance: string | null;
+  adresse: string | null;
   notes: string | null;
   secondaires: number[];
 }
@@ -44,10 +51,16 @@ interface FormState {
   nom: string;
   email: string;
   telephone: string;
+  mobile: string;
   type_contrat: ContratType;
+  sous_type_contrat: string;
+  is_apprenti: boolean;
   agence_interim: string;
   metier_principal_id: number | null;
   actif: boolean;
+  non_staffing: boolean;
+  date_naissance: string;
+  adresse: string;
   notes: string;
   secondaires: number[];
 }
@@ -57,10 +70,16 @@ const emptyForm: FormState = {
   nom: "",
   email: "",
   telephone: "",
+  mobile: "",
   type_contrat: "CDI",
+  sous_type_contrat: "",
+  is_apprenti: false,
   agence_interim: "",
   metier_principal_id: null,
   actif: true,
+  non_staffing: false,
+  date_naissance: "",
+  adresse: "",
   notes: "",
   secondaires: [],
 };
