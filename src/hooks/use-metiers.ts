@@ -15,16 +15,16 @@ let pending: Promise<Metier[]> | null = null;
 async function loadMetiers(): Promise<Metier[]> {
   if (cache) return cache;
   if (pending) return pending;
-  pending = supabase
-    .from("metiers")
-    .select("*")
-    .order("ordre", { ascending: true })
-    .then(({ data, error }) => {
-      pending = null;
-      if (error || !data) return [];
-      cache = data as Metier[];
-      return cache;
-    });
+  pending = (async () => {
+    const { data, error } = await supabase
+      .from("metiers")
+      .select("*")
+      .order("ordre", { ascending: true });
+    pending = null;
+    if (error || !data) return [];
+    cache = data as Metier[];
+    return cache;
+  })();
   return pending;
 }
 
@@ -36,7 +36,10 @@ export function useMetiers() {
   const [loading, setLoading] = useState(!cache);
 
   useEffect(() => {
-    if (cache) return;
+    if (cache) {
+      setMetiers(cache);
+      return;
+    }
     loadMetiers().then((m) => {
       setMetiers(m);
       setLoading(false);
