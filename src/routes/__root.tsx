@@ -29,8 +29,8 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Planning chantiers — Scénographie" },
-      { name: "description", content: "Application de planning chantiers, staffing et import de devis pour la scénographie et fabrication de décors." },
+      { title: "Setup Paris — Planning chantiers" },
+      { name: "description", content: "Setup Paris : planning chantiers, staffing et import de devis pour la scénographie et fabrication de décors." },
     ],
     links: [{ rel: "stylesheet", href: appCss }],
   }),
