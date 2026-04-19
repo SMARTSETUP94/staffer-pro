@@ -178,6 +178,3 @@ export function usePlanningData(weekStart: Date, weekEnd: Date): PlanningData {
     refresh: () => setTick((t) => t + 1),
   };
 }
-    refresh: () => setTick((t) => t + 1),
-  };
-}
