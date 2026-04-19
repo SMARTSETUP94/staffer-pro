@@ -274,7 +274,42 @@ function DashboardPage() {
 
       {/* KPIs scalaires */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <KpiCard icon={Building2} label="Chantiers staffés (S+1)" value={chantiersSemaineProchaine} to="/planning" />
+        <TooltipProvider delayDuration={150}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div>
+                <KpiCard
+                  icon={Building2}
+                  label="Chantiers staffés (S+1)"
+                  value={chantiersSemaineProchaine.length}
+                  to="/planning"
+                />
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" align="start" className="max-w-xs">
+              {chantiersSemaineProchaine.length === 0 ? (
+                <p className="text-xs">Aucun chantier staffé la semaine prochaine</p>
+              ) : (
+                <div className="space-y-1">
+                  <p className="text-xs font-semibold">Chantiers concernés</p>
+                  <ul className="space-y-0.5 text-xs">
+                    {chantiersSemaineProchaine.slice(0, 12).map((c) => (
+                      <li key={c.id} className="truncate">
+                        <span className="font-medium">{c.numero}</span> — {c.nom}
+                      </li>
+                    ))}
+                    {chantiersSemaineProchaine.length > 12 && (
+                      <li className="italic opacity-70">
+                        + {chantiersSemaineProchaine.length - 12} autre
+                        {chantiersSemaineProchaine.length - 12 > 1 ? "s" : ""}…
+                      </li>
+                    )}
+                  </ul>
+                </div>
+              )}
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
         <KpiCard icon={Calendar} label="Heures cette semaine" value={`${heuresSemaine}h`} to="/planning" />
         <KpiCard icon={ClipboardCheck} label="Heures à valider" value={heuresAValider.length} to="/validation-heures" emphasize={heuresAValider.length > 0} />
       </div>
