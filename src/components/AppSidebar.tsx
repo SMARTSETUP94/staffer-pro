@@ -46,7 +46,13 @@ export function AppSidebar() {
   const isActive = (url: string) =>
     currentPath === url || currentPath.startsWith(url + "/");
 
-  const displayedRole = isPreviewing ? `${effectiveRole} (preview)` : (roles[0] ?? "—");
+  // Rôle réel canonique (admin > chef > employe), pas roles[0] qui dépend de l'ordre DB
+  const realRole = roles.includes("admin")
+    ? "admin"
+    : roles.includes("chef_chantier")
+      ? "chef_chantier"
+      : (roles[0] ?? "—");
+  const displayedRole = isPreviewing ? `${effectiveRole} (preview)` : realRole;
 
   return (
     <Sidebar collapsible="icon">
