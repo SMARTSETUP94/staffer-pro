@@ -1,0 +1,1 @@
+DELETE FROM affaires WHERE numero = 'TEST-AUDIT-2132';
