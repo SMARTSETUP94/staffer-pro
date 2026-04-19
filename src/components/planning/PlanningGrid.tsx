@@ -2,6 +2,16 @@ import { Fragment as FragmentGroup, useMemo, useState } from "react";
 import { addDays, format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { AlertTriangle, X } from "lucide-react";
+import {
+  DndContext,
+  PointerSensor,
+  useDroppable,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import type {
   Absence,
   Affaire,
@@ -10,7 +20,7 @@ import type {
   Employe,
   Metier,
 } from "@/hooks/use-planning-data";
-import { AssignationCell } from "./AssignationCell";
+import { AssignationCell, type DragGroupPayload } from "./AssignationCell";
 import { AssignationDialog } from "./AssignationDialog";
 import { BulkAssignDialog } from "./BulkAssignDialog";
 import { ABSENCE_ICON, ABSENCE_LABEL, findAbsence } from "@/lib/absence-helpers";
