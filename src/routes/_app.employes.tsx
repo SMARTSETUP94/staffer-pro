@@ -488,7 +488,7 @@ function EmployesPage() {
             </div>
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="border-t border-border px-6 py-4">
             <Button variant="ghost" onClick={() => setOpen(false)} className="rounded-xl">Annuler</Button>
             <Button onClick={handleSave} disabled={saving} className="rounded-xl bg-primary text-primary-foreground hover:bg-primary/90">
               {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
