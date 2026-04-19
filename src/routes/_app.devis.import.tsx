@@ -1,6 +1,10 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useRef, useState } from "react";
-import { FileUp, Upload, Loader2, AlertCircle, CheckCircle2, ArrowLeft } from "lucide-react";
+import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  CalendarIcon, FileUp, Loader2, Upload, AlertCircle, Plus, Trash2, Info,
+} from "lucide-react";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { useMetiers } from "@/hooks/use-metiers";
@@ -8,13 +12,15 @@ import { PageHeader } from "@/components/PageHeader";
 import { MetierBadge } from "@/components/MetierBadge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { parseDevisFromArrayBuffer, type ParsedDevisLine } from "@/lib/devis-import";
+import { parseDevisFromArrayBuffer } from "@/lib/devis-import";
 import type { MetierCode } from "@/lib/employes-import";
 
 export const Route = createFileRoute("/_app/devis/import")({
@@ -26,11 +32,26 @@ interface AffaireOption {
   id: string;
   numero: string;
   nom: string;
+  client: string | null;
+  lieu: string | null;
 }
 
-interface LineState extends ParsedDevisLine {
-  metierIdOverride: number | null;
-  excludedOverride: boolean;
+interface PosteRow {
+  key: string;
+  metierId: number | null;
+  heures: number;
+  montantHt: number;
+  libellesSources: string[];
+  manuel: boolean;
+}
+
+const NEW_AFFAIRE = "__new__";
+
+function round1(n: number) { return Math.round(n * 10) / 10; }
+function round2(n: number) { return Math.round(n * 100) / 100; }
+function toIso(d: Date | undefined): string | null {
+  if (!d) return null;
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
 function DevisImportPage() {
@@ -38,27 +59,35 @@ function DevisImportPage() {
   const { metiers, byId } = useMetiers();
   const fileRef = useRef<HTMLInputElement>(null);
 
+  // Upload & parse
   const [filename, setFilename] = useState<string | null>(null);
   const [parsing, setParsing] = useState(false);
   const [committing, setCommitting] = useState(false);
   const [dragOver, setDragOver] = useState(false);
-  const [errors, setErrors] = useState<string[]>([]);
-  const [meta, setMeta] = useState<{ numeroDevis: string | null; libelle: string | null }>({ numeroDevis: null, libelle: null });
-  const [lines, setLines] = useState<LineState[]>([]);
+  const [parseErrors, setParseErrors] = useState<string[]>([]);
+  const [hasParsed, setHasParsed] = useState(false);
 
-  // Sélection affaire / numéro / libellé / statut
+  // Section 1
   const [affaires, setAffaires] = useState<AffaireOption[]>([]);
   const [affaireId, setAffaireId] = useState<string>("");
+  const [newAffaireNumero, setNewAffaireNumero] = useState("");
+  const [newAffaireNom, setNewAffaireNom] = useState("");
+  const [newAffaireClient, setNewAffaireClient] = useState("");
+  const [newAffaireLieu, setNewAffaireLieu] = useState("");
+  const [nomDevis, setNomDevis] = useState("");
   const [numeroDevis, setNumeroDevis] = useState("");
-  const [libelleDevis, setLibelleDevis] = useState("");
+  const [dateMontage, setDateMontage] = useState<Date | undefined>(undefined);
+  const [dateDemontage, setDateDemontage] = useState<Date | undefined>(undefined);
 
-  // Charge la liste affaires au mount.
-  useMemo(() => {
+  // Section 2
+  const [postes, setPostes] = useState<PosteRow[]>([]);
+
+  useEffect(() => {
     supabase
       .from("affaires")
-      .select("id, numero, nom")
+      .select("id, numero, nom, client, lieu")
       .order("numero", { ascending: false })
-      .limit(100)
+      .limit(200)
       .then(({ data }) => setAffaires((data ?? []) as AffaireOption[]));
   }, []);
 
@@ -68,24 +97,63 @@ function DevisImportPage() {
     return map;
   }, [metiers]);
 
+  const selectedAffaire = useMemo(
+    () => (affaireId && affaireId !== NEW_AFFAIRE ? affaires.find((a) => a.id === affaireId) : undefined),
+    [affaireId, affaires],
+  );
+  const effectiveClient = affaireId === NEW_AFFAIRE ? newAffaireClient : selectedAffaire?.client ?? "";
+  const effectiveLieu = affaireId === NEW_AFFAIRE ? newAffaireLieu : selectedAffaire?.lieu ?? "";
+
   const handleFile = async (file: File) => {
     setParsing(true);
     setFilename(file.name);
-    setErrors([]);
-    setLines([]);
+    setParseErrors([]);
     try {
       const buf = await file.arrayBuffer();
       const result = parseDevisFromArrayBuffer(buf, { filename: file.name });
-      setErrors(result.errors);
-      setMeta(result.meta);
-      if (result.meta.numeroDevis) setNumeroDevis(result.meta.numeroDevis);
-      if (result.meta.libelle) setLibelleDevis(result.meta.libelle);
-      const states: LineState[] = result.lines.map((l) => ({
-        ...l,
-        metierIdOverride: l.metierFinalCode ? metierByCode.get(l.metierFinalCode) ?? null : null,
-        excludedOverride: l.excluded,
+      setParseErrors(result.errors);
+
+      if (result.meta.libelle) setNomDevis(result.meta.libelle);
+      const fnNoExt = file.name.replace(/\.(xlsx?|xls)$/i, "").trim();
+      setNumeroDevis(fnNoExt || result.meta.numeroDevis || "");
+
+      const byMetier = new Map<MetierCode, { heures: number; montant: number; libelles: string[] }>();
+      const sansMetier = { heures: 0, montant: 0, libelles: [] as string[] };
+      result.lines.forEach((l) => {
+        if (l.excluded) return;
+        if (l.metierFinalCode) {
+          const cur = byMetier.get(l.metierFinalCode) ?? { heures: 0, montant: 0, libelles: [] };
+          cur.heures += l.tempsPrevu ?? 0;
+          cur.montant += l.total ?? 0;
+          if (l.designation) cur.libelles.push(l.designation);
+          byMetier.set(l.metierFinalCode, cur);
+        } else {
+          sansMetier.heures += l.tempsPrevu ?? 0;
+          sansMetier.montant += l.total ?? 0;
+          if (l.designation) sansMetier.libelles.push(l.designation);
+        }
+      });
+
+      const newPostes: PosteRow[] = Array.from(byMetier.entries()).map(([code, v], i) => ({
+        key: `${code}-${i}`,
+        metierId: metierByCode.get(code) ?? null,
+        heures: round1(v.heures),
+        montantHt: round2(v.montant),
+        libellesSources: v.libelles,
+        manuel: false,
       }));
-      setLines(states);
+      if (sansMetier.heures > 0 || sansMetier.libelles.length > 0) {
+        newPostes.push({
+          key: `sansmetier-${Date.now()}`,
+          metierId: null,
+          heures: round1(sansMetier.heures),
+          montantHt: round2(sansMetier.montant),
+          libellesSources: sansMetier.libelles,
+          manuel: false,
+        });
+      }
+      setPostes(newPostes);
+      setHasParsed(true);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       toast.error("Lecture impossible", { description: msg });
@@ -101,40 +169,106 @@ function DevisImportPage() {
     if (f) handleFile(f);
   };
 
-  const updateLine = (idx: number, patch: Partial<LineState>) =>
-    setLines((ls) => ls.map((l, i) => (i === idx ? { ...l, ...patch } : l)));
+  const updatePoste = (key: string, patch: Partial<PosteRow>) =>
+    setPostes((ps) => ps.map((p) => (p.key === key ? { ...p, ...patch } : p)));
+  const removePoste = (key: string) => setPostes((ps) => ps.filter((p) => p.key !== key));
+  const addPoste = () =>
+    setPostes((ps) => [
+      ...ps,
+      { key: `manuel-${Date.now()}`, metierId: null, heures: 0, montantHt: 0, libellesSources: [], manuel: true },
+    ]);
 
-  const stats = useMemo(() => {
-    let importables = 0;
-    let exclues = 0;
-    let sansMetier = 0;
-    let totalHeures = 0;
-    let totalMontant = 0;
-    lines.forEach((l) => {
-      if (l.excludedOverride) exclues++;
-      else {
-        importables++;
-        totalHeures += l.tempsPrevu ?? 0;
-        totalMontant += l.total ?? 0;
-        if (!l.metierIdOverride) sansMetier++;
-      }
-    });
-    return { importables, exclues, sansMetier, totalHeures, totalMontant, total: lines.length };
-  }, [lines]);
+  const totals = useMemo(() => {
+    let h = 0;
+    let m = 0;
+    postes.forEach((p) => { h += p.heures || 0; m += p.montantHt || 0; });
+    return { heures: round1(h), montant: round2(m) };
+  }, [postes]);
 
-  const canCommit = !!affaireId && !!numeroDevis.trim() && stats.importables > 0 && stats.sansMetier === 0;
+  const errors = useMemo(() => {
+    const errs: string[] = [];
+    if (!hasParsed) return errs;
+    if (!affaireId) errs.push("Sélectionne une affaire (ou créer une nouvelle).");
+    if (affaireId === NEW_AFFAIRE) {
+      if (!newAffaireNumero.trim()) errs.push("Numéro de la nouvelle affaire requis.");
+      if (!newAffaireNom.trim()) errs.push("Nom de la nouvelle affaire requis.");
+    }
+    if (!numeroDevis.trim()) errs.push("Numéro de devis requis.");
+    if (!dateMontage) errs.push("Date de montage requise.");
+    if (postes.length === 0) errs.push("Aucun poste à importer.");
+    if (postes.some((p) => !p.metierId)) errs.push("Tous les postes doivent avoir un métier assigné.");
+    if (postes.some((p) => p.heures <= 0)) errs.push("Toutes les heures doivent être > 0.");
+    return errs;
+  }, [hasParsed, affaireId, newAffaireNumero, newAffaireNom, numeroDevis, dateMontage, postes]);
+
+  const canCommit = hasParsed && errors.length === 0 && !committing;
+
+  const reset = () => {
+    setHasParsed(false);
+    setFilename(null);
+    setParseErrors([]);
+    setPostes([]);
+    setNomDevis("");
+    setNumeroDevis("");
+    setDateMontage(undefined);
+    setDateDemontage(undefined);
+    setAffaireId("");
+    setNewAffaireNumero("");
+    setNewAffaireNom("");
+    setNewAffaireClient("");
+    setNewAffaireLieu("");
+  };
 
   const commit = async () => {
     if (!canCommit) return;
     setCommitting(true);
     try {
-      // 1. Crée le devis (statut "signe" par défaut, comme spec).
+      // 1. Affaire : crée ou met à jour les dates de l'existante.
+      let finalAffaireId = affaireId;
+      if (affaireId === NEW_AFFAIRE) {
+        const { data, error } = await supabase
+          .from("affaires")
+          .insert({
+            numero: newAffaireNumero.trim(),
+            nom: newAffaireNom.trim(),
+            client: newAffaireClient.trim() || null,
+            lieu: newAffaireLieu.trim() || null,
+            statut: "en_cours",
+            date_montage: toIso(dateMontage),
+            date_demontage: toIso(dateDemontage),
+          })
+          .select("id")
+          .single();
+        if (error || !data) {
+          toast.error("Création de l'affaire impossible", { description: error?.message });
+          setCommitting(false);
+          return;
+        }
+        finalAffaireId = data.id;
+      } else {
+        // MAJ des dates de montage/démontage sur l'affaire existante.
+        const { error } = await supabase
+          .from("affaires")
+          .update({
+            date_montage: toIso(dateMontage),
+            date_demontage: toIso(dateDemontage),
+          })
+          .eq("id", affaireId);
+        if (error) {
+          toast.error("Mise à jour de l'affaire impossible", { description: error.message });
+          setCommitting(false);
+          return;
+        }
+      }
+
+      // 2. Devis.
       const { data: devis, error: errDevis } = await supabase
         .from("devis")
         .insert({
-          affaire_id: affaireId,
+          affaire_id: finalAffaireId,
           numero: numeroDevis.trim(),
-          libelle: libelleDevis.trim() || null,
+          libelle: nomDevis.trim() || null,
+          montant_ht: totals.montant || null,
           statut: "signe",
           fichier_source: filename,
         })
@@ -146,25 +280,14 @@ function DevisImportPage() {
         return;
       }
 
-      // 2. Agrège les lignes importables par métier (somme heures + montant).
-      const aggregated = new Map<number, { heures: number; montant: number; libelles: string[] }>();
-      lines.forEach((l) => {
-        if (l.excludedOverride || !l.metierIdOverride) return;
-        const cur = aggregated.get(l.metierIdOverride) ?? { heures: 0, montant: 0, libelles: [] };
-        cur.heures += l.tempsPrevu ?? 0;
-        cur.montant += l.total ?? 0;
-        if (l.designation) cur.libelles.push(l.designation);
-        aggregated.set(l.metierIdOverride, cur);
-      });
-
-      const postesPayload = Array.from(aggregated.entries()).map(([metier_id, v]) => ({
+      // 3. Postes.
+      const postesPayload = postes.map((p) => ({
         devis_id: devis.id,
-        metier_id,
-        heures_prevues: v.heures,
-        montant_ht: v.montant || null,
-        libelle_source: v.libelles.slice(0, 5).join(" • ").slice(0, 500),
+        metier_id: p.metierId!,
+        heures_prevues: p.heures,
+        montant_ht: p.montantHt || null,
+        libelle_source: p.libellesSources.slice(0, 5).join(" • ").slice(0, 500) || null,
       }));
-
       if (postesPayload.length) {
         const { error: errPostes } = await supabase.from("devis_postes").insert(postesPayload);
         if (errPostes) {
@@ -175,14 +298,9 @@ function DevisImportPage() {
       }
 
       toast.success("Devis importé", {
-        description: `${postesPayload.length} poste(s) métier, ${stats.totalHeures} h, ${stats.totalMontant.toLocaleString("fr-FR")} € HT.`,
+        description: `${postesPayload.length} poste(s), ${totals.heures} h, ${totals.montant.toLocaleString("fr-FR")} € HT.`,
       });
-      // Reset.
-      setLines([]);
-      setFilename(null);
-      setMeta({ numeroDevis: null, libelle: null });
-      setNumeroDevis("");
-      setLibelleDevis("");
+      reset();
     } finally {
       setCommitting(false);
     }
@@ -197,222 +315,391 @@ function DevisImportPage() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6 p-6">
-      <PageHeader
-        number="04"
-        eyebrow="Données / Import"
-        title="Import devis Excel"
-        description="Charger un fichier devis (format D-202604-XXXX.xlsx). Le parser détecte les sections, hérite le métier et exclut les lignes de récap (Total/TVA, Budget matériaux, Liste matière, régul)."
-        actions={
-          <Link to="/devis/import" className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground hover:text-foreground">
-            <ArrowLeft className="mr-1 inline h-3 w-3" />
-          </Link>
-        }
-      />
-
-      {/* Drop zone */}
-      <div
-        onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-        onDragLeave={() => setDragOver(false)}
-        onDrop={onDrop}
-        onClick={() => fileRef.current?.click()}
-        className={`flex cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed p-10 text-center transition-colors ${
-          dragOver ? "border-primary bg-primary/5" : "border-border bg-card hover:border-primary/40"
-        }`}
-      >
-        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
-          {parsing ? <Loader2 className="h-6 w-6 animate-spin" /> : <Upload className="h-6 w-6" />}
-        </div>
-        <div>
-          <p className="text-sm font-semibold text-foreground">
-            {filename ?? "Glisser le fichier .xlsx ou cliquer pour sélectionner"}
-          </p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Colonnes attendues : N° • Désignation • Qté • Unité • PU HT • Total • TVA • Temps prévu
-          </p>
-        </div>
-        <input
-          ref={fileRef}
-          type="file"
-          accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-          className="hidden"
-          onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }}
+    <TooltipProvider delayDuration={150}>
+      <div className="mx-auto max-w-7xl space-y-6 p-6">
+        <PageHeader
+          number="04"
+          eyebrow="Données / Import"
+          title="Import devis Excel"
+          description="Charge un fichier devis (.xlsx). Le parser pré-remplit les champs et regroupe les heures par métier — à toi de valider ou corriger avant import."
         />
-      </div>
 
-      {errors.length > 0 && (
-        <Card className="border-destructive/40 bg-destructive/5">
-          <CardContent className="space-y-1 p-4">
-            <p className="flex items-center gap-2 text-sm font-semibold text-destructive">
-              <AlertCircle className="h-4 w-4" /> Erreurs de parsing
-            </p>
-            {errors.map((e, i) => <div key={i} className="text-xs text-destructive/80">• {e}</div>)}
-          </CardContent>
-        </Card>
-      )}
+        {/* Drop zone */}
+        {!hasParsed && (
+          <div
+            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={onDrop}
+            onClick={() => fileRef.current?.click()}
+            className={cn(
+              "flex cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed p-10 text-center transition-colors",
+              dragOver ? "border-primary bg-primary/5" : "border-border bg-card hover:border-primary/40",
+            )}
+          >
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              {parsing ? <Loader2 className="h-6 w-6 animate-spin" /> : <Upload className="h-6 w-6" />}
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-foreground">
+                {filename ?? "Glisser le fichier .xlsx ou cliquer pour sélectionner"}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Colonnes attendues : N° • Désignation • Qté • Unité • PU HT • Total • TVA • Temps prévu
+              </p>
+            </div>
+            <input
+              ref={fileRef}
+              type="file"
+              accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+              className="hidden"
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }}
+            />
+          </div>
+        )}
 
-      {lines.length > 0 && (
-        <>
-          {/* Bandeau affectation */}
-          <Card>
-            <CardContent className="grid gap-4 p-4 sm:grid-cols-3">
-              <div className="space-y-1.5">
-                <Label>Affaire de destination</Label>
-                <Select value={affaireId} onValueChange={setAffaireId}>
-                  <SelectTrigger className="h-10 rounded-xl"><SelectValue placeholder="Choisir une affaire…" /></SelectTrigger>
-                  <SelectContent>
-                    {affaires.map((a) => (
-                      <SelectItem key={a.id} value={a.id}>{a.numero} — {a.nom}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1.5">
-                <Label>Numéro de devis</Label>
-                <Input value={numeroDevis} onChange={(e) => setNumeroDevis(e.target.value)} placeholder="D-202604-XXXX" className="h-10 rounded-xl" />
-                {meta.numeroDevis && meta.numeroDevis !== numeroDevis && (
-                  <p className="text-[10px] text-muted-foreground">Détecté : {meta.numeroDevis}</p>
-                )}
-              </div>
-              <div className="space-y-1.5">
-                <Label>Libellé (optionnel)</Label>
-                <Input value={libelleDevis} onChange={(e) => setLibelleDevis(e.target.value)} placeholder="Ex. Stand Maison & Objet" className="h-10 rounded-xl" />
-              </div>
+        {parseErrors.length > 0 && (
+          <Card className="border-destructive/40 bg-destructive/5">
+            <CardContent className="space-y-1 p-4">
+              <p className="flex items-center gap-2 text-sm font-semibold text-destructive">
+                <AlertCircle className="h-4 w-4" /> Avertissements de parsing
+              </p>
+              {parseErrors.map((e, i) => <div key={i} className="text-xs text-destructive/80">• {e}</div>)}
             </CardContent>
           </Card>
+        )}
 
-          {/* Stats */}
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-            <StatCard label="Lignes totales" value={stats.total} />
-            <StatCard label="À importer" value={stats.importables} tone="primary" />
-            <StatCard label="Exclues" value={stats.exclues} tone="muted" />
-            <StatCard label="Sans métier" value={stats.sansMetier} tone={stats.sansMetier > 0 ? "danger" : "default"} />
-            <StatCard label="Total heures" value={stats.totalHeures} tone="info" />
-          </div>
+        {hasParsed && (
+          <>
+            {/* SECTION 1 — Affaire & devis */}
+            <Card>
+              <CardContent className="space-y-5 p-5">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                    Section 1 — Affaire & devis
+                  </h2>
+                  <p className="text-[11px] text-muted-foreground">
+                    Fichier : <span className="font-medium text-foreground">{filename}</span>
+                  </p>
+                </div>
 
-          {/* Preview */}
-          <div className="overflow-hidden rounded-2xl border border-border bg-card">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[60px]">N°</TableHead>
-                  <TableHead>Désignation</TableHead>
-                  <TableHead className="w-[80px] text-right">Temps</TableHead>
-                  <TableHead className="w-[100px] text-right">Montant HT</TableHead>
-                  <TableHead className="w-[180px]">Métier</TableHead>
-                  <TableHead className="w-[80px]">Importer</TableHead>
-                  <TableHead>Notes</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {lines.map((l, i) => (
-                  <TableRow
-                    key={i}
-                    className={
-                      l.isSection ? "bg-muted/40" :
-                      l.excludedOverride ? "opacity-50" : ""
-                    }
-                  >
-                    <TableCell className="font-mono text-xs">{l.numero || "—"}</TableCell>
-                    <TableCell>
-                      <div className={`text-sm ${l.isSection ? "font-bold uppercase tracking-wide text-foreground" : "text-foreground"}`}>
-                        {l.designation || "—"}
-                      </div>
-                      {l.unite && (
-                        <div className="text-[10px] text-muted-foreground">{l.quantite ?? "?"} {l.unite}</div>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right text-sm tabular-nums">{l.tempsPrevu ?? "—"}</TableCell>
-                    <TableCell className="text-right text-sm tabular-nums">
-                      {l.total != null ? `${l.total.toLocaleString("fr-FR")} €` : "—"}
-                    </TableCell>
-                    <TableCell>
-                      {l.isSection ? (
-                        <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Section</span>
-                      ) : (
-                        <div className="space-y-1">
-                          <Select
-                            value={l.metierIdOverride ? String(l.metierIdOverride) : ""}
-                            onValueChange={(v) => updateLine(i, { metierIdOverride: Number(v) })}
-                            disabled={l.excludedOverride}
-                          >
-                            <SelectTrigger className="h-8 rounded-lg text-xs">
-                              <SelectValue placeholder="—" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {metiers.map((m) => (
-                                <SelectItem key={m.id} value={String(m.id)}>{m.libelle}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          {l.metierIdOverride && (() => {
-                            const m = byId(l.metierIdOverride);
-                            return m ? <MetierBadge libelle={m.libelle} couleur={m.couleur} /> : null;
-                          })()}
-                        </div>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {!l.isSection && (
-                        <Switch
-                          checked={!l.excludedOverride}
-                          onCheckedChange={(v) => updateLine(i, { excludedOverride: !v })}
+                <div className="grid gap-4 md:grid-cols-2">
+                  {/* Affaire */}
+                  <div className="space-y-1.5">
+                    <Label>Numéro d'affaire <span className="text-destructive">*</span></Label>
+                    <Select value={affaireId} onValueChange={setAffaireId}>
+                      <SelectTrigger className="h-10 rounded-xl"><SelectValue placeholder="Choisir une affaire ou en créer…" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={NEW_AFFAIRE} className="font-semibold text-primary">
+                          + Créer une nouvelle affaire
+                        </SelectItem>
+                        {affaires.map((a) => (
+                          <SelectItem key={a.id} value={a.id}>{a.numero} — {a.nom}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Numéro devis */}
+                  <div className="space-y-1.5">
+                    <Label>Numéro de devis <span className="text-destructive">*</span></Label>
+                    <Input
+                      value={numeroDevis}
+                      onChange={(e) => setNumeroDevis(e.target.value)}
+                      placeholder="D-202604-XXXX"
+                      className="h-10 rounded-xl"
+                    />
+                  </div>
+
+                  {/* Sous-champs nouvelle affaire */}
+                  {affaireId === NEW_AFFAIRE && (
+                    <>
+                      <div className="space-y-1.5">
+                        <Label>N° nouvelle affaire <span className="text-destructive">*</span></Label>
+                        <Input
+                          value={newAffaireNumero}
+                          onChange={(e) => setNewAffaireNumero(e.target.value)}
+                          placeholder="Ex. A-2604-001"
+                          className="h-10 rounded-xl"
                         />
-                      )}
-                    </TableCell>
-                    <TableCell className="max-w-[220px] space-y-0.5">
-                      {l.warnings.map((w, k) => (
-                        <div key={k} className="text-[10px] text-muted-foreground">• {w}</div>
-                      ))}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label>Nom de la nouvelle affaire <span className="text-destructive">*</span></Label>
+                        <Input
+                          value={newAffaireNom}
+                          onChange={(e) => setNewAffaireNom(e.target.value)}
+                          placeholder="Ex. Stand Maison & Objet 2026"
+                          className="h-10 rounded-xl"
+                        />
+                      </div>
+                    </>
+                  )}
 
-          {/* Footer commit */}
-          <div className="sticky bottom-4 flex flex-wrap items-center justify-end gap-3 rounded-2xl border border-border bg-card/95 p-3 shadow-elegant backdrop-blur">
-            <p className="mr-auto text-xs text-muted-foreground">
-              {stats.sansMetier > 0
-                ? `${stats.sansMetier} ligne(s) sans métier — corrige-les avant validation.`
-                : `Prêt à importer ${stats.importables} lignes • ${stats.totalHeures} h • ${stats.totalMontant.toLocaleString("fr-FR")} € HT.`}
-            </p>
-            <Button variant="ghost" onClick={() => { setLines([]); setFilename(null); setMeta({ numeroDevis: null, libelle: null }); setNumeroDevis(""); setLibelleDevis(""); }} className="rounded-xl">
-              Réinitialiser
-            </Button>
-            <Button
-              onClick={commit}
-              disabled={!canCommit || committing}
-              className="rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
-            >
-              {committing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileUp className="mr-2 h-4 w-4" />}
-              Créer le devis ({stats.importables} ligne{stats.importables > 1 ? "s" : ""})
-            </Button>
-          </div>
-        </>
-      )}
+                  {/* Nom devis */}
+                  <div className="space-y-1.5 md:col-span-2">
+                    <Label>Nom du devis</Label>
+                    <Input
+                      value={nomDevis}
+                      onChange={(e) => setNomDevis(e.target.value)}
+                      placeholder="Libellé du devis (pré-rempli)"
+                      className="h-10 rounded-xl"
+                    />
+                  </div>
+
+                  {/* Client / lieu */}
+                  <div className="space-y-1.5">
+                    <Label>Client</Label>
+                    {affaireId === NEW_AFFAIRE ? (
+                      <Input
+                        value={newAffaireClient}
+                        onChange={(e) => setNewAffaireClient(e.target.value)}
+                        placeholder="Client de la nouvelle affaire"
+                        className="h-10 rounded-xl"
+                      />
+                    ) : (
+                      <Input value={effectiveClient || "—"} readOnly className="h-10 rounded-xl bg-muted/40" />
+                    )}
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Lieu chantier</Label>
+                    {affaireId === NEW_AFFAIRE ? (
+                      <Input
+                        value={newAffaireLieu}
+                        onChange={(e) => setNewAffaireLieu(e.target.value)}
+                        placeholder="Lieu du chantier"
+                        className="h-10 rounded-xl"
+                      />
+                    ) : (
+                      <Input value={effectiveLieu || "—"} readOnly className="h-10 rounded-xl bg-muted/40" />
+                    )}
+                  </div>
+
+                  {/* Dates */}
+                  <DatePickerField
+                    label="Date de montage"
+                    required
+                    value={dateMontage}
+                    onChange={setDateMontage}
+                  />
+                  <DatePickerField
+                    label="Date de démontage"
+                    value={dateDemontage}
+                    onChange={setDateDemontage}
+                    minDate={dateMontage}
+                  />
+
+                  {/* Montant total lecture seule */}
+                  <div className="space-y-1.5 md:col-span-2">
+                    <Label>Montant HT total (calculé)</Label>
+                    <Input
+                      readOnly
+                      value={`${totals.montant.toLocaleString("fr-FR")} € HT`}
+                      className="h-10 rounded-xl bg-muted/40 font-semibold"
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* SECTION 2 — Heures par poste */}
+            <Card>
+              <CardContent className="space-y-3 p-5">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                    Section 2 — Heures par poste
+                  </h2>
+                  <Button variant="outline" size="sm" onClick={addPoste} className="rounded-lg">
+                    <Plus className="mr-1 h-3.5 w-3.5" /> Ajouter un poste
+                  </Button>
+                </div>
+
+                <div className="overflow-x-auto rounded-xl border border-border">
+                  <table className="w-full text-sm">
+                    <thead className="bg-muted/40 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                      <tr>
+                        <th className="px-3 py-2 text-left">Métier</th>
+                        <th className="px-3 py-2 text-right w-[140px]">Heures prévues</th>
+                        <th className="px-3 py-2 text-right w-[160px]">Montant HT</th>
+                        <th className="px-3 py-2 text-center w-[60px]">Sources</th>
+                        <th className="px-3 py-2 w-[60px]"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {postes.length === 0 && (
+                        <tr><td colSpan={5} className="px-3 py-6 text-center text-sm text-muted-foreground">
+                          Aucun poste détecté. Clique sur « Ajouter un poste » pour saisir manuellement.
+                        </td></tr>
+                      )}
+                      {postes.map((p) => {
+                        const m = p.metierId ? byId(p.metierId) : null;
+                        return (
+                          <tr key={p.key} className="border-t border-border">
+                            <td className="px-3 py-2">
+                              <div className="flex items-center gap-2">
+                                <Select
+                                  value={p.metierId ? String(p.metierId) : ""}
+                                  onValueChange={(v) => updatePoste(p.key, { metierId: Number(v) })}
+                                >
+                                  <SelectTrigger className="h-9 w-[200px] rounded-lg text-xs">
+                                    <SelectValue placeholder="Choisir un métier…" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {metiers.map((mm) => (
+                                      <SelectItem key={mm.id} value={String(mm.id)}>{mm.libelle}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                {m && <MetierBadge libelle={m.libelle} couleur={m.couleur} />}
+                                {p.manuel && (
+                                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground">manuel</span>
+                                )}
+                              </div>
+                            </td>
+                            <td className="px-3 py-2">
+                              <Input
+                                type="number"
+                                min={0}
+                                step={0.5}
+                                value={p.heures}
+                                onChange={(e) => updatePoste(p.key, { heures: Number(e.target.value) || 0 })}
+                                className="h-9 rounded-lg text-right tabular-nums"
+                              />
+                            </td>
+                            <td className="px-3 py-2">
+                              <Input
+                                type="number"
+                                min={0}
+                                step={0.01}
+                                value={p.montantHt}
+                                onChange={(e) => updatePoste(p.key, { montantHt: Number(e.target.value) || 0 })}
+                                className="h-9 rounded-lg text-right tabular-nums"
+                              />
+                            </td>
+                            <td className="px-3 py-2 text-center">
+                              {p.libellesSources.length > 0 ? (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <button type="button" className="text-muted-foreground hover:text-foreground">
+                                      <Info className="h-4 w-4" />
+                                    </button>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="left" className="max-w-md">
+                                    <p className="text-[11px] font-semibold uppercase tracking-wider mb-1">
+                                      {p.libellesSources.length} ligne(s) source
+                                    </p>
+                                    <ul className="space-y-0.5 text-xs">
+                                      {p.libellesSources.slice(0, 12).map((l, i) => (
+                                        <li key={i}>• {l}</li>
+                                      ))}
+                                      {p.libellesSources.length > 12 && (
+                                        <li className="opacity-70">… et {p.libellesSources.length - 12} autres</li>
+                                      )}
+                                    </ul>
+                                  </TooltipContent>
+                                </Tooltip>
+                              ) : (
+                                <span className="text-xs text-muted-foreground">—</span>
+                              )}
+                            </td>
+                            <td className="px-3 py-2 text-right">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => removePoste(p.key)}
+                                className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                    <tfoot className="bg-muted/30 text-sm font-semibold">
+                      <tr className="border-t border-border">
+                        <td className="px-3 py-2 text-right uppercase text-[11px] tracking-wider text-muted-foreground">Totaux</td>
+                        <td className="px-3 py-2 text-right tabular-nums">{totals.heures} h</td>
+                        <td className="px-3 py-2 text-right tabular-nums">{totals.montant.toLocaleString("fr-FR")} €</td>
+                        <td colSpan={2}></td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Erreurs validation */}
+            {errors.length > 0 && (
+              <Card className="border-destructive/40 bg-destructive/5">
+                <CardContent className="space-y-1 p-4">
+                  <p className="flex items-center gap-2 text-sm font-semibold text-destructive">
+                    <AlertCircle className="h-4 w-4" /> Corrections requises avant validation
+                  </p>
+                  {errors.map((e, i) => <div key={i} className="text-xs text-destructive/80">• {e}</div>)}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Footer commit */}
+            <div className="sticky bottom-4 flex flex-wrap items-center justify-end gap-3 rounded-2xl border border-border bg-card/95 p-3 shadow-elegant backdrop-blur">
+              <p className="mr-auto text-xs text-muted-foreground">
+                {errors.length === 0
+                  ? `Prêt à importer : ${postes.length} poste(s) • ${totals.heures} h • ${totals.montant.toLocaleString("fr-FR")} € HT.`
+                  : `${errors.length} correction(s) avant validation.`}
+              </p>
+              <Button variant="ghost" onClick={reset} className="rounded-xl">Réinitialiser</Button>
+              <Button
+                onClick={commit}
+                disabled={!canCommit}
+                className="rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
+              >
+                {committing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileUp className="mr-2 h-4 w-4" />}
+                Valider et importer
+              </Button>
+            </div>
+          </>
+        )}
+      </div>
+    </TooltipProvider>
+  );
+}
+
+function DatePickerField({
+  label, value, onChange, required, minDate,
+}: {
+  label: string;
+  value: Date | undefined;
+  onChange: (d: Date | undefined) => void;
+  required?: boolean;
+  minDate?: Date;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <Label>{label} {required && <span className="text-destructive">*</span>}</Label>
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            className={cn(
+              "h-10 w-full justify-start rounded-xl text-left font-normal",
+              !value && "text-muted-foreground",
+            )}
+          >
+            <CalendarIcon className="mr-2 h-4 w-4" />
+            {value ? format(value, "EEEE d MMMM yyyy", { locale: fr }) : "Choisir une date"}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0" align="start">
+          <Calendar
+            mode="single"
+            selected={value}
+            onSelect={onChange}
+            disabled={minDate ? (d) => d < minDate : undefined}
+            initialFocus
+            locale={fr}
+            className={cn("p-3 pointer-events-auto")}
+          />
+        </PopoverContent>
+      </Popover>
     </div>
   );
 }
-
-function StatCard({
-  label, value, tone = "default",
-}: { label: string; value: number | string; tone?: "default" | "primary" | "info" | "muted" | "danger" }) {
-  const cls =
-    tone === "primary" ? "text-primary" :
-    tone === "info" ? "text-foreground" :
-    tone === "muted" ? "text-muted-foreground" :
-    tone === "danger" ? "text-destructive" : "text-foreground";
-  return (
-    <Card>
-      <CardContent className="p-4">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">{label}</p>
-        <p className={`mt-1 text-2xl font-bold ${cls}`}>{value}</p>
-      </CardContent>
-    </Card>
-  );
-}
-
-// Inutile mais conserve l'import propre.
-export type _UsedCheck = typeof CheckCircle2;

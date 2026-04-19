@@ -20,7 +20,9 @@ export type Database = {
           client: string | null
           created_at: string
           date_debut: string | null
+          date_demontage: string | null
           date_fin_prevue: string | null
+          date_montage: string | null
           id: string
           lieu: string | null
           nom: string
@@ -34,7 +36,9 @@ export type Database = {
           client?: string | null
           created_at?: string
           date_debut?: string | null
+          date_demontage?: string | null
           date_fin_prevue?: string | null
+          date_montage?: string | null
           id?: string
           lieu?: string | null
           nom: string
@@ -48,7 +52,9 @@ export type Database = {
           client?: string | null
           created_at?: string
           date_debut?: string | null
+          date_demontage?: string | null
           date_fin_prevue?: string | null
+          date_montage?: string | null
           id?: string
           lieu?: string | null
           nom?: string
