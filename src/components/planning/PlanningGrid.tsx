@@ -2,6 +2,16 @@ import { Fragment as FragmentGroup, useMemo, useState } from "react";
 import { addDays, format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { AlertTriangle, X } from "lucide-react";
+import {
+  DndContext,
+  PointerSensor,
+  useDroppable,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import type {
   Absence,
   Affaire,
@@ -10,7 +20,7 @@ import type {
   Employe,
   Metier,
 } from "@/hooks/use-planning-data";
-import { AssignationCell } from "./AssignationCell";
+import { AssignationCell, type DragGroupPayload } from "./AssignationCell";
 import { AssignationDialog } from "./AssignationDialog";
 import { BulkAssignDialog } from "./BulkAssignDialog";
 import { ABSENCE_ICON, ABSENCE_LABEL, findAbsence } from "@/lib/absence-helpers";
@@ -205,6 +215,87 @@ export function PlanningGrid({
     });
   }
 
+  // ─── Drag & Drop ─────────────────────────────────────────────────────────
+  // distance:6 → distingue clic vs drag pour ne pas casser l'ouverture du dialog
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
+
+  function slotsConflict(existing: Set<string>, incoming: "AM" | "PM" | "JOURNEE"): boolean {
+    if (existing.size === 0) return false;
+    if (existing.has("JOURNEE")) return true;
+    if (incoming === "JOURNEE") return true;
+    return existing.has(incoming);
+  }
+
+  async function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over) return;
+    const payload = active.data.current as DragGroupPayload | undefined;
+    if (!payload || payload.type !== "assignation-group") return;
+
+    const overId = String(over.id);
+    if (!overId.startsWith("cell::")) return;
+    const [, toEmployeId, toDate] = overId.split("::");
+
+    const altPressed = (event.activatorEvent as MouseEvent | undefined)?.altKey === true;
+
+    const sameCell = toEmployeId === payload.fromEmployeId && toDate === payload.fromDate;
+    if (sameCell && !altPressed) return;
+
+    // Cellule cible : occupée ?
+    const targetExisting = assignations.filter(
+      (a) => a.employe_id === toEmployeId && a.date === toDate,
+    );
+    // En déplacement, on ignore les rangs qu'on s'apprête à bouger
+    const targetSlots = new Set(
+      targetExisting
+        .filter((a) => altPressed || !payload.assignationIds.includes(a.id))
+        .map((a) => a.demi_journee as string),
+    );
+    if (slotsConflict(targetSlots, payload.slot)) {
+      toast.error("Cellule occupée — impossible de déposer ici");
+      return;
+    }
+
+    // Vérif absence sur la cellule cible
+    const abs = findAbsence(absences, toEmployeId, toDate, payload.slot);
+    if (abs && abs.valide) {
+      toast.error(`Cellule en absence (${ABSENCE_LABEL[abs.type]}) — drop refusé`);
+      return;
+    }
+
+    try {
+      if (altPressed) {
+        // Duplication : INSERT clones (champs essentiels uniquement)
+        const sourceRows = assignations.filter((a) => payload.assignationIds.includes(a.id));
+        const inserts = sourceRows.map((a) => ({
+          affaire_id: a.affaire_id,
+          employe_id: toEmployeId,
+          metier_id: a.metier_id,
+          date: toDate,
+          demi_journee: a.demi_journee,
+          heures: a.heures,
+          notes: a.notes,
+        }));
+        const { error } = await supabase.from("assignations").insert(inserts);
+        if (error) throw error;
+        toast.success(`Assignation dupliquée (${inserts.length})`);
+      } else {
+        // Déplacement : UPDATE date + employe_id
+        const { error } = await supabase
+          .from("assignations")
+          .update({ employe_id: toEmployeId, date: toDate })
+          .in("id", payload.assignationIds);
+        if (error) throw error;
+        toast.success("Assignation déplacée");
+      }
+      onChanged?.();
+    } catch (e) {
+      console.error(e);
+      toast.error("Échec de l'opération");
+    }
+  }
+  // ─────────────────────────────────────────────────────────────────────────
+
   if (employes.length === 0) {
     return (
       <div className="rounded-lg border border-dashed p-8 text-center">
@@ -214,6 +305,7 @@ export function PlanningGrid({
   }
 
   return (
+    <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
     <TooltipProvider delayDuration={200}>
       {/* Hint multi-sélection (toujours visible en haut, discret) */}
       {!readonly && selected.size === 0 && (
@@ -343,8 +435,10 @@ export function PlanningGrid({
                       }
 
                       return (
-                        <td
+                        <DroppableCell
                           key={d.toISOString()}
+                          employeId={emp.id}
+                          date={dayStr}
                           className={cn(
                             "relative border-b border-l align-top",
                             isWeekend && "bg-muted/20",
@@ -358,7 +452,7 @@ export function PlanningGrid({
                               ? undefined
                               : conflict
                                 ? `⚠ Conflit : ${conflict.detail}`
-                                : "Cliquer pour éditer · Ctrl+click pour sélection multiple"
+                                : "Cliquer pour éditer · Ctrl+click pour sélection multiple · Glisser-déposer pour bouger (Alt = dupliquer)"
                           }
                         >
                           {conflict && (
@@ -380,8 +474,9 @@ export function PlanningGrid({
                             assignations={dayAssigns}
                             metiersById={metiersById}
                             affairesById={affairesById}
+                            dnd={readonly ? undefined : { employeId: emp.id, date: dayStr }}
                           />
-                        </td>
+                        </DroppableCell>
                       );
                     })}
                   </tr>
@@ -419,5 +514,31 @@ export function PlanningGrid({
         }}
       />
     </TooltipProvider>
+    </DndContext>
+  );
+}
+
+interface DroppableCellProps {
+  employeId: string;
+  date: string;
+  children: React.ReactNode;
+  className?: string;
+  onClick: (e: React.MouseEvent) => void;
+  title?: string;
+}
+
+function DroppableCell({ employeId, date, children, className, onClick, title }: DroppableCellProps) {
+  const { setNodeRef, isOver } = useDroppable({
+    id: `cell::${employeId}::${date}`,
+  });
+  return (
+    <td
+      ref={setNodeRef}
+      className={cn(className, isOver && "bg-primary/20 ring-2 ring-inset ring-primary/60")}
+      onClick={onClick}
+      title={title}
+    >
+      {children}
+    </td>
   );
 }
