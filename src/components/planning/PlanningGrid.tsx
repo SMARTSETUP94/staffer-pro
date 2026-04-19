@@ -321,7 +321,7 @@ export function PlanningGrid({
 
       {/* Barre flottante sélection multiple */}
       {selected.size > 0 && !readonly && (
-        <div data-export-ignore="true" className="sticky top-2 z-20 mb-3 flex items-center justify-between rounded-lg border-2 border-primary bg-primary/10 px-3 py-2 shadow-md">
+        <div data-export-ignore="true" className="sticky top-16 z-30 mb-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border-2 border-primary bg-primary/10 px-3 py-2 shadow-md backdrop-blur">
           <span className="text-sm font-semibold">
             {selected.size} cellule{selected.size > 1 ? "s" : ""} sélectionnée{selected.size > 1 ? "s" : ""}
           </span>
