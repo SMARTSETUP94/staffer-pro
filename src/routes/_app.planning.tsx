@@ -1,8 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { startOfWeek, addDays } from "date-fns";
-import { Calendar, Loader2 } from "lucide-react";
+import { Calendar, Loader2, Search } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { usePlanningData } from "@/hooks/use-planning-data";
 import { WeekPicker } from "@/components/planning/WeekPicker";
 import { PlanningGrid } from "@/components/planning/PlanningGrid";
@@ -26,9 +29,23 @@ function PlanningPage() {
   const [tab, setTab] = useState<"cdi" | "interim" | "synthese">("cdi");
   const [filterAffaire, setFilterAffaire] = useState<Set<string | number>>(new Set());
   const [filterMetier, setFilterMetier] = useState<Set<string | number>>(new Set());
+  const [showWeekend, setShowWeekend] = useState(false);
+  const [searchEmploye, setSearchEmploye] = useState("");
 
   const { metiers, employes, affaires, assignations, consommation, absences, loading, error, refresh } =
     usePlanningData(weekStart, weekEnd);
+
+  // Filtre recherche employé (prénom + nom, insensible casse/accent)
+  const norm = (s: string) =>
+    s
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
+  const employesFiltres = useMemo(() => {
+    const q = norm(searchEmploye.trim());
+    if (!q) return employes;
+    return employes.filter((e) => norm(`${e.prenom} ${e.nom}`).includes(q));
+  }, [employes, searchEmploye]);
 
   const employesCDI = useMemo(
     () => employes.filter((e) => e.type_contrat === "CDI" || e.type_contrat === "CDD"),
