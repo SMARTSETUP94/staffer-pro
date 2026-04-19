@@ -367,6 +367,7 @@ function EmployesPage() {
       </div>
       )}
 
+
       {/* Dialog création/édition */}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-2xl">
