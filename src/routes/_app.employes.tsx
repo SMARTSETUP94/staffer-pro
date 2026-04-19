@@ -97,6 +97,7 @@ function EmployesPage() {
   const [search, setSearch] = useState("");
   const [filterContrat, setFilterContrat] = useState<"all" | ContratType>("all");
   const [filterActif, setFilterActif] = useState<"actifs" | "inactifs" | "tous">("actifs");
+  const [viewMode, setViewMode] = useState<"liste" | "tableur">("liste");
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<FormState>(emptyForm);
   const [saving, setSaving] = useState(false);
@@ -105,8 +106,9 @@ function EmployesPage() {
     setLoading(true);
     const { data: emps, error } = await supabase
       .from("employes")
-      .select("id, prenom, nom, email, telephone, type_contrat, agence_interim, metier_principal_id, actif, notes")
-      .order("nom", { ascending: true });
+      .select("id, prenom, nom, email, telephone, mobile, type_contrat, sous_type_contrat, is_apprenti, agence_interim, metier_principal_id, actif, non_staffing, date_naissance, adresse, notes")
+      .order("nom", { ascending: true })
+      .limit(2000);
     if (error) {
       toast.error("Chargement impossible", { description: error.message });
       setLoading(false);
@@ -142,6 +144,16 @@ function EmployesPage() {
     });
   }, [rows, search, filterContrat, filterActif]);
 
+  const spreadsheetRows: SpreadsheetRow[] = useMemo(
+    () => filtered.map((r) => ({
+      id: r.id, prenom: r.prenom, nom: r.nom, email: r.email,
+      telephone: r.telephone, mobile: r.mobile, type_contrat: r.type_contrat,
+      sous_type_contrat: r.sous_type_contrat, agence_interim: r.agence_interim,
+      metier_principal_id: r.metier_principal_id, actif: r.actif, non_staffing: r.non_staffing,
+    })),
+    [filtered],
+  );
+
   const openCreate = () => {
     setForm({ ...emptyForm, metier_principal_id: metiers[0]?.id ?? null });
     setOpen(true);
@@ -153,10 +165,16 @@ function EmployesPage() {
       nom: row.nom,
       email: row.email ?? "",
       telephone: row.telephone ?? "",
+      mobile: row.mobile ?? "",
       type_contrat: row.type_contrat,
+      sous_type_contrat: row.sous_type_contrat ?? "",
+      is_apprenti: row.is_apprenti,
       agence_interim: row.agence_interim ?? "",
       metier_principal_id: row.metier_principal_id,
       actif: row.actif,
+      non_staffing: row.non_staffing,
+      date_naissance: row.date_naissance ?? "",
+      adresse: row.adresse ?? "",
       notes: row.notes ?? "",
       secondaires: row.secondaires.filter((id) => id !== row.metier_principal_id),
     });
@@ -174,10 +192,16 @@ function EmployesPage() {
       nom: form.nom.trim(),
       email: form.email.trim() || null,
       telephone: form.telephone.trim() || null,
+      mobile: form.mobile.trim() || null,
       type_contrat: form.type_contrat,
+      sous_type_contrat: form.sous_type_contrat.trim() || null,
+      is_apprenti: form.is_apprenti,
       agence_interim: form.type_contrat === "Interim" ? (form.agence_interim.trim() || null) : null,
       metier_principal_id: form.metier_principal_id,
       actif: form.actif,
+      non_staffing: form.non_staffing,
+      date_naissance: form.date_naissance || null,
+      adresse: form.adresse.trim() || null,
       notes: form.notes.trim() || null,
     };
 
