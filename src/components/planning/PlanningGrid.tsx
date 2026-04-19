@@ -215,6 +215,93 @@ export function PlanningGrid({
     });
   }
 
+  // ─── Drag & Drop ─────────────────────────────────────────────────────────
+  // distance:6 → distingue clic vs drag pour ne pas casser l'ouverture du dialog
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
+
+  function slotsConflict(existing: Set<string>, incoming: "AM" | "PM" | "JOURNEE"): boolean {
+    if (existing.size === 0) return false;
+    if (existing.has("JOURNEE")) return true;
+    if (incoming === "JOURNEE") return true;
+    return existing.has(incoming);
+  }
+
+  async function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over) return;
+    const payload = active.data.current as DragGroupPayload | undefined;
+    if (!payload || payload.type !== "assignation-group") return;
+
+    const overId = String(over.id);
+    if (!overId.startsWith("cell::")) return;
+    const [, toEmployeId, toDate] = overId.split("::");
+
+    // Pas de move sur la même cellule (sauf si Alt = duplication explicite)
+    const altPressed =
+      (event.activatorEvent as MouseEvent | KeyboardEvent | undefined)?.altKey === true ||
+      (event as unknown as { activatorEvent?: { altKey?: boolean } }).activatorEvent?.altKey === true;
+
+    const sameCell = toEmployeId === payload.fromEmployeId && toDate === payload.fromDate;
+    if (sameCell && !altPressed) return;
+
+    // Cellule cible : occupée par une autre affaire ?
+    const targetExisting = assignations.filter(
+      (a) => a.employe_id === toEmployeId && a.date === toDate,
+    );
+    // Si on déplace (pas duplique), on ignore les assignations qu'on s'apprête à bouger
+    const targetSlots = new Set(
+      targetExisting
+        .filter((a) => altPressed || !payload.assignationIds.includes(a.id))
+        .map((a) => a.demi_journee),
+    );
+    if (slotsConflict(targetSlots, payload.slot)) {
+      toast.error("Cellule occupée — impossible de déposer ici");
+      return;
+    }
+
+    // Vérif absence sur la cellule cible
+    const abs = findAbsence(absences, toEmployeId, toDate, payload.slot);
+    if (abs && abs.valide) {
+      toast.error(`Cellule en absence (${ABSENCE_LABEL[abs.type]}) — drop refusé`);
+      return;
+    }
+
+    try {
+      if (altPressed) {
+        // Duplication : INSERT clones
+        const sourceRows = assignations.filter((a) => payload.assignationIds.includes(a.id));
+        const inserts = sourceRows.map((a) => ({
+          affaire_id: a.affaire_id,
+          devis_id: a.devis_id,
+          employe_id: toEmployeId,
+          metier_id: a.metier_id,
+          date: toDate,
+          demi_journee: a.demi_journee,
+          heures: a.heures,
+          heure_debut: a.heure_debut,
+          heure_fin: a.heure_fin,
+          notes: a.notes,
+        }));
+        const { error } = await supabase.from("assignations").insert(inserts);
+        if (error) throw error;
+        toast.success(`Assignation dupliquée (${inserts.length})`);
+      } else {
+        // Déplacement : UPDATE date + employe_id
+        const { error } = await supabase
+          .from("assignations")
+          .update({ employe_id: toEmployeId, date: toDate })
+          .in("id", payload.assignationIds);
+        if (error) throw error;
+        toast.success("Assignation déplacée");
+      }
+      onChanged?.();
+    } catch (e) {
+      console.error(e);
+      toast.error("Échec de l'opération");
+    }
+  }
+  // ─────────────────────────────────────────────────────────────────────────
+
   if (employes.length === 0) {
     return (
       <div className="rounded-lg border border-dashed p-8 text-center">
