@@ -145,7 +145,7 @@ export function PlanningGrid({
                         </span>
                         {(emp.type_contrat === "CDI" || emp.type_contrat === "CDD") &&
                           !assignedEmployeIds.has(emp.id) && (
-                            <span className="rounded-sm border border-emerald-500/40 bg-emerald-500/10 px-1 py-px text-[9px] font-medium uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
+                            <span className="rounded-sm border border-success/40 bg-success/10 px-1 py-px text-[9px] font-medium uppercase tracking-wide text-success">
                               Disponible
                             </span>
                           )}
