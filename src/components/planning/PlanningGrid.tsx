@@ -1,7 +1,14 @@
 import { Fragment as FragmentGroup, useMemo, useState } from "react";
 import { addDays, format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { AlertTriangle, X } from "lucide-react";
+import { AlertTriangle, CalendarOff, X } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu";
 import {
   DndContext,
   PointerSensor,
