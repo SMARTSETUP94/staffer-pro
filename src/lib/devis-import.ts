@@ -273,10 +273,16 @@ export function parseDevisFromArrayBuffer(
     const row = rows[i] ?? [];
     for (const cell of row) {
       const s = String(cell ?? "").trim();
-      // Format type "D-202604-XXXX" ou "D202604XXXX"
+      if (!s) continue;
       const m = s.match(/D[-\s]?(\d{6})[-\s]?(\d{3,5})/i);
       if (m && !numeroDevis) numeroDevis = `D-${m[1]}-${m[2]}`;
-      if (!libelle && s.length > 6 && !s.match(/^[d\d\-\s]+$/i) && !numeroDevis?.includes(s)) {
+      const sNorm = norm(s);
+      if (
+        !libelle &&
+        s.length > 6 &&
+        !sNorm.startsWith("devis") &&
+        !/d[-\s]?\d{6}/.test(sNorm)
+      ) {
         libelle = s.slice(0, 200);
       }
     }
