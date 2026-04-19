@@ -30,6 +30,7 @@ const items: NavItem[] = [
   { title: "Devis", url: "/devis", icon: FileText, show: (r) => r === "admin" || r === "chef_chantier" },
   { title: "Employés", url: "/employes", icon: Users, show: (r) => r === "admin" || r === "chef_chantier" },
   { title: "Absences", url: "/absences", icon: CalendarOff, show: (r) => r === "admin" || r === "chef_chantier" },
+  { title: "Intérimaires", url: "/interimaires", icon: Trophy, show: (r) => r === "admin" || r === "chef_chantier" },
   { title: "Import employés", url: "/employes/import", icon: FileUp, show: (r) => r === "admin" || r === "chef_chantier" },
   { title: "Import devis", url: "/devis/import", icon: FileUp, show: (r) => r === "admin" || r === "chef_chantier" },
   { title: "Export planning", url: "/export", icon: FileDown, show: (r) => r === "admin" || r === "chef_chantier" },
