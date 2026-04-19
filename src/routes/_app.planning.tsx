@@ -293,6 +293,22 @@ function PlanningPage() {
           filterAffaireIds={filterAffaireStr}
         />
       </aside>
+
+      <AddInterimDialog
+        open={addInterimOpen}
+        onOpenChange={setAddInterimOpen}
+        alreadyVisibleIds={new Set(employesInterim.map((e) => e.id))}
+        onSelect={(emp) => {
+          // Switch sur l'onglet intérim au cas où on ouvrirait depuis ailleurs
+          setTab("interim");
+          // Ajoute à la liste visible si pas déjà là
+          setExtraInterims((prev) =>
+            prev.some((p) => p.id === emp.id) ? prev : [...prev, emp],
+          );
+          // Ouvre le dialog d'assignation sur le lundi de la semaine
+          setAutoOpen({ employe: emp, date: weekStart });
+        }}
+      />
     </div>
   );
 }
