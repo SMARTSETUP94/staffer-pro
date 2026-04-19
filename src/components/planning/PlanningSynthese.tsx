@@ -91,11 +91,33 @@ export function PlanningSynthese({
                       </Badge>
                     )}
                   </div>
-                  <div className="mt-1 flex flex-wrap gap-3 text-[11px] text-muted-foreground">
+                  <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
                     {affaire.client && <span>{affaire.client}</span>}
                     {affaire.lieu && (
                       <span className="flex items-center gap-1">
                         <MapPin className="h-3 w-3" /> {affaire.lieu}
+                      </span>
+                    )}
+                    {(() => {
+                      const chef = affaire.chef_chantier_id
+                        ? employesById.get(affaire.chef_chantier_id)
+                        : null;
+                      return chef ? (
+                        <span className="flex items-center gap-1">
+                          <HardHat className="h-3 w-3" /> Chef : {chef.prenom} {chef.nom}
+                        </span>
+                      ) : null;
+                    })()}
+                    {(affaire.date_montage || affaire.date_demontage) && (
+                      <span className="flex items-center gap-1">
+                        <Calendar className="h-3 w-3" />
+                        {affaire.date_montage
+                          ? `Montage ${format(parseISO(affaire.date_montage), "d MMM", { locale: fr })}`
+                          : ""}
+                        {affaire.date_montage && affaire.date_demontage ? " → " : ""}
+                        {affaire.date_demontage
+                          ? `Démontage ${format(parseISO(affaire.date_demontage), "d MMM", { locale: fr })}`
+                          : ""}
                       </span>
                     )}
                   </div>
