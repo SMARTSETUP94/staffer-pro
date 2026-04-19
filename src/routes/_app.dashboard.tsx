@@ -10,6 +10,8 @@ import {
   AlertTriangle,
   Loader2,
   ArrowRight,
+  ArrowUpCircle,
+  ArrowDownCircle,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/PageHeader";
