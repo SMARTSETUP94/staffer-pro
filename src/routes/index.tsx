@@ -24,7 +24,7 @@ function IndexRedirect() {
       return;
     }
     if (isAdminOrChef) {
-      navigate({ to: "/planning" });
+      navigate({ to: "/dashboard" });
     } else {
       navigate({ to: "/mobile/aujourdhui" });
     }

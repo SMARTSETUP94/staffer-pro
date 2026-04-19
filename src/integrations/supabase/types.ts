@@ -71,6 +71,39 @@ export type Database = {
           },
         ]
       }
+      affaire_commentaires: {
+        Row: {
+          affaire_id: string
+          attachments: Json
+          author_id: string
+          body: string
+          created_at: string
+          id: string
+          mentions: string[]
+          updated_at: string
+        }
+        Insert: {
+          affaire_id: string
+          attachments?: Json
+          author_id: string
+          body: string
+          created_at?: string
+          id?: string
+          mentions?: string[]
+          updated_at?: string
+        }
+        Update: {
+          affaire_id?: string
+          attachments?: Json
+          author_id?: string
+          body?: string
+          created_at?: string
+          id?: string
+          mentions?: string[]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       affaires: {
         Row: {
           chef_chantier_id: string | null
@@ -602,6 +635,45 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications: {
+        Row: {
+          created_at: string
+          id: string
+          lien: string | null
+          lu: boolean
+          lu_le: string | null
+          message: string
+          metadata: Json | null
+          titre: string
+          type: Database["public"]["Enums"]["notification_type"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          lien?: string | null
+          lu?: boolean
+          lu_le?: string | null
+          message: string
+          metadata?: Json | null
+          titre: string
+          type: Database["public"]["Enums"]["notification_type"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          lien?: string | null
+          lu?: boolean
+          lu_le?: string | null
+          message?: string
+          metadata?: Json | null
+          titre?: string
+          type?: Database["public"]["Enums"]["notification_type"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -706,6 +778,17 @@ export type Database = {
       }
     }
     Functions: {
+      create_notification: {
+        Args: {
+          _lien?: string
+          _message: string
+          _metadata?: Json
+          _titre: string
+          _type: Database["public"]["Enums"]["notification_type"]
+          _user_id: string
+        }
+        Returns: string
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -724,6 +807,18 @@ export type Database = {
       demi_journee_type: "AM" | "PM" | "JOURNEE"
       devis_statut: "brouillon" | "signe" | "facture"
       heures_statut: "brouillon" | "soumis" | "valide" | "rejete"
+      notification_type:
+        | "assignation_creee"
+        | "assignation_modifiee"
+        | "assignation_supprimee"
+        | "heures_soumises"
+        | "heures_validees"
+        | "heures_rejetees"
+        | "absence_demandee"
+        | "absence_validee"
+        | "conflit_staffing"
+        | "depassement_budget"
+        | "mention"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -858,6 +953,19 @@ export const Constants = {
       demi_journee_type: ["AM", "PM", "JOURNEE"],
       devis_statut: ["brouillon", "signe", "facture"],
       heures_statut: ["brouillon", "soumis", "valide", "rejete"],
+      notification_type: [
+        "assignation_creee",
+        "assignation_modifiee",
+        "assignation_supprimee",
+        "heures_soumises",
+        "heures_validees",
+        "heures_rejetees",
+        "absence_demandee",
+        "absence_validee",
+        "conflit_staffing",
+        "depassement_budget",
+        "mention",
+      ],
     },
   },
 } as const
