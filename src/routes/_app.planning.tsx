@@ -142,6 +142,7 @@ function PlanningPage() {
                 filterAffaireIds={filterAffaireStr}
                 filterMetierIds={filterMetierNum}
                 emptyMessage="Aucun employé CDI/CDD actif."
+                onChanged={refresh}
               />
             </TabsContent>
 
@@ -155,6 +156,7 @@ function PlanningPage() {
                 filterAffaireIds={filterAffaireStr}
                 filterMetierIds={filterMetierNum}
                 emptyMessage="Aucun employé intérimaire / indépendant actif."
+                onChanged={refresh}
               />
             </TabsContent>
 
