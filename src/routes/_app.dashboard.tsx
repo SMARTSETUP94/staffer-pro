@@ -149,10 +149,16 @@ function DashboardPage() {
 
       if (cancelled) return;
 
-      const distinctChantiers = new Set(
-        (chantiersNextRes.data ?? []).map((r) => r.affaire_id as string),
+      const chantiersMap = new Map<string, { id: string; numero: string; nom: string }>();
+      for (const r of (chantiersNextRes.data ?? []) as any[]) {
+        const aff = r.affaires;
+        if (aff && !chantiersMap.has(aff.id)) {
+          chantiersMap.set(aff.id, { id: aff.id, numero: aff.numero, nom: aff.nom });
+        }
+      }
+      setChantiersSemaineProchaine(
+        Array.from(chantiersMap.values()).sort((a, b) => a.numero.localeCompare(b.numero)),
       );
-      setChantiersSemaineProchaine(distinctChantiers.size);
       setHeuresSemaine(
         (heuresWeekRes.data ?? []).reduce((acc, r) => acc + Number(r.heures ?? 0), 0),
       );
