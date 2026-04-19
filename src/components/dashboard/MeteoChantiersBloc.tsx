@@ -127,47 +127,53 @@ export function MeteoChantiersBloc() {
         ) : (
           <div className="grid gap-3 sm:grid-cols-3">
             {buckets.map((b) => (
-              <div key={b.date} className="rounded-lg border bg-muted/30 p-2.5">
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 capitalize">
+              <div key={b.date} className="rounded-lg border bg-muted/30 p-3">
+                <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground capitalize">
                   {b.label}
                 </p>
                 {b.affaires.length === 0 ? (
-                  <p className="text-xs text-muted-foreground italic py-2">Rien de prévu</p>
+                  <p className="py-2 text-xs italic text-muted-foreground">Rien de prévu</p>
                 ) : (
                   <ul className="space-y-2">
                     {b.affaires.slice(0, 4).map((a) => (
-                      <li key={a.id} className="rounded-md bg-card p-2 border">
+                      <li key={a.id} className="rounded-md border bg-card p-2">
                         <Link
                           to="/affaires/$affaireId"
                           params={{ affaireId: a.id }}
                           className="block hover:text-primary"
                         >
-                          <div className="flex items-start justify-between gap-2">
-                            <p className="text-xs font-medium truncate flex-1">
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="truncate font-mono text-xs font-semibold text-primary">
                               {a.numero}
                             </p>
-                            <Badge variant="secondary" className="text-[10px] shrink-0 px-1.5 py-0">
+                            <Badge
+                              variant="secondary"
+                              className="shrink-0 px-1.5 py-0 text-[11px] tabular-nums"
+                              title={`${a.effectif} personne${a.effectif > 1 ? "s" : ""} affectée${a.effectif > 1 ? "s" : ""}`}
+                            >
                               {a.effectif}
                             </Badge>
                           </div>
-                          <p className="text-[11px] text-muted-foreground truncate">{a.nom}</p>
+                          <p className="truncate text-xs text-foreground/90">{a.nom}</p>
                           {a.lieu && (
-                            <p className="text-[10px] text-muted-foreground truncate flex items-center gap-1 mt-0.5">
-                              <MapPin className="h-2.5 w-2.5 shrink-0" />
-                              {a.lieu}
+                            <p className="mt-0.5 flex items-center gap-1 truncate text-[11px] text-muted-foreground">
+                              <MapPin className="h-3 w-3 shrink-0" />
+                              <span className="truncate">{a.lieu}</span>
                             </p>
                           )}
                           {a.chef && (
-                            <p className="text-[10px] text-muted-foreground truncate flex items-center gap-1 mt-0.5">
-                              <HardHat className="h-2.5 w-2.5 shrink-0" />
-                              {a.chef.prenom} {a.chef.nom}
+                            <p className="mt-0.5 flex items-center gap-1 truncate text-[11px] text-muted-foreground">
+                              <HardHat className="h-3 w-3 shrink-0" />
+                              <span className="truncate">
+                                {a.chef.prenom} {a.chef.nom}
+                              </span>
                             </p>
                           )}
                         </Link>
                       </li>
                     ))}
                     {b.affaires.length > 4 && (
-                      <li className="text-[10px] text-muted-foreground text-center pt-1">
+                      <li className="pt-1 text-center text-[11px] text-muted-foreground">
                         +{b.affaires.length - 4} autre{b.affaires.length - 4 > 1 ? "s" : ""}
                       </li>
                     )}
