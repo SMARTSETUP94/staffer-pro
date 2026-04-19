@@ -1,19 +1,322 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Building2 } from "lucide-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useMemo, useState } from "react";
+import { Plus, Search, Loader2, ArrowRight, Pencil } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth-context";
+import { PageHeader } from "@/components/PageHeader";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from "@/components/ui/table";
+import { toast } from "sonner";
+
+type AffaireStatut = "prospect" | "en_cours" | "termine" | "annule";
+
+interface AffaireRow {
+  id: string;
+  numero: string;
+  nom: string;
+  client: string | null;
+  lieu: string | null;
+  statut: AffaireStatut;
+  date_debut: string | null;
+  date_fin_prevue: string | null;
+}
+
+interface FormState {
+  id?: string;
+  numero: string;
+  nom: string;
+  client: string;
+  lieu: string;
+  statut: AffaireStatut;
+  date_debut: string;
+  date_fin_prevue: string;
+  notes: string;
+}
+
+const emptyForm: FormState = {
+  numero: "",
+  nom: "",
+  client: "",
+  lieu: "",
+  statut: "en_cours",
+  date_debut: "",
+  date_fin_prevue: "",
+  notes: "",
+};
+
+const STATUTS: { value: AffaireStatut; label: string }[] = [
+  { value: "prospect", label: "Prospect" },
+  { value: "en_cours", label: "En cours" },
+  { value: "termine", label: "Terminée" },
+  { value: "annule", label: "Annulée" },
+];
 
 export const Route = createFileRoute("/_app/affaires")({
-  head: () => ({ meta: [{ title: "Affaires — Planning chantiers" }] }),
-  component: () => (
-    <div className="p-6">
-      <div className="mb-6 flex items-center gap-3">
-        <Building2 className="h-6 w-6 text-primary" />
-        <h1 className="text-2xl font-bold">Affaires</h1>
-      </div>
-      <Card>
-        <CardHeader><CardTitle>Étape 2</CardTitle></CardHeader>
-        <CardContent><p className="text-muted-foreground">CRUD affaires + devis manuel à venir.</p></CardContent>
-      </Card>
-    </div>
-  ),
+  head: () => ({ meta: [{ title: "Affaires — Setup Paris" }] }),
+  component: AffairesPage,
 });
+
+function AffairesPage() {
+  const { isAdminOrChef } = useAuth();
+  const [rows, setRows] = useState<AffaireRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState<"all" | AffaireStatut>("en_cours");
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState<FormState>(emptyForm);
+  const [saving, setSaving] = useState(false);
+
+  const fetchAll = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("affaires")
+      .select("id, numero, nom, client, lieu, statut, date_debut, date_fin_prevue")
+      .order("date_debut", { ascending: false, nullsFirst: false });
+    if (error) {
+      toast.error("Chargement impossible", { description: error.message });
+      setLoading(false);
+      return;
+    }
+    setRows((data ?? []) as AffaireRow[]);
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchAll(); }, []);
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return rows.filter((r) => {
+      if (filter !== "all" && r.statut !== filter) return false;
+      if (!q) return true;
+      return `${r.numero} ${r.nom} ${r.client ?? ""} ${r.lieu ?? ""}`.toLowerCase().includes(q);
+    });
+  }, [rows, search, filter]);
+
+  const openCreate = () => { setForm(emptyForm); setOpen(true); };
+  const openEdit = (r: AffaireRow) => {
+    setForm({
+      id: r.id,
+      numero: r.numero,
+      nom: r.nom,
+      client: r.client ?? "",
+      lieu: r.lieu ?? "",
+      statut: r.statut,
+      date_debut: r.date_debut ?? "",
+      date_fin_prevue: r.date_fin_prevue ?? "",
+      notes: "",
+    });
+    setOpen(true);
+  };
+
+  const handleSave = async () => {
+    if (!form.numero.trim() || !form.nom.trim()) {
+      toast.error("Champs requis", { description: "Numéro et nom de l'affaire." });
+      return;
+    }
+    setSaving(true);
+    const payload = {
+      numero: form.numero.trim(),
+      nom: form.nom.trim(),
+      client: form.client.trim() || null,
+      lieu: form.lieu.trim() || null,
+      statut: form.statut,
+      date_debut: form.date_debut || null,
+      date_fin_prevue: form.date_fin_prevue || null,
+      notes: form.notes.trim() || null,
+    };
+    if (form.id) {
+      const { error } = await supabase.from("affaires").update(payload).eq("id", form.id);
+      if (error) { toast.error("Mise à jour impossible", { description: error.message }); setSaving(false); return; }
+      toast.success("Affaire mise à jour");
+    } else {
+      const { error } = await supabase.from("affaires").insert(payload);
+      if (error) { toast.error("Création impossible", { description: error.message }); setSaving(false); return; }
+      toast.success("Affaire créée");
+    }
+    setOpen(false);
+    setSaving(false);
+    fetchAll();
+  };
+
+  return (
+    <div className="mx-auto max-w-7xl space-y-6 p-6">
+      <PageHeader
+        number="02"
+        eyebrow="Données / Affaires"
+        title="Affaires"
+        description={`${rows.filter((r) => r.statut === "en_cours").length} en cours sur ${rows.length} fiche(s).`}
+        actions={
+          isAdminOrChef && (
+            <Button onClick={openCreate} className="rounded-xl bg-primary text-primary-foreground hover:bg-primary/90">
+              <Plus className="mr-2 h-4 w-4" /> Nouvelle affaire
+            </Button>
+          )
+        }
+      />
+
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="relative w-full sm:max-w-sm">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Rechercher (numéro, nom, client, lieu)…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="h-10 rounded-xl pl-9"
+          />
+        </div>
+        <Tabs value={filter} onValueChange={(v) => setFilter(v as typeof filter)}>
+          <TabsList className="rounded-xl bg-muted">
+            <TabsTrigger value="all" className="rounded-lg">Toutes</TabsTrigger>
+            <TabsTrigger value="prospect" className="rounded-lg">Prospect</TabsTrigger>
+            <TabsTrigger value="en_cours" className="rounded-lg">En cours</TabsTrigger>
+            <TabsTrigger value="termine" className="rounded-lg">Terminées</TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
+
+      <div className="overflow-hidden rounded-2xl border border-border bg-card">
+        {loading ? (
+          <div className="flex items-center justify-center p-12">
+            <Loader2 className="h-5 w-5 animate-spin text-primary" />
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="p-12 text-center text-sm text-muted-foreground">
+            Aucune affaire ne correspond aux filtres.
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>N°</TableHead>
+                <TableHead>Nom</TableHead>
+                <TableHead>Client</TableHead>
+                <TableHead>Lieu</TableHead>
+                <TableHead>Période</TableHead>
+                <TableHead>Statut</TableHead>
+                <TableHead className="w-[120px]"></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filtered.map((r) => (
+                <TableRow key={r.id}>
+                  <TableCell className="font-mono text-xs font-semibold text-primary">{r.numero}</TableCell>
+                  <TableCell className="font-semibold text-foreground">{r.nom}</TableCell>
+                  <TableCell className="text-sm">{r.client ?? "—"}</TableCell>
+                  <TableCell className="text-sm">{r.lieu ?? "—"}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground">
+                    {formatPeriode(r.date_debut, r.date_fin_prevue)}
+                  </TableCell>
+                  <TableCell><StatutPill statut={r.statut} /></TableCell>
+                  <TableCell>
+                    <div className="flex items-center justify-end gap-1">
+                      {isAdminOrChef && (
+                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg" onClick={() => openEdit(r)}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                      )}
+                      <Button asChild variant="ghost" size="sm" className="rounded-lg">
+                        <Link to="/affaires/$affaireId" params={{ affaireId: r.id }}>
+                          Ouvrir <ArrowRight className="ml-1 h-3 w-3" />
+                        </Link>
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </div>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{form.id ? "Modifier l'affaire" : "Nouvelle affaire"}</DialogTitle>
+            <DialogDescription>
+              Le numéro est l'identifiant interne (ex. 2026-018). Les devis et le staffing s'ajoutent depuis la page détail.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label>Numéro</Label>
+              <Input value={form.numero} onChange={(e) => setForm({ ...form, numero: e.target.value })} className="h-10 rounded-xl" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Statut</Label>
+              <Select value={form.statut} onValueChange={(v) => setForm({ ...form, statut: v as AffaireStatut })}>
+                <SelectTrigger className="h-10 rounded-xl"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {STATUTS.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label>Nom de l'affaire</Label>
+              <Input value={form.nom} onChange={(e) => setForm({ ...form, nom: e.target.value })} className="h-10 rounded-xl" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Client</Label>
+              <Input value={form.client} onChange={(e) => setForm({ ...form, client: e.target.value })} className="h-10 rounded-xl" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Lieu</Label>
+              <Input value={form.lieu} onChange={(e) => setForm({ ...form, lieu: e.target.value })} className="h-10 rounded-xl" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Date de début</Label>
+              <Input type="date" value={form.date_debut} onChange={(e) => setForm({ ...form, date_debut: e.target.value })} className="h-10 rounded-xl" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Date de fin prévue</Label>
+              <Input type="date" value={form.date_fin_prevue} onChange={(e) => setForm({ ...form, date_fin_prevue: e.target.value })} className="h-10 rounded-xl" />
+            </div>
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label>Notes</Label>
+              <Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={2} className="rounded-xl" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setOpen(false)} className="rounded-xl">Annuler</Button>
+            <Button onClick={handleSave} disabled={saving} className="rounded-xl bg-primary text-primary-foreground hover:bg-primary/90">
+              {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {form.id ? "Enregistrer" : "Créer l'affaire"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+export function StatutPill({ statut }: { statut: AffaireStatut }) {
+  const map: Record<AffaireStatut, { label: string; cls: string }> = {
+    prospect:  { label: "Prospect",  cls: "bg-[var(--cream-deep)] text-foreground" },
+    en_cours:  { label: "En cours",  cls: "bg-[var(--indigo-soft)] text-primary" },
+    termine:   { label: "Terminée",  cls: "bg-emerald-100 text-emerald-700" },
+    annule:    { label: "Annulée",   cls: "bg-rose-100 text-rose-700" },
+  };
+  const v = map[statut];
+  return (
+    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${v.cls}`}>
+      {v.label}
+    </span>
+  );
+}
+
+function formatPeriode(start: string | null, end: string | null) {
+  if (!start && !end) return "—";
+  const fmt = (d: string) => new Date(d).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "2-digit" });
+  if (start && end) return `${fmt(start)} → ${fmt(end)}`;
+  if (start) return `dès ${fmt(start)}`;
+  return `→ ${fmt(end!)}`;
+}
