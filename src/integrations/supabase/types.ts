@@ -14,6 +14,63 @@ export type Database = {
   }
   public: {
     Tables: {
+      absences: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          date_debut: string
+          date_fin: string
+          demi_journee: Database["public"]["Enums"]["demi_journee_type"] | null
+          employe_id: string
+          id: string
+          motif: string | null
+          type: Database["public"]["Enums"]["absence_type"]
+          updated_at: string
+          valide: boolean
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          date_debut: string
+          date_fin: string
+          demi_journee?: Database["public"]["Enums"]["demi_journee_type"] | null
+          employe_id: string
+          id?: string
+          motif?: string | null
+          type?: Database["public"]["Enums"]["absence_type"]
+          updated_at?: string
+          valide?: boolean
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          date_debut?: string
+          date_fin?: string
+          demi_journee?: Database["public"]["Enums"]["demi_journee_type"] | null
+          employe_id?: string
+          id?: string
+          motif?: string | null
+          type?: Database["public"]["Enums"]["absence_type"]
+          updated_at?: string
+          valide?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "absences_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "absences_employe_id_fkey"
+            columns: ["employe_id"]
+            isOneToOne: false
+            referencedRelation: "employes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       affaires: {
         Row: {
           chef_chantier_id: string | null
@@ -660,6 +717,7 @@ export type Database = {
       is_chef_or_admin: { Args: never; Returns: boolean }
     }
     Enums: {
+      absence_type: "conges" | "formation" | "arret_maladie" | "rtt" | "autre"
       affaire_statut: "prospect" | "en_cours" | "termine" | "annule"
       app_role: "admin" | "chef_chantier" | "employe"
       contrat_type: "CDI" | "Interim" | "CDD" | "Independant"
@@ -793,6 +851,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      absence_type: ["conges", "formation", "arret_maladie", "rtt", "autre"],
       affaire_statut: ["prospect", "en_cours", "termine", "annule"],
       app_role: ["admin", "chef_chantier", "employe"],
       contrat_type: ["CDI", "Interim", "CDD", "Independant"],

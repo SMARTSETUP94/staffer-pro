@@ -21,6 +21,7 @@ import { Route as AppParametresRouteImport } from './routes/_app.parametres'
 import { Route as AppExportRouteImport } from './routes/_app.export'
 import { Route as AppEmployesRouteImport } from './routes/_app.employes'
 import { Route as AppAffairesRouteImport } from './routes/_app.affaires'
+import { Route as AppAbsencesRouteImport } from './routes/_app.absences'
 import { Route as AppEmployesImportRouteImport } from './routes/_app.employes.import'
 import { Route as AppDevisImportRouteImport } from './routes/_app.devis.import'
 import { Route as AppAffairesAffaireIdRouteImport } from './routes/_app.affaires.$affaireId'
@@ -87,6 +88,11 @@ const AppAffairesRoute = AppAffairesRouteImport.update({
   path: '/affaires',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAbsencesRoute = AppAbsencesRouteImport.update({
+  id: '/absences',
+  path: '/absences',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppEmployesImportRoute = AppEmployesImportRouteImport.update({
   id: '/import',
   path: '/import',
@@ -124,6 +130,7 @@ const AppAffairesAffaireIdDevisRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/absences': typeof AppAbsencesRoute
   '/affaires': typeof AppAffairesRouteWithChildren
   '/employes': typeof AppEmployesRouteWithChildren
   '/export': typeof AppExportRoute
@@ -143,6 +150,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/absences': typeof AppAbsencesRoute
   '/affaires': typeof AppAffairesRouteWithChildren
   '/employes': typeof AppEmployesRouteWithChildren
   '/export': typeof AppExportRoute
@@ -163,6 +171,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
+  '/_app/absences': typeof AppAbsencesRoute
   '/_app/affaires': typeof AppAffairesRouteWithChildren
   '/_app/employes': typeof AppEmployesRouteWithChildren
   '/_app/export': typeof AppExportRoute
@@ -184,6 +193,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/login'
+    | '/absences'
     | '/affaires'
     | '/employes'
     | '/export'
@@ -203,6 +213,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/login'
+    | '/absences'
     | '/affaires'
     | '/employes'
     | '/export'
@@ -222,6 +233,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_app'
     | '/login'
+    | '/_app/absences'
     | '/_app/affaires'
     | '/_app/employes'
     | '/_app/export'
@@ -334,6 +346,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAffairesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/absences': {
+      id: '/_app/absences'
+      path: '/absences'
+      fullPath: '/absences'
+      preLoaderRoute: typeof AppAbsencesRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/employes/import': {
       id: '/_app/employes/import'
       path: '/import'
@@ -419,6 +438,7 @@ const AppEmployesRouteWithChildren = AppEmployesRoute._addFileChildren(
 )
 
 interface AppRouteChildren {
+  AppAbsencesRoute: typeof AppAbsencesRoute
   AppAffairesRoute: typeof AppAffairesRouteWithChildren
   AppEmployesRoute: typeof AppEmployesRouteWithChildren
   AppExportRoute: typeof AppExportRoute
@@ -429,6 +449,7 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppAbsencesRoute: AppAbsencesRoute,
   AppAffairesRoute: AppAffairesRouteWithChildren,
   AppEmployesRoute: AppEmployesRouteWithChildren,
   AppExportRoute: AppExportRoute,
