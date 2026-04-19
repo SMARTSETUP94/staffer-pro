@@ -257,9 +257,8 @@ function DashboardPage() {
       )}
 
       {/* KPIs scalaires */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <KpiCard icon={Building2} label="Affaires actives" value={affairesActives} to="/affaires" />
-        <KpiCard icon={Users} label="Employés actifs" value={employesActifs} to="/employes" />
         <KpiCard icon={Calendar} label="Heures cette semaine" value={`${heuresSemaine}h`} to="/planning" />
         <KpiCard icon={ClipboardCheck} label="Heures à valider" value={heuresAValider.length} to="/validation-heures" emphasize={heuresAValider.length > 0} />
       </div>
