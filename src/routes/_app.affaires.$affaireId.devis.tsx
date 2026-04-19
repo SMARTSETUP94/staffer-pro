@@ -159,10 +159,22 @@ function AffaireDevisPage() {
 
   const handleDelete = async () => {
     if (!toDelete) return;
-    const table = toDelete.kind === "devis" ? "devis" : "devis_postes";
-    const { error } = await supabase.from(table).delete().eq("id", toDelete.id);
-    if (error) toast.error("Suppression impossible", { description: error.message });
-    else toast.success("Supprimé");
+    if (toDelete.kind === "devis") {
+      // Détacher les assignations liées (devis_id = null) avant suppression
+      const { error: detachErr } = await supabase
+        .from("assignations").update({ devis_id: null }).eq("devis_id", toDelete.id);
+      if (detachErr) {
+        toast.error("Suppression impossible", { description: detachErr.message });
+        setToDelete(null); return;
+      }
+      const { error } = await supabase.from("devis").delete().eq("id", toDelete.id);
+      if (error) toast.error("Suppression impossible", { description: error.message });
+      else toast.success("Devis supprimé. Assignations détachées (conservées sur l'affaire).");
+    } else {
+      const { error } = await supabase.from("devis_postes").delete().eq("id", toDelete.id);
+      if (error) toast.error("Suppression impossible", { description: error.message });
+      else toast.success("Ligne supprimée");
+    }
     setToDelete(null);
     fetchAll();
   };

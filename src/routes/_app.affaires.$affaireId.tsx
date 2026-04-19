@@ -1,7 +1,14 @@
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Loader2, MapPin, User, Calendar } from "lucide-react";
+import { ArrowLeft, Loader2, MapPin, User, Calendar, Lock, Unlock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth-context";
+import { Button } from "@/components/ui/button";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
 import { StatutPill } from "./_app.affaires";
 
 interface AffaireDetail {
@@ -25,8 +32,24 @@ function AffaireDetailLayout() {
   const { affaireId } = Route.useParams();
   const routerState = useRouterState();
   const path = routerState.location.pathname;
+  const { isAdmin, isAdminOrChef } = useAuth();
   const [affaire, setAffaire] = useState<AffaireDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [confirmAction, setConfirmAction] = useState<"close" | "reopen" | null>(null);
+  const [savingStatut, setSavingStatut] = useState(false);
+
+  const reload = () => {
+    setLoading(true);
+    supabase
+      .from("affaires")
+      .select("id, numero, nom, client, lieu, statut, date_debut, date_fin_prevue, notes")
+      .eq("id", affaireId)
+      .maybeSingle()
+      .then(({ data }) => {
+        setAffaire(data as AffaireDetail | null);
+        setLoading(false);
+      });
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -43,6 +66,22 @@ function AffaireDetailLayout() {
       });
     return () => { cancelled = true; };
   }, [affaireId]);
+
+  const handleStatut = async () => {
+    if (!affaire || !confirmAction) return;
+    setSavingStatut(true);
+    const newStatut = confirmAction === "close" ? "termine" : "en_cours";
+    const { error } = await supabase
+      .from("affaires").update({ statut: newStatut }).eq("id", affaire.id);
+    setSavingStatut(false);
+    if (error) {
+      toast.error("Action impossible", { description: error.message });
+    } else {
+      toast.success(confirmAction === "close" ? "Affaire clôturée" : "Affaire rouverte");
+      setConfirmAction(null);
+      reload();
+    }
+  };
 
   if (loading) {
     return (
@@ -92,7 +131,24 @@ function AffaireDetailLayout() {
             </span>
           </div>
         </div>
-        <StatutPill statut={affaire.statut} />
+        <div className="flex flex-col items-end gap-2">
+          <StatutPill statut={affaire.statut} />
+          {isAdminOrChef && affaire.statut !== "annule" && (
+            affaire.statut === "termine" ? (
+              isAdmin && (
+                <Button size="sm" variant="outline" className="rounded-xl"
+                  onClick={() => setConfirmAction("reopen")}>
+                  <Unlock className="mr-1.5 h-3.5 w-3.5" /> Rouvrir
+                </Button>
+              )
+            ) : (
+              <Button size="sm" variant="outline" className="rounded-xl"
+                onClick={() => setConfirmAction("close")}>
+                <Lock className="mr-1.5 h-3.5 w-3.5" /> Clôturer
+              </Button>
+            )
+          )}
+        </div>
       </div>
 
       {/* Onglets */}
@@ -116,6 +172,29 @@ function AffaireDetailLayout() {
       <div className="py-6">
         <Outlet />
       </div>
+
+      <AlertDialog open={!!confirmAction} onOpenChange={(o) => !o && setConfirmAction(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {confirmAction === "close" ? `Clôturer l'affaire ${affaire.numero} ?` : `Rouvrir l'affaire ${affaire.numero} ?`}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {confirmAction === "close"
+                ? "Aucune nouvelle assignation ne pourra être créée tant que l'affaire reste clôturée. L'historique reste consultable. Un admin pourra rouvrir si besoin."
+                : "L'affaire repasse en cours. Vous pourrez à nouveau créer des assignations."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="rounded-xl">Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={handleStatut} disabled={savingStatut}
+              className="rounded-xl bg-primary text-primary-foreground hover:bg-primary/90">
+              {savingStatut && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {confirmAction === "close" ? "Clôturer" : "Rouvrir"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
