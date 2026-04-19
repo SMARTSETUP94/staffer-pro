@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Loader2, Trash2 } from "lucide-react";
@@ -46,10 +47,18 @@ interface Props {
   date: Date;
   /** Employé concerné */
   employe: Employe;
-  /** Assignations existantes pour ce jour + employé (peut contenir AM, PM ou JOURNEE) */
+  /** Assignations existantes pour ce jour + employé */
   existing: Assignation[];
   affaires: Affaire[];
   metiers: Metier[];
+  /** Consommation devis par (affaire+métier) — passée depuis le parent */
+  consommation: {
+    affaire_id: string;
+    metier_id: number;
+    heures_prevues: number;
+    heures_assignees: number;
+    heures_restantes: number;
+  }[];
   onSaved: () => void;
 }
 
@@ -61,6 +70,7 @@ export function AssignationDialog({
   existing,
   affaires,
   metiers,
+  consommation,
   onSaved,
 }: Props) {
   // Édition d'une assignation existante = sélection par id ; sinon création
