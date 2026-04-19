@@ -1,7 +1,9 @@
 import { Fragment as FragmentGroup, useMemo, useState } from "react";
 import { addDays, format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { AlertTriangle, X } from "lucide-react";
 import type {
+  Absence,
   Affaire,
   Assignation,
   DevisConsommation,
@@ -10,6 +12,10 @@ import type {
 } from "@/hooks/use-planning-data";
 import { AssignationCell } from "./AssignationCell";
 import { AssignationDialog } from "./AssignationDialog";
+import { BulkAssignDialog } from "./BulkAssignDialog";
+import { ABSENCE_ICON, ABSENCE_LABEL, findAbsence } from "@/lib/absence-helpers";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -19,13 +25,21 @@ interface Props {
   affaires: Affaire[];
   assignations: Assignation[];
   consommation: DevisConsommation[];
+  absences: Absence[];
   filterAffaireIds?: Set<string>;
   filterMetierIds?: Set<number>;
   emptyMessage: string;
-  /** Callback appelé après création / modification / suppression */
   onChanged?: () => void;
-  /** Désactive l'édition (lecture seule) */
   readonly?: boolean;
+}
+
+interface CellKey {
+  employeId: string;
+  date: string;
+}
+
+function cellKeyStr(c: CellKey) {
+  return `${c.employeId}::${c.date}`;
 }
 
 export function PlanningGrid({
@@ -35,6 +49,7 @@ export function PlanningGrid({
   affaires,
   assignations,
   consommation,
+  absences,
   filterAffaireIds,
   filterMetierIds,
   emptyMessage,
@@ -49,7 +64,6 @@ export function PlanningGrid({
   const metiersById = useMemo(() => new Map(metiers.map((m) => [m.id, m])), [metiers]);
   const affairesById = useMemo(() => new Map(affaires.map((a) => [a.id, a])), [affaires]);
 
-  // IDs des employés ayant au moins une assignation sur la semaine affichée
   const assignedEmployeIds = useMemo(
     () => new Set(assignations.map((a) => a.employe_id)),
     [assignations],
@@ -63,6 +77,70 @@ export function PlanningGrid({
     });
   }, [assignations, filterAffaireIds, filterMetierIds]);
 
+  // Index conflits : (employe_id, date) -> détecte si plusieurs affaires DIFFÉRENTES
+  // ou si chevauche une absence.
+  const conflictsByCell = useMemo(() => {
+    const map = new Map<string, { reason: "double_affaire" | "absence_overlap"; detail: string }>();
+    // Conflits assignations : grouper par (emp,date)
+    const grp = new Map<string, Assignation[]>();
+    assignations.forEach((a) => {
+      const k = `${a.employe_id}::${a.date}`;
+      const arr = grp.get(k) ?? [];
+      arr.push(a);
+      grp.set(k, arr);
+    });
+    grp.forEach((items, key) => {
+      const distinctAffaires = new Set(items.map((i) => i.affaire_id));
+      if (distinctAffaires.size > 1) {
+        // Double assignation sur affaires différentes
+        const slotsParAffaire = new Map<string, Set<string>>();
+        items.forEach((i) => {
+          const set = slotsParAffaire.get(i.affaire_id) ?? new Set();
+          set.add(i.demi_journee);
+          slotsParAffaire.set(i.affaire_id, set);
+        });
+        // Vérif vrai conflit : 2 affaires demandent le même slot OU une JOURNEE
+        // Un cas valide = affaire A en AM, affaire B en PM (pas de conflit)
+        let hasConflict = false;
+        const affaireSlots: { affaire: string; slots: Set<string> }[] = [];
+        slotsParAffaire.forEach((slots, affaireId) => {
+          affaireSlots.push({ affaire: affaireId, slots });
+        });
+        for (let i = 0; i < affaireSlots.length; i++) {
+          for (let j = i + 1; j < affaireSlots.length; j++) {
+            const a = affaireSlots[i].slots;
+            const b = affaireSlots[j].slots;
+            if (a.has("JOURNEE") || b.has("JOURNEE")) {
+              hasConflict = true;
+              break;
+            }
+            // intersection non vide ?
+            for (const s of a) if (b.has(s)) { hasConflict = true; break; }
+            if (hasConflict) break;
+          }
+          if (hasConflict) break;
+        }
+        if (hasConflict) {
+          const numeros = Array.from(distinctAffaires)
+            .map((id) => affairesById.get(id)?.numero ?? id)
+            .join(", ");
+          map.set(key, { reason: "double_affaire", detail: `Affecté sur ${distinctAffaires.size} affaires : ${numeros}` });
+        }
+      }
+    });
+    // Conflits absence : assignation existante sur jour absent
+    assignations.forEach((a) => {
+      const abs = findAbsence(absences, a.employe_id, a.date, a.demi_journee as "AM" | "PM" | "JOURNEE");
+      if (abs && abs.valide) {
+        const key = `${a.employe_id}::${a.date}`;
+        const existing = map.get(key);
+        const detail = `Assignation alors qu'absence (${ABSENCE_LABEL[abs.type]})`;
+        if (!existing) map.set(key, { reason: "absence_overlap", detail });
+      }
+    });
+    return map;
+  }, [assignations, absences, affairesById]);
+
   const grouped = useMemo(() => {
     const groups = new Map<number, Employe[]>();
     employes.forEach((e) => {
@@ -75,12 +153,16 @@ export function PlanningGrid({
       .map((m) => ({ metier: m, employes: groups.get(m.id) ?? [] }));
   }, [employes, metiers]);
 
-  // Modale édition
+  // Modale édition cellule simple
   const [dialogState, setDialogState] = useState<{
     open: boolean;
     employe: Employe | null;
     date: Date | null;
   }>({ open: false, employe: null, date: null });
+
+  // Multi-sélection Ctrl/Cmd+click
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkOpen, setBulkOpen] = useState(false);
 
   const dialogExisting = useMemo(() => {
     if (!dialogState.employe || !dialogState.date) return [];
@@ -90,9 +172,35 @@ export function PlanningGrid({
     );
   }, [assignations, dialogState.employe, dialogState.date]);
 
-  function openCell(emp: Employe, d: Date) {
+  function handleCellClick(emp: Employe, d: Date, ev: React.MouseEvent) {
     if (readonly) return;
+    const dayStr = format(d, "yyyy-MM-dd");
+    const key = cellKeyStr({ employeId: emp.id, date: dayStr });
+
+    // Ctrl/Cmd-click → toggle dans la sélection multiple
+    if (ev.ctrlKey || ev.metaKey) {
+      ev.preventDefault();
+      setSelected((prev) => {
+        const next = new Set(prev);
+        if (next.has(key)) next.delete(key);
+        else next.add(key);
+        return next;
+      });
+      return;
+    }
+    // Click simple → si une sélection est active, on l'ignore pas mais on ouvre quand même
     setDialogState({ open: true, employe: emp, date: d });
+  }
+
+  function clearSelection() {
+    setSelected(new Set());
+  }
+
+  function selectedCells(): { employeId: string; date: string }[] {
+    return Array.from(selected).map((k) => {
+      const [employeId, date] = k.split("::");
+      return { employeId, date };
+    });
   }
 
   if (employes.length === 0) {
@@ -104,7 +212,24 @@ export function PlanningGrid({
   }
 
   return (
-    <>
+    <TooltipProvider delayDuration={200}>
+      {/* Barre flottante sélection multiple */}
+      {selected.size > 0 && !readonly && (
+        <div className="sticky top-2 z-20 mb-3 flex items-center justify-between rounded-lg border-2 border-primary bg-primary/10 px-3 py-2 shadow-md">
+          <span className="text-sm font-semibold">
+            {selected.size} cellule{selected.size > 1 ? "s" : ""} sélectionnée{selected.size > 1 ? "s" : ""}
+          </span>
+          <div className="flex gap-2">
+            <Button size="sm" variant="ghost" onClick={clearSelection}>
+              <X className="mr-1 h-3.5 w-3.5" /> Annuler
+            </Button>
+            <Button size="sm" onClick={() => setBulkOpen(true)}>
+              Assigner les {selected.size} cellules
+            </Button>
+          </div>
+        </div>
+      )}
+
       <div className="overflow-x-auto rounded-lg border bg-card">
         <table className="w-full min-w-[900px] border-collapse text-xs">
           <thead className="bg-muted/50">
@@ -159,21 +284,84 @@ export function PlanningGrid({
                     </td>
                     {days.map((d) => {
                       const dayStr = format(d, "yyyy-MM-dd");
+                      const key = cellKeyStr({ employeId: emp.id, date: dayStr });
                       const dayAssigns = filteredAssignations.filter(
                         (a) => a.employe_id === emp.id && a.date === dayStr,
                       );
                       const isWeekend = d.getDay() === 0 || d.getDay() === 6;
+                      const absence = findAbsence(absences, emp.id, dayStr, "JOURNEE");
+                      const conflict = conflictsByCell.get(key);
+                      const isSelected = selected.has(key);
+
+                      // Cellule absence : grisée et NON cliquable pour création
+                      // (mais on peut quand même cliquer pour voir les assignations existantes)
+                      if (absence && dayAssigns.length === 0) {
+                        return (
+                          <td
+                            key={d.toISOString()}
+                            className={cn(
+                              "border-b border-l bg-muted/40 align-top",
+                              isWeekend && "bg-muted/50",
+                            )}
+                          >
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="flex h-full min-h-[44px] cursor-not-allowed items-center justify-center gap-1 p-1 text-center text-[10px] font-medium text-muted-foreground">
+                                  <span className="text-base">{ABSENCE_ICON[absence.type]}</span>
+                                  <span className="truncate">{ABSENCE_LABEL[absence.type]}</span>
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent side="top" className="text-xs">
+                                <div className="font-semibold">
+                                  {ABSENCE_ICON[absence.type]} {ABSENCE_LABEL[absence.type]}
+                                </div>
+                                {absence.demi_journee && (
+                                  <div className="text-muted-foreground">{absence.demi_journee}</div>
+                                )}
+                                {absence.motif && <div className="italic">{absence.motif}</div>}
+                                {!absence.valide && (
+                                  <div className="text-warning">⚠ Non validée</div>
+                                )}
+                              </TooltipContent>
+                            </Tooltip>
+                          </td>
+                        );
+                      }
+
                       return (
                         <td
                           key={d.toISOString()}
                           className={cn(
-                            "border-b border-l align-top",
+                            "relative border-b border-l align-top",
                             isWeekend && "bg-muted/20",
                             !readonly && "cursor-pointer transition-colors hover:bg-primary/5",
+                            isSelected && "bg-primary/15 ring-2 ring-inset ring-primary",
+                            conflict && "ring-2 ring-inset ring-destructive",
                           )}
-                          onClick={() => openCell(emp, d)}
-                          title={readonly ? undefined : "Cliquer pour éditer"}
+                          onClick={(e) => handleCellClick(emp, d, e)}
+                          title={
+                            readonly
+                              ? undefined
+                              : conflict
+                                ? `⚠ Conflit : ${conflict.detail}`
+                                : "Cliquer pour éditer · Ctrl+click pour sélection multiple"
+                          }
                         >
+                          {conflict && (
+                            <div className="absolute right-0.5 top-0.5 z-10">
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <span className="flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-destructive-foreground shadow">
+                                    <AlertTriangle className="h-2.5 w-2.5" />
+                                  </span>
+                                </TooltipTrigger>
+                                <TooltipContent side="top" className="text-xs">
+                                  <div className="font-semibold text-destructive">⚠ Conflit staffing</div>
+                                  <div>{conflict.detail}</div>
+                                </TooltipContent>
+                              </Tooltip>
+                            </div>
+                          )}
                           <AssignationCell
                             assignations={dayAssigns}
                             metiersById={metiersById}
@@ -203,6 +391,19 @@ export function PlanningGrid({
           onSaved={() => onChanged?.()}
         />
       )}
-    </>
+
+      <BulkAssignDialog
+        open={bulkOpen}
+        onOpenChange={setBulkOpen}
+        cells={selectedCells()}
+        employes={employes}
+        affaires={affaires}
+        metiers={metiers}
+        onSaved={() => {
+          clearSelection();
+          onChanged?.();
+        }}
+      />
+    </TooltipProvider>
   );
 }
