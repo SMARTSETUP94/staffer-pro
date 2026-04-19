@@ -55,15 +55,25 @@ function PlanningPage() {
     () => employesFiltres.filter((e) => e.type_contrat === "CDI" || e.type_contrat === "CDD"),
     [employesFiltres],
   );
-  // Intérim/Indép. : uniquement ceux qui ont au moins une assignation sur la semaine
+  // Intérim/Indép. : ceux qui ont au moins une assignation sur la semaine
+  // OU ceux ajoutés manuellement via le bouton "Ajouter un intérimaire"
+  const [extraInterims, setExtraInterims] = useState<Employe[]>([]);
+  const [autoOpen, setAutoOpen] = useState<{ employe: Employe; date: Date } | null>(null);
+  const [addInterimOpen, setAddInterimOpen] = useState(false);
+
   const employesInterim = useMemo(() => {
     const assignedIds = new Set(assignations.map((a) => a.employe_id));
-    return employesFiltres.filter(
+    const extraIds = new Set(extraInterims.map((e) => e.id));
+    const baseFiltered = employesFiltres.filter(
       (e) =>
         (e.type_contrat === "Interim" || e.type_contrat === "Independant") &&
-        assignedIds.has(e.id),
+        (assignedIds.has(e.id) || extraIds.has(e.id)),
     );
-  }, [employesFiltres, assignations]);
+    // Ajoute les extras qui ne sont pas dans employesFiltres (filtre recherche par ex)
+    const baseIds = new Set(baseFiltered.map((e) => e.id));
+    const missingExtras = extraInterims.filter((e) => !baseIds.has(e.id));
+    return [...baseFiltered, ...missingExtras];
+  }, [employesFiltres, assignations, extraInterims]);
 
   // Affaires actives cette semaine pour le filtre (toutes celles qui apparaissent dans les assignations OU avec heures budgétées)
   const affairesActivesIds = useMemo(() => {
