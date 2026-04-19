@@ -109,7 +109,6 @@ function DashboardPage() {
 
       const [
         affairesRes,
-        employesRes,
         heuresWeekRes,
         montagesRes,
         margesRes,
@@ -117,7 +116,6 @@ function DashboardPage() {
         absRes,
       ] = await Promise.all([
         supabase.from("affaires").select("id", { count: "exact", head: true }).eq("statut", "en_cours"),
-        supabase.from("employes").select("id", { count: "exact", head: true }).eq("actif", true).eq("non_staffing", false),
         supabase.from("assignations").select("heures").gte("date", weekStart).lte("date", weekEnd),
         supabase
           .from("affaires")
@@ -142,7 +140,6 @@ function DashboardPage() {
       if (cancelled) return;
 
       setAffairesActives(affairesRes.count ?? 0);
-      setEmployesActifs(employesRes.count ?? 0);
       setHeuresSemaine(
         (heuresWeekRes.data ?? []).reduce((acc, r) => acc + Number(r.heures ?? 0), 0),
       );
