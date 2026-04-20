@@ -194,42 +194,56 @@ export function PlanningSynthese({
                             </p>
                           ) : (
                             <div className="space-y-1.5">
-                              {lignesPole.map((c) => {
-                                const pct =
-                                  Number(c.heures_prevues) > 0
-                                    ? (Number(c.heures_assignees) / Number(c.heures_prevues)) * 100
-                                    : 0;
-                                const dep = pct > 100;
-                                return (
-                                  <div
-                                    key={`${c.devis_id}-${c.metier_id}`}
-                                    className="space-y-0.5"
-                                  >
-                                    <div className="flex items-center justify-between text-[10px]">
-                                      <span className="flex min-w-0 items-center gap-1.5">
+                              {(() => {
+                                // Agrégation par métier (somme tous devis confondus)
+                                const parMetier = new Map<
+                                  number,
+                                  { metier: string; couleur: string; prevues: number; assignees: number }
+                                >();
+                                for (const l of lignesPole) {
+                                  const ex = parMetier.get(l.metier_id);
+                                  if (ex) {
+                                    ex.prevues += Number(l.heures_prevues || 0);
+                                    ex.assignees += Number(l.heures_assignees || 0);
+                                  } else {
+                                    parMetier.set(l.metier_id, {
+                                      metier: l.metier,
+                                      couleur: l.couleur,
+                                      prevues: Number(l.heures_prevues || 0),
+                                      assignees: Number(l.heures_assignees || 0),
+                                    });
+                                  }
+                                }
+                                return Array.from(parMetier.entries()).map(([mid, agg]) => {
+                                  const pct = agg.prevues > 0 ? (agg.assignees / agg.prevues) * 100 : 0;
+                                  const dep = pct > 100;
+                                  return (
+                                    <div key={mid} className="space-y-0.5">
+                                      <div className="flex items-center justify-between text-[10px]">
+                                        <span className="flex min-w-0 items-center gap-1.5">
+                                          <span
+                                            className="inline-block h-2 w-2 flex-shrink-0 rounded-full"
+                                            style={{ backgroundColor: agg.couleur }}
+                                          />
+                                          <span className="truncate">{agg.metier}</span>
+                                        </span>
                                         <span
-                                          className="inline-block h-2 w-2 flex-shrink-0 rounded-full"
-                                          style={{ backgroundColor: c.couleur }}
-                                        />
-                                        <span className="truncate">{c.metier}</span>
-                                      </span>
-                                      <span
-                                        className={cn(
-                                          "ml-1 font-mono",
-                                          dep && "font-semibold text-destructive",
-                                        )}
-                                      >
-                                        {Number(c.heures_assignees).toFixed(0)}/
-                                        {Number(c.heures_prevues).toFixed(0)}
-                                      </span>
+                                          className={cn(
+                                            "ml-1 font-mono",
+                                            dep && "font-semibold text-destructive",
+                                          )}
+                                        >
+                                          {agg.assignees.toFixed(0)}/{agg.prevues.toFixed(0)}
+                                        </span>
+                                      </div>
+                                      <Progress
+                                        value={Math.min(pct, 100)}
+                                        className={cn("h-1", dep && "[&>div]:bg-destructive")}
+                                      />
                                     </div>
-                                    <Progress
-                                      value={Math.min(pct, 100)}
-                                      className={cn("h-1", dep && "[&>div]:bg-destructive")}
-                                    />
-                                  </div>
-                                );
-                              })}
+                                  );
+                                });
+                              })()}
                             </div>
                           )}
                         </div>
