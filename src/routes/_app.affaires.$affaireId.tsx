@@ -9,7 +9,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { StatutPill } from "./_app.affaires";
+import { StatutPill } from "./_app.affaires.index";
 
 interface AffaireDetail {
   id: string;

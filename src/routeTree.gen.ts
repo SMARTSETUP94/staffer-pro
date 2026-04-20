@@ -31,9 +31,9 @@ import { Route as AppExportRouteImport } from './routes/_app.export'
 import { Route as AppEmployesRouteImport } from './routes/_app.employes'
 import { Route as AppDashboardEmployeRouteImport } from './routes/_app.dashboard-employe'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
-import { Route as AppAffairesRouteImport } from './routes/_app.affaires'
 import { Route as AppAbsencesRouteImport } from './routes/_app.absences'
 import { Route as AppDevisIndexRouteImport } from './routes/_app.devis.index'
+import { Route as AppAffairesIndexRouteImport } from './routes/_app.affaires.index'
 import { Route as AppParametresUtilisateursRouteImport } from './routes/_app.parametres.utilisateurs'
 import { Route as AppParametresMetiersRouteImport } from './routes/_app.parametres.metiers'
 import { Route as AppExportDemandesDevisRouteImport } from './routes/_app.export.demandes-devis'
@@ -154,11 +154,6 @@ const AppDashboardRoute = AppDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AppRoute,
 } as any)
-const AppAffairesRoute = AppAffairesRouteImport.update({
-  id: '/affaires',
-  path: '/affaires',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppAbsencesRoute = AppAbsencesRouteImport.update({
   id: '/absences',
   path: '/absences',
@@ -167,6 +162,11 @@ const AppAbsencesRoute = AppAbsencesRouteImport.update({
 const AppDevisIndexRoute = AppDevisIndexRouteImport.update({
   id: '/devis/',
   path: '/devis/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAffairesIndexRoute = AppAffairesIndexRouteImport.update({
+  id: '/affaires/',
+  path: '/affaires/',
   getParentRoute: () => AppRoute,
 } as any)
 const AppParametresUtilisateursRoute =
@@ -196,9 +196,9 @@ const AppDevisImportRoute = AppDevisImportRouteImport.update({
   getParentRoute: () => AppRoute,
 } as any)
 const AppAffairesAffaireIdRoute = AppAffairesAffaireIdRouteImport.update({
-  id: '/$affaireId',
-  path: '/$affaireId',
-  getParentRoute: () => AppAffairesRoute,
+  id: '/affaires/$affaireId',
+  path: '/affaires/$affaireId',
+  getParentRoute: () => AppRoute,
 } as any)
 const AppAffairesAffaireIdIndexRoute =
   AppAffairesAffaireIdIndexRouteImport.update({
@@ -229,7 +229,6 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/absences': typeof AppAbsencesRoute
-  '/affaires': typeof AppAffairesRouteWithChildren
   '/dashboard': typeof AppDashboardRoute
   '/dashboard-employe': typeof AppDashboardEmployeRoute
   '/employes': typeof AppEmployesRouteWithChildren
@@ -255,6 +254,7 @@ export interface FileRoutesByFullPath {
   '/export/demandes-devis': typeof AppExportDemandesDevisRoute
   '/parametres/metiers': typeof AppParametresMetiersRoute
   '/parametres/utilisateurs': typeof AppParametresUtilisateursRoute
+  '/affaires/': typeof AppAffairesIndexRoute
   '/devis/': typeof AppDevisIndexRoute
   '/affaires/$affaireId/devis': typeof AppAffairesAffaireIdDevisRoute
   '/affaires/$affaireId/journal': typeof AppAffairesAffaireIdJournalRoute
@@ -265,7 +265,6 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/absences': typeof AppAbsencesRoute
-  '/affaires': typeof AppAffairesRouteWithChildren
   '/dashboard': typeof AppDashboardRoute
   '/dashboard-employe': typeof AppDashboardEmployeRoute
   '/employes': typeof AppEmployesRouteWithChildren
@@ -290,6 +289,7 @@ export interface FileRoutesByTo {
   '/export/demandes-devis': typeof AppExportDemandesDevisRoute
   '/parametres/metiers': typeof AppParametresMetiersRoute
   '/parametres/utilisateurs': typeof AppParametresUtilisateursRoute
+  '/affaires': typeof AppAffairesIndexRoute
   '/devis': typeof AppDevisIndexRoute
   '/affaires/$affaireId/devis': typeof AppAffairesAffaireIdDevisRoute
   '/affaires/$affaireId/journal': typeof AppAffairesAffaireIdJournalRoute
@@ -302,7 +302,6 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
   '/_app/absences': typeof AppAbsencesRoute
-  '/_app/affaires': typeof AppAffairesRouteWithChildren
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/dashboard-employe': typeof AppDashboardEmployeRoute
   '/_app/employes': typeof AppEmployesRouteWithChildren
@@ -328,6 +327,7 @@ export interface FileRoutesById {
   '/_app/export/demandes-devis': typeof AppExportDemandesDevisRoute
   '/_app/parametres/metiers': typeof AppParametresMetiersRoute
   '/_app/parametres/utilisateurs': typeof AppParametresUtilisateursRoute
+  '/_app/affaires/': typeof AppAffairesIndexRoute
   '/_app/devis/': typeof AppDevisIndexRoute
   '/_app/affaires/$affaireId/devis': typeof AppAffairesAffaireIdDevisRoute
   '/_app/affaires/$affaireId/journal': typeof AppAffairesAffaireIdJournalRoute
@@ -340,7 +340,6 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/absences'
-    | '/affaires'
     | '/dashboard'
     | '/dashboard-employe'
     | '/employes'
@@ -366,6 +365,7 @@ export interface FileRouteTypes {
     | '/export/demandes-devis'
     | '/parametres/metiers'
     | '/parametres/utilisateurs'
+    | '/affaires/'
     | '/devis/'
     | '/affaires/$affaireId/devis'
     | '/affaires/$affaireId/journal'
@@ -376,7 +376,6 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/absences'
-    | '/affaires'
     | '/dashboard'
     | '/dashboard-employe'
     | '/employes'
@@ -401,6 +400,7 @@ export interface FileRouteTypes {
     | '/export/demandes-devis'
     | '/parametres/metiers'
     | '/parametres/utilisateurs'
+    | '/affaires'
     | '/devis'
     | '/affaires/$affaireId/devis'
     | '/affaires/$affaireId/journal'
@@ -412,7 +412,6 @@ export interface FileRouteTypes {
     | '/_app'
     | '/login'
     | '/_app/absences'
-    | '/_app/affaires'
     | '/_app/dashboard'
     | '/_app/dashboard-employe'
     | '/_app/employes'
@@ -438,6 +437,7 @@ export interface FileRouteTypes {
     | '/_app/export/demandes-devis'
     | '/_app/parametres/metiers'
     | '/_app/parametres/utilisateurs'
+    | '/_app/affaires/'
     | '/_app/devis/'
     | '/_app/affaires/$affaireId/devis'
     | '/_app/affaires/$affaireId/journal'
@@ -613,13 +613,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDashboardRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/affaires': {
-      id: '/_app/affaires'
-      path: '/affaires'
-      fullPath: '/affaires'
-      preLoaderRoute: typeof AppAffairesRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/_app/absences': {
       id: '/_app/absences'
       path: '/absences'
@@ -632,6 +625,13 @@ declare module '@tanstack/react-router' {
       path: '/devis'
       fullPath: '/devis/'
       preLoaderRoute: typeof AppDevisIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/affaires/': {
+      id: '/_app/affaires/'
+      path: '/affaires'
+      fullPath: '/affaires/'
+      preLoaderRoute: typeof AppAffairesIndexRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/parametres/utilisateurs': {
@@ -671,10 +671,10 @@ declare module '@tanstack/react-router' {
     }
     '/_app/affaires/$affaireId': {
       id: '/_app/affaires/$affaireId'
-      path: '/$affaireId'
+      path: '/affaires/$affaireId'
       fullPath: '/affaires/$affaireId'
       preLoaderRoute: typeof AppAffairesAffaireIdRouteImport
-      parentRoute: typeof AppAffairesRoute
+      parentRoute: typeof AppRoute
     }
     '/_app/affaires/$affaireId/': {
       id: '/_app/affaires/$affaireId/'
@@ -706,35 +706,6 @@ declare module '@tanstack/react-router' {
     }
   }
 }
-
-interface AppAffairesAffaireIdRouteChildren {
-  AppAffairesAffaireIdDevisRoute: typeof AppAffairesAffaireIdDevisRoute
-  AppAffairesAffaireIdJournalRoute: typeof AppAffairesAffaireIdJournalRoute
-  AppAffairesAffaireIdStaffingRoute: typeof AppAffairesAffaireIdStaffingRoute
-  AppAffairesAffaireIdIndexRoute: typeof AppAffairesAffaireIdIndexRoute
-}
-
-const AppAffairesAffaireIdRouteChildren: AppAffairesAffaireIdRouteChildren = {
-  AppAffairesAffaireIdDevisRoute: AppAffairesAffaireIdDevisRoute,
-  AppAffairesAffaireIdJournalRoute: AppAffairesAffaireIdJournalRoute,
-  AppAffairesAffaireIdStaffingRoute: AppAffairesAffaireIdStaffingRoute,
-  AppAffairesAffaireIdIndexRoute: AppAffairesAffaireIdIndexRoute,
-}
-
-const AppAffairesAffaireIdRouteWithChildren =
-  AppAffairesAffaireIdRoute._addFileChildren(AppAffairesAffaireIdRouteChildren)
-
-interface AppAffairesRouteChildren {
-  AppAffairesAffaireIdRoute: typeof AppAffairesAffaireIdRouteWithChildren
-}
-
-const AppAffairesRouteChildren: AppAffairesRouteChildren = {
-  AppAffairesAffaireIdRoute: AppAffairesAffaireIdRouteWithChildren,
-}
-
-const AppAffairesRouteWithChildren = AppAffairesRoute._addFileChildren(
-  AppAffairesRouteChildren,
-)
 
 interface AppEmployesRouteChildren {
   AppEmployesImportRoute: typeof AppEmployesImportRoute
@@ -774,9 +745,25 @@ const AppParametresRouteWithChildren = AppParametresRoute._addFileChildren(
   AppParametresRouteChildren,
 )
 
+interface AppAffairesAffaireIdRouteChildren {
+  AppAffairesAffaireIdDevisRoute: typeof AppAffairesAffaireIdDevisRoute
+  AppAffairesAffaireIdJournalRoute: typeof AppAffairesAffaireIdJournalRoute
+  AppAffairesAffaireIdStaffingRoute: typeof AppAffairesAffaireIdStaffingRoute
+  AppAffairesAffaireIdIndexRoute: typeof AppAffairesAffaireIdIndexRoute
+}
+
+const AppAffairesAffaireIdRouteChildren: AppAffairesAffaireIdRouteChildren = {
+  AppAffairesAffaireIdDevisRoute: AppAffairesAffaireIdDevisRoute,
+  AppAffairesAffaireIdJournalRoute: AppAffairesAffaireIdJournalRoute,
+  AppAffairesAffaireIdStaffingRoute: AppAffairesAffaireIdStaffingRoute,
+  AppAffairesAffaireIdIndexRoute: AppAffairesAffaireIdIndexRoute,
+}
+
+const AppAffairesAffaireIdRouteWithChildren =
+  AppAffairesAffaireIdRoute._addFileChildren(AppAffairesAffaireIdRouteChildren)
+
 interface AppRouteChildren {
   AppAbsencesRoute: typeof AppAbsencesRoute
-  AppAffairesRoute: typeof AppAffairesRouteWithChildren
   AppDashboardRoute: typeof AppDashboardRoute
   AppDashboardEmployeRoute: typeof AppDashboardEmployeRoute
   AppEmployesRoute: typeof AppEmployesRouteWithChildren
@@ -790,13 +777,14 @@ interface AppRouteChildren {
   AppPlanningRoute: typeof AppPlanningRoute
   AppRoadmapRoute: typeof AppRoadmapRoute
   AppValidationHeuresRoute: typeof AppValidationHeuresRoute
+  AppAffairesAffaireIdRoute: typeof AppAffairesAffaireIdRouteWithChildren
   AppDevisImportRoute: typeof AppDevisImportRoute
+  AppAffairesIndexRoute: typeof AppAffairesIndexRoute
   AppDevisIndexRoute: typeof AppDevisIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
   AppAbsencesRoute: AppAbsencesRoute,
-  AppAffairesRoute: AppAffairesRouteWithChildren,
   AppDashboardRoute: AppDashboardRoute,
   AppDashboardEmployeRoute: AppDashboardEmployeRoute,
   AppEmployesRoute: AppEmployesRouteWithChildren,
@@ -810,7 +798,9 @@ const AppRouteChildren: AppRouteChildren = {
   AppPlanningRoute: AppPlanningRoute,
   AppRoadmapRoute: AppRoadmapRoute,
   AppValidationHeuresRoute: AppValidationHeuresRoute,
+  AppAffairesAffaireIdRoute: AppAffairesAffaireIdRouteWithChildren,
   AppDevisImportRoute: AppDevisImportRoute,
+  AppAffairesIndexRoute: AppAffairesIndexRoute,
   AppDevisIndexRoute: AppDevisIndexRoute,
 }
 
