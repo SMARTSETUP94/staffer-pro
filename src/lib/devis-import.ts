@@ -256,7 +256,8 @@ export function parseDevisFromArrayBuffer(
   opts: ParseDevisOptions = {},
 ): ParseDevisResult {
   const errors: string[] = [];
-  const wb = XLSX.read(buffer, { type: "array" });
+  // XLSX.read sait lire .xlsx, .xls et .csv (auto-détection via le contenu).
+  const wb = XLSX.read(buffer, { type: "array", raw: true });
   const sheetName = wb.SheetNames[0];
   if (!sheetName) {
     return { meta: { numeroDevis: null, libelle: null }, lines: [], totalTempsPrevu: 0, totalMontantHt: 0, errors: ["Aucune feuille trouvée"] };
