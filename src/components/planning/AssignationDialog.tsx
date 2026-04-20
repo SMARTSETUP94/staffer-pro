@@ -324,7 +324,18 @@ export function AssignationDialog({
 
             <div className="grid grid-cols-2 gap-3">
               <div className="grid gap-1.5">
-                <Label>Métier</Label>
+                <div className="flex items-center justify-between">
+                  <Label>Métier</Label>
+                  {metiersCompetence.length < metiers.length && (
+                    <button
+                      type="button"
+                      onClick={() => setShowAllMetiers((v) => !v)}
+                      className="text-[10px] text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+                    >
+                      {showAllMetiers ? "Compétences" : "Tous"}
+                    </button>
+                  )}
+                </div>
                 <Select
                   value={metierId?.toString() ?? ""}
                   onValueChange={(v) => setMetierId(Number(v))}
@@ -333,15 +344,29 @@ export function AssignationDialog({
                     <SelectValue placeholder="Métier" />
                   </SelectTrigger>
                   <SelectContent>
-                    {metiers.map((m) => (
-                      <SelectItem key={m.id} value={m.id.toString()}>
-                        <span
-                          className="mr-1.5 inline-block h-2 w-2 rounded-full align-middle"
-                          style={{ backgroundColor: m.couleur }}
-                        />
-                        {m.libelle}
-                      </SelectItem>
-                    ))}
+                    {metiersAffiches.map((m) => {
+                      const isPrincipal = m.id === employe.metier_principal_id;
+                      const isCompetence = metiersCompetence.some((mc) => mc.id === m.id);
+                      return (
+                        <SelectItem key={m.id} value={m.id.toString()}>
+                          <span
+                            className="mr-1.5 inline-block h-2 w-2 rounded-full align-middle"
+                            style={{ backgroundColor: m.couleur }}
+                          />
+                          {m.libelle}
+                          {isPrincipal && (
+                            <span className="ml-1 text-[10px] text-muted-foreground">
+                              (principal)
+                            </span>
+                          )}
+                          {!isCompetence && showAllMetiers && (
+                            <span className="ml-1 text-[10px] text-muted-foreground">
+                              (hors compétence)
+                            </span>
+                          )}
+                        </SelectItem>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
               </div>
