@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useRef, useState } from "react";
-import { startOfWeek, addDays } from "date-fns";
+import { startOfWeek, addDays, format } from "date-fns";
 import { Calendar, Loader2, Search, FileDown, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -15,6 +15,10 @@ import { PlanningSynthese } from "@/components/planning/PlanningSynthese";
 import { HeuresRestantesSidebar } from "@/components/planning/HeuresRestantesSidebar";
 import { MultiFilter } from "@/components/planning/MultiFilter";
 import { AddInterimDialog } from "@/components/planning/AddInterimDialog";
+import { FlotteGrid } from "@/components/planning/FlotteGrid";
+import { TrajetDialog } from "@/components/flotte/TrajetDialog";
+import { useVehicules, type Trajet } from "@/hooks/use-vehicules";
+import { useTrajetsWeek } from "@/hooks/use-trajets";
 import { exportPlanningToPDF } from "@/lib/planning-export";
 
 export const Route = createFileRoute("/_app/planning")({
@@ -30,7 +34,13 @@ export const Route = createFileRoute("/_app/planning")({
 function PlanningPage() {
   const [weekStart, setWeekStart] = useState<Date>(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
   const weekEnd = addDays(weekStart, 6);
-  const [tab, setTab] = useState<"cdi" | "interim" | "synthese">("cdi");
+  const [tab, setTab] = useState<"cdi" | "interim" | "synthese" | "flotte">("cdi");
+  const [trajetDlgOpen, setTrajetDlgOpen] = useState(false);
+  const [editTrajet, setEditTrajet] = useState<Trajet | null>(null);
+  const [defaultTrajetVehId, setDefaultTrajetVehId] = useState<string | null>(null);
+  const [defaultTrajetDate, setDefaultTrajetDate] = useState<string | undefined>(undefined);
+  const { vehicules } = useVehicules();
+  const { trajets, refresh: refreshTrajets } = useTrajetsWeek(weekStart, weekEnd);
   const [filterAffaire, setFilterAffaire] = useState<Set<string | number>>(new Set());
   const [filterMetier, setFilterMetier] = useState<Set<string | number>>(new Set());
   const [showWeekend, setShowWeekend] = useState(false);
@@ -221,6 +231,7 @@ function PlanningPage() {
                   Intérim / Indép. <span className="ml-1.5 text-[10px] opacity-60">({employesInterim.length})</span>
                 </TabsTrigger>
                 <TabsTrigger value="synthese">Synthèse chantier</TabsTrigger>
+                <TabsTrigger value="flotte">Flotte ({vehicules.filter((v) => v.actif).length})</TabsTrigger>
               </TabsList>
 
               <TabsContent value="cdi" className="mt-4">
@@ -283,6 +294,29 @@ function PlanningPage() {
                   onSelectAffaire={handleSelectAffaireFromSynthese}
                 />
               </TabsContent>
+
+              <TabsContent value="flotte" className="mt-4">
+                <FlotteGrid
+                  weekStart={weekStart}
+                  vehicules={vehicules}
+                  trajets={trajets}
+                  employesById={new Map(employes.map((e) => [e.id, { id: e.id, prenom: e.prenom, nom: e.nom }]))}
+                  affairesById={new Map(affaires.map((a) => [a.id, { id: a.id, numero: a.numero }]))}
+                  showWeekend={showWeekend}
+                  onAddTrajet={(vId, d) => {
+                    setEditTrajet(null);
+                    setDefaultTrajetVehId(vId);
+                    setDefaultTrajetDate(format(d, "yyyy-MM-dd"));
+                    setTrajetDlgOpen(true);
+                  }}
+                  onEditTrajet={(t) => {
+                    setEditTrajet(t);
+                    setDefaultTrajetVehId(null);
+                    setDefaultTrajetDate(undefined);
+                    setTrajetDlgOpen(true);
+                  }}
+                />
+              </TabsContent>
             </Tabs>
           </div>
         )}
@@ -310,6 +344,19 @@ function PlanningPage() {
           // Ouvre le dialog d'assignation sur le lundi de la semaine
           setAutoOpen({ employe: emp, date: weekStart });
         }}
+      />
+
+      <TrajetDialog
+        open={trajetDlgOpen}
+        onOpenChange={setTrajetDlgOpen}
+        trajet={editTrajet}
+        defaultDate={defaultTrajetDate}
+        defaultVehiculeId={defaultTrajetVehId}
+        affaires={affaires.map((a) => ({ id: a.id, numero: a.numero, nom: a.nom }))}
+        employesLivreurs={employes
+          .filter((e) => (e as Employe & { est_livreur?: boolean }).est_livreur)
+          .map((e) => ({ id: e.id, prenom: e.prenom, nom: e.nom, est_livreur: true, actif: true }))}
+        onSaved={() => void refreshTrajets()}
       />
     </div>
   );
