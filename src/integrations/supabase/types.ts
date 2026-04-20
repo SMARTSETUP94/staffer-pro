@@ -957,6 +957,35 @@ export type Database = {
       }
     }
     Functions: {
+      acknowledge_heures_rejet: {
+        Args: { _saisie_id: string }
+        Returns: {
+          affaire_id: string
+          assignation_id: string | null
+          commentaire: string | null
+          created_at: string
+          date: string
+          employe_id: string
+          heure_debut: string | null
+          heure_fin: string | null
+          heures_reelles: number | null
+          id: string
+          motif_rejet: string | null
+          motif_rejet_lu_le: string | null
+          rejete_le: string | null
+          rejete_par: string | null
+          statut: Database["public"]["Enums"]["heures_statut"]
+          updated_at: string
+          valide_le: string | null
+          valide_par: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "heures_saisies"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       create_notification: {
         Args: {
           _lien?: string
