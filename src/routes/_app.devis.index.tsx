@@ -132,6 +132,24 @@ function DevisPage() {
     fetchAll();
   };
 
+  const handleSaveEdit = async () => {
+    if (!editForm?.id) return;
+    if (!editForm.numero?.toString().trim()) { toast.error("Numéro requis"); return; }
+    setSavingEdit(true);
+    const { error } = await supabase.from("devis").update({
+      numero: editForm.numero.toString().trim(),
+      libelle: editForm.libelle?.toString().trim() || null,
+      montant_ht: editForm.montant_ht ?? null,
+      date_signature: editForm.date_signature || null,
+      statut: editForm.statut as DevisStatut,
+    }).eq("id", editForm.id);
+    setSavingEdit(false);
+    if (error) { toast.error("Mise à jour impossible", { description: error.message }); return; }
+    toast.success("Devis mis à jour");
+    setEditForm(null);
+    fetchAll();
+  };
+
   return (
     <div className="mx-auto max-w-7xl p-6">
       <PageHeader
