@@ -170,9 +170,16 @@ export function PlanningGrid({
     return map;
   }, [assignations, absences, affairesById]);
 
+  // B5 — Filtre métier : masque les lignes employés dont le métier principal
+  // n'est pas dans la sélection. Si aucun métier sélectionné, on ne filtre pas.
+  const employesVisibles = useMemo(() => {
+    if (!filterMetierIds || filterMetierIds.size === 0) return employes;
+    return employes.filter((e) => filterMetierIds.has(e.metier_principal_id));
+  }, [employes, filterMetierIds]);
+
   const grouped = useMemo(() => {
     const groups = new Map<number, Employe[]>();
-    employes.forEach((e) => {
+    employesVisibles.forEach((e) => {
       const arr = groups.get(e.metier_principal_id) ?? [];
       arr.push(e);
       groups.set(e.metier_principal_id, arr);
@@ -180,7 +187,7 @@ export function PlanningGrid({
     return metiers
       .filter((m) => groups.has(m.id))
       .map((m) => ({ metier: m, employes: groups.get(m.id) ?? [] }));
-  }, [employes, metiers]);
+  }, [employesVisibles, metiers]);
 
   // Modale édition cellule simple
   const [dialogState, setDialogState] = useState<{
@@ -521,6 +528,28 @@ export function PlanningGrid({
                             affairesById={affairesById}
                             dnd={readonly ? undefined : { employeId: emp.id, date: dayStr }}
                             swapAssignationIds={swapAssignationIds}
+                            onDeleteGroup={
+                              readonly
+                                ? undefined
+                                : async (ids) => {
+                                    try {
+                                      const { error } = await supabase
+                                        .from("assignations")
+                                        .delete()
+                                        .in("id", ids);
+                                      if (error) throw error;
+                                      toast.success(
+                                        ids.length > 1
+                                          ? `${ids.length} affectations supprimées`
+                                          : "Affectation supprimée",
+                                      );
+                                      onChanged?.();
+                                    } catch (e) {
+                                      console.error(e);
+                                      toast.error("Échec de la suppression");
+                                    }
+                                  }
+                            }
                           />
                         </DroppableCell>
                       );
