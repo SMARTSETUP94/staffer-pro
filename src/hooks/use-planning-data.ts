@@ -40,6 +40,7 @@ export interface Assignation {
   employe_id: string;
   metier_id: number;
   notes: string | null;
+  statut_confirmation: "non_requise" | "en_attente" | "confirmee" | "refusee";
 }
 
 export interface DevisConsommation {
