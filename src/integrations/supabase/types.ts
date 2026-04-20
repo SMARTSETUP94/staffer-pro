@@ -536,6 +536,10 @@ export type Database = {
           heure_fin: string | null
           heures_reelles: number | null
           id: string
+          motif_rejet: string | null
+          motif_rejet_lu_le: string | null
+          rejete_le: string | null
+          rejete_par: string | null
           statut: Database["public"]["Enums"]["heures_statut"]
           updated_at: string
           valide_le: string | null
@@ -552,6 +556,10 @@ export type Database = {
           heure_fin?: string | null
           heures_reelles?: number | null
           id?: string
+          motif_rejet?: string | null
+          motif_rejet_lu_le?: string | null
+          rejete_le?: string | null
+          rejete_par?: string | null
           statut?: Database["public"]["Enums"]["heures_statut"]
           updated_at?: string
           valide_le?: string | null
@@ -568,6 +576,10 @@ export type Database = {
           heure_fin?: string | null
           heures_reelles?: number | null
           id?: string
+          motif_rejet?: string | null
+          motif_rejet_lu_le?: string | null
+          rejete_le?: string | null
+          rejete_par?: string | null
           statut?: Database["public"]["Enums"]["heures_statut"]
           updated_at?: string
           valide_le?: string | null
@@ -603,8 +615,60 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "heures_saisies_rejete_par_fkey"
+            columns: ["rejete_par"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "heures_saisies_valide_par_fkey"
             columns: ["valide_par"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      heures_saisies_historique: {
+        Row: {
+          ancien_statut: Database["public"]["Enums"]["heures_statut"] | null
+          commentaire: string | null
+          created_at: string
+          heure_saisie_id: string
+          id: string
+          nouveau_statut: Database["public"]["Enums"]["heures_statut"]
+          user_id: string | null
+        }
+        Insert: {
+          ancien_statut?: Database["public"]["Enums"]["heures_statut"] | null
+          commentaire?: string | null
+          created_at?: string
+          heure_saisie_id: string
+          id?: string
+          nouveau_statut: Database["public"]["Enums"]["heures_statut"]
+          user_id?: string | null
+        }
+        Update: {
+          ancien_statut?: Database["public"]["Enums"]["heures_statut"] | null
+          commentaire?: string | null
+          created_at?: string
+          heure_saisie_id?: string
+          id?: string
+          nouveau_statut?: Database["public"]["Enums"]["heures_statut"]
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "heures_saisies_historique_heure_saisie_id_fkey"
+            columns: ["heure_saisie_id"]
+            isOneToOne: false
+            referencedRelation: "heures_saisies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "heures_saisies_historique_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
