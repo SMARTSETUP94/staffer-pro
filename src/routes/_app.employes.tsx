@@ -309,6 +309,18 @@ function EmployesPage() {
               <TabsTrigger value="tous" className="rounded-lg">Tous</TabsTrigger>
             </TabsList>
           </Tabs>
+          <MultiFilter
+            label="Métier principal"
+            options={metiers.map((m) => ({ id: m.id, label: m.libelle, color: m.couleur }))}
+            selected={filterMetierPrincipal}
+            onChange={setFilterMetierPrincipal}
+          />
+          <MultiFilter
+            label="Compétences"
+            options={metiers.map((m) => ({ id: m.id, label: m.libelle, color: m.couleur }))}
+            selected={filterMetierSecondaire}
+            onChange={setFilterMetierSecondaire}
+          />
         </div>
       </div>
 
