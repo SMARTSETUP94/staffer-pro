@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { MapPin, Clock, StickyNote, Briefcase } from "lucide-react";
+import { MapPin, Clock, StickyNote, Briefcase, Hourglass, Check, X, ArrowLeftRight } from "lucide-react";
 import { useDraggable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import { cn } from "@/lib/utils";
@@ -16,6 +16,8 @@ interface Props {
     employeId: string;
     date: string; // yyyy-MM-dd
   };
+  /** Ids d'assignations actuellement engagées dans une demande de swap "en cours" */
+  swapAssignationIds?: Set<string>;
 }
 
 type Slot = "AM" | "PM" | "JOURNEE";
