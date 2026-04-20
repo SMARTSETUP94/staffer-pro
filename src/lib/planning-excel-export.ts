@@ -850,7 +850,7 @@ export function exportPlanningExcel(opts: BuildOpts): void {
 export function exportPlanningExcelRange(
   opts: Omit<BuildOpts, "weekStart"> & { weekStarts: Date[] },
 ): void {
-  const { weekStarts, employes, assignations, absences, ...rest } = opts;
+  const { weekStarts, employes, assignations, absences, trajets, ...rest } = opts;
   if (weekStarts.length === 0) return;
 
   const wb = XLSX.utils.book_new();
@@ -873,11 +873,16 @@ export function exportPlanningExcelRange(
         assignedIds.has(e.id),
     );
 
+    const trajetsWeek = (trajets ?? []).filter(
+      (t) => t.date >= weekStartStr && t.date <= weekEndStr,
+    );
+
     const weekOpts: BuildOpts = {
       ...rest,
       employes,
       assignations: assignsWeek,
       absences: absencesWeek,
+      trajets: trajetsWeek,
       weekStart,
     };
 
@@ -897,6 +902,9 @@ export function exportPlanningExcelRange(
       buildHeuresEmployeSheet(cdiCdd, weekOpts),
       `S${weekNum} Heures`,
     );
+    if ((rest.vehicules && rest.vehicules.length > 0) || trajetsWeek.length > 0) {
+      XLSX.utils.book_append_sheet(wb, buildFlotteSheet(weekOpts), `S${weekNum} Flotte`);
+    }
   }
 
   const first = weekStarts[0];
