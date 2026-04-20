@@ -789,6 +789,7 @@ export type Database = {
       profiles: {
         Row: {
           created_at: string
+          derniere_connexion_le: string | null
           email: string
           full_name: string | null
           id: string
@@ -796,6 +797,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          derniere_connexion_le?: string | null
           email: string
           full_name?: string | null
           id: string
@@ -803,6 +805,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          derniere_connexion_le?: string | null
           email?: string
           full_name?: string | null
           id?: string
@@ -1031,24 +1034,44 @@ export type Database = {
       }
       user_roles: {
         Row: {
+          activated_at: string | null
           created_at: string
           id: string
+          invited_at: string | null
+          invited_by: string | null
           role: Database["public"]["Enums"]["app_role"]
+          status: Database["public"]["Enums"]["user_status"]
           user_id: string
         }
         Insert: {
+          activated_at?: string | null
           created_at?: string
           id?: string
+          invited_at?: string | null
+          invited_by?: string | null
           role: Database["public"]["Enums"]["app_role"]
+          status?: Database["public"]["Enums"]["user_status"]
           user_id: string
         }
         Update: {
+          activated_at?: string | null
           created_at?: string
           id?: string
+          invited_at?: string | null
+          invited_by?: string | null
           role?: Database["public"]["Enums"]["app_role"]
+          status?: Database["public"]["Enums"]["user_status"]
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_invited_by_fkey"
+            columns: ["invited_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       vehicule_chauffeurs_autorises: {
         Row: {
@@ -1321,6 +1344,7 @@ export type Database = {
         | "a_sous_traiter"
         | "devis_envoye"
         | "confirme"
+      user_status: "invite" | "actif" | "desactive"
       vehicule_proprietaire: "interne" | "location" | "sous_traitance"
       vehicule_type: "VL" | "M3_20" | "poids_lourd"
     }
@@ -1501,6 +1525,7 @@ export const Constants = {
         "devis_envoye",
         "confirme",
       ],
+      user_status: ["invite", "actif", "desactive"],
       vehicule_proprietaire: ["interne", "location", "sous_traitance"],
       vehicule_type: ["VL", "M3_20", "poids_lourd"],
     },

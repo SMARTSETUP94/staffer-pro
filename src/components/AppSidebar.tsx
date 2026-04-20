@@ -41,8 +41,12 @@ const items: NavItem[] = [
   { title: "Export planning", url: "/export", icon: FileDown, show: (r) => r === "admin" || r === "chef_chantier" },
   { title: "Demandes de devis", url: "/export/demandes-devis", icon: FileQuestion, show: (r) => r === "admin" || r === "chef_chantier" },
   { title: "Validation heures", url: "/validation-heures", icon: ClipboardCheck, show: (r) => r === "admin" || r === "chef_chantier" },
-  { title: "Paramètres", url: "/parametres", icon: Settings, show: (r) => r === "admin" },
   { title: "Roadmap", url: "/roadmap", icon: Map, show: (r) => r === "admin" },
+];
+
+const settingsItems: NavItem[] = [
+  { title: "Utilisateurs", url: "/parametres/utilisateurs", icon: UserCircle, show: (r) => r === "admin" },
+  { title: "Réglages app", url: "/parametres", icon: Settings, show: (r) => r === "admin" },
 ];
 
 export function AppSidebar() {
@@ -54,6 +58,7 @@ export function AppSidebar() {
   const currentPath = routerState.location.pathname;
 
   const visibleItems = items.filter((it) => it.show(effectiveRole));
+  const visibleSettings = settingsItems.filter((it) => it.show(effectiveRole));
 
   // En preview "employé" (desktop ou mobile), un admin doit pouvoir naviguer
   // vers les pages mobiles pour QA.
@@ -130,6 +135,38 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {visibleSettings.length > 0 && (
+          <SidebarGroup>
+            {!collapsed && (
+              <SidebarGroupLabel className="overline !text-sidebar-foreground/60">
+                — Paramètres
+              </SidebarGroupLabel>
+            )}
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {visibleSettings.map((item) => {
+                  const active = isActive(item.url);
+                  return (
+                    <SidebarMenuItem key={item.url}>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={active}
+                        tooltip={item.title}
+                        className="rounded-xl data-[active=true]:bg-primary data-[active=true]:text-primary-foreground"
+                      >
+                        <Link to={item.url}>
+                          <item.icon className="h-4 w-4 shrink-0" />
+                          <span className="truncate text-sm font-medium">{item.title}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
 
         {showMobilePreview && (
           <SidebarGroup>
