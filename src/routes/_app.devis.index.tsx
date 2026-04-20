@@ -33,7 +33,7 @@ interface DevisRow {
   nb_assignations: number;
 }
 
-export const Route = createFileRoute("/_app/devis")({
+export const Route = createFileRoute("/_app/devis/")({
   head: () => ({ meta: [{ title: "Devis — Setup Paris" }] }),
   component: DevisPage,
 });
