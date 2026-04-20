@@ -36,6 +36,7 @@ const items: NavItem[] = [
   { title: "Export planning", url: "/export", icon: FileDown, show: (r) => r === "admin" || r === "chef_chantier" },
   { title: "Validation heures", url: "/validation-heures", icon: ClipboardCheck, show: (r) => r === "admin" || r === "chef_chantier" },
   { title: "Paramètres", url: "/parametres", icon: Settings, show: (r) => r === "admin" },
+  { title: "Roadmap", url: "/roadmap", icon: Map, show: (r) => r === "admin" },
 ];
 
 export function AppSidebar() {
