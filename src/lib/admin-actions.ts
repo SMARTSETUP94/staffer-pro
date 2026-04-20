@@ -1,9 +1,13 @@
 import { createServerFn } from "@tanstack/react-start";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import type { Database } from "@/integrations/supabase/types";
 
 export type AppRoleName = "admin" | "chef_chantier" | "employe";
 export type UserStatusName = "invite" | "actif" | "desactive";
+
+type AuthedSupabase = SupabaseClient<Database>;
 
 interface InviteInput {
   email: string;
@@ -28,7 +32,7 @@ function validateInviteInput(input: unknown): InviteInput {
   return { email, fullName, roles: Array.from(new Set(cleanRoles)) };
 }
 
-async function assertCallerIsAdmin(supabase: ReturnType<typeof getCtxSupabase>, userId: string) {
+async function assertCallerIsAdmin(supabase: AuthedSupabase, userId: string) {
   const { data, error } = await supabase
     .from("user_roles")
     .select("role")
@@ -39,14 +43,6 @@ async function assertCallerIsAdmin(supabase: ReturnType<typeof getCtxSupabase>, 
     throw new Error("Action réservée aux administrateurs");
   }
 }
-type SupabaseFromCtx = Parameters<typeof requireSupabaseAuth.server>[0] extends never
-  ? never
-  : never;
-function getCtxSupabase(): never {
-  // type helper only — never called
-  throw new Error("type-helper");
-}
-void getCtxSupabase;
 
 function inviteEmailHtml(opts: {
   greeting: string;
