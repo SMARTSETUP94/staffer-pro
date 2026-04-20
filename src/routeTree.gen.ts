@@ -16,6 +16,7 @@ import { Route as MobileProfilRouteImport } from './routes/mobile.profil'
 import { Route as MobileHeuresRouteImport } from './routes/mobile.heures'
 import { Route as MobileAujourdhuiRouteImport } from './routes/mobile.aujourdhui'
 import { Route as AppValidationHeuresRouteImport } from './routes/_app.validation-heures'
+import { Route as AppRoadmapRouteImport } from './routes/_app.roadmap'
 import { Route as AppPlanningRouteImport } from './routes/_app.planning'
 import { Route as AppParametresRouteImport } from './routes/_app.parametres'
 import { Route as AppInterimairesRouteImport } from './routes/_app.interimaires'
@@ -65,6 +66,11 @@ const MobileAujourdhuiRoute = MobileAujourdhuiRouteImport.update({
 const AppValidationHeuresRoute = AppValidationHeuresRouteImport.update({
   id: '/validation-heures',
   path: '/validation-heures',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppRoadmapRoute = AppRoadmapRouteImport.update({
+  id: '/roadmap',
+  path: '/roadmap',
   getParentRoute: () => AppRoute,
 } as any)
 const AppPlanningRoute = AppPlanningRouteImport.update({
@@ -163,6 +169,7 @@ export interface FileRoutesByFullPath {
   '/interimaires': typeof AppInterimairesRoute
   '/parametres': typeof AppParametresRoute
   '/planning': typeof AppPlanningRoute
+  '/roadmap': typeof AppRoadmapRoute
   '/validation-heures': typeof AppValidationHeuresRoute
   '/mobile/aujourdhui': typeof MobileAujourdhuiRoute
   '/mobile/heures': typeof MobileHeuresRoute
@@ -187,6 +194,7 @@ export interface FileRoutesByTo {
   '/interimaires': typeof AppInterimairesRoute
   '/parametres': typeof AppParametresRoute
   '/planning': typeof AppPlanningRoute
+  '/roadmap': typeof AppRoadmapRoute
   '/validation-heures': typeof AppValidationHeuresRoute
   '/mobile/aujourdhui': typeof MobileAujourdhuiRoute
   '/mobile/heures': typeof MobileHeuresRoute
@@ -212,6 +220,7 @@ export interface FileRoutesById {
   '/_app/interimaires': typeof AppInterimairesRoute
   '/_app/parametres': typeof AppParametresRoute
   '/_app/planning': typeof AppPlanningRoute
+  '/_app/roadmap': typeof AppRoadmapRoute
   '/_app/validation-heures': typeof AppValidationHeuresRoute
   '/mobile/aujourdhui': typeof MobileAujourdhuiRoute
   '/mobile/heures': typeof MobileHeuresRoute
@@ -238,6 +247,7 @@ export interface FileRouteTypes {
     | '/interimaires'
     | '/parametres'
     | '/planning'
+    | '/roadmap'
     | '/validation-heures'
     | '/mobile/aujourdhui'
     | '/mobile/heures'
@@ -262,6 +272,7 @@ export interface FileRouteTypes {
     | '/interimaires'
     | '/parametres'
     | '/planning'
+    | '/roadmap'
     | '/validation-heures'
     | '/mobile/aujourdhui'
     | '/mobile/heures'
@@ -286,6 +297,7 @@ export interface FileRouteTypes {
     | '/_app/interimaires'
     | '/_app/parametres'
     | '/_app/planning'
+    | '/_app/roadmap'
     | '/_app/validation-heures'
     | '/mobile/aujourdhui'
     | '/mobile/heures'
@@ -358,6 +370,13 @@ declare module '@tanstack/react-router' {
       path: '/validation-heures'
       fullPath: '/validation-heures'
       preLoaderRoute: typeof AppValidationHeuresRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/roadmap': {
+      id: '/_app/roadmap'
+      path: '/roadmap'
+      fullPath: '/roadmap'
+      preLoaderRoute: typeof AppRoadmapRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/planning': {
@@ -525,6 +544,7 @@ interface AppRouteChildren {
   AppInterimairesRoute: typeof AppInterimairesRoute
   AppParametresRoute: typeof AppParametresRoute
   AppPlanningRoute: typeof AppPlanningRoute
+  AppRoadmapRoute: typeof AppRoadmapRoute
   AppValidationHeuresRoute: typeof AppValidationHeuresRoute
   AppDevisImportRoute: typeof AppDevisImportRoute
   AppDevisIndexRoute: typeof AppDevisIndexRoute
@@ -539,6 +559,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppInterimairesRoute: AppInterimairesRoute,
   AppParametresRoute: AppParametresRoute,
   AppPlanningRoute: AppPlanningRoute,
+  AppRoadmapRoute: AppRoadmapRoute,
   AppValidationHeuresRoute: AppValidationHeuresRoute,
   AppDevisImportRoute: AppDevisImportRoute,
   AppDevisIndexRoute: AppDevisIndexRoute,
