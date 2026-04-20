@@ -12,6 +12,8 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as MobileSwapsRouteImport } from './routes/mobile.swaps'
+import { Route as MobilePropositionsRouteImport } from './routes/mobile.propositions'
 import { Route as MobileProfilRouteImport } from './routes/mobile.profil'
 import { Route as MobileMoisRouteImport } from './routes/mobile.mois'
 import { Route as MobileHeuresRouteImport } from './routes/mobile.heures'
@@ -20,6 +22,8 @@ import { Route as AppValidationHeuresRouteImport } from './routes/_app.validatio
 import { Route as AppRoadmapRouteImport } from './routes/_app.roadmap'
 import { Route as AppPlanningRouteImport } from './routes/_app.planning'
 import { Route as AppParametresRouteImport } from './routes/_app.parametres'
+import { Route as AppMesSwapsRouteImport } from './routes/_app.mes-swaps'
+import { Route as AppMesPropositionsRouteImport } from './routes/_app.mes-propositions'
 import { Route as AppMesHeuresRouteImport } from './routes/_app.mes-heures'
 import { Route as AppInterimairesRouteImport } from './routes/_app.interimaires'
 import { Route as AppExportRouteImport } from './routes/_app.export'
@@ -48,6 +52,16 @@ const AppRoute = AppRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MobileSwapsRoute = MobileSwapsRouteImport.update({
+  id: '/mobile/swaps',
+  path: '/mobile/swaps',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MobilePropositionsRoute = MobilePropositionsRouteImport.update({
+  id: '/mobile/propositions',
+  path: '/mobile/propositions',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MobileProfilRoute = MobileProfilRouteImport.update({
@@ -88,6 +102,16 @@ const AppPlanningRoute = AppPlanningRouteImport.update({
 const AppParametresRoute = AppParametresRouteImport.update({
   id: '/parametres',
   path: '/parametres',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppMesSwapsRoute = AppMesSwapsRouteImport.update({
+  id: '/mes-swaps',
+  path: '/mes-swaps',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppMesPropositionsRoute = AppMesPropositionsRouteImport.update({
+  id: '/mes-propositions',
+  path: '/mes-propositions',
   getParentRoute: () => AppRoute,
 } as any)
 const AppMesHeuresRoute = AppMesHeuresRouteImport.update({
@@ -180,6 +204,8 @@ export interface FileRoutesByFullPath {
   '/export': typeof AppExportRoute
   '/interimaires': typeof AppInterimairesRoute
   '/mes-heures': typeof AppMesHeuresRoute
+  '/mes-propositions': typeof AppMesPropositionsRoute
+  '/mes-swaps': typeof AppMesSwapsRoute
   '/parametres': typeof AppParametresRoute
   '/planning': typeof AppPlanningRoute
   '/roadmap': typeof AppRoadmapRoute
@@ -188,6 +214,8 @@ export interface FileRoutesByFullPath {
   '/mobile/heures': typeof MobileHeuresRoute
   '/mobile/mois': typeof MobileMoisRoute
   '/mobile/profil': typeof MobileProfilRoute
+  '/mobile/propositions': typeof MobilePropositionsRoute
+  '/mobile/swaps': typeof MobileSwapsRoute
   '/affaires/$affaireId': typeof AppAffairesAffaireIdRouteWithChildren
   '/devis/import': typeof AppDevisImportRoute
   '/employes/import': typeof AppEmployesImportRoute
@@ -207,6 +235,8 @@ export interface FileRoutesByTo {
   '/export': typeof AppExportRoute
   '/interimaires': typeof AppInterimairesRoute
   '/mes-heures': typeof AppMesHeuresRoute
+  '/mes-propositions': typeof AppMesPropositionsRoute
+  '/mes-swaps': typeof AppMesSwapsRoute
   '/parametres': typeof AppParametresRoute
   '/planning': typeof AppPlanningRoute
   '/roadmap': typeof AppRoadmapRoute
@@ -215,6 +245,8 @@ export interface FileRoutesByTo {
   '/mobile/heures': typeof MobileHeuresRoute
   '/mobile/mois': typeof MobileMoisRoute
   '/mobile/profil': typeof MobileProfilRoute
+  '/mobile/propositions': typeof MobilePropositionsRoute
+  '/mobile/swaps': typeof MobileSwapsRoute
   '/devis/import': typeof AppDevisImportRoute
   '/employes/import': typeof AppEmployesImportRoute
   '/devis': typeof AppDevisIndexRoute
@@ -235,6 +267,8 @@ export interface FileRoutesById {
   '/_app/export': typeof AppExportRoute
   '/_app/interimaires': typeof AppInterimairesRoute
   '/_app/mes-heures': typeof AppMesHeuresRoute
+  '/_app/mes-propositions': typeof AppMesPropositionsRoute
+  '/_app/mes-swaps': typeof AppMesSwapsRoute
   '/_app/parametres': typeof AppParametresRoute
   '/_app/planning': typeof AppPlanningRoute
   '/_app/roadmap': typeof AppRoadmapRoute
@@ -243,6 +277,8 @@ export interface FileRoutesById {
   '/mobile/heures': typeof MobileHeuresRoute
   '/mobile/mois': typeof MobileMoisRoute
   '/mobile/profil': typeof MobileProfilRoute
+  '/mobile/propositions': typeof MobilePropositionsRoute
+  '/mobile/swaps': typeof MobileSwapsRoute
   '/_app/affaires/$affaireId': typeof AppAffairesAffaireIdRouteWithChildren
   '/_app/devis/import': typeof AppDevisImportRoute
   '/_app/employes/import': typeof AppEmployesImportRoute
@@ -264,6 +300,8 @@ export interface FileRouteTypes {
     | '/export'
     | '/interimaires'
     | '/mes-heures'
+    | '/mes-propositions'
+    | '/mes-swaps'
     | '/parametres'
     | '/planning'
     | '/roadmap'
@@ -272,6 +310,8 @@ export interface FileRouteTypes {
     | '/mobile/heures'
     | '/mobile/mois'
     | '/mobile/profil'
+    | '/mobile/propositions'
+    | '/mobile/swaps'
     | '/affaires/$affaireId'
     | '/devis/import'
     | '/employes/import'
@@ -291,6 +331,8 @@ export interface FileRouteTypes {
     | '/export'
     | '/interimaires'
     | '/mes-heures'
+    | '/mes-propositions'
+    | '/mes-swaps'
     | '/parametres'
     | '/planning'
     | '/roadmap'
@@ -299,6 +341,8 @@ export interface FileRouteTypes {
     | '/mobile/heures'
     | '/mobile/mois'
     | '/mobile/profil'
+    | '/mobile/propositions'
+    | '/mobile/swaps'
     | '/devis/import'
     | '/employes/import'
     | '/devis'
@@ -318,6 +362,8 @@ export interface FileRouteTypes {
     | '/_app/export'
     | '/_app/interimaires'
     | '/_app/mes-heures'
+    | '/_app/mes-propositions'
+    | '/_app/mes-swaps'
     | '/_app/parametres'
     | '/_app/planning'
     | '/_app/roadmap'
@@ -326,6 +372,8 @@ export interface FileRouteTypes {
     | '/mobile/heures'
     | '/mobile/mois'
     | '/mobile/profil'
+    | '/mobile/propositions'
+    | '/mobile/swaps'
     | '/_app/affaires/$affaireId'
     | '/_app/devis/import'
     | '/_app/employes/import'
@@ -344,6 +392,8 @@ export interface RootRouteChildren {
   MobileHeuresRoute: typeof MobileHeuresRoute
   MobileMoisRoute: typeof MobileMoisRoute
   MobileProfilRoute: typeof MobileProfilRoute
+  MobilePropositionsRoute: typeof MobilePropositionsRoute
+  MobileSwapsRoute: typeof MobileSwapsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -367,6 +417,20 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mobile/swaps': {
+      id: '/mobile/swaps'
+      path: '/mobile/swaps'
+      fullPath: '/mobile/swaps'
+      preLoaderRoute: typeof MobileSwapsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mobile/propositions': {
+      id: '/mobile/propositions'
+      path: '/mobile/propositions'
+      fullPath: '/mobile/propositions'
+      preLoaderRoute: typeof MobilePropositionsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mobile/profil': {
@@ -423,6 +487,20 @@ declare module '@tanstack/react-router' {
       path: '/parametres'
       fullPath: '/parametres'
       preLoaderRoute: typeof AppParametresRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/mes-swaps': {
+      id: '/_app/mes-swaps'
+      path: '/mes-swaps'
+      fullPath: '/mes-swaps'
+      preLoaderRoute: typeof AppMesSwapsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/mes-propositions': {
+      id: '/_app/mes-propositions'
+      path: '/mes-propositions'
+      fullPath: '/mes-propositions'
+      preLoaderRoute: typeof AppMesPropositionsRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/mes-heures': {
@@ -582,6 +660,8 @@ interface AppRouteChildren {
   AppExportRoute: typeof AppExportRoute
   AppInterimairesRoute: typeof AppInterimairesRoute
   AppMesHeuresRoute: typeof AppMesHeuresRoute
+  AppMesPropositionsRoute: typeof AppMesPropositionsRoute
+  AppMesSwapsRoute: typeof AppMesSwapsRoute
   AppParametresRoute: typeof AppParametresRoute
   AppPlanningRoute: typeof AppPlanningRoute
   AppRoadmapRoute: typeof AppRoadmapRoute
@@ -598,6 +678,8 @@ const AppRouteChildren: AppRouteChildren = {
   AppExportRoute: AppExportRoute,
   AppInterimairesRoute: AppInterimairesRoute,
   AppMesHeuresRoute: AppMesHeuresRoute,
+  AppMesPropositionsRoute: AppMesPropositionsRoute,
+  AppMesSwapsRoute: AppMesSwapsRoute,
   AppParametresRoute: AppParametresRoute,
   AppPlanningRoute: AppPlanningRoute,
   AppRoadmapRoute: AppRoadmapRoute,
@@ -616,6 +698,8 @@ const rootRouteChildren: RootRouteChildren = {
   MobileHeuresRoute: MobileHeuresRoute,
   MobileMoisRoute: MobileMoisRoute,
   MobileProfilRoute: MobileProfilRoute,
+  MobilePropositionsRoute: MobilePropositionsRoute,
+  MobileSwapsRoute: MobileSwapsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

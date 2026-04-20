@@ -1,7 +1,7 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
   Calendar, Building2, Users, FileUp, FileDown, ClipboardCheck, Settings, LogOut, Clock, CalendarOff,
-  Smartphone, UserCircle, LayoutDashboard, FileText, Trophy, Map,
+  Smartphone, UserCircle, LayoutDashboard, FileText, Trophy, Map, ArrowLeftRight, ClipboardList,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -24,6 +24,8 @@ interface NavItem {
 
 const items: NavItem[] = [
   { title: "Mes heures", url: "/mes-heures", icon: Clock, show: (r) => r === "employe" },
+  { title: "Mes échanges", url: "/mes-swaps", icon: ArrowLeftRight, show: (r) => r === "employe" },
+  { title: "Mes propositions", url: "/mes-propositions", icon: ClipboardList, show: (r) => r === "employe" },
   { title: "Tableau de bord", url: "/dashboard", icon: LayoutDashboard, show: (r) => r === "admin" || r === "chef_chantier" },
   { title: "Planning", url: "/planning", icon: Calendar, show: (r) => r === "admin" || r === "chef_chantier" },
   { title: "Affaires", url: "/affaires", icon: Building2, show: (r) => r === "admin" || r === "chef_chantier" },
@@ -56,6 +58,8 @@ export function AppSidebar() {
   const mobileItems = [
     { title: "Aujourd'hui", url: "/mobile/aujourdhui", icon: Smartphone },
     { title: "Mes heures (mobile)", url: "/mobile/heures", icon: Clock },
+    { title: "Mes échanges (mobile)", url: "/mobile/swaps", icon: ArrowLeftRight },
+    { title: "Mes propositions (mobile)", url: "/mobile/propositions", icon: ClipboardList },
     { title: "Mon profil", url: "/mobile/profil", icon: UserCircle },
   ];
 
