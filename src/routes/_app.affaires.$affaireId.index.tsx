@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Loader2, TrendingUp, TrendingDown, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Loader2, TrendingUp, TrendingDown, AlertTriangle, CheckCircle2, ClipboardCheck, Clock, Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useMetiers } from "@/hooks/use-metiers";
 import { MetierBadge } from "@/components/MetierBadge";
@@ -15,13 +15,11 @@ interface ConsoLine {
   couleur: string | null;
   heures_prevues: number | null;
   heures_assignees: number | null;
+  heures_reelles_validees: number | null;
+  heures_reelles_soumises: number | null;
   heures_restantes: number | null;
   pct_consomme: number | null;
-}
-
-interface HeureReelleRow {
-  metier_id: number;
-  heures_reelles: number;
+  pct_consomme_reel: number | null;
 }
 
 export const Route = createFileRoute("/_app/affaires/$affaireId/")({
@@ -32,7 +30,6 @@ function AffaireSynthesePage() {
   const { affaireId } = Route.useParams();
   const { byId } = useMetiers();
   const [lines, setLines] = useState<ConsoLine[]>([]);
-  const [reelles, setReelles] = useState<Map<number, number>>(new Map());
   const [loading, setLoading] = useState(true);
   const [notes, setNotes] = useState<string | null>(null);
 
@@ -40,85 +37,101 @@ function AffaireSynthesePage() {
     let cancelled = false;
     (async () => {
       setLoading(true);
-      const [{ data: cons }, { data: aff }, { data: heures }] = await Promise.all([
+      const [{ data: cons }, { data: aff }] = await Promise.all([
         supabase
           .from("v_devis_consommation")
-          .select("devis_id, devis_numero, metier_id, metier, couleur, heures_prevues, heures_assignees, heures_restantes, pct_consomme")
+          .select(
+            "devis_id, devis_numero, metier_id, metier, couleur, heures_prevues, heures_assignees, heures_reelles_validees, heures_reelles_soumises, heures_restantes, pct_consomme, pct_consomme_reel",
+          )
           .eq("affaire_id", affaireId),
         supabase.from("affaires").select("notes").eq("id", affaireId).maybeSingle(),
-        // Heures réelles validées : on doit JOINdre via assignation.metier_id
-        supabase
-          .from("heures_saisies")
-          .select("heures_reelles, statut, assignations(metier_id)")
-          .eq("affaire_id", affaireId)
-          .eq("statut", "valide"),
       ]);
       if (cancelled) return;
       setLines((cons ?? []) as ConsoLine[]);
       setNotes((aff?.notes as string | null) ?? null);
-
-      // Aggrégation heures réelles par métier
-      const map = new Map<number, number>();
-      (heures ?? []).forEach((h: { heures_reelles: number | null; assignations: { metier_id: number } | null }) => {
-        const mid = h.assignations?.metier_id;
-        if (!mid) return;
-        map.set(mid, (map.get(mid) ?? 0) + Number(h.heures_reelles ?? 0));
-      });
-      setReelles(map);
       setLoading(false);
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [affaireId]);
 
   const enriched = useMemo(() => {
     return lines.map((l) => {
       const prevues = Number(l.heures_prevues ?? 0);
-      const assignees = Number(l.heures_assignees ?? 0);
-      const reelles_h = (l.metier_id != null ? reelles.get(l.metier_id) : 0) ?? 0;
-      const pctAssign = prevues > 0 ? (assignees / prevues) * 100 : 0;
-      const pctReel = prevues > 0 ? (reelles_h / prevues) * 100 : 0;
-      const ecart = prevues - reelles_h;
-      // Statut marge basé sur (max(assignées, réelles) / prévues)
-      const pctMax = Math.max(pctAssign, pctReel);
+      const staffees = Number(l.heures_assignees ?? 0);
+      const validees = Number(l.heures_reelles_validees ?? 0);
+      const soumises = Number(l.heures_reelles_soumises ?? 0);
+      const realisees = validees + soumises; // tout ce qui a été déclaré par l'employé
+      const pctStaff = prevues > 0 ? (staffees / prevues) * 100 : 0;
+      const pctReal = prevues > 0 ? (realisees / prevues) * 100 : 0;
+      const pctValide = prevues > 0 ? (validees / prevues) * 100 : 0;
+      const ecart = prevues - validees; // marge officielle = budget - validées
+      // Statut basé sur le max des engagements (planning ou réalisé)
+      const pctMax = Math.max(pctStaff, pctReal);
       let tone: "ok" | "warn" | "danger" = "ok";
       if (pctMax > 100) tone = "danger";
       else if (pctMax >= 85) tone = "warn";
-      return { ...l, prevues, assignees, reelles_h, pctAssign, pctReel, ecart, tone };
+      return { ...l, prevues, staffees, validees, soumises, realisees, pctStaff, pctReal, pctValide, ecart, tone };
     });
-  }, [lines, reelles]);
+  }, [lines]);
 
   const totals = enriched.reduce(
     (acc, l) => {
       acc.prevues += l.prevues;
-      acc.assignees += l.assignees;
-      acc.reelles += l.reelles_h;
+      acc.staffees += l.staffees;
+      acc.validees += l.validees;
+      acc.soumises += l.soumises;
       return acc;
     },
-    { prevues: 0, assignees: 0, reelles: 0 },
+    { prevues: 0, staffees: 0, validees: 0, soumises: 0 },
   );
-  const pctAssignTotal = totals.prevues > 0 ? (totals.assignees / totals.prevues) * 100 : 0;
-  const pctReelTotal = totals.prevues > 0 ? (totals.reelles / totals.prevues) * 100 : 0;
-  const ecartTotal = totals.prevues - totals.reelles;
+  const totalRealisees = totals.validees + totals.soumises;
+  const pctStaffTotal = totals.prevues > 0 ? (totals.staffees / totals.prevues) * 100 : 0;
+  const pctRealTotal = totals.prevues > 0 ? (totalRealisees / totals.prevues) * 100 : 0;
+  const pctValideTotal = totals.prevues > 0 ? (totals.validees / totals.prevues) * 100 : 0;
+  const ecartTotal = totals.prevues - totals.validees;
 
   if (loading) {
-    return <div className="flex justify-center p-8"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>;
+    return (
+      <div className="flex justify-center p-8">
+        <Loader2 className="h-5 w-5 animate-spin text-primary" />
+      </div>
+    );
   }
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 sm:grid-cols-4">
-        <Stat label="Prévues" value={`${totals.prevues.toFixed(0)} h`} />
+      {/* Légende rapide des 3 niveaux */}
+      <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+        <span className="font-semibold uppercase tracking-wider">Lecture :</span>
+        <LevelChip tone="staff" icon={<ClipboardCheck className="h-3 w-3" />} label="Staffé = planning" />
+        <LevelChip tone="real" icon={<Send className="h-3 w-3" />} label="Réalisé = soumis par employé" />
+        <LevelChip tone="valide" icon={<CheckCircle2 className="h-3 w-3" />} label="Validé = officiel marge" />
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <Stat label="Prévues" value={`${totals.prevues.toFixed(0)} h`} icon={<Clock className="h-4 w-4" />} />
         <Stat
-          label="Assignées"
-          value={`${totals.assignees.toFixed(0)} h`}
-          sub={`${pctAssignTotal.toFixed(0)}%`}
-          tone={pctAssignTotal > 100 ? "danger" : pctAssignTotal >= 85 ? "warn" : "ok"}
+          label="Staffé"
+          value={`${totals.staffees.toFixed(0)} h`}
+          sub={`${pctStaffTotal.toFixed(0)}%`}
+          tone={pctStaffTotal > 100 ? "danger" : pctStaffTotal >= 85 ? "warn" : "ok"}
+          icon={<ClipboardCheck className="h-4 w-4" />}
         />
         <Stat
-          label="Réelles validées"
-          value={`${totals.reelles.toFixed(0)} h`}
-          sub={`${pctReelTotal.toFixed(0)}%`}
-          tone={pctReelTotal > 100 ? "danger" : pctReelTotal >= 85 ? "warn" : "ok"}
+          label="Réalisé"
+          value={`${totalRealisees.toFixed(0)} h`}
+          sub={totals.soumises > 0 ? `dont ${totals.soumises.toFixed(0)}h en attente` : `${pctRealTotal.toFixed(0)}%`}
+          tone={pctRealTotal > 100 ? "danger" : pctRealTotal >= 85 ? "warn" : "ok"}
+          icon={<Send className="h-4 w-4" />}
+        />
+        <Stat
+          label="Validé"
+          value={`${totals.validees.toFixed(0)} h`}
+          sub={`${pctValideTotal.toFixed(0)}%`}
+          tone={pctValideTotal > 100 ? "danger" : pctValideTotal >= 85 ? "warn" : "ok"}
+          icon={<CheckCircle2 className="h-4 w-4" />}
         />
         <Stat
           label="Marge restante"
@@ -129,7 +142,7 @@ function AffaireSynthesePage() {
       </div>
 
       <section>
-        <p className="overline mb-3">— Suivi marge par métier</p>
+        <p className="overline mb-3">— Suivi marge par métier (Staffé / Réalisé / Validé)</p>
         {enriched.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
             Aucun poste de devis renseigné. Ajoutez un devis dans l'onglet Devis pour suivre la consommation.
@@ -141,10 +154,17 @@ function AffaireSynthesePage() {
                 <tr>
                   <th className="p-3 text-left font-semibold">Métier</th>
                   <th className="p-3 text-right font-semibold">Prévues</th>
-                  <th className="p-3 text-right font-semibold">Assignées</th>
-                  <th className="p-3 text-right font-semibold">Réelles ✓</th>
-                  <th className="p-3 text-right font-semibold">Écart</th>
-                  <th className="p-3 text-center font-semibold">Marge</th>
+                  <th className="p-3 text-right font-semibold">
+                    <span title="Heures du planning">Staffé</span>
+                  </th>
+                  <th className="p-3 text-right font-semibold">
+                    <span title="Heures soumises (validées + en attente)">Réalisé</span>
+                  </th>
+                  <th className="p-3 text-right font-semibold">
+                    <span title="Heures officiellement validées par chef/admin — base de la marge">Validé ✓</span>
+                  </th>
+                  <th className="p-3 text-right font-semibold">Marge</th>
+                  <th className="p-3 text-center font-semibold">Statut</th>
                 </tr>
               </thead>
               <tbody>
@@ -160,23 +180,36 @@ function AffaireSynthesePage() {
                       </td>
                       <td className="p-3 text-right font-mono">{l.prevues.toFixed(1)}</td>
                       <td className="p-3 text-right font-mono">
-                        {l.assignees.toFixed(1)}
-                        <div className="text-[10px] text-muted-foreground">({l.pctAssign.toFixed(0)}%)</div>
+                        {l.staffees.toFixed(1)}
+                        <div className="text-[10px] text-muted-foreground">({l.pctStaff.toFixed(0)}%)</div>
                       </td>
                       <td className="p-3 text-right font-mono">
-                        {l.reelles_h.toFixed(1)}
-                        <div className="text-[10px] text-muted-foreground">({l.pctReel.toFixed(0)}%)</div>
+                        {l.realisees.toFixed(1)}
+                        <div className="text-[10px] text-muted-foreground">
+                          {l.soumises > 0 ? `+${l.soumises.toFixed(1)}h en attente` : `(${l.pctReal.toFixed(0)}%)`}
+                        </div>
                       </td>
-                      <td className={cn(
-                        "p-3 text-right font-mono font-semibold",
-                        l.ecart < 0 ? "text-destructive" : l.ecart < l.prevues * 0.15 ? "text-warning" : "text-success",
-                      )}>
-                        {l.ecart >= 0 ? "+" : ""}{l.ecart.toFixed(1)} h
+                      <td className="p-3 text-right font-mono">
+                        <span className="font-semibold">{l.validees.toFixed(1)}</span>
+                        <div className="text-[10px] text-muted-foreground">({l.pctValide.toFixed(0)}%)</div>
+                      </td>
+                      <td
+                        className={cn(
+                          "p-3 text-right font-mono font-semibold",
+                          l.ecart < 0
+                            ? "text-destructive"
+                            : l.ecart < l.prevues * 0.15
+                              ? "text-warning"
+                              : "text-success",
+                        )}
+                      >
+                        {l.ecart >= 0 ? "+" : ""}
+                        {l.ecart.toFixed(1)} h
                       </td>
                       <td className="p-3 text-center">
                         <MargeBadge tone={l.tone} />
                         <Progress
-                          value={Math.min(100, Math.max(l.pctAssign, l.pctReel))}
+                          value={Math.min(100, Math.max(l.pctStaff, l.pctReal))}
                           className={cn(
                             "mt-1.5 h-1.5",
                             l.tone === "danger" && "[&>*]:bg-destructive",
@@ -228,6 +261,34 @@ function MargeBadge({ tone }: { tone: "ok" | "warn" | "danger" }) {
   );
 }
 
+function LevelChip({
+  tone,
+  icon,
+  label,
+}: {
+  tone: "staff" | "real" | "valide";
+  icon: React.ReactNode;
+  label: string;
+}) {
+  const cls =
+    tone === "staff"
+      ? "bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20"
+      : tone === "real"
+        ? "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20"
+        : "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20";
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider",
+        cls,
+      )}
+    >
+      {icon}
+      {label}
+    </span>
+  );
+}
+
 function Stat({
   label,
   value,
@@ -242,17 +303,20 @@ function Stat({
   icon?: React.ReactNode;
 }) {
   const toneCls =
-    tone === "danger" ? "text-destructive" :
-    tone === "warn" ? "text-warning" :
-    tone === "ok" ? "text-success" :
-    "text-foreground";
+    tone === "danger"
+      ? "text-destructive"
+      : tone === "warn"
+        ? "text-warning"
+        : tone === "ok"
+          ? "text-success"
+          : "text-foreground";
   return (
     <div className="rounded-2xl border border-border bg-card p-4">
-      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
-      <div className="mt-1 flex items-end justify-between gap-2">
-        <p className={cn("text-2xl font-bold tracking-tight", toneCls)}>{value}</p>
-        {icon && <div className={toneCls}>{icon}</div>}
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
+        {icon && <div className={cn("opacity-60", toneCls)}>{icon}</div>}
       </div>
+      <p className={cn("mt-1 text-2xl font-bold tracking-tight", toneCls)}>{value}</p>
       {sub && <p className={cn("text-xs font-semibold", toneCls)}>{sub}</p>}
     </div>
   );
