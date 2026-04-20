@@ -142,11 +142,13 @@ function DashboardPage() {
           .select("id, numero, nom, client, date_montage, date_demontage, lieu")
           .or(`and(date_montage.gte.${todayStr},date_montage.lte.${j7Str}),and(date_demontage.gte.${todayStr},date_demontage.lte.${j7Str})`)
           .limit(20),
+        // Jointure inner avec affaires pour ne garder que prospect/en_cours
         supabase
           .from("v_affaire_consommation")
           .select(
-            "affaire_id, numero, nom, total_heures_prevues, total_heures_assignees, total_heures_reelles_validees",
-          ),
+            "affaire_id, numero, nom, total_heures_prevues, total_heures_assignees, total_heures_reelles_validees, affaires!inner(statut)",
+          )
+          .in("affaires.statut", ["en_cours", "prospect"]),
         supabase
           .from("heures_saisies")
           .select("id, date, employes:employe_id(prenom, nom), affaires:affaire_id(numero, nom)")

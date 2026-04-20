@@ -93,13 +93,11 @@ function AbsencesPage() {
       supabase
         .from("absences")
         .select("id, employe_id, date_debut, date_fin, type, demi_journee, motif, valide, employes!inner(prenom, nom, type_contrat)")
-        .in("employes.type_contrat", ["CDI", "CDD"])
         .order("date_debut", { ascending: false }),
       supabase
         .from("employes")
         .select("id, prenom, nom, type_contrat")
         .eq("actif", true)
-        .in("type_contrat", ["CDI", "CDD"])
         .order("nom"),
     ]);
     if (aErr) toast.error(aErr.message);
