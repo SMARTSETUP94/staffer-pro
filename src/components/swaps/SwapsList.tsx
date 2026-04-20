@@ -57,18 +57,14 @@ export function SwapsList({
     );
   }
 
-  const update = async (id: string, patch: Parameters<typeof supabase["from"] extends never ? never : (typeof supabase)["from"]>) => {
-    return Promise.resolve(); // never used
+  type SwapPatch = {
+    statut?: SwapRequestRow["statut"];
+    collegue_decide_le?: string | null;
+    collegue_motif?: string | null;
+    chef_motif?: string | null;
   };
-  const updateSwap = async (id: string, patch: Parameters<ReturnType<ReturnType<typeof supabase.from<"swap_requests">>["update"]>["eq"]> extends never ? never : Parameters<typeof supabase.from<"swap_requests">>) => {
-    return Promise.resolve();
-  };
-  const doUpdate = async (id: string, patch: Partial<{
-    statut: SwapRequestRow["statut"];
-    collegue_decide_le: string | null;
-    collegue_motif: string | null;
-    chef_motif: string | null;
-  }>) => {
+
+  const update = async (id: string, patch: SwapPatch): Promise<boolean> => {
     setBusy(id);
     const { error } = await supabase.from("swap_requests").update(patch).eq("id", id);
     setBusy(null);
@@ -102,7 +98,7 @@ export function SwapsList({
       return;
     }
     const { swap, mode, motif } = decisionDialog;
-    const patch =
+    const patch: SwapPatch =
       mode === "refuse_collegue"
         ? { statut: "refusee_collegue", collegue_motif: motif.trim(), collegue_decide_le: new Date().toISOString() }
         : { statut: "rejetee_chef", chef_motif: motif.trim() };
