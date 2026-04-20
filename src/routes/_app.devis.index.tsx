@@ -285,6 +285,60 @@ function DevisPage() {
         )}
       </div>
 
+      {/* Édition rapide */}
+      <Dialog open={!!editForm} onOpenChange={(o) => !o && setEditForm(null)}>
+        <DialogContent className="max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Modifier le devis {editForm?.numero}</DialogTitle>
+            <DialogDescription>
+              Modifie les méta-données du devis. Pour éditer les lignes (postes par métier), utilise le bouton « Ouvrir dans l'affaire ».
+            </DialogDescription>
+          </DialogHeader>
+          {editForm && (
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label>Numéro</Label>
+                <Input value={editForm.numero ?? ""} onChange={(e) => setEditForm({ ...editForm, numero: e.target.value })} className="h-10 rounded-xl" />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Statut</Label>
+                <Select value={(editForm.statut as DevisStatut) ?? "signe"} onValueChange={(v) => setEditForm({ ...editForm, statut: v as DevisStatut })}>
+                  <SelectTrigger className="h-10 rounded-xl"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="brouillon">Brouillon</SelectItem>
+                    <SelectItem value="signe">Signé</SelectItem>
+                    <SelectItem value="facture">Facturé</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5 sm:col-span-2">
+                <Label>Libellé</Label>
+                <Input value={editForm.libelle ?? ""} onChange={(e) => setEditForm({ ...editForm, libelle: e.target.value })} className="h-10 rounded-xl" />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Montant HT (€)</Label>
+                <Input type="number" step="0.01" value={editForm.montant_ht ?? ""}
+                  onChange={(e) => setEditForm({ ...editForm, montant_ht: e.target.value === "" ? null : Number(e.target.value) })}
+                  className="h-10 rounded-xl" />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Date de signature</Label>
+                <Input type="date" value={editForm.date_signature ?? ""}
+                  onChange={(e) => setEditForm({ ...editForm, date_signature: e.target.value || null })}
+                  className="h-10 rounded-xl" />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setEditForm(null)} className="rounded-xl">Annuler</Button>
+            <Button onClick={handleSaveEdit} disabled={savingEdit} className="rounded-xl bg-primary text-primary-foreground hover:bg-primary/90">
+              {savingEdit && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Enregistrer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Confirmation suppression */}
       <AlertDialog open={!!toDelete} onOpenChange={(o) => !o && setToDelete(null)}>
         <AlertDialogContent>
