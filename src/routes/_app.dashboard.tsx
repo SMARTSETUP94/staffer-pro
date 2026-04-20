@@ -43,7 +43,9 @@ interface AffaireDepassement {
   nom: string;
   total_prevues: number;
   total_assignees: number;
+  total_validees: number;
   pct: number;
+  pct_valide: number;
 }
 
 interface AbsenceItem {
@@ -133,7 +135,11 @@ function DashboardPage() {
           .select("id, numero, nom, client, date_montage, date_demontage, lieu")
           .or(`and(date_montage.gte.${todayStr},date_montage.lte.${j7Str}),and(date_demontage.gte.${todayStr},date_demontage.lte.${j7Str})`)
           .limit(20),
-        supabase.from("v_affaire_consommation").select("affaire_id, numero, nom, total_heures_prevues, total_heures_assignees"),
+        supabase
+          .from("v_affaire_consommation")
+          .select(
+            "affaire_id, numero, nom, total_heures_prevues, total_heures_assignees, total_heures_reelles_validees",
+          ),
         supabase
           .from("heures_saisies")
           .select("id, date, employes:employe_id(prenom, nom), affaires:affaire_id(numero, nom)")
@@ -197,17 +203,20 @@ function DashboardPage() {
         .map((r) => {
           const prev = Number(r.total_heures_prevues ?? 0);
           const ass = Number(r.total_heures_assignees ?? 0);
+          const val = Number(r.total_heures_reelles_validees ?? 0);
           return {
             affaire_id: r.affaire_id as string,
             numero: r.numero as string,
             nom: r.nom as string,
             total_prevues: prev,
             total_assignees: ass,
+            total_validees: val,
             pct: prev > 0 ? Math.round((ass / prev) * 100) : 0,
+            pct_valide: prev > 0 ? Math.round((val / prev) * 100) : 0,
           };
         })
-        .filter((r) => r.pct >= 80)
-        .sort((a, b) => b.pct - a.pct)
+        .filter((r) => Math.max(r.pct, r.pct_valide) >= 80)
+        .sort((a, b) => Math.max(b.pct, b.pct_valide) - Math.max(a.pct, a.pct_valide))
         .slice(0, 5);
       setDepassements(dep);
 
