@@ -398,7 +398,7 @@ function AffaireDevisPage() {
             <AlertDialogTitle>Supprimer {toDelete?.label} ?</AlertDialogTitle>
             <AlertDialogDescription>
               {toDelete?.kind === "devis"
-                ? "Toutes les lignes de ce devis seront également supprimées. Cette action est irréversible."
+                ? "Toutes les lignes de ce devis seront supprimées. Les assignations liées seront détachées (conservées sur l'affaire, sans rattachement devis). Cette action est irréversible."
                 : "Cette ligne sera supprimée. Cette action est irréversible."}
             </AlertDialogDescription>
           </AlertDialogHeader>
