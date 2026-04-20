@@ -50,6 +50,8 @@ function DevisPage() {
   const [statutFilter, setStatutFilter] = useState<DevisStatut | "all">("all");
   const [affaireFilter, setAffaireFilter] = useState<string>("all");
   const [toDelete, setToDelete] = useState<DevisRow | null>(null);
+  const [editForm, setEditForm] = useState<Partial<DevisRow> | null>(null);
+  const [savingEdit, setSavingEdit] = useState(false);
 
   const fetchAll = async () => {
     setLoading(true);
