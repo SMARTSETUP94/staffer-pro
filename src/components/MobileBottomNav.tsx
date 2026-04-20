@@ -1,9 +1,10 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { CalendarDays, Clock, User } from "lucide-react";
+import { CalendarDays, CalendarRange, Clock, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const items = [
-  { to: "/mobile/aujourdhui", label: "Aujourd'hui", icon: CalendarDays },
+  { to: "/mobile/aujourdhui", label: "Semaine", icon: CalendarDays },
+  { to: "/mobile/mois", label: "Mois", icon: CalendarRange },
   { to: "/mobile/heures", label: "Mes heures", icon: Clock },
   { to: "/mobile/profil", label: "Profil", icon: User },
 ] as const;
@@ -13,7 +14,7 @@ export function MobileBottomNav() {
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 backdrop-blur">
-      <ul className="mx-auto grid max-w-md grid-cols-3">
+      <ul className="mx-auto grid max-w-md grid-cols-4">
         {items.map(({ to, label, icon: Icon }) => {
           const active = path === to;
           return (

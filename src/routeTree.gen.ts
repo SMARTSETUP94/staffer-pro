@@ -13,6 +13,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as MobileProfilRouteImport } from './routes/mobile.profil'
+import { Route as MobileMoisRouteImport } from './routes/mobile.mois'
 import { Route as MobileHeuresRouteImport } from './routes/mobile.heures'
 import { Route as MobileAujourdhuiRouteImport } from './routes/mobile.aujourdhui'
 import { Route as AppValidationHeuresRouteImport } from './routes/_app.validation-heures'
@@ -51,6 +52,11 @@ const IndexRoute = IndexRouteImport.update({
 const MobileProfilRoute = MobileProfilRouteImport.update({
   id: '/mobile/profil',
   path: '/mobile/profil',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MobileMoisRoute = MobileMoisRouteImport.update({
+  id: '/mobile/mois',
+  path: '/mobile/mois',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MobileHeuresRoute = MobileHeuresRouteImport.update({
@@ -173,6 +179,7 @@ export interface FileRoutesByFullPath {
   '/validation-heures': typeof AppValidationHeuresRoute
   '/mobile/aujourdhui': typeof MobileAujourdhuiRoute
   '/mobile/heures': typeof MobileHeuresRoute
+  '/mobile/mois': typeof MobileMoisRoute
   '/mobile/profil': typeof MobileProfilRoute
   '/affaires/$affaireId': typeof AppAffairesAffaireIdRouteWithChildren
   '/devis/import': typeof AppDevisImportRoute
@@ -198,6 +205,7 @@ export interface FileRoutesByTo {
   '/validation-heures': typeof AppValidationHeuresRoute
   '/mobile/aujourdhui': typeof MobileAujourdhuiRoute
   '/mobile/heures': typeof MobileHeuresRoute
+  '/mobile/mois': typeof MobileMoisRoute
   '/mobile/profil': typeof MobileProfilRoute
   '/devis/import': typeof AppDevisImportRoute
   '/employes/import': typeof AppEmployesImportRoute
@@ -224,6 +232,7 @@ export interface FileRoutesById {
   '/_app/validation-heures': typeof AppValidationHeuresRoute
   '/mobile/aujourdhui': typeof MobileAujourdhuiRoute
   '/mobile/heures': typeof MobileHeuresRoute
+  '/mobile/mois': typeof MobileMoisRoute
   '/mobile/profil': typeof MobileProfilRoute
   '/_app/affaires/$affaireId': typeof AppAffairesAffaireIdRouteWithChildren
   '/_app/devis/import': typeof AppDevisImportRoute
@@ -251,6 +260,7 @@ export interface FileRouteTypes {
     | '/validation-heures'
     | '/mobile/aujourdhui'
     | '/mobile/heures'
+    | '/mobile/mois'
     | '/mobile/profil'
     | '/affaires/$affaireId'
     | '/devis/import'
@@ -276,6 +286,7 @@ export interface FileRouteTypes {
     | '/validation-heures'
     | '/mobile/aujourdhui'
     | '/mobile/heures'
+    | '/mobile/mois'
     | '/mobile/profil'
     | '/devis/import'
     | '/employes/import'
@@ -301,6 +312,7 @@ export interface FileRouteTypes {
     | '/_app/validation-heures'
     | '/mobile/aujourdhui'
     | '/mobile/heures'
+    | '/mobile/mois'
     | '/mobile/profil'
     | '/_app/affaires/$affaireId'
     | '/_app/devis/import'
@@ -318,6 +330,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   MobileAujourdhuiRoute: typeof MobileAujourdhuiRoute
   MobileHeuresRoute: typeof MobileHeuresRoute
+  MobileMoisRoute: typeof MobileMoisRoute
   MobileProfilRoute: typeof MobileProfilRoute
 }
 
@@ -349,6 +362,13 @@ declare module '@tanstack/react-router' {
       path: '/mobile/profil'
       fullPath: '/mobile/profil'
       preLoaderRoute: typeof MobileProfilRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mobile/mois': {
+      id: '/mobile/mois'
+      path: '/mobile/mois'
+      fullPath: '/mobile/mois'
+      preLoaderRoute: typeof MobileMoisRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mobile/heures': {
@@ -573,6 +593,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   MobileAujourdhuiRoute: MobileAujourdhuiRoute,
   MobileHeuresRoute: MobileHeuresRoute,
+  MobileMoisRoute: MobileMoisRoute,
   MobileProfilRoute: MobileProfilRoute,
 }
 export const routeTree = rootRouteImport
