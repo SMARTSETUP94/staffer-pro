@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, Loader2, MapPin, User, Calendar, Lock, Unlock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { StatutPill } from "./_app.affaires.index";
+import { PageBreadcrumbs } from "@/components/PageBreadcrumbs";
 
 interface AffaireDetail {
   id: string;
@@ -108,9 +109,26 @@ function AffaireDetailLayout() {
     { to: `/affaires/${affaire.id}/journal`, label: "Journal", match: path.endsWith("/journal") },
   ];
 
+  // Fil d'ariane dynamique selon l'onglet courant
+  const currentTab = tabs.find((t) => t.match);
+  const breadcrumbSteps = useMemo(() => {
+    const base = [
+      { label: "Affaires", to: "/affaires" },
+      {
+        label: `${affaire.numero} — ${affaire.nom}`,
+        to: currentTab && currentTab.label !== "Synthèse" ? `/affaires/${affaire.id}` : undefined,
+      },
+    ];
+    if (currentTab && currentTab.label !== "Synthèse") {
+      base.push({ label: currentTab.label, to: undefined });
+    }
+    return base;
+  }, [affaire.id, affaire.numero, affaire.nom, currentTab]);
+
   return (
     <div className="mx-auto max-w-7xl p-6">
-      <Link to="/affaires" className="inline-flex items-center text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground">
+      <PageBreadcrumbs steps={breadcrumbSteps} className="mb-3" />
+      <Link to="/affaires" className="inline-flex items-center text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground sm:hidden">
         <ArrowLeft className="mr-1 h-3 w-3" /> Affaires
       </Link>
 
