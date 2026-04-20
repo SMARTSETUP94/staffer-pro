@@ -19,6 +19,10 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { PageHeader } from "@/components/PageHeader";
+import {
+  buildDemandeDevisTexte,
+  TRAJET_CATEGORIE_LABEL as CATEGORIE_LABEL,
+} from "@/lib/demande-devis-helpers";
 import type { Tables } from "@/integrations/supabase/types";
 
 export const Route = createFileRoute("/_app/export/demandes-devis")({
@@ -78,35 +82,7 @@ function DemandesDevisPage() {
   }, [trajets]);
 
   function buildTexteDevis(g: { affaire: Affaire | null; trajets: TrajetEnrichi[] }) {
-    const lignes: string[] = [];
-    lignes.push("Bonjour,");
-    lignes.push("");
-    if (g.affaire) {
-      lignes.push(
-        `Nous souhaitons obtenir un devis de transport pour l'affaire ${g.affaire.numero} — ${g.affaire.nom}${g.affaire.client ? ` (${g.affaire.client})` : ""}.`,
-      );
-    } else {
-      lignes.push("Nous souhaitons obtenir un devis de transport pour les trajets suivants :");
-    }
-    lignes.push("");
-    lignes.push("Trajets à réaliser :");
-    g.trajets.forEach((t, idx) => {
-      const dateFr = format(new Date(t.date + "T00:00:00"), "EEEE d MMMM yyyy", { locale: fr });
-      const heure = t.heure_depart ? ` à ${t.heure_depart.slice(0, 5)}` : "";
-      const cat = CATEGORIE_LABEL[t.categorie] ?? t.categorie;
-      lignes.push(
-        `${idx + 1}. ${dateFr}${heure} — ${cat}`,
-      );
-      lignes.push(`   • Départ : ${t.adresse_depart}`);
-      lignes.push(`   • Arrivée : ${t.adresse_arrivee}`);
-      if (t.notes) lignes.push(`   • Notes : ${t.notes}`);
-    });
-    lignes.push("");
-    lignes.push("Merci de nous transmettre votre meilleur devis dans les meilleurs délais.");
-    lignes.push("");
-    lignes.push("Cordialement,");
-    lignes.push("L'équipe Setup Paris");
-    return lignes.join("\n");
+    return buildDemandeDevisTexte(g.affaire, g.trajets);
   }
 
   async function handleCopy(key: string, text: string) {
@@ -294,10 +270,3 @@ function DemandesDevisPage() {
   );
 }
 
-const CATEGORIE_LABEL: Record<string, string> = {
-  pose: "Pose",
-  depose: "Dépose",
-  livraison_fourniture: "Livraison fourniture",
-  recuperation_materiel: "Récupération matériel",
-  autre: "Autre",
-};

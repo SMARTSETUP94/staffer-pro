@@ -19,6 +19,25 @@ const ABSENCE_LABEL: Record<string, string> = {
   autre: "ABS",
 };
 
+export interface VehiculeRef {
+  id: string;
+  nom: string;
+  immatriculation: string | null;
+  type: "VL" | "M3_20" | "poids_lourd";
+}
+
+export interface TrajetRef {
+  id: string;
+  date: string; // YYYY-MM-DD
+  heure_depart: string | null;
+  vehicule_id: string | null;
+  chauffeur_id: string | null;
+  adresse_depart: string;
+  adresse_arrivee: string;
+  categorie: string;
+  statut_soustraitance: "non" | "a_sous_traiter" | "devis_envoye" | "confirme";
+}
+
 interface BuildOpts {
   weekStart: Date;
   metiers: Metier[];
@@ -28,6 +47,8 @@ interface BuildOpts {
   consommation: DevisConsommation[];
   absences: Absence[];
   chefsById: Map<string, ChefRef>;
+  vehicules?: VehiculeRef[];
+  trajets?: TrajetRef[];
 }
 
 type Cell = XLSX.CellObject & { s?: any };
@@ -630,8 +651,177 @@ function buildHeuresEmployeSheet(employes: Employe[], opts: BuildOpts): XLSX.Wor
   return ws;
 }
 
+const VEHICULE_TYPE_SHORT: Record<VehiculeRef["type"], string> = {
+  VL: "VL",
+  M3_20: "20m³",
+  poids_lourd: "PL",
+};
+
+const STATUT_SOUSTRAITANCE_TAG: Record<TrajetRef["statut_soustraitance"], string> = {
+  non: "",
+  a_sous_traiter: " [À S/T]",
+  devis_envoye: " [Devis env.]",
+  confirme: " [S/T conf.]",
+};
+function buildFlotteSheet(opts: BuildOpts): XLSX.WorkSheet {
+  const { weekStart, vehicules = [], trajets = [], employes } = opts;
+  const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+  const empById = new Map(employes.map((e) => [e.id, e]));
+
+  const aoa: Cell[][] = [];
+
+  // Titre
+  aoa.push([
+    {
+      t: "s",
+      v: `Flotte — Semaine ${format(weekStart, "II")} — ${format(weekStart, "d MMM", { locale: fr })} → ${format(addDays(weekStart, 6), "d MMM yyyy", { locale: fr })}`,
+      s: {
+        font: { bold: true, sz: 14, color: { rgb: "FFFFFF" } },
+        fill: { fgColor: { rgb: "111827" } },
+        alignment: { horizontal: "left", vertical: "center" },
+      },
+    },
+  ]);
+  aoa.push([{ t: "s", v: "" }]);
+
+  // En-têtes
+  const header: Cell[] = [
+    { t: "s", v: "Véhicule", s: HEADER_STYLE },
+    { t: "s", v: "Type", s: HEADER_STYLE },
+    ...days.map((d) => ({
+      t: "s" as const,
+      v: format(d, "EEE d MMM", { locale: fr }),
+      s: HEADER_STYLE,
+    })),
+  ];
+  aoa.push(header);
+
+  // Une ligne par véhicule
+  for (const veh of vehicules) {
+    const row: Cell[] = [
+      {
+        t: "s",
+        v: `${veh.nom}${veh.immatriculation ? `\n${veh.immatriculation}` : ""}`,
+        s: NAME_STYLE,
+      },
+      {
+        t: "s",
+        v: VEHICULE_TYPE_SHORT[veh.type],
+        s: { ...SUBHEADER_STYLE, font: { bold: true, sz: 9 } },
+      },
+    ];
+    for (const day of days) {
+      const dStr = format(day, "yyyy-MM-dd");
+      const dayTrajets = trajets
+        .filter((t) => t.vehicule_id === veh.id && t.date === dStr)
+        .sort((a, b) => (a.heure_depart ?? "").localeCompare(b.heure_depart ?? ""));
+      if (dayTrajets.length === 0) {
+        row.push(cellEmpty());
+        continue;
+      }
+      // Concaténer plusieurs trajets dans la même cellule
+      const lines: string[] = [];
+      let isAnySubTraite = false;
+      for (const t of dayTrajets) {
+        const heure = t.heure_depart ? `${t.heure_depart.slice(0, 5)} ` : "";
+        const chauffeur = t.chauffeur_id ? empById.get(t.chauffeur_id) : null;
+        const chauffeurLabel = chauffeur
+          ? `${chauffeur.prenom[0] ?? ""}${chauffeur.nom[0] ?? ""}`.toUpperCase()
+          : "—";
+        const tag = STATUT_SOUSTRAITANCE_TAG[t.statut_soustraitance] ?? "";
+        if (t.statut_soustraitance !== "non") isAnySubTraite = true;
+        lines.push(
+          `${heure}${t.adresse_depart} → ${t.adresse_arrivee} (${chauffeurLabel})${tag}`,
+        );
+      }
+      row.push({
+        t: "s",
+        v: lines.join("\n"),
+        s: {
+          font: { sz: 9, color: { rgb: "111827" } },
+          fill: { fgColor: { rgb: isAnySubTraite ? "FEF3C7" : "DBEAFE" } },
+          alignment: { horizontal: "left", vertical: "top", wrapText: true },
+          border: BORDER_ALL,
+        },
+      });
+    }
+    aoa.push(row);
+  }
+
+  // Trajets sans véhicule (ex: sous-traitance pure)
+  const trajetsSansVeh = trajets.filter((t) => !t.vehicule_id);
+  if (trajetsSansVeh.length > 0) {
+    const row: Cell[] = [
+      {
+        t: "s",
+        v: "Sans véhicule\n(sous-traitance)",
+        s: { ...NAME_STYLE, font: { bold: true, sz: 9, italic: true, color: { rgb: "92400E" } } },
+      },
+      { t: "s", v: "—", s: SUBHEADER_STYLE },
+    ];
+    for (const day of days) {
+      const dStr = format(day, "yyyy-MM-dd");
+      const dayTrajets = trajetsSansVeh.filter((t) => t.date === dStr);
+      if (dayTrajets.length === 0) {
+        row.push(cellEmpty());
+        continue;
+      }
+      const lines = dayTrajets.map((t) => {
+        const heure = t.heure_depart ? `${t.heure_depart.slice(0, 5)} ` : "";
+        const tag = STATUT_SOUSTRAITANCE_TAG[t.statut_soustraitance] ?? "";
+        return `${heure}${t.adresse_depart} → ${t.adresse_arrivee}${tag}`;
+      });
+      row.push({
+        t: "s",
+        v: lines.join("\n"),
+        s: {
+          font: { sz: 9, color: { rgb: "111827" } },
+          fill: { fgColor: { rgb: "FEF3C7" } },
+          alignment: { horizontal: "left", vertical: "top", wrapText: true },
+          border: BORDER_ALL,
+        },
+      });
+    }
+    aoa.push(row);
+  }
+
+  if (vehicules.length === 0 && trajetsSansVeh.length === 0) {
+    aoa.push([
+      {
+        t: "s",
+        v: "Aucun véhicule ni trajet sur la semaine.",
+        s: { font: { italic: true, color: { rgb: "9CA3AF" } } },
+      },
+    ]);
+  }
+
+  // Légende
+  aoa.push([{ t: "s", v: "" }]);
+  aoa.push([
+    {
+      t: "s",
+      v: "Bleu = trajet interne · Jaune = sous-traitance · Initiales = chauffeur",
+      s: { font: { italic: true, sz: 9, color: { rgb: "6B7280" } } },
+    },
+  ]);
+
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws["!cols"] = [
+    { wch: 22 }, // véhicule
+    { wch: 8 }, // type
+    ...days.map(() => ({ wch: 26 })),
+  ];
+  ws["!rows"] = [{ hpt: 26 }, { hpt: 8 }, { hpt: 28 }];
+  ws["!merges"] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 1 + days.length } }];
+  ws["!freeze"] = { xSplit: 2, ySplit: 3 };
+  return ws;
+}
+
+// Exposé pour les tests unitaires (indirectement via construction)
+export { buildFlotteSheet };
+
 export function exportPlanningExcel(opts: BuildOpts): void {
-  const { employes, assignations, weekStart } = opts;
+  const { employes, assignations, weekStart, vehicules, trajets } = opts;
 
   const cdiCdd = employes.filter((e) => e.type_contrat === "CDI" || e.type_contrat === "CDD");
   const assignedIds = new Set(assignations.map((a) => a.employe_id));
@@ -644,6 +834,10 @@ export function exportPlanningExcel(opts: BuildOpts): void {
   XLSX.utils.book_append_sheet(wb, buildEmployeSheet("Intérim / Indép.", interim, opts), "Intérim");
   XLSX.utils.book_append_sheet(wb, buildSyntheseSheet(opts), "Synthèse chantier");
   XLSX.utils.book_append_sheet(wb, buildHeuresEmployeSheet(cdiCdd, opts), "Heures par employé");
+  // Feuille Flotte uniquement si véhicules ou trajets fournis
+  if ((vehicules && vehicules.length > 0) || (trajets && trajets.length > 0)) {
+    XLSX.utils.book_append_sheet(wb, buildFlotteSheet(opts), "Flotte");
+  }
 
   const filename = `planning-S${format(weekStart, "II")}-${format(weekStart, "yyyy-MM-dd")}.xlsx`;
   XLSX.writeFile(wb, filename);
@@ -656,7 +850,7 @@ export function exportPlanningExcel(opts: BuildOpts): void {
 export function exportPlanningExcelRange(
   opts: Omit<BuildOpts, "weekStart"> & { weekStarts: Date[] },
 ): void {
-  const { weekStarts, employes, assignations, absences, ...rest } = opts;
+  const { weekStarts, employes, assignations, absences, trajets, ...rest } = opts;
   if (weekStarts.length === 0) return;
 
   const wb = XLSX.utils.book_new();
@@ -679,11 +873,16 @@ export function exportPlanningExcelRange(
         assignedIds.has(e.id),
     );
 
+    const trajetsWeek = (trajets ?? []).filter(
+      (t) => t.date >= weekStartStr && t.date <= weekEndStr,
+    );
+
     const weekOpts: BuildOpts = {
       ...rest,
       employes,
       assignations: assignsWeek,
       absences: absencesWeek,
+      trajets: trajetsWeek,
       weekStart,
     };
 
@@ -703,6 +902,9 @@ export function exportPlanningExcelRange(
       buildHeuresEmployeSheet(cdiCdd, weekOpts),
       `S${weekNum} Heures`,
     );
+    if ((rest.vehicules && rest.vehicules.length > 0) || trajetsWeek.length > 0) {
+      XLSX.utils.book_append_sheet(wb, buildFlotteSheet(weekOpts), `S${weekNum} Flotte`);
+    }
   }
 
   const first = weekStarts[0];
