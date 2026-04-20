@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Loader2, Search, ArrowRight, Trash2, FileText, ExternalLink } from "lucide-react";
+import { Loader2, Search, ArrowRight, Trash2, FileText, ExternalLink, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { PageHeader } from "@/components/PageHeader";
@@ -132,6 +132,16 @@ function DevisPage() {
         eyebrow="Pilotage commercial"
         title="Devis"
         description="Tous les devis importés ou créés. Édition par affaire, suppression avec détachement des assignations."
+        actions={
+          isAdminOrChef && (
+            <Button asChild className="rounded-xl">
+              <Link to="/devis/import">
+                <Plus className="h-4 w-4" />
+                Nouveau devis
+              </Link>
+            </Button>
+          )
+        }
       />
 
       {/* Filtres */}
