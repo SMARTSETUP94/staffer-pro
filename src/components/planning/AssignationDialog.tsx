@@ -83,6 +83,8 @@ export function AssignationDialog({
   const [notes, setNotes] = useState<string>("");
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [secondairesIds, setSecondairesIds] = useState<number[]>([]);
+  const [showAllMetiers, setShowAllMetiers] = useState(false);
 
   // Réinitialise à l'ouverture
   useEffect(() => {
@@ -93,7 +95,41 @@ export function AssignationDialog({
     setSlot("JOURNEE");
     setHeures(8);
     setNotes("");
+    setShowAllMetiers(false);
   }, [open, employe.metier_principal_id]);
+
+  // Charge les compétences secondaires de l'employé
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    supabase
+      .from("employe_metiers")
+      .select("metier_id")
+      .eq("employe_id", employe.id)
+      .then(({ data }) => {
+        if (cancelled) return;
+        setSecondairesIds((data ?? []).map((r) => r.metier_id));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [open, employe.id]);
+
+  // Métiers de compétence (principal + secondaires)
+  const metiersCompetence = useMemo(() => {
+    const ids = new Set<number>([employe.metier_principal_id, ...secondairesIds]);
+    return metiers.filter((m) => ids.has(m.id));
+  }, [metiers, employe.metier_principal_id, secondairesIds]);
+
+  // Si le métier sélectionné n'est pas une compétence, on bascule en "tous"
+  const metiersAffichesBase = showAllMetiers ? metiers : metiersCompetence;
+  const metiersAffiches = useMemo(() => {
+    if (metierId && !metiersAffichesBase.some((m) => m.id === metierId)) {
+      const extra = metiers.find((m) => m.id === metierId);
+      return extra ? [...metiersAffichesBase, extra] : metiersAffichesBase;
+    }
+    return metiersAffichesBase;
+  }, [metiersAffichesBase, metierId, metiers]);
 
   const sortedAffaires = useMemo(
     () =>
@@ -288,7 +324,18 @@ export function AssignationDialog({
 
             <div className="grid grid-cols-2 gap-3">
               <div className="grid gap-1.5">
-                <Label>Métier</Label>
+                <div className="flex items-center justify-between">
+                  <Label>Métier</Label>
+                  {metiersCompetence.length < metiers.length && (
+                    <button
+                      type="button"
+                      onClick={() => setShowAllMetiers((v) => !v)}
+                      className="text-[10px] text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+                    >
+                      {showAllMetiers ? "Compétences" : "Tous"}
+                    </button>
+                  )}
+                </div>
                 <Select
                   value={metierId?.toString() ?? ""}
                   onValueChange={(v) => setMetierId(Number(v))}
@@ -297,15 +344,29 @@ export function AssignationDialog({
                     <SelectValue placeholder="Métier" />
                   </SelectTrigger>
                   <SelectContent>
-                    {metiers.map((m) => (
-                      <SelectItem key={m.id} value={m.id.toString()}>
-                        <span
-                          className="mr-1.5 inline-block h-2 w-2 rounded-full align-middle"
-                          style={{ backgroundColor: m.couleur }}
-                        />
-                        {m.libelle}
-                      </SelectItem>
-                    ))}
+                    {metiersAffiches.map((m) => {
+                      const isPrincipal = m.id === employe.metier_principal_id;
+                      const isCompetence = metiersCompetence.some((mc) => mc.id === m.id);
+                      return (
+                        <SelectItem key={m.id} value={m.id.toString()}>
+                          <span
+                            className="mr-1.5 inline-block h-2 w-2 rounded-full align-middle"
+                            style={{ backgroundColor: m.couleur }}
+                          />
+                          {m.libelle}
+                          {isPrincipal && (
+                            <span className="ml-1 text-[10px] text-muted-foreground">
+                              (principal)
+                            </span>
+                          )}
+                          {!isCompetence && showAllMetiers && (
+                            <span className="ml-1 text-[10px] text-muted-foreground">
+                              (hors compétence)
+                            </span>
+                          )}
+                        </SelectItem>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
               </div>
