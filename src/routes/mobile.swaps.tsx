@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
 import { ArrowLeftRight, Loader2, Plus } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
+import { useResolvedEmploye } from "@/hooks/use-resolved-employe";
 import { supabase } from "@/integrations/supabase/client";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { PreviewBanner } from "@/components/PreviewBanner";
@@ -36,22 +37,10 @@ type Tab = "en_cours" | "historique";
 
 function MobileSwaps() {
   const { user } = useAuth();
-  const [employeId, setEmployeId] = useState<string | null>(null);
+  const { employeId } = useResolvedEmploye();
   const [tab, setTab] = useState<Tab>("en_cours");
   const [createOpen, setCreateOpen] = useState(false);
   const [myAssignations, setMyAssignations] = useState<MyAssignation[]>([]);
-
-  useEffect(() => {
-    if (!user) return;
-    supabase
-      .from("employes")
-      .select("id")
-      .eq("profile_id", user.id)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data) setEmployeId(data.id);
-      });
-  }, [user]);
 
   useEffect(() => {
     if (!employeId) return;

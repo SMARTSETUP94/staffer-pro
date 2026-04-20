@@ -12,6 +12,7 @@ import { fr } from "date-fns/locale";
 import { CalendarDays, ChevronLeft, ChevronRight, Inbox, Loader2, MapPin } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { usePreview } from "@/lib/preview-context";
+import { useResolvedEmploye } from "@/hooks/use-resolved-employe";
 import { PreviewBanner } from "@/components/PreviewBanner";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { Button } from "@/components/ui/button";
@@ -37,10 +38,10 @@ interface AssignationLite {
 function MobileSemaine() {
   const { user, signOut } = useAuth();
   const { isPreviewing, setPreviewRole } = usePreview();
+  const { employe, employeId, resolved: employeResolved } = useResolvedEmploye();
+  const employeNom = employe ? `${employe.prenom} ${employe.nom}` : "";
   const navigate = useNavigate();
 
-  const [employeId, setEmployeId] = useState<string | null>(null);
-  const [employeNom, setEmployeNom] = useState<string>("");
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
   const [assignations, setAssignations] = useState<AssignationLite[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,24 +52,10 @@ function MobileSemaine() {
     [weekStart],
   );
 
-  // Résoudre l'employé lié au profil connecté
+  // Si résolution terminée sans employé : on arrête le loading
   useEffect(() => {
-    if (!user) return;
-    supabase
-      .from("employes")
-      .select("id, prenom, nom")
-      .eq("profile_id", user.id)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data) {
-          setEmployeId(data.id);
-          setEmployeNom(`${data.prenom} ${data.nom}`);
-        } else {
-          setEmployeId(null);
-          setLoading(false);
-        }
-      });
-  }, [user]);
+    if (employeResolved && !employeId) setLoading(false);
+  }, [employeResolved, employeId]);
 
   // Charger les assignations de la semaine
   useEffect(() => {

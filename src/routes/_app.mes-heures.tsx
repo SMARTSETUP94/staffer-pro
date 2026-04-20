@@ -4,6 +4,8 @@ import { startOfWeek } from "date-fns";
 import { Clock } from "lucide-react";
 import { WeekPicker } from "@/components/planning/WeekPicker";
 import { MesHeuresGrid } from "@/components/heures/MesHeuresGrid";
+import { useResolvedEmploye } from "@/hooks/use-resolved-employe";
+import { usePreview } from "@/lib/preview-context";
 
 export const Route = createFileRoute("/_app/mes-heures")({
   head: () => ({ meta: [{ title: "Mes heures — Planning chantiers" }] }),
@@ -12,6 +14,10 @@ export const Route = createFileRoute("/_app/mes-heures")({
 
 function MesHeuresPage() {
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
+  const { isEmployePreview, previewEmployeId } = usePreview();
+  const { employeId } = useResolvedEmploye();
+  // Si admin en preview employé, force l'override sur la grille
+  const override = isEmployePreview ? (previewEmployeId ?? employeId) : null;
 
   return (
     <div className="p-6">
@@ -28,7 +34,7 @@ function MesHeuresPage() {
         <WeekPicker weekStart={weekStart} onChange={setWeekStart} />
       </div>
 
-      <MesHeuresGrid weekStart={weekStart} variant="desktop" />
+      <MesHeuresGrid weekStart={weekStart} variant="desktop" employeIdOverride={override} />
     </div>
   );
 }

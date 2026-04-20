@@ -4,6 +4,7 @@ import { format } from "date-fns";
 import { ArrowLeftRight, Loader2, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import { useResolvedEmploye } from "@/hooks/use-resolved-employe";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -35,23 +36,10 @@ type Tab = "en_cours" | "historique";
 
 function MesSwapsPage() {
   const { user } = useAuth();
-  const [employeId, setEmployeId] = useState<string | null>(null);
+  const { employeId } = useResolvedEmploye();
   const [tab, setTab] = useState<Tab>("en_cours");
   const [createOpen, setCreateOpen] = useState(false);
   const [myAssignations, setMyAssignations] = useState<MyAssignation[]>([]);
-
-  // Résoudre employé courant
-  useEffect(() => {
-    if (!user) return;
-    supabase
-      .from("employes")
-      .select("id")
-      .eq("profile_id", user.id)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data) setEmployeId(data.id);
-      });
-  }, [user]);
 
   // Charger mes assignations futures (pour CreateSwapDialog)
   useEffect(() => {
