@@ -208,19 +208,32 @@ function ValidationHeuresPage() {
         <div className="flex items-center gap-3">
           <ClipboardCheck className="h-6 w-6 text-primary" />
           <div>
-            <h1 className="text-2xl font-bold">Validation des heures</h1>
+            <h1 className="text-2xl font-bold">Validation</h1>
             <p className="text-sm text-muted-foreground">
-              Validez ou rejetez les saisies soumises par les employés.
+              Validez les heures saisies et arbitrez les demandes d'échange.
             </p>
           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <WeekPicker weekStart={weekStart} onChange={setWeekStart} />
-          <Button variant="outline" onClick={handleExport} disabled={exporting} className="gap-2">
-            {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-            Exporter validées
-          </Button>
-        </div>
+      </div>
+
+      <Tabs defaultValue="heures" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="heures" className="gap-1.5">
+            <ClipboardCheck className="h-3.5 w-3.5" /> Heures à valider
+          </TabsTrigger>
+          <TabsTrigger value="swaps" className="gap-1.5">
+            <ArrowLeftRight className="h-3.5 w-3.5" /> Swaps à valider
+            <SwapsBadgeCount />
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="heures" className="space-y-4">
+      <div className="flex flex-wrap items-center justify-end gap-2">
+        <WeekPicker weekStart={weekStart} onChange={setWeekStart} />
+        <Button variant="outline" onClick={handleExport} disabled={exporting} className="gap-2">
+          {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+          Exporter validées
+        </Button>
       </div>
 
       {/* Filtres */}
