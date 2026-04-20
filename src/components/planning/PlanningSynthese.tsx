@@ -139,41 +139,99 @@ export function PlanningSynthese({
                 </Button>
               </div>
 
-              {/* Récap heures par métier */}
+              {/* Récap heures par pôle (4 colonnes) */}
               {consoLignes.length > 0 && (
                 <div className="mt-4 space-y-2">
                   <div className="flex items-center justify-between text-[11px]">
                     <span className="font-semibold uppercase tracking-wide text-muted-foreground">
-                      Heures par métier
+                      Heures par pôle
                     </span>
                     <span className={cn("font-semibold", depassement && "text-destructive")}>
                       {totalAssignees.toFixed(0)}h / {totalPrevues.toFixed(0)}h ({pctGlobal.toFixed(0)}%)
                     </span>
                   </div>
-                  <div className="grid gap-1.5 sm:grid-cols-2">
-                    {consoLignes.map((c) => {
-                      const pct = Number(c.heures_prevues) > 0
-                        ? (Number(c.heures_assignees) / Number(c.heures_prevues)) * 100
-                        : 0;
-                      const dep = pct > 100;
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                    {POLES.map((pole) => {
+                      // Métiers de ce pôle existant en BDD
+                      const metiersPole = metiers.filter((m) => pole.codes.includes(m.code));
+                      const lignesPole = consoLignes.filter((c) =>
+                        metiersPole.some((m) => m.id === c.metier_id),
+                      );
+                      const polePrevues = lignesPole.reduce(
+                        (s, l) => s + Number(l.heures_prevues || 0),
+                        0,
+                      );
+                      const poleAssignees = lignesPole.reduce(
+                        (s, l) => s + Number(l.heures_assignees || 0),
+                        0,
+                      );
+                      const polePct = polePrevues > 0 ? (poleAssignees / polePrevues) * 100 : 0;
+                      const poleDep = polePct > 100;
+
                       return (
-                        <div key={`${c.devis_id}-${c.metier_id}`} className="space-y-0.5">
-                          <div className="flex items-center justify-between text-[10px]">
-                            <span className="flex items-center gap-1.5">
+                        <div
+                          key={pole.key}
+                          className="rounded-md border border-border/60 bg-muted/20 p-2"
+                        >
+                          <div className="mb-1.5 flex items-center justify-between gap-2">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-foreground">
+                              {pole.label}
+                            </span>
+                            {polePrevues > 0 && (
                               <span
-                                className="inline-block h-2 w-2 rounded-full"
-                                style={{ backgroundColor: c.couleur }}
-                              />
-                              {c.metier}
-                            </span>
-                            <span className={cn("font-mono", dep && "text-destructive font-semibold")}>
-                              {Number(c.heures_assignees).toFixed(0)}/{Number(c.heures_prevues).toFixed(0)}h
-                            </span>
+                                className={cn(
+                                  "font-mono text-[10px] font-semibold",
+                                  poleDep && "text-destructive",
+                                )}
+                              >
+                                {poleAssignees.toFixed(0)}/{polePrevues.toFixed(0)}h
+                              </span>
+                            )}
                           </div>
-                          <Progress
-                            value={Math.min(pct, 100)}
-                            className={cn("h-1", dep && "[&>div]:bg-destructive")}
-                          />
+                          {lignesPole.length === 0 ? (
+                            <p className="text-[10px] italic text-muted-foreground">
+                              Aucun budget devis
+                            </p>
+                          ) : (
+                            <div className="space-y-1.5">
+                              {lignesPole.map((c) => {
+                                const pct =
+                                  Number(c.heures_prevues) > 0
+                                    ? (Number(c.heures_assignees) / Number(c.heures_prevues)) * 100
+                                    : 0;
+                                const dep = pct > 100;
+                                return (
+                                  <div
+                                    key={`${c.devis_id}-${c.metier_id}`}
+                                    className="space-y-0.5"
+                                  >
+                                    <div className="flex items-center justify-between text-[10px]">
+                                      <span className="flex min-w-0 items-center gap-1.5">
+                                        <span
+                                          className="inline-block h-2 w-2 flex-shrink-0 rounded-full"
+                                          style={{ backgroundColor: c.couleur }}
+                                        />
+                                        <span className="truncate">{c.metier}</span>
+                                      </span>
+                                      <span
+                                        className={cn(
+                                          "ml-1 font-mono",
+                                          dep && "font-semibold text-destructive",
+                                        )}
+                                      >
+                                        {Number(c.heures_assignees).toFixed(0)}/
+                                        {Number(c.heures_prevues).toFixed(0)}
+                                      </span>
+                                    </div>
+                                    <Progress
+                                      value={Math.min(pct, 100)}
+                                      className={cn("h-1", dep && "[&>div]:bg-destructive")}
+                                    />
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
                         </div>
                       );
                     })}
