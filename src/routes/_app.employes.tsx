@@ -99,6 +99,8 @@ function EmployesPage() {
   const [search, setSearch] = useState("");
   const [filterContrat, setFilterContrat] = useState<"all" | ContratType | "Apprenti">("all");
   const [filterActif, setFilterActif] = useState<"actifs" | "inactifs" | "tous">("actifs");
+  const [filterMetierPrincipal, setFilterMetierPrincipal] = useState<Set<string | number>>(new Set());
+  const [filterMetierSecondaire, setFilterMetierSecondaire] = useState<Set<string | number>>(new Set());
   const [viewMode, setViewMode] = useState<"liste" | "tableur">("liste");
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<FormState>(emptyForm);
