@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useRef, useState } from "react";
-import { startOfWeek, addDays } from "date-fns";
+import { startOfWeek, addDays, format } from "date-fns";
 import { Calendar, Loader2, Search, FileDown, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -15,6 +15,10 @@ import { PlanningSynthese } from "@/components/planning/PlanningSynthese";
 import { HeuresRestantesSidebar } from "@/components/planning/HeuresRestantesSidebar";
 import { MultiFilter } from "@/components/planning/MultiFilter";
 import { AddInterimDialog } from "@/components/planning/AddInterimDialog";
+import { FlotteGrid } from "@/components/planning/FlotteGrid";
+import { TrajetDialog } from "@/components/flotte/TrajetDialog";
+import { useVehicules, type Trajet } from "@/hooks/use-vehicules";
+import { useTrajetsWeek } from "@/hooks/use-trajets";
 import { exportPlanningToPDF } from "@/lib/planning-export";
 
 export const Route = createFileRoute("/_app/planning")({
