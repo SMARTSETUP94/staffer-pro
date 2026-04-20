@@ -371,7 +371,7 @@ function ParametresPage() {
           <CardTitle className="text-base">À venir</CardTitle>
         </CardHeader>
         <CardContent className="text-sm text-muted-foreground">
-          Gestion des métiers, seuils d'alerte planning, paramètres globaux.
+          Seuils d'alerte planning, paramètres globaux d'export.
         </CardContent>
       </Card>
     </div>
