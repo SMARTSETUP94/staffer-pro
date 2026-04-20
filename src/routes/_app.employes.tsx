@@ -6,6 +6,7 @@ import { useMetiers } from "@/hooks/use-metiers";
 import { useAuth } from "@/lib/auth-context";
 import { PageHeader } from "@/components/PageHeader";
 import { MetierBadge } from "@/components/MetierBadge";
+import { MultiFilter } from "@/components/planning/MultiFilter";
 import { EmployesSpreadsheet, type SpreadsheetRow } from "@/components/employes/EmployesSpreadsheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
