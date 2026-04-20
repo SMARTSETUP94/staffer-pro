@@ -278,18 +278,13 @@ export function useMesHeures({ weekStart, employeIdOverride }: UseMesHeuresOptio
   const hasBlockingRejet = rejectedNotAcked.length > 0;
 
   const acknowledgeRejet = useCallback(async (saisieId: string) => {
-    const ackTs = new Date().toISOString();
-    const { data } = await supabase
-      .from("heures_saisies")
-      .update({ motif_rejet_lu_le: ackTs, statut: "brouillon" })
-      .eq("id", saisieId)
-      .select(
-        "id, assignation_id, affaire_id, date, heure_debut, heure_fin, heures_reelles, commentaire, statut, motif_rejet, motif_rejet_lu_le",
-      )
-      .maybeSingle();
-    if (data) {
-      setSaisies((prev) => prev.map((s) => (s.id === saisieId ? (data as unknown as SaisieRow) : s)));
-    }
+    // Passe par la RPC SECURITY DEFINER (l'employé n'a plus le droit d'UPDATE direct sur statut='rejete')
+    const { data, error } = await supabase.rpc("acknowledge_heures_rejet", {
+      _saisie_id: saisieId,
+    });
+    if (error || !data) return;
+    const updated = data as unknown as SaisieRow;
+    setSaisies((prev) => prev.map((s) => (s.id === saisieId ? updated : s)));
   }, []);
 
   const submitWeek = useCallback(async () => {
