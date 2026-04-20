@@ -196,8 +196,12 @@ function DraggableBadge({ group: g, metier, affaire, getReadableTextColor, dnd }
           }}
         >
           <div className="flex items-center justify-between gap-1">
-            <span className="truncate font-mono text-[10px]">
-              {affaire?.numero ?? "—"}
+            <span className="flex min-w-0 items-center gap-1 truncate font-mono text-[10px]">
+              {g.hasSwap && <ArrowLeftRight className="h-2.5 w-2.5 shrink-0 opacity-90" />}
+              {g.confStatus === "en_attente" && <Hourglass className="h-2.5 w-2.5 shrink-0 animate-pulse" />}
+              {g.confStatus === "confirmee" && <Check className="h-2.5 w-2.5 shrink-0" />}
+              {g.confStatus === "refusee" && <X className="h-2.5 w-2.5 shrink-0" />}
+              <span className="truncate">{affaire?.numero ?? "—"}</span>
             </span>
             <span
               className="shrink-0 rounded-sm px-1 text-[9px] font-bold opacity-90"
