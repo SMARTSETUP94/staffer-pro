@@ -239,8 +239,14 @@ function DevisPage() {
                   <TableCell className="text-right font-mono text-sm text-muted-foreground">{r.nb_assignations}</TableCell>
                   <TableCell>
                     <div className="flex justify-end gap-1">
+                      {isAdminOrChef && (
+                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg" title="Modifier le devis"
+                          onClick={() => setEditForm(r)}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                      )}
                       {r.affaire && (
-                        <Button asChild variant="ghost" size="icon" className="h-8 w-8 rounded-lg" title="Éditer dans l'affaire">
+                        <Button asChild variant="ghost" size="icon" className="h-8 w-8 rounded-lg" title="Ouvrir dans l'affaire (lignes)">
                           <Link to="/affaires/$affaireId/devis" params={{ affaireId: r.affaire.id }}>
                             <ExternalLink className="h-4 w-4" />
                           </Link>
