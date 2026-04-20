@@ -19,6 +19,25 @@ const ABSENCE_LABEL: Record<string, string> = {
   autre: "ABS",
 };
 
+export interface VehiculeRef {
+  id: string;
+  nom: string;
+  immatriculation: string | null;
+  type: "VL" | "M3_20" | "poids_lourd";
+}
+
+export interface TrajetRef {
+  id: string;
+  date: string; // YYYY-MM-DD
+  heure_depart: string | null;
+  vehicule_id: string | null;
+  chauffeur_id: string | null;
+  adresse_depart: string;
+  adresse_arrivee: string;
+  categorie: string;
+  statut_soustraitance: "non" | "a_sous_traiter" | "devis_envoye" | "confirme";
+}
+
 interface BuildOpts {
   weekStart: Date;
   metiers: Metier[];
@@ -28,6 +47,8 @@ interface BuildOpts {
   consommation: DevisConsommation[];
   absences: Absence[];
   chefsById: Map<string, ChefRef>;
+  vehicules?: VehiculeRef[];
+  trajets?: TrajetRef[];
 }
 
 type Cell = XLSX.CellObject & { s?: any };
