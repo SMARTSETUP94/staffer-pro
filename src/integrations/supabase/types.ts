@@ -166,6 +166,7 @@ export type Database = {
       assignations: {
         Row: {
           affaire_id: string
+          confirmee_le: string | null
           created_at: string
           created_by: string | null
           date: string
@@ -177,11 +178,15 @@ export type Database = {
           heures: number
           id: string
           metier_id: number
+          motif_refus: string | null
           notes: string | null
+          refusee_le: string | null
+          statut_confirmation: Database["public"]["Enums"]["confirmation_status"]
           updated_at: string
         }
         Insert: {
           affaire_id: string
+          confirmee_le?: string | null
           created_at?: string
           created_by?: string | null
           date: string
@@ -193,11 +198,15 @@ export type Database = {
           heures?: number
           id?: string
           metier_id: number
+          motif_refus?: string | null
           notes?: string | null
+          refusee_le?: string | null
+          statut_confirmation?: Database["public"]["Enums"]["confirmation_status"]
           updated_at?: string
         }
         Update: {
           affaire_id?: string
+          confirmee_le?: string | null
           created_at?: string
           created_by?: string | null
           date?: string
@@ -209,7 +218,10 @@ export type Database = {
           heures?: number
           id?: string
           metier_id?: number
+          motif_refus?: string | null
           notes?: string | null
+          refusee_le?: string | null
+          statut_confirmation?: Database["public"]["Enums"]["confirmation_status"]
           updated_at?: string
         }
         Relationships: [
@@ -762,6 +774,99 @@ export type Database = {
         }
         Relationships: []
       }
+      swap_requests: {
+        Row: {
+          appliquee_le: string | null
+          chef_decide_le: string | null
+          chef_decide_par: string | null
+          chef_motif: string | null
+          collegue_decide_le: string | null
+          collegue_motif: string | null
+          created_at: string
+          from_assignation_id: string
+          from_employe_id: string
+          id: string
+          motif_demande: string | null
+          statut: Database["public"]["Enums"]["swap_status"]
+          to_assignation_id: string | null
+          to_employe_id: string
+          type: Database["public"]["Enums"]["swap_type"]
+          updated_at: string
+        }
+        Insert: {
+          appliquee_le?: string | null
+          chef_decide_le?: string | null
+          chef_decide_par?: string | null
+          chef_motif?: string | null
+          collegue_decide_le?: string | null
+          collegue_motif?: string | null
+          created_at?: string
+          from_assignation_id: string
+          from_employe_id: string
+          id?: string
+          motif_demande?: string | null
+          statut?: Database["public"]["Enums"]["swap_status"]
+          to_assignation_id?: string | null
+          to_employe_id: string
+          type?: Database["public"]["Enums"]["swap_type"]
+          updated_at?: string
+        }
+        Update: {
+          appliquee_le?: string | null
+          chef_decide_le?: string | null
+          chef_decide_par?: string | null
+          chef_motif?: string | null
+          collegue_decide_le?: string | null
+          collegue_motif?: string | null
+          created_at?: string
+          from_assignation_id?: string
+          from_employe_id?: string
+          id?: string
+          motif_demande?: string | null
+          statut?: Database["public"]["Enums"]["swap_status"]
+          to_assignation_id?: string | null
+          to_employe_id?: string
+          type?: Database["public"]["Enums"]["swap_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "swap_requests_chef_decide_par_fkey"
+            columns: ["chef_decide_par"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "swap_requests_from_assignation_id_fkey"
+            columns: ["from_assignation_id"]
+            isOneToOne: false
+            referencedRelation: "assignations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "swap_requests_from_employe_id_fkey"
+            columns: ["from_employe_id"]
+            isOneToOne: false
+            referencedRelation: "employes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "swap_requests_to_assignation_id_fkey"
+            columns: ["to_assignation_id"]
+            isOneToOne: false
+            referencedRelation: "assignations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "swap_requests_to_employe_id_fkey"
+            columns: ["to_employe_id"]
+            isOneToOne: false
+            referencedRelation: "employes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -877,6 +982,11 @@ export type Database = {
       absence_type: "conges" | "formation" | "arret_maladie" | "rtt" | "autre"
       affaire_statut: "prospect" | "en_cours" | "termine" | "annule"
       app_role: "admin" | "chef_chantier" | "employe"
+      confirmation_status:
+        | "non_requise"
+        | "en_attente"
+        | "confirmee"
+        | "refusee"
       contrat_type: "CDI" | "Interim" | "CDD" | "Independant"
       demi_journee_type: "AM" | "PM" | "JOURNEE"
       devis_statut: "brouillon" | "signe" | "facture"
@@ -893,6 +1003,15 @@ export type Database = {
         | "conflit_staffing"
         | "depassement_budget"
         | "mention"
+      swap_status:
+        | "proposee"
+        | "acceptee_collegue"
+        | "refusee_collegue"
+        | "validee_chef"
+        | "rejetee_chef"
+        | "appliquee"
+        | "annulee"
+      swap_type: "delegation" | "echange"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1023,6 +1142,12 @@ export const Constants = {
       absence_type: ["conges", "formation", "arret_maladie", "rtt", "autre"],
       affaire_statut: ["prospect", "en_cours", "termine", "annule"],
       app_role: ["admin", "chef_chantier", "employe"],
+      confirmation_status: [
+        "non_requise",
+        "en_attente",
+        "confirmee",
+        "refusee",
+      ],
       contrat_type: ["CDI", "Interim", "CDD", "Independant"],
       demi_journee_type: ["AM", "PM", "JOURNEE"],
       devis_statut: ["brouillon", "signe", "facture"],
@@ -1040,6 +1165,16 @@ export const Constants = {
         "depassement_budget",
         "mention",
       ],
+      swap_status: [
+        "proposee",
+        "acceptee_collegue",
+        "refusee_collegue",
+        "validee_chef",
+        "rejetee_chef",
+        "appliquee",
+        "annulee",
+      ],
+      swap_type: ["delegation", "echange"],
     },
   },
 } as const
