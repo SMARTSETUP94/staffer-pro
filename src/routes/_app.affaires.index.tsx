@@ -64,7 +64,7 @@ const STATUTS: { value: AffaireStatut; label: string }[] = [
   { value: "annule", label: "Annulée" },
 ];
 
-export const Route = createFileRoute("/_app/affaires")({
+export const Route = createFileRoute("/_app/affaires/")({
   head: () => ({ meta: [{ title: "Affaires — Setup Paris" }] }),
   component: AffairesPage,
 });
