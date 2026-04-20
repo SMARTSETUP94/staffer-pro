@@ -44,6 +44,101 @@ interface RoadmapPlanned {
 const RELEASES: RoadmapRelease[] = [
   {
     date: "2026-04-20",
+    version: "v0.9",
+    title: "Export PDF paginé & filtres employés cumulables",
+    entries: [
+      {
+        type: "improvement",
+        area: "Export",
+        title: "Export PDF planning multi-pages avec en-tête répété",
+        description:
+          "Pagination automatique : la grille est découpée verticalement, en-tête (titre, semaine, vue, date d'édition) répété sur chaque page + pied de page « Page X/Y ». UTF-8 préservé via rendu PNG navigateur.",
+      },
+      {
+        type: "feature",
+        area: "Employés",
+        title: "Filtres MultiFilter Métier principal + Compétences cumulables",
+        description:
+          "2 nouveaux filtres multi-select sur /employes : Métier principal (OR) et Compétences secondaires (OR sur secondaires hors principal), combinés en AND avec contrat/actif/recherche.",
+      },
+    ],
+  },
+  {
+    date: "2026-04-20",
+    version: "v0.8",
+    title: "Dashboard employé & verrouillage rôles",
+    entries: [
+      {
+        type: "feature",
+        area: "Employé",
+        title: "Page /dashboard-employe (vue desktop)",
+        description:
+          "Grille semaine responsive avec assignations (n° affaire, nom, heures, lieu, pastille couleur métier).",
+      },
+      {
+        type: "improvement",
+        area: "Sécurité",
+        title: "Verrouillage strict des routes pour le rôle employé",
+        description:
+          "Whitelist EMPLOYE_DESKTOP_ALLOWED dans _app.tsx (dashboard, mes-heures, mes-swaps, mes-propositions). Toute autre route redirige vers /dashboard-employe.",
+      },
+      {
+        type: "improvement",
+        area: "UI",
+        title: "Cloche notifications restylée + suppression label STUDIO",
+        description:
+          "Icône 24px gray-700, badge red-500. Navbar nettoyée. Lien « Ma semaine » ajouté à la sidebar employé.",
+      },
+    ],
+  },
+  {
+    date: "2026-04-20",
+    version: "v0.7",
+    title: "Flotte, trajets & sous-traitance",
+    entries: [
+      {
+        type: "feature",
+        area: "Flotte",
+        title: "Onglet Flotte sur /planning (véhicules × jours)",
+        description:
+          "Grille hebdomadaire des véhicules avec création de trajet, chauffeurs autorisés filtrés par permis, case « créer le retour » pour aller-retour automatique.",
+      },
+      {
+        type: "feature",
+        area: "Flotte",
+        title: "Adresses favorites + autocomplete Nominatim",
+        description:
+          "Entrepôts, ateliers, clients récurrents enregistrés et réutilisables dans les trajets.",
+      },
+      {
+        type: "feature",
+        area: "Sous-traitance",
+        title: "Trajets « à sous-traiter » + page /export/demandes-devis",
+        description:
+          "Toggle sous-traitance sur le trajet, bloc « À sous-traiter » dans le footer planning, page d'agrégation avec texte de devis copiable et bouton « Marquer envoyé ».",
+      },
+      {
+        type: "feature",
+        area: "Export",
+        title: "Feuille « Flotte » dans l'export Excel planning",
+        description: "Ajout de la grille véhicules × jours dans l'export hebdomadaire.",
+      },
+      {
+        type: "feature",
+        area: "Dashboard",
+        title: "KPIs flotte (véhicules en service J/J+1, alertes CT/révision/assurance, km semaine)",
+        description: "Bloc dédié sur le dashboard admin avec alertes J-30 sur les échéances.",
+      },
+      {
+        type: "improvement",
+        area: "Tests",
+        title: "Tests unitaires getCompatibleChauffeurs / alerteDate / bloc devis",
+        description: "Couverture des helpers flotte et de la génération du texte de demande de devis.",
+      },
+    ],
+  },
+  {
+    date: "2026-04-20",
     version: "v0.6",
     title: "Devis & Employés — confort d'usage",
     entries: [
