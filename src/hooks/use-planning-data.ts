@@ -97,6 +97,7 @@ export function usePlanningData(weekStart: Date, weekEnd: Date): PlanningData {
   const [consommation, setConsommation] = useState<DevisConsommation[]>([]);
   const [absences, setAbsences] = useState<Absence[]>([]);
   const [chefsById, setChefsById] = useState<Map<string, ChefRef>>(new Map());
+  const [swapAssignationIds, setSwapAssignationIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
@@ -135,8 +136,13 @@ export function usePlanningData(weekStart: Date, weekEnd: Date): PlanningData {
         .from("employes")
         .select("id, prenom, nom")
         .eq("actif", true),
+      // Swaps actifs (en cours de négociation)
+      supabase
+        .from("swap_requests")
+        .select("from_assignation_id, to_assignation_id")
+        .in("statut", ["proposee", "acceptee_collegue"]),
     ])
-      .then(([mRes, eRes, aRes, asRes, cRes, abRes, chefsRes]) => {
+      .then(([mRes, eRes, aRes, asRes, cRes, abRes, chefsRes, swapsRes]) => {
         if (cancelled) return;
         if (mRes.error) throw mRes.error;
         if (eRes.error) throw eRes.error;
@@ -145,6 +151,7 @@ export function usePlanningData(weekStart: Date, weekEnd: Date): PlanningData {
         if (cRes.error) throw cRes.error;
         if (abRes.error) throw abRes.error;
         if (chefsRes.error) throw chefsRes.error;
+        if (swapsRes.error) throw swapsRes.error;
         setMetiers((mRes.data ?? []) as Metier[]);
         setEmployes((eRes.data ?? []) as Employe[]);
         setAffaires((aRes.data ?? []) as Affaire[]);
@@ -154,6 +161,12 @@ export function usePlanningData(weekStart: Date, weekEnd: Date): PlanningData {
         const cMap = new Map<string, ChefRef>();
         ((chefsRes.data ?? []) as ChefRef[]).forEach((c) => cMap.set(c.id, c));
         setChefsById(cMap);
+        const swapIds = new Set<string>();
+        ((swapsRes.data ?? []) as { from_assignation_id: string; to_assignation_id: string | null }[]).forEach((s) => {
+          if (s.from_assignation_id) swapIds.add(s.from_assignation_id);
+          if (s.to_assignation_id) swapIds.add(s.to_assignation_id);
+        });
+        setSwapAssignationIds(swapIds);
         setLoading(false);
       })
       .catch((e) => {
@@ -175,6 +188,7 @@ export function usePlanningData(weekStart: Date, weekEnd: Date): PlanningData {
     consommation,
     absences,
     chefsById,
+    swapAssignationIds,
     loading,
     error,
     refresh: () => setTick((t) => t + 1),
