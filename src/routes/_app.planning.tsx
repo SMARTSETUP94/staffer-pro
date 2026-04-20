@@ -231,6 +231,7 @@ function PlanningPage() {
                   Intérim / Indép. <span className="ml-1.5 text-[10px] opacity-60">({employesInterim.length})</span>
                 </TabsTrigger>
                 <TabsTrigger value="synthese">Synthèse chantier</TabsTrigger>
+                <TabsTrigger value="flotte">Flotte ({vehicules.filter((v) => v.actif).length})</TabsTrigger>
               </TabsList>
 
               <TabsContent value="cdi" className="mt-4">
