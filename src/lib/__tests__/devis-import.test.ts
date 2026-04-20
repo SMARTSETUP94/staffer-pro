@@ -13,8 +13,8 @@ function makeXlsx(rows: unknown[][]): ArrayBuffer {
   const ws = XLSX.utils.aoa_to_sheet(rows);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Devis");
-  // type 'array' → Uint8Array; on retourne le buffer.
-  const out = XLSX.write(wb, { type: "array", bookType: "xlsx" }) as Uint8Array;
+  // XLSX.write avec type 'buffer' retourne un Node Buffer en environnement Node.
+  const out = XLSX.write(wb, { type: "buffer", bookType: "xlsx" }) as Buffer;
   return out.buffer.slice(out.byteOffset, out.byteOffset + out.byteLength) as ArrayBuffer;
 }
 

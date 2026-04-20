@@ -48,12 +48,17 @@ describe("parseNomComplet", () => {
     });
   });
 
-  it("retire un suffixe collé '-C'", () => {
-    expect(parseNomComplet("Brieg -C")).toEqual({
-      nom: "BRIEG",
+  it("retire un suffixe collé '-C' avec nom + prénom", () => {
+    // Cas réel CSV : suffixe collé sans espace
+    expect(parseNomComplet("AB- DURAND Brieg -C")).toEqual({
+      nom: "DURAND",
       prenom: "Brieg",
     });
-    // edge case : si un seul token, on ne peut pas séparer → on retourne null ailleurs
+  });
+
+  it("retourne null si un seul token (pas de nom OU pas de prénom)", () => {
+    // Un seul mot après nettoyage des suffixes ne peut pas être splitté.
+    expect(parseNomComplet("Brieg -C")).toBeNull();
   });
 
   it("retourne null si entrée vide", () => {
