@@ -1,6 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
-  Calendar, Building2, Users, FileUp, FileDown, ClipboardCheck, Settings, LogOut, Clock, CalendarOff,
+  Calendar, Building2, Users, FileUp, FileDown, ClipboardCheck, LogOut, Clock, CalendarOff,
   Smartphone, UserCircle, LayoutDashboard, FileText, Trophy, Map, ArrowLeftRight, ClipboardList,
   Truck, FileQuestion, Palette,
 } from "lucide-react";
@@ -12,7 +12,7 @@ import {
 import { useAuth } from "@/lib/auth-context";
 import { usePreview } from "@/lib/preview-context";
 import { Button } from "@/components/ui/button";
-import { BrandLogo } from "./BrandLogo";
+
 import { ViewAsSwitcher } from "./ViewAsSwitcher";
 
 interface NavItem {

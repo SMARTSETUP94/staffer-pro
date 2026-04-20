@@ -591,9 +591,6 @@ function UtilisateursPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <p className="text-xs text-muted-foreground">
-        <Link to="/parametres" className="underline">← Retour aux paramètres</Link>
-      </p>
     </div>
   );
 }
