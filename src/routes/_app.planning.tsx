@@ -294,6 +294,29 @@ function PlanningPage() {
                   onSelectAffaire={handleSelectAffaireFromSynthese}
                 />
               </TabsContent>
+
+              <TabsContent value="flotte" className="mt-4">
+                <FlotteGrid
+                  weekStart={weekStart}
+                  vehicules={vehicules}
+                  trajets={trajets}
+                  employesById={new Map(employes.map((e) => [e.id, { id: e.id, prenom: e.prenom, nom: e.nom }]))}
+                  affairesById={new Map(affaires.map((a) => [a.id, { id: a.id, numero: a.numero }]))}
+                  showWeekend={showWeekend}
+                  onAddTrajet={(vId, d) => {
+                    setEditTrajet(null);
+                    setDefaultTrajetVehId(vId);
+                    setDefaultTrajetDate(format(d, "yyyy-MM-dd"));
+                    setTrajetDlgOpen(true);
+                  }}
+                  onEditTrajet={(t) => {
+                    setEditTrajet(t);
+                    setDefaultTrajetVehId(null);
+                    setDefaultTrajetDate(undefined);
+                    setTrajetDlgOpen(true);
+                  }}
+                />
+              </TabsContent>
             </Tabs>
           </div>
         )}
@@ -321,6 +344,19 @@ function PlanningPage() {
           // Ouvre le dialog d'assignation sur le lundi de la semaine
           setAutoOpen({ employe: emp, date: weekStart });
         }}
+      />
+
+      <TrajetDialog
+        open={trajetDlgOpen}
+        onOpenChange={setTrajetDlgOpen}
+        trajet={editTrajet}
+        defaultDate={defaultTrajetDate}
+        defaultVehiculeId={defaultTrajetVehId}
+        affaires={affaires.map((a) => ({ id: a.id, numero: a.numero, nom: a.nom }))}
+        employesLivreurs={employes
+          .filter((e) => (e as Employe & { est_livreur?: boolean }).est_livreur)
+          .map((e) => ({ id: e.id, prenom: e.prenom, nom: e.nom, est_livreur: true, actif: true }))}
+        onSaved={() => void refreshTrajets()}
       />
     </div>
   );
