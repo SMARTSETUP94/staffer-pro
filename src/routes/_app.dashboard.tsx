@@ -243,6 +243,9 @@ function DashboardPage() {
         })),
       );
 
+      setPropositionsInterim(propIntRes.count ?? 0);
+      setSwapsAValider(swapsChefRes.count ?? 0);
+
       setAbsencesSemaine(
         (absRes.data ?? []).map((a: any) => ({
           id: a.id,
