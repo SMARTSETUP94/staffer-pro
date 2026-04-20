@@ -39,6 +39,7 @@ interface EmployeRow {
   metier_principal_id: number;
   actif: boolean;
   non_staffing: boolean;
+  est_livreur: boolean;
   date_naissance: string | null;
   adresse: string | null;
   notes: string | null;
@@ -122,7 +123,7 @@ function EmployesPage() {
     setLoading(true);
     const { data: emps, error } = await supabase
       .from("employes")
-      .select("id, prenom, nom, email, telephone, mobile, type_contrat, sous_type_contrat, is_apprenti, agence_interim, metier_principal_id, actif, non_staffing, date_naissance, adresse, notes")
+      .select("id, prenom, nom, email, telephone, mobile, type_contrat, sous_type_contrat, is_apprenti, agence_interim, metier_principal_id, actif, non_staffing, est_livreur, date_naissance, adresse, notes")
       .order("nom", { ascending: true })
       .limit(2000);
     if (error) {
@@ -168,6 +169,7 @@ function EmployesPage() {
       telephone: r.telephone, mobile: r.mobile, type_contrat: r.type_contrat,
       sous_type_contrat: r.sous_type_contrat, agence_interim: r.agence_interim,
       metier_principal_id: r.metier_principal_id, actif: r.actif, non_staffing: r.non_staffing,
+      est_livreur: r.est_livreur,
     })),
     [filtered],
   );

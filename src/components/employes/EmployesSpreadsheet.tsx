@@ -37,6 +37,7 @@ export interface SpreadsheetRow {
   metier_principal_id: number;
   actif: boolean;
   non_staffing: boolean;
+  est_livreur: boolean;
 }
 
 interface Props {
@@ -58,6 +59,7 @@ type DraftPatch = Partial<
     | "metier_principal_id"
     | "actif"
     | "non_staffing"
+    | "est_livreur"
   >
 >;
 
@@ -114,6 +116,7 @@ export function EmployesSpreadsheet({ rows, onSaved }: Props) {
               <TableHead className="min-w-[180px]">Métier principal</TableHead>
               <TableHead className="w-[80px] text-center">Actif</TableHead>
               <TableHead className="w-[100px] text-center">Hors staffing</TableHead>
+              <TableHead className="w-[80px] text-center">Livreur</TableHead>
               <TableHead className="w-[100px]"></TableHead>
             </TableRow>
           </TableHeader>
@@ -214,6 +217,12 @@ export function EmployesSpreadsheet({ rows, onSaved }: Props) {
                     <Switch
                       checked={v("non_staffing") as boolean}
                       onCheckedChange={(val) => setField(row.id, { non_staffing: val })}
+                    />
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <Switch
+                      checked={v("est_livreur") as boolean}
+                      onCheckedChange={(val) => setField(row.id, { est_livreur: val })}
                     />
                   </TableCell>
                   <TableCell>

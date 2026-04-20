@@ -2,6 +2,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import {
   Calendar, Building2, Users, FileUp, FileDown, ClipboardCheck, Settings, LogOut, Clock, CalendarOff,
   Smartphone, UserCircle, LayoutDashboard, FileText, Trophy, Map, ArrowLeftRight, ClipboardList,
+  Truck, FileQuestion,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -33,9 +34,11 @@ const items: NavItem[] = [
   { title: "Employés", url: "/employes", icon: Users, show: (r) => r === "admin" || r === "chef_chantier" },
   { title: "Absences", url: "/absences", icon: CalendarOff, show: (r) => r === "admin" || r === "chef_chantier" },
   { title: "Intérimaires", url: "/interimaires", icon: Trophy, show: (r) => r === "admin" || r === "chef_chantier" },
+  { title: "Flotte", url: "/flotte", icon: Truck, show: (r) => r === "admin" || r === "chef_chantier" },
   { title: "Import employés", url: "/employes/import", icon: FileUp, show: (r) => r === "admin" || r === "chef_chantier" },
   { title: "Import devis", url: "/devis/import", icon: FileUp, show: (r) => r === "admin" || r === "chef_chantier" },
   { title: "Export planning", url: "/export", icon: FileDown, show: (r) => r === "admin" || r === "chef_chantier" },
+  { title: "Demandes de devis", url: "/export/demandes-devis", icon: FileQuestion, show: (r) => r === "admin" || r === "chef_chantier" },
   { title: "Validation heures", url: "/validation-heures", icon: ClipboardCheck, show: (r) => r === "admin" || r === "chef_chantier" },
   { title: "Paramètres", url: "/parametres", icon: Settings, show: (r) => r === "admin" },
   { title: "Roadmap", url: "/roadmap", icon: Map, show: (r) => r === "admin" },
