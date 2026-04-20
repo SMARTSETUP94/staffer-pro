@@ -136,6 +136,38 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
+        {visibleSettings.length > 0 && (
+          <SidebarGroup>
+            {!collapsed && (
+              <SidebarGroupLabel className="overline !text-sidebar-foreground/60">
+                — Paramètres
+              </SidebarGroupLabel>
+            )}
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {visibleSettings.map((item) => {
+                  const active = isActive(item.url);
+                  return (
+                    <SidebarMenuItem key={item.url}>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={active}
+                        tooltip={item.title}
+                        className="rounded-xl data-[active=true]:bg-primary data-[active=true]:text-primary-foreground"
+                      >
+                        <Link to={item.url}>
+                          <item.icon className="h-4 w-4 shrink-0" />
+                          <span className="truncate text-sm font-medium">{item.title}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
+
         {showMobilePreview && (
           <SidebarGroup>
             {!collapsed && (
