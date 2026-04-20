@@ -36,7 +36,7 @@ function PlanningPage() {
   const [showWeekend, setShowWeekend] = useState(false);
   const [searchEmploye, setSearchEmploye] = useState("");
 
-  const { metiers, employes, affaires, assignations, consommation, absences, chefsById, loading, error, refresh } =
+  const { metiers, employes, affaires, assignations, consommation, absences, chefsById, swapAssignationIds, loading, error, refresh } =
     usePlanningData(weekStart, weekEnd);
 
   // Filtre recherche employé (prénom + nom, insensible casse/accent)
@@ -237,6 +237,7 @@ function PlanningPage() {
                   showWeekend={showWeekend}
                   emptyMessage="Aucun employé CDI/CDD actif."
                   onChanged={refresh}
+                  swapAssignationIds={swapAssignationIds}
                 />
               </TabsContent>
 
@@ -264,6 +265,7 @@ function PlanningPage() {
                   showWeekend={showWeekend}
                   emptyMessage="Aucun employé intérimaire / indépendant staffé cette semaine. Clique sur « Ajouter un intérimaire »."
                   onChanged={refresh}
+                  swapAssignationIds={swapAssignationIds}
                   openAssignationFor={autoOpen}
                   onAutoOpenConsumed={() => setAutoOpen(null)}
                 />
