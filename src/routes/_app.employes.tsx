@@ -6,6 +6,7 @@ import { useMetiers } from "@/hooks/use-metiers";
 import { useAuth } from "@/lib/auth-context";
 import { PageHeader } from "@/components/PageHeader";
 import { MetierBadge } from "@/components/MetierBadge";
+import { MultiFilter } from "@/components/planning/MultiFilter";
 import { EmployesSpreadsheet, type SpreadsheetRow } from "@/components/employes/EmployesSpreadsheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -98,6 +99,8 @@ function EmployesPage() {
   const [search, setSearch] = useState("");
   const [filterContrat, setFilterContrat] = useState<"all" | ContratType | "Apprenti">("all");
   const [filterActif, setFilterActif] = useState<"actifs" | "inactifs" | "tous">("actifs");
+  const [filterMetierPrincipal, setFilterMetierPrincipal] = useState<Set<string | number>>(new Set());
+  const [filterMetierSecondaire, setFilterMetierSecondaire] = useState<Set<string | number>>(new Set());
   const [viewMode, setViewMode] = useState<"liste" | "tableur">("liste");
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<FormState>(emptyForm);
@@ -157,11 +160,18 @@ function EmployesPage() {
       } else if (filterContrat !== "all" && r.type_contrat !== filterContrat) return false;
       if (filterActif === "actifs" && !r.actif) return false;
       if (filterActif === "inactifs" && r.actif) return false;
+      // Métier principal : OR cumulatif (au moins l'un des sélectionnés)
+      if (filterMetierPrincipal.size > 0 && !filterMetierPrincipal.has(r.metier_principal_id)) return false;
+      // Compétences secondaires : OR cumulatif sur la liste des secondaires (hors principal)
+      if (filterMetierSecondaire.size > 0) {
+        const sec = r.secondaires.filter((id) => id !== r.metier_principal_id);
+        if (!sec.some((id) => filterMetierSecondaire.has(id))) return false;
+      }
       if (!q) return true;
       const hay = `${r.prenom} ${r.nom} ${r.email ?? ""} ${r.agence_interim ?? ""}`.toLowerCase();
       return hay.includes(q);
     });
-  }, [rows, search, filterContrat, filterActif]);
+  }, [rows, search, filterContrat, filterActif, filterMetierPrincipal, filterMetierSecondaire]);
 
   const spreadsheetRows: SpreadsheetRow[] = useMemo(
     () => filtered.map((r) => ({
@@ -299,6 +309,18 @@ function EmployesPage() {
               <TabsTrigger value="tous" className="rounded-lg">Tous</TabsTrigger>
             </TabsList>
           </Tabs>
+          <MultiFilter
+            label="Métier principal"
+            options={metiers.map((m) => ({ id: m.id, label: m.libelle, color: m.couleur }))}
+            selected={filterMetierPrincipal}
+            onChange={setFilterMetierPrincipal}
+          />
+          <MultiFilter
+            label="Compétences"
+            options={metiers.map((m) => ({ id: m.id, label: m.libelle, color: m.couleur }))}
+            selected={filterMetierSecondaire}
+            onChange={setFilterMetierSecondaire}
+          />
         </div>
       </div>
 
