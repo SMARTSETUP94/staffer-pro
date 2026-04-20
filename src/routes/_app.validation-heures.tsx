@@ -2,7 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { addDays, format, startOfWeek } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Check, ClipboardCheck, Download, Filter, Loader2, X } from "lucide-react";
+import { ArrowLeftRight, Check, ClipboardCheck, Download, Filter, Loader2, X } from "lucide-react";
+import { useMesSwaps } from "@/hooks/use-mes-swaps";
+import { SwapsList } from "@/components/swaps/SwapsList";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -26,7 +28,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { WeekPicker } from "@/components/planning/WeekPicker";
 import { cn } from "@/lib/utils";
 import { exportHeuresXlsx } from "@/lib/heures-export";
@@ -206,19 +208,32 @@ function ValidationHeuresPage() {
         <div className="flex items-center gap-3">
           <ClipboardCheck className="h-6 w-6 text-primary" />
           <div>
-            <h1 className="text-2xl font-bold">Validation des heures</h1>
+            <h1 className="text-2xl font-bold">Validation</h1>
             <p className="text-sm text-muted-foreground">
-              Validez ou rejetez les saisies soumises par les employés.
+              Validez les heures saisies et arbitrez les demandes d'échange.
             </p>
           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <WeekPicker weekStart={weekStart} onChange={setWeekStart} />
-          <Button variant="outline" onClick={handleExport} disabled={exporting} className="gap-2">
-            {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-            Exporter validées
-          </Button>
-        </div>
+      </div>
+
+      <Tabs defaultValue="heures" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="heures" className="gap-1.5">
+            <ClipboardCheck className="h-3.5 w-3.5" /> Heures à valider
+          </TabsTrigger>
+          <TabsTrigger value="swaps" className="gap-1.5">
+            <ArrowLeftRight className="h-3.5 w-3.5" /> Swaps à valider
+            <SwapsBadgeCount />
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="heures" className="space-y-4">
+      <div className="flex flex-wrap items-center justify-end gap-2">
+        <WeekPicker weekStart={weekStart} onChange={setWeekStart} />
+        <Button variant="outline" onClick={handleExport} disabled={exporting} className="gap-2">
+          {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+          Exporter validées
+        </Button>
       </div>
 
       {/* Filtres */}
@@ -336,6 +351,12 @@ function ValidationHeuresPage() {
           })}
         </div>
       )}
+        </TabsContent>
+
+        <TabsContent value="swaps">
+          <SwapsValidationTab />
+        </TabsContent>
+      </Tabs>
 
       {/* Dialog rejet */}
       <Dialog open={rejectDialog.open} onOpenChange={(o) => setRejectDialog((d) => ({ ...d, open: o }))}>
@@ -367,6 +388,36 @@ function ValidationHeuresPage() {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+function SwapsBadgeCount() {
+  const { rows } = useMesSwaps({ chefView: true });
+  if (rows.length === 0) return null;
+  return (
+    <Badge variant="destructive" className="ml-1 h-4 min-w-4 px-1 text-[10px]">
+      {rows.length}
+    </Badge>
+  );
+}
+
+function SwapsValidationTab() {
+  const { rows, loading, refresh } = useMesSwaps({ chefView: true });
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-16 text-muted-foreground">
+        <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Chargement…
+      </div>
+    );
+  }
+  return (
+    <SwapsList
+      rows={rows}
+      currentEmployeId={null}
+      chefMode
+      onChanged={refresh}
+      emptyMessage="Aucun swap en attente de validation."
+    />
   );
 }
 

@@ -49,6 +49,7 @@ interface Props {
   emptyMessage: string;
   onChanged?: () => void;
   readonly?: boolean;
+  swapAssignationIds?: Set<string>;
   /** Ouvre automatiquement le dialog d'assignation pour cet employé sur la date donnée
    *  (utilisé par le bouton "Ajouter un intérimaire" du parent). Le parent doit
    *  remettre la valeur à null après consommation pour pouvoir re-déclencher. */
@@ -79,6 +80,7 @@ export function PlanningGrid({
   emptyMessage,
   onChanged,
   readonly,
+  swapAssignationIds,
   openAssignationFor,
   onAutoOpenConsumed,
 }: Props) {
@@ -518,6 +520,7 @@ export function PlanningGrid({
                             metiersById={metiersById}
                             affairesById={affairesById}
                             dnd={readonly ? undefined : { employeId: emp.id, date: dayStr }}
+                            swapAssignationIds={swapAssignationIds}
                           />
                         </DroppableCell>
                       );
