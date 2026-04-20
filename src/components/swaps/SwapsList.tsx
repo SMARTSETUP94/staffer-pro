@@ -57,7 +57,18 @@ export function SwapsList({
     );
   }
 
-  const update = async (id: string, patch: Record<string, unknown>) => {
+  const update = async (id: string, patch: Parameters<typeof supabase["from"] extends never ? never : (typeof supabase)["from"]>) => {
+    return Promise.resolve(); // never used
+  };
+  const updateSwap = async (id: string, patch: Parameters<ReturnType<ReturnType<typeof supabase.from<"swap_requests">>["update"]>["eq"]> extends never ? never : Parameters<typeof supabase.from<"swap_requests">>) => {
+    return Promise.resolve();
+  };
+  const doUpdate = async (id: string, patch: Partial<{
+    statut: SwapRequestRow["statut"];
+    collegue_decide_le: string | null;
+    collegue_motif: string | null;
+    chef_motif: string | null;
+  }>) => {
     setBusy(id);
     const { error } = await supabase.from("swap_requests").update(patch).eq("id", id);
     setBusy(null);
