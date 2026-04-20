@@ -16,7 +16,7 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AddressAutocomplete } from "./AddressAutocomplete";
 import {
-  useVehicules, useAdressesFavorites, type Trajet, type Vehicule,
+  useVehicules, useAdressesFavorites, type Trajet,
 } from "@/hooks/use-vehicules";
 import { getCompatibleChauffeurs } from "@/hooks/use-trajets";
 import type { Tables } from "@/integrations/supabase/types";
@@ -325,11 +325,12 @@ export function TrajetDialog({
             <Label>Adresse de départ *</Label>
             <AddressAutocomplete
               value={adresseDepart}
-              onChange={(v, fav) => {
+              onValueChange={(v, favId) => {
                 setAdresseDepart(v);
-                setAdresseDepartFavId(fav?.id ?? null);
+                setAdresseDepartFavId(favId ?? null);
               }}
               favorites={adresses}
+              favoriteId={adresseDepartFavId}
               placeholder="Ex : 12 rue de Paris, 75001 Paris"
             />
           </div>
@@ -338,11 +339,12 @@ export function TrajetDialog({
             <Label>Adresse d'arrivée *</Label>
             <AddressAutocomplete
               value={adresseArrivee}
-              onChange={(v, fav) => {
+              onValueChange={(v, favId) => {
                 setAdresseArrivee(v);
-                setAdresseArriveeFavId(fav?.id ?? null);
+                setAdresseArriveeFavId(favId ?? null);
               }}
               favorites={adresses}
+              favoriteId={adresseArriveeFavId}
               placeholder="Ex : 50 av. des Champs-Élysées, 75008 Paris"
             />
           </div>
