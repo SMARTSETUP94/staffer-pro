@@ -101,6 +101,22 @@ function EmployesPage() {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<FormState>(emptyForm);
   const [saving, setSaving] = useState(false);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
+
+  const toggleActif = async (row: EmployeRow) => {
+    if (!isAdminOrChef) return;
+    setTogglingId(row.id);
+    const next = !row.actif;
+    setRows((rs) => rs.map((r) => (r.id === row.id ? { ...r, actif: next } : r)));
+    const { error } = await supabase.from("employes").update({ actif: next }).eq("id", row.id);
+    setTogglingId(null);
+    if (error) {
+      setRows((rs) => rs.map((r) => (r.id === row.id ? { ...r, actif: !next } : r)));
+      toast.error("Modification impossible", { description: error.message });
+      return;
+    }
+    toast.success(next ? `${row.prenom} ${row.nom} → Actif` : `${row.prenom} ${row.nom} → Inactif`);
+  };
 
   const fetchAll = async () => {
     setLoading(true);
@@ -350,9 +366,31 @@ function EmployesPage() {
                       <div className="text-xs text-muted-foreground">{r.telephone ?? "—"}</div>
                     </TableCell>
                     <TableCell>
-                      {r.actif
-                        ? <span className="text-xs font-semibold text-success">Actif</span>
-                        : <span className="text-xs font-semibold text-muted-foreground">Inactif</span>}
+                      {isAdminOrChef ? (
+                        <button
+                          type="button"
+                          onClick={() => toggleActif(r)}
+                          disabled={togglingId === r.id}
+                          title={r.actif ? "Cliquer pour archiver" : "Cliquer pour réactiver"}
+                          className={
+                            "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold transition-colors disabled:opacity-50 " +
+                            (r.actif
+                              ? "bg-success/15 text-success hover:bg-success/25"
+                              : "bg-muted text-muted-foreground hover:bg-muted/70")
+                          }
+                        >
+                          {togglingId === r.id ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <span className={"h-1.5 w-1.5 rounded-full " + (r.actif ? "bg-success" : "bg-muted-foreground")} />
+                          )}
+                          {r.actif ? "Actif" : "Inactif"}
+                        </button>
+                      ) : (
+                        r.actif
+                          ? <span className="text-xs font-semibold text-success">Actif</span>
+                          : <span className="text-xs font-semibold text-muted-foreground">Inactif</span>
+                      )}
                     </TableCell>
                     <TableCell>
                       {isAdminOrChef && (
