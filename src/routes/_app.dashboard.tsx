@@ -24,6 +24,7 @@ import { useNotifications } from "@/hooks/use-notifications";
 import { ABSENCE_ICON, ABSENCE_LABEL } from "@/lib/absence-helpers";
 import { ChargeEquipeBloc } from "@/components/dashboard/ChargeEquipeBloc";
 import { MeteoChantiersBloc } from "@/components/dashboard/MeteoChantiersBloc";
+import { FlotteKpisBloc } from "@/components/dashboard/FlotteKpisBloc";
 
 export const Route = createFileRoute("/_app/dashboard")({
   component: DashboardPage,
@@ -346,6 +347,7 @@ function DashboardPage() {
 
       <div className="grid gap-4 lg:grid-cols-2">
         <ChargeEquipeBloc weekStart={weekStartStr} weekEnd={weekEndStr} />
+        <FlotteKpisBloc />
         {/* Bloc montages & démontages J+7 */}
         <Card>
           <CardHeader className="flex-row items-center justify-between space-y-0">
