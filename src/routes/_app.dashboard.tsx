@@ -400,9 +400,10 @@ function DashboardPage() {
             ) : (
               <ul className="space-y-3">
                 {depassements.map((d) => {
-                  const tone = d.pct >= 100 ? "destructive" : d.pct >= 90 ? "default" : "secondary";
+                  const pctMax = Math.max(d.pct, d.pct_valide);
+                  const tone = pctMax >= 100 ? "destructive" : pctMax >= 90 ? "default" : "secondary";
                   const barColor =
-                    d.pct >= 100 ? "bg-destructive" : d.pct >= 90 ? "bg-primary" : "bg-warning";
+                    pctMax >= 100 ? "bg-destructive" : pctMax >= 90 ? "bg-primary" : "bg-warning";
                   return (
                     <li key={d.affaire_id} className="space-y-1.5">
                       <div className="flex items-center justify-between gap-2">
@@ -417,19 +418,19 @@ function DashboardPage() {
                           <span>{d.nom}</span>
                         </Link>
                         <Badge variant={tone} className="shrink-0 text-xs tabular-nums">
-                          {d.pct}%
+                          {pctMax}%
                         </Badge>
                       </div>
                       <div className="flex items-center gap-2">
                         <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
                           <div
                             className={`h-full ${barColor}`}
-                            style={{ width: `${Math.min(100, d.pct)}%` }}
+                            style={{ width: `${Math.min(100, pctMax)}%` }}
                             aria-hidden
                           />
                         </div>
                         <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground">
-                          {d.total_assignees}/{d.total_prevues}h
+                          Staffé {d.total_assignees}h · Validé {d.total_validees}h / {d.total_prevues}h
                         </span>
                       </div>
                     </li>
