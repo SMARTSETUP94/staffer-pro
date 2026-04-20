@@ -72,11 +72,17 @@ function cellAssign(
   affaireNum: string,
   metier: Metier,
   demi: "AM" | "PM" | "JOURNEE",
+  statutConfirmation?: "non_requise" | "en_attente" | "confirmee" | "refusee",
 ): Cell {
-  const label = demi === "JOURNEE" ? affaireNum : `${affaireNum} (${demi})`;
+  const baseLabel = demi === "JOURNEE" ? affaireNum : `${affaireNum} (${demi})`;
+  const suffix =
+    statutConfirmation === "en_attente" ? " ⏳"
+    : statutConfirmation === "confirmee" ? " ✓"
+    : statutConfirmation === "refusee" ? " ✕"
+    : "";
   return {
     t: "s",
-    v: label,
+    v: baseLabel + suffix,
     s: {
       font: { bold: true, sz: 9, color: { rgb: "111827" } },
       fill: { fgColor: { rgb: hexFromCss(metier.couleur) } },
