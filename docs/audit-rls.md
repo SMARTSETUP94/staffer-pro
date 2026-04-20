@@ -66,7 +66,7 @@
 |---|---|---|
 | 1 | `notifications` n'a **pas de policy INSERT** → l'insert ne passe que via `create_notification` (SECURITY DEFINER). ✅ Sécurisé. | RAS |
 | 2 | `heures_saisies_historique` : pas de policy INSERT/UPDATE/DELETE → seul le trigger `log_heures_saisies_transition` (SECURITY DEFINER) écrit. ✅ Sécurisé. | RAS |
-| 3 | Policy `heures_saisies_self_update` permet UPDATE sur statut `soumis` → un employé pourrait modifier ses heures déjà soumises. | **Restreindre à `brouillon` uniquement**, ou exclure les colonnes non-cosmétiques |
+| 3 | ~~Policy `heures_saisies_self_update` permet UPDATE sur statut `soumis`.~~ **✅ CORRIGÉ (2026-04-20)** : policy restreinte à `brouillon`, et acquittement de rejet via RPC `acknowledge_heures_rejet` (SECURITY DEFINER). | RAS |
 | 4 | Policy `assignations_self_confirm` couvre `[en_attente, confirmee, refusee]` → un employé peut re-passer `confirmee → refusee` ou inverse indéfiniment. | Acceptable si workflow voulu, sinon ajouter contrainte `OLD.statut_confirmation = 'en_attente'` |
 | 5 | `affaire_commentaires` : aucun accès employé → un employé connecté ne peut pas lire les commentaires de SON chantier. | Si pas voulu, ajouter policy `SELECT` filtrant par `affaire_id IN (assignations self)` |
 | 6 | 345 intérimaires sans `profile_id` → ne reçoivent aucune notif et n'ont pas accès à `/mes-propositions`. | Documenter : pour qu'un intérimaire confirme, il faut lui créer un compte (`inviteUser` dans admin-actions.ts) |
