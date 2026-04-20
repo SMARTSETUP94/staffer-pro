@@ -1,16 +1,20 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Loader2, Search, ArrowRight, Trash2, FileText, ExternalLink, Plus } from "lucide-react";
+import { Loader2, Search, ArrowRight, Trash2, FileText, ExternalLink, Plus, Pencil } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { PageHeader } from "@/components/PageHeader";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+import {
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -46,6 +50,8 @@ function DevisPage() {
   const [statutFilter, setStatutFilter] = useState<DevisStatut | "all">("all");
   const [affaireFilter, setAffaireFilter] = useState<string>("all");
   const [toDelete, setToDelete] = useState<DevisRow | null>(null);
+  const [editForm, setEditForm] = useState<Partial<DevisRow> | null>(null);
+  const [savingEdit, setSavingEdit] = useState(false);
 
   const fetchAll = async () => {
     setLoading(true);
@@ -123,6 +129,24 @@ function DevisPage() {
     if (error) toast.error("Suppression impossible", { description: error.message });
     else toast.success(`Devis ${toDelete.numero} supprimé. ${toDelete.nb_assignations} assignation(s) détachée(s).`);
     setToDelete(null);
+    fetchAll();
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editForm?.id) return;
+    if (!editForm.numero?.toString().trim()) { toast.error("Numéro requis"); return; }
+    setSavingEdit(true);
+    const { error } = await supabase.from("devis").update({
+      numero: editForm.numero.toString().trim(),
+      libelle: editForm.libelle?.toString().trim() || null,
+      montant_ht: editForm.montant_ht ?? null,
+      date_signature: editForm.date_signature || null,
+      statut: editForm.statut as DevisStatut,
+    }).eq("id", editForm.id);
+    setSavingEdit(false);
+    if (error) { toast.error("Mise à jour impossible", { description: error.message }); return; }
+    toast.success("Devis mis à jour");
+    setEditForm(null);
     fetchAll();
   };
 
@@ -233,8 +257,14 @@ function DevisPage() {
                   <TableCell className="text-right font-mono text-sm text-muted-foreground">{r.nb_assignations}</TableCell>
                   <TableCell>
                     <div className="flex justify-end gap-1">
+                      {isAdminOrChef && (
+                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg" title="Modifier le devis"
+                          onClick={() => setEditForm(r)}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                      )}
                       {r.affaire && (
-                        <Button asChild variant="ghost" size="icon" className="h-8 w-8 rounded-lg" title="Éditer dans l'affaire">
+                        <Button asChild variant="ghost" size="icon" className="h-8 w-8 rounded-lg" title="Ouvrir dans l'affaire (lignes)">
                           <Link to="/affaires/$affaireId/devis" params={{ affaireId: r.affaire.id }}>
                             <ExternalLink className="h-4 w-4" />
                           </Link>
@@ -254,6 +284,60 @@ function DevisPage() {
           </Table>
         )}
       </div>
+
+      {/* Édition rapide */}
+      <Dialog open={!!editForm} onOpenChange={(o) => !o && setEditForm(null)}>
+        <DialogContent className="max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Modifier le devis {editForm?.numero}</DialogTitle>
+            <DialogDescription>
+              Modifie les méta-données du devis. Pour éditer les lignes (postes par métier), utilise le bouton « Ouvrir dans l'affaire ».
+            </DialogDescription>
+          </DialogHeader>
+          {editForm && (
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label>Numéro</Label>
+                <Input value={editForm.numero ?? ""} onChange={(e) => setEditForm({ ...editForm, numero: e.target.value })} className="h-10 rounded-xl" />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Statut</Label>
+                <Select value={(editForm.statut as DevisStatut) ?? "signe"} onValueChange={(v) => setEditForm({ ...editForm, statut: v as DevisStatut })}>
+                  <SelectTrigger className="h-10 rounded-xl"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="brouillon">Brouillon</SelectItem>
+                    <SelectItem value="signe">Signé</SelectItem>
+                    <SelectItem value="facture">Facturé</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5 sm:col-span-2">
+                <Label>Libellé</Label>
+                <Input value={editForm.libelle ?? ""} onChange={(e) => setEditForm({ ...editForm, libelle: e.target.value })} className="h-10 rounded-xl" />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Montant HT (€)</Label>
+                <Input type="number" step="0.01" value={editForm.montant_ht ?? ""}
+                  onChange={(e) => setEditForm({ ...editForm, montant_ht: e.target.value === "" ? null : Number(e.target.value) })}
+                  className="h-10 rounded-xl" />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Date de signature</Label>
+                <Input type="date" value={editForm.date_signature ?? ""}
+                  onChange={(e) => setEditForm({ ...editForm, date_signature: e.target.value || null })}
+                  className="h-10 rounded-xl" />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setEditForm(null)} className="rounded-xl">Annuler</Button>
+            <Button onClick={handleSaveEdit} disabled={savingEdit} className="rounded-xl bg-primary text-primary-foreground hover:bg-primary/90">
+              {savingEdit && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Enregistrer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Confirmation suppression */}
       <AlertDialog open={!!toDelete} onOpenChange={(o) => !o && setToDelete(null)}>

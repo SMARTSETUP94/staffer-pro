@@ -239,8 +239,18 @@ function AffairesPage() {
                 const isClotured = r.statut === "termine";
                 return (
                 <TableRow key={r.id} className={isClotured ? "opacity-60" : undefined}>
-                  <TableCell className="font-mono text-xs font-semibold text-primary">{r.numero}</TableCell>
-                  <TableCell className="font-semibold text-foreground">{r.nom}</TableCell>
+                  <TableCell className="p-0">
+                    <Link to="/affaires/$affaireId" params={{ affaireId: r.id }}
+                      className="block px-4 py-3 font-mono text-xs font-semibold text-primary hover:underline">
+                      {r.numero}
+                    </Link>
+                  </TableCell>
+                  <TableCell className="p-0">
+                    <Link to="/affaires/$affaireId" params={{ affaireId: r.id }}
+                      className="block px-4 py-3 font-semibold text-foreground hover:text-primary hover:underline">
+                      {r.nom}
+                    </Link>
+                  </TableCell>
                   <TableCell className="text-sm">{r.client ?? "—"}</TableCell>
                   <TableCell className="text-sm">{r.lieu ?? "—"}</TableCell>
                   <TableCell className="text-xs text-muted-foreground">
