@@ -47,7 +47,6 @@ const items: NavItem[] = [
 const settingsItems: NavItem[] = [
   { title: "Utilisateurs", url: "/parametres/utilisateurs", icon: UserCircle, show: (r) => r === "admin" },
   { title: "Métiers", url: "/parametres/metiers", icon: Palette, show: (r) => r === "admin" },
-  { title: "Réglages app", url: "/parametres", icon: Settings, show: (r) => r === "admin" },
 ];
 
 export function AppSidebar() {
