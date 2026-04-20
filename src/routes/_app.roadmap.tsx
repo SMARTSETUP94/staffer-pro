@@ -310,9 +310,15 @@ const RELEASES: RoadmapRelease[] = [
 const PLANNED: RoadmapPlanned[] = [
   {
     priority: "haute",
-    title: "Refonte /devis/import en formulaire de validation",
+    title: "Export PDF planning en jsPDF natif (sans rasterisation PNG)",
     description:
-      "Formulaire 2 sections (affaire/devis + heures par poste) pré-rempli, validation manuelle chef chantier, transaction atomique avec dates montage/démontage.",
+      "Remplacer html-to-image + découpe d'image par un rendu jsPDF natif (autoTable, texte vectoriel, polices Roboto/DejaVu UTF-8). Bénéfices : poids fichier réduit, texte sélectionnable, qualité d'impression nette, accessibilité.",
+  },
+  {
+    priority: "haute",
+    title: "Filtre MultiFilter Métier sur /interimaires",
+    description:
+      "Ajouter un MultiFilter multi-select Métier principal sur la page de classement intérimaires, combiné en AND avec la recherche existante. Permet de comparer le top staffing par corps de métier.",
   },
   {
     priority: "moyenne",
