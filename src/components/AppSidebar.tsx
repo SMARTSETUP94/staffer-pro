@@ -1,7 +1,7 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
   Calendar, Building2, Users, FileUp, FileDown, ClipboardCheck, Settings, LogOut, Clock, CalendarOff,
-  Smartphone, UserCircle, LayoutDashboard, FileText, Trophy,
+  Smartphone, UserCircle, LayoutDashboard, FileText, Trophy, Map,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -36,6 +36,7 @@ const items: NavItem[] = [
   { title: "Export planning", url: "/export", icon: FileDown, show: (r) => r === "admin" || r === "chef_chantier" },
   { title: "Validation heures", url: "/validation-heures", icon: ClipboardCheck, show: (r) => r === "admin" || r === "chef_chantier" },
   { title: "Paramètres", url: "/parametres", icon: Settings, show: (r) => r === "admin" },
+  { title: "Roadmap", url: "/roadmap", icon: Map, show: (r) => r === "admin" },
 ];
 
 export function AppSidebar() {
