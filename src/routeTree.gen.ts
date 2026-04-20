@@ -21,7 +21,6 @@ import { Route as MobileAujourdhuiRouteImport } from './routes/mobile.aujourdhui
 import { Route as AppValidationHeuresRouteImport } from './routes/_app.validation-heures'
 import { Route as AppRoadmapRouteImport } from './routes/_app.roadmap'
 import { Route as AppPlanningRouteImport } from './routes/_app.planning'
-import { Route as AppParametresRouteImport } from './routes/_app.parametres'
 import { Route as AppMesSwapsRouteImport } from './routes/_app.mes-swaps'
 import { Route as AppMesPropositionsRouteImport } from './routes/_app.mes-propositions'
 import { Route as AppMesHeuresRouteImport } from './routes/_app.mes-heures'
@@ -104,11 +103,6 @@ const AppPlanningRoute = AppPlanningRouteImport.update({
   path: '/planning',
   getParentRoute: () => AppRoute,
 } as any)
-const AppParametresRoute = AppParametresRouteImport.update({
-  id: '/parametres',
-  path: '/parametres',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppMesSwapsRoute = AppMesSwapsRouteImport.update({
   id: '/mes-swaps',
   path: '/mes-swaps',
@@ -171,14 +165,14 @@ const AppAffairesIndexRoute = AppAffairesIndexRouteImport.update({
 } as any)
 const AppParametresUtilisateursRoute =
   AppParametresUtilisateursRouteImport.update({
-    id: '/utilisateurs',
-    path: '/utilisateurs',
-    getParentRoute: () => AppParametresRoute,
+    id: '/parametres/utilisateurs',
+    path: '/parametres/utilisateurs',
+    getParentRoute: () => AppRoute,
   } as any)
 const AppParametresMetiersRoute = AppParametresMetiersRouteImport.update({
-  id: '/metiers',
-  path: '/metiers',
-  getParentRoute: () => AppParametresRoute,
+  id: '/parametres/metiers',
+  path: '/parametres/metiers',
+  getParentRoute: () => AppRoute,
 } as any)
 const AppExportDemandesDevisRoute = AppExportDemandesDevisRouteImport.update({
   id: '/demandes-devis',
@@ -238,7 +232,6 @@ export interface FileRoutesByFullPath {
   '/mes-heures': typeof AppMesHeuresRoute
   '/mes-propositions': typeof AppMesPropositionsRoute
   '/mes-swaps': typeof AppMesSwapsRoute
-  '/parametres': typeof AppParametresRouteWithChildren
   '/planning': typeof AppPlanningRoute
   '/roadmap': typeof AppRoadmapRoute
   '/validation-heures': typeof AppValidationHeuresRoute
@@ -274,7 +267,6 @@ export interface FileRoutesByTo {
   '/mes-heures': typeof AppMesHeuresRoute
   '/mes-propositions': typeof AppMesPropositionsRoute
   '/mes-swaps': typeof AppMesSwapsRoute
-  '/parametres': typeof AppParametresRouteWithChildren
   '/planning': typeof AppPlanningRoute
   '/roadmap': typeof AppRoadmapRoute
   '/validation-heures': typeof AppValidationHeuresRoute
@@ -311,7 +303,6 @@ export interface FileRoutesById {
   '/_app/mes-heures': typeof AppMesHeuresRoute
   '/_app/mes-propositions': typeof AppMesPropositionsRoute
   '/_app/mes-swaps': typeof AppMesSwapsRoute
-  '/_app/parametres': typeof AppParametresRouteWithChildren
   '/_app/planning': typeof AppPlanningRoute
   '/_app/roadmap': typeof AppRoadmapRoute
   '/_app/validation-heures': typeof AppValidationHeuresRoute
@@ -349,7 +340,6 @@ export interface FileRouteTypes {
     | '/mes-heures'
     | '/mes-propositions'
     | '/mes-swaps'
-    | '/parametres'
     | '/planning'
     | '/roadmap'
     | '/validation-heures'
@@ -385,7 +375,6 @@ export interface FileRouteTypes {
     | '/mes-heures'
     | '/mes-propositions'
     | '/mes-swaps'
-    | '/parametres'
     | '/planning'
     | '/roadmap'
     | '/validation-heures'
@@ -421,7 +410,6 @@ export interface FileRouteTypes {
     | '/_app/mes-heures'
     | '/_app/mes-propositions'
     | '/_app/mes-swaps'
-    | '/_app/parametres'
     | '/_app/planning'
     | '/_app/roadmap'
     | '/_app/validation-heures'
@@ -543,13 +531,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPlanningRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/parametres': {
-      id: '/_app/parametres'
-      path: '/parametres'
-      fullPath: '/parametres'
-      preLoaderRoute: typeof AppParametresRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/_app/mes-swaps': {
       id: '/_app/mes-swaps'
       path: '/mes-swaps'
@@ -636,17 +617,17 @@ declare module '@tanstack/react-router' {
     }
     '/_app/parametres/utilisateurs': {
       id: '/_app/parametres/utilisateurs'
-      path: '/utilisateurs'
+      path: '/parametres/utilisateurs'
       fullPath: '/parametres/utilisateurs'
       preLoaderRoute: typeof AppParametresUtilisateursRouteImport
-      parentRoute: typeof AppParametresRoute
+      parentRoute: typeof AppRoute
     }
     '/_app/parametres/metiers': {
       id: '/_app/parametres/metiers'
-      path: '/metiers'
+      path: '/parametres/metiers'
       fullPath: '/parametres/metiers'
       preLoaderRoute: typeof AppParametresMetiersRouteImport
-      parentRoute: typeof AppParametresRoute
+      parentRoute: typeof AppRoute
     }
     '/_app/export/demandes-devis': {
       id: '/_app/export/demandes-devis'
@@ -731,20 +712,6 @@ const AppExportRouteWithChildren = AppExportRoute._addFileChildren(
   AppExportRouteChildren,
 )
 
-interface AppParametresRouteChildren {
-  AppParametresMetiersRoute: typeof AppParametresMetiersRoute
-  AppParametresUtilisateursRoute: typeof AppParametresUtilisateursRoute
-}
-
-const AppParametresRouteChildren: AppParametresRouteChildren = {
-  AppParametresMetiersRoute: AppParametresMetiersRoute,
-  AppParametresUtilisateursRoute: AppParametresUtilisateursRoute,
-}
-
-const AppParametresRouteWithChildren = AppParametresRoute._addFileChildren(
-  AppParametresRouteChildren,
-)
-
 interface AppAffairesAffaireIdRouteChildren {
   AppAffairesAffaireIdDevisRoute: typeof AppAffairesAffaireIdDevisRoute
   AppAffairesAffaireIdJournalRoute: typeof AppAffairesAffaireIdJournalRoute
@@ -773,12 +740,13 @@ interface AppRouteChildren {
   AppMesHeuresRoute: typeof AppMesHeuresRoute
   AppMesPropositionsRoute: typeof AppMesPropositionsRoute
   AppMesSwapsRoute: typeof AppMesSwapsRoute
-  AppParametresRoute: typeof AppParametresRouteWithChildren
   AppPlanningRoute: typeof AppPlanningRoute
   AppRoadmapRoute: typeof AppRoadmapRoute
   AppValidationHeuresRoute: typeof AppValidationHeuresRoute
   AppAffairesAffaireIdRoute: typeof AppAffairesAffaireIdRouteWithChildren
   AppDevisImportRoute: typeof AppDevisImportRoute
+  AppParametresMetiersRoute: typeof AppParametresMetiersRoute
+  AppParametresUtilisateursRoute: typeof AppParametresUtilisateursRoute
   AppAffairesIndexRoute: typeof AppAffairesIndexRoute
   AppDevisIndexRoute: typeof AppDevisIndexRoute
 }
@@ -794,12 +762,13 @@ const AppRouteChildren: AppRouteChildren = {
   AppMesHeuresRoute: AppMesHeuresRoute,
   AppMesPropositionsRoute: AppMesPropositionsRoute,
   AppMesSwapsRoute: AppMesSwapsRoute,
-  AppParametresRoute: AppParametresRouteWithChildren,
   AppPlanningRoute: AppPlanningRoute,
   AppRoadmapRoute: AppRoadmapRoute,
   AppValidationHeuresRoute: AppValidationHeuresRoute,
   AppAffairesAffaireIdRoute: AppAffairesAffaireIdRouteWithChildren,
   AppDevisImportRoute: AppDevisImportRoute,
+  AppParametresMetiersRoute: AppParametresMetiersRoute,
+  AppParametresUtilisateursRoute: AppParametresUtilisateursRoute,
   AppAffairesIndexRoute: AppAffairesIndexRoute,
   AppDevisIndexRoute: AppDevisIndexRoute,
 }
