@@ -21,6 +21,7 @@ interface Props {
 }
 
 type Slot = "AM" | "PM" | "JOURNEE";
+type ConfStatus = "non_requise" | "en_attente" | "confirmee" | "refusee" | "mixte";
 
 interface Group {
   key: string;
@@ -30,6 +31,8 @@ interface Group {
   heures: number;
   items: Assignation[];
   notes: string[];
+  confStatus: ConfStatus;
+  hasSwap: boolean;
 }
 
 export interface DragGroupPayload {
@@ -53,7 +56,7 @@ function getReadableTextColor(hex: string): string {
 }
 
 /** Cellule jour — regroupe les assignations par (affaire + métier), fusionne AM+PM en JOURNEE */
-export function AssignationCell({ assignations, metiersById, affairesById, compact, dnd }: Props) {
+export function AssignationCell({ assignations, metiersById, affairesById, compact, dnd, swapAssignationIds }: Props) {
   const groups = useMemo<Group[]>(() => {
     if (assignations.length === 0) return [];
     const byKey = new Map<string, Assignation[]>();
@@ -72,6 +75,20 @@ export function AssignationCell({ assignations, metiersById, affairesById, compa
       else slot = "PM";
       const heures = items.reduce((s, i) => s + Number(i.heures || 0), 0);
       const notes = items.map((i) => i.notes).filter((n): n is string => !!n);
+      // Agrégation statut confirmation
+      const statusSet = new Set(items.map((i) => i.statut_confirmation ?? "non_requise"));
+      let confStatus: ConfStatus = "non_requise";
+      if (statusSet.size === 1) confStatus = items[0].statut_confirmation ?? "non_requise";
+      else {
+        // Priorité visuelle : refusée > en_attente > confirmée > non_requise
+        if (statusSet.has("refusee")) confStatus = "refusee";
+        else if (statusSet.has("en_attente")) confStatus = "en_attente";
+        else if (statusSet.has("confirmee")) confStatus = "mixte";
+        else confStatus = "non_requise";
+      }
+      const hasSwap = swapAssignationIds
+        ? items.some((i) => swapAssignationIds.has(i.id))
+        : false;
       result.push({
         key,
         affaire_id: items[0].affaire_id,
@@ -80,12 +97,14 @@ export function AssignationCell({ assignations, metiersById, affairesById, compa
         heures,
         items,
         notes,
+        confStatus,
+        hasSwap,
       });
     });
     const order: Record<Slot, number> = { JOURNEE: 0, AM: 1, PM: 2 };
     result.sort((a, b) => order[a.slot] - order[b.slot]);
     return result;
-  }, [assignations]);
+  }, [assignations, swapAssignationIds]);
 
   if (groups.length === 0) {
     return (
