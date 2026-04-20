@@ -663,24 +663,6 @@ const STATUT_SOUSTRAITANCE_TAG: Record<TrajetRef["statut_soustraitance"], string
   devis_envoye: " [Devis env.]",
   confirme: " [S/T conf.]",
 };
-
-function cellTrajet(t: TrajetRef, chauffeurLabel: string): Cell {
-  const heure = t.heure_depart ? `${t.heure_depart.slice(0, 5)} ` : "";
-  const tag = STATUT_SOUSTRAITANCE_TAG[t.statut_soustraitance] ?? "";
-  const isSubTraite = t.statut_soustraitance !== "non";
-  const fillColor = isSubTraite ? "FEF3C7" : "DBEAFE";
-  return {
-    t: "s",
-    v: `${heure}${t.adresse_depart} → ${t.adresse_arrivee}\n${chauffeurLabel}${tag}`,
-    s: {
-      font: { sz: 9, color: { rgb: "111827" } },
-      fill: { fgColor: { rgb: fillColor } },
-      alignment: { horizontal: "left", vertical: "top", wrapText: true },
-      border: BORDER_ALL,
-    },
-  };
-}
-
 function buildFlotteSheet(opts: BuildOpts): XLSX.WorkSheet {
   const { weekStart, vehicules = [], trajets = [], employes } = opts;
   const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
