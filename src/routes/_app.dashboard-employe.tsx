@@ -11,6 +11,7 @@ import {
 import { fr } from "date-fns/locale";
 import { CalendarDays, ChevronLeft, ChevronRight, Inbox, Loader2, MapPin } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
+import { useResolvedEmploye } from "@/hooks/use-resolved-employe";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { PageHeader } from "@/components/PageHeader";
@@ -35,8 +36,8 @@ interface AssignationLite {
 
 function DashboardEmployePage() {
   const { user } = useAuth();
-  const [employeId, setEmployeId] = useState<string | null>(null);
-  const [employeNom, setEmployeNom] = useState<string>("");
+  const { employe, employeId, resolved: employeResolved } = useResolvedEmploye();
+  const employeNom = employe ? `${employe.prenom} ${employe.nom}` : "";
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
   const [assignations, setAssignations] = useState<AssignationLite[]>([]);
   const [loading, setLoading] = useState(true);
@@ -47,23 +48,10 @@ function DashboardEmployePage() {
     [weekStart],
   );
 
+  // Si la résolution employé est terminée mais aucun employé trouvé, on stoppe le loading.
   useEffect(() => {
-    if (!user) return;
-    supabase
-      .from("employes")
-      .select("id, prenom, nom")
-      .eq("profile_id", user.id)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data) {
-          setEmployeId(data.id);
-          setEmployeNom(`${data.prenom} ${data.nom}`);
-        } else {
-          setEmployeId(null);
-          setLoading(false);
-        }
-      });
-  }, [user]);
+    if (employeResolved && !employeId) setLoading(false);
+  }, [employeResolved, employeId]);
 
   useEffect(() => {
     if (!employeId) return;
