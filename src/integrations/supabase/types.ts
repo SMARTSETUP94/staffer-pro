@@ -792,6 +792,8 @@ export type Database = {
           numero: string | null
           total_heures_assignees: number | null
           total_heures_prevues: number | null
+          total_heures_reelles_soumises: number | null
+          total_heures_reelles_validees: number | null
         }
         Insert: {
           affaire_id?: string | null
@@ -799,6 +801,8 @@ export type Database = {
           numero?: string | null
           total_heures_assignees?: never
           total_heures_prevues?: never
+          total_heures_reelles_soumises?: never
+          total_heures_reelles_validees?: never
         }
         Update: {
           affaire_id?: string | null
@@ -806,6 +810,8 @@ export type Database = {
           numero?: string | null
           total_heures_assignees?: never
           total_heures_prevues?: never
+          total_heures_reelles_soumises?: never
+          total_heures_reelles_validees?: never
         }
         Relationships: []
       }
@@ -817,11 +823,15 @@ export type Database = {
           devis_numero: string | null
           heures_assignees: number | null
           heures_prevues: number | null
+          heures_reelles_soumises: number | null
+          heures_reelles_validees: number | null
           heures_restantes: number | null
+          heures_restantes_vs_validees: number | null
           metier: string | null
           metier_id: number | null
           ordre: number | null
           pct_consomme: number | null
+          pct_consomme_reel: number | null
         }
         Relationships: [
           {

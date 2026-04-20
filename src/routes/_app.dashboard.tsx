@@ -43,7 +43,9 @@ interface AffaireDepassement {
   nom: string;
   total_prevues: number;
   total_assignees: number;
+  total_validees: number;
   pct: number;
+  pct_valide: number;
 }
 
 interface AbsenceItem {
@@ -133,7 +135,11 @@ function DashboardPage() {
           .select("id, numero, nom, client, date_montage, date_demontage, lieu")
           .or(`and(date_montage.gte.${todayStr},date_montage.lte.${j7Str}),and(date_demontage.gte.${todayStr},date_demontage.lte.${j7Str})`)
           .limit(20),
-        supabase.from("v_affaire_consommation").select("affaire_id, numero, nom, total_heures_prevues, total_heures_assignees"),
+        supabase
+          .from("v_affaire_consommation")
+          .select(
+            "affaire_id, numero, nom, total_heures_prevues, total_heures_assignees, total_heures_reelles_validees",
+          ),
         supabase
           .from("heures_saisies")
           .select("id, date, employes:employe_id(prenom, nom), affaires:affaire_id(numero, nom)")
@@ -197,17 +203,20 @@ function DashboardPage() {
         .map((r) => {
           const prev = Number(r.total_heures_prevues ?? 0);
           const ass = Number(r.total_heures_assignees ?? 0);
+          const val = Number(r.total_heures_reelles_validees ?? 0);
           return {
             affaire_id: r.affaire_id as string,
             numero: r.numero as string,
             nom: r.nom as string,
             total_prevues: prev,
             total_assignees: ass,
+            total_validees: val,
             pct: prev > 0 ? Math.round((ass / prev) * 100) : 0,
+            pct_valide: prev > 0 ? Math.round((val / prev) * 100) : 0,
           };
         })
-        .filter((r) => r.pct >= 80)
-        .sort((a, b) => b.pct - a.pct)
+        .filter((r) => Math.max(r.pct, r.pct_valide) >= 80)
+        .sort((a, b) => Math.max(b.pct, b.pct_valide) - Math.max(a.pct, a.pct_valide))
         .slice(0, 5);
       setDepassements(dep);
 
@@ -391,9 +400,10 @@ function DashboardPage() {
             ) : (
               <ul className="space-y-3">
                 {depassements.map((d) => {
-                  const tone = d.pct >= 100 ? "destructive" : d.pct >= 90 ? "default" : "secondary";
+                  const pctMax = Math.max(d.pct, d.pct_valide);
+                  const tone = pctMax >= 100 ? "destructive" : pctMax >= 90 ? "default" : "secondary";
                   const barColor =
-                    d.pct >= 100 ? "bg-destructive" : d.pct >= 90 ? "bg-primary" : "bg-warning";
+                    pctMax >= 100 ? "bg-destructive" : pctMax >= 90 ? "bg-primary" : "bg-warning";
                   return (
                     <li key={d.affaire_id} className="space-y-1.5">
                       <div className="flex items-center justify-between gap-2">
@@ -408,19 +418,19 @@ function DashboardPage() {
                           <span>{d.nom}</span>
                         </Link>
                         <Badge variant={tone} className="shrink-0 text-xs tabular-nums">
-                          {d.pct}%
+                          {pctMax}%
                         </Badge>
                       </div>
                       <div className="flex items-center gap-2">
                         <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
                           <div
                             className={`h-full ${barColor}`}
-                            style={{ width: `${Math.min(100, d.pct)}%` }}
+                            style={{ width: `${Math.min(100, pctMax)}%` }}
                             aria-hidden
                           />
                         </div>
                         <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground">
-                          {d.total_assignees}/{d.total_prevues}h
+                          Staffé {d.total_assignees}h · Validé {d.total_validees}h / {d.total_prevues}h
                         </span>
                       </div>
                     </li>
