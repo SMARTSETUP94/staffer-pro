@@ -101,6 +101,22 @@ function EmployesPage() {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<FormState>(emptyForm);
   const [saving, setSaving] = useState(false);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
+
+  const toggleActif = async (row: EmployeRow) => {
+    if (!isAdminOrChef) return;
+    setTogglingId(row.id);
+    const next = !row.actif;
+    setRows((rs) => rs.map((r) => (r.id === row.id ? { ...r, actif: next } : r)));
+    const { error } = await supabase.from("employes").update({ actif: next }).eq("id", row.id);
+    setTogglingId(null);
+    if (error) {
+      setRows((rs) => rs.map((r) => (r.id === row.id ? { ...r, actif: !next } : r)));
+      toast.error("Modification impossible", { description: error.message });
+      return;
+    }
+    toast.success(next ? `${row.prenom} ${row.nom} → Actif` : `${row.prenom} ${row.nom} → Inactif`);
+  };
 
   const fetchAll = async () => {
     setLoading(true);
