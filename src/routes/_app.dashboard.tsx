@@ -299,7 +299,7 @@ function DashboardPage() {
       )}
 
       {/* KPIs scalaires */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <TooltipProvider delayDuration={150}>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -338,6 +338,8 @@ function DashboardPage() {
         </TooltipProvider>
         <KpiCard icon={Calendar} label="Heures cette semaine" value={`${heuresSemaine}h`} to="/planning" />
         <KpiCard icon={ClipboardCheck} label="Heures à valider" value={heuresAValider.length} to="/validation-heures" emphasize={heuresAValider.length > 0} />
+        <KpiCard icon={Hourglass} label="Propositions intérim" value={propositionsInterim} to="/planning" emphasize={propositionsInterim > 0} />
+        <KpiCard icon={ArrowLeftRight} label="Swaps à valider" value={swapsAValider} to="/validation-heures" emphasize={swapsAValider > 0} />
       </div>
 
       <MeteoChantiersBloc />
