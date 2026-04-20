@@ -23,7 +23,7 @@ interface NavItem {
 }
 
 const items: NavItem[] = [
-  { title: "Mes heures", url: "/mobile/heures", icon: Clock, show: (r) => r === "employe" },
+  { title: "Mes heures", url: "/mes-heures", icon: Clock, show: (r) => r === "employe" },
   { title: "Tableau de bord", url: "/dashboard", icon: LayoutDashboard, show: (r) => r === "admin" || r === "chef_chantier" },
   { title: "Planning", url: "/planning", icon: Calendar, show: (r) => r === "admin" || r === "chef_chantier" },
   { title: "Affaires", url: "/affaires", icon: Building2, show: (r) => r === "admin" || r === "chef_chantier" },
@@ -55,7 +55,7 @@ export function AppSidebar() {
     isAdmin && (previewRole === "employe_desktop" || previewRole === "employe_mobile");
   const mobileItems = [
     { title: "Aujourd'hui", url: "/mobile/aujourdhui", icon: Smartphone },
-    { title: "Mes heures", url: "/mobile/heures", icon: Clock },
+    { title: "Mes heures (mobile)", url: "/mobile/heures", icon: Clock },
     { title: "Mon profil", url: "/mobile/profil", icon: UserCircle },
   ];
 
