@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 
@@ -8,50 +8,70 @@ export type VehiculeChauffeurAutorise = Tables<"vehicule_chauffeurs_autorises">;
 export type Trajet = Tables<"trajets">;
 
 export function useVehicules() {
-  const query = useQuery({
-    queryKey: ["vehicules"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("vehicules")
-        .select("*")
-        .order("nom", { ascending: true });
-      if (error) throw error;
-      return data as Vehicule[];
-    },
-  });
-  return { vehicules: query.data ?? [], isLoading: query.isLoading, refetch: query.refetch };
+  const [vehicules, setVehicules] = useState<Vehicule[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const refetch = useCallback(async () => {
+    setIsLoading(true);
+    const { data, error } = await supabase
+      .from("vehicules")
+      .select("*")
+      .order("nom", { ascending: true });
+    if (!error) setVehicules((data as Vehicule[]) ?? []);
+    setIsLoading(false);
+  }, []);
+
+  useEffect(() => {
+    void refetch();
+  }, [refetch]);
+
+  return { vehicules, isLoading, refetch };
 }
 
 export function useAdressesFavorites() {
-  const query = useQuery({
-    queryKey: ["adresses_favorites"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("adresses_favorites")
-        .select("*")
-        .order("nom", { ascending: true });
-      if (error) throw error;
-      return data as AdresseFavorite[];
-    },
-  });
-  return { adresses: query.data ?? [], isLoading: query.isLoading, refetch: query.refetch };
+  const [adresses, setAdresses] = useState<AdresseFavorite[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const refetch = useCallback(async () => {
+    setIsLoading(true);
+    const { data, error } = await supabase
+      .from("adresses_favorites")
+      .select("*")
+      .order("nom", { ascending: true });
+    if (!error) setAdresses((data as AdresseFavorite[]) ?? []);
+    setIsLoading(false);
+  }, []);
+
+  useEffect(() => {
+    void refetch();
+  }, [refetch]);
+
+  return { adresses, isLoading, refetch };
 }
 
 export function useVehiculeChauffeursAutorises(vehiculeId: string | null) {
-  const query = useQuery({
-    queryKey: ["vca", vehiculeId],
-    enabled: !!vehiculeId,
-    queryFn: async () => {
-      if (!vehiculeId) return [];
-      const { data, error } = await supabase
-        .from("vehicule_chauffeurs_autorises")
-        .select("*")
-        .eq("vehicule_id", vehiculeId);
-      if (error) throw error;
-      return data as VehiculeChauffeurAutorise[];
-    },
-  });
-  return { autorises: query.data ?? [], isLoading: query.isLoading, refetch: query.refetch };
+  const [autorises, setAutorises] = useState<VehiculeChauffeurAutorise[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const refetch = useCallback(async () => {
+    if (!vehiculeId) {
+      setAutorises([]);
+      return;
+    }
+    setIsLoading(true);
+    const { data, error } = await supabase
+      .from("vehicule_chauffeurs_autorises")
+      .select("*")
+      .eq("vehicule_id", vehiculeId);
+    if (!error) setAutorises((data as VehiculeChauffeurAutorise[]) ?? []);
+    setIsLoading(false);
+  }, [vehiculeId]);
+
+  useEffect(() => {
+    void refetch();
+  }, [refetch]);
+
+  return { autorises, isLoading, refetch };
 }
 
 /** Helpers J-30 sur dates de contrôle / révision / assurance */
@@ -69,14 +89,12 @@ export function alerteDate(date: string | null, joursAvant = 30): AlerteNiveau {
 }
 
 export function vehiculeAUneAlerte(v: Vehicule, joursAvant = 30): boolean {
-  return (
-    alerteDate(v.date_controle_technique, joursAvant) !== "ok" &&
-      alerteDate(v.date_controle_technique, joursAvant) !== "none" ||
-    alerteDate(v.date_prochaine_revision, joursAvant) !== "ok" &&
-      alerteDate(v.date_prochaine_revision, joursAvant) !== "none" ||
-    alerteDate(v.date_expiration_assurance, joursAvant) !== "ok" &&
-      alerteDate(v.date_expiration_assurance, joursAvant) !== "none"
-  );
+  const niveaux = [
+    alerteDate(v.date_controle_technique, joursAvant),
+    alerteDate(v.date_prochaine_revision, joursAvant),
+    alerteDate(v.date_expiration_assurance, joursAvant),
+  ];
+  return niveaux.some((n) => n === "warning" || n === "expired");
 }
 
 export const VEHICULE_TYPE_LABEL: Record<Vehicule["type"], string> = {
