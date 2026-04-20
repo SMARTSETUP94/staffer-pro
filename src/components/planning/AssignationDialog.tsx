@@ -83,6 +83,8 @@ export function AssignationDialog({
   const [notes, setNotes] = useState<string>("");
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [secondairesIds, setSecondairesIds] = useState<number[]>([]);
+  const [showAllMetiers, setShowAllMetiers] = useState(false);
 
   // Réinitialise à l'ouverture
   useEffect(() => {
@@ -93,7 +95,41 @@ export function AssignationDialog({
     setSlot("JOURNEE");
     setHeures(8);
     setNotes("");
+    setShowAllMetiers(false);
   }, [open, employe.metier_principal_id]);
+
+  // Charge les compétences secondaires de l'employé
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    supabase
+      .from("employe_metiers")
+      .select("metier_id")
+      .eq("employe_id", employe.id)
+      .then(({ data }) => {
+        if (cancelled) return;
+        setSecondairesIds((data ?? []).map((r) => r.metier_id));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [open, employe.id]);
+
+  // Métiers de compétence (principal + secondaires)
+  const metiersCompetence = useMemo(() => {
+    const ids = new Set<number>([employe.metier_principal_id, ...secondairesIds]);
+    return metiers.filter((m) => ids.has(m.id));
+  }, [metiers, employe.metier_principal_id, secondairesIds]);
+
+  // Si le métier sélectionné n'est pas une compétence, on bascule en "tous"
+  const metiersAffichesBase = showAllMetiers ? metiers : metiersCompetence;
+  const metiersAffiches = useMemo(() => {
+    if (metierId && !metiersAffichesBase.some((m) => m.id === metierId)) {
+      const extra = metiers.find((m) => m.id === metierId);
+      return extra ? [...metiersAffichesBase, extra] : metiersAffichesBase;
+    }
+    return metiersAffichesBase;
+  }, [metiersAffichesBase, metierId, metiers]);
 
   const sortedAffaires = useMemo(
     () =>
