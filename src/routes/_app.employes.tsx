@@ -160,11 +160,18 @@ function EmployesPage() {
       } else if (filterContrat !== "all" && r.type_contrat !== filterContrat) return false;
       if (filterActif === "actifs" && !r.actif) return false;
       if (filterActif === "inactifs" && r.actif) return false;
+      // Métier principal : OR cumulatif (au moins l'un des sélectionnés)
+      if (filterMetierPrincipal.size > 0 && !filterMetierPrincipal.has(r.metier_principal_id)) return false;
+      // Compétences secondaires : OR cumulatif sur la liste des secondaires (hors principal)
+      if (filterMetierSecondaire.size > 0) {
+        const sec = r.secondaires.filter((id) => id !== r.metier_principal_id);
+        if (!sec.some((id) => filterMetierSecondaire.has(id))) return false;
+      }
       if (!q) return true;
       const hay = `${r.prenom} ${r.nom} ${r.email ?? ""} ${r.agence_interim ?? ""}`.toLowerCase();
       return hay.includes(q);
     });
-  }, [rows, search, filterContrat, filterActif]);
+  }, [rows, search, filterContrat, filterActif, filterMetierPrincipal, filterMetierSecondaire]);
 
   const spreadsheetRows: SpreadsheetRow[] = useMemo(
     () => filtered.map((r) => ({
