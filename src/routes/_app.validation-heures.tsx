@@ -351,6 +351,12 @@ function ValidationHeuresPage() {
           })}
         </div>
       )}
+        </TabsContent>
+
+        <TabsContent value="swaps">
+          <SwapsValidationTab />
+        </TabsContent>
+      </Tabs>
 
       {/* Dialog rejet */}
       <Dialog open={rejectDialog.open} onOpenChange={(o) => setRejectDialog((d) => ({ ...d, open: o }))}>
@@ -382,6 +388,36 @@ function ValidationHeuresPage() {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+function SwapsBadgeCount() {
+  const { rows } = useMesSwaps({ chefView: true });
+  if (rows.length === 0) return null;
+  return (
+    <Badge variant="destructive" className="ml-1 h-4 min-w-4 px-1 text-[10px]">
+      {rows.length}
+    </Badge>
+  );
+}
+
+function SwapsValidationTab() {
+  const { rows, loading, refresh } = useMesSwaps({ chefView: true });
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-16 text-muted-foreground">
+        <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Chargement…
+      </div>
+    );
+  }
+  return (
+    <SwapsList
+      rows={rows}
+      currentEmployeId={null}
+      chefMode
+      onChanged={refresh}
+      emptyMessage="Aucun swap en attente de validation."
+    />
   );
 }
 
