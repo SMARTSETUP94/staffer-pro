@@ -29,6 +29,7 @@ import { Route as AppInterimairesRouteImport } from './routes/_app.interimaires'
 import { Route as AppFlotteRouteImport } from './routes/_app.flotte'
 import { Route as AppExportRouteImport } from './routes/_app.export'
 import { Route as AppEmployesRouteImport } from './routes/_app.employes'
+import { Route as AppDashboardEmployeRouteImport } from './routes/_app.dashboard-employe'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppAffairesRouteImport } from './routes/_app.affaires'
 import { Route as AppAbsencesRouteImport } from './routes/_app.absences'
@@ -141,6 +142,11 @@ const AppEmployesRoute = AppEmployesRouteImport.update({
   path: '/employes',
   getParentRoute: () => AppRoute,
 } as any)
+const AppDashboardEmployeRoute = AppDashboardEmployeRouteImport.update({
+  id: '/dashboard-employe',
+  path: '/dashboard-employe',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppDashboardRoute = AppDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -212,6 +218,7 @@ export interface FileRoutesByFullPath {
   '/absences': typeof AppAbsencesRoute
   '/affaires': typeof AppAffairesRouteWithChildren
   '/dashboard': typeof AppDashboardRoute
+  '/dashboard-employe': typeof AppDashboardEmployeRoute
   '/employes': typeof AppEmployesRouteWithChildren
   '/export': typeof AppExportRouteWithChildren
   '/flotte': typeof AppFlotteRoute
@@ -245,6 +252,7 @@ export interface FileRoutesByTo {
   '/absences': typeof AppAbsencesRoute
   '/affaires': typeof AppAffairesRouteWithChildren
   '/dashboard': typeof AppDashboardRoute
+  '/dashboard-employe': typeof AppDashboardEmployeRoute
   '/employes': typeof AppEmployesRouteWithChildren
   '/export': typeof AppExportRouteWithChildren
   '/flotte': typeof AppFlotteRoute
@@ -279,6 +287,7 @@ export interface FileRoutesById {
   '/_app/absences': typeof AppAbsencesRoute
   '/_app/affaires': typeof AppAffairesRouteWithChildren
   '/_app/dashboard': typeof AppDashboardRoute
+  '/_app/dashboard-employe': typeof AppDashboardEmployeRoute
   '/_app/employes': typeof AppEmployesRouteWithChildren
   '/_app/export': typeof AppExportRouteWithChildren
   '/_app/flotte': typeof AppFlotteRoute
@@ -314,6 +323,7 @@ export interface FileRouteTypes {
     | '/absences'
     | '/affaires'
     | '/dashboard'
+    | '/dashboard-employe'
     | '/employes'
     | '/export'
     | '/flotte'
@@ -347,6 +357,7 @@ export interface FileRouteTypes {
     | '/absences'
     | '/affaires'
     | '/dashboard'
+    | '/dashboard-employe'
     | '/employes'
     | '/export'
     | '/flotte'
@@ -380,6 +391,7 @@ export interface FileRouteTypes {
     | '/_app/absences'
     | '/_app/affaires'
     | '/_app/dashboard'
+    | '/_app/dashboard-employe'
     | '/_app/employes'
     | '/_app/export'
     | '/_app/flotte'
@@ -562,6 +574,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppEmployesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/dashboard-employe': {
+      id: '/_app/dashboard-employe'
+      path: '/dashboard-employe'
+      fullPath: '/dashboard-employe'
+      preLoaderRoute: typeof AppDashboardEmployeRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/dashboard': {
       id: '/_app/dashboard'
       path: '/dashboard'
@@ -706,6 +725,7 @@ interface AppRouteChildren {
   AppAbsencesRoute: typeof AppAbsencesRoute
   AppAffairesRoute: typeof AppAffairesRouteWithChildren
   AppDashboardRoute: typeof AppDashboardRoute
+  AppDashboardEmployeRoute: typeof AppDashboardEmployeRoute
   AppEmployesRoute: typeof AppEmployesRouteWithChildren
   AppExportRoute: typeof AppExportRouteWithChildren
   AppFlotteRoute: typeof AppFlotteRoute
@@ -725,6 +745,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAbsencesRoute: AppAbsencesRoute,
   AppAffairesRoute: AppAffairesRouteWithChildren,
   AppDashboardRoute: AppDashboardRoute,
+  AppDashboardEmployeRoute: AppDashboardEmployeRoute,
   AppEmployesRoute: AppEmployesRouteWithChildren,
   AppExportRoute: AppExportRouteWithChildren,
   AppFlotteRoute: AppFlotteRoute,
