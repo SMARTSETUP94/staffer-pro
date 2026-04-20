@@ -33,6 +33,7 @@ import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppAffairesRouteImport } from './routes/_app.affaires'
 import { Route as AppAbsencesRouteImport } from './routes/_app.absences'
 import { Route as AppDevisIndexRouteImport } from './routes/_app.devis.index'
+import { Route as AppExportDemandesDevisRouteImport } from './routes/_app.export.demandes-devis'
 import { Route as AppEmployesImportRouteImport } from './routes/_app.employes.import'
 import { Route as AppDevisImportRouteImport } from './routes/_app.devis.import'
 import { Route as AppAffairesAffaireIdRouteImport } from './routes/_app.affaires.$affaireId'
@@ -160,6 +161,11 @@ const AppDevisIndexRoute = AppDevisIndexRouteImport.update({
   path: '/devis/',
   getParentRoute: () => AppRoute,
 } as any)
+const AppExportDemandesDevisRoute = AppExportDemandesDevisRouteImport.update({
+  id: '/demandes-devis',
+  path: '/demandes-devis',
+  getParentRoute: () => AppExportRoute,
+} as any)
 const AppEmployesImportRoute = AppEmployesImportRouteImport.update({
   id: '/import',
   path: '/import',
@@ -207,7 +213,7 @@ export interface FileRoutesByFullPath {
   '/affaires': typeof AppAffairesRouteWithChildren
   '/dashboard': typeof AppDashboardRoute
   '/employes': typeof AppEmployesRouteWithChildren
-  '/export': typeof AppExportRoute
+  '/export': typeof AppExportRouteWithChildren
   '/flotte': typeof AppFlotteRoute
   '/interimaires': typeof AppInterimairesRoute
   '/mes-heures': typeof AppMesHeuresRoute
@@ -226,6 +232,7 @@ export interface FileRoutesByFullPath {
   '/affaires/$affaireId': typeof AppAffairesAffaireIdRouteWithChildren
   '/devis/import': typeof AppDevisImportRoute
   '/employes/import': typeof AppEmployesImportRoute
+  '/export/demandes-devis': typeof AppExportDemandesDevisRoute
   '/devis/': typeof AppDevisIndexRoute
   '/affaires/$affaireId/devis': typeof AppAffairesAffaireIdDevisRoute
   '/affaires/$affaireId/journal': typeof AppAffairesAffaireIdJournalRoute
@@ -239,7 +246,7 @@ export interface FileRoutesByTo {
   '/affaires': typeof AppAffairesRouteWithChildren
   '/dashboard': typeof AppDashboardRoute
   '/employes': typeof AppEmployesRouteWithChildren
-  '/export': typeof AppExportRoute
+  '/export': typeof AppExportRouteWithChildren
   '/flotte': typeof AppFlotteRoute
   '/interimaires': typeof AppInterimairesRoute
   '/mes-heures': typeof AppMesHeuresRoute
@@ -257,6 +264,7 @@ export interface FileRoutesByTo {
   '/mobile/swaps': typeof MobileSwapsRoute
   '/devis/import': typeof AppDevisImportRoute
   '/employes/import': typeof AppEmployesImportRoute
+  '/export/demandes-devis': typeof AppExportDemandesDevisRoute
   '/devis': typeof AppDevisIndexRoute
   '/affaires/$affaireId/devis': typeof AppAffairesAffaireIdDevisRoute
   '/affaires/$affaireId/journal': typeof AppAffairesAffaireIdJournalRoute
@@ -272,7 +280,7 @@ export interface FileRoutesById {
   '/_app/affaires': typeof AppAffairesRouteWithChildren
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/employes': typeof AppEmployesRouteWithChildren
-  '/_app/export': typeof AppExportRoute
+  '/_app/export': typeof AppExportRouteWithChildren
   '/_app/flotte': typeof AppFlotteRoute
   '/_app/interimaires': typeof AppInterimairesRoute
   '/_app/mes-heures': typeof AppMesHeuresRoute
@@ -291,6 +299,7 @@ export interface FileRoutesById {
   '/_app/affaires/$affaireId': typeof AppAffairesAffaireIdRouteWithChildren
   '/_app/devis/import': typeof AppDevisImportRoute
   '/_app/employes/import': typeof AppEmployesImportRoute
+  '/_app/export/demandes-devis': typeof AppExportDemandesDevisRoute
   '/_app/devis/': typeof AppDevisIndexRoute
   '/_app/affaires/$affaireId/devis': typeof AppAffairesAffaireIdDevisRoute
   '/_app/affaires/$affaireId/journal': typeof AppAffairesAffaireIdJournalRoute
@@ -325,6 +334,7 @@ export interface FileRouteTypes {
     | '/affaires/$affaireId'
     | '/devis/import'
     | '/employes/import'
+    | '/export/demandes-devis'
     | '/devis/'
     | '/affaires/$affaireId/devis'
     | '/affaires/$affaireId/journal'
@@ -356,6 +366,7 @@ export interface FileRouteTypes {
     | '/mobile/swaps'
     | '/devis/import'
     | '/employes/import'
+    | '/export/demandes-devis'
     | '/devis'
     | '/affaires/$affaireId/devis'
     | '/affaires/$affaireId/journal'
@@ -389,6 +400,7 @@ export interface FileRouteTypes {
     | '/_app/affaires/$affaireId'
     | '/_app/devis/import'
     | '/_app/employes/import'
+    | '/_app/export/demandes-devis'
     | '/_app/devis/'
     | '/_app/affaires/$affaireId/devis'
     | '/_app/affaires/$affaireId/journal'
@@ -578,6 +590,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDevisIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/export/demandes-devis': {
+      id: '/_app/export/demandes-devis'
+      path: '/demandes-devis'
+      fullPath: '/export/demandes-devis'
+      preLoaderRoute: typeof AppExportDemandesDevisRouteImport
+      parentRoute: typeof AppExportRoute
+    }
     '/_app/employes/import': {
       id: '/_app/employes/import'
       path: '/import'
@@ -671,12 +690,24 @@ const AppEmployesRouteWithChildren = AppEmployesRoute._addFileChildren(
   AppEmployesRouteChildren,
 )
 
+interface AppExportRouteChildren {
+  AppExportDemandesDevisRoute: typeof AppExportDemandesDevisRoute
+}
+
+const AppExportRouteChildren: AppExportRouteChildren = {
+  AppExportDemandesDevisRoute: AppExportDemandesDevisRoute,
+}
+
+const AppExportRouteWithChildren = AppExportRoute._addFileChildren(
+  AppExportRouteChildren,
+)
+
 interface AppRouteChildren {
   AppAbsencesRoute: typeof AppAbsencesRoute
   AppAffairesRoute: typeof AppAffairesRouteWithChildren
   AppDashboardRoute: typeof AppDashboardRoute
   AppEmployesRoute: typeof AppEmployesRouteWithChildren
-  AppExportRoute: typeof AppExportRoute
+  AppExportRoute: typeof AppExportRouteWithChildren
   AppFlotteRoute: typeof AppFlotteRoute
   AppInterimairesRoute: typeof AppInterimairesRoute
   AppMesHeuresRoute: typeof AppMesHeuresRoute
@@ -695,7 +726,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAffairesRoute: AppAffairesRouteWithChildren,
   AppDashboardRoute: AppDashboardRoute,
   AppEmployesRoute: AppEmployesRouteWithChildren,
-  AppExportRoute: AppExportRoute,
+  AppExportRoute: AppExportRouteWithChildren,
   AppFlotteRoute: AppFlotteRoute,
   AppInterimairesRoute: AppInterimairesRoute,
   AppMesHeuresRoute: AppMesHeuresRoute,
