@@ -5,6 +5,7 @@ import { fr } from "date-fns/locale";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { usePreview } from "@/lib/preview-context";
+import { useResolvedEmploye } from "@/hooks/use-resolved-employe";
 import { PreviewBanner } from "@/components/PreviewBanner";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { Button } from "@/components/ui/button";
@@ -17,7 +18,9 @@ export const Route = createFileRoute("/mobile/heures")({
 
 function MobileHeures() {
   const { user, signOut } = useAuth();
-  const { isPreviewing, setPreviewRole } = usePreview();
+  const { isPreviewing, setPreviewRole, isEmployePreview, previewEmployeId } = usePreview();
+  const { employeId } = useResolvedEmploye();
+  const override = isEmployePreview ? (previewEmployeId ?? employeId) : null;
   const navigate = useNavigate();
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
   const weekEnd = useMemo(() => addDays(weekStart, 6), [weekStart]);
@@ -93,7 +96,7 @@ function MobileHeures() {
       </div>
 
       <main className="mx-auto max-w-md px-4 py-4">
-        <MesHeuresGrid weekStart={weekStart} variant="mobile" />
+        <MesHeuresGrid weekStart={weekStart} variant="mobile" employeIdOverride={override} />
       </main>
 
       <MobileBottomNav />
