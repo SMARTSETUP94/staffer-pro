@@ -71,6 +71,39 @@ export type Database = {
           },
         ]
       }
+      adresses_favorites: {
+        Row: {
+          adresse_complete: string
+          created_at: string
+          id: string
+          latitude: number | null
+          longitude: number | null
+          nom: string
+          type: Database["public"]["Enums"]["adresse_favorite_type"]
+          updated_at: string
+        }
+        Insert: {
+          adresse_complete: string
+          created_at?: string
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          nom: string
+          type?: Database["public"]["Enums"]["adresse_favorite_type"]
+          updated_at?: string
+        }
+        Update: {
+          adresse_complete?: string
+          created_at?: string
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          nom?: string
+          type?: Database["public"]["Enums"]["adresse_favorite_type"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       affaire_commentaires: {
         Row: {
           affaire_id: string
@@ -452,6 +485,7 @@ export type Database = {
           date_naissance: string | null
           date_sortie: string | null
           email: string | null
+          est_livreur: boolean
           id: string
           is_apprenti: boolean
           metier_principal_id: number
@@ -475,6 +509,7 @@ export type Database = {
           date_naissance?: string | null
           date_sortie?: string | null
           email?: string | null
+          est_livreur?: boolean
           id?: string
           is_apprenti?: boolean
           metier_principal_id: number
@@ -498,6 +533,7 @@ export type Database = {
           date_naissance?: string | null
           date_sortie?: string | null
           email?: string | null
+          est_livreur?: boolean
           id?: string
           is_apprenti?: boolean
           metier_principal_id?: number
@@ -867,6 +903,132 @@ export type Database = {
           },
         ]
       }
+      trajets: {
+        Row: {
+          adresse_arrivee: string
+          adresse_arrivee_favorite_id: string | null
+          adresse_depart: string
+          adresse_depart_favorite_id: string | null
+          affaire_id: string | null
+          categorie: Database["public"]["Enums"]["trajet_categorie"]
+          chauffeur_id: string | null
+          created_at: string
+          created_by: string | null
+          date: string
+          heure_arrivee: string | null
+          heure_depart: string | null
+          id: string
+          kilometrage: number | null
+          notes: string | null
+          parent_trajet_id: string | null
+          soustraitance_envoye_le: string | null
+          statut_soustraitance: Database["public"]["Enums"]["trajet_statut_soustraitance"]
+          updated_at: string
+          vehicule_id: string | null
+        }
+        Insert: {
+          adresse_arrivee: string
+          adresse_arrivee_favorite_id?: string | null
+          adresse_depart: string
+          adresse_depart_favorite_id?: string | null
+          affaire_id?: string | null
+          categorie?: Database["public"]["Enums"]["trajet_categorie"]
+          chauffeur_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          date: string
+          heure_arrivee?: string | null
+          heure_depart?: string | null
+          id?: string
+          kilometrage?: number | null
+          notes?: string | null
+          parent_trajet_id?: string | null
+          soustraitance_envoye_le?: string | null
+          statut_soustraitance?: Database["public"]["Enums"]["trajet_statut_soustraitance"]
+          updated_at?: string
+          vehicule_id?: string | null
+        }
+        Update: {
+          adresse_arrivee?: string
+          adresse_arrivee_favorite_id?: string | null
+          adresse_depart?: string
+          adresse_depart_favorite_id?: string | null
+          affaire_id?: string | null
+          categorie?: Database["public"]["Enums"]["trajet_categorie"]
+          chauffeur_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          date?: string
+          heure_arrivee?: string | null
+          heure_depart?: string | null
+          id?: string
+          kilometrage?: number | null
+          notes?: string | null
+          parent_trajet_id?: string | null
+          soustraitance_envoye_le?: string | null
+          statut_soustraitance?: Database["public"]["Enums"]["trajet_statut_soustraitance"]
+          updated_at?: string
+          vehicule_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trajets_adresse_arrivee_favorite_id_fkey"
+            columns: ["adresse_arrivee_favorite_id"]
+            isOneToOne: false
+            referencedRelation: "adresses_favorites"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trajets_adresse_depart_favorite_id_fkey"
+            columns: ["adresse_depart_favorite_id"]
+            isOneToOne: false
+            referencedRelation: "adresses_favorites"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trajets_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "affaires"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trajets_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "v_affaire_consommation"
+            referencedColumns: ["affaire_id"]
+          },
+          {
+            foreignKeyName: "trajets_chauffeur_id_fkey"
+            columns: ["chauffeur_id"]
+            isOneToOne: false
+            referencedRelation: "employes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trajets_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trajets_parent_trajet_id_fkey"
+            columns: ["parent_trajet_id"]
+            isOneToOne: false
+            referencedRelation: "trajets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trajets_vehicule_id_fkey"
+            columns: ["vehicule_id"]
+            isOneToOne: false
+            referencedRelation: "vehicules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -885,6 +1047,111 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      vehicule_chauffeurs_autorises: {
+        Row: {
+          created_at: string
+          employe_id: string
+          id: number
+          vehicule_id: string
+        }
+        Insert: {
+          created_at?: string
+          employe_id: string
+          id?: number
+          vehicule_id: string
+        }
+        Update: {
+          created_at?: string
+          employe_id?: string
+          id?: number
+          vehicule_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicule_chauffeurs_autorises_employe_id_fkey"
+            columns: ["employe_id"]
+            isOneToOne: false
+            referencedRelation: "employes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicule_chauffeurs_autorises_vehicule_id_fkey"
+            columns: ["vehicule_id"]
+            isOneToOne: false
+            referencedRelation: "vehicules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vehicules: {
+        Row: {
+          actif: boolean
+          capacite_passagers: number | null
+          cout_journalier_eur: number | null
+          created_at: string
+          date_controle_technique: string | null
+          date_expiration_assurance: string | null
+          date_prochaine_revision: string | null
+          fournisseur_location: string | null
+          id: string
+          immatriculation: string | null
+          marque: string | null
+          modele: string | null
+          nom: string
+          notes: string | null
+          permis_requis: Database["public"]["Enums"]["permis_type"]
+          poids_max_kg: number | null
+          proprietaire: Database["public"]["Enums"]["vehicule_proprietaire"]
+          type: Database["public"]["Enums"]["vehicule_type"]
+          updated_at: string
+          volume_m3: number | null
+        }
+        Insert: {
+          actif?: boolean
+          capacite_passagers?: number | null
+          cout_journalier_eur?: number | null
+          created_at?: string
+          date_controle_technique?: string | null
+          date_expiration_assurance?: string | null
+          date_prochaine_revision?: string | null
+          fournisseur_location?: string | null
+          id?: string
+          immatriculation?: string | null
+          marque?: string | null
+          modele?: string | null
+          nom: string
+          notes?: string | null
+          permis_requis?: Database["public"]["Enums"]["permis_type"]
+          poids_max_kg?: number | null
+          proprietaire?: Database["public"]["Enums"]["vehicule_proprietaire"]
+          type: Database["public"]["Enums"]["vehicule_type"]
+          updated_at?: string
+          volume_m3?: number | null
+        }
+        Update: {
+          actif?: boolean
+          capacite_passagers?: number | null
+          cout_journalier_eur?: number | null
+          created_at?: string
+          date_controle_technique?: string | null
+          date_expiration_assurance?: string | null
+          date_prochaine_revision?: string | null
+          fournisseur_location?: string | null
+          id?: string
+          immatriculation?: string | null
+          marque?: string | null
+          modele?: string | null
+          nom?: string
+          notes?: string | null
+          permis_requis?: Database["public"]["Enums"]["permis_type"]
+          poids_max_kg?: number | null
+          proprietaire?: Database["public"]["Enums"]["vehicule_proprietaire"]
+          type?: Database["public"]["Enums"]["vehicule_type"]
+          updated_at?: string
+          volume_m3?: number | null
         }
         Relationships: []
       }
@@ -1009,6 +1276,7 @@ export type Database = {
     }
     Enums: {
       absence_type: "conges" | "formation" | "arret_maladie" | "rtt" | "autre"
+      adresse_favorite_type: "entrepot" | "client" | "fournisseur" | "autre"
       affaire_statut: "prospect" | "en_cours" | "termine" | "annule"
       app_role: "admin" | "chef_chantier" | "employe"
       confirmation_status:
@@ -1032,6 +1300,7 @@ export type Database = {
         | "conflit_staffing"
         | "depassement_budget"
         | "mention"
+      permis_type: "B" | "C" | "CE"
       swap_status:
         | "proposee"
         | "acceptee_collegue"
@@ -1041,6 +1310,19 @@ export type Database = {
         | "appliquee"
         | "annulee"
       swap_type: "delegation" | "echange"
+      trajet_categorie:
+        | "pose"
+        | "depose"
+        | "livraison_fourniture"
+        | "recuperation_materiel"
+        | "autre"
+      trajet_statut_soustraitance:
+        | "non"
+        | "a_sous_traiter"
+        | "devis_envoye"
+        | "confirme"
+      vehicule_proprietaire: "interne" | "location" | "sous_traitance"
+      vehicule_type: "VL" | "M3_20" | "poids_lourd"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1169,6 +1451,7 @@ export const Constants = {
   public: {
     Enums: {
       absence_type: ["conges", "formation", "arret_maladie", "rtt", "autre"],
+      adresse_favorite_type: ["entrepot", "client", "fournisseur", "autre"],
       affaire_statut: ["prospect", "en_cours", "termine", "annule"],
       app_role: ["admin", "chef_chantier", "employe"],
       confirmation_status: [
@@ -1194,6 +1477,7 @@ export const Constants = {
         "depassement_budget",
         "mention",
       ],
+      permis_type: ["B", "C", "CE"],
       swap_status: [
         "proposee",
         "acceptee_collegue",
@@ -1204,6 +1488,21 @@ export const Constants = {
         "annulee",
       ],
       swap_type: ["delegation", "echange"],
+      trajet_categorie: [
+        "pose",
+        "depose",
+        "livraison_fourniture",
+        "recuperation_materiel",
+        "autre",
+      ],
+      trajet_statut_soustraitance: [
+        "non",
+        "a_sous_traiter",
+        "devis_envoye",
+        "confirme",
+      ],
+      vehicule_proprietaire: ["interne", "location", "sous_traitance"],
+      vehicule_type: ["VL", "M3_20", "poids_lourd"],
     },
   },
 } as const
