@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
-import { supabase } from "@/integrations/supabase/client";
+import { useResolvedEmploye } from "@/hooks/use-resolved-employe";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { PreviewBanner } from "@/components/PreviewBanner";
 import { Card, CardContent } from "@/components/ui/card";
@@ -19,20 +19,8 @@ type Tab = "en_attente" | "confirmees" | "refusees";
 
 function MobilePropositions() {
   const { user } = useAuth();
-  const [employeId, setEmployeId] = useState<string | null>(null);
+  const { employeId } = useResolvedEmploye();
   const [tab, setTab] = useState<Tab>("en_attente");
-
-  useEffect(() => {
-    if (!user) return;
-    supabase
-      .from("employes")
-      .select("id")
-      .eq("profile_id", user.id)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data) setEmployeId(data.id);
-      });
-  }, [user]);
 
   const { rows, loading, refresh } = useMesPropositions(employeId);
 
