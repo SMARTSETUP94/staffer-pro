@@ -83,6 +83,7 @@ export interface PlanningData {
   consommation: DevisConsommation[];
   absences: Absence[];
   chefsById: Map<string, ChefRef>;
+  swapAssignationIds: Set<string>;
   loading: boolean;
   error: string | null;
   refresh: () => void;
