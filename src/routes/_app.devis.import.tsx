@@ -342,7 +342,7 @@ function DevisImportPage() {
               </div>
               <div>
                 <p className="text-sm font-semibold text-foreground">
-                  {filename ?? "Glisser le fichier .xlsx ou cliquer pour sélectionner"}
+                  {filename ?? "Glisser le fichier .xlsx, .xls ou .csv (ou cliquer pour sélectionner)"}
                 </p>
                 <p className="mt-1 text-xs text-muted-foreground">
                   Colonnes attendues : N° • Désignation • Qté • Unité • PU HT • Total • TVA • Temps prévu
@@ -351,7 +351,7 @@ function DevisImportPage() {
               <input
                 ref={fileRef}
                 type="file"
-                accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                accept=".xlsx,.xls,.csv,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
                 className="hidden"
                 onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }}
               />
