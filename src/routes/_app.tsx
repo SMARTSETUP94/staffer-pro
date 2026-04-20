@@ -1,4 +1,4 @@
-import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
@@ -9,10 +9,24 @@ export const Route = createFileRoute("/_app")({
   component: AppGuard,
 });
 
+// Pages accessibles à un employé en desktop (vue restreinte)
+const EMPLOYE_DESKTOP_ALLOWED = [
+  "/dashboard-employe",
+  "/mes-heures",
+  "/mes-swaps",
+  "/mes-propositions",
+];
+
 function AppGuard() {
   const navigate = useNavigate();
+  const router = useRouterState();
+  const currentPath = router.location.pathname;
   const { user, loading, rolesLoaded, isAdminOrChef } = useAuth();
   const { effIsMobile, effIsAdminOrChef } = usePreview();
+
+  const isEmployeAllowedPath = EMPLOYE_DESKTOP_ALLOWED.some(
+    (p) => currentPath === p || currentPath.startsWith(p + "/"),
+  );
 
   useEffect(() => {
     if (loading || !rolesLoaded) return;
@@ -20,19 +34,30 @@ function AppGuard() {
       navigate({ to: "/login" });
       return;
     }
-    // Si admin en preview "Employé mobile" -> bascule mobile
+    // Preview "Employé mobile" -> bascule mobile
     if (effIsMobile) {
       navigate({ to: "/mobile/aujourdhui" });
       return;
     }
-    // Vrais droits : si pas admin/chef, redirige mobile
-    if (!isAdminOrChef) {
-      navigate({ to: "/mobile/aujourdhui" });
+    // Pas admin/chef sur desktop : autorisé uniquement sur les pages employé
+    if (!effIsAdminOrChef && !isEmployeAllowedPath) {
+      navigate({ to: "/dashboard-employe" });
     }
-    // Note: en preview "Employé desktop" l'admin reste sur le desktop avec UI restreinte
-  }, [loading, rolesLoaded, user, isAdminOrChef, effIsMobile, effIsAdminOrChef, navigate]);
+  }, [
+    loading, rolesLoaded, user, isAdminOrChef, effIsAdminOrChef,
+    effIsMobile, isEmployeAllowedPath, navigate,
+  ]);
 
-  if (loading || !rolesLoaded || !user || !isAdminOrChef) {
+  if (loading || !rolesLoaded || !user) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // Employe sur desktop sans page autorisée : on attend la redirection
+  if (!effIsAdminOrChef && !isEmployeAllowedPath) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />

@@ -6,7 +6,6 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useNotifications, type Notification } from "@/hooks/use-notifications";
 import { cn } from "@/lib/utils";
@@ -61,17 +60,16 @@ export function NotificationBell() {
         <Button
           variant="ghost"
           size="icon"
-          className="relative h-9 w-9"
+          className="relative h-10 w-10"
           aria-label="Notifications"
         >
-          <Bell className="h-4 w-4" />
+          <Bell className="h-6 w-6 text-gray-700" strokeWidth={2} />
           {unreadCount > 0 && (
-            <Badge
-              variant="destructive"
-              className="absolute -right-1 -top-1 h-4 min-w-4 rounded-full px-1 text-[10px] leading-none flex items-center justify-center"
+            <span
+              className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold leading-none text-white"
             >
               {unreadCount > 99 ? "99+" : unreadCount}
-            </Badge>
+            </span>
           )}
         </Button>
       </PopoverTrigger>

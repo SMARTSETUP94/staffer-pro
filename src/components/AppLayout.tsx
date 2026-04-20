@@ -34,7 +34,6 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 <kbd className="ml-1 rounded border bg-muted px-1.5 py-0.5 font-mono text-[10px]">⌘K</kbd>
               </Button>
               <NotificationBell />
-              <span className="overline hidden lg:inline-block">— Studio</span>
             </div>
           </header>
           <main className="flex-1 overflow-auto bg-background">{children}</main>

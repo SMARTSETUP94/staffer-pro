@@ -24,6 +24,7 @@ interface NavItem {
 }
 
 const items: NavItem[] = [
+  { title: "Ma semaine", url: "/dashboard-employe", icon: LayoutDashboard, show: (r) => r === "employe" },
   { title: "Mes heures", url: "/mes-heures", icon: Clock, show: (r) => r === "employe" },
   { title: "Mes échanges", url: "/mes-swaps", icon: ArrowLeftRight, show: (r) => r === "employe" },
   { title: "Mes propositions", url: "/mes-propositions", icon: ClipboardList, show: (r) => r === "employe" },
