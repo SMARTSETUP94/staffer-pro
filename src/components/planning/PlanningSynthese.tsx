@@ -16,6 +16,14 @@ import type {
   Metier,
 } from "@/hooks/use-planning-data";
 
+// Regroupement des 8 métiers en 4 pôles "ateliers"
+const POLES: { key: string; label: string; codes: string[] }[] = [
+  { key: "etude", label: "Bureau d'étude / Plans", codes: ["suivi_projet"] },
+  { key: "fab", label: "Fabrication atelier", codes: ["numerique", "construction", "metallerie"] },
+  { key: "finition", label: "Finition", codes: ["peinture", "tapisserie"] },
+  { key: "pose", label: "Pose / Dépose", codes: ["logistique", "machiniste"] },
+];
+
 interface Props {
   weekStart: Date;
   affaires: Affaire[];
