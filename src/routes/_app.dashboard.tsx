@@ -11,6 +11,8 @@ import {
   ArrowRight,
   ArrowUpCircle,
   ArrowDownCircle,
+  Hourglass,
+  ArrowLeftRight,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/PageHeader";
@@ -98,6 +100,8 @@ function DashboardPage() {
   const [evenementsProches, setEvenementsProches] = useState<AffaireEvenement[]>([]);
   const [depassements, setDepassements] = useState<AffaireDepassement[]>([]);
   const [heuresAValider, setHeuresAValider] = useState<HeuresSoumise[]>([]);
+  const [propositionsInterim, setPropositionsInterim] = useState(0);
+  const [swapsAValider, setSwapsAValider] = useState(0);
   const [absencesSemaine, setAbsencesSemaine] = useState<AbsenceItem[]>([]);
 
   useEffect(() => {
@@ -123,6 +127,8 @@ function DashboardPage() {
         margesRes,
         soumisesRes,
         absRes,
+        propIntRes,
+        swapsChefRes,
       ] = await Promise.all([
         supabase
           .from("assignations")
@@ -152,6 +158,14 @@ function DashboardPage() {
           .or(`and(date_debut.lte.${weekEnd},date_fin.gte.${weekStart})`)
           .order("date_debut", { ascending: true })
           .limit(20),
+        supabase
+          .from("assignations")
+          .select("id", { count: "exact", head: true })
+          .eq("statut_confirmation", "en_attente"),
+        supabase
+          .from("swap_requests")
+          .select("id", { count: "exact", head: true })
+          .eq("statut", "acceptee_collegue"),
       ]);
 
       if (cancelled) return;
