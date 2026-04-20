@@ -26,6 +26,7 @@ import { Route as AppMesSwapsRouteImport } from './routes/_app.mes-swaps'
 import { Route as AppMesPropositionsRouteImport } from './routes/_app.mes-propositions'
 import { Route as AppMesHeuresRouteImport } from './routes/_app.mes-heures'
 import { Route as AppInterimairesRouteImport } from './routes/_app.interimaires'
+import { Route as AppFlotteRouteImport } from './routes/_app.flotte'
 import { Route as AppExportRouteImport } from './routes/_app.export'
 import { Route as AppEmployesRouteImport } from './routes/_app.employes'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
@@ -124,6 +125,11 @@ const AppInterimairesRoute = AppInterimairesRouteImport.update({
   path: '/interimaires',
   getParentRoute: () => AppRoute,
 } as any)
+const AppFlotteRoute = AppFlotteRouteImport.update({
+  id: '/flotte',
+  path: '/flotte',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppExportRoute = AppExportRouteImport.update({
   id: '/export',
   path: '/export',
@@ -202,6 +208,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AppDashboardRoute
   '/employes': typeof AppEmployesRouteWithChildren
   '/export': typeof AppExportRoute
+  '/flotte': typeof AppFlotteRoute
   '/interimaires': typeof AppInterimairesRoute
   '/mes-heures': typeof AppMesHeuresRoute
   '/mes-propositions': typeof AppMesPropositionsRoute
@@ -233,6 +240,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AppDashboardRoute
   '/employes': typeof AppEmployesRouteWithChildren
   '/export': typeof AppExportRoute
+  '/flotte': typeof AppFlotteRoute
   '/interimaires': typeof AppInterimairesRoute
   '/mes-heures': typeof AppMesHeuresRoute
   '/mes-propositions': typeof AppMesPropositionsRoute
@@ -265,6 +273,7 @@ export interface FileRoutesById {
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/employes': typeof AppEmployesRouteWithChildren
   '/_app/export': typeof AppExportRoute
+  '/_app/flotte': typeof AppFlotteRoute
   '/_app/interimaires': typeof AppInterimairesRoute
   '/_app/mes-heures': typeof AppMesHeuresRoute
   '/_app/mes-propositions': typeof AppMesPropositionsRoute
@@ -298,6 +307,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/employes'
     | '/export'
+    | '/flotte'
     | '/interimaires'
     | '/mes-heures'
     | '/mes-propositions'
@@ -329,6 +339,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/employes'
     | '/export'
+    | '/flotte'
     | '/interimaires'
     | '/mes-heures'
     | '/mes-propositions'
@@ -360,6 +371,7 @@ export interface FileRouteTypes {
     | '/_app/dashboard'
     | '/_app/employes'
     | '/_app/export'
+    | '/_app/flotte'
     | '/_app/interimaires'
     | '/_app/mes-heures'
     | '/_app/mes-propositions'
@@ -517,6 +529,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppInterimairesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/flotte': {
+      id: '/_app/flotte'
+      path: '/flotte'
+      fullPath: '/flotte'
+      preLoaderRoute: typeof AppFlotteRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/export': {
       id: '/_app/export'
       path: '/export'
@@ -658,6 +677,7 @@ interface AppRouteChildren {
   AppDashboardRoute: typeof AppDashboardRoute
   AppEmployesRoute: typeof AppEmployesRouteWithChildren
   AppExportRoute: typeof AppExportRoute
+  AppFlotteRoute: typeof AppFlotteRoute
   AppInterimairesRoute: typeof AppInterimairesRoute
   AppMesHeuresRoute: typeof AppMesHeuresRoute
   AppMesPropositionsRoute: typeof AppMesPropositionsRoute
@@ -676,6 +696,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppDashboardRoute: AppDashboardRoute,
   AppEmployesRoute: AppEmployesRouteWithChildren,
   AppExportRoute: AppExportRoute,
+  AppFlotteRoute: AppFlotteRoute,
   AppInterimairesRoute: AppInterimairesRoute,
   AppMesHeuresRoute: AppMesHeuresRoute,
   AppMesPropositionsRoute: AppMesPropositionsRoute,
