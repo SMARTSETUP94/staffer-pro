@@ -651,8 +651,195 @@ function buildHeuresEmployeSheet(employes: Employe[], opts: BuildOpts): XLSX.Wor
   return ws;
 }
 
+const VEHICULE_TYPE_SHORT: Record<VehiculeRef["type"], string> = {
+  VL: "VL",
+  M3_20: "20m³",
+  poids_lourd: "PL",
+};
+
+const STATUT_SOUSTRAITANCE_TAG: Record<TrajetRef["statut_soustraitance"], string> = {
+  non: "",
+  a_sous_traiter: " [À S/T]",
+  devis_envoye: " [Devis env.]",
+  confirme: " [S/T conf.]",
+};
+
+function cellTrajet(t: TrajetRef, chauffeurLabel: string): Cell {
+  const heure = t.heure_depart ? `${t.heure_depart.slice(0, 5)} ` : "";
+  const tag = STATUT_SOUSTRAITANCE_TAG[t.statut_soustraitance] ?? "";
+  const isSubTraite = t.statut_soustraitance !== "non";
+  const fillColor = isSubTraite ? "FEF3C7" : "DBEAFE";
+  return {
+    t: "s",
+    v: `${heure}${t.adresse_depart} → ${t.adresse_arrivee}\n${chauffeurLabel}${tag}`,
+    s: {
+      font: { sz: 9, color: { rgb: "111827" } },
+      fill: { fgColor: { rgb: fillColor } },
+      alignment: { horizontal: "left", vertical: "top", wrapText: true },
+      border: BORDER_ALL,
+    },
+  };
+}
+
+function buildFlotteSheet(opts: BuildOpts): XLSX.WorkSheet {
+  const { weekStart, vehicules = [], trajets = [], employes } = opts;
+  const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+  const empById = new Map(employes.map((e) => [e.id, e]));
+
+  const aoa: Cell[][] = [];
+
+  // Titre
+  aoa.push([
+    {
+      t: "s",
+      v: `Flotte — Semaine ${format(weekStart, "II")} — ${format(weekStart, "d MMM", { locale: fr })} → ${format(addDays(weekStart, 6), "d MMM yyyy", { locale: fr })}`,
+      s: {
+        font: { bold: true, sz: 14, color: { rgb: "FFFFFF" } },
+        fill: { fgColor: { rgb: "111827" } },
+        alignment: { horizontal: "left", vertical: "center" },
+      },
+    },
+  ]);
+  aoa.push([{ t: "s", v: "" }]);
+
+  // En-têtes
+  const header: Cell[] = [
+    { t: "s", v: "Véhicule", s: HEADER_STYLE },
+    { t: "s", v: "Type", s: HEADER_STYLE },
+    ...days.map((d) => ({
+      t: "s" as const,
+      v: format(d, "EEE d MMM", { locale: fr }),
+      s: HEADER_STYLE,
+    })),
+  ];
+  aoa.push(header);
+
+  // Une ligne par véhicule
+  for (const veh of vehicules) {
+    const row: Cell[] = [
+      {
+        t: "s",
+        v: `${veh.nom}${veh.immatriculation ? `\n${veh.immatriculation}` : ""}`,
+        s: NAME_STYLE,
+      },
+      {
+        t: "s",
+        v: VEHICULE_TYPE_SHORT[veh.type],
+        s: { ...SUBHEADER_STYLE, font: { bold: true, sz: 9 } },
+      },
+    ];
+    for (const day of days) {
+      const dStr = format(day, "yyyy-MM-dd");
+      const dayTrajets = trajets
+        .filter((t) => t.vehicule_id === veh.id && t.date === dStr)
+        .sort((a, b) => (a.heure_depart ?? "").localeCompare(b.heure_depart ?? ""));
+      if (dayTrajets.length === 0) {
+        row.push(cellEmpty());
+        continue;
+      }
+      // Concaténer plusieurs trajets dans la même cellule
+      const lines: string[] = [];
+      let isAnySubTraite = false;
+      for (const t of dayTrajets) {
+        const heure = t.heure_depart ? `${t.heure_depart.slice(0, 5)} ` : "";
+        const chauffeur = t.chauffeur_id ? empById.get(t.chauffeur_id) : null;
+        const chauffeurLabel = chauffeur
+          ? `${chauffeur.prenom[0] ?? ""}${chauffeur.nom[0] ?? ""}`.toUpperCase()
+          : "—";
+        const tag = STATUT_SOUSTRAITANCE_TAG[t.statut_soustraitance] ?? "";
+        if (t.statut_soustraitance !== "non") isAnySubTraite = true;
+        lines.push(
+          `${heure}${t.adresse_depart} → ${t.adresse_arrivee} (${chauffeurLabel})${tag}`,
+        );
+      }
+      row.push({
+        t: "s",
+        v: lines.join("\n"),
+        s: {
+          font: { sz: 9, color: { rgb: "111827" } },
+          fill: { fgColor: { rgb: isAnySubTraite ? "FEF3C7" : "DBEAFE" } },
+          alignment: { horizontal: "left", vertical: "top", wrapText: true },
+          border: BORDER_ALL,
+        },
+      });
+    }
+    aoa.push(row);
+  }
+
+  // Trajets sans véhicule (ex: sous-traitance pure)
+  const trajetsSansVeh = trajets.filter((t) => !t.vehicule_id);
+  if (trajetsSansVeh.length > 0) {
+    const row: Cell[] = [
+      {
+        t: "s",
+        v: "Sans véhicule\n(sous-traitance)",
+        s: { ...NAME_STYLE, font: { bold: true, sz: 9, italic: true, color: { rgb: "92400E" } } },
+      },
+      { t: "s", v: "—", s: SUBHEADER_STYLE },
+    ];
+    for (const day of days) {
+      const dStr = format(day, "yyyy-MM-dd");
+      const dayTrajets = trajetsSansVeh.filter((t) => t.date === dStr);
+      if (dayTrajets.length === 0) {
+        row.push(cellEmpty());
+        continue;
+      }
+      const lines = dayTrajets.map((t) => {
+        const heure = t.heure_depart ? `${t.heure_depart.slice(0, 5)} ` : "";
+        const tag = STATUT_SOUSTRAITANCE_TAG[t.statut_soustraitance] ?? "";
+        return `${heure}${t.adresse_depart} → ${t.adresse_arrivee}${tag}`;
+      });
+      row.push({
+        t: "s",
+        v: lines.join("\n"),
+        s: {
+          font: { sz: 9, color: { rgb: "111827" } },
+          fill: { fgColor: { rgb: "FEF3C7" } },
+          alignment: { horizontal: "left", vertical: "top", wrapText: true },
+          border: BORDER_ALL,
+        },
+      });
+    }
+    aoa.push(row);
+  }
+
+  if (vehicules.length === 0 && trajetsSansVeh.length === 0) {
+    aoa.push([
+      {
+        t: "s",
+        v: "Aucun véhicule ni trajet sur la semaine.",
+        s: { font: { italic: true, color: { rgb: "9CA3AF" } } },
+      },
+    ]);
+  }
+
+  // Légende
+  aoa.push([{ t: "s", v: "" }]);
+  aoa.push([
+    {
+      t: "s",
+      v: "Bleu = trajet interne · Jaune = sous-traitance · Initiales = chauffeur",
+      s: { font: { italic: true, sz: 9, color: { rgb: "6B7280" } } },
+    },
+  ]);
+
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws["!cols"] = [
+    { wch: 22 }, // véhicule
+    { wch: 8 }, // type
+    ...days.map(() => ({ wch: 26 })),
+  ];
+  ws["!rows"] = [{ hpt: 26 }, { hpt: 8 }, { hpt: 28 }];
+  ws["!merges"] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 1 + days.length } }];
+  ws["!freeze"] = { xSplit: 2, ySplit: 3 };
+  return ws;
+}
+
+// Exposé pour les tests unitaires (indirectement via construction)
+export { buildFlotteSheet };
+
 export function exportPlanningExcel(opts: BuildOpts): void {
-  const { employes, assignations, weekStart } = opts;
+  const { employes, assignations, weekStart, vehicules, trajets } = opts;
 
   const cdiCdd = employes.filter((e) => e.type_contrat === "CDI" || e.type_contrat === "CDD");
   const assignedIds = new Set(assignations.map((a) => a.employe_id));
@@ -665,6 +852,10 @@ export function exportPlanningExcel(opts: BuildOpts): void {
   XLSX.utils.book_append_sheet(wb, buildEmployeSheet("Intérim / Indép.", interim, opts), "Intérim");
   XLSX.utils.book_append_sheet(wb, buildSyntheseSheet(opts), "Synthèse chantier");
   XLSX.utils.book_append_sheet(wb, buildHeuresEmployeSheet(cdiCdd, opts), "Heures par employé");
+  // Feuille Flotte uniquement si véhicules ou trajets fournis
+  if ((vehicules && vehicules.length > 0) || (trajets && trajets.length > 0)) {
+    XLSX.utils.book_append_sheet(wb, buildFlotteSheet(opts), "Flotte");
+  }
 
   const filename = `planning-S${format(weekStart, "II")}-${format(weekStart, "yyyy-MM-dd")}.xlsx`;
   XLSX.writeFile(wb, filename);
