@@ -136,15 +136,25 @@ function ValidationHeuresPage() {
 
   const validateBulk = async (ids: string[]) => {
     if (ids.length === 0) return;
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("heures_saisies")
       .update({ statut: "valide" })
-      .in("id", ids);
+      .in("id", ids)
+      .eq("statut", "soumis")
+      .select("id");
     if (error) {
       toast.error(error.message);
       return;
     }
-    toast.success(`${ids.length} saisie(s) validée(s)`);
+    const updated = data?.length ?? 0;
+    const ignored = ids.length - updated;
+    if (updated === 0) {
+      toast.warning("Aucune saisie validée : elles ont déjà été traitées par un autre chef.");
+    } else if (ignored > 0) {
+      toast.warning(`${updated} validée(s), ${ignored} ignorée(s) (déjà traitée(s) par un autre chef).`);
+    } else {
+      toast.success(`${updated} saisie(s) validée(s)`);
+    }
     setReloadKey((k) => k + 1);
   };
 
