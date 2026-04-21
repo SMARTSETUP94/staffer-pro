@@ -176,6 +176,7 @@ export function MesHeuresGrid({ weekStart, variant, employeIdOverride }: Props) 
                       row={row}
                       variant={variant}
                       onUpdate={upsertSaisie}
+                      onAcknowledge={acknowledgeRejet}
                     />
                   ))}
                 </div>
