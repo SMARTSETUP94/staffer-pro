@@ -77,11 +77,11 @@ export function FlotteKpisBloc() {
       // Alertes J-30 sur CT (échéance = date_controle_technique + 2 ans) / révision / assurance
       const alertesArr: AlerteVehicule[] = [];
       vehicules.forEach((v) => {
-        const checks: Array<[AlerteVehicule["type"], string | null, AlerteNiveauLocal]> = [
+        const checks = [
           ["controle_technique", dateExpirationCT(v.date_controle_technique), alerteCT(v.date_controle_technique, 30)],
           ["revision", v.date_prochaine_revision, alerteDate(v.date_prochaine_revision, 30)],
           ["assurance", v.date_expiration_assurance, alerteDate(v.date_expiration_assurance, 30)],
-        ];
+        ] as const;
         checks.forEach(([type, date, niveau]) => {
           if (!date) return;
           if (niveau === "warning" || niveau === "expired") {
