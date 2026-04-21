@@ -29,7 +29,7 @@ import { toast } from "sonner";
 import { useAuth, type AppRole } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  inviteUser, resendInvitation, updateUserRole, setUserActive, deleteUser,
+  inviteUser, resendInvitation, updateUserRole, setUserActive, deleteUser, linkExistingUsers,
 } from "@/lib/admin-actions";
 import { PageHeader } from "@/components/PageHeader";
 import { format, formatDistanceToNow } from "date-fns";
@@ -97,6 +97,7 @@ function UtilisateursPage() {
 
   const [confirmDelete, setConfirmDelete] = useState<UserRow | null>(null);
   const [actingOn, setActingOn] = useState<string | null>(null);
+  const [linking, setLinking] = useState(false);
 
   useEffect(() => {
     if (!loading && !isAdmin) navigate({ to: "/dashboard" });
@@ -293,6 +294,26 @@ function UtilisateursPage() {
     }
   }
 
+  async function handleLinkExisting() {
+    setLinking(true);
+    try {
+      const result = await linkExistingUsers({ data: undefined as never });
+      if (result.lies === 0) {
+        toast.info(`Aucun nouvel employé lié. ${result.orphelinsRestants} employé(s) sans compte associé.`);
+      } else {
+        toast.success(`${result.lies} employé(s) lié(s) automatiquement. ${result.orphelinsRestants} restant(s).`);
+      }
+      if (result.errors.length > 0) {
+        console.warn("link errors:", result.errors);
+      }
+      loadUsers();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Échec liaison");
+    } finally {
+      setLinking(false);
+    }
+  }
+
   if (loading || !isAdmin) {
     return (
       <div className="flex h-full items-center justify-center">
@@ -301,16 +322,29 @@ function UtilisateursPage() {
     );
   }
 
+
   return (
     <div className="flex flex-col gap-6 p-6">
       <PageHeader
         title="Utilisateurs"
         description="Invitez les chefs d'équipe et employés, gérez leurs rôles et statuts."
         actions={
-          <Button onClick={() => setInviteOpen(true)} className="gap-1.5">
-            <UserPlus className="h-4 w-4" />
-            Inviter un utilisateur
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={handleLinkExisting}
+              disabled={linking}
+              className="gap-1.5"
+              title="Lie automatiquement les fiches employés aux comptes utilisateurs via correspondance email"
+            >
+              {linking ? <Loader2 className="h-4 w-4 animate-spin" /> : <Link2 className="h-4 w-4" />}
+              Auto-lier employés
+            </Button>
+            <Button onClick={() => setInviteOpen(true)} className="gap-1.5">
+              <UserPlus className="h-4 w-4" />
+              Inviter un utilisateur
+            </Button>
+          </div>
         }
       />
 

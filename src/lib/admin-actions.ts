@@ -327,6 +327,78 @@ export const setUserActive = createServerFn({ method: "POST" })
   });
 
 // ============================================================================
+// linkExistingUsers : auto-lie les employés orphelins aux profiles via email
+// ============================================================================
+export const linkExistingUsers = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    await assertCallerIsAdmin(supabase, userId);
+
+    // Compteurs avant
+    const { count: orphelinsAvant } = await supabaseAdmin
+      .from("employes")
+      .select("id", { count: "exact", head: true })
+      .is("profile_id", null)
+      .not("email", "is", null);
+
+    // Récupère tous les profiles
+    const { data: profiles, error: pErr } = await supabaseAdmin
+      .from("profiles")
+      .select("id, email");
+    if (pErr) throw new Error("Erreur lecture profiles : " + pErr.message);
+
+    // Récupère tous les employés orphelins avec email
+    const { data: employes, error: eErr } = await supabaseAdmin
+      .from("employes")
+      .select("id, email")
+      .is("profile_id", null)
+      .not("email", "is", null);
+    if (eErr) throw new Error("Erreur lecture employés : " + eErr.message);
+
+    // Index profiles par email (lower-case)
+    const profileByEmail = new Map<string, string>();
+    for (const p of profiles ?? []) {
+      if (p.email) profileByEmail.set(p.email.trim().toLowerCase(), p.id);
+    }
+
+    // Set des profiles déjà liés (pour éviter doublons)
+    const { data: linked } = await supabaseAdmin
+      .from("employes")
+      .select("profile_id")
+      .not("profile_id", "is", null);
+    const usedProfiles = new Set((linked ?? []).map((r) => r.profile_id as string));
+
+    // Match + update
+    let lies = 0;
+    const errors: string[] = [];
+    const nowIso = new Date().toISOString();
+    for (const emp of employes ?? []) {
+      if (!emp.email) continue;
+      const profileId = profileByEmail.get(emp.email.trim().toLowerCase());
+      if (!profileId || usedProfiles.has(profileId)) continue;
+      const { error: upErr } = await supabaseAdmin
+        .from("employes")
+        .update({ profile_id: profileId, updated_at: nowIso })
+        .eq("id", emp.id);
+      if (upErr) {
+        errors.push(`${emp.email}: ${upErr.message}`);
+      } else {
+        usedProfiles.add(profileId);
+        lies++;
+      }
+    }
+
+    return {
+      success: true,
+      lies,
+      orphelinsAvant: orphelinsAvant ?? 0,
+      orphelinsRestants: (orphelinsAvant ?? 0) - lies,
+      errors: errors.slice(0, 10),
+    };
+  });
+
+// ============================================================================
 // deleteUser : suppression définitive
 // ============================================================================
 export const deleteUser = createServerFn({ method: "POST" })
