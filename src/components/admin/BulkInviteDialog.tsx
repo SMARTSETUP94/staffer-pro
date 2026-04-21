@@ -456,3 +456,91 @@ function StatusBadge({ status }: { status: RowStatus }) {
       );
   }
 }
+
+function ErrorDetailsSection({ results }: { results: ResultRow[] }) {
+  const failed = results.filter((r) => r.errorDetail);
+  if (failed.length === 0) return null;
+
+  function copyAll() {
+    const text = failed
+      .map((r) => {
+        const d = r.errorDetail!;
+        const status = d.status ? `[HTTP ${d.status} ${d.statusText ?? ""}]`.trim() : "";
+        return `── ${r.email} ${status}\n${d.message}\n${d.body ?? ""}`.trim();
+      })
+      .join("\n\n");
+    navigator.clipboard
+      .writeText(text)
+      .then(() => toast.success("Détails copiés dans le presse-papier"))
+      .catch(() => toast.error("Impossible de copier"));
+  }
+
+  return (
+    <div className="rounded-md border border-destructive/30 bg-destructive/5">
+      <div className="flex items-center justify-between gap-2 border-b border-destructive/20 px-3 py-2">
+        <div className="flex items-center gap-2 text-sm font-medium text-destructive">
+          <AlertCircle className="h-4 w-4" />
+          Détails des erreurs ({failed.length})
+        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={copyAll}
+          className="h-7 gap-1.5 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive"
+        >
+          <Copy className="h-3 w-3" />
+          Copier tout
+        </Button>
+      </div>
+      <Accordion type="multiple" className="px-2">
+        {failed.map((r) => {
+          const d = r.errorDetail!;
+          return (
+            <AccordionItem key={r.email} value={r.email} className="border-b-0">
+              <AccordionTrigger className="py-2 hover:no-underline">
+                <div className="flex flex-1 items-center gap-2 text-left">
+                  <span className="font-mono text-xs">{r.email}</span>
+                  {d.status && (
+                    <Badge
+                      variant="outline"
+                      className="border-destructive/30 bg-destructive/10 px-1.5 py-0 font-mono text-[10px] text-destructive"
+                    >
+                      HTTP {d.status}
+                      {d.statusText ? ` ${d.statusText}` : ""}
+                    </Badge>
+                  )}
+                  <span className="truncate text-xs text-muted-foreground">
+                    {d.message}
+                  </span>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent>
+                <div className="space-y-2 pb-2">
+                  <div>
+                    <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                      Message
+                    </div>
+                    <div className="font-mono text-xs text-foreground">{d.message}</div>
+                  </div>
+                  {d.body && d.body !== d.message && (
+                    <div>
+                      <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                        Réponse serveur ({d.kind})
+                      </div>
+                      <pre className="max-h-40 overflow-auto whitespace-pre-wrap rounded border bg-muted/30 p-2 font-mono text-[11px] text-muted-foreground">
+                        {d.body}
+                      </pre>
+                    </div>
+                  )}
+                  <div className="text-[10px] text-muted-foreground">
+                    {r.attempts} tentative{r.attempts > 1 ? "s" : ""}
+                  </div>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          );
+        })}
+      </Accordion>
+    </div>
+  );
+}
