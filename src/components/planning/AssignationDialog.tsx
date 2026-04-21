@@ -194,6 +194,7 @@ export function AssignationDialog({
     setEditingId(a.id);
     setAffaireId(a.affaire_id);
     setMetierId(a.metier_id);
+    setDevisId(a.devis_id ?? null);
     setSlot(a.demi_journee as Slot);
     setHeures(Number(a.heures));
     setNotes(a.notes ?? "");
@@ -203,6 +204,7 @@ export function AssignationDialog({
     setEditingId(null);
     setAffaireId("");
     setMetierId(employe.metier_principal_id);
+    setDevisId(null);
     // Choix par défaut : premier slot libre
     const usedSlots = new Set(existing.map((e) => e.demi_journee));
     if (usedSlots.has("JOURNEE")) {
@@ -247,6 +249,7 @@ export function AssignationDialog({
       employe_id: employe.id,
       affaire_id: affaireId,
       metier_id: metierId,
+      devis_id: devisId,
       demi_journee: slot,
       heures,
       date: dateStr,
