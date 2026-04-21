@@ -5,6 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { useMetiers } from "@/hooks/use-metiers";
 import { PageHeader } from "@/components/PageHeader";
+import { PageBreadcrumbs } from "@/components/PageBreadcrumbs";
+import { ImportsTabsNav } from "@/components/ImportsTabsNav";
 import { MetierBadge } from "@/components/MetierBadge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -250,12 +252,13 @@ function EmployesImportPage() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-6 p-6">
+      <PageBreadcrumbs steps={[{ label: "Imports", to: "/employes/import" }, { label: "Employés" }]} />
       <PageHeader
-        number="03"
-        eyebrow="Données / Import"
+        eyebrow="Administration / Imports"
         title="Import employés"
         description="Charger un export RH au format CSV (séparateur ; , encodage Windows-1252). Les lignes seront mises en correspondance avec les fiches existantes avant validation."
       />
+      <ImportsTabsNav />
 
       {/* Zone drop */}
       <div

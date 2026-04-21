@@ -2,7 +2,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import {
   Calendar, Building2, Users, FileUp, FileDown, ClipboardCheck, LogOut, Clock, CalendarOff,
   Smartphone, UserCircle, LayoutDashboard, FileText, Trophy, Map, ArrowLeftRight, ClipboardList,
-  Truck, FileQuestion, Palette, History, MessageCircle,
+  Truck, FileQuestion, Palette, MessageCircle,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -12,44 +12,113 @@ import {
 import { useAuth } from "@/lib/auth-context";
 import { usePreview } from "@/lib/preview-context";
 import { Button } from "@/components/ui/button";
+import { useValidationCount } from "@/hooks/use-validation-count";
 
 import { ViewAsSwitcher } from "./ViewAsSwitcher";
+
+type EffRole = "admin" | "chef_chantier" | "employe";
 
 interface NavItem {
   title: string;
   url: string;
   icon: typeof Calendar;
-  /** Visibilité selon le rôle effectif */
-  show: (role: "admin" | "chef_chantier" | "employe") => boolean;
+  /** Visibilité selon le rôle effectif. */
+  show: (role: EffRole) => boolean;
+  /** Compteur optionnel (badge indigo si > 0). */
+  count?: number;
 }
 
-const items: NavItem[] = [
-  { title: "Ma semaine", url: "/dashboard-employe", icon: LayoutDashboard, show: (r) => r === "employe" },
-  { title: "Mes heures", url: "/mes-heures", icon: Clock, show: (r) => r === "employe" },
-  { title: "Mes échanges", url: "/mes-swaps", icon: ArrowLeftRight, show: (r) => r === "employe" },
-  { title: "Mes propositions", url: "/mes-propositions", icon: ClipboardList, show: (r) => r === "employe" },
-  { title: "Tableau de bord", url: "/dashboard", icon: LayoutDashboard, show: (r) => r === "admin" || r === "chef_chantier" },
-  { title: "Planning", url: "/planning", icon: Calendar, show: (r) => r === "admin" || r === "chef_chantier" },
-  { title: "Affaires", url: "/affaires", icon: Building2, show: (r) => r === "admin" || r === "chef_chantier" },
-  { title: "Devis", url: "/devis", icon: FileText, show: (r) => r === "admin" || r === "chef_chantier" },
-  { title: "Employés", url: "/employes", icon: Users, show: (r) => r === "admin" || r === "chef_chantier" },
-  { title: "Absences", url: "/absences", icon: CalendarOff, show: (r) => r === "admin" || r === "chef_chantier" },
-  { title: "Intérimaires", url: "/interimaires", icon: Trophy, show: (r) => r === "admin" || r === "chef_chantier" },
-  { title: "Flotte", url: "/flotte", icon: Truck, show: (r) => r === "admin" || r === "chef_chantier" },
-  { title: "Import employés", url: "/employes/import", icon: FileUp, show: (r) => r === "admin" || r === "chef_chantier" },
-  { title: "Import devis", url: "/devis/import", icon: FileUp, show: (r) => r === "admin" || r === "chef_chantier" },
-  { title: "Historique imports", url: "/devis/historique", icon: History, show: (r) => r === "admin" || r === "chef_chantier" },
-  { title: "Export planning", url: "/export", icon: FileDown, show: (r) => r === "admin" || r === "chef_chantier" },
-  { title: "Demandes de devis", url: "/export/demandes-devis", icon: FileQuestion, show: (r) => r === "admin" || r === "chef_chantier" },
-  { title: "Validation heures", url: "/validation-heures", icon: ClipboardCheck, show: (r) => r === "admin" || r === "chef_chantier" },
-  { title: "Signalements", url: "/admin/feedback", icon: MessageCircle, show: (r) => r === "admin" },
-  { title: "Roadmap", url: "/roadmap", icon: Map, show: (r) => r === "admin" },
-];
+interface NavSection {
+  /** Libellé affiché en overline. */
+  label: string;
+  items: NavItem[];
+}
 
-const settingsItems: NavItem[] = [
-  { title: "Utilisateurs", url: "/parametres/utilisateurs", icon: UserCircle, show: (r) => r === "admin" },
-  { title: "Métiers", url: "/parametres/metiers", icon: Palette, show: (r) => r === "admin" },
-];
+function buildSections(role: EffRole, validationCount: number): NavSection[] {
+  const isAdmin = role === "admin";
+  const isAdminOrChef = role === "admin" || role === "chef_chantier";
+
+  // ===== Vue Employé : 3 items flat =====
+  if (role === "employe") {
+    return [
+      {
+        label: "Espace personnel",
+        items: [
+          { title: "Ma semaine", url: "/dashboard-employe", icon: LayoutDashboard, show: () => true },
+          { title: "Mes heures", url: "/mes-heures", icon: Clock, show: () => true },
+          { title: "Mes échanges", url: "/mes-swaps", icon: ArrowLeftRight, show: () => true },
+          { title: "Mes propositions", url: "/mes-propositions", icon: ClipboardList, show: () => true },
+        ],
+      },
+    ];
+  }
+
+  // ===== Vue Chef / Admin =====
+  const sections: NavSection[] = [
+    {
+      label: "Pilotage",
+      items: [
+        { title: "Tableau de bord", url: "/dashboard", icon: LayoutDashboard, show: () => true },
+        { title: "Planning", url: "/planning", icon: Calendar, show: () => true },
+      ],
+    },
+    {
+      label: "Chantiers",
+      items: [
+        { title: "Affaires", url: "/affaires", icon: Building2, show: () => true },
+        { title: "Devis", url: "/devis", icon: FileText, show: () => true },
+      ],
+    },
+    {
+      label: "Équipes",
+      items: [
+        { title: "Employés", url: "/employes", icon: Users, show: () => true },
+        { title: "Intérimaires", url: "/interimaires", icon: Trophy, show: () => true },
+        { title: "Absences", url: "/absences", icon: CalendarOff, show: () => true },
+        {
+          title: "Validation heures",
+          url: "/validation-heures",
+          icon: ClipboardCheck,
+          show: () => true,
+          count: validationCount,
+        },
+      ],
+    },
+    {
+      label: "Flotte",
+      items: [
+        { title: "Véhicules", url: "/flotte", icon: Truck, show: () => true },
+      ],
+    },
+  ];
+
+  // ===== Administration : admin only =====
+  if (isAdmin) {
+    sections.push({
+      label: "Administration",
+      items: [
+        { title: "Utilisateurs", url: "/parametres/utilisateurs", icon: UserCircle, show: () => true },
+        { title: "Imports", url: "/employes/import", icon: FileUp, show: () => true },
+        { title: "Export planning", url: "/export", icon: FileDown, show: () => true },
+        { title: "Demandes de devis", url: "/export/demandes-devis", icon: FileQuestion, show: () => true },
+        { title: "Métiers", url: "/parametres/metiers", icon: Palette, show: () => true },
+        { title: "Signalements", url: "/admin/feedback", icon: MessageCircle, show: () => true },
+        { title: "Roadmap", url: "/roadmap", icon: Map, show: () => true },
+      ],
+    });
+  } else if (isAdminOrChef) {
+    // Chef d'équipe : Exports accessibles mais pas la conf
+    sections.push({
+      label: "Outils",
+      items: [
+        { title: "Export planning", url: "/export", icon: FileDown, show: () => true },
+        { title: "Demandes de devis", url: "/export/demandes-devis", icon: FileQuestion, show: () => true },
+      ],
+    });
+  }
+
+  return sections;
+}
 
 export function AppSidebar() {
   const { state } = useSidebar();
@@ -58,9 +127,9 @@ export function AppSidebar() {
   const { effectiveRole, isPreviewing, previewRole } = usePreview();
   const routerState = useRouterState();
   const currentPath = routerState.location.pathname;
+  const validationCount = useValidationCount();
 
-  const visibleItems = items.filter((it) => it.show(effectiveRole));
-  const visibleSettings = settingsItems.filter((it) => it.show(effectiveRole));
+  const sections = buildSections(effectiveRole as EffRole, validationCount);
 
   // En preview "employé" (desktop ou mobile), un admin doit pouvoir naviguer
   // vers les pages mobiles pour QA.
@@ -77,7 +146,7 @@ export function AppSidebar() {
   const isActive = (url: string) =>
     currentPath === url || currentPath.startsWith(url + "/");
 
-  // Rôle réel canonique (admin > chef > employe), pas roles[0] qui dépend de l'ordre DB
+  // Rôle réel canonique (admin > chef > employe)
   const realRole = roles.includes("admin")
     ? "admin"
     : roles.includes("chef_chantier")
@@ -108,47 +177,18 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent className="px-1">
-        <SidebarGroup>
-          {!collapsed && (
-            <SidebarGroupLabel className="overline !text-sidebar-foreground/60">
-              — Navigation
-            </SidebarGroupLabel>
-          )}
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {visibleItems.map((item) => {
-                const active = isActive(item.url);
-                return (
-                  <SidebarMenuItem key={item.url}>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={active}
-                      tooltip={item.title}
-                      className="rounded-xl data-[active=true]:bg-primary data-[active=true]:text-primary-foreground"
-                    >
-                      <Link to={item.url}>
-                        <item.icon className="h-4 w-4 shrink-0" />
-                        <span className="truncate text-sm font-medium">{item.title}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        {visibleSettings.length > 0 && (
-          <SidebarGroup>
+        {sections.map((section) => (
+          <SidebarGroup key={section.label}>
             {!collapsed && (
               <SidebarGroupLabel className="overline !text-sidebar-foreground/60">
-                — Paramètres
+                — {section.label}
               </SidebarGroupLabel>
             )}
             <SidebarGroupContent>
               <SidebarMenu>
-                {visibleSettings.map((item) => {
+                {section.items.map((item) => {
                   const active = isActive(item.url);
+                  const showBadge = (item.count ?? 0) > 0;
                   return (
                     <SidebarMenuItem key={item.url}>
                       <SidebarMenuButton
@@ -160,6 +200,11 @@ export function AppSidebar() {
                         <Link to={item.url}>
                           <item.icon className="h-4 w-4 shrink-0" />
                           <span className="truncate text-sm font-medium">{item.title}</span>
+                          {showBadge && !collapsed && (
+                            <span className="ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-indigo-500 px-1.5 text-[10px] font-bold text-white">
+                              {item.count}
+                            </span>
+                          )}
                         </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -168,7 +213,7 @@ export function AppSidebar() {
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
-        )}
+        ))}
 
         {showMobilePreview && (
           <SidebarGroup>
