@@ -44,6 +44,20 @@ interface RoadmapPlanned {
 const RELEASES: RoadmapRelease[] = [
   {
     date: "2026-04-21",
+    version: "v0.12.1",
+    title: "Fix déconnexion mobile",
+    entries: [
+      {
+        type: "fix",
+        area: "Mobile",
+        title: "Bouton « Se déconnecter » sur /mobile/profil sans effet",
+        description:
+          "Les routes /mobile/* ne sont pas sous le guard _app : après signOut() Supabase, aucune redirection ne se déclenchait et l'écran restait figé. Ajout d'une navigation explicite vers /login après la déconnexion sur mobile.",
+      },
+    ],
+  },
+  {
+    date: "2026-04-21",
     version: "v0.12",
     title: "Auth flow différencié par rôle + reset password via Resend",
     entries: [
