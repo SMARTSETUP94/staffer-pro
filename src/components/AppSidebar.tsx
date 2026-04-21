@@ -19,11 +19,11 @@ import { ViewAsSwitcher } from "./ViewAsSwitcher";
 type EffRole = "admin" | "chef_chantier" | "employe";
 
 /**
- * v0.13 — Refonte IA : 5 sections
+ * v0.14 — Refonte IA : 5 sections
  *  • PILOTAGE      : Dashboard, Planning
- *  • CHANTIERS     : Chantiers (ex Affaires), Devis, Demandes de devis
+ *  • CHANTIERS     : Chantiers (ex Affaires), Devis (clients)
  *  • ÉQUIPES       : Employés, Intérimaires, Absences, Validation heures (badge count)
- *  • VÉHICULES     : Véhicules (ex Flotte)
+ *  • LOGISTIQUE    : Véhicules (flotte), Demandes transport (sous-traitance)
  *  • ADMINISTRATION (admin only) : Utilisateurs, Imports, Exports, Paramètres, Roadmap
  *
  * RBAC strict : on filtre sur `effectiveRole` (et non `isAdmin` réel) pour que
