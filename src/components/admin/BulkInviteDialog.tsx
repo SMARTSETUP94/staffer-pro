@@ -114,7 +114,11 @@ export function BulkInviteDialog({ open, onOpenChange, onComplete }: BulkInviteD
     const r = await inviteUser({
       data: { email, roles: [role] },
     });
-    return { messageId: (r as { messageId?: string | null }).messageId ?? null };
+    if (!r.ok) {
+      // On convertit en throw pour que le retry/catch existant fonctionne
+      throw new Error(r.error);
+    }
+    return { messageId: r.messageId ?? null };
   }
 
   async function handleRun() {
