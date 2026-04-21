@@ -735,21 +735,23 @@ const RELEASES: RoadmapRelease[] = [
 ];
 
 const PLANNED: RoadmapPlanned[] = [
-  // ========== v0.14 — Prochaine release ==========
+  // ========== v0.16 — Demandes transport automatisées + prestataires ==========
   {
     priority: "haute",
-    title: "v0.14 — Centralisation des retours des 5 chefs d'équipe (interviews semaine en cours)",
+    title: "v0.16 — Demandes transport automatisées + base prestataires",
     description:
-      "Sprint dédié aux feedbacks terrain : interviews des 5 chefs Setup Paris, consolidation dans /admin/feedback (filtres par chef, tags par module), priorisation collégiale, puis livraison des 3-5 quick wins identifiés. Objectif : aligner l'app sur le quotidien réel avant d'attaquer les grosses features (PWA, IA staffing).",
+      "L'export planning logistique génère automatiquement les demandes de devis aux transporteurs : pour chaque affaire staffée, pré-remplissage des adresses chargement (atelier Setup Paris par défaut) / déchargement (lieu chantier) avec horaires (J-1 montage 6h, livraison J 7h, retour J démontage). Nouvelle table `prestataires_transport` (nom, email, tel, spécialité VL/PL/SPL/grue, zones géo, notes, RLS chef/admin). Envoi 1 clic via Resend (template branded indigo/cream + PDF récap server-side). Réception et comparaison des offres (saisie manuelle des réponses dans un premier temps), choix du prestataire retenu, statut (brouillon / envoyée / répondue / acceptée / refusée / annulée). Liaison avec Véhicules (proposition « véhicule interne dispo ? » avant sous-traitance) et avec Adresses favorites existantes.",
   },
 
-  // ========== v0.15 — Demandes transport automatisées (logistique) ==========
+  // ========== v0.17 — Module CRM Opportunités (9XXX → 5XXX) ==========
   {
     priority: "haute",
-    title: "v0.15 — Demandes transport automatisées (workflow logistique complet)",
+    title: "v0.17 — Module CRM Opportunités : pipeline amont 9XXX → 5XXX",
     description:
-      "Refonte de /logistique/demandes-transport (ex « Demandes de devis ») en module logistique end-to-end. (1) Auto-génération du PLANNING LOGISTIQUE depuis les chantiers staffés : pour chaque affaire avec date_montage/date_demontage, pré-remplir une demande transport — chargement (atelier Setup Paris par défaut), déchargement (lieu chantier), date/heure chargement (J-1 montage à 6h), livraison (jour montage à 7h), type véhicule suggéré (20m³ / PL / Sous-traitance selon volume estimé), commentaires libres, le tout éditable. (2) Carnet d'adresses transporteurs — nouvelle table `prestataires_transport` (nom, email, tel, spécialité VL/PL/SPL/grue, zones géo, notes, RLS chef/admin). Multi-sélection des destinataires depuis la demande. (3) Envoi 1 clic via Resend : template email branded Setup Paris (indigo/cream) avec toutes les infos structurées + PDF récap généré server-side (jsPDF). (4) Tracking : statut demande (brouillon / envoyée / répondue / acceptée / refusée / annulée), historique par prestataire, comparatif des prix reçus (saisie manuelle des réponses), choix du prestataire retenu. (5) Liaison avec la page Véhicules (proposition « véhicule interne dispo ? » avant d'envoyer en sous-traitance) et avec Adresses favorites existantes (chargement/déchargement). (6) Sidebar LOGISTIQUE enrichie : « Demandes transport » (refonte) + nouveau lien « Prestataires ». À livrer APRÈS v0.14 (feedback chefs).",
+      "Pipeline amont des affaires signées avec Kanban par statut (Envoyé / En cours / Gagné / Perdu / Terminé). Import initial des 30 dernières affaires depuis le fichier CRM Excel existant. Auto-suggestion du prochain numéro libre (9XXX pour les opportunités, 5XXX pour les affaires signées). Bouton « Signer » qui convertit une opportunité Gagnée en affaire 5XXX en gardant le lien `code_opportunite` vers le 9XXX d'origine (traçabilité commerciale conservée). Staffing possible directement sur les 9XXX avec badge `PROTO` visible et alerte « opportunité non signée » sur le planning et la fiche. Unicité garantie au niveau DB via `UNIQUE(code)` sur la table `affaires` (couvre 9XXX et 5XXX en un seul espace de noms). Permet aux commerciaux de pré-staffer les opportunités fortes sans polluer le suivi des affaires signées.",
   },
+
+
 
   // ========== HAUTE PRIORITÉ ==========
   {
