@@ -276,12 +276,15 @@ export function VehiculeDialog({ open, onOpenChange, vehicule, onSaved }: Props)
 
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <Label>Contrôle technique</Label>
+              <Label>Dernier contrôle technique</Label>
               <Input
                 type="date"
                 value={draft.date_controle_technique ?? ""}
                 onChange={(e) => set("date_controle_technique", e.target.value || null)}
               />
+              <p className="mt-1 text-[10px] text-muted-foreground">
+                Validité 2 ans · alerte 30 j avant échéance
+              </p>
             </div>
             <div>
               <Label>Prochaine révision</Label>

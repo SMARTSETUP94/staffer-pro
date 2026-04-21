@@ -1,6 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { getCompatibleChauffeurs } from "@/hooks/use-trajets";
-import { alerteDate, vehiculeAUneAlerte, type Vehicule } from "@/hooks/use-vehicules";
+import {
+  alerteDate, alerteCT, dateExpirationCT, vehiculeAUneAlerte, type Vehicule,
+} from "@/hooks/use-vehicules";
 
 /* ------------------------------------------------------------------ */
 /* getCompatibleChauffeurs                                             */
