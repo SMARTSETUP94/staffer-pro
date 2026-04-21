@@ -99,9 +99,17 @@ function PlanningPage() {
   const affairesOptions = useMemo(
     () =>
       affaires
-        .filter((a) => affairesActivesIds.has(a.id))
-        .map((a) => ({ id: a.id, label: a.numero, sub: a.nom })),
-    [affaires, affairesActivesIds],
+        .filter((a) => {
+          // v0.17 — Inclut les opportunités uniquement si toggle activé
+          if (a.phase === "opportunite") return includeOpportunites;
+          return affairesActivesIds.has(a.id);
+        })
+        .map((a) => ({
+          id: a.id,
+          label: a.numero,
+          sub: a.phase === "opportunite" ? `🟡 PROTO · ${a.nom}` : a.nom,
+        })),
+    [affaires, affairesActivesIds, includeOpportunites],
   );
 
   const metiersOptions = useMemo(
