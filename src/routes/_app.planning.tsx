@@ -287,6 +287,8 @@ function PlanningPage() {
                   absences={absences}
                   filterAffaireIds={filterAffaireStr}
                   filterMetierIds={filterMetierNum}
+                  filterDevisIds={filterDevisStr}
+                  devisLots={devisLots}
                   showWeekend={showWeekend}
                   emptyMessage="Aucun employé CDI/CDD actif."
                   onChanged={refresh}
@@ -315,6 +317,8 @@ function PlanningPage() {
                   absences={absences}
                   filterAffaireIds={filterAffaireStr}
                   filterMetierIds={filterMetierNum}
+                  filterDevisIds={filterDevisStr}
+                  devisLots={devisLots}
                   showWeekend={showWeekend}
                   emptyMessage="Aucun employé intérimaire / indépendant staffé cette semaine. Clique sur « Ajouter un intérimaire »."
                   onChanged={refresh}
