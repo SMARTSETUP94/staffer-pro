@@ -116,60 +116,93 @@ export const inviteUser = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(validateInviteInput)
   .handler(async ({ data, context }) => {
-    const { supabase, userId } = context;
-    await assertCallerIsAdmin(supabase, userId);
-
-    // 1. Générer le lien d'invitation (crée l'utilisateur s'il n'existe pas)
-    const { data: linkData, error: linkErr } = await supabaseAdmin.auth.admin.generateLink({
-      type: "invite",
-      email: data.email,
-      options: {
-        data: {
-          full_name: data.fullName,
-          invited: true,
-          role: data.roles[0],
-        },
-      },
-    });
-    if (linkErr || !linkData?.user) {
-      throw new Error(linkErr?.message ?? "Échec de la génération du lien d'invitation");
-    }
-    const newUserId = linkData.user.id;
-    const inviteLink = linkData.properties?.action_link;
-    if (!inviteLink) throw new Error("Lien d'invitation manquant");
-
-    // 2. Reset les rôles auto-créés + insère les rôles demandés en statut 'invite'
-    await supabaseAdmin.from("user_roles").delete().eq("user_id", newUserId);
-    const nowIso = new Date().toISOString();
-    const rows = data.roles.map((role) => ({
-      user_id: newUserId,
-      role,
-      status: "invite" as const,
-      invited_by: userId,
-      invited_at: nowIso,
-    }));
-    const { error: insErr } = await supabaseAdmin.from("user_roles").insert(rows);
-    if (insErr) throw new Error("Compte créé, mais erreur sur les rôles : " + insErr.message);
-
-    // 3. Auto-lier l'employé matchant (case-insensitive)
-    const linkedEmployeId = await tryAutoLinkEmploye(newUserId, data.email);
-
-    // 4. Envoyer l'email Resend
-    let messageId: string | null = null;
     try {
-      const r = await sendInvitationEmail({
-        email: data.email,
-        fullName: data.fullName,
-        roles: data.roles,
-        inviteLink,
-      });
-      messageId = r.messageId;
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : "Erreur envoi email";
-      throw new Error(`Compte créé et rôles attribués, mais ${msg}`);
-    }
+      const { supabase, userId } = context;
+      await assertCallerIsAdmin(supabase, userId);
 
-    return { success: true, userId: newUserId, email: data.email, linkedEmployeId, messageId };
+      // 1. Générer le lien d'invitation (crée l'utilisateur s'il n'existe pas)
+      const { data: linkData, error: linkErr } = await supabaseAdmin.auth.admin.generateLink({
+        type: "invite",
+        email: data.email,
+        options: {
+          data: {
+            full_name: data.fullName,
+            invited: true,
+            role: data.roles[0],
+          },
+        },
+      });
+      if (linkErr || !linkData?.user) {
+        return {
+          ok: false as const,
+          error: linkErr?.message ?? "Échec de la génération du lien d'invitation",
+          stage: "generate_link",
+        };
+      }
+      const newUserId = linkData.user.id;
+      const inviteLink = linkData.properties?.action_link;
+      if (!inviteLink) {
+        return { ok: false as const, error: "Lien d'invitation manquant", stage: "generate_link" };
+      }
+
+      // 2. Reset les rôles auto-créés + insère les rôles demandés en statut 'invite'
+      await supabaseAdmin.from("user_roles").delete().eq("user_id", newUserId);
+      const nowIso = new Date().toISOString();
+      const rows = data.roles.map((role) => ({
+        user_id: newUserId,
+        role,
+        status: "invite" as const,
+        invited_by: userId,
+        invited_at: nowIso,
+      }));
+      const { error: insErr } = await supabaseAdmin.from("user_roles").insert(rows);
+      if (insErr) {
+        return {
+          ok: false as const,
+          error: "Compte créé, mais erreur sur les rôles : " + insErr.message,
+          stage: "roles",
+          userId: newUserId,
+        };
+      }
+
+      // 3. Auto-lier l'employé matchant (case-insensitive)
+      const linkedEmployeId = await tryAutoLinkEmploye(newUserId, data.email);
+
+      // 4. Envoyer l'email Resend
+      let messageId: string | null = null;
+      try {
+        const r = await sendInvitationEmail({
+          email: data.email,
+          fullName: data.fullName,
+          roles: data.roles,
+          inviteLink,
+        });
+        messageId = r.messageId;
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : "Erreur envoi email";
+        return {
+          ok: false as const,
+          error: `Compte créé et rôles attribués, mais ${msg}`,
+          stage: "email",
+          userId: newUserId,
+          linkedEmployeId,
+        };
+      }
+
+      return {
+        ok: true as const,
+        success: true,
+        userId: newUserId,
+        email: data.email,
+        linkedEmployeId,
+        messageId,
+      };
+    } catch (e) {
+      // Filet de sécurité : ne JAMAIS throw — sinon le client reçoit "[object Response]"
+      const msg = e instanceof Error ? e.message : String(e);
+      console.error("[inviteUser] uncaught:", msg);
+      return { ok: false as const, error: msg, stage: "unexpected" };
+    }
   });
 
 // ============================================================================
