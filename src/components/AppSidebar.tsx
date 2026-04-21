@@ -48,7 +48,6 @@ interface NavSection {
 
 function buildSections(role: EffRole, validationCount: number): NavSection[] {
   const isAdmin = role === "admin";
-  const isAdminOrChef = role === "admin" || role === "chef_chantier";
 
   // ===== Vue Employé : 3 items flat =====
   if (role === "employe") {
@@ -209,7 +208,7 @@ export function AppSidebar() {
                           <item.icon className="h-4 w-4 shrink-0" />
                           <span className="truncate text-sm font-medium">{item.title}</span>
                           {showBadge && !collapsed && (
-                            <span className="ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-indigo-500 px-1.5 text-[10px] font-bold text-white">
+                            <span className="ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-primary-foreground">
                               {item.count}
                             </span>
                           )}
