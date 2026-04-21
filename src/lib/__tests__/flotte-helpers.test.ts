@@ -35,6 +35,10 @@ const vehVL: Vehicule = {
   actif: true,
   cout_journalier_eur: null,
   fournisseur_location: null,
+  date_debut_location: null,
+  date_fin_location: null,
+  prestataire_location: null,
+  reference_contrat: null,
   created_at: "",
   updated_at: "",
 };
