@@ -355,6 +355,47 @@ export function AssignationDialog({
               />
             </div>
 
+            {/* v0.15.1 — Sélecteur de lot/devis : visible si ≥1 lot actif sur l'affaire */}
+            {affaireId && lotsActifs.length > 0 && (
+              <div className="grid gap-1.5">
+                <div className="flex items-center justify-between">
+                  <Label>
+                    Lot / devis{" "}
+                    {lotsActifs.length === 1 && (
+                      <span className="text-[10px] font-normal text-muted-foreground">
+                        (auto)
+                      </span>
+                    )}
+                  </Label>
+                  {lotsActifs.length >= 2 && (
+                    <span className="text-[10px] text-muted-foreground">
+                      {lotsActifs.length} lots actifs
+                    </span>
+                  )}
+                </div>
+                <Select
+                  value={devisId ?? "none"}
+                  onValueChange={(v) => setDevisId(v === "none" ? null : v)}
+                  disabled={lotsActifs.length === 1}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choisir un lot…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">— Non rattaché —</SelectItem>
+                    {lotsActifs.map((l) => (
+                      <SelectItem key={l.id} value={l.id}>
+                        <span className="font-mono font-semibold">{l.numero}</span>
+                        {l.libelle && (
+                          <span className="ml-1.5 text-muted-foreground">— {l.libelle}</span>
+                        )}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
             <div className="grid grid-cols-2 gap-3">
               <div className="grid gap-1.5">
                 <div className="flex items-center justify-between">
