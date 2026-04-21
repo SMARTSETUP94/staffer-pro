@@ -4,6 +4,8 @@ import { History, FileText, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { PageHeader } from "@/components/PageHeader";
+import { PageBreadcrumbs } from "@/components/PageBreadcrumbs";
+import { ImportsTabsNav } from "@/components/ImportsTabsNav";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -101,12 +103,13 @@ function DevisHistoriquePage() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-6 p-6">
+      <PageBreadcrumbs steps={[{ label: "Imports", to: "/employes/import" }, { label: "Historique" }]} />
       <PageHeader
-        number="05"
-        eyebrow="Données / Historique"
+        eyebrow="Administration / Imports"
         title="Historique des imports devis"
         description="Trace de tous les fichiers devis importés. Empêche les doublons par empreinte de fichier."
       />
+      <ImportsTabsNav />
 
       <div className="flex items-center justify-end">
         <Button asChild variant="outline" size="sm">

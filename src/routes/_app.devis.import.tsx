@@ -5,6 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { useMetiers } from "@/hooks/use-metiers";
 import { PageHeader } from "@/components/PageHeader";
+import { PageBreadcrumbs } from "@/components/PageBreadcrumbs";
+import { ImportsTabsNav } from "@/components/ImportsTabsNav";
 import { Card, CardContent } from "@/components/ui/card";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { toast } from "sonner";
@@ -270,12 +272,13 @@ function DevisImportPage() {
   return (
     <TooltipProvider delayDuration={150}>
       <div className="mx-auto max-w-7xl space-y-6 p-6">
+        <PageBreadcrumbs steps={[{ label: "Imports", to: "/employes/import" }, { label: "Devis" }]} />
         <PageHeader
-          number="04"
-          eyebrow="Données / Import"
+          eyebrow="Administration / Imports"
           title="Import devis Excel"
           description="Charge un fichier devis (.xlsx). Le parser pré-remplit les champs et regroupe les heures par métier — à toi de valider ou corriger avant import."
         />
+        <ImportsTabsNav />
 
         {!hasParsed && (
           <DevisImportDropzone
