@@ -46,6 +46,7 @@ function PlanningPage() {
   const [filterMetier, setFilterMetier] = useState<Set<string | number>>(new Set());
   const [filterDevis, setFilterDevis] = useState<Set<string | number>>(new Set());
   const [showWeekend, setShowWeekend] = useState(false);
+  const [includeOpportunites, setIncludeOpportunites] = useState(false);
   const [searchEmploye, setSearchEmploye] = useState("");
 
   const { metiers, employes, affaires, assignations, consommation, absences, chefsById, swapAssignationIds, devisLots, loading, error, refresh } =
