@@ -81,6 +81,7 @@ export function AssignationDialog({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [affaireId, setAffaireId] = useState<string>("");
   const [metierId, setMetierId] = useState<number | null>(null);
+  const [devisId, setDevisId] = useState<string | null>(null);
   const [slot, setSlot] = useState<Slot>("JOURNEE");
   const [heures, setHeures] = useState<number>(8);
   const [notes, setNotes] = useState<string>("");
@@ -95,6 +96,7 @@ export function AssignationDialog({
     setEditingId(null);
     setAffaireId("");
     setMetierId(employe.metier_principal_id);
+    setDevisId(null);
     setSlot("JOURNEE");
     setHeures(8);
     setNotes("");
