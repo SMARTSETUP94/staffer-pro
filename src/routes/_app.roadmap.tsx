@@ -45,7 +45,7 @@ const RELEASES: RoadmapRelease[] = [
   {
     date: "2026-04-21",
     version: "v0.13",
-    title: "Refonte Information Architecture (sidebar 5 sections)",
+    title: "UX polish + refonte IA + mobile-first",
     entries: [
       {
         type: "refactor",
@@ -59,28 +59,21 @@ const RELEASES: RoadmapRelease[] = [
         area: "Sécurité",
         title: "RBAC sidebar strict basé sur le rôle effectif",
         description:
-          "Bug : un admin en preview « Chef d'équipe » continuait de voir la section Administration. La sidebar utilise maintenant `effectiveRole` au lieu du rôle réel pour décider de l'affichage. Les chefs ne voient plus aucune entrée admin.",
+          "Bug critique : un admin en preview « Chef d'équipe » continuait de voir la section Administration. La sidebar utilise maintenant `effectiveRole` au lieu du rôle réel. Les chefs ne voient plus aucune entrée admin (Utilisateurs, Imports, Exports, Métiers, Roadmap, Signalements). L'employé voit 4 items flat (Ma semaine, Mes heures, Mes échanges, Mes propositions).",
       },
       {
         type: "improvement",
         area: "Lisibilité",
-        title: "Renommage Affaires → Chantiers, Flotte → Véhicules",
+        title: "Renommages Affaires → Chantiers et Flotte → Véhicules",
         description:
-          "Vocabulaire aligné sur le métier. Les routes (/affaires, /flotte) restent inchangées pour ne pas casser les liens existants ; seule l'UI évolue (sidebar, command palette, breadcrumbs).",
+          "Vocabulaire aligné sur le métier des chefs Setup Paris. Les routes (/affaires, /flotte) restent inchangées pour ne pas casser les liens existants ; seule l'UI évolue (sidebar, command palette, breadcrumbs, headers).",
       },
       {
         type: "improvement",
         area: "Validation",
         title: "Badge live « Heures à valider » dans la sidebar",
         description:
-          "Compteur indigo sur l'entrée « Validation heures » (Équipes), branché en realtime sur les saisies de statut « soumis ». Plus besoin de cliquer pour savoir qu'il y a quelque chose à traiter.",
-      },
-      {
-        type: "feature",
-        area: "Recherche",
-        title: "Bouton « Rechercher ⌘K » exposé dans le header",
-        description:
-          "La command palette (déjà présente) gagne un déclencheur visible : bouton avec raccourci kbd dans le header, à côté de la cloche. Recherche multi-source affaires + employés + navigation.",
+          "Compteur indigo sur l'entrée « Validation heures » (Équipes), branché en realtime sur les saisies de statut « soumis ». Le compteur est aussi visible sur le dashboard et reste synchronisé. Plus besoin de cliquer pour savoir qu'il y a quelque chose à traiter.",
       },
       {
         type: "improvement",
@@ -88,6 +81,48 @@ const RELEASES: RoadmapRelease[] = [
         title: "Onglet planning « Flotte » renommé « Véhicules staffés »",
         description:
           "Désambigüise avec l'entrée « Véhicules » de la sidebar : on parle bien des véhicules planifiés sur la semaine en cours, pas du parc complet.",
+      },
+      {
+        type: "feature",
+        area: "Recherche",
+        title: "Bouton « Rechercher ⌘K » exposé dans le header",
+        description:
+          "La command palette (déjà présente mais cachée) gagne un déclencheur visible : bouton avec raccourci kbd dans le header, à côté de la cloche de notifications. Recherche multi-source affaires + employés + navigation.",
+      },
+      {
+        type: "refactor",
+        area: "Imports",
+        title: "Page /imports unifiée (3 onglets : Employés / Devis / Historique)",
+        description:
+          "Composant ImportsTabsNav qui regroupe les 3 flux d'import auparavant dispersés (Import employés CSV, Import devis Excel, Historique des imports devis). Un seul point d'entrée admin dans la sidebar.",
+      },
+      {
+        type: "improvement",
+        area: "Navigation",
+        title: "Breadcrumb désormais présent sur Validation heures",
+        description:
+          "Cohérence du fil d'Ariane : toutes les pages chef/admin affichent leur breadcrumb (Équipes › Validation heures, etc.).",
+      },
+      {
+        type: "improvement",
+        area: "Auth",
+        title: "Layout auth unifié split ink/cream sur toutes les pages d'auth",
+        description:
+          "Login, magic link, set-password, forgot-password, reset-password partagent désormais le même layout split (panneau gauche ink avec branding, panneau droit cream avec formulaire). Bouton retour cohérent.",
+      },
+      {
+        type: "feature",
+        area: "Mobile",
+        title: "Breakpoint mobile à 1024px → hamburger drawer Sheet",
+        description:
+          "En dessous de 1024px (lg), la sidebar bascule en drawer Sheet ouvert via hamburger. Au-dessus, elle reste persistante. Permet d'utiliser confortablement l'app sur tablette portrait et téléphone.",
+      },
+      {
+        type: "improvement",
+        area: "Design system",
+        title: "Design tokens CSS Setup Paris (indigo / cream / ink) documentés",
+        description:
+          "Variables CSS oklch pour la palette de marque : Setup Indigo #2A2A8C (--primary, --ring, --accent-foreground), cream #F7F4EF, ink #0A0A0B. Échelles de spacing (4/8/16/24/32) et typographie. Documentation dans docs/DESIGN_TOKENS.md pour cohérence des futures pages.",
       },
     ],
   },
