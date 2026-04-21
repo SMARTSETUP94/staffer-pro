@@ -156,8 +156,13 @@ export function usePlanningData(weekStart: Date, weekEnd: Date): PlanningData {
         .from("swap_requests")
         .select("from_assignation_id, to_assignation_id")
         .in("statut", ["proposee", "acceptee_collegue"]),
+      // v0.15.1 — Devis (lots) de toutes les affaires, pour sélecteur lot Planning
+      supabase
+        .from("devis")
+        .select("id, affaire_id, numero, libelle, statut, date_debut_phase, date_fin_phase, livre_le")
+        .order("created_at", { ascending: true }),
     ])
-      .then(([mRes, eRes, aRes, asRes, cRes, abRes, chefsRes, swapsRes]) => {
+      .then(([mRes, eRes, aRes, asRes, cRes, abRes, chefsRes, swapsRes, dvRes]) => {
         if (cancelled) return;
         if (mRes.error) throw mRes.error;
         if (eRes.error) throw eRes.error;
@@ -167,6 +172,7 @@ export function usePlanningData(weekStart: Date, weekEnd: Date): PlanningData {
         if (abRes.error) throw abRes.error;
         if (chefsRes.error) throw chefsRes.error;
         if (swapsRes.error) throw swapsRes.error;
+        if (dvRes.error) throw dvRes.error;
         setMetiers((mRes.data ?? []) as Metier[]);
         setEmployes((eRes.data ?? []) as Employe[]);
         setAffaires((aRes.data ?? []) as Affaire[]);
@@ -182,6 +188,7 @@ export function usePlanningData(weekStart: Date, weekEnd: Date): PlanningData {
           if (s.to_assignation_id) swapIds.add(s.to_assignation_id);
         });
         setSwapAssignationIds(swapIds);
+        setDevisLots((dvRes.data ?? []) as DevisLot[]);
         setLoading(false);
       })
       .catch((e) => {
@@ -204,6 +211,7 @@ export function usePlanningData(weekStart: Date, weekEnd: Date): PlanningData {
     absences,
     chefsById,
     swapAssignationIds,
+    devisLots,
     loading,
     error,
     refresh: () => setTick((t) => t + 1),
