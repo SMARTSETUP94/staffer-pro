@@ -162,6 +162,11 @@ function AffaireItem({
       <div className="flex min-w-0 flex-col">
         <div className="flex items-center gap-1.5">
           <span className="font-mono text-xs font-semibold">{affaire.numero}</span>
+          {affaire.phase === "opportunite" && (
+            <span className="rounded bg-warning/20 px-1 py-0 text-[9px] font-bold uppercase tracking-wider text-warning-foreground">
+              PROTO
+            </span>
+          )}
           <span className="truncate text-sm">{affaire.nom}</span>
         </div>
         {(affaire.client || affaire.lieu) && (
