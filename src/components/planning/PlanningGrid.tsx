@@ -24,6 +24,7 @@ import type {
   Affaire,
   Assignation,
   DevisConsommation,
+  DevisLot,
   Employe,
   Metier,
 } from "@/hooks/use-planning-data";
@@ -45,6 +46,10 @@ interface Props {
   absences: Absence[];
   filterAffaireIds?: Set<string>;
   filterMetierIds?: Set<number>;
+  /** v0.15.1 — Filtre par lot/devis (ids). */
+  filterDevisIds?: Set<string>;
+  /** v0.15.1 — Tous les lots/devis pour le sélecteur dans AssignationDialog. */
+  devisLots?: DevisLot[];
   showWeekend?: boolean;
   emptyMessage: string;
   onChanged?: () => void;
@@ -76,6 +81,8 @@ export function PlanningGrid({
   absences,
   filterAffaireIds,
   filterMetierIds,
+  filterDevisIds,
+  devisLots = [],
   showWeekend = false,
   emptyMessage,
   onChanged,
