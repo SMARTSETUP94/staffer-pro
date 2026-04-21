@@ -140,11 +140,6 @@ export function PipelineCommercialBloc() {
     () => filtered.filter((o) => o.statut_opportunite === "envoye"),
     [filtered],
   );
-  const gagneesActives = useMemo(
-    () => filtered.filter((o) => o.statut_opportunite === "gagne"),
-    [filtered],
-  );
-
   // Tension
   const aFaireTension = useMemo(
     () => aFaire.filter((o) => daysSince(o.date_opportunite) >= 1),
