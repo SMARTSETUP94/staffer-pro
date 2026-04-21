@@ -504,8 +504,8 @@ function DevisImportPage() {
                     <thead className="bg-muted/40 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                       <tr>
                         <th className="px-3 py-2 text-left">Métier</th>
-                        <th className="px-3 py-2 text-right w-[140px]">Heures prévues</th>
-                        <th className="px-3 py-2 text-right w-[160px]">Montant HT</th>
+                        <th className="px-3 py-2 text-right w-[180px]">Heures prévues</th>
+                        <th className="px-3 py-2 text-right w-[200px]">Montant HT</th>
                         <th className="px-3 py-2 text-center w-[60px]">Sources</th>
                         <th className="px-3 py-2 w-[60px]"></th>
                       </tr>
