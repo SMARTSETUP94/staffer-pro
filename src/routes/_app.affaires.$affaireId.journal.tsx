@@ -229,6 +229,7 @@ function JournalPage() {
       } else {
         setBody("");
         setPendingFiles([]);
+        mentionedIdsRef.current.clear();
         toast.success("Commentaire publié");
       }
     } finally {
