@@ -56,6 +56,18 @@ export interface DevisConsommation {
   pct_consomme: number;
 }
 
+/** v0.15.1 — Lot/devis exposé pour le sélecteur Planning et l'autofill assignation. */
+export interface DevisLot {
+  id: string;
+  affaire_id: string;
+  numero: string;
+  libelle: string | null;
+  statut: "brouillon" | "signe" | "en_cours" | "termine" | "facture" | "cloture";
+  date_debut_phase: string | null;
+  date_fin_phase: string | null;
+  livre_le: string | null;
+}
+
 export type AbsenceType = "conges" | "formation" | "arret_maladie" | "rtt" | "autre";
 
 export interface Absence {
@@ -84,6 +96,8 @@ export interface PlanningData {
   absences: Absence[];
   chefsById: Map<string, ChefRef>;
   swapAssignationIds: Set<string>;
+  /** v0.15.1 — Tous les devis (lots) des affaires actives, pour sélecteur lot et autofill. */
+  devisLots: DevisLot[];
   loading: boolean;
   error: string | null;
   refresh: () => void;
@@ -98,6 +112,7 @@ export function usePlanningData(weekStart: Date, weekEnd: Date): PlanningData {
   const [absences, setAbsences] = useState<Absence[]>([]);
   const [chefsById, setChefsById] = useState<Map<string, ChefRef>>(new Map());
   const [swapAssignationIds, setSwapAssignationIds] = useState<Set<string>>(new Set());
+  const [devisLots, setDevisLots] = useState<DevisLot[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
@@ -141,8 +156,13 @@ export function usePlanningData(weekStart: Date, weekEnd: Date): PlanningData {
         .from("swap_requests")
         .select("from_assignation_id, to_assignation_id")
         .in("statut", ["proposee", "acceptee_collegue"]),
+      // v0.15.1 — Devis (lots) de toutes les affaires, pour sélecteur lot Planning
+      supabase
+        .from("devis")
+        .select("id, affaire_id, numero, libelle, statut, date_debut_phase, date_fin_phase, livre_le")
+        .order("created_at", { ascending: true }),
     ])
-      .then(([mRes, eRes, aRes, asRes, cRes, abRes, chefsRes, swapsRes]) => {
+      .then(([mRes, eRes, aRes, asRes, cRes, abRes, chefsRes, swapsRes, dvRes]) => {
         if (cancelled) return;
         if (mRes.error) throw mRes.error;
         if (eRes.error) throw eRes.error;
@@ -152,6 +172,7 @@ export function usePlanningData(weekStart: Date, weekEnd: Date): PlanningData {
         if (abRes.error) throw abRes.error;
         if (chefsRes.error) throw chefsRes.error;
         if (swapsRes.error) throw swapsRes.error;
+        if (dvRes.error) throw dvRes.error;
         setMetiers((mRes.data ?? []) as Metier[]);
         setEmployes((eRes.data ?? []) as Employe[]);
         setAffaires((aRes.data ?? []) as Affaire[]);
@@ -167,6 +188,7 @@ export function usePlanningData(weekStart: Date, weekEnd: Date): PlanningData {
           if (s.to_assignation_id) swapIds.add(s.to_assignation_id);
         });
         setSwapAssignationIds(swapIds);
+        setDevisLots((dvRes.data ?? []) as DevisLot[]);
         setLoading(false);
       })
       .catch((e) => {
@@ -189,6 +211,7 @@ export function usePlanningData(weekStart: Date, weekEnd: Date): PlanningData {
     absences,
     chefsById,
     swapAssignationIds,
+    devisLots,
     loading,
     error,
     refresh: () => setTick((t) => t + 1),
