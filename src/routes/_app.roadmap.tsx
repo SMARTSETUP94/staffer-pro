@@ -602,6 +602,14 @@ const RELEASES: RoadmapRelease[] = [
 ];
 
 const PLANNED: RoadmapPlanned[] = [
+  // ========== v0.14 — Prochaine release ==========
+  {
+    priority: "haute",
+    title: "v0.14 — Centralisation des retours des 5 chefs d'équipe (interviews semaine en cours)",
+    description:
+      "Sprint dédié aux feedbacks terrain : interviews des 5 chefs Setup Paris, consolidation dans /admin/feedback (filtres par chef, tags par module), priorisation collégiale, puis livraison des 3-5 quick wins identifiés. Objectif : aligner l'app sur le quotidien réel avant d'attaquer les grosses features (PWA, IA staffing).",
+  },
+
   // ========== HAUTE PRIORITÉ ==========
   {
     priority: "haute",
