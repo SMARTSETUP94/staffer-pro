@@ -77,6 +77,16 @@ export function useVehiculeChauffeursAutorises(vehiculeId: string | null) {
 /** Helpers J-30 sur dates de contrôle / révision / assurance */
 export type AlerteNiveau = "ok" | "warning" | "expired" | "none";
 
+/** Durée de validité d'un contrôle technique (années) */
+export const CT_VALIDITE_ANNEES = 2;
+
+/**
+ * Calcule un niveau d'alerte par rapport à une date d'échéance.
+ * - expired : la date est passée
+ * - warning : on est dans la fenêtre `joursAvant` avant l'échéance
+ * - ok      : encore au-delà de la fenêtre
+ * - none    : pas de date renseignée
+ */
 export function alerteDate(date: string | null, joursAvant = 30): AlerteNiveau {
   if (!date) return "none";
   const d = new Date(date + "T00:00:00").getTime();
@@ -88,9 +98,28 @@ export function alerteDate(date: string | null, joursAvant = 30): AlerteNiveau {
   return "ok";
 }
 
+/**
+ * Renvoie la date d'expiration du CT (date du dernier contrôle + 2 ans),
+ * au format ISO YYYY-MM-DD. `null` si pas de date d'origine.
+ */
+export function dateExpirationCT(dateControle: string | null): string | null {
+  if (!dateControle) return null;
+  const d = new Date(dateControle + "T00:00:00");
+  d.setFullYear(d.getFullYear() + CT_VALIDITE_ANNEES);
+  return d.toISOString().slice(0, 10);
+}
+
+/**
+ * Alerte spécifique au CT : on calcule sur la date d'expiration
+ * (date du dernier contrôle + 2 ans), pas sur la date de contrôle.
+ */
+export function alerteCT(dateControle: string | null, joursAvant = 30): AlerteNiveau {
+  return alerteDate(dateExpirationCT(dateControle), joursAvant);
+}
+
 export function vehiculeAUneAlerte(v: Vehicule, joursAvant = 30): boolean {
   const niveaux = [
-    alerteDate(v.date_controle_technique, joursAvant),
+    alerteCT(v.date_controle_technique, joursAvant),
     alerteDate(v.date_prochaine_revision, joursAvant),
     alerteDate(v.date_expiration_assurance, joursAvant),
   ];
