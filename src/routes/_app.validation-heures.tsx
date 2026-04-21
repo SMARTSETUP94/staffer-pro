@@ -136,15 +136,25 @@ function ValidationHeuresPage() {
 
   const validateBulk = async (ids: string[]) => {
     if (ids.length === 0) return;
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("heures_saisies")
       .update({ statut: "valide" })
-      .in("id", ids);
+      .in("id", ids)
+      .eq("statut", "soumis")
+      .select("id");
     if (error) {
       toast.error(error.message);
       return;
     }
-    toast.success(`${ids.length} saisie(s) validée(s)`);
+    const updated = data?.length ?? 0;
+    const ignored = ids.length - updated;
+    if (updated === 0) {
+      toast.warning("Aucune saisie validée : elles ont déjà été traitées par un autre chef.");
+    } else if (ignored > 0) {
+      toast.warning(`${updated} validée(s), ${ignored} ignorée(s) (déjà traitée(s) par un autre chef).`);
+    } else {
+      toast.success(`${updated} saisie(s) validée(s)`);
+    }
     setReloadKey((k) => k + 1);
   };
 
@@ -159,15 +169,25 @@ function ValidationHeuresPage() {
       toast.error("Le motif est obligatoire");
       return;
     }
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("heures_saisies")
       .update({ statut: "rejete", motif_rejet: rejectMotif.trim() })
-      .in("id", rejectDialog.ids);
+      .in("id", rejectDialog.ids)
+      .eq("statut", "soumis")
+      .select("id");
     if (error) {
       toast.error(error.message);
       return;
     }
-    toast.success(`${rejectDialog.ids.length} saisie(s) rejetée(s)`);
+    const updated = data?.length ?? 0;
+    const ignored = rejectDialog.ids.length - updated;
+    if (updated === 0) {
+      toast.warning("Aucune saisie rejetée : elles ont déjà été traitées par un autre chef.");
+    } else if (ignored > 0) {
+      toast.warning(`${updated} rejetée(s), ${ignored} ignorée(s) (déjà traitée(s) par un autre chef).`);
+    } else {
+      toast.success(`${updated} saisie(s) rejetée(s)`);
+    }
     setRejectDialog({ ids: [], open: false });
     setRejectMotif("");
     setReloadKey((k) => k + 1);
