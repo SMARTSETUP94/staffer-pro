@@ -25,6 +25,7 @@ import { ABSENCE_ICON, ABSENCE_LABEL } from "@/lib/absence-helpers";
 import { ChargeEquipeBloc } from "@/components/dashboard/ChargeEquipeBloc";
 import { MeteoChantiersBloc } from "@/components/dashboard/MeteoChantiersBloc";
 import { FlotteKpisBloc } from "@/components/dashboard/FlotteKpisBloc";
+import { PipelineCommercialBloc } from "@/components/dashboard/PipelineCommercialBloc";
 
 export const Route = createFileRoute("/_app/dashboard")({
   component: DashboardPage,
