@@ -652,6 +652,14 @@ const PLANNED: RoadmapPlanned[] = [
       "Sprint dédié aux feedbacks terrain : interviews des 5 chefs Setup Paris, consolidation dans /admin/feedback (filtres par chef, tags par module), priorisation collégiale, puis livraison des 3-5 quick wins identifiés. Objectif : aligner l'app sur le quotidien réel avant d'attaquer les grosses features (PWA, IA staffing).",
   },
 
+  // ========== v0.15 — Demandes transport automatisées (logistique) ==========
+  {
+    priority: "haute",
+    title: "v0.15 — Demandes transport automatisées (workflow logistique complet)",
+    description:
+      "Refonte de /logistique/demandes-transport (ex « Demandes de devis ») en module logistique end-to-end. (1) Auto-génération du PLANNING LOGISTIQUE depuis les chantiers staffés : pour chaque affaire avec date_montage/date_demontage, pré-remplir une demande transport — chargement (atelier Setup Paris par défaut), déchargement (lieu chantier), date/heure chargement (J-1 montage à 6h), livraison (jour montage à 7h), type véhicule suggéré (20m³ / PL / Sous-traitance selon volume estimé), commentaires libres, le tout éditable. (2) Carnet d'adresses transporteurs — nouvelle table `prestataires_transport` (nom, email, tel, spécialité VL/PL/SPL/grue, zones géo, notes, RLS chef/admin). Multi-sélection des destinataires depuis la demande. (3) Envoi 1 clic via Resend : template email branded Setup Paris (indigo/cream) avec toutes les infos structurées + PDF récap généré server-side (jsPDF). (4) Tracking : statut demande (brouillon / envoyée / répondue / acceptée / refusée / annulée), historique par prestataire, comparatif des prix reçus (saisie manuelle des réponses), choix du prestataire retenu. (5) Liaison avec la page Véhicules (proposition « véhicule interne dispo ? » avant d'envoyer en sous-traitance) et avec Adresses favorites existantes (chargement/déchargement). (6) Sidebar LOGISTIQUE enrichie : « Demandes transport » (refonte) + nouveau lien « Prestataires ». À livrer APRÈS v0.14 (feedback chefs).",
+  },
+
   // ========== HAUTE PRIORITÉ ==========
   {
     priority: "haute",
