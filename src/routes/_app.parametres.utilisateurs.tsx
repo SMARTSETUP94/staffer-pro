@@ -31,6 +31,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   inviteUser, resendInvitation, updateUserRole, setUserActive, deleteUser, linkExistingUsers,
 } from "@/lib/admin-actions";
+import { readServerFnError } from "@/lib/server-fn-error";
 import { PageHeader } from "@/components/PageHeader";
 import { BulkInviteDialog } from "@/components/admin/BulkInviteDialog";
 import { format, formatDistanceToNow } from "date-fns";
@@ -238,8 +239,8 @@ function UtilisateursPage() {
       setInviteRole("employe");
       loadUsers();
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "Échec de l'invitation";
-      toast.error(msg);
+      const msg = await readServerFnError(e);
+      toast.error(msg || "Échec de l'invitation");
     } finally {
       setInviting(false);
     }
