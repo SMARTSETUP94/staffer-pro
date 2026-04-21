@@ -292,6 +292,8 @@ function UtilisateursPage() {
     } finally {
       setActingOn(null);
     }
+  }
+
   async function handleLinkExisting() {
     setLinking(true);
     try {
@@ -312,12 +314,14 @@ function UtilisateursPage() {
     }
   }
 
+  if (loading || !isAdmin) {
     return (
       <div className="flex h-full items-center justify-center">
         <Loader2 className="h-6 w-6 animate-spin text-primary" />
       </div>
     );
   }
+
 
   return (
     <div className="flex flex-col gap-6 p-6">
