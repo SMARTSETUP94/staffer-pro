@@ -351,13 +351,27 @@ function SaisieRowCard({
             </CollapsibleContent>
           </Collapsible>
 
-          {/* Saisie textarea long uniquement en desktop si rejet */}
-          {variant === "desktop" && statut === "rejete" && row.saisie?.motif_rejet && (
+          {/* Bloc motif rejet (mobile + desktop) */}
+          {statut === "rejete" && row.saisie?.motif_rejet && (
             <div className="mt-2 rounded-md border border-red-500/30 bg-red-500/5 p-2">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-red-700 dark:text-red-400">
-                Motif rejet
-              </p>
-              <p className="mt-0.5 text-xs text-foreground">{row.saisie.motif_rejet}</p>
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-red-700 dark:text-red-400">
+                    Motif rejet
+                  </p>
+                  <p className="mt-0.5 text-xs text-foreground">{row.saisie.motif_rejet}</p>
+                </div>
+                {!row.saisie.motif_rejet_lu_le && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 flex-shrink-0 px-2 text-[11px]"
+                    onClick={() => row.saisie && onAcknowledge(row.saisie.id)}
+                  >
+                    J'ai compris
+                  </Button>
+                )}
+              </div>
             </div>
           )}
         </div>
