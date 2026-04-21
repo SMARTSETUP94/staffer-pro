@@ -197,22 +197,32 @@ function ValidationHeuresPage() {
     setExporting(true);
     try {
       // Export = uniquement validées dans la période/filtres actuels
-      let q = supabase
-        .from("heures_saisies")
-        .select(
-          "id, date, heure_debut, heure_fin, heures_reelles, commentaire, statut, valide_le, employe:employes(prenom, nom), affaire:affaires(numero, nom)",
-        )
-        .gte("date", startStr)
-        .lte("date", endStr)
-        .eq("statut", "valide")
-        .order("date")
-        .limit(5000);
-      if (employeFilter !== "all") q = q.eq("employe_id", employeFilter);
-      if (affaireFilter !== "all") q = q.eq("affaire_id", affaireFilter);
-      const { data, error } = await q;
-      if (error) throw error;
-      await exportHeuresXlsx(data as any, { weekStart, weekEnd });
-      toast.success(`${data?.length ?? 0} ligne(s) exportée(s)`);
+      // Pagination par pages de 1000 pour éviter toute troncature silencieuse
+      const PAGE_SIZE = 1000;
+      const all: any[] = [];
+      let from = 0;
+      while (true) {
+        let q = supabase
+          .from("heures_saisies")
+          .select(
+            "id, date, heure_debut, heure_fin, heures_reelles, commentaire, statut, valide_le, employe:employes(prenom, nom), affaire:affaires(numero, nom)",
+          )
+          .gte("date", startStr)
+          .lte("date", endStr)
+          .eq("statut", "valide")
+          .order("date")
+          .range(from, from + PAGE_SIZE - 1);
+        if (employeFilter !== "all") q = q.eq("employe_id", employeFilter);
+        if (affaireFilter !== "all") q = q.eq("affaire_id", affaireFilter);
+        const { data, error } = await q;
+        if (error) throw error;
+        const batch = data ?? [];
+        all.push(...batch);
+        if (batch.length < PAGE_SIZE) break;
+        from += PAGE_SIZE;
+      }
+      await exportHeuresXlsx(all as any, { weekStart, weekEnd });
+      toast.success(`${all.length} ligne(s) exportée(s)`);
     } catch (e: any) {
       toast.error(e?.message ?? "Erreur export");
     } finally {
