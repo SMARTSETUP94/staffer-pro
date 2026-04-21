@@ -155,19 +155,21 @@ export const inviteUser = createServerFn({ method: "POST" })
     const linkedEmployeId = await tryAutoLinkEmploye(newUserId, data.email);
 
     // 4. Envoyer l'email Resend
+    let messageId: string | null = null;
     try {
-      await sendInvitationEmail({
+      const r = await sendInvitationEmail({
         email: data.email,
         fullName: data.fullName,
         roles: data.roles,
         inviteLink,
       });
+      messageId = r.messageId;
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Erreur envoi email";
       throw new Error(`Compte créé et rôles attribués, mais ${msg}`);
     }
 
-    return { success: true, userId: newUserId, email: data.email, linkedEmployeId };
+    return { success: true, userId: newUserId, email: data.email, linkedEmployeId, messageId };
   });
 
 // ============================================================================
