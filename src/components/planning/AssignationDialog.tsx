@@ -230,20 +230,7 @@ export function AssignationDialog({
     setHeures(HEURES_DEFAUT[newSlot]);
   }
 
-  async function handleSave() {
-    if (!affaireId) {
-      toast.error("Sélectionne une affaire");
-      return;
-    }
-    if (!metierId) {
-      toast.error("Sélectionne un métier");
-      return;
-    }
-    if (heures <= 0 || heures > 12) {
-      toast.error("Heures invalides (0 < h ≤ 12)");
-      return;
-    }
-
+  async function performSave() {
     setSaving(true);
     const dateStr = format(date, "yyyy-MM-dd");
     const payload = {
@@ -269,6 +256,30 @@ export function AssignationDialog({
     toast.success(editingId ? "Assignation modifiée" : "Assignation créée");
     onSaved();
     onOpenChange(false);
+  }
+
+  async function handleSave() {
+    if (!affaireId) {
+      toast.error("Sélectionne une affaire");
+      return;
+    }
+    if (!metierId) {
+      toast.error("Sélectionne un métier");
+      return;
+    }
+    if (heures <= 0 || heures > 12) {
+      toast.error("Heures invalides (0 < h ≤ 12)");
+      return;
+    }
+
+    // v0.17 — Si affaire est une opportunité non signée, demander confirmation
+    const aff = affaires.find((a) => a.id === affaireId);
+    if (aff?.phase === "opportunite" && !editingId) {
+      setConfirmOpportunite(true);
+      return;
+    }
+
+    await performSave();
   }
 
   async function handleDelete() {
