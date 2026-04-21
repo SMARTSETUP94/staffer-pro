@@ -49,7 +49,9 @@ export function FlotteKpisBloc() {
           .from("trajets")
           .select("vehicule_id, date, kilometrage")
           .gte("date", weekStart)
-          .lte("date", weekEnd),
+          .lte("date", weekEnd)
+          .eq("statut_soustraitance", "non")
+          .not("vehicule_id", "is", null),
       ]);
 
       if (cancelled) return;
