@@ -48,24 +48,37 @@ function SetPasswordPage() {
       return;
     }
     setBusy(true);
-    const { error } = await supabase.auth.updateUser({ password });
-    if (error) {
-      setBusy(false);
-      toast.error("Impossible de définir le mot de passe", { description: error.message });
-      return;
-    }
+    console.info("[set-password] submit start");
     try {
-      const r = await withAuthRetry(() => markPasswordSet({ data: { skipped: false } }));
-      if (!r.ok) throw new Error(r.error);
+      const { error } = await supabase.auth.updateUser({ password });
+      if (error) {
+        console.error("[set-password] updateUser error:", error);
+        toast.error("Impossible de définir le mot de passe", { description: error.message });
+        return;
+      }
+      console.info("[set-password] updateUser ok");
+      try {
+        const r = await withAuthRetry(() => markPasswordSet({ data: { skipped: false } }));
+        if (!r.ok) throw new Error(r.error);
+        console.info("[set-password] markPasswordSet ok");
+      } catch (e) {
+        const msg = await readServerFnError(e);
+        console.warn("[set-password] markPasswordSet failed:", msg);
+        // Pas bloquant pour l'UX (le password est posé)
+      }
+      await refreshRoles();
+      toast.success("Mot de passe créé", { description: "Bienvenue chez Setup Paris !" });
+      // Redirection explicite selon le rôle (évite de dépendre d'IndexRedirect + preview state)
+      const isChefOrAdmin = roles.includes("admin") || roles.includes("chef_chantier");
+      navigate({ to: isChefOrAdmin ? "/dashboard" : "/mobile/aujourdhui" });
     } catch (e) {
-      const msg = await readServerFnError(e);
-      // Pas bloquant pour l'UX (le password est posé), on log juste
-      console.warn("[set-password] markPasswordSet failed:", msg);
+      console.error("[set-password] uncaught:", e);
+      toast.error("Une erreur inattendue est survenue", {
+        description: e instanceof Error ? e.message : String(e),
+      });
+    } finally {
+      setBusy(false);
     }
-    await refreshRoles();
-    setBusy(false);
-    toast.success("Mot de passe créé", { description: "Bienvenue chez Setup Paris !" });
-    navigate({ to: "/" });
   };
 
   const onSkip = async () => {
@@ -140,8 +153,21 @@ function SetPasswordPage() {
                 className="h-11 rounded-xl"
               />
             </div>
-            <Button type="submit" disabled={busy}
-              className="group h-11 w-full rounded-xl bg-[var(--indigo,#2A2A8C)] text-white hover:bg-[var(--indigo,#2A2A8C)]/90">
+            <Button
+              type="submit"
+              disabled={busy}
+              onClick={(e) => {
+                // Filet de sécurité : si pour une raison quelconque le submit du form
+                // ne se déclenche pas (Slot/Radix, autoComplete bloqué…), on appelle
+                // explicitement le handler.
+                if (!busy) {
+                  // Laisser le submit natif se faire ; ne rien faire ici.
+                  // Mais on log le clic pour débogage.
+                  console.info("[set-password] click create account");
+                }
+              }}
+              className="group h-11 w-full rounded-xl bg-[var(--indigo,#2A2A8C)] text-white hover:bg-[var(--indigo,#2A2A8C)]/90"
+            >
               {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <KeyRound className="mr-2 h-4 w-4" />}
               Créer mon compte
               <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
