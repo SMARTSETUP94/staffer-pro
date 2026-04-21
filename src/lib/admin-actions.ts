@@ -3,6 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import type { Database } from "@/integrations/supabase/types";
+import { buildInvitationEmailHtml } from "@/lib/email-templates/invitation";
 
 export type AppRoleName = "admin" | "chef_chantier" | "employe";
 export type UserStatusName = "invite" | "actif" | "desactive";
@@ -44,61 +45,20 @@ async function assertCallerIsAdmin(supabase: AuthedSupabase, userId: string) {
   }
 }
 
-function inviteEmailHtml(opts: {
-  greeting: string;
-  rolesLabel: string;
-  inviteLink: string;
-}) {
-  return `<!doctype html>
-<html><body style="margin:0;padding:0;background:#f6f7f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#1a1a1a;">
-  <div style="max-width:560px;margin:40px auto;background:#ffffff;border-radius:12px;padding:32px;border:1px solid #e5e7eb;">
-    <h1 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#0f172a;">Bienvenue sur Setup Paris — Planning chantiers</h1>
-    <p style="margin:0 0 12px;font-size:15px;line-height:1.55;">${opts.greeting}</p>
-    <p style="margin:0 0 12px;font-size:15px;line-height:1.55;">
-      Vous avez été invité(e) à rejoindre l'application de planning chantiers avec le(s) rôle(s) suivant(s) :
-      <strong>${opts.rolesLabel}</strong>.
-    </p>
-    <p style="margin:0 0 24px;font-size:15px;line-height:1.55;">
-      Cliquez sur le bouton ci-dessous pour définir votre mot de passe et accéder à l'application :
-    </p>
-    <p style="text-align:center;margin:0 0 28px;">
-      <a href="${opts.inviteLink}" style="display:inline-block;background:#0f172a;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:8px;font-weight:600;font-size:15px;">
-        Activer mon compte
-      </a>
-    </p>
-    <p style="margin:0 0 8px;font-size:13px;color:#6b7280;line-height:1.5;">
-      Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur :
-    </p>
-    <p style="margin:0 0 24px;font-size:12px;color:#6b7280;word-break:break-all;">${opts.inviteLink}</p>
-    <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0;" />
-    <p style="margin:0;font-size:12px;color:#9ca3af;">
-      Ce lien est valable une seule fois. Si vous n'attendiez pas cette invitation, ignorez cet email.
-    </p>
-  </div>
-</body></html>`;
-}
-
-function rolesLabel(roles: AppRoleName[]) {
-  return roles
-    .map((r) => (r === "admin" ? "Admin" : r === "chef_chantier" ? "Chef d'équipe" : "Employé"))
-    .join(", ");
-}
-
 async function sendInvitationEmail(args: {
   email: string;
   fullName?: string;
   roles: AppRoleName[];
   inviteLink: string;
-}) {
+}): Promise<{ messageId: string | null }> {
   const LOVABLE_API_KEY = process.env.LOVABLE_API_KEY;
   const RESEND_API_KEY = process.env.RESEND_API_KEY;
   if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY non configuré");
   if (!RESEND_API_KEY) throw new Error("RESEND_API_KEY non configuré");
 
-  const greeting = args.fullName ? `Bonjour ${args.fullName},` : "Bonjour,";
-  const html = inviteEmailHtml({
-    greeting,
-    rolesLabel: rolesLabel(args.roles),
+  const html = buildInvitationEmailHtml({
+    fullName: args.fullName,
+    roles: args.roles,
     inviteLink: args.inviteLink,
   });
 
@@ -121,6 +81,14 @@ async function sendInvitationEmail(args: {
     const errBody = await res.text();
     throw new Error(`Échec envoi email Resend [${res.status}]: ${errBody}`);
   }
+  let messageId: string | null = null;
+  try {
+    const body = (await res.json()) as { id?: string };
+    messageId = body.id ?? null;
+  } catch {
+    // ignore parse errors
+  }
+  return { messageId };
 }
 
 async function tryAutoLinkEmploye(userId: string, email: string) {
