@@ -43,6 +43,62 @@ interface RoadmapPlanned {
 
 const RELEASES: RoadmapRelease[] = [
   {
+    date: "2026-04-21",
+    version: "v0.10",
+    title: "Audits qualité — modules heures & absences",
+    entries: [
+      {
+        type: "feature",
+        area: "Mobile",
+        title: "Route /mobile/absences pour les employés (CDI/CDD/Indépendant)",
+        description:
+          "Liste des absences personnelles + bouton « Demander une absence » (création en valide=false). Onglet dédié dans la bottom nav, masqué pour les intérimaires (redirigés vers leur agence).",
+      },
+      {
+        type: "feature",
+        area: "Validation",
+        title: "Drawer Historique sur chaque ligne de validation des heures",
+        description:
+          "Timeline anti-chronologique des transitions (ancien → nouveau statut, auteur, date, motif/commentaire) lue depuis heures_saisies_historique. Lazy-load au clic.",
+      },
+      {
+        type: "feature",
+        area: "Absences",
+        title: "Détection des assignations conflictuelles avant enregistrement",
+        description:
+          "Dialog récapitulatif des assignations chevauchantes avec bouton « Supprimer toutes les assignations conflictuelles » avant validation d'une absence par le chef.",
+      },
+      {
+        type: "feature",
+        area: "Planning",
+        title: "Pré-remplissage du créneau (AM/PM/Journée) lors de « Déclarer absence »",
+        description:
+          "Le clic droit sur une cellule du planning propage l'employé, la date et le slot vers /absences pour ouvrir un dialog déjà rempli.",
+      },
+      {
+        type: "fix",
+        area: "Mobile",
+        title: "Affichage du motif de rejet + bouton « J'ai compris » sur mobile",
+        description:
+          "Variante mobile de MesHeuresGrid : carte rouge avec motif de rejet et action acknowledge_heures_rejet pour repasser en brouillon avant re-soumission.",
+      },
+      {
+        type: "fix",
+        area: "Sécurité",
+        title: "Valeur par défaut « Validée » à false pour les nouvelles absences",
+        description:
+          "Le chef doit cocher explicitement la case avant d'enregistrer, évitant les validations involontaires.",
+      },
+      {
+        type: "refactor",
+        area: "Code quality",
+        title: "Cleanup lot 8 : mutation immutable, type partagé HeuresExportRow, label « Tout est soumis »",
+        description:
+          "Mise à jour byKey immutable dans use-mes-heures, type ExportRow partagé, suppression TZ_OFFSET_DAYS, label dynamique du bouton de soumission.",
+      },
+    ],
+  },
+  {
     date: "2026-04-20",
     version: "v0.9",
     title: "Export PDF paginé & filtres employés cumulables",
@@ -308,6 +364,24 @@ const RELEASES: RoadmapRelease[] = [
 ];
 
 const PLANNED: RoadmapPlanned[] = [
+  {
+    priority: "haute",
+    title: "Contrainte EXCLUDE anti-chevauchement sur la table absences",
+    description:
+      "Migration : CREATE EXTENSION btree_gist + contrainte EXCLUDE (employe_id, daterange, slot) pour empêcher tout chevauchement d'absences en base, en complément du dialog de conflits côté UI.",
+  },
+  {
+    priority: "haute",
+    title: "Routage ciblé des notifications « absence_demandee »",
+    description:
+      "Notifier uniquement le chef rattaché à l'employé (via affaire.chef_chantier_id de la semaine courante) plutôt que tous les chefs/admins.",
+  },
+  {
+    priority: "haute",
+    title: "Audit du module flotte (lot 10)",
+    description:
+      "Revue complète : véhicules, trajets, autorisations chauffeurs PL, sous-traitance, RLS, conflits de planning véhicule.",
+  },
   {
     priority: "haute",
     title: "Export PDF planning en jsPDF natif (sans rasterisation PNG)",
