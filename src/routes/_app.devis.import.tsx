@@ -223,78 +223,40 @@ function DevisImportPage() {
     if (!canCommit) return;
     setCommitting(true);
     try {
-      // 1. Affaire : crée ou met à jour les dates de l'existante.
-      let finalAffaireId = affaireId;
-      if (affaireId === NEW_AFFAIRE) {
-        const { data, error } = await supabase
-          .from("affaires")
-          .insert({
-            numero: newAffaireNumero.trim(),
-            nom: newAffaireNom.trim(),
-            client: newAffaireClient.trim() || null,
-            lieu: newAffaireLieu.trim() || null,
-            statut: "en_cours",
-            date_montage: toIso(dateMontage),
-            date_demontage: toIso(dateDemontage),
-          })
-          .select("id")
-          .single();
-        if (error || !data) {
-          toast.error("Création de l'affaire impossible", { description: error?.message });
-          setCommitting(false);
-          return;
-        }
-        finalAffaireId = data.id;
-      } else {
-        // MAJ des dates de montage/démontage sur l'affaire existante.
-        const { error } = await supabase
-          .from("affaires")
-          .update({
-            date_montage: toIso(dateMontage),
-            date_demontage: toIso(dateDemontage),
-          })
-          .eq("id", affaireId);
-        if (error) {
-          toast.error("Mise à jour de l'affaire impossible", { description: error.message });
-          setCommitting(false);
-          return;
-        }
-      }
-
-      // 2. Devis.
-      const { data: devis, error: errDevis } = await supabase
-        .from("devis")
-        .insert({
-          affaire_id: finalAffaireId,
-          numero: numeroDevis.trim(),
-          libelle: nomDevis.trim() || null,
-          montant_ht: totals.montant || null,
-          statut: "signe",
-          fichier_source: filename,
-        })
-        .select("id")
-        .single();
-      if (errDevis || !devis) {
-        toast.error("Création du devis impossible", { description: errDevis?.message });
-        setCommitting(false);
-        return;
-      }
-
-      // 3. Postes.
+      // Import atomique : affaire + devis + postes en une seule transaction côté DB.
+      // Si n'importe quelle étape échoue, RIEN n'est créé (transaction rollback).
       const postesPayload = postes.map((p) => ({
-        devis_id: devis.id,
         metier_id: p.metierId!,
         heures_prevues: p.heures,
         montant_ht: p.montantHt || null,
         libelle_source: p.libellesSources.slice(0, 5).join(" • ").slice(0, 500) || null,
       }));
-      if (postesPayload.length) {
-        const { error: errPostes } = await supabase.from("devis_postes").insert(postesPayload);
-        if (errPostes) {
-          toast.error("Création des postes impossible", { description: errPostes.message });
-          setCommitting(false);
-          return;
-        }
+
+      const { error } = await supabase.rpc("import_devis_atomique", {
+        _affaire_id: (affaireId === NEW_AFFAIRE ? null : affaireId) as unknown as string,
+        _new_affaire:
+          affaireId === NEW_AFFAIRE
+            ? {
+                numero: newAffaireNumero.trim(),
+                nom: newAffaireNom.trim(),
+                client: newAffaireClient.trim() || null,
+                lieu: newAffaireLieu.trim() || null,
+              }
+            : {},
+        _date_montage: toIso(dateMontage) as unknown as string,
+        _date_demontage: toIso(dateDemontage) as unknown as string,
+        _devis: {
+          numero: numeroDevis.trim(),
+          libelle: nomDevis.trim() || null,
+          montant_ht: totals.montant ? String(totals.montant) : null,
+          fichier_source: filename,
+        },
+        _postes: postesPayload,
+      });
+
+      if (error) {
+        toast.error("Import impossible", { description: error.message });
+        return;
       }
 
       toast.success("Devis importé", {

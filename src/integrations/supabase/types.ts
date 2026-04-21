@@ -1294,6 +1294,17 @@ export type Database = {
         }
         Returns: boolean
       }
+      import_devis_atomique: {
+        Args: {
+          _affaire_id: string
+          _date_demontage: string
+          _date_montage: string
+          _devis: Json
+          _new_affaire: Json
+          _postes: Json
+        }
+        Returns: Json
+      }
       is_admin: { Args: never; Returns: boolean }
       is_chef_or_admin: { Args: never; Returns: boolean }
     }
