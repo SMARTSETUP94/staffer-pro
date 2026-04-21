@@ -68,16 +68,16 @@
 :root {
   --radius: 0.75rem;
 
-  /* Setup Paris palette
+  /* Setup Paris palette (v0.13)
      cream  #F7F4EF
      ink    #0A0A0B
-     indigo #4F46E5 (indigo-600)
-     soft   #EEF2FF (indigo-50)
+     indigo #2A2A8C  ← brand primary
+     soft   #EEF2FF
   */
   --cream: oklch(0.965 0.012 80);
   --cream-deep: oklch(0.93 0.018 80);
   --ink: oklch(0.145 0.005 280);
-  --indigo-accent: oklch(0.518 0.226 277);
+  --indigo-accent: oklch(0.295 0.158 280);  /* ≈ #2A2A8C */
   --indigo-soft: oklch(0.965 0.025 277);
 
   /* Base — beige crème, professionnel */
@@ -89,8 +89,8 @@
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0.005 280);
 
-  /* Primary = indigo Setup */
-  --primary: oklch(0.518 0.226 277);
+  /* Primary = indigo Setup #2A2A8C */
+  --primary: oklch(0.295 0.158 280);
   --primary-foreground: oklch(0.99 0.005 80);
 
   --secondary: oklch(0.93 0.018 80);
@@ -100,7 +100,7 @@
   --muted-foreground: oklch(0.45 0.01 280);
 
   --accent: oklch(0.965 0.025 277);
-  --accent-foreground: oklch(0.518 0.226 277);
+  --accent-foreground: oklch(0.295 0.158 280);
 
   --destructive: oklch(0.58 0.22 27);
   --destructive-foreground: oklch(0.99 0.005 80);
@@ -116,7 +116,7 @@
 
   --border: oklch(0.88 0.012 80);
   --input: oklch(0.88 0.012 80);
-  --ring: oklch(0.518 0.226 277);
+  --ring: oklch(0.295 0.158 280);
 
   /* Sidebar — fond ink (noir Setup) */
   --sidebar: oklch(0.145 0.005 280);

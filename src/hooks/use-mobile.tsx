@@ -1,6 +1,8 @@
 import * as React from "react";
 
-const MOBILE_BREAKPOINT = 768;
+// v0.13 — bump à 1024 (lg) pour basculer la sidebar en drawer Sheet
+// dès qu'on passe sous le seuil "petit desktop / tablette paysage".
+const MOBILE_BREAKPOINT = 1024;
 
 export function useIsMobile() {
   const [isMobile, setIsMobile] = React.useState<boolean | undefined>(undefined);
