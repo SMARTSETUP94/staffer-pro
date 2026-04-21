@@ -125,7 +125,7 @@ function AbsencesPage() {
     load();
   }, []);
 
-  // Pré-remplissage depuis ?employe=...&date=... (raccourci depuis le planning)
+  // Pré-remplissage depuis ?employe=...&date=...&slot=... (raccourci depuis le planning)
   useEffect(() => {
     if (prefillHandled || loading) return;
     if (!search.employe && !search.date) return;
@@ -133,13 +133,18 @@ function AbsencesPage() {
     if (!emp) return; // attendre que les employés soient chargés (ou employé inconnu)
     const today = format(new Date(), "yyyy-MM-dd");
     const day = search.date ?? today;
+    // slot=JOURNEE → on garde null (= "Toute la période") pour rester cohérent avec
+    // l'option par défaut quand l'utilisateur veut une plage multi-jours.
+    // Sinon AM ou PM → préremplir le créneau.
+    const prefillSlot: "AM" | "PM" | "JOURNEE" | null =
+      search.slot === "AM" || search.slot === "PM" ? search.slot : null;
     setEditing({
       id: "",
       employe_id: emp.id,
       date_debut: day,
       date_fin: day,
       type: "conges",
-      demi_journee: null,
+      demi_journee: prefillSlot,
       motif: "",
       valide: true,
       employes: { prenom: emp.prenom, nom: emp.nom },
@@ -148,7 +153,7 @@ function AbsencesPage() {
     setPrefillHandled(true);
     // Nettoie les query params pour éviter de re-déclencher
     navigate({ search: {}, replace: true });
-  }, [employes, loading, search.employe, search.date, prefillHandled, navigate]);
+  }, [employes, loading, search.employe, search.date, search.slot, prefillHandled, navigate]);
 
   const filtered = useMemo(() => {
     const today = format(new Date(), "yyyy-MM-dd");
