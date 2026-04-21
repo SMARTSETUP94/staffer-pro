@@ -44,10 +44,11 @@ function PlanningPage() {
   const { trajets, refresh: refreshTrajets } = useTrajetsWeek(weekStart, weekEnd);
   const [filterAffaire, setFilterAffaire] = useState<Set<string | number>>(new Set());
   const [filterMetier, setFilterMetier] = useState<Set<string | number>>(new Set());
+  const [filterDevis, setFilterDevis] = useState<Set<string | number>>(new Set());
   const [showWeekend, setShowWeekend] = useState(false);
   const [searchEmploye, setSearchEmploye] = useState("");
 
-  const { metiers, employes, affaires, assignations, consommation, absences, chefsById, swapAssignationIds, loading, error, refresh } =
+  const { metiers, employes, affaires, assignations, consommation, absences, chefsById, swapAssignationIds, devisLots, loading, error, refresh } =
     usePlanningData(weekStart, weekEnd);
 
   // Filtre recherche employé (prénom + nom, insensible casse/accent)
@@ -107,13 +108,34 @@ function PlanningPage() {
     [metiers],
   );
 
+  // v0.15.1 — Options "Lot" : visibles uniquement quand 1+ affaire(s) filtrée(s) avec ≥2 lots actifs au total.
+  // Si aucune affaire filtrée, on liste les lots des affaires actives (peut être grand → on requiert filterAffaire).
+  const lotsOptions = useMemo(() => {
+    const affaireIdsActives = filterAffaire.size > 0
+      ? new Set(Array.from(filterAffaire).map(String))
+      : null;
+    const filtered = devisLots.filter((d) => {
+      if (d.statut === "termine" || d.statut === "cloture") return false;
+      if (affaireIdsActives && !affaireIdsActives.has(d.affaire_id)) return false;
+      return true;
+    });
+    return filtered.map((d) => {
+      const aff = affaires.find((a) => a.id === d.affaire_id);
+      const aff_label = aff ? `${aff.numero}` : "";
+      const sub = d.libelle ? `${aff_label} — ${d.libelle}` : aff_label;
+      return { id: d.id, label: d.numero, sub };
+    });
+  }, [devisLots, filterAffaire, affaires]);
+
   const handleSelectAffaireFromSynthese = (affaireId: string) => {
     setFilterAffaire(new Set([affaireId]));
+    setFilterDevis(new Set());
     setTab("cdi");
   };
 
   const filterAffaireStr = filterAffaire as Set<string>;
   const filterMetierNum = filterMetier as Set<number>;
+  const filterDevisStr = filterDevis as Set<string>;
 
   const exportRef = useRef<HTMLDivElement>(null);
   const [exporting, setExporting] = useState(false);
@@ -195,6 +217,15 @@ function PlanningPage() {
             selected={filterMetier}
             onChange={setFilterMetier}
           />
+          {/* v0.15.1 — Sélecteur lot : visible si ≥2 lots actifs disponibles dans le contexte courant */}
+          {lotsOptions.length >= 2 && (
+            <MultiFilter
+              label="Lot"
+              options={lotsOptions}
+              selected={filterDevis}
+              onChange={setFilterDevis}
+            />
+          )}
           <div className="ml-2 flex items-center gap-2">
             <Switch
               id="weekend-toggle"
@@ -205,11 +236,12 @@ function PlanningPage() {
               Week-end
             </Label>
           </div>
-          {(filterAffaire.size > 0 || filterMetier.size > 0 || searchEmploye) && (
+          {(filterAffaire.size > 0 || filterMetier.size > 0 || filterDevis.size > 0 || searchEmploye) && (
             <button
               onClick={() => {
                 setFilterAffaire(new Set());
                 setFilterMetier(new Set());
+                setFilterDevis(new Set());
                 setSearchEmploye("");
               }}
               className="text-xs text-muted-foreground underline-offset-2 hover:underline"
@@ -255,6 +287,8 @@ function PlanningPage() {
                   absences={absences}
                   filterAffaireIds={filterAffaireStr}
                   filterMetierIds={filterMetierNum}
+                  filterDevisIds={filterDevisStr}
+                  devisLots={devisLots}
                   showWeekend={showWeekend}
                   emptyMessage="Aucun employé CDI/CDD actif."
                   onChanged={refresh}
@@ -283,6 +317,8 @@ function PlanningPage() {
                   absences={absences}
                   filterAffaireIds={filterAffaireStr}
                   filterMetierIds={filterMetierNum}
+                  filterDevisIds={filterDevisStr}
+                  devisLots={devisLots}
                   showWeekend={showWeekend}
                   emptyMessage="Aucun employé intérimaire / indépendant staffé cette semaine. Clique sur « Ajouter un intérimaire »."
                   onChanged={refresh}

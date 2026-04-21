@@ -35,7 +35,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
-import type { Affaire, Assignation, Employe, Metier } from "@/hooks/use-planning-data";
+import type { Affaire, Assignation, DevisLot, Employe, Metier } from "@/hooks/use-planning-data";
 
 type Slot = "AM" | "PM" | "JOURNEE";
 
@@ -60,6 +60,8 @@ interface Props {
     heures_assignees: number;
     heures_restantes: number;
   }[];
+  /** v0.15.1 — Tous les lots/devis chargés (pour sélecteur si ≥2 lots actifs sur l'affaire). */
+  devisLots?: DevisLot[];
   onSaved: () => void;
 }
 
@@ -72,12 +74,14 @@ export function AssignationDialog({
   affaires,
   metiers,
   consommation,
+  devisLots = [],
   onSaved,
 }: Props) {
   // Édition d'une assignation existante = sélection par id ; sinon création
   const [editingId, setEditingId] = useState<string | null>(null);
   const [affaireId, setAffaireId] = useState<string>("");
   const [metierId, setMetierId] = useState<number | null>(null);
+  const [devisId, setDevisId] = useState<string | null>(null);
   const [slot, setSlot] = useState<Slot>("JOURNEE");
   const [heures, setHeures] = useState<number>(8);
   const [notes, setNotes] = useState<string>("");
@@ -92,6 +96,7 @@ export function AssignationDialog({
     setEditingId(null);
     setAffaireId("");
     setMetierId(employe.metier_principal_id);
+    setDevisId(null);
     setSlot("JOURNEE");
     setHeures(8);
     setNotes("");
@@ -137,6 +142,31 @@ export function AssignationDialog({
     [affaires],
   );
 
+  // v0.15.1 — Lots actifs (non terminés/clôturés) pour l'affaire sélectionnée
+  const lotsActifs = useMemo(() => {
+    if (!affaireId) return [];
+    return devisLots
+      .filter((d) => d.affaire_id === affaireId && d.statut !== "termine" && d.statut !== "cloture")
+      .sort((a, b) => a.numero.localeCompare(b.numero, "fr", { numeric: true }));
+  }, [devisLots, affaireId]);
+
+  // Autofill devis_id quand 1 seul lot actif et qu'on n'est pas en édition
+  useEffect(() => {
+    if (editingId) return;
+    if (!affaireId) {
+      setDevisId(null);
+      return;
+    }
+    if (lotsActifs.length === 1) {
+      setDevisId(lotsActifs[0].id);
+    } else if (lotsActifs.length === 0) {
+      setDevisId(null);
+    } else if (devisId && !lotsActifs.some((l) => l.id === devisId)) {
+      // Lot précédemment choisi n'est plus dans les actifs (changement d'affaire)
+      setDevisId(null);
+    }
+  }, [editingId, affaireId, lotsActifs, devisId]);
+
   // Conso devis pour le couple (affaire + métier) sélectionné
   const consoCouple = useMemo(() => {
     if (!affaireId || !metierId) return null;
@@ -164,6 +194,7 @@ export function AssignationDialog({
     setEditingId(a.id);
     setAffaireId(a.affaire_id);
     setMetierId(a.metier_id);
+    setDevisId(a.devis_id ?? null);
     setSlot(a.demi_journee as Slot);
     setHeures(Number(a.heures));
     setNotes(a.notes ?? "");
@@ -173,6 +204,7 @@ export function AssignationDialog({
     setEditingId(null);
     setAffaireId("");
     setMetierId(employe.metier_principal_id);
+    setDevisId(null);
     // Choix par défaut : premier slot libre
     const usedSlots = new Set(existing.map((e) => e.demi_journee));
     if (usedSlots.has("JOURNEE")) {
@@ -217,6 +249,7 @@ export function AssignationDialog({
       employe_id: employe.id,
       affaire_id: affaireId,
       metier_id: metierId,
+      devis_id: devisId,
       demi_journee: slot,
       heures,
       date: dateStr,
@@ -321,6 +354,47 @@ export function AssignationDialog({
                 onChange={setAffaireId}
               />
             </div>
+
+            {/* v0.15.1 — Sélecteur de lot/devis : visible si ≥1 lot actif sur l'affaire */}
+            {affaireId && lotsActifs.length > 0 && (
+              <div className="grid gap-1.5">
+                <div className="flex items-center justify-between">
+                  <Label>
+                    Lot / devis{" "}
+                    {lotsActifs.length === 1 && (
+                      <span className="text-[10px] font-normal text-muted-foreground">
+                        (auto)
+                      </span>
+                    )}
+                  </Label>
+                  {lotsActifs.length >= 2 && (
+                    <span className="text-[10px] text-muted-foreground">
+                      {lotsActifs.length} lots actifs
+                    </span>
+                  )}
+                </div>
+                <Select
+                  value={devisId ?? "none"}
+                  onValueChange={(v) => setDevisId(v === "none" ? null : v)}
+                  disabled={lotsActifs.length === 1}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choisir un lot…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">— Non rattaché —</SelectItem>
+                    {lotsActifs.map((l) => (
+                      <SelectItem key={l.id} value={l.id}>
+                        <span className="font-mono font-semibold">{l.numero}</span>
+                        {l.libelle && (
+                          <span className="ml-1.5 text-muted-foreground">— {l.libelle}</span>
+                        )}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             <div className="grid grid-cols-2 gap-3">
               <div className="grid gap-1.5">
