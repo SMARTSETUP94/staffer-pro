@@ -44,6 +44,48 @@ interface RoadmapPlanned {
 const RELEASES: RoadmapRelease[] = [
   {
     date: "2026-04-21",
+    version: "v0.11",
+    title: "Email stack production-ready + invitations en lot",
+    entries: [
+      {
+        type: "feature",
+        area: "Emails",
+        title: "Template HTML branded Setup Paris (cream / ink / indigo)",
+        description:
+          "Refonte du template d'invitation : fond cream #F5F0E8, titre indigo #2A2A8C « Bienvenue chez Setup Paris », sous-titre « Staffing by Setup.Paris », CTA bouton indigo « Créer mon compte », footer « 🏗️ Constructeur d'imaginaire ». Police Inter, 100% responsive (table-based), compatible clients mail.",
+      },
+      {
+        type: "feature",
+        area: "Admin",
+        title: "Page /admin/email-preview pour visualiser les templates sans envoyer",
+        description:
+          "Page admin avec contrôles (nom, rôle, lien magique) et preview live en iframe sandbox + onglet HTML source. Permet de QA le rendu des emails transactionnels avant déclenchement.",
+      },
+      {
+        type: "feature",
+        area: "Admin",
+        title: "Bouton « Inviter en lot » dans Paramètres → Utilisateurs",
+        description:
+          "Modal avec textarea (1 email par ligne / virgules / point-virgules), dropdown rôle (chef_chantier par défaut), checkbox « Envoyer auto », parsing avec déduplication. Envoi séquentiel avec retry 1× automatique sur échec, tableau récap live (✅ envoyé / ⏳ retry / ❌ échec / message_id Resend) et export CSV du rapport.",
+      },
+      {
+        type: "improvement",
+        area: "Emails",
+        title: "Sender migration vers domaine vérifié",
+        description:
+          "From: « Setup Paris <onboarding@setup.paris> », Reply-To: smart@setup.paris. DNS Resend verified sur setup.paris (DKIM + SPF + MX via Cloudflare).",
+      },
+      {
+        type: "improvement",
+        area: "Emails",
+        title: "inviteUser retourne le message_id Resend",
+        description:
+          "Le server fn `inviteUser` parse la réponse Resend et expose `messageId` pour traçabilité (utilisé par le bouton Inviter en lot et permettra le futur module email_logs).",
+      },
+    ],
+  },
+  {
+    date: "2026-04-21",
     version: "v0.10",
     title: "Audits qualité — modules heures & absences",
     entries: [
