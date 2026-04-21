@@ -109,9 +109,10 @@ export function PlanningGrid({
     return assignations.filter((a) => {
       if (filterAffaireIds && filterAffaireIds.size > 0 && !filterAffaireIds.has(a.affaire_id)) return false;
       if (filterMetierIds && filterMetierIds.size > 0 && !filterMetierIds.has(a.metier_id)) return false;
+      if (filterDevisIds && filterDevisIds.size > 0 && (!a.devis_id || !filterDevisIds.has(a.devis_id))) return false;
       return true;
     });
-  }, [assignations, filterAffaireIds, filterMetierIds]);
+  }, [assignations, filterAffaireIds, filterMetierIds, filterDevisIds]);
 
   // Index conflits : (employe_id, date) -> détecte si plusieurs affaires DIFFÉRENTES
   // ou si chevauche une absence.
@@ -603,6 +604,7 @@ export function PlanningGrid({
           affaires={affaires}
           metiers={metiers}
           consommation={consommation}
+          devisLots={devisLots}
           onSaved={() => onChanged?.()}
         />
       )}
