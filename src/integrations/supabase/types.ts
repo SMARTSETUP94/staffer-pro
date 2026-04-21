@@ -139,54 +139,88 @@ export type Database = {
       }
       affaires: {
         Row: {
+          charge_affaires_id: string | null
           chef_chantier_id: string | null
           client: string | null
+          code_opportunite: string | null
           created_at: string
           date_debut: string | null
           date_demontage: string | null
           date_fin_prevue: string | null
           date_montage: string | null
+          date_opportunite: string | null
           id: string
           lieu: string | null
           nom: string
           notes: string | null
           numero: string
+          phase: Database["public"]["Enums"]["affaire_phase"]
+          signed_at: string | null
           statut: Database["public"]["Enums"]["affaire_statut"]
+          statut_opportunite:
+            | Database["public"]["Enums"]["opportunite_statut"]
+            | null
+          taille: Database["public"]["Enums"]["opportunite_taille"] | null
           updated_at: string
         }
         Insert: {
+          charge_affaires_id?: string | null
           chef_chantier_id?: string | null
           client?: string | null
+          code_opportunite?: string | null
           created_at?: string
           date_debut?: string | null
           date_demontage?: string | null
           date_fin_prevue?: string | null
           date_montage?: string | null
+          date_opportunite?: string | null
           id?: string
           lieu?: string | null
           nom: string
           notes?: string | null
           numero: string
+          phase?: Database["public"]["Enums"]["affaire_phase"]
+          signed_at?: string | null
           statut?: Database["public"]["Enums"]["affaire_statut"]
+          statut_opportunite?:
+            | Database["public"]["Enums"]["opportunite_statut"]
+            | null
+          taille?: Database["public"]["Enums"]["opportunite_taille"] | null
           updated_at?: string
         }
         Update: {
+          charge_affaires_id?: string | null
           chef_chantier_id?: string | null
           client?: string | null
+          code_opportunite?: string | null
           created_at?: string
           date_debut?: string | null
           date_demontage?: string | null
           date_fin_prevue?: string | null
           date_montage?: string | null
+          date_opportunite?: string | null
           id?: string
           lieu?: string | null
           nom?: string
           notes?: string | null
           numero?: string
+          phase?: Database["public"]["Enums"]["affaire_phase"]
+          signed_at?: string | null
           statut?: Database["public"]["Enums"]["affaire_statut"]
+          statut_opportunite?:
+            | Database["public"]["Enums"]["opportunite_statut"]
+            | null
+          taille?: Database["public"]["Enums"]["opportunite_taille"] | null
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "affaires_charge_affaires_id_fkey"
+            columns: ["charge_affaires_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "affaires_chef_chantier_id_fkey"
             columns: ["chef_chantier_id"]
@@ -1459,6 +1493,18 @@ export type Database = {
         }
         Returns: string
       }
+      create_opportunite: {
+        Args: {
+          _charge_affaires_id: string
+          _client: string
+          _code: string
+          _commentaires?: string
+          _date_opportunite: string
+          _nom: string
+          _taille: Database["public"]["Enums"]["opportunite_taille"]
+        }
+        Returns: string
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1493,14 +1539,20 @@ export type Database = {
       is_admin: { Args: never; Returns: boolean }
       is_chef_or_admin: { Args: never; Returns: boolean }
       is_devis_termine: { Args: { _devis_id: string }; Returns: boolean }
+      next_affaire_numero: { Args: { _prefix: number }; Returns: string }
       set_vehicule_chauffeurs_autorises: {
         Args: { _employe_ids: string[]; _vehicule_id: string }
         Returns: undefined
+      }
+      sign_opportunite: {
+        Args: { _affaire_id: string; _new_code: string }
+        Returns: string
       }
     }
     Enums: {
       absence_type: "conges" | "formation" | "arret_maladie" | "rtt" | "autre"
       adresse_favorite_type: "entrepot" | "client" | "fournisseur" | "autre"
+      affaire_phase: "opportunite" | "signe"
       affaire_statut: "prospect" | "en_cours" | "termine" | "annule"
       app_role: "admin" | "chef_chantier" | "employe"
       confirmation_status:
@@ -1533,6 +1585,13 @@ export type Database = {
         | "conflit_staffing"
         | "depassement_budget"
         | "mention"
+      opportunite_statut: "a_faire" | "envoye" | "gagne" | "perdu" | "termine"
+      opportunite_taille:
+        | "tres_petit"
+        | "petit"
+        | "moyen"
+        | "gros"
+        | "tres_gros"
       permis_type: "B" | "C" | "CE"
       swap_status:
         | "proposee"
@@ -1686,6 +1745,7 @@ export const Constants = {
     Enums: {
       absence_type: ["conges", "formation", "arret_maladie", "rtt", "autre"],
       adresse_favorite_type: ["entrepot", "client", "fournisseur", "autre"],
+      affaire_phase: ["opportunite", "signe"],
       affaire_statut: ["prospect", "en_cours", "termine", "annule"],
       app_role: ["admin", "chef_chantier", "employe"],
       confirmation_status: [
@@ -1721,6 +1781,8 @@ export const Constants = {
         "depassement_budget",
         "mention",
       ],
+      opportunite_statut: ["a_faire", "envoye", "gagne", "perdu", "termine"],
+      opportunite_taille: ["tres_petit", "petit", "moyen", "gros", "tres_gros"],
       permis_type: ["B", "C", "CE"],
       swap_status: [
         "proposee",
