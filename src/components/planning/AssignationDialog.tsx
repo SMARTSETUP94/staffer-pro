@@ -35,7 +35,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
-import type { Affaire, Assignation, DevisLot, Employe, Metier } from "@/hooks/use-planning-data";
+import type { Affaire, Assignation, Employe, Metier } from "@/hooks/use-planning-data";
 
 type Slot = "AM" | "PM" | "JOURNEE";
 
@@ -52,9 +52,7 @@ interface Props {
   existing: Assignation[];
   affaires: Affaire[];
   metiers: Metier[];
-  /** v0.15.1 — Devis (lots) de toutes les affaires, pour autofill / sélecteur. */
-  devisLots?: DevisLot[];
-  /** Conso devis par (affaire+métier) — passée depuis le parent */
+  /** Consommation devis par (affaire+métier) — passée depuis le parent */
   consommation: {
     affaire_id: string;
     metier_id: number;
