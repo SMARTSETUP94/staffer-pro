@@ -3,10 +3,29 @@ import { createMiddleware } from '@tanstack/react-start'
 import { getRequest } from '@tanstack/react-start/server'
 import { createClient } from '@supabase/supabase-js'
 import type { Database } from './types'
+import { supabase as browserSupabase } from './client'
 
 
 
-export const requireSupabaseAuth = createMiddleware({ type: 'function' }).server(
+export const requireSupabaseAuth = createMiddleware({ type: 'function' })
+  .client(async ({ next }) => {
+    // Côté client : injecter automatiquement le Bearer token Supabase courant
+    // dans les headers du fetch RPC vers le serverFn. Sans ça, le middleware
+    // serveur répondrait toujours 401 "No authorization header provided".
+    let token: string | null = null;
+    if (typeof window !== 'undefined') {
+      try {
+        const { data } = await browserSupabase.auth.getSession();
+        token = data.session?.access_token ?? null;
+      } catch {
+        // ignore — le serveur renverra 401 et withAuthRetry fera un refresh
+      }
+    }
+    return next({
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+  })
+  .server(
   async ({ next }) => {
     
     const SUPABASE_URL = process.env.SUPABASE_URL;

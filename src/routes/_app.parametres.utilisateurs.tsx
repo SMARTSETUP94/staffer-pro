@@ -32,6 +32,7 @@ import {
   inviteUser, resendInvitation, updateUserRole, setUserActive, deleteUser, linkExistingUsers,
 } from "@/lib/admin-actions";
 import { readServerFnError } from "@/lib/server-fn-error";
+import { withAuthRetry } from "@/lib/with-auth-retry";
 import { PageHeader } from "@/components/PageHeader";
 import { BulkInviteDialog } from "@/components/admin/BulkInviteDialog";
 import { format, formatDistanceToNow } from "date-fns";
@@ -220,13 +221,15 @@ function UtilisateursPage() {
     }
     setInviting(true);
     try {
-      const result = await inviteUser({
-        data: {
-          email: inviteEmail.trim(),
-          fullName: inviteFullName.trim() || undefined,
-          roles: [inviteRole],
-        },
-      });
+      const result = await withAuthRetry(() =>
+        inviteUser({
+          data: {
+            email: inviteEmail.trim(),
+            fullName: inviteFullName.trim() || undefined,
+            roles: [inviteRole],
+          },
+        }),
+      );
       if (!result.ok) {
         toast.error(result.error);
         return;
@@ -249,10 +252,10 @@ function UtilisateursPage() {
   async function handleResend(u: UserRow) {
     setActingOn(u.id);
     try {
-      await resendInvitation({ data: { targetUserId: u.id } });
+      await withAuthRetry(() => resendInvitation({ data: { targetUserId: u.id } }));
       toast.success(`Invitation renvoyée à ${u.email}`);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Échec");
+      toast.error(await readServerFnError(e));
     } finally {
       setActingOn(null);
     }
@@ -261,11 +264,11 @@ function UtilisateursPage() {
   async function handleChangeRole(u: UserRow, role: AppRole) {
     setActingOn(u.id);
     try {
-      await updateUserRole({ data: { targetUserId: u.id, role } });
+      await withAuthRetry(() => updateUserRole({ data: { targetUserId: u.id, role } }));
       toast.success(`Rôle ${ROLE_LABEL[role]} appliqué à ${u.email}`);
       loadUsers();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Échec");
+      toast.error(await readServerFnError(e));
     } finally {
       setActingOn(null);
     }
@@ -275,11 +278,11 @@ function UtilisateursPage() {
     setActingOn(u.id);
     try {
       const next = u.status === "desactive";
-      await setUserActive({ data: { targetUserId: u.id, active: next } });
+      await withAuthRetry(() => setUserActive({ data: { targetUserId: u.id, active: next } }));
       toast.success(next ? "Utilisateur réactivé" : "Utilisateur désactivé");
       loadUsers();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Échec");
+      toast.error(await readServerFnError(e));
     } finally {
       setActingOn(null);
     }
@@ -291,11 +294,11 @@ function UtilisateursPage() {
     setConfirmDelete(null);
     setActingOn(u.id);
     try {
-      await deleteUser({ data: { targetUserId: u.id } });
+      await withAuthRetry(() => deleteUser({ data: { targetUserId: u.id } }));
       toast.success(`${u.email} supprimé`);
       loadUsers();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Échec");
+      toast.error(await readServerFnError(e));
     } finally {
       setActingOn(null);
     }
@@ -304,7 +307,9 @@ function UtilisateursPage() {
   async function handleLinkExisting() {
     setLinking(true);
     try {
-      const result = await linkExistingUsers({ data: undefined as never });
+      const result = await withAuthRetry(() =>
+        linkExistingUsers({ data: undefined as never }),
+      );
       if (result.lies === 0) {
         toast.info(`Aucun nouvel employé lié. ${result.orphelinsRestants} employé(s) sans compte associé.`);
       } else {
@@ -315,7 +320,7 @@ function UtilisateursPage() {
       }
       loadUsers();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Échec liaison");
+      toast.error(await readServerFnError(e));
     } finally {
       setLinking(false);
     }
