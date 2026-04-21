@@ -19,6 +19,9 @@ import { Route as MobileMoisRouteImport } from './routes/mobile.mois'
 import { Route as MobileHeuresRouteImport } from './routes/mobile.heures'
 import { Route as MobileAujourdhuiRouteImport } from './routes/mobile.aujourdhui'
 import { Route as MobileAbsencesRouteImport } from './routes/mobile.absences'
+import { Route as AuthSetPasswordRouteImport } from './routes/auth.set-password'
+import { Route as AuthResetPasswordRouteImport } from './routes/auth.reset-password'
+import { Route as AuthForgotPasswordRouteImport } from './routes/auth.forgot-password'
 import { Route as AppValidationHeuresRouteImport } from './routes/_app.validation-heures'
 import { Route as AppRoadmapRouteImport } from './routes/_app.roadmap'
 import { Route as AppPlanningRouteImport } from './routes/_app.planning'
@@ -94,6 +97,21 @@ const MobileAujourdhuiRoute = MobileAujourdhuiRouteImport.update({
 const MobileAbsencesRoute = MobileAbsencesRouteImport.update({
   id: '/mobile/absences',
   path: '/mobile/absences',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthSetPasswordRoute = AuthSetPasswordRouteImport.update({
+  id: '/auth/set-password',
+  path: '/auth/set-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthResetPasswordRoute = AuthResetPasswordRouteImport.update({
+  id: '/auth/reset-password',
+  path: '/auth/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthForgotPasswordRoute = AuthForgotPasswordRouteImport.update({
+  id: '/auth/forgot-password',
+  path: '/auth/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppValidationHeuresRoute = AppValidationHeuresRouteImport.update({
@@ -253,6 +271,9 @@ export interface FileRoutesByFullPath {
   '/planning': typeof AppPlanningRoute
   '/roadmap': typeof AppRoadmapRoute
   '/validation-heures': typeof AppValidationHeuresRoute
+  '/auth/forgot-password': typeof AuthForgotPasswordRoute
+  '/auth/reset-password': typeof AuthResetPasswordRoute
+  '/auth/set-password': typeof AuthSetPasswordRoute
   '/mobile/absences': typeof MobileAbsencesRoute
   '/mobile/aujourdhui': typeof MobileAujourdhuiRoute
   '/mobile/heures': typeof MobileHeuresRoute
@@ -291,6 +312,9 @@ export interface FileRoutesByTo {
   '/planning': typeof AppPlanningRoute
   '/roadmap': typeof AppRoadmapRoute
   '/validation-heures': typeof AppValidationHeuresRoute
+  '/auth/forgot-password': typeof AuthForgotPasswordRoute
+  '/auth/reset-password': typeof AuthResetPasswordRoute
+  '/auth/set-password': typeof AuthSetPasswordRoute
   '/mobile/absences': typeof MobileAbsencesRoute
   '/mobile/aujourdhui': typeof MobileAujourdhuiRoute
   '/mobile/heures': typeof MobileHeuresRoute
@@ -330,6 +354,9 @@ export interface FileRoutesById {
   '/_app/planning': typeof AppPlanningRoute
   '/_app/roadmap': typeof AppRoadmapRoute
   '/_app/validation-heures': typeof AppValidationHeuresRoute
+  '/auth/forgot-password': typeof AuthForgotPasswordRoute
+  '/auth/reset-password': typeof AuthResetPasswordRoute
+  '/auth/set-password': typeof AuthSetPasswordRoute
   '/mobile/absences': typeof MobileAbsencesRoute
   '/mobile/aujourdhui': typeof MobileAujourdhuiRoute
   '/mobile/heures': typeof MobileHeuresRoute
@@ -370,6 +397,9 @@ export interface FileRouteTypes {
     | '/planning'
     | '/roadmap'
     | '/validation-heures'
+    | '/auth/forgot-password'
+    | '/auth/reset-password'
+    | '/auth/set-password'
     | '/mobile/absences'
     | '/mobile/aujourdhui'
     | '/mobile/heures'
@@ -408,6 +438,9 @@ export interface FileRouteTypes {
     | '/planning'
     | '/roadmap'
     | '/validation-heures'
+    | '/auth/forgot-password'
+    | '/auth/reset-password'
+    | '/auth/set-password'
     | '/mobile/absences'
     | '/mobile/aujourdhui'
     | '/mobile/heures'
@@ -446,6 +479,9 @@ export interface FileRouteTypes {
     | '/_app/planning'
     | '/_app/roadmap'
     | '/_app/validation-heures'
+    | '/auth/forgot-password'
+    | '/auth/reset-password'
+    | '/auth/set-password'
     | '/mobile/absences'
     | '/mobile/aujourdhui'
     | '/mobile/heures'
@@ -473,6 +509,9 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
   LoginRoute: typeof LoginRoute
+  AuthForgotPasswordRoute: typeof AuthForgotPasswordRoute
+  AuthResetPasswordRoute: typeof AuthResetPasswordRoute
+  AuthSetPasswordRoute: typeof AuthSetPasswordRoute
   MobileAbsencesRoute: typeof MobileAbsencesRoute
   MobileAujourdhuiRoute: typeof MobileAujourdhuiRoute
   MobileHeuresRoute: typeof MobileHeuresRoute
@@ -552,6 +591,27 @@ declare module '@tanstack/react-router' {
       path: '/mobile/absences'
       fullPath: '/mobile/absences'
       preLoaderRoute: typeof MobileAbsencesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/set-password': {
+      id: '/auth/set-password'
+      path: '/auth/set-password'
+      fullPath: '/auth/set-password'
+      preLoaderRoute: typeof AuthSetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/reset-password': {
+      id: '/auth/reset-password'
+      path: '/auth/reset-password'
+      fullPath: '/auth/reset-password'
+      preLoaderRoute: typeof AuthResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/forgot-password': {
+      id: '/auth/forgot-password'
+      path: '/auth/forgot-password'
+      fullPath: '/auth/forgot-password'
+      preLoaderRoute: typeof AuthForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app/validation-heures': {
@@ -841,6 +901,9 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
   LoginRoute: LoginRoute,
+  AuthForgotPasswordRoute: AuthForgotPasswordRoute,
+  AuthResetPasswordRoute: AuthResetPasswordRoute,
+  AuthSetPasswordRoute: AuthSetPasswordRoute,
   MobileAbsencesRoute: MobileAbsencesRoute,
   MobileAujourdhuiRoute: MobileAujourdhuiRoute,
   MobileHeuresRoute: MobileHeuresRoute,
