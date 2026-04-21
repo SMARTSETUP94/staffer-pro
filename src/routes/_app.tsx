@@ -21,17 +21,26 @@ function AppGuard() {
   const navigate = useNavigate();
   const router = useRouterState();
   const currentPath = router.location.pathname;
-  const { user, loading, rolesLoaded, isAdminOrChef } = useAuth();
+  const { user, loading, rolesLoaded, isAdminOrChef, passwordSetDone, roles } = useAuth();
   const { effIsMobile, effIsAdminOrChef } = usePreview();
 
   const isEmployeAllowedPath = EMPLOYE_DESKTOP_ALLOWED.some(
     (p) => currentPath === p || currentPath.startsWith(p + "/"),
   );
 
+  // Chef/admin doivent OBLIGATOIREMENT avoir un mot de passe
+  const isChefOrAdmin = roles.includes("admin") || roles.includes("chef_chantier");
+  const mustSetPassword = passwordSetDone === false && isChefOrAdmin;
+
   useEffect(() => {
     if (loading || !rolesLoaded) return;
     if (!user) {
       navigate({ to: "/login" });
+      return;
+    }
+    // Set-password obligatoire pour chef/admin
+    if (mustSetPassword) {
+      navigate({ to: "/auth/set-password" });
       return;
     }
     // Preview "Employé mobile" -> bascule mobile
@@ -45,7 +54,7 @@ function AppGuard() {
     }
   }, [
     loading, rolesLoaded, user, isAdminOrChef, effIsAdminOrChef,
-    effIsMobile, isEmployeAllowedPath, navigate,
+    effIsMobile, isEmployeAllowedPath, mustSetPassword, navigate,
   ]);
 
   if (loading || !rolesLoaded || !user) {
