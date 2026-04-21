@@ -1,12 +1,12 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { CalendarDays, Clock, ArrowLeftRight, ClipboardList, User } from "lucide-react";
+import { CalendarDays, Clock, ArrowLeftRight, CalendarOff, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const items = [
   { to: "/mobile/aujourdhui", label: "Semaine", icon: CalendarDays },
   { to: "/mobile/heures", label: "Heures", icon: Clock },
+  { to: "/mobile/absences", label: "Absences", icon: CalendarOff },
   { to: "/mobile/swaps", label: "Swaps", icon: ArrowLeftRight },
-  { to: "/mobile/propositions", label: "Missions", icon: ClipboardList },
   { to: "/mobile/profil", label: "Profil", icon: User },
 ] as const;
 
