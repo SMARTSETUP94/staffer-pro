@@ -233,7 +233,7 @@ function DevisImportPage() {
       }));
 
       const { error } = await supabase.rpc("import_devis_atomique", {
-        _affaire_id: affaireId === NEW_AFFAIRE ? null : affaireId,
+        _affaire_id: (affaireId === NEW_AFFAIRE ? null : affaireId) as unknown as string,
         _new_affaire:
           affaireId === NEW_AFFAIRE
             ? {
@@ -243,8 +243,8 @@ function DevisImportPage() {
                 lieu: newAffaireLieu.trim() || null,
               }
             : {},
-        _date_montage: toIso(dateMontage),
-        _date_demontage: toIso(dateDemontage),
+        _date_montage: toIso(dateMontage) as unknown as string,
+        _date_demontage: toIso(dateDemontage) as unknown as string,
         _devis: {
           numero: numeroDevis.trim(),
           libelle: nomDevis.trim() || null,
