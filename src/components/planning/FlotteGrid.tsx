@@ -7,11 +7,23 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import {
-  alerteDate, alerteCT, dateExpirationCT, VEHICULE_TYPE_LABEL, type Trajet, type Vehicule,
+  alerteDate,
+  alerteCT,
+  dateExpirationCT,
+  VEHICULE_TYPE_LABEL,
+  type Trajet,
+  type Vehicule,
 } from "@/hooks/use-vehicules";
 
-interface EmployeMini { id: string; prenom: string; nom: string }
-interface AffaireMini { id: string; numero: string }
+interface EmployeMini {
+  id: string;
+  prenom: string;
+  nom: string;
+}
+interface AffaireMini {
+  id: string;
+  numero: string;
+}
 
 interface Props {
   weekStart: Date;
@@ -25,8 +37,14 @@ interface Props {
 }
 
 export function FlotteGrid({
-  weekStart, vehicules, trajets, employesById, affairesById, showWeekend,
-  onAddTrajet, onEditTrajet,
+  weekStart,
+  vehicules,
+  trajets,
+  employesById,
+  affairesById,
+  showWeekend,
+  onAddTrajet,
+  onEditTrajet,
 }: Props) {
   const days = useMemo(() => {
     const all = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
@@ -72,7 +90,11 @@ export function FlotteGrid({
   if (vehiculesActifs.length === 0) {
     return (
       <div className="rounded-md border bg-card p-8 text-center text-sm text-muted-foreground">
-        Aucun véhicule actif. Ajoute un véhicule depuis <a href="/flotte" className="underline">la page Flotte</a>.
+        Aucun véhicule actif. Ajoute un véhicule depuis{" "}
+        <a href="/flotte" className="underline">
+          la page Flotte
+        </a>
+        .
       </div>
     );
   }
@@ -95,7 +117,9 @@ export function FlotteGrid({
                   )}
                 >
                   <div>{format(d, "EEE", { locale: fr })}</div>
-                  <div className="text-[10px] text-muted-foreground">{format(d, "d MMM", { locale: fr })}</div>
+                  <div className="text-[10px] text-muted-foreground">
+                    {format(d, "d MMM", { locale: fr })}
+                  </div>
                 </th>
               ))}
             </tr>
@@ -106,7 +130,9 @@ export function FlotteGrid({
               const ctEcheance = dateExpirationCT(v.date_controle_technique);
               const revAlert = alerteDate(v.date_prochaine_revision);
               const assAlert = alerteDate(v.date_expiration_assurance);
-              const hasAlert = [ctAlert, revAlert, assAlert].some((a) => a === "warning" || a === "expired");
+              const hasAlert = [ctAlert, revAlert, assAlert].some(
+                (a) => a === "warning" || a === "expired",
+              );
               return (
                 <tr key={v.id} className="hover:bg-muted/20">
                   <td className="sticky left-0 z-10 w-[200px] border-b border-r bg-card px-3 py-2 align-top">
@@ -122,9 +148,15 @@ export function FlotteGrid({
                               </TooltipTrigger>
                               <TooltipContent>
                                 <div className="text-xs space-y-0.5">
-                                  {ctAlert !== "ok" && ctAlert !== "none" && <div>CT (échéance) : {ctEcheance}</div>}
-                                  {revAlert !== "ok" && revAlert !== "none" && <div>Révision : {v.date_prochaine_revision}</div>}
-                                  {assAlert !== "ok" && assAlert !== "none" && <div>Assurance : {v.date_expiration_assurance}</div>}
+                                  {ctAlert !== "ok" && ctAlert !== "none" && (
+                                    <div>CT (échéance) : {ctEcheance}</div>
+                                  )}
+                                  {revAlert !== "ok" && revAlert !== "none" && (
+                                    <div>Révision : {v.date_prochaine_revision}</div>
+                                  )}
+                                  {assAlert !== "ok" && assAlert !== "none" && (
+                                    <div>Assurance : {v.date_expiration_assurance}</div>
+                                  )}
                                 </div>
                               </TooltipContent>
                             </Tooltip>
@@ -134,7 +166,9 @@ export function FlotteGrid({
                           {VEHICULE_TYPE_LABEL[v.type]} · {v.permis_requis}
                         </div>
                         {v.immatriculation && (
-                          <div className="text-[10px] font-mono text-muted-foreground">{v.immatriculation}</div>
+                          <div className="text-[10px] font-mono text-muted-foreground">
+                            {v.immatriculation}
+                          </div>
                         )}
                       </div>
                     </div>
@@ -165,13 +199,17 @@ export function FlotteGrid({
                                   <span className="font-semibold truncate">
                                     {t.heure_depart ? t.heure_depart.slice(0, 5) : "—"}
                                   </span>
-                                  {t.parent_trajet_id && <span className="text-[8px] uppercase opacity-60">retour</span>}
+                                  {t.parent_trajet_id && (
+                                    <span className="text-[8px] uppercase opacity-60">retour</span>
+                                  )}
                                 </div>
                                 <div className="truncate text-muted-foreground">
                                   {driver ? `${driver.prenom} ${driver.nom[0]}.` : "Sans chauffeur"}
                                 </div>
                                 {aff && (
-                                  <div className="truncate text-[10px] text-primary">{aff.numero}</div>
+                                  <div className="truncate text-[10px] text-primary">
+                                    {aff.numero}
+                                  </div>
                                 )}
                               </button>
                             );
@@ -218,9 +256,13 @@ export function FlotteGrid({
                 className="flex w-full items-center justify-between gap-2 rounded border bg-card px-2 py-1 text-xs hover:bg-accent"
               >
                 <span className="font-mono">{format(new Date(t.date + "T00:00:00"), "dd/MM")}</span>
-                <span className="flex-1 truncate text-left">{t.adresse_depart} → {t.adresse_arrivee}</span>
+                <span className="flex-1 truncate text-left">
+                  {t.adresse_depart} → {t.adresse_arrivee}
+                </span>
                 <Badge variant="secondary" className="text-[9px]">
-                  {t.statut_soustraitance === "a_sous_traiter" ? "à envoyer" : t.statut_soustraitance}
+                  {t.statut_soustraitance === "a_sous_traiter"
+                    ? "à envoyer"
+                    : t.statut_soustraitance}
                 </Badge>
               </button>
             ))}

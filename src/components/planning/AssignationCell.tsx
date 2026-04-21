@@ -12,17 +12,8 @@ import {
 import { useDraggable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import { cn } from "@/lib/utils";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import type { Assignation, Metier, Affaire } from "@/hooks/use-planning-data";
 
@@ -131,9 +122,7 @@ export function AssignationCell({
         else if (statusSet.has("confirmee")) confStatus = "mixte";
         else confStatus = "non_requise";
       }
-      const hasSwap = swapAssignationIds
-        ? items.some((i) => swapAssignationIds.has(i.id))
-        : false;
+      const hasSwap = swapAssignationIds ? items.some((i) => swapAssignationIds.has(i.id)) : false;
       result.push({
         key,
         affaire_id: items[0].affaire_id,
@@ -264,9 +253,7 @@ function DraggableBadge({ group: g, metier, affaire, dnd, onDelete }: DraggableB
             </span>
           </div>
           {affaire?.nom && (
-            <div className="mt-0.5 truncate text-[9px] font-normal opacity-80">
-              {affaire.nom}
-            </div>
+            <div className="mt-0.5 truncate text-[9px] font-normal opacity-80">{affaire.nom}</div>
           )}
 
           {/* ✕ rouge en haut-droite, visible au hover du badge uniquement */}
@@ -301,9 +288,7 @@ function DraggableBadge({ group: g, metier, affaire, dnd, onDelete }: DraggableB
                 onClick={(e) => e.stopPropagation()}
                 onPointerDown={(e) => e.stopPropagation()}
               >
-                <p className="mb-3 text-sm font-medium">
-                  Supprimer cette affectation ?
-                </p>
+                <p className="mb-3 text-sm font-medium">Supprimer cette affectation ?</p>
                 <p className="mb-3 text-xs text-muted-foreground">
                   {affaire?.numero ?? "—"} · {g.slot === "JOURNEE" ? "Journée" : g.slot} ·{" "}
                   {g.heures}h
