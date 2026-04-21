@@ -49,6 +49,14 @@ interface AbsenceRow {
   employes: { prenom: string; nom: string } | null;
 }
 
+interface ConflictAssignation {
+  id: string;
+  date: string;
+  demi_journee: "AM" | "PM" | "JOURNEE";
+  heures: number;
+  affaires: { numero: string; nom: string } | null;
+}
+
 interface EmployeOpt {
   id: string;
   prenom: string;
