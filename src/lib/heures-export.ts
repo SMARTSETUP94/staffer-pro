@@ -2,7 +2,7 @@ import * as XLSX from "xlsx";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
-interface ExportRow {
+export interface HeuresExportRow {
   date: string;
   heure_debut: string | null;
   heure_fin: string | null;
@@ -14,12 +14,12 @@ interface ExportRow {
   affaire: { numero: string; nom: string } | null;
 }
 
-interface ExportOpts {
+export interface HeuresExportOpts {
   weekStart: Date;
   weekEnd: Date;
 }
 
-export async function exportHeuresXlsx(rows: ExportRow[], opts: ExportOpts) {
+export async function exportHeuresXlsx(rows: HeuresExportRow[], opts: HeuresExportOpts) {
   const data = rows.map((r) => ({
     Date: format(new Date(r.date), "dd/MM/yyyy"),
     Jour: format(new Date(r.date), "EEEE", { locale: fr }),

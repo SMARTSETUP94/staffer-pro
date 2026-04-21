@@ -31,7 +31,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { WeekPicker } from "@/components/planning/WeekPicker";
 import { cn } from "@/lib/utils";
-import { exportHeuresXlsx } from "@/lib/heures-export";
+import { exportHeuresXlsx, type HeuresExportRow } from "@/lib/heures-export";
 
 export const Route = createFileRoute("/_app/validation-heures")({
   head: () => ({ meta: [{ title: "Validation heures — Planning chantiers" }] }),
@@ -199,7 +199,7 @@ function ValidationHeuresPage() {
       // Export = uniquement validées dans la période/filtres actuels
       // Pagination par pages de 1000 pour éviter toute troncature silencieuse
       const PAGE_SIZE = 1000;
-      const all: any[] = [];
+      const all: HeuresExportRow[] = [];
       let from = 0;
       while (true) {
         let q = supabase
@@ -216,12 +216,12 @@ function ValidationHeuresPage() {
         if (affaireFilter !== "all") q = q.eq("affaire_id", affaireFilter);
         const { data, error } = await q;
         if (error) throw error;
-        const batch = data ?? [];
+        const batch = (data ?? []) as unknown as HeuresExportRow[];
         all.push(...batch);
         if (batch.length < PAGE_SIZE) break;
         from += PAGE_SIZE;
       }
-      await exportHeuresXlsx(all as any, { weekStart, weekEnd });
+      await exportHeuresXlsx(all, { weekStart, weekEnd });
       toast.success(`${all.length} ligne(s) exportée(s)`);
     } catch (e: any) {
       toast.error(e?.message ?? "Erreur export");
