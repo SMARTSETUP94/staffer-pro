@@ -39,33 +39,28 @@ function AffaireDetailLayout() {
   const [confirmAction, setConfirmAction] = useState<"close" | "reopen" | null>(null);
   const [savingStatut, setSavingStatut] = useState(false);
 
-  const reload = () => {
-    setLoading(true);
-    supabase
+  const fetchAffaire = async (id: string, signal?: { cancelled: boolean }) => {
+    const { data } = await supabase
       .from("affaires")
       .select("id, numero, nom, client, lieu, statut, date_debut, date_fin_prevue, notes")
-      .eq("id", affaireId)
-      .maybeSingle()
-      .then(({ data }) => {
-        setAffaire(data as AffaireDetail | null);
-        setLoading(false);
-      });
+      .eq("id", id)
+      .maybeSingle();
+    if (signal?.cancelled) return;
+    setAffaire(data as AffaireDetail | null);
+    setLoading(false);
+  };
+
+  const reload = () => {
+    setLoading(true);
+    void fetchAffaire(affaireId);
   };
 
   useEffect(() => {
-    let cancelled = false;
+    const signal = { cancelled: false };
     setLoading(true);
-    supabase
-      .from("affaires")
-      .select("id, numero, nom, client, lieu, statut, date_debut, date_fin_prevue, notes")
-      .eq("id", affaireId)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (cancelled) return;
-        setAffaire(data as AffaireDetail | null);
-        setLoading(false);
-      });
-    return () => { cancelled = true; };
+    void fetchAffaire(affaireId, signal);
+    return () => { signal.cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [affaireId]);
 
   const handleStatut = async () => {
