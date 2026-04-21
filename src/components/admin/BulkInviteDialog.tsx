@@ -18,6 +18,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { inviteUser } from "@/lib/admin-actions";
+import { readServerFnError } from "@/lib/server-fn-error";
 import type { AppRole } from "@/lib/auth-context";
 
 interface BulkInviteDialogProps {
