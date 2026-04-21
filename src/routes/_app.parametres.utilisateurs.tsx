@@ -29,7 +29,7 @@ import { toast } from "sonner";
 import { useAuth, type AppRole } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  inviteUser, resendInvitation, updateUserRole, setUserActive, deleteUser,
+  inviteUser, resendInvitation, updateUserRole, setUserActive, deleteUser, linkExistingUsers,
 } from "@/lib/admin-actions";
 import { PageHeader } from "@/components/PageHeader";
 import { format, formatDistanceToNow } from "date-fns";
