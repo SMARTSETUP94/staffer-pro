@@ -44,6 +44,41 @@ interface RoadmapPlanned {
 const RELEASES: RoadmapRelease[] = [
   {
     date: "2026-04-21",
+    version: "v0.13",
+    title: "Module signalements + roadmap enrichie",
+    entries: [
+      {
+        type: "feature",
+        area: "Feedback",
+        title: "Bouton flottant 💬 « Signaler ou proposer » sur toutes les pages",
+        description:
+          "Bouton fixe en bas à droite (desktop) ou au-dessus de la bottom nav (mobile) accessible aux chefs et admins. Dialog avec type (bug/idée/amélioration/question), priorité, titre, description et capture d'écran auto de la page courante (via html-to-image). Capture stockée dans bucket privé feedback-screenshots, signalement créé dans table feedbacks avec page_url + user_agent. Notification auto envoyée à tous les admins.",
+      },
+      {
+        type: "feature",
+        area: "Admin",
+        title: "Page /admin/feedback pour trier et résoudre les signalements",
+        description:
+          "Vue admin avec stats (total, nouveaux, en cours, résolus, critiques ouverts), filtres par statut/type, cartes signalement avec badges colorés, dialog détail montrant la capture (URL signée), édition statut + notes admin internes, auto-fill resolved_at/by, suppression définitive (capture + ligne).",
+      },
+      {
+        type: "feature",
+        area: "Roadmap",
+        title: "Roadmap « À venir » enrichie (~30 features identifiées)",
+        description:
+          "Nouvelles pistes structurées par priorité : notifications push PWA, mode hors-ligne, suggestions IA de staffing, détection conflits temps réel, dashboard direction (marges), justificatifs absence, géoloc pointage, export compta, calendrier Gantt, intégration Google Calendar, QR pointage, multi-tenant, etc.",
+      },
+      {
+        type: "refactor",
+        area: "Database",
+        title: "Migration feedbacks + bucket feedback-screenshots",
+        description:
+          "Nouvelle table feedbacks (RLS : insert chef/admin, select own/admin, update/delete admin only), enums feedback_type/priorite/statut, triggers notify_feedback_created (notif admins) + guard_feedback_resolution (auto-fill resolved_at). Bucket privé avec policies storage scopées par auth.uid().",
+      },
+    ],
+  },
+  {
+    date: "2026-04-21",
     version: "v0.12.1",
     title: "Fix déconnexion mobile",
     entries: [
