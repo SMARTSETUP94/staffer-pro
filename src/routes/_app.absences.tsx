@@ -556,6 +556,88 @@ function AbsencesPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Dialog conflits assignations chevauchant l'absence */}
+      <Dialog
+        open={!!conflicts}
+        onOpenChange={(o) => {
+          if (!o && !conflictBusy) setConflicts(null);
+        }}
+      >
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>
+              {conflicts?.length ?? 0} assignation{(conflicts?.length ?? 0) > 1 ? "s" : ""} en conflit
+            </DialogTitle>
+            <DialogDescription>
+              Cet employé a déjà des créneaux planifiés sur la période de l'absence. Tu peux les
+              supprimer en cascade ou enregistrer l'absence sans toucher au planning (à corriger
+              manuellement après).
+            </DialogDescription>
+          </DialogHeader>
+          {conflicts && conflicts.length > 0 && (
+            <div className="max-h-72 overflow-y-auto rounded-md border bg-muted/20">
+              <table className="w-full text-xs">
+                <thead className="sticky top-0 bg-muted/60 text-[10px] uppercase tracking-wider text-muted-foreground">
+                  <tr>
+                    <th className="p-2 text-left font-semibold">Date</th>
+                    <th className="p-2 text-left font-semibold">Slot</th>
+                    <th className="p-2 text-left font-semibold">Affaire</th>
+                    <th className="p-2 text-right font-semibold">H</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {conflicts.map((c) => (
+                    <tr key={c.id} className="border-t">
+                      <td className="p-2">
+                        {format(parseISO(c.date), "EEE dd MMM", { locale: fr })}
+                      </td>
+                      <td className="p-2">{c.demi_journee}</td>
+                      <td className="p-2">
+                        <span className="font-mono text-[10px] text-muted-foreground">
+                          {c.affaires?.numero ?? "?"}
+                        </span>{" "}
+                        {c.affaires?.nom ?? ""}
+                      </td>
+                      <td className="p-2 text-right tabular-nums">{c.heures}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          <DialogFooter className="flex-col gap-2 sm:flex-row sm:justify-between">
+            <Button
+              variant="outline"
+              onClick={() => setConflicts(null)}
+              disabled={conflictBusy}
+            >
+              <X className="mr-1 h-4 w-4" /> Annuler
+            </Button>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Button
+                variant="secondary"
+                onClick={handleConfirmKeepAssignations}
+                disabled={conflictBusy}
+              >
+                Garder les assignations
+              </Button>
+              <Button
+                onClick={handleDeleteConflictsAndSave}
+                disabled={conflictBusy}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {conflictBusy ? (
+                  <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                ) : (
+                  <Trash2 className="mr-1 h-4 w-4" />
+                )}
+                Supprimer toutes les assignations conflictuelles
+              </Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
