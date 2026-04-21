@@ -131,6 +131,7 @@ function MetiersPage() {
     });
     const assCount = new Map<number, number>();
     aRes.data?.forEach((a) => {
+      if (a.metier_id == null) return;
       assCount.set(a.metier_id, (assCount.get(a.metier_id) ?? 0) + 1);
     });
     const devisCount = new Map<number, number>();
