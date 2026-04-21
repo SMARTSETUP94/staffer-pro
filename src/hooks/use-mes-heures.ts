@@ -72,6 +72,10 @@ export function useMesHeures({ weekStart, employeIdOverride }: UseMesHeuresOptio
   const [saisies, setSaisies] = useState<SaisieRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [reloadKey, setReloadKey] = useState(0);
+  // Anti-rejeu : mémorise les assignation_id pour lesquels un autofill est en cours
+  // ou a déjà été tenté pendant cette session, afin d'éviter les insertions multiples
+  // (double-render React, requêtes en parallèle, etc.) avant que la table ne soit rechargée.
+  const autofillInFlight = useRef<Set<string>>(new Set());
 
   const weekEnd = useMemo(() => addDays(weekStart, 6), [weekStart]);
   const startStr = format(weekStart, "yyyy-MM-dd");
