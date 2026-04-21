@@ -320,10 +320,14 @@ export type Database = {
         Row: {
           affaire_id: string
           created_at: string
+          date_debut_phase: string | null
+          date_fin_phase: string | null
           date_signature: string | null
           fichier_source: string | null
           id: string
           libelle: string | null
+          livre_le: string | null
+          livre_par: string | null
           montant_ht: number | null
           numero: string
           statut: Database["public"]["Enums"]["devis_statut"]
@@ -332,10 +336,14 @@ export type Database = {
         Insert: {
           affaire_id: string
           created_at?: string
+          date_debut_phase?: string | null
+          date_fin_phase?: string | null
           date_signature?: string | null
           fichier_source?: string | null
           id?: string
           libelle?: string | null
+          livre_le?: string | null
+          livre_par?: string | null
           montant_ht?: number | null
           numero: string
           statut?: Database["public"]["Enums"]["devis_statut"]
@@ -344,10 +352,14 @@ export type Database = {
         Update: {
           affaire_id?: string
           created_at?: string
+          date_debut_phase?: string | null
+          date_fin_phase?: string | null
           date_signature?: string | null
           fichier_source?: string | null
           id?: string
           libelle?: string | null
+          livre_le?: string | null
+          livre_par?: string | null
           montant_ht?: number | null
           numero?: string
           statut?: Database["public"]["Enums"]["devis_statut"]
@@ -367,6 +379,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_affaire_consommation"
             referencedColumns: ["affaire_id"]
+          },
+          {
+            foreignKeyName: "devis_livre_par_fkey"
+            columns: ["livre_par"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -696,6 +715,7 @@ export type Database = {
           commentaire: string | null
           created_at: string
           date: string
+          devis_id: string | null
           employe_id: string
           heure_debut: string | null
           heure_fin: string | null
@@ -716,6 +736,7 @@ export type Database = {
           commentaire?: string | null
           created_at?: string
           date: string
+          devis_id?: string | null
           employe_id: string
           heure_debut?: string | null
           heure_fin?: string | null
@@ -736,6 +757,7 @@ export type Database = {
           commentaire?: string | null
           created_at?: string
           date?: string
+          devis_id?: string | null
           employe_id?: string
           heure_debut?: string | null
           heure_fin?: string | null
@@ -771,6 +793,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "assignations"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "heures_saisies_devis_id_fkey"
+            columns: ["devis_id"]
+            isOneToOne: false
+            referencedRelation: "devis"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "heures_saisies_devis_id_fkey"
+            columns: ["devis_id"]
+            isOneToOne: false
+            referencedRelation: "v_devis_consommation"
+            referencedColumns: ["devis_id"]
           },
           {
             foreignKeyName: "heures_saisies_employe_id_fkey"
@@ -1378,6 +1414,7 @@ export type Database = {
           commentaire: string | null
           created_at: string
           date: string
+          devis_id: string | null
           employe_id: string
           heure_debut: string | null
           heure_fin: string | null
@@ -1443,6 +1480,7 @@ export type Database = {
           }
       is_admin: { Args: never; Returns: boolean }
       is_chef_or_admin: { Args: never; Returns: boolean }
+      is_devis_termine: { Args: { _devis_id: string }; Returns: boolean }
       set_vehicule_chauffeurs_autorises: {
         Args: { _employe_ids: string[]; _vehicule_id: string }
         Returns: undefined
@@ -1460,7 +1498,13 @@ export type Database = {
         | "refusee"
       contrat_type: "CDI" | "Interim" | "CDD" | "Independant"
       demi_journee_type: "AM" | "PM" | "JOURNEE"
-      devis_statut: "brouillon" | "signe" | "facture"
+      devis_statut:
+        | "brouillon"
+        | "signe"
+        | "facture"
+        | "en_cours"
+        | "termine"
+        | "cloture"
       feedback_priorite: "basse" | "moyenne" | "haute" | "critique"
       feedback_statut: "nouveau" | "en_cours" | "resolu" | "ferme" | "rejete"
       feedback_type: "bug" | "idee" | "amelioration" | "question"
@@ -1640,7 +1684,14 @@ export const Constants = {
       ],
       contrat_type: ["CDI", "Interim", "CDD", "Independant"],
       demi_journee_type: ["AM", "PM", "JOURNEE"],
-      devis_statut: ["brouillon", "signe", "facture"],
+      devis_statut: [
+        "brouillon",
+        "signe",
+        "facture",
+        "en_cours",
+        "termine",
+        "cloture",
+      ],
       feedback_priorite: ["basse", "moyenne", "haute", "critique"],
       feedback_statut: ["nouveau", "en_cours", "resolu", "ferme", "rejete"],
       feedback_type: ["bug", "idee", "amelioration", "question"],
