@@ -25,6 +25,7 @@ import { ABSENCE_ICON, ABSENCE_LABEL } from "@/lib/absence-helpers";
 import { ChargeEquipeBloc } from "@/components/dashboard/ChargeEquipeBloc";
 import { MeteoChantiersBloc } from "@/components/dashboard/MeteoChantiersBloc";
 import { FlotteKpisBloc } from "@/components/dashboard/FlotteKpisBloc";
+import { PipelineCommercialBloc } from "@/components/dashboard/PipelineCommercialBloc";
 
 export const Route = createFileRoute("/_app/dashboard")({
   component: DashboardPage,
@@ -346,6 +347,8 @@ function DashboardPage() {
       </div>
 
       <MeteoChantiersBloc />
+
+      <PipelineCommercialBloc />
 
       <div className="grid gap-4 lg:grid-cols-2">
         <ChargeEquipeBloc weekStart={weekStartStr} weekEnd={weekEndStr} />
