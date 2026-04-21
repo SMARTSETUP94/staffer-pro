@@ -47,6 +47,10 @@ const emptyDraft: TablesInsert<"vehicules"> = {
   proprietaire: "interne",
   fournisseur_location: null,
   cout_journalier_eur: null,
+  date_debut_location: null,
+  date_fin_location: null,
+  prestataire_location: null,
+  reference_contrat: null,
   actif: true,
   notes: null,
 };
@@ -250,26 +254,70 @@ export function VehiculeDialog({ open, onOpenChange, vehicule, onSaved }: Props)
             </div>
           </div>
 
-          {draft.proprietaire === "location" && (
-            <div className="grid grid-cols-2 gap-3 rounded-lg border border-warning/30 bg-warning/5 p-3">
-              <div>
-                <Label>Fournisseur</Label>
-                <Input
-                  placeholder="ex Hertz"
-                  value={draft.fournisseur_location ?? ""}
-                  onChange={(e) => set("fournisseur_location", e.target.value || null)}
-                />
+          {(draft.proprietaire === "location" || draft.proprietaire === "sous_traitance") && (
+            <div className="grid gap-3 rounded-lg border border-warning/30 bg-warning/5 p-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Fournisseur / Loueur</Label>
+                  <Input
+                    placeholder="ex Europcar, Hertz"
+                    value={draft.fournisseur_location ?? ""}
+                    onChange={(e) => set("fournisseur_location", e.target.value || null)}
+                  />
+                </div>
+                <div>
+                  <Label>Coût journalier (€)</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={draft.cout_journalier_eur ?? ""}
+                    onChange={(e) =>
+                      set("cout_journalier_eur", e.target.value ? Number(e.target.value) : null)
+                    }
+                  />
+                </div>
               </div>
-              <div>
-                <Label>Coût journalier (€)</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={draft.cout_journalier_eur ?? ""}
-                  onChange={(e) =>
-                    set("cout_journalier_eur", e.target.value ? Number(e.target.value) : null)
-                  }
-                />
+
+              {/* v0.15.2 — Plage de dates location pour filtrer du planning hors période */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Date début location</Label>
+                  <Input
+                    type="date"
+                    value={draft.date_debut_location ?? ""}
+                    onChange={(e) => set("date_debut_location", e.target.value || null)}
+                  />
+                </div>
+                <div>
+                  <Label>Date fin location</Label>
+                  <Input
+                    type="date"
+                    value={draft.date_fin_location ?? ""}
+                    onChange={(e) => set("date_fin_location", e.target.value || null)}
+                  />
+                </div>
+              </div>
+              <p className="-mt-2 text-[11px] text-muted-foreground">
+                Hors de cette plage, le véhicule sera masqué du planning flotte automatiquement.
+              </p>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Prestataire</Label>
+                  <Input
+                    placeholder="Nom commercial du loueur"
+                    value={draft.prestataire_location ?? ""}
+                    onChange={(e) => set("prestataire_location", e.target.value || null)}
+                  />
+                </div>
+                <div>
+                  <Label>Référence contrat</Label>
+                  <Input
+                    placeholder="N° de contrat ou bon de commande"
+                    value={draft.reference_contrat ?? ""}
+                    onChange={(e) => set("reference_contrat", e.target.value || null)}
+                  />
+                </div>
               </div>
             </div>
           )}

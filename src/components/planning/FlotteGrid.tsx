@@ -49,10 +49,25 @@ export function FlotteGrid({
     [trajets],
   );
 
-  const vehiculesActifs = useMemo(
-    () => vehicules.filter((v) => v.actif).sort((a, b) => a.nom.localeCompare(b.nom)),
-    [vehicules],
-  );
+  // v0.15.2 — Pour les véhicules loués/sous-traités, on les masque du planning
+  // hors de leur plage [date_debut_location, date_fin_location]. Si une seule borne
+  // est définie, on respecte uniquement celle-ci. Si aucune borne, le véhicule
+  // s'affiche normalement (rétro-compat).
+  const vehiculesActifs = useMemo(() => {
+    const weekStartStr = format(weekStart, "yyyy-MM-dd");
+    const weekEndStr = format(addDays(weekStart, 6), "yyyy-MM-dd");
+    return vehicules
+      .filter((v) => {
+        if (!v.actif) return false;
+        const isLoue = v.proprietaire === "location" || v.proprietaire === "sous_traitance";
+        if (!isLoue) return true;
+        // Au moins un jour de la semaine doit être dans la plage de location
+        if (v.date_debut_location && weekEndStr < v.date_debut_location) return false;
+        if (v.date_fin_location && weekStartStr > v.date_fin_location) return false;
+        return true;
+      })
+      .sort((a, b) => a.nom.localeCompare(b.nom));
+  }, [vehicules, weekStart]);
 
   if (vehiculesActifs.length === 0) {
     return (
