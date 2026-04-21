@@ -129,6 +129,39 @@ describe("alerteDate", () => {
   });
 });
 
+describe("dateExpirationCT", () => {
+  it("retourne null si pas de date", () => {
+    expect(dateExpirationCT(null)).toBeNull();
+  });
+
+  it("ajoute 2 ans à la date du dernier contrôle", () => {
+    expect(dateExpirationCT("2024-04-15")).toBe("2026-04-15");
+    expect(dateExpirationCT("2023-01-01")).toBe("2025-01-01");
+  });
+});
+
+describe("alerteCT", () => {
+  it("retourne 'none' si pas de date", () => {
+    expect(alerteCT(null)).toBe("none");
+  });
+
+  it("retourne 'expired' si dernier CT > 2 ans (échéance dépassée)", () => {
+    // CT effectué il y a 2 ans + 1 jour → expiré
+    expect(alerteCT(todayPlus(-(365 * 2 + 1)))).toBe("expired");
+  });
+
+  it("retourne 'ok' si dernier CT récent (échéance > 30j)", () => {
+    // CT effectué hier → échéance ~ dans 2 ans → ok
+    expect(alerteCT(todayPlus(-1))).toBe("ok");
+    expect(alerteCT(todayPlus(0))).toBe("ok");
+  });
+
+  it("retourne 'warning' si on est dans les 30j avant l'échéance des 2 ans", () => {
+    // CT effectué il y a (2 ans - 15 j) → échéance dans 15 j → warning
+    expect(alerteCT(todayPlus(-(365 * 2 - 15)))).toBe("warning");
+  });
+});
+
 describe("vehiculeAUneAlerte", () => {
   const baseVeh: Vehicule = { ...vehVL };
 
@@ -136,10 +169,16 @@ describe("vehiculeAUneAlerte", () => {
     expect(vehiculeAUneAlerte(baseVeh)).toBe(false);
   });
 
-  it("retourne true si CT expiré", () => {
+  it("retourne true si CT expiré (dernier contrôle > 2 ans)", () => {
     expect(
-      vehiculeAUneAlerte({ ...baseVeh, date_controle_technique: todayPlus(-1) }),
+      vehiculeAUneAlerte({ ...baseVeh, date_controle_technique: todayPlus(-(365 * 2 + 5)) }),
     ).toBe(true);
+  });
+
+  it("retourne false si CT récent (échéance > 30j)", () => {
+    expect(
+      vehiculeAUneAlerte({ ...baseVeh, date_controle_technique: todayPlus(-30) }),
+    ).toBe(false);
   });
 
   it("retourne true si révision dans les 30 jours", () => {
@@ -154,11 +193,11 @@ describe("vehiculeAUneAlerte", () => {
     ).toBe(true);
   });
 
-  it("retourne false si toutes les dates sont au-delà de 30j", () => {
+  it("retourne false si toutes les dates sont saines", () => {
     expect(
       vehiculeAUneAlerte({
         ...baseVeh,
-        date_controle_technique: todayPlus(180),
+        date_controle_technique: todayPlus(-30), // échéance ~ dans 2 ans - 30j
         date_prochaine_revision: todayPlus(120),
         date_expiration_assurance: todayPlus(365),
       }),
