@@ -44,6 +44,69 @@ interface RoadmapPlanned {
 const RELEASES: RoadmapRelease[] = [
   {
     date: "2026-04-21",
+    version: "v0.12",
+    title: "Auth flow différencié par rôle + reset password via Resend",
+    entries: [
+      {
+        type: "feature",
+        area: "Auth",
+        title: "Page /auth/set-password — création de mot de passe au 1er login",
+        description:
+          "Après un magic link d'invitation, l'utilisateur arrive sur /auth/set-password (UI cream/ink/indigo). Chef de chantier et admin doivent OBLIGATOIREMENT créer un mot de passe (8 car. min). Les employés ont un bouton secondaire « Passer (utiliser le lien magique uniquement) » qui flag le profil et redirige direct vers le dashboard.",
+      },
+      {
+        type: "feature",
+        area: "Auth",
+        title: "Page /auth/forgot-password — demande de reset",
+        description:
+          "Champ email + CTA « Envoyer le lien ». Réponse générique pour ne pas leaker l'existence des comptes (anti-énumération). Email branded Setup Paris envoyé via Resend (from onboarding@setup.paris) avec lien valable 1 heure.",
+      },
+      {
+        type: "feature",
+        area: "Auth",
+        title: "Page /auth/reset-password — choix du nouveau mot de passe",
+        description:
+          "Détecte la session Supabase recovery (event PASSWORD_RECOVERY), affiche un formulaire confirmation + nouveau mot de passe, met à jour via supabase.auth.updateUser puis flag profile.password_set_done = true. Si lien expiré, écran « Demander un nouveau lien ».",
+      },
+      {
+        type: "feature",
+        area: "Auth",
+        title: "Login enrichi : mot de passe OU lien magique",
+        description:
+          "Nouvelle page /login à 3 onglets : Mot de passe (signin classique + lien « Oublié ? »), Lien magique (signInWithOtp + redirect vers /auth/set-password), Créer un compte. UI Setup Paris.",
+      },
+      {
+        type: "feature",
+        area: "Emails",
+        title: "Template Resend reset password branded Setup Paris",
+        description:
+          "Nouveau template HTML cream/ink/indigo cohérent avec invitation : titre « Réinitialisation de mot de passe », CTA indigo, fallback link, mention validité 60 min, footer « Constructeur d'imaginaire ».",
+      },
+      {
+        type: "improvement",
+        area: "Backend",
+        title: "Server fns auth-actions (markPasswordSet + sendPasswordReset)",
+        description:
+          "Nouveau module src/lib/auth-actions.ts. markPasswordSet flag profile.password_set_done et active le rôle (status invite → actif). sendPasswordReset utilise supabaseAdmin.auth.admin.generateLink({ type: 'recovery' }) pour générer le lien sans déclencher l'email Supabase natif, puis envoie via Resend gateway.",
+      },
+      {
+        type: "improvement",
+        area: "Backend",
+        title: "AuthGuard force /auth/set-password pour chef/admin sans mot de passe",
+        description:
+          "Le guard /_app vérifie passwordSetDone et redirige les chef_chantier/admin vers /auth/set-password tant que le password n'est pas créé. Les employés peuvent skip et accéder directement à leur dashboard.",
+      },
+      {
+        type: "refactor",
+        area: "Database",
+        title: "Migration profiles : password_set_done + password_set_at",
+        description:
+          "Nouvelles colonnes pour tracker qui a posé un vrai password vs qui utilise magic link only. Backfill : tous les profils existants marqués comme set_done = true (pour ne pas casser l'existant).",
+      },
+    ],
+  },
+  {
+    date: "2026-04-21",
     version: "v0.11",
     title: "Email stack production-ready + invitations en lot",
     entries: [
