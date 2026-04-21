@@ -87,6 +87,7 @@ export function AssignationDialog({
   const [notes, setNotes] = useState<string>("");
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [confirmOpportunite, setConfirmOpportunite] = useState(false);
   const [secondairesIds, setSecondairesIds] = useState<number[]>([]);
   const [showAllMetiers, setShowAllMetiers] = useState(false);
 
