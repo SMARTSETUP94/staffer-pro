@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import {
-  Loader2, Send, CheckCircle2, XCircle, RotateCw, Download, Users,
+  Loader2, Send, CheckCircle2, XCircle, RotateCw, Download, Users, AlertCircle, Copy,
 } from "lucide-react";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
@@ -16,9 +16,12 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import {
+  Accordion, AccordionContent, AccordionItem, AccordionTrigger,
+} from "@/components/ui/accordion";
 import { toast } from "sonner";
 import { inviteUser } from "@/lib/admin-actions";
-import { readServerFnError } from "@/lib/server-fn-error";
+import { parseServerFnError, type ServerFnErrorDetail } from "@/lib/server-fn-error";
 import { withAuthRetry } from "@/lib/with-auth-retry";
 import type { AppRole } from "@/lib/auth-context";
 
@@ -36,6 +39,7 @@ interface ResultRow {
   attempts: number;
   messageId: string | null;
   error: string | null;
+  errorDetail: ServerFnErrorDetail | null;
 }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -112,6 +116,14 @@ export function BulkInviteDialog({ open, onOpenChange, onComplete }: BulkInviteD
     if (done) onComplete?.();
   }
 
+  class InviteError extends Error {
+    detail: ServerFnErrorDetail;
+    constructor(detail: ServerFnErrorDetail) {
+      super(detail.message);
+      this.detail = detail;
+    }
+  }
+
   async function sendOne(email: string): Promise<{ messageId: string | null }> {
     let r;
     try {
@@ -126,13 +138,27 @@ export function BulkInviteDialog({ open, onOpenChange, onComplete }: BulkInviteD
       );
     } catch (e) {
       // Middleware d'auth (après retry) ou 5xx → throw Response côté serveur
-      const msg = await readServerFnError(e);
-      throw new Error(msg);
+      const detail = await parseServerFnError(e);
+      throw new InviteError(detail);
     }
     if (!r.ok) {
-      throw new Error(r.error);
+      throw new InviteError({
+        message: r.error,
+        status: null,
+        statusText: null,
+        body: r.error,
+        kind: "error",
+      });
     }
     return { messageId: r.messageId ?? null };
+  }
+
+  function toDetail(e: unknown): ServerFnErrorDetail {
+    if (e instanceof InviteError) return e.detail;
+    if (e instanceof Error) {
+      return { message: e.message, status: null, statusText: null, body: e.stack ?? null, kind: "error" };
+    }
+    return { message: String(e), status: null, statusText: null, body: null, kind: "unknown" };
   }
 
   async function handleRun() {
@@ -150,6 +176,7 @@ export function BulkInviteDialog({ open, onOpenChange, onComplete }: BulkInviteD
       attempts: 0,
       messageId: null,
       error: null,
+      errorDetail: null,
     }));
     setResults(initial);
 
@@ -175,12 +202,19 @@ export function BulkInviteDialog({ open, onOpenChange, onComplete }: BulkInviteD
           status: "sent",
           messageId,
           error: null,
+          errorDetail: null,
         };
         setResults([...updated]);
       } catch (e1) {
-        const err1 = e1 instanceof Error ? e1.message : String(e1);
+        const d1 = toDetail(e1);
         // Retry 1×
-        updated[i] = { ...updated[i], status: "retrying", attempts: 2, error: err1 };
+        updated[i] = {
+          ...updated[i],
+          status: "retrying",
+          attempts: 2,
+          error: d1.message,
+          errorDetail: d1,
+        };
         setResults([...updated]);
 
         await new Promise((r) => setTimeout(r, 800));
@@ -192,23 +226,36 @@ export function BulkInviteDialog({ open, onOpenChange, onComplete }: BulkInviteD
             status: "sent",
             messageId,
             error: null,
+            errorDetail: null,
           };
           setResults([...updated]);
         } catch (e2) {
-          const err2 = e2 instanceof Error ? e2.message : String(e2);
+          const d2 = toDetail(e2);
           updated[i] = {
             ...updated[i],
             status: "failed",
-            error: err2,
+            error: d2.message,
+            errorDetail: d2,
           };
           setResults([...updated]);
+          // Toast d'erreur enrichi avec le statut HTTP
+          const prefix = d2.status ? `[${d2.status}] ` : "";
+          toast.error(`Échec ${updated[i].email}`, {
+            description: `${prefix}${d2.message}`,
+          });
         }
       }
     }
 
     const sentCount = updated.filter((r) => r.status === "sent").length;
     const failedCount = updated.filter((r) => r.status === "failed").length;
-    toast.success(`${sentCount} envoyé(s)${failedCount > 0 ? `, ${failedCount} échec(s)` : ""}`);
+    if (failedCount === 0) {
+      toast.success(`${sentCount} invitation(s) envoyée(s)`);
+    } else {
+      toast.warning(`${sentCount} envoyée(s), ${failedCount} échec(s)`, {
+        description: "Voir la section « Détails » pour les erreurs.",
+      });
+    }
 
     setRunning(false);
     setDone(true);
@@ -284,38 +331,60 @@ export function BulkInviteDialog({ open, onOpenChange, onComplete }: BulkInviteD
             </div>
           </div>
         ) : (
-          <div className="max-h-[420px] overflow-auto rounded-md border">
-            <Table>
-              <TableHeader className="sticky top-0 bg-background">
-                <TableRow>
-                  <TableHead>Email</TableHead>
-                  <TableHead className="w-[110px]">Statut</TableHead>
-                  <TableHead className="w-[70px] text-center">Essais</TableHead>
-                  <TableHead>Message ID</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {results.map((r) => (
-                  <TableRow key={r.email}>
-                    <TableCell className="font-mono text-xs">{r.email}</TableCell>
-                    <TableCell>
-                      <StatusBadge status={r.status} />
-                    </TableCell>
-                    <TableCell className="text-center text-xs">{r.attempts}</TableCell>
-                    <TableCell
-                      className="font-mono text-[11px] text-muted-foreground"
-                      title={r.error ?? r.messageId ?? ""}
-                    >
-                      {r.messageId
-                        ? r.messageId.slice(0, 16) + "…"
-                        : r.error
-                          ? r.error.slice(0, 40) + (r.error.length > 40 ? "…" : "")
-                          : "—"}
-                    </TableCell>
+          <div className="space-y-3">
+            <div className="max-h-[320px] overflow-auto rounded-md border">
+              <Table>
+                <TableHeader className="sticky top-0 bg-background">
+                  <TableRow>
+                    <TableHead>Email</TableHead>
+                    <TableHead className="w-[110px]">Statut</TableHead>
+                    <TableHead className="w-[70px] text-center">Essais</TableHead>
+                    <TableHead>Détail</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {results.map((r) => (
+                    <TableRow key={r.email}>
+                      <TableCell className="font-mono text-xs">{r.email}</TableCell>
+                      <TableCell>
+                        <StatusBadge status={r.status} />
+                      </TableCell>
+                      <TableCell className="text-center text-xs">{r.attempts}</TableCell>
+                      <TableCell className="font-mono text-[11px] text-muted-foreground">
+                        {r.errorDetail ? (
+                          <div className="flex items-center gap-1.5">
+                            {r.errorDetail.status && (
+                              <Badge
+                                variant="outline"
+                                className="border-destructive/30 bg-destructive/10 px-1.5 py-0 font-mono text-[10px] text-destructive"
+                              >
+                                {r.errorDetail.status}
+                              </Badge>
+                            )}
+                            <span
+                              className="truncate text-destructive"
+                              title={r.errorDetail.message}
+                            >
+                              {r.errorDetail.message}
+                            </span>
+                          </div>
+                        ) : r.messageId ? (
+                          <span title={r.messageId}>
+                            {r.messageId.slice(0, 16)}…
+                          </span>
+                        ) : (
+                          "—"
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+
+            {results.some((r) => r.errorDetail) && (
+              <ErrorDetailsSection results={results} />
+            )}
           </div>
         )}
 
@@ -386,4 +455,92 @@ function StatusBadge({ status }: { status: RowStatus }) {
         </Badge>
       );
   }
+}
+
+function ErrorDetailsSection({ results }: { results: ResultRow[] }) {
+  const failed = results.filter((r) => r.errorDetail);
+  if (failed.length === 0) return null;
+
+  function copyAll() {
+    const text = failed
+      .map((r) => {
+        const d = r.errorDetail!;
+        const status = d.status ? `[HTTP ${d.status} ${d.statusText ?? ""}]`.trim() : "";
+        return `── ${r.email} ${status}\n${d.message}\n${d.body ?? ""}`.trim();
+      })
+      .join("\n\n");
+    navigator.clipboard
+      .writeText(text)
+      .then(() => toast.success("Détails copiés dans le presse-papier"))
+      .catch(() => toast.error("Impossible de copier"));
+  }
+
+  return (
+    <div className="rounded-md border border-destructive/30 bg-destructive/5">
+      <div className="flex items-center justify-between gap-2 border-b border-destructive/20 px-3 py-2">
+        <div className="flex items-center gap-2 text-sm font-medium text-destructive">
+          <AlertCircle className="h-4 w-4" />
+          Détails des erreurs ({failed.length})
+        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={copyAll}
+          className="h-7 gap-1.5 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive"
+        >
+          <Copy className="h-3 w-3" />
+          Copier tout
+        </Button>
+      </div>
+      <Accordion type="multiple" className="px-2">
+        {failed.map((r) => {
+          const d = r.errorDetail!;
+          return (
+            <AccordionItem key={r.email} value={r.email} className="border-b-0">
+              <AccordionTrigger className="py-2 hover:no-underline">
+                <div className="flex flex-1 items-center gap-2 text-left">
+                  <span className="font-mono text-xs">{r.email}</span>
+                  {d.status && (
+                    <Badge
+                      variant="outline"
+                      className="border-destructive/30 bg-destructive/10 px-1.5 py-0 font-mono text-[10px] text-destructive"
+                    >
+                      HTTP {d.status}
+                      {d.statusText ? ` ${d.statusText}` : ""}
+                    </Badge>
+                  )}
+                  <span className="truncate text-xs text-muted-foreground">
+                    {d.message}
+                  </span>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent>
+                <div className="space-y-2 pb-2">
+                  <div>
+                    <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                      Message
+                    </div>
+                    <div className="font-mono text-xs text-foreground">{d.message}</div>
+                  </div>
+                  {d.body && d.body !== d.message && (
+                    <div>
+                      <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                        Réponse serveur ({d.kind})
+                      </div>
+                      <pre className="max-h-40 overflow-auto whitespace-pre-wrap rounded border bg-muted/30 p-2 font-mono text-[11px] text-muted-foreground">
+                        {d.body}
+                      </pre>
+                    </div>
+                  )}
+                  <div className="text-[10px] text-muted-foreground">
+                    {r.attempts} tentative{r.attempts > 1 ? "s" : ""}
+                  </div>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          );
+        })}
+      </Accordion>
+    </div>
+  );
 }
