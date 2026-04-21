@@ -59,6 +59,9 @@ function DevisImportPage() {
   // Section 2
   const [postes, setPostes] = useState<PosteRow[]>([]);
 
+  // Hash du fichier pour anti-doublon
+  const [fichierHash, setFichierHash] = useState<string | null>(null);
+
   useEffect(() => {
     supabase
       .from("affaires")
@@ -87,6 +90,12 @@ function DevisImportPage() {
     setParseErrors([]);
     try {
       const buf = await file.arrayBuffer();
+      // Hash SHA-256 du fichier pour détecter les doublons
+      const hashBuf = await crypto.subtle.digest("SHA-256", buf);
+      const hashHex = Array.from(new Uint8Array(hashBuf))
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("");
+      setFichierHash(hashHex);
       const result = parseDevisFromArrayBuffer(buf, { filename: file.name });
       setParseErrors(result.errors);
 
@@ -179,6 +188,7 @@ function DevisImportPage() {
   const reset = () => {
     setHasParsed(false);
     setFilename(null);
+    setFichierHash(null);
     setParseErrors([]);
     setPostes([]);
     setNomDevis("");
@@ -223,10 +233,16 @@ function DevisImportPage() {
           fichier_source: filename,
         },
         _postes: postesPayload,
+        _fichier_hash: fichierHash,
       });
 
       if (error) {
-        toast.error("Import impossible", { description: error.message });
+        const isDuplicate = error.code === "23505" || /déjà été importé/i.test(error.message);
+        toast.error(isDuplicate ? "Doublon détecté" : "Import impossible", {
+          description: isDuplicate
+            ? "Ce fichier a déjà été importé. Consulte l'historique des imports."
+            : error.message,
+        });
         return;
       }
 

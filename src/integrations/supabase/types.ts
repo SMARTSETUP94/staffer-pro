@@ -370,6 +370,54 @@ export type Database = {
           },
         ]
       }
+      devis_imports: {
+        Row: {
+          affaire_id: string | null
+          affaire_nom: string | null
+          affaire_numero: string | null
+          created_at: string
+          devis_id: string | null
+          devis_numero: string | null
+          fichier_hash: string
+          fichier_nom: string
+          id: string
+          postes_count: number
+          total_heures: number
+          total_montant_ht: number | null
+          user_id: string
+        }
+        Insert: {
+          affaire_id?: string | null
+          affaire_nom?: string | null
+          affaire_numero?: string | null
+          created_at?: string
+          devis_id?: string | null
+          devis_numero?: string | null
+          fichier_hash: string
+          fichier_nom: string
+          id?: string
+          postes_count?: number
+          total_heures?: number
+          total_montant_ht?: number | null
+          user_id: string
+        }
+        Update: {
+          affaire_id?: string | null
+          affaire_nom?: string | null
+          affaire_numero?: string | null
+          created_at?: string
+          devis_id?: string | null
+          devis_numero?: string | null
+          fichier_hash?: string
+          fichier_nom?: string
+          id?: string
+          postes_count?: number
+          total_heures?: number
+          total_montant_ht?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       devis_postes: {
         Row: {
           created_at: string
@@ -1294,17 +1342,30 @@ export type Database = {
         }
         Returns: boolean
       }
-      import_devis_atomique: {
-        Args: {
-          _affaire_id: string
-          _date_demontage: string
-          _date_montage: string
-          _devis: Json
-          _new_affaire: Json
-          _postes: Json
-        }
-        Returns: Json
-      }
+      import_devis_atomique:
+        | {
+            Args: {
+              _affaire_id: string
+              _date_demontage: string
+              _date_montage: string
+              _devis: Json
+              _new_affaire: Json
+              _postes: Json
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              _affaire_id: string
+              _date_demontage: string
+              _date_montage: string
+              _devis: Json
+              _fichier_hash?: string
+              _new_affaire: Json
+              _postes: Json
+            }
+            Returns: Json
+          }
       is_admin: { Args: never; Returns: boolean }
       is_chef_or_admin: { Args: never; Returns: boolean }
     }

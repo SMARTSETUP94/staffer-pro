@@ -38,6 +38,7 @@ import { Route as AppParametresMetiersRouteImport } from './routes/_app.parametr
 import { Route as AppExportDemandesDevisRouteImport } from './routes/_app.export.demandes-devis'
 import { Route as AppEmployesImportRouteImport } from './routes/_app.employes.import'
 import { Route as AppDevisImportRouteImport } from './routes/_app.devis.import'
+import { Route as AppDevisHistoriqueRouteImport } from './routes/_app.devis.historique'
 import { Route as AppAffairesAffaireIdRouteImport } from './routes/_app.affaires.$affaireId'
 import { Route as AppAffairesAffaireIdIndexRouteImport } from './routes/_app.affaires.$affaireId.index'
 import { Route as AppAffairesAffaireIdStaffingRouteImport } from './routes/_app.affaires.$affaireId.staffing'
@@ -189,6 +190,11 @@ const AppDevisImportRoute = AppDevisImportRouteImport.update({
   path: '/devis/import',
   getParentRoute: () => AppRoute,
 } as any)
+const AppDevisHistoriqueRoute = AppDevisHistoriqueRouteImport.update({
+  id: '/devis/historique',
+  path: '/devis/historique',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAffairesAffaireIdRoute = AppAffairesAffaireIdRouteImport.update({
   id: '/affaires/$affaireId',
   path: '/affaires/$affaireId',
@@ -242,6 +248,7 @@ export interface FileRoutesByFullPath {
   '/mobile/propositions': typeof MobilePropositionsRoute
   '/mobile/swaps': typeof MobileSwapsRoute
   '/affaires/$affaireId': typeof AppAffairesAffaireIdRouteWithChildren
+  '/devis/historique': typeof AppDevisHistoriqueRoute
   '/devis/import': typeof AppDevisImportRoute
   '/employes/import': typeof AppEmployesImportRoute
   '/export/demandes-devis': typeof AppExportDemandesDevisRoute
@@ -276,6 +283,7 @@ export interface FileRoutesByTo {
   '/mobile/profil': typeof MobileProfilRoute
   '/mobile/propositions': typeof MobilePropositionsRoute
   '/mobile/swaps': typeof MobileSwapsRoute
+  '/devis/historique': typeof AppDevisHistoriqueRoute
   '/devis/import': typeof AppDevisImportRoute
   '/employes/import': typeof AppEmployesImportRoute
   '/export/demandes-devis': typeof AppExportDemandesDevisRoute
@@ -313,6 +321,7 @@ export interface FileRoutesById {
   '/mobile/propositions': typeof MobilePropositionsRoute
   '/mobile/swaps': typeof MobileSwapsRoute
   '/_app/affaires/$affaireId': typeof AppAffairesAffaireIdRouteWithChildren
+  '/_app/devis/historique': typeof AppDevisHistoriqueRoute
   '/_app/devis/import': typeof AppDevisImportRoute
   '/_app/employes/import': typeof AppEmployesImportRoute
   '/_app/export/demandes-devis': typeof AppExportDemandesDevisRoute
@@ -350,6 +359,7 @@ export interface FileRouteTypes {
     | '/mobile/propositions'
     | '/mobile/swaps'
     | '/affaires/$affaireId'
+    | '/devis/historique'
     | '/devis/import'
     | '/employes/import'
     | '/export/demandes-devis'
@@ -384,6 +394,7 @@ export interface FileRouteTypes {
     | '/mobile/profil'
     | '/mobile/propositions'
     | '/mobile/swaps'
+    | '/devis/historique'
     | '/devis/import'
     | '/employes/import'
     | '/export/demandes-devis'
@@ -420,6 +431,7 @@ export interface FileRouteTypes {
     | '/mobile/propositions'
     | '/mobile/swaps'
     | '/_app/affaires/$affaireId'
+    | '/_app/devis/historique'
     | '/_app/devis/import'
     | '/_app/employes/import'
     | '/_app/export/demandes-devis'
@@ -650,6 +662,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDevisImportRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/devis/historique': {
+      id: '/_app/devis/historique'
+      path: '/devis/historique'
+      fullPath: '/devis/historique'
+      preLoaderRoute: typeof AppDevisHistoriqueRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/affaires/$affaireId': {
       id: '/_app/affaires/$affaireId'
       path: '/affaires/$affaireId'
@@ -744,6 +763,7 @@ interface AppRouteChildren {
   AppRoadmapRoute: typeof AppRoadmapRoute
   AppValidationHeuresRoute: typeof AppValidationHeuresRoute
   AppAffairesAffaireIdRoute: typeof AppAffairesAffaireIdRouteWithChildren
+  AppDevisHistoriqueRoute: typeof AppDevisHistoriqueRoute
   AppDevisImportRoute: typeof AppDevisImportRoute
   AppParametresMetiersRoute: typeof AppParametresMetiersRoute
   AppParametresUtilisateursRoute: typeof AppParametresUtilisateursRoute
@@ -766,6 +786,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppRoadmapRoute: AppRoadmapRoute,
   AppValidationHeuresRoute: AppValidationHeuresRoute,
   AppAffairesAffaireIdRoute: AppAffairesAffaireIdRouteWithChildren,
+  AppDevisHistoriqueRoute: AppDevisHistoriqueRoute,
   AppDevisImportRoute: AppDevisImportRoute,
   AppParametresMetiersRoute: AppParametresMetiersRoute,
   AppParametresUtilisateursRoute: AppParametresUtilisateursRoute,
