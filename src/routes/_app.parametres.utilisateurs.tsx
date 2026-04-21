@@ -631,6 +631,13 @@ function UtilisateursPage() {
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* Bulk invite */}
+      <BulkInviteDialog
+        open={bulkOpen}
+        onOpenChange={setBulkOpen}
+        onComplete={loadUsers}
+      />
+
     </div>
   );
 }
