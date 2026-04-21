@@ -11,6 +11,8 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import type { Affaire } from "@/hooks/use-planning-data";
 
 interface Props {
@@ -20,6 +22,10 @@ interface Props {
   placeholder?: string;
   /** Si fourni, ces affaires apparaissent en haut (ex: actives cette semaine). */
   pinnedIds?: Set<string>;
+  /** v0.17 — Inclut aussi les opportunités (phase='opportunite', codes 9XXX). */
+  includeOpportunites?: boolean;
+  /** v0.17 — Toggle interne pour inclure les opportunités (staffing proto). */
+  showOpportuniteToggle?: boolean;
 }
 
 export function AffaireCombobox({
@@ -28,18 +34,27 @@ export function AffaireCombobox({
   onChange,
   placeholder = "Rechercher une affaire (n°, nom, client)…",
   pinnedIds,
+  includeOpportunites = false,
+  showOpportuniteToggle = false,
 }: Props) {
   const [open, setOpen] = useState(false);
+  const [includeOpps, setIncludeOpps] = useState(includeOpportunites);
 
   const sorted = useMemo(() => {
-    const list = [...affaires].sort((a, b) =>
+    // v0.17 — Filtrer les opportunités sauf si toggle activé OU si la valeur sélectionnée en est une
+    const filtered = affaires.filter((a) => {
+      if (a.phase !== "opportunite") return true;
+      if (includeOpps) return true;
+      return a.id === value; // garde la sélection courante visible
+    });
+    const list = [...filtered].sort((a, b) =>
       a.numero.localeCompare(b.numero, "fr", { numeric: true }),
     );
     if (!pinnedIds || pinnedIds.size === 0) return { pinned: [], rest: list };
     const pinned = list.filter((a) => pinnedIds.has(a.id));
     const rest = list.filter((a) => !pinnedIds.has(a.id));
     return { pinned, rest };
-  }, [affaires, pinnedIds]);
+  }, [affaires, pinnedIds, includeOpps, value]);
 
   const selected = affaires.find((a) => a.id === value);
 
@@ -67,6 +82,21 @@ export function AffaireCombobox({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+        {showOpportuniteToggle && (
+          <div className="flex items-center justify-between gap-2 border-b border-border bg-muted/30 px-3 py-2">
+            <Label
+              htmlFor="aff-include-opps"
+              className="text-[11px] font-medium text-muted-foreground cursor-pointer"
+            >
+              Inclure opportunités (staffing proto)
+            </Label>
+            <Switch
+              id="aff-include-opps"
+              checked={includeOpps}
+              onCheckedChange={setIncludeOpps}
+            />
+          </div>
+        )}
         <Command
           filter={(itemValue, search) => {
             // itemValue contient "numero|nom|client" en lowercase
@@ -132,6 +162,11 @@ function AffaireItem({
       <div className="flex min-w-0 flex-col">
         <div className="flex items-center gap-1.5">
           <span className="font-mono text-xs font-semibold">{affaire.numero}</span>
+          {affaire.phase === "opportunite" && (
+            <span className="rounded bg-warning/20 px-1 py-0 text-[9px] font-bold uppercase tracking-wider text-warning-foreground">
+              PROTO
+            </span>
+          )}
           <span className="truncate text-sm">{affaire.nom}</span>
         </div>
         {(affaire.client || affaire.lieu) && (

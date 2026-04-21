@@ -87,6 +87,7 @@ export function AssignationDialog({
   const [notes, setNotes] = useState<string>("");
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [confirmOpportunite, setConfirmOpportunite] = useState(false);
   const [secondairesIds, setSecondairesIds] = useState<number[]>([]);
   const [showAllMetiers, setShowAllMetiers] = useState(false);
 
@@ -229,20 +230,8 @@ export function AssignationDialog({
     setHeures(HEURES_DEFAUT[newSlot]);
   }
 
-  async function handleSave() {
-    if (!affaireId) {
-      toast.error("Sélectionne une affaire");
-      return;
-    }
-    if (!metierId) {
-      toast.error("Sélectionne un métier");
-      return;
-    }
-    if (heures <= 0 || heures > 12) {
-      toast.error("Heures invalides (0 < h ≤ 12)");
-      return;
-    }
-
+  async function performSave() {
+    if (!metierId) return; // garde TS — déjà checké dans handleSave
     setSaving(true);
     const dateStr = format(date, "yyyy-MM-dd");
     const payload = {
@@ -268,6 +257,30 @@ export function AssignationDialog({
     toast.success(editingId ? "Assignation modifiée" : "Assignation créée");
     onSaved();
     onOpenChange(false);
+  }
+
+  async function handleSave() {
+    if (!affaireId) {
+      toast.error("Sélectionne une affaire");
+      return;
+    }
+    if (!metierId) {
+      toast.error("Sélectionne un métier");
+      return;
+    }
+    if (heures <= 0 || heures > 12) {
+      toast.error("Heures invalides (0 < h ≤ 12)");
+      return;
+    }
+
+    // v0.17 — Si affaire est une opportunité non signée, demander confirmation
+    const aff = affaires.find((a) => a.id === affaireId);
+    if (aff?.phase === "opportunite" && !editingId) {
+      setConfirmOpportunite(true);
+      return;
+    }
+
+    await performSave();
   }
 
   async function handleDelete() {
@@ -345,6 +358,22 @@ export function AssignationDialog({
             </div>
           )}
 
+          {/* v0.17 — Bannière PROTO si l'affaire sélectionnée est une opportunité */}
+          {affaireId &&
+            (() => {
+              const aff = affaires.find((a) => a.id === affaireId);
+              if (aff?.phase !== "opportunite") return null;
+              return (
+                <div className="flex items-start gap-2 rounded-md border border-warning/50 bg-warning/10 p-2 text-[11px]">
+                  <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-warning" />
+                  <div>
+                    <strong className="text-warning-foreground">Opportunité non signée</strong> ·{" "}
+                    Tu staffes une affaire en phase étude (proto).
+                  </div>
+                </div>
+              );
+            })()}
+
           <div className="grid gap-3">
             <div className="grid gap-1.5">
               <Label>Affaire</Label>
@@ -352,6 +381,7 @@ export function AssignationDialog({
                 affaires={sortedAffaires}
                 value={affaireId}
                 onChange={setAffaireId}
+                showOpportuniteToggle
               />
             </div>
 
@@ -562,6 +592,33 @@ export function AssignationDialog({
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* v0.17 — Confirmation staffing sur opportunité non signée */}
+      <AlertDialog open={confirmOpportunite} onOpenChange={setConfirmOpportunite}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-warning" />
+              Staffer sur une opportunité non signée ?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette affaire est en phase étude (code 9XXX). L'assignation sera créée mais
+              marquée comme staffing prototype, à reconfirmer après signature.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                setConfirmOpportunite(false);
+                await performSave();
+              }}
+            >
+              Confirmer
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

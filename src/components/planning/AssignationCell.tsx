@@ -244,6 +244,12 @@ function DraggableBadge({ group: g, metier, affaire, dnd, onDelete }: DraggableB
               {g.confStatus === "confirmee" && <Check className="h-2.5 w-2.5 shrink-0" />}
               {g.confStatus === "refusee" && <X className="h-2.5 w-2.5 shrink-0" />}
               <span className="truncate">{affaire?.numero ?? "—"}</span>
+              {/* v0.17 — Badge PROTO si l'affaire est une opportunité non signée */}
+              {affaire?.phase === "opportunite" && (
+                <span className="shrink-0 rounded bg-warning px-1 text-[8px] font-bold uppercase tracking-wider text-warning-foreground">
+                  PROTO
+                </span>
+              )}
             </span>
             <span
               className="shrink-0 rounded-sm px-1 text-[9px] font-bold opacity-80"

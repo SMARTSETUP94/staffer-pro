@@ -46,6 +46,7 @@ function PlanningPage() {
   const [filterMetier, setFilterMetier] = useState<Set<string | number>>(new Set());
   const [filterDevis, setFilterDevis] = useState<Set<string | number>>(new Set());
   const [showWeekend, setShowWeekend] = useState(false);
+  const [includeOpportunites, setIncludeOpportunites] = useState(false);
   const [searchEmploye, setSearchEmploye] = useState("");
 
   const { metiers, employes, affaires, assignations, consommation, absences, chefsById, swapAssignationIds, devisLots, loading, error, refresh } =
@@ -98,9 +99,17 @@ function PlanningPage() {
   const affairesOptions = useMemo(
     () =>
       affaires
-        .filter((a) => affairesActivesIds.has(a.id))
-        .map((a) => ({ id: a.id, label: a.numero, sub: a.nom })),
-    [affaires, affairesActivesIds],
+        .filter((a) => {
+          // v0.17 — Inclut les opportunités uniquement si toggle activé
+          if (a.phase === "opportunite") return includeOpportunites;
+          return affairesActivesIds.has(a.id);
+        })
+        .map((a) => ({
+          id: a.id,
+          label: a.numero,
+          sub: a.phase === "opportunite" ? `🟡 PROTO · ${a.nom}` : a.nom,
+        })),
+    [affaires, affairesActivesIds, includeOpportunites],
   );
 
   const metiersOptions = useMemo(
@@ -234,6 +243,16 @@ function PlanningPage() {
             />
             <Label htmlFor="weekend-toggle" className="text-xs text-muted-foreground cursor-pointer">
               Week-end
+            </Label>
+          </div>
+          <div className="ml-2 flex items-center gap-2">
+            <Switch
+              id="opp-toggle"
+              checked={includeOpportunites}
+              onCheckedChange={setIncludeOpportunites}
+            />
+            <Label htmlFor="opp-toggle" className="text-xs text-muted-foreground cursor-pointer">
+              Inclure opportunités (proto)
             </Label>
           </div>
           {(filterAffaire.size > 0 || filterMetier.size > 0 || filterDevis.size > 0 || searchEmploye) && (
