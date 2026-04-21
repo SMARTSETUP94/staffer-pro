@@ -49,6 +49,14 @@ interface AbsenceRow {
   employes: { prenom: string; nom: string } | null;
 }
 
+interface ConflictAssignation {
+  id: string;
+  date: string;
+  demi_journee: "AM" | "PM" | "JOURNEE";
+  heures: number;
+  affaires: { numero: string; nom: string } | null;
+}
+
 interface EmployeOpt {
   id: string;
   prenom: string;
@@ -86,6 +94,8 @@ function AbsencesPage() {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [filter, setFilter] = useState<"all" | "future" | "pending">("future");
   const [prefillHandled, setPrefillHandled] = useState(false);
+  const [conflicts, setConflicts] = useState<ConflictAssignation[] | null>(null);
+  const [conflictBusy, setConflictBusy] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -164,16 +174,35 @@ function AbsencesPage() {
     setDialogOpen(true);
   }
 
-  async function handleSave() {
+  // Helper : un slot d'absence chevauche-t-il un slot d'assignation ?
+  // - absence sur "JOURNEE" ou null (= toute la période) → couvre AM, PM, JOURNEE
+  // - absence sur "AM" → couvre AM, JOURNEE
+  // - absence sur "PM" → couvre PM, JOURNEE
+  function slotOverlaps(absSlot: "AM" | "PM" | "JOURNEE" | null, assSlot: "AM" | "PM" | "JOURNEE") {
+    if (absSlot === null || absSlot === "JOURNEE") return true;
+    if (assSlot === "JOURNEE") return true;
+    return absSlot === assSlot;
+  }
+
+  async function fetchConflicts(): Promise<ConflictAssignation[]> {
+    if (!editing) return [];
+    const { data, error } = await supabase
+      .from("assignations")
+      .select("id, date, demi_journee, heures, affaires!inner(numero, nom)")
+      .eq("employe_id", editing.employe_id)
+      .gte("date", editing.date_debut)
+      .lte("date", editing.date_fin)
+      .order("date", { ascending: true });
+    if (error) {
+      toast.error(error.message);
+      return [];
+    }
+    const all = (data ?? []) as unknown as ConflictAssignation[];
+    return all.filter((a) => slotOverlaps(editing.demi_journee, a.demi_journee));
+  }
+
+  async function persistAbsence() {
     if (!editing) return;
-    if (!editing.employe_id) {
-      toast.error("Sélectionne un employé");
-      return;
-    }
-    if (editing.date_fin < editing.date_debut) {
-      toast.error("La date de fin doit être après la date de début");
-      return;
-    }
     const payload = {
       employe_id: editing.employe_id,
       date_debut: editing.date_debut,
@@ -188,12 +217,68 @@ function AbsencesPage() {
       : await supabase.from("absences").insert(payload);
     if (res.error) {
       toast.error(res.error.message);
-      return;
+      return false;
     }
     toast.success(editing.id ? "Absence modifiée" : "Absence créée");
-    setDialogOpen(false);
-    setEditing(null);
-    load();
+    return true;
+  }
+
+  async function handleSave() {
+    if (!editing) return;
+    if (!editing.employe_id) {
+      toast.error("Sélectionne un employé");
+      return;
+    }
+    if (editing.date_fin < editing.date_debut) {
+      toast.error("La date de fin doit être après la date de début");
+      return;
+    }
+    // 1. Vérifier les assignations qui chevauchent l'absence
+    const conflictRows = await fetchConflicts();
+    if (conflictRows.length > 0) {
+      // Stocke les conflits → ouvre le dialog. La création se fera après décision.
+      setConflicts(conflictRows);
+      return;
+    }
+    // 2. Pas de conflit → enregistrer directement
+    const ok = await persistAbsence();
+    if (ok) {
+      setDialogOpen(false);
+      setEditing(null);
+      load();
+    }
+  }
+
+  async function handleConfirmKeepAssignations() {
+    // L'utilisateur veut créer l'absence malgré les conflits (sans toucher au planning)
+    const ok = await persistAbsence();
+    if (ok) {
+      setConflicts(null);
+      setDialogOpen(false);
+      setEditing(null);
+      load();
+    }
+  }
+
+  async function handleDeleteConflictsAndSave() {
+    if (!conflicts || conflicts.length === 0) return;
+    setConflictBusy(true);
+    const ids = conflicts.map((c) => c.id);
+    const { error: delErr } = await supabase.from("assignations").delete().in("id", ids);
+    if (delErr) {
+      toast.error(`Suppression assignations : ${delErr.message}`);
+      setConflictBusy(false);
+      return;
+    }
+    toast.success(`${ids.length} assignation${ids.length > 1 ? "s" : ""} supprimée${ids.length > 1 ? "s" : ""}`);
+    const ok = await persistAbsence();
+    setConflictBusy(false);
+    if (ok) {
+      setConflicts(null);
+      setDialogOpen(false);
+      setEditing(null);
+      load();
+    }
   }
 
   async function handleDelete() {
@@ -471,6 +556,88 @@ function AbsencesPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Dialog conflits assignations chevauchant l'absence */}
+      <Dialog
+        open={!!conflicts}
+        onOpenChange={(o) => {
+          if (!o && !conflictBusy) setConflicts(null);
+        }}
+      >
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>
+              {conflicts?.length ?? 0} assignation{(conflicts?.length ?? 0) > 1 ? "s" : ""} en conflit
+            </DialogTitle>
+            <DialogDescription>
+              Cet employé a déjà des créneaux planifiés sur la période de l'absence. Tu peux les
+              supprimer en cascade ou enregistrer l'absence sans toucher au planning (à corriger
+              manuellement après).
+            </DialogDescription>
+          </DialogHeader>
+          {conflicts && conflicts.length > 0 && (
+            <div className="max-h-72 overflow-y-auto rounded-md border bg-muted/20">
+              <table className="w-full text-xs">
+                <thead className="sticky top-0 bg-muted/60 text-[10px] uppercase tracking-wider text-muted-foreground">
+                  <tr>
+                    <th className="p-2 text-left font-semibold">Date</th>
+                    <th className="p-2 text-left font-semibold">Slot</th>
+                    <th className="p-2 text-left font-semibold">Affaire</th>
+                    <th className="p-2 text-right font-semibold">H</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {conflicts.map((c) => (
+                    <tr key={c.id} className="border-t">
+                      <td className="p-2">
+                        {format(parseISO(c.date), "EEE dd MMM", { locale: fr })}
+                      </td>
+                      <td className="p-2">{c.demi_journee}</td>
+                      <td className="p-2">
+                        <span className="font-mono text-[10px] text-muted-foreground">
+                          {c.affaires?.numero ?? "?"}
+                        </span>{" "}
+                        {c.affaires?.nom ?? ""}
+                      </td>
+                      <td className="p-2 text-right tabular-nums">{c.heures}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          <DialogFooter className="flex-col gap-2 sm:flex-row sm:justify-between">
+            <Button
+              variant="outline"
+              onClick={() => setConflicts(null)}
+              disabled={conflictBusy}
+            >
+              <X className="mr-1 h-4 w-4" /> Annuler
+            </Button>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Button
+                variant="secondary"
+                onClick={handleConfirmKeepAssignations}
+                disabled={conflictBusy}
+              >
+                Garder les assignations
+              </Button>
+              <Button
+                onClick={handleDeleteConflictsAndSave}
+                disabled={conflictBusy}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {conflictBusy ? (
+                  <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                ) : (
+                  <Trash2 className="mr-1 h-4 w-4" />
+                )}
+                Supprimer toutes les assignations conflictuelles
+              </Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
