@@ -31,6 +31,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   inviteUser, resendInvitation, updateUserRole, setUserActive, deleteUser, linkExistingUsers,
 } from "@/lib/admin-actions";
+import { readServerFnError } from "@/lib/server-fn-error";
 import { PageHeader } from "@/components/PageHeader";
 import { BulkInviteDialog } from "@/components/admin/BulkInviteDialog";
 import { format, formatDistanceToNow } from "date-fns";
