@@ -226,6 +226,10 @@ function UtilisateursPage() {
           roles: [inviteRole],
         },
       });
+      if (!result.ok) {
+        toast.error(result.error);
+        return;
+      }
       const linked = result.linkedEmployeId ? " (employé lié automatiquement)" : "";
       toast.success(`Invitation envoyée à ${result.email}${linked}`);
       setInviteOpen(false);
