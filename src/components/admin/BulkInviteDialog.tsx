@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import {
-  Loader2, Send, CheckCircle2, XCircle, RotateCw, Download, Users,
-  ChevronDown, ChevronRight, AlertCircle, Copy,
+  Loader2, Send, CheckCircle2, XCircle, RotateCw, Download, Users, AlertCircle, Copy,
 } from "lucide-react";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
@@ -17,12 +16,14 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import {
+  Accordion, AccordionContent, AccordionItem, AccordionTrigger,
+} from "@/components/ui/accordion";
 import { toast } from "sonner";
 import { inviteUser } from "@/lib/admin-actions";
 import { parseServerFnError, type ServerFnErrorDetail } from "@/lib/server-fn-error";
 import { withAuthRetry } from "@/lib/with-auth-retry";
 import type { AppRole } from "@/lib/auth-context";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface BulkInviteDialogProps {
   open: boolean;
