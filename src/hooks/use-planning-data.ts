@@ -56,6 +56,18 @@ export interface DevisConsommation {
   pct_consomme: number;
 }
 
+/** v0.15.1 — Lot/devis exposé pour le sélecteur Planning et l'autofill assignation. */
+export interface DevisLot {
+  id: string;
+  affaire_id: string;
+  numero: string;
+  libelle: string | null;
+  statut: "brouillon" | "signe" | "en_cours" | "termine" | "facture" | "cloture";
+  date_debut_phase: string | null;
+  date_fin_phase: string | null;
+  livre_le: string | null;
+}
+
 export type AbsenceType = "conges" | "formation" | "arret_maladie" | "rtt" | "autre";
 
 export interface Absence {
