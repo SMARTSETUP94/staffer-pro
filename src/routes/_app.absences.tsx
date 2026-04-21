@@ -174,16 +174,35 @@ function AbsencesPage() {
     setDialogOpen(true);
   }
 
-  async function handleSave() {
+  // Helper : un slot d'absence chevauche-t-il un slot d'assignation ?
+  // - absence sur "JOURNEE" ou null (= toute la période) → couvre AM, PM, JOURNEE
+  // - absence sur "AM" → couvre AM, JOURNEE
+  // - absence sur "PM" → couvre PM, JOURNEE
+  function slotOverlaps(absSlot: "AM" | "PM" | "JOURNEE" | null, assSlot: "AM" | "PM" | "JOURNEE") {
+    if (absSlot === null || absSlot === "JOURNEE") return true;
+    if (assSlot === "JOURNEE") return true;
+    return absSlot === assSlot;
+  }
+
+  async function fetchConflicts(): Promise<ConflictAssignation[]> {
+    if (!editing) return [];
+    const { data, error } = await supabase
+      .from("assignations")
+      .select("id, date, demi_journee, heures, affaires!inner(numero, nom)")
+      .eq("employe_id", editing.employe_id)
+      .gte("date", editing.date_debut)
+      .lte("date", editing.date_fin)
+      .order("date", { ascending: true });
+    if (error) {
+      toast.error(error.message);
+      return [];
+    }
+    const all = (data ?? []) as unknown as ConflictAssignation[];
+    return all.filter((a) => slotOverlaps(editing.demi_journee, a.demi_journee));
+  }
+
+  async function persistAbsence() {
     if (!editing) return;
-    if (!editing.employe_id) {
-      toast.error("Sélectionne un employé");
-      return;
-    }
-    if (editing.date_fin < editing.date_debut) {
-      toast.error("La date de fin doit être après la date de début");
-      return;
-    }
     const payload = {
       employe_id: editing.employe_id,
       date_debut: editing.date_debut,
@@ -198,12 +217,68 @@ function AbsencesPage() {
       : await supabase.from("absences").insert(payload);
     if (res.error) {
       toast.error(res.error.message);
-      return;
+      return false;
     }
     toast.success(editing.id ? "Absence modifiée" : "Absence créée");
-    setDialogOpen(false);
-    setEditing(null);
-    load();
+    return true;
+  }
+
+  async function handleSave() {
+    if (!editing) return;
+    if (!editing.employe_id) {
+      toast.error("Sélectionne un employé");
+      return;
+    }
+    if (editing.date_fin < editing.date_debut) {
+      toast.error("La date de fin doit être après la date de début");
+      return;
+    }
+    // 1. Vérifier les assignations qui chevauchent l'absence
+    const conflictRows = await fetchConflicts();
+    if (conflictRows.length > 0) {
+      // Stocke les conflits → ouvre le dialog. La création se fera après décision.
+      setConflicts(conflictRows);
+      return;
+    }
+    // 2. Pas de conflit → enregistrer directement
+    const ok = await persistAbsence();
+    if (ok) {
+      setDialogOpen(false);
+      setEditing(null);
+      load();
+    }
+  }
+
+  async function handleConfirmKeepAssignations() {
+    // L'utilisateur veut créer l'absence malgré les conflits (sans toucher au planning)
+    const ok = await persistAbsence();
+    if (ok) {
+      setConflicts(null);
+      setDialogOpen(false);
+      setEditing(null);
+      load();
+    }
+  }
+
+  async function handleDeleteConflictsAndSave() {
+    if (!conflicts || conflicts.length === 0) return;
+    setConflictBusy(true);
+    const ids = conflicts.map((c) => c.id);
+    const { error: delErr } = await supabase.from("assignations").delete().in("id", ids);
+    if (delErr) {
+      toast.error(`Suppression assignations : ${delErr.message}`);
+      setConflictBusy(false);
+      return;
+    }
+    toast.success(`${ids.length} assignation${ids.length > 1 ? "s" : ""} supprimée${ids.length > 1 ? "s" : ""}`);
+    const ok = await persistAbsence();
+    setConflictBusy(false);
+    if (ok) {
+      setConflicts(null);
+      setDialogOpen(false);
+      setEditing(null);
+      load();
+    }
   }
 
   async function handleDelete() {
