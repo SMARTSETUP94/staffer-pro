@@ -1,6 +1,6 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowRight, Loader2 } from "lucide-react";
+import { ArrowRight, Loader2, Mail, KeyRound, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,12 +21,13 @@ export const Route = createFileRoute("/login")({
 
 function LoginPage() {
   const navigate = useNavigate();
-  const { user, loading, signIn, signUp } = useAuth();
-  const [tab, setTab] = useState<"signin" | "signup">("signin");
+  const { user, loading, signIn, signInWithMagicLink, signUp } = useAuth();
+  const [tab, setTab] = useState<"signin" | "magic" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [busy, setBusy] = useState(false);
+  const [magicSent, setMagicSent] = useState(false);
 
   useEffect(() => {
     if (!loading && user) navigate({ to: "/" });
@@ -42,6 +43,15 @@ function LoginPage() {
       toast.success("Connecté");
       navigate({ to: "/" });
     }
+  };
+
+  const onMagicLink = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    const { error } = await signInWithMagicLink(email);
+    setBusy(false);
+    if (error) toast.error("Envoi impossible", { description: error });
+    else setMagicSent(true);
   };
 
   const onSignUp = async (e: React.FormEvent) => {
