@@ -3,7 +3,12 @@ import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
-  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +16,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { Vehicule } from "@/hooks/use-vehicules";
@@ -112,10 +121,7 @@ export function VehiculeDialog({ open, onOpenChange, vehicule, onSaved }: Props)
     try {
       let vehiculeId = vehicule?.id;
       if (vehicule) {
-        const { error } = await supabase
-          .from("vehicules")
-          .update(draft)
-          .eq("id", vehicule.id);
+        const { error } = await supabase.from("vehicules").update(draft).eq("id", vehicule.id);
         if (error) throw error;
       } else {
         const { data, error } = await supabase
@@ -129,12 +135,11 @@ export function VehiculeDialog({ open, onOpenChange, vehicule, onSaved }: Props)
 
       // Sync atomique des chauffeurs autorisés via RPC (DELETE + INSERT en transaction)
       if (vehiculeId) {
-        const employeIds =
-          draft.type === "poids_lourd" ? Array.from(autorises) : [];
-        const { error: errSync } = await supabase.rpc(
-          "set_vehicule_chauffeurs_autorises",
-          { _vehicule_id: vehiculeId, _employe_ids: employeIds },
-        );
+        const employeIds = draft.type === "poids_lourd" ? Array.from(autorises) : [];
+        const { error: errSync } = await supabase.rpc("set_vehicule_chauffeurs_autorises", {
+          _vehicule_id: vehiculeId,
+          _employe_ids: employeIds,
+        });
         if (errSync) throw errSync;
       }
 
@@ -177,11 +182,17 @@ export function VehiculeDialog({ open, onOpenChange, vehicule, onSaved }: Props)
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label>Marque</Label>
-              <Input value={draft.marque ?? ""} onChange={(e) => set("marque", e.target.value || null)} />
+              <Input
+                value={draft.marque ?? ""}
+                onChange={(e) => set("marque", e.target.value || null)}
+              />
             </div>
             <div>
               <Label>Modèle</Label>
-              <Input value={draft.modele ?? ""} onChange={(e) => set("modele", e.target.value || null)} />
+              <Input
+                value={draft.modele ?? ""}
+                onChange={(e) => set("modele", e.target.value || null)}
+              />
             </div>
           </div>
 
@@ -189,7 +200,9 @@ export function VehiculeDialog({ open, onOpenChange, vehicule, onSaved }: Props)
             <div>
               <Label>Type</Label>
               <Select value={draft.type} onValueChange={(v) => set("type", v as Vehicule["type"])}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="VL">Véhicule léger</SelectItem>
                   <SelectItem value="M3_20">20 m³</SelectItem>
@@ -199,8 +212,13 @@ export function VehiculeDialog({ open, onOpenChange, vehicule, onSaved }: Props)
             </div>
             <div>
               <Label>Permis requis</Label>
-              <Select value={draft.permis_requis ?? "B"} onValueChange={(v) => set("permis_requis", v as "B" | "C" | "CE")}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+              <Select
+                value={draft.permis_requis ?? "B"}
+                onValueChange={(v) => set("permis_requis", v as "B" | "C" | "CE")}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="B">B</SelectItem>
                   <SelectItem value="C">C</SelectItem>
@@ -214,7 +232,9 @@ export function VehiculeDialog({ open, onOpenChange, vehicule, onSaved }: Props)
                 value={draft.proprietaire ?? "interne"}
                 onValueChange={(v) => set("proprietaire", v as Vehicule["proprietaire"])}
               >
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="interne">Interne</SelectItem>
                   <SelectItem value="location">Location</SelectItem>
@@ -239,7 +259,9 @@ export function VehiculeDialog({ open, onOpenChange, vehicule, onSaved }: Props)
               <Input
                 type="number"
                 value={draft.poids_max_kg ?? ""}
-                onChange={(e) => set("poids_max_kg", e.target.value ? Number(e.target.value) : null)}
+                onChange={(e) =>
+                  set("poids_max_kg", e.target.value ? Number(e.target.value) : null)
+                }
               />
             </div>
             <div>
@@ -367,7 +389,9 @@ export function VehiculeDialog({ open, onOpenChange, vehicule, onSaved }: Props)
                         checked={autorises.has(e.id)}
                         onCheckedChange={(v) => toggleAutorise(e.id, !!v)}
                       />
-                      <span>{e.prenom} {e.nom}</span>
+                      <span>
+                        {e.prenom} {e.nom}
+                      </span>
                     </label>
                   ))}
                 </div>
@@ -391,7 +415,9 @@ export function VehiculeDialog({ open, onOpenChange, vehicule, onSaved }: Props)
         </div>
 
         <DialogFooter>
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>Annuler</Button>
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>
+            Annuler
+          </Button>
           <Button onClick={handleSave} disabled={saving}>
             {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
             Enregistrer

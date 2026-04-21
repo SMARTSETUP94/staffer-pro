@@ -44,6 +44,69 @@ interface RoadmapPlanned {
 const RELEASES: RoadmapRelease[] = [
   {
     date: "2026-04-21",
+    version: "v0.15.2",
+    title: "Hotfix terrain — modals stables, planning débloqué, véhicules loués datés",
+    entries: [
+      {
+        type: "fix",
+        area: "UX globale",
+        title: "Bug #1 P0 — Les modals/sheets ne se ferment plus au changement d'onglet Chrome",
+        description:
+          "Patch global sur les composants Dialog et Sheet (Radix) : `onFocusOutside` désactivé et `onInteractOutside` ignore les événements provenant hors du document (window blur). Les chefs peuvent maintenant changer d'onglet pour vérifier une info sans perdre la saisie en cours sur fiche employé, fiche véhicule, fiche affaire, etc. Aucune régression sur la fermeture par X / Annuler / Escape / clic overlay.",
+      },
+      {
+        type: "fix",
+        area: "Planning",
+        title: "Bug #2 P0 — Bouton Supprimer affectation à nouveau cliquable",
+        description:
+          "Le popover de confirmation `Supprimer cette affectation ?` était masqué par le tooltip de hover de la cellule planning. Fix : `z-[60]` sur le PopoverContent (au-dessus du z-50 du tooltip) + le tooltip est forcé fermé tant que le popover de confirmation est ouvert. Workflow de suppression d'affectations à nouveau fluide.",
+      },
+      {
+        type: "feature",
+        area: "Logistique",
+        title: "Véhicules loués — dates, prestataire, contrat + filtrage planning automatique",
+        description:
+          "Ajout des colonnes `date_debut_location`, `date_fin_location`, `prestataire_location`, `reference_contrat` sur la table vehicules. Dans la fiche véhicule (mode location/sous-traitance), 4 nouveaux champs avec dates obligatoires. Le planning Flotte masque automatiquement les véhicules loués hors plage de location → fini l'alourdissement avec d'anciennes locations. La liste véhicules avec filtre statut/période fait office d'historique des locations (scope minimal v0.15.2 — page dédiée reportée v0.16 si besoin).",
+      },
+    ],
+  },
+  {
+    date: "2026-04-21",
+    version: "v0.15.1",
+    title: "Multi-devis par chantier — sélecteur de lot dans Planning + rattachement historique",
+    entries: [
+      {
+        type: "feature",
+        area: "Planning",
+        title: "Sélecteur de lot (devis_id) dans AssignationDialog",
+        description:
+          "Quand un chantier a 1 seul devis actif, le lot est auto-rempli (transparent pour le chef). Quand le chantier a ≥2 devis actifs (cas multi-lots), un sélecteur apparaît pour rattacher l'assignation au bon lot. Les heures saisies héritent du devis_id de leur assignation, pour un suivi `heures_prevues / heures_assignees / heures_reelles_validees` propre par lot via la vue `v_devis_consommation`.",
+      },
+      {
+        type: "feature",
+        area: "Admin",
+        title: "Page /devis/rattachement-historique pour backfill multi-devis",
+        description:
+          "Nouvelle page admin (sidebar Administration → Rattachement devis) listant les chantiers multi-devis avec assignations/heures encore orphelines (sans devis_id). Pour chaque affaire, l'admin choisit un lot par défaut auquel rattacher en masse les lignes orphelines. Indispensable pour migrer proprement les chantiers historiques importés avant v0.15. Opération ponctuelle, idempotente.",
+      },
+      {
+        type: "feature",
+        area: "Workflow devis",
+        title: "Cycle de vie devis : Brouillon → Signé → En cours → Terminé → Clôturé",
+        description:
+          "Statut `devis_statut` étendu pour suivre la livraison (terminé) et la clôture financière (clôturé). RLS chefs : interdit de modifier/supprimer assignations et heures rattachées à un devis terminé/clôturé (admin only override). Onglet Devis sur la fiche affaire avec progression visuelle par lot et action « Marquer livré ».",
+      },
+      {
+        type: "improvement",
+        area: "Design system",
+        title: "Tokens sémantiques success/warning sur les badges statut",
+        description:
+          "Migration des hardcoded `text-emerald-700` / `text-amber-700` vers les tokens `text-success` / `text-warning` (déjà définis en oklch dans styles.css). Compatibilité dark mode native, cohérence visuelle des badges entre validation heures, rattachement devis, statuts de feedback.",
+      },
+    ],
+  },
+  {
+    date: "2026-04-21",
     version: "v0.14",
     title: "Feedback chefs d'équipe — module signalement in-app",
     entries: [

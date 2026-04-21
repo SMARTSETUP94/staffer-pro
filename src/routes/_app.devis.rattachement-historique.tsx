@@ -150,11 +150,7 @@ function RattachementPage() {
   }
 
   const totalOrphelins = useMemo(
-    () =>
-      data.reduce(
-        (acc, a) => acc + a.assignations_orphelines + a.heures_orphelines,
-        0,
-      ),
+    () => data.reduce((acc, a) => acc + a.assignations_orphelines + a.heures_orphelines, 0),
     [data],
   );
 
@@ -198,13 +194,13 @@ function RattachementPage() {
         </CardHeader>
         <CardContent className="space-y-2 text-sm text-muted-foreground">
           <p>
-            Lors de la migration v0.15.1, les assignations et heures des affaires avec un seul
-            devis actif ont été automatiquement rattachées. Les affaires multi-devis listées
-            ci-dessous nécessitent un choix manuel.
+            Lors de la migration v0.15.1, les assignations et heures des affaires avec un seul devis
+            actif ont été automatiquement rattachées. Les affaires multi-devis listées ci-dessous
+            nécessitent un choix manuel.
           </p>
           <p>
-            Pour chaque affaire, choisis un <strong>lot par défaut</strong> auquel rattacher
-            toutes les assignations/heures orphelines. Tu pourras toujours réassigner une ligne
+            Pour chaque affaire, choisis un <strong>lot par défaut</strong> auquel rattacher toutes
+            les assignations/heures orphelines. Tu pourras toujours réassigner une ligne
             individuellement après coup.
           </p>
         </CardContent>
@@ -217,12 +213,15 @@ function RattachementPage() {
       ) : data.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center gap-2 p-8 text-center text-sm text-muted-foreground">
-            <Badge variant="outline" className="bg-emerald-500/15 text-emerald-700 border-emerald-500/30">
+            <Badge
+              variant="outline"
+              className="border-success/30 bg-success/15 text-success"
+            >
               Tout est à jour
             </Badge>
             <p>
-              Aucune affaire multi-devis avec des données orphelines. Le rattachement historique
-              est complet.
+              Aucune affaire multi-devis avec des données orphelines. Le rattachement historique est
+              complet.
             </p>
           </CardContent>
         </Card>
@@ -241,7 +240,8 @@ function RattachementPage() {
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <CardTitle className="font-mono text-base">
-                          {aff.numero} <span className="font-sans text-muted-foreground">— {aff.nom}</span>
+                          {aff.numero}{" "}
+                          <span className="font-sans text-muted-foreground">— {aff.nom}</span>
                         </CardTitle>
                         <div className="mt-1 text-xs text-muted-foreground">
                           {aff.lots.length} lots · {aff.assignations_orphelines} assignations
@@ -249,13 +249,18 @@ function RattachementPage() {
                         </div>
                       </div>
                       {isDone ? (
-                        <Badge variant="outline" className="bg-emerald-500/15 text-emerald-700 border-emerald-500/30">
+                        <Badge
+                          variant="outline"
+                          className="border-success/30 bg-success/15 text-success"
+                        >
                           Rattaché
                         </Badge>
                       ) : (
-                        <Badge variant="outline" className="bg-amber-500/15 text-amber-700 border-amber-500/30">
-                          <AlertTriangle className="mr-1 h-3 w-3" />
-                          À rattacher
+                        <Badge
+                          variant="outline"
+                          className="border-warning/30 bg-warning/15 text-warning"
+                        >
+                          <AlertTriangle className="mr-1 h-3 w-3" />À rattacher
                         </Badge>
                       )}
                     </div>
