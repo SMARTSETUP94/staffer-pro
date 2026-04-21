@@ -14,6 +14,12 @@ export const Route = createFileRoute("/mobile/profil")({
 function MobileProfil() {
   const { user, roles, signOut } = useAuth();
   const { isPreviewing, setPreviewRole } = usePreview();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate({ to: "/login" });
+  };
 
   return (
     <div className="min-h-screen bg-background pb-20">
