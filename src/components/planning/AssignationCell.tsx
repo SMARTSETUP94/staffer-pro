@@ -214,7 +214,10 @@ function DraggableBadge({ group: g, metier, affaire, dnd, onDelete }: DraggableB
   });
 
   return (
-    <Tooltip>
+    // v0.15.2 fix bug #2 : désactiver le Tooltip quand le popover de confirmation
+    // est ouvert, sinon le TooltipContent (z-50) chevauche le PopoverContent et
+    // bloque le clic sur le bouton "Supprimer".
+    <Tooltip open={confirmOpen ? false : undefined}>
       <TooltipTrigger asChild>
         <div
           ref={setNodeRef}
@@ -292,7 +295,9 @@ function DraggableBadge({ group: g, metier, affaire, dnd, onDelete }: DraggableB
               <PopoverContent
                 side="top"
                 align="end"
-                className="w-[220px] p-3"
+                // v0.15.2 fix bug #2 : z-[60] pour passer au-dessus du Tooltip (z-50)
+                // et de tout hover-overlay des cellules planning.
+                className="z-[60] w-[220px] p-3"
                 onClick={(e) => e.stopPropagation()}
                 onPointerDown={(e) => e.stopPropagation()}
               >

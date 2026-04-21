@@ -1275,7 +1275,9 @@ export type Database = {
           cout_journalier_eur: number | null
           created_at: string
           date_controle_technique: string | null
+          date_debut_location: string | null
           date_expiration_assurance: string | null
+          date_fin_location: string | null
           date_prochaine_revision: string | null
           fournisseur_location: string | null
           id: string
@@ -1286,7 +1288,9 @@ export type Database = {
           notes: string | null
           permis_requis: Database["public"]["Enums"]["permis_type"]
           poids_max_kg: number | null
+          prestataire_location: string | null
           proprietaire: Database["public"]["Enums"]["vehicule_proprietaire"]
+          reference_contrat: string | null
           type: Database["public"]["Enums"]["vehicule_type"]
           updated_at: string
           volume_m3: number | null
@@ -1297,7 +1301,9 @@ export type Database = {
           cout_journalier_eur?: number | null
           created_at?: string
           date_controle_technique?: string | null
+          date_debut_location?: string | null
           date_expiration_assurance?: string | null
+          date_fin_location?: string | null
           date_prochaine_revision?: string | null
           fournisseur_location?: string | null
           id?: string
@@ -1308,7 +1314,9 @@ export type Database = {
           notes?: string | null
           permis_requis?: Database["public"]["Enums"]["permis_type"]
           poids_max_kg?: number | null
+          prestataire_location?: string | null
           proprietaire?: Database["public"]["Enums"]["vehicule_proprietaire"]
+          reference_contrat?: string | null
           type: Database["public"]["Enums"]["vehicule_type"]
           updated_at?: string
           volume_m3?: number | null
@@ -1319,7 +1327,9 @@ export type Database = {
           cout_journalier_eur?: number | null
           created_at?: string
           date_controle_technique?: string | null
+          date_debut_location?: string | null
           date_expiration_assurance?: string | null
+          date_fin_location?: string | null
           date_prochaine_revision?: string | null
           fournisseur_location?: string | null
           id?: string
@@ -1330,7 +1340,9 @@ export type Database = {
           notes?: string | null
           permis_requis?: Database["public"]["Enums"]["permis_type"]
           poids_max_kg?: number | null
+          prestataire_location?: string | null
           proprietaire?: Database["public"]["Enums"]["vehicule_proprietaire"]
+          reference_contrat?: string | null
           type?: Database["public"]["Enums"]["vehicule_type"]
           updated_at?: string
           volume_m3?: number | null
