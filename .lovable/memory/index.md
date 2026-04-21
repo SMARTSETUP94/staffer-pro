@@ -10,6 +10,7 @@ Supabase Cloud backend. TanStack Start + Tailwind v4.
 8 métiers : construction, métallerie, peinture, numérique, tapisserie, machiniste, logistique, suivi_projet.
 Emails via Resend gateway, from onboarding@setup.paris (DNS verified). Templates branded cream/ink/indigo.
 Auth : chef_chantier/admin DOIVENT poser un password (page /auth/set-password). Employés peuvent skip et utiliser magic link uniquement. Tracker = profiles.password_set_done.
+Module feedback : bouton flottant 💬 visible uniquement chef/admin (RLS), capture via html-to-image, bucket privé feedback-screenshots scopé par auth.uid(), page admin /admin/feedback.
 
 ## Roadmap
 1. ✅ Étapes 1-3 (CRUD, RBAC, imports CSV employés + Excel devis basique)
@@ -17,6 +18,7 @@ Auth : chef_chantier/admin DOIVENT poser un password (page /auth/set-password). 
 3. ✅ Refonte [/devis/import en formulaire de validation](mem://features/devis-import-validation)
 4. ✅ v0.11 — Email stack production-ready + invitations en lot
 5. ✅ v0.12 — [Auth flow différencié par rôle + reset password](mem://features/auth-flow-roles)
+6. ✅ v0.13 — Module signalements (feedback chef↔admin) + roadmap "À venir" enrichie ~30 features
 
 ## Memories
 - [Planning 3 vues](mem://features/planning-views) — CDI / Intérim / Synthèse chantier, tabs, sélecteur semaine, sidebar heures restantes

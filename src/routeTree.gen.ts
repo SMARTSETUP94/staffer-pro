@@ -44,6 +44,7 @@ import { Route as AppEmployesImportRouteImport } from './routes/_app.employes.im
 import { Route as AppDevisImportRouteImport } from './routes/_app.devis.import'
 import { Route as AppDevisHistoriqueRouteImport } from './routes/_app.devis.historique'
 import { Route as AppAffairesAffaireIdRouteImport } from './routes/_app.affaires.$affaireId'
+import { Route as AppAdminFeedbackRouteImport } from './routes/_app.admin.feedback'
 import { Route as AppAdminEmailPreviewRouteImport } from './routes/_app.admin.email-preview'
 import { Route as AppAffairesAffaireIdIndexRouteImport } from './routes/_app.affaires.$affaireId.index'
 import { Route as AppAffairesAffaireIdStaffingRouteImport } from './routes/_app.affaires.$affaireId.staffing'
@@ -225,6 +226,11 @@ const AppAffairesAffaireIdRoute = AppAffairesAffaireIdRouteImport.update({
   path: '/affaires/$affaireId',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAdminFeedbackRoute = AppAdminFeedbackRouteImport.update({
+  id: '/admin/feedback',
+  path: '/admin/feedback',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAdminEmailPreviewRoute = AppAdminEmailPreviewRouteImport.update({
   id: '/admin/email-preview',
   path: '/admin/email-preview',
@@ -282,6 +288,7 @@ export interface FileRoutesByFullPath {
   '/mobile/propositions': typeof MobilePropositionsRoute
   '/mobile/swaps': typeof MobileSwapsRoute
   '/admin/email-preview': typeof AppAdminEmailPreviewRoute
+  '/admin/feedback': typeof AppAdminFeedbackRoute
   '/affaires/$affaireId': typeof AppAffairesAffaireIdRouteWithChildren
   '/devis/historique': typeof AppDevisHistoriqueRoute
   '/devis/import': typeof AppDevisImportRoute
@@ -323,6 +330,7 @@ export interface FileRoutesByTo {
   '/mobile/propositions': typeof MobilePropositionsRoute
   '/mobile/swaps': typeof MobileSwapsRoute
   '/admin/email-preview': typeof AppAdminEmailPreviewRoute
+  '/admin/feedback': typeof AppAdminFeedbackRoute
   '/devis/historique': typeof AppDevisHistoriqueRoute
   '/devis/import': typeof AppDevisImportRoute
   '/employes/import': typeof AppEmployesImportRoute
@@ -365,6 +373,7 @@ export interface FileRoutesById {
   '/mobile/propositions': typeof MobilePropositionsRoute
   '/mobile/swaps': typeof MobileSwapsRoute
   '/_app/admin/email-preview': typeof AppAdminEmailPreviewRoute
+  '/_app/admin/feedback': typeof AppAdminFeedbackRoute
   '/_app/affaires/$affaireId': typeof AppAffairesAffaireIdRouteWithChildren
   '/_app/devis/historique': typeof AppDevisHistoriqueRoute
   '/_app/devis/import': typeof AppDevisImportRoute
@@ -408,6 +417,7 @@ export interface FileRouteTypes {
     | '/mobile/propositions'
     | '/mobile/swaps'
     | '/admin/email-preview'
+    | '/admin/feedback'
     | '/affaires/$affaireId'
     | '/devis/historique'
     | '/devis/import'
@@ -449,6 +459,7 @@ export interface FileRouteTypes {
     | '/mobile/propositions'
     | '/mobile/swaps'
     | '/admin/email-preview'
+    | '/admin/feedback'
     | '/devis/historique'
     | '/devis/import'
     | '/employes/import'
@@ -490,6 +501,7 @@ export interface FileRouteTypes {
     | '/mobile/propositions'
     | '/mobile/swaps'
     | '/_app/admin/email-preview'
+    | '/_app/admin/feedback'
     | '/_app/affaires/$affaireId'
     | '/_app/devis/historique'
     | '/_app/devis/import'
@@ -768,6 +780,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAffairesAffaireIdRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/admin/feedback': {
+      id: '/_app/admin/feedback'
+      path: '/admin/feedback'
+      fullPath: '/admin/feedback'
+      preLoaderRoute: typeof AppAdminFeedbackRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/admin/email-preview': {
       id: '/_app/admin/email-preview'
       path: '/admin/email-preview'
@@ -862,6 +881,7 @@ interface AppRouteChildren {
   AppRoadmapRoute: typeof AppRoadmapRoute
   AppValidationHeuresRoute: typeof AppValidationHeuresRoute
   AppAdminEmailPreviewRoute: typeof AppAdminEmailPreviewRoute
+  AppAdminFeedbackRoute: typeof AppAdminFeedbackRoute
   AppAffairesAffaireIdRoute: typeof AppAffairesAffaireIdRouteWithChildren
   AppDevisHistoriqueRoute: typeof AppDevisHistoriqueRoute
   AppDevisImportRoute: typeof AppDevisImportRoute
@@ -886,6 +906,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppRoadmapRoute: AppRoadmapRoute,
   AppValidationHeuresRoute: AppValidationHeuresRoute,
   AppAdminEmailPreviewRoute: AppAdminEmailPreviewRoute,
+  AppAdminFeedbackRoute: AppAdminFeedbackRoute,
   AppAffairesAffaireIdRoute: AppAffairesAffaireIdRouteWithChildren,
   AppDevisHistoriqueRoute: AppDevisHistoriqueRoute,
   AppDevisImportRoute: AppDevisImportRoute,

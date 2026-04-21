@@ -44,6 +44,41 @@ interface RoadmapPlanned {
 const RELEASES: RoadmapRelease[] = [
   {
     date: "2026-04-21",
+    version: "v0.13",
+    title: "Module signalements + roadmap enrichie",
+    entries: [
+      {
+        type: "feature",
+        area: "Feedback",
+        title: "Bouton flottant 💬 « Signaler ou proposer » sur toutes les pages",
+        description:
+          "Bouton fixe en bas à droite (desktop) ou au-dessus de la bottom nav (mobile) accessible aux chefs et admins. Dialog avec type (bug/idée/amélioration/question), priorité, titre, description et capture d'écran auto de la page courante (via html-to-image). Capture stockée dans bucket privé feedback-screenshots, signalement créé dans table feedbacks avec page_url + user_agent. Notification auto envoyée à tous les admins.",
+      },
+      {
+        type: "feature",
+        area: "Admin",
+        title: "Page /admin/feedback pour trier et résoudre les signalements",
+        description:
+          "Vue admin avec stats (total, nouveaux, en cours, résolus, critiques ouverts), filtres par statut/type, cartes signalement avec badges colorés, dialog détail montrant la capture (URL signée), édition statut + notes admin internes, auto-fill resolved_at/by, suppression définitive (capture + ligne).",
+      },
+      {
+        type: "feature",
+        area: "Roadmap",
+        title: "Roadmap « À venir » enrichie (~30 features identifiées)",
+        description:
+          "Nouvelles pistes structurées par priorité : notifications push PWA, mode hors-ligne, suggestions IA de staffing, détection conflits temps réel, dashboard direction (marges), justificatifs absence, géoloc pointage, export compta, calendrier Gantt, intégration Google Calendar, QR pointage, multi-tenant, etc.",
+      },
+      {
+        type: "refactor",
+        area: "Database",
+        title: "Migration feedbacks + bucket feedback-screenshots",
+        description:
+          "Nouvelle table feedbacks (RLS : insert chef/admin, select own/admin, update/delete admin only), enums feedback_type/priorite/statut, triggers notify_feedback_created (notif admins) + guard_feedback_resolution (auto-fill resolved_at). Bucket privé avec policies storage scopées par auth.uid().",
+      },
+    ],
+  },
+  {
+    date: "2026-04-21",
     version: "v0.12.1",
     title: "Fix déconnexion mobile",
     entries: [
@@ -483,6 +518,37 @@ const RELEASES: RoadmapRelease[] = [
 ];
 
 const PLANNED: RoadmapPlanned[] = [
+  // ========== HAUTE PRIORITÉ ==========
+  {
+    priority: "haute",
+    title: "Module signalements / feedback intégré (chefs ↔ admin)",
+    description:
+      "Bouton flottant 💬 sur toutes les pages (desktop + mobile) permettant aux chefs de remonter bugs, idées et améliorations avec capture d'écran auto, page d'origine et user-agent. Page admin /admin/feedback pour trier, prioriser, ajouter des notes internes, marquer résolu. Notifications auto vers les admins.",
+  },
+  {
+    priority: "haute",
+    title: "Notifications push mobile (PWA + Web Push API)",
+    description:
+      "Installation PWA (manifest + service worker) + Web Push pour que les employés reçoivent une notif système sur leur téléphone : nouvelle proposition de mission, validation d'heures, swap accepté, trajet assigné. Évite d'avoir à ouvrir l'app pour voir.",
+  },
+  {
+    priority: "haute",
+    title: "Mode hors-ligne saisie heures (mobile)",
+    description:
+      "Permettre aux employés sur chantier sans réseau de saisir leurs heures localement (IndexedDB + queue de sync). Sync automatique au retour réseau avec gestion des conflits.",
+  },
+  {
+    priority: "haute",
+    title: "Suggestions automatiques de staffing (IA Lovable AI)",
+    description:
+      "À l'ouverture du planning, proposer automatiquement les meilleurs candidats pour combler les manques d'un devis : disponibles, bon métier, pas en absence, expérience similaire (déjà bossé sur le même client). Score + raisons. Powered by gemini-2.5-flash.",
+  },
+  {
+    priority: "haute",
+    title: "Détection de conflits de planning en temps réel",
+    description:
+      "Avant validation d'une assignation : vérifier double-booking (déjà sur autre chantier le même slot), absence validée chevauchante, dépassement budget heures du devis. Dialog bloquant ou warning selon gravité.",
+  },
   {
     priority: "haute",
     title: "Contrainte EXCLUDE anti-chevauchement sur la table absences",
@@ -509,6 +575,14 @@ const PLANNED: RoadmapPlanned[] = [
   },
   {
     priority: "haute",
+    title: "Dashboard direction : marge prévisionnelle par chantier",
+    description:
+      "Vue admin avec, par affaire en cours : montant devis HT, coût main d'œuvre prévu (heures × taux par métier), coût flotte, marge brute prévisionnelle vs réelle (heures validées). Alertes sur les chantiers qui dérapent.",
+  },
+
+  // ========== MOYENNE PRIORITÉ ==========
+  {
+    priority: "moyenne",
     title: "Filtre MultiFilter Métier sur /interimaires",
     description:
       "Ajouter un MultiFilter multi-select Métier principal sur la page de classement intérimaires, combiné en AND avec la recherche existante. Permet de comparer le top staffing par corps de métier.",
@@ -529,9 +603,100 @@ const PLANNED: RoadmapPlanned[] = [
     description: "Bouton 'Télécharger un modèle' avec colonnes + 2 lignes de démo.",
   },
   {
+    priority: "moyenne",
+    title: "Historique commenté des modifications de planning",
+    description:
+      "Audit log : qui a créé/modifié/supprimé quelle assignation, quand, et optionnellement pourquoi (champ commentaire au moment du clic). Drawer historique sur chaque ligne planning.",
+  },
+  {
+    priority: "moyenne",
+    title: "Justificatifs photo pour les absences (arrêt maladie, etc.)",
+    description:
+      "Upload PDF/image dans le bucket privé absences-justificatifs lors de la demande. Visible uniquement par chef/admin. Aide à la contestation côté Pôle emploi / mutuelle.",
+  },
+  {
+    priority: "moyenne",
+    title: "Géolocalisation au pointage (mobile)",
+    description:
+      "Capture optionnelle de la position GPS au moment où l'employé saisit ses heures, pour tracer la présence effective sur le chantier. Désactivable par l'employé. Stockée chiffrée.",
+  },
+  {
+    priority: "moyenne",
+    title: "Templates de planning récurrents (équipes-types)",
+    description:
+      "Sauvegarder une combinaison « 3 peintres + 2 menuisiers + 1 chef » comme template réutilisable. Application en 1 clic sur un nouveau chantier.",
+  },
+  {
+    priority: "moyenne",
+    title: "Module congés annuels (compteurs + soldes)",
+    description:
+      "Suivi des compteurs CP / RTT par employé : acquis, posés, restants. Affichage sur fiche employé + alerte chef si solde insuffisant lors d'une demande d'absence.",
+  },
+  {
+    priority: "moyenne",
+    title: "Export comptable mensuel (heures validées par employé)",
+    description:
+      "Export CSV ou PDF formaté pour la paie : par employé, par mois, total d'heures validées par chantier, ventilation jours travaillés / absences. Compatible Sage / EBP / Cegid.",
+  },
+  {
+    priority: "moyenne",
+    title: "Rappels automatiques de soumission d'heures (vendredi 17h)",
+    description:
+      "Cron edge function qui envoie une notif/email aux employés n'ayant pas soumis leurs heures de la semaine en cours. Configurable par l'admin.",
+  },
+  {
+    priority: "moyenne",
+    title: "Recherche globale unifiée (⌘K) — étendue aux affaires + employés + devis",
+    description:
+      "Étendre la command palette pour rechercher au-delà des routes : affaires (numéro/nom/client), employés (prénom/nom), devis. Navigation directe vers la fiche.",
+  },
+  {
+    priority: "moyenne",
+    title: "Vue Gantt par chantier (timeline visuelle)",
+    description:
+      "Représentation visuelle horizontale des affaires sur calendrier (montage → démontage), avec barres colorées par chef ou statut. Pratique pour visualiser le carnet de commandes.",
+  },
+
+  // ========== BASSE PRIORITÉ ==========
+  {
     priority: "basse",
     title: "Heuristique de mapping métier améliorée + override en bulk",
-    description: "Reconnaissance plus fine des libellés ambigus dans la preview d'import.",
+    description: "Reconnaissance plus fine des libellés ambigus dans la preview d'import devis.",
+  },
+  {
+    priority: "basse",
+    title: "Mode sombre forcé / clair forcé (préférence utilisateur)",
+    description: "Aujourd'hui suit l'OS. Ajouter un toggle 3 états (auto/clair/sombre) dans le menu profil.",
+  },
+  {
+    priority: "basse",
+    title: "Avatars personnalisés (employés + chefs)",
+    description:
+      "Upload photo dans bucket avatars, affichage dans planning, dashboard, sidebar. Aide à reconnaître visuellement les équipes.",
+  },
+  {
+    priority: "basse",
+    title: "Intégration calendrier externe (Google Calendar / Outlook)",
+    description:
+      "Push automatique des assignations confirmées dans le calendrier perso de l'employé via OAuth. Sync unidirectionnel app → calendrier.",
+  },
+  {
+    priority: "basse",
+    title: "QR code chantier pour pointage rapide",
+    description:
+      "Affiche du QR sur site → l'employé scanne → ouvre directement /mobile/heures pré-rempli avec l'affaire et la date du jour.",
+  },
+  {
+    priority: "basse",
+    title: "Statistiques personnelles employé (gamification light)",
+    description:
+      "Page /mobile/profil enrichie : nb d'heures validées sur le mois/année, nb chantiers différents, métier le plus utilisé, taux de confirmation des propositions (intérimaires).",
+  },
+  {
+    priority: "basse",
+    title: "Mode multi-tenant (autres entreprises clientes Setup Paris)",
+    description:
+      "Refactor pour supporter plusieurs organisations isolées (workspace_id + RLS étendu). Permettrait de proposer l'app en SaaS à d'autres scénographes / décorateurs.",
   },
 ];
 
