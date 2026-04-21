@@ -325,10 +325,22 @@ function UtilisateursPage() {
         title="Utilisateurs"
         description="Invitez les chefs d'équipe et employés, gérez leurs rôles et statuts."
         actions={
-          <Button onClick={() => setInviteOpen(true)} className="gap-1.5">
-            <UserPlus className="h-4 w-4" />
-            Inviter un utilisateur
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={handleLinkExisting}
+              disabled={linking}
+              className="gap-1.5"
+              title="Lie automatiquement les fiches employés aux comptes utilisateurs via correspondance email"
+            >
+              {linking ? <Loader2 className="h-4 w-4 animate-spin" /> : <Link2 className="h-4 w-4" />}
+              Auto-lier employés
+            </Button>
+            <Button onClick={() => setInviteOpen(true)} className="gap-1.5">
+              <UserPlus className="h-4 w-4" />
+              Inviter un utilisateur
+            </Button>
+          </div>
         }
       />
 
