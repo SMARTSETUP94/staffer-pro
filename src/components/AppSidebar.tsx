@@ -18,6 +18,18 @@ import { ViewAsSwitcher } from "./ViewAsSwitcher";
 
 type EffRole = "admin" | "chef_chantier" | "employe";
 
+/**
+ * v0.13 — Refonte IA : 5 sections
+ *  • PILOTAGE      : Dashboard, Planning
+ *  • CHANTIERS     : Chantiers (ex Affaires), Devis, Demandes de devis
+ *  • ÉQUIPES       : Employés, Intérimaires, Absences, Validation heures (badge count)
+ *  • VÉHICULES     : Véhicules (ex Flotte)
+ *  • ADMINISTRATION (admin only) : Utilisateurs, Imports, Exports, Paramètres, Roadmap
+ *
+ * RBAC strict : on filtre sur `effectiveRole` (et non `isAdmin` réel) pour que
+ * la preview "Chef" cache bien la section ADMINISTRATION à un admin.
+ */
+
 interface NavItem {
   title: string;
   url: string;
@@ -65,8 +77,10 @@ function buildSections(role: EffRole, validationCount: number): NavSection[] {
     {
       label: "Chantiers",
       items: [
-        { title: "Affaires", url: "/affaires", icon: Building2, show: () => true },
+        // Renommé v0.13 : "Affaires" → "Chantiers" (route /affaires conservée)
+        { title: "Chantiers", url: "/affaires", icon: Building2, show: () => true },
         { title: "Devis", url: "/devis", icon: FileText, show: () => true },
+        { title: "Demandes de devis", url: "/export/demandes-devis", icon: FileQuestion, show: () => true },
       ],
     },
     {
@@ -85,14 +99,15 @@ function buildSections(role: EffRole, validationCount: number): NavSection[] {
       ],
     },
     {
-      label: "Flotte",
+      // Renommé v0.13 : section "Flotte" → "Véhicules"
+      label: "Véhicules",
       items: [
         { title: "Véhicules", url: "/flotte", icon: Truck, show: () => true },
       ],
     },
   ];
 
-  // ===== Administration : admin only =====
+  // ===== Administration : admin only (rôle effectif) =====
   if (isAdmin) {
     sections.push({
       label: "Administration",
@@ -100,22 +115,14 @@ function buildSections(role: EffRole, validationCount: number): NavSection[] {
         { title: "Utilisateurs", url: "/parametres/utilisateurs", icon: UserCircle, show: () => true },
         { title: "Imports", url: "/employes/import", icon: FileUp, show: () => true },
         { title: "Export planning", url: "/export", icon: FileDown, show: () => true },
-        { title: "Demandes de devis", url: "/export/demandes-devis", icon: FileQuestion, show: () => true },
         { title: "Métiers", url: "/parametres/metiers", icon: Palette, show: () => true },
         { title: "Signalements", url: "/admin/feedback", icon: MessageCircle, show: () => true },
         { title: "Roadmap", url: "/roadmap", icon: Map, show: () => true },
       ],
     });
-  } else if (isAdminOrChef) {
-    // Chef d'équipe : Exports accessibles mais pas la conf
-    sections.push({
-      label: "Outils",
-      items: [
-        { title: "Export planning", url: "/export", icon: FileDown, show: () => true },
-        { title: "Demandes de devis", url: "/export/demandes-devis", icon: FileQuestion, show: () => true },
-      ],
-    });
   }
+  // Le chef ne voit AUCUNE section Administration. Les exports/demandes
+  // de devis qu'il utilise sont déjà accessibles via le menu Chantiers.
 
   return sections;
 }
@@ -129,10 +136,11 @@ export function AppSidebar() {
   const currentPath = routerState.location.pathname;
   const validationCount = useValidationCount();
 
+  // RBAC visuel : on s'appuie sur effectiveRole pour respecter le mode preview.
   const sections = buildSections(effectiveRole as EffRole, validationCount);
 
   // En preview "employé" (desktop ou mobile), un admin doit pouvoir naviguer
-  // vers les pages mobiles pour QA.
+  // vers les pages mobiles pour QA. (basé sur le vrai isAdmin, pas effectif)
   const showMobilePreview =
     isAdmin && (previewRole === "employe_desktop" || previewRole === "employe_mobile");
   const mobileItems = [

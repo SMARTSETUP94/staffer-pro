@@ -94,14 +94,16 @@ export function CommandPalette() {
     return [
       { label: "Tableau de bord", to: "/dashboard", icon: LayoutDashboard },
       { label: "Planning", to: "/planning", icon: Calendar },
-      { label: "Affaires", to: "/affaires", icon: Building2 },
+      { label: "Chantiers", to: "/affaires", icon: Building2 },
       { label: "Employés", to: "/employes", icon: Users },
       { label: "Absences", to: "/absences", icon: CalendarOff },
       { label: "Validation des heures", to: "/validation-heures", icon: ClipboardCheck },
       { label: "Import employés", to: "/employes/import", icon: FileUp },
       { label: "Import devis", to: "/devis/import", icon: FileUp },
       { label: "Export planning", to: "/export", icon: FileDown },
-      ...(effectiveRole === "admin" ? [{ label: "Paramètres", to: "/parametres", icon: Settings }] : []),
+      ...(effectiveRole === "admin"
+        ? [{ label: "Paramètres utilisateurs", to: "/parametres/utilisateurs", icon: Settings }]
+        : []),
     ];
   }, [effectiveRole]);
 
@@ -143,7 +145,7 @@ export function CommandPalette() {
         {isAdminOrChef && affaires.length > 0 && (
           <>
             <CommandSeparator />
-            <CommandGroup heading="Affaires">
+            <CommandGroup heading="Chantiers">
               {affaires.map((a) => (
                 <CommandItem
                   key={a.id}
