@@ -23,6 +23,7 @@ import { Route as AuthSetPasswordRouteImport } from './routes/auth.set-password'
 import { Route as AuthResetPasswordRouteImport } from './routes/auth.reset-password'
 import { Route as AuthForgotPasswordRouteImport } from './routes/auth.forgot-password'
 import { Route as AppValidationHeuresRouteImport } from './routes/_app.validation-heures'
+import { Route as AppSignalementsRouteImport } from './routes/_app.signalements'
 import { Route as AppRoadmapRouteImport } from './routes/_app.roadmap'
 import { Route as AppPlanningRouteImport } from './routes/_app.planning'
 import { Route as AppMesSwapsRouteImport } from './routes/_app.mes-swaps'
@@ -119,6 +120,11 @@ const AuthForgotPasswordRoute = AuthForgotPasswordRouteImport.update({
 const AppValidationHeuresRoute = AppValidationHeuresRouteImport.update({
   id: '/validation-heures',
   path: '/validation-heures',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSignalementsRoute = AppSignalementsRouteImport.update({
+  id: '/signalements',
+  path: '/signalements',
   getParentRoute: () => AppRoute,
 } as any)
 const AppRoadmapRoute = AppRoadmapRouteImport.update({
@@ -283,6 +289,7 @@ export interface FileRoutesByFullPath {
   '/mes-swaps': typeof AppMesSwapsRoute
   '/planning': typeof AppPlanningRoute
   '/roadmap': typeof AppRoadmapRoute
+  '/signalements': typeof AppSignalementsRoute
   '/validation-heures': typeof AppValidationHeuresRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
@@ -326,6 +333,7 @@ export interface FileRoutesByTo {
   '/mes-swaps': typeof AppMesSwapsRoute
   '/planning': typeof AppPlanningRoute
   '/roadmap': typeof AppRoadmapRoute
+  '/signalements': typeof AppSignalementsRoute
   '/validation-heures': typeof AppValidationHeuresRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
@@ -370,6 +378,7 @@ export interface FileRoutesById {
   '/_app/mes-swaps': typeof AppMesSwapsRoute
   '/_app/planning': typeof AppPlanningRoute
   '/_app/roadmap': typeof AppRoadmapRoute
+  '/_app/signalements': typeof AppSignalementsRoute
   '/_app/validation-heures': typeof AppValidationHeuresRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
@@ -415,6 +424,7 @@ export interface FileRouteTypes {
     | '/mes-swaps'
     | '/planning'
     | '/roadmap'
+    | '/signalements'
     | '/validation-heures'
     | '/auth/forgot-password'
     | '/auth/reset-password'
@@ -458,6 +468,7 @@ export interface FileRouteTypes {
     | '/mes-swaps'
     | '/planning'
     | '/roadmap'
+    | '/signalements'
     | '/validation-heures'
     | '/auth/forgot-password'
     | '/auth/reset-password'
@@ -501,6 +512,7 @@ export interface FileRouteTypes {
     | '/_app/mes-swaps'
     | '/_app/planning'
     | '/_app/roadmap'
+    | '/_app/signalements'
     | '/_app/validation-heures'
     | '/auth/forgot-password'
     | '/auth/reset-password'
@@ -643,6 +655,13 @@ declare module '@tanstack/react-router' {
       path: '/validation-heures'
       fullPath: '/validation-heures'
       preLoaderRoute: typeof AppValidationHeuresRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/signalements': {
+      id: '/_app/signalements'
+      path: '/signalements'
+      fullPath: '/signalements'
+      preLoaderRoute: typeof AppSignalementsRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/roadmap': {
@@ -899,6 +918,7 @@ interface AppRouteChildren {
   AppMesSwapsRoute: typeof AppMesSwapsRoute
   AppPlanningRoute: typeof AppPlanningRoute
   AppRoadmapRoute: typeof AppRoadmapRoute
+  AppSignalementsRoute: typeof AppSignalementsRoute
   AppValidationHeuresRoute: typeof AppValidationHeuresRoute
   AppAdminEmailPreviewRoute: typeof AppAdminEmailPreviewRoute
   AppAdminFeedbackRoute: typeof AppAdminFeedbackRoute
@@ -925,6 +945,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppMesSwapsRoute: AppMesSwapsRoute,
   AppPlanningRoute: AppPlanningRoute,
   AppRoadmapRoute: AppRoadmapRoute,
+  AppSignalementsRoute: AppSignalementsRoute,
   AppValidationHeuresRoute: AppValidationHeuresRoute,
   AppAdminEmailPreviewRoute: AppAdminEmailPreviewRoute,
   AppAdminFeedbackRoute: AppAdminFeedbackRoute,
