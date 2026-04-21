@@ -13,7 +13,9 @@ export interface AuthContextValue {
   isAdmin: boolean;
   isChef: boolean;
   isAdminOrChef: boolean;
+  passwordSetDone: boolean | null;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
+  signInWithMagicLink: (email: string, redirectTo?: string) => Promise<{ error: string | null }>;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
   refreshRoles: () => Promise<void>;
@@ -30,12 +32,23 @@ async function fetchRoles(userId: string): Promise<AppRole[]> {
   return data.map((r) => r.role as AppRole);
 }
 
+async function fetchPasswordSetDone(userId: string): Promise<boolean | null> {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("password_set_done")
+    .eq("id", userId)
+    .maybeSingle();
+  if (error || !data) return null;
+  return Boolean(data.password_set_done);
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [roles, setRoles] = useState<AppRole[]>([]);
   const [loading, setLoading] = useState(true);
   const [rolesLoaded, setRolesLoaded] = useState(false);
+  const [passwordSetDone, setPasswordSetDone] = useState<boolean | null>(null);
 
   useEffect(() => {
     // 1. Listener AVANT getSession (règle Supabase)
@@ -44,15 +57,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(newSession?.user ?? null);
       if (newSession?.user) {
         setRolesLoaded(false);
+        const uid = newSession.user.id;
         // Defer pour éviter deadlock
         setTimeout(() => {
-          fetchRoles(newSession.user.id).then((r) => {
+          Promise.all([fetchRoles(uid), fetchPasswordSetDone(uid)]).then(([r, p]) => {
             setRoles(r);
+            setPasswordSetDone(p);
             setRolesLoaded(true);
           });
         }, 0);
       } else {
         setRoles([]);
+        setPasswordSetDone(null);
         setRolesLoaded(true);
       }
     });
@@ -62,8 +78,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(s);
       setUser(s?.user ?? null);
       if (s?.user) {
-        fetchRoles(s.user.id).then((r) => {
+        const uid = s.user.id;
+        Promise.all([fetchRoles(uid), fetchPasswordSetDone(uid)]).then(([r, p]) => {
           setRoles(r);
+          setPasswordSetDone(p);
           setRolesLoaded(true);
           setLoading(false);
         });
@@ -78,6 +96,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
+    return { error: error?.message ?? null };
+  };
+
+  const signInWithMagicLink = async (email: string, redirectTo?: string) => {
+    const emailRedirectTo = redirectTo ?? `${window.location.origin}/auth/set-password`;
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo, shouldCreateUser: false },
+    });
     return { error: error?.message ?? null };
   };
 
@@ -100,8 +127,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshRoles = async () => {
     if (user) {
-      const r = await fetchRoles(user.id);
+      const [r, p] = await Promise.all([fetchRoles(user.id), fetchPasswordSetDone(user.id)]);
       setRoles(r);
+      setPasswordSetDone(p);
       setRolesLoaded(true);
     }
   };
@@ -114,8 +142,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     <AuthContext.Provider
       value={{
         user, session, roles, loading, rolesLoaded,
-        isAdmin, isChef, isAdminOrChef,
-        signIn, signUp, signOut, refreshRoles,
+        isAdmin, isChef, isAdminOrChef, passwordSetDone,
+        signIn, signInWithMagicLink, signUp, signOut, refreshRoles,
       }}
     >
       {children}
