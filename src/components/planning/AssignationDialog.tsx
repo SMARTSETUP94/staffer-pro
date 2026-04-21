@@ -35,7 +35,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
-import type { Affaire, Assignation, Employe, Metier } from "@/hooks/use-planning-data";
+import type { Affaire, Assignation, DevisLot, Employe, Metier } from "@/hooks/use-planning-data";
 
 type Slot = "AM" | "PM" | "JOURNEE";
 
@@ -60,6 +60,8 @@ interface Props {
     heures_assignees: number;
     heures_restantes: number;
   }[];
+  /** v0.15.1 — Tous les lots/devis chargés (pour sélecteur si ≥2 lots actifs sur l'affaire). */
+  devisLots?: DevisLot[];
   onSaved: () => void;
 }
 
@@ -72,6 +74,7 @@ export function AssignationDialog({
   affaires,
   metiers,
   consommation,
+  devisLots = [],
   onSaved,
 }: Props) {
   // Édition d'une assignation existante = sélection par id ; sinon création
