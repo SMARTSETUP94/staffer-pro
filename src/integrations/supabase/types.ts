@@ -1480,6 +1480,7 @@ export type Database = {
           }
       is_admin: { Args: never; Returns: boolean }
       is_chef_or_admin: { Args: never; Returns: boolean }
+      is_devis_termine: { Args: { _devis_id: string }; Returns: boolean }
       set_vehicule_chauffeurs_autorises: {
         Args: { _employe_ids: string[]; _vehicule_id: string }
         Returns: undefined
