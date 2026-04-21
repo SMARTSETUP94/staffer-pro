@@ -133,7 +133,7 @@ function PlanningPage() {
             ? "Planning par chantier"
             : tab === "budget"
               ? "Budget chantier"
-              : "Flotte";
+              : "Véhicules staffés";
     setExporting(true);
     try {
       await exportPlanningToPDF(target, { weekStart, tabLabel });
@@ -241,7 +241,7 @@ function PlanningPage() {
                 </TabsTrigger>
                 <TabsTrigger value="parchantier">Planning par chantier</TabsTrigger>
                 <TabsTrigger value="budget">Budget chantier</TabsTrigger>
-                <TabsTrigger value="flotte">Flotte ({vehicules.filter((v) => v.actif).length})</TabsTrigger>
+                <TabsTrigger value="flotte">Véhicules staffés ({vehicules.filter((v) => v.actif).length})</TabsTrigger>
               </TabsList>
 
               <TabsContent value="cdi" className="mt-4">

@@ -34,6 +34,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { WeekPicker } from "@/components/planning/WeekPicker";
 import { cn } from "@/lib/utils";
 import { exportHeuresXlsx, type HeuresExportRow } from "@/lib/heures-export";
+import { PageBreadcrumbs } from "@/components/PageBreadcrumbs";
 
 export const Route = createFileRoute("/_app/validation-heures")({
   head: () => ({ meta: [{ title: "Validation heures — Planning chantiers" }] }),
@@ -236,8 +237,9 @@ function ValidationHeuresPage() {
 
   // render
   return (
-    <div className="p-6">
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+    <div className="space-y-6 p-6">
+      <PageBreadcrumbs steps={[{ label: "Équipes" }, { label: "Validation des heures" }]} />
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <ClipboardCheck className="h-6 w-6 text-primary" />
           <div>
