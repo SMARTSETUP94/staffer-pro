@@ -45,6 +45,55 @@ const RELEASES: RoadmapRelease[] = [
   {
     date: "2026-04-21",
     version: "v0.13",
+    title: "Refonte Information Architecture (sidebar 5 sections)",
+    entries: [
+      {
+        type: "refactor",
+        area: "Navigation",
+        title: "Sidebar regroupée en 5 sections cohérentes",
+        description:
+          "Pilotage (Dashboard, Planning) / Chantiers (Chantiers, Devis, Demandes de devis) / Équipes (Employés, Intérimaires, Absences, Validation heures) / Véhicules / Administration (admin only). Fini la section « Outils » fourre-tout pour les chefs ; les exports et demandes de devis vivent désormais à l'endroit logique.",
+      },
+      {
+        type: "fix",
+        area: "Sécurité",
+        title: "RBAC sidebar strict basé sur le rôle effectif",
+        description:
+          "Bug : un admin en preview « Chef d'équipe » continuait de voir la section Administration. La sidebar utilise maintenant `effectiveRole` au lieu du rôle réel pour décider de l'affichage. Les chefs ne voient plus aucune entrée admin.",
+      },
+      {
+        type: "improvement",
+        area: "Lisibilité",
+        title: "Renommage Affaires → Chantiers, Flotte → Véhicules",
+        description:
+          "Vocabulaire aligné sur le métier. Les routes (/affaires, /flotte) restent inchangées pour ne pas casser les liens existants ; seule l'UI évolue (sidebar, command palette, breadcrumbs).",
+      },
+      {
+        type: "improvement",
+        area: "Validation",
+        title: "Badge live « Heures à valider » dans la sidebar",
+        description:
+          "Compteur indigo sur l'entrée « Validation heures » (Équipes), branché en realtime sur les saisies de statut « soumis ». Plus besoin de cliquer pour savoir qu'il y a quelque chose à traiter.",
+      },
+      {
+        type: "feature",
+        area: "Recherche",
+        title: "Bouton « Rechercher ⌘K » exposé dans le header",
+        description:
+          "La command palette (déjà présente) gagne un déclencheur visible : bouton avec raccourci kbd dans le header, à côté de la cloche. Recherche multi-source affaires + employés + navigation.",
+      },
+      {
+        type: "improvement",
+        area: "Planning",
+        title: "Onglet planning « Flotte » renommé « Véhicules staffés »",
+        description:
+          "Désambigüise avec l'entrée « Véhicules » de la sidebar : on parle bien des véhicules planifiés sur la semaine en cours, pas du parc complet.",
+      },
+    ],
+  },
+  {
+    date: "2026-04-21",
+    version: "v0.12",
     title: "Module signalements + roadmap enrichie",
     entries: [
       {
