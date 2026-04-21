@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { addDays, format, startOfWeek } from "date-fns";
 import { fr } from "date-fns/locale";
-import { ArrowLeftRight, Check, ClipboardCheck, Download, Filter, Loader2, X } from "lucide-react";
+import { ArrowLeftRight, Check, ClipboardCheck, Clock, Download, Filter, History, Loader2, X } from "lucide-react";
 import { useMesSwaps } from "@/hooks/use-mes-swaps";
 import { SwapsList } from "@/components/swaps/SwapsList";
 import { toast } from "sonner";
@@ -29,6 +29,8 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { WeekPicker } from "@/components/planning/WeekPicker";
 import { cn } from "@/lib/utils";
 import { exportHeuresXlsx, type HeuresExportRow } from "@/lib/heures-export";
@@ -510,16 +512,137 @@ function RowItem({
           </p>
         )}
       </div>
-      {row.statut === "soumis" && (
-        <div className="flex items-center gap-1">
-          <Button size="sm" variant="ghost" onClick={onValidate} className="h-8 gap-1 text-emerald-700 hover:text-emerald-800 dark:text-emerald-400">
-            <Check className="h-3.5 w-3.5" />
-          </Button>
-          <Button size="sm" variant="ghost" onClick={onReject} className="h-8 gap-1 text-red-700 hover:text-red-800 dark:text-red-400">
-            <X className="h-3.5 w-3.5" />
-          </Button>
-        </div>
-      )}
+      <div className="flex items-center gap-1">
+        <HistoryDrawer saisieId={row.id} />
+        {row.statut === "soumis" && (
+          <>
+            <Button size="sm" variant="ghost" onClick={onValidate} className="h-8 gap-1 text-emerald-700 hover:text-emerald-800 dark:text-emerald-400" title="Valider">
+              <Check className="h-3.5 w-3.5" />
+            </Button>
+            <Button size="sm" variant="ghost" onClick={onReject} className="h-8 gap-1 text-red-700 hover:text-red-800 dark:text-red-400" title="Rejeter">
+              <X className="h-3.5 w-3.5" />
+            </Button>
+          </>
+        )}
+      </div>
     </div>
+  );
+}
+
+interface HistoriqueRow {
+  id: string;
+  created_at: string;
+  ancien_statut: "brouillon" | "soumis" | "valide" | "rejete" | null;
+  nouveau_statut: "brouillon" | "soumis" | "valide" | "rejete";
+  commentaire: string | null;
+  user_id: string | null;
+  user: { full_name: string | null; email: string } | null;
+}
+
+const STATUT_LABEL: Record<string, string> = {
+  brouillon: "Brouillon",
+  soumis: "Soumis",
+  valide: "Validé",
+  rejete: "Rejeté",
+};
+
+const STATUT_CLASS: Record<string, string> = {
+  brouillon: "bg-muted text-muted-foreground",
+  soumis: "bg-amber-500/15 text-amber-700 dark:text-amber-400",
+  valide: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400",
+  rejete: "bg-red-500/15 text-red-700 dark:text-red-400",
+};
+
+function HistoryDrawer({ saisieId }: { saisieId: string }) {
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [items, setItems] = useState<HistoriqueRow[]>([]);
+
+  useEffect(() => {
+    if (!open) return;
+    setLoading(true);
+    supabase
+      .from("heures_saisies_historique")
+      .select("id, created_at, ancien_statut, nouveau_statut, commentaire, user_id, user:profiles(full_name, email)")
+      .eq("heure_saisie_id", saisieId)
+      .order("created_at", { ascending: false })
+      .then(({ data, error }) => {
+        if (error) toast.error(error.message);
+        setItems((data ?? []) as unknown as HistoriqueRow[]);
+        setLoading(false);
+      });
+  }, [open, saisieId]);
+
+  return (
+    <>
+      <Button
+        size="sm"
+        variant="ghost"
+        onClick={() => setOpen(true)}
+        className="h-8 gap-1 text-muted-foreground hover:text-foreground"
+        title="Historique"
+      >
+        <History className="h-3.5 w-3.5" />
+      </Button>
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetContent className="sm:max-w-md">
+          <SheetHeader>
+            <SheetTitle className="flex items-center gap-2">
+              <History className="h-4 w-4" /> Historique des transitions
+            </SheetTitle>
+            <SheetDescription>
+              Toutes les modifications de statut de cette saisie, du plus récent au plus ancien.
+            </SheetDescription>
+          </SheetHeader>
+          <ScrollArea className="mt-4 h-[calc(100vh-9rem)] pr-3">
+            {loading ? (
+              <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Chargement…
+              </div>
+            ) : items.length === 0 ? (
+              <p className="py-12 text-center text-sm text-muted-foreground">
+                Aucune transition enregistrée.
+              </p>
+            ) : (
+              <ol className="relative space-y-4 border-l border-border pl-4">
+                {items.map((it) => {
+                  const who = it.user?.full_name ?? it.user?.email ?? "Système";
+                  return (
+                    <li key={it.id} className="relative">
+                      <span className="absolute -left-[1.4rem] top-1 inline-block h-2 w-2 rounded-full bg-primary ring-4 ring-background" />
+                      <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                        <Clock className="h-3 w-3" />
+                        {format(new Date(it.created_at), "EEE d MMM yyyy 'à' HH:mm", { locale: fr })}
+                      </div>
+                      <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs">
+                        {it.ancien_statut && (
+                          <>
+                            <Badge variant="outline" className={cn("text-[10px]", STATUT_CLASS[it.ancien_statut])}>
+                              {STATUT_LABEL[it.ancien_statut]}
+                            </Badge>
+                            <span className="text-muted-foreground">→</span>
+                          </>
+                        )}
+                        <Badge variant="outline" className={cn("text-[10px]", STATUT_CLASS[it.nouveau_statut])}>
+                          {STATUT_LABEL[it.nouveau_statut]}
+                        </Badge>
+                      </div>
+                      <p className="mt-1 text-xs text-foreground">
+                        <span className="font-semibold">Par :</span> {who}
+                      </p>
+                      {it.commentaire && (
+                        <p className="mt-1 rounded-md bg-muted/40 px-2 py-1.5 text-xs italic text-muted-foreground">
+                          {it.commentaire}
+                        </p>
+                      )}
+                    </li>
+                  );
+                })}
+              </ol>
+            )}
+          </ScrollArea>
+        </SheetContent>
+      </Sheet>
+    </>
   );
 }
