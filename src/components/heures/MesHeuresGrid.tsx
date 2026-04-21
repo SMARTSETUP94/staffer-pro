@@ -5,7 +5,6 @@ import { AlertTriangle, ChevronDown, Clock, Loader2, MapPin, Send } from "lucide
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import {
   Collapsible,
@@ -129,7 +128,7 @@ export function MesHeuresGrid({ weekStart, variant, employeIdOverride }: Props) 
           className="gap-2"
         >
           <Send className="h-4 w-4" />
-          Soumettre la semaine ({draftCount})
+          {draftCount === 0 ? "Tout est soumis" : `Soumettre la semaine (${draftCount})`}
         </Button>
       </div>
 
@@ -380,5 +379,3 @@ function SaisieRowCard({
   );
 }
 
-// Suppress lint for unused Textarea import (kept for future)
-void Textarea;

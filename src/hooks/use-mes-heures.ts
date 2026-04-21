@@ -63,8 +63,6 @@ interface UseMesHeuresResult {
   acknowledgeRejet: (saisieId: string) => Promise<void>;
 }
 
-const TZ_OFFSET_DAYS = 0;
-
 export function useMesHeures({ weekStart, employeIdOverride }: UseMesHeuresOptions): UseMesHeuresResult {
   const [employeId, setEmployeId] = useState<string | null>(null);
   const [employeNom, setEmployeNom] = useState<string>("");
@@ -167,12 +165,12 @@ export function useMesHeures({ weekStart, employeIdOverride }: UseMesHeuresOptio
       });
     }
     for (const s of saisies) {
-      // Si la saisie a un assignation_id qu'on a déjà → on la fusionne
+      // Si la saisie a un assignation_id qu'on a déjà → on la fusionne (immutable)
       if (s.assignation_id) {
         const k = `a-${s.assignation_id}`;
         const existing = byKey.get(k);
         if (existing) {
-          existing.saisie = s;
+          byKey.set(k, { ...existing, saisie: s });
           continue;
         }
       }
@@ -352,6 +350,3 @@ export function useMesHeures({ weekStart, employeIdOverride }: UseMesHeuresOptio
     acknowledgeRejet,
   };
 }
-
-// Suppress unused warning for TZ_OFFSET_DAYS placeholder
-void TZ_OFFSET_DAYS;
