@@ -203,10 +203,12 @@ function SaisieRowCard({
   row,
   variant,
   onUpdate,
+  onAcknowledge,
 }: {
   row: SaisieCombined;
   variant: "mobile" | "desktop";
   onUpdate: (row: SaisieCombined, patch: Partial<NonNullable<SaisieCombined["saisie"]>>) => Promise<void>;
+  onAcknowledge: (saisieId: string) => Promise<void>;
 }) {
   const statut = row.saisie?.statut ?? "brouillon";
   const locked = statut === "soumis" || statut === "valide";
