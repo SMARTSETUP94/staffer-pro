@@ -19,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { inviteUser } from "@/lib/admin-actions";
 import { readServerFnError } from "@/lib/server-fn-error";
+import { withAuthRetry } from "@/lib/with-auth-retry";
 import type { AppRole } from "@/lib/auth-context";
 
 interface BulkInviteDialogProps {
@@ -114,11 +115,17 @@ export function BulkInviteDialog({ open, onOpenChange, onComplete }: BulkInviteD
   async function sendOne(email: string): Promise<{ messageId: string | null }> {
     let r;
     try {
-      r = await inviteUser({
-        data: { email, roles: [role] },
-      });
+      // withAuthRetry détecte les 401, refresh la session Supabase et rejoue 1×
+      r = await withAuthRetry(
+        () => inviteUser({ data: { email, roles: [role] } }),
+        {
+          onSessionLost: () => {
+            toast.error("Session expirée, merci de te reconnecter");
+          },
+        },
+      );
     } catch (e) {
-      // Middleware d'auth ou 5xx → throw Response côté serveur
+      // Middleware d'auth (après retry) ou 5xx → throw Response côté serveur
       const msg = await readServerFnError(e);
       throw new Error(msg);
     }
