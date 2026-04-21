@@ -18,6 +18,7 @@ import { Route as MobileProfilRouteImport } from './routes/mobile.profil'
 import { Route as MobileMoisRouteImport } from './routes/mobile.mois'
 import { Route as MobileHeuresRouteImport } from './routes/mobile.heures'
 import { Route as MobileAujourdhuiRouteImport } from './routes/mobile.aujourdhui'
+import { Route as MobileAbsencesRouteImport } from './routes/mobile.absences'
 import { Route as AppValidationHeuresRouteImport } from './routes/_app.validation-heures'
 import { Route as AppRoadmapRouteImport } from './routes/_app.roadmap'
 import { Route as AppPlanningRouteImport } from './routes/_app.planning'
@@ -87,6 +88,11 @@ const MobileHeuresRoute = MobileHeuresRouteImport.update({
 const MobileAujourdhuiRoute = MobileAujourdhuiRouteImport.update({
   id: '/mobile/aujourdhui',
   path: '/mobile/aujourdhui',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MobileAbsencesRoute = MobileAbsencesRouteImport.update({
+  id: '/mobile/absences',
+  path: '/mobile/absences',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppValidationHeuresRoute = AppValidationHeuresRouteImport.update({
@@ -241,6 +247,7 @@ export interface FileRoutesByFullPath {
   '/planning': typeof AppPlanningRoute
   '/roadmap': typeof AppRoadmapRoute
   '/validation-heures': typeof AppValidationHeuresRoute
+  '/mobile/absences': typeof MobileAbsencesRoute
   '/mobile/aujourdhui': typeof MobileAujourdhuiRoute
   '/mobile/heures': typeof MobileHeuresRoute
   '/mobile/mois': typeof MobileMoisRoute
@@ -277,6 +284,7 @@ export interface FileRoutesByTo {
   '/planning': typeof AppPlanningRoute
   '/roadmap': typeof AppRoadmapRoute
   '/validation-heures': typeof AppValidationHeuresRoute
+  '/mobile/absences': typeof MobileAbsencesRoute
   '/mobile/aujourdhui': typeof MobileAujourdhuiRoute
   '/mobile/heures': typeof MobileHeuresRoute
   '/mobile/mois': typeof MobileMoisRoute
@@ -314,6 +322,7 @@ export interface FileRoutesById {
   '/_app/planning': typeof AppPlanningRoute
   '/_app/roadmap': typeof AppRoadmapRoute
   '/_app/validation-heures': typeof AppValidationHeuresRoute
+  '/mobile/absences': typeof MobileAbsencesRoute
   '/mobile/aujourdhui': typeof MobileAujourdhuiRoute
   '/mobile/heures': typeof MobileHeuresRoute
   '/mobile/mois': typeof MobileMoisRoute
@@ -352,6 +361,7 @@ export interface FileRouteTypes {
     | '/planning'
     | '/roadmap'
     | '/validation-heures'
+    | '/mobile/absences'
     | '/mobile/aujourdhui'
     | '/mobile/heures'
     | '/mobile/mois'
@@ -388,6 +398,7 @@ export interface FileRouteTypes {
     | '/planning'
     | '/roadmap'
     | '/validation-heures'
+    | '/mobile/absences'
     | '/mobile/aujourdhui'
     | '/mobile/heures'
     | '/mobile/mois'
@@ -424,6 +435,7 @@ export interface FileRouteTypes {
     | '/_app/planning'
     | '/_app/roadmap'
     | '/_app/validation-heures'
+    | '/mobile/absences'
     | '/mobile/aujourdhui'
     | '/mobile/heures'
     | '/mobile/mois'
@@ -449,6 +461,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
   LoginRoute: typeof LoginRoute
+  MobileAbsencesRoute: typeof MobileAbsencesRoute
   MobileAujourdhuiRoute: typeof MobileAujourdhuiRoute
   MobileHeuresRoute: typeof MobileHeuresRoute
   MobileMoisRoute: typeof MobileMoisRoute
@@ -520,6 +533,13 @@ declare module '@tanstack/react-router' {
       path: '/mobile/aujourdhui'
       fullPath: '/mobile/aujourdhui'
       preLoaderRoute: typeof MobileAujourdhuiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mobile/absences': {
+      id: '/mobile/absences'
+      path: '/mobile/absences'
+      fullPath: '/mobile/absences'
+      preLoaderRoute: typeof MobileAbsencesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app/validation-heures': {
@@ -800,6 +820,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
   LoginRoute: LoginRoute,
+  MobileAbsencesRoute: MobileAbsencesRoute,
   MobileAujourdhuiRoute: MobileAujourdhuiRoute,
   MobileHeuresRoute: MobileHeuresRoute,
   MobileMoisRoute: MobileMoisRoute,
