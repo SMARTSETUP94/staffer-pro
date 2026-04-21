@@ -331,38 +331,60 @@ export function BulkInviteDialog({ open, onOpenChange, onComplete }: BulkInviteD
             </div>
           </div>
         ) : (
-          <div className="max-h-[420px] overflow-auto rounded-md border">
-            <Table>
-              <TableHeader className="sticky top-0 bg-background">
-                <TableRow>
-                  <TableHead>Email</TableHead>
-                  <TableHead className="w-[110px]">Statut</TableHead>
-                  <TableHead className="w-[70px] text-center">Essais</TableHead>
-                  <TableHead>Message ID</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {results.map((r) => (
-                  <TableRow key={r.email}>
-                    <TableCell className="font-mono text-xs">{r.email}</TableCell>
-                    <TableCell>
-                      <StatusBadge status={r.status} />
-                    </TableCell>
-                    <TableCell className="text-center text-xs">{r.attempts}</TableCell>
-                    <TableCell
-                      className="font-mono text-[11px] text-muted-foreground"
-                      title={r.error ?? r.messageId ?? ""}
-                    >
-                      {r.messageId
-                        ? r.messageId.slice(0, 16) + "…"
-                        : r.error
-                          ? r.error.slice(0, 40) + (r.error.length > 40 ? "…" : "")
-                          : "—"}
-                    </TableCell>
+          <div className="space-y-3">
+            <div className="max-h-[320px] overflow-auto rounded-md border">
+              <Table>
+                <TableHeader className="sticky top-0 bg-background">
+                  <TableRow>
+                    <TableHead>Email</TableHead>
+                    <TableHead className="w-[110px]">Statut</TableHead>
+                    <TableHead className="w-[70px] text-center">Essais</TableHead>
+                    <TableHead>Détail</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {results.map((r) => (
+                    <TableRow key={r.email}>
+                      <TableCell className="font-mono text-xs">{r.email}</TableCell>
+                      <TableCell>
+                        <StatusBadge status={r.status} />
+                      </TableCell>
+                      <TableCell className="text-center text-xs">{r.attempts}</TableCell>
+                      <TableCell className="font-mono text-[11px] text-muted-foreground">
+                        {r.errorDetail ? (
+                          <div className="flex items-center gap-1.5">
+                            {r.errorDetail.status && (
+                              <Badge
+                                variant="outline"
+                                className="border-destructive/30 bg-destructive/10 px-1.5 py-0 font-mono text-[10px] text-destructive"
+                              >
+                                {r.errorDetail.status}
+                              </Badge>
+                            )}
+                            <span
+                              className="truncate text-destructive"
+                              title={r.errorDetail.message}
+                            >
+                              {r.errorDetail.message}
+                            </span>
+                          </div>
+                        ) : r.messageId ? (
+                          <span title={r.messageId}>
+                            {r.messageId.slice(0, 16)}…
+                          </span>
+                        ) : (
+                          "—"
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+
+            {results.some((r) => r.errorDetail) && (
+              <ErrorDetailsSection results={results} />
+            )}
           </div>
         )}
 
