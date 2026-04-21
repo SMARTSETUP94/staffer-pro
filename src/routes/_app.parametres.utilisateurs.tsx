@@ -292,9 +292,26 @@ function UtilisateursPage() {
     } finally {
       setActingOn(null);
     }
+  async function handleLinkExisting() {
+    setLinking(true);
+    try {
+      const result = await linkExistingUsers({ data: undefined as never });
+      if (result.lies === 0) {
+        toast.info(`Aucun nouvel employé lié. ${result.orphelinsRestants} employé(s) sans compte associé.`);
+      } else {
+        toast.success(`${result.lies} employé(s) lié(s) automatiquement. ${result.orphelinsRestants} restant(s).`);
+      }
+      if (result.errors.length > 0) {
+        console.warn("link errors:", result.errors);
+      }
+      loadUsers();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Échec liaison");
+    } finally {
+      setLinking(false);
+    }
   }
 
-  if (loading || !isAdmin) {
     return (
       <div className="flex h-full items-center justify-center">
         <Loader2 className="h-6 w-6 animate-spin text-primary" />
