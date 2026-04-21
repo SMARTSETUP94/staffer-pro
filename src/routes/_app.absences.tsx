@@ -173,7 +173,7 @@ function AbsencesPage() {
       type: "conges",
       demi_journee: null,
       motif: "",
-      valide: true,
+      valide: false,
       employes: null,
     });
     setDialogOpen(true);
