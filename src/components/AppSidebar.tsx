@@ -79,7 +79,6 @@ function buildSections(role: EffRole, validationCount: number): NavSection[] {
         // Renommé v0.13 : "Affaires" → "Chantiers" (route /affaires conservée)
         { title: "Chantiers", url: "/affaires", icon: Building2, show: () => true },
         { title: "Devis", url: "/devis", icon: FileText, show: () => true },
-        { title: "Demandes de devis", url: "/export/demandes-devis", icon: FileQuestion, show: () => true },
       ],
     },
     {
@@ -98,10 +97,12 @@ function buildSections(role: EffRole, validationCount: number): NavSection[] {
       ],
     },
     {
-      // Renommé v0.13 : section "Flotte" → "Véhicules"
-      label: "Véhicules",
+      // v0.14 : section "Véhicules" → "Logistique" (englobe flotte interne + sous-traitance)
+      label: "Logistique",
       items: [
         { title: "Véhicules", url: "/flotte", icon: Truck, show: () => true },
+        // v0.14 : "Demandes de devis" → "Demandes transport" (lever ambiguïté avec devis clients)
+        { title: "Demandes transport", url: "/export/demandes-devis", icon: FileQuestion, show: () => true },
       ],
     },
   ];
