@@ -246,7 +246,7 @@ function DraggableBadge({ group: g, metier, affaire, dnd, onDelete }: DraggableB
               <span className="truncate">{affaire?.numero ?? "—"}</span>
               {/* v0.17 — Badge PROTO si l'affaire est une opportunité non signée */}
               {affaire?.phase === "opportunite" && (
-                <span className="shrink-0 rounded bg-amber-400 px-1 text-[8px] font-bold uppercase tracking-wider text-amber-950">
+                <span className="shrink-0 rounded bg-warning px-1 text-[8px] font-bold uppercase tracking-wider text-warning-foreground">
                   PROTO
                 </span>
               )}
