@@ -215,7 +215,7 @@ function JournalPage() {
         uploaded.push({ path, name: file.name, size: file.size, type: file.type });
       }
 
-      const mentions = extractMentions(body);
+      const mentions = collectMentions(body);
 
       const { error } = await supabase.from("affaire_commentaires").insert({
         affaire_id: affaireId,
