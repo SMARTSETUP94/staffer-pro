@@ -142,6 +142,31 @@ export function AssignationDialog({
     [affaires],
   );
 
+  // v0.15.1 — Lots actifs (non terminés/clôturés) pour l'affaire sélectionnée
+  const lotsActifs = useMemo(() => {
+    if (!affaireId) return [];
+    return devisLots
+      .filter((d) => d.affaire_id === affaireId && d.statut !== "termine" && d.statut !== "cloture")
+      .sort((a, b) => a.numero.localeCompare(b.numero, "fr", { numeric: true }));
+  }, [devisLots, affaireId]);
+
+  // Autofill devis_id quand 1 seul lot actif et qu'on n'est pas en édition
+  useEffect(() => {
+    if (editingId) return;
+    if (!affaireId) {
+      setDevisId(null);
+      return;
+    }
+    if (lotsActifs.length === 1) {
+      setDevisId(lotsActifs[0].id);
+    } else if (lotsActifs.length === 0) {
+      setDevisId(null);
+    } else if (devisId && !lotsActifs.some((l) => l.id === devisId)) {
+      // Lot précédemment choisi n'est plus dans les actifs (changement d'affaire)
+      setDevisId(null);
+    }
+  }, [editingId, affaireId, lotsActifs, devisId]);
+
   // Conso devis pour le couple (affaire + métier) sélectionné
   const consoCouple = useMemo(() => {
     if (!affaireId || !metierId) return null;
