@@ -596,6 +596,33 @@ export function AssignationDialog({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* v0.17 — Confirmation staffing sur opportunité non signée */}
+      <AlertDialog open={confirmOpportunite} onOpenChange={setConfirmOpportunite}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-warning" />
+              Staffer sur une opportunité non signée ?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette affaire est en phase étude (code 9XXX). L'assignation sera créée mais
+              marquée comme staffing prototype, à reconfirmer après signature.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                setConfirmOpportunite(false);
+                await performSave();
+              }}
+            >
+              Confirmer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
