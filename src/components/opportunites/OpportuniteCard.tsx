@@ -118,7 +118,7 @@ export function OpportuniteCard({ opp, chargesById, onSign, draggable = true }: 
                 e.stopPropagation();
                 onSign(opp);
               }}
-              className="mt-2 h-7 w-full rounded-md bg-emerald-600 text-[11px] font-semibold text-white hover:bg-emerald-700"
+              className="mt-2 h-7 w-full rounded-md bg-primary text-[11px] font-semibold text-primary-foreground hover:bg-primary/90"
             >
               <Trophy className="mr-1 h-3 w-3" /> Signer cette opportunité
             </Button>
