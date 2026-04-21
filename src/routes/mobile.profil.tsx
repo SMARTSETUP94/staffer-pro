@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { LogOut, User } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { usePreview } from "@/lib/preview-context";
@@ -14,6 +14,12 @@ export const Route = createFileRoute("/mobile/profil")({
 function MobileProfil() {
   const { user, roles, signOut } = useAuth();
   const { isPreviewing, setPreviewRole } = usePreview();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate({ to: "/login" });
+  };
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -55,7 +61,7 @@ function MobileProfil() {
           <Button
             variant="outline"
             className="w-full justify-center gap-2"
-            onClick={() => signOut()}
+            onClick={handleSignOut}
           >
             <LogOut className="h-4 w-4" />
             Se déconnecter
