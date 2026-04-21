@@ -358,6 +358,22 @@ export function AssignationDialog({
             </div>
           )}
 
+          {/* v0.17 — Bannière PROTO si l'affaire sélectionnée est une opportunité */}
+          {affaireId &&
+            (() => {
+              const aff = affaires.find((a) => a.id === affaireId);
+              if (aff?.phase !== "opportunite") return null;
+              return (
+                <div className="flex items-start gap-2 rounded-md border border-warning/50 bg-warning/10 p-2 text-[11px]">
+                  <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-warning" />
+                  <div>
+                    <strong className="text-warning-foreground">Opportunité non signée</strong> ·{" "}
+                    Tu staffes une affaire en phase étude (proto).
+                  </div>
+                </div>
+              );
+            })()}
+
           <div className="grid gap-3">
             <div className="grid gap-1.5">
               <Label>Affaire</Label>
@@ -365,6 +381,7 @@ export function AssignationDialog({
                 affaires={sortedAffaires}
                 value={affaireId}
                 onChange={setAffaireId}
+                showOpportuniteToggle
               />
             </div>
 
