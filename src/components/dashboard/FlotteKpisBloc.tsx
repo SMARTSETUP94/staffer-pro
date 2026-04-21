@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { alerteDate } from "@/hooks/use-vehicules";
+import { alerteDate, alerteCT, dateExpirationCT } from "@/hooks/use-vehicules";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Vehicule = Tables<"vehicules">;
@@ -74,17 +74,16 @@ export function FlotteKpisBloc() {
       setVehiculesJ1(setJ1.size);
       setKmSemaine(Math.round(totalKm));
 
-      // Alertes J-30 sur CT / révision / assurance
+      // Alertes J-30 sur CT (échéance = date_controle_technique + 2 ans) / révision / assurance
       const alertesArr: AlerteVehicule[] = [];
       vehicules.forEach((v) => {
-        const checks: Array<[AlerteVehicule["type"], string | null]> = [
-          ["controle_technique", v.date_controle_technique],
-          ["revision", v.date_prochaine_revision],
-          ["assurance", v.date_expiration_assurance],
+        const checks: Array<[AlerteVehicule["type"], string | null, AlerteNiveauLocal]> = [
+          ["controle_technique", dateExpirationCT(v.date_controle_technique), alerteCT(v.date_controle_technique, 30)],
+          ["revision", v.date_prochaine_revision, alerteDate(v.date_prochaine_revision, 30)],
+          ["assurance", v.date_expiration_assurance, alerteDate(v.date_expiration_assurance, 30)],
         ];
-        checks.forEach(([type, date]) => {
+        checks.forEach(([type, date, niveau]) => {
           if (!date) return;
-          const niveau = alerteDate(date, 30);
           if (niveau === "warning" || niveau === "expired") {
             alertesArr.push({
               id: v.id,

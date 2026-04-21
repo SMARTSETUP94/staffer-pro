@@ -7,7 +7,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import {
-  alerteDate, VEHICULE_TYPE_LABEL, type Trajet, type Vehicule,
+  alerteDate, alerteCT, dateExpirationCT, VEHICULE_TYPE_LABEL, type Trajet, type Vehicule,
 } from "@/hooks/use-vehicules";
 
 interface EmployeMini { id: string; prenom: string; nom: string }
@@ -87,7 +87,8 @@ export function FlotteGrid({
           </thead>
           <tbody>
             {vehiculesActifs.map((v) => {
-              const ctAlert = alerteDate(v.date_controle_technique);
+              const ctAlert = alerteCT(v.date_controle_technique);
+              const ctEcheance = dateExpirationCT(v.date_controle_technique);
               const revAlert = alerteDate(v.date_prochaine_revision);
               const assAlert = alerteDate(v.date_expiration_assurance);
               const hasAlert = [ctAlert, revAlert, assAlert].some((a) => a === "warning" || a === "expired");
@@ -106,7 +107,7 @@ export function FlotteGrid({
                               </TooltipTrigger>
                               <TooltipContent>
                                 <div className="text-xs space-y-0.5">
-                                  {ctAlert !== "ok" && ctAlert !== "none" && <div>CT : {v.date_controle_technique}</div>}
+                                  {ctAlert !== "ok" && ctAlert !== "none" && <div>CT (échéance) : {ctEcheance}</div>}
                                   {revAlert !== "ok" && revAlert !== "none" && <div>Révision : {v.date_prochaine_revision}</div>}
                                   {assAlert !== "ok" && assAlert !== "none" && <div>Assurance : {v.date_expiration_assurance}</div>}
                                 </div>
