@@ -225,8 +225,7 @@ export function TrajetDialog({
     if (!window.confirm("Supprimer ce trajet ? Si un trajet retour est lié, il sera également supprimé.")) return;
     setSaving(true);
     try {
-      // Supprime le retour lié si parent
-      await supabase.from("trajets").delete().eq("parent_trajet_id", trajet.id);
+      // ON DELETE CASCADE en DB : supprime aussi automatiquement les trajets enfants (retour lié)
       const { error } = await supabase.from("trajets").delete().eq("id", trajet.id);
       if (error) throw error;
       toast.success("Trajet supprimé");
