@@ -110,9 +110,10 @@ async function sendInvitationEmail(args: {
       "X-Connection-Api-Key": RESEND_API_KEY,
     },
     body: JSON.stringify({
-      from: "Setup Paris <onboarding@resend.dev>",
+      from: "Setup Paris <onboarding@setup.paris>",
       to: [args.email],
-      subject: "Invitation — Planning chantiers Setup Paris",
+      reply_to: "smart@setup.paris",
+      subject: "Invitation — Staffing by Setup.Paris",
       html,
     }),
   });
