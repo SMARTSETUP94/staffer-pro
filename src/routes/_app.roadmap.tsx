@@ -64,37 +64,65 @@ const RELEASES: RoadmapRelease[] = [
       {
         type: "feature",
         area: "Logistique",
-        title: "Véhicules loués — dates, prestataire, contrat + filtrage planning automatique",
+        title: "Véhicules loués — dates de location, prestataire, ref contrat, coût journalier + filtre planning actif",
         description:
-          "Ajout des colonnes `date_debut_location`, `date_fin_location`, `prestataire_location`, `reference_contrat` sur la table vehicules. Dans la fiche véhicule (mode location/sous-traitance), 4 nouveaux champs avec dates obligatoires. Le planning Flotte masque automatiquement les véhicules loués hors plage de location → fini l'alourdissement avec d'anciennes locations. La liste véhicules avec filtre statut/période fait office d'historique des locations (scope minimal v0.15.2 — page dédiée reportée v0.16 si besoin).",
+          "Ajout des colonnes `date_debut_location`, `date_fin_location`, `prestataire_location`, `reference_contrat` et `cout_journalier_eur` sur la table `vehicules`. Dans la fiche véhicule (mode location/sous-traitance), 5 nouveaux champs avec dates obligatoires. Le planning Flotte masque automatiquement les véhicules loués hors plage de location active → fini l'alourdissement avec d'anciennes locations qui restaient affichées en permanence. La liste véhicules avec filtres statut/période fait office d'historique des locations (scope minimal v0.15.2 — page dédiée et reporting coût par affaire reportés v0.16+).",
       },
     ],
   },
   {
     date: "2026-04-21",
     version: "v0.15.1",
-    title: "Multi-devis par chantier — sélecteur de lot dans Planning + rattachement historique",
+    title: "Phases de chantier / lots de devis — multi-devis bout en bout",
     entries: [
       {
         type: "feature",
-        area: "Planning",
-        title: "Sélecteur de lot (devis_id) dans AssignationDialog",
+        area: "Workflow devis",
+        title: "Cycle de vie devis enrichi : Brouillon → Signé → En cours → Terminé → Clôturé",
         description:
-          "Quand un chantier a 1 seul devis actif, le lot est auto-rempli (transparent pour le chef). Quand le chantier a ≥2 devis actifs (cas multi-lots), un sélecteur apparaît pour rattacher l'assignation au bon lot. Les heures saisies héritent du devis_id de leur assignation, pour un suivi `heures_prevues / heures_assignees / heures_reelles_validees` propre par lot via la vue `v_devis_consommation`.",
+          "Statuts `signe` et `termine` ajoutés à `devis_statut`. Action « Marquer livré » sur la fiche affaire qui passe le lot à Terminé (`livre_le`, `livre_par` historisés). Action admin « Rouvrir » qui ramène un lot Terminé en En cours, audit-loggée. Permet de suivre la livraison réelle des lots indépendamment de la facturation.",
+      },
+      {
+        type: "feature",
+        area: "Schéma DB",
+        title: "FK `assignations.devis_id` (nullable) + backfill auto mono-devis",
+        description:
+          "Nouvelle FK sur `assignations` et `heures_saisies` vers `devis(id)`. Migration de backfill : pour toute affaire avec un seul devis actif, les assignations/heures orphelines sont automatiquement rattachées (idempotente). Les chantiers multi-devis restent à traiter via la page admin dédiée. Index ajouté pour la perf des requêtes par lot.",
+      },
+      {
+        type: "feature",
+        area: "Sécurité",
+        title: "RLS : verrouillage post-livraison côté chef + override admin",
+        description:
+          "Helper SQL `is_devis_termine(_devis_id)` utilisé dans les policies `assignations_*` et `heures_saisies_*` : un chef ne peut plus modifier ni supprimer une assignation/heure rattachée à un lot Terminé ou Clôturé. L'admin garde la main (override). Évite la corruption rétroactive des données livrées et facturées.",
+      },
+      {
+        type: "feature",
+        area: "Audit",
+        title: "Triggers d'audit admin sur les actions sensibles devis",
+        description:
+          "Triggers DB qui historisent toute transition de statut devis (signé→terminé, terminé→en_cours via rouvrir admin) avec acteur, horodatage et ancien/nouveau statut. Visible dans le journal de l'affaire pour traçabilité chef + audit.",
+      },
+      {
+        type: "feature",
+        area: "Affaires",
+        title: "Onglet Devis sur la fiche affaire — alerte dépassement, Terminer, Rouvrir admin",
+        description:
+          "Nouvel onglet `/affaires/$id/devis` listant tous les lots de l'affaire avec progression `prévues / assignées / réelles validées` par lot (vue `v_devis_consommation`). Alerte visuelle si `pct_consomme > 100%`. Actions contextuelles : « Marquer livré » (chef + admin), « Rouvrir » (admin only) avec confirmation.",
+      },
+      {
+        type: "feature",
+        area: "Planning",
+        title: "Sélecteur de lot dans Planning + AssignationDialog",
+        description:
+          "Quand un chantier a 1 seul devis actif, le lot est auto-rempli (transparent pour le chef). Quand le chantier a ≥2 devis actifs (cas multi-lots), un sélecteur `devis_id` apparaît dans `AssignationDialog` pour rattacher l'assignation au bon lot. Le sélecteur de lot apparaît également dans la barre du planning quand l'affaire courante a ≥2 devis actifs. Les heures saisies héritent du `devis_id` de leur assignation, pour un suivi propre par lot.",
       },
       {
         type: "feature",
         area: "Admin",
         title: "Page /devis/rattachement-historique pour backfill multi-devis",
         description:
-          "Nouvelle page admin (sidebar Administration → Rattachement devis) listant les chantiers multi-devis avec assignations/heures encore orphelines (sans devis_id). Pour chaque affaire, l'admin choisit un lot par défaut auquel rattacher en masse les lignes orphelines. Indispensable pour migrer proprement les chantiers historiques importés avant v0.15. Opération ponctuelle, idempotente.",
-      },
-      {
-        type: "feature",
-        area: "Workflow devis",
-        title: "Cycle de vie devis : Brouillon → Signé → En cours → Terminé → Clôturé",
-        description:
-          "Statut `devis_statut` étendu pour suivre la livraison (terminé) et la clôture financière (clôturé). RLS chefs : interdit de modifier/supprimer assignations et heures rattachées à un devis terminé/clôturé (admin only override). Onglet Devis sur la fiche affaire avec progression visuelle par lot et action « Marquer livré ».",
+          "Nouvelle page admin (sidebar Administration → Rattachement devis) listant les chantiers multi-devis avec assignations/heures encore orphelines (sans `devis_id`). Pour chaque affaire, l'admin choisit un lot par défaut auquel rattacher en masse les lignes orphelines. Indispensable pour migrer proprement les chantiers historiques importés avant v0.15. Opération ponctuelle, idempotente.",
       },
       {
         type: "improvement",
@@ -707,21 +735,23 @@ const RELEASES: RoadmapRelease[] = [
 ];
 
 const PLANNED: RoadmapPlanned[] = [
-  // ========== v0.14 — Prochaine release ==========
+  // ========== v0.16 — Demandes transport automatisées + prestataires ==========
   {
     priority: "haute",
-    title: "v0.14 — Centralisation des retours des 5 chefs d'équipe (interviews semaine en cours)",
+    title: "v0.16 — Demandes transport automatisées + base prestataires",
     description:
-      "Sprint dédié aux feedbacks terrain : interviews des 5 chefs Setup Paris, consolidation dans /admin/feedback (filtres par chef, tags par module), priorisation collégiale, puis livraison des 3-5 quick wins identifiés. Objectif : aligner l'app sur le quotidien réel avant d'attaquer les grosses features (PWA, IA staffing).",
+      "L'export planning logistique génère automatiquement les demandes de devis aux transporteurs : pour chaque affaire staffée, pré-remplissage des adresses chargement (atelier Setup Paris par défaut) / déchargement (lieu chantier) avec horaires (J-1 montage 6h, livraison J 7h, retour J démontage). Nouvelle table `prestataires_transport` (nom, email, tel, spécialité VL/PL/SPL/grue, zones géo, notes, RLS chef/admin). Envoi 1 clic via Resend (template branded indigo/cream + PDF récap server-side). Réception et comparaison des offres (saisie manuelle des réponses dans un premier temps), choix du prestataire retenu, statut (brouillon / envoyée / répondue / acceptée / refusée / annulée). Liaison avec Véhicules (proposition « véhicule interne dispo ? » avant sous-traitance) et avec Adresses favorites existantes.",
   },
 
-  // ========== v0.15 — Demandes transport automatisées (logistique) ==========
+  // ========== v0.17 — Module CRM Opportunités (9XXX → 5XXX) ==========
   {
     priority: "haute",
-    title: "v0.15 — Demandes transport automatisées (workflow logistique complet)",
+    title: "v0.17 — Module CRM Opportunités : pipeline amont 9XXX → 5XXX",
     description:
-      "Refonte de /logistique/demandes-transport (ex « Demandes de devis ») en module logistique end-to-end. (1) Auto-génération du PLANNING LOGISTIQUE depuis les chantiers staffés : pour chaque affaire avec date_montage/date_demontage, pré-remplir une demande transport — chargement (atelier Setup Paris par défaut), déchargement (lieu chantier), date/heure chargement (J-1 montage à 6h), livraison (jour montage à 7h), type véhicule suggéré (20m³ / PL / Sous-traitance selon volume estimé), commentaires libres, le tout éditable. (2) Carnet d'adresses transporteurs — nouvelle table `prestataires_transport` (nom, email, tel, spécialité VL/PL/SPL/grue, zones géo, notes, RLS chef/admin). Multi-sélection des destinataires depuis la demande. (3) Envoi 1 clic via Resend : template email branded Setup Paris (indigo/cream) avec toutes les infos structurées + PDF récap généré server-side (jsPDF). (4) Tracking : statut demande (brouillon / envoyée / répondue / acceptée / refusée / annulée), historique par prestataire, comparatif des prix reçus (saisie manuelle des réponses), choix du prestataire retenu. (5) Liaison avec la page Véhicules (proposition « véhicule interne dispo ? » avant d'envoyer en sous-traitance) et avec Adresses favorites existantes (chargement/déchargement). (6) Sidebar LOGISTIQUE enrichie : « Demandes transport » (refonte) + nouveau lien « Prestataires ». À livrer APRÈS v0.14 (feedback chefs).",
+      "Pipeline amont des affaires signées avec Kanban par statut (Envoyé / En cours / Gagné / Perdu / Terminé). Import initial des 30 dernières affaires depuis le fichier CRM Excel existant. Auto-suggestion du prochain numéro libre (9XXX pour les opportunités, 5XXX pour les affaires signées). Bouton « Signer » qui convertit une opportunité Gagnée en affaire 5XXX en gardant le lien `code_opportunite` vers le 9XXX d'origine (traçabilité commerciale conservée). Staffing possible directement sur les 9XXX avec badge `PROTO` visible et alerte « opportunité non signée » sur le planning et la fiche. Unicité garantie au niveau DB via `UNIQUE(code)` sur la table `affaires` (couvre 9XXX et 5XXX en un seul espace de noms). Permet aux commerciaux de pré-staffer les opportunités fortes sans polluer le suivi des affaires signées.",
   },
+
+
 
   // ========== HAUTE PRIORITÉ ==========
   {
