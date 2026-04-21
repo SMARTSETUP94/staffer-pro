@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, useMemo } from "react";
 import {
   Loader2, Mail, Shield, UserCog, UserPlus, Send, Power, Trash2, MoreHorizontal,
-  CheckCircle2, Clock, XCircle, Link2,
+  CheckCircle2, Clock, XCircle, Link2, Users,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -32,6 +32,7 @@ import {
   inviteUser, resendInvitation, updateUserRole, setUserActive, deleteUser, linkExistingUsers,
 } from "@/lib/admin-actions";
 import { PageHeader } from "@/components/PageHeader";
+import { BulkInviteDialog } from "@/components/admin/BulkInviteDialog";
 import { format, formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 
@@ -90,6 +91,7 @@ function UtilisateursPage() {
   const [search, setSearch] = useState("");
 
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [bulkOpen, setBulkOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteFullName, setInviteFullName] = useState("");
   const [inviteRole, setInviteRole] = useState<AppRole>("employe");
@@ -329,7 +331,7 @@ function UtilisateursPage() {
         title="Utilisateurs"
         description="Invitez les chefs d'équipe et employés, gérez leurs rôles et statuts."
         actions={
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button
               variant="outline"
               onClick={handleLinkExisting}
@@ -339,6 +341,10 @@ function UtilisateursPage() {
             >
               {linking ? <Loader2 className="h-4 w-4 animate-spin" /> : <Link2 className="h-4 w-4" />}
               Auto-lier employés
+            </Button>
+            <Button variant="outline" onClick={() => setBulkOpen(true)} className="gap-1.5">
+              <Users className="h-4 w-4" />
+              Inviter en lot
             </Button>
             <Button onClick={() => setInviteOpen(true)} className="gap-1.5">
               <UserPlus className="h-4 w-4" />
@@ -624,6 +630,13 @@ function UtilisateursPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Bulk invite */}
+      <BulkInviteDialog
+        open={bulkOpen}
+        onOpenChange={setBulkOpen}
+        onComplete={loadUsers}
+      />
 
     </div>
   );
