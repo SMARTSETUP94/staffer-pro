@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { addDays, format, isBefore, startOfDay } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -72,6 +72,10 @@ export function useMesHeures({ weekStart, employeIdOverride }: UseMesHeuresOptio
   const [saisies, setSaisies] = useState<SaisieRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [reloadKey, setReloadKey] = useState(0);
+  // Anti-rejeu : mémorise les assignation_id pour lesquels un autofill est en cours
+  // ou a déjà été tenté pendant cette session, afin d'éviter les insertions multiples
+  // (double-render React, requêtes en parallèle, etc.) avant que la table ne soit rechargée.
+  const autofillInFlight = useRef<Set<string>>(new Set());
 
   const weekEnd = useMemo(() => addDays(weekStart, 6), [weekStart]);
   const startStr = format(weekStart, "yyyy-MM-dd");
@@ -199,10 +203,14 @@ export function useMesHeures({ weekStart, employeIdOverride }: UseMesHeuresOptio
     const toAutofill = rows.filter((r) => {
       if (!r.assignation) return false;
       if (r.saisie) return false;
+      // Anti-rejeu : ignorer si déjà en cours d'insertion
+      if (autofillInFlight.current.has(r.assignation.id)) return false;
       const d = startOfDay(new Date(r.date));
       return isBefore(d, today);
     });
     if (toAutofill.length === 0) return;
+    // Marque ces assignations comme "en cours" avant l'INSERT pour bloquer un re-trigger
+    for (const r of toAutofill) autofillInFlight.current.add(r.assignation!.id);
     const inserts = toAutofill.map((r) => ({
       employe_id: employeId,
       assignation_id: r.assignation!.id,
@@ -213,13 +221,21 @@ export function useMesHeures({ weekStart, employeIdOverride }: UseMesHeuresOptio
     }));
     supabase
       .from("heures_saisies")
-      .insert(inserts)
+      .upsert(inserts, {
+        onConflict: "employe_id,assignation_id",
+        ignoreDuplicates: true,
+      })
       .select(
         "id, assignation_id, affaire_id, date, heure_debut, heure_fin, heures_reelles, commentaire, statut, motif_rejet, motif_rejet_lu_le",
       )
       .then(({ data }) => {
         if (data && data.length > 0) {
-          setSaisies((prev) => [...prev, ...(data as unknown as SaisieRow[])]);
+          setSaisies((prev) => {
+            // Dédup défensive : ne pas ajouter une saisie déjà présente
+            const existingIds = new Set(prev.map((s) => s.id));
+            const fresh = (data as unknown as SaisieRow[]).filter((s) => !existingIds.has(s.id));
+            return fresh.length > 0 ? [...prev, ...fresh] : prev;
+          });
         }
       });
   }, [rows, employeId, loading]);
