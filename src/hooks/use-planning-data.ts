@@ -96,6 +96,8 @@ export interface PlanningData {
   absences: Absence[];
   chefsById: Map<string, ChefRef>;
   swapAssignationIds: Set<string>;
+  /** v0.15.1 — Tous les devis (lots) des affaires actives, pour sélecteur lot et autofill. */
+  devisLots: DevisLot[];
   loading: boolean;
   error: string | null;
   refresh: () => void;
@@ -110,6 +112,7 @@ export function usePlanningData(weekStart: Date, weekEnd: Date): PlanningData {
   const [absences, setAbsences] = useState<Absence[]>([]);
   const [chefsById, setChefsById] = useState<Map<string, ChefRef>>(new Map());
   const [swapAssignationIds, setSwapAssignationIds] = useState<Set<string>>(new Set());
+  const [devisLots, setDevisLots] = useState<DevisLot[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
