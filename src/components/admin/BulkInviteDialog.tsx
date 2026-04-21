@@ -111,11 +111,17 @@ export function BulkInviteDialog({ open, onOpenChange, onComplete }: BulkInviteD
   }
 
   async function sendOne(email: string): Promise<{ messageId: string | null }> {
-    const r = await inviteUser({
-      data: { email, roles: [role] },
-    });
+    let r;
+    try {
+      r = await inviteUser({
+        data: { email, roles: [role] },
+      });
+    } catch (e) {
+      // Middleware d'auth ou 5xx → throw Response côté serveur
+      const msg = await readServerFnError(e);
+      throw new Error(msg);
+    }
     if (!r.ok) {
-      // On convertit en throw pour que le retry/catch existant fonctionne
       throw new Error(r.error);
     }
     return { messageId: r.messageId ?? null };
