@@ -620,6 +620,75 @@ export type Database = {
           },
         ]
       }
+      feedbacks: {
+        Row: {
+          author_id: string
+          created_at: string
+          description: string
+          id: string
+          notes_admin: string | null
+          page_url: string | null
+          priorite: Database["public"]["Enums"]["feedback_priorite"]
+          resolved_at: string | null
+          resolved_by: string | null
+          screenshot_path: string | null
+          statut: Database["public"]["Enums"]["feedback_statut"]
+          titre: string
+          type: Database["public"]["Enums"]["feedback_type"]
+          updated_at: string
+          user_agent: string | null
+        }
+        Insert: {
+          author_id: string
+          created_at?: string
+          description: string
+          id?: string
+          notes_admin?: string | null
+          page_url?: string | null
+          priorite?: Database["public"]["Enums"]["feedback_priorite"]
+          resolved_at?: string | null
+          resolved_by?: string | null
+          screenshot_path?: string | null
+          statut?: Database["public"]["Enums"]["feedback_statut"]
+          titre: string
+          type?: Database["public"]["Enums"]["feedback_type"]
+          updated_at?: string
+          user_agent?: string | null
+        }
+        Update: {
+          author_id?: string
+          created_at?: string
+          description?: string
+          id?: string
+          notes_admin?: string | null
+          page_url?: string | null
+          priorite?: Database["public"]["Enums"]["feedback_priorite"]
+          resolved_at?: string | null
+          resolved_by?: string | null
+          screenshot_path?: string | null
+          statut?: Database["public"]["Enums"]["feedback_statut"]
+          titre?: string
+          type?: Database["public"]["Enums"]["feedback_type"]
+          updated_at?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedbacks_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "feedbacks_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       heures_saisies: {
         Row: {
           affaire_id: string
@@ -1392,6 +1461,9 @@ export type Database = {
       contrat_type: "CDI" | "Interim" | "CDD" | "Independant"
       demi_journee_type: "AM" | "PM" | "JOURNEE"
       devis_statut: "brouillon" | "signe" | "facture"
+      feedback_priorite: "basse" | "moyenne" | "haute" | "critique"
+      feedback_statut: "nouveau" | "en_cours" | "resolu" | "ferme" | "rejete"
+      feedback_type: "bug" | "idee" | "amelioration" | "question"
       heures_statut: "brouillon" | "soumis" | "valide" | "rejete"
       notification_type:
         | "assignation_creee"
@@ -1569,6 +1641,9 @@ export const Constants = {
       contrat_type: ["CDI", "Interim", "CDD", "Independant"],
       demi_journee_type: ["AM", "PM", "JOURNEE"],
       devis_statut: ["brouillon", "signe", "facture"],
+      feedback_priorite: ["basse", "moyenne", "haute", "critique"],
+      feedback_statut: ["nouveau", "en_cours", "resolu", "ferme", "rejete"],
+      feedback_type: ["bug", "idee", "amelioration", "question"],
       heures_statut: ["brouillon", "soumis", "valide", "rejete"],
       notification_type: [
         "assignation_creee",
