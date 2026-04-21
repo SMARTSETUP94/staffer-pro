@@ -61,10 +61,28 @@ function DevisHistoriquePage() {
       setLoading(true);
       const { data, error } = await supabase
         .from("devis_imports")
-        .select("*, profiles:user_id(full_name, email)")
+        .select("*")
         .order("created_at", { ascending: false })
         .limit(200);
-      if (!error && data) setRows(data as unknown as ImportRow[]);
+      if (error || !data) {
+        setLoading(false);
+        return;
+      }
+      // Fetch profiles separately (no FK declared between devis_imports.user_id and profiles)
+      const userIds = Array.from(new Set(data.map((r) => r.user_id).filter(Boolean)));
+      const profilesMap = new Map<string, { full_name: string | null; email: string }>();
+      if (userIds.length > 0) {
+        const { data: profs } = await supabase
+          .from("profiles")
+          .select("id, full_name, email")
+          .in("id", userIds);
+        profs?.forEach((p) => profilesMap.set(p.id, { full_name: p.full_name, email: p.email }));
+      }
+      const enriched: ImportRow[] = data.map((r) => ({
+        ...(r as unknown as ImportRow),
+        profiles: profilesMap.get(r.user_id) ?? null,
+      }));
+      setRows(enriched);
       setLoading(false);
     })();
   }, [isAdminOrChef]);
