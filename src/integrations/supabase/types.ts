@@ -244,7 +244,7 @@ export type Database = {
           heure_fin: string | null
           heures: number
           id: string
-          metier_id: number
+          metier_id: number | null
           motif_refus: string | null
           notes: string | null
           refusee_le: string | null
@@ -264,7 +264,7 @@ export type Database = {
           heure_fin?: string | null
           heures?: number
           id?: string
-          metier_id: number
+          metier_id?: number | null
           motif_refus?: string | null
           notes?: string | null
           refusee_le?: string | null
@@ -284,7 +284,7 @@ export type Database = {
           heure_fin?: string | null
           heures?: number
           id?: string
-          metier_id?: number
+          metier_id?: number | null
           motif_refus?: string | null
           notes?: string | null
           refusee_le?: string | null
@@ -753,6 +753,7 @@ export type Database = {
           employe_id: string
           heure_debut: string | null
           heure_fin: string | null
+          heures_nuit: number
           heures_reelles: number | null
           id: string
           motif_rejet: string | null
@@ -774,6 +775,7 @@ export type Database = {
           employe_id: string
           heure_debut?: string | null
           heure_fin?: string | null
+          heures_nuit?: number
           heures_reelles?: number | null
           id?: string
           motif_rejet?: string | null
@@ -795,6 +797,7 @@ export type Database = {
           employe_id?: string
           heure_debut?: string | null
           heure_fin?: string | null
+          heures_nuit?: number
           heures_reelles?: number | null
           id?: string
           motif_rejet?: string | null
@@ -980,6 +983,7 @@ export type Database = {
           email: string
           full_name: string | null
           id: string
+          matricule_silae: string | null
           password_set_at: string | null
           password_set_done: boolean
           updated_at: string
@@ -990,6 +994,7 @@ export type Database = {
           email: string
           full_name?: string | null
           id: string
+          matricule_silae?: string | null
           password_set_at?: string | null
           password_set_done?: boolean
           updated_at?: string
@@ -1000,6 +1005,7 @@ export type Database = {
           email?: string
           full_name?: string | null
           id?: string
+          matricule_silae?: string | null
           password_set_at?: string | null
           password_set_done?: boolean
           updated_at?: string
@@ -1464,6 +1470,7 @@ export type Database = {
           employe_id: string
           heure_debut: string | null
           heure_fin: string | null
+          heures_nuit: number
           heures_reelles: number | null
           id: string
           motif_rejet: string | null
