@@ -148,32 +148,39 @@ function JournalPage() {
     }
   };
 
+  // Map { token (sans @, lowercase) → Set<profile_id> } construite au clic.
+  // Plusieurs profils peuvent partager un token (ex: deux "Jean") → on les notifie tous.
+  const mentionedIdsRef = useRef<Map<string, Set<string>>>(new Map());
+
+  const tokenForProfile = (p: Profile) =>
+    ((p.full_name ?? p.email).split(/\s+/)[0] || p.email.split("@")[0]).toLowerCase();
+
   const insertMention = (p: Profile) => {
     const ta = textareaRef.current;
     if (!ta) return;
     const pos = ta.selectionStart;
-    const before = body.slice(0, pos).replace(/@\w*$/, `@${(p.full_name ?? p.email).split(" ")[0]} `);
+    const token = tokenForProfile(p);
+    const before = body.slice(0, pos).replace(/@\w*$/, `@${token} `);
     const after = body.slice(pos);
-    const next = before + after;
-    setBody(next);
+    setBody(before + after);
     setShowMentions(false);
-    // Stocker l'id mentionné via data-attr indirect : on ré-extrait à la soumission
+    // Tracking déterministe : on stocke l'id réel du profil cliqué pour ce token.
+    const set = mentionedIdsRef.current.get(token) ?? new Set<string>();
+    set.add(p.id);
+    mentionedIdsRef.current.set(token, set);
     setTimeout(() => ta.focus(), 0);
   };
 
-  // Extraire mentions à partir du body (matching simple sur prénom + email)
-  const extractMentions = (text: string): string[] => {
-    const ids = new Set<string>();
+  // À la soumission : on ne garde que les ids dont le token est encore présent dans le body.
+  // Aucun re-parsing heuristique → pas de collision possible avec un homonyme non cliqué.
+  const collectMentions = (text: string): string[] => {
     const tags = text.match(/@(\w+)/g);
     if (!tags) return [];
-    for (const tag of tags) {
-      const t = tag.slice(1).toLowerCase();
-      const match = profiles.find(
-        (p) =>
-          (p.full_name?.toLowerCase().split(/\s+/)[0] === t) ||
-          p.email.toLowerCase().split("@")[0] === t,
-      );
-      if (match) ids.add(match.id);
+    const presentTokens = new Set(tags.map((t) => t.slice(1).toLowerCase()));
+    const ids = new Set<string>();
+    for (const token of presentTokens) {
+      const tracked = mentionedIdsRef.current.get(token);
+      if (tracked) tracked.forEach((id) => ids.add(id));
     }
     return Array.from(ids);
   };
