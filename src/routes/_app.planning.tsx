@@ -217,6 +217,15 @@ function PlanningPage() {
             selected={filterMetier}
             onChange={setFilterMetier}
           />
+          {/* v0.15.1 — Sélecteur lot : visible si ≥2 lots actifs disponibles dans le contexte courant */}
+          {lotsOptions.length >= 2 && (
+            <MultiFilter
+              label="Lot"
+              options={lotsOptions}
+              selected={filterDevis}
+              onChange={setFilterDevis}
+            />
+          )}
           <div className="ml-2 flex items-center gap-2">
             <Switch
               id="weekend-toggle"
@@ -227,11 +236,12 @@ function PlanningPage() {
               Week-end
             </Label>
           </div>
-          {(filterAffaire.size > 0 || filterMetier.size > 0 || searchEmploye) && (
+          {(filterAffaire.size > 0 || filterMetier.size > 0 || filterDevis.size > 0 || searchEmploye) && (
             <button
               onClick={() => {
                 setFilterAffaire(new Set());
                 setFilterMetier(new Set());
+                setFilterDevis(new Set());
                 setSearchEmploye("");
               }}
               className="text-xs text-muted-foreground underline-offset-2 hover:underline"
