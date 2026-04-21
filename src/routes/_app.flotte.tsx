@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/table";
 import { PageHeader } from "@/components/PageHeader";
 import {
-  useVehicules, useAdressesFavorites, alerteDate,
+  useVehicules, useAdressesFavorites, alerteDate, alerteCT, dateExpirationCT,
   VEHICULE_TYPE_LABEL, PROPRIETAIRE_LABEL,
   type Vehicule, type AdresseFavorite, type AlerteNiveau,
 } from "@/hooks/use-vehicules";
@@ -31,8 +31,22 @@ const ADRESSE_TYPE_LABEL: Record<AdresseFavorite["type"], string> = {
   autre: "Autre",
 };
 
-function AlerteBadge({ date, label }: { date: string | null; label: string }) {
-  const niveau: AlerteNiveau = alerteDate(date);
+/**
+ * Badge d'alerte générique sur une date d'échéance.
+ * Pour le CT, passer `kind="ct"` : la date stockée est la date du dernier contrôle,
+ * l'échéance affichée est date + 2 ans.
+ */
+function AlerteBadge({
+  date,
+  label,
+  kind = "echeance",
+}: {
+  date: string | null;
+  label: string;
+  kind?: "ct" | "echeance";
+}) {
+  const echeance = kind === "ct" ? dateExpirationCT(date) : date;
+  const niveau: AlerteNiveau = kind === "ct" ? alerteCT(date) : alerteDate(date);
   if (niveau === "none") {
     return <span className="text-xs text-muted-foreground">—</span>;
   }
@@ -40,7 +54,7 @@ function AlerteBadge({ date, label }: { date: string | null; label: string }) {
     return (
       <div className="text-xs">
         <div className="text-muted-foreground">{label}</div>
-        <div>{new Date(date!).toLocaleDateString("fr-FR")}</div>
+        <div>{new Date(echeance!).toLocaleDateString("fr-FR")}</div>
       </div>
     );
   }
@@ -57,7 +71,7 @@ function AlerteBadge({ date, label }: { date: string | null; label: string }) {
         }
       >
         <AlertTriangle className="h-3 w-3 mr-1" />
-        {new Date(date!).toLocaleDateString("fr-FR")}
+        {new Date(echeance!).toLocaleDateString("fr-FR")}
       </Badge>
     </div>
   );
@@ -268,7 +282,7 @@ function VehiculesTable({
                     {PROPRIETAIRE_LABEL[v.proprietaire]}
                   </Badge>
                 </TableCell>
-                <TableCell><AlerteBadge date={v.date_controle_technique} label="CT" /></TableCell>
+                <TableCell><AlerteBadge date={v.date_controle_technique} label="CT" kind="ct" /></TableCell>
                 <TableCell><AlerteBadge date={v.date_prochaine_revision} label="Révision" /></TableCell>
                 <TableCell><AlerteBadge date={v.date_expiration_assurance} label="Assurance" /></TableCell>
                 <TableCell>
