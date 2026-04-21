@@ -67,12 +67,17 @@ interface EmployeOpt {
 interface AbsencesSearch {
   employe?: string;
   date?: string;
+  slot?: "AM" | "PM" | "JOURNEE";
 }
 
 export const Route = createFileRoute("/_app/absences")({
   validateSearch: (search: Record<string, unknown>): AbsencesSearch => ({
     employe: typeof search.employe === "string" ? search.employe : undefined,
     date: typeof search.date === "string" ? search.date : undefined,
+    slot:
+      search.slot === "AM" || search.slot === "PM" || search.slot === "JOURNEE"
+        ? search.slot
+        : undefined,
   }),
   head: () => ({
     meta: [
