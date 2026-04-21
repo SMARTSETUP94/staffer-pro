@@ -13,9 +13,11 @@ Mobile breakpoint : <1024px (lg) → sidebar drawer Sheet ; ≥1024px → sideba
 ## Roadmap
 1. ✅ Étapes 1-3 (CRUD, RBAC, imports CSV employés + Excel devis basique)
 2. ✅ Étape 4 — [Planning 3 vues](mem://features/planning-views)
-3. ✅ Refonte [/devis/import en formulaire de validation](mem://features/devis-import-validation) — 2 sections + RPC atomique
-4. ✅ v0.13 — IA & UX Refactor : sidebar 5 sections, RBAC strict via effectiveRole, Ctrl+K palette, breadcrumbs, design tokens
+3. ✅ Refonte [/devis/import en formulaire de validation](mem://features/devis-import-validation)
+4. ✅ v0.13 — IA & UX Refactor : sidebar 5 sections, RBAC strict, Ctrl+K, design tokens
+5. ✅ v0.14 — [Feedback chefs d'équipe](mem://features/feedback-module) : bouton flottant, capture, page admin, email Resend
 
 ## Memories
-- [Planning 3 vues](mem://features/planning-views) — CDI / Intérim / Synthèse chantier, tabs, sélecteur semaine, sidebar heures restantes
-- [Refonte /devis/import](mem://features/devis-import-validation) — formulaire 2 sections pré-rempli, dates montage/démontage, import atomique via RPC `import_devis_atomique`
+- [Planning 3 vues](mem://features/planning-views) — CDI / Intérim / Synthèse chantier
+- [Refonte /devis/import](mem://features/devis-import-validation) — formulaire 2 sections, RPC `import_devis_atomique`
+- [Module Feedback v0.14](mem://features/feedback-module) — table `feedbacks`, bucket privé, edge function `notify-feedback-email`

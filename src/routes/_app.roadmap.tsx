@@ -44,6 +44,48 @@ interface RoadmapPlanned {
 const RELEASES: RoadmapRelease[] = [
   {
     date: "2026-04-21",
+    version: "v0.14",
+    title: "Feedback chefs d'équipe — module signalement in-app",
+    entries: [
+      {
+        type: "feature",
+        area: "Signalements",
+        title: "Bouton flottant « Signaler » sur toutes les pages",
+        description:
+          "Visible uniquement pour chefs de chantier et admins (jamais pour les employés). Position fixe en bas à droite, monte au-dessus de la bottom-nav mobile. Ouvre un dialog avec type (🐛 Bug / 💡 Idée / 🎯 Amélioration / ❓ Question), priorité (basse/moyenne/haute/critique), titre, description et capture d'écran auto de la page courante.",
+      },
+      {
+        type: "feature",
+        area: "Signalements",
+        title: "Capture d'écran client + stockage privé",
+        description:
+          "Capture html-to-image de la page (filtre les dialogs/popovers Radix et le bouton lui-même). Upload dans le bucket privé `feedback-screenshots` scopé par `auth.uid()`. URL signée 1h générée à la demande dans la page admin.",
+      },
+      {
+        type: "feature",
+        area: "Admin",
+        title: "Page /admin/feedback avec stats, filtres et édition",
+        description:
+          "5 KPIs (total / nouveaux / en cours / résolus / critiques ouverts), filtres statut + type, liste détaillée avec auteur, page concernée, user-agent, capture en preview cliquable. Édition statut (nouveau / en cours / résolu / fermé / rejeté) + notes admin privées + suppression. Accès admin uniquement (RBAC strict).",
+      },
+      {
+        type: "feature",
+        area: "Notifications",
+        title: "Notification in-app + email Resend aux admins",
+        description:
+          "Trigger DB `notify_feedback_created` qui crée une notification in-app pour chaque admin actif (cloche en header). En complément, edge function `notify-feedback-email` qui envoie un email branded Setup Paris (palette indigo) à tous les admins, avec reply-to vers l'auteur du signalement et lien direct vers /admin/feedback.",
+      },
+      {
+        type: "feature",
+        area: "Sécurité",
+        title: "RLS + RBAC sur signalements",
+        description:
+          "Table `feedbacks` : insert réservé aux chefs/admins (RLS), select limité à l'auteur ou aux admins, update/delete réservés aux admins. Bucket `feedback-screenshots` privé, accès via URL signée uniquement. Trigger `guard_feedback_resolution` qui auto-fill resolved_at/resolved_by lors du passage à résolu/fermé/rejeté.",
+      },
+    ],
+  },
+  {
+    date: "2026-04-21",
     version: "v0.13",
     title: "UX polish + refonte IA + mobile-first",
     entries: [

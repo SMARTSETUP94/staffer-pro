@@ -127,16 +127,20 @@ export function FeedbackButton({ floating = true, variant = "icon", className }:
     }
 
     // 2. Insert
-    const { error } = await supabase.from("feedbacks").insert({
-      author_id: user.id,
-      type,
-      priorite,
-      titre: titre.trim(),
-      description: description.trim(),
-      page_url: path,
-      user_agent: navigator.userAgent,
-      screenshot_path: screenshotPath,
-    });
+    const { data: inserted, error } = await supabase
+      .from("feedbacks")
+      .insert({
+        author_id: user.id,
+        type,
+        priorite,
+        titre: titre.trim(),
+        description: description.trim(),
+        page_url: path,
+        user_agent: navigator.userAgent,
+        screenshot_path: screenshotPath,
+      })
+      .select("id")
+      .single();
 
     setBusy(false);
 
@@ -148,6 +152,13 @@ export function FeedbackButton({ floating = true, variant = "icon", className }:
     toast.success("Merci ! Ton signalement a bien été enregistré.");
     reset();
     setOpen(false);
+
+    // 3. Notification email aux admins (best-effort, non bloquant)
+    if (inserted?.id) {
+      supabase.functions
+        .invoke("notify-feedback-email", { body: { feedback_id: inserted.id } })
+        .catch((e) => console.warn("[feedback] email notify failed", e));
+    }
   };
 
   const Trigger = (
