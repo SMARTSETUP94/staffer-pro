@@ -82,6 +82,21 @@ export function AffaireCombobox({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+        {showOpportuniteToggle && (
+          <div className="flex items-center justify-between gap-2 border-b border-border bg-muted/30 px-3 py-2">
+            <Label
+              htmlFor="aff-include-opps"
+              className="text-[11px] font-medium text-muted-foreground cursor-pointer"
+            >
+              Inclure opportunités (staffing proto)
+            </Label>
+            <Switch
+              id="aff-include-opps"
+              checked={includeOpps}
+              onCheckedChange={setIncludeOpps}
+            />
+          </div>
+        )}
         <Command
           filter={(itemValue, search) => {
             // itemValue contient "numero|nom|client" en lowercase
