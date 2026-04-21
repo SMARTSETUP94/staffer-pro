@@ -115,6 +115,14 @@ export function BulkInviteDialog({ open, onOpenChange, onComplete }: BulkInviteD
     if (done) onComplete?.();
   }
 
+  class InviteError extends Error {
+    detail: ServerFnErrorDetail;
+    constructor(detail: ServerFnErrorDetail) {
+      super(detail.message);
+      this.detail = detail;
+    }
+  }
+
   async function sendOne(email: string): Promise<{ messageId: string | null }> {
     let r;
     try {
@@ -129,13 +137,27 @@ export function BulkInviteDialog({ open, onOpenChange, onComplete }: BulkInviteD
       );
     } catch (e) {
       // Middleware d'auth (après retry) ou 5xx → throw Response côté serveur
-      const msg = await readServerFnError(e);
-      throw new Error(msg);
+      const detail = await parseServerFnError(e);
+      throw new InviteError(detail);
     }
     if (!r.ok) {
-      throw new Error(r.error);
+      throw new InviteError({
+        message: r.error,
+        status: null,
+        statusText: null,
+        body: r.error,
+        kind: "error",
+      });
     }
     return { messageId: r.messageId ?? null };
+  }
+
+  function toDetail(e: unknown): ServerFnErrorDetail {
+    if (e instanceof InviteError) return e.detail;
+    if (e instanceof Error) {
+      return { message: e.message, status: null, statusText: null, body: e.stack ?? null, kind: "error" };
+    }
+    return { message: String(e), status: null, statusText: null, body: null, kind: "unknown" };
   }
 
   async function handleRun() {
@@ -153,6 +175,7 @@ export function BulkInviteDialog({ open, onOpenChange, onComplete }: BulkInviteD
       attempts: 0,
       messageId: null,
       error: null,
+      errorDetail: null,
     }));
     setResults(initial);
 
@@ -178,12 +201,19 @@ export function BulkInviteDialog({ open, onOpenChange, onComplete }: BulkInviteD
           status: "sent",
           messageId,
           error: null,
+          errorDetail: null,
         };
         setResults([...updated]);
       } catch (e1) {
-        const err1 = e1 instanceof Error ? e1.message : String(e1);
+        const d1 = toDetail(e1);
         // Retry 1×
-        updated[i] = { ...updated[i], status: "retrying", attempts: 2, error: err1 };
+        updated[i] = {
+          ...updated[i],
+          status: "retrying",
+          attempts: 2,
+          error: d1.message,
+          errorDetail: d1,
+        };
         setResults([...updated]);
 
         await new Promise((r) => setTimeout(r, 800));
@@ -195,23 +225,36 @@ export function BulkInviteDialog({ open, onOpenChange, onComplete }: BulkInviteD
             status: "sent",
             messageId,
             error: null,
+            errorDetail: null,
           };
           setResults([...updated]);
         } catch (e2) {
-          const err2 = e2 instanceof Error ? e2.message : String(e2);
+          const d2 = toDetail(e2);
           updated[i] = {
             ...updated[i],
             status: "failed",
-            error: err2,
+            error: d2.message,
+            errorDetail: d2,
           };
           setResults([...updated]);
+          // Toast d'erreur enrichi avec le statut HTTP
+          const prefix = d2.status ? `[${d2.status}] ` : "";
+          toast.error(`Échec ${updated[i].email}`, {
+            description: `${prefix}${d2.message}`,
+          });
         }
       }
     }
 
     const sentCount = updated.filter((r) => r.status === "sent").length;
     const failedCount = updated.filter((r) => r.status === "failed").length;
-    toast.success(`${sentCount} envoyé(s)${failedCount > 0 ? `, ${failedCount} échec(s)` : ""}`);
+    if (failedCount === 0) {
+      toast.success(`${sentCount} invitation(s) envoyée(s)`);
+    } else {
+      toast.warning(`${sentCount} envoyée(s), ${failedCount} échec(s)`, {
+        description: "Voir la section « Détails » pour les erreurs.",
+      });
+    }
 
     setRunning(false);
     setDone(true);
