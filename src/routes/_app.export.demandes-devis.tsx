@@ -26,7 +26,7 @@ import {
 import type { Tables } from "@/integrations/supabase/types";
 
 export const Route = createFileRoute("/_app/export/demandes-devis")({
-  head: () => ({ meta: [{ title: "Demandes de devis sous-traitance — Flotte" }] }),
+  head: () => ({ meta: [{ title: "Demandes transport — Logistique" }] }),
   component: DemandesDevisPage,
 });
 
@@ -131,9 +131,9 @@ function DemandesDevisPage() {
     <div className="space-y-6 p-6">
       <PageHeader
         number="07"
-        eyebrow="Flotte / Sous-traitance"
-        title="Demandes de devis"
-        description="Trajets en attente d'envoi à un sous-traitant"
+        eyebrow="Logistique / Sous-traitance"
+        title="Demandes transport"
+        description="Trajets en attente d'envoi à un sous-traitant transport"
       />
 
       {trajets.length === 0 ? (

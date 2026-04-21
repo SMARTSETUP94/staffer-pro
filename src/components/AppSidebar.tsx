@@ -19,11 +19,11 @@ import { ViewAsSwitcher } from "./ViewAsSwitcher";
 type EffRole = "admin" | "chef_chantier" | "employe";
 
 /**
- * v0.13 — Refonte IA : 5 sections
+ * v0.14 — Refonte IA : 5 sections
  *  • PILOTAGE      : Dashboard, Planning
- *  • CHANTIERS     : Chantiers (ex Affaires), Devis, Demandes de devis
+ *  • CHANTIERS     : Chantiers (ex Affaires), Devis (clients)
  *  • ÉQUIPES       : Employés, Intérimaires, Absences, Validation heures (badge count)
- *  • VÉHICULES     : Véhicules (ex Flotte)
+ *  • LOGISTIQUE    : Véhicules (flotte), Demandes transport (sous-traitance)
  *  • ADMINISTRATION (admin only) : Utilisateurs, Imports, Exports, Paramètres, Roadmap
  *
  * RBAC strict : on filtre sur `effectiveRole` (et non `isAdmin` réel) pour que
@@ -79,7 +79,6 @@ function buildSections(role: EffRole, validationCount: number): NavSection[] {
         // Renommé v0.13 : "Affaires" → "Chantiers" (route /affaires conservée)
         { title: "Chantiers", url: "/affaires", icon: Building2, show: () => true },
         { title: "Devis", url: "/devis", icon: FileText, show: () => true },
-        { title: "Demandes de devis", url: "/export/demandes-devis", icon: FileQuestion, show: () => true },
       ],
     },
     {
@@ -98,10 +97,12 @@ function buildSections(role: EffRole, validationCount: number): NavSection[] {
       ],
     },
     {
-      // Renommé v0.13 : section "Flotte" → "Véhicules"
-      label: "Véhicules",
+      // v0.14 : section "Véhicules" → "Logistique" (englobe flotte interne + sous-traitance)
+      label: "Logistique",
       items: [
         { title: "Véhicules", url: "/flotte", icon: Truck, show: () => true },
+        // v0.14 : "Demandes de devis" → "Demandes transport" (lever ambiguïté avec devis clients)
+        { title: "Demandes transport", url: "/export/demandes-devis", icon: FileQuestion, show: () => true },
       ],
     },
   ];

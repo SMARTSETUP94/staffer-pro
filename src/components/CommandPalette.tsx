@@ -11,6 +11,8 @@ import {
   FileDown,
   LayoutDashboard,
   Clock,
+  Truck,
+  FileQuestion,
 } from "lucide-react";
 import {
   CommandDialog,
@@ -98,6 +100,8 @@ export function CommandPalette() {
       { label: "Employés", to: "/employes", icon: Users },
       { label: "Absences", to: "/absences", icon: CalendarOff },
       { label: "Validation des heures", to: "/validation-heures", icon: ClipboardCheck },
+      { label: "Véhicules", to: "/flotte", icon: Truck },
+      { label: "Demandes transport", to: "/export/demandes-devis", icon: FileQuestion },
       { label: "Import employés", to: "/employes/import", icon: FileUp },
       { label: "Import devis", to: "/devis/import", icon: FileUp },
       { label: "Export planning", to: "/export", icon: FileDown },
