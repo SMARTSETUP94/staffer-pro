@@ -19,9 +19,10 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { inviteUser } from "@/lib/admin-actions";
-import { readServerFnError } from "@/lib/server-fn-error";
+import { parseServerFnError, type ServerFnErrorDetail } from "@/lib/server-fn-error";
 import { withAuthRetry } from "@/lib/with-auth-retry";
 import type { AppRole } from "@/lib/auth-context";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface BulkInviteDialogProps {
   open: boolean;
@@ -37,6 +38,7 @@ interface ResultRow {
   attempts: number;
   messageId: string | null;
   error: string | null;
+  errorDetail: ServerFnErrorDetail | null;
 }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
