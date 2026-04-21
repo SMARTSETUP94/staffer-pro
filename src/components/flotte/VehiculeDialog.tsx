@@ -123,28 +123,15 @@ export function VehiculeDialog({ open, onOpenChange, vehicule, onSaved }: Props)
         vehiculeId = data.id;
       }
 
-      // Sync chauffeurs autorisés (uniquement si PL)
-      if (vehiculeId && draft.type === "poids_lourd") {
-        await supabase
-          .from("vehicule_chauffeurs_autorises")
-          .delete()
-          .eq("vehicule_id", vehiculeId);
-        if (autorises.size > 0) {
-          const rows = Array.from(autorises).map((employe_id) => ({
-            vehicule_id: vehiculeId!,
-            employe_id,
-          }));
-          const { error: errIns } = await supabase
-            .from("vehicule_chauffeurs_autorises")
-            .insert(rows);
-          if (errIns) throw errIns;
-        }
-      } else if (vehiculeId) {
-        // Si on n'est plus en PL, on nettoie
-        await supabase
-          .from("vehicule_chauffeurs_autorises")
-          .delete()
-          .eq("vehicule_id", vehiculeId);
+      // Sync atomique des chauffeurs autorisés via RPC (DELETE + INSERT en transaction)
+      if (vehiculeId) {
+        const employeIds =
+          draft.type === "poids_lourd" ? Array.from(autorises) : [];
+        const { error: errSync } = await supabase.rpc(
+          "set_vehicule_chauffeurs_autorises",
+          { _vehicule_id: vehiculeId, _employe_ids: employeIds },
+        );
+        if (errSync) throw errSync;
       }
 
       toast.success(vehicule ? "Véhicule modifié" : "Véhicule créé");
