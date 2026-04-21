@@ -46,6 +46,33 @@ export const Route = createFileRoute("/_app/affaires/$affaireId/devis")({
   component: AffaireDevisPage,
 });
 
+/**
+ * v0.14 — Dédoublonnage du libellé source.
+ * Les imports devis Excel concatènent jusqu'à 5 libellés sources avec " • ".
+ * Si tous identiques (ex: même ligne répétée 5x), on affiche "libellé ×N".
+ * Sinon on garde les libellés uniques séparés par " • ".
+ */
+function formatLibelleSource(raw: string | null): string {
+  if (!raw) return "—";
+  const parts = raw
+    .split("•")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  if (parts.length === 0) return raw;
+  if (parts.length === 1) return parts[0];
+  // Comptage en préservant l'ordre d'apparition
+  const counts = new Map<string, number>();
+  for (const p of parts) counts.set(p, (counts.get(p) ?? 0) + 1);
+  const unique = Array.from(counts.entries());
+  if (unique.length === 1) {
+    const [label, n] = unique[0];
+    return n > 1 ? `${label} ×${n}` : label;
+  }
+  return unique
+    .map(([label, n]) => (n > 1 ? `${label} ×${n}` : label))
+    .join(" • ");
+}
+
 function AffaireDevisPage() {
   const { affaireId } = Route.useParams();
   const { isAdminOrChef } = useAuth();
