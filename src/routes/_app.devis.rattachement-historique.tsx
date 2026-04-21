@@ -215,7 +215,7 @@ function RattachementPage() {
           <CardContent className="flex flex-col items-center gap-2 p-8 text-center text-sm text-muted-foreground">
             <Badge
               variant="outline"
-              className="border-emerald-500/30 bg-emerald-500/15 text-emerald-700 dark:text-emerald-400"
+              className="border-success/30 bg-success/15 text-success"
             >
               Tout est à jour
             </Badge>
@@ -251,14 +251,14 @@ function RattachementPage() {
                       {isDone ? (
                         <Badge
                           variant="outline"
-                          className="border-emerald-500/30 bg-emerald-500/15 text-emerald-700 dark:text-emerald-400"
+                          className="border-success/30 bg-success/15 text-success"
                         >
                           Rattaché
                         </Badge>
                       ) : (
                         <Badge
                           variant="outline"
-                          className="border-amber-500/30 bg-amber-500/15 text-amber-700 dark:text-amber-400"
+                          className="border-warning/30 bg-warning/15 text-warning"
                         >
                           <AlertTriangle className="mr-1 h-3 w-3" />À rattacher
                         </Badge>
