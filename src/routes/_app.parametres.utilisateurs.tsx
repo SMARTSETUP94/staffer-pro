@@ -239,8 +239,8 @@ function UtilisateursPage() {
       setInviteRole("employe");
       loadUsers();
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "Échec de l'invitation";
-      toast.error(msg);
+      const msg = await readServerFnError(e);
+      toast.error(msg || "Échec de l'invitation");
     } finally {
       setInviting(false);
     }
