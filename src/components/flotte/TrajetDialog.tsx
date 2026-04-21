@@ -400,7 +400,7 @@ export function TrajetDialog({
               />
               <Alert className="mt-2 bg-warning/10 border-warning/40">
                 <AlertDescription className="text-xs">
-                  Ce trajet sera listé dans <code>/export/demandes-devis</code> tant qu'il n'est pas marqué comme envoyé.
+                  Ce trajet sera listé dans <code>Logistique → Demandes transport</code> tant qu'il n'est pas marqué comme envoyé.
                 </AlertDescription>
               </Alert>
             </div>

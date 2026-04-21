@@ -253,7 +253,7 @@ function AffaireDevisPage() {
                       return (
                         <TableRow key={p.id}>
                           <TableCell>{m && <MetierBadge libelle={m.libelle} couleur={m.couleur} />}</TableCell>
-                          <TableCell className="text-sm">{p.libelle_source ?? "—"}</TableCell>
+                          <TableCell className="text-sm">{formatLibelleSource(p.libelle_source)}</TableCell>
                           <TableCell className="text-right font-mono text-sm">{Number(p.heures_prevues).toFixed(1)}</TableCell>
                           <TableCell className="text-right font-mono text-sm text-muted-foreground">
                             {p.montant_ht != null ? `${Number(p.montant_ht).toLocaleString("fr-FR")} €` : "—"}

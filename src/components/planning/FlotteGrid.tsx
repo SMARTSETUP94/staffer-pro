@@ -191,7 +191,7 @@ export function FlotteGrid({
               href="/export/demandes-devis"
               className="text-xs text-primary underline-offset-2 hover:underline"
             >
-              Voir la page demandes de devis →
+              Voir les demandes transport →
             </a>
           </div>
           <div className="space-y-1">
