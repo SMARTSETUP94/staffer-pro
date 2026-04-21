@@ -76,6 +76,8 @@ function buildSections(role: EffRole, validationCount: number): NavSection[] {
     {
       label: "Chantiers",
       items: [
+        // v0.17 — Pipeline commercial amont (opportunités 9XXX)
+        { title: "Opportunités", url: "/opportunites", icon: Trophy, show: () => true },
         // Renommé v0.13 : "Affaires" → "Chantiers" (route /affaires conservée)
         { title: "Chantiers", url: "/affaires", icon: Building2, show: () => true },
         { title: "Devis", url: "/devis", icon: FileText, show: () => true },

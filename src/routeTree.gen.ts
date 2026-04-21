@@ -26,6 +26,7 @@ import { Route as AppValidationHeuresRouteImport } from './routes/_app.validatio
 import { Route as AppSignalementsRouteImport } from './routes/_app.signalements'
 import { Route as AppRoadmapRouteImport } from './routes/_app.roadmap'
 import { Route as AppPlanningRouteImport } from './routes/_app.planning'
+import { Route as AppOpportunitesRouteImport } from './routes/_app.opportunites'
 import { Route as AppMesSwapsRouteImport } from './routes/_app.mes-swaps'
 import { Route as AppMesPropositionsRouteImport } from './routes/_app.mes-propositions'
 import { Route as AppMesHeuresRouteImport } from './routes/_app.mes-heures'
@@ -136,6 +137,11 @@ const AppRoadmapRoute = AppRoadmapRouteImport.update({
 const AppPlanningRoute = AppPlanningRouteImport.update({
   id: '/planning',
   path: '/planning',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppOpportunitesRoute = AppOpportunitesRouteImport.update({
+  id: '/opportunites',
+  path: '/opportunites',
   getParentRoute: () => AppRoute,
 } as any)
 const AppMesSwapsRoute = AppMesSwapsRouteImport.update({
@@ -294,6 +300,7 @@ export interface FileRoutesByFullPath {
   '/mes-heures': typeof AppMesHeuresRoute
   '/mes-propositions': typeof AppMesPropositionsRoute
   '/mes-swaps': typeof AppMesSwapsRoute
+  '/opportunites': typeof AppOpportunitesRoute
   '/planning': typeof AppPlanningRoute
   '/roadmap': typeof AppRoadmapRoute
   '/signalements': typeof AppSignalementsRoute
@@ -339,6 +346,7 @@ export interface FileRoutesByTo {
   '/mes-heures': typeof AppMesHeuresRoute
   '/mes-propositions': typeof AppMesPropositionsRoute
   '/mes-swaps': typeof AppMesSwapsRoute
+  '/opportunites': typeof AppOpportunitesRoute
   '/planning': typeof AppPlanningRoute
   '/roadmap': typeof AppRoadmapRoute
   '/signalements': typeof AppSignalementsRoute
@@ -385,6 +393,7 @@ export interface FileRoutesById {
   '/_app/mes-heures': typeof AppMesHeuresRoute
   '/_app/mes-propositions': typeof AppMesPropositionsRoute
   '/_app/mes-swaps': typeof AppMesSwapsRoute
+  '/_app/opportunites': typeof AppOpportunitesRoute
   '/_app/planning': typeof AppPlanningRoute
   '/_app/roadmap': typeof AppRoadmapRoute
   '/_app/signalements': typeof AppSignalementsRoute
@@ -432,6 +441,7 @@ export interface FileRouteTypes {
     | '/mes-heures'
     | '/mes-propositions'
     | '/mes-swaps'
+    | '/opportunites'
     | '/planning'
     | '/roadmap'
     | '/signalements'
@@ -477,6 +487,7 @@ export interface FileRouteTypes {
     | '/mes-heures'
     | '/mes-propositions'
     | '/mes-swaps'
+    | '/opportunites'
     | '/planning'
     | '/roadmap'
     | '/signalements'
@@ -522,6 +533,7 @@ export interface FileRouteTypes {
     | '/_app/mes-heures'
     | '/_app/mes-propositions'
     | '/_app/mes-swaps'
+    | '/_app/opportunites'
     | '/_app/planning'
     | '/_app/roadmap'
     | '/_app/signalements'
@@ -689,6 +701,13 @@ declare module '@tanstack/react-router' {
       path: '/planning'
       fullPath: '/planning'
       preLoaderRoute: typeof AppPlanningRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/opportunites': {
+      id: '/_app/opportunites'
+      path: '/opportunites'
+      fullPath: '/opportunites'
+      preLoaderRoute: typeof AppOpportunitesRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/mes-swaps': {
@@ -936,6 +955,7 @@ interface AppRouteChildren {
   AppMesHeuresRoute: typeof AppMesHeuresRoute
   AppMesPropositionsRoute: typeof AppMesPropositionsRoute
   AppMesSwapsRoute: typeof AppMesSwapsRoute
+  AppOpportunitesRoute: typeof AppOpportunitesRoute
   AppPlanningRoute: typeof AppPlanningRoute
   AppRoadmapRoute: typeof AppRoadmapRoute
   AppSignalementsRoute: typeof AppSignalementsRoute
@@ -964,6 +984,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppMesHeuresRoute: AppMesHeuresRoute,
   AppMesPropositionsRoute: AppMesPropositionsRoute,
   AppMesSwapsRoute: AppMesSwapsRoute,
+  AppOpportunitesRoute: AppOpportunitesRoute,
   AppPlanningRoute: AppPlanningRoute,
   AppRoadmapRoute: AppRoadmapRoute,
   AppSignalementsRoute: AppSignalementsRoute,
