@@ -564,7 +564,7 @@ export function PlanningGrid({
                               onSelect={() =>
                                 navigate({
                                   to: "/absences",
-                                  search: { employe: emp.id, date: dayStr } as never,
+                                  search: { employe: emp.id, date: dayStr, slot: "JOURNEE" } as never,
                                 })
                               }
                             >
