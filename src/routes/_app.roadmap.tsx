@@ -44,6 +44,69 @@ interface RoadmapPlanned {
 const RELEASES: RoadmapRelease[] = [
   {
     date: "2026-04-22",
+    version: "Audit v0.18.1",
+    title: "Audit de stabilité post-prod — empilement v0.15 → v0.17 → v0.18 → v0.18.1",
+    entries: [
+      {
+        type: "improvement",
+        area: "Audit",
+        title: "✅ Sanité technique : 0 erreur TypeScript, 156/156 tests Vitest, Supabase linter clean",
+        description:
+          "tsc --noEmit silencieux. 6 fichiers de tests, 156 assertions vertes (employes, devis, opportunités, flotte, demandes-devis). supabase--linter remonte 0 issue. Build production stable.",
+      },
+      {
+        type: "improvement",
+        area: "Audit",
+        title: "✅ Cohérence DB : 25 tables, 23 RLS actives, 44 FK, 167 contraintes CHECK, 0 orphelin",
+        description:
+          "Toutes les colonnes/tables ajoutées en v0.15-v0.18.1 sont présentes (affaires.phase/code_opportunite/charge_affaires_id/taille, assignations.devis_id/metier_id, heures_saisies.heures_nuit, profiles.matricule_silae, employes.est_livreur/categories_permis, vehicules.date_fin_location/prestataire_location, lieux, vehicule_chauffeurs_autorises, opportunites_imports, trajets). Vue v_affaire_consommation correctement à jour (somme assignations.heures sans filtre devis_id, correctif v0.18.1 confirmé). 0 ligne orpheline sur 5 FK testées (assignations→devis/affaires, heures→employe, trajets→chauffeur/vehicule).",
+      },
+      {
+        type: "improvement",
+        area: "Audit",
+        title: "✅ RLS : matricule SILAE admin only, lieux admin only, vehicule_chauffeurs_autorises chef/admin",
+        description:
+          "Trigger guard_matricule_silae_admin_only confirmé actif. Policy lieux_admin_modify (admin only en écriture, lecture authentifiée). Policy vca_admin_chef_modify (chef/admin en écriture). 28 triggers actifs sur tables critiques (notifications, guards, log historique). Aucune policy USING(true) sur table sensible.",
+      },
+      {
+        type: "improvement",
+        area: "Audit",
+        title: "✅ Data prod cohérente : 91 affaires, 370 employés (219 actifs), 5 devis, 8 véhicules",
+        description:
+          "Sondage prod : 91 affaires (toutes en phase=signe), 0 opportunité créée pour l'instant, 219 employés actifs sur 370, 6 employés liés à un compte (les autres sont intérimaires sans login), 8 véhicules dont 1 loué, 1 atelier + 1 stockage configurés, 6 trajets, 0 feedback reçu sur 7 jours.",
+      },
+      {
+        type: "fix",
+        area: "Audit — mineurs",
+        title: "⚠️ Doublon contrainte UNIQUE affaires_numero_key vs affaires_numero_unique",
+        description:
+          "Deux contraintes UNIQUE redondantes sur affaires.numero (affaires_numero_key + affaires_numero_unique). Sans gravité fonctionnelle, juste de la dette. À nettoyer en v0.18.2 via DROP CONSTRAINT affaires_numero_unique.",
+      },
+      {
+        type: "fix",
+        area: "Audit — mineurs",
+        title: "⚠️ Policy heures_saisies_self_update : USING/CHECK incohérents",
+        description:
+          "Le USING exige statut='brouillon' (correct) mais le WITH CHECK accepte encore brouillon OR soumis. Pas exploitable car USING bloque déjà la lecture, mais à aligner pour clarté en v0.18.2.",
+      },
+      {
+        type: "fix",
+        area: "Audit — cosmétique",
+        title: "⚠️ 3207 erreurs Prettier (formatage auto-fixable) + ~24 warnings ESLint réels",
+        description:
+          "Aucune erreur fonctionnelle. Le projet n'est pas formaté Prettier (à régler via `bunx eslint --fix`). 24 warnings ESLint réels : quelques `any` dans 4-5 fichiers, dépendances exhaustives manquantes sur useMemo/useEffect (weekStart/weekEnd dans use-trajets.ts), warnings react-refresh sur fichiers exportant constantes ET composants. À nettoyer progressivement.",
+      },
+      {
+        type: "improvement",
+        area: "Audit",
+        title: "🟢 Recommandation finale : app stable, GO pour v0.16 ou v0.18.2",
+        description:
+          "Aucun bloquant. Aucun majeur. Les 3 mineurs/cosmétiques peuvent être groupés dans une v0.18.2 légère (1 migration DROP CONSTRAINT + alignement policy + bunx eslint --fix). Sinon, on peut directement attaquer v0.16 (auto-envoi devis Resend) sans risque. La consolidation post-empilement v0.15→v0.18.1 est validée.",
+      },
+    ],
+  },
+  {
+    date: "2026-04-22",
     version: "v0.18.1",
     title: "Correctifs post-publish v0.18 — Flotte, livreur/chauffeur, lieux entreprise, suggestions trajets, export sous-traitance + polish UI",
     entries: [
