@@ -106,13 +106,14 @@ export function TrajetDialog({
       });
   }, [vehiculeSel]);
 
-  const chauffeursCompatibles = useMemo(
-    () => getCompatibleChauffeurs(vehiculeSel, employesLivreurs, autorisesIds),
+  const chauffeursAvecStatut = useMemo(
+    () => getChauffeursAvecStatut(vehiculeSel, employesLivreurs, autorisesIds),
     [vehiculeSel, employesLivreurs, autorisesIds],
   );
 
   const chauffeurIncompatible =
-    chauffeurId && !chauffeursCompatibles.some((c) => c.id === chauffeurId);
+    chauffeurId &&
+    !chauffeursAvecStatut.some((c) => c.employe.id === chauffeurId && c.statut === "ok");
 
   // Reset / hydrate when opened
   useEffect(() => {
