@@ -187,6 +187,15 @@ export function FlotteGrid({
                             {v.immatriculation}
                           </div>
                         )}
+                        {isLoue && (
+                          <Badge
+                            variant="outline"
+                            className="mt-1 h-4 px-1 text-[9px] border-warning/40 text-warning bg-warning/10"
+                          >
+                            {v.proprietaire === "location" ? "Loué" : "S/T"}
+                            {v.fournisseur_location ? ` · ${v.fournisseur_location}` : ""}
+                          </Badge>
+                        )}
                       </div>
                     </div>
                   </td>
