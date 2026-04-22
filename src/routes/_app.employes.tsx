@@ -26,6 +26,8 @@ import { toast } from "sonner";
 
 type ContratType = "CDI" | "CDD" | "Interim" | "Independant";
 
+type Permis = "B" | "C" | "CE" | "D";
+
 interface EmployeRow {
   id: string;
   prenom: string;
@@ -41,6 +43,7 @@ interface EmployeRow {
   actif: boolean;
   non_staffing: boolean;
   est_livreur: boolean;
+  categories_permis: Permis[];
   date_naissance: string | null;
   adresse: string | null;
   notes: string | null;
@@ -63,6 +66,8 @@ interface FormState {
   metier_principal_id: number | null;
   actif: boolean;
   non_staffing: boolean;
+  est_livreur: boolean;
+  categories_permis: Permis[];
   date_naissance: string;
   adresse: string;
   notes: string;
@@ -84,6 +89,8 @@ const emptyForm: FormState = {
   metier_principal_id: null,
   actif: true,
   non_staffing: false,
+  est_livreur: false,
+  categories_permis: [],
   date_naissance: "",
   adresse: "",
   notes: "",
@@ -91,6 +98,13 @@ const emptyForm: FormState = {
   profile_id: null,
   secondaires: [],
 };
+
+const PERMIS_OPTIONS: { value: Permis; label: string }[] = [
+  { value: "B", label: "B (VL / utilitaire ≤ 3.5T)" },
+  { value: "C", label: "C (PL > 3.5T)" },
+  { value: "CE", label: "CE (PL + remorque)" },
+  { value: "D", label: "D (transport en commun)" },
+];
 
 export const Route = createFileRoute("/_app/employes")({
   head: () => ({ meta: [{ title: "Employés — Setup Paris" }] }),
