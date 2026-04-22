@@ -1095,13 +1095,6 @@ const PLANNED: RoadmapPlanned[] = [
       "Refactor moyen terme du module saisie d'heures vers un format horaire précis : `heure_debut`, `heure_fin`, pauses (déjeuner + autres). Auto-calcul des heures de nuit par overlap avec la plage 00h-06h (convention spectacle vivant). Déclenchement conditionné au retour d'usage Phase 1 (v0.18, saisie déclarative).",
   },
 
-  // ========== v0.16 — Export texte trajets sous-traités (mode copier-coller mail) ==========
-  {
-    priority: "haute",
-    title: "v0.16 — Export texte trajets sous-traités (mode copier-coller mail)",
-    description:
-      "Bouton « Export texte » dans Planning Flotte → modale avec zone texte pré-remplie, groupement par date chronologique, un seul template par défaut non éditable, bouton « Copier » intégré. Pas d'automatisation Resend (reportée plus tard). Déclenchement sur demande Gabin.",
-  },
 
   // ========== HAUTE PRIORITÉ ==========
   {
