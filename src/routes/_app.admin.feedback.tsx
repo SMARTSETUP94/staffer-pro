@@ -204,13 +204,13 @@ function StatCard({
 }: {
   label: string;
   value: number;
-  accent?: "primary" | "destructive" | "blue" | "emerald";
+  accent?: "primary" | "destructive" | "info" | "success";
 }) {
   const accentMap: Record<string, string> = {
     primary: "text-primary",
     destructive: "text-destructive",
-    blue: "text-blue-600",
-    emerald: "text-emerald-600",
+    info: "text-info",
+    success: "text-success",
   };
   return (
     <Card>
@@ -437,7 +437,7 @@ function FeedbackDialog({
           </div>
 
           {feedback.statut === "resolu" && feedback.resolved_at && (
-            <div className="flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-emerald-700 dark:text-emerald-400">
+            <div className="flex items-center gap-2 rounded-lg border border-success/30 bg-success/10 p-3 text-xs text-success">
               <AlertCircle className="h-4 w-4" />
               Résolu le {format(new Date(feedback.resolved_at), "d MMM yyyy", { locale: fr })}
             </div>
