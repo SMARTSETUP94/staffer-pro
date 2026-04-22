@@ -718,6 +718,70 @@ function DemandesTransportPage() {
         onOpenChange={setExportDialogOpen}
       />
 
+      {/* v0.19 — Modale "Générer texte demande" : action rapide pour générer un mail
+          copier-coller à envoyer aux transporteurs, à partir des trajets actuellement filtrés. */}
+      <Dialog open={mailDialogOpen} onOpenChange={setMailDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Générer texte demande transport</DialogTitle>
+            <DialogDescription>
+              Texte pré-rempli à partir des {sorted.length} trajet
+              {sorted.length > 1 ? "s" : ""} affiché{sorted.length > 1 ? "s" : ""} (filtres
+              actuels). Copie-le dans ton mail aux transporteurs.
+            </DialogDescription>
+          </DialogHeader>
+
+          <Alert className="bg-muted/50">
+            <AlertDescription className="text-xs">
+              Pense à filtrer le tableau (par prestataire, statut, dates) avant d'ouvrir cette
+              modale pour cibler les bons trajets.
+            </AlertDescription>
+          </Alert>
+
+          <Textarea
+            value={mailText}
+            onChange={(e) => {
+              setMailText(e.target.value);
+              setMailCopied(false);
+            }}
+            rows={14}
+            className="font-mono text-xs"
+          />
+
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setMailDialogOpen(false)}
+            >
+              Fermer
+            </Button>
+            <Button
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(mailText);
+                  setMailCopied(true);
+                  toast.success("Texte copié dans le presse-papier");
+                } catch {
+                  toast.error("Impossible de copier (sélectionne le texte manuellement)");
+                }
+              }}
+            >
+              {mailCopied ? (
+                <>
+                  <Check className="mr-2 h-4 w-4" />
+                  Copié
+                </>
+              ) : (
+                <>
+                  <Copy className="mr-2 h-4 w-4" />
+                  Copier le texte
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* placeholder pour éviter le tree-shaking de useVehicules (futur usage) */}
       <span className="hidden">{vehicules.length}</span>
     </div>
