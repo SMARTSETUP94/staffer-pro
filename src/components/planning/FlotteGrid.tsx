@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { addDays, format, isSameDay } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Truck, Plus, AlertTriangle, ExternalLink, Info } from "lucide-react";
-import { Button } from "@/components/ui/button";
+
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";

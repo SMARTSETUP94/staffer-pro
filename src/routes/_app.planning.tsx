@@ -395,6 +395,12 @@ function PlanningPage() {
                     setDefaultTrajetDate(undefined);
                     setTrajetDlgOpen(true);
                   }}
+                  onAddTrajetSousTraite={(d) => {
+                    setEditTrajet(null);
+                    setDefaultTrajetVehId(null);
+                    setDefaultTrajetDate(format(d, "yyyy-MM-dd"));
+                    setTrajetDlgOpen(true);
+                  }}
                 />
               </TabsContent>
             </Tabs>
