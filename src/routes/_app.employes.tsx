@@ -99,9 +99,8 @@ const emptyForm: FormState = {
   secondaires: [],
 };
 
-// PERMIS_OPTIONS sera utilisé dans une prochaine itération pour la section
-// "Capacités / Permis" du dialog d'édition employé (Bloc 3 — UI à finaliser).
-export const PERMIS_OPTIONS_V0181: { value: Permis; label: string }[] = [
+// v0.18.1 — Bloc 3 : options pour la section "Capacités / Permis" du dialog
+const PERMIS_OPTIONS: { value: Permis; label: string }[] = [
   { value: "B", label: "B (VL / utilitaire ≤ 3.5T)" },
   { value: "C", label: "C (PL > 3.5T)" },
   { value: "CE", label: "CE (PL + remorque)" },
