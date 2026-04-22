@@ -65,6 +65,7 @@ export function TrajetDialog({
   open, onOpenChange, trajet, defaultDate, defaultVehiculeId,
   affaires, employesLivreurs, onSaved,
 }: Props) {
+  const { isAdmin } = useAuth();
   const { vehicules } = useVehicules();
   const { adresses } = useAdressesFavorites();
 
