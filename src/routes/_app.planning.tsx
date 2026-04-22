@@ -42,6 +42,13 @@ function PlanningPage() {
   const [editTrajet, setEditTrajet] = useState<Trajet | null>(null);
   const [defaultTrajetVehId, setDefaultTrajetVehId] = useState<string | null>(null);
   const [defaultTrajetDate, setDefaultTrajetDate] = useState<string | undefined>(undefined);
+  // v0.18.1 — prefill depuis suggestion auto
+  const [defaultPrefill, setDefaultPrefill] = useState<{
+    adresseDepart?: string;
+    adresseArrivee?: string;
+    categorie?: "pose" | "depose" | "livraison_fourniture" | "recuperation_materiel" | "autre";
+    affaireId?: string | null;
+  }>({});
   const { vehicules } = useVehicules();
   const { trajets, refresh: refreshTrajets } = useTrajetsWeek(weekStart, weekEnd);
   const [filterAffaire, setFilterAffaire] = useState<Set<string | number>>(new Set());
