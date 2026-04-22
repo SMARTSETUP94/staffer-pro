@@ -87,6 +87,7 @@ export function TrajetDialog({
   const [demandeText, setDemandeText] = useState("");
   const [saving, setSaving] = useState(false);
   const [autorisesIds, setAutorisesIds] = useState<Set<string>>(new Set());
+  const [authorizingId, setAuthorizingId] = useState<string | null>(null);
 
   const vehiculeSel = useMemo(
     () => vehicules.find((v) => v.id === vehiculeId) ?? null,
@@ -94,24 +95,53 @@ export function TrajetDialog({
   );
 
   // Charge les chauffeurs autorisés pour le PL sélectionné
+  const refreshAutorises = async (vehId: string) => {
+    const { data } = await supabase
+      .from("vehicule_chauffeurs_autorises")
+      .select("employe_id")
+      .eq("vehicule_id", vehId);
+    setAutorisesIds(new Set((data ?? []).map((r: { employe_id: string }) => r.employe_id)));
+  };
+
   useEffect(() => {
     if (!vehiculeSel || vehiculeSel.type !== "poids_lourd") {
       setAutorisesIds(new Set());
       return;
     }
-    void supabase
-      .from("vehicule_chauffeurs_autorises")
-      .select("employe_id")
-      .eq("vehicule_id", vehiculeSel.id)
-      .then(({ data }) => {
-        setAutorisesIds(new Set((data ?? []).map((r: { employe_id: string }) => r.employe_id)));
-      });
+    void refreshAutorises(vehiculeSel.id);
   }, [vehiculeSel]);
 
   const chauffeursAvecStatut = useMemo(
     () => getChauffeursAvecStatut(vehiculeSel, employesLivreurs, autorisesIds),
     [vehiculeSel, employesLivreurs, autorisesIds],
   );
+
+  const aAutoriser = useMemo(
+    () => chauffeursAvecStatut.filter((c) => c.statut === "non_autorise"),
+    [chauffeursAvecStatut],
+  );
+
+  async function handleAutoriser(employeId: string) {
+    if (!vehiculeSel) return;
+    setAuthorizingId(employeId);
+    try {
+      const nextIds = Array.from(new Set([...Array.from(autorisesIds), employeId]));
+      const { error } = await supabase.rpc("set_vehicule_chauffeurs_autorises", {
+        _vehicule_id: vehiculeSel.id,
+        _employe_ids: nextIds,
+      });
+      if (error) throw error;
+      await refreshAutorises(vehiculeSel.id);
+      const emp = employesLivreurs.find((e) => e.id === employeId);
+      toast.success(
+        emp ? `${emp.prenom} ${emp.nom} autorisé(e) sur ${vehiculeSel.nom}` : "Chauffeur autorisé",
+      );
+    } catch (e) {
+      toast.error("Autorisation impossible", { description: (e as Error).message });
+    } finally {
+      setAuthorizingId(null);
+    }
+  }
 
   const chauffeurIncompatible =
     chauffeurId &&
