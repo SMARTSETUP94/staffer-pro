@@ -18,7 +18,7 @@ import { AddressAutocomplete } from "./AddressAutocomplete";
 import {
   useVehicules, useAdressesFavorites, type Trajet,
 } from "@/hooks/use-vehicules";
-import { getCompatibleChauffeurs } from "@/hooks/use-trajets";
+import { getChauffeursAvecStatut } from "@/hooks/use-trajets";
 import type { Tables } from "@/integrations/supabase/types";
 import type { Permis } from "@/lib/permis";
 
