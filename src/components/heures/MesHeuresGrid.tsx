@@ -213,11 +213,14 @@ function SaisieRowCard({
   const statut = row.saisie?.statut ?? "brouillon";
   const locked = statut === "soumis" || statut === "valide";
   const initialHeures = row.saisie?.heures_reelles ?? row.assignation?.heures ?? 0;
+  const initialNuit = Number((row.saisie as unknown as { heures_nuit?: number } | null)?.heures_nuit ?? 0);
   const [heures, setHeures] = useState<string>(String(initialHeures));
+  const [nuit, setNuit] = useState<string>(String(initialNuit));
   const [debut, setDebut] = useState<string>(row.saisie?.heure_debut ?? "");
   const [fin, setFin] = useState<string>(row.saisie?.heure_fin ?? "");
   const [commentaire, setCommentaire] = useState<string>(row.saisie?.commentaire ?? "");
   const [showTimes, setShowTimes] = useState(!!(row.saisie?.heure_debut || row.saisie?.heure_fin));
+  const [showNuit, setShowNuit] = useState(initialNuit > 0);
 
   const badge = STATUT_BADGE[statut];
 
@@ -301,6 +304,45 @@ function SaisieRowCard({
               />
             </div>
           </div>
+
+          {/* Heures de nuit (collapsible si jamais déclarées) */}
+          <Collapsible open={showNuit} onOpenChange={setShowNuit} className="mt-2">
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-7 gap-1 px-2 text-[11px]" disabled={locked}>
+                🌙 {showNuit ? "Masquer" : "Déclarer"} heures de nuit
+                <ChevronDown className={cn("h-3 w-3 transition-transform", showNuit && "rotate-180")} />
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="mt-2">
+              <div>
+                <label
+                  className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground"
+                  title="Heures effectuées entre 00h et 06h selon convention collective spectacle vivant"
+                >
+                  Dont heures de nuit (00h–06h)
+                </label>
+                <Input
+                  type="number"
+                  step="0.25"
+                  min="0"
+                  max="24"
+                  value={nuit}
+                  disabled={locked}
+                  onChange={(e) => setNuit(e.target.value)}
+                  onBlur={() => {
+                    const n = Number(nuit);
+                    if (!isNaN(n) && n !== Number((row.saisie as unknown as { heures_nuit?: number } | null)?.heures_nuit ?? -1)) {
+                      commit({ heures_nuit: n } as Partial<NonNullable<SaisieCombined["saisie"]>>);
+                    }
+                  }}
+                  className="h-9 max-w-[140px]"
+                />
+                <p className="mt-1 text-[10px] text-muted-foreground">
+                  Convention spectacle vivant. Doit être ≤ heures totales.
+                </p>
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
 
           <Collapsible open={showTimes} onOpenChange={setShowTimes} className="mt-2">
             <CollapsibleTrigger asChild>

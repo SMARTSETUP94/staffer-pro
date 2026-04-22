@@ -44,6 +44,8 @@ interface EmployeRow {
   date_naissance: string | null;
   adresse: string | null;
   notes: string | null;
+  profile_id: string | null;
+  matricule_silae: string | null;
   secondaires: number[];
 }
 
@@ -64,6 +66,8 @@ interface FormState {
   date_naissance: string;
   adresse: string;
   notes: string;
+  matricule_silae: string;
+  profile_id: string | null;
   secondaires: number[];
 }
 
@@ -83,6 +87,8 @@ const emptyForm: FormState = {
   date_naissance: "",
   adresse: "",
   notes: "",
+  matricule_silae: "",
+  profile_id: null,
   secondaires: [],
 };
 
@@ -92,7 +98,7 @@ export const Route = createFileRoute("/_app/employes")({
 });
 
 function EmployesPage() {
-  const { isAdminOrChef } = useAuth();
+  const { isAdminOrChef, isAdmin } = useAuth();
   const { metiers, byId } = useMetiers();
   const [rows, setRows] = useState<EmployeRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -126,7 +132,7 @@ function EmployesPage() {
     setLoading(true);
     const { data: emps, error } = await supabase
       .from("employes")
-      .select("id, prenom, nom, email, telephone, mobile, type_contrat, sous_type_contrat, is_apprenti, agence_interim, metier_principal_id, actif, non_staffing, est_livreur, date_naissance, adresse, notes")
+      .select("id, prenom, nom, email, telephone, mobile, type_contrat, sous_type_contrat, is_apprenti, agence_interim, metier_principal_id, actif, non_staffing, est_livreur, date_naissance, adresse, notes, profile_id")
       .order("nom", { ascending: true })
       .limit(2000);
     if (error) {
@@ -146,7 +152,25 @@ function EmployesPage() {
         return acc;
       }, {});
     }
-    setRows((emps ?? []).map((e) => ({ ...e, secondaires: secMap[e.id] ?? [] })));
+    const profileIds = (emps ?? []).map((e) => e.profile_id).filter((x): x is string => !!x);
+    let matriculeMap: Record<string, string | null> = {};
+    if (profileIds.length) {
+      const { data: profs } = await supabase
+        .from("profiles")
+        .select("id, matricule_silae")
+        .in("id", profileIds);
+      matriculeMap = (profs ?? []).reduce<Record<string, string | null>>((acc, p) => {
+        acc[p.id] = p.matricule_silae;
+        return acc;
+      }, {});
+    }
+    setRows(
+      (emps ?? []).map((e) => ({
+        ...e,
+        secondaires: secMap[e.id] ?? [],
+        matricule_silae: e.profile_id ? matriculeMap[e.profile_id] ?? null : null,
+      })),
+    );
     setLoading(false);
   };
 
@@ -206,6 +230,8 @@ function EmployesPage() {
       date_naissance: row.date_naissance ?? "",
       adresse: row.adresse ?? "",
       notes: row.notes ?? "",
+      matricule_silae: row.matricule_silae ?? "",
+      profile_id: row.profile_id,
       secondaires: row.secondaires.filter((id) => id !== row.metier_principal_id),
     });
     setOpen(true);
@@ -252,6 +278,18 @@ function EmployesPage() {
       await supabase
         .from("employe_metiers")
         .insert(sec.map((metier_id) => ({ employe_id: employeId!, metier_id })));
+    }
+
+    // Matricule SILAE : update sur profiles si lié et admin (le trigger DB rejette sinon)
+    if (form.profile_id && isAdmin) {
+      const newMat = form.matricule_silae.trim() || null;
+      const { error: matErr } = await supabase
+        .from("profiles")
+        .update({ matricule_silae: newMat })
+        .eq("id", form.profile_id);
+      if (matErr) {
+        toast.error("Matricule SILAE non sauvegardé", { description: matErr.message });
+      }
     }
 
     toast.success(form.id ? "Employé mis à jour" : "Employé créé");
@@ -479,6 +517,23 @@ function EmployesPage() {
                 placeholder={form.type_contrat === "Interim" ? "Ex. Manpower" : "—"}
                 className="h-10 rounded-xl"
               />
+            </div>
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label>
+                Matricule SILAE
+                {!isAdmin && <span className="ml-2 text-[10px] font-normal text-muted-foreground">(admin uniquement)</span>}
+                {!form.profile_id && <span className="ml-2 text-[10px] font-normal text-muted-foreground">(employé non lié à un compte)</span>}
+              </Label>
+              <Input
+                value={form.matricule_silae}
+                onChange={(e) => setForm({ ...form, matricule_silae: e.target.value })}
+                placeholder="Ex. 00123"
+                disabled={!isAdmin || !form.profile_id}
+                className="h-10 rounded-xl font-mono"
+              />
+              <p className="text-[10px] text-muted-foreground">
+                Clé de jointure pour l'export paie SILAE/PROGBAT.
+              </p>
             </div>
             <div className="space-y-1.5 sm:col-span-2">
               <Label>Métier principal</Label>
