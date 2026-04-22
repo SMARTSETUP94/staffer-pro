@@ -17,10 +17,12 @@ import { HeuresRestantesSidebar } from "@/components/planning/HeuresRestantesSid
 import { MultiFilter } from "@/components/planning/MultiFilter";
 import { AddInterimDialog } from "@/components/planning/AddInterimDialog";
 import { FlotteGrid } from "@/components/planning/FlotteGrid";
+import { SuggestionsTrajetsBloc } from "@/components/planning/SuggestionsTrajetsBloc";
 import { TrajetDialog } from "@/components/flotte/TrajetDialog";
 import { useVehicules, type Trajet } from "@/hooks/use-vehicules";
 import { useTrajetsWeek } from "@/hooks/use-trajets";
 import { exportPlanningToPDF } from "@/lib/planning-export";
+import type { TrajetSuggestion } from "@/lib/trajets-suggestions";
 
 export const Route = createFileRoute("/_app/planning")({
   head: () => ({
