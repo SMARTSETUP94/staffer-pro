@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import { Loader2, Trash2 } from "lucide-react";
+import { Loader2, Trash2, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/lib/auth-context";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
@@ -64,6 +65,7 @@ export function TrajetDialog({
   open, onOpenChange, trajet, defaultDate, defaultVehiculeId,
   affaires, employesLivreurs, onSaved,
 }: Props) {
+  const { isAdmin } = useAuth();
   const { vehicules } = useVehicules();
   const { adresses } = useAdressesFavorites();
 
@@ -85,6 +87,7 @@ export function TrajetDialog({
   const [demandeText, setDemandeText] = useState("");
   const [saving, setSaving] = useState(false);
   const [autorisesIds, setAutorisesIds] = useState<Set<string>>(new Set());
+  const [authorizingId, setAuthorizingId] = useState<string | null>(null);
 
   const vehiculeSel = useMemo(
     () => vehicules.find((v) => v.id === vehiculeId) ?? null,
@@ -92,24 +95,53 @@ export function TrajetDialog({
   );
 
   // Charge les chauffeurs autorisés pour le PL sélectionné
+  const refreshAutorises = async (vehId: string) => {
+    const { data } = await supabase
+      .from("vehicule_chauffeurs_autorises")
+      .select("employe_id")
+      .eq("vehicule_id", vehId);
+    setAutorisesIds(new Set((data ?? []).map((r: { employe_id: string }) => r.employe_id)));
+  };
+
   useEffect(() => {
     if (!vehiculeSel || vehiculeSel.type !== "poids_lourd") {
       setAutorisesIds(new Set());
       return;
     }
-    void supabase
-      .from("vehicule_chauffeurs_autorises")
-      .select("employe_id")
-      .eq("vehicule_id", vehiculeSel.id)
-      .then(({ data }) => {
-        setAutorisesIds(new Set((data ?? []).map((r: { employe_id: string }) => r.employe_id)));
-      });
+    void refreshAutorises(vehiculeSel.id);
   }, [vehiculeSel]);
 
   const chauffeursAvecStatut = useMemo(
     () => getChauffeursAvecStatut(vehiculeSel, employesLivreurs, autorisesIds),
     [vehiculeSel, employesLivreurs, autorisesIds],
   );
+
+  const aAutoriser = useMemo(
+    () => chauffeursAvecStatut.filter((c) => c.statut === "non_autorise"),
+    [chauffeursAvecStatut],
+  );
+
+  async function handleAutoriser(employeId: string) {
+    if (!vehiculeSel) return;
+    setAuthorizingId(employeId);
+    try {
+      const nextIds = Array.from(new Set([...Array.from(autorisesIds), employeId]));
+      const { error } = await supabase.rpc("set_vehicule_chauffeurs_autorises", {
+        _vehicule_id: vehiculeSel.id,
+        _employe_ids: nextIds,
+      });
+      if (error) throw error;
+      await refreshAutorises(vehiculeSel.id);
+      const emp = employesLivreurs.find((e) => e.id === employeId);
+      toast.success(
+        emp ? `${emp.prenom} ${emp.nom} autorisé(e) sur ${vehiculeSel.nom}` : "Chauffeur autorisé",
+      );
+    } catch (e) {
+      toast.error("Autorisation impossible", { description: (e as Error).message });
+    } finally {
+      setAuthorizingId(null);
+    }
+  }
 
   const chauffeurIncompatible =
     chauffeurId &&
@@ -150,7 +182,8 @@ export function TrajetDialog({
       setKilometrage("");
       setNotes("");
       setAllerRetour(false);
-      setSousTraitance(false);
+      // v0.18.1 — Si pas de véhicule passé, on présume "création depuis bouton + S/T"
+      setSousTraitance(!defaultVehiculeId);
       setDemandeText("");
     }
   }, [open, trajet, defaultDate, defaultVehiculeId]);
@@ -318,11 +351,47 @@ export function TrajetDialog({
                     Ce chauffeur n'est pas compatible avec le véhicule.
                   </p>
                 )}
-                {vehiculeSel?.type === "poids_lourd" && (
-                  <p className="mt-1 text-[10px] text-muted-foreground">
-                    Pour autoriser un nouveau chauffeur sur ce PL, ouvre la fiche véhicule
-                    dans <strong>Logistique → Véhicules</strong>.
-                  </p>
+                {vehiculeSel?.type === "poids_lourd" && aAutoriser.length > 0 && (
+                  <div className="mt-2 rounded-md border border-warning/40 bg-warning/5 p-2">
+                    <p className="text-[10px] font-semibold text-foreground mb-1">
+                      Livreurs à autoriser sur ce PL
+                    </p>
+                    <div className="space-y-1">
+                      {aAutoriser.map((c) => (
+                        <div
+                          key={c.employe.id}
+                          className="flex items-center justify-between gap-2 text-[11px]"
+                        >
+                          <span className="truncate">
+                            🔒 {c.employe.prenom} {c.employe.nom}
+                          </span>
+                          {isAdmin ? (
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              className="h-6 px-2 text-[10px]"
+                              disabled={authorizingId === c.employe.id}
+                              onClick={() => handleAutoriser(c.employe.id)}
+                            >
+                              {authorizingId === c.employe.id ? (
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                              ) : (
+                                <>
+                                  <ShieldCheck className="h-3 w-3 mr-1" />
+                                  Autoriser
+                                </>
+                              )}
+                            </Button>
+                          ) : (
+                            <span className="text-[10px] text-muted-foreground">
+                              admin requis
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 )}
               </div>
             </div>

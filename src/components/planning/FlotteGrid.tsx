@@ -1,8 +1,8 @@
 import { useMemo } from "react";
 import { addDays, format, isSameDay } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Truck, Plus, AlertTriangle, ExternalLink } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Truck, Plus, AlertTriangle, ExternalLink, Info } from "lucide-react";
+
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -33,6 +33,8 @@ interface Props {
   affairesById: Map<string, AffaireMini>;
   showWeekend: boolean;
   onAddTrajet: (vehiculeId: string, date: Date) => void;
+  /** v0.18.1 — Bouton "+ Trajet sous-traité" en bas de chaque colonne de jour */
+  onAddTrajetSousTraite?: (date: Date) => void;
   onEditTrajet: (trajet: Trajet) => void;
 }
 
@@ -44,6 +46,7 @@ export function FlotteGrid({
   affairesById,
   showWeekend,
   onAddTrajet,
+  onAddTrajetSousTraite,
   onEditTrajet,
 }: Props) {
   const days = useMemo(() => {
@@ -133,9 +136,23 @@ export function FlotteGrid({
               const hasAlert = [ctAlert, revAlert, assAlert].some(
                 (a) => a === "warning" || a === "expired",
               );
+              const isLoue =
+                v.proprietaire === "location" || v.proprietaire === "sous_traitance";
               return (
-                <tr key={v.id} className="hover:bg-muted/20">
-                  <td className="sticky left-0 z-10 w-[200px] border-b border-r bg-card px-3 py-2 align-top">
+                <tr
+                  key={v.id}
+                  className={cn(
+                    "hover:bg-muted/20",
+                    // v0.18.1 — fond teinté pour véhicules loués / sous-traités (warning soft)
+                    isLoue && "bg-warning/5",
+                  )}
+                >
+                  <td
+                    className={cn(
+                      "sticky left-0 z-10 w-[200px] border-b border-r px-3 py-2 align-top",
+                      isLoue ? "bg-warning/10" : "bg-card",
+                    )}
+                  >
                     <div className="flex items-start gap-2">
                       <Truck className="mt-0.5 h-4 w-4 text-primary shrink-0" />
                       <div className="min-w-0 flex-1">
@@ -169,6 +186,15 @@ export function FlotteGrid({
                           <div className="text-[10px] font-mono text-muted-foreground">
                             {v.immatriculation}
                           </div>
+                        )}
+                        {isLoue && (
+                          <Badge
+                            variant="outline"
+                            className="mt-1 h-4 px-1 text-[9px] border-warning/40 text-warning bg-warning/10"
+                          >
+                            {v.proprietaire === "location" ? "Loué" : "S/T"}
+                            {v.fournisseur_location ? ` · ${v.fournisseur_location}` : ""}
+                          </Badge>
                         )}
                       </div>
                     </div>
@@ -229,6 +255,38 @@ export function FlotteGrid({
               );
             })}
           </tbody>
+          {/* v0.18.1 — Bouton "+ Trajet sous-traité" en bas de chaque colonne de jour */}
+          {onAddTrajetSousTraite && (
+            <tfoot className="sticky bottom-0 bg-card">
+              <tr>
+                <td className="sticky left-0 z-10 border-t border-r bg-card px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  + Trajet sous-traité
+                </td>
+                {days.map((d) => (
+                  <td
+                    key={`st-${d.toISOString()}`}
+                    className="border-t border-r px-1 py-1.5"
+                  >
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          type="button"
+                          onClick={() => onAddTrajetSousTraite(d)}
+                          className="flex w-full items-center justify-center rounded border border-dashed border-warning/40 py-1 text-[11px] text-warning hover:bg-warning/10"
+                        >
+                          <Plus className="h-3 w-3 mr-1" />
+                          S/T
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        Créer un trajet sans véhicule interne
+                      </TooltipContent>
+                    </Tooltip>
+                  </td>
+                ))}
+              </tr>
+            </tfoot>
+          )}
         </table>
       </div>
 
@@ -239,6 +297,28 @@ export function FlotteGrid({
               <ExternalLink className="h-4 w-4 text-warning" />
               <span className="font-semibold text-sm">À sous-traiter</span>
               <Badge variant="outline">{sousTraitanceTrajets.length}</Badge>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button type="button" className="text-muted-foreground hover:text-foreground">
+                    <Info className="h-3.5 w-3.5" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs">
+                  <div className="text-xs space-y-1">
+                    <p className="font-semibold">D'où viennent ces trajets ?</p>
+                    <p>
+                      Ce sont les trajets créés avec l'option « Sous-traiter ce trajet » activée
+                      (depuis le bouton <strong>+ S/T</strong> sous chaque colonne, ou depuis la
+                      modale d'un trajet existant en activant le switch en haut). Aucun véhicule
+                      interne ne leur est rattaché — ils sont destinés à un transporteur externe.
+                    </p>
+                    <p className="text-muted-foreground">
+                      Statuts : <code>à envoyer</code> → <code>devis envoyé</code> →{" "}
+                      <code>confirmé</code>.
+                    </p>
+                  </div>
+                </TooltipContent>
+              </Tooltip>
             </div>
             <a
               href="/export/demandes-devis"
