@@ -82,6 +82,13 @@ const RELEASES: RoadmapRelease[] = [
         description:
           "Vérification : l'autre Export planning Excel (matriciel multi-semaines CDI/Intérim/Synthèse/Heures) existe bien à /export en section Administration — pas de doublon à supprimer. La route /export/demandes-devis est désormais cohérente avec son nom et son item sidebar LOGISTIQUE > Demandes transport.",
       },
+      {
+        type: "fix",
+        area: "Cohérence routing",
+        title: "Layout route /export (ajout <Outlet />) — fix régression d'affichage",
+        description:
+          "Le fichier _app.export.tsx était une page terminale sans <Outlet />, ce qui faisait que /export/demandes-devis affichait toujours le rendu parent (Export planning Excel) au lieu de la nouvelle page enfant. Fix : _app.export.tsx devient un layout route minimal (Outlet only), et l'Export planning Excel est déplacé dans _app.export.index.tsx pour conserver l'URL /export historique. Sidebar Administration > Export planning inchangée.",
+      },
     ],
   },
   {
