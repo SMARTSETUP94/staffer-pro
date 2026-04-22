@@ -384,7 +384,37 @@ function PlanningPage() {
                 />
               </TabsContent>
 
-              <TabsContent value="flotte" className="mt-4">
+              <TabsContent value="flotte" className="mt-4 space-y-4">
+                <SuggestionsTrajetsBloc
+                  weekStart={weekStart}
+                  weekEnd={weekEnd}
+                  affaires={affaires.map((a) => ({
+                    id: a.id,
+                    numero: a.numero,
+                    nom: a.nom,
+                    lieu: a.lieu,
+                    date_montage: a.date_montage,
+                    date_demontage: a.date_demontage,
+                  }))}
+                  trajets={trajets.map((t) => ({
+                    affaire_id: t.affaire_id,
+                    date: t.date,
+                    adresse_depart: t.adresse_depart,
+                    adresse_arrivee: t.adresse_arrivee,
+                  }))}
+                  onAccepter={(s: TrajetSuggestion, altAdresse?: string) => {
+                    setEditTrajet(null);
+                    setDefaultTrajetVehId(null);
+                    setDefaultTrajetDate(s.date);
+                    setDefaultPrefill({
+                      adresseDepart: s.adresse_depart,
+                      adresseArrivee: altAdresse ?? s.adresse_arrivee,
+                      categorie: s.type === "montage" ? "pose" : "depose",
+                      affaireId: s.affaire.id,
+                    });
+                    setTrajetDlgOpen(true);
+                  }}
+                />
                 <FlotteGrid
                   weekStart={weekStart}
                   vehicules={vehicules}
@@ -396,18 +426,21 @@ function PlanningPage() {
                     setEditTrajet(null);
                     setDefaultTrajetVehId(vId);
                     setDefaultTrajetDate(format(d, "yyyy-MM-dd"));
+                    setDefaultPrefill({});
                     setTrajetDlgOpen(true);
                   }}
                   onEditTrajet={(t) => {
                     setEditTrajet(t);
                     setDefaultTrajetVehId(null);
                     setDefaultTrajetDate(undefined);
+                    setDefaultPrefill({});
                     setTrajetDlgOpen(true);
                   }}
                   onAddTrajetSousTraite={(d) => {
                     setEditTrajet(null);
                     setDefaultTrajetVehId(null);
                     setDefaultTrajetDate(format(d, "yyyy-MM-dd"));
+                    setDefaultPrefill({});
                     setTrajetDlgOpen(true);
                   }}
                 />
