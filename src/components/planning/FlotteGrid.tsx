@@ -297,6 +297,28 @@ export function FlotteGrid({
               <ExternalLink className="h-4 w-4 text-warning" />
               <span className="font-semibold text-sm">À sous-traiter</span>
               <Badge variant="outline">{sousTraitanceTrajets.length}</Badge>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button type="button" className="text-muted-foreground hover:text-foreground">
+                    <Info className="h-3.5 w-3.5" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs">
+                  <div className="text-xs space-y-1">
+                    <p className="font-semibold">D'où viennent ces trajets ?</p>
+                    <p>
+                      Ce sont les trajets créés avec l'option « Sous-traiter ce trajet » activée
+                      (depuis le bouton <strong>+ S/T</strong> sous chaque colonne, ou depuis la
+                      modale d'un trajet existant en activant le switch en haut). Aucun véhicule
+                      interne ne leur est rattaché — ils sont destinés à un transporteur externe.
+                    </p>
+                    <p className="text-muted-foreground">
+                      Statuts : <code>à envoyer</code> → <code>devis envoyé</code> →{" "}
+                      <code>confirmé</code>.
+                    </p>
+                  </div>
+                </TooltipContent>
+              </Tooltip>
             </div>
             <a
               href="/export/demandes-devis"
