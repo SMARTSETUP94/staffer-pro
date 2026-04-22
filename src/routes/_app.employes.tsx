@@ -285,11 +285,13 @@ function EmployesPage() {
     };
 
     let employeId = form.id;
+    // Cast: types Supabase pas encore régénérés pour categories_permis (v0.18.1)
+    const payloadAny = payload as unknown as Record<string, unknown>;
     if (employeId) {
-      const { error } = await supabase.from("employes").update(payload).eq("id", employeId);
+      const { error } = await supabase.from("employes").update(payloadAny).eq("id", employeId);
       if (error) { toast.error("Mise à jour impossible", { description: error.message }); setSaving(false); return; }
     } else {
-      const { data, error } = await supabase.from("employes").insert(payload).select("id").single();
+      const { data, error } = await supabase.from("employes").insert(payloadAny as never).select("id").single();
       if (error || !data) { toast.error("Création impossible", { description: error?.message }); setSaving(false); return; }
       employeId = data.id;
     }
