@@ -581,6 +581,7 @@ export type Database = {
           actif: boolean
           adresse: string | null
           agence_interim: string | null
+          categories_permis: Database["public"]["Enums"]["categorie_permis"][]
           created_at: string
           date_entree: string | null
           date_naissance: string | null
@@ -605,6 +606,7 @@ export type Database = {
           actif?: boolean
           adresse?: string | null
           agence_interim?: string | null
+          categories_permis?: Database["public"]["Enums"]["categorie_permis"][]
           created_at?: string
           date_entree?: string | null
           date_naissance?: string | null
@@ -629,6 +631,7 @@ export type Database = {
           actif?: boolean
           adresse?: string | null
           agence_interim?: string | null
+          categories_permis?: Database["public"]["Enums"]["categorie_permis"][]
           created_at?: string
           date_entree?: string | null
           date_naissance?: string | null
@@ -912,6 +915,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      lieux: {
+        Row: {
+          actif: boolean
+          adresse_complete: string
+          created_at: string
+          id: string
+          label: string
+          latitude: number | null
+          longitude: number | null
+          type: Database["public"]["Enums"]["lieu_type"]
+          updated_at: string
+        }
+        Insert: {
+          actif?: boolean
+          adresse_complete: string
+          created_at?: string
+          id?: string
+          label: string
+          latitude?: number | null
+          longitude?: number | null
+          type: Database["public"]["Enums"]["lieu_type"]
+          updated_at?: string
+        }
+        Update: {
+          actif?: boolean
+          adresse_complete?: string
+          created_at?: string
+          id?: string
+          label?: string
+          latitude?: number | null
+          longitude?: number | null
+          type?: Database["public"]["Enums"]["lieu_type"]
+          updated_at?: string
+        }
+        Relationships: []
       }
       metiers: {
         Row: {
@@ -1598,6 +1637,7 @@ export type Database = {
       affaire_phase: "opportunite" | "signe"
       affaire_statut: "prospect" | "en_cours" | "termine" | "annule"
       app_role: "admin" | "chef_chantier" | "employe"
+      categorie_permis: "B" | "C" | "CE" | "D"
       confirmation_status:
         | "non_requise"
         | "en_attente"
@@ -1616,6 +1656,7 @@ export type Database = {
       feedback_statut: "nouveau" | "en_cours" | "resolu" | "ferme" | "rejete"
       feedback_type: "bug" | "idee" | "amelioration" | "question"
       heures_statut: "brouillon" | "soumis" | "valide" | "rejete"
+      lieu_type: "atelier" | "stockage"
       notification_type:
         | "assignation_creee"
         | "assignation_modifiee"
@@ -1791,6 +1832,7 @@ export const Constants = {
       affaire_phase: ["opportunite", "signe"],
       affaire_statut: ["prospect", "en_cours", "termine", "annule"],
       app_role: ["admin", "chef_chantier", "employe"],
+      categorie_permis: ["B", "C", "CE", "D"],
       confirmation_status: [
         "non_requise",
         "en_attente",
@@ -1811,6 +1853,7 @@ export const Constants = {
       feedback_statut: ["nouveau", "en_cours", "resolu", "ferme", "rejete"],
       feedback_type: ["bug", "idee", "amelioration", "question"],
       heures_statut: ["brouillon", "soumis", "valide", "rejete"],
+      lieu_type: ["atelier", "stockage"],
       notification_type: [
         "assignation_creee",
         "assignation_modifiee",
