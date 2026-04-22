@@ -434,8 +434,15 @@ function PlanningPage() {
         defaultVehiculeId={defaultTrajetVehId}
         affaires={affaires.map((a) => ({ id: a.id, numero: a.numero, nom: a.nom }))}
         employesLivreurs={employes
-          .filter((e) => (e as Employe & { est_livreur?: boolean }).est_livreur)
-          .map((e) => ({ id: e.id, prenom: e.prenom, nom: e.nom, est_livreur: true, actif: true }))}
+          .filter((e) => e.est_livreur)
+          .map((e) => ({
+            id: e.id,
+            prenom: e.prenom,
+            nom: e.nom,
+            est_livreur: true,
+            actif: true,
+            categories_permis: e.categories_permis ?? [],
+          }))}
         onSaved={() => void refreshTrajets()}
       />
     </div>
