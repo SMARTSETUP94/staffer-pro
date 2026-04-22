@@ -211,19 +211,21 @@ export function PlanningSynthese({
                                 // Agrégation par métier (somme tous devis confondus)
                                 const parMetier = new Map<
                                   number,
-                                  { metier: string; couleur: string; prevues: number; assignees: number }
+                                  { metier: string; couleur: string; prevues: number; assignees: number; realisees: number }
                                 >();
                                 for (const l of lignesPole) {
                                   const ex = parMetier.get(l.metier_id);
                                   if (ex) {
                                     ex.prevues += Number(l.heures_prevues || 0);
                                     ex.assignees += Number(l.heures_assignees || 0);
+                                    ex.realisees += Number(l.heures_reelles_validees || 0);
                                   } else {
                                     parMetier.set(l.metier_id, {
                                       metier: l.metier,
                                       couleur: l.couleur,
                                       prevues: Number(l.heures_prevues || 0),
                                       assignees: Number(l.heures_assignees || 0),
+                                      realisees: Number(l.heures_reelles_validees || 0),
                                     });
                                   }
                                 }
@@ -249,9 +251,12 @@ export function PlanningSynthese({
                                           {agg.assignees.toFixed(0)}/{agg.prevues.toFixed(0)}
                                         </span>
                                       </div>
-                                      <Progress
-                                        value={Math.min(pct, 100)}
-                                        className={cn("h-1", dep && "[&>div]:bg-destructive")}
+                                      <DualProgress
+                                        staffees={agg.assignees}
+                                        realisees={agg.realisees}
+                                        budget={agg.prevues}
+                                        size="sm"
+                                        showLabel={false}
                                       />
                                     </div>
                                   );
