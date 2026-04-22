@@ -250,6 +250,8 @@ function VehiculesTable({
               <TableHead>Permis</TableHead>
               {showFournisseur && <TableHead>Fournisseur</TableHead>}
               <TableHead>Propriétaire</TableHead>
+              {showFournisseur && <TableHead>Début location</TableHead>}
+              {showFournisseur && <TableHead>Fin location</TableHead>}
               <TableHead>CT</TableHead>
               <TableHead>Révision</TableHead>
               <TableHead>Assurance</TableHead>
@@ -282,6 +284,42 @@ function VehiculesTable({
                     {PROPRIETAIRE_LABEL[v.proprietaire]}
                   </Badge>
                 </TableCell>
+                {showFournisseur && (
+                  <TableCell className="text-xs">
+                    {v.date_debut_location
+                      ? new Date(v.date_debut_location + "T00:00:00").toLocaleDateString("fr-FR")
+                      : <span className="text-muted-foreground">—</span>}
+                  </TableCell>
+                )}
+                {showFournisseur && (
+                  <TableCell className="text-xs">
+                    {v.date_fin_location ? (
+                      (() => {
+                        const niveau = alerteDate(v.date_fin_location);
+                        const formatted = new Date(v.date_fin_location + "T00:00:00").toLocaleDateString("fr-FR");
+                        if (niveau === "expired") {
+                          return (
+                            <Badge variant="destructive">
+                              <AlertTriangle className="h-3 w-3 mr-1" />
+                              {formatted}
+                            </Badge>
+                          );
+                        }
+                        if (niveau === "warning") {
+                          return (
+                            <Badge className="bg-warning/15 text-warning-foreground border border-warning/40">
+                              <AlertTriangle className="h-3 w-3 mr-1" />
+                              {formatted}
+                            </Badge>
+                          );
+                        }
+                        return <span>{formatted}</span>;
+                      })()
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
+                  </TableCell>
+                )}
                 <TableCell><AlerteBadge date={v.date_controle_technique} label="CT" kind="ct" /></TableCell>
                 <TableCell><AlerteBadge date={v.date_prochaine_revision} label="Révision" /></TableCell>
                 <TableCell><AlerteBadge date={v.date_expiration_assurance} label="Assurance" /></TableCell>

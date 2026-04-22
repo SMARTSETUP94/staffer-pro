@@ -97,6 +97,13 @@ const RELEASES: RoadmapRelease[] = [
         description:
           "Le fichier _app.export.tsx était une page terminale sans <Outlet />, ce qui faisait que /export/demandes-devis affichait toujours le rendu parent (Export planning Excel) au lieu de la nouvelle page enfant. Fix : _app.export.tsx devient un layout route minimal (Outlet only), et l'Export planning Excel est déplacé dans _app.export.index.tsx pour conserver l'URL /export historique. Sidebar Administration > Export planning inchangée.",
       },
+      {
+        type: "fix",
+        area: "Flotte",
+        title: "Affichage dates location véhicules loués + filtrage planning strict hors période",
+        description:
+          "Bug remonté par Gabin : le tableau /flotte onglet « Loués / Sous-traitance » n'affichait pas les colonnes date_debut_location / date_fin_location malgré la présence des champs en DB depuis v0.15. Ajout de 2 colonnes « Début location » et « Fin location » (format FR JJ/MM/AAAA) entre Propriétaire et CT. La colonne Fin location passe en badge warning ≤ 30 jours avant échéance et en badge destructive si déjà expirée. La modale VehiculeDialog éditait déjà ces 2 dates (DatePickers natifs), pas de changement. Vérification du filtrage planning : FlotteGrid masque déjà strictement un véhicule loué si la semaine affichée est entièrement hors plage [date_debut_location, date_fin_location], donc location expirée → disparait du planning, location future → pas encore affichée. Sémantique métier intacte.",
+      },
     ],
   },
   {
