@@ -127,7 +127,9 @@ function DemandesTransportPage() {
   const today = new Date();
   const [dateFrom, setDateFrom] = useState(format(startOfMonth(today), "yyyy-MM-dd"));
   const [dateTo, setDateTo] = useState(format(addMonths(startOfMonth(today), 2), "yyyy-MM-dd"));
-  const [statutFilter, setStatutFilter] = useState<StatutSousTraitance | "all">("all");
+  // v0.19 — Par défaut : on n'affiche que les brouillons (à envoyer).
+  // Le user peut basculer sur Tous / Envoyé / Confirmé via le sélecteur.
+  const [statutFilter, setStatutFilter] = useState<StatutSousTraitance | "all">("a_sous_traiter");
   const [prestataireFilter, setPrestataireFilter] = useState<string>("__all__");
   const [affaireFilter, setAffaireFilter] = useState<string>("__all__");
   const [search, setSearch] = useState("");
