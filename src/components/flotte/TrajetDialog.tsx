@@ -90,6 +90,7 @@ export function TrajetDialog({
   const [notes, setNotes] = useState("");
   const [allerRetour, setAllerRetour] = useState(false);
   const [sousTraitance, setSousTraitance] = useState(false);
+  const [prestataire, setPrestataire] = useState("");
   const [demandeText, setDemandeText] = useState("");
   const [saving, setSaving] = useState(false);
   const [autorisesIds, setAutorisesIds] = useState<Set<string>>(new Set());
@@ -170,8 +171,9 @@ export function TrajetDialog({
       setCategorie(trajet.categorie);
       setKilometrage(trajet.kilometrage?.toString() ?? "");
       setNotes(trajet.notes ?? "");
-      setAllerRetour(false);
+      setAllerRetour(trajet.aller_retour ?? false);
       setSousTraitance(trajet.statut_soustraitance !== "non");
+      setPrestataire(trajet.prestataire ?? "");
       setDemandeText(trajet.notes ?? "");
     } else {
       setVehiculeId(defaultVehiculeId ?? null);
@@ -190,6 +192,7 @@ export function TrajetDialog({
       setAllerRetour(false);
       // v0.18.1 — Si pas de véhicule passé, on présume "création depuis bouton + S/T"
       setSousTraitance(!defaultVehiculeId);
+      setPrestataire("");
       setDemandeText("");
     }
   }, [open, trajet, defaultDate, defaultVehiculeId, defaultAdresseDepart, defaultAdresseArrivee, defaultCategorie, defaultAffaireId]);
@@ -209,7 +212,11 @@ export function TrajetDialog({
 
     setSaving(true);
     try {
-      const statutSt: SoustraitanceStatut = sousTraitance ? "a_sous_traiter" : "non";
+      const statutSt: SoustraitanceStatut = sousTraitance
+        ? trajet?.statut_soustraitance && trajet.statut_soustraitance !== "non"
+          ? trajet.statut_soustraitance // garde le statut courant (devis_envoye, confirme) lors d'une édition
+          : "a_sous_traiter"
+        : "non";
       const base = {
         vehicule_id: sousTraitance ? null : vehiculeId,
         chauffeur_id: sousTraitance ? null : chauffeurId,
@@ -224,6 +231,8 @@ export function TrajetDialog({
         categorie,
         kilometrage: kilometrage ? parseFloat(kilometrage) : null,
         notes: sousTraitance ? demandeText || notes : notes,
+        prestataire: sousTraitance ? (prestataire.trim() || null) : null,
+        aller_retour: allerRetour,
         statut_soustraitance: statutSt,
       };
 
