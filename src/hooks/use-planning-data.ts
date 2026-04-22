@@ -55,6 +55,10 @@ export interface DevisConsommation {
   couleur: string;
   heures_prevues: number;
   heures_assignees: number;
+  /** v0.18.1 — heures saisies par les employés et validées par chef/admin */
+  heures_reelles_validees: number;
+  /** v0.18.1 — heures saisies en attente de validation */
+  heures_reelles_soumises: number;
   heures_restantes: number;
   pct_consomme: number;
 }

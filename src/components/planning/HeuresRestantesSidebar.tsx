@@ -1,7 +1,7 @@
 import { AlertTriangle, CheckCircle2, PanelRightClose, PanelRightOpen } from "lucide-react";
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
+import { DualProgress } from "@/components/ui/dual-progress";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { Affaire, DevisConsommation } from "@/hooks/use-planning-data";
@@ -16,6 +16,7 @@ interface AffaireRecap {
   affaire: Affaire;
   prevues: number;
   assignees: number;
+  realisees: number;
   restantes: number;
   pct: number;
 }
@@ -29,9 +30,10 @@ export function HeuresRestantesSidebar({ affaires, consommation, filterAffaireId
       const lignes = consommation.filter((c) => c.affaire_id === affaire.id);
       const prevues = lignes.reduce((s, l) => s + Number(l.heures_prevues || 0), 0);
       const assignees = lignes.reduce((s, l) => s + Number(l.heures_assignees || 0), 0);
+      const realisees = lignes.reduce((s, l) => s + Number(l.heures_reelles_validees || 0), 0);
       const restantes = prevues - assignees;
       const pct = prevues > 0 ? (assignees / prevues) * 100 : 0;
-      return { affaire, prevues, assignees, restantes, pct };
+      return { affaire, prevues, assignees, realisees, restantes, pct };
     })
     .filter((r) => r.prevues > 0 || r.assignees > 0)
     .sort((a, b) => b.pct - a.pct);
@@ -73,7 +75,7 @@ export function HeuresRestantesSidebar({ affaires, consommation, filterAffaireId
             Aucune affaire avec heures budgétées.
           </p>
         ) : (
-          recap.map(({ affaire, prevues, assignees, restantes, pct }) => {
+          recap.map(({ affaire, prevues, assignees, realisees, restantes, pct }) => {
             const depasse = pct > 100;
             const proche = pct >= 80 && pct <= 100;
             return (
@@ -91,17 +93,17 @@ export function HeuresRestantesSidebar({ affaires, consommation, filterAffaireId
                     <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-success" />
                   )}
                 </div>
-                <Progress
-                  value={Math.min(pct, 100)}
-                  className={cn(
-                    "h-1.5",
-                    depasse && "[&>div]:bg-destructive",
-                    proche && !depasse && "[&>div]:bg-warning",
-                  )}
+                <DualProgress
+                  staffees={assignees}
+                  realisees={realisees}
+                  budget={prevues}
+                  size="sm"
+                  showLabel={false}
                 />
                 <div className="flex justify-between text-[10px] text-muted-foreground">
                   <span>
-                    {assignees.toFixed(0)}h / {prevues.toFixed(0)}h
+                    <span className="font-mono">{assignees.toFixed(0)}h</span> staffées ·{" "}
+                    <span className="font-mono">{realisees.toFixed(0)}h</span> réalisées
                   </span>
                   <span className={cn("font-semibold", depasse && "text-destructive")}>
                     {depasse ? `+${(assignees - prevues).toFixed(0)}h` : `${restantes.toFixed(0)}h restantes`}

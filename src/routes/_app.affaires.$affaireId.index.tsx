@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useMetiers } from "@/hooks/use-metiers";
 import { MetierBadge } from "@/components/MetierBadge";
 import { Progress } from "@/components/ui/progress";
+import { DualProgress } from "@/components/ui/dual-progress";
 import { cn } from "@/lib/utils";
 
 interface ConsoLine {
@@ -208,14 +209,13 @@ function AffaireSynthesePage() {
                       </td>
                       <td className="p-3 text-center">
                         <MargeBadge tone={l.tone} />
-                        <Progress
-                          value={Math.min(100, Math.max(l.pctStaff, l.pctReal))}
-                          className={cn(
-                            "mt-1.5 h-1.5",
-                            l.tone === "danger" && "[&>*]:bg-destructive",
-                            l.tone === "warn" && "[&>*]:bg-warning",
-                            l.tone === "ok" && "[&>*]:bg-success",
-                          )}
+                        <DualProgress
+                          staffees={l.staffees}
+                          realisees={l.validees}
+                          budget={l.prevues}
+                          size="sm"
+                          showLabel={false}
+                          className="mt-1.5"
                         />
                       </td>
                     </tr>
