@@ -99,7 +99,9 @@ const emptyForm: FormState = {
   secondaires: [],
 };
 
-const PERMIS_OPTIONS: { value: Permis; label: string }[] = [
+// PERMIS_OPTIONS sera utilisé dans une prochaine itération pour la section
+// "Capacités / Permis" du dialog d'édition employé (Bloc 3 — UI à finaliser).
+export const PERMIS_OPTIONS_V0181: { value: Permis; label: string }[] = [
   { value: "B", label: "B (VL / utilitaire ≤ 3.5T)" },
   { value: "C", label: "C (PL > 3.5T)" },
   { value: "CE", label: "CE (PL + remorque)" },
@@ -146,7 +148,7 @@ function EmployesPage() {
     setLoading(true);
     const { data: emps, error } = await supabase
       .from("employes")
-      .select("id, prenom, nom, email, telephone, mobile, type_contrat, sous_type_contrat, is_apprenti, agence_interim, metier_principal_id, actif, non_staffing, est_livreur, date_naissance, adresse, notes, profile_id")
+      .select("id, prenom, nom, email, telephone, mobile, type_contrat, sous_type_contrat, is_apprenti, agence_interim, metier_principal_id, actif, non_staffing, est_livreur, categories_permis, date_naissance, adresse, notes, profile_id")
       .order("nom", { ascending: true })
       .limit(2000);
     if (error) {
