@@ -181,6 +181,7 @@ function EmployesPage() {
     setRows(
       (emps ?? []).map((e) => ({
         ...e,
+        categories_permis: (e.categories_permis ?? []) as Permis[],
         secondaires: secMap[e.id] ?? [],
         matricule_silae: e.profile_id ? matriculeMap[e.profile_id] ?? null : null,
       })),
@@ -218,6 +219,7 @@ function EmployesPage() {
       sous_type_contrat: r.sous_type_contrat, agence_interim: r.agence_interim,
       metier_principal_id: r.metier_principal_id, actif: r.actif, non_staffing: r.non_staffing,
       est_livreur: r.est_livreur,
+      categories_permis: r.categories_permis,
     })),
     [filtered],
   );
@@ -241,6 +243,8 @@ function EmployesPage() {
       metier_principal_id: row.metier_principal_id,
       actif: row.actif,
       non_staffing: row.non_staffing,
+      est_livreur: row.est_livreur,
+      categories_permis: row.categories_permis ?? [],
       date_naissance: row.date_naissance ?? "",
       adresse: row.adresse ?? "",
       notes: row.notes ?? "",
@@ -270,6 +274,8 @@ function EmployesPage() {
       metier_principal_id: form.metier_principal_id,
       actif: form.actif,
       non_staffing: form.non_staffing,
+      est_livreur: form.est_livreur,
+      categories_permis: form.est_livreur ? form.categories_permis : [],
       date_naissance: form.date_naissance || null,
       adresse: form.adresse.trim() || null,
       notes: form.notes.trim() || null,
