@@ -136,9 +136,23 @@ export function FlotteGrid({
               const hasAlert = [ctAlert, revAlert, assAlert].some(
                 (a) => a === "warning" || a === "expired",
               );
+              const isLoue =
+                v.proprietaire === "location" || v.proprietaire === "sous_traitance";
               return (
-                <tr key={v.id} className="hover:bg-muted/20">
-                  <td className="sticky left-0 z-10 w-[200px] border-b border-r bg-card px-3 py-2 align-top">
+                <tr
+                  key={v.id}
+                  className={cn(
+                    "hover:bg-muted/20",
+                    // v0.18.1 — fond teinté pour véhicules loués / sous-traités (visuel doux)
+                    isLoue && "bg-amber-50/40 dark:bg-amber-950/15",
+                  )}
+                >
+                  <td
+                    className={cn(
+                      "sticky left-0 z-10 w-[200px] border-b border-r px-3 py-2 align-top",
+                      isLoue ? "bg-amber-50/80 dark:bg-amber-950/30" : "bg-card",
+                    )}
+                  >
                     <div className="flex items-start gap-2">
                       <Truck className="mt-0.5 h-4 w-4 text-primary shrink-0" />
                       <div className="min-w-0 flex-1">
