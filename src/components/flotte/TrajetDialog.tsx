@@ -90,6 +90,7 @@ export function TrajetDialog({
   const [notes, setNotes] = useState("");
   const [allerRetour, setAllerRetour] = useState(false);
   const [sousTraitance, setSousTraitance] = useState(false);
+  const [prestataire, setPrestataire] = useState("");
   const [demandeText, setDemandeText] = useState("");
   const [saving, setSaving] = useState(false);
   const [autorisesIds, setAutorisesIds] = useState<Set<string>>(new Set());
@@ -170,8 +171,9 @@ export function TrajetDialog({
       setCategorie(trajet.categorie);
       setKilometrage(trajet.kilometrage?.toString() ?? "");
       setNotes(trajet.notes ?? "");
-      setAllerRetour(false);
+      setAllerRetour(trajet.aller_retour ?? false);
       setSousTraitance(trajet.statut_soustraitance !== "non");
+      setPrestataire(trajet.prestataire ?? "");
       setDemandeText(trajet.notes ?? "");
     } else {
       setVehiculeId(defaultVehiculeId ?? null);
@@ -190,6 +192,7 @@ export function TrajetDialog({
       setAllerRetour(false);
       // v0.18.1 — Si pas de véhicule passé, on présume "création depuis bouton + S/T"
       setSousTraitance(!defaultVehiculeId);
+      setPrestataire("");
       setDemandeText("");
     }
   }, [open, trajet, defaultDate, defaultVehiculeId, defaultAdresseDepart, defaultAdresseArrivee, defaultCategorie, defaultAffaireId]);
@@ -209,7 +212,11 @@ export function TrajetDialog({
 
     setSaving(true);
     try {
-      const statutSt: SoustraitanceStatut = sousTraitance ? "a_sous_traiter" : "non";
+      const statutSt: SoustraitanceStatut = sousTraitance
+        ? trajet?.statut_soustraitance && trajet.statut_soustraitance !== "non"
+          ? trajet.statut_soustraitance // garde le statut courant (devis_envoye, confirme) lors d'une édition
+          : "a_sous_traiter"
+        : "non";
       const base = {
         vehicule_id: sousTraitance ? null : vehiculeId,
         chauffeur_id: sousTraitance ? null : chauffeurId,
@@ -224,6 +231,8 @@ export function TrajetDialog({
         categorie,
         kilometrage: kilometrage ? parseFloat(kilometrage) : null,
         notes: sousTraitance ? demandeText || notes : notes,
+        prestataire: sousTraitance ? (prestataire.trim() || null) : null,
+        aller_retour: allerRetour,
         statut_soustraitance: statutSt,
       };
 
@@ -446,14 +455,17 @@ export function TrajetDialog({
             />
           </div>
 
-          {!isEdit && (
-            <div className="flex items-center gap-2 rounded-md border bg-muted/40 px-3 py-2">
-              <Switch id="ar" checked={allerRetour} onCheckedChange={setAllerRetour} />
-              <Label htmlFor="ar" className="text-sm cursor-pointer">
-                Aller-retour (crée un trajet retour lié)
-              </Label>
-            </div>
-          )}
+          <div className="flex items-center gap-2 rounded-md border bg-muted/40 px-3 py-2">
+            <Switch id="ar" checked={allerRetour} onCheckedChange={setAllerRetour} />
+            <Label htmlFor="ar" className="text-sm cursor-pointer">
+              Aller-retour
+              {!isEdit && (
+                <span className="ml-2 text-xs text-muted-foreground">
+                  (crée un trajet retour lié)
+                </span>
+              )}
+            </Label>
+          </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -488,20 +500,34 @@ export function TrajetDialog({
           </div>
 
           {sousTraitance ? (
-            <div>
-              <Label>Demande de devis (texte à envoyer)</Label>
-              <Textarea
-                rows={4}
-                value={demandeText}
-                onChange={(e) => setDemandeText(e.target.value)}
-                placeholder="Bonjour, nous cherchons un transporteur pour…"
-              />
-              <Alert className="mt-2 bg-warning/10 border-warning/40">
-                <AlertDescription className="text-xs">
-                  Ce trajet sera listé dans <code>Logistique → Demandes transport</code> tant qu'il n'est pas marqué comme envoyé.
-                </AlertDescription>
-              </Alert>
-            </div>
+            <>
+              <div>
+                <Label htmlFor="prestataire">Prestataire transporteur</Label>
+                <Input
+                  id="prestataire"
+                  value={prestataire}
+                  onChange={(e) => setPrestataire(e.target.value)}
+                  placeholder="Ex : Transports Dupont, DHL Express…"
+                />
+                <p className="mt-1 text-[10px] text-muted-foreground">
+                  Laisse vide si tu n'as pas encore choisi le transporteur.
+                </p>
+              </div>
+              <div>
+                <Label>Demande de devis (texte à envoyer)</Label>
+                <Textarea
+                  rows={4}
+                  value={demandeText}
+                  onChange={(e) => setDemandeText(e.target.value)}
+                  placeholder="Bonjour, nous cherchons un transporteur pour…"
+                />
+                <Alert className="mt-2 bg-warning/10 border-warning/40">
+                  <AlertDescription className="text-xs">
+                    Ce trajet sera listé dans <code>Logistique → Demandes transport</code> tant qu'il n'est pas marqué comme confirmé.
+                  </AlertDescription>
+                </Alert>
+              </div>
+            </>
           ) : (
             <div>
               <Label>Notes</Label>
