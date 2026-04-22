@@ -1187,6 +1187,7 @@ export type Database = {
           adresse_depart: string
           adresse_depart_favorite_id: string | null
           affaire_id: string | null
+          aller_retour: boolean
           categorie: Database["public"]["Enums"]["trajet_categorie"]
           chauffeur_id: string | null
           created_at: string
@@ -1198,6 +1199,8 @@ export type Database = {
           kilometrage: number | null
           notes: string | null
           parent_trajet_id: string | null
+          prestataire: string | null
+          reference: string | null
           soustraitance_envoye_le: string | null
           statut_soustraitance: Database["public"]["Enums"]["trajet_statut_soustraitance"]
           updated_at: string
@@ -1209,6 +1212,7 @@ export type Database = {
           adresse_depart: string
           adresse_depart_favorite_id?: string | null
           affaire_id?: string | null
+          aller_retour?: boolean
           categorie?: Database["public"]["Enums"]["trajet_categorie"]
           chauffeur_id?: string | null
           created_at?: string
@@ -1220,6 +1224,8 @@ export type Database = {
           kilometrage?: number | null
           notes?: string | null
           parent_trajet_id?: string | null
+          prestataire?: string | null
+          reference?: string | null
           soustraitance_envoye_le?: string | null
           statut_soustraitance?: Database["public"]["Enums"]["trajet_statut_soustraitance"]
           updated_at?: string
@@ -1231,6 +1237,7 @@ export type Database = {
           adresse_depart?: string
           adresse_depart_favorite_id?: string | null
           affaire_id?: string | null
+          aller_retour?: boolean
           categorie?: Database["public"]["Enums"]["trajet_categorie"]
           chauffeur_id?: string | null
           created_at?: string
@@ -1242,6 +1249,8 @@ export type Database = {
           kilometrage?: number | null
           notes?: string | null
           parent_trajet_id?: string | null
+          prestataire?: string | null
+          reference?: string | null
           soustraitance_envoye_le?: string | null
           statut_soustraitance?: Database["public"]["Enums"]["trajet_statut_soustraitance"]
           updated_at?: string
