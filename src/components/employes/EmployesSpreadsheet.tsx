@@ -23,6 +23,9 @@ import {
 import { toast } from "sonner";
 
 type ContratType = "CDI" | "CDD" | "Interim" | "Independant";
+type Permis = "B" | "C" | "CE" | "D";
+
+const PERMIS_VALUES: Permis[] = ["B", "C", "CE", "D"];
 
 export interface SpreadsheetRow {
   id: string;
@@ -38,6 +41,7 @@ export interface SpreadsheetRow {
   actif: boolean;
   non_staffing: boolean;
   est_livreur: boolean;
+  categories_permis: Permis[];
 }
 
 interface Props {
