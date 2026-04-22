@@ -1301,6 +1301,13 @@ export type Database = {
             foreignKeyName: "trajets_vehicule_id_fkey"
             columns: ["vehicule_id"]
             isOneToOne: false
+            referencedRelation: "v_vehicules_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trajets_vehicule_id_fkey"
+            columns: ["vehicule_id"]
+            isOneToOne: false
             referencedRelation: "vehicules"
             referencedColumns: ["id"]
           },
@@ -1372,6 +1379,13 @@ export type Database = {
             columns: ["employe_id"]
             isOneToOne: false
             referencedRelation: "employes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicule_chauffeurs_autorises_vehicule_id_fkey"
+            columns: ["vehicule_id"]
+            isOneToOne: false
+            referencedRelation: "v_vehicules_public"
             referencedColumns: ["id"]
           },
           {
@@ -1530,6 +1544,137 @@ export type Database = {
             referencedColumns: ["affaire_id"]
           },
         ]
+      }
+      v_feedbacks_public: {
+        Row: {
+          author_id: string | null
+          created_at: string | null
+          description: string | null
+          id: string | null
+          page_url: string | null
+          priorite: Database["public"]["Enums"]["feedback_priorite"] | null
+          resolved_at: string | null
+          screenshot_path: string | null
+          statut: Database["public"]["Enums"]["feedback_statut"] | null
+          titre: string | null
+          type: Database["public"]["Enums"]["feedback_type"] | null
+          updated_at: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          author_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string | null
+          page_url?: string | null
+          priorite?: Database["public"]["Enums"]["feedback_priorite"] | null
+          resolved_at?: string | null
+          screenshot_path?: string | null
+          statut?: Database["public"]["Enums"]["feedback_statut"] | null
+          titre?: string | null
+          type?: Database["public"]["Enums"]["feedback_type"] | null
+          updated_at?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          author_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string | null
+          page_url?: string | null
+          priorite?: Database["public"]["Enums"]["feedback_priorite"] | null
+          resolved_at?: string | null
+          screenshot_path?: string | null
+          statut?: Database["public"]["Enums"]["feedback_statut"] | null
+          titre?: string | null
+          type?: Database["public"]["Enums"]["feedback_type"] | null
+          updated_at?: string | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedbacks_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_vehicules_public: {
+        Row: {
+          actif: boolean | null
+          capacite_passagers: number | null
+          created_at: string | null
+          date_controle_technique: string | null
+          date_debut_location: string | null
+          date_expiration_assurance: string | null
+          date_fin_location: string | null
+          date_prochaine_revision: string | null
+          id: string | null
+          immatriculation: string | null
+          marque: string | null
+          modele: string | null
+          nom: string | null
+          notes: string | null
+          permis_requis: Database["public"]["Enums"]["permis_type"] | null
+          poids_max_kg: number | null
+          proprietaire:
+            | Database["public"]["Enums"]["vehicule_proprietaire"]
+            | null
+          type: Database["public"]["Enums"]["vehicule_type"] | null
+          updated_at: string | null
+          volume_m3: number | null
+        }
+        Insert: {
+          actif?: boolean | null
+          capacite_passagers?: number | null
+          created_at?: string | null
+          date_controle_technique?: string | null
+          date_debut_location?: string | null
+          date_expiration_assurance?: string | null
+          date_fin_location?: string | null
+          date_prochaine_revision?: string | null
+          id?: string | null
+          immatriculation?: string | null
+          marque?: string | null
+          modele?: string | null
+          nom?: string | null
+          notes?: string | null
+          permis_requis?: Database["public"]["Enums"]["permis_type"] | null
+          poids_max_kg?: number | null
+          proprietaire?:
+            | Database["public"]["Enums"]["vehicule_proprietaire"]
+            | null
+          type?: Database["public"]["Enums"]["vehicule_type"] | null
+          updated_at?: string | null
+          volume_m3?: number | null
+        }
+        Update: {
+          actif?: boolean | null
+          capacite_passagers?: number | null
+          created_at?: string | null
+          date_controle_technique?: string | null
+          date_debut_location?: string | null
+          date_expiration_assurance?: string | null
+          date_fin_location?: string | null
+          date_prochaine_revision?: string | null
+          id?: string | null
+          immatriculation?: string | null
+          marque?: string | null
+          modele?: string | null
+          nom?: string | null
+          notes?: string | null
+          permis_requis?: Database["public"]["Enums"]["permis_type"] | null
+          poids_max_kg?: number | null
+          proprietaire?:
+            | Database["public"]["Enums"]["vehicule_proprietaire"]
+            | null
+          type?: Database["public"]["Enums"]["vehicule_type"] | null
+          updated_at?: string | null
+          volume_m3?: number | null
+        }
+        Relationships: []
       }
     }
     Functions: {

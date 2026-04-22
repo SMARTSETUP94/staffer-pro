@@ -44,6 +44,77 @@ interface RoadmapPlanned {
 const RELEASES: RoadmapRelease[] = [
   {
     date: "2026-04-22",
+    version: "v0.18.2",
+    title:
+      "Consolidation RLS — 6 findings audit B + 2 mineurs audit A (option Z planning partagé par chantier)",
+    entries: [
+      {
+        type: "fix",
+        area: "Sécurité — A1",
+        title: "Drop doublon UNIQUE affaires_numero_unique",
+        description:
+          "Suppression de la contrainte redondante `affaires_numero_unique` (on garde le standard `affaires_numero_key`). Plus de duplication structurelle sur la colonne `affaires.numero`.",
+      },
+      {
+        type: "fix",
+        area: "Sécurité — A2 / M3",
+        title: "Policy heures_saisies_self_update — USING/CHECK alignés",
+        description:
+          "USING et WITH CHECK couvrent désormais tous deux `brouillon` ET `soumis` (un employé peut éditer son brouillon et le soumettre dans la même opération). Commentaire SQL inline pour rappeler que le trigger `guard_heures_saisies_transition` valide la transition réelle.",
+      },
+      {
+        type: "feature",
+        area: "Sécurité — M1",
+        title: "Vue v_vehicules_public — coût/contrat masqués aux livreurs",
+        description:
+          "Nouvelle vue `v_vehicules_public` (security_invoker) exposant les colonnes safe : id, nom, type, immatriculation, marque, modèle, permis_requis, capacité, poids/volume, propriétaire, dates contrôle/révision/assurance, dates de location. Masque `cout_journalier_eur`, `prestataire_location`, `reference_contrat`, `fournisseur_location`. Utilisable côté livreur pour les futurs écrans mobiles (les chefs/admins continuent de lire la table complète sur Flotte / Planning / TrajetDialog).",
+      },
+      {
+        type: "fix",
+        area: "Sécurité — M2",
+        title: "RPC next_affaire_numero réservée aux chefs/admins",
+        description:
+          "Ajout de `IF NOT public.is_chef_or_admin() THEN RAISE EXCEPTION 'insufficient_privilege'` en tête de la fonction. Cohérence avec `create_opportunite`, `sign_opportunite`, `import_devis_atomique`. Plus de divulgation indirecte du compteur 5XXX/9XXX par un employé.",
+      },
+      {
+        type: "feature",
+        area: "Sécurité — M4",
+        title: "Vue v_feedbacks_public — notes admin masquées à l'auteur",
+        description:
+          "Nouvelle vue `v_feedbacks_public` (security_invoker) qui omet `notes_admin` et `resolved_by`. Les chefs auteurs voient leur signalement et son statut, mais pas les annotations internes admin (« doublon », « à recadrer », etc.). L'admin garde l'accès complet à la table feedbacks pour annoter et résoudre.",
+      },
+      {
+        type: "feature",
+        area: "Sécurité — M5",
+        title: "Option Z — Planning partagé par chantier (assignations + heures + commentaires)",
+        description:
+          "Choix produit tranché par Gabin : un employé voit toutes les assignations / heures / commentaires des chantiers sur lesquels IL EST LUI-MÊME STAFFÉ (pas toutes les assignations, pas uniquement les siennes). Policies SELECT enrichies sur `assignations`, `heures_saisies`, `affaire_commentaires` avec EXISTS croisé sur `affaire_id`. Permet aux coéquipiers d'une même équipe de se voir (utile pour swaps, covoiturage, coordination terrain).",
+      },
+      {
+        type: "fix",
+        area: "Sécurité — M6",
+        title: "Affaires accessibles si mentionné dans un commentaire",
+        description:
+          "Policy `affaires_select_chef_admin_or_assigned` élargie avec `OR EXISTS (SELECT 1 FROM affaire_commentaires WHERE affaire_id = affaires.id AND auth.uid() = ANY (mentions))`. Plus de 404 RLS quand un chef mentionne un employé sur une affaire où il n'est pas (encore) assigné — la notif devient cliquable.",
+      },
+      {
+        type: "improvement",
+        area: "Sécurité — F1/F2",
+        title: "Documentation des ouvertures intentionnelles (adresses_favorites, vca)",
+        description:
+          "COMMENT ON POLICY ajouté sur `adresses_favorites_select_authenticated` et `vca_select_authenticated` pour figer le choix : référentiels logistiques partagés (adresses entrepôts/clients/fournisseurs et liste des chauffeurs autorisés sur PL) accessibles à tous les utilisateurs authentifiés. Pas de risque, juste de la doc.",
+      },
+      {
+        type: "improvement",
+        area: "Audit final",
+        title: "✅ TypeScript vert, Supabase linter clean, RLS toutes alignées",
+        description:
+          "Post-migration : `tsc --noEmit` silencieux, supabase--linter retourne 0 issue, aucune régression côté UI (les hooks existants `use-vehicules.ts`, `use-feedbacks` côté admin restent sur la table complète puisque utilisés en contexte chef/admin uniquement). Les vues `v_vehicules_public` et `v_feedbacks_public` sont prêtes pour les futurs écrans côté livreur / chef-auteur.",
+      },
+    ],
+  },
+  {
+    date: "2026-04-22",
     version: "Audit v0.18.1",
     title: "Audit de stabilité post-prod — empilement v0.15 → v0.17 → v0.18 → v0.18.1",
     entries: [
@@ -960,12 +1031,12 @@ const PLANNED: RoadmapPlanned[] = [
       "Refactor moyen terme du module saisie d'heures vers un format horaire précis : `heure_debut`, `heure_fin`, pauses (déjeuner + autres). Auto-calcul des heures de nuit par overlap avec la plage 00h-06h (convention spectacle vivant). Déclenchement conditionné au retour d'usage Phase 1 (v0.18, saisie déclarative).",
   },
 
-  // ========== v0.16 — Demandes transport automatisées Resend ==========
+  // ========== v0.16 — Export texte trajets sous-traités (mode copier-coller mail) ==========
   {
     priority: "haute",
-    title: "v0.16 — Envoi automatisé devis transport (Resend)",
+    title: "v0.16 — Export texte trajets sous-traités (mode copier-coller mail)",
     description:
-      "Bouton « Envoyer demande de devis » sur l'export trajets sous-traités : génération email branded indigo/cream + PDF récap server-side, envoi 1 clic via Resend au prestataire choisi (FK `transporteur_id`, livrée v0.18.2). Suivi des réponses (saisie manuelle Phase 1), choix du prestataire retenu, statut (envoyée / répondue / acceptée / refusée). Liaison avec véhicules (proposition « véhicule interne dispo ? » avant sous-traitance).",
+      "Bouton « Export texte » dans Planning Flotte → modale avec zone texte pré-remplie, groupement par date chronologique, un seul template par défaut non éditable, bouton « Copier » intégré. Pas d'automatisation Resend (reportée plus tard). Déclenchement sur demande Gabin.",
   },
 
   // ========== HAUTE PRIORITÉ ==========
