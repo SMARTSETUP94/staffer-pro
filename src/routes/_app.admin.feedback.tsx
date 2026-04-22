@@ -135,8 +135,8 @@ function FeedbackAdminPage() {
       <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
         <StatCard label="Total" value={stats.total} />
         <StatCard label="Nouveaux" value={stats.nouveau} accent="primary" />
-        <StatCard label="En cours" value={stats.en_cours} accent="blue" />
-        <StatCard label="Résolus" value={stats.resolu} accent="emerald" />
+        <StatCard label="En cours" value={stats.en_cours} accent="info" />
+        <StatCard label="Résolus" value={stats.resolu} accent="success" />
         <StatCard label="Critiques ouverts" value={stats.critique} accent="destructive" />
       </div>
 
