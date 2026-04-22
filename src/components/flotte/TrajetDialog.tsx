@@ -289,13 +289,26 @@ export function TrajetDialog({
                 <Select value={chauffeurId ?? ""} onValueChange={(v) => setChauffeurId(v || null)}>
                   <SelectTrigger><SelectValue placeholder="Choisir…" /></SelectTrigger>
                   <SelectContent>
-                    {chauffeursCompatibles.length === 0 ? (
+                    {chauffeursAvecStatut.length === 0 ? (
                       <div className="px-3 py-2 text-xs text-muted-foreground">
-                        Aucun chauffeur compatible.
+                        Aucun livreur actif. Coche « Livreur/Chauffeur » sur une fiche employé.
                       </div>
                     ) : (
-                      chauffeursCompatibles.map((c) => (
-                        <SelectItem key={c.id} value={c.id}>{c.prenom} {c.nom}</SelectItem>
+                      chauffeursAvecStatut.map((c) => (
+                        <SelectItem
+                          key={c.employe.id}
+                          value={c.employe.id}
+                          disabled={c.statut !== "ok"}
+                        >
+                          <span className="flex items-center gap-2">
+                            <span>{c.employe.prenom} {c.employe.nom}</span>
+                            {c.raison && (
+                              <span className="text-[10px] text-muted-foreground">
+                                — {c.raison}
+                              </span>
+                            )}
+                          </span>
+                        </SelectItem>
                       ))
                     )}
                   </SelectContent>
@@ -303,6 +316,12 @@ export function TrajetDialog({
                 {chauffeurIncompatible && (
                   <p className="mt-1 text-[10px] text-destructive">
                     Ce chauffeur n'est pas compatible avec le véhicule.
+                  </p>
+                )}
+                {vehiculeSel?.type === "poids_lourd" && (
+                  <p className="mt-1 text-[10px] text-muted-foreground">
+                    Pour autoriser un nouveau chauffeur sur ce PL, ouvre la fiche véhicule
+                    dans <strong>Logistique → Véhicules</strong>.
                   </p>
                 )}
               </div>
