@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { addDays, format, isSameDay } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Truck, Plus, AlertTriangle, ExternalLink } from "lucide-react";
+import { Truck, Plus, AlertTriangle, ExternalLink, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
@@ -33,6 +33,8 @@ interface Props {
   affairesById: Map<string, AffaireMini>;
   showWeekend: boolean;
   onAddTrajet: (vehiculeId: string, date: Date) => void;
+  /** v0.18.1 — Bouton "+ Trajet sous-traité" en bas de chaque colonne de jour */
+  onAddTrajetSousTraite?: (date: Date) => void;
   onEditTrajet: (trajet: Trajet) => void;
 }
 
