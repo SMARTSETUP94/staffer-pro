@@ -176,15 +176,15 @@ export function TrajetDialog({
     } else {
       setVehiculeId(defaultVehiculeId ?? null);
       setChauffeurId(null);
-      setAffaireId(null);
+      setAffaireId(defaultAffaireId ?? null);
       setDate(defaultDate ?? new Date().toISOString().slice(0, 10));
       setHeureDepart("08:00");
       setHeureArrivee("");
-      setAdresseDepart("");
-      setAdresseArrivee("");
+      setAdresseDepart(defaultAdresseDepart ?? "");
+      setAdresseArrivee(defaultAdresseArrivee ?? "");
       setAdresseDepartFavId(null);
       setAdresseArriveeFavId(null);
-      setCategorie("autre");
+      setCategorie(defaultCategorie ?? "autre");
       setKilometrage("");
       setNotes("");
       setAllerRetour(false);
@@ -192,7 +192,7 @@ export function TrajetDialog({
       setSousTraitance(!defaultVehiculeId);
       setDemandeText("");
     }
-  }, [open, trajet, defaultDate, defaultVehiculeId]);
+  }, [open, trajet, defaultDate, defaultVehiculeId, defaultAdresseDepart, defaultAdresseArrivee, defaultCategorie, defaultAffaireId]);
 
   const isEdit = !!trajet;
   const vehiculesActifs = vehicules.filter((v) => v.actif);
