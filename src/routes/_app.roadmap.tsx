@@ -952,12 +952,12 @@ const TYPE_META: Record<
   improvement: {
     label: "Amélioration",
     icon: Rocket,
-    className: "bg-emerald-500/15 text-emerald-600 border-emerald-500/30",
+    className: "bg-success/15 text-success border-success/30",
   },
   refactor: {
     label: "Refacto",
     icon: Wrench,
-    className: "bg-amber-500/15 text-amber-600 border-amber-500/30",
+    className: "bg-warning/15 text-warning border-warning/30",
   },
 };
 
@@ -971,7 +971,7 @@ const PRIORITY_META: Record<
   },
   moyenne: {
     label: "Priorité moyenne",
-    className: "bg-amber-500/15 text-amber-600 border-amber-500/30",
+    className: "bg-warning/15 text-warning border-warning/30",
   },
   basse: {
     label: "Priorité basse",
