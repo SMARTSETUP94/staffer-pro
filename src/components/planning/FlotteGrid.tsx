@@ -46,6 +46,7 @@ export function FlotteGrid({
   affairesById,
   showWeekend,
   onAddTrajet,
+  onAddTrajetSousTraite,
   onEditTrajet,
 }: Props) {
   const days = useMemo(() => {
