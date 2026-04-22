@@ -250,6 +250,8 @@ function VehiculesTable({
               <TableHead>Permis</TableHead>
               {showFournisseur && <TableHead>Fournisseur</TableHead>}
               <TableHead>Propriétaire</TableHead>
+              {showFournisseur && <TableHead>Début location</TableHead>}
+              {showFournisseur && <TableHead>Fin location</TableHead>}
               <TableHead>CT</TableHead>
               <TableHead>Révision</TableHead>
               <TableHead>Assurance</TableHead>
