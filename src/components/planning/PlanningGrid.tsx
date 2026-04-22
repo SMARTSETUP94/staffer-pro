@@ -178,14 +178,57 @@ export function PlanningGrid({
     return map;
   }, [assignations, absences, affairesById]);
 
-  // B5 — Filtre métier : masque les lignes employés dont le métier principal
-  // n'est pas dans la sélection. Si aucun métier sélectionné, on ne filtre pas.
+  // Fix #51 — Filtre métier intelligent : un employé apparaît dans le métier X si
+  //  - son métier principal = X (titulaire), OU
+  //  - il a ≥1 assignation de la semaine avec metier_id = X (renfort)
+  // Quand le filtre est actif, on regroupe en 2 sous-sections par métier.
+  const assignMetierByEmploye = useMemo(() => {
+    const map = new Map<string, Set<number>>();
+    assignations.forEach((a) => {
+      if (a.metier_id == null) return;
+      const set = map.get(a.employe_id) ?? new Set();
+      set.add(a.metier_id);
+      map.set(a.employe_id, set);
+    });
+    return map;
+  }, [assignations]);
+
   const employesVisibles = useMemo(() => {
     if (!filterMetierIds || filterMetierIds.size === 0) return employes;
-    return employes.filter((e) => filterMetierIds.has(e.metier_principal_id));
-  }, [employes, filterMetierIds]);
+    return employes.filter((e) => {
+      if (filterMetierIds.has(e.metier_principal_id)) return true;
+      const mset = assignMetierByEmploye.get(e.id);
+      if (!mset) return false;
+      for (const m of mset) if (filterMetierIds.has(m)) return true;
+      return false;
+    });
+  }, [employes, filterMetierIds, assignMetierByEmploye]);
 
+  // grouped : si filtre métier actif → titulaires + renforts par métier
+  // sinon → groupement standard par métier principal (titulaires uniquement)
   const grouped = useMemo(() => {
+    if (filterMetierIds && filterMetierIds.size > 0) {
+      const result: { metier: Metier; titulaires: Employe[]; renforts: Employe[] }[] = [];
+      metiers
+        .filter((m) => filterMetierIds.has(m.id))
+        .forEach((m) => {
+          const titulaires: Employe[] = [];
+          const renforts: Employe[] = [];
+          employesVisibles.forEach((e) => {
+            if (e.metier_principal_id === m.id) {
+              titulaires.push(e);
+            } else {
+              const mset = assignMetierByEmploye.get(e.id);
+              if (mset && mset.has(m.id)) renforts.push(e);
+            }
+          });
+          if (titulaires.length > 0 || renforts.length > 0) {
+            result.push({ metier: m, titulaires, renforts });
+          }
+        });
+      return result;
+    }
+    // Sans filtre : groupement standard
     const groups = new Map<number, Employe[]>();
     employesVisibles.forEach((e) => {
       const arr = groups.get(e.metier_principal_id) ?? [];
@@ -194,8 +237,8 @@ export function PlanningGrid({
     });
     return metiers
       .filter((m) => groups.has(m.id))
-      .map((m) => ({ metier: m, employes: groups.get(m.id) ?? [] }));
-  }, [employesVisibles, metiers]);
+      .map((m) => ({ metier: m, titulaires: groups.get(m.id) ?? [], renforts: [] as Employe[] }));
+  }, [employesVisibles, metiers, filterMetierIds, assignMetierByEmploye]);
 
   // Modale édition cellule simple
   const [dialogState, setDialogState] = useState<{
