@@ -480,6 +480,10 @@ function PlanningPage() {
         trajet={editTrajet}
         defaultDate={defaultTrajetDate}
         defaultVehiculeId={defaultTrajetVehId}
+        defaultAdresseDepart={defaultPrefill.adresseDepart}
+        defaultAdresseArrivee={defaultPrefill.adresseArrivee}
+        defaultCategorie={defaultPrefill.categorie}
+        defaultAffaireId={defaultPrefill.affaireId}
         affaires={affaires.map((a) => ({ id: a.id, numero: a.numero, nom: a.nom }))}
         employesLivreurs={employes
           .filter((e) => e.est_livreur)
