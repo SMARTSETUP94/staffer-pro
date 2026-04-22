@@ -42,6 +42,7 @@ import { Route as AppDevisIndexRouteImport } from './routes/_app.devis.index'
 import { Route as AppAffairesIndexRouteImport } from './routes/_app.affaires.index'
 import { Route as AppParametresUtilisateursRouteImport } from './routes/_app.parametres.utilisateurs'
 import { Route as AppParametresMetiersRouteImport } from './routes/_app.parametres.metiers'
+import { Route as AppParametresLieuxRouteImport } from './routes/_app.parametres.lieux'
 import { Route as AppOpportunitesImportRouteImport } from './routes/_app.opportunites.import'
 import { Route as AppExportDemandesDevisRouteImport } from './routes/_app.export.demandes-devis'
 import { Route as AppEmployesImportRouteImport } from './routes/_app.employes.import'
@@ -221,6 +222,11 @@ const AppParametresMetiersRoute = AppParametresMetiersRouteImport.update({
   path: '/parametres/metiers',
   getParentRoute: () => AppRoute,
 } as any)
+const AppParametresLieuxRoute = AppParametresLieuxRouteImport.update({
+  id: '/parametres/lieux',
+  path: '/parametres/lieux',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppOpportunitesImportRoute = AppOpportunitesImportRouteImport.update({
   id: '/import',
   path: '/import',
@@ -330,6 +336,7 @@ export interface FileRoutesByFullPath {
   '/employes/import': typeof AppEmployesImportRoute
   '/export/demandes-devis': typeof AppExportDemandesDevisRoute
   '/opportunites/import': typeof AppOpportunitesImportRoute
+  '/parametres/lieux': typeof AppParametresLieuxRoute
   '/parametres/metiers': typeof AppParametresMetiersRoute
   '/parametres/utilisateurs': typeof AppParametresUtilisateursRoute
   '/affaires/': typeof AppAffairesIndexRoute
@@ -376,6 +383,7 @@ export interface FileRoutesByTo {
   '/employes/import': typeof AppEmployesImportRoute
   '/export/demandes-devis': typeof AppExportDemandesDevisRoute
   '/opportunites/import': typeof AppOpportunitesImportRoute
+  '/parametres/lieux': typeof AppParametresLieuxRoute
   '/parametres/metiers': typeof AppParametresMetiersRoute
   '/parametres/utilisateurs': typeof AppParametresUtilisateursRoute
   '/affaires': typeof AppAffairesIndexRoute
@@ -425,6 +433,7 @@ export interface FileRoutesById {
   '/_app/employes/import': typeof AppEmployesImportRoute
   '/_app/export/demandes-devis': typeof AppExportDemandesDevisRoute
   '/_app/opportunites/import': typeof AppOpportunitesImportRoute
+  '/_app/parametres/lieux': typeof AppParametresLieuxRoute
   '/_app/parametres/metiers': typeof AppParametresMetiersRoute
   '/_app/parametres/utilisateurs': typeof AppParametresUtilisateursRoute
   '/_app/affaires/': typeof AppAffairesIndexRoute
@@ -474,6 +483,7 @@ export interface FileRouteTypes {
     | '/employes/import'
     | '/export/demandes-devis'
     | '/opportunites/import'
+    | '/parametres/lieux'
     | '/parametres/metiers'
     | '/parametres/utilisateurs'
     | '/affaires/'
@@ -520,6 +530,7 @@ export interface FileRouteTypes {
     | '/employes/import'
     | '/export/demandes-devis'
     | '/opportunites/import'
+    | '/parametres/lieux'
     | '/parametres/metiers'
     | '/parametres/utilisateurs'
     | '/affaires'
@@ -568,6 +579,7 @@ export interface FileRouteTypes {
     | '/_app/employes/import'
     | '/_app/export/demandes-devis'
     | '/_app/opportunites/import'
+    | '/_app/parametres/lieux'
     | '/_app/parametres/metiers'
     | '/_app/parametres/utilisateurs'
     | '/_app/affaires/'
@@ -827,6 +839,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppParametresMetiersRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/parametres/lieux': {
+      id: '/_app/parametres/lieux'
+      path: '/parametres/lieux'
+      fullPath: '/parametres/lieux'
+      preLoaderRoute: typeof AppParametresLieuxRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/opportunites/import': {
       id: '/_app/opportunites/import'
       path: '/import'
@@ -997,6 +1016,7 @@ interface AppRouteChildren {
   AppDevisHistoriqueRoute: typeof AppDevisHistoriqueRoute
   AppDevisImportRoute: typeof AppDevisImportRoute
   AppDevisRattachementHistoriqueRoute: typeof AppDevisRattachementHistoriqueRoute
+  AppParametresLieuxRoute: typeof AppParametresLieuxRoute
   AppParametresMetiersRoute: typeof AppParametresMetiersRoute
   AppParametresUtilisateursRoute: typeof AppParametresUtilisateursRoute
   AppAffairesIndexRoute: typeof AppAffairesIndexRoute
@@ -1026,6 +1046,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppDevisHistoriqueRoute: AppDevisHistoriqueRoute,
   AppDevisImportRoute: AppDevisImportRoute,
   AppDevisRattachementHistoriqueRoute: AppDevisRattachementHistoriqueRoute,
+  AppParametresLieuxRoute: AppParametresLieuxRoute,
   AppParametresMetiersRoute: AppParametresMetiersRoute,
   AppParametresUtilisateursRoute: AppParametresUtilisateursRoute,
   AppAffairesIndexRoute: AppAffairesIndexRoute,
