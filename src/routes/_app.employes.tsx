@@ -519,6 +519,23 @@ function EmployesPage() {
               />
             </div>
             <div className="space-y-1.5 sm:col-span-2">
+              <Label>
+                Matricule SILAE
+                {!isAdmin && <span className="ml-2 text-[10px] font-normal text-muted-foreground">(admin uniquement)</span>}
+                {!form.profile_id && <span className="ml-2 text-[10px] font-normal text-muted-foreground">(employé non lié à un compte)</span>}
+              </Label>
+              <Input
+                value={form.matricule_silae}
+                onChange={(e) => setForm({ ...form, matricule_silae: e.target.value })}
+                placeholder="Ex. 00123"
+                disabled={!isAdmin || !form.profile_id}
+                className="h-10 rounded-xl font-mono"
+              />
+              <p className="text-[10px] text-muted-foreground">
+                Clé de jointure pour l'export paie SILAE/PROGBAT.
+              </p>
+            </div>
+            <div className="space-y-1.5 sm:col-span-2">
               <Label>Métier principal</Label>
               <Select
                 value={form.metier_principal_id ? String(form.metier_principal_id) : ""}
