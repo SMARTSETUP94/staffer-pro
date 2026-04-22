@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { DualProgress } from "@/components/ui/dual-progress";
 import { cn } from "@/lib/utils";
 import type {
   Affaire,
@@ -82,6 +83,10 @@ export function PlanningSynthese({
         const consoLignes = consommation.filter((c) => c.affaire_id === affaire.id);
         const totalPrevues = consoLignes.reduce((s, l) => s + Number(l.heures_prevues || 0), 0);
         const totalAssignees = consoLignes.reduce((s, l) => s + Number(l.heures_assignees || 0), 0);
+        const totalRealisees = consoLignes.reduce(
+          (s, l) => s + Number(l.heures_reelles_validees || 0),
+          0,
+        );
         const pctGlobal = totalPrevues > 0 ? (totalAssignees / totalPrevues) * 100 : 0;
         const depassement = pctGlobal > 100;
 
@@ -142,14 +147,22 @@ export function PlanningSynthese({
               {/* Récap heures par pôle (4 colonnes) */}
               {consoLignes.length > 0 && (
                 <div className="mt-4 space-y-2">
-                  <div className="flex items-center justify-between text-[11px]">
+                  <div className="flex items-center justify-between gap-4 text-[11px]">
                     <span className="font-semibold uppercase tracking-wide text-muted-foreground">
                       Heures par pôle
                     </span>
-                    <span className={cn("font-semibold", depassement && "text-destructive")}>
-                      {totalAssignees.toFixed(0)}h / {totalPrevues.toFixed(0)}h ({pctGlobal.toFixed(0)}%)
+                    <span className={cn("font-mono font-semibold", depassement && "text-destructive")}>
+                      {totalAssignees.toFixed(0)}h staffées · {totalRealisees.toFixed(0)}h réalisées /{" "}
+                      {totalPrevues.toFixed(0)}h budget
                     </span>
                   </div>
+                  <DualProgress
+                    staffees={totalAssignees}
+                    realisees={totalRealisees}
+                    budget={totalPrevues}
+                    size="sm"
+                    showLabel={false}
+                  />
                   <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                     {POLES.map((pole) => {
                       // Métiers de ce pôle existant en BDD
