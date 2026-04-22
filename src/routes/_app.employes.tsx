@@ -627,6 +627,57 @@ function EmployesPage() {
               </div>
               <Switch checked={form.actif} onCheckedChange={(v) => setForm({ ...form, actif: v })} />
             </div>
+
+            {/* v0.18.1 — Bloc 3 : Capacités / Permis */}
+            <div className="space-y-2 rounded-xl border border-border bg-background p-3 sm:col-span-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-foreground">Livreur / Chauffeur</p>
+                  <p className="text-xs text-muted-foreground">
+                    Active si l'employé peut être affecté à un véhicule (planning Flotte).
+                  </p>
+                </div>
+                <Switch
+                  checked={form.est_livreur}
+                  onCheckedChange={(v) =>
+                    setForm((f) => ({ ...f, est_livreur: v, categories_permis: v ? f.categories_permis : [] }))
+                  }
+                />
+              </div>
+              {form.est_livreur && (
+                <div className="space-y-1.5 border-t border-border pt-2">
+                  <Label className="text-xs">Catégories de permis détenues</Label>
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                    {PERMIS_OPTIONS.map((opt) => {
+                      const checked = form.categories_permis.includes(opt.value);
+                      return (
+                        <label
+                          key={opt.value}
+                          className="flex items-center gap-2 rounded-lg border border-border bg-card px-2 py-1.5 text-xs"
+                        >
+                          <Checkbox
+                            checked={checked}
+                            onCheckedChange={(v) => {
+                              const on = Boolean(v);
+                              setForm((f) => ({
+                                ...f,
+                                categories_permis: on
+                                  ? [...f.categories_permis, opt.value]
+                                  : f.categories_permis.filter((p) => p !== opt.value),
+                              }));
+                            }}
+                          />
+                          <span className="font-medium">{opt.label}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                  <p className="text-[10px] text-muted-foreground">
+                    Le permis détermine l'éligibilité du chauffeur sur les véhicules : B suffit pour VL/20m³, C ou CE obligatoires pour les poids lourds.
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
 
           <DialogFooter className="border-t border-border px-6 py-4">
