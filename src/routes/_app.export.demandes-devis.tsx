@@ -51,6 +51,16 @@ import { PageHeader } from "@/components/PageHeader";
 import { TrajetDialog } from "@/components/flotte/TrajetDialog";
 import { ExportTrajetsSoustraitanceDialog } from "@/components/flotte/ExportTrajetsSoustraitanceDialog";
 import { useVehicules, type Trajet } from "@/hooks/use-vehicules";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import type { Tables } from "@/integrations/supabase/types";
 
 export const Route = createFileRoute("/_app/export/demandes-devis")({
