@@ -141,6 +141,9 @@ function DemandesTransportPage() {
   const [editingTrajet, setEditingTrajet] = useState<Trajet | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
+  const [mailDialogOpen, setMailDialogOpen] = useState(false);
+  const [mailText, setMailText] = useState("");
+  const [mailCopied, setMailCopied] = useState(false);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   const refresh = async () => {
