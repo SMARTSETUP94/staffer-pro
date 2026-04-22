@@ -347,6 +347,7 @@ function DemandesTransportPage() {
               size="sm"
               onClick={() => {
                 setMailText(buildMailText(sorted));
+                setMailScope(sorted);
                 setMailCopied(false);
                 setMailDialogOpen(true);
               }}
