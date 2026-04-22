@@ -44,6 +44,28 @@ interface RoadmapPlanned {
 const RELEASES: RoadmapRelease[] = [
   {
     date: "2026-04-22",
+    version: "v0.18.3",
+    title:
+      "🚨 Hotfix récursion RLS assignations post-v0.18.2 — policy Option Z refactorisée via fonction SECURITY DEFINER",
+    entries: [
+      {
+        type: "fix",
+        area: "Sécurité — Hotfix critique",
+        title: "Casse la récursion infinie RLS sur assignations",
+        description:
+          "La policy Option Z livrée en v0.18.2 (EXISTS sur assignations dans la policy d'assignations) déclenchait `infinite recursion detected in policy for relation 'assignations'` et bloquait Planning, Export, Dashboard, Heures restantes — tous les écrans qui lisent assignations. Refactor via deux fonctions SECURITY DEFINER (`user_has_affaire_access(_affaire_id)` + `user_is_mentioned_on_affaire(_affaire_id)`) qui isolent la sous-requête du contexte RLS. Sémantique métier préservée à 100% (employé voit ses collègues sur les affaires où il est staffé, accès via mention conservé). Policies impactées : `assignations_select_self_or_chef`, `heures_saisies_self_select`, `affaire_commentaires_select_chef_admin_or_mentioned`, `affaires_select_chef_admin_or_assigned`.",
+      },
+      {
+        type: "fix",
+        area: "Sécurité — Audit défense en profondeur",
+        title: "Vérification systématique des policies à risque de récursion",
+        description:
+          "Audit complet des policies utilisant `EXISTS` sur leur propre table ou des tables croisées (heures_saisies → assignations, affaires → assignations + commentaires). Toutes refactorisées via fonctions SECURITY DEFINER. Aucune autre récursion détectée dans les 23 policies actives.",
+      },
+    ],
+  },
+  {
+    date: "2026-04-22",
     version: "v0.18.2",
     title:
       "Consolidation RLS — 6 findings audit B + 2 mineurs audit A (option Z planning partagé par chantier)",
