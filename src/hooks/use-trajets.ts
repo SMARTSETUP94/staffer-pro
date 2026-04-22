@@ -67,3 +67,61 @@ export function getCompatibleChauffeurs<
   }
   return baseLivreurs.filter(filtreParPermis);
 }
+
+/**
+ * v0.18.1 — Variante enrichie : retourne TOUS les livreurs actifs avec leur statut
+ * de compatibilité pour le véhicule donné. Permet à l'UI d'afficher les non
+ * autorisés en grisé avec une raison plutôt que de les masquer (UX plus claire :
+ * "pourquoi Alberto n'apparaît pas ?" → réponse : "il n'est pas autorisé sur ce PL").
+ *
+ * Statut :
+ * - "ok"            : compatible et autorisé, sélectionnable
+ * - "permis_ko"     : permis incompatible avec le type véhicule
+ * - "non_autorise"  : permis OK mais pas dans la liste des autorisés (PL uniquement)
+ */
+export type ChauffeurStatut = "ok" | "permis_ko" | "non_autorise";
+
+export interface ChauffeurAvecStatut<T> {
+  employe: T;
+  statut: ChauffeurStatut;
+  raison: string | null;
+}
+
+export function getChauffeursAvecStatut<
+  T extends {
+    id: string;
+    est_livreur: boolean;
+    actif: boolean;
+    categories_permis?: Permis[] | null;
+  },
+>(
+  vehicule: Vehicule | null,
+  livreurs: T[],
+  autorisesIds: Set<string>,
+): ChauffeurAvecStatut<T>[] {
+  const baseLivreurs = livreurs.filter((l) => l.actif && l.est_livreur);
+  if (!vehicule) {
+    return baseLivreurs.map((l) => ({ employe: l, statut: "ok", raison: null }));
+  }
+
+  return baseLivreurs.map<ChauffeurAvecStatut<T>>((l) => {
+    const aPermis =
+      !l.categories_permis ||
+      l.categories_permis.length === 0 ||
+      aPermisCompatible(vehicule.type, l.categories_permis);
+
+    if (!aPermis) {
+      return { employe: l, statut: "permis_ko", raison: "Permis non compatible" };
+    }
+
+    if (vehicule.type === "poids_lourd" && !autorisesIds.has(l.id)) {
+      return {
+        employe: l,
+        statut: "non_autorise",
+        raison: "À autoriser sur ce PL",
+      };
+    }
+
+    return { employe: l, statut: "ok", raison: null };
+  });
+}
