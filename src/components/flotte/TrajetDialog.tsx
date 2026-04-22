@@ -56,6 +56,11 @@ interface Props {
   trajet: Trajet | null;
   defaultDate?: string;
   defaultVehiculeId?: string | null;
+  /** v0.18.1 — préremplissage depuis suggestion auto (montage/démontage). */
+  defaultAdresseDepart?: string;
+  defaultAdresseArrivee?: string;
+  defaultCategorie?: TrajetCategorie;
+  defaultAffaireId?: string | null;
   affaires: AffaireLite[];
   employesLivreurs: EmployeLite[];
   onSaved: () => void;
@@ -63,6 +68,7 @@ interface Props {
 
 export function TrajetDialog({
   open, onOpenChange, trajet, defaultDate, defaultVehiculeId,
+  defaultAdresseDepart, defaultAdresseArrivee, defaultCategorie, defaultAffaireId,
   affaires, employesLivreurs, onSaved,
 }: Props) {
   const { isAdmin } = useAuth();
