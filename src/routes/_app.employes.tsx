@@ -230,6 +230,8 @@ function EmployesPage() {
       date_naissance: row.date_naissance ?? "",
       adresse: row.adresse ?? "",
       notes: row.notes ?? "",
+      matricule_silae: row.matricule_silae ?? "",
+      profile_id: row.profile_id,
       secondaires: row.secondaires.filter((id) => id !== row.metier_principal_id),
     });
     setOpen(true);
