@@ -143,14 +143,14 @@ export function FlotteGrid({
                   key={v.id}
                   className={cn(
                     "hover:bg-muted/20",
-                    // v0.18.1 — fond teinté pour véhicules loués / sous-traités (visuel doux)
-                    isLoue && "bg-amber-50/40 dark:bg-amber-950/15",
+                    // v0.18.1 — fond teinté pour véhicules loués / sous-traités (warning soft)
+                    isLoue && "bg-warning/5",
                   )}
                 >
                   <td
                     className={cn(
                       "sticky left-0 z-10 w-[200px] border-b border-r px-3 py-2 align-top",
-                      isLoue ? "bg-amber-50/80 dark:bg-amber-950/30" : "bg-card",
+                      isLoue ? "bg-warning/10" : "bg-card",
                     )}
                   >
                     <div className="flex items-start gap-2">
