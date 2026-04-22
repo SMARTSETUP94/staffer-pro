@@ -182,7 +182,8 @@ export function TrajetDialog({
       setKilometrage("");
       setNotes("");
       setAllerRetour(false);
-      setSousTraitance(false);
+      // v0.18.1 — Si pas de véhicule passé, on présume "création depuis bouton + S/T"
+      setSousTraitance(!defaultVehiculeId);
       setDemandeText("");
     }
   }, [open, trajet, defaultDate, defaultVehiculeId]);
