@@ -44,6 +44,48 @@ interface RoadmapPlanned {
 const RELEASES: RoadmapRelease[] = [
   {
     date: "2026-04-22",
+    version: "v0.19",
+    title: "Vraie page Demandes transport — suivi trajets sous-traités",
+    entries: [
+      {
+        type: "feature",
+        area: "Logistique",
+        title: "Tableau filtrable de tous les trajets sous-traités",
+        description:
+          "Refonte complète de /export/demandes-devis (héritage incohérent depuis v0.13 où la route servait par erreur d'Export planning) en une vraie page de suivi des trajets sous-traités. Tableau 10 colonnes : Référence, Date, Horaires, Adresse départ, Adresse arrivée, Aller-retour, Véhicule demandé, Affaire, Prestataire, Statut (parmi a_sous_traiter / devis_envoye / confirme / non), Commentaires. Tri sur toutes les colonnes, pagination 50 lignes, recherche texte globale.",
+      },
+      {
+        type: "feature",
+        area: "Logistique",
+        title: "Filtres période / statut / prestataire / affaire + compteurs interactifs",
+        description:
+          "Filtres multi-critères en haut de page : plage de dates, statut sous-traitance, prestataire, affaire, recherche texte. Compteurs cliquables par statut pour filtrage rapide. Clic ligne → ouvre la modale TrajetDialog existante (mêmes actions que depuis Planning Flotte). Menu contextuel par ligne pour transition rapide de statut (à sous-traiter → devis envoyé → confirmé).",
+      },
+      {
+        type: "feature",
+        area: "Logistique",
+        title: "Approche hybride : drawer « Générer texte demande » conservé",
+        description:
+          "Le tableau filtrable devient la vue principale, mais le mode « copier-coller mail » historique reste accessible via un bouton dédié dans le header de page : ouvre une modale avec textarea pré-remplie (groupement par date, format chronologique, copie en un clic). Permet à Gabin de continuer à générer ses mails aux transporteurs sans cliquer partout. Pas de duplication fonctionnelle : les exports CSV/XLSX trajets sous-traités de v0.18.1 restent intégrés à la même page.",
+      },
+      {
+        type: "feature",
+        area: "DB",
+        title: "Migration trajets : colonnes prestataire + aller_retour + reference auto-générée",
+        description:
+          "Ajout de 3 colonnes natives à `trajets` : `prestataire` (text, fini le parsing depuis `notes`), `aller_retour` (boolean, fini le calcul via `parent_trajet_id`), `reference` (text au format `TR-YYYY-NNNNN` auto-générée par séquence + trigger). Permet une exploitation directe sans transformation côté client. TrajetDialog enrichi du champ Prestataire. Export trajets sous-traités migré pour utiliser ces colonnes natives.",
+      },
+      {
+        type: "fix",
+        area: "Cohérence routing",
+        title: "Item sidebar « Demandes transport » pointe vers la bonne page",
+        description:
+          "Vérification : l'autre Export planning Excel (matriciel multi-semaines CDI/Intérim/Synthèse/Heures) existe bien à /export en section Administration — pas de doublon à supprimer. La route /export/demandes-devis est désormais cohérente avec son nom et son item sidebar LOGISTIQUE > Demandes transport.",
+      },
+    ],
+  },
+  {
+    date: "2026-04-22",
     version: "v0.18.3",
     title:
       "🚨 Hotfix récursion RLS assignations post-v0.18.2 — policy Option Z refactorisée via fonction SECURITY DEFINER",
@@ -1053,13 +1095,6 @@ const PLANNED: RoadmapPlanned[] = [
       "Refactor moyen terme du module saisie d'heures vers un format horaire précis : `heure_debut`, `heure_fin`, pauses (déjeuner + autres). Auto-calcul des heures de nuit par overlap avec la plage 00h-06h (convention spectacle vivant). Déclenchement conditionné au retour d'usage Phase 1 (v0.18, saisie déclarative).",
   },
 
-  // ========== v0.16 — Export texte trajets sous-traités (mode copier-coller mail) ==========
-  {
-    priority: "haute",
-    title: "v0.16 — Export texte trajets sous-traités (mode copier-coller mail)",
-    description:
-      "Bouton « Export texte » dans Planning Flotte → modale avec zone texte pré-remplie, groupement par date chronologique, un seul template par défaut non éditable, bouton « Copier » intégré. Pas d'automatisation Resend (reportée plus tard). Déclenchement sur demande Gabin.",
-  },
 
   // ========== HAUTE PRIORITÉ ==========
   {
