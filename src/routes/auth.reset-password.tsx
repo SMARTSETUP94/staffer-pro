@@ -85,7 +85,7 @@ function ResetPasswordPage() {
         <div className="rounded-2xl border border-[var(--border)] bg-white p-7 shadow-sm">
           {hasRecoverySession === false ? (
             <>
-              <div className="mb-4 grid h-12 w-12 place-items-center rounded-xl bg-amber-50 text-amber-600">
+              <div className="mb-4 grid h-12 w-12 place-items-center rounded-xl bg-warning/15 text-warning">
                 <AlertCircle className="h-6 w-6" />
               </div>
               <h1 className="text-2xl font-bold tracking-tight text-[var(--ink)]">Lien invalide ou expiré</h1>

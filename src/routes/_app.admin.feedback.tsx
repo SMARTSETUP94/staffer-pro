@@ -47,26 +47,26 @@ type Type = Database["public"]["Enums"]["feedback_type"];
 
 const TYPE_META: Record<Type, { label: string; icon: typeof Bug; className: string }> = {
   bug: { label: "Bug", icon: Bug, className: "bg-destructive/15 text-destructive border-destructive/30" },
-  idee: { label: "Idée", icon: Lightbulb, className: "bg-amber-500/15 text-amber-600 border-amber-500/30" },
+  idee: { label: "Idée", icon: Lightbulb, className: "bg-warning/15 text-warning border-warning/30" },
   amelioration: {
     label: "Amélioration",
     icon: Sparkles,
-    className: "bg-emerald-500/15 text-emerald-600 border-emerald-500/30",
+    className: "bg-success/15 text-success border-success/30",
   },
-  question: { label: "Question", icon: HelpCircle, className: "bg-blue-500/15 text-blue-600 border-blue-500/30" },
+  question: { label: "Question", icon: HelpCircle, className: "bg-info/15 text-info border-info/30" },
 };
 
 const PRIO_META: Record<Priorite, { label: string; className: string }> = {
   critique: { label: "Critique", className: "bg-destructive text-destructive-foreground" },
   haute: { label: "Haute", className: "bg-destructive/15 text-destructive border-destructive/30" },
-  moyenne: { label: "Moyenne", className: "bg-amber-500/15 text-amber-600 border-amber-500/30" },
+  moyenne: { label: "Moyenne", className: "bg-warning/15 text-warning border-warning/30" },
   basse: { label: "Basse", className: "bg-muted text-muted-foreground border-border" },
 };
 
 const STATUT_META: Record<Statut, { label: string; className: string }> = {
   nouveau: { label: "Nouveau", className: "bg-primary/15 text-primary border-primary/30" },
-  en_cours: { label: "En cours", className: "bg-blue-500/15 text-blue-600 border-blue-500/30" },
-  resolu: { label: "Résolu", className: "bg-emerald-500/15 text-emerald-600 border-emerald-500/30" },
+  en_cours: { label: "En cours", className: "bg-info/15 text-info border-info/30" },
+  resolu: { label: "Résolu", className: "bg-success/15 text-success border-success/30" },
   ferme: { label: "Fermé", className: "bg-muted text-muted-foreground border-border" },
   rejete: { label: "Rejeté", className: "bg-destructive/15 text-destructive border-destructive/30" },
 };
@@ -135,8 +135,8 @@ function FeedbackAdminPage() {
       <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
         <StatCard label="Total" value={stats.total} />
         <StatCard label="Nouveaux" value={stats.nouveau} accent="primary" />
-        <StatCard label="En cours" value={stats.en_cours} accent="blue" />
-        <StatCard label="Résolus" value={stats.resolu} accent="emerald" />
+        <StatCard label="En cours" value={stats.en_cours} accent="info" />
+        <StatCard label="Résolus" value={stats.resolu} accent="success" />
         <StatCard label="Critiques ouverts" value={stats.critique} accent="destructive" />
       </div>
 
@@ -204,13 +204,13 @@ function StatCard({
 }: {
   label: string;
   value: number;
-  accent?: "primary" | "destructive" | "blue" | "emerald";
+  accent?: "primary" | "destructive" | "info" | "success";
 }) {
   const accentMap: Record<string, string> = {
     primary: "text-primary",
     destructive: "text-destructive",
-    blue: "text-blue-600",
-    emerald: "text-emerald-600",
+    info: "text-info",
+    success: "text-success",
   };
   return (
     <Card>
@@ -437,7 +437,7 @@ function FeedbackDialog({
           </div>
 
           {feedback.statut === "resolu" && feedback.resolved_at && (
-            <div className="flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-emerald-700 dark:text-emerald-400">
+            <div className="flex items-center gap-2 rounded-lg border border-success/30 bg-success/10 p-3 text-xs text-success">
               <AlertCircle className="h-4 w-4" />
               Résolu le {format(new Date(feedback.resolved_at), "d MMM yyyy", { locale: fr })}
             </div>

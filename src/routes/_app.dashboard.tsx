@@ -378,7 +378,7 @@ function DashboardPage() {
                     <li key={`${e.id}-${e.type}`} className="py-2.5 flex items-center justify-between gap-3">
                       <div className="min-w-0 flex-1 flex items-center gap-2">
                         <Icon
-                          className={`h-4 w-4 shrink-0 ${isMontage ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"}`}
+                          className={`h-4 w-4 shrink-0 ${isMontage ? "text-success" : "text-warning"}`}
                           aria-hidden
                         />
                         <div className="min-w-0">

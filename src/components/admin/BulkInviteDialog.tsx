@@ -293,7 +293,7 @@ export function BulkInviteDialog({ open, onOpenChange, onComplete }: BulkInviteD
                 className="font-mono text-sm"
               />
               <div className="flex gap-3 text-xs">
-                <span className="text-emerald-600">
+                <span className="text-success">
                   {valid.length} valide{valid.length > 1 ? "s" : ""}
                 </span>
                 {invalid.length > 0 && (
@@ -428,28 +428,28 @@ function StatusBadge({ status }: { status: RowStatus }) {
       );
     case "sending":
       return (
-        <Badge variant="outline" className="border-blue-500/30 bg-blue-500/10 text-blue-700">
+        <Badge variant="outline" className="border-info/30 bg-info/10 text-info">
           <Loader2 className="mr-1 h-3 w-3 animate-spin" />
           Envoi…
         </Badge>
       );
     case "retrying":
       return (
-        <Badge variant="outline" className="border-amber-500/30 bg-amber-500/10 text-amber-700">
+        <Badge variant="outline" className="border-warning/30 bg-warning/10 text-warning">
           <RotateCw className="mr-1 h-3 w-3 animate-spin" />
           Retry
         </Badge>
       );
     case "sent":
       return (
-        <Badge variant="outline" className="border-emerald-500/30 bg-emerald-500/10 text-emerald-700">
+        <Badge variant="outline" className="border-success/30 bg-success/10 text-success">
           <CheckCircle2 className="mr-1 h-3 w-3" />
           Envoyé
         </Badge>
       );
     case "failed":
       return (
-        <Badge variant="outline" className="border-red-500/30 bg-red-500/10 text-red-700">
+        <Badge variant="outline" className="border-destructive/30 bg-destructive/10 text-destructive">
           <XCircle className="mr-1 h-3 w-3" />
           Échec
         </Badge>

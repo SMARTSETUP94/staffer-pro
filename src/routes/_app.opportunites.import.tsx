@@ -37,6 +37,13 @@ interface RowState extends ParsedOpportuniteRow {
   importError?: string;
 }
 
+async function sha256Hex(buf: ArrayBuffer): Promise<string> {
+  const digest = await crypto.subtle.digest("SHA-256", buf);
+  return Array.from(new Uint8Array(digest))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
 function OpportunitesImportPage() {
   const { user, isAdminOrChef } = useAuth();
   const { data: charges } = useChargesAffaires();
@@ -46,6 +53,7 @@ function OpportunitesImportPage() {
   const [committing, setCommitting] = useState(false);
   const [parseErrors, setParseErrors] = useState<string[]>([]);
   const [filename, setFilename] = useState<string | null>(null);
+  const [fileHash, setFileHash] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
 
   const chargesByEmail = useMemo(() => {
@@ -59,8 +67,31 @@ function OpportunitesImportPage() {
     setFilename(file.name);
     setRows([]);
     setParseErrors([]);
+    setFileHash(null);
     try {
       const buf = await file.arrayBuffer();
+      const hash = await sha256Hex(buf);
+
+      // Vérification anti-doublon
+      const { data: dup } = await supabase
+        .from("opportunites_imports")
+        .select("created_at, fichier_nom")
+        .eq("fichier_hash", hash)
+        .maybeSingle();
+      if (dup) {
+        const dt = new Date(dup.created_at).toLocaleDateString("fr-FR", {
+          day: "2-digit",
+          month: "long",
+          year: "numeric",
+        });
+        toast.error("Fichier déjà importé", {
+          description: `Ce fichier (« ${dup.fichier_nom} ») a déjà été importé le ${dt}. Réinitialise pour forcer un nouvel import.`,
+        });
+        setParsing(false);
+        return;
+      }
+      setFileHash(hash);
+
       const { rows: parsed, parseErrors: errs } = parseOpportunitesFile(buf);
       setParseErrors(errs);
 
@@ -172,6 +203,20 @@ function OpportunitesImportPage() {
 
     setRows(updated);
     setCommitting(false);
+
+    // Enregistrement de l'import (anti-doublon hash)
+    if (fileHash && user?.id) {
+      await supabase.from("opportunites_imports").insert({
+        user_id: user.id,
+        fichier_nom: filename ?? "Sans nom",
+        fichier_hash: fileHash,
+        rows_count: updated.length,
+        created_count: okCreate,
+        updated_count: okUpdate,
+        errored_count: errored,
+      });
+    }
+
     toast.success("Import terminé", {
       description: `${okCreate} créées, ${okUpdate} mises à jour, ${skipped} ignorées, ${errored} en erreur.`,
     });

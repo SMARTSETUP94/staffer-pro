@@ -976,6 +976,42 @@ export type Database = {
         }
         Relationships: []
       }
+      opportunites_imports: {
+        Row: {
+          created_at: string
+          created_count: number
+          errored_count: number
+          fichier_hash: string
+          fichier_nom: string
+          id: string
+          rows_count: number
+          updated_count: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_count?: number
+          errored_count?: number
+          fichier_hash: string
+          fichier_nom: string
+          id?: string
+          rows_count?: number
+          updated_count?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          created_count?: number
+          errored_count?: number
+          fichier_hash?: string
+          fichier_nom?: string
+          id?: string
+          rows_count?: number
+          updated_count?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string

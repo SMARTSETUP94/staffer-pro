@@ -43,6 +43,62 @@ interface RoadmapPlanned {
 
 const RELEASES: RoadmapRelease[] = [
   {
+    date: "2026-04-22",
+    version: "v0.18",
+    title: "Export SILAE + heures de nuit déclaratives + matricule SILAE + fix filtre Métiers (titulaires/renforts)",
+    entries: [
+      {
+        type: "feature",
+        area: "Paie / Export",
+        title: "Export SILAE 28 colonnes (CSV UTF-8 BOM + Excel 2 onglets)",
+        description:
+          "Bouton « Exporter validées » sur /validation-heures qui génère en parallèle un CSV (UTF-8 + BOM, séparateur `;`, dates JJ/MM/AAAA, virgule décimale FR — destiné import SILAE/PROGBAT) et un Excel `.xlsx` à 2 onglets (Détail saisies + Récap hebdo par employé). 28 colonnes : matricule SILAE, nom/prénom, catégorie contrat, date / semaine ISO / jour / mois / année, code et phase affaire, nom et adresse chantier, poste affecté (métier mobilisé) vs métier principal, badge PROTO si phase opportunité, heures totales / jour / nuit / dimanche / férié (calcul automatique des fériés FR via algorithme de Butcher pour Pâques + dates fixes), commentaires employé et chef, statut, valideur, date validation, devis_id. On remonte les données brutes : SILAE applique son moteur de paie (HS 125/150 %, paniers, primes hauteur/salissure).",
+      },
+      {
+        type: "feature",
+        area: "Saisie heures",
+        title: "Heures de nuit déclaratives sur la modale de saisie (collapse par défaut)",
+        description:
+          "Champ optionnel « Dont heures de nuit » sur la modale `MesHeuresGrid` avec tooltip explicatif (00h-06h selon convention spectacle vivant). Default 0, modifiable par l'employé et par le chef au moment de la validation. Stockage dans `heures_saisies.heures_nuit` numeric(5,2) avec trigger DB `validate_heures_nuit` qui interdit les valeurs négatives ou supérieures aux heures réelles. Phase 1 = saisie déclarative ; Phase 2 (v0.19) = horaires précis avec auto-calcul par overlap.",
+      },
+      {
+        type: "feature",
+        area: "RH",
+        title: "Matricule SILAE éditable uniquement par admin sur la fiche employé",
+        description:
+          "Nouveau champ `profiles.matricule_silae` (text nullable) visible et éditable uniquement par les administrateurs depuis la modale d'édition employé (section RH, à côté du contrat). Trigger DB `guard_matricule_silae_admin_only` qui bloque toute modification non-admin. Ce matricule est la clé de jointure principale de l'export SILAE.",
+      },
+      {
+        type: "feature",
+        area: "Planning",
+        title: "Fix filtre Métiers : sections « Titulaires » + « Renforts » (task #51)",
+        description:
+          "La colonne `assignations.metier_id` devient nullable et trace le « métier mobilisé » (différent du métier principal de l'employé = renfort). Le filtre Métiers du planning inclut désormais un employé dans la section X si son métier principal = X OU s'il a au moins une assignation de la semaine filtrée avec metier_id = X. Affichage scindé en 2 sous-sections visuelles par métier (Titulaires + Renforts), badge discret du métier d'origine sur les cartes des renforts, header enrichi `Peinture (7) — 5 titulaires + 2 renforts`. Modale `AssignationDialog` complétée d'un dropdown « Métier mobilisé » pré-rempli avec le métier principal mais éditable par le chef.",
+      },
+      {
+        type: "improvement",
+        area: "Imports",
+        title: "Hash anti-doublon SHA-256 sur l'import CRM opportunités",
+        description:
+          "Nouvelle table `opportunites_imports` qui stocke un hash SHA-256 de chaque fichier importé. Au glisser-déposer, l'app calcule le hash, interroge la table et bloque l'import avec un toast clair `Ce fichier a déjà été importé le …` si une signature identique existe déjà. Évite les doublons accidentels lors de mises à jour CRM répétées.",
+      },
+      {
+        type: "improvement",
+        area: "Design system",
+        title: "Migration des couleurs hardcoded restantes vers tokens sémantiques",
+        description:
+          "Remplacement systématique des classes `text-emerald-*`, `text-amber-*`, `text-red-*`, `text-blue-*` par les tokens `text-success`, `text-warning`, `text-destructive`, `text-info` (et variantes `bg-*/10`, `border-*/30`). Composants nettoyés : Roadmap, AdminFeedback, BulkInviteDialog, SwapsList, Dashboard, AuthResetPassword. Cohérence clair/sombre garantie.",
+      },
+      {
+        type: "improvement",
+        area: "Tests",
+        title: "Tests unitaires Vitest sur le parser Excel/CSV opportunités",
+        description:
+          "Nouvelle suite `src/lib/__tests__/opportunites-import.test.ts` : ligne valide, sans code (ou code hors plage 9XXX), code existant (simulation), colonnes manquantes, taille invalide, alias tailles (XS/P/M/L/XL) et statuts FR (gagnée/perdue/terminée), lignes vides, fichier vide. Garantit la stabilité du parser face aux variations CRM.",
+      },
+    ],
+  },
+  {
     date: "2026-04-21",
     version: "v0.15.2",
     title: "Hotfix terrain — modals stables, planning débloqué, véhicules loués datés",
@@ -735,6 +791,13 @@ const RELEASES: RoadmapRelease[] = [
 ];
 
 const PLANNED: RoadmapPlanned[] = [
+  // ========== v0.19 — Saisie heures horaires précis (auto-calcul nuit) ==========
+  {
+    priority: "haute",
+    title: "v0.19 — Saisie heures précises (heure_debut / heure_fin / pauses) + auto-calcul nuit",
+    description:
+      "Refactor moyen terme du module saisie d'heures vers un format horaire précis : `heure_debut`, `heure_fin`, pauses (déjeuner + autres). Auto-calcul des heures de nuit par overlap avec la plage 00h-06h (convention spectacle vivant). Déclenchement conditionné au retour d'usage Phase 1 (v0.18, saisie déclarative).",
+  },
   // ========== v0.16 — Demandes transport automatisées + prestataires ==========
   {
     priority: "haute",
@@ -952,12 +1015,12 @@ const TYPE_META: Record<
   improvement: {
     label: "Amélioration",
     icon: Rocket,
-    className: "bg-emerald-500/15 text-emerald-600 border-emerald-500/30",
+    className: "bg-success/15 text-success border-success/30",
   },
   refactor: {
     label: "Refacto",
     icon: Wrench,
-    className: "bg-amber-500/15 text-amber-600 border-amber-500/30",
+    className: "bg-warning/15 text-warning border-warning/30",
   },
 };
 
@@ -971,7 +1034,7 @@ const PRIORITY_META: Record<
   },
   moyenne: {
     label: "Priorité moyenne",
-    className: "bg-amber-500/15 text-amber-600 border-amber-500/30",
+    className: "bg-warning/15 text-warning border-warning/30",
   },
   basse: {
     label: "Priorité basse",
