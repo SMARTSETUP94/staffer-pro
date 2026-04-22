@@ -387,6 +387,16 @@ function PlanningPage() {
               </TabsContent>
 
               <TabsContent value="flotte" className="mt-4 space-y-4">
+                <div className="flex items-center justify-end">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setExportSousTraitanceOpen(true)}
+                  >
+                    <Truck className="mr-1.5 h-3.5 w-3.5" />
+                    Exporter trajets sous-traités
+                  </Button>
+                </div>
                 <SuggestionsTrajetsBloc
                   weekStart={weekStart}
                   weekEnd={weekEnd}
@@ -498,6 +508,11 @@ function PlanningPage() {
             categories_permis: e.categories_permis ?? [],
           }))}
         onSaved={() => void refreshTrajets()}
+      />
+
+      <ExportTrajetsSoustraitanceDialog
+        open={exportSousTraitanceOpen}
+        onOpenChange={setExportSousTraitanceOpen}
       />
     </div>
   );

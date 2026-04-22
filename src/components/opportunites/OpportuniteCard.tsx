@@ -58,7 +58,7 @@ export function OpportuniteCard({ opp, chargesById, onSign, draggable = true }: 
       ref={setNodeRef}
       style={style}
       className={cn(
-        "group rounded-lg border border-border bg-card p-3 shadow-sm transition-shadow hover:shadow-md",
+        "group rounded-lg border border-border bg-card p-3 shadow-sm transition-shadow hover:shadow-md focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-1",
         isDragging && "opacity-40",
       )}
     >
@@ -68,8 +68,8 @@ export function OpportuniteCard({ opp, chargesById, onSign, draggable = true }: 
             type="button"
             {...attributes}
             {...listeners}
-            className="mt-0.5 cursor-grab text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 active:cursor-grabbing"
-            aria-label="Déplacer"
+            className="mt-0.5 cursor-grab rounded text-muted-foreground opacity-0 transition-opacity focus:opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring group-hover:opacity-100 active:cursor-grabbing"
+            aria-label={`Déplacer l'opportunité ${opp.numero}`}
           >
             <GripVertical className="h-4 w-4" />
           </button>
