@@ -228,8 +228,42 @@ export function EmployesSpreadsheet({ rows, onSaved }: Props) {
                   <TableCell className="text-center">
                     <Switch
                       checked={v("est_livreur") as boolean}
-                      onCheckedChange={(val) => setField(row.id, { est_livreur: val })}
+                      onCheckedChange={(val) =>
+                        setField(row.id, val ? { est_livreur: true } : { est_livreur: false, categories_permis: [] })
+                      }
                     />
+                  </TableCell>
+                  <TableCell>
+                    {(v("est_livreur") as boolean) ? (
+                      <div className="flex flex-wrap gap-1">
+                        {PERMIS_VALUES.map((p) => {
+                          const current = (v("categories_permis") as Permis[] | null) ?? [];
+                          const checked = current.includes(p);
+                          return (
+                            <button
+                              key={p}
+                              type="button"
+                              onClick={() => {
+                                const next = checked
+                                  ? current.filter((x) => x !== p)
+                                  : [...current, p];
+                                setField(row.id, { categories_permis: next });
+                              }}
+                              className={
+                                "rounded-md border px-2 py-0.5 text-[11px] font-semibold transition-colors " +
+                                (checked
+                                  ? "border-primary bg-primary text-primary-foreground"
+                                  : "border-border bg-card text-muted-foreground hover:bg-muted")
+                              }
+                            >
+                              {p}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    )}
                   </TableCell>
                   <TableCell>
                     {dirty && (
