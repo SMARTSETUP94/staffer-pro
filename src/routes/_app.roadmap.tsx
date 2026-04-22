@@ -76,6 +76,14 @@ const RELEASES: RoadmapRelease[] = [
           "Ajout de 3 colonnes natives à `trajets` : `prestataire` (text, fini le parsing depuis `notes`), `aller_retour` (boolean, fini le calcul via `parent_trajet_id`), `reference` (text au format `TR-YYYY-NNNNN` auto-générée par séquence + trigger). Permet une exploitation directe sans transformation côté client. TrajetDialog enrichi du champ Prestataire. Export trajets sous-traités migré pour utiliser ces colonnes natives.",
       },
       {
+        type: "feature",
+        area: "Logistique",
+        title:
+          "Workflow brouillon → envoyé : filtre par défaut + auto-passage au copier-coller mail",
+        description:
+          "Au chargement de /export/demandes-devis, le filtre statut est pré-positionné sur « Brouillon » pour que Gabin voie uniquement ce qui reste à envoyer. Le drawer « Générer texte demande » affiche une note explicite indiquant le nombre de trajets brouillons qui seront marqués comme envoyés au clic. Bouton principal « Copier et marquer comme envoyé » → copie clipboard + UPDATE statut_soustraitance='devis_envoye' + soustraitance_envoye_le=now() en une seule action atomique (filtré sur statut a_sous_traiter uniquement, pour ne pas re-toucher les déjà envoyés/confirmés). Bouton secondaire discret « Copier sans marquer envoyé » conservé pour les cas de relecture. Snapshot de la liste au moment de l'ouverture pour éviter les surprises si les filtres changent. Toast détaillé + refresh tableau + auto-fermeture modale en cas de succès. En cas d'erreur DB, statuts conservés en brouillon avec log console pour debug.",
+      },
+      {
         type: "fix",
         area: "Cohérence routing",
         title: "Item sidebar « Demandes transport » pointe vers la bonne page",

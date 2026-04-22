@@ -127,7 +127,9 @@ function DemandesTransportPage() {
   const today = new Date();
   const [dateFrom, setDateFrom] = useState(format(startOfMonth(today), "yyyy-MM-dd"));
   const [dateTo, setDateTo] = useState(format(addMonths(startOfMonth(today), 2), "yyyy-MM-dd"));
-  const [statutFilter, setStatutFilter] = useState<StatutSousTraitance | "all">("all");
+  // v0.19 — Par défaut : on n'affiche que les brouillons (à envoyer).
+  // Le user peut basculer sur Tous / Envoyé / Confirmé via le sélecteur.
+  const [statutFilter, setStatutFilter] = useState<StatutSousTraitance | "all">("a_sous_traiter");
   const [prestataireFilter, setPrestataireFilter] = useState<string>("__all__");
   const [affaireFilter, setAffaireFilter] = useState<string>("__all__");
   const [search, setSearch] = useState("");
@@ -144,6 +146,8 @@ function DemandesTransportPage() {
   const [mailDialogOpen, setMailDialogOpen] = useState(false);
   const [mailText, setMailText] = useState("");
   const [mailCopied, setMailCopied] = useState(false);
+  const [mailScope, setMailScope] = useState<TrajetEnrichi[]>([]);
+  const [mailUpdating, setMailUpdating] = useState(false);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   const refresh = async () => {
@@ -343,6 +347,7 @@ function DemandesTransportPage() {
               size="sm"
               onClick={() => {
                 setMailText(buildMailText(sorted));
+                setMailScope(sorted);
                 setMailCopied(false);
                 setMailDialogOpen(true);
               }}
@@ -762,24 +767,49 @@ function DemandesTransportPage() {
       />
 
       {/* v0.19 — Modale "Générer texte demande" : action rapide pour générer un mail
-          copier-coller à envoyer aux transporteurs, à partir des trajets actuellement filtrés. */}
-      <Dialog open={mailDialogOpen} onOpenChange={setMailDialogOpen}>
+          copier-coller à envoyer aux transporteurs, à partir des trajets actuellement filtrés.
+          Workflow confirmé Gabin : copier marque automatiquement les trajets brouillons en "Envoyé". */}
+      <Dialog
+        open={mailDialogOpen}
+        onOpenChange={(o) => {
+          if (!mailUpdating) setMailDialogOpen(o);
+        }}
+      >
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Générer texte demande transport</DialogTitle>
             <DialogDescription>
-              Texte pré-rempli à partir des {sorted.length} trajet
-              {sorted.length > 1 ? "s" : ""} affiché{sorted.length > 1 ? "s" : ""} (filtres
+              Texte pré-rempli à partir des {mailScope.length} trajet
+              {mailScope.length > 1 ? "s" : ""} affiché{mailScope.length > 1 ? "s" : ""} (filtres
               actuels). Copie-le dans ton mail aux transporteurs.
             </DialogDescription>
           </DialogHeader>
 
-          <Alert className="bg-muted/50">
-            <AlertDescription className="text-xs">
-              Pense à filtrer le tableau (par prestataire, statut, dates) avant d'ouvrir cette
-              modale pour cibler les bons trajets.
-            </AlertDescription>
-          </Alert>
+          {(() => {
+            const brouillonCount = mailScope.filter(
+              (t) => t.statut_soustraitance === "a_sous_traiter",
+            ).length;
+            return (
+              <Alert className="border-primary/30 bg-primary/5">
+                <AlertDescription className="text-xs">
+                  {brouillonCount > 0 ? (
+                    <>
+                      ⚠ Les <strong>{brouillonCount}</strong> trajet
+                      {brouillonCount > 1 ? "s" : ""} en statut{" "}
+                      <strong>Brouillon</strong> seront automatiquement marqués comme{" "}
+                      <strong>Envoyé</strong> après clic sur « Copier et marquer comme envoyé ».
+                      Ils n'apparaîtront plus dans la vue par défaut.
+                    </>
+                  ) : (
+                    <>
+                      Aucun trajet en statut Brouillon dans cette sélection — la copie
+                      n'affectera aucun statut.
+                    </>
+                  )}
+                </AlertDescription>
+              </Alert>
+            );
+          })()}
 
           <Textarea
             value={mailText}
@@ -789,32 +819,103 @@ function DemandesTransportPage() {
             }}
             rows={14}
             className="font-mono text-xs"
+            disabled={mailUpdating}
           />
 
-          <DialogFooter className="gap-2 sm:gap-2">
-            <Button variant="outline" onClick={() => setMailDialogOpen(false)}>
+          <DialogFooter className="flex-col gap-2 sm:flex-row sm:gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setMailDialogOpen(false)}
+              disabled={mailUpdating}
+              className="sm:mr-auto"
+            >
               Fermer
             </Button>
             <Button
+              variant="ghost"
+              size="sm"
+              disabled={mailUpdating || mailScope.length === 0}
               onClick={async () => {
                 try {
                   await navigator.clipboard.writeText(mailText);
                   setMailCopied(true);
-                  toast.success("Texte copié dans le presse-papier");
+                  toast.success("Texte copié (statuts inchangés)");
                 } catch {
                   toast.error("Impossible de copier (sélectionne le texte manuellement)");
                 }
               }}
             >
-              {mailCopied ? (
+              <Copy className="mr-2 h-3.5 w-3.5" />
+              Copier sans marquer envoyé
+            </Button>
+            <Button
+              disabled={mailUpdating || mailScope.length === 0}
+              onClick={async () => {
+                const brouillons = mailScope.filter(
+                  (t) => t.statut_soustraitance === "a_sous_traiter",
+                );
+                // 1. Copie clipboard
+                let copied = false;
+                try {
+                  await navigator.clipboard.writeText(mailText);
+                  copied = true;
+                } catch {
+                  toast.error(
+                    "Impossible de copier (sélectionne le texte manuellement). Statuts non modifiés.",
+                  );
+                  return;
+                }
+
+                // 2. Si rien à passer en envoyé : on s'arrête là
+                if (brouillons.length === 0) {
+                  setMailCopied(true);
+                  toast.success("Texte copié (aucun brouillon à marquer)");
+                  setMailDialogOpen(false);
+                  return;
+                }
+
+                // 3. Update statuts en DB
+                setMailUpdating(true);
+                const ids = brouillons.map((t) => t.id);
+                const { error } = await supabase
+                  .from("trajets")
+                  .update({
+                    statut_soustraitance: "devis_envoye",
+                    soustraitance_envoye_le: new Date().toISOString(),
+                  })
+                  .in("id", ids);
+                setMailUpdating(false);
+
+                if (error) {
+                  toast.error(
+                    `Texte ${copied ? "copié" : "non copié"} mais échec de la mise à jour : ${error.message}. Les trajets restent en brouillon.`,
+                  );
+                  console.error("[demandes-transport] update statut envoyé failed", { ids, error });
+                  return;
+                }
+
+                setMailCopied(true);
+                toast.success(
+                  `✓ Texte copié et ${brouillons.length} trajet${brouillons.length > 1 ? "s" : ""} marqué${brouillons.length > 1 ? "s" : ""} comme envoyé${brouillons.length > 1 ? "s" : ""}`,
+                );
+                setMailDialogOpen(false);
+                await refresh();
+              }}
+            >
+              {mailUpdating ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Mise à jour…
+                </>
+              ) : mailCopied ? (
                 <>
                   <Check className="mr-2 h-4 w-4" />
-                  Copié
+                  Copié et marqué envoyé
                 </>
               ) : (
                 <>
                   <Copy className="mr-2 h-4 w-4" />
-                  Copier le texte
+                  Copier et marquer comme envoyé
                 </>
               )}
             </Button>
