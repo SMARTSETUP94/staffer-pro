@@ -203,6 +203,20 @@ function OpportunitesImportPage() {
 
     setRows(updated);
     setCommitting(false);
+
+    // Enregistrement de l'import (anti-doublon hash)
+    if (fileHash && user?.id) {
+      await supabase.from("opportunites_imports").insert({
+        user_id: user.id,
+        fichier_nom: filename ?? "Sans nom",
+        fichier_hash: fileHash,
+        rows_count: updated.length,
+        created_count: okCreate,
+        updated_count: okUpdate,
+        errored_count: errored,
+      });
+    }
+
     toast.success("Import terminé", {
       description: `${okCreate} créées, ${okUpdate} mises à jour, ${skipped} ignorées, ${errored} en erreur.`,
     });
