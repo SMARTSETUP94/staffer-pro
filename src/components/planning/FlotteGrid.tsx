@@ -255,6 +255,38 @@ export function FlotteGrid({
               );
             })}
           </tbody>
+          {/* v0.18.1 — Bouton "+ Trajet sous-traité" en bas de chaque colonne de jour */}
+          {onAddTrajetSousTraite && (
+            <tfoot className="sticky bottom-0 bg-card">
+              <tr>
+                <td className="sticky left-0 z-10 border-t border-r bg-card px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  + Trajet sous-traité
+                </td>
+                {days.map((d) => (
+                  <td
+                    key={`st-${d.toISOString()}`}
+                    className="border-t border-r px-1 py-1.5"
+                  >
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          type="button"
+                          onClick={() => onAddTrajetSousTraite(d)}
+                          className="flex w-full items-center justify-center rounded border border-dashed border-warning/40 py-1 text-[11px] text-warning hover:bg-warning/10"
+                        >
+                          <Plus className="h-3 w-3 mr-1" />
+                          S/T
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        Créer un trajet sans véhicule interne
+                      </TooltipContent>
+                    </Tooltip>
+                  </td>
+                ))}
+              </tr>
+            </tfoot>
+          )}
         </table>
       </div>
 
