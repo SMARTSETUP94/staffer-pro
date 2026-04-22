@@ -67,8 +67,7 @@ function ExportPage() {
   const assignedIds = new Set(data.assignations.map((a) => a.employe_id));
   const interimCount = data.employes.filter(
     (e) =>
-      (e.type_contrat === "Interim" || e.type_contrat === "Independant") &&
-      assignedIds.has(e.id),
+      (e.type_contrat === "Interim" || e.type_contrat === "Independant") && assignedIds.has(e.id),
   ).length;
   const affairesActivesCount = new Set(data.assignations.map((a) => a.affaire_id)).size;
 
@@ -140,8 +139,8 @@ function ExportPage() {
                 {format(rangeEnd, "EEE d MMM yyyy", { locale: fr })}
               </span>
               <span className="font-medium">
-                {effectiveCount} semaine{effectiveCount > 1 ? "s" : ""} ·{" "}
-                {effectiveCount * 4} feuilles
+                {effectiveCount} semaine{effectiveCount > 1 ? "s" : ""} · {effectiveCount * 4}{" "}
+                feuilles
               </span>
             </div>
           </div>
