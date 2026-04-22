@@ -26,6 +26,8 @@ import { toast } from "sonner";
 
 type ContratType = "CDI" | "CDD" | "Interim" | "Independant";
 
+type Permis = "B" | "C" | "CE" | "D";
+
 interface EmployeRow {
   id: string;
   prenom: string;
@@ -41,6 +43,7 @@ interface EmployeRow {
   actif: boolean;
   non_staffing: boolean;
   est_livreur: boolean;
+  categories_permis: Permis[];
   date_naissance: string | null;
   adresse: string | null;
   notes: string | null;
@@ -63,6 +66,8 @@ interface FormState {
   metier_principal_id: number | null;
   actif: boolean;
   non_staffing: boolean;
+  est_livreur: boolean;
+  categories_permis: Permis[];
   date_naissance: string;
   adresse: string;
   notes: string;
@@ -84,6 +89,8 @@ const emptyForm: FormState = {
   metier_principal_id: null,
   actif: true,
   non_staffing: false,
+  est_livreur: false,
+  categories_permis: [],
   date_naissance: "",
   adresse: "",
   notes: "",
@@ -91,6 +98,15 @@ const emptyForm: FormState = {
   profile_id: null,
   secondaires: [],
 };
+
+// PERMIS_OPTIONS sera utilisé dans une prochaine itération pour la section
+// "Capacités / Permis" du dialog d'édition employé (Bloc 3 — UI à finaliser).
+export const PERMIS_OPTIONS_V0181: { value: Permis; label: string }[] = [
+  { value: "B", label: "B (VL / utilitaire ≤ 3.5T)" },
+  { value: "C", label: "C (PL > 3.5T)" },
+  { value: "CE", label: "CE (PL + remorque)" },
+  { value: "D", label: "D (transport en commun)" },
+];
 
 export const Route = createFileRoute("/_app/employes")({
   head: () => ({ meta: [{ title: "Employés — Setup Paris" }] }),
@@ -132,7 +148,7 @@ function EmployesPage() {
     setLoading(true);
     const { data: emps, error } = await supabase
       .from("employes")
-      .select("id, prenom, nom, email, telephone, mobile, type_contrat, sous_type_contrat, is_apprenti, agence_interim, metier_principal_id, actif, non_staffing, est_livreur, date_naissance, adresse, notes, profile_id")
+      .select("id, prenom, nom, email, telephone, mobile, type_contrat, sous_type_contrat, is_apprenti, agence_interim, metier_principal_id, actif, non_staffing, est_livreur, categories_permis, date_naissance, adresse, notes, profile_id")
       .order("nom", { ascending: true })
       .limit(2000);
     if (error) {
@@ -165,11 +181,15 @@ function EmployesPage() {
       }, {});
     }
     setRows(
-      (emps ?? []).map((e) => ({
-        ...e,
-        secondaires: secMap[e.id] ?? [],
-        matricule_silae: e.profile_id ? matriculeMap[e.profile_id] ?? null : null,
-      })),
+      (emps ?? []).map((e) => {
+        const permis = (e as unknown as { categories_permis?: Permis[] | null }).categories_permis;
+        return {
+          ...e,
+          categories_permis: (permis ?? []) as Permis[],
+          secondaires: secMap[e.id] ?? [],
+          matricule_silae: e.profile_id ? matriculeMap[e.profile_id] ?? null : null,
+        };
+      }),
     );
     setLoading(false);
   };
@@ -204,6 +224,7 @@ function EmployesPage() {
       sous_type_contrat: r.sous_type_contrat, agence_interim: r.agence_interim,
       metier_principal_id: r.metier_principal_id, actif: r.actif, non_staffing: r.non_staffing,
       est_livreur: r.est_livreur,
+      categories_permis: r.categories_permis,
     })),
     [filtered],
   );
@@ -227,6 +248,8 @@ function EmployesPage() {
       metier_principal_id: row.metier_principal_id,
       actif: row.actif,
       non_staffing: row.non_staffing,
+      est_livreur: row.est_livreur,
+      categories_permis: row.categories_permis ?? [],
       date_naissance: row.date_naissance ?? "",
       adresse: row.adresse ?? "",
       notes: row.notes ?? "",
@@ -256,6 +279,8 @@ function EmployesPage() {
       metier_principal_id: form.metier_principal_id,
       actif: form.actif,
       non_staffing: form.non_staffing,
+      est_livreur: form.est_livreur,
+      categories_permis: form.est_livreur ? form.categories_permis : [],
       date_naissance: form.date_naissance || null,
       adresse: form.adresse.trim() || null,
       notes: form.notes.trim() || null,
