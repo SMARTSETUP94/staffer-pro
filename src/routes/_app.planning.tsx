@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useRef, useState } from "react";
 import { startOfWeek, addDays, format } from "date-fns";
-import { Calendar, Loader2, Search, FileDown, UserPlus } from "lucide-react";
+import { Calendar, Loader2, Search, FileDown, UserPlus, Truck } from "lucide-react";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
@@ -19,6 +19,7 @@ import { AddInterimDialog } from "@/components/planning/AddInterimDialog";
 import { FlotteGrid } from "@/components/planning/FlotteGrid";
 import { SuggestionsTrajetsBloc } from "@/components/planning/SuggestionsTrajetsBloc";
 import { TrajetDialog } from "@/components/flotte/TrajetDialog";
+import { ExportTrajetsSoustraitanceDialog } from "@/components/flotte/ExportTrajetsSoustraitanceDialog";
 import { useVehicules, type Trajet } from "@/hooks/use-vehicules";
 import { useTrajetsWeek } from "@/hooks/use-trajets";
 import { exportPlanningToPDF } from "@/lib/planning-export";
@@ -39,6 +40,7 @@ function PlanningPage() {
   const weekEnd = addDays(weekStart, 6);
   const [tab, setTab] = useState<"cdi" | "interim" | "parchantier" | "budget" | "flotte">("cdi");
   const [trajetDlgOpen, setTrajetDlgOpen] = useState(false);
+  const [exportSousTraitanceOpen, setExportSousTraitanceOpen] = useState(false);
   const [editTrajet, setEditTrajet] = useState<Trajet | null>(null);
   const [defaultTrajetVehId, setDefaultTrajetVehId] = useState<string | null>(null);
   const [defaultTrajetDate, setDefaultTrajetDate] = useState<string | undefined>(undefined);
