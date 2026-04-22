@@ -13,6 +13,9 @@ import {
   FileDown,
   Eye,
   X,
+  Mail,
+  Copy,
+  Check,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -48,6 +51,16 @@ import { PageHeader } from "@/components/PageHeader";
 import { TrajetDialog } from "@/components/flotte/TrajetDialog";
 import { ExportTrajetsSoustraitanceDialog } from "@/components/flotte/ExportTrajetsSoustraitanceDialog";
 import { useVehicules, type Trajet } from "@/hooks/use-vehicules";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import type { Tables } from "@/integrations/supabase/types";
 
 export const Route = createFileRoute("/_app/export/demandes-devis")({
@@ -128,6 +141,9 @@ function DemandesTransportPage() {
   const [editingTrajet, setEditingTrajet] = useState<Trajet | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
+  const [mailDialogOpen, setMailDialogOpen] = useState(false);
+  const [mailText, setMailText] = useState("");
+  const [mailCopied, setMailCopied] = useState(false);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   const refresh = async () => {
@@ -322,10 +338,25 @@ function DemandesTransportPage() {
         title="Demandes transport"
         description="Suivi des trajets sous-traités aux transporteurs"
         actions={
-          <Button variant="outline" size="sm" onClick={() => setExportDialogOpen(true)}>
-            <FileDown className="mr-2 h-4 w-4" />
-            Exporter CSV / Excel
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setMailText(buildMailText(sorted));
+                setMailCopied(false);
+                setMailDialogOpen(true);
+              }}
+              disabled={sorted.length === 0}
+            >
+              <Mail className="mr-2 h-4 w-4" />
+              Générer texte demande
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setExportDialogOpen(true)}>
+              <FileDown className="mr-2 h-4 w-4" />
+              Exporter CSV / Excel
+            </Button>
+          </div>
         }
       />
 
@@ -687,6 +718,70 @@ function DemandesTransportPage() {
         onOpenChange={setExportDialogOpen}
       />
 
+      {/* v0.19 — Modale "Générer texte demande" : action rapide pour générer un mail
+          copier-coller à envoyer aux transporteurs, à partir des trajets actuellement filtrés. */}
+      <Dialog open={mailDialogOpen} onOpenChange={setMailDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Générer texte demande transport</DialogTitle>
+            <DialogDescription>
+              Texte pré-rempli à partir des {sorted.length} trajet
+              {sorted.length > 1 ? "s" : ""} affiché{sorted.length > 1 ? "s" : ""} (filtres
+              actuels). Copie-le dans ton mail aux transporteurs.
+            </DialogDescription>
+          </DialogHeader>
+
+          <Alert className="bg-muted/50">
+            <AlertDescription className="text-xs">
+              Pense à filtrer le tableau (par prestataire, statut, dates) avant d'ouvrir cette
+              modale pour cibler les bons trajets.
+            </AlertDescription>
+          </Alert>
+
+          <Textarea
+            value={mailText}
+            onChange={(e) => {
+              setMailText(e.target.value);
+              setMailCopied(false);
+            }}
+            rows={14}
+            className="font-mono text-xs"
+          />
+
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setMailDialogOpen(false)}
+            >
+              Fermer
+            </Button>
+            <Button
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(mailText);
+                  setMailCopied(true);
+                  toast.success("Texte copié dans le presse-papier");
+                } catch {
+                  toast.error("Impossible de copier (sélectionne le texte manuellement)");
+                }
+              }}
+            >
+              {mailCopied ? (
+                <>
+                  <Check className="mr-2 h-4 w-4" />
+                  Copié
+                </>
+              ) : (
+                <>
+                  <Copy className="mr-2 h-4 w-4" />
+                  Copier le texte
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* placeholder pour éviter le tree-shaking de useVehicules (futur usage) */}
       <span className="hidden">{vehicules.length}</span>
     </div>
@@ -752,4 +847,38 @@ function SortHead({
       </button>
     </TableHead>
   );
+}
+
+/**
+ * v0.19 — Génère un texte mail copier-coller pour demande transport groupée.
+ * Reprend la logique de l'ancienne page (cards/textarea) mais formatée à partir
+ * de la liste filtrée du tableau principal.
+ */
+function buildMailText(rows: TrajetEnrichi[]): string {
+  if (rows.length === 0) {
+    return "Aucun trajet à transmettre — ajuste les filtres.";
+  }
+  const lignes = rows.map((t, i) => {
+    const date = format(new Date(t.date + "T00:00:00"), "EEEE d MMMM yyyy", { locale: fr });
+    const horaires =
+      t.heure_depart || t.heure_arrivee
+        ? ` (${t.heure_depart?.slice(0, 5) ?? "?"}${t.heure_arrivee ? " → " + t.heure_arrivee.slice(0, 5) : ""})`
+        : "";
+    const ar = t.aller_retour ? " — Aller-retour" : "";
+    const aff = t.affaire ? ` — Affaire ${t.affaire.numero}` : "";
+    const ref = t.reference ? `[${t.reference}] ` : "";
+    return `${i + 1}. ${ref}${date}${horaires}\n   De : ${t.adresse_depart}\n   Vers : ${t.adresse_arrivee}${ar}${aff}${t.notes ? `\n   Notes : ${t.notes}` : ""}`;
+  });
+  return [
+    "Bonjour,",
+    "",
+    `Nous avons besoin d'un transport pour les ${rows.length} trajet${rows.length > 1 ? "s" : ""} suivant${rows.length > 1 ? "s" : ""} :`,
+    "",
+    lignes.join("\n\n"),
+    "",
+    "Pourrais-tu nous transmettre un devis sous 48h ?",
+    "Merci d'avance.",
+    "",
+    "Cordialement",
+  ].join("\n");
 }
