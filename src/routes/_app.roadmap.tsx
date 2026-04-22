@@ -44,6 +44,90 @@ interface RoadmapPlanned {
 const RELEASES: RoadmapRelease[] = [
   {
     date: "2026-04-22",
+    version: "v0.18.1",
+    title: "Correctifs post-publish v0.18 — Flotte, livreur/chauffeur, lieux entreprise, suggestions trajets, export sous-traitance + polish UI",
+    entries: [
+      {
+        type: "feature",
+        area: "Flotte",
+        title: "Autorisation chauffeur PL actionnable depuis la modale Trajet",
+        description:
+          "Dans la modale « Nouveau trajet » sur un poids lourd, tous les livreurs actifs sont désormais listés (au lieu d'être silencieusement masqués). Les non-autorisés sont grisés avec une raison claire (« Permis non compatible » ou « À autoriser sur ce PL »), et un bouton « Autoriser » (admin/chef) ajoute l'employé à `vehicule_chauffeurs_autorises` via l'RPC `set_vehicule_chauffeurs_autorises` puis rafraîchit le dropdown. Le livreur passe immédiatement en sélectionnable. Compatibilité rétro : un livreur sans permis renseigné reste accepté (legacy v0.18).",
+      },
+      {
+        type: "feature",
+        area: "Flotte",
+        title: "Fond de ligne teinté pour véhicules loués / sous-traités + badges Loué / S/T",
+        description:
+          "Les lignes de la grille `FlotteGrid` héritent d'une teinte `bg-warning/5` quand le véhicule a `proprietaire = 'location' | 'sous_traitance'`, avec badge dédié. Distinction visuelle immédiate entre la flotte interne et les véhicules ponctuels.",
+      },
+      {
+        type: "fix",
+        area: "Flotte",
+        title: "date_fin_location filtre désormais l'affichage planning",
+        description:
+          "Les véhicules dont `date_fin_location` est dépassée disparaissent automatiquement de la grille planning et des sélecteurs. Pas besoin de désactiver manuellement la fiche.",
+      },
+      {
+        type: "feature",
+        area: "Flotte",
+        title: "Bouton « + S/T » par jour pour créer un trajet sous-traité hors véhicule",
+        description:
+          "Au pied de chaque colonne de jour, un bouton ouvre la modale Trajet avec le switch « Sous-traiter ce trajet » déjà activé et la date pré-remplie. Permet de saisir un trajet à externaliser sans véhicule interne attribué.",
+      },
+      {
+        type: "improvement",
+        area: "Flotte",
+        title: "Tooltip explicatif sur la section « À sous-traiter »",
+        description:
+          "Header enrichi d'un icône info détaillant l'origine de ces trajets (créés via le switch « Sous-traiter ce trajet ») et listant les statuts possibles (à envoyer / devis envoyé / confirmé). Lève l'ambigüité signalée en QA terrain.",
+      },
+      {
+        type: "feature",
+        area: "Paramétrage",
+        title: "Page /parametres/lieux pour gérer ATELIER (unique) + STOCKAGE (1..N)",
+        description:
+          "Nouvelle page admin (lien dans la sidebar « Lieux entreprise ») permettant de déclarer l'atelier principal de Setup Paris (unique) et N adresses de stockage. Adresse autocomplétée via Nominatim, désactivation soft (flag `actif`). Ces lieux alimentent les suggestions auto de trajets.",
+      },
+      {
+        type: "feature",
+        area: "Flotte",
+        title: "Suggestions automatiques de trajets ATELIER ↔ chantier",
+        description:
+          "Bloc « Suggestions trajets » dans l'onglet Véhicules staffés : scanne les `affaires` actives avec `date_montage`/`date_demontage` dans la semaine et propose 1 trajet « Pose » (ATELIER → chantier) au montage et 1 trajet « Dépose » (chantier → ATELIER ou STOCKAGE choisi) au démontage. Clic sur « Créer » → ouvre la modale Trajet pré-remplie (adresses, catégorie, affaire, date). Plus aucun trajet à saisir à la main pour les chantiers récurrents.",
+      },
+      {
+        type: "feature",
+        area: "Export",
+        title: "Export trajets sous-traités (CSV UTF-8 BOM + Excel) — 15 colonnes",
+        description:
+          "Bouton « Exporter trajets sous-traités » dans l'onglet Véhicules staffés (distinct de l'export SILAE des heures salariés). Filtres : plage de dates, statuts (à sous-traiter / devis envoyé / confirmé), affaire, prestataire. Colonnes : Référence, Date, Horaires, Adresses départ/arrivée, Aller-retour (oui/non basé sur parent_trajet_id), Véhicule demandé, Kilométrage estimé, Affaire + code, Catégorie, Prestataire (« À attribuer » si vide), Statut, Commentaires. Usage : transmission directe au transporteur pour demande de devis groupée.",
+      },
+      {
+        type: "feature",
+        area: "Employés",
+        title: "Section Capacités/Permis sur fiche employé : livreur + permis B/C/CE/D",
+        description:
+          "Nouveau bloc dans la modale d'édition employé : checkbox « Livreur/Chauffeur » + tags multi-sélection des catégories de permis détenues (B / C / CE / D). Stocké dans `employes.est_livreur` et `employes.categories_permis` (array enum `categorie_permis`). Le filtrage chauffeur dans Planning Flotte s'appuie sur ces deux champs (cf. helper `getChauffeursAvecStatut`).",
+      },
+      {
+        type: "fix",
+        area: "Pilotage",
+        title: "Audit Heures staffées vs réalisées — colonnes restées cohérentes",
+        description:
+          "Validation visuelle terrain (Maison&Objet) : la vue `v_devis_consommation` distingue désormais clairement `heures_assignees` (planning prévu), `heures_reelles_validees` (chef OK) et `heures_reelles_soumises` (en attente). Les indicateurs de consommation budget pilotage chantier sont remontés correctement.",
+      },
+      {
+        type: "improvement",
+        area: "Design system",
+        title: "Polish UI Kanban opportunités — focus visible + KeyboardSensor",
+        description:
+          "Cartes opportunités : ajout de `focus-within:ring-2 focus-within:ring-ring` et bouton de drag avec focus-visible cohérent. Ajout du `KeyboardSensor` @dnd-kit avec `sortableKeyboardCoordinates` pour permettre le déplacement des cartes au clavier (espace pour saisir, flèches pour déplacer, espace pour valider). Tokens sémantiques utilisés partout (warning, primary, ring) — aucune couleur hard-codée résiduelle dans les composants Flotte.",
+      },
+    ],
+  },
+  {
+    date: "2026-04-22",
     version: "v0.18",
     title: "Export SILAE + heures de nuit déclaratives + matricule SILAE + fix filtre Métiers (titulaires/renforts)",
     entries: [
