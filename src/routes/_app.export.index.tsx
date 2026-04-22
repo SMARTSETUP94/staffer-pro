@@ -19,7 +19,7 @@ import { WeekPicker } from "@/components/planning/WeekPicker";
 import { usePlanningData } from "@/hooks/use-planning-data";
 import { exportPlanningExcelRange } from "@/lib/planning-excel-export";
 
-export const Route = createFileRoute("/_app/export")({
+export const Route = createFileRoute("/_app/export/")({
   head: () => ({ meta: [{ title: "Export planning — Planning chantiers" }] }),
   component: ExportPage,
 });
