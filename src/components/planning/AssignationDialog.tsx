@@ -429,7 +429,11 @@ export function AssignationDialog({
             <div className="grid grid-cols-2 gap-3">
               <div className="grid gap-1.5">
                 <div className="flex items-center justify-between">
-                  <Label>Métier</Label>
+                  <Label
+                    title="Métier sur lequel l'employé est mobilisé. Si différent du métier principal = renfort."
+                  >
+                    Métier mobilisé
+                  </Label>
                   {metiersCompetence.length < metiers.length && (
                     <button
                       type="button"
