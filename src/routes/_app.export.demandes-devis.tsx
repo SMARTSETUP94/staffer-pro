@@ -258,8 +258,7 @@ function DemandesTransportPage() {
         case "date":
         default:
           cmp = a.date.localeCompare(b.date);
-          if (cmp === 0)
-            cmp = (a.heure_depart ?? "").localeCompare(b.heure_depart ?? "");
+          if (cmp === 0) cmp = (a.heure_depart ?? "").localeCompare(b.heure_depart ?? "");
       }
       return sortDir === "asc" ? cmp : -cmp;
     });
@@ -390,7 +389,9 @@ function DemandesTransportPage() {
         <CardContent className="space-y-3 pt-4">
           <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
             <div>
-              <Label htmlFor="from" className="text-xs">Du</Label>
+              <Label htmlFor="from" className="text-xs">
+                Du
+              </Label>
               <Input
                 id="from"
                 type="date"
@@ -399,7 +400,9 @@ function DemandesTransportPage() {
               />
             </div>
             <div>
-              <Label htmlFor="to" className="text-xs">Au</Label>
+              <Label htmlFor="to" className="text-xs">
+                Au
+              </Label>
               <Input
                 id="to"
                 type="date"
@@ -441,7 +444,10 @@ function DemandesTransportPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="__all__">Tous prestataires</SelectItem>
-                  <SelectItem value="__none__" disabled={!trajets.some((t) => !t.prestataire?.trim())}>
+                  <SelectItem
+                    value="__none__"
+                    disabled={!trajets.some((t) => !t.prestataire?.trim())}
+                  >
                     — Sans prestataire —
                   </SelectItem>
                   {prestataireOptions.map((p) => (
@@ -531,23 +537,43 @@ function DemandesTransportPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <SortHead onClick={() => toggleSort("reference")} active={sortKey === "reference"} dir={sortDir}>
+                    <SortHead
+                      onClick={() => toggleSort("reference")}
+                      active={sortKey === "reference"}
+                      dir={sortDir}
+                    >
                       Référence
                     </SortHead>
-                    <SortHead onClick={() => toggleSort("date")} active={sortKey === "date"} dir={sortDir}>
+                    <SortHead
+                      onClick={() => toggleSort("date")}
+                      active={sortKey === "date"}
+                      dir={sortDir}
+                    >
                       Date
                     </SortHead>
                     <TableHead>Horaires</TableHead>
                     <TableHead>Trajet</TableHead>
                     <TableHead className="text-center">A/R</TableHead>
                     <TableHead>Véhicule</TableHead>
-                    <SortHead onClick={() => toggleSort("affaire")} active={sortKey === "affaire"} dir={sortDir}>
+                    <SortHead
+                      onClick={() => toggleSort("affaire")}
+                      active={sortKey === "affaire"}
+                      dir={sortDir}
+                    >
                       Affaire
                     </SortHead>
-                    <SortHead onClick={() => toggleSort("prestataire")} active={sortKey === "prestataire"} dir={sortDir}>
+                    <SortHead
+                      onClick={() => toggleSort("prestataire")}
+                      active={sortKey === "prestataire"}
+                      dir={sortDir}
+                    >
                       Prestataire
                     </SortHead>
-                    <SortHead onClick={() => toggleSort("statut")} active={sortKey === "statut"} dir={sortDir}>
+                    <SortHead
+                      onClick={() => toggleSort("statut")}
+                      active={sortKey === "statut"}
+                      dir={sortDir}
+                    >
                       Statut
                     </SortHead>
                     <TableHead className="text-right">Actions</TableHead>
@@ -571,7 +597,9 @@ function DemandesTransportPage() {
                           {t.heure_arrivee ? ` → ${t.heure_arrivee.slice(0, 5)}` : ""}
                         </TableCell>
                         <TableCell className="max-w-[260px]">
-                          <div className="truncate" title={t.adresse_depart}>{t.adresse_depart}</div>
+                          <div className="truncate" title={t.adresse_depart}>
+                            {t.adresse_depart}
+                          </div>
                           <div className="truncate text-muted-foreground" title={t.adresse_arrivee}>
                             → {t.adresse_arrivee}
                           </div>
@@ -589,12 +617,16 @@ function DemandesTransportPage() {
                           )}
                         </TableCell>
                         <TableCell className="max-w-[140px] truncate">
-                          {t.vehicule_label ?? <span className="text-muted-foreground italic">À attribuer</span>}
+                          {t.vehicule_label ?? (
+                            <span className="text-muted-foreground italic">À attribuer</span>
+                          )}
                         </TableCell>
                         <TableCell className="max-w-[160px]">
                           {t.affaire ? (
                             <div>
-                              <div className="font-mono text-[11px] text-primary">{t.affaire.numero}</div>
+                              <div className="font-mono text-[11px] text-primary">
+                                {t.affaire.numero}
+                              </div>
                               <div className="truncate text-muted-foreground">{t.affaire.nom}</div>
                             </div>
                           ) : (
@@ -611,7 +643,10 @@ function DemandesTransportPage() {
                           )}
                         </TableCell>
                         <TableCell>
-                          <Badge variant={STATUT_VARIANT[t.statut_soustraitance]} className="text-[10px]">
+                          <Badge
+                            variant={STATUT_VARIANT[t.statut_soustraitance]}
+                            className="text-[10px]"
+                          >
                             {STATUT_LABEL[t.statut_soustraitance]}
                           </Badge>
                         </TableCell>
@@ -643,14 +678,22 @@ function DemandesTransportPage() {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                                <DropdownMenuLabel className="text-xs">Changer le statut</DropdownMenuLabel>
+                                <DropdownMenuLabel className="text-xs">
+                                  Changer le statut
+                                </DropdownMenuLabel>
                                 <DropdownMenuSeparator />
                                 {next && (
                                   <DropdownMenuItem onClick={() => changeStatut(t.id, next)}>
                                     → {STATUT_LABEL[next]}
                                   </DropdownMenuItem>
                                 )}
-                                {(["a_sous_traiter", "devis_envoye", "confirme"] as StatutSousTraitance[])
+                                {(
+                                  [
+                                    "a_sous_traiter",
+                                    "devis_envoye",
+                                    "confirme",
+                                  ] as StatutSousTraitance[]
+                                )
                                   .filter((s) => s !== t.statut_soustraitance && s !== next)
                                   .map((s) => (
                                     <DropdownMenuItem key={s} onClick={() => changeStatut(t.id, s)}>
@@ -749,10 +792,7 @@ function DemandesTransportPage() {
           />
 
           <DialogFooter className="gap-2 sm:gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setMailDialogOpen(false)}
-            >
+            <Button variant="outline" onClick={() => setMailDialogOpen(false)}>
               Fermer
             </Button>
             <Button
