@@ -875,6 +875,20 @@ const RELEASES: RoadmapRelease[] = [
 ];
 
 const PLANNED: RoadmapPlanned[] = [
+  // ========== v0.18.2 — Suite immédiate flotte / sous-traitance ==========
+  {
+    priority: "haute",
+    title: "v0.18.2 — Base prestataires transport typée + liaison trajets",
+    description:
+      "Nouvelle table `prestataires_transport` (nom, email, tel, spécialité VL/PL/SPL/grue, zones géo, notes) avec RLS chef/admin. Remplace le champ texte libre `prestataire_location` actuel par une FK `trajets.transporteur_id`. L'export trajets sous-traités exploite la fiche prestataire (email pré-rempli pour demande de devis groupée). Pré-requis pour v0.16 (envoi automatisé Resend).",
+  },
+  {
+    priority: "haute",
+    title: "v0.18.2 — Reporting coût flotte par affaire",
+    description:
+      "Cumul `cout_journalier_eur × jours_utilisés` des véhicules loués + total trajets sous-traités confirmés, par affaire. Colonne dans la fiche affaire et export pilotage. Permet de comparer coût logistique prévisionnel vs réel.",
+  },
+
   // ========== v0.19 — Saisie heures horaires précis (auto-calcul nuit) ==========
   {
     priority: "haute",
@@ -882,31 +896,16 @@ const PLANNED: RoadmapPlanned[] = [
     description:
       "Refactor moyen terme du module saisie d'heures vers un format horaire précis : `heure_debut`, `heure_fin`, pauses (déjeuner + autres). Auto-calcul des heures de nuit par overlap avec la plage 00h-06h (convention spectacle vivant). Déclenchement conditionné au retour d'usage Phase 1 (v0.18, saisie déclarative).",
   },
-  // ========== v0.16 — Demandes transport automatisées + prestataires ==========
+
+  // ========== v0.16 — Demandes transport automatisées Resend ==========
   {
     priority: "haute",
-    title: "v0.16 — Demandes transport automatisées + base prestataires",
+    title: "v0.16 — Envoi automatisé devis transport (Resend)",
     description:
-      "L'export planning logistique génère automatiquement les demandes de devis aux transporteurs : pour chaque affaire staffée, pré-remplissage des adresses chargement (atelier Setup Paris par défaut) / déchargement (lieu chantier) avec horaires (J-1 montage 6h, livraison J 7h, retour J démontage). Nouvelle table `prestataires_transport` (nom, email, tel, spécialité VL/PL/SPL/grue, zones géo, notes, RLS chef/admin). Envoi 1 clic via Resend (template branded indigo/cream + PDF récap server-side). Réception et comparaison des offres (saisie manuelle des réponses dans un premier temps), choix du prestataire retenu, statut (brouillon / envoyée / répondue / acceptée / refusée / annulée). Liaison avec Véhicules (proposition « véhicule interne dispo ? » avant sous-traitance) et avec Adresses favorites existantes.",
+      "Bouton « Envoyer demande de devis » sur l'export trajets sous-traités : génération email branded indigo/cream + PDF récap server-side, envoi 1 clic via Resend au prestataire choisi (FK `transporteur_id`, livrée v0.18.2). Suivi des réponses (saisie manuelle Phase 1), choix du prestataire retenu, statut (envoyée / répondue / acceptée / refusée). Liaison avec véhicules (proposition « véhicule interne dispo ? » avant sous-traitance).",
   },
-
-  // ========== v0.17 — Module CRM Opportunités (9XXX → 5XXX) ==========
-  {
-    priority: "haute",
-    title: "v0.17 — Module CRM Opportunités : pipeline amont 9XXX → 5XXX",
-    description:
-      "Pipeline amont des affaires signées avec Kanban par statut (Envoyé / En cours / Gagné / Perdu / Terminé). Import initial des 30 dernières affaires depuis le fichier CRM Excel existant. Auto-suggestion du prochain numéro libre (9XXX pour les opportunités, 5XXX pour les affaires signées). Bouton « Signer » qui convertit une opportunité Gagnée en affaire 5XXX en gardant le lien `code_opportunite` vers le 9XXX d'origine (traçabilité commerciale conservée). Staffing possible directement sur les 9XXX avec badge `PROTO` visible et alerte « opportunité non signée » sur le planning et la fiche. Unicité garantie au niveau DB via `UNIQUE(code)` sur la table `affaires` (couvre 9XXX et 5XXX en un seul espace de noms). Permet aux commerciaux de pré-staffer les opportunités fortes sans polluer le suivi des affaires signées.",
-  },
-
-
 
   // ========== HAUTE PRIORITÉ ==========
-  {
-    priority: "haute",
-    title: "Module signalements / feedback intégré (chefs ↔ admin)",
-    description:
-      "Bouton flottant 💬 sur toutes les pages (desktop + mobile) permettant aux chefs de remonter bugs, idées et améliorations avec capture d'écran auto, page d'origine et user-agent. Page admin /admin/feedback pour trier, prioriser, ajouter des notes internes, marquer résolu. Notifications auto vers les admins.",
-  },
   {
     priority: "haute",
     title: "Notifications push mobile (PWA + Web Push API)",
@@ -942,12 +941,6 @@ const PLANNED: RoadmapPlanned[] = [
     title: "Routage ciblé des notifications « absence_demandee »",
     description:
       "Notifier uniquement le chef rattaché à l'employé (via affaire.chef_chantier_id de la semaine courante) plutôt que tous les chefs/admins.",
-  },
-  {
-    priority: "haute",
-    title: "Audit du module flotte (lot 10)",
-    description:
-      "Revue complète : véhicules, trajets, autorisations chauffeurs PL, sous-traitance, RLS, conflits de planning véhicule.",
   },
   {
     priority: "haute",
