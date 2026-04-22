@@ -47,26 +47,26 @@ type Type = Database["public"]["Enums"]["feedback_type"];
 
 const TYPE_META: Record<Type, { label: string; icon: typeof Bug; className: string }> = {
   bug: { label: "Bug", icon: Bug, className: "bg-destructive/15 text-destructive border-destructive/30" },
-  idee: { label: "Idée", icon: Lightbulb, className: "bg-amber-500/15 text-amber-600 border-amber-500/30" },
+  idee: { label: "Idée", icon: Lightbulb, className: "bg-warning/15 text-warning border-warning/30" },
   amelioration: {
     label: "Amélioration",
     icon: Sparkles,
-    className: "bg-emerald-500/15 text-emerald-600 border-emerald-500/30",
+    className: "bg-success/15 text-success border-success/30",
   },
-  question: { label: "Question", icon: HelpCircle, className: "bg-blue-500/15 text-blue-600 border-blue-500/30" },
+  question: { label: "Question", icon: HelpCircle, className: "bg-info/15 text-info border-info/30" },
 };
 
 const PRIO_META: Record<Priorite, { label: string; className: string }> = {
   critique: { label: "Critique", className: "bg-destructive text-destructive-foreground" },
   haute: { label: "Haute", className: "bg-destructive/15 text-destructive border-destructive/30" },
-  moyenne: { label: "Moyenne", className: "bg-amber-500/15 text-amber-600 border-amber-500/30" },
+  moyenne: { label: "Moyenne", className: "bg-warning/15 text-warning border-warning/30" },
   basse: { label: "Basse", className: "bg-muted text-muted-foreground border-border" },
 };
 
 const STATUT_META: Record<Statut, { label: string; className: string }> = {
   nouveau: { label: "Nouveau", className: "bg-primary/15 text-primary border-primary/30" },
-  en_cours: { label: "En cours", className: "bg-blue-500/15 text-blue-600 border-blue-500/30" },
-  resolu: { label: "Résolu", className: "bg-emerald-500/15 text-emerald-600 border-emerald-500/30" },
+  en_cours: { label: "En cours", className: "bg-info/15 text-info border-info/30" },
+  resolu: { label: "Résolu", className: "bg-success/15 text-success border-success/30" },
   ferme: { label: "Fermé", className: "bg-muted text-muted-foreground border-border" },
   rejete: { label: "Rejeté", className: "bg-destructive/15 text-destructive border-destructive/30" },
 };

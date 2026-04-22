@@ -180,12 +180,12 @@ export function SwapsList({
                       </p>
                     )}
                     {s.collegue_motif && (
-                      <p className="text-red-700 dark:text-red-400">
+                      <p className="text-destructive">
                         <strong>Refus collègue :</strong> {s.collegue_motif}
                       </p>
                     )}
                     {s.chef_motif && (
-                      <p className="text-red-700 dark:text-red-400">
+                      <p className="text-destructive">
                         <strong>Décision chef :</strong> {s.chef_motif}
                       </p>
                     )}
@@ -206,7 +206,7 @@ export function SwapsList({
                           variant="outline"
                           onClick={() => setDecisionDialog({ swap: s, mode: "refuse_collegue", motif: "" })}
                           disabled={busy === s.id}
-                          className="gap-1 text-red-700 hover:text-red-800 dark:text-red-400"
+                          className="gap-1 text-destructive hover:text-destructive/80"
                         >
                           <X className="h-3.5 w-3.5" /> Refuser
                         </Button>
@@ -228,7 +228,7 @@ export function SwapsList({
                           variant="outline"
                           onClick={() => setDecisionDialog({ swap: s, mode: "reject_chef", motif: "" })}
                           disabled={busy === s.id}
-                          className="gap-1 text-red-700 hover:text-red-800 dark:text-red-400"
+                          className="gap-1 text-destructive hover:text-destructive/80"
                         >
                           <X className="h-3.5 w-3.5" /> Rejeter
                         </Button>
