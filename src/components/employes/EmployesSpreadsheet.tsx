@@ -122,6 +122,7 @@ export function EmployesSpreadsheet({ rows, onSaved }: Props) {
               <TableHead className="w-[80px] text-center">Actif</TableHead>
               <TableHead className="w-[100px] text-center">Hors staffing</TableHead>
               <TableHead className="w-[80px] text-center">Livreur</TableHead>
+              <TableHead className="min-w-[180px]">Permis</TableHead>
               <TableHead className="w-[100px]"></TableHead>
             </TableRow>
           </TableHeader>
