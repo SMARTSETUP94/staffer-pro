@@ -179,12 +179,15 @@ function EmployesPage() {
       }, {});
     }
     setRows(
-      (emps ?? []).map((e) => ({
-        ...e,
-        categories_permis: (e.categories_permis ?? []) as Permis[],
-        secondaires: secMap[e.id] ?? [],
-        matricule_silae: e.profile_id ? matriculeMap[e.profile_id] ?? null : null,
-      })),
+      (emps ?? []).map((e) => {
+        const eAny = e as typeof e & { categories_permis?: Permis[] | null };
+        return {
+          ...e,
+          categories_permis: (eAny.categories_permis ?? []) as Permis[],
+          secondaires: secMap[e.id] ?? [],
+          matricule_silae: e.profile_id ? matriculeMap[e.profile_id] ?? null : null,
+        };
+      }),
     );
     setLoading(false);
   };
