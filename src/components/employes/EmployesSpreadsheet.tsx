@@ -64,6 +64,7 @@ type DraftPatch = Partial<
     | "actif"
     | "non_staffing"
     | "est_livreur"
+    | "categories_permis"
   >
 >;
 
