@@ -74,20 +74,19 @@ export function ExportTrajetsSoustraitanceDialog({ open, onOpenChange }: Props) 
           .limit(500),
         supabase
           .from("trajets")
-          .select("notes, statut_soustraitance")
+          .select("prestataire")
           .neq("statut_soustraitance", "non")
+          .not("prestataire", "is", null)
           .limit(2000),
       ]);
       setAffaires((aff ?? []) as { id: string; numero: string; nom: string }[]);
-      // Heuristique : on extrait les prestataires depuis le champ notes (optionnel),
-      // plus tard on aura un champ dédié transporteur_id.
+      // v0.19 — on utilise désormais la vraie colonne `prestataire`.
       const setP = new Set<string>();
-      ((tr ?? []) as { notes: string | null }[]).forEach((t) => {
-        if (t.notes && t.notes.length < 80 && /transporteur|prestataire|^[A-Z]/i.test(t.notes)) {
-          setP.add(t.notes.trim());
-        }
+      ((tr ?? []) as { prestataire: string | null }[]).forEach((t) => {
+        const p = t.prestataire?.trim();
+        if (p) setP.add(p);
       });
-      setPrestataires(Array.from(setP).slice(0, 50));
+      setPrestataires(Array.from(setP).sort().slice(0, 100));
     })();
   }, [open]);
 
@@ -118,7 +117,7 @@ export function ExportTrajetsSoustraitanceDialog({ open, onOpenChange }: Props) 
     let q = supabase
       .from("trajets")
       .select(
-        "id, date, heure_depart, heure_arrivee, adresse_depart, adresse_arrivee, parent_trajet_id, kilometrage, categorie, statut_soustraitance, notes, vehicule_id, affaire_id, vehicules(nom, immatriculation, type), affaires(numero, nom)",
+        "id, reference, date, heure_depart, heure_arrivee, adresse_depart, adresse_arrivee, aller_retour, parent_trajet_id, kilometrage, categorie, statut_soustraitance, notes, prestataire, vehicule_id, affaire_id, vehicules(nom, immatriculation, type), affaires(numero, nom)",
       )
       .neq("statut_soustraitance", "non")
       .gte("date", dateFrom)
@@ -132,30 +131,38 @@ export function ExportTrajetsSoustraitanceDialog({ open, onOpenChange }: Props) 
     if (affaireFilter !== "__all__") {
       q = q.eq("affaire_id", affaireFilter);
     }
+    if (prestataireFilter !== "__all__") {
+      q = q.eq("prestataire", prestataireFilter);
+    }
     const { data, error } = await q;
     if (error) throw error;
     type Row = {
       id: string;
+      reference: string | null;
       date: string;
       heure_depart: string | null;
       heure_arrivee: string | null;
       adresse_depart: string;
       adresse_arrivee: string;
+      aller_retour: boolean;
       parent_trajet_id: string | null;
       kilometrage: number | null;
       categorie: string;
       statut_soustraitance: "non" | "a_sous_traiter" | "devis_envoye" | "confirme";
       notes: string | null;
+      prestataire: string | null;
       vehicules: { nom: string | null; immatriculation: string | null; type: string | null } | null;
       affaires: { numero: string | null; nom: string | null } | null;
     };
-    let mapped: TrajetExportRow[] = ((data ?? []) as unknown as Row[]).map((r) => ({
+    const mapped: TrajetExportRow[] = ((data ?? []) as unknown as Row[]).map((r) => ({
       id: r.id,
+      reference: r.reference,
       date: r.date,
       heure_depart: r.heure_depart,
       heure_arrivee: r.heure_arrivee,
       adresse_depart: r.adresse_depart,
       adresse_arrivee: r.adresse_arrivee,
+      aller_retour: r.aller_retour,
       parent_trajet_id: r.parent_trajet_id,
       vehicule_label: r.vehicules?.nom
         ? `${r.vehicules.nom}${r.vehicules.immatriculation ? ` (${r.vehicules.immatriculation})` : ""}`
@@ -165,14 +172,11 @@ export function ExportTrajetsSoustraitanceDialog({ open, onOpenChange }: Props) 
       affaire_numero: r.affaires?.numero ?? null,
       affaire_nom: r.affaires?.nom ?? null,
       categorie: r.categorie,
-      prestataire: r.notes && r.notes.length < 80 ? r.notes : null,
+      prestataire: r.prestataire,
       statut_soustraitance: r.statut_soustraitance,
       notes: r.notes,
     }));
 
-    if (prestataireFilter !== "__all__") {
-      mapped = mapped.filter((r) => (r.prestataire ?? "").trim() === prestataireFilter);
-    }
     return mapped;
   }
 
