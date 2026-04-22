@@ -654,8 +654,11 @@ export function PlanningGrid({
                     })}
                   </tr>
                 ))}
+                  </FragmentGroup>
+                ))}
               </FragmentGroup>
-            ))}
+              );
+            })}
           </tbody>
         </table>
       </div>
