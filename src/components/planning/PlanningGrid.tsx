@@ -440,7 +440,13 @@ export function PlanningGrid({
             </tr>
           </thead>
           <tbody>
-            {grouped.map(({ metier, employes: emps }) => (
+            {grouped.map(({ metier, titulaires, renforts }) => {
+              const totalCount = titulaires.length + renforts.length;
+              const hasRenforts = renforts.length > 0;
+              const sections: { kind: "titulaire" | "renfort"; emps: Employe[] }[] = [];
+              if (titulaires.length > 0) sections.push({ kind: "titulaire", emps: titulaires });
+              if (hasRenforts) sections.push({ kind: "renfort", emps: renforts });
+              return (
               <FragmentGroup key={metier.id}>
                 <tr>
                   <td
@@ -452,10 +458,27 @@ export function PlanningGrid({
                       className="mr-2 inline-block h-2 w-2 rounded-full"
                       style={{ backgroundColor: metier.couleur }}
                     />
-                    {metier.libelle} ({emps.length})
+                    {metier.libelle} ({totalCount})
+                    {hasRenforts && (
+                      <span className="ml-2 normal-case tracking-normal text-muted-foreground">
+                        — {titulaires.length} titulaire{titulaires.length > 1 ? "s" : ""} + {renforts.length} renfort{renforts.length > 1 ? "s" : ""}
+                      </span>
+                    )}
                   </td>
                 </tr>
-                {emps.map((emp) => (
+                {sections.map((section) => (
+                  <FragmentGroup key={`${metier.id}-${section.kind}`}>
+                    {hasRenforts && (
+                      <tr>
+                        <td
+                          colSpan={days.length + 1}
+                          className="border-b bg-muted/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground"
+                        >
+                          {section.kind === "titulaire" ? "Titulaires" : "Renforts (autres métiers principaux)"}
+                        </td>
+                      </tr>
+                    )}
+                    {section.emps.map((emp) => (
                   <tr key={emp.id} className="hover:bg-muted/30">
                     <td className="sticky left-0 z-10 border-b bg-card p-2 hover:bg-muted/30">
                       <div className="flex items-center gap-1.5">
