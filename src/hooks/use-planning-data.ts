@@ -18,6 +18,10 @@ export interface Employe {
   sous_type_contrat: string | null;
   agence_interim: string | null;
   metier_principal_id: number;
+  /** v0.18.1 — chauffeur compatible véhicule. */
+  est_livreur?: boolean;
+  /** v0.18.1 — permis détenus (pour filtrage chauffeur véhicule). */
+  categories_permis?: ("B" | "C" | "CE" | "D")[] | null;
 }
 
 export interface Affaire {
@@ -136,7 +140,7 @@ export function usePlanningData(weekStart: Date, weekEnd: Date): PlanningData {
       supabase.from("metiers").select("*").order("ordre"),
       supabase
         .from("employes")
-        .select("id, prenom, nom, type_contrat, sous_type_contrat, agence_interim, metier_principal_id")
+        .select("id, prenom, nom, type_contrat, sous_type_contrat, agence_interim, metier_principal_id, est_livreur, categories_permis")
         .eq("actif", true)
         .eq("non_staffing", false)
         .order("nom"),

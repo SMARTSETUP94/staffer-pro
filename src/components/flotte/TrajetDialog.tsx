@@ -20,6 +20,7 @@ import {
 } from "@/hooks/use-vehicules";
 import { getCompatibleChauffeurs } from "@/hooks/use-trajets";
 import type { Tables } from "@/integrations/supabase/types";
+import type { Permis } from "@/lib/permis";
 
 type TrajetCategorie = Trajet["categorie"];
 type SoustraitanceStatut = Trajet["statut_soustraitance"];
@@ -38,6 +39,8 @@ interface EmployeLite {
   nom: string;
   est_livreur: boolean;
   actif: boolean;
+  /** v0.18.1 — catégories de permis (utilisées pour filtrer compatibilité véhicule). */
+  categories_permis?: Permis[] | null;
 }
 
 interface AffaireLite {
