@@ -350,11 +350,47 @@ export function TrajetDialog({
                     Ce chauffeur n'est pas compatible avec le véhicule.
                   </p>
                 )}
-                {vehiculeSel?.type === "poids_lourd" && (
-                  <p className="mt-1 text-[10px] text-muted-foreground">
-                    Pour autoriser un nouveau chauffeur sur ce PL, ouvre la fiche véhicule
-                    dans <strong>Logistique → Véhicules</strong>.
-                  </p>
+                {vehiculeSel?.type === "poids_lourd" && aAutoriser.length > 0 && (
+                  <div className="mt-2 rounded-md border border-warning/40 bg-warning/5 p-2">
+                    <p className="text-[10px] font-semibold text-foreground mb-1">
+                      Livreurs à autoriser sur ce PL
+                    </p>
+                    <div className="space-y-1">
+                      {aAutoriser.map((c) => (
+                        <div
+                          key={c.employe.id}
+                          className="flex items-center justify-between gap-2 text-[11px]"
+                        >
+                          <span className="truncate">
+                            🔒 {c.employe.prenom} {c.employe.nom}
+                          </span>
+                          {isAdmin ? (
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              className="h-6 px-2 text-[10px]"
+                              disabled={authorizingId === c.employe.id}
+                              onClick={() => handleAutoriser(c.employe.id)}
+                            >
+                              {authorizingId === c.employe.id ? (
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                              ) : (
+                                <>
+                                  <ShieldCheck className="h-3 w-3 mr-1" />
+                                  Autoriser
+                                </>
+                              )}
+                            </Button>
+                          ) : (
+                            <span className="text-[10px] text-muted-foreground">
+                              admin requis
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 )}
               </div>
             </div>
