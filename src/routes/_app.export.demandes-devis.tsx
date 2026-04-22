@@ -338,10 +338,25 @@ function DemandesTransportPage() {
         title="Demandes transport"
         description="Suivi des trajets sous-traités aux transporteurs"
         actions={
-          <Button variant="outline" size="sm" onClick={() => setExportDialogOpen(true)}>
-            <FileDown className="mr-2 h-4 w-4" />
-            Exporter CSV / Excel
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setMailText(buildMailText(sorted));
+                setMailCopied(false);
+                setMailDialogOpen(true);
+              }}
+              disabled={sorted.length === 0}
+            >
+              <Mail className="mr-2 h-4 w-4" />
+              Générer texte demande
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setExportDialogOpen(true)}>
+              <FileDown className="mr-2 h-4 w-4" />
+              Exporter CSV / Excel
+            </Button>
+          </div>
         }
       />
 
