@@ -17,10 +17,12 @@ import { HeuresRestantesSidebar } from "@/components/planning/HeuresRestantesSid
 import { MultiFilter } from "@/components/planning/MultiFilter";
 import { AddInterimDialog } from "@/components/planning/AddInterimDialog";
 import { FlotteGrid } from "@/components/planning/FlotteGrid";
+import { SuggestionsTrajetsBloc } from "@/components/planning/SuggestionsTrajetsBloc";
 import { TrajetDialog } from "@/components/flotte/TrajetDialog";
 import { useVehicules, type Trajet } from "@/hooks/use-vehicules";
 import { useTrajetsWeek } from "@/hooks/use-trajets";
 import { exportPlanningToPDF } from "@/lib/planning-export";
+import type { TrajetSuggestion } from "@/lib/trajets-suggestions";
 
 export const Route = createFileRoute("/_app/planning")({
   head: () => ({
@@ -40,6 +42,13 @@ function PlanningPage() {
   const [editTrajet, setEditTrajet] = useState<Trajet | null>(null);
   const [defaultTrajetVehId, setDefaultTrajetVehId] = useState<string | null>(null);
   const [defaultTrajetDate, setDefaultTrajetDate] = useState<string | undefined>(undefined);
+  // v0.18.1 — prefill depuis suggestion auto
+  const [defaultPrefill, setDefaultPrefill] = useState<{
+    adresseDepart?: string;
+    adresseArrivee?: string;
+    categorie?: "pose" | "depose" | "livraison_fourniture" | "recuperation_materiel" | "autre";
+    affaireId?: string | null;
+  }>({});
   const { vehicules } = useVehicules();
   const { trajets, refresh: refreshTrajets } = useTrajetsWeek(weekStart, weekEnd);
   const [filterAffaire, setFilterAffaire] = useState<Set<string | number>>(new Set());
@@ -375,7 +384,37 @@ function PlanningPage() {
                 />
               </TabsContent>
 
-              <TabsContent value="flotte" className="mt-4">
+              <TabsContent value="flotte" className="mt-4 space-y-4">
+                <SuggestionsTrajetsBloc
+                  weekStart={weekStart}
+                  weekEnd={weekEnd}
+                  affaires={affaires.map((a) => ({
+                    id: a.id,
+                    numero: a.numero,
+                    nom: a.nom,
+                    lieu: a.lieu,
+                    date_montage: a.date_montage,
+                    date_demontage: a.date_demontage,
+                  }))}
+                  trajets={trajets.map((t) => ({
+                    affaire_id: t.affaire_id,
+                    date: t.date,
+                    adresse_depart: t.adresse_depart,
+                    adresse_arrivee: t.adresse_arrivee,
+                  }))}
+                  onAccepter={(s: TrajetSuggestion, altAdresse?: string) => {
+                    setEditTrajet(null);
+                    setDefaultTrajetVehId(null);
+                    setDefaultTrajetDate(s.date);
+                    setDefaultPrefill({
+                      adresseDepart: s.adresse_depart,
+                      adresseArrivee: altAdresse ?? s.adresse_arrivee,
+                      categorie: s.type === "montage" ? "pose" : "depose",
+                      affaireId: s.affaire.id,
+                    });
+                    setTrajetDlgOpen(true);
+                  }}
+                />
                 <FlotteGrid
                   weekStart={weekStart}
                   vehicules={vehicules}
@@ -387,18 +426,21 @@ function PlanningPage() {
                     setEditTrajet(null);
                     setDefaultTrajetVehId(vId);
                     setDefaultTrajetDate(format(d, "yyyy-MM-dd"));
+                    setDefaultPrefill({});
                     setTrajetDlgOpen(true);
                   }}
                   onEditTrajet={(t) => {
                     setEditTrajet(t);
                     setDefaultTrajetVehId(null);
                     setDefaultTrajetDate(undefined);
+                    setDefaultPrefill({});
                     setTrajetDlgOpen(true);
                   }}
                   onAddTrajetSousTraite={(d) => {
                     setEditTrajet(null);
                     setDefaultTrajetVehId(null);
                     setDefaultTrajetDate(format(d, "yyyy-MM-dd"));
+                    setDefaultPrefill({});
                     setTrajetDlgOpen(true);
                   }}
                 />
@@ -438,6 +480,10 @@ function PlanningPage() {
         trajet={editTrajet}
         defaultDate={defaultTrajetDate}
         defaultVehiculeId={defaultTrajetVehId}
+        defaultAdresseDepart={defaultPrefill.adresseDepart}
+        defaultAdresseArrivee={defaultPrefill.adresseArrivee}
+        defaultCategorie={defaultPrefill.categorie}
+        defaultAffaireId={defaultPrefill.affaireId}
         affaires={affaires.map((a) => ({ id: a.id, numero: a.numero, nom: a.nom }))}
         employesLivreurs={employes
           .filter((e) => e.est_livreur)

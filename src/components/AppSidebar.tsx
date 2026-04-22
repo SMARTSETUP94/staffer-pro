@@ -2,7 +2,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import {
   Calendar, Building2, Users, FileUp, FileDown, ClipboardCheck, LogOut, Clock, CalendarOff,
   Smartphone, UserCircle, LayoutDashboard, FileText, Trophy, Map, ArrowLeftRight, ClipboardList,
-  Truck, FileQuestion, Palette, MessageCircle,
+  Truck, FileQuestion, Palette, MessageCircle, Warehouse,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -118,7 +118,7 @@ function buildSections(role: EffRole, validationCount: number): NavSection[] {
         { title: "Imports", url: "/employes/import", icon: FileUp, show: () => true },
         { title: "Export planning", url: "/export", icon: FileDown, show: () => true },
         { title: "Métiers", url: "/parametres/metiers", icon: Palette, show: () => true },
-        // v0.15.1 : backfill rattachement multi-devis (admin only, opération ponctuelle)
+        { title: "Lieux entreprise", url: "/parametres/lieux", icon: Warehouse, show: () => true },
         { title: "Rattachement devis", url: "/devis/rattachement-historique", icon: ClipboardList, show: () => true },
         { title: "Signalements", url: "/admin/feedback", icon: MessageCircle, show: () => true },
         { title: "Roadmap", url: "/roadmap", icon: Map, show: () => true },
