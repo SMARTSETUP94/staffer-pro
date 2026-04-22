@@ -1031,12 +1031,12 @@ const PLANNED: RoadmapPlanned[] = [
       "Refactor moyen terme du module saisie d'heures vers un format horaire précis : `heure_debut`, `heure_fin`, pauses (déjeuner + autres). Auto-calcul des heures de nuit par overlap avec la plage 00h-06h (convention spectacle vivant). Déclenchement conditionné au retour d'usage Phase 1 (v0.18, saisie déclarative).",
   },
 
-  // ========== v0.16 — Demandes transport automatisées Resend ==========
+  // ========== v0.16 — Export texte trajets sous-traités (mode copier-coller mail) ==========
   {
     priority: "haute",
-    title: "v0.16 — Envoi automatisé devis transport (Resend)",
+    title: "v0.16 — Export texte trajets sous-traités (mode copier-coller mail)",
     description:
-      "Bouton « Envoyer demande de devis » sur l'export trajets sous-traités : génération email branded indigo/cream + PDF récap server-side, envoi 1 clic via Resend au prestataire choisi (FK `transporteur_id`, livrée v0.18.2). Suivi des réponses (saisie manuelle Phase 1), choix du prestataire retenu, statut (envoyée / répondue / acceptée / refusée). Liaison avec véhicules (proposition « véhicule interne dispo ? » avant sous-traitance).",
+      "Bouton « Export texte » dans Planning Flotte → modale avec zone texte pré-remplie, groupement par date chronologique, un seul template par défaut non éditable, bouton « Copier » intégré. Pas d'automatisation Resend (reportée plus tard). Déclenchement sur demande Gabin.",
   },
 
   // ========== HAUTE PRIORITÉ ==========
