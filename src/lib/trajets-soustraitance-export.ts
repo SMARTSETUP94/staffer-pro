@@ -8,11 +8,13 @@ import { format } from "date-fns";
  */
 export interface TrajetExportRow {
   id: string;
+  reference: string | null;
   date: string; // YYYY-MM-DD
   heure_depart: string | null;
   heure_arrivee: string | null;
   adresse_depart: string;
   adresse_arrivee: string;
+  aller_retour: boolean;
   parent_trajet_id: string | null;
   vehicule_label: string | null;
   vehicule_type: string | null;
@@ -67,19 +69,21 @@ interface FlatRow {
 }
 
 function aplatir(rows: TrajetExportRow[]): FlatRow[] {
-  // Groupage AR : si un trajet a un parent_trajet_id, on le considère comme retour.
-  const parentIds = new Set(rows.map((r) => r.parent_trajet_id).filter(Boolean));
+  // v0.19 : on utilise les vraies colonnes `aller_retour` + `reference` + `prestataire`.
+  // Pour distinguer aller / retour dans une paire AR, on s'appuie encore sur parent_trajet_id.
   return rows.map((r) => {
-    const isAller = parentIds.has(r.id);
-    const isRetour = !!r.parent_trajet_id;
+    let allerRetourLabel = "Non";
+    if (r.aller_retour) {
+      allerRetourLabel = r.parent_trajet_id ? "Retour (AR)" : "Aller (AR)";
+    }
     return {
-      reference: r.id.slice(0, 8).toUpperCase(),
+      reference: r.reference ?? r.id.slice(0, 8).toUpperCase(),
       date: format(new Date(r.date + "T00:00:00"), "dd/MM/yyyy"),
       heure_depart: r.heure_depart?.slice(0, 5) ?? "",
       heure_arrivee: r.heure_arrivee?.slice(0, 5) ?? "",
       adresse_depart: r.adresse_depart,
       adresse_arrivee: r.adresse_arrivee,
-      aller_retour: isAller ? "Aller (AR)" : isRetour ? "Retour (AR)" : "Non",
+      aller_retour: allerRetourLabel,
       vehicule: r.vehicule_label ?? r.vehicule_type ?? "À attribuer",
       kilometrage: r.kilometrage != null ? String(r.kilometrage) : "",
       affaire: r.affaire_nom ?? "",
