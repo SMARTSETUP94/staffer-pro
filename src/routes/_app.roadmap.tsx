@@ -791,6 +791,13 @@ const RELEASES: RoadmapRelease[] = [
 ];
 
 const PLANNED: RoadmapPlanned[] = [
+  // ========== v0.19 — Saisie heures horaires précis (auto-calcul nuit) ==========
+  {
+    priority: "haute",
+    title: "v0.19 — Saisie heures précises (heure_debut / heure_fin / pauses) + auto-calcul nuit",
+    description:
+      "Refactor moyen terme du module saisie d'heures vers un format horaire précis : `heure_debut`, `heure_fin`, pauses (déjeuner + autres). Auto-calcul des heures de nuit par overlap avec la plage 00h-06h (convention spectacle vivant). Déclenchement conditionné au retour d'usage Phase 1 (v0.18, saisie déclarative).",
+  },
   // ========== v0.16 — Demandes transport automatisées + prestataires ==========
   {
     priority: "haute",
