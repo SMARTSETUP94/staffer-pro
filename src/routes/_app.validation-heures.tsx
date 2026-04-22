@@ -33,7 +33,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { WeekPicker } from "@/components/planning/WeekPicker";
 import { cn } from "@/lib/utils";
-import { exportHeuresXlsx, type HeuresExportRow } from "@/lib/heures-export";
+import { exportHeuresSilae, type HeuresExportRow } from "@/lib/heures-export";
 import { PageBreadcrumbs } from "@/components/PageBreadcrumbs";
 
 export const Route = createFileRoute("/_app/validation-heures")({
@@ -199,7 +199,7 @@ function ValidationHeuresPage() {
   const handleExport = async () => {
     setExporting(true);
     try {
-      // Export = uniquement validées dans la période/filtres actuels
+      // Export SILAE = uniquement validées dans la période/filtres actuels
       // Pagination par pages de 1000 pour éviter toute troncature silencieuse
       const PAGE_SIZE = 1000;
       const all: HeuresExportRow[] = [];
@@ -208,7 +208,7 @@ function ValidationHeuresPage() {
         let q = supabase
           .from("heures_saisies")
           .select(
-            "id, date, heure_debut, heure_fin, heures_reelles, commentaire, statut, valide_le, employe:employes(prenom, nom), affaire:affaires(numero, nom)",
+            "id, date, heure_debut, heure_fin, heures_reelles, heures_nuit, commentaire, statut, valide_le, motif_rejet, devis_id, employe:employes(prenom, nom, type_contrat, metier_principal:metiers!employes_metier_principal_id_fkey(libelle), profile:profiles(matricule_silae)), affaire:affaires(numero, nom, lieu, phase), assignation:assignations(metier:metiers(libelle)), valideur:profiles!heures_saisies_valide_par_fkey(full_name, email)",
           )
           .gte("date", startStr)
           .lte("date", endStr)
@@ -224,8 +224,12 @@ function ValidationHeuresPage() {
         if (batch.length < PAGE_SIZE) break;
         from += PAGE_SIZE;
       }
-      await exportHeuresXlsx(all, { weekStart, weekEnd });
-      toast.success(`${all.length} ligne(s) exportée(s)`);
+      if (all.length === 0) {
+        toast.warning("Aucune saisie validée à exporter sur cette période.");
+        return;
+      }
+      await exportHeuresSilae(all, { weekStart, weekEnd });
+      toast.success(`Export SILAE généré — ${all.length} ligne(s) (CSV + XLSX)`);
     } catch (e: any) {
       toast.error(e?.message ?? "Erreur export");
     } finally {
