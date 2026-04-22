@@ -1775,6 +1775,14 @@ export type Database = {
         Args: { _affaire_id: string; _new_code: string }
         Returns: string
       }
+      user_has_affaire_access: {
+        Args: { _affaire_id: string }
+        Returns: boolean
+      }
+      user_is_mentioned_on_affaire: {
+        Args: { _affaire_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       absence_type: "conges" | "formation" | "arret_maladie" | "rtt" | "autre"
