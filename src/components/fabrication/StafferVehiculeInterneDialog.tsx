@@ -54,12 +54,18 @@ interface EmployeLite {
   nom: string;
 }
 
-/** Règle de suggestion simple : <5 objets = utilitaire, 5-15 = camion 20m³, >15 = poids lourd. */
+/** Règle de suggestion simple : <5 objets = VL, 5-15 = M3_20, >15 = poids lourd. */
 function suggererTypeVehicule(count: number): VehiculeType {
-  if (count <= 5) return "utilitaire";
-  if (count <= 15) return "camion_20m3";
+  if (count <= 5) return "VL";
+  if (count <= 15) return "M3_20";
   return "poids_lourd";
 }
+
+const TYPE_LABEL: Record<VehiculeType, string> = {
+  VL: "Véhicule léger",
+  M3_20: "Camion 20m³",
+  poids_lourd: "Poids lourd",
+};
 
 export function StafferVehiculeInterneDialog({
   open,
