@@ -200,6 +200,32 @@ function FabricationPage() {
         </div>
       </div>
 
+      {/* v0.20 Bloc 7 — Bandeau "prête à livrer" */}
+      {pretALivrer && isAdminOrChef && (
+        <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">
+              ✅ Affaire prête à livrer — toutes les étapes manutention sont terminées.
+            </p>
+            <div className="flex flex-shrink-0 gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                className="rounded-xl"
+                onClick={() => setOpenStaffer(true)}
+              >
+                <Truck className="mr-1 h-3 w-3" /> Staffer véhicule interne
+              </Button>
+              <Button asChild size="sm" variant="outline" className="rounded-xl">
+                <Link to="/export/demandes-devis">
+                  <Send className="mr-1 h-3 w-3" /> Demander trajet sous-traité
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Tableau */}
       {objets.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border bg-card/50 p-8 text-center">
