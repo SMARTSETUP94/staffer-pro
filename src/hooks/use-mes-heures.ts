@@ -272,6 +272,7 @@ export function useMesHeures({ weekStart, employeIdOverride }: UseMesHeuresOptio
         heures_reelles: patch.heures_reelles ?? Number(row.assignation.heures),
         heure_debut: patch.heure_debut ?? null,
         heure_fin: patch.heure_fin ?? null,
+        duree_pause_minutes: patch.duree_pause_minutes ?? 0,
         commentaire: patch.commentaire ?? null,
         fabrication_objet_id: patch.fabrication_objet_id ?? null,
         fabrication_etape_type: patch.fabrication_etape_type ?? null,
