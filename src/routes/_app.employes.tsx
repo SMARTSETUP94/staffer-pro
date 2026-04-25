@@ -110,6 +110,7 @@ const emptyForm: FormState = {
   est_respo_fab: false,
   est_finition: false,
   est_manutention: false,
+  est_bureau_etude: false,
   secondaires: [],
 };
 
