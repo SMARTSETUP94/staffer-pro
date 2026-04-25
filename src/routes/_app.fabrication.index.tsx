@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { createFileRoute, Link, redirect } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Hammer, Loader2, Box, Brush, Pencil, Wrench, Truck, AlertCircle, Send,
 } from "lucide-react";
@@ -20,11 +20,6 @@ import { StafferVehiculeInterneDialog } from "@/components/fabrication/StafferVe
 
 export const Route = createFileRoute("/_app/fabrication/")({
   head: () => ({ meta: [{ title: "Dashboard fabrication — Setup Paris" }] }),
-  beforeLoad: ({ context }) => {
-    // Garde-fou : seuls les chef/admin peuvent voir cette page (vue globale)
-    // Le contexte n'est pas typé ici, on s'appuie sur le AppGuard parent pour le reste.
-    void context;
-  },
   component: FabricationDashboardPage,
   errorComponent: ({ error }) => (
     <div className="rounded-xl border border-destructive bg-destructive/5 p-4">
@@ -297,7 +292,7 @@ function FabricationDashboardPage() {
                       <Truck className="mr-1 h-3 w-3" /> Staffer véhicule
                     </Button>
                     <Button asChild size="sm" variant="outline" className="rounded-xl">
-                      <Link to="/export/demandes-devis" search={{ affaireId: a.id } as never}>
+                      <Link to="/export/demandes-devis">
                         <Send className="mr-1 h-3 w-3" /> Sous-traiter
                       </Link>
                     </Button>
@@ -350,5 +345,3 @@ function KpiCard({
   );
 }
 
-// Suppress unused import warning for redirect (kept for future guard logic)
-void redirect;
