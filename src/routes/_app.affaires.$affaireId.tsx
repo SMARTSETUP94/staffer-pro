@@ -43,7 +43,7 @@ function AffaireDetailLayout() {
   const fetchAffaire = async (id: string, signal?: { cancelled: boolean }) => {
     const { data } = await supabase
       .from("affaires")
-      .select("id, numero, nom, client, lieu, statut, date_debut, date_fin_prevue, notes")
+      .select("id, numero, nom, client, lieu, statut, phase, date_debut, date_fin_prevue, notes")
       .eq("id", id)
       .maybeSingle();
     if (signal?.cancelled) return;
