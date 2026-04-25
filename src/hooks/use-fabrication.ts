@@ -173,7 +173,7 @@ export function useProfilesWithRoles() {
     setLoading(true);
     const { data } = await supabase
       .from("profiles")
-      .select("id, full_name, email, est_chef_projet, est_respo_fab, est_finition, est_manutention")
+      .select("id, full_name, email, est_chef_projet, est_respo_fab, est_finition, est_manutention, est_bureau_etude")
       .order("full_name", { ascending: true, nullsFirst: false });
     setProfiles((data ?? []) as ProfileRole[]);
     setLoading(false);
