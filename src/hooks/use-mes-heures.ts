@@ -16,6 +16,8 @@ export interface AssignationRow {
   metier: { libelle: string; couleur: string } | null;
 }
 
+export type FabricationEtapeTypeRow = "be" | "respo_fab" | "finition" | "manutention";
+
 export interface SaisieRow {
   id: string;
   assignation_id: string | null;
@@ -28,6 +30,8 @@ export interface SaisieRow {
   statut: HeureStatut;
   motif_rejet: string | null;
   motif_rejet_lu_le: string | null;
+  fabrication_objet_id: string | null;
+  fabrication_etape_type: FabricationEtapeTypeRow | null;
 }
 
 /** Combinaison d'une assignation + sa saisie (s'il y en a une). */
