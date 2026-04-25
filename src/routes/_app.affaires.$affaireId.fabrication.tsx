@@ -1,6 +1,12 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Loader2, Plus, Upload } from "lucide-react";
+import { Loader2, Plus, Upload, MoreVertical, Pencil } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
@@ -36,6 +42,7 @@ import {
   type FabricationEtapeType,
 } from "@/hooks/use-fabrication";
 import { AjouterObjetDialog } from "@/components/fabrication/AjouterObjetDialog";
+import { EditerObjetDialog } from "@/components/fabrication/EditerObjetDialog";
 import { EtapeDialog } from "@/components/fabrication/EtapeDialog";
 
 export const Route = createFileRoute("/_app/affaires/$affaireId/fabrication")({
@@ -49,6 +56,7 @@ function FabricationPage() {
   const { objets, loading, reload } = useFabricationObjets(affaireId);
   const { profiles } = useProfilesWithRoles();
   const [openAjouter, setOpenAjouter] = useState(false);
+  const [editObjet, setEditObjet] = useState<FabricationObjet | null>(null);
   const [editEtape, setEditEtape] = useState<{ objet: FabricationObjet; etape: FabricationEtape } | null>(null);
   const [chefProjetId, setChefProjetId] = useState<string | null>(null);
   const [savingChef, setSavingChef] = useState(false);
@@ -190,6 +198,7 @@ function FabricationPage() {
                   </TableHead>
                 ))}
                 <TableHead className="w-20 text-center">Avanc.</TableHead>
+                {isAdminOrChef && <TableHead className="w-12"></TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -232,6 +241,22 @@ function FabricationPage() {
                   <TableCell className="text-center text-xs font-semibold">
                     {calcAvancementObjet(o)}%
                   </TableCell>
+                  {isAdminOrChef && (
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-7 w-7">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => setEditObjet(o)}>
+                            <Pencil className="mr-2 h-4 w-4" /> Modifier l'objet
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
             </TableBody>
@@ -251,6 +276,15 @@ function FabricationPage() {
         onOpenChange={setOpenAjouter}
         onCreated={reload}
       />
+
+      {editObjet && (
+        <EditerObjetDialog
+          objet={editObjet}
+          open={!!editObjet}
+          onOpenChange={(o) => !o && setEditObjet(null)}
+          onSaved={reload}
+        />
+      )}
 
       {editEtape && (
         <EtapeDialog

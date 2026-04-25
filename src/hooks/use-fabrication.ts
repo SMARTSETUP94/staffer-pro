@@ -68,6 +68,10 @@ export interface FabricationObjet {
   ordre: number;
   archive: boolean;
   created_at: string;
+  a_dessiner: boolean;
+  a_construire: boolean;
+  est_brut: boolean;
+  a_emballer: boolean;
   etapes: FabricationEtape[];
 }
 
@@ -99,7 +103,7 @@ export function useFabricationObjets(affaireId: string | undefined) {
 
     const { data: objs, error: objErr } = await supabase
       .from("fabrication_objets")
-      .select("id, affaire_id, devis_id, reference, nom, quantite, respo_fab_id, type_finition, commentaire, ordre, archive, created_at")
+      .select("id, affaire_id, devis_id, reference, nom, quantite, respo_fab_id, type_finition, commentaire, ordre, archive, created_at, a_dessiner, a_construire, est_brut, a_emballer")
       .eq("affaire_id", affaireId)
       .eq("archive", false)
       .order("ordre", { ascending: true })

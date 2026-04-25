@@ -832,12 +832,16 @@ export type Database = {
       }
       fabrication_objets: {
         Row: {
+          a_construire: boolean
+          a_dessiner: boolean
+          a_emballer: boolean
           affaire_id: string
           archive: boolean
           commentaire: string | null
           created_at: string
           created_by: string | null
           devis_id: string | null
+          est_brut: boolean
           id: string
           nom: string
           ordre: number
@@ -848,12 +852,16 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          a_construire?: boolean
+          a_dessiner?: boolean
+          a_emballer?: boolean
           affaire_id: string
           archive?: boolean
           commentaire?: string | null
           created_at?: string
           created_by?: string | null
           devis_id?: string | null
+          est_brut?: boolean
           id?: string
           nom: string
           ordre?: number
@@ -864,12 +872,16 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          a_construire?: boolean
+          a_dessiner?: boolean
+          a_emballer?: boolean
           affaire_id?: string
           archive?: boolean
           commentaire?: string | null
           created_at?: string
           created_by?: string | null
           devis_id?: string | null
+          est_brut?: boolean
           id?: string
           nom?: string
           ordre?: number
