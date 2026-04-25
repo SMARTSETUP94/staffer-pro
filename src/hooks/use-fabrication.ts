@@ -34,8 +34,8 @@ export const FINITION_LABELS: Record<FabricationFinitionType, string> = {
 };
 
 /** Mapping étape → flag rôle profile pour filtrer les assignees éligibles */
-export const ETAPE_TO_FLAG: Record<FabricationEtapeType, "est_chef_projet" | "est_respo_fab" | "est_finition" | "est_manutention"> = {
-  be: "est_chef_projet",
+export const ETAPE_TO_FLAG: Record<FabricationEtapeType, "est_chef_projet" | "est_respo_fab" | "est_finition" | "est_manutention" | "est_bureau_etude"> = {
+  be: "est_bureau_etude",
   respo_fab: "est_respo_fab",
   finition: "est_finition",
   manutention: "est_manutention",
