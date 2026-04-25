@@ -180,25 +180,38 @@ function EmployesPage() {
       }, {});
     }
     const profileIds = (emps ?? []).map((e) => e.profile_id).filter((x): x is string => !!x);
-    let matriculeMap: Record<string, string | null> = {};
+    type ProfileFabRow = {
+      id: string;
+      matricule_silae: string | null;
+      est_chef_projet: boolean;
+      est_respo_fab: boolean;
+      est_finition: boolean;
+      est_manutention: boolean;
+    };
+    let profileMap: Record<string, ProfileFabRow> = {};
     if (profileIds.length) {
       const { data: profs } = await supabase
         .from("profiles")
-        .select("id, matricule_silae")
+        .select("id, matricule_silae, est_chef_projet, est_respo_fab, est_finition, est_manutention")
         .in("id", profileIds);
-      matriculeMap = (profs ?? []).reduce<Record<string, string | null>>((acc, p) => {
-        acc[p.id] = p.matricule_silae;
+      profileMap = (profs ?? []).reduce<Record<string, ProfileFabRow>>((acc, p) => {
+        acc[p.id] = p as ProfileFabRow;
         return acc;
       }, {});
     }
     setRows(
       (emps ?? []).map((e) => {
         const permis = (e as unknown as { categories_permis?: Permis[] | null }).categories_permis;
+        const prof = e.profile_id ? profileMap[e.profile_id] : undefined;
         return {
           ...e,
           categories_permis: (permis ?? []) as Permis[],
           secondaires: secMap[e.id] ?? [],
-          matricule_silae: e.profile_id ? matriculeMap[e.profile_id] ?? null : null,
+          matricule_silae: prof?.matricule_silae ?? null,
+          est_chef_projet: prof?.est_chef_projet ?? false,
+          est_respo_fab: prof?.est_respo_fab ?? false,
+          est_finition: prof?.est_finition ?? false,
+          est_manutention: prof?.est_manutention ?? false,
         };
       }),
     );
