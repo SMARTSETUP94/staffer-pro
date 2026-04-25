@@ -1,6 +1,12 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Loader2, Plus, Upload } from "lucide-react";
+import { Loader2, Plus, Upload, MoreVertical, Pencil } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
@@ -36,6 +42,7 @@ import {
   type FabricationEtapeType,
 } from "@/hooks/use-fabrication";
 import { AjouterObjetDialog } from "@/components/fabrication/AjouterObjetDialog";
+import { EditerObjetDialog } from "@/components/fabrication/EditerObjetDialog";
 import { EtapeDialog } from "@/components/fabrication/EtapeDialog";
 
 export const Route = createFileRoute("/_app/affaires/$affaireId/fabrication")({
@@ -49,6 +56,7 @@ function FabricationPage() {
   const { objets, loading, reload } = useFabricationObjets(affaireId);
   const { profiles } = useProfilesWithRoles();
   const [openAjouter, setOpenAjouter] = useState(false);
+  const [editObjet, setEditObjet] = useState<FabricationObjet | null>(null);
   const [editEtape, setEditEtape] = useState<{ objet: FabricationObjet; etape: FabricationEtape } | null>(null);
   const [chefProjetId, setChefProjetId] = useState<string | null>(null);
   const [savingChef, setSavingChef] = useState(false);
