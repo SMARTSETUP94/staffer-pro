@@ -49,6 +49,10 @@ interface EmployeRow {
   notes: string | null;
   profile_id: string | null;
   matricule_silae: string | null;
+  est_chef_projet: boolean;
+  est_respo_fab: boolean;
+  est_finition: boolean;
+  est_manutention: boolean;
   secondaires: number[];
 }
 
@@ -73,6 +77,10 @@ interface FormState {
   notes: string;
   matricule_silae: string;
   profile_id: string | null;
+  est_chef_projet: boolean;
+  est_respo_fab: boolean;
+  est_finition: boolean;
+  est_manutention: boolean;
   secondaires: number[];
 }
 
@@ -96,6 +104,10 @@ const emptyForm: FormState = {
   notes: "",
   matricule_silae: "",
   profile_id: null,
+  est_chef_projet: false,
+  est_respo_fab: false,
+  est_finition: false,
+  est_manutention: false,
   secondaires: [],
 };
 
@@ -168,25 +180,38 @@ function EmployesPage() {
       }, {});
     }
     const profileIds = (emps ?? []).map((e) => e.profile_id).filter((x): x is string => !!x);
-    let matriculeMap: Record<string, string | null> = {};
+    type ProfileFabRow = {
+      id: string;
+      matricule_silae: string | null;
+      est_chef_projet: boolean;
+      est_respo_fab: boolean;
+      est_finition: boolean;
+      est_manutention: boolean;
+    };
+    let profileMap: Record<string, ProfileFabRow> = {};
     if (profileIds.length) {
       const { data: profs } = await supabase
         .from("profiles")
-        .select("id, matricule_silae")
+        .select("id, matricule_silae, est_chef_projet, est_respo_fab, est_finition, est_manutention")
         .in("id", profileIds);
-      matriculeMap = (profs ?? []).reduce<Record<string, string | null>>((acc, p) => {
-        acc[p.id] = p.matricule_silae;
+      profileMap = (profs ?? []).reduce<Record<string, ProfileFabRow>>((acc, p) => {
+        acc[p.id] = p as ProfileFabRow;
         return acc;
       }, {});
     }
     setRows(
       (emps ?? []).map((e) => {
         const permis = (e as unknown as { categories_permis?: Permis[] | null }).categories_permis;
+        const prof = e.profile_id ? profileMap[e.profile_id] : undefined;
         return {
           ...e,
           categories_permis: (permis ?? []) as Permis[],
           secondaires: secMap[e.id] ?? [],
-          matricule_silae: e.profile_id ? matriculeMap[e.profile_id] ?? null : null,
+          matricule_silae: prof?.matricule_silae ?? null,
+          est_chef_projet: prof?.est_chef_projet ?? false,
+          est_respo_fab: prof?.est_respo_fab ?? false,
+          est_finition: prof?.est_finition ?? false,
+          est_manutention: prof?.est_manutention ?? false,
         };
       }),
     );
@@ -254,6 +279,10 @@ function EmployesPage() {
       notes: row.notes ?? "",
       matricule_silae: row.matricule_silae ?? "",
       profile_id: row.profile_id,
+      est_chef_projet: row.est_chef_projet,
+      est_respo_fab: row.est_respo_fab,
+      est_finition: row.est_finition,
+      est_manutention: row.est_manutention,
       secondaires: row.secondaires.filter((id) => id !== row.metier_principal_id),
     });
     setOpen(true);
@@ -304,15 +333,21 @@ function EmployesPage() {
         .insert(sec.map((metier_id) => ({ employe_id: employeId!, metier_id })));
     }
 
-    // Matricule SILAE : update sur profiles si lié et admin (le trigger DB rejette sinon)
+    // Matricule SILAE + flags rôles fabrication : update sur profiles si lié et admin
     if (form.profile_id && isAdmin) {
       const newMat = form.matricule_silae.trim() || null;
-      const { error: matErr } = await supabase
+      const { error: profErr } = await supabase
         .from("profiles")
-        .update({ matricule_silae: newMat })
+        .update({
+          matricule_silae: newMat,
+          est_chef_projet: form.est_chef_projet,
+          est_respo_fab: form.est_respo_fab,
+          est_finition: form.est_finition,
+          est_manutention: form.est_manutention,
+        })
         .eq("id", form.profile_id);
-      if (matErr) {
-        toast.error("Matricule SILAE non sauvegardé", { description: matErr.message });
+      if (profErr) {
+        toast.error("Profil non sauvegardé", { description: profErr.message });
       }
     }
 
@@ -677,6 +712,41 @@ function EmployesPage() {
                   </p>
                 </div>
               )}
+            </div>
+
+            {/* v0.20 — Bloc 2 : Rôles fabrication (indépendants du métier principal) */}
+            <div className="space-y-2 rounded-xl border border-border bg-background p-3 sm:col-span-2">
+              <div>
+                <p className="text-sm font-semibold text-foreground">Rôles fabrication</p>
+                <p className="text-xs text-muted-foreground">
+                  {form.profile_id
+                    ? "Active les rôles atelier (indépendants du métier principal). Filtre les assignees dans le module Fabrication."
+                    : "Disponible uniquement pour les employés liés à un compte utilisateur."}
+                  {!isAdmin && form.profile_id && " Lecture seule (admin requis pour modifier)."}
+                </p>
+              </div>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                {([
+                  { key: "est_chef_projet", label: "Chef projet" },
+                  { key: "est_respo_fab", label: "Respo Fab" },
+                  { key: "est_finition", label: "Finition" },
+                  { key: "est_manutention", label: "Manutention" },
+                ] as const).map((flag) => (
+                  <label
+                    key={flag.key}
+                    className={`flex items-center gap-2 rounded-lg border border-border bg-card px-2 py-1.5 text-xs ${
+                      !form.profile_id || !isAdmin ? "opacity-60" : ""
+                    }`}
+                  >
+                    <Checkbox
+                      checked={form[flag.key]}
+                      disabled={!form.profile_id || !isAdmin}
+                      onCheckedChange={(v) => setForm((f) => ({ ...f, [flag.key]: Boolean(v) }))}
+                    />
+                    <span className="font-medium">{flag.label}</span>
+                  </label>
+                ))}
+              </div>
             </div>
           </div>
 
