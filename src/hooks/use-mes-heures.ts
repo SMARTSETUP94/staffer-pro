@@ -26,6 +26,7 @@ export interface SaisieRow {
   heure_debut: string | null;
   heure_fin: string | null;
   heures_reelles: number | null;
+  duree_pause_minutes: number;
   commentaire: string | null;
   statut: HeureStatut;
   motif_rejet: string | null;
@@ -138,7 +139,7 @@ export function useMesHeures({ weekStart, employeIdOverride }: UseMesHeuresOptio
       supabase
         .from("heures_saisies")
         .select(
-          "id, assignation_id, affaire_id, date, heure_debut, heure_fin, heures_reelles, commentaire, statut, motif_rejet, motif_rejet_lu_le, fabrication_objet_id, fabrication_etape_type",
+          "id, assignation_id, affaire_id, date, heure_debut, heure_fin, heures_reelles, duree_pause_minutes, commentaire, statut, motif_rejet, motif_rejet_lu_le, fabrication_objet_id, fabrication_etape_type",
         )
         .eq("employe_id", employeId)
         .gte("date", startStr)
@@ -228,7 +229,7 @@ export function useMesHeures({ weekStart, employeIdOverride }: UseMesHeuresOptio
         ignoreDuplicates: true,
       })
       .select(
-        "id, assignation_id, affaire_id, date, heure_debut, heure_fin, heures_reelles, commentaire, statut, motif_rejet, motif_rejet_lu_le, fabrication_objet_id, fabrication_etape_type",
+        "id, assignation_id, affaire_id, date, heure_debut, heure_fin, heures_reelles, duree_pause_minutes, commentaire, statut, motif_rejet, motif_rejet_lu_le, fabrication_objet_id, fabrication_etape_type",
       )
       .then(({ data }) => {
         if (data && data.length > 0) {
@@ -253,7 +254,7 @@ export function useMesHeures({ weekStart, employeIdOverride }: UseMesHeuresOptio
           .update(patch)
           .eq("id", row.saisie.id)
           .select(
-            "id, assignation_id, affaire_id, date, heure_debut, heure_fin, heures_reelles, commentaire, statut, motif_rejet, motif_rejet_lu_le, fabrication_objet_id, fabrication_etape_type",
+            "id, assignation_id, affaire_id, date, heure_debut, heure_fin, heures_reelles, duree_pause_minutes, commentaire, statut, motif_rejet, motif_rejet_lu_le, fabrication_objet_id, fabrication_etape_type",
           )
           .maybeSingle();
         if (!error && data) {
@@ -271,6 +272,7 @@ export function useMesHeures({ weekStart, employeIdOverride }: UseMesHeuresOptio
         heures_reelles: patch.heures_reelles ?? Number(row.assignation.heures),
         heure_debut: patch.heure_debut ?? null,
         heure_fin: patch.heure_fin ?? null,
+        duree_pause_minutes: patch.duree_pause_minutes ?? 0,
         commentaire: patch.commentaire ?? null,
         fabrication_objet_id: patch.fabrication_objet_id ?? null,
         fabrication_etape_type: patch.fabrication_etape_type ?? null,
@@ -280,7 +282,7 @@ export function useMesHeures({ weekStart, employeIdOverride }: UseMesHeuresOptio
         .from("heures_saisies")
         .insert(insert)
         .select(
-          "id, assignation_id, affaire_id, date, heure_debut, heure_fin, heures_reelles, commentaire, statut, motif_rejet, motif_rejet_lu_le, fabrication_objet_id, fabrication_etape_type",
+          "id, assignation_id, affaire_id, date, heure_debut, heure_fin, heures_reelles, duree_pause_minutes, commentaire, statut, motif_rejet, motif_rejet_lu_le, fabrication_objet_id, fabrication_etape_type",
         )
         .maybeSingle();
       if (data) {

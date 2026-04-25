@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { addDays, format, isSameDay, isToday } from "date-fns";
 import { fr } from "date-fns/locale";
 import { AlertTriangle, ChevronDown, Clock, Hammer, Loader2, MapPin, Send } from "lucide-react";
@@ -21,6 +21,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useMesHeures, type SaisieCombined, type FabricationEtapeTypeRow } from "@/hooks/use-mes-heures";
 import { useObjetsAffaireLight, useMyFabricationRoles, getEligibleEtapesForRoles } from "@/hooks/use-objets-affaire-light";
+import { computeHeuresFromTimes } from "@/lib/heures-calculator";
 
 const ETAPE_LABEL_MAP: Record<FabricationEtapeTypeRow, string> = {
   be: "BE (dessin)",
@@ -229,10 +230,12 @@ function SaisieRowCard({
   const locked = statut === "soumis" || statut === "valide";
   const initialHeures = row.saisie?.heures_reelles ?? row.assignation?.heures ?? 0;
   const initialNuit = Number((row.saisie as unknown as { heures_nuit?: number } | null)?.heures_nuit ?? 0);
+  const initialPause = Number(row.saisie?.duree_pause_minutes ?? 0);
   const [heures, setHeures] = useState<string>(String(initialHeures));
   const [nuit, setNuit] = useState<string>(String(initialNuit));
   const [debut, setDebut] = useState<string>(row.saisie?.heure_debut ?? "");
   const [fin, setFin] = useState<string>(row.saisie?.heure_fin ?? "");
+  const [pause, setPause] = useState<string>(String(initialPause));
   const [commentaire, setCommentaire] = useState<string>(row.saisie?.commentaire ?? "");
   const [showTimes, setShowTimes] = useState(!!(row.saisie?.heure_debut || row.saisie?.heure_fin));
   const [showNuit, setShowNuit] = useState(initialNuit > 0);
@@ -246,9 +249,43 @@ function SaisieRowCard({
 
   const badge = STATUT_BADGE[statut];
 
+  // Auto-calcul des heures (réalisées + nuit) dès que début ET fin sont remplis
+  const computed = useMemo(
+    () => computeHeuresFromTimes(debut, fin, Number(pause) || 0),
+    [debut, fin, pause],
+  );
+  const autoHeures = computed?.heuresReelles ?? null;
+  const autoNuit = computed?.heuresNuit ?? 0;
+
+  // Synchronise les champs affichés avec le calcul auto (sans déclencher de commit)
+  useEffect(() => {
+    if (autoHeures === null) return;
+    setHeures(String(autoHeures));
+    setNuit(String(autoNuit));
+  }, [autoHeures, autoNuit]);
+
   const commit = async (patch: Partial<NonNullable<SaisieCombined["saisie"]>>) => {
     if (locked) return;
     await onUpdate(row, patch);
+  };
+
+  // Commit groupé quand l'utilisateur ajuste début/fin/pause : on persiste
+  // la valeur tapée + les heures auto-calculées + les heures de nuit auto-calculées
+  // en un seul UPDATE (cohérent côté DB).
+  const commitTimesAndAuto = async (
+    patch: Partial<NonNullable<SaisieCombined["saisie"]>>,
+    nextDebut: string | null,
+    nextFin: string | null,
+    nextPauseMin: number,
+  ) => {
+    if (locked) return;
+    const c = computeHeuresFromTimes(nextDebut, nextFin, nextPauseMin);
+    const merged: Partial<NonNullable<SaisieCombined["saisie"]>> = { ...patch };
+    if (c) {
+      (merged as { heures_reelles?: number }).heures_reelles = c.heuresReelles;
+      (merged as { heures_nuit?: number }).heures_nuit = c.heuresNuit;
+    }
+    await onUpdate(row, merged);
   };
 
   return (
@@ -288,7 +325,7 @@ function SaisieRowCard({
           <div className={cn("mt-3 grid gap-2", variant === "desktop" ? "grid-cols-[120px_1fr_auto]" : "grid-cols-1")}>
             <div>
               <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                Heures réalisées
+                Heures réalisées {autoHeures !== null && <span className="text-primary">(auto)</span>}
               </label>
               <Input
                 type="number"
@@ -296,9 +333,10 @@ function SaisieRowCard({
                 min="0"
                 max="24"
                 value={heures}
-                disabled={locked}
+                disabled={locked || autoHeures !== null}
                 onChange={(e) => setHeures(e.target.value)}
                 onBlur={() => {
+                  if (autoHeures !== null) return;
                   const n = Number(heures);
                   if (!isNaN(n) && n !== Number(row.saisie?.heures_reelles ?? -1)) {
                     commit({ heures_reelles: n });
@@ -306,6 +344,11 @@ function SaisieRowCard({
                 }}
                 className="h-9"
               />
+              {autoHeures !== null && (
+                <p className="mt-1 text-[10px] text-muted-foreground">
+                  Calculé : fin − début − pause
+                </p>
+              )}
             </div>
 
             <div>
@@ -375,7 +418,7 @@ function SaisieRowCard({
               </Button>
             </CollapsibleTrigger>
             <CollapsibleContent className="mt-2">
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-3 gap-2">
                 <div>
                   <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                     Début
@@ -387,7 +430,12 @@ function SaisieRowCard({
                     onChange={(e) => setDebut(e.target.value)}
                     onBlur={() => {
                       if (debut !== (row.saisie?.heure_debut ?? "")) {
-                        commit({ heure_debut: debut || null });
+                        commitTimesAndAuto(
+                          { heure_debut: debut || null },
+                          debut || null,
+                          fin || null,
+                          Number(pause) || 0,
+                        );
                       }
                     }}
                     className="h-9"
@@ -404,13 +452,56 @@ function SaisieRowCard({
                     onChange={(e) => setFin(e.target.value)}
                     onBlur={() => {
                       if (fin !== (row.saisie?.heure_fin ?? "")) {
-                        commit({ heure_fin: fin || null });
+                        commitTimesAndAuto(
+                          { heure_fin: fin || null },
+                          debut || null,
+                          fin || null,
+                          Number(pause) || 0,
+                        );
+                      }
+                    }}
+                    className="h-9"
+                  />
+                </div>
+                <div>
+                  <label
+                    className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground"
+                    title="Durée de la pause déjeuner (ou autres pauses) en minutes — déduite des heures totales"
+                  >
+                    Dont pause (min)
+                  </label>
+                  <Input
+                    type="number"
+                    step="5"
+                    min="0"
+                    max="600"
+                    value={pause}
+                    disabled={locked}
+                    placeholder="0"
+                    onChange={(e) => setPause(e.target.value)}
+                    onBlur={() => {
+                      const n = Math.max(0, Number(pause) || 0);
+                      if (n !== Number(row.saisie?.duree_pause_minutes ?? 0)) {
+                        commitTimesAndAuto(
+                          { duree_pause_minutes: n },
+                          debut || null,
+                          fin || null,
+                          n,
+                        );
                       }
                     }}
                     className="h-9"
                   />
                 </div>
               </div>
+              {computed && (
+                <p className="mt-2 text-[10px] text-muted-foreground">
+                  ⏱ <strong>{computed.heuresReelles}h</strong> travaillées (pause déduite)
+                  {computed.heuresNuit > 0 && (
+                    <> · 🌙 <strong>{computed.heuresNuit}h</strong> de nuit (00h–06h)</>
+                  )}
+                </p>
+              )}
             </CollapsibleContent>
           </Collapsible>
 

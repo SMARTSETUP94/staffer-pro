@@ -1013,6 +1013,7 @@ export type Database = {
           created_at: string
           date: string
           devis_id: string | null
+          duree_pause_minutes: number
           employe_id: string
           fabrication_etape_type:
             | Database["public"]["Enums"]["fabrication_etape_type"]
@@ -1039,6 +1040,7 @@ export type Database = {
           created_at?: string
           date: string
           devis_id?: string | null
+          duree_pause_minutes?: number
           employe_id: string
           fabrication_etape_type?:
             | Database["public"]["Enums"]["fabrication_etape_type"]
@@ -1065,6 +1067,7 @@ export type Database = {
           created_at?: string
           date?: string
           devis_id?: string | null
+          duree_pause_minutes?: number
           employe_id?: string
           fabrication_etape_type?:
             | Database["public"]["Enums"]["fabrication_etape_type"]
@@ -1990,6 +1993,7 @@ export type Database = {
           created_at: string
           date: string
           devis_id: string | null
+          duree_pause_minutes: number
           employe_id: string
           fabrication_etape_type:
             | Database["public"]["Enums"]["fabrication_etape_type"]
