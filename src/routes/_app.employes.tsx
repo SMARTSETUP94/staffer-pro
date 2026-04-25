@@ -104,6 +104,10 @@ const emptyForm: FormState = {
   notes: "",
   matricule_silae: "",
   profile_id: null,
+  est_chef_projet: false,
+  est_respo_fab: false,
+  est_finition: false,
+  est_manutention: false,
   secondaires: [],
 };
 
