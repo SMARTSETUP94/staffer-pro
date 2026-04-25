@@ -34,8 +34,8 @@ export const FINITION_LABELS: Record<FabricationFinitionType, string> = {
 };
 
 /** Mapping étape → flag rôle profile pour filtrer les assignees éligibles */
-export const ETAPE_TO_FLAG: Record<FabricationEtapeType, "est_chef_projet" | "est_respo_fab" | "est_finition" | "est_manutention"> = {
-  be: "est_chef_projet",
+export const ETAPE_TO_FLAG: Record<FabricationEtapeType, "est_chef_projet" | "est_respo_fab" | "est_finition" | "est_manutention" | "est_bureau_etude"> = {
+  be: "est_bureau_etude",
   respo_fab: "est_respo_fab",
   finition: "est_finition",
   manutention: "est_manutention",
@@ -79,6 +79,7 @@ export interface ProfileRole {
   est_respo_fab: boolean;
   est_finition: boolean;
   est_manutention: boolean;
+  est_bureau_etude: boolean;
 }
 
 /**
@@ -172,7 +173,7 @@ export function useProfilesWithRoles() {
     setLoading(true);
     const { data } = await supabase
       .from("profiles")
-      .select("id, full_name, email, est_chef_projet, est_respo_fab, est_finition, est_manutention")
+      .select("id, full_name, email, est_chef_projet, est_respo_fab, est_finition, est_manutention, est_bureau_etude")
       .order("full_name", { ascending: true, nullsFirst: false });
     setProfiles((data ?? []) as ProfileRole[]);
     setLoading(false);

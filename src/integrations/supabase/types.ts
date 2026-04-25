@@ -1323,6 +1323,7 @@ export type Database = {
           created_at: string
           derniere_connexion_le: string | null
           email: string
+          est_bureau_etude: boolean
           est_chef_projet: boolean
           est_finition: boolean
           est_manutention: boolean
@@ -1338,6 +1339,7 @@ export type Database = {
           created_at?: string
           derniere_connexion_le?: string | null
           email: string
+          est_bureau_etude?: boolean
           est_chef_projet?: boolean
           est_finition?: boolean
           est_manutention?: boolean
@@ -1353,6 +1355,7 @@ export type Database = {
           created_at?: string
           derniere_connexion_le?: string | null
           email?: string
+          est_bureau_etude?: boolean
           est_chef_projet?: boolean
           est_finition?: boolean
           est_manutention?: boolean
