@@ -19,6 +19,7 @@ interface AffaireDetail {
   client: string | null;
   lieu: string | null;
   statut: "prospect" | "en_cours" | "termine" | "annule";
+  phase: "opportunite" | "signe";
   date_debut: string | null;
   date_fin_prevue: string | null;
   notes: string | null;
@@ -42,7 +43,7 @@ function AffaireDetailLayout() {
   const fetchAffaire = async (id: string, signal?: { cancelled: boolean }) => {
     const { data } = await supabase
       .from("affaires")
-      .select("id, numero, nom, client, lieu, statut, date_debut, date_fin_prevue, notes")
+      .select("id, numero, nom, client, lieu, statut, phase, date_debut, date_fin_prevue, notes")
       .eq("id", id)
       .maybeSingle();
     if (signal?.cancelled) return;
@@ -100,6 +101,9 @@ function AffaireDetailLayout() {
   const tabs = [
     { to: `/affaires/${affaire.id}`, label: "Synthèse", match: path === `/affaires/${affaire.id}` },
     { to: `/affaires/${affaire.id}/devis`, label: "Devis", match: path.endsWith("/devis") },
+    ...(affaire.phase === "signe"
+      ? [{ to: `/affaires/${affaire.id}/fabrication`, label: "Fabrication", match: path.endsWith("/fabrication") }]
+      : []),
     { to: `/affaires/${affaire.id}/staffing`, label: "Staffing", match: path.endsWith("/staffing") },
     { to: `/affaires/${affaire.id}/journal`, label: "Journal", match: path.endsWith("/journal") },
   ];

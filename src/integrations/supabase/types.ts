@@ -141,6 +141,7 @@ export type Database = {
         Row: {
           charge_affaires_id: string | null
           chef_chantier_id: string | null
+          chef_projet_id: string | null
           client: string | null
           code_opportunite: string | null
           created_at: string
@@ -166,6 +167,7 @@ export type Database = {
         Insert: {
           charge_affaires_id?: string | null
           chef_chantier_id?: string | null
+          chef_projet_id?: string | null
           client?: string | null
           code_opportunite?: string | null
           created_at?: string
@@ -191,6 +193,7 @@ export type Database = {
         Update: {
           charge_affaires_id?: string | null
           chef_chantier_id?: string | null
+          chef_projet_id?: string | null
           client?: string | null
           code_opportunite?: string | null
           created_at?: string
@@ -226,6 +229,13 @@ export type Database = {
             columns: ["chef_chantier_id"]
             isOneToOne: false
             referencedRelation: "employes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affaires_chef_projet_id_fkey"
+            columns: ["chef_projet_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -676,6 +686,244 @@ export type Database = {
           },
         ]
       }
+      fabrication_etapes: {
+        Row: {
+          assignee_id: string | null
+          commentaire: string | null
+          created_at: string
+          date_debut: string | null
+          date_fin: string | null
+          id: string
+          objet_id: string
+          statut: Database["public"]["Enums"]["fabrication_etape_statut"]
+          type_etape: Database["public"]["Enums"]["fabrication_etape_type"]
+          updated_at: string
+          validateur_id: string | null
+        }
+        Insert: {
+          assignee_id?: string | null
+          commentaire?: string | null
+          created_at?: string
+          date_debut?: string | null
+          date_fin?: string | null
+          id?: string
+          objet_id: string
+          statut?: Database["public"]["Enums"]["fabrication_etape_statut"]
+          type_etape: Database["public"]["Enums"]["fabrication_etape_type"]
+          updated_at?: string
+          validateur_id?: string | null
+        }
+        Update: {
+          assignee_id?: string | null
+          commentaire?: string | null
+          created_at?: string
+          date_debut?: string | null
+          date_fin?: string | null
+          id?: string
+          objet_id?: string
+          statut?: Database["public"]["Enums"]["fabrication_etape_statut"]
+          type_etape?: Database["public"]["Enums"]["fabrication_etape_type"]
+          updated_at?: string
+          validateur_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fabrication_etapes_assignee_id_fkey"
+            columns: ["assignee_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fabrication_etapes_objet_id_fkey"
+            columns: ["objet_id"]
+            isOneToOne: false
+            referencedRelation: "fabrication_objets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fabrication_etapes_validateur_id_fkey"
+            columns: ["validateur_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fabrication_etapes_historique: {
+        Row: {
+          action: string
+          ancien_assignee_id: string | null
+          ancien_statut:
+            | Database["public"]["Enums"]["fabrication_etape_statut"]
+            | null
+          commentaire: string | null
+          created_at: string
+          etape_id: string
+          fait_par_id: string | null
+          id: string
+          nouveau_assignee_id: string | null
+          nouveau_statut:
+            | Database["public"]["Enums"]["fabrication_etape_statut"]
+            | null
+        }
+        Insert: {
+          action: string
+          ancien_assignee_id?: string | null
+          ancien_statut?:
+            | Database["public"]["Enums"]["fabrication_etape_statut"]
+            | null
+          commentaire?: string | null
+          created_at?: string
+          etape_id: string
+          fait_par_id?: string | null
+          id?: string
+          nouveau_assignee_id?: string | null
+          nouveau_statut?:
+            | Database["public"]["Enums"]["fabrication_etape_statut"]
+            | null
+        }
+        Update: {
+          action?: string
+          ancien_assignee_id?: string | null
+          ancien_statut?:
+            | Database["public"]["Enums"]["fabrication_etape_statut"]
+            | null
+          commentaire?: string | null
+          created_at?: string
+          etape_id?: string
+          fait_par_id?: string | null
+          id?: string
+          nouveau_assignee_id?: string | null
+          nouveau_statut?:
+            | Database["public"]["Enums"]["fabrication_etape_statut"]
+            | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fabrication_etapes_historique_ancien_assignee_id_fkey"
+            columns: ["ancien_assignee_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fabrication_etapes_historique_etape_id_fkey"
+            columns: ["etape_id"]
+            isOneToOne: false
+            referencedRelation: "fabrication_etapes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fabrication_etapes_historique_fait_par_id_fkey"
+            columns: ["fait_par_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fabrication_etapes_historique_nouveau_assignee_id_fkey"
+            columns: ["nouveau_assignee_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fabrication_objets: {
+        Row: {
+          affaire_id: string
+          archive: boolean
+          commentaire: string | null
+          created_at: string
+          created_by: string | null
+          devis_id: string | null
+          id: string
+          nom: string
+          ordre: number
+          quantite: number
+          reference: string
+          respo_fab_id: string | null
+          type_finition: Database["public"]["Enums"]["fabrication_finition_type"]
+          updated_at: string
+        }
+        Insert: {
+          affaire_id: string
+          archive?: boolean
+          commentaire?: string | null
+          created_at?: string
+          created_by?: string | null
+          devis_id?: string | null
+          id?: string
+          nom: string
+          ordre?: number
+          quantite?: number
+          reference: string
+          respo_fab_id?: string | null
+          type_finition?: Database["public"]["Enums"]["fabrication_finition_type"]
+          updated_at?: string
+        }
+        Update: {
+          affaire_id?: string
+          archive?: boolean
+          commentaire?: string | null
+          created_at?: string
+          created_by?: string | null
+          devis_id?: string | null
+          id?: string
+          nom?: string
+          ordre?: number
+          quantite?: number
+          reference?: string
+          respo_fab_id?: string | null
+          type_finition?: Database["public"]["Enums"]["fabrication_finition_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fabrication_objets_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "affaires"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fabrication_objets_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "v_affaire_consommation"
+            referencedColumns: ["affaire_id"]
+          },
+          {
+            foreignKeyName: "fabrication_objets_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fabrication_objets_devis_id_fkey"
+            columns: ["devis_id"]
+            isOneToOne: false
+            referencedRelation: "devis"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fabrication_objets_devis_id_fkey"
+            columns: ["devis_id"]
+            isOneToOne: false
+            referencedRelation: "v_devis_consommation"
+            referencedColumns: ["devis_id"]
+          },
+          {
+            foreignKeyName: "fabrication_objets_respo_fab_id_fkey"
+            columns: ["respo_fab_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       feedbacks: {
         Row: {
           author_id: string
@@ -754,6 +1002,10 @@ export type Database = {
           date: string
           devis_id: string | null
           employe_id: string
+          fabrication_etape_type:
+            | Database["public"]["Enums"]["fabrication_etape_type"]
+            | null
+          fabrication_objet_id: string | null
           heure_debut: string | null
           heure_fin: string | null
           heures_nuit: number
@@ -776,6 +1028,10 @@ export type Database = {
           date: string
           devis_id?: string | null
           employe_id: string
+          fabrication_etape_type?:
+            | Database["public"]["Enums"]["fabrication_etape_type"]
+            | null
+          fabrication_objet_id?: string | null
           heure_debut?: string | null
           heure_fin?: string | null
           heures_nuit?: number
@@ -798,6 +1054,10 @@ export type Database = {
           date?: string
           devis_id?: string | null
           employe_id?: string
+          fabrication_etape_type?:
+            | Database["public"]["Enums"]["fabrication_etape_type"]
+            | null
+          fabrication_objet_id?: string | null
           heure_debut?: string | null
           heure_fin?: string | null
           heures_nuit?: number
@@ -853,6 +1113,13 @@ export type Database = {
             columns: ["employe_id"]
             isOneToOne: false
             referencedRelation: "employes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "heures_saisies_fabrication_objet_id_fkey"
+            columns: ["fabrication_objet_id"]
+            isOneToOne: false
+            referencedRelation: "fabrication_objets"
             referencedColumns: ["id"]
           },
           {
@@ -1056,6 +1323,10 @@ export type Database = {
           created_at: string
           derniere_connexion_le: string | null
           email: string
+          est_chef_projet: boolean
+          est_finition: boolean
+          est_manutention: boolean
+          est_respo_fab: boolean
           full_name: string | null
           id: string
           matricule_silae: string | null
@@ -1067,6 +1338,10 @@ export type Database = {
           created_at?: string
           derniere_connexion_le?: string | null
           email: string
+          est_chef_projet?: boolean
+          est_finition?: boolean
+          est_manutention?: boolean
+          est_respo_fab?: boolean
           full_name?: string | null
           id: string
           matricule_silae?: string | null
@@ -1078,6 +1353,10 @@ export type Database = {
           created_at?: string
           derniere_connexion_le?: string | null
           email?: string
+          est_chef_projet?: boolean
+          est_finition?: boolean
+          est_manutention?: boolean
+          est_respo_fab?: boolean
           full_name?: string | null
           id?: string
           matricule_silae?: string | null
@@ -1697,6 +1976,10 @@ export type Database = {
           date: string
           devis_id: string | null
           employe_id: string
+          fabrication_etape_type:
+            | Database["public"]["Enums"]["fabrication_etape_type"]
+            | null
+          fabrication_objet_id: string | null
           heure_debut: string | null
           heure_fin: string | null
           heures_nuit: number
@@ -1814,6 +2097,13 @@ export type Database = {
         | "en_cours"
         | "termine"
         | "cloture"
+      fabrication_etape_statut:
+        | "a_faire"
+        | "en_cours"
+        | "termine"
+        | "non_applicable"
+      fabrication_etape_type: "be" | "respo_fab" | "finition" | "manutention"
+      fabrication_finition_type: "peinture" | "tapisserie" | "autre" | "aucune"
       feedback_priorite: "basse" | "moyenne" | "haute" | "critique"
       feedback_statut: "nouveau" | "en_cours" | "resolu" | "ferme" | "rejete"
       feedback_type: "bug" | "idee" | "amelioration" | "question"
@@ -2011,6 +2301,14 @@ export const Constants = {
         "termine",
         "cloture",
       ],
+      fabrication_etape_statut: [
+        "a_faire",
+        "en_cours",
+        "termine",
+        "non_applicable",
+      ],
+      fabrication_etape_type: ["be", "respo_fab", "finition", "manutention"],
+      fabrication_finition_type: ["peinture", "tapisserie", "autre", "aucune"],
       feedback_priorite: ["basse", "moyenne", "haute", "critique"],
       feedback_statut: ["nouveau", "en_cours", "resolu", "ferme", "rejete"],
       feedback_type: ["bug", "idee", "amelioration", "question"],
