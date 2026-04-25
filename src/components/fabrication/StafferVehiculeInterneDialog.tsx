@@ -62,10 +62,11 @@ function suggererTypeVehicule(count: number): VehiculeType {
 }
 
 const TYPE_LABEL: Record<VehiculeType, string> = {
-  VL: "Véhicule léger",
-  M3_20: "Camion 20m³",
-  poids_lourd: "Poids lourd",
+  VL: "véhicule léger",
+  M3_20: "camion 20m³",
+  poids_lourd: "poids lourd",
 };
+
 
 export function StafferVehiculeInterneDialog({
   open,
