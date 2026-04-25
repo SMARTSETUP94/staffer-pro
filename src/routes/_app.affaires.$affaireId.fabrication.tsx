@@ -198,6 +198,7 @@ function FabricationPage() {
                   </TableHead>
                 ))}
                 <TableHead className="w-20 text-center">Avanc.</TableHead>
+                {isAdminOrChef && <TableHead className="w-12"></TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -240,6 +241,22 @@ function FabricationPage() {
                   <TableCell className="text-center text-xs font-semibold">
                     {calcAvancementObjet(o)}%
                   </TableCell>
+                  {isAdminOrChef && (
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-7 w-7">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => setEditObjet(o)}>
+                            <Pencil className="mr-2 h-4 w-4" /> Modifier l'objet
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
             </TableBody>
@@ -259,6 +276,15 @@ function FabricationPage() {
         onOpenChange={setOpenAjouter}
         onCreated={reload}
       />
+
+      {editObjet && (
+        <EditerObjetDialog
+          objet={editObjet}
+          open={!!editObjet}
+          onOpenChange={(o) => !o && setEditObjet(null)}
+          onSaved={reload}
+        />
+      )}
 
       {editEtape && (
         <EtapeDialog
