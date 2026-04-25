@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Loader2, Plus, Upload, MoreVertical, Pencil } from "lucide-react";
+import { Loader2, Plus, Upload, MoreVertical, Pencil, Truck, Send } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -44,6 +44,8 @@ import {
 import { AjouterObjetDialog } from "@/components/fabrication/AjouterObjetDialog";
 import { EditerObjetDialog } from "@/components/fabrication/EditerObjetDialog";
 import { EtapeDialog } from "@/components/fabrication/EtapeDialog";
+import { StafferVehiculeInterneDialog } from "@/components/fabrication/StafferVehiculeInterneDialog";
+import { Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_app/affaires/$affaireId/fabrication")({
   head: () => ({ meta: [{ title: "Fabrication — Setup Paris" }] }),
@@ -60,16 +62,32 @@ function FabricationPage() {
   const [editEtape, setEditEtape] = useState<{ objet: FabricationObjet; etape: FabricationEtape } | null>(null);
   const [chefProjetId, setChefProjetId] = useState<string | null>(null);
   const [savingChef, setSavingChef] = useState(false);
+  const [affaireMeta, setAffaireMeta] = useState<{
+    numero: string;
+    nom: string;
+    lieu: string | null;
+    date_montage: string | null;
+  } | null>(null);
+  const [openStaffer, setOpenStaffer] = useState(false);
 
-  // Charger chef_projet_id de l'affaire
-  useState(() => {
+  // Charger meta affaire (chef projet, lieu, dates) — useEffect, pas useState
+  useEffect(() => {
     void supabase
       .from("affaires")
-      .select("chef_projet_id")
+      .select("chef_projet_id, numero, nom, lieu, date_montage")
       .eq("id", affaireId)
       .maybeSingle()
-      .then(({ data }) => setChefProjetId((data?.chef_projet_id as string | null) ?? null));
-  });
+      .then(({ data }) => {
+        if (!data) return;
+        setChefProjetId((data.chef_projet_id as string | null) ?? null);
+        setAffaireMeta({
+          numero: data.numero as string,
+          nom: data.nom as string,
+          lieu: (data.lieu as string | null) ?? null,
+          date_montage: (data.date_montage as string | null) ?? null,
+        });
+      });
+  }, [affaireId]);
 
   const chefsProjet = profiles.filter((p) => p.est_chef_projet);
   const avancement = calcAvancementAffaire(objets);
