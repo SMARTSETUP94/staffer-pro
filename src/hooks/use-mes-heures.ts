@@ -281,7 +281,7 @@ export function useMesHeures({ weekStart, employeIdOverride }: UseMesHeuresOptio
         .from("heures_saisies")
         .insert(insert)
         .select(
-          "id, assignation_id, affaire_id, date, heure_debut, heure_fin, heures_reelles, commentaire, statut, motif_rejet, motif_rejet_lu_le, fabrication_objet_id, fabrication_etape_type",
+          "id, assignation_id, affaire_id, date, heure_debut, heure_fin, heures_reelles, duree_pause_minutes, commentaire, statut, motif_rejet, motif_rejet_lu_le, fabrication_objet_id, fabrication_etape_type",
         )
         .maybeSingle();
       if (data) {
