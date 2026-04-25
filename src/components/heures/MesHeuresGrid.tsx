@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { addDays, format, isSameDay, isToday } from "date-fns";
 import { fr } from "date-fns/locale";
 import { AlertTriangle, ChevronDown, Clock, Hammer, Loader2, MapPin, Send } from "lucide-react";
@@ -21,6 +21,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useMesHeures, type SaisieCombined, type FabricationEtapeTypeRow } from "@/hooks/use-mes-heures";
 import { useObjetsAffaireLight, useMyFabricationRoles, getEligibleEtapesForRoles } from "@/hooks/use-objets-affaire-light";
+import { computeHeuresFromTimes } from "@/lib/heures-calculator";
 
 const ETAPE_LABEL_MAP: Record<FabricationEtapeTypeRow, string> = {
   be: "BE (dessin)",
