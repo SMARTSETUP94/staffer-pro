@@ -117,8 +117,8 @@ export function StafferVehiculeInterneDialog({
       setAdressesFav((favRes.data ?? []) as AdresseFavorite[]);
       setChauffeurs((chRes.data ?? []) as EmployeLite[]);
 
-      // Sélectionner adresse atelier comme départ par défaut
-      const atelier = (favRes.data ?? []).find((a) => a.type === "atelier");
+      // Sélectionner adresse entrepot comme départ par défaut
+      const atelier = (favRes.data ?? []).find((a) => a.type === "entrepot");
       if (atelier) setAdresseDepart(atelier.adresse_complete);
     })();
   }, [open, affaireLieu, dateMontage]);
