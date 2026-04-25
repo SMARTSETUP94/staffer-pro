@@ -77,6 +77,10 @@ interface FormState {
   notes: string;
   matricule_silae: string;
   profile_id: string | null;
+  est_chef_projet: boolean;
+  est_respo_fab: boolean;
+  est_finition: boolean;
+  est_manutention: boolean;
   secondaires: number[];
 }
 
