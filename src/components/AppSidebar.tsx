@@ -118,6 +118,7 @@ function buildSections(role: EffRole, validationCount: number): NavSection[] {
         { title: "Imports", url: "/employes/import", icon: FileUp, show: () => true },
         { title: "Export planning", url: "/export", icon: FileDown, show: () => true },
         { title: "Métiers", url: "/parametres/metiers", icon: Palette, show: () => true },
+        { title: "Rôles fabrication", url: "/parametres/roles-fabrication", icon: Hammer, show: () => true },
         { title: "Lieux entreprise", url: "/parametres/lieux", icon: Warehouse, show: () => true },
         { title: "Rattachement devis", url: "/devis/rattachement-historique", icon: ClipboardList, show: () => true },
         { title: "Signalements", url: "/admin/feedback", icon: MessageCircle, show: () => true },
