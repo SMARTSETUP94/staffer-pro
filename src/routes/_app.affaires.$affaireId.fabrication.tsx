@@ -45,6 +45,7 @@ import { AjouterObjetDialog } from "@/components/fabrication/AjouterObjetDialog"
 import { EditerObjetDialog } from "@/components/fabrication/EditerObjetDialog";
 import { EtapeDialog } from "@/components/fabrication/EtapeDialog";
 import { StafferVehiculeInterneDialog } from "@/components/fabrication/StafferVehiculeInterneDialog";
+import { ObjetCardMobile } from "@/components/fabrication/ObjetCardMobile";
 import { Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_app/affaires/$affaireId/fabrication")({
