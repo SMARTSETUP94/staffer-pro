@@ -350,6 +350,7 @@ function EmployesPage() {
           est_respo_fab: form.est_respo_fab,
           est_finition: form.est_finition,
           est_manutention: form.est_manutention,
+          est_bureau_etude: form.est_bureau_etude,
         })
         .eq("id", form.profile_id);
       if (profErr) {
