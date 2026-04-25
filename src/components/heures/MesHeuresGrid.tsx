@@ -230,10 +230,12 @@ function SaisieRowCard({
   const locked = statut === "soumis" || statut === "valide";
   const initialHeures = row.saisie?.heures_reelles ?? row.assignation?.heures ?? 0;
   const initialNuit = Number((row.saisie as unknown as { heures_nuit?: number } | null)?.heures_nuit ?? 0);
+  const initialPause = Number(row.saisie?.duree_pause_minutes ?? 0);
   const [heures, setHeures] = useState<string>(String(initialHeures));
   const [nuit, setNuit] = useState<string>(String(initialNuit));
   const [debut, setDebut] = useState<string>(row.saisie?.heure_debut ?? "");
   const [fin, setFin] = useState<string>(row.saisie?.heure_fin ?? "");
+  const [pause, setPause] = useState<string>(String(initialPause));
   const [commentaire, setCommentaire] = useState<string>(row.saisie?.commentaire ?? "");
   const [showTimes, setShowTimes] = useState(!!(row.saisie?.heure_debut || row.saisie?.heure_fin));
   const [showNuit, setShowNuit] = useState(initialNuit > 0);
@@ -247,9 +249,43 @@ function SaisieRowCard({
 
   const badge = STATUT_BADGE[statut];
 
+  // Auto-calcul des heures (réalisées + nuit) dès que début ET fin sont remplis
+  const computed = useMemo(
+    () => computeHeuresFromTimes(debut, fin, Number(pause) || 0),
+    [debut, fin, pause],
+  );
+  const autoHeures = computed?.heuresReelles ?? null;
+  const autoNuit = computed?.heuresNuit ?? 0;
+
+  // Synchronise les champs affichés avec le calcul auto (sans déclencher de commit)
+  useEffect(() => {
+    if (autoHeures === null) return;
+    setHeures(String(autoHeures));
+    setNuit(String(autoNuit));
+  }, [autoHeures, autoNuit]);
+
   const commit = async (patch: Partial<NonNullable<SaisieCombined["saisie"]>>) => {
     if (locked) return;
     await onUpdate(row, patch);
+  };
+
+  // Commit groupé quand l'utilisateur ajuste début/fin/pause : on persiste
+  // la valeur tapée + les heures auto-calculées + les heures de nuit auto-calculées
+  // en un seul UPDATE (cohérent côté DB).
+  const commitTimesAndAuto = async (
+    patch: Partial<NonNullable<SaisieCombined["saisie"]>>,
+    nextDebut: string | null,
+    nextFin: string | null,
+    nextPauseMin: number,
+  ) => {
+    if (locked) return;
+    const c = computeHeuresFromTimes(nextDebut, nextFin, nextPauseMin);
+    const merged: Partial<NonNullable<SaisieCombined["saisie"]>> = { ...patch };
+    if (c) {
+      (merged as { heures_reelles?: number }).heures_reelles = c.heuresReelles;
+      (merged as { heures_nuit?: number }).heures_nuit = c.heuresNuit;
+    }
+    await onUpdate(row, merged);
   };
 
   return (
