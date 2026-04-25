@@ -44,6 +44,34 @@ interface RoadmapPlanned {
 const RELEASES: RoadmapRelease[] = [
   {
     date: "2026-04-25",
+    version: "v0.20.0",
+    title: "Hotfix accès employé /fabrication/mes-etapes + audit pré-publish v0.20",
+    entries: [
+      {
+        type: "fix",
+        area: "Sécurité — Routing",
+        title: "🚨 BLOCKER fixé : /fabrication ajouté à EMPLOYE_DESKTOP_ALLOWED",
+        description:
+          "Audit pré-publish v0.20 a identifié que la route /fabrication/mes-etapes (livrée v0.20) était inaccessible aux employés desktop : le guard AppGuard les redirigeait vers /dashboard-employe au clic sur la sidebar « Mes étapes fab ». Fix : ajout de '/fabrication' dans EMPLOYE_DESKTOP_ALLOWED de src/routes/_app.tsx, qui couvre /fabrication/mes-etapes via startsWith. Le dashboard /fabrication global reste protégé par son propre guard chef/admin côté composant. tsc --noEmit ✅.",
+      },
+      {
+        type: "improvement",
+        area: "Audit",
+        title: "✅ Audit RLS Fabrication clean — pas de récursion détectée",
+        description:
+          "Vérification post-hotfix v0.18.3 : les 3 nouvelles tables fabrication_objets / fabrication_etapes / fabrication_etapes_historique utilisent bien is_chef_or_admin() (SECURITY DEFINER, search_path public) sans EXISTS auto-référencé. Les 3 triggers de notification (assignation, prêt à livrer, signée) ne réécrivent jamais sur leur propre table source — pas de boucle infinie. Anti-spam 24h confirmé sur 'affaire prête à livrer'. Les indexes de base sont en place pour les KPIs dashboard.",
+      },
+      {
+        type: "improvement",
+        area: "Audit",
+        title: "✅ Compatibilité saisie heures pré-v0.20 préservée",
+        description:
+          "Vérifié que les heures saisies AVANT v0.20 (avec fabrication_objet_id et fabrication_etape_type NULL) s'affichent et se ré-éditent sans erreur. Le sous-bloc 'Sur quoi as-tu travaillé ?' est strictement optionnel et collapsible par défaut. Si un utilisateur n'a aucun flag rôle fabrication, le dropdown Étape reste vide sans crash.",
+      },
+    ],
+  },
+  {
+    date: "2026-04-25",
     version: "v0.20",
     title: "Module Fabrication / Suivi de production (remplace Asana)",
     entries: [
