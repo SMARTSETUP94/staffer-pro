@@ -98,6 +98,17 @@ function FabricationPage() {
     termine: totalEtapes.filter((e) => e.statut === "termine").length,
   };
 
+  // v0.20 Bloc 7 — détection "prête à livrer" : toutes les étapes Manutention
+  // de tous les objets non archivés sont termine ou non_applicable
+  const objetsActifs = objets.filter((o) => !o.archive);
+  const manutEtapes = objetsActifs.flatMap((o) =>
+    o.etapes.filter((e) => e.type_etape === "manutention"),
+  );
+  const pretALivrer =
+    objetsActifs.length > 0 &&
+    manutEtapes.length > 0 &&
+    manutEtapes.every((e) => e.statut === "termine" || e.statut === "non_applicable");
+
   const handleSetChefProjet = async (id: string) => {
     setSavingChef(true);
     const newId = id === "none" ? null : id;
