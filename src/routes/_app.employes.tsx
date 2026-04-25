@@ -732,9 +732,10 @@ function EmployesPage() {
                   {!isAdmin && form.profile_id && " Lecture seule (admin requis pour modifier)."}
                 </p>
               </div>
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
                 {([
                   { key: "est_chef_projet", label: "Chef projet" },
+                  { key: "est_bureau_etude", label: "Bureau d'étude" },
                   { key: "est_respo_fab", label: "Respo Fab" },
                   { key: "est_finition", label: "Finition" },
                   { key: "est_manutention", label: "Manutention" },
