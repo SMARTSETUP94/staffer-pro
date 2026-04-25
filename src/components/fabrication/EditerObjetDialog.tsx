@@ -67,9 +67,11 @@ export function EditerObjetDialog({ objet, open, onOpenChange, onSaved }: Props)
     a_emballer: objet.a_emballer,
   });
   const [saving, setSaving] = useState(false);
-  const [confirmStep, setConfirmStep] = useState<{ etape: FabricationEtapeType; toApplicable: boolean } | null>(
-    null,
-  );
+  const [pendingFlag, setPendingFlag] = useState<{
+    flagKey: keyof FlagsState;
+    newValue: boolean;
+    etape: FabricationEtapeType;
+  } | null>(null);
 
   // Reset à l'ouverture
   useEffect(() => {
@@ -84,53 +86,19 @@ export function EditerObjetDialog({ objet, open, onOpenChange, onSaved }: Props)
         est_brut: objet.est_brut,
         a_emballer: objet.a_emballer,
       });
+      setPendingFlag(null);
     }
   }, [open, objet]);
 
-  /** Quel étape est concernée par un flag, et quel est son statut actuel. */
   const etapeFor = (etape: FabricationEtapeType) => objet.etapes.find((e) => e.type_etape === etape);
 
-  /** Tente de basculer un flag, ouvre une confirmation si une étape en cours/terminée est impactée. */
+  /**
+   * Tente de basculer un flag.
+   * `invertLogic=true` pour est_brut (où value=true → étape non applicable).
+   * Si le changement marque une étape en cours/terminée comme non applicable,
+   * on demande confirmation.
+   */
   const handleFlagToggle = (
-    flagKey: keyof FlagsState,
-    newValue: boolean,
-    etape: FabricationEtapeType,
-    invertLogic = false, // pour est_brut
-  ) => {
-    const becomingNonApplicable = invertLogic ? newValue : !newValue;
-    if (becomingNonApplicable) {
-      const e = etapeFor(etape);
-      if (e && (e.statut === "en_cours" || e.statut === "termine")) {
-        setConfirmStep({ etape, toApplicable: false });
-        // On stocke l'intent dans confirmStep mais on n'applique pas tout de suite
-        // Le confirm dialog appliquera le changement
-        // On garde la valeur précédente pour l'instant
-        pendingFlagChange.current = { flagKey, newValue };
-        return;
-      }
-    }
-    setFlags((f) => ({ ...f, [flagKey]: newValue }));
-  };
-
-  // ref simulée via useState
-  const [pendingFlag, setPendingFlag] = useState<{ flagKey: keyof FlagsState; newValue: boolean } | null>(null);
-  // alias pratique
-  const pendingFlagChange = { current: pendingFlag, set: setPendingFlag };
-
-  const confirmFlagChange = () => {
-    if (pendingFlag) {
-      setFlags((f) => ({ ...f, [pendingFlag.flagKey]: pendingFlag.newValue }));
-      setPendingFlag(null);
-    }
-    setConfirmStep(null);
-  };
-
-  const cancelFlagChange = () => {
-    setPendingFlag(null);
-    setConfirmStep(null);
-  };
-
-  const handleFlagToggleV2 = (
     flagKey: keyof FlagsState,
     newValue: boolean,
     etape: FabricationEtapeType,
@@ -140,12 +108,18 @@ export function EditerObjetDialog({ objet, open, onOpenChange, onSaved }: Props)
     if (becomingNonApplicable) {
       const e = etapeFor(etape);
       if (e && (e.statut === "en_cours" || e.statut === "termine")) {
-        setPendingFlag({ flagKey, newValue });
-        setConfirmStep({ etape, toApplicable: false });
+        setPendingFlag({ flagKey, newValue, etape });
         return;
       }
     }
     setFlags((f) => ({ ...f, [flagKey]: newValue }));
+  };
+
+  const confirmFlagChange = () => {
+    if (pendingFlag) {
+      setFlags((f) => ({ ...f, [pendingFlag.flagKey]: pendingFlag.newValue }));
+    }
+    setPendingFlag(null);
   };
 
   const handleSubmit = async () => {
@@ -182,6 +156,8 @@ export function EditerObjetDialog({ objet, open, onOpenChange, onSaved }: Props)
     onSaved();
     onOpenChange(false);
   };
+
+  const pendingEtape = pendingFlag ? etapeFor(pendingFlag.etape) : null;
 
   return (
     <>
@@ -222,24 +198,23 @@ export function EditerObjetDialog({ objet, open, onOpenChange, onSaved }: Props)
               />
             </div>
 
-            {/* Bloc Étapes nécessaires */}
             <div className="rounded-xl border border-border bg-background p-3">
               <div className="mb-3 text-sm font-semibold">Étapes nécessaires</div>
               <div className="grid gap-3">
                 <EtapeQuestion
                   question="L'objet doit être dessiné ?"
                   value={flags.a_dessiner}
-                  onChange={(v) => handleFlagToggleV2("a_dessiner", v, "be", false)}
+                  onChange={(v) => handleFlagToggle("a_dessiner", v, "be", false)}
                 />
                 <EtapeQuestion
                   question="L'objet est à construire (ou existant) ?"
                   value={flags.a_construire}
-                  onChange={(v) => handleFlagToggleV2("a_construire", v, "respo_fab", false)}
+                  onChange={(v) => handleFlagToggle("a_construire", v, "respo_fab", false)}
                 />
                 <EtapeQuestion
                   question="L'objet est brut ?"
                   value={flags.est_brut}
-                  onChange={(v) => handleFlagToggleV2("est_brut", v, "finition", true)}
+                  onChange={(v) => handleFlagToggle("est_brut", v, "finition", true)}
                 >
                   {!flags.est_brut && (
                     <div className="grid gap-1.5">
@@ -268,7 +243,7 @@ export function EditerObjetDialog({ objet, open, onOpenChange, onSaved }: Props)
                 <EtapeQuestion
                   question="L'objet doit être emballé ?"
                   value={flags.a_emballer}
-                  onChange={(v) => handleFlagToggleV2("a_emballer", v, "manutention", false)}
+                  onChange={(v) => handleFlagToggle("a_emballer", v, "manutention", false)}
                 />
               </div>
             </div>
@@ -286,18 +261,18 @@ export function EditerObjetDialog({ objet, open, onOpenChange, onSaved }: Props)
         </DialogContent>
       </Dialog>
 
-      <AlertDialog open={!!confirmStep} onOpenChange={(o) => !o && cancelFlagChange()}>
+      <AlertDialog open={!!pendingFlag} onOpenChange={(o) => !o && setPendingFlag(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Marquer l'étape non applicable ?</AlertDialogTitle>
             <AlertDialogDescription>
-              L'étape « {confirmStep ? ETAPE_LABELS[confirmStep.etape] : ""} » est actuellement{" "}
-              {confirmStep ? etapeFor(confirmStep.etape)?.statut === "termine" ? "terminée" : "en cours" : ""}.
-              La marquer non applicable la fera disparaître du calcul d'avancement. Es-tu sûr ?
+              L'étape « {pendingFlag ? ETAPE_LABELS[pendingFlag.etape] : ""} » est actuellement{" "}
+              {pendingEtape?.statut === "termine" ? "terminée" : "en cours"}. La marquer non applicable la fera
+              disparaître du calcul d'avancement (l'historique est conservé). Es-tu sûr ?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={cancelFlagChange}>Annuler</AlertDialogCancel>
+            <AlertDialogCancel onClick={() => setPendingFlag(null)}>Annuler</AlertDialogCancel>
             <AlertDialogAction onClick={confirmFlagChange}>Confirmer</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
