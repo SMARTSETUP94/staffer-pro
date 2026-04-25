@@ -325,7 +325,7 @@ function SaisieRowCard({
           <div className={cn("mt-3 grid gap-2", variant === "desktop" ? "grid-cols-[120px_1fr_auto]" : "grid-cols-1")}>
             <div>
               <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                Heures réalisées
+                Heures réalisées {autoHeures !== null && <span className="text-primary">(auto)</span>}
               </label>
               <Input
                 type="number"
@@ -333,9 +333,10 @@ function SaisieRowCard({
                 min="0"
                 max="24"
                 value={heures}
-                disabled={locked}
+                disabled={locked || autoHeures !== null}
                 onChange={(e) => setHeures(e.target.value)}
                 onBlur={() => {
+                  if (autoHeures !== null) return;
                   const n = Number(heures);
                   if (!isNaN(n) && n !== Number(row.saisie?.heures_reelles ?? -1)) {
                     commit({ heures_reelles: n });
@@ -343,6 +344,11 @@ function SaisieRowCard({
                 }}
                 className="h-9"
               />
+              {autoHeures !== null && (
+                <p className="mt-1 text-[10px] text-muted-foreground">
+                  Calculé : fin − début − pause
+                </p>
+              )}
             </div>
 
             <div>
