@@ -111,7 +111,7 @@ function RolesFabricationPage() {
         </Button>
       </div>
 
-      <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-4">
+      <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
         {FLAGS.map((f) => (
           <div key={f.key} className="rounded-lg border border-border bg-card/50 p-2 text-xs">
             <p className="font-semibold">{f.label}</p>
