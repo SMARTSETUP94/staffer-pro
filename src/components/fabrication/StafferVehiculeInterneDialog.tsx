@@ -178,7 +178,7 @@ export function StafferVehiculeInterneDialog({
           </DialogTitle>
           <DialogDescription>
             Affaire {affaireNumero} — {affaireNom}. Type suggéré pour {objetsCount} objet
-            {objetsCount > 1 ? "s" : ""} : <strong>{typeSuggere.replace(/_/g, " ")}</strong>.
+            {objetsCount > 1 ? "s" : ""} : <strong>{TYPE_LABEL[typeSuggere]}</strong>.
           </DialogDescription>
         </DialogHeader>
 
