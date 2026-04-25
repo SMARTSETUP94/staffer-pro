@@ -236,6 +236,13 @@ function SaisieRowCard({
   const [commentaire, setCommentaire] = useState<string>(row.saisie?.commentaire ?? "");
   const [showTimes, setShowTimes] = useState(!!(row.saisie?.heure_debut || row.saisie?.heure_fin));
   const [showNuit, setShowNuit] = useState(initialNuit > 0);
+  // Bloc 5 v0.20 — lien vers objet/étape de fabrication (optionnel)
+  const initialObjetId = row.saisie?.fabrication_objet_id ?? null;
+  const initialEtapeType = row.saisie?.fabrication_etape_type ?? null;
+  const [showFab, setShowFab] = useState(!!(initialObjetId || initialEtapeType));
+  const { objets: fabObjets } = useObjetsAffaireLight(row.affaire_id);
+  const { flags: fabRoles } = useMyFabricationRoles();
+  const eligibleEtapes = getEligibleEtapesForRoles(fabRoles);
 
   const badge = STATUT_BADGE[statut];
 
