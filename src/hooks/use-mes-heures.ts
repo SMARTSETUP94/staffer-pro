@@ -26,7 +26,7 @@ export interface SaisieRow {
   heure_debut: string | null;
   heure_fin: string | null;
   heures_reelles: number | null;
-  duree_pause_minutes: number | null;
+  duree_pause_minutes: number;
   commentaire: string | null;
   statut: HeureStatut;
   motif_rejet: string | null;
