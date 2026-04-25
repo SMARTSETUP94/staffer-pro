@@ -350,6 +350,20 @@ function FabricationPage() {
           onSaved={reload}
         />
       )}
+
+      {affaireMeta && (
+        <StafferVehiculeInterneDialog
+          open={openStaffer}
+          onOpenChange={setOpenStaffer}
+          affaireId={affaireId}
+          affaireNumero={affaireMeta.numero}
+          affaireNom={affaireMeta.nom}
+          affaireLieu={affaireMeta.lieu}
+          dateMontage={affaireMeta.date_montage}
+          objetsCount={objetsActifs.length}
+          onCreated={reload}
+        />
+      )}
     </div>
   );
 }
