@@ -145,11 +145,13 @@ export function AjouterObjetDialog({ affaireId, open, onOpenChange, onCreated }:
       const assigneeId = assignees[etape];
       if (assigneeId !== "none") {
         updates.push(
-          supabase
-            .from("fabrication_etapes")
-            .update({ assignee_id: assigneeId })
-            .eq("objet_id", objet.id)
-            .eq("type_etape", etape),
+          Promise.resolve(
+            supabase
+              .from("fabrication_etapes")
+              .update({ assignee_id: assigneeId })
+              .eq("objet_id", objet.id)
+              .eq("type_etape", etape),
+          ),
         );
       }
     }
