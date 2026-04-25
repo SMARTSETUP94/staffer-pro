@@ -15,6 +15,7 @@ const EMPLOYE_DESKTOP_ALLOWED = [
   "/mes-heures",
   "/mes-swaps",
   "/mes-propositions",
+  "/fabrication",
 ];
 
 function AppGuard() {
