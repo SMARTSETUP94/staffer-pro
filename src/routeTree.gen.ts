@@ -38,6 +38,7 @@ import { Route as AppEmployesRouteImport } from './routes/_app.employes'
 import { Route as AppDashboardEmployeRouteImport } from './routes/_app.dashboard-employe'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppAbsencesRouteImport } from './routes/_app.absences'
+import { Route as AppFabricationIndexRouteImport } from './routes/_app.fabrication.index'
 import { Route as AppExportIndexRouteImport } from './routes/_app.export.index'
 import { Route as AppDevisIndexRouteImport } from './routes/_app.devis.index'
 import { Route as AppAffairesIndexRouteImport } from './routes/_app.affaires.index'
@@ -46,6 +47,7 @@ import { Route as AppParametresRolesFabricationRouteImport } from './routes/_app
 import { Route as AppParametresMetiersRouteImport } from './routes/_app.parametres.metiers'
 import { Route as AppParametresLieuxRouteImport } from './routes/_app.parametres.lieux'
 import { Route as AppOpportunitesImportRouteImport } from './routes/_app.opportunites.import'
+import { Route as AppFabricationMesEtapesRouteImport } from './routes/_app.fabrication.mes-etapes'
 import { Route as AppExportDemandesDevisRouteImport } from './routes/_app.export.demandes-devis'
 import { Route as AppEmployesImportRouteImport } from './routes/_app.employes.import'
 import { Route as AppDevisRattachementHistoriqueRouteImport } from './routes/_app.devis.rattachement-historique'
@@ -204,6 +206,11 @@ const AppAbsencesRoute = AppAbsencesRouteImport.update({
   path: '/absences',
   getParentRoute: () => AppRoute,
 } as any)
+const AppFabricationIndexRoute = AppFabricationIndexRouteImport.update({
+  id: '/fabrication/',
+  path: '/fabrication/',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppExportIndexRoute = AppExportIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -245,6 +252,11 @@ const AppOpportunitesImportRoute = AppOpportunitesImportRouteImport.update({
   id: '/import',
   path: '/import',
   getParentRoute: () => AppOpportunitesRoute,
+} as any)
+const AppFabricationMesEtapesRoute = AppFabricationMesEtapesRouteImport.update({
+  id: '/fabrication/mes-etapes',
+  path: '/fabrication/mes-etapes',
+  getParentRoute: () => AppRoute,
 } as any)
 const AppExportDemandesDevisRoute = AppExportDemandesDevisRouteImport.update({
   id: '/demandes-devis',
@@ -355,6 +367,7 @@ export interface FileRoutesByFullPath {
   '/devis/rattachement-historique': typeof AppDevisRattachementHistoriqueRoute
   '/employes/import': typeof AppEmployesImportRoute
   '/export/demandes-devis': typeof AppExportDemandesDevisRoute
+  '/fabrication/mes-etapes': typeof AppFabricationMesEtapesRoute
   '/opportunites/import': typeof AppOpportunitesImportRoute
   '/parametres/lieux': typeof AppParametresLieuxRoute
   '/parametres/metiers': typeof AppParametresMetiersRoute
@@ -363,6 +376,7 @@ export interface FileRoutesByFullPath {
   '/affaires/': typeof AppAffairesIndexRoute
   '/devis/': typeof AppDevisIndexRoute
   '/export/': typeof AppExportIndexRoute
+  '/fabrication/': typeof AppFabricationIndexRoute
   '/affaires/$affaireId/devis': typeof AppAffairesAffaireIdDevisRoute
   '/affaires/$affaireId/fabrication': typeof AppAffairesAffaireIdFabricationRoute
   '/affaires/$affaireId/journal': typeof AppAffairesAffaireIdJournalRoute
@@ -404,6 +418,7 @@ export interface FileRoutesByTo {
   '/devis/rattachement-historique': typeof AppDevisRattachementHistoriqueRoute
   '/employes/import': typeof AppEmployesImportRoute
   '/export/demandes-devis': typeof AppExportDemandesDevisRoute
+  '/fabrication/mes-etapes': typeof AppFabricationMesEtapesRoute
   '/opportunites/import': typeof AppOpportunitesImportRoute
   '/parametres/lieux': typeof AppParametresLieuxRoute
   '/parametres/metiers': typeof AppParametresMetiersRoute
@@ -412,6 +427,7 @@ export interface FileRoutesByTo {
   '/affaires': typeof AppAffairesIndexRoute
   '/devis': typeof AppDevisIndexRoute
   '/export': typeof AppExportIndexRoute
+  '/fabrication': typeof AppFabricationIndexRoute
   '/affaires/$affaireId/devis': typeof AppAffairesAffaireIdDevisRoute
   '/affaires/$affaireId/fabrication': typeof AppAffairesAffaireIdFabricationRoute
   '/affaires/$affaireId/journal': typeof AppAffairesAffaireIdJournalRoute
@@ -457,6 +473,7 @@ export interface FileRoutesById {
   '/_app/devis/rattachement-historique': typeof AppDevisRattachementHistoriqueRoute
   '/_app/employes/import': typeof AppEmployesImportRoute
   '/_app/export/demandes-devis': typeof AppExportDemandesDevisRoute
+  '/_app/fabrication/mes-etapes': typeof AppFabricationMesEtapesRoute
   '/_app/opportunites/import': typeof AppOpportunitesImportRoute
   '/_app/parametres/lieux': typeof AppParametresLieuxRoute
   '/_app/parametres/metiers': typeof AppParametresMetiersRoute
@@ -465,6 +482,7 @@ export interface FileRoutesById {
   '/_app/affaires/': typeof AppAffairesIndexRoute
   '/_app/devis/': typeof AppDevisIndexRoute
   '/_app/export/': typeof AppExportIndexRoute
+  '/_app/fabrication/': typeof AppFabricationIndexRoute
   '/_app/affaires/$affaireId/devis': typeof AppAffairesAffaireIdDevisRoute
   '/_app/affaires/$affaireId/fabrication': typeof AppAffairesAffaireIdFabricationRoute
   '/_app/affaires/$affaireId/journal': typeof AppAffairesAffaireIdJournalRoute
@@ -510,6 +528,7 @@ export interface FileRouteTypes {
     | '/devis/rattachement-historique'
     | '/employes/import'
     | '/export/demandes-devis'
+    | '/fabrication/mes-etapes'
     | '/opportunites/import'
     | '/parametres/lieux'
     | '/parametres/metiers'
@@ -518,6 +537,7 @@ export interface FileRouteTypes {
     | '/affaires/'
     | '/devis/'
     | '/export/'
+    | '/fabrication/'
     | '/affaires/$affaireId/devis'
     | '/affaires/$affaireId/fabrication'
     | '/affaires/$affaireId/journal'
@@ -559,6 +579,7 @@ export interface FileRouteTypes {
     | '/devis/rattachement-historique'
     | '/employes/import'
     | '/export/demandes-devis'
+    | '/fabrication/mes-etapes'
     | '/opportunites/import'
     | '/parametres/lieux'
     | '/parametres/metiers'
@@ -567,6 +588,7 @@ export interface FileRouteTypes {
     | '/affaires'
     | '/devis'
     | '/export'
+    | '/fabrication'
     | '/affaires/$affaireId/devis'
     | '/affaires/$affaireId/fabrication'
     | '/affaires/$affaireId/journal'
@@ -611,6 +633,7 @@ export interface FileRouteTypes {
     | '/_app/devis/rattachement-historique'
     | '/_app/employes/import'
     | '/_app/export/demandes-devis'
+    | '/_app/fabrication/mes-etapes'
     | '/_app/opportunites/import'
     | '/_app/parametres/lieux'
     | '/_app/parametres/metiers'
@@ -619,6 +642,7 @@ export interface FileRouteTypes {
     | '/_app/affaires/'
     | '/_app/devis/'
     | '/_app/export/'
+    | '/_app/fabrication/'
     | '/_app/affaires/$affaireId/devis'
     | '/_app/affaires/$affaireId/fabrication'
     | '/_app/affaires/$affaireId/journal'
@@ -847,6 +871,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAbsencesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/fabrication/': {
+      id: '/_app/fabrication/'
+      path: '/fabrication'
+      fullPath: '/fabrication/'
+      preLoaderRoute: typeof AppFabricationIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/export/': {
       id: '/_app/export/'
       path: '/'
@@ -902,6 +933,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/opportunites/import'
       preLoaderRoute: typeof AppOpportunitesImportRouteImport
       parentRoute: typeof AppOpportunitesRoute
+    }
+    '/_app/fabrication/mes-etapes': {
+      id: '/_app/fabrication/mes-etapes'
+      path: '/fabrication/mes-etapes'
+      fullPath: '/fabrication/mes-etapes'
+      preLoaderRoute: typeof AppFabricationMesEtapesRouteImport
+      parentRoute: typeof AppRoute
     }
     '/_app/export/demandes-devis': {
       id: '/_app/export/demandes-devis'
@@ -1077,12 +1115,14 @@ interface AppRouteChildren {
   AppDevisHistoriqueRoute: typeof AppDevisHistoriqueRoute
   AppDevisImportRoute: typeof AppDevisImportRoute
   AppDevisRattachementHistoriqueRoute: typeof AppDevisRattachementHistoriqueRoute
+  AppFabricationMesEtapesRoute: typeof AppFabricationMesEtapesRoute
   AppParametresLieuxRoute: typeof AppParametresLieuxRoute
   AppParametresMetiersRoute: typeof AppParametresMetiersRoute
   AppParametresRolesFabricationRoute: typeof AppParametresRolesFabricationRoute
   AppParametresUtilisateursRoute: typeof AppParametresUtilisateursRoute
   AppAffairesIndexRoute: typeof AppAffairesIndexRoute
   AppDevisIndexRoute: typeof AppDevisIndexRoute
+  AppFabricationIndexRoute: typeof AppFabricationIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -1108,12 +1148,14 @@ const AppRouteChildren: AppRouteChildren = {
   AppDevisHistoriqueRoute: AppDevisHistoriqueRoute,
   AppDevisImportRoute: AppDevisImportRoute,
   AppDevisRattachementHistoriqueRoute: AppDevisRattachementHistoriqueRoute,
+  AppFabricationMesEtapesRoute: AppFabricationMesEtapesRoute,
   AppParametresLieuxRoute: AppParametresLieuxRoute,
   AppParametresMetiersRoute: AppParametresMetiersRoute,
   AppParametresRolesFabricationRoute: AppParametresRolesFabricationRoute,
   AppParametresUtilisateursRoute: AppParametresUtilisateursRoute,
   AppAffairesIndexRoute: AppAffairesIndexRoute,
   AppDevisIndexRoute: AppDevisIndexRoute,
+  AppFabricationIndexRoute: AppFabricationIndexRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)

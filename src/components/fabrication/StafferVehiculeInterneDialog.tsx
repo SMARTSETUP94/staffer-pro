@@ -54,11 +54,9 @@ interface EmployeLite {
   nom: string;
 }
 
-/** Règle de suggestion simple : <5 objets = VL, 5-15 = M3_20, >15 = poids lourd. */
-function suggererTypeVehicule(count: number): VehiculeType {
-  if (count <= 5) return "VL";
-  if (count <= 15) return "M3_20";
-  return "poids_lourd";
+/** v0.20 décision Q2=A : toujours suggérer Camion 20m³ par défaut, à itérer plus tard. */
+function suggererTypeVehicule(_count: number): VehiculeType {
+  return "M3_20";
 }
 
 const TYPE_LABEL: Record<VehiculeType, string> = {

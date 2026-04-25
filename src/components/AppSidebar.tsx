@@ -2,7 +2,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import {
   Calendar, Building2, Users, FileUp, FileDown, ClipboardCheck, LogOut, Clock, CalendarOff,
   Smartphone, UserCircle, LayoutDashboard, FileText, Trophy, Map, ArrowLeftRight, ClipboardList,
-  Truck, FileQuestion, Palette, MessageCircle, Warehouse, Hammer,
+  Truck, FileQuestion, Palette, MessageCircle, Warehouse, Hammer, Wrench,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -57,6 +57,7 @@ function buildSections(role: EffRole, validationCount: number): NavSection[] {
         items: [
           { title: "Ma semaine", url: "/dashboard-employe", icon: LayoutDashboard, show: () => true },
           { title: "Mes heures", url: "/mes-heures", icon: Clock, show: () => true },
+          { title: "Mes étapes fab", url: "/fabrication/mes-etapes", icon: Wrench, show: () => true },
           { title: "Mes échanges", url: "/mes-swaps", icon: ArrowLeftRight, show: () => true },
           { title: "Mes propositions", url: "/mes-propositions", icon: ClipboardList, show: () => true },
         ],
@@ -96,6 +97,14 @@ function buildSections(role: EffRole, validationCount: number): NavSection[] {
           show: () => true,
           count: validationCount,
         },
+      ],
+    },
+    {
+      // v0.20 — Atelier : dashboard fabrication global + accès "Mes étapes" perso
+      label: "Atelier",
+      items: [
+        { title: "Dashboard fabrication", url: "/fabrication", icon: Hammer, show: () => true },
+        { title: "Mes étapes", url: "/fabrication/mes-etapes", icon: Wrench, show: () => true },
       ],
     },
     {
