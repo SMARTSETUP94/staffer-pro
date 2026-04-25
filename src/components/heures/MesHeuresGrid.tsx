@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { addDays, format, isSameDay, isToday } from "date-fns";
 import { fr } from "date-fns/locale";
-import { AlertTriangle, ChevronDown, Clock, Loader2, MapPin, Send } from "lucide-react";
+import { AlertTriangle, ChevronDown, Clock, Hammer, Loader2, MapPin, Send } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,8 +11,23 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { useMesHeures, type SaisieCombined } from "@/hooks/use-mes-heures";
+import { useMesHeures, type SaisieCombined, type FabricationEtapeTypeRow } from "@/hooks/use-mes-heures";
+import { useObjetsAffaireLight, useMyFabricationRoles, getEligibleEtapesForRoles } from "@/hooks/use-objets-affaire-light";
+
+const ETAPE_LABEL_MAP: Record<FabricationEtapeTypeRow, string> = {
+  be: "BE (dessin)",
+  respo_fab: "Respo Fab (construction)",
+  finition: "Finition",
+  manutention: "Manutention",
+};
 
 interface Props {
   weekStart: Date;
