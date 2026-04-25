@@ -272,6 +272,8 @@ export function useMesHeures({ weekStart, employeIdOverride }: UseMesHeuresOptio
         heure_debut: patch.heure_debut ?? null,
         heure_fin: patch.heure_fin ?? null,
         commentaire: patch.commentaire ?? null,
+        fabrication_objet_id: patch.fabrication_objet_id ?? null,
+        fabrication_etape_type: patch.fabrication_etape_type ?? null,
         statut: "brouillon" as const,
       };
       const { data } = await supabase
