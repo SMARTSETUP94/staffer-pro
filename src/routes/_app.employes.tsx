@@ -190,12 +190,13 @@ function EmployesPage() {
       est_respo_fab: boolean;
       est_finition: boolean;
       est_manutention: boolean;
+      est_bureau_etude: boolean;
     };
     let profileMap: Record<string, ProfileFabRow> = {};
     if (profileIds.length) {
       const { data: profs } = await supabase
         .from("profiles")
-        .select("id, matricule_silae, est_chef_projet, est_respo_fab, est_finition, est_manutention")
+        .select("id, matricule_silae, est_chef_projet, est_respo_fab, est_finition, est_manutention, est_bureau_etude")
         .in("id", profileIds);
       profileMap = (profs ?? []).reduce<Record<string, ProfileFabRow>>((acc, p) => {
         acc[p.id] = p as ProfileFabRow;
@@ -215,6 +216,7 @@ function EmployesPage() {
           est_respo_fab: prof?.est_respo_fab ?? false,
           est_finition: prof?.est_finition ?? false,
           est_manutention: prof?.est_manutention ?? false,
+          est_bureau_etude: prof?.est_bureau_etude ?? false,
         };
       }),
     );
