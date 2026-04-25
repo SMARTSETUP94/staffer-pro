@@ -333,15 +333,21 @@ function EmployesPage() {
         .insert(sec.map((metier_id) => ({ employe_id: employeId!, metier_id })));
     }
 
-    // Matricule SILAE : update sur profiles si lié et admin (le trigger DB rejette sinon)
+    // Matricule SILAE + flags rôles fabrication : update sur profiles si lié et admin
     if (form.profile_id && isAdmin) {
       const newMat = form.matricule_silae.trim() || null;
-      const { error: matErr } = await supabase
+      const { error: profErr } = await supabase
         .from("profiles")
-        .update({ matricule_silae: newMat })
+        .update({
+          matricule_silae: newMat,
+          est_chef_projet: form.est_chef_projet,
+          est_respo_fab: form.est_respo_fab,
+          est_finition: form.est_finition,
+          est_manutention: form.est_manutention,
+        })
         .eq("id", form.profile_id);
-      if (matErr) {
-        toast.error("Matricule SILAE non sauvegardé", { description: matErr.message });
+      if (profErr) {
+        toast.error("Profil non sauvegardé", { description: profErr.message });
       }
     }
 
