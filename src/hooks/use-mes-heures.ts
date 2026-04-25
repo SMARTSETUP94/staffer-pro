@@ -16,6 +16,8 @@ export interface AssignationRow {
   metier: { libelle: string; couleur: string } | null;
 }
 
+export type FabricationEtapeTypeRow = "be" | "respo_fab" | "finition" | "manutention";
+
 export interface SaisieRow {
   id: string;
   assignation_id: string | null;
@@ -28,6 +30,8 @@ export interface SaisieRow {
   statut: HeureStatut;
   motif_rejet: string | null;
   motif_rejet_lu_le: string | null;
+  fabrication_objet_id: string | null;
+  fabrication_etape_type: FabricationEtapeTypeRow | null;
 }
 
 /** Combinaison d'une assignation + sa saisie (s'il y en a une). */
@@ -134,7 +138,7 @@ export function useMesHeures({ weekStart, employeIdOverride }: UseMesHeuresOptio
       supabase
         .from("heures_saisies")
         .select(
-          "id, assignation_id, affaire_id, date, heure_debut, heure_fin, heures_reelles, commentaire, statut, motif_rejet, motif_rejet_lu_le",
+          "id, assignation_id, affaire_id, date, heure_debut, heure_fin, heures_reelles, commentaire, statut, motif_rejet, motif_rejet_lu_le, fabrication_objet_id, fabrication_etape_type",
         )
         .eq("employe_id", employeId)
         .gte("date", startStr)
@@ -224,7 +228,7 @@ export function useMesHeures({ weekStart, employeIdOverride }: UseMesHeuresOptio
         ignoreDuplicates: true,
       })
       .select(
-        "id, assignation_id, affaire_id, date, heure_debut, heure_fin, heures_reelles, commentaire, statut, motif_rejet, motif_rejet_lu_le",
+        "id, assignation_id, affaire_id, date, heure_debut, heure_fin, heures_reelles, commentaire, statut, motif_rejet, motif_rejet_lu_le, fabrication_objet_id, fabrication_etape_type",
       )
       .then(({ data }) => {
         if (data && data.length > 0) {
@@ -249,7 +253,7 @@ export function useMesHeures({ weekStart, employeIdOverride }: UseMesHeuresOptio
           .update(patch)
           .eq("id", row.saisie.id)
           .select(
-            "id, assignation_id, affaire_id, date, heure_debut, heure_fin, heures_reelles, commentaire, statut, motif_rejet, motif_rejet_lu_le",
+            "id, assignation_id, affaire_id, date, heure_debut, heure_fin, heures_reelles, commentaire, statut, motif_rejet, motif_rejet_lu_le, fabrication_objet_id, fabrication_etape_type",
           )
           .maybeSingle();
         if (!error && data) {
@@ -268,13 +272,15 @@ export function useMesHeures({ weekStart, employeIdOverride }: UseMesHeuresOptio
         heure_debut: patch.heure_debut ?? null,
         heure_fin: patch.heure_fin ?? null,
         commentaire: patch.commentaire ?? null,
+        fabrication_objet_id: patch.fabrication_objet_id ?? null,
+        fabrication_etape_type: patch.fabrication_etape_type ?? null,
         statut: "brouillon" as const,
       };
       const { data } = await supabase
         .from("heures_saisies")
         .insert(insert)
         .select(
-          "id, assignation_id, affaire_id, date, heure_debut, heure_fin, heures_reelles, commentaire, statut, motif_rejet, motif_rejet_lu_le",
+          "id, assignation_id, affaire_id, date, heure_debut, heure_fin, heures_reelles, commentaire, statut, motif_rejet, motif_rejet_lu_le, fabrication_objet_id, fabrication_etape_type",
         )
         .maybeSingle();
       if (data) {

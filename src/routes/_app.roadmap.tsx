@@ -43,6 +43,69 @@ interface RoadmapPlanned {
 
 const RELEASES: RoadmapRelease[] = [
   {
+    date: "2026-04-25",
+    version: "v0.20",
+    title: "Module Fabrication / Suivi de production (remplace Asana)",
+    entries: [
+      {
+        type: "feature",
+        area: "Fabrication",
+        title: "Onglet Fabrication sur fiche affaire — tableau objets × 4 étapes",
+        description:
+          "Tableau BE / Respo Fab / Finition / Manutention par objet, avec statuts (a_faire / en_cours / termine / non_applicable), assignees, validateurs et historique. Vue cards mobile dédiée < 1024px.",
+      },
+      {
+        type: "feature",
+        area: "Fabrication",
+        title: "5 flags rôles indépendants + matrice bulk /parametres/roles-fabrication",
+        description:
+          "Chef projet, Bureau d'étude, Respo Fab, Finition, Manutention configurables sur fiche employé et via une matrice bulk admin.",
+      },
+      {
+        type: "feature",
+        area: "Fabrication",
+        title: "4 flags d'applicabilité par objet (a_dessiner, a_construire, est_brut, a_emballer)",
+        description:
+          "Modale création/édition objet pose 4 questions Oui/Non qui basculent automatiquement les étapes correspondantes en non_applicable. Trigger DB sync_fabrication_etapes_on_flags_change garantit la cohérence.",
+      },
+      {
+        type: "feature",
+        area: "Fabrication",
+        title: "Dashboard /fabrication (chef/admin) + page /fabrication/mes-etapes (employé)",
+        description:
+          "Dashboard global avec KPIs, charge par pôle, étapes non assignées et affaires prêtes à livrer. Page perso listant les étapes assignées à l'utilisateur, triées par urgence (date démontage).",
+      },
+      {
+        type: "feature",
+        area: "Fabrication",
+        title: "Lien optionnel saisie heures ↔ objet/étape",
+        description:
+          "Sous-bloc collapsible 'Sur quoi as-tu travaillé ?' sur chaque saisie : dropdown Objet (filtré par affaire) + dropdown Étape (filtré par flags rôle de l'utilisateur).",
+      },
+      {
+        type: "feature",
+        area: "Logistique",
+        title: "Lien automatique avec module Demandes transport et flotte interne",
+        description:
+          "Bandeau 'Affaire prête à livrer' apparaît dès que toutes les étapes Manutention sont termine ou non_applicable. Boutons Staffer véhicule interne (Camion 20m³ par défaut) ou Demander trajet sous-traité.",
+      },
+      {
+        type: "feature",
+        area: "Notifications",
+        title: "Notifications in-app fabrication (3 types)",
+        description:
+          "Assignation à une étape (notif assignee), Affaire prête à livrer (notif chef projet, anti-spam 24h), Affaire signée (notif chef projet ou admins).",
+      },
+      {
+        type: "improvement",
+        area: "Fabrication",
+        title: "Hors-scope reporté en v0.20.1 — import objets depuis devis",
+        description:
+          "Bouton 'Importer depuis devis' présent mais désactivé (tooltip explicatif). Parser à entraîner sur des devis réels avant ouverture.",
+      },
+    ],
+  },
+  {
     date: "2026-04-22",
     version: "v0.19",
     title: "Vraie page Demandes transport — suivi trajets sous-traités",

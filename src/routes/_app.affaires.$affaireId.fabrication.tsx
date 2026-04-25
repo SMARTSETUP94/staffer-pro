@@ -45,6 +45,7 @@ import { AjouterObjetDialog } from "@/components/fabrication/AjouterObjetDialog"
 import { EditerObjetDialog } from "@/components/fabrication/EditerObjetDialog";
 import { EtapeDialog } from "@/components/fabrication/EtapeDialog";
 import { StafferVehiculeInterneDialog } from "@/components/fabrication/StafferVehiculeInterneDialog";
+import { ObjetCardMobile } from "@/components/fabrication/ObjetCardMobile";
 import { Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_app/affaires/$affaireId/fabrication")({
@@ -239,84 +240,100 @@ function FabricationPage() {
           )}
         </div>
       ) : (
-        <div className="rounded-xl border border-border bg-card overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-32">Réf</TableHead>
-                <TableHead>Objet</TableHead>
-                <TableHead className="w-16 text-center">Qté</TableHead>
-                <TableHead className="w-32">Respo Fab</TableHead>
-                {(["be", "respo_fab", "finition", "manutention"] as FabricationEtapeType[]).map((t) => (
-                  <TableHead key={t} className="w-36 text-center">
-                    {ETAPE_LABELS[t]}
-                  </TableHead>
-                ))}
-                <TableHead className="w-20 text-center">Avanc.</TableHead>
-                {isAdminOrChef && <TableHead className="w-12"></TableHead>}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {objets.map((o) => (
-                <TableRow key={o.id}>
-                  <TableCell className="font-mono text-xs">{o.reference}</TableCell>
-                  <TableCell className="font-medium">{o.nom}</TableCell>
-                  <TableCell className="text-center">{o.quantite}</TableCell>
-                  <TableCell className="text-xs">
-                    {o.respo_fab_name ?? <span className="text-muted-foreground">—</span>}
-                  </TableCell>
-                  {(["be", "respo_fab", "finition", "manutention"] as FabricationEtapeType[]).map((t) => {
-                    const e = o.etapes.find((x) => x.type_etape === t);
-                    if (!e) return <TableCell key={t} className="text-center text-muted-foreground">—</TableCell>;
-                    return (
-                      <TableCell key={t} className="text-center">
-                        <button
-                          type="button"
-                          onClick={() => isAdminOrChef && setEditEtape({ objet: o, etape: e })}
-                          disabled={!isAdminOrChef}
-                          className="flex w-full flex-col items-center gap-0.5 rounded-md p-1 text-xs transition-colors hover:bg-muted disabled:cursor-default disabled:hover:bg-transparent"
-                          title={isAdminOrChef ? "Modifier l'étape" : STATUT_LABELS[e.statut]}
-                        >
-                          <span className="text-base leading-none">{STATUT_ICONS[e.statut]}</span>
-                          {e.assignee_name && e.statut === "termine" && (
-                            <span className="text-[10px] text-muted-foreground">
-                              {e.assignee_name}
-                              {e.date_fin && (
-                                <> · {new Date(e.date_fin).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" })}</>
-                              )}
-                            </span>
-                          )}
-                          {e.assignee_name && e.statut === "en_cours" && (
-                            <span className="text-[10px] text-muted-foreground">{e.assignee_name}</span>
-                          )}
-                        </button>
-                      </TableCell>
-                    );
-                  })}
-                  <TableCell className="text-center text-xs font-semibold">
-                    {calcAvancementObjet(o)}%
-                  </TableCell>
-                  {isAdminOrChef && (
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-7 w-7">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => setEditObjet(o)}>
-                            <Pencil className="mr-2 h-4 w-4" /> Modifier l'objet
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  )}
+        <>
+          {/* Vue cards mobile (<lg) — Bloc 4 v0.20 */}
+          <div className="space-y-3 lg:hidden">
+            {objets.map((o) => (
+              <ObjetCardMobile
+                key={o.id}
+                objet={o}
+                isAdminOrChef={isAdminOrChef}
+                onEditObjet={(obj) => setEditObjet(obj)}
+                onEditEtape={(obj, etape) => setEditEtape({ objet: obj, etape })}
+              />
+            ))}
+          </div>
+
+          {/* Vue tableau desktop (>=lg) */}
+          <div className="hidden rounded-xl border border-border bg-card overflow-hidden lg:block">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-32">Réf</TableHead>
+                  <TableHead>Objet</TableHead>
+                  <TableHead className="w-16 text-center">Qté</TableHead>
+                  <TableHead className="w-32">Respo Fab</TableHead>
+                  {(["be", "respo_fab", "finition", "manutention"] as FabricationEtapeType[]).map((t) => (
+                    <TableHead key={t} className="w-36 text-center">
+                      {ETAPE_LABELS[t]}
+                    </TableHead>
+                  ))}
+                  <TableHead className="w-20 text-center">Avanc.</TableHead>
+                  {isAdminOrChef && <TableHead className="w-12"></TableHead>}
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+              </TableHeader>
+              <TableBody>
+                {objets.map((o) => (
+                  <TableRow key={o.id}>
+                    <TableCell className="font-mono text-xs">{o.reference}</TableCell>
+                    <TableCell className="font-medium">{o.nom}</TableCell>
+                    <TableCell className="text-center">{o.quantite}</TableCell>
+                    <TableCell className="text-xs">
+                      {o.respo_fab_name ?? <span className="text-muted-foreground">—</span>}
+                    </TableCell>
+                    {(["be", "respo_fab", "finition", "manutention"] as FabricationEtapeType[]).map((t) => {
+                      const e = o.etapes.find((x) => x.type_etape === t);
+                      if (!e) return <TableCell key={t} className="text-center text-muted-foreground">—</TableCell>;
+                      return (
+                        <TableCell key={t} className="text-center">
+                          <button
+                            type="button"
+                            onClick={() => isAdminOrChef && setEditEtape({ objet: o, etape: e })}
+                            disabled={!isAdminOrChef}
+                            className="flex w-full flex-col items-center gap-0.5 rounded-md p-1 text-xs transition-colors hover:bg-muted disabled:cursor-default disabled:hover:bg-transparent"
+                            title={isAdminOrChef ? "Modifier l'étape" : STATUT_LABELS[e.statut]}
+                          >
+                            <span className="text-base leading-none">{STATUT_ICONS[e.statut]}</span>
+                            {e.assignee_name && e.statut === "termine" && (
+                              <span className="text-[10px] text-muted-foreground">
+                                {e.assignee_name}
+                                {e.date_fin && (
+                                  <> · {new Date(e.date_fin).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" })}</>
+                                )}
+                              </span>
+                            )}
+                            {e.assignee_name && e.statut === "en_cours" && (
+                              <span className="text-[10px] text-muted-foreground">{e.assignee_name}</span>
+                            )}
+                          </button>
+                        </TableCell>
+                      );
+                    })}
+                    <TableCell className="text-center text-xs font-semibold">
+                      {calcAvancementObjet(o)}%
+                    </TableCell>
+                    {isAdminOrChef && (
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-7 w-7">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => setEditObjet(o)}>
+                              <Pencil className="mr-2 h-4 w-4" /> Modifier l'objet
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    )}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </>
       )}
 
       <p className="text-xs text-muted-foreground">
