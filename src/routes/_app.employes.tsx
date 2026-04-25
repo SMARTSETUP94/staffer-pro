@@ -288,6 +288,7 @@ function EmployesPage() {
       est_respo_fab: row.est_respo_fab,
       est_finition: row.est_finition,
       est_manutention: row.est_manutention,
+      est_bureau_etude: row.est_bureau_etude,
       secondaires: row.secondaires.filter((id) => id !== row.metier_principal_id),
     });
     setOpen(true);
