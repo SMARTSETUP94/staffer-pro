@@ -49,6 +49,10 @@ interface EmployeRow {
   notes: string | null;
   profile_id: string | null;
   matricule_silae: string | null;
+  est_chef_projet: boolean;
+  est_respo_fab: boolean;
+  est_finition: boolean;
+  est_manutention: boolean;
   secondaires: number[];
 }
 
