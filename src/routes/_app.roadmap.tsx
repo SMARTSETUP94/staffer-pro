@@ -44,6 +44,34 @@ interface RoadmapPlanned {
 const RELEASES: RoadmapRelease[] = [
   {
     date: "2026-04-25",
+    version: "v0.20.0",
+    title: "Hotfix accès employé /fabrication/mes-etapes + audit pré-publish v0.20",
+    entries: [
+      {
+        type: "fix",
+        area: "Sécurité — Routing",
+        title: "🚨 BLOCKER fixé : /fabrication ajouté à EMPLOYE_DESKTOP_ALLOWED",
+        description:
+          "Audit pré-publish v0.20 a identifié que la route /fabrication/mes-etapes (livrée v0.20) était inaccessible aux employés desktop : le guard AppGuard les redirigeait vers /dashboard-employe au clic sur la sidebar « Mes étapes fab ». Fix : ajout de '/fabrication' dans EMPLOYE_DESKTOP_ALLOWED de src/routes/_app.tsx, qui couvre /fabrication/mes-etapes via startsWith. Le dashboard /fabrication global reste protégé par son propre guard chef/admin côté composant. tsc --noEmit ✅.",
+      },
+      {
+        type: "improvement",
+        area: "Audit",
+        title: "✅ Audit RLS Fabrication clean — pas de récursion détectée",
+        description:
+          "Vérification post-hotfix v0.18.3 : les 3 nouvelles tables fabrication_objets / fabrication_etapes / fabrication_etapes_historique utilisent bien is_chef_or_admin() (SECURITY DEFINER, search_path public) sans EXISTS auto-référencé. Les 3 triggers de notification (assignation, prêt à livrer, signée) ne réécrivent jamais sur leur propre table source — pas de boucle infinie. Anti-spam 24h confirmé sur 'affaire prête à livrer'. Les indexes de base sont en place pour les KPIs dashboard.",
+      },
+      {
+        type: "improvement",
+        area: "Audit",
+        title: "✅ Compatibilité saisie heures pré-v0.20 préservée",
+        description:
+          "Vérifié que les heures saisies AVANT v0.20 (avec fabrication_objet_id et fabrication_etape_type NULL) s'affichent et se ré-éditent sans erreur. Le sous-bloc 'Sur quoi as-tu travaillé ?' est strictement optionnel et collapsible par défaut. Si un utilisateur n'a aucun flag rôle fabrication, le dropdown Étape reste vide sans crash.",
+      },
+    ],
+  },
+  {
+    date: "2026-04-25",
     version: "v0.20",
     title: "Module Fabrication / Suivi de production (remplace Asana)",
     entries: [
@@ -1158,28 +1186,49 @@ const RELEASES: RoadmapRelease[] = [
 ];
 
 const PLANNED: RoadmapPlanned[] = [
-  // ========== v0.18.2 — Suite immédiate flotte / sous-traitance ==========
+  // ========== v0.20.1 — Hotfixes & finitions Fabrication ==========
   {
     priority: "haute",
-    title: "v0.18.2 — Base prestataires transport typée + liaison trajets",
+    title: "v0.20.1 — Pré-remplissage trajet sous-traité depuis bandeau « Prête à livrer »",
     description:
-      "Nouvelle table `prestataires_transport` (nom, email, tel, spécialité VL/PL/SPL/grue, zones géo, notes) avec RLS chef/admin. Remplace le champ texte libre `prestataire_location` actuel par une FK `trajets.transporteur_id`. L'export trajets sous-traités exploite la fiche prestataire (email pré-rempli pour demande de devis groupée). Pré-requis pour v0.16 (envoi automatisé Resend).",
+      "🔴 HIGH identifié à l'audit v0.20 : les boutons « Demander trajet sous-traité » du dashboard /fabrication et de la fiche affaire ouvrent /flotte sans passer ?affaireId=… ni les adresses pré-remplies. À fixer : query params + auto-ouverture du TrajetDialog en mode création avec affaire_id, adresse arrivée client, statut_soustraitance='a_sous_traiter' pré-positionnés.",
   },
   {
     priority: "haute",
-    title: "v0.18.2 — Reporting coût flotte par affaire",
+    title: "v0.20.1 — Import objets de fabrication depuis devis (parser dédié)",
     description:
-      "Cumul `cout_journalier_eur × jours_utilisés` des véhicules loués + total trajets sous-traités confirmés, par affaire. Colonne dans la fiche affaire et export pilotage. Permet de comparer coût logistique prévisionnel vs réel.",
+      "Hors-scope reporté de v0.20 : transformer la liste des postes d'un devis signé en objets de fabrication en 1 clic. Détection auto des références produit (mobilier, signalétique…), de la quantité, et proposition des 4 flags d'applicabilité par défaut selon le type de poste. Bouton actuellement désactivé avec tooltip explicatif. Nécessite d'entraîner le parser sur ≥ 20 devis réels.",
   },
-
-  // ========== v0.19 — Saisie heures horaires précis (auto-calcul nuit) ==========
   {
-    priority: "haute",
-    title: "v0.19 — Saisie heures précises (heure_debut / heure_fin / pauses) + auto-calcul nuit",
+    priority: "moyenne",
+    title: "v0.20.1 — Indexes composites dashboard fabrication (perf)",
     description:
-      "Refactor moyen terme du module saisie d'heures vers un format horaire précis : `heure_debut`, `heure_fin`, pauses (déjeuner + autres). Auto-calcul des heures de nuit par overlap avec la plage 00h-06h (convention spectacle vivant). Déclenchement conditionné au retour d'usage Phase 1 (v0.18, saisie déclarative).",
+      "🟡 MEDIUM identifié à l'audit : sur grosse base, les requêtes 'charge par assignee' et 'étapes non assignées' du dashboard /fabrication peuvent ralentir. Ajouter index composites (assignee_id, statut) et (statut, type_etape) sur fabrication_etapes. À déclencher si latence dashboard > 1s en prod.",
   },
-
+  {
+    priority: "moyenne",
+    title: "v0.20.1 — Cache useObjetsAffaireLight partagé (anti N+1)",
+    description:
+      "🟡 MEDIUM identifié à l'audit : si plusieurs lignes de saisie d'heures pour la même affaire sont ouvertes simultanément, le hook fetche les objets N fois. Refactor avec queryKey partagée par affaire_id pour mutualiser le cache TanStack Query.",
+  },
+  {
+    priority: "moyenne",
+    title: "v0.20.1 — Notification « prête à livrer » étendue au chargé d'affaires",
+    description:
+      "Aujourd'hui notif chef projet uniquement (spec d'origine). À itérer selon retour terrain : si un chargé d'affaires est défini sur l'affaire et différent du chef projet, lui pousser aussi la notif. À cadrer avec Gabin après 2-3 livraisons réelles.",
+  },
+  {
+    priority: "basse",
+    title: "v0.20.1 — Suggestion intelligente type véhicule pour staffing interne",
+    description:
+      "Aujourd'hui par défaut Camion 20m³ pour le bouton « Staffer véhicule interne ». À itérer : suggérer le type selon le volume cumulé estimé des objets prêts à livrer (VL si < 3 m³, Camion 20m³ entre 3-15 m³, Poids lourd > 15 m³). Nécessite de saisir un volume estimé sur fabrication_objets.",
+  },
+  {
+    priority: "basse",
+    title: "v0.20.1 — Tests Vitest triggers DB fabrication",
+    description:
+      "Couvrir en tests d'intégration : trigger sync_fabrication_etapes_on_flags_change (bascule auto a_faire ↔ non_applicable), trigger d'historique fabrication_etapes_historique, transitions de statut a_faire → en_cours → termine. Aujourd'hui validés manuellement uniquement.",
+  },
 
   // ========== HAUTE PRIORITÉ ==========
   {
