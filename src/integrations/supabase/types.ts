@@ -2136,6 +2136,9 @@ export type Database = {
         | "conflit_staffing"
         | "depassement_budget"
         | "mention"
+        | "fabrication_pret_livraison"
+        | "fabrication_assignation"
+        | "affaire_signee"
       opportunite_statut: "a_faire" | "envoye" | "gagne" | "perdu" | "termine"
       opportunite_taille:
         | "tres_petit"
@@ -2341,6 +2344,9 @@ export const Constants = {
         "conflit_staffing",
         "depassement_budget",
         "mention",
+        "fabrication_pret_livraison",
+        "fabrication_assignation",
+        "affaire_signee",
       ],
       opportunite_statut: ["a_faire", "envoye", "gagne", "perdu", "termine"],
       opportunite_taille: ["tres_petit", "petit", "moyen", "gros", "tres_gros"],
