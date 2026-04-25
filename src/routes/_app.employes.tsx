@@ -713,6 +713,41 @@ function EmployesPage() {
                 </div>
               )}
             </div>
+
+            {/* v0.20 — Bloc 2 : Rôles fabrication (indépendants du métier principal) */}
+            <div className="space-y-2 rounded-xl border border-border bg-background p-3 sm:col-span-2">
+              <div>
+                <p className="text-sm font-semibold text-foreground">Rôles fabrication</p>
+                <p className="text-xs text-muted-foreground">
+                  {form.profile_id
+                    ? "Active les rôles atelier (indépendants du métier principal). Filtre les assignees dans le module Fabrication."
+                    : "Disponible uniquement pour les employés liés à un compte utilisateur."}
+                  {!isAdmin && form.profile_id && " Lecture seule (admin requis pour modifier)."}
+                </p>
+              </div>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                {([
+                  { key: "est_chef_projet", label: "Chef projet" },
+                  { key: "est_respo_fab", label: "Respo Fab" },
+                  { key: "est_finition", label: "Finition" },
+                  { key: "est_manutention", label: "Manutention" },
+                ] as const).map((flag) => (
+                  <label
+                    key={flag.key}
+                    className={`flex items-center gap-2 rounded-lg border border-border bg-card px-2 py-1.5 text-xs ${
+                      !form.profile_id || !isAdmin ? "opacity-60" : ""
+                    }`}
+                  >
+                    <Checkbox
+                      checked={form[flag.key]}
+                      disabled={!form.profile_id || !isAdmin}
+                      onCheckedChange={(v) => setForm((f) => ({ ...f, [flag.key]: Boolean(v) }))}
+                    />
+                    <span className="font-medium">{flag.label}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
           </div>
 
           <DialogFooter className="border-t border-border px-6 py-4">
