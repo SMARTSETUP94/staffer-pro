@@ -154,7 +154,7 @@ function RolesFabricationPage() {
               ))}
               {filtered.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-sm text-muted-foreground">
+                  <TableCell colSpan={FLAGS.length + 1} className="text-center text-sm text-muted-foreground">
                     Aucun utilisateur trouvé.
                   </TableCell>
                 </TableRow>
