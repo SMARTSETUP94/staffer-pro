@@ -19,6 +19,7 @@ interface AffaireDetail {
   client: string | null;
   lieu: string | null;
   statut: "prospect" | "en_cours" | "termine" | "annule";
+  phase: "opportunite" | "signe";
   date_debut: string | null;
   date_fin_prevue: string | null;
   notes: string | null;
