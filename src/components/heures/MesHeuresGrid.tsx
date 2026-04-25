@@ -418,7 +418,7 @@ function SaisieRowCard({
               </Button>
             </CollapsibleTrigger>
             <CollapsibleContent className="mt-2">
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-3 gap-2">
                 <div>
                   <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                     Début
@@ -430,7 +430,12 @@ function SaisieRowCard({
                     onChange={(e) => setDebut(e.target.value)}
                     onBlur={() => {
                       if (debut !== (row.saisie?.heure_debut ?? "")) {
-                        commit({ heure_debut: debut || null });
+                        commitTimesAndAuto(
+                          { heure_debut: debut || null },
+                          debut || null,
+                          fin || null,
+                          Number(pause) || 0,
+                        );
                       }
                     }}
                     className="h-9"
@@ -447,13 +452,56 @@ function SaisieRowCard({
                     onChange={(e) => setFin(e.target.value)}
                     onBlur={() => {
                       if (fin !== (row.saisie?.heure_fin ?? "")) {
-                        commit({ heure_fin: fin || null });
+                        commitTimesAndAuto(
+                          { heure_fin: fin || null },
+                          debut || null,
+                          fin || null,
+                          Number(pause) || 0,
+                        );
+                      }
+                    }}
+                    className="h-9"
+                  />
+                </div>
+                <div>
+                  <label
+                    className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground"
+                    title="Durée de la pause déjeuner (ou autres pauses) en minutes — déduite des heures totales"
+                  >
+                    Dont pause (min)
+                  </label>
+                  <Input
+                    type="number"
+                    step="5"
+                    min="0"
+                    max="600"
+                    value={pause}
+                    disabled={locked}
+                    placeholder="0"
+                    onChange={(e) => setPause(e.target.value)}
+                    onBlur={() => {
+                      const n = Math.max(0, Number(pause) || 0);
+                      if (n !== Number(row.saisie?.duree_pause_minutes ?? 0)) {
+                        commitTimesAndAuto(
+                          { duree_pause_minutes: n },
+                          debut || null,
+                          fin || null,
+                          n,
+                        );
                       }
                     }}
                     className="h-9"
                   />
                 </div>
               </div>
+              {computed && (
+                <p className="mt-2 text-[10px] text-muted-foreground">
+                  ⏱ <strong>{computed.heuresReelles}h</strong> travaillées (pause déduite)
+                  {computed.heuresNuit > 0 && (
+                    <> · 🌙 <strong>{computed.heuresNuit}h</strong> de nuit (00h–06h)</>
+                  )}
+                </p>
+              )}
             </CollapsibleContent>
           </Collapsible>
 
