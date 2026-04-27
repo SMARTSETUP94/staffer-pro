@@ -95,30 +95,48 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return { error: error?.message ?? null };
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      return { error: error?.message ?? null };
+    } catch (err) {
+      console.error("[auth] signIn threw", err);
+      const message = err instanceof Error ? err.message : "Erreur réseau ou session corrompue. Réessaie.";
+      return { error: message };
+    }
   };
 
   const signInWithMagicLink = async (email: string, redirectTo?: string) => {
-    const emailRedirectTo = redirectTo ?? `${window.location.origin}/auth/set-password`;
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo, shouldCreateUser: false },
-    });
-    return { error: error?.message ?? null };
+    try {
+      const emailRedirectTo = redirectTo ?? `${window.location.origin}/auth/set-password`;
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: { emailRedirectTo, shouldCreateUser: false },
+      });
+      return { error: error?.message ?? null };
+    } catch (err) {
+      console.error("[auth] signInWithMagicLink threw", err);
+      const message = err instanceof Error ? err.message : "Erreur réseau, réessaie.";
+      return { error: message };
+    }
   };
 
   const signUp = async (email: string, password: string, fullName: string) => {
-    const redirectUrl = `${window.location.origin}/`;
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: redirectUrl,
-        data: { full_name: fullName },
-      },
-    });
-    return { error: error?.message ?? null };
+    try {
+      const redirectUrl = `${window.location.origin}/`;
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: redirectUrl,
+          data: { full_name: fullName },
+        },
+      });
+      return { error: error?.message ?? null };
+    } catch (err) {
+      console.error("[auth] signUp threw", err);
+      const message = err instanceof Error ? err.message : "Erreur réseau, réessaie.";
+      return { error: message };
+    }
   };
 
   const signOut = async () => {
