@@ -33,31 +33,90 @@ function LoginPage() {
     if (!loading && user) navigate({ to: "/" });
   }, [loading, user, navigate]);
 
+  // Nettoyage automatique des tokens Supabase expirés au mount de la page login.
+  // Évite que des refresh tokens corrompus/périmés bloquent silencieusement le signIn.
+  useEffect(() => {
+    try {
+      const now = Math.floor(Date.now() / 1000);
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (!key || !key.startsWith("sb-") || !key.endsWith("-auth-token")) continue;
+        const raw = localStorage.getItem(key);
+        if (!raw) continue;
+        try {
+          const parsed = JSON.parse(raw);
+          const expiresAt = typeof parsed?.expires_at === "number" ? parsed.expires_at : null;
+          if (expiresAt !== null && expiresAt < now) {
+            localStorage.removeItem(key);
+            console.warn("[login] cleared expired auth token:", key);
+          }
+        } catch {
+          // token corrompu : on l'efface aussi
+          localStorage.removeItem(key);
+        }
+      }
+    } catch (err) {
+      console.warn("[login] token cleanup failed", err);
+    }
+  }, []);
+
   const onSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (busy) return;
     setBusy(true);
-    const { error } = await signIn(email, password);
-    setBusy(false);
-    if (error) toast.error("Connexion impossible", { description: error });
-    else { toast.success("Connecté"); navigate({ to: "/" }); }
+    try {
+      const { error } = await signIn(email, password);
+      if (error) {
+        toast.error("Connexion impossible", { description: error });
+      } else {
+        toast.success("Connecté");
+        navigate({ to: "/" });
+      }
+    } catch (err) {
+      console.error("[login] signIn threw", err);
+      const message = err instanceof Error ? err.message : "Erreur inconnue, réessaie.";
+      toast.error("Connexion impossible", { description: message });
+    } finally {
+      setBusy(false);
+    }
   };
 
   const onMagicLink = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (busy) return;
     setBusy(true);
-    const { error } = await signInWithMagicLink(email);
-    setBusy(false);
-    if (error) toast.error("Envoi impossible", { description: error });
-    else setMagicSent(true);
+    try {
+      const { error } = await signInWithMagicLink(email);
+      if (error) toast.error("Envoi impossible", { description: error });
+      else setMagicSent(true);
+    } catch (err) {
+      console.error("[login] magic link threw", err);
+      const message = err instanceof Error ? err.message : "Erreur inconnue, réessaie.";
+      toast.error("Envoi impossible", { description: message });
+    } finally {
+      setBusy(false);
+    }
   };
 
   const onSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (busy) return;
     setBusy(true);
-    const { error } = await signUp(email, password, fullName);
-    setBusy(false);
-    if (error) toast.error("Inscription impossible", { description: error });
-    else { toast.success("Compte créé", { description: "Vous pouvez vous connecter." }); setTab("signin"); }
+    try {
+      const { error } = await signUp(email, password, fullName);
+      if (error) {
+        toast.error("Inscription impossible", { description: error });
+      } else {
+        toast.success("Compte créé", { description: "Vous pouvez vous connecter." });
+        setTab("signin");
+      }
+    } catch (err) {
+      console.error("[login] signUp threw", err);
+      const message = err instanceof Error ? err.message : "Erreur inconnue, réessaie.";
+      toast.error("Inscription impossible", { description: message });
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
