@@ -202,6 +202,14 @@ function PlanningPage() {
             <WeekPicker weekStart={weekStart} onChange={setWeekStart} />
             <Button
               size="sm"
+              onClick={() => setBulkStafferOpen(true)}
+              disabled={loading}
+            >
+              <Users className="mr-1.5 h-3.5 w-3.5" />
+              Staffer en bulk
+            </Button>
+            <Button
+              size="sm"
               variant="outline"
               onClick={handleExportPDF}
               disabled={exporting || loading}
