@@ -48,6 +48,7 @@ const FINITIONS_VISIBLES: FabricationFinitionType[] = ["peinture", "tapisserie",
 
 interface FlagsState {
   a_dessiner: boolean;
+  a_usiner: boolean;
   a_construire: boolean;
   est_brut: boolean;
   a_emballer: boolean;
@@ -55,6 +56,7 @@ interface FlagsState {
 
 const defaultFlags: FlagsState = {
   a_dessiner: true,
+  a_usiner: true,
   a_construire: true,
   est_brut: false,
   a_emballer: true,
@@ -128,6 +130,9 @@ export function AjouterObjetDialog({ affaireId, open, onOpenChange, onCreated }:
     if (!flags.a_dessiner) setAssignees((a) => ({ ...a, be: "none" }));
   }, [flags.a_dessiner]);
   useEffect(() => {
+    if (!flags.a_usiner) setAssignees((a) => ({ ...a, usinage: "none" }));
+  }, [flags.a_usiner]);
+  useEffect(() => {
     if (!flags.a_construire) setAssignees((a) => ({ ...a, respo_fab: "none" }));
   }, [flags.a_construire]);
   useEffect(() => {
@@ -145,7 +150,7 @@ export function AjouterObjetDialog({ affaireId, open, onOpenChange, onCreated }:
     }
     setSaving(true);
 
-    // 1. Insert objet (le trigger crée les 4 étapes selon les flags)
+    // 1. Insert objet (le trigger crée les 5 étapes selon les flags)
     const respoFabId = assignees.respo_fab === "none" ? null : assignees.respo_fab;
     const { data: objet, error } = await supabase
       .from("fabrication_objets")
@@ -160,6 +165,7 @@ export function AjouterObjetDialog({ affaireId, open, onOpenChange, onCreated }:
         created_by: user?.id ?? null,
         reference: "", // sera généré par le trigger BEFORE INSERT
         a_dessiner: flags.a_dessiner,
+        a_usiner: flags.a_usiner,
         a_construire: flags.a_construire,
         est_brut: flags.est_brut,
         a_emballer: flags.a_emballer,
@@ -175,7 +181,7 @@ export function AjouterObjetDialog({ affaireId, open, onOpenChange, onCreated }:
 
     // 2. Pré-remplir les assignees sur les étapes correspondantes
     const updates: Promise<unknown>[] = [];
-    (["be", "respo_fab", "finition", "manutention"] as FabricationEtapeType[]).forEach((etape) => {
+    (["be", "usinage", "respo_fab", "finition", "manutention"] as FabricationEtapeType[]).forEach((etape) => {
       const assigneeId = assignees[etape];
       if (assigneeId !== "none") {
         updates.push(
@@ -211,7 +217,7 @@ export function AjouterObjetDialog({ affaireId, open, onOpenChange, onCreated }:
         <DialogHeader>
           <DialogTitle>Ajouter un objet de fabrication</DialogTitle>
           <DialogDescription>
-            La référence FAB-AAAA-NNNNN sera générée automatiquement. Réponds aux 4 questions ci-dessous pour
+            La référence FAB-AAAA-NNNNN sera générée automatiquement. Réponds aux 5 questions ci-dessous pour
             définir les étapes nécessaires.
           </DialogDescription>
         </DialogHeader>
@@ -292,7 +298,24 @@ export function AjouterObjetDialog({ affaireId, open, onOpenChange, onCreated }:
                 )}
               </EtapeQuestion>
 
-              {/* 2. Respo Fab */}
+              {/* 2. Usinage Numérique */}
+              <EtapeQuestion
+                question="L'objet nécessite de l'usinage CNC ?"
+                value={flags.a_usiner}
+                onChange={(v) => setFlags((f) => ({ ...f, a_usiner: v }))}
+              >
+                {flags.a_usiner && (
+                  <AssigneeSelect
+                    label="Usinage Numérique (optionnel)"
+                    value={assignees.usinage}
+                    onChange={(v) => setAssignees((a) => ({ ...a, usinage: v }))}
+                    eligibles={eligiblesForEtape("usinage")}
+                    placeholder="Choisir un opérateur CNC…"
+                  />
+                )}
+              </EtapeQuestion>
+
+              {/* 3. Respo Fab */}
               <EtapeQuestion
                 question="L'objet est à construire (ou existant) ?"
                 value={flags.a_construire}
