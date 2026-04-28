@@ -269,6 +269,38 @@ function SaisiePourEquipePage() {
               </SelectContent>
             </Select>
           </div>
+          <div>
+            <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Typologie</Label>
+            <ToggleGroup
+              type="single"
+              size="sm"
+              value={typeFilter}
+              onValueChange={(v) => {
+                const next = (v as "all" | "cdi" | "interim") || "all";
+                navigate({
+                  search: (prev: { type: string; q: string }) => ({ ...prev, type: next }),
+                  replace: true,
+                });
+              }}
+              className="h-9 justify-start"
+            >
+              <ToggleGroupItem value="all" className="px-3">Tous</ToggleGroupItem>
+              <ToggleGroupItem value="cdi" className="px-3">CDI / CDD</ToggleGroupItem>
+              <ToggleGroupItem value="interim" className="px-3">Intérim / Indép.</ToggleGroupItem>
+            </ToggleGroup>
+          </div>
+          <div className="min-w-[220px] flex-1">
+            <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Recherche</Label>
+            <div className="relative">
+              <Search className="absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                placeholder="Nom ou prénom…"
+                className="h-9 pl-7"
+              />
+            </div>
+          </div>
         </CardContent>
       </Card>
 
