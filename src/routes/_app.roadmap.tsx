@@ -1432,12 +1432,6 @@ const PLANNED: RoadmapPlanned[] = [
   },
   {
     priority: "moyenne",
-    title: "Module congés annuels (compteurs + soldes)",
-    description:
-      "Suivi des compteurs CP / RTT par employé : acquis, posés, restants. Affichage sur fiche employé + alerte chef si solde insuffisant lors d'une demande d'absence.",
-  },
-  {
-    priority: "moyenne",
     title: "Export comptable mensuel (heures validées par employé)",
     description:
       "Export CSV ou PDF formaté pour la paie : par employé, par mois, total d'heures validées par chantier, ventilation jours travaillés / absences. Compatible Sage / EBP / Cegid.",
@@ -1454,12 +1448,59 @@ const PLANNED: RoadmapPlanned[] = [
     description:
       "Étendre la command palette pour rechercher au-delà des routes : affaires (numéro/nom/client), employés (prénom/nom), devis. Navigation directe vers la fiche.",
   },
+
+  // ========== v0.21.1 — Findings audit v0.21 + chantiers reportés ==========
+  {
+    priority: "haute",
+    title: "v0.21.1 — Garde RBAC UI sur /saisie-pour-equipe",
+    description:
+      "🔴 HIGH identifié à l'audit v0.21 : la route /saisie-pour-equipe n'a pas de garde useAuth côté UI (la RLS protège mais l'UI est accessible aux employés et trompeuse). Ajouter Navigate vers /dashboard si !isChef && !isAdmin, et conditionner l'item sidebar sur le même critère.",
+  },
   {
     priority: "moyenne",
+    title: "v0.21.1 — Durcissement RLS heures_saisies_self_update (Option B)",
+    description:
+      "🟡 MEDIUM identifié à l'audit v0.21 : la policy update employé n'inclut pas can_saisie_on_affaire(affaire_id, date), ce qui permet à un employé d'éditer une saisie en brouillon/soumis après que l'affaire est fermée. Cohérence Option B à durcir côté RLS.",
+  },
+  {
+    priority: "moyenne",
+    title: "v0.21.1 — UNIQUE INDEX partiel chef_jour (anti race condition)",
+    description:
+      "🟡 MEDIUM identifié à l'audit v0.21 : sous bulk-insert simultané sur même (affaire, date) avec plusieurs est_chef_jour=true, le trigger BEFORE peut produire un état final unique mais le verrouillage est ligne par ligne. Ajouter CREATE UNIQUE INDEX ... ON assignations(affaire_id, date) WHERE est_chef_jour = true comme garde-fou DB.",
+  },
+  {
+    priority: "moyenne",
+    title: "v0.21.1 — Tests d'intégration SQL (audit v0.21 gaps)",
+    description:
+      "🟡 MEDIUM identifié à l'audit v0.21 : 4 cas non couverts par tests automatisés — can_saisie_on_affaire avec date_demontage NULL + statut termine, set_saisie_authorship quand chef = employé (auto-saisie), trigger enforce_unique_chef_jour (bascule), export Excel feuille de route avec 0 chantier ce jour. À ajouter via tests RPC ou tests purs sur la logique TS.",
+  },
+  {
+    priority: "moyenne",
+    title: "v0.21.1 — Pagination intra-jour pour PDF feuille de route chargée",
+    description:
+      "🟡 MEDIUM identifié à l'audit v0.21 : aucun test ni garde sur le débordement de page si plus de 5 chantiers dans la même journée. Ajouter pagination intra-jour ou réduction automatique de la taille de bloc.",
+  },
+
+  // ========== Chantiers prioritaires identifiés à l'audit v0.20 — reportés ==========
+  {
+    priority: "haute",
     title: "Vue Gantt par chantier (timeline visuelle)",
     description:
-      "Représentation visuelle horizontale des affaires sur calendrier (montage → démontage), avec barres colorées par chef ou statut. Pratique pour visualiser le carnet de commandes.",
+      "Identifié comme prioritaire à l'audit v0.20. Représentation visuelle horizontale des affaires sur calendrier (montage → démontage), avec barres colorées par chef ou statut. Pratique pour visualiser le carnet de commandes et anticiper les conflits multi-chantiers. Complète la feuille de route quotidienne livrée en v0.21.",
   },
+  {
+    priority: "haute",
+    title: "Module Absences / Congés annuels (compteurs + soldes)",
+    description:
+      "Identifié comme prioritaire à l'audit v0.20. Suivi des compteurs CP / RTT par employé : acquis, posés, restants. Affichage sur fiche employé + alerte chef si solde insuffisant lors d'une demande d'absence. Justificatifs photo (cf. carte dédiée).",
+  },
+  {
+    priority: "moyenne",
+    title: "Consolidation des redondances code (audit v0.20)",
+    description:
+      "Identifié à l'audit v0.20. Plusieurs helpers et hooks dupliqués (notamment autour de planning/data, employes/affaires). Audit dédié + refactor en lib/ partagée pour réduire la dette technique avant v0.22.",
+  },
+
 
   // ========== BASSE PRIORITÉ ==========
   {
