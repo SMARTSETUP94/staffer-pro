@@ -1028,6 +1028,8 @@ export type Database = {
           motif_rejet_lu_le: string | null
           rejete_le: string | null
           rejete_par: string | null
+          saisi_par: string | null
+          saisi_par_chef: boolean
           statut: Database["public"]["Enums"]["heures_statut"]
           updated_at: string
           valide_le: string | null
@@ -1055,6 +1057,8 @@ export type Database = {
           motif_rejet_lu_le?: string | null
           rejete_le?: string | null
           rejete_par?: string | null
+          saisi_par?: string | null
+          saisi_par_chef?: boolean
           statut?: Database["public"]["Enums"]["heures_statut"]
           updated_at?: string
           valide_le?: string | null
@@ -1082,6 +1086,8 @@ export type Database = {
           motif_rejet_lu_le?: string | null
           rejete_le?: string | null
           rejete_par?: string | null
+          saisi_par?: string | null
+          saisi_par_chef?: boolean
           statut?: Database["public"]["Enums"]["heures_statut"]
           updated_at?: string
           valide_le?: string | null
@@ -1145,6 +1151,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "heures_saisies_saisi_par_fkey"
+            columns: ["saisi_par"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "heures_saisies_valide_par_fkey"
             columns: ["valide_par"]
             isOneToOne: false
@@ -1155,30 +1168,36 @@ export type Database = {
       }
       heures_saisies_historique: {
         Row: {
+          action_type: string | null
           ancien_statut: Database["public"]["Enums"]["heures_statut"] | null
           commentaire: string | null
           created_at: string
           heure_saisie_id: string
           id: string
           nouveau_statut: Database["public"]["Enums"]["heures_statut"]
+          pour_compte_de: string | null
           user_id: string | null
         }
         Insert: {
+          action_type?: string | null
           ancien_statut?: Database["public"]["Enums"]["heures_statut"] | null
           commentaire?: string | null
           created_at?: string
           heure_saisie_id: string
           id?: string
           nouveau_statut: Database["public"]["Enums"]["heures_statut"]
+          pour_compte_de?: string | null
           user_id?: string | null
         }
         Update: {
+          action_type?: string | null
           ancien_statut?: Database["public"]["Enums"]["heures_statut"] | null
           commentaire?: string | null
           created_at?: string
           heure_saisie_id?: string
           id?: string
           nouveau_statut?: Database["public"]["Enums"]["heures_statut"]
+          pour_compte_de?: string | null
           user_id?: string | null
         }
         Relationships: [
@@ -1187,6 +1206,13 @@ export type Database = {
             columns: ["heure_saisie_id"]
             isOneToOne: false
             referencedRelation: "heures_saisies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "heures_saisies_historique_pour_compte_de_fkey"
+            columns: ["pour_compte_de"]
+            isOneToOne: false
+            referencedRelation: "employes"
             referencedColumns: ["id"]
           },
           {
@@ -2008,6 +2034,8 @@ export type Database = {
           motif_rejet_lu_le: string | null
           rejete_le: string | null
           rejete_par: string | null
+          saisi_par: string | null
+          saisi_par_chef: boolean
           statut: Database["public"]["Enums"]["heures_statut"]
           updated_at: string
           valide_le: string | null

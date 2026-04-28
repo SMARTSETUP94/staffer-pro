@@ -37,6 +37,7 @@ import { Route as AppExportRouteImport } from './routes/_app.export'
 import { Route as AppEmployesRouteImport } from './routes/_app.employes'
 import { Route as AppDashboardEmployeRouteImport } from './routes/_app.dashboard-employe'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
+import { Route as AppAuditHeuresRouteImport } from './routes/_app.audit-heures'
 import { Route as AppAbsencesRouteImport } from './routes/_app.absences'
 import { Route as AppFabricationIndexRouteImport } from './routes/_app.fabrication.index'
 import { Route as AppExportIndexRouteImport } from './routes/_app.export.index'
@@ -201,6 +202,11 @@ const AppDashboardRoute = AppDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAuditHeuresRoute = AppAuditHeuresRouteImport.update({
+  id: '/audit-heures',
+  path: '/audit-heures',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAbsencesRoute = AppAbsencesRouteImport.update({
   id: '/absences',
   path: '/absences',
@@ -334,6 +340,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/absences': typeof AppAbsencesRoute
+  '/audit-heures': typeof AppAuditHeuresRoute
   '/dashboard': typeof AppDashboardRoute
   '/dashboard-employe': typeof AppDashboardEmployeRoute
   '/employes': typeof AppEmployesRouteWithChildren
@@ -387,6 +394,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/absences': typeof AppAbsencesRoute
+  '/audit-heures': typeof AppAuditHeuresRoute
   '/dashboard': typeof AppDashboardRoute
   '/dashboard-employe': typeof AppDashboardEmployeRoute
   '/employes': typeof AppEmployesRouteWithChildren
@@ -440,6 +448,7 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
   '/_app/absences': typeof AppAbsencesRoute
+  '/_app/audit-heures': typeof AppAuditHeuresRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/dashboard-employe': typeof AppDashboardEmployeRoute
   '/_app/employes': typeof AppEmployesRouteWithChildren
@@ -495,6 +504,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/absences'
+    | '/audit-heures'
     | '/dashboard'
     | '/dashboard-employe'
     | '/employes'
@@ -548,6 +558,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/absences'
+    | '/audit-heures'
     | '/dashboard'
     | '/dashboard-employe'
     | '/employes'
@@ -600,6 +611,7 @@ export interface FileRouteTypes {
     | '/_app'
     | '/login'
     | '/_app/absences'
+    | '/_app/audit-heures'
     | '/_app/dashboard'
     | '/_app/dashboard-employe'
     | '/_app/employes'
@@ -864,6 +876,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDashboardRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/audit-heures': {
+      id: '/_app/audit-heures'
+      path: '/audit-heures'
+      fullPath: '/audit-heures'
+      preLoaderRoute: typeof AppAuditHeuresRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/absences': {
       id: '/_app/absences'
       path: '/absences'
@@ -1094,6 +1113,7 @@ const AppAffairesAffaireIdRouteWithChildren =
 
 interface AppRouteChildren {
   AppAbsencesRoute: typeof AppAbsencesRoute
+  AppAuditHeuresRoute: typeof AppAuditHeuresRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppDashboardEmployeRoute: typeof AppDashboardEmployeRoute
   AppEmployesRoute: typeof AppEmployesRouteWithChildren
@@ -1127,6 +1147,7 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppAbsencesRoute: AppAbsencesRoute,
+  AppAuditHeuresRoute: AppAuditHeuresRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppDashboardEmployeRoute: AppDashboardEmployeRoute,
   AppEmployesRoute: AppEmployesRouteWithChildren,
