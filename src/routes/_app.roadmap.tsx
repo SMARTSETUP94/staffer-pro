@@ -44,6 +44,73 @@ interface RoadmapPlanned {
 const RELEASES: RoadmapRelease[] = [
   {
     date: "2026-04-28",
+    version: "v0.23.0",
+    title: "Parser devis Progbat — import objets fabrication",
+    entries: [
+      {
+        type: "feature",
+        title: "Page /devis/progbat-import (admin) : upload + validation chef + import",
+        description:
+          "Nouvelle page admin only : upload Excel Progbat (max 5MB) → sélection affaire active → parsing 100% client → tableau de validation chef interactif (cocher/décocher/éditer chaque objet, heures par métier, budget matières, lot) → confirmation heures Montage/Démontage chantier (checkboxes pour ne pas écraser) → bulk insert fabrication_objets + UPDATE conditionnel affaires.heures_prevues_montage/demontage. Redirige vers /affaires/$id/fabrication après import. Onglet « Devis Progbat » ajouté dans /imports.",
+      },
+      {
+        type: "feature",
+        title: "Helpers parser purs (src/lib/devis-parser/)",
+        description:
+          "matchMetier (fuzzy), isMatiere, isChantierKeyword, detectDevisType (Fabrication / Chantier seul / Mixte / Inconnu), computeFlagsFromMetiers (5 flags v0.22 dérivés des métiers détectés), detectTypeFinition. 100% pur, testable isolément.",
+      },
+      {
+        type: "feature",
+        title: "Parser core parse-excel.ts",
+        description:
+          "Pipeline : xlsx → matrice → détection headers → extraction metadata (n° devis, client, total HT) → findObjetParents (niveaux 1-2) → aggregateObjet (somme heures × quantité par métier, accumulation budget matériaux, confidence high/medium/low) → computeHeuresChantier (Montage/Démontage globaux) → findRenvois (« Voir devis XXXX »).",
+      },
+      {
+        type: "feature",
+        title: "13 fixtures Excel reproduisant les devis Progbat réels",
+        description:
+          "Mocks matriciels couvrant les 13 cas analysés : D-2153, D-2141, D-2023, D-1973, D-1816, D-1831, D-1625, D-1665, D-1707, D-2022, D-1650, D-2028, D-2133. Cas couverts : objets multi-quantités, lots Achat/Régul/Voir devis exclus, chantier seul, mixte fabrication+chantier, accessoires (budget sans heures), transport.",
+      },
+      {
+        type: "feature",
+        title: "Détection auto type devis",
+        description:
+          "Fabrication (objets atelier) / Chantier seul (Montage/Démontage uniquement, 0 objet) / Mixte / Inconnu. Si chantier seul → 0 objet créé, juste extraction des heures chantier vers l'affaire.",
+      },
+      {
+        type: "feature",
+        title: "UI validation chef : tableau interactif",
+        description:
+          "Checkboxes Importer/Skip par objet, édition inline nom/quantité/budget matières/heures par métier (BE, Numérique, Bois, Métal, Peinture, Tapisserie, Manutention), warnings (matière sans prix, métier ambigu), confidence 🟢🟡🔴. Section heures chantier séparée avec checkboxes pour ne pas écraser les valeurs existantes sur l'affaire.",
+      },
+      {
+        type: "feature",
+        title: "Helper importProgbatToAffaire (bulk insert + UPDATE conditionnel)",
+        description:
+          "Bulk insert fabrication_objets (références auto OBJ-N si nom manquant, devis_id propagé, flags v0.22 dérivés). UPDATE affaires.heures_prevues_montage/demontage uniquement si checkbox cochée. Trigger v2 (Bloc 1 v0.22) crée automatiquement les 5 étapes pour chaque objet importé. Toast succès « N objets importés sur affaire Y ».",
+      },
+      {
+        type: "feature",
+        title: "Mapping fuzzy : 8 métiers atelier + 2 chantier + 30+ aliases",
+        description:
+          "Tissu → Tapisserie (cumul), Serrurerie → Métal (cumul), Permanence → Montage (cumul chantier), Day 1-4 → Montage, CNC/3D/Découpe Numérique → Numérique (mappe vers étape Usinage v0.22). Lots Achat / leurre / Voir devis / Régul / Cadrage = exclus. Numérique = métier à part entière.",
+      },
+      {
+        type: "improvement",
+        title: "+111 tests Vitest (250 → 361 verts)",
+        description:
+          "75 tests helpers (matchMetier, detectDevisType, flags, type finition) + 16 tests fixtures (parse-excel sur les 13 cas réels) + 20 tests intégration importProgbatToAffaire (bulk insert, UPDATE conditionnel, confidence, RBAC, idempotence). Non-régression v0.20-v0.22 vérifiée.",
+      },
+      {
+        type: "improvement",
+        title: "Spec issue de l'analyse de 14 devis Progbat réels",
+        description:
+          "parser-rules-progbat.md : 29 questions de cadrage Q1-Q29 résolues avec Gabin avant code. Définit la grammaire des cellules Progbat (lots, sous-lots, lignes matières, métiers, mots-clés exclus, conventions de quantité).",
+      },
+    ],
+  },
+  {
+    date: "2026-04-28",
     version: "v0.22.0",
     title:
       "Refonte module Fabrication — heures par métier + étape Usinage Numérique",
@@ -1352,12 +1419,6 @@ const PLANNED: RoadmapPlanned[] = [
     title: "v0.20.1 — Pré-remplissage trajet sous-traité depuis bandeau « Prête à livrer »",
     description:
       "🔴 HIGH identifié à l'audit v0.20 : les boutons « Demander trajet sous-traité » du dashboard /fabrication et de la fiche affaire ouvrent /flotte sans passer ?affaireId=… ni les adresses pré-remplies. À fixer : query params + auto-ouverture du TrajetDialog en mode création avec affaire_id, adresse arrivée client, statut_soustraitance='a_sous_traiter' pré-positionnés.",
-  },
-  {
-    priority: "haute",
-    title: "v0.20.1 — Import objets de fabrication depuis devis (parser dédié)",
-    description:
-      "Hors-scope reporté de v0.20 : transformer la liste des postes d'un devis signé en objets de fabrication en 1 clic. Détection auto des références produit (mobilier, signalétique…), de la quantité, et proposition des 4 flags d'applicabilité par défaut selon le type de poste. Bouton actuellement désactivé avec tooltip explicatif. Nécessite d'entraîner le parser sur ≥ 20 devis réels.",
   },
   {
     priority: "moyenne",
