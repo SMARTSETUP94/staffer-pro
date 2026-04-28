@@ -407,21 +407,34 @@ export function PlanningGrid({
         </div>
       )}
 
-      {/* Barre flottante sélection multiple */}
+      {/* Barre flottante sélection multiple — sticky top + bottom pour visibilité */}
       {selected.size > 0 && !readonly && (
-        <div data-export-ignore="true" className="sticky top-16 z-30 mb-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border-2 border-primary bg-primary/10 px-3 py-2 shadow-md backdrop-blur">
-          <span className="text-sm font-semibold">
-            {selected.size} cellule{selected.size > 1 ? "s" : ""} sélectionnée{selected.size > 1 ? "s" : ""}
-          </span>
-          <div className="flex gap-2">
+        <>
+          <div data-export-ignore="true" className="sticky top-16 z-30 mb-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border-2 border-primary bg-primary/10 px-3 py-2 shadow-md backdrop-blur">
+            <span className="text-sm font-semibold">
+              {selected.size} cellule{selected.size > 1 ? "s" : ""} sélectionnée{selected.size > 1 ? "s" : ""}
+            </span>
+            <div className="flex gap-2">
+              <Button size="sm" variant="ghost" onClick={clearSelection}>
+                <X className="mr-1 h-3.5 w-3.5" /> Annuler
+              </Button>
+              <Button size="sm" onClick={() => setBulkOpen(true)}>
+                Affecter ces {selected.size} cellules
+              </Button>
+            </div>
+          </div>
+          <div data-export-ignore="true" className="fixed bottom-4 left-1/2 z-40 flex -translate-x-1/2 items-center gap-3 rounded-full border-2 border-primary bg-card px-4 py-2 shadow-lg">
+            <span className="text-sm font-semibold">
+              {selected.size} cellule{selected.size > 1 ? "s" : ""} sélectionnée{selected.size > 1 ? "s" : ""}
+            </span>
             <Button size="sm" variant="ghost" onClick={clearSelection}>
-              <X className="mr-1 h-3.5 w-3.5" /> Annuler
+              <X className="h-3.5 w-3.5" />
             </Button>
             <Button size="sm" onClick={() => setBulkOpen(true)}>
-              Assigner les {selected.size} cellules
+              Affecter ces {selected.size} cellules
             </Button>
           </div>
-        </div>
+        </>
       )}
 
       <div data-planning-grid-export className="overflow-x-auto rounded-lg border bg-card">
