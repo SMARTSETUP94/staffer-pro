@@ -98,7 +98,7 @@ function ValidationHeuresPage() {
     let q = supabase
       .from("heures_saisies")
       .select(
-        "id, date, employe_id, affaire_id, heure_debut, heure_fin, heures_reelles, commentaire, statut, motif_rejet, valide_le, rejete_le, employe:employes(prenom, nom), affaire:affaires(numero, nom), assignation:assignations(metier:metiers(libelle, couleur))",
+        "id, date, employe_id, affaire_id, heure_debut, heure_fin, heures_reelles, commentaire, statut, motif_rejet, valide_le, rejete_le, saisi_par_chef, employe:employes(prenom, nom), affaire:affaires(numero, nom), assignation:assignations(metier:metiers(libelle, couleur))",
       )
       .gte("date", startStr)
       .lte("date", endStr)
