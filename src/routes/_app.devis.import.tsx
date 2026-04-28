@@ -241,10 +241,15 @@ function DevisImportPage() {
 
   const selectedObjetsCount = useMemo(() => objets.filter((o) => o.selected).length, [objets]);
 
-  const warnMachiniste = useMemo(() => {
-    const hasMachinistePoste = postes.some((p) => p.metierId === MACHINISTE_METIER_ID && p.heures > 0);
-    return hasMachinistePoste && (importMontage || importDemontage);
-  }, [postes, importMontage, importDemontage]);
+  const warnMachiniste = useMemo(
+    () =>
+      detectMachinisteDoubleComptage(
+        postes.map((p) => ({ metierId: p.metierId, heures: p.heures })),
+        importMontage,
+        importDemontage,
+      ),
+    [postes, importMontage, importDemontage],
+  );
 
   const errors = useMemo(() => {
     const errs: string[] = [];
