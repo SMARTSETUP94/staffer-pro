@@ -2020,6 +2020,10 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      can_saisie_on_affaire: {
+        Args: { _affaire_id: string; _date: string }
+        Returns: boolean
+      }
       create_notification: {
         Args: {
           _lien?: string
@@ -2075,6 +2079,7 @@ export type Database = {
             Returns: Json
           }
       is_admin: { Args: never; Returns: boolean }
+      is_affaire_open: { Args: { _affaire_id: string }; Returns: boolean }
       is_chef_or_admin: { Args: never; Returns: boolean }
       is_devis_termine: { Args: { _devis_id: string }; Returns: boolean }
       next_affaire_numero: { Args: { _prefix: number }; Returns: string }
