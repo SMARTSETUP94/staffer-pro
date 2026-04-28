@@ -310,11 +310,10 @@ function ProgbatImportPage() {
   return (
     <TooltipProvider delayDuration={150}>
       <div className="flex flex-1 flex-col gap-6 p-4 md:p-6">
-        <PageBreadcrumbs items={[{ label: "Imports" }, { label: "Devis Progbat" }]} />
+        <PageBreadcrumbs steps={[{ label: "Imports", to: "/imports" }, { label: "Devis Progbat" }]} />
         <PageHeader
           title="Import devis Progbat"
           description="Upload d'un devis Excel Progbat → génération des objets de fabrication"
-          icon={Hammer}
         />
         <ImportsTabsNav />
 
