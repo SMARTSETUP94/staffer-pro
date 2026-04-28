@@ -37,6 +37,9 @@ import {
   type FabricationFinitionType,
   type FabricationEtapeType,
   ETAPE_LABELS,
+  FAB_METIERS,
+  FAB_METIER_LABELS,
+  type FabMetier,
 } from "@/hooks/use-fabrication";
 
 interface Props {
@@ -50,10 +53,13 @@ const FINITIONS_VISIBLES: FabricationFinitionType[] = ["peinture", "tapisserie",
 
 interface FlagsState {
   a_dessiner: boolean;
+  a_usiner: boolean;
   a_construire: boolean;
   est_brut: boolean;
   a_emballer: boolean;
 }
+
+type HeuresState = Record<FabMetier, number>;
 
 export function EditerObjetDialog({ objet, open, onOpenChange, onSaved }: Props) {
   const [nom, setNom] = useState(objet.nom);
@@ -62,10 +68,21 @@ export function EditerObjetDialog({ objet, open, onOpenChange, onSaved }: Props)
   const [typeFinition, setTypeFinition] = useState<FabricationFinitionType>(objet.type_finition);
   const [flags, setFlags] = useState<FlagsState>({
     a_dessiner: objet.a_dessiner,
+    a_usiner: objet.a_usiner,
     a_construire: objet.a_construire,
     est_brut: objet.est_brut,
     a_emballer: objet.a_emballer,
   });
+  const [heures, setHeures] = useState<HeuresState>({
+    be: objet.heures_prevues_be,
+    numerique: objet.heures_prevues_numerique,
+    bois: objet.heures_prevues_bois,
+    metal: objet.heures_prevues_metal,
+    peinture: objet.heures_prevues_peinture,
+    tapisserie: objet.heures_prevues_tapisserie,
+    manutention: objet.heures_prevues_manutention,
+  });
+  const [budgetMateriaux, setBudgetMateriaux] = useState(objet.budget_materiaux);
   const [saving, setSaving] = useState(false);
   const [pendingFlag, setPendingFlag] = useState<{
     flagKey: keyof FlagsState;
@@ -82,10 +99,21 @@ export function EditerObjetDialog({ objet, open, onOpenChange, onSaved }: Props)
       setTypeFinition(objet.type_finition);
       setFlags({
         a_dessiner: objet.a_dessiner,
+        a_usiner: objet.a_usiner,
         a_construire: objet.a_construire,
         est_brut: objet.est_brut,
         a_emballer: objet.a_emballer,
       });
+      setHeures({
+        be: objet.heures_prevues_be,
+        numerique: objet.heures_prevues_numerique,
+        bois: objet.heures_prevues_bois,
+        metal: objet.heures_prevues_metal,
+        peinture: objet.heures_prevues_peinture,
+        tapisserie: objet.heures_prevues_tapisserie,
+        manutention: objet.heures_prevues_manutention,
+      });
+      setBudgetMateriaux(objet.budget_materiaux);
       setPendingFlag(null);
     }
   }, [open, objet]);
