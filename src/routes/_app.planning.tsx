@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useRef, useState } from "react";
 import { startOfWeek, addDays, format } from "date-fns";
-import { Calendar, Loader2, Search, FileDown, UserPlus, Truck } from "lucide-react";
+import { Calendar, Loader2, Search, FileDown, UserPlus, Truck, Users } from "lucide-react";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,7 @@ import { PlanningParChantier } from "@/components/planning/PlanningParChantier";
 import { HeuresRestantesSidebar } from "@/components/planning/HeuresRestantesSidebar";
 import { MultiFilter } from "@/components/planning/MultiFilter";
 import { AddInterimDialog } from "@/components/planning/AddInterimDialog";
+import { BulkStafferDialog } from "@/components/planning/BulkStafferDialog";
 import { FlotteGrid } from "@/components/planning/FlotteGrid";
 import { SuggestionsTrajetsBloc } from "@/components/planning/SuggestionsTrajetsBloc";
 import { TrajetDialog } from "@/components/flotte/TrajetDialog";
@@ -84,6 +85,7 @@ function PlanningPage() {
   const [extraInterims, setExtraInterims] = useState<Employe[]>([]);
   const [autoOpen, setAutoOpen] = useState<{ employe: Employe; date: Date } | null>(null);
   const [addInterimOpen, setAddInterimOpen] = useState(false);
+  const [bulkStafferOpen, setBulkStafferOpen] = useState(false);
 
   const employesInterim = useMemo(() => {
     const assignedIds = new Set(assignations.map((a) => a.employe_id));
@@ -198,6 +200,14 @@ function PlanningPage() {
           </div>
           <div className="flex items-center gap-2">
             <WeekPicker weekStart={weekStart} onChange={setWeekStart} />
+            <Button
+              size="sm"
+              onClick={() => setBulkStafferOpen(true)}
+              disabled={loading}
+            >
+              <Users className="mr-1.5 h-3.5 w-3.5" />
+              Staffer en bulk
+            </Button>
             <Button
               size="sm"
               variant="outline"
@@ -484,6 +494,18 @@ function PlanningPage() {
           // Ouvre le dialog d'assignation sur le lundi de la semaine
           setAutoOpen({ employe: emp, date: weekStart });
         }}
+      />
+
+      <BulkStafferDialog
+        open={bulkStafferOpen}
+        onOpenChange={setBulkStafferOpen}
+        weekStart={weekStart}
+        employes={employes}
+        affaires={affaires}
+        metiers={metiers}
+        devisLots={devisLots}
+        assignations={assignations}
+        onSaved={refresh}
       />
 
       <TrajetDialog
