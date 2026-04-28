@@ -8,16 +8,20 @@
  * - Cellule remplie → affiche heures + badge si saisi_par_chef
  * - Bouton "Saisir en bulk" en haut à droite
  */
-import { createFileRoute, Navigate } from "@tanstack/react-router";
+import { createFileRoute, Navigate, useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth-context";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { addDays, format, isWeekend, startOfWeek } from "date-fns";
 import { fr } from "date-fns/locale";
-import { ClipboardList, Filter, Loader2, Plus, Users } from "lucide-react";
+import { ClipboardList, Filter, Loader2, Plus, Search, Users } from "lucide-react";
 import { toast } from "sonner";
+import { z } from "zod";
+import { zodValidator, fallback } from "@tanstack/zod-adapter";
+import { stripSearchParams } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -26,6 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { WeekPicker } from "@/components/planning/WeekPicker";
 import { PageBreadcrumbs } from "@/components/PageBreadcrumbs";
 import { SaisirPourEmployeDialog } from "@/components/heures/SaisirPourEmployeDialog";
@@ -33,16 +38,36 @@ import { BulkSaisieDialog } from "@/components/heures/BulkSaisieDialog";
 import { SaisieChefBadge } from "@/components/heures/SaisieChefBadge";
 import { cn } from "@/lib/utils";
 
+const SEARCH_DEFAULTS = { type: "all" as const, q: "" };
+
+const searchSchema = z.object({
+  type: fallback(z.enum(["all", "cdi", "interim"]), SEARCH_DEFAULTS.type).default(
+    SEARCH_DEFAULTS.type,
+  ),
+  q: fallback(z.string(), SEARCH_DEFAULTS.q).default(SEARCH_DEFAULTS.q),
+});
+
 export const Route = createFileRoute("/_app/saisie-pour-equipe")({
   head: () => ({ meta: [{ title: "Saisie équipe — Planning chantiers" }] }),
+  validateSearch: zodValidator(searchSchema),
+  search: { middlewares: [stripSearchParams(SEARCH_DEFAULTS)] },
   component: SaisiePourEquipePage,
 });
+
+/** Fuzzy maison : lowercase + strip diacritics + includes. */
+function fuzzyMatch(haystack: string, needle: string): boolean {
+  if (!needle) return true;
+  const norm = (s: string) =>
+    s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  return norm(haystack).includes(norm(needle));
+}
 
 interface Employe {
   id: string;
   prenom: string;
   nom: string;
   metier_principal_id: number;
+  type_contrat: "CDI" | "CDD" | "Interim" | "Independant";
 }
 
 interface Metier {
@@ -70,6 +95,9 @@ interface Saisie {
 
 function SaisiePourEquipePage() {
   const { isChef, isAdmin, rolesLoaded } = useAuth();
+  const navigate = useNavigate({ from: "/saisie-pour-equipe" });
+  const { type: typeFilter, q: searchQuery } = Route.useSearch();
+
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
   const [employes, setEmployes] = useState<Employe[]>([]);
   const [metiers, setMetiers] = useState<Metier[]>([]);
@@ -80,6 +108,25 @@ function SaisiePourEquipePage() {
 
   const [metierFilter, setMetierFilter] = useState<string>("all");
   const [affaireFilter, setAffaireFilter] = useState<string>("all");
+
+  // Recherche debouncée 200ms
+  const [searchInput, setSearchInput] = useState(searchQuery);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    setSearchInput(searchQuery);
+  }, [searchQuery]);
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      if (searchInput !== searchQuery) {
+        navigate({ search: (prev: { type: string; q: string }) => ({ ...prev, q: searchInput }), replace: true });
+      }
+    }, 200);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchInput]);
 
   const [saisieDialog, setSaisieDialog] = useState<{
     open: boolean;
@@ -99,7 +146,12 @@ function SaisiePourEquipePage() {
   // Refs initiales
   useEffect(() => {
     Promise.all([
-      supabase.from("employes").select("id, prenom, nom, metier_principal_id").eq("actif", true).order("nom").limit(1000),
+      supabase
+        .from("employes")
+        .select("id, prenom, nom, metier_principal_id, type_contrat")
+        .eq("actif", true)
+        .order("nom")
+        .limit(1000),
       supabase.from("metiers").select("id, libelle, couleur").order("ordre"),
       supabase.from("affaires").select("id, numero, nom").in("statut", ["en_cours", "prospect"]).order("numero", { ascending: false }).limit(500),
     ]).then(([eRes, mRes, aRes]) => {
@@ -127,15 +179,23 @@ function SaisiePourEquipePage() {
     });
   }, [startStr, endStr, affaireFilter, reloadKey]);
 
-  // Filtres employés
+  // Filtres employés (métier + typologie + recherche fuzzy)
   const filteredEmployes = useMemo(() => {
     let list = employes;
     if (metierFilter !== "all") {
       const mid = Number(metierFilter);
       list = list.filter((e) => e.metier_principal_id === mid);
     }
+    if (typeFilter === "cdi") {
+      list = list.filter((e) => e.type_contrat === "CDI" || e.type_contrat === "CDD");
+    } else if (typeFilter === "interim") {
+      list = list.filter((e) => e.type_contrat === "Interim" || e.type_contrat === "Independant");
+    }
+    if (searchQuery.trim()) {
+      list = list.filter((e) => fuzzyMatch(`${e.prenom} ${e.nom}`, searchQuery));
+    }
     return list;
-  }, [employes, metierFilter]);
+  }, [employes, metierFilter, typeFilter, searchQuery]);
 
   // Index saisies par employé+date
   const saisieIndex = useMemo(() => {
@@ -208,6 +268,38 @@ function SaisiePourEquipePage() {
                 ))}
               </SelectContent>
             </Select>
+          </div>
+          <div>
+            <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Typologie</Label>
+            <ToggleGroup
+              type="single"
+              size="sm"
+              value={typeFilter}
+              onValueChange={(v) => {
+                const next = (v as "all" | "cdi" | "interim") || "all";
+                navigate({
+                  search: (prev: { type: string; q: string }) => ({ ...prev, type: next }),
+                  replace: true,
+                });
+              }}
+              className="h-9 justify-start"
+            >
+              <ToggleGroupItem value="all" className="px-3">Tous</ToggleGroupItem>
+              <ToggleGroupItem value="cdi" className="px-3">CDI / CDD</ToggleGroupItem>
+              <ToggleGroupItem value="interim" className="px-3">Intérim / Indép.</ToggleGroupItem>
+            </ToggleGroup>
+          </div>
+          <div className="min-w-[220px] flex-1">
+            <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Recherche</Label>
+            <div className="relative">
+              <Search className="absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                placeholder="Nom ou prénom…"
+                className="h-9 pl-7"
+              />
+            </div>
           </div>
         </CardContent>
       </Card>

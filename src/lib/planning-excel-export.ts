@@ -844,14 +844,14 @@ export function exportPlanningExcel(opts: BuildOpts): void {
 }
 
 /**
- * Export d'une plage de semaines (1 à 4) — un groupe de 4 feuilles par semaine,
- * suffixées par S{numéro de semaine}.
+ * Construit le workbook multi-semaines (sans téléchargement). Réutilisé par l'export
+ * direct et par l'archive zip "all-in-one".
  */
-export function exportPlanningExcelRange(
+export function buildPlanningWorkbookRange(
   opts: Omit<BuildOpts, "weekStart"> & { weekStarts: Date[] },
-): void {
+): { wb: XLSX.WorkBook; filename: string } | null {
   const { weekStarts, employes, assignations, absences, trajets, ...rest } = opts;
-  if (weekStarts.length === 0) return;
+  if (weekStarts.length === 0) return null;
 
   const wb = XLSX.utils.book_new();
   const cdiCdd = employes.filter((e) => e.type_contrat === "CDI" || e.type_contrat === "CDD");
@@ -913,5 +913,24 @@ export function exportPlanningExcelRange(
     weekStarts.length === 1
       ? `planning-S${format(first, "II")}-${format(first, "yyyy-MM-dd")}.xlsx`
       : `planning-S${format(first, "II")}-a-S${format(last, "II")}-${format(first, "yyyy-MM-dd")}.xlsx`;
-  XLSX.writeFile(wb, filename);
+  return { wb, filename };
+}
+
+/**
+ * Export d'une plage de semaines (1 à 4) — télécharge directement le fichier.
+ */
+export function exportPlanningExcelRange(
+  opts: Omit<BuildOpts, "weekStart"> & { weekStarts: Date[] },
+): void {
+  const built = buildPlanningWorkbookRange(opts);
+  if (!built) return;
+  XLSX.writeFile(built.wb, built.filename);
+}
+
+/** Convertit un workbook XLSX en Blob (pour insertion dans un zip). */
+export function workbookToBlob(wb: XLSX.WorkBook): Blob {
+  const out = XLSX.write(wb, { type: "array", bookType: "xlsx" });
+  return new Blob([out], {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  });
 }

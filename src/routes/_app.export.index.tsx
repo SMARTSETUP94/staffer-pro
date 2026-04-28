@@ -10,6 +10,7 @@ import {
   Briefcase,
   LayoutGrid,
   AlertTriangle,
+  Archive,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -18,6 +19,9 @@ import { Label } from "@/components/ui/label";
 import { WeekPicker } from "@/components/planning/WeekPicker";
 import { usePlanningData } from "@/hooks/use-planning-data";
 import { exportPlanningExcelRange } from "@/lib/planning-excel-export";
+import { exportPlanningZip } from "@/lib/planning-zip-export";
+import { useVehicules } from "@/hooks/use-vehicules";
+import { useTrajetsWeek } from "@/hooks/use-trajets";
 
 export const Route = createFileRoute("/_app/export/")({
   head: () => ({ meta: [{ title: "Export planning — Planning chantiers" }] }),
@@ -34,6 +38,7 @@ function ExportPage() {
     startOfWeek(new Date(), { weekStartsOn: 1 }),
   );
   const [exporting, setExporting] = useState(false);
+  const [zipping, setZipping] = useState(false);
 
   // Sécurise l'ordre + plafonne à 4 semaines
   const { rangeStart, weekCount, tooMany } = useMemo(() => {
@@ -60,6 +65,8 @@ function ExportPage() {
 
   // On charge la plage entière en une seule passe
   const data = usePlanningData(rangeStart, rangeEnd);
+  const { vehicules } = useVehicules();
+  const { trajets } = useTrajetsWeek(rangeStart, rangeEnd);
 
   const cdiCount = data.employes.filter(
     (e) => e.type_contrat === "CDI" || e.type_contrat === "CDD",
@@ -84,6 +91,23 @@ function ExportPage() {
         consommation: data.consommation,
         absences: data.absences,
         chefsById: data.chefsById,
+        vehicules: vehicules.filter((v) => v.actif).map((v) => ({
+          id: v.id,
+          nom: v.nom,
+          immatriculation: v.immatriculation,
+          type: v.type,
+        })),
+        trajets: trajets.map((t) => ({
+          id: t.id,
+          date: t.date,
+          heure_depart: t.heure_depart,
+          vehicule_id: t.vehicule_id,
+          chauffeur_id: t.chauffeur_id,
+          adresse_depart: t.adresse_depart,
+          adresse_arrivee: t.adresse_arrivee,
+          categorie: t.categorie,
+          statut_soustraitance: t.statut_soustraitance,
+        })),
       });
       toast.success(
         weekStarts.length > 1
@@ -95,6 +119,48 @@ function ExportPage() {
       toast.error("Échec de l'export Excel");
     } finally {
       setExporting(false);
+    }
+  }
+
+  async function handleExportZip() {
+    if (data.loading) return;
+    setZipping(true);
+    try {
+      const res = await exportPlanningZip({
+        weekStarts,
+        rangeStart,
+        rangeEnd,
+        metiers: data.metiers,
+        employes: data.employes,
+        affaires: data.affaires,
+        assignations: data.assignations,
+        consommation: data.consommation,
+        absences: data.absences,
+        chefsById: data.chefsById,
+        vehicules: vehicules.filter((v) => v.actif).map((v) => ({
+          id: v.id,
+          nom: v.nom,
+          immatriculation: v.immatriculation,
+          type: v.type,
+        })),
+        trajets: trajets.map((t) => ({
+          id: t.id,
+          date: t.date,
+          heure_depart: t.heure_depart,
+          vehicule_id: t.vehicule_id,
+          chauffeur_id: t.chauffeur_id,
+          adresse_depart: t.adresse_depart,
+          adresse_arrivee: t.adresse_arrivee,
+          categorie: t.categorie,
+          statut_soustraitance: t.statut_soustraitance,
+        })),
+      });
+      toast.success(`Archive téléchargée : ${res.files.length} fichier(s)`);
+    } catch (e) {
+      console.error(e);
+      toast.error("Échec de l'export zip");
+    } finally {
+      setZipping(false);
     }
   }
 
@@ -181,18 +247,33 @@ function ExportPage() {
             </div>
           )}
 
-          <div className="flex items-center justify-between border-t pt-4">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-4">
             <p className="text-xs text-muted-foreground">
-              Le fichier sera téléchargé automatiquement (.xlsx).
+              Le fichier sera téléchargé automatiquement.
             </p>
-            <Button onClick={handleExport} disabled={data.loading || exporting} size="lg">
-              {exporting ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <FileDown className="mr-2 h-4 w-4" />
-              )}
-              Télécharger Excel
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={handleExportZip}
+                disabled={data.loading || zipping || exporting}
+                size="lg"
+                variant="outline"
+              >
+                {zipping ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Archive className="mr-2 h-4 w-4" />
+                )}
+                Exporter toutes les vues (.zip)
+              </Button>
+              <Button onClick={handleExport} disabled={data.loading || exporting || zipping} size="lg">
+                {exporting ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <FileDown className="mr-2 h-4 w-4" />
+                )}
+                Télécharger Excel
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
