@@ -97,6 +97,7 @@ function buildSections(role: EffRole, validationCount: number): NavSection[] {
           show: () => true,
           count: validationCount,
         },
+        { title: "Saisie pour l'équipe", url: "/saisie-pour-equipe", icon: ClipboardList, show: () => true },
       ],
     },
     {
