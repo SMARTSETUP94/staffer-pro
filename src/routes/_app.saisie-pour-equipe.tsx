@@ -37,6 +37,7 @@ import { SaisirPourEmployeDialog } from "@/components/heures/SaisirPourEmployeDi
 import { BulkSaisieDialog } from "@/components/heures/BulkSaisieDialog";
 import { SaisieChefBadge } from "@/components/heures/SaisieChefBadge";
 import { cn } from "@/lib/utils";
+import { fuzzyMatch, filterByTypologie } from "@/lib/saisie-equipe-filter";
 
 const SEARCH_DEFAULTS = { type: "all" as const, q: "" };
 
@@ -54,13 +55,7 @@ export const Route = createFileRoute("/_app/saisie-pour-equipe")({
   component: SaisiePourEquipePage,
 });
 
-/** Fuzzy maison : lowercase + strip diacritics + includes. */
-function fuzzyMatch(haystack: string, needle: string): boolean {
-  if (!needle) return true;
-  const norm = (s: string) =>
-    s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  return norm(haystack).includes(norm(needle));
-}
+// fuzzyMatch / filterByTypologie : importés depuis @/lib/saisie-equipe-filter (testés unitairement)
 
 interface Employe {
   id: string;
@@ -186,11 +181,7 @@ function SaisiePourEquipePage() {
       const mid = Number(metierFilter);
       list = list.filter((e) => e.metier_principal_id === mid);
     }
-    if (typeFilter === "cdi") {
-      list = list.filter((e) => e.type_contrat === "CDI" || e.type_contrat === "CDD");
-    } else if (typeFilter === "interim") {
-      list = list.filter((e) => e.type_contrat === "Interim" || e.type_contrat === "Independant");
-    }
+    list = filterByTypologie(list, typeFilter);
     if (searchQuery.trim()) {
       list = list.filter((e) => fuzzyMatch(`${e.prenom} ${e.nom}`, searchQuery));
     }

@@ -28,6 +28,7 @@ import {
 import { DevisImportSection4Chantier } from "@/components/devis-import/DevisImportSection4Chantier";
 import { DevisImportFooter } from "@/components/devis-import/DevisImportFooter";
 import { NEW_AFFAIRE, type AffaireOption, type PosteRow } from "@/components/devis-import/types";
+import { detectMachinisteDoubleComptage } from "@/lib/devis-import-v2-helpers";
 
 export const Route = createFileRoute("/_app/devis/import")({
   head: () => ({ meta: [{ title: "Import devis Excel — Setup Paris" }] }),
@@ -45,7 +46,7 @@ function toIso(d: Date | undefined): string | null {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-const MACHINISTE_METIER_ID = 6;
+// MACHINISTE_METIER_ID extrait dans @/lib/devis-import-v2-helpers (testé unitairement)
 
 function DevisImportPage() {
   const { isAdminOrChef } = useAuth();
@@ -241,10 +242,17 @@ function DevisImportPage() {
 
   const selectedObjetsCount = useMemo(() => objets.filter((o) => o.selected).length, [objets]);
 
-  const warnMachiniste = useMemo(() => {
-    const hasMachinistePoste = postes.some((p) => p.metierId === MACHINISTE_METIER_ID && p.heures > 0);
-    return hasMachinistePoste && (importMontage || importDemontage);
-  }, [postes, importMontage, importDemontage]);
+  const warnMachiniste = useMemo(
+    () =>
+      detectMachinisteDoubleComptage(
+        postes
+          .filter((p): p is PosteRow & { metierId: number } => p.metierId != null)
+          .map((p) => ({ metierId: p.metierId, heures: p.heures })),
+        importMontage,
+        importDemontage,
+      ),
+    [postes, importMontage, importDemontage],
+  );
 
   const errors = useMemo(() => {
     const errs: string[] = [];
