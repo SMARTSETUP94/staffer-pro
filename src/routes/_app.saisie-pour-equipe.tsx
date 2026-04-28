@@ -8,7 +8,8 @@
  * - Cellule remplie → affiche heures + badge si saisi_par_chef
  * - Bouton "Saisir en bulk" en haut à droite
  */
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Navigate } from "@tanstack/react-router";
+import { useAuth } from "@/lib/auth-context";
 import { useEffect, useMemo, useState } from "react";
 import { addDays, format, isWeekend, startOfWeek } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -68,6 +69,7 @@ interface Saisie {
 }
 
 function SaisiePourEquipePage() {
+  const { isChef, isAdmin, rolesLoaded } = useAuth();
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
   const [employes, setEmployes] = useState<Employe[]>([]);
   const [metiers, setMetiers] = useState<Metier[]>([]);
