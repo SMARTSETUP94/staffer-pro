@@ -183,7 +183,7 @@ function SaisiePourEquipePage() {
     }
     list = filterByTypologie(list, typeFilter);
     if (searchQuery.trim()) {
-      list = list.filter((e) => fuzzyMatch(`${e.prenom} ${e.nom}`, searchQuery));
+      list = list.filter((e) => fuzzyMatchName(`${e.prenom} ${e.nom}`, searchQuery));
     }
     return list;
   }, [employes, metierFilter, typeFilter, searchQuery]);
