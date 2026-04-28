@@ -1,7 +1,7 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { addDays, format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Briefcase, MapPin, Users } from "lucide-react";
+import { Briefcase, Lock, MapPin, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   Tooltip,
@@ -9,10 +9,14 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { isAffaireSelectable, affaireLockReason } from "@/lib/affaire-lock";
+import { AssignationDialog } from "./AssignationDialog";
+import { ParChantierAssignDialog } from "./ParChantierAssignDialog";
 import type {
   Affaire,
   Assignation,
   DevisConsommation,
+  DevisLot,
   Employe,
   Metier,
 } from "@/hooks/use-planning-data";
@@ -24,10 +28,14 @@ interface Props {
   metiers: Metier[];
   assignations: Assignation[];
   consommation: DevisConsommation[];
+  /** v0.21 Bloc 6 — lots devis pour pré-remplissage modale d'affectation. */
+  devisLots?: DevisLot[];
   showWeekend?: boolean;
   filterAffaireIds?: Set<string>;
   filterMetierIds?: Set<number>;
   onSelectAffaire?: (affaireId: string) => void;
+  /** v0.21 Bloc 6 — callback rafraîchissement après création/édition d'assignations. */
+  onChanged?: () => void;
 }
 
 /** Vue planning pivotée : lignes = chantiers actifs cette semaine, colonnes = jours,
@@ -39,10 +47,12 @@ export function PlanningParChantier({
   metiers,
   assignations,
   consommation,
+  devisLots = [],
   showWeekend = false,
   filterAffaireIds,
   filterMetierIds,
   onSelectAffaire,
+  onChanged,
 }: Props) {
   const days = useMemo(
     () => Array.from({ length: showWeekend ? 7 : 5 }, (_, i) => addDays(weekStart, i)),
@@ -57,6 +67,22 @@ export function PlanningParChantier({
     () => new Map(metiers.map((m) => [m.id, m])),
     [metiers],
   );
+
+  // v0.21 Bloc 6 — Édition directe : sélection multi-cellules par ligne (affaire)
+  // Une cellule = "{affaireId}::{date}". Sélection limitée à une seule ligne à la fois.
+  const [selectedCells, setSelectedCells] = useState<Set<string>>(new Set());
+  const [selectionAffaireId, setSelectionAffaireId] = useState<string | null>(null);
+
+  // États modales
+  const [assignDlg, setAssignDlg] = useState<{
+    affaire: Affaire;
+    dates: string[];
+  } | null>(null);
+  const [editDlg, setEditDlg] = useState<{
+    employe: Employe;
+    date: Date;
+    existing: Assignation[];
+  } | null>(null);
 
   // Affaires actives = celles avec assignations dans la semaine OU heures budgétées
   const affairesActives = useMemo(() => {
@@ -100,6 +126,74 @@ export function PlanningParChantier({
     return map;
   }, [affairesActives, assignByCell, days]);
 
+  function handleCellClick(
+    e: React.MouseEvent,
+    affaire: Affaire,
+    dayStr: string,
+    cellAssigns: Assignation[],
+  ) {
+    e.stopPropagation();
+    const isLocked = !isAffaireSelectable(affaire);
+
+    // Cellule occupée → édition de la première assignation (comportement actuel préservé)
+    if (cellAssigns.length > 0 && !e.ctrlKey && !e.metaKey) {
+      const first = cellAssigns[0];
+      const emp = employesById.get(first.employe_id);
+      if (!emp) return;
+      // Toutes les assignations de cet employé ce jour-là
+      const empExisting = assignations.filter(
+        (a) => a.employe_id === emp.id && a.date === first.date,
+      );
+      setEditDlg({ employe: emp, date: new Date(first.date), existing: empExisting });
+      return;
+    }
+
+    // Cellule vide
+    if (isLocked) return;
+
+    // Ctrl+clic / Cmd+clic = multi-sélection sur la même ligne
+    if (e.ctrlKey || e.metaKey) {
+      const key = `${affaire.id}::${dayStr}`;
+      setSelectedCells((prev) => {
+        // Reset si on change de ligne
+        if (selectionAffaireId && selectionAffaireId !== affaire.id) {
+          setSelectionAffaireId(affaire.id);
+          return new Set([key]);
+        }
+        const next = new Set(prev);
+        if (next.has(key)) next.delete(key);
+        else next.add(key);
+        if (next.size === 0) {
+          setSelectionAffaireId(null);
+        } else if (!selectionAffaireId) {
+          setSelectionAffaireId(affaire.id);
+        }
+        return next;
+      });
+      return;
+    }
+
+    // Clic simple sur cellule vide → modale d'affectation 1 jour
+    setAssignDlg({ affaire, dates: [dayStr] });
+  }
+
+  function openMultiSelection() {
+    if (!selectionAffaireId || selectedCells.size === 0) return;
+    const affaire = affaires.find((a) => a.id === selectionAffaireId);
+    if (!affaire) return;
+    const dates = Array.from(selectedCells)
+      .map((k) => k.split("::")[1])
+      .sort();
+    setAssignDlg({ affaire, dates });
+    setSelectedCells(new Set());
+    setSelectionAffaireId(null);
+  }
+
+  function clearSelection() {
+    setSelectedCells(new Set());
+    setSelectionAffaireId(null);
+  }
+
   if (affairesActives.length === 0) {
     return (
       <div className="rounded-lg border border-dashed p-8 text-center">
@@ -137,6 +231,8 @@ export function PlanningParChantier({
           <tbody>
             {affairesActives.map((af) => {
               const totalPers = totalPersonnesByAffaire.get(af.id) ?? 0;
+              const isLocked = !isAffaireSelectable(af);
+              const lockMsg = affaireLockReason(af);
               return (
                 <tr key={af.id} className="hover:bg-muted/30">
                   <td className="sticky left-0 z-10 border-b bg-card p-2 align-top hover:bg-muted/30">
@@ -157,6 +253,14 @@ export function PlanningParChantier({
                         <span className="rounded bg-muted px-1.5 py-0.5 font-mono text-[10px] font-bold">
                           {af.numero}
                         </span>
+                        {isLocked && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Lock className="h-3 w-3 text-muted-foreground" />
+                            </TooltipTrigger>
+                            <TooltipContent>{lockMsg ?? "Affaire verrouillée"}</TooltipContent>
+                          </Tooltip>
+                        )}
                         <span
                           className="ml-auto inline-flex items-center gap-0.5 rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary"
                           title={`${totalPers} personne${totalPers > 1 ? "s" : ""} sur la semaine`}
@@ -188,6 +292,9 @@ export function PlanningParChantier({
                   {days.map((d) => {
                     const dayStr = format(d, "yyyy-MM-dd");
                     const cellAssigns = assignByCell.get(`${af.id}::${dayStr}`) ?? [];
+                    const cellKey = `${af.id}::${dayStr}`;
+                    const isSelected = selectedCells.has(cellKey);
+                    const isSelectableForMulti = selectionAffaireId === null || selectionAffaireId === af.id;
                     // Group par employé pour fusionner AM/PM
                     const byEmploye = new Map<string, Assignation[]>();
                     cellAssigns.forEach((a) => {
@@ -196,15 +303,28 @@ export function PlanningParChantier({
                       byEmploye.set(a.employe_id, arr);
                     });
                     const isWeekend = d.getDay() === 0 || d.getDay() === 6;
+                    const isEmpty = byEmploye.size === 0;
                     return (
                       <td
                         key={d.toISOString()}
+                        onClick={(e) => handleCellClick(e, af, dayStr, cellAssigns)}
                         className={cn(
-                          "border-b border-l align-top",
+                          "border-b border-l align-top transition-colors",
                           isWeekend && "bg-muted/20",
+                          !isLocked && "cursor-pointer hover:bg-primary/5",
+                          isLocked && "cursor-not-allowed opacity-60",
+                          isSelected && "ring-4 ring-primary ring-inset bg-primary/10",
+                          !isSelectableForMulti && selectedCells.size > 0 && "opacity-50",
                         )}
+                        title={
+                          isLocked
+                            ? lockMsg ?? undefined
+                            : isEmpty
+                              ? "Cliquer pour staffer · Ctrl+clic pour multi-sélection"
+                              : "Cliquer pour éditer"
+                        }
                       >
-                        <div className="flex flex-wrap gap-1 p-1">
+                        <div className="flex flex-wrap gap-1 p-1 min-h-[36px]">
                           {Array.from(byEmploye.entries()).map(([empId, arr]) => {
                             const emp = employesById.get(empId);
                             if (!emp) return null;
@@ -253,8 +373,8 @@ export function PlanningParChantier({
                               </Tooltip>
                             );
                           })}
-                          {byEmploye.size === 0 && (
-                            <div className="min-h-[24px] w-full" />
+                          {isEmpty && !isLocked && (
+                            <span className="text-[10px] text-muted-foreground/40 self-center mx-auto">+</span>
                           )}
                         </div>
                       </td>
@@ -266,6 +386,72 @@ export function PlanningParChantier({
           </tbody>
         </table>
       </div>
+
+      {/* Barre flottante multi-sélection */}
+      {selectedCells.size > 0 && (
+        <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 flex items-center gap-3 rounded-full border bg-card px-4 py-2 shadow-lg">
+          <span className="text-sm font-semibold">
+            {selectedCells.size} cellule(s) sélectionnée(s)
+          </span>
+          <button
+            type="button"
+            onClick={openMultiSelection}
+            className="rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground hover:bg-primary/90"
+          >
+            Affecter ces {selectedCells.size} cellule(s)
+          </button>
+          <button
+            type="button"
+            onClick={clearSelection}
+            className="text-xs text-muted-foreground underline-offset-2 hover:underline"
+          >
+            Annuler
+          </button>
+        </div>
+      )}
+
+      {/* Modale d'affectation (création) */}
+      {assignDlg && (
+        <ParChantierAssignDialog
+          open
+          onOpenChange={(o) => !o && setAssignDlg(null)}
+          affaire={assignDlg.affaire}
+          dates={assignDlg.dates}
+          employes={employes}
+          metiers={metiers}
+          devisLots={devisLots}
+          assignations={assignations}
+          onSaved={() => {
+            onChanged?.();
+            setAssignDlg(null);
+          }}
+        />
+      )}
+
+      {/* Modale d'édition d'assignation existante */}
+      {editDlg && (
+        <AssignationDialog
+          open
+          onOpenChange={(o) => !o && setEditDlg(null)}
+          date={editDlg.date}
+          employe={editDlg.employe}
+          existing={editDlg.existing}
+          affaires={affaires}
+          metiers={metiers}
+          consommation={consommation.map((c) => ({
+            affaire_id: c.affaire_id,
+            metier_id: c.metier_id,
+            heures_prevues: c.heures_prevues,
+            heures_assignees: c.heures_assignees,
+            heures_restantes: c.heures_restantes,
+          }))}
+          devisLots={devisLots}
+          onSaved={() => {
+            onChanged?.();
+            setEditDlg(null);
+          }}
+        />
+      )}
     </TooltipProvider>
   );
 }
