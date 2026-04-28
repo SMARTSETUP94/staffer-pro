@@ -111,6 +111,8 @@ export function AssignationDialog({
     setSlot("JOURNEE");
     setHeures(8);
     setNotes("");
+    setTypeOperation("");
+    setEstChefJour(false);
     setShowAllMetiers(false);
     setDateOverride(date);
   }, [open, employe.metier_principal_id, date]);
