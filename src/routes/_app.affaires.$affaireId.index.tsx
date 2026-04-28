@@ -34,9 +34,13 @@ export const Route = createFileRoute("/_app/affaires/$affaireId/")({
 function AffaireSynthesePage() {
   const { affaireId } = Route.useParams();
   const { byId } = useMetiers();
+  const { isAdminOrChef } = useAuth();
   const [lines, setLines] = useState<ConsoLine[]>([]);
   const [loading, setLoading] = useState(true);
   const [notes, setNotes] = useState<string | null>(null);
+  const [hMontage, setHMontage] = useState<string>("0");
+  const [hDemontage, setHDemontage] = useState<string>("0");
+  const [savingMD, setSavingMD] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -49,17 +53,39 @@ function AffaireSynthesePage() {
             "devis_id, devis_numero, metier_id, metier, couleur, heures_prevues, heures_assignees, heures_reelles_validees, heures_reelles_soumises, heures_restantes, pct_consomme, pct_consomme_reel",
           )
           .eq("affaire_id", affaireId),
-        supabase.from("affaires").select("notes").eq("id", affaireId).maybeSingle(),
+        supabase
+          .from("affaires")
+          .select("notes, heures_prevues_montage, heures_prevues_demontage")
+          .eq("id", affaireId)
+          .maybeSingle(),
       ]);
       if (cancelled) return;
       setLines((cons ?? []) as ConsoLine[]);
       setNotes((aff?.notes as string | null) ?? null);
+      setHMontage(String(aff?.heures_prevues_montage ?? 0));
+      setHDemontage(String(aff?.heures_prevues_demontage ?? 0));
       setLoading(false);
     })();
     return () => {
       cancelled = true;
     };
   }, [affaireId]);
+
+  const saveMontageDemontage = async () => {
+    setSavingMD(true);
+    const m = Number(hMontage) || 0;
+    const d = Number(hDemontage) || 0;
+    const { error } = await supabase
+      .from("affaires")
+      .update({ heures_prevues_montage: m, heures_prevues_demontage: d })
+      .eq("id", affaireId);
+    setSavingMD(false);
+    if (error) {
+      toast.error("Enregistrement impossible", { description: error.message });
+    } else {
+      toast.success("Heures montage/démontage enregistrées");
+    }
+  };
 
   const enriched = useMemo(() => {
     return lines.map((l) => {
