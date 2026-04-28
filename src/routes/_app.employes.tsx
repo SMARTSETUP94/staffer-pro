@@ -194,6 +194,7 @@ function EmployesPage() {
       est_finition: boolean;
       est_manutention: boolean;
       est_bureau_etude: boolean;
+      est_usinage_numerique: boolean;
     };
     let profileMap: Record<string, ProfileFabRow> = {};
     if (profileIds.length) {
