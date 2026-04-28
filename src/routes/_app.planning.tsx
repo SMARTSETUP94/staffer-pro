@@ -40,7 +40,7 @@ export const Route = createFileRoute("/_app/planning")({
 function PlanningPage() {
   const [weekStart, setWeekStart] = useState<Date>(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
   const weekEnd = addDays(weekStart, 6);
-  const [tab, setTab] = useState<"cdi" | "interim" | "parchantier" | "budget" | "flotte">("cdi");
+  const [tab, setTab] = useState<"cdi" | "interim" | "parchantier" | "budget" | "flotte" | "feuilleroute">("cdi");
   const [trajetDlgOpen, setTrajetDlgOpen] = useState(false);
   const [exportSousTraitanceOpen, setExportSousTraitanceOpen] = useState(false);
   const [editTrajet, setEditTrajet] = useState<Trajet | null>(null);
