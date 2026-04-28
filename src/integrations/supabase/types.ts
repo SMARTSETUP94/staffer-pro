@@ -2160,7 +2160,12 @@ export type Database = {
         | "en_cours"
         | "termine"
         | "non_applicable"
-      fabrication_etape_type: "be" | "respo_fab" | "finition" | "manutention"
+      fabrication_etape_type:
+        | "be"
+        | "usinage"
+        | "respo_fab"
+        | "finition"
+        | "manutention"
       fabrication_finition_type: "peinture" | "tapisserie" | "autre" | "aucune"
       feedback_priorite: "basse" | "moyenne" | "haute" | "critique"
       feedback_statut: "nouveau" | "en_cours" | "resolu" | "ferme" | "rejete"
@@ -2368,7 +2373,13 @@ export const Constants = {
         "termine",
         "non_applicable",
       ],
-      fabrication_etape_type: ["be", "respo_fab", "finition", "manutention"],
+      fabrication_etape_type: [
+        "be",
+        "usinage",
+        "respo_fab",
+        "finition",
+        "manutention",
+      ],
       fabrication_finition_type: ["peinture", "tapisserie", "autre", "aucune"],
       feedback_priorite: ["basse", "moyenne", "haute", "critique"],
       feedback_statut: ["nouveau", "en_cours", "resolu", "ferme", "rejete"],

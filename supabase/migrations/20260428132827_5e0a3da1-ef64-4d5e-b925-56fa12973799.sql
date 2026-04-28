@@ -1,0 +1,1 @@
+ALTER TYPE public.fabrication_etape_type ADD VALUE IF NOT EXISTS 'usinage' BEFORE 'respo_fab';
