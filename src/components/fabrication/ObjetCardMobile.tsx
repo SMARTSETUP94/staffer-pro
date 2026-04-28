@@ -12,10 +12,10 @@ import { MoreVertical, Pencil } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   ETAPE_LABELS,
+  ETAPES_ORDER,
   STATUT_LABELS,
   calcAvancementObjet,
   type FabricationEtape,
-  type FabricationEtapeType,
   type FabricationObjet,
 } from "@/hooks/use-fabrication";
 
@@ -25,8 +25,6 @@ interface ObjetCardMobileProps {
   onEditObjet: (objet: FabricationObjet) => void;
   onEditEtape: (objet: FabricationObjet, etape: FabricationEtape) => void;
 }
-
-const ETAPES_ORDER: FabricationEtapeType[] = ["be", "respo_fab", "finition", "manutention"];
 
 const STATUT_BTN_CLASS: Record<string, string> = {
   a_faire: "bg-muted text-muted-foreground hover:bg-muted/80 border-border",
@@ -90,8 +88,8 @@ export function ObjetCardMobile({
         )}
       </div>
 
-      {/* 4 boutons d'étape — zone tactile >=44×44px */}
-      <div className="mt-3 grid grid-cols-2 gap-2">
+      {/* 5 boutons d'étape — zone tactile >=56px */}
+      <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
         {ETAPES_ORDER.map((type) => {
           const e = objet.etapes.find((x) => x.type_etape === type);
           if (!e) {

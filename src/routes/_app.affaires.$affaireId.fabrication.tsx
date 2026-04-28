@@ -35,11 +35,11 @@ import {
   calcAvancementAffaire,
   calcAvancementObjet,
   ETAPE_LABELS,
+  ETAPES_ORDER,
   STATUT_ICONS,
   STATUT_LABELS,
   type FabricationEtape,
   type FabricationObjet,
-  type FabricationEtapeType,
 } from "@/hooks/use-fabrication";
 import { AjouterObjetDialog } from "@/components/fabrication/AjouterObjetDialog";
 import { EditerObjetDialog } from "@/components/fabrication/EditerObjetDialog";
@@ -263,8 +263,8 @@ function FabricationPage() {
                   <TableHead>Objet</TableHead>
                   <TableHead className="w-16 text-center">Qté</TableHead>
                   <TableHead className="w-32">Respo Fab</TableHead>
-                  {(["be", "respo_fab", "finition", "manutention"] as FabricationEtapeType[]).map((t) => (
-                    <TableHead key={t} className="w-36 text-center">
+                  {ETAPES_ORDER.map((t) => (
+                    <TableHead key={t} className="w-32 text-center">
                       {ETAPE_LABELS[t]}
                     </TableHead>
                   ))}
@@ -281,7 +281,7 @@ function FabricationPage() {
                     <TableCell className="text-xs">
                       {o.respo_fab_name ?? <span className="text-muted-foreground">—</span>}
                     </TableCell>
-                    {(["be", "respo_fab", "finition", "manutention"] as FabricationEtapeType[]).map((t) => {
+                    {ETAPES_ORDER.map((t) => {
                       const e = o.etapes.find((x) => x.type_etape === t);
                       if (!e) return <TableCell key={t} className="text-center text-muted-foreground">—</TableCell>;
                       return (
