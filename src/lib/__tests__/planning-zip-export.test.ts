@@ -191,13 +191,13 @@ describe("workbookToBlob + JSZip — composition zip", () => {
     });
 
     const zip = new JSZip();
-    zip.file(built!.filename, planningBlob);
-    zip.file(fr.filename, fr.blob);
+    zip.file(built!.filename, await planningBlob.arrayBuffer());
+    zip.file(fr.filename, await fr.blob.arrayBuffer());
 
     const startISO = "2026-04-27";
     const endISO = "2026-05-03";
     const expectedZipName = `planning-export-${startISO}-${endISO}.zip`;
-    expect(expectedZipName).toMatch(/^planning-export-\d{4}-\d{2}-\d{2}-\d{2}\d{2}-\d{2}\d{2}$|^planning-export-\d{4}-\d{2}-\d{2}-\d{4}-\d{2}-\d{2}\.zip$/);
+    expect(expectedZipName).toBe("planning-export-2026-04-27-2026-05-03.zip");
 
     const arr = await zip.generateAsync({ type: "uint8array" });
     expect(arr.byteLength).toBeGreaterThan(0);
