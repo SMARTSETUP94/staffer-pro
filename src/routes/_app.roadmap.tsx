@@ -1421,12 +1421,6 @@ const PLANNED: RoadmapPlanned[] = [
       "🔴 HIGH identifié à l'audit v0.20 : les boutons « Demander trajet sous-traité » du dashboard /fabrication et de la fiche affaire ouvrent /flotte sans passer ?affaireId=… ni les adresses pré-remplies. À fixer : query params + auto-ouverture du TrajetDialog en mode création avec affaire_id, adresse arrivée client, statut_soustraitance='a_sous_traiter' pré-positionnés.",
   },
   {
-    priority: "haute",
-    title: "v0.20.1 — Import objets de fabrication depuis devis (parser dédié)",
-    description:
-      "Hors-scope reporté de v0.20 : transformer la liste des postes d'un devis signé en objets de fabrication en 1 clic. Détection auto des références produit (mobilier, signalétique…), de la quantité, et proposition des 4 flags d'applicabilité par défaut selon le type de poste. Bouton actuellement désactivé avec tooltip explicatif. Nécessite d'entraîner le parser sur ≥ 20 devis réels.",
-  },
-  {
     priority: "moyenne",
     title: "v0.20.1 — Indexes composites dashboard fabrication (perf)",
     description:
