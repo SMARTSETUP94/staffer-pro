@@ -46,7 +46,7 @@ function toIso(d: Date | undefined): string | null {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-const MACHINISTE_METIER_ID = 6;
+// MACHINISTE_METIER_ID extrait dans @/lib/devis-import-v2-helpers (testé unitairement)
 
 function DevisImportPage() {
   const { isAdminOrChef } = useAuth();
