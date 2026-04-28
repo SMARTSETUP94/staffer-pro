@@ -298,7 +298,7 @@ function ProgbatImportPage() {
             <div>
               <p className="font-semibold">Accès réservé</p>
               <p className="text-sm text-muted-foreground">
-                Cette page d'import est réservée aux administrateurs.
+                Cette page d'import est réservée aux administrateurs et chefs.
               </p>
             </div>
           </CardContent>
