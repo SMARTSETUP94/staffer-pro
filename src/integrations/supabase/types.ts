@@ -150,6 +150,8 @@ export type Database = {
           date_fin_prevue: string | null
           date_montage: string | null
           date_opportunite: string | null
+          heures_prevues_demontage: number
+          heures_prevues_montage: number
           id: string
           lieu: string | null
           nom: string
@@ -176,6 +178,8 @@ export type Database = {
           date_fin_prevue?: string | null
           date_montage?: string | null
           date_opportunite?: string | null
+          heures_prevues_demontage?: number
+          heures_prevues_montage?: number
           id?: string
           lieu?: string | null
           nom: string
@@ -202,6 +206,8 @@ export type Database = {
           date_fin_prevue?: string | null
           date_montage?: string | null
           date_opportunite?: string | null
+          heures_prevues_demontage?: number
+          heures_prevues_montage?: number
           id?: string
           lieu?: string | null
           nom?: string
@@ -841,13 +847,22 @@ export type Database = {
           a_construire: boolean
           a_dessiner: boolean
           a_emballer: boolean
+          a_usiner: boolean
           affaire_id: string
           archive: boolean
+          budget_materiaux: number
           commentaire: string | null
           created_at: string
           created_by: string | null
           devis_id: string | null
           est_brut: boolean
+          heures_prevues_be: number
+          heures_prevues_bois: number
+          heures_prevues_manutention: number
+          heures_prevues_metal: number
+          heures_prevues_numerique: number
+          heures_prevues_peinture: number
+          heures_prevues_tapisserie: number
           id: string
           nom: string
           ordre: number
@@ -861,13 +876,22 @@ export type Database = {
           a_construire?: boolean
           a_dessiner?: boolean
           a_emballer?: boolean
+          a_usiner?: boolean
           affaire_id: string
           archive?: boolean
+          budget_materiaux?: number
           commentaire?: string | null
           created_at?: string
           created_by?: string | null
           devis_id?: string | null
           est_brut?: boolean
+          heures_prevues_be?: number
+          heures_prevues_bois?: number
+          heures_prevues_manutention?: number
+          heures_prevues_metal?: number
+          heures_prevues_numerique?: number
+          heures_prevues_peinture?: number
+          heures_prevues_tapisserie?: number
           id?: string
           nom: string
           ordre?: number
@@ -881,13 +905,22 @@ export type Database = {
           a_construire?: boolean
           a_dessiner?: boolean
           a_emballer?: boolean
+          a_usiner?: boolean
           affaire_id?: string
           archive?: boolean
+          budget_materiaux?: number
           commentaire?: string | null
           created_at?: string
           created_by?: string | null
           devis_id?: string | null
           est_brut?: boolean
+          heures_prevues_be?: number
+          heures_prevues_bois?: number
+          heures_prevues_manutention?: number
+          heures_prevues_metal?: number
+          heures_prevues_numerique?: number
+          heures_prevues_peinture?: number
+          heures_prevues_tapisserie?: number
           id?: string
           nom?: string
           ordre?: number
@@ -1375,6 +1408,7 @@ export type Database = {
           est_finition: boolean
           est_manutention: boolean
           est_respo_fab: boolean
+          est_usinage_numerique: boolean
           full_name: string | null
           id: string
           matricule_silae: string | null
@@ -1391,6 +1425,7 @@ export type Database = {
           est_finition?: boolean
           est_manutention?: boolean
           est_respo_fab?: boolean
+          est_usinage_numerique?: boolean
           full_name?: string | null
           id: string
           matricule_silae?: string | null
@@ -1407,6 +1442,7 @@ export type Database = {
           est_finition?: boolean
           est_manutention?: boolean
           est_respo_fab?: boolean
+          est_usinage_numerique?: boolean
           full_name?: string | null
           id?: string
           matricule_silae?: string | null
@@ -2080,6 +2116,10 @@ export type Database = {
           _taille: Database["public"]["Enums"]["opportunite_taille"]
         }
         Returns: string
+      }
+      etape_for_metier: {
+        Args: { metier: string }
+        Returns: Database["public"]["Enums"]["fabrication_etape_type"]
       }
       has_role: {
         Args: {
