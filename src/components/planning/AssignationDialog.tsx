@@ -94,6 +94,9 @@ export function AssignationDialog({
   const [secondairesIds, setSecondairesIds] = useState<number[]>([]);
   const [showAllMetiers, setShowAllMetiers] = useState(false);
 
+  // v0.21 — Date éditable (par défaut = prop date, modifiable uniquement en création)
+  const [dateOverride, setDateOverride] = useState<Date>(date);
+
   // Réinitialise à l'ouverture
   useEffect(() => {
     if (!open) return;
@@ -105,7 +108,8 @@ export function AssignationDialog({
     setHeures(8);
     setNotes("");
     setShowAllMetiers(false);
-  }, [open, employe.metier_principal_id]);
+    setDateOverride(date);
+  }, [open, employe.metier_principal_id, date]);
 
   // Charge les compétences secondaires de l'employé
   useEffect(() => {
