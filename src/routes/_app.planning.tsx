@@ -317,6 +317,10 @@ function PlanningPage() {
                 <TabsTrigger value="parchantier">Planning par chantier</TabsTrigger>
                 <TabsTrigger value="budget">Budget chantier</TabsTrigger>
                 <TabsTrigger value="flotte">Véhicules staffés ({vehicules.filter((v) => v.actif).length})</TabsTrigger>
+                <TabsTrigger value="feuilleroute">
+                  <ClipboardList className="mr-1 h-3.5 w-3.5" />
+                  Feuille de route
+                </TabsTrigger>
               </TabsList>
 
               <TabsContent value="cdi" className="mt-4">
