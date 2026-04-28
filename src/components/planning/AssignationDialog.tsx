@@ -259,6 +259,8 @@ export function AssignationDialog({
       heures,
       date: dateStr,
       notes: notes.trim() || null,
+      type_operation: typeOperation.trim() || null,
+      est_chef_jour: estChefJour,
     };
 
     const res = editingId
