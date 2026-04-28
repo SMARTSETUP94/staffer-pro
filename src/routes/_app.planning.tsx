@@ -85,6 +85,7 @@ function PlanningPage() {
   const [extraInterims, setExtraInterims] = useState<Employe[]>([]);
   const [autoOpen, setAutoOpen] = useState<{ employe: Employe; date: Date } | null>(null);
   const [addInterimOpen, setAddInterimOpen] = useState(false);
+  const [bulkStafferOpen, setBulkStafferOpen] = useState(false);
 
   const employesInterim = useMemo(() => {
     const assignedIds = new Set(assignations.map((a) => a.employe_id));
