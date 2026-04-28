@@ -332,7 +332,7 @@ export function AjouterObjetDialog({ affaireId, open, onOpenChange, onCreated }:
                 )}
               </EtapeQuestion>
 
-              {/* 3. Finition (logique inversée) */}
+              {/* 4. Finition (logique inversée) */}
               <EtapeQuestion
                 question="L'objet est brut ?"
                 value={flags.est_brut}
@@ -372,7 +372,7 @@ export function AjouterObjetDialog({ affaireId, open, onOpenChange, onCreated }:
                 )}
               </EtapeQuestion>
 
-              {/* 4. Manutention */}
+              {/* 5. Manutention */}
               <EtapeQuestion
                 question="L'objet doit être emballé ?"
                 value={flags.a_emballer}
