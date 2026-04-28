@@ -24,6 +24,7 @@ import { Route as AuthResetPasswordRouteImport } from './routes/auth.reset-passw
 import { Route as AuthForgotPasswordRouteImport } from './routes/auth.forgot-password'
 import { Route as AppValidationHeuresRouteImport } from './routes/_app.validation-heures'
 import { Route as AppSignalementsRouteImport } from './routes/_app.signalements'
+import { Route as AppSaisiePourEquipeRouteImport } from './routes/_app.saisie-pour-equipe'
 import { Route as AppRoadmapRouteImport } from './routes/_app.roadmap'
 import { Route as AppPlanningRouteImport } from './routes/_app.planning'
 import { Route as AppOpportunitesRouteImport } from './routes/_app.opportunites'
@@ -135,6 +136,11 @@ const AppValidationHeuresRoute = AppValidationHeuresRouteImport.update({
 const AppSignalementsRoute = AppSignalementsRouteImport.update({
   id: '/signalements',
   path: '/signalements',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSaisiePourEquipeRoute = AppSaisiePourEquipeRouteImport.update({
+  id: '/saisie-pour-equipe',
+  path: '/saisie-pour-equipe',
   getParentRoute: () => AppRoute,
 } as any)
 const AppRoadmapRoute = AppRoadmapRouteImport.update({
@@ -354,6 +360,7 @@ export interface FileRoutesByFullPath {
   '/opportunites': typeof AppOpportunitesRouteWithChildren
   '/planning': typeof AppPlanningRoute
   '/roadmap': typeof AppRoadmapRoute
+  '/saisie-pour-equipe': typeof AppSaisiePourEquipeRoute
   '/signalements': typeof AppSignalementsRoute
   '/validation-heures': typeof AppValidationHeuresRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
@@ -407,6 +414,7 @@ export interface FileRoutesByTo {
   '/opportunites': typeof AppOpportunitesRouteWithChildren
   '/planning': typeof AppPlanningRoute
   '/roadmap': typeof AppRoadmapRoute
+  '/saisie-pour-equipe': typeof AppSaisiePourEquipeRoute
   '/signalements': typeof AppSignalementsRoute
   '/validation-heures': typeof AppValidationHeuresRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
@@ -462,6 +470,7 @@ export interface FileRoutesById {
   '/_app/opportunites': typeof AppOpportunitesRouteWithChildren
   '/_app/planning': typeof AppPlanningRoute
   '/_app/roadmap': typeof AppRoadmapRoute
+  '/_app/saisie-pour-equipe': typeof AppSaisiePourEquipeRoute
   '/_app/signalements': typeof AppSignalementsRoute
   '/_app/validation-heures': typeof AppValidationHeuresRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
@@ -518,6 +527,7 @@ export interface FileRouteTypes {
     | '/opportunites'
     | '/planning'
     | '/roadmap'
+    | '/saisie-pour-equipe'
     | '/signalements'
     | '/validation-heures'
     | '/auth/forgot-password'
@@ -571,6 +581,7 @@ export interface FileRouteTypes {
     | '/opportunites'
     | '/planning'
     | '/roadmap'
+    | '/saisie-pour-equipe'
     | '/signalements'
     | '/validation-heures'
     | '/auth/forgot-password'
@@ -625,6 +636,7 @@ export interface FileRouteTypes {
     | '/_app/opportunites'
     | '/_app/planning'
     | '/_app/roadmap'
+    | '/_app/saisie-pour-equipe'
     | '/_app/signalements'
     | '/_app/validation-heures'
     | '/auth/forgot-password'
@@ -783,6 +795,13 @@ declare module '@tanstack/react-router' {
       path: '/signalements'
       fullPath: '/signalements'
       preLoaderRoute: typeof AppSignalementsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/saisie-pour-equipe': {
+      id: '/_app/saisie-pour-equipe'
+      path: '/saisie-pour-equipe'
+      fullPath: '/saisie-pour-equipe'
+      preLoaderRoute: typeof AppSaisiePourEquipeRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/roadmap': {
@@ -1127,6 +1146,7 @@ interface AppRouteChildren {
   AppOpportunitesRoute: typeof AppOpportunitesRouteWithChildren
   AppPlanningRoute: typeof AppPlanningRoute
   AppRoadmapRoute: typeof AppRoadmapRoute
+  AppSaisiePourEquipeRoute: typeof AppSaisiePourEquipeRoute
   AppSignalementsRoute: typeof AppSignalementsRoute
   AppValidationHeuresRoute: typeof AppValidationHeuresRoute
   AppAdminEmailPreviewRoute: typeof AppAdminEmailPreviewRoute
@@ -1161,6 +1181,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppOpportunitesRoute: AppOpportunitesRouteWithChildren,
   AppPlanningRoute: AppPlanningRoute,
   AppRoadmapRoute: AppRoadmapRoute,
+  AppSaisiePourEquipeRoute: AppSaisiePourEquipeRoute,
   AppSignalementsRoute: AppSignalementsRoute,
   AppValidationHeuresRoute: AppValidationHeuresRoute,
   AppAdminEmailPreviewRoute: AppAdminEmailPreviewRoute,

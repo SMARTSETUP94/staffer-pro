@@ -35,6 +35,9 @@ import { WeekPicker } from "@/components/planning/WeekPicker";
 import { cn } from "@/lib/utils";
 import { exportHeuresSilae, type HeuresExportRow } from "@/lib/heures-export";
 import { PageBreadcrumbs } from "@/components/PageBreadcrumbs";
+import { SaisirPourEmployeDialog } from "@/components/heures/SaisirPourEmployeDialog";
+import { SaisieChefBadge } from "@/components/heures/SaisieChefBadge";
+import { UserCog } from "lucide-react";
 
 export const Route = createFileRoute("/_app/validation-heures")({
   head: () => ({ meta: [{ title: "Validation heures — Planning chantiers" }] }),
@@ -54,6 +57,7 @@ interface SaisieRow {
   motif_rejet: string | null;
   valide_le: string | null;
   rejete_le: string | null;
+  saisi_par_chef: boolean | null;
   employe: { prenom: string; nom: string } | null;
   affaire: { numero: string; nom: string } | null;
   assignation: { metier: { libelle: string; couleur: string } | null } | null;
@@ -75,6 +79,7 @@ function ValidationHeuresPage() {
   const [rejectDialog, setRejectDialog] = useState<{ ids: string[]; open: boolean }>({ ids: [], open: false });
   const [rejectMotif, setRejectMotif] = useState("");
   const [exporting, setExporting] = useState(false);
+  const [saisirOpen, setSaisirOpen] = useState(false);
 
   const weekEnd = useMemo(() => addDays(weekStart, 6), [weekStart]);
   const startStr = format(weekStart, "yyyy-MM-dd");
@@ -97,7 +102,7 @@ function ValidationHeuresPage() {
     let q = supabase
       .from("heures_saisies")
       .select(
-        "id, date, employe_id, affaire_id, heure_debut, heure_fin, heures_reelles, commentaire, statut, motif_rejet, valide_le, rejete_le, employe:employes(prenom, nom), affaire:affaires(numero, nom), assignation:assignations(metier:metiers(libelle, couleur))",
+        "id, date, employe_id, affaire_id, heure_debut, heure_fin, heures_reelles, commentaire, statut, motif_rejet, valide_le, rejete_le, saisi_par_chef, employe:employes(prenom, nom), affaire:affaires(numero, nom), assignation:assignations(metier:metiers(libelle, couleur))",
       )
       .gte("date", startStr)
       .lte("date", endStr)
@@ -269,6 +274,10 @@ function ValidationHeuresPage() {
         <TabsContent value="heures" className="space-y-4">
       <div className="flex flex-wrap items-center justify-end gap-2">
         <WeekPicker weekStart={weekStart} onChange={setWeekStart} />
+        <Button variant="outline" onClick={() => setSaisirOpen(true)} className="gap-2">
+          <UserCog className="h-4 w-4" />
+          Saisir pour un employé
+        </Button>
         <Button variant="outline" onClick={handleExport} disabled={exporting} className="gap-2">
           {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
           Exporter validées
