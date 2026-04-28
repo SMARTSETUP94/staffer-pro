@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -27,6 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { AffaireCombobox } from "./AffaireCombobox";
+import { TYPE_OPERATION_OPTIONS } from "@/lib/feuille-route-helpers";
 import {
   AlertDialog,
   AlertDialogAction,
