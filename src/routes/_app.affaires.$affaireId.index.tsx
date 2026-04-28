@@ -257,6 +257,54 @@ function AffaireSynthesePage() {
         )}
       </section>
 
+      {isAdminOrChef && (
+        <section>
+          <p className="overline mb-3 flex items-center gap-2">
+            <Hammer className="h-3 w-3" />— Heures Montage / Démontage chantier
+          </p>
+          <div className="rounded-2xl border border-border bg-card p-4">
+            <div className="grid gap-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+              <div className="space-y-1.5">
+                <Label htmlFor="h-montage" className="text-xs">Montage (h)</Label>
+                <Input
+                  id="h-montage"
+                  type="number"
+                  min="0"
+                  step="0.5"
+                  value={hMontage}
+                  onChange={(e) => setHMontage(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="h-demontage" className="text-xs">Démontage (h)</Label>
+                <Input
+                  id="h-demontage"
+                  type="number"
+                  min="0"
+                  step="0.5"
+                  value={hDemontage}
+                  onChange={(e) => setHDemontage(e.target.value)}
+                />
+              </div>
+              <Button
+                onClick={saveMontageDemontage}
+                disabled={savingMD}
+                className="rounded-xl"
+              >
+                {savingMD && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Enregistrer
+              </Button>
+            </div>
+            <p className="mt-3 text-xs text-muted-foreground">
+              Total chantier :{" "}
+              <span className="font-semibold text-foreground">
+                {((Number(hMontage) || 0) + (Number(hDemontage) || 0)).toFixed(1)} h
+              </span>
+            </p>
+          </div>
+        </section>
+      )}
+
       {notes && (
         <section>
           <p className="overline mb-2">— Notes affaire</p>
