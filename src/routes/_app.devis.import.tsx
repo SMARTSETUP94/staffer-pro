@@ -314,8 +314,8 @@ function DevisImportPage() {
           flags: o.flags,
         }));
 
-      const { error } = await supabase.rpc("import_devis_atomique_v2", {
-        _affaire_id: (affaireId === NEW_AFFAIRE ? null : affaireId) as unknown as string,
+      const rpcArgs = {
+        _affaire_id: affaireId === NEW_AFFAIRE ? null : affaireId,
         _new_affaire:
           affaireId === NEW_AFFAIRE
             ? {
@@ -325,8 +325,8 @@ function DevisImportPage() {
                 lieu: newAffaireLieu.trim() || null,
               }
             : {},
-        _date_montage: toIso(dateMontage) as unknown as string,
-        _date_demontage: toIso(dateDemontage) as unknown as string,
+        _date_montage: toIso(dateMontage),
+        _date_demontage: toIso(dateDemontage),
         _devis: {
           numero: numeroDevis.trim(),
           libelle: nomDevis.trim() || null,
@@ -338,7 +338,9 @@ function DevisImportPage() {
         _heures_montage: importMontage ? montageH : null,
         _heures_demontage: importDemontage ? demontageH : null,
         _fichier_hash: fichierHash,
-      });
+      } as unknown as Parameters<typeof supabase.rpc<"import_devis_atomique_v2">>[1];
+
+      const { error } = await supabase.rpc("import_devis_atomique_v2", rpcArgs);
 
       if (error) {
         const isDuplicate = error.code === "23505" || /déjà été importé/i.test(error.message);
