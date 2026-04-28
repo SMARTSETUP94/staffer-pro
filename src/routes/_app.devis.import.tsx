@@ -11,10 +11,21 @@ import { Card, CardContent } from "@/components/ui/card";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import { parseDevisFromArrayBuffer } from "@/lib/devis-import";
+import { parseDevisProgbatFromArrayBuffer } from "@/lib/devis-parser/parse-excel";
+import {
+  computeFlagsFromMetiers,
+  detectTypeFinition,
+} from "@/lib/devis-parser/compute-flags";
+import type { FabMetier } from "@/hooks/use-fabrication";
 import type { MetierCode } from "@/lib/employes-import";
 import { DevisImportDropzone } from "@/components/devis-import/DevisImportDropzone";
 import { DevisImportSection1Affaire } from "@/components/devis-import/DevisImportSection1Affaire";
 import { DevisImportSection2Postes } from "@/components/devis-import/DevisImportSection2Postes";
+import {
+  DevisImportSection3Objets,
+  type EditableObjet,
+} from "@/components/devis-import/DevisImportSection3Objets";
+import { DevisImportSection4Chantier } from "@/components/devis-import/DevisImportSection4Chantier";
 import { DevisImportFooter } from "@/components/devis-import/DevisImportFooter";
 import { NEW_AFFAIRE, type AffaireOption, type PosteRow } from "@/components/devis-import/types";
 
@@ -33,6 +44,8 @@ function toIso(d: Date | undefined): string | null {
   if (!d) return null;
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
+
+const MACHINISTE_METIER_ID = 6;
 
 function DevisImportPage() {
   const { isAdminOrChef } = useAuth();
@@ -58,8 +71,17 @@ function DevisImportPage() {
   const [dateMontage, setDateMontage] = useState<Date | undefined>(undefined);
   const [dateDemontage, setDateDemontage] = useState<Date | undefined>(undefined);
 
-  // Section 2
+  // Section 2 (postes RH)
   const [postes, setPostes] = useState<PosteRow[]>([]);
+
+  // Section 3 (objets fabrication Progbat)
+  const [objets, setObjets] = useState<EditableObjet[]>([]);
+
+  // Section 4 (heures chantier)
+  const [importMontage, setImportMontage] = useState(false);
+  const [importDemontage, setImportDemontage] = useState(false);
+  const [montageH, setMontageH] = useState(0);
+  const [demontageH, setDemontageH] = useState(0);
 
   // Hash du fichier pour anti-doublon
   const [fichierHash, setFichierHash] = useState<string | null>(null);
@@ -98,6 +120,8 @@ function DevisImportPage() {
         .map((b) => b.toString(16).padStart(2, "0"))
         .join("");
       setFichierHash(hashHex);
+
+      // ---- Parser RH (devis_postes) ----
       const result = parseDevisFromArrayBuffer(buf, { filename: file.name });
       setParseErrors(result.errors);
 
@@ -141,6 +165,33 @@ function DevisImportPage() {
         });
       }
       setPostes(newPostes);
+
+      // ---- Parser Progbat (objets fabrication + heures chantier) ----
+      try {
+        const progbat = parseDevisProgbatFromArrayBuffer(buf, { filename: file.name });
+        const editable: EditableObjet[] = progbat.objetsCandidats.map((o) => ({
+          selected: o.confidence === "high",
+          numero: o.numero,
+          nom: o.nom,
+          quantite: o.quantite,
+          heures: { ...o.heures },
+          budgetMateriaux: o.budgetMateriaux,
+          typeFinition: o.typeFinition,
+          flags: o.flags,
+          confidence: o.confidence,
+          warnings: o.warnings,
+        }));
+        setObjets(editable);
+        setMontageH(progbat.heuresChantier.montage);
+        setDemontageH(progbat.heuresChantier.demontage);
+        setImportMontage(progbat.heuresChantier.montage > 0);
+        setImportDemontage(progbat.heuresChantier.demontage > 0);
+      } catch (e) {
+        // Si le parser Progbat échoue, on continue avec juste les postes RH.
+        const msg = e instanceof Error ? e.message : String(e);
+        setParseErrors((prev) => [...prev, `Parser Progbat : ${msg}`]);
+      }
+
       setHasParsed(true);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -159,6 +210,25 @@ function DevisImportPage() {
       { key: `manuel-${Date.now()}`, metierId: null, heures: 0, montantHt: 0, libellesSources: [], manuel: true },
     ]);
 
+  const updateObjet = (idx: number, patch: Partial<EditableObjet>) =>
+    setObjets((prev) =>
+      prev.map((o, i) => {
+        if (i !== idx) return o;
+        const next = { ...o, ...patch };
+        if (patch.heures) {
+          next.flags = computeFlagsFromMetiers(next.heures);
+          next.typeFinition = detectTypeFinition(next.heures);
+        }
+        return next;
+      }),
+    );
+  const updateMetier = (idx: number, metier: FabMetier, value: number) => {
+    const obj = objets[idx];
+    if (!obj) return;
+    const heures = { ...obj.heures, [metier]: Number.isFinite(value) ? value : 0 };
+    updateObjet(idx, { heures });
+  };
+
   const totals = useMemo(() => {
     let h = 0;
     let m = 0;
@@ -168,6 +238,13 @@ function DevisImportPage() {
     });
     return { heures: round1(h), montant: round2(m) };
   }, [postes]);
+
+  const selectedObjetsCount = useMemo(() => objets.filter((o) => o.selected).length, [objets]);
+
+  const warnMachiniste = useMemo(() => {
+    const hasMachinistePoste = postes.some((p) => p.metierId === MACHINISTE_METIER_ID && p.heures > 0);
+    return hasMachinistePoste && (importMontage || importDemontage);
+  }, [postes, importMontage, importDemontage]);
 
   const errors = useMemo(() => {
     const errs: string[] = [];
@@ -179,11 +256,16 @@ function DevisImportPage() {
     }
     if (!numeroDevis.trim()) errs.push("Numéro de devis requis.");
     if (!dateMontage) errs.push("Date de montage requise.");
-    if (postes.length === 0) errs.push("Aucun poste à importer.");
+    if (postes.length === 0 && selectedObjetsCount === 0) {
+      errs.push("Aucun poste ni objet à importer.");
+    }
     if (postes.some((p) => !p.metierId)) errs.push("Tous les postes doivent avoir un métier assigné.");
-    if (postes.some((p) => p.heures <= 0)) errs.push("Toutes les heures doivent être > 0.");
+    if (postes.some((p) => p.heures <= 0)) errs.push("Toutes les heures de poste doivent être > 0.");
     return errs;
-  }, [hasParsed, affaireId, newAffaireNumero, newAffaireNom, numeroDevis, dateMontage, postes]);
+  }, [
+    hasParsed, affaireId, newAffaireNumero, newAffaireNom,
+    numeroDevis, dateMontage, postes, selectedObjetsCount,
+  ]);
 
   const canCommit = hasParsed && errors.length === 0 && !committing;
 
@@ -193,6 +275,7 @@ function DevisImportPage() {
     setFichierHash(null);
     setParseErrors([]);
     setPostes([]);
+    setObjets([]);
     setNomDevis("");
     setNumeroDevis("");
     setDateMontage(undefined);
@@ -202,6 +285,10 @@ function DevisImportPage() {
     setNewAffaireNom("");
     setNewAffaireClient("");
     setNewAffaireLieu("");
+    setImportMontage(false);
+    setImportDemontage(false);
+    setMontageH(0);
+    setDemontageH(0);
   };
 
   const commit = async () => {
@@ -215,8 +302,20 @@ function DevisImportPage() {
         libelle_source: p.libellesSources.slice(0, 5).join(" • ").slice(0, 500) || null,
       }));
 
-      const { error } = await supabase.rpc("import_devis_atomique", {
-        _affaire_id: (affaireId === NEW_AFFAIRE ? null : affaireId) as unknown as string,
+      const objetsPayload = objets
+        .filter((o) => o.selected)
+        .map((o, idx) => ({
+          reference: o.numero || `OBJ-${idx + 1}`,
+          nom: o.nom.trim() || "Objet sans nom",
+          quantite: Math.max(1, Math.round(o.quantite)),
+          heures: o.heures,
+          budget_materiaux: o.budgetMateriaux,
+          type_finition: o.typeFinition,
+          flags: o.flags,
+        }));
+
+      const rpcArgs = {
+        _affaire_id: affaireId === NEW_AFFAIRE ? null : affaireId,
         _new_affaire:
           affaireId === NEW_AFFAIRE
             ? {
@@ -226,8 +325,8 @@ function DevisImportPage() {
                 lieu: newAffaireLieu.trim() || null,
               }
             : {},
-        _date_montage: toIso(dateMontage) as unknown as string,
-        _date_demontage: toIso(dateDemontage) as unknown as string,
+        _date_montage: toIso(dateMontage),
+        _date_demontage: toIso(dateDemontage),
         _devis: {
           numero: numeroDevis.trim(),
           libelle: nomDevis.trim() || null,
@@ -235,8 +334,13 @@ function DevisImportPage() {
           fichier_source: filename,
         },
         _postes: postesPayload,
+        _objets_fab: objetsPayload,
+        _heures_montage: importMontage ? montageH : null,
+        _heures_demontage: importDemontage ? demontageH : null,
         _fichier_hash: fichierHash,
-      });
+      } as unknown as Parameters<typeof supabase.rpc<"import_devis_atomique_v2">>[1];
+
+      const { error } = await supabase.rpc("import_devis_atomique_v2", rpcArgs);
 
       if (error) {
         const isDuplicate = error.code === "23505" || /déjà été importé/i.test(error.message);
@@ -249,7 +353,7 @@ function DevisImportPage() {
       }
 
       toast.success("Devis importé", {
-        description: `${postesPayload.length} poste(s), ${totals.heures} h, ${totals.montant.toLocaleString("fr-FR")} € HT.`,
+        description: `${postesPayload.length} poste(s) RH, ${objetsPayload.length} objet(s) fab, ${totals.heures} h, ${totals.montant.toLocaleString("fr-FR")} € HT.`,
       });
       reset();
     } finally {
@@ -274,9 +378,9 @@ function DevisImportPage() {
       <div className="mx-auto max-w-7xl space-y-6 p-6">
         <PageBreadcrumbs steps={[{ label: "Imports", to: "/employes/import" }, { label: "Devis" }]} />
         <PageHeader
-          eyebrow="Administration / Imports"
+          eyebrow="Imports"
           title="Import devis Excel"
-          description="Charge un fichier devis (.xlsx). Le parser pré-remplit les champs et regroupe les heures par métier — à toi de valider ou corriger avant import."
+          description="Charge un fichier devis Progbat (.xlsx). Le parser détecte simultanément les postes RH, les objets fabrication et les heures chantier — à toi de valider avant import."
         />
         <ImportsTabsNav />
 
@@ -291,6 +395,7 @@ function DevisImportPage() {
               setHasParsed(true);
               setFilename(null);
               setPostes([]);
+              setObjets([]);
             }}
           />
         )}
@@ -348,6 +453,24 @@ function DevisImportPage() {
               addPoste={addPoste}
             />
 
+            <DevisImportSection3Objets
+              objets={objets}
+              updateObjet={updateObjet}
+              updateMetier={updateMetier}
+            />
+
+            <DevisImportSection4Chantier
+              importMontage={importMontage}
+              setImportMontage={setImportMontage}
+              importDemontage={importDemontage}
+              setImportDemontage={setImportDemontage}
+              montageH={montageH}
+              setMontageH={setMontageH}
+              demontageH={demontageH}
+              setDemontageH={setDemontageH}
+              warnMachiniste={warnMachiniste}
+            />
+
             {errors.length > 0 && (
               <Card className="border-destructive/40 bg-destructive/5">
                 <CardContent className="space-y-1 p-4">
@@ -365,7 +488,7 @@ function DevisImportPage() {
 
             <DevisImportFooter
               errorsCount={errors.length}
-              postesCount={postes.length}
+              postesCount={postes.length + selectedObjetsCount}
               totalHeures={totals.heures}
               totalMontant={totals.montant}
               committing={committing}

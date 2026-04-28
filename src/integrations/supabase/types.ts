@@ -2152,6 +2152,21 @@ export type Database = {
             }
             Returns: Json
           }
+      import_devis_atomique_v2: {
+        Args: {
+          _affaire_id: string
+          _date_demontage: string
+          _date_montage: string
+          _devis: Json
+          _fichier_hash?: string
+          _heures_demontage?: number
+          _heures_montage?: number
+          _new_affaire: Json
+          _objets_fab?: Json
+          _postes: Json
+        }
+        Returns: Json
+      }
       is_admin: { Args: never; Returns: boolean }
       is_affaire_open: { Args: { _affaire_id: string }; Returns: boolean }
       is_chef_or_admin: { Args: never; Returns: boolean }
