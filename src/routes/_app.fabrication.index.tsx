@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { ETAPE_LABELS } from "@/hooks/use-fabrication";
+import { ETAPE_LABELS, ETAPES_ORDER } from "@/hooks/use-fabrication";
 import type { FabricationEtapeType } from "@/hooks/use-fabrication";
 import {
   useFabricationDashboard,
@@ -80,7 +80,7 @@ function FabricationDashboardPage() {
 
   const unassigned = useMemo(() => listUnassignedEtapes(objetsFiltres), [objetsFiltres]);
 
-  const types: FabricationEtapeType[] = ["be", "respo_fab", "finition", "manutention"];
+  const types: FabricationEtapeType[] = ETAPES_ORDER;
 
   // Liste des chefs projet pour le filtre (déduit des affaires)
   const chefsList = useMemo(() => {
@@ -149,7 +149,7 @@ function FabricationDashboardPage() {
         <h2 className="mb-3 text-sm font-bold uppercase tracking-wider text-muted-foreground">
           Charge par pôle
         </h2>
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           {types.map((t) => {
             const Icon = ETAPE_ICONS[t];
             const charge = computeChargeByAssignee(objetsFiltres, t);
@@ -197,7 +197,7 @@ function FabricationDashboardPage() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
             {types.map((t) => {
               const items = unassigned[t];
               if (items.length === 0) return null;

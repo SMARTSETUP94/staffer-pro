@@ -23,11 +23,12 @@ export const Route = createFileRoute("/_app/parametres/roles-fabrication")({
   component: RolesFabricationPage,
 });
 
-type FlagKey = "est_chef_projet" | "est_bureau_etude" | "est_respo_fab" | "est_finition" | "est_manutention";
+type FlagKey = "est_chef_projet" | "est_bureau_etude" | "est_usinage_numerique" | "est_respo_fab" | "est_finition" | "est_manutention";
 
 const FLAGS: { key: FlagKey; label: string; description: string }[] = [
   { key: "est_chef_projet", label: "Chef projet", description: "Pilote l'affaire de bout en bout (1 par affaire)." },
   { key: "est_bureau_etude", label: "Bureau d'étude", description: "Conçoit et prépare les plans (étape BE)." },
+  { key: "est_usinage_numerique", label: "Usinage Num.", description: "Opère la découpe CNC (étape Usinage Numérique)." },
   { key: "est_respo_fab", label: "Respo Fab", description: "Responsable d'objets en fabrication (plusieurs par affaire possible)." },
   { key: "est_finition", label: "Finition", description: "Peintres, tapissiers, finisseurs." },
   { key: "est_manutention", label: "Manutention", description: "Préparation pour livraison, chargement." },
@@ -111,7 +112,7 @@ function RolesFabricationPage() {
         </Button>
       </div>
 
-      <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+      <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
         {FLAGS.map((f) => (
           <div key={f.key} className="rounded-lg border border-border bg-card/50 p-2 text-xs">
             <p className="font-semibold">{f.label}</p>

@@ -43,6 +43,22 @@ export const ETAPE_TO_FLAG: Record<FabricationEtapeType, "est_chef_projet" | "es
   manutention: "est_manutention",
 };
 
+/** Ordre canonique des 5 étapes (BE → Usinage → Respo Fab → Finition → Manutention) */
+export const ETAPES_ORDER: FabricationEtapeType[] = ["be", "usinage", "respo_fab", "finition", "manutention"];
+
+/** Métiers du devis Progbat (pour heures prévues par métier) */
+export type FabMetier = "be" | "numerique" | "bois" | "metal" | "peinture" | "tapisserie" | "manutention";
+export const FAB_METIERS: FabMetier[] = ["be", "numerique", "bois", "metal", "peinture", "tapisserie", "manutention"];
+export const FAB_METIER_LABELS: Record<FabMetier, string> = {
+  be: "BE",
+  numerique: "Usinage Num",
+  bois: "Bois",
+  metal: "Métal",
+  peinture: "Peinture",
+  tapisserie: "Tapisserie",
+  manutention: "Manutention",
+};
+
 export interface FabricationEtape {
   id: string;
   objet_id: string;
@@ -71,9 +87,19 @@ export interface FabricationObjet {
   archive: boolean;
   created_at: string;
   a_dessiner: boolean;
+  a_usiner: boolean;
   a_construire: boolean;
   est_brut: boolean;
   a_emballer: boolean;
+  // v0.22 — heures prévues par métier (issues du devis)
+  heures_prevues_be: number;
+  heures_prevues_numerique: number;
+  heures_prevues_bois: number;
+  heures_prevues_metal: number;
+  heures_prevues_peinture: number;
+  heures_prevues_tapisserie: number;
+  heures_prevues_manutention: number;
+  budget_materiaux: number;
   etapes: FabricationEtape[];
 }
 
@@ -106,7 +132,7 @@ export function useFabricationObjets(affaireId: string | undefined) {
 
     const { data: objs, error: objErr } = await supabase
       .from("fabrication_objets")
-      .select("id, affaire_id, devis_id, reference, nom, quantite, respo_fab_id, type_finition, commentaire, ordre, archive, created_at, a_dessiner, a_construire, est_brut, a_emballer")
+      .select("id, affaire_id, devis_id, reference, nom, quantite, respo_fab_id, type_finition, commentaire, ordre, archive, created_at, a_dessiner, a_usiner, a_construire, est_brut, a_emballer, heures_prevues_be, heures_prevues_numerique, heures_prevues_bois, heures_prevues_metal, heures_prevues_peinture, heures_prevues_tapisserie, heures_prevues_manutention, budget_materiaux")
       .eq("affaire_id", affaireId)
       .eq("archive", false)
       .order("ordre", { ascending: true })
@@ -145,6 +171,14 @@ export function useFabricationObjets(affaireId: string | undefined) {
 
     const merged: FabricationObjet[] = objs.map((o) => ({
       ...o,
+      heures_prevues_be: Number(o.heures_prevues_be ?? 0),
+      heures_prevues_numerique: Number(o.heures_prevues_numerique ?? 0),
+      heures_prevues_bois: Number(o.heures_prevues_bois ?? 0),
+      heures_prevues_metal: Number(o.heures_prevues_metal ?? 0),
+      heures_prevues_peinture: Number(o.heures_prevues_peinture ?? 0),
+      heures_prevues_tapisserie: Number(o.heures_prevues_tapisserie ?? 0),
+      heures_prevues_manutention: Number(o.heures_prevues_manutention ?? 0),
+      budget_materiaux: Number(o.budget_materiaux ?? 0),
       respo_fab_name: o.respo_fab_id ? nameMap.get(o.respo_fab_id) ?? null : null,
       etapes: (etapes ?? [])
         .filter((e) => e.objet_id === o.id)
@@ -152,10 +186,7 @@ export function useFabricationObjets(affaireId: string | undefined) {
           ...e,
           assignee_name: e.assignee_id ? nameMap.get(e.assignee_id) ?? null : null,
         }))
-        .sort((a, b) => {
-          const order: FabricationEtapeType[] = ["be", "respo_fab", "finition", "manutention"];
-          return order.indexOf(a.type_etape) - order.indexOf(b.type_etape);
-        }),
+        .sort((a, b) => ETAPES_ORDER.indexOf(a.type_etape) - ETAPES_ORDER.indexOf(b.type_etape)),
     }));
 
     setObjets(merged);
@@ -180,7 +211,7 @@ export function useProfilesWithRoles() {
     setLoading(true);
     const { data } = await supabase
       .from("profiles")
-      .select("id, full_name, email, est_chef_projet, est_respo_fab, est_finition, est_manutention, est_bureau_etude")
+      .select("id, full_name, email, est_chef_projet, est_respo_fab, est_finition, est_manutention, est_bureau_etude, est_usinage_numerique")
       .order("full_name", { ascending: true, nullsFirst: false });
     setProfiles((data ?? []) as ProfileRole[]);
     setLoading(false);

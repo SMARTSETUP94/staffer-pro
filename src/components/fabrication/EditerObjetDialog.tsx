@@ -37,6 +37,9 @@ import {
   type FabricationFinitionType,
   type FabricationEtapeType,
   ETAPE_LABELS,
+  FAB_METIERS,
+  FAB_METIER_LABELS,
+  type FabMetier,
 } from "@/hooks/use-fabrication";
 
 interface Props {
@@ -50,10 +53,13 @@ const FINITIONS_VISIBLES: FabricationFinitionType[] = ["peinture", "tapisserie",
 
 interface FlagsState {
   a_dessiner: boolean;
+  a_usiner: boolean;
   a_construire: boolean;
   est_brut: boolean;
   a_emballer: boolean;
 }
+
+type HeuresState = Record<FabMetier, number>;
 
 export function EditerObjetDialog({ objet, open, onOpenChange, onSaved }: Props) {
   const [nom, setNom] = useState(objet.nom);
@@ -62,10 +68,21 @@ export function EditerObjetDialog({ objet, open, onOpenChange, onSaved }: Props)
   const [typeFinition, setTypeFinition] = useState<FabricationFinitionType>(objet.type_finition);
   const [flags, setFlags] = useState<FlagsState>({
     a_dessiner: objet.a_dessiner,
+    a_usiner: objet.a_usiner,
     a_construire: objet.a_construire,
     est_brut: objet.est_brut,
     a_emballer: objet.a_emballer,
   });
+  const [heures, setHeures] = useState<HeuresState>({
+    be: objet.heures_prevues_be,
+    numerique: objet.heures_prevues_numerique,
+    bois: objet.heures_prevues_bois,
+    metal: objet.heures_prevues_metal,
+    peinture: objet.heures_prevues_peinture,
+    tapisserie: objet.heures_prevues_tapisserie,
+    manutention: objet.heures_prevues_manutention,
+  });
+  const [budgetMateriaux, setBudgetMateriaux] = useState(objet.budget_materiaux);
   const [saving, setSaving] = useState(false);
   const [pendingFlag, setPendingFlag] = useState<{
     flagKey: keyof FlagsState;
@@ -82,10 +99,21 @@ export function EditerObjetDialog({ objet, open, onOpenChange, onSaved }: Props)
       setTypeFinition(objet.type_finition);
       setFlags({
         a_dessiner: objet.a_dessiner,
+        a_usiner: objet.a_usiner,
         a_construire: objet.a_construire,
         est_brut: objet.est_brut,
         a_emballer: objet.a_emballer,
       });
+      setHeures({
+        be: objet.heures_prevues_be,
+        numerique: objet.heures_prevues_numerique,
+        bois: objet.heures_prevues_bois,
+        metal: objet.heures_prevues_metal,
+        peinture: objet.heures_prevues_peinture,
+        tapisserie: objet.heures_prevues_tapisserie,
+        manutention: objet.heures_prevues_manutention,
+      });
+      setBudgetMateriaux(objet.budget_materiaux);
       setPendingFlag(null);
     }
   }, [open, objet]);
@@ -141,9 +169,18 @@ export function EditerObjetDialog({ objet, open, onOpenChange, onSaved }: Props)
         commentaire: commentaire.trim() || null,
         type_finition: flags.est_brut ? "aucune" : typeFinition,
         a_dessiner: flags.a_dessiner,
+        a_usiner: flags.a_usiner,
         a_construire: flags.a_construire,
         est_brut: flags.est_brut,
         a_emballer: flags.a_emballer,
+        heures_prevues_be: heures.be,
+        heures_prevues_numerique: heures.numerique,
+        heures_prevues_bois: heures.bois,
+        heures_prevues_metal: heures.metal,
+        heures_prevues_peinture: heures.peinture,
+        heures_prevues_tapisserie: heures.tapisserie,
+        heures_prevues_manutention: heures.manutention,
+        budget_materiaux: budgetMateriaux,
       })
       .eq("id", objet.id);
 
@@ -207,6 +244,11 @@ export function EditerObjetDialog({ objet, open, onOpenChange, onSaved }: Props)
                   onChange={(v) => handleFlagToggle("a_dessiner", v, "be", false)}
                 />
                 <EtapeQuestion
+                  question="L'objet nécessite de l'usinage CNC ?"
+                  value={flags.a_usiner}
+                  onChange={(v) => handleFlagToggle("a_usiner", v, "usinage", false)}
+                />
+                <EtapeQuestion
                   question="L'objet est à construire (ou existant) ?"
                   value={flags.a_construire}
                   onChange={(v) => handleFlagToggle("a_construire", v, "respo_fab", false)}
@@ -246,6 +288,52 @@ export function EditerObjetDialog({ objet, open, onOpenChange, onSaved }: Props)
                   onChange={(v) => handleFlagToggle("a_emballer", v, "manutention", false)}
                 />
               </div>
+            </div>
+
+            {/* v0.22 — Heures prévues par métier */}
+            <div className="rounded-xl border border-border bg-background p-3">
+              <div className="mb-3 text-sm font-semibold">Heures prévues par métier</div>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                {FAB_METIERS.map((m) => (
+                  <div key={m} className="grid gap-1">
+                    <Label htmlFor={`heures-${m}`} className="text-[11px] text-muted-foreground">
+                      {FAB_METIER_LABELS[m]}
+                    </Label>
+                    <Input
+                      id={`heures-${m}`}
+                      type="number"
+                      min={0}
+                      step={0.5}
+                      value={heures[m]}
+                      onChange={(e) =>
+                        setHeures((h) => ({ ...h, [m]: Math.max(0, parseFloat(e.target.value || "0")) }))
+                      }
+                      className="h-8 text-sm"
+                    />
+                  </div>
+                ))}
+                <div className="grid gap-1">
+                  <Label htmlFor="budget-mat" className="text-[11px] text-muted-foreground">
+                    Budget matériaux (€)
+                  </Label>
+                  <Input
+                    id="budget-mat"
+                    type="number"
+                    min={0}
+                    step={1}
+                    value={budgetMateriaux}
+                    onChange={(e) => setBudgetMateriaux(Math.max(0, parseFloat(e.target.value || "0")))}
+                    className="h-8 text-sm"
+                  />
+                </div>
+              </div>
+              <p className="mt-2 text-[11px] text-muted-foreground">
+                Total :{" "}
+                <span className="font-semibold text-foreground">
+                  {Object.values(heures).reduce((s, v) => s + v, 0).toFixed(1)} h
+                </span>
+                {" · "}Pré-rempli par le parser devis (v0.23) ou éditable manuellement.
+              </p>
             </div>
           </div>
 

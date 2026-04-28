@@ -47,6 +47,7 @@ export function useObjetsAffaireLight(affaireId: string | null | undefined) {
  */
 export interface FabRolesFlags {
   est_bureau_etude: boolean;
+  est_usinage_numerique?: boolean;
   est_respo_fab: boolean;
   est_finition: boolean;
   est_manutention: boolean;
@@ -55,6 +56,7 @@ export interface FabRolesFlags {
 export function useMyFabricationRoles() {
   const [flags, setFlags] = useState<FabRolesFlags>({
     est_bureau_etude: false,
+    est_usinage_numerique: false,
     est_respo_fab: false,
     est_finition: false,
     est_manutention: false,
@@ -71,13 +73,14 @@ export function useMyFabricationRoles() {
       }
       const { data } = await supabase
         .from("profiles")
-        .select("est_bureau_etude, est_respo_fab, est_finition, est_manutention")
+        .select("est_bureau_etude, est_usinage_numerique, est_respo_fab, est_finition, est_manutention")
         .eq("id", user.id)
         .maybeSingle();
       if (cancelled) return;
       if (data) {
         setFlags({
           est_bureau_etude: !!data.est_bureau_etude,
+          est_usinage_numerique: !!data.est_usinage_numerique,
           est_respo_fab: !!data.est_respo_fab,
           est_finition: !!data.est_finition,
           est_manutention: !!data.est_manutention,
@@ -91,10 +94,13 @@ export function useMyFabricationRoles() {
   return { flags, loading };
 }
 
+export type EligibleEtape = "be" | "usinage" | "respo_fab" | "finition" | "manutention";
+
 /** Pure : étapes éligibles selon les flags rôle (utilisé en tests). */
-export function getEligibleEtapesForRoles(flags: FabRolesFlags): Array<"be" | "respo_fab" | "finition" | "manutention"> {
-  const out: Array<"be" | "respo_fab" | "finition" | "manutention"> = [];
+export function getEligibleEtapesForRoles(flags: FabRolesFlags): EligibleEtape[] {
+  const out: EligibleEtape[] = [];
   if (flags.est_bureau_etude) out.push("be");
+  if (flags.est_usinage_numerique) out.push("usinage");
   if (flags.est_respo_fab) out.push("respo_fab");
   if (flags.est_finition) out.push("finition");
   if (flags.est_manutention) out.push("manutention");

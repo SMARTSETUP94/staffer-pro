@@ -16,7 +16,7 @@ export interface AssignationRow {
   metier: { libelle: string; couleur: string } | null;
 }
 
-export type FabricationEtapeTypeRow = "be" | "respo_fab" | "finition" | "manutention";
+export type FabricationEtapeTypeRow = "be" | "usinage" | "respo_fab" | "finition" | "manutention";
 
 export interface SaisieRow {
   id: string;
