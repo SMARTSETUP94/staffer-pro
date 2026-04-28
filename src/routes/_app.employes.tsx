@@ -54,6 +54,7 @@ interface EmployeRow {
   est_finition: boolean;
   est_manutention: boolean;
   est_bureau_etude: boolean;
+  est_usinage_numerique: boolean;
   secondaires: number[];
 }
 
@@ -83,6 +84,7 @@ interface FormState {
   est_finition: boolean;
   est_manutention: boolean;
   est_bureau_etude: boolean;
+  est_usinage_numerique: boolean;
   secondaires: number[];
 }
 
@@ -111,6 +113,7 @@ const emptyForm: FormState = {
   est_finition: false,
   est_manutention: false,
   est_bureau_etude: false,
+  est_usinage_numerique: false,
   secondaires: [],
 };
 
@@ -191,12 +194,13 @@ function EmployesPage() {
       est_finition: boolean;
       est_manutention: boolean;
       est_bureau_etude: boolean;
+      est_usinage_numerique: boolean;
     };
     let profileMap: Record<string, ProfileFabRow> = {};
     if (profileIds.length) {
       const { data: profs } = await supabase
         .from("profiles")
-        .select("id, matricule_silae, est_chef_projet, est_respo_fab, est_finition, est_manutention, est_bureau_etude")
+        .select("id, matricule_silae, est_chef_projet, est_respo_fab, est_finition, est_manutention, est_bureau_etude, est_usinage_numerique")
         .in("id", profileIds);
       profileMap = (profs ?? []).reduce<Record<string, ProfileFabRow>>((acc, p) => {
         acc[p.id] = p as ProfileFabRow;
@@ -217,6 +221,7 @@ function EmployesPage() {
           est_finition: prof?.est_finition ?? false,
           est_manutention: prof?.est_manutention ?? false,
           est_bureau_etude: prof?.est_bureau_etude ?? false,
+          est_usinage_numerique: prof?.est_usinage_numerique ?? false,
         };
       }),
     );
@@ -289,6 +294,7 @@ function EmployesPage() {
       est_finition: row.est_finition,
       est_manutention: row.est_manutention,
       est_bureau_etude: row.est_bureau_etude,
+      est_usinage_numerique: row.est_usinage_numerique,
       secondaires: row.secondaires.filter((id) => id !== row.metier_principal_id),
     });
     setOpen(true);
@@ -351,6 +357,7 @@ function EmployesPage() {
           est_finition: form.est_finition,
           est_manutention: form.est_manutention,
           est_bureau_etude: form.est_bureau_etude,
+          est_usinage_numerique: form.est_usinage_numerique,
         })
         .eq("id", form.profile_id);
       if (profErr) {
@@ -732,10 +739,11 @@ function EmployesPage() {
                   {!isAdmin && form.profile_id && " Lecture seule (admin requis pour modifier)."}
                 </p>
               </div>
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
                 {([
                   { key: "est_chef_projet", label: "Chef projet" },
                   { key: "est_bureau_etude", label: "Bureau d'étude" },
+                  { key: "est_usinage_numerique", label: "Usinage Num." },
                   { key: "est_respo_fab", label: "Respo Fab" },
                   { key: "est_finition", label: "Finition" },
                   { key: "est_manutention", label: "Manutention" },
