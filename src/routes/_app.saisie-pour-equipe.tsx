@@ -67,6 +67,7 @@ interface Employe {
   prenom: string;
   nom: string;
   metier_principal_id: number;
+  type_contrat: "CDI" | "CDD" | "Interim" | "Independant";
 }
 
 interface Metier {
@@ -94,6 +95,9 @@ interface Saisie {
 
 function SaisiePourEquipePage() {
   const { isChef, isAdmin, rolesLoaded } = useAuth();
+  const navigate = useNavigate({ from: "/saisie-pour-equipe" });
+  const { type: typeFilter, q: searchQuery } = Route.useSearch();
+
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
   const [employes, setEmployes] = useState<Employe[]>([]);
   const [metiers, setMetiers] = useState<Metier[]>([]);
@@ -104,6 +108,25 @@ function SaisiePourEquipePage() {
 
   const [metierFilter, setMetierFilter] = useState<string>("all");
   const [affaireFilter, setAffaireFilter] = useState<string>("all");
+
+  // Recherche debouncée 200ms
+  const [searchInput, setSearchInput] = useState(searchQuery);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    setSearchInput(searchQuery);
+  }, [searchQuery]);
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      if (searchInput !== searchQuery) {
+        navigate({ search: (prev) => ({ ...prev, q: searchInput }), replace: true });
+      }
+    }, 200);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchInput]);
 
   const [saisieDialog, setSaisieDialog] = useState<{
     open: boolean;
@@ -123,7 +146,12 @@ function SaisiePourEquipePage() {
   // Refs initiales
   useEffect(() => {
     Promise.all([
-      supabase.from("employes").select("id, prenom, nom, metier_principal_id").eq("actif", true).order("nom").limit(1000),
+      supabase
+        .from("employes")
+        .select("id, prenom, nom, metier_principal_id, type_contrat")
+        .eq("actif", true)
+        .order("nom")
+        .limit(1000),
       supabase.from("metiers").select("id, libelle, couleur").order("ordre"),
       supabase.from("affaires").select("id, numero, nom").in("statut", ["en_cours", "prospect"]).order("numero", { ascending: false }).limit(500),
     ]).then(([eRes, mRes, aRes]) => {
@@ -151,15 +179,23 @@ function SaisiePourEquipePage() {
     });
   }, [startStr, endStr, affaireFilter, reloadKey]);
 
-  // Filtres employés
+  // Filtres employés (métier + typologie + recherche fuzzy)
   const filteredEmployes = useMemo(() => {
     let list = employes;
     if (metierFilter !== "all") {
       const mid = Number(metierFilter);
       list = list.filter((e) => e.metier_principal_id === mid);
     }
+    if (typeFilter === "cdi") {
+      list = list.filter((e) => e.type_contrat === "CDI" || e.type_contrat === "CDD");
+    } else if (typeFilter === "interim") {
+      list = list.filter((e) => e.type_contrat === "Interim" || e.type_contrat === "Independant");
+    }
+    if (searchQuery.trim()) {
+      list = list.filter((e) => fuzzyMatch(`${e.prenom} ${e.nom}`, searchQuery));
+    }
     return list;
-  }, [employes, metierFilter]);
+  }, [employes, metierFilter, typeFilter, searchQuery]);
 
   // Index saisies par employé+date
   const saisieIndex = useMemo(() => {
