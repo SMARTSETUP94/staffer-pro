@@ -13,6 +13,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { isAffaireSelectable } from "@/lib/affaire-lock";
 import type { Affaire } from "@/hooks/use-planning-data";
 
 interface Props {
@@ -26,6 +27,12 @@ interface Props {
   includeOpportunites?: boolean;
   /** v0.17 — Toggle interne pour inclure les opportunités (staffing proto). */
   showOpportuniteToggle?: boolean;
+  /**
+   * v0.21 Bloc 4 — Inclure les affaires terminees/annulees.
+   * Par defaut false : seules les affaires ouvertes sont selectionnables.
+   * Mettre a true pour le filtrage Planning (lecture historique) ou pour l'admin.
+   */
+  includeClosed?: boolean;
 }
 
 export function AffaireCombobox({
@@ -36,16 +43,19 @@ export function AffaireCombobox({
   pinnedIds,
   includeOpportunites = false,
   showOpportuniteToggle = false,
+  includeClosed = false,
 }: Props) {
   const [open, setOpen] = useState(false);
   const [includeOpps, setIncludeOpps] = useState(includeOpportunites);
 
   const sorted = useMemo(() => {
     // v0.17 — Filtrer les opportunités sauf si toggle activé OU si la valeur sélectionnée en est une
+    // v0.21 Bloc 4 — Filtrer les affaires terminees/annulees sauf si la valeur courante en est une
     const filtered = affaires.filter((a) => {
-      if (a.phase !== "opportunite") return true;
-      if (includeOpps) return true;
-      return a.id === value; // garde la sélection courante visible
+      if (a.id === value) return true; // garde toujours la selection courante visible
+      if (a.phase === "opportunite" && !includeOpps) return false;
+      if (!includeClosed && !isAffaireSelectable(a)) return false;
+      return true;
     });
     const list = [...filtered].sort((a, b) =>
       a.numero.localeCompare(b.numero, "fr", { numeric: true }),
@@ -54,7 +64,7 @@ export function AffaireCombobox({
     const pinned = list.filter((a) => pinnedIds.has(a.id));
     const rest = list.filter((a) => !pinnedIds.has(a.id));
     return { pinned, rest };
-  }, [affaires, pinnedIds, includeOpps, value]);
+  }, [affaires, pinnedIds, includeOpps, value, includeClosed]);
 
   const selected = affaires.find((a) => a.id === value);
 
