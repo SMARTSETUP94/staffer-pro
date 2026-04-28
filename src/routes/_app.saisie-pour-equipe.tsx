@@ -181,11 +181,7 @@ function SaisiePourEquipePage() {
       const mid = Number(metierFilter);
       list = list.filter((e) => e.metier_principal_id === mid);
     }
-    if (typeFilter === "cdi") {
-      list = list.filter((e) => e.type_contrat === "CDI" || e.type_contrat === "CDD");
-    } else if (typeFilter === "interim") {
-      list = list.filter((e) => e.type_contrat === "Interim" || e.type_contrat === "Independant");
-    }
+    list = filterByTypologie(list, typeFilter);
     if (searchQuery.trim()) {
       list = list.filter((e) => fuzzyMatch(`${e.prenom} ${e.nom}`, searchQuery));
     }
