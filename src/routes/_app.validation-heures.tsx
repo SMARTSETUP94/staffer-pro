@@ -54,6 +54,7 @@ interface SaisieRow {
   motif_rejet: string | null;
   valide_le: string | null;
   rejete_le: string | null;
+  saisi_par_chef: boolean | null;
   employe: { prenom: string; nom: string } | null;
   affaire: { numero: string; nom: string } | null;
   assignation: { metier: { libelle: string; couleur: string } | null } | null;
