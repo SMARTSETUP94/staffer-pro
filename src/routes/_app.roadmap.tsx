@@ -44,6 +44,37 @@ interface RoadmapPlanned {
 const RELEASES: RoadmapRelease[] = [
   {
     date: "2026-04-28",
+    version: "v0.23.1",
+    title: "Hotfix UX — 3 fixes groupés",
+    entries: [
+      {
+        type: "fix",
+        title: "🚨 Fusion onglet Devis + Devis Progbat (un seul upload)",
+        description:
+          "Régression UX bloquante v0.23.0 : 2 onglets séparés pour le même fichier .xlsx Progbat. Fusion en un seul flux : 1 upload → parsing dual (postes RH + objets fabrication) → un écran de validation chef avec sections 📋 Postes / 🛠️ Objets fab / 🏗️ Heures chantier → bouton « Valider import » → transaction atomique via nouvelle RPC `import_devis_atomique_v2` (postes + objets + heures montage/démontage en une seule transaction, hash anti-doublon). Onglet « Devis Progbat » supprimé de ImportsTabsNav. Route `/devis/progbat-import` → redirect 301 vers `/devis/import` (rétrocompat liens). Warning visuel sans blocage si poste « machiniste » détecté ET heures chantier cochées (anti double-comptage, reco B).",
+      },
+      {
+        type: "improvement",
+        title: "🛠️ Export Planning all-in-one (.zip)",
+        description:
+          "Bouton « Exporter toutes les vues (.zip) » sur /export. Génère un zip `planning-export-{YYYY-MM-DD}-{YYYY-MM-DD}.zip` contenant : (1) le .xlsx multi-vues (CDI-CDD / Intérim / Synthèse / Heures par employé / Flotte avec onglet Véhicules ajouté), (2) la Feuille de route .xlsx (un onglet par jour de la plage). 100% client-side via JSZip — aucune nouvelle surface serveur, aucun nouveau secret. Plage limitée à 4 semaines comme l'export simple.",
+      },
+      {
+        type: "improvement",
+        title: "🛠️ Filtres Saisie pour équipe (typologie + recherche fuzzy)",
+        description:
+          "Page /saisie-pour-equipe : ajout d'un ToggleGroup typologie (Tous / CDI-CDD / Intérim-Indép.) + Input recherche nom (debounce 200ms, fuzzy maison lowercase + NFD strip diacritics + includes — « Léa » match « lea », « François » match « francois »). Persistance de l'état en query string via validateSearch + zod-adapter (`fallback()` + `stripSearchParams`) — partageable et restauré au reload. 0 nouvelle dépendance fuzzy.",
+      },
+      {
+        type: "improvement",
+        title: "Tests Vitest +32 (393 tests, target ≥380)",
+        description:
+          "Nouveaux fichiers : `saisie-equipe-filter.test.ts` (12 tests fuzzy + ToggleGroup), `planning-zip-export.test.ts` (7 tests workbook multi-vues + onglet Flotte + composition zip JSZip), `devis-import-v2.test.ts` (13 tests détection machiniste reco B + contrat RPC v2 10 paramètres + redirect progbat-import). Helpers extraits pour testabilité : `src/lib/saisie-equipe-filter.ts`, `src/lib/devis-import-v2-helpers.ts`. Build tsc clean, 393/393 verts.",
+      },
+    ],
+  },
+  {
+    date: "2026-04-28",
     version: "v0.23.0",
     title: "Parser devis Progbat — import objets fabrication",
     entries: [
