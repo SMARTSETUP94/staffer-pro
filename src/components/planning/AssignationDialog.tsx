@@ -90,6 +90,8 @@ export function AssignationDialog({
   const [slot, setSlot] = useState<Slot>("JOURNEE");
   const [heures, setHeures] = useState<number>(8);
   const [notes, setNotes] = useState<string>("");
+  const [typeOperation, setTypeOperation] = useState<string>("");
+  const [estChefJour, setEstChefJour] = useState<boolean>(false);
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [confirmOpportunite, setConfirmOpportunite] = useState(false);
