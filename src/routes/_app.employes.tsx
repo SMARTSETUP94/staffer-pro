@@ -221,6 +221,7 @@ function EmployesPage() {
           est_finition: prof?.est_finition ?? false,
           est_manutention: prof?.est_manutention ?? false,
           est_bureau_etude: prof?.est_bureau_etude ?? false,
+          est_usinage_numerique: prof?.est_usinage_numerique ?? false,
         };
       }),
     );
