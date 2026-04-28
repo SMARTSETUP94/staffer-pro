@@ -59,6 +59,20 @@ export const FAB_METIER_LABELS: Record<FabMetier, string> = {
   manutention: "Manutention",
 };
 
+/** Mapping métier devis → étape fabrication (mirror SQL etape_for_metier) */
+export function etapeForMetier(metier: FabMetier): FabricationEtapeType | null {
+  switch (metier) {
+    case "be": return "be";
+    case "numerique": return "usinage";
+    case "bois": return "respo_fab";
+    case "metal": return "respo_fab";
+    case "peinture": return "finition";
+    case "tapisserie": return "finition";
+    case "manutention": return "manutention";
+    default: return null;
+  }
+}
+
 export interface FabricationEtape {
   id: string;
   objet_id: string;
