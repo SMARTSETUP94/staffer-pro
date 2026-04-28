@@ -35,6 +35,9 @@ import { WeekPicker } from "@/components/planning/WeekPicker";
 import { cn } from "@/lib/utils";
 import { exportHeuresSilae, type HeuresExportRow } from "@/lib/heures-export";
 import { PageBreadcrumbs } from "@/components/PageBreadcrumbs";
+import { SaisirPourEmployeDialog } from "@/components/heures/SaisirPourEmployeDialog";
+import { SaisieChefBadge } from "@/components/heures/SaisieChefBadge";
+import { UserCog } from "lucide-react";
 
 export const Route = createFileRoute("/_app/validation-heures")({
   head: () => ({ meta: [{ title: "Validation heures — Planning chantiers" }] }),
