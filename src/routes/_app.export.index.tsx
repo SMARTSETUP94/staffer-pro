@@ -38,6 +38,7 @@ function ExportPage() {
     startOfWeek(new Date(), { weekStartsOn: 1 }),
   );
   const [exporting, setExporting] = useState(false);
+  const [zipping, setZipping] = useState(false);
 
   // Sécurise l'ordre + plafonne à 4 semaines
   const { rangeStart, weekCount, tooMany } = useMemo(() => {
@@ -64,6 +65,8 @@ function ExportPage() {
 
   // On charge la plage entière en une seule passe
   const data = usePlanningData(rangeStart, rangeEnd);
+  const { vehicules } = useVehicules();
+  const { trajets } = useTrajetsWeek(rangeStart, rangeEnd);
 
   const cdiCount = data.employes.filter(
     (e) => e.type_contrat === "CDI" || e.type_contrat === "CDD",
@@ -88,6 +91,23 @@ function ExportPage() {
         consommation: data.consommation,
         absences: data.absences,
         chefsById: data.chefsById,
+        vehicules: vehicules.filter((v) => v.actif).map((v) => ({
+          id: v.id,
+          nom: v.nom,
+          immatriculation: v.immatriculation,
+          type: v.type,
+        })),
+        trajets: trajets.map((t) => ({
+          id: t.id,
+          date: t.date,
+          heure_depart: t.heure_depart,
+          vehicule_id: t.vehicule_id,
+          chauffeur_id: t.chauffeur_id,
+          adresse_depart: t.adresse_depart,
+          adresse_arrivee: t.adresse_arrivee,
+          categorie: t.categorie,
+          statut_soustraitance: t.statut_soustraitance,
+        })),
       });
       toast.success(
         weekStarts.length > 1
