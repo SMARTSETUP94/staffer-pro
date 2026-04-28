@@ -496,6 +496,18 @@ function PlanningPage() {
         }}
       />
 
+      <BulkStafferDialog
+        open={bulkStafferOpen}
+        onOpenChange={setBulkStafferOpen}
+        weekStart={weekStart}
+        employes={employes}
+        affaires={affaires}
+        metiers={metiers}
+        devisLots={devisLots}
+        assignations={assignations}
+        onSaved={refresh}
+      />
+
       <TrajetDialog
         open={trajetDlgOpen}
         onOpenChange={setTrajetDlgOpen}
