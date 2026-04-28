@@ -51,6 +51,7 @@
     "@tanstack/react-router": "^1.168.0",
     "@tanstack/react-start": "^1.167.14",
     "@tanstack/router-plugin": "^1.167.10",
+    "@tanstack/zod-adapter": "^1.166.9",
     "@types/papaparse": "^5.5.2",
     "@vitest/ui": "^2.1.9",
     "class-variance-authority": "^0.7.1",
