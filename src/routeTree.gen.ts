@@ -53,6 +53,7 @@ import { Route as AppFabricationMesEtapesRouteImport } from './routes/_app.fabri
 import { Route as AppExportDemandesDevisRouteImport } from './routes/_app.export.demandes-devis'
 import { Route as AppEmployesImportRouteImport } from './routes/_app.employes.import'
 import { Route as AppDevisRattachementHistoriqueRouteImport } from './routes/_app.devis.rattachement-historique'
+import { Route as AppDevisProgbatImportRouteImport } from './routes/_app.devis.progbat-import'
 import { Route as AppDevisImportRouteImport } from './routes/_app.devis.import'
 import { Route as AppDevisHistoriqueRouteImport } from './routes/_app.devis.historique'
 import { Route as AppAffairesAffaireIdRouteImport } from './routes/_app.affaires.$affaireId'
@@ -286,6 +287,11 @@ const AppDevisRattachementHistoriqueRoute =
     path: '/devis/rattachement-historique',
     getParentRoute: () => AppRoute,
   } as any)
+const AppDevisProgbatImportRoute = AppDevisProgbatImportRouteImport.update({
+  id: '/devis/progbat-import',
+  path: '/devis/progbat-import',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppDevisImportRoute = AppDevisImportRouteImport.update({
   id: '/devis/import',
   path: '/devis/import',
@@ -378,6 +384,7 @@ export interface FileRoutesByFullPath {
   '/affaires/$affaireId': typeof AppAffairesAffaireIdRouteWithChildren
   '/devis/historique': typeof AppDevisHistoriqueRoute
   '/devis/import': typeof AppDevisImportRoute
+  '/devis/progbat-import': typeof AppDevisProgbatImportRoute
   '/devis/rattachement-historique': typeof AppDevisRattachementHistoriqueRoute
   '/employes/import': typeof AppEmployesImportRoute
   '/export/demandes-devis': typeof AppExportDemandesDevisRoute
@@ -431,6 +438,7 @@ export interface FileRoutesByTo {
   '/admin/feedback': typeof AppAdminFeedbackRoute
   '/devis/historique': typeof AppDevisHistoriqueRoute
   '/devis/import': typeof AppDevisImportRoute
+  '/devis/progbat-import': typeof AppDevisProgbatImportRoute
   '/devis/rattachement-historique': typeof AppDevisRattachementHistoriqueRoute
   '/employes/import': typeof AppEmployesImportRoute
   '/export/demandes-devis': typeof AppExportDemandesDevisRoute
@@ -488,6 +496,7 @@ export interface FileRoutesById {
   '/_app/affaires/$affaireId': typeof AppAffairesAffaireIdRouteWithChildren
   '/_app/devis/historique': typeof AppDevisHistoriqueRoute
   '/_app/devis/import': typeof AppDevisImportRoute
+  '/_app/devis/progbat-import': typeof AppDevisProgbatImportRoute
   '/_app/devis/rattachement-historique': typeof AppDevisRattachementHistoriqueRoute
   '/_app/employes/import': typeof AppEmployesImportRoute
   '/_app/export/demandes-devis': typeof AppExportDemandesDevisRoute
@@ -545,6 +554,7 @@ export interface FileRouteTypes {
     | '/affaires/$affaireId'
     | '/devis/historique'
     | '/devis/import'
+    | '/devis/progbat-import'
     | '/devis/rattachement-historique'
     | '/employes/import'
     | '/export/demandes-devis'
@@ -598,6 +608,7 @@ export interface FileRouteTypes {
     | '/admin/feedback'
     | '/devis/historique'
     | '/devis/import'
+    | '/devis/progbat-import'
     | '/devis/rattachement-historique'
     | '/employes/import'
     | '/export/demandes-devis'
@@ -654,6 +665,7 @@ export interface FileRouteTypes {
     | '/_app/affaires/$affaireId'
     | '/_app/devis/historique'
     | '/_app/devis/import'
+    | '/_app/devis/progbat-import'
     | '/_app/devis/rattachement-historique'
     | '/_app/employes/import'
     | '/_app/export/demandes-devis'
@@ -1000,6 +1012,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDevisRattachementHistoriqueRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/devis/progbat-import': {
+      id: '/_app/devis/progbat-import'
+      path: '/devis/progbat-import'
+      fullPath: '/devis/progbat-import'
+      preLoaderRoute: typeof AppDevisProgbatImportRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/devis/import': {
       id: '/_app/devis/import'
       path: '/devis/import'
@@ -1154,6 +1173,7 @@ interface AppRouteChildren {
   AppAffairesAffaireIdRoute: typeof AppAffairesAffaireIdRouteWithChildren
   AppDevisHistoriqueRoute: typeof AppDevisHistoriqueRoute
   AppDevisImportRoute: typeof AppDevisImportRoute
+  AppDevisProgbatImportRoute: typeof AppDevisProgbatImportRoute
   AppDevisRattachementHistoriqueRoute: typeof AppDevisRattachementHistoriqueRoute
   AppFabricationMesEtapesRoute: typeof AppFabricationMesEtapesRoute
   AppParametresLieuxRoute: typeof AppParametresLieuxRoute
@@ -1189,6 +1209,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAffairesAffaireIdRoute: AppAffairesAffaireIdRouteWithChildren,
   AppDevisHistoriqueRoute: AppDevisHistoriqueRoute,
   AppDevisImportRoute: AppDevisImportRoute,
+  AppDevisProgbatImportRoute: AppDevisProgbatImportRoute,
   AppDevisRattachementHistoriqueRoute: AppDevisRattachementHistoriqueRoute,
   AppFabricationMesEtapesRoute: AppFabricationMesEtapesRoute,
   AppParametresLieuxRoute: AppParametresLieuxRoute,
