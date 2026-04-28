@@ -150,6 +150,8 @@ function SaisiePourEquipePage() {
 
   const metierOf = (id: number) => metiers.find((m) => m.id === id);
 
+  if (rolesLoaded && !isChef && !isAdmin) return <Navigate to="/dashboard" />;
+
   return (
     <div className="space-y-6 p-6">
       <PageBreadcrumbs steps={[{ label: "Équipes" }, { label: "Saisie pour l'équipe" }]} />
