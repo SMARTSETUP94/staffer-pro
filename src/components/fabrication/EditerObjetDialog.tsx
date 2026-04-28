@@ -169,9 +169,18 @@ export function EditerObjetDialog({ objet, open, onOpenChange, onSaved }: Props)
         commentaire: commentaire.trim() || null,
         type_finition: flags.est_brut ? "aucune" : typeFinition,
         a_dessiner: flags.a_dessiner,
+        a_usiner: flags.a_usiner,
         a_construire: flags.a_construire,
         est_brut: flags.est_brut,
         a_emballer: flags.a_emballer,
+        heures_prevues_be: heures.be,
+        heures_prevues_numerique: heures.numerique,
+        heures_prevues_bois: heures.bois,
+        heures_prevues_metal: heures.metal,
+        heures_prevues_peinture: heures.peinture,
+        heures_prevues_tapisserie: heures.tapisserie,
+        heures_prevues_manutention: heures.manutention,
+        budget_materiaux: budgetMateriaux,
       })
       .eq("id", objet.id);
 
@@ -235,6 +244,11 @@ export function EditerObjetDialog({ objet, open, onOpenChange, onSaved }: Props)
                   onChange={(v) => handleFlagToggle("a_dessiner", v, "be", false)}
                 />
                 <EtapeQuestion
+                  question="L'objet nécessite de l'usinage CNC ?"
+                  value={flags.a_usiner}
+                  onChange={(v) => handleFlagToggle("a_usiner", v, "usinage", false)}
+                />
+                <EtapeQuestion
                   question="L'objet est à construire (ou existant) ?"
                   value={flags.a_construire}
                   onChange={(v) => handleFlagToggle("a_construire", v, "respo_fab", false)}
@@ -274,6 +288,52 @@ export function EditerObjetDialog({ objet, open, onOpenChange, onSaved }: Props)
                   onChange={(v) => handleFlagToggle("a_emballer", v, "manutention", false)}
                 />
               </div>
+            </div>
+
+            {/* v0.22 — Heures prévues par métier */}
+            <div className="rounded-xl border border-border bg-background p-3">
+              <div className="mb-3 text-sm font-semibold">Heures prévues par métier</div>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                {FAB_METIERS.map((m) => (
+                  <div key={m} className="grid gap-1">
+                    <Label htmlFor={`heures-${m}`} className="text-[11px] text-muted-foreground">
+                      {FAB_METIER_LABELS[m]}
+                    </Label>
+                    <Input
+                      id={`heures-${m}`}
+                      type="number"
+                      min={0}
+                      step={0.5}
+                      value={heures[m]}
+                      onChange={(e) =>
+                        setHeures((h) => ({ ...h, [m]: Math.max(0, parseFloat(e.target.value || "0")) }))
+                      }
+                      className="h-8 text-sm"
+                    />
+                  </div>
+                ))}
+                <div className="grid gap-1">
+                  <Label htmlFor="budget-mat" className="text-[11px] text-muted-foreground">
+                    Budget matériaux (€)
+                  </Label>
+                  <Input
+                    id="budget-mat"
+                    type="number"
+                    min={0}
+                    step={1}
+                    value={budgetMateriaux}
+                    onChange={(e) => setBudgetMateriaux(Math.max(0, parseFloat(e.target.value || "0")))}
+                    className="h-8 text-sm"
+                  />
+                </div>
+              </div>
+              <p className="mt-2 text-[11px] text-muted-foreground">
+                Total :{" "}
+                <span className="font-semibold text-foreground">
+                  {Object.values(heures).reduce((s, v) => s + v, 0).toFixed(1)} h
+                </span>
+                {" · "}Pré-rempli par le parser devis (v0.23) ou éditable manuellement.
+              </p>
             </div>
           </div>
 
