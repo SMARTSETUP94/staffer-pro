@@ -435,6 +435,12 @@ function ValidationHeuresPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <SaisirPourEmployeDialog
+        open={saisirOpen}
+        onOpenChange={setSaisirOpen}
+        onCreated={() => setReloadKey((k) => k + 1)}
+      />
     </div>
   );
 }
