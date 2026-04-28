@@ -130,6 +130,7 @@ function buildSections(role: EffRole, validationCount: number): NavSection[] {
         { title: "Rôles fabrication", url: "/parametres/roles-fabrication", icon: Hammer, show: () => true },
         { title: "Lieux entreprise", url: "/parametres/lieux", icon: Warehouse, show: () => true },
         { title: "Rattachement devis", url: "/devis/rattachement-historique", icon: ClipboardList, show: () => true },
+        { title: "Audit heures", url: "/audit-heures", icon: ClipboardCheck, show: () => true },
         { title: "Signalements", url: "/admin/feedback", icon: MessageCircle, show: () => true },
         { title: "Roadmap", url: "/roadmap", icon: Map, show: () => true },
       ],
