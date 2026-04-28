@@ -310,8 +310,35 @@ export function AssignationDialog({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>
-              {employe.prenom} {employe.nom} — {format(date, "EEEE d MMMM yyyy", { locale: fr })}
+            <DialogTitle className="flex flex-wrap items-center gap-2">
+              <span>{employe.prenom} {employe.nom} —</span>
+              {editingId ? (
+                <span>{format(dateOverride, "EEEE d MMMM yyyy", { locale: fr })}</span>
+              ) : (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className={cn("h-8 gap-2 font-normal", !dateOverride && "text-muted-foreground")}
+                    >
+                      <CalendarIcon className="h-3.5 w-3.5" />
+                      {format(dateOverride, "EEEE d MMMM yyyy", { locale: fr })}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={dateOverride}
+                      onSelect={(d) => d && setDateOverride(d)}
+                      weekStartsOn={1}
+                      locale={fr}
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
+              )}
             </DialogTitle>
             <DialogDescription>
               {existing.length === 0
