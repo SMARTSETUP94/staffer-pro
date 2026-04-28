@@ -3,7 +3,6 @@ import { useEffect, useMemo, useState } from "react";
 import { format, parseISO, subDays } from "date-fns";
 import { fr } from "date-fns/locale";
 import {
-  ClipboardCheck,
   Loader2,
   User as UserIcon,
   ShieldCheck,
@@ -256,7 +255,6 @@ function AuditHeuresPage() {
       <PageHeader
         title="Audit des heures"
         description="Trace complète des saisies, modifications, validations et rejets sur les 500 dernières actions."
-        icon={<ClipboardCheck className="h-5 w-5" />}
       />
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
