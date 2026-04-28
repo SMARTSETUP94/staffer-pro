@@ -18,6 +18,7 @@ import { MultiFilter } from "@/components/planning/MultiFilter";
 import { AddInterimDialog } from "@/components/planning/AddInterimDialog";
 import { BulkStafferDialog } from "@/components/planning/BulkStafferDialog";
 import { FlotteGrid } from "@/components/planning/FlotteGrid";
+import { FeuilleRouteView } from "@/components/planning/FeuilleRouteView";
 import { SuggestionsTrajetsBloc } from "@/components/planning/SuggestionsTrajetsBloc";
 import { TrajetDialog } from "@/components/flotte/TrajetDialog";
 import { ExportTrajetsSoustraitanceDialog } from "@/components/flotte/ExportTrajetsSoustraitanceDialog";
