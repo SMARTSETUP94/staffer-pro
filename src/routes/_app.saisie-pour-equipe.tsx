@@ -55,13 +55,7 @@ export const Route = createFileRoute("/_app/saisie-pour-equipe")({
   component: SaisiePourEquipePage,
 });
 
-/** Fuzzy maison : lowercase + strip diacritics + includes. */
-function fuzzyMatch(haystack: string, needle: string): boolean {
-  if (!needle) return true;
-  const norm = (s: string) =>
-    s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  return norm(haystack).includes(norm(needle));
-}
+// fuzzyMatch / filterByTypologie : importés depuis @/lib/saisie-equipe-filter (testés unitairement)
 
 interface Employe {
   id: string;
