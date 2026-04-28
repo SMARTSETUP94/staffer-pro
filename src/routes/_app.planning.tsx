@@ -474,6 +474,14 @@ function PlanningPage() {
                   }}
                 />
               </TabsContent>
+
+              <TabsContent value="feuilleroute" className="mt-4">
+                <FeuilleRouteView
+                  affaires={affaires}
+                  employes={employes}
+                  metiers={metiers}
+                />
+              </TabsContent>
             </Tabs>
           </div>
         )}
