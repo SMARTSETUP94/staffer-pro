@@ -435,6 +435,12 @@ function ValidationHeuresPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <SaisirPourEmployeDialog
+        open={saisirOpen}
+        onOpenChange={setSaisirOpen}
+        onCreated={() => setReloadKey((k) => k + 1)}
+      />
     </div>
   );
 }
@@ -510,6 +516,7 @@ function RowItem({
           <Badge variant="outline" className={cn("text-[10px]", statutBadge[row.statut])}>
             {row.statut}
           </Badge>
+          {row.saisi_par_chef && <SaisieChefBadge saisieId={row.id} />}
         </div>
         <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-0.5 text-xs text-muted-foreground">
           <span>
