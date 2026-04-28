@@ -86,6 +86,7 @@ export interface ProfileRole {
   est_finition: boolean;
   est_manutention: boolean;
   est_bureau_etude: boolean;
+  est_usinage_numerique: boolean;
 }
 
 /**

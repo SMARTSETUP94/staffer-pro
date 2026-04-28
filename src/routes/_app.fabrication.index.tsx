@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
-  Hammer, Loader2, Box, Brush, Pencil, Wrench, Truck, AlertCircle, Send,
+  Hammer, Loader2, Box, Brush, Pencil, Wrench, Truck, AlertCircle, Send, Cog,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
