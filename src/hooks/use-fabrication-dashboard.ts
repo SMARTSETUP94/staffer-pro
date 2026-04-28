@@ -244,6 +244,7 @@ export function listUnassignedEtapes(objets: DashObjet[]) {
     }>
   > = {
     be: [],
+    usinage: [],
     respo_fab: [],
     finition: [],
     manutention: [],

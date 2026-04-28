@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Hammer, Loader2, Wrench, Brush, Box, Pencil } from "lucide-react";
+import { Hammer, Loader2, Wrench, Brush, Box, Pencil, Cog } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ETAPE_LABELS, STATUT_ICONS, STATUT_LABELS } from "@/hooks/use-fabrication";
 import type { FabricationEtapeType } from "@/hooks/use-fabrication";
@@ -12,6 +12,7 @@ export const Route = createFileRoute("/_app/fabrication/mes-etapes")({
 
 const ETAPE_ICONS: Record<FabricationEtapeType, typeof Hammer> = {
   be: Pencil,
+  usinage: Cog,
   respo_fab: Wrench,
   finition: Brush,
   manutention: Box,
