@@ -383,10 +383,12 @@ function PlanningPage() {
                   metiers={metiers}
                   assignations={assignations}
                   consommation={consommation}
+                  devisLots={devisLots}
                   showWeekend={showWeekend}
                   filterAffaireIds={filterAffaireStr}
                   filterMetierIds={filterMetierNum}
                   onSelectAffaire={handleSelectAffaireFromSynthese}
+                  onChanged={refresh}
                 />
               </TabsContent>
 
