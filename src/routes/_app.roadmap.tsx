@@ -43,6 +43,110 @@ interface RoadmapPlanned {
 
 const RELEASES: RoadmapRelease[] = [
   {
+    date: "2026-04-28",
+    version: "v0.21.0",
+    title:
+      "Saisie heures par chef + bulk staffing + feuille de route + verrouillage affaires",
+    entries: [
+      {
+        type: "feature",
+        title: "Saisie d'heures par chef pour un employé",
+        description:
+          "Modale ponctuelle « + Saisir pour un employé » depuis Validation heures (dropdown employé + date + horaires + auto-calc) + nouvelle page /saisie-pour-equipe (sidebar Équipes) avec grille employé × jour, filtres période/employés/métier/affaire + modale « Saisir en bulk » multi-employés × multi-jours (default 8h-17h pause 60min, aperçu avant validation, skip cellules déjà saisies). Toutes les saisies créées en statut 'valide' (la saisie chef vaut validation). saisi_par + saisi_par_chef remplis automatiquement par trigger DB.",
+      },
+      {
+        type: "feature",
+        title: "Page admin /audit-heures (traçabilité RH)",
+        description:
+          "Nouvelle route admin only avec stats globales, filtres par période / employé / type d'action (création_self, création_chef, soumission, validation, rejet, acquittement, édition), badges colorés et export CSV. S'appuie sur heures_saisies_historique enrichi (action_type + pour_compte_de) pour permettre un audit RH complet.",
+      },
+      {
+        type: "feature",
+        title: "Badge 👤 + popover historique sur saisies créées par un chef",
+        description:
+          "Composant SaisieChefBadge affiché sur les cellules dont saisi_par_chef = true. Au clic, popover qui détaille qui a saisi quoi pour qui et quand, avec extraction depuis heures_saisies_historique. N'apparaît jamais sur les saisies pré-v0.21 (backfill saisi_par_chef = false).",
+      },
+      {
+        type: "feature",
+        title: "Notification in-app à l'employé sur saisie chef",
+        description:
+          "Trigger DB notify_saisie_par_chef qui pousse une notification « Heures saisies par votre chef » à l'employé concerné (avec deep-link /mes-heures) à chaque insert avec saisi_par_chef = true. Anti-spam : pas de notif si statut + heures + horaires inchangés sur un UPDATE.",
+      },
+      {
+        type: "feature",
+        title: "Verrouillage des affaires en statut termine / annule",
+        description:
+          "Helpers SQL is_affaire_open() + can_saisie_on_affaire() (Option B : saisies heures autorisées jusqu'à date_demontage incluse, fallback strict si NULL ; admin override) + helper TS isAffaireSelectable + filtrage UI cohérent sur Planning, Validation heures, Module Fabrication, Demandes transport. RLS heures_saisies_self_insert durcie. Index idx_affaires_statut. Trigger check_affaire_open_for_assignation bloque les modifs structurelles d'assignations sur affaire fermée.",
+      },
+      {
+        type: "feature",
+        title: "Bulk staffing Planning (Ctrl+clic + modale dédiée)",
+        description:
+          "Sélection multi-cellules par Ctrl+clic avec cadre violet épais (ring-4) et barre flottante sticky « N cellules sélectionnées » → bouton « Affecter ces N cellules » qui ouvre la modale d'affectation pré-remplie. Nouvelle modale « + Staffer en bulk » à côté du WeekPicker : multi-select employés (groupés par métier avec raccourcis « Tous CDI / Tous Intérim »), multi-select dates, aperçu avec cellules occupées en jaune (skip auto), création en lot. Helper computeBulkPreview centralisé + 12 tests Vitest.",
+      },
+      {
+        type: "feature",
+        title: "Vue « Feuille de route » sur Planning (6e onglet)",
+        description:
+          "Nouvel onglet « Feuille de route » : 1 jour = 1 page, blocs chantiers verticaux avec équipe staffée, type d'opération et chef du jour. Navigation J-1 / J+1, filtres par adresse et par responsable. Helper resolveResponsable centralisé avec 4 niveaux de fallback : est_chef_jour → chef_projet → manutention staffé → chargé d'affaires. 6 tests Vitest.",
+      },
+      {
+        type: "feature",
+        title: "Désignation chef du jour par chantier × date",
+        description:
+          "Nouveau champ assignations.est_chef_jour + trigger enforce_unique_chef_jour qui garantit un seul chef du jour par couple (affaire_id, date) — désigner un nouveau chef bascule automatiquement le précédent à false. Index partiel idx_assignations_chef_jour. Checkbox dans AssignationDialog.",
+      },
+      {
+        type: "feature",
+        title: "Champ type_operation sur assignation",
+        description:
+          "Nouveau champ assignations.type_operation (text libre) avec combobox dans AssignationDialog proposant 8 options pré-remplies (Montage, Démontage, Préparation, Livraison, Récupération, Maintenance, Repérage, Atelier). Affiché sur la feuille de route quotidienne.",
+      },
+      {
+        type: "feature",
+        title: "Export Excel « Feuille de route » (template équipes terrain)",
+        description:
+          "Bouton « Exporter Excel » sur la feuille de route avec dialog plage 1-7 jours. Format conforme au template terrain : date_header → chantier_header → chantier_data → liste équipe (NOM Prénom en majuscule). Génération via XLSX.",
+      },
+      {
+        type: "feature",
+        title: "Export PDF imprimable feuille de route",
+        description:
+          "Bouton « Exporter PDF » : A4 portrait, 1 page = 1 jour, blocs chantiers verticaux. Réutilise le moteur PDF existant.",
+      },
+      {
+        type: "feature",
+        title: "Édition directe depuis Planning par chantier (Bloc 6)",
+        description:
+          "Clic sur cellule vide chantier × jour → ouvre la modale d'affectation pré-remplie (affaire + date + lot devis si unique). Ctrl+clic multi-cellules même ligne → modale bulk multi-employé multi-jour avec skip des cellules occupées. Cellules sur affaires termine/annule passent en lecture seule avec icône cadenas. Helper parchantier-edit.ts + 8 tests Vitest.",
+      },
+      {
+        type: "fix",
+        title: "Intérimaire : date d'assignation désormais éditable",
+        description:
+          "Correction d'un bug qui forçait silencieusement la date au lundi de la semaine courante lors de la création d'une assignation pour un intérimaire. La date est maintenant éditable via le Calendar comme pour les CDI.",
+      },
+      {
+        type: "improvement",
+        title: "30 nouveaux tests Vitest (229 au total)",
+        description:
+          "12 affaire-lock + 12 bulk-staffer + 6 feuille-route-helpers + 4 feuille-route-excel + 8 parchantier-edit. Couverture du verrouillage des affaires, des conflits AM/PM/full sur bulk staffing, des 4 niveaux de fallback chef du jour, du format Excel template, et du skip des cellules occupées en édition par chantier.",
+      },
+      {
+        type: "refactor",
+        title: "4 migrations DB consolidées",
+        description:
+          "(1) affaire-lock : is_affaire_open + can_saisie_on_affaire + RLS heures_saisies_self_insert + index statut. (2) audit-heures : saisi_par + saisi_par_chef sur heures_saisies + action_type + pour_compte_de sur heures_saisies_historique + trigger set_saisie_authorship + trigger log_heures_saisies_transition enrichi + RLS hsh_select_admin + 3 indexes audit. (3) notify-saisie-chef : trigger notify_saisie_par_chef avec anti-spam. (4) feuille-route : assignations.type_operation + assignations.est_chef_jour + trigger enforce_unique_chef_jour + index partiel.",
+      },
+      {
+        type: "improvement",
+        title: "Audit pré-publish v0.21 — RLS / triggers / perf",
+        description:
+          "Audit en lecture stricte sur 10 axes : RLS et récursion (helpers SECURITY DEFINER avec search_path = public, pas de référence auto-récursive sur heures_saisies), triggers DB (pas de boucle infinie, anti-spam notif validé), régression saisie employé (compatibilité pré-v0.21 préservée, badge 👤 absent sur vieilles lignes), saisie chef (statut 'valide' uniformément appliqué), verrouillage affaires (Option B respectée), bulk staffing (skip occupées + filtrage isAffaireSelectable), feuille de route (4 niveaux de fallback testés), édition par chantier (lock cohérent), tests gaps identifiés, cohérence UI (ordre onglets Planning + sidebar). 0 BLOCKER. Findings MEDIUM reportés en v0.21.1.",
+      },
+    ],
+  },
+  {
     date: "2026-04-25",
     version: "v0.20.0",
     title: "Hotfix accès employé /fabrication/mes-etapes + audit pré-publish v0.20",
