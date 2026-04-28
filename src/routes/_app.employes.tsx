@@ -357,6 +357,7 @@ function EmployesPage() {
           est_finition: form.est_finition,
           est_manutention: form.est_manutention,
           est_bureau_etude: form.est_bureau_etude,
+          est_usinage_numerique: form.est_usinage_numerique,
         })
         .eq("id", form.profile_id);
       if (profErr) {
