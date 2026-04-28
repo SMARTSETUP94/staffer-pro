@@ -79,6 +79,7 @@ function ValidationHeuresPage() {
   const [rejectDialog, setRejectDialog] = useState<{ ids: string[]; open: boolean }>({ ids: [], open: false });
   const [rejectMotif, setRejectMotif] = useState("");
   const [exporting, setExporting] = useState(false);
+  const [saisirOpen, setSaisirOpen] = useState(false);
 
   const weekEnd = useMemo(() => addDays(weekStart, 6), [weekStart]);
   const startStr = format(weekStart, "yyyy-MM-dd");
