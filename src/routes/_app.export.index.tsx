@@ -247,18 +247,33 @@ function ExportPage() {
             </div>
           )}
 
-          <div className="flex items-center justify-between border-t pt-4">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-4">
             <p className="text-xs text-muted-foreground">
-              Le fichier sera téléchargé automatiquement (.xlsx).
+              Le fichier sera téléchargé automatiquement.
             </p>
-            <Button onClick={handleExport} disabled={data.loading || exporting} size="lg">
-              {exporting ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <FileDown className="mr-2 h-4 w-4" />
-              )}
-              Télécharger Excel
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={handleExportZip}
+                disabled={data.loading || zipping || exporting}
+                size="lg"
+                variant="outline"
+              >
+                {zipping ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Archive className="mr-2 h-4 w-4" />
+                )}
+                Exporter toutes les vues (.zip)
+              </Button>
+              <Button onClick={handleExport} disabled={data.loading || exporting || zipping} size="lg">
+                {exporting ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <FileDown className="mr-2 h-4 w-4" />
+                )}
+                Télécharger Excel
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
