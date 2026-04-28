@@ -118,7 +118,7 @@ function confidenceDot(c: EditableObjet["confidence"]): string {
 }
 
 function ProgbatImportPage() {
-  const { isAdmin } = useAuth();
+  const { isAdminOrChef } = useAuth();
   const navigate = useNavigate();
 
   const [filename, setFilename] = useState<string | null>(null);
@@ -289,7 +289,7 @@ function ProgbatImportPage() {
     }
   };
 
-  if (!isAdmin) {
+  if (!isAdminOrChef) {
     return (
       <div className="flex flex-1 items-center justify-center p-12">
         <Card className="max-w-md">
@@ -298,7 +298,7 @@ function ProgbatImportPage() {
             <div>
               <p className="font-semibold">Accès réservé</p>
               <p className="text-sm text-muted-foreground">
-                Cette page d'import est réservée aux administrateurs.
+                Cette page d'import est réservée aux administrateurs et chefs.
               </p>
             </div>
           </CardContent>
