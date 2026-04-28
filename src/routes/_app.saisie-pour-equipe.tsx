@@ -37,7 +37,7 @@ import { SaisirPourEmployeDialog } from "@/components/heures/SaisirPourEmployeDi
 import { BulkSaisieDialog } from "@/components/heures/BulkSaisieDialog";
 import { SaisieChefBadge } from "@/components/heures/SaisieChefBadge";
 import { cn } from "@/lib/utils";
-import { fuzzyMatch, filterByTypologie } from "@/lib/saisie-equipe-filter";
+import { fuzzyMatch as fuzzyMatchName, filterByTypologie } from "@/lib/saisie-equipe-filter";
 
 const SEARCH_DEFAULTS = { type: "all" as const, q: "" };
 
@@ -183,7 +183,7 @@ function SaisiePourEquipePage() {
     }
     list = filterByTypologie(list, typeFilter);
     if (searchQuery.trim()) {
-      list = list.filter((e) => fuzzyMatch(`${e.prenom} ${e.nom}`, searchQuery));
+      list = list.filter((e) => fuzzyMatchName(`${e.prenom} ${e.nom}`, searchQuery));
     }
     return list;
   }, [employes, metierFilter, typeFilter, searchQuery]);
