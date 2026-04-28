@@ -1,11 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Loader2, TrendingUp, TrendingDown, AlertTriangle, CheckCircle2, ClipboardCheck, Clock, Send } from "lucide-react";
+import { Loader2, TrendingUp, TrendingDown, AlertTriangle, CheckCircle2, ClipboardCheck, Clock, Send, Hammer } from "lucide-react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth-context";
 import { useMetiers } from "@/hooks/use-metiers";
 import { MetierBadge } from "@/components/MetierBadge";
-import { Progress } from "@/components/ui/progress";
 import { DualProgress } from "@/components/ui/dual-progress";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 interface ConsoLine {
@@ -30,9 +34,13 @@ export const Route = createFileRoute("/_app/affaires/$affaireId/")({
 function AffaireSynthesePage() {
   const { affaireId } = Route.useParams();
   const { byId } = useMetiers();
+  const { isAdminOrChef } = useAuth();
   const [lines, setLines] = useState<ConsoLine[]>([]);
   const [loading, setLoading] = useState(true);
   const [notes, setNotes] = useState<string | null>(null);
+  const [hMontage, setHMontage] = useState<string>("0");
+  const [hDemontage, setHDemontage] = useState<string>("0");
+  const [savingMD, setSavingMD] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -45,17 +53,39 @@ function AffaireSynthesePage() {
             "devis_id, devis_numero, metier_id, metier, couleur, heures_prevues, heures_assignees, heures_reelles_validees, heures_reelles_soumises, heures_restantes, pct_consomme, pct_consomme_reel",
           )
           .eq("affaire_id", affaireId),
-        supabase.from("affaires").select("notes").eq("id", affaireId).maybeSingle(),
+        supabase
+          .from("affaires")
+          .select("notes, heures_prevues_montage, heures_prevues_demontage")
+          .eq("id", affaireId)
+          .maybeSingle(),
       ]);
       if (cancelled) return;
       setLines((cons ?? []) as ConsoLine[]);
       setNotes((aff?.notes as string | null) ?? null);
+      setHMontage(String(aff?.heures_prevues_montage ?? 0));
+      setHDemontage(String(aff?.heures_prevues_demontage ?? 0));
       setLoading(false);
     })();
     return () => {
       cancelled = true;
     };
   }, [affaireId]);
+
+  const saveMontageDemontage = async () => {
+    setSavingMD(true);
+    const m = Number(hMontage) || 0;
+    const d = Number(hDemontage) || 0;
+    const { error } = await supabase
+      .from("affaires")
+      .update({ heures_prevues_montage: m, heures_prevues_demontage: d })
+      .eq("id", affaireId);
+    setSavingMD(false);
+    if (error) {
+      toast.error("Enregistrement impossible", { description: error.message });
+    } else {
+      toast.success("Heures montage/démontage enregistrées");
+    }
+  };
 
   const enriched = useMemo(() => {
     return lines.map((l) => {
@@ -226,6 +256,54 @@ function AffaireSynthesePage() {
           </div>
         )}
       </section>
+
+      {isAdminOrChef && (
+        <section>
+          <p className="overline mb-3 flex items-center gap-2">
+            <Hammer className="h-3 w-3" />— Heures Montage / Démontage chantier
+          </p>
+          <div className="rounded-2xl border border-border bg-card p-4">
+            <div className="grid gap-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+              <div className="space-y-1.5">
+                <Label htmlFor="h-montage" className="text-xs">Montage (h)</Label>
+                <Input
+                  id="h-montage"
+                  type="number"
+                  min="0"
+                  step="0.5"
+                  value={hMontage}
+                  onChange={(e) => setHMontage(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="h-demontage" className="text-xs">Démontage (h)</Label>
+                <Input
+                  id="h-demontage"
+                  type="number"
+                  min="0"
+                  step="0.5"
+                  value={hDemontage}
+                  onChange={(e) => setHDemontage(e.target.value)}
+                />
+              </div>
+              <Button
+                onClick={saveMontageDemontage}
+                disabled={savingMD}
+                className="rounded-xl"
+              >
+                {savingMD && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Enregistrer
+              </Button>
+            </div>
+            <p className="mt-3 text-xs text-muted-foreground">
+              Total chantier :{" "}
+              <span className="font-semibold text-foreground">
+                {((Number(hMontage) || 0) + (Number(hDemontage) || 0)).toFixed(1)} h
+              </span>
+            </p>
+          </div>
+        </section>
+      )}
 
       {notes && (
         <section>
