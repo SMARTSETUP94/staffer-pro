@@ -200,7 +200,7 @@ function EmployesPage() {
     if (profileIds.length) {
       const { data: profs } = await supabase
         .from("profiles")
-        .select("id, matricule_silae, est_chef_projet, est_respo_fab, est_finition, est_manutention, est_bureau_etude")
+        .select("id, matricule_silae, est_chef_projet, est_respo_fab, est_finition, est_manutention, est_bureau_etude, est_usinage_numerique")
         .in("id", profileIds);
       profileMap = (profs ?? []).reduce<Record<string, ProfileFabRow>>((acc, p) => {
         acc[p.id] = p as ProfileFabRow;
