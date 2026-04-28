@@ -119,14 +119,21 @@ function buildSections(role: EffRole, validationCount: number): NavSection[] {
     },
   ];
 
+  // ===== Outils : exports + imports accessibles aux chefs et admins =====
+  sections.push({
+    label: "Outils",
+    items: [
+      { title: "Export planning", url: "/export", icon: FileDown, show: () => true },
+      { title: "Imports", url: "/employes/import", icon: FileUp, show: () => true },
+    ],
+  });
+
   // ===== Administration : admin only (rôle effectif) =====
   if (isAdmin) {
     sections.push({
       label: "Administration",
       items: [
         { title: "Utilisateurs", url: "/parametres/utilisateurs", icon: UserCircle, show: () => true },
-        { title: "Imports", url: "/employes/import", icon: FileUp, show: () => true },
-        { title: "Export planning", url: "/export", icon: FileDown, show: () => true },
         { title: "Métiers", url: "/parametres/metiers", icon: Palette, show: () => true },
         { title: "Rôles fabrication", url: "/parametres/roles-fabrication", icon: Hammer, show: () => true },
         { title: "Lieux entreprise", url: "/parametres/lieux", icon: Warehouse, show: () => true },
@@ -137,8 +144,6 @@ function buildSections(role: EffRole, validationCount: number): NavSection[] {
       ],
     });
   }
-  // Le chef ne voit AUCUNE section Administration. Les exports/demandes
-  // de devis qu'il utilise sont déjà accessibles via le menu Chantiers.
 
   return sections
     .map((s) => ({ ...s, items: s.items.filter((it) => it.show(role)) }))
