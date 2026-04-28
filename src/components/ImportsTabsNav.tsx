@@ -1,10 +1,11 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { FileUp, FileText, History, Trophy } from "lucide-react";
+import { FileUp, FileText, History, Trophy, Hammer } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const TABS = [
   { to: "/employes/import", label: "Employés", icon: FileUp },
   { to: "/devis/import", label: "Devis", icon: FileText },
+  { to: "/devis/progbat-import", label: "Devis Progbat", icon: Hammer },
   { to: "/opportunites/import", label: "Opportunités", icon: Trophy },
   { to: "/devis/historique", label: "Historique", icon: History },
 ] as const;

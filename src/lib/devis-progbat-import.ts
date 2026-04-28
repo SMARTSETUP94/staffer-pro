@@ -68,10 +68,10 @@ export async function importProgbatToAffaire(
   }
 
   // 2. UPDATE affaire heures chantier (uniquement si cochés)
-  const updates: Record<string, number> = {};
-  if (heuresMontage !== null) updates.heures_prevues_montage = heuresMontage;
-  if (heuresDemontage !== null) updates.heures_prevues_demontage = heuresDemontage;
-  if (Object.keys(updates).length > 0) {
+  if (heuresMontage !== null || heuresDemontage !== null) {
+    const updates: { heures_prevues_montage?: number; heures_prevues_demontage?: number } = {};
+    if (heuresMontage !== null) updates.heures_prevues_montage = heuresMontage;
+    if (heuresDemontage !== null) updates.heures_prevues_demontage = heuresDemontage;
     const { error } = await supabase.from("affaires").update(updates).eq("id", affaireId);
     if (error) throw new Error(`Erreur update affaire : ${error.message}`);
   }
