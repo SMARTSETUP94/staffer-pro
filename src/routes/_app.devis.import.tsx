@@ -28,6 +28,7 @@ import {
 import { DevisImportSection4Chantier } from "@/components/devis-import/DevisImportSection4Chantier";
 import { DevisImportFooter } from "@/components/devis-import/DevisImportFooter";
 import { NEW_AFFAIRE, type AffaireOption, type PosteRow } from "@/components/devis-import/types";
+import { detectMachinisteDoubleComptage } from "@/lib/devis-import-v2-helpers";
 
 export const Route = createFileRoute("/_app/devis/import")({
   head: () => ({ meta: [{ title: "Import devis Excel — Setup Paris" }] }),
