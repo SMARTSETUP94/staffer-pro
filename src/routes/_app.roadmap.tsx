@@ -44,6 +44,62 @@ interface RoadmapPlanned {
 const RELEASES: RoadmapRelease[] = [
   {
     date: "2026-04-28",
+    version: "v0.22.0",
+    title:
+      "Refonte module Fabrication — heures par métier + étape Usinage Numérique",
+    entries: [
+      {
+        type: "feature",
+        title: "Nouvelle étape Usinage Numérique (5 étapes au lieu de 4)",
+        description:
+          "Ajout d'une 5e étape de fabrication entre BE et Respo Fab pour tracer le travail CNC distinctement. Enum fabrication_etape_type étendu avec 'usinage', flag a_usiner sur fabrication_objets (default true). Triggers create_fabrication_etapes_for_objet et sync_fabrication_etapes_on_flags_change mis à jour pour gérer les 5 étapes. Backfill automatique : tous les objets existants reçoivent une étape usinage en a_faire.",
+      },
+      {
+        type: "feature",
+        title: "Heures prévues par métier sur fabrication_objets",
+        description:
+          "7 colonnes numériques ajoutées : heures_prevues_be / numerique / bois / metal / peinture / tapisserie / manutention. Plus colonne budget_materiaux. Éditables manuellement par chef projet via la modale Ajouter/Éditer Objet (section dédiée). Alimenteront le parser devis Progbat v0.23.",
+      },
+      {
+        type: "feature",
+        title: "Heures montage/démontage sur l'affaire",
+        description:
+          "Colonnes heures_prevues_montage et heures_prevues_demontage ajoutées sur affaires. Mini-formulaire chef projet/admin sur la fiche affaire avec total chantier calculé en live. Ces heures vont sur l'affaire (pas sur fabrication_objets) car elles concernent le chantier global.",
+      },
+      {
+        type: "feature",
+        title: "Modale Ajouter/Éditer Objet : 5 questions Oui/Non",
+        description:
+          "Section « Étapes nécessaires » passe de 4 à 5 questions : à dessiner (BE), à usiner (Usinage Num — NOUVEAU), à construire (Respo Fab), brut (skip Finition), à emballer (Manutention). Chaque réponse pilote le statut initial de l'étape correspondante via le trigger.",
+      },
+      {
+        type: "feature",
+        title: "UI Fabrication : 5 colonnes étapes partout",
+        description:
+          "Tableau objets × étapes sur /affaires/$id/fabrication passe à 5 colonnes (BE / Usinage / Respo Fab / Finition / Manutention). Cartes mobile : 5 boutons. Dashboard global /fabrication : 5 pôles de charge. Page /parametres/roles-fabrication : matrice 6 colonnes incluant Usinage Num.",
+      },
+      {
+        type: "feature",
+        title: "Rôle Usinage Numérique sur profils + employés",
+        description:
+          "Nouveau flag est_usinage_numerique sur profiles. Intégré dans la grille de gestion employés (_app.employes.tsx, 6 colonnes au lieu de 5), dans le filtre des assignees éligibles (ETAPE_TO_FLAG.usinage → est_usinage_numerique), et dans MesHeuresGrid pour la saisie d'heures sur étape usinage.",
+      },
+      {
+        type: "feature",
+        title: "Helper SQL etape_for_metier() + mirror TS etapeForMetier()",
+        description:
+          "Fonction immutable côté DB qui mappe les 7 métiers devis vers les 5 étapes fabrication (be→be, numerique→usinage, bois/metal→respo_fab, peinture/tapisserie→finition, manutention→manutention). Mirror TS exporté depuis use-fabrication.ts pour les calculs UI et tests.",
+      },
+      {
+        type: "improvement",
+        title: "Tests Vitest +21 (229 → 250 verts)",
+        description:
+          "Nouveau fichier fabrication-v022.test.ts couvrant : trigger create_fabrication_etapes_for_objet v2 (5 étapes, statuts dérivés des flags), helper etape_for_metier (7 cas), trigger sync sur a_usiner (bascule ↔ non_applicable), ETAPE_TO_FLAG.usinage, getEligibleEtapesForRoles avec est_usinage_numerique. Non-régression v0.20–v0.21 vérifiée.",
+      },
+    ],
+  },
+  {
+    date: "2026-04-28",
     version: "v0.21.0",
     title:
       "Saisie heures par chef + bulk staffing + feuille de route + verrouillage affaires",
