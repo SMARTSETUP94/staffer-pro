@@ -54,10 +54,7 @@ interface EmployeRow {
   est_finition: boolean;
   est_manutention: boolean;
   est_bureau_etude: boolean;
-  secondaires: number[];
-}
-
-interface FormState {
+  est_usinage_numerique: boolean;
   id?: string;
   prenom: string;
   nom: string;
