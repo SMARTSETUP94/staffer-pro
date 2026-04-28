@@ -30,6 +30,7 @@ export const Route = createFileRoute("/_app/fabrication/")({
 
 const ETAPE_ICONS: Record<FabricationEtapeType, typeof Hammer> = {
   be: Pencil,
+  usinage: Cog,
   respo_fab: Wrench,
   finition: Brush,
   manutention: Box,

@@ -64,6 +64,7 @@ type AssigneesState = Record<FabricationEtapeType, string>; // "none" | id
 
 const emptyAssignees: AssigneesState = {
   be: "none",
+  usinage: "none",
   respo_fab: "none",
   finition: "none",
   manutention: "none",
