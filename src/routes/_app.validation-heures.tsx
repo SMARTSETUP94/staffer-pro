@@ -274,6 +274,10 @@ function ValidationHeuresPage() {
         <TabsContent value="heures" className="space-y-4">
       <div className="flex flex-wrap items-center justify-end gap-2">
         <WeekPicker weekStart={weekStart} onChange={setWeekStart} />
+        <Button variant="outline" onClick={() => setSaisirOpen(true)} className="gap-2">
+          <UserCog className="h-4 w-4" />
+          Saisir pour un employé
+        </Button>
         <Button variant="outline" onClick={handleExport} disabled={exporting} className="gap-2">
           {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
           Exporter validées
