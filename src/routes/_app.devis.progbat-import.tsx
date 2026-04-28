@@ -118,7 +118,7 @@ function confidenceDot(c: EditableObjet["confidence"]): string {
 }
 
 function ProgbatImportPage() {
-  const { isAdmin } = useAuth();
+  const { isAdminOrChef } = useAuth();
   const navigate = useNavigate();
 
   const [filename, setFilename] = useState<string | null>(null);
