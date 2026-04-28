@@ -168,8 +168,10 @@ export function buildFeuilleRouteRows(opts: BuildFeuilleRouteOpts): FeuilleRoute
   return rows;
 }
 
-/** Génère et télécharge le .xlsx. */
-export function exportFeuilleRouteExcel(opts: BuildFeuilleRouteOpts) {
+/** Construit le workbook et son nom (sans déclencher de téléchargement). */
+export function buildFeuilleRouteWorkbook(
+  opts: BuildFeuilleRouteOpts,
+): { wb: XLSX.WorkBook; filename: string; rowsCount: number } {
   const rows = buildFeuilleRouteRows(opts);
 
   const aoa: (string | null)[][] = rows.map((r) => r.cells);
@@ -232,11 +234,31 @@ export function exportFeuilleRouteExcel(opts: BuildFeuilleRouteOpts) {
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Planning");
 
-  const fname = `feuille-route-${format(opts.dates[0], "yyyy-MM-dd")}_${format(
+  const filename = `feuille-route-${format(opts.dates[0], "yyyy-MM-dd")}_${format(
     opts.dates[opts.dates.length - 1],
     "yyyy-MM-dd",
   )}.xlsx`;
-  XLSX.writeFile(wb, fname);
 
-  return { rowsCount: rows.length, filename: fname };
+  return { wb, filename, rowsCount: rows.length };
+}
+
+/** Génère et télécharge le .xlsx. */
+export function exportFeuilleRouteExcel(opts: BuildFeuilleRouteOpts) {
+  const { wb, filename, rowsCount } = buildFeuilleRouteWorkbook(opts);
+  XLSX.writeFile(wb, filename);
+  return { rowsCount, filename };
+}
+
+/** Variante Blob (pour zip). */
+export function feuilleRouteToBlob(opts: BuildFeuilleRouteOpts): {
+  blob: Blob;
+  filename: string;
+  rowsCount: number;
+} {
+  const { wb, filename, rowsCount } = buildFeuilleRouteWorkbook(opts);
+  const out = XLSX.write(wb, { type: "array", bookType: "xlsx" });
+  const blob = new Blob([out], {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  });
+  return { blob, filename, rowsCount };
 }
