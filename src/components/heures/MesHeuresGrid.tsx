@@ -25,6 +25,7 @@ import { computeHeuresFromTimes } from "@/lib/heures-calculator";
 
 const ETAPE_LABEL_MAP: Record<FabricationEtapeTypeRow, string> = {
   be: "BE (dessin)",
+  usinage: "Usinage Numérique",
   respo_fab: "Respo Fab (construction)",
   finition: "Finition",
   manutention: "Manutention",
