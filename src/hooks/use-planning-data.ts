@@ -35,6 +35,8 @@ export interface Affaire {
   date_demontage: string | null;
   /** v0.17 — 'opportunite' (9XXX) ou 'signe' (5XXX). Default 'signe' côté DB. */
   phase: "opportunite" | "signe";
+  /** v0.21 Bloc 4 — pour verrouillage termine/annule */
+  statut: "prospect" | "en_cours" | "termine" | "annule";
 }
 
 export interface Assignation {
@@ -144,7 +146,7 @@ export function usePlanningData(weekStart: Date, weekEnd: Date): PlanningData {
         .eq("actif", true)
         .eq("non_staffing", false)
         .order("nom"),
-      supabase.from("affaires").select("id, numero, nom, lieu, client, chef_chantier_id, date_montage, date_demontage, phase"),
+      supabase.from("affaires").select("id, numero, nom, lieu, client, chef_chantier_id, date_montage, date_demontage, phase, statut"),
       supabase
         .from("assignations")
         .select("id, date, demi_journee, heures, affaire_id, employe_id, metier_id, devis_id, notes, statut_confirmation")
