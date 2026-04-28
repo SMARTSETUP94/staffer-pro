@@ -122,6 +122,48 @@ function ExportPage() {
     }
   }
 
+  async function handleExportZip() {
+    if (data.loading) return;
+    setZipping(true);
+    try {
+      const res = await exportPlanningZip({
+        weekStarts,
+        rangeStart,
+        rangeEnd,
+        metiers: data.metiers,
+        employes: data.employes,
+        affaires: data.affaires,
+        assignations: data.assignations,
+        consommation: data.consommation,
+        absences: data.absences,
+        chefsById: data.chefsById,
+        vehicules: vehicules.filter((v) => v.actif).map((v) => ({
+          id: v.id,
+          nom: v.nom,
+          immatriculation: v.immatriculation,
+          type: v.type,
+        })),
+        trajets: trajets.map((t) => ({
+          id: t.id,
+          date: t.date,
+          heure_depart: t.heure_depart,
+          vehicule_id: t.vehicule_id,
+          chauffeur_id: t.chauffeur_id,
+          adresse_depart: t.adresse_depart,
+          adresse_arrivee: t.adresse_arrivee,
+          categorie: t.categorie,
+          statut_soustraitance: t.statut_soustraitance,
+        })),
+      });
+      toast.success(`Archive téléchargée : ${res.files.length} fichier(s)`);
+    } catch (e) {
+      console.error(e);
+      toast.error("Échec de l'export zip");
+    } finally {
+      setZipping(false);
+    }
+  }
+
   return (
     <div className="p-6">
       <div className="mb-6 flex items-center gap-3">
