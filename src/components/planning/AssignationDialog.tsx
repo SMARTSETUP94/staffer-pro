@@ -563,6 +563,39 @@ export function AssignationDialog({
                 maxLength={500}
               />
             </div>
+
+            {/* v0.21 Bloc 5 — Type d'opération (combobox texte libre + suggestions) */}
+            <div className="grid gap-1.5">
+              <Label htmlFor="type-operation">Type d'opération (optionnel)</Label>
+              <Input
+                id="type-operation"
+                list="type-operation-suggest"
+                value={typeOperation}
+                onChange={(e) => setTypeOperation(e.target.value)}
+                placeholder="ex: Montage, Démontage…"
+                maxLength={50}
+              />
+              <datalist id="type-operation-suggest">
+                {TYPE_OPERATION_OPTIONS.map((opt) => (
+                  <option key={opt} value={opt} />
+                ))}
+              </datalist>
+            </div>
+
+            {/* v0.21 Bloc 5 — Désigner comme chef du jour */}
+            <div className="flex items-center gap-2 rounded-md border bg-muted/30 p-2">
+              <Checkbox
+                id="est-chef-jour"
+                checked={estChefJour}
+                onCheckedChange={(c) => setEstChefJour(Boolean(c))}
+              />
+              <Label htmlFor="est-chef-jour" className="cursor-pointer text-xs">
+                Désigner comme <strong>chef du jour</strong> sur ce chantier
+                <span className="ml-1 text-[10px] text-muted-foreground">
+                  (l'ancien chef perdra automatiquement le flag)
+                </span>
+              </Label>
+            </div>
           </div>
 
           {affaireId && metierId && (
