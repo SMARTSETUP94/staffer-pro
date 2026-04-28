@@ -178,7 +178,9 @@ function PlanningPage() {
             ? "Planning par chantier"
             : tab === "budget"
               ? "Budget chantier"
-              : "Véhicules staffés";
+              : tab === "feuilleroute"
+                ? "Feuille de route"
+                : "Véhicules staffés";
     setExporting(true);
     try {
       await exportPlanningToPDF(target, { weekStart, tabLabel });
