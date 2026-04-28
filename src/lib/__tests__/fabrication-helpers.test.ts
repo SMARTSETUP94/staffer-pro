@@ -40,9 +40,18 @@ function makeObjet(etapes: FabricationEtape[], archive = false): FabricationObje
     archive,
     created_at: new Date().toISOString(),
     a_dessiner: true,
+    a_usiner: true,
     a_construire: true,
     est_brut: false,
     a_emballer: true,
+    heures_prevues_be: 0,
+    heures_prevues_numerique: 0,
+    heures_prevues_bois: 0,
+    heures_prevues_metal: 0,
+    heures_prevues_peinture: 0,
+    heures_prevues_tapisserie: 0,
+    heures_prevues_manutention: 0,
+    budget_materiaux: 0,
     etapes,
   };
 }
