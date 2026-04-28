@@ -212,6 +212,9 @@ export function AssignationDialog({
     setSlot(a.demi_journee as Slot);
     setHeures(Number(a.heures));
     setNotes(a.notes ?? "");
+    const ext = a as Assignation & { type_operation?: string | null; est_chef_jour?: boolean };
+    setTypeOperation(ext.type_operation ?? "");
+    setEstChefJour(Boolean(ext.est_chef_jour));
   }
 
   function startNew() {
