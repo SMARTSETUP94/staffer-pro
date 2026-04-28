@@ -250,6 +250,7 @@ export type Database = {
           demi_journee: Database["public"]["Enums"]["demi_journee_type"]
           devis_id: string | null
           employe_id: string
+          est_chef_jour: boolean
           heure_debut: string | null
           heure_fin: string | null
           heures: number
@@ -259,6 +260,7 @@ export type Database = {
           notes: string | null
           refusee_le: string | null
           statut_confirmation: Database["public"]["Enums"]["confirmation_status"]
+          type_operation: string | null
           updated_at: string
         }
         Insert: {
@@ -270,6 +272,7 @@ export type Database = {
           demi_journee: Database["public"]["Enums"]["demi_journee_type"]
           devis_id?: string | null
           employe_id: string
+          est_chef_jour?: boolean
           heure_debut?: string | null
           heure_fin?: string | null
           heures?: number
@@ -279,6 +282,7 @@ export type Database = {
           notes?: string | null
           refusee_le?: string | null
           statut_confirmation?: Database["public"]["Enums"]["confirmation_status"]
+          type_operation?: string | null
           updated_at?: string
         }
         Update: {
@@ -290,6 +294,7 @@ export type Database = {
           demi_journee?: Database["public"]["Enums"]["demi_journee_type"]
           devis_id?: string | null
           employe_id?: string
+          est_chef_jour?: boolean
           heure_debut?: string | null
           heure_fin?: string | null
           heures?: number
@@ -299,6 +304,7 @@ export type Database = {
           notes?: string | null
           refusee_le?: string | null
           statut_confirmation?: Database["public"]["Enums"]["confirmation_status"]
+          type_operation?: string | null
           updated_at?: string
         }
         Relationships: [
