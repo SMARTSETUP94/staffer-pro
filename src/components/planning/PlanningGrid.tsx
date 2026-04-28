@@ -581,7 +581,7 @@ export function PlanningGrid({
                             "relative border-b border-l align-top",
                             isWeekend && "bg-muted/20",
                             !readonly && "cursor-pointer transition-colors hover:bg-primary/5",
-                            isSelected && "bg-primary/15 ring-2 ring-inset ring-primary",
+                            isSelected && "bg-primary/20 ring-4 ring-inset ring-primary",
                             conflict && "ring-2 ring-inset ring-destructive",
                           )}
                           onClick={(e) => handleCellClick(emp, d, e)}
