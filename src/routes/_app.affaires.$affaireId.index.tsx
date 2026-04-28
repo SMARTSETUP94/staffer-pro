@@ -1,11 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Loader2, TrendingUp, TrendingDown, AlertTriangle, CheckCircle2, ClipboardCheck, Clock, Send } from "lucide-react";
+import { Loader2, TrendingUp, TrendingDown, AlertTriangle, CheckCircle2, ClipboardCheck, Clock, Send, Hammer } from "lucide-react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth-context";
 import { useMetiers } from "@/hooks/use-metiers";
 import { MetierBadge } from "@/components/MetierBadge";
-import { Progress } from "@/components/ui/progress";
 import { DualProgress } from "@/components/ui/dual-progress";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 interface ConsoLine {
