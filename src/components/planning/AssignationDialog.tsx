@@ -240,7 +240,7 @@ export function AssignationDialog({
   async function performSave() {
     if (!metierId) return; // garde TS — déjà checké dans handleSave
     setSaving(true);
-    const dateStr = format(date, "yyyy-MM-dd");
+    const dateStr = format(dateOverride, "yyyy-MM-dd");
     const payload = {
       employe_id: employe.id,
       affaire_id: affaireId,
