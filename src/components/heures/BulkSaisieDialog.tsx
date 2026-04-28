@@ -222,7 +222,20 @@ export function BulkSaisieDialog({
       const existing = new Set((existingRows ?? []).map((r) => `${r.employe_id}|${r.date}`));
 
       const nowIso = new Date().toISOString();
-      const rows: Array<Record<string, unknown>> = [];
+      type InsertRow = {
+        employe_id: string;
+        date: string;
+        affaire_id: string;
+        heure_debut: string;
+        heure_fin: string;
+        duree_pause_minutes: number;
+        heures_reelles: number;
+        heures_nuit: number;
+        statut: "valide";
+        valide_par: string | null;
+        valide_le: string;
+      };
+      const rows: InsertRow[] = [];
       for (const empId of empIds) {
         for (const d of validDays) {
           if (existing.has(`${empId}|${d}`)) continue;
