@@ -91,7 +91,7 @@ const RELEASES: RoadmapRelease[] = [
           "Fonction immutable côté DB qui mappe les 7 métiers devis vers les 5 étapes fabrication (be→be, numerique→usinage, bois/metal→respo_fab, peinture/tapisserie→finition, manutention→manutention). Mirror TS exporté depuis use-fabrication.ts pour les calculs UI et tests.",
       },
       {
-        type: "test",
+        type: "improvement",
         title: "Tests Vitest +21 (229 → 250 verts)",
         description:
           "Nouveau fichier fabrication-v022.test.ts couvrant : trigger create_fabrication_etapes_for_objet v2 (5 étapes, statuts dérivés des flags), helper etape_for_metier (7 cas), trigger sync sur a_usiner (bascule ↔ non_applicable), ETAPE_TO_FLAG.usinage, getEligibleEtapesForRoles avec est_usinage_numerique. Non-régression v0.20–v0.21 vérifiée.",
