@@ -245,7 +245,9 @@ function DevisImportPage() {
   const warnMachiniste = useMemo(
     () =>
       detectMachinisteDoubleComptage(
-        postes.map((p) => ({ metierId: p.metierId, heures: p.heures })),
+        postes
+          .filter((p): p is PosteRow & { metierId: number } => p.metierId != null)
+          .map((p) => ({ metierId: p.metierId, heures: p.heures })),
         importMontage,
         importDemontage,
       ),
