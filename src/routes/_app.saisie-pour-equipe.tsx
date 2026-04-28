@@ -8,16 +8,20 @@
  * - Cellule remplie → affiche heures + badge si saisi_par_chef
  * - Bouton "Saisir en bulk" en haut à droite
  */
-import { createFileRoute, Navigate } from "@tanstack/react-router";
+import { createFileRoute, Navigate, useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth-context";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { addDays, format, isWeekend, startOfWeek } from "date-fns";
 import { fr } from "date-fns/locale";
-import { ClipboardList, Filter, Loader2, Plus, Users } from "lucide-react";
+import { ClipboardList, Filter, Loader2, Plus, Search, Users } from "lucide-react";
 import { toast } from "sonner";
+import { z } from "zod";
+import { zodValidator, fallback } from "@tanstack/zod-adapter";
+import { stripSearchParams } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -26,6 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { WeekPicker } from "@/components/planning/WeekPicker";
 import { PageBreadcrumbs } from "@/components/PageBreadcrumbs";
 import { SaisirPourEmployeDialog } from "@/components/heures/SaisirPourEmployeDialog";
@@ -33,10 +38,29 @@ import { BulkSaisieDialog } from "@/components/heures/BulkSaisieDialog";
 import { SaisieChefBadge } from "@/components/heures/SaisieChefBadge";
 import { cn } from "@/lib/utils";
 
+const SEARCH_DEFAULTS = { type: "all" as const, q: "" };
+
+const searchSchema = z.object({
+  type: fallback(z.enum(["all", "cdi", "interim"]), SEARCH_DEFAULTS.type).default(
+    SEARCH_DEFAULTS.type,
+  ),
+  q: fallback(z.string(), SEARCH_DEFAULTS.q).default(SEARCH_DEFAULTS.q),
+});
+
 export const Route = createFileRoute("/_app/saisie-pour-equipe")({
   head: () => ({ meta: [{ title: "Saisie équipe — Planning chantiers" }] }),
+  validateSearch: zodValidator(searchSchema),
+  search: { middlewares: [stripSearchParams(SEARCH_DEFAULTS)] },
   component: SaisiePourEquipePage,
 });
+
+/** Fuzzy maison : lowercase + strip diacritics + includes. */
+function fuzzyMatch(haystack: string, needle: string): boolean {
+  if (!needle) return true;
+  const norm = (s: string) =>
+    s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  return norm(haystack).includes(norm(needle));
+}
 
 interface Employe {
   id: string;
