@@ -140,7 +140,9 @@ function buildSections(role: EffRole, validationCount: number): NavSection[] {
   // Le chef ne voit AUCUNE section Administration. Les exports/demandes
   // de devis qu'il utilise sont déjà accessibles via le menu Chantiers.
 
-  return sections;
+  return sections
+    .map((s) => ({ ...s, items: s.items.filter((it) => it.show(role)) }))
+    .filter((s) => s.items.length > 0);
 }
 
 export function AppSidebar() {
