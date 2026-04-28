@@ -844,14 +844,14 @@ export function exportPlanningExcel(opts: BuildOpts): void {
 }
 
 /**
- * Export d'une plage de semaines (1 à 4) — un groupe de 4 feuilles par semaine,
- * suffixées par S{numéro de semaine}.
+ * Construit le workbook multi-semaines (sans téléchargement). Réutilisé par l'export
+ * direct et par l'archive zip "all-in-one".
  */
-export function exportPlanningExcelRange(
+export function buildPlanningWorkbookRange(
   opts: Omit<BuildOpts, "weekStart"> & { weekStarts: Date[] },
-): void {
+): { wb: XLSX.WorkBook; filename: string } | null {
   const { weekStarts, employes, assignations, absences, trajets, ...rest } = opts;
-  if (weekStarts.length === 0) return;
+  if (weekStarts.length === 0) return null;
 
   const wb = XLSX.utils.book_new();
   const cdiCdd = employes.filter((e) => e.type_contrat === "CDI" || e.type_contrat === "CDD");
