@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useRef, useState } from "react";
 import { startOfWeek, addDays, format } from "date-fns";
-import { Calendar, Loader2, Search, FileDown, UserPlus, Truck, Users } from "lucide-react";
+import { Calendar, Loader2, Search, FileDown, UserPlus, Truck, Users, ClipboardList } from "lucide-react";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
@@ -18,6 +18,7 @@ import { MultiFilter } from "@/components/planning/MultiFilter";
 import { AddInterimDialog } from "@/components/planning/AddInterimDialog";
 import { BulkStafferDialog } from "@/components/planning/BulkStafferDialog";
 import { FlotteGrid } from "@/components/planning/FlotteGrid";
+import { FeuilleRouteView } from "@/components/planning/FeuilleRouteView";
 import { SuggestionsTrajetsBloc } from "@/components/planning/SuggestionsTrajetsBloc";
 import { TrajetDialog } from "@/components/flotte/TrajetDialog";
 import { ExportTrajetsSoustraitanceDialog } from "@/components/flotte/ExportTrajetsSoustraitanceDialog";
@@ -39,7 +40,7 @@ export const Route = createFileRoute("/_app/planning")({
 function PlanningPage() {
   const [weekStart, setWeekStart] = useState<Date>(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
   const weekEnd = addDays(weekStart, 6);
-  const [tab, setTab] = useState<"cdi" | "interim" | "parchantier" | "budget" | "flotte">("cdi");
+  const [tab, setTab] = useState<"cdi" | "interim" | "parchantier" | "budget" | "flotte" | "feuilleroute">("cdi");
   const [trajetDlgOpen, setTrajetDlgOpen] = useState(false);
   const [exportSousTraitanceOpen, setExportSousTraitanceOpen] = useState(false);
   const [editTrajet, setEditTrajet] = useState<Trajet | null>(null);
@@ -177,7 +178,9 @@ function PlanningPage() {
             ? "Planning par chantier"
             : tab === "budget"
               ? "Budget chantier"
-              : "Véhicules staffés";
+              : tab === "feuilleroute"
+                ? "Feuille de route"
+                : "Véhicules staffés";
     setExporting(true);
     try {
       await exportPlanningToPDF(target, { weekStart, tabLabel });
@@ -314,6 +317,10 @@ function PlanningPage() {
                 <TabsTrigger value="parchantier">Planning par chantier</TabsTrigger>
                 <TabsTrigger value="budget">Budget chantier</TabsTrigger>
                 <TabsTrigger value="flotte">Véhicules staffés ({vehicules.filter((v) => v.actif).length})</TabsTrigger>
+                <TabsTrigger value="feuilleroute">
+                  <ClipboardList className="mr-1 h-3.5 w-3.5" />
+                  Feuille de route
+                </TabsTrigger>
               </TabsList>
 
               <TabsContent value="cdi" className="mt-4">
@@ -465,6 +472,14 @@ function PlanningPage() {
                     setDefaultPrefill({});
                     setTrajetDlgOpen(true);
                   }}
+                />
+              </TabsContent>
+
+              <TabsContent value="feuilleroute" className="mt-4">
+                <FeuilleRouteView
+                  affaires={affaires}
+                  employes={employes}
+                  metiers={metiers}
                 />
               </TabsContent>
             </Tabs>

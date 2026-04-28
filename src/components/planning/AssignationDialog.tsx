@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -27,6 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { AffaireCombobox } from "./AffaireCombobox";
+import { TYPE_OPERATION_OPTIONS } from "@/lib/feuille-route-helpers";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -88,6 +90,8 @@ export function AssignationDialog({
   const [slot, setSlot] = useState<Slot>("JOURNEE");
   const [heures, setHeures] = useState<number>(8);
   const [notes, setNotes] = useState<string>("");
+  const [typeOperation, setTypeOperation] = useState<string>("");
+  const [estChefJour, setEstChefJour] = useState<boolean>(false);
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [confirmOpportunite, setConfirmOpportunite] = useState(false);
@@ -107,6 +111,8 @@ export function AssignationDialog({
     setSlot("JOURNEE");
     setHeures(8);
     setNotes("");
+    setTypeOperation("");
+    setEstChefJour(false);
     setShowAllMetiers(false);
     setDateOverride(date);
   }, [open, employe.metier_principal_id, date]);
@@ -206,6 +212,9 @@ export function AssignationDialog({
     setSlot(a.demi_journee as Slot);
     setHeures(Number(a.heures));
     setNotes(a.notes ?? "");
+    const ext = a as Assignation & { type_operation?: string | null; est_chef_jour?: boolean };
+    setTypeOperation(ext.type_operation ?? "");
+    setEstChefJour(Boolean(ext.est_chef_jour));
   }
 
   function startNew() {
@@ -250,6 +259,8 @@ export function AssignationDialog({
       heures,
       date: dateStr,
       notes: notes.trim() || null,
+      type_operation: typeOperation.trim() || null,
+      est_chef_jour: estChefJour,
     };
 
     const res = editingId
@@ -551,6 +562,39 @@ export function AssignationDialog({
                 placeholder="Précisions, consignes…"
                 maxLength={500}
               />
+            </div>
+
+            {/* v0.21 Bloc 5 — Type d'opération (combobox texte libre + suggestions) */}
+            <div className="grid gap-1.5">
+              <Label htmlFor="type-operation">Type d'opération (optionnel)</Label>
+              <Input
+                id="type-operation"
+                list="type-operation-suggest"
+                value={typeOperation}
+                onChange={(e) => setTypeOperation(e.target.value)}
+                placeholder="ex: Montage, Démontage…"
+                maxLength={50}
+              />
+              <datalist id="type-operation-suggest">
+                {TYPE_OPERATION_OPTIONS.map((opt) => (
+                  <option key={opt} value={opt} />
+                ))}
+              </datalist>
+            </div>
+
+            {/* v0.21 Bloc 5 — Désigner comme chef du jour */}
+            <div className="flex items-center gap-2 rounded-md border bg-muted/30 p-2">
+              <Checkbox
+                id="est-chef-jour"
+                checked={estChefJour}
+                onCheckedChange={(c) => setEstChefJour(Boolean(c))}
+              />
+              <Label htmlFor="est-chef-jour" className="cursor-pointer text-xs">
+                Désigner comme <strong>chef du jour</strong> sur ce chantier
+                <span className="ml-1 text-[10px] text-muted-foreground">
+                  (l'ancien chef perdra automatiquement le flag)
+                </span>
+              </Label>
             </div>
           </div>
 
