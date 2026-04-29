@@ -87,20 +87,10 @@ function SetPasswordPage() {
   const canSkip = isEmploye;
 
   const validate = (): boolean => {
-    let ok = true;
-    if (password.length < 8) {
-      setPwdError("8 caractères minimum.");
-      ok = false;
-    } else {
-      setPwdError(null);
-    }
-    if (password !== confirm) {
-      setConfirmError("Les mots de passe ne correspondent pas.");
-      ok = false;
-    } else {
-      setConfirmError(null);
-    }
-    return ok;
+    const r = validateSetPassword(password, confirm);
+    setPwdError(r.pwdError);
+    setConfirmError(r.confirmError);
+    return r.ok;
   };
 
   const onSubmit = async (e: React.FormEvent) => {
