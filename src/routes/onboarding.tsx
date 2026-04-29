@@ -23,7 +23,8 @@ import {
   stepProSchema,
   stepSecuriteSchema,
 } from "@/lib/onboarding-schemas";
-import { uploadAvatar } from "@/lib/avatar-upload";
+import { useServerFn } from "@tanstack/react-start";
+import { uploadAvatarServer } from "@/server/avatars.functions";
 
 export const Route = createFileRoute("/onboarding")({
   head: () => ({
