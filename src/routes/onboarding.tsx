@@ -191,7 +191,8 @@ function OnboardingPage() {
         date_naissance: form.date_naissance || null,
         bio_courte: form.bio_courte || null,
         avatar_url: form.avatar_url || null,
-      })
+        avatar_path: form.avatar_path || null,
+      } as never)
       .eq("id", user.id);
     if (error) {
       toast.error("Erreur sauvegarde identité");
