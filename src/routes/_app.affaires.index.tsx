@@ -288,6 +288,9 @@ function AffairesPage() {
                       {r.numero}
                     </Link>
                   </TableCell>
+                  <TableCell>
+                    <TypologieBadge typologie={r.typologie ?? getAffaireTypologie(r.numero)} />
+                  </TableCell>
                   <TableCell className="p-0">
                     <Link to="/affaires/$affaireId" params={{ affaireId: r.id }}
                       className="block px-4 py-3 font-semibold text-foreground hover:text-primary hover:underline">
