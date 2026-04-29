@@ -100,17 +100,23 @@ function SetPasswordPage() {
       console.info("[set-password] validation failed", { pwdLen: password.length, match: password === confirm });
       return;
     }
-    // Vérifier qu'on a bien une session avant updateUser
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      console.error("[set-password] no session before updateUser");
-      setSessionError("Lien expiré. Demandez un nouveau lien d'invitation.");
-      toast.error("Lien expiré", { description: "Demandez un nouveau lien d'invitation à un admin." });
-      return;
-    }
     setBusy(true);
     console.info("[set-password] submit start");
     try {
+      // Re-tente de consommer le hash si jamais on n'a pas encore de session
+      let { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        console.warn("[set-password] no session — retrying hash consume");
+        await consumeHashSessionIfPresent();
+        const r = await supabase.auth.getSession();
+        session = r.data.session;
+      }
+      if (!session) {
+        console.error("[set-password] no session before updateUser (after retry)");
+        setSessionError("Lien expiré ou invalide. Demande un nouveau lien d'invitation à l'administrateur.");
+        toast.error("Lien expiré", { description: "Demande un nouveau lien d'invitation à un admin." });
+        return;
+      }
       const { error } = await supabase.auth.updateUser({ password });
       if (error) {
         console.error("[set-password] updateUser error:", error);
@@ -118,13 +124,29 @@ function SetPasswordPage() {
         return;
       }
       console.info("[set-password] updateUser ok");
+      // markPasswordSet est CRITIQUE : sans ça, l'AppGuard renvoie en boucle ici.
+      // En cas d'échec on bloque la redirection et on affiche un message clair.
+      let markOk = false;
       try {
         const r = await withAuthRetry(() => markPasswordSet({ data: { skipped: false } }));
-        if (!r.ok) throw new Error(r.error);
-        console.info("[set-password] markPasswordSet ok");
+        if (r.ok) {
+          markOk = true;
+          console.info("[set-password] markPasswordSet ok");
+        } else {
+          console.error("[set-password] markPasswordSet returned not ok", r);
+        }
       } catch (e) {
         const msg = await readServerFnError(e);
-        console.warn("[set-password] markPasswordSet failed:", msg);
+        console.error("[set-password] markPasswordSet threw:", msg);
+      }
+      if (!markOk) {
+        toast.error("Mot de passe enregistré mais profil non finalisé", {
+          description: "Ton mot de passe a bien été défini. Reconnecte-toi via /login. Si le problème persiste, contacte un admin.",
+        });
+        // On déconnecte pour éviter la boucle infinie set-password ↔ AppGuard
+        await supabase.auth.signOut();
+        navigate({ to: "/login" });
+        return;
       }
       await refreshRoles();
       toast.success("Mot de passe créé", { description: "Bienvenue chez Setup Paris !" });
