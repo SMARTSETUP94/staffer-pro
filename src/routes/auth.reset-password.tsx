@@ -59,20 +59,32 @@ function ResetPasswordPage() {
       return;
     }
     setBusy(true);
-    const { error } = await supabase.auth.updateUser({ password });
-    if (error) {
-      setBusy(false);
-      toast.error("Impossible de mettre à jour le mot de passe", { description: error.message });
-      return;
-    }
     try {
-      await withAuthRetry(() => markPasswordSet({ data: { skipped: false } }));
-    } catch {
-      // non bloquant
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("Lien expiré", { description: "Demande un nouveau lien depuis 'Mot de passe oublié'." });
+        setHasRecoverySession(false);
+        return;
+      }
+      const { error } = await supabase.auth.updateUser({ password });
+      if (error) {
+        console.error("[reset-password] updateUser error", error);
+        toast.error("Impossible de mettre à jour le mot de passe", { description: error.message });
+        return;
+      }
+      try {
+        await withAuthRetry(() => markPasswordSet({ data: { skipped: false } }));
+      } catch (err) {
+        console.warn("[reset-password] markPasswordSet failed (non-blocking)", err);
+      }
+      toast.success("Mot de passe mis à jour");
+      navigate({ to: "/" });
+    } catch (err) {
+      console.error("[reset-password] uncaught", err);
+      toast.error("Erreur inattendue", { description: err instanceof Error ? err.message : String(err) });
+    } finally {
+      setBusy(false);
     }
-    setBusy(false);
-    toast.success("Mot de passe mis à jour");
-    navigate({ to: "/" });
   };
 
   return (
