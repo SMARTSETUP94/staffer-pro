@@ -440,6 +440,27 @@ function DevisImportPage() {
         />
         <ImportsTabsNav />
 
+        {prefilledAffaireId && (
+          <div className="flex items-center justify-between rounded-xl border border-border bg-muted/30 px-4 py-2">
+            <Button asChild variant="ghost" size="sm" className="h-8 rounded-lg">
+              <Link to="/affaires/$affaireId/devis" params={{ affaireId: prefilledAffaireId }}>
+                <ArrowLeft className="mr-1.5 h-4 w-4" />
+                Retour à l'affaire
+              </Link>
+            </Button>
+            {prefillState === "invalid" && (
+              <p className="text-xs text-destructive">
+                Affaire non trouvée ou accès refusé. Sélectionne une affaire dans la liste.
+              </p>
+            )}
+            {prefillState === "valid" && (
+              <p className="text-xs text-muted-foreground">
+                Affaire pré-sélectionnée depuis l'onglet Devis.
+              </p>
+            )}
+          </div>
+        )}
+
         {!hasParsed && (
           <DevisImportDropzone
             filename={filename}
