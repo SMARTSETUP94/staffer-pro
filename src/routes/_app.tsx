@@ -57,7 +57,7 @@ function AppGuard() {
     }
     // Pas admin/chef sur desktop : autorisé uniquement sur les pages employé
     if (!effIsAdminOrChef && !isEmployeAllowedPath) {
-      navigate({ to: "/dashboard-employe" });
+      navigate({ to: "/dashboard" });
     }
   }, [
     loading, rolesLoaded, user, isAdminOrChef, effIsAdminOrChef,
