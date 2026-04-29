@@ -29,9 +29,16 @@ import {
   type EditableObjet,
 } from "@/components/devis-import/DevisImportSection3Objets";
 import { DevisImportSection4Chantier } from "@/components/devis-import/DevisImportSection4Chantier";
+import { DevisImportSection5BulkAssign } from "@/components/devis-import/DevisImportSection5BulkAssign";
 import { DevisImportFooter } from "@/components/devis-import/DevisImportFooter";
 import { NEW_AFFAIRE, type AffaireOption, type PosteRow } from "@/components/devis-import/types";
 import { detectMachinisteDoubleComptage } from "@/lib/devis-import-v2-helpers";
+import {
+  EMPTY_BULK_ASSIGN,
+  activeEtapesFromObjets,
+  buildBulkAssignPayload,
+  type BulkAssignSelections,
+} from "@/lib/bulk-assign-roles";
 
 /** v0.25.1 — Pré-sélection affaire via ?affaire_id=... depuis l'onglet Devis d'une affaire. */
 const importSearchSchema = z.object({
