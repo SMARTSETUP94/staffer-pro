@@ -43,6 +43,7 @@ type FormData = {
   rgpd_consent: boolean;
   // Identité
   avatar_url: string;
+  avatar_path: string;
   telephone: string;
   date_naissance: string;
   bio_courte: string;
