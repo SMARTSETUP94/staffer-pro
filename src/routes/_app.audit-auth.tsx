@@ -27,7 +27,7 @@ function AuditAuthPage() {
     <div className="space-y-6 p-4 md:p-6">
       <PageHeader
         title="Audit Auth"
-        subtitle="Registre des inscriptions, connexions et invitations"
+        description="Registre des inscriptions, connexions et invitations"
       />
 
       <Tabs defaultValue="connexions" className="w-full">
