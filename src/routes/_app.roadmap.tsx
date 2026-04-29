@@ -1475,6 +1475,13 @@ const RELEASES: RoadmapRelease[] = [
 ];
 
 const PLANNED: RoadmapPlanned[] = [
+  // ========== v0.26+ ==========
+  {
+    priority: "moyenne",
+    title: "v0.26+ — Pièce d'identité (CNI / passeport) sur profil utilisateur",
+    description:
+      "🔮 Ajouter upload sécurisé de pièce d'identité (CNI ou passeport) sur le profil employé : champ photo recto/verso, type de pièce, numéro, date d'expiration. Stockage privé (bucket Lovable Cloud avec RLS stricte : seuls admin + l'employé lui-même peuvent voir), expiration alerte 60j avant. Use case : conformité chantiers, contrôle accès sites sécurisés.",
+  },
   // ========== v0.20.1 — Hotfixes & finitions Fabrication ==========
   {
     priority: "haute",
