@@ -567,6 +567,15 @@ function DevisImportPage() {
               warnMachiniste={warnMachiniste}
             />
 
+            <DevisImportSection5BulkAssign
+              selections={bulkAssign}
+              setSelections={setBulkAssign}
+              activeEtapes={activeEtapes}
+              hasSelectedObjets={selectedObjetsCount > 0}
+              heuresMontage={importMontage ? montageH : 0}
+              heuresDemontage={importDemontage ? demontageH : 0}
+            />
+
             {errors.length > 0 && (
               <Card className="border-destructive/40 bg-destructive/5">
                 <CardContent className="space-y-1 p-4">
