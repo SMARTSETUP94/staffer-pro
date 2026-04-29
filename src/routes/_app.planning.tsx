@@ -1,4 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, stripSearchParams } from "@tanstack/react-router";
+import { zodValidator, fallback } from "@tanstack/zod-adapter";
+import { z } from "zod";
 import { useMemo, useRef, useState } from "react";
 import { startOfWeek, addDays, format } from "date-fns";
 import { Calendar, Loader2, Search, FileDown, UserPlus, Truck, Users, ClipboardList } from "lucide-react";
@@ -26,6 +28,21 @@ import { useVehicules, type Trajet } from "@/hooks/use-vehicules";
 import { useTrajetsWeek } from "@/hooks/use-trajets";
 import { exportPlanningToPDF } from "@/lib/planning-export";
 import type { TrajetSuggestion } from "@/lib/trajets-suggestions";
+import { TypologieMultiFilter } from "@/components/typologie/TypologieMultiFilter";
+import {
+  type AffaireTypologie,
+  AFFAIRE_TYPOLOGIES,
+  getAffaireTypologie,
+} from "@/lib/affaire-typologie";
+
+const PLANNING_SEARCH_DEFAULTS = { typo: [] as AffaireTypologie[] };
+
+const planningSearchSchema = z.object({
+  typo: fallback(
+    z.array(z.enum(AFFAIRE_TYPOLOGIES as [AffaireTypologie, ...AffaireTypologie[]])),
+    [],
+  ).default([]),
+});
 
 export const Route = createFileRoute("/_app/planning")({
   head: () => ({
@@ -34,6 +51,8 @@ export const Route = createFileRoute("/_app/planning")({
       { name: "description", content: "Vue planning hebdomadaire des équipes sur les chantiers." },
     ],
   }),
+  validateSearch: zodValidator(planningSearchSchema),
+  search: { middlewares: [stripSearchParams(PLANNING_SEARCH_DEFAULTS)] },
   component: PlanningPage,
 });
 
