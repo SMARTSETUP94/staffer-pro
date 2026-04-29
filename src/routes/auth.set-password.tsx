@@ -178,7 +178,10 @@ function SetPasswordPage() {
     }
   };
 
-  if (!hashChecked || loading || (!user && !sessionError)) {
+  // Loader uniquement si on attend encore le check du hash.
+  // Une fois hashChecked: on affiche TOUJOURS le formulaire (même sans user)
+  // pour permettre de saisir un mot de passe — au submit on retentera la session.
+  if (!hashChecked) {
     return (
       <div className="grid min-h-screen place-items-center bg-[var(--cream)]">
         <Loader2 className="h-6 w-6 animate-spin text-[var(--ink)]" />
