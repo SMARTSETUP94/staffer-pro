@@ -297,32 +297,24 @@ function OnboardingPage() {
 
   async function handleAvatarUpload(file: File) {
     if (!user) return;
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Image > 5 Mo");
-      return;
-    }
     setBusy(true);
-    const ext = file.name.split(".").pop() ?? "jpg";
-    const path = `${user.id}/avatar-${Date.now()}.${ext}`;
-    const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, {
-      upsert: true,
-      contentType: file.type,
-    });
-    if (upErr) {
-      toast.error("Upload échoué");
+    const { data, error } = await uploadAvatar(file, user.id);
+    if (error) {
+      toast.error(
+        error.code === "size"
+          ? "Image > 5 Mo"
+          : error.code === "type"
+            ? "Format non supporté"
+            : error.code === "upload"
+              ? "Upload échoué"
+              : error.code === "sign"
+                ? "Génération de l'URL échouée"
+                : "Erreur"
+      );
       setBusy(false);
       return;
     }
-    // Bucket privé : on génère une URL signée longue durée (1 an)
-    const { data: signed, error: signErr } = await supabase.storage
-      .from("avatars")
-      .createSignedUrl(path, 60 * 60 * 24 * 365);
-    if (signErr || !signed?.signedUrl) {
-      toast.error("Génération de l'URL échouée");
-      setBusy(false);
-      return;
-    }
-    update("avatar_url", signed.signedUrl);
+    update("avatar_url", data.signedUrl);
     toast.success("Photo importée");
     setBusy(false);
   }
