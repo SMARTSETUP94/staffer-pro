@@ -14,6 +14,7 @@ export interface AuthContextValue {
   isChef: boolean;
   isAdminOrChef: boolean;
   passwordSetDone: boolean | null;
+  profileCompleted: boolean;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signInWithMagicLink: (email: string, redirectTo?: string) => Promise<{ error: string | null }>;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: string | null }>;
@@ -35,11 +36,20 @@ async function fetchRoles(userId: string): Promise<AppRole[]> {
 async function fetchPasswordSetDone(userId: string): Promise<boolean | null> {
   const { data, error } = await supabase
     .from("profiles")
-    .select("password_set_done")
+    .select("password_set_done, profile_completed_at")
     .eq("id", userId)
     .maybeSingle();
   if (error || !data) return null;
   return Boolean(data.password_set_done);
+}
+
+async function fetchProfileCompleted(userId: string): Promise<boolean> {
+  const { data } = await supabase
+    .from("profiles")
+    .select("profile_completed_at")
+    .eq("id", userId)
+    .maybeSingle();
+  return Boolean(data?.profile_completed_at);
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
