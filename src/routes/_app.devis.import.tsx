@@ -355,6 +355,7 @@ function DevisImportPage() {
     setImportDemontage(false);
     setMontageH(0);
     setDemontageH(0);
+    setBulkAssign(EMPTY_BULK_ASSIGN);
   };
 
   const commit = async () => {
@@ -404,9 +405,10 @@ function DevisImportPage() {
         _heures_montage: importMontage ? montageH : null,
         _heures_demontage: importDemontage ? demontageH : null,
         _fichier_hash: fichierHash,
-      } as unknown as Parameters<typeof supabase.rpc<"import_devis_atomique_v2">>[1];
+        _bulk_assign: buildBulkAssignPayload(bulkAssign),
+      } as unknown as Parameters<typeof supabase.rpc<"import_devis_atomique_v3">>[1];
 
-      const { error } = await supabase.rpc("import_devis_atomique_v2", rpcArgs);
+      const { error } = await supabase.rpc("import_devis_atomique_v3", rpcArgs);
 
       if (error) {
         const isDuplicate = error.code === "23505" || /déjà été importé/i.test(error.message);
