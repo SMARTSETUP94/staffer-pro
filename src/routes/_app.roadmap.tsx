@@ -44,6 +44,48 @@ interface RoadmapPlanned {
 const RELEASES: RoadmapRelease[] = [
   {
     date: "2026-04-29",
+    version: "v0.26.1",
+    title: "🚨 Hotfix critique — Lien d'invitation cassé pour nouveaux utilisateurs",
+    entries: [
+      {
+        type: "fix",
+        title: "🔧 inviteUser/resendInvitation : redirectTo=/auth/set-password (admin-actions.ts)",
+        description:
+          "BUG BLOQUANT TERRAIN : depuis v0.25.0, generateLink({type:'invite'}) ne passait PAS d'options.redirectTo, donc Supabase utilisait Site URL par défaut (/) au lieu de /auth/set-password. Le hash #access_token était consommé sur la racine par detectSessionInUrl, AppGuard prenait la main avant que l'utilisateur ait pu créer son mot de passe → boucle infinie ou /onboarding sans password réel. Fix : ajout de options.redirectTo dans inviteUser ET resendInvitation, avec siteUrl passé depuis le client (window.location.origin) + fallback prod (https://staffing.setup.paris). Helper testable resolveSetPasswordRedirect() exposé.",
+        priority: "haute",
+      },
+      {
+        type: "fix",
+        title: "🛡️ AppGuard : invité status=invite forcé sur /auth/set-password (filet de sécurité)",
+        description:
+          "Extension de la garde mustSetPassword : tout user_roles.status='invite' avec password_set_done!=true ET password_set_at IS NULL est forcé sur /auth/set-password, peu importe son rôle (chef/admin/employé). Empêche qu'un employé invité bypass la création de mot de passe et arrive directement sur /onboarding. Logique extraite dans src/lib/auth-redirect-helpers.ts (testable) via shouldForceSetPassword().",
+        priority: "haute",
+      },
+      {
+        type: "fix",
+        title: "🚪 routes/index.tsx : hash #access_token redirige vers /auth/set-password",
+        description:
+          "Défense en profondeur : si la racine reçoit un hash de lien d'invitation/recovery (access_token, type=invite|recovery|magiclink|signup), redirect immédiat vers /auth/set-password en préservant le hash, AVANT que detectSessionInUrl ne consomme la session sur la mauvaise route. Helper isAuthHashPresent() testable.",
+        priority: "haute",
+      },
+      {
+        type: "fix",
+        title: "⚡ auth-context : chargement rôles synchrone (suppression setTimeout)",
+        description:
+          "Bug secondaire : le setTimeout(0) sur fetchRoles créait un gap où AppGuard pouvait router prematurely (user présent mais rolesLoaded=false → loader → routing immédiat sur /onboarding). Refonte : loadUserData() asynchrone fire-and-forget sans setTimeout, expose passwordSetAt + isInviteStatus pour la garde étendue. Pas d'await dans le callback onAuthStateChange (évite deadlock).",
+        priority: "moyenne",
+      },
+      {
+        type: "fix",
+        title: "✅ +23 tests Vitest sur la régression auth (543 verts au total)",
+        description:
+          "Couverture complète : shouldForceSetPassword (8 cas dont chef legacy, invité employé, skip, password déjà set), isAuthHashPresent (8 cas dont anchor classique, invite, recovery), resolveSetPasswordRedirect (7 cas dont fallback, trailing slash, http preview, Lovable preview).",
+        priority: "moyenne",
+      },
+    ],
+  },
+  {
+    date: "2026-04-29",
     version: "v0.26.0",
     title: "Dashboard customizable mixable (17 widgets atomiques)",
     entries: [
