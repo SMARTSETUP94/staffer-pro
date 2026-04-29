@@ -85,7 +85,7 @@ export const Route = createFileRoute("/_app/affaires/")({
 
 function AffairesPage() {
   const { isAdminOrChef } = useAuth();
-  const navigate = useNavigate({ from: "/affaires" });
+  const navigate = useNavigate({ from: "/affaires/" });
   const { typo: typoFilter } = Route.useSearch();
   const [rows, setRows] = useState<AffaireRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -133,7 +133,7 @@ function AffairesPage() {
   }, [rows, search, filter, typoSet]);
 
   const setTypoFilter = (next: AffaireTypologie[]) => {
-    navigate({ search: (prev) => ({ ...prev, typo: next }), replace: true });
+    navigate({ search: { typo: next }, replace: true });
   };
 
   const openCreate = () => { setForm(emptyForm); setOpen(true); };
