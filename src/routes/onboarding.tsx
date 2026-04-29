@@ -23,6 +23,7 @@ import {
   stepProSchema,
   stepSecuriteSchema,
 } from "@/lib/onboarding-schemas";
+import { uploadAvatar } from "@/lib/avatar-upload";
 
 export const Route = createFileRoute("/onboarding")({
   head: () => ({
