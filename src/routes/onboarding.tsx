@@ -120,6 +120,7 @@ function OnboardingPage() {
           ...f,
           rgpd_consent: Boolean(profile.rgpd_consent_at),
           avatar_url: profile.avatar_url ?? "",
+          avatar_path: ((profile as unknown as { avatar_path?: string | null }).avatar_path) ?? "",
           telephone: profile.telephone ?? "",
           date_naissance: profile.date_naissance ?? "",
           bio_courte: profile.bio_courte ?? "",
