@@ -11,6 +11,7 @@ export const Route = createFileRoute("/_app")({
 
 // Pages accessibles à un employé en desktop (vue restreinte)
 const EMPLOYE_DESKTOP_ALLOWED = [
+  "/dashboard",
   "/dashboard-employe",
   "/mes-heures",
   "/mes-swaps",
@@ -56,7 +57,7 @@ function AppGuard() {
     }
     // Pas admin/chef sur desktop : autorisé uniquement sur les pages employé
     if (!effIsAdminOrChef && !isEmployeAllowedPath) {
-      navigate({ to: "/dashboard-employe" });
+      navigate({ to: "/dashboard" });
     }
   }, [
     loading, rolesLoaded, user, isAdminOrChef, effIsAdminOrChef,
