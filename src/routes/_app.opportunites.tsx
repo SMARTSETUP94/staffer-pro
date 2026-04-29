@@ -269,6 +269,17 @@ function OpportunitesPage() {
         </Link>
       </div>
 
+      <div className="rounded-2xl border border-border bg-card p-3">
+        <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+          Typologie
+        </div>
+        <TypologieMultiFilter
+          value={typoFilter}
+          onChange={setTypoFilter}
+          counts={typoCounts}
+        />
+      </div>
+
       {loading ? (
         <div className="flex items-center justify-center p-16">
           <Loader2 className="h-6 w-6 animate-spin text-primary" />
