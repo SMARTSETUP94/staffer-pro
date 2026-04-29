@@ -29,6 +29,7 @@ import { useTrajetsWeek } from "@/hooks/use-trajets";
 import { exportPlanningToPDF } from "@/lib/planning-export";
 import type { TrajetSuggestion } from "@/lib/trajets-suggestions";
 import { TypologieMultiFilter } from "@/components/typologie/TypologieMultiFilter";
+import { normalizeName } from "@/lib/string-normalize";
 import {
   type AffaireTypologie,
   AFFAIRE_TYPOLOGIES,

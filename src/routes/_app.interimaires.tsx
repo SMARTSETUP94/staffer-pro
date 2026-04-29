@@ -25,6 +25,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
+import { normalizeName } from "@/lib/string-normalize";
 
 export const Route = createFileRoute("/_app/interimaires")({
   head: () => ({
