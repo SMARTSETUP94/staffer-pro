@@ -73,6 +73,7 @@ function OnboardingPage() {
   const [employeId, setEmployeId] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const uploadAvatarFn = useServerFn(uploadAvatarServer);
 
   const [form, setForm] = useState<FormData>({
     rgpd_consent: false,
