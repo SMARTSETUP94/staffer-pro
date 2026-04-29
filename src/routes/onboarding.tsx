@@ -77,6 +77,7 @@ function OnboardingPage() {
   const [form, setForm] = useState<FormData>({
     rgpd_consent: false,
     avatar_url: "",
+    avatar_path: "",
     telephone: "",
     date_naissance: "",
     bio_courte: "",
