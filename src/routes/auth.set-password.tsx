@@ -22,29 +22,104 @@ export const Route = createFileRoute("/auth/set-password")({
   component: SetPasswordPage,
 });
 
+/**
+ * Tente d'établir la session depuis le hash URL (#access_token=...&refresh_token=...)
+ * Cas typique : lien d'invitation/recovery Supabase.
+ * Retourne true si une session a été établie, false sinon.
+ */
+async function consumeHashSessionIfPresent(): Promise<boolean> {
+  if (typeof window === "undefined") return false;
+  const hash = window.location.hash;
+  if (!hash || !hash.includes("access_token=")) return false;
+  try {
+    const params = new URLSearchParams(hash.startsWith("#") ? hash.slice(1) : hash);
+    const access_token = params.get("access_token");
+    const refresh_token = params.get("refresh_token");
+    if (!access_token || !refresh_token) return false;
+    const { error } = await supabase.auth.setSession({ access_token, refresh_token });
+    if (error) {
+      console.error("[set-password] setSession from hash failed:", error);
+      return false;
+    }
+    // Nettoyer le hash de l'URL
+    history.replaceState(null, "", window.location.pathname + window.location.search);
+    console.info("[set-password] session set from hash");
+    return true;
+  } catch (e) {
+    console.error("[set-password] hash parse error:", e);
+    return false;
+  }
+}
+
 function SetPasswordPage() {
   const navigate = useNavigate();
   const { user, roles, loading, rolesLoaded, refreshRoles } = useAuth();
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [busy, setBusy] = useState(false);
+  const [pwdError, setPwdError] = useState<string | null>(null);
+  const [confirmError, setConfirmError] = useState<string | null>(null);
+  const [sessionError, setSessionError] = useState<string | null>(null);
+  const [hashChecked, setHashChecked] = useState(false);
 
-  // Si pas connecté → vers login
+  // Au mount : tenter de consommer le hash AVANT de décider de rediriger
   useEffect(() => {
-    if (!loading && !user) navigate({ to: "/login" });
-  }, [loading, user, navigate]);
+    let cancelled = false;
+    (async () => {
+      await consumeHashSessionIfPresent();
+      if (!cancelled) setHashChecked(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Si pas connecté APRÈS check hash → vers login (avec petit délai de grâce)
+  useEffect(() => {
+    if (!hashChecked || loading) return;
+    if (user) return;
+    // Grâce de 600ms : laisser onAuthStateChange propager si nécessaire
+    const t = setTimeout(() => {
+      console.warn("[set-password] no user after grace period → redirect /login");
+      setSessionError("Lien expiré ou invalide. Demandez un nouveau lien d'invitation.");
+      navigate({ to: "/login" });
+    }, 600);
+    return () => clearTimeout(t);
+  }, [hashChecked, loading, user, navigate]);
 
   const isEmploye = rolesLoaded && roles.includes("employe") && !roles.includes("chef_chantier") && !roles.includes("admin");
   const canSkip = isEmploye;
 
-  const onSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const validate = (): boolean => {
+    let ok = true;
     if (password.length < 8) {
-      toast.error("Mot de passe trop court", { description: "8 caractères minimum." });
-      return;
+      setPwdError("8 caractères minimum.");
+      ok = false;
+    } else {
+      setPwdError(null);
     }
     if (password !== confirm) {
-      toast.error("Les mots de passe ne correspondent pas");
+      setConfirmError("Les mots de passe ne correspondent pas.");
+      ok = false;
+    } else {
+      setConfirmError(null);
+    }
+    return ok;
+  };
+
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    console.info("[set-password] submit attempt");
+    if (!validate()) {
+      console.info("[set-password] validation failed", { pwdLen: password.length, match: password === confirm });
+      return;
+    }
+    // Vérifier qu'on a bien une session avant updateUser
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      console.error("[set-password] no session before updateUser");
+      setSessionError("Lien expiré. Demandez un nouveau lien d'invitation.");
+      toast.error("Lien expiré", { description: "Demandez un nouveau lien d'invitation à un admin." });
       return;
     }
     setBusy(true);
@@ -64,11 +139,9 @@ function SetPasswordPage() {
       } catch (e) {
         const msg = await readServerFnError(e);
         console.warn("[set-password] markPasswordSet failed:", msg);
-        // Pas bloquant pour l'UX (le password est posé)
       }
       await refreshRoles();
       toast.success("Mot de passe créé", { description: "Bienvenue chez Setup Paris !" });
-      // Redirection explicite selon le rôle (évite de dépendre d'IndexRedirect + preview state)
       const isChefOrAdmin = roles.includes("admin") || roles.includes("chef_chantier");
       navigate({ to: isChefOrAdmin ? "/dashboard" : "/mobile/aujourdhui" });
     } catch (e) {
@@ -97,7 +170,7 @@ function SetPasswordPage() {
     }
   };
 
-  if (loading || !user) {
+  if (!hashChecked || loading || (!user && !sessionError)) {
     return (
       <div className="grid min-h-screen place-items-center bg-[var(--cream)]">
         <Loader2 className="h-6 w-6 animate-spin text-[var(--ink)]" />
@@ -131,41 +204,46 @@ function SetPasswordPage() {
                 ", un mot de passe est obligatoire pour sécuriser ton accès."}
           </p>
 
-          <form onSubmit={onSubmit} className="mt-6 space-y-4">
+          {sessionError && (
+            <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+              {sessionError}
+            </div>
+          )}
+
+          <form onSubmit={onSubmit} className="mt-6 space-y-4" noValidate>
             <div className="space-y-1.5">
               <Label htmlFor="pwd" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Nouveau mot de passe
               </Label>
               <Input
-                id="pwd" type="password" autoComplete="new-password" required minLength={8}
-                value={password} onChange={(e) => setPassword(e.target.value)}
+                id="pwd" type="password" autoComplete="new-password"
+                value={password}
+                onChange={(e) => { setPassword(e.target.value); if (pwdError) setPwdError(null); }}
+                aria-invalid={!!pwdError}
                 className="h-11 rounded-xl"
               />
-              <p className="text-xs text-muted-foreground">8 caractères minimum.</p>
+              {pwdError ? (
+                <p className="text-xs text-red-600">{pwdError}</p>
+              ) : (
+                <p className="text-xs text-muted-foreground">8 caractères minimum.</p>
+              )}
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="pwd2" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Confirmation
               </Label>
               <Input
-                id="pwd2" type="password" autoComplete="new-password" required minLength={8}
-                value={confirm} onChange={(e) => setConfirm(e.target.value)}
+                id="pwd2" type="password" autoComplete="new-password"
+                value={confirm}
+                onChange={(e) => { setConfirm(e.target.value); if (confirmError) setConfirmError(null); }}
+                aria-invalid={!!confirmError}
                 className="h-11 rounded-xl"
               />
+              {confirmError && <p className="text-xs text-red-600">{confirmError}</p>}
             </div>
             <Button
               type="submit"
               disabled={busy}
-              onClick={(e) => {
-                // Filet de sécurité : si pour une raison quelconque le submit du form
-                // ne se déclenche pas (Slot/Radix, autoComplete bloqué…), on appelle
-                // explicitement le handler.
-                if (!busy) {
-                  // Laisser le submit natif se faire ; ne rien faire ici.
-                  // Mais on log le clic pour débogage.
-                  console.info("[set-password] click create account");
-                }
-              }}
               className="group h-11 w-full rounded-xl bg-[var(--indigo,#2A2A8C)] text-white hover:bg-[var(--indigo,#2A2A8C)]/90"
             >
               {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <KeyRound className="mr-2 h-4 w-4" />}
