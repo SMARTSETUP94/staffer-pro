@@ -63,6 +63,18 @@
   --color-metier-machiniste: var(--metier-machiniste);
   --color-metier-logistique: var(--metier-logistique);
   --color-metier-suivi-projet: var(--metier-suivi-projet);
+
+  /* Couleurs typologie chantiers (v0.24.0) */
+  --color-typologie-non-op: var(--typologie-non-op);
+  --color-typologie-non-op-foreground: var(--typologie-non-op-foreground);
+  --color-typologie-md: var(--typologie-md);
+  --color-typologie-md-foreground: var(--typologie-md-foreground);
+  --color-typologie-fab: var(--typologie-fab);
+  --color-typologie-fab-foreground: var(--typologie-fab-foreground);
+  --color-typologie-stockage: var(--typologie-stockage);
+  --color-typologie-stockage-foreground: var(--typologie-stockage-foreground);
+  --color-typologie-proto: var(--typologie-proto);
+  --color-typologie-proto-foreground: var(--typologie-proto-foreground);
 }
 
 :root {
@@ -137,6 +149,18 @@
   --metier-machiniste: #10B981;
   --metier-logistique: #6366F1;
   --metier-suivi-projet: #14B8A6;
+
+  /* Typologie chantiers v0.24.0 — pâles pour fond badge, teinte saturée pour foreground */
+  --typologie-non-op: oklch(0.94 0.045 25);          /* rouge pâle */
+  --typologie-non-op-foreground: oklch(0.45 0.18 25);
+  --typologie-md: oklch(0.94 0.06 45);                /* orange pâle */
+  --typologie-md-foreground: oklch(0.5 0.17 45);
+  --typologie-fab: oklch(0.94 0.05 290);              /* violet pâle */
+  --typologie-fab-foreground: oklch(0.45 0.2 290);
+  --typologie-stockage: oklch(0.92 0.005 280);        /* gris neutre */
+  --typologie-stockage-foreground: oklch(0.4 0.01 280);
+  --typologie-proto: oklch(0.94 0.07 75);             /* amber pâle */
+  --typologie-proto-foreground: oklch(0.48 0.16 75);
 }
 
 .dark {
@@ -167,6 +191,18 @@
   --sidebar-accent-foreground: oklch(0.965 0.012 80);
   --sidebar-border: oklch(0.25 0.008 280);
   --sidebar-ring: oklch(0.65 0.2 277);
+
+  /* Typologie chantiers — variantes sombres (fond plus foncé, foreground plus clair) */
+  --typologie-non-op: oklch(0.32 0.08 25);
+  --typologie-non-op-foreground: oklch(0.85 0.12 25);
+  --typologie-md: oklch(0.32 0.09 45);
+  --typologie-md-foreground: oklch(0.85 0.13 45);
+  --typologie-fab: oklch(0.32 0.09 290);
+  --typologie-fab-foreground: oklch(0.85 0.14 290);
+  --typologie-stockage: oklch(0.3 0.005 280);
+  --typologie-stockage-foreground: oklch(0.8 0.01 280);
+  --typologie-proto: oklch(0.34 0.1 75);
+  --typologie-proto-foreground: oklch(0.88 0.13 75);
 }
 
 @layer base {
