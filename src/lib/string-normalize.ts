@@ -37,3 +37,6 @@ export function fuzzyMatch(haystack: string, needle: string): boolean {
   if (!needle) return true;
   return normalizeName(haystack).includes(normalizeName(needle));
 }
+
+/** Alias sémantique de fuzzyMatch pour les call sites qui préfèrent "contains". */
+export const fuzzyContains = fuzzyMatch;
