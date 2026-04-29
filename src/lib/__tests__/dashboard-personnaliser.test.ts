@@ -121,4 +121,10 @@ describe("Empty state du dashboard", () => {
     const layout: DashboardLayout = { visible: ["mes_etapes_fab"] };
     expect(layout.visible.length).toBeGreaterThan(0);
   });
+
+  it("layout.visible filtre les ids inconnus avant rendu", () => {
+    const raw = ["kpi_top", "fake_xyz", "meteo_chantiers"];
+    const filtered = raw.filter((id) => (WIDGET_META as Record<string, unknown>)[id] !== undefined);
+    expect(filtered).toEqual(["kpi_top", "meteo_chantiers"]);
+  });
 });
