@@ -44,6 +44,49 @@ interface RoadmapPlanned {
 const RELEASES: RoadmapRelease[] = [
   {
     date: "2026-04-29",
+    version: "v0.24.1",
+    title: "Hotfix dette technique — 5 findings audit Bloc 8",
+    entries: [
+      {
+        type: "improvement",
+        title: "🛠️ S1.1 Factorisation `stripDiacritics` (8 fichiers → 1 module)",
+        description:
+          "Centralisation dans `src/lib/string-normalize.ts` (`stripDiacritics`, `normalizeName`, `normalizeForMatch`, `fuzzyMatch`, alias `fuzzyContains`). 8 fichiers convertis : saisie-equipe-filter, opportunites-import, employes-import, devis-import, devis-parser/match, planning, interimaires, AddInterimDialog. Anti-régression critique (cause du bug fuzzyMatch v0.23.1). +11 tests dédiés (`string-normalize.test.ts`).",
+      },
+      {
+        type: "improvement",
+        title: "🔒 S2.1 REVOKE EXECUTE PUBLIC sur 37 helpers SQL internes",
+        description:
+          "Migration : tous les `notify_*`, `set_*`, `log_*`, `guard_*`, `handle_*`, `sync_*`, `enforce_*`, `check_*`, `create_notification`, `update_updated_at_column` ne sont plus exécutables par `public/anon/authenticated`. Ils restent appelés par les triggers (rôle `postgres`). Linter Supabase : 98 warnings → 28 (les 28 restants = helpers RLS volontairement publics : has_role, is_admin, is_chef_or_admin, can_saisie_on_affaire, etc.).",
+      },
+      {
+        type: "improvement",
+        title: "⚡ S3.1 Lazy-load `jszip` sur planning-zip-export",
+        description:
+          "`await import('jszip')` à l'intérieur du handler d'export. Avec le lazy-load `xlsx` déjà fait au tour précédent (Lot B v0.24.1), gain bundle initial cumulé estimé ~600–800 KB. Aucun changement fonctionnel.",
+      },
+      {
+        type: "improvement",
+        title: "🧠 S3.2 useMemo Planning sur filtre typologie",
+        description:
+          "`affaireIdsByTypo` + `filterAffaireStr` mémoïsés sur `[affaires, typoFilter, filterAffaire]`. Évite re-render inutile à chaque toggle typologie. (Déjà appliqué au commit Bloc 4 v0.24.0, validé en audit.)",
+      },
+      {
+        type: "improvement",
+        title: "🛡️ S7.2 UNIQUE INDEX `fabrication_objets(affaire_id, reference)`",
+        description:
+          "Anti-doublon en base contre double-clic import progbat ou bulk insert concurrent. 0 doublon existant détecté avant création. Garantie d'idempotence native côté DB.",
+      },
+      {
+        type: "improvement",
+        title: "✅ Tests Vitest : 416 → 427 (+11)",
+        description:
+          "Nouveau fichier `string-normalize.test.ts` couvrant 100% des helpers (NFD, lowercase, fuzzyContains, edge cases majuscules accents, null/undefined). Suite complète verte en 7s.",
+      },
+    ],
+  },
+  {
+    date: "2026-04-29",
     version: "v0.24.0",
     title: "Typologie de chantiers + hotfix set-password",
     entries: [
