@@ -1427,6 +1427,7 @@ export type Database = {
           adresse_pays: string | null
           adresse_rue: string | null
           adresse_ville: string | null
+          avatar_path: string | null
           avatar_url: string | null
           bio_courte: string | null
           contact_urgence_lien: string | null
@@ -1458,6 +1459,7 @@ export type Database = {
           adresse_pays?: string | null
           adresse_rue?: string | null
           adresse_ville?: string | null
+          avatar_path?: string | null
           avatar_url?: string | null
           bio_courte?: string | null
           contact_urgence_lien?: string | null
@@ -1489,6 +1491,7 @@ export type Database = {
           adresse_pays?: string | null
           adresse_rue?: string | null
           adresse_ville?: string | null
+          avatar_path?: string | null
           avatar_url?: string | null
           bio_courte?: string | null
           contact_urgence_lien?: string | null
