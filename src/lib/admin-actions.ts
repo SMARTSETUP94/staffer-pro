@@ -14,9 +14,19 @@ interface InviteInput {
   email: string;
   fullName?: string;
   roles: AppRoleName[];
+  siteUrl?: string;
 }
 
 const ALLOWED_ROLES: AppRoleName[] = ["admin", "chef_chantier", "employe"];
+
+const FALLBACK_SITE_URL = "https://staffing.setup.paris";
+
+/** Retourne une URL valide commençant par http(s)://, fallback prod sinon. */
+export function resolveSetPasswordRedirect(siteUrl?: string): string {
+  const candidate = (siteUrl ?? process.env.PUBLIC_SITE_URL ?? FALLBACK_SITE_URL).trim();
+  const safe = /^https?:\/\//.test(candidate) ? candidate : FALLBACK_SITE_URL;
+  return `${safe.replace(/\/$/, "")}/auth/set-password`;
+}
 
 function validateInviteInput(input: unknown): InviteInput {
   if (!input || typeof input !== "object") throw new Error("Payload invalide");
@@ -30,7 +40,8 @@ function validateInviteInput(input: unknown): InviteInput {
     .map((r) => String(r))
     .filter((r): r is AppRoleName => (ALLOWED_ROLES as string[]).includes(r));
   if (cleanRoles.length === 0) throw new Error("Au moins un rôle est requis");
-  return { email, fullName, roles: Array.from(new Set(cleanRoles)) };
+  const siteUrl = typeof i.siteUrl === "string" ? i.siteUrl : undefined;
+  return { email, fullName, roles: Array.from(new Set(cleanRoles)), siteUrl };
 }
 
 async function assertCallerIsAdmin(supabase: AuthedSupabase, userId: string) {
@@ -121,10 +132,13 @@ export const inviteUser = createServerFn({ method: "POST" })
       await assertCallerIsAdmin(supabase, userId);
 
       // 1. Générer le lien d'invitation (crée l'utilisateur s'il n'existe pas)
+      // CRITIQUE : redirectTo force l'arrivée sur /auth/set-password (et non /)
+      const redirectTo = resolveSetPasswordRedirect(data.siteUrl);
       const { data: linkData, error: linkErr } = await supabaseAdmin.auth.admin.generateLink({
         type: "invite",
         email: data.email,
         options: {
+          redirectTo,
           data: {
             full_name: data.fullName,
             invited: true,
@@ -215,7 +229,8 @@ export const resendInvitation = createServerFn({ method: "POST" })
     const i = input as Record<string, unknown>;
     const targetUserId = String(i.targetUserId ?? "");
     if (!/^[0-9a-f-]{36}$/i.test(targetUserId)) throw new Error("targetUserId invalide");
-    return { targetUserId };
+    const siteUrl = typeof i.siteUrl === "string" ? i.siteUrl : undefined;
+    return { targetUserId, siteUrl };
   })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
@@ -236,9 +251,11 @@ export const resendInvitation = createServerFn({ method: "POST" })
     const roles = (roleRows ?? []).map((r) => r.role as AppRoleName);
     if (roles.length === 0) throw new Error("L'utilisateur n'a aucun rôle");
 
+    const redirectTo = resolveSetPasswordRedirect(data.siteUrl);
     const { data: linkData, error: linkErr } = await supabaseAdmin.auth.admin.generateLink({
       type: "invite",
       email: profile.email,
+      options: { redirectTo },
     });
     if (linkErr || !linkData?.properties?.action_link) {
       throw new Error(linkErr?.message ?? "Impossible de regénérer le lien");
