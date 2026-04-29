@@ -1,4 +1,6 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, stripSearchParams } from "@tanstack/react-router";
+import { zodValidator, fallback } from "@tanstack/zod-adapter";
+import { z } from "zod";
 import { useEffect, useMemo, useState } from "react";
 import { Plus, Search, Loader2, ArrowRight, Pencil, RotateCcw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,6 +21,9 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+import { TypologieBadge } from "@/components/typologie/TypologieBadge";
+import { TypologieMultiFilter } from "@/components/typologie/TypologieMultiFilter";
+import { type AffaireTypologie, AFFAIRE_TYPOLOGIES, getAffaireTypologie } from "@/lib/affaire-typologie";
 import { toast } from "sonner";
 
 type AffaireStatut = "prospect" | "en_cours" | "termine" | "annule";
@@ -32,6 +37,7 @@ interface AffaireRow {
   statut: AffaireStatut;
   date_debut: string | null;
   date_fin_prevue: string | null;
+  typologie: AffaireTypologie | null;
 }
 
 interface FormState {
@@ -64,8 +70,16 @@ const STATUTS: { value: AffaireStatut; label: string }[] = [
   { value: "annule", label: "Annulée" },
 ];
 
+const SEARCH_DEFAULTS = { typo: [] as AffaireTypologie[] };
+
+const searchSchema = z.object({
+  typo: fallback(z.array(z.enum(AFFAIRE_TYPOLOGIES as [AffaireTypologie, ...AffaireTypologie[]])), []).default([]),
+});
+
 export const Route = createFileRoute("/_app/affaires/")({
   head: () => ({ meta: [{ title: "Affaires — Setup Paris" }] }),
+  validateSearch: zodValidator(searchSchema),
+  search: { middlewares: [stripSearchParams(SEARCH_DEFAULTS)] },
   component: AffairesPage,
 });
 
