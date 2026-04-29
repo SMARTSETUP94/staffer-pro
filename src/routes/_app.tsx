@@ -4,6 +4,7 @@ import { Loader2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { usePreview } from "@/lib/preview-context";
 import { AppLayout } from "@/components/AppLayout";
+import { shouldForceSetPassword } from "@/lib/auth-redirect-helpers";
 
 export const Route = createFileRoute("/_app")({
   component: AppGuard,
@@ -23,16 +24,24 @@ function AppGuard() {
   const navigate = useNavigate();
   const router = useRouterState();
   const currentPath = router.location.pathname;
-  const { user, loading, rolesLoaded, isAdminOrChef, passwordSetDone, profileCompleted, roles } = useAuth();
+  const {
+    user, loading, rolesLoaded, isAdminOrChef,
+    passwordSetDone, passwordSetAt, isInviteStatus, profileCompleted, roles,
+  } = useAuth();
   const { effIsMobile, effIsAdminOrChef } = usePreview();
 
   const isEmployeAllowedPath = EMPLOYE_DESKTOP_ALLOWED.some(
     (p) => currentPath === p || currentPath.startsWith(p + "/"),
   );
 
-  // Chef/admin doivent OBLIGATOIREMENT avoir un mot de passe
   const isChefOrAdmin = roles.includes("admin") || roles.includes("chef_chantier");
-  const mustSetPassword = passwordSetDone === false && isChefOrAdmin;
+  const mustSetPassword = shouldForceSetPassword({
+    isChefOrAdmin,
+    passwordSetDone,
+    passwordSetAt,
+    isInviteStatus,
+    profileCompleted,
+  });
 
   useEffect(() => {
     if (loading || !rolesLoaded) return;
@@ -40,7 +49,7 @@ function AppGuard() {
       navigate({ to: "/login" });
       return;
     }
-    // Set-password obligatoire pour chef/admin
+    // Set-password obligatoire (chef/admin OU tout invité fraîchement créé)
     if (mustSetPassword) {
       navigate({ to: "/auth/set-password" });
       return;
