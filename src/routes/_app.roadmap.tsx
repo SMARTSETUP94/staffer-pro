@@ -44,6 +44,55 @@ interface RoadmapPlanned {
 const RELEASES: RoadmapRelease[] = [
   {
     date: "2026-04-29",
+    version: "v0.26.0",
+    title: "Dashboard customizable mixable (17 widgets atomiques)",
+    entries: [
+      {
+        type: "feature",
+        title: "🧩 Dashboard universel /dashboard avec 17 widgets atomiques mixables",
+        description:
+          "Catalogue final 17 widgets : 8 existants identifiés (kpi_top, opportunites_priorite, pipeline_charge_affaires, pipeline_typologie, conversions_recentes, opportunites_perdues, meteo_chantiers, charge_atelier) + 5 existants no-regression (charge_equipe, flotte_kpis, montages_j7, tension_budget, absences_semaine) + 4 nouveaux (heures_a_valider, objets_en_retard, mes_etapes_fab, sous_effectif_J7). Mix libre commerce + opérationnel + commerce + perso sur une seule page. Grid responsive 2 colonnes lg, widgets width=2 prennent toute la largeur.",
+      },
+      {
+        type: "feature",
+        title: "🎯 Presets par rôle au 1er login (admin / chef / chargé d'affaires / employé)",
+        description:
+          "Admin : tous (17). Chef de chantier : 10 widgets ops + perso + fab pertinents. Chargé d'affaires : 7 widgets commerce + tension_budget (preset exposé pour usage futur). Employé : mes_etapes_fab uniquement. Fallback automatique si profiles.dashboard_layout est NULL. Bouton « Réinitialiser au preset » dans la Sheet.",
+      },
+      {
+        type: "feature",
+        title: "⚙️ Sheet latérale « Personnaliser » (show/hide par widget)",
+        description:
+          "Drawer droit avec checkboxes groupées par catégorie (Commerce / Opérationnel / Fabrication / Personnel). Persistance JSONB dans profiles.dashboard_layout. Optimistic update + toast confirmation. Drag & drop reorder reporté en Phase B (v0.27+).",
+      },
+      {
+        type: "feature",
+        title: "🔀 Fusion /dashboard-employe → /dashboard universel",
+        description:
+          "Suppression de la dualité de routes. /dashboard-employe redirect 301 vers /dashboard pour ne casser aucun lien. EMPLOYE_DESKTOP_ALLOWED whitelist élargie (/dashboard ajouté). Le preset 'employe' réduit l'expérience à mes_etapes_fab pour rester cohérent avec l'ancienne vue.",
+      },
+      {
+        type: "feature",
+        title: "🗄️ Migration : profiles.dashboard_layout JSONB nullable",
+        description:
+          "Stockage par utilisateur du layout personnalisé { visible: WidgetId[], hidden?: WidgetId[] }. RLS héritées des policies profiles existantes (self-update). sanitizeLayout filtre les WidgetId obsolètes au chargement (forward-compat).",
+      },
+      {
+        type: "feature",
+        title: "✅ +45 tests Vitest (520/520 verts)",
+        description:
+          "ROLE_PRESETS (admin=17, chef=10, employe=1, charge_affaires=7) + computePresetForRoles priorité + sanitizeLayout (null, formats invalides, ids inconnus filtrés) + widget-registry (registerWidget / getWidgetComponent) + WIDGET_META widths cohérents + groupement par catégorie (6/5/3/3) + Personnaliser sheet (toggle, idempotence, buildLayoutFromDraft).",
+      },
+      {
+        type: "improvement",
+        title: "🪶 Hook partagé useOpportunitesPipeline (déduplication fetch)",
+        description:
+          "Les widgets commerce (kpi_top, pipeline_charge_affaires, opportunites_priorite, etc.) partagent un même hook de fetch pour éviter N requêtes parallèles redondantes quand plusieurs widgets commerce sont actifs simultanément.",
+      },
+    ],
+  },
+  {
+    date: "2026-04-29",
     version: "v0.25.2",
     title: "Bulk-assign rôles à l'import devis Progbat",
     entries: [
