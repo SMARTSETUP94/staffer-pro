@@ -213,6 +213,7 @@ export function FeuilleRouteView({ affaires, employes, metiers, initialDate }: P
       }
     }
 
+    const { exportFeuilleRouteExcel } = await import("@/lib/feuille-route-excel");
     exportFeuilleRouteExcel({
       dates,
       affaires: affsExt.map((a) => ({ id: a.id, numero: a.numero, nom: a.nom, lieu: a.lieu })),

@@ -25,8 +25,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import {
   buildExportFilename,
   downloadBlob,
-  exportTrajetsSoustraitanceCSV,
-  exportTrajetsSoustraitanceXLSX,
   type TrajetExportRow,
 } from "@/lib/trajets-soustraitance-export";
 
