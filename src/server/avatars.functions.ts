@@ -16,10 +16,7 @@ const ALLOWED_MIME = ["image/jpeg", "image/png", "image/webp", "image/gif"];
  *   const fn = useServerFn(uploadAvatarServer);
  *   const { signedUrl, path } = await fn({ data: fd });
  */
-export const uploadAvatarServer = createServerFn({
-  method: "POST",
-  response: "data",
-})
+export const uploadAvatarServer = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => {
     if (!(input instanceof FormData)) {
