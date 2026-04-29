@@ -1,18 +1,12 @@
 /**
  * v0.23.1 FIX 3 — Helpers purs pour le filtrage de la page "Saisie pour équipe".
- * Extraits pour testabilité unitaire (lowercase + NFD strip diacritics + includes).
+ * v0.24.1 — fuzzyMatch ré-exporté depuis string-normalize (factorisation).
  */
+
+export { fuzzyMatch } from "./string-normalize";
 
 export type ContratType = "CDI" | "CDD" | "Interim" | "Independant";
 export type TypoFilter = "all" | "cdi" | "interim";
-
-/** Fuzzy maison : lowercase + strip diacritics + includes. */
-export function fuzzyMatch(haystack: string, needle: string): boolean {
-  if (!needle) return true;
-  const norm = (s: string) =>
-    s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  return norm(haystack).includes(norm(needle));
-}
 
 /** Filtre une liste d'employés selon typologie de contrat. */
 export function filterByTypologie<T extends { type_contrat: ContratType }>(

@@ -25,10 +25,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import {
   buildExportFilename,
   downloadBlob,
-  exportTrajetsSoustraitanceCSV,
-  exportTrajetsSoustraitanceXLSX,
   type TrajetExportRow,
-} from "@/lib/trajets-soustraitance-export";
+} from "@/lib/trajets-soustraitance-shared";
 
 interface Props {
   open: boolean;
@@ -209,6 +207,9 @@ export function ExportTrajetsSoustraitanceDialog({ open, onOpenChange }: Props) 
         affaireId: affaireFilter === "__all__" ? null : affaireFilter,
       };
       const filename = buildExportFilename(kind, filters);
+      const { exportTrajetsSoustraitanceCSV, exportTrajetsSoustraitanceXLSX } = await import(
+        "@/lib/trajets-soustraitance-export"
+      );
       const blob =
         kind === "csv"
           ? exportTrajetsSoustraitanceCSV(rows)

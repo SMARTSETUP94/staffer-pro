@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Loader2, Search, UserPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { normalizeName } from "@/lib/string-normalize";
 import {
   Dialog,
   DialogContent,
@@ -50,14 +51,11 @@ export function AddInterimDialog({
       });
   }, [open]);
 
-  const norm = (s: string) =>
-    s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-
   const filtered = useMemo(() => {
-    const q = norm(query.trim());
+    const q = normalizeName(query.trim());
     if (!q) return employes;
     return employes.filter((e) => {
-      const hay = norm(`${e.prenom} ${e.nom} ${e.agence_interim ?? ""} ${e.sous_type_contrat ?? ""}`);
+      const hay = normalizeName(`${e.prenom} ${e.nom} ${e.agence_interim ?? ""} ${e.sous_type_contrat ?? ""}`);
       return hay.includes(q);
     });
   }, [employes, query]);

@@ -18,8 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { WeekPicker } from "@/components/planning/WeekPicker";
 import { usePlanningData } from "@/hooks/use-planning-data";
-import { exportPlanningExcelRange } from "@/lib/planning-excel-export";
-import { exportPlanningZip } from "@/lib/planning-zip-export";
+// v0.24.1 — lazy-load des helpers d'export (xlsx, jszip ~600KB) au clic
 import { useVehicules } from "@/hooks/use-vehicules";
 import { useTrajetsWeek } from "@/hooks/use-trajets";
 
@@ -82,6 +81,7 @@ function ExportPage() {
     if (data.loading) return;
     setExporting(true);
     try {
+      const { exportPlanningExcelRange } = await import("@/lib/planning-excel-export");
       exportPlanningExcelRange({
         weekStarts,
         metiers: data.metiers,
@@ -126,6 +126,7 @@ function ExportPage() {
     if (data.loading) return;
     setZipping(true);
     try {
+      const { exportPlanningZip } = await import("@/lib/planning-zip-export");
       const res = await exportPlanningZip({
         weekStarts,
         rangeStart,

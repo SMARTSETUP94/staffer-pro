@@ -32,7 +32,7 @@ import {
   resolveResponsable,
   type EmployeForResponsable,
 } from "@/lib/feuille-route-helpers";
-import { exportFeuilleRouteExcel } from "@/lib/feuille-route-excel";
+// v0.24.1 — exportFeuilleRouteExcel chargé en lazy au clic (xlsx-js-style ~400KB)
 import { exportPlanningToPDF } from "@/lib/planning-export";
 import { AssignationDialog } from "./AssignationDialog";
 
@@ -213,6 +213,7 @@ export function FeuilleRouteView({ affaires, employes, metiers, initialDate }: P
       }
     }
 
+    const { exportFeuilleRouteExcel } = await import("@/lib/feuille-route-excel");
     exportFeuilleRouteExcel({
       dates,
       affaires: affsExt.map((a) => ({ id: a.id, numero: a.numero, nom: a.nom, lieu: a.lieu })),

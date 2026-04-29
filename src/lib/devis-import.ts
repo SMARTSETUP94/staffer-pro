@@ -111,9 +111,7 @@ const METIER_KEYWORDS: Record<MetierCode, string[]> = {
   ],
 };
 
-const STRIP_DIACRITICS = (s: string) =>
-  s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-const norm = (s: string) => STRIP_DIACRITICS(s).toLowerCase().trim();
+import { stripDiacritics as STRIP_DIACRITICS, normalizeName as norm } from "./string-normalize";
 
 export function guessMetierFromLibelle(libelle: string): MetierCode | null {
   const n = norm(libelle);

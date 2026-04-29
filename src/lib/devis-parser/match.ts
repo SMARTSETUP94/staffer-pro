@@ -12,15 +12,11 @@ import {
   MONTAGE_KEYWORDS,
 } from "./mappings";
 
+import { normalizeForMatch } from "@/lib/string-normalize";
+
 /** Normalise une chaîne : lower-case + suppression des diacritiques + espaces compactés. */
 export function normalize(s: string | null | undefined): string {
-  if (!s) return "";
-  return s
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/\s+/g, " ")
-    .trim();
+  return normalizeForMatch(s);
 }
 
 function containsAny(haystack: string, needles: string[]): boolean {
