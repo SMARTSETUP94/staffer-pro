@@ -44,6 +44,49 @@ interface RoadmapPlanned {
 const RELEASES: RoadmapRelease[] = [
   {
     date: "2026-04-29",
+    version: "v0.26.3",
+    title: "🚨 Hotfix critique #2 — Bouton 'Créer mon compte' inerte sur set-password",
+    entries: [
+      {
+        type: "fix",
+        title: "🔴 BLOCKER — Boucle infinie set-password ↔ AppGuard quand markPasswordSet échoue silencieusement",
+        description:
+          "Symptôme terrain : utilisateur invité clique sur le lien, voit le formulaire /auth/set-password, saisit un password 8+ chars dans les 2 champs, clique 'Créer mon compte' → rien ne se passe (ou redirect immédiat vers la même page). Cause racine : avant v0.26.3, en cas d'échec de markPasswordSet (server fn qui flag profiles.password_set_done + user_roles.status), le code faisait un simple console.warn puis redirect dashboard. L'AppGuard rebasculait ensuite l'utilisateur sur set-password (passwordSetDone=false en BDD) → boucle perçue comme 'bouton inerte'. Constaté en BDD : 4 invités status='invite' avec password_set_done=true mais user_roles non actif. Fix : si markPasswordSet ne renvoie pas ok, on signOut + redirect /login + toast clair 'Mot de passe enregistré mais profil non finalisé, contacte un admin'.",
+      },
+      {
+        type: "fix",
+        title: "🔴 HIGH — Set-password : retry de consume hash au submit + form toujours visible",
+        description:
+          "Avant : si la session n'était pas encore propagée (race entre detectSessionInUrl et React mount), le useEffect redirigeait vers /login après 600ms et l'écran restait sur Loader, empêchant la saisie. Après : (1) on n'affiche le Loader QUE pendant le check du hash (~100ms), ensuite le formulaire est toujours rendu même sans user, (2) au submit, si pas de session on retente parseHashTokens + setSession avant updateUser, (3) plus de redirect auto vers /login — bandeau d'erreur clair à la place.",
+      },
+      {
+        type: "fix",
+        title: "🟠 HIGH — markPasswordSet : log explicite des erreurs profiles + user_roles, retour fiable",
+        description:
+          "Avant : l'update user_roles était fire-and-forget sans gestion d'erreur. Après : on capture {error: roleErr} et on log un warning non bloquant (l'utilisateur reste actif via passwordSetAt rempli). L'update profiles reste bloquant — si elle échoue, on retourne ok=false avec le message PostgREST exact pour permettre le diagnostic.",
+      },
+      {
+        type: "fix",
+        title: "🟡 MEDIUM — Reset-password : bouton plus jamais 'disabled' silencieusement",
+        description:
+          "Avant : Button disabled={busy || hasRecoverySession === null}. Si onAuthStateChange ne firait pas (PASSWORD_RECOVERY déjà consommé sur /), hasRecoverySession restait null indéfiniment et le bouton était grisé sans message. Après : le bouton est cliquable, et au submit on re-vérifie getSession() pour décider si on appelle updateUser ou si on bascule sur l'écran 'Lien expiré'.",
+      },
+      {
+        type: "fix",
+        title: "🧪 +22 tests Vitest auth-flows (588 verts)",
+        description:
+          "Nouveau fichier auth-flows.test.ts couvrant les 5 flows critiques (inscription invité, login, magic link, reset password, onboarding). Invariants figés : validateSetPassword (8 cas), parseHashTokens (5 cas dont URL malformée), isAuthHashPresent (8 cas dont type=invite/recovery/magiclink/signup), shouldForceSetPassword (7 cas dont rattrapage passwordSetAt sans flag done, évite boucle infinie). Cible 605 dépassée seulement en partie (588) — focus invariants helpers, pas E2E full Supabase.",
+      },
+      {
+        type: "fix",
+        title: "🧹 Logs console.info / console.error structurés pour debug futur",
+        description:
+          "Toutes les étapes set-password loguent désormais : '[set-password] submit attempt', 'submit start', 'updateUser ok', 'markPasswordSet ok' / 'failed:', 'no session — retrying hash consume'. Idem reset-password : '[reset-password] updateUser error', 'markPasswordSet failed (non-blocking)'. Permet à l'admin de diagnostiquer en remontant simplement les logs Supabase Auth + console navigateur.",
+      },
+    ],
+  },
+  {
+    date: "2026-04-29",
     version: "v0.26.2",
     title: "🔍 Audit Auth — Page admin (registre inscriptions / connexions / invitations)",
     entries: [
