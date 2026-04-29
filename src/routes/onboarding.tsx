@@ -312,8 +312,16 @@ function OnboardingPage() {
       setBusy(false);
       return;
     }
-    const { data: pub } = supabase.storage.from("avatars").getPublicUrl(path);
-    update("avatar_url", pub.publicUrl);
+    // Bucket privé : on génère une URL signée longue durée (1 an)
+    const { data: signed, error: signErr } = await supabase.storage
+      .from("avatars")
+      .createSignedUrl(path, 60 * 60 * 24 * 365);
+    if (signErr || !signed?.signedUrl) {
+      toast.error("Génération de l'URL échouée");
+      setBusy(false);
+      return;
+    }
+    update("avatar_url", signed.signedUrl);
     toast.success("Photo importée");
     setBusy(false);
   }
