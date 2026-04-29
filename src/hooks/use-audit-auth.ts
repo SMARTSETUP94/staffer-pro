@@ -62,7 +62,7 @@ export function useAuthEvents(filters: {
     enabled: isAdmin,
     queryFn: async (): Promise<AuthEventRow[]> => {
       const { data, error } = await supabase.rpc("admin_get_auth_events", {
-        p_types: types && types.length > 0 ? types : null,
+        p_types: types && types.length > 0 ? types : undefined,
         p_from: range.from.toISOString(),
         p_to: range.to.toISOString(),
         p_limit: limit,
