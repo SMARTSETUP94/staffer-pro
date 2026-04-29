@@ -57,12 +57,13 @@ type FormData = {
   contact_urgence_lien: "conjoint" | "parent" | "frere_soeur" | "ami" | "autre" | "";
 };
 
-const PERMIS_OPTIONS = ["B", "C", "CE", "EC"];
+const PERMIS_OPTIONS = ["B", "C", "CE", "D"] as const;
+type PermisType = (typeof PERMIS_OPTIONS)[number];
 
 function OnboardingPage() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
-  const { data: metiers = [] } = useMetiers();
+  const { metiers } = useMetiers();
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -208,11 +209,14 @@ function OnboardingPage() {
       return false;
     }
     if (employeId) {
-      const update: Record<string, unknown> = {
-        categories_permis: form.permis_types,
+      const empUpdate: {
+        categories_permis: PermisType[];
+        metier_principal_id?: number;
+      } = {
+        categories_permis: form.permis_types as PermisType[],
       };
-      if (form.metier_principal_id) update.metier_principal_id = form.metier_principal_id;
-      const { error } = await supabase.from("employes").update(update).eq("id", employeId);
+      if (form.metier_principal_id) empUpdate.metier_principal_id = form.metier_principal_id;
+      const { error } = await supabase.from("employes").update(empUpdate).eq("id", employeId);
       if (error) {
         toast.error("Erreur sauvegarde pro");
         return false;
@@ -240,7 +244,16 @@ function OnboardingPage() {
       return false;
     }
     if (!user) return false;
-    const update: Record<string, unknown> = {
+    const profileUpdate: {
+      adresse_rue: string;
+      adresse_code_postal: string;
+      adresse_ville: string;
+      adresse_pays: string;
+      contact_urgence_nom: string;
+      contact_urgence_telephone: string;
+      contact_urgence_lien: string | null;
+      profile_completed_at?: string;
+    } = {
       adresse_rue: form.adresse_rue,
       adresse_code_postal: form.adresse_code_postal,
       adresse_ville: form.adresse_ville,
@@ -249,8 +262,8 @@ function OnboardingPage() {
       contact_urgence_telephone: form.contact_urgence_telephone,
       contact_urgence_lien: form.contact_urgence_lien || null,
     };
-    if (finalize) update.profile_completed_at = new Date().toISOString();
-    const { error } = await supabase.from("profiles").update(update).eq("id", user.id);
+    if (finalize) profileUpdate.profile_completed_at = new Date().toISOString();
+    const { error } = await supabase.from("profiles").update(profileUpdate).eq("id", user.id);
     if (error) {
       toast.error("Erreur sauvegarde sécurité");
       return false;
@@ -452,7 +465,7 @@ function Step1({
   form: FormData;
   update: <K extends keyof FormData>(k: K, v: FormData[K]) => void;
   errors: Record<string, string>;
-  fileInputRef: React.RefObject<HTMLInputElement>;
+  fileInputRef: React.RefObject<HTMLInputElement | null>;
   onAvatar: (file: File) => void;
   busy: boolean;
 }) {
