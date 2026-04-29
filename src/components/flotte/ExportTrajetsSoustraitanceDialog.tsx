@@ -26,7 +26,7 @@ import {
   buildExportFilename,
   downloadBlob,
   type TrajetExportRow,
-} from "@/lib/trajets-soustraitance-export";
+} from "@/lib/trajets-soustraitance-shared";
 
 interface Props {
   open: boolean;
