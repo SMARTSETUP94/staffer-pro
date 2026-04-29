@@ -299,6 +299,12 @@ function DevisImportPage() {
 
   const selectedObjetsCount = useMemo(() => objets.filter((o) => o.selected).length, [objets]);
 
+  // v0.25.2 — étapes actives = au moins 1 objet sélectionné a des heures > 0 sur ce métier
+  const activeEtapes = useMemo(
+    () => activeEtapesFromObjets(objets.map((o) => ({ selected: o.selected, heures: o.heures }))),
+    [objets],
+  );
+
   const warnMachiniste = useMemo(
     () =>
       detectMachinisteDoubleComptage(
