@@ -114,7 +114,7 @@ function SaisiePourEquipePage() {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
       if (searchInput !== searchQuery) {
-        navigate({ search: (prev: { type: string; q: string }) => ({ ...prev, q: searchInput }), replace: true });
+        navigate({ search: (prev) => ({ ...prev, q: searchInput }), replace: true });
       }
     }, 200);
     return () => {
