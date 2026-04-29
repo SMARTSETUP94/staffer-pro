@@ -1,6 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, ArrowLeft } from "lucide-react";
+import { z } from "zod";
+import { zodValidator, fallback } from "@tanstack/zod-adapter";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { useMetiers } from "@/hooks/use-metiers";
@@ -30,8 +33,14 @@ import { DevisImportFooter } from "@/components/devis-import/DevisImportFooter";
 import { NEW_AFFAIRE, type AffaireOption, type PosteRow } from "@/components/devis-import/types";
 import { detectMachinisteDoubleComptage } from "@/lib/devis-import-v2-helpers";
 
+/** v0.25.1 — Pré-sélection affaire via ?affaire_id=... depuis l'onglet Devis d'une affaire. */
+const importSearchSchema = z.object({
+  affaire_id: fallback(z.string().uuid().optional(), undefined),
+});
+
 export const Route = createFileRoute("/_app/devis/import")({
   head: () => ({ meta: [{ title: "Import devis Excel — Setup Paris" }] }),
+  validateSearch: zodValidator(importSearchSchema),
   component: DevisImportPage,
 });
 
