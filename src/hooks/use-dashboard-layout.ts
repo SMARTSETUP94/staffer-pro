@@ -65,7 +65,7 @@ export function useDashboardLayout(): UseDashboardLayoutResult {
       setIsPreset(false);
       await supabase
         .from("profiles")
-        .update({ dashboard_layout: next as unknown as object })
+        .update({ dashboard_layout: next as unknown as never })
         .eq("id", user.id);
     },
     [user],
