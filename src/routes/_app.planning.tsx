@@ -251,47 +251,51 @@ function PlanningPage() {
 
   return (
     <div className="flex h-full">
-      <div className="flex-1 overflow-y-auto p-6">
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <Calendar className="h-6 w-6 text-primary" />
-            <h1 className="text-2xl font-bold">Planning hebdomadaire</h1>
+      <div className="flex-1 overflow-y-auto p-3 sm:p-6">
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <Calendar className="h-5 w-5 shrink-0 text-primary sm:h-6 sm:w-6" />
+            <h1 className="text-lg font-bold sm:text-2xl">Planning hebdomadaire</h1>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <WeekPicker weekStart={weekStart} onChange={setWeekStart} />
             <Button
               size="sm"
               onClick={() => setBulkStafferOpen(true)}
               disabled={loading}
+              className="h-8 px-2.5 sm:h-9 sm:px-3"
             >
               <Users className="mr-1.5 h-3.5 w-3.5" />
-              Staffer en bulk
+              <span className="hidden sm:inline">Staffer en bulk</span>
+              <span className="sm:hidden">Staffer</span>
             </Button>
             <Button
               size="sm"
               variant="outline"
               onClick={handleExportPDF}
               disabled={exporting || loading}
+              className="h-8 px-2.5 sm:h-9 sm:px-3"
             >
               {exporting ? (
                 <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
               ) : (
                 <FileDown className="mr-1.5 h-3.5 w-3.5" />
               )}
-              Exporter PDF
+              <span className="hidden sm:inline">Exporter PDF</span>
+              <span className="sm:hidden">PDF</span>
             </Button>
           </div>
         </div>
 
         <div className="mb-4 flex flex-wrap items-center gap-2">
-          <div className="relative">
+          <div className="relative w-full sm:w-auto">
             <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
             <Input
               type="search"
               placeholder="Rechercher un employé…"
               value={searchEmploye}
               onChange={(e) => setSearchEmploye(e.target.value)}
-              className="h-9 w-[220px] pl-8"
+              className="h-9 w-full pl-8 sm:w-[220px]"
             />
           </div>
           <MultiFilter
@@ -371,21 +375,33 @@ function PlanningPage() {
         ) : (
           <div ref={exportRef}>
             <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
-              <TabsList>
-                <TabsTrigger value="cdi">
-                  CDI / CDD <span className="ml-1.5 text-[10px] opacity-60">({employesCDI.length})</span>
-                </TabsTrigger>
-                <TabsTrigger value="interim">
-                  Intérim / Indép. <span className="ml-1.5 text-[10px] opacity-60">({employesInterim.length})</span>
-                </TabsTrigger>
-                <TabsTrigger value="parchantier">Planning par chantier</TabsTrigger>
-                <TabsTrigger value="budget">Budget chantier</TabsTrigger>
-                <TabsTrigger value="flotte">Véhicules staffés ({vehicules.filter((v) => v.actif).length})</TabsTrigger>
-                <TabsTrigger value="feuilleroute">
-                  <ClipboardList className="mr-1 h-3.5 w-3.5" />
-                  Feuille de route
-                </TabsTrigger>
-              </TabsList>
+              <div className="-mx-3 overflow-x-auto sm:mx-0">
+                <TabsList className="mx-3 inline-flex w-max sm:mx-0">
+                  <TabsTrigger value="cdi">
+                    CDI / CDD <span className="ml-1.5 text-[10px] opacity-60">({employesCDI.length})</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="interim">
+                    Intérim <span className="ml-1.5 text-[10px] opacity-60">({employesInterim.length})</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="parchantier">
+                    <span className="hidden sm:inline">Planning par chantier</span>
+                    <span className="sm:hidden">Par chantier</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="budget">
+                    <span className="hidden sm:inline">Budget chantier</span>
+                    <span className="sm:hidden">Budget</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="flotte">
+                    <span className="hidden sm:inline">Véhicules staffés ({vehicules.filter((v) => v.actif).length})</span>
+                    <span className="sm:hidden">Véhic. ({vehicules.filter((v) => v.actif).length})</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="feuilleroute">
+                    <ClipboardList className="mr-1 h-3.5 w-3.5" />
+                    <span className="hidden sm:inline">Feuille de route</span>
+                    <span className="sm:hidden">Feuille</span>
+                  </TabsTrigger>
+                </TabsList>
+              </div>
 
               <TabsContent value="cdi" className="mt-4">
                 <PlanningGrid
