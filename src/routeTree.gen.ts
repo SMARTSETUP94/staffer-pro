@@ -34,6 +34,7 @@ import { Route as AppMesSwapsRouteImport } from './routes/_app.mes-swaps'
 import { Route as AppMesPropositionsRouteImport } from './routes/_app.mes-propositions'
 import { Route as AppMesHeuresRouteImport } from './routes/_app.mes-heures'
 import { Route as AppInterimairesRouteImport } from './routes/_app.interimaires'
+import { Route as AppIncidentAuthRouteImport } from './routes/_app.incident-auth'
 import { Route as AppImportsRouteImport } from './routes/_app.imports'
 import { Route as AppFlotteRouteImport } from './routes/_app.flotte'
 import { Route as AppExportRouteImport } from './routes/_app.export'
@@ -190,6 +191,11 @@ const AppMesHeuresRoute = AppMesHeuresRouteImport.update({
 const AppInterimairesRoute = AppInterimairesRouteImport.update({
   id: '/interimaires',
   path: '/interimaires',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppIncidentAuthRoute = AppIncidentAuthRouteImport.update({
+  id: '/incident-auth',
+  path: '/incident-auth',
   getParentRoute: () => AppRoute,
 } as any)
 const AppImportsRoute = AppImportsRouteImport.update({
@@ -380,6 +386,7 @@ export interface FileRoutesByFullPath {
   '/export': typeof AppExportRouteWithChildren
   '/flotte': typeof AppFlotteRoute
   '/imports': typeof AppImportsRoute
+  '/incident-auth': typeof AppIncidentAuthRoute
   '/interimaires': typeof AppInterimairesRoute
   '/mes-heures': typeof AppMesHeuresRoute
   '/mes-propositions': typeof AppMesPropositionsRoute
@@ -438,6 +445,7 @@ export interface FileRoutesByTo {
   '/employes': typeof AppEmployesRouteWithChildren
   '/flotte': typeof AppFlotteRoute
   '/imports': typeof AppImportsRoute
+  '/incident-auth': typeof AppIncidentAuthRoute
   '/interimaires': typeof AppInterimairesRoute
   '/mes-heures': typeof AppMesHeuresRoute
   '/mes-propositions': typeof AppMesPropositionsRoute
@@ -498,6 +506,7 @@ export interface FileRoutesById {
   '/_app/export': typeof AppExportRouteWithChildren
   '/_app/flotte': typeof AppFlotteRoute
   '/_app/imports': typeof AppImportsRoute
+  '/_app/incident-auth': typeof AppIncidentAuthRoute
   '/_app/interimaires': typeof AppInterimairesRoute
   '/_app/mes-heures': typeof AppMesHeuresRoute
   '/_app/mes-propositions': typeof AppMesPropositionsRoute
@@ -559,6 +568,7 @@ export interface FileRouteTypes {
     | '/export'
     | '/flotte'
     | '/imports'
+    | '/incident-auth'
     | '/interimaires'
     | '/mes-heures'
     | '/mes-propositions'
@@ -617,6 +627,7 @@ export interface FileRouteTypes {
     | '/employes'
     | '/flotte'
     | '/imports'
+    | '/incident-auth'
     | '/interimaires'
     | '/mes-heures'
     | '/mes-propositions'
@@ -676,6 +687,7 @@ export interface FileRouteTypes {
     | '/_app/export'
     | '/_app/flotte'
     | '/_app/imports'
+    | '/_app/incident-auth'
     | '/_app/interimaires'
     | '/_app/mes-heures'
     | '/_app/mes-propositions'
@@ -915,6 +927,13 @@ declare module '@tanstack/react-router' {
       path: '/interimaires'
       fullPath: '/interimaires'
       preLoaderRoute: typeof AppInterimairesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/incident-auth': {
+      id: '/_app/incident-auth'
+      path: '/incident-auth'
+      fullPath: '/incident-auth'
+      preLoaderRoute: typeof AppIncidentAuthRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/imports': {
@@ -1218,6 +1237,7 @@ interface AppRouteChildren {
   AppExportRoute: typeof AppExportRouteWithChildren
   AppFlotteRoute: typeof AppFlotteRoute
   AppImportsRoute: typeof AppImportsRoute
+  AppIncidentAuthRoute: typeof AppIncidentAuthRoute
   AppInterimairesRoute: typeof AppInterimairesRoute
   AppMesHeuresRoute: typeof AppMesHeuresRoute
   AppMesPropositionsRoute: typeof AppMesPropositionsRoute
@@ -1255,6 +1275,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppExportRoute: AppExportRouteWithChildren,
   AppFlotteRoute: AppFlotteRoute,
   AppImportsRoute: AppImportsRoute,
+  AppIncidentAuthRoute: AppIncidentAuthRoute,
   AppInterimairesRoute: AppInterimairesRoute,
   AppMesHeuresRoute: AppMesHeuresRoute,
   AppMesPropositionsRoute: AppMesPropositionsRoute,
