@@ -106,6 +106,9 @@ function DevisImportPage() {
   const [montageH, setMontageH] = useState(0);
   const [demontageH, setDemontageH] = useState(0);
 
+  // v0.25.2 — Section 5 : bulk-assign rôles
+  const [bulkAssign, setBulkAssign] = useState<BulkAssignSelections>(EMPTY_BULK_ASSIGN);
+
   // Hash du fichier pour anti-doublon
   const [fichierHash, setFichierHash] = useState<string | null>(null);
 
