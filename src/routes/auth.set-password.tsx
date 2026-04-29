@@ -70,18 +70,20 @@ function SetPasswordPage() {
     };
   }, []);
 
-  // Si pas connecté APRÈS check hash → vers login (avec petit délai de grâce)
+  // Pas de redirect auto vers /login : on laisse l'utilisateur soumettre.
+  // En cas de session manquante au submit, on retentera de consommer le hash.
+  // Si toujours rien → toast clair + bandeau d'erreur, sans le bloquer hors page.
   useEffect(() => {
-    if (!hashChecked || loading) return;
-    if (user) return;
-    // Grâce de 600ms : laisser onAuthStateChange propager si nécessaire
+    if (!hashChecked || loading || user) return;
+    // Affichage du bandeau seulement, pas de redirect
     const t = setTimeout(() => {
-      console.warn("[set-password] no user after grace period → redirect /login");
-      setSessionError("Lien expiré ou invalide. Demandez un nouveau lien d'invitation.");
-      navigate({ to: "/login" });
-    }, 600);
+      if (!sessionError) {
+        console.warn("[set-password] no user after grace period — banner only");
+        setSessionError("Aucune session détectée. Si tu viens de cliquer sur un lien d'invitation, tu peux quand même tenter de définir ton mot de passe ci-dessous.");
+      }
+    }, 800);
     return () => clearTimeout(t);
-  }, [hashChecked, loading, user, navigate]);
+  }, [hashChecked, loading, user, sessionError]);
 
   const isEmploye = rolesLoaded && roles.includes("employe") && !roles.includes("chef_chantier") && !roles.includes("admin");
   const canSkip = isEmploye;
