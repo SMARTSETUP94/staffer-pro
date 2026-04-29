@@ -74,3 +74,76 @@ export const uploadAvatarServer = createServerFn({ method: "POST" })
       expiresInSeconds: AVATAR_SIGNED_URL_TTL_SECONDS,
     };
   });
+
+/**
+ * Régénère en masse les URLs signées de tous les avatars existants.
+ * Réservé aux admins. Utilise `avatar_path` comme source de vérité ;
+ * met à jour `avatar_url` avec une nouvelle URL signée 1 an.
+ *
+ * Retourne le nombre de profils traités, mis à jour, et en erreur.
+ * Idempotent — peut être déclenché manuellement ou via cron annuel.
+ */
+export const regenerateAllAvatarUrls = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+
+    // Garde-fou admin (vérifié côté DB pour éviter toute confiance client).
+    const { data: isAdminRow, error: roleErr } = await supabase
+      .rpc("is_admin");
+    if (roleErr) {
+      throw new Error(`Vérification rôle échouée : ${roleErr.message}`);
+    }
+    if (!isAdminRow) {
+      throw new Error("Accès refusé : admin requis.");
+    }
+
+    const { data: profiles, error: listErr } = await supabase
+      .from("profiles")
+      .select("id, avatar_path")
+      .not("avatar_path", "is", null);
+
+    if (listErr) {
+      throw new Error(`Lecture profils échouée : ${listErr.message}`);
+    }
+
+    let updated = 0;
+    const errors: Array<{ id: string; reason: string }> = [];
+
+    for (const profile of profiles ?? []) {
+      const path = profile.avatar_path;
+      if (!path) continue;
+
+      const { data: signed, error: signErr } = await supabase.storage
+        .from(AVATAR_BUCKET)
+        .createSignedUrl(path, AVATAR_SIGNED_URL_TTL_SECONDS);
+
+      if (signErr || !signed?.signedUrl) {
+        errors.push({
+          id: profile.id,
+          reason: signErr?.message ?? "URL signée vide",
+        });
+        continue;
+      }
+
+      const { error: updErr } = await supabase
+        .from("profiles")
+        .update({ avatar_url: signed.signedUrl })
+        .eq("id", profile.id);
+
+      if (updErr) {
+        errors.push({ id: profile.id, reason: updErr.message });
+        continue;
+      }
+
+      updated += 1;
+    }
+
+    return {
+      processed: profiles?.length ?? 0,
+      updated,
+      errored: errors.length,
+      errors,
+      triggeredBy: userId,
+    };
+  });
