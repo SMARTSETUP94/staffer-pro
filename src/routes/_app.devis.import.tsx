@@ -335,7 +335,8 @@ function DevisImportPage() {
     setNumeroDevis("");
     setDateMontage(undefined);
     setDateDemontage(undefined);
-    setAffaireId("");
+    // v0.25.1 — préserver la pré-sélection d'affaire si verrouillée
+    if (!lockedAffaire) setAffaireId("");
     setNewAffaireNumero("");
     setNewAffaireNom("");
     setNewAffaireClient("");
