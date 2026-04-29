@@ -3,7 +3,7 @@
  * (CDI/Intérim/Synthèse/Heures/Véhicules) + la Feuille de route .xlsx pour la
  * même plage.
  */
-import JSZip from "jszip";
+// v0.24.1 — jszip lazy-loadé dans la fonction d'export (gain bundle initial).
 import { addDays, format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { resolveResponsable, type EmployeForResponsable } from "@/lib/feuille-route-helpers";
@@ -79,6 +79,7 @@ export async function exportPlanningZip(opts: ExportZipOpts): Promise<{
   const startISO = format(rangeStart, "yyyy-MM-dd");
   const endISO = format(rangeEnd, "yyyy-MM-dd");
 
+  const { default: JSZip } = await import("jszip");
   const zip = new JSZip();
   const files: string[] = [];
 
