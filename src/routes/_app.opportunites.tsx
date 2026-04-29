@@ -72,6 +72,11 @@ export const Route = createFileRoute("/_app/opportunites")({
 
 function OpportunitesPage() {
   const { user, isAdmin, isAdminOrChef } = useAuth();
+  const navigate = useNavigate({ from: "/opportunites" });
+  const { typo: typoFilter } = Route.useSearch();
+  const setTypoFilter = (next: AffaireTypologie[]) => {
+    navigate({ search: { typo: next }, replace: true });
+  };
   const { data: charges, loading: chargesLoading } = useChargesAffaires();
   const [opps, setOpps] = useState<OpportuniteCardData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -123,11 +128,27 @@ function OpportunitesPage() {
     };
   }, [refreshTick]);
 
-  // Filtrage CA
+  // Filtrage CA + typologie
+  const typoSet = useMemo(() => new Set(typoFilter), [typoFilter]);
   const oppsFiltrees = useMemo(() => {
-    if (!filterCa || filterCa === "__all__") return opps;
-    return opps.filter((o) => o.charge_affaires_id === filterCa);
-  }, [opps, filterCa]);
+    return opps.filter((o) => {
+      if (filterCa && filterCa !== "__all__" && o.charge_affaires_id !== filterCa) return false;
+      if (typoSet.size > 0) {
+        const t = getAffaireTypologie(o.numero);
+        if (!t || !typoSet.has(t)) return false;
+      }
+      return true;
+    });
+  }, [opps, filterCa, typoSet]);
+
+  const typoCounts = useMemo(() => {
+    const counts: Partial<Record<AffaireTypologie, number>> = {};
+    opps.forEach((o) => {
+      const t = getAffaireTypologie(o.numero);
+      if (t) counts[t] = (counts[t] ?? 0) + 1;
+    });
+    return counts;
+  }, [opps]);
 
   // Groupage par statut
   const byStatut = useMemo(() => {
