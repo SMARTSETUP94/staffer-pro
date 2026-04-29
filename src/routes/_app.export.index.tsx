@@ -18,8 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { WeekPicker } from "@/components/planning/WeekPicker";
 import { usePlanningData } from "@/hooks/use-planning-data";
-import { exportPlanningExcelRange } from "@/lib/planning-excel-export";
-import { exportPlanningZip } from "@/lib/planning-zip-export";
+// v0.24.1 — lazy-load des helpers d'export (xlsx, jszip ~600KB) au clic
 import { useVehicules } from "@/hooks/use-vehicules";
 import { useTrajetsWeek } from "@/hooks/use-trajets";
 
