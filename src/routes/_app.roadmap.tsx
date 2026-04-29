@@ -43,6 +43,37 @@ interface RoadmapPlanned {
 
 const RELEASES: RoadmapRelease[] = [
   {
+    date: "2026-04-29",
+    version: "v0.24.0",
+    title: "Typologie de chantiers + hotfix set-password",
+    entries: [
+      {
+        type: "feature",
+        title: "🆕 Typologie d'affaires (filtre multi-zones)",
+        description:
+          "Nouvelle colonne `typologie` générée STORED + indexée sur `affaires`, dérivée du `numero` via `compute_affaire_typologie()` (5 valeurs : non_operationnel, montage_demontage, fabrication, stockage, prototype). Helper TS miroir `getAffaireTypologie()`, tokens design `--typologie-*` (5 couleurs + foreground), composants `TypologieBadge` + `TypologieMultiFilter` (preset « Opérationnels » = M/D + Fab strict, sans stockage — voix Gabin).",
+      },
+      {
+        type: "feature",
+        title: "🆕 Filtre multi-typologies sur 4 vues",
+        description:
+          "Ajout de TypologieMultiFilter sur Planning, Liste Chantiers (+ colonne typologie), Kanban Opportunités (+ badge sur cartes) et Dashboard Pipeline (segmentation BarChart). Persistance query string `?typo=fab,md,...` via `validateSearch` + zod-adapter (fallback + stripSearchParams).",
+      },
+      {
+        type: "fix",
+        title: "🚨 Hotfix bouton submit page set-password (lien d'invitation)",
+        description:
+          "Bug terrain : nouvel utilisateur invité par admin clique sur lien email, arrive sur /auth/set-password, mais le bouton « Créer mon compte » restait inerte. Causes identifiées : (1) hash `#access_token=...&refresh_token=...` parfois pas consommé avant le redirect /login (race condition au mount), (2) erreurs Zod silencieuses (toast au lieu d'erreur sous champ), (3) attribut HTML `required minLength=8` qui bloquait la prévalidation native. Fix : consommation explicite du hash via `setSession()` au mount avant toute décision de redirect, délai de grâce 600ms, validation visible sous chaque champ, bouton toujours cliquable, vérification session avant `updateUser()`, logs `[set-password]` à chaque étape. Helpers extraits dans `src/lib/set-password-helpers.ts` pour testabilité.",
+      },
+      {
+        type: "improvement",
+        title: "Tests Vitest +23 (416 tests, target ≥410)",
+        description:
+          "Nouveaux fichiers : `affaire-typologie.test.ts` (14 tests — mapping 1XXX/2XXXX/3XXX/4XXX/5XXX/6XXX/9XXX, edge cases longueur, null, preset Opérationnels, labels & colors), `set-password-helpers.test.ts` (9 tests — validation password court / mismatch / cumul, parser hash invitation Supabase). Build tsc clean, 416/416 verts.",
+      },
+    ],
+  },
+  {
     date: "2026-04-28",
     version: "v0.23.1",
     title: "Hotfix UX — 3 fixes groupés",
@@ -1444,6 +1475,13 @@ const RELEASES: RoadmapRelease[] = [
 ];
 
 const PLANNED: RoadmapPlanned[] = [
+  // ========== v0.26+ ==========
+  {
+    priority: "moyenne",
+    title: "v0.26+ — Pièce d'identité (CNI / passeport) sur profil utilisateur",
+    description:
+      "🔮 Ajouter upload sécurisé de pièce d'identité (CNI ou passeport) sur le profil employé : champ photo recto/verso, type de pièce, numéro, date d'expiration. Stockage privé (bucket Lovable Cloud avec RLS stricte : seuls admin + l'employé lui-même peuvent voir), expiration alerte 60j avant. Use case : conformité chantiers, contrôle accès sites sécurisés.",
+  },
   // ========== v0.20.1 — Hotfixes & finitions Fabrication ==========
   {
     priority: "haute",
