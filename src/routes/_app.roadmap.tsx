@@ -44,6 +44,55 @@ interface RoadmapPlanned {
 const RELEASES: RoadmapRelease[] = [
   {
     date: "2026-04-29",
+    version: "v0.25.0",
+    title: "Onboarding profil utilisateur (wizard 4 étapes)",
+    entries: [
+      {
+        type: "feature",
+        title: "🎉 Wizard /onboarding 4 étapes (RGPD → Identité → Pro → Sécurité)",
+        description:
+          "1ʳᵉ connexion : redirect automatique post-set-password vers `/onboarding`. Stepper visuel + barre de progression. Validation Zod par étape, erreurs inline. Auto-save partiel à chaque passage. Bouton « Compléter plus tard » sur chaque étape. Champs obligatoires : téléphone + adresse complète + contact urgence + consentement RGPD. Photo de profil (bucket public `avatars`, RLS owner-only write), date de naissance, bio, métier principal, permis : skipables.",
+      },
+      {
+        type: "feature",
+        title: "🔒 Page /privacy (politique de confidentialité)",
+        description:
+          "Page publique listant : données collectées (identité, contact, pro, urgence, activité), finalités (paie SILAE, planning, contact urgence), durée conservation (contrat + 5 ans), droits RGPD. Contact référent : Gabin g.chaussegros@groupe-smart.fr.",
+      },
+      {
+        type: "feature",
+        title: "⚠️ Bandeau persistant ProfileIncompleteBanner",
+        description:
+          "Affiché sur AppLayout tant que `profile_completed_at` est null. Affiche le % de complétion calculé sur les 7 champs requis (téléphone, adresse rue/CP/ville, contact urgence nom/tel, RGPD). Lien direct vers /onboarding.",
+      },
+      {
+        type: "improvement",
+        title: "🗄️ Schéma profiles : 13 nouveaux champs + helper SQL",
+        description:
+          "Colonnes ajoutées : avatar_url, telephone, date_naissance, bio_courte, adresse_rue/code_postal/ville/pays, contact_urgence_nom/telephone/lien, rgpd_consent_at, profile_completed_at. Helper `is_profile_complete(uuid)` STABLE SECURITY DEFINER (REVOKE PUBLIC, GRANT authenticated). Bucket Storage `avatars` public read + RLS écriture par owner uniquement (path = `{user_id}/...`).",
+      },
+      {
+        type: "improvement",
+        title: "🔁 AuthGuard étendu : redirect onboarding obligatoire",
+        description:
+          "`_app.tsx` chaîne désormais : login → set-password (chef/admin) → onboarding (tous) → dashboard. `useAuth()` expose `profileCompleted: boolean` rafraîchi à chaque session.",
+      },
+      {
+        type: "improvement",
+        title: "✅ Tests Vitest : 427 → 451 (+24)",
+        description:
+          "Nouveau fichier `onboarding-schemas.test.ts` couvrant : telephoneSchema (FR/intl/edge cases), codePostalSchema, stepRgpdSchema, stepIdentiteSchema, stepSecuriteSchema, isProfileComplete, computeProfileCompletion (0/partiel/100). Suite complète verte en 7,7s.",
+      },
+      {
+        type: "improvement",
+        title: "🔮 Roadmap v0.27+ : pièce d'identité (CNI / passeport)",
+        description:
+          "Reportée pour v0.27+ : upload CNI ou passeport sur profil utilisateur (storage chiffré, RLS RH-only, validation manuelle admin). Reportée car nécessite arbitrage RGPD + workflow validation RH.",
+      },
+    ],
+  },
+  {
+    date: "2026-04-29",
     version: "v0.24.1",
     title: "Hotfix dette technique — 5 findings audit Bloc 8",
     entries: [
