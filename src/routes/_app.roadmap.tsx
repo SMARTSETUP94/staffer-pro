@@ -44,6 +44,37 @@ interface RoadmapPlanned {
 const RELEASES: RoadmapRelease[] = [
   {
     date: "2026-04-29",
+    version: "v0.25.2",
+    title: "Bulk-assign rôles à l'import devis Progbat",
+    entries: [
+      {
+        type: "feature",
+        title: "🎯 Section 5 du wizard import : 8 dropdowns pré-assignation responsables",
+        description:
+          "Chef de projet (niveau affaire), responsables Montage / Démontage (niveau affaire), responsables des 5 étapes fab par objet (BE, Usinage, Respo Fab, Finition, Manutention). Filtrage par flag rôle profile (est_chef_projet, est_bureau_etude, est_usinage_numerique, est_respo_fab, est_finition, est_manutention). Masquage automatique des dropdowns pour métiers sans heures sélectionnées. Tous skipables (placeholder « — Non assigné — » + bouton « Passer cette étape »).",
+      },
+      {
+        type: "feature",
+        title: "🗄️ 2 nouvelles colonnes affaires : responsable_montage_id & responsable_demontage_id",
+        description:
+          "FK profiles ON DELETE SET NULL, indexes dédiés. Cohérent avec chef_projet_id préexistant.",
+      },
+      {
+        type: "feature",
+        title: "🆕 RPC v3 : import_devis_atomique_v3 (param _bulk_assign jsonb)",
+        description:
+          "Étend la v2 avec un paramètre _bulk_assign optionnel. Pour chaque objet : si heures du métier > 0 ET assignee fourni → UPDATE fabrication_etapes.assignee_id (uniquement étapes statut « a_faire »). Au niveau affaire : UPDATE chef_projet_id, responsable_montage_id, responsable_demontage_id si fournis. RPC v2 conservée pour rétrocompatibilité.",
+      },
+      {
+        type: "feature",
+        title: "✅ 15 nouveaux tests Vitest (475/475 verts)",
+        description:
+          "activeEtapesFromObjets (regroupements bois+metal, peinture+tapisserie), buildBulkAssignPayload (skip = {} → comportement v0.25.1 inchangé, payload partiel, payload complet), profileLabel (fallback email).",
+      },
+    ],
+  },
+  {
+    date: "2026-04-29",
     version: "v0.25.1",
     title: "Import devis depuis onglet Devis d'affaire (UX quick win)",
     entries: [

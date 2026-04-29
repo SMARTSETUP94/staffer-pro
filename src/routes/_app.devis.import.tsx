@@ -29,9 +29,16 @@ import {
   type EditableObjet,
 } from "@/components/devis-import/DevisImportSection3Objets";
 import { DevisImportSection4Chantier } from "@/components/devis-import/DevisImportSection4Chantier";
+import { DevisImportSection5BulkAssign } from "@/components/devis-import/DevisImportSection5BulkAssign";
 import { DevisImportFooter } from "@/components/devis-import/DevisImportFooter";
 import { NEW_AFFAIRE, type AffaireOption, type PosteRow } from "@/components/devis-import/types";
 import { detectMachinisteDoubleComptage } from "@/lib/devis-import-v2-helpers";
+import {
+  EMPTY_BULK_ASSIGN,
+  activeEtapesFromObjets,
+  buildBulkAssignPayload,
+  type BulkAssignSelections,
+} from "@/lib/bulk-assign-roles";
 
 /** v0.25.1 — Pré-sélection affaire via ?affaire_id=... depuis l'onglet Devis d'une affaire. */
 const importSearchSchema = z.object({
@@ -98,6 +105,9 @@ function DevisImportPage() {
   const [importDemontage, setImportDemontage] = useState(false);
   const [montageH, setMontageH] = useState(0);
   const [demontageH, setDemontageH] = useState(0);
+
+  // v0.25.2 — Section 5 : bulk-assign rôles
+  const [bulkAssign, setBulkAssign] = useState<BulkAssignSelections>(EMPTY_BULK_ASSIGN);
 
   // Hash du fichier pour anti-doublon
   const [fichierHash, setFichierHash] = useState<string | null>(null);
@@ -289,6 +299,12 @@ function DevisImportPage() {
 
   const selectedObjetsCount = useMemo(() => objets.filter((o) => o.selected).length, [objets]);
 
+  // v0.25.2 — étapes actives = au moins 1 objet sélectionné a des heures > 0 sur ce métier
+  const activeEtapes = useMemo(
+    () => activeEtapesFromObjets(objets.map((o) => ({ selected: o.selected, heures: o.heures }))),
+    [objets],
+  );
+
   const warnMachiniste = useMemo(
     () =>
       detectMachinisteDoubleComptage(
@@ -345,6 +361,7 @@ function DevisImportPage() {
     setImportDemontage(false);
     setMontageH(0);
     setDemontageH(0);
+    setBulkAssign(EMPTY_BULK_ASSIGN);
   };
 
   const commit = async () => {
@@ -394,9 +411,10 @@ function DevisImportPage() {
         _heures_montage: importMontage ? montageH : null,
         _heures_demontage: importDemontage ? demontageH : null,
         _fichier_hash: fichierHash,
-      } as unknown as Parameters<typeof supabase.rpc<"import_devis_atomique_v2">>[1];
+        _bulk_assign: buildBulkAssignPayload(bulkAssign),
+      } as unknown as Parameters<typeof supabase.rpc<"import_devis_atomique_v3">>[1];
 
-      const { error } = await supabase.rpc("import_devis_atomique_v2", rpcArgs);
+      const { error } = await supabase.rpc("import_devis_atomique_v3", rpcArgs);
 
       if (error) {
         const isDuplicate = error.code === "23505" || /déjà été importé/i.test(error.message);
@@ -547,6 +565,15 @@ function DevisImportPage() {
               demontageH={demontageH}
               setDemontageH={setDemontageH}
               warnMachiniste={warnMachiniste}
+            />
+
+            <DevisImportSection5BulkAssign
+              selections={bulkAssign}
+              setSelections={setBulkAssign}
+              activeEtapes={activeEtapes}
+              hasSelectedObjets={selectedObjetsCount > 0}
+              heuresMontage={importMontage ? montageH : 0}
+              heuresDemontage={importDemontage ? demontageH : 0}
             />
 
             {errors.length > 0 && (
