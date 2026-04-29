@@ -518,6 +518,7 @@ function DevisImportPage() {
               effectiveClient={effectiveClient}
               effectiveLieu={effectiveLieu}
               totalMontant={totals.montant}
+              lockedAffaire={lockedAffaire}
             />
 
             <DevisImportSection2Postes
