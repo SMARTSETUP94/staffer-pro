@@ -2155,6 +2155,56 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      admin_get_auth_events: {
+        Args: {
+          p_from?: string
+          p_limit?: number
+          p_offset?: number
+          p_to?: string
+          p_types?: string[]
+        }
+        Returns: {
+          action: string
+          actor_email: string
+          actor_id: string
+          actor_name: string
+          created_at: string
+          id: string
+          ip_address: string
+          log_type: string
+          raw_payload: Json
+        }[]
+      }
+      admin_get_invitations: {
+        Args: never
+        Returns: {
+          email: string
+          email_confirmed_at: string
+          full_name: string
+          invited_at: string
+          invited_by: string
+          invited_by_name: string
+          last_sign_in_at: string
+          role: string
+          statut: string
+          user_id: string
+        }[]
+      }
+      admin_get_user_connection_stats: {
+        Args: never
+        Returns: {
+          avatar_url: string
+          created_at: string
+          email: string
+          email_confirmed_at: string
+          full_name: string
+          last_sign_in_at: string
+          role: string
+          sessions_30d: number
+          status: string
+          user_id: string
+        }[]
+      }
       can_saisie_on_affaire: {
         Args: { _affaire_id: string; _date: string }
         Returns: boolean
