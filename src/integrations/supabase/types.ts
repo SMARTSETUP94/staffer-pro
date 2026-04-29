@@ -158,6 +158,8 @@ export type Database = {
           notes: string | null
           numero: string
           phase: Database["public"]["Enums"]["affaire_phase"]
+          responsable_demontage_id: string | null
+          responsable_montage_id: string | null
           signed_at: string | null
           statut: Database["public"]["Enums"]["affaire_statut"]
           statut_opportunite:
@@ -187,6 +189,8 @@ export type Database = {
           notes?: string | null
           numero: string
           phase?: Database["public"]["Enums"]["affaire_phase"]
+          responsable_demontage_id?: string | null
+          responsable_montage_id?: string | null
           signed_at?: string | null
           statut?: Database["public"]["Enums"]["affaire_statut"]
           statut_opportunite?:
@@ -216,6 +220,8 @@ export type Database = {
           notes?: string | null
           numero?: string
           phase?: Database["public"]["Enums"]["affaire_phase"]
+          responsable_demontage_id?: string | null
+          responsable_montage_id?: string | null
           signed_at?: string | null
           statut?: Database["public"]["Enums"]["affaire_statut"]
           statut_opportunite?:
@@ -243,6 +249,20 @@ export type Database = {
           {
             foreignKeyName: "affaires_chef_projet_id_fkey"
             columns: ["chef_projet_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affaires_responsable_demontage_id_fkey"
+            columns: ["responsable_demontage_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affaires_responsable_montage_id_fkey"
+            columns: ["responsable_montage_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -2198,6 +2218,22 @@ export type Database = {
       import_devis_atomique_v2: {
         Args: {
           _affaire_id: string
+          _date_demontage: string
+          _date_montage: string
+          _devis: Json
+          _fichier_hash?: string
+          _heures_demontage?: number
+          _heures_montage?: number
+          _new_affaire: Json
+          _objets_fab?: Json
+          _postes: Json
+        }
+        Returns: Json
+      }
+      import_devis_atomique_v3: {
+        Args: {
+          _affaire_id: string
+          _bulk_assign?: Json
           _date_demontage: string
           _date_montage: string
           _devis: Json
