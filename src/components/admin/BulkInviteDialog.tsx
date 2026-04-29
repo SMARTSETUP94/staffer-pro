@@ -129,7 +129,7 @@ export function BulkInviteDialog({ open, onOpenChange, onComplete }: BulkInviteD
     try {
       // withAuthRetry détecte les 401, refresh la session Supabase et rejoue 1×
       r = await withAuthRetry(
-        () => inviteUser({ data: { email, roles: [role] } }),
+        () => inviteUser({ data: { email, roles: [role], siteUrl: typeof window !== "undefined" ? window.location.origin : undefined } }),
         {
           onSessionLost: () => {
             toast.error("Session expirée, merci de te reconnecter");

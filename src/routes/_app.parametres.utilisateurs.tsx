@@ -227,6 +227,7 @@ function UtilisateursPage() {
             email: inviteEmail.trim(),
             fullName: inviteFullName.trim() || undefined,
             roles: [inviteRole],
+            siteUrl: typeof window !== "undefined" ? window.location.origin : undefined,
           },
         }),
       );
@@ -252,7 +253,7 @@ function UtilisateursPage() {
   async function handleResend(u: UserRow) {
     setActingOn(u.id);
     try {
-      await withAuthRetry(() => resendInvitation({ data: { targetUserId: u.id } }));
+      await withAuthRetry(() => resendInvitation({ data: { targetUserId: u.id, siteUrl: typeof window !== "undefined" ? window.location.origin : undefined } }));
       toast.success(`Invitation renvoyée à ${u.email}`);
     } catch (e) {
       toast.error(await readServerFnError(e));
