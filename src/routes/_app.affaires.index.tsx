@@ -243,6 +243,17 @@ function AffairesPage() {
         </Tabs>
       </div>
 
+      <div className="rounded-2xl border border-border bg-card p-3">
+        <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+          Typologie
+        </div>
+        <TypologieMultiFilter
+          value={typoFilter}
+          onChange={setTypoFilter}
+          counts={typoCounts}
+        />
+      </div>
+
       <div className="overflow-x-auto rounded-2xl border border-border bg-card">
         {loading ? (
           <div className="flex items-center justify-center p-12">
@@ -257,6 +268,7 @@ function AffairesPage() {
             <TableHeader>
               <TableRow>
                 <TableHead className="w-[110px]">N°</TableHead>
+                <TableHead className="w-[140px]">Typologie</TableHead>
                 <TableHead className="min-w-[200px]">Nom</TableHead>
                 <TableHead className="min-w-[140px]">Client</TableHead>
                 <TableHead className="min-w-[120px]">Lieu</TableHead>
