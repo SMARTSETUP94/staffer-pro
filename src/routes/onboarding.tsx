@@ -23,7 +23,8 @@ import {
   stepProSchema,
   stepSecuriteSchema,
 } from "@/lib/onboarding-schemas";
-import { uploadAvatar } from "@/lib/avatar-upload";
+import { useServerFn } from "@tanstack/react-start";
+import { uploadAvatarServer } from "@/server/avatars.functions";
 
 export const Route = createFileRoute("/onboarding")({
   head: () => ({
@@ -42,6 +43,7 @@ type FormData = {
   rgpd_consent: boolean;
   // Identité
   avatar_url: string;
+  avatar_path: string;
   telephone: string;
   date_naissance: string;
   bio_courte: string;
@@ -71,10 +73,12 @@ function OnboardingPage() {
   const [employeId, setEmployeId] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const uploadAvatarFn = useServerFn(uploadAvatarServer);
 
   const [form, setForm] = useState<FormData>({
     rgpd_consent: false,
     avatar_url: "",
+    avatar_path: "",
     telephone: "",
     date_naissance: "",
     bio_courte: "",
@@ -117,6 +121,7 @@ function OnboardingPage() {
           ...f,
           rgpd_consent: Boolean(profile.rgpd_consent_at),
           avatar_url: profile.avatar_url ?? "",
+          avatar_path: ((profile as unknown as { avatar_path?: string | null }).avatar_path) ?? "",
           telephone: profile.telephone ?? "",
           date_naissance: profile.date_naissance ?? "",
           bio_courte: profile.bio_courte ?? "",
@@ -187,7 +192,8 @@ function OnboardingPage() {
         date_naissance: form.date_naissance || null,
         bio_courte: form.bio_courte || null,
         avatar_url: form.avatar_url || null,
-      })
+        avatar_path: form.avatar_path || null,
+      } as never)
       .eq("id", user.id);
     if (error) {
       toast.error("Erreur sauvegarde identité");
@@ -298,25 +304,19 @@ function OnboardingPage() {
   async function handleAvatarUpload(file: File) {
     if (!user) return;
     setBusy(true);
-    const { data, error } = await uploadAvatar(file, user.id);
-    if (error) {
-      toast.error(
-        error.code === "size"
-          ? "Image > 5 Mo"
-          : error.code === "type"
-            ? "Format non supporté"
-            : error.code === "upload"
-              ? "Upload échoué"
-              : error.code === "sign"
-                ? "Génération de l'URL échouée"
-                : "Erreur"
-      );
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const result = await uploadAvatarFn({ data: fd });
+      update("avatar_url", result.signedUrl);
+      update("avatar_path", result.path);
+      toast.success("Photo importée");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Upload échoué";
+      toast.error(msg);
+    } finally {
       setBusy(false);
-      return;
     }
-    update("avatar_url", data.signedUrl);
-    toast.success("Photo importée");
-    setBusy(false);
   }
 
   if (authLoading || loading) {
