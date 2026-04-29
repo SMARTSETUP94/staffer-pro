@@ -44,6 +44,30 @@ interface RoadmapPlanned {
 const RELEASES: RoadmapRelease[] = [
   {
     date: "2026-04-29",
+    version: "v0.25.1",
+    title: "Import devis depuis onglet Devis d'affaire (UX quick win)",
+    entries: [
+      {
+        type: "feature",
+        title: "📥 Bouton « Importer un devis Progbat » sur fiche affaire → onglet Devis",
+        description:
+          "Remplace le bouton « Nouveau devis » historique. Au clic, navigation vers `/devis/import?affaire_id={current_id}` avec pré-sélection automatique de l'affaire de destination dans le wizard d'import. Le bouton « Devis manuel » (création vide) reste disponible en secondaire pour les cas hors-Progbat.",
+      },
+      {
+        type: "improvement",
+        title: "🔒 /devis/import : pré-remplissage + verrouillage dropdown affaire",
+        description:
+          "Nouveau `validateSearch` zod-adapter avec `affaire_id?: string().uuid()`. Si présent : fetch ciblé Supabase (peut être hors top 200), pré-sélection + dropdown disabled avec tooltip « Pré-rempli depuis l'affaire courante ». Bouton « ← Retour à l'affaire » visible en haut. Edge cases gérés : UUID invalide → fallback dropdown libre, affaire RLS-bloquée → message d'erreur + déverrouillage. `reset()` post-import préserve la sélection verrouillée.",
+      },
+      {
+        type: "improvement",
+        title: "🧪 +9 tests Vitest (validateSearch + decidePrefillState + buildImportLinkSearch)",
+        description: "Couverture : UUID valide, query string vide, UUID malformé (fallback), params inconnus ignorés, états valid/invalid/idle du fetch ciblé, encodage du Link search. Total 460 tests verts.",
+      },
+    ],
+  },
+  {
+    date: "2026-04-29",
     version: "v0.25.0",
     title: "Onboarding profil utilisateur (wizard 4 étapes)",
     entries: [

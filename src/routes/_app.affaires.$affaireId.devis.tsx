@@ -1,6 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Plus, Loader2, Pencil, Trash2, FileText, CheckCircle2, Lock, AlertTriangle } from "lucide-react";
+import { Plus, Loader2, Pencil, Trash2, FileText, CheckCircle2, Lock, AlertTriangle, Download } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
@@ -297,9 +297,16 @@ function AffaireDevisPage() {
       <div className="flex items-center justify-between">
         <p className="overline">— Devis ({devis.length})</p>
         {isAdminOrChef && (
-          <Button onClick={openCreateDevis} className="rounded-xl bg-primary text-primary-foreground hover:bg-primary/90">
-            <Plus className="mr-2 h-4 w-4" /> Nouveau devis
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button asChild className="rounded-xl bg-primary text-primary-foreground hover:bg-primary/90">
+              <Link to="/devis/import" search={{ affaire_id: affaireId }}>
+                <Download className="mr-2 h-4 w-4" /> Importer un devis Progbat
+              </Link>
+            </Button>
+            <Button variant="outline" onClick={openCreateDevis} className="rounded-xl">
+              <Plus className="mr-2 h-4 w-4" /> Devis manuel
+            </Button>
+          </div>
         )}
       </div>
 

@@ -1,6 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, ArrowLeft } from "lucide-react";
+import { z } from "zod";
+import { zodValidator, fallback } from "@tanstack/zod-adapter";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { useMetiers } from "@/hooks/use-metiers";
@@ -30,8 +33,14 @@ import { DevisImportFooter } from "@/components/devis-import/DevisImportFooter";
 import { NEW_AFFAIRE, type AffaireOption, type PosteRow } from "@/components/devis-import/types";
 import { detectMachinisteDoubleComptage } from "@/lib/devis-import-v2-helpers";
 
+/** v0.25.1 — Pré-sélection affaire via ?affaire_id=... depuis l'onglet Devis d'une affaire. */
+const importSearchSchema = z.object({
+  affaire_id: fallback(z.string().uuid().optional(), undefined),
+});
+
 export const Route = createFileRoute("/_app/devis/import")({
   head: () => ({ meta: [{ title: "Import devis Excel — Setup Paris" }] }),
+  validateSearch: zodValidator(importSearchSchema),
   component: DevisImportPage,
 });
 
@@ -51,6 +60,12 @@ function toIso(d: Date | undefined): string | null {
 function DevisImportPage() {
   const { isAdminOrChef } = useAuth();
   const { metiers, byId } = useMetiers();
+  const { affaire_id: prefilledAffaireId } = Route.useSearch();
+
+  // v0.25.1 — Verrouillage si pré-sélection valide depuis l'onglet Devis d'une affaire
+  const [prefillState, setPrefillState] = useState<"idle" | "loading" | "valid" | "invalid">(
+    prefilledAffaireId ? "loading" : "idle",
+  );
 
   // Upload & parse
   const [filename, setFilename] = useState<string | null>(null);
@@ -95,6 +110,38 @@ function DevisImportPage() {
       .limit(200)
       .then(({ data }) => setAffaires((data ?? []) as AffaireOption[]));
   }, []);
+
+  // v0.25.1 — Si ?affaire_id présent, fetch ciblé (peut être hors top 200) + RLS check
+  useEffect(() => {
+    if (!prefilledAffaireId) return;
+    let cancelled = false;
+    setPrefillState("loading");
+    supabase
+      .from("affaires")
+      .select("id, numero, nom, client, lieu")
+      .eq("id", prefilledAffaireId)
+      .maybeSingle()
+      .then(({ data, error }) => {
+        if (cancelled) return;
+        if (error || !data) {
+          setPrefillState("invalid");
+          toast.error("Affaire introuvable", {
+            description: "Sélectionne une affaire de destination dans la liste.",
+          });
+          return;
+        }
+        const opt = data as AffaireOption;
+        setAffaires((prev) => (prev.some((a) => a.id === opt.id) ? prev : [opt, ...prev]));
+        setAffaireId(opt.id);
+        setPrefillState("valid");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [prefilledAffaireId]);
+
+  const lockedAffaire = prefillState === "valid";
+
 
   const metierByCode = useMemo(() => {
     const map = new Map<MetierCode, number>();
@@ -288,7 +335,8 @@ function DevisImportPage() {
     setNumeroDevis("");
     setDateMontage(undefined);
     setDateDemontage(undefined);
-    setAffaireId("");
+    // v0.25.1 — préserver la pré-sélection d'affaire si verrouillée
+    if (!lockedAffaire) setAffaireId("");
     setNewAffaireNumero("");
     setNewAffaireNom("");
     setNewAffaireClient("");
@@ -392,6 +440,27 @@ function DevisImportPage() {
         />
         <ImportsTabsNav />
 
+        {prefilledAffaireId && (
+          <div className="flex items-center justify-between rounded-xl border border-border bg-muted/30 px-4 py-2">
+            <Button asChild variant="ghost" size="sm" className="h-8 rounded-lg">
+              <Link to="/affaires/$affaireId/devis" params={{ affaireId: prefilledAffaireId }}>
+                <ArrowLeft className="mr-1.5 h-4 w-4" />
+                Retour à l'affaire
+              </Link>
+            </Button>
+            {prefillState === "invalid" && (
+              <p className="text-xs text-destructive">
+                Affaire non trouvée ou accès refusé. Sélectionne une affaire dans la liste.
+              </p>
+            )}
+            {prefillState === "valid" && (
+              <p className="text-xs text-muted-foreground">
+                Affaire pré-sélectionnée depuis l'onglet Devis.
+              </p>
+            )}
+          </div>
+        )}
+
         {!hasParsed && (
           <DevisImportDropzone
             filename={filename}
@@ -449,6 +518,7 @@ function DevisImportPage() {
               effectiveClient={effectiveClient}
               effectiveLieu={effectiveLieu}
               totalMontant={totals.montant}
+              lockedAffaire={lockedAffaire}
             />
 
             <DevisImportSection2Postes

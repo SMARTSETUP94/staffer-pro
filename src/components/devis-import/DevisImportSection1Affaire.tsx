@@ -2,6 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { DatePickerField } from "./DatePickerField";
 import { NEW_AFFAIRE, type AffaireOption } from "./types";
 
@@ -29,6 +30,8 @@ interface Props {
   effectiveClient: string;
   effectiveLieu: string;
   totalMontant: number;
+  /** v0.25.1 — Verrouille la sélection d'affaire quand pré-remplie via ?affaire_id=… */
+  lockedAffaire?: boolean;
 }
 
 export function DevisImportSection1Affaire({
@@ -55,6 +58,7 @@ export function DevisImportSection1Affaire({
   effectiveClient,
   effectiveLieu,
   totalMontant,
+  lockedAffaire = false,
 }: Props) {
   return (
     <Card>
@@ -75,21 +79,43 @@ export function DevisImportSection1Affaire({
             <Label>
               Numéro d'affaire <span className="text-destructive">*</span>
             </Label>
-            <Select value={affaireId} onValueChange={setAffaireId}>
-              <SelectTrigger className="h-10 rounded-xl">
-                <SelectValue placeholder="Choisir une affaire ou en créer…" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={NEW_AFFAIRE} className="font-semibold text-primary">
-                  + Créer une nouvelle affaire
-                </SelectItem>
-                {affaires.map((a) => (
-                  <SelectItem key={a.id} value={a.id}>
-                    {a.numero} — {a.nom}
+            {lockedAffaire ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div>
+                    <Select value={affaireId} onValueChange={setAffaireId} disabled>
+                      <SelectTrigger className="h-10 rounded-xl bg-muted/40">
+                        <SelectValue placeholder="…" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {affaires.map((a) => (
+                          <SelectItem key={a.id} value={a.id}>
+                            {a.numero} — {a.nom}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>Pré-rempli depuis l'affaire courante</TooltipContent>
+              </Tooltip>
+            ) : (
+              <Select value={affaireId} onValueChange={setAffaireId}>
+                <SelectTrigger className="h-10 rounded-xl">
+                  <SelectValue placeholder="Choisir une affaire ou en créer…" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={NEW_AFFAIRE} className="font-semibold text-primary">
+                    + Créer une nouvelle affaire
                   </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+                  {affaires.map((a) => (
+                    <SelectItem key={a.id} value={a.id}>
+                      {a.numero} — {a.nom}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </div>
 
           <div className="space-y-1.5">
