@@ -60,6 +60,12 @@ function toIso(d: Date | undefined): string | null {
 function DevisImportPage() {
   const { isAdminOrChef } = useAuth();
   const { metiers, byId } = useMetiers();
+  const { affaire_id: prefilledAffaireId } = Route.useSearch();
+
+  // v0.25.1 — Verrouillage si pré-sélection valide depuis l'onglet Devis d'une affaire
+  const [prefillState, setPrefillState] = useState<"idle" | "loading" | "valid" | "invalid">(
+    prefilledAffaireId ? "loading" : "idle",
+  );
 
   // Upload & parse
   const [filename, setFilename] = useState<string | null>(null);
@@ -104,6 +110,38 @@ function DevisImportPage() {
       .limit(200)
       .then(({ data }) => setAffaires((data ?? []) as AffaireOption[]));
   }, []);
+
+  // v0.25.1 — Si ?affaire_id présent, fetch ciblé (peut être hors top 200) + RLS check
+  useEffect(() => {
+    if (!prefilledAffaireId) return;
+    let cancelled = false;
+    setPrefillState("loading");
+    supabase
+      .from("affaires")
+      .select("id, numero, nom, client, lieu")
+      .eq("id", prefilledAffaireId)
+      .maybeSingle()
+      .then(({ data, error }) => {
+        if (cancelled) return;
+        if (error || !data) {
+          setPrefillState("invalid");
+          toast.error("Affaire introuvable", {
+            description: "Sélectionne une affaire de destination dans la liste.",
+          });
+          return;
+        }
+        const opt = data as AffaireOption;
+        setAffaires((prev) => (prev.some((a) => a.id === opt.id) ? prev : [opt, ...prev]));
+        setAffaireId(opt.id);
+        setPrefillState("valid");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [prefilledAffaireId]);
+
+  const lockedAffaire = prefillState === "valid";
+
 
   const metierByCode = useMemo(() => {
     const map = new Map<MetierCode, number>();
