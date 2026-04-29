@@ -304,25 +304,19 @@ function OnboardingPage() {
   async function handleAvatarUpload(file: File) {
     if (!user) return;
     setBusy(true);
-    const { data, error } = await uploadAvatar(file, user.id);
-    if (error) {
-      toast.error(
-        error.code === "size"
-          ? "Image > 5 Mo"
-          : error.code === "type"
-            ? "Format non supporté"
-            : error.code === "upload"
-              ? "Upload échoué"
-              : error.code === "sign"
-                ? "Génération de l'URL échouée"
-                : "Erreur"
-      );
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const result = await uploadAvatarFn({ data: fd });
+      update("avatar_url", result.signedUrl);
+      update("avatar_path", result.path);
+      toast.success("Photo importée");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Upload échoué";
+      toast.error(msg);
+    } finally {
       setBusy(false);
-      return;
     }
-    update("avatar_url", data.signedUrl);
-    toast.success("Photo importée");
-    setBusy(false);
   }
 
   if (authLoading || loading) {
