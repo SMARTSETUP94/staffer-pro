@@ -130,7 +130,7 @@ function ResetPasswordPage() {
                     value={confirm} onChange={(e) => setConfirm(e.target.value)}
                     className="h-11 rounded-xl" />
                 </div>
-                <Button type="submit" disabled={busy || hasRecoverySession === null}
+                <Button type="submit" disabled={busy}
                   className="group h-11 w-full rounded-xl bg-[var(--indigo,#2A2A8C)] text-white hover:bg-[var(--indigo,#2A2A8C)]/90">
                   {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                   Mettre à jour
