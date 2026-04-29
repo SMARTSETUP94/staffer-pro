@@ -30,24 +30,19 @@ export const Route = createFileRoute("/auth/set-password")({
  */
 async function consumeHashSessionIfPresent(): Promise<boolean> {
   if (typeof window === "undefined") return false;
-  const hash = window.location.hash;
-  if (!hash || !hash.includes("access_token=")) return false;
+  const tokens = parseHashTokens(window.location.hash);
+  if (!tokens) return false;
   try {
-    const params = new URLSearchParams(hash.startsWith("#") ? hash.slice(1) : hash);
-    const access_token = params.get("access_token");
-    const refresh_token = params.get("refresh_token");
-    if (!access_token || !refresh_token) return false;
-    const { error } = await supabase.auth.setSession({ access_token, refresh_token });
+    const { error } = await supabase.auth.setSession(tokens);
     if (error) {
       console.error("[set-password] setSession from hash failed:", error);
       return false;
     }
-    // Nettoyer le hash de l'URL
     history.replaceState(null, "", window.location.pathname + window.location.search);
     console.info("[set-password] session set from hash");
     return true;
   } catch (e) {
-    console.error("[set-password] hash parse error:", e);
+    console.error("[set-password] hash setSession error:", e);
     return false;
   }
 }
