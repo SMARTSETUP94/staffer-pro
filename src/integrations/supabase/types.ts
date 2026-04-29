@@ -1433,6 +1433,7 @@ export type Database = {
           contact_urgence_nom: string | null
           contact_urgence_telephone: string | null
           created_at: string
+          dashboard_layout: Json | null
           date_naissance: string | null
           derniere_connexion_le: string | null
           email: string
@@ -1463,6 +1464,7 @@ export type Database = {
           contact_urgence_nom?: string | null
           contact_urgence_telephone?: string | null
           created_at?: string
+          dashboard_layout?: Json | null
           date_naissance?: string | null
           derniere_connexion_le?: string | null
           email: string
@@ -1493,6 +1495,7 @@ export type Database = {
           contact_urgence_nom?: string | null
           contact_urgence_telephone?: string | null
           created_at?: string
+          dashboard_layout?: Json | null
           date_naissance?: string | null
           derniere_connexion_le?: string | null
           email?: string
