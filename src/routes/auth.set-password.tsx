@@ -11,6 +11,7 @@ import { withAuthRetry } from "@/lib/with-auth-retry";
 import { readServerFnError } from "@/lib/server-fn-error";
 import { toast } from "sonner";
 import { BrandLogo } from "@/components/BrandLogo";
+import { parseHashTokens, validateSetPassword } from "@/lib/set-password-helpers";
 
 export const Route = createFileRoute("/auth/set-password")({
   head: () => ({
