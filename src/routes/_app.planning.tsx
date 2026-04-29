@@ -304,6 +304,14 @@ function PlanningPage() {
             selected={filterAffaire}
             onChange={setFilterAffaire}
           />
+          <div className="basis-full" />
+          <TypologieMultiFilter
+            value={typoFilter}
+            onChange={setTypoFilter}
+            counts={typoCounts}
+            className="-mt-1"
+          />
+          <div className="basis-full" />
           <MultiFilter
             label="Métiers"
             options={metiersOptions}
