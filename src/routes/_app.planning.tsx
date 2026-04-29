@@ -375,21 +375,33 @@ function PlanningPage() {
         ) : (
           <div ref={exportRef}>
             <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
-              <TabsList>
-                <TabsTrigger value="cdi">
-                  CDI / CDD <span className="ml-1.5 text-[10px] opacity-60">({employesCDI.length})</span>
-                </TabsTrigger>
-                <TabsTrigger value="interim">
-                  Intérim / Indép. <span className="ml-1.5 text-[10px] opacity-60">({employesInterim.length})</span>
-                </TabsTrigger>
-                <TabsTrigger value="parchantier">Planning par chantier</TabsTrigger>
-                <TabsTrigger value="budget">Budget chantier</TabsTrigger>
-                <TabsTrigger value="flotte">Véhicules staffés ({vehicules.filter((v) => v.actif).length})</TabsTrigger>
-                <TabsTrigger value="feuilleroute">
-                  <ClipboardList className="mr-1 h-3.5 w-3.5" />
-                  Feuille de route
-                </TabsTrigger>
-              </TabsList>
+              <div className="-mx-3 overflow-x-auto sm:mx-0">
+                <TabsList className="mx-3 inline-flex w-max sm:mx-0">
+                  <TabsTrigger value="cdi">
+                    CDI / CDD <span className="ml-1.5 text-[10px] opacity-60">({employesCDI.length})</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="interim">
+                    Intérim <span className="ml-1.5 text-[10px] opacity-60">({employesInterim.length})</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="parchantier">
+                    <span className="hidden sm:inline">Planning par chantier</span>
+                    <span className="sm:hidden">Par chantier</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="budget">
+                    <span className="hidden sm:inline">Budget chantier</span>
+                    <span className="sm:hidden">Budget</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="flotte">
+                    <span className="hidden sm:inline">Véhicules staffés ({vehicules.filter((v) => v.actif).length})</span>
+                    <span className="sm:hidden">Véhic. ({vehicules.filter((v) => v.actif).length})</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="feuilleroute">
+                    <ClipboardList className="mr-1 h-3.5 w-3.5" />
+                    <span className="hidden sm:inline">Feuille de route</span>
+                    <span className="sm:hidden">Feuille</span>
+                  </TabsTrigger>
+                </TabsList>
+              </div>
 
               <TabsContent value="cdi" className="mt-4">
                 <PlanningGrid
