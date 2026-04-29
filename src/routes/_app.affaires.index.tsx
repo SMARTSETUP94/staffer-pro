@@ -85,6 +85,8 @@ export const Route = createFileRoute("/_app/affaires/")({
 
 function AffairesPage() {
   const { isAdminOrChef } = useAuth();
+  const navigate = useNavigate({ from: "/affaires" });
+  const { typo: typoFilter } = Route.useSearch();
   const [rows, setRows] = useState<AffaireRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -97,7 +99,7 @@ function AffairesPage() {
     setLoading(true);
     const { data, error } = await supabase
       .from("affaires")
-      .select("id, numero, nom, client, lieu, statut, date_debut, date_fin_prevue")
+      .select("id, numero, nom, client, lieu, statut, date_debut, date_fin_prevue, typologie")
       .order("date_debut", { ascending: false, nullsFirst: false });
     if (error) {
       toast.error("Chargement impossible", { description: error.message });
@@ -110,14 +112,29 @@ function AffairesPage() {
 
   useEffect(() => { fetchAll(); }, []);
 
+  const typoCounts = useMemo(() => {
+    const counts: Partial<Record<AffaireTypologie, number>> = {};
+    for (const r of rows) {
+      if (r.typologie) counts[r.typologie] = (counts[r.typologie] ?? 0) + 1;
+    }
+    return counts;
+  }, [rows]);
+
+  const typoSet = useMemo(() => new Set(typoFilter), [typoFilter]);
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return rows.filter((r) => {
       if (filter !== "all" && r.statut !== filter) return false;
+      if (typoSet.size > 0 && (!r.typologie || !typoSet.has(r.typologie))) return false;
       if (!q) return true;
       return `${r.numero} ${r.nom} ${r.client ?? ""} ${r.lieu ?? ""}`.toLowerCase().includes(q);
     });
-  }, [rows, search, filter]);
+  }, [rows, search, filter, typoSet]);
+
+  const setTypoFilter = (next: AffaireTypologie[]) => {
+    navigate({ search: (prev) => ({ ...prev, typo: next }), replace: true });
+  };
 
   const openCreate = () => { setForm(emptyForm); setOpen(true); };
   const openEdit = (r: AffaireRow) => {
