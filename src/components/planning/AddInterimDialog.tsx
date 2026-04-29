@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Loader2, Search, UserPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { normalizeName } from "@/lib/string-normalize";
 import {
   Dialog,
   DialogContent,

@@ -42,6 +42,8 @@ const TAILLE_VALUES: OpportuniteTaille[] = [
 
 const STATUT_VALUES: OpportuniteStatut[] = ["a_faire", "envoye", "gagne", "perdu", "termine"];
 
+import { normalizeName } from "./string-normalize";
+
 function normalizeKey(s: string): string {
   return normalizeName(s).replace(/[^a-z0-9]/g, "");
 }
