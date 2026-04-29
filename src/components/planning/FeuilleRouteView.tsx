@@ -32,7 +32,7 @@ import {
   resolveResponsable,
   type EmployeForResponsable,
 } from "@/lib/feuille-route-helpers";
-import { exportFeuilleRouteExcel } from "@/lib/feuille-route-excel";
+// v0.24.1 — exportFeuilleRouteExcel chargé en lazy au clic (xlsx-js-style ~400KB)
 import { exportPlanningToPDF } from "@/lib/planning-export";
 import { AssignationDialog } from "./AssignationDialog";
 

@@ -33,7 +33,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { WeekPicker } from "@/components/planning/WeekPicker";
 import { cn } from "@/lib/utils";
-import { exportHeuresSilae, type HeuresExportRow } from "@/lib/heures-export";
+import type { HeuresExportRow } from "@/lib/heures-export";
 import { PageBreadcrumbs } from "@/components/PageBreadcrumbs";
 import { SaisirPourEmployeDialog } from "@/components/heures/SaisirPourEmployeDialog";
 import { SaisieChefBadge } from "@/components/heures/SaisieChefBadge";
@@ -233,6 +233,7 @@ function ValidationHeuresPage() {
         toast.warning("Aucune saisie validée à exporter sur cette période.");
         return;
       }
+      const { exportHeuresSilae } = await import("@/lib/heures-export");
       await exportHeuresSilae(all, { weekStart, weekEnd });
       toast.success(`Export SILAE généré — ${all.length} ligne(s) (CSV + XLSX)`);
     } catch (e: any) {

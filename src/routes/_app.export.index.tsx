@@ -81,6 +81,7 @@ function ExportPage() {
     if (data.loading) return;
     setExporting(true);
     try {
+      const { exportPlanningExcelRange } = await import("@/lib/planning-excel-export");
       exportPlanningExcelRange({
         weekStarts,
         metiers: data.metiers,
@@ -125,6 +126,7 @@ function ExportPage() {
     if (data.loading) return;
     setZipping(true);
     try {
+      const { exportPlanningZip } = await import("@/lib/planning-zip-export");
       const res = await exportPlanningZip({
         weekStarts,
         rangeStart,
