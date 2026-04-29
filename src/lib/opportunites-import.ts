@@ -43,11 +43,7 @@ const TAILLE_VALUES: OpportuniteTaille[] = [
 const STATUT_VALUES: OpportuniteStatut[] = ["a_faire", "envoye", "gagne", "perdu", "termine"];
 
 function normalizeKey(s: string): string {
-  return s
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]/g, "");
+  return normalizeName(s).replace(/[^a-z0-9]/g, "");
 }
 
 function findColumn(headers: string[], aliases: string[]): number {

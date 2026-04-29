@@ -91,15 +91,10 @@ function PlanningPage() {
     usePlanningData(weekStart, weekEnd);
 
   // Filtre recherche employé (prénom + nom, insensible casse/accent)
-  const norm = (s: string) =>
-    s
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "");
   const employesFiltres = useMemo(() => {
-    const q = norm(searchEmploye.trim());
+    const q = normalizeName(searchEmploye.trim());
     if (!q) return employes;
-    return employes.filter((e) => norm(`${e.prenom} ${e.nom}`).includes(q));
+    return employes.filter((e) => normalizeName(`${e.prenom} ${e.nom}`).includes(q));
   }, [employes, searchEmploye]);
 
   const employesCDI = useMemo(

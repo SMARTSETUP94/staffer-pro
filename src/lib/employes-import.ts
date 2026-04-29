@@ -102,10 +102,7 @@ const INTERIM_SUFFIX_TO_METIER: Record<string, MetierCode> = {
   T: "tapisserie",
 };
 
-const STRIP_DIACRITICS = (s: string) =>
-  s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-
-const norm = (s: string) => STRIP_DIACRITICS(s).toLowerCase().trim();
+import { stripDiacritics as STRIP_DIACRITICS, normalizeName as norm } from "./string-normalize";
 
 /** Décode un buffer Windows-1252 en string. */
 export function decodeWindows1252(buffer: ArrayBuffer): string {

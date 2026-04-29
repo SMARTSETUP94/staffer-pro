@@ -148,13 +148,11 @@ function InterimairesPage() {
       s.jours.add(a.date);
       stats.set(a.employe_id, s);
     }
-    const norm = (s: string) =>
-      s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    const q = norm(search.trim());
+    const q = normalizeName(search.trim());
     return interims
       .filter((e) => {
         if (!q) return true;
-        return norm(`${e.prenom} ${e.nom} ${e.agence_interim ?? ""}`).includes(q);
+        return normalizeName(`${e.prenom} ${e.nom} ${e.agence_interim ?? ""}`).includes(q);
       })
       .map((e) => {
         const s = stats.get(e.id);
