@@ -181,7 +181,42 @@ function PlanningPage() {
     setTab("cdi");
   };
 
-  const filterAffaireStr = filterAffaire as Set<string>;
+  // v0.24.0 — Filtre typologie : restreint l'ensemble d'affaires propagé downstream.
+  // Si typoFilter actif : intersect avec filterAffaire si non-vide, sinon = toutes les affaires de la typo.
+  const affaireIdsByTypo = useMemo(() => {
+    if (typoFilter.length === 0) return null;
+    const set = new Set(typoFilter);
+    return new Set(
+      affaires
+        .filter((a) => {
+          const t = getAffaireTypologie(a.numero);
+          return t !== null && set.has(t);
+        })
+        .map((a) => a.id),
+    );
+  }, [affaires, typoFilter]);
+
+  const filterAffaireStr: Set<string> = useMemo(() => {
+    const explicit = filterAffaire as Set<string>;
+    if (!affaireIdsByTypo) return explicit;
+    if (explicit.size === 0) return affaireIdsByTypo;
+    // intersect
+    const out = new Set<string>();
+    explicit.forEach((id) => {
+      if (affaireIdsByTypo.has(id)) out.add(id);
+    });
+    return out;
+  }, [filterAffaire, affaireIdsByTypo]);
+
+  const typoCounts = useMemo(() => {
+    const counts: Partial<Record<AffaireTypologie, number>> = {};
+    affaires.forEach((a) => {
+      const t = getAffaireTypologie(a.numero);
+      if (t) counts[t] = (counts[t] ?? 0) + 1;
+    });
+    return counts;
+  }, [affaires]);
+
   const filterMetierNum = filterMetier as Set<number>;
   const filterDevisStr = filterDevis as Set<string>;
 
