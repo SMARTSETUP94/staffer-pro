@@ -81,6 +81,12 @@ function PlanningPage() {
   const [includeOpportunites, setIncludeOpportunites] = useState(false);
   const [searchEmploye, setSearchEmploye] = useState("");
 
+  const navigate = useNavigate({ from: "/planning" });
+  const { typo: typoFilter } = Route.useSearch();
+  const setTypoFilter = (next: AffaireTypologie[]) => {
+    navigate({ search: { typo: next }, replace: true });
+  };
+
   const { metiers, employes, affaires, assignations, consommation, absences, chefsById, swapAssignationIds, devisLots, loading, error, refresh } =
     usePlanningData(weekStart, weekEnd);
 
