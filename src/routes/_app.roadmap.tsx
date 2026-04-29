@@ -44,6 +44,37 @@ interface RoadmapPlanned {
 const RELEASES: RoadmapRelease[] = [
   {
     date: "2026-04-29",
+    version: "v0.26.2",
+    title: "🔍 Audit Auth — Page admin (registre inscriptions / connexions / invitations)",
+    entries: [
+      {
+        type: "feature",
+        title: "🆕 Route /audit-auth — 3 onglets Connexions / Invitations / Événements",
+        description:
+          "Nouvelle page admin only pour suivre dans l'app (sans aller dans Supabase Dashboard) qui s'est inscrit, qui s'est connecté, et qui a une invitation en attente. Onglet Connexions : tableau utilisateurs avec photo + last_sign_in_at + nb sessions 30j + badges Jamais connecté / Inactif >30j / Désactivé. Filtre par rôle, recherche fuzzy nom/email. Onglet Invitations : statut calculé envoyé/accepté/expiré (>7j), bouton Renvoyer (réutilise resendInvitation v0.26.1 fixée). Onglet Événements : 10 types auth (login, logout, signup, invite, recovery, modified, refreshed, login_failed, signup_failed), filtres preset 1j/7j/30j + type, export CSV pour archivage RH, limite 500 lignes.",
+      },
+      {
+        type: "feature",
+        title: "🔐 3 RPC SECURITY DEFINER (admin_get_auth_events / connection_stats / invitations)",
+        description:
+          "Exposition contrôlée des données auth.audit_log_entries et auth.users (schéma normalement inaccessible). Chaque RPC vérifie en interne is_admin() et raise 'forbidden' sinon. EXECUTE révoqué de PUBLIC, accordé uniquement à authenticated. admin_get_auth_events : pagination, filtre types[], plage dates. admin_get_user_connection_stats : agrégat COUNT(login) sur 30j par user. admin_get_invitations : jointure user_roles + auth.users avec statut SQL calculé.",
+      },
+      {
+        type: "feature",
+        title: "🧪 +23 tests Vitest audit-auth-helpers (566 verts)",
+        description:
+          "Couverture : AUTH_EVENT_TYPES (10 actions), authEventLabel (FR + fallback + null), authEventTone (success/info/danger/neutral), computeInvitationStatut (5 cas dont status='actif', expiration 7j, jamais invité), invitationStatutLabel, csvEscape (quotes/virgules/retours ligne), eventsToCsv (header + lignes), presetRange (today/7d/30d).",
+      },
+      {
+        type: "feature",
+        title: "🧭 Sidebar : entrée 'Audit Auth' admin only sous Audit heures",
+        description:
+          "Filtrage RBAC strict via effectiveRole (preview Chef/Employé masque la section). Route /audit-auth également gardée côté composant : redirect /dashboard si !isAdmin une fois rolesLoaded.",
+      },
+    ],
+  },
+  {
+    date: "2026-04-29",
     version: "v0.26.1",
     title: "🚨 Hotfix critique — Lien d'invitation cassé pour nouveaux utilisateurs",
     entries: [
