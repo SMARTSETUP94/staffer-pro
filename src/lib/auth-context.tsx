@@ -14,6 +14,7 @@ export interface AuthContextValue {
   isChef: boolean;
   isAdminOrChef: boolean;
   passwordSetDone: boolean | null;
+  profileCompleted: boolean;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signInWithMagicLink: (email: string, redirectTo?: string) => Promise<{ error: string | null }>;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: string | null }>;
@@ -35,11 +36,20 @@ async function fetchRoles(userId: string): Promise<AppRole[]> {
 async function fetchPasswordSetDone(userId: string): Promise<boolean | null> {
   const { data, error } = await supabase
     .from("profiles")
-    .select("password_set_done")
+    .select("password_set_done, profile_completed_at")
     .eq("id", userId)
     .maybeSingle();
   if (error || !data) return null;
   return Boolean(data.password_set_done);
+}
+
+async function fetchProfileCompleted(userId: string): Promise<boolean> {
+  const { data } = await supabase
+    .from("profiles")
+    .select("profile_completed_at")
+    .eq("id", userId)
+    .maybeSingle();
+  return Boolean(data?.profile_completed_at);
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -49,6 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [rolesLoaded, setRolesLoaded] = useState(false);
   const [passwordSetDone, setPasswordSetDone] = useState<boolean | null>(null);
+  const [profileCompleted, setProfileCompleted] = useState(false);
 
   useEffect(() => {
     // 1. Listener AVANT getSession (règle Supabase)
@@ -60,15 +71,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const uid = newSession.user.id;
         // Defer pour éviter deadlock
         setTimeout(() => {
-          Promise.all([fetchRoles(uid), fetchPasswordSetDone(uid)]).then(([r, p]) => {
+          Promise.all([
+            fetchRoles(uid),
+            fetchPasswordSetDone(uid),
+            fetchProfileCompleted(uid),
+          ]).then(([r, p, pc]) => {
             setRoles(r);
             setPasswordSetDone(p);
+            setProfileCompleted(pc);
             setRolesLoaded(true);
           });
         }, 0);
       } else {
         setRoles([]);
         setPasswordSetDone(null);
+        setProfileCompleted(false);
         setRolesLoaded(true);
       }
     });
@@ -79,9 +96,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(s?.user ?? null);
       if (s?.user) {
         const uid = s.user.id;
-        Promise.all([fetchRoles(uid), fetchPasswordSetDone(uid)]).then(([r, p]) => {
+        Promise.all([
+          fetchRoles(uid),
+          fetchPasswordSetDone(uid),
+          fetchProfileCompleted(uid),
+        ]).then(([r, p, pc]) => {
           setRoles(r);
           setPasswordSetDone(p);
+          setProfileCompleted(pc);
           setRolesLoaded(true);
           setLoading(false);
         });
@@ -160,7 +182,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     <AuthContext.Provider
       value={{
         user, session, roles, loading, rolesLoaded,
-        isAdmin, isChef, isAdminOrChef, passwordSetDone,
+        isAdmin, isChef, isAdminOrChef, passwordSetDone, profileCompleted,
         signIn, signInWithMagicLink, signUp, signOut, refreshRoles,
       }}
     >

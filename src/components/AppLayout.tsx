@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
 import { Toaster } from "@/components/ui/sonner";
 import { FeedbackButton } from "./feedback/FeedbackButton";
+import { ProfileIncompleteBanner } from "./onboarding/ProfileIncompleteBanner";
 
 export function AppLayout({ children }: { children: ReactNode }) {
   return (
@@ -17,6 +18,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
         <AppSidebar />
         <div className="flex flex-1 flex-col">
           <PreviewBanner />
+          <ProfileIncompleteBanner />
           <header className="flex h-14 items-center gap-3 border-b border-border bg-background/80 px-4 backdrop-blur">
             <SidebarTrigger className="text-foreground" />
             <div className="ml-auto flex items-center gap-2">

@@ -1403,7 +1403,17 @@ export type Database = {
       }
       profiles: {
         Row: {
+          adresse_code_postal: string | null
+          adresse_pays: string | null
+          adresse_rue: string | null
+          adresse_ville: string | null
+          avatar_url: string | null
+          bio_courte: string | null
+          contact_urgence_lien: string | null
+          contact_urgence_nom: string | null
+          contact_urgence_telephone: string | null
           created_at: string
+          date_naissance: string | null
           derniere_connexion_le: string | null
           email: string
           est_bureau_etude: boolean
@@ -1417,10 +1427,23 @@ export type Database = {
           matricule_silae: string | null
           password_set_at: string | null
           password_set_done: boolean
+          profile_completed_at: string | null
+          rgpd_consent_at: string | null
+          telephone: string | null
           updated_at: string
         }
         Insert: {
+          adresse_code_postal?: string | null
+          adresse_pays?: string | null
+          adresse_rue?: string | null
+          adresse_ville?: string | null
+          avatar_url?: string | null
+          bio_courte?: string | null
+          contact_urgence_lien?: string | null
+          contact_urgence_nom?: string | null
+          contact_urgence_telephone?: string | null
           created_at?: string
+          date_naissance?: string | null
           derniere_connexion_le?: string | null
           email: string
           est_bureau_etude?: boolean
@@ -1434,10 +1457,23 @@ export type Database = {
           matricule_silae?: string | null
           password_set_at?: string | null
           password_set_done?: boolean
+          profile_completed_at?: string | null
+          rgpd_consent_at?: string | null
+          telephone?: string | null
           updated_at?: string
         }
         Update: {
+          adresse_code_postal?: string | null
+          adresse_pays?: string | null
+          adresse_rue?: string | null
+          adresse_ville?: string | null
+          avatar_url?: string | null
+          bio_courte?: string | null
+          contact_urgence_lien?: string | null
+          contact_urgence_nom?: string | null
+          contact_urgence_telephone?: string | null
           created_at?: string
+          date_naissance?: string | null
           derniere_connexion_le?: string | null
           email?: string
           est_bureau_etude?: boolean
@@ -1451,6 +1487,9 @@ export type Database = {
           matricule_silae?: string | null
           password_set_at?: string | null
           password_set_done?: boolean
+          profile_completed_at?: string | null
+          rgpd_consent_at?: string | null
+          telephone?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -2175,6 +2214,7 @@ export type Database = {
       is_affaire_open: { Args: { _affaire_id: string }; Returns: boolean }
       is_chef_or_admin: { Args: never; Returns: boolean }
       is_devis_termine: { Args: { _devis_id: string }; Returns: boolean }
+      is_profile_complete: { Args: { p_id: string }; Returns: boolean }
       next_affaire_numero: { Args: { _prefix: number }; Returns: string }
       set_vehicule_chauffeurs_autorises: {
         Args: { _employe_ids: string[]; _vehicule_id: string }

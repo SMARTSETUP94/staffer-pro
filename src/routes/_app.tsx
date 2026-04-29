@@ -22,7 +22,7 @@ function AppGuard() {
   const navigate = useNavigate();
   const router = useRouterState();
   const currentPath = router.location.pathname;
-  const { user, loading, rolesLoaded, isAdminOrChef, passwordSetDone, roles } = useAuth();
+  const { user, loading, rolesLoaded, isAdminOrChef, passwordSetDone, profileCompleted, roles } = useAuth();
   const { effIsMobile, effIsAdminOrChef } = usePreview();
 
   const isEmployeAllowedPath = EMPLOYE_DESKTOP_ALLOWED.some(
@@ -44,6 +44,11 @@ function AppGuard() {
       navigate({ to: "/auth/set-password" });
       return;
     }
+    // Onboarding profil obligatoire (1ʳᵉ connexion)
+    if (!profileCompleted) {
+      navigate({ to: "/onboarding" });
+      return;
+    }
     // Preview "Employé mobile" -> bascule mobile
     if (effIsMobile) {
       navigate({ to: "/mobile/aujourdhui" });
@@ -55,7 +60,7 @@ function AppGuard() {
     }
   }, [
     loading, rolesLoaded, user, isAdminOrChef, effIsAdminOrChef,
-    effIsMobile, isEmployeAllowedPath, mustSetPassword, navigate,
+    effIsMobile, isEmployeAllowedPath, mustSetPassword, profileCompleted, navigate,
   ]);
 
   if (loading || !rolesLoaded || !user) {
