@@ -59,6 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [rolesLoaded, setRolesLoaded] = useState(false);
   const [passwordSetDone, setPasswordSetDone] = useState<boolean | null>(null);
+  const [profileCompleted, setProfileCompleted] = useState(false);
 
   useEffect(() => {
     // 1. Listener AVANT getSession (règle Supabase)
@@ -70,15 +71,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const uid = newSession.user.id;
         // Defer pour éviter deadlock
         setTimeout(() => {
-          Promise.all([fetchRoles(uid), fetchPasswordSetDone(uid)]).then(([r, p]) => {
+          Promise.all([
+            fetchRoles(uid),
+            fetchPasswordSetDone(uid),
+            fetchProfileCompleted(uid),
+          ]).then(([r, p, pc]) => {
             setRoles(r);
             setPasswordSetDone(p);
+            setProfileCompleted(pc);
             setRolesLoaded(true);
           });
         }, 0);
       } else {
         setRoles([]);
         setPasswordSetDone(null);
+        setProfileCompleted(false);
         setRolesLoaded(true);
       }
     });
@@ -89,9 +96,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(s?.user ?? null);
       if (s?.user) {
         const uid = s.user.id;
-        Promise.all([fetchRoles(uid), fetchPasswordSetDone(uid)]).then(([r, p]) => {
+        Promise.all([
+          fetchRoles(uid),
+          fetchPasswordSetDone(uid),
+          fetchProfileCompleted(uid),
+        ]).then(([r, p, pc]) => {
           setRoles(r);
           setPasswordSetDone(p);
+          setProfileCompleted(pc);
           setRolesLoaded(true);
           setLoading(false);
         });
