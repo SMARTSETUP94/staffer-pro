@@ -207,6 +207,9 @@ export function ExportTrajetsSoustraitanceDialog({ open, onOpenChange }: Props) 
         affaireId: affaireFilter === "__all__" ? null : affaireFilter,
       };
       const filename = buildExportFilename(kind, filters);
+      const { exportTrajetsSoustraitanceCSV, exportTrajetsSoustraitanceXLSX } = await import(
+        "@/lib/trajets-soustraitance-export"
+      );
       const blob =
         kind === "csv"
           ? exportTrajetsSoustraitanceCSV(rows)
