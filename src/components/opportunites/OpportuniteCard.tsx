@@ -10,6 +10,8 @@ import {
   type OpportuniteTaille,
 } from "@/lib/opportunites";
 import type { ChargeAffaires } from "@/hooks/use-charges-affaires";
+import { TypologieBadge } from "@/components/typologie/TypologieBadge";
+import { getAffaireTypologie } from "@/lib/affaire-typologie";
 
 export interface OpportuniteCardData {
   id: string;
@@ -87,6 +89,7 @@ export function OpportuniteCard({ opp, chargesById, onSign, draggable = true }: 
           )}
 
           <div className="mt-2 flex flex-wrap items-center gap-1.5">
+            <TypologieBadge typologie={getAffaireTypologie(opp.numero)} short />
             {opp.taille ? (
               <span
                 className={cn(

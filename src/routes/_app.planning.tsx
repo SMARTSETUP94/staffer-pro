@@ -1,4 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, stripSearchParams } from "@tanstack/react-router";
+import { zodValidator, fallback } from "@tanstack/zod-adapter";
+import { z } from "zod";
 import { useMemo, useRef, useState } from "react";
 import { startOfWeek, addDays, format } from "date-fns";
 import { Calendar, Loader2, Search, FileDown, UserPlus, Truck, Users, ClipboardList } from "lucide-react";
@@ -26,6 +28,21 @@ import { useVehicules, type Trajet } from "@/hooks/use-vehicules";
 import { useTrajetsWeek } from "@/hooks/use-trajets";
 import { exportPlanningToPDF } from "@/lib/planning-export";
 import type { TrajetSuggestion } from "@/lib/trajets-suggestions";
+import { TypologieMultiFilter } from "@/components/typologie/TypologieMultiFilter";
+import {
+  type AffaireTypologie,
+  AFFAIRE_TYPOLOGIES,
+  getAffaireTypologie,
+} from "@/lib/affaire-typologie";
+
+const PLANNING_SEARCH_DEFAULTS = { typo: [] as AffaireTypologie[] };
+
+const planningSearchSchema = z.object({
+  typo: fallback(
+    z.array(z.enum(AFFAIRE_TYPOLOGIES as [AffaireTypologie, ...AffaireTypologie[]])),
+    [],
+  ).default([]),
+});
 
 export const Route = createFileRoute("/_app/planning")({
   head: () => ({
@@ -34,6 +51,8 @@ export const Route = createFileRoute("/_app/planning")({
       { name: "description", content: "Vue planning hebdomadaire des équipes sur les chantiers." },
     ],
   }),
+  validateSearch: zodValidator(planningSearchSchema),
+  search: { middlewares: [stripSearchParams(PLANNING_SEARCH_DEFAULTS)] },
   component: PlanningPage,
 });
 
@@ -61,6 +80,12 @@ function PlanningPage() {
   const [showWeekend, setShowWeekend] = useState(false);
   const [includeOpportunites, setIncludeOpportunites] = useState(false);
   const [searchEmploye, setSearchEmploye] = useState("");
+
+  const navigate = useNavigate({ from: "/planning" });
+  const { typo: typoFilter } = Route.useSearch();
+  const setTypoFilter = (next: AffaireTypologie[]) => {
+    navigate({ search: { typo: next }, replace: true });
+  };
 
   const { metiers, employes, affaires, assignations, consommation, absences, chefsById, swapAssignationIds, devisLots, loading, error, refresh } =
     usePlanningData(weekStart, weekEnd);
@@ -156,7 +181,42 @@ function PlanningPage() {
     setTab("cdi");
   };
 
-  const filterAffaireStr = filterAffaire as Set<string>;
+  // v0.24.0 — Filtre typologie : restreint l'ensemble d'affaires propagé downstream.
+  // Si typoFilter actif : intersect avec filterAffaire si non-vide, sinon = toutes les affaires de la typo.
+  const affaireIdsByTypo = useMemo(() => {
+    if (typoFilter.length === 0) return null;
+    const set = new Set(typoFilter);
+    return new Set(
+      affaires
+        .filter((a) => {
+          const t = getAffaireTypologie(a.numero);
+          return t !== null && set.has(t);
+        })
+        .map((a) => a.id),
+    );
+  }, [affaires, typoFilter]);
+
+  const filterAffaireStr: Set<string> = useMemo(() => {
+    const explicit = filterAffaire as Set<string>;
+    if (!affaireIdsByTypo) return explicit;
+    if (explicit.size === 0) return affaireIdsByTypo;
+    // intersect
+    const out = new Set<string>();
+    explicit.forEach((id) => {
+      if (affaireIdsByTypo.has(id)) out.add(id);
+    });
+    return out;
+  }, [filterAffaire, affaireIdsByTypo]);
+
+  const typoCounts = useMemo(() => {
+    const counts: Partial<Record<AffaireTypologie, number>> = {};
+    affaires.forEach((a) => {
+      const t = getAffaireTypologie(a.numero);
+      if (t) counts[t] = (counts[t] ?? 0) + 1;
+    });
+    return counts;
+  }, [affaires]);
+
   const filterMetierNum = filterMetier as Set<number>;
   const filterDevisStr = filterDevis as Set<string>;
 
@@ -244,6 +304,14 @@ function PlanningPage() {
             selected={filterAffaire}
             onChange={setFilterAffaire}
           />
+          <div className="basis-full" />
+          <TypologieMultiFilter
+            value={typoFilter}
+            onChange={setTypoFilter}
+            counts={typoCounts}
+            className="-mt-1"
+          />
+          <div className="basis-full" />
           <MultiFilter
             label="Métiers"
             options={metiersOptions}

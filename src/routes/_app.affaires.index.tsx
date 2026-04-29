@@ -1,4 +1,6 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, stripSearchParams } from "@tanstack/react-router";
+import { zodValidator, fallback } from "@tanstack/zod-adapter";
+import { z } from "zod";
 import { useEffect, useMemo, useState } from "react";
 import { Plus, Search, Loader2, ArrowRight, Pencil, RotateCcw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,6 +21,9 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+import { TypologieBadge } from "@/components/typologie/TypologieBadge";
+import { TypologieMultiFilter } from "@/components/typologie/TypologieMultiFilter";
+import { type AffaireTypologie, AFFAIRE_TYPOLOGIES, getAffaireTypologie } from "@/lib/affaire-typologie";
 import { toast } from "sonner";
 
 type AffaireStatut = "prospect" | "en_cours" | "termine" | "annule";
@@ -32,6 +37,7 @@ interface AffaireRow {
   statut: AffaireStatut;
   date_debut: string | null;
   date_fin_prevue: string | null;
+  typologie: AffaireTypologie | null;
 }
 
 interface FormState {
@@ -64,13 +70,23 @@ const STATUTS: { value: AffaireStatut; label: string }[] = [
   { value: "annule", label: "Annulée" },
 ];
 
+const SEARCH_DEFAULTS = { typo: [] as AffaireTypologie[] };
+
+const searchSchema = z.object({
+  typo: fallback(z.array(z.enum(AFFAIRE_TYPOLOGIES as [AffaireTypologie, ...AffaireTypologie[]])), []).default([]),
+});
+
 export const Route = createFileRoute("/_app/affaires/")({
   head: () => ({ meta: [{ title: "Affaires — Setup Paris" }] }),
+  validateSearch: zodValidator(searchSchema),
+  search: { middlewares: [stripSearchParams(SEARCH_DEFAULTS)] },
   component: AffairesPage,
 });
 
 function AffairesPage() {
   const { isAdminOrChef } = useAuth();
+  const navigate = useNavigate({ from: "/affaires/" });
+  const { typo: typoFilter } = Route.useSearch();
   const [rows, setRows] = useState<AffaireRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -83,7 +99,7 @@ function AffairesPage() {
     setLoading(true);
     const { data, error } = await supabase
       .from("affaires")
-      .select("id, numero, nom, client, lieu, statut, date_debut, date_fin_prevue")
+      .select("id, numero, nom, client, lieu, statut, date_debut, date_fin_prevue, typologie")
       .order("date_debut", { ascending: false, nullsFirst: false });
     if (error) {
       toast.error("Chargement impossible", { description: error.message });
@@ -96,14 +112,29 @@ function AffairesPage() {
 
   useEffect(() => { fetchAll(); }, []);
 
+  const typoCounts = useMemo(() => {
+    const counts: Partial<Record<AffaireTypologie, number>> = {};
+    for (const r of rows) {
+      if (r.typologie) counts[r.typologie] = (counts[r.typologie] ?? 0) + 1;
+    }
+    return counts;
+  }, [rows]);
+
+  const typoSet = useMemo(() => new Set(typoFilter), [typoFilter]);
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return rows.filter((r) => {
       if (filter !== "all" && r.statut !== filter) return false;
+      if (typoSet.size > 0 && (!r.typologie || !typoSet.has(r.typologie))) return false;
       if (!q) return true;
       return `${r.numero} ${r.nom} ${r.client ?? ""} ${r.lieu ?? ""}`.toLowerCase().includes(q);
     });
-  }, [rows, search, filter]);
+  }, [rows, search, filter, typoSet]);
+
+  const setTypoFilter = (next: AffaireTypologie[]) => {
+    navigate({ search: { typo: next }, replace: true });
+  };
 
   const openCreate = () => { setForm(emptyForm); setOpen(true); };
   const openEdit = (r: AffaireRow) => {
@@ -212,6 +243,17 @@ function AffairesPage() {
         </Tabs>
       </div>
 
+      <div className="rounded-2xl border border-border bg-card p-3">
+        <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+          Typologie
+        </div>
+        <TypologieMultiFilter
+          value={typoFilter}
+          onChange={setTypoFilter}
+          counts={typoCounts}
+        />
+      </div>
+
       <div className="overflow-x-auto rounded-2xl border border-border bg-card">
         {loading ? (
           <div className="flex items-center justify-center p-12">
@@ -226,6 +268,7 @@ function AffairesPage() {
             <TableHeader>
               <TableRow>
                 <TableHead className="w-[110px]">N°</TableHead>
+                <TableHead className="w-[140px]">Typologie</TableHead>
                 <TableHead className="min-w-[200px]">Nom</TableHead>
                 <TableHead className="min-w-[140px]">Client</TableHead>
                 <TableHead className="min-w-[120px]">Lieu</TableHead>
@@ -244,6 +287,9 @@ function AffairesPage() {
                       className="block px-4 py-3 font-mono text-xs font-semibold text-primary hover:underline">
                       {r.numero}
                     </Link>
+                  </TableCell>
+                  <TableCell>
+                    <TypologieBadge typologie={r.typologie ?? getAffaireTypologie(r.numero)} />
                   </TableCell>
                   <TableCell className="p-0">
                     <Link to="/affaires/$affaireId" params={{ affaireId: r.id }}

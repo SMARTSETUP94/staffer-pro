@@ -164,6 +164,7 @@ export type Database = {
             | Database["public"]["Enums"]["opportunite_statut"]
             | null
           taille: Database["public"]["Enums"]["opportunite_taille"] | null
+          typologie: string | null
           updated_at: string
         }
         Insert: {
@@ -192,6 +193,7 @@ export type Database = {
             | Database["public"]["Enums"]["opportunite_statut"]
             | null
           taille?: Database["public"]["Enums"]["opportunite_taille"] | null
+          typologie?: string | null
           updated_at?: string
         }
         Update: {
@@ -220,6 +222,7 @@ export type Database = {
             | Database["public"]["Enums"]["opportunite_statut"]
             | null
           taille?: Database["public"]["Enums"]["opportunite_taille"] | null
+          typologie?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -2094,6 +2097,7 @@ export type Database = {
         Args: { _affaire_id: string; _date: string }
         Returns: boolean
       }
+      compute_affaire_typologie: { Args: { num: string }; Returns: string }
       create_notification: {
         Args: {
           _lien?: string
