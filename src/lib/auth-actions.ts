@@ -17,7 +17,7 @@ export const markPasswordSet = createServerFn({ method: "POST" })
     try {
       const { userId } = context;
       const nowIso = new Date().toISOString();
-      const { error } = await supabaseAdmin
+      const { error: profileErr } = await supabaseAdmin
         .from("profiles")
         .update({
           password_set_done: true,
@@ -25,20 +25,25 @@ export const markPasswordSet = createServerFn({ method: "POST" })
           updated_at: nowIso,
         })
         .eq("id", userId);
-      if (error) {
-        return { ok: false as const, error: error.message };
+      if (profileErr) {
+        console.error("[markPasswordSet] profiles update failed", profileErr);
+        return { ok: false as const, error: profileErr.message };
       }
 
       // Marque le rôle comme actif si encore en "invite"
-      await supabaseAdmin
+      const { error: roleErr } = await supabaseAdmin
         .from("user_roles")
         .update({ status: "actif", activated_at: nowIso })
         .eq("user_id", userId)
         .eq("status", "invite");
+      if (roleErr) {
+        console.warn("[markPasswordSet] user_roles status update failed (non-blocking)", roleErr);
+      }
 
       return { ok: true as const, skipped: data.skipped };
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
+      console.error("[markPasswordSet] uncaught", msg);
       return { ok: false as const, error: msg };
     }
   });
