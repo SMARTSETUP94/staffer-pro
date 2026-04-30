@@ -114,7 +114,7 @@ export function PlanningParObjet({
     setLoadingObjets(true);
     supabase
       .from("fabrication_objets")
-      .select("id, affaire_id, reference, nom, ordre, created_at")
+      .select("id, affaire_id, reference, nom, ordre, created_at, heures_prevues_be, heures_prevues_numerique, heures_prevues_bois, heures_prevues_metal, heures_prevues_peinture, heures_prevues_tapisserie, heures_prevues_manutention, quantite")
       .in("affaire_id", ids)
       .eq("archive", false)
       .order("affaire_id", { ascending: true })
@@ -128,13 +128,25 @@ export function PlanningParObjet({
           return;
         }
         setObjets(
-          (data ?? []).map((o) => ({
-            id: o.id,
-            affaire_id: o.affaire_id,
-            reference: o.reference,
-            nom: o.nom,
-            ordre: o.ordre ?? 0,
-          })),
+          (data ?? []).map((o) => {
+            const qte = Number(o.quantite ?? 1) || 1;
+            const totalUnit =
+              Number(o.heures_prevues_be ?? 0) +
+              Number(o.heures_prevues_numerique ?? 0) +
+              Number(o.heures_prevues_bois ?? 0) +
+              Number(o.heures_prevues_metal ?? 0) +
+              Number(o.heures_prevues_peinture ?? 0) +
+              Number(o.heures_prevues_tapisserie ?? 0) +
+              Number(o.heures_prevues_manutention ?? 0);
+            return {
+              id: o.id,
+              affaire_id: o.affaire_id,
+              reference: o.reference,
+              nom: o.nom,
+              ordre: o.ordre ?? 0,
+              heures_prevues_total: totalUnit * qte,
+            };
+          }),
         );
       });
     return () => {
