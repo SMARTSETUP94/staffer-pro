@@ -234,14 +234,15 @@ describe("STATUT_ROW_BG — coloration par statut", () => {
   });
 });
 
-describe("TABLEUR_COLUMNS — ordre déterministe (v0.29.1: PAT retiré)", () => {
-  it("contient les 10 colonnes éditables dans l'ordre, sans date_pat", () => {
+describe("TABLEUR_COLUMNS — ordre déterministe (v0.29.2: + typologie_future)", () => {
+  it("contient les 11 colonnes éditables dans l'ordre, sans date_pat", () => {
     expect(TABLEUR_COLUMNS).toEqual([
       "code",
       "client",
       "deviseur",
       "date_opportunite",
       "taille",
+      "typologie_future",
       "statut",
       "code_5xxx",
       "date_montage",
@@ -254,6 +255,11 @@ describe("TABLEUR_COLUMNS — ordre déterministe (v0.29.1: PAT retiré)", () =>
   });
   it("inclut code_5xxx (éditable conditionnel)", () => {
     expect(TABLEUR_COLUMNS).toContain("code_5xxx");
+  });
+  it("inclut typologie_future entre taille et statut (v0.29.2)", () => {
+    const idx = TABLEUR_COLUMNS.indexOf("typologie_future");
+    expect(idx).toBeGreaterThan(TABLEUR_COLUMNS.indexOf("taille"));
+    expect(idx).toBeLessThan(TABLEUR_COLUMNS.indexOf("statut"));
   });
 });
 
