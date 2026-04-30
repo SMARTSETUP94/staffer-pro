@@ -314,6 +314,24 @@ function PlanningPage() {
               <span className="hidden sm:inline">Exporter PDF</span>
               <span className="sm:hidden">PDF</span>
             </Button>
+            {tab === "parobjet" && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleExportObjetXlsx}
+                disabled={exporting || loading}
+                className="h-8 px-2.5 sm:h-9 sm:px-3"
+                title="Export Excel matriciel objets × jours"
+              >
+                {exporting ? (
+                  <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <FileDown className="mr-1.5 h-3.5 w-3.5" />
+                )}
+                <span className="hidden sm:inline">Export Excel objets</span>
+                <span className="sm:hidden">Excel</span>
+              </Button>
+            )}
           </div>
         </div>
 
