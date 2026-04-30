@@ -390,6 +390,10 @@ function PlanningPage() {
                     <span className="hidden sm:inline">Planning par chantier</span>
                     <span className="sm:hidden">Par chantier</span>
                   </TabsTrigger>
+                  <TabsTrigger value="parobjet">
+                    <span className="hidden sm:inline">Planning par objet</span>
+                    <span className="sm:hidden">Par objet</span>
+                  </TabsTrigger>
                   <TabsTrigger value="budget">
                     <span className="hidden sm:inline">Budget chantier</span>
                     <span className="sm:hidden">Budget</span>
@@ -471,6 +475,22 @@ function PlanningPage() {
                   filterAffaireIds={filterAffaireStr}
                   filterMetierIds={filterMetierNum}
                   onSelectAffaire={handleSelectAffaireFromSynthese}
+                  onChanged={refresh}
+                />
+              </TabsContent>
+
+              <TabsContent value="parobjet" className="mt-4">
+                <PlanningParObjet
+                  weekStart={weekStart}
+                  affaires={affaires}
+                  employes={employes}
+                  metiers={metiers}
+                  assignations={assignations}
+                  consommation={consommation}
+                  devisLots={devisLots}
+                  showWeekend={showWeekend}
+                  filterAffaireIds={filterAffaireStr}
+                  filterMetierIds={filterMetierNum}
                   onChanged={refresh}
                 />
               </TabsContent>
