@@ -402,7 +402,7 @@ function DevisImportPage() {
     try {
       const { data, error } = await supabase.rpc("preflight_import_devis", {
         _fichier_hash: fichierHash,
-        _affaire_id: affaireId === NEW_AFFAIRE ? null : affaireId || null,
+        _affaire_id: affaireId === NEW_AFFAIRE || !affaireId ? undefined : affaireId,
       });
       if (error) {
         toast.error("Vérification impossible", { description: error.message });
