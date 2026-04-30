@@ -314,15 +314,55 @@ export function AssignationDialog({
       est_chef_jour: estChefJour,
     };
 
-    const res = editingId
-      ? await supabase.from("assignations").update(payload).eq("id", editingId)
-      : await supabase.from("assignations").insert(payload);
+    let assignationId: string | null = editingId;
+    if (editingId) {
+      const { error } = await supabase.from("assignations").update(payload).eq("id", editingId);
+      if (error) {
+        setSaving(false);
+        toast.error(`Erreur : ${error.message}`);
+        return;
+      }
+    } else {
+      const { data, error } = await supabase
+        .from("assignations")
+        .insert(payload)
+        .select("id")
+        .single();
+      if (error || !data) {
+        setSaving(false);
+        toast.error(`Erreur : ${error?.message ?? "insert"}`);
+        return;
+      }
+      assignationId = data.id;
+    }
+
+    // v0.25 — Synchronise les objets de fabrication rattachés
+    if (assignationId) {
+      // Récupère l'état actuel pour calculer le diff (vide en création)
+      const { data: existingLinks } = await supabase
+        .from("assignation_objets")
+        .select("objet_id")
+        .eq("assignation_id", assignationId);
+      const existingIds = new Set((existingLinks ?? []).map((r) => r.objet_id));
+      const targetIds = new Set(selectedObjetIds);
+      const toInsert = [...targetIds].filter((id) => !existingIds.has(id));
+      const toDelete = [...existingIds].filter((id) => !targetIds.has(id));
+
+      if (toDelete.length > 0) {
+        await supabase
+          .from("assignation_objets")
+          .delete()
+          .eq("assignation_id", assignationId)
+          .in("objet_id", toDelete);
+      }
+      if (toInsert.length > 0) {
+        await supabase.from("assignation_objets").insert(
+          toInsert.map((objet_id) => ({ assignation_id: assignationId!, objet_id })),
+        );
+      }
+    }
 
     setSaving(false);
-    if (res.error) {
-      toast.error(`Erreur : ${res.error.message}`);
-      return;
-    }
     toast.success(editingId ? "Assignation modifiée" : "Assignation créée");
     onSaved();
     onOpenChange(false);
