@@ -2359,6 +2359,10 @@ export type Database = {
       is_devis_termine: { Args: { _devis_id: string }; Returns: boolean }
       is_profile_complete: { Args: { p_id: string }; Returns: boolean }
       next_affaire_numero: { Args: { _prefix: number }; Returns: string }
+      preflight_import_devis: {
+        Args: { _affaire_id?: string; _fichier_hash: string }
+        Returns: Json
+      }
       set_vehicule_chauffeurs_autorises: {
         Args: { _employe_ids: string[]; _vehicule_id: string }
         Returns: undefined
