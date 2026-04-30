@@ -1,16 +1,26 @@
 /**
  * v0.28.0 — Vue Tableur opportunités (saisie inline type Excel/Sheets).
- *
- * - Edition inline cellule par cellule
- * - Tab/Enter navigation entre cellules
- * - Auto-save debounce 300ms à la sortie de cellule
- * - Code 9XXX auto-suggéré sur nouvelle ligne
- * - Coloration par statut
- * - Pagination explicite 50 lignes
+ * v0.29.1 — Hotfix édition (3 fixes critiques) :
+ *   1. BUG focus perdu : pattern overlay local + debounce 800ms + setQueryData-like
+ *      → la cellule en cours d'édition n'est PLUS démontée par les refetch parent.
+ *      onRowsMutated() N'est PLUS appelé après chaque save (uniquement create + delete +
+ *      sign 5XXX), évitant le re-render destructif. La saisie reste fluide pendant
+ *      qu'une mutation s'exécute en background.
+ *   2. Colonne PAT retirée (header + cellule + ordre nav).
+ *   3. Code 5XXX éditable conditionnel quand statut="gagne" (admin OR CA propriétaire) :
+ *      validation regex /^5\d{3}$/ + appel RPC sign_opportunite (unicité côté BDD).
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Loader2, Plus, Trash2, ChevronLeft, ChevronRight, ExternalLink } from "lucide-react";
+import {
+  Loader2,
+  Plus,
+  Trash2,
+  ChevronLeft,
+  ChevronRight,
+  ExternalLink,
+  Check,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -48,8 +58,11 @@ import {
   type TableurFilters,
   type TableurRow,
   applyTableurFilters,
+  canEditCode5XXX,
   isDraftRowEmpty,
+  isValidCode5XXX,
   isValidCode9XXX,
+  mergeRowOverlay,
   nextCell,
 } from "@/lib/opportunites-tableur-helpers";
 import { useNextOpportuniteCode } from "@/hooks/use-next-opportunite-code";
@@ -62,7 +75,8 @@ import {
 } from "@/lib/opportunite-delete";
 
 const PAGE_SIZE = 50;
-const SAVE_DEBOUNCE_MS = 300;
+/** v0.29.1 — Debounce passé de 300ms à 800ms (spec hotfix). */
+const SAVE_DEBOUNCE_MS = 800;
 
 interface Props {
   rows: TableurRow[];
@@ -70,6 +84,9 @@ interface Props {
   filters: TableurFilters;
   canEdit: boolean;
   isAdminOrChef: boolean;
+  isAdmin: boolean;
+  /** v0.29.1 — id du user courant pour vérifier la propriété sur Code 5XXX. */
+  currentUserId: string | null;
   defaultChargeId: string | null;
   onRowsMutated: () => void;
 }
@@ -85,6 +102,8 @@ export function OpportunitesTableurView({
   filters,
   canEdit,
   isAdminOrChef,
+  isAdmin,
+  currentUserId,
   defaultChargeId,
   onRowsMutated,
 }: Props) {
@@ -95,12 +114,26 @@ export function OpportunitesTableurView({
   const [drafts, setDrafts] = useState<TableurRow[]>([]);
   const [page, setPage] = useState(0);
   const [savingIds, setSavingIds] = useState<Set<string>>(new Set());
-  const [editing, setEditing] = useState<CellPosition | null>(null);
+  const [savedFlash, setSavedFlash] = useState<Set<string>>(new Set());
+  const [, setEditing] = useState<CellPosition | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<TableurRow | null>(null);
+  /**
+   * v0.29.1 — Overlay local pour les lignes persistées : patches "en vol"
+   * pas encore confirmés serveur. Ne JAMAIS être écrasé par un refetch parent.
+   * Clé = row.id, valeur = patches partiels.
+   */
+  const [overlay, setOverlay] = useState<Map<string, Partial<TableurRow>>>(new Map());
   const debounceRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   const cellRefs = useRef<Map<string, HTMLElement | null>>(new Map());
+  /** Ref vers le dernier champ modifié pour chaque ligne (utilisé par debounce). */
+  const lastFieldRef = useRef<Map<string, TableurColumnKey>>(new Map());
 
-  const allRows = useMemo(() => [...rows, ...drafts], [rows, drafts]);
+  // Lignes finales affichées : merge serveur + overlay + drafts
+  const mergedRows = useMemo(() => {
+    return rows.map((r) => mergeRowOverlay(r, overlay.get(r.id)));
+  }, [rows, overlay]);
+
+  const allRows = useMemo(() => [...mergedRows, ...drafts], [mergedRows, drafts]);
   const filtered = useMemo(() => applyTableurFilters(allRows, filters), [allRows, filters]);
   const pageRows = useMemo(
     () => filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE),
@@ -112,8 +145,18 @@ export function OpportunitesTableurView({
     if (page >= pageCount) setPage(Math.max(0, pageCount - 1));
   }, [pageCount, page]);
 
-  // Patch in place une ligne (locale) — pour optimistic UI
-  const patchRowLocal = useCallback((id: string, patch: Partial<TableurRow>) => {
+  /** Patch overlay (lignes persistées) — optimistic, pas de re-render destructif. */
+  const patchOverlay = useCallback((id: string, patch: Partial<TableurRow>) => {
+    setOverlay((prev) => {
+      const next = new Map(prev);
+      const existing = next.get(id) ?? {};
+      next.set(id, { ...existing, ...patch });
+      return next;
+    });
+  }, []);
+
+  /** Patch in place une ligne brouillon (locale). */
+  const patchDraftLocal = useCallback((id: string, patch: Partial<TableurRow>) => {
     setDrafts((prev) => prev.map((r) => (r.id === id ? { ...r, ...patch } : r)));
   }, []);
 
@@ -126,7 +169,27 @@ export function OpportunitesTableurView({
     });
   }, []);
 
-  /** Sauvegarde une ligne (create si pas d'affaireId, sinon update du champ). */
+  const flashSaved = useCallback((id: string) => {
+    setSavedFlash((prev) => {
+      const next = new Set(prev);
+      next.add(id);
+      return next;
+    });
+    setTimeout(() => {
+      setSavedFlash((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+    }, 1200);
+  }, []);
+
+  /**
+   * v0.29.1 — Sauvegarde une ligne sans déclencher de refetch parent.
+   * Pour les drafts → create() puis on retire le draft ET on demande refresh
+   * (nouvelle ligne à charger). Pour update → update() puis on nettoie l'overlay
+   * SANS appeler onRowsMutated (le cache local reflète déjà la valeur).
+   */
   const saveRow = useCallback(
     async (row: TableurRow, changedField: TableurColumnKey | null) => {
       markSaving(row.id, true);
@@ -148,7 +211,8 @@ export function OpportunitesTableurView({
             client: row.client,
             nom: row.nom,
             charge_affaires_id: row.charge_affaires_id,
-            date_opportunite: row.date_opportunite ?? new Date().toISOString().slice(0, 10),
+            date_opportunite:
+              row.date_opportunite ?? new Date().toISOString().slice(0, 10),
             taille: row.taille,
             notes: row.notes,
           });
@@ -164,19 +228,18 @@ export function OpportunitesTableurView({
             return;
           }
           if (result.kind === "created") {
-            // Si d'autres champs (statut/dates) sont déjà saisis sur le brouillon → patch après
             const extraPatch: Record<string, unknown> = {};
             if (row.statut_opportunite && row.statut_opportunite !== "a_faire")
               extraPatch.statut_opportunite = row.statut_opportunite;
-            if (row.date_pat) extraPatch.date_pat = row.date_pat;
             if (row.date_montage) extraPatch.date_montage = row.date_montage;
             if (row.date_demontage) extraPatch.date_demontage = row.date_demontage;
             if (Object.keys(extraPatch).length > 0) {
               await update(result.affaireId, extraPatch);
             }
-            // Retire le brouillon, demande refresh à parent
+            // Retire le brouillon, demande refresh à parent (nouvelle ligne en BDD)
             setDrafts((prev) => prev.filter((r) => r.id !== row.id));
             onRowsMutated();
+            flashSaved(result.affaireId);
             toast.success(`Opportunité ${result.numero} créée`);
           }
         } else {
@@ -199,9 +262,6 @@ export function OpportunitesTableurView({
             case "statut":
               patch.statut_opportunite = row.statut_opportunite;
               break;
-            case "date_pat":
-              patch.date_pat = row.date_pat;
-              break;
             case "date_montage":
               patch.date_montage = row.date_montage;
               break;
@@ -218,6 +278,7 @@ export function OpportunitesTableurView({
               }
               patch.numero = row.numero;
               break;
+            // case "code_5xxx" est géré séparément (RPC sign_opportunite)
           }
           if (Object.keys(patch).length === 0) return;
           const result = await update(row.affaireId, patch);
@@ -225,32 +286,62 @@ export function OpportunitesTableurView({
             const msg = result.message.toLowerCase();
             if (msg.includes("duplicate") || msg.includes("unique")) {
               toast.error("Code déjà utilisé");
+              // En cas d'erreur de duplicat, on rollback l'overlay
+              setOverlay((prev) => {
+                const next = new Map(prev);
+                next.delete(row.id);
+                return next;
+              });
               onRowsMutated();
             } else {
               toast.error("Sauvegarde impossible", { description: result.message });
+              // Rollback overlay sur la clé du champ
+              setOverlay((prev) => {
+                const next = new Map(prev);
+                next.delete(row.id);
+                return next;
+              });
             }
           } else {
-            onRowsMutated();
+            // ✅ Succès : on garde l'overlay (il reflète la vérité serveur)
+            // Pas de onRowsMutated → pas de re-fetch destructif → focus conservé.
+            flashSaved(row.id);
           }
         }
       } finally {
         markSaving(row.id, false);
       }
     },
-    [create, update, onRowsMutated, markSaving],
+    [create, update, onRowsMutated, markSaving, flashSaved],
   );
 
-  /** Programme une sauvegarde debounced. */
+  /** Programme une sauvegarde debounced (800ms). */
   const scheduleSave = useCallback(
     (row: TableurRow, field: TableurColumnKey | null) => {
       const map = debounceRef.current;
       const existing = map.get(row.id);
       if (existing) clearTimeout(existing);
+      if (field) lastFieldRef.current.set(row.id, field);
       const t = setTimeout(() => {
         map.delete(row.id);
-        void saveRow(row, field);
+        const lastField = lastFieldRef.current.get(row.id) ?? field;
+        void saveRow(row, lastField);
       }, SAVE_DEBOUNCE_MS);
       map.set(row.id, t);
+    },
+    [saveRow],
+  );
+
+  /** Flush immédiat sur blur (sortie cellule) — pas d'attente debounce. */
+  const flushSaveNow = useCallback(
+    (row: TableurRow, field: TableurColumnKey | null) => {
+      const map = debounceRef.current;
+      const existing = map.get(row.id);
+      if (existing) {
+        clearTimeout(existing);
+        map.delete(row.id);
+        void saveRow(row, field ?? lastFieldRef.current.get(row.id) ?? null);
+      }
     },
     [saveRow],
   );
@@ -269,16 +360,15 @@ export function OpportunitesTableurView({
     (row: TableurRow, field: TableurColumnKey, patch: Partial<TableurRow>) => {
       const newRow = { ...row, ...patch };
       if (row.affaireId) {
-        // Pour les lignes persistées : optimistic via parent (refetch au save).
-        // Mais comme on ne contrôle pas `rows` ici, on garde un état de patch local minimal
-        // → on déclenche le save direct sur le row patché.
+        // Lignes persistées : overlay local immédiat (pas écrasé par refetch).
+        patchOverlay(row.id, patch);
         scheduleSave(newRow, field);
       } else {
-        patchRowLocal(row.id, patch);
+        patchDraftLocal(row.id, patch);
         scheduleSave(newRow, field);
       }
     },
-    [scheduleSave, patchRowLocal],
+    [scheduleSave, patchOverlay, patchDraftLocal],
   );
 
   /** Ajoute une nouvelle ligne brouillon avec code suggéré. */
@@ -308,21 +398,18 @@ export function OpportunitesTableurView({
       notes: null,
     };
     setDrafts((prev) => [...prev, newRow]);
-    // Va sur la dernière page
     const newTotal = filtered.length + 1;
     setPage(Math.max(0, Math.ceil(newTotal / PAGE_SIZE) - 1));
-    // Focus 1ère cellule éditable (client) après render
     setTimeout(() => {
-      const lastIdx = pageRows.length; // nouvelle ligne sera juste après
+      const lastIdx = pageRows.length;
       setEditing({ row: lastIdx, col: "client" });
     }, 50);
   }, [fetchNext, defaultChargeId, filtered.length, pageRows.length]);
 
-  /** Suppression d'une opportunité (admin/chef uniquement). v0.28.1 — guard business rule + RLS. */
+  /** Suppression d'une opportunité (admin/chef uniquement). */
   const handleDelete = useCallback(async () => {
     if (!deleteTarget) return;
     if (!deleteTarget.affaireId) {
-      // Brouillon non persisté
       setDrafts((prev) => prev.filter((r) => r.id !== deleteTarget.id));
       setDeleteTarget(null);
       return;
@@ -358,6 +445,46 @@ export function OpportunitesTableurView({
     }
     setDeleteTarget(null);
   }, [deleteTarget, onRowsMutated]);
+
+  /**
+   * v0.29.1 — Signature d'une opportunité depuis la cellule Code 5XXX.
+   * Validation regex puis RPC sign_opportunite (gère unicité côté BDD).
+   */
+  const handleSignFromCell = useCallback(
+    async (row: TableurRow, code5xxx: string) => {
+      const trimmed = code5xxx.trim();
+      if (!trimmed) return;
+      if (!isValidCode5XXX(trimmed)) {
+        toast.error("Code 5XXX invalide", {
+          description: "Format attendu : 5XXX (4 chiffres commençant par 5).",
+        });
+        return;
+      }
+      if (!row.affaireId) return;
+      markSaving(row.id, true);
+      const { error } = await supabase.rpc("sign_opportunite", {
+        _affaire_id: row.affaireId,
+        _new_code: trimmed,
+      });
+      markSaving(row.id, false);
+      if (error) {
+        const msg = (error.message || "").toLowerCase();
+        if (msg.includes("duplicate") || msg.includes("unique")) {
+          toast.error("Code 5XXX déjà attribué", {
+            description: `Le code ${trimmed} est déjà utilisé par une autre affaire.`,
+          });
+        } else {
+          toast.error("Signature impossible", { description: error.message });
+        }
+        return;
+      }
+      flashSaved(row.id);
+      toast.success(`Opportunité ${row.numero} signée → affaire ${trimmed}`);
+      // Le numero a changé en BDD (9XXX → 5XXX) + phase=signe → refetch nécessaire
+      onRowsMutated();
+    },
+    [markSaving, flashSaved, onRowsMutated],
+  );
 
   /** Navigation Tab/Enter. */
   const onCellKeyDown = useCallback(
@@ -400,7 +527,6 @@ export function OpportunitesTableurView({
               <th className="px-2 py-2 text-left font-semibold">Taille</th>
               <th className="px-2 py-2 text-left font-semibold">Statut</th>
               <th className="px-2 py-2 text-left font-semibold">Code 5XXX</th>
-              <th className="px-2 py-2 text-left font-semibold">PAT</th>
               <th className="px-2 py-2 text-left font-semibold">Montage</th>
               <th className="px-2 py-2 text-left font-semibold">Démontage</th>
               <th className="px-2 py-2 text-left font-semibold">Commentaires</th>
@@ -411,7 +537,7 @@ export function OpportunitesTableurView({
             {pageRows.length === 0 && (
               <tr>
                 <td
-                  colSpan={isAdminOrChef ? 12 : 11}
+                  colSpan={isAdminOrChef ? 11 : 10}
                   className="px-4 py-8 text-center text-xs text-muted-foreground"
                 >
                   Aucune opportunité ne correspond aux filtres.
@@ -421,17 +547,22 @@ export function OpportunitesTableurView({
             {pageRows.map((row, rowIdx) => {
               const bg = row.statut_opportunite ? STATUT_ROW_BG[row.statut_opportunite] : "";
               const saving = savingIds.has(row.id);
+              const justSaved = savedFlash.has(row.id);
               const setRef = (col: TableurColumnKey) => (el: HTMLElement | null) => {
                 cellRefs.current.set(`${rowIdx}-${col}`, el);
               };
+              const isOwner =
+                !!currentUserId && row.charge_affaires_id === currentUserId;
+              const code5xxxEditable = canEditCode5XXX({
+                statut: row.statut_opportunite,
+                isAdmin,
+                isOwner,
+                alreadySigned: !!row.signed_affaire_id,
+              });
               return (
                 <tr
                   key={row.id}
-                  className={cn(
-                    "border-b border-border/40 transition-colors",
-                    bg,
-                    saving && "opacity-70",
-                  )}
+                  className={cn("border-b border-border/40 transition-colors", bg)}
                 >
                   {/* Code 9XXX */}
                   <td className="px-2 py-1">
@@ -441,6 +572,7 @@ export function OpportunitesTableurView({
                       onChange={(e) => updateField(row, "code", { numero: e.target.value })}
                       onKeyDown={(e) => onCellKeyDown(e, rowIdx, "code")}
                       onFocus={() => setEditing({ row: rowIdx, col: "code" })}
+                      onBlur={() => flushSaveNow(row, "code")}
                       disabled={!canEdit}
                       maxLength={4}
                       className="h-8 w-20 font-mono"
@@ -454,6 +586,7 @@ export function OpportunitesTableurView({
                       onChange={(e) => updateField(row, "client", { client: e.target.value })}
                       onKeyDown={(e) => onCellKeyDown(e, rowIdx, "client")}
                       onFocus={() => setEditing({ row: rowIdx, col: "client" })}
+                      onBlur={() => flushSaveNow(row, "client")}
                       disabled={!canEdit}
                       placeholder="Client / chantier…"
                       className="h-8 min-w-[180px]"
@@ -496,6 +629,7 @@ export function OpportunitesTableurView({
                         })
                       }
                       onKeyDown={(e) => onCellKeyDown(e, rowIdx, "date_opportunite")}
+                      onBlur={() => flushSaveNow(row, "date_opportunite")}
                       disabled={!canEdit}
                       className="h-8 w-[140px]"
                     />
@@ -552,7 +686,7 @@ export function OpportunitesTableurView({
                       </SelectContent>
                     </Select>
                   </td>
-                  {/* Code 5XXX (lecture seule) */}
+                  {/* Code 5XXX — éditable conditionnel (v0.29.1) */}
                   <td className="px-2 py-1 font-mono text-xs">
                     {row.signed_affaire_numero && row.signed_affaire_id ? (
                       <Link
@@ -563,23 +697,16 @@ export function OpportunitesTableurView({
                         {row.signed_affaire_numero}
                         <ExternalLink className="h-3 w-3" />
                       </Link>
+                    ) : code5xxxEditable ? (
+                      <Code5xxxCell
+                        ref={setRef("code_5xxx") as React.Ref<HTMLInputElement>}
+                        onSign={(v) => handleSignFromCell(row, v)}
+                        onKeyDown={(e) => onCellKeyDown(e, rowIdx, "code_5xxx")}
+                        disabled={saving}
+                      />
                     ) : (
                       <span className="text-muted-foreground">—</span>
                     )}
-                  </td>
-                  {/* PAT */}
-                  <td className="px-2 py-1">
-                    <Input
-                      ref={setRef("date_pat") as React.Ref<HTMLInputElement>}
-                      type="date"
-                      value={row.date_pat ?? ""}
-                      onChange={(e) =>
-                        updateField(row, "date_pat", { date_pat: e.target.value || null })
-                      }
-                      onKeyDown={(e) => onCellKeyDown(e, rowIdx, "date_pat")}
-                      disabled={!canEdit}
-                      className="h-8 w-[140px]"
-                    />
                   </td>
                   {/* Montage */}
                   <td className="px-2 py-1">
@@ -593,6 +720,7 @@ export function OpportunitesTableurView({
                         })
                       }
                       onKeyDown={(e) => onCellKeyDown(e, rowIdx, "date_montage")}
+                      onBlur={() => flushSaveNow(row, "date_montage")}
                       disabled={!canEdit}
                       className="h-8 w-[140px]"
                     />
@@ -609,6 +737,7 @@ export function OpportunitesTableurView({
                         })
                       }
                       onKeyDown={(e) => onCellKeyDown(e, rowIdx, "date_demontage")}
+                      onBlur={() => flushSaveNow(row, "date_demontage")}
                       disabled={!canEdit}
                       className="h-8 w-[140px]"
                     />
@@ -622,10 +751,10 @@ export function OpportunitesTableurView({
                         updateField(row, "commentaires", { notes: e.target.value })
                       }
                       onKeyDown={(e) => {
-                        // Enter dans textarea = saut de ligne, on ignore la nav
                         if (e.key === "Enter" && !e.shiftKey) return;
                         onCellKeyDown(e, rowIdx, "commentaires");
                       }}
+                      onBlur={() => flushSaveNow(row, "commentaires")}
                       disabled={!canEdit}
                       maxLength={500}
                       rows={1}
@@ -635,19 +764,25 @@ export function OpportunitesTableurView({
                   </td>
                   {isAdminOrChef && (
                     <td className="px-2 py-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setDeleteTarget(row)}
-                        className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
-                        aria-label="Supprimer"
-                      >
-                        {saving ? (
-                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                        ) : (
+                      <div className="flex items-center gap-1">
+                        {/* Indicateur discret de save en cours / réussi */}
+                        <span className="inline-flex h-5 w-5 items-center justify-center">
+                          {saving ? (
+                            <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
+                          ) : justSaved ? (
+                            <Check className="h-3 w-3 text-emerald-500" />
+                          ) : null}
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setDeleteTarget(row)}
+                          className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
+                          aria-label="Supprimer"
+                        >
                           <Trash2 className="h-3.5 w-3.5" />
-                        )}
-                      </Button>
+                        </Button>
+                      </div>
                     </td>
                   )}
                 </tr>
@@ -728,6 +863,60 @@ export function OpportunitesTableurView({
     </div>
   );
 }
+
+/**
+ * v0.29.1 — Cellule input dédiée à la saisie du Code 5XXX (signature).
+ * Local state pour ne pas interférer avec l'overlay des autres champs.
+ * Save sur Enter ou Blur si valide.
+ */
+const Code5xxxCell = (() => {
+  const Inner = (
+    {
+      onSign,
+      onKeyDown,
+      disabled,
+    }: {
+      onSign: (code: string) => void;
+      onKeyDown: (e: React.KeyboardEvent) => void;
+      disabled?: boolean;
+    },
+    ref: React.Ref<HTMLInputElement>,
+  ) => {
+    const [val, setVal] = useState("");
+    return (
+      <Input
+        ref={ref}
+        value={val}
+        onChange={(e) => setVal(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            if (val.trim()) onSign(val);
+            return;
+          }
+          onKeyDown(e);
+        }}
+        onBlur={() => {
+          if (val.trim() && isValidCode5XXX(val)) onSign(val);
+        }}
+        disabled={disabled}
+        maxLength={4}
+        placeholder="5XXX"
+        className="h-7 w-20 font-mono text-xs"
+      />
+    );
+  };
+  return Object.assign(
+    // eslint-disable-next-line react/display-name
+    require("react").forwardRef(Inner) as React.ForwardRefExoticComponent<
+      {
+        onSign: (code: string) => void;
+        onKeyDown: (e: React.KeyboardEvent) => void;
+        disabled?: boolean;
+      } & React.RefAttributes<HTMLInputElement>
+    >,
+  );
+})();
 
 // Re-export TableurRow + helpers utilisés ailleurs (route, tests)
 export { isDraftRowEmpty, TABLEUR_COLUMNS };
