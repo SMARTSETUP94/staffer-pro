@@ -2,6 +2,9 @@ import { describe, it, expect } from "vitest";
 import {
   shouldForceSetPassword,
   isAuthHashPresent,
+  isOnboardingPath,
+  shouldIgnoreTokenRefreshForSameUser,
+  shouldRedirectToOnboarding,
 } from "@/lib/auth-redirect-helpers";
 import { resolveSetPasswordRedirect } from "@/lib/admin-actions";
 
@@ -99,6 +102,44 @@ describe("shouldForceSetPassword", () => {
         isInviteStatus: false,
         profileCompleted: true,
       }),
+    ).toBe(false);
+  });
+});
+
+describe("onboarding guard idempotence", () => {
+  it("profil incomplet hors onboarding → redirect onboarding", () => {
+    expect(shouldRedirectToOnboarding({ profileCompleted: false, currentPath: "/dashboard" })).toBe(true);
+  });
+
+  it("profil incomplet déjà sur /onboarding → pas de redirect en boucle", () => {
+    expect(shouldRedirectToOnboarding({ profileCompleted: false, currentPath: "/onboarding" })).toBe(false);
+    expect(shouldRedirectToOnboarding({ profileCompleted: false, currentPath: "/onboarding/step" })).toBe(false);
+  });
+
+  it("profil complet → jamais de redirect onboarding", () => {
+    expect(shouldRedirectToOnboarding({ profileCompleted: true, currentPath: "/dashboard" })).toBe(false);
+  });
+
+  it("détecte seulement les chemins onboarding exacts", () => {
+    expect(isOnboardingPath("/onboarding")).toBe(true);
+    expect(isOnboardingPath("/onboarding/step")).toBe(true);
+    expect(isOnboardingPath("/onboarding-old")).toBe(false);
+  });
+});
+
+describe("auth TOKEN_REFRESHED same user", () => {
+  it("ignore TOKEN_REFRESHED sans changement d'utilisateur", () => {
+    expect(
+      shouldIgnoreTokenRefreshForSameUser({ event: "TOKEN_REFRESHED", newUserId: "u1", lastUserId: "u1" }),
+    ).toBe(true);
+  });
+
+  it("ne bloque pas SIGNED_IN ni changement d'utilisateur", () => {
+    expect(
+      shouldIgnoreTokenRefreshForSameUser({ event: "SIGNED_IN", newUserId: "u1", lastUserId: "u1" }),
+    ).toBe(false);
+    expect(
+      shouldIgnoreTokenRefreshForSameUser({ event: "TOKEN_REFRESHED", newUserId: "u2", lastUserId: "u1" }),
     ).toBe(false);
   });
 });
