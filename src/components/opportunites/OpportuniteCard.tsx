@@ -17,7 +17,7 @@ import {
 } from "@/lib/opportunites";
 import type { ChargeAffaires } from "@/hooks/use-charges-affaires";
 import { TypologieBadge } from "@/components/typologie/TypologieBadge";
-import { getAffaireTypologie } from "@/lib/affaire-typologie";
+import { getAffaireTypologie, type AffaireTypologie } from "@/lib/affaire-typologie";
 import { checkCanDeleteOpportunite } from "@/lib/opportunite-delete";
 
 export interface OpportuniteCardData {
@@ -30,6 +30,8 @@ export interface OpportuniteCardData {
   date_opportunite: string | null;
   notes: string | null;
   statut_opportunite: "a_faire" | "envoye" | "gagne" | "perdu" | "termine";
+  /** v0.29.2 — typologie cible déclarée (override le getAffaireTypologie 9XXX par défaut). */
+  typologie_future?: AffaireTypologie | null;
 }
 
 interface Props {
@@ -139,7 +141,7 @@ export function OpportuniteCard({
           )}
 
           <div className="mt-2 flex flex-wrap items-center gap-1.5">
-            <TypologieBadge typologie={getAffaireTypologie(opp.numero)} short />
+            <TypologieBadge typologie={opp.typologie_future ?? getAffaireTypologie(opp.numero)} short />
             {opp.taille ? (
               <span
                 className={cn(

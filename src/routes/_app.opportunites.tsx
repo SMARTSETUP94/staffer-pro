@@ -580,6 +580,7 @@ function OpportunitesPage() {
           affaireId={signTarget.id}
           oldCode={signTarget.numero}
           clientLabel={signTarget.client}
+          typologieFuture={signTarget.typologie_future ?? null}
           onSigned={() => setRefreshTick((t) => t + 1)}
         />
       )}

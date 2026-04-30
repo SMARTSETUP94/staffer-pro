@@ -41,6 +41,7 @@ import {
   AFFAIRE_TYPOLOGIES,
   getAffaireTypologie,
 } from "@/lib/affaire-typologie";
+import { countActiveAffairesByTypologie } from "@/lib/typologie-active-counts";
 
 const PLANNING_SEARCH_DEFAULTS = { typo: [] as AffaireTypologie[] };
 
@@ -210,14 +211,11 @@ function PlanningPage() {
     return out;
   }, [filterAffaire, affaireIdsByTypo]);
 
-  const typoCounts = useMemo(() => {
-    const counts: Partial<Record<AffaireTypologie, number>> = {};
-    affaires.forEach((a) => {
-      const t = getAffaireTypologie(a.numero);
-      if (t) counts[t] = (counts[t] ?? 0) + 1;
-    });
-    return counts;
-  }, [affaires]);
+  // v0.29.2 — Compteurs typologies actifs : voir countActiveAffairesByTypologie.
+  const typoCounts = useMemo(
+    () => countActiveAffairesByTypologie(affaires),
+    [affaires],
+  );
 
   const filterMetierNum = filterMetier as Set<number>;
   const filterDevisStr = filterDevis as Set<string>;

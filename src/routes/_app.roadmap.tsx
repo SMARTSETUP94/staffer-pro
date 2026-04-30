@@ -44,6 +44,41 @@ interface RoadmapPlanned {
 const RELEASES: RoadmapRelease[] = [
   {
     date: "2026-04-30",
+    version: "v0.29.2",
+    title: "🎯 Typologie future opportunités + signature intelligente + compteurs actifs",
+    entries: [
+      {
+        type: "feature",
+        area: "Opportunités",
+        title: "🏷️ Typologie future déclarable sur opportunité 9XXX",
+        description:
+          "Nouvelle colonne `typologie_future` sur affaires (prototype | non_operationnel | montage_demontage | fabrication | stockage). Saisissable dans la Vue Tableur via dropdown dédié, et affichée comme badge en bas des cartes Kanban (override le défaut 9XXX). Permet au CA de déclarer en amont la nature future du chantier signé.",
+      },
+      {
+        type: "feature",
+        area: "Opportunités — Signature",
+        title: "✨ Modale Signer enrichie : code intelligent + 5 derniers utilisés + warning préfixe",
+        description:
+          "La modale 'Signer l'opportunité' lit la typologie future et : (1) pré-remplit le code via next_affaire_numero(prefix) selon la typologie (5XXX par défaut, 4XXX pour M/D, 1XXX pour non-op, 2XXXXX pour stockage 5 chiffres) ; (2) affiche les 5 derniers codes signés du préfixe (cliquables pour copier, via RPC get_last_used_codes) ; (3) valide le format avec regex dynamique (longueur + préfixe) ; (4) avertit en soft warning si le préfixe saisi diffère de la typologie déclarée mais autorise la signature ; (5) bloque la signature pour typologie 'prototype' (reste 9XXX).",
+      },
+      {
+        type: "fix",
+        area: "Planning / Fabrication / Export",
+        title: "🔢 Compteurs typologies actifs : exclut chantiers terminés + démontés",
+        description:
+          "Les badges de compteurs typologie au-dessus des onglets (Planning, Fabrication, Export) excluent désormais les affaires `statut IN (termine, annule)` ET celles dont la `date_demontage` est antérieure à aujourd'hui. Helper partagé `countActiveAffairesByTypologie` pour cohérence + testabilité.",
+      },
+      {
+        type: "fix",
+        area: "Tests",
+        title: "🧪 +42 tests Vitest (typologie-future + counts actifs)",
+        description:
+          "typologie-future.test.ts (31 tests) : prefix/length/regex/placeholder/isValid/isSignable/codePrefixMismatch sur les 5 typologies. typologie-active-counts.test.ts (11 tests) : isAffaireActiveForCount + countActiveAffairesByTypologie (statuts terminé/annulé/actif, démontage passé/futur/null, mix réel). Cumul : 974 tests verts (+42 depuis v0.29.1).",
+      },
+    ],
+  },
+  {
+    date: "2026-04-30",
     version: "v0.27.0",
     title: "🧰 Édition groupée des cellules planning par objet + garde-fou budget",
     entries: [

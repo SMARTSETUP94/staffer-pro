@@ -22,6 +22,7 @@ import {
   type AffaireTypologie,
   getAffaireTypologie,
 } from "@/lib/affaire-typologie";
+import { countActiveAffairesByTypologie } from "@/lib/typologie-active-counts";
 
 export const Route = createFileRoute("/_app/fabrication/")({
   head: () => ({ meta: [{ title: "Dashboard fabrication — Setup Paris" }] }),
@@ -79,20 +80,15 @@ function FabricationDashboardPage() {
     return list;
   }, [affaires, chefFilter, typoSet]);
 
-  // Compteurs typologie sur l'univers complet (avant filtre typo, mais après chef si actif)
+  // v0.29.2 — Compteurs typologie sur l'univers (filtré chef si actif), exclut démontage passé.
   const typoCounts = useMemo(() => {
-    const counts: Partial<Record<AffaireTypologie, number>> = {};
     const base =
       chefFilter === "all"
         ? affaires
         : chefFilter === "none"
           ? affaires.filter((a) => !a.chef_projet_id)
           : affaires.filter((a) => a.chef_projet_id === chefFilter);
-    base.forEach((a) => {
-      const t = getAffaireTypologie(a.numero);
-      if (t) counts[t] = (counts[t] ?? 0) + 1;
-    });
-    return counts;
+    return countActiveAffairesByTypologie(base);
   }, [affaires, chefFilter]);
 
   // KPIs

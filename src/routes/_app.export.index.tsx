@@ -26,6 +26,7 @@ import {
   type AffaireTypologie,
   getAffaireTypologie,
 } from "@/lib/affaire-typologie";
+import { countActiveAffairesByTypologie } from "@/lib/typologie-active-counts";
 
 export const Route = createFileRoute("/_app/export/")({
   head: () => ({ meta: [{ title: "Export planning — Planning chantiers" }] }),
@@ -91,14 +92,11 @@ function ExportPage() {
     return data.assignations.filter((a) => affaireIdsFiltres.has(a.affaire_id));
   }, [data.assignations, affaireIdsFiltres, typoSet]);
 
-  const typoCounts = useMemo(() => {
-    const counts: Partial<Record<AffaireTypologie, number>> = {};
-    data.affaires.forEach((a) => {
-      const t = getAffaireTypologie(a.numero);
-      if (t) counts[t] = (counts[t] ?? 0) + 1;
-    });
-    return counts;
-  }, [data.affaires]);
+  // v0.29.2 — Compteurs typologie actifs (exclut terminé/annulé/démontage passé).
+  const typoCounts = useMemo(
+    () => countActiveAffairesByTypologie(data.affaires),
+    [data.affaires],
+  );
 
   const cdiCount = data.employes.filter(
     (e) => e.type_contrat === "CDI" || e.type_contrat === "CDD",
