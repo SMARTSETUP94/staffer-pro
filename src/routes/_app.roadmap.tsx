@@ -44,6 +44,32 @@ interface RoadmapPlanned {
 const RELEASES: RoadmapRelease[] = [
   {
     date: "2026-04-30",
+    version: "v0.29.3",
+    title: "🧹 Fusion Audit + Incident Auth + Export Excel Planning multi-onglets",
+    entries: [
+      {
+        type: "refactor",
+        area: "Admin",
+        title: "Fusion Audit Auth + Incident Auth en une seule page à 4 onglets",
+        description:
+          "Connexions / Invitations / Événements / Incidents (24h). La route /incident-auth redirige désormais vers /audit-auth?tab=incidents. Entrée sidebar 'Incident Auth' supprimée pour éviter le doublon. URL deep-link préservée via search param ?tab=.",
+      },
+      {
+        type: "feature",
+        area: "Planning",
+        title: "Bouton 'Export Excel' sur onglets CDI / Intérim / Synthèse budget",
+        description:
+          "Réutilise exportPlanningExcel (workbook complet : CDI-CDD, Intérim, Synthèse chantier, Heures par employé, Flotte si trajets). Le bouton 'Export Excel objets' reste exclusif à l'onglet Planning par objet.",
+      },
+      {
+        type: "improvement",
+        area: "Tests",
+        title: "+7 tests Vitest (981 verts depuis 974) — fusion search schema + visibilité bouton Excel",
+      },
+    ],
+  },
+  {
+    date: "2026-04-30",
     version: "v0.29.2",
     title: "🎯 Typologie future opportunités + signature intelligente + compteurs actifs",
     entries: [
