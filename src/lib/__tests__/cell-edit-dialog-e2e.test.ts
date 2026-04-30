@@ -183,16 +183,16 @@ describe("CellEditDialog — édition groupée (E2E)", () => {
 
   describe("validateBudgetObjet — dépassement heures devisées", () => {
     it("OK quand projection ≤ devisé", () => {
-      const rows = startingRows(); // Alice 7 + Bob 6 = 13
+      const rows = startingRows(); // Alice 7 + Bob 7 = 14
       const v = validateBudgetObjet({
         heuresPrevues: 40,
-        heuresObjetTotalAvant: 13,
+        heuresObjetTotalAvant: 14,
         rows,
         newRows: [],
         objetLabel: "OBJ-1",
       });
       expect(v.ok).toBe(true);
-      expect(v.heuresApres).toBe(13);
+      expect(v.heuresApres).toBe(14);
       expect(v.ecart).toBe(0);
       expect(v.message).toBeUndefined();
     });
@@ -204,46 +204,46 @@ describe("CellEditDialog — édition groupée (E2E)", () => {
       ];
       const v = validateBudgetObjet({
         heuresPrevues: 20,
-        heuresObjetTotalAvant: 13,
+        heuresObjetTotalAvant: 14,
         rows,
         newRows,
         objetLabel: "OBJ-1 — Caisson",
       });
-      // 13 + 10 = 23 > 20 ⇒ +3
+      // 14 + 10 = 24 > 20 ⇒ +4
       expect(v.ok).toBe(false);
-      expect(v.heuresApres).toBe(23);
-      expect(v.ecart).toBe(3);
+      expect(v.heuresApres).toBe(24);
+      expect(v.ecart).toBe(4);
       expect(v.message).toContain("OBJ-1 — Caisson");
-      expect(v.message).toContain("23h");
+      expect(v.message).toContain("24h");
       expect(v.message).toContain("20h");
-      expect(v.message).toContain("+3h");
+      expect(v.message).toContain("+4h");
     });
 
     it("KO sur modification d'heures (sans ajout)", () => {
-      const rows = startingRows(); // total avant 13
+      const rows = startingRows(); // total avant 14
       rows[0].heures = 12; // Alice 7 → 12 ⇒ delta +5
       const v = validateBudgetObjet({
         heuresPrevues: 15,
-        heuresObjetTotalAvant: 13,
+        heuresObjetTotalAvant: 14,
         rows,
         newRows: [],
       });
-      // 13 + 5 = 18 > 15 ⇒ +3
+      // 14 + 5 = 19 > 15 ⇒ +4
       expect(v.ok).toBe(false);
-      expect(v.ecart).toBe(3);
+      expect(v.ecart).toBe(4);
       expect(v.message).toMatch(/Dépassement/);
     });
 
     it("Suppression peut résorber un dépassement existant", () => {
       const rows = startingRows();
-      rows[1].toDelete = true; // -6
+      rows[1].toDelete = true; // -7 (Bob)
       const v = validateBudgetObjet({
         heuresPrevues: 10,
-        heuresObjetTotalAvant: 13, // déjà au-dessus
+        heuresObjetTotalAvant: 14, // déjà au-dessus
         rows,
         newRows: [],
       });
-      // 13 - 6 = 7 ≤ 10 ⇒ OK
+      // 14 - 7 = 7 ≤ 10 ⇒ OK
       expect(v.ok).toBe(true);
       expect(v.heuresApres).toBe(7);
     });
@@ -255,7 +255,7 @@ describe("CellEditDialog — édition groupée (E2E)", () => {
       ];
       const v = validateBudgetObjet({
         heuresPrevues: 0,
-        heuresObjetTotalAvant: 13,
+        heuresObjetTotalAvant: 14,
         rows,
         newRows,
       });
