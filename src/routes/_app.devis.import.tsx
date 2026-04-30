@@ -728,7 +728,7 @@ function DevisImportPage() {
             )}
 
             <DevisImportFooter
-              errorsCount={errors.length}
+              errorsCount={validationIssues.length}
               postesCount={postes.length + selectedObjetsCount}
               totalHeures={totals.heures}
               totalMontant={totals.montant}
