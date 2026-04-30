@@ -21,6 +21,7 @@ import {
   makeIssue,
   validateDateRange,
   validateMetierTotalsConsistency,
+  validateObjetsHeuresConsistency,
   validateRowSumMatch,
   validateTotalsMatch,
   type ImportIssue,
@@ -104,6 +105,10 @@ function DevisImportPage() {
   // v0.32.1 — mémoire des lignes parsées (source) pour contrôle cohérence par métier.
   const [parsedLines, setParsedLines] = useState<
     Array<{ rowIndex: number; metier: string | null; heures: number; excluded: boolean; designation: string; quantite: number | null; pu: number | null; total: number | null }>
+  >([]);
+  // v0.32.2 — snapshot des objets fabrication parsés pour contrôle cohérence par objet.
+  const [parsedObjets, setParsedObjets] = useState<
+    Array<{ numero: string; nom: string; heures: Record<string, number> }>
   >([]);
 
   // Section 1
@@ -215,6 +220,7 @@ function DevisImportPage() {
     setFilename(file.name);
     setParseErrors([]);
     setParsedLines([]);
+    setParsedObjets([]);
     try {
       const buf = await file.arrayBuffer();
       // Hash SHA-256 du fichier pour détecter les doublons
@@ -298,6 +304,14 @@ function DevisImportPage() {
           warnings: o.warnings,
         }));
         setObjets(editable);
+        // v0.32.2 — snapshot des objets source pour validation cohérence.
+        setParsedObjets(
+          progbat.objetsCandidats.map((o) => ({
+            numero: o.numero,
+            nom: o.nom,
+            heures: { ...o.heures } as Record<string, number>,
+          })),
+        );
         setMontageH(progbat.heuresChantier.montage);
         setDemontageH(progbat.heuresChantier.demontage);
         setImportMontage(progbat.heuresChantier.montage > 0);
@@ -426,8 +440,28 @@ function DevisImportPage() {
       );
       arr.push(...metierIssues);
     }
+    // v0.32.2 — Cohérence heures par objet × métier (parsé vs édité UI).
+    if (parsedObjets.length > 0 || objets.length > 0) {
+      const objetIssues = validateObjetsHeuresConsistency(
+        parsedObjets,
+        objets,
+        (o) => ({
+          key: o.numero || o.nom,
+          label: o.nom || o.numero,
+          heuresParMetier: o.heures,
+        }),
+        (o) => ({
+          key: o.numero || o.nom,
+          label: o.nom || o.numero,
+          selected: o.selected,
+          heuresParMetier: o.heures as unknown as Record<string, number>,
+        }),
+        { tolerance: 0.1, field: "Heures par objet" },
+      );
+      arr.push(...objetIssues);
+    }
     return arr;
-  }, [parseErrors, dateMontage, dateDemontage, postes, totals.montant, parsedLines, metiers]);
+  }, [parseErrors, dateMontage, dateDemontage, postes, totals.montant, parsedLines, metiers, parsedObjets, objets]);
 
   // v0.32.0 — Issues bloquantes (corrections requises avant Valider).
   const validationIssues = useMemo<ImportIssue[]>(() => {
@@ -483,6 +517,7 @@ function DevisImportPage() {
     setFichierHash(null);
     setParseErrors([]);
     setParsedLines([]);
+    setParsedObjets([]);
     setPostes([]);
     setObjets([]);
     setNomDevis("");
