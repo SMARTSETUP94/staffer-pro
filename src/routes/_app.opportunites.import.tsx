@@ -302,20 +302,19 @@ function OpportunitesImportPage() {
         />
       </div>
 
-      {parseErrors.length > 0 && (
-        <Card className="border-destructive/40 bg-destructive/5">
-          <CardContent className="space-y-1 p-4">
-            <p className="flex items-center gap-2 text-sm font-semibold text-destructive">
-              <AlertCircle className="h-4 w-4" /> Avertissements de parsing
-            </p>
-            <ul className="text-xs text-destructive/80">
-              {parseErrors.map((e, i) => (
-                <li key={i}>• {e}</li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
-      )}
+      <ImportErrorPanel
+        issues={importIssues}
+        filename={filename}
+        onReset={
+          rows.length > 0 || parseErrors.length > 0
+            ? () => {
+                setRows([]);
+                setFilename(null);
+                setParseErrors([]);
+              }
+            : undefined
+        }
+      />
 
       {rows.length > 0 && (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
