@@ -469,6 +469,14 @@ function DevisImportPage() {
       toast.success(isUpdate ? "Devis mis à jour" : "Devis importé", {
         description: `${postesPayload.length} poste(s) RH, ${objetsPayload.length} objet(s) fab, ${totals.heures} h, ${totals.montant.toLocaleString("fr-FR")} € HT.${isUpdate ? " Anciens postes/objets remplacés." : ""}`,
       });
+
+      if (isUpdate && heuresPreservees > 0) {
+        toast.warning(`${heuresPreservees} saisie(s) d'heures conservée(s)`, {
+          description:
+            "Les heures réelles déjà pointées sur ce devis n'ont pas été supprimées. Vérifiez qu'elles correspondent toujours aux nouveaux postes/objets.",
+          duration: 8000,
+        });
+      }
       reset();
     } finally {
       setCommitting(false);
