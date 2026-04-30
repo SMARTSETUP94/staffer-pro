@@ -218,6 +218,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user, session, roles, loading, rolesLoaded,
     isAdmin, isChef, isAdminOrChef,
     passwordSetDone, passwordSetAt, isInviteStatus, profileCompleted,
+    signIn, signInWithMagicLink, signUp, signOut, refreshRoles,
   ]);
 
   return (
