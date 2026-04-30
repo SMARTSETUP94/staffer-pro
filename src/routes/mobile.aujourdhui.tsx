@@ -254,6 +254,20 @@ function MobileSemaine() {
                                 </span>
                               )}
                             </p>
+                            {a.objets.length > 0 && (
+                              <ul className="mt-1 space-y-0.5 rounded-md border border-border/40 bg-muted/30 p-1.5">
+                                {a.objets.map((o, i) => (
+                                  <li key={i} className="flex items-baseline gap-1.5 text-[10px]">
+                                    <span className="font-mono font-semibold text-foreground">
+                                      {o.reference}
+                                    </span>
+                                    <span className="truncate text-muted-foreground">
+                                      {o.nom}
+                                    </span>
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
                             {a.notes && (
                               <p className="mt-1 text-[11px] italic text-muted-foreground">
                                 {a.notes}
