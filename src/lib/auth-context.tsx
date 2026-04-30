@@ -91,6 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     // 1. Listener AVANT getSession (règle Supabase). Aucun await dans le callback.
+    let lastUserId: string | null = null;
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, newSession) => {
       // FIX v0.27.1 : purge le preview admin (sessionStorage) à chaque login/logout
       // pour éviter qu'un admin reste coincé en "Preview : Employé mobile" après
@@ -106,11 +107,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       setSession(newSession);
       setUser(newSession?.user ?? null);
-      if (newSession?.user) {
-        // Fire-and-forget : pas d'await pour éviter deadlock
-        setRolesLoaded(false);
-        void loadUserData(newSession.user.id);
+      const newUserId = newSession?.user?.id ?? null;
+      if (newUserId) {
+        // FIX v0.27.7 — ANTI-RÉGRESSION popups fermées au changement d'onglet :
+        // Supabase émet TOKEN_REFRESHED / USER_UPDATED quand l'onglet redevient
+        // visible et auto-refresh. Si on remet rolesLoaded=false ici, AppGuard
+        // démonte <Outlet/> (loader plein écran) et toutes les Sheet/Dialog
+        // ouvertes perdent leur state. On ne reload les rôles QUE si on bascule
+        // sur un nouvel utilisateur (login initial ou switch d'utilisateur).
+        if (newUserId !== lastUserId) {
+          lastUserId = newUserId;
+          setRolesLoaded(false);
+          void loadUserData(newUserId);
+        }
       } else {
+        lastUserId = null;
         setRoleRows([]);
         setPasswordSetDone(null);
         setPasswordSetAt(null);
@@ -124,6 +135,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(s);
       setUser(s?.user ?? null);
       if (s?.user) {
+        lastUserId = s.user.id;
         loadUserData(s.user.id).finally(() => setLoading(false));
       } else {
         setRolesLoaded(true);
