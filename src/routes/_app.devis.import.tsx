@@ -390,8 +390,38 @@ function DevisImportPage() {
     setBulkAssign(EMPTY_BULK_ASSIGN);
   };
 
-  const commit = async () => {
+  // v0.30.6 — Clic Importer : preflight, puis modal de confirmation si re-import
+  const handleCommitClick = async () => {
     if (!canCommit) return;
+    if (!fichierHash) {
+      // Pas de hash (création manuelle) → commit direct
+      await doCommit();
+      return;
+    }
+    setCommitting(true);
+    try {
+      const { data, error } = await supabase.rpc("preflight_import_devis", {
+        _fichier_hash: fichierHash,
+        _affaire_id: affaireId === NEW_AFFAIRE ? null : affaireId || null,
+      });
+      if (error) {
+        toast.error("Vérification impossible", { description: error.message });
+        return;
+      }
+      const pf = (data as ReimportPreflight | null) ?? { mode: "created" };
+      if (pf.mode === "updated") {
+        setPreflight(pf);
+        setConfirmOpen(true);
+        return; // attend la confirmation utilisateur
+      }
+      // Première import → commit direct
+      await doCommit();
+    } finally {
+      setCommitting(false);
+    }
+  };
+
+  const doCommit = async () => {
     setCommitting(true);
     try {
       const postesPayload = postes.map((p) => ({
@@ -443,17 +473,13 @@ function DevisImportPage() {
       const { data, error } = await supabase.rpc("import_devis_atomique_v3", rpcArgs);
 
       if (error) {
-        // v0.30.5 : un seul garde-fou SQL restant = "autre affaire".
-        const msg = error.message ?? "";
-        const isAutreAffaire = /autre affaire/i.test(msg);
-        const title = isAutreAffaire
-          ? "Fichier déjà lié à une autre affaire"
-          : "Import impossible";
-        toast.error(title, { description: msg });
+        // v0.30.6 : plus aucun garde-fou métier bloquant côté SQL.
+        // Toute erreur ici = vraie erreur technique (RLS, contrainte, réseau).
+        toast.error("Import impossible", { description: error.message ?? "Erreur inconnue." });
         return;
       }
 
-      // v0.30.5 : distinguer création vs mise à jour + warning heures préservées
+      // v0.30.6 : distinguer création vs mise à jour + warning heures préservées
       const rpcData = (data as { mode?: string; heures_preservees?: number } | null) ?? {};
       const rpcMode = rpcData.mode ?? "created";
       const isUpdate = rpcMode === "updated";
@@ -485,11 +511,23 @@ function DevisImportPage() {
           duration: 8000,
         });
       }
+      setConfirmOpen(false);
+      setPreflight(null);
       reset();
     } finally {
       setCommitting(false);
     }
   };
+
+  // Label affaire cible pour la modal
+  const targetAffaireLabel = useMemo(() => {
+    if (affaireId === NEW_AFFAIRE) {
+      return `${newAffaireNumero.trim()} — ${newAffaireNom.trim()} (nouvelle)`.trim();
+    }
+    const a = affaires.find((x) => x.id === affaireId);
+    return a ? `${a.numero} — ${a.nom}` : "—";
+  }, [affaireId, affaires, newAffaireNumero, newAffaireNom]);
+
 
   if (!isAdminOrChef) {
     return (
