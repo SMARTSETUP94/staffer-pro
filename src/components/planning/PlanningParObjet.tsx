@@ -514,7 +514,8 @@ export function PlanningParObjet({
                             );
                           })}
                         </tr>
-                      ))}
+                        );
+                      })}
                     </FragmentWithKey>
                   );
                 })}
