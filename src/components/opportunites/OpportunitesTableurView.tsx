@@ -73,6 +73,8 @@ import {
   checkCanDeleteOpportunite,
   deleteBlockedMessage,
 } from "@/lib/opportunite-delete";
+import { TypologieFutureSelect } from "@/components/typologie/TypologieFutureSelect";
+import type { AffaireTypologie } from "@/lib/affaire-typologie";
 
 const PAGE_SIZE = 50;
 /** v0.29.1 — Debounce passé de 300ms à 800ms (spec hotfix). */
@@ -529,6 +531,7 @@ export function OpportunitesTableurView({
               <th className="px-2 py-2 text-left font-semibold">Deviseur</th>
               <th className="px-2 py-2 text-left font-semibold">Date d'opp</th>
               <th className="px-2 py-2 text-left font-semibold">Taille</th>
+              <th className="px-2 py-2 text-left font-semibold">Typo. future</th>
               <th className="px-2 py-2 text-left font-semibold">Statut</th>
               <th className="px-2 py-2 text-left font-semibold">Code 5XXX</th>
               <th className="px-2 py-2 text-left font-semibold">Montage</th>
@@ -541,7 +544,7 @@ export function OpportunitesTableurView({
             {pageRows.length === 0 && (
               <tr>
                 <td
-                  colSpan={isAdminOrChef ? 11 : 10}
+                  colSpan={isAdminOrChef ? 12 : 11}
                   className="px-4 py-8 text-center text-xs text-muted-foreground"
                 >
                   Aucune opportunité ne correspond aux filtres.
