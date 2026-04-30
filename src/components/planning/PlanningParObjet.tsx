@@ -276,6 +276,9 @@ export function PlanningParObjet({
     cellAssigns: Assignation[];
   } | null>(null);
 
+  // v0.29 — Dialog bulk staffing sur objet
+  const [bulkObjet, setBulkObjet] = useState<BulkObjetForDialog | null>(null);
+
   function openCreateDialog(emp: Employe, affaire: Affaire, objet: FabObjet, day: Date) {
     if (!isAffaireSelectable(affaire)) {
       toast.error(affaireLockReason(affaire) ?? "Affaire verrouillée");
