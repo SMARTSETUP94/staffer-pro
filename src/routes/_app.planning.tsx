@@ -28,12 +28,12 @@ import { ExportTrajetsSoustraitanceDialog } from "@/components/flotte/ExportTraj
 import { useVehicules, type Trajet } from "@/hooks/use-vehicules";
 import { useTrajetsWeek } from "@/hooks/use-trajets";
 import { exportPlanningToPDF } from "@/lib/planning-export";
-import {
-  exportPlanningParObjetToXlsx,
-  buildPlanningObjetXlsxFilename,
-} from "@/lib/planning-objet-xlsx-export";
-import { exportPlanningExcel } from "@/lib/planning-excel-export";
-import { downloadBlob } from "@/lib/trajets-soustraitance-export";
+// PERF v0.30.1 — xlsx-js-style (~600 KB) chargé dynamiquement au clic export.
+// Les exports planning Excel ne sont utilisés qu'occasionnellement → on évite
+// de les embarquer dans le chunk initial de la page Planning.
+//   import { exportPlanningParObjetToXlsx, buildPlanningObjetXlsxFilename } from "@/lib/planning-objet-xlsx-export";
+//   import { exportPlanningExcel } from "@/lib/planning-excel-export";
+//   import { downloadBlob } from "@/lib/trajets-soustraitance-export";
 import type { TrajetSuggestion } from "@/lib/trajets-suggestions";
 import { TypologieMultiFilter } from "@/components/typologie/TypologieMultiFilter";
 import { normalizeName } from "@/lib/string-normalize";
@@ -259,6 +259,12 @@ function PlanningPage() {
   async function handleExportObjetXlsx() {
     setExporting(true);
     try {
+      // PERF v0.30.1 — chargement dynamique de xlsx-js-style au clic
+      const [{ exportPlanningParObjetToXlsx, buildPlanningObjetXlsxFilename }, { downloadBlob }] =
+        await Promise.all([
+          import("@/lib/planning-objet-xlsx-export"),
+          import("@/lib/trajets-soustraitance-export"),
+        ]);
       const blob = await exportPlanningParObjetToXlsx({
         weekStart,
         showWeekend,
@@ -281,6 +287,8 @@ function PlanningPage() {
   async function handleExportWeekXlsx() {
     setExporting(true);
     try {
+      // PERF v0.30.1 — chargement dynamique de xlsx-js-style au clic
+      const { exportPlanningExcel } = await import("@/lib/planning-excel-export");
       exportPlanningExcel({
         weekStart,
         metiers,

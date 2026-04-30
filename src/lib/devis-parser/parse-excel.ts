@@ -15,7 +15,7 @@
  *  8. Heures chantier (lots Montage/Démontage)
  *  9. Renvois externes "Voir devis XXXX"
  */
-import * as XLSX from "xlsx";
+import * as XLSX from "xlsx-js-style";
 import type { FabMetier } from "@/hooks/use-fabrication";
 import { computeFlagsFromMetiers, detectTypeFinition, emptyHeures } from "./compute-flags";
 import { detectDevisType } from "./detect-type";

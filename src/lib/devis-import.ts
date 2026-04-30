@@ -18,7 +18,7 @@
  *  - lignes "Total", "Sous-total", "TVA", "HT", "TTC"
  *  - lignes dont temps_prevu = 0 ou vide
  */
-import * as XLSX from "xlsx";
+import * as XLSX from "xlsx-js-style";
 import type { MetierCode } from "./employes-import";
 
 export interface RawDevisRow {

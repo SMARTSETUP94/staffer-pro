@@ -1,4 +1,4 @@
-import * as XLSX from "xlsx";
+import * as XLSX from "xlsx-js-style";
 import { format, getISOWeek, getISOWeekYear, startOfISOWeek } from "date-fns";
 import { fr } from "date-fns/locale";
 

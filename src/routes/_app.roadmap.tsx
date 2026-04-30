@@ -44,6 +44,69 @@ interface RoadmapPlanned {
 const RELEASES: RoadmapRelease[] = [
   {
     date: "2026-04-30",
+    version: "v0.30.1",
+    title: "⚡ Sprint dette J2 — Dedup xlsx + lazy-load Planning Excel",
+    entries: [
+      {
+        type: "improvement",
+        area: "Performance",
+        title: "PERF-H1 — Suppression du package xlsx (dedup avec xlsx-js-style)",
+        description:
+          "Le projet embarquait à la fois 'xlsx' (0.18.5) et 'xlsx-js-style' (1.2.0) — superset 100% compatible API. Migration de 8 modules (devis-import, devis-parser, opportunites-import, planning-objet-xlsx-export, heures-export, trajets-soustraitance-export, et 2 tests) vers xlsx-js-style. Gain bundle ~600 KB sur le chunk où xlsx était dupliqué.",
+      },
+      {
+        type: "improvement",
+        area: "Performance",
+        title: "PERF-M1 — Lazy-load des exports Excel sur /planning",
+        description:
+          "exportPlanningExcel et exportPlanningParObjetToXlsx sont désormais chargés dynamiquement au clic du bouton Export (pattern déjà utilisé sur /export depuis v0.24.1). xlsx-js-style sort du chunk initial du Planning.",
+      },
+      {
+        type: "improvement",
+        area: "Tests",
+        title: "+6 tests sentinels PERF (998 verts depuis 992)",
+        description:
+          "Couvre la non-régression : pas de re-import de 'xlsx' plain, pas d'import statique des modules d'export Excel sur Planning, pattern lazy préservé sur /export.",
+      },
+    ],
+  },
+  {
+    date: "2026-04-30",
+    version: "v0.30.0",
+    title: "🛡️ Sprint dette J1 — Audit RLS + UNIQUE imports + sync mémoire",
+    entries: [
+      {
+        type: "refactor",
+        area: "Sécurité",
+        title: "SEC-H1 — Audit complet 7 helpers RLS SECURITY DEFINER",
+        description:
+          "Snapshot privilèges authenticated/anon vérifié sur is_admin, is_chef_or_admin, has_role, user_has_affaire_access, is_devis_termine, can_saisie_on_affaire, user_is_mentioned_on_affaire. ✅ Aucune régression depuis v0.27.3. Mémoire enrichie avec query d'audit reproductible.",
+      },
+      {
+        type: "refactor",
+        area: "Sécurité",
+        title: "SEC-H1 — Catégorisation des 48 SECURITY DEFINER non-RLS",
+        description:
+          "Triggers internes (notify_*, guard_*, log_*, set_*) → REVOKE EXECUTE possible. RPCs client (admin_get_*, sign_opportunite, get_last_used_codes, etc.) → DOIT garder EXECUTE. Documenté dans mem://constraints/security-definer-non-rls.",
+      },
+      {
+        type: "improvement",
+        area: "Données",
+        title: "DATA-M1 — UNIQUE INDEX devis_imports.fichier_hash confirmé",
+        description:
+          "Index devis_imports_hash_unique déjà en place (anti-doublon idempotent). Décision : opportunites_imports reste non-UNIQUE pour permettre re-import après nettoyage métier.",
+      },
+      {
+        type: "improvement",
+        area: "Documentation",
+        title: "DOC-H1 — Sync .lovable/memory/index.md avec mem:// (12 mémoires)",
+        description:
+          "Le fichier physique était bloqué à v0.18.1 (4 entrées). Resynchronisé avec les 12+ mémoires actuelles. Procédure de sync documentée pour éviter la dérive future.",
+      },
+    ],
+  },
+  {
+    date: "2026-04-30",
     version: "v0.29.3",
     title: "🧹 Fusion Audit + Incident Auth + Export Excel Planning multi-onglets",
     entries: [
