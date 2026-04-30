@@ -666,6 +666,18 @@ export function OpportunitesTableurView({
                       </SelectContent>
                     </Select>
                   </td>
+                  {/* Typologie future (v0.29.2) */}
+                  <td className="px-2 py-1">
+                    <TypologieFutureSelect
+                      value={row.typologie_future}
+                      onChange={(v) =>
+                        updateField(row, "typologie_future", { typologie_future: v })
+                      }
+                      disabled={!canEdit}
+                      className="h-8 w-[140px]"
+                      ariaLabel="Typologie future"
+                    />
+                  </td>
                   {/* Statut */}
                   <td className="px-2 py-1">
                     <Select
