@@ -135,6 +135,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(s);
       setUser(s?.user ?? null);
       if (s?.user) {
+        lastUserId = s.user.id;
         loadUserData(s.user.id).finally(() => setLoading(false));
       } else {
         setRolesLoaded(true);
