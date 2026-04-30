@@ -33,6 +33,7 @@ import { Route as AppOpportunitesRouteImport } from './routes/_app.opportunites'
 import { Route as AppMesSwapsRouteImport } from './routes/_app.mes-swaps'
 import { Route as AppMesPropositionsRouteImport } from './routes/_app.mes-propositions'
 import { Route as AppMesHeuresRouteImport } from './routes/_app.mes-heures'
+import { Route as AppMaSemaineRouteImport } from './routes/_app.ma-semaine'
 import { Route as AppInterimairesRouteImport } from './routes/_app.interimaires'
 import { Route as AppIncidentAuthRouteImport } from './routes/_app.incident-auth'
 import { Route as AppImportsRouteImport } from './routes/_app.imports'
@@ -40,7 +41,6 @@ import { Route as AppFlotteRouteImport } from './routes/_app.flotte'
 import { Route as AppExportRouteImport } from './routes/_app.export'
 import { Route as AppEmployesRouteImport } from './routes/_app.employes'
 import { Route as AppDashboardEmployeRouteImport } from './routes/_app.dashboard-employe'
-import { Route as AppMaSemaineRouteImport } from './routes/_app.ma-semaine'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppAuditHeuresRouteImport } from './routes/_app.audit-heures'
 import { Route as AppAuditAuthRouteImport } from './routes/_app.audit-auth'
@@ -189,6 +189,11 @@ const AppMesHeuresRoute = AppMesHeuresRouteImport.update({
   path: '/mes-heures',
   getParentRoute: () => AppRoute,
 } as any)
+const AppMaSemaineRoute = AppMaSemaineRouteImport.update({
+  id: '/ma-semaine',
+  path: '/ma-semaine',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppInterimairesRoute = AppInterimairesRouteImport.update({
   id: '/interimaires',
   path: '/interimaires',
@@ -222,11 +227,6 @@ const AppEmployesRoute = AppEmployesRouteImport.update({
 const AppDashboardEmployeRoute = AppDashboardEmployeRouteImport.update({
   id: '/dashboard-employe',
   path: '/dashboard-employe',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppMaSemaineRoute = AppMaSemaineRouteImport.update({
-  id: '/ma-semaine',
-  path: '/ma-semaine',
   getParentRoute: () => AppRoute,
 } as any)
 const AppDashboardRoute = AppDashboardRouteImport.update({
@@ -934,18 +934,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppMesHeuresRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/interimaires': {
-      id: '/_app/interimaires'
-      path: '/interimaires'
-      fullPath: '/interimaires'
-      preLoaderRoute: typeof AppInterimairesRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/_app/ma-semaine': {
       id: '/_app/ma-semaine'
       path: '/ma-semaine'
       fullPath: '/ma-semaine'
       preLoaderRoute: typeof AppMaSemaineRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/interimaires': {
+      id: '/_app/interimaires'
+      path: '/interimaires'
+      fullPath: '/interimaires'
+      preLoaderRoute: typeof AppInterimairesRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/incident-auth': {
@@ -1346,12 +1346,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}
