@@ -1,10 +1,20 @@
 /**
- * v0.30.4 — Mode "écraser/mettre à jour" pour l'import devis (option C).
- * Tests purs sur la logique de branchement côté client (toast + handling erreurs).
+ * v0.30.5 — Mode "écraser/mettre à jour" pour l'import devis (option C bis, assoupli).
+ *
+ * Garde-fous SQL restants :
+ *   - "autre affaire" : bloque si le PDF a été initialement importé sur une autre affaire (sécurité).
+ *
+ * Garde-fous LEVÉS depuis v0.30.4 :
+ *   - "heures réelles saisies" : remplacé par un warning client + heures conservées.
+ *   - "devis terminé" : retiré complètement (chef + admin peuvent ré-importer).
+ *
+ * Tests purs sur la logique de branchement côté client.
  */
 import { describe, it, expect } from "vitest";
 
-type RpcResponse = { mode?: "created" | "updated" } | null;
+type RpcResponse =
+  | { mode?: "created" | "updated"; heures_preservees?: number }
+  | null;
 
 function pickToastTitle(rpcResponse: RpcResponse, isUpdateExpected: boolean): string {
   const mode = rpcResponse?.mode ?? "created";
@@ -13,17 +23,19 @@ function pickToastTitle(rpcResponse: RpcResponse, isUpdateExpected: boolean): st
   return isUpdate ? "Devis mis à jour" : "Devis importé";
 }
 
-function classifyError(message: string): string {
-  const isHeuresExist = /saisie.*heures r[ée]elles/i.test(message);
-  const isAutreAffaire = /autre affaire/i.test(message);
-  const isDevisTermine = /devis est termin[ée]/i.test(message);
-  if (isHeuresExist) return "Ré-import bloqué : heures saisies";
-  if (isAutreAffaire) return "Fichier déjà lié à une autre affaire";
-  if (isDevisTermine) return "Devis terminé : ré-import refusé";
-  return "Import impossible";
+function shouldShowHeuresWarning(rpcResponse: RpcResponse): boolean {
+  const isUpdate = rpcResponse?.mode === "updated";
+  const heures = rpcResponse?.heures_preservees ?? 0;
+  return isUpdate && heures > 0;
 }
 
-describe("v0.30.4 — Import devis upsert mode (option C)", () => {
+function classifyError(message: string): string {
+  // v0.30.5 : un seul garde-fou SQL = "autre affaire"
+  const isAutreAffaire = /autre affaire/i.test(message);
+  return isAutreAffaire ? "Fichier déjà lié à une autre affaire" : "Import impossible";
+}
+
+describe("v0.30.5 — Import devis upsert mode (option C bis, assoupli)", () => {
   it("première import → mode 'created' → toast 'Devis importé'", () => {
     expect(pickToastTitle({ mode: "created" }, false)).toBe("Devis importé");
   });
@@ -37,22 +49,38 @@ describe("v0.30.4 — Import devis upsert mode (option C)", () => {
     expect(pickToastTitle(null, false)).toBe("Devis importé");
   });
 
-  it("classification erreur : heures réelles existent", () => {
-    expect(classifyError("Impossible de ré-importer : 3 saisie(s) d'heures réelles existe(nt) sur ce devis."))
-      .toBe("Ré-import bloqué : heures saisies");
+  it("v0.30.5 : ré-import avec heures préservées → warning affiché", () => {
+    expect(shouldShowHeuresWarning({ mode: "updated", heures_preservees: 3 })).toBe(true);
   });
 
-  it("classification erreur : autre affaire", () => {
-    expect(classifyError("Ce fichier a déjà été importé sur une autre affaire."))
+  it("v0.30.5 : ré-import sans heures préservées → pas de warning", () => {
+    expect(shouldShowHeuresWarning({ mode: "updated", heures_preservees: 0 })).toBe(false);
+    expect(shouldShowHeuresWarning({ mode: "updated" })).toBe(false);
+  });
+
+  it("v0.30.5 : création (pas un ré-import) → pas de warning même si champ présent", () => {
+    expect(shouldShowHeuresWarning({ mode: "created", heures_preservees: 5 })).toBe(false);
+  });
+
+  it("classification erreur : autre affaire (seul garde-fou restant)", () => {
+    expect(classifyError("Ce fichier a déjà été importé sur une autre affaire (uuid-A vs uuid-B)."))
       .toBe("Fichier déjà lié à une autre affaire");
   });
 
-  it("classification erreur : devis terminé", () => {
-    expect(classifyError("Ce devis est terminé, seul un admin peut le ré-importer."))
-      .toBe("Devis terminé : ré-import refusé");
+  it("v0.30.5 : message générique → fallback 'Import impossible'", () => {
+    expect(classifyError("connection timeout")).toBe("Import impossible");
   });
 
-  it("classification erreur : message générique → fallback", () => {
-    expect(classifyError("connection timeout")).toBe("Import impossible");
+  it("v0.30.5 : ancien message 'heures réelles' → ne match plus 'autre affaire' → fallback", () => {
+    // Les anciens blocages SQL n'arrivent plus (garde-fou retiré) — si une instance
+    // legacy renvoyait encore ce message, on tomberait sur le fallback générique
+    // au lieu du bloc dédié, ce qui est OK (le client n'affiche plus cette erreur métier).
+    expect(classifyError("Impossible de ré-importer : 3 saisie(s) d'heures réelles existe(nt) sur ce devis."))
+      .toBe("Import impossible");
+  });
+
+  it("v0.30.5 : ancien message 'devis terminé' → fallback (garde-fou retiré côté SQL)", () => {
+    expect(classifyError("Ce devis est terminé, seul un admin peut le ré-importer."))
+      .toBe("Import impossible");
   });
 });
