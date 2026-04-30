@@ -55,7 +55,7 @@ function buildSections(role: EffRole, validationCount: number): NavSection[] {
       {
         label: "Espace personnel",
         items: [
-          { title: "Ma semaine", url: "/dashboard-employe", icon: LayoutDashboard, show: () => true },
+          { title: "Ma semaine", url: "/ma-semaine", icon: LayoutDashboard, show: () => true },
           { title: "Mes heures", url: "/mes-heures", icon: Clock, show: () => true },
           { title: "Mes étapes fab", url: "/fabrication/mes-etapes", icon: Wrench, show: () => true },
           { title: "Mes échanges", url: "/mes-swaps", icon: ArrowLeftRight, show: () => true },

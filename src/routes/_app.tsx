@@ -14,6 +14,7 @@ export const Route = createFileRoute("/_app")({
 const EMPLOYE_DESKTOP_ALLOWED = [
   "/dashboard",
   "/dashboard-employe",
+  "/ma-semaine",
   "/mes-heures",
   "/mes-swaps",
   "/mes-propositions",
@@ -64,9 +65,12 @@ function AppGuard() {
       navigate({ to: "/mobile/aujourdhui" });
       return;
     }
-    // Pas admin/chef sur desktop : autorisé uniquement sur les pages employé
+    // Pas admin/chef sur desktop : autorisé uniquement sur les pages employé.
+    // v0.27.5 : redirige vers /ma-semaine (route sémantique employé) plutôt
+    // que /dashboard pour éviter toute confusion avec la vue admin et
+    // matérialiser dans l'URL le périmètre employé.
     if (!effIsAdminOrChef && !isEmployeAllowedPath) {
-      navigate({ to: "/dashboard" });
+      navigate({ to: "/ma-semaine" });
     }
   }, [
     loading, rolesLoaded, user, isAdminOrChef, effIsAdminOrChef,

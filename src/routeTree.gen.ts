@@ -40,6 +40,7 @@ import { Route as AppFlotteRouteImport } from './routes/_app.flotte'
 import { Route as AppExportRouteImport } from './routes/_app.export'
 import { Route as AppEmployesRouteImport } from './routes/_app.employes'
 import { Route as AppDashboardEmployeRouteImport } from './routes/_app.dashboard-employe'
+import { Route as AppMaSemaineRouteImport } from './routes/_app.ma-semaine'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppAuditHeuresRouteImport } from './routes/_app.audit-heures'
 import { Route as AppAuditAuthRouteImport } from './routes/_app.audit-auth'
@@ -223,6 +224,11 @@ const AppDashboardEmployeRoute = AppDashboardEmployeRouteImport.update({
   path: '/dashboard-employe',
   getParentRoute: () => AppRoute,
 } as any)
+const AppMaSemaineRoute = AppMaSemaineRouteImport.update({
+  id: '/ma-semaine',
+  path: '/ma-semaine',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppDashboardRoute = AppDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -388,6 +394,7 @@ export interface FileRoutesByFullPath {
   '/imports': typeof AppImportsRoute
   '/incident-auth': typeof AppIncidentAuthRoute
   '/interimaires': typeof AppInterimairesRoute
+  '/ma-semaine': typeof AppMaSemaineRoute
   '/mes-heures': typeof AppMesHeuresRoute
   '/mes-propositions': typeof AppMesPropositionsRoute
   '/mes-swaps': typeof AppMesSwapsRoute
@@ -447,6 +454,7 @@ export interface FileRoutesByTo {
   '/imports': typeof AppImportsRoute
   '/incident-auth': typeof AppIncidentAuthRoute
   '/interimaires': typeof AppInterimairesRoute
+  '/ma-semaine': typeof AppMaSemaineRoute
   '/mes-heures': typeof AppMesHeuresRoute
   '/mes-propositions': typeof AppMesPropositionsRoute
   '/mes-swaps': typeof AppMesSwapsRoute
@@ -508,6 +516,7 @@ export interface FileRoutesById {
   '/_app/imports': typeof AppImportsRoute
   '/_app/incident-auth': typeof AppIncidentAuthRoute
   '/_app/interimaires': typeof AppInterimairesRoute
+  '/_app/ma-semaine': typeof AppMaSemaineRoute
   '/_app/mes-heures': typeof AppMesHeuresRoute
   '/_app/mes-propositions': typeof AppMesPropositionsRoute
   '/_app/mes-swaps': typeof AppMesSwapsRoute
@@ -570,6 +579,7 @@ export interface FileRouteTypes {
     | '/imports'
     | '/incident-auth'
     | '/interimaires'
+    | '/ma-semaine'
     | '/mes-heures'
     | '/mes-propositions'
     | '/mes-swaps'
@@ -629,6 +639,7 @@ export interface FileRouteTypes {
     | '/imports'
     | '/incident-auth'
     | '/interimaires'
+    | '/ma-semaine'
     | '/mes-heures'
     | '/mes-propositions'
     | '/mes-swaps'
@@ -689,6 +700,7 @@ export interface FileRouteTypes {
     | '/_app/imports'
     | '/_app/incident-auth'
     | '/_app/interimaires'
+    | '/_app/ma-semaine'
     | '/_app/mes-heures'
     | '/_app/mes-propositions'
     | '/_app/mes-swaps'
@@ -927,6 +939,13 @@ declare module '@tanstack/react-router' {
       path: '/interimaires'
       fullPath: '/interimaires'
       preLoaderRoute: typeof AppInterimairesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/ma-semaine': {
+      id: '/_app/ma-semaine'
+      path: '/ma-semaine'
+      fullPath: '/ma-semaine'
+      preLoaderRoute: typeof AppMaSemaineRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/incident-auth': {
@@ -1239,6 +1258,7 @@ interface AppRouteChildren {
   AppImportsRoute: typeof AppImportsRoute
   AppIncidentAuthRoute: typeof AppIncidentAuthRoute
   AppInterimairesRoute: typeof AppInterimairesRoute
+  AppMaSemaineRoute: typeof AppMaSemaineRoute
   AppMesHeuresRoute: typeof AppMesHeuresRoute
   AppMesPropositionsRoute: typeof AppMesPropositionsRoute
   AppMesSwapsRoute: typeof AppMesSwapsRoute
@@ -1277,6 +1297,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppImportsRoute: AppImportsRoute,
   AppIncidentAuthRoute: AppIncidentAuthRoute,
   AppInterimairesRoute: AppInterimairesRoute,
+  AppMaSemaineRoute: AppMaSemaineRoute,
   AppMesHeuresRoute: AppMesHeuresRoute,
   AppMesPropositionsRoute: AppMesPropositionsRoute,
   AppMesSwapsRoute: AppMesSwapsRoute,
