@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { shouldIgnoreTokenRefreshForSameUser } from "@/lib/auth-redirect-helpers";
@@ -76,7 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Fonction stable de chargement des données utilisateur
   // Pas de setTimeout : on n'attend rien, mais on laisse onAuthStateChange retourner
   // immédiatement et on déclenche le fetch en parallèle (sans await dans le callback).
-  const loadUserData = async (uid: string) => {
+  const loadUserData = useCallback(async (uid: string) => {
     try {
       const [r, pf] = await Promise.all([fetchRoles(uid), fetchProfileFlags(uid)]);
       setRoleRows(r);
@@ -88,7 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setRolesLoaded(true);
     }
-  };
+  }, []);
 
   useEffect(() => {
     // 1. Listener AVANT getSession (règle Supabase). Aucun await dans le callback.
@@ -147,10 +147,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     return () => subscription.unsubscribe();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [loadUserData]);
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = useCallback(async (email: string, password: string) => {
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       return { error: error?.message ?? null };
@@ -159,9 +158,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const message = err instanceof Error ? err.message : "Erreur réseau ou session corrompue. Réessaie.";
       return { error: message };
     }
-  };
+  }, []);
 
-  const signInWithMagicLink = async (email: string, redirectTo?: string) => {
+  const signInWithMagicLink = useCallback(async (email: string, redirectTo?: string) => {
     try {
       const emailRedirectTo = redirectTo ?? `${window.location.origin}/auth/set-password`;
       const { error } = await supabase.auth.signInWithOtp({
@@ -174,9 +173,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const message = err instanceof Error ? err.message : "Erreur réseau, réessaie.";
       return { error: message };
     }
-  };
+  }, []);
 
-  const signUp = async (email: string, password: string, fullName: string) => {
+  const signUp = useCallback(async (email: string, password: string, fullName: string) => {
     try {
       const redirectUrl = `${window.location.origin}/`;
       const { error } = await supabase.auth.signUp({
@@ -193,19 +192,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const message = err instanceof Error ? err.message : "Erreur réseau, réessaie.";
       return { error: message };
     }
-  };
+  }, []);
 
-  const signOut = async () => {
+  const signOut = useCallback(async () => {
     await supabase.auth.signOut();
-  };
+  }, []);
 
-  const refreshRoles = async () => {
+  const refreshRoles = useCallback(async () => {
     if (user) {
       await loadUserData(user.id);
     }
-  };
+  }, [loadUserData, user]);
 
-  const roles = roleRows.map((r) => r.role);
+  const roles = useMemo(() => roleRows.map((r) => r.role), [roleRows]);
   const isAdmin = roles.includes("admin");
   const isChef = roles.includes("chef_chantier");
   const isAdminOrChef = isAdmin || isChef;
