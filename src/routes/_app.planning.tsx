@@ -32,6 +32,7 @@ import {
   exportPlanningParObjetToXlsx,
   buildPlanningObjetXlsxFilename,
 } from "@/lib/planning-objet-xlsx-export";
+import { exportPlanningExcel } from "@/lib/planning-excel-export";
 import { downloadBlob } from "@/lib/trajets-soustraitance-export";
 import type { TrajetSuggestion } from "@/lib/trajets-suggestions";
 import { TypologieMultiFilter } from "@/components/typologie/TypologieMultiFilter";
