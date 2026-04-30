@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { addDays, format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Loader2, Package, Search } from "lucide-react";
@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/tooltip";
 import { isAffaireSelectable, affaireLockReason } from "@/lib/affaire-lock";
 import { supabase } from "@/integrations/supabase/client";
-import { useEffect } from "react";
 import { AssignationDialog } from "./AssignationDialog";
 import type {
   Affaire,
