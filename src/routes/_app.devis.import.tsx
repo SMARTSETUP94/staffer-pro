@@ -166,8 +166,21 @@ function DevisImportPage() {
     () => (affaireId && affaireId !== NEW_AFFAIRE ? affaires.find((a) => a.id === affaireId) : undefined),
     [affaireId, affaires],
   );
-  const effectiveClient = affaireId === NEW_AFFAIRE ? newAffaireClient : selectedAffaire?.client ?? "";
-  const effectiveLieu = affaireId === NEW_AFFAIRE ? newAffaireLieu : selectedAffaire?.lieu ?? "";
+  // v0.30.2 — Client/Lieu éditables sur affaire existante.
+  // Tant que l'utilisateur n'a pas tapé, on affiche la valeur de l'affaire ;
+  // dès la première frappe, on prend la valeur saisie.
+  const effectiveClient =
+    affaireId === NEW_AFFAIRE
+      ? newAffaireClient
+      : clientTouched
+        ? newAffaireClient
+        : selectedAffaire?.client ?? "";
+  const effectiveLieu =
+    affaireId === NEW_AFFAIRE
+      ? newAffaireLieu
+      : lieuTouched
+        ? newAffaireLieu
+        : selectedAffaire?.lieu ?? "";
 
   const handleFile = async (file: File) => {
     setParsing(true);
