@@ -22,6 +22,7 @@ import {
 import { isAffaireSelectable, affaireLockReason } from "@/lib/affaire-lock";
 import { supabase } from "@/integrations/supabase/client";
 import { AssignationDialog } from "./AssignationDialog";
+import { CellEditDialog } from "./CellEditDialog";
 import type {
   Affaire,
   Assignation,
@@ -239,13 +240,21 @@ export function PlanningParObjet({
   const [dragEmp, setDragEmp] = useState<Employe | null>(null);
   const [dragOverKey, setDragOverKey] = useState<string | null>(null);
 
-  // Dialog
+  // Dialog création (drag & drop / picker cellule vide)
   const [assignDlg, setAssignDlg] = useState<{
     employe: Employe;
     date: Date;
     affaireId: string;
     objetId: string;
     existing: Assignation[];
+  } | null>(null);
+
+  // Dialog édition groupée d'une cellule (objet × jour)
+  const [cellDlg, setCellDlg] = useState<{
+    objet: FabObjet;
+    affaire: Affaire;
+    date: Date;
+    cellAssigns: Assignation[];
   } | null>(null);
 
   function openCreateDialog(emp: Employe, affaire: Affaire, objet: FabObjet, day: Date) {
@@ -266,20 +275,12 @@ export function PlanningParObjet({
     });
   }
 
-  function openEditDialog(a: Assignation) {
-    const emp = employesById.get(a.employe_id);
-    const aff = affairesById.get(a.affaire_id);
-    if (!emp || !aff) return;
-    const empExisting = assignations.filter(
-      (x) => x.employe_id === emp.id && x.date === a.date,
-    );
-    setAssignDlg({
-      employe: emp,
-      date: new Date(a.date),
-      affaireId: a.affaire_id,
-      objetId: "",
-      existing: empExisting,
-    });
+  function openCellDialog(obj: FabObjet, af: Affaire, day: Date, cellAssigns: Assignation[]) {
+    if (!isAffaireSelectable(af)) {
+      toast.error(affaireLockReason(af) ?? "Affaire verrouillée");
+      return;
+    }
+    setCellDlg({ objet: obj, affaire: af, date: day, cellAssigns });
   }
 
   if (affairesRetenues.length === 0) {
@@ -444,8 +445,8 @@ export function PlanningParObjet({
                                 }}
                                 onClick={() => {
                                   if (isEmpty) return; // cellule vide → utiliser le bouton "+" (Popover)
-                                  // Cellule occupée : éditer la 1ère
-                                  openEditDialog(cellAssigns[0]);
+                                  // Cellule occupée : éditer toutes les affectations en bloc
+                                  openCellDialog(obj, af, d, cellAssigns);
                                 }}
                                 className={cn(
                                   "border-b border-l align-top transition-colors",
@@ -472,7 +473,7 @@ export function PlanningParObjet({
                                             type="button"
                                             onClick={(e) => {
                                               e.stopPropagation();
-                                              openEditDialog(arr[0]);
+                                              openCellDialog(obj, af, d, cellAssigns);
                                             }}
                                             className="inline-flex items-center gap-1 rounded-full border bg-card px-1.5 py-0.5 text-[10px] font-medium shadow-sm hover:bg-muted"
                                           >
@@ -617,6 +618,32 @@ export function PlanningParObjet({
           defaultObjetId={assignDlg.objetId || undefined}
           onSaved={() => {
             setAssignDlg(null);
+            refreshLinks();
+            onChanged?.();
+          }}
+        />
+      )}
+
+      {/* Dialog édition groupée d'une cellule (objet × jour) */}
+      {cellDlg && (
+        <CellEditDialog
+          open
+          onOpenChange={(o) => !o && setCellDlg(null)}
+          date={cellDlg.date}
+          objet={{
+            id: cellDlg.objet.id,
+            reference: cellDlg.objet.reference,
+            nom: cellDlg.objet.nom,
+            affaire_id: cellDlg.objet.affaire_id,
+            heures_prevues_total: cellDlg.objet.heures_prevues_total,
+          }}
+          affaire={cellDlg.affaire}
+          cellAssigns={cellDlg.cellAssigns}
+          employes={employes}
+          metiers={metiers}
+          heuresObjetTotal={heuresAssigneesByObjet.get(cellDlg.objet.id) ?? 0}
+          onChanged={() => {
+            setCellDlg(null);
             refreshLinks();
             onChanged?.();
           }}
