@@ -383,57 +383,87 @@ export function PlanningParObjet({
                         return (
                         <tr key={obj.id} className="hover:bg-muted/20">
                           <td className="sticky left-0 z-10 border-b bg-card p-2 align-top">
-                            <div className="flex items-start gap-1.5">
-                              <Package className="mt-0.5 h-3 w-3 shrink-0 text-muted-foreground" />
-                              <div className="min-w-0 flex-1">
-                                <div className="flex items-center gap-1.5">
-                                  <span className="font-mono text-[11px] font-bold">
-                                    {obj.reference}
-                                  </span>
-                                  {isOver && (
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <span className="inline-flex items-center gap-0.5 rounded-full bg-destructive px-1.5 py-0.5 text-[9px] font-bold text-destructive-foreground">
-                                          <AlertTriangle className="h-2.5 w-2.5" />
-                                          +{depassement}h
-                                        </span>
-                                      </TooltipTrigger>
-                                      <TooltipContent side="top" className="border bg-white p-2 text-xs text-gray-900 shadow-lg">
-                                        <div className="font-semibold text-destructive">Dépassement détecté</div>
-                                        <div className="text-gray-600">
-                                          Assignées : {heuresAssign}h<br />
-                                          Prévues devis : {heuresPrev}h<br />
-                                          Écart : <span className="font-bold">+{depassement}h</span>
-                                        </div>
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  )}
-                                  {noBudget && (
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-500 px-1.5 py-0.5 text-[9px] font-bold text-white">
-                                          <AlertTriangle className="h-2.5 w-2.5" />
-                                          Hors budget
-                                        </span>
-                                      </TooltipTrigger>
-                                      <TooltipContent side="top" className="border bg-white p-2 text-xs text-gray-900 shadow-lg">
-                                        Aucune heure prévue dans le devis pour cet objet, mais {heuresAssign}h ont été assignées.
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  )}
-                                </div>
-                                <div className="truncate text-[11px] leading-tight text-muted-foreground">
-                                  {obj.nom}
-                                </div>
-                                {heuresPrev > 0 && (
-                                  <div className={cn(
-                                    "mt-0.5 text-[10px] font-medium tabular-nums",
-                                    isOver ? "text-destructive" : "text-muted-foreground",
-                                  )}>
-                                    {heuresAssign}h / {heuresPrev}h
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex items-start gap-1.5 min-w-0 flex-1">
+                                <Package className="mt-0.5 h-3 w-3 shrink-0 text-muted-foreground" />
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="font-mono text-[11px] font-bold">
+                                      {obj.reference}
+                                    </span>
+                                    {isOver && (
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <span className="inline-flex items-center gap-0.5 rounded-full bg-destructive px-1.5 py-0.5 text-[9px] font-bold text-destructive-foreground">
+                                            <AlertTriangle className="h-2.5 w-2.5" />
+                                            +{depassement}h
+                                          </span>
+                                        </TooltipTrigger>
+                                        <TooltipContent side="top" className="border bg-white p-2 text-xs text-gray-900 shadow-lg">
+                                          <div className="font-semibold text-destructive">Dépassement détecté</div>
+                                          <div className="text-gray-600">
+                                            Assignées : {heuresAssign}h<br />
+                                            Prévues devis : {heuresPrev}h<br />
+                                            Écart : <span className="font-bold">+{depassement}h</span>
+                                          </div>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    )}
+                                    {noBudget && (
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-500 px-1.5 py-0.5 text-[9px] font-bold text-white">
+                                            <AlertTriangle className="h-2.5 w-2.5" />
+                                            Hors budget
+                                          </span>
+                                        </TooltipTrigger>
+                                        <TooltipContent side="top" className="border bg-white p-2 text-xs text-gray-900 shadow-lg">
+                                          Aucune heure prévue dans le devis pour cet objet, mais {heuresAssign}h ont été assignées.
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    )}
                                   </div>
-                                )}
+                                  <div className="truncate text-[11px] leading-tight text-muted-foreground">
+                                    {obj.nom}
+                                  </div>
+                                  {heuresPrev > 0 && (
+                                    <div className={cn(
+                                      "mt-0.5 text-[10px] font-medium tabular-nums",
+                                      isOver ? "text-destructive" : "text-muted-foreground",
+                                    )}>
+                                      {heuresAssign}h / {heuresPrev}h
+                                    </div>
+                                  )}
+                                </div>
                               </div>
+                              {!isLocked && (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="h-6 shrink-0 gap-1 px-2 text-[10px]"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setBulkObjet({
+                                          id: obj.id,
+                                          affaire_id: obj.affaire_id,
+                                          reference: obj.reference,
+                                          nom: obj.nom,
+                                          raw: obj.raw,
+                                        });
+                                      }}
+                                      aria-label={`Staffer en bulk sur ${obj.reference}`}
+                                    >
+                                      <Users className="h-3 w-3" />
+                                      Bulk
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="top" className="border bg-white p-2 text-xs text-gray-900 shadow-lg">
+                                    Staffer plusieurs employés × jours sur cet objet
+                                  </TooltipContent>
+                                </Tooltip>
+                              )}
                             </div>
                           </td>
                           {days.map((d) => {
