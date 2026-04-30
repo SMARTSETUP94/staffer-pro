@@ -351,28 +351,75 @@ function DevisImportPage() {
     [postes, importMontage, importDemontage],
   );
 
-  const errors = useMemo(() => {
-    const errs: string[] = [];
-    if (!hasParsed) return errs;
-    if (!affaireId) errs.push("Sélectionne une affaire (ou créer une nouvelle).");
+  // v0.32.0 — Issues du parsing (file/format) + warnings métier détectés au parse.
+  const parseIssues = useMemo<ImportIssue[]>(() => {
+    const arr = legacyStringsToIssues(parseErrors, { severity: "warning" });
+    // Cohérence dates Devis (warning, ne bloque pas).
+    const dr = validateDateRange(
+      dateMontage ? toIso(dateMontage) : null,
+      dateDemontage ? toIso(dateDemontage) : null,
+      { rowIndex: null, fieldDebut: "Date montage", fieldFin: "Date démontage" },
+    );
+    if (dr) arr.push(dr);
+    // Cohérence totaux (warning).
+    const sumPostes = postes.reduce((s, p) => s + (p.montantHt || 0), 0);
+    if (sumPostes > 0 && totals.montant > 0) {
+      const totalsCheck = validateTotalsMatch(sumPostes, totals.montant, {
+        field: "Montant HT (postes)",
+        tolerance: 1,
+      });
+      if (totalsCheck) arr.push(totalsCheck);
+    }
+    return arr;
+  }, [parseErrors, dateMontage, dateDemontage, postes, totals.montant]);
+
+  // v0.32.0 — Issues bloquantes (corrections requises avant Valider).
+  const validationIssues = useMemo<ImportIssue[]>(() => {
+    if (!hasParsed) return [];
+    const arr: ImportIssue[] = [];
+    const push = (message: string, column: string | null = null) =>
+      arr.push(makeIssue({ code: "REQUIRED_FIELD_MISSING", message, column }));
+    if (!affaireId) push("Sélectionne une affaire (ou créer une nouvelle).", "Affaire");
     if (affaireId === NEW_AFFAIRE) {
-      if (!newAffaireNumero.trim()) errs.push("Numéro de la nouvelle affaire requis.");
-      if (!newAffaireNom.trim()) errs.push("Nom de la nouvelle affaire requis.");
+      if (!newAffaireNumero.trim()) push("Numéro de la nouvelle affaire requis.", "Numéro affaire");
+      if (!newAffaireNom.trim()) push("Nom de la nouvelle affaire requis.", "Nom affaire");
     }
-    if (!numeroDevis.trim()) errs.push("Numéro de devis requis.");
-    if (!dateMontage) errs.push("Date de montage requise.");
+    if (!numeroDevis.trim()) push("Numéro de devis requis.", "Numéro devis");
+    if (!dateMontage) push("Date de montage requise.", "Date montage");
     if (postes.length === 0 && selectedObjetsCount === 0) {
-      errs.push("Aucun poste ni objet à importer.");
+      push("Aucun poste ni objet à importer.");
     }
-    if (postes.some((p) => !p.metierId)) errs.push("Tous les postes doivent avoir un métier assigné.");
-    if (postes.some((p) => p.heures <= 0)) errs.push("Toutes les heures de poste doivent être > 0.");
-    return errs;
+    postes.forEach((p, i) => {
+      const ligne = i + 1;
+      if (!p.metierId) {
+        arr.push(
+          makeIssue({
+            code: "REQUIRED_FIELD_MISSING",
+            rowIndex: ligne,
+            column: "Métier",
+            message: `Poste ${ligne} : un métier doit être assigné.`,
+          }),
+        );
+      }
+      if (p.heures <= 0) {
+        arr.push(
+          makeIssue({
+            code: "OUT_OF_BOUNDS",
+            rowIndex: ligne,
+            column: "Heures",
+            value: p.heures,
+            message: `Poste ${ligne} : heures = ${p.heures}, doit être > 0.`,
+          }),
+        );
+      }
+    });
+    return arr;
   }, [
     hasParsed, affaireId, newAffaireNumero, newAffaireNom,
     numeroDevis, dateMontage, postes, selectedObjetsCount,
   ]);
 
-  const canCommit = hasParsed && errors.length === 0 && !committing;
+  const canCommit = hasParsed && validationIssues.length === 0 && !committing;
 
   const reset = () => {
     setHasParsed(false);
