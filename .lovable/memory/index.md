@@ -19,6 +19,8 @@ Excel : UNIQUEMENT xlsx-js-style (pas xlsx plain, dedup v0.30.1). Modules d'expo
 2. ✅ v0.29.3 — fusion Audit Auth + Incident Auth (4 onglets, /incident-auth redirige) + Export Excel Planning sur CDI/Intérim/Budget (981 tests verts, +7)
 3. ✅ v0.30.0 — Sprint dette J1 : audit helpers RLS + catégorisation 48 SECURITY DEFINER + UNIQUE indexes + sync mem (992 tests, +11)
 4. ✅ v0.30.1 — Sprint dette J2 : dedup xlsx (-1 package) + lazy-load Planning Excel (998 tests, +6)
+5. ✅ v0.30.2 — Hotfix onboarding boucle infinie (AppGuard idempotent, ignore TOKEN_REFRESHED même user) (1004 tests, +6)
+6. ✅ v0.30.3 — UX import devis Progbat : Client/Lieu éditables sur affaire existante + UPDATE affaire après RPC (1004 tests)
 
 ## Memories
 - [Planning 3 vues](mem://features/planning-views) — CDI / Intérim / Synthèse chantier
