@@ -32,7 +32,16 @@ interface Props {
   totalMontant: number;
   /** v0.25.1 — Verrouille la sélection d'affaire quand pré-remplie via ?affaire_id=… */
   lockedAffaire?: boolean;
+  /** v0.30.3 — Badge "Édité" si l'utilisateur a modifié la valeur Progbat */
+  clientEdited?: boolean;
+  lieuEdited?: boolean;
 }
+
+const EditedBadge = () => (
+  <span className="ml-2 inline-flex items-center rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wider text-amber-700 dark:text-amber-400">
+    Édité
+  </span>
+);
 
 export function DevisImportSection1Affaire({
   filename,
@@ -59,6 +68,8 @@ export function DevisImportSection1Affaire({
   effectiveLieu,
   totalMontant,
   lockedAffaire = false,
+  clientEdited = false,
+  lieuEdited = false,
 }: Props) {
   return (
     <Card>
@@ -168,7 +179,7 @@ export function DevisImportSection1Affaire({
           </div>
 
           <div className="space-y-1.5">
-            <Label>Client</Label>
+            <Label>Client{clientEdited && <EditedBadge />}</Label>
             {affaireId === NEW_AFFAIRE ? (
               <Input
                 value={newAffaireClient}
@@ -186,7 +197,7 @@ export function DevisImportSection1Affaire({
             )}
           </div>
           <div className="space-y-1.5">
-            <Label>Lieu chantier</Label>
+            <Label>Lieu chantier{lieuEdited && <EditedBadge />}</Label>
             {affaireId === NEW_AFFAIRE ? (
               <Input
                 value={newAffaireLieu}
