@@ -166,14 +166,43 @@ export function CellEditDialog({
     return s;
   }, [rows, newRows]);
 
+  // Heures déjà engagées ce jour pour chaque employé (autre que cette cellule)
+  const heuresJourByEmp = useMemo(() => {
+    const m = new Map<string, number>();
+    if (!allAssignations) return m;
+    const cellIds = new Set(cellAssigns.map((a) => a.id));
+    for (const a of allAssignations) {
+      if (a.date !== dateStr) continue;
+      if (cellIds.has(a.id)) continue; // exclut la cellule en cours d'édition
+      m.set(a.employe_id, (m.get(a.employe_id) ?? 0) + Number(a.heures || 0));
+    }
+    return m;
+  }, [allAssignations, dateStr, cellAssigns]);
+
   const employesDispo = useMemo(
     () =>
       employes
         .filter((e) => !usedEmpIds.has(e.id))
-        .sort((a, b) =>
-          `${a.prenom} ${a.nom}`.localeCompare(`${b.prenom} ${b.nom}`, "fr"),
-        ),
-    [employes, usedEmpIds],
+        .map((e) => {
+          const metier = metiersById.get(e.metier_principal_id);
+          const heuresJour = heuresJourByEmp.get(e.id) ?? 0;
+          // dispo : libre (0h), partiel (>0 et <7), complet (≥7)
+          const statut: "libre" | "partiel" | "complet" =
+            heuresJour <= 0 ? "libre" : heuresJour < 7 ? "partiel" : "complet";
+          return { emp: e, metier, heuresJour, statut };
+        })
+        .sort((a, b) => {
+          // libre d'abord, puis partiel, puis complet ; puis nom
+          const order = { libre: 0, partiel: 1, complet: 2 } as const;
+          if (order[a.statut] !== order[b.statut]) {
+            return order[a.statut] - order[b.statut];
+          }
+          return `${a.emp.prenom} ${a.emp.nom}`.localeCompare(
+            `${b.emp.prenom} ${b.emp.nom}`,
+            "fr",
+          );
+        }),
+    [employes, usedEmpIds, heuresJourByEmp, metiersById],
   );
 
   function updateRowHeures(id: string, h: number) {
