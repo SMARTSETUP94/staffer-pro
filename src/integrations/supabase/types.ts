@@ -150,6 +150,7 @@ export type Database = {
           date_fin_prevue: string | null
           date_montage: string | null
           date_opportunite: string | null
+          date_pat: string | null
           heures_prevues_demontage: number
           heures_prevues_montage: number
           id: string
@@ -181,6 +182,7 @@ export type Database = {
           date_fin_prevue?: string | null
           date_montage?: string | null
           date_opportunite?: string | null
+          date_pat?: string | null
           heures_prevues_demontage?: number
           heures_prevues_montage?: number
           id?: string
@@ -212,6 +214,7 @@ export type Database = {
           date_fin_prevue?: string | null
           date_montage?: string | null
           date_opportunite?: string | null
+          date_pat?: string | null
           heures_prevues_demontage?: number
           heures_prevues_montage?: number
           id?: string

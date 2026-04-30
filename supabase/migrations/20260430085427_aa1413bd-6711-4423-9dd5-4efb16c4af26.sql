@@ -1,0 +1,2 @@
+ALTER TABLE public.affaires ADD COLUMN IF NOT EXISTS date_pat date;
+COMMENT ON COLUMN public.affaires.date_pat IS 'Date PAT (Prise À Témoin / présentation client) — saisie depuis vue Tableur opportunités v0.28.';
