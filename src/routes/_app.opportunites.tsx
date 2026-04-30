@@ -135,6 +135,8 @@ function OpportunitesPage() {
   const [refreshTick, setRefreshTick] = useState(0);
   const [createOpen, setCreateOpen] = useState(false);
   const [signTarget, setSignTarget] = useState<OpportuniteCardData | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<OpportuniteCardData | null>(null);
+  const { remove: removeOpportunite, pending: deletePending } = useDeleteOpportunite();
   const [activeId, setActiveId] = useState<string | null>(null);
 
   // Filtres tableur additionnels (statut/taille/deviseur multi-select)
@@ -302,6 +304,31 @@ function OpportunitesPage() {
 
   function handleSign(opp: OpportuniteCardData) {
     setSignTarget(opp);
+  }
+
+  function handleDeleteRequest(opp: OpportuniteCardData) {
+    const check = checkCanDeleteOpportunite({
+      statut_opportunite: opp.statut_opportunite,
+      phase: "opportunite",
+    });
+    if (!check.ok) {
+      const msg = deleteBlockedMessage(check.reason);
+      toast.error(msg.title, { description: msg.description });
+      return;
+    }
+    setDeleteTarget(opp);
+  }
+
+  async function handleDeleteConfirm() {
+    if (!deleteTarget) return;
+    const result = await removeOpportunite(deleteTarget.id);
+    if (result.ok) {
+      toast.success(`Opportunité ${deleteTarget.numero} supprimée`);
+      setRefreshTick((t) => t + 1);
+      setDeleteTarget(null);
+    } else {
+      toast.error("Suppression impossible", { description: result.error });
+    }
   }
 
   return (
@@ -499,6 +526,7 @@ function OpportunitesPage() {
                 items={byStatut.get(s) ?? []}
                 chargesById={chargesById}
                 onSign={handleSign}
+                onDelete={isAdminOrChef ? handleDeleteRequest : undefined}
                 draggable={isAdminOrChef}
               />
             ))}
