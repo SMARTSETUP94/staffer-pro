@@ -35,7 +35,11 @@ import {
 
 export const Route = createFileRoute("/_app/opportunites/import")({
   head: () => ({ meta: [{ title: "Import opportunités — Setup Paris" }] }),
-  component: OpportunitesImportPage,
+  component: () => (
+    <ImportErrorBoundary label="Import opportunités">
+      <OpportunitesImportPage />
+    </ImportErrorBoundary>
+  ),
 });
 
 interface RowState extends ParsedOpportuniteRow {
