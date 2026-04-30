@@ -34,6 +34,8 @@ import type {
   Employe,
   Metier,
 } from "@/hooks/use-planning-data";
+import { validateBudgetObjet } from "@/lib/cell-edit-helpers";
+import { AlertTriangle } from "lucide-react";
 
 interface FabObjetLite {
   id: string;
