@@ -225,6 +225,19 @@ function DevisImportPage() {
       // ---- Parser RH (devis_postes) ----
       const result = parseDevisFromArrayBuffer(buf, { filename: file.name });
       setParseErrors(result.errors);
+      // v0.32.1 — snapshot des lignes pour validation cohérence par métier.
+      setParsedLines(
+        result.lines.map((l) => ({
+          rowIndex: l.rowIndex,
+          metier: l.metierFinalCode,
+          heures: l.tempsPrevu ?? 0,
+          excluded: l.excluded,
+          designation: l.designation,
+          quantite: l.quantite,
+          pu: l.puHt,
+          total: l.total,
+        })),
+      );
 
       if (result.meta.libelle) setNomDevis(result.meta.libelle);
       const fnNoExt = file.name.replace(/\.(xlsx?|xls)$/i, "").trim();
