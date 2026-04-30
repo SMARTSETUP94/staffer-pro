@@ -407,7 +407,7 @@ function OpportunitesPage() {
               </SelectContent>
             </Select>
 
-            <Select value={preset} onValueChange={(v) => setPreset(v as DatePreset)}>
+            <Select value={preset} onValueChange={(v) => setPreset(v as StoredPreset)}>
               <SelectTrigger className="h-9 w-[160px] rounded-xl">
                 <SelectValue placeholder="Période" />
               </SelectTrigger>
