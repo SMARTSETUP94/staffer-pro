@@ -396,6 +396,7 @@ export function OpportunitesTableurView({
       date_montage: null,
       date_demontage: null,
       notes: null,
+      typologie_future: null,
     };
     setDrafts((prev) => [...prev, newRow]);
     const newTotal = filtered.length + 1;

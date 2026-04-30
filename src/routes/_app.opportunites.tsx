@@ -120,6 +120,7 @@ interface OppRowFull extends OpportuniteCardData {
   date_pat: string | null;
   date_montage: string | null;
   date_demontage: string | null;
+  typologie_future: AffaireTypologie | null;
 }
 
 function OpportunitesPage() {
@@ -182,7 +183,7 @@ function OpportunitesPage() {
     supabase
       .from("affaires")
       .select(
-        "id, numero, client, nom, charge_affaires_id, taille, date_opportunite, notes, statut_opportunite, date_pat, date_montage, date_demontage",
+        "id, numero, client, nom, charge_affaires_id, taille, date_opportunite, notes, statut_opportunite, date_pat, date_montage, date_demontage, typologie_future",
       )
       .eq("phase", "opportunite")
       .order("date_opportunite", { ascending: false, nullsFirst: false })
@@ -254,6 +255,7 @@ function OpportunitesPage() {
         date_montage: o.date_montage,
         date_demontage: o.date_demontage,
         notes: o.notes,
+        typologie_future: o.typologie_future,
       })),
     [oppsFiltrees],
   );
