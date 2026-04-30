@@ -14,6 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { isAffaireSelectable } from "@/lib/affaire-lock";
+import { getAffaireTypologie } from "@/lib/affaire-typologie";
 import type { Affaire } from "@/hooks/use-planning-data";
 
 interface Props {
