@@ -43,6 +43,62 @@ interface RoadmapPlanned {
 
 const RELEASES: RoadmapRelease[] = [
   {
+    date: "2026-04-30",
+    version: "v0.27.0",
+    title: "🧰 Édition groupée des cellules planning par objet + garde-fou budget",
+    entries: [
+      {
+        type: "feature",
+        area: "Planning par objet",
+        title: "✏️ CellEditDialog — éditer toutes les affectations d'une cellule en un clic",
+        description:
+          "Avant : un clic sur une cellule (objet × jour) ouvrait l'édition de la première assignation seulement. Désormais, le dialog liste TOUTES les affectations de la cellule et permet, en une seule validation : modifier les heures de chaque employé, supprimer/restaurer une affectation (toggle), ajouter de nouveaux employés. Toutes les opérations (delete + update + insert + lien assignation_objets) sont batchées au save.",
+      },
+      {
+        type: "feature",
+        area: "Planning par objet",
+        title: "🚨 Garde-fou budget objet — validation bloquante du dépassement devis",
+        description:
+          "Nouveau helper validateBudgetObjet : compare la projection (heures actuelles + delta + ajouts) au total devisé (Σ category_hours × quantity). Si dépassement, le bouton 'Enregistrer' est désactivé, un bandeau rouge s'affiche avec message détaillé (ex : 'Dépassement de l'objet « OBJ-1 — Caisson » : 24h projetées pour 20h devisées (+4h)…'). Si l'objet n'a pas de budget, un bandeau ambre signale que la validation est désactivée. Toast au save pour double-sécurité.",
+      },
+      {
+        type: "feature",
+        area: "Planning par objet",
+        title: "🔍 Autocomplete enrichi — recherche multi-critères + dispo employé",
+        description:
+          "Le picker 'Ajouter un employé' supporte désormais la recherche par nom, métier OU statut (libre/partiel/complet). Chaque ligne affiche : pastille couleur métier, nom + libellé métier, pastille de disponibilité (vert=libre, ambre=partiel, rouge=complet) et heures déjà engagées ce jour (autres affaires/objets exclues). Tri intelligent : libre d'abord, puis partiel, puis complet. Compte des disponibles affiché en en-tête.",
+      },
+      {
+        type: "feature",
+        area: "Planning par objet",
+        title: "📋 AssignationDialog — récap heures par objet sélectionné",
+        description:
+          "Avant validation, le dialog affiche pour chaque objet sélectionné : Devisé / Planifié (avec preview après save) / Restant. Bordure rouge + AlertTriangle en cas de dépassement, bandeau ambre si l'objet n'a pas de budget devisé. Empêche le double-comptage en mode édition (heuresEditees soustraites).",
+      },
+      {
+        type: "feature",
+        area: "Planning par objet",
+        title: "📊 Indicateurs de dépassement objet + cellule",
+        description:
+          "Badges rouges automatiques sur chaque objet et chaque cellule du planning par objet quand les heures affectées dépassent le devis. Différence (+Xh) affichée directement.",
+      },
+      {
+        type: "feature",
+        area: "Exports",
+        title: "📤 Export Excel matriciel par objet",
+        description:
+          "Nouveau bouton d'export sur l'onglet Planning par objet : matrice objets × jours avec heures et noms d'employés en cellule. Idéal pour partage hors-app / impression.",
+      },
+      {
+        type: "fix",
+        area: "Tests",
+        title: "🧪 +29 tests Vitest (E2E objets + édition groupée + budget)",
+        description:
+          "objet-planning-recap-e2e.test.ts (7 tests) : scénario complet création objets → planning → saisie heures → récap heures affaire. cell-edit-dialog-e2e.test.ts (17 tests) : édition en bloc (modif/suppr/ajout simultanés), validation heures (0 < h ≤ 12), doublons employé, projection budget, validateBudgetObjet (5 cas dont suppression résorbant un dépassement existant + objet sans budget).",
+      },
+    ],
+  },
+  {
     date: "2026-04-29",
     version: "v0.26.3",
     title: "🚨 Hotfix critique #2 — Bouton 'Créer mon compte' inerte sur set-password",
