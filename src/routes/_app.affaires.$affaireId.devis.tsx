@@ -661,15 +661,13 @@ function AffaireDevisPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Confirmation suppression */}
+      {/* Confirmation suppression poste */}
       <AlertDialog open={!!toDelete} onOpenChange={(o) => !o && setToDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Supprimer {toDelete?.label} ?</AlertDialogTitle>
             <AlertDialogDescription>
-              {toDelete?.kind === "devis"
-                ? "Toutes les lignes de ce devis seront supprimées. Les assignations liées seront détachées (conservées sur l'affaire, sans rattachement devis). Cette action est irréversible."
-                : "Cette ligne sera supprimée. Cette action est irréversible."}
+              Cette ligne sera supprimée. Cette action est irréversible.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -680,6 +678,17 @@ function AffaireDevisPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* v0.31.1 — Suppression cascade devis (réutilise RPC + modale v0.31.0) */}
+      <DevisDeleteCascadeDialog
+        devisId={devisToDelete}
+        onClose={() => setDevisToDelete(null)}
+        onConfirmed={() => {
+          toast.success("Devis supprimé");
+          setDevisToDelete(null);
+          fetchAll();
+        }}
+      />
     </div>
   );
 }
