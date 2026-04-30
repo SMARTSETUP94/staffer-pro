@@ -16,6 +16,7 @@ import {
   buildCellPlan,
   projectedObjetHeures,
   validateCell,
+  validateBudgetObjet,
   employesDisponibles,
   type ExistingRow,
   type NewRow,
