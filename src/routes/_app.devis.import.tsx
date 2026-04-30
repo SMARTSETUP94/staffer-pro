@@ -20,6 +20,8 @@ import {
   legacyStringsToIssues,
   makeIssue,
   validateDateRange,
+  validateMetierTotalsConsistency,
+  validateRowSumMatch,
   validateTotalsMatch,
   type ImportIssue,
 } from "@/lib/import-validation";
@@ -99,6 +101,10 @@ function DevisImportPage() {
   const [dragOver, setDragOver] = useState(false);
   const [parseErrors, setParseErrors] = useState<string[]>([]);
   const [hasParsed, setHasParsed] = useState(false);
+  // v0.32.1 — mémoire des lignes parsées (source) pour contrôle cohérence par métier.
+  const [parsedLines, setParsedLines] = useState<
+    Array<{ rowIndex: number; metier: string | null; heures: number; excluded: boolean; designation: string; quantite: number | null; pu: number | null; total: number | null }>
+  >([]);
 
   // Section 1
   const [affaires, setAffaires] = useState<AffaireOption[]>([]);
@@ -208,6 +214,7 @@ function DevisImportPage() {
     setParsing(true);
     setFilename(file.name);
     setParseErrors([]);
+    setParsedLines([]);
     try {
       const buf = await file.arrayBuffer();
       // Hash SHA-256 du fichier pour détecter les doublons
@@ -220,6 +227,19 @@ function DevisImportPage() {
       // ---- Parser RH (devis_postes) ----
       const result = parseDevisFromArrayBuffer(buf, { filename: file.name });
       setParseErrors(result.errors);
+      // v0.32.1 — snapshot des lignes pour validation cohérence par métier.
+      setParsedLines(
+        result.lines.map((l) => ({
+          rowIndex: l.rowIndex,
+          metier: l.metierFinalCode,
+          heures: l.tempsPrevu ?? 0,
+          excluded: l.excluded,
+          designation: l.designation,
+          quantite: l.quantite,
+          pu: l.puHt,
+          total: l.total,
+        })),
+      );
 
       if (result.meta.libelle) setNomDevis(result.meta.libelle);
       const fnNoExt = file.name.replace(/\.(xlsx?|xls)$/i, "").trim();
@@ -358,6 +378,7 @@ function DevisImportPage() {
   );
 
   // v0.32.0 — Issues du parsing (file/format) + warnings métier détectés au parse.
+  // v0.32.1 — + contrôle cohérence par ligne (qte×PU vs total) et par métier.
   const parseIssues = useMemo<ImportIssue[]>(() => {
     const arr = legacyStringsToIssues(parseErrors, { severity: "warning" });
     // Cohérence dates Devis (warning, ne bloque pas).
@@ -367,7 +388,7 @@ function DevisImportPage() {
       { rowIndex: null, fieldDebut: "Date montage", fieldFin: "Date démontage" },
     );
     if (dr) arr.push(dr);
-    // Cohérence totaux (warning).
+    // Cohérence totaux montants (warning global).
     const sumPostes = postes.reduce((s, p) => s + (p.montantHt || 0), 0);
     if (sumPostes > 0 && totals.montant > 0) {
       const totalsCheck = validateTotalsMatch(sumPostes, totals.montant, {
@@ -376,8 +397,37 @@ function DevisImportPage() {
       });
       if (totalsCheck) arr.push(totalsCheck);
     }
+    // v0.32.1 — Cohérence ligne par ligne (qte × PU ≈ total).
+    if (parsedLines.length > 0) {
+      const rowIssues = validateRowSumMatch(
+        parsedLines.filter((l) => !l.excluded),
+        (l) => ({
+          rowIndex: l.rowIndex,
+          quantite: l.quantite,
+          pu: l.pu,
+          total: l.total,
+          label: l.designation,
+        }),
+        { tolerance: 0.05, field: "Total ligne (HT)" },
+      );
+      arr.push(...rowIssues);
+    }
+    // v0.32.1 — Cohérence heures par métier (lignes source vs postes consolidés).
+    if (parsedLines.length > 0 && postes.length > 0) {
+      // metierId → code
+      const idToCode = new Map<number, string>();
+      metiers.forEach((m) => idToCode.set(m.id, m.code));
+      const metierIssues = validateMetierTotalsConsistency(
+        parsedLines,
+        postes,
+        (l) => ({ rowIndex: l.rowIndex, metier: l.metier, heures: l.heures, excluded: l.excluded }),
+        (p) => ({ metier: p.metierId != null ? idToCode.get(p.metierId) ?? null : null, heures: p.heures }),
+        { tolerance: 0.1, field: "Heures par métier" },
+      );
+      arr.push(...metierIssues);
+    }
     return arr;
-  }, [parseErrors, dateMontage, dateDemontage, postes, totals.montant]);
+  }, [parseErrors, dateMontage, dateDemontage, postes, totals.montant, parsedLines, metiers]);
 
   // v0.32.0 — Issues bloquantes (corrections requises avant Valider).
   const validationIssues = useMemo<ImportIssue[]>(() => {
@@ -432,6 +482,7 @@ function DevisImportPage() {
     setFilename(null);
     setFichierHash(null);
     setParseErrors([]);
+    setParsedLines([]);
     setPostes([]);
     setObjets([]);
     setNomDevis("");
