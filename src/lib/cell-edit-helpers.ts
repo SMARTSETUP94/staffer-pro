@@ -106,7 +106,8 @@ export function validateBudgetObjet(params: {
 }): BudgetValidation {
   const { heuresPrevues, heuresObjetTotalAvant, rows, newRows, objetLabel } = params;
   const heuresApres = projectedObjetHeures(heuresObjetTotalAvant, rows, newRows);
-  const ecart = heuresPrevues > 0 ? heuresApres - heuresPrevues : 0;
+  const rawEcart = heuresPrevues > 0 ? heuresApres - heuresPrevues : 0;
+  const ecart = rawEcart > 0 ? rawEcart : 0;
   if (heuresPrevues > 0 && ecart > 0) {
     const label = objetLabel ? ` « ${objetLabel} »` : "";
     return {
