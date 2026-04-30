@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { AlertCircle, ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { z } from "zod";
 import { zodValidator, fallback } from "@tanstack/zod-adapter";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,16 @@ import { ImportsTabsNav } from "@/components/ImportsTabsNav";
 import { Card, CardContent } from "@/components/ui/card";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { toast } from "sonner";
+import { ImportErrorPanel } from "@/components/imports/ImportErrorPanel";
+import { ImportErrorBoundary } from "@/components/imports/ImportErrorBoundary";
+import {
+  exceptionToIssue,
+  legacyStringsToIssues,
+  makeIssue,
+  validateDateRange,
+  validateTotalsMatch,
+  type ImportIssue,
+} from "@/lib/import-validation";
 import { parseDevisFromArrayBuffer } from "@/lib/devis-import";
 import { parseDevisProgbatFromArrayBuffer } from "@/lib/devis-parser/parse-excel";
 import {
