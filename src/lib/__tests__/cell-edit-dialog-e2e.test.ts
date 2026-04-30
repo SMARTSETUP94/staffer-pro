@@ -180,4 +180,87 @@ describe("CellEditDialog — édition groupée (E2E)", () => {
     expect(plan.toUpdate).toEqual([]);
     expect(plan.toInsert).toEqual([]);
   });
+
+  describe("validateBudgetObjet — dépassement heures devisées", () => {
+    it("OK quand projection ≤ devisé", () => {
+      const rows = startingRows(); // Alice 7 + Bob 6 = 13
+      const v = validateBudgetObjet({
+        heuresPrevues: 40,
+        heuresObjetTotalAvant: 13,
+        rows,
+        newRows: [],
+        objetLabel: "OBJ-1",
+      });
+      expect(v.ok).toBe(true);
+      expect(v.heuresApres).toBe(13);
+      expect(v.ecart).toBe(0);
+      expect(v.message).toBeUndefined();
+    });
+
+    it("KO quand ajout pousse au-delà du devis — message détaillé", () => {
+      const rows = startingRows();
+      const newRows: NewRow[] = [
+        { tempId: "n1", employe_id: CHLOE, metier_id: METIER_BOIS, heures: 10 },
+      ];
+      const v = validateBudgetObjet({
+        heuresPrevues: 20,
+        heuresObjetTotalAvant: 13,
+        rows,
+        newRows,
+        objetLabel: "OBJ-1 — Caisson",
+      });
+      // 13 + 10 = 23 > 20 ⇒ +3
+      expect(v.ok).toBe(false);
+      expect(v.heuresApres).toBe(23);
+      expect(v.ecart).toBe(3);
+      expect(v.message).toContain("OBJ-1 — Caisson");
+      expect(v.message).toContain("23h");
+      expect(v.message).toContain("20h");
+      expect(v.message).toContain("+3h");
+    });
+
+    it("KO sur modification d'heures (sans ajout)", () => {
+      const rows = startingRows(); // total avant 13
+      rows[0].heures = 12; // Alice 7 → 12 ⇒ delta +5
+      const v = validateBudgetObjet({
+        heuresPrevues: 15,
+        heuresObjetTotalAvant: 13,
+        rows,
+        newRows: [],
+      });
+      // 13 + 5 = 18 > 15 ⇒ +3
+      expect(v.ok).toBe(false);
+      expect(v.ecart).toBe(3);
+      expect(v.message).toMatch(/Dépassement/);
+    });
+
+    it("Suppression peut résorber un dépassement existant", () => {
+      const rows = startingRows();
+      rows[1].toDelete = true; // -6
+      const v = validateBudgetObjet({
+        heuresPrevues: 10,
+        heuresObjetTotalAvant: 13, // déjà au-dessus
+        rows,
+        newRows: [],
+      });
+      // 13 - 6 = 7 ≤ 10 ⇒ OK
+      expect(v.ok).toBe(true);
+      expect(v.heuresApres).toBe(7);
+    });
+
+    it("Pas de validation quand heuresPrevues ≤ 0 (objet sans budget)", () => {
+      const rows = startingRows();
+      const newRows: NewRow[] = [
+        { tempId: "n1", employe_id: CHLOE, metier_id: METIER_BOIS, heures: 99 },
+      ];
+      const v = validateBudgetObjet({
+        heuresPrevues: 0,
+        heuresObjetTotalAvant: 13,
+        rows,
+        newRows,
+      });
+      expect(v.ok).toBe(true);
+      expect(v.ecart).toBe(0);
+    });
+  });
 });
