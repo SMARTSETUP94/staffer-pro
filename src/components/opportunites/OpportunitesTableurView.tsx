@@ -56,6 +56,10 @@ import { useNextOpportuniteCode } from "@/hooks/use-next-opportunite-code";
 import { useUpsertOpportunite } from "@/hooks/use-upsert-opportunite";
 import type { ChargeAffaires } from "@/hooks/use-charges-affaires";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  checkCanDeleteOpportunite,
+  deleteBlockedMessage,
+} from "@/lib/opportunite-delete";
 
 const PAGE_SIZE = 50;
 const SAVE_DEBOUNCE_MS = 300;
@@ -314,7 +318,7 @@ export function OpportunitesTableurView({
     }, 50);
   }, [fetchNext, defaultChargeId, filtered.length, pageRows.length]);
 
-  /** Suppression d'une opportunité (admin/chef uniquement). */
+  /** Suppression d'une opportunité (admin/chef uniquement). v0.28.1 — guard business rule + RLS. */
   const handleDelete = useCallback(async () => {
     if (!deleteTarget) return;
     if (!deleteTarget.affaireId) {
@@ -323,12 +327,31 @@ export function OpportunitesTableurView({
       setDeleteTarget(null);
       return;
     }
+    const check = checkCanDeleteOpportunite({
+      statut_opportunite: deleteTarget.statut_opportunite ?? null,
+      phase: deleteTarget.signed_affaire_id ? "signe" : "opportunite",
+    });
+    if (!check.ok) {
+      const msg = deleteBlockedMessage(check.reason);
+      toast.error(msg.title, { description: msg.description });
+      setDeleteTarget(null);
+      return;
+    }
     const { error } = await supabase
       .from("affaires")
       .delete()
       .eq("id", deleteTarget.affaireId);
     if (error) {
-      toast.error("Suppression impossible", { description: error.message });
+      const m = error.message || "";
+      if (m.toLowerCase().includes("violates row-level security")) {
+        toast.error("Suppression refusée", {
+          description: "Vous n'avez pas les droits pour supprimer cette opportunité.",
+        });
+      } else if (m.includes("Impossible de supprimer une opportunité")) {
+        toast.error("Suppression bloquée", { description: m });
+      } else {
+        toast.error("Suppression impossible", { description: m });
+      }
     } else {
       toast.success(`Opportunité ${deleteTarget.numero} supprimée`);
       onRowsMutated();
