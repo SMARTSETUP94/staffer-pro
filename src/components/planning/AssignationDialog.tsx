@@ -40,6 +40,11 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  repartirHeuresProRata,
+  metierIdToHeuresKey,
+  type ProRataInput,
+} from "@/lib/objet-heures-helpers";
 import type { Affaire, Assignation, DevisLot, Employe, Metier } from "@/hooks/use-planning-data";
 
 type Slot = "AM" | "PM" | "JOURNEE";
