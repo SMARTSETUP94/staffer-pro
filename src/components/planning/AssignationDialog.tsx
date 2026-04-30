@@ -845,6 +845,67 @@ export function AssignationDialog({
             </div>
           )}
 
+          {selectedObjetIds.length > 0 && (
+            <div className="rounded-md border border-primary/20 bg-card p-2 text-[11px]">
+              <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                Détail par objet sélectionné ({selectedObjetIds.length})
+              </div>
+              <div className="space-y-1">
+                {selectedObjetIds.map((oid) => {
+                  const c = objetsConso[oid];
+                  if (!c) {
+                    return (
+                      <div key={oid} className="text-muted-foreground italic">
+                        Chargement…
+                      </div>
+                    );
+                  }
+                  const planifBase = editingId
+                    ? Math.max(0, c.planifiees - heuresEditees)
+                    : c.planifiees;
+                  const planifApres = planifBase + heures;
+                  const restant = c.prevues - planifApres;
+                  const noBudget = c.prevues === 0;
+                  const over = !noBudget && restant < 0;
+                  return (
+                    <div
+                      key={oid}
+                      className={cn(
+                        "flex flex-col gap-0.5 rounded border p-1.5",
+                        over && "border-destructive/50 bg-destructive/10",
+                        noBudget && "border-amber-500/50 bg-amber-50",
+                        !over && !noBudget && "border-muted-foreground/10",
+                      )}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="truncate font-mono text-[10px] font-bold">{c.reference}</span>
+                        <span className="truncate text-[10px] text-muted-foreground">{c.nom}</span>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 tabular-nums">
+                        <span>Devisé : <strong>{c.prevues}h</strong></span>
+                        <span>
+                          Planifié : <strong>{planifBase}h</strong>
+                          {heures > 0 && (
+                            <span className="text-muted-foreground"> → {planifApres}h après</span>
+                          )}
+                        </span>
+                        <span className={cn(over && "text-destructive font-semibold")}>
+                          Restant : <strong>{restant}h</strong>
+                          {over && <AlertTriangle className="ml-1 inline h-3 w-3" />}
+                        </span>
+                      </div>
+                      {noBudget && (
+                        <div className="text-[10px] text-amber-700">
+                          Aucune heure prévue au devis pour cet objet.
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           <DialogFooter className="flex-row justify-between sm:justify-between">
             <div>
               {editingId && (
