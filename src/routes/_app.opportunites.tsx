@@ -487,7 +487,7 @@ function OpportunitesPage() {
 
       <div className="rounded-2xl border border-border bg-card p-3">
         <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-          Typologie
+          Typologie future (cible à la signature)
         </div>
         <TypologieMultiFilter
           value={typoFilter}
