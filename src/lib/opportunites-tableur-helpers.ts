@@ -6,7 +6,7 @@
  * - Filtres dates preset
  * - Détection ligne "vide" (à créer)
  */
-import { normalize } from "@/lib/string-normalize";
+import { normalizeName } from "@/lib/string-normalize";
 import type { OpportuniteStatut, OpportuniteTaille } from "@/lib/opportunites";
 
 export const CODE_9XXX_REGEX = /^9\d{3}$/;
@@ -83,15 +83,15 @@ export function nextCell(
 /** Recherche fuzzy maison sur client + nom + numéro. */
 export function fuzzySearchRow(row: TableurRow, query: string): boolean {
   if (!query.trim()) return true;
-  const q = normalize(query);
-  const haystack = normalize(
+  const q = normalizeName(query);
+  const haystack = normalizeName(
     [row.numero, row.client, row.nom, row.notes ?? ""].join(" "),
   );
   // Tous les tokens doivent matcher (AND)
   return q
     .split(/\s+/)
     .filter(Boolean)
-    .every((token) => haystack.includes(token));
+    .every((token: string) => haystack.includes(token));
 }
 
 export type DatePreset = "all" | "7d" | "30d" | "current_month" | "custom";
