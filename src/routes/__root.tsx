@@ -1,4 +1,6 @@
 import { Outlet, createRootRoute, HeadContent, Scripts, Link } from "@tanstack/react-router";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useState } from "react";
 import { AuthProvider } from "@/lib/auth-context";
 import { PreviewProvider } from "@/lib/preview-context";
 import appCss from "../styles.css?url";
@@ -68,11 +70,20 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 function RootComponent() {
+  // v0.29.2 hotfix — QueryClientProvider au root pour que useMutation/useQuery
+  // (ex: useBulkAssignObjet sur /planning?vue=par-objet) trouvent un client.
+  // useState garantit une instance stable par render tree (SSR-safe : nouveau
+  // client par requête côté serveur).
+  const [queryClient] = useState(() => new QueryClient({
+    defaultOptions: { queries: { staleTime: 30_000, refetchOnWindowFocus: false } },
+  }));
   return (
-    <AuthProvider>
-      <PreviewProvider>
-        <Outlet />
-      </PreviewProvider>
-    </AuthProvider>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <PreviewProvider>
+          <Outlet />
+        </PreviewProvider>
+      </AuthProvider>
+    </QueryClientProvider>
   );
 }
