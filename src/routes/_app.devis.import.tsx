@@ -31,6 +31,10 @@ import {
 import { DevisImportSection4Chantier } from "@/components/devis-import/DevisImportSection4Chantier";
 import { DevisImportSection5BulkAssign } from "@/components/devis-import/DevisImportSection5BulkAssign";
 import { DevisImportFooter } from "@/components/devis-import/DevisImportFooter";
+import {
+  DevisReimportConfirmDialog,
+  type ReimportPreflight,
+} from "@/components/devis-import/DevisReimportConfirmDialog";
 import { NEW_AFFAIRE, type AffaireOption, type PosteRow } from "@/components/devis-import/types";
 import { detectMachinisteDoubleComptage } from "@/lib/devis-import-v2-helpers";
 import {
