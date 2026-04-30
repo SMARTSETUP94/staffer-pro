@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { Fragment as FragmentWithKey, useEffect, useMemo, useState } from "react";
 import { addDays, format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Loader2, Package, Search } from "lucide-react";
@@ -296,8 +296,8 @@ export function PlanningParObjet({
                   if (objs.length === 0) return null;
                   const isLocked = !isAffaireSelectable(af);
                   return (
-                    <>
-                      <tr key={`hdr-${af.id}`} className="bg-muted/30">
+                    <FragmentWithKey key={af.id}>
+                      <tr className="bg-muted/30">
                         <td
                           colSpan={days.length + 1}
                           className="sticky left-0 z-10 border-b bg-muted/30 px-2 py-1.5 text-[11px]"
@@ -440,7 +440,7 @@ export function PlanningParObjet({
                           })}
                         </tr>
                       ))}
-                    </>
+                    </FragmentWithKey>
                   );
                 })}
                 {affairesRetenues.every(
