@@ -12,11 +12,13 @@ Routing post-login : admin/chef → /dashboard, employé desktop → /ma-semaine
 auth-context onAuthStateChange : reload rôles UNIQUEMENT si userId change (pas TOKEN_REFRESHED) sinon AppGuard démonte Outlet → modales fermées au changement d'onglet. Voir mem://constraints/auth-context-tab-refocus.
 Compteurs typologie : utiliser countActiveAffairesByTypologie (exclut terminé/annulé/démontage passé). Voir mem://features/typologie-active-counts.
 Imports : devis_imports a UNIQUE INDEX sur fichier_hash (anti-doublon). opportunites_imports non. Voir mem://features/data-integrity-unique-indexes.
+Excel : UNIQUEMENT xlsx-js-style (pas xlsx plain, dedup v0.30.1). Modules d'export lazy-loadés au clic. Voir mem://constraints/xlsx-package-policy.
 
 ## Roadmap
 1. ✅ v0.27.0 → v0.29.2 (voir historique précédent)
 2. ✅ v0.29.3 — fusion Audit Auth + Incident Auth (4 onglets, /incident-auth redirige) + Export Excel Planning sur CDI/Intérim/Budget (981 tests verts, +7)
-3. ✅ v0.30.0 — Sprint dette J1 : audit helpers RLS confirmé OK + catégorisation 48 SECURITY DEFINER non-RLS + doc UNIQUE indexes imports + sync mem (DOC-H1, SEC-H1, DATA-M1)
+3. ✅ v0.30.0 — Sprint dette J1 : audit helpers RLS + catégorisation 48 SECURITY DEFINER + UNIQUE indexes + sync mem (992 tests, +11)
+4. ✅ v0.30.1 — Sprint dette J2 : dedup xlsx (-1 package) + lazy-load Planning Excel (998 tests, +6)
 
 ## Memories
 - [Planning 3 vues](mem://features/planning-views) — CDI / Intérim / Synthèse chantier
@@ -29,6 +31,7 @@ Imports : devis_imports a UNIQUE INDEX sur fichier_hash (anti-doublon). opportun
 - [Helpers RLS protégés](mem://constraints/rls-helpers-execute-grant) — audit v0.30.0 ✅ pas de régression
 - [SECURITY DEFINER non-RLS catégorisés](mem://constraints/security-definer-non-rls) — v0.30.0
 - [UNIQUE indexes imports](mem://features/data-integrity-unique-indexes) — v0.30.0
+- [Politique xlsx](mem://constraints/xlsx-package-policy) — v0.30.1
 - [Dashboard role guard](mem://features/dashboard-role-guard) — v0.27.4
 - [Route /ma-semaine](mem://features/route-ma-semaine) — v0.27.5
 - [Vue Tableur opportunités](mem://features/opportunites-tableur) — v0.28.0
