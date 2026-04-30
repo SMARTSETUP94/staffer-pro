@@ -212,6 +212,7 @@ function DevisImportPage() {
     setParsing(true);
     setFilename(file.name);
     setParseErrors([]);
+    setParsedLines([]);
     try {
       const buf = await file.arrayBuffer();
       // Hash SHA-256 du fichier pour détecter les doublons
