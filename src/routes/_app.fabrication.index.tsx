@@ -17,6 +17,11 @@ import {
   listUnassignedEtapes,
 } from "@/hooks/use-fabrication-dashboard";
 import { StafferVehiculeInterneDialog } from "@/components/fabrication/StafferVehiculeInterneDialog";
+import { TypologieMultiFilter } from "@/components/typologie/TypologieMultiFilter";
+import {
+  type AffaireTypologie,
+  getAffaireTypologie,
+} from "@/lib/affaire-typologie";
 
 export const Route = createFileRoute("/_app/fabrication/")({
   head: () => ({ meta: [{ title: "Dashboard fabrication — Setup Paris" }] }),
