@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { History, FileText, ExternalLink } from "lucide-react";
+import { History, FileText, ExternalLink, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { PageHeader } from "@/components/PageHeader";
@@ -10,6 +11,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { DevisDeleteCascadeDialog } from "@/components/devis-import/DevisDeleteCascadeDialog";
 
 export const Route = createFileRoute("/_app/devis/historique")({
   head: () => ({ meta: [{ title: "Historique des imports devis — Setup Paris" }] }),
