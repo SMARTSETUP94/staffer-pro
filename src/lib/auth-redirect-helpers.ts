@@ -29,6 +29,25 @@ export function shouldForceSetPassword(g: GuardInputs): boolean {
   return false;
 }
 
+export function isOnboardingPath(pathname: string): boolean {
+  return pathname === "/onboarding" || pathname.startsWith("/onboarding/");
+}
+
+export function shouldRedirectToOnboarding(g: {
+  profileCompleted: boolean;
+  currentPath: string;
+}): boolean {
+  return !g.profileCompleted && !isOnboardingPath(g.currentPath);
+}
+
+export function shouldIgnoreTokenRefreshForSameUser(g: {
+  event: string;
+  newUserId: string | null;
+  lastUserId: string | null;
+}): boolean {
+  return g.event === "TOKEN_REFRESHED" && Boolean(g.newUserId) && g.newUserId === g.lastUserId;
+}
+
 /**
  * Détecte un hash Supabase contenant un access_token (lien d'invitation/recovery).
  * Utilisé par routes/index.tsx pour rediriger vers /auth/set-password en
