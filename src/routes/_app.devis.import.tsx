@@ -444,6 +444,21 @@ function DevisImportPage() {
         return;
       }
 
+      // v0.30.2 — Sur affaire existante, propager les éventuelles modifs Client/Lieu
+      if (affaireId !== NEW_AFFAIRE && affaireId) {
+        const updates: { client?: string | null; lieu?: string | null } = {};
+        if (clientTouched) updates.client = newAffaireClient.trim() || null;
+        if (lieuTouched) updates.lieu = newAffaireLieu.trim() || null;
+        if (Object.keys(updates).length > 0) {
+          const { error: upErr } = await supabase.from("affaires").update(updates).eq("id", affaireId);
+          if (upErr) {
+            toast.warning("Devis importé, mais Client/Lieu non mis à jour", {
+              description: upErr.message,
+            });
+          }
+        }
+      }
+
       toast.success("Devis importé", {
         description: `${postesPayload.length} poste(s) RH, ${objetsPayload.length} objet(s) fab, ${totals.heures} h, ${totals.montant.toLocaleString("fr-FR")} € HT.`,
       });
