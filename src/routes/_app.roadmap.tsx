@@ -44,6 +44,20 @@ interface RoadmapPlanned {
 const RELEASES: RoadmapRelease[] = [
   {
     date: "2026-04-30",
+    version: "v0.30.3",
+    title: "✨ UX import devis Progbat — Client/Lieu éditables",
+    entries: [
+      {
+        type: "improvement",
+        area: "Devis",
+        title: "Champs Client & Lieu chantier éditables sur affaire existante",
+        description:
+          "Dans la modale d'import devis Progbat (depuis une affaire), les champs Client et Lieu chantier ne sont plus en lecture seule : ils sont pré-remplis depuis l'affaire (ou Progbat) et peuvent être librement modifiés. Si l'utilisateur change la valeur, l'affaire est mise à jour à l'import (UPDATE après RPC). Évite la friction « fermer la modale → éditer l'affaire → recommencer l'import » quand le PDF Progbat retourne une adresse incomplète ou un client générique.",
+      },
+    ],
+  },
+  {
+    date: "2026-04-30",
     version: "v0.30.2",
     title: "🚨 Hotfix onboarding — boucle infinie invités",
     entries: [
