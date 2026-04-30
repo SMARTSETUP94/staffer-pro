@@ -43,6 +43,7 @@ function ExportPage() {
   );
   const [exporting, setExporting] = useState(false);
   const [zipping, setZipping] = useState(false);
+  const [typoFilter, setTypoFilter] = useState<AffaireTypologie[]>([]);
 
   // Sécurise l'ordre + plafonne à 4 semaines
   const { rangeStart, weekCount, tooMany } = useMemo(() => {
