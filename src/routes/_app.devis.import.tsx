@@ -435,23 +435,21 @@ function DevisImportPage() {
       const { data, error } = await supabase.rpc("import_devis_atomique_v3", rpcArgs);
 
       if (error) {
-        // v0.30.4 : les blocages "doublon" SQL ont disparu (mode upsert),
-        // mais on garde un fallback pour les nouveaux garde-fous (heures, autre affaire, devis terminé)
+        // v0.30.5 : un seul garde-fou SQL restant = "autre affaire".
         const msg = error.message ?? "";
-        const isHeuresExist = /saisie.*heures r[ée]elles/i.test(msg);
         const isAutreAffaire = /autre affaire/i.test(msg);
-        const isDevisTermine = /devis est termin[ée]/i.test(msg);
-        let title = "Import impossible";
-        if (isHeuresExist) title = "Ré-import bloqué : heures saisies";
-        else if (isAutreAffaire) title = "Fichier déjà lié à une autre affaire";
-        else if (isDevisTermine) title = "Devis terminé : ré-import refusé";
+        const title = isAutreAffaire
+          ? "Fichier déjà lié à une autre affaire"
+          : "Import impossible";
         toast.error(title, { description: msg });
         return;
       }
 
-      // v0.30.4 : distinguer création vs mise à jour (mode upsert sur fichier_hash)
-      const rpcMode = (data as { mode?: string } | null)?.mode ?? "created";
+      // v0.30.5 : distinguer création vs mise à jour + warning heures préservées
+      const rpcData = (data as { mode?: string; heures_preservees?: number } | null) ?? {};
+      const rpcMode = rpcData.mode ?? "created";
       const isUpdate = rpcMode === "updated";
+      const heuresPreservees = rpcData.heures_preservees ?? 0;
 
       // v0.30.2 — Sur affaire existante, propager les éventuelles modifs Client/Lieu
       if (affaireId !== NEW_AFFAIRE && affaireId) {
