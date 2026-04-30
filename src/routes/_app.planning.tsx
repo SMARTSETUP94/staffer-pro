@@ -254,7 +254,29 @@ function PlanningPage() {
       toast.error("Échec de l'export PDF");
     } finally {
       setExporting(false);
+  }
+
+  async function handleExportObjetXlsx() {
+    setExporting(true);
+    try {
+      const blob = await exportPlanningParObjetToXlsx({
+        weekStart,
+        showWeekend,
+        affaires,
+        employes,
+        assignations,
+        filterAffaireIds: filterAffaireStr,
+        filterMetierIds: filterMetierNum,
+      });
+      downloadBlob(blob, buildPlanningObjetXlsxFilename(weekStart));
+      toast.success("Export Excel généré");
+    } catch (e) {
+      console.error(e);
+      toast.error(`Échec export Excel : ${(e as Error).message}`);
+    } finally {
+      setExporting(false);
     }
+  }
   }
 
   return (
