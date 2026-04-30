@@ -105,6 +105,10 @@ function DevisImportPage() {
   const [parsedLines, setParsedLines] = useState<
     Array<{ rowIndex: number; metier: string | null; heures: number; excluded: boolean; designation: string; quantite: number | null; pu: number | null; total: number | null }>
   >([]);
+  // v0.32.2 — snapshot des objets fabrication parsés pour contrôle cohérence par objet.
+  const [parsedObjets, setParsedObjets] = useState<
+    Array<{ numero: string; nom: string; heures: Record<string, number> }>
+  >([]);
 
   // Section 1
   const [affaires, setAffaires] = useState<AffaireOption[]>([]);
