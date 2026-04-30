@@ -28,6 +28,11 @@ import { ExportTrajetsSoustraitanceDialog } from "@/components/flotte/ExportTraj
 import { useVehicules, type Trajet } from "@/hooks/use-vehicules";
 import { useTrajetsWeek } from "@/hooks/use-trajets";
 import { exportPlanningToPDF } from "@/lib/planning-export";
+import {
+  exportPlanningParObjetToXlsx,
+  buildPlanningObjetXlsxFilename,
+} from "@/lib/planning-objet-xlsx-export";
+import { downloadBlob } from "@/lib/trajets-soustraitance-export";
 import type { TrajetSuggestion } from "@/lib/trajets-suggestions";
 import { TypologieMultiFilter } from "@/components/typologie/TypologieMultiFilter";
 import { normalizeName } from "@/lib/string-normalize";
