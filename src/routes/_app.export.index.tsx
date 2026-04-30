@@ -26,6 +26,7 @@ import {
   type AffaireTypologie,
   getAffaireTypologie,
 } from "@/lib/affaire-typologie";
+import { countActiveAffairesByTypologie } from "@/lib/typologie-active-counts";
 
 export const Route = createFileRoute("/_app/export/")({
   head: () => ({ meta: [{ title: "Export planning — Planning chantiers" }] }),
