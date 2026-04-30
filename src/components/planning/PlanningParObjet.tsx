@@ -22,6 +22,7 @@ import {
 import { isAffaireSelectable, affaireLockReason } from "@/lib/affaire-lock";
 import { supabase } from "@/integrations/supabase/client";
 import { AssignationDialog } from "./AssignationDialog";
+import { CellEditDialog } from "./CellEditDialog";
 import type {
   Affaire,
   Assignation,
