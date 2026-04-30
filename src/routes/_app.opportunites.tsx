@@ -57,6 +57,21 @@ import {
   type TableurFilters,
   type TableurRow,
 } from "@/lib/opportunites-tableur-helpers";
+import {
+  checkCanDeleteOpportunite,
+  deleteBlockedMessage,
+} from "@/lib/opportunite-delete";
+import { useDeleteOpportunite } from "@/hooks/use-delete-opportunite";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const VUE_VALUES = ["kanban", "tableur"] as const;
 type VueOpportunites = (typeof VUE_VALUES)[number];
@@ -135,6 +150,8 @@ function OpportunitesPage() {
   const [refreshTick, setRefreshTick] = useState(0);
   const [createOpen, setCreateOpen] = useState(false);
   const [signTarget, setSignTarget] = useState<OpportuniteCardData | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<OpportuniteCardData | null>(null);
+  const { remove: removeOpportunite, pending: deletePending } = useDeleteOpportunite();
   const [activeId, setActiveId] = useState<string | null>(null);
 
   // Filtres tableur additionnels (statut/taille/deviseur multi-select)
@@ -302,6 +319,31 @@ function OpportunitesPage() {
 
   function handleSign(opp: OpportuniteCardData) {
     setSignTarget(opp);
+  }
+
+  function handleDeleteRequest(opp: OpportuniteCardData) {
+    const check = checkCanDeleteOpportunite({
+      statut_opportunite: opp.statut_opportunite,
+      phase: "opportunite",
+    });
+    if (!check.ok) {
+      const msg = deleteBlockedMessage(check.reason);
+      toast.error(msg.title, { description: msg.description });
+      return;
+    }
+    setDeleteTarget(opp);
+  }
+
+  async function handleDeleteConfirm() {
+    if (!deleteTarget) return;
+    const result = await removeOpportunite(deleteTarget.id);
+    if (result.ok) {
+      toast.success(`Opportunité ${deleteTarget.numero} supprimée`);
+      setRefreshTick((t) => t + 1);
+      setDeleteTarget(null);
+    } else {
+      toast.error("Suppression impossible", { description: result.error });
+    }
   }
 
   return (
@@ -499,6 +541,7 @@ function OpportunitesPage() {
                 items={byStatut.get(s) ?? []}
                 chargesById={chargesById}
                 onSign={handleSign}
+                onDelete={isAdminOrChef ? handleDeleteRequest : undefined}
                 draggable={isAdminOrChef}
               />
             ))}
@@ -535,6 +578,39 @@ function OpportunitesPage() {
           onSigned={() => setRefreshTick((t) => t + 1)}
         />
       )}
+
+      <AlertDialog
+        open={!!deleteTarget}
+        onOpenChange={(o) => !o && setDeleteTarget(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Supprimer l&apos;opportunité {deleteTarget?.numero}&nbsp;?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {deleteTarget?.client ?? "(sans client)"}
+              {deleteTarget?.nom && deleteTarget.nom !== deleteTarget.client
+                ? ` — ${deleteTarget.nom}`
+                : ""}
+              . Cette action est irréversible.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deletePending}>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                void handleDeleteConfirm();
+              }}
+              disabled={deletePending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deletePending ? "Suppression…" : "Supprimer"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

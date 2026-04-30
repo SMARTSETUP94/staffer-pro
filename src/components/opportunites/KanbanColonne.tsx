@@ -14,6 +14,7 @@ interface Props {
   items: OpportuniteCardData[];
   chargesById: Map<string, ChargeAffaires>;
   onSign?: (opp: OpportuniteCardData) => void;
+  onDelete?: (opp: OpportuniteCardData) => void;
   draggable?: boolean;
 }
 
@@ -21,7 +22,7 @@ interface Props {
  * v0.17 — Colonne du Kanban : zone droppable + liste sortable de cartes.
  * Le statut effectif est dérivé de la colonne sur laquelle on drop (cf. handleDragEnd).
  */
-export function KanbanColonne({ statut, items, chargesById, onSign, draggable = true }: Props) {
+export function KanbanColonne({ statut, items, chargesById, onSign, onDelete, draggable = true }: Props) {
   const tone = STATUT_TONE[statut];
   const { setNodeRef, isOver } = useDroppable({ id: `col::${statut}` });
 
@@ -67,6 +68,7 @@ export function KanbanColonne({ statut, items, chargesById, onSign, draggable = 
                 opp={opp}
                 chargesById={chargesById}
                 onSign={onSign}
+                onDelete={onDelete}
                 draggable={draggable}
               />
             ))

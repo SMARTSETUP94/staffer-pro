@@ -1,7 +1,13 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Sparkles, Trophy, GripVertical } from "lucide-react";
+import { Sparkles, Trophy, GripVertical, MoreVertical, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import {
   TAILLE_LABEL,
@@ -12,6 +18,7 @@ import {
 import type { ChargeAffaires } from "@/hooks/use-charges-affaires";
 import { TypologieBadge } from "@/components/typologie/TypologieBadge";
 import { getAffaireTypologie } from "@/lib/affaire-typologie";
+import { checkCanDeleteOpportunite } from "@/lib/opportunite-delete";
 
 export interface OpportuniteCardData {
   id: string;
@@ -29,15 +36,23 @@ interface Props {
   opp: OpportuniteCardData;
   chargesById: Map<string, ChargeAffaires>;
   onSign?: (opp: OpportuniteCardData) => void;
+  /** v0.28.1 — callback suppression. Si non défini → menu masqué. */
+  onDelete?: (opp: OpportuniteCardData) => void;
   /** Si false, le drag est désactivé (lecture seule). */
   draggable?: boolean;
 }
 
 /**
  * v0.17 — Carte d'opportunité dans le Kanban.
- * Drag-drop via @dnd-kit/sortable (la colonne est le conteneur Sortable).
+ * v0.28.1 — Ajout menu kebab avec suppression (gardé par RBAC parent).
  */
-export function OpportuniteCard({ opp, chargesById, onSign, draggable = true }: Props) {
+export function OpportuniteCard({
+  opp,
+  chargesById,
+  onSign,
+  onDelete,
+  draggable = true,
+}: Props) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: opp.id, disabled: !draggable, data: { opp } });
 
@@ -54,6 +69,12 @@ export function OpportuniteCard({ opp, chargesById, onSign, draggable = true }: 
       })
     : "—";
   const isGagne = opp.statut_opportunite === "gagne";
+  const canDelete =
+    onDelete &&
+    checkCanDeleteOpportunite({
+      statut_opportunite: opp.statut_opportunite,
+      phase: "opportunite",
+    }).ok;
 
   return (
     <div
@@ -79,7 +100,36 @@ export function OpportuniteCard({ opp, chargesById, onSign, draggable = true }: 
         <div className="min-w-0 flex-1">
           <div className="flex items-baseline justify-between gap-2">
             <span className="font-mono text-xs font-bold text-primary">{opp.numero}</span>
-            <span className="text-[10px] text-muted-foreground">{dateLabel}</span>
+            <div className="flex items-center gap-1">
+              <span className="text-[10px] text-muted-foreground">{dateLabel}</span>
+              {canDelete && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      type="button"
+                      onClick={(e) => e.stopPropagation()}
+                      onPointerDown={(e) => e.stopPropagation()}
+                      className="rounded p-0.5 text-muted-foreground opacity-0 transition-opacity hover:bg-muted hover:text-foreground focus:opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring group-hover:opacity-100"
+                      aria-label="Actions"
+                    >
+                      <MoreVertical className="h-3.5 w-3.5" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDelete?.(opp);
+                      }}
+                      className="text-destructive focus:bg-destructive/10 focus:text-destructive"
+                    >
+                      <Trash2 className="mr-2 h-3.5 w-3.5" />
+                      Supprimer l'opportunité
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </div>
           </div>
           <div className="mt-0.5 truncate text-sm font-semibold text-foreground">
             {opp.client ?? opp.nom}
