@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { History, FileText, ExternalLink } from "lucide-react";
+import { History, FileText, ExternalLink, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { PageHeader } from "@/components/PageHeader";
@@ -10,6 +11,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { DevisDeleteCascadeDialog } from "@/components/devis-import/DevisDeleteCascadeDialog";
 
 export const Route = createFileRoute("/_app/devis/historique")({
   head: () => ({ meta: [{ title: "Historique des imports devis — Setup Paris" }] }),
@@ -53,40 +55,42 @@ function DevisHistoriquePage() {
   const { isAdminOrChef } = useAuth();
   const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState<ImportRow[]>([]);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+
+  const fetchRows = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("devis_imports")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(200);
+    if (error || !data) {
+      setLoading(false);
+      return;
+    }
+    const userIds = Array.from(new Set(data.map((r) => r.user_id).filter(Boolean)));
+    const profilesMap = new Map<string, { full_name: string | null; email: string }>();
+    if (userIds.length > 0) {
+      const { data: profs } = await supabase
+        .from("profiles")
+        .select("id, full_name, email")
+        .in("id", userIds);
+      profs?.forEach((p) => profilesMap.set(p.id, { full_name: p.full_name, email: p.email }));
+    }
+    const enriched: ImportRow[] = data.map((r) => ({
+      ...(r as unknown as ImportRow),
+      profiles: profilesMap.get(r.user_id) ?? null,
+    }));
+    setRows(enriched);
+    setLoading(false);
+  };
 
   useEffect(() => {
     if (!isAdminOrChef) {
       setLoading(false);
       return;
     }
-    (async () => {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from("devis_imports")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(200);
-      if (error || !data) {
-        setLoading(false);
-        return;
-      }
-      // Fetch profiles separately (no FK declared between devis_imports.user_id and profiles)
-      const userIds = Array.from(new Set(data.map((r) => r.user_id).filter(Boolean)));
-      const profilesMap = new Map<string, { full_name: string | null; email: string }>();
-      if (userIds.length > 0) {
-        const { data: profs } = await supabase
-          .from("profiles")
-          .select("id, full_name, email")
-          .in("id", userIds);
-        profs?.forEach((p) => profilesMap.set(p.id, { full_name: p.full_name, email: p.email }));
-      }
-      const enriched: ImportRow[] = data.map((r) => ({
-        ...(r as unknown as ImportRow),
-        profiles: profilesMap.get(r.user_id) ?? null,
-      }));
-      setRows(enriched);
-      setLoading(false);
-    })();
+    fetchRows();
   }, [isAdminOrChef]);
 
   if (!isAdminOrChef) {
@@ -196,12 +200,33 @@ function DevisHistoriquePage() {
                       </Link>
                     </Button>
                   )}
+                  {row.devis_id && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="shrink-0 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                      onClick={() => setDeleteTarget(row.devis_id)}
+                      title="Supprimer ce devis (cascade)"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>
           ))}
         </div>
       )}
+
+      <DevisDeleteCascadeDialog
+        devisId={deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirmed={() => {
+          toast.success("Devis supprimé");
+          setDeleteTarget(null);
+          fetchRows();
+        }}
+      />
     </div>
   );
 }

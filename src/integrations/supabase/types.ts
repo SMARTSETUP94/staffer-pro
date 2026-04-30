@@ -440,6 +440,7 @@ export type Database = {
       devis: {
         Row: {
           affaire_id: string
+          archive: boolean
           created_at: string
           date_debut_phase: string | null
           date_fin_phase: string | null
@@ -456,6 +457,7 @@ export type Database = {
         }
         Insert: {
           affaire_id: string
+          archive?: boolean
           created_at?: string
           date_debut_phase?: string | null
           date_fin_phase?: string | null
@@ -472,6 +474,7 @@ export type Database = {
         }
         Update: {
           affaire_id?: string
+          archive?: boolean
           created_at?: string
           date_debut_phase?: string | null
           date_fin_phase?: string | null
@@ -509,6 +512,63 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      devis_deletion_log: {
+        Row: {
+          action: string
+          affaire_id: string | null
+          affaire_numero: string | null
+          created_at: string
+          deleted_by: string
+          deleted_by_email: string | null
+          devis_id: string
+          devis_numero: string | null
+          fichier_hash: string | null
+          fichier_nom: string | null
+          heures_preservees: number
+          heures_supprimees: number
+          id: string
+          objets_archives: number
+          objets_supprimes: number
+          postes_supprimes: number
+        }
+        Insert: {
+          action: string
+          affaire_id?: string | null
+          affaire_numero?: string | null
+          created_at?: string
+          deleted_by: string
+          deleted_by_email?: string | null
+          devis_id: string
+          devis_numero?: string | null
+          fichier_hash?: string | null
+          fichier_nom?: string | null
+          heures_preservees?: number
+          heures_supprimees?: number
+          id?: string
+          objets_archives?: number
+          objets_supprimes?: number
+          postes_supprimes?: number
+        }
+        Update: {
+          action?: string
+          affaire_id?: string | null
+          affaire_numero?: string | null
+          created_at?: string
+          deleted_by?: string
+          deleted_by_email?: string | null
+          devis_id?: string
+          devis_numero?: string | null
+          fichier_hash?: string | null
+          fichier_nom?: string | null
+          heures_preservees?: number
+          heures_supprimees?: number
+          id?: string
+          objets_archives?: number
+          objets_supprimes?: number
+          postes_supprimes?: number
+        }
+        Relationships: []
       }
       devis_imports: {
         Row: {
@@ -2278,6 +2338,7 @@ export type Database = {
         }
         Returns: string
       }
+      delete_devis_atomique: { Args: { p_devis_id: string }; Returns: Json }
       etape_for_metier: {
         Args: { metier: string }
         Returns: Database["public"]["Enums"]["fabrication_etape_type"]
@@ -2359,6 +2420,7 @@ export type Database = {
       is_devis_termine: { Args: { _devis_id: string }; Returns: boolean }
       is_profile_complete: { Args: { p_id: string }; Returns: boolean }
       next_affaire_numero: { Args: { _prefix: number }; Returns: string }
+      preflight_delete_devis: { Args: { p_devis_id: string }; Returns: Json }
       preflight_import_devis: {
         Args: { _affaire_id?: string; _fichier_hash: string }
         Returns: Json
