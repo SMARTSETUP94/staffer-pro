@@ -128,9 +128,9 @@ function OpportunitesImportPage() {
       });
       setRows(states);
     } catch (err) {
-      toast.error("Lecture impossible", {
-        description: err instanceof Error ? err.message : String(err),
-      });
+      const issue = exceptionToIssue(err, "Lecture du fichier opportunités");
+      setParseErrors((prev) => [...prev, issue.message]);
+      toast.error("Lecture impossible", { description: issue.message });
     } finally {
       setParsing(false);
     }
