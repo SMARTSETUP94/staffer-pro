@@ -461,8 +461,8 @@ export function PlanningParObjet({
                                 }}
                                 onClick={() => {
                                   if (isEmpty) return; // cellule vide → utiliser le bouton "+" (Popover)
-                                  // Cellule occupée : éditer la 1ère
-                                  openEditDialog(cellAssigns[0]);
+                                  // Cellule occupée : éditer toutes les affectations en bloc
+                                  openCellDialog(obj, af, d, cellAssigns);
                                 }}
                                 className={cn(
                                   "border-b border-l align-top transition-colors",
