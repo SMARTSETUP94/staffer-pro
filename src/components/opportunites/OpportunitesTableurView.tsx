@@ -10,7 +10,7 @@
  *   3. Code 5XXX éditable conditionnel quand statut="gagne" (admin OR CA propriétaire) :
  *      validation regex /^5\d{3}$/ + appel RPC sign_opportunite (unicité côté BDD).
  */
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import {
   Loader2,
@@ -869,26 +869,21 @@ export function OpportunitesTableurView({
  * Local state pour ne pas interférer avec l'overlay des autres champs.
  * Save sur Enter ou Blur si valide.
  */
-const Code5xxxCell = (() => {
-  const Inner = (
-    {
-      onSign,
-      onKeyDown,
-      disabled,
-    }: {
-      onSign: (code: string) => void;
-      onKeyDown: (e: React.KeyboardEvent) => void;
-      disabled?: boolean;
-    },
-    ref: React.Ref<HTMLInputElement>,
-  ) => {
+interface Code5xxxCellProps {
+  onSign: (code: string) => void;
+  onKeyDown: (e: React.KeyboardEvent) => void;
+  disabled?: boolean;
+}
+
+const Code5xxxCell = forwardRef<HTMLInputElement, Code5xxxCellProps>(
+  function Code5xxxCell({ onSign, onKeyDown, disabled }, ref) {
     const [val, setVal] = useState("");
     return (
       <Input
         ref={ref}
         value={val}
         onChange={(e) => setVal(e.target.value)}
-        onKeyDown={(e) => {
+        onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
           if (e.key === "Enter") {
             e.preventDefault();
             if (val.trim()) onSign(val);
@@ -905,18 +900,8 @@ const Code5xxxCell = (() => {
         className="h-7 w-20 font-mono text-xs"
       />
     );
-  };
-  return Object.assign(
-    // eslint-disable-next-line react/display-name
-    require("react").forwardRef(Inner) as React.ForwardRefExoticComponent<
-      {
-        onSign: (code: string) => void;
-        onKeyDown: (e: React.KeyboardEvent) => void;
-        disabled?: boolean;
-      } & React.RefAttributes<HTMLInputElement>
-    >,
-  );
-})();
+  },
+);
 
 // Re-export TableurRow + helpers utilisés ailleurs (route, tests)
 export { isDraftRowEmpty, TABLEUR_COLUMNS };

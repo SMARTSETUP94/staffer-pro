@@ -504,6 +504,8 @@ function OpportunitesPage() {
           filters={tableurFilters}
           canEdit={isAdminOrChef}
           isAdminOrChef={isAdminOrChef}
+          isAdmin={isAdmin}
+          currentUserId={user?.id ?? null}
           defaultChargeId={user?.id ?? null}
           onRowsMutated={() => setRefreshTick((t) => t + 1)}
         />
