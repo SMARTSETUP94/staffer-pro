@@ -460,12 +460,13 @@ export function validateObjetsHeuresConsistency<S, E>(
         deltas.push(`${m} ${sH.toFixed(1)}→${cH.toFixed(1)} (${sign}${(cH - sH).toFixed(1)})`);
       }
     }
-    if (deltas.length === 0) continue;
+    const isDeselectedWithHours = cur && !cur.selected && totalSrc > 0;
+    if (deltas.length === 0 && !isDeselectedWithHours) continue;
 
     let context = "";
     if (!src) context = " — objet absent du fichier (ajouté manuellement).";
     else if (!cur) context = " — objet retiré.";
-    else if (!cur.selected && totalSrc > 0) context = " — objet désélectionné mais contenait des heures.";
+    else if (!cur.selected && totalSrc > 0) context = " — objet désélectionné, ses heures ne seront pas importées.";
 
     issues.push(
       makeIssue({
