@@ -153,6 +153,16 @@ export function PlanningParObjet({
               nom: o.nom,
               ordre: o.ordre ?? 0,
               heures_prevues_total: totalUnit * qte,
+              raw: {
+                heures_prevues_be: o.heures_prevues_be,
+                heures_prevues_numerique: o.heures_prevues_numerique,
+                heures_prevues_bois: o.heures_prevues_bois,
+                heures_prevues_metal: o.heures_prevues_metal,
+                heures_prevues_peinture: o.heures_prevues_peinture,
+                heures_prevues_tapisserie: o.heures_prevues_tapisserie,
+                heures_prevues_manutention: o.heures_prevues_manutention,
+                quantite: o.quantite,
+              },
             };
           }),
         );
