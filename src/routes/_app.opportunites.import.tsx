@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useRef, useState } from "react";
-import { FileUp, Loader2, Upload, AlertCircle } from "lucide-react";
+import { FileUp, Loader2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
@@ -24,6 +24,14 @@ import {
   type ParsedOpportuniteRow,
 } from "@/lib/opportunites-import";
 import { STATUT_LABEL, TAILLE_LABEL } from "@/lib/opportunites";
+import { ImportErrorPanel } from "@/components/imports/ImportErrorPanel";
+import { ImportErrorBoundary } from "@/components/imports/ImportErrorBoundary";
+import {
+  exceptionToIssue,
+  legacyStringsToIssues,
+  makeIssue,
+  type ImportIssue,
+} from "@/lib/import-validation";
 
 export const Route = createFileRoute("/_app/opportunites/import")({
   head: () => ({ meta: [{ title: "Import opportunités — Setup Paris" }] }),
