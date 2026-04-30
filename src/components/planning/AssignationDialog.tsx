@@ -67,6 +67,10 @@ interface Props {
   }[];
   /** v0.15.1 — Tous les lots/devis chargés (pour sélecteur si ≥2 lots actifs sur l'affaire). */
   devisLots?: DevisLot[];
+  /** v0.26 — Pré-remplissage : affaire ciblée à l'ouverture (création). */
+  defaultAffaireId?: string;
+  /** v0.26 — Pré-remplissage : objet de fabrication coché à l'ouverture (création). */
+  defaultObjetId?: string;
   onSaved: () => void;
 }
 
