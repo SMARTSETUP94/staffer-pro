@@ -110,6 +110,10 @@ export function AssignationDialog({
   // v0.25 — Objets de fabrication rattachés à cette assignation
   const [objetsAffaire, setObjetsAffaire] = useState<{ id: string; reference: string; nom: string }[]>([]);
   const [selectedObjetIds, setSelectedObjetIds] = useState<string[]>([]);
+  // Détail conso par objet sélectionné : { id, ref, nom, prevues, planifiees }
+  const [objetsConso, setObjetsConso] = useState<
+    Record<string, { reference: string; nom: string; prevues: number; planifiees: number }>
+  >({});
 
   // Réinitialise à l'ouverture
   useEffect(() => {
@@ -173,6 +177,68 @@ export function AssignationDialog({
     };
   }, [editingId]);
 
+  // Charge le détail conso par objet sélectionné (heures prévues + heures déjà planifiées)
+  useEffect(() => {
+    if (selectedObjetIds.length === 0) {
+      setObjetsConso({});
+      return;
+    }
+    let cancelled = false;
+    const ids = selectedObjetIds;
+    (async () => {
+      // 1) heures prévues par objet (toutes colonnes × quantité)
+      const { data: objs } = await supabase
+        .from("fabrication_objets")
+        .select(
+          "id, reference, nom, quantite, heures_prevues_be, heures_prevues_numerique, heures_prevues_bois, heures_prevues_metal, heures_prevues_peinture, heures_prevues_tapisserie, heures_prevues_manutention",
+        )
+        .in("id", ids);
+      // 2) liens assignation_objets pour ces objets
+      const { data: links } = await supabase
+        .from("assignation_objets")
+        .select("assignation_id, objet_id")
+        .in("objet_id", ids);
+      const assignIds = Array.from(new Set((links ?? []).map((l) => l.assignation_id)));
+      // 3) heures de ces assignations
+      let assignsHeures = new Map<string, number>();
+      if (assignIds.length > 0) {
+        const { data: assigns } = await supabase
+          .from("assignations")
+          .select("id, heures")
+          .in("id", assignIds);
+        assignsHeures = new Map(
+          (assigns ?? []).map((a) => [a.id, Number(a.heures ?? 0)]),
+        );
+      }
+      if (cancelled) return;
+      const byObjet: Record<string, { reference: string; nom: string; prevues: number; planifiees: number }> = {};
+      for (const o of objs ?? []) {
+        const qte = Number(o.quantite ?? 1) || 1;
+        const totalUnit =
+          Number(o.heures_prevues_be ?? 0) +
+          Number(o.heures_prevues_numerique ?? 0) +
+          Number(o.heures_prevues_bois ?? 0) +
+          Number(o.heures_prevues_metal ?? 0) +
+          Number(o.heures_prevues_peinture ?? 0) +
+          Number(o.heures_prevues_tapisserie ?? 0) +
+          Number(o.heures_prevues_manutention ?? 0);
+        byObjet[o.id] = {
+          reference: o.reference,
+          nom: o.nom,
+          prevues: totalUnit * qte,
+          planifiees: 0,
+        };
+      }
+      for (const lk of links ?? []) {
+        const h = assignsHeures.get(lk.assignation_id) ?? 0;
+        if (byObjet[lk.objet_id]) byObjet[lk.objet_id].planifiees += h;
+      }
+      setObjetsConso(byObjet);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedObjetIds]);
 
   // Charge les compétences secondaires de l'employé
   useEffect(() => {
@@ -776,6 +842,67 @@ export function AssignationDialog({
                   </div>
                 </div>
               )}
+            </div>
+          )}
+
+          {selectedObjetIds.length > 0 && (
+            <div className="rounded-md border border-primary/20 bg-card p-2 text-[11px]">
+              <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                Détail par objet sélectionné ({selectedObjetIds.length})
+              </div>
+              <div className="space-y-1">
+                {selectedObjetIds.map((oid) => {
+                  const c = objetsConso[oid];
+                  if (!c) {
+                    return (
+                      <div key={oid} className="text-muted-foreground italic">
+                        Chargement…
+                      </div>
+                    );
+                  }
+                  const planifBase = editingId
+                    ? Math.max(0, c.planifiees - heuresEditees)
+                    : c.planifiees;
+                  const planifApres = planifBase + heures;
+                  const restant = c.prevues - planifApres;
+                  const noBudget = c.prevues === 0;
+                  const over = !noBudget && restant < 0;
+                  return (
+                    <div
+                      key={oid}
+                      className={cn(
+                        "flex flex-col gap-0.5 rounded border p-1.5",
+                        over && "border-destructive/50 bg-destructive/10",
+                        noBudget && "border-amber-500/50 bg-amber-50",
+                        !over && !noBudget && "border-muted-foreground/10",
+                      )}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="truncate font-mono text-[10px] font-bold">{c.reference}</span>
+                        <span className="truncate text-[10px] text-muted-foreground">{c.nom}</span>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 tabular-nums">
+                        <span>Devisé : <strong>{c.prevues}h</strong></span>
+                        <span>
+                          Planifié : <strong>{planifBase}h</strong>
+                          {heures > 0 && (
+                            <span className="text-muted-foreground"> → {planifApres}h après</span>
+                          )}
+                        </span>
+                        <span className={cn(over && "text-destructive font-semibold")}>
+                          Restant : <strong>{restant}h</strong>
+                          {over && <AlertTriangle className="ml-1 inline h-3 w-3" />}
+                        </span>
+                      </div>
+                      {noBudget && (
+                        <div className="text-[10px] text-amber-700">
+                          Aucune heure prévue au devis pour cet objet.
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
 
