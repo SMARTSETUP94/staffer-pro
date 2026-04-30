@@ -119,6 +119,10 @@ function DevisImportPage() {
   // Hash du fichier pour anti-doublon
   const [fichierHash, setFichierHash] = useState<string | null>(null);
 
+  // v0.30.6 — Modale de confirmation ré-import (garde-fous SOFT)
+  const [preflight, setPreflight] = useState<ReimportPreflight | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
   useEffect(() => {
     supabase
       .from("affaires")
