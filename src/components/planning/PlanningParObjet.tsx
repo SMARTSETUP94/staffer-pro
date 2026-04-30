@@ -32,6 +32,10 @@ import type {
   Metier,
 } from "@/hooks/use-planning-data";
 import { normalizeName } from "@/lib/string-normalize";
+import {
+  getHeuresPrevuesTotalForMetiers,
+  type ObjetHeuresPrevues,
+} from "@/lib/objet-heures-helpers";
 import { toast } from "sonner";
 
 interface FabObjet {
@@ -40,7 +44,10 @@ interface FabObjet {
   reference: string;
   nom: string;
   ordre: number;
+  /** Heures prévues TOTALES (somme tous métiers × quantité). */
   heures_prevues_total: number;
+  /** v0.27.7 — Détail des colonnes brutes pour permettre le filtrage par métier. */
+  raw: ObjetHeuresPrevues;
 }
 
 interface ObjetLink {
