@@ -275,6 +275,7 @@ function PlanningPage() {
       toast.error(`Échec export Excel : ${(e as Error).message}`);
     } finally {
       setExporting(false);
+    }
   }
 
   async function handleExportWeekXlsx() {
@@ -299,7 +300,6 @@ function PlanningPage() {
     } finally {
       setExporting(false);
     }
-  }
   }
 
   return (
