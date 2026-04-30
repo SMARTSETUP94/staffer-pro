@@ -21,6 +21,7 @@ import {
   makeIssue,
   validateDateRange,
   validateMetierTotalsConsistency,
+  validateObjetsHeuresConsistency,
   validateRowSumMatch,
   validateTotalsMatch,
   type ImportIssue,
