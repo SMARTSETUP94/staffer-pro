@@ -290,6 +290,118 @@ export function validateTotalsMatch(
   });
 }
 
+/**
+ * v0.32.1 — Vérifie qu'une ligne est cohérente : quantité × PU ≈ total.
+ * Génère un warning par ligne incohérente avec écart > tolerance €.
+ *
+ * Skipe les lignes incomplètes (qte/pu/total null) — c'est validateNumber qui
+ * doit signaler les champs manquants si critiques.
+ */
+export function validateRowSumMatch<T>(
+  rows: readonly T[],
+  pick: (row: T) => {
+    rowIndex: number;
+    quantite: number | null;
+    pu: number | null;
+    total: number | null;
+    label?: string;
+  },
+  opts: { tolerance?: number; field?: string } = {},
+): ImportIssue[] {
+  const tol = opts.tolerance ?? 0.01;
+  const field = opts.field ?? "Total ligne";
+  const issues: ImportIssue[] = [];
+  for (const row of rows) {
+    const { rowIndex, quantite, pu, total, label } = pick(row);
+    if (quantite == null || pu == null || total == null) continue;
+    if (quantite === 0 && total === 0) continue;
+    const expected = quantite * pu;
+    const delta = total - expected;
+    if (Math.abs(delta) <= tol) continue;
+    const where = label ? ` (« ${label.slice(0, 60)} »)` : "";
+    issues.push(
+      makeIssue({
+        code: "TOTAL_MISMATCH",
+        rowIndex,
+        column: field,
+        severity: "warning",
+        value: total,
+        message: `Ligne ${rowIndex}${where} : ${quantite} × ${pu} = ${expected.toFixed(2)} mais total lu = ${total.toFixed(2)} (écart ${delta.toFixed(2)} €).`,
+      }),
+    );
+  }
+  return issues;
+}
+
+/**
+ * v0.32.1 — Compare la somme des heures par métier issue des lignes brutes
+ * vs la somme par métier dans les postes consolidés (édition manuelle UI).
+ *
+ * Détecte :
+ *  - heures perdues lors de la consolidation (poste supprimé manuellement)
+ *  - heures ajoutées sans source (métier inventé en UI)
+ *  - heures réduites/augmentées (édition manuelle)
+ *
+ * Renvoie un warning par métier divergent avec les lignes sources concernées.
+ */
+export function validateMetierTotalsConsistency<L, P>(
+  parsedLines: readonly L[],
+  consolidatedPostes: readonly P[],
+  pickLine: (l: L) => { rowIndex: number; metier: string | null; heures: number; excluded: boolean },
+  pickPoste: (p: P) => { metier: string | null; heures: number },
+  opts: { tolerance?: number; field?: string } = {},
+): ImportIssue[] {
+  const tol = opts.tolerance ?? 0.1;
+  const field = opts.field ?? "Heures par métier";
+
+  // Agrège les heures sources par métier (clé "" pour sans-métier)
+  const sourceByMetier = new Map<string, { heures: number; rows: number[] }>();
+  for (const l of parsedLines) {
+    const { rowIndex, metier, heures, excluded } = pickLine(l);
+    if (excluded) continue;
+    const key = metier ?? "";
+    const cur = sourceByMetier.get(key) ?? { heures: 0, rows: [] };
+    cur.heures += heures;
+    if (heures > 0) cur.rows.push(rowIndex);
+    sourceByMetier.set(key, cur);
+  }
+
+  // Agrège les heures consolidées par métier
+  const consolidatedByMetier = new Map<string, number>();
+  for (const p of consolidatedPostes) {
+    const { metier, heures } = pickPoste(p);
+    const key = metier ?? "";
+    consolidatedByMetier.set(key, (consolidatedByMetier.get(key) ?? 0) + heures);
+  }
+
+  const issues: ImportIssue[] = [];
+  const allKeys = new Set([...sourceByMetier.keys(), ...consolidatedByMetier.keys()]);
+  for (const key of allKeys) {
+    const src = sourceByMetier.get(key);
+    const srcH = src?.heures ?? 0;
+    const cstH = consolidatedByMetier.get(key) ?? 0;
+    const delta = cstH - srcH;
+    if (Math.abs(delta) <= tol) continue;
+    const label = key === "" ? "(sans métier)" : key;
+    const rowsHint = src && src.rows.length > 0
+      ? ` Lignes source : ${src.rows.slice(0, 8).join(", ")}${src.rows.length > 8 ? `, +${src.rows.length - 8}` : ""}.`
+      : srcH === 0
+        ? " Aucune ligne source pour ce métier — heures ajoutées manuellement ?"
+        : "";
+    issues.push(
+      makeIssue({
+        code: "TOTAL_MISMATCH",
+        rowIndex: src?.rows[0] ?? null,
+        column: field,
+        severity: "warning",
+        value: cstH,
+        message: `Métier « ${label} » : lignes source = ${srcH.toFixed(1)} h, consolidé = ${cstH.toFixed(1)} h (écart ${delta > 0 ? "+" : ""}${delta.toFixed(1)} h).${rowsHint}`,
+      }),
+    );
+  }
+  return issues;
+}
+
 /** Détecte les doublons sur une clé (ex: référence d'objet). */
 export function findDuplicates<T>(
   rows: readonly T[],
