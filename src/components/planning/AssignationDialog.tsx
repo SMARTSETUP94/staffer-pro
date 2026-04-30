@@ -226,21 +226,35 @@ export function AssignationDialog({
         );
       }
       if (cancelled) return;
-      const byObjet: Record<string, { reference: string; nom: string; prevues: number; planifiees: number }> = {};
+      const byObjet: Record<
+        string,
+        {
+          reference: string;
+          nom: string;
+          prevues: number;
+          prevuesParMetier: Record<string, number>;
+          quantite: number;
+          planifiees: number;
+        }
+      > = {};
       for (const o of objs ?? []) {
         const qte = Number(o.quantite ?? 1) || 1;
-        const totalUnit =
-          Number(o.heures_prevues_be ?? 0) +
-          Number(o.heures_prevues_numerique ?? 0) +
-          Number(o.heures_prevues_bois ?? 0) +
-          Number(o.heures_prevues_metal ?? 0) +
-          Number(o.heures_prevues_peinture ?? 0) +
-          Number(o.heures_prevues_tapisserie ?? 0) +
-          Number(o.heures_prevues_manutention ?? 0);
+        const prevuesParMetier = {
+          be: Number(o.heures_prevues_be ?? 0),
+          numerique: Number(o.heures_prevues_numerique ?? 0),
+          bois: Number(o.heures_prevues_bois ?? 0),
+          metal: Number(o.heures_prevues_metal ?? 0),
+          peinture: Number(o.heures_prevues_peinture ?? 0),
+          tapisserie: Number(o.heures_prevues_tapisserie ?? 0),
+          manutention: Number(o.heures_prevues_manutention ?? 0),
+        };
+        const totalUnit = Object.values(prevuesParMetier).reduce((s, n) => s + n, 0);
         byObjet[o.id] = {
           reference: o.reference,
           nom: o.nom,
           prevues: totalUnit * qte,
+          prevuesParMetier,
+          quantite: qte,
           planifiees: 0,
         };
       }
