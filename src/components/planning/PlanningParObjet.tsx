@@ -642,6 +642,7 @@ export function PlanningParObjet({
           employes={employes}
           metiers={metiers}
           heuresObjetTotal={heuresAssigneesByObjet.get(cellDlg.objet.id) ?? 0}
+          allAssignations={assignations}
           onChanged={() => {
             setCellDlg(null);
             refreshLinks();

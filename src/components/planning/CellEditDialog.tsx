@@ -56,6 +56,8 @@ interface Props {
   metiers: Metier[];
   /** total heures déjà assignées sur cet objet (toutes dates) */
   heuresObjetTotal: number;
+  /** toutes les assignations connues (utilisé pour évaluer la dispo des employés ce jour) */
+  allAssignations?: Assignation[];
   onChanged: () => void;
 }
 
@@ -86,6 +88,7 @@ export function CellEditDialog({
   employes,
   metiers,
   heuresObjetTotal,
+  allAssignations,
   onChanged,
 }: Props) {
   const employesById = useMemo(
@@ -163,14 +166,43 @@ export function CellEditDialog({
     return s;
   }, [rows, newRows]);
 
+  // Heures déjà engagées ce jour pour chaque employé (autre que cette cellule)
+  const heuresJourByEmp = useMemo(() => {
+    const m = new Map<string, number>();
+    if (!allAssignations) return m;
+    const cellIds = new Set(cellAssigns.map((a) => a.id));
+    for (const a of allAssignations) {
+      if (a.date !== dateStr) continue;
+      if (cellIds.has(a.id)) continue; // exclut la cellule en cours d'édition
+      m.set(a.employe_id, (m.get(a.employe_id) ?? 0) + Number(a.heures || 0));
+    }
+    return m;
+  }, [allAssignations, dateStr, cellAssigns]);
+
   const employesDispo = useMemo(
     () =>
       employes
         .filter((e) => !usedEmpIds.has(e.id))
-        .sort((a, b) =>
-          `${a.prenom} ${a.nom}`.localeCompare(`${b.prenom} ${b.nom}`, "fr"),
-        ),
-    [employes, usedEmpIds],
+        .map((e) => {
+          const metier = metiersById.get(e.metier_principal_id);
+          const heuresJour = heuresJourByEmp.get(e.id) ?? 0;
+          // dispo : libre (0h), partiel (>0 et <7), complet (≥7)
+          const statut: "libre" | "partiel" | "complet" =
+            heuresJour <= 0 ? "libre" : heuresJour < 7 ? "partiel" : "complet";
+          return { emp: e, metier, heuresJour, statut };
+        })
+        .sort((a, b) => {
+          // libre d'abord, puis partiel, puis complet ; puis nom
+          const order = { libre: 0, partiel: 1, complet: 2 } as const;
+          if (order[a.statut] !== order[b.statut]) {
+            return order[a.statut] - order[b.statut];
+          }
+          return `${a.emp.prenom} ${a.emp.nom}`.localeCompare(
+            `${b.emp.prenom} ${b.emp.nom}`,
+            "fr",
+          );
+        }),
+    [employes, usedEmpIds, heuresJourByEmp, metiersById],
   );
 
   function updateRowHeures(id: string, h: number) {
@@ -455,22 +487,48 @@ export function CellEditDialog({
                 Ajouter un employé
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-[300px] p-0" align="start">
-              <Command>
-                <CommandInput placeholder="Rechercher un employé…" className="h-8 text-xs" />
+            <PopoverContent className="w-[340px] p-0" align="start">
+              <Command
+                filter={(value, search) => {
+                  // recherche fuzzy : nom + métier + statut
+                  const v = value.toLowerCase();
+                  const s = search.toLowerCase().trim();
+                  if (!s) return 1;
+                  return v.includes(s) ? 1 : 0;
+                }}
+              >
+                <CommandInput
+                  placeholder="Nom, métier, libre/partiel…"
+                  className="h-8 text-xs"
+                  autoFocus
+                />
                 <CommandList>
                   <CommandEmpty>
                     <div className="py-3 text-center text-xs text-muted-foreground">
                       Aucun employé disponible
                     </div>
                   </CommandEmpty>
-                  <CommandGroup>
-                    {employesDispo.map((emp) => {
-                      const metier = metiersById.get(emp.metier_principal_id);
+                  <CommandGroup heading={`${employesDispo.length} employé(s)`}>
+                    {employesDispo.map(({ emp, metier, heuresJour, statut }) => {
+                      const dotClass =
+                        statut === "libre"
+                          ? "bg-emerald-500"
+                          : statut === "partiel"
+                            ? "bg-amber-500"
+                            : "bg-destructive";
+                      const dispoLabel =
+                        statut === "libre"
+                          ? "libre"
+                          : statut === "complet"
+                            ? "complet"
+                            : "partiel";
+                      // value sert au filtre Command
+                      const searchValue =
+                        `${emp.prenom} ${emp.nom} ${metier?.libelle ?? ""} ${dispoLabel}`.toLowerCase();
                       return (
                         <CommandItem
                           key={emp.id}
-                          value={`${emp.prenom} ${emp.nom}`}
+                          value={searchValue}
                           onSelect={() => addNewRow(emp)}
                           className="text-xs"
                         >
@@ -478,14 +536,32 @@ export function CellEditDialog({
                             className="mr-1.5 h-1.5 w-1.5 shrink-0 rounded-full"
                             style={{ backgroundColor: metier?.couleur ?? "#94a3b8" }}
                           />
-                          <span className="truncate">
+                          <span className="truncate font-medium">
                             {emp.prenom} {emp.nom}
                           </span>
                           {metier && (
-                            <span className="ml-auto truncate text-[10px] text-muted-foreground">
-                              {metier.libelle}
+                            <span className="ml-1.5 truncate text-[10px] text-muted-foreground">
+                              · {metier.libelle}
                             </span>
                           )}
+                          <span className="ml-auto flex items-center gap-1">
+                            <span
+                              className={"h-1.5 w-1.5 shrink-0 rounded-full " + dotClass}
+                              title={`Déjà planifié ce jour : ${heuresJour}h`}
+                            />
+                            <span
+                              className={
+                                "font-mono text-[10px] " +
+                                (statut === "complet"
+                                  ? "text-destructive font-bold"
+                                  : statut === "partiel"
+                                    ? "text-amber-600 dark:text-amber-400"
+                                    : "text-muted-foreground")
+                              }
+                            >
+                              {heuresJour > 0 ? `${heuresJour}h` : "libre"}
+                            </span>
+                          </span>
                         </CommandItem>
                       );
                     })}
