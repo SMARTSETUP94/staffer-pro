@@ -84,6 +84,46 @@ export function validateCell(rows: ExistingRow[], newRows: NewRow[]): CellValida
   return { ok: errors.length === 0, errors };
 }
 
+/**
+ * Valide le budget objet : la somme projetée ne doit pas dépasser les heures devisées.
+ * Si `heuresPrevues <= 0`, aucun budget défini → pas d'erreur (avertissement géré côté UI).
+ * Renvoie un message détaillé en cas de dépassement.
+ */
+export interface BudgetValidation {
+  ok: boolean;
+  heuresApres: number;
+  heuresPrevues: number;
+  ecart: number; // > 0 ⇒ dépassement
+  message?: string;
+}
+
+export function validateBudgetObjet(params: {
+  heuresPrevues: number;
+  heuresObjetTotalAvant: number;
+  rows: ExistingRow[];
+  newRows: NewRow[];
+  objetLabel?: string;
+}): BudgetValidation {
+  const { heuresPrevues, heuresObjetTotalAvant, rows, newRows, objetLabel } = params;
+  const heuresApres = projectedObjetHeures(heuresObjetTotalAvant, rows, newRows);
+  const rawEcart = heuresPrevues > 0 ? heuresApres - heuresPrevues : 0;
+  const ecart = rawEcart > 0 ? rawEcart : 0;
+  if (heuresPrevues > 0 && ecart > 0) {
+    const label = objetLabel ? ` « ${objetLabel} »` : "";
+    return {
+      ok: false,
+      heuresApres,
+      heuresPrevues,
+      ecart,
+      message:
+        `Dépassement du budget de l'objet${label} : ` +
+        `${heuresApres}h projetées pour ${heuresPrevues}h devisées ` +
+        `(+${ecart}h au-delà du devis). Réduisez les heures ou supprimez des affectations.`,
+    };
+  }
+  return { ok: true, heuresApres, heuresPrevues, ecart };
+}
+
 /** Liste des employés disponibles à l'ajout (exclut ceux déjà présents et non supprimés). */
 export function employesDisponibles<T extends { id: string }>(
   employes: T[],

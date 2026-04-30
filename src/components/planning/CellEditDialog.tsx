@@ -34,6 +34,8 @@ import type {
   Employe,
   Metier,
 } from "@/hooks/use-planning-data";
+import { validateBudgetObjet } from "@/lib/cell-edit-helpers";
+import { AlertTriangle } from "lucide-react";
 
 interface FabObjetLite {
   id: string;
@@ -129,6 +131,30 @@ export function CellEditDialog({
   const heuresPrev = objet.heures_prevues_total;
   const ecart = heuresPrev > 0 ? heuresApres - heuresPrev : 0;
 
+  const budgetCheck = useMemo(
+    () =>
+      validateBudgetObjet({
+        heuresPrevues: heuresPrev,
+        heuresObjetTotalAvant: heuresObjetTotal,
+        rows: rows.map((r) => ({
+          assignation_id: r.assignation_id,
+          employe_id: r.employe_id,
+          metier_id: r.metier_id,
+          heures: r.heures,
+          initialHeures: r.initialHeures,
+          toDelete: r.toDelete,
+        })),
+        newRows: newRows.map((n) => ({
+          tempId: n.tempId,
+          employe_id: n.employe_id,
+          metier_id: n.metier_id,
+          heures: n.heures,
+        })),
+        objetLabel: `${objet.reference} — ${objet.nom}`,
+      }),
+    [heuresPrev, heuresObjetTotal, rows, newRows, objet.reference, objet.nom],
+  );
+
   // employés déjà présents dans la cellule (pour exclure du picker)
   const usedEmpIds = useMemo(() => {
     const s = new Set<string>();
@@ -192,6 +218,12 @@ export function CellEditDialog({
         toast.error("Heures invalides pour le nouvel employé (0 < h ≤ 12)");
         return;
       }
+    }
+
+    // Validation budget objet (bloquante)
+    if (!budgetCheck.ok && budgetCheck.message) {
+      toast.error(budgetCheck.message, { duration: 8000 });
+      return;
     }
 
     setSaving(true);
@@ -269,18 +301,40 @@ export function CellEditDialog({
         <div className="space-y-3">
           {/* Récap budget objet */}
           {heuresPrev > 0 && (
-            <div className="rounded-md border bg-muted/40 p-2 text-xs">
+            <div
+              className={
+                "rounded-md border p-2 text-xs " +
+                (budgetCheck.ok
+                  ? "bg-muted/40"
+                  : "border-destructive/60 bg-destructive/10")
+              }
+            >
               <div className="flex items-center justify-between">
-                <span>Budget objet :</span>
-                <span className="font-mono">
+                <span className="font-medium">Budget objet</span>
+                <span
+                  className={
+                    "font-mono " + (budgetCheck.ok ? "" : "text-destructive font-bold")
+                  }
+                >
                   {heuresApres}h / {heuresPrev}h
                 </span>
               </div>
-              {ecart > 0 && (
+              {!budgetCheck.ok && budgetCheck.message && (
+                <div className="mt-1 flex items-start gap-1.5 text-destructive">
+                  <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                  <span className="font-medium leading-tight">{budgetCheck.message}</span>
+                </div>
+              )}
+              {budgetCheck.ok && ecart > 0 && (
                 <div className="mt-0.5 text-destructive font-medium">
                   ⚠ Dépassement après modification : +{ecart}h
                 </div>
               )}
+            </div>
+          )}
+          {heuresPrev <= 0 && (
+            <div className="rounded-md border border-amber-500/40 bg-amber-500/10 p-2 text-xs text-amber-700 dark:text-amber-400">
+              Aucun budget devisé pour cet objet — la validation de dépassement est désactivée.
             </div>
           )}
 
@@ -446,7 +500,11 @@ export function CellEditDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
             Annuler
           </Button>
-          <Button onClick={handleSave} disabled={saving}>
+          <Button
+            onClick={handleSave}
+            disabled={saving || !budgetCheck.ok}
+            title={!budgetCheck.ok ? budgetCheck.message : undefined}
+          >
             {saving && <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />}
             Enregistrer
           </Button>
