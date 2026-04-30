@@ -370,15 +370,7 @@ export function PlanningParObjet({
                                   setDragEmp(null);
                                 }}
                                 onClick={() => {
-                                  if (isEmpty) {
-                                    // Clic vide : on demande quel employé via dialog en passant un placeholder
-                                    // → simplification : on ouvre dialog vide nécessite un employé.
-                                    // On informe l'utilisateur de drag, sinon on prend le premier employé filtré ?
-                                    toast.info(
-                                      "Glisse un employé depuis le panneau ou clique sur un employé existant pour éditer.",
-                                    );
-                                    return;
-                                  }
+                                  if (isEmpty) return; // cellule vide → utiliser le bouton "+" (Popover)
                                   // Cellule occupée : éditer la 1ère
                                   openEditDialog(cellAssigns[0]);
                                 }}
@@ -439,9 +431,12 @@ export function PlanningParObjet({
                                     );
                                   })}
                                   {isEmpty && !isLocked && (
-                                    <span className="text-[10px] text-muted-foreground/40 self-center mx-auto">
-                                      {dragEmp ? "Déposer ici" : "+"}
-                                    </span>
+                                    <EmptyCellPicker
+                                      employes={employes}
+                                      metiersById={metiersById}
+                                      hint={dragEmp ? "Déposer ici" : undefined}
+                                      onPick={(emp) => openCreateDialog(emp, af, obj, d)}
+                                    />
                                   )}
                                 </div>
                               </td>
