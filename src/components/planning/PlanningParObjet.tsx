@@ -489,7 +489,7 @@ export function PlanningParObjet({
                                             type="button"
                                             onClick={(e) => {
                                               e.stopPropagation();
-                                              openEditDialog(arr[0]);
+                                              openCellDialog(obj, af, d, cellAssigns);
                                             }}
                                             className="inline-flex items-center gap-1 rounded-full border bg-card px-1.5 py-0.5 text-[10px] font-medium shadow-sm hover:bg-muted"
                                           >
