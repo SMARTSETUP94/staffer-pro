@@ -101,18 +101,25 @@ export function AffaireCombobox({
       </PopoverTrigger>
       <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
         {showOpportuniteToggle && (
-          <div className="flex items-center justify-between gap-2 border-b border-border bg-muted/30 px-3 py-2">
-            <Label
-              htmlFor="aff-include-opps"
-              className="text-[11px] font-medium text-muted-foreground cursor-pointer"
-            >
-              Inclure opportunités (staffing proto)
-            </Label>
-            <Switch
-              id="aff-include-opps"
-              checked={includeOpps}
-              onCheckedChange={setIncludeOpps}
-            />
+          <div className="space-y-1.5 border-b border-border bg-muted/30 px-3 py-2">
+            <div className="flex items-center justify-between gap-2">
+              <Label htmlFor="aff-include-opps" className="text-[11px] font-medium text-muted-foreground cursor-pointer">
+                Inclure opportunités (staffing proto)
+              </Label>
+              <Switch id="aff-include-opps" checked={includeOpps} onCheckedChange={setIncludeOpps} />
+            </div>
+            <div className="flex items-center justify-between gap-2">
+              <Label htmlFor="aff-include-nonop" className="text-[11px] font-medium text-muted-foreground cursor-pointer">
+                Inclure chantiers non opérationnels (1XXX/3XXX)
+              </Label>
+              <Switch id="aff-include-nonop" checked={includeNonOp} onCheckedChange={setIncludeNonOp} />
+            </div>
+            <div className="flex items-center justify-between gap-2">
+              <Label htmlFor="aff-include-stockage" className="text-[11px] font-medium text-muted-foreground cursor-pointer">
+                Inclure stockage (2XXXX)
+              </Label>
+              <Switch id="aff-include-stockage" checked={includeStockage} onCheckedChange={setIncludeStockage} />
+            </div>
           </div>
         )}
         <Command
