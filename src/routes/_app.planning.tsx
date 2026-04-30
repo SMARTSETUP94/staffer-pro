@@ -28,6 +28,11 @@ import { ExportTrajetsSoustraitanceDialog } from "@/components/flotte/ExportTraj
 import { useVehicules, type Trajet } from "@/hooks/use-vehicules";
 import { useTrajetsWeek } from "@/hooks/use-trajets";
 import { exportPlanningToPDF } from "@/lib/planning-export";
+import {
+  exportPlanningParObjetToXlsx,
+  buildPlanningObjetXlsxFilename,
+} from "@/lib/planning-objet-xlsx-export";
+import { downloadBlob } from "@/lib/trajets-soustraitance-export";
 import type { TrajetSuggestion } from "@/lib/trajets-suggestions";
 import { TypologieMultiFilter } from "@/components/typologie/TypologieMultiFilter";
 import { normalizeName } from "@/lib/string-normalize";
@@ -252,6 +257,28 @@ function PlanningPage() {
     }
   }
 
+  async function handleExportObjetXlsx() {
+    setExporting(true);
+    try {
+      const blob = await exportPlanningParObjetToXlsx({
+        weekStart,
+        showWeekend,
+        affaires,
+        employes,
+        assignations,
+        filterAffaireIds: filterAffaireStr,
+        filterMetierIds: filterMetierNum,
+      });
+      downloadBlob(blob, buildPlanningObjetXlsxFilename(weekStart));
+      toast.success("Export Excel généré");
+    } catch (e) {
+      console.error(e);
+      toast.error(`Échec export Excel : ${(e as Error).message}`);
+    } finally {
+      setExporting(false);
+    }
+  }
+
   return (
     <div className="flex h-full">
       <div className="flex-1 overflow-y-auto p-3 sm:p-6">
@@ -287,6 +314,24 @@ function PlanningPage() {
               <span className="hidden sm:inline">Exporter PDF</span>
               <span className="sm:hidden">PDF</span>
             </Button>
+            {tab === "parobjet" && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleExportObjetXlsx}
+                disabled={exporting || loading}
+                className="h-8 px-2.5 sm:h-9 sm:px-3"
+                title="Export Excel matriciel objets × jours"
+              >
+                {exporting ? (
+                  <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <FileDown className="mr-1.5 h-3.5 w-3.5" />
+                )}
+                <span className="hidden sm:inline">Export Excel objets</span>
+                <span className="sm:hidden">Excel</span>
+              </Button>
+            )}
           </div>
         </div>
 
