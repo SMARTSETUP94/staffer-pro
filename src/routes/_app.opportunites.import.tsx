@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useRef, useState } from "react";
-import { FileUp, Loader2, Upload, AlertCircle } from "lucide-react";
+import { FileUp, Loader2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
@@ -24,10 +24,22 @@ import {
   type ParsedOpportuniteRow,
 } from "@/lib/opportunites-import";
 import { STATUT_LABEL, TAILLE_LABEL } from "@/lib/opportunites";
+import { ImportErrorPanel } from "@/components/imports/ImportErrorPanel";
+import { ImportErrorBoundary } from "@/components/imports/ImportErrorBoundary";
+import {
+  exceptionToIssue,
+  legacyStringsToIssues,
+  makeIssue,
+  type ImportIssue,
+} from "@/lib/import-validation";
 
 export const Route = createFileRoute("/_app/opportunites/import")({
   head: () => ({ meta: [{ title: "Import opportunités — Setup Paris" }] }),
-  component: OpportunitesImportPage,
+  component: () => (
+    <ImportErrorBoundary label="Import opportunités">
+      <OpportunitesImportPage />
+    </ImportErrorBoundary>
+  ),
 });
 
 interface RowState extends ParsedOpportuniteRow {
@@ -116,9 +128,9 @@ function OpportunitesImportPage() {
       });
       setRows(states);
     } catch (err) {
-      toast.error("Lecture impossible", {
-        description: err instanceof Error ? err.message : String(err),
-      });
+      const issue = exceptionToIssue(err, "Lecture du fichier opportunités");
+      setParseErrors((prev) => [...prev, issue.message]);
+      toast.error("Lecture impossible", { description: issue.message });
     } finally {
       setParsing(false);
     }
@@ -142,6 +154,36 @@ function OpportunitesImportPage() {
     });
     return { nouveaux, majs, erreurs, total: rows.length };
   }, [rows]);
+
+  // v0.32.0 — Issues globales (parse) + issues par ligne (cellule).
+  const importIssues = useMemo<ImportIssue[]>(() => {
+    const arr: ImportIssue[] = legacyStringsToIssues(parseErrors, { severity: "warning" });
+    rows.forEach((r) => {
+      r.errors.forEach((msg) =>
+        arr.push(
+          makeIssue({
+            code: "REQUIRED_FIELD_MISSING",
+            severity: "error",
+            rowIndex: r.rowIndex,
+            column: null,
+            message: `Ligne ${r.rowIndex} · ${msg}`,
+          }),
+        ),
+      );
+      r.warnings.forEach((msg) =>
+        arr.push(
+          makeIssue({
+            code: "INVALID_TEXT",
+            severity: "warning",
+            rowIndex: r.rowIndex,
+            column: null,
+            message: `Ligne ${r.rowIndex} · ${msg}`,
+          }),
+        ),
+      );
+    });
+    return arr;
+  }, [parseErrors, rows]);
 
   async function commit() {
     setCommitting(true);
@@ -290,20 +332,19 @@ function OpportunitesImportPage() {
         />
       </div>
 
-      {parseErrors.length > 0 && (
-        <Card className="border-destructive/40 bg-destructive/5">
-          <CardContent className="space-y-1 p-4">
-            <p className="flex items-center gap-2 text-sm font-semibold text-destructive">
-              <AlertCircle className="h-4 w-4" /> Avertissements de parsing
-            </p>
-            <ul className="text-xs text-destructive/80">
-              {parseErrors.map((e, i) => (
-                <li key={i}>• {e}</li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
-      )}
+      <ImportErrorPanel
+        issues={importIssues}
+        filename={filename}
+        onReset={
+          rows.length > 0 || parseErrors.length > 0
+            ? () => {
+                setRows([]);
+                setFilename(null);
+                setParseErrors([]);
+              }
+            : undefined
+        }
+      />
 
       {rows.length > 0 && (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
