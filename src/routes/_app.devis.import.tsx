@@ -599,20 +599,11 @@ function DevisImportPage() {
           />
         )}
 
-        {parseErrors.length > 0 && (
-          <Card className="border-destructive/40 bg-destructive/5">
-            <CardContent className="space-y-1 p-4">
-              <p className="flex items-center gap-2 text-sm font-semibold text-destructive">
-                <AlertCircle className="h-4 w-4" /> Avertissements de parsing
-              </p>
-              {parseErrors.map((e, i) => (
-                <div key={i} className="text-xs text-destructive/80">
-                  • {e}
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        )}
+        <ImportErrorPanel
+          issues={parseIssues}
+          filename={filename}
+          onReset={hasParsed ? reset : undefined}
+        />
 
         {hasParsed && (
           <>
