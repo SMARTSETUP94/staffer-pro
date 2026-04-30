@@ -177,7 +177,12 @@ export function DevisImportSection1Affaire({
                 className="h-10 rounded-xl"
               />
             ) : (
-              <Input value={effectiveClient || "—"} readOnly className="h-10 rounded-xl bg-muted/40" />
+              <Input
+                value={effectiveClient}
+                onChange={(e) => setNewAffaireClient(e.target.value)}
+                placeholder="Client (modifiable)"
+                className="h-10 rounded-xl"
+              />
             )}
           </div>
           <div className="space-y-1.5">
@@ -190,7 +195,12 @@ export function DevisImportSection1Affaire({
                 className="h-10 rounded-xl"
               />
             ) : (
-              <Input value={effectiveLieu || "—"} readOnly className="h-10 rounded-xl bg-muted/40" />
+              <Input
+                value={effectiveLieu}
+                onChange={(e) => setNewAffaireLieu(e.target.value)}
+                placeholder="Lieu du chantier (modifiable)"
+                className="h-10 rounded-xl"
+              />
             )}
           </div>
 
