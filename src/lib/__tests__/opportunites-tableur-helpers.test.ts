@@ -1,11 +1,16 @@
 /**
- * v0.28.0 — Tests Vitest pour la vue Tableur opportunités.
- * Couvre : validation code 9XXX, navigation Tab/Enter, fuzzy search,
- * filtres composés, presets dates, détection brouillon vide.
+ * v0.28.0 / v0.29.1 — Tests Vitest pour la vue Tableur opportunités.
+ * Couvre : validation code 9XXX/5XXX, navigation Tab/Enter, fuzzy search,
+ * filtres composés, presets dates, détection brouillon vide, overlay optimistic UI,
+ * conditions d'édition Code 5XXX.
  */
 import { describe, it, expect } from "vitest";
 import {
+  canEditCode5XXX,
+  cleanOverlay,
+  isValidCode5XXX,
   isValidCode9XXX,
+  mergeRowOverlay,
   nextCell,
   fuzzySearchRow,
   applyTableurFilters,
@@ -228,8 +233,8 @@ describe("STATUT_ROW_BG — coloration par statut", () => {
   });
 });
 
-describe("TABLEUR_COLUMNS — ordre déterministe", () => {
-  it("contient les 10 colonnes éditables dans l'ordre", () => {
+describe("TABLEUR_COLUMNS — ordre déterministe (v0.29.1: PAT retiré)", () => {
+  it("contient les 10 colonnes éditables dans l'ordre, sans date_pat", () => {
     expect(TABLEUR_COLUMNS).toEqual([
       "code",
       "client",
@@ -237,10 +242,150 @@ describe("TABLEUR_COLUMNS — ordre déterministe", () => {
       "date_opportunite",
       "taille",
       "statut",
-      "date_pat",
+      "code_5xxx",
       "date_montage",
       "date_demontage",
       "commentaires",
     ]);
+  });
+  it("ne contient plus date_pat", () => {
+    expect(TABLEUR_COLUMNS).not.toContain("date_pat");
+  });
+  it("inclut code_5xxx (éditable conditionnel)", () => {
+    expect(TABLEUR_COLUMNS).toContain("code_5xxx");
+  });
+});
+
+// ============================================================================
+// v0.29.1 — Hotfix : validation Code 5XXX + overlay optimistic UI
+// ============================================================================
+
+describe("isValidCode5XXX — validation regex /^5\\d{3}$/", () => {
+  it("accepte les codes 5XXX valides", () => {
+    expect(isValidCode5XXX("5000")).toBe(true);
+    expect(isValidCode5XXX("5001")).toBe(true);
+    expect(isValidCode5XXX("5999")).toBe(true);
+  });
+  it("trim les espaces", () => {
+    expect(isValidCode5XXX(" 5123 ")).toBe(true);
+  });
+  it("rejette les codes hors format", () => {
+    expect(isValidCode5XXX("4000")).toBe(false); // pas de 4XXX
+    expect(isValidCode5XXX("9001")).toBe(false); // 9XXX = opportunité, pas signée
+    expect(isValidCode5XXX("50000")).toBe(false); // trop long
+    expect(isValidCode5XXX("500")).toBe(false); // trop court
+    expect(isValidCode5XXX("abcd")).toBe(false);
+    expect(isValidCode5XXX("")).toBe(false);
+    expect(isValidCode5XXX("50A1")).toBe(false);
+  });
+});
+
+describe("canEditCode5XXX — règle d'édition conditionnelle", () => {
+  it("autorise admin + statut gagne + non signée", () => {
+    expect(
+      canEditCode5XXX({
+        statut: "gagne",
+        isAdmin: true,
+        isOwner: false,
+        alreadySigned: false,
+      }),
+    ).toBe(true);
+  });
+  it("autorise CA propriétaire + statut gagne + non signée", () => {
+    expect(
+      canEditCode5XXX({
+        statut: "gagne",
+        isAdmin: false,
+        isOwner: true,
+        alreadySigned: false,
+      }),
+    ).toBe(true);
+  });
+  it("refuse CA non propriétaire (même si gagne)", () => {
+    expect(
+      canEditCode5XXX({
+        statut: "gagne",
+        isAdmin: false,
+        isOwner: false,
+        alreadySigned: false,
+      }),
+    ).toBe(false);
+  });
+  it("refuse si statut != gagne (a_faire/envoye/perdu/termine)", () => {
+    for (const statut of ["a_faire", "envoye", "perdu", "termine"] as const) {
+      expect(
+        canEditCode5XXX({
+          statut,
+          isAdmin: true,
+          isOwner: true,
+          alreadySigned: false,
+        }),
+      ).toBe(false);
+    }
+  });
+  it("refuse si déjà signée (évite double signature)", () => {
+    expect(
+      canEditCode5XXX({
+        statut: "gagne",
+        isAdmin: true,
+        isOwner: true,
+        alreadySigned: true,
+      }),
+    ).toBe(false);
+  });
+  it("refuse si statut null", () => {
+    expect(
+      canEditCode5XXX({
+        statut: null,
+        isAdmin: true,
+        isOwner: true,
+        alreadySigned: false,
+      }),
+    ).toBe(false);
+  });
+});
+
+describe("mergeRowOverlay — optimistic UI (anti perte de focus)", () => {
+  it("retourne la ligne serveur si pas d'overlay", () => {
+    const server = makeRow();
+    expect(mergeRowOverlay(server, undefined)).toBe(server);
+  });
+  it("retourne la ligne serveur si overlay vide", () => {
+    const server = makeRow();
+    const result = mergeRowOverlay(server, {});
+    expect(result).toBe(server); // référence inchangée → pas de re-render
+  });
+  it("applique l'overlay champ par champ", () => {
+    const server = makeRow({ client: "Mercedes", taille: "petit" });
+    const merged = mergeRowOverlay(server, { client: "Audi" });
+    expect(merged.client).toBe("Audi");
+    expect(merged.taille).toBe("petit"); // inchangé
+  });
+  it("l'overlay l'emporte sur le serveur (clé existante)", () => {
+    const server = makeRow({ statut_opportunite: "a_faire" });
+    const merged = mergeRowOverlay(server, { statut_opportunite: "gagne" });
+    expect(merged.statut_opportunite).toBe("gagne");
+  });
+  it("supporte les valeurs null dans l'overlay", () => {
+    const server = makeRow({ taille: "petit" });
+    const merged = mergeRowOverlay(server, { taille: null });
+    expect(merged.taille).toBeNull();
+  });
+});
+
+describe("cleanOverlay — purge des clés synchronisées", () => {
+  it("retourne undefined si toutes les clés sont synchronisées", () => {
+    const server = makeRow({ client: "Mercedes" });
+    const overlay = { client: "Mercedes" };
+    expect(cleanOverlay(overlay, server)).toBeUndefined();
+  });
+  it("garde les clés divergentes", () => {
+    const server = makeRow({ client: "Mercedes", taille: "petit" });
+    const overlay = { client: "Audi", taille: "petit" };
+    const cleaned = cleanOverlay(overlay, server);
+    expect(cleaned).toEqual({ client: "Audi" });
+  });
+  it("retourne undefined pour overlay vide", () => {
+    expect(cleanOverlay({}, makeRow())).toBeUndefined();
   });
 });
