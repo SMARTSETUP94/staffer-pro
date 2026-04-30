@@ -140,7 +140,6 @@ function buildSections(role: EffRole, validationCount: number): NavSection[] {
         { title: "Rattachement devis", url: "/devis/rattachement-historique", icon: ClipboardList, show: () => true },
         { title: "Audit heures", url: "/audit-heures", icon: ClipboardCheck, show: () => true },
         { title: "Audit Auth", url: "/audit-auth", icon: ClipboardCheck, show: () => true },
-        { title: "Incident Auth", url: "/incident-auth", icon: ShieldAlert, show: () => true },
         { title: "Signalements", url: "/admin/feedback", icon: MessageCircle, show: () => true },
         { title: "Roadmap", url: "/roadmap", icon: Map, show: () => true },
       ],
