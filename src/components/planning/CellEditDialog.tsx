@@ -56,6 +56,8 @@ interface Props {
   metiers: Metier[];
   /** total heures déjà assignées sur cet objet (toutes dates) */
   heuresObjetTotal: number;
+  /** toutes les assignations connues (utilisé pour évaluer la dispo des employés ce jour) */
+  allAssignations?: Assignation[];
   onChanged: () => void;
 }
 
