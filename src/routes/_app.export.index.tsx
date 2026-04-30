@@ -245,6 +245,23 @@ function ExportPage() {
             </div>
           </div>
 
+          <div className="space-y-2">
+            <Label className="block text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Filtrer par typologie de chantier
+            </Label>
+            <TypologieMultiFilter
+              value={typoFilter}
+              onChange={setTypoFilter}
+              counts={typoCounts}
+            />
+            {typoFilter.length > 0 && (
+              <p className="text-xs text-muted-foreground">
+                {affairesFiltrees.length} affaire{affairesFiltrees.length > 1 ? "s" : ""} retenue
+                {affairesFiltrees.length > 1 ? "s" : ""} sur {data.affaires.length}.
+              </p>
+            )}
+          </div>
+
           {tooMany && (
             <div className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
               <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
