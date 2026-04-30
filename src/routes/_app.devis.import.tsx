@@ -673,19 +673,11 @@ function DevisImportPage() {
               heuresDemontage={importDemontage ? demontageH : 0}
             />
 
-            {errors.length > 0 && (
-              <Card className="border-destructive/40 bg-destructive/5">
-                <CardContent className="space-y-1 p-4">
-                  <p className="flex items-center gap-2 text-sm font-semibold text-destructive">
-                    <AlertCircle className="h-4 w-4" /> Corrections requises avant validation
-                  </p>
-                  {errors.map((e, i) => (
-                    <div key={i} className="text-xs text-destructive/80">
-                      • {e}
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
+            {validationIssues.length > 0 && (
+              <ImportErrorPanel
+                issues={validationIssues}
+                filename={filename}
+              />
             )}
 
             <DevisImportFooter
