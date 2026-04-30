@@ -44,6 +44,41 @@ interface RoadmapPlanned {
 const RELEASES: RoadmapRelease[] = [
   {
     date: "2026-04-30",
+    version: "v0.30.0",
+    title: "🛡️ Sprint dette J1 — Audit RLS + UNIQUE imports + sync mémoire",
+    entries: [
+      {
+        type: "refactor",
+        area: "Sécurité",
+        title: "SEC-H1 — Audit complet 7 helpers RLS SECURITY DEFINER",
+        description:
+          "Snapshot privilèges authenticated/anon vérifié sur is_admin, is_chef_or_admin, has_role, user_has_affaire_access, is_devis_termine, can_saisie_on_affaire, user_is_mentioned_on_affaire. ✅ Aucune régression depuis v0.27.3. Mémoire enrichie avec query d'audit reproductible.",
+      },
+      {
+        type: "refactor",
+        area: "Sécurité",
+        title: "SEC-H1 — Catégorisation des 48 SECURITY DEFINER non-RLS",
+        description:
+          "Triggers internes (notify_*, guard_*, log_*, set_*) → REVOKE EXECUTE possible. RPCs client (admin_get_*, sign_opportunite, get_last_used_codes, etc.) → DOIT garder EXECUTE. Documenté dans mem://constraints/security-definer-non-rls.",
+      },
+      {
+        type: "improvement",
+        area: "Données",
+        title: "DATA-M1 — UNIQUE INDEX devis_imports.fichier_hash confirmé",
+        description:
+          "Index devis_imports_hash_unique déjà en place (anti-doublon idempotent). Décision : opportunites_imports reste non-UNIQUE pour permettre re-import après nettoyage métier.",
+      },
+      {
+        type: "improvement",
+        area: "Documentation",
+        title: "DOC-H1 — Sync .lovable/memory/index.md avec mem:// (12 mémoires)",
+        description:
+          "Le fichier physique était bloqué à v0.18.1 (4 entrées). Resynchronisé avec les 12+ mémoires actuelles. Procédure de sync documentée pour éviter la dérive future.",
+      },
+    ],
+  },
+  {
+    date: "2026-04-30",
     version: "v0.29.3",
     title: "🧹 Fusion Audit + Incident Auth + Export Excel Planning multi-onglets",
     entries: [
