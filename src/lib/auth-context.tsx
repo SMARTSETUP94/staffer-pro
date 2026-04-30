@@ -1,6 +1,7 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { shouldIgnoreTokenRefreshForSameUser } from "@/lib/auth-redirect-helpers";
 
 export type AppRole = "admin" | "chef_chantier" | "employe";
 
@@ -105,9 +106,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // ignore (SSR / private mode)
         }
       }
-      setSession(newSession);
-      setUser(newSession?.user ?? null);
       const newUserId = newSession?.user?.id ?? null;
+      if (!shouldIgnoreTokenRefreshForSameUser({ event, newUserId, lastUserId })) {
+        setSession(newSession);
+        setUser(newSession?.user ?? null);
+      }
       if (newUserId) {
         // FIX v0.27.7 — ANTI-RÉGRESSION popups fermées au changement d'onglet :
         // Supabase émet TOKEN_REFRESHED / USER_UPDATED quand l'onglet redevient
@@ -207,16 +210,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isChef = roles.includes("chef_chantier");
   const isAdminOrChef = isAdmin || isChef;
   const isInviteStatus = roleRows.some((r) => r.status === "invite");
+  const value = useMemo<AuthContextValue>(() => ({
+    user, session, roles, loading, rolesLoaded,
+    isAdmin, isChef, isAdminOrChef,
+    passwordSetDone, passwordSetAt, isInviteStatus, profileCompleted,
+    signIn, signInWithMagicLink, signUp, signOut, refreshRoles,
+  }), [
+    user, session, roles, loading, rolesLoaded,
+    isAdmin, isChef, isAdminOrChef,
+    passwordSetDone, passwordSetAt, isInviteStatus, profileCompleted,
+  ]);
 
   return (
-    <AuthContext.Provider
-      value={{
-        user, session, roles, loading, rolesLoaded,
-        isAdmin, isChef, isAdminOrChef,
-        passwordSetDone, passwordSetAt, isInviteStatus, profileCompleted,
-        signIn, signInWithMagicLink, signUp, signOut, refreshRoles,
-      }}
-    >
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
