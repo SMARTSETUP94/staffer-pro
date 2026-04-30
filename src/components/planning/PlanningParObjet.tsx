@@ -364,7 +364,14 @@ export function PlanningParObjet({
                       </tr>
                       {objs.map((obj) => {
                         const heuresAssign = heuresAssigneesByObjet.get(obj.id) ?? 0;
-                        const heuresPrev = obj.heures_prevues_total;
+                        // v0.27.7 — Si filtre métier actif, on n'affiche que la
+                        // somme des heures_prevues_X correspondant aux métiers
+                        // cochés. Sans filtre = somme totale (comportement v0.26).
+                        const heuresPrev = getHeuresPrevuesTotalForMetiers(
+                          obj.raw,
+                          filterMetierIds ?? null,
+                          metiers,
+                        );
                         const depassement = heuresAssign - heuresPrev;
                         const isOver = heuresPrev > 0 && depassement > 0;
                         const noBudget = heuresPrev === 0 && heuresAssign > 0;
