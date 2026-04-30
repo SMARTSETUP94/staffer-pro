@@ -44,6 +44,34 @@ interface RoadmapPlanned {
 const RELEASES: RoadmapRelease[] = [
   {
     date: "2026-04-30",
+    version: "v0.30.2",
+    title: "🚨 Hotfix onboarding — boucle infinie invités",
+    entries: [
+      {
+        type: "fix",
+        area: "Auth",
+        title: "AppGuard idempotent sur /onboarding",
+        description:
+          "Le guard ne renvoie plus vers /onboarding quand l'utilisateur est déjà sur cette route. Cela évite la boucle profile_completed_at NULL → /onboarding → re-check → /onboarding pour les invités fraîchement créés.",
+      },
+      {
+        type: "fix",
+        area: "Auth",
+        title: "TOKEN_REFRESHED même utilisateur ignoré côté state auth",
+        description:
+          "Les refreshs de session sans changement d'utilisateur ne remplacent plus user/session dans le contexte, ce qui évite de relancer inutilement les effets dépendants de user sur le wizard.",
+      },
+      {
+        type: "improvement",
+        area: "Tests",
+        title: "+7 tests anti-régression onboarding/auth",
+        description:
+          "Couvre l'idempotence AppGuard sur /onboarding, la détection stricte des chemins onboarding et l'ignorance des TOKEN_REFRESHED sans changement d'utilisateur.",
+      },
+    ],
+  },
+  {
+    date: "2026-04-30",
     version: "v0.30.1",
     title: "⚡ Sprint dette J2 — Dedup xlsx + lazy-load Planning Excel",
     entries: [
