@@ -44,6 +44,34 @@ interface RoadmapPlanned {
 const RELEASES: RoadmapRelease[] = [
   {
     date: "2026-04-30",
+    version: "v0.30.1",
+    title: "⚡ Sprint dette J2 — Dedup xlsx + lazy-load Planning Excel",
+    entries: [
+      {
+        type: "improvement",
+        area: "Performance",
+        title: "PERF-H1 — Suppression du package xlsx (dedup avec xlsx-js-style)",
+        description:
+          "Le projet embarquait à la fois 'xlsx' (0.18.5) et 'xlsx-js-style' (1.2.0) — superset 100% compatible API. Migration de 8 modules (devis-import, devis-parser, opportunites-import, planning-objet-xlsx-export, heures-export, trajets-soustraitance-export, et 2 tests) vers xlsx-js-style. Gain bundle ~600 KB sur le chunk où xlsx était dupliqué.",
+      },
+      {
+        type: "improvement",
+        area: "Performance",
+        title: "PERF-M1 — Lazy-load des exports Excel sur /planning",
+        description:
+          "exportPlanningExcel et exportPlanningParObjetToXlsx sont désormais chargés dynamiquement au clic du bouton Export (pattern déjà utilisé sur /export depuis v0.24.1). xlsx-js-style sort du chunk initial du Planning.",
+      },
+      {
+        type: "improvement",
+        area: "Tests",
+        title: "+6 tests sentinels PERF (998 verts depuis 992)",
+        description:
+          "Couvre la non-régression : pas de re-import de 'xlsx' plain, pas d'import statique des modules d'export Excel sur Planning, pattern lazy préservé sur /export.",
+      },
+    ],
+  },
+  {
+    date: "2026-04-30",
     version: "v0.30.0",
     title: "🛡️ Sprint dette J1 — Audit RLS + UNIQUE imports + sync mémoire",
     entries: [
