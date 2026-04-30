@@ -220,6 +220,12 @@ export function CellEditDialog({
       }
     }
 
+    // Validation budget objet (bloquante)
+    if (!budgetCheck.ok && budgetCheck.message) {
+      toast.error(budgetCheck.message, { duration: 8000 });
+      return;
+    }
+
     setSaving(true);
     try {
       // 1) Suppressions
