@@ -99,6 +99,10 @@ function DevisImportPage() {
   const [dragOver, setDragOver] = useState(false);
   const [parseErrors, setParseErrors] = useState<string[]>([]);
   const [hasParsed, setHasParsed] = useState(false);
+  // v0.32.1 — mémoire des lignes parsées (source) pour contrôle cohérence par métier.
+  const [parsedLines, setParsedLines] = useState<
+    Array<{ rowIndex: number; metier: string | null; heures: number; excluded: boolean; designation: string; quantite: number | null; pu: number | null; total: number | null }>
+  >([]);
 
   // Section 1
   const [affaires, setAffaires] = useState<AffaireOption[]>([]);
