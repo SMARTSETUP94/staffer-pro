@@ -453,6 +453,7 @@ export function PlanningParObjet({
                                   isLocked && "cursor-not-allowed opacity-60",
                                   !isLocked && "cursor-pointer hover:bg-primary/5",
                                   isDragOver && "ring-2 ring-primary ring-inset bg-primary/10",
+                                  cellOver && "bg-destructive/10 ring-1 ring-destructive/40 ring-inset",
                                 )}
                               >
                                 <div className="flex flex-wrap gap-1 p-1 min-h-[40px]">
