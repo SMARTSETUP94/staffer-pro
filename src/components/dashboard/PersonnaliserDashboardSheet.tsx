@@ -85,7 +85,7 @@ export function PersonnaliserDashboardSheet({ layout, onSave, onReset }: Props) 
         <SheetHeader>
           <SheetTitle>Personnaliser le dashboard</SheetTitle>
           <SheetDescription>
-            {draft.size} widget{draft.size > 1 ? "s" : ""} actif{draft.size > 1 ? "s" : ""} sur {ALL_WIDGET_IDS.length}
+            {draft.size} widget{draft.size > 1 ? "s" : ""} actif{draft.size > 1 ? "s" : ""} sur {allowedIds.length} disponible{allowedIds.length > 1 ? "s" : ""} pour votre rôle
           </SheetDescription>
         </SheetHeader>
 
