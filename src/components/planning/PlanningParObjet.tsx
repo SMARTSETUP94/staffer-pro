@@ -205,6 +205,17 @@ export function PlanningParObjet({
     return map;
   }, [links, assignById, filterMetierIds]);
 
+  // Index : objet_id → total heures assignées (toutes dates chargées, hors filtre métier)
+  const heuresAssigneesByObjet = useMemo(() => {
+    const map = new Map<string, number>();
+    links.forEach((lk) => {
+      const a = assignById.get(lk.assignation_id);
+      if (!a) return;
+      map.set(lk.objet_id, (map.get(lk.objet_id) ?? 0) + Number(a.heures || 0));
+    });
+    return map;
+  }, [links, assignById]);
+
   // Filtre objets retenus (affaire visible + objet ayant au moins 1 assign si filterAffaire actif vide ?)
   const objetsByAffaire = useMemo(() => {
     const map = new Map<string, FabObjet[]>();
