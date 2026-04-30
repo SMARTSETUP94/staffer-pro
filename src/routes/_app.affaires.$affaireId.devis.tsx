@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/table";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { DevisDeleteCascadeDialog } from "@/components/devis-import/DevisDeleteCascadeDialog";
 
 /** v0.15.1 — Statuts UI exposés. Les autres (en_cours, cloture, facture) restent
  *  dormants en DB pour flexibilité future mais ne sont pas proposés à la sélection. */
@@ -95,8 +96,9 @@ function AffaireDevisPage() {
   const [posteForm, setPosteForm] = useState<Partial<Poste> & { devis_id: string }>({ devis_id: "" });
   const [savingPoste, setSavingPoste] = useState(false);
 
-  // Suppression
-  const [toDelete, setToDelete] = useState<{ kind: "devis" | "poste"; id: string; label: string } | null>(null);
+  // Suppression poste (devis géré par DevisDeleteCascadeDialog)
+  const [toDelete, setToDelete] = useState<{ kind: "poste"; id: string; label: string } | null>(null);
+  const [devisToDelete, setDevisToDelete] = useState<string | null>(null);
 
   // v0.15.1 — Dialog de livraison (Signé → Terminé)
   const [toDeliver, setToDeliver] = useState<Devis | null>(null);
@@ -219,21 +221,9 @@ function AffaireDevisPage() {
 
   const handleDelete = async () => {
     if (!toDelete) return;
-    if (toDelete.kind === "devis") {
-      const { error: detachErr } = await supabase
-        .from("assignations").update({ devis_id: null }).eq("devis_id", toDelete.id);
-      if (detachErr) {
-        toast.error("Suppression impossible", { description: detachErr.message });
-        setToDelete(null); return;
-      }
-      const { error } = await supabase.from("devis").delete().eq("id", toDelete.id);
-      if (error) toast.error("Suppression impossible", { description: error.message });
-      else toast.success("Devis supprimé. Assignations détachées (conservées sur l'affaire).");
-    } else {
-      const { error } = await supabase.from("devis_postes").delete().eq("id", toDelete.id);
-      if (error) toast.error("Suppression impossible", { description: error.message });
-      else toast.success("Ligne supprimée");
-    }
+    const { error } = await supabase.from("devis_postes").delete().eq("id", toDelete.id);
+    if (error) toast.error("Suppression impossible", { description: error.message });
+    else toast.success("Ligne supprimée");
     setToDelete(null);
     fetchAll();
   };
@@ -377,7 +367,8 @@ function AffaireDevisPage() {
                         <Pencil className="h-4 w-4" />
                       </Button>
                       <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-destructive"
-                        onClick={() => setToDelete({ kind: "devis", id: d.id, label: `devis ${d.numero}` })}>
+                        onClick={() => setDevisToDelete(d.id)}
+                        title="Supprimer le devis (cascade)">
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </>
@@ -670,15 +661,13 @@ function AffaireDevisPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Confirmation suppression */}
+      {/* Confirmation suppression poste */}
       <AlertDialog open={!!toDelete} onOpenChange={(o) => !o && setToDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Supprimer {toDelete?.label} ?</AlertDialogTitle>
             <AlertDialogDescription>
-              {toDelete?.kind === "devis"
-                ? "Toutes les lignes de ce devis seront supprimées. Les assignations liées seront détachées (conservées sur l'affaire, sans rattachement devis). Cette action est irréversible."
-                : "Cette ligne sera supprimée. Cette action est irréversible."}
+              Cette ligne sera supprimée. Cette action est irréversible.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -689,6 +678,17 @@ function AffaireDevisPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* v0.31.1 — Suppression cascade devis (réutilise RPC + modale v0.31.0) */}
+      <DevisDeleteCascadeDialog
+        devisId={devisToDelete}
+        onClose={() => setDevisToDelete(null)}
+        onConfirmed={() => {
+          toast.success("Devis supprimé");
+          setDevisToDelete(null);
+          fetchAll();
+        }}
+      />
     </div>
   );
 }
