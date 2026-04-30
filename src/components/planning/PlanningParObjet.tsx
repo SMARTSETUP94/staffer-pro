@@ -344,18 +344,65 @@ export function PlanningParObjet({
                           </span>
                         </td>
                       </tr>
-                      {objs.map((obj) => (
+                      {objs.map((obj) => {
+                        const heuresAssign = heuresAssigneesByObjet.get(obj.id) ?? 0;
+                        const heuresPrev = obj.heures_prevues_total;
+                        const depassement = heuresAssign - heuresPrev;
+                        const isOver = heuresPrev > 0 && depassement > 0;
+                        const noBudget = heuresPrev === 0 && heuresAssign > 0;
+                        return (
                         <tr key={obj.id} className="hover:bg-muted/20">
                           <td className="sticky left-0 z-10 border-b bg-card p-2 align-top">
                             <div className="flex items-start gap-1.5">
                               <Package className="mt-0.5 h-3 w-3 shrink-0 text-muted-foreground" />
                               <div className="min-w-0 flex-1">
-                                <div className="font-mono text-[11px] font-bold">
-                                  {obj.reference}
+                                <div className="flex items-center gap-1.5">
+                                  <span className="font-mono text-[11px] font-bold">
+                                    {obj.reference}
+                                  </span>
+                                  {isOver && (
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <span className="inline-flex items-center gap-0.5 rounded-full bg-destructive px-1.5 py-0.5 text-[9px] font-bold text-destructive-foreground">
+                                          <AlertTriangle className="h-2.5 w-2.5" />
+                                          +{depassement}h
+                                        </span>
+                                      </TooltipTrigger>
+                                      <TooltipContent side="top" className="border bg-white p-2 text-xs text-gray-900 shadow-lg">
+                                        <div className="font-semibold text-destructive">Dépassement détecté</div>
+                                        <div className="text-gray-600">
+                                          Assignées : {heuresAssign}h<br />
+                                          Prévues devis : {heuresPrev}h<br />
+                                          Écart : <span className="font-bold">+{depassement}h</span>
+                                        </div>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  )}
+                                  {noBudget && (
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-500 px-1.5 py-0.5 text-[9px] font-bold text-white">
+                                          <AlertTriangle className="h-2.5 w-2.5" />
+                                          Hors budget
+                                        </span>
+                                      </TooltipTrigger>
+                                      <TooltipContent side="top" className="border bg-white p-2 text-xs text-gray-900 shadow-lg">
+                                        Aucune heure prévue dans le devis pour cet objet, mais {heuresAssign}h ont été assignées.
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  )}
                                 </div>
                                 <div className="truncate text-[11px] leading-tight text-muted-foreground">
                                   {obj.nom}
                                 </div>
+                                {heuresPrev > 0 && (
+                                  <div className={cn(
+                                    "mt-0.5 text-[10px] font-medium tabular-nums",
+                                    isOver ? "text-destructive" : "text-muted-foreground",
+                                  )}>
+                                    {heuresAssign}h / {heuresPrev}h
+                                  </div>
+                                )}
                               </div>
                             </div>
                           </td>
