@@ -60,7 +60,7 @@ export function AffaireCombobox({
       if (a.id === value) return true; // garde toujours la selection courante visible
       if (a.phase === "opportunite" && !includeOpps) return false;
       if (!includeClosed && !isAffaireSelectable(a)) return false;
-      const typo = a.typologie ?? getAffaireTypologie(a.numero);
+      const typo = getAffaireTypologie(a.numero);
       if (typo === "non_operationnel" && !includeNonOp) return false;
       if (typo === "stockage" && !includeStockage) return false;
       return true;
