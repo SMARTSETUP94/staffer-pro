@@ -67,14 +67,24 @@ function MobileSemaine() {
     supabase
       .from("assignations")
       .select(
-        "id, date, demi_journee, heures, notes, metier_id, affaire:affaires(numero, nom, lieu), metier:metiers(libelle, couleur)",
+        "id, date, demi_journee, heures, notes, metier_id, affaire:affaires(numero, nom, lieu), metier:metiers(libelle, couleur), assignation_objets(objet:fabrication_objets(reference, nom))",
       )
       .eq("employe_id", employeId)
       .gte("date", startStr)
       .lte("date", endStr)
       .order("date")
       .then(({ data }) => {
-        setAssignations((data ?? []) as unknown as AssignationLite[]);
+        const rows = (data ?? []).map((a) => {
+          const links = (a as unknown as { assignation_objets?: { objet: { reference: string; nom: string } | null }[] })
+            .assignation_objets ?? [];
+          return {
+            ...(a as unknown as AssignationLite),
+            objets: links
+              .map((l) => l.objet)
+              .filter((o): o is { reference: string; nom: string } => o !== null),
+          };
+        });
+        setAssignations(rows);
         setLoading(false);
       });
   }, [employeId, weekStart, weekEnd]);
