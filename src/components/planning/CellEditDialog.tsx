@@ -131,6 +131,30 @@ export function CellEditDialog({
   const heuresPrev = objet.heures_prevues_total;
   const ecart = heuresPrev > 0 ? heuresApres - heuresPrev : 0;
 
+  const budgetCheck = useMemo(
+    () =>
+      validateBudgetObjet({
+        heuresPrevues: heuresPrev,
+        heuresObjetTotalAvant: heuresObjetTotal,
+        rows: rows.map((r) => ({
+          assignation_id: r.assignation_id,
+          employe_id: r.employe_id,
+          metier_id: r.metier_id,
+          heures: r.heures,
+          initialHeures: r.initialHeures,
+          toDelete: r.toDelete,
+        })),
+        newRows: newRows.map((n) => ({
+          tempId: n.tempId,
+          employe_id: n.employe_id,
+          metier_id: n.metier_id,
+          heures: n.heures,
+        })),
+        objetLabel: `${objet.reference} — ${objet.nom}`,
+      }),
+    [heuresPrev, heuresObjetTotal, rows, newRows, objet.reference, objet.nom],
+  );
+
   // employés déjà présents dans la cellule (pour exclure du picker)
   const usedEmpIds = useMemo(() => {
     const s = new Set<string>();
