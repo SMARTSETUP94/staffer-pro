@@ -62,7 +62,11 @@ const importSearchSchema = z.object({
 export const Route = createFileRoute("/_app/devis/import")({
   head: () => ({ meta: [{ title: "Import devis Excel — Setup Paris" }] }),
   validateSearch: zodValidator(importSearchSchema),
-  component: DevisImportPage,
+  component: () => (
+    <ImportErrorBoundary label="Import devis">
+      <DevisImportPage />
+    </ImportErrorBoundary>
+  ),
 });
 
 function round1(n: number) {
