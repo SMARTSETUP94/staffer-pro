@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { usePreview } from "@/lib/preview-context";
@@ -19,12 +20,13 @@ interface UseDashboardLayoutResult {
 }
 
 /**
- * v0.27.4 — Hook unifié pour lire/écrire le layout dashboard.
- * - Fallback preset selon rôle EFFECTIF (preview admin pris en compte)
- * - Layout BDD systématiquement clampé au rôle effectif (defense in depth :
- *   un employé ne peut PAS voir un widget commerce même si le JSONB BDD
- *   en contient — couvre layout corrompu / changement de rôle / preview).
- * - Persistance JSONB via UPDATE profiles
+ * v0.27.6 — Hook unifié pour lire/écrire le layout dashboard.
+ * - Fallback preset selon rôle EFFECTIF UNIQUEMENT si dashboard_layout est NULL
+ *   en BDD (=jamais sauvegardé). Un layout sauvegardé même vide (visible=[])
+ *   est respecté : l'utilisateur a explicitement décoché tous les widgets.
+ * - Layout BDD systématiquement clampé au rôle effectif (defense in depth).
+ * - Persistance JSONB via UPDATE profiles + try/catch + toast erreur visible
+ *   + rollback UI en cas d'échec (plus d'échec silencieux).
  */
 export function useDashboardLayout(): UseDashboardLayoutResult {
   const { user, roles, rolesLoaded } = useAuth();
@@ -34,7 +36,6 @@ export function useDashboardLayout(): UseDashboardLayoutResult {
   const [loading, setLoading] = useState(true);
 
   const computePreset = useCallback((): DashboardLayout => {
-    // En preview, on calcule le preset du rôle PREVIEW, pas du rôle réel.
     return { visible: computePresetForRoles([effectiveRole]) };
   }, [effectiveRole]);
 
@@ -43,17 +44,21 @@ export function useDashboardLayout(): UseDashboardLayoutResult {
     let cancelled = false;
     setLoading(true);
     (async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("profiles")
         .select("dashboard_layout")
         .eq("id", user.id)
         .maybeSingle();
       if (cancelled) return;
-      const stored = sanitizeLayout((data as { dashboard_layout?: unknown } | null)?.dashboard_layout);
-      if (stored && stored.visible.length > 0) {
-        // GARDE-FOU : clamp au rôle effectif. Si le layout BDD contient des
-        // widgets non autorisés (employé qui aurait kpi_top dans son JSONB),
-        // on les retire silencieusement au rendu.
+      if (error) {
+        console.error("[useDashboardLayout] load error:", error);
+      }
+      const rawLayout = (data as { dashboard_layout?: unknown } | null)?.dashboard_layout;
+      const stored = sanitizeLayout(rawLayout);
+      // FIX v0.27.6 : on distingue "jamais sauvegardé" (rawLayout null/undefined)
+      // de "sauvegardé vide" (stored.visible.length === 0). Un user qui décoche
+      // tout doit voir un dashboard vide, pas le preset par défaut.
+      if (rawLayout != null && stored) {
         setLayout(clampLayoutToRole(stored, effectiveRole));
         setIsPreset(false);
       } else {
@@ -70,35 +75,52 @@ export function useDashboardLayout(): UseDashboardLayoutResult {
   const saveLayout = useCallback(
     async (next: DashboardLayout) => {
       if (!user) return;
-      // Au save aussi : on clampe pour empêcher de stocker un layout illégal.
-      // Utilise le rôle RÉEL (roles), pas effectiveRole, pour qu'un admin en
-      // preview employé ne corrompe pas son propre layout admin.
       const realRole = roles.includes("admin")
         ? "admin"
         : roles.includes("chef_chantier")
           ? "chef_chantier"
           : "employe";
       const clamped = clampLayoutToRole(next, realRole);
+      // Optimistic update
+      const previousLayout = layout;
+      const previousIsPreset = isPreset;
       setLayout(clamped);
       setIsPreset(false);
-      await supabase
+      const { error } = await supabase
         .from("profiles")
         .update({ dashboard_layout: clamped as unknown as never })
         .eq("id", user.id);
+      if (error) {
+        // Rollback + log + toast
+        console.error("[useDashboardLayout] save error:", error);
+        setLayout(previousLayout);
+        setIsPreset(previousIsPreset);
+        toast.error("Erreur de sauvegarde, vérifiez votre connexion ou réessayez.");
+        throw error;
+      }
     },
-    [user, roles],
+    [user, roles, layout, isPreset],
   );
 
   const resetToPreset = useCallback(async () => {
     if (!user) return;
     const preset = computePreset();
+    const previousLayout = layout;
+    const previousIsPreset = isPreset;
     setLayout(preset);
     setIsPreset(true);
-    await supabase
+    const { error } = await supabase
       .from("profiles")
       .update({ dashboard_layout: null })
       .eq("id", user.id);
-  }, [user, computePreset]);
+    if (error) {
+      console.error("[useDashboardLayout] reset error:", error);
+      setLayout(previousLayout);
+      setIsPreset(previousIsPreset);
+      toast.error("Erreur de réinitialisation, réessayez.");
+      throw error;
+    }
+  }, [user, computePreset, layout, isPreset]);
 
   return { layout, loading, isPreset, saveLayout, resetToPreset };
 }
