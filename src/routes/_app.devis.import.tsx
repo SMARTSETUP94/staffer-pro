@@ -20,6 +20,8 @@ import {
   legacyStringsToIssues,
   makeIssue,
   validateDateRange,
+  validateMetierTotalsConsistency,
+  validateRowSumMatch,
   validateTotalsMatch,
   type ImportIssue,
 } from "@/lib/import-validation";
