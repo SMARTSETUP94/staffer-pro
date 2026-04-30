@@ -199,9 +199,8 @@ export function PlanningParObjet({
   const [searchEmp, setSearchEmp] = useState("");
   const employesFiltres = useMemo(() => {
     const q = normalizeName(searchEmp.trim());
-    const base = employes.filter((e) => e.actif !== false);
-    if (!q) return base;
-    return base.filter((e) => normalizeName(`${e.prenom} ${e.nom}`).includes(q));
+    if (!q) return employes;
+    return employes.filter((e) => normalizeName(`${e.prenom} ${e.nom}`).includes(q));
   }, [employes, searchEmp]);
 
   // Drag state
