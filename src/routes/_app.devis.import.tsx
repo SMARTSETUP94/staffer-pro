@@ -432,17 +432,26 @@ function DevisImportPage() {
         _bulk_assign: buildBulkAssignPayload(bulkAssign),
       } as unknown as Parameters<typeof supabase.rpc<"import_devis_atomique_v3">>[1];
 
-      const { error } = await supabase.rpc("import_devis_atomique_v3", rpcArgs);
+      const { data, error } = await supabase.rpc("import_devis_atomique_v3", rpcArgs);
 
       if (error) {
-        const isDuplicate = error.code === "23505" || /déjà été importé/i.test(error.message);
-        toast.error(isDuplicate ? "Doublon détecté" : "Import impossible", {
-          description: isDuplicate
-            ? "Ce fichier a déjà été importé. Consulte l'historique des imports."
-            : error.message,
-        });
+        // v0.30.4 : les blocages "doublon" SQL ont disparu (mode upsert),
+        // mais on garde un fallback pour les nouveaux garde-fous (heures, autre affaire, devis terminé)
+        const msg = error.message ?? "";
+        const isHeuresExist = /saisie.*heures r[ée]elles/i.test(msg);
+        const isAutreAffaire = /autre affaire/i.test(msg);
+        const isDevisTermine = /devis est termin[ée]/i.test(msg);
+        let title = "Import impossible";
+        if (isHeuresExist) title = "Ré-import bloqué : heures saisies";
+        else if (isAutreAffaire) title = "Fichier déjà lié à une autre affaire";
+        else if (isDevisTermine) title = "Devis terminé : ré-import refusé";
+        toast.error(title, { description: msg });
         return;
       }
+
+      // v0.30.4 : distinguer création vs mise à jour (mode upsert sur fichier_hash)
+      const rpcMode = (data as { mode?: string } | null)?.mode ?? "created";
+      const isUpdate = rpcMode === "updated";
 
       // v0.30.2 — Sur affaire existante, propager les éventuelles modifs Client/Lieu
       if (affaireId !== NEW_AFFAIRE && affaireId) {
@@ -459,8 +468,8 @@ function DevisImportPage() {
         }
       }
 
-      toast.success("Devis importé", {
-        description: `${postesPayload.length} poste(s) RH, ${objetsPayload.length} objet(s) fab, ${totals.heures} h, ${totals.montant.toLocaleString("fr-FR")} € HT.`,
+      toast.success(isUpdate ? "Devis mis à jour" : "Devis importé", {
+        description: `${postesPayload.length} poste(s) RH, ${objetsPayload.length} objet(s) fab, ${totals.heures} h, ${totals.montant.toLocaleString("fr-FR")} € HT.${isUpdate ? " Anciens postes/objets remplacés." : ""}`,
       });
       reset();
     } finally {
