@@ -228,7 +228,7 @@ export function CellEditDialog({
             metier_id: n.metier_id,
             heures: n.heures,
             date: dateStr,
-            demi_journee: "journee",
+            demi_journee: "JOURNEE" as const,
           })
           .select("id")
           .single();
