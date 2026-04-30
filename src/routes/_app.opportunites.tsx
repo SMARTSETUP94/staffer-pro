@@ -61,11 +61,13 @@ import {
 const VUE_VALUES = ["kanban", "tableur"] as const;
 type VueOpportunites = (typeof VUE_VALUES)[number];
 
+type StoredPreset = "all" | "7d" | "30d" | "current_month";
+
 const OPPS_SEARCH_DEFAULTS = {
   typo: [] as AffaireTypologie[],
   vue: "kanban" as VueOpportunites,
   q: "",
-  preset: "all" as DatePreset,
+  preset: "all" as StoredPreset,
 };
 
 const oppsSearchSchema = z.object({
@@ -80,6 +82,8 @@ const oppsSearchSchema = z.object({
     "all",
   ).default("all"),
 });
+
+type OppsSearch = z.infer<typeof oppsSearchSchema>;
 
 export const Route = createFileRoute("/_app/opportunites")({
   head: () => ({
@@ -110,17 +114,17 @@ function OpportunitesPage() {
   const { typo: typoFilter, vue, q: searchQuery, preset } = search;
 
   const setTypoFilter = (next: AffaireTypologie[]) => {
-    navigate({ search: (prev) => ({ ...prev, typo: next }), replace: true });
+    navigate({ search: (prev: OppsSearch) => ({ ...prev, typo: next }), replace: true });
   };
   const setVue = (next: VueOpportunites) => {
-    navigate({ search: (prev) => ({ ...prev, vue: next }), replace: true });
+    navigate({ search: (prev: OppsSearch) => ({ ...prev, vue: next }), replace: true });
   };
   const setSearchQuery = (next: string) => {
-    navigate({ search: (prev) => ({ ...prev, q: next }), replace: true });
+    navigate({ search: (prev: OppsSearch) => ({ ...prev, q: next }), replace: true });
   };
-  const setPreset = (next: DatePreset) => {
+  const setPreset = (next: StoredPreset) => {
     navigate({
-      search: (prev) => ({ ...prev, preset: next === "custom" ? "all" : next }),
+      search: (prev: OppsSearch) => ({ ...prev, preset: next }),
       replace: true,
     });
   };
