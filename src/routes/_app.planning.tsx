@@ -210,23 +210,11 @@ function PlanningPage() {
     return out;
   }, [filterAffaire, affaireIdsByTypo]);
 
-  // v0.29.2 — Compteurs typologies actifs : exclut les affaires terminées/annulées
-  // ET celles dont le démontage est passé (chantier "consommé"). NULL date_demontage = actif.
-  const typoCounts = useMemo(() => {
-    const counts: Partial<Record<AffaireTypologie, number>> = {};
-    const now = new Date();
-    now.setHours(0, 0, 0, 0);
-    affaires.forEach((a) => {
-      if (a.statut === "termine" || a.statut === "annule") return;
-      if (a.date_demontage) {
-        const dDem = new Date(a.date_demontage);
-        if (dDem < now) return;
-      }
-      const t = getAffaireTypologie(a.numero);
-      if (t) counts[t] = (counts[t] ?? 0) + 1;
-    });
-    return counts;
-  }, [affaires]);
+  // v0.29.2 — Compteurs typologies actifs : voir countActiveAffairesByTypologie.
+  const typoCounts = useMemo(
+    () => countActiveAffairesByTypologie(affaires),
+    [affaires],
+  );
 
   const filterMetierNum = filterMetier as Set<number>;
   const filterDevisStr = filterDevis as Set<string>;
