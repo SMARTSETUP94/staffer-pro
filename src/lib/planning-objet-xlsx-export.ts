@@ -6,7 +6,7 @@
  *
  * Utilisé depuis l'onglet « Planning par objet » de /planning.
  */
-import * as XLSX from "xlsx";
+import * as XLSX from "xlsx-js-style";
 import { addDays, format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";

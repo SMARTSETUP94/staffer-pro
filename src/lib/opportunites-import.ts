@@ -12,7 +12,7 @@
  *
  * UPSERT idempotent sur le numero d'affaire.
  */
-import * as XLSX from "xlsx";
+import * as XLSX from "xlsx-js-style";
 import type { OpportuniteStatut, OpportuniteTaille } from "./opportunites";
 
 export interface ParsedOpportuniteRow {

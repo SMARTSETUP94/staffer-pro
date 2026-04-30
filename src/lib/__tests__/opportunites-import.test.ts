@@ -5,7 +5,7 @@
  * colonne manquante, taille invalide.
  */
 import { describe, it, expect } from "vitest";
-import * as XLSX from "xlsx";
+import * as XLSX from "xlsx-js-style";
 import { parseOpportunitesFile } from "../opportunites-import";
 
 function makeXlsx(rows: unknown[][]): ArrayBuffer {
