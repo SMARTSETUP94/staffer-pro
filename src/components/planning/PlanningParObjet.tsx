@@ -275,22 +275,6 @@ export function PlanningParObjet({
     });
   }
 
-  function openEditDialog(a: Assignation) {
-    const emp = employesById.get(a.employe_id);
-    const aff = affairesById.get(a.affaire_id);
-    if (!emp || !aff) return;
-    const empExisting = assignations.filter(
-      (x) => x.employe_id === emp.id && x.date === a.date,
-    );
-    setAssignDlg({
-      employe: emp,
-      date: new Date(a.date),
-      affaireId: a.affaire_id,
-      objetId: "",
-      existing: empExisting,
-    });
-  }
-
   function openCellDialog(obj: FabObjet, af: Affaire, day: Date, cellAssigns: Assignation[]) {
     if (!isAffaireSelectable(af)) {
       toast.error(affaireLockReason(af) ?? "Affaire verrouillée");
