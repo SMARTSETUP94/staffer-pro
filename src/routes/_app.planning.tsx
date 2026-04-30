@@ -254,6 +254,7 @@ function PlanningPage() {
       toast.error("Échec de l'export PDF");
     } finally {
       setExporting(false);
+    }
   }
 
   async function handleExportObjetXlsx() {
@@ -276,7 +277,6 @@ function PlanningPage() {
     } finally {
       setExporting(false);
     }
-  }
   }
 
   return (
