@@ -1,7 +1,7 @@
 import { Fragment as FragmentWithKey, useEffect, useMemo, useState } from "react";
 import { addDays, format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Loader2, Package, Plus, Search, UserPlus } from "lucide-react";
+import { AlertTriangle, Loader2, Package, Plus, Search, UserPlus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -39,6 +39,7 @@ interface FabObjet {
   reference: string;
   nom: string;
   ordre: number;
+  heures_prevues_total: number;
 }
 
 interface ObjetLink {
@@ -113,7 +114,7 @@ export function PlanningParObjet({
     setLoadingObjets(true);
     supabase
       .from("fabrication_objets")
-      .select("id, affaire_id, reference, nom, ordre, created_at")
+      .select("id, affaire_id, reference, nom, ordre, created_at, heures_prevues_be, heures_prevues_numerique, heures_prevues_bois, heures_prevues_metal, heures_prevues_peinture, heures_prevues_tapisserie, heures_prevues_manutention, quantite")
       .in("affaire_id", ids)
       .eq("archive", false)
       .order("affaire_id", { ascending: true })
@@ -127,13 +128,25 @@ export function PlanningParObjet({
           return;
         }
         setObjets(
-          (data ?? []).map((o) => ({
-            id: o.id,
-            affaire_id: o.affaire_id,
-            reference: o.reference,
-            nom: o.nom,
-            ordre: o.ordre ?? 0,
-          })),
+          (data ?? []).map((o) => {
+            const qte = Number(o.quantite ?? 1) || 1;
+            const totalUnit =
+              Number(o.heures_prevues_be ?? 0) +
+              Number(o.heures_prevues_numerique ?? 0) +
+              Number(o.heures_prevues_bois ?? 0) +
+              Number(o.heures_prevues_metal ?? 0) +
+              Number(o.heures_prevues_peinture ?? 0) +
+              Number(o.heures_prevues_tapisserie ?? 0) +
+              Number(o.heures_prevues_manutention ?? 0);
+            return {
+              id: o.id,
+              affaire_id: o.affaire_id,
+              reference: o.reference,
+              nom: o.nom,
+              ordre: o.ordre ?? 0,
+              heures_prevues_total: totalUnit * qte,
+            };
+          }),
         );
       });
     return () => {
@@ -191,6 +204,17 @@ export function PlanningParObjet({
     });
     return map;
   }, [links, assignById, filterMetierIds]);
+
+  // Index : objet_id → total heures assignées (toutes dates chargées, hors filtre métier)
+  const heuresAssigneesByObjet = useMemo(() => {
+    const map = new Map<string, number>();
+    links.forEach((lk) => {
+      const a = assignById.get(lk.assignation_id);
+      if (!a) return;
+      map.set(lk.objet_id, (map.get(lk.objet_id) ?? 0) + Number(a.heures || 0));
+    });
+    return map;
+  }, [links, assignById]);
 
   // Filtre objets retenus (affaire visible + objet ayant au moins 1 assign si filterAffaire actif vide ?)
   const objetsByAffaire = useMemo(() => {
@@ -320,18 +344,65 @@ export function PlanningParObjet({
                           </span>
                         </td>
                       </tr>
-                      {objs.map((obj) => (
+                      {objs.map((obj) => {
+                        const heuresAssign = heuresAssigneesByObjet.get(obj.id) ?? 0;
+                        const heuresPrev = obj.heures_prevues_total;
+                        const depassement = heuresAssign - heuresPrev;
+                        const isOver = heuresPrev > 0 && depassement > 0;
+                        const noBudget = heuresPrev === 0 && heuresAssign > 0;
+                        return (
                         <tr key={obj.id} className="hover:bg-muted/20">
                           <td className="sticky left-0 z-10 border-b bg-card p-2 align-top">
                             <div className="flex items-start gap-1.5">
                               <Package className="mt-0.5 h-3 w-3 shrink-0 text-muted-foreground" />
                               <div className="min-w-0 flex-1">
-                                <div className="font-mono text-[11px] font-bold">
-                                  {obj.reference}
+                                <div className="flex items-center gap-1.5">
+                                  <span className="font-mono text-[11px] font-bold">
+                                    {obj.reference}
+                                  </span>
+                                  {isOver && (
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <span className="inline-flex items-center gap-0.5 rounded-full bg-destructive px-1.5 py-0.5 text-[9px] font-bold text-destructive-foreground">
+                                          <AlertTriangle className="h-2.5 w-2.5" />
+                                          +{depassement}h
+                                        </span>
+                                      </TooltipTrigger>
+                                      <TooltipContent side="top" className="border bg-white p-2 text-xs text-gray-900 shadow-lg">
+                                        <div className="font-semibold text-destructive">Dépassement détecté</div>
+                                        <div className="text-gray-600">
+                                          Assignées : {heuresAssign}h<br />
+                                          Prévues devis : {heuresPrev}h<br />
+                                          Écart : <span className="font-bold">+{depassement}h</span>
+                                        </div>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  )}
+                                  {noBudget && (
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-500 px-1.5 py-0.5 text-[9px] font-bold text-white">
+                                          <AlertTriangle className="h-2.5 w-2.5" />
+                                          Hors budget
+                                        </span>
+                                      </TooltipTrigger>
+                                      <TooltipContent side="top" className="border bg-white p-2 text-xs text-gray-900 shadow-lg">
+                                        Aucune heure prévue dans le devis pour cet objet, mais {heuresAssign}h ont été assignées.
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  )}
                                 </div>
                                 <div className="truncate text-[11px] leading-tight text-muted-foreground">
                                   {obj.nom}
                                 </div>
+                                {heuresPrev > 0 && (
+                                  <div className={cn(
+                                    "mt-0.5 text-[10px] font-medium tabular-nums",
+                                    isOver ? "text-destructive" : "text-muted-foreground",
+                                  )}>
+                                    {heuresAssign}h / {heuresPrev}h
+                                  </div>
+                                )}
                               </div>
                             </div>
                           </td>
@@ -342,6 +413,8 @@ export function PlanningParObjet({
                             const isWeekend = d.getDay() === 0 || d.getDay() === 6;
                             const isEmpty = cellAssigns.length === 0;
                             const isDragOver = dragOverKey === cellKey;
+                            const cellHeures = cellAssigns.reduce((s, a) => s + Number(a.heures || 0), 0);
+                            const cellOver = (isOver || noBudget) && cellHeures > 0;
 
                             // Group par employé pour fusion
                             const byEmp = new Map<string, Assignation[]>();
@@ -380,6 +453,7 @@ export function PlanningParObjet({
                                   isLocked && "cursor-not-allowed opacity-60",
                                   !isLocked && "cursor-pointer hover:bg-primary/5",
                                   isDragOver && "ring-2 ring-primary ring-inset bg-primary/10",
+                                  cellOver && "bg-destructive/10 ring-1 ring-destructive/40 ring-inset",
                                 )}
                               >
                                 <div className="flex flex-wrap gap-1 p-1 min-h-[40px]">
@@ -443,7 +517,8 @@ export function PlanningParObjet({
                             );
                           })}
                         </tr>
-                      ))}
+                        );
+                      })}
                     </FragmentWithKey>
                   );
                 })}
