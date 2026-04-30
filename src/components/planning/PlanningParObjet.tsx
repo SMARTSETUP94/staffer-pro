@@ -413,6 +413,8 @@ export function PlanningParObjet({
                             const isWeekend = d.getDay() === 0 || d.getDay() === 6;
                             const isEmpty = cellAssigns.length === 0;
                             const isDragOver = dragOverKey === cellKey;
+                            const cellHeures = cellAssigns.reduce((s, a) => s + Number(a.heures || 0), 0);
+                            const cellOver = (isOver || noBudget) && cellHeures > 0;
 
                             // Group par employé pour fusion
                             const byEmp = new Map<string, Assignation[]>();
