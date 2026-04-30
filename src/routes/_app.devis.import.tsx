@@ -450,6 +450,7 @@ function DevisImportPage() {
     setFilename(null);
     setFichierHash(null);
     setParseErrors([]);
+    setParsedLines([]);
     setPostes([]);
     setObjets([]);
     setNomDevis("");
