@@ -381,7 +381,7 @@ describe("cleanOverlay — purge des clés synchronisées", () => {
   });
   it("garde les clés divergentes", () => {
     const server = makeRow({ client: "Mercedes", taille: "petit" });
-    const overlay = { client: "Audi", taille: "petit" };
+    const overlay: Partial<TableurRow> = { client: "Audi", taille: "petit" };
     const cleaned = cleanOverlay(overlay, server);
     expect(cleaned).toEqual({ client: "Audi" });
   });
