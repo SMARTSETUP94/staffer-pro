@@ -709,6 +709,23 @@ export function PlanningParObjet({
           }}
         />
       )}
+
+      {/* v0.29 — Bulk staffing sur objet */}
+      <AssignationBulkObjetDialog
+        open={bulkObjet !== null}
+        onOpenChange={(o) => { if (!o) setBulkObjet(null); }}
+        objet={bulkObjet}
+        weekStart={weekStart}
+        showWeekend={showWeekend}
+        employes={employes}
+        metiers={metiers}
+        assignations={assignations}
+        links={links}
+        onSaved={() => {
+          refreshLinks();
+          onChanged?.();
+        }}
+      />
     </TooltipProvider>
   );
 }
