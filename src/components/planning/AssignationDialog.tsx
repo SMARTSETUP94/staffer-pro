@@ -177,6 +177,68 @@ export function AssignationDialog({
     };
   }, [editingId]);
 
+  // Charge le détail conso par objet sélectionné (heures prévues + heures déjà planifiées)
+  useEffect(() => {
+    if (selectedObjetIds.length === 0) {
+      setObjetsConso({});
+      return;
+    }
+    let cancelled = false;
+    const ids = selectedObjetIds;
+    (async () => {
+      // 1) heures prévues par objet (toutes colonnes × quantité)
+      const { data: objs } = await supabase
+        .from("fabrication_objets")
+        .select(
+          "id, reference, nom, quantite, heures_prevues_be, heures_prevues_numerique, heures_prevues_bois, heures_prevues_metal, heures_prevues_peinture, heures_prevues_tapisserie, heures_prevues_manutention",
+        )
+        .in("id", ids);
+      // 2) liens assignation_objets pour ces objets
+      const { data: links } = await supabase
+        .from("assignation_objets")
+        .select("assignation_id, objet_id")
+        .in("objet_id", ids);
+      const assignIds = Array.from(new Set((links ?? []).map((l) => l.assignation_id)));
+      // 3) heures de ces assignations
+      let assignsHeures = new Map<string, number>();
+      if (assignIds.length > 0) {
+        const { data: assigns } = await supabase
+          .from("assignations")
+          .select("id, heures")
+          .in("id", assignIds);
+        assignsHeures = new Map(
+          (assigns ?? []).map((a) => [a.id, Number(a.heures ?? 0)]),
+        );
+      }
+      if (cancelled) return;
+      const byObjet: Record<string, { reference: string; nom: string; prevues: number; planifiees: number }> = {};
+      for (const o of objs ?? []) {
+        const qte = Number(o.quantite ?? 1) || 1;
+        const totalUnit =
+          Number(o.heures_prevues_be ?? 0) +
+          Number(o.heures_prevues_numerique ?? 0) +
+          Number(o.heures_prevues_bois ?? 0) +
+          Number(o.heures_prevues_metal ?? 0) +
+          Number(o.heures_prevues_peinture ?? 0) +
+          Number(o.heures_prevues_tapisserie ?? 0) +
+          Number(o.heures_prevues_manutention ?? 0);
+        byObjet[o.id] = {
+          reference: o.reference,
+          nom: o.nom,
+          prevues: totalUnit * qte,
+          planifiees: 0,
+        };
+      }
+      for (const lk of links ?? []) {
+        const h = assignsHeures.get(lk.assignation_id) ?? 0;
+        if (byObjet[lk.objet_id]) byObjet[lk.objet_id].planifiees += h;
+      }
+      setObjetsConso(byObjet);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedObjetIds]);
 
   // Charge les compétences secondaires de l'employé
   useEffect(() => {
