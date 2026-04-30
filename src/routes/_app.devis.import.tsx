@@ -89,6 +89,9 @@ function DevisImportPage() {
   const [newAffaireNom, setNewAffaireNom] = useState("");
   const [newAffaireClient, setNewAffaireClient] = useState("");
   const [newAffaireLieu, setNewAffaireLieu] = useState("");
+  // v0.30.2 — édition libre du Client/Lieu même sur affaire existante
+  const [clientTouched, setClientTouched] = useState(false);
+  const [lieuTouched, setLieuTouched] = useState(false);
   const [nomDevis, setNomDevis] = useState("");
   const [numeroDevis, setNumeroDevis] = useState("");
   const [dateMontage, setDateMontage] = useState<Date | undefined>(undefined);
