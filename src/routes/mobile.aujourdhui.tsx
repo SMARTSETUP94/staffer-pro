@@ -33,6 +33,7 @@ interface AssignationLite {
   metier_id: number;
   affaire: { numero: string; nom: string; lieu: string | null } | null;
   metier: { libelle: string; couleur: string } | null;
+  objets: { reference: string; nom: string }[];
 }
 
 function MobileSemaine() {
