@@ -163,8 +163,8 @@ export function budgetStatus(params: {
 }
 
 /** Util : auto-suggestion métier (un seul disponible → sélectionné). */
-export function autoSuggestMetier(
-  metiersDispo: MetierLite[],
+export function autoSuggestMetier<M extends MetierLite>(
+  metiersDispo: M[],
 ): number | null {
   if (metiersDispo.length === 1) return metiersDispo[0].id;
   return null;
