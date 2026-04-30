@@ -55,40 +55,42 @@ function DevisHistoriquePage() {
   const { isAdminOrChef } = useAuth();
   const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState<ImportRow[]>([]);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+
+  const fetchRows = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("devis_imports")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(200);
+    if (error || !data) {
+      setLoading(false);
+      return;
+    }
+    const userIds = Array.from(new Set(data.map((r) => r.user_id).filter(Boolean)));
+    const profilesMap = new Map<string, { full_name: string | null; email: string }>();
+    if (userIds.length > 0) {
+      const { data: profs } = await supabase
+        .from("profiles")
+        .select("id, full_name, email")
+        .in("id", userIds);
+      profs?.forEach((p) => profilesMap.set(p.id, { full_name: p.full_name, email: p.email }));
+    }
+    const enriched: ImportRow[] = data.map((r) => ({
+      ...(r as unknown as ImportRow),
+      profiles: profilesMap.get(r.user_id) ?? null,
+    }));
+    setRows(enriched);
+    setLoading(false);
+  };
 
   useEffect(() => {
     if (!isAdminOrChef) {
       setLoading(false);
       return;
     }
-    (async () => {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from("devis_imports")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(200);
-      if (error || !data) {
-        setLoading(false);
-        return;
-      }
-      // Fetch profiles separately (no FK declared between devis_imports.user_id and profiles)
-      const userIds = Array.from(new Set(data.map((r) => r.user_id).filter(Boolean)));
-      const profilesMap = new Map<string, { full_name: string | null; email: string }>();
-      if (userIds.length > 0) {
-        const { data: profs } = await supabase
-          .from("profiles")
-          .select("id, full_name, email")
-          .in("id", userIds);
-        profs?.forEach((p) => profilesMap.set(p.id, { full_name: p.full_name, email: p.email }));
-      }
-      const enriched: ImportRow[] = data.map((r) => ({
-        ...(r as unknown as ImportRow),
-        profiles: profilesMap.get(r.user_id) ?? null,
-      }));
-      setRows(enriched);
-      setLoading(false);
-    })();
+    fetchRows();
   }, [isAdminOrChef]);
 
   if (!isAdminOrChef) {
