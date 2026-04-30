@@ -30,11 +30,11 @@ export interface EmployeForBulk {
   est_respo_fab?: boolean | null;
 }
 
-/** Liste les métiers où l'objet a heures_prevues_X > 0. */
-export function metiersDisponiblesForObjet(
+/** Liste les métiers où l'objet a heures_prevues_X > 0. Préserve le type d'entrée. */
+export function metiersDisponiblesForObjet<M extends MetierLite>(
   objet: ObjetHeuresPrevues,
-  metiers: MetierLite[],
-): MetierLite[] {
+  metiers: M[],
+): M[] {
   return metiers.filter((m) => {
     const k = METIER_CODE_TO_HEURES_KEY[m.code];
     if (!k) return false;
