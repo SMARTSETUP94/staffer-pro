@@ -89,6 +89,9 @@ function DevisImportPage() {
   const [newAffaireNom, setNewAffaireNom] = useState("");
   const [newAffaireClient, setNewAffaireClient] = useState("");
   const [newAffaireLieu, setNewAffaireLieu] = useState("");
+  // v0.30.2 — édition libre du Client/Lieu même sur affaire existante
+  const [clientTouched, setClientTouched] = useState(false);
+  const [lieuTouched, setLieuTouched] = useState(false);
   const [nomDevis, setNomDevis] = useState("");
   const [numeroDevis, setNumeroDevis] = useState("");
   const [dateMontage, setDateMontage] = useState<Date | undefined>(undefined);
@@ -163,8 +166,21 @@ function DevisImportPage() {
     () => (affaireId && affaireId !== NEW_AFFAIRE ? affaires.find((a) => a.id === affaireId) : undefined),
     [affaireId, affaires],
   );
-  const effectiveClient = affaireId === NEW_AFFAIRE ? newAffaireClient : selectedAffaire?.client ?? "";
-  const effectiveLieu = affaireId === NEW_AFFAIRE ? newAffaireLieu : selectedAffaire?.lieu ?? "";
+  // v0.30.2 — Client/Lieu éditables sur affaire existante.
+  // Tant que l'utilisateur n'a pas tapé, on affiche la valeur de l'affaire ;
+  // dès la première frappe, on prend la valeur saisie.
+  const effectiveClient =
+    affaireId === NEW_AFFAIRE
+      ? newAffaireClient
+      : clientTouched
+        ? newAffaireClient
+        : selectedAffaire?.client ?? "";
+  const effectiveLieu =
+    affaireId === NEW_AFFAIRE
+      ? newAffaireLieu
+      : lieuTouched
+        ? newAffaireLieu
+        : selectedAffaire?.lieu ?? "";
 
   const handleFile = async (file: File) => {
     setParsing(true);
@@ -357,6 +373,8 @@ function DevisImportPage() {
     setNewAffaireNom("");
     setNewAffaireClient("");
     setNewAffaireLieu("");
+    setClientTouched(false);
+    setLieuTouched(false);
     setImportMontage(false);
     setImportDemontage(false);
     setMontageH(0);
@@ -424,6 +442,21 @@ function DevisImportPage() {
             : error.message,
         });
         return;
+      }
+
+      // v0.30.2 — Sur affaire existante, propager les éventuelles modifs Client/Lieu
+      if (affaireId !== NEW_AFFAIRE && affaireId) {
+        const updates: { client?: string | null; lieu?: string | null } = {};
+        if (clientTouched) updates.client = newAffaireClient.trim() || null;
+        if (lieuTouched) updates.lieu = newAffaireLieu.trim() || null;
+        if (Object.keys(updates).length > 0) {
+          const { error: upErr } = await supabase.from("affaires").update(updates).eq("id", affaireId);
+          if (upErr) {
+            toast.warning("Devis importé, mais Client/Lieu non mis à jour", {
+              description: upErr.message,
+            });
+          }
+        }
       }
 
       toast.success("Devis importé", {
@@ -524,9 +557,9 @@ function DevisImportPage() {
               newAffaireNom={newAffaireNom}
               setNewAffaireNom={setNewAffaireNom}
               newAffaireClient={newAffaireClient}
-              setNewAffaireClient={setNewAffaireClient}
+              setNewAffaireClient={(v) => { setNewAffaireClient(v); setClientTouched(true); }}
               newAffaireLieu={newAffaireLieu}
-              setNewAffaireLieu={setNewAffaireLieu}
+              setNewAffaireLieu={(v) => { setNewAffaireLieu(v); setLieuTouched(true); }}
               nomDevis={nomDevis}
               setNomDevis={setNomDevis}
               dateMontage={dateMontage}
