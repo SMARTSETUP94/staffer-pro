@@ -200,12 +200,33 @@ function DevisHistoriquePage() {
                       </Link>
                     </Button>
                   )}
+                  {row.devis_id && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="shrink-0 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                      onClick={() => setDeleteTarget(row.devis_id)}
+                      title="Supprimer ce devis (cascade)"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>
           ))}
         </div>
       )}
+
+      <DevisDeleteCascadeDialog
+        devisId={deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirmed={() => {
+          toast.success("Devis supprimé");
+          setDeleteTarget(null);
+          fetchRows();
+        }}
+      />
     </div>
   );
 }
