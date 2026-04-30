@@ -88,6 +88,7 @@ export function CellEditDialog({
   employes,
   metiers,
   heuresObjetTotal,
+  allAssignations,
   onChanged,
 }: Props) {
   const employesById = useMemo(
