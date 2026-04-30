@@ -101,6 +101,10 @@ export function AssignationDialog({
   // v0.21 — Date éditable (par défaut = prop date, modifiable uniquement en création)
   const [dateOverride, setDateOverride] = useState<Date>(date);
 
+  // v0.25 — Objets de fabrication rattachés à cette assignation
+  const [objetsAffaire, setObjetsAffaire] = useState<{ id: string; reference: string; nom: string }[]>([]);
+  const [selectedObjetIds, setSelectedObjetIds] = useState<string[]>([]);
+
   // Réinitialise à l'ouverture
   useEffect(() => {
     if (!open) return;
