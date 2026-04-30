@@ -46,7 +46,8 @@ function IndexRedirect() {
     if (isAdminOrChef) {
       navigate({ to: "/dashboard" });
     } else {
-      navigate({ to: "/mobile/aujourdhui" });
+      // v0.27.5 : employé desktop → /ma-semaine (pas /dashboard pour anti-fuite RGPD)
+      navigate({ to: "/ma-semaine" });
     }
   }, [hashRedirectChecked, loading, rolesLoaded, user, isAdminOrChef, effIsMobile, navigate]);
 
