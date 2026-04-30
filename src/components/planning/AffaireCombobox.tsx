@@ -48,14 +48,21 @@ export function AffaireCombobox({
 }: Props) {
   const [open, setOpen] = useState(false);
   const [includeOpps, setIncludeOpps] = useState(includeOpportunites);
+  // v0.27.7 — Fix #3 — Toggles typologies (par défaut OFF)
+  const [includeNonOp, setIncludeNonOp] = useState(false);
+  const [includeStockage, setIncludeStockage] = useState(false);
 
   const sorted = useMemo(() => {
     // v0.17 — Filtrer les opportunités sauf si toggle activé OU si la valeur sélectionnée en est une
     // v0.21 Bloc 4 — Filtrer les affaires terminees/annulees sauf si la valeur courante en est une
+    // v0.27.7 — Filtrer non_operationnel et stockage sauf si toggles activés
     const filtered = affaires.filter((a) => {
       if (a.id === value) return true; // garde toujours la selection courante visible
       if (a.phase === "opportunite" && !includeOpps) return false;
       if (!includeClosed && !isAffaireSelectable(a)) return false;
+      const typo = a.typologie ?? getAffaireTypologie(a.numero);
+      if (typo === "non_operationnel" && !includeNonOp) return false;
+      if (typo === "stockage" && !includeStockage) return false;
       return true;
     });
     const list = [...filtered].sort((a, b) =>
@@ -65,7 +72,7 @@ export function AffaireCombobox({
     const pinned = list.filter((a) => pinnedIds.has(a.id));
     const rest = list.filter((a) => !pinnedIds.has(a.id));
     return { pinned, rest };
-  }, [affaires, pinnedIds, includeOpps, value, includeClosed]);
+  }, [affaires, pinnedIds, includeOpps, includeNonOp, includeStockage, value, includeClosed]);
 
   const selected = affaires.find((a) => a.id === value);
 
