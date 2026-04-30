@@ -167,7 +167,8 @@ describe("computeTotalHeures", () => {
     expect(computeTotalHeures(3, 5, 0)).toBe(0);
   });
   it("arrondi 2 décimales", () => {
-    expect(computeTotalHeures(2, 3, 4.333)).toBe(25.998);
+    // 2 × 3 × 4.333 = 25.998 → arrondi à 26
+    expect(computeTotalHeures(2, 3, 4.333)).toBe(26);
   });
 });
 
