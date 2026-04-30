@@ -275,7 +275,31 @@ function PlanningPage() {
       toast.error(`Échec export Excel : ${(e as Error).message}`);
     } finally {
       setExporting(false);
+  }
+
+  async function handleExportWeekXlsx() {
+    setExporting(true);
+    try {
+      exportPlanningExcel({
+        weekStart,
+        metiers,
+        employes,
+        affaires,
+        assignations,
+        consommation,
+        absences,
+        chefsById,
+        vehicules,
+        trajets,
+      });
+      toast.success("Export Excel généré");
+    } catch (e) {
+      console.error(e);
+      toast.error(`Échec export Excel : ${(e as Error).message}`);
+    } finally {
+      setExporting(false);
     }
+  }
   }
 
   return (
