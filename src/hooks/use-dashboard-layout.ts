@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import { usePreview } from "@/lib/preview-context";
 import {
   type DashboardLayout,
-  type WidgetId,
   computePresetForRoles,
   sanitizeLayout,
+  clampLayoutToRole,
 } from "@/lib/dashboard/types";
 
 interface UseDashboardLayoutResult {
@@ -18,19 +19,24 @@ interface UseDashboardLayoutResult {
 }
 
 /**
- * v0.26.0 — Hook unifié pour lire/écrire le layout dashboard.
- * - Fallback preset selon rôles si profiles.dashboard_layout est NULL
+ * v0.27.4 — Hook unifié pour lire/écrire le layout dashboard.
+ * - Fallback preset selon rôle EFFECTIF (preview admin pris en compte)
+ * - Layout BDD systématiquement clampé au rôle effectif (defense in depth :
+ *   un employé ne peut PAS voir un widget commerce même si le JSONB BDD
+ *   en contient — couvre layout corrompu / changement de rôle / preview).
  * - Persistance JSONB via UPDATE profiles
  */
 export function useDashboardLayout(): UseDashboardLayoutResult {
   const { user, roles, rolesLoaded } = useAuth();
+  const { effectiveRole } = usePreview();
   const [layout, setLayout] = useState<DashboardLayout>({ visible: [] });
   const [isPreset, setIsPreset] = useState(true);
   const [loading, setLoading] = useState(true);
 
   const computePreset = useCallback((): DashboardLayout => {
-    return { visible: computePresetForRoles(roles) };
-  }, [roles]);
+    // En preview, on calcule le preset du rôle PREVIEW, pas du rôle réel.
+    return { visible: computePresetForRoles([effectiveRole]) };
+  }, [effectiveRole]);
 
   useEffect(() => {
     if (!user || !rolesLoaded) return;
@@ -45,7 +51,10 @@ export function useDashboardLayout(): UseDashboardLayoutResult {
       if (cancelled) return;
       const stored = sanitizeLayout((data as { dashboard_layout?: unknown } | null)?.dashboard_layout);
       if (stored && stored.visible.length > 0) {
-        setLayout(stored);
+        // GARDE-FOU : clamp au rôle effectif. Si le layout BDD contient des
+        // widgets non autorisés (employé qui aurait kpi_top dans son JSONB),
+        // on les retire silencieusement au rendu.
+        setLayout(clampLayoutToRole(stored, effectiveRole));
         setIsPreset(false);
       } else {
         setLayout(computePreset());
@@ -56,19 +65,28 @@ export function useDashboardLayout(): UseDashboardLayoutResult {
     return () => {
       cancelled = true;
     };
-  }, [user, rolesLoaded, computePreset]);
+  }, [user, rolesLoaded, computePreset, effectiveRole]);
 
   const saveLayout = useCallback(
     async (next: DashboardLayout) => {
       if (!user) return;
-      setLayout(next);
+      // Au save aussi : on clampe pour empêcher de stocker un layout illégal.
+      // Utilise le rôle RÉEL (roles), pas effectiveRole, pour qu'un admin en
+      // preview employé ne corrompe pas son propre layout admin.
+      const realRole = roles.includes("admin")
+        ? "admin"
+        : roles.includes("chef_chantier")
+          ? "chef_chantier"
+          : "employe";
+      const clamped = clampLayoutToRole(next, realRole);
+      setLayout(clamped);
       setIsPreset(false);
       await supabase
         .from("profiles")
-        .update({ dashboard_layout: next as unknown as never })
+        .update({ dashboard_layout: clamped as unknown as never })
         .eq("id", user.id);
     },
-    [user],
+    [user, roles],
   );
 
   const resetToPreset = useCallback(async () => {
