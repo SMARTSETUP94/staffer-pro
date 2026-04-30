@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import {
@@ -24,11 +24,12 @@ interface ProfileSnapshot extends ProfileForCompleteness {
 
 export function useProfileCompletion() {
   const { user } = useAuth();
+  const userId = user?.id ?? null;
   const [profile, setProfile] = useState<ProfileSnapshot | null>(null);
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
-    if (!user) {
+    if (!userId) {
       setProfile(null);
       setLoading(false);
       return;
@@ -36,11 +37,11 @@ export function useProfileCompletion() {
     const { data } = await supabase
       .from("profiles")
       .select(FIELDS.join(","))
-      .eq("id", user.id)
+      .eq("id", userId)
       .maybeSingle<ProfileSnapshot>();
     setProfile(data ?? null);
     setLoading(false);
-  }, [user]);
+  }, [userId]);
 
   useEffect(() => {
     setLoading(true);
@@ -51,5 +52,8 @@ export function useProfileCompletion() {
   const complete = isProfileComplete(profile);
   const percent = computeProfileCompletion(profile);
 
-  return { profile, loading, completed, complete, percent, refresh };
+  return useMemo(
+    () => ({ profile, loading, completed, complete, percent, refresh }),
+    [profile, loading, completed, complete, percent, refresh],
+  );
 }
