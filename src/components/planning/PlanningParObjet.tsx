@@ -240,13 +240,21 @@ export function PlanningParObjet({
   const [dragEmp, setDragEmp] = useState<Employe | null>(null);
   const [dragOverKey, setDragOverKey] = useState<string | null>(null);
 
-  // Dialog
+  // Dialog création (drag & drop / picker cellule vide)
   const [assignDlg, setAssignDlg] = useState<{
     employe: Employe;
     date: Date;
     affaireId: string;
     objetId: string;
     existing: Assignation[];
+  } | null>(null);
+
+  // Dialog édition groupée d'une cellule (objet × jour)
+  const [cellDlg, setCellDlg] = useState<{
+    objet: FabObjet;
+    affaire: Affaire;
+    date: Date;
+    cellAssigns: Assignation[];
   } | null>(null);
 
   function openCreateDialog(emp: Employe, affaire: Affaire, objet: FabObjet, day: Date) {
