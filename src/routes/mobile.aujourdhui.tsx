@@ -33,6 +33,7 @@ interface AssignationLite {
   metier_id: number;
   affaire: { numero: string; nom: string; lieu: string | null } | null;
   metier: { libelle: string; couleur: string } | null;
+  objets: { reference: string; nom: string }[];
 }
 
 function MobileSemaine() {
@@ -66,14 +67,24 @@ function MobileSemaine() {
     supabase
       .from("assignations")
       .select(
-        "id, date, demi_journee, heures, notes, metier_id, affaire:affaires(numero, nom, lieu), metier:metiers(libelle, couleur)",
+        "id, date, demi_journee, heures, notes, metier_id, affaire:affaires(numero, nom, lieu), metier:metiers(libelle, couleur), assignation_objets(objet:fabrication_objets(reference, nom))",
       )
       .eq("employe_id", employeId)
       .gte("date", startStr)
       .lte("date", endStr)
       .order("date")
       .then(({ data }) => {
-        setAssignations((data ?? []) as unknown as AssignationLite[]);
+        const rows = (data ?? []).map((a) => {
+          const links = (a as unknown as { assignation_objets?: { objet: { reference: string; nom: string } | null }[] })
+            .assignation_objets ?? [];
+          return {
+            ...(a as unknown as AssignationLite),
+            objets: links
+              .map((l) => l.objet)
+              .filter((o): o is { reference: string; nom: string } => o !== null),
+          };
+        });
+        setAssignations(rows);
         setLoading(false);
       });
   }, [employeId, weekStart, weekEnd]);
@@ -243,6 +254,20 @@ function MobileSemaine() {
                                 </span>
                               )}
                             </p>
+                            {a.objets.length > 0 && (
+                              <ul className="mt-1 space-y-0.5 rounded-md border border-border/40 bg-muted/30 p-1.5">
+                                {a.objets.map((o, i) => (
+                                  <li key={i} className="flex items-baseline gap-1.5 text-[10px]">
+                                    <span className="font-mono font-semibold text-foreground">
+                                      {o.reference}
+                                    </span>
+                                    <span className="truncate text-muted-foreground">
+                                      {o.nom}
+                                    </span>
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
                             {a.notes && (
                               <p className="mt-1 text-[11px] italic text-muted-foreground">
                                 {a.notes}

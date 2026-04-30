@@ -269,6 +269,42 @@ export type Database = {
           },
         ]
       }
+      assignation_objets: {
+        Row: {
+          assignation_id: string
+          created_at: string
+          created_by: string | null
+          objet_id: string
+        }
+        Insert: {
+          assignation_id: string
+          created_at?: string
+          created_by?: string | null
+          objet_id: string
+        }
+        Update: {
+          assignation_id?: string
+          created_at?: string
+          created_by?: string | null
+          objet_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assignation_objets_assignation_id_fkey"
+            columns: ["assignation_id"]
+            isOneToOne: false
+            referencedRelation: "assignations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assignation_objets_objet_id_fkey"
+            columns: ["objet_id"]
+            isOneToOne: false
+            referencedRelation: "fabrication_objets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       assignations: {
         Row: {
           affaire_id: string

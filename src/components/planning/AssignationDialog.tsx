@@ -101,6 +101,10 @@ export function AssignationDialog({
   // v0.21 — Date éditable (par défaut = prop date, modifiable uniquement en création)
   const [dateOverride, setDateOverride] = useState<Date>(date);
 
+  // v0.25 — Objets de fabrication rattachés à cette assignation
+  const [objetsAffaire, setObjetsAffaire] = useState<{ id: string; reference: string; nom: string }[]>([]);
+  const [selectedObjetIds, setSelectedObjetIds] = useState<string[]>([]);
+
   // Réinitialise à l'ouverture
   useEffect(() => {
     if (!open) return;
@@ -115,7 +119,54 @@ export function AssignationDialog({
     setEstChefJour(false);
     setShowAllMetiers(false);
     setDateOverride(date);
+    setSelectedObjetIds([]);
   }, [open, employe.metier_principal_id, date]);
+
+  // v0.25 — Charge les objets de fabrication de l'affaire sélectionnée
+  useEffect(() => {
+    if (!affaireId) {
+      setObjetsAffaire([]);
+      return;
+    }
+    let cancelled = false;
+    supabase
+      .from("fabrication_objets")
+      .select("id, reference, nom, ordre, created_at")
+      .eq("affaire_id", affaireId)
+      .eq("archive", false)
+      .order("ordre", { ascending: true })
+      .order("created_at", { ascending: true })
+      .then(({ data }) => {
+        if (cancelled) return;
+        setObjetsAffaire(
+          (data ?? []).map((o) => ({ id: o.id, reference: o.reference, nom: o.nom })),
+        );
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [affaireId]);
+
+  // v0.25 — Charge les objets déjà rattachés à l'assignation en cours d'édition
+  useEffect(() => {
+    if (!editingId) {
+      setSelectedObjetIds([]);
+      return;
+    }
+    let cancelled = false;
+    supabase
+      .from("assignation_objets")
+      .select("objet_id")
+      .eq("assignation_id", editingId)
+      .then(({ data }) => {
+        if (cancelled) return;
+        setSelectedObjetIds((data ?? []).map((r) => r.objet_id));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [editingId]);
+
 
   // Charge les compétences secondaires de l'employé
   useEffect(() => {
@@ -263,15 +314,55 @@ export function AssignationDialog({
       est_chef_jour: estChefJour,
     };
 
-    const res = editingId
-      ? await supabase.from("assignations").update(payload).eq("id", editingId)
-      : await supabase.from("assignations").insert(payload);
+    let assignationId: string | null = editingId;
+    if (editingId) {
+      const { error } = await supabase.from("assignations").update(payload).eq("id", editingId);
+      if (error) {
+        setSaving(false);
+        toast.error(`Erreur : ${error.message}`);
+        return;
+      }
+    } else {
+      const { data, error } = await supabase
+        .from("assignations")
+        .insert(payload)
+        .select("id")
+        .single();
+      if (error || !data) {
+        setSaving(false);
+        toast.error(`Erreur : ${error?.message ?? "insert"}`);
+        return;
+      }
+      assignationId = data.id;
+    }
+
+    // v0.25 — Synchronise les objets de fabrication rattachés
+    if (assignationId) {
+      // Récupère l'état actuel pour calculer le diff (vide en création)
+      const { data: existingLinks } = await supabase
+        .from("assignation_objets")
+        .select("objet_id")
+        .eq("assignation_id", assignationId);
+      const existingIds = new Set((existingLinks ?? []).map((r) => r.objet_id));
+      const targetIds = new Set(selectedObjetIds);
+      const toInsert = [...targetIds].filter((id) => !existingIds.has(id));
+      const toDelete = [...existingIds].filter((id) => !targetIds.has(id));
+
+      if (toDelete.length > 0) {
+        await supabase
+          .from("assignation_objets")
+          .delete()
+          .eq("assignation_id", assignationId)
+          .in("objet_id", toDelete);
+      }
+      if (toInsert.length > 0) {
+        await supabase.from("assignation_objets").insert(
+          toInsert.map((objet_id) => ({ assignation_id: assignationId!, objet_id })),
+        );
+      }
+    }
 
     setSaving(false);
-    if (res.error) {
-      toast.error(`Erreur : ${res.error.message}`);
-      return;
-    }
     toast.success(editingId ? "Assignation modifiée" : "Assignation créée");
     onSaved();
     onOpenChange(false);
@@ -552,6 +643,57 @@ export function AssignationDialog({
                 />
               </div>
             </div>
+
+            {/* v0.25 — Objet(s) de fabrication concerné(s) */}
+            {affaireId && objetsAffaire.length > 0 && (
+              <div className="grid gap-1.5">
+                <div className="flex items-center justify-between">
+                  <Label>
+                    Objet(s) du devis{" "}
+                    <span className="text-[10px] font-normal text-muted-foreground">
+                      ({selectedObjetIds.length}/{objetsAffaire.length})
+                    </span>
+                  </Label>
+                  {selectedObjetIds.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setSelectedObjetIds([])}
+                      className="text-[10px] text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+                    >
+                      Tout déselectionner
+                    </button>
+                  )}
+                </div>
+                <div className="max-h-40 space-y-1 overflow-y-auto rounded-md border bg-muted/20 p-2">
+                  {objetsAffaire.map((o) => {
+                    const checked = selectedObjetIds.includes(o.id);
+                    return (
+                      <label
+                        key={o.id}
+                        className="flex cursor-pointer items-start gap-2 rounded px-1.5 py-1 text-xs hover:bg-background"
+                      >
+                        <Checkbox
+                          checked={checked}
+                          onCheckedChange={(c) => {
+                            setSelectedObjetIds((prev) =>
+                              c ? [...prev, o.id] : prev.filter((id) => id !== o.id),
+                            );
+                          }}
+                          className="mt-0.5"
+                        />
+                        <div className="min-w-0 flex-1">
+                          <span className="font-mono font-semibold">{o.reference}</span>
+                          <span className="ml-1.5 text-muted-foreground">— {o.nom}</span>
+                        </div>
+                      </label>
+                    );
+                  })}
+                </div>
+                <p className="text-[10px] text-muted-foreground">
+                  L'employé verra ces objets dans son espace mobile.
+                </p>
+              </div>
+            )}
 
             <div className="grid gap-1.5">
               <Label>Notes (optionnel)</Label>
