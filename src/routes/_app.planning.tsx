@@ -41,6 +41,7 @@ import {
   AFFAIRE_TYPOLOGIES,
   getAffaireTypologie,
 } from "@/lib/affaire-typologie";
+import { countActiveAffairesByTypologie } from "@/lib/typologie-active-counts";
 
 const PLANNING_SEARCH_DEFAULTS = { typo: [] as AffaireTypologie[] };
 
