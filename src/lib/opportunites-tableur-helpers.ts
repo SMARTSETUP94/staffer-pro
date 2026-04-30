@@ -13,6 +13,7 @@
  */
 import { normalizeName } from "@/lib/string-normalize";
 import type { OpportuniteStatut, OpportuniteTaille } from "@/lib/opportunites";
+import type { AffaireTypologie } from "@/lib/affaire-typologie";
 
 export const CODE_9XXX_REGEX = /^9\d{3}$/;
 /** v0.29.1 — Format code affaire signée. */
@@ -51,6 +52,7 @@ export const TABLEUR_COLUMNS = [
   "deviseur",
   "date_opportunite",
   "taille",
+  "typologie_future",
   "statut",
   "code_5xxx",
   "date_montage",
@@ -80,6 +82,8 @@ export interface TableurRow {
   date_montage: string | null;
   date_demontage: string | null;
   notes: string | null;
+  /** v0.29.2 — Typologie cible déclarée par le CA (pré-remplit le préfixe à la signature). */
+  typologie_future: AffaireTypologie | null;
 }
 
 /** Calcule la cellule cible pour Tab (right-then-down) ou Enter (down). */

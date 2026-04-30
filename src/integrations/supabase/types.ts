@@ -168,6 +168,7 @@ export type Database = {
             | null
           taille: Database["public"]["Enums"]["opportunite_taille"] | null
           typologie: string | null
+          typologie_future: string | null
           updated_at: string
         }
         Insert: {
@@ -200,6 +201,7 @@ export type Database = {
             | null
           taille?: Database["public"]["Enums"]["opportunite_taille"] | null
           typologie?: string | null
+          typologie_future?: string | null
           updated_at?: string
         }
         Update: {
@@ -232,6 +234,7 @@ export type Database = {
             | null
           taille?: Database["public"]["Enums"]["opportunite_taille"] | null
           typologie?: string | null
+          typologie_future?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -2278,6 +2281,15 @@ export type Database = {
       etape_for_metier: {
         Args: { metier: string }
         Returns: Database["public"]["Enums"]["fabrication_etape_type"]
+      }
+      get_last_used_codes: {
+        Args: { _n?: number; _prefix: number }
+        Returns: {
+          client: string
+          code: string
+          nom: string
+          signed_at: string
+        }[]
       }
       has_role: {
         Args: {

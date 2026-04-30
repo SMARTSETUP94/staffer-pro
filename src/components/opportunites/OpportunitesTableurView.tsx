@@ -73,6 +73,8 @@ import {
   checkCanDeleteOpportunite,
   deleteBlockedMessage,
 } from "@/lib/opportunite-delete";
+import { TypologieFutureSelect } from "@/components/typologie/TypologieFutureSelect";
+import type { AffaireTypologie } from "@/lib/affaire-typologie";
 
 const PAGE_SIZE = 50;
 /** v0.29.1 — Debounce passé de 300ms à 800ms (spec hotfix). */
@@ -271,6 +273,9 @@ export function OpportunitesTableurView({
             case "commentaires":
               patch.notes = row.notes;
               break;
+            case "typologie_future":
+              patch.typologie_future = row.typologie_future;
+              break;
             case "code":
               if (!isValidCode9XXX(row.numero)) {
                 toast.error("Code 9XXX invalide");
@@ -396,6 +401,7 @@ export function OpportunitesTableurView({
       date_montage: null,
       date_demontage: null,
       notes: null,
+      typologie_future: null,
     };
     setDrafts((prev) => [...prev, newRow]);
     const newTotal = filtered.length + 1;
@@ -525,6 +531,7 @@ export function OpportunitesTableurView({
               <th className="px-2 py-2 text-left font-semibold">Deviseur</th>
               <th className="px-2 py-2 text-left font-semibold">Date d'opp</th>
               <th className="px-2 py-2 text-left font-semibold">Taille</th>
+              <th className="px-2 py-2 text-left font-semibold">Typo. future</th>
               <th className="px-2 py-2 text-left font-semibold">Statut</th>
               <th className="px-2 py-2 text-left font-semibold">Code 5XXX</th>
               <th className="px-2 py-2 text-left font-semibold">Montage</th>
@@ -537,7 +544,7 @@ export function OpportunitesTableurView({
             {pageRows.length === 0 && (
               <tr>
                 <td
-                  colSpan={isAdminOrChef ? 11 : 10}
+                  colSpan={isAdminOrChef ? 12 : 11}
                   className="px-4 py-8 text-center text-xs text-muted-foreground"
                 >
                   Aucune opportunité ne correspond aux filtres.
@@ -658,6 +665,18 @@ export function OpportunitesTableurView({
                         ))}
                       </SelectContent>
                     </Select>
+                  </td>
+                  {/* Typologie future (v0.29.2) */}
+                  <td className="px-2 py-1">
+                    <TypologieFutureSelect
+                      value={row.typologie_future}
+                      onChange={(v) =>
+                        updateField(row, "typologie_future", { typologie_future: v })
+                      }
+                      disabled={!canEdit}
+                      className="h-8 w-[140px]"
+                      ariaLabel="Typologie future"
+                    />
                   </td>
                   {/* Statut */}
                   <td className="px-2 py-1">

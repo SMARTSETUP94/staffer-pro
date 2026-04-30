@@ -1,10 +1,12 @@
 import { useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { OpportuniteStatut, OpportuniteTaille } from "@/lib/opportunites";
+import type { AffaireTypologie } from "@/lib/affaire-typologie";
 import { isValidCode9XXX } from "@/lib/opportunites-tableur-helpers";
 
 /**
  * v0.28.0 — Hook upsert opportunité (création + édition champ par champ).
+ * v0.29.2 — Ajout typologie_future (colonne BDD) supporté en update.
  *
  * - Si pas d'affaireId : appelle RPC `create_opportunite` (équivalent NouvelleOpportuniteDialog).
  *   Requiert : code (9XXX valide), client, charge_affaires_id.
@@ -23,6 +25,7 @@ export interface UpsertPatch {
   date_montage?: string | null;
   date_demontage?: string | null;
   notes?: string | null;
+  typologie_future?: AffaireTypologie | null;
 }
 
 export interface CreateInput {

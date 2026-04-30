@@ -120,6 +120,7 @@ interface OppRowFull extends OpportuniteCardData {
   date_pat: string | null;
   date_montage: string | null;
   date_demontage: string | null;
+  typologie_future: AffaireTypologie | null;
 }
 
 function OpportunitesPage() {
@@ -182,7 +183,7 @@ function OpportunitesPage() {
     supabase
       .from("affaires")
       .select(
-        "id, numero, client, nom, charge_affaires_id, taille, date_opportunite, notes, statut_opportunite, date_pat, date_montage, date_demontage",
+        "id, numero, client, nom, charge_affaires_id, taille, date_opportunite, notes, statut_opportunite, date_pat, date_montage, date_demontage, typologie_future",
       )
       .eq("phase", "opportunite")
       .order("date_opportunite", { ascending: false, nullsFirst: false })
@@ -201,15 +202,15 @@ function OpportunitesPage() {
     };
   }, [refreshTick]);
 
-  // Filtrage CA + typologie (commun aux 2 vues)
+  // v0.29.2 — Filtrage CA + typologie FUTURE (la typologie dérivée du numero
+  // est inutile ici car toutes les opps sont 9XXX = prototype par construction).
   const typoSet = useMemo(() => new Set(typoFilter), [typoFilter]);
   const oppsFiltrees = useMemo(() => {
     return opps.filter((o) => {
       if (filterCa && filterCa !== "__all__" && o.charge_affaires_id !== filterCa)
         return false;
       if (typoSet.size > 0) {
-        const t = getAffaireTypologie(o.numero);
-        if (!t || !typoSet.has(t)) return false;
+        if (!o.typologie_future || !typoSet.has(o.typologie_future)) return false;
       }
       return true;
     });
@@ -218,8 +219,9 @@ function OpportunitesPage() {
   const typoCounts = useMemo(() => {
     const counts: Partial<Record<AffaireTypologie, number>> = {};
     opps.forEach((o) => {
-      const t = getAffaireTypologie(o.numero);
-      if (t) counts[t] = (counts[t] ?? 0) + 1;
+      if (o.typologie_future) {
+        counts[o.typologie_future] = (counts[o.typologie_future] ?? 0) + 1;
+      }
     });
     return counts;
   }, [opps]);
@@ -254,6 +256,7 @@ function OpportunitesPage() {
         date_montage: o.date_montage,
         date_demontage: o.date_demontage,
         notes: o.notes,
+        typologie_future: o.typologie_future,
       })),
     [oppsFiltrees],
   );
@@ -484,7 +487,7 @@ function OpportunitesPage() {
 
       <div className="rounded-2xl border border-border bg-card p-3">
         <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-          Typologie
+          Typologie future (cible à la signature)
         </div>
         <TypologieMultiFilter
           value={typoFilter}
