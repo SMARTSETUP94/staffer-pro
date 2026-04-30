@@ -290,8 +290,10 @@ function DevisImportPage() {
 
       setHasParsed(true);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      toast.error("Lecture impossible", { description: msg });
+      const issue = exceptionToIssue(err, "Lecture du fichier devis");
+      setParseErrors((prev) => [...prev, issue.message]);
+      setHasParsed(false);
+      toast.error("Lecture impossible", { description: issue.message });
     } finally {
       setParsing(false);
     }
