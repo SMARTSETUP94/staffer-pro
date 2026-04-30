@@ -21,6 +21,11 @@ import { usePlanningData } from "@/hooks/use-planning-data";
 // v0.24.1 — lazy-load des helpers d'export (xlsx, jszip ~600KB) au clic
 import { useVehicules } from "@/hooks/use-vehicules";
 import { useTrajetsWeek } from "@/hooks/use-trajets";
+import { TypologieMultiFilter } from "@/components/typologie/TypologieMultiFilter";
+import {
+  type AffaireTypologie,
+  getAffaireTypologie,
+} from "@/lib/affaire-typologie";
 
 export const Route = createFileRoute("/_app/export/")({
   head: () => ({ meta: [{ title: "Export planning — Planning chantiers" }] }),
