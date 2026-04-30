@@ -32,6 +32,10 @@ import type {
   Metier,
 } from "@/hooks/use-planning-data";
 import { normalizeName } from "@/lib/string-normalize";
+import {
+  getHeuresPrevuesTotalForMetiers,
+  type ObjetHeuresPrevues,
+} from "@/lib/objet-heures-helpers";
 import { toast } from "sonner";
 
 interface FabObjet {
@@ -40,7 +44,10 @@ interface FabObjet {
   reference: string;
   nom: string;
   ordre: number;
+  /** Heures prévues TOTALES (somme tous métiers × quantité). */
   heures_prevues_total: number;
+  /** v0.27.7 — Détail des colonnes brutes pour permettre le filtrage par métier. */
+  raw: ObjetHeuresPrevues;
 }
 
 interface ObjetLink {
@@ -146,6 +153,16 @@ export function PlanningParObjet({
               nom: o.nom,
               ordre: o.ordre ?? 0,
               heures_prevues_total: totalUnit * qte,
+              raw: {
+                heures_prevues_be: o.heures_prevues_be,
+                heures_prevues_numerique: o.heures_prevues_numerique,
+                heures_prevues_bois: o.heures_prevues_bois,
+                heures_prevues_metal: o.heures_prevues_metal,
+                heures_prevues_peinture: o.heures_prevues_peinture,
+                heures_prevues_tapisserie: o.heures_prevues_tapisserie,
+                heures_prevues_manutention: o.heures_prevues_manutention,
+                quantite: o.quantite,
+              },
             };
           }),
         );
@@ -347,7 +364,14 @@ export function PlanningParObjet({
                       </tr>
                       {objs.map((obj) => {
                         const heuresAssign = heuresAssigneesByObjet.get(obj.id) ?? 0;
-                        const heuresPrev = obj.heures_prevues_total;
+                        // v0.27.7 — Si filtre métier actif, on n'affiche que la
+                        // somme des heures_prevues_X correspondant aux métiers
+                        // cochés. Sans filtre = somme totale (comportement v0.26).
+                        const heuresPrev = getHeuresPrevuesTotalForMetiers(
+                          obj.raw,
+                          filterMetierIds ?? null,
+                          metiers,
+                        );
                         const depassement = heuresAssign - heuresPrev;
                         const isOver = heuresPrev > 0 && depassement > 0;
                         const noBudget = heuresPrev === 0 && heuresAssign > 0;

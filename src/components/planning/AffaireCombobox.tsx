@@ -14,6 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { isAffaireSelectable } from "@/lib/affaire-lock";
+import { getAffaireTypologie } from "@/lib/affaire-typologie";
 import type { Affaire } from "@/hooks/use-planning-data";
 
 interface Props {
@@ -47,14 +48,21 @@ export function AffaireCombobox({
 }: Props) {
   const [open, setOpen] = useState(false);
   const [includeOpps, setIncludeOpps] = useState(includeOpportunites);
+  // v0.27.7 — Fix #3 — Toggles typologies (par défaut OFF)
+  const [includeNonOp, setIncludeNonOp] = useState(false);
+  const [includeStockage, setIncludeStockage] = useState(false);
 
   const sorted = useMemo(() => {
     // v0.17 — Filtrer les opportunités sauf si toggle activé OU si la valeur sélectionnée en est une
     // v0.21 Bloc 4 — Filtrer les affaires terminees/annulees sauf si la valeur courante en est une
+    // v0.27.7 — Filtrer non_operationnel et stockage sauf si toggles activés
     const filtered = affaires.filter((a) => {
       if (a.id === value) return true; // garde toujours la selection courante visible
       if (a.phase === "opportunite" && !includeOpps) return false;
       if (!includeClosed && !isAffaireSelectable(a)) return false;
+      const typo = getAffaireTypologie(a.numero);
+      if (typo === "non_operationnel" && !includeNonOp) return false;
+      if (typo === "stockage" && !includeStockage) return false;
       return true;
     });
     const list = [...filtered].sort((a, b) =>
@@ -64,7 +72,7 @@ export function AffaireCombobox({
     const pinned = list.filter((a) => pinnedIds.has(a.id));
     const rest = list.filter((a) => !pinnedIds.has(a.id));
     return { pinned, rest };
-  }, [affaires, pinnedIds, includeOpps, value, includeClosed]);
+  }, [affaires, pinnedIds, includeOpps, includeNonOp, includeStockage, value, includeClosed]);
 
   const selected = affaires.find((a) => a.id === value);
 
@@ -93,18 +101,25 @@ export function AffaireCombobox({
       </PopoverTrigger>
       <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
         {showOpportuniteToggle && (
-          <div className="flex items-center justify-between gap-2 border-b border-border bg-muted/30 px-3 py-2">
-            <Label
-              htmlFor="aff-include-opps"
-              className="text-[11px] font-medium text-muted-foreground cursor-pointer"
-            >
-              Inclure opportunités (staffing proto)
-            </Label>
-            <Switch
-              id="aff-include-opps"
-              checked={includeOpps}
-              onCheckedChange={setIncludeOpps}
-            />
+          <div className="space-y-1.5 border-b border-border bg-muted/30 px-3 py-2">
+            <div className="flex items-center justify-between gap-2">
+              <Label htmlFor="aff-include-opps" className="text-[11px] font-medium text-muted-foreground cursor-pointer">
+                Inclure opportunités (staffing proto)
+              </Label>
+              <Switch id="aff-include-opps" checked={includeOpps} onCheckedChange={setIncludeOpps} />
+            </div>
+            <div className="flex items-center justify-between gap-2">
+              <Label htmlFor="aff-include-nonop" className="text-[11px] font-medium text-muted-foreground cursor-pointer">
+                Inclure chantiers non opérationnels (1XXX/3XXX)
+              </Label>
+              <Switch id="aff-include-nonop" checked={includeNonOp} onCheckedChange={setIncludeNonOp} />
+            </div>
+            <div className="flex items-center justify-between gap-2">
+              <Label htmlFor="aff-include-stockage" className="text-[11px] font-medium text-muted-foreground cursor-pointer">
+                Inclure stockage (2XXXX)
+              </Label>
+              <Switch id="aff-include-stockage" checked={includeStockage} onCheckedChange={setIncludeStockage} />
+            </div>
           </div>
         )}
         <Command

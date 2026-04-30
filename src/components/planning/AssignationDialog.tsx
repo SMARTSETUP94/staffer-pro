@@ -40,6 +40,11 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  repartirHeuresProRata,
+  metierIdToHeuresKey,
+  type ProRataInput,
+} from "@/lib/objet-heures-helpers";
 import type { Affaire, Assignation, DevisLot, Employe, Metier } from "@/hooks/use-planning-data";
 
 type Slot = "AM" | "PM" | "JOURNEE";
@@ -110,9 +115,19 @@ export function AssignationDialog({
   // v0.25 — Objets de fabrication rattachés à cette assignation
   const [objetsAffaire, setObjetsAffaire] = useState<{ id: string; reference: string; nom: string }[]>([]);
   const [selectedObjetIds, setSelectedObjetIds] = useState<string[]>([]);
-  // Détail conso par objet sélectionné : { id, ref, nom, prevues, planifiees }
+  // Détail conso par objet sélectionné : { id, ref, nom, prevues (total), prevuesParMetier (par clé), planifiees, quantite }
   const [objetsConso, setObjetsConso] = useState<
-    Record<string, { reference: string; nom: string; prevues: number; planifiees: number }>
+    Record<
+      string,
+      {
+        reference: string;
+        nom: string;
+        prevues: number;
+        prevuesParMetier: Record<string, number>;
+        quantite: number;
+        planifiees: number;
+      }
+    >
   >({});
 
   // Réinitialise à l'ouverture
@@ -211,21 +226,35 @@ export function AssignationDialog({
         );
       }
       if (cancelled) return;
-      const byObjet: Record<string, { reference: string; nom: string; prevues: number; planifiees: number }> = {};
+      const byObjet: Record<
+        string,
+        {
+          reference: string;
+          nom: string;
+          prevues: number;
+          prevuesParMetier: Record<string, number>;
+          quantite: number;
+          planifiees: number;
+        }
+      > = {};
       for (const o of objs ?? []) {
         const qte = Number(o.quantite ?? 1) || 1;
-        const totalUnit =
-          Number(o.heures_prevues_be ?? 0) +
-          Number(o.heures_prevues_numerique ?? 0) +
-          Number(o.heures_prevues_bois ?? 0) +
-          Number(o.heures_prevues_metal ?? 0) +
-          Number(o.heures_prevues_peinture ?? 0) +
-          Number(o.heures_prevues_tapisserie ?? 0) +
-          Number(o.heures_prevues_manutention ?? 0);
+        const prevuesParMetier = {
+          be: Number(o.heures_prevues_be ?? 0),
+          numerique: Number(o.heures_prevues_numerique ?? 0),
+          bois: Number(o.heures_prevues_bois ?? 0),
+          metal: Number(o.heures_prevues_metal ?? 0),
+          peinture: Number(o.heures_prevues_peinture ?? 0),
+          tapisserie: Number(o.heures_prevues_tapisserie ?? 0),
+          manutention: Number(o.heures_prevues_manutention ?? 0),
+        };
+        const totalUnit = Object.values(prevuesParMetier).reduce((s, n) => s + n, 0);
         byObjet[o.id] = {
           reference: o.reference,
           nom: o.nom,
           prevues: totalUnit * qte,
+          prevuesParMetier,
+          quantite: qte,
           planifiees: 0,
         };
       }
@@ -845,66 +874,115 @@ export function AssignationDialog({
             </div>
           )}
 
-          {selectedObjetIds.length > 0 && (
-            <div className="rounded-md border border-primary/20 bg-card p-2 text-[11px]">
-              <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-                Détail par objet sélectionné ({selectedObjetIds.length})
-              </div>
-              <div className="space-y-1">
-                {selectedObjetIds.map((oid) => {
-                  const c = objetsConso[oid];
-                  if (!c) {
+          {selectedObjetIds.length > 0 && (() => {
+            // v0.27.7 — Fix #2 — Répartition au prorata des heures saisies
+            // entre les objets sélectionnés selon les heures_prevues_X du
+            // métier choisi. Évite le bug : 8h × 3 objets = 24h comptées.
+            const heuresKey = metierId
+              ? metierIdToHeuresKey(metierId, metiers)
+              : null;
+            const inputs: ProRataInput[] = selectedObjetIds.map((oid) => {
+              const c = objetsConso[oid];
+              const unit = c
+                ? heuresKey
+                  ? c.prevuesParMetier[heuresKey] ?? 0
+                  : c.prevues / (c.quantite || 1)
+                : 0;
+              return {
+                objetId: oid,
+                heuresPrevuesUnit: unit,
+                quantite: c?.quantite ?? 1,
+              };
+            });
+            const repartition = repartirHeuresProRata(heures, inputs);
+            const repartMap = new Map(
+              repartition.map((r) => [r.objetId, r]),
+            );
+            const fallbackMode = repartition.length > 0 && repartition[0].fallback;
+            return (
+              <div className="rounded-md border border-primary/20 bg-card p-2 text-[11px]">
+                <div className="mb-1.5 flex items-center justify-between text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  <span>Détail par objet sélectionné ({selectedObjetIds.length})</span>
+                  {selectedObjetIds.length > 1 && (
+                    <span className="text-[9px] font-normal normal-case text-muted-foreground/80">
+                      {fallbackMode
+                        ? `répartition équitable (${heures}h ÷ ${selectedObjetIds.length})`
+                        : `prorata sur ${heuresKey ?? "total"}`}
+                    </span>
+                  )}
+                </div>
+                <div className="space-y-1">
+                  {selectedObjetIds.map((oid) => {
+                    const c = objetsConso[oid];
+                    if (!c) {
+                      return (
+                        <div key={oid} className="text-muted-foreground italic">
+                          Chargement…
+                        </div>
+                      );
+                    }
+                    const r = repartMap.get(oid);
+                    const heuresAttribuees = r?.heuresAttribuees ?? 0;
+                    const planifBase = editingId
+                      ? Math.max(0, c.planifiees - heuresEditees)
+                      : c.planifiees;
+                    const planifApres = planifBase + heuresAttribuees;
+                    // Pour la jauge "restant", on utilise le total métier × qte
+                    // si un métier est sélectionné, sinon le total tous métiers.
+                    const prevuesAffichees = heuresKey
+                      ? (c.prevuesParMetier[heuresKey] ?? 0) * c.quantite
+                      : c.prevues;
+                    const restant = prevuesAffichees - planifApres;
+                    const noBudget = prevuesAffichees === 0;
+                    const over = !noBudget && restant < 0;
                     return (
-                      <div key={oid} className="text-muted-foreground italic">
-                        Chargement…
+                      <div
+                        key={oid}
+                        className={cn(
+                          "flex flex-col gap-0.5 rounded border p-1.5",
+                          over && "border-destructive/50 bg-destructive/10",
+                          noBudget && "border-amber-500/50 bg-amber-50",
+                          !over && !noBudget && "border-muted-foreground/10",
+                        )}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="truncate font-mono text-[10px] font-bold">{c.reference}</span>
+                          <span className="truncate text-[10px] text-muted-foreground">{c.nom}</span>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 tabular-nums">
+                          <span>Devisé : <strong>{prevuesAffichees}h</strong></span>
+                          <span>
+                            Planifié : <strong>{planifBase}h</strong>
+                            {heuresAttribuees > 0 && (
+                              <span className="text-muted-foreground">
+                                {" "}→ {planifApres.toFixed(2)}h après (+{heuresAttribuees.toFixed(2)}h)
+                              </span>
+                            )}
+                          </span>
+                          <span className={cn(over && "text-destructive font-semibold")}>
+                            Restant : <strong>{restant.toFixed(2)}h</strong>
+                            {over && <AlertTriangle className="ml-1 inline h-3 w-3" />}
+                          </span>
+                        </div>
+                        {noBudget && (
+                          <div className="text-[10px] text-amber-700">
+                            Aucune heure prévue au devis pour cet objet
+                            {heuresKey ? ` sur le métier sélectionné` : ""}.
+                          </div>
+                        )}
                       </div>
                     );
-                  }
-                  const planifBase = editingId
-                    ? Math.max(0, c.planifiees - heuresEditees)
-                    : c.planifiees;
-                  const planifApres = planifBase + heures;
-                  const restant = c.prevues - planifApres;
-                  const noBudget = c.prevues === 0;
-                  const over = !noBudget && restant < 0;
-                  return (
-                    <div
-                      key={oid}
-                      className={cn(
-                        "flex flex-col gap-0.5 rounded border p-1.5",
-                        over && "border-destructive/50 bg-destructive/10",
-                        noBudget && "border-amber-500/50 bg-amber-50",
-                        !over && !noBudget && "border-muted-foreground/10",
-                      )}
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="truncate font-mono text-[10px] font-bold">{c.reference}</span>
-                        <span className="truncate text-[10px] text-muted-foreground">{c.nom}</span>
-                      </div>
-                      <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 tabular-nums">
-                        <span>Devisé : <strong>{c.prevues}h</strong></span>
-                        <span>
-                          Planifié : <strong>{planifBase}h</strong>
-                          {heures > 0 && (
-                            <span className="text-muted-foreground"> → {planifApres}h après</span>
-                          )}
-                        </span>
-                        <span className={cn(over && "text-destructive font-semibold")}>
-                          Restant : <strong>{restant}h</strong>
-                          {over && <AlertTriangle className="ml-1 inline h-3 w-3" />}
-                        </span>
-                      </div>
-                      {noBudget && (
-                        <div className="text-[10px] text-amber-700">
-                          Aucune heure prévue au devis pour cet objet.
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+                  })}
+                </div>
+                {selectedObjetIds.length > 1 && (
+                  <div className="mt-1.5 border-t pt-1 text-[10px] text-muted-foreground">
+                    Total imputé sur les {selectedObjetIds.length} objets :{" "}
+                    <strong>{heures}h</strong> (et non {heures * selectedObjetIds.length}h).
+                  </div>
+                )}
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           <DialogFooter className="flex-row justify-between sm:justify-between">
             <div>
