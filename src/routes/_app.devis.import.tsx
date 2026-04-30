@@ -303,6 +303,14 @@ function DevisImportPage() {
           warnings: o.warnings,
         }));
         setObjets(editable);
+        // v0.32.2 — snapshot des objets source pour validation cohérence.
+        setParsedObjets(
+          progbat.objetsCandidats.map((o) => ({
+            numero: o.numero,
+            nom: o.nom,
+            heures: { ...o.heures } as Record<string, number>,
+          })),
+        );
         setMontageH(progbat.heuresChantier.montage);
         setDemontageH(progbat.heuresChantier.demontage);
         setImportMontage(progbat.heuresChantier.montage > 0);
