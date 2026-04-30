@@ -110,6 +110,10 @@ export function AssignationDialog({
   // v0.25 — Objets de fabrication rattachés à cette assignation
   const [objetsAffaire, setObjetsAffaire] = useState<{ id: string; reference: string; nom: string }[]>([]);
   const [selectedObjetIds, setSelectedObjetIds] = useState<string[]>([]);
+  // Détail conso par objet sélectionné : { id, ref, nom, prevues, planifiees }
+  const [objetsConso, setObjetsConso] = useState<
+    Record<string, { reference: string; nom: string; prevues: number; planifiees: number }>
+  >({});
 
   // Réinitialise à l'ouverture
   useEffect(() => {
