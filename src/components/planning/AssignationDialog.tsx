@@ -644,6 +644,57 @@ export function AssignationDialog({
               </div>
             </div>
 
+            {/* v0.25 — Objet(s) de fabrication concerné(s) */}
+            {affaireId && objetsAffaire.length > 0 && (
+              <div className="grid gap-1.5">
+                <div className="flex items-center justify-between">
+                  <Label>
+                    Objet(s) du devis{" "}
+                    <span className="text-[10px] font-normal text-muted-foreground">
+                      ({selectedObjetIds.length}/{objetsAffaire.length})
+                    </span>
+                  </Label>
+                  {selectedObjetIds.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setSelectedObjetIds([])}
+                      className="text-[10px] text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+                    >
+                      Tout déselectionner
+                    </button>
+                  )}
+                </div>
+                <div className="max-h-40 space-y-1 overflow-y-auto rounded-md border bg-muted/20 p-2">
+                  {objetsAffaire.map((o) => {
+                    const checked = selectedObjetIds.includes(o.id);
+                    return (
+                      <label
+                        key={o.id}
+                        className="flex cursor-pointer items-start gap-2 rounded px-1.5 py-1 text-xs hover:bg-background"
+                      >
+                        <Checkbox
+                          checked={checked}
+                          onCheckedChange={(c) => {
+                            setSelectedObjetIds((prev) =>
+                              c ? [...prev, o.id] : prev.filter((id) => id !== o.id),
+                            );
+                          }}
+                          className="mt-0.5"
+                        />
+                        <div className="min-w-0 flex-1">
+                          <span className="font-mono font-semibold">{o.reference}</span>
+                          <span className="ml-1.5 text-muted-foreground">— {o.nom}</span>
+                        </div>
+                      </label>
+                    );
+                  })}
+                </div>
+                <p className="text-[10px] text-muted-foreground">
+                  L'employé verra ces objets dans son espace mobile.
+                </p>
+              </div>
+            )}
+
             <div className="grid gap-1.5">
               <Label>Notes (optionnel)</Label>
               <Textarea
