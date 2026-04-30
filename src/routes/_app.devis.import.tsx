@@ -439,8 +439,28 @@ function DevisImportPage() {
       );
       arr.push(...metierIssues);
     }
+    // v0.32.2 — Cohérence heures par objet × métier (parsé vs édité UI).
+    if (parsedObjets.length > 0 || objets.length > 0) {
+      const objetIssues = validateObjetsHeuresConsistency(
+        parsedObjets,
+        objets,
+        (o) => ({
+          key: o.numero || o.nom,
+          label: o.nom || o.numero,
+          heuresParMetier: o.heures,
+        }),
+        (o) => ({
+          key: o.numero || o.nom,
+          label: o.nom || o.numero,
+          selected: o.selected,
+          heuresParMetier: o.heures as unknown as Record<string, number>,
+        }),
+        { tolerance: 0.1, field: "Heures par objet" },
+      );
+      arr.push(...objetIssues);
+    }
     return arr;
-  }, [parseErrors, dateMontage, dateDemontage, postes, totals.montant, parsedLines, metiers]);
+  }, [parseErrors, dateMontage, dateDemontage, postes, totals.montant, parsedLines, metiers, parsedObjets, objets]);
 
   // v0.32.0 — Issues bloquantes (corrections requises avant Valider).
   const validationIssues = useMemo<ImportIssue[]>(() => {
