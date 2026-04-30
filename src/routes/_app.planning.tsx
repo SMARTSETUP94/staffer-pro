@@ -32,6 +32,7 @@ import {
   exportPlanningParObjetToXlsx,
   buildPlanningObjetXlsxFilename,
 } from "@/lib/planning-objet-xlsx-export";
+import { exportPlanningExcel } from "@/lib/planning-excel-export";
 import { downloadBlob } from "@/lib/trajets-soustraitance-export";
 import type { TrajetSuggestion } from "@/lib/trajets-suggestions";
 import { TypologieMultiFilter } from "@/components/typologie/TypologieMultiFilter";
@@ -277,6 +278,30 @@ function PlanningPage() {
     }
   }
 
+  async function handleExportWeekXlsx() {
+    setExporting(true);
+    try {
+      exportPlanningExcel({
+        weekStart,
+        metiers,
+        employes,
+        affaires,
+        assignations,
+        consommation,
+        absences,
+        chefsById,
+        vehicules,
+        trajets,
+      });
+      toast.success("Export Excel généré");
+    } catch (e) {
+      console.error(e);
+      toast.error(`Échec export Excel : ${(e as Error).message}`);
+    } finally {
+      setExporting(false);
+    }
+  }
+
   return (
     <div className="flex h-full">
       <div className="flex-1 overflow-y-auto p-3 sm:p-6">
@@ -312,7 +337,7 @@ function PlanningPage() {
               <span className="hidden sm:inline">Exporter PDF</span>
               <span className="sm:hidden">PDF</span>
             </Button>
-            {tab === "parobjet" && (
+            {tab === "parobjet" ? (
               <Button
                 size="sm"
                 variant="outline"
@@ -329,7 +354,24 @@ function PlanningPage() {
                 <span className="hidden sm:inline">Export Excel objets</span>
                 <span className="sm:hidden">Excel</span>
               </Button>
-            )}
+            ) : (tab === "cdi" || tab === "interim" || tab === "budget") ? (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleExportWeekXlsx}
+                disabled={exporting || loading}
+                className="h-8 px-2.5 sm:h-9 sm:px-3"
+                title="Export Excel complet (CDI, Intérim, Synthèse, Heures, Flotte)"
+              >
+                {exporting ? (
+                  <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <FileDown className="mr-1.5 h-3.5 w-3.5" />
+                )}
+                <span className="hidden sm:inline">Export Excel</span>
+                <span className="sm:hidden">Excel</span>
+              </Button>
+            ) : null}
           </div>
         </div>
 
