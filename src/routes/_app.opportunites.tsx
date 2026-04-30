@@ -578,6 +578,39 @@ function OpportunitesPage() {
           onSigned={() => setRefreshTick((t) => t + 1)}
         />
       )}
+
+      <AlertDialog
+        open={!!deleteTarget}
+        onOpenChange={(o) => !o && setDeleteTarget(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Supprimer l&apos;opportunité {deleteTarget?.numero}&nbsp;?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {deleteTarget?.client ?? "(sans client)"}
+              {deleteTarget?.nom && deleteTarget.nom !== deleteTarget.client
+                ? ` — ${deleteTarget.nom}`
+                : ""}
+              . Cette action est irréversible.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deletePending}>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                void handleDeleteConfirm();
+              }}
+              disabled={deletePending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deletePending ? "Suppression…" : "Supprimer"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
