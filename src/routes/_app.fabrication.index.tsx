@@ -17,6 +17,11 @@ import {
   listUnassignedEtapes,
 } from "@/hooks/use-fabrication-dashboard";
 import { StafferVehiculeInterneDialog } from "@/components/fabrication/StafferVehiculeInterneDialog";
+import { TypologieMultiFilter } from "@/components/typologie/TypologieMultiFilter";
+import {
+  type AffaireTypologie,
+  getAffaireTypologie,
+} from "@/lib/affaire-typologie";
 
 export const Route = createFileRoute("/_app/fabrication/")({
   head: () => ({ meta: [{ title: "Dashboard fabrication — Setup Paris" }] }),
@@ -39,6 +44,7 @@ const ETAPE_ICONS: Record<FabricationEtapeType, typeof Hammer> = {
 function FabricationDashboardPage() {
   const { loading, objets, affaires, reload } = useFabricationDashboard();
   const [chefFilter, setChefFilter] = useState<string>("all");
+  const [typoFilter, setTypoFilter] = useState<AffaireTypologie[]>([]);
   const [stafferAffaire, setStafferAffaire] = useState<{
     id: string;
     numero: string;
@@ -48,17 +54,45 @@ function FabricationDashboardPage() {
     objets_count: number;
   } | null>(null);
 
-  // Filtrage par chef projet
+  // v0.24.x — Filtre typologie : restreint l'ensemble propagé downstream (objets + affaires).
+  const typoSet = useMemo(() => new Set(typoFilter), [typoFilter]);
+  const matchTypo = (numero: string | null | undefined) => {
+    if (typoSet.size === 0) return true;
+    const t = getAffaireTypologie(numero ?? null);
+    return t !== null && typoSet.has(t);
+  };
+
+  // Filtrage par chef projet + typologie (chaînés)
   const objetsFiltres = useMemo(() => {
-    if (chefFilter === "all") return objets;
-    if (chefFilter === "none") return objets.filter((o) => !o.chef_projet_id);
-    return objets.filter((o) => o.chef_projet_id === chefFilter);
-  }, [objets, chefFilter]);
+    let list = objets;
+    if (chefFilter === "none") list = list.filter((o) => !o.chef_projet_id);
+    else if (chefFilter !== "all") list = list.filter((o) => o.chef_projet_id === chefFilter);
+    if (typoSet.size > 0) list = list.filter((o) => matchTypo(o.affaire_numero));
+    return list;
+  }, [objets, chefFilter, typoSet]);
 
   const affairesFiltres = useMemo(() => {
-    if (chefFilter === "all") return affaires;
-    if (chefFilter === "none") return affaires.filter((a) => !a.chef_projet_id);
-    return affaires.filter((a) => a.chef_projet_id === chefFilter);
+    let list = affaires;
+    if (chefFilter === "none") list = list.filter((a) => !a.chef_projet_id);
+    else if (chefFilter !== "all") list = list.filter((a) => a.chef_projet_id === chefFilter);
+    if (typoSet.size > 0) list = list.filter((a) => matchTypo(a.numero));
+    return list;
+  }, [affaires, chefFilter, typoSet]);
+
+  // Compteurs typologie sur l'univers complet (avant filtre typo, mais après chef si actif)
+  const typoCounts = useMemo(() => {
+    const counts: Partial<Record<AffaireTypologie, number>> = {};
+    const base =
+      chefFilter === "all"
+        ? affaires
+        : chefFilter === "none"
+          ? affaires.filter((a) => !a.chef_projet_id)
+          : affaires.filter((a) => a.chef_projet_id === chefFilter);
+    base.forEach((a) => {
+      const t = getAffaireTypologie(a.numero);
+      if (t) counts[t] = (counts[t] ?? 0) + 1;
+    });
+    return counts;
   }, [affaires, chefFilter]);
 
   // KPIs
@@ -133,6 +167,9 @@ function FabricationDashboardPage() {
           </div>
         </div>
       </header>
+
+      {/* Filtre typologie chantiers */}
+      <TypologieMultiFilter value={typoFilter} onChange={setTypoFilter} counts={typoCounts} />
 
       {/* KPIs */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">

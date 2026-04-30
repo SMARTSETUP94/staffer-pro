@@ -21,6 +21,11 @@ import { usePlanningData } from "@/hooks/use-planning-data";
 // v0.24.1 — lazy-load des helpers d'export (xlsx, jszip ~600KB) au clic
 import { useVehicules } from "@/hooks/use-vehicules";
 import { useTrajetsWeek } from "@/hooks/use-trajets";
+import { TypologieMultiFilter } from "@/components/typologie/TypologieMultiFilter";
+import {
+  type AffaireTypologie,
+  getAffaireTypologie,
+} from "@/lib/affaire-typologie";
 
 export const Route = createFileRoute("/_app/export/")({
   head: () => ({ meta: [{ title: "Export planning — Planning chantiers" }] }),
@@ -38,6 +43,7 @@ function ExportPage() {
   );
   const [exporting, setExporting] = useState(false);
   const [zipping, setZipping] = useState(false);
+  const [typoFilter, setTypoFilter] = useState<AffaireTypologie[]>([]);
 
   // Sécurise l'ordre + plafonne à 4 semaines
   const { rangeStart, weekCount, tooMany } = useMemo(() => {
@@ -67,15 +73,42 @@ function ExportPage() {
   const { vehicules } = useVehicules();
   const { trajets } = useTrajetsWeek(rangeStart, rangeEnd);
 
+  // v0.24.x — Filtre typologie : restreint l'univers exporté.
+  const typoSet = useMemo(() => new Set(typoFilter), [typoFilter]);
+  const affairesFiltrees = useMemo(() => {
+    if (typoSet.size === 0) return data.affaires;
+    return data.affaires.filter((a) => {
+      const t = getAffaireTypologie(a.numero);
+      return t !== null && typoSet.has(t);
+    });
+  }, [data.affaires, typoSet]);
+  const affaireIdsFiltres = useMemo(
+    () => new Set(affairesFiltrees.map((a) => a.id)),
+    [affairesFiltrees],
+  );
+  const assignationsFiltrees = useMemo(() => {
+    if (typoSet.size === 0) return data.assignations;
+    return data.assignations.filter((a) => affaireIdsFiltres.has(a.affaire_id));
+  }, [data.assignations, affaireIdsFiltres, typoSet]);
+
+  const typoCounts = useMemo(() => {
+    const counts: Partial<Record<AffaireTypologie, number>> = {};
+    data.affaires.forEach((a) => {
+      const t = getAffaireTypologie(a.numero);
+      if (t) counts[t] = (counts[t] ?? 0) + 1;
+    });
+    return counts;
+  }, [data.affaires]);
+
   const cdiCount = data.employes.filter(
     (e) => e.type_contrat === "CDI" || e.type_contrat === "CDD",
   ).length;
-  const assignedIds = new Set(data.assignations.map((a) => a.employe_id));
+  const assignedIds = new Set(assignationsFiltrees.map((a) => a.employe_id));
   const interimCount = data.employes.filter(
     (e) =>
       (e.type_contrat === "Interim" || e.type_contrat === "Independant") && assignedIds.has(e.id),
   ).length;
-  const affairesActivesCount = new Set(data.assignations.map((a) => a.affaire_id)).size;
+  const affairesActivesCount = new Set(assignationsFiltrees.map((a) => a.affaire_id)).size;
 
   async function handleExport() {
     if (data.loading) return;
@@ -86,8 +119,8 @@ function ExportPage() {
         weekStarts,
         metiers: data.metiers,
         employes: data.employes,
-        affaires: data.affaires,
-        assignations: data.assignations,
+        affaires: affairesFiltrees,
+        assignations: assignationsFiltrees,
         consommation: data.consommation,
         absences: data.absences,
         chefsById: data.chefsById,
@@ -133,8 +166,8 @@ function ExportPage() {
         rangeEnd,
         metiers: data.metiers,
         employes: data.employes,
-        affaires: data.affaires,
-        assignations: data.assignations,
+        affaires: affairesFiltrees,
+        assignations: assignationsFiltrees,
         consommation: data.consommation,
         absences: data.absences,
         chefsById: data.chefsById,
@@ -210,6 +243,23 @@ function ExportPage() {
                 feuilles
               </span>
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label className="block text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Filtrer par typologie de chantier
+            </Label>
+            <TypologieMultiFilter
+              value={typoFilter}
+              onChange={setTypoFilter}
+              counts={typoCounts}
+            />
+            {typoFilter.length > 0 && (
+              <p className="text-xs text-muted-foreground">
+                {affairesFiltrees.length} affaire{affairesFiltrees.length > 1 ? "s" : ""} retenue
+                {affairesFiltrees.length > 1 ? "s" : ""} sur {data.affaires.length}.
+              </p>
+            )}
           </div>
 
           {tooMany && (
