@@ -500,7 +500,11 @@ export function CellEditDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
             Annuler
           </Button>
-          <Button onClick={handleSave} disabled={saving}>
+          <Button
+            onClick={handleSave}
+            disabled={saving || !budgetCheck.ok}
+            title={!budgetCheck.ok ? budgetCheck.message : undefined}
+          >
             {saving && <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />}
             Enregistrer
           </Button>
