@@ -402,6 +402,85 @@ export function validateMetierTotalsConsistency<L, P>(
   return issues;
 }
 
+/**
+ * v0.32.2 — Cohérence heures par objet × métier (objets fabrication).
+ *
+ * Compare, pour chaque objet identifié par sa clé (numéro), les heures
+ * détectées par le parser vs les heures éditées en UI, métier par métier.
+ *
+ * Cas détectés :
+ *  - Objet présent en UI mais absent du parser (ajouté à la main)
+ *  - Objet retiré de la sélection mais qui contenait des heures (perte)
+ *  - Métier modifié manuellement (écart > tolérance)
+ *  - Total objet (somme tous métiers) divergent
+ *
+ * On émet UN warning par objet (regroupe tous les écarts métiers en un message).
+ */
+export function validateObjetsHeuresConsistency<S, E>(
+  parsed: readonly S[],
+  edited: readonly E[],
+  pickParsed: (s: S) => { key: string; label: string; heuresParMetier: Record<string, number> },
+  pickEdited: (e: E) => { key: string; label: string; selected: boolean; heuresParMetier: Record<string, number> },
+  opts: { tolerance?: number; field?: string } = {},
+): ImportIssue[] {
+  const tol = opts.tolerance ?? 0.1;
+  const field = opts.field ?? "Heures par objet";
+  const issues: ImportIssue[] = [];
+
+  const parsedMap = new Map<string, { label: string; heures: Record<string, number> }>();
+  for (const s of parsed) {
+    const p = pickParsed(s);
+    parsedMap.set(p.key, { label: p.label, heures: p.heuresParMetier });
+  }
+  const editedMap = new Map<string, { label: string; selected: boolean; heures: Record<string, number> }>();
+  for (const e of edited) {
+    const p = pickEdited(e);
+    editedMap.set(p.key, { label: p.label, selected: p.selected, heures: p.heuresParMetier });
+  }
+
+  const allKeys = new Set([...parsedMap.keys(), ...editedMap.keys()]);
+  for (const key of allKeys) {
+    const src = parsedMap.get(key);
+    const cur = editedMap.get(key);
+    const label = (cur?.label || src?.label || key).slice(0, 60);
+    const allMetiers = new Set([
+      ...Object.keys(src?.heures ?? {}),
+      ...Object.keys(cur?.heures ?? {}),
+    ]);
+    const deltas: string[] = [];
+    let totalSrc = 0;
+    let totalCur = 0;
+    for (const m of allMetiers) {
+      const sH = src?.heures[m] ?? 0;
+      const cH = cur?.heures[m] ?? 0;
+      totalSrc += sH;
+      totalCur += cH;
+      if (Math.abs(cH - sH) > tol) {
+        const sign = cH - sH > 0 ? "+" : "";
+        deltas.push(`${m} ${sH.toFixed(1)}→${cH.toFixed(1)} (${sign}${(cH - sH).toFixed(1)})`);
+      }
+    }
+    if (deltas.length === 0) continue;
+
+    let context = "";
+    if (!src) context = " — objet absent du fichier (ajouté manuellement).";
+    else if (!cur) context = " — objet retiré.";
+    else if (!cur.selected && totalSrc > 0) context = " — objet désélectionné mais contenait des heures.";
+
+    issues.push(
+      makeIssue({
+        code: "TOTAL_MISMATCH",
+        rowIndex: null,
+        column: field,
+        severity: "warning",
+        value: totalCur,
+        message: `Objet « ${label} » : ${totalSrc.toFixed(1)} h source vs ${totalCur.toFixed(1)} h en UI (écart ${(totalCur - totalSrc).toFixed(1)} h). Métiers : ${deltas.slice(0, 6).join(", ")}${deltas.length > 6 ? `, +${deltas.length - 6}` : ""}.${context}`,
+      }),
+    );
+  }
+  return issues;
+}
+
 /** Détecte les doublons sur une clé (ex: référence d'objet). */
 export function findDuplicates<T>(
   rows: readonly T[],
