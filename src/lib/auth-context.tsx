@@ -91,7 +91,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     // 1. Listener AVANT getSession (règle Supabase). Aucun await dans le callback.
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, newSession) => {
+      // FIX v0.27.1 : purge le preview admin (sessionStorage) à chaque login/logout
+      // pour éviter qu'un admin reste coincé en "Preview : Employé mobile" après
+      // s'être reconnecté (régression Gabin : redirigé sur /mobile/aujourdhui sans
+      // possibilité de revenir).
+      if (event === "SIGNED_IN" || event === "SIGNED_OUT") {
+        try {
+          window.sessionStorage.removeItem("setup_paris_preview_role");
+          window.sessionStorage.removeItem("setup_paris_preview_employe_id");
+        } catch {
+          // ignore (SSR / private mode)
+        }
+      }
       setSession(newSession);
       setUser(newSession?.user ?? null);
       if (newSession?.user) {
