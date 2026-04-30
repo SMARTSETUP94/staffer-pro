@@ -85,6 +85,45 @@ export function computePresetForRoles(roles: AppRole[]): WidgetId[] {
 }
 
 /**
+ * v0.27.4 — Garde-fou sécurité : ENSEMBLE des widgets AUTORISÉS pour un rôle.
+ * Différent du preset par défaut : c'est la WHITELIST qui borne TOUT layout
+ * (sauvegardé, preset, ou personnalisation). Empêche un employé de voir un
+ * widget commercial même via :
+ *  - layout corrompu en BDD
+ *  - mode "Preview Employé" admin (effectiveRole=employe)
+ *  - manipulation directe des données dashboard_layout
+ *
+ * Règle :
+ *  - admin   : tous les widgets (full)
+ *  - chef    : tout sauf widgets commerce strict (kpi_top, opp_*, pipeline_*, conversions_*)
+ *  - employe : UNIQUEMENT widgets perso (mes_etapes_fab, heures_a_valider)
+ */
+export function getAllowedWidgetsForRole(role: AppRole): Set<WidgetId> {
+  if (role === "admin") return new Set(ALL_WIDGET_IDS);
+  if (role === "chef_chantier") {
+    return new Set([
+      "meteo_chantiers", "montages_j7", "tension_budget", "absences_semaine",
+      "flotte_kpis", "charge_atelier", "objets_en_retard", "charge_equipe",
+      "mes_etapes_fab", "heures_a_valider", "sous_effectif_J7",
+    ]);
+  }
+  // employe : strict — uniquement widgets personnels
+  return new Set<WidgetId>(["mes_etapes_fab", "heures_a_valider"]);
+}
+
+/**
+ * Filtre un layout pour ne garder que les widgets autorisés au rôle donné.
+ * Utilisé au rendu (defense in depth) ET au save (anti-corruption).
+ */
+export function clampLayoutToRole(layout: DashboardLayout, role: AppRole): DashboardLayout {
+  const allowed = getAllowedWidgetsForRole(role);
+  return {
+    visible: layout.visible.filter((id) => allowed.has(id)),
+    hidden: layout.hidden?.filter((id) => allowed.has(id)),
+  };
+}
+
+/**
  * Valide un layout chargé depuis la BDD (filtre les WidgetId obsolètes).
  */
 export function sanitizeLayout(raw: unknown): DashboardLayout | null {

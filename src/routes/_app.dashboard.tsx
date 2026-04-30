@@ -5,10 +5,11 @@ import { PageHeader } from "@/components/PageHeader";
 import { useNotifications } from "@/hooks/use-notifications";
 import { useDashboardLayout } from "@/hooks/use-dashboard-layout";
 import { useAuth } from "@/lib/auth-context";
+import { usePreview } from "@/lib/preview-context";
 import { PersonnaliserDashboardSheet } from "@/components/dashboard/PersonnaliserDashboardSheet";
 import { registerAllWidgets } from "@/components/dashboard/widgets/register-all";
 import { getWidgetComponent, WIDGET_META } from "@/lib/dashboard/widget-registry";
-import type { WidgetId } from "@/lib/dashboard/types";
+import { getAllowedWidgetsForRole, type WidgetId } from "@/lib/dashboard/types";
 
 export const Route = createFileRoute("/_app/dashboard")({
   head: () => ({ meta: [{ title: "Tableau de bord — Setup Paris" }] }),
@@ -19,6 +20,7 @@ function DashboardPage() {
   const { unreadCount } = useNotifications();
   const { layout, loading, isPreset, saveLayout, resetToPreset } = useDashboardLayout();
   const { user } = useAuth();
+  const { effectiveRole } = usePreview();
 
   useEffect(() => {
     registerAllWidgets();
@@ -32,7 +34,15 @@ function DashboardPage() {
     );
   }
 
-  const visibleWidgets = layout.visible.filter((id): id is WidgetId => !!WIDGET_META[id]);
+  // v0.27.4 — Defense in depth : double filtre au rendu (en plus du clamp dans le hook).
+  // Garantit qu'AUCUN widget non autorisé ne traverse jusqu'au DOM, même si :
+  //  - layout BDD a été corrompu directement
+  //  - bug futur dans clampLayoutToRole
+  //  - changement de rôle preview en cours de session
+  const allowed = getAllowedWidgetsForRole(effectiveRole);
+  const visibleWidgets = layout.visible.filter(
+    (id): id is WidgetId => !!WIDGET_META[id] && allowed.has(id),
+  );
 
   return (
     <div className="space-y-6 p-6">

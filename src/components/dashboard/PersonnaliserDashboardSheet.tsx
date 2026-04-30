@@ -1,7 +1,8 @@
 /**
  * v0.26.0 — Sheet "Personnaliser le dashboard".
+ * v0.27.4 — Limite la liste aux widgets autorisés par le rôle effectif (anti-fuite).
  */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Settings2, RotateCcw } from "lucide-react";
 import {
   Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger, SheetFooter,
@@ -12,7 +13,13 @@ import { Label } from "@/components/ui/label";
 import {
   WIDGET_META, CATEGORY_LABELS, CATEGORY_ORDER,
 } from "@/lib/dashboard/widget-registry";
-import { ALL_WIDGET_IDS, type DashboardLayout, type WidgetId } from "@/lib/dashboard/types";
+import {
+  ALL_WIDGET_IDS,
+  getAllowedWidgetsForRole,
+  type DashboardLayout,
+  type WidgetId,
+} from "@/lib/dashboard/types";
+import { usePreview } from "@/lib/preview-context";
 import { toast } from "sonner";
 
 interface Props {
@@ -24,6 +31,16 @@ interface Props {
 export function PersonnaliserDashboardSheet({ layout, onSave, onReset }: Props) {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<Set<WidgetId>>(new Set(layout.visible));
+  const { effectiveRole } = usePreview();
+
+  // v0.27.4 — Whitelist des widgets que l'utilisateur courant a le droit
+  // d'activer dans son dashboard. Empêche de cocher un widget commerce
+  // quand on est employé.
+  const allowedSet = useMemo(() => getAllowedWidgetsForRole(effectiveRole), [effectiveRole]);
+  const allowedIds = useMemo(
+    () => ALL_WIDGET_IDS.filter((id) => allowedSet.has(id)),
+    [allowedSet],
+  );
 
   useEffect(() => {
     if (open) setDraft(new Set(layout.visible));
@@ -39,8 +56,8 @@ export function PersonnaliserDashboardSheet({ layout, onSave, onReset }: Props) 
   };
 
   const handleSave = async () => {
-    const visible = ALL_WIDGET_IDS.filter((id) => draft.has(id));
-    const hidden = ALL_WIDGET_IDS.filter((id) => !draft.has(id));
+    const visible = allowedIds.filter((id) => draft.has(id));
+    const hidden = allowedIds.filter((id) => !draft.has(id));
     await onSave({ visible, hidden });
     toast.success("Layout enregistré");
     setOpen(false);
@@ -54,8 +71,8 @@ export function PersonnaliserDashboardSheet({ layout, onSave, onReset }: Props) 
 
   const widgetsByCategory = CATEGORY_ORDER.map((cat) => ({
     category: cat,
-    widgets: ALL_WIDGET_IDS.filter((id) => WIDGET_META[id].category === cat),
-  }));
+    widgets: allowedIds.filter((id) => WIDGET_META[id].category === cat),
+  })).filter((g) => g.widgets.length > 0);
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -68,7 +85,7 @@ export function PersonnaliserDashboardSheet({ layout, onSave, onReset }: Props) 
         <SheetHeader>
           <SheetTitle>Personnaliser le dashboard</SheetTitle>
           <SheetDescription>
-            {draft.size} widget{draft.size > 1 ? "s" : ""} actif{draft.size > 1 ? "s" : ""} sur {ALL_WIDGET_IDS.length}
+            {draft.size} widget{draft.size > 1 ? "s" : ""} actif{draft.size > 1 ? "s" : ""} sur {allowedIds.length} disponible{allowedIds.length > 1 ? "s" : ""} pour votre rôle
           </SheetDescription>
         </SheetHeader>
 
