@@ -119,7 +119,54 @@ export function AssignationDialog({
     setEstChefJour(false);
     setShowAllMetiers(false);
     setDateOverride(date);
+    setSelectedObjetIds([]);
   }, [open, employe.metier_principal_id, date]);
+
+  // v0.25 — Charge les objets de fabrication de l'affaire sélectionnée
+  useEffect(() => {
+    if (!affaireId) {
+      setObjetsAffaire([]);
+      return;
+    }
+    let cancelled = false;
+    supabase
+      .from("fabrication_objets")
+      .select("id, reference, nom, ordre, created_at")
+      .eq("affaire_id", affaireId)
+      .eq("archive", false)
+      .order("ordre", { ascending: true })
+      .order("created_at", { ascending: true })
+      .then(({ data }) => {
+        if (cancelled) return;
+        setObjetsAffaire(
+          (data ?? []).map((o) => ({ id: o.id, reference: o.reference, nom: o.nom })),
+        );
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [affaireId]);
+
+  // v0.25 — Charge les objets déjà rattachés à l'assignation en cours d'édition
+  useEffect(() => {
+    if (!editingId) {
+      setSelectedObjetIds([]);
+      return;
+    }
+    let cancelled = false;
+    supabase
+      .from("assignation_objets")
+      .select("objet_id")
+      .eq("assignation_id", editingId)
+      .then(({ data }) => {
+        if (cancelled) return;
+        setSelectedObjetIds((data ?? []).map((r) => r.objet_id));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [editingId]);
+
 
   // Charge les compétences secondaires de l'employé
   useEffect(() => {
