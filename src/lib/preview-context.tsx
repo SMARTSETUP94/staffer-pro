@@ -51,7 +51,7 @@ function readStoredEmp(): string | null {
 }
 
 export function PreviewProvider({ children }: { children: ReactNode }) {
-  const { isAdmin, roles } = useAuth();
+  const { isAdmin, roles, user } = useAuth();
   const [previewRole, setPreviewRoleState] = useState<PreviewRole | null>(() => readStored());
   const [previewEmployeId, setPreviewEmployeIdState] = useState<string | null>(() => readStoredEmp());
 
@@ -68,6 +68,19 @@ export function PreviewProvider({ children }: { children: ReactNode }) {
       }
     }
   }, [isAdmin, previewRole, previewEmployeId]);
+
+  // FIX v0.27.1 : à chaque changement de user.id (login/relogin), on resync le state
+  // depuis sessionStorage. Comme auth-context purge sessionStorage sur SIGNED_IN,
+  // un admin qui se reconnecte démarre toujours en mode "Admin" (pas en preview
+  // employé sticky). Évite le bug Gabin : coincé sur /mobile/aujourdhui après login.
+  const userId = user?.id ?? null;
+  useEffect(() => {
+    const stored = readStored();
+    if (stored !== previewRole) setPreviewRoleState(stored);
+    const storedEmp = readStoredEmp();
+    if (storedEmp !== previewEmployeId) setPreviewEmployeIdState(storedEmp);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId]);
 
   const setPreviewRole = (role: PreviewRole | null) => {
     setPreviewRoleState(role);
