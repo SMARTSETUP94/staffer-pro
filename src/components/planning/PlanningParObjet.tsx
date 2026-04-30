@@ -1,7 +1,7 @@
 import { Fragment as FragmentWithKey, useEffect, useMemo, useState } from "react";
 import { addDays, format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { AlertTriangle, Loader2, Package, Plus, Search, UserPlus } from "lucide-react";
+import { AlertTriangle, Loader2, Package, Plus, Search, UserPlus, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -23,6 +23,8 @@ import { isAffaireSelectable, affaireLockReason } from "@/lib/affaire-lock";
 import { supabase } from "@/integrations/supabase/client";
 import { AssignationDialog } from "./AssignationDialog";
 import { CellEditDialog } from "./CellEditDialog";
+import { AssignationBulkObjetDialog, type BulkObjetForDialog } from "./AssignationBulkObjetDialog";
+import { Button } from "@/components/ui/button";
 import type {
   Affaire,
   Assignation,
