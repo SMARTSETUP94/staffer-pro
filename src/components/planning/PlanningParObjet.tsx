@@ -1,9 +1,18 @@
 import { Fragment as FragmentWithKey, useEffect, useMemo, useState } from "react";
 import { addDays, format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Loader2, Package, Search } from "lucide-react";
+import { Loader2, Package, Plus, Search, UserPlus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import {
   Tooltip,
   TooltipContent,
@@ -361,15 +370,7 @@ export function PlanningParObjet({
                                   setDragEmp(null);
                                 }}
                                 onClick={() => {
-                                  if (isEmpty) {
-                                    // Clic vide : on demande quel employé via dialog en passant un placeholder
-                                    // → simplification : on ouvre dialog vide nécessite un employé.
-                                    // On informe l'utilisateur de drag, sinon on prend le premier employé filtré ?
-                                    toast.info(
-                                      "Glisse un employé depuis le panneau ou clique sur un employé existant pour éditer.",
-                                    );
-                                    return;
-                                  }
+                                  if (isEmpty) return; // cellule vide → utiliser le bouton "+" (Popover)
                                   // Cellule occupée : éditer la 1ère
                                   openEditDialog(cellAssigns[0]);
                                 }}
@@ -430,9 +431,12 @@ export function PlanningParObjet({
                                     );
                                   })}
                                   {isEmpty && !isLocked && (
-                                    <span className="text-[10px] text-muted-foreground/40 self-center mx-auto">
-                                      {dragEmp ? "Déposer ici" : "+"}
-                                    </span>
+                                    <EmptyCellPicker
+                                      employes={employes}
+                                      metiersById={metiersById}
+                                      hint={dragEmp ? "Déposer ici" : undefined}
+                                      onPick={(emp) => openCreateDialog(emp, af, obj, d)}
+                                    />
                                   )}
                                 </div>
                               </td>
@@ -544,5 +548,78 @@ export function PlanningParObjet({
         />
       )}
     </TooltipProvider>
+  );
+}
+
+interface EmptyCellPickerProps {
+  employes: Employe[];
+  metiersById: Map<number, Metier>;
+  hint?: string;
+  onPick: (emp: Employe) => void;
+}
+
+function EmptyCellPicker({ employes, metiersById, hint, onPick }: EmptyCellPickerProps) {
+  const [open, setOpen] = useState(false);
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          onClick={(e) => e.stopPropagation()}
+          className="mx-auto inline-flex items-center gap-1 self-center rounded-full border border-dashed border-muted-foreground/30 px-2 py-0.5 text-[10px] text-muted-foreground/70 hover:border-primary hover:bg-primary/5 hover:text-primary"
+          title="Staffer un employé sur cet objet"
+        >
+          <Plus className="h-3 w-3" />
+          {hint ?? "Staffer"}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[260px] p-0" align="start" onClick={(e) => e.stopPropagation()}>
+        <Command>
+          <CommandInput placeholder="Rechercher un employé…" className="h-8 text-xs" />
+          <CommandList>
+            <CommandEmpty>
+              <div className="flex items-center justify-center gap-1.5 py-3 text-xs text-muted-foreground">
+                <UserPlus className="h-3.5 w-3.5" />
+                Aucun employé
+              </div>
+            </CommandEmpty>
+            <CommandGroup>
+              {employes
+                .slice()
+                .sort((a, b) =>
+                  `${a.prenom} ${a.nom}`.localeCompare(`${b.prenom} ${b.nom}`, "fr"),
+                )
+                .map((emp) => {
+                  const metier = metiersById.get(emp.metier_principal_id);
+                  return (
+                    <CommandItem
+                      key={emp.id}
+                      value={`${emp.prenom} ${emp.nom}`}
+                      onSelect={() => {
+                        setOpen(false);
+                        onPick(emp);
+                      }}
+                      className="text-xs"
+                    >
+                      <span
+                        className="mr-1.5 h-1.5 w-1.5 shrink-0 rounded-full"
+                        style={{ backgroundColor: metier?.couleur ?? "#94a3b8" }}
+                      />
+                      <span className="truncate">
+                        {emp.prenom} {emp.nom}
+                      </span>
+                      {metier && (
+                        <span className="ml-auto truncate text-[10px] text-muted-foreground">
+                          {metier.libelle}
+                        </span>
+                      )}
+                    </CommandItem>
+                  );
+                })}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
   );
 }
