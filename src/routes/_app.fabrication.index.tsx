@@ -168,6 +168,9 @@ function FabricationDashboardPage() {
         </div>
       </header>
 
+      {/* Filtre typologie chantiers */}
+      <TypologieMultiFilter value={typoFilter} onChange={setTypoFilter} counts={typoCounts} />
+
       {/* KPIs */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         <KpiCard label="Objets" value={kpis.total} />
