@@ -68,6 +68,8 @@ export function DevisImportSection1Affaire({
   effectiveLieu,
   totalMontant,
   lockedAffaire = false,
+  clientEdited = false,
+  lieuEdited = false,
 }: Props) {
   return (
     <Card>
