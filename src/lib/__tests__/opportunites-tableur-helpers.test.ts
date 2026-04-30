@@ -40,6 +40,7 @@ function makeRow(overrides: Partial<TableurRow> = {}): TableurRow {
     date_montage: null,
     date_demontage: null,
     notes: null,
+    typologie_future: null,
     ...overrides,
   };
 }
