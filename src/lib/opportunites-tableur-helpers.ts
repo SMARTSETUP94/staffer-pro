@@ -5,17 +5,46 @@
  * - Navigation Tab/Enter entre cellules
  * - Filtres dates preset
  * - Détection ligne "vide" (à créer)
+ *
+ * v0.29.1 — Hotfix édition (3 fixes) :
+ * - Colonne PAT retirée (header + ordre nav)
+ * - Code 5XXX éditable conditionnel quand statut="gagne" → validation regex
+ * - Pattern optimistic UI documenté ci-dessous (utilisé par OpportunitesTableurView)
  */
 import { normalizeName } from "@/lib/string-normalize";
 import type { OpportuniteStatut, OpportuniteTaille } from "@/lib/opportunites";
 
 export const CODE_9XXX_REGEX = /^9\d{3}$/;
+/** v0.29.1 — Format code affaire signée. */
+export const CODE_5XXX_REGEX = /^5\d{3}$/;
 
 export function isValidCode9XXX(code: string): boolean {
   return CODE_9XXX_REGEX.test(code.trim());
 }
 
-/** Colonnes éditables dans l'ordre Tab. */
+export function isValidCode5XXX(code: string): boolean {
+  return CODE_5XXX_REGEX.test(code.trim());
+}
+
+/**
+ * v0.29.1 — Le code 5XXX est éditable uniquement quand l'opportunité est gagnée
+ * et que l'utilisateur a les droits (admin OR chargé d'affaires propriétaire).
+ */
+export function canEditCode5XXX(params: {
+  statut: OpportuniteStatut | null;
+  isAdmin: boolean;
+  isOwner: boolean;
+  alreadySigned: boolean;
+}): boolean {
+  if (params.alreadySigned) return false;
+  if (params.statut !== "gagne") return false;
+  return params.isAdmin || params.isOwner;
+}
+
+/**
+ * v0.28.0 / v0.29.1 — Colonnes éditables dans l'ordre Tab.
+ * date_pat retirée en v0.29.1 (non utilisée terrain).
+ */
 export const TABLEUR_COLUMNS = [
   "code",
   "client",
@@ -23,7 +52,7 @@ export const TABLEUR_COLUMNS = [
   "date_opportunite",
   "taille",
   "statut",
-  "date_pat",
+  "code_5xxx",
   "date_montage",
   "date_demontage",
   "commentaires",
@@ -46,6 +75,7 @@ export interface TableurRow {
   code_opportunite: string | null;
   signed_affaire_numero: string | null;
   signed_affaire_id: string | null;
+  /** v0.29.1 — conservé en type (BDD le supporte) mais plus exposé en UI */
   date_pat: string | null;
   date_montage: string | null;
   date_demontage: string | null;
@@ -115,7 +145,8 @@ export function dateRangeForPreset(
   if (preset === "current_month") {
     const from = new Date(ref.getFullYear(), ref.getMonth(), 1);
     const to = new Date(ref.getFullYear(), ref.getMonth() + 1, 0);
-    return { from: fmt(from), to: fmt(to) };
+    return { from: fmt(from), to: fmt(ref) };
+    // NB: `to` borné à `ref` pour éviter d'inclure les jours futurs du mois.
   }
   return { from: null, to: null };
 }
@@ -182,3 +213,43 @@ export const STATUT_ROW_BG: Record<OpportuniteStatut, string> = {
   perdu: "bg-rose-50/60 dark:bg-rose-950/20",
   termine: "bg-slate-50/60 dark:bg-slate-900/20",
 };
+
+/**
+ * v0.29.1 — Pattern de mutation optimistic UI utilisé par la vue Tableur.
+ *
+ * mergeRowOverlay(serverRow, overlay) renvoie la ligne fusionnée affichée à l'écran.
+ * Permet de garder en local les patches "en vol" (pas encore confirmés par le serveur)
+ * SANS être écrasé par un refetch parent.
+ *
+ * Règle : le overlay l'emporte champ par champ. Quand un patch est confirmé,
+ * supprimer la clé du overlay (ou tout l'overlay si vide).
+ */
+export function mergeRowOverlay(
+  serverRow: TableurRow,
+  overlay: Partial<TableurRow> | undefined,
+): TableurRow {
+  if (!overlay || Object.keys(overlay).length === 0) return serverRow;
+  return { ...serverRow, ...overlay };
+}
+
+/**
+ * v0.29.1 — Calcule un overlay nettoyé après confirmation serveur :
+ * supprime les clés dont la valeur est désormais identique à la version serveur,
+ * et renvoie undefined si l'overlay est vide.
+ */
+export function cleanOverlay(
+  overlay: Partial<TableurRow>,
+  serverRow: TableurRow,
+): Partial<TableurRow> | undefined {
+  const out: Partial<TableurRow> = {};
+  let kept = 0;
+  for (const k of Object.keys(overlay) as (keyof TableurRow)[]) {
+    if (overlay[k] !== serverRow[k]) {
+      // garde
+      // @ts-expect-error narrowed at runtime
+      out[k] = overlay[k];
+      kept++;
+    }
+  }
+  return kept === 0 ? undefined : out;
+}
