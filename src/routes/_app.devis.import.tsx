@@ -540,9 +540,9 @@ function DevisImportPage() {
               newAffaireNom={newAffaireNom}
               setNewAffaireNom={setNewAffaireNom}
               newAffaireClient={newAffaireClient}
-              setNewAffaireClient={setNewAffaireClient}
+              setNewAffaireClient={(v) => { setNewAffaireClient(v); setClientTouched(true); }}
               newAffaireLieu={newAffaireLieu}
-              setNewAffaireLieu={setNewAffaireLieu}
+              setNewAffaireLieu={(v) => { setNewAffaireLieu(v); setLieuTouched(true); }}
               nomDevis={nomDevis}
               setNomDevis={setNomDevis}
               dateMontage={dateMontage}
