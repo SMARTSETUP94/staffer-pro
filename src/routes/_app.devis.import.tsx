@@ -468,8 +468,8 @@ function DevisImportPage() {
         }
       }
 
-      toast.success("Devis importé", {
-        description: `${postesPayload.length} poste(s) RH, ${objetsPayload.length} objet(s) fab, ${totals.heures} h, ${totals.montant.toLocaleString("fr-FR")} € HT.`,
+      toast.success(isUpdate ? "Devis mis à jour" : "Devis importé", {
+        description: `${postesPayload.length} poste(s) RH, ${objetsPayload.length} objet(s) fab, ${totals.heures} h, ${totals.montant.toLocaleString("fr-FR")} € HT.${isUpdate ? " Anciens postes/objets remplacés." : ""}`,
       });
       reset();
     } finally {
