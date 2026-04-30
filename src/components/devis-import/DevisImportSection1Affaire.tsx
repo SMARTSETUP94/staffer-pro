@@ -32,7 +32,16 @@ interface Props {
   totalMontant: number;
   /** v0.25.1 — Verrouille la sélection d'affaire quand pré-remplie via ?affaire_id=… */
   lockedAffaire?: boolean;
+  /** v0.30.3 — Badge "Édité" si l'utilisateur a modifié la valeur Progbat */
+  clientEdited?: boolean;
+  lieuEdited?: boolean;
 }
+
+const EditedBadge = () => (
+  <span className="ml-2 inline-flex items-center rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wider text-amber-700 dark:text-amber-400">
+    Édité
+  </span>
+);
 
 export function DevisImportSection1Affaire({
   filename,
