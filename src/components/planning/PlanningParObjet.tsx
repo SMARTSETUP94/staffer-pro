@@ -291,6 +291,14 @@ export function PlanningParObjet({
     });
   }
 
+  function openCellDialog(obj: FabObjet, af: Affaire, day: Date, cellAssigns: Assignation[]) {
+    if (!isAffaireSelectable(af)) {
+      toast.error(affaireLockReason(af) ?? "Affaire verrouillée");
+      return;
+    }
+    setCellDlg({ objet: obj, affaire: af, date: day, cellAssigns });
+  }
+
   if (affairesRetenues.length === 0) {
     return (
       <div className="rounded-lg border border-dashed p-8 text-center">
