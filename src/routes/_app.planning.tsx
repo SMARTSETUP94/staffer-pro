@@ -15,6 +15,7 @@ import { WeekPicker } from "@/components/planning/WeekPicker";
 import { PlanningGrid } from "@/components/planning/PlanningGrid";
 import { PlanningSynthese } from "@/components/planning/PlanningSynthese";
 import { PlanningParChantier } from "@/components/planning/PlanningParChantier";
+import { PlanningParObjet } from "@/components/planning/PlanningParObjet";
 import { HeuresRestantesSidebar } from "@/components/planning/HeuresRestantesSidebar";
 import { MultiFilter } from "@/components/planning/MultiFilter";
 import { AddInterimDialog } from "@/components/planning/AddInterimDialog";
@@ -60,7 +61,7 @@ export const Route = createFileRoute("/_app/planning")({
 function PlanningPage() {
   const [weekStart, setWeekStart] = useState<Date>(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
   const weekEnd = addDays(weekStart, 6);
-  const [tab, setTab] = useState<"cdi" | "interim" | "parchantier" | "budget" | "flotte" | "feuilleroute">("cdi");
+  const [tab, setTab] = useState<"cdi" | "interim" | "parchantier" | "parobjet" | "budget" | "flotte" | "feuilleroute">("cdi");
   const [trajetDlgOpen, setTrajetDlgOpen] = useState(false);
   const [exportSousTraitanceOpen, setExportSousTraitanceOpen] = useState(false);
   const [editTrajet, setEditTrajet] = useState<Trajet | null>(null);
@@ -232,11 +233,13 @@ function PlanningPage() {
           ? "Intérim / Indép."
           : tab === "parchantier"
             ? "Planning par chantier"
-            : tab === "budget"
-              ? "Budget chantier"
-              : tab === "feuilleroute"
-                ? "Feuille de route"
-                : "Véhicules staffés";
+            : tab === "parobjet"
+              ? "Planning par objet"
+              : tab === "budget"
+                ? "Budget chantier"
+                : tab === "feuilleroute"
+                  ? "Feuille de route"
+                  : "Véhicules staffés";
     setExporting(true);
     try {
       await exportPlanningToPDF(target, { weekStart, tabLabel });
@@ -387,6 +390,10 @@ function PlanningPage() {
                     <span className="hidden sm:inline">Planning par chantier</span>
                     <span className="sm:hidden">Par chantier</span>
                   </TabsTrigger>
+                  <TabsTrigger value="parobjet">
+                    <span className="hidden sm:inline">Planning par objet</span>
+                    <span className="sm:hidden">Par objet</span>
+                  </TabsTrigger>
                   <TabsTrigger value="budget">
                     <span className="hidden sm:inline">Budget chantier</span>
                     <span className="sm:hidden">Budget</span>
@@ -468,6 +475,22 @@ function PlanningPage() {
                   filterAffaireIds={filterAffaireStr}
                   filterMetierIds={filterMetierNum}
                   onSelectAffaire={handleSelectAffaireFromSynthese}
+                  onChanged={refresh}
+                />
+              </TabsContent>
+
+              <TabsContent value="parobjet" className="mt-4">
+                <PlanningParObjet
+                  weekStart={weekStart}
+                  affaires={affaires}
+                  employes={employes}
+                  metiers={metiers}
+                  assignations={assignations}
+                  consommation={consommation}
+                  devisLots={devisLots}
+                  showWeekend={showWeekend}
+                  filterAffaireIds={filterAffaireStr}
+                  filterMetierIds={filterMetierNum}
                   onChanged={refresh}
                 />
               </TabsContent>

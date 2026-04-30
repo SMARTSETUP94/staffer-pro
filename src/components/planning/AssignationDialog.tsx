@@ -67,6 +67,10 @@ interface Props {
   }[];
   /** v0.15.1 — Tous les lots/devis chargés (pour sélecteur si ≥2 lots actifs sur l'affaire). */
   devisLots?: DevisLot[];
+  /** v0.26 — Pré-remplissage : affaire ciblée à l'ouverture (création). */
+  defaultAffaireId?: string;
+  /** v0.26 — Pré-remplissage : objet de fabrication coché à l'ouverture (création). */
+  defaultObjetId?: string;
   onSaved: () => void;
 }
 
@@ -80,6 +84,8 @@ export function AssignationDialog({
   metiers,
   consommation,
   devisLots = [],
+  defaultAffaireId,
+  defaultObjetId,
   onSaved,
 }: Props) {
   // Édition d'une assignation existante = sélection par id ; sinon création
@@ -109,7 +115,7 @@ export function AssignationDialog({
   useEffect(() => {
     if (!open) return;
     setEditingId(null);
-    setAffaireId("");
+    setAffaireId(defaultAffaireId ?? "");
     setMetierId(employe.metier_principal_id);
     setDevisId(null);
     setSlot("JOURNEE");
@@ -119,8 +125,8 @@ export function AssignationDialog({
     setEstChefJour(false);
     setShowAllMetiers(false);
     setDateOverride(date);
-    setSelectedObjetIds([]);
-  }, [open, employe.metier_principal_id, date]);
+    setSelectedObjetIds(defaultObjetId ? [defaultObjetId] : []);
+  }, [open, employe.metier_principal_id, date, defaultAffaireId, defaultObjetId]);
 
   // v0.25 — Charge les objets de fabrication de l'affaire sélectionnée
   useEffect(() => {
