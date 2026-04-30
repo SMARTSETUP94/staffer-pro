@@ -271,6 +271,9 @@ export function OpportunitesTableurView({
             case "commentaires":
               patch.notes = row.notes;
               break;
+            case "typologie_future":
+              patch.typologie_future = row.typologie_future;
+              break;
             case "code":
               if (!isValidCode9XXX(row.numero)) {
                 toast.error("Code 9XXX invalide");
