@@ -695,7 +695,21 @@ function DevisImportPage() {
               committing={committing}
               canCommit={canCommit}
               onReset={reset}
-              onCommit={commit}
+              onCommit={handleCommitClick}
+            />
+
+            <DevisReimportConfirmDialog
+              open={confirmOpen}
+              preflight={preflight}
+              targetAffaireLabel={targetAffaireLabel}
+              committing={committing}
+              onCancel={() => {
+                setConfirmOpen(false);
+                setPreflight(null);
+              }}
+              onConfirm={() => {
+                void doCommit();
+              }}
             />
           </>
         )}
