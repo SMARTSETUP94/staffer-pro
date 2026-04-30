@@ -155,6 +155,36 @@ function OpportunitesImportPage() {
     return { nouveaux, majs, erreurs, total: rows.length };
   }, [rows]);
 
+  // v0.32.0 — Issues globales (parse) + issues par ligne (cellule).
+  const importIssues = useMemo<ImportIssue[]>(() => {
+    const arr: ImportIssue[] = legacyStringsToIssues(parseErrors, { severity: "warning" });
+    rows.forEach((r) => {
+      r.errors.forEach((msg) =>
+        arr.push(
+          makeIssue({
+            code: "REQUIRED_FIELD_MISSING",
+            severity: "error",
+            rowIndex: r.rowIndex,
+            column: null,
+            message: `Ligne ${r.rowIndex} · ${msg}`,
+          }),
+        ),
+      );
+      r.warnings.forEach((msg) =>
+        arr.push(
+          makeIssue({
+            code: "INVALID_TEXT",
+            severity: "warning",
+            rowIndex: r.rowIndex,
+            column: null,
+            message: `Ligne ${r.rowIndex} · ${msg}`,
+          }),
+        ),
+      );
+    });
+    return arr;
+  }, [parseErrors, rows]);
+
   async function commit() {
     setCommitting(true);
     const updated: RowState[] = [...rows];
