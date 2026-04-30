@@ -141,7 +141,7 @@ export function OpportuniteCard({
           )}
 
           <div className="mt-2 flex flex-wrap items-center gap-1.5">
-            <TypologieBadge typologie={getAffaireTypologie(opp.numero)} short />
+            <TypologieBadge typologie={opp.typology_future ?? getAffaireTypologie(opp.numero)} short />
             {opp.taille ? (
               <span
                 className={cn(
