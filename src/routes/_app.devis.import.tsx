@@ -373,6 +373,8 @@ function DevisImportPage() {
     setNewAffaireNom("");
     setNewAffaireClient("");
     setNewAffaireLieu("");
+    setClientTouched(false);
+    setLieuTouched(false);
     setImportMontage(false);
     setImportDemontage(false);
     setMontageH(0);
