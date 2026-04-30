@@ -39,6 +39,7 @@ interface FabObjet {
   reference: string;
   nom: string;
   ordre: number;
+  heures_prevues_total: number;
 }
 
 interface ObjetLink {
