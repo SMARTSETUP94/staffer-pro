@@ -1,20 +1,27 @@
 /**
- * v0.30.5 — Mode "écraser/mettre à jour" pour l'import devis (option C bis, assoupli).
+ * v0.30.6 — Mode "écraser/mettre à jour" pour l'import devis (option C ter, SOFT).
  *
- * Garde-fous SQL restants :
- *   - "autre affaire" : bloque si le PDF a été initialement importé sur une autre affaire (sécurité).
+ * AUCUN garde-fou SQL bloquant côté RPC `import_devis_atomique_v3`.
+ * Tous les blocages sont gérés côté client via une modale de confirmation
+ * alimentée par la RPC `preflight_import_devis` (lecture seule).
  *
- * Garde-fous LEVÉS depuis v0.30.4 :
- *   - "heures réelles saisies" : remplacé par un warning client + heures conservées.
- *   - "devis terminé" : retiré complètement (chef + admin peuvent ré-importer).
- *
- * Tests purs sur la logique de branchement côté client.
+ * Garde-fous SOFT (modale client uniquement, jamais de blocage SQL) :
+ *   - autre_affaire        → confirmation explicite
+ *   - heures réelles count → warning + heures conservées
+ *   - devis_termine        → information seule (autorisé)
  */
 import { describe, it, expect } from "vitest";
 
 type RpcResponse =
   | { mode?: "created" | "updated"; heures_preservees?: number }
   | null;
+
+type Preflight = {
+  mode: "created" | "updated";
+  autre_affaire?: boolean;
+  devis_termine?: boolean;
+  heures_reelles_count?: number;
+};
 
 function pickToastTitle(rpcResponse: RpcResponse, isUpdateExpected: boolean): string {
   const mode = rpcResponse?.mode ?? "created";
@@ -29,13 +36,16 @@ function shouldShowHeuresWarning(rpcResponse: RpcResponse): boolean {
   return isUpdate && heures > 0;
 }
 
-function classifyError(message: string): string {
-  // v0.30.5 : un seul garde-fou SQL = "autre affaire"
-  const isAutreAffaire = /autre affaire/i.test(message);
-  return isAutreAffaire ? "Fichier déjà lié à une autre affaire" : "Import impossible";
+function shouldOpenConfirmDialog(preflight: Preflight | null): boolean {
+  return preflight?.mode === "updated";
 }
 
-describe("v0.30.5 — Import devis upsert mode (option C bis, assoupli)", () => {
+function classifyError(message: string): string {
+  // v0.30.6 : plus AUCUN garde-fou métier côté SQL → toute erreur = technique.
+  return "Import impossible";
+}
+
+describe("v0.30.6 — Import devis SOFT mode (option C ter, modale client)", () => {
   it("première import → mode 'created' → toast 'Devis importé'", () => {
     expect(pickToastTitle({ mode: "created" }, false)).toBe("Devis importé");
   });
@@ -49,38 +59,59 @@ describe("v0.30.5 — Import devis upsert mode (option C bis, assoupli)", () => 
     expect(pickToastTitle(null, false)).toBe("Devis importé");
   });
 
-  it("v0.30.5 : ré-import avec heures préservées → warning affiché", () => {
+  it("v0.30.6 : ré-import avec heures préservées → warning affiché", () => {
     expect(shouldShowHeuresWarning({ mode: "updated", heures_preservees: 3 })).toBe(true);
   });
 
-  it("v0.30.5 : ré-import sans heures préservées → pas de warning", () => {
+  it("v0.30.6 : ré-import sans heures préservées → pas de warning", () => {
     expect(shouldShowHeuresWarning({ mode: "updated", heures_preservees: 0 })).toBe(false);
     expect(shouldShowHeuresWarning({ mode: "updated" })).toBe(false);
   });
 
-  it("v0.30.5 : création (pas un ré-import) → pas de warning même si champ présent", () => {
+  it("v0.30.6 : création → pas de warning même si champ présent", () => {
     expect(shouldShowHeuresWarning({ mode: "created", heures_preservees: 5 })).toBe(false);
   });
 
-  it("classification erreur : autre affaire (seul garde-fou restant)", () => {
-    expect(classifyError("Ce fichier a déjà été importé sur une autre affaire (uuid-A vs uuid-B)."))
-      .toBe("Fichier déjà lié à une autre affaire");
+  // --- Modale de confirmation (garde-fous SOFT) ---
+
+  it("preflight 'created' → pas de modale, commit direct", () => {
+    expect(shouldOpenConfirmDialog({ mode: "created" })).toBe(false);
+    expect(shouldOpenConfirmDialog(null)).toBe(false);
   });
 
-  it("v0.30.5 : message générique → fallback 'Import impossible'", () => {
-    expect(classifyError("connection timeout")).toBe("Import impossible");
+  it("preflight 'updated' simple → modale ouverte (info)", () => {
+    expect(shouldOpenConfirmDialog({ mode: "updated" })).toBe(true);
   });
 
-  it("v0.30.5 : ancien message 'heures réelles' → ne match plus 'autre affaire' → fallback", () => {
-    // Les anciens blocages SQL n'arrivent plus (garde-fou retiré) — si une instance
-    // legacy renvoyait encore ce message, on tomberait sur le fallback générique
-    // au lieu du bloc dédié, ce qui est OK (le client n'affiche plus cette erreur métier).
+  it("preflight 'updated' + autre_affaire → modale ouverte (warn)", () => {
+    expect(shouldOpenConfirmDialog({ mode: "updated", autre_affaire: true })).toBe(true);
+  });
+
+  it("preflight 'updated' + heures réelles → modale ouverte (warn)", () => {
+    expect(shouldOpenConfirmDialog({ mode: "updated", heures_reelles_count: 7 })).toBe(true);
+  });
+
+  it("preflight 'updated' + devis terminé → modale ouverte (info)", () => {
+    expect(shouldOpenConfirmDialog({ mode: "updated", devis_termine: true })).toBe(true);
+  });
+
+  // --- Plus aucun blocage SQL : toute erreur = technique ---
+
+  it("v0.30.6 : erreur 'autre affaire' (legacy) → fallback générique", () => {
+    expect(classifyError("Ce fichier a déjà été importé sur une autre affaire."))
+      .toBe("Import impossible");
+  });
+
+  it("v0.30.6 : erreur 'heures réelles' (legacy) → fallback générique", () => {
     expect(classifyError("Impossible de ré-importer : 3 saisie(s) d'heures réelles existe(nt) sur ce devis."))
       .toBe("Import impossible");
   });
 
-  it("v0.30.5 : ancien message 'devis terminé' → fallback (garde-fou retiré côté SQL)", () => {
-    expect(classifyError("Ce devis est terminé, seul un admin peut le ré-importer."))
-      .toBe("Import impossible");
+  it("v0.30.6 : erreur 'devis terminé' (legacy) → fallback générique", () => {
+    expect(classifyError("Ce devis est terminé.")).toBe("Import impossible");
+  });
+
+  it("v0.30.6 : erreur réseau/RLS → fallback générique", () => {
+    expect(classifyError("connection timeout")).toBe("Import impossible");
   });
 });
