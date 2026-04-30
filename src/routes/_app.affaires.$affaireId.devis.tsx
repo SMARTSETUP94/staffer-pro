@@ -367,7 +367,8 @@ function AffaireDevisPage() {
                         <Pencil className="h-4 w-4" />
                       </Button>
                       <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-destructive"
-                        onClick={() => setToDelete({ kind: "devis", id: d.id, label: `devis ${d.numero}` })}>
+                        onClick={() => setDevisToDelete(d.id)}
+                        title="Supprimer le devis (cascade)">
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </>
