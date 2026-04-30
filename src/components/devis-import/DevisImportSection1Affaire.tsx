@@ -179,7 +179,7 @@ export function DevisImportSection1Affaire({
           </div>
 
           <div className="space-y-1.5">
-            <Label>Client</Label>
+            <Label>Client{clientEdited && <EditedBadge />}</Label>
             {affaireId === NEW_AFFAIRE ? (
               <Input
                 value={newAffaireClient}
