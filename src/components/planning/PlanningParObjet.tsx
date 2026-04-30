@@ -639,6 +639,32 @@ export function PlanningParObjet({
           }}
         />
       )}
+
+      {/* Dialog édition groupée d'une cellule (objet × jour) */}
+      {cellDlg && (
+        <CellEditDialog
+          open
+          onOpenChange={(o) => !o && setCellDlg(null)}
+          date={cellDlg.date}
+          objet={{
+            id: cellDlg.objet.id,
+            reference: cellDlg.objet.reference,
+            nom: cellDlg.objet.nom,
+            affaire_id: cellDlg.objet.affaire_id,
+            heures_prevues_total: cellDlg.objet.heures_prevues_total,
+          }}
+          affaire={cellDlg.affaire}
+          cellAssigns={cellDlg.cellAssigns}
+          employes={employes}
+          metiers={metiers}
+          heuresObjetTotal={heuresAssigneesByObjet.get(cellDlg.objet.id) ?? 0}
+          onChanged={() => {
+            setCellDlg(null);
+            refreshLinks();
+            onChanged?.();
+          }}
+        />
+      )}
     </TooltipProvider>
   );
 }
