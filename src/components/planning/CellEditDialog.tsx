@@ -487,22 +487,48 @@ export function CellEditDialog({
                 Ajouter un employé
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-[300px] p-0" align="start">
-              <Command>
-                <CommandInput placeholder="Rechercher un employé…" className="h-8 text-xs" />
+            <PopoverContent className="w-[340px] p-0" align="start">
+              <Command
+                filter={(value, search) => {
+                  // recherche fuzzy : nom + métier + statut
+                  const v = value.toLowerCase();
+                  const s = search.toLowerCase().trim();
+                  if (!s) return 1;
+                  return v.includes(s) ? 1 : 0;
+                }}
+              >
+                <CommandInput
+                  placeholder="Nom, métier, libre/partiel…"
+                  className="h-8 text-xs"
+                  autoFocus
+                />
                 <CommandList>
                   <CommandEmpty>
                     <div className="py-3 text-center text-xs text-muted-foreground">
                       Aucun employé disponible
                     </div>
                   </CommandEmpty>
-                  <CommandGroup>
-                    {employesDispo.map((emp) => {
-                      const metier = metiersById.get(emp.metier_principal_id);
+                  <CommandGroup heading={`${employesDispo.length} employé(s)`}>
+                    {employesDispo.map(({ emp, metier, heuresJour, statut }) => {
+                      const dotClass =
+                        statut === "libre"
+                          ? "bg-emerald-500"
+                          : statut === "partiel"
+                            ? "bg-amber-500"
+                            : "bg-destructive";
+                      const dispoLabel =
+                        statut === "libre"
+                          ? "libre"
+                          : statut === "complet"
+                            ? "complet"
+                            : "partiel";
+                      // value sert au filtre Command
+                      const searchValue =
+                        `${emp.prenom} ${emp.nom} ${metier?.libelle ?? ""} ${dispoLabel}`.toLowerCase();
                       return (
                         <CommandItem
                           key={emp.id}
-                          value={`${emp.prenom} ${emp.nom}`}
+                          value={searchValue}
                           onSelect={() => addNewRow(emp)}
                           className="text-xs"
                         >
@@ -510,14 +536,32 @@ export function CellEditDialog({
                             className="mr-1.5 h-1.5 w-1.5 shrink-0 rounded-full"
                             style={{ backgroundColor: metier?.couleur ?? "#94a3b8" }}
                           />
-                          <span className="truncate">
+                          <span className="truncate font-medium">
                             {emp.prenom} {emp.nom}
                           </span>
                           {metier && (
-                            <span className="ml-auto truncate text-[10px] text-muted-foreground">
-                              {metier.libelle}
+                            <span className="ml-1.5 truncate text-[10px] text-muted-foreground">
+                              · {metier.libelle}
                             </span>
                           )}
+                          <span className="ml-auto flex items-center gap-1">
+                            <span
+                              className={"h-1.5 w-1.5 shrink-0 rounded-full " + dotClass}
+                              title={`Déjà planifié ce jour : ${heuresJour}h`}
+                            />
+                            <span
+                              className={
+                                "font-mono text-[10px] " +
+                                (statut === "complet"
+                                  ? "text-destructive font-bold"
+                                  : statut === "partiel"
+                                    ? "text-amber-600 dark:text-amber-400"
+                                    : "text-muted-foreground")
+                              }
+                            >
+                              {heuresJour > 0 ? `${heuresJour}h` : "libre"}
+                            </span>
+                          </span>
                         </CommandItem>
                       );
                     })}
