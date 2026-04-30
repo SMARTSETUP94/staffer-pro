@@ -700,6 +700,7 @@ export interface FileRouteTypes {
     | '/_app/imports'
     | '/_app/incident-auth'
     | '/_app/interimaires'
+    | '/_app/ma-semaine'
     | '/_app/mes-heures'
     | '/_app/mes-propositions'
     | '/_app/mes-swaps'
@@ -938,6 +939,13 @@ declare module '@tanstack/react-router' {
       path: '/interimaires'
       fullPath: '/interimaires'
       preLoaderRoute: typeof AppInterimairesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/ma-semaine': {
+      id: '/_app/ma-semaine'
+      path: '/ma-semaine'
+      fullPath: '/ma-semaine'
+      preLoaderRoute: typeof AppMaSemaineRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/incident-auth': {
@@ -1250,6 +1258,7 @@ interface AppRouteChildren {
   AppImportsRoute: typeof AppImportsRoute
   AppIncidentAuthRoute: typeof AppIncidentAuthRoute
   AppInterimairesRoute: typeof AppInterimairesRoute
+  AppMaSemaineRoute: typeof AppMaSemaineRoute
   AppMesHeuresRoute: typeof AppMesHeuresRoute
   AppMesPropositionsRoute: typeof AppMesPropositionsRoute
   AppMesSwapsRoute: typeof AppMesSwapsRoute
@@ -1288,6 +1297,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppImportsRoute: AppImportsRoute,
   AppIncidentAuthRoute: AppIncidentAuthRoute,
   AppInterimairesRoute: AppInterimairesRoute,
+  AppMaSemaineRoute: AppMaSemaineRoute,
   AppMesHeuresRoute: AppMesHeuresRoute,
   AppMesPropositionsRoute: AppMesPropositionsRoute,
   AppMesSwapsRoute: AppMesSwapsRoute,
