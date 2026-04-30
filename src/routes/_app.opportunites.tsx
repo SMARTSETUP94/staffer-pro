@@ -57,6 +57,21 @@ import {
   type TableurFilters,
   type TableurRow,
 } from "@/lib/opportunites-tableur-helpers";
+import {
+  checkCanDeleteOpportunite,
+  deleteBlockedMessage,
+} from "@/lib/opportunite-delete";
+import { useDeleteOpportunite } from "@/hooks/use-delete-opportunite";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const VUE_VALUES = ["kanban", "tableur"] as const;
 type VueOpportunites = (typeof VUE_VALUES)[number];
