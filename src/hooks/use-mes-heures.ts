@@ -325,7 +325,7 @@ export function useMesHeures({ weekStart, employeIdOverride }: UseMesHeuresOptio
         ignoreDuplicates: true,
       })
       .select(
-        "id, assignation_id, affaire_id, date, heure_debut, heure_fin, heures_reelles, duree_pause_minutes, commentaire, statut, motif_rejet, motif_rejet_lu_le, fabrication_objet_id, fabrication_etape_type",
+        SAISIE_SELECT,
       )
       .then(({ data }) => {
         if (data && data.length > 0) {
@@ -350,7 +350,7 @@ export function useMesHeures({ weekStart, employeIdOverride }: UseMesHeuresOptio
           .update(patch)
           .eq("id", row.saisie.id)
           .select(
-            "id, assignation_id, affaire_id, date, heure_debut, heure_fin, heures_reelles, duree_pause_minutes, commentaire, statut, motif_rejet, motif_rejet_lu_le, fabrication_objet_id, fabrication_etape_type",
+            SAISIE_SELECT,
           )
           .maybeSingle();
         if (!error && data) {
@@ -378,7 +378,7 @@ export function useMesHeures({ weekStart, employeIdOverride }: UseMesHeuresOptio
         .from("heures_saisies")
         .insert(insert)
         .select(
-          "id, assignation_id, affaire_id, date, heure_debut, heure_fin, heures_reelles, duree_pause_minutes, commentaire, statut, motif_rejet, motif_rejet_lu_le, fabrication_objet_id, fabrication_etape_type",
+          SAISIE_SELECT,
         )
         .maybeSingle();
       if (data) {
