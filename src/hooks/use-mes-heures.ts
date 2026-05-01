@@ -209,11 +209,12 @@ export function useMesHeures({ weekStart, employeIdOverride }: UseMesHeuresOptio
       }
       if (missingMetierIds.size > 0) {
         lookups.push(
-          supabase
-            .from("metiers")
-            .select("id, libelle, couleur")
-            .in("id", Array.from(missingMetierIds))
-            .then(({ data }) => {
+          Promise.resolve(
+            supabase
+              .from("metiers")
+              .select("id, libelle, couleur")
+              .in("id", Array.from(missingMetierIds)),
+          ).then(({ data }) => {
               if (cancelled || !data) return;
               setMetiersById((prev) => {
                 const next = { ...prev };
