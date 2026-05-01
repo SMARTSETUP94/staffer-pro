@@ -173,6 +173,21 @@ export function FeuilleRouteTableurView({
           Aujourd'hui
         </Button>
 
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleExport}
+          disabled={exportBusy || loading}
+          data-testid="fr-tableur-export"
+        >
+          {exportBusy ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <FileDown className="mr-2 h-4 w-4" />
+          )}
+          Export Excel
+        </Button>
+
         <div className="relative ml-auto">
           <Search className="pointer-events-none absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
