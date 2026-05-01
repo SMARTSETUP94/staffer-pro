@@ -488,3 +488,40 @@ export const deleteUser = createServerFn({ method: "POST" })
 
     return { success: true };
   });
+
+// ============================================================================
+// updateUserFullName : édition inline du nom complet sur /parametres/utilisateurs
+// ============================================================================
+export const updateUserFullName = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => {
+    if (!input || typeof input !== "object") throw new Error("Payload invalide");
+    const i = input as Record<string, unknown>;
+    const targetUserId = String(i.targetUserId ?? "");
+    if (!/^[0-9a-f-]{36}$/i.test(targetUserId)) throw new Error("targetUserId invalide");
+    const raw = typeof i.fullName === "string" ? i.fullName.trim() : "";
+    const fullName = raw.length === 0 ? null : raw.slice(0, 120);
+    return { targetUserId, fullName };
+  })
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    await assertCallerIsAdmin(supabase, userId);
+
+    const { error } = await supabaseAdmin
+      .from("profiles")
+      .update({ full_name: data.fullName, updated_at: new Date().toISOString() })
+      .eq("id", data.targetUserId);
+    if (error) throw new Error("Erreur mise à jour nom : " + error.message);
+
+    // Sync user_metadata.full_name pour cohérence
+    try {
+      await supabaseAdmin.auth.admin.updateUserById(data.targetUserId, {
+        user_metadata: { full_name: data.fullName ?? "" },
+      });
+    } catch (e) {
+      console.warn("[updateUserFullName] sync user_metadata échec:", e);
+    }
+
+    return { success: true, fullName: data.fullName };
+  });
+
