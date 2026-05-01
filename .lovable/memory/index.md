@@ -35,6 +35,7 @@ Validation imports : `import-validation.ts` centralise toutes les vérifs (PARSE
 15. ✅ HOTFIX auth invitation — Résolu par CONFIG Supabase : `mailer_otp_exp` passé de 86400s (24h) à 604800s (7j). Aucun code modifié. Invités bloqués avant fix (Raoul, Claude, Vera, etc. >24h sans clic) à réinviter manuellement depuis Supabase Dashboard > Auth > Users.
 16. 🚧 v0.32.3 — EN COURS : auto-saisie heures employé sur chantiers non staffés. Cadrage figé : déclencheur = saisie mobile employé / UI = bouton "+ Autre chantier" sur `/mobile/heures` / data = `heures_saisies.assignation_id IS NULL` / validation = 4ᵉ onglet "Hors planning" sur `/validation-heures`. RLS `heures_saisies_self_insert` déjà OK, pas de migration requise.
 17. ⏳ v0.33 — À LANCER APRÈS v0.32.3 + hotfixes : Vue Tableur Feuille de Route dans Planning (équivalent vue tableur opportunités v0.28.0, mais pour les feuilles de route — édition inline, tri, filtres).
+18. ⏳ v0.34 — APRÈS publish v0.32.3 : Batterie ~50 tests E2E Playwright (12 par rôle admin/chef/employé-desktop/employé-mobile + smoke transverses). Choix Gabin : tous rôles d'un coup, npm local + GH Actions push main, parallélisation 4 shards, cible <15min CI. Anti-régression critique : RGPD employé desktop (pas de pipeline commercial), modales au changement d'onglet, dashboard customizable reload. Voir mem://features/e2e-playwright-coverage.
 
 ## Memories
 - [Planning 3 vues](mem://features/planning-views) — CDI / Intérim / Synthèse chantier
@@ -59,3 +60,4 @@ Validation imports : `import-validation.ts` centralise toutes les vérifs (PARSE
 - [Fusion Audit + Incident Auth](mem://features/audit-auth-fusion) — v0.29.3
 - [Suppression cascade devis](mem://features/devis-delete-cascade) — v0.31.0+v0.31.1
 - [Auth flow différencié rôle](mem://features/auth-flow-roles) — magic link + set-password
+- [E2E Playwright coverage](mem://features/e2e-playwright-coverage) — v0.34 ~50 tests 4 rôles + smoke
