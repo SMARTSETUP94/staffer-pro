@@ -219,8 +219,8 @@ export function FeuilleRouteTableurView({
                     {/* 2. Code */}
                     <td className="px-2 py-1">
                       <Link
-                        to="/affaires/$id"
-                        params={{ id: row.affaire_id }}
+                        to="/affaires/$affaireId"
+                        params={{ affaireId: row.affaire_id }}
                         className="inline-flex items-center gap-1 font-mono text-primary hover:underline"
                       >
                         {row.affaire_numero}
