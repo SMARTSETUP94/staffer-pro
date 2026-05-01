@@ -1,11 +1,24 @@
 import { useEffect, useMemo, useState } from "react";
 import { addDays, format, isSameDay, isToday } from "date-fns";
 import { fr } from "date-fns/locale";
-import { AlertTriangle, ChevronDown, Clock, Hammer, Loader2, MapPin, Send } from "lucide-react";
+import { AlertTriangle, ChevronDown, Clock, Hammer, Loader2, MapPin, Send, Sparkles, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { AddHorsPlanningDialog } from "@/components/heures/AddHorsPlanningDialog";
+import { canEmployeDeleteSaisie } from "@/lib/hors-planning-helpers";
 import {
   Collapsible,
   CollapsibleContent,
@@ -56,7 +69,18 @@ export function MesHeuresGrid({ weekStart, variant, employeIdOverride }: Props) 
     upsertSaisie,
     submitWeek,
     acknowledgeRejet,
+    addHorsPlanning,
+    deleteHorsPlanning,
   } = useMesHeures({ weekStart, employeIdOverride });
+
+  const handleDeleteHorsPlanning = async (saisieId: string) => {
+    const res = await deleteHorsPlanning(saisieId);
+    if (res.ok) {
+      toast.success("Saisie supprimée.");
+    } else {
+      toast.error(res.error ?? "Suppression impossible.");
+    }
+  };
 
   const days = useMemo(
     () => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)),
@@ -137,8 +161,9 @@ export function MesHeuresGrid({ weekStart, variant, employeIdOverride }: Props) 
         </div>
       </div>
 
-      {/* Bouton soumettre */}
-      <div className="flex items-center justify-end gap-2">
+      {/* Actions semaine */}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <AddHorsPlanningDialog variant={variant} onSubmit={addHorsPlanning} />
         <Button
           onClick={handleSubmit}
           disabled={draftCount === 0 || hasBlockingRejet}
@@ -193,6 +218,7 @@ export function MesHeuresGrid({ weekStart, variant, employeIdOverride }: Props) 
                       variant={variant}
                       onUpdate={upsertSaisie}
                       onAcknowledge={acknowledgeRejet}
+                      onDeleteHorsPlanning={handleDeleteHorsPlanning}
                     />
                   ))}
                 </div>
@@ -221,11 +247,13 @@ function SaisieRowCard({
   variant,
   onUpdate,
   onAcknowledge,
+  onDeleteHorsPlanning,
 }: {
   row: SaisieCombined;
   variant: "mobile" | "desktop";
   onUpdate: (row: SaisieCombined, patch: Partial<NonNullable<SaisieCombined["saisie"]>>) => Promise<void>;
   onAcknowledge: (saisieId: string) => Promise<void>;
+  onDeleteHorsPlanning?: (saisieId: string) => Promise<void>;
 }) {
   const statut = row.saisie?.statut ?? "brouillon";
   const locked = statut === "soumis" || statut === "valide";
@@ -304,12 +332,25 @@ function SaisieRowCard({
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-2">
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold text-foreground">
-                {row.affaire_label}
-              </p>
+              <div className="flex flex-wrap items-center gap-1.5">
+                <p className="truncate text-sm font-semibold text-foreground">
+                  {row.affaire_label}
+                </p>
+                {row.hors_planning && (
+                  <Badge
+                    variant="outline"
+                    className="gap-1 border-amber-500/40 bg-amber-500/10 px-1.5 py-0 text-[9px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-300"
+                    data-testid="badge-hors-planning"
+                  >
+                    <Sparkles className="h-2.5 w-2.5" />
+                    Hors planning
+                  </Badge>
+                )}
+              </div>
               <p className="text-[11px] text-muted-foreground">
-                {row.demi_journee === "JOURNEE" ? "Journée" : row.demi_journee} ·{" "}
-                {row.assignation?.heures}h prévues
+                {row.hors_planning
+                  ? "Saisie déclarée par toi"
+                  : `${row.demi_journee === "JOURNEE" ? "Journée" : row.demi_journee} · ${row.assignation?.heures}h prévues`}
                 {row.assignation?.affaire?.lieu && (
                   <span className="ml-2 inline-flex items-center gap-0.5">
                     <MapPin className="h-2.5 w-2.5" />
@@ -318,9 +359,43 @@ function SaisieRowCard({
                 )}
               </p>
             </div>
-            <Badge className={cn("text-[10px]", badge.className)} variant="outline">
-              {badge.label}
-            </Badge>
+            <div className="flex items-center gap-1.5">
+              <Badge className={cn("text-[10px]", badge.className)} variant="outline">
+                {badge.label}
+              </Badge>
+              {row.hors_planning && row.saisie && onDeleteHorsPlanning && canEmployeDeleteSaisie(row.saisie) && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                      data-testid="btn-delete-hors-planning"
+                      aria-label="Supprimer cette saisie"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Supprimer cette saisie hors planning ?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Tu peux supprimer une saisie hors planning tant qu'elle est en brouillon.
+                        Une fois soumise, seul ton chef pourra intervenir.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Annuler</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => row.saisie && onDeleteHorsPlanning(row.saisie.id)}
+                      >
+                        Supprimer
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
+            </div>
           </div>
 
           <div className={cn("mt-3 grid gap-2", variant === "desktop" ? "grid-cols-[120px_1fr_auto]" : "grid-cols-1")}>
