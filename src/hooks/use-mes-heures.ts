@@ -405,6 +405,46 @@ export function useMesHeures({ weekStart, employeIdOverride }: UseMesHeuresOptio
     setSaisies((prev) => prev.map((s) => (s.id === saisieId ? updated : s)));
   }, []);
 
+  // v0.32.3 — Créer une saisie hors planning (assignation_id NULL)
+  const addHorsPlanning = useCallback(
+    async (input: HorsPlanningInput): Promise<{ ok: boolean; error?: string; saisieId?: string }> => {
+      if (!employeId) return { ok: false, error: "Employé non résolu" };
+      let payload: ReturnType<typeof buildHorsPlanningInsert>;
+      try {
+        payload = buildHorsPlanningInsert(employeId, input);
+      } catch (e) {
+        return { ok: false, error: e instanceof Error ? e.message : "Input invalide" };
+      }
+      const { data, error } = await supabase
+        .from("heures_saisies")
+        .insert(payload)
+        .select(SAISIE_SELECT)
+        .maybeSingle();
+      if (error || !data) {
+        return { ok: false, error: error?.message ?? "Insertion échouée" };
+      }
+      // Optimistic update + déclenche le re-render avec la nouvelle saisie
+      setSaisies((prev) => [...prev, data as unknown as SaisieRow]);
+      // Force un reload pour récupérer affaire/métier label si besoin
+      setReloadKey((k) => k + 1);
+      return { ok: true, saisieId: (data as { id: string }).id };
+    },
+    [employeId],
+  );
+
+  // v0.32.3 — Suppression d'une saisie hors planning brouillon (RPC sécurisée)
+  const deleteHorsPlanning = useCallback(
+    async (saisieId: string): Promise<{ ok: boolean; error?: string }> => {
+      const { error } = await supabase.rpc("delete_my_hors_planning_saisie", {
+        _saisie_id: saisieId,
+      });
+      if (error) return { ok: false, error: error.message };
+      setSaisies((prev) => prev.filter((s) => s.id !== saisieId));
+      return { ok: true };
+    },
+    [],
+  );
+
   const submitWeek = useCallback(async () => {
     if (!employeId) return { ok: false, error: "Employé non résolu", count: 0 };
     if (hasBlockingRejet) {
