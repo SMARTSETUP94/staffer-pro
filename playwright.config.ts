@@ -6,16 +6,46 @@
  *   bunx playwright install chromium
  *
  * Lancement :
- *   bun run test:e2e            # full
- *   bun run test:e2e:ui         # UI mode
+ *   bun run test:e2e               # full (HTML report local)
+ *   bun run test:e2e:ui            # UI mode interactif
+ *   bun run test:e2e:report        # ouvre le dernier rapport HTML
  *   bun run test:e2e -- --shard=1/4
  *
- * En CI (.github/workflows/e2e.yml) on utilise 4 shards en parallèle pour viser <15min.
+ * En CI (.github/workflows/e2e.yml) :
+ *   - 4 shards en parallèle (cible <15min) émettent chacun un BLOB report
+ *     (`blob-report/`), uploadés comme artefacts.
+ *   - Un job `merge-reports` télécharge les 4 blobs et produit un UNIQUE
+ *     rapport HTML consolidé (`playwright-report/`) → artefact final
+ *     `playwright-report` exploré directement dans l'UI GitHub Actions.
+ *
+ * Diagnostics sur échec (admin + smoke) :
+ *   - screenshot fullPage automatique (`only-on-failure`)
+ *   - trace zip (timeline DOM + réseau + console) sur premier retry
+ *   - vidéo MP4 conservée si test échoue après retry
+ *   Tous attachés au rapport HTML, accessibles via clic sur le test rouge.
  */
 import { defineConfig, devices } from "@playwright/test";
 
 const BASE_URL = process.env.E2E_BASE_URL ?? "http://localhost:3000";
 const isCI = !!process.env.CI;
+
+/**
+ * Reporters :
+ *  - Local : list (console) + html (auto-ouvert seulement sur échec).
+ *  - CI    : github (annotations PR) + blob (mergeable) + dot (logs compacts).
+ *    Le rapport HTML final est généré par le job `merge-reports` à partir
+ *    des blobs des 4 shards (cf. .github/workflows/e2e.yml).
+ */
+const reporter: Parameters<typeof defineConfig>[0]["reporter"] = isCI
+  ? [
+      ["github"],
+      ["blob", { outputDir: "blob-report" }],
+      ["dot"],
+    ]
+  : [
+      ["list"],
+      ["html", { outputFolder: "playwright-report", open: "on-failure" }],
+    ];
 
 export default defineConfig({
   testDir: "./e2e",
@@ -25,14 +55,22 @@ export default defineConfig({
   forbidOnly: isCI,
   retries: isCI ? 1 : 0,
   workers: isCI ? 2 : undefined,
-  reporter: isCI ? [["github"], ["html", { open: "never" }]] : [["list"], ["html", { open: "never" }]],
+  reporter,
+
+  /** Dossier des artefacts bruts (screenshots/videos/traces avant rapport). */
+  outputDir: "test-results",
 
   use: {
     baseURL: BASE_URL,
-    trace: "retain-on-failure",
-    screenshot: "only-on-failure",
+    /** Trace zip seulement sur premier retry → léger en succès, complet sur flake. */
+    trace: "on-first-retry",
+    /** Screenshot fullPage automatique à l'échec → contexte visuel dans le rapport. */
+    screenshot: { mode: "only-on-failure", fullPage: true },
+    /** Vidéo MP4 conservée uniquement pour les tests qui finissent en échec. */
     video: "retain-on-failure",
     actionTimeout: 10_000,
+    /** Empêche les requêtes inattendues de masquer l'erreur réelle. */
+    navigationTimeout: 15_000,
   },
 
   projects: [

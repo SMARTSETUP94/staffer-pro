@@ -13,7 +13,11 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui"
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:admin": "playwright test --project=admin-desktop",
+    "test:e2e:smoke": "playwright test --project=smoke",
+    "test:e2e:report": "playwright show-report playwright-report",
+    "test:e2e:merge": "playwright merge-reports --reporter html ./all-blob-reports"
   },
   "dependencies": {
     "@cloudflare/vite-plugin": "^1.25.5",
