@@ -1,11 +1,24 @@
 import { useEffect, useMemo, useState } from "react";
 import { addDays, format, isSameDay, isToday } from "date-fns";
 import { fr } from "date-fns/locale";
-import { AlertTriangle, ChevronDown, Clock, Hammer, Loader2, MapPin, Send } from "lucide-react";
+import { AlertTriangle, ChevronDown, Clock, Hammer, Loader2, MapPin, Send, Sparkles, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { AddHorsPlanningDialog } from "@/components/heures/AddHorsPlanningDialog";
+import { canEmployeDeleteSaisie } from "@/lib/hors-planning-helpers";
 import {
   Collapsible,
   CollapsibleContent,
@@ -56,7 +69,18 @@ export function MesHeuresGrid({ weekStart, variant, employeIdOverride }: Props) 
     upsertSaisie,
     submitWeek,
     acknowledgeRejet,
+    addHorsPlanning,
+    deleteHorsPlanning,
   } = useMesHeures({ weekStart, employeIdOverride });
+
+  const handleDeleteHorsPlanning = async (saisieId: string) => {
+    const res = await deleteHorsPlanning(saisieId);
+    if (res.ok) {
+      toast.success("Saisie supprimée.");
+    } else {
+      toast.error(res.error ?? "Suppression impossible.");
+    }
+  };
 
   const days = useMemo(
     () => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)),
