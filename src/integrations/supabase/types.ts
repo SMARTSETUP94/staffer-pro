@@ -1169,6 +1169,48 @@ export type Database = {
           },
         ]
       }
+      feuille_route_lignes: {
+        Row: {
+          adresse_override: string | null
+          affaire_id: string
+          commentaires: string | null
+          created_at: string
+          created_by: string | null
+          date: string
+          horaire_rdv: string | null
+          id: string
+          type_operation: string | null
+          updated_at: string
+          vehicules_ids: string[]
+        }
+        Insert: {
+          adresse_override?: string | null
+          affaire_id: string
+          commentaires?: string | null
+          created_at?: string
+          created_by?: string | null
+          date: string
+          horaire_rdv?: string | null
+          id?: string
+          type_operation?: string | null
+          updated_at?: string
+          vehicules_ids?: string[]
+        }
+        Update: {
+          adresse_override?: string | null
+          affaire_id?: string
+          commentaires?: string | null
+          created_at?: string
+          created_by?: string | null
+          date?: string
+          horaire_rdv?: string | null
+          id?: string
+          type_operation?: string | null
+          updated_at?: string
+          vehicules_ids?: string[]
+        }
+        Relationships: []
+      }
       heures_saisies: {
         Row: {
           affaire_id: string
@@ -2454,6 +2496,28 @@ export type Database = {
       sign_opportunite: {
         Args: { _affaire_id: string; _new_code: string }
         Returns: string
+      }
+      upsert_feuille_route_ligne: {
+        Args: { _affaire_id: string; _date: string; _patch: Json }
+        Returns: {
+          adresse_override: string | null
+          affaire_id: string
+          commentaires: string | null
+          created_at: string
+          created_by: string | null
+          date: string
+          horaire_rdv: string | null
+          id: string
+          type_operation: string | null
+          updated_at: string
+          vehicules_ids: string[]
+        }
+        SetofOptions: {
+          from: "*"
+          to: "feuille_route_lignes"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       user_has_affaire_access: {
         Args: { _affaire_id: string }
