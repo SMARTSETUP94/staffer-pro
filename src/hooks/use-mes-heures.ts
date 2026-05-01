@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { addDays, format, isBefore, startOfDay } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  buildHorsPlanningInsert,
+  type HorsPlanningInput,
+} from "@/lib/hors-planning-helpers";
 
 export type DemiJournee = "AM" | "PM" | "JOURNEE";
 export type HeureStatut = "brouillon" | "soumis" | "valide" | "rejete";
