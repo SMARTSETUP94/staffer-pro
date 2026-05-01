@@ -100,32 +100,42 @@ async function sendInvitationEmail(args: {
     inviteLink: args.inviteLink,
   });
 
-  const res = await fetch("https://connector-gateway.lovable.dev/resend/emails", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${LOVABLE_API_KEY}`,
-      "X-Connection-Api-Key": RESEND_API_KEY,
-    },
-    body: JSON.stringify({
-      from: "Setup Paris <onboarding@setup.paris>",
-      to: [args.email],
-      reply_to: "smart@setup.paris",
-      subject: "Invitation — Staffing by Setup.Paris",
-      html,
-    }),
-  });
+  console.info("[sendInvitationEmail] →", { to: args.email, roles: args.roles });
+  let res: Response;
+  try {
+    res = await fetch("https://connector-gateway.lovable.dev/resend/emails", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "X-Connection-Api-Key": RESEND_API_KEY,
+      },
+      body: JSON.stringify({
+        from: "Setup Paris <onboarding@setup.paris>",
+        to: [args.email],
+        reply_to: "smart@setup.paris",
+        subject: "Invitation — Staffing by Setup.Paris",
+        html,
+      }),
+    });
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error("[sendInvitationEmail] fetch threw:", msg);
+    throw new Error(`Erreur réseau gateway Resend : ${msg}`);
+  }
+  const rawBody = await res.text();
   if (!res.ok) {
-    const errBody = await res.text();
-    throw new Error(`Échec envoi email Resend [${res.status}]: ${errBody}`);
+    console.error("[sendInvitationEmail] Resend KO", { status: res.status, body: rawBody });
+    throw new Error(`Échec envoi email Resend [${res.status}]: ${rawBody}`);
   }
   let messageId: string | null = null;
   try {
-    const body = (await res.json()) as { id?: string };
-    messageId = body.id ?? null;
+    const parsed = JSON.parse(rawBody) as { id?: string };
+    messageId = parsed.id ?? null;
   } catch {
     // ignore parse errors
   }
+  console.info("[sendInvitationEmail] OK", { to: args.email, messageId });
   return { messageId };
 }
 
