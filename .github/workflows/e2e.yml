@@ -1,10 +1,15 @@
 # v0.34 — Workflow E2E Playwright.
 #
-# Déclenchement : push sur main uniquement (pas chaque PR).
-# Stratégie : 4 shards parallèles → cible <15 min.
+# Déclenchement : push sur main + workflow_dispatch.
+# Stratégie : 4 shards parallèles (cible <15 min) → blob reports → merge HTML.
+#
+# Artefacts :
+#   - playwright-blob-shard-N    : blob brut par shard (mergeable)
+#   - playwright-traces-shard-N  : traces/screenshots/vidéos sur échec
+#   - playwright-report          : rapport HTML CONSOLIDÉ (job merge)
 #
 # Secrets requis (Settings → Secrets and variables → Actions) :
-#   E2E_BASE_URL              # ex https://staffer-pro.lovable.app (preview ou staging)
+#   E2E_BASE_URL              # ex https://staffer-pro.lovable.app
 #   E2E_ADMIN_EMAIL / E2E_ADMIN_PASSWORD
 #   E2E_CHEF_EMAIL  / E2E_CHEF_PASSWORD
 #   E2E_EMPLOYE_EMAIL / E2E_EMPLOYE_PASSWORD
@@ -53,10 +58,66 @@ jobs:
           E2E_EMPLOYE_PASSWORD: ${{ secrets.E2E_EMPLOYE_PASSWORD }}
         run: bunx playwright test --shard=${{ matrix.shard }}/4
 
-      - name: Upload Playwright report
+      # Blob report : nécessaire pour le merge cross-shards.
+      - name: Upload blob report (shard ${{ matrix.shard }})
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-report-shard-${{ matrix.shard }}
-          path: playwright-report/
+          name: playwright-blob-shard-${{ matrix.shard }}
+          path: blob-report/
           retention-days: 7
+
+      # Artefacts bruts (traces/screenshots/vidéos) : utiles pour debug local.
+      - name: Upload raw traces & screenshots (shard ${{ matrix.shard }})
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-traces-shard-${{ matrix.shard }}
+          path: test-results/
+          retention-days: 7
+          if-no-files-found: ignore
+
+  merge-reports:
+    name: Merge HTML report
+    if: always()
+    needs: [e2e]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install Playwright (merge only needs the package)
+        run: bun add -D @playwright/test
+
+      - name: Download blob reports from all shards
+        uses: actions/download-artifact@v4
+        with:
+          path: all-blob-reports
+          pattern: playwright-blob-shard-*
+          merge-multiple: true
+
+      - name: Merge into single HTML report
+        run: bunx playwright merge-reports --reporter html ./all-blob-reports
+
+      - name: Upload consolidated HTML report
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 14
+
+      - name: Summarize report location
+        run: |
+          echo "### 📊 Playwright HTML Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Téléchargez l'artefact **playwright-report** ci-dessus, puis :" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo '```bash' >> $GITHUB_STEP_SUMMARY
+          echo "unzip playwright-report.zip -d playwright-report" >> $GITHUB_STEP_SUMMARY
+          echo "bunx playwright show-report playwright-report" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
