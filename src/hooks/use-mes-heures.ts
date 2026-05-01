@@ -37,6 +37,8 @@ export interface SaisieRow {
   motif_rejet_lu_le: string | null;
   fabrication_objet_id: string | null;
   fabrication_etape_type: FabricationEtapeTypeRow | null;
+  /** v0.32.3 — métier réellement effectué (renseigné pour saisies hors planning). */
+  metier_id: number | null;
 }
 
 /** Combinaison d'une assignation + sa saisie (s'il y en a une). */
@@ -49,6 +51,8 @@ export interface SaisieCombined {
   affaire_id: string;
   affaire_label: string;
   metier_couleur: string;
+  /** v0.32.3 — true si saisie hors planning (assignation_id IS NULL). */
+  hors_planning: boolean;
 }
 
 interface UseMesHeuresOptions {
