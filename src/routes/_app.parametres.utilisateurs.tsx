@@ -30,6 +30,7 @@ import { useAuth, type AppRole } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
 import {
   inviteUser, resendInvitation, updateUserRole, setUserActive, deleteUser, linkExistingUsers,
+  updateUserFullName,
 } from "@/lib/admin-actions";
 import { readServerFnError } from "@/lib/server-fn-error";
 import { withAuthRetry } from "@/lib/with-auth-retry";
@@ -236,7 +237,8 @@ function UtilisateursPage() {
         return;
       }
       const linked = result.linkedEmployeId ? " (employé lié automatiquement)" : "";
-      toast.success(`Invitation envoyée à ${result.email}${linked}`);
+      const idHint = result.messageId ? ` · id ${result.messageId.slice(0, 8)}` : "";
+      toast.success(`Invitation envoyée à ${result.email}${linked}${idHint}`);
       setInviteOpen(false);
       setInviteEmail("");
       setInviteFullName("");
@@ -441,8 +443,17 @@ function UtilisateursPage() {
                           </Badge>
                         )}
                       </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {u.full_name ?? "—"}
+                      <TableCell>
+                        <EditableFullName
+                          userId={u.id}
+                          value={u.full_name}
+                          disabled={busy}
+                          onSaved={(next) =>
+                            setUsers((prev) =>
+                              prev.map((row) => (row.id === u.id ? { ...row, full_name: next } : row)),
+                            )
+                          }
+                        />
                       </TableCell>
                       <TableCell>
                         {u.role ? (
@@ -663,5 +674,89 @@ function StatBlock({
         <span className="text-xs uppercase tracking-wider opacity-80">{label}</span>
       </CardContent>
     </Card>
+  );
+}
+
+function EditableFullName({
+  userId,
+  value,
+  disabled,
+  onSaved,
+}: {
+  userId: string;
+  value: string | null;
+  disabled?: boolean;
+  onSaved: (next: string | null) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value ?? "");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!editing) setDraft(value ?? "");
+  }, [value, editing]);
+
+  async function commit() {
+    const trimmed = draft.trim();
+    const nextVal = trimmed.length === 0 ? null : trimmed;
+    if (nextVal === (value ?? null)) {
+      setEditing(false);
+      return;
+    }
+    setSaving(true);
+    try {
+      const res = await withAuthRetry(() =>
+        updateUserFullName({ data: { targetUserId: userId, fullName: nextVal ?? "" } }),
+      );
+      onSaved(res.fullName ?? null);
+      toast.success("Nom mis à jour");
+      setEditing(false);
+    } catch (e) {
+      toast.error(await readServerFnError(e));
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (!editing) {
+    return (
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => setEditing(true)}
+        className="w-full rounded px-2 py-1 text-left text-sm text-muted-foreground hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
+        title="Cliquer pour éditer"
+      >
+        {value ?? <span className="italic opacity-60">— ajouter —</span>}
+      </button>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-1">
+      <Input
+        autoFocus
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") commit();
+          if (e.key === "Escape") {
+            setDraft(value ?? "");
+            setEditing(false);
+          }
+        }}
+        disabled={saving}
+        className="h-7 text-sm"
+      />
+      <Button
+        size="sm"
+        variant="ghost"
+        className="h-7 px-2"
+        disabled={saving}
+        onClick={commit}
+      >
+        {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "OK"}
+      </Button>
+    </div>
   );
 }
