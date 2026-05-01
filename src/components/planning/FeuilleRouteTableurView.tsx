@@ -115,6 +115,31 @@ export function FeuilleRouteTableurView({
     return m;
   }, [vehicules]);
 
+  const [exportBusy, setExportBusy] = useState(false);
+  async function handleExport() {
+    if (visibleRows.length === 0) {
+      toast.info("Aucune ligne à exporter sur cette période.");
+      return;
+    }
+    setExportBusy(true);
+    try {
+      // Lazy-load xlsx-js-style (~400KB) au clic uniquement.
+      const mod = await import("@/lib/feuille-route-tableur-excel");
+      const out = mod.exportFRTableurExcel({
+        rows: visibleRows,
+        vehicules: vehicules.map((v) => ({ id: v.id, nom: v.nom })),
+        periodStart: weekStart,
+        periodEnd: addDays(weekStart, nbDays - 1),
+      });
+      toast.success(`Export OK : ${out.rowsCount} ligne(s) → ${out.filename}`);
+    } catch (e) {
+      console.error("[FR Tableur] export error", e);
+      toast.error("Erreur à l'export Excel");
+    } finally {
+      setExportBusy(false);
+    }
+  }
+
   return (
     <div className="space-y-3" data-testid="fr-tableur">
       {/* Toolbar : navigation + search */}
