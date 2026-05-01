@@ -74,7 +74,15 @@ interface UseMesHeuresResult {
   upsertSaisie: (row: SaisieCombined, patch: Partial<SaisieRow>) => Promise<void>;
   submitWeek: () => Promise<{ ok: boolean; error?: string; count: number }>;
   acknowledgeRejet: (saisieId: string) => Promise<void>;
+  /** v0.32.3 — créer une saisie hors planning (assignation_id = NULL). */
+  addHorsPlanning: (input: HorsPlanningInput) => Promise<{ ok: boolean; error?: string; saisieId?: string }>;
+  /** v0.32.3 — supprimer une saisie hors planning brouillon (RPC sécurisée). */
+  deleteHorsPlanning: (saisieId: string) => Promise<{ ok: boolean; error?: string }>;
 }
+
+/** v0.32.3 — projection commune pour SELECT sur heures_saisies (inclut metier_id). */
+const SAISIE_SELECT =
+  "id, assignation_id, affaire_id, date, heure_debut, heure_fin, heures_reelles, duree_pause_minutes, commentaire, statut, motif_rejet, motif_rejet_lu_le, fabrication_objet_id, fabrication_etape_type, metier_id";
 
 export function useMesHeures({ weekStart, employeIdOverride }: UseMesHeuresOptions): UseMesHeuresResult {
   const [employeId, setEmployeId] = useState<string | null>(null);
