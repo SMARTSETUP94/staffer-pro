@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { addDays, format, isBefore, startOfDay } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  buildHorsPlanningInsert,
+  type HorsPlanningInput,
+} from "@/lib/hors-planning-helpers";
 
 export type DemiJournee = "AM" | "PM" | "JOURNEE";
 export type HeureStatut = "brouillon" | "soumis" | "valide" | "rejete";
@@ -33,6 +37,8 @@ export interface SaisieRow {
   motif_rejet_lu_le: string | null;
   fabrication_objet_id: string | null;
   fabrication_etape_type: FabricationEtapeTypeRow | null;
+  /** v0.32.3 — métier réellement effectué (renseigné pour saisies hors planning). */
+  metier_id: number | null;
 }
 
 /** Combinaison d'une assignation + sa saisie (s'il y en a une). */
@@ -45,6 +51,8 @@ export interface SaisieCombined {
   affaire_id: string;
   affaire_label: string;
   metier_couleur: string;
+  /** v0.32.3 — true si saisie hors planning (assignation_id IS NULL). */
+  hors_planning: boolean;
 }
 
 interface UseMesHeuresOptions {
@@ -66,7 +74,15 @@ interface UseMesHeuresResult {
   upsertSaisie: (row: SaisieCombined, patch: Partial<SaisieRow>) => Promise<void>;
   submitWeek: () => Promise<{ ok: boolean; error?: string; count: number }>;
   acknowledgeRejet: (saisieId: string) => Promise<void>;
+  /** v0.32.3 — créer une saisie hors planning (assignation_id = NULL). */
+  addHorsPlanning: (input: HorsPlanningInput) => Promise<{ ok: boolean; error?: string; saisieId?: string }>;
+  /** v0.32.3 — supprimer une saisie hors planning brouillon (RPC sécurisée). */
+  deleteHorsPlanning: (saisieId: string) => Promise<{ ok: boolean; error?: string }>;
 }
+
+/** v0.32.3 — projection commune pour SELECT sur heures_saisies (inclut metier_id). */
+const SAISIE_SELECT =
+  "id, assignation_id, affaire_id, date, heure_debut, heure_fin, heures_reelles, duree_pause_minutes, commentaire, statut, motif_rejet, motif_rejet_lu_le, fabrication_objet_id, fabrication_etape_type, metier_id";
 
 export function useMesHeures({ weekStart, employeIdOverride }: UseMesHeuresOptions): UseMesHeuresResult {
   const [employeId, setEmployeId] = useState<string | null>(null);
@@ -121,6 +137,17 @@ export function useMesHeures({ weekStart, employeIdOverride }: UseMesHeuresOptio
     return () => { cancelled = true; };
   }, [employeIdOverride]);
 
+  // v0.32.3 — Cache des affaires + métiers connus pour fournir un label
+  // aux saisies hors planning (assignation_id IS NULL).
+  // Pour éviter une N+1, on récupère en un seul lookup les affaires/métiers
+  // référencées par les saisies orphelines après chargement initial.
+  const [affairesById, setAffairesById] = useState<
+    Record<string, { numero: string; nom: string; lieu: string | null }>
+  >({});
+  const [metiersById, setMetiersById] = useState<
+    Record<number, { libelle: string; couleur: string }>
+  >({});
+
   // Charger assignations + saisies de la semaine
   useEffect(() => {
     if (!employeId) return;
@@ -139,16 +166,76 @@ export function useMesHeures({ weekStart, employeIdOverride }: UseMesHeuresOptio
       supabase
         .from("heures_saisies")
         .select(
-          "id, assignation_id, affaire_id, date, heure_debut, heure_fin, heures_reelles, duree_pause_minutes, commentaire, statut, motif_rejet, motif_rejet_lu_le, fabrication_objet_id, fabrication_etape_type",
+          "id, assignation_id, affaire_id, date, heure_debut, heure_fin, heures_reelles, duree_pause_minutes, commentaire, statut, motif_rejet, motif_rejet_lu_le, fabrication_objet_id, fabrication_etape_type, metier_id",
         )
         .eq("employe_id", employeId)
         .gte("date", startStr)
         .lte("date", endStr),
-    ]).then(([aRes, sRes]) => {
+    ]).then(async ([aRes, sRes]) => {
       if (cancelled) return;
-      setAssignations((aRes.data ?? []) as unknown as AssignationRow[]);
-      setSaisies((sRes.data ?? []) as unknown as SaisieRow[]);
-      setLoading(false);
+      const newAssign = (aRes.data ?? []) as unknown as AssignationRow[];
+      const newSaisies = (sRes.data ?? []) as unknown as SaisieRow[];
+      setAssignations(newAssign);
+      setSaisies(newSaisies);
+
+      // Lookup orphelines : affaires/métiers non couverts par les assignations
+      const knownAffaireIds = new Set(newAssign.map((a) => a.affaire_id));
+      const knownMetierIds = new Set<number>();
+      const missingAffaireIds = new Set<string>();
+      const missingMetierIds = new Set<number>();
+      for (const s of newSaisies) {
+        if (s.assignation_id) continue;
+        if (!knownAffaireIds.has(s.affaire_id)) missingAffaireIds.add(s.affaire_id);
+        if (s.metier_id != null && !knownMetierIds.has(s.metier_id)) {
+          missingMetierIds.add(s.metier_id);
+        }
+      }
+      const lookups: Promise<unknown>[] = [];
+      if (missingAffaireIds.size > 0) {
+        lookups.push(
+          Promise.resolve(
+            supabase
+              .from("affaires")
+              .select("id, numero, nom, lieu")
+              .in("id", Array.from(missingAffaireIds)),
+          ).then(({ data }) => {
+              if (cancelled || !data) return;
+              setAffairesById((prev) => {
+                const next = { ...prev };
+                for (const a of data as Array<{
+                  id: string;
+                  numero: string;
+                  nom: string;
+                  lieu: string | null;
+                }>) {
+                  next[a.id] = { numero: a.numero, nom: a.nom, lieu: a.lieu };
+                }
+                return next;
+              });
+            }),
+        );
+      }
+      if (missingMetierIds.size > 0) {
+        lookups.push(
+          Promise.resolve(
+            supabase
+              .from("metiers")
+              .select("id, libelle, couleur")
+              .in("id", Array.from(missingMetierIds)),
+          ).then(({ data }) => {
+              if (cancelled || !data) return;
+              setMetiersById((prev) => {
+                const next = { ...prev };
+                for (const m of data as Array<{ id: number; libelle: string; couleur: string }>) {
+                  next[m.id] = { libelle: m.libelle, couleur: m.couleur };
+                }
+                return next;
+              });
+            }),
+        );
+      }
+      await Promise.all(lookups);
+      if (!cancelled) setLoading(false);
     });
     return () => { cancelled = true; };
   }, [employeId, startStr, endStr, reloadKey]);
@@ -167,6 +254,7 @@ export function useMesHeures({ weekStart, employeIdOverride }: UseMesHeuresOptio
         affaire_id: a.affaire_id,
         affaire_label: a.affaire ? `${a.affaire.numero} — ${a.affaire.nom}` : "—",
         metier_couleur: a.metier?.couleur ?? "#94a3b8",
+        hors_planning: false,
       });
     }
     for (const s of saisies) {
@@ -179,8 +267,11 @@ export function useMesHeures({ weekStart, employeIdOverride }: UseMesHeuresOptio
           continue;
         }
       }
-      // Sinon, saisie orpheline (ex: assignation supprimée après saisie)
+      // Saisie hors planning (ou assignation supprimée après saisie)
       const key = `s-${s.id}`;
+      const aff = affairesById[s.affaire_id];
+      const met = s.metier_id != null ? metiersById[s.metier_id] : undefined;
+      const isHorsPlanning = s.assignation_id === null;
       byKey.set(key, {
         key,
         assignation: null,
@@ -188,8 +279,13 @@ export function useMesHeures({ weekStart, employeIdOverride }: UseMesHeuresOptio
         date: s.date,
         demi_journee: "JOURNEE",
         affaire_id: s.affaire_id,
-        affaire_label: "(assignation supprimée)",
-        metier_couleur: "#94a3b8",
+        affaire_label: aff
+          ? `${aff.numero} — ${aff.nom}`
+          : isHorsPlanning
+            ? "(chargement…)"
+            : "(assignation supprimée)",
+        metier_couleur: met?.couleur ?? "#94a3b8",
+        hors_planning: isHorsPlanning,
       });
     }
     return Array.from(byKey.values()).sort((a, b) => {
@@ -229,7 +325,7 @@ export function useMesHeures({ weekStart, employeIdOverride }: UseMesHeuresOptio
         ignoreDuplicates: true,
       })
       .select(
-        "id, assignation_id, affaire_id, date, heure_debut, heure_fin, heures_reelles, duree_pause_minutes, commentaire, statut, motif_rejet, motif_rejet_lu_le, fabrication_objet_id, fabrication_etape_type",
+        SAISIE_SELECT,
       )
       .then(({ data }) => {
         if (data && data.length > 0) {
@@ -254,7 +350,7 @@ export function useMesHeures({ weekStart, employeIdOverride }: UseMesHeuresOptio
           .update(patch)
           .eq("id", row.saisie.id)
           .select(
-            "id, assignation_id, affaire_id, date, heure_debut, heure_fin, heures_reelles, duree_pause_minutes, commentaire, statut, motif_rejet, motif_rejet_lu_le, fabrication_objet_id, fabrication_etape_type",
+            SAISIE_SELECT,
           )
           .maybeSingle();
         if (!error && data) {
@@ -282,7 +378,7 @@ export function useMesHeures({ weekStart, employeIdOverride }: UseMesHeuresOptio
         .from("heures_saisies")
         .insert(insert)
         .select(
-          "id, assignation_id, affaire_id, date, heure_debut, heure_fin, heures_reelles, duree_pause_minutes, commentaire, statut, motif_rejet, motif_rejet_lu_le, fabrication_objet_id, fabrication_etape_type",
+          SAISIE_SELECT,
         )
         .maybeSingle();
       if (data) {
@@ -308,6 +404,46 @@ export function useMesHeures({ weekStart, employeIdOverride }: UseMesHeuresOptio
     const updated = data as unknown as SaisieRow;
     setSaisies((prev) => prev.map((s) => (s.id === saisieId ? updated : s)));
   }, []);
+
+  // v0.32.3 — Créer une saisie hors planning (assignation_id NULL)
+  const addHorsPlanning = useCallback(
+    async (input: HorsPlanningInput): Promise<{ ok: boolean; error?: string; saisieId?: string }> => {
+      if (!employeId) return { ok: false, error: "Employé non résolu" };
+      let payload: ReturnType<typeof buildHorsPlanningInsert>;
+      try {
+        payload = buildHorsPlanningInsert(employeId, input);
+      } catch (e) {
+        return { ok: false, error: e instanceof Error ? e.message : "Input invalide" };
+      }
+      const { data, error } = await supabase
+        .from("heures_saisies")
+        .insert(payload)
+        .select(SAISIE_SELECT)
+        .maybeSingle();
+      if (error || !data) {
+        return { ok: false, error: error?.message ?? "Insertion échouée" };
+      }
+      // Optimistic update + déclenche le re-render avec la nouvelle saisie
+      setSaisies((prev) => [...prev, data as unknown as SaisieRow]);
+      // Force un reload pour récupérer affaire/métier label si besoin
+      setReloadKey((k) => k + 1);
+      return { ok: true, saisieId: (data as { id: string }).id };
+    },
+    [employeId],
+  );
+
+  // v0.32.3 — Suppression d'une saisie hors planning brouillon (RPC sécurisée)
+  const deleteHorsPlanning = useCallback(
+    async (saisieId: string): Promise<{ ok: boolean; error?: string }> => {
+      const { error } = await supabase.rpc("delete_my_hors_planning_saisie", {
+        _saisie_id: saisieId,
+      });
+      if (error) return { ok: false, error: error.message };
+      setSaisies((prev) => prev.filter((s) => s.id !== saisieId));
+      return { ok: true };
+    },
+    [],
+  );
 
   const submitWeek = useCallback(async () => {
     if (!employeId) return { ok: false, error: "Employé non résolu", count: 0 };
@@ -356,5 +492,7 @@ export function useMesHeures({ weekStart, employeIdOverride }: UseMesHeuresOptio
     upsertSaisie,
     submitWeek,
     acknowledgeRejet,
+    addHorsPlanning,
+    deleteHorsPlanning,
   };
 }

@@ -1188,6 +1188,7 @@ export type Database = {
           heures_nuit: number
           heures_reelles: number | null
           id: string
+          metier_id: number | null
           motif_rejet: string | null
           motif_rejet_lu_le: string | null
           rejete_le: string | null
@@ -1217,6 +1218,7 @@ export type Database = {
           heures_nuit?: number
           heures_reelles?: number | null
           id?: string
+          metier_id?: number | null
           motif_rejet?: string | null
           motif_rejet_lu_le?: string | null
           rejete_le?: string | null
@@ -1246,6 +1248,7 @@ export type Database = {
           heures_nuit?: number
           heures_reelles?: number | null
           id?: string
+          metier_id?: number | null
           motif_rejet?: string | null
           motif_rejet_lu_le?: string | null
           rejete_le?: string | null
@@ -1306,6 +1309,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "fabrication_objets"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "heures_saisies_metier_id_fkey"
+            columns: ["metier_id"]
+            isOneToOne: false
+            referencedRelation: "metiers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "heures_saisies_metier_id_fkey"
+            columns: ["metier_id"]
+            isOneToOne: false
+            referencedRelation: "v_devis_consommation"
+            referencedColumns: ["metier_id"]
           },
           {
             foreignKeyName: "heures_saisies_rejete_par_fkey"
@@ -2242,6 +2259,7 @@ export type Database = {
           heures_nuit: number
           heures_reelles: number | null
           id: string
+          metier_id: number | null
           motif_rejet: string | null
           motif_rejet_lu_le: string | null
           rejete_le: string | null
@@ -2339,6 +2357,10 @@ export type Database = {
         Returns: string
       }
       delete_devis_atomique: { Args: { p_devis_id: string }; Returns: Json }
+      delete_my_hors_planning_saisie: {
+        Args: { _saisie_id: string }
+        Returns: boolean
+      }
       etape_for_metier: {
         Args: { metier: string }
         Returns: Database["public"]["Enums"]["fabrication_etape_type"]
