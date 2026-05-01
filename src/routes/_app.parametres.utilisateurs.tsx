@@ -443,8 +443,17 @@ function UtilisateursPage() {
                           </Badge>
                         )}
                       </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {u.full_name ?? "—"}
+                      <TableCell>
+                        <EditableFullName
+                          userId={u.id}
+                          value={u.full_name}
+                          disabled={busy}
+                          onSaved={(next) =>
+                            setUsers((prev) =>
+                              prev.map((row) => (row.id === u.id ? { ...row, full_name: next } : row)),
+                            )
+                          }
+                        />
                       </TableCell>
                       <TableCell>
                         {u.role ? (
