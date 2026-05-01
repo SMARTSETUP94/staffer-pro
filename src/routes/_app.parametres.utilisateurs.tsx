@@ -30,6 +30,7 @@ import { useAuth, type AppRole } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
 import {
   inviteUser, resendInvitation, updateUserRole, setUserActive, deleteUser, linkExistingUsers,
+  updateUserFullName,
 } from "@/lib/admin-actions";
 import { readServerFnError } from "@/lib/server-fn-error";
 import { withAuthRetry } from "@/lib/with-auth-retry";
@@ -236,7 +237,8 @@ function UtilisateursPage() {
         return;
       }
       const linked = result.linkedEmployeId ? " (employé lié automatiquement)" : "";
-      toast.success(`Invitation envoyée à ${result.email}${linked}`);
+      const idHint = result.messageId ? ` · id ${result.messageId.slice(0, 8)}` : "";
+      toast.success(`Invitation envoyée à ${result.email}${linked}${idHint}`);
       setInviteOpen(false);
       setInviteEmail("");
       setInviteFullName("");
