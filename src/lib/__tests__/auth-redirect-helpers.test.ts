@@ -195,9 +195,9 @@ describe("resolveSetPasswordRedirect", () => {
     );
   });
 
-  it("siteUrl http (preview) → conservé", () => {
+  it("siteUrl http localhost (preview dev) → IGNORÉ, fallback prod (hotfix anti-preview)", () => {
     expect(resolveSetPasswordRedirect("http://localhost:5173")).toBe(
-      "http://localhost:5173/auth/set-password",
+      "https://staffing.setup.paris/auth/set-password",
     );
   });
 
@@ -219,8 +219,16 @@ describe("resolveSetPasswordRedirect", () => {
     );
   });
 
-  it("preview Lovable → respecté", () => {
+  it("preview Lovable id-preview → IGNORÉ, fallback prod (hotfix anti-preview)", () => {
     const url = "https://id-preview--646285ee-aca4-406c-aa78-a85235d7e6e0.lovable.app";
-    expect(resolveSetPasswordRedirect(url)).toBe(`${url}/auth/set-password`);
+    expect(resolveSetPasswordRedirect(url)).toBe(
+      "https://staffing.setup.paris/auth/set-password",
+    );
+  });
+
+  it("domaine prod publié staffer-pro.lovable.app → respecté", () => {
+    expect(resolveSetPasswordRedirect("https://staffer-pro.lovable.app")).toBe(
+      "https://staffer-pro.lovable.app/auth/set-password",
+    );
   });
 });
