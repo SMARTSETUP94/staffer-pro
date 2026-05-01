@@ -21,7 +21,7 @@ import { MultiFilter } from "@/components/planning/MultiFilter";
 import { AddInterimDialog } from "@/components/planning/AddInterimDialog";
 import { BulkStafferDialog } from "@/components/planning/BulkStafferDialog";
 import { FlotteGrid } from "@/components/planning/FlotteGrid";
-import { FeuilleRouteView } from "@/components/planning/FeuilleRouteView";
+import { FeuilleRouteTableurView } from "@/components/planning/FeuilleRouteTableurView";
 import { SuggestionsTrajetsBloc } from "@/components/planning/SuggestionsTrajetsBloc";
 import { TrajetDialog } from "@/components/flotte/TrajetDialog";
 import { ExportTrajetsSoustraitanceDialog } from "@/components/flotte/ExportTrajetsSoustraitanceDialog";
@@ -674,10 +674,9 @@ function PlanningPage() {
               </TabsContent>
 
               <TabsContent value="feuilleroute" className="mt-4">
-                <FeuilleRouteView
-                  affaires={affaires}
+                <FeuilleRouteTableurView
                   employes={employes}
-                  metiers={metiers}
+                  vehicules={vehicules}
                 />
               </TabsContent>
             </Tabs>
