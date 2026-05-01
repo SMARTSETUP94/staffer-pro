@@ -185,11 +185,12 @@ export function useMesHeures({ weekStart, employeIdOverride }: UseMesHeuresOptio
       const lookups: Promise<unknown>[] = [];
       if (missingAffaireIds.size > 0) {
         lookups.push(
-          supabase
-            .from("affaires")
-            .select("id, numero, nom, lieu")
-            .in("id", Array.from(missingAffaireIds))
-            .then(({ data }) => {
+          Promise.resolve(
+            supabase
+              .from("affaires")
+              .select("id, numero, nom, lieu")
+              .in("id", Array.from(missingAffaireIds)),
+          ).then(({ data }) => {
               if (cancelled || !data) return;
               setAffairesById((prev) => {
                 const next = { ...prev };
