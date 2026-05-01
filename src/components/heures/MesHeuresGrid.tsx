@@ -161,8 +161,9 @@ export function MesHeuresGrid({ weekStart, variant, employeIdOverride }: Props) 
         </div>
       </div>
 
-      {/* Bouton soumettre */}
-      <div className="flex items-center justify-end gap-2">
+      {/* Actions semaine */}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <AddHorsPlanningDialog variant={variant} onSubmit={addHorsPlanning} />
         <Button
           onClick={handleSubmit}
           disabled={draftCount === 0 || hasBlockingRejet}
@@ -217,6 +218,7 @@ export function MesHeuresGrid({ weekStart, variant, employeIdOverride }: Props) 
                       variant={variant}
                       onUpdate={upsertSaisie}
                       onAcknowledge={acknowledgeRejet}
+                      onDeleteHorsPlanning={handleDeleteHorsPlanning}
                     />
                   ))}
                 </div>
