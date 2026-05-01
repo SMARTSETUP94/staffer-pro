@@ -32,8 +32,8 @@ Validation imports : `import-validation.ts` centralise toutes les vérifs (PARSE
 12. ✅ v0.31.2 — HOTFIX import : contrainte UNIQUE(reference) sur fabrication_objets remplacée par UNIQUE(affaire_id, reference). Débloque imports Progbat cross-affaires.
 13. ✅ v0.32.1 — Validation imports : sommes lignes (qte×PU vs total) + cohérence totaux métier (heures source vs consolidées, lignes citées).
 14. ✅ v0.32.2 — Validation imports : cohérence heures parsées vs UI par objet × métier (`validateObjetsHeuresConsistency`).
-15. 🔥 HOTFIX EN COURS — Bug auth invitation : nouveaux invités voient "lien expiré ou invalide". Investigation pg_policy + grants helpers + flow set-password/signup. Voir bilan agent.
-16. 🚧 v0.32.3 — EN COURS : auto-saisie heures employé sur chantiers non staffés (Progbat-like). Cadrage en attente (3 questions).
+15. ✅ HOTFIX auth invitation — Résolu par CONFIG Supabase : `mailer_otp_exp` passé de 86400s (24h) à 604800s (7j). Aucun code modifié. Invités bloqués avant fix (Raoul, Claude, Vera, etc. >24h sans clic) à réinviter manuellement depuis Supabase Dashboard > Auth > Users.
+16. 🚧 v0.32.3 — EN COURS : auto-saisie heures employé sur chantiers non staffés. Cadrage figé : déclencheur = saisie mobile employé / UI = bouton "+ Autre chantier" sur `/mobile/heures` / data = `heures_saisies.assignation_id IS NULL` / validation = 4ᵉ onglet "Hors planning" sur `/validation-heures`. RLS `heures_saisies_self_insert` déjà OK, pas de migration requise.
 17. ⏳ v0.33 — À LANCER APRÈS v0.32.3 + hotfixes : Vue Tableur Feuille de Route dans Planning (équivalent vue tableur opportunités v0.28.0, mais pour les feuilles de route — édition inline, tri, filtres).
 
 ## Memories
