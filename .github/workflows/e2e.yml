@@ -1,0 +1,62 @@
+# v0.34 — Workflow E2E Playwright.
+#
+# Déclenchement : push sur main uniquement (pas chaque PR).
+# Stratégie : 4 shards parallèles → cible <15 min.
+#
+# Secrets requis (Settings → Secrets and variables → Actions) :
+#   E2E_BASE_URL              # ex https://staffer-pro.lovable.app (preview ou staging)
+#   E2E_ADMIN_EMAIL / E2E_ADMIN_PASSWORD
+#   E2E_CHEF_EMAIL  / E2E_CHEF_PASSWORD
+#   E2E_EMPLOYE_EMAIL / E2E_EMPLOYE_PASSWORD
+
+name: E2E (Playwright)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  e2e:
+    name: Shard ${{ matrix.shard }}/4
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install deps
+        run: bun install --frozen-lockfile
+
+      - name: Install Playwright (chromium only)
+        run: |
+          bun add -D @playwright/test
+          bunx playwright install --with-deps chromium
+
+      - name: Run E2E tests (shard ${{ matrix.shard }}/4)
+        env:
+          CI: "true"
+          E2E_BASE_URL: ${{ secrets.E2E_BASE_URL }}
+          E2E_ADMIN_EMAIL: ${{ secrets.E2E_ADMIN_EMAIL }}
+          E2E_ADMIN_PASSWORD: ${{ secrets.E2E_ADMIN_PASSWORD }}
+          E2E_CHEF_EMAIL: ${{ secrets.E2E_CHEF_EMAIL }}
+          E2E_CHEF_PASSWORD: ${{ secrets.E2E_CHEF_PASSWORD }}
+          E2E_EMPLOYE_EMAIL: ${{ secrets.E2E_EMPLOYE_EMAIL }}
+          E2E_EMPLOYE_PASSWORD: ${{ secrets.E2E_EMPLOYE_PASSWORD }}
+        run: bunx playwright test --shard=${{ matrix.shard }}/4
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-shard-${{ matrix.shard }}
+          path: playwright-report/
+          retention-days: 7
