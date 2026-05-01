@@ -492,5 +492,7 @@ export function useMesHeures({ weekStart, employeIdOverride }: UseMesHeuresOptio
     upsertSaisie,
     submitWeek,
     acknowledgeRejet,
+    addHorsPlanning,
+    deleteHorsPlanning,
   };
 }
