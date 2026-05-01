@@ -129,6 +129,17 @@ export function useMesHeures({ weekStart, employeIdOverride }: UseMesHeuresOptio
     return () => { cancelled = true; };
   }, [employeIdOverride]);
 
+  // v0.32.3 — Cache des affaires + métiers connus pour fournir un label
+  // aux saisies hors planning (assignation_id IS NULL).
+  // Pour éviter une N+1, on récupère en un seul lookup les affaires/métiers
+  // référencées par les saisies orphelines après chargement initial.
+  const [affairesById, setAffairesById] = useState<
+    Record<string, { numero: string; nom: string; lieu: string | null }>
+  >({});
+  const [metiersById, setMetiersById] = useState<
+    Record<number, { libelle: string; couleur: string }>
+  >({});
+
   // Charger assignations + saisies de la semaine
   useEffect(() => {
     if (!employeId) return;
@@ -147,16 +158,74 @@ export function useMesHeures({ weekStart, employeIdOverride }: UseMesHeuresOptio
       supabase
         .from("heures_saisies")
         .select(
-          "id, assignation_id, affaire_id, date, heure_debut, heure_fin, heures_reelles, duree_pause_minutes, commentaire, statut, motif_rejet, motif_rejet_lu_le, fabrication_objet_id, fabrication_etape_type",
+          "id, assignation_id, affaire_id, date, heure_debut, heure_fin, heures_reelles, duree_pause_minutes, commentaire, statut, motif_rejet, motif_rejet_lu_le, fabrication_objet_id, fabrication_etape_type, metier_id",
         )
         .eq("employe_id", employeId)
         .gte("date", startStr)
         .lte("date", endStr),
-    ]).then(([aRes, sRes]) => {
+    ]).then(async ([aRes, sRes]) => {
       if (cancelled) return;
-      setAssignations((aRes.data ?? []) as unknown as AssignationRow[]);
-      setSaisies((sRes.data ?? []) as unknown as SaisieRow[]);
-      setLoading(false);
+      const newAssign = (aRes.data ?? []) as unknown as AssignationRow[];
+      const newSaisies = (sRes.data ?? []) as unknown as SaisieRow[];
+      setAssignations(newAssign);
+      setSaisies(newSaisies);
+
+      // Lookup orphelines : affaires/métiers non couverts par les assignations
+      const knownAffaireIds = new Set(newAssign.map((a) => a.affaire_id));
+      const knownMetierIds = new Set<number>();
+      const missingAffaireIds = new Set<string>();
+      const missingMetierIds = new Set<number>();
+      for (const s of newSaisies) {
+        if (s.assignation_id) continue;
+        if (!knownAffaireIds.has(s.affaire_id)) missingAffaireIds.add(s.affaire_id);
+        if (s.metier_id != null && !knownMetierIds.has(s.metier_id)) {
+          missingMetierIds.add(s.metier_id);
+        }
+      }
+      const lookups: Promise<unknown>[] = [];
+      if (missingAffaireIds.size > 0) {
+        lookups.push(
+          supabase
+            .from("affaires")
+            .select("id, numero, nom, lieu")
+            .in("id", Array.from(missingAffaireIds))
+            .then(({ data }) => {
+              if (cancelled || !data) return;
+              setAffairesById((prev) => {
+                const next = { ...prev };
+                for (const a of data as Array<{
+                  id: string;
+                  numero: string;
+                  nom: string;
+                  lieu: string | null;
+                }>) {
+                  next[a.id] = { numero: a.numero, nom: a.nom, lieu: a.lieu };
+                }
+                return next;
+              });
+            }),
+        );
+      }
+      if (missingMetierIds.size > 0) {
+        lookups.push(
+          supabase
+            .from("metiers")
+            .select("id, libelle, couleur")
+            .in("id", Array.from(missingMetierIds))
+            .then(({ data }) => {
+              if (cancelled || !data) return;
+              setMetiersById((prev) => {
+                const next = { ...prev };
+                for (const m of data as Array<{ id: number; libelle: string; couleur: string }>) {
+                  next[m.id] = { libelle: m.libelle, couleur: m.couleur };
+                }
+                return next;
+              });
+            }),
+        );
+      }
+      await Promise.all(lookups);
+      if (!cancelled) setLoading(false);
     });
     return () => { cancelled = true; };
   }, [employeId, startStr, endStr, reloadKey]);
@@ -175,6 +244,7 @@ export function useMesHeures({ weekStart, employeIdOverride }: UseMesHeuresOptio
         affaire_id: a.affaire_id,
         affaire_label: a.affaire ? `${a.affaire.numero} — ${a.affaire.nom}` : "—",
         metier_couleur: a.metier?.couleur ?? "#94a3b8",
+        hors_planning: false,
       });
     }
     for (const s of saisies) {
@@ -187,8 +257,11 @@ export function useMesHeures({ weekStart, employeIdOverride }: UseMesHeuresOptio
           continue;
         }
       }
-      // Sinon, saisie orpheline (ex: assignation supprimée après saisie)
+      // Saisie hors planning (ou assignation supprimée après saisie)
       const key = `s-${s.id}`;
+      const aff = affairesById[s.affaire_id];
+      const met = s.metier_id != null ? metiersById[s.metier_id] : undefined;
+      const isHorsPlanning = s.assignation_id === null;
       byKey.set(key, {
         key,
         assignation: null,
@@ -196,8 +269,13 @@ export function useMesHeures({ weekStart, employeIdOverride }: UseMesHeuresOptio
         date: s.date,
         demi_journee: "JOURNEE",
         affaire_id: s.affaire_id,
-        affaire_label: "(assignation supprimée)",
-        metier_couleur: "#94a3b8",
+        affaire_label: aff
+          ? `${aff.numero} — ${aff.nom}`
+          : isHorsPlanning
+            ? "(chargement…)"
+            : "(assignation supprimée)",
+        metier_couleur: met?.couleur ?? "#94a3b8",
+        hors_planning: isHorsPlanning,
       });
     }
     return Array.from(byKey.values()).sort((a, b) => {
