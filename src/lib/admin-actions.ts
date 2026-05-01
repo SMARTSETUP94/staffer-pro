@@ -21,11 +21,38 @@ const ALLOWED_ROLES: AppRoleName[] = ["admin", "chef_chantier", "employe"];
 
 const FALLBACK_SITE_URL = "https://staffing.setup.paris";
 
-/** Retourne une URL valide commençant par http(s)://, fallback prod sinon. */
+/** Domaines de prod autorisés à propager leur origin dans le lien d'invitation. */
+const ALLOWED_PROD_HOSTS = new Set<string>([
+  "staffing.setup.paris",
+  "staffer-pro.lovable.app",
+]);
+
+function isAllowedProdOrigin(siteUrl: string): boolean {
+  try {
+    const u = new URL(siteUrl);
+    return ALLOWED_PROD_HOSTS.has(u.hostname);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Retourne l'URL de set-password.
+ * HOTFIX : on ignore tout siteUrl qui ne fait PAS partie des domaines prod
+ * autorisés (preview Lovable, sandbox, localhost…) pour éviter d'envoyer
+ * un lien d'invitation pointant vers un environnement éphémère.
+ */
 export function resolveSetPasswordRedirect(siteUrl?: string): string {
-  const candidate = (siteUrl ?? process.env.PUBLIC_SITE_URL ?? FALLBACK_SITE_URL).trim();
-  const safe = /^https?:\/\//.test(candidate) ? candidate : FALLBACK_SITE_URL;
-  return `${safe.replace(/\/$/, "")}/auth/set-password`;
+  const fromEnv = process.env.PUBLIC_SITE_URL?.trim();
+  const candidate = siteUrl?.trim();
+
+  let base = FALLBACK_SITE_URL;
+  if (candidate && /^https?:\/\//.test(candidate) && isAllowedProdOrigin(candidate)) {
+    base = candidate;
+  } else if (fromEnv && /^https?:\/\//.test(fromEnv) && isAllowedProdOrigin(fromEnv)) {
+    base = fromEnv;
+  }
+  return `${base.replace(/\/$/, "")}/auth/set-password`;
 }
 
 function validateInviteInput(input: unknown): InviteInput {
