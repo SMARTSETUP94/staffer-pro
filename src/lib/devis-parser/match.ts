@@ -105,6 +105,15 @@ export function isExcludeKeyword(libelle: string | null | undefined): boolean {
 }
 
 /**
+ * v0.31.6 — Renvoie la regex EXCLUDE_REGEX qui matche la désignation, ou null.
+ * Utilisé par le panneau "Pourquoi c'est exclu" pour afficher la règle exacte.
+ */
+export function findExcludeRule(libelle: string | null | undefined): RegExp | null {
+  const s = String(libelle ?? "");
+  return EXCLUDE_REGEX.find((r) => r.test(s)) ?? null;
+}
+
+/**
  * Vrai si la ligne est désactivée :
  * - quantité = 0
  * - heures = 0 ET total HT = 0
