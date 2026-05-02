@@ -357,6 +357,7 @@ function aggregateObjet(
     numero: parent.hierarchique || parent.numero,
     sectionNumero: section.hierarchique || section.numero,
     sectionNom: section.designation,
+    sectionQuantite: sectionQte,
     nom: parent.designation,
     description: extractDescription(parent, allRows),
     quantite,
