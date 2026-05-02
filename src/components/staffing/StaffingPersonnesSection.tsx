@@ -1,7 +1,9 @@
 // v0.35.3 — Section Staffing Personnes : suggestions tier-based + assignation + split presence
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, RefreshCw, UserPlus, X, AlertTriangle, Sliders } from "lucide-react";
+import { Loader2, RefreshCw, UserPlus, X, AlertTriangle, Sliders, Wand2 } from "lucide-react";
+import { toast } from "sonner";
+import { autoStaffStep } from "@/server/staffing-autostaff.functions";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
@@ -161,24 +163,32 @@ export function StaffingPersonnesSection({ planId, steps, onAssignmentsChanged, 
             const stepAssigns = assignments.filter((a) => a.step_id === step.id);
             return (
               <AccordionItem key={step.id} value={step.id}>
-                <AccordionTrigger className="hover:no-underline">
-                  <div className="flex flex-1 items-center gap-3 pr-4">
-                    <span
-                      className="inline-block h-3 w-3 rounded-sm"
-                      style={{ backgroundColor: METIER_COLOR[k] }}
-                    />
-                    <span className="font-bold text-sm">{METIER_LABEL[k]}</span>
-                    <span className="text-xs text-muted-foreground truncate max-w-[260px]">
-                      {objLabel}
-                    </span>
-                    <span className="ml-auto flex items-center gap-2 text-xs">
-                      <span className="font-mono">{step.pers}p × {step.span_days}j</span>
-                      <Badge variant="secondary" className="text-[10px]">
-                        {stepAssigns.length}/{step.pers * step.span_days} aff.
-                      </Badge>
-                    </span>
-                  </div>
-                </AccordionTrigger>
+                <div className="flex items-center gap-1">
+                  <AccordionTrigger className="flex-1 hover:no-underline">
+                    <div className="flex flex-1 items-center gap-3 pr-4">
+                      <span
+                        className="inline-block h-3 w-3 rounded-sm"
+                        style={{ backgroundColor: METIER_COLOR[k] }}
+                      />
+                      <span className="font-bold text-sm">{METIER_LABEL[k]}</span>
+                      <span className="text-xs text-muted-foreground truncate max-w-[260px]">
+                        {objLabel}
+                      </span>
+                      <span className="ml-auto flex items-center gap-2 text-xs">
+                        <span className="font-mono">{step.pers}p × {step.span_days}j</span>
+                        <Badge variant="secondary" className="text-[10px]">
+                          {stepAssigns.length}/{step.pers * step.span_days} aff.
+                        </Badge>
+                      </span>
+                    </div>
+                  </AccordionTrigger>
+                  <AutoStaffButton
+                    planId={planId}
+                    stepId={step.id}
+                    label="Auto-staffer l'étape"
+                    onDone={handleChanged}
+                  />
+                </div>
                 <AccordionContent>
                   <div className="space-y-3 pl-1">
                     {days.map((d) => (
@@ -264,10 +274,20 @@ function StepDayRow({
             </span>
           )}
         </div>
-        <Button onClick={toggleOpen} size="sm" variant={open ? "secondary" : "outline"}>
-          <UserPlus className="mr-1 h-3 w-3" />
-          {open ? "Fermer" : "Suggestions"}
-        </Button>
+        <div className="flex items-center gap-1">
+          <AutoStaffButton
+            planId={planId}
+            stepId={step.id}
+            onlyDate={date}
+            label="Auto ce jour"
+            compact
+            onDone={onChanged}
+          />
+          <Button onClick={toggleOpen} size="sm" variant={open ? "secondary" : "outline"}>
+            <UserPlus className="mr-1 h-3 w-3" />
+            {open ? "Fermer" : "Suggestions"}
+          </Button>
+        </div>
       </div>
 
       {/* Affectations actuelles */}
@@ -583,5 +603,71 @@ function PresenceSliderModal({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+/* ================================================================== */
+/* AutoStaffButton — remplit auto les slots manquants (jour ou step)    */
+/* ================================================================== */
+function AutoStaffButton({
+  planId,
+  stepId,
+  onlyDate,
+  label,
+  compact,
+  onDone,
+}: {
+  planId: string;
+  stepId: string;
+  onlyDate?: string;
+  label: string;
+  compact?: boolean;
+  onDone: () => Promise<void>;
+}) {
+  const [busy, setBusy] = useState(false);
+  const run = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setBusy(true);
+    try {
+      const r = await autoStaffStep({ data: { stepId, planId, onlyDate } });
+      if (r.filled === 0 && r.skipped === 0) {
+        toast.info("Étape déjà complète, rien à affecter.");
+      } else if (r.filled === 0) {
+        toast.warning(`Aucun candidat disponible (${r.skipped} slot(s) non couvert(s)).`);
+      } else {
+        const noms = r.details
+          .slice(0, 3)
+          .map((d) => `${d.prenom} ${d.nom[0]}.`)
+          .join(", ");
+        toast.success(
+          `${r.filled} affectation${r.filled > 1 ? "s" : ""} créée${r.filled > 1 ? "s" : ""}` +
+            (r.skipped > 0 ? ` · ${r.skipped} slot(s) non couvert(s)` : "") +
+            (noms ? ` — ${noms}${r.details.length > 3 ? "…" : ""}` : "")
+        );
+      }
+      await onDone();
+    } catch (err) {
+      toast.error((err as Error).message ?? "Échec auto-staffing");
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <Button
+      onClick={run}
+      disabled={busy}
+      size="sm"
+      variant="outline"
+      title={label}
+      className={compact ? "h-7 px-2" : "h-7 px-2 mr-2"}
+    >
+      {busy ? (
+        <Loader2 className="h-3 w-3 animate-spin" />
+      ) : (
+        <Wand2 className="h-3 w-3" />
+      )}
+      {!compact && <span className="ml-1 text-xs">Auto</span>}
+      {compact && <span className="ml-1 text-[10px]">Auto</span>}
+    </Button>
   );
 }
