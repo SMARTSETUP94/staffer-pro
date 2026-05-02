@@ -720,6 +720,29 @@ function AffaireDevisPage() {
           fetchAll();
         }}
       />
+
+      {/* v0.35.4 — Wizard "Mettre au planning" (typologie 5XXX) */}
+      <Dialog open={planningOpen} onOpenChange={setPlanningOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-primary" />
+              Mettre au planning fabrication
+            </DialogTitle>
+            <DialogDescription>
+              Auto-staffing v0.35 — Calcul rétrograde depuis la livraison.
+            </DialogDescription>
+          </DialogHeader>
+          {planningOpen && (
+            <StaffingPlanWizard
+              affaireId={affaireId}
+              defaultDateFin={affaireMeta?.date_montage ?? null}
+              compact
+              onCreated={() => setPlanningOpen(false)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
