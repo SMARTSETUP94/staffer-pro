@@ -19,6 +19,7 @@ import type { FabMetier } from "@/hooks/use-fabrication";
 import { computeFlagsFromMetiers, detectTypeFinition, emptyHeures } from "./compute-flags";
 import { detectDevisType } from "./detect-type";
 import {
+  findExcludeRule,
   isDemontageKeyword,
   isExcludeKeyword,
   isLineDisabled,
@@ -32,6 +33,8 @@ import { RENVOI_REGEX } from "./mappings";
 import type {
   Confidence,
   DevisMetadata,
+  ExclusionEntry,
+  ExclusionKind,
   HeuresChantier,
   IntegrityCheck,
   ObjetCandidat,
