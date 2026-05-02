@@ -293,6 +293,7 @@ function DevisImportPage() {
           numero: o.numero,
           sectionNumero: o.sectionNumero,
           sectionNom: o.sectionNom,
+          sectionQuantite: o.sectionQuantite,
           nom: o.nom,
           description: o.description,
           quantite: o.quantite,

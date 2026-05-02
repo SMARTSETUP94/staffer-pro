@@ -221,6 +221,7 @@ export function DevisImportObjetsHierarchy({ objets, setObjets, integrityChecks 
         numero,
         sectionNumero: "",
         sectionNom: "Objets manuels",
+        sectionQuantite: 1,
         nom: "Nouvel objet manuel",
         description: null,
         quantite: 1,
