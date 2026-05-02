@@ -523,6 +523,10 @@ export const GanttInteractif = forwardRef<
                           isOverDeadline={overDL}
                           manualShift={localShift}
                           hasWarning={hasImpact}
+                          hasLocalEdit={
+                            edits[s.id]?.pers !== undefined ||
+                            edits[s.id]?.manual_shift !== undefined
+                          }
                           onShift={(d) => handleShift(s, d)}
                           onResetShift={() => handleResetShift(s.id)}
                         />
