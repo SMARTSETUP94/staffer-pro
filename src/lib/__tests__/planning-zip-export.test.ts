@@ -134,7 +134,20 @@ describe("buildPlanningWorkbookRange — onglets", () => {
     expect(names.some((n) => n.includes("Heures"))).toBe(true);
   });
 
-  it("ajoute l'onglet Flotte (véhicules) au xlsx multi-vues", () => {
+  it("v0.31.5 #105 — contient l'onglet 'Par chantier' avec une ligne par affaire active", () => {
+    const built = buildPlanningWorkbookRange({ ...baseOpts, weekStarts: [weekStart] });
+    const names = built!.wb.SheetNames;
+    expect(names.some((n) => n.includes("Par chantier"))).toBe(true);
+    const sheetName = names.find((n) => n.includes("Par chantier"))!;
+    const ws = built!.wb.Sheets[sheetName];
+    // Cherche la ligne contenant le numéro d'affaire
+    const allCells = Object.keys(ws)
+      .filter((k) => !k.startsWith("!"))
+      .map((k) => (ws as Record<string, { v?: unknown }>)[k]?.v)
+      .filter((v): v is string => typeof v === "string");
+    expect(allCells.some((v) => v.includes("AFF001"))).toBe(true);
+    // Vérifie qu'au moins un employé y figure
+    expect(allCells.some((v) => v.includes("Jean Dupont"))).toBe(true);
     const built = buildPlanningWorkbookRange({
       ...baseOpts,
       weekStarts: [weekStart],
