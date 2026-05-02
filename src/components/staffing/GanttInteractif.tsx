@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState, useCallback, useImperativeHandle, forward
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, ArrowUp, ArrowDown, RefreshCw, Calendar, Users, Activity, AlertTriangle } from "lucide-react";
+import { Loader2, ArrowUp, ArrowDown, RefreshCw, Calendar, Users, Activity, AlertTriangle, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
