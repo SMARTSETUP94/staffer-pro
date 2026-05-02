@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Plus, Loader2, Pencil, Trash2, FileText, CheckCircle2, Lock, AlertTriangle, Download } from "lucide-react";
+import { Plus, Loader2, Pencil, Trash2, FileText, CheckCircle2, Lock, AlertTriangle, Download, Sparkles } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
