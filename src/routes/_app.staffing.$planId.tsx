@@ -21,12 +21,30 @@ import { DeletePlanDialog } from "@/components/staffing/DeletePlanDialog";
 import { StaffingEditToolbar } from "@/components/staffing/StaffingEditToolbar";
 import { AutoStaffPlanButton, type AutoStaffPlanButtonHandle } from "@/components/staffing/AutoStaffPlanButton";
 import { StaffingShortcutsHelp } from "@/components/staffing/StaffingShortcutsHelp";
+import { ExpressResultBanner } from "@/components/staffing/ExpressResultBanner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PageBreadcrumbs } from "@/components/PageBreadcrumbs";
 
+interface ExpressSearch {
+  express?: string;
+  published?: string;
+  filled?: string;
+  unfilled?: string;
+  alertes?: string;
+  reason?: string;
+}
+
 export const Route = createFileRoute("/_app/staffing/$planId")({
   component: StaffingPlanPage,
+  validateSearch: (search: Record<string, unknown>): ExpressSearch => ({
+    express: typeof search.express === "string" ? search.express : undefined,
+    published: typeof search.published === "string" ? search.published : undefined,
+    filled: typeof search.filled === "string" ? search.filled : undefined,
+    unfilled: typeof search.unfilled === "string" ? search.unfilled : undefined,
+    alertes: typeof search.alertes === "string" ? search.alertes : undefined,
+    reason: typeof search.reason === "string" ? search.reason : undefined,
+  }),
 });
 
 function StaffingPlanPage() {
