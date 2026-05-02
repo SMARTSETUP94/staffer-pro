@@ -1,5 +1,5 @@
-// v0.35.1 — date helpers (ISO YYYY-MM-DD), pure functions, UTC, working days incluent samedi/dimanche
-// (les week-ends seront gérés en v0.35.2 avec calendrier fériés). Pour l'algo de base, jours = jours calendaires.
+// v0.35.8 — date helpers (ISO YYYY-MM-DD), pure functions, UTC.
+// Ajout : jours ouvrés (exclut samedi/dimanche + jours fériés FR optionnels).
 
 export function toISO(d: Date): string {
   const y = d.getUTCFullYear();
@@ -24,7 +24,7 @@ export function diffDays(a: string, b: string): number {
   return Math.round(ms / 86_400_000);
 }
 
-/** Liste des dates ISO entre start (inclus) et start+span-1 (inclus) */
+/** Liste des dates ISO entre start (inclus) et start+span-1 (inclus) — jours calendaires. */
 export function dateRange(start: string, spanDays: number): string[] {
   const out: string[] = [];
   for (let i = 0; i < spanDays; i++) out.push(addDays(start, i));
@@ -37,4 +37,137 @@ export function maxISO(...dates: string[]): string {
 
 export function minISO(...dates: string[]): string {
   return dates.reduce((a, b) => (a < b ? a : b));
+}
+
+/* ============================================================ */
+/* Jours ouvrés                                                  */
+/* ============================================================ */
+
+/** day-of-week UTC (0 = dimanche, 6 = samedi) */
+export function dayOfWeek(iso: string): number {
+  return fromISO(iso).getUTCDay();
+}
+
+export function isWeekend(iso: string): boolean {
+  const d = dayOfWeek(iso);
+  return d === 0 || d === 6;
+}
+
+/** Computus de Gauss — dimanche de Pâques (UTC) pour `year` */
+function easterSunday(year: number): Date {
+  const a = year % 19;
+  const b = Math.floor(year / 100);
+  const c = year % 100;
+  const d = Math.floor(b / 4);
+  const e = b % 4;
+  const f = Math.floor((b + 8) / 25);
+  const g = Math.floor((b - f + 1) / 3);
+  const h = (19 * a + b - d - g + 15) % 30;
+  const i = Math.floor(c / 4);
+  const k = c % 4;
+  const l = (32 + 2 * e + 2 * i - h - k) % 7;
+  const m = Math.floor((a + 11 * h + 22 * l) / 451);
+  const month = Math.floor((h + l - 7 * m + 114) / 31); // 3=mars, 4=avril
+  const day = ((h + l - 7 * m + 114) % 31) + 1;
+  return new Date(Date.UTC(year, month - 1, day));
+}
+
+const _holidaysCache = new Map<number, Set<string>>();
+
+/** Jours fériés FR (métropole) pour une année — fixes + mobiles (Pâques). */
+export function frenchHolidays(year: number): Set<string> {
+  const cached = _holidaysCache.get(year);
+  if (cached) return cached;
+  const easter = easterSunday(year);
+  const easterMonday = new Date(easter);
+  easterMonday.setUTCDate(easter.getUTCDate() + 1);
+  const ascension = new Date(easter);
+  ascension.setUTCDate(easter.getUTCDate() + 39);
+  const pentecost = new Date(easter);
+  pentecost.setUTCDate(easter.getUTCDate() + 50);
+  const set = new Set<string>([
+    `${year}-01-01`, // Jour de l'an
+    toISO(easterMonday), // Lundi de Pâques
+    `${year}-05-01`, // Fête du travail
+    `${year}-05-08`, // Victoire 1945
+    toISO(ascension), // Ascension
+    toISO(pentecost), // Lundi de Pentecôte
+    `${year}-07-14`, // Fête nationale
+    `${year}-08-15`, // Assomption
+    `${year}-11-01`, // Toussaint
+    `${year}-11-11`, // Armistice
+    `${year}-12-25`, // Noël
+  ]);
+  _holidaysCache.set(year, set);
+  return set;
+}
+
+/** Set de jours fériés couvrant les années [from..to] inclus. */
+export function holidaysRange(fromYear: number, toYear: number): Set<string> {
+  const out = new Set<string>();
+  for (let y = fromYear; y <= toYear; y++) {
+    for (const d of frenchHolidays(y)) out.add(d);
+  }
+  return out;
+}
+
+export function isWorkingDay(iso: string, holidays?: Set<string>): boolean {
+  if (isWeekend(iso)) return false;
+  if (holidays && holidays.has(iso)) return false;
+  return true;
+}
+
+/** Avance/recule de `n` jours OUVRÉS (n peut être négatif). n=0 → renvoie iso si ouvré, sinon prochain ouvré dans la direction +1. */
+export function addWorkingDays(iso: string, n: number, holidays?: Set<string>): string {
+  if (n === 0) {
+    let cur = iso;
+    while (!isWorkingDay(cur, holidays)) cur = addDays(cur, 1);
+    return cur;
+  }
+  const step = n > 0 ? 1 : -1;
+  let remaining = Math.abs(n);
+  let cur = iso;
+  while (remaining > 0) {
+    cur = addDays(cur, step);
+    if (isWorkingDay(cur, holidays)) remaining -= 1;
+  }
+  return cur;
+}
+
+/** Renvoie le jour ouvré ≤ iso (recule jusqu'à un ouvré). */
+export function previousWorkingDay(iso: string, holidays?: Set<string>): string {
+  let cur = iso;
+  while (!isWorkingDay(cur, holidays)) cur = addDays(cur, -1);
+  return cur;
+}
+
+/** Renvoie le jour ouvré ≥ iso (avance jusqu'à un ouvré). */
+export function nextWorkingDay(iso: string, holidays?: Set<string>): string {
+  let cur = iso;
+  while (!isWorkingDay(cur, holidays)) cur = addDays(cur, 1);
+  return cur;
+}
+
+/** `spanDays` jours OUVRÉS consécutifs à partir de start (inclus, supposé ouvré). */
+export function workingDateRange(start: string, spanDays: number, holidays?: Set<string>): string[] {
+  if (spanDays <= 0) return [];
+  const out: string[] = [];
+  let cur = nextWorkingDay(start, holidays);
+  for (let i = 0; i < spanDays; i++) {
+    out.push(cur);
+    if (i < spanDays - 1) cur = addWorkingDays(cur, 1, holidays);
+  }
+  return out;
+}
+
+/** Nombre de jours OUVRÉS entre a (inclus) et b (inclus). a ≤ b. */
+export function workingDaysBetween(a: string, b: string, holidays?: Set<string>): number {
+  if (a > b) return 0;
+  let n = 0;
+  let cur = a;
+  while (cur <= b) {
+    if (isWorkingDay(cur, holidays)) n += 1;
+    cur = addDays(cur, 1);
+  }
+  return n;
 }
