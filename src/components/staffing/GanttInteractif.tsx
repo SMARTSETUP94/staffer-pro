@@ -291,6 +291,7 @@ export const GanttInteractif = forwardRef<
     })),
   );
   const allAlerts = [...data.result.alerts, ...previewAlerts];
+  const hasCncConflict = allAlerts.some((a) => a.code === "NUM_CONFLIT_INSOLUBLE");
 
   return (
     <div className="space-y-4">
