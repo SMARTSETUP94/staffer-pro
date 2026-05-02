@@ -1,10 +1,22 @@
 // v0.35.4 / Sprint 4 — Server functions création plan via Wizard
-// - listFabObjetsForWizard: liste les fabrication_objets non archivés d'une affaire
+// v0.35.4.1 — Tracking anti-duplication objets : 1 objet = 1 plan actif (draft|published) max
+// - listFabObjetsForWizard: liste les fabrication_objets non archivés + dans_plan_actif
 // - getActivePlansForAffaire: renvoie les plans existants (draft/published) pour cette affaire
-// - createStaffingPlan: crée un plan draft + plan_objects, archive les anciens si demandé
+// - createStaffingPlan: crée un plan draft + plan_objects, gère collisions (409 si published, archive auto draft)
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+
+interface DansPlanActif {
+  plan_id: string;
+  status: "draft" | "published";
+  affaire_id: string;
+  affaire_nom: string | null;
+  affaire_numero: string | null;
+  same_affaire: boolean;
+  created_at: string;
+  created_by: string | null;
+}
 
 /* ------------------------------------------------------------------ */
 /* listFabObjetsForWizard                                              */
@@ -25,6 +37,90 @@ export const listFabObjetsForWizard = createServerFn({ method: "POST" })
       .eq("archive", false)
       .order("ordre", { ascending: true });
     if (error) throw new Error(error.message);
+
+    const objIds = (rows ?? []).map((r) => r.id as string);
+
+    /* Collisions : objets déjà dans un plan actif (draft|published) */
+    const collisions = new Map<string, DansPlanActif>();
+    if (objIds.length > 0) {
+      const { data: spo, error: spoErr } = await supabase
+        .from("staffing_plan_object")
+        .select(
+          "objet_id, plan:staffing_plan!inner(id, status, affaire_id, created_at, created_by)",
+        )
+        .in("objet_id", objIds)
+        .in("plan.status", ["draft", "published"]);
+      if (spoErr) throw new Error(spoErr.message);
+
+      const affaireIds = new Set<string>();
+      const raws: Array<{
+        objet_id: string;
+        plan_id: string;
+        status: "draft" | "published";
+        affaire_id: string;
+        created_at: string;
+        created_by: string | null;
+      }> = [];
+      for (const row of (spo ?? []) as Array<{
+        objet_id: string;
+        plan: {
+          id: string;
+          status: string;
+          affaire_id: string;
+          created_at: string;
+          created_by: string | null;
+        } | null;
+      }>) {
+        if (!row.plan) continue;
+        affaireIds.add(row.plan.affaire_id);
+        raws.push({
+          objet_id: row.objet_id,
+          plan_id: row.plan.id,
+          status: row.plan.status as "draft" | "published",
+          affaire_id: row.plan.affaire_id,
+          created_at: row.plan.created_at,
+          created_by: row.plan.created_by,
+        });
+      }
+
+      const affaireMeta = new Map<string, { nom: string | null; numero: string | null }>();
+      if (affaireIds.size > 0) {
+        const { data: affs } = await supabase
+          .from("affaires")
+          .select("id, nom, numero")
+          .in("id", Array.from(affaireIds));
+        for (const a of affs ?? []) {
+          affaireMeta.set(a.id as string, {
+            nom: (a.nom as string | null) ?? null,
+            numero: (a.numero as string | null) ?? null,
+          });
+        }
+      }
+
+      /* Priorité : published > draft, sinon plus récent */
+      for (const r of raws) {
+        const prev = collisions.get(r.objet_id);
+        const meta = affaireMeta.get(r.affaire_id) ?? { nom: null, numero: null };
+        const candidate: DansPlanActif = {
+          plan_id: r.plan_id,
+          status: r.status,
+          affaire_id: r.affaire_id,
+          affaire_nom: meta.nom,
+          affaire_numero: meta.numero,
+          same_affaire: r.affaire_id === data.affaire_id,
+          created_at: r.created_at,
+          created_by: r.created_by,
+        };
+        if (
+          !prev ||
+          (prev.status === "draft" && candidate.status === "published") ||
+          (prev.status === candidate.status && candidate.created_at > prev.created_at)
+        ) {
+          collisions.set(r.objet_id, candidate);
+        }
+      }
+    }
+
     return (rows ?? []).map((r) => {
       const h_be = Number(r.heures_prevues_be ?? 0);
       const h_num = Number(r.heures_prevues_numerique ?? 0);
@@ -40,6 +136,7 @@ export const listFabObjetsForWizard = createServerFn({ method: "POST" })
         quantite: Number(r.quantite ?? 1),
         h_bois,
         heures_total: h_be + h_num + h_bois + h_metal + h_peint + h_tap + h_manut,
+        dans_plan_actif: collisions.get(r.id as string) ?? null,
       };
     });
   });
@@ -94,7 +191,72 @@ export const createStaffingPlan = createServerFn({ method: "POST" })
       throw new Error("La date de début doit précéder la date de fin (livraison).");
     }
 
-    /* Optionnel : archiver les plans actifs existants */
+    /* v0.35.4.1 — Validation anti-duplication objets */
+    const { data: collisionsRows, error: colErr } = await supabase
+      .from("staffing_plan_object")
+      .select(
+        "objet_id, plan:staffing_plan!inner(id, status, affaire_id)",
+      )
+      .in("objet_id", data.objet_ids)
+      .in("plan.status", ["draft", "published"]);
+    if (colErr) throw new Error(colErr.message);
+
+    const blocking: Array<{ objet_id: string; plan_id: string; affaire_id: string }> = [];
+    const draftSameAffaire = new Set<string>();
+    for (const row of (collisionsRows ?? []) as Array<{
+      objet_id: string;
+      plan: { id: string; status: string; affaire_id: string } | null;
+    }>) {
+      if (!row.plan) continue;
+      if (row.plan.status === "published") {
+        blocking.push({
+          objet_id: row.objet_id,
+          plan_id: row.plan.id,
+          affaire_id: row.plan.affaire_id,
+        });
+      } else if (row.plan.status === "draft" && row.plan.affaire_id !== data.affaire_id) {
+        // draft d'une AUTRE affaire = blocant aussi
+        blocking.push({
+          objet_id: row.objet_id,
+          plan_id: row.plan.id,
+          affaire_id: row.plan.affaire_id,
+        });
+      } else if (row.plan.status === "draft" && row.plan.affaire_id === data.affaire_id) {
+        draftSameAffaire.add(row.plan.id);
+      }
+    }
+
+    if (blocking.length > 0) {
+      const objMeta = new Map<string, string>();
+      const { data: objs } = await supabase
+        .from("fabrication_objets")
+        .select("id, nom, reference")
+        .in(
+          "id",
+          blocking.map((b) => b.objet_id),
+        );
+      for (const o of objs ?? []) {
+        objMeta.set(o.id as string, `${o.reference as string} — ${o.nom as string}`);
+      }
+      const first = blocking[0];
+      const label = objMeta.get(first.objet_id) ?? first.objet_id.slice(0, 8);
+      const err = new Error(
+        `Objet "${label}" déjà staffé dans un plan publié ou un brouillon d'une autre affaire. Archivez-le d'abord.`,
+      );
+      (err as Error & { code?: string; status?: number }).code = "OBJET_DEJA_STAFFE";
+      (err as Error & { code?: string; status?: number }).status = 409;
+      throw err;
+    }
+
+    /* Auto-archive : plans draft de la MÊME affaire qui contiennent un de nos objets */
+    if (draftSameAffaire.size > 0) {
+      await supabase
+        .from("staffing_plan")
+        .update({ status: "archived" })
+        .in("id", Array.from(draftSameAffaire));
+    }
+
+    /* Optionnel : archiver tous les plans actifs existants de l'affaire (bouton "nouveau plan") */
     if (data.archive_existing) {
       await supabase
         .from("staffing_plan")
@@ -144,5 +306,8 @@ export const createStaffingPlan = createServerFn({ method: "POST" })
       throw new Error(insErr.message);
     }
 
-    return { plan_id: plan.id as string };
+    return {
+      plan_id: plan.id as string,
+      drafts_archived: draftSameAffaire.size,
+    };
   });
