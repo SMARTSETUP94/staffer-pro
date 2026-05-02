@@ -165,11 +165,19 @@ function StaffingPlanPage() {
           <p className="mt-1 font-mono text-xs text-muted-foreground">{planId}</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
+          <StaffingShortcutsHelp
+            onAutoStaff={
+              isDraft && planData
+                ? () => autoStaffRef.current?.trigger()
+                : null
+            }
+          />
           <Button variant="outline" size="sm" onClick={() => setHistoryOpen(true)}>
             <History className="mr-1 h-3 w-3" /> Historique
           </Button>
           {isDraft && planData && (
             <AutoStaffPlanButton
+              ref={autoStaffRef}
               planId={planId}
               stepsCount={planData.result.steps.filter((s) => s.start_date !== "TBD").length}
               onCompleted={() => {
