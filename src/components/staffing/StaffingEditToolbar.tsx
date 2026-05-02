@@ -211,10 +211,31 @@ export function StaffingEditToolbar({
         <Button
           size="sm"
           variant="outline"
+          onClick={() => {
+            const ok = undo();
+            if (ok) toast.info("Modification annulée", { duration: 1500 });
+          }}
+          disabled={historyDepth === 0 || flushing}
+          title="Annuler la dernière modification (Ctrl+Z / ⌘+Z)"
+        >
+          <Undo2 className="mr-1 h-3 w-3" />
+          Annuler
+          {historyDepth > 0 && (
+            <Badge variant="secondary" className="ml-1.5 h-4 px-1 text-[9px]">
+              {historyDepth}
+            </Badge>
+          )}
+          <kbd className="ml-1.5 hidden sm:inline-flex h-4 items-center rounded border border-border bg-muted px-1 text-[9px] font-mono opacity-80">
+            ⌘Z
+          </kbd>
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
           onClick={() => setConfirmReset(true)}
           disabled={dirtyCount === 0 || flushing}
         >
-          <RotateCcw className="mr-1 h-3 w-3" /> Annuler les modifs
+          <RotateCcw className="mr-1 h-3 w-3" /> Tout réinitialiser
         </Button>
         <Button
           size="sm"
