@@ -23,7 +23,7 @@ import { AlerteBandeau } from "./AlerteBandeau";
 import type { PlanResult, PlanStep } from "@/lib/staffing/types";
 import { METIER_KEY_BY_ID } from "@/lib/staffing/types";
 
-interface PlanData {
+export interface PlanData {
   plan: { id: string; affaire_id: string; date_debut_fab: string; date_fin_fab: string; status: string };
   objets: Array<{
     id: string;
@@ -39,7 +39,13 @@ interface PlanData {
   step_overrides: Record<string, { manual_shift: number; manual_pers: boolean }>;
 }
 
-export function GanttInteractif({ planId }: { planId: string }) {
+export function GanttInteractif({
+  planId,
+  onDataLoaded,
+}: {
+  planId: string;
+  onDataLoaded?: (d: PlanData) => void;
+}) {
   const calculate = useServerFn(calculateStaffingPlan);
   const updateObj = useServerFn(updatePlanObject);
   const updateStep = useServerFn(updatePlanStep);
@@ -52,14 +58,15 @@ export function GanttInteractif({ planId }: { planId: string }) {
     setLoading(true);
     setError(null);
     try {
-      const r = await calculate({ data: { planId } });
-      setData(r as PlanData);
+      const r = (await calculate({ data: { planId } })) as PlanData;
+      setData(r);
+      onDataLoaded?.(r);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erreur inconnue");
     } finally {
       setLoading(false);
     }
-  }, [calculate, planId]);
+  }, [calculate, planId, onDataLoaded]);
 
   useEffect(() => {
     void reload();
