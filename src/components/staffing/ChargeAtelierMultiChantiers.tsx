@@ -110,9 +110,9 @@ export function ChargeAtelierMultiChantiers() {
 
     // Conflits CNC : cellule Num avec >= 2 affaires distinctes
     const cncConflicts: Array<{ date: string; affaires: string[] }> = [];
-    const numRow = matrix.get(4) ?? new Map();
+    const numRow = matrix.get(4) ?? new Map<string, Array<{ affaire_id: string; pers: number }>>();
     for (const [date, list] of numRow.entries()) {
-      const uniq = Array.from(new Set(list.map((l: { affaire_id: string }) => l.affaire_id)));
+      const uniq: string[] = Array.from(new Set((list as Array<{ affaire_id: string }>).map((l) => l.affaire_id)));
       if (uniq.length >= 2) cncConflicts.push({ date, affaires: uniq });
     }
 

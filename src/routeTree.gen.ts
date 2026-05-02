@@ -42,6 +42,7 @@ import { Route as AppExportRouteImport } from './routes/_app.export'
 import { Route as AppEmployesRouteImport } from './routes/_app.employes'
 import { Route as AppDashboardEmployeRouteImport } from './routes/_app.dashboard-employe'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
+import { Route as AppChargeAtelierRouteImport } from './routes/_app.charge-atelier'
 import { Route as AppAuditHeuresRouteImport } from './routes/_app.audit-heures'
 import { Route as AppAuditAuthRouteImport } from './routes/_app.audit-auth'
 import { Route as AppAbsencesRouteImport } from './routes/_app.absences'
@@ -235,6 +236,11 @@ const AppDashboardRoute = AppDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AppRoute,
 } as any)
+const AppChargeAtelierRoute = AppChargeAtelierRouteImport.update({
+  id: '/charge-atelier',
+  path: '/charge-atelier',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAuditHeuresRoute = AppAuditHeuresRouteImport.update({
   id: '/audit-heures',
   path: '/audit-heures',
@@ -392,6 +398,7 @@ export interface FileRoutesByFullPath {
   '/absences': typeof AppAbsencesRoute
   '/audit-auth': typeof AppAuditAuthRoute
   '/audit-heures': typeof AppAuditHeuresRoute
+  '/charge-atelier': typeof AppChargeAtelierRoute
   '/dashboard': typeof AppDashboardRoute
   '/dashboard-employe': typeof AppDashboardEmployeRoute
   '/employes': typeof AppEmployesRouteWithChildren
@@ -454,6 +461,7 @@ export interface FileRoutesByTo {
   '/absences': typeof AppAbsencesRoute
   '/audit-auth': typeof AppAuditAuthRoute
   '/audit-heures': typeof AppAuditHeuresRoute
+  '/charge-atelier': typeof AppChargeAtelierRoute
   '/dashboard': typeof AppDashboardRoute
   '/dashboard-employe': typeof AppDashboardEmployeRoute
   '/employes': typeof AppEmployesRouteWithChildren
@@ -516,6 +524,7 @@ export interface FileRoutesById {
   '/_app/absences': typeof AppAbsencesRoute
   '/_app/audit-auth': typeof AppAuditAuthRoute
   '/_app/audit-heures': typeof AppAuditHeuresRoute
+  '/_app/charge-atelier': typeof AppChargeAtelierRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/dashboard-employe': typeof AppDashboardEmployeRoute
   '/_app/employes': typeof AppEmployesRouteWithChildren
@@ -580,6 +589,7 @@ export interface FileRouteTypes {
     | '/absences'
     | '/audit-auth'
     | '/audit-heures'
+    | '/charge-atelier'
     | '/dashboard'
     | '/dashboard-employe'
     | '/employes'
@@ -642,6 +652,7 @@ export interface FileRouteTypes {
     | '/absences'
     | '/audit-auth'
     | '/audit-heures'
+    | '/charge-atelier'
     | '/dashboard'
     | '/dashboard-employe'
     | '/employes'
@@ -703,6 +714,7 @@ export interface FileRouteTypes {
     | '/_app/absences'
     | '/_app/audit-auth'
     | '/_app/audit-heures'
+    | '/_app/charge-atelier'
     | '/_app/dashboard'
     | '/_app/dashboard-employe'
     | '/_app/employes'
@@ -1009,6 +1021,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDashboardRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/charge-atelier': {
+      id: '/_app/charge-atelier'
+      path: '/charge-atelier'
+      fullPath: '/charge-atelier'
+      preLoaderRoute: typeof AppChargeAtelierRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/audit-heures': {
       id: '/_app/audit-heures'
       path: '/audit-heures'
@@ -1269,6 +1288,7 @@ interface AppRouteChildren {
   AppAbsencesRoute: typeof AppAbsencesRoute
   AppAuditAuthRoute: typeof AppAuditAuthRoute
   AppAuditHeuresRoute: typeof AppAuditHeuresRoute
+  AppChargeAtelierRoute: typeof AppChargeAtelierRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppDashboardEmployeRoute: typeof AppDashboardEmployeRoute
   AppEmployesRoute: typeof AppEmployesRouteWithChildren
@@ -1309,6 +1329,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAbsencesRoute: AppAbsencesRoute,
   AppAuditAuthRoute: AppAuditAuthRoute,
   AppAuditHeuresRoute: AppAuditHeuresRoute,
+  AppChargeAtelierRoute: AppChargeAtelierRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppDashboardEmployeRoute: AppDashboardEmployeRoute,
   AppEmployesRoute: AppEmployesRouteWithChildren,
