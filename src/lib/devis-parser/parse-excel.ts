@@ -286,7 +286,7 @@ function aggregateObjet(
 
     // Régul : 0 h mais Total HT préservé. Flag warning si Temps > 0.
     if (c.isRegul) {
-      if (c.totalHt && c.totalHt > 0) budgetMateriaux += c.totalHt;
+      if (c.totalHt && c.totalHt > 0) budgetMateriaux += c.totalHt * sectionQte;
       if ((c.tempsPrevu ?? 0) > 0) {
         warnings.push(
           `Régul ligne ${c.rowIndex} avec ${c.tempsPrevu}h — à valider manuellement.`,
