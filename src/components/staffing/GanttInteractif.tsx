@@ -1,7 +1,10 @@
 // v0.35.2 / Sprint 2.1 — GanttInteractif : composant principal Auto-staffing Fabrication 5XXX
 // v0.35.x — Pré-vol risque (toast + slider warning + badge inline) avant commit.
-import { useEffect, useMemo, useState, useCallback } from "react";
+// v0.35.x BATCH — sliders + shifts écrivent dans useEditStore (pas de round-trip serveur).
+//                 Reorder objet reste save-immédiat (rare, pas de cumul).
+import { useEffect, useMemo, useState, useCallback, useImperativeHandle, forwardRef } from "react";
 import { useServerFn } from "@tanstack/react-start";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2, ArrowUp, ArrowDown, RefreshCw, Calendar, Users, Activity, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,8 +13,8 @@ import { Badge } from "@/components/ui/badge";
 import {
   calculateStaffingPlan,
   updatePlanObject,
-  updatePlanStep,
 } from "@/server/staffing.functions";
+import { useEditStore, applyEdits } from "@/lib/staffing/edit-store";
 import {
   workingDaysBetween,
   formatDayName,
@@ -43,43 +46,87 @@ export interface PlanData {
   step_overrides: Record<string, { manual_shift: number; manual_pers: boolean }>;
 }
 
-export function GanttInteractif({
-  planId,
-  onDataLoaded,
-}: {
-  planId: string;
-  onDataLoaded?: (d: PlanData) => void;
-}) {
+export interface GanttInteractifHandle {
+  reload: () => Promise<void>;
+}
+
+export const GanttInteractif = forwardRef<
+  GanttInteractifHandle,
+  {
+    planId: string;
+    onDataLoaded?: (d: PlanData) => void;
+  }
+>(function GanttInteractifInner({ planId, onDataLoaded }, ref) {
   const calculate = useServerFn(calculateStaffingPlan);
   const updateObj = useServerFn(updatePlanObject);
-  const updateStep = useServerFn(updatePlanStep);
   const [data, setData] = useState<PlanData | null>(null);
   const [loading, setLoading] = useState(true);
   const [busyStepId, setBusyStepId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   /** Impacts pré-vol par stepId — alimente badge + couleur slider + bandeau bonus */
   const [impactByStep, setImpactByStep] = useState<Record<string, SliderImpact[]>>({});
+  const initFromPlan = useEditStore((s) => s.initFromPlan);
+  const setStepPersStore = useEditStore((s) => s.setStepPers);
+  const setStepShiftStore = useEditStore((s) => s.setStepShift);
+  const resetStepShiftStore = useEditStore((s) => s.resetStepShift);
+  const edits = useEditStore((s) => s.edits);
 
   const reload = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const r = (await calculate({ data: { planId } })) as PlanData;
+      // Charger updated_at du plan en parallèle pour init store
+      const [r, planMeta] = await Promise.all([
+        calculate({ data: { planId } }) as Promise<PlanData>,
+        supabase
+          .from("staffing_plan")
+          .select("updated_at")
+          .eq("id", planId)
+          .single(),
+      ]);
       setData(r);
       onDataLoaded?.(r);
-      // Reset impacts pré-vol — l'algo serveur a recalculé, les alertes officielles
-      // sont dans r.result.alerts.
+      if (planMeta.data?.updated_at) {
+        initFromPlan(planId, planMeta.data.updated_at as string);
+      }
       setImpactByStep({});
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erreur inconnue");
     } finally {
       setLoading(false);
     }
-  }, [calculate, planId, onDataLoaded]);
+  }, [calculate, planId, onDataLoaded, initFromPlan]);
 
   useEffect(() => {
     void reload();
   }, [reload]);
+
+  useImperativeHandle(ref, () => ({ reload }), [reload]);
+
+  /** Steps mergés : applique les edits locaux par-dessus les steps serveur */
+  const mergedSteps = useMemo(() => {
+    if (!data) return [];
+    return data.result.steps.map((s) => {
+      const e = edits[s.id];
+      const baseShift = data.step_overrides[s.id]?.manual_shift ?? 0;
+      return applyEdits(s, e, baseShift);
+    });
+  }, [data, edits]);
+
+  /** daily_load recalculé à partir des steps mergés (pour stats + heatmap + simulate) */
+  const mergedDailyLoad = useMemo(() => {
+    const out: Record<string, number> = {};
+    for (const s of mergedSteps) {
+      if (s.start_date === "TBD") continue;
+      for (let i = 0; i < s.span_days; i++) {
+        const d = new Date(s.start_date + "T00:00:00Z");
+        d.setUTCDate(d.getUTCDate() + i);
+        const iso = d.toISOString().slice(0, 10);
+        out[iso] = (out[iso] ?? 0) + s.pers;
+      }
+    }
+    return out;
+  }, [mergedSteps]);
 
   const days = useMemo(() => {
     if (!data) return [];
@@ -90,8 +137,8 @@ export function GanttInteractif({
     if (!data) return null;
     let totalH = 0;
     let pic = 0;
-    for (const s of data.result.steps) totalH += s.pers * s.h_par_jour * s.span_days;
-    for (const v of Object.values(data.result.daily_load)) if (v > pic) pic = v;
+    for (const s of mergedSteps) totalH += s.pers * s.h_par_jour * s.span_days;
+    for (const v of Object.values(mergedDailyLoad)) if (v > pic) pic = v;
     const hasHard = data.result.alerts.some((a) => a.severity === "hard");
     const hasSoft = data.result.alerts.some((a) => a.severity === "soft");
     const statut = hasHard ? "Critique" : hasSoft ? "Attention" : "Conforme";
@@ -101,28 +148,24 @@ export function GanttInteractif({
         ? "text-amber-600 dark:text-amber-400"
         : "text-emerald-600 dark:text-emerald-400";
     return { totalH, pic, statut, statutColor };
-  }, [data]);
+  }, [data, mergedSteps, mergedDailyLoad]);
 
-  /** Pré-vol : simule l'impact, affiche toast + stocke pour badges, puis commit */
-  const previewAndCommit = useCallback(
-    async (
-      step: PlanStep,
-      change: { newPers?: number; newShift?: number },
-      commit: () => Promise<void>,
-    ) => {
+  /** Pré-vol : simule l'impact, affiche toast + stocke pour badges (pas de commit serveur) */
+  const previewImpacts = useCallback(
+    (step: PlanStep, change: { newPers?: number; newShift?: number }) => {
       if (!data) return;
       const impacts = simulateStepChange({
         step,
         newPers: change.newPers,
         newShift: change.newShift,
-        allSteps: data.result.steps,
-        dailyLoad: data.result.daily_load,
+        allSteps: mergedSteps,
+        dailyLoad: mergedDailyLoad,
         dateFinFab: data.result.date_fin_fab,
       });
       if (impacts.length > 0) {
-        toast.warning("Réduction non viable", {
+        toast.warning("Modification à risque", {
           description: impactToastMessage(impacts),
-          duration: 6000,
+          duration: 5000,
         });
         setImpactByStep((prev) => ({ ...prev, [step.id]: impacts }));
       } else {
@@ -132,68 +175,40 @@ export function GanttInteractif({
           return rest;
         });
       }
-      await commit();
     },
-    [data],
+    [data, mergedSteps, mergedDailyLoad],
   );
 
   const handleShift = useCallback(
-    async (step: PlanStep, delta: number) => {
-      if (!data || busyStepId) return;
-      const ov = data.step_overrides[step.id];
-      const newShift = (ov?.manual_shift ?? 0) + delta;
-      setBusyStepId(step.id);
-      try {
-        await previewAndCommit(step, { newShift: delta }, async () => {
-          await updateStep({ data: { id: step.id, manual_shift: newShift } });
-          await reload();
-        });
-      } catch (e) {
-        setError(e instanceof Error ? e.message : "Erreur décalage");
-      } finally {
-        setBusyStepId(null);
-      }
+    (step: PlanStep, delta: number) => {
+      if (!data) return;
+      const baseShift = data.step_overrides[step.id]?.manual_shift ?? 0;
+      const currentShift = edits[step.id]?.manual_shift ?? baseShift;
+      const newShift = currentShift + delta;
+      previewImpacts(step, { newShift: delta });
+      setStepShiftStore(step.id, newShift);
     },
-    [data, busyStepId, updateStep, reload, previewAndCommit],
+    [data, edits, previewImpacts, setStepShiftStore],
   );
 
   const handleResetShift = useCallback(
-    async (stepId: string) => {
-      if (busyStepId) return;
-      setBusyStepId(stepId);
-      try {
-        await updateStep({ data: { id: stepId, manual_shift: 0 } });
-        setImpactByStep((prev) => {
-          if (!(stepId in prev)) return prev;
-          const { [stepId]: _, ...rest } = prev;
-          return rest;
-        });
-        await reload();
-      } catch (e) {
-        setError(e instanceof Error ? e.message : "Erreur reset");
-      } finally {
-        setBusyStepId(null);
-      }
+    (stepId: string) => {
+      resetStepShiftStore(stepId);
+      setImpactByStep((prev) => {
+        if (!(stepId in prev)) return prev;
+        const { [stepId]: _, ...rest } = prev;
+        return rest;
+      });
     },
-    [busyStepId, updateStep, reload],
+    [resetStepShiftStore],
   );
 
   const handleSetPers = useCallback(
-    async (step: PlanStep, pers: number) => {
-      if (busyStepId) return;
-      setBusyStepId(step.id);
-      try {
-        await previewAndCommit(step, { newPers: pers }, async () => {
-          await updateStep({ data: { id: step.id, pers, manual_pers: true } });
-          await reload();
-        });
-      } catch (e) {
-        setError(e instanceof Error ? e.message : "Erreur pers");
-      } finally {
-        setBusyStepId(null);
-      }
+    (step: PlanStep, pers: number) => {
+      previewImpacts(step, { newPers: pers });
+      setStepPersStore(step.id, pers);
     },
-    [busyStepId, updateStep, reload, previewAndCommit],
+    [previewImpacts, setStepPersStore],
   );
 
   const handleReorder = useCallback(
@@ -206,6 +221,7 @@ export function GanttInteractif({
       const a = sorted[idx];
       const b = sorted[swap];
       try {
+        setBusyStepId(objId);
         await Promise.all([
           updateObj({ data: { id: a.id, display_order: b.display_order } }),
           updateObj({ data: { id: b.id, display_order: a.display_order } }),
@@ -213,6 +229,8 @@ export function GanttInteractif({
         await reload();
       } catch (e) {
         setError(e instanceof Error ? e.message : "Erreur reorder");
+      } finally {
+        setBusyStepId(null);
       }
     },
     [data, updateObj, reload],
@@ -244,7 +262,7 @@ export function GanttInteractif({
   const gridTemplate = `220px repeat(${days.length}, minmax(42px, 1fr))`;
 
   const getObjStepByMetier = (objet_id: string, metier_id: number): PlanStep | undefined =>
-    data.result.steps.find(
+    mergedSteps.find(
       (s) => s.objet_id === objet_id && s.metier_id === metier_id && s.start_date !== "TBD",
     );
 
@@ -305,7 +323,7 @@ export function GanttInteractif({
           </div>
 
           {/* BE & Num steps (sans objet) */}
-          {data.result.steps
+          {mergedSteps
             .filter((s) => s.objet_id === null && s.start_date !== "TBD")
             .map((s) => {
               const span = stepSpanInWindow(days, s.start_date, s.span_days);
@@ -313,7 +331,8 @@ export function GanttInteractif({
               stepEnd.setUTCDate(stepEnd.getUTCDate() + s.span_days - 1);
               const overDL = stepEnd.toISOString().slice(0, 10) > dateLivraison;
               const k = METIER_KEY_BY_ID[s.metier_id] ?? "Manut";
-              const ov = data.step_overrides[s.id];
+              const baseShift = data.step_overrides[s.id]?.manual_shift ?? 0;
+              const localShift = edits[s.id]?.manual_shift ?? baseShift;
               const hasImpact = (impactByStep[s.id]?.length ?? 0) > 0;
               return (
                 <div
@@ -335,7 +354,7 @@ export function GanttInteractif({
                       startCol={span.startCol + 1}
                       endCol={span.endCol + 1}
                       isOverDeadline={overDL}
-                      manualShift={ov?.manual_shift ?? 0}
+                      manualShift={localShift}
                       hasWarning={hasImpact}
                       onShift={(d) => handleShift(s, d)}
                       onResetShift={() => handleResetShift(s.id)}
@@ -347,7 +366,7 @@ export function GanttInteractif({
 
           {/* Par objet */}
           {objets.map((obj, idx) => {
-            const objSteps = data.result.steps.filter(
+            const objSteps = mergedSteps.filter(
               (s) => s.objet_id === obj.objet_id && s.start_date !== "TBD",
             );
             const boisStep = getObjStepByMetier(obj.objet_id, 1);
@@ -389,22 +408,20 @@ export function GanttInteractif({
                       </p>
                       {boisStep && (
                         <PersSlider
-                          key={`bois-${boisStep.id}-${boisStep.pers}`}
                           label="Bois"
                           color={METIER_COLOR.Bois}
                           value={boisStep.pers}
-                          disabled={busyStepId === boisStep.id}
+                          disabled={false}
                           impacts={impactByStep[boisStep.id]}
                           onChange={(v) => handleSetPers(boisStep, v)}
                         />
                       )}
                       {peintStep && (
                         <PersSlider
-                          key={`peint-${peintStep.id}-${peintStep.pers}`}
                           label="Peint"
                           color={METIER_COLOR.Peint}
                           value={peintStep.pers}
-                          disabled={busyStepId === peintStep.id}
+                          disabled={false}
                           impacts={impactByStep[peintStep.id]}
                           onChange={(v) => handleSetPers(peintStep, v)}
                         />
@@ -420,7 +437,8 @@ export function GanttInteractif({
                   stepEnd.setUTCDate(stepEnd.getUTCDate() + s.span_days - 1);
                   const overDL = stepEnd.toISOString().slice(0, 10) > dateLivraison;
                   const k = METIER_KEY_BY_ID[s.metier_id] ?? "Manut";
-                  const ov = data.step_overrides[s.id];
+                  const baseShift = data.step_overrides[s.id]?.manual_shift ?? 0;
+                  const localShift = edits[s.id]?.manual_shift ?? baseShift;
                   const hasImpact = (impactByStep[s.id]?.length ?? 0) > 0;
                   return (
                     <div
@@ -442,7 +460,7 @@ export function GanttInteractif({
                           startCol={span.startCol + 1}
                           endCol={span.endCol + 1}
                           isOverDeadline={overDL}
-                          manualShift={ov?.manual_shift ?? 0}
+                          manualShift={localShift}
                           hasWarning={hasImpact}
                           onShift={(d) => handleShift(s, d)}
                           onResetShift={() => handleResetShift(s.id)}
@@ -468,7 +486,7 @@ export function GanttInteractif({
         <h3 className="mb-2 text-sm font-bold uppercase tracking-wider text-muted-foreground">
           Charge par métier
         </h3>
-        <HeatmapMetier steps={data.result.steps} days={days} />
+        <HeatmapMetier steps={mergedSteps} days={days} />
       </div>
 
       <div className="flex justify-end">
@@ -478,7 +496,9 @@ export function GanttInteractif({
       </div>
     </div>
   );
-}
+});
+
+GanttInteractif.displayName = "GanttInteractif";
 
 function ImpactBadge({ impacts }: { impacts: SliderImpact[] }) {
   const labels = impacts.map((i) =>

@@ -1,10 +1,15 @@
 // v0.35.5 / Sprint 5 — Page Gantt staffing + Wizard + Publication + Historique
-import { useEffect, useState } from "react";
+// v0.35.x BATCH — Toolbar batch edition (sliders + shifts) + autosave 2 min idle.
+import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
 import { ArrowLeft, History, Send, Zap, ListChecks } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
-import { GanttInteractif, type PlanData } from "@/components/staffing/GanttInteractif";
+import {
+  GanttInteractif,
+  type PlanData,
+  type GanttInteractifHandle,
+} from "@/components/staffing/GanttInteractif";
 import { StaffingPersonnesSection } from "@/components/staffing/StaffingPersonnesSection";
 import {
   EquipeAffaireSection,
@@ -12,6 +17,7 @@ import {
 } from "@/components/staffing/EquipeAffaireSection";
 import { PublishPlanDialog } from "@/components/staffing/PublishPlanDialog";
 import { PlanHistoryDrawer } from "@/components/staffing/PlanHistoryDrawer";
+import { StaffingEditToolbar } from "@/components/staffing/StaffingEditToolbar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PageBreadcrumbs } from "@/components/PageBreadcrumbs";
@@ -25,6 +31,7 @@ function StaffingPlanPage() {
   const { isAdminOrChef, rolesLoaded } = useAuth();
   const [planData, setPlanData] = useState<PlanData | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const ganttRef = useRef<GanttInteractifHandle>(null);
   const [equipeRefresh, setEquipeRefresh] = useState(0);
   const [publishOpen, setPublishOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -176,7 +183,14 @@ function StaffingPlanPage() {
           )}
         </div>
       </div>
+      {isDraft && (
+        <StaffingEditToolbar
+          planId={planId}
+          onSaved={() => ganttRef.current?.reload()}
+        />
+      )}
       <GanttInteractif
+        ref={ganttRef}
         key={refreshKey}
         planId={planId}
         onDataLoaded={setPlanData}
