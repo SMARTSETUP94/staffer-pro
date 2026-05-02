@@ -1,10 +1,14 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeEach, beforeAll, afterAll } from "vitest";
 import {
   shouldForceSetPassword,
   isAuthHashPresent,
   isOnboardingPath,
   shouldIgnoreTokenRefreshForSameUser,
   shouldRedirectToOnboarding,
+  isOnboardingSkipped,
+  markOnboardingSkipped,
+  clearOnboardingSkipped,
+  ONBOARDING_SKIPPED_KEY,
 } from "@/lib/auth-redirect-helpers";
 import { resolveSetPasswordRedirect } from "@/lib/admin-actions";
 
@@ -120,6 +124,18 @@ describe("onboarding guard idempotence", () => {
     expect(shouldRedirectToOnboarding({ profileCompleted: true, currentPath: "/dashboard" })).toBe(false);
   });
 
+  it("v0.31.4 : skipped=true (Compléter plus tard) → pas de redirect même profil incomplet", () => {
+    expect(
+      shouldRedirectToOnboarding({ profileCompleted: false, currentPath: "/dashboard", skipped: true }),
+    ).toBe(false);
+  });
+
+  it("v0.31.4 : skipped=true ne force pas si profil complet (no-op)", () => {
+    expect(
+      shouldRedirectToOnboarding({ profileCompleted: true, currentPath: "/dashboard", skipped: true }),
+    ).toBe(false);
+  });
+
   it("détecte seulement les chemins onboarding exacts", () => {
     expect(isOnboardingPath("/onboarding")).toBe(true);
     expect(isOnboardingPath("/onboarding/step")).toBe(true);
@@ -230,5 +246,46 @@ describe("resolveSetPasswordRedirect", () => {
     expect(resolveSetPasswordRedirect("https://staffer-pro.lovable.app")).toBe(
       "https://staffer-pro.lovable.app/auth/set-password",
     );
+  });
+});
+
+describe("v0.31.4 onboarding skip flag (sessionStorage)", () => {
+  // Mock minimaliste de window.sessionStorage (env=node)
+  const store = new Map<string, string>();
+  const fakeStorage = {
+    getItem: (k: string) => store.get(k) ?? null,
+    setItem: (k: string, v: string) => void store.set(k, v),
+    removeItem: (k: string) => void store.delete(k),
+    clear: () => void store.clear(),
+    key: () => null,
+    length: 0,
+  };
+
+  beforeAll(() => {
+    (globalThis as unknown as { window: { sessionStorage: typeof fakeStorage } }).window = {
+      sessionStorage: fakeStorage,
+    };
+  });
+  afterAll(() => {
+    delete (globalThis as unknown as { window?: unknown }).window;
+  });
+  beforeEach(() => {
+    store.clear();
+  });
+
+  it("isOnboardingSkipped : false par défaut", () => {
+    expect(isOnboardingSkipped()).toBe(false);
+  });
+
+  it("markOnboardingSkipped → isOnboardingSkipped=true", () => {
+    markOnboardingSkipped();
+    expect(isOnboardingSkipped()).toBe(true);
+    expect(fakeStorage.getItem(ONBOARDING_SKIPPED_KEY)).toBe("1");
+  });
+
+  it("clearOnboardingSkipped purge le flag", () => {
+    markOnboardingSkipped();
+    clearOnboardingSkipped();
+    expect(isOnboardingSkipped()).toBe(false);
   });
 });

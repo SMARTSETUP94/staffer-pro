@@ -4,7 +4,11 @@ import { Loader2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { usePreview } from "@/lib/preview-context";
 import { AppLayout } from "@/components/AppLayout";
-import { shouldForceSetPassword, shouldRedirectToOnboarding } from "@/lib/auth-redirect-helpers";
+import {
+  shouldForceSetPassword,
+  shouldRedirectToOnboarding,
+  isOnboardingSkipped,
+} from "@/lib/auth-redirect-helpers";
 
 export const Route = createFileRoute("/_app")({
   component: AppGuard,
@@ -56,7 +60,7 @@ function AppGuard() {
       return;
     }
     // Onboarding profil obligatoire (1ʳᵉ connexion)
-    if (shouldRedirectToOnboarding({ profileCompleted, currentPath })) {
+    if (shouldRedirectToOnboarding({ profileCompleted, currentPath, skipped: isOnboardingSkipped() })) {
       navigate({ to: "/onboarding" });
       return;
     }

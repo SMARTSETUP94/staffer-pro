@@ -102,6 +102,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         try {
           window.sessionStorage.removeItem("setup_paris_preview_role");
           window.sessionStorage.removeItem("setup_paris_preview_employe_id");
+          // v0.31.4 : nouvelle session → on oublie le skip onboarding pour
+          // forcer à nouveau le wizard si profile_completed_at est toujours NULL.
+          window.sessionStorage.removeItem("onboarding_skipped_v1");
         } catch {
           // ignore (SSR / private mode)
         }
