@@ -154,6 +154,23 @@ export function StaffingEditToolbar({
     return () => clearInterval(itv);
   }, [lastSavedAt]);
 
+  /** Raccourci clavier Ctrl/Cmd+S → flush manuel (toast confirmation) */
+  useEffect(() => {
+    const handler = (ev: KeyboardEvent) => {
+      const isSave = (ev.ctrlKey || ev.metaKey) && (ev.key === "s" || ev.key === "S");
+      if (!isSave) return;
+      ev.preventDefault();
+      const dc = useEditStore.getState().dirtyCount();
+      if (dc === 0) {
+        toast.info("Aucune modification à enregistrer");
+        return;
+      }
+      void doFlush();
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [doFlush]);
+
   return (
     <>
       <div className="sticky top-2 z-30 flex items-center gap-2 rounded-2xl border border-border bg-card/95 px-3 py-2 shadow-sm backdrop-blur">
@@ -183,6 +200,7 @@ export function StaffingEditToolbar({
           size="sm"
           onClick={() => void doFlush()}
           disabled={dirtyCount === 0 || flushing}
+          title="Enregistrer (Ctrl+S)"
         >
           {flushing ? (
             <Loader2 className="mr-1 h-3 w-3 animate-spin" />
