@@ -150,6 +150,22 @@ function AffaireDevisPage() {
 
   useEffect(() => { fetchAll(); }, [affaireId]);
 
+  // v0.35.4 — charge typologie + date_montage pour bouton "Mettre au planning"
+  useEffect(() => {
+    void supabase
+      .from("affaires")
+      .select("typologie, date_montage")
+      .eq("id", affaireId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!data) return;
+        setAffaireMeta({
+          typologie: (data.typologie as string | null) ?? null,
+          date_montage: (data.date_montage as string | null) ?? null,
+        });
+      });
+  }, [affaireId]);
+
   const openCreateDevis = () => {
     setDevisForm({
       numero: "",
