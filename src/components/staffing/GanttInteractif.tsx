@@ -112,6 +112,25 @@ export const GanttInteractif = forwardRef<
 
   useImperativeHandle(ref, () => ({ reload }), [reload]);
 
+  /** Observe la largeur réelle du header pour calculer dayWidthPx (drag-to-shift) */
+  useEffect(() => {
+    const el = gridRef.current;
+    if (!el) return;
+    const measure = () => {
+      // 1ère colonne = 220px (label objet), reste = jours
+      const total = el.getBoundingClientRect().width;
+      const dayCount = el.dataset.dayCount ? parseInt(el.dataset.dayCount, 10) : 0;
+      if (dayCount > 0) {
+        const w = (total - 220) / dayCount;
+        setDayWidthPx(w > 0 ? w : 0);
+      }
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [data]);
+
   /** Steps mergés : applique les edits locaux par-dessus les steps serveur */
   const mergedSteps = useMemo(() => {
     if (!data) return [];
