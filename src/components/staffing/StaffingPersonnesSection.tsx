@@ -161,6 +161,14 @@ export function StaffingPersonnesSection({ planId, steps, onAssignmentsChanged, 
             const k = METIER_KEY_BY_ID[step.metier_id] ?? "Manut";
             const objLabel = step.objet_id ? (objetsLabel[step.objet_id] ?? step.objet_id) : "Global";
             const stepAssigns = assignments.filter((a) => a.step_id === step.id);
+            // v0.35.x audit UX #4 — couverture en équivalent-personnes-jour (Σ presence_pct/100)
+            // au lieu du count brut, qui surestime quand presence_pct < 100%.
+            const targetPersDays = step.pers * step.span_days;
+            const coverPersDays =
+              stepAssigns.reduce((s, a) => s + a.presence_pct, 0) / 100;
+            const coverRounded = Math.round(coverPersDays * 10) / 10;
+            const partialCount = stepAssigns.filter((a) => a.presence_pct < 100).length;
+            const isFull = coverPersDays >= targetPersDays;
             return (
               <AccordionItem key={step.id} value={step.id}>
                 <div className="flex items-center gap-1">
@@ -176,8 +184,21 @@ export function StaffingPersonnesSection({ planId, steps, onAssignmentsChanged, 
                       </span>
                       <span className="ml-auto flex items-center gap-2 text-xs">
                         <span className="font-mono">{step.pers}p × {step.span_days}j</span>
-                        <Badge variant="secondary" className="text-[10px]">
-                          {stepAssigns.length}/{step.pers * step.span_days} aff.
+                        <Badge
+                          variant={isFull ? "secondary" : "outline"}
+                          className={`text-[10px] ${isFull ? "" : "border-amber-500/60 text-amber-700 dark:text-amber-300"}`}
+                          title={
+                            `${stepAssigns.length} affectation${stepAssigns.length > 1 ? "s" : ""}` +
+                            (partialCount > 0
+                              ? ` dont ${partialCount} partielle${partialCount > 1 ? "s" : ""} (< 100%)`
+                              : "") +
+                            ` — couverture ${coverRounded} pers·j sur ${targetPersDays} requis`
+                          }
+                        >
+                          {coverRounded}/{targetPersDays} pers·j
+                          {partialCount > 0 && (
+                            <span className="ml-1 opacity-70">({stepAssigns.length} aff.)</span>
+                          )}
                         </Badge>
                       </span>
                     </div>
