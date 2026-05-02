@@ -296,11 +296,11 @@ function aggregateObjet(
       continue;
     }
 
-    // Matière → budget cumulé (× quantité objet pour aligner sur le total réel)
+    // Matière → budget cumulé (× quantité objet × qte section pour aligner sur le total réel)
     if (c.isMatiere) {
       const ht = c.totalHt ?? 0;
       if (ht > 0) {
-        budgetMateriaux += ht * quantite;
+        budgetMateriaux += ht * quantite * sectionQte;
       } else {
         warnings.push(
           `Matière sans montant ligne ${c.rowIndex} : « ${c.designation.slice(0, 40)} »`,
