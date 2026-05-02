@@ -120,6 +120,18 @@ describe("onboarding guard idempotence", () => {
     expect(shouldRedirectToOnboarding({ profileCompleted: true, currentPath: "/dashboard" })).toBe(false);
   });
 
+  it("v0.31.4 : skipped=true (Compléter plus tard) → pas de redirect même profil incomplet", () => {
+    expect(
+      shouldRedirectToOnboarding({ profileCompleted: false, currentPath: "/dashboard", skipped: true }),
+    ).toBe(false);
+  });
+
+  it("v0.31.4 : skipped=true ne force pas si profil complet (no-op)", () => {
+    expect(
+      shouldRedirectToOnboarding({ profileCompleted: true, currentPath: "/dashboard", skipped: true }),
+    ).toBe(false);
+  });
+
   it("détecte seulement les chemins onboarding exacts", () => {
     expect(isOnboardingPath("/onboarding")).toBe(true);
     expect(isOnboardingPath("/onboarding/step")).toBe(true);
