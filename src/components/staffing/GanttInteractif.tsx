@@ -67,6 +67,8 @@ export const GanttInteractif = forwardRef<
   const [error, setError] = useState<string | null>(null);
   /** Impacts pré-vol par stepId — alimente badge + couleur slider + bandeau bonus */
   const [impactByStep, setImpactByStep] = useState<Record<string, SliderImpact[]>>({});
+  const [resolveOpen, setResolveOpen] = useState(false);
+  const updateDateFin = useServerFn(updatePlanDateFinFab);
   const initFromPlan = useEditStore((s) => s.initFromPlan);
   const setStepPersStore = useEditStore((s) => s.setStepPers);
   const setStepShiftStore = useEditStore((s) => s.setStepShift);
