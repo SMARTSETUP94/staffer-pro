@@ -196,7 +196,8 @@ export const REGUL_REGEX: RegExp[] = [
 /* Lignes à exclure totalement (vraiment parasites).                          */
 /* -------------------------------------------------------------------------- */
 export const EXCLUDE_REGEX: RegExp[] = [
-  /\bremise\b/i,
+  /^remise\b/i, // "Remise commerciale" en début seulement (pas "Remise en peinture")
+  /remise commerciale/i,
   /\bbenne\b/i,
   /\bleurre\b/i,
   /prix itw/i,
