@@ -336,8 +336,9 @@ function aggregateObjet(
   }
 
   // Multiplication par la quantité de l'objet (heures = par unité dans l'Excel)
+  // PUIS par la quantité de la Section parente (règle unifiée v0.31.4c).
   for (const k of Object.keys(heures) as FabMetier[]) {
-    heures[k] = +(heures[k] * quantite).toFixed(2);
+    heures[k] = +(heures[k] * quantite * sectionQte).toFixed(2);
   }
 
   if (metierUnknownCount > 0) {
