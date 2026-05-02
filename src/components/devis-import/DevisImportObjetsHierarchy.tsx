@@ -295,7 +295,7 @@ export function DevisImportObjetsHierarchy({ objets, setObjets, integrityChecks 
         quantite: 1,
         heures: emptyHeures(),
         budgetMateriaux: 0,
-        typeFinition: "brut",
+        typeFinition: "aucune",
         flags: computeFlagsFromMetiers(emptyHeures()),
         confidence: "high",
         warnings: [],
