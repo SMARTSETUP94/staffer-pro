@@ -314,15 +314,11 @@ function AffaireDevisPage() {
         {isAdminOrChef && (
           <div className="flex flex-wrap items-center gap-2">
             {affaireMeta?.typologie === "fabrication" && (
-              <Button
-                variant="outline"
-                onClick={() => setPlanningOpen(true)}
-                onMouseEnter={prefetchWizard}
-                onFocus={prefetchWizard}
-                className="rounded-xl border-primary/40 text-primary hover:bg-primary/5"
-              >
-                <Sparkles className="mr-2 h-4 w-4" /> Mettre au planning
-              </Button>
+              <MettreAuPlanningExpressButton
+                affaireId={affaireId}
+                dateMontage={affaireMeta?.date_montage ?? null}
+                onConfigurer={() => setPlanningOpen(true)}
+              />
             )}
             <Button asChild className="rounded-xl bg-primary text-primary-foreground hover:bg-primary/90">
               <Link to="/devis/import" search={{ affaire_id: affaireId }}>
