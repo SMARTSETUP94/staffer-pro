@@ -40,15 +40,21 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import type { FabMetier } from "@/hooks/use-fabrication";
-import {
-  computeFlagsFromMetiers,
-  detectTypeFinition,
-  emptyHeures,
-  type ApplicabilityFlags,
-  type HeuresParMetier,
-  type TypeFinition,
-} from "@/lib/devis-parser/compute-flags";
+import { emptyHeures } from "@/lib/devis-parser/compute-flags";
+import { computeFlagsFromMetiers } from "@/lib/devis-parser/compute-flags";
 import type { IntegrityCheck, PosteCandidat } from "@/lib/devis-parser/types";
+import {
+  computeCounters,
+  effectiveIsMatiere,
+  isPosteAutoMapped,
+  movePosteBetweenObjets,
+  objetTotalHeures,
+  recomputeObjet,
+  round2,
+  type EditableObjet,
+} from "./objets-hierarchy-helpers";
+
+export type { EditableObjet } from "./objets-hierarchy-helpers";
 
 const METIER_OPTIONS: { key: FabMetier; label: string }[] = [
   { key: "be", label: "BE / Suivi" },
