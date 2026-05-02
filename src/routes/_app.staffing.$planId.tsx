@@ -170,6 +170,16 @@ function StaffingPlanPage() {
               <Send className="mr-1 h-3 w-3" /> Publier le plan
             </Button>
           )}
+          {isAdmin && affaireMeta && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="border-destructive/50 text-destructive hover:bg-destructive/10"
+              onClick={() => setDeleteOpen(true)}
+            >
+              <Trash2 className="mr-1 h-3 w-3" /> Supprimer
+            </Button>
+          )}
           {affaireMeta ? (
             <Button asChild variant="outline" size="sm">
               <Link to="/affaires/$affaireId/fabrication" params={{ affaireId: affaireMeta.id }}>
@@ -253,6 +263,16 @@ function StaffingPlanPage() {
         onOpenChange={setHistoryOpen}
         onRestored={() => setRefreshKey((k) => k + 1)}
       />
+      {affaireMeta && (
+        <DeletePlanDialog
+          planId={planId}
+          affaireId={affaireMeta.id}
+          affaireNumero={affaireMeta.numero}
+          affaireNom={affaireMeta.nom}
+          open={deleteOpen}
+          onOpenChange={setDeleteOpen}
+        />
+      )}
     </div>
   );
 }
