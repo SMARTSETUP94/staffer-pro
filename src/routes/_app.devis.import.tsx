@@ -512,6 +512,7 @@ function DevisImportPage() {
     setParsedObjets([]);
     setPostes([]);
     setObjets([]);
+    setIntegrityChecks([]);
     setNomDevis("");
     setNumeroDevis("");
     setDateMontage(undefined);
@@ -726,6 +727,7 @@ function DevisImportPage() {
               setFilename(null);
               setPostes([]);
               setObjets([]);
+              setIntegrityChecks([]);
             }}
           />
         )}
