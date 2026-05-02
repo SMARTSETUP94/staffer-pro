@@ -263,6 +263,16 @@ function StaffingPlanPage() {
         onOpenChange={setHistoryOpen}
         onRestored={() => setRefreshKey((k) => k + 1)}
       />
+      {affaireMeta && (
+        <DeletePlanDialog
+          planId={planId}
+          affaireId={affaireMeta.id}
+          affaireNumero={affaireMeta.numero}
+          affaireNom={affaireMeta.nom}
+          open={deleteOpen}
+          onOpenChange={setDeleteOpen}
+        />
+      )}
     </div>
   );
 }
