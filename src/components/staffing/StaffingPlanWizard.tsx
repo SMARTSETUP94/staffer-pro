@@ -163,8 +163,18 @@ export function StaffingPlanWizard({
   const SHORT_THRESHOLD = 5;
 
   const visibleObjets = useMemo(
-    () => objets.filter((o) => !removed.has(o.id)),
-    [objets, removed],
+    () =>
+      objets
+        .filter((o) => !removed.has(o.id))
+        .filter((o) => !hideShort || o.heures_total >= SHORT_THRESHOLD),
+    [objets, removed, hideShort],
+  );
+  const hiddenShortCount = useMemo(
+    () =>
+      hideShort
+        ? objets.filter((o) => !removed.has(o.id) && o.heures_total < SHORT_THRESHOLD).length
+        : 0,
+    [objets, removed, hideShort],
   );
   const includedCount = useMemo(
     () => visibleObjets.filter((o) => included.has(o.id)).length,
