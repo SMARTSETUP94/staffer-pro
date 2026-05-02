@@ -35,10 +35,12 @@ import {
 interface Props {
   defaultDate?: string; // YYYY-MM-DD
   variant: "mobile" | "desktop";
+  /** v0.32.4 — pré-sélection métier (ex. métier principal de l'employé). */
+  defaultMetierId?: number;
   onSubmit: (input: HorsPlanningInput) => Promise<{ ok: boolean; error?: string }>;
 }
 
-export function AddHorsPlanningDialog({ defaultDate, variant, onSubmit }: Props) {
+export function AddHorsPlanningDialog({ defaultDate, variant, defaultMetierId, onSubmit }: Props) {
   const [open, setOpen] = useState(false);
   const [affaires, setAffaires] = useState<Affaire[]>([]);
   const [loadingAffaires, setLoadingAffaires] = useState(false);
@@ -50,6 +52,9 @@ export function AddHorsPlanningDialog({ defaultDate, variant, onSubmit }: Props)
   const [heures, setHeures] = useState<string>("8");
   const [commentaire, setCommentaire] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
+  // v0.32.4 — N'afficher les erreurs inline qu'après une 1re tentative de soumission.
+  const [showErrors, setShowErrors] = useState(false);
+  const todayISO = useMemo(() => format(new Date(), "yyyy-MM-dd"), []);
 
   // Charger affaires actives à l'ouverture
   useEffect(() => {
@@ -72,12 +77,13 @@ export function AddHorsPlanningDialog({ defaultDate, variant, onSubmit }: Props)
   useEffect(() => {
     if (open) {
       setAffaireId("");
-      setMetierId("");
+      setMetierId(defaultMetierId ? String(defaultMetierId) : "");
       setDate(defaultDate ?? format(new Date(), "yyyy-MM-dd"));
       setHeures("8");
       setCommentaire("");
+      setShowErrors(false);
     }
-  }, [open, defaultDate]);
+  }, [open, defaultDate, defaultMetierId]);
 
   const input: Partial<HorsPlanningInput> = useMemo(
     () => ({
