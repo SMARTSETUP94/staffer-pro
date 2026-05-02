@@ -139,8 +139,8 @@ describe("v0.31.4 — D-3204 : 3 niveaux + descriptions + qté > 1", () => {
       expect(typeof c.heuresCalculees).toBe("number");
     }
   });
+});
 
-describe("v0.31.4 — D-2150 : RÈGLE QUANTITE × heures unitaires", () => {
   const r = parse("D-2150");
 
   it("4 objets dont 3 avec qté > 1", () => {
