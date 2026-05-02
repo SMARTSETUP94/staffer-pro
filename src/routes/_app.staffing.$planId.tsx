@@ -2,7 +2,7 @@
 // v0.35.x BATCH — Toolbar batch edition (sliders + shifts) + autosave 2 min idle.
 import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
-import { ArrowLeft, History, Send, Zap, ListChecks } from "lucide-react";
+import { ArrowLeft, History, Send, Zap, ListChecks, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -17,6 +17,7 @@ import {
 } from "@/components/staffing/EquipeAffaireSection";
 import { PublishPlanDialog } from "@/components/staffing/PublishPlanDialog";
 import { PlanHistoryDrawer } from "@/components/staffing/PlanHistoryDrawer";
+import { DeletePlanDialog } from "@/components/staffing/DeletePlanDialog";
 import { StaffingEditToolbar } from "@/components/staffing/StaffingEditToolbar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -28,13 +29,14 @@ export const Route = createFileRoute("/_app/staffing/$planId")({
 
 function StaffingPlanPage() {
   const { planId } = Route.useParams();
-  const { isAdminOrChef, rolesLoaded } = useAuth();
+  const { isAdminOrChef, rolesLoaded, isAdmin } = useAuth();
   const [planData, setPlanData] = useState<PlanData | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const ganttRef = useRef<GanttInteractifHandle>(null);
   const [equipeRefresh, setEquipeRefresh] = useState(0);
   const [publishOpen, setPublishOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [viewMode, setViewMode] = useStaffingViewMode();
   const [planMeta, setPlanMeta] = useState<{
     status: string;
