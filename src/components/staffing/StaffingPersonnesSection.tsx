@@ -163,24 +163,32 @@ export function StaffingPersonnesSection({ planId, steps, onAssignmentsChanged, 
             const stepAssigns = assignments.filter((a) => a.step_id === step.id);
             return (
               <AccordionItem key={step.id} value={step.id}>
-                <AccordionTrigger className="hover:no-underline">
-                  <div className="flex flex-1 items-center gap-3 pr-4">
-                    <span
-                      className="inline-block h-3 w-3 rounded-sm"
-                      style={{ backgroundColor: METIER_COLOR[k] }}
-                    />
-                    <span className="font-bold text-sm">{METIER_LABEL[k]}</span>
-                    <span className="text-xs text-muted-foreground truncate max-w-[260px]">
-                      {objLabel}
-                    </span>
-                    <span className="ml-auto flex items-center gap-2 text-xs">
-                      <span className="font-mono">{step.pers}p × {step.span_days}j</span>
-                      <Badge variant="secondary" className="text-[10px]">
-                        {stepAssigns.length}/{step.pers * step.span_days} aff.
-                      </Badge>
-                    </span>
-                  </div>
-                </AccordionTrigger>
+                <div className="flex items-center gap-1">
+                  <AccordionTrigger className="flex-1 hover:no-underline">
+                    <div className="flex flex-1 items-center gap-3 pr-4">
+                      <span
+                        className="inline-block h-3 w-3 rounded-sm"
+                        style={{ backgroundColor: METIER_COLOR[k] }}
+                      />
+                      <span className="font-bold text-sm">{METIER_LABEL[k]}</span>
+                      <span className="text-xs text-muted-foreground truncate max-w-[260px]">
+                        {objLabel}
+                      </span>
+                      <span className="ml-auto flex items-center gap-2 text-xs">
+                        <span className="font-mono">{step.pers}p × {step.span_days}j</span>
+                        <Badge variant="secondary" className="text-[10px]">
+                          {stepAssigns.length}/{step.pers * step.span_days} aff.
+                        </Badge>
+                      </span>
+                    </div>
+                  </AccordionTrigger>
+                  <AutoStaffButton
+                    planId={planId}
+                    stepId={step.id}
+                    label="Auto-staffer l'étape"
+                    onDone={handleChanged}
+                  />
+                </div>
                 <AccordionContent>
                   <div className="space-y-3 pl-1">
                     {days.map((d) => (
