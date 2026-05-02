@@ -1,8 +1,10 @@
-// v0.35.2 — Page test Gantt staffing
+// v0.35.3 — Page Gantt staffing + Section staffing personnes (Sprint 3)
+import { useState } from "react";
 import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
-import { GanttInteractif } from "@/components/staffing/GanttInteractif";
+import { GanttInteractif, type PlanData } from "@/components/staffing/GanttInteractif";
+import { StaffingPersonnesSection } from "@/components/staffing/StaffingPersonnesSection";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_app/staffing/$planId")({
@@ -12,8 +14,17 @@ export const Route = createFileRoute("/_app/staffing/$planId")({
 function StaffingPlanPage() {
   const { planId } = Route.useParams();
   const { isAdminOrChef, rolesLoaded } = useAuth();
+  const [planData, setPlanData] = useState<PlanData | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
   if (!rolesLoaded) return null;
   if (!isAdminOrChef) return <Navigate to="/dashboard" />;
+
+  const objetsLabel: Record<string, string> = {};
+  if (planData) {
+    for (const o of planData.objets) {
+      objetsLabel[o.objet_id] = `${o.reference} — ${o.nom}`;
+    }
+  }
 
   return (
     <div className="space-y-4 px-2 py-4 md:px-6">
@@ -29,7 +40,19 @@ function StaffingPlanPage() {
           </Link>
         </Button>
       </div>
-      <GanttInteractif planId={planId} />
+      <GanttInteractif
+        key={refreshKey}
+        planId={planId}
+        onDataLoaded={setPlanData}
+      />
+      {planData && (
+        <StaffingPersonnesSection
+          planId={planId}
+          steps={planData.result.steps}
+          objetsLabel={objetsLabel}
+          onAssignmentsChanged={() => setRefreshKey((k) => k + 1)}
+        />
+      )}
     </div>
   );
 }
