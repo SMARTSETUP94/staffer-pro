@@ -35,6 +35,7 @@ import {
 } from "@/server/staffing-equipe.functions";
 import { METIER_KEY_BY_ID } from "@/lib/staffing/types";
 import { METIER_COLOR, METIER_LABEL } from "./gantt-helpers";
+import { TeamPresetsBar } from "./TeamPresetsBar";
 
 interface Candidate {
   id: string;
