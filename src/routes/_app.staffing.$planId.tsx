@@ -19,6 +19,7 @@ import { PublishPlanDialog } from "@/components/staffing/PublishPlanDialog";
 import { PlanHistoryDrawer } from "@/components/staffing/PlanHistoryDrawer";
 import { DeletePlanDialog } from "@/components/staffing/DeletePlanDialog";
 import { StaffingEditToolbar } from "@/components/staffing/StaffingEditToolbar";
+import { AutoStaffPlanButton } from "@/components/staffing/AutoStaffPlanButton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PageBreadcrumbs } from "@/components/PageBreadcrumbs";
@@ -165,6 +166,16 @@ function StaffingPlanPage() {
           <Button variant="outline" size="sm" onClick={() => setHistoryOpen(true)}>
             <History className="mr-1 h-3 w-3" /> Historique
           </Button>
+          {isDraft && planData && (
+            <AutoStaffPlanButton
+              planId={planId}
+              stepsCount={planData.result.steps.filter((s) => s.start_date !== "TBD").length}
+              onCompleted={() => {
+                setRefreshKey((k) => k + 1);
+                setEquipeRefresh((k) => k + 1);
+              }}
+            />
+          )}
           {isDraft && planData && (
             <Button size="sm" onClick={() => setPublishOpen(true)}>
               <Send className="mr-1 h-3 w-3" /> Publier le plan
