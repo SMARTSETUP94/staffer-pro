@@ -4,7 +4,7 @@
 // - Autosave 2 min idle (auto-flush silencieux)
 // - beforeunload + flush au unmount
 // - Dialog conflit (recharger / forcer)
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Save, RotateCcw, Check, Loader2, AlertTriangle, Undo2 } from "lucide-react";
 import { toast } from "sonner";
