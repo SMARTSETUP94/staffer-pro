@@ -75,22 +75,58 @@ export const GanttInteractif = forwardRef<
     setLoading(true);
     setError(null);
     try {
-      const r = (await calculate({ data: { planId } })) as PlanData;
+      // Charger updated_at du plan en parallèle pour init store
+      const [r, planMeta] = await Promise.all([
+        calculate({ data: { planId } }) as Promise<PlanData>,
+        supabase
+          .from("staffing_plan")
+          .select("updated_at")
+          .eq("id", planId)
+          .single(),
+      ]);
       setData(r);
       onDataLoaded?.(r);
-      // Reset impacts pré-vol — l'algo serveur a recalculé, les alertes officielles
-      // sont dans r.result.alerts.
+      if (planMeta.data?.updated_at) {
+        initFromPlan(planId, planMeta.data.updated_at as string);
+      }
       setImpactByStep({});
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erreur inconnue");
     } finally {
       setLoading(false);
     }
-  }, [calculate, planId, onDataLoaded]);
+  }, [calculate, planId, onDataLoaded, initFromPlan]);
 
   useEffect(() => {
     void reload();
   }, [reload]);
+
+  useImperativeHandle(ref, () => ({ reload }), [reload]);
+
+  /** Steps mergés : applique les edits locaux par-dessus les steps serveur */
+  const mergedSteps = useMemo(() => {
+    if (!data) return [];
+    return data.result.steps.map((s) => {
+      const e = edits[s.id];
+      const baseShift = data.step_overrides[s.id]?.manual_shift ?? 0;
+      return applyEdits(s, e, baseShift);
+    });
+  }, [data, edits]);
+
+  /** daily_load recalculé à partir des steps mergés (pour stats + heatmap + simulate) */
+  const mergedDailyLoad = useMemo(() => {
+    const out: Record<string, number> = {};
+    for (const s of mergedSteps) {
+      if (s.start_date === "TBD") continue;
+      for (let i = 0; i < s.span_days; i++) {
+        const d = new Date(s.start_date + "T00:00:00Z");
+        d.setUTCDate(d.getUTCDate() + i);
+        const iso = d.toISOString().slice(0, 10);
+        out[iso] = (out[iso] ?? 0) + s.pers;
+      }
+    }
+    return out;
+  }, [mergedSteps]);
 
   const days = useMemo(() => {
     if (!data) return [];
