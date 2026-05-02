@@ -154,6 +154,18 @@ export function EquipeAffaireSection({ planId, onAssigned }: Props) {
         </Badge>
       </div>
 
+      {/* v0.35.10 #7 — Templates équipe (sauvegarde / chargement) */}
+      <TeamPresetsBar
+        currentSelection={selected}
+        onLoad={(sel) => setSelected(sel)}
+        availableEmployeIds={
+          new Set(
+            Object.values(candidatsByMetier)
+              .flatMap((cands) => cands.map((c) => c.id)),
+          )
+        }
+      />
+
       <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
         {metiers.map((m) => {
           const k = METIER_KEY_BY_ID[m.metier_id] ?? "Manut";
