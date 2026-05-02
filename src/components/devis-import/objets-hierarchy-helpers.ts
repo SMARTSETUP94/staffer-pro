@@ -58,13 +58,14 @@ export function objetTotalHeures(o: EditableObjet): number {
 export function recomputeObjet(o: EditableObjet): EditableObjet {
   const heures = emptyHeures();
   let budget = 0;
+  const sectionQte = o.sectionQuantite > 0 ? o.sectionQuantite : 1;
   for (const p of o.postes) {
     if (p.isRegul) {
-      if (p.totalHt && p.totalHt > 0) budget += p.totalHt;
+      if (p.totalHt && p.totalHt > 0) budget += p.totalHt * sectionQte;
       continue;
     }
     if (effectiveIsMatiere(p)) {
-      if (p.totalHt && p.totalHt > 0) budget += p.totalHt * o.quantite;
+      if (p.totalHt && p.totalHt > 0) budget += p.totalHt * o.quantite * sectionQte;
       continue;
     }
     if (p.metier && p.heuresUnitaires > 0) {
@@ -72,7 +73,7 @@ export function recomputeObjet(o: EditableObjet): EditableObjet {
     }
   }
   for (const k of Object.keys(heures) as FabMetier[]) {
-    heures[k] = +(heures[k] * o.quantite).toFixed(2);
+    heures[k] = +(heures[k] * o.quantite * sectionQte).toFixed(2);
   }
   return {
     ...o,
