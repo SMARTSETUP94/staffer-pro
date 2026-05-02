@@ -564,6 +564,7 @@ export function PlanningGrid({
                       const isWeekend = d.getDay() === 0 || d.getDay() === 6;
                       const absence = findAbsence(absences, emp.id, dayStr, "JOURNEE");
                       const conflict = conflictsByCell.get(key);
+                      const overrun = overrunByCell.get(key);
                       const isSelected = selected.has(key);
 
                       // Cellule absence : grisée et NON cliquable pour création
