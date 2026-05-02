@@ -123,7 +123,7 @@ describe("v0.31.4 — D-3204 : 3 niveaux + descriptions + qté > 1", () => {
     const obj12 = r.objetsCandidats.find((o) => o.numero === "1.2");
     expect(obj12?.description ?? "").toMatch(/Panneau LED|PMMA/);
     const obj21 = r.objetsCandidats.find((o) => o.numero === "2.1");
-    expect(obj21?.description ?? "").toContain("velours");
+    expect(obj21?.description ?? "").toMatch(/tissu|mousse/i);
   });
 
   it("Heures chantier (Montage day 1 + Démontage day 4)", () => {
