@@ -252,7 +252,7 @@ export const METIER_KEYWORDS: Record<FabMetier, string[]> = {
   metal: ["metallerie", "metal", "serrurerie", "soudure", "ferronnerie"],
   peinture: ["peinture", "vernis", "laque"],
   tapisserie: ["tissu", "tapisserie", "rembourrage", "garnissage"],
-  manutention: ["logistique", "logisitique", "conditionnement", "emballage", "premontage", "manutention"],
+  manutention: ["logistique", "logisitique", "conditionnement", "emballage", "premontage", "manutention", "coursier", "livreur", "chauffeur", "navette"],
 };
 
 export const CHANTIER_KEYWORDS = ["montage", "pose", "installation", "permanence", "demontage", "depose", "transport"];
