@@ -145,6 +145,7 @@ export const METIER_REGEX: Record<FabMetier, RegExp[]> = {
     /pr[ée]montage/i,
     /logisitique/i, // typo Progbat
     /\blogistique\b/i,
+    /^stockage$/i,
     /conditionnement/i,
     /emballage/i,
     /\bmanutention\b/i,
