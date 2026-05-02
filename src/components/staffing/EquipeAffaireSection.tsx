@@ -70,6 +70,8 @@ export function EquipeAffaireSection({ planId, onAssigned }: Props) {
   const [selected, setSelected] = useState<Record<number, string[]>>({});
   const [loading, setLoading] = useState(true);
   const [busyMetier, setBusyMetier] = useState<number | null>(null);
+  // v0.35.x audit UX #5 — confirmation pré-affectation
+  const [confirmMetier, setConfirmMetier] = useState<number | null>(null);
 
   const reload = useCallback(async () => {
     setLoading(true);
@@ -112,6 +114,7 @@ export function EquipeAffaireSection({ planId, onAssigned }: Props) {
         });
       } finally {
         setBusyMetier(null);
+        setConfirmMetier(null);
       }
     },
     [assign, planId, selected, onAssigned],
