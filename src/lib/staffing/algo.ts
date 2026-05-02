@@ -243,7 +243,8 @@ export function calculatePlan(input: PlanInput): PlanResult {
     const numLatestEnd = earliestBoisMetalStart
       ? addDays(earliestBoisMetalStart, -1 - lagNumBois)
       : addDays(dateLivraison, -1);
-    const numSlot = findCNCSlotBackward(numLatestEnd, numStep.span_days, cncReserved);
+    const numEarliestStart = addDays(numLatestEnd, -90); // fenêtre raisonnable cross-affaires
+    const numSlot = findCNCSlotBackward(numLatestEnd, numStep.span_days, cncReserved, numEarliestStart, 90);
     if (numSlot === null) {
       alerts.push({
         code: "NUM_CONFLIT_INSOLUBLE",
