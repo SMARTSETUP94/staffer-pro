@@ -360,7 +360,7 @@ export const FIXTURE_D2128: FixtureMatrix = [
   ["4.1", "Stockage atelier", 1, "u", null, null, null],
   ["4.1.1", "Stockage", 1, "h", 35, 175, 5],
   // Section 5 : groupe qte=3 — poste affiche 10h → total = 30h (règle qte Section)
-  ["5", "GROUPE PERMANENCE", 3, "", null, null, 30],
+  ["5", "ANIMATION SUR SITE", 3, "", null, null, 30],
   ["5.1", "Logistique sur site", 1, "u", null, null, null],
   ["5.1.1", "Logistique interne", 1, "h", 35, 350, 10],
   // Lots chantier : Montage + Démontage Pecqueuse (nouveau pattern Démontage)
