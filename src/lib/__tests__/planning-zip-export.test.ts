@@ -148,6 +148,9 @@ describe("buildPlanningWorkbookRange — onglets", () => {
     expect(allCells.some((v) => v.includes("AFF001"))).toBe(true);
     // Vérifie qu'au moins un employé y figure
     expect(allCells.some((v) => v.includes("Jean Dupont"))).toBe(true);
+  });
+
+  it("ajoute l'onglet Flotte (véhicules) au xlsx multi-vues", () => {
     const built = buildPlanningWorkbookRange({
       ...baseOpts,
       weekStarts: [weekStart],
