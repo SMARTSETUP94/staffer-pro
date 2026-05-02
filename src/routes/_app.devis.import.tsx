@@ -128,6 +128,11 @@ function DevisImportPage() {
   const [integrityChecks, setIntegrityChecks] = useState<
     import("@/lib/devis-parser/types").IntegrityCheck[]
   >([]);
+  // v0.31.6 — Trace des exclusions parser ("Pourquoi c'est exclu").
+  const [exclusions, setExclusions] = useState<
+    import("@/lib/devis-parser/types").ExclusionEntry[]
+  >([]);
+  const [sourceFilename, setSourceFilename] = useState<string | null>(null);
 
   // Section 4 (heures chantier)
   const [importMontage, setImportMontage] = useState(false);
