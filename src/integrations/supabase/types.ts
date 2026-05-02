@@ -330,6 +330,7 @@ export type Database = {
           motif_refus: string | null
           notes: string | null
           refusee_le: string | null
+          staffing_plan_id: string | null
           statut_confirmation: Database["public"]["Enums"]["confirmation_status"]
           type_operation: string | null
           updated_at: string
@@ -352,6 +353,7 @@ export type Database = {
           motif_refus?: string | null
           notes?: string | null
           refusee_le?: string | null
+          staffing_plan_id?: string | null
           statut_confirmation?: Database["public"]["Enums"]["confirmation_status"]
           type_operation?: string | null
           updated_at?: string
@@ -374,6 +376,7 @@ export type Database = {
           motif_refus?: string | null
           notes?: string | null
           refusee_le?: string | null
+          staffing_plan_id?: string | null
           statut_confirmation?: Database["public"]["Enums"]["confirmation_status"]
           type_operation?: string | null
           updated_at?: string
@@ -434,6 +437,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_devis_consommation"
             referencedColumns: ["metier_id"]
+          },
+          {
+            foreignKeyName: "assignations_staffing_plan_id_fkey"
+            columns: ["staffing_plan_id"]
+            isOneToOne: false
+            referencedRelation: "staffing_plan"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -2899,6 +2909,7 @@ export type Database = {
         | "fabrication_pret_livraison"
         | "fabrication_assignation"
         | "affaire_signee"
+        | "staffing_publie"
       opportunite_statut: "a_faire" | "envoye" | "gagne" | "perdu" | "termine"
       opportunite_taille:
         | "tres_petit"
@@ -3113,6 +3124,7 @@ export const Constants = {
         "fabrication_pret_livraison",
         "fabrication_assignation",
         "affaire_signee",
+        "staffing_publie",
       ],
       opportunite_statut: ["a_faire", "envoye", "gagne", "perdu", "termine"],
       opportunite_taille: ["tres_petit", "petit", "moyen", "gros", "tres_gros"],
