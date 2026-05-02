@@ -511,8 +511,13 @@ function aggregateObjet(
 /*    → objet implicite portant le libellé de la Section                      */
 /* -------------------------------------------------------------------------- */
 
-function buildObjetsForSection(section: ParsedRow, allRows: ParsedRow[]): ObjetCandidat[] {
+function buildObjetsForSection(
+  section: ParsedRow,
+  allRows: ParsedRow[],
+  exclusions: ExclusionEntry[],
+): ObjetCandidat[] {
   const subTree = descendantsOf(section, allRows);
+  const sectionNumeroForExcl = section.hierarchique || section.numero;
 
   // Détection de la profondeur réelle :
   //  - Profondeur 3 (Progbat moderne) : Section N → Objets N.M → Postes N.M.K
@@ -529,7 +534,16 @@ function buildObjetsForSection(section: ParsedRow, allRows: ParsedRow[]): ObjetC
     // (cas prod 2141 : « Remise en peinture du bar existant »).
     const niveau2 = subTree.filter((r) => r.niveau === 2 && !r.isComment);
     for (const obj of niveau2) {
-      if ((obj.isMontage || obj.isDemontage) && !obj.metier) continue;
+      if ((obj.isMontage || obj.isDemontage) && !obj.metier) {
+        pushExclusion(
+          exclusions,
+          obj,
+          sectionNumeroForExcl,
+          "lot_chantier_in_objet",
+          "Objet N.M ignoré — lot chantier (Montage/Démontage) sans métier atelier.",
+        );
+        continue;
+      }
       if (!obj.designation) continue;
 
       const directChildren = descendantsOf(obj, allRows);
@@ -539,10 +553,21 @@ function buildObjetsForSection(section: ParsedRow, allRows: ParsedRow[]): ObjetC
       const isLeafAtelier =
         directChildren.length === 0 && !!obj.metier && (obj.tempsPrevu ?? 0) > 0;
       const isLeafMatiere = directChildren.length === 0 && obj.isMatiere;
-      if (obj.isExclude && !hasAnyAtelier && !isLeafAtelier && !isLeafMatiere) continue;
+      if (obj.isExclude && !hasAnyAtelier && !isLeafAtelier && !isLeafMatiere) {
+        const rule = findExcludeRule(obj.designation);
+        pushExclusion(
+          exclusions,
+          obj,
+          sectionNumeroForExcl,
+          "niveau2_excluded_no_children",
+          `Objet N.M exclu par règle (« ${rule?.source ?? "?"} ») et sans enfant atelier/matière à récupérer.`,
+          rule?.source ?? null,
+        );
+        continue;
+      }
 
       if (hasAnyAtelier || isLeafAtelier || isLeafMatiere) {
-        objets.push(aggregateObjet(obj, allRows, section));
+        objets.push(aggregateObjet(obj, allRows, section, exclusions));
       }
     }
   }
@@ -554,7 +579,7 @@ function buildObjetsForSection(section: ParsedRow, allRows: ParsedRow[]): ObjetC
     );
     const hasMatiere = subTree.some((c) => !c.isExclude && c.isMatiere);
     if (hasAtelierAnywhere || hasMatiere) {
-      objets.push(aggregateObjet(section, allRows, section));
+      objets.push(aggregateObjet(section, allRows, section, exclusions));
     }
   }
 
