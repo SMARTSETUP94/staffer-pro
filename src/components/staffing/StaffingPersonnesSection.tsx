@@ -387,6 +387,7 @@ function PersonneSuggestionCard({
       {showSlider ? (
         <div className="flex items-center gap-2">
           <Slider
+            key={`assign-pct-${suggestion.employe.id}`}
             min={10}
             max={100}
             step={10}
