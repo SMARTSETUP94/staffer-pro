@@ -25,6 +25,7 @@ import {
 } from "@/lib/onboarding-schemas";
 import { useServerFn } from "@tanstack/react-start";
 import { uploadAvatarServer } from "@/server/avatars.functions";
+import { markOnboardingSkipped } from "@/lib/auth-redirect-helpers";
 
 export const Route = createFileRoute("/onboarding")({
   head: () => ({
