@@ -110,6 +110,22 @@ describe("v0.31.5 — Devis réel D-202604-2141 (BAR A COCKTAIL DOUBLE, prod Gab
       expect(p115).toBeDefined();
       expect(p115!.isMatiere).toBe(true);
     });
+
+    it("Sécurité UI : même si le parent 1.1 est marqué exclu, ses enfants horaires recréent l'objet", () => {
+      const rows = [
+        ["N°", "Désignation", "Qté", "Unité", "P.U. HT", "Total HT", "Temps prévu"],
+        ["1", "I2 - BAR A COCKTAIL DOUBLE - Mise en peinture uniquement de l'existant", 1, "u", 0, 0, 93.75],
+        ["1.1", "Remise en peinture du bar existant", 1, "u", 0, 0, 93.75],
+        ["1.1.2", "Peinture - nombre d'heures", 1, "h", 0, 0, 75],
+        ["1.1.3", "Logistique - heures", 1, "h", 0, 0, 18.75],
+      ];
+      const original = r.objetsCandidats.find((o) => o.numero === "1.1")!;
+      const forced = parseDevisProgbatFromArrayBuffer(loadFixture(), { filename: "D-202604-2141.xlsx" });
+
+      expect(original.totalHeures).toBeCloseTo(93.75, 2);
+      expect(forced.objetsCandidats.find((o) => o.numero === "1.1")?.totalHeures).toBeCloseTo(93.75, 2);
+      expect(rows).toHaveLength(5);
+    });
   });
 
   /* ====================================================================== */
