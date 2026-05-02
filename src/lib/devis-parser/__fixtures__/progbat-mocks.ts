@@ -329,6 +329,46 @@ export const FIXTURE_D1832: FixtureMatrix = [
 ];
 
 /* ============================================================ */
+/* D-2128 — 4e devis calibrage Gabin (585h, 100% mapping cible)  */
+/*  Section 5 qte=3 → poste 5.1 affiche 10h                       */
+/*  → total réel = 10 × 3 = 30h (règle quantité Section)         */
+/*  Inclut nouveaux patterns : Plans techniques (BE),             */
+/*  Démontage Pecqueuse (Démontage), Stockage (Manutention),      */
+/*  Budget matériaux avec heures (bascule Manutention),           */
+/*  Liste des principales fournitures en logistique idem.         */
+/* ============================================================ */
+export const FIXTURE_D2128: FixtureMatrix = [
+  ...meta("D-2128", "Stand modulaire + permanence"),
+  // Section 1 : étude technique BE = 12 + 6 = 18h
+  ["1", "ETUDES", null, "", null, null, 18],
+  ["1.1", "Étude générale", 1, "u", null, null, null],
+  ["1.1.1", "Tarif du bureau d'étude", 1, "h", 60, 720, 12],
+  ["1.1.2", "Plans techniques heures", 1, "h", 60, 360, 6],
+  // Section 2 : fabrication = 40 + 30 + 20 = 90h
+  ["2", "FABRICATION", null, "", null, null, 90],
+  ["2.1", "Bar principal 4m", 1, "u", null, null, null],
+  ["2.1.1", "Construction heures", 1, "h", 50, 2000, 40],
+  ["2.1.2", "Métallerie heures", 1, "h", 50, 1500, 30],
+  ["2.1.3", "Peinture nombre d'heures", 1, "h", 50, 1000, 20],
+  // Section 3 : logistique avec bascule conditionnelle = 8 + 4 = 12h
+  ["3", "LOGISTIQUE", null, "", null, null, 12],
+  ["3.1", "Logistique atelier", 1, "u", null, null, null],
+  ["3.1.1", "Budget matériaux", 1, "h", 35, 280, 8], // bascule → manutention 8h
+  ["3.1.2", "Liste des principales fournitures en logistique", 1, "h", 35, 140, 4], // bascule → manutention 4h
+  // Section 4 : stockage = 5h (nouveau pattern)
+  ["4", "STOCKAGE", null, "", null, null, 5],
+  ["4.1", "Stockage atelier", 1, "u", null, null, null],
+  ["4.1.1", "Stockage", 1, "h", 35, 175, 5],
+  // Section 5 : groupe qte=3 — poste affiche 10h → total = 30h (règle qte Section)
+  ["5", "ANIMATION SUR SITE", 3, "", null, null, 30],
+  ["5.1", "Logistique sur site", 1, "u", null, null, null],
+  ["5.1.1", "Logistique interne", 1, "h", 35, 350, 10],
+  // Lots chantier : Montage + Démontage Pecqueuse (nouveau pattern Démontage)
+  ["6", "Montage day 1", 1, "ff", null, 20000, 400],
+  ["7", "Démontage Pecqueuse", 1, "ff", null, 1500, 30],
+];
+
+/* ============================================================ */
 /* Index                                                         */
 /* ============================================================ */
 export const ALL_FIXTURES = {
@@ -348,4 +388,5 @@ export const ALL_FIXTURES = {
   "D-3204": FIXTURE_D3204,
   "D-2150": FIXTURE_D2150,
   "D-1832": FIXTURE_D1832,
+  "D-2128": FIXTURE_D2128,
 } as const;

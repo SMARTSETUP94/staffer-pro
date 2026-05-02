@@ -20,6 +20,7 @@ import {
   GripVertical,
   Info,
   Plus,
+  Trash2,
   TriangleAlert,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -50,6 +51,9 @@ import {
   movePosteBetweenObjets,
   objetTotalHeures,
   recomputeObjet,
+  removeObjet,
+  removePosteFromObjet,
+  renamePoste,
   round2,
   type EditableObjet,
 } from "./objets-hierarchy-helpers";
@@ -211,6 +215,14 @@ export function DevisImportObjetsHierarchy({ objets, setObjets, integrityChecks 
       });
     });
   };
+
+  const deletePoste = (objetIdx: number, posteId: string) =>
+    setObjets((prev) => removePosteFromObjet(prev, objetIdx, posteId));
+
+  const deleteObjet = (objetIdx: number) => setObjets((prev) => removeObjet(prev, objetIdx));
+
+  const renamePosteDesignation = (objetIdx: number, posteId: string, designation: string) =>
+    setObjets((prev) => renamePoste(prev, objetIdx, posteId, designation));
 
   const addManualObjet = () => {
     const numero = `M${Date.now().toString().slice(-5)}`;
@@ -474,6 +486,28 @@ export function DevisImportObjetsHierarchy({ objets, setObjets, integrityChecks 
                                   </TooltipContent>
                                 </Tooltip>
                               )}
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                                    onClick={() => {
+                                      if (
+                                        window.confirm(
+                                          `Supprimer l'objet « ${o.nom || o.numero} » et ses ${o.postes.length} poste(s) ?`,
+                                        )
+                                      ) {
+                                        deleteObjet(objetIdx);
+                                      }
+                                    }}
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent side="left">Supprimer l'objet</TooltipContent>
+                              </Tooltip>
                             </div>
 
                             {/* Section repliable « Détails » */}
@@ -524,9 +558,17 @@ export function DevisImportObjetsHierarchy({ objets, setObjets, integrityChecks 
                                           <span className="font-mono text-[10px] text-muted-foreground">
                                             {p.numero || `L${p.rowIndex}`}
                                           </span>
-                                          <span className="flex-1 truncate text-xs">
-                                            {p.designation.slice(0, 80)}
-                                          </span>
+                                          <Input
+                                            value={p.designation}
+                                            onChange={(e) =>
+                                              renamePosteDesignation(
+                                                objetIdx,
+                                                p.id,
+                                                e.target.value,
+                                              )
+                                            }
+                                            className="h-7 min-w-[180px] flex-1 text-xs"
+                                          />
                                           {/* Toggle Matériel/Heures */}
                                           <button
                                             type="button"
@@ -571,6 +613,16 @@ export function DevisImportObjetsHierarchy({ objets, setObjets, integrityChecks 
                                               ? `${(p.totalHt ?? 0).toLocaleString("fr-FR")} €`
                                               : `${round2(p.heuresUnitaires * o.quantite)} h`}
                                           </span>
+                                          <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                                            onClick={() => deletePoste(objetIdx, p.id)}
+                                            title="Supprimer ce poste"
+                                          >
+                                            <Trash2 className="h-3 w-3" />
+                                          </Button>
                                         </li>
                                       );
                                     })}
