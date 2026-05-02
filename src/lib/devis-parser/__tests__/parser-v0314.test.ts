@@ -266,6 +266,51 @@ describe("v0.31.4 — Régul : 0h, HT conservé, flag manuel si Temps > 0", () =
   });
 });
 
+describe("v0.31.4c — D-2128 : 4e fixture, 100% mapping cible (calibrage final)", () => {
+  const r = parse("D-2128");
+
+  it("Parse sans erreur", () => {
+    expect(r.errors).toEqual([]);
+  });
+
+  it("Plans techniques → BE (nouveau pattern)", () => {
+    const obj = r.objetsCandidats.find((o) => o.numero === "1.1")!;
+    expect(obj.heures.be).toBe(18); // 12 + 6
+  });
+
+  it("Budget matériaux + Temps>0 bascule en Manutention (matière conditionnelle)", () => {
+    const obj = r.objetsCandidats.find((o) => o.numero === "3.1")!;
+    expect(obj.heures.manutention).toBe(12); // 8 + 4
+    expect(obj.budgetMateriaux).toBe(0); // ne doit PAS être compté en matière
+  });
+
+  it("Stockage → Manutention (nouveau pattern)", () => {
+    const obj = r.objetsCandidats.find((o) => o.numero === "4.1")!;
+    expect(obj.heures.manutention).toBe(5);
+  });
+
+  it("Section 5 Permanence qte=3 : 10h × 3 = 30h manutention (règle qte Section)", () => {
+    const obj = r.objetsCandidats.find((o) => o.numero === "5.1")!;
+    expect(obj.heures.manutention).toBe(30);
+  });
+
+  it("Démontage Pecqueuse → heures démontage chantier (nouveau pattern)", () => {
+    expect(r.heuresChantier.demontage).toBe(30);
+  });
+
+  it("100% mapping auto : aucun poste métier ambigu", () => {
+    const orphans: string[] = [];
+    for (const o of r.objetsCandidats) {
+      for (const p of o.postes) {
+        const isMat = p.isMatiereOverride ?? p.isMatiere;
+        const mapped = p.isRegul || isMat || (p.metier != null && p.heuresUnitaires > 0);
+        if (!mapped) orphans.push(`${o.numero}/${p.numero || p.rowIndex} : ${p.designation}`);
+      }
+    }
+    expect(orphans).toEqual([]);
+  });
+});
+
 describe("v0.31.4 — backward compat : aucune régression sur 13 fixtures historiques", () => {
   it.each([
     ["D-2153", 4] as const,
