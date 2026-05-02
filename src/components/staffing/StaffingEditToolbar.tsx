@@ -42,6 +42,8 @@ export function StaffingEditToolbar({
   const markFlushing = useEditStore((s) => s.markFlushing);
   const markSaved = useEditStore((s) => s.markSaved);
   const resetAll = useEditStore((s) => s.resetAll);
+  const undo = useEditStore((s) => s.undo);
+  const historyDepth = useEditStore((s) => s.history.length);
 
   const [confirmReset, setConfirmReset] = useState(false);
   const [conflictOpen, setConflictOpen] = useState(false);
