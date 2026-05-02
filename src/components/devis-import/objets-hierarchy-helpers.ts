@@ -18,6 +18,8 @@ export interface EditableObjet {
   numero: string;
   sectionNumero: string;
   sectionNom: string;
+  /** v0.31.4c — Quantité de la Section parente (multiplicateur final). */
+  sectionQuantite: number;
   nom: string;
   description: string | null;
   quantite: number;
