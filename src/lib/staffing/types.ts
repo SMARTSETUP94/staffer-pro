@@ -88,6 +88,15 @@ export interface PlanAlert {
   step_id?: string;
   objet_id?: string;
   date?: string;
+  /** Détail dépannage (NUM_CONFLIT_INSOLUBLE) : plage recherchée + ressource */
+  detail?: {
+    objet_reference?: string;
+    objet_nom?: string;
+    machine_id?: string;
+    span_days?: number;
+    window_start?: string;
+    window_end?: string;
+  };
 }
 
 export interface PlanResult {
