@@ -17,9 +17,47 @@ export interface DevisMetadata {
   nbLignes: number;
 }
 
+/**
+ * v0.31.4b — Poste individuel (ligne N.M.K) exposé pour la modale UI :
+ * permet l'override de métier, le toggle Matériel/Heures et le drag&drop
+ * d'un poste vers un autre objet sans repasser par le parser.
+ */
+export interface PosteCandidat {
+  /** Identifiant stable (numéro hiérarchique, fallback sur rowIndex). */
+  id: string;
+  /** Numéro hiérarchique brut tel que lu (ex: "1.2.3"). */
+  numero: string;
+  /** Index Excel 1-based pour traçabilité. */
+  rowIndex: number;
+  /** Désignation Excel telle que lue. */
+  designation: string;
+  /** Métier détecté automatiquement (null si ambigu). */
+  metierAuto: FabMetier | null;
+  /** Métier après override utilisateur (= metierAuto par défaut). */
+  metier: FabMetier | null;
+  /** Heures par UNITÉ telles que lues dans l'Excel (avant × quantité objet). */
+  heuresUnitaires: number;
+  /** Quantité affichée sur la ligne poste (souvent 1). */
+  quantite: number | null;
+  /** Total HT de la ligne (informatif, peut alimenter budget si Matériel). */
+  totalHt: number | null;
+  /** Le poste est-il une ligne matériel (m², kg, ml, "matière"…) ? */
+  isMatiere: boolean;
+  /** Override utilisateur du toggle matière/heures. */
+  isMatiereOverride: boolean | null;
+  /** Régul (heures à 0 mais total préservé). */
+  isRegul: boolean;
+  /** Le poste est-il intégré au calcul des heures objet ? (false = à mapper). */
+  autoMapped: boolean;
+}
+
 export interface ObjetCandidat {
   /** Numéro hiérarchique (ex: "1.2"). */
   numero: string;
+  /** Numéro de la Section parent (ex: "1"). Vide si objet implicite/manuel. */
+  sectionNumero: string;
+  /** Libellé de la Section parent (info UI). */
+  sectionNom: string;
   nom: string;
   description: string | null;
   quantite: number;
@@ -39,6 +77,8 @@ export interface ObjetCandidat {
   warnings: string[];
   /** Index Excel des lignes feuilles agrégées (debug). */
   rowIndices: number[];
+  /** v0.31.4b — Postes individuels (N.M.K) exposés pour la modale UI. */
+  postes: PosteCandidat[];
 }
 
 export interface HeuresChantier {

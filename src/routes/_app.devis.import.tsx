@@ -28,19 +28,12 @@ import {
 } from "@/lib/import-validation";
 import { parseDevisFromArrayBuffer } from "@/lib/devis-import";
 import { parseDevisProgbatFromArrayBuffer } from "@/lib/devis-parser/parse-excel";
-import {
-  computeFlagsFromMetiers,
-  detectTypeFinition,
-} from "@/lib/devis-parser/compute-flags";
-import type { FabMetier } from "@/hooks/use-fabrication";
 import type { MetierCode } from "@/lib/employes-import";
 import { DevisImportDropzone } from "@/components/devis-import/DevisImportDropzone";
 import { DevisImportSection1Affaire } from "@/components/devis-import/DevisImportSection1Affaire";
 import { DevisImportSection2Postes } from "@/components/devis-import/DevisImportSection2Postes";
-import {
-  DevisImportSection3Objets,
-  type EditableObjet,
-} from "@/components/devis-import/DevisImportSection3Objets";
+import { DevisImportObjetsHierarchy } from "@/components/devis-import/DevisImportObjetsHierarchy";
+import type { EditableObjet } from "@/components/devis-import/objets-hierarchy-helpers";
 import { DevisImportSection4Chantier } from "@/components/devis-import/DevisImportSection4Chantier";
 import { DevisImportSection5BulkAssign } from "@/components/devis-import/DevisImportSection5BulkAssign";
 import { DevisImportFooter } from "@/components/devis-import/DevisImportFooter";
@@ -131,6 +124,10 @@ function DevisImportPage() {
 
   // Section 3 (objets fabrication Progbat)
   const [objets, setObjets] = useState<EditableObjet[]>([]);
+  // v0.31.4b — cross-checks intégrité Section vs Σ(objets) du parser.
+  const [integrityChecks, setIntegrityChecks] = useState<
+    import("@/lib/devis-parser/types").IntegrityCheck[]
+  >([]);
 
   // Section 4 (heures chantier)
   const [importMontage, setImportMontage] = useState(false);
@@ -294,7 +291,10 @@ function DevisImportPage() {
         const editable: EditableObjet[] = progbat.objetsCandidats.map((o) => ({
           selected: o.confidence === "high",
           numero: o.numero,
+          sectionNumero: o.sectionNumero,
+          sectionNom: o.sectionNom,
           nom: o.nom,
+          description: o.description,
           quantite: o.quantite,
           heures: { ...o.heures },
           budgetMateriaux: o.budgetMateriaux,
@@ -302,8 +302,10 @@ function DevisImportPage() {
           flags: o.flags,
           confidence: o.confidence,
           warnings: o.warnings,
+          postes: o.postes.map((p) => ({ ...p })),
         }));
         setObjets(editable);
+        setIntegrityChecks(progbat.integrityChecks);
         // v0.32.2 — snapshot des objets source pour validation cohérence.
         setParsedObjets(
           progbat.objetsCandidats.map((o) => ({
@@ -342,24 +344,7 @@ function DevisImportPage() {
       { key: `manuel-${Date.now()}`, metierId: null, heures: 0, montantHt: 0, libellesSources: [], manuel: true },
     ]);
 
-  const updateObjet = (idx: number, patch: Partial<EditableObjet>) =>
-    setObjets((prev) =>
-      prev.map((o, i) => {
-        if (i !== idx) return o;
-        const next = { ...o, ...patch };
-        if (patch.heures) {
-          next.flags = computeFlagsFromMetiers(next.heures);
-          next.typeFinition = detectTypeFinition(next.heures);
-        }
-        return next;
-      }),
-    );
-  const updateMetier = (idx: number, metier: FabMetier, value: number) => {
-    const obj = objets[idx];
-    if (!obj) return;
-    const heures = { ...obj.heures, [metier]: Number.isFinite(value) ? value : 0 };
-    updateObjet(idx, { heures });
-  };
+  // v0.31.4b — édition des objets/postes déléguée à DevisImportObjetsHierarchy.
 
   const totals = useMemo(() => {
     let h = 0;
@@ -520,6 +505,7 @@ function DevisImportPage() {
     setParsedObjets([]);
     setPostes([]);
     setObjets([]);
+    setIntegrityChecks([]);
     setNomDevis("");
     setNumeroDevis("");
     setDateMontage(undefined);
@@ -734,6 +720,7 @@ function DevisImportPage() {
               setFilename(null);
               setPostes([]);
               setObjets([]);
+              setIntegrityChecks([]);
             }}
           />
         )}
@@ -785,10 +772,10 @@ function DevisImportPage() {
               addPoste={addPoste}
             />
 
-            <DevisImportSection3Objets
+            <DevisImportObjetsHierarchy
               objets={objets}
-              updateObjet={updateObjet}
-              updateMetier={updateMetier}
+              setObjets={setObjets}
+              integrityChecks={integrityChecks}
             />
 
             <DevisImportSection4Chantier
