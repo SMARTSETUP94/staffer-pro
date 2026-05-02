@@ -1,6 +1,16 @@
 import { describe, expect, it } from "vitest";
 import { computeSpan, calculatePlan, findCNCSlotBackward } from "../algo";
-import { addDays, dateRange, diffDays } from "../date-utils";
+import {
+  addDays,
+  addWorkingDays,
+  dateRange,
+  diffDays,
+  frenchHolidays,
+  isWeekend,
+  isWorkingDay,
+  workingDateRange,
+  workingDaysBetween,
+} from "../date-utils";
 import type { ObjetInput, PlanInput } from "../types";
 
 /* ---------- factories ---------- */
