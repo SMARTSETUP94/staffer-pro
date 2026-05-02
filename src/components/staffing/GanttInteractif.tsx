@@ -1,7 +1,10 @@
 // v0.35.2 / Sprint 2.1 — GanttInteractif : composant principal Auto-staffing Fabrication 5XXX
 // v0.35.x — Pré-vol risque (toast + slider warning + badge inline) avant commit.
-import { useEffect, useMemo, useState, useCallback } from "react";
+// v0.35.x BATCH — sliders + shifts écrivent dans useEditStore (pas de round-trip serveur).
+//                 Reorder objet reste save-immédiat (rare, pas de cumul).
+import { useEffect, useMemo, useState, useCallback, useImperativeHandle, forwardRef } from "react";
 import { useServerFn } from "@tanstack/react-start";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2, ArrowUp, ArrowDown, RefreshCw, Calendar, Users, Activity, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,8 +13,8 @@ import { Badge } from "@/components/ui/badge";
 import {
   calculateStaffingPlan,
   updatePlanObject,
-  updatePlanStep,
 } from "@/server/staffing.functions";
+import { useEditStore, applyEdits } from "@/lib/staffing/edit-store";
 import {
   workingDaysBetween,
   formatDayName,
