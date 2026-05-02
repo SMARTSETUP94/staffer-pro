@@ -156,48 +156,67 @@ export const calculateStaffingPlan = createServerFn({ method: "POST" })
       }
     }
 
-    /* 8. PERSISTENCE : delete + insert toutes les steps + cnc reservations du plan */
+    /* 8. PERSISTENCE IDEMPOTENTE — préserve step IDs existants par clé naturelle
+       (metier_id, objet_id) pour ne PAS cascade-delete les staffing_plan_assignment
+       lors des recalculs successifs (sliders, shift, reorder, …). */
     await supabase.from("machine_reservation").delete().eq("affaire_id", plan.affaire_id);
-    await supabase.from("staffing_plan_step").delete().eq("plan_id", planId);
+
+    // Réutilise existingSteps déjà chargé étape 4 (overrides) — même source de vérité
+    const existingByKey = new Map<string, string>();
+    for (const r of (existingSteps ?? []) as Array<{ id: string; metier_id: number; objet_id: string | null }>) {
+      existingByKey.set(`${r.metier_id}|${r.objet_id ?? "_null_"}`, r.id as string);
+    }
 
     if (result.steps.length > 0) {
-      const stepsToInsert = result.steps
-        .filter((s) => s.start_date !== "TBD")
-        .map((s) => {
-          const ov = overridesMap.get(overrideKey(s.metier_id, s.objet_id));
-          return {
-            plan_id: planId,
-            metier_id: s.metier_id,
-            objet_id: s.objet_id,
-            start_date: s.start_date,
-            span_days: s.span_days,
-            pers: s.pers,
-            h_par_jour: s.h_par_jour,
-            manual_shift: ov?.manual_shift ?? 0,
-            manual_pers: ov?.manual_pers ?? false,
-            source: s.source,
-          };
-        });
-      if (stepsToInsert.length > 0) {
-        const { data: inserted, error: insErr } = await supabase
-          .from("staffing_plan_step")
-          .insert(stepsToInsert)
-          .select("id, metier_id, objet_id, start_date");
-        if (insErr) throw new Error(insErr.message);
+      const targetSteps = result.steps.filter((s) => s.start_date !== "TBD");
+      const usedExistingIds = new Set<string>();
 
-        // Map (metier_id, objet_id, start_date) -> uuid pour réinjecter dans result.steps
-        const dbIdMap = new Map<string, string>();
-        for (const r of inserted ?? []) {
-          dbIdMap.set(
-            `${r.metier_id}|${r.objet_id ?? "_null_"}|${r.start_date}`,
-            r.id as string
-          );
+      // 8.a UPDATE in-place les steps qui matchent une clé existante (préserve l'id → assignments survivent)
+      for (const s of targetSteps) {
+        const key = `${s.metier_id}|${s.objet_id ?? "_null_"}`;
+        const existingId = existingByKey.get(key);
+        const ov = overridesMap.get(overrideKey(s.metier_id, s.objet_id));
+        const payload = {
+          start_date: s.start_date,
+          span_days: s.span_days,
+          pers: s.pers,
+          h_par_jour: s.h_par_jour,
+          manual_shift: ov?.manual_shift ?? 0,
+          manual_pers: ov?.manual_pers ?? false,
+          source: s.source,
+        };
+        if (existingId) {
+          usedExistingIds.add(existingId);
+          const { error: upErr } = await supabase
+            .from("staffing_plan_step")
+            .update(payload)
+            .eq("id", existingId);
+          if (upErr) throw new Error(upErr.message);
+          s.id = existingId;
+        } else {
+          // 8.b INSERT pour les nouvelles combinaisons (metier_id, objet_id) qui n'existaient pas encore
+          const { data: inserted, error: insErr } = await supabase
+            .from("staffing_plan_step")
+            .insert({ plan_id: planId, metier_id: s.metier_id, objet_id: s.objet_id, ...payload })
+            .select("id")
+            .single();
+          if (insErr) throw new Error(insErr.message);
+          s.id = inserted.id as string;
+          usedExistingIds.add(s.id);
         }
-        for (const s of result.steps) {
-          if (s.start_date === "TBD") continue;
-          const dbId = dbIdMap.get(`${s.metier_id}|${s.objet_id ?? "_null_"}|${s.start_date}`);
-          if (dbId) s.id = dbId;
-        }
+      }
+
+      // 8.c DELETE les steps existants qui ne sont plus dans le plan recalculé (objet retiré, etc.)
+      // CASCADE supprimera leurs assignments — c'est le comportement attendu pour un step disparu.
+      const toDelete: string[] = [];
+      for (const [, id] of existingByKey) {
+        if (!usedExistingIds.has(id)) toDelete.push(id);
+      }
+      if (toDelete.length > 0) {
+        await supabase.from("staffing_plan_step").delete().in("id", toDelete);
+      }
+
+      if (targetSteps.length > 0) {
 
         // Réinsérer cnc_reservations en utilisant les nouveaux uuids
         if (result.cnc_reservations.length > 0) {

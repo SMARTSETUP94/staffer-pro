@@ -317,9 +317,13 @@ export function GanttInteractif({
                       <p className="font-mono text-[10px] text-muted-foreground">
                         {obj.heures_total.toFixed(0)} h
                       </p>
-                      {/* Sliders Bois / Peint */}
+                      {/* Sliders Bois / Peint
+                          NOTE: `key` inclut la valeur — force le remontage Radix après commit
+                          pour que le thumb retombe sur la valeur DB (sinon Radix garde la
+                          position visuelle interne du dernier drag même après reload). */}
                       {boisStep && (
                         <PersSlider
+                          key={`bois-${boisStep.id}-${boisStep.pers}`}
                           label="Bois"
                           color={METIER_COLOR.Bois}
                           value={boisStep.pers}
@@ -329,6 +333,7 @@ export function GanttInteractif({
                       )}
                       {peintStep && (
                         <PersSlider
+                          key={`peint-${peintStep.id}-${peintStep.pers}`}
                           label="Peint"
                           color={METIER_COLOR.Peint}
                           value={peintStep.pers}
