@@ -232,10 +232,9 @@ function FabricationPage() {
         </div>
       )}
 
-      {/* v0.35.4 — Wizard Auto-staffing pour typologie 5XXX (Fabrication) */}
+      {/* v0.35.4 — Wizard Auto-staffing pour typologie Fabrication (5XXX) */}
       {isAdminOrChef &&
-        affaireMeta?.typologie &&
-        affaireMeta.typologie.startsWith("5") && (
+        affaireMeta?.typologie === "fabrication" && (
           <div className="rounded-xl border border-border bg-card p-4">
             <StaffingPlanWizard
               affaireId={affaireId}
