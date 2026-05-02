@@ -43,6 +43,41 @@ interface RoadmapPlanned {
 
 const RELEASES: RoadmapRelease[] = [
   {
+    date: "2026-05-02",
+    version: "v0.31.4d",
+    title: "🛠️ Refonte parser Progbat 3 niveaux + modale UI hiérarchique + édition manuelle",
+    entries: [
+      {
+        type: "feature",
+        area: "Devis — Parser",
+        title: "Parser Progbat 3 niveaux (Section / Objet / Postes) + règle quantité unifiée",
+        description:
+          "Refonte complète du parser Excel Progbat : détection hiérarchique Section → Objet → Postes, avec multiplication systématique sectionQuantite × quantiteObjet × tempsUnitaire à TOUS les niveaux (corrige les sous-comptages sur sections répétitives type 'Permanence ×3'). Cross-check d'intégrité ligne par ligne (qte × PU vs total) et par métier (heures source vs consolidées) avec citations de lignes incohérentes.",
+      },
+      {
+        type: "feature",
+        area: "Devis — Parser",
+        title: "5 nouveaux patterns de mapping métier (BE / Manut / Stockage / Matériaux conditionnels)",
+        description:
+          "Ajout des patterns : 'Plans techniques heures' → BE, 'Démontage Pecqueuse' → Manut/Démontage, 'Stockage' (seul) → Manut/Logistique, 'Budget matériaux' et 'Liste des principales fournitures en logistique' → Manut/Logistique si tempsPrevu>0 sinon Matériel pur (bascule isMatiereContextual). 4 fixtures Vitest 100% mapping auto (D-3204 / D-2150 / D-1832 / D-2128 = 585h).",
+      },
+      {
+        type: "feature",
+        area: "Devis — Modale Import",
+        title: "Modale UI hiérarchique Section/Objet/Postes + édition manuelle complète",
+        description:
+          "Nouvelle modale `DevisImportObjetsHierarchy` : compteur global mapping auto/manuel, bandeau intégrité, override métier par poste, toggle Matériel/Heures, drag&drop poste entre objets, ajout d'objet manuel, détails repliables (description). Édition manuelle : renommage inline du libellé poste, suppression poste, suppression objet — tout est recalculé live (heures × sectionQte) avant sauvegarde.",
+      },
+      {
+        type: "improvement",
+        area: "Tests",
+        title: "+22 tests Vitest (parser-v0314 + objets-hierarchy-helpers) — 1206 verts",
+        description:
+          "parser-v0314.test.ts : 4 fixtures × 100% mapping + 5 patterns + règle quantité. objets-hierarchy-helpers.test.ts (15 tests) : recomputeObjet × sectionQte, computeCounters pondérés, movePosteBetweenObjets, removePoste/Objet, renamePoste avec préservation hiérarchie.",
+      },
+    ],
+  },
+  {
     date: "2026-04-30",
     version: "v0.30.3",
     title: "✨ UX import devis Progbat — Client/Lieu éditables",
