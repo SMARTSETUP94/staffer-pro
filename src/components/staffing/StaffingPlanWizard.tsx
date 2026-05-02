@@ -335,26 +335,87 @@ export function StaffingPlanWizard({
         <>
           {/* Dates */}
           <div className="grid gap-3 sm:grid-cols-2">
-            <DateField
-              label="Début fabrication"
-              value={dateDebut}
-              onChange={setDateDebut}
-              placeholder="Choisir une date"
-            />
+            <div className="space-y-1">
+              <DateField
+                label="Début fabrication"
+                value={dateDebut}
+                onChange={setDateDebut}
+                placeholder="Choisir une date"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-7 text-[11px] text-violet-600 hover:text-violet-700 hover:bg-violet-50"
+                onClick={estimerDateDebut}
+                disabled={!dateFin || includedCount === 0}
+                title="Calcule un début rétrograde depuis la livraison selon les heures sélectionnées"
+              >
+                <Wand2 className="mr-1 h-3 w-3" /> Estimer auto
+              </Button>
+            </div>
             <DateField
               label="Livraison (HARD)"
               value={dateFin}
-              onChange={setDateFin}
+              onChange={(d) => {
+                setDateFin(d);
+                if (d && !dateDebut) {
+                  // Re-déclenche estimation quand livraison change et début vide
+                  const totalH = visibleObjets
+                    .filter((o) => included.has(o.id))
+                    .reduce((s, o) => s + o.heures_total, 0);
+                  if (totalH > 0) {
+                    const spanJ = Math.ceil(((totalH / 40) * 1.3) / 5) * 7;
+                    setDateDebut(subDays(d, spanJ));
+                  }
+                }
+              }}
               placeholder="Date de livraison"
             />
           </div>
 
           {/* Objets */}
           <div className="rounded-xl border border-border">
-            <div className="flex items-center justify-between border-b border-border bg-background/40 px-3 py-2">
-              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Objets à planifier
-              </span>
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border bg-background/40 px-3 py-2">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Objets à planifier
+                </span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 px-2 text-[11px]"
+                  onClick={selectAll}
+                  title="Cocher tous les objets éligibles"
+                >
+                  <CheckSquare className="mr-1 h-3 w-3" /> Tout
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 px-2 text-[11px]"
+                  onClick={selectNone}
+                  title="Décocher tous les objets"
+                >
+                  <Square className="mr-1 h-3 w-3" /> Aucun
+                </Button>
+                <Button
+                  type="button"
+                  variant={hideShort ? "default" : "ghost"}
+                  size="sm"
+                  className="h-6 px-2 text-[11px]"
+                  onClick={() => setHideShort((v) => !v)}
+                  title={`Masquer les objets < ${SHORT_THRESHOLD}h`}
+                >
+                  <Filter className="mr-1 h-3 w-3" />
+                  &lt; {SHORT_THRESHOLD}h
+                  {hiddenShortCount > 0 && hideShort && (
+                    <span className="ml-1 opacity-70">({hiddenShortCount})</span>
+                  )}
+                </Button>
+              </div>
               <span className="text-xs text-muted-foreground">
                 {includedCount} / {visibleObjets.length} inclus · {totalHeures.toFixed(1)} h
               </span>
