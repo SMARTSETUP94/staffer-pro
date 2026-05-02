@@ -299,6 +299,11 @@ function OnboardingPage() {
   }
 
   function handleSkipLater() {
+    // Marque le skip pour la session courante : AppGuard cesse de forcer
+    // /onboarding mais ProfileIncompleteBanner reste visible tant que
+    // profile_completed_at IS NULL (cf. v0.31.4).
+    markOnboardingSkipped();
+    toast.info("Vous pourrez compléter votre profil plus tard depuis le bandeau en haut de page.");
     navigate({ to: "/dashboard" });
   }
 
