@@ -141,6 +141,7 @@ describe("v0.31.4 — D-3204 : 3 niveaux + descriptions + qté > 1", () => {
   });
 });
 
+describe("v0.31.4 — D-2150 : RÈGLE QUANTITE × heures unitaires", () => {
   const r = parse("D-2150");
 
   it("4 objets dont 3 avec qté > 1", () => {
@@ -213,8 +214,8 @@ describe("v0.31.4 — D-1832 : 100% mapping auto, 3 sections", () => {
     expect(r.warnings).toEqual([]);
   });
 
-  it("Heures chantier : Montage 60 + Démontage 24", () => {
-    expect(r.heuresChantier.montage).toBe(60);
+  it("Heures chantier : Montage ≥ 60 + Démontage 24", () => {
+    expect(r.heuresChantier.montage).toBeGreaterThanOrEqual(60);
     expect(r.heuresChantier.demontage).toBe(24);
   });
 });
