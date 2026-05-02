@@ -120,6 +120,55 @@ export interface IntegrityCheck {
   severite: "ok" | "warning" | "error";
 }
 
+/**
+ * v0.31.6 — Diagnostic "Pourquoi c'est exclu" : trace toutes les lignes
+ * écartées par le parser et la règle qui a déclenché l'exclusion.
+ *
+ * `kind` = règle appliquée :
+ *   - "exclude_regex" : libellé matché par EXCLUDE_REGEX (mappings.ts)
+ *   - "empty_poste" : qty/total/temps tous nuls (skip silencieux)
+ *   - "lot_chantier_in_objet" : Montage/Démontage sans métier dans un objet
+ *   - "metier_unknown" : heures > 0 mais aucun pattern métier
+ *   - "niveau2_excluded_no_children" : N.M exclu et sans enfant atelier/matière
+ *   - "matiere_no_montant" : ligne matière sans Total HT
+ *   - "regul_with_hours" : Régul avec heures > 0 (à valider manuellement)
+ *   - "section_skipped" : Section niveau 1 ignorée (chantier pur sans métier)
+ *   - "comment" : ligne sans numéro (commentaire / description)
+ */
+export type ExclusionKind =
+  | "exclude_regex"
+  | "empty_poste"
+  | "lot_chantier_in_objet"
+  | "metier_unknown"
+  | "niveau2_excluded_no_children"
+  | "matiere_no_montant"
+  | "regul_with_hours"
+  | "section_skipped"
+  | "comment";
+
+export interface ExclusionEntry {
+  /** Numéro de ligne Excel (1-based, tel qu'il apparaît dans le fichier source). */
+  rowIndex: number;
+  /** Numéro hiérarchique brut de la ligne (ex: "1.2.3"), ou "" si absent. */
+  numero: string;
+  /** Désignation Excel telle que lue. */
+  designation: string;
+  /** Section parente (ex: "1") si identifiable, sinon vide. */
+  sectionNumero: string;
+  /** Type de règle appliquée par le parser. */
+  kind: ExclusionKind;
+  /** Phrase humaine prête à l'affichage ("Pourquoi c'est exclu"). */
+  reason: string;
+  /** Pattern technique qui a matché (regex source) si applicable. */
+  rule: string | null;
+  /** Heures/total/qty associés (debug). */
+  tempsPrevu: number | null;
+  totalHt: number | null;
+  quantite: number | null;
+  /** Si true, la ligne aurait pu être mappée mais a été désactivée. */
+  isRecoverable: boolean;
+}
+
 export interface ParseResult {
   meta: DevisMetadata;
   devisType: DevisType;
@@ -128,6 +177,8 @@ export interface ParseResult {
   renvoisExternes: RenvoiExterne[];
   /** Cross-checks par section (anti-bug critique). */
   integrityChecks: IntegrityCheck[];
+  /** v0.31.6 — Trace des exclusions parser pour la modale "Pourquoi c'est exclu". */
+  exclusions: ExclusionEntry[];
   warnings: string[];
   errors: string[];
 }

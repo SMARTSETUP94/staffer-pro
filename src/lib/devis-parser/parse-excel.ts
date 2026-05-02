@@ -19,6 +19,7 @@ import type { FabMetier } from "@/hooks/use-fabrication";
 import { computeFlagsFromMetiers, detectTypeFinition, emptyHeures } from "./compute-flags";
 import { detectDevisType } from "./detect-type";
 import {
+  findExcludeRule,
   isDemontageKeyword,
   isExcludeKeyword,
   isLineDisabled,
@@ -32,6 +33,8 @@ import { RENVOI_REGEX } from "./mappings";
 import type {
   Confidence,
   DevisMetadata,
+  ExclusionEntry,
+  ExclusionKind,
   HeuresChantier,
   IntegrityCheck,
   ObjetCandidat,
@@ -199,16 +202,61 @@ function parseRows(rows: unknown[][], headerRow: number, cols: ColumnMap): Parse
 /* Identification Sections (N) et Objets (N.M)                                */
 /* -------------------------------------------------------------------------- */
 
+/** v0.31.6 — Helper trace exclusion. */
+function pushExclusion(
+  list: ExclusionEntry[],
+  row: ParsedRow,
+  sectionNumero: string,
+  kind: ExclusionKind,
+  reason: string,
+  rule: string | null = null,
+  isRecoverable = false,
+) {
+  list.push({
+    rowIndex: row.rowIndex,
+    numero: row.numero,
+    designation: row.designation,
+    sectionNumero,
+    kind,
+    reason,
+    rule,
+    tempsPrevu: row.tempsPrevu,
+    totalHt: row.totalHt,
+    quantite: row.quantite,
+    isRecoverable,
+  });
+}
+
 /** Indices dans `rows` des lignes Section (niveau 1 non-chantier-pur, non-exclu). */
-function findSections(rows: ParsedRow[]): ParsedRow[] {
-  return rows.filter(
-    (r) =>
-      r.niveau === 1 &&
-      r.hierarchique &&
-      !r.isExclude &&
-      !((r.isMontage || r.isDemontage) && !r.metier) &&
-      !!r.designation,
-  );
+function findSections(rows: ParsedRow[], exclusions: ExclusionEntry[]): ParsedRow[] {
+  const out: ParsedRow[] = [];
+  for (const r of rows) {
+    if (r.niveau !== 1 || !r.hierarchique || !r.designation) continue;
+    if (r.isExclude) {
+      const rule = findExcludeRule(r.designation);
+      pushExclusion(
+        exclusions,
+        r,
+        r.hierarchique,
+        "exclude_regex",
+        `Section ignorée — libellé matché par la règle d'exclusion (${rule?.source ?? "?"}).`,
+        rule?.source ?? null,
+      );
+      continue;
+    }
+    if ((r.isMontage || r.isDemontage) && !r.metier) {
+      pushExclusion(
+        exclusions,
+        r,
+        r.hierarchique,
+        "section_skipped",
+        "Section ignorée — lot chantier global (Montage/Démontage) sans métier atelier.",
+      );
+      continue;
+    }
+    out.push(r);
+  }
+  return out;
 }
 
 /** Sous-arbre strict d'un nœud (toutes lignes dont le code commence par parent.). */
@@ -241,6 +289,7 @@ function aggregateObjet(
   parent: ParsedRow,
   allRows: ParsedRow[],
   section: ParsedRow,
+  exclusions: ExclusionEntry[],
 ): ObjetCandidat {
   const heures = emptyHeures();
   let budgetMateriaux = 0;
@@ -249,6 +298,7 @@ function aggregateObjet(
   const postes: PosteCandidat[] = [];
   let descendantCount = 0;
   let metierUnknownCount = 0;
+  const sectionNumeroForExcl = section.hierarchique || section.numero;
 
   // Quantité de l'objet : celle du parent si renseignée et > 0, sinon 1.
   const quantite = parent.quantite && parent.quantite > 0 ? parent.quantite : 1;
@@ -260,8 +310,29 @@ function aggregateObjet(
   const children = descendantsOf(parent, allRows);
 
   for (const c of children) {
-    if (c.isExclude) continue;
-    if (c.isComment) continue;
+    if (c.isExclude) {
+      const rule = findExcludeRule(c.designation);
+      pushExclusion(
+        exclusions,
+        c,
+        sectionNumeroForExcl,
+        "exclude_regex",
+        `Ligne exclue par règle parser (« ${rule?.source ?? "?"} »).`,
+        rule?.source ?? null,
+      );
+      continue;
+    }
+    if (c.isComment) {
+      // Commentaire = description de l'objet, pas un poste — info silencieuse.
+      pushExclusion(
+        exclusions,
+        c,
+        sectionNumeroForExcl,
+        "comment",
+        "Ligne sans numéro — utilisée comme description de l'objet parent.",
+      );
+      continue;
+    }
 
     // v0.31.5 — Bug B faux positifs "à mapper" : un poste totalement vide
     // (qty=0 OU null, total=0 OU null, temps=0 OU null) n'est PAS un poste
@@ -270,7 +341,16 @@ function aggregateObjet(
       (c.quantite == null || c.quantite === 0) &&
       (c.totalHt == null || c.totalHt === 0) &&
       (c.tempsPrevu == null || c.tempsPrevu === 0);
-    if (isEmptyPoste) continue;
+    if (isEmptyPoste) {
+      pushExclusion(
+        exclusions,
+        c,
+        sectionNumeroForExcl,
+        "empty_poste",
+        "Poste inutilisé dans ce devis (quantité, total HT et temps prévu tous à zéro).",
+      );
+      continue;
+    }
 
     descendantCount++;
     rowIndices.push(c.rowIndex);
@@ -301,6 +381,15 @@ function aggregateObjet(
         warnings.push(
           `Régul ligne ${c.rowIndex} avec ${c.tempsPrevu}h — à valider manuellement.`,
         );
+        pushExclusion(
+          exclusions,
+          c,
+          sectionNumeroForExcl,
+          "regul_with_hours",
+          `Régul avec ${c.tempsPrevu}h — heures ignorées par défaut, total HT préservé.`,
+          null,
+          true,
+        );
       }
       pushPoste(false);
       continue;
@@ -315,6 +404,15 @@ function aggregateObjet(
         warnings.push(
           `Matière sans montant ligne ${c.rowIndex} : « ${c.designation.slice(0, 40)} »`,
         );
+        pushExclusion(
+          exclusions,
+          c,
+          sectionNumeroForExcl,
+          "matiere_no_montant",
+          "Ligne matière sans Total HT — non comptée dans le budget matériaux.",
+          null,
+          true,
+        );
       }
       pushPoste(true);
       continue;
@@ -322,6 +420,13 @@ function aggregateObjet(
 
     // Lots chantier dans un objet : ignorés (vont dans heuresChantier global)
     if ((c.isMontage || c.isDemontage) && !c.metier) {
+      pushExclusion(
+        exclusions,
+        c,
+        sectionNumeroForExcl,
+        "lot_chantier_in_objet",
+        "Lot chantier (Montage/Démontage) — basculé dans les heures chantier globales, pas dans l'objet.",
+      );
       pushPoste(false);
       continue;
     }
@@ -329,6 +434,13 @@ function aggregateObjet(
     if (c.metier && (c.tempsPrevu ?? 0) > 0) {
       if (isLineDisabled({ quantite: c.quantite, heures: c.tempsPrevu, totalHt: c.totalHt })) {
         // Désactivé (qty=0 ou heures=total=0) → on ne l'expose pas non plus.
+        pushExclusion(
+          exclusions,
+          c,
+          sectionNumeroForExcl,
+          "empty_poste",
+          "Poste désactivé (quantité 0 ou heures + total HT à zéro).",
+        );
         continue;
       }
       heures[c.metier] += c.tempsPrevu ?? 0;
@@ -337,6 +449,15 @@ function aggregateObjet(
       metierUnknownCount++;
       warnings.push(
         `Métier non détecté ligne ${c.rowIndex} (${c.tempsPrevu}h) : « ${c.designation.slice(0, 50)} »`,
+      );
+      pushExclusion(
+        exclusions,
+        c,
+        sectionNumeroForExcl,
+        "metier_unknown",
+        `Heures (${c.tempsPrevu}h) présentes mais aucun pattern métier ne matche le libellé.`,
+        null,
+        true,
       );
       pushPoste(false);
     } else {
@@ -390,8 +511,13 @@ function aggregateObjet(
 /*    → objet implicite portant le libellé de la Section                      */
 /* -------------------------------------------------------------------------- */
 
-function buildObjetsForSection(section: ParsedRow, allRows: ParsedRow[]): ObjetCandidat[] {
+function buildObjetsForSection(
+  section: ParsedRow,
+  allRows: ParsedRow[],
+  exclusions: ExclusionEntry[],
+): ObjetCandidat[] {
   const subTree = descendantsOf(section, allRows);
+  const sectionNumeroForExcl = section.hierarchique || section.numero;
 
   // Détection de la profondeur réelle :
   //  - Profondeur 3 (Progbat moderne) : Section N → Objets N.M → Postes N.M.K
@@ -408,7 +534,16 @@ function buildObjetsForSection(section: ParsedRow, allRows: ParsedRow[]): ObjetC
     // (cas prod 2141 : « Remise en peinture du bar existant »).
     const niveau2 = subTree.filter((r) => r.niveau === 2 && !r.isComment);
     for (const obj of niveau2) {
-      if ((obj.isMontage || obj.isDemontage) && !obj.metier) continue;
+      if ((obj.isMontage || obj.isDemontage) && !obj.metier) {
+        pushExclusion(
+          exclusions,
+          obj,
+          sectionNumeroForExcl,
+          "lot_chantier_in_objet",
+          "Objet N.M ignoré — lot chantier (Montage/Démontage) sans métier atelier.",
+        );
+        continue;
+      }
       if (!obj.designation) continue;
 
       const directChildren = descendantsOf(obj, allRows);
@@ -418,10 +553,21 @@ function buildObjetsForSection(section: ParsedRow, allRows: ParsedRow[]): ObjetC
       const isLeafAtelier =
         directChildren.length === 0 && !!obj.metier && (obj.tempsPrevu ?? 0) > 0;
       const isLeafMatiere = directChildren.length === 0 && obj.isMatiere;
-      if (obj.isExclude && !hasAnyAtelier && !isLeafAtelier && !isLeafMatiere) continue;
+      if (obj.isExclude && !hasAnyAtelier && !isLeafAtelier && !isLeafMatiere) {
+        const rule = findExcludeRule(obj.designation);
+        pushExclusion(
+          exclusions,
+          obj,
+          sectionNumeroForExcl,
+          "niveau2_excluded_no_children",
+          `Objet N.M exclu par règle (« ${rule?.source ?? "?"} ») et sans enfant atelier/matière à récupérer.`,
+          rule?.source ?? null,
+        );
+        continue;
+      }
 
       if (hasAnyAtelier || isLeafAtelier || isLeafMatiere) {
-        objets.push(aggregateObjet(obj, allRows, section));
+        objets.push(aggregateObjet(obj, allRows, section, exclusions));
       }
     }
   }
@@ -433,7 +579,7 @@ function buildObjetsForSection(section: ParsedRow, allRows: ParsedRow[]): ObjetC
     );
     const hasMatiere = subTree.some((c) => !c.isExclude && c.isMatiere);
     if (hasAtelierAnywhere || hasMatiere) {
-      objets.push(aggregateObjet(section, allRows, section));
+      objets.push(aggregateObjet(section, allRows, section, exclusions));
     }
   }
 
@@ -590,12 +736,13 @@ export function parseDevisProgbatFromMatrix(
   const renvoisExternes = findRenvois(parsed);
   const warnings: string[] = [];
   const integrityChecks: IntegrityCheck[] = [];
+  const exclusions: ExclusionEntry[] = [];
 
   let objetsCandidats: ObjetCandidat[] = [];
   if (devisType !== "chantier_seul" && devisType !== "inconnu") {
-    const sections = findSections(parsed);
+    const sections = findSections(parsed, exclusions);
     for (const sec of sections) {
-      const objets = buildObjetsForSection(sec, parsed);
+      const objets = buildObjetsForSection(sec, parsed, exclusions);
       objetsCandidats.push(...objets);
       const check = buildIntegrityCheck(sec, objets);
       if (check) {
@@ -625,6 +772,7 @@ export function parseDevisProgbatFromMatrix(
     heuresChantier,
     renvoisExternes,
     integrityChecks,
+    exclusions,
     warnings,
     errors: [],
   };
@@ -638,6 +786,7 @@ function emptyResult(errors: string[]): ParseResult {
     heuresChantier: { montage: 0, demontage: 0, totalHt: 0 },
     renvoisExternes: [],
     integrityChecks: [],
+    exclusions: [],
     warnings: [],
     errors,
   };

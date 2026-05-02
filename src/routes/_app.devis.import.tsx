@@ -33,6 +33,7 @@ import { DevisImportDropzone } from "@/components/devis-import/DevisImportDropzo
 import { DevisImportSection1Affaire } from "@/components/devis-import/DevisImportSection1Affaire";
 import { DevisImportSection2Postes } from "@/components/devis-import/DevisImportSection2Postes";
 import { DevisImportObjetsHierarchy } from "@/components/devis-import/DevisImportObjetsHierarchy";
+import { DevisImportExclusions } from "@/components/devis-import/DevisImportExclusions";
 import type { EditableObjet } from "@/components/devis-import/objets-hierarchy-helpers";
 import { DevisImportSection4Chantier } from "@/components/devis-import/DevisImportSection4Chantier";
 import { DevisImportSection5BulkAssign } from "@/components/devis-import/DevisImportSection5BulkAssign";
@@ -128,6 +129,11 @@ function DevisImportPage() {
   const [integrityChecks, setIntegrityChecks] = useState<
     import("@/lib/devis-parser/types").IntegrityCheck[]
   >([]);
+  // v0.31.6 — Trace des exclusions parser ("Pourquoi c'est exclu").
+  const [exclusions, setExclusions] = useState<
+    import("@/lib/devis-parser/types").ExclusionEntry[]
+  >([]);
+  const [sourceFilename, setSourceFilename] = useState<string | null>(null);
 
   // Section 4 (heures chantier)
   const [importMontage, setImportMontage] = useState(false);
@@ -307,6 +313,8 @@ function DevisImportPage() {
         }));
         setObjets(editable);
         setIntegrityChecks(progbat.integrityChecks);
+        setExclusions(progbat.exclusions);
+        setSourceFilename(file.name);
         // v0.32.2 — snapshot des objets source pour validation cohérence.
         setParsedObjets(
           progbat.objetsCandidats.map((o) => ({
@@ -507,6 +515,8 @@ function DevisImportPage() {
     setPostes([]);
     setObjets([]);
     setIntegrityChecks([]);
+    setExclusions([]);
+    setSourceFilename(null);
     setNomDevis("");
     setNumeroDevis("");
     setDateMontage(undefined);
@@ -722,6 +732,8 @@ function DevisImportPage() {
               setPostes([]);
               setObjets([]);
               setIntegrityChecks([]);
+              setExclusions([]);
+              setSourceFilename(null);
             }}
           />
         )}
@@ -778,6 +790,8 @@ function DevisImportPage() {
               setObjets={setObjets}
               integrityChecks={integrityChecks}
             />
+
+            <DevisImportExclusions exclusions={exclusions} filename={sourceFilename} />
 
             <DevisImportSection4Chantier
               importMontage={importMontage}
