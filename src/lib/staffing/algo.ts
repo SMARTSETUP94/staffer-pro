@@ -299,14 +299,21 @@ export function calculatePlan(input: PlanInput): PlanResult {
     }
   }
 
-  // -------- BE : doit finir avant Num.start - LAG_BE_NUM (sinon avant Bois/Metal - 1j si pas de Num)
-  if (beStep) {
-    const beLatestEnd = numStep
+  // -------- BE : chaîne sériée. Le DERNIER BE doit finir avant Num.start - LAG_BE_NUM
+  // (sinon avant earliestBoisMetalStart - 2j si pas de Num).
+  // On planifie en backward dans l'ordre inverse de display_order.
+  if (beSteps.length > 0) {
+    const beAnchorEnd = numStep
       ? addDays(numStep.start_date, -1 - LAG_BE_NUM)
       : earliestBoisMetalStart
       ? addDays(earliestBoisMetalStart, -2)
       : addDays(dateLivraison, -1);
-    beStep.start_date = addDays(beLatestEnd, -(beStep.span_days - 1));
+    let cursor = beAnchorEnd;
+    for (let i = beSteps.length - 1; i >= 0; i--) {
+      const s = beSteps[i];
+      s.start_date = addDays(cursor, -(s.span_days - 1));
+      cursor = addDays(s.start_date, -1);
+    }
   }
 
   /* ----- Bornes globales ----- */
