@@ -288,8 +288,8 @@ export const restorePlanSnapshot = createServerFn({ method: "POST" })
         objets: curObjets ?? [],
         steps: curSteps ?? [],
         assignments: curAsg ?? [],
-      },
-    });
+      } as never,
+    } as never);
 
     /* DELETE actuel + RESTORE depuis snapshot */
     if (curStepIds.length > 0) {
@@ -320,7 +320,7 @@ export const restorePlanSnapshot = createServerFn({ method: "POST" })
       });
       const { data: insSteps, error: insErr } = await supabase
         .from("staffing_plan_step")
-        .insert(stepsRows)
+        .insert(stepsRows as never)
         .select("id, metier_id, objet_id, start_date");
       if (insErr) throw new Error(insErr.message);
       // Map (metier_id|objet_id|start_date) -> new id
@@ -353,7 +353,7 @@ export const restorePlanSnapshot = createServerFn({ method: "POST" })
         })
         .filter((x): x is NonNullable<typeof x> => x !== null);
       if (asgRows.length > 0) {
-        await supabase.from("staffing_plan_assignment").insert(asgRows);
+        await supabase.from("staffing_plan_assignment").insert(asgRows as never);
       }
     }
 
