@@ -252,6 +252,10 @@ function aggregateObjet(
 
   // Quantité de l'objet : celle du parent si renseignée et > 0, sinon 1.
   const quantite = parent.quantite && parent.quantite > 0 ? parent.quantite : 1;
+  // v0.31.4c — Quantité de la SECTION parente (multiplicateur final).
+  // Si parent === section (objet implicite), on neutralise pour ne pas doubler.
+  const sectionQte =
+    parent === section ? 1 : section.quantite && section.quantite > 0 ? section.quantite : 1;
 
   const children = descendantsOf(parent, allRows);
 
