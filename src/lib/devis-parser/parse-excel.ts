@@ -262,6 +262,16 @@ function aggregateObjet(
   for (const c of children) {
     if (c.isExclude) continue;
     if (c.isComment) continue;
+
+    // v0.31.5 — Bug B faux positifs "à mapper" : un poste totalement vide
+    // (qty=0 OU null, total=0 OU null, temps=0 OU null) n'est PAS un poste
+    // utilisé dans ce devis — on ne l'expose même pas dans la modale.
+    const isEmptyPoste =
+      (c.quantite == null || c.quantite === 0) &&
+      (c.totalHt == null || c.totalHt === 0) &&
+      (c.tempsPrevu == null || c.tempsPrevu === 0);
+    if (isEmptyPoste) continue;
+
     descendantCount++;
     rowIndices.push(c.rowIndex);
 
@@ -318,7 +328,7 @@ function aggregateObjet(
 
     if (c.metier && (c.tempsPrevu ?? 0) > 0) {
       if (isLineDisabled({ quantite: c.quantite, heures: c.tempsPrevu, totalHt: c.totalHt })) {
-        pushPoste(false);
+        // Désactivé (qty=0 ou heures=total=0) → on ne l'expose pas non plus.
         continue;
       }
       heures[c.metier] += c.tempsPrevu ?? 0;
@@ -330,7 +340,7 @@ function aggregateObjet(
       );
       pushPoste(false);
     } else {
-      // Poste sans heures et sans matière (rare) → exposé à mapper manuellement
+      // Poste sans heures mais avec un montant ou une quantité → exposé à mapper manuellement
       pushPoste(false);
     }
   }

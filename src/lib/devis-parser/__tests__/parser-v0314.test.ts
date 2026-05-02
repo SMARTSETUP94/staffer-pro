@@ -311,6 +311,86 @@ describe("v0.31.4c — D-2128 : 4e fixture, 100% mapping cible (calibrage final)
   });
 });
 
+describe("v0.31.5 HOTFIX — D-2141bis : Bug A (Remise en peinture exclue) + Bug B (postes vides faux positifs)", () => {
+  const r = parse("D-2141bis");
+
+  it("Parse sans erreur", () => {
+    expect(r.errors).toEqual([]);
+  });
+
+  it("Bug A : objet 1.1 'Remise en peinture du bar existant' DOIT être détecté", () => {
+    const obj = r.objetsCandidats.find((o) => o.numero === "1.1");
+    expect(obj).toBeDefined();
+    expect(obj!.nom).toMatch(/Remise en peinture/i);
+    expect(obj!.heures.peinture).toBe(75);
+    expect(obj!.heures.manutention).toBe(18.75);
+    expect(obj!.totalHeures).toBeCloseTo(93.75, 2);
+  });
+
+  it("Bug B : aucun poste vide (qty=0,total=0,temps=0) ne figure dans postes[]", () => {
+    const obj12 = r.objetsCandidats.find((o) => o.numero === "1.2")!;
+    const numerosVides = ["1.2.1", "1.2.2", "1.2.3", "1.2.4", "1.2.7", "1.2.11"];
+    for (const num of numerosVides) {
+      const exists = obj12.postes.some((p) => p.numero === num);
+      expect(exists, `poste vide ${num} ne devrait pas être listé`).toBe(false);
+    }
+  });
+
+  it("Objet 1.2 : seuls les 4 postes utilisés sont conservés (54.75h)", () => {
+    const obj = r.objetsCandidats.find((o) => o.numero === "1.2")!;
+    expect(obj.postes).toHaveLength(4);
+    expect(obj.totalHeures).toBeCloseTo(54.75, 2);
+  });
+
+  it("Section 1 : cross-check OK, déclaré=148.5h, calculé=148.5h", () => {
+    const sec1 = r.integrityChecks.find((c) => c.sectionNumero === "1")!;
+    expect(sec1.heuresDeclarees).toBe(148.5);
+    expect(sec1.heuresCalculees).toBeCloseTo(148.5, 2);
+    expect(sec1.severite).toBe("ok");
+  });
+
+  it("100% mapping auto sur les 4 sections (aucun poste orphelin)", () => {
+    const orphans: string[] = [];
+    for (const o of r.objetsCandidats) {
+      for (const p of o.postes) {
+        const isMat = p.isMatiereOverride ?? p.isMatiere;
+        const mapped = p.isRegul || isMat || (p.metier != null && p.heuresUnitaires > 0);
+        if (!mapped) orphans.push(`${o.numero}/${p.numero} : ${p.designation}`);
+      }
+    }
+    expect(orphans).toEqual([]);
+  });
+
+  it("Total cumulé sections 1+2+3+4 ≈ 579.26h (cible Gabin)", () => {
+    const total = r.integrityChecks
+      .filter((c) => ["1", "2", "3", "4"].includes(c.sectionNumero))
+      .reduce((acc, c) => acc + c.heuresCalculees, 0);
+    expect(total).toBeCloseTo(579.26, 1);
+  });
+});
+
+describe("v0.31.5 — Régression EXCLUDE_REGEX : Remise commerciale toujours exclue", () => {
+  it("Remise commerciale + Remise consentie client → exclues, Remise en peinture conservée", () => {
+    const m: (string | number | null)[][] = [
+      ["D-9100", "", "", "", "", "", ""],
+      ["Test exclude", "", "", "", "", "", ""],
+      ["N°", "Désignation", "Qté", "Unité", "PU HT", "Total HT", "Temps prévu"],
+      ["1", "ZONE", null, "", null, null, 24],
+      ["1.1", "Remise en peinture du mur", 1, "u", null, null, null],
+      ["1.1.1", "Construction heures", 1, "h", 50, 1200, 24],
+      ["1.1.2", "Remise commerciale 5%", 1, "ff", null, -300, null],
+      ["1.1.3", "Remise consentie client", 1, "ff", null, -100, null],
+    ];
+    const r = parseDevisProgbatFromMatrix(m, { filename: "D-9100.xlsx" });
+    expect(r.objetsCandidats).toHaveLength(1);
+    const obj = r.objetsCandidats[0];
+    expect(obj.numero).toBe("1.1");
+    expect(obj.heures.bois).toBe(24);
+    const remises = obj.postes.filter((p) => /^remise/i.test(p.designation));
+    expect(remises).toHaveLength(0);
+  });
+});
+
 describe("v0.31.4 — backward compat : aucune régression sur 13 fixtures historiques", () => {
   it.each([
     ["D-2153", 4] as const,

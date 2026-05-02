@@ -217,7 +217,9 @@ export const REGUL_REGEX: RegExp[] = [
 /* Lignes à exclure totalement (vraiment parasites).                          */
 /* -------------------------------------------------------------------------- */
 export const EXCLUDE_REGEX: RegExp[] = [
-  /^remise\b/i, // "Remise commerciale" en début seulement (pas "Remise en peinture")
+  // v0.31.5 — "Remise" exclu UNIQUEMENT si suivi d'un mot commercial / chiffre.
+  // Bug devis 2141 : "Remise en peinture du bar existant" était exclu à tort.
+  /^remise\s+(?:commerciale|client|consentie|exceptionnelle|globale|forfaitaire|sur\b|de\s+\d|[-\d])/i,
   /remise commerciale/i,
   /\bbenne\b/i,
   /\bleurre\b/i,
