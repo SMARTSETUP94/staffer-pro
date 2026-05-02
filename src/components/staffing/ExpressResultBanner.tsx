@@ -1,25 +1,24 @@
 // v0.35.11 / Sprint Express — Bandeau sticky post-création Express
 // Affiché en haut de /staffing/$planId quand on arrive depuis le bouton Express,
-// avec actions immédiates : Publier (si draft), Ajuster (scroll Gantt), Annuler (delete).
+// avec actions immédiates : Publier (si draft), Ajuster (scroll Gantt), Fermer.
 import { useState } from "react";
-import { useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { CheckCircle2, AlertTriangle, Send, ListChecks, Trash2, X, Sparkles } from "lucide-react";
+import { CheckCircle2, AlertTriangle, Send, ListChecks, X, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { publishStaffingPlan } from "@/server/staffing-publish.functions";
-import { deleteStaffingPlan } from "@/server/staffing-plan-delete.functions";
+
+interface Props {
+  planId: string;
+  published: boolean;
+  filled: number;
+  unfilled: number;
+  alertesCritiques: number;
+  reason: string;
+  onDismiss: () => void;
+  onPublished: () => void;
+}
 
 interface Props {
   planId: string;
@@ -42,12 +41,8 @@ export function ExpressResultBanner({
   onDismiss,
   onPublished,
 }: Props) {
-  const navigate = useNavigate();
   const publishFn = useServerFn(publishStaffingPlan);
-  const deleteFn = useServerFn(deleteStaffingPlan);
   const [publishing, setPublishing] = useState(false);
-  const [confirmDelete, setConfirmDelete] = useState(false);
-  const [deleting, setDeleting] = useState(false);
 
   const blocking = unfilled > 0 || alertesCritiques > 0;
 
@@ -62,19 +57,6 @@ export function ExpressResultBanner({
       toast.error(e instanceof Error ? e.message : "Publication échouée");
     } finally {
       setPublishing(false);
-    }
-  };
-
-  const handleDelete = async () => {
-    setDeleting(true);
-    try {
-      await deleteFn({ data: { planId } });
-      toast.success("Plan annulé");
-      navigate({ to: "/dashboard" });
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Suppression échouée");
-      setDeleting(false);
-      setConfirmDelete(false);
     }
   };
 
