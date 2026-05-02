@@ -178,6 +178,38 @@ export function PlanningGrid({
     return map;
   }, [assignations, absences, affairesById]);
 
+  // v0.35.9 — Index dépassements devis (heures_assignees > heures_prevues) par poste
+  const overrunKeys = useMemo(() => {
+    const map = new Map<string, { numero: string; metier: string; depassement: number; prevues: number; assignees: number }>();
+    consommation.forEach((c) => {
+      if (c.heures_assignees > c.heures_prevues) {
+        map.set(`${c.affaire_id}::${c.devis_id}::${c.metier_id}`, {
+          numero: c.devis_numero,
+          metier: c.metier,
+          depassement: c.heures_assignees - c.heures_prevues,
+          prevues: c.heures_prevues,
+          assignees: c.heures_assignees,
+        });
+      }
+    });
+    return map;
+  }, [consommation]);
+
+  // Index dépassements par cellule (employe::date)
+  const overrunByCell = useMemo(() => {
+    const m = new Map<string, { numero: string; metier: string; depassement: number; prevues: number; assignees: number }[]>();
+    assignations.forEach((a) => {
+      if (!a.devis_id) return;
+      const ov = overrunKeys.get(`${a.affaire_id}::${a.devis_id}::${a.metier_id}`);
+      if (!ov) return;
+      const cellKey = `${a.employe_id}::${a.date}`;
+      const arr = m.get(cellKey) ?? [];
+      if (!arr.some((x) => x.numero === ov.numero && x.metier === ov.metier)) arr.push(ov);
+      m.set(cellKey, arr);
+    });
+    return m;
+  }, [assignations, overrunKeys]);
+
   // Fix #51 — Filtre métier intelligent : un employé apparaît dans le métier X si
   //  - son métier principal = X (titulaire), OU
   //  - il a ≥1 assignation de la semaine avec metier_id = X (renfort)
