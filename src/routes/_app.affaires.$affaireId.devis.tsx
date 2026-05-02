@@ -26,6 +26,7 @@ import {
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { DevisDeleteCascadeDialog } from "@/components/devis-import/DevisDeleteCascadeDialog";
+import { StaffingPlanWizard } from "@/components/staffing/StaffingPlanWizard";
 
 /** v0.15.1 — Statuts UI exposés. Les autres (en_cours, cloture, facture) restent
  *  dormants en DB pour flexibilité future mais ne sont pas proposés à la sélection. */
