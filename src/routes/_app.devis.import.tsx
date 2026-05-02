@@ -515,6 +515,8 @@ function DevisImportPage() {
     setPostes([]);
     setObjets([]);
     setIntegrityChecks([]);
+    setExclusions([]);
+    setSourceFilename(null);
     setNomDevis("");
     setNumeroDevis("");
     setDateMontage(undefined);
