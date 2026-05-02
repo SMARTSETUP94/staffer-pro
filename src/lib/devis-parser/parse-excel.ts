@@ -338,42 +338,42 @@ function aggregateObjet(parent: ParsedRow, allRows: ParsedRow[]): ObjetCandidat 
 function buildObjetsForSection(section: ParsedRow, allRows: ParsedRow[]): ObjetCandidat[] {
   const subTree = descendantsOf(section, allRows);
 
-  // Candidats N.M (niveau 2) qui ont au moins un descendant atelier OU sont eux-mêmes atelier
-  const niveau2 = subTree.filter((r) => r.niveau === 2 && !r.isExclude && !r.isComment);
+  // Détection de la profondeur réelle :
+  //  - Profondeur 3 (Progbat moderne) : Section N → Objets N.M → Postes N.M.K
+  //  - Profondeur 2 (historique simple) : Section N → Postes N.M directement
+  //    → on crée un objet IMPLICITE portant le libellé de la Section.
+  const hasNiveau3 = subTree.some((r) => r.niveau >= 3);
 
   const objets: ObjetCandidat[] = [];
-  for (const obj of niveau2) {
-    // Si N.M est un lot chantier pur → ignoré (heures vont dans heuresChantier)
-    if ((obj.isMontage || obj.isDemontage) && !obj.metier) continue;
-    if (!obj.designation) continue;
 
-    // L'objet doit avoir au moins un poste avec heures atelier ou matière,
-    // OU être lui-même un poste atelier (N.M directement métier sans N.M.K).
-    const directChildren = descendantsOf(obj, allRows);
-    const hasAnyAtelier = directChildren.some(
-      (c) => !c.isExclude && !c.isComment && (c.metier || c.isMatiere),
-    );
-    const isLeafAtelier = directChildren.length === 0 && !!obj.metier && (obj.tempsPrevu ?? 0) > 0;
-    const isLeafMatiere = directChildren.length === 0 && obj.isMatiere;
+  if (hasNiveau3) {
+    // Cas 3 niveaux : objets = N.M qui ont au moins un enfant atelier/matière
+    const niveau2 = subTree.filter((r) => r.niveau === 2 && !r.isExclude && !r.isComment);
+    for (const obj of niveau2) {
+      if ((obj.isMontage || obj.isDemontage) && !obj.metier) continue;
+      if (!obj.designation) continue;
 
-    if (hasAnyAtelier) {
-      objets.push(aggregateObjet(obj, allRows));
-    } else if (isLeafAtelier || isLeafMatiere) {
-      // Objet feuille (sans N.M.K) : on l'agrège quand même (lui-même est sa propre ligne)
-      objets.push(aggregateObjet(obj, allRows));
+      const directChildren = descendantsOf(obj, allRows);
+      const hasAnyAtelier = directChildren.some(
+        (c) => !c.isExclude && !c.isComment && (c.metier || c.isMatiere),
+      );
+      const isLeafAtelier =
+        directChildren.length === 0 && !!obj.metier && (obj.tempsPrevu ?? 0) > 0;
+      const isLeafMatiere = directChildren.length === 0 && obj.isMatiere;
+
+      if (hasAnyAtelier || isLeafAtelier || isLeafMatiere) {
+        objets.push(aggregateObjet(obj, allRows));
+      }
     }
   }
 
-  // Cas spécial : Section sans aucun N.M mais avec descendants atelier directs
-  // (pattern "Section juste = postes en N.K"). Ex : section 1 contenant 1.1, 1.2 où
-  // 1.1 et 1.2 sont déjà des POSTES atelier (pas des objets).
+  // Cas 2 niveaux OU 3 niveaux sans aucun objet détecté → objet implicite Section.
   if (objets.length === 0) {
     const hasAtelierAnywhere = subTree.some(
       (c) => !c.isExclude && !c.isComment && c.metier && (c.tempsPrevu ?? 0) > 0,
     );
     const hasMatiere = subTree.some((c) => !c.isExclude && c.isMatiere);
     if (hasAtelierAnywhere || hasMatiere) {
-      // Objet implicite = la section elle-même
       objets.push(aggregateObjet(section, allRows));
     }
   }
