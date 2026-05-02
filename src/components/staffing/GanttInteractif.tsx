@@ -1,9 +1,12 @@
 // v0.35.2 / Sprint 2.1 — GanttInteractif : composant principal Auto-staffing Fabrication 5XXX
+// v0.35.x — Pré-vol risque (toast + slider warning + badge inline) avant commit.
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, ArrowUp, ArrowDown, RefreshCw, Calendar, Users, Activity } from "lucide-react";
+import { toast } from "sonner";
+import { Loader2, ArrowUp, ArrowDown, RefreshCw, Calendar, Users, Activity, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
+import { Badge } from "@/components/ui/badge";
 import {
   calculateStaffingPlan,
   updatePlanObject,
@@ -20,8 +23,9 @@ import {
 import { GanttBar } from "./GanttBar";
 import { HeatmapMetier } from "./HeatmapMetier";
 import { AlerteBandeau } from "./AlerteBandeau";
-import type { PlanResult, PlanStep } from "@/lib/staffing/types";
+import type { PlanResult, PlanStep, PlanAlert } from "@/lib/staffing/types";
 import { METIER_KEY_BY_ID } from "@/lib/staffing/types";
+import { simulateStepChange, impactToastMessage, type SliderImpact } from "@/lib/staffing/slider-impact";
 
 export interface PlanData {
   plan: { id: string; affaire_id: string; date_debut_fab: string; date_fin_fab: string; status: string };
@@ -53,6 +57,8 @@ export function GanttInteractif({
   const [loading, setLoading] = useState(true);
   const [busyStepId, setBusyStepId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  /** Impacts pré-vol par stepId — alimente badge + couleur slider + bandeau bonus */
+  const [impactByStep, setImpactByStep] = useState<Record<string, SliderImpact[]>>({});
 
   const reload = useCallback(async () => {
     setLoading(true);
@@ -61,6 +67,9 @@ export function GanttInteractif({
       const r = (await calculate({ data: { planId } })) as PlanData;
       setData(r);
       onDataLoaded?.(r);
+      // Reset impacts pré-vol — l'algo serveur a recalculé, les alertes officielles
+      // sont dans r.result.alerts.
+      setImpactByStep({});
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erreur inconnue");
     } finally {
@@ -94,22 +103,58 @@ export function GanttInteractif({
     return { totalH, pic, statut, statutColor };
   }, [data]);
 
+  /** Pré-vol : simule l'impact, affiche toast + stocke pour badges, puis commit */
+  const previewAndCommit = useCallback(
+    async (
+      step: PlanStep,
+      change: { newPers?: number; newShift?: number },
+      commit: () => Promise<void>,
+    ) => {
+      if (!data) return;
+      const impacts = simulateStepChange({
+        step,
+        newPers: change.newPers,
+        newShift: change.newShift,
+        allSteps: data.result.steps,
+        dailyLoad: data.result.daily_load,
+        dateFinFab: data.result.date_fin_fab,
+      });
+      if (impacts.length > 0) {
+        toast.warning("Réduction non viable", {
+          description: impactToastMessage(impacts),
+          duration: 6000,
+        });
+        setImpactByStep((prev) => ({ ...prev, [step.id]: impacts }));
+      } else {
+        setImpactByStep((prev) => {
+          if (!(step.id in prev)) return prev;
+          const { [step.id]: _, ...rest } = prev;
+          return rest;
+        });
+      }
+      await commit();
+    },
+    [data],
+  );
+
   const handleShift = useCallback(
-    async (stepId: string, delta: number) => {
+    async (step: PlanStep, delta: number) => {
       if (!data || busyStepId) return;
-      const ov = data.step_overrides[stepId];
+      const ov = data.step_overrides[step.id];
       const newShift = (ov?.manual_shift ?? 0) + delta;
-      setBusyStepId(stepId);
+      setBusyStepId(step.id);
       try {
-        await updateStep({ data: { id: stepId, manual_shift: newShift } });
-        await reload();
+        await previewAndCommit(step, { newShift: delta }, async () => {
+          await updateStep({ data: { id: step.id, manual_shift: newShift } });
+          await reload();
+        });
       } catch (e) {
         setError(e instanceof Error ? e.message : "Erreur décalage");
       } finally {
         setBusyStepId(null);
       }
     },
-    [data, busyStepId, updateStep, reload]
+    [data, busyStepId, updateStep, reload, previewAndCommit],
   );
 
   const handleResetShift = useCallback(
@@ -118,6 +163,11 @@ export function GanttInteractif({
       setBusyStepId(stepId);
       try {
         await updateStep({ data: { id: stepId, manual_shift: 0 } });
+        setImpactByStep((prev) => {
+          if (!(stepId in prev)) return prev;
+          const { [stepId]: _, ...rest } = prev;
+          return rest;
+        });
         await reload();
       } catch (e) {
         setError(e instanceof Error ? e.message : "Erreur reset");
@@ -125,23 +175,25 @@ export function GanttInteractif({
         setBusyStepId(null);
       }
     },
-    [busyStepId, updateStep, reload]
+    [busyStepId, updateStep, reload],
   );
 
   const handleSetPers = useCallback(
-    async (stepId: string, pers: number) => {
+    async (step: PlanStep, pers: number) => {
       if (busyStepId) return;
-      setBusyStepId(stepId);
+      setBusyStepId(step.id);
       try {
-        await updateStep({ data: { id: stepId, pers, manual_pers: true } });
-        await reload();
+        await previewAndCommit(step, { newPers: pers }, async () => {
+          await updateStep({ data: { id: step.id, pers, manual_pers: true } });
+          await reload();
+        });
       } catch (e) {
         setError(e instanceof Error ? e.message : "Erreur pers");
       } finally {
         setBusyStepId(null);
       }
     },
-    [busyStepId, updateStep, reload]
+    [busyStepId, updateStep, reload, previewAndCommit],
   );
 
   const handleReorder = useCallback(
@@ -163,7 +215,7 @@ export function GanttInteractif({
         setError(e instanceof Error ? e.message : "Erreur reorder");
       }
     },
-    [data, updateObj, reload]
+    [data, updateObj, reload],
   );
 
   if (loading) {
@@ -188,14 +240,29 @@ export function GanttInteractif({
   const objets = [...data.objets].sort((a, b) => a.display_order - b.display_order);
   const dateLivraison = data.result.date_fin_fab;
 
-  // Grid template : 1 col label + N cols jours
+  // Grid template
   const gridTemplate = `220px repeat(${days.length}, minmax(42px, 1fr))`;
 
-  // Helper : récupérer step Bois/Peint d'un objet pour piloter le slider sous le header
   const getObjStepByMetier = (objet_id: string, metier_id: number): PlanStep | undefined =>
     data.result.steps.find(
-      (s) => s.objet_id === objet_id && s.metier_id === metier_id && s.start_date !== "TBD"
+      (s) => s.objet_id === objet_id && s.metier_id === metier_id && s.start_date !== "TBD",
     );
+
+  // Bandeau alertes = officielles serveur + pré-vol pending (transient)
+  const previewAlerts: PlanAlert[] = Object.entries(impactByStep).flatMap(([stepId, impacts]) =>
+    impacts.map((imp) => ({
+      code:
+        imp.kind === "debord"
+          ? "DEBORD_LIVRAISON"
+          : imp.kind === "pic"
+            ? "PIC_GLOBAL_DEPASSE"
+            : "PLAFOND_OBJET_DEPASSE",
+      severity: "soft" as const,
+      message: `Pré-vol : ${imp.message}`,
+      step_id: stepId,
+    })),
+  );
+  const allAlerts = [...data.result.alerts, ...previewAlerts];
 
   return (
     <div className="space-y-4">
@@ -220,8 +287,8 @@ export function GanttInteractif({
         />
       </div>
 
-      {/* Alertes */}
-      <AlerteBandeau alerts={data.result.alerts} />
+      {/* Alertes (officielles + pré-vol) */}
+      <AlerteBandeau alerts={allAlerts} />
 
       {/* Gantt */}
       <div className="overflow-x-auto rounded-2xl border border-border bg-card">
@@ -247,6 +314,7 @@ export function GanttInteractif({
               const overDL = stepEnd.toISOString().slice(0, 10) > dateLivraison;
               const k = METIER_KEY_BY_ID[s.metier_id] ?? "Manut";
               const ov = data.step_overrides[s.id];
+              const hasImpact = (impactByStep[s.id]?.length ?? 0) > 0;
               return (
                 <div
                   key={s.id}
@@ -259,6 +327,7 @@ export function GanttInteractif({
                       style={{ backgroundColor: METIER_COLOR[k] }}
                     />
                     <span className="font-semibold">{METIER_LABEL[k]} (global)</span>
+                    {hasImpact && <ImpactBadge impacts={impactByStep[s.id]!} />}
                   </div>
                   {span.visible && (
                     <GanttBar
@@ -267,7 +336,8 @@ export function GanttInteractif({
                       endCol={span.endCol + 1}
                       isOverDeadline={overDL}
                       manualShift={ov?.manual_shift ?? 0}
-                      onShift={(d) => handleShift(s.id, d)}
+                      hasWarning={hasImpact}
+                      onShift={(d) => handleShift(s, d)}
                       onResetShift={() => handleResetShift(s.id)}
                     />
                   )}
@@ -278,7 +348,7 @@ export function GanttInteractif({
           {/* Par objet */}
           {objets.map((obj, idx) => {
             const objSteps = data.result.steps.filter(
-              (s) => s.objet_id === obj.objet_id && s.start_date !== "TBD"
+              (s) => s.objet_id === obj.objet_id && s.start_date !== "TBD",
             );
             const boisStep = getObjStepByMetier(obj.objet_id, 1);
             const peintStep = getObjStepByMetier(obj.objet_id, 3);
@@ -317,10 +387,6 @@ export function GanttInteractif({
                       <p className="font-mono text-[10px] text-muted-foreground">
                         {obj.heures_total.toFixed(0)} h
                       </p>
-                      {/* Sliders Bois / Peint
-                          NOTE: `key` inclut la valeur — force le remontage Radix après commit
-                          pour que le thumb retombe sur la valeur DB (sinon Radix garde la
-                          position visuelle interne du dernier drag même après reload). */}
                       {boisStep && (
                         <PersSlider
                           key={`bois-${boisStep.id}-${boisStep.pers}`}
@@ -328,7 +394,8 @@ export function GanttInteractif({
                           color={METIER_COLOR.Bois}
                           value={boisStep.pers}
                           disabled={busyStepId === boisStep.id}
-                          onChange={(v) => handleSetPers(boisStep.id, v)}
+                          impacts={impactByStep[boisStep.id]}
+                          onChange={(v) => handleSetPers(boisStep, v)}
                         />
                       )}
                       {peintStep && (
@@ -338,7 +405,8 @@ export function GanttInteractif({
                           color={METIER_COLOR.Peint}
                           value={peintStep.pers}
                           disabled={busyStepId === peintStep.id}
-                          onChange={(v) => handleSetPers(peintStep.id, v)}
+                          impacts={impactByStep[peintStep.id]}
+                          onChange={(v) => handleSetPers(peintStep, v)}
                         />
                       )}
                     </div>
@@ -353,6 +421,7 @@ export function GanttInteractif({
                   const overDL = stepEnd.toISOString().slice(0, 10) > dateLivraison;
                   const k = METIER_KEY_BY_ID[s.metier_id] ?? "Manut";
                   const ov = data.step_overrides[s.id];
+                  const hasImpact = (impactByStep[s.id]?.length ?? 0) > 0;
                   return (
                     <div
                       key={s.id}
@@ -365,6 +434,7 @@ export function GanttInteractif({
                           style={{ backgroundColor: METIER_COLOR[k] }}
                         />
                         <span className="text-muted-foreground">{METIER_LABEL[k]}</span>
+                        {hasImpact && <ImpactBadge impacts={impactByStep[s.id]!} />}
                       </div>
                       {span.visible && (
                         <GanttBar
@@ -373,7 +443,8 @@ export function GanttInteractif({
                           endCol={span.endCol + 1}
                           isOverDeadline={overDL}
                           manualShift={ov?.manual_shift ?? 0}
-                          onShift={(d) => handleShift(s.id, d)}
+                          hasWarning={hasImpact}
+                          onShift={(d) => handleShift(s, d)}
                           onResetShift={() => handleResetShift(s.id)}
                         />
                       )}
@@ -409,28 +480,53 @@ export function GanttInteractif({
   );
 }
 
+function ImpactBadge({ impacts }: { impacts: SliderImpact[] }) {
+  const labels = impacts.map((i) =>
+    i.kind === "debord" ? "Débord" : i.kind === "pic" ? "Pic" : "Volume",
+  );
+  return (
+    <Badge
+      variant="outline"
+      className="border-amber-500/60 bg-amber-500/10 text-amber-700 dark:text-amber-400 px-1.5 py-0 text-[9px] font-bold"
+      title={impacts.map((i) => i.message).join("\n")}
+    >
+      <AlertTriangle className="mr-0.5 h-2.5 w-2.5" />
+      {labels.join(" · ")}
+    </Badge>
+  );
+}
+
 function PersSlider({
   label,
   color,
   value,
   disabled,
+  impacts,
   onChange,
 }: {
   label: string;
   color: string;
   value: number;
   disabled?: boolean;
+  impacts?: SliderImpact[];
   onChange: (v: number) => void;
 }) {
+  const hasWarn = (impacts?.length ?? 0) > 0;
   return (
     <div className="flex items-center gap-2">
       <span
         className="inline-block h-1.5 w-1.5 rounded-sm"
         style={{ backgroundColor: color }}
       />
-      <span className="w-10 text-[10px] uppercase tracking-wider text-muted-foreground">{label}</span>
+      <span
+        className={`w-10 text-[10px] uppercase tracking-wider ${
+          hasWarn ? "text-amber-600 dark:text-amber-400 font-bold" : "text-muted-foreground"
+        }`}
+      >
+        {label}
+      </span>
       <Slider
-        className="w-24"
+        className={`w-24 ${hasWarn ? "[&_[data-orientation=horizontal]>span:first-child]:bg-amber-500/30 [&_[role=slider]]:border-amber-500 [&_[role=slider]]:ring-2 [&_[role=slider]]:ring-amber-500/40" : ""}`}
         min={2}
         max={12}
         step={2}
@@ -438,7 +534,14 @@ function PersSlider({
         disabled={disabled}
         onValueCommit={(v) => onChange(v[0] ?? value)}
       />
-      <span className="w-7 font-mono text-[10px] font-bold tabular-nums">{value}p</span>
+      <span
+        className={`w-7 font-mono text-[10px] font-bold tabular-nums ${
+          hasWarn ? "text-amber-600 dark:text-amber-400" : ""
+        }`}
+      >
+        {value}p
+      </span>
+      {hasWarn && <AlertTriangle className="h-3 w-3 text-amber-500" />}
     </div>
   );
 }

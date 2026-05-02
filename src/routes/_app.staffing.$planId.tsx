@@ -1,11 +1,15 @@
 // v0.35.5 / Sprint 5 — Page Gantt staffing + Wizard + Publication + Historique
 import { useEffect, useState } from "react";
 import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
-import { ArrowLeft, History, Send } from "lucide-react";
+import { ArrowLeft, History, Send, Zap, ListChecks } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
 import { GanttInteractif, type PlanData } from "@/components/staffing/GanttInteractif";
 import { StaffingPersonnesSection } from "@/components/staffing/StaffingPersonnesSection";
+import {
+  EquipeAffaireSection,
+  useStaffingViewMode,
+} from "@/components/staffing/EquipeAffaireSection";
 import { PublishPlanDialog } from "@/components/staffing/PublishPlanDialog";
 import { PlanHistoryDrawer } from "@/components/staffing/PlanHistoryDrawer";
 import { Button } from "@/components/ui/button";
@@ -21,8 +25,10 @@ function StaffingPlanPage() {
   const { isAdminOrChef, rolesLoaded } = useAuth();
   const [planData, setPlanData] = useState<PlanData | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [equipeRefresh, setEquipeRefresh] = useState(0);
   const [publishOpen, setPublishOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [viewMode, setViewMode] = useStaffingViewMode();
   const [planMeta, setPlanMeta] = useState<{
     status: string;
     published_at: string | null;
@@ -176,15 +182,41 @@ function StaffingPlanPage() {
         onDataLoaded={setPlanData}
       />
       {planData && (
-        <StaffingPersonnesSection
-          planId={planId}
-          steps={planData.result.steps}
-          objetsLabel={objetsLabel}
-          /* IMPORTANT: ne PAS bump refreshKey ici — ça remonterait le Gantt et
-             relancerait calculateStaffingPlan inutilement. La section gère son
-             propre reload des assignments. La heatmap (Gantt) ne dépend que des
-             steps, pas des assignments. */
-        />
+        <>
+          <div className="flex items-center gap-2 rounded-2xl border border-border bg-card p-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground px-2">
+              Mode d'affectation
+            </span>
+            <div className="flex gap-1">
+              <Button
+                size="sm"
+                variant={viewMode === "rapide" ? "default" : "ghost"}
+                onClick={() => setViewMode("rapide")}
+              >
+                <Zap className="mr-1 h-3 w-3" /> Rapide (par affaire)
+              </Button>
+              <Button
+                size="sm"
+                variant={viewMode === "detaille" ? "default" : "ghost"}
+                onClick={() => setViewMode("detaille")}
+              >
+                <ListChecks className="mr-1 h-3 w-3" /> Détaillé (par créneau)
+              </Button>
+            </div>
+          </div>
+          {viewMode === "rapide" && (
+            <EquipeAffaireSection
+              planId={planId}
+              onAssigned={() => setEquipeRefresh((k) => k + 1)}
+            />
+          )}
+          <StaffingPersonnesSection
+            key={equipeRefresh}
+            planId={planId}
+            steps={planData.result.steps}
+            objetsLabel={objetsLabel}
+          />
+        </>
       )}
 
       {affaireMeta && planData && (
