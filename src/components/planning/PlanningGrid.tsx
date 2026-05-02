@@ -642,6 +642,30 @@ export function PlanningGrid({
                               </Tooltip>
                             </div>
                           )}
+                          {overrun && overrun.length > 0 && (
+                            <div className={cn("absolute z-10", conflict ? "right-0.5 top-5" : "right-0.5 top-0.5")}>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <span className="flex h-4 min-w-4 items-center justify-center gap-0.5 rounded-full bg-destructive px-1 text-[9px] font-bold text-destructive-foreground shadow ring-1 ring-destructive-foreground/20">
+                                    <span className="leading-none">!</span>
+                                    <span className="leading-none">
+                                      +{Math.round(overrun.reduce((s, o) => s + o.depassement, 0))}h
+                                    </span>
+                                  </span>
+                                </TooltipTrigger>
+                                <TooltipContent side="top" className="text-xs">
+                                  <div className="mb-1 font-semibold text-destructive">⚠ Dépassement devis</div>
+                                  {overrun.map((o, i) => (
+                                    <div key={i} className="mt-0.5">
+                                      <span className="font-medium">{o.numero}</span> · {o.metier} :
+                                      {" "}{o.assignees.toFixed(1)}h / {o.prevues.toFixed(1)}h prévues
+                                      {" "}<span className="font-semibold text-destructive">(+{o.depassement.toFixed(1)}h)</span>
+                                    </div>
+                                  ))}
+                                </TooltipContent>
+                              </Tooltip>
+                            </div>
+                          )}
                           <AssignationCell
                             assignations={dayAssigns}
                             metiersById={metiersById}
