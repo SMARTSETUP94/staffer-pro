@@ -1,10 +1,14 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 import {
   shouldForceSetPassword,
   isAuthHashPresent,
   isOnboardingPath,
   shouldIgnoreTokenRefreshForSameUser,
   shouldRedirectToOnboarding,
+  isOnboardingSkipped,
+  markOnboardingSkipped,
+  clearOnboardingSkipped,
+  ONBOARDING_SKIPPED_KEY,
 } from "@/lib/auth-redirect-helpers";
 import { resolveSetPasswordRedirect } from "@/lib/admin-actions";
 
