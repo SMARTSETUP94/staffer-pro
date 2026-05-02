@@ -156,18 +156,36 @@ export function StaffingEditToolbar({
     return () => clearInterval(itv);
   }, [lastSavedAt]);
 
-  /** Raccourci clavier Ctrl/Cmd+S → flush manuel (toast confirmation) */
+  /** Raccourcis clavier : Ctrl/Cmd+S → flush ; Ctrl/Cmd+Z → undo */
   useEffect(() => {
     const handler = (ev: KeyboardEvent) => {
-      const isSave = (ev.ctrlKey || ev.metaKey) && (ev.key === "s" || ev.key === "S");
-      if (!isSave) return;
-      ev.preventDefault();
-      const dc = useEditStore.getState().dirtyCount();
-      if (dc === 0) {
-        toast.info("Aucune modification à enregistrer");
+      const meta = ev.ctrlKey || ev.metaKey;
+      if (!meta) return;
+      // Ne pas hijack le undo natif quand on tape dans un input/textarea
+      const target = ev.target as HTMLElement | null;
+      const inEditable =
+        !!target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable);
+
+      if (ev.key === "s" || ev.key === "S") {
+        ev.preventDefault();
+        const dc = useEditStore.getState().dirtyCount();
+        if (dc === 0) {
+          toast.info("Aucune modification à enregistrer");
+          return;
+        }
+        void doFlush();
         return;
       }
-      void doFlush();
+      if ((ev.key === "z" || ev.key === "Z") && !ev.shiftKey && !inEditable) {
+        const depth = useEditStore.getState().history.length;
+        if (depth === 0) return; // laisse passer si rien à annuler
+        ev.preventDefault();
+        const ok = useEditStore.getState().undo();
+        if (ok) toast.info("Modification annulée", { duration: 1500 });
+      }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
