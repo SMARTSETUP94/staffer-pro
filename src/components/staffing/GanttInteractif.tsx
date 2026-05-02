@@ -439,7 +439,8 @@ export const GanttInteractif = forwardRef<
                   stepEnd.setUTCDate(stepEnd.getUTCDate() + s.span_days - 1);
                   const overDL = stepEnd.toISOString().slice(0, 10) > dateLivraison;
                   const k = METIER_KEY_BY_ID[s.metier_id] ?? "Manut";
-                  const ov = data.step_overrides[s.id];
+                  const baseShift = data.step_overrides[s.id]?.manual_shift ?? 0;
+                  const localShift = edits[s.id]?.manual_shift ?? baseShift;
                   const hasImpact = (impactByStep[s.id]?.length ?? 0) > 0;
                   return (
                     <div
@@ -461,7 +462,7 @@ export const GanttInteractif = forwardRef<
                           startCol={span.startCol + 1}
                           endCol={span.endCol + 1}
                           isOverDeadline={overDL}
-                          manualShift={ov?.manual_shift ?? 0}
+                          manualShift={localShift}
                           hasWarning={hasImpact}
                           onShift={(d) => handleShift(s, d)}
                           onResetShift={() => handleResetShift(s.id)}
