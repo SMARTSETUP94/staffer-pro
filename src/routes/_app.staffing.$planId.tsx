@@ -81,15 +81,19 @@ function StaffingPlanPage() {
           </div>
           <p className="mt-1 font-mono text-xs text-muted-foreground">{planId}</p>
         </div>
-        <Button asChild variant="outline" size="sm">
-          <Link
-            to={affaireMeta ? "/affaires/$affaireId/fabrication" : "/dashboard"}
-            params={affaireMeta ? { affaireId: affaireMeta.id } : undefined}
-          >
-            <ArrowLeft className="mr-1 h-3 w-3" />
-            {affaireMeta ? "Retour à l'affaire" : "Retour"}
-          </Link>
-        </Button>
+        {affaireMeta ? (
+          <Button asChild variant="outline" size="sm">
+            <Link to="/affaires/$affaireId/fabrication" params={{ affaireId: affaireMeta.id }}>
+              <ArrowLeft className="mr-1 h-3 w-3" /> Retour à l'affaire
+            </Link>
+          </Button>
+        ) : (
+          <Button asChild variant="outline" size="sm">
+            <Link to="/dashboard">
+              <ArrowLeft className="mr-1 h-3 w-3" /> Retour
+            </Link>
+          </Button>
+        )}
       </div>
       <GanttInteractif
         key={refreshKey}
