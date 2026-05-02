@@ -23,7 +23,7 @@ import { AlerteBandeau } from "./AlerteBandeau";
 import type { PlanResult, PlanStep } from "@/lib/staffing/types";
 import { METIER_KEY_BY_ID } from "@/lib/staffing/types";
 
-interface PlanData {
+export interface PlanData {
   plan: { id: string; affaire_id: string; date_debut_fab: string; date_fin_fab: string; status: string };
   objets: Array<{
     id: string;
