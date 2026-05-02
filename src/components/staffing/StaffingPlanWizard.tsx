@@ -9,7 +9,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, Link } from "@tanstack/react-router";
 import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
-import { CalendarIcon, Loader2, Trash2, Calculator, ExternalLink, Sparkles, AlertTriangle } from "lucide-react";
+import { CalendarIcon, Loader2, Trash2, Calculator, ExternalLink, Sparkles, AlertTriangle, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -388,16 +388,31 @@ export function StaffingPlanWizard({
             )}
           </div>
 
-          {/* Action */}
-          <div className="flex flex-wrap items-center justify-end gap-2">
+          {/* v0.35.x audit UX #3 — barre récap sticky toujours visible */}
+          <div className="sticky bottom-0 -mx-1 flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card/95 px-3 py-2 shadow-md backdrop-blur">
+            <Badge variant="outline" className="gap-1">
+              <span className="font-mono">{includedCount}</span>
+              <span className="text-muted-foreground">/ {visibleObjets.length} objets</span>
+            </Badge>
+            <Badge variant="outline" className="font-mono">
+              {totalHeures.toFixed(1)} h
+            </Badge>
+            {dateDebut && dateFin && (
+              <Badge variant="secondary" className="text-[10px]">
+                {format(dateDebut, "dd MMM", { locale: fr })} → {format(dateFin, "dd MMM yyyy", { locale: fr })}
+              </Badge>
+            )}
+            <div className="flex-1" />
             {hasExisting && creatingNew && (
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setCreatingNew(false)}
                 disabled={submitting}
+                title="Revenir aux plans existants"
               >
-                Annuler
+                <ArrowLeft className="mr-1 h-3 w-3" />
+                Précédent
               </Button>
             )}
             <Button

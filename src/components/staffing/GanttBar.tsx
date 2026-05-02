@@ -13,6 +13,8 @@ interface Props {
   manualShift?: number;
   /** Indique un risque pré-vol détecté (toast déjà affiché) — entoure d'un ring orange */
   hasWarning?: boolean;
+  /** v0.35.x audit UX #2 — modif locale en attente de flush (sliders / shift) */
+  hasLocalEdit?: boolean;
   onShift?: (delta: number) => void;
   onResetShift?: () => void;
   disableShift?: boolean;
@@ -25,23 +27,34 @@ export function GanttBar({
   isOverDeadline,
   manualShift = 0,
   hasWarning,
+  hasLocalEdit,
   onShift,
   onResetShift,
   disableShift,
 }: Props) {
   const metierKey = METIER_KEY_BY_ID[step.metier_id] ?? "Manut";
   const bg = isOverDeadline ? "#dc2626" : METIER_COLOR[metierKey];
-  const warnRing = hasWarning && !isOverDeadline ? "ring-2 ring-amber-500/80 ring-offset-1 ring-offset-background" : "";
+  // Priorité visuelle : warning (rouge/risque) > localEdit (pointillé orange)
+  const ringClass = hasWarning && !isOverDeadline
+    ? "ring-2 ring-amber-500/80 ring-offset-1 ring-offset-background"
+    : hasLocalEdit
+      ? "outline-dashed outline-2 outline-offset-1 outline-amber-500/90"
+      : "";
   const shiftLabel = manualShift !== 0 ? `${manualShift > 0 ? "+" : ""}${manualShift}j` : null;
+  const tooltip =
+    `${metierKey} · ${step.pers}p × ${step.span_days}j × ${step.h_par_jour}h` +
+    (shiftLabel ? ` (décalé ${shiftLabel})` : "") +
+    (hasWarning ? " — risque détecté" : "") +
+    (hasLocalEdit ? " — modif locale en attente (Ctrl+S pour enregistrer)" : "");
   return (
     <div
-      className={`group relative flex h-7 items-center rounded-md px-2 text-[11px] font-mono text-white shadow-sm ${warnRing}`}
+      className={`group relative flex h-7 items-center rounded-md px-2 text-[11px] font-mono text-white shadow-sm ${ringClass}`}
       style={{
         gridColumnStart: startCol,
         gridColumnEnd: endCol,
         backgroundColor: bg,
       }}
-      title={`${metierKey} · ${step.pers}p × ${step.span_days}j × ${step.h_par_jour}h${shiftLabel ? ` (décalé ${shiftLabel})` : ""}${hasWarning ? " — risque détecté" : ""}`}
+      title={tooltip}
     >
       {onShift && !disableShift && (
         <Button
