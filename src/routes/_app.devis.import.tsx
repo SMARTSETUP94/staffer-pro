@@ -131,6 +131,10 @@ function DevisImportPage() {
 
   // Section 3 (objets fabrication Progbat)
   const [objets, setObjets] = useState<EditableObjet[]>([]);
+  // v0.31.4b — cross-checks intégrité Section vs Σ(objets) du parser.
+  const [integrityChecks, setIntegrityChecks] = useState<
+    import("@/lib/devis-parser/types").IntegrityCheck[]
+  >([]);
 
   // Section 4 (heures chantier)
   const [importMontage, setImportMontage] = useState(false);
