@@ -98,6 +98,7 @@ export const METIER_REGEX: Record<FabMetier, RegExp[]> = {
     /suivi de projet[ _-]?heures?/i,
     /suivi de projet/i,
     /suivi de chantier/i,
+    /plans techniques[ _-]?heures?/i,
     /plans techniques/i,
     /visite technique/i,
     /[ée]tude technique/i,
