@@ -408,22 +408,20 @@ export const GanttInteractif = forwardRef<
                       </p>
                       {boisStep && (
                         <PersSlider
-                          key={`bois-${boisStep.id}-${boisStep.pers}`}
                           label="Bois"
                           color={METIER_COLOR.Bois}
                           value={boisStep.pers}
-                          disabled={busyStepId === boisStep.id}
+                          disabled={false}
                           impacts={impactByStep[boisStep.id]}
                           onChange={(v) => handleSetPers(boisStep, v)}
                         />
                       )}
                       {peintStep && (
                         <PersSlider
-                          key={`peint-${peintStep.id}-${peintStep.pers}`}
                           label="Peint"
                           color={METIER_COLOR.Peint}
                           value={peintStep.pers}
-                          disabled={busyStepId === peintStep.id}
+                          disabled={false}
                           impacts={impactByStep[peintStep.id]}
                           onChange={(v) => handleSetPers(peintStep, v)}
                         />
