@@ -1,6 +1,6 @@
 // v0.35.10 #1 — Bouton "Baguette magique" : auto-staff plan complet (tous steps).
 // Affiche dialog confirmation + résumé après exécution (steps traités, slots remplis, manqués).
-import { useState } from "react";
+import { useState, forwardRef, useImperativeHandle } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Wand2, Loader2, CheckCircle2, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
@@ -16,6 +16,11 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { autoStaffPlan } from "@/server/staffing-autostaff-plan.functions";
+
+export interface AutoStaffPlanButtonHandle {
+  /** Ouvre le dialog de confirmation (raccourci clavier A). */
+  trigger: () => void;
+}
 
 interface Props {
   planId: string;
