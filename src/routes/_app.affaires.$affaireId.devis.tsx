@@ -311,7 +311,7 @@ function AffaireDevisPage() {
         <p className="overline">— Devis ({devis.length})</p>
         {isAdminOrChef && (
           <div className="flex flex-wrap items-center gap-2">
-            {affaireMeta?.typologie?.startsWith("5") && (
+            {affaireMeta?.typologie === "fabrication" && (
               <Button
                 variant="outline"
                 onClick={() => setPlanningOpen(true)}
