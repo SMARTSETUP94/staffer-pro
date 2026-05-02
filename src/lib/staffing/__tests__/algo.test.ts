@@ -493,9 +493,11 @@ describe("calculatePlan — jours ouvrés", () => {
       holidays: frenchHolidays(2026),
     });
     const bois = r.steps[0];
-    const dates = workingDateRange(bois.start_date, bois.span_days);
+    const h = frenchHolidays(2026);
+    const dates = workingDateRange(bois.start_date, bois.span_days, h);
     // Aucune date du step ne doit être le 14/07
     expect(dates.includes("2026-07-14")).toBe(false);
+    for (const d of dates) expect(isWorkingDay(d, h)).toBe(true);
   });
 
   it("daily_load ne contient aucun weekend", () => {
