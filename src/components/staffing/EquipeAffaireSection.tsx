@@ -184,7 +184,7 @@ export function EquipeAffaireSection({ planId, onAssigned }: Props) {
                 size="sm"
                 className="w-full"
                 disabled={sel.length === 0 || busyMetier === m.metier_id}
-                onClick={() => handleAssign(m.metier_id)}
+                onClick={() => setConfirmMetier(m.metier_id)}
               >
                 {busyMetier === m.metier_id ? (
                   <Loader2 className="mr-1 h-3 w-3 animate-spin" />
@@ -197,6 +197,70 @@ export function EquipeAffaireSection({ planId, onAssigned }: Props) {
           );
         })}
       </div>
+
+      {/* v0.35.x audit UX #5 — confirmation pré-affectation avec récap */}
+      <AlertDialog
+        open={confirmMetier !== null}
+        onOpenChange={(o) => !o && setConfirmMetier(null)}
+      >
+        <AlertDialogContent>
+          {confirmMetier !== null && (() => {
+            const m = metiers.find((x) => x.metier_id === confirmMetier);
+            const ids = selected[confirmMetier] ?? [];
+            const cands = candidatsByMetier[confirmMetier] ?? [];
+            const persons = cands.filter((c) => ids.includes(c.id));
+            const metierLabel =
+              METIER_LABEL[METIER_KEY_BY_ID[confirmMetier] ?? "Manut"];
+            return (
+              <>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Confirmer l'affectation rapide</AlertDialogTitle>
+                  <AlertDialogDescription asChild>
+                    <div className="space-y-2 text-sm">
+                      <p>
+                        Vous allez affecter{" "}
+                        <strong>
+                          {persons.length} personne{persons.length > 1 ? "s" : ""}
+                        </strong>{" "}
+                        sur le métier <strong>{metierLabel}</strong> à 100% de présence,
+                        couvrant <strong>{m?.steps_count ?? 0} étape{(m?.steps_count ?? 0) > 1 ? "s" : ""}</strong>{" "}
+                        soit <strong>{m?.total_pers_jours ?? 0} pers·j</strong> de
+                        couverture potentielle.
+                      </p>
+                      <ul className="rounded-md border border-border bg-muted/30 px-3 py-2 text-xs space-y-0.5">
+                        {persons.map((p) => (
+                          <li key={p.id} className="flex items-center justify-between">
+                            <span>
+                              {p.prenom} {p.nom}
+                            </span>
+                            <Badge variant="outline" className="text-[9px] px-1 py-0">
+                              T{p.tier} · {p.type_contrat}
+                            </Badge>
+                          </li>
+                        ))}
+                      </ul>
+                      <p className="text-xs text-muted-foreground">
+                        Les jours déjà saturés (cumul &gt; 100% sur d'autres affaires)
+                        seront automatiquement skippés. Vous pourrez ajuster la présence
+                        au cas par cas dans la section détaillée.
+                      </p>
+                    </div>
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Annuler</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => void handleAssign(confirmMetier)}
+                    disabled={busyMetier === confirmMetier}
+                  >
+                    Confirmer l'affectation
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </>
+            );
+          })()}
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
