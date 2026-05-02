@@ -11,6 +11,8 @@ interface Props {
   endCol: number;
   isOverDeadline?: boolean;
   manualShift?: number;
+  /** Indique un risque pré-vol détecté (toast déjà affiché) — entoure d'un ring orange */
+  hasWarning?: boolean;
   onShift?: (delta: number) => void;
   onResetShift?: () => void;
   disableShift?: boolean;
@@ -22,12 +24,14 @@ export function GanttBar({
   endCol,
   isOverDeadline,
   manualShift = 0,
+  hasWarning,
   onShift,
   onResetShift,
   disableShift,
 }: Props) {
   const metierKey = METIER_KEY_BY_ID[step.metier_id] ?? "Manut";
   const bg = isOverDeadline ? "#dc2626" : METIER_COLOR[metierKey];
+  const warnRing = hasWarning && !isOverDeadline ? "ring-2 ring-amber-500/80 ring-offset-1 ring-offset-background" : "";
   const shiftLabel = manualShift !== 0 ? `${manualShift > 0 ? "+" : ""}${manualShift}j` : null;
   return (
     <div
