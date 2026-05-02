@@ -174,4 +174,4 @@ export const AutoStaffPlanButton = forwardRef<AutoStaffPlanButtonHandle, Props>(
       </AlertDialog>
     </>
   );
-}
+});
