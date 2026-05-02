@@ -79,23 +79,26 @@ describe("computeSpan", () => {
 /* ============================================================ */
 /* findCNCSlotBackward                                           */
 /* ============================================================ */
-describe("findCNCSlotBackward", () => {
-  it("slot libre = la fin demandée", () => {
+describe("findCNCSlotBackward (jours ouvrés)", () => {
+  it("slot libre = la fin demandée (mer 06-10)", () => {
+    // 06-10 mer → start = 06-08 (lun), 06-09, 06-10
     expect(findCNCSlotBackward("2026-06-10", 3, new Set())).toBe("2026-06-08");
   });
-  it("recule si occupé sur la fenêtre", () => {
+  it("recule en sautant weekends si occupé (06-10/06-09 réservés)", () => {
+    // 06-08 réservé via remontée → fin = 06-08 lun, mais [08,09] = [09 réservé]. Recule à 06-05 (ven) → [05,08].
     const reserved = new Set(["2026-06-10", "2026-06-09"]);
     const r = findCNCSlotBackward("2026-06-10", 2, reserved);
-    expect(r).toBe("2026-06-07"); // fin = 06-08
+    expect(r).toBe("2026-06-05");
   });
   it("respecte earliestStart → null si pas de place", () => {
-    const reserved = new Set(["2026-06-10", "2026-06-09", "2026-06-08", "2026-06-07"]);
-    const r = findCNCSlotBackward("2026-06-10", 2, reserved, "2026-06-07");
+    const reserved = new Set(["2026-06-10", "2026-06-09", "2026-06-08", "2026-06-05", "2026-06-04"]);
+    const r = findCNCSlotBackward("2026-06-10", 2, reserved, "2026-06-04");
     expect(r).toBeNull();
   });
-  it("trouve un trou intermédiaire", () => {
+  it("trouve un trou intermédiaire en jours ouvrés", () => {
     const reserved = new Set(["2026-06-10", "2026-06-09", "2026-06-08"]);
-    expect(findCNCSlotBackward("2026-06-10", 2, reserved)).toBe("2026-06-06");
+    // recule jusqu'à end=06-05 → [06-04, 06-05]
+    expect(findCNCSlotBackward("2026-06-10", 2, reserved)).toBe("2026-06-04");
   });
 });
 
