@@ -200,6 +200,7 @@ export function StaffingEditToolbar({
           size="sm"
           onClick={() => void doFlush()}
           disabled={dirtyCount === 0 || flushing}
+          title="Enregistrer (Ctrl+S)"
         >
           {flushing ? (
             <Loader2 className="mr-1 h-3 w-3 animate-spin" />
