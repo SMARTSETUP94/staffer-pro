@@ -777,10 +777,10 @@ function DevisImportPage() {
               addPoste={addPoste}
             />
 
-            <DevisImportSection3Objets
+            <DevisImportObjetsHierarchy
               objets={objets}
-              updateObjet={updateObjet}
-              updateMetier={updateMetier}
+              setObjets={setObjets}
+              integrityChecks={integrityChecks}
             />
 
             <DevisImportSection4Chantier
