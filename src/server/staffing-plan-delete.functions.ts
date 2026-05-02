@@ -16,12 +16,12 @@ export const deleteStaffingPlan = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ data, context }) => {
-    const { supabase, user } = context;
+    const { supabase, userId } = context;
     // Vérif admin
     const { data: roles } = await supabase
       .from("user_roles")
       .select("role")
-      .eq("user_id", user.id);
+      .eq("user_id", userId);
     const isAdmin = (roles ?? []).some((r) => r.role === "admin");
     if (!isAdmin) throw new Error("Suppression réservée aux administrateurs.");
 
