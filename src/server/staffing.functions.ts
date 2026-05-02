@@ -6,8 +6,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { calculatePlan } from "@/lib/staffing/algo";
 import { addDays } from "@/lib/staffing/date-utils";
-import { H_DEFAULT } from "@/lib/staffing/types";
-import type { ObjetInput, PlanResult, PlanStep } from "@/lib/staffing/types";
+import type { ObjetInput, PlanResult } from "@/lib/staffing/types";
 
 /* ------------------------------------------------------------------ */
 /* GET /staffing-plan/:planId/calculate (POST)                         */
@@ -301,9 +300,6 @@ export const updatePlanStep = createServerFn({ method: "POST" })
     if (data.manual_shift !== undefined) patch.manual_shift = data.manual_shift;
     if (data.manual_pers !== undefined) patch.manual_pers = data.manual_pers;
     if (data.pers !== undefined) patch.pers = data.pers;
-    // h_par_jour reste inchangé ; H_DEFAULT importé pour cohérence si besoin futur
-    void H_DEFAULT;
-    void {} as Pick<PlanStep, "id">;
     const { error } = await supabase.from("staffing_plan_step").update(patch).eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
