@@ -312,6 +312,8 @@ function DevisImportPage() {
         }));
         setObjets(editable);
         setIntegrityChecks(progbat.integrityChecks);
+        setExclusions(progbat.exclusions);
+        setSourceFilename(file.name);
         // v0.32.2 — snapshot des objets source pour validation cohérence.
         setParsedObjets(
           progbat.objetsCandidats.map((o) => ({
