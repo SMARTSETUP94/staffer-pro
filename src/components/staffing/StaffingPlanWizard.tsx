@@ -101,14 +101,22 @@ export function StaffingPlanWizard({
         if (cancelled) return;
         setObjets(objs);
         // exclut par défaut les objets verrouillés (published)
-        setIncluded(
-          new Set(
-            objs
-              .filter((o) => !(o.dans_plan_actif && o.dans_plan_actif.status === "published"))
-              .map((o) => o.id),
-          ),
+        const eligibles = objs.filter(
+          (o) => !(o.dans_plan_actif && o.dans_plan_actif.status === "published"),
         );
+        setIncluded(new Set(eligibles.map((o) => o.id)));
         setExistingPlans(plans as ExistingPlan[]);
+
+        // v0.35.10 #2 — estime dateDebut si non fourni : marche arrière depuis dateFin
+        // Hypothèse simple : 8h/j × 5 personnes en moyenne → spanJ = totalH / 40
+        // ajoute 30% marge sécu et arrondit à la semaine entière supérieure (multiple 5j ouvrés ≈ 7j cal).
+        if (!defaultDateDebut && initialDateFin) {
+          const totalH = eligibles.reduce((s, o) => s + o.heures_total, 0);
+          if (totalH > 0) {
+            const spanJ = Math.ceil(((totalH / 40) * 1.3) / 5) * 7;
+            setDateDebut((prev) => prev ?? subDays(initialDateFin, spanJ));
+          }
+        }
       })
       .catch((err) => {
         if (cancelled) return;
@@ -120,7 +128,39 @@ export function StaffingPlanWizard({
     return () => {
       cancelled = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [affaireId]);
+
+  /** Recalcule dateDebut estimé sur demande utilisateur. */
+  const estimerDateDebut = () => {
+    if (!dateFin) {
+      toast.error("Renseignez d'abord la date de livraison.");
+      return;
+    }
+    const totalH = visibleObjets
+      .filter((o) => included.has(o.id))
+      .reduce((s, o) => s + o.heures_total, 0);
+    if (totalH <= 0) {
+      toast.error("Sélectionnez au moins un objet pour estimer la durée.");
+      return;
+    }
+    const spanJ = Math.ceil(((totalH / 40) * 1.3) / 5) * 7;
+    const estimated = subDays(dateFin, spanJ);
+    setDateDebut(estimated);
+    toast.success(
+      `Début estimé : ${format(estimated, "dd MMM yyyy", { locale: fr })} (~${spanJ}j calendaires)`,
+    );
+  };
+
+  /** Sélection batch : toutes / aucune (hors verrouillés). */
+  const selectAll = () => {
+    setIncluded(new Set(visibleObjets.filter((o) => o.dans_plan_actif?.status !== "published").map((o) => o.id)));
+  };
+  const selectNone = () => {
+    setIncluded(new Set());
+  };
+  /** Filtre : masque les objets < 5h. */
+  const SHORT_THRESHOLD = 5;
 
   const visibleObjets = useMemo(
     () => objets.filter((o) => !removed.has(o.id)),
