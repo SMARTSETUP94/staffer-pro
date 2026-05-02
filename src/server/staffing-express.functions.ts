@@ -73,13 +73,10 @@ export const createPlanExpress = createServerFn({ method: "POST" })
     const stepsCount = calc.result.steps.filter(
       (s) => s.start_date !== "TBD",
     ).length;
-    const alertes = calc.result.alertes ?? [];
+    const alertes = calc.result.alerts ?? [];
     const alertesCount = alertes.length;
-    // Critique : CNC conflit OU pic atelier > 12 (mapping élargi pour rester safe)
-    const alertesCritiques = alertes.filter((a) => {
-      const t = (a as { type?: string }).type ?? "";
-      return /cnc|pic|atelier|conflit/i.test(t);
-    }).length;
+    // Critique : alertes severity 'hard' (CNC conflit insoluble, pics atelier hard)
+    const alertesCritiques = alertes.filter((a) => a.severity === "hard").length;
 
     // 3. Auto-staff (skip si pas de steps)
     let filled = 0;
