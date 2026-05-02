@@ -26,6 +26,8 @@ import {
 import { GanttBar } from "./GanttBar";
 import { HeatmapMetier } from "./HeatmapMetier";
 import { AlerteBandeau } from "./AlerteBandeau";
+import { ResolveCncConflictDialog } from "./ResolveCncConflictDialog";
+import { updatePlanDateFinFab } from "@/server/staffing-resolve.functions";
 import type { PlanResult, PlanStep, PlanAlert } from "@/lib/staffing/types";
 import { METIER_KEY_BY_ID } from "@/lib/staffing/types";
 import { simulateStepChange, impactToastMessage, type SliderImpact } from "@/lib/staffing/slider-impact";
