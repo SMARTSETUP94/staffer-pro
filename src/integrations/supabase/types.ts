@@ -729,6 +729,7 @@ export type Database = {
           adresse: string | null
           agence_interim: string | null
           categories_permis: Database["public"]["Enums"]["categorie_permis"][]
+          competences_polyvalentes: Json
           created_at: string
           date_entree: string | null
           date_naissance: string | null
@@ -738,7 +739,9 @@ export type Database = {
           id: string
           is_apprenti: boolean
           metier_principal_id: number
+          metiers_secondaires: number[]
           mobile: string | null
+          niveau_seniorite: number
           nom: string
           non_staffing: boolean
           notes: string | null
@@ -754,6 +757,7 @@ export type Database = {
           adresse?: string | null
           agence_interim?: string | null
           categories_permis?: Database["public"]["Enums"]["categorie_permis"][]
+          competences_polyvalentes?: Json
           created_at?: string
           date_entree?: string | null
           date_naissance?: string | null
@@ -763,7 +767,9 @@ export type Database = {
           id?: string
           is_apprenti?: boolean
           metier_principal_id: number
+          metiers_secondaires?: number[]
           mobile?: string | null
+          niveau_seniorite?: number
           nom: string
           non_staffing?: boolean
           notes?: string | null
@@ -779,6 +785,7 @@ export type Database = {
           adresse?: string | null
           agence_interim?: string | null
           categories_permis?: Database["public"]["Enums"]["categorie_permis"][]
+          competences_polyvalentes?: Json
           created_at?: string
           date_entree?: string | null
           date_naissance?: string | null
@@ -788,7 +795,9 @@ export type Database = {
           id?: string
           is_apprenti?: boolean
           metier_principal_id?: number
+          metiers_secondaires?: number[]
           mobile?: string | null
+          niveau_seniorite?: number
           nom?: string
           non_staffing?: boolean
           notes?: string | null
@@ -1483,6 +1492,55 @@ export type Database = {
         }
         Relationships: []
       }
+      machine_reservation: {
+        Row: {
+          affaire_id: string
+          created_at: string
+          date: string
+          id: string
+          machine_id: string
+          step_id: string
+        }
+        Insert: {
+          affaire_id: string
+          created_at?: string
+          date: string
+          id?: string
+          machine_id?: string
+          step_id: string
+        }
+        Update: {
+          affaire_id?: string
+          created_at?: string
+          date?: string
+          id?: string
+          machine_id?: string
+          step_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "machine_reservation_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "affaires"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "machine_reservation_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "v_affaire_consommation"
+            referencedColumns: ["affaire_id"]
+          },
+          {
+            foreignKeyName: "machine_reservation_step_id_fkey"
+            columns: ["step_id"]
+            isOneToOne: false
+            referencedRelation: "staffing_plan_step"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       metiers: {
         Row: {
           code: string
@@ -1680,6 +1738,266 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      staffing_plan: {
+        Row: {
+          affaire_id: string
+          created_at: string
+          created_by: string | null
+          date_debut_fab: string
+          date_fin_fab: string
+          id: string
+          parent_plan_id: string | null
+          published_at: string | null
+          published_by: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          affaire_id: string
+          created_at?: string
+          created_by?: string | null
+          date_debut_fab: string
+          date_fin_fab: string
+          id?: string
+          parent_plan_id?: string | null
+          published_at?: string | null
+          published_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          affaire_id?: string
+          created_at?: string
+          created_by?: string | null
+          date_debut_fab?: string
+          date_fin_fab?: string
+          id?: string
+          parent_plan_id?: string | null
+          published_at?: string | null
+          published_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staffing_plan_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "affaires"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staffing_plan_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "v_affaire_consommation"
+            referencedColumns: ["affaire_id"]
+          },
+          {
+            foreignKeyName: "staffing_plan_parent_plan_id_fkey"
+            columns: ["parent_plan_id"]
+            isOneToOne: false
+            referencedRelation: "staffing_plan"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      staffing_plan_assignment: {
+        Row: {
+          created_at: string
+          date: string
+          employe_id: string
+          id: string
+          presence_pct: number
+          step_id: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          employe_id: string
+          id?: string
+          presence_pct?: number
+          step_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          employe_id?: string
+          id?: string
+          presence_pct?: number
+          step_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staffing_plan_assignment_employe_id_fkey"
+            columns: ["employe_id"]
+            isOneToOne: false
+            referencedRelation: "employes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staffing_plan_assignment_step_id_fkey"
+            columns: ["step_id"]
+            isOneToOne: false
+            referencedRelation: "staffing_plan_step"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      staffing_plan_object: {
+        Row: {
+          created_at: string
+          display_order: number
+          id: string
+          included: boolean
+          objet_id: string
+          plan_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          included?: boolean
+          objet_id: string
+          plan_id: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          included?: boolean
+          objet_id?: string
+          plan_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staffing_plan_object_objet_id_fkey"
+            columns: ["objet_id"]
+            isOneToOne: false
+            referencedRelation: "fabrication_objets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staffing_plan_object_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "staffing_plan"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      staffing_plan_snapshot: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          plan_id: string
+          reason: string
+          snapshot_data: Json
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          plan_id: string
+          reason: string
+          snapshot_data: Json
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          plan_id?: string
+          reason?: string
+          snapshot_data?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staffing_plan_snapshot_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "staffing_plan"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      staffing_plan_step: {
+        Row: {
+          created_at: string
+          h_par_jour: number
+          id: string
+          manual_pers: boolean
+          manual_shift: number
+          metier_id: number
+          objet_id: string | null
+          pers: number
+          plan_id: string
+          source: string
+          span_days: number
+          start_date: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          h_par_jour?: number
+          id?: string
+          manual_pers?: boolean
+          manual_shift?: number
+          metier_id: number
+          objet_id?: string | null
+          pers: number
+          plan_id: string
+          source?: string
+          span_days: number
+          start_date: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          h_par_jour?: number
+          id?: string
+          manual_pers?: boolean
+          manual_shift?: number
+          metier_id?: number
+          objet_id?: string | null
+          pers?: number
+          plan_id?: string
+          source?: string
+          span_days?: number
+          start_date?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staffing_plan_step_metier_id_fkey"
+            columns: ["metier_id"]
+            isOneToOne: false
+            referencedRelation: "metiers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staffing_plan_step_metier_id_fkey"
+            columns: ["metier_id"]
+            isOneToOne: false
+            referencedRelation: "v_devis_consommation"
+            referencedColumns: ["metier_id"]
+          },
+          {
+            foreignKeyName: "staffing_plan_step_objet_id_fkey"
+            columns: ["objet_id"]
+            isOneToOne: false
+            referencedRelation: "fabrication_objets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staffing_plan_step_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "staffing_plan"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       swap_requests: {
         Row: {
