@@ -33,6 +33,7 @@ import { DevisImportDropzone } from "@/components/devis-import/DevisImportDropzo
 import { DevisImportSection1Affaire } from "@/components/devis-import/DevisImportSection1Affaire";
 import { DevisImportSection2Postes } from "@/components/devis-import/DevisImportSection2Postes";
 import { DevisImportObjetsHierarchy } from "@/components/devis-import/DevisImportObjetsHierarchy";
+import { DevisImportExclusions } from "@/components/devis-import/DevisImportExclusions";
 import type { EditableObjet } from "@/components/devis-import/objets-hierarchy-helpers";
 import { DevisImportSection4Chantier } from "@/components/devis-import/DevisImportSection4Chantier";
 import { DevisImportSection5BulkAssign } from "@/components/devis-import/DevisImportSection5BulkAssign";
