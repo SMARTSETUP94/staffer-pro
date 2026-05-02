@@ -184,11 +184,11 @@ function parseRows(rows: unknown[][], headerRow: number, cols: ColumnMap): Parse
       totalHt,
       tempsPrevu,
       isExclude: isExcludeKeyword(designation),
-      isMatiere: isMatiere(designation),
+      isMatiere: isMatiere(designation, tempsPrevu),
       isMontage: isMontageKeyword(designation),
       isDemontage: isDemontageKeyword(designation),
       isRegul: isRegul(designation),
-      metier: matchMetier(designation),
+      metier: matchMetier(designation, tempsPrevu),
       isComment,
     });
   }
