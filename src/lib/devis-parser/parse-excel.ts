@@ -289,6 +289,7 @@ function aggregateObjet(
   parent: ParsedRow,
   allRows: ParsedRow[],
   section: ParsedRow,
+  exclusions: ExclusionEntry[],
 ): ObjetCandidat {
   const heures = emptyHeures();
   let budgetMateriaux = 0;
@@ -297,6 +298,7 @@ function aggregateObjet(
   const postes: PosteCandidat[] = [];
   let descendantCount = 0;
   let metierUnknownCount = 0;
+  const sectionNumeroForExcl = section.hierarchique || section.numero;
 
   // Quantité de l'objet : celle du parent si renseignée et > 0, sinon 1.
   const quantite = parent.quantite && parent.quantite > 0 ? parent.quantite : 1;
