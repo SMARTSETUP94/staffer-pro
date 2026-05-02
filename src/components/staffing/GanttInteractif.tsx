@@ -366,7 +366,7 @@ export const GanttInteractif = forwardRef<
 
           {/* Par objet */}
           {objets.map((obj, idx) => {
-            const objSteps = data.result.steps.filter(
+            const objSteps = mergedSteps.filter(
               (s) => s.objet_id === obj.objet_id && s.start_date !== "TBD",
             );
             const boisStep = getObjStepByMetier(obj.objet_id, 1);
