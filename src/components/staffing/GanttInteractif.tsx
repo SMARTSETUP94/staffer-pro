@@ -365,7 +365,12 @@ export const GanttInteractif = forwardRef<
       <div className="overflow-x-auto rounded-2xl border border-border bg-card">
         <div className="min-w-[900px]">
           {/* Header dates */}
-          <div className="grid border-b border-border bg-background/40" style={{ gridTemplateColumns: gridTemplate }}>
+          <div
+            ref={gridRef}
+            data-day-count={days.length}
+            className="grid border-b border-border bg-background/40"
+            style={{ gridTemplateColumns: gridTemplate }}
+          >
             <div className="px-3 py-2 text-xs font-bold uppercase tracking-wider">Objet / Étape</div>
             {days.map((d) => (
               <div key={d} className="border-l border-border/40 px-1 py-2 text-center font-mono text-[10px]">
