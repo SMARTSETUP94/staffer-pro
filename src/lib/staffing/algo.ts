@@ -276,53 +276,61 @@ export function calculatePlan(input: PlanInput): PlanResult {
     if (chain.metal) chain.metal.start_date = addDays(endCursor, -(chain.metal.span_days - 1));
   }
 
-  // Earliest Bois/Metal start cross-objets — sert d'ancre pour Num
-  const earliestBoisMetalStart = chains
-    .flatMap((c) => [c.bois?.start_date, c.metal?.start_date])
-    .filter((d): d is string => !!d)
-    .reduce<string | null>((acc, d) => (acc === null || d < acc ? d : acc), null);
+  // Earliest Bois/Metal start PAR OBJET — sert d'ancre pour Num par objet
+  const earliestBoisMetalByObj = new Map<string, string>();
+  for (const c of chains) {
+    const candidates = [c.bois?.start_date, c.metal?.start_date].filter(
+      (d): d is string => !!d,
+    );
+    if (candidates.length === 0) continue;
+    earliestBoisMetalByObj.set(c.objet_id, candidates.reduce((a, b) => (a < b ? a : b)));
+  }
 
-  // -------- Num : doit finir AVANT (earliestBoisMetalStart - lag_num_bois)
-  if (numStep) {
-    const lagNumBois = Math.ceil(LAG_NUM_BOIS_RATIO * numStep.span_days);
-    const numLatestEnd = earliestBoisMetalStart
-      ? addDays(earliestBoisMetalStart, -1 - lagNumBois)
-      : addDays(dateLivraison, -1);
-    const numEarliestStart = addDays(numLatestEnd, -90); // fenêtre raisonnable cross-affaires
-    const numSlot = findCNCSlotBackward(numLatestEnd, numStep.span_days, cncReserved, numEarliestStart, 90);
-    if (numSlot === null) {
+  // -------- Num PAR OBJET : doit finir AVANT (earliestBoisMetal_obj - lag).
+  // CNC mono-machine → exclusivité globale via cncReserved (HARD anti-superposition).
+  // On ordonne par latestEnd descendant pour que les objets "tardifs" prennent les slots tardifs.
+  const numEntries: Array<{ objet_id: string; step: PlanStep; latestEnd: string }> = [];
+  for (const [objet_id, step] of numStepsByObj) {
+    const lag = Math.ceil(LAG_NUM_BOIS_RATIO * step.span_days);
+    const ebm = earliestBoisMetalByObj.get(objet_id);
+    const latestEnd = ebm ? addDays(ebm, -1 - lag) : addDays(dateLivraison, -1);
+    numEntries.push({ objet_id, step, latestEnd });
+  }
+  numEntries.sort((a, b) => (a.latestEnd < b.latestEnd ? 1 : a.latestEnd > b.latestEnd ? -1 : 0));
+  for (const { step, latestEnd, objet_id } of numEntries) {
+    const earliestStart = addDays(latestEnd, -180);
+    const slot = findCNCSlotBackward(latestEnd, step.span_days, cncReserved, earliestStart, 180);
+    if (slot === null) {
       alerts.push({
         code: "NUM_CONFLIT_INSOLUBLE",
         severity: "hard",
-        message: `Aucun créneau CNC libre de ${numStep.span_days}j avant le ${numLatestEnd}`,
-        step_id: numStep.id,
+        message: `Aucun créneau CNC libre de ${step.span_days}j avant le ${latestEnd} (objet ${objet_id})`,
+        step_id: step.id,
+        objet_id,
       });
-      // fallback : on pose quand même au numLatestEnd reculé du span
-      numStep.start_date = addDays(numLatestEnd, -(numStep.span_days - 1));
+      step.start_date = addDays(latestEnd, -(step.span_days - 1));
     } else {
-      numStep.start_date = numSlot;
-      for (const d of dateRange(numSlot, numStep.span_days)) {
+      step.start_date = slot;
+      for (const d of dateRange(slot, step.span_days)) {
         cncReserved.add(d);
-        cncReservations.push({ step_id: numStep.id, date: d, machine_id: "cnc_principale" });
+        cncReservations.push({ step_id: step.id, date: d, machine_id: "cnc_principale" });
       }
     }
   }
 
-  // -------- BE : chaîne sériée. Le DERNIER BE doit finir avant Num.start - LAG_BE_NUM
-  // (sinon avant earliestBoisMetalStart - 2j si pas de Num).
-  // On planifie en backward dans l'ordre inverse de display_order.
-  if (beSteps.length > 0) {
-    const beAnchorEnd = numStep
+  // -------- BE PAR OBJET : ancre = Num.start - LAG_BE_NUM si Num existe pour cet objet,
+  // sinon earliestBoisMetal_obj - 2j, sinon livraison-1. Backward sur la chaîne BE de l'objet.
+  // Ici 1 step BE par objet → simple décalage individuel.
+  for (const beStep of beSteps) {
+    const objet_id = beStep.objet_id!;
+    const numStep = numStepsByObj.get(objet_id);
+    const ebm = earliestBoisMetalByObj.get(objet_id);
+    const anchorEnd = numStep
       ? addDays(numStep.start_date, -1 - LAG_BE_NUM)
-      : earliestBoisMetalStart
-      ? addDays(earliestBoisMetalStart, -2)
+      : ebm
+      ? addDays(ebm, -2)
       : addDays(dateLivraison, -1);
-    let cursor = beAnchorEnd;
-    for (let i = beSteps.length - 1; i >= 0; i--) {
-      const s = beSteps[i];
-      s.start_date = addDays(cursor, -(s.span_days - 1));
-      cursor = addDays(s.start_date, -1);
-    }
+    beStep.start_date = addDays(anchorEnd, -(beStep.span_days - 1));
   }
 
   /* ----- Bornes globales ----- */
