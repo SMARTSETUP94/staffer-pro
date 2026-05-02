@@ -160,6 +160,9 @@ export function AddHorsPlanningDialog({ defaultDate, variant, defaultMetierId, o
                 placeholder="Rechercher (n°, nom, client)…"
               />
             )}
+            {errorFor(["AFFAIRE_REQUISE"]) && (
+              <p className="mt-1 text-xs text-destructive">{errorFor(["AFFAIRE_REQUISE"])}</p>
+            )}
           </div>
 
           <div>
@@ -184,6 +187,9 @@ export function AddHorsPlanningDialog({ defaultDate, variant, defaultMetierId, o
                 ))}
               </SelectContent>
             </Select>
+            {errorFor(["METIER_REQUIS"]) && (
+              <p className="mt-1 text-xs text-destructive">{errorFor(["METIER_REQUIS"])}</p>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -194,8 +200,14 @@ export function AddHorsPlanningDialog({ defaultDate, variant, defaultMetierId, o
               <Input
                 type="date"
                 value={date}
+                max={todayISO}
                 onChange={(e) => setDate(e.target.value)}
               />
+              {errorFor(["DATE_REQUISE", "DATE_INVALIDE", "DATE_FUTURE"]) && (
+                <p className="mt-1 text-xs text-destructive">
+                  {errorFor(["DATE_REQUISE", "DATE_INVALIDE", "DATE_FUTURE"])}
+                </p>
+              )}
             </div>
             <div>
               <Label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -209,6 +221,11 @@ export function AddHorsPlanningDialog({ defaultDate, variant, defaultMetierId, o
                 value={heures}
                 onChange={(e) => setHeures(e.target.value)}
               />
+              {errorFor(["HEURES_INVALIDE", "HEURES_HORS_BORNES"]) && (
+                <p className="mt-1 text-xs text-destructive">
+                  {errorFor(["HEURES_INVALIDE", "HEURES_HORS_BORNES"])}
+                </p>
+              )}
             </div>
           </div>
 
