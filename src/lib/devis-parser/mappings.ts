@@ -40,7 +40,13 @@ export const METIER_TO_ETAPE: Record<FabMetier, FabricationEtapeType> = {
 /* Le premier qui matche gagne. Matériel doit être testé AVANT métier.        */
 /* -------------------------------------------------------------------------- */
 
-/** Patterns matière / matériel (testés en priorité absolue). */
+/**
+ * Patterns matière / matériel (testés en priorité absolue).
+ * NOTE v0.31.4c : "budget matériaux" et "fournitures logistique" deviennent
+ * conditionnels (cf. isMatiereContextual) : si la ligne porte du temps prévu
+ * elle bascule en heures Manutention/Logistique. Les patterns purs restent
+ * ici pour le cas Temps prévu = 0.
+ */
 export const MATIERE_REGEX: RegExp[] = [
   /m2 de peinture/i,
   /m²\s*de peinture/i,
@@ -52,6 +58,7 @@ export const MATIERE_REGEX: RegExp[] = [
   /budget accessoires/i,
   /fournitures d'?emballage/i,
   /fournitures logistique/i,
+  /liste des principales fournitures en logistique/i,
   /\bled\b/i,
   /\bpmma\b/i,
   /\bsunclear\b/i,
@@ -66,6 +73,17 @@ export const MATIERE_REGEX: RegExp[] = [
   /liste des [ée]l[ée]ments en m[ée]tal mati[èe]re/i,
   /m[ée]tal mati[èe]re/i,
   /liste des tissus mati[èe]re/i,
+];
+
+/**
+ * v0.31.4c — Patterns "matière conditionnelle" : ces libellés sont matière
+ * UNIQUEMENT si la ligne ne porte pas d'heures. Sinon ils valent Manutention
+ * (heures de récupération matière / logistique interne).
+ */
+export const MATIERE_CONDITIONAL_REGEX: RegExp[] = [
+  /budget mat[ée]riaux/i,
+  /liste des principales fournitures en logistique/i,
+  /fournitures logistique/i,
 ];
 
 /**
