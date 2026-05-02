@@ -202,16 +202,61 @@ function parseRows(rows: unknown[][], headerRow: number, cols: ColumnMap): Parse
 /* Identification Sections (N) et Objets (N.M)                                */
 /* -------------------------------------------------------------------------- */
 
+/** v0.31.6 — Helper trace exclusion. */
+function pushExclusion(
+  list: ExclusionEntry[],
+  row: ParsedRow,
+  sectionNumero: string,
+  kind: ExclusionKind,
+  reason: string,
+  rule: string | null = null,
+  isRecoverable = false,
+) {
+  list.push({
+    rowIndex: row.rowIndex,
+    numero: row.numero,
+    designation: row.designation,
+    sectionNumero,
+    kind,
+    reason,
+    rule,
+    tempsPrevu: row.tempsPrevu,
+    totalHt: row.totalHt,
+    quantite: row.quantite,
+    isRecoverable,
+  });
+}
+
 /** Indices dans `rows` des lignes Section (niveau 1 non-chantier-pur, non-exclu). */
-function findSections(rows: ParsedRow[]): ParsedRow[] {
-  return rows.filter(
-    (r) =>
-      r.niveau === 1 &&
-      r.hierarchique &&
-      !r.isExclude &&
-      !((r.isMontage || r.isDemontage) && !r.metier) &&
-      !!r.designation,
-  );
+function findSections(rows: ParsedRow[], exclusions: ExclusionEntry[]): ParsedRow[] {
+  const out: ParsedRow[] = [];
+  for (const r of rows) {
+    if (r.niveau !== 1 || !r.hierarchique || !r.designation) continue;
+    if (r.isExclude) {
+      const rule = findExcludeRule(r.designation);
+      pushExclusion(
+        exclusions,
+        r,
+        r.hierarchique,
+        "exclude_regex",
+        `Section ignorée — libellé matché par la règle d'exclusion (${rule?.source ?? "?"}).`,
+        rule?.source ?? null,
+      );
+      continue;
+    }
+    if ((r.isMontage || r.isDemontage) && !r.metier) {
+      pushExclusion(
+        exclusions,
+        r,
+        r.hierarchique,
+        "section_skipped",
+        "Section ignorée — lot chantier global (Montage/Démontage) sans métier atelier.",
+      );
+      continue;
+    }
+    out.push(r);
+  }
+  return out;
 }
 
 /** Sous-arbre strict d'un nœud (toutes lignes dont le code commence par parent.). */
