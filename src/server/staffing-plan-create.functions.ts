@@ -88,7 +88,7 @@ export const createStaffingPlan = createServerFn({ method: "POST" })
         .parse(d),
   )
   .handler(async ({ data, context }) => {
-    const { supabase, user } = context;
+    const { supabase, userId } = context;
 
     if (data.date_debut_fab > data.date_fin_fab) {
       throw new Error("La date de début doit précéder la date de fin (livraison).");
@@ -122,7 +122,7 @@ export const createStaffingPlan = createServerFn({ method: "POST" })
         date_debut_fab: data.date_debut_fab,
         date_fin_fab: data.date_fin_fab,
         status: "draft",
-        created_by: user.id,
+        created_by: userId,
       })
       .select("id")
       .single();
