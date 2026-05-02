@@ -401,7 +401,7 @@ function buildObjetsForSection(section: ParsedRow, allRows: ParsedRow[]): ObjetC
       const isLeafMatiere = directChildren.length === 0 && obj.isMatiere;
 
       if (hasAnyAtelier || isLeafAtelier || isLeafMatiere) {
-        objets.push(aggregateObjet(obj, allRows));
+        objets.push(aggregateObjet(obj, allRows, section));
       }
     }
   }
@@ -413,7 +413,7 @@ function buildObjetsForSection(section: ParsedRow, allRows: ParsedRow[]): ObjetC
     );
     const hasMatiere = subTree.some((c) => !c.isExclude && c.isMatiere);
     if (hasAtelierAnywhere || hasMatiere) {
-      objets.push(aggregateObjet(section, allRows));
+      objets.push(aggregateObjet(section, allRows, section));
     }
   }
 
