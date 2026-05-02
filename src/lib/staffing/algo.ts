@@ -301,12 +301,21 @@ export function calculatePlan(input: PlanInput): PlanResult {
     const earliestStart = addDays(latestEnd, -180);
     const slot = findCNCSlotBackward(latestEnd, step.span_days, cncReserved, earliestStart, 180);
     if (slot === null) {
+      const o = objets.find((x) => x.objet_id === objet_id);
       alerts.push({
         code: "NUM_CONFLIT_INSOLUBLE",
         severity: "hard",
-        message: `Aucun créneau CNC libre de ${step.span_days}j avant le ${latestEnd} (objet ${objet_id})`,
+        message: `CNC saturée : impossible de placer ${step.span_days}j de Numérique pour « ${o?.reference ?? objet_id} » entre ${earliestStart} et ${latestEnd}`,
         step_id: step.id,
         objet_id,
+        detail: {
+          objet_reference: o?.reference,
+          objet_nom: o?.nom,
+          machine_id: "cnc_principale",
+          span_days: step.span_days,
+          window_start: earliestStart,
+          window_end: latestEnd,
+        },
       });
       step.start_date = addDays(latestEnd, -(step.span_days - 1));
     } else {
