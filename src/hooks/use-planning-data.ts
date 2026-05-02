@@ -50,6 +50,8 @@ export interface Assignation {
   devis_id: string | null;
   notes: string | null;
   statut_confirmation: "non_requise" | "en_attente" | "confirmee" | "refusee";
+  staffing_plan_id?: string | null;
+  type_operation?: string | null;
 }
 
 export interface DevisConsommation {
