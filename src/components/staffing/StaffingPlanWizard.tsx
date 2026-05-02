@@ -7,9 +7,9 @@
 //  4. Si plan(s) actif(s) existant(s) : bandeau "Voir plan" (draft/published).
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, Link } from "@tanstack/react-router";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, subDays } from "date-fns";
 import { fr } from "date-fns/locale";
-import { CalendarIcon, Loader2, Trash2, Calculator, ExternalLink, Sparkles, AlertTriangle, ArrowLeft } from "lucide-react";
+import { CalendarIcon, Loader2, Trash2, Calculator, ExternalLink, Sparkles, AlertTriangle, ArrowLeft, Wand2, CheckSquare, Square, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -76,12 +76,17 @@ export function StaffingPlanWizard({
   const [objets, setObjets] = useState<ObjetRow[]>([]);
   const [removed, setRemoved] = useState<Set<string>>(new Set());
   const [included, setIncluded] = useState<Set<string>>(new Set());
+  // v0.35.10 #2 — Dates intelligentes
+  // - Si defaultDateFin (= date_montage) fourni : livraison fab = montage - 2j (marge logistique)
+  // - dateDebut estimé après chargement objets (estimateStartDate)
+  const initialDateFin = defaultDateFin
+    ? subDays(parseISO(defaultDateFin), 2)
+    : undefined;
   const [dateDebut, setDateDebut] = useState<Date | undefined>(
     defaultDateDebut ? parseISO(defaultDateDebut) : undefined,
   );
-  const [dateFin, setDateFin] = useState<Date | undefined>(
-    defaultDateFin ? parseISO(defaultDateFin) : undefined,
-  );
+  const [dateFin, setDateFin] = useState<Date | undefined>(initialDateFin);
+  const [hideShort, setHideShort] = useState(false);
   const [existingPlans, setExistingPlans] = useState<ExistingPlan[]>([]);
   const [creatingNew, setCreatingNew] = useState(false);
 
@@ -96,14 +101,22 @@ export function StaffingPlanWizard({
         if (cancelled) return;
         setObjets(objs);
         // exclut par défaut les objets verrouillés (published)
-        setIncluded(
-          new Set(
-            objs
-              .filter((o) => !(o.dans_plan_actif && o.dans_plan_actif.status === "published"))
-              .map((o) => o.id),
-          ),
+        const eligibles = objs.filter(
+          (o) => !(o.dans_plan_actif && o.dans_plan_actif.status === "published"),
         );
+        setIncluded(new Set(eligibles.map((o) => o.id)));
         setExistingPlans(plans as ExistingPlan[]);
+
+        // v0.35.10 #2 — estime dateDebut si non fourni : marche arrière depuis dateFin
+        // Hypothèse simple : 8h/j × 5 personnes en moyenne → spanJ = totalH / 40
+        // ajoute 30% marge sécu et arrondit à la semaine entière supérieure (multiple 5j ouvrés ≈ 7j cal).
+        if (!defaultDateDebut && initialDateFin) {
+          const totalH = eligibles.reduce((s, o) => s + o.heures_total, 0);
+          if (totalH > 0) {
+            const spanJ = Math.ceil(((totalH / 40) * 1.3) / 5) * 7;
+            setDateDebut((prev) => prev ?? subDays(initialDateFin, spanJ));
+          }
+        }
       })
       .catch((err) => {
         if (cancelled) return;
@@ -115,11 +128,53 @@ export function StaffingPlanWizard({
     return () => {
       cancelled = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [affaireId]);
 
+  /** Recalcule dateDebut estimé sur demande utilisateur. */
+  const estimerDateDebut = () => {
+    if (!dateFin) {
+      toast.error("Renseignez d'abord la date de livraison.");
+      return;
+    }
+    const totalH = visibleObjets
+      .filter((o) => included.has(o.id))
+      .reduce((s, o) => s + o.heures_total, 0);
+    if (totalH <= 0) {
+      toast.error("Sélectionnez au moins un objet pour estimer la durée.");
+      return;
+    }
+    const spanJ = Math.ceil(((totalH / 40) * 1.3) / 5) * 7;
+    const estimated = subDays(dateFin, spanJ);
+    setDateDebut(estimated);
+    toast.success(
+      `Début estimé : ${format(estimated, "dd MMM yyyy", { locale: fr })} (~${spanJ}j calendaires)`,
+    );
+  };
+
+  /** Sélection batch : toutes / aucune (hors verrouillés). */
+  const selectAll = () => {
+    setIncluded(new Set(visibleObjets.filter((o) => o.dans_plan_actif?.status !== "published").map((o) => o.id)));
+  };
+  const selectNone = () => {
+    setIncluded(new Set());
+  };
+  /** Filtre : masque les objets < 5h. */
+  const SHORT_THRESHOLD = 5;
+
   const visibleObjets = useMemo(
-    () => objets.filter((o) => !removed.has(o.id)),
-    [objets, removed],
+    () =>
+      objets
+        .filter((o) => !removed.has(o.id))
+        .filter((o) => !hideShort || o.heures_total >= SHORT_THRESHOLD),
+    [objets, removed, hideShort],
+  );
+  const hiddenShortCount = useMemo(
+    () =>
+      hideShort
+        ? objets.filter((o) => !removed.has(o.id) && o.heures_total < SHORT_THRESHOLD).length
+        : 0,
+    [objets, removed, hideShort],
   );
   const includedCount = useMemo(
     () => visibleObjets.filter((o) => included.has(o.id)).length,
@@ -280,26 +335,87 @@ export function StaffingPlanWizard({
         <>
           {/* Dates */}
           <div className="grid gap-3 sm:grid-cols-2">
-            <DateField
-              label="Début fabrication"
-              value={dateDebut}
-              onChange={setDateDebut}
-              placeholder="Choisir une date"
-            />
+            <div className="space-y-1">
+              <DateField
+                label="Début fabrication"
+                value={dateDebut}
+                onChange={setDateDebut}
+                placeholder="Choisir une date"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-7 text-[11px] text-violet-600 hover:text-violet-700 hover:bg-violet-50"
+                onClick={estimerDateDebut}
+                disabled={!dateFin || includedCount === 0}
+                title="Calcule un début rétrograde depuis la livraison selon les heures sélectionnées"
+              >
+                <Wand2 className="mr-1 h-3 w-3" /> Estimer auto
+              </Button>
+            </div>
             <DateField
               label="Livraison (HARD)"
               value={dateFin}
-              onChange={setDateFin}
+              onChange={(d) => {
+                setDateFin(d);
+                if (d && !dateDebut) {
+                  // Re-déclenche estimation quand livraison change et début vide
+                  const totalH = visibleObjets
+                    .filter((o) => included.has(o.id))
+                    .reduce((s, o) => s + o.heures_total, 0);
+                  if (totalH > 0) {
+                    const spanJ = Math.ceil(((totalH / 40) * 1.3) / 5) * 7;
+                    setDateDebut(subDays(d, spanJ));
+                  }
+                }
+              }}
               placeholder="Date de livraison"
             />
           </div>
 
           {/* Objets */}
           <div className="rounded-xl border border-border">
-            <div className="flex items-center justify-between border-b border-border bg-background/40 px-3 py-2">
-              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Objets à planifier
-              </span>
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border bg-background/40 px-3 py-2">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Objets à planifier
+                </span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 px-2 text-[11px]"
+                  onClick={selectAll}
+                  title="Cocher tous les objets éligibles"
+                >
+                  <CheckSquare className="mr-1 h-3 w-3" /> Tout
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 px-2 text-[11px]"
+                  onClick={selectNone}
+                  title="Décocher tous les objets"
+                >
+                  <Square className="mr-1 h-3 w-3" /> Aucun
+                </Button>
+                <Button
+                  type="button"
+                  variant={hideShort ? "default" : "ghost"}
+                  size="sm"
+                  className="h-6 px-2 text-[11px]"
+                  onClick={() => setHideShort((v) => !v)}
+                  title={`Masquer les objets < ${SHORT_THRESHOLD}h`}
+                >
+                  <Filter className="mr-1 h-3 w-3" />
+                  &lt; {SHORT_THRESHOLD}h
+                  {hiddenShortCount > 0 && hideShort && (
+                    <span className="ml-1 opacity-70">({hiddenShortCount})</span>
+                  )}
+                </Button>
+              </div>
               <span className="text-xs text-muted-foreground">
                 {includedCount} / {visibleObjets.length} inclus · {totalHeures.toFixed(1)} h
               </span>

@@ -27,6 +27,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { DevisDeleteCascadeDialog } from "@/components/devis-import/DevisDeleteCascadeDialog";
 import { StaffingPlanWizard } from "@/components/staffing/StaffingPlanWizard";
+import { useWizardPrefetch } from "@/hooks/use-wizard-prefetch";
 
 /** v0.15.1 — Statuts UI exposés. Les autres (en_cours, cloture, facture) restent
  *  dormants en DB pour flexibilité future mais ne sont pas proposés à la sélection. */
@@ -92,6 +93,7 @@ function AffaireDevisPage() {
     date_montage: string | null;
   } | null>(null);
   const [planningOpen, setPlanningOpen] = useState(false);
+  const { prefetch: prefetchWizard } = useWizardPrefetch(affaireId);
 
   // Devis dialog
   const [devisOpen, setDevisOpen] = useState(false);
@@ -315,6 +317,8 @@ function AffaireDevisPage() {
               <Button
                 variant="outline"
                 onClick={() => setPlanningOpen(true)}
+                onMouseEnter={prefetchWizard}
+                onFocus={prefetchWizard}
                 className="rounded-xl border-primary/40 text-primary hover:bg-primary/5"
               >
                 <Sparkles className="mr-2 h-4 w-4" /> Mettre au planning

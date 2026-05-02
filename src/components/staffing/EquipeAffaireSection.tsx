@@ -35,6 +35,7 @@ import {
 } from "@/server/staffing-equipe.functions";
 import { METIER_KEY_BY_ID } from "@/lib/staffing/types";
 import { METIER_COLOR, METIER_LABEL } from "./gantt-helpers";
+import { TeamPresetsBar } from "./TeamPresetsBar";
 
 interface Candidate {
   id: string;
@@ -152,6 +153,18 @@ export function EquipeAffaireSection({ planId, onAssigned }: Props) {
           <Users className="mr-1 h-3 w-3" /> {metiers.length} métiers
         </Badge>
       </div>
+
+      {/* v0.35.10 #7 — Templates équipe (sauvegarde / chargement) */}
+      <TeamPresetsBar
+        currentSelection={selected}
+        onLoad={(sel) => setSelected(sel)}
+        availableEmployeIds={
+          new Set(
+            Object.values(candidatsByMetier)
+              .flatMap((cands) => cands.map((c) => c.id)),
+          )
+        }
+      />
 
       <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
         {metiers.map((m) => {
