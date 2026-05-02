@@ -216,6 +216,14 @@ export function DevisImportObjetsHierarchy({ objets, setObjets, integrityChecks 
     });
   };
 
+  const deletePoste = (objetIdx: number, posteId: string) =>
+    setObjets((prev) => removePosteFromObjet(prev, objetIdx, posteId));
+
+  const deleteObjet = (objetIdx: number) => setObjets((prev) => removeObjet(prev, objetIdx));
+
+  const renamePosteDesignation = (objetIdx: number, posteId: string, designation: string) =>
+    setObjets((prev) => renamePoste(prev, objetIdx, posteId, designation));
+
   const addManualObjet = () => {
     const numero = `M${Date.now().toString().slice(-5)}`;
     setObjets((prev) => [
