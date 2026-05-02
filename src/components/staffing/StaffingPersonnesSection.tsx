@@ -274,10 +274,20 @@ function StepDayRow({
             </span>
           )}
         </div>
-        <Button onClick={toggleOpen} size="sm" variant={open ? "secondary" : "outline"}>
-          <UserPlus className="mr-1 h-3 w-3" />
-          {open ? "Fermer" : "Suggestions"}
-        </Button>
+        <div className="flex items-center gap-1">
+          <AutoStaffButton
+            planId={planId}
+            stepId={step.id}
+            onlyDate={date}
+            label="Auto ce jour"
+            compact
+            onDone={onChanged}
+          />
+          <Button onClick={toggleOpen} size="sm" variant={open ? "secondary" : "outline"}>
+            <UserPlus className="mr-1 h-3 w-3" />
+            {open ? "Fermer" : "Suggestions"}
+          </Button>
+        </div>
       </div>
 
       {/* Affectations actuelles */}
