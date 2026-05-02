@@ -149,7 +149,7 @@ export function usePlanningData(weekStart: Date, weekEnd: Date): PlanningData {
       supabase.from("affaires").select("id, numero, nom, lieu, client, chef_chantier_id, date_montage, date_demontage, phase, statut"),
       supabase
         .from("assignations")
-        .select("id, date, demi_journee, heures, affaire_id, employe_id, metier_id, devis_id, notes, statut_confirmation")
+        .select("id, date, demi_journee, heures, affaire_id, employe_id, metier_id, devis_id, notes, statut_confirmation, staffing_plan_id, type_operation")
         .gte("date", startStr)
         .lte("date", endStr),
       supabase.from("v_devis_consommation").select("*"),
