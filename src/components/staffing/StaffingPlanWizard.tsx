@@ -133,11 +133,28 @@ export function StaffingPlanWizard({
     [visibleObjets, included],
   );
 
-  const toggle = (id: string) => {
+  const toggle = (o: ObjetRow) => {
+    if (o.dans_plan_actif?.status === "published") {
+      toast.error("Objet verrouillé", {
+        description: `Déjà dans un plan publié${
+          o.dans_plan_actif.affaire_numero ? ` (affaire ${o.dans_plan_actif.affaire_numero})` : ""
+        }. Archivez le plan d'abord.`,
+      });
+      return;
+    }
     setIncluded((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
+      if (next.has(o.id)) {
+        next.delete(o.id);
+      } else {
+        next.add(o.id);
+        if (o.dans_plan_actif?.status === "draft") {
+          const where = o.dans_plan_actif.same_affaire
+            ? "le brouillon précédent"
+            : `le brouillon de l'affaire ${o.dans_plan_actif.affaire_numero ?? "?"}`;
+          toast.warning(`Cet objet sera retiré de ${where}.`);
+        }
+      }
       return next;
     });
   };
