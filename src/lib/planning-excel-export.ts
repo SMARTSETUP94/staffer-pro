@@ -784,11 +784,12 @@ function buildParChantierSheet(opts: BuildOpts): XLSX.WorkSheet {
   return ws;
 }
 
-
+const VEHICULE_TYPE_SHORT: Record<VehiculeRef["type"], string> = {
   VL: "VL",
   M3_20: "20m³",
   poids_lourd: "PL",
 };
+
 
 const STATUT_SOUSTRAITANCE_TAG: Record<TrajetRef["statut_soustraitance"], string> = {
   non: "",
