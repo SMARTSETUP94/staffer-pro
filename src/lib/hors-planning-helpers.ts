@@ -32,6 +32,7 @@ export type HorsPlanningValidationError =
   | "METIER_REQUIS"
   | "DATE_REQUISE"
   | "DATE_INVALIDE"
+  | "DATE_FUTURE"
   | "HEURES_INVALIDE"
   | "HEURES_HORS_BORNES";
 
@@ -61,6 +62,11 @@ export function validateHorsPlanningInput(input: Partial<HorsPlanningInput>): Ho
     errors.push("DATE_REQUISE");
   } else if (!ISO_DATE_RE.test(input.date) || Number.isNaN(Date.parse(input.date))) {
     errors.push("DATE_INVALIDE");
+  } else {
+    // v0.32.4 — Garde-fou date future : une saisie hors-planning est rétroactive
+    // par nature (l'employé déclare ce qu'il a fait, pas ce qu'il fera).
+    const todayISO = new Date().toISOString().slice(0, 10);
+    if (input.date > todayISO) errors.push("DATE_FUTURE");
   }
 
   const h = input.heures_reelles;
@@ -124,6 +130,7 @@ export const HORS_PLANNING_ERROR_LABELS: Record<HorsPlanningValidationError, str
   METIER_REQUIS: "Sélectionne le métier réellement effectué.",
   DATE_REQUISE: "Renseigne la date.",
   DATE_INVALIDE: "Date invalide.",
+  DATE_FUTURE: "La date ne peut pas être dans le futur.",
   HEURES_INVALIDE: "Renseigne le nombre d'heures.",
   HEURES_HORS_BORNES: "Le nombre d'heures doit être > 0 et ≤ 24.",
 };
