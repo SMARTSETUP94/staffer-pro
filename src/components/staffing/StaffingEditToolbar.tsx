@@ -6,7 +6,7 @@
 // - Dialog conflit (recharger / forcer)
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Save, RotateCcw, Check, Loader2, AlertTriangle } from "lucide-react";
+import { Save, RotateCcw, Check, Loader2, AlertTriangle, Undo2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
