@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState, useCallback, useImperativeHandle, forward
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, ArrowUp, ArrowDown, RefreshCw, Calendar, Users, Activity, AlertTriangle } from "lucide-react";
+import { Loader2, ArrowUp, ArrowDown, RefreshCw, Calendar, Users, Activity, AlertTriangle, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
@@ -26,6 +26,8 @@ import {
 import { GanttBar } from "./GanttBar";
 import { HeatmapMetier } from "./HeatmapMetier";
 import { AlerteBandeau } from "./AlerteBandeau";
+import { ResolveCncConflictDialog } from "./ResolveCncConflictDialog";
+import { updatePlanDateFinFab } from "@/server/staffing-resolve.functions";
 import type { PlanResult, PlanStep, PlanAlert } from "@/lib/staffing/types";
 import { METIER_KEY_BY_ID } from "@/lib/staffing/types";
 import { simulateStepChange, impactToastMessage, type SliderImpact } from "@/lib/staffing/slider-impact";
@@ -65,6 +67,8 @@ export const GanttInteractif = forwardRef<
   const [error, setError] = useState<string | null>(null);
   /** Impacts pré-vol par stepId — alimente badge + couleur slider + bandeau bonus */
   const [impactByStep, setImpactByStep] = useState<Record<string, SliderImpact[]>>({});
+  const [resolveOpen, setResolveOpen] = useState(false);
+  const updateDateFin = useServerFn(updatePlanDateFinFab);
   const initFromPlan = useEditStore((s) => s.initFromPlan);
   const setStepPersStore = useEditStore((s) => s.setStepPers);
   const setStepShiftStore = useEditStore((s) => s.setStepShift);
@@ -287,6 +291,7 @@ export const GanttInteractif = forwardRef<
     })),
   );
   const allAlerts = [...data.result.alerts, ...previewAlerts];
+  const hasCncConflict = allAlerts.some((a) => a.code === "NUM_CONFLIT_INSOLUBLE");
 
   return (
     <div className="space-y-4">
@@ -313,6 +318,24 @@ export const GanttInteractif = forwardRef<
 
       {/* Alertes (officielles + pré-vol) */}
       <AlerteBandeau alerts={allAlerts} />
+
+      {hasCncConflict && (
+        <div className="flex justify-end">
+          <Button size="sm" variant="outline" onClick={() => setResolveOpen(true)}>
+            <Wand2 className="mr-1.5 h-3.5 w-3.5" /> Résoudre auto (décaler livraison)
+          </Button>
+        </div>
+      )}
+
+      <ResolveCncConflictDialog
+        open={resolveOpen}
+        onOpenChange={setResolveOpen}
+        planId={planId}
+        onApplyNewDateFinFab={async (newDate) => {
+          await updateDateFin({ data: { planId, date_fin_fab: newDate } });
+          await reload();
+        }}
+      />
 
       {/* Gantt */}
       <div className="overflow-x-auto rounded-2xl border border-border bg-card">
