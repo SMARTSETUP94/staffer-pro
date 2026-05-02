@@ -111,6 +111,7 @@ export const METIER_REGEX: Record<FabMetier, RegExp[]> = {
     /tapisserie/i,
     /rembourrage/i,
     /garnissage/i,
+    /\btissus?\b/i,
   ],
   peinture: [
     /peinture[ _-]+(?:nombre d['’ ]?)?heures?/i,
