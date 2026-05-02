@@ -55,6 +55,9 @@ export interface PlanInput {
   cnc_reserved_dates?: Set<string>;
   /** Capacité atelier max (défaut PIC_ATELIER) */
   pic_max?: number;
+  /** Heures BE "globales / suivi de projet" non rattachées à un objet :
+   *  splittées au pro-rata du total heures par objet (ajoutées à heures_be par objet). */
+  heures_be_global?: number;
 }
 
 export interface PlanStep {
