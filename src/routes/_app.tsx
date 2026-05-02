@@ -60,7 +60,7 @@ function AppGuard() {
       return;
     }
     // Onboarding profil obligatoire (1ʳᵉ connexion)
-    if (shouldRedirectToOnboarding({ profileCompleted, currentPath })) {
+    if (shouldRedirectToOnboarding({ profileCompleted, currentPath, skipped: isOnboardingSkipped() })) {
       navigate({ to: "/onboarding" });
       return;
     }
