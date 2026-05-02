@@ -1,5 +1,4 @@
-// @vitest-environment jsdom
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, beforeAll, afterAll } from "vitest";
 import {
   shouldForceSetPassword,
   isAuthHashPresent,
