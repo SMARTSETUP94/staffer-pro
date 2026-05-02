@@ -151,3 +151,35 @@ export function movePosteBetweenObjets(
     return o;
   });
 }
+
+/** v0.31.4d — Supprime un poste d'un objet (recompute l'objet). */
+export function removePosteFromObjet(
+  objets: EditableObjet[],
+  objetIdx: number,
+  posteId: string,
+): EditableObjet[] {
+  return objets.map((o, i) =>
+    i === objetIdx ? recomputeObjet({ ...o, postes: o.postes.filter((p) => p.id !== posteId) }) : o,
+  );
+}
+
+/** v0.31.4d — Supprime un objet entier de la liste. */
+export function removeObjet(objets: EditableObjet[], objetIdx: number): EditableObjet[] {
+  return objets.filter((_, i) => i !== objetIdx);
+}
+
+/** v0.31.4d — Renomme la désignation d'un poste (sans recompute heures). */
+export function renamePoste(
+  objets: EditableObjet[],
+  objetIdx: number,
+  posteId: string,
+  designation: string,
+): EditableObjet[] {
+  return objets.map((o, i) => {
+    if (i !== objetIdx) return o;
+    return {
+      ...o,
+      postes: o.postes.map((p) => (p.id === posteId ? { ...p, designation } : p)),
+    };
+  });
+}
