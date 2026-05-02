@@ -369,6 +369,57 @@ export const FIXTURE_D2128: FixtureMatrix = [
 ];
 
 /* ============================================================ */
+/* D-2141bis — HOTFIX v0.31.5 (BAR A COCKTAIL DOUBLE prod)       */
+/*  Bug A : "Remise en peinture du bar existant" exclu à tort    */
+/*    (regex /^remise\b/ trop large) → -93.75h sur Section 1.    */
+/*  Bug B : 6 postes vides (qty=0,total=0,temps=0) listés        */
+/*    en faux positifs "à mapper manuellement".                  */
+/*  Cible : 100% mapping auto, total 579.26h sur 4 sections.     */
+/* ============================================================ */
+export const FIXTURE_D2141BIS: FixtureMatrix = [
+  ...meta("D-2141bis", "BAR A COCKTAIL DOUBLE"),
+  // Section 1 : 148.5h = 93.75 (1.1) + 54.75 (1.2)
+  ["1", "BAR A COCKTAIL DOUBLE", null, "", null, null, 148.5],
+  // Objet 1.1 — "Remise en peinture du bar existant" (NE DOIT PAS être exclu)
+  ["1.1", "Remise en peinture du bar existant", 1, "u", null, null, null],
+  ["1.1.2", "Peinture nombre d'heures", 1, "h", 50, 3750, 75],
+  ["1.1.3", "Logistique interne", 1, "h", 35, 656.25, 18.75],
+  // Objet 1.2 — Linteau + Volume avec postes utilisés ET postes vides
+  ["1.2", "Linteau et volume décor", 1, "u", null, null, null],
+  // Postes vides (qty=0, total=0, temps=0) — NE DOIVENT PAS apparaître "à mapper"
+  ["1.2.1", "Construction linteau", 0, "h", 50, 0, 0],
+  ["1.2.2", "Peinture linteau", 0, "h", 50, 0, 0],
+  ["1.2.3", "Logistique linteau", 0, "h", 35, 0, 0],
+  ["1.2.4", "BE linteau", 0, "h", 60, 0, 0],
+  ["1.2.7", "Construction VOLUME", 0, "h", 50, 0, 0],
+  ["1.2.11", "Numérique linteau", 0, "h", 60, 0, 0],
+  // Postes utilisés sur 1.2 (54.75h)
+  ["1.2.5", "Tarif du bureau d'étude", 1, "h", 60, 360, 6],
+  ["1.2.6", "Construction heures", 1, "h", 50, 1500, 30],
+  ["1.2.8", "Peinture nombre d'heures", 1, "h", 50, 600, 12],
+  ["1.2.9", "Logistique interne", 1, "h", 35, 236.25, 6.75],
+  // Section 2 : 127.24h sur 1 objet
+  ["2", "MOBILIER VIP", null, "", null, null, 127.24],
+  ["2.1", "Tabouret bar", 8, "u", null, null, null],
+  ["2.1.1", "Métallerie heures", 1, "h", 50, 4000, 10],
+  ["2.1.2", "Tissu nb d'heures", 1, "h", 45, 2160, 5.905],
+  // Section 3 : 287.52h sur 1 objet
+  ["3", "DECOR MURAL", null, "", null, null, 287.52],
+  ["3.1", "Panneau décor LED", 4, "u", null, null, null],
+  ["3.1.1", "Numérique nb d'heures", 1, "h", 60, 6000, 25],
+  ["3.1.2", "Construction heures", 1, "h", 50, 4000, 30],
+  ["3.1.3", "Peinture nombre d'heures", 1, "h", 50, 1880, 11.88],
+  ["3.1.4", "LED + PMMA", 1, "ff", 1500, 6000, null],
+  // Section 4 : 16h
+  ["4", "PREMONTAGE", null, "", null, null, 16],
+  ["4.1", "Prémontage atelier", 1, "u", null, null, null],
+  ["4.1.1", "Heures prémontage", 1, "h", 35, 560, 16],
+  // Lots chantier hors objets
+  ["5", "Montage day 1", 1, "ff", null, 5000, 80],
+  ["6", "Démontage day 4", 1, "ff", null, 1500, 30],
+];
+
+/* ============================================================ */
 /* Index                                                         */
 /* ============================================================ */
 export const ALL_FIXTURES = {
@@ -389,4 +440,5 @@ export const ALL_FIXTURES = {
   "D-2150": FIXTURE_D2150,
   "D-1832": FIXTURE_D1832,
   "D-2128": FIXTURE_D2128,
+  "D-2141bis": FIXTURE_D2141BIS,
 } as const;
