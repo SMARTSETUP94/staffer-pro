@@ -30,7 +30,8 @@ interface Props {
   onCompleted: () => void;
 }
 
-export function AutoStaffPlanButton({ planId, stepsCount, onCompleted }: Props) {
+export const AutoStaffPlanButton = forwardRef<AutoStaffPlanButtonHandle, Props>(
+  function AutoStaffPlanButton({ planId, stepsCount, onCompleted }, ref) {
   const autoStaff = useServerFn(autoStaffPlan);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [running, setRunning] = useState(false);
@@ -41,6 +42,12 @@ export function AutoStaffPlanButton({ planId, stepsCount, onCompleted }: Props) 
     unfilled_total: number;
   } | null>(null);
   const [resultOpen, setResultOpen] = useState(false);
+
+  useImperativeHandle(ref, () => ({
+    trigger: () => {
+      if (!running && stepsCount > 0) setConfirmOpen(true);
+    },
+  }), [running, stepsCount]);
 
   const handleRun = async () => {
     setConfirmOpen(false);
