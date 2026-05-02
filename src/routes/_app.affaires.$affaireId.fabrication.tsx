@@ -233,14 +233,41 @@ function FabricationPage() {
         </div>
       )}
 
-      {/* v0.35.4 — Wizard Auto-staffing pour typologie Fabrication (5XXX) */}
+      {/* v0.35.4 — Wizard / v0.35.11 — Express en option principale */}
       {isAdminOrChef &&
         affaireMeta?.typologie === "fabrication" && (
-          <div className="rounded-xl border border-border bg-card p-4">
-            <StaffingPlanWizard
-              affaireId={affaireId}
-              defaultDateFin={affaireMeta.date_montage}
-            />
+          <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <div>
+                <p className="text-sm font-semibold text-foreground">
+                  Auto-staffing fabrication
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Express : 1 clic pour créer + staffer + publier (si aucun conflit). Sinon utilisez le wizard ci-dessous.
+                </p>
+              </div>
+              <MettreAuPlanningExpressButton
+                affaireId={affaireId}
+                dateMontage={affaireMeta?.date_montage ?? null}
+                onConfigurer={() => {
+                  // Wizard inline déjà visible : on scroll dessus
+                  document
+                    .getElementById("staffing-wizard-inline")
+                    ?.scrollIntoView({ behavior: "smooth", block: "start" });
+                }}
+              />
+            </div>
+            <details id="staffing-wizard-inline" className="group">
+              <summary className="cursor-pointer text-xs text-muted-foreground hover:text-foreground select-none">
+                ▸ Configurer manuellement (wizard détaillé)
+              </summary>
+              <div className="mt-3">
+                <StaffingPlanWizard
+                  affaireId={affaireId}
+                  defaultDateFin={affaireMeta.date_montage}
+                />
+              </div>
+            </details>
           </div>
         )}
 
