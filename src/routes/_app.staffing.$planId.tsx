@@ -1,11 +1,15 @@
 // v0.35.5 / Sprint 5 — Page Gantt staffing + Wizard + Publication + Historique
 import { useEffect, useState } from "react";
 import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
-import { ArrowLeft, History, Send } from "lucide-react";
+import { ArrowLeft, History, Send, Zap, ListChecks } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
 import { GanttInteractif, type PlanData } from "@/components/staffing/GanttInteractif";
 import { StaffingPersonnesSection } from "@/components/staffing/StaffingPersonnesSection";
+import {
+  EquipeAffaireSection,
+  useStaffingViewMode,
+} from "@/components/staffing/EquipeAffaireSection";
 import { PublishPlanDialog } from "@/components/staffing/PublishPlanDialog";
 import { PlanHistoryDrawer } from "@/components/staffing/PlanHistoryDrawer";
 import { Button } from "@/components/ui/button";
