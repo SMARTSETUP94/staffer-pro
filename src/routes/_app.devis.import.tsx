@@ -786,6 +786,8 @@ function DevisImportPage() {
               integrityChecks={integrityChecks}
             />
 
+            <DevisImportExclusions exclusions={exclusions} filename={sourceFilename} />
+
             <DevisImportSection4Chantier
               importMontage={importMontage}
               setImportMontage={setImportMontage}
