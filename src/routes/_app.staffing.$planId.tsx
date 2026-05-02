@@ -183,7 +183,14 @@ function StaffingPlanPage() {
           )}
         </div>
       </div>
+      {isDraft && (
+        <StaffingEditToolbar
+          planId={planId}
+          onSaved={() => ganttRef.current?.reload()}
+        />
+      )}
       <GanttInteractif
+        ref={ganttRef}
         key={refreshKey}
         planId={planId}
         onDataLoaded={setPlanData}
