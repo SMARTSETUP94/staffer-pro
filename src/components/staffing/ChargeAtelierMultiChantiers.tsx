@@ -186,6 +186,18 @@ export function ChargeAtelierMultiChantiers() {
   }
   if (!data || !analysis) return null;
 
+  if (analysis.affaireIds.length === 0) {
+    return (
+      <div className="rounded-2xl border border-dashed border-border bg-card/40 p-10 text-center">
+        <Activity className="mx-auto h-8 w-8 text-muted-foreground/60" />
+        <p className="mt-3 text-sm font-semibold text-foreground">Aucun chantier publié sur cette fenêtre</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Publiez un plan staffing depuis une affaire 5XXX pour le voir apparaître ici.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       {/* Stats */}
@@ -271,6 +283,7 @@ export function ChargeAtelierMultiChantiers() {
                     const isCncConflict = id === 4 && uniq.length >= 2;
                     const cellInner = (
                       <div
+                        data-conflit-cell={isCncConflict ? "1" : undefined}
                         className={`flex h-7 items-center justify-center gap-0.5 rounded text-[10px] font-mono ${
                           isCncConflict ? "outline outline-2 outline-destructive cursor-pointer" : ""
                         } ${total === 0 ? "bg-muted/20" : ""}`}
