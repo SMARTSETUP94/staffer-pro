@@ -35,6 +35,7 @@ function StaffingPlanPage() {
   const [planData, setPlanData] = useState<PlanData | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const ganttRef = useRef<GanttInteractifHandle>(null);
+  const autoStaffRef = useRef<AutoStaffPlanButtonHandle>(null);
   const [equipeRefresh, setEquipeRefresh] = useState(0);
   const [publishOpen, setPublishOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
