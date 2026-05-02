@@ -46,22 +46,30 @@ export interface PlanData {
   step_overrides: Record<string, { manual_shift: number; manual_pers: boolean }>;
 }
 
-export function GanttInteractif({
-  planId,
-  onDataLoaded,
-}: {
-  planId: string;
-  onDataLoaded?: (d: PlanData) => void;
-}) {
+export interface GanttInteractifHandle {
+  reload: () => Promise<void>;
+}
+
+export const GanttInteractif = forwardRef<
+  GanttInteractifHandle,
+  {
+    planId: string;
+    onDataLoaded?: (d: PlanData) => void;
+  }
+>(function GanttInteractifInner({ planId, onDataLoaded }, ref) {
   const calculate = useServerFn(calculateStaffingPlan);
   const updateObj = useServerFn(updatePlanObject);
-  const updateStep = useServerFn(updatePlanStep);
   const [data, setData] = useState<PlanData | null>(null);
   const [loading, setLoading] = useState(true);
   const [busyStepId, setBusyStepId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   /** Impacts pré-vol par stepId — alimente badge + couleur slider + bandeau bonus */
   const [impactByStep, setImpactByStep] = useState<Record<string, SliderImpact[]>>({});
+  const initFromPlan = useEditStore((s) => s.initFromPlan);
+  const setStepPersStore = useEditStore((s) => s.setStepPers);
+  const setStepShiftStore = useEditStore((s) => s.setStepShift);
+  const resetStepShiftStore = useEditStore((s) => s.resetStepShift);
+  const edits = useEditStore((s) => s.edits);
 
   const reload = useCallback(async () => {
     setLoading(true);
