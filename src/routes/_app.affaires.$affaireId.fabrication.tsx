@@ -48,6 +48,7 @@ import { StafferVehiculeInterneDialog } from "@/components/fabrication/StafferVe
 import { ObjetCardMobile } from "@/components/fabrication/ObjetCardMobile";
 import { Link } from "@tanstack/react-router";
 import { StaffingPlanWizard } from "@/components/staffing/StaffingPlanWizard";
+import { MettreAuPlanningExpressButton } from "@/components/staffing/MettreAuPlanningExpressButton";
 
 export const Route = createFileRoute("/_app/affaires/$affaireId/fabrication")({
   head: () => ({ meta: [{ title: "Fabrication — Setup Paris" }] }),
