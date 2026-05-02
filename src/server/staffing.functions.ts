@@ -1,13 +1,16 @@
-// v0.35.2 — Server functions Auto-staffing Fabrication 5XXX
-// Calcule un plan via algo backward + persiste les modifs (manual_shift, manual_pers, display_order)
+// v0.35.2 / Sprint 2.1 — Server functions Auto-staffing Fabrication 5XXX
+// calculateStaffingPlan: calcule + MERGE avec overrides DB existants + UPSERT (delete+insert) toutes
+// les steps. Renvoie les steps avec leurs UUIDs DB.
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { calculatePlan } from "@/lib/staffing/algo";
-import type { ObjetInput, PlanResult } from "@/lib/staffing/types";
+import { addDays } from "@/lib/staffing/date-utils";
+import { H_DEFAULT } from "@/lib/staffing/types";
+import type { ObjetInput, PlanResult, PlanStep } from "@/lib/staffing/types";
 
 /* ------------------------------------------------------------------ */
-/* GET /staffing-plan/:planId/calculate                                */
+/* GET /staffing-plan/:planId/calculate (POST)                         */
 /* ------------------------------------------------------------------ */
 export const calculateStaffingPlan = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -35,7 +38,7 @@ export const calculateStaffingPlan = createServerFn({ method: "POST" })
     const { supabase } = context;
     const { planId } = data;
 
-    // 1. Plan
+    /* 1. Plan */
     const { data: plan, error: planErr } = await supabase
       .from("staffing_plan")
       .select("id, affaire_id, date_debut_fab, date_fin_fab, status")
@@ -43,7 +46,7 @@ export const calculateStaffingPlan = createServerFn({ method: "POST" })
       .single();
     if (planErr || !plan) throw new Error(planErr?.message ?? "Plan introuvable");
 
-    // 2. Objets liés au plan + détail fabrication_objets
+    /* 2. Objets liés au plan + détail fabrication_objets */
     const { data: planObjs, error: poErr } = await supabase
       .from("staffing_plan_object")
       .select("id, objet_id, display_order, included")
@@ -75,7 +78,7 @@ export const calculateStaffingPlan = createServerFn({ method: "POST" })
       fabObjets = fab ?? [];
     }
 
-    // 3. CNC réservé hors ce plan
+    /* 3. CNC réservé hors ce plan */
     const { data: cncRows, error: cncErr } = await supabase
       .from("machine_reservation")
       .select("date, affaire_id")
@@ -84,7 +87,26 @@ export const calculateStaffingPlan = createServerFn({ method: "POST" })
     if (cncErr) throw new Error(cncErr.message);
     const cncReservedDates = new Set<string>((cncRows ?? []).map((r) => r.date as string));
 
-    // 4. Build ObjetInput[]
+    /* 4. Charger les overrides existants (manual_shift, manual_pers, pers) */
+    const { data: existingSteps } = await supabase
+      .from("staffing_plan_step")
+      .select("id, metier_id, objet_id, manual_shift, manual_pers, pers")
+      .eq("plan_id", planId);
+    type Override = { manual_shift: number; manual_pers: boolean; pers: number };
+    const overrideKey = (metier_id: number, objet_id: string | null) =>
+      `${metier_id}|${objet_id ?? "_null_"}`;
+    const overridesMap = new Map<string, Override>();
+    for (const s of existingSteps ?? []) {
+      if (s.manual_shift !== 0 || s.manual_pers === true) {
+        overridesMap.set(overrideKey(s.metier_id, s.objet_id), {
+          manual_shift: s.manual_shift ?? 0,
+          manual_pers: s.manual_pers ?? false,
+          pers: s.pers,
+        });
+      }
+    }
+
+    /* 5. Build ObjetInput[] */
     const fabById = new Map(fabObjets.map((f) => [f.id, f] as const));
     const objetsInput: ObjetInput[] = (planObjs ?? [])
       .filter((po) => po.included)
@@ -105,13 +127,103 @@ export const calculateStaffingPlan = createServerFn({ method: "POST" })
         };
       });
 
-    // 5. Calcul
+    /* 6. Calcul algo */
     const result = calculatePlan({
       affaire_id: plan.affaire_id,
       date_fin_fab: plan.date_fin_fab,
       objets: objetsInput,
       cnc_reserved_dates: cncReservedDates,
     });
+
+    /* 7. Appliquer overrides : si manual_pers, recalcule span ; si manual_shift, décale start_date */
+    for (const step of result.steps) {
+      if (step.start_date === "TBD") continue;
+      const ov = overridesMap.get(overrideKey(step.metier_id, step.objet_id));
+      if (!ov) continue;
+      if (ov.manual_pers && ov.pers > 0 && ov.pers !== step.pers) {
+        const totalH = step.pers * step.h_par_jour * step.span_days;
+        const newSpan = Math.max(1, Math.ceil(totalH / (ov.pers * step.h_par_jour)));
+        // Réancrer fin = ancienne fin -> nouvelle start = ancienne fin - (newSpan-1)
+        const oldEnd = addDays(step.start_date, step.span_days - 1);
+        step.pers = ov.pers;
+        step.span_days = newSpan;
+        step.start_date = addDays(oldEnd, -(newSpan - 1));
+        step.source = "manual";
+      }
+      if (ov.manual_shift !== 0) {
+        step.start_date = addDays(step.start_date, ov.manual_shift);
+        step.source = "manual";
+      }
+    }
+
+    /* 8. PERSISTENCE : delete + insert toutes les steps + cnc reservations du plan */
+    await supabase.from("machine_reservation").delete().eq("affaire_id", plan.affaire_id);
+    await supabase.from("staffing_plan_step").delete().eq("plan_id", planId);
+
+    if (result.steps.length > 0) {
+      const stepsToInsert = result.steps
+        .filter((s) => s.start_date !== "TBD")
+        .map((s) => {
+          const ov = overridesMap.get(overrideKey(s.metier_id, s.objet_id));
+          return {
+            plan_id: planId,
+            metier_id: s.metier_id,
+            objet_id: s.objet_id,
+            start_date: s.start_date,
+            span_days: s.span_days,
+            pers: s.pers,
+            h_par_jour: s.h_par_jour,
+            manual_shift: ov?.manual_shift ?? 0,
+            manual_pers: ov?.manual_pers ?? false,
+            source: s.source,
+          };
+        });
+      if (stepsToInsert.length > 0) {
+        const { data: inserted, error: insErr } = await supabase
+          .from("staffing_plan_step")
+          .insert(stepsToInsert)
+          .select("id, metier_id, objet_id, start_date");
+        if (insErr) throw new Error(insErr.message);
+
+        // Map (metier_id, objet_id, start_date) -> uuid pour réinjecter dans result.steps
+        const dbIdMap = new Map<string, string>();
+        for (const r of inserted ?? []) {
+          dbIdMap.set(
+            `${r.metier_id}|${r.objet_id ?? "_null_"}|${r.start_date}`,
+            r.id as string
+          );
+        }
+        for (const s of result.steps) {
+          if (s.start_date === "TBD") continue;
+          const dbId = dbIdMap.get(`${s.metier_id}|${s.objet_id ?? "_null_"}|${s.start_date}`);
+          if (dbId) s.id = dbId;
+        }
+
+        // Réinsérer cnc_reservations en utilisant les nouveaux uuids
+        if (result.cnc_reservations.length > 0) {
+          const cncToInsert: Array<{
+            machine_id: string;
+            date: string;
+            step_id: string;
+            affaire_id: string;
+          }> = [];
+          for (const r of result.cnc_reservations) {
+            const step = result.steps.find((s) => s.id === r.step_id || s.metier_id === 4);
+            if (step && step.id) {
+              cncToInsert.push({
+                machine_id: r.machine_id,
+                date: r.date,
+                step_id: step.id,
+                affaire_id: plan.affaire_id,
+              });
+            }
+          }
+          if (cncToInsert.length > 0) {
+            await supabase.from("machine_reservation").insert(cncToInsert);
+          }
+        }
+      }
+    }
 
     const objetsOut = (planObjs ?? []).map((po) => {
       const f = fabById.get(po.objet_id);
@@ -175,9 +287,9 @@ export const updatePlanStep = createServerFn({ method: "POST" })
     z
       .object({
         id: z.string().uuid(),
-        manual_shift: z.number().int().optional(),
+        manual_shift: z.number().int().min(-30).max(30).optional(),
         manual_pers: z.boolean().optional(),
-        pers: z.number().int().min(0).max(20).optional(),
+        pers: z.number().int().min(1).max(12).optional(),
       })
       .parse(d)
   )
@@ -189,6 +301,9 @@ export const updatePlanStep = createServerFn({ method: "POST" })
     if (data.manual_shift !== undefined) patch.manual_shift = data.manual_shift;
     if (data.manual_pers !== undefined) patch.manual_pers = data.manual_pers;
     if (data.pers !== undefined) patch.pers = data.pers;
+    // h_par_jour reste inchangé ; H_DEFAULT importé pour cohérence si besoin futur
+    void H_DEFAULT;
+    void {} as Pick<PlanStep, "id">;
     const { error } = await supabase.from("staffing_plan_step").update(patch).eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
