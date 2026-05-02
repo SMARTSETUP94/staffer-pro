@@ -289,7 +289,7 @@ describe("v0.31.4c — D-2128 : 4e fixture, 100% mapping cible (calibrage final)
     expect(obj.heures.manutention).toBe(5);
   });
 
-  it("Section 5 Permanence qte=3 : 10h × 3 = 30h manutention (règle qte Section)", () => {
+  it("Section 5 qte=3 : 10h × 3 = 30h manutention (règle qte Section)", () => {
     const obj = r.objetsCandidats.find((o) => o.numero === "5.1")!;
     expect(obj.heures.manutention).toBe(30);
   });
