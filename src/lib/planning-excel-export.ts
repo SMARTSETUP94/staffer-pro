@@ -967,6 +967,7 @@ export function exportPlanningExcel(opts: BuildOpts): void {
   XLSX.utils.book_append_sheet(wb, buildEmployeSheet("CDI / CDD", cdiCdd, opts), "CDI-CDD");
   XLSX.utils.book_append_sheet(wb, buildEmployeSheet("Intérim / Indép.", interim, opts), "Intérim");
   XLSX.utils.book_append_sheet(wb, buildSyntheseSheet(opts), "Synthèse chantier");
+  XLSX.utils.book_append_sheet(wb, buildParChantierSheet(opts), "Par chantier");
   XLSX.utils.book_append_sheet(wb, buildHeuresEmployeSheet(cdiCdd, opts), "Heures par employé");
   // Feuille Flotte uniquement si véhicules ou trajets fournis
   if ((vehicules && vehicules.length > 0) || (trajets && trajets.length > 0)) {
@@ -1031,6 +1032,7 @@ export function buildPlanningWorkbookRange(
       `S${weekNum} Intérim`,
     );
     XLSX.utils.book_append_sheet(wb, buildSyntheseSheet(weekOpts), `S${weekNum} Synthèse`);
+    XLSX.utils.book_append_sheet(wb, buildParChantierSheet(weekOpts), `S${weekNum} Par chantier`);
     XLSX.utils.book_append_sheet(
       wb,
       buildHeuresEmployeSheet(cdiCdd, weekOpts),
