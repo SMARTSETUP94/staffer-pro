@@ -229,6 +229,106 @@ export const FIXTURE_D2133: FixtureMatrix = [
 ];
 
 /* ============================================================ */
+/* D-3204 — Devis Progbat moderne 3 niveaux (cas test Gabin)     */
+/*  Section 1 = "I2 BAR A COCKTAIL DOUBLE" (regroupement visuel) */
+/*    Objet 1.1 "Remise en peinture du bar existant" qte=1       */
+/*      Postes 1.1.1 BE, 1.1.2 Construction, 1.1.3 Peinture      */
+/*    Objet 1.2 "Décor mural" qte=2                              */
+/*      Postes 1.2.1 Numérique, 1.2.2 Peinture                   */
+/*  Section 2 = "MOBILIER VIP"                                   */
+/*    Objet 2.1 "Tabouret haut" qte=12                           */
+/*      Postes 2.1.1 Métallerie, 2.1.2 Tissu                     */
+/*  Avec descriptions (lignes commentaires sans numéro).         */
+/* ============================================================ */
+export const FIXTURE_D3204: FixtureMatrix = [
+  ...meta("D-3204", "Bar cocktail + mobilier VIP"),
+  // Section 1 : Temps prévu déclaré = 8 + 24 + 6 + (3+5)*2 = 54h
+  ["1", "I2 BAR A COCKTAIL DOUBLE", null, "", null, null, 54],
+  // Objet 1.1 qte=1
+  ["1.1", "Remise en peinture du bar existant", 1, "u", null, null, null],
+  ["", "Bar bois 4m × 1m, plateau zinc, 4 pieds laqués", null, "", null, null, null],
+  ["1.1.1", "Tarif du bureau d'étude", 1, "h", 60, 480, 8],
+  ["1.1.2", "Construction heures", 1, "h", 50, 1200, 24],
+  ["1.1.3", "Peinture nombre d'heures", 1, "h", 50, 300, 6],
+  ["1.1.4", "Liste de matière pour bois", 1, "ff", 800, 800, null],
+  // Objet 1.2 qte=2 → heures par UNITE × 2
+  ["1.2", "Décor mural lumineux", 2, "u", null, null, null],
+  ["", "Panneau LED 1.5m diffuseur PMMA", null, "", null, null, null],
+  ["1.2.1", "Numérique nb d'heures", 1, "h", 60, 360, 3],
+  ["1.2.2", "Peinture heures", 1, "h", 50, 500, 5],
+  ["1.2.3", "LED + PMMA", 1, "ff", 250, 250, null],
+  // Section 2 : Temps prévu déclaré = (3+4)*12 = 84h
+  ["2", "MOBILIER VIP", null, "", null, null, 84],
+  // Objet 2.1 qte=12
+  ["2.1", "Tabouret haut", 12, "u", null, null, null],
+  ["", "Assise tissu vert mousse h.75cm", null, "", null, null, null],
+  ["2.1.1", "Métallerie heures", 1, "h", 50, 1800, 3],
+  ["2.1.2", "Tissu nb d'heures", 1, "h", 45, 2160, 4],
+  // Lots chantier
+  ["3", "Montage day 1", 1, "ff", null, 2000, 40],
+  ["4", "Démontage day 4", 1, "ff", null, 800, 16],
+];
+
+/* ============================================================ */
+/* D-2150 — fabrication avec quantités multiples (cas Gabin)    */
+/*  Section 1 : objets 1.1 (qte=60), 1.4 (qte=8), 1.5 (qte=3)   */
+/*  Cas spécial : 1 poste "Suivi de projet" → BE                */
+/* ============================================================ */
+export const FIXTURE_D2150: FixtureMatrix = [
+  ...meta("D-2150", "Décor événementiel"),
+  // Section 1 : Temps déclaré = 60*0.15 + 8*1 + 3*2 = 9 + 8 + 6 = 23h
+  ["1", "DECOR PRINCIPAL", null, "", null, null, 23],
+  // Fausses briques qte=60
+  ["1.1", "Fausse briques", 60, "u", null, null, null],
+  ["1.1.1", "Numérique nb d'heures", 1, "h", 60, 540, 0.15],
+  ["1.1.2", "Liste de matière pour bois", 1, "ff", 5, 300, null],
+  // Châssis qte=8
+  ["1.4", "Châssis tendu", 8, "u", null, null, null],
+  ["", "Format 2m × 1m toile coton", null, "", null, null, null],
+  ["1.4.1", "Construction heures", 1, "h", 50, 400, 1],
+  // Stèles qte=3
+  ["1.5", "Stèles", 3, "u", null, null, null],
+  ["1.5.1", "Peinture nombre d'heures", 1, "h", 50, 300, 2],
+  ["1.5.2", "Liste de matière pour bois", 1, "ff", 100, 300, null],
+  // Suivi de projet → BE (cas Gabin : 14h)
+  ["2", "SUIVI", null, "", null, null, 14],
+  ["2.1", "Suivi de projet heures", 14, "h", 60, 840, 1],
+];
+
+/* ============================================================ */
+/* D-1832 — Test 100% mapping auto (803h cas Gabin)              */
+/*  Plusieurs objets, tous métiers, descriptions, qté variables  */
+/* ============================================================ */
+export const FIXTURE_D1832: FixtureMatrix = [
+  ...meta("D-1832", "Stand expo majeur"),
+  // Section 1 : Temps déclaré = (8+20+5)*1 + (4+12+4)*2 = 33 + 40 = 73h
+  ["1", "STAND PRINCIPAL", null, "", null, null, 73],
+  ["1.1", "Bar central", 1, "u", null, null, null],
+  ["", "Bar L4m fond miroir", null, "", null, null, null],
+  ["1.1.1", "Tarif du bureau d'étude", 1, "h", 60, 480, 8],
+  ["1.1.2", "Construction heures", 1, "h", 50, 1000, 20],
+  ["1.1.3", "Peinture nombre d'heures", 1, "h", 50, 250, 5],
+  ["1.1.4", "Budget matériaux", 1, "ff", 800, 800, null],
+  ["1.2", "Banquette VIP", 2, "u", null, null, null],
+  ["", "L1.8m garnissage velours bleu nuit", null, "", null, null, null],
+  ["1.2.1", "Tarif du bureau d'étude", 1, "h", 60, 480, 4],
+  ["1.2.2", "Métallerie heures", 1, "h", 50, 1200, 12],
+  ["1.2.3", "Tissu nb d'heures", 1, "h", 45, 360, 4],
+  // Section 2 : Temps déclaré = (10+8)*1 = 18h
+  ["2", "SIGNALETIQUE", null, "", null, null, 18],
+  ["2.1", "Totem signalétique 3m", 1, "u", null, null, null],
+  ["2.1.1", "Numérique nb d'heures", 1, "h", 60, 600, 10],
+  ["2.1.2", "Construction heures", 1, "h", 50, 400, 8],
+  ["2.1.3", "PMMA + adhésif", 1, "ff", 350, 350, null],
+  // Section 3 : juste un poste manutention prémontage = 4h
+  ["3", "PREMONTAGE ATELIER", null, "", null, null, 4],
+  ["3.1", "Heures prémontage logistique interne", 1, "h", 35, 140, 4],
+  // Lots chantier
+  ["4", "Montage sur site day 1", 1, "ff", null, 3000, 60],
+  ["5", "Démontage day 4", 1, "ff", null, 1200, 24],
+];
+
+/* ============================================================ */
 /* Index                                                         */
 /* ============================================================ */
 export const ALL_FIXTURES = {
@@ -245,4 +345,7 @@ export const ALL_FIXTURES = {
   "D-1650": FIXTURE_D1650,
   "D-2028": FIXTURE_D2028,
   "D-2133": FIXTURE_D2133,
+  "D-3204": FIXTURE_D3204,
+  "D-2150": FIXTURE_D2150,
+  "D-1832": FIXTURE_D1832,
 } as const;
