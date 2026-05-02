@@ -294,7 +294,10 @@ function DevisImportPage() {
         const editable: EditableObjet[] = progbat.objetsCandidats.map((o) => ({
           selected: o.confidence === "high",
           numero: o.numero,
+          sectionNumero: o.sectionNumero,
+          sectionNom: o.sectionNom,
           nom: o.nom,
+          description: o.description,
           quantite: o.quantite,
           heures: { ...o.heures },
           budgetMateriaux: o.budgetMateriaux,
@@ -302,6 +305,7 @@ function DevisImportPage() {
           flags: o.flags,
           confidence: o.confidence,
           warnings: o.warnings,
+          postes: o.postes.map((p) => ({ ...p })),
         }));
         setObjets(editable);
         // v0.32.2 — snapshot des objets source pour validation cohérence.
