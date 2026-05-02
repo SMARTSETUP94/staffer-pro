@@ -158,7 +158,7 @@ export const updatePlanObject = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabase } = context;
-    const patch: Record<string, unknown> = {};
+    const patch: { display_order?: number; included?: boolean } = {};
     if (data.display_order !== undefined) patch.display_order = data.display_order;
     if (data.included !== undefined) patch.included = data.included;
     const { error } = await supabase.from("staffing_plan_object").update(patch).eq("id", data.id);
@@ -183,7 +183,9 @@ export const updatePlanStep = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabase } = context;
-    const patch: Record<string, unknown> = { source: "manual" };
+    const patch: { source: string; manual_shift?: number; manual_pers?: boolean; pers?: number } = {
+      source: "manual",
+    };
     if (data.manual_shift !== undefined) patch.manual_shift = data.manual_shift;
     if (data.manual_pers !== undefined) patch.manual_pers = data.manual_pers;
     if (data.pers !== undefined) patch.pers = data.pers;
