@@ -40,7 +40,13 @@ export const METIER_TO_ETAPE: Record<FabMetier, FabricationEtapeType> = {
 /* Le premier qui matche gagne. Matériel doit être testé AVANT métier.        */
 /* -------------------------------------------------------------------------- */
 
-/** Patterns matière / matériel (testés en priorité absolue). */
+/**
+ * Patterns matière / matériel (testés en priorité absolue).
+ * NOTE v0.31.4c : "budget matériaux" et "fournitures logistique" deviennent
+ * conditionnels (cf. isMatiereContextual) : si la ligne porte du temps prévu
+ * elle bascule en heures Manutention/Logistique. Les patterns purs restent
+ * ici pour le cas Temps prévu = 0.
+ */
 export const MATIERE_REGEX: RegExp[] = [
   /m2 de peinture/i,
   /m²\s*de peinture/i,
@@ -52,6 +58,7 @@ export const MATIERE_REGEX: RegExp[] = [
   /budget accessoires/i,
   /fournitures d'?emballage/i,
   /fournitures logistique/i,
+  /liste des principales fournitures en logistique/i,
   /\bled\b/i,
   /\bpmma\b/i,
   /\bsunclear\b/i,
@@ -69,6 +76,17 @@ export const MATIERE_REGEX: RegExp[] = [
 ];
 
 /**
+ * v0.31.4c — Patterns "matière conditionnelle" : ces libellés sont matière
+ * UNIQUEMENT si la ligne ne porte pas d'heures. Sinon ils valent Manutention
+ * (heures de récupération matière / logistique interne).
+ */
+export const MATIERE_CONDITIONAL_REGEX: RegExp[] = [
+  /budget mat[ée]riaux/i,
+  /liste des principales fournitures en logistique/i,
+  /fournitures logistique/i,
+];
+
+/**
  * Table métier → patterns (ordre PRIORITAIRE).
  * Évalué dans l'ordre : be → numerique → metal → tapisserie → peinture → manutention → bois.
  * Bois en dernier car "construction" capture beaucoup.
@@ -80,6 +98,7 @@ export const METIER_REGEX: Record<FabMetier, RegExp[]> = {
     /suivi de projet[ _-]?heures?/i,
     /suivi de projet/i,
     /suivi de chantier/i,
+    /plans techniques[ _-]?heures?/i,
     /plans techniques/i,
     /visite technique/i,
     /[ée]tude technique/i,
@@ -126,6 +145,7 @@ export const METIER_REGEX: Record<FabMetier, RegExp[]> = {
     /pr[ée]montage/i,
     /logisitique/i, // typo Progbat
     /\blogistique\b/i,
+    /^stockage$/i,
     /conditionnement/i,
     /emballage/i,
     /\bmanutention\b/i,
@@ -172,6 +192,7 @@ export const DEMONTAGE_REGEX: RegExp[] = [
   /d[ée]montage[ _-]+heures?/i,
   /\bd[ée]montage\b/i,
   /\bd[ée]pose\b/i,
+  /d[ée]montage[ _-]?pecqueuse/i,
 ];
 
 export const CHANTIER_REGEX: RegExp[] = [

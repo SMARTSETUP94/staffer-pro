@@ -184,11 +184,11 @@ function parseRows(rows: unknown[][], headerRow: number, cols: ColumnMap): Parse
       totalHt,
       tempsPrevu,
       isExclude: isExcludeKeyword(designation),
-      isMatiere: isMatiere(designation),
+      isMatiere: isMatiere(designation, tempsPrevu),
       isMontage: isMontageKeyword(designation),
       isDemontage: isDemontageKeyword(designation),
       isRegul: isRegul(designation),
-      metier: matchMetier(designation),
+      metier: matchMetier(designation, tempsPrevu),
       isComment,
     });
   }
@@ -252,6 +252,10 @@ function aggregateObjet(
 
   // Quantité de l'objet : celle du parent si renseignée et > 0, sinon 1.
   const quantite = parent.quantite && parent.quantite > 0 ? parent.quantite : 1;
+  // v0.31.4c — Quantité de la SECTION parente (multiplicateur final).
+  // Si parent === section (objet implicite), on neutralise pour ne pas doubler.
+  const sectionQte =
+    parent === section ? 1 : section.quantite && section.quantite > 0 ? section.quantite : 1;
 
   const children = descendantsOf(parent, allRows);
 
@@ -282,7 +286,7 @@ function aggregateObjet(
 
     // Régul : 0 h mais Total HT préservé. Flag warning si Temps > 0.
     if (c.isRegul) {
-      if (c.totalHt && c.totalHt > 0) budgetMateriaux += c.totalHt;
+      if (c.totalHt && c.totalHt > 0) budgetMateriaux += c.totalHt * sectionQte;
       if ((c.tempsPrevu ?? 0) > 0) {
         warnings.push(
           `Régul ligne ${c.rowIndex} avec ${c.tempsPrevu}h — à valider manuellement.`,
@@ -292,11 +296,11 @@ function aggregateObjet(
       continue;
     }
 
-    // Matière → budget cumulé (× quantité objet pour aligner sur le total réel)
+    // Matière → budget cumulé (× quantité objet × qte section pour aligner sur le total réel)
     if (c.isMatiere) {
       const ht = c.totalHt ?? 0;
       if (ht > 0) {
-        budgetMateriaux += ht * quantite;
+        budgetMateriaux += ht * quantite * sectionQte;
       } else {
         warnings.push(
           `Matière sans montant ligne ${c.rowIndex} : « ${c.designation.slice(0, 40)} »`,
@@ -332,8 +336,9 @@ function aggregateObjet(
   }
 
   // Multiplication par la quantité de l'objet (heures = par unité dans l'Excel)
+  // PUIS par la quantité de la Section parente (règle unifiée v0.31.4c).
   for (const k of Object.keys(heures) as FabMetier[]) {
-    heures[k] = +(heures[k] * quantite).toFixed(2);
+    heures[k] = +(heures[k] * quantite * sectionQte).toFixed(2);
   }
 
   if (metierUnknownCount > 0) {
@@ -352,6 +357,7 @@ function aggregateObjet(
     numero: parent.hierarchique || parent.numero,
     sectionNumero: section.hierarchique || section.numero,
     sectionNom: section.designation,
+    sectionQuantite: sectionQte,
     nom: parent.designation,
     description: extractDescription(parent, allRows),
     quantite,
