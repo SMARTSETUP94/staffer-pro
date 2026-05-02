@@ -330,7 +330,7 @@ export const FIXTURE_D1832: FixtureMatrix = [
 
 /* ============================================================ */
 /* D-2128 — 4e devis calibrage Gabin (585h, 100% mapping cible)  */
-/*  Section 5 "Permanence" qte=3 → poste 5.1 affiche 10h           */
+/*  Section 5 qte=3 → poste 5.1 affiche 10h                       */
 /*  → total réel = 10 × 3 = 30h (règle quantité Section)         */
 /*  Inclut nouveaux patterns : Plans techniques (BE),             */
 /*  Démontage Pecqueuse (Démontage), Stockage (Manutention),      */
