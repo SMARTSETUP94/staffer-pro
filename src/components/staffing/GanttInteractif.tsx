@@ -39,7 +39,13 @@ interface PlanData {
   step_overrides: Record<string, { manual_shift: number; manual_pers: boolean }>;
 }
 
-export function GanttInteractif({ planId }: { planId: string }) {
+export function GanttInteractif({
+  planId,
+  onDataLoaded,
+}: {
+  planId: string;
+  onDataLoaded?: (d: PlanData) => void;
+}) {
   const calculate = useServerFn(calculateStaffingPlan);
   const updateObj = useServerFn(updatePlanObject);
   const updateStep = useServerFn(updatePlanStep);
