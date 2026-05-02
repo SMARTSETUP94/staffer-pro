@@ -250,8 +250,27 @@ describe("resolveSetPasswordRedirect", () => {
 });
 
 describe("v0.31.4 onboarding skip flag (sessionStorage)", () => {
+  // Mock minimaliste de window.sessionStorage (env=node)
+  const store = new Map<string, string>();
+  const fakeStorage = {
+    getItem: (k: string) => store.get(k) ?? null,
+    setItem: (k: string, v: string) => void store.set(k, v),
+    removeItem: (k: string) => void store.delete(k),
+    clear: () => void store.clear(),
+    key: () => null,
+    length: 0,
+  };
+
+  beforeAll(() => {
+    (globalThis as unknown as { window: { sessionStorage: typeof fakeStorage } }).window = {
+      sessionStorage: fakeStorage,
+    };
+  });
+  afterAll(() => {
+    delete (globalThis as unknown as { window?: unknown }).window;
+  });
   beforeEach(() => {
-    window.sessionStorage.clear();
+    store.clear();
   });
 
   it("isOnboardingSkipped : false par défaut", () => {
@@ -261,7 +280,7 @@ describe("v0.31.4 onboarding skip flag (sessionStorage)", () => {
   it("markOnboardingSkipped → isOnboardingSkipped=true", () => {
     markOnboardingSkipped();
     expect(isOnboardingSkipped()).toBe(true);
-    expect(window.sessionStorage.getItem(ONBOARDING_SKIPPED_KEY)).toBe("1");
+    expect(fakeStorage.getItem(ONBOARDING_SKIPPED_KEY)).toBe("1");
   });
 
   it("clearOnboardingSkipped purge le flag", () => {
