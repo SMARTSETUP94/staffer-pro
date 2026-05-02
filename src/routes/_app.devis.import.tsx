@@ -28,11 +28,6 @@ import {
 } from "@/lib/import-validation";
 import { parseDevisFromArrayBuffer } from "@/lib/devis-import";
 import { parseDevisProgbatFromArrayBuffer } from "@/lib/devis-parser/parse-excel";
-import {
-  computeFlagsFromMetiers,
-  detectTypeFinition,
-} from "@/lib/devis-parser/compute-flags";
-import type { FabMetier } from "@/hooks/use-fabrication";
 import type { MetierCode } from "@/lib/employes-import";
 import { DevisImportDropzone } from "@/components/devis-import/DevisImportDropzone";
 import { DevisImportSection1Affaire } from "@/components/devis-import/DevisImportSection1Affaire";
