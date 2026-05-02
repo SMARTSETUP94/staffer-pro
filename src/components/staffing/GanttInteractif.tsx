@@ -74,6 +74,11 @@ export const GanttInteractif = forwardRef<
   const setStepShiftStore = useEditStore((s) => s.setStepShift);
   const resetStepShiftStore = useEditStore((s) => s.resetStepShift);
   const edits = useEditStore((s) => s.edits);
+  const bulkSetPersStore = useEditStore((s) => s.bulkSetPers);
+
+  /** Mesure dynamique de la largeur d'une colonne jour pour drag-to-shift */
+  const gridRef = useRef<HTMLDivElement | null>(null);
+  const [dayWidthPx, setDayWidthPx] = useState(0);
 
   const reload = useCallback(async () => {
     setLoading(true);
