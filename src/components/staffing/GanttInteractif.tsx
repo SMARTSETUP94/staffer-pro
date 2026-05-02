@@ -130,8 +130,14 @@ export const GanttInteractif = forwardRef<
 
   const days = useMemo(() => {
     if (!data) return [];
-    return workingDaysBetween(data.result.date_debut_fab, data.result.date_fin_fab);
-  }, [data]);
+    // Étendre la fenêtre si un edit local fait commencer un step AVANT date_debut_fab
+    // (réduction pers → span allongé → start avancé). Sans ça, la barre devient invisible.
+    let minStart = data.result.date_debut_fab;
+    for (const s of mergedSteps) {
+      if (s.start_date !== "TBD" && s.start_date < minStart) minStart = s.start_date;
+    }
+    return workingDaysBetween(minStart, data.result.date_fin_fab);
+  }, [data, mergedSteps]);
 
   const stats = useMemo(() => {
     if (!data) return null;
