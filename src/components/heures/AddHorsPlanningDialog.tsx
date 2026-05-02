@@ -35,10 +35,12 @@ import {
 interface Props {
   defaultDate?: string; // YYYY-MM-DD
   variant: "mobile" | "desktop";
+  /** v0.32.4 — pré-sélection métier (ex. métier principal de l'employé). */
+  defaultMetierId?: number;
   onSubmit: (input: HorsPlanningInput) => Promise<{ ok: boolean; error?: string }>;
 }
 
-export function AddHorsPlanningDialog({ defaultDate, variant, onSubmit }: Props) {
+export function AddHorsPlanningDialog({ defaultDate, variant, defaultMetierId, onSubmit }: Props) {
   const [open, setOpen] = useState(false);
   const [affaires, setAffaires] = useState<Affaire[]>([]);
   const [loadingAffaires, setLoadingAffaires] = useState(false);
@@ -50,6 +52,9 @@ export function AddHorsPlanningDialog({ defaultDate, variant, onSubmit }: Props)
   const [heures, setHeures] = useState<string>("8");
   const [commentaire, setCommentaire] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
+  // v0.32.4 — N'afficher les erreurs inline qu'après une 1re tentative de soumission.
+  const [showErrors, setShowErrors] = useState(false);
+  const todayISO = useMemo(() => format(new Date(), "yyyy-MM-dd"), []);
 
   // Charger affaires actives à l'ouverture
   useEffect(() => {
@@ -72,12 +77,13 @@ export function AddHorsPlanningDialog({ defaultDate, variant, onSubmit }: Props)
   useEffect(() => {
     if (open) {
       setAffaireId("");
-      setMetierId("");
+      setMetierId(defaultMetierId ? String(defaultMetierId) : "");
       setDate(defaultDate ?? format(new Date(), "yyyy-MM-dd"));
       setHeures("8");
       setCommentaire("");
+      setShowErrors(false);
     }
-  }, [open, defaultDate]);
+  }, [open, defaultDate, defaultMetierId]);
 
   const input: Partial<HorsPlanningInput> = useMemo(
     () => ({
@@ -91,9 +97,16 @@ export function AddHorsPlanningDialog({ defaultDate, variant, onSubmit }: Props)
   );
 
   const validation = useMemo(() => validateHorsPlanningInput(input), [input]);
+  const errorSet = useMemo(() => new Set(validation.errors), [validation.errors]);
+  const errorFor = (codes: typeof validation.errors): string | null => {
+    if (!showErrors) return null;
+    const found = codes.find((c) => errorSet.has(c));
+    return found ? HORS_PLANNING_ERROR_LABELS[found] : null;
+  };
 
   const handleSubmit = async () => {
     if (!validation.ok) {
+      setShowErrors(true);
       toast.error(HORS_PLANNING_ERROR_LABELS[validation.errors[0]]);
       return;
     }
@@ -147,6 +160,9 @@ export function AddHorsPlanningDialog({ defaultDate, variant, onSubmit }: Props)
                 placeholder="Rechercher (n°, nom, client)…"
               />
             )}
+            {errorFor(["AFFAIRE_REQUISE"]) && (
+              <p className="mt-1 text-xs text-destructive">{errorFor(["AFFAIRE_REQUISE"])}</p>
+            )}
           </div>
 
           <div>
@@ -171,6 +187,9 @@ export function AddHorsPlanningDialog({ defaultDate, variant, onSubmit }: Props)
                 ))}
               </SelectContent>
             </Select>
+            {errorFor(["METIER_REQUIS"]) && (
+              <p className="mt-1 text-xs text-destructive">{errorFor(["METIER_REQUIS"])}</p>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -181,8 +200,14 @@ export function AddHorsPlanningDialog({ defaultDate, variant, onSubmit }: Props)
               <Input
                 type="date"
                 value={date}
+                max={todayISO}
                 onChange={(e) => setDate(e.target.value)}
               />
+              {errorFor(["DATE_REQUISE", "DATE_INVALIDE", "DATE_FUTURE"]) && (
+                <p className="mt-1 text-xs text-destructive">
+                  {errorFor(["DATE_REQUISE", "DATE_INVALIDE", "DATE_FUTURE"])}
+                </p>
+              )}
             </div>
             <div>
               <Label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -196,6 +221,11 @@ export function AddHorsPlanningDialog({ defaultDate, variant, onSubmit }: Props)
                 value={heures}
                 onChange={(e) => setHeures(e.target.value)}
               />
+              {errorFor(["HEURES_INVALIDE", "HEURES_HORS_BORNES"]) && (
+                <p className="mt-1 text-xs text-destructive">
+                  {errorFor(["HEURES_INVALIDE", "HEURES_HORS_BORNES"])}
+                </p>
+              )}
             </div>
           </div>
 

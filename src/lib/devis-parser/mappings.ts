@@ -150,6 +150,12 @@ export const METIER_REGEX: Record<FabMetier, RegExp[]> = {
     /emballage/i,
     /\bmanutention\b/i,
     /pr[ée]paration atelier/i,
+    // v0.31.5 (item #113) — Coursier / livreur / chauffeur → Logistique (Manutention)
+    /\bcoursier\b/i,
+    /\bcoursiers?\b/i,
+    /\blivreur\b/i,
+    /\bchauffeur\b/i,
+    /\bnavette\b/i,
   ],
   bois: [
     /construction[ _-]+heures?/i,
@@ -246,7 +252,7 @@ export const METIER_KEYWORDS: Record<FabMetier, string[]> = {
   metal: ["metallerie", "metal", "serrurerie", "soudure", "ferronnerie"],
   peinture: ["peinture", "vernis", "laque"],
   tapisserie: ["tissu", "tapisserie", "rembourrage", "garnissage"],
-  manutention: ["logistique", "logisitique", "conditionnement", "emballage", "premontage", "manutention"],
+  manutention: ["logistique", "logisitique", "conditionnement", "emballage", "premontage", "manutention", "coursier", "livreur", "chauffeur", "navette"],
 };
 
 export const CHANTIER_KEYWORDS = ["montage", "pose", "installation", "permanence", "demontage", "depose", "transport"];

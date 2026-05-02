@@ -651,11 +651,145 @@ function buildHeuresEmployeSheet(employes: Employe[], opts: BuildOpts): XLSX.Wor
   return ws;
 }
 
+/* -------------------------------------------------------------------------- */
+/* Onglet "Par chantier" — v0.31.5 (item #105)                                */
+/* Lignes = affaires actives sur la semaine, colonnes = jours, cellules =     */
+/* employés assignés ce jour-là. Colonnes finales : pers. uniques + jours-h. */
+/* -------------------------------------------------------------------------- */
+function buildParChantierSheet(opts: BuildOpts): XLSX.WorkSheet {
+  const { weekStart, affaires, employes, assignations, consommation } = opts;
+  const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+  const empById = new Map(employes.map((e) => [e.id, e]));
+
+  // Affaires actives = celles avec assignations ou heures budgétées sur la semaine
+  const activeIds = new Set<string>();
+  assignations.forEach((a) => activeIds.add(a.affaire_id));
+  consommation.forEach((c) => activeIds.add(c.affaire_id));
+  const activeAffaires = affaires
+    .filter((a) => activeIds.has(a.id))
+    .sort((a, b) => a.numero.localeCompare(b.numero));
+
+  // Index assignations par (affaire_id, date)
+  const assignByCell = new Map<string, typeof assignations>();
+  assignations.forEach((a) => {
+    const k = `${a.affaire_id}::${a.date}`;
+    const arr = assignByCell.get(k) ?? [];
+    arr.push(a);
+    assignByCell.set(k, arr as typeof assignations);
+  });
+
+  const aoa: Cell[][] = [];
+
+  // Titre
+  aoa.push([
+    {
+      t: "s",
+      v: `Par chantier — Semaine ${format(weekStart, "II")} — ${format(weekStart, "d MMM", { locale: fr })} → ${format(addDays(weekStart, 6), "d MMM yyyy", { locale: fr })}`,
+      s: {
+        font: { bold: true, sz: 14, color: { rgb: "FFFFFF" } },
+        fill: { fgColor: { rgb: "111827" } },
+        alignment: { horizontal: "center", vertical: "center" },
+      },
+    },
+  ]);
+  aoa.push([{ t: "s", v: "" }]);
+
+  // En-tête : Affaire | Lun..Dim | Pers. uniques | Jours-hommes
+  const headerRow: Cell[] = [{ t: "s", v: "Chantier (numéro — nom)", s: HEADER_STYLE }];
+  for (const d of days) {
+    headerRow.push({
+      t: "s",
+      v: `${format(d, "EEE", { locale: fr })} ${format(d, "d/MM", { locale: fr })}`,
+      s: HEADER_STYLE,
+    });
+  }
+  headerRow.push({ t: "s", v: "Pers. uniques", s: HEADER_STYLE });
+  headerRow.push({ t: "s", v: "Jours-hommes", s: HEADER_STYLE });
+  aoa.push(headerRow);
+
+  if (activeAffaires.length === 0) {
+    aoa.push([
+      {
+        t: "s",
+        v: "Aucun chantier actif cette semaine.",
+        s: { font: { italic: true, color: { rgb: "9CA3AF" } } },
+      },
+    ]);
+  } else {
+    for (const af of activeAffaires) {
+      const persUniques = new Set<string>();
+      let joursHommes = 0;
+      const cells: Cell[] = [
+        {
+          t: "s",
+          v: `${af.numero} — ${af.nom}${af.lieu ? ` · ${af.lieu}` : ""}`,
+          s: NAME_STYLE,
+        },
+      ];
+      for (const d of days) {
+        const dStr = format(d, "yyyy-MM-dd");
+        const list = assignByCell.get(`${af.id}::${dStr}`) ?? [];
+        const noms: string[] = [];
+        for (const a of list) {
+          const e = empById.get(a.employe_id);
+          if (!e) continue;
+          persUniques.add(a.employe_id);
+          joursHommes += 1;
+          noms.push(`${e.prenom} ${e.nom}`);
+        }
+        cells.push({
+          t: "s",
+          v: noms.join("\n"),
+          s: {
+            font: { sz: 9 },
+            alignment: { vertical: "top", wrapText: true },
+            border: BORDER_ALL,
+          },
+        });
+      }
+      cells.push({
+        t: "n",
+        v: persUniques.size,
+        s: {
+          font: { bold: true, sz: 11 },
+          alignment: { horizontal: "center", vertical: "center" },
+          border: BORDER_ALL,
+          numFmt: "0",
+        },
+      });
+      cells.push({
+        t: "n",
+        v: joursHommes,
+        s: {
+          font: { bold: true, sz: 11 },
+          alignment: { horizontal: "center", vertical: "center" },
+          border: BORDER_ALL,
+          numFmt: "0",
+        },
+      });
+      aoa.push(cells);
+    }
+  }
+
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws["!cols"] = [
+    { wch: 42 }, // affaire
+    ...days.map(() => ({ wch: 22 })),
+    { wch: 14 }, // pers uniques
+    { wch: 14 }, // jours-hommes
+  ];
+  ws["!rows"] = [{ hpt: 26 }, { hpt: 8 }, { hpt: 24 }];
+  ws["!merges"] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: days.length + 2 } }];
+  ws["!freeze"] = { xSplit: 1, ySplit: 3 };
+  return ws;
+}
+
 const VEHICULE_TYPE_SHORT: Record<VehiculeRef["type"], string> = {
   VL: "VL",
   M3_20: "20m³",
   poids_lourd: "PL",
 };
+
 
 const STATUT_SOUSTRAITANCE_TAG: Record<TrajetRef["statut_soustraitance"], string> = {
   non: "",
@@ -833,6 +967,7 @@ export function exportPlanningExcel(opts: BuildOpts): void {
   XLSX.utils.book_append_sheet(wb, buildEmployeSheet("CDI / CDD", cdiCdd, opts), "CDI-CDD");
   XLSX.utils.book_append_sheet(wb, buildEmployeSheet("Intérim / Indép.", interim, opts), "Intérim");
   XLSX.utils.book_append_sheet(wb, buildSyntheseSheet(opts), "Synthèse chantier");
+  XLSX.utils.book_append_sheet(wb, buildParChantierSheet(opts), "Par chantier");
   XLSX.utils.book_append_sheet(wb, buildHeuresEmployeSheet(cdiCdd, opts), "Heures par employé");
   // Feuille Flotte uniquement si véhicules ou trajets fournis
   if ((vehicules && vehicules.length > 0) || (trajets && trajets.length > 0)) {
@@ -897,6 +1032,7 @@ export function buildPlanningWorkbookRange(
       `S${weekNum} Intérim`,
     );
     XLSX.utils.book_append_sheet(wb, buildSyntheseSheet(weekOpts), `S${weekNum} Synthèse`);
+    XLSX.utils.book_append_sheet(wb, buildParChantierSheet(weekOpts), `S${weekNum} Par chantier`);
     XLSX.utils.book_append_sheet(
       wb,
       buildHeuresEmployeSheet(cdiCdd, weekOpts),

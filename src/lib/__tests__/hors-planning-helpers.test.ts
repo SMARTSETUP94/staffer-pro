@@ -8,10 +8,11 @@ import {
 
 describe("v0.32.3 — hors-planning-helpers", () => {
   describe("validateHorsPlanningInput", () => {
+    // v0.32.4 — date dans le passé pour ne pas déclencher DATE_FUTURE
     const valid = {
       affaire_id: "aff-1",
       metier_id: 3,
-      date: "2026-05-04",
+      date: "2026-04-15",
       heures_reelles: 7,
       commentaire: null,
     };
@@ -77,7 +78,7 @@ describe("v0.32.3 — hors-planning-helpers", () => {
     const input = {
       affaire_id: "aff-1",
       metier_id: 3,
-      date: "2026-05-04",
+      date: "2026-04-15",
       heures_reelles: 7,
       commentaire: null,
     };
@@ -89,7 +90,7 @@ describe("v0.32.3 — hors-planning-helpers", () => {
         assignation_id: null,
         affaire_id: "aff-1",
         metier_id: 3,
-        date: "2026-05-04",
+        date: "2026-04-15",
         heures_reelles: 7,
         commentaire: null,
         statut: "brouillon",
@@ -137,6 +138,7 @@ describe("v0.32.3 — hors-planning-helpers", () => {
         "METIER_REQUIS",
         "DATE_REQUISE",
         "DATE_INVALIDE",
+        "DATE_FUTURE",
         "HEURES_INVALIDE",
         "HEURES_HORS_BORNES",
       ] as const;
