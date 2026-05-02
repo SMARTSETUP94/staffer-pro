@@ -309,7 +309,16 @@ function AffaireDevisPage() {
       <div className="flex items-center justify-between">
         <p className="overline">— Devis ({devis.length})</p>
         {isAdminOrChef && (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            {affaireMeta?.typologie?.startsWith("5") && (
+              <Button
+                variant="outline"
+                onClick={() => setPlanningOpen(true)}
+                className="rounded-xl border-primary/40 text-primary hover:bg-primary/5"
+              >
+                <Sparkles className="mr-2 h-4 w-4" /> Mettre au planning
+              </Button>
+            )}
             <Button asChild className="rounded-xl bg-primary text-primary-foreground hover:bg-primary/90">
               <Link to="/devis/import" search={{ affaire_id: affaireId }}>
                 <Download className="mr-2 h-4 w-4" /> Importer un devis Progbat
