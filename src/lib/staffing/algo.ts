@@ -27,7 +27,19 @@ import {
   type PlanResult,
   type PlanStep,
 } from "./types";
-import { addDays, dateRange, diffDays, maxISO } from "./date-utils";
+import {
+  addDays,
+  addWorkingDays,
+  dateRange,
+  diffDays,
+  fromISO,
+  holidaysRange,
+  isWorkingDay,
+  maxISO,
+  nextWorkingDay,
+  previousWorkingDay,
+  workingDateRange,
+} from "./date-utils";
 
 /* ------------------------------------------------------------------ */
 /* helpers internes                                                    */
