@@ -1,7 +1,9 @@
 // v0.35.3 — Section Staffing Personnes : suggestions tier-based + assignation + split presence
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, RefreshCw, UserPlus, X, AlertTriangle, Sliders } from "lucide-react";
+import { Loader2, RefreshCw, UserPlus, X, AlertTriangle, Sliders, Wand2 } from "lucide-react";
+import { toast } from "sonner";
+import { autoStaffStep } from "@/server/staffing-autostaff.functions";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
