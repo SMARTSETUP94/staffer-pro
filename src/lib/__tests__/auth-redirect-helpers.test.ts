@@ -248,3 +248,25 @@ describe("resolveSetPasswordRedirect", () => {
     );
   });
 });
+
+describe("v0.31.4 onboarding skip flag (sessionStorage)", () => {
+  beforeEach(() => {
+    window.sessionStorage.clear();
+  });
+
+  it("isOnboardingSkipped : false par défaut", () => {
+    expect(isOnboardingSkipped()).toBe(false);
+  });
+
+  it("markOnboardingSkipped → isOnboardingSkipped=true", () => {
+    markOnboardingSkipped();
+    expect(isOnboardingSkipped()).toBe(true);
+    expect(window.sessionStorage.getItem(ONBOARDING_SKIPPED_KEY)).toBe("1");
+  });
+
+  it("clearOnboardingSkipped purge le flag", () => {
+    markOnboardingSkipped();
+    clearOnboardingSkipped();
+    expect(isOnboardingSkipped()).toBe(false);
+  });
+});
