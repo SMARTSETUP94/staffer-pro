@@ -1,6 +1,7 @@
 // v0.35.x — Store local edition mode batch (sliders + shifts uniquement).
 // Les changements de pers / manual_shift sont accumulés ici sans round-trip serveur.
 // Flush via bouton "Enregistrer (N)" ou autosave 2 min idle ou unmount.
+// v0.35.10 P1 — historique undo (Ctrl+Z) : snapshots des `edits` avant chaque mutation.
 import { create } from "zustand";
 
 export interface StepEdit {
@@ -9,6 +10,8 @@ export interface StepEdit {
   manual_pers?: boolean;
   manual_shift?: number;
 }
+
+const HISTORY_LIMIT = 50;
 
 interface EditState {
   planId: string | null;
@@ -22,16 +25,30 @@ interface EditState {
   lastChangeAt: number | null;
   /** flush en cours */
   flushing: boolean;
+  /** Stack d'historique pour undo (snapshots `edits` AVANT chaque mutation) */
+  history: Array<Record<string, StepEdit>>;
 
   initFromPlan: (planId: string, baseUpdatedAt: string) => void;
   setStepPers: (stepId: string, pers: number) => void;
   setStepShift: (stepId: string, manual_shift: number) => void;
   resetStepShift: (stepId: string) => void;
+  /** Bulk : applique pers à plusieurs steps en une seule entrée d'historique */
+  bulkSetPers: (entries: Array<{ stepId: string; pers: number }>) => void;
   resetAll: () => void;
   markFlushing: (v: boolean) => void;
   markSaved: (newBaseUpdatedAt: string) => void;
+  /** Annule la dernière mutation */
+  undo: () => boolean;
   /** Compteur de modifs pendantes */
   dirtyCount: () => number;
+  /** Profondeur de l'historique undo */
+  historyDepth: () => number;
+}
+
+function pushHistory(history: Array<Record<string, StepEdit>>, snapshot: Record<string, StepEdit>) {
+  const next = [...history, snapshot];
+  if (next.length > HISTORY_LIMIT) next.shift();
+  return next;
 }
 
 export const useEditStore = create<EditState>((set, get) => ({
@@ -41,6 +58,7 @@ export const useEditStore = create<EditState>((set, get) => ({
   lastSavedAt: null,
   lastChangeAt: null,
   flushing: false,
+  history: [],
 
   initFromPlan: (planId, baseUpdatedAt) => {
     const cur = get();
@@ -56,11 +74,13 @@ export const useEditStore = create<EditState>((set, get) => ({
       lastSavedAt: null,
       lastChangeAt: null,
       flushing: false,
+      history: [],
     });
   },
 
   setStepPers: (stepId, pers) =>
     set((s) => ({
+      history: pushHistory(s.history, s.edits),
       edits: {
         ...s.edits,
         [stepId]: { ...s.edits[stepId], pers, manual_pers: true },
@@ -70,6 +90,7 @@ export const useEditStore = create<EditState>((set, get) => ({
 
   setStepShift: (stepId, manual_shift) =>
     set((s) => ({
+      history: pushHistory(s.history, s.edits),
       edits: {
         ...s.edits,
         [stepId]: { ...s.edits[stepId], manual_shift },
@@ -79,6 +100,7 @@ export const useEditStore = create<EditState>((set, get) => ({
 
   resetStepShift: (stepId) =>
     set((s) => ({
+      history: pushHistory(s.history, s.edits),
       edits: {
         ...s.edits,
         [stepId]: { ...s.edits[stepId], manual_shift: 0 },
@@ -86,11 +108,25 @@ export const useEditStore = create<EditState>((set, get) => ({
       lastChangeAt: Date.now(),
     })),
 
+  bulkSetPers: (entries) =>
+    set((s) => {
+      const next = { ...s.edits };
+      for (const { stepId, pers } of entries) {
+        next[stepId] = { ...next[stepId], pers, manual_pers: true };
+      }
+      return {
+        history: pushHistory(s.history, s.edits),
+        edits: next,
+        lastChangeAt: Date.now(),
+      };
+    }),
+
   resetAll: () =>
-    set({
+    set((s) => ({
+      history: pushHistory(s.history, s.edits),
       edits: {},
       lastChangeAt: null,
-    }),
+    })),
 
   markFlushing: (v) => set({ flushing: v }),
 
@@ -101,7 +137,23 @@ export const useEditStore = create<EditState>((set, get) => ({
       lastSavedAt: Date.now(),
       lastChangeAt: null,
       flushing: false,
+      history: [],
     }),
+
+  undo: () => {
+    const cur = get();
+    if (cur.history.length === 0) return false;
+    const next = [...cur.history];
+    const prev = next.pop()!;
+    set({
+      edits: prev,
+      history: next,
+      lastChangeAt: Date.now(),
+    });
+    return true;
+  },
+
+  historyDepth: () => get().history.length,
 
   dirtyCount: () => {
     const e = get().edits;

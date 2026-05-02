@@ -2,7 +2,7 @@
 // v0.35.x — Pré-vol risque (toast + slider warning + badge inline) avant commit.
 // v0.35.x BATCH — sliders + shifts écrivent dans useEditStore (pas de round-trip serveur).
 //                 Reorder objet reste save-immédiat (rare, pas de cumul).
-import { useEffect, useMemo, useState, useCallback, useImperativeHandle, forwardRef } from "react";
+import { useEffect, useMemo, useState, useCallback, useImperativeHandle, useRef, forwardRef } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -24,6 +24,7 @@ import {
   METIER_LABEL,
 } from "./gantt-helpers";
 import { GanttBar } from "./GanttBar";
+import { BulkPersByMetierBar } from "./BulkPersByMetierBar";
 import { HeatmapMetier } from "./HeatmapMetier";
 import { AlerteBandeau } from "./AlerteBandeau";
 import { ResolveCncConflictDialog } from "./ResolveCncConflictDialog";
@@ -75,6 +76,10 @@ export const GanttInteractif = forwardRef<
   const resetStepShiftStore = useEditStore((s) => s.resetStepShift);
   const edits = useEditStore((s) => s.edits);
 
+  /** Mesure dynamique de la largeur d'une colonne jour pour drag-to-shift */
+  const gridRef = useRef<HTMLDivElement | null>(null);
+  const [dayWidthPx, setDayWidthPx] = useState(0);
+
   const reload = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -106,6 +111,25 @@ export const GanttInteractif = forwardRef<
   }, [reload]);
 
   useImperativeHandle(ref, () => ({ reload }), [reload]);
+
+  /** Observe la largeur réelle du header pour calculer dayWidthPx (drag-to-shift) */
+  useEffect(() => {
+    const el = gridRef.current;
+    if (!el) return;
+    const measure = () => {
+      // 1ère colonne = 220px (label objet), reste = jours
+      const total = el.getBoundingClientRect().width;
+      const dayCount = el.dataset.dayCount ? parseInt(el.dataset.dayCount, 10) : 0;
+      if (dayCount > 0) {
+        const w = (total - 220) / dayCount;
+        setDayWidthPx(w > 0 ? w : 0);
+      }
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [data]);
 
   /** Steps mergés : applique les edits locaux par-dessus les steps serveur */
   const mergedSteps = useMemo(() => {
@@ -337,11 +361,19 @@ export const GanttInteractif = forwardRef<
         }}
       />
 
+      {/* Bulk pers par métier (P1 #6) */}
+      <BulkPersByMetierBar steps={mergedSteps} />
+
       {/* Gantt */}
       <div className="overflow-x-auto rounded-2xl border border-border bg-card">
         <div className="min-w-[900px]">
           {/* Header dates */}
-          <div className="grid border-b border-border bg-background/40" style={{ gridTemplateColumns: gridTemplate }}>
+          <div
+            ref={gridRef}
+            data-day-count={days.length}
+            className="grid border-b border-border bg-background/40"
+            style={{ gridTemplateColumns: gridTemplate }}
+          >
             <div className="px-3 py-2 text-xs font-bold uppercase tracking-wider">Objet / Étape</div>
             {days.map((d) => (
               <div key={d} className="border-l border-border/40 px-1 py-2 text-center font-mono text-[10px]">
@@ -407,6 +439,7 @@ export const GanttInteractif = forwardRef<
                           step={s}
                           startCol={span.startCol + 1}
                           endCol={span.endCol + 1}
+                          dayWidthPx={dayWidthPx}
                           isOverDeadline={overDL}
                           manualShift={localShift}
                           hasWarning={hasImpact}
@@ -520,6 +553,7 @@ export const GanttInteractif = forwardRef<
                           step={s}
                           startCol={span.startCol + 1}
                           endCol={span.endCol + 1}
+                          dayWidthPx={dayWidthPx}
                           isOverDeadline={overDL}
                           manualShift={localShift}
                           hasWarning={hasImpact}
