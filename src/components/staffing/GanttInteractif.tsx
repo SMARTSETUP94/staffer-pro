@@ -1,8 +1,9 @@
-// v0.35.2 — GanttInteractif : composant principal Auto-staffing Fabrication 5XXX
+// v0.35.2 / Sprint 2.1 — GanttInteractif : composant principal Auto-staffing Fabrication 5XXX
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Loader2, ArrowUp, ArrowDown, RefreshCw, Calendar, Users, Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Slider } from "@/components/ui/slider";
 import {
   calculateStaffingPlan,
   updatePlanObject,
@@ -19,7 +20,7 @@ import {
 import { GanttBar } from "./GanttBar";
 import { HeatmapMetier } from "./HeatmapMetier";
 import { AlerteBandeau } from "./AlerteBandeau";
-import type { PlanResult } from "@/lib/staffing/types";
+import type { PlanResult, PlanStep } from "@/lib/staffing/types";
 import { METIER_KEY_BY_ID } from "@/lib/staffing/types";
 
 interface PlanData {
@@ -35,6 +36,7 @@ interface PlanData {
   }>;
   result: PlanResult;
   cnc_reserved_dates: string[];
+  step_overrides: Record<string, { manual_shift: number; manual_pers: boolean }>;
 }
 
 export function GanttInteractif({ planId }: { planId: string }) {
@@ -43,6 +45,7 @@ export function GanttInteractif({ planId }: { planId: string }) {
   const updateStep = useServerFn(updatePlanStep);
   const [data, setData] = useState<PlanData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [busyStepId, setBusyStepId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const reload = useCallback(async () => {
@@ -86,14 +89,52 @@ export function GanttInteractif({ planId }: { planId: string }) {
 
   const handleShift = useCallback(
     async (stepId: string, delta: number) => {
-      const step = data?.result.steps.find((s) => s.id === stepId);
-      if (!step) return;
-      // step.id est l'id en mémoire, pas le DB id ; pour MVP on n'écrit que si DB id mappable
-      // ici on saute la persistance car les steps en mémoire viennent du calcul, pas de la DB
-      // (Sprint 2.1 : persister steps avant de pouvoir shift)
-      void delta;
+      if (!data || busyStepId) return;
+      const ov = data.step_overrides[stepId];
+      const newShift = (ov?.manual_shift ?? 0) + delta;
+      setBusyStepId(stepId);
+      try {
+        await updateStep({ data: { id: stepId, manual_shift: newShift } });
+        await reload();
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Erreur décalage");
+      } finally {
+        setBusyStepId(null);
+      }
     },
-    [data]
+    [data, busyStepId, updateStep, reload]
+  );
+
+  const handleResetShift = useCallback(
+    async (stepId: string) => {
+      if (busyStepId) return;
+      setBusyStepId(stepId);
+      try {
+        await updateStep({ data: { id: stepId, manual_shift: 0 } });
+        await reload();
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Erreur reset");
+      } finally {
+        setBusyStepId(null);
+      }
+    },
+    [busyStepId, updateStep, reload]
+  );
+
+  const handleSetPers = useCallback(
+    async (stepId: string, pers: number) => {
+      if (busyStepId) return;
+      setBusyStepId(stepId);
+      try {
+        await updateStep({ data: { id: stepId, pers, manual_pers: true } });
+        await reload();
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Erreur pers");
+      } finally {
+        setBusyStepId(null);
+      }
+    },
+    [busyStepId, updateStep, reload]
   );
 
   const handleReorder = useCallback(
@@ -117,10 +158,6 @@ export function GanttInteractif({ planId }: { planId: string }) {
     },
     [data, updateObj, reload]
   );
-
-  // Pour éviter unused
-  void handleShift;
-  void updateStep;
 
   if (loading) {
     return (
@@ -146,6 +183,12 @@ export function GanttInteractif({ planId }: { planId: string }) {
 
   // Grid template : 1 col label + N cols jours
   const gridTemplate = `220px repeat(${days.length}, minmax(42px, 1fr))`;
+
+  // Helper : récupérer step Bois/Peint d'un objet pour piloter le slider sous le header
+  const getObjStepByMetier = (objet_id: string, metier_id: number): PlanStep | undefined =>
+    data.result.steps.find(
+      (s) => s.objet_id === objet_id && s.metier_id === metier_id && s.start_date !== "TBD"
+    );
 
   return (
     <div className="space-y-4">
@@ -196,6 +239,7 @@ export function GanttInteractif({ planId }: { planId: string }) {
               stepEnd.setUTCDate(stepEnd.getUTCDate() + s.span_days - 1);
               const overDL = stepEnd.toISOString().slice(0, 10) > dateLivraison;
               const k = METIER_KEY_BY_ID[s.metier_id] ?? "Manut";
+              const ov = data.step_overrides[s.id];
               return (
                 <div
                   key={s.id}
@@ -215,7 +259,9 @@ export function GanttInteractif({ planId }: { planId: string }) {
                       startCol={span.startCol + 1}
                       endCol={span.endCol + 1}
                       isOverDeadline={overDL}
-                      disableShift
+                      manualShift={ov?.manual_shift ?? 0}
+                      onShift={(d) => handleShift(s.id, d)}
+                      onResetShift={() => handleResetShift(s.id)}
                     />
                   )}
                 </div>
@@ -227,15 +273,17 @@ export function GanttInteractif({ planId }: { planId: string }) {
             const objSteps = data.result.steps.filter(
               (s) => s.objet_id === obj.objet_id && s.start_date !== "TBD"
             );
+            const boisStep = getObjStepByMetier(obj.objet_id, 1);
+            const peintStep = getObjStepByMetier(obj.objet_id, 3);
             return (
               <div key={obj.id} className="border-b border-border bg-background/20">
                 {/* Header objet */}
                 <div
-                  className="grid items-center border-b border-border/30 py-2"
+                  className="grid items-start border-b border-border/30 py-2"
                   style={{ gridTemplateColumns: gridTemplate }}
                 >
-                  <div className="flex items-center gap-2 px-3">
-                    <div className="flex flex-col gap-0.5">
+                  <div className="flex items-start gap-2 px-3">
+                    <div className="flex flex-col gap-0.5 pt-0.5">
                       <Button
                         size="icon"
                         variant="ghost"
@@ -255,13 +303,32 @@ export function GanttInteractif({ planId }: { planId: string }) {
                         <ArrowDown className="h-3 w-3" />
                       </Button>
                     </div>
-                    <div className="min-w-0 flex-1">
+                    <div className="min-w-0 flex-1 space-y-1.5">
                       <p className="truncate text-sm font-bold text-foreground">
                         {obj.reference} — {obj.nom}
                       </p>
                       <p className="font-mono text-[10px] text-muted-foreground">
                         {obj.heures_total.toFixed(0)} h
                       </p>
+                      {/* Sliders Bois / Peint */}
+                      {boisStep && (
+                        <PersSlider
+                          label="Bois"
+                          color={METIER_COLOR.Bois}
+                          value={boisStep.pers}
+                          disabled={busyStepId === boisStep.id}
+                          onChange={(v) => handleSetPers(boisStep.id, v)}
+                        />
+                      )}
+                      {peintStep && (
+                        <PersSlider
+                          label="Peint"
+                          color={METIER_COLOR.Peint}
+                          value={peintStep.pers}
+                          disabled={busyStepId === peintStep.id}
+                          onChange={(v) => handleSetPers(peintStep.id, v)}
+                        />
+                      )}
                     </div>
                   </div>
                 </div>
@@ -273,6 +340,7 @@ export function GanttInteractif({ planId }: { planId: string }) {
                   stepEnd.setUTCDate(stepEnd.getUTCDate() + s.span_days - 1);
                   const overDL = stepEnd.toISOString().slice(0, 10) > dateLivraison;
                   const k = METIER_KEY_BY_ID[s.metier_id] ?? "Manut";
+                  const ov = data.step_overrides[s.id];
                   return (
                     <div
                       key={s.id}
@@ -292,7 +360,9 @@ export function GanttInteractif({ planId }: { planId: string }) {
                           startCol={span.startCol + 1}
                           endCol={span.endCol + 1}
                           isOverDeadline={overDL}
-                          disableShift
+                          manualShift={ov?.manual_shift ?? 0}
+                          onShift={(d) => handleShift(s.id, d)}
+                          onResetShift={() => handleResetShift(s.id)}
                         />
                       )}
                     </div>
@@ -323,6 +393,40 @@ export function GanttInteractif({ planId }: { planId: string }) {
           <RefreshCw className="mr-1 h-3 w-3" /> Recalculer
         </Button>
       </div>
+    </div>
+  );
+}
+
+function PersSlider({
+  label,
+  color,
+  value,
+  disabled,
+  onChange,
+}: {
+  label: string;
+  color: string;
+  value: number;
+  disabled?: boolean;
+  onChange: (v: number) => void;
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <span
+        className="inline-block h-1.5 w-1.5 rounded-sm"
+        style={{ backgroundColor: color }}
+      />
+      <span className="w-10 text-[10px] uppercase tracking-wider text-muted-foreground">{label}</span>
+      <Slider
+        className="w-24"
+        min={2}
+        max={12}
+        step={2}
+        value={[value]}
+        disabled={disabled}
+        onValueCommit={(v) => onChange(v[0] ?? value)}
+      />
+      <span className="w-7 font-mono text-[10px] font-bold tabular-nums">{value}p</span>
     </div>
   );
 }
