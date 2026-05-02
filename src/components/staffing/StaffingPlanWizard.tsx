@@ -7,9 +7,9 @@
 //  4. Si plan(s) actif(s) existant(s) : bandeau "Voir plan" (draft/published).
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, Link } from "@tanstack/react-router";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, subDays, addDays } from "date-fns";
 import { fr } from "date-fns/locale";
-import { CalendarIcon, Loader2, Trash2, Calculator, ExternalLink, Sparkles, AlertTriangle, ArrowLeft } from "lucide-react";
+import { CalendarIcon, Loader2, Trash2, Calculator, ExternalLink, Sparkles, AlertTriangle, ArrowLeft, Wand2, CheckSquare, Square, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
