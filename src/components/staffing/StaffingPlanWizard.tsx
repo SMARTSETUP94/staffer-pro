@@ -76,12 +76,17 @@ export function StaffingPlanWizard({
   const [objets, setObjets] = useState<ObjetRow[]>([]);
   const [removed, setRemoved] = useState<Set<string>>(new Set());
   const [included, setIncluded] = useState<Set<string>>(new Set());
+  // v0.35.10 #2 — Dates intelligentes
+  // - Si defaultDateFin (= date_montage) fourni : livraison fab = montage - 2j (marge logistique)
+  // - dateDebut estimé après chargement objets (estimateStartDate)
+  const initialDateFin = defaultDateFin
+    ? subDays(parseISO(defaultDateFin), 2)
+    : undefined;
   const [dateDebut, setDateDebut] = useState<Date | undefined>(
     defaultDateDebut ? parseISO(defaultDateDebut) : undefined,
   );
-  const [dateFin, setDateFin] = useState<Date | undefined>(
-    defaultDateFin ? parseISO(defaultDateFin) : undefined,
-  );
+  const [dateFin, setDateFin] = useState<Date | undefined>(initialDateFin);
+  const [hideShort, setHideShort] = useState(false);
   const [existingPlans, setExistingPlans] = useState<ExistingPlan[]>([]);
   const [creatingNew, setCreatingNew] = useState(false);
 
