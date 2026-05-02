@@ -262,7 +262,7 @@ export const GanttInteractif = forwardRef<
   const gridTemplate = `220px repeat(${days.length}, minmax(42px, 1fr))`;
 
   const getObjStepByMetier = (objet_id: string, metier_id: number): PlanStep | undefined =>
-    data.result.steps.find(
+    mergedSteps.find(
       (s) => s.objet_id === objet_id && s.metier_id === metier_id && s.start_date !== "TBD",
     );
 
