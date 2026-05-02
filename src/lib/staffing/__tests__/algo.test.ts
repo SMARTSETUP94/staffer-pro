@@ -322,6 +322,48 @@ describe("calculatePlan — multi-objets", () => {
 });
 
 /* ============================================================ */
+/* Num par objet — exclusivité CNC                              */
+/* ============================================================ */
+describe("calculatePlan — Num par objet (CNC mono-machine)", () => {
+  it("2 objets avec Num → 2 steps Num distincts, jamais superposés", () => {
+    const r = calculatePlan(
+      input([
+        obj({ objet_id: "o1", heures_numerique: 16, heures_bois: 32, display_order: 0 }),
+        obj({ objet_id: "o2", heures_numerique: 24, heures_bois: 32, display_order: 1 }),
+      ])
+    );
+    const nums = r.steps.filter((s) => s.metier === "Num");
+    expect(nums).toHaveLength(2);
+    for (const n of nums) expect(n.objet_id).not.toBeNull();
+    // Aucune date partagée entre les 2 fenêtres Num
+    const dates1 = new Set(dateRange(nums[0].start_date, nums[0].span_days));
+    for (const d of dateRange(nums[1].start_date, nums[1].span_days)) {
+      expect(dates1.has(d)).toBe(false);
+    }
+  });
+
+  it("heures_numerique_global splitté pro-rata sur Num par objet", () => {
+    const r = calculatePlan({
+      affaire_id: "a",
+      date_fin_fab: "2026-06-30",
+      objets: [
+        obj({ objet_id: "o1", heures_numerique: 0, heures_bois: 80 }),
+        obj({ objet_id: "o2", heures_numerique: 0, heures_bois: 20 }),
+      ],
+      heures_numerique_global: 80,
+    });
+    const nums = r.steps.filter((s) => s.metier === "Num");
+    expect(nums).toHaveLength(2);
+    // o1 = 80% × 80h = 64h / 8h = 8j ; o2 = 16h / 8h = 2j
+    const o1 = nums.find((s) => s.objet_id === "o1")!;
+    const o2 = nums.find((s) => s.objet_id === "o2")!;
+    expect(o1.span_days).toBe(8);
+    expect(o2.span_days).toBe(2);
+  });
+});
+
+
+/* ============================================================ */
 /* Determinisme                                                  */
 /* ============================================================ */
 describe("calculatePlan — déterminisme", () => {
