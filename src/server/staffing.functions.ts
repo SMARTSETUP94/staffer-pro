@@ -33,6 +33,7 @@ export const calculateStaffingPlan = createServerFn({ method: "POST" })
     }>;
     result: PlanResult;
     cnc_reserved_dates: string[];
+    step_overrides: Record<string, { manual_shift: number; manual_pers: boolean }>;
   }> => {
     const { supabase } = context;
     const { planId } = data;
@@ -245,11 +246,22 @@ export const calculateStaffingPlan = createServerFn({ method: "POST" })
       };
     });
 
+    /* step_overrides : map step_db_uuid -> {manual_shift, manual_pers} */
+    const stepOverrides: Record<string, { manual_shift: number; manual_pers: boolean }> = {};
+    for (const s of result.steps) {
+      const ov = overridesMap.get(overrideKey(s.metier_id, s.objet_id));
+      stepOverrides[s.id] = {
+        manual_shift: ov?.manual_shift ?? 0,
+        manual_pers: ov?.manual_pers ?? false,
+      };
+    }
+
     return {
       plan,
       objets: objetsOut,
       result,
       cnc_reserved_dates: Array.from(cncReservedDates),
+      step_overrides: stepOverrides,
     };
   });
 
