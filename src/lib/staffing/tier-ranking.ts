@@ -52,6 +52,8 @@ export interface ResourceAvailability {
   pic_par_jour: Record<string, number>;
   /** date → métier → personnes */
   pic_par_metier: Record<string, Record<MetierKey, number>>;
+  /** employe_id → set de dates ISO d'absence pleine journée */
+  absences_par_personne?: Record<string, Set<string>>;
 }
 
 export const TIER_BASE = { 1: 100, 2: 70, 3: 30 } as const;

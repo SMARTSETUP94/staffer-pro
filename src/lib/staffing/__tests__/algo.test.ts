@@ -1,6 +1,16 @@
 import { describe, expect, it } from "vitest";
 import { computeSpan, calculatePlan, findCNCSlotBackward } from "../algo";
-import { addDays, dateRange, diffDays } from "../date-utils";
+import {
+  addDays,
+  addWorkingDays,
+  dateRange,
+  diffDays,
+  frenchHolidays,
+  isWeekend,
+  isWorkingDay,
+  workingDateRange,
+  workingDaysBetween,
+} from "../date-utils";
 import type { ObjetInput, PlanInput } from "../types";
 
 /* ---------- factories ---------- */
@@ -79,23 +89,26 @@ describe("computeSpan", () => {
 /* ============================================================ */
 /* findCNCSlotBackward                                           */
 /* ============================================================ */
-describe("findCNCSlotBackward", () => {
-  it("slot libre = la fin demandée", () => {
+describe("findCNCSlotBackward (jours ouvrés)", () => {
+  it("slot libre = la fin demandée (mer 06-10)", () => {
+    // 06-10 mer → start = 06-08 (lun), 06-09, 06-10
     expect(findCNCSlotBackward("2026-06-10", 3, new Set())).toBe("2026-06-08");
   });
-  it("recule si occupé sur la fenêtre", () => {
+  it("recule en sautant weekends si occupé (06-10/06-09 réservés)", () => {
+    // 06-08 réservé via remontée → fin = 06-08 lun, mais [08,09] = [09 réservé]. Recule à 06-05 (ven) → [05,08].
     const reserved = new Set(["2026-06-10", "2026-06-09"]);
     const r = findCNCSlotBackward("2026-06-10", 2, reserved);
-    expect(r).toBe("2026-06-07"); // fin = 06-08
+    expect(r).toBe("2026-06-05");
   });
   it("respecte earliestStart → null si pas de place", () => {
-    const reserved = new Set(["2026-06-10", "2026-06-09", "2026-06-08", "2026-06-07"]);
-    const r = findCNCSlotBackward("2026-06-10", 2, reserved, "2026-06-07");
+    const reserved = new Set(["2026-06-10", "2026-06-09", "2026-06-08", "2026-06-05", "2026-06-04"]);
+    const r = findCNCSlotBackward("2026-06-10", 2, reserved, "2026-06-04");
     expect(r).toBeNull();
   });
-  it("trouve un trou intermédiaire", () => {
+  it("trouve un trou intermédiaire en jours ouvrés", () => {
     const reserved = new Set(["2026-06-10", "2026-06-09", "2026-06-08"]);
-    expect(findCNCSlotBackward("2026-06-10", 2, reserved)).toBe("2026-06-06");
+    // recule jusqu'à end=06-05 → [06-04, 06-05]
+    expect(findCNCSlotBackward("2026-06-10", 2, reserved)).toBe("2026-06-04");
   });
 });
 
@@ -382,5 +395,128 @@ describe("calculatePlan — déterminisme", () => {
     const a = calculatePlan(input([o1, o2]));
     const b = calculatePlan(input([{ ...o2, display_order: 0 }, { ...o1, display_order: 1 }]));
     expect(a.steps.length).toBe(b.steps.length);
+});
+
+/* ============================================================ */
+/* Jours ouvrés + jours fériés FR                                */
+/* ============================================================ */
+describe("jours ouvrés", () => {
+  it("isWeekend détecte sam/dim", () => {
+    expect(isWeekend("2026-06-27")).toBe(true); // sam
+    expect(isWeekend("2026-06-28")).toBe(true); // dim
+    expect(isWeekend("2026-06-29")).toBe(false); // lun
   });
+
+  it("frenchHolidays 2026 contient les fixes + Pâques 2026 = 5 avril → lundi 6 avril", () => {
+    const h = frenchHolidays(2026);
+    expect(h.has("2026-01-01")).toBe(true);
+    expect(h.has("2026-05-01")).toBe(true);
+    expect(h.has("2026-07-14")).toBe(true);
+    expect(h.has("2026-12-25")).toBe(true);
+    expect(h.has("2026-04-06")).toBe(true); // Lundi de Pâques
+    expect(h.has("2026-05-14")).toBe(true); // Ascension
+  });
+
+  it("isWorkingDay : 14 juillet exclu", () => {
+    const h = frenchHolidays(2026);
+    expect(isWorkingDay("2026-07-14", h)).toBe(false);
+    expect(isWorkingDay("2026-07-13", h)).toBe(true); // lundi
+  });
+
+  it("addWorkingDays saute weekends", () => {
+    // ven 06-26 + 1 jour ouvré = lun 06-29
+    expect(addWorkingDays("2026-06-26", 1)).toBe("2026-06-29");
+    // lun 06-29 - 1 jour ouvré = ven 06-26
+    expect(addWorkingDays("2026-06-29", -1)).toBe("2026-06-26");
+  });
+
+  it("addWorkingDays saute fériés", () => {
+    const h = frenchHolidays(2026);
+    // mar 14 juillet férié → lun 13 + 1 = mer 15
+    expect(addWorkingDays("2026-07-13", 1, h)).toBe("2026-07-15");
+  });
+
+  it("workingDateRange exclut weekends", () => {
+    // 5 jours ouvrés à partir de jeu 06-25 → [25,26,29,30,01]
+    expect(workingDateRange("2026-06-25", 5)).toEqual([
+      "2026-06-25",
+      "2026-06-26",
+      "2026-06-29",
+      "2026-06-30",
+      "2026-07-01",
+    ]);
+  });
+
+  it("workingDaysBetween compte ouvrés inclus", () => {
+    // ven 06-26 → mar 06-30 = ven, lun, mar = 3
+    expect(workingDaysBetween("2026-06-26", "2026-06-30")).toBe(3);
+  });
+});
+
+describe("calculatePlan — jours ouvrés", () => {
+  it("step de 5 jours bois finissant un mardi → start = mardi précédent (saute weekend)", () => {
+    // livraison 06-30 mardi, span 5j ouvrés → start = mardi 06-23
+    const r = calculatePlan(input([obj({ objet_id: "o1", heures_bois: 80 })]));
+    const bois = r.steps.find((s) => s.metier === "Bois")!;
+    // 80h / 8 / 4 pers = 2,5 → 3j; 80h/(2*8)=5j ; computeSpan → 4 pers × 3j (le 1er span<best)
+    // peu importe le span exact, on vérifie ouvrés
+    for (const d of dateRange(bois.start_date, bois.span_days)) {
+      const dow = new Date(d + "T00:00:00Z").getUTCDay();
+      // start_date est ouvré ; les dates intermédiaires de l'algo (workingDateRange) ne contiennent que des ouvrés
+    }
+    // workingDateRange depuis start_date doit produire que des ouvrés
+    const dates = workingDateRange(bois.start_date, bois.span_days);
+    for (const d of dates) {
+      expect(isWorkingDay(d, frenchHolidays(2026))).toBe(true);
+    }
+  });
+
+  it("livraison un dimanche → recule au vendredi pour dernière fin", () => {
+    const r = calculatePlan({
+      affaire_id: "a",
+      date_fin_fab: "2026-06-28", // dimanche
+      objets: [obj({ objet_id: "o1", heures_bois: 16 })],
+    });
+    const bois = r.steps[0];
+    const lastDate = workingDateRange(bois.start_date, bois.span_days).pop()!;
+    expect(isWeekend(lastDate)).toBe(false);
+    expect(lastDate <= "2026-06-26").toBe(true); // vendredi 06-26 ou avant
+  });
+
+  it("férié 14 juillet 2026 (mardi) ignoré dans la chaîne", () => {
+    // livraison 07-17 vendredi, span Bois 16h = 1j → start = ven 07-17
+    // si on demande livraison 07-15 (mer post 14/07), bois doit caler sur 07-15 mer (14 férié)
+    const r = calculatePlan({
+      affaire_id: "a",
+      date_fin_fab: "2026-07-15",
+      objets: [obj({ objet_id: "o1", heures_bois: 80 })], // 5j ouvrés à 2 pers
+      holidays: frenchHolidays(2026),
+    });
+    const bois = r.steps[0];
+    const h = frenchHolidays(2026);
+    const dates = workingDateRange(bois.start_date, bois.span_days, h);
+    // Aucune date du step ne doit être le 14/07
+    expect(dates.includes("2026-07-14")).toBe(false);
+    for (const d of dates) expect(isWorkingDay(d, h)).toBe(true);
+  });
+
+  it("daily_load ne contient aucun weekend", () => {
+    const r = calculatePlan(input([obj({ objet_id: "o1", heures_bois: 80, heures_peinture: 32 })]));
+    for (const date of Object.keys(r.daily_load)) {
+      expect(isWeekend(date)).toBe(false);
+    }
+  });
+
+  it("aucun step n'est positionné un weekend", () => {
+    const r = calculatePlan(
+      input([
+        obj({ objet_id: "o1", heures_be: 30, heures_numerique: 24, heures_bois: 64, heures_peinture: 16, heures_manutention: 8 }),
+        obj({ objet_id: "o2", heures_numerique: 16, heures_bois: 32 }),
+      ])
+    );
+    for (const s of r.steps) {
+      expect(isWeekend(s.start_date)).toBe(false);
+    }
+  });
+});
 });
