@@ -124,6 +124,16 @@ export function calculatePlan(input: PlanInput): PlanResult {
   const picMax = input.pic_max ?? PIC_ATELIER;
   const dateLivraison = input.date_fin_fab;
 
+  // Jours fériés FR sur fenêtre [livraison-2 ans .. livraison] (large pour backward 180j + amont)
+  const livYear = fromISO(dateLivraison).getUTCFullYear();
+  const holidays =
+    input.holidays ?? holidaysRange(livYear - 2, livYear + 1);
+
+  // helpers locaux jours ouvrés
+  const dayMinus = (iso: string, n: number) => addWorkingDays(iso, -n, holidays);
+  const stepEnd = (start: string, span: number) => addWorkingDays(start, span - 1, holidays);
+  const stepDates = (start: string, span: number) => workingDateRange(start, span, holidays);
+
   // Tri objets : ordre d'affichage donné par le caller (display_order)
   const objets = [...input.objets].sort((a, b) => a.display_order - b.display_order);
 
@@ -176,7 +186,6 @@ export function calculatePlan(input: PlanInput): PlanResult {
   }
 
   // -------- 2) Num — un step PAR OBJET (1 pers × 8h), CNC mono-machine (exclusivité cross-objet).
-  // Heures Num par objet = heures_numerique + pro-rata heures_numerique_global.
   const numStepsByObj = new Map<string, PlanStep>();
   for (const o of objets) {
     const proRata = numGlobal > 0 && totalAllH > 0 ? numGlobal * (objWeight(o) / totalAllH) : 0;
@@ -200,10 +209,7 @@ export function calculatePlan(input: PlanInput): PlanResult {
     numStepsByObj.set(o.objet_id, step);
   }
 
-  // -------- 3) Bois & Metal par objet (binôme [2..4])
-  // -------- 4) Peint après Bois ET Metal du même objet (réfection : après BE)
-  // -------- 5) Tap par objet si heures_tapisserie
-  // -------- 6) Manut par objet (50%) après Peint
+  // -------- 3-6) Bois/Metal/Peint/Tap/Manut par objet
   interface ObjChain {
     objet_id: string;
     bois?: PlanStep;
@@ -267,32 +273,30 @@ export function calculatePlan(input: PlanInput): PlanResult {
     chains.push(chain);
   }
 
-  /* ----- Backward scheduling : on ancre tout sur date_fin_fab et on remonte ----- */
+  /* ----- Backward scheduling — JOURS OUVRÉS (exclut weekends + fériés FR) ----- */
+  // Ancre dernière fin = dernier jour ouvré ≤ date_fin_fab
+  const lastWorkBeforeLiv = previousWorkingDay(dateLivraison, holidays);
 
-  // Pour chaque chaîne objet : Manut → fin = livraison ; Peint → fin = Manut.start - 0 (consécutif) sinon livraison ;
-  // Bois & Metal → fin = Peint.start (parallèle entre eux) sinon livraison.
   for (const chain of chains) {
-    let endCursor = dateLivraison;
+    let endCursor = lastWorkBeforeLiv;
     if (chain.manut) {
-      chain.manut.start_date = addDays(endCursor, -(chain.manut.span_days - 1));
-      endCursor = addDays(chain.manut.start_date, -1);
+      chain.manut.start_date = dayMinus(endCursor, chain.manut.span_days - 1);
+      endCursor = dayMinus(chain.manut.start_date, 1);
     }
     if (chain.peint) {
-      chain.peint.start_date = addDays(endCursor, -(chain.peint.span_days - 1));
-      endCursor = addDays(chain.peint.start_date, -1);
+      chain.peint.start_date = dayMinus(endCursor, chain.peint.span_days - 1);
+      endCursor = dayMinus(chain.peint.start_date, 1);
     }
     if (chain.tap) {
-      // Tap en parallèle de Peint (post Bois/Metal) — on l'aligne sur la même fenêtre
       chain.tap.start_date = chain.peint
         ? chain.peint.start_date
-        : addDays(endCursor, -(chain.tap.span_days - 1));
+        : dayMinus(endCursor, chain.tap.span_days - 1);
     }
-    // Bois & Metal en parallèle, fin = endCursor
-    if (chain.bois) chain.bois.start_date = addDays(endCursor, -(chain.bois.span_days - 1));
-    if (chain.metal) chain.metal.start_date = addDays(endCursor, -(chain.metal.span_days - 1));
+    if (chain.bois) chain.bois.start_date = dayMinus(endCursor, chain.bois.span_days - 1);
+    if (chain.metal) chain.metal.start_date = dayMinus(endCursor, chain.metal.span_days - 1);
   }
 
-  // Earliest Bois/Metal start PAR OBJET — sert d'ancre pour Num par objet
+  // Earliest Bois/Metal start PAR OBJET — sert d'ancre pour Num
   const earliestBoisMetalByObj = new Map<string, string>();
   for (const c of chains) {
     const candidates = [c.bois?.start_date, c.metal?.start_date].filter(
@@ -302,20 +306,20 @@ export function calculatePlan(input: PlanInput): PlanResult {
     earliestBoisMetalByObj.set(c.objet_id, candidates.reduce((a, b) => (a < b ? a : b)));
   }
 
-  // -------- Num PAR OBJET : doit finir AVANT (earliestBoisMetal_obj - lag).
-  // CNC mono-machine → exclusivité globale via cncReserved (HARD anti-superposition).
-  // On ordonne par latestEnd descendant pour que les objets "tardifs" prennent les slots tardifs.
+  // -------- Num PAR OBJET : doit finir AVANT (earliestBoisMetal_obj - lag jours OUVRÉS).
   const numEntries: Array<{ objet_id: string; step: PlanStep; latestEnd: string }> = [];
   for (const [objet_id, step] of numStepsByObj) {
     const lag = Math.ceil(LAG_NUM_BOIS_RATIO * step.span_days);
     const ebm = earliestBoisMetalByObj.get(objet_id);
-    const latestEnd = ebm ? addDays(ebm, -1 - lag) : addDays(dateLivraison, -1);
+    const latestEnd = ebm
+      ? dayMinus(ebm, 1 + lag)
+      : dayMinus(lastWorkBeforeLiv, 0);
     numEntries.push({ objet_id, step, latestEnd });
   }
   numEntries.sort((a, b) => (a.latestEnd < b.latestEnd ? 1 : a.latestEnd > b.latestEnd ? -1 : 0));
   for (const { step, latestEnd, objet_id } of numEntries) {
-    const earliestStart = addDays(latestEnd, -180);
-    const slot = findCNCSlotBackward(latestEnd, step.span_days, cncReserved, earliestStart, 180);
+    const earliestStart = dayMinus(latestEnd, 180);
+    const slot = findCNCSlotBackward(latestEnd, step.span_days, cncReserved, earliestStart, 180, holidays);
     if (slot === null) {
       const o = objets.find((x) => x.objet_id === objet_id);
       alerts.push({
@@ -333,40 +337,38 @@ export function calculatePlan(input: PlanInput): PlanResult {
           window_end: latestEnd,
         },
       });
-      step.start_date = addDays(latestEnd, -(step.span_days - 1));
+      step.start_date = dayMinus(latestEnd, step.span_days - 1);
     } else {
       step.start_date = slot;
-      for (const d of dateRange(slot, step.span_days)) {
+      for (const d of stepDates(slot, step.span_days)) {
         cncReserved.add(d);
         cncReservations.push({ step_id: step.id, date: d, machine_id: "cnc_principale" });
       }
     }
   }
 
-  // -------- BE PAR OBJET : ancre = Num.start - LAG_BE_NUM si Num existe pour cet objet,
-  // sinon earliestBoisMetal_obj - 2j, sinon livraison-1. Backward sur la chaîne BE de l'objet.
-  // Ici 1 step BE par objet → simple décalage individuel.
+  // -------- BE PAR OBJET : ancre = Num.start - LAG_BE_NUM (ouvrés)
   for (const beStep of beSteps) {
     const objet_id = beStep.objet_id!;
     const numStep = numStepsByObj.get(objet_id);
     const ebm = earliestBoisMetalByObj.get(objet_id);
     const anchorEnd = numStep
-      ? addDays(numStep.start_date, -1 - LAG_BE_NUM)
+      ? dayMinus(numStep.start_date, 1 + LAG_BE_NUM)
       : ebm
-      ? addDays(ebm, -2)
-      : addDays(dateLivraison, -1);
-    beStep.start_date = addDays(anchorEnd, -(beStep.span_days - 1));
+      ? dayMinus(ebm, 2)
+      : dayMinus(lastWorkBeforeLiv, 0);
+    beStep.start_date = dayMinus(anchorEnd, beStep.span_days - 1);
   }
 
   /* ----- Bornes globales ----- */
   const allStarts = steps.map((s) => s.start_date).filter((d) => d !== "TBD");
   const dateDebutFab = allStarts.length ? allStarts.reduce((a, b) => (a < b ? a : b)) : dateLivraison;
 
-  /* ----- Pic atelier journalier ----- */
+  /* ----- Pic atelier journalier (jours ouvrés effectifs des steps) ----- */
   const dailyLoad: Record<string, number> = {};
   for (const s of steps) {
     if (s.start_date === "TBD") continue;
-    for (const d of dateRange(s.start_date, s.span_days)) {
+    for (const d of stepDates(s.start_date, s.span_days)) {
       dailyLoad[d] = (dailyLoad[d] ?? 0) + s.pers;
     }
   }
@@ -376,10 +378,10 @@ export function calculatePlan(input: PlanInput): PlanResult {
     }
   }
 
-  /* ----- Débord livraison (HARD) ----- */
+  /* ----- Débord livraison (HARD) — fin = stepEnd jours ouvrés ----- */
   const dateFinCalculee = steps
     .filter((s) => s.start_date !== "TBD")
-    .map((s) => addDays(s.start_date, s.span_days - 1))
+    .map((s) => stepEnd(s.start_date, s.span_days))
     .reduce((a, b) => maxISO(a, b), dateDebutFab);
   if (dateFinCalculee > dateLivraison) {
     alerts.push({
