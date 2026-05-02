@@ -34,7 +34,7 @@ export const FIXTURE_D2153: FixtureMatrix = [
   ["1", "Bar central", 1, "u", null, null, null],
   ["1.1", "Bureau d'étude", 1, "h", 60, 480, 8],
   ["1.2", "Construction bois", 1, "ff", 50, 1200, 24],
-  ["1.3", "Peinture m² peinture", 12, "m2", 25, 300, 6],
+  ["1.3", "Peinture laque finition", 1, "ff", 25, 300, 6],
   ["1.4", "Liste de matière pour bois", 1, "ff", 800, 800, null],
   ["2", "Banquette VIP", 2, "u", null, null, null],
   ["2.1", "Bureau d'étude", 1, "h", 60, 240, 4],
@@ -110,7 +110,7 @@ export const FIXTURE_D1816: FixtureMatrix = [
   ...meta("D-1816", "Mur signalétique"),
   ["1", "Mur signalétique 4x3m", 1, "u", null, null, null],
   ["1.1", "Construction bois — ossature", 1, "ff", null, 800, 16],
-  ["1.2", "Peinture m² peinture", 12, "m2", 25, 300, 6],
+  ["1.2", "Peinture laque", 1, "ff", null, 300, 6],
   ["2", "Pose sur site", 1, "ff", null, 400, 8],
 ];
 
