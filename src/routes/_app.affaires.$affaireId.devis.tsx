@@ -93,6 +93,7 @@ function AffaireDevisPage() {
     date_montage: string | null;
   } | null>(null);
   const [planningOpen, setPlanningOpen] = useState(false);
+  const { prefetch: prefetchWizard } = useWizardPrefetch(affaireId);
 
   // Devis dialog
   const [devisOpen, setDevisOpen] = useState(false);
@@ -316,6 +317,8 @@ function AffaireDevisPage() {
               <Button
                 variant="outline"
                 onClick={() => setPlanningOpen(true)}
+                onMouseEnter={prefetchWizard}
+                onFocus={prefetchWizard}
                 className="rounded-xl border-primary/40 text-primary hover:bg-primary/5"
               >
                 <Sparkles className="mr-2 h-4 w-4" /> Mettre au planning
