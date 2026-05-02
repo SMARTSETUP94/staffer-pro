@@ -161,12 +161,7 @@ export const calculateStaffingPlan = createServerFn({ method: "POST" })
        lors des recalculs successifs (sliders, shift, reorder, …). */
     await supabase.from("machine_reservation").delete().eq("affaire_id", plan.affaire_id);
 
-    // Lire les steps existants du plan AVANT modification
-    const { data: existingSteps } = await supabase
-      .from("staffing_plan_step")
-      .select("id, metier_id, objet_id")
-      .eq("plan_id", planId);
-
+    // Réutilise existingSteps déjà chargé étape 4 (overrides) — même source de vérité
     const existingByKey = new Map<string, string>();
     for (const r of (existingSteps ?? []) as Array<{ id: string; metier_id: number; objet_id: string | null }>) {
       existingByKey.set(`${r.metier_id}|${r.objet_id ?? "_null_"}`, r.id as string);
