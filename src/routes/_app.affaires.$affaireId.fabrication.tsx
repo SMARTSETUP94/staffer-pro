@@ -231,6 +231,18 @@ function FabricationPage() {
         </div>
       )}
 
+      {/* v0.35.4 — Wizard Auto-staffing pour typologie 5XXX (Fabrication) */}
+      {isAdminOrChef &&
+        affaireMeta?.typologie &&
+        affaireMeta.typologie.startsWith("5") && (
+          <div className="rounded-xl border border-border bg-card p-4">
+            <StaffingPlanWizard
+              affaireId={affaireId}
+              defaultDateFin={affaireMeta.date_montage}
+            />
+          </div>
+        )}
+
       {/* Tableau */}
       {objets.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border bg-card/50 p-8 text-center">
