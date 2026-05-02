@@ -58,6 +58,8 @@ export interface ObjetCandidat {
   sectionNumero: string;
   /** Libellé de la Section parent (info UI). */
   sectionNom: string;
+  /** v0.31.4c — Quantité de la Section parent (déjà appliquée aux heures). */
+  sectionQuantite: number;
   nom: string;
   description: string | null;
   quantite: number;
