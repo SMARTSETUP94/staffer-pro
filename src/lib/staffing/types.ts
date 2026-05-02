@@ -58,6 +58,8 @@ export interface PlanInput {
   /** Heures BE "globales / suivi de projet" non rattachées à un objet :
    *  splittées au pro-rata du total heures par objet (ajoutées à heures_be par objet). */
   heures_be_global?: number;
+  /** Heures Num "globales" non rattachées à un objet : pro-rata sur heures_numerique par objet. */
+  heures_numerique_global?: number;
 }
 
 export interface PlanStep {
