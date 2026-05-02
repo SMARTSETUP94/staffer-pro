@@ -558,9 +558,17 @@ export function DevisImportObjetsHierarchy({ objets, setObjets, integrityChecks 
                                           <span className="font-mono text-[10px] text-muted-foreground">
                                             {p.numero || `L${p.rowIndex}`}
                                           </span>
-                                          <span className="flex-1 truncate text-xs">
-                                            {p.designation.slice(0, 80)}
-                                          </span>
+                                          <Input
+                                            value={p.designation}
+                                            onChange={(e) =>
+                                              renamePosteDesignation(
+                                                objetIdx,
+                                                p.id,
+                                                e.target.value,
+                                              )
+                                            }
+                                            className="h-7 min-w-[180px] flex-1 text-xs"
+                                          />
                                           {/* Toggle Matériel/Heures */}
                                           <button
                                             type="button"
@@ -605,6 +613,16 @@ export function DevisImportObjetsHierarchy({ objets, setObjets, integrityChecks 
                                               ? `${(p.totalHt ?? 0).toLocaleString("fr-FR")} €`
                                               : `${round2(p.heuresUnitaires * o.quantite)} h`}
                                           </span>
+                                          <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                                            onClick={() => deletePoste(objetIdx, p.id)}
+                                            title="Supprimer ce poste"
+                                          >
+                                            <Trash2 className="h-3 w-3" />
+                                          </Button>
                                         </li>
                                       );
                                     })}
