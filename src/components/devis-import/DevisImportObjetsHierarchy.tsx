@@ -54,8 +54,6 @@ import {
   type EditableObjet,
 } from "./objets-hierarchy-helpers";
 
-export type { EditableObjet } from "./objets-hierarchy-helpers";
-
 const METIER_OPTIONS: { key: FabMetier; label: string }[] = [
   { key: "be", label: "BE / Suivi" },
   { key: "numerique", label: "Numérique" },
@@ -66,83 +64,10 @@ const METIER_OPTIONS: { key: FabMetier; label: string }[] = [
   { key: "manutention", label: "Logistique" },
 ];
 
-export interface EditableObjet {
-  selected: boolean;
-  numero: string;
-  sectionNumero: string;
-  sectionNom: string;
-  nom: string;
-  description: string | null;
-  quantite: number;
-  heures: HeuresParMetier;
-  budgetMateriaux: number;
-  typeFinition: TypeFinition;
-  flags: ApplicabilityFlags;
-  confidence: "high" | "medium" | "low";
-  warnings: string[];
-  postes: PosteCandidat[];
-  /** Objet créé manuellement par l'utilisateur (= true si bouton Ajouter). */
-  manuel?: boolean;
-}
-
 interface Props {
   objets: EditableObjet[];
   setObjets: React.Dispatch<React.SetStateAction<EditableObjet[]>>;
   integrityChecks: IntegrityCheck[];
-}
-
-/* -------------------------------------------------------------------------- */
-/* Helpers                                                                     */
-/* -------------------------------------------------------------------------- */
-
-function round2(n: number) {
-  return Math.round(n * 100) / 100;
-}
-
-function effectiveIsMatiere(p: PosteCandidat): boolean {
-  return p.isMatiereOverride ?? p.isMatiere;
-}
-
-/**
- * Recalcule les agrégats heures + budget d'un objet à partir de ses postes
- * (avec overrides métier / matière). Heures = heuresUnitaires × quantité objet.
- */
-function recomputeObjet(o: EditableObjet): EditableObjet {
-  const heures = emptyHeures();
-  let budget = 0;
-  for (const p of o.postes) {
-    if (p.isRegul) {
-      if (p.totalHt && p.totalHt > 0) budget += p.totalHt;
-      continue;
-    }
-    if (effectiveIsMatiere(p)) {
-      if (p.totalHt && p.totalHt > 0) budget += p.totalHt * o.quantite;
-      continue;
-    }
-    if (p.metier && p.heuresUnitaires > 0) {
-      heures[p.metier] += p.heuresUnitaires;
-    }
-  }
-  for (const k of Object.keys(heures) as FabMetier[]) {
-    heures[k] = +(heures[k] * o.quantite).toFixed(2);
-  }
-  return {
-    ...o,
-    heures,
-    budgetMateriaux: +budget.toFixed(2),
-    flags: computeFlagsFromMetiers(heures),
-    typeFinition: detectTypeFinition(heures),
-  };
-}
-
-function isPosteAutoMapped(p: PosteCandidat): boolean {
-  if (p.isRegul) return true; // pris en charge en budget
-  if (effectiveIsMatiere(p)) return true;
-  return p.metier != null && p.heuresUnitaires > 0;
-}
-
-function objetTotalHeures(o: EditableObjet): number {
-  return +Object.values(o.heures).reduce((a, b) => a + b, 0).toFixed(2);
 }
 
 /* -------------------------------------------------------------------------- */
