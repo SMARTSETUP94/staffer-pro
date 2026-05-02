@@ -51,6 +51,9 @@ import {
   movePosteBetweenObjets,
   objetTotalHeures,
   recomputeObjet,
+  removeObjet,
+  removePosteFromObjet,
+  renamePoste,
   round2,
   type EditableObjet,
 } from "./objets-hierarchy-helpers";
