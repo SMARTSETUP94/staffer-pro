@@ -49,6 +49,7 @@ import { Route as AppFabricationIndexRouteImport } from './routes/_app.fabricati
 import { Route as AppExportIndexRouteImport } from './routes/_app.export.index'
 import { Route as AppDevisIndexRouteImport } from './routes/_app.devis.index'
 import { Route as AppAffairesIndexRouteImport } from './routes/_app.affaires.index'
+import { Route as AppStaffingPlanIdRouteImport } from './routes/_app.staffing.$planId'
 import { Route as AppParametresUtilisateursRouteImport } from './routes/_app.parametres.utilisateurs'
 import { Route as AppParametresRolesFabricationRouteImport } from './routes/_app.parametres.roles-fabrication'
 import { Route as AppParametresMetiersRouteImport } from './routes/_app.parametres.metiers'
@@ -269,6 +270,11 @@ const AppAffairesIndexRoute = AppAffairesIndexRouteImport.update({
   path: '/affaires/',
   getParentRoute: () => AppRoute,
 } as any)
+const AppStaffingPlanIdRoute = AppStaffingPlanIdRouteImport.update({
+  id: '/staffing/$planId',
+  path: '/staffing/$planId',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppParametresUtilisateursRoute =
   AppParametresUtilisateursRouteImport.update({
     id: '/parametres/utilisateurs',
@@ -429,6 +435,7 @@ export interface FileRoutesByFullPath {
   '/parametres/metiers': typeof AppParametresMetiersRoute
   '/parametres/roles-fabrication': typeof AppParametresRolesFabricationRoute
   '/parametres/utilisateurs': typeof AppParametresUtilisateursRoute
+  '/staffing/$planId': typeof AppStaffingPlanIdRoute
   '/affaires/': typeof AppAffairesIndexRoute
   '/devis/': typeof AppDevisIndexRoute
   '/export/': typeof AppExportIndexRoute
@@ -488,6 +495,7 @@ export interface FileRoutesByTo {
   '/parametres/metiers': typeof AppParametresMetiersRoute
   '/parametres/roles-fabrication': typeof AppParametresRolesFabricationRoute
   '/parametres/utilisateurs': typeof AppParametresUtilisateursRoute
+  '/staffing/$planId': typeof AppStaffingPlanIdRoute
   '/affaires': typeof AppAffairesIndexRoute
   '/devis': typeof AppDevisIndexRoute
   '/export': typeof AppExportIndexRoute
@@ -551,6 +559,7 @@ export interface FileRoutesById {
   '/_app/parametres/metiers': typeof AppParametresMetiersRoute
   '/_app/parametres/roles-fabrication': typeof AppParametresRolesFabricationRoute
   '/_app/parametres/utilisateurs': typeof AppParametresUtilisateursRoute
+  '/_app/staffing/$planId': typeof AppStaffingPlanIdRoute
   '/_app/affaires/': typeof AppAffairesIndexRoute
   '/_app/devis/': typeof AppDevisIndexRoute
   '/_app/export/': typeof AppExportIndexRoute
@@ -614,6 +623,7 @@ export interface FileRouteTypes {
     | '/parametres/metiers'
     | '/parametres/roles-fabrication'
     | '/parametres/utilisateurs'
+    | '/staffing/$planId'
     | '/affaires/'
     | '/devis/'
     | '/export/'
@@ -673,6 +683,7 @@ export interface FileRouteTypes {
     | '/parametres/metiers'
     | '/parametres/roles-fabrication'
     | '/parametres/utilisateurs'
+    | '/staffing/$planId'
     | '/affaires'
     | '/devis'
     | '/export'
@@ -735,6 +746,7 @@ export interface FileRouteTypes {
     | '/_app/parametres/metiers'
     | '/_app/parametres/roles-fabrication'
     | '/_app/parametres/utilisateurs'
+    | '/_app/staffing/$planId'
     | '/_app/affaires/'
     | '/_app/devis/'
     | '/_app/export/'
@@ -1046,6 +1058,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAffairesIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/staffing/$planId': {
+      id: '/_app/staffing/$planId'
+      path: '/staffing/$planId'
+      fullPath: '/staffing/$planId'
+      preLoaderRoute: typeof AppStaffingPlanIdRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/parametres/utilisateurs': {
       id: '/_app/parametres/utilisateurs'
       path: '/parametres/utilisateurs'
@@ -1280,6 +1299,7 @@ interface AppRouteChildren {
   AppParametresMetiersRoute: typeof AppParametresMetiersRoute
   AppParametresRolesFabricationRoute: typeof AppParametresRolesFabricationRoute
   AppParametresUtilisateursRoute: typeof AppParametresUtilisateursRoute
+  AppStaffingPlanIdRoute: typeof AppStaffingPlanIdRoute
   AppAffairesIndexRoute: typeof AppAffairesIndexRoute
   AppDevisIndexRoute: typeof AppDevisIndexRoute
   AppFabricationIndexRoute: typeof AppFabricationIndexRoute
@@ -1319,6 +1339,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppParametresMetiersRoute: AppParametresMetiersRoute,
   AppParametresRolesFabricationRoute: AppParametresRolesFabricationRoute,
   AppParametresUtilisateursRoute: AppParametresUtilisateursRoute,
+  AppStaffingPlanIdRoute: AppStaffingPlanIdRoute,
   AppAffairesIndexRoute: AppAffairesIndexRoute,
   AppDevisIndexRoute: AppDevisIndexRoute,
   AppFabricationIndexRoute: AppFabricationIndexRoute,
