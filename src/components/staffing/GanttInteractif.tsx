@@ -58,14 +58,15 @@ export function GanttInteractif({
     setLoading(true);
     setError(null);
     try {
-      const r = await calculate({ data: { planId } });
-      setData(r as PlanData);
+      const r = (await calculate({ data: { planId } })) as PlanData;
+      setData(r);
+      onDataLoaded?.(r);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erreur inconnue");
     } finally {
       setLoading(false);
     }
-  }, [calculate, planId]);
+  }, [calculate, planId, onDataLoaded]);
 
   useEffect(() => {
     void reload();
