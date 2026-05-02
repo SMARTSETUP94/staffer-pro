@@ -310,8 +310,29 @@ function aggregateObjet(
   const children = descendantsOf(parent, allRows);
 
   for (const c of children) {
-    if (c.isExclude) continue;
-    if (c.isComment) continue;
+    if (c.isExclude) {
+      const rule = findExcludeRule(c.designation);
+      pushExclusion(
+        exclusions,
+        c,
+        sectionNumeroForExcl,
+        "exclude_regex",
+        `Ligne exclue par règle parser (« ${rule?.source ?? "?"} »).`,
+        rule?.source ?? null,
+      );
+      continue;
+    }
+    if (c.isComment) {
+      // Commentaire = description de l'objet, pas un poste — info silencieuse.
+      pushExclusion(
+        exclusions,
+        c,
+        sectionNumeroForExcl,
+        "comment",
+        "Ligne sans numéro — utilisée comme description de l'objet parent.",
+      );
+      continue;
+    }
 
     // v0.31.5 — Bug B faux positifs "à mapper" : un poste totalement vide
     // (qty=0 OU null, total=0 OU null, temps=0 OU null) n'est PAS un poste
@@ -320,7 +341,16 @@ function aggregateObjet(
       (c.quantite == null || c.quantite === 0) &&
       (c.totalHt == null || c.totalHt === 0) &&
       (c.tempsPrevu == null || c.tempsPrevu === 0);
-    if (isEmptyPoste) continue;
+    if (isEmptyPoste) {
+      pushExclusion(
+        exclusions,
+        c,
+        sectionNumeroForExcl,
+        "empty_poste",
+        "Poste inutilisé dans ce devis (quantité, total HT et temps prévu tous à zéro).",
+      );
+      continue;
+    }
 
     descendantCount++;
     rowIndices.push(c.rowIndex);
@@ -351,6 +381,15 @@ function aggregateObjet(
         warnings.push(
           `Régul ligne ${c.rowIndex} avec ${c.tempsPrevu}h — à valider manuellement.`,
         );
+        pushExclusion(
+          exclusions,
+          c,
+          sectionNumeroForExcl,
+          "regul_with_hours",
+          `Régul avec ${c.tempsPrevu}h — heures ignorées par défaut, total HT préservé.`,
+          null,
+          true,
+        );
       }
       pushPoste(false);
       continue;
@@ -365,6 +404,15 @@ function aggregateObjet(
         warnings.push(
           `Matière sans montant ligne ${c.rowIndex} : « ${c.designation.slice(0, 40)} »`,
         );
+        pushExclusion(
+          exclusions,
+          c,
+          sectionNumeroForExcl,
+          "matiere_no_montant",
+          "Ligne matière sans Total HT — non comptée dans le budget matériaux.",
+          null,
+          true,
+        );
       }
       pushPoste(true);
       continue;
@@ -372,6 +420,13 @@ function aggregateObjet(
 
     // Lots chantier dans un objet : ignorés (vont dans heuresChantier global)
     if ((c.isMontage || c.isDemontage) && !c.metier) {
+      pushExclusion(
+        exclusions,
+        c,
+        sectionNumeroForExcl,
+        "lot_chantier_in_objet",
+        "Lot chantier (Montage/Démontage) — basculé dans les heures chantier globales, pas dans l'objet.",
+      );
       pushPoste(false);
       continue;
     }
@@ -379,6 +434,13 @@ function aggregateObjet(
     if (c.metier && (c.tempsPrevu ?? 0) > 0) {
       if (isLineDisabled({ quantite: c.quantite, heures: c.tempsPrevu, totalHt: c.totalHt })) {
         // Désactivé (qty=0 ou heures=total=0) → on ne l'expose pas non plus.
+        pushExclusion(
+          exclusions,
+          c,
+          sectionNumeroForExcl,
+          "empty_poste",
+          "Poste désactivé (quantité 0 ou heures + total HT à zéro).",
+        );
         continue;
       }
       heures[c.metier] += c.tempsPrevu ?? 0;
@@ -387,6 +449,15 @@ function aggregateObjet(
       metierUnknownCount++;
       warnings.push(
         `Métier non détecté ligne ${c.rowIndex} (${c.tempsPrevu}h) : « ${c.designation.slice(0, 50)} »`,
+      );
+      pushExclusion(
+        exclusions,
+        c,
+        sectionNumeroForExcl,
+        "metier_unknown",
+        `Heures (${c.tempsPrevu}h) présentes mais aucun pattern métier ne matche le libellé.`,
+        null,
+        true,
       );
       pushPoste(false);
     } else {
