@@ -328,7 +328,7 @@ export const GanttInteractif = forwardRef<
             ))}
           </div>
 
-          {/* BE & Num steps (globaux affaire) — affichés UNE SEULE FOIS au top en mode "amont" */}
+          {/* Steps globaux affaire (Num CNC partagée) — affichés UNE SEULE FOIS au top */}
           {(() => {
             const globalSteps = mergedSteps.filter(
               (s) => s.objet_id === null && s.start_date !== "TBD",
@@ -341,7 +341,7 @@ export const GanttInteractif = forwardRef<
                   style={{ gridTemplateColumns: gridTemplate }}
                 >
                   <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                    Phase amont (partagée)
+                    Phase amont — ressource partagée (CNC)
                   </div>
                 </div>
                 {globalSteps.map((s) => {

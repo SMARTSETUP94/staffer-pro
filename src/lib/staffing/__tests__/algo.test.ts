@@ -266,7 +266,7 @@ describe("calculatePlan — multi-objets", () => {
     }
   });
 
-  it("BE est cumulé sur tous les objets (1 step BE total)", () => {
+  it("BE par objet : 1 step BE par objet ayant heures_be > 0", () => {
     const r = calculatePlan(
       input([
         obj({ objet_id: "o1", heures_be: 10, heures_bois: 16 }),
@@ -274,9 +274,34 @@ describe("calculatePlan — multi-objets", () => {
       ])
     );
     const beSteps = r.steps.filter((s) => s.metier === "BE");
-    expect(beSteps).toHaveLength(1);
-    expect(beSteps[0].pers).toBe(1);
-    expect(beSteps[0].span_days).toBe(Math.ceil(30 / 10));
+    expect(beSteps).toHaveLength(2);
+    for (const s of beSteps) {
+      expect(s.objet_id).not.toBeNull();
+      expect(s.pers).toBe(1);
+      expect(s.h_par_jour).toBe(10);
+    }
+    // Spans cumulés : ceil(10/10) + ceil(20/10) = 1 + 2 = 3
+    const totalSpan = beSteps.reduce((a, s) => a + s.span_days, 0);
+    expect(totalSpan).toBe(3);
+  });
+
+  it("heures_be_global splitté pro-rata sur objets", () => {
+    const r = calculatePlan({
+      affaire_id: "a",
+      date_fin_fab: "2026-06-30",
+      objets: [
+        obj({ objet_id: "o1", heures_be: 0, heures_bois: 80 }),
+        obj({ objet_id: "o2", heures_be: 0, heures_bois: 20 }),
+      ],
+      heures_be_global: 50,
+    });
+    const beSteps = r.steps.filter((s) => s.metier === "BE");
+    expect(beSteps).toHaveLength(2);
+    // o1 = 80% du total → 40h BE → 4j ; o2 = 20% → 10h → 1j
+    const o1 = beSteps.find((s) => s.objet_id === "o1")!;
+    const o2 = beSteps.find((s) => s.objet_id === "o2")!;
+    expect(o1.span_days).toBe(4);
+    expect(o2.span_days).toBe(1);
   });
 
   it("date_debut_fab = min des starts", () => {

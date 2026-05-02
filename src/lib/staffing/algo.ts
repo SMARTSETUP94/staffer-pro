@@ -111,20 +111,56 @@ export function calculatePlan(input: PlanInput): PlanResult {
   // Tri objets : ordre d'affichage donné par le caller (display_order)
   const objets = [...input.objets].sort((a, b) => a.display_order - b.display_order);
 
-  // -------- 1) BE — série, 1 pers × 10h, total cumulé sur tous objets, tri −heures_BE
-  const objetsBe = [...objets].filter((o) => o.heures_be > 0).sort((a, b) => b.heures_be - a.heures_be);
-  const totalBe = objetsBe.reduce((s, o) => s + o.heures_be, 0);
-  let beStep: PlanStep | null = null;
-  if (totalBe > 0) {
-    const { pers, span_days } = computeSpan(totalBe, H_BE, { persFix: 1 });
-    // BE doit finir avant le début de Num/Bois (donc on le pose au plus tôt par rapport à la livraison)
-    // En backward : on pose BE comme la 1re étape, la chaîne aval sera ancrée sur (BE_end + LAG_BE_NUM).
-    // Pour estimer une start_date, on prend (date_fin - somme spans estimés) — calculé via passe forward après.
-    beStep = pushStep(
+  // -------- 1) BE — un step PAR OBJET (1 pers × 10h), sériels ordre = display_order.
+  // Les heures BE sont déjà par objet (heures_be). Si l'affaire a des heures BE
+  // "globales / suivi de projet" elles peuvent être splittées au pro-rata via
+  // input.heures_be_global (optionnel). Si non fourni, seules heures_be par objet sont utilisées.
+  const totalAllH = objets.reduce(
+    (s, o) =>
+      s +
+      o.heures_be +
+      o.heures_numerique +
+      o.heures_bois +
+      o.heures_metal +
+      o.heures_peinture +
+      o.heures_tapisserie +
+      o.heures_manutention,
+    0,
+  );
+  const beGlobal = Math.max(0, input.heures_be_global ?? 0);
+  const beSteps: PlanStep[] = [];
+  // Itère dans l'ordre display_order (== ordre déjà trié plus haut)
+  for (const o of objets) {
+    const proRata =
+      beGlobal > 0 && totalAllH > 0
+        ? beGlobal *
+          ((o.heures_be +
+            o.heures_numerique +
+            o.heures_bois +
+            o.heures_metal +
+            o.heures_peinture +
+            o.heures_tapisserie +
+            o.heures_manutention) /
+            totalAllH)
+        : 0;
+    const heuresBeObj = o.heures_be + proRata;
+    if (heuresBeObj <= 0) continue;
+    const { pers, span_days } = computeSpan(heuresBeObj, H_BE, { persFix: 1 });
+    const step = pushStep(
       steps,
-      { metier_id: METIER_ID.BE, metier: "BE", objet_id: null, start_date: "TBD", span_days, pers, h_par_jour: H_BE, source: "auto" },
-      "be"
+      {
+        metier_id: METIER_ID.BE,
+        metier: "BE",
+        objet_id: o.objet_id,
+        start_date: "TBD",
+        span_days,
+        pers,
+        h_par_jour: H_BE,
+        source: "auto",
+      },
+      "be",
     );
+    beSteps.push(step);
   }
 
   // -------- 2) Num — série 1 pers × 8h, démarre BE+2j, créneau CNC libre
@@ -263,14 +299,21 @@ export function calculatePlan(input: PlanInput): PlanResult {
     }
   }
 
-  // -------- BE : doit finir avant Num.start - LAG_BE_NUM (sinon avant Bois/Metal - 1j si pas de Num)
-  if (beStep) {
-    const beLatestEnd = numStep
+  // -------- BE : chaîne sériée. Le DERNIER BE doit finir avant Num.start - LAG_BE_NUM
+  // (sinon avant earliestBoisMetalStart - 2j si pas de Num).
+  // On planifie en backward dans l'ordre inverse de display_order.
+  if (beSteps.length > 0) {
+    const beAnchorEnd = numStep
       ? addDays(numStep.start_date, -1 - LAG_BE_NUM)
       : earliestBoisMetalStart
       ? addDays(earliestBoisMetalStart, -2)
       : addDays(dateLivraison, -1);
-    beStep.start_date = addDays(beLatestEnd, -(beStep.span_days - 1));
+    let cursor = beAnchorEnd;
+    for (let i = beSteps.length - 1; i >= 0; i--) {
+      const s = beSteps[i];
+      s.start_date = addDays(cursor, -(s.span_days - 1));
+      cursor = addDays(s.start_date, -1);
+    }
   }
 
   /* ----- Bornes globales ----- */
