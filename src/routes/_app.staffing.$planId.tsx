@@ -1,7 +1,7 @@
 // v0.35.5 / Sprint 5 — Page Gantt staffing + Wizard + Publication + Historique
 // v0.35.x BATCH — Toolbar batch edition (sliders + shifts) + autosave 2 min idle.
 import { useEffect, useRef, useState } from "react";
-import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
+import { createFileRoute, Link, Navigate, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, History, Send, Zap, ListChecks, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,12 +21,30 @@ import { DeletePlanDialog } from "@/components/staffing/DeletePlanDialog";
 import { StaffingEditToolbar } from "@/components/staffing/StaffingEditToolbar";
 import { AutoStaffPlanButton, type AutoStaffPlanButtonHandle } from "@/components/staffing/AutoStaffPlanButton";
 import { StaffingShortcutsHelp } from "@/components/staffing/StaffingShortcutsHelp";
+import { ExpressResultBanner } from "@/components/staffing/ExpressResultBanner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PageBreadcrumbs } from "@/components/PageBreadcrumbs";
 
+interface ExpressSearch {
+  express?: string;
+  published?: string;
+  filled?: string;
+  unfilled?: string;
+  alertes?: string;
+  reason?: string;
+}
+
 export const Route = createFileRoute("/_app/staffing/$planId")({
   component: StaffingPlanPage,
+  validateSearch: (search: Record<string, unknown>): ExpressSearch => ({
+    express: typeof search.express === "string" ? search.express : undefined,
+    published: typeof search.published === "string" ? search.published : undefined,
+    filled: typeof search.filled === "string" ? search.filled : undefined,
+    unfilled: typeof search.unfilled === "string" ? search.unfilled : undefined,
+    alertes: typeof search.alertes === "string" ? search.alertes : undefined,
+    reason: typeof search.reason === "string" ? search.reason : undefined,
+  }),
 });
 
 function StaffingPlanPage() {
@@ -140,9 +158,35 @@ function StaffingPlanPage() {
     return d.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric" });
   };
 
+  const search = Route.useSearch();
+  const navigate = useNavigate();
+  const [bannerDismissed, setBannerDismissed] = useState(false);
+  const showExpressBanner =
+    search.express === "1" && !bannerDismissed && (isDraft || isPublished);
+
   return (
     <div className="space-y-4 px-2 py-4 md:px-6">
       <PageBreadcrumbs steps={breadcrumbSteps} className="mb-2" />
+      {showExpressBanner && (
+        <ExpressResultBanner
+          planId={planId}
+          published={search.published === "1"}
+          filled={Number(search.filled ?? 0)}
+          unfilled={Number(search.unfilled ?? 0)}
+          alertesCritiques={Number(search.alertes ?? 0)}
+          reason={search.reason ?? ""}
+          onDismiss={() => {
+            setBannerDismissed(true);
+            navigate({
+              to: "/staffing/$planId",
+              params: { planId },
+              search: {} as never,
+              replace: true,
+            });
+          }}
+          onPublished={() => setRefreshKey((k) => k + 1)}
+        />
+      )}
       <div className="flex items-start justify-between gap-2 flex-wrap">
         <div>
           <p className="overline">— Auto-staffing Fabrication 5XXX</p>
