@@ -97,9 +97,16 @@ export function AddHorsPlanningDialog({ defaultDate, variant, defaultMetierId, o
   );
 
   const validation = useMemo(() => validateHorsPlanningInput(input), [input]);
+  const errorSet = useMemo(() => new Set(validation.errors), [validation.errors]);
+  const errorFor = (codes: typeof validation.errors): string | null => {
+    if (!showErrors) return null;
+    const found = codes.find((c) => errorSet.has(c));
+    return found ? HORS_PLANNING_ERROR_LABELS[found] : null;
+  };
 
   const handleSubmit = async () => {
     if (!validation.ok) {
+      setShowErrors(true);
       toast.error(HORS_PLANNING_ERROR_LABELS[validation.errors[0]]);
       return;
     }
