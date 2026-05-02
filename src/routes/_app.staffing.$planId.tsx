@@ -180,7 +180,10 @@ function StaffingPlanPage() {
           planId={planId}
           steps={planData.result.steps}
           objetsLabel={objetsLabel}
-          onAssignmentsChanged={() => setRefreshKey((k) => k + 1)}
+          /* IMPORTANT: ne PAS bump refreshKey ici — ça remonterait le Gantt et
+             relancerait calculateStaffingPlan inutilement. La section gère son
+             propre reload des assignments. La heatmap (Gantt) ne dépend que des
+             steps, pas des assignments. */
         />
       )}
 
