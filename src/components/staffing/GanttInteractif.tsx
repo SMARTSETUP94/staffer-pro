@@ -488,7 +488,7 @@ export const GanttInteractif = forwardRef<
         <h3 className="mb-2 text-sm font-bold uppercase tracking-wider text-muted-foreground">
           Charge par métier
         </h3>
-        <HeatmapMetier steps={data.result.steps} days={days} />
+        <HeatmapMetier steps={mergedSteps} days={days} />
       </div>
 
       <div className="flex justify-end">
@@ -498,7 +498,9 @@ export const GanttInteractif = forwardRef<
       </div>
     </div>
   );
-}
+});
+
+GanttInteractif.displayName = "GanttInteractif";
 
 function ImpactBadge({ impacts }: { impacts: SliderImpact[] }) {
   const labels = impacts.map((i) =>
