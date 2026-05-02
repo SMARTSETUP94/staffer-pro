@@ -312,6 +312,7 @@ function DevisImportPage() {
           postes: o.postes.map((p) => ({ ...p })),
         }));
         setObjets(editable);
+        setIntegrityChecks(progbat.integrityChecks);
         // v0.32.2 — snapshot des objets source pour validation cohérence.
         setParsedObjets(
           progbat.objetsCandidats.map((o) => ({
@@ -350,24 +351,7 @@ function DevisImportPage() {
       { key: `manuel-${Date.now()}`, metierId: null, heures: 0, montantHt: 0, libellesSources: [], manuel: true },
     ]);
 
-  const updateObjet = (idx: number, patch: Partial<EditableObjet>) =>
-    setObjets((prev) =>
-      prev.map((o, i) => {
-        if (i !== idx) return o;
-        const next = { ...o, ...patch };
-        if (patch.heures) {
-          next.flags = computeFlagsFromMetiers(next.heures);
-          next.typeFinition = detectTypeFinition(next.heures);
-        }
-        return next;
-      }),
-    );
-  const updateMetier = (idx: number, metier: FabMetier, value: number) => {
-    const obj = objets[idx];
-    if (!obj) return;
-    const heures = { ...obj.heures, [metier]: Number.isFinite(value) ? value : 0 };
-    updateObjet(idx, { heures });
-  };
+  // v0.31.4b — édition des objets/postes déléguée à DevisImportObjetsHierarchy.
 
   const totals = useMemo(() => {
     let h = 0;
