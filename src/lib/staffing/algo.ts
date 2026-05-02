@@ -112,9 +112,7 @@ export function calculatePlan(input: PlanInput): PlanResult {
   const objets = [...input.objets].sort((a, b) => a.display_order - b.display_order);
 
   // -------- 1) BE — un step PAR OBJET (1 pers × 10h), sériels ordre = display_order.
-  // Les heures BE sont déjà par objet (heures_be). Si l'affaire a des heures BE
-  // "globales / suivi de projet" elles peuvent être splittées au pro-rata via
-  // input.heures_be_global (optionnel). Si non fourni, seules heures_be par objet sont utilisées.
+  // Heures BE par objet = heures_be + pro-rata de heures_be_global (suivi de projet).
   const totalAllH = objets.reduce(
     (s, o) =>
       s +
@@ -127,22 +125,20 @@ export function calculatePlan(input: PlanInput): PlanResult {
       o.heures_manutention,
     0,
   );
+  const objWeight = (o: ObjetInput) =>
+    o.heures_be +
+    o.heures_numerique +
+    o.heures_bois +
+    o.heures_metal +
+    o.heures_peinture +
+    o.heures_tapisserie +
+    o.heures_manutention;
   const beGlobal = Math.max(0, input.heures_be_global ?? 0);
+  const numGlobal = Math.max(0, input.heures_numerique_global ?? 0);
+
   const beSteps: PlanStep[] = [];
-  // Itère dans l'ordre display_order (== ordre déjà trié plus haut)
   for (const o of objets) {
-    const proRata =
-      beGlobal > 0 && totalAllH > 0
-        ? beGlobal *
-          ((o.heures_be +
-            o.heures_numerique +
-            o.heures_bois +
-            o.heures_metal +
-            o.heures_peinture +
-            o.heures_tapisserie +
-            o.heures_manutention) /
-            totalAllH)
-        : 0;
+    const proRata = beGlobal > 0 && totalAllH > 0 ? beGlobal * (objWeight(o) / totalAllH) : 0;
     const heuresBeObj = o.heures_be + proRata;
     if (heuresBeObj <= 0) continue;
     const { pers, span_days } = computeSpan(heuresBeObj, H_BE, { persFix: 1 });
@@ -163,16 +159,29 @@ export function calculatePlan(input: PlanInput): PlanResult {
     beSteps.push(step);
   }
 
-  // -------- 2) Num — série 1 pers × 8h, démarre BE+2j, créneau CNC libre
-  const totalNum = objets.reduce((s, o) => s + o.heures_numerique, 0);
-  let numStep: PlanStep | null = null;
-  if (totalNum > 0) {
-    const { span_days, pers } = computeSpan(totalNum, H_DEFAULT, { persFix: 1 });
-    numStep = pushStep(
+  // -------- 2) Num — un step PAR OBJET (1 pers × 8h), CNC mono-machine (exclusivité cross-objet).
+  // Heures Num par objet = heures_numerique + pro-rata heures_numerique_global.
+  const numStepsByObj = new Map<string, PlanStep>();
+  for (const o of objets) {
+    const proRata = numGlobal > 0 && totalAllH > 0 ? numGlobal * (objWeight(o) / totalAllH) : 0;
+    const heuresNumObj = o.heures_numerique + proRata;
+    if (heuresNumObj <= 0) continue;
+    const { pers, span_days } = computeSpan(heuresNumObj, H_DEFAULT, { persFix: 1 });
+    const step = pushStep(
       steps,
-      { metier_id: METIER_ID.Num, metier: "Num", objet_id: null, start_date: "TBD", span_days, pers, h_par_jour: H_DEFAULT, source: "auto" },
-      "num"
+      {
+        metier_id: METIER_ID.Num,
+        metier: "Num",
+        objet_id: o.objet_id,
+        start_date: "TBD",
+        span_days,
+        pers,
+        h_par_jour: H_DEFAULT,
+        source: "auto",
+      },
+      "num",
     );
+    numStepsByObj.set(o.objet_id, step);
   }
 
   // -------- 3) Bois & Metal par objet (binôme [2..4])
