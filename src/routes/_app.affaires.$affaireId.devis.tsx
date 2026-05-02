@@ -85,6 +85,12 @@ function AffaireDevisPage() {
   const [postes, setPostes] = useState<Poste[]>([]);
   const [heuresAssign, setHeuresAssign] = useState<HeuresAssignParCouple>(new Map());
   const [loading, setLoading] = useState(true);
+  // v0.35.4 — méta affaire pour bouton "Mettre au planning" (typologie 5XXX)
+  const [affaireMeta, setAffaireMeta] = useState<{
+    typologie: string | null;
+    date_montage: string | null;
+  } | null>(null);
+  const [planningOpen, setPlanningOpen] = useState(false);
 
   // Devis dialog
   const [devisOpen, setDevisOpen] = useState(false);
