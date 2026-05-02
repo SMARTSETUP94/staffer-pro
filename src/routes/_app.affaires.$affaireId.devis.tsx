@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Plus, Loader2, Pencil, Trash2, FileText, CheckCircle2, Lock, AlertTriangle, Download } from "lucide-react";
+import { Plus, Loader2, Pencil, Trash2, FileText, CheckCircle2, Lock, AlertTriangle, Download, Sparkles } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,6 +26,7 @@ import {
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { DevisDeleteCascadeDialog } from "@/components/devis-import/DevisDeleteCascadeDialog";
+import { StaffingPlanWizard } from "@/components/staffing/StaffingPlanWizard";
 
 /** v0.15.1 — Statuts UI exposés. Les autres (en_cours, cloture, facture) restent
  *  dormants en DB pour flexibilité future mais ne sont pas proposés à la sélection. */
@@ -85,6 +86,12 @@ function AffaireDevisPage() {
   const [postes, setPostes] = useState<Poste[]>([]);
   const [heuresAssign, setHeuresAssign] = useState<HeuresAssignParCouple>(new Map());
   const [loading, setLoading] = useState(true);
+  // v0.35.4 — méta affaire pour bouton "Mettre au planning" (typologie 5XXX)
+  const [affaireMeta, setAffaireMeta] = useState<{
+    typologie: string | null;
+    date_montage: string | null;
+  } | null>(null);
+  const [planningOpen, setPlanningOpen] = useState(false);
 
   // Devis dialog
   const [devisOpen, setDevisOpen] = useState(false);
@@ -143,6 +150,22 @@ function AffaireDevisPage() {
   };
 
   useEffect(() => { fetchAll(); }, [affaireId]);
+
+  // v0.35.4 — charge typologie + date_montage pour bouton "Mettre au planning"
+  useEffect(() => {
+    void supabase
+      .from("affaires")
+      .select("typologie, date_montage")
+      .eq("id", affaireId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!data) return;
+        setAffaireMeta({
+          typologie: (data.typologie as string | null) ?? null,
+          date_montage: (data.date_montage as string | null) ?? null,
+        });
+      });
+  }, [affaireId]);
 
   const openCreateDevis = () => {
     setDevisForm({
@@ -287,7 +310,16 @@ function AffaireDevisPage() {
       <div className="flex items-center justify-between">
         <p className="overline">— Devis ({devis.length})</p>
         {isAdminOrChef && (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            {affaireMeta?.typologie?.startsWith("5") && (
+              <Button
+                variant="outline"
+                onClick={() => setPlanningOpen(true)}
+                className="rounded-xl border-primary/40 text-primary hover:bg-primary/5"
+              >
+                <Sparkles className="mr-2 h-4 w-4" /> Mettre au planning
+              </Button>
+            )}
             <Button asChild className="rounded-xl bg-primary text-primary-foreground hover:bg-primary/90">
               <Link to="/devis/import" search={{ affaire_id: affaireId }}>
                 <Download className="mr-2 h-4 w-4" /> Importer un devis Progbat
@@ -689,6 +721,29 @@ function AffaireDevisPage() {
           fetchAll();
         }}
       />
+
+      {/* v0.35.4 — Wizard "Mettre au planning" (typologie 5XXX) */}
+      <Dialog open={planningOpen} onOpenChange={setPlanningOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-primary" />
+              Mettre au planning fabrication
+            </DialogTitle>
+            <DialogDescription>
+              Auto-staffing v0.35 — Calcul rétrograde depuis la livraison.
+            </DialogDescription>
+          </DialogHeader>
+          {planningOpen && (
+            <StaffingPlanWizard
+              affaireId={affaireId}
+              defaultDateFin={affaireMeta?.date_montage ?? null}
+              compact
+              onCreated={() => setPlanningOpen(false)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
