@@ -150,6 +150,12 @@ export const METIER_REGEX: Record<FabMetier, RegExp[]> = {
     /emballage/i,
     /\bmanutention\b/i,
     /pr[ée]paration atelier/i,
+    // v0.31.5 (item #113) — Coursier / livreur / chauffeur → Logistique (Manutention)
+    /\bcoursier\b/i,
+    /\bcoursiers?\b/i,
+    /\blivreur\b/i,
+    /\bchauffeur\b/i,
+    /\bnavette\b/i,
   ],
   bois: [
     /construction[ _-]+heures?/i,
