@@ -402,8 +402,11 @@ function buildObjetsForSection(section: ParsedRow, allRows: ParsedRow[]): ObjetC
   const objets: ObjetCandidat[] = [];
 
   if (hasNiveau3) {
-    // Cas 3 niveaux : objets = N.M qui ont au moins un enfant atelier/matière
-    const niveau2 = subTree.filter((r) => r.niveau === 2 && !r.isExclude && !r.isComment);
+    // Cas 3 niveaux : objets = N.M qui ont au moins un enfant atelier/matière.
+    // v0.31.5 — Sécurité anti-régression : un parent N.M exclu par libellé
+    // ne doit JAMAIS faire disparaître ses enfants horaires/matière valides
+    // (cas prod 2141 : « Remise en peinture du bar existant »).
+    const niveau2 = subTree.filter((r) => r.niveau === 2 && !r.isComment);
     for (const obj of niveau2) {
       if ((obj.isMontage || obj.isDemontage) && !obj.metier) continue;
       if (!obj.designation) continue;
@@ -415,6 +418,7 @@ function buildObjetsForSection(section: ParsedRow, allRows: ParsedRow[]): ObjetC
       const isLeafAtelier =
         directChildren.length === 0 && !!obj.metier && (obj.tempsPrevu ?? 0) > 0;
       const isLeafMatiere = directChildren.length === 0 && obj.isMatiere;
+      if (obj.isExclude && !hasAnyAtelier && !isLeafAtelier && !isLeafMatiere) continue;
 
       if (hasAnyAtelier || isLeafAtelier || isLeafMatiere) {
         objets.push(aggregateObjet(obj, allRows, section));

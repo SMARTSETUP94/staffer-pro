@@ -13,7 +13,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { parseDevisProgbatFromArrayBuffer } from "../parse-excel";
+import { parseDevisProgbatFromArrayBuffer, parseDevisProgbatFromMatrix } from "../parse-excel";
 
 function loadFixture(): ArrayBuffer {
   const path = resolve(__dirname, "../__fixtures__/D-202604-2141.xlsx");
@@ -109,6 +109,23 @@ describe("v0.31.5 — Devis réel D-202604-2141 (BAR A COCKTAIL DOUBLE, prod Gab
       const p115 = obj.postes.find((p) => p.numero === "1.1.5");
       expect(p115).toBeDefined();
       expect(p115!.isMatiere).toBe(true);
+    });
+
+    it("Sécurité UI : même si le parent 1.1 est marqué exclu, ses enfants horaires recréent l'objet", () => {
+      const rows = [
+        ["N°", "Désignation", "Qté", "Unité", "P.U. HT", "Total HT", "Temps prévu"],
+        ["1", "I2 - BAR A COCKTAIL DOUBLE - Mise en peinture uniquement de l'existant", 1, "u", 0, 0, 93.75],
+        ["1.1", "Remise commerciale peinture du bar existant", 1, "u", 0, 0, 93.75],
+        ["1.1.2", "Peinture - nombre d'heures", 1, "h", 0, 0, 75],
+        ["1.1.3", "Logistique - heures", 1, "h", 0, 0, 18.75],
+      ];
+      const forced = parseDevisProgbatFromMatrix(rows, { filename: "D-202604-2141-ui-regression.xlsx" });
+      const obj = forced.objetsCandidats.find((o) => o.numero === "1.1");
+
+      expect(obj).toBeDefined();
+      expect(obj!.heures.peinture).toBe(75);
+      expect(obj!.heures.manutention).toBe(18.75);
+      expect(obj!.totalHeures).toBeCloseTo(93.75, 2);
     });
   });
 
