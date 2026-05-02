@@ -68,14 +68,16 @@ function FabricationPage() {
     nom: string;
     lieu: string | null;
     date_montage: string | null;
+    date_demontage: string | null;
+    typologie: string | null;
   } | null>(null);
   const [openStaffer, setOpenStaffer] = useState(false);
 
-  // Charger meta affaire (chef projet, lieu, dates) — useEffect, pas useState
+  // Charger meta affaire (chef projet, lieu, dates, typologie) — useEffect, pas useState
   useEffect(() => {
     void supabase
       .from("affaires")
-      .select("chef_projet_id, numero, nom, lieu, date_montage")
+      .select("chef_projet_id, numero, nom, lieu, date_montage, date_demontage, typologie")
       .eq("id", affaireId)
       .maybeSingle()
       .then(({ data }) => {
@@ -86,6 +88,8 @@ function FabricationPage() {
           nom: data.nom as string,
           lieu: (data.lieu as string | null) ?? null,
           date_montage: (data.date_montage as string | null) ?? null,
+          date_demontage: (data.date_demontage as string | null) ?? null,
+          typologie: (data.typologie as string | null) ?? null,
         });
       });
   }, [affaireId]);
