@@ -300,13 +300,13 @@ function StepDayRow({
                   alreadyAssigned={assignments.some((a) => a.employe_id === s.employe.id)}
                   cumul={cumulByEmpDate[`${s.employe.id}|${date}`] ?? 0}
                   onAssign={async (presencePct) => {
-                    const fn = assignPersonneToStep;
-                    // Direct call via fetch to avoid wrap; but we use useServerFn wrapper
-                    await invokeAssign(fn, {
-                      step_id: step.id,
-                      employe_id: s.employe.id,
-                      date,
-                      presence_pct: presencePct,
+                    await assignPersonneToStep({
+                      data: {
+                        step_id: step.id,
+                        employe_id: s.employe.id,
+                        date,
+                        presence_pct: presencePct,
+                      },
                     });
                     await onChanged();
                     await loadSuggestions();
@@ -323,14 +323,6 @@ function StepDayRow({
       )}
     </div>
   );
-}
-
-/* Helper : invoque le serverFn directement (sans hook) — call wrapper */
-async function invokeAssign(
-  _fn: typeof assignPersonneToStep,
-  payload: { step_id: string; employe_id: string; date: string; presence_pct: number }
-) {
-  return assignPersonneToStep({ data: payload });
 }
 
 /* ================================================================== */
