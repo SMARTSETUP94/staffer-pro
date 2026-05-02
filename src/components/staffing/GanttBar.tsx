@@ -35,13 +35,13 @@ export function GanttBar({
   const shiftLabel = manualShift !== 0 ? `${manualShift > 0 ? "+" : ""}${manualShift}j` : null;
   return (
     <div
-      className="group relative flex h-7 items-center rounded-md px-2 text-[11px] font-mono text-white shadow-sm"
+      className={`group relative flex h-7 items-center rounded-md px-2 text-[11px] font-mono text-white shadow-sm ${warnRing}`}
       style={{
         gridColumnStart: startCol,
         gridColumnEnd: endCol,
         backgroundColor: bg,
       }}
-      title={`${metierKey} · ${step.pers}p × ${step.span_days}j × ${step.h_par_jour}h${shiftLabel ? ` (décalé ${shiftLabel})` : ""}`}
+      title={`${metierKey} · ${step.pers}p × ${step.span_days}j × ${step.h_par_jour}h${shiftLabel ? ` (décalé ${shiftLabel})` : ""}${hasWarning ? " — risque détecté" : ""}`}
     >
       {onShift && !disableShift && (
         <Button
