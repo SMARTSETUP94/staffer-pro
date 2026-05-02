@@ -95,7 +95,14 @@ export function StaffingPlanWizard({
       .then(([objs, plans]) => {
         if (cancelled) return;
         setObjets(objs);
-        setIncluded(new Set(objs.map((o) => o.id)));
+        // exclut par défaut les objets verrouillés (published)
+        setIncluded(
+          new Set(
+            objs
+              .filter((o) => !(o.dans_plan_actif && o.dans_plan_actif.status === "published"))
+              .map((o) => o.id),
+          ),
+        );
         setExistingPlans(plans as ExistingPlan[]);
       })
       .catch((err) => {
