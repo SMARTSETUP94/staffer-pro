@@ -486,6 +486,28 @@ export function DevisImportObjetsHierarchy({ objets, setObjets, integrityChecks 
                                   </TooltipContent>
                                 </Tooltip>
                               )}
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                                    onClick={() => {
+                                      if (
+                                        window.confirm(
+                                          `Supprimer l'objet « ${o.nom || o.numero} » et ses ${o.postes.length} poste(s) ?`,
+                                        )
+                                      ) {
+                                        deleteObjet(objetIdx);
+                                      }
+                                    }}
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent side="left">Supprimer l'objet</TooltipContent>
+                              </Tooltip>
                             </div>
 
                             {/* Section repliable « Détails » */}
