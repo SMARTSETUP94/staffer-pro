@@ -87,22 +87,26 @@ function pushStep(steps: PlanStep[], draft: StepDraft, prefix: string): PlanStep
   return step;
 }
 
-/** Retourne la 1ère date de span_days consécutifs où aucune date n'est dans `reserved`,
- *  en backward depuis `latestEnd` (inclus). Si aucun créneau trouvé, retourne null. */
+/** Retourne la 1ère date OUVRÉE telle que les `spanDays` jours ouvrés consécutifs depuis cette date
+ *  (inclus) ne sont pas dans `reserved`, en backward depuis `latestEnd` (inclus, ramené à un ouvré).
+ *  `holidays` fait partie des jours non-ouvrés (donc skip). Si rien trouvé, retourne null. */
 export function findCNCSlotBackward(
   latestEnd: string,
   spanDays: number,
   reserved: Set<string>,
   earliestStart?: string,
-  maxLookbackDays = 365
+  maxLookbackDays = 365,
+  holidays?: Set<string>
 ): string | null {
-  let end = latestEnd;
+  let end = previousWorkingDay(latestEnd, holidays);
   for (let i = 0; i < maxLookbackDays; i++) {
-    const start = addDays(end, -(spanDays - 1));
+    // start = end - (spanDays-1) jours ouvrés
+    const start = addWorkingDays(end, -(spanDays - 1), holidays);
     if (earliestStart && start < earliestStart) return null;
-    const dates = dateRange(start, spanDays);
+    const dates = workingDateRange(start, spanDays, holidays);
     if (dates.every((d) => !reserved.has(d))) return start;
-    end = addDays(end, -1);
+    // recule d'1 jour ouvré
+    end = addWorkingDays(end, -1, holidays);
   }
   return null;
 }
