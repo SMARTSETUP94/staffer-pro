@@ -137,8 +137,8 @@ export const GanttInteractif = forwardRef<
     if (!data) return null;
     let totalH = 0;
     let pic = 0;
-    for (const s of data.result.steps) totalH += s.pers * s.h_par_jour * s.span_days;
-    for (const v of Object.values(data.result.daily_load)) if (v > pic) pic = v;
+    for (const s of mergedSteps) totalH += s.pers * s.h_par_jour * s.span_days;
+    for (const v of Object.values(mergedDailyLoad)) if (v > pic) pic = v;
     const hasHard = data.result.alerts.some((a) => a.severity === "hard");
     const hasSoft = data.result.alerts.some((a) => a.severity === "soft");
     const statut = hasHard ? "Critique" : hasSoft ? "Attention" : "Conforme";
@@ -148,28 +148,24 @@ export const GanttInteractif = forwardRef<
         ? "text-amber-600 dark:text-amber-400"
         : "text-emerald-600 dark:text-emerald-400";
     return { totalH, pic, statut, statutColor };
-  }, [data]);
+  }, [data, mergedSteps, mergedDailyLoad]);
 
-  /** Pré-vol : simule l'impact, affiche toast + stocke pour badges, puis commit */
-  const previewAndCommit = useCallback(
-    async (
-      step: PlanStep,
-      change: { newPers?: number; newShift?: number },
-      commit: () => Promise<void>,
-    ) => {
+  /** Pré-vol : simule l'impact, affiche toast + stocke pour badges (pas de commit serveur) */
+  const previewImpacts = useCallback(
+    (step: PlanStep, change: { newPers?: number; newShift?: number }) => {
       if (!data) return;
       const impacts = simulateStepChange({
         step,
         newPers: change.newPers,
         newShift: change.newShift,
-        allSteps: data.result.steps,
-        dailyLoad: data.result.daily_load,
+        allSteps: mergedSteps,
+        dailyLoad: mergedDailyLoad,
         dateFinFab: data.result.date_fin_fab,
       });
       if (impacts.length > 0) {
-        toast.warning("Réduction non viable", {
+        toast.warning("Modification à risque", {
           description: impactToastMessage(impacts),
-          duration: 6000,
+          duration: 5000,
         });
         setImpactByStep((prev) => ({ ...prev, [step.id]: impacts }));
       } else {
@@ -179,68 +175,40 @@ export const GanttInteractif = forwardRef<
           return rest;
         });
       }
-      await commit();
     },
-    [data],
+    [data, mergedSteps, mergedDailyLoad],
   );
 
   const handleShift = useCallback(
-    async (step: PlanStep, delta: number) => {
-      if (!data || busyStepId) return;
-      const ov = data.step_overrides[step.id];
-      const newShift = (ov?.manual_shift ?? 0) + delta;
-      setBusyStepId(step.id);
-      try {
-        await previewAndCommit(step, { newShift: delta }, async () => {
-          await updateStep({ data: { id: step.id, manual_shift: newShift } });
-          await reload();
-        });
-      } catch (e) {
-        setError(e instanceof Error ? e.message : "Erreur décalage");
-      } finally {
-        setBusyStepId(null);
-      }
+    (step: PlanStep, delta: number) => {
+      if (!data) return;
+      const baseShift = data.step_overrides[step.id]?.manual_shift ?? 0;
+      const currentShift = edits[step.id]?.manual_shift ?? baseShift;
+      const newShift = currentShift + delta;
+      previewImpacts(step, { newShift: delta });
+      setStepShiftStore(step.id, newShift);
     },
-    [data, busyStepId, updateStep, reload, previewAndCommit],
+    [data, edits, previewImpacts, setStepShiftStore],
   );
 
   const handleResetShift = useCallback(
-    async (stepId: string) => {
-      if (busyStepId) return;
-      setBusyStepId(stepId);
-      try {
-        await updateStep({ data: { id: stepId, manual_shift: 0 } });
-        setImpactByStep((prev) => {
-          if (!(stepId in prev)) return prev;
-          const { [stepId]: _, ...rest } = prev;
-          return rest;
-        });
-        await reload();
-      } catch (e) {
-        setError(e instanceof Error ? e.message : "Erreur reset");
-      } finally {
-        setBusyStepId(null);
-      }
+    (stepId: string) => {
+      resetStepShiftStore(stepId);
+      setImpactByStep((prev) => {
+        if (!(stepId in prev)) return prev;
+        const { [stepId]: _, ...rest } = prev;
+        return rest;
+      });
     },
-    [busyStepId, updateStep, reload],
+    [resetStepShiftStore],
   );
 
   const handleSetPers = useCallback(
-    async (step: PlanStep, pers: number) => {
-      if (busyStepId) return;
-      setBusyStepId(step.id);
-      try {
-        await previewAndCommit(step, { newPers: pers }, async () => {
-          await updateStep({ data: { id: step.id, pers, manual_pers: true } });
-          await reload();
-        });
-      } catch (e) {
-        setError(e instanceof Error ? e.message : "Erreur pers");
-      } finally {
-        setBusyStepId(null);
-      }
+    (step: PlanStep, pers: number) => {
+      previewImpacts(step, { newPers: pers });
+      setStepPersStore(step.id, pers);
     },
-    [busyStepId, updateStep, reload, previewAndCommit],
+    [previewImpacts, setStepPersStore],
   );
 
   const handleReorder = useCallback(
@@ -253,6 +221,7 @@ export const GanttInteractif = forwardRef<
       const a = sorted[idx];
       const b = sorted[swap];
       try {
+        setBusyStepId(objId);
         await Promise.all([
           updateObj({ data: { id: a.id, display_order: b.display_order } }),
           updateObj({ data: { id: b.id, display_order: a.display_order } }),
@@ -260,6 +229,8 @@ export const GanttInteractif = forwardRef<
         await reload();
       } catch (e) {
         setError(e instanceof Error ? e.message : "Erreur reorder");
+      } finally {
+        setBusyStepId(null);
       }
     },
     [data, updateObj, reload],
