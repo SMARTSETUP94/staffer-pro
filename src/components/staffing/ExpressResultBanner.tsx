@@ -142,43 +142,12 @@ export function ExpressResultBanner({
               <Send className="mr-1 h-3 w-3" />
               {publishing ? "Publication…" : "Publier quand même"}
             </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => setConfirmDelete(true)}
-              className="text-rose-600 hover:bg-rose-100 dark:hover:bg-rose-900/40"
-              title="Supprimer ce plan brouillon"
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </Button>
             <Button variant="ghost" size="sm" onClick={onDismiss}>
               <X className="h-4 w-4" />
             </Button>
           </div>
         </div>
       </div>
-
-      <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Annuler ce plan Express ?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Le brouillon et toutes ses affectations seront définitivement supprimés.
-              Cette action est irréversible.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleting}>Garder le plan</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              disabled={deleting}
-              className="bg-rose-600 hover:bg-rose-700"
-            >
-              {deleting ? "Suppression…" : "Supprimer"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 }
