@@ -20,6 +20,7 @@ import {
   GripVertical,
   Info,
   Plus,
+  Trash2,
   TriangleAlert,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
