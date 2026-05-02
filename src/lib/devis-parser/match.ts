@@ -40,9 +40,36 @@ export function matchMetier(libelle: string | null | undefined): FabMetier | nul
   return null;
 }
 
-/** Vrai si la ligne désigne un poste matière (cumulé dans budget_materiaux). */
-export function isMatiere(libelle: string | null | undefined): boolean {
-  return anyMatch(String(libelle ?? ""), MATIERE_REGEX);
+/**
+ * Vrai si la ligne désigne un poste matière (cumulé dans budget_materiaux).
+ *
+ * v0.31.4c — Pour les patterns "matière conditionnelle"
+ * (Budget matériaux, fournitures logistique...) : si tempsPrevu > 0,
+ * la ligne bascule en heures Manutention/Logistique → on retourne false.
+ */
+export function isMatiere(
+  libelle: string | null | undefined,
+  tempsPrevu: number | null | undefined = null,
+): boolean {
+  const s = String(libelle ?? "");
+  if (!anyMatch(s, MATIERE_REGEX)) return false;
+  if ((tempsPrevu ?? 0) > 0 && anyMatch(s, MATIERE_CONDITIONAL_REGEX)) {
+    return false;
+  }
+  return true;
+}
+
+/**
+ * v0.31.4c — Pour les patterns matière conditionnelle (cf. MATIERE_CONDITIONAL_REGEX),
+ * lorsque tempsPrevu > 0, on bascule la ligne en métier Manutention.
+ * Renvoie true si le libellé tombe dans ce cas spécial.
+ */
+export function isMatiereBascule(
+  libelle: string | null | undefined,
+  tempsPrevu: number | null | undefined,
+): boolean {
+  if ((tempsPrevu ?? 0) <= 0) return false;
+  return anyMatch(String(libelle ?? ""), MATIERE_CONDITIONAL_REGEX);
 }
 
 /** Vrai si la ligne est un lot chantier (Montage/Démontage/Transport/...). */
