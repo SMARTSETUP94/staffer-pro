@@ -29,11 +29,16 @@ function anyMatch(s: string, regs: RegExp[]): boolean {
  * Détermine le métier d'une ligne d'après son libellé via regex prioritaires.
  * Renvoie null si aucun match (ou si la ligne est de la matière → ce n'est pas un métier).
  */
-export function matchMetier(libelle: string | null | undefined): FabMetier | null {
+export function matchMetier(
+  libelle: string | null | undefined,
+  tempsPrevu: number | null | undefined = null,
+): FabMetier | null {
   const s = String(libelle ?? "");
   if (!s.trim()) return null;
+  // v0.31.4c — Bascule conditionnelle : "Budget matériaux" + Temps>0 → manutention
+  if (isMatiereBascule(s, tempsPrevu)) return "manutention";
   // La matière n'est jamais un métier (ex: m² peinture).
-  if (anyMatch(s, MATIERE_REGEX)) return null;
+  if (isMatiere(s, tempsPrevu)) return null;
   for (const m of METIER_ORDER) {
     if (anyMatch(s, METIER_REGEX[m])) return m;
   }
