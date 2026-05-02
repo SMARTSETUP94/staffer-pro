@@ -130,8 +130,14 @@ export const GanttInteractif = forwardRef<
 
   const days = useMemo(() => {
     if (!data) return [];
-    return workingDaysBetween(data.result.date_debut_fab, data.result.date_fin_fab);
-  }, [data]);
+    // Étendre la fenêtre si un edit local fait commencer un step AVANT date_debut_fab
+    // (réduction pers → span allongé → start avancé). Sans ça, la barre devient invisible.
+    let minStart = data.result.date_debut_fab;
+    for (const s of mergedSteps) {
+      if (s.start_date !== "TBD" && s.start_date < minStart) minStart = s.start_date;
+    }
+    return workingDaysBetween(minStart, data.result.date_fin_fab);
+  }, [data, mergedSteps]);
 
   const stats = useMemo(() => {
     if (!data) return null;
@@ -322,49 +328,77 @@ export const GanttInteractif = forwardRef<
             ))}
           </div>
 
-          {/* BE & Num steps (sans objet) */}
-          {mergedSteps
-            .filter((s) => s.objet_id === null && s.start_date !== "TBD")
-            .map((s) => {
-              const span = stepSpanInWindow(days, s.start_date, s.span_days);
-              const stepEnd = new Date(s.start_date + "T00:00:00Z");
-              stepEnd.setUTCDate(stepEnd.getUTCDate() + s.span_days - 1);
-              const overDL = stepEnd.toISOString().slice(0, 10) > dateLivraison;
-              const k = METIER_KEY_BY_ID[s.metier_id] ?? "Manut";
-              const baseShift = data.step_overrides[s.id]?.manual_shift ?? 0;
-              const localShift = edits[s.id]?.manual_shift ?? baseShift;
-              const hasImpact = (impactByStep[s.id]?.length ?? 0) > 0;
-              return (
+          {/* BE & Num steps (globaux affaire) — affichés UNE SEULE FOIS au top en mode "amont" */}
+          {(() => {
+            const globalSteps = mergedSteps.filter(
+              (s) => s.objet_id === null && s.start_date !== "TBD",
+            );
+            if (globalSteps.length === 0) return null;
+            return (
+              <div className="bg-muted/20">
                 <div
-                  key={s.id}
-                  className="grid items-center border-b border-border/30 py-1.5"
+                  className="grid items-center border-b border-border/30 px-3 py-1"
                   style={{ gridTemplateColumns: gridTemplate }}
                 >
-                  <div className="flex items-center gap-2 px-3 text-xs">
-                    <span
-                      className="inline-block h-2.5 w-2.5 rounded-sm"
-                      style={{ backgroundColor: METIER_COLOR[k] }}
-                    />
-                    <span className="font-semibold">{METIER_LABEL[k]} (global)</span>
-                    {hasImpact && <ImpactBadge impacts={impactByStep[s.id]!} />}
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                    Phase amont (partagée)
                   </div>
-                  {span.visible && (
-                    <GanttBar
-                      step={s}
-                      startCol={span.startCol + 1}
-                      endCol={span.endCol + 1}
-                      isOverDeadline={overDL}
-                      manualShift={localShift}
-                      hasWarning={hasImpact}
-                      onShift={(d) => handleShift(s, d)}
-                      onResetShift={() => handleResetShift(s.id)}
-                    />
-                  )}
                 </div>
-              );
-            })}
+                {globalSteps.map((s) => {
+                  const span = stepSpanInWindow(days, s.start_date, s.span_days);
+                  const stepEnd = new Date(s.start_date + "T00:00:00Z");
+                  stepEnd.setUTCDate(stepEnd.getUTCDate() + s.span_days - 1);
+                  const overDL = stepEnd.toISOString().slice(0, 10) > dateLivraison;
+                  const k = METIER_KEY_BY_ID[s.metier_id] ?? "Manut";
+                  const baseShift = data.step_overrides[s.id]?.manual_shift ?? 0;
+                  const localShift = edits[s.id]?.manual_shift ?? baseShift;
+                  const hasImpact = (impactByStep[s.id]?.length ?? 0) > 0;
+                  // Détail heures par objet pour ce métier
+                  const totalH =
+                    k === "BE"
+                      ? objets.reduce((acc, o) => {
+                          const f = data.objets.find((x) => x.objet_id === o.objet_id);
+                          return acc + (f?.heures_total ?? 0); // approx, pas de breakdown DB
+                        }, 0)
+                      : 0;
+                  void totalH;
+                  return (
+                    <div
+                      key={s.id}
+                      className="grid items-center border-b border-border/30 py-1.5"
+                      style={{ gridTemplateColumns: gridTemplate }}
+                    >
+                      <div className="flex items-center gap-2 px-3 text-xs">
+                        <span
+                          className="inline-block h-2.5 w-2.5 rounded-sm"
+                          style={{ backgroundColor: METIER_COLOR[k] }}
+                        />
+                        <span className="font-semibold">{METIER_LABEL[k]}</span>
+                        <span className="text-[10px] text-muted-foreground">
+                          tous objets · {s.pers}p × {s.h_par_jour}h
+                        </span>
+                        {hasImpact && <ImpactBadge impacts={impactByStep[s.id]!} />}
+                      </div>
+                      {span.visible && (
+                        <GanttBar
+                          step={s}
+                          startCol={span.startCol + 1}
+                          endCol={span.endCol + 1}
+                          isOverDeadline={overDL}
+                          manualShift={localShift}
+                          hasWarning={hasImpact}
+                          onShift={(d) => handleShift(s, d)}
+                          onResetShift={() => handleResetShift(s.id)}
+                        />
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
 
-          {/* Par objet */}
+          {/* Par objet — chaque objet affiche : entête + steps métiers (incl. quote-part BE/Num) */}
           {objets.map((obj, idx) => {
             const objSteps = mergedSteps.filter(
               (s) => s.objet_id === obj.objet_id && s.start_date !== "TBD",

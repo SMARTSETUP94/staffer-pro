@@ -156,6 +156,21 @@ export const calculateStaffingPlan = createServerFn({ method: "POST" })
       }
     }
 
+    /* 7.b Recalculer date_debut_fab APRÈS application overrides — sinon une override
+       qui rallonge un span (réduction pers) peut faire commencer avant la fenêtre
+       initiale calculée par l'algo, rendant la barre invisible côté UI. */
+    {
+      const allStarts = result.steps
+        .filter((s) => s.start_date !== "TBD")
+        .map((s) => s.start_date);
+      if (allStarts.length > 0) {
+        const minStart = allStarts.reduce((a, b) => (a < b ? a : b));
+        if (minStart < result.date_debut_fab) {
+          result.date_debut_fab = minStart;
+        }
+      }
+    }
+
     /* 8. PERSISTENCE IDEMPOTENTE — préserve step IDs existants par clé naturelle
        (metier_id, objet_id) pour ne PAS cascade-delete les staffing_plan_assignment
        lors des recalculs successifs (sliders, shift, reorder, …). */
