@@ -33,6 +33,17 @@ interface Props {
   onCreated?: (planId: string) => void;
 }
 
+interface DansPlanActif {
+  plan_id: string;
+  status: "draft" | "published";
+  affaire_id: string;
+  affaire_nom: string | null;
+  affaire_numero: string | null;
+  same_affaire: boolean;
+  created_at: string;
+  created_by: string | null;
+}
+
 interface ObjetRow {
   id: string;
   reference: string;
@@ -40,6 +51,7 @@ interface ObjetRow {
   quantite: number;
   h_bois: number;
   heures_total: number;
+  dans_plan_actif: DansPlanActif | null;
 }
 
 interface ExistingPlan {
