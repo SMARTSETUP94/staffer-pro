@@ -58,12 +58,34 @@ export interface RenvoiExterne {
   rowIndex: number;
 }
 
+/**
+ * Cross-check intégrité Section vs Σ(Objets) :
+ * compare le Temps prévu affiché au niveau de la Section (N)
+ * à la somme des heures objets (N.M) après multiplication par leur quantité.
+ */
+export interface IntegrityCheck {
+  /** Numéro hiérarchique de la section (ex: "1"). */
+  sectionNumero: string;
+  /** Nom de la section. */
+  sectionNom: string;
+  /** Heures déclarées sur la ligne Section (Temps prévu colonne). */
+  heuresDeclarees: number;
+  /** Heures calculées = Σ(objets enfants × quantité). */
+  heuresCalculees: number;
+  /** Écart = calculées - déclarées. Tolérance ±0.5h. */
+  ecart: number;
+  /** Niveau d'alerte. */
+  severite: "ok" | "warning" | "error";
+}
+
 export interface ParseResult {
   meta: DevisMetadata;
   devisType: DevisType;
   objetsCandidats: ObjetCandidat[];
   heuresChantier: HeuresChantier;
   renvoisExternes: RenvoiExterne[];
+  /** Cross-checks par section (anti-bug critique). */
+  integrityChecks: IntegrityCheck[];
   warnings: string[];
   errors: string[];
 }

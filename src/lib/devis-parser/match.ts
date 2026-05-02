@@ -1,78 +1,74 @@
 /**
- * v0.23 — Helpers de matching (lower-case + sans accents).
+ * v0.31.4 — Helpers de matching (regex case-insensitive ordonnées).
  */
 
 import type { FabMetier } from "@/hooks/use-fabrication";
 import {
-  CHANTIER_KEYWORDS,
-  DEMONTAGE_KEYWORDS,
-  EXCLUDE_KEYWORDS,
-  MATIERE_KEYWORDS,
-  METIER_KEYWORDS,
-  MONTAGE_KEYWORDS,
+  CHANTIER_REGEX,
+  DEMONTAGE_REGEX,
+  EXCLUDE_REGEX,
+  MATIERE_REGEX,
+  METIER_ORDER,
+  METIER_REGEX,
+  MONTAGE_REGEX,
+  REGUL_REGEX,
 } from "./mappings";
-
 import { normalizeForMatch } from "@/lib/string-normalize";
 
-/** Normalise une chaîne : lower-case + suppression des diacritiques + espaces compactés. */
+/** Normalise une chaîne pour debug / fallback (pas utilisé pour les regex). */
 export function normalize(s: string | null | undefined): string {
   return normalizeForMatch(s);
 }
 
-function containsAny(haystack: string, needles: string[]): boolean {
-  return needles.some((n) => haystack.includes(normalize(n)));
+function anyMatch(s: string, regs: RegExp[]): boolean {
+  return regs.some((r) => r.test(s));
 }
 
 /**
- * Détermine le métier d'une ligne d'après son libellé.
- * Ordre de priorité : métiers spécifiques avant les génériques (bois est large).
+ * Détermine le métier d'une ligne d'après son libellé via regex prioritaires.
+ * Renvoie null si aucun match (ou si la ligne est de la matière → ce n'est pas un métier).
  */
-export function matchMetier(libelle: string): FabMetier | null {
-  const n = normalize(libelle);
-  if (!n) return null;
-
-  // Ordre stable : be → numerique → metal → tapisserie → peinture → manutention → bois
-  // (bois est testé en dernier car "construction" capture beaucoup).
-  const order: FabMetier[] = [
-    "be",
-    "numerique",
-    "metal",
-    "tapisserie",
-    "peinture",
-    "manutention",
-    "bois",
-  ];
-  for (const m of order) {
-    if (containsAny(n, METIER_KEYWORDS[m])) return m;
+export function matchMetier(libelle: string | null | undefined): FabMetier | null {
+  const s = String(libelle ?? "");
+  if (!s.trim()) return null;
+  // La matière n'est jamais un métier (ex: m² peinture).
+  if (anyMatch(s, MATIERE_REGEX)) return null;
+  for (const m of METIER_ORDER) {
+    if (anyMatch(s, METIER_REGEX[m])) return m;
   }
   return null;
 }
 
 /** Vrai si la ligne désigne un poste matière (cumulé dans budget_materiaux). */
-export function isMatiere(libelle: string): boolean {
-  return containsAny(normalize(libelle), MATIERE_KEYWORDS);
+export function isMatiere(libelle: string | null | undefined): boolean {
+  return anyMatch(String(libelle ?? ""), MATIERE_REGEX);
 }
 
-/** Vrai si la ligne est un lot chantier (Montage/Démontage/Transport/...) — niveau affaire. */
-export function isChantierKeyword(libelle: string): boolean {
-  return containsAny(normalize(libelle), CHANTIER_KEYWORDS);
+/** Vrai si la ligne est un lot chantier (Montage/Démontage/Transport/...). */
+export function isChantierKeyword(libelle: string | null | undefined): boolean {
+  return anyMatch(String(libelle ?? ""), CHANTIER_REGEX);
 }
 
 /** Vrai si la ligne tombe spécifiquement dans Démontage. */
-export function isDemontageKeyword(libelle: string): boolean {
-  return containsAny(normalize(libelle), DEMONTAGE_KEYWORDS);
+export function isDemontageKeyword(libelle: string | null | undefined): boolean {
+  return anyMatch(String(libelle ?? ""), DEMONTAGE_REGEX);
 }
 
 /** Vrai si la ligne tombe spécifiquement dans Montage (et pas Démontage). */
-export function isMontageKeyword(libelle: string): boolean {
-  const n = normalize(libelle);
-  if (containsAny(n, DEMONTAGE_KEYWORDS)) return false;
-  return containsAny(n, MONTAGE_KEYWORDS);
+export function isMontageKeyword(libelle: string | null | undefined): boolean {
+  const s = String(libelle ?? "");
+  if (anyMatch(s, DEMONTAGE_REGEX)) return false;
+  return anyMatch(s, MONTAGE_REGEX);
 }
 
-/** Vrai si la ligne doit être exclue totalement (régul, achats, sous-totaux, renvois). */
-export function isExcludeKeyword(libelle: string): boolean {
-  return containsAny(normalize(libelle), EXCLUDE_KEYWORDS);
+/** Vrai si la ligne est une régul (heures ignorées par défaut, HT conservé). */
+export function isRegul(libelle: string | null | undefined): boolean {
+  return anyMatch(String(libelle ?? ""), REGUL_REGEX);
+}
+
+/** Vrai si la ligne doit être exclue totalement. */
+export function isExcludeKeyword(libelle: string | null | undefined): boolean {
+  return anyMatch(String(libelle ?? ""), EXCLUDE_REGEX);
 }
 
 /**

@@ -1,19 +1,18 @@
 /**
- * v0.23 — Parser devis Progbat (côté navigateur).
+ * v0.31.4 — Parser devis Progbat (refonte 3 niveaux strict).
  *
- * Pipeline :
- *  1. Lecture Excel via xlsx → matrice de cellules
- *  2. Détection en-tête + colonnes (N° / Désignation / Qté / PU / Total / Temps prévu)
- *  3. Métadonnées (numéro devis, libellé, client, total)
- *  4. Extraction des lignes-feuilles (avec niveau hiérarchique + métier hérité)
- *  5. detectDevisType (fabrication / chantier_seul / mixte / inconnu)
- *  6. Si chantier_seul → 0 objet, juste heures_chantier
- *  7. Sinon agrège par parent niveau 1 ou 2 :
- *      - somme heures par métier (× quantité)
- *      - somme matières dans budgetMateriaux
- *      - flags applicabilité, confidence
- *  8. Heures chantier (lots Montage/Démontage)
- *  9. Renvois externes "Voir devis XXXX"
+ * Hiérarchie figée :
+ *  - Section N (ex: "1") : regroupement visuel, AUCUN objet créé directement.
+ *      Mais si la section n'a pas de N.M (postes directement à N.K) → objet implicite.
+ *  - Objet N.M (ex: "1.2") : OBJET DE FABRICATION dans le staffing.
+ *      Hérite des heures de ses postes enfants (multipliées par sa quantité).
+ *      Description = lignes commentaires sans numéro entre N.M et N.M+1.
+ *  - Poste N.M.K (ex: "1.2.3") : ligne d'heures atelier OU matériel.
+ *      Heures affichées = par UNITE → multiplier par la quantité de l'objet parent.
+ *
+ * Anti-bug critique : cross-check sum(objets après × qté) vs Temps prévu Section.
+ *
+ * Régul : 0 h, mais Total HT conservé. Si Temps prévu > 0 → flag warning manuel.
  */
 import * as XLSX from "xlsx-js-style";
 import type { FabMetier } from "@/hooks/use-fabrication";
@@ -25,6 +24,7 @@ import {
   isLineDisabled,
   isMatiere,
   isMontageKeyword,
+  isRegul,
   matchMetier,
   normalize,
 } from "./match";
@@ -33,6 +33,7 @@ import type {
   Confidence,
   DevisMetadata,
   HeuresChantier,
+  IntegrityCheck,
   ObjetCandidat,
   ParseResult,
   RenvoiExterne,
@@ -120,6 +121,12 @@ function isStrictDescendant(parentCode: string, childCode: string): boolean {
   return childCode.length > parentCode.length && childCode.startsWith(parentCode + ".");
 }
 
+function getParentCode(code: string): string {
+  const parts = code.split(".");
+  if (parts.length <= 1) return "";
+  return parts.slice(0, -1).join(".");
+}
+
 /* -------------------------------------------------------------------------- */
 /* Lignes intermédiaires                                                       */
 /* -------------------------------------------------------------------------- */
@@ -138,7 +145,10 @@ interface ParsedRow {
   isMatiere: boolean;
   isMontage: boolean;
   isDemontage: boolean;
+  isRegul: boolean;
   metier: FabMetier | null;
+  /** Ligne de commentaire (pas de numéro mais désignation) → nourrit description. */
+  isComment: boolean;
 }
 
 function parseRows(rows: unknown[][], headerRow: number, cols: ColumnMap): ParsedRow[] {
@@ -155,12 +165,17 @@ function parseRows(rows: unknown[][], headerRow: number, cols: ColumnMap): Parse
       if (c !== 0) totalHt = c;
     }
     const tempsPrevu = cols.tempsPrevu >= 0 ? toNumber(row[cols.tempsPrevu]) : null;
+
+    // Skip lignes 100% vides
     if (!numero && !designation && quantite == null && totalHt == null && tempsPrevu == null) continue;
+
+    const hier = getHierarchicalCode(numero);
+    const isComment = !hier && designation.length > 0;
 
     out.push({
       rowIndex: i + 1,
       numero,
-      hierarchique: getHierarchicalCode(numero),
+      hierarchique: hier,
       niveau: parseHierarchicalNumber(numero),
       designation,
       quantite,
@@ -171,59 +186,54 @@ function parseRows(rows: unknown[][], headerRow: number, cols: ColumnMap): Parse
       isMatiere: isMatiere(designation),
       isMontage: isMontageKeyword(designation),
       isDemontage: isDemontageKeyword(designation),
+      isRegul: isRegul(designation),
       metier: matchMetier(designation),
+      isComment,
     });
   }
   return out;
 }
 
 /* -------------------------------------------------------------------------- */
-/* Détection objets candidats (parents niveau 1 ou 2)                          */
+/* Identification Sections (N) et Objets (N.M)                                */
 /* -------------------------------------------------------------------------- */
 
-function findObjetParents(rows: ParsedRow[]): ParsedRow[] {
-  // Candidats : lignes niveau 1 ou 2 dont au moins un descendant strict est
-  // une sous-prestation atelier (métier reconnu) — et qui ne sont pas elles-mêmes
-  // exclues / lots chantier.
-  const candidates: ParsedRow[] = [];
-  for (let i = 0; i < rows.length; i++) {
-    const p = rows[i];
-    if (p.niveau !== 1 && p.niveau !== 2) continue;
-    if (p.isExclude) continue;
-    if (!p.designation) continue;
-    // Si le parent lui-même est un lot chantier pur → pas un objet
-    if ((p.isMontage || p.isDemontage) && !p.metier) continue;
+/** Indices dans `rows` des lignes Section (niveau 1 non-chantier-pur, non-exclu). */
+function findSections(rows: ParsedRow[]): ParsedRow[] {
+  return rows.filter(
+    (r) =>
+      r.niveau === 1 &&
+      r.hierarchique &&
+      !r.isExclude &&
+      !((r.isMontage || r.isDemontage) && !r.metier) &&
+      !!r.designation,
+  );
+}
 
-    let hasAtelierChild = false;
-    for (let j = i + 1; j < rows.length; j++) {
-      const c = rows[j];
-      if (!c.hierarchique) continue;
-      if (!isStrictDescendant(p.hierarchique, c.hierarchique)) {
-        // dès qu'on sort du sous-arbre, on s'arrête (les rows sont en ordre)
-        if (c.niveau > 0 && c.niveau <= p.niveau) break;
-        continue;
-      }
-      if (c.metier && (c.tempsPrevu ?? 0) > 0) {
-        hasAtelierChild = true;
-        break;
-      }
-    }
-    if (hasAtelierChild) candidates.push(p);
-  }
+/** Sous-arbre strict d'un nœud (toutes lignes dont le code commence par parent.). */
+function descendantsOf(parent: ParsedRow, allRows: ParsedRow[]): ParsedRow[] {
+  return allRows.filter((c) => isStrictDescendant(parent.hierarchique, c.hierarchique));
+}
 
-  // Élimine les parents qui ont eux-mêmes un parent dans la liste (on garde le plus profond)
-  const result: ParsedRow[] = [];
-  for (const c of candidates) {
-    const hasDescendantCandidate = candidates.some(
-      (other) => other !== c && isStrictDescendant(c.hierarchique, other.hierarchique),
-    );
-    if (!hasDescendantCandidate) result.push(c);
+/**
+ * Description d'un objet = concat des lignes commentaires (sans numéro)
+ * situées entre la ligne objet et la prochaine ligne numérotée.
+ */
+function extractDescription(objet: ParsedRow, allRows: ParsedRow[]): string | null {
+  const idx = allRows.indexOf(objet);
+  if (idx < 0) return null;
+  const parts: string[] = [];
+  for (let j = idx + 1; j < allRows.length; j++) {
+    const r = allRows[j];
+    if (r.hierarchique) break; // on s'arrête à la prochaine ligne numérotée
+    if (r.isComment && r.designation) parts.push(r.designation);
   }
-  return result;
+  if (parts.length === 0) return null;
+  return parts.join(" — ").slice(0, 500);
 }
 
 /* -------------------------------------------------------------------------- */
-/* Agrégation d'un objet                                                       */
+/* Agrégation d'un objet (N.M) à partir de ses postes enfants (N.M.K)         */
 /* -------------------------------------------------------------------------- */
 
 function aggregateObjet(parent: ParsedRow, allRows: ParsedRow[]): ObjetCandidat {
@@ -234,21 +244,37 @@ function aggregateObjet(parent: ParsedRow, allRows: ParsedRow[]): ObjetCandidat 
   let descendantCount = 0;
   let metierUnknownCount = 0;
 
-  // Quantité de l'objet : celle du parent si renseignée, sinon 1
+  // Quantité de l'objet : celle du parent si renseignée et > 0, sinon 1.
   const quantite = parent.quantite && parent.quantite > 0 ? parent.quantite : 1;
 
-  for (const c of allRows) {
-    if (!isStrictDescendant(parent.hierarchique, c.hierarchique)) continue;
+  const children = descendantsOf(parent, allRows);
+
+  for (const c of children) {
     if (c.isExclude) continue;
+    if (c.isComment) continue;
     descendantCount++;
     rowIndices.push(c.rowIndex);
 
-    // Matière → budget cumulé
+    // Régul : 0 h mais Total HT préservé. Flag warning si Temps > 0.
+    if (c.isRegul) {
+      if (c.totalHt && c.totalHt > 0) budgetMateriaux += c.totalHt;
+      if ((c.tempsPrevu ?? 0) > 0) {
+        warnings.push(
+          `Régul ligne ${c.rowIndex} avec ${c.tempsPrevu}h — à valider manuellement.`,
+        );
+      }
+      continue;
+    }
+
+    // Matière → budget cumulé (× quantité objet pour aligner sur le total réel)
     if (c.isMatiere) {
-      if (c.totalHt != null && c.totalHt > 0) {
-        budgetMateriaux += c.totalHt;
+      const ht = c.totalHt ?? 0;
+      if (ht > 0) {
+        budgetMateriaux += ht * quantite;
       } else {
-        warnings.push(`Matière sans montant ligne ${c.rowIndex} : « ${c.designation.slice(0, 40)} »`);
+        warnings.push(
+          `Matière sans montant ligne ${c.rowIndex} : « ${c.designation.slice(0, 40)} »`,
+        );
       }
       continue;
     }
@@ -263,10 +289,13 @@ function aggregateObjet(parent: ParsedRow, allRows: ParsedRow[]): ObjetCandidat 
       heures[c.metier] += c.tempsPrevu ?? 0;
     } else if (!c.metier && (c.tempsPrevu ?? 0) > 0) {
       metierUnknownCount++;
+      warnings.push(
+        `Métier non détecté ligne ${c.rowIndex} (${c.tempsPrevu}h) : « ${c.designation.slice(0, 50)} »`,
+      );
     }
   }
 
-  // Multiplier les heures par la quantité de l'objet
+  // Multiplication par la quantité de l'objet (heures = par unité dans l'Excel)
   for (const k of Object.keys(heures) as FabMetier[]) {
     heures[k] = +(heures[k] * quantite).toFixed(2);
   }
@@ -279,7 +308,6 @@ function aggregateObjet(parent: ParsedRow, allRows: ParsedRow[]): ObjetCandidat 
   const flags = computeFlagsFromMetiers(heures);
   const typeFinition = detectTypeFinition(heures);
 
-  // Confidence : high si tout détecté, medium si warnings, low si totalHeures = 0 ou descendants vides
   let confidence: Confidence = "high";
   if (warnings.length > 0) confidence = "medium";
   if (totalHeures === 0 || descendantCount === 0) confidence = "low";
@@ -287,7 +315,7 @@ function aggregateObjet(parent: ParsedRow, allRows: ParsedRow[]): ObjetCandidat 
   return {
     numero: parent.hierarchique || parent.numero,
     nom: parent.designation,
-    description: null,
+    description: extractDescription(parent, allRows),
     quantite,
     heures,
     totalHeures,
@@ -297,6 +325,94 @@ function aggregateObjet(parent: ParsedRow, allRows: ParsedRow[]): ObjetCandidat 
     confidence,
     warnings,
     rowIndices,
+  };
+}
+
+/* -------------------------------------------------------------------------- */
+/* Construction des objets pour une Section donnée                            */
+/*  - Cas normal : Section N → objets N.M détectés                            */
+/*  - Cas spécial : Section N sans N.M mais avec N.K (atelier direct)         */
+/*    → objet implicite portant le libellé de la Section                      */
+/* -------------------------------------------------------------------------- */
+
+function buildObjetsForSection(section: ParsedRow, allRows: ParsedRow[]): ObjetCandidat[] {
+  const subTree = descendantsOf(section, allRows);
+
+  // Détection de la profondeur réelle :
+  //  - Profondeur 3 (Progbat moderne) : Section N → Objets N.M → Postes N.M.K
+  //  - Profondeur 2 (historique simple) : Section N → Postes N.M directement
+  //    → on crée un objet IMPLICITE portant le libellé de la Section.
+  const hasNiveau3 = subTree.some((r) => r.niveau >= 3);
+
+  const objets: ObjetCandidat[] = [];
+
+  if (hasNiveau3) {
+    // Cas 3 niveaux : objets = N.M qui ont au moins un enfant atelier/matière
+    const niveau2 = subTree.filter((r) => r.niveau === 2 && !r.isExclude && !r.isComment);
+    for (const obj of niveau2) {
+      if ((obj.isMontage || obj.isDemontage) && !obj.metier) continue;
+      if (!obj.designation) continue;
+
+      const directChildren = descendantsOf(obj, allRows);
+      const hasAnyAtelier = directChildren.some(
+        (c) => !c.isExclude && !c.isComment && (c.metier || c.isMatiere),
+      );
+      const isLeafAtelier =
+        directChildren.length === 0 && !!obj.metier && (obj.tempsPrevu ?? 0) > 0;
+      const isLeafMatiere = directChildren.length === 0 && obj.isMatiere;
+
+      if (hasAnyAtelier || isLeafAtelier || isLeafMatiere) {
+        objets.push(aggregateObjet(obj, allRows));
+      }
+    }
+  }
+
+  // Cas 2 niveaux OU 3 niveaux sans aucun objet détecté → objet implicite Section.
+  if (objets.length === 0) {
+    const hasAtelierAnywhere = subTree.some(
+      (c) => !c.isExclude && !c.isComment && c.metier && (c.tempsPrevu ?? 0) > 0,
+    );
+    const hasMatiere = subTree.some((c) => !c.isExclude && c.isMatiere);
+    if (hasAtelierAnywhere || hasMatiere) {
+      objets.push(aggregateObjet(section, allRows));
+    }
+  }
+
+  return objets;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Cross-check intégrité Section vs Σ(objets après × qté)                     */
+/* -------------------------------------------------------------------------- */
+
+function buildIntegrityCheck(
+  section: ParsedRow,
+  objets: ObjetCandidat[],
+): IntegrityCheck | null {
+  const heuresDeclarees = section.tempsPrevu ?? 0;
+  // Si la section ne déclare rien et qu'on n'a aucun objet → pas de check
+  if (heuresDeclarees === 0 && objets.length === 0) return null;
+
+  const heuresCalculees = +objets.reduce((acc, o) => acc + o.totalHeures, 0).toFixed(2);
+  const ecart = +(heuresCalculees - heuresDeclarees).toFixed(2);
+  const abs = Math.abs(ecart);
+  let severite: IntegrityCheck["severite"] = "ok";
+  if (heuresDeclarees > 0) {
+    const ratio = abs / heuresDeclarees;
+    if (abs > 0.5 && ratio > 0.05) severite = "error";
+    else if (abs > 0.5) severite = "warning";
+  } else if (heuresCalculees > 0) {
+    // Section sans heures déclarées mais on a calculé : info, pas d'alerte
+    severite = "ok";
+  }
+
+  return {
+    sectionNumero: section.hierarchique || section.numero,
+    sectionNom: section.designation,
+    heuresDeclarees: +heuresDeclarees.toFixed(2),
+    heuresCalculees,
+    ecart,
+    severite,
   };
 }
 
@@ -414,11 +530,26 @@ export function parseDevisProgbatFromMatrix(
   const heuresChantier = computeHeuresChantier(parsed);
   const renvoisExternes = findRenvois(parsed);
   const warnings: string[] = [];
+  const integrityChecks: IntegrityCheck[] = [];
 
   let objetsCandidats: ObjetCandidat[] = [];
   if (devisType !== "chantier_seul" && devisType !== "inconnu") {
-    const parents = findObjetParents(parsed);
-    objetsCandidats = parents.map((p) => aggregateObjet(p, parsed));
+    const sections = findSections(parsed);
+    for (const sec of sections) {
+      const objets = buildObjetsForSection(sec, parsed);
+      objetsCandidats.push(...objets);
+      const check = buildIntegrityCheck(sec, objets);
+      if (check) {
+        integrityChecks.push(check);
+        if (check.severite === "error") {
+          warnings.push(
+            `⚠ Section ${check.sectionNumero} « ${check.sectionNom.slice(0, 40)} » : ` +
+              `écart ${check.ecart > 0 ? "+" : ""}${check.ecart}h ` +
+              `(déclaré ${check.heuresDeclarees}h, calculé ${check.heuresCalculees}h)`,
+          );
+        }
+      }
+    }
     if (objetsCandidats.length === 0) {
       warnings.push("Aucun objet détecté malgré un type devis avec atelier — vérifier la hiérarchie.");
     }
@@ -434,6 +565,7 @@ export function parseDevisProgbatFromMatrix(
     objetsCandidats,
     heuresChantier,
     renvoisExternes,
+    integrityChecks,
     warnings,
     errors: [],
   };
@@ -446,6 +578,7 @@ function emptyResult(errors: string[]): ParseResult {
     objetsCandidats: [],
     heuresChantier: { montage: 0, demontage: 0, totalHt: 0 },
     renvoisExternes: [],
+    integrityChecks: [],
     warnings: [],
     errors,
   };

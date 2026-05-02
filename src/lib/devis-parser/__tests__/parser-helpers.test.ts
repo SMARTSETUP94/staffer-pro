@@ -57,7 +57,8 @@ describe("matchMetier — 30+ libellés réels", () => {
     ["Ferronnerie d'art", "metal"],
     // Peinture
     ["Peinture", "peinture"],
-    ["m² peinture finition mate", "peinture"],
+    // m² peinture est désormais MATERIEL (v0.31.4 spec Gabin) → null
+    ["m² peinture finition mate", null],
     ["Vernis", "peinture"],
     ["Laque polyuréthane", "peinture"],
     // Tapisserie / Tissu
@@ -132,8 +133,7 @@ describe("isChantierKeyword / Montage / Démontage", () => {
 });
 
 describe("isExcludeKeyword", () => {
-  it("exclut régul, leurre, sous-totaux, renvois, achats", () => {
-    expect(isExcludeKeyword("Régul de cadrage")).toBe(true);
+  it("exclut leurre, sous-totaux, renvois, achats (régul traité à part)", () => {
     expect(isExcludeKeyword("Leurre")).toBe(true);
     expect(isExcludeKeyword("Sous-total HT")).toBe(true);
     expect(isExcludeKeyword("Voir devis 1586")).toBe(true);
@@ -143,6 +143,9 @@ describe("isExcludeKeyword", () => {
   });
   it("ne matche pas un objet normal", () => {
     expect(isExcludeKeyword("Bar 1")).toBe(false);
+  });
+  it("ne matche PAS régul (régul est traité séparément v0.31.4)", () => {
+    expect(isExcludeKeyword("Régul de cadrage")).toBe(false);
   });
 });
 
