@@ -46,6 +46,7 @@ interface Group {
   notes: string[];
   confStatus: ConfStatus;
   hasSwap: boolean;
+  hasAutoStaffing: boolean;
 }
 
 export interface DragGroupPayload {
@@ -123,6 +124,9 @@ export function AssignationCell({
         else confStatus = "non_requise";
       }
       const hasSwap = swapAssignationIds ? items.some((i) => swapAssignationIds.has(i.id)) : false;
+      const hasAutoStaffing = items.some(
+        (i) => Boolean(i.staffing_plan_id) || i.type_operation === "auto_staffing",
+      );
       result.push({
         key,
         affaire_id: items[0].affaire_id,
@@ -133,6 +137,7 @@ export function AssignationCell({
         notes,
         confStatus,
         hasSwap,
+        hasAutoStaffing,
       });
     });
     const order: Record<Slot, number> = { JOURNEE: 0, AM: 1, PM: 2 };
@@ -248,6 +253,15 @@ function DraggableBadge({ group: g, metier, affaire, dnd, onDelete }: DraggableB
               {affaire?.phase === "opportunite" && (
                 <span className="shrink-0 rounded bg-warning px-1 text-[8px] font-bold uppercase tracking-wider text-warning-foreground">
                   PROTO
+                </span>
+              )}
+              {/* v0.35.5 — Badge Auto-staffing */}
+              {g.hasAutoStaffing && (
+                <span
+                  className="shrink-0 rounded bg-primary/15 px-1 text-[8px] font-bold uppercase tracking-wider text-primary"
+                  title="Créneau issu d'un plan Auto-staffing v0.35"
+                >
+                  AS
                 </span>
               )}
             </span>
