@@ -36,6 +36,7 @@ import type {
   IntegrityCheck,
   ObjetCandidat,
   ParseResult,
+  PosteCandidat,
   RenvoiExterne,
 } from "./types";
 
@@ -236,11 +237,16 @@ function extractDescription(objet: ParsedRow, allRows: ParsedRow[]): string | nu
 /* Agrégation d'un objet (N.M) à partir de ses postes enfants (N.M.K)         */
 /* -------------------------------------------------------------------------- */
 
-function aggregateObjet(parent: ParsedRow, allRows: ParsedRow[]): ObjetCandidat {
+function aggregateObjet(
+  parent: ParsedRow,
+  allRows: ParsedRow[],
+  section: ParsedRow,
+): ObjetCandidat {
   const heures = emptyHeures();
   let budgetMateriaux = 0;
   const warnings: string[] = [];
   const rowIndices: number[] = [];
+  const postes: PosteCandidat[] = [];
   let descendantCount = 0;
   let metierUnknownCount = 0;
 
@@ -255,6 +261,25 @@ function aggregateObjet(parent: ParsedRow, allRows: ParsedRow[]): ObjetCandidat 
     descendantCount++;
     rowIndices.push(c.rowIndex);
 
+    // v0.31.4b — Construire le PosteCandidat pour la modale UI (sauf comments/exclude)
+    const pushPoste = (autoMapped: boolean) => {
+      postes.push({
+        id: c.hierarchique || `row-${c.rowIndex}`,
+        numero: c.numero,
+        rowIndex: c.rowIndex,
+        designation: c.designation,
+        metierAuto: c.metier,
+        metier: c.metier,
+        heuresUnitaires: c.tempsPrevu ?? 0,
+        quantite: c.quantite,
+        totalHt: c.totalHt,
+        isMatiere: c.isMatiere,
+        isMatiereOverride: null,
+        isRegul: c.isRegul,
+        autoMapped,
+      });
+    };
+
     // Régul : 0 h mais Total HT préservé. Flag warning si Temps > 0.
     if (c.isRegul) {
       if (c.totalHt && c.totalHt > 0) budgetMateriaux += c.totalHt;
@@ -263,6 +288,7 @@ function aggregateObjet(parent: ParsedRow, allRows: ParsedRow[]): ObjetCandidat 
           `Régul ligne ${c.rowIndex} avec ${c.tempsPrevu}h — à valider manuellement.`,
         );
       }
+      pushPoste(false);
       continue;
     }
 
@@ -276,22 +302,32 @@ function aggregateObjet(parent: ParsedRow, allRows: ParsedRow[]): ObjetCandidat 
           `Matière sans montant ligne ${c.rowIndex} : « ${c.designation.slice(0, 40)} »`,
         );
       }
+      pushPoste(true);
       continue;
     }
 
     // Lots chantier dans un objet : ignorés (vont dans heuresChantier global)
-    if ((c.isMontage || c.isDemontage) && !c.metier) continue;
+    if ((c.isMontage || c.isDemontage) && !c.metier) {
+      pushPoste(false);
+      continue;
+    }
 
     if (c.metier && (c.tempsPrevu ?? 0) > 0) {
       if (isLineDisabled({ quantite: c.quantite, heures: c.tempsPrevu, totalHt: c.totalHt })) {
+        pushPoste(false);
         continue;
       }
       heures[c.metier] += c.tempsPrevu ?? 0;
+      pushPoste(true);
     } else if (!c.metier && (c.tempsPrevu ?? 0) > 0) {
       metierUnknownCount++;
       warnings.push(
         `Métier non détecté ligne ${c.rowIndex} (${c.tempsPrevu}h) : « ${c.designation.slice(0, 50)} »`,
       );
+      pushPoste(false);
+    } else {
+      // Poste sans heures et sans matière (rare) → exposé à mapper manuellement
+      pushPoste(false);
     }
   }
 
@@ -314,6 +350,8 @@ function aggregateObjet(parent: ParsedRow, allRows: ParsedRow[]): ObjetCandidat 
 
   return {
     numero: parent.hierarchique || parent.numero,
+    sectionNumero: section.hierarchique || section.numero,
+    sectionNom: section.designation,
     nom: parent.designation,
     description: extractDescription(parent, allRows),
     quantite,
@@ -325,6 +363,7 @@ function aggregateObjet(parent: ParsedRow, allRows: ParsedRow[]): ObjetCandidat 
     confidence,
     warnings,
     rowIndices,
+    postes,
   };
 }
 
