@@ -736,12 +736,13 @@ export function parseDevisProgbatFromMatrix(
   const renvoisExternes = findRenvois(parsed);
   const warnings: string[] = [];
   const integrityChecks: IntegrityCheck[] = [];
+  const exclusions: ExclusionEntry[] = [];
 
   let objetsCandidats: ObjetCandidat[] = [];
   if (devisType !== "chantier_seul" && devisType !== "inconnu") {
-    const sections = findSections(parsed);
+    const sections = findSections(parsed, exclusions);
     for (const sec of sections) {
-      const objets = buildObjetsForSection(sec, parsed);
+      const objets = buildObjetsForSection(sec, parsed, exclusions);
       objetsCandidats.push(...objets);
       const check = buildIntegrityCheck(sec, objets);
       if (check) {
@@ -771,6 +772,7 @@ export function parseDevisProgbatFromMatrix(
     heuresChantier,
     renvoisExternes,
     integrityChecks,
+    exclusions,
     warnings,
     errors: [],
   };
@@ -784,6 +786,7 @@ function emptyResult(errors: string[]): ParseResult {
     heuresChantier: { montage: 0, demontage: 0, totalHt: 0 },
     renvoisExternes: [],
     integrityChecks: [],
+    exclusions: [],
     warnings: [],
     errors,
   };
