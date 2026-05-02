@@ -319,6 +319,24 @@ export const GanttInteractif = forwardRef<
       {/* Alertes (officielles + pré-vol) */}
       <AlerteBandeau alerts={allAlerts} />
 
+      {hasCncConflict && (
+        <div className="flex justify-end">
+          <Button size="sm" variant="outline" onClick={() => setResolveOpen(true)}>
+            <Wand2 className="mr-1.5 h-3.5 w-3.5" /> Résoudre auto (décaler livraison)
+          </Button>
+        </div>
+      )}
+
+      <ResolveCncConflictDialog
+        open={resolveOpen}
+        onOpenChange={setResolveOpen}
+        planId={planId}
+        onApplyNewDateFinFab={async (newDate) => {
+          await updateDateFin({ data: { planId, date_fin_fab: newDate } });
+          await reload();
+        }}
+      />
+
       {/* Gantt */}
       <div className="overflow-x-auto rounded-2xl border border-border bg-card">
         <div className="min-w-[900px]">
