@@ -57,7 +57,8 @@ describe("matchMetier — 30+ libellés réels", () => {
     ["Ferronnerie d'art", "metal"],
     // Peinture
     ["Peinture", "peinture"],
-    ["m² peinture finition mate", "peinture"],
+    // m² peinture est désormais MATERIEL (v0.31.4 spec Gabin) → null
+    ["m² peinture finition mate", null],
     ["Vernis", "peinture"],
     ["Laque polyuréthane", "peinture"],
     // Tapisserie / Tissu
