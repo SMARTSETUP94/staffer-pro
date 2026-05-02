@@ -192,6 +192,7 @@ export const DEMONTAGE_REGEX: RegExp[] = [
   /d[ée]montage[ _-]+heures?/i,
   /\bd[ée]montage\b/i,
   /\bd[ée]pose\b/i,
+  /d[ée]montage[ _-]?pecqueuse/i,
 ];
 
 export const CHANTIER_REGEX: RegExp[] = [
