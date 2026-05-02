@@ -313,22 +313,29 @@ export function StaffingPlanWizard({
               <ul className="divide-y divide-border">
                 {visibleObjets.map((o) => {
                   const isOn = included.has(o.id);
+                  const collision = o.dans_plan_actif;
+                  const locked = collision?.status === "published";
                   return (
                     <li
                       key={o.id}
                       className={cn(
                         "flex items-center gap-3 px-3 py-2 text-sm",
                         !isOn && "opacity-60",
+                        locked && "bg-muted/40",
                       )}
                     >
                       <Checkbox
                         checked={isOn}
-                        onCheckedChange={() => toggle(o.id)}
+                        disabled={locked}
+                        onCheckedChange={() => toggle(o)}
                         id={`obj-${o.id}`}
                       />
                       <label
                         htmlFor={`obj-${o.id}`}
-                        className="flex flex-1 cursor-pointer items-center gap-2 min-w-0"
+                        className={cn(
+                          "flex flex-1 items-center gap-2 min-w-0",
+                          locked ? "cursor-not-allowed" : "cursor-pointer",
+                        )}
                       >
                         <span className="font-mono text-xs text-primary">{o.reference}</span>
                         <span className="truncate text-foreground">{o.nom}</span>
@@ -336,6 +343,29 @@ export function StaffingPlanWizard({
                           <Badge variant="outline" className="h-5 text-[10px]">
                             ×{o.quantite}
                           </Badge>
+                        )}
+                        {collision && (
+                          <Link
+                            to="/staffing/$planId"
+                            params={{ planId: collision.plan_id }}
+                            onClick={(e) => e.stopPropagation()}
+                            title={`Voir le plan ${collision.status === "published" ? "publié" : "brouillon"}`}
+                          >
+                            <Badge
+                              variant={collision.status === "published" ? "default" : "secondary"}
+                              className={cn(
+                                "h-5 gap-1 text-[10px]",
+                                collision.status === "published"
+                                  ? "bg-emerald-600 text-white hover:bg-emerald-700"
+                                  : "",
+                              )}
+                            >
+                              {collision.status === "published" ? "Publié" : "Brouillon"}
+                              {!collision.same_affaire && collision.affaire_numero
+                                ? ` · ${collision.affaire_numero}`
+                                : ""}
+                            </Badge>
+                          </Link>
                         )}
                       </label>
                       <span className="hidden sm:inline text-xs text-muted-foreground">
