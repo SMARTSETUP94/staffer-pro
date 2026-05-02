@@ -2,7 +2,7 @@
 // v0.35.x — Pré-vol risque (toast + slider warning + badge inline) avant commit.
 // v0.35.x BATCH — sliders + shifts écrivent dans useEditStore (pas de round-trip serveur).
 //                 Reorder objet reste save-immédiat (rare, pas de cumul).
-import { useEffect, useMemo, useState, useCallback, useImperativeHandle, forwardRef } from "react";
+import { useEffect, useMemo, useState, useCallback, useImperativeHandle, useRef, forwardRef } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
