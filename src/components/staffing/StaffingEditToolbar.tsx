@@ -200,7 +200,7 @@ export function StaffingEditToolbar({
           size="sm"
           onClick={() => void doFlush()}
           disabled={dirtyCount === 0 || flushing}
-          title="Enregistrer (Ctrl+S)"
+          title="Enregistrer maintenant (raccourci Ctrl+S / ⌘+S)"
         >
           {flushing ? (
             <Loader2 className="mr-1 h-3 w-3 animate-spin" />
@@ -208,6 +208,9 @@ export function StaffingEditToolbar({
             <Save className="mr-1 h-3 w-3" />
           )}
           Enregistrer{dirtyCount > 0 ? ` (${dirtyCount})` : ""}
+          <kbd className="ml-2 hidden sm:inline-flex h-4 items-center rounded border border-white/40 bg-white/10 px-1 text-[9px] font-mono opacity-80">
+            ⌘S
+          </kbd>
         </Button>
       </div>
 
