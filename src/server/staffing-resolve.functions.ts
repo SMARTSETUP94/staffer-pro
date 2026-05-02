@@ -143,3 +143,27 @@ export const resolveCncConflict = createServerFn({ method: "POST" })
       date_fin_fab_initial: baseFin,
     };
   });
+
+/* ------------------------------------------------------------------ */
+/* PATCH staffing_plan.date_fin_fab — réservé admin/chef côté RLS      */
+/* ------------------------------------------------------------------ */
+export const updatePlanDateFinFab = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { planId: string; date_fin_fab: string }) =>
+    z
+      .object({
+        planId: z.string().uuid(),
+        date_fin_fab: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+    const { error } = await supabase
+      .from("staffing_plan")
+      .update({ date_fin_fab: data.date_fin_fab })
+      .eq("id", data.planId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
