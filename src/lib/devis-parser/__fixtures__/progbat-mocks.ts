@@ -403,13 +403,14 @@ export const FIXTURE_D2141BIS: FixtureMatrix = [
   ["2.1", "Tabouret bar", 8, "u", null, null, null],
   ["2.1.1", "Métallerie heures", 1, "h", 50, 4000, 10],
   ["2.1.2", "Tissu nb d'heures", 1, "h", 45, 2160, 5.905],
-  // Section 3 : 287.52h sur 1 objet
+  // Section 3 : 287.52h sur 1 objet qte=4 → (25+30+11.88+5)*4 = 287.52
   ["3", "DECOR MURAL", null, "", null, null, 287.52],
   ["3.1", "Panneau décor LED", 4, "u", null, null, null],
   ["3.1.1", "Numérique nb d'heures", 1, "h", 60, 6000, 25],
   ["3.1.2", "Construction heures", 1, "h", 50, 4000, 30],
   ["3.1.3", "Peinture nombre d'heures", 1, "h", 50, 1880, 11.88],
-  ["3.1.4", "LED + PMMA", 1, "ff", 1500, 6000, null],
+  ["3.1.4", "Logistique interne", 1, "h", 35, 700, 5],
+  ["3.1.5", "LED + PMMA", 1, "ff", 1500, 6000, null],
   // Section 4 : 16h
   ["4", "PREMONTAGE", null, "", null, null, 16],
   ["4.1", "Prémontage atelier", 1, "u", null, null, null],
