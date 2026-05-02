@@ -362,6 +362,9 @@ export const GanttInteractif = forwardRef<
         }}
       />
 
+      {/* Bulk pers par métier (P1 #6) */}
+      <BulkPersByMetierBar steps={mergedSteps} />
+
       {/* Gantt */}
       <div className="overflow-x-auto rounded-2xl border border-border bg-card">
         <div className="min-w-[900px]">
