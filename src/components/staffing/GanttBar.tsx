@@ -39,7 +39,11 @@ export function GanttBar({
   disableShift,
 }: Props) {
   const metierKey = METIER_KEY_BY_ID[step.metier_id] ?? "Manut";
-  const bg = isOverDeadline ? "#dc2626" : METIER_COLOR[metierKey];
+  // v0.38.5 — Barres uniformes neutres (gris). Identification métier via pastille en début de ligne.
+  // Garde rouge si dépassement deadline (signal critique).
+  const bg = isOverDeadline ? "#dc2626" : undefined;
+  const neutralClass = isOverDeadline ? "" : "bg-muted/70 border border-border/60";
+  const textClass = isOverDeadline ? "text-white" : "text-foreground";
   // v0.37 — Manut splittée en 3 phases : badge visible à droite du libellé.
   const phaseLabel =
     metierKey === "Manut" && step.phase
