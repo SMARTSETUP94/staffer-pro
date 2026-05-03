@@ -40,6 +40,15 @@ export function GanttBar({
 }: Props) {
   const metierKey = METIER_KEY_BY_ID[step.metier_id] ?? "Manut";
   const bg = isOverDeadline ? "#dc2626" : METIER_COLOR[metierKey];
+  // v0.37 — Manut splittée en 3 phases : badge visible à droite du libellé.
+  const phaseLabel =
+    metierKey === "Manut" && step.phase
+      ? step.phase === "DEBUT"
+        ? "DÉB"
+        : step.phase === "TRANSFERT"
+          ? "TRF"
+          : "FIN"
+      : null;
 
   // Drag state — pixels translation pendant drag, snap commit au mouseup
   const [dragDeltaPx, setDragDeltaPx] = useState(0);
