@@ -344,7 +344,7 @@ function ListView({
     return steps.map((step) => {
       const days: Array<{ date: string; key: string }> = [];
       const start = new Date(step.start_date + "T00:00:00Z");
-      for (let i = 0; i < step.span_days; i++) {
+      for (let i = 0; i < effectiveSpanDays(step); i++) {
         const d = new Date(start);
         d.setUTCDate(d.getUTCDate() + i);
         const dow = d.getUTCDay();
