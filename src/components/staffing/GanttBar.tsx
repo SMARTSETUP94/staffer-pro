@@ -131,8 +131,16 @@ export function GanttBar({
   const shiftLabel = manualShift !== 0 ? `${manualShift > 0 ? "+" : ""}${manualShift}j` : null;
   const previewLabel =
     dragging && previewDays !== 0 ? `${previewDays > 0 ? "+" : ""}${previewDays}j` : null;
+  const spanLabel = (() => {
+    const demi = step.span_demi_jours ?? step.span_days * 2;
+    if (demi === 1) return "½j";
+    if (demi % 2 === 0) return `${demi / 2}j`;
+    return `${Math.floor(demi / 2)}½j`;
+  })();
+  const compactLabel = `${step.pers}p × ${spanLabel}`;
   const tooltip =
-    `${metierKey} · ${step.pers}p × ${step.span_days}j × ${step.h_par_jour}h` +
+    `${metierKey} · ${compactLabel} × ${step.h_par_jour}h` +
+    (phaseLabel ? ` · ${phaseLabel}` : "") +
     (shiftLabel ? ` (décalé ${shiftLabel})` : "") +
     (canDrag ? " — glisser pour décaler, chevrons ±1j" : "") +
     (hasWarning ? " — risque détecté" : "") +
