@@ -382,19 +382,14 @@ export const GanttInteractif = forwardRef<
       {/* Bulk pers par métier (P1 #6) */}
       <BulkPersByMetierBar steps={mergedSteps} />
 
-      {/* Heatmap métier — v0.36 : toggle cible vs réel si configs fournies, sinon réel seul */}
-      <div>
-        {preParamConfigs && preParamConfigs.length > 0 ? (
-          <HeatmapCibleVsReel steps={mergedSteps} days={days} configs={preParamConfigs} />
-        ) : (
-          <>
-            <h3 className="mb-2 text-sm font-bold uppercase tracking-wider text-muted-foreground">
-              Charge par métier
-            </h3>
-            <HeatmapMetier steps={mergedSteps} days={days} />
-          </>
-        )}
-      </div>
+      {/* v0.38.2 — Section Charge par métier collapsible + drilldown objet */}
+      <ChargeMetierSection
+        planId={planId}
+        steps={mergedSteps}
+        days={days}
+        objets={data.objets.map((o) => ({ objet_id: o.objet_id, reference: o.reference, nom: o.nom }))}
+        preParamConfigs={preParamConfigs}
+      />
 
       {/* Gantt */}
       <div className="overflow-x-auto rounded-2xl border border-border bg-card">
