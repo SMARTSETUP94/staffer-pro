@@ -441,7 +441,9 @@ export const GanttInteractif = forwardRef<
                   </div>
                 </div>
                 {globalSteps.map((s) => {
-                  const span = stepSpanInWindow(days, s.start_date, s.span_days);
+                  const demi = s.span_demi_jours ?? s.span_days * 2;
+                  const halfStart = s.start_half_day ?? "AM";
+                  const span = stepSpanInHalves(days, s.start_date, demi, halfStart);
                   const stepEnd = new Date(s.start_date + "T00:00:00Z");
                   stepEnd.setUTCDate(stepEnd.getUTCDate() + s.span_days - 1);
                   const overDL = stepEnd.toISOString().slice(0, 10) > dateLivraison;
@@ -570,7 +572,9 @@ export const GanttInteractif = forwardRef<
 
                 {/* Steps de l'objet */}
                 {objSteps.map((s) => {
-                  const span = stepSpanInWindow(days, s.start_date, s.span_days);
+                  const demi = s.span_demi_jours ?? s.span_days * 2;
+                  const halfStart = s.start_half_day ?? "AM";
+                  const span = stepSpanInHalves(days, s.start_date, demi, halfStart);
                   const stepEnd = new Date(s.start_date + "T00:00:00Z");
                   stepEnd.setUTCDate(stepEnd.getUTCDate() + s.span_days - 1);
                   const overDL = stepEnd.toISOString().slice(0, 10) > dateLivraison;
