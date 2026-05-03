@@ -153,11 +153,59 @@ export const calculateStaffingPlan = createServerFn({ method: "POST" })
       include_weekends: (plan as { include_weekends?: boolean }).include_weekends === true,
     });
 
-    /* 6.b v0.36 — Lissage post-traitement (chantier_metier_config) */
-    const { data: cmcRows } = await supabase
+    /* 6.b v0.36 — Lissage post-traitement (chantier_metier_config)
+       AUTO-CRÉATION : si aucune config en DB, on les génère depuis les totaux
+       du plan + plan.date_fin_fab comme deadline (bypass UI / date_fin_prevue NULL). */
+    let { data: cmcRows } = await supabase
       .from("chantier_metier_config")
       .select("metier_id, total_h_calc, nb_pers_cible, duree_cible_j, capa_max_jour, lissage_active, be_override, override_reason")
       .eq("affaire_id", plan.affaire_id);
+
+    if (!cmcRows || cmcRows.length === 0) {
+      // Totaux par métier depuis les objets actifs du plan
+      const totalsByMetier: Record<string, number> = {
+        BE: 0, Num: 0, Bois: 0, Peint: 0, Tap: 0, Manut: 0,
+      };
+      for (const f of fabObjets) {
+        totalsByMetier.BE += Number(f.heures_prevues_be ?? 0);
+        totalsByMetier.Num += Number(f.heures_prevues_numerique ?? 0);
+        totalsByMetier.Bois += Number(f.heures_prevues_bois ?? 0);
+        totalsByMetier.Peint += Number(f.heures_prevues_peinture ?? 0);
+        totalsByMetier.Tap += Number(f.heures_prevues_tapisserie ?? 0);
+        totalsByMetier.Manut += Number(f.heures_prevues_manutention ?? 0);
+      }
+      const today = new Date().toISOString().slice(0, 10);
+      const sugg = autoSuggestMetierConfig(
+        totalsByMetier as Record<MetierConfigKey, number>,
+        today,
+        plan.date_fin_fab,
+      );
+      const KEY_TO_ID_LOCAL: Record<MetierConfigKey, number> = {
+        BE: 8, Num: 4, Bois: 1, Peint: 3, Tap: 5, Manut: 7,
+      };
+      const seedRows = sugg.configs.map((c) => ({
+        affaire_id: plan.affaire_id,
+        metier_id: KEY_TO_ID_LOCAL[c.metier_code],
+        total_h_calc: c.total_h_calc,
+        nb_pers_cible: c.nb_pers_cible,
+        duree_cible_j: c.duree_cible_j,
+        capa_max_jour: c.capa_max_jour,
+        lissage_active: c.lissage_active,
+        be_override: false,
+        override_reason: null,
+      }));
+      if (seedRows.length > 0) {
+        await supabase
+          .from("chantier_metier_config")
+          .upsert(seedRows, { onConflict: "affaire_id,metier_id" });
+        const reread = await supabase
+          .from("chantier_metier_config")
+          .select("metier_id, total_h_calc, nb_pers_cible, duree_cible_j, capa_max_jour, lissage_active, be_override, override_reason")
+          .eq("affaire_id", plan.affaire_id);
+        cmcRows = reread.data;
+      }
+    }
+
     const lissageConfigs: MetierConfig[] = [];
     let beOverrideFlag = false;
     for (const r of (cmcRows ?? []) as Array<{
