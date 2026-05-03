@@ -91,9 +91,9 @@ function emptyTotals(): TotalHByMetier {
   return { BE: 0, Num: 0, Bois: 0, Peint: 0, Tap: 0, Manut: 0 };
 }
 
-/** Renvoie un nombre arrondi à la 1 décimale supérieure (ceil). */
-function ceil1(n: number): number {
-  return Math.ceil(n * 10) / 10;
+/** Renvoie un nombre arrondi à 2 décimales (arrondi standard). */
+function round2(n: number): number {
+  return Math.round(n * 100) / 100;
 }
 
 /* ============================================================ */
