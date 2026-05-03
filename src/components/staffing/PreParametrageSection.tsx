@@ -263,15 +263,15 @@ export function PreParametrageSection({ affaireId, deadline, onApplied }: Props)
       <header className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <h2 className="text-sm font-bold uppercase tracking-wider text-foreground">
-            Pré-paramétrage métier
+            Pré-paramétrage métier <span className="text-muted-foreground">(lecture seule)</span>
           </h2>
           <p className="text-xs text-muted-foreground">
-            Pipeline {pipelineDuration.toFixed(1)} j · fenêtre dispo {fenetreDispo} j ouvrés
+            Pipeline {pipelineDuration.toFixed(1)} j · fenêtre dispo {fenetreDispo} j ouvrés ·
+            <span className="ml-1 inline-flex items-center gap-1 rounded bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-foreground">
+              <Lock className="h-3 w-3" /> v0.37 — algo automatique
+            </span>
           </p>
         </div>
-        <Button size="sm" onClick={applySuggestions} disabled={busy}>
-          <Wand2 className="mr-1 h-3 w-3" /> Appliquer + recalculer
-        </Button>
       </header>
 
       {windowConflict && (
@@ -283,23 +283,12 @@ export function PreParametrageSection({ affaireId, deadline, onApplied }: Props)
           <div className="space-y-1">
             <p className="font-semibold">Fenêtre infaisable ({windowConflict.delta_days ?? "?"} j manquants)</p>
             <p>{windowConflict.message}</p>
-            {windowConflict.levers && (
-              <ul className="mt-1 list-inside list-disc space-y-0.5">
-                {windowConflict.levers.map((l, i) => (
-                  <li key={i}>
-                    {l.action === "BE_OVERRIDE" && `BE override (gain ~${l.gain_days?.toFixed(1)} j)`}
-                    {l.action === "INCREASE_RESOURCES" && `Renforcer ${l.metier ? METIER_LABEL[l.metier] : "?"}`}
-                    {l.action === "POSTPONE_DEADLINE" && `Repousser la livraison de ${l.delta_days} j`}
-                  </li>
-                ))}
-              </ul>
-            )}
           </div>
         </div>
       )}
 
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[760px] text-xs">
+        <table className="w-full min-w-[640px] text-xs">
           <thead className="border-b border-border bg-background/40 text-left">
             <tr>
               <th className="px-2 py-2">Métier</th>
@@ -307,16 +296,11 @@ export function PreParametrageSection({ affaireId, deadline, onApplied }: Props)
               <th className="px-2 py-2 text-right">Pers cible</th>
               <th className="px-2 py-2 text-right">Durée j</th>
               <th className="px-2 py-2 text-right">Capa max/j</th>
-              <th className="px-2 py-2 text-center">Lissage</th>
-              <th className="px-2 py-2">Statut</th>
-              <th className="px-2 py-2"></th>
             </tr>
           </thead>
           <tbody>
             {rows.map((r) => {
               const m = merged(r);
-              const isSugg = r.id.startsWith("__suggest_");
-              const dirty = Boolean(editing[r.metier_id]);
               return (
                 <tr
                   key={r.metier_id}
@@ -325,52 +309,12 @@ export function PreParametrageSection({ affaireId, deadline, onApplied }: Props)
                 >
                   <td className="px-2 py-1.5 font-semibold">{METIER_LABEL[m.metier_code]}</td>
                   <td className="px-2 py-1.5 text-right font-mono">{m.total_h_calc.toFixed(0)}</td>
-                  <td className="px-2 py-1.5 text-right">
-                    <Input
-                      type="number"
-                      min={1}
-                      value={m.nb_pers_cible}
-                      onChange={(e) => patch(r.metier_id, { nb_pers_cible: Number(e.target.value) })}
-                      className="h-7 w-16 text-right text-xs"
-                      data-testid={`pre-param-pers-${m.metier_code}`}
-                    />
+                  <td className="px-2 py-1.5 text-right font-mono" data-testid={`pre-param-pers-${m.metier_code}`}>
+                    {m.nb_pers_cible}
                   </td>
                   <td className="px-2 py-1.5 text-right font-mono">{m.duree_cible_j.toFixed(1)}</td>
-                  <td className="px-2 py-1.5 text-right">
-                    <Input
-                      type="number"
-                      min={1}
-                      value={m.capa_max_jour}
-                      onChange={(e) => patch(r.metier_id, { capa_max_jour: Number(e.target.value) })}
-                      className="h-7 w-16 text-right text-xs"
-                      data-testid={`pre-param-cap-${m.metier_code}`}
-                    />
-                  </td>
-                  <td className="px-2 py-1.5 text-center">
-                    <Switch
-                      checked={m.lissage_active}
-                      onCheckedChange={(v) => patch(r.metier_id, { lissage_active: v })}
-                      data-testid={`pre-param-lissage-${m.metier_code}`}
-                    />
-                  </td>
-                  <td className="px-2 py-1.5">
-                    {isSugg ? (
-                      <Badge variant="outline" className="text-[10px]">Suggéré</Badge>
-                    ) : (
-                      <Badge variant="secondary" className="text-[10px]">Sauvegardé</Badge>
-                    )}
-                    {dirty && <Badge variant="default" className="ml-1 text-[10px]">Modifié</Badge>}
-                  </td>
-                  <td className="px-2 py-1.5 text-right">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      disabled={busy || (!dirty && !isSugg)}
-                      onClick={() => saveRow(r)}
-                      data-testid={`pre-param-save-${m.metier_code}`}
-                    >
-                      <Save className="h-3 w-3" />
-                    </Button>
+                  <td className="px-2 py-1.5 text-right font-mono" data-testid={`pre-param-cap-${m.metier_code}`}>
+                    {m.capa_max_jour}
                   </td>
                 </tr>
               );
@@ -378,17 +322,10 @@ export function PreParametrageSection({ affaireId, deadline, onApplied }: Props)
           </tbody>
         </table>
       </div>
-
-      {/* Override BE — seul cas où on autorise 2 BE en parallèle */}
-      {rows.some((r) => r.metier_code === "BE") && (
-        <BeOverridePanel
-          row={rows.find((r) => r.metier_code === "BE")!}
-          editing={editing}
-          patch={patch}
-          onSave={(r) => saveRow(r)}
-          busy={busy}
-        />
-      )}
+      <p className="text-[11px] text-muted-foreground">
+        Les valeurs sont déduites automatiquement par l'algo v0.37 (pipeline par objet, splits Manut 35/15/50,
+        binômes obligatoires Bois/Peint/Tap/Manut). Plus de réglage manuel nécessaire.
+      </p>
     </section>
   );
 }
