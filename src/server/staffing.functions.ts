@@ -10,6 +10,7 @@ import type { ObjetInput, PlanResult } from "@/lib/staffing/types";
 import { applyLissage } from "@/lib/staffing/lissage";
 import {
   computeMetierWindows,
+  autoSuggestMetierConfig,
   type MetierConfig,
   type MetierConfigKey,
   type Conflict,
