@@ -230,12 +230,28 @@ export function StaffingPersonnesSection({ planId, steps, onAssignmentsChanged, 
   const totalSteps = steps.filter((s) => s.start_date !== "TBD").length;
   const fullCount = steps.filter((s) => s.start_date !== "TBD" && coverByStep[s.id]?.isFull).length;
 
+  const restaff = useServerFn(autoStaffPlan);
+  const [restaffing, setRestaffing] = useState(false);
+  const handleRestaff = useCallback(async () => {
+    setRestaffing(true);
+    try {
+      const r = await restaff({ data: { planId } });
+      toast.success(`Re-staffing nominatif terminé : ${r.assigned}/${r.attempted} étapes`);
+      await reload();
+      onAssignmentsChanged?.();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erreur re-staffing");
+    } finally {
+      setRestaffing(false);
+    }
+  }, [restaff, planId, reload, onAssignmentsChanged]);
+
   return (
     <div className="space-y-3 rounded-2xl border border-border bg-card p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
-            Staffing personnes (tier-based)
+            Staffing personnes (tier-based){readOnly && <span className="ml-2 text-[10px] font-normal italic text-muted-foreground">— lecture seule, dérivé des Vues 1 & 2</span>}
           </h3>
           <p className="mt-0.5 text-xs text-muted-foreground">
             {assignments.length} affectation{assignments.length > 1 ? "s" : ""} · {visibleSteps.length}/
@@ -246,6 +262,19 @@ export function StaffingPersonnesSection({ planId, steps, onAssignmentsChanged, 
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          {readOnly && (
+            <Button
+              onClick={handleRestaff}
+              disabled={restaffing}
+              variant="default"
+              size="sm"
+              data-testid="restaff-nominatif"
+              title="Re-lancer la suggestion nominative tier-based sur toutes les étapes"
+            >
+              {restaffing ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Wand2 className="mr-1 h-3 w-3" />}
+              Re-staffer nominatif
+            </Button>
+          )}
           <Button
             onClick={() => setHideFull((v) => !v)}
             variant={hideFull ? "secondary" : "ghost"}
