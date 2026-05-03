@@ -1,0 +1,2 @@
+ALTER TABLE public.staffing_plan_step ADD COLUMN IF NOT EXISTS phase TEXT NULL CHECK (phase IS NULL OR phase IN ('DEBUT','TRANSFERT','FIN'));
+COMMENT ON COLUMN public.staffing_plan_step.phase IS 'v0.37: Phase Manutention (DEBUT/TRANSFERT/FIN). NULL pour métiers ≠ Manut.';
