@@ -42,6 +42,15 @@ export const calculateStaffingPlan = createServerFn({ method: "POST" })
     result: PlanResult;
     cnc_reserved_dates: string[];
     step_overrides: Record<string, { manual_shift: number; manual_pers: boolean }>;
+    lissage: {
+      applied: boolean;
+      configs_count: number;
+      be_override: boolean;
+      diagnostics: {
+        pic_global_depasse: Array<{ date: string; load: number; seuil: number }>;
+        window_infeasible: Conflict[];
+      };
+    };
   }> => {
     const { supabase } = context;
     const { planId } = data;
