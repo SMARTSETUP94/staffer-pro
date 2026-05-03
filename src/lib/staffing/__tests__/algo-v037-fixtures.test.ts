@@ -106,6 +106,34 @@ describe("v0.37 fixture HERMES D-202604-2141", () => {
     }
     for (const [, count] of numByDay) expect(count).toBeLessThanOrEqual(1);
   });
+
+  it("v0.37.1 — dates BE exactes : I2=04/05, I1=05-06/05, D1=07+11+12/05", () => {
+    const be = Object.fromEntries(
+      r.steps.filter((s) => s.metier === "BE").map((s) => [s.objet_id, s]),
+    );
+    expect(be.I2.start_date).toBe("2026-05-04");
+    expect(be.I2.span_days).toBe(1);
+    expect(be.I1.start_date).toBe("2026-05-05");
+    expect(be.I1.span_days).toBe(2);
+    expect(be.D1.start_date).toBe("2026-05-07");
+    expect(be.D1.span_days).toBe(3); // 07/05 + 11 + 12 (08 férié, 09-10 WE)
+  });
+
+  it("v0.37.1 — Manut FIN sur 28-29/05 (2 derniers jours ouvrés avant 29/05 livraison)", () => {
+    const fin = r.steps.find((s) => s.metier === "Manut" && s.phase === "FIN")!;
+    expect(fin.start_date).toBe("2026-05-28");
+    expect(fin.span_days).toBe(2);
+  });
+
+  it("v0.37.1 — Peint I2 étalé 2p (prefer_min_pers, fenêtre large)", () => {
+    const peint = r.steps.find((s) => s.metier === "Peint" && s.objet_id === "I2")!;
+    expect(peint.pers).toBe(2); // 123h / 14j ≈ 1.1 → binôme min 2
+  });
+
+  it("v0.37.1 — Peint D1 = 6p (fenêtre étroite force le cap)", () => {
+    const peint = r.steps.find((s) => s.metier === "Peint" && s.objet_id === "D1")!;
+    expect(peint.pers).toBe(6); // 169.7h / fenêtre étroite → cap atteint
+  });
 });
 
 /* -------------------- D-202604-2151 -------------------- */
