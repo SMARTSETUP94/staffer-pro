@@ -325,8 +325,8 @@ export const calculateStaffingPlan = createServerFn({ method: "POST" })
       cnc_reserved_dates: Array.from(cncReservedDates),
       step_overrides: stepOverrides,
       lissage: {
-        applied: lissageConfigs.length > 0,
-        configs_count: lissageConfigs.length,
+        applied: lissageConfigsCount > 0,
+        configs_count: lissageConfigsCount,
         be_override: beOverrideFlag,
         diagnostics: {
           pic_global_depasse: picDiagnostics,
