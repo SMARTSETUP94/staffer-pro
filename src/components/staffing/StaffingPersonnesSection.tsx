@@ -121,11 +121,11 @@ interface Props {
   /** Trigger pour réinvalider le Gantt parent après changement (heatmap) */
   onAssignmentsChanged?: () => void;
   objetsLabel: Record<string, string>;
-  /** v0.39.0 — par défaut LECTURE PURE. Édition désactivée, seul "Re-staffer nominatif" reste actif. */
+  /** v0.39.0 (corrigé) — assignations + presence_pct restent ÉDITABLES. pers/dates sont dérivés des Vues 1 & 2. */
   readOnly?: boolean;
 }
 
-export function StaffingPersonnesSection({ planId, steps, onAssignmentsChanged, objetsLabel, readOnly = true }: Props) {
+export function StaffingPersonnesSection({ planId, steps, onAssignmentsChanged, objetsLabel, readOnly = false }: Props) {
   const fetchAssignments = useServerFn(getPlanAssignments);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -262,19 +262,17 @@ export function StaffingPersonnesSection({ planId, steps, onAssignmentsChanged, 
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          {readOnly && (
-            <Button
-              onClick={handleRestaff}
-              disabled={restaffing}
-              variant="default"
-              size="sm"
-              data-testid="restaff-nominatif"
-              title="Re-lancer la suggestion nominative tier-based sur toutes les étapes"
-            >
-              {restaffing ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Wand2 className="mr-1 h-3 w-3" />}
-              Re-staffer nominatif
-            </Button>
-          )}
+          <Button
+            onClick={handleRestaff}
+            disabled={restaffing}
+            variant="default"
+            size="sm"
+            data-testid="restaff-nominatif"
+            title="Re-lancer la suggestion nominative tier-based sur toutes les étapes"
+          >
+            {restaffing ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Wand2 className="mr-1 h-3 w-3" />}
+            Re-staffer nominatif
+          </Button>
           <Button
             onClick={() => setHideFull((v) => !v)}
             variant={hideFull ? "secondary" : "ghost"}
