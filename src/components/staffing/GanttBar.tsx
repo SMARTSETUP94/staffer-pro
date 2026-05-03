@@ -39,7 +39,11 @@ export function GanttBar({
   disableShift,
 }: Props) {
   const metierKey = METIER_KEY_BY_ID[step.metier_id] ?? "Manut";
-  const bg = isOverDeadline ? "#dc2626" : METIER_COLOR[metierKey];
+  // v0.38.5 — Barres uniformes neutres (gris). Identification métier via pastille en début de ligne.
+  // Garde rouge si dépassement deadline (signal critique).
+  const bg = isOverDeadline ? "#dc2626" : undefined;
+  const neutralClass = isOverDeadline ? "" : "bg-muted/70 border border-border/60";
+  const textClass = isOverDeadline ? "text-white" : "text-foreground";
   // v0.37 — Manut splittée en 3 phases : badge visible à droite du libellé.
   const phaseLabel =
     metierKey === "Manut" && step.phase
@@ -153,7 +157,7 @@ export function GanttBar({
   return (
     <div
       ref={containerRef}
-      className={`group relative flex h-7 items-center rounded-md px-2 text-[11px] font-mono text-white shadow-sm ${ringClass} ${
+      className={`group relative flex h-7 items-center rounded-md px-2 text-[11px] font-mono ${textClass} ${neutralClass} shadow-sm ${ringClass} ${
         canDrag ? (dragging ? "cursor-grabbing" : "cursor-grab") : ""
       }`}
       style={{
@@ -174,7 +178,7 @@ export function GanttBar({
         <Button
           size="icon"
           variant="ghost"
-          className="h-5 w-5 shrink-0 text-white opacity-0 transition-opacity group-hover:opacity-100 hover:bg-white/20"
+          className="h-5 w-5 shrink-0 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-foreground/10"
           onClick={(e) => {
             e.stopPropagation();
             onShift(-1);
@@ -190,12 +194,12 @@ export function GanttBar({
       >
         {compactLabel}
         {phaseLabel && (
-          <span className="ml-1 rounded bg-white/30 px-1 text-[9px] font-bold tracking-wider">
+          <span className="ml-1 rounded bg-foreground/15 px-1 text-[9px] font-bold tracking-wider">
             {phaseLabel}
           </span>
         )}
         {shiftLabel && !dragging && (
-          <span className="ml-1 rounded bg-white/25 px-1 text-[9px] font-bold">{shiftLabel}</span>
+          <span className="ml-1 rounded bg-foreground/15 px-1 text-[9px] font-bold">{shiftLabel}</span>
         )}
         {previewLabel && (
           <span className="ml-1 rounded bg-primary/80 px-1 text-[9px] font-bold ring-1 ring-white/60">
@@ -216,7 +220,7 @@ export function GanttBar({
         <Button
           size="icon"
           variant="ghost"
-          className="h-5 w-5 shrink-0 text-white opacity-0 transition-opacity group-hover:opacity-100 hover:bg-white/20"
+          className="h-5 w-5 shrink-0 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-foreground/10"
           onClick={(e) => {
             e.stopPropagation();
             onResetShift();
@@ -230,7 +234,7 @@ export function GanttBar({
         <Button
           size="icon"
           variant="ghost"
-          className="h-5 w-5 shrink-0 text-white opacity-0 transition-opacity group-hover:opacity-100 hover:bg-white/20"
+          className="h-5 w-5 shrink-0 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-foreground/10"
           onClick={(e) => {
             e.stopPropagation();
             onShift(1);
