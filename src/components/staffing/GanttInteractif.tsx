@@ -60,8 +60,10 @@ export const GanttInteractif = forwardRef<
   {
     planId: string;
     onDataLoaded?: (d: PlanData) => void;
+    /** v0.36 — configs pré-paramétrage pour heatmap cible vs réel. */
+    preParamConfigs?: ChantierMetierConfigRow[];
   }
->(function GanttInteractifInner({ planId, onDataLoaded }, ref) {
+>(function GanttInteractifInner({ planId, onDataLoaded, preParamConfigs }, ref) {
   const calculate = useServerFn(calculateStaffingPlan);
   const updateObj = useServerFn(updatePlanObject);
   const [data, setData] = useState<PlanData | null>(null);
