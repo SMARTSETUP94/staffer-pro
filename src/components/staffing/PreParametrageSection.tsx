@@ -91,23 +91,15 @@ export function PreParametrageSection({ affaireId, deadline, onApplied }: Props)
 
   const merged = (r: ChantierMetierConfigRow): ChantierMetierConfigRow => {
     const base = { ...r, ...(editing[r.metier_id] ?? {}) };
-    // Garde-fous : jamais d'undefined/NaN dans les colonnes affichées.
-    const totalH = Number.isFinite(Number(base.total_h_calc)) ? Number(base.total_h_calc) : 0;
-    const persCible = Number.isFinite(Number(base.nb_pers_cible)) && Number(base.nb_pers_cible) > 0
-      ? Number(base.nb_pers_cible)
-      : 1;
-    const dureeJ = Number.isFinite(Number(base.duree_cible_j)) ? Number(base.duree_cible_j) : 0;
-    const capaMax = Number.isFinite(Number(base.capa_max_jour)) && Number(base.capa_max_jour) > 0
-      ? Number(base.capa_max_jour)
-      : persCible;
+    const persCible = safeNumber(base.nb_pers_cible, 1, { min: 1 });
     return {
       ...base,
-      total_h_calc: totalH,
+      total_h_calc: safeNumber(base.total_h_calc, 0),
       nb_pers_cible: persCible,
-      duree_cible_j: dureeJ,
-      capa_max_jour: capaMax,
-      lissage_active: base.lissage_active ?? true,
-      be_override: base.be_override ?? false,
+      duree_cible_j: safeNumber(base.duree_cible_j, 0),
+      capa_max_jour: safeNumber(base.capa_max_jour, persCible, { min: 1 }),
+      lissage_active: safeBool(base.lissage_active, true),
+      be_override: safeBool(base.be_override, false),
     };
   };
 
