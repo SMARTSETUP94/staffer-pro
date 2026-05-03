@@ -79,6 +79,36 @@ export const GanttInteractif = forwardRef<
   const resetStepShiftStore = useEditStore((s) => s.resetStepShift);
   const edits = useEditStore((s) => s.edits);
 
+  /** v0.38.4 — Treetable expand/collapse par objet (persist localStorage) */
+  const expandedKey = `objet-expanded-${planId}`;
+  const [expandedObjets, setExpandedObjets] = useState<Set<string>>(() => {
+    if (typeof window === "undefined") return new Set();
+    try {
+      const raw = window.localStorage.getItem(expandedKey);
+      if (raw) return new Set(JSON.parse(raw) as string[]);
+    } catch {
+      /* noop */
+    }
+    return new Set();
+  });
+  const [expandedInit, setExpandedInit] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      window.localStorage.setItem(expandedKey, JSON.stringify([...expandedObjets]));
+    } catch {
+      /* noop */
+    }
+  }, [expandedObjets, expandedKey]);
+  const toggleObjet = useCallback((objId: string) => {
+    setExpandedObjets((prev) => {
+      const next = new Set(prev);
+      if (next.has(objId)) next.delete(objId);
+      else next.add(objId);
+      return next;
+    });
+  }, []);
+
   /** Mesure dynamique de la largeur d'une colonne jour pour drag-to-shift */
   const gridRef = useRef<HTMLDivElement | null>(null);
   const [dayWidthPx, setDayWidthPx] = useState(0);
