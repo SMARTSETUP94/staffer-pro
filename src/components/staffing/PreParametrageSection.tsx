@@ -1,22 +1,15 @@
-// v0.36 RC — Section Pré-paramétrage métier (au-dessus du Gantt)
-// Affiche les configs métier avec sliders pers cible / capa / lissage + override BE.
+// v0.37 — Section Pré-paramétrage métier (lecture seule).
+// L'algo v0.37 fixe automatiquement pers/durée/capa par métier ; l'opérateur ne saisit plus rien ici.
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, Wand2, Save, AlertTriangle, Lock } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { toast } from "sonner";
+import { Loader2, AlertTriangle, Lock } from "lucide-react";
 import {
   listChantierMetierConfig,
   suggestPreParametrage,
-  upsertChantierMetierConfig,
-  applyPreParametrageSuggestions,
   type ChantierMetierConfigRow,
 } from "@/server/staffing-pre-parametrage.functions";
 import type { Conflict, MetierConfigKey } from "@/lib/staffing/pre-parametrage";
+
 
 const METIER_LABEL: Record<MetierConfigKey, string> = {
   BE: "Bureau d'études",
