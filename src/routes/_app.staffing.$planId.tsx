@@ -80,6 +80,7 @@ function StaffingPlanPage() {
     nom: string;
   } | null>(null);
   const [preParamConfigs, setPreParamConfigs] = useState<ChantierMetierConfigRow[]>([]);
+  const [planDeadline, setPlanDeadline] = useState<string | null>(null);
   const loadConfigs = useServerFn(listChantierMetierConfig);
 
   useEffect(() => {
