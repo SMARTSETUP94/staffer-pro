@@ -136,11 +136,11 @@ export const GanttInteractif = forwardRef<
     const el = gridRef.current;
     if (!el) return;
     const measure = () => {
-      // 1ère colonne = 220px (label objet), reste = jours
+      // 1ère colonne = 220px (label objet), reste = 2*jours demi-journées
       const total = el.getBoundingClientRect().width;
       const dayCount = el.dataset.dayCount ? parseInt(el.dataset.dayCount, 10) : 0;
       if (dayCount > 0) {
-        const w = (total - 220) / dayCount;
+        const w = (total - 220) / dayCount; // largeur d'un jour plein (= 2 demi-journées)
         setDayWidthPx(w > 0 ? w : 0);
       }
     };
