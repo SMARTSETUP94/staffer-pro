@@ -102,24 +102,70 @@ function capForMetier(m: MetierKey): number {
   }
 }
 
-/** Retourne (pers, span) minimisant le span sous contrainte cap & binôme. */
+/** v0.37.1 — Stratégie PAR DÉFAUT : prefer_min_pers (étalement).
+ *  Logique métier Setup Paris : équipe stable sur toute la fenêtre, pic atelier minimal.
+ *  Spec :
+ *    1) pers_min = max(min_metier, ceil(h / (fenetre_max * h_jour)))
+ *    2) arrondi au binôme (multiple 2) si binome
+ *    3) cap par CAPS[metier]
+ *    4) span = ceil(h / (pers * h_jour))
+ *    5) si span > fenetre_max → augmenter pers d'un cran jusqu'à span ≤ fenetre_max ou cap atteint
+ */
 export function pickPersAndSpan(
   totalHeures: number,
   metier: MetierKey,
-  hParJour = H_DEFAULT,
+  hParJourOrOpts: number | { fenetreMax?: number; hParJour?: number } = H_DEFAULT,
 ): { pers: number; span_days: number } {
   if (totalHeures <= 0) return { pers: 0, span_days: 0 };
+  const opts = typeof hParJourOrOpts === "number" ? { hParJour: hParJourOrOpts } : hParJourOrOpts;
+  const hParJour = opts.hParJour ?? H_DEFAULT;
+  const fenetreMax = opts.fenetreMax ?? Number.POSITIVE_INFINITY;
   const cap = capForMetier(metier);
   const binome = isBinome(metier);
-  const min = binome ? 2 : 1;
-  const max = Math.max(min, cap);
-  let best = { pers: min, span_days: Math.max(1, Math.ceil(totalHeures / (min * hParJour))) };
-  for (let p = min; p <= max; p++) {
-    if (binome && p % 2 !== 0) continue;
-    const span = Math.max(1, Math.ceil(totalHeures / (p * hParJour)));
-    if (span < best.span_days) best = { pers: p, span_days: span };
+  const minMetier = binome ? 2 : 1;
+
+  const roundUpBinome = (p: number) => (binome ? p + (p % 2) : p);
+
+  // (1) pers_min basé sur fenêtre
+  let pers = Math.max(minMetier, Math.ceil(totalHeures / (fenetreMax * hParJour)));
+  // (2) arrondi binôme
+  pers = roundUpBinome(pers);
+  // (3) cap
+  pers = Math.min(pers, cap);
+
+  // (4) span
+  let span = Math.max(1, Math.ceil(totalHeures / (pers * hParJour)));
+
+  // (5) si encore trop long, augmenter pers d'un binôme
+  const step = binome ? 2 : 1;
+  while (span > fenetreMax && pers + step <= cap) {
+    pers += step;
+    span = Math.max(1, Math.ceil(totalHeures / (pers * hParJour)));
   }
-  return best;
+  return { pers, span_days: span };
+}
+
+/** Helper : nombre de jours ouvrés entre deux dates (inclus), ≥ 1. */
+function workingWindow(
+  startISO: string,
+  endISO: string,
+  holidays?: Set<string>,
+  includeWeekends = false,
+): number {
+  if (startISO > endISO) return 1;
+  let n = 0;
+  let cur = startISO;
+  while (cur <= endISO) {
+    if (
+      includeWeekends ||
+      ((fromISO(cur).getUTCDay() !== 0 && fromISO(cur).getUTCDay() !== 6) &&
+        !(holidays && holidays.has(cur)))
+    ) {
+      n += 1;
+    }
+    cur = addDays(cur, 1);
+  }
+  return Math.max(1, n);
 }
 
 /* ------------------------------------------------------------------ */
