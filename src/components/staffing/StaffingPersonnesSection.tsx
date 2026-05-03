@@ -51,7 +51,7 @@ import { METIER_COLOR, METIER_LABEL, METIER_ORDER, formatShortDate, formatDayNam
 interface Suggestion {
   employe: { id: string; nom: string; prenom: string; metier_principal_id: number; type_contrat: string };
   score: number;
-  tier: 1 | 2 | 3;
+  tier: 1 | 2 | 3 | 4;
   dispo_pct: number;
   absent_days_in_step: number;
   absent_today: boolean;
