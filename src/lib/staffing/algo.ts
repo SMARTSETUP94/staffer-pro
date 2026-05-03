@@ -319,7 +319,7 @@ export function calculatePlan(input: PlanInput): PlanResult {
   numEntries.sort((a, b) => (a.latestEnd < b.latestEnd ? 1 : a.latestEnd > b.latestEnd ? -1 : 0));
   for (const { step, latestEnd, objet_id } of numEntries) {
     const earliestStart = dayMinus(latestEnd, 180);
-    const slot = findCNCSlotBackward(latestEnd, step.span_days, cncReserved, earliestStart, 180, holidays);
+    const slot = findCNCSlotBackward(latestEnd, step.span_days, cncReserved, earliestStart, 180, holidays, includeWeekends);
     if (slot === null) {
       const o = objets.find((x) => x.objet_id === objet_id);
       alerts.push({
