@@ -6,11 +6,20 @@ import { METIER_COLOR, METIER_LABEL, METIER_ORDER, formatShortDate } from "./gan
 import type { PlanStep, MetierKey } from "@/lib/staffing/types";
 import { METIER_KEY_BY_ID } from "@/lib/staffing/types";
 import type { ChantierMetierConfigRow } from "@/server/staffing-pre-parametrage.functions";
+import { PersStepper } from "./PersStepper";
+import { DateShifter } from "./DateShifter";
 
 interface ObjetInfo {
   objet_id: string;
   reference: string;
   nom: string;
+}
+
+interface StepEditCtx {
+  step: PlanStep;
+  manualShift: number;
+  hasLocalEdit: boolean;
+  hasWarn: boolean;
 }
 
 interface Props {
@@ -19,6 +28,12 @@ interface Props {
   days: string[];
   objets: ObjetInfo[];
   preParamConfigs?: ChantierMetierConfigRow[];
+  /** v0.39.0 — édition cross-vues : passe handlers + ctx pour PersStepper / DateShifter */
+  editable?: boolean;
+  getStepCtx?: (objet_id: string | null, metier: MetierKey) => StepEditCtx | null;
+  onSetPers?: (step: PlanStep, pers: number) => void;
+  onShift?: (step: PlanStep, delta: number) => void;
+  onResetShift?: (stepId: string) => void;
 }
 
 interface MetierRow {
