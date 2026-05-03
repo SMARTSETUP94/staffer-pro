@@ -297,7 +297,7 @@ export function ChargeMetierSection({ planId, steps, days, objets, preParamConfi
                         })}
                       </tr>
                     ))}
-                  </>
+                  </Fragment>
                 );
               })}
               {rows.length === 0 && (
