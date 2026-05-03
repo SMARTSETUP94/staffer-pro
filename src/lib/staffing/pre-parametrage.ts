@@ -140,7 +140,7 @@ export function autoSuggestMetierConfig(
     const persTh = Math.max(1, Math.ceil(T[m] / (dTh * 8)));
     const cap = CAPS_PERS_V036[m];
     const nbPers = Math.min(persTh, cap);
-    const duree = ceil1(T[m] / (nbPers * 8));
+    const duree = round2(T[m] / (nbPers * 8));
     configs.push({
       metier_code: m,
       total_h_calc: T[m],
@@ -163,7 +163,7 @@ export function autoSuggestMetierConfig(
     const delta = Math.ceil(pipelineDuration - J);
     const levers: ConflictLever[] = [];
     if (beCfg) {
-      levers.push({ action: "BE_OVERRIDE", gain_days: ceil1(beCfg.duree_cible_j / 2) });
+      levers.push({ action: "BE_OVERRIDE", gain_days: round2(beCfg.duree_cible_j / 2) });
     }
     if (bottleneck) {
       levers.push({ action: "INCREASE_RESOURCES", metier: bottleneck });
