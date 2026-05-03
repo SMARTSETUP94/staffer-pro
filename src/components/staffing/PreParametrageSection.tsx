@@ -189,7 +189,7 @@ export function PreParametrageSection({ affaireId, deadline, onApplied }: Props)
           </p>
         </div>
         <Button size="sm" onClick={applySuggestions} disabled={busy}>
-          <Wand2 className="mr-1 h-3 w-3" /> Appliquer les suggestions
+          <Wand2 className="mr-1 h-3 w-3" /> Appliquer + recalculer
         </Button>
       </header>
 
