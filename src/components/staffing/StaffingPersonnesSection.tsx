@@ -455,7 +455,7 @@ function CalendarView({
     const set = new Set<string>();
     for (const s of steps) {
       const start = new Date(s.start_date + "T00:00:00Z");
-      for (let i = 0; i < s.span_days; i++) {
+      for (let i = 0; i < effectiveSpanDays(s); i++) {
         const d = new Date(start);
         d.setUTCDate(d.getUTCDate() + i);
         const dow = d.getUTCDay();
