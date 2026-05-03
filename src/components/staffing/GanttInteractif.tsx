@@ -26,6 +26,8 @@ import {
 import { GanttBar } from "./GanttBar";
 import { BulkPersByMetierBar } from "./BulkPersByMetierBar";
 import { ChargeMetierSection } from "./ChargeMetierSection";
+import { PersStepper } from "./PersStepper";
+import { DateShifter } from "./DateShifter";
 import type { ChantierMetierConfigRow } from "@/server/staffing-pre-parametrage.functions";
 import { AlerteBandeau } from "./AlerteBandeau";
 import { ResolveCncConflictDialog } from "./ResolveCncConflictDialog";
