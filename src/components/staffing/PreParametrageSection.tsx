@@ -166,71 +166,89 @@ export function PreParametrageSection({ affaireId, deadline, onApplied: _onAppli
       className="space-y-3 rounded-2xl border border-border bg-card p-4"
     >
       <header className="flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <h2 className="text-sm font-bold uppercase tracking-wider text-foreground">
-            Pré-paramétrage métier <span className="text-muted-foreground">(lecture seule)</span>
-          </h2>
-          <p className="text-xs text-muted-foreground">
-            Pipeline {pipelineDuration.toFixed(1)} j · fenêtre dispo {fenetreDispo} j ouvrés ·
-            <span className="ml-1 inline-flex items-center gap-1 rounded bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-foreground">
-              <Lock className="h-3 w-3" /> v0.37 — algo automatique
-            </span>
-          </p>
-        </div>
+        <button
+          type="button"
+          onClick={toggleCollapsed}
+          className="flex items-start gap-2 text-left hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
+          aria-expanded={!collapsed}
+          aria-controls="pre-param-body"
+          data-testid="pre-param-toggle"
+        >
+          {collapsed ? (
+            <ChevronRight className="mt-0.5 h-4 w-4 text-muted-foreground" />
+          ) : (
+            <ChevronDown className="mt-0.5 h-4 w-4 text-muted-foreground" />
+          )}
+          <div>
+            <h2 className="text-sm font-bold uppercase tracking-wider text-foreground">
+              Pré-paramétrage métier <span className="text-muted-foreground">(lecture seule)</span>
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              Pipeline {pipelineDuration.toFixed(1)} j · fenêtre dispo {fenetreDispo} j ouvrés ·
+              <span className="ml-1 inline-flex items-center gap-1 rounded bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-foreground">
+                <Lock className="h-3 w-3" /> v0.37 — algo automatique
+              </span>
+            </p>
+          </div>
+        </button>
       </header>
 
-      {windowConflict && (
-        <div
-          data-testid="pre-param-conflict"
-          className="flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/10 p-3 text-xs text-destructive"
-        >
-          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-          <div className="space-y-1">
-            <p className="font-semibold">Fenêtre infaisable ({windowConflict.delta_days ?? "?"} j manquants)</p>
-            <p>{windowConflict.message}</p>
+      {!collapsed && (
+        <div id="pre-param-body" className="space-y-3">
+          {windowConflict && (
+            <div
+              data-testid="pre-param-conflict"
+              className="flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/10 p-3 text-xs text-destructive"
+            >
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+              <div className="space-y-1">
+                <p className="font-semibold">Fenêtre infaisable ({windowConflict.delta_days ?? "?"} j manquants)</p>
+                <p>{windowConflict.message}</p>
+              </div>
+            </div>
+          )}
+
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[640px] text-xs">
+              <thead className="border-b border-border bg-background/40 text-left">
+                <tr>
+                  <th className="px-2 py-2">Métier</th>
+                  <th className="px-2 py-2 text-right">Total h</th>
+                  <th className="px-2 py-2 text-right">Pers cible</th>
+                  <th className="px-2 py-2 text-right">Durée j</th>
+                  <th className="px-2 py-2 text-right">Capa max/j</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((r) => {
+                  const m = merged(r);
+                  return (
+                    <tr
+                      key={r.metier_id}
+                      data-testid={`pre-param-row-${m.metier_code}`}
+                      className="border-b border-border/40"
+                    >
+                      <td className="px-2 py-1.5 font-semibold">{METIER_LABEL[m.metier_code]}</td>
+                      <td className="px-2 py-1.5 text-right font-mono">{m.total_h_calc.toFixed(0)}</td>
+                      <td className="px-2 py-1.5 text-right font-mono" data-testid={`pre-param-pers-${m.metier_code}`}>
+                        {m.nb_pers_cible}
+                      </td>
+                      <td className="px-2 py-1.5 text-right font-mono">{m.duree_cible_j.toFixed(1)}</td>
+                      <td className="px-2 py-1.5 text-right font-mono" data-testid={`pre-param-cap-${m.metier_code}`}>
+                        {m.capa_max_jour}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
+          <p className="text-[11px] text-muted-foreground">
+            Les valeurs sont déduites automatiquement par l'algo v0.37 (pipeline par objet, splits Manut 35/15/50,
+            binômes obligatoires Bois/Peint/Tap/Manut). Plus de réglage manuel nécessaire.
+          </p>
         </div>
       )}
-
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[640px] text-xs">
-          <thead className="border-b border-border bg-background/40 text-left">
-            <tr>
-              <th className="px-2 py-2">Métier</th>
-              <th className="px-2 py-2 text-right">Total h</th>
-              <th className="px-2 py-2 text-right">Pers cible</th>
-              <th className="px-2 py-2 text-right">Durée j</th>
-              <th className="px-2 py-2 text-right">Capa max/j</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((r) => {
-              const m = merged(r);
-              return (
-                <tr
-                  key={r.metier_id}
-                  data-testid={`pre-param-row-${m.metier_code}`}
-                  className="border-b border-border/40"
-                >
-                  <td className="px-2 py-1.5 font-semibold">{METIER_LABEL[m.metier_code]}</td>
-                  <td className="px-2 py-1.5 text-right font-mono">{m.total_h_calc.toFixed(0)}</td>
-                  <td className="px-2 py-1.5 text-right font-mono" data-testid={`pre-param-pers-${m.metier_code}`}>
-                    {m.nb_pers_cible}
-                  </td>
-                  <td className="px-2 py-1.5 text-right font-mono">{m.duree_cible_j.toFixed(1)}</td>
-                  <td className="px-2 py-1.5 text-right font-mono" data-testid={`pre-param-cap-${m.metier_code}`}>
-                    {m.capa_max_jour}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-      <p className="text-[11px] text-muted-foreground">
-        Les valeurs sont déduites automatiquement par l'algo v0.37 (pipeline par objet, splits Manut 35/15/50,
-        binômes obligatoires Bois/Peint/Tap/Manut). Plus de réglage manuel nécessaire.
-      </p>
     </section>
   );
 }
