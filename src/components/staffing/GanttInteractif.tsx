@@ -19,7 +19,7 @@ import {
   workingDaysBetween,
   formatDayName,
   formatShortDate,
-  stepSpanInWindow,
+  stepSpanInHalves,
   METIER_COLOR,
   METIER_LABEL,
 } from "./gantt-helpers";
