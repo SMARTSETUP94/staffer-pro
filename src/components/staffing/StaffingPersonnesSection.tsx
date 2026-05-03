@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { autoStaffStep } from "@/server/staffing-autostaff.functions";
+import { autoStaffPlan } from "@/server/staffing-autostaff-plan.functions";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
