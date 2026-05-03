@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { autoStaffStep } from "@/server/staffing-autostaff.functions";
+import { autoStaffPlan } from "@/server/staffing-autostaff-plan.functions";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
@@ -120,9 +121,11 @@ interface Props {
   /** Trigger pour réinvalider le Gantt parent après changement (heatmap) */
   onAssignmentsChanged?: () => void;
   objetsLabel: Record<string, string>;
+  /** v0.39.0 — par défaut LECTURE PURE. Édition désactivée, seul "Re-staffer nominatif" reste actif. */
+  readOnly?: boolean;
 }
 
-export function StaffingPersonnesSection({ planId, steps, onAssignmentsChanged, objetsLabel }: Props) {
+export function StaffingPersonnesSection({ planId, steps, onAssignmentsChanged, objetsLabel, readOnly = true }: Props) {
   const fetchAssignments = useServerFn(getPlanAssignments);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -227,12 +230,28 @@ export function StaffingPersonnesSection({ planId, steps, onAssignmentsChanged, 
   const totalSteps = steps.filter((s) => s.start_date !== "TBD").length;
   const fullCount = steps.filter((s) => s.start_date !== "TBD" && coverByStep[s.id]?.isFull).length;
 
+  const restaff = useServerFn(autoStaffPlan);
+  const [restaffing, setRestaffing] = useState(false);
+  const handleRestaff = useCallback(async () => {
+    setRestaffing(true);
+    try {
+      const r = await restaff({ data: { planId } });
+      toast.success(`Re-staffing nominatif terminé : ${r.filled_total} affectations sur ${r.steps_traites} étapes`);
+      await reload();
+      onAssignmentsChanged?.();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erreur re-staffing");
+    } finally {
+      setRestaffing(false);
+    }
+  }, [restaff, planId, reload, onAssignmentsChanged]);
+
   return (
     <div className="space-y-3 rounded-2xl border border-border bg-card p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
-            Staffing personnes (tier-based)
+            Staffing personnes (tier-based){readOnly && <span className="ml-2 text-[10px] font-normal italic text-muted-foreground">— lecture seule, dérivé des Vues 1 & 2</span>}
           </h3>
           <p className="mt-0.5 text-xs text-muted-foreground">
             {assignments.length} affectation{assignments.length > 1 ? "s" : ""} · {visibleSteps.length}/
@@ -243,6 +262,19 @@ export function StaffingPersonnesSection({ planId, steps, onAssignmentsChanged, 
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          {readOnly && (
+            <Button
+              onClick={handleRestaff}
+              disabled={restaffing}
+              variant="default"
+              size="sm"
+              data-testid="restaff-nominatif"
+              title="Re-lancer la suggestion nominative tier-based sur toutes les étapes"
+            >
+              {restaffing ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Wand2 className="mr-1 h-3 w-3" />}
+              Re-staffer nominatif
+            </Button>
+          )}
           <Button
             onClick={() => setHideFull((v) => !v)}
             variant={hideFull ? "secondary" : "ghost"}
@@ -289,31 +321,47 @@ export function StaffingPersonnesSection({ planId, steps, onAssignmentsChanged, 
         </TabsList>
       </Tabs>
 
+      {readOnly && (
+        <p className="rounded-md border border-border/60 bg-muted/30 px-3 py-2 text-[11px] italic text-muted-foreground">
+          Cette vue est en <strong>lecture pure</strong> — l'affectation est dérivée automatiquement des Vues 1 (Charge métier) et 2 (Objet/Étape). Utilisez le bouton <strong>Re-staffer nominatif</strong> pour relancer la suggestion tier-based sur l'ensemble du plan.
+        </p>
+      )}
       {visibleSteps.length === 0 ? (
         <p className="py-6 text-center text-sm italic text-muted-foreground">
           {totalSteps === 0
             ? "Aucune étape planifiée. Recalculez le plan d'abord."
             : "Aucune étape correspond aux filtres actifs."}
         </p>
-      ) : viewMode === "list" ? (
-        <ListView
-          planId={planId}
-          steps={visibleSteps}
-          assignments={assignments}
-          coverByStep={coverByStep}
-          cumulByEmpDate={cumulByEmpDate}
-          objetsLabel={objetsLabel}
-          onChanged={handleChanged}
-        />
       ) : (
-        <CalendarView
-          planId={planId}
-          steps={visibleSteps}
-          assignments={assignments}
-          cumulByEmpDate={cumulByEmpDate}
-          objetsLabel={objetsLabel}
-          onChanged={handleChanged}
-        />
+        <div
+          data-readonly={readOnly ? "1" : "0"}
+          className={
+            readOnly
+              ? "[&_[data-write='1']]:pointer-events-none [&_[data-write='1']]:opacity-40 [&_[data-write='1']]:select-none"
+              : ""
+          }
+        >
+          {viewMode === "list" ? (
+            <ListView
+              planId={planId}
+              steps={visibleSteps}
+              assignments={assignments}
+              coverByStep={coverByStep}
+              cumulByEmpDate={cumulByEmpDate}
+              objetsLabel={objetsLabel}
+              onChanged={handleChanged}
+            />
+          ) : (
+            <CalendarView
+              planId={planId}
+              steps={visibleSteps}
+              assignments={assignments}
+              cumulByEmpDate={cumulByEmpDate}
+              objetsLabel={objetsLabel}
+              onChanged={handleChanged}
+            />
+          )}
+        </div>
       )}
     </div>
   );
@@ -756,7 +804,7 @@ function StepDayRow({
             compact
             onDone={onChanged}
           />
-          <Button onClick={toggleOpen} size="sm" variant={open ? "secondary" : "outline"}>
+          <Button onClick={toggleOpen} size="sm" variant={open ? "secondary" : "outline"} data-write="1">
             <UserPlus className="mr-1 h-3 w-3" />
             {open ? "Fermer" : "Suggestions"}
           </Button>
@@ -917,11 +965,12 @@ function PersonneSuggestionCard({
             disabled={busy || alreadyAssigned}
             onClick={() => setShowSlider(true)}
             title="Affecter avec %"
+            data-write="1"
             className="h-7 w-7"
           >
             <Sliders className="h-3 w-3" />
           </Button>
-          <Button size="sm" disabled={busy || alreadyAssigned} onClick={() => doAssign(100)}>
+          <Button size="sm" disabled={busy || alreadyAssigned} onClick={() => doAssign(100)} data-write="1">
             {busy ? <Loader2 className="h-3 w-3 animate-spin" /> : alreadyAssigned ? "Affecté" : "Affecter"}
           </Button>
         </div>
@@ -983,6 +1032,7 @@ function AssignedChip({
           type="button"
           onClick={doRemove}
           disabled={busy}
+          data-write="1"
           className="ml-0.5 text-muted-foreground hover:text-destructive"
           title="Retirer"
         >
@@ -1140,6 +1190,7 @@ function AutoStaffButton({
       size="sm"
       variant="outline"
       title={label}
+      data-write="1"
       className={compact ? "h-7 px-2" : "h-7 px-2 mr-2"}
     >
       {busy ? <Loader2 className="h-3 w-3 animate-spin" /> : <Wand2 className="h-3 w-3" />}

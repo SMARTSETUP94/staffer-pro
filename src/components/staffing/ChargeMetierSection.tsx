@@ -6,11 +6,20 @@ import { METIER_COLOR, METIER_LABEL, METIER_ORDER, formatShortDate } from "./gan
 import type { PlanStep, MetierKey } from "@/lib/staffing/types";
 import { METIER_KEY_BY_ID } from "@/lib/staffing/types";
 import type { ChantierMetierConfigRow } from "@/server/staffing-pre-parametrage.functions";
+import { PersStepper } from "./PersStepper";
+import { DateShifter } from "./DateShifter";
 
 interface ObjetInfo {
   objet_id: string;
   reference: string;
   nom: string;
+}
+
+interface StepEditCtx {
+  step: PlanStep;
+  manualShift: number;
+  hasLocalEdit: boolean;
+  hasWarn: boolean;
 }
 
 interface Props {
@@ -19,6 +28,12 @@ interface Props {
   days: string[];
   objets: ObjetInfo[];
   preParamConfigs?: ChantierMetierConfigRow[];
+  /** v0.39.0 — édition cross-vues : passe handlers + ctx pour PersStepper / DateShifter */
+  editable?: boolean;
+  getStepCtx?: (objet_id: string | null, metier: MetierKey) => StepEditCtx | null;
+  onSetPers?: (step: PlanStep, pers: number) => void;
+  onShift?: (step: PlanStep, delta: number) => void;
+  onResetShift?: (stepId: string) => void;
 }
 
 interface MetierRow {
@@ -37,7 +52,18 @@ interface MetierRow {
 
 const HIGH_VOLUME_THRESHOLD_H = 100;
 
-export function ChargeMetierSection({ planId, steps, days, objets, preParamConfigs: _ }: Props) {
+export function ChargeMetierSection({
+  planId,
+  steps,
+  days,
+  objets,
+  preParamConfigs: _,
+  editable,
+  getStepCtx,
+  onSetPers,
+  onShift,
+  onResetShift,
+}: Props) {
   const sectionLsKey = `charge-metier-collapsed-${planId}`;
   const [collapsed, setCollapsed] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
@@ -261,7 +287,9 @@ export function ChargeMetierSection({ planId, steps, days, objets, preParamConfi
                         );
                       })}
                     </tr>
-                    {isExpanded && row.contributors.map((c) => (
+                    {isExpanded && row.contributors.map((c) => {
+                      const ctx = editable && getStepCtx ? getStepCtx(c.objet_id, row.metier) : null;
+                      return (
                       <tr
                         key={`${row.metier}-${c.key}`}
                         className="border-b border-border/20"
@@ -279,8 +307,24 @@ export function ChargeMetierSection({ planId, steps, days, objets, preParamConfi
                             {c.nom && (
                               <span className="truncate text-[10px]">— {c.nom}</span>
                             )}
-                            <span className="ml-auto text-[10px] font-mono">
-                              {Math.round(c.totalHours)}h
+                            <span className="ml-auto flex items-center gap-1.5 text-[10px] font-mono">
+                              {ctx && onSetPers && (
+                                <PersStepper
+                                  value={ctx.step.pers}
+                                  metier={row.metier}
+                                  hasWarn={ctx.hasWarn}
+                                  hasLocalEdit={ctx.hasLocalEdit}
+                                  onChange={(v) => onSetPers(ctx.step, v)}
+                                />
+                              )}
+                              {ctx && onShift && (
+                                <DateShifter
+                                  manualShift={ctx.manualShift}
+                                  onShift={(d) => onShift(ctx.step, d)}
+                                  onReset={onResetShift ? () => onResetShift(ctx.step.id) : undefined}
+                                />
+                              )}
+                              <span className="ml-1">{Math.round(c.totalHours)}h</span>
                             </span>
                           </span>
                         </td>
@@ -300,7 +344,8 @@ export function ChargeMetierSection({ planId, steps, days, objets, preParamConfi
                           );
                         })}
                       </tr>
-                    ))}
+                      );
+                    })}
                   </Fragment>
                 );
               })}

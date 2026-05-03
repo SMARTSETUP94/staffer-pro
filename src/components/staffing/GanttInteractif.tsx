@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2, ArrowUp, ArrowDown, RefreshCw, Calendar, Users, Activity, AlertTriangle, Wand2, ChevronRight, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
+// v0.39.0 — Slider supprimé : remplacé par PersStepper inline.
 import { Badge } from "@/components/ui/badge";
 import {
   calculateStaffingPlan,
@@ -26,6 +26,8 @@ import {
 import { GanttBar } from "./GanttBar";
 import { BulkPersByMetierBar } from "./BulkPersByMetierBar";
 import { ChargeMetierSection } from "./ChargeMetierSection";
+import { PersStepper } from "./PersStepper";
+import { DateShifter } from "./DateShifter";
 import type { ChantierMetierConfigRow } from "@/server/staffing-pre-parametrage.functions";
 import { AlerteBandeau } from "./AlerteBandeau";
 import { ResolveCncConflictDialog } from "./ResolveCncConflictDialog";
@@ -426,13 +428,36 @@ export const GanttInteractif = forwardRef<
       {/* Bulk pers par métier (P1 #6) */}
       <BulkPersByMetierBar steps={mergedSteps} />
 
-      {/* v0.38.2 — Section Charge par métier collapsible + drilldown objet */}
+      {/* v0.39.0 — Section Charge par métier ÉDITABLE (stepper + chevrons date) */}
       <ChargeMetierSection
         planId={planId}
         steps={mergedSteps}
         days={days}
         objets={data.objets.map((o) => ({ objet_id: o.objet_id, reference: o.reference, nom: o.nom }))}
         preParamConfigs={preParamConfigs}
+        editable
+        getStepCtx={(objet_id, metierKey) => {
+          const metierIdEntry = Object.entries(METIER_KEY_BY_ID).find(([, k]) => k === metierKey);
+          if (!metierIdEntry) return null;
+          const metier_id = Number(metierIdEntry[0]);
+          const step = mergedSteps.find(
+            (s) => s.objet_id === objet_id && s.metier_id === metier_id && s.start_date !== "TBD",
+          );
+          if (!step) return null;
+          const baseShift = data.step_overrides[step.id]?.manual_shift ?? 0;
+          const localShift = edits[step.id]?.manual_shift ?? baseShift;
+          return {
+            step,
+            manualShift: localShift,
+            hasLocalEdit:
+              edits[step.id]?.pers !== undefined ||
+              edits[step.id]?.manual_shift !== undefined,
+            hasWarn: (impactByStep[step.id]?.length ?? 0) > 0,
+          };
+        }}
+        onSetPers={(step, pers) => handleSetPers(step, pers)}
+        onShift={(step, delta) => handleShift(step, delta)}
+        onResetShift={(stepId) => handleResetShift(stepId)}
       />
 
       {/* Gantt */}
@@ -604,23 +629,29 @@ export const GanttInteractif = forwardRef<
                         {objSteps.length > 1 ? "s" : ""}
                       </p>
                       {isExpanded && boisStep && (
-                        <PersSlider
-                          label="Bois"
-                          color={METIER_COLOR.Bois}
+                        <PersStepper
                           value={boisStep.pers}
-                          disabled={false}
-                          impacts={impactByStep[boisStep.id]}
+                          metier="Bois"
+                          hasWarn={(impactByStep[boisStep.id]?.length ?? 0) > 0}
+                          hasLocalEdit={
+                            edits[boisStep.id]?.pers !== undefined ||
+                            edits[boisStep.id]?.manual_shift !== undefined
+                          }
                           onChange={(v) => handleSetPers(boisStep, v)}
+                          size="normal"
                         />
                       )}
                       {isExpanded && peintStep && (
-                        <PersSlider
-                          label="Peint"
-                          color={METIER_COLOR.Peint}
+                        <PersStepper
                           value={peintStep.pers}
-                          disabled={false}
-                          impacts={impactByStep[peintStep.id]}
+                          metier="Peint"
+                          hasWarn={(impactByStep[peintStep.id]?.length ?? 0) > 0}
+                          hasLocalEdit={
+                            edits[peintStep.id]?.pers !== undefined ||
+                            edits[peintStep.id]?.manual_shift !== undefined
+                          }
                           onChange={(v) => handleSetPers(peintStep, v)}
+                          size="normal"
                         />
                       )}
                     </div>
@@ -652,8 +683,25 @@ export const GanttInteractif = forwardRef<
                           style={{ backgroundColor: METIER_COLOR[k] }}
                         />
                         <span className="text-muted-foreground">{METIER_LABEL[k]}</span>
-                        <span className="ml-auto font-mono text-[10px] font-semibold text-muted-foreground">
-                          {Math.round(s.pers * (s.span_demi_jours ?? s.span_days * 2) * 4)}h
+                        <span className="ml-auto flex items-center gap-1.5">
+                          <PersStepper
+                            value={s.pers}
+                            metier={k}
+                            hasWarn={hasImpact}
+                            hasLocalEdit={
+                              edits[s.id]?.pers !== undefined ||
+                              edits[s.id]?.manual_shift !== undefined
+                            }
+                            onChange={(v) => handleSetPers(s, v)}
+                          />
+                          <DateShifter
+                            manualShift={localShift}
+                            onShift={(d) => handleShift(s, d)}
+                            onReset={() => handleResetShift(s.id)}
+                          />
+                          <span className="font-mono text-[10px] font-semibold text-muted-foreground">
+                            {Math.round(s.pers * (s.span_demi_jours ?? s.span_days * 2) * 4)}h
+                          </span>
                         </span>
                         {hasImpact && <ImpactBadge impacts={impactByStep[s.id]!} />}
                       </div>
@@ -730,65 +778,6 @@ function ImpactBadge({ impacts }: { impacts: SliderImpact[] }) {
   );
 }
 
-function PersSlider({
-  label,
-  color,
-  value,
-  disabled,
-  impacts,
-  onChange,
-}: {
-  label: string;
-  color: string;
-  value: number;
-  disabled?: boolean;
-  impacts?: SliderImpact[];
-  onChange: (v: number) => void;
-}) {
-  const hasWarn = (impacts?.length ?? 0) > 0;
-  // v0.35.x BUGFIX prod : on rend le slider non contrôlé (defaultValue) pour que le thumb
-  // bouge sous le doigt/pointer. onValueChange = preview local immédiat (state interne),
-  // onValueCommit = push dans le store. Sans onValueChange + value seul, Radix bloque
-  // le thumb tant que `value` ne change pas → en prod (build minifié) ça donne l'illusion
-  // d'un slider mort. On sync defaultValue via key={value} quand le store écrit la nouvelle valeur.
-  const [local, setLocal] = useState(value);
-  useEffect(() => {
-    setLocal(value);
-  }, [value]);
-  return (
-    <div className="flex items-center gap-2">
-      <span
-        className="inline-block h-1.5 w-1.5 rounded-sm"
-        style={{ backgroundColor: color }}
-      />
-      <span
-        className={`w-10 text-[10px] uppercase tracking-wider ${
-          hasWarn ? "text-amber-600 dark:text-amber-400 font-bold" : "text-muted-foreground"
-        }`}
-      >
-        {label}
-      </span>
-      <Slider
-        className={`w-24 ${hasWarn ? "[&_[data-orientation=horizontal]>span:first-child]:bg-amber-500/30 [&_[role=slider]]:border-amber-500 [&_[role=slider]]:ring-2 [&_[role=slider]]:ring-amber-500/40" : ""}`}
-        min={2}
-        max={12}
-        step={2}
-        value={[local]}
-        disabled={disabled}
-        onValueChange={(v) => setLocal(v[0] ?? local)}
-        onValueCommit={(v) => onChange(v[0] ?? local)}
-      />
-      <span
-        className={`w-7 font-mono text-[10px] font-bold tabular-nums ${
-          hasWarn ? "text-amber-600 dark:text-amber-400" : ""
-        }`}
-      >
-        {local}p
-      </span>
-      {hasWarn && <AlertTriangle className="h-3 w-3 text-amber-500" />}
-    </div>
-  );
-}
 
 function StatCard({
   icon,
