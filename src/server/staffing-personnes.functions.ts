@@ -73,22 +73,29 @@ export const getPersonnelSuggestions = createServerFn({ method: "POST" })
         non_staffing: false,
       }));
 
-      /* Disponibilité sur la date (fenêtre 1 jour) */
-      const avail = await getResourceAvailability(supabase, {
-        date_debut: data.date,
-        date_fin: data.date,
+      /* Disponibilité sur la fenêtre du step (pour calculer les absences chevauchantes) */
+      const stepStart = step.start_date as string;
+      const stepSpan = step.span_days as number;
+      const stepEnd = (() => {
+        const d = new Date(stepStart + "T00:00:00Z");
+        d.setUTCDate(d.getUTCDate() + Math.max(0, stepSpan - 1));
+        return d.toISOString().slice(0, 10);
+      })();
+      const availWindow = await getResourceAvailability(supabase, {
+        date_debut: stepStart < data.date ? stepStart : data.date,
+        date_fin: stepEnd > data.date ? stepEnd : data.date,
         exclude_plan_id: data.planId,
       });
 
       /* Inclure aussi les assignations DU plan en cours (mais sur d'autres steps que celui-ci)
-         pour calculer le cumul correctement */
+         pour calculer le cumul correctement sur la date ciblée */
       const { data: ownAssigns } = await supabase
         .from("staffing_plan_assignment")
         .select("employe_id, presence_pct, step_id, staffing_plan_step!inner(plan_id)")
         .eq("date", data.date)
         .eq("staffing_plan_step.plan_id", data.planId)
         .neq("step_id", data.stepId);
-      const occ = { ...avail.personnes };
+      const occ = { ...availWindow.personnes };
       for (const a of (ownAssigns ?? []) as Array<{ employe_id: string; presence_pct: number }>) {
         const cur = occ[a.employe_id] ?? { occupation_pct_moyenne: 0, par_jour: {} };
         cur.par_jour[data.date] = (cur.par_jour[data.date] ?? 0) + (a.presence_pct ?? 100);
@@ -97,18 +104,36 @@ export const getPersonnelSuggestions = createServerFn({ method: "POST" })
       }
 
       const ranked = rankCandidats(employes, step.metier_id as number, occ);
-      const top = ranked.slice(0, 10).map((r) => ({
-        employe: {
-          id: r.employe.id,
-          nom: r.employe.nom,
-          prenom: r.employe.prenom,
-          metier_principal_id: r.employe.metier_principal_id,
-          type_contrat: r.employe.type_contrat,
-        },
-        score: Math.round(r.score),
-        tier: r.tier,
-        dispo_pct: 100 - (occ[r.employe.id]?.par_jour[data.date] ?? 0),
-      }));
+      const absencesMap = availWindow.absences_par_personne ?? {};
+      // Liste des dates ouvrées du step (pour compter absences pertinentes)
+      const stepDates: string[] = [];
+      {
+        const d = new Date(stepStart + "T00:00:00Z");
+        for (let i = 0; i < stepSpan; i++) {
+          stepDates.push(d.toISOString().slice(0, 10));
+          d.setUTCDate(d.getUTCDate() + 1);
+        }
+      }
+      const top = ranked.slice(0, 10).map((r) => {
+        const absSet = absencesMap[r.employe.id];
+        const absent_days_in_step = absSet
+          ? stepDates.filter((d) => absSet.has(d)).length
+          : 0;
+        return {
+          employe: {
+            id: r.employe.id,
+            nom: r.employe.nom,
+            prenom: r.employe.prenom,
+            metier_principal_id: r.employe.metier_principal_id,
+            type_contrat: r.employe.type_contrat as string,
+          },
+          score: Math.round(r.score),
+          tier: r.tier,
+          dispo_pct: 100 - (occ[r.employe.id]?.par_jour[data.date] ?? 0),
+          absent_days_in_step,
+          absent_today: absSet?.has(data.date) ?? false,
+        };
+      });
 
       return {
         suggestions: top,
