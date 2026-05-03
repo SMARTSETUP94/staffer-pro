@@ -25,8 +25,7 @@ import {
 } from "./gantt-helpers";
 import { GanttBar } from "./GanttBar";
 import { BulkPersByMetierBar } from "./BulkPersByMetierBar";
-import { HeatmapMetier } from "./HeatmapMetier";
-import { HeatmapCibleVsReel } from "./HeatmapCibleVsReel";
+import { ChargeMetierSection } from "./ChargeMetierSection";
 import type { ChantierMetierConfigRow } from "@/server/staffing-pre-parametrage.functions";
 import { AlerteBandeau } from "./AlerteBandeau";
 import { ResolveCncConflictDialog } from "./ResolveCncConflictDialog";
