@@ -155,6 +155,11 @@ export function GanttBar({
       )}
       <span className="flex-1 truncate text-center">
         {step.pers}p × {step.span_days}j
+        {phaseLabel && (
+          <span className="ml-1 rounded bg-white/30 px-1 text-[9px] font-bold tracking-wider">
+            {phaseLabel}
+          </span>
+        )}
         {shiftLabel && !dragging && (
           <span className="ml-1 rounded bg-white/25 px-1 text-[9px] font-bold">{shiftLabel}</span>
         )}
