@@ -275,7 +275,7 @@ export function calculatePlan(input: PlanInput): PlanResult {
 
   /* ----- Backward scheduling — JOURS OUVRÉS (exclut weekends + fériés FR) ----- */
   // Ancre dernière fin = dernier jour ouvré ≤ date_fin_fab
-  const lastWorkBeforeLiv = previousWorkingDay(dateLivraison, holidays);
+  const lastWorkBeforeLiv = previousWorkingDay(dateLivraison, holidays, includeWeekends);
 
   for (const chain of chains) {
     let endCursor = lastWorkBeforeLiv;
