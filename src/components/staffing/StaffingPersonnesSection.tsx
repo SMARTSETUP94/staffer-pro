@@ -1032,6 +1032,7 @@ function AssignedChip({
           type="button"
           onClick={doRemove}
           disabled={busy}
+          data-write="1"
           className="ml-0.5 text-muted-foreground hover:text-destructive"
           title="Retirer"
         >
