@@ -81,10 +81,13 @@ export const GanttInteractif = forwardRef<
   const [dayWidthPx, setDayWidthPx] = useState(0);
 
   const reload = useCallback(async () => {
-    setLoading(true);
+    // v0.35.x — Préserve scroll + pas de spinner plein écran si data déjà là
+    // (sinon l'unmount reset la position et l'utilisateur perd son repère).
+    const hasData = dataRef.current !== null;
+    const scrollY = typeof window !== "undefined" ? window.scrollY : 0;
+    if (!hasData) setLoading(true);
     setError(null);
     try {
-      // Charger updated_at du plan en parallèle pour init store
       const [r, planMeta] = await Promise.all([
         calculate({ data: { planId } }) as Promise<PlanData>,
         supabase
@@ -99,6 +102,10 @@ export const GanttInteractif = forwardRef<
         initFromPlan(planId, planMeta.data.updated_at as string);
       }
       setImpactByStep({});
+      // Restaure scroll après render (silent reload)
+      if (hasData && typeof window !== "undefined") {
+        requestAnimationFrame(() => window.scrollTo({ top: scrollY, behavior: "auto" }));
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erreur inconnue");
     } finally {
