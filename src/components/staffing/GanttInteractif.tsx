@@ -79,12 +79,18 @@ export const GanttInteractif = forwardRef<
   /** Mesure dynamique de la largeur d'une colonne jour pour drag-to-shift */
   const gridRef = useRef<HTMLDivElement | null>(null);
   const [dayWidthPx, setDayWidthPx] = useState(0);
+  /** Ref miroir de data pour pouvoir tester "déjà chargé" sans re-render */
+  const dataRef = useRef<PlanData | null>(null);
+  useEffect(() => { dataRef.current = data; }, [data]);
 
   const reload = useCallback(async () => {
-    setLoading(true);
+    // v0.35.x — Préserve scroll + pas de spinner plein écran si data déjà là
+    // (sinon l'unmount reset la position et l'utilisateur perd son repère).
+    const hasData = dataRef.current !== null;
+    const scrollY = typeof window !== "undefined" ? window.scrollY : 0;
+    if (!hasData) setLoading(true);
     setError(null);
     try {
-      // Charger updated_at du plan en parallèle pour init store
       const [r, planMeta] = await Promise.all([
         calculate({ data: { planId } }) as Promise<PlanData>,
         supabase
@@ -99,6 +105,10 @@ export const GanttInteractif = forwardRef<
         initFromPlan(planId, planMeta.data.updated_at as string);
       }
       setImpactByStep({});
+      // Restaure scroll après render (silent reload)
+      if (hasData && typeof window !== "undefined") {
+        requestAnimationFrame(() => window.scrollTo({ top: scrollY, behavior: "auto" }));
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erreur inconnue");
     } finally {
@@ -364,6 +374,14 @@ export const GanttInteractif = forwardRef<
       {/* Bulk pers par métier (P1 #6) */}
       <BulkPersByMetierBar steps={mergedSteps} />
 
+      {/* Heatmap métier — vue agrégée AVANT le détail Gantt (UX top-down) */}
+      <div>
+        <h3 className="mb-2 text-sm font-bold uppercase tracking-wider text-muted-foreground">
+          Charge par métier
+        </h3>
+        <HeatmapMetier steps={mergedSteps} days={days} />
+      </div>
+
       {/* Gantt */}
       <div className="overflow-x-auto rounded-2xl border border-border bg-card">
         <div className="min-w-[900px]">
@@ -429,6 +447,9 @@ export const GanttInteractif = forwardRef<
                           style={{ backgroundColor: METIER_COLOR[k] }}
                         />
                         <span className="font-semibold">{METIER_LABEL[k]}</span>
+                        <span className="font-mono text-[10px] text-muted-foreground/80">
+                          {stepDateRangeShort(s.start_date, s.span_days)}
+                        </span>
                         <span className="text-[10px] text-muted-foreground">
                           tous objets · {s.pers}p × {s.h_par_jour}h
                         </span>
@@ -546,6 +567,9 @@ export const GanttInteractif = forwardRef<
                           style={{ backgroundColor: METIER_COLOR[k] }}
                         />
                         <span className="text-muted-foreground">{METIER_LABEL[k]}</span>
+                        <span className="font-mono text-[10px] text-muted-foreground/70">
+                          {stepDateRangeShort(s.start_date, s.span_days)}
+                        </span>
                         {hasImpact && <ImpactBadge impacts={impactByStep[s.id]!} />}
                       </div>
                       {span.visible && (
@@ -580,14 +604,6 @@ export const GanttInteractif = forwardRef<
         </div>
       </div>
 
-      {/* Heatmap métier */}
-      <div>
-        <h3 className="mb-2 text-sm font-bold uppercase tracking-wider text-muted-foreground">
-          Charge par métier
-        </h3>
-        <HeatmapMetier steps={mergedSteps} days={days} />
-      </div>
-
       <div className="flex justify-end">
         <Button onClick={reload} variant="outline" size="sm">
           <RefreshCw className="mr-1 h-3 w-3" /> Recalculer
@@ -596,6 +612,20 @@ export const GanttInteractif = forwardRef<
     </div>
   );
 });
+
+/** "12-15/05" : plage compacte du step (calendar days, dd-dd/MM ; dd/MM-dd/MM si mois différents) */
+function stepDateRangeShort(startISO: string, spanDays: number): string {
+  if (!startISO || startISO === "TBD" || spanDays <= 0) return "";
+  const s = new Date(startISO + "T00:00:00Z");
+  const e = new Date(s);
+  e.setUTCDate(e.getUTCDate() + spanDays - 1);
+  const dd = (d: Date) => String(d.getUTCDate()).padStart(2, "0");
+  const mm = (d: Date) => String(d.getUTCMonth() + 1).padStart(2, "0");
+  if (s.getUTCMonth() === e.getUTCMonth()) {
+    return `${dd(s)}–${dd(e)}/${mm(s)}`;
+  }
+  return `${dd(s)}/${mm(s)}–${dd(e)}/${mm(e)}`;
+}
 
 GanttInteractif.displayName = "GanttInteractif";
 
