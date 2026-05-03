@@ -2031,6 +2031,7 @@ export type Database = {
           metier_id: number
           objet_id: string | null
           pers: number
+          phase: string | null
           plan_id: string
           source: string
           span_days: number
@@ -2046,6 +2047,7 @@ export type Database = {
           metier_id: number
           objet_id?: string | null
           pers: number
+          phase?: string | null
           plan_id: string
           source?: string
           span_days: number
@@ -2061,6 +2063,7 @@ export type Database = {
           metier_id?: number
           objet_id?: string | null
           pers?: number
+          phase?: string | null
           plan_id?: string
           source?: string
           span_days?: number
