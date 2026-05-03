@@ -2,6 +2,7 @@
 // v0.35.x BATCH — Toolbar batch edition (sliders + shifts) + autosave 2 min idle.
 import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link, Navigate, useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { ArrowLeft, History, Send, Zap, ListChecks, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
