@@ -141,21 +141,56 @@ export function PreParametrageSection({ affaireId, deadline, onApplied }: Props)
   };
 
   const saveRow = async (r: ChantierMetierConfigRow) => {
+    const base = { ...r, ...(editing[r.metier_id] ?? {}) };
     const m = merged(r);
+
+    // Détecte les valeurs invalides saisies → auto-correction silencieuse + warning.
+    const corrections: string[] = [];
+    if (
+      base.nb_pers_cible === null ||
+      base.nb_pers_cible === undefined ||
+      String(base.nb_pers_cible).trim() === "" ||
+      !Number.isFinite(Number(base.nb_pers_cible)) ||
+      Number(base.nb_pers_cible) < 1
+    ) {
+      corrections.push(`Pers cible → ${m.nb_pers_cible}`);
+      patch(r.metier_id, { nb_pers_cible: m.nb_pers_cible });
+    }
+    if (
+      base.capa_max_jour === null ||
+      base.capa_max_jour === undefined ||
+      String(base.capa_max_jour).trim() === "" ||
+      !Number.isFinite(Number(base.capa_max_jour)) ||
+      Number(base.capa_max_jour) < 1
+    ) {
+      corrections.push(`Capa max/j → ${m.capa_max_jour}`);
+      patch(r.metier_id, { capa_max_jour: m.capa_max_jour });
+    }
+    if (typeof base.lissage_active !== "boolean") {
+      corrections.push(`Lissage → ${m.lissage_active ? "ON" : "OFF"}`);
+      patch(r.metier_id, { lissage_active: m.lissage_active });
+    }
+
+    if (corrections.length > 0) {
+      toast.warning(
+        `${METIER_LABEL[m.metier_code]} : valeurs corrigées (${corrections.join(", ")})`,
+      );
+    }
+
     setBusy(true);
     try {
       await upsert({
         data: {
           affaire_id: affaireId,
           metier_id: m.metier_id,
-          total_h_calc: Number(m.total_h_calc),
-          nb_pers_cible: Number(m.nb_pers_cible),
-          duree_cible_j: Number(m.duree_cible_j),
-          capa_max_jour: Number(m.capa_max_jour),
+          total_h_calc: m.total_h_calc,
+          nb_pers_cible: m.nb_pers_cible,
+          duree_cible_j: m.duree_cible_j,
+          capa_max_jour: m.capa_max_jour,
           fenetre_start: m.fenetre_start ?? null,
           fenetre_end: m.fenetre_end ?? null,
-          lissage_active: Boolean(m.lissage_active),
-          be_override: Boolean(m.be_override),
+          lissage_active: m.lissage_active,
+          be_override: m.be_override,
           override_reason: m.override_reason ?? null,
         },
       });
