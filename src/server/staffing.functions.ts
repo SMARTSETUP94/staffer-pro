@@ -222,6 +222,8 @@ export const calculateStaffingPlan = createServerFn({ method: "POST" })
         const payload = {
           start_date: s.start_date,
           span_days: s.span_days,
+          span_demi_jours: s.span_demi_jours ?? s.span_days * 2,
+          start_half_day: s.start_half_day ?? "AM",
           pers: s.pers,
           h_par_jour: s.h_par_jour,
           manual_shift: ov?.manual_shift ?? 0,

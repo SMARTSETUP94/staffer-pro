@@ -2035,7 +2035,9 @@ export type Database = {
           plan_id: string
           source: string
           span_days: number
+          span_demi_jours: number | null
           start_date: string
+          start_half_day: string
           updated_at: string
         }
         Insert: {
@@ -2051,7 +2053,9 @@ export type Database = {
           plan_id: string
           source?: string
           span_days: number
+          span_demi_jours?: number | null
           start_date: string
+          start_half_day?: string
           updated_at?: string
         }
         Update: {
@@ -2067,7 +2071,9 @@ export type Database = {
           plan_id?: string
           source?: string
           span_days?: number
+          span_demi_jours?: number | null
           start_date?: string
+          start_half_day?: string
           updated_at?: string
         }
         Relationships: [

@@ -18,10 +18,15 @@ export const METIER_KEY_BY_ID: Record<number, MetierKey> = Object.fromEntries(
   Object.entries(METIER_ID).map(([k, v]) => [v, k as MetierKey])
 ) as Record<number, MetierKey>;
 
-/** Constantes algo v0.37 */
+/** Constantes algo v0.37 / v0.38 */
 export const H_BE = 8;          // 8h/j ouvré (alignement v0.37, plus 10h)
 export const H_DEFAULT = 8;
 export const PIC_ATELIER = 12;  // SOFT (alerte mais plan généré)
+
+// v0.38 — Granularité demi-journée
+export const H_HALF = 4;            // 4h par demi-journée
+export const DEMI_PER_DAY = 2;      // 2 demi-journées par jour ouvré
+export type HalfDay = "AM" | "PM";
 
 // Lags (jours ouvrés entiers)
 export const LAG_BE_NUM = 2;
@@ -90,7 +95,11 @@ export interface PlanStep {
   metier: MetierKey;
   objet_id: string | null;
   start_date: string; // ISO
-  span_days: number;
+  span_days: number;          // v0.38 : dérivé = ceil(span_demi_jours/2), conservé pour grille jour
+  /** v0.38 — granularité demi-journée. Si absent, fallback = span_days * 2. */
+  span_demi_jours?: number;
+  /** v0.38 — AM (matin) ou PM (après-midi). Défaut AM. */
+  start_half_day?: HalfDay;
   pers: number;
   h_par_jour: number;
   source: "auto" | "manual";

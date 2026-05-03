@@ -16,8 +16,10 @@ import {
   CAP_METAL,
   CAP_PEINT,
   CAP_TAP,
+  DEMI_PER_DAY,
   H_BE,
   H_DEFAULT,
+  H_HALF,
   LAG_BE_NUM,
   LAG_NUM_BOIS,
   MANUT_FIN_DAYS,
@@ -102,47 +104,49 @@ function capForMetier(m: MetierKey): number {
   }
 }
 
-/** v0.37.1 — Stratégie PAR DÉFAUT : prefer_min_pers (étalement).
- *  Logique métier Setup Paris : équipe stable sur toute la fenêtre, pic atelier minimal.
+/** v0.38 — Granularité demi-journée FLOOR strict.
  *  Spec :
- *    1) pers_min = max(min_metier, ceil(h / (fenetre_max * h_jour)))
- *    2) arrondi au binôme (multiple 2) si binome
- *    3) cap par CAPS[metier]
- *    4) span = ceil(h / (pers * h_jour))
- *    5) si span > fenetre_max → augmenter pers d'un cran jusqu'à span ≤ fenetre_max ou cap atteint
+ *    n_demi_min = max(min_metier_demi, ceil(h / (cap * H_HALF)))   // assez d'effectif pour ne PAS dépasser la fenêtre
+ *    n_demi_floor = max(1, floor(h / (pers * H_HALF)))              // FLOOR strict
+ *    pers final : binôme arrondi haut + cap métier
+ *  Compat v0.37 : retourne aussi span_days = ceil(n_demi/2).
+ *  fenetreMax = en JOURS ouvrés ; on convertit en demi-journées.
  */
 export function pickPersAndSpan(
   totalHeures: number,
   metier: MetierKey,
   hParJourOrOpts: number | { fenetreMax?: number; hParJour?: number } = H_DEFAULT,
-): { pers: number; span_days: number } {
-  if (totalHeures <= 0) return { pers: 0, span_days: 0 };
+): { pers: number; span_days: number; span_demi_jours: number } {
+  if (totalHeures <= 0) return { pers: 0, span_days: 0, span_demi_jours: 0 };
   const opts = typeof hParJourOrOpts === "number" ? { hParJour: hParJourOrOpts } : hParJourOrOpts;
   const hParJour = opts.hParJour ?? H_DEFAULT;
-  const fenetreMax = opts.fenetreMax ?? Number.POSITIVE_INFINITY;
+  const fenetreMaxJours = opts.fenetreMax ?? Number.POSITIVE_INFINITY;
+  const fenetreMaxDemi = Number.isFinite(fenetreMaxJours) ? fenetreMaxJours * DEMI_PER_DAY : Number.POSITIVE_INFINITY;
   const cap = capForMetier(metier);
   const binome = isBinome(metier);
   const minMetier = binome ? 2 : 1;
 
   const roundUpBinome = (p: number) => (binome ? p + (p % 2) : p);
 
-  // (1) pers_min basé sur fenêtre
-  let pers = Math.max(minMetier, Math.ceil(totalHeures / (fenetreMax * hParJour)));
+  // (1) pers_min basé sur fenêtre (en demi-journées) — équivalent à étalement max
+  let pers = Math.max(minMetier, Math.ceil(totalHeures / (fenetreMaxDemi * H_HALF)));
   // (2) arrondi binôme
   pers = roundUpBinome(pers);
-  // (3) cap
+  // (3) cap métier
   pers = Math.min(pers, cap);
 
-  // (4) span
-  let span = Math.max(1, Math.ceil(totalHeures / (pers * hParJour)));
+  // (4) span en demi-journées — FLOOR strict (spec v0.38)
+  let nDemi = Math.max(1, Math.floor(totalHeures / (pers * H_HALF)));
 
-  // (5) si encore trop long, augmenter pers d'un binôme
+  // (5) si dépasse fenêtre, augmenter pers d'un cran
   const step = binome ? 2 : 1;
-  while (span > fenetreMax && pers + step <= cap) {
+  while (nDemi > fenetreMaxDemi && pers + step <= cap) {
     pers += step;
-    span = Math.max(1, Math.ceil(totalHeures / (pers * hParJour)));
+    nDemi = Math.max(1, Math.floor(totalHeures / (pers * H_HALF)));
   }
-  return { pers, span_days: span };
+
+  const spanDays = Math.max(1, Math.ceil(nDemi / DEMI_PER_DAY));
+  return { pers, span_days: spanDays, span_demi_jours: nDemi };
 }
 
 /** Helper : nombre de jours ouvrés entre deux dates (inclus), ≥ 1. */
@@ -256,6 +260,8 @@ export function calculatePlanV037(input: PlanInput): PlanResult {
       objet_id: o.objet_id,
       start_date: start,
       span_days: span,
+      span_demi_jours: span * DEMI_PER_DAY,
+      start_half_day: "AM",
       pers: 1,
       h_par_jour: H_BE,
       source: "auto",
@@ -298,10 +304,10 @@ export function calculatePlanV037(input: PlanInput): PlanResult {
     // -- Manut DÉBUT (concurrent avec Num) --
     if (hManutDebut > 0) {
       const fenetre = workingWindow(objStart, peintEndMax, holidays, includeWeekends);
-      const { pers, span_days } = pickPersAndSpan(hManutDebut, "Manut", { fenetreMax: Math.max(1, Math.floor(fenetre / 4)) });
+      const { pers, span_days, span_demi_jours } = pickPersAndSpan(hManutDebut, "Manut", { fenetreMax: Math.max(1, Math.floor(fenetre / 4)) });
       steps.push({
         id: nextId("manut_d"), metier_id: METIER_ID.Manut, metier: "Manut",
-        objet_id: o.objet_id, start_date: objStart, span_days, pers,
+        objet_id: o.objet_id, start_date: objStart, span_days, span_demi_jours, start_half_day: "AM", pers,
         h_par_jour: H_DEFAULT, source: "auto", phase: "DEBUT",
       });
     }
@@ -322,7 +328,8 @@ export function calculatePlanV037(input: PlanInput): PlanResult {
       const placed = numStart ?? objStart;
       const numStep: PlanStep = {
         id: nextId("num"), metier_id: METIER_ID.Num, metier: "Num",
-        objet_id: o.objet_id, start_date: placed, span_days: span, pers: 1,
+        objet_id: o.objet_id, start_date: placed, span_days: span,
+        span_demi_jours: span * DEMI_PER_DAY, start_half_day: "AM", pers: 1,
         h_par_jour: H_DEFAULT, source: "auto",
       };
       steps.push(numStep);
@@ -339,10 +346,10 @@ export function calculatePlanV037(input: PlanInput): PlanResult {
       const start = numEnd !== null ? wPlus(numEnd, LAG_NUM_BOIS) : objStart;
       // Fenêtre Bois max = peintEndMax - 1j transfert
       const fenetre = workingWindow(start, wMinus(peintEndMax, 1), holidays, includeWeekends);
-      const { pers, span_days } = pickPersAndSpan(o.heures_bois, "Bois", { fenetreMax: fenetre });
+      const { pers, span_days, span_demi_jours } = pickPersAndSpan(o.heures_bois, "Bois", { fenetreMax: fenetre });
       steps.push({
         id: nextId("bois"), metier_id: METIER_ID.Bois, metier: "Bois",
-        objet_id: o.objet_id, start_date: start, span_days, pers,
+        objet_id: o.objet_id, start_date: start, span_days, span_demi_jours, start_half_day: "AM", pers,
         h_par_jour: H_DEFAULT, source: "auto",
       });
       boisEnd = stepEnd(start, span_days);
@@ -353,10 +360,10 @@ export function calculatePlanV037(input: PlanInput): PlanResult {
     if (o.heures_metal > 0) {
       const start = numEnd !== null ? wPlus(numEnd, LAG_NUM_BOIS) : objStart;
       const fenetre = workingWindow(start, wMinus(peintEndMax, 1), holidays, includeWeekends);
-      const { pers, span_days } = pickPersAndSpan(o.heures_metal, "Metal", { fenetreMax: fenetre });
+      const { pers, span_days, span_demi_jours } = pickPersAndSpan(o.heures_metal, "Metal", { fenetreMax: fenetre });
       steps.push({
         id: nextId("metal"), metier_id: METIER_ID.Metal, metier: "Metal",
-        objet_id: o.objet_id, start_date: start, span_days, pers,
+        objet_id: o.objet_id, start_date: start, span_days, span_demi_jours, start_half_day: "AM", pers,
         h_par_jour: H_DEFAULT, source: "auto",
       });
       metalEnd = stepEnd(start, span_days);
@@ -369,10 +376,10 @@ export function calculatePlanV037(input: PlanInput): PlanResult {
     if (hManutTransfert > 0) {
       const start = wPlus(productionEnd, 1);
       const fenetre = workingWindow(start, peintEndMax, holidays, includeWeekends);
-      const { pers, span_days } = pickPersAndSpan(hManutTransfert, "Manut", { fenetreMax: Math.max(1, Math.min(2, fenetre)) });
+      const { pers, span_days, span_demi_jours } = pickPersAndSpan(hManutTransfert, "Manut", { fenetreMax: Math.max(1, Math.min(2, fenetre)) });
       steps.push({
         id: nextId("manut_t"), metier_id: METIER_ID.Manut, metier: "Manut",
-        objet_id: o.objet_id, start_date: start, span_days, pers,
+        objet_id: o.objet_id, start_date: start, span_days, span_demi_jours, start_half_day: "AM", pers,
         h_par_jour: H_DEFAULT, source: "auto", phase: "TRANSFERT",
       });
       transfertEnd = stepEnd(start, span_days);
@@ -383,10 +390,10 @@ export function calculatePlanV037(input: PlanInput): PlanResult {
     if (o.heures_peinture > 0) {
       const start = wPlus(transfertEnd, 1);
       const fenetre = workingWindow(start, peintEndMax, holidays, includeWeekends);
-      const { pers, span_days } = pickPersAndSpan(o.heures_peinture, "Peint", { fenetreMax: fenetre });
+      const { pers, span_days, span_demi_jours } = pickPersAndSpan(o.heures_peinture, "Peint", { fenetreMax: fenetre });
       steps.push({
         id: nextId("peint"), metier_id: METIER_ID.Peint, metier: "Peint",
-        objet_id: o.objet_id, start_date: start, span_days, pers,
+        objet_id: o.objet_id, start_date: start, span_days, span_demi_jours, start_half_day: "AM", pers,
         h_par_jour: H_DEFAULT, source: "auto",
       });
       peintEnd = stepEnd(start, span_days);
@@ -398,10 +405,10 @@ export function calculatePlanV037(input: PlanInput): PlanResult {
         ? steps.find((s) => s.metier === "Peint" && s.objet_id === o.objet_id)!.start_date
         : wPlus(transfertEnd, 1);
       const fenetre = workingWindow(start, peintEndMax, holidays, includeWeekends);
-      const { pers, span_days } = pickPersAndSpan(o.heures_tapisserie, "Tap", { fenetreMax: fenetre });
+      const { pers, span_days, span_demi_jours } = pickPersAndSpan(o.heures_tapisserie, "Tap", { fenetreMax: fenetre });
       steps.push({
         id: nextId("tap"), metier_id: METIER_ID.Tap, metier: "Tap",
-        objet_id: o.objet_id, start_date: start, span_days, pers,
+        objet_id: o.objet_id, start_date: start, span_days, span_demi_jours, start_half_day: "AM", pers,
         h_par_jour: H_DEFAULT, source: "auto",
       });
     }
@@ -416,7 +423,8 @@ export function calculatePlanV037(input: PlanInput): PlanResult {
     const { pers } = pickPersAndSpan(manutFinTotalH, "Manut", { fenetreMax: MANUT_FIN_DAYS });
     const step: PlanStep = {
       id: nextId("manut_f"), metier_id: METIER_ID.Manut, metier: "Manut",
-      objet_id: null, start_date: finStart, span_days: MANUT_FIN_DAYS, pers,
+      objet_id: null, start_date: finStart, span_days: MANUT_FIN_DAYS,
+      span_demi_jours: MANUT_FIN_DAYS * DEMI_PER_DAY, start_half_day: "AM", pers,
       h_par_jour: H_DEFAULT, source: "auto", phase: "FIN",
     };
     steps.push(step);
