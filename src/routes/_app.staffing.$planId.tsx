@@ -286,6 +286,7 @@ function StaffingPlanPage() {
       {affaireMeta && (
         <PreParametrageSection
           affaireId={affaireMeta.id}
+          deadline={planDeadline}
           onApplied={async () => {
             const cfgs = await loadConfigs({ data: { affaire_id: affaireMeta.id } });
             setPreParamConfigs(cfgs);
