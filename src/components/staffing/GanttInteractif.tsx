@@ -627,8 +627,8 @@ export const GanttInteractif = forwardRef<
                   </div>
                 </div>
 
-                {/* Steps de l'objet */}
-                {objSteps.map((s) => {
+                {/* Steps de l'objet — visibles uniquement si expanded (treetable v0.38.4) */}
+                {isExpanded && objSteps.map((s) => {
                   const demi = s.span_demi_jours ?? s.span_days * 2;
                   const halfStart = s.start_half_day ?? "AM";
                   const span = stepSpanInHalves(days, s.start_date, demi, halfStart);
@@ -645,7 +645,8 @@ export const GanttInteractif = forwardRef<
                       className="grid items-center py-1"
                       style={{ gridTemplateColumns: gridTemplate }}
                     >
-                      <div className="flex items-center gap-2 px-3 pl-9 text-xs">
+                      <div className="flex items-center gap-2 px-3 pl-12 text-xs">
+                        <span className="inline-block h-3 w-px self-stretch bg-border" />
                         <span
                           className="inline-block h-2 w-2 rounded-sm"
                           style={{ backgroundColor: METIER_COLOR[k] }}
@@ -677,8 +678,8 @@ export const GanttInteractif = forwardRef<
                   );
                 })}
 
-                {objSteps.length === 0 && (
-                  <div className="px-3 py-2 text-xs italic text-muted-foreground">
+                {isExpanded && objSteps.length === 0 && (
+                  <div className="px-3 py-2 pl-12 text-xs italic text-muted-foreground">
                     Aucune étape (heures à 0)
                   </div>
                 )}
