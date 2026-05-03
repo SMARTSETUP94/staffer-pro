@@ -251,11 +251,14 @@ export function applyLissage(plan: PlanResult, opts: ApplyLissageOptions): PlanR
   const holidays = opts.holidays ?? holidaysRange(livYear - 2, livYear + 1);
   const includeWeekends = opts.includeWeekends === true;
 
-  // 1. Lissage par métier
+  // 1. Lissage par métier (réduit pers par step)
   let steps = plan.steps;
   for (const cfg of opts.configs) {
     steps = smoothMetierLoad(steps, cfg, holidays, includeWeekends);
   }
+
+  // 1.b Désempilement métier (résout cumul multi-steps > cap)
+  steps = cascadeMetierOverlaps(steps, opts.configs, holidays, includeWeekends);
 
   // 2. BE séquentiel (sauf override)
   steps = sequenceBeSteps(steps, {
