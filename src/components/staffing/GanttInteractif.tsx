@@ -598,14 +598,6 @@ export const GanttInteractif = forwardRef<
         </div>
       </div>
 
-      {/* Heatmap métier */}
-      <div>
-        <h3 className="mb-2 text-sm font-bold uppercase tracking-wider text-muted-foreground">
-          Charge par métier
-        </h3>
-        <HeatmapMetier steps={mergedSteps} days={days} />
-      </div>
-
       <div className="flex justify-end">
         <Button onClick={reload} variant="outline" size="sm">
           <RefreshCw className="mr-1 h-3 w-3" /> Recalculer
