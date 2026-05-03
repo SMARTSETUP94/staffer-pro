@@ -98,26 +98,38 @@ export interface SuggestResult {
 
 export const suggestPreParametrage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { affaire_id: string; today?: string }) =>
+  .inputValidator((d: { affaire_id: string; today?: string; deadline?: string | null }) =>
     z
       .object({
         affaire_id: z.string().uuid(),
         today: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+        deadline: z
+          .string()
+          .regex(/^\d{4}-\d{2}-\d{2}$/)
+          .nullable()
+          .optional(),
       })
       .parse(d),
   )
   .handler(async ({ data, context }): Promise<SuggestResult> => {
     const { supabase } = context;
 
-    // 1) Affaire (date_fin_prevue = deadline)
+    // 1) Deadline résolue : override > date_fin_prevue > date_demontage
     const { data: aff, error: affErr } = await supabase
       .from("affaires")
-      .select("date_fin_prevue, date_debut")
+      .select("date_fin_prevue, date_demontage, date_debut")
       .eq("id", data.affaire_id)
       .single();
     if (affErr) throw new Error(affErr.message);
-    if (!aff?.date_fin_prevue) {
-      throw new Error("Affaire sans date_fin_prevue : impossible de pré-paramétrer.");
+    const resolvedDeadline =
+      data.deadline ??
+      (aff?.date_fin_prevue as string | null) ??
+      (aff?.date_demontage as string | null) ??
+      null;
+    if (!resolvedDeadline) {
+      throw new Error(
+        "Aucune deadline disponible (renseigne date_fin_prevue, date_demontage ou la date de fin du plan).",
+      );
     }
 
     // 2) Totaux heures par métier depuis fabrication_objets non archivés
@@ -142,7 +154,7 @@ export const suggestPreParametrage = createServerFn({ method: "POST" })
     }
 
     const today = data.today ?? new Date().toISOString().slice(0, 10);
-    const result = autoSuggestMetierConfig(totals, today, aff.date_fin_prevue as string);
+    const result = autoSuggestMetierConfig(totals, today, resolvedDeadline);
 
     return {
       configs: result.configs.map((c) => ({
@@ -224,13 +236,20 @@ export const upsertChantierMetierConfig = createServerFn({ method: "POST" })
 
 export const applyPreParametrageSuggestions = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { affaire_id: string }) =>
-    z.object({ affaire_id: z.string().uuid() }).parse(d),
+  .inputValidator((d: { affaire_id: string; deadline?: string | null }) =>
+    z
+      .object({
+        affaire_id: z.string().uuid(),
+        deadline: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
+      })
+      .parse(d),
   )
   .handler(async ({ data, context }) => {
     const { supabase } = context;
-    // Recalcule + persiste
-    const sugg = await suggestPreParametrage({ data: { affaire_id: data.affaire_id } });
+    // Recalcule + persiste (transmet la deadline override si fournie)
+    const sugg = await suggestPreParametrage({
+      data: { affaire_id: data.affaire_id, deadline: data.deadline ?? null },
+    });
     if (sugg.configs.length === 0) return { saved: 0 };
     const rows = sugg.configs.map((c) => ({
       affaire_id: data.affaire_id,

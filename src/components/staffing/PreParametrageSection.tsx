@@ -29,10 +29,12 @@ const METIER_LABEL: Record<MetierConfigKey, string> = {
 
 interface Props {
   affaireId: string;
+  /** Deadline override (ex: plan.date_fin_fab) — fallback si affaire.date_fin_prevue NULL. */
+  deadline?: string | null;
   onApplied?: () => void;
 }
 
-export function PreParametrageSection({ affaireId, onApplied }: Props) {
+export function PreParametrageSection({ affaireId, deadline, onApplied }: Props) {
   const list = useServerFn(listChantierMetierConfig);
   const suggest = useServerFn(suggestPreParametrage);
   const upsert = useServerFn(upsertChantierMetierConfig);
@@ -44,14 +46,16 @@ export function PreParametrageSection({ affaireId, onApplied }: Props) {
   const [fenetreDispo, setFenetreDispo] = useState(0);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [editing, setEditing] = useState<Record<string, Partial<ChantierMetierConfigRow>>>({});
 
   const load = async () => {
     setLoading(true);
+    setErrorMsg(null);
     try {
       const [existing, sugg] = await Promise.all([
         list({ data: { affaire_id: affaireId } }),
-        suggest({ data: { affaire_id: affaireId } }),
+        suggest({ data: { affaire_id: affaireId, deadline: deadline ?? null } }),
       ]);
       // Merge : existant prioritaire, sinon suggestion
       const map = new Map<number, ChantierMetierConfigRow>();
@@ -68,7 +72,9 @@ export function PreParametrageSection({ affaireId, onApplied }: Props) {
       setPipelineDuration(sugg.pipeline_duration);
       setFenetreDispo(sugg.fenetre_dispo);
     } catch (e) {
-      toast.error("Pré-paramétrage : " + (e instanceof Error ? e.message : "erreur"));
+      const msg = e instanceof Error ? e.message : "erreur";
+      // Affiche inline plutôt qu'en toast rouge — le bloc reste visible pour l'utilisateur.
+      setErrorMsg(msg);
     } finally {
       setLoading(false);
     }
@@ -77,7 +83,7 @@ export function PreParametrageSection({ affaireId, onApplied }: Props) {
   useEffect(() => {
     void load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [affaireId]);
+  }, [affaireId, deadline]);
 
   const patch = (metier_id: number, p: Partial<ChantierMetierConfigRow>) => {
     setEditing((prev) => ({ ...prev, [metier_id]: { ...prev[metier_id], ...p } }));
@@ -125,7 +131,9 @@ export function PreParametrageSection({ affaireId, onApplied }: Props) {
   const applySuggestions = async () => {
     setBusy(true);
     try {
-      const { saved } = await applyAll({ data: { affaire_id: affaireId } });
+      const { saved } = await applyAll({
+        data: { affaire_id: affaireId, deadline: deadline ?? null },
+      });
       toast.success(`${saved} métier(s) appliqué(s)`);
       await load();
       onApplied?.();
@@ -140,6 +148,18 @@ export function PreParametrageSection({ affaireId, onApplied }: Props) {
     return (
       <div className="flex items-center gap-2 rounded-2xl border border-border bg-card p-4 text-sm text-muted-foreground">
         <Loader2 className="h-4 w-4 animate-spin" /> Chargement pré-paramétrage…
+      </div>
+    );
+  }
+
+  if (errorMsg) {
+    return (
+      <div className="flex items-start gap-2 rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-700 dark:text-amber-300">
+        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+        <div>
+          <p className="font-semibold">Pré-paramétrage indisponible</p>
+          <p className="text-xs opacity-90">{errorMsg}</p>
+        </div>
       </div>
     );
   }

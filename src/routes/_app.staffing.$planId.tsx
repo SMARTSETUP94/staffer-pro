@@ -80,6 +80,7 @@ function StaffingPlanPage() {
     nom: string;
   } | null>(null);
   const [preParamConfigs, setPreParamConfigs] = useState<ChantierMetierConfigRow[]>([]);
+  const [planDeadline, setPlanDeadline] = useState<string | null>(null);
   const loadConfigs = useServerFn(listChantierMetierConfig);
 
   useEffect(() => {
@@ -87,7 +88,7 @@ function StaffingPlanPage() {
     void supabase
       .from("staffing_plan")
       .select(
-        "affaire_id, status, published_at, published_by, parent_plan_id, affaires:affaire_id(id, numero, nom)",
+        "affaire_id, status, published_at, published_by, parent_plan_id, date_fin_fab, affaires:affaire_id(id, numero, nom)",
       )
       .eq("id", planId)
       .maybeSingle()
@@ -97,6 +98,7 @@ function StaffingPlanPage() {
           const aff = data.affaires as { id: string; numero: string; nom: string };
           setAffaireMeta({ id: aff.id, numero: aff.numero, nom: aff.nom });
         }
+        setPlanDeadline((data.date_fin_fab as string | null) ?? null);
         let publishedByName: string | null = null;
         if (data.published_by) {
           const { data: prof } = await supabase
@@ -284,6 +286,7 @@ function StaffingPlanPage() {
       {affaireMeta && (
         <PreParametrageSection
           affaireId={affaireMeta.id}
+          deadline={planDeadline}
           onApplied={async () => {
             const cfgs = await loadConfigs({ data: { affaire_id: affaireMeta.id } });
             setPreParamConfigs(cfgs);
