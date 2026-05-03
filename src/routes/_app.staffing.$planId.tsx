@@ -33,6 +33,9 @@ interface ExpressSearch {
   unfilled?: string;
   alertes?: string;
   reason?: string;
+  jours?: string;
+  delaiCourt?: string;
+  we?: string;
 }
 
 export const Route = createFileRoute("/_app/staffing/$planId")({
@@ -44,6 +47,9 @@ export const Route = createFileRoute("/_app/staffing/$planId")({
     unfilled: typeof search.unfilled === "string" ? search.unfilled : undefined,
     alertes: typeof search.alertes === "string" ? search.alertes : undefined,
     reason: typeof search.reason === "string" ? search.reason : undefined,
+    jours: typeof search.jours === "string" ? search.jours : undefined,
+    delaiCourt: typeof search.delaiCourt === "string" ? search.delaiCourt : undefined,
+    we: typeof search.we === "string" ? search.we : undefined,
   }),
 });
 
