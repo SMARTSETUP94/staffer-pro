@@ -41,7 +41,7 @@ export const calculateStaffingPlan = createServerFn({ method: "POST" })
     /* 1. Plan */
     const { data: plan, error: planErr } = await supabase
       .from("staffing_plan")
-      .select("id, affaire_id, date_debut_fab, date_fin_fab, status")
+      .select("id, affaire_id, date_debut_fab, date_fin_fab, status, include_weekends")
       .eq("id", planId)
       .single();
     if (planErr || !plan) throw new Error(planErr?.message ?? "Plan introuvable");
@@ -133,6 +133,7 @@ export const calculateStaffingPlan = createServerFn({ method: "POST" })
       date_fin_fab: plan.date_fin_fab,
       objets: objetsInput,
       cnc_reserved_dates: cncReservedDates,
+      include_weekends: (plan as { include_weekends?: boolean }).include_weekends === true,
     });
 
     /* 7. Appliquer overrides : si manual_pers, recalcule span ; si manual_shift, décale start_date */

@@ -1757,6 +1757,7 @@ export type Database = {
           date_debut_fab: string
           date_fin_fab: string
           id: string
+          include_weekends: boolean
           parent_plan_id: string | null
           published_at: string | null
           published_by: string | null
@@ -1770,6 +1771,7 @@ export type Database = {
           date_debut_fab: string
           date_fin_fab: string
           id?: string
+          include_weekends?: boolean
           parent_plan_id?: string | null
           published_at?: string | null
           published_by?: string | null
@@ -1783,6 +1785,7 @@ export type Database = {
           date_debut_fab?: string
           date_fin_fab?: string
           id?: string
+          include_weekends?: boolean
           parent_plan_id?: string | null
           published_at?: string | null
           published_by?: string | null

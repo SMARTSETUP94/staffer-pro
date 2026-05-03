@@ -33,6 +33,9 @@ interface ExpressSearch {
   unfilled?: string;
   alertes?: string;
   reason?: string;
+  jours?: string;
+  delaiCourt?: string;
+  we?: string;
 }
 
 export const Route = createFileRoute("/_app/staffing/$planId")({
@@ -44,6 +47,9 @@ export const Route = createFileRoute("/_app/staffing/$planId")({
     unfilled: typeof search.unfilled === "string" ? search.unfilled : undefined,
     alertes: typeof search.alertes === "string" ? search.alertes : undefined,
     reason: typeof search.reason === "string" ? search.reason : undefined,
+    jours: typeof search.jours === "string" ? search.jours : undefined,
+    delaiCourt: typeof search.delaiCourt === "string" ? search.delaiCourt : undefined,
+    we: typeof search.we === "string" ? search.we : undefined,
   }),
 });
 
@@ -170,11 +176,15 @@ function StaffingPlanPage() {
       {showExpressBanner && (
         <ExpressResultBanner
           planId={planId}
+          affaireId={affaireMeta?.id ?? null}
           published={search.published === "1"}
           filled={Number(search.filled ?? 0)}
           unfilled={Number(search.unfilled ?? 0)}
           alertesCritiques={Number(search.alertes ?? 0)}
           reason={search.reason ?? ""}
+          joursOuvres={search.jours ? Number(search.jours) : undefined}
+          delaiCourt={search.delaiCourt === "1"}
+          includeWeekends={search.we === "1"}
           onDismiss={() => {
             setBannerDismissed(true);
             navigate({

@@ -96,17 +96,16 @@ export function findCNCSlotBackward(
   reserved: Set<string>,
   earliestStart?: string,
   maxLookbackDays = 365,
-  holidays?: Set<string>
+  holidays?: Set<string>,
+  includeWeekends = false,
 ): string | null {
-  let end = previousWorkingDay(latestEnd, holidays);
+  let end = previousWorkingDay(latestEnd, holidays, includeWeekends);
   for (let i = 0; i < maxLookbackDays; i++) {
-    // start = end - (spanDays-1) jours ouvrés
-    const start = addWorkingDays(end, -(spanDays - 1), holidays);
+    const start = addWorkingDays(end, -(spanDays - 1), holidays, includeWeekends);
     if (earliestStart && start < earliestStart) return null;
-    const dates = workingDateRange(start, spanDays, holidays);
+    const dates = workingDateRange(start, spanDays, holidays, includeWeekends);
     if (dates.every((d) => !reserved.has(d))) return start;
-    // recule d'1 jour ouvré
-    end = addWorkingDays(end, -1, holidays);
+    end = addWorkingDays(end, -1, holidays, includeWeekends);
   }
   return null;
 }
@@ -123,6 +122,7 @@ export function calculatePlan(input: PlanInput): PlanResult {
   const cncReserved = new Set<string>(input.cnc_reserved_dates ?? []);
   const picMax = input.pic_max ?? PIC_ATELIER;
   const dateLivraison = input.date_fin_fab;
+  const includeWeekends = input.include_weekends === true;
 
   // Jours fériés FR sur fenêtre [livraison-2 ans .. livraison] (large pour backward 180j + amont)
   const livYear = fromISO(dateLivraison).getUTCFullYear();
@@ -130,9 +130,9 @@ export function calculatePlan(input: PlanInput): PlanResult {
     input.holidays ?? holidaysRange(livYear - 2, livYear + 1);
 
   // helpers locaux jours ouvrés
-  const dayMinus = (iso: string, n: number) => addWorkingDays(iso, -n, holidays);
-  const stepEnd = (start: string, span: number) => addWorkingDays(start, span - 1, holidays);
-  const stepDates = (start: string, span: number) => workingDateRange(start, span, holidays);
+  const dayMinus = (iso: string, n: number) => addWorkingDays(iso, -n, holidays, includeWeekends);
+  const stepEnd = (start: string, span: number) => addWorkingDays(start, span - 1, holidays, includeWeekends);
+  const stepDates = (start: string, span: number) => workingDateRange(start, span, holidays, includeWeekends);
 
   // Tri objets : ordre d'affichage donné par le caller (display_order)
   const objets = [...input.objets].sort((a, b) => a.display_order - b.display_order);
@@ -275,7 +275,7 @@ export function calculatePlan(input: PlanInput): PlanResult {
 
   /* ----- Backward scheduling — JOURS OUVRÉS (exclut weekends + fériés FR) ----- */
   // Ancre dernière fin = dernier jour ouvré ≤ date_fin_fab
-  const lastWorkBeforeLiv = previousWorkingDay(dateLivraison, holidays);
+  const lastWorkBeforeLiv = previousWorkingDay(dateLivraison, holidays, includeWeekends);
 
   for (const chain of chains) {
     let endCursor = lastWorkBeforeLiv;
@@ -319,7 +319,7 @@ export function calculatePlan(input: PlanInput): PlanResult {
   numEntries.sort((a, b) => (a.latestEnd < b.latestEnd ? 1 : a.latestEnd > b.latestEnd ? -1 : 0));
   for (const { step, latestEnd, objet_id } of numEntries) {
     const earliestStart = dayMinus(latestEnd, 180);
-    const slot = findCNCSlotBackward(latestEnd, step.span_days, cncReserved, earliestStart, 180, holidays);
+    const slot = findCNCSlotBackward(latestEnd, step.span_days, cncReserved, earliestStart, 180, holidays, includeWeekends);
     if (slot === null) {
       const o = objets.find((x) => x.objet_id === objet_id);
       alerts.push({
