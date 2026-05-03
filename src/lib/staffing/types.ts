@@ -60,9 +60,10 @@ export interface PlanInput {
   heures_be_global?: number;
   /** Heures Num "globales" non rattachées à un objet : pro-rata sur heures_numerique par objet. */
   heures_numerique_global?: number;
-  /** Jours fériés à exclure du calcul (en plus des weekends, toujours exclus).
-   *  Si omis, l'algo génère automatiquement les fériés FR couvrant la fenêtre. */
+  /** Jours fériés à exclure du calcul. Si omis, fériés FR auto. */
   holidays?: Set<string>;
+  /** Si true, samedi/dimanche sont considérés ouvrés. Fériés FR toujours exclus. Défaut: false. */
+  include_weekends?: boolean;
 }
 
 export interface PlanStep {
