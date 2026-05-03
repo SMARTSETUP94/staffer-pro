@@ -52,7 +52,18 @@ interface MetierRow {
 
 const HIGH_VOLUME_THRESHOLD_H = 100;
 
-export function ChargeMetierSection({ planId, steps, days, objets, preParamConfigs: _ }: Props) {
+export function ChargeMetierSection({
+  planId,
+  steps,
+  days,
+  objets,
+  preParamConfigs: _,
+  editable,
+  getStepCtx,
+  onSetPers,
+  onShift,
+  onResetShift,
+}: Props) {
   const sectionLsKey = `charge-metier-collapsed-${planId}`;
   const [collapsed, setCollapsed] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
