@@ -287,7 +287,9 @@ export function ChargeMetierSection({
                         );
                       })}
                     </tr>
-                    {isExpanded && row.contributors.map((c) => (
+                    {isExpanded && row.contributors.map((c) => {
+                      const ctx = editable && getStepCtx ? getStepCtx(c.objet_id, row.metier) : null;
+                      return (
                       <tr
                         key={`${row.metier}-${c.key}`}
                         className="border-b border-border/20"
@@ -305,8 +307,24 @@ export function ChargeMetierSection({
                             {c.nom && (
                               <span className="truncate text-[10px]">— {c.nom}</span>
                             )}
-                            <span className="ml-auto text-[10px] font-mono">
-                              {Math.round(c.totalHours)}h
+                            <span className="ml-auto flex items-center gap-1.5 text-[10px] font-mono">
+                              {ctx && onSetPers && (
+                                <PersStepper
+                                  value={ctx.step.pers}
+                                  metier={row.metier}
+                                  hasWarn={ctx.hasWarn}
+                                  hasLocalEdit={ctx.hasLocalEdit}
+                                  onChange={(v) => onSetPers(ctx.step, v)}
+                                />
+                              )}
+                              {ctx && onShift && (
+                                <DateShifter
+                                  manualShift={ctx.manualShift}
+                                  onShift={(d) => onShift(ctx.step, d)}
+                                  onReset={onResetShift ? () => onResetShift(ctx.step.id) : undefined}
+                                />
+                              )}
+                              <span className="ml-1">{Math.round(c.totalHours)}h</span>
                             </span>
                           </span>
                         </td>
