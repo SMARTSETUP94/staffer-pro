@@ -78,6 +78,8 @@ function StaffingPlanPage() {
     numero: string;
     nom: string;
   } | null>(null);
+  const [preParamConfigs, setPreParamConfigs] = useState<ChantierMetierConfigRow[]>([]);
+  const loadConfigs = useServerFn(listChantierMetierConfig);
 
   useEffect(() => {
     let cancelled = false;
