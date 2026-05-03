@@ -778,65 +778,6 @@ function ImpactBadge({ impacts }: { impacts: SliderImpact[] }) {
   );
 }
 
-function PersSlider({
-  label,
-  color,
-  value,
-  disabled,
-  impacts,
-  onChange,
-}: {
-  label: string;
-  color: string;
-  value: number;
-  disabled?: boolean;
-  impacts?: SliderImpact[];
-  onChange: (v: number) => void;
-}) {
-  const hasWarn = (impacts?.length ?? 0) > 0;
-  // v0.35.x BUGFIX prod : on rend le slider non contrôlé (defaultValue) pour que le thumb
-  // bouge sous le doigt/pointer. onValueChange = preview local immédiat (state interne),
-  // onValueCommit = push dans le store. Sans onValueChange + value seul, Radix bloque
-  // le thumb tant que `value` ne change pas → en prod (build minifié) ça donne l'illusion
-  // d'un slider mort. On sync defaultValue via key={value} quand le store écrit la nouvelle valeur.
-  const [local, setLocal] = useState(value);
-  useEffect(() => {
-    setLocal(value);
-  }, [value]);
-  return (
-    <div className="flex items-center gap-2">
-      <span
-        className="inline-block h-1.5 w-1.5 rounded-sm"
-        style={{ backgroundColor: color }}
-      />
-      <span
-        className={`w-10 text-[10px] uppercase tracking-wider ${
-          hasWarn ? "text-amber-600 dark:text-amber-400 font-bold" : "text-muted-foreground"
-        }`}
-      >
-        {label}
-      </span>
-      <Slider
-        className={`w-24 ${hasWarn ? "[&_[data-orientation=horizontal]>span:first-child]:bg-amber-500/30 [&_[role=slider]]:border-amber-500 [&_[role=slider]]:ring-2 [&_[role=slider]]:ring-amber-500/40" : ""}`}
-        min={2}
-        max={12}
-        step={2}
-        value={[local]}
-        disabled={disabled}
-        onValueChange={(v) => setLocal(v[0] ?? local)}
-        onValueCommit={(v) => onChange(v[0] ?? local)}
-      />
-      <span
-        className={`w-7 font-mono text-[10px] font-bold tabular-nums ${
-          hasWarn ? "text-amber-600 dark:text-amber-400" : ""
-        }`}
-      >
-        {local}p
-      </span>
-      {hasWarn && <AlertTriangle className="h-3 w-3 text-amber-500" />}
-    </div>
-  );
-}
 
 function StatCard({
   icon,
