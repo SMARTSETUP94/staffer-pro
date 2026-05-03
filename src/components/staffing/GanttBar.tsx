@@ -1,7 +1,7 @@
 // v0.35.2 / Sprint 2.1 — GanttBar (barre individuelle d'une étape métier)
 // v0.35.10 P1 #4 — drag horizontal pour shift au jour près (en plus des chevrons).
 //                  Snap au jour, preview visuel via translation, commit au mouseup.
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { METIER_COLOR } from "./gantt-helpers";
