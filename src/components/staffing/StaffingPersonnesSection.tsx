@@ -37,6 +37,8 @@ interface Suggestion {
   score: number;
   tier: 1 | 2 | 3;
   dispo_pct: number;
+  absent_days_in_step: number;
+  absent_today: boolean;
 }
 interface Assignment {
   id: string;
@@ -403,13 +405,23 @@ function PersonneSuggestionCard({
         <AvatarFallback className="text-[10px] font-semibold">{initials}</AvatarFallback>
       </Avatar>
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 flex-wrap">
           <p className="truncate text-xs font-semibold">
             {suggestion.employe.prenom} {suggestion.employe.nom}
           </p>
           <Badge className={`px-1 py-0 text-[9px] font-bold ${tier.bg} ${tier.text}`} variant="outline">
             {tier.label}
           </Badge>
+          {suggestion.absent_today && (
+            <Badge variant="outline" className="px-1 py-0 text-[9px] font-bold bg-destructive/15 text-destructive border-destructive/30" title="Absent ce jour">
+              Absent ce jour
+            </Badge>
+          )}
+          {!suggestion.absent_today && suggestion.absent_days_in_step > 0 && (
+            <Badge variant="outline" className="px-1 py-0 text-[9px] font-bold bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30" title={`Absent ${suggestion.absent_days_in_step} j sur la fenêtre du step`}>
+              Absent {suggestion.absent_days_in_step} j
+            </Badge>
+          )}
         </div>
         <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
           <span className="font-mono">{suggestion.employe.type_contrat}</span>
