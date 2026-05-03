@@ -80,15 +80,28 @@ export function cascadeMetierOverlaps(
   configs: MetierConfig[],
   holidays?: Set<string>,
   includeWeekends = false,
+  /** Borne ISO inférieure de recul (jamais avant cette date). Défaut: 60j ouvrés
+   * avant le min start_date des steps. Évite l'explosion d'horizon (BUG v0.36 RC). */
+  earliestStart?: string,
 ): PlanStep[] {
   // Clone des steps actifs (mutables localement)
   const cloned = steps.map((s) => ({ ...s }));
+  // Borne inférieure : 60 jours ouvrés avant le start le plus précoce
+  const placedStarts = cloned.filter((s) => s.start_date !== "TBD").map((s) => s.start_date);
+  const minOriginalStart = placedStarts.length
+    ? placedStarts.reduce((a, b) => (a < b ? a : b))
+    : null;
+  const floorStart =
+    earliestStart ??
+    (minOriginalStart
+      ? addWorkingDays(minOriginalStart, -60, holidays, includeWeekends)
+      : null);
   for (const cfg of configs) {
     if (!cfg.lissage_active) continue;
     const target = CFG_TO_METIER[cfg.metier_code];
     const cap = Math.max(1, cfg.capa_max_jour);
     let safety = 0;
-    while (safety++ < 1000) {
+    while (safety++ < 500) {
       const metierSteps = cloned.filter(
         (s) => s.metier === target && s.start_date !== "TBD",
       );
