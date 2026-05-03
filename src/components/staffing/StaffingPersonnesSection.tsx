@@ -46,6 +46,21 @@ import {
   getPlanAssignments,
 } from "@/server/staffing-personnes.functions";
 import { METIER_KEY_BY_ID, METIER_ID, type MetierKey, type PlanStep } from "@/lib/staffing/types";
+
+/** v0.38.1.1 — helpers demi-journée (alignement Gantt) */
+function effectiveDemi(step: PlanStep): number {
+  return step.span_demi_jours ?? (step.span_days ?? 0) * 2;
+}
+function effectiveSpanDays(step: PlanStep): number {
+  return Math.max(1, Math.ceil(effectiveDemi(step) / 2));
+}
+function formatSpanLabel(step: PlanStep): string {
+  const demi = effectiveDemi(step);
+  const full = Math.floor(demi / 2);
+  const half = demi % 2;
+  if (full === 0) return `${half}½j`;
+  return half ? `${full}½j` : `${full}j`;
+}
 import { METIER_COLOR, METIER_LABEL, METIER_ORDER, formatShortDate, formatDayName } from "./gantt-helpers";
 
 interface Suggestion {
