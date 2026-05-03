@@ -199,7 +199,7 @@ export function ChargeMetierSection({ planId, steps, days, objets, preParamConfi
                 const canExpand = row.contributors.length > 1;
                 const isExpanded = canExpand && expanded.has(row.metier);
                 return (
-                  <>
+                  <Fragment key={row.metier}>
                     <tr
                       key={row.metier}
                       className="border-b border-border/30 bg-muted/20"
