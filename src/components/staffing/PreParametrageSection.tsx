@@ -76,6 +76,17 @@ export function PreParametrageSection({ affaireId, deadline, onApplied: _onAppli
   const [fenetreDispo, setFenetreDispo] = useState(0);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [collapsed, setCollapsed] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem(COLLAPSE_LS_KEY) === "1";
+  });
+  const toggleCollapsed = () => {
+    setCollapsed((c) => {
+      const next = !c;
+      try { window.localStorage.setItem(COLLAPSE_LS_KEY, next ? "1" : "0"); } catch { /* ignore */ }
+      return next;
+    });
+  };
 
   const load = async () => {
     setLoading(true);
