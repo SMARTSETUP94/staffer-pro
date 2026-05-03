@@ -50,13 +50,12 @@ export function dayIndex(days: string[], iso: string): number {
   return days.indexOf(iso);
 }
 
-/** Renvoie la "span" effective d'un step en jours ouvrés sur la fenêtre */
+/** Renvoie la "span" effective d'un step en jours ouvrés sur la fenêtre (legacy jours pleins) */
 export function stepSpanInWindow(
   days: string[],
   startISO: string,
   spanDays: number
 ): { startCol: number; endCol: number; visible: boolean } {
-  // Étend les calendar days ; on cherche le 1er jour ouvré dans la fenêtre
   const startD = new Date(startISO + "T00:00:00Z");
   const endD = new Date(startD);
   endD.setUTCDate(endD.getUTCDate() + spanDays - 1);
@@ -64,10 +63,44 @@ export function stepSpanInWindow(
   const startISOClamp = startD.toISOString().slice(0, 10);
   const endISOClamp = endD.toISOString().slice(0, 10);
 
-  // Cherche premier jour ouvré dans days >= startISOClamp et <= endISOClamp
   const matches = days.filter((d) => d >= startISOClamp && d <= endISOClamp);
   if (matches.length === 0) return { startCol: -1, endCol: -1, visible: false };
   const first = days.indexOf(matches[0]);
   const last = days.indexOf(matches[matches.length - 1]);
   return { startCol: first + 1, endCol: last + 2, visible: true };
+}
+
+/**
+ * v0.38.1b — Span d'un step exprimé en colonnes de demi-journées (AM|PM).
+ * Chaque jour ouvré = 2 colonnes (AM puis PM). Col 1 = label objet.
+ *  - col jour i = (1 + i*2 + 1) AM, (1 + i*2 + 2) PM  (1-indexed pour grid)
+ *  - startCol dépend de start_half_day ("AM" ou "PM") du step
+ *  - endCol = startCol + span_demi_jours (exclusif → +1 pour grid-end)
+ */
+export function stepSpanInHalves(
+  days: string[],
+  startISO: string,
+  spanDemiJours: number,
+  startHalf: "AM" | "PM",
+): { startCol: number; endCol: number; visible: boolean } {
+  if (spanDemiJours <= 0) return { startCol: -1, endCol: -1, visible: false };
+  const dayIdx = days.indexOf(startISO);
+  // Si start hors fenêtre, on essaie de clamper sur le 1er jour visible >= startISO
+  let firstHalfPos: number; // position 0-indexée dans la liste des demi-journées
+  if (dayIdx >= 0) {
+    firstHalfPos = dayIdx * 2 + (startHalf === "PM" ? 1 : 0);
+  } else {
+    const next = days.findIndex((d) => d >= startISO);
+    if (next === -1) return { startCol: -1, endCol: -1, visible: false };
+    firstHalfPos = next * 2;
+  }
+  const totalHalves = days.length * 2;
+  if (firstHalfPos >= totalHalves) return { startCol: -1, endCol: -1, visible: false };
+  const lastHalfPos = Math.min(totalHalves - 1, firstHalfPos + spanDemiJours - 1);
+  // grid column 1 = label, demi-journée 0 = column 2
+  return {
+    startCol: firstHalfPos + 2,
+    endCol: lastHalfPos + 3,
+    visible: true,
+  };
 }

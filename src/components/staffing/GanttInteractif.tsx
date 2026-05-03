@@ -19,7 +19,7 @@ import {
   workingDaysBetween,
   formatDayName,
   formatShortDate,
-  stepSpanInWindow,
+  stepSpanInHalves,
   METIER_COLOR,
   METIER_LABEL,
 } from "./gantt-helpers";
@@ -136,11 +136,11 @@ export const GanttInteractif = forwardRef<
     const el = gridRef.current;
     if (!el) return;
     const measure = () => {
-      // 1ère colonne = 220px (label objet), reste = jours
+      // 1ère colonne = 220px (label objet), reste = 2*jours demi-journées
       const total = el.getBoundingClientRect().width;
       const dayCount = el.dataset.dayCount ? parseInt(el.dataset.dayCount, 10) : 0;
       if (dayCount > 0) {
-        const w = (total - 220) / dayCount;
+        const w = (total - 220) / dayCount; // largeur d'un jour plein (= 2 demi-journées)
         setDayWidthPx(w > 0 ? w : 0);
       }
     };
@@ -311,8 +311,8 @@ export const GanttInteractif = forwardRef<
   const objets = [...data.objets].sort((a, b) => a.display_order - b.display_order);
   const dateLivraison = data.result.date_fin_fab;
 
-  // Grid template
-  const gridTemplate = `220px repeat(${days.length}, minmax(42px, 1fr))`;
+  // v0.38.1b — Grid 2 colonnes par jour (AM | PM)
+  const gridTemplate = `220px repeat(${days.length * 2}, minmax(22px, 1fr))`;
 
   const getObjStepByMetier = (objet_id: string, metier_id: number): PlanStep | undefined =>
     mergedSteps.find(
@@ -409,9 +409,17 @@ export const GanttInteractif = forwardRef<
           >
             <div className="px-3 py-2 text-xs font-bold uppercase tracking-wider">Objet / Étape</div>
             {days.map((d) => (
-              <div key={d} className="border-l border-border/40 px-1 py-2 text-center font-mono text-[10px]">
-                <div className="text-muted-foreground">{formatDayName(d)}</div>
-                <div className="font-semibold">{formatShortDate(d)}</div>
+              <div key={d} className="contents">
+                <div className="border-l border-border/60 px-0.5 pt-2 pb-0.5 text-center font-mono text-[10px]">
+                  <div className="text-muted-foreground">{formatDayName(d)}</div>
+                  <div className="font-semibold">{formatShortDate(d)}</div>
+                  <div className="mt-0.5 text-[8px] font-bold text-muted-foreground/70">AM</div>
+                </div>
+                <div className="border-l border-border/20 px-0.5 pt-2 pb-0.5 text-center font-mono text-[10px]">
+                  <div className="text-muted-foreground opacity-0">.</div>
+                  <div className="opacity-0">.</div>
+                  <div className="mt-0.5 text-[8px] font-bold text-muted-foreground/70">PM</div>
+                </div>
               </div>
             ))}
           </div>
@@ -433,7 +441,9 @@ export const GanttInteractif = forwardRef<
                   </div>
                 </div>
                 {globalSteps.map((s) => {
-                  const span = stepSpanInWindow(days, s.start_date, s.span_days);
+                  const demi = s.span_demi_jours ?? s.span_days * 2;
+                  const halfStart = s.start_half_day ?? "AM";
+                  const span = stepSpanInHalves(days, s.start_date, demi, halfStart);
                   const stepEnd = new Date(s.start_date + "T00:00:00Z");
                   stepEnd.setUTCDate(stepEnd.getUTCDate() + s.span_days - 1);
                   const overDL = stepEnd.toISOString().slice(0, 10) > dateLivraison;
@@ -562,7 +572,9 @@ export const GanttInteractif = forwardRef<
 
                 {/* Steps de l'objet */}
                 {objSteps.map((s) => {
-                  const span = stepSpanInWindow(days, s.start_date, s.span_days);
+                  const demi = s.span_demi_jours ?? s.span_days * 2;
+                  const halfStart = s.start_half_day ?? "AM";
+                  const span = stepSpanInHalves(days, s.start_date, demi, halfStart);
                   const stepEnd = new Date(s.start_date + "T00:00:00Z");
                   stepEnd.setUTCDate(stepEnd.getUTCDate() + s.span_days - 1);
                   const overDL = stepEnd.toISOString().slice(0, 10) > dateLivraison;
