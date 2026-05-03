@@ -154,7 +154,7 @@ export const suggestPreParametrage = createServerFn({ method: "POST" })
     }
 
     const today = data.today ?? new Date().toISOString().slice(0, 10);
-    const result = autoSuggestMetierConfig(totals, today, aff.date_fin_prevue as string);
+    const result = autoSuggestMetierConfig(totals, today, resolvedDeadline);
 
     return {
       configs: result.configs.map((c) => ({
