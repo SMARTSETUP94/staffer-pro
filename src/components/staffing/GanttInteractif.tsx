@@ -426,13 +426,36 @@ export const GanttInteractif = forwardRef<
       {/* Bulk pers par métier (P1 #6) */}
       <BulkPersByMetierBar steps={mergedSteps} />
 
-      {/* v0.38.2 — Section Charge par métier collapsible + drilldown objet */}
+      {/* v0.39.0 — Section Charge par métier ÉDITABLE (stepper + chevrons date) */}
       <ChargeMetierSection
         planId={planId}
         steps={mergedSteps}
         days={days}
         objets={data.objets.map((o) => ({ objet_id: o.objet_id, reference: o.reference, nom: o.nom }))}
         preParamConfigs={preParamConfigs}
+        editable
+        getStepCtx={(objet_id, metierKey) => {
+          const metierIdEntry = Object.entries(METIER_KEY_BY_ID).find(([, k]) => k === metierKey);
+          if (!metierIdEntry) return null;
+          const metier_id = Number(metierIdEntry[0]);
+          const step = mergedSteps.find(
+            (s) => s.objet_id === objet_id && s.metier_id === metier_id && s.start_date !== "TBD",
+          );
+          if (!step) return null;
+          const baseShift = data.step_overrides[step.id]?.manual_shift ?? 0;
+          const localShift = edits[step.id]?.manual_shift ?? baseShift;
+          return {
+            step,
+            manualShift: localShift,
+            hasLocalEdit:
+              edits[step.id]?.pers !== undefined ||
+              edits[step.id]?.manual_shift !== undefined,
+            hasWarn: (impactByStep[step.id]?.length ?? 0) > 0,
+          };
+        }}
+        onSetPers={(step, pers) => handleSetPers(step, pers)}
+        onShift={(step, delta) => handleShift(step, delta)}
+        onResetShift={(stepId) => handleResetShift(stepId)}
       />
 
       {/* Gantt */}
