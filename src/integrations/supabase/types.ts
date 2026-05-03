@@ -447,6 +447,89 @@ export type Database = {
           },
         ]
       }
+      chantier_metier_config: {
+        Row: {
+          affaire_id: string
+          be_override: boolean
+          capa_max_jour: number
+          created_at: string
+          duree_cible_j: number
+          fenetre_end: string | null
+          fenetre_start: string | null
+          id: string
+          lissage_active: boolean
+          metier_id: number
+          nb_pers_cible: number
+          override_reason: string | null
+          total_h_calc: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          affaire_id: string
+          be_override?: boolean
+          capa_max_jour?: number
+          created_at?: string
+          duree_cible_j?: number
+          fenetre_end?: string | null
+          fenetre_start?: string | null
+          id?: string
+          lissage_active?: boolean
+          metier_id: number
+          nb_pers_cible?: number
+          override_reason?: string | null
+          total_h_calc?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          affaire_id?: string
+          be_override?: boolean
+          capa_max_jour?: number
+          created_at?: string
+          duree_cible_j?: number
+          fenetre_end?: string | null
+          fenetre_start?: string | null
+          id?: string
+          lissage_active?: boolean
+          metier_id?: number
+          nb_pers_cible?: number
+          override_reason?: string | null
+          total_h_calc?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chantier_metier_config_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "affaires"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chantier_metier_config_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "v_affaire_consommation"
+            referencedColumns: ["affaire_id"]
+          },
+          {
+            foreignKeyName: "chantier_metier_config_metier_id_fkey"
+            columns: ["metier_id"]
+            isOneToOne: false
+            referencedRelation: "metiers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chantier_metier_config_metier_id_fkey"
+            columns: ["metier_id"]
+            isOneToOne: false
+            referencedRelation: "v_devis_consommation"
+            referencedColumns: ["metier_id"]
+          },
+        ]
+      }
       devis: {
         Row: {
           affaire_id: string
