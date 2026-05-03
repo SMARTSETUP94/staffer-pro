@@ -96,17 +96,16 @@ export function findCNCSlotBackward(
   reserved: Set<string>,
   earliestStart?: string,
   maxLookbackDays = 365,
-  holidays?: Set<string>
+  holidays?: Set<string>,
+  includeWeekends = false,
 ): string | null {
-  let end = previousWorkingDay(latestEnd, holidays);
+  let end = previousWorkingDay(latestEnd, holidays, includeWeekends);
   for (let i = 0; i < maxLookbackDays; i++) {
-    // start = end - (spanDays-1) jours ouvrés
-    const start = addWorkingDays(end, -(spanDays - 1), holidays);
+    const start = addWorkingDays(end, -(spanDays - 1), holidays, includeWeekends);
     if (earliestStart && start < earliestStart) return null;
-    const dates = workingDateRange(start, spanDays, holidays);
+    const dates = workingDateRange(start, spanDays, holidays, includeWeekends);
     if (dates.every((d) => !reserved.has(d))) return start;
-    // recule d'1 jour ouvré
-    end = addWorkingDays(end, -1, holidays);
+    end = addWorkingDays(end, -1, holidays, includeWeekends);
   }
   return null;
 }
