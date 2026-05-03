@@ -26,6 +26,8 @@ import {
 import { GanttBar } from "./GanttBar";
 import { BulkPersByMetierBar } from "./BulkPersByMetierBar";
 import { HeatmapMetier } from "./HeatmapMetier";
+import { HeatmapCibleVsReel } from "./HeatmapCibleVsReel";
+import type { ChantierMetierConfigRow } from "@/server/staffing-pre-parametrage.functions";
 import { AlerteBandeau } from "./AlerteBandeau";
 import { ResolveCncConflictDialog } from "./ResolveCncConflictDialog";
 import { updatePlanDateFinFab } from "@/server/staffing-resolve.functions";
@@ -58,8 +60,10 @@ export const GanttInteractif = forwardRef<
   {
     planId: string;
     onDataLoaded?: (d: PlanData) => void;
+    /** v0.36 — configs pré-paramétrage pour heatmap cible vs réel. */
+    preParamConfigs?: ChantierMetierConfigRow[];
   }
->(function GanttInteractifInner({ planId, onDataLoaded }, ref) {
+>(function GanttInteractifInner({ planId, onDataLoaded, preParamConfigs }, ref) {
   const calculate = useServerFn(calculateStaffingPlan);
   const updateObj = useServerFn(updatePlanObject);
   const [data, setData] = useState<PlanData | null>(null);
@@ -374,12 +378,18 @@ export const GanttInteractif = forwardRef<
       {/* Bulk pers par métier (P1 #6) */}
       <BulkPersByMetierBar steps={mergedSteps} />
 
-      {/* Heatmap métier — vue agrégée AVANT le détail Gantt (UX top-down) */}
+      {/* Heatmap métier — v0.36 : toggle cible vs réel si configs fournies, sinon réel seul */}
       <div>
-        <h3 className="mb-2 text-sm font-bold uppercase tracking-wider text-muted-foreground">
-          Charge par métier
-        </h3>
-        <HeatmapMetier steps={mergedSteps} days={days} />
+        {preParamConfigs && preParamConfigs.length > 0 ? (
+          <HeatmapCibleVsReel steps={mergedSteps} days={days} configs={preParamConfigs} />
+        ) : (
+          <>
+            <h3 className="mb-2 text-sm font-bold uppercase tracking-wider text-muted-foreground">
+              Charge par métier
+            </h3>
+            <HeatmapMetier steps={mergedSteps} days={days} />
+          </>
+        )}
       </div>
 
       {/* Gantt */}

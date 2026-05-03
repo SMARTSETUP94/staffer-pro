@@ -2,6 +2,7 @@
 // v0.35.x BATCH — Toolbar batch edition (sliders + shifts) + autosave 2 min idle.
 import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link, Navigate, useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { ArrowLeft, History, Send, Zap, ListChecks, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,6 +22,8 @@ import { DeletePlanDialog } from "@/components/staffing/DeletePlanDialog";
 import { StaffingEditToolbar } from "@/components/staffing/StaffingEditToolbar";
 import { AutoStaffPlanButton, type AutoStaffPlanButtonHandle } from "@/components/staffing/AutoStaffPlanButton";
 import { StaffingShortcutsHelp } from "@/components/staffing/StaffingShortcutsHelp";
+import { PreParametrageSection } from "@/components/staffing/PreParametrageSection";
+import { listChantierMetierConfig, type ChantierMetierConfigRow } from "@/server/staffing-pre-parametrage.functions";
 import { ExpressResultBanner } from "@/components/staffing/ExpressResultBanner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -76,6 +79,8 @@ function StaffingPlanPage() {
     numero: string;
     nom: string;
   } | null>(null);
+  const [preParamConfigs, setPreParamConfigs] = useState<ChantierMetierConfigRow[]>([]);
+  const loadConfigs = useServerFn(listChantierMetierConfig);
 
   useEffect(() => {
     let cancelled = false;
@@ -276,11 +281,30 @@ function StaffingPlanPage() {
           onSaved={() => ganttRef.current?.reload()}
         />
       )}
+      {affaireMeta && (
+        <PreParametrageSection
+          affaireId={affaireMeta.id}
+          onApplied={async () => {
+            const cfgs = await loadConfigs({ data: { affaire_id: affaireMeta.id } });
+            setPreParamConfigs(cfgs);
+            setRefreshKey((k) => k + 1);
+          }}
+        />
+      )}
       <GanttInteractif
         ref={ganttRef}
         key={refreshKey}
         planId={planId}
-        onDataLoaded={setPlanData}
+        onDataLoaded={async (d) => {
+          setPlanData(d);
+          if (affaireMeta) {
+            try {
+              const cfgs = await loadConfigs({ data: { affaire_id: affaireMeta.id } });
+              setPreParamConfigs(cfgs);
+            } catch { /* silent */ }
+          }
+        }}
+        preParamConfigs={preParamConfigs}
       />
       {planData && (
         <>
