@@ -1,6 +1,6 @@
 // v0.38.3 — Treetable hiérarchique unique : 1 ligne par métier (total/jour) + sous-lignes
 // objets contributeurs expand/collapse. Remplace l'ancien duo heatmap + drill par cellule.
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { METIER_COLOR, METIER_LABEL, METIER_ORDER, formatShortDate } from "./gantt-helpers";
 import type { PlanStep, MetierKey } from "@/lib/staffing/types";
