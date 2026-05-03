@@ -364,7 +364,7 @@ function ListView({
         const objLabel = step.objet_id ? (objetsLabel[step.objet_id] ?? step.objet_id) : "Global";
         const stepAssigns = assignments.filter((a) => a.step_id === step.id);
         const cov = coverByStep[step.id];
-        const targetPersDays = cov?.target ?? step.pers * step.span_days;
+        const targetPersDays = cov?.target ?? step.pers * effectiveSpanDays(step);
         const coverPersDays = cov?.cover ?? 0;
         const coverRounded = Math.round(coverPersDays * 10) / 10;
         const partialCount = stepAssigns.filter((a) => a.presence_pct < 100).length;
@@ -382,7 +382,7 @@ function ListView({
                   <span className="text-xs text-muted-foreground truncate max-w-[260px]">{objLabel}</span>
                   <span className="ml-auto flex items-center gap-2 text-xs">
                     <span className="font-mono">
-                      {step.pers}p × {step.span_days}j
+                      {step.pers}p × {formatSpanLabel(step)}
                     </span>
                     <Badge
                       variant={isFull ? "secondary" : "outline"}
