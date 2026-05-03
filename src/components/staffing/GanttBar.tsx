@@ -152,6 +152,7 @@ export function GanttBar({
 
   return (
     <div
+      ref={containerRef}
       className={`group relative flex h-7 items-center rounded-md px-2 text-[11px] font-mono text-white shadow-sm ${ringClass} ${
         canDrag ? (dragging ? "cursor-grabbing" : "cursor-grab") : ""
       }`}
@@ -165,6 +166,8 @@ export function GanttBar({
         zIndex: dragging ? 20 : undefined,
       }}
       title={tooltip}
+      data-testid="gantt-bar"
+      data-label={compactLabel}
       onMouseDown={handleMouseDown}
     >
       {onShift && !disableShift && (
@@ -180,14 +183,12 @@ export function GanttBar({
           <ChevronLeft className="h-3 w-3" />
         </Button>
       )}
-      <span className="flex-1 truncate text-center">
-        {step.pers}p × {(() => {
-          const demi = step.span_demi_jours ?? step.span_days * 2;
-          // Affichage : "Nj" si entier en jours, "N½j" si demi-journée résiduelle, "½j" si 1 demi seul
-          if (demi === 1) return "½j";
-          if (demi % 2 === 0) return `${demi / 2}j`;
-          return `${Math.floor(demi / 2)}½j`;
-        })()}
+      <span
+        ref={labelRef}
+        className={`flex-1 truncate text-center ${labelOverflow ? "opacity-0" : ""}`}
+        aria-hidden={labelOverflow}
+      >
+        {compactLabel}
         {phaseLabel && (
           <span className="ml-1 rounded bg-white/30 px-1 text-[9px] font-bold tracking-wider">
             {phaseLabel}
@@ -203,6 +204,14 @@ export function GanttBar({
         )}
         {isOverDeadline && !dragging && <span className="ml-1 font-bold">OUT</span>}
       </span>
+      {labelOverflow && (
+        <span
+          className="pointer-events-none absolute inset-0 flex items-center justify-center text-[10px] font-bold"
+          aria-hidden
+        >
+          •••
+        </span>
+      )}
       {onResetShift && manualShift !== 0 && !disableShift && !dragging && (
         <Button
           size="icon"
