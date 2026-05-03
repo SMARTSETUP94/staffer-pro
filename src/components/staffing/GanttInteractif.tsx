@@ -627,23 +627,29 @@ export const GanttInteractif = forwardRef<
                         {objSteps.length > 1 ? "s" : ""}
                       </p>
                       {isExpanded && boisStep && (
-                        <PersSlider
-                          label="Bois"
-                          color={METIER_COLOR.Bois}
+                        <PersStepper
                           value={boisStep.pers}
-                          disabled={false}
-                          impacts={impactByStep[boisStep.id]}
+                          metier="Bois"
+                          hasWarn={(impactByStep[boisStep.id]?.length ?? 0) > 0}
+                          hasLocalEdit={
+                            edits[boisStep.id]?.pers !== undefined ||
+                            edits[boisStep.id]?.manual_shift !== undefined
+                          }
                           onChange={(v) => handleSetPers(boisStep, v)}
+                          size="normal"
                         />
                       )}
                       {isExpanded && peintStep && (
-                        <PersSlider
-                          label="Peint"
-                          color={METIER_COLOR.Peint}
+                        <PersStepper
                           value={peintStep.pers}
-                          disabled={false}
-                          impacts={impactByStep[peintStep.id]}
+                          metier="Peint"
+                          hasWarn={(impactByStep[peintStep.id]?.length ?? 0) > 0}
+                          hasLocalEdit={
+                            edits[peintStep.id]?.pers !== undefined ||
+                            edits[peintStep.id]?.manual_shift !== undefined
+                          }
                           onChange={(v) => handleSetPers(peintStep, v)}
+                          size="normal"
                         />
                       )}
                     </div>
