@@ -15,7 +15,7 @@ interface AutoStaffResult {
     employe_id: string;
     nom: string;
     prenom: string;
-    tier: 1 | 2 | 3;
+    tier: 1 | 2 | 3 | 4;
     presence_pct: number;
   }>;
 }

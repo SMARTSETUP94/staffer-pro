@@ -33,7 +33,7 @@ export const getPersonnelSuggestions = createServerFn({ method: "POST" })
           type_contrat: string;
         };
         score: number;
-        tier: 1 | 2 | 3;
+        tier: 1 | 2 | 3 | 4;
         dispo_pct: number;
         absent_days_in_step: number;
         absent_today: boolean;
