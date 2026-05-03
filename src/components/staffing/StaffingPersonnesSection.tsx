@@ -236,7 +236,7 @@ export function StaffingPersonnesSection({ planId, steps, onAssignmentsChanged, 
     setRestaffing(true);
     try {
       const r = await restaff({ data: { planId } });
-      toast.success(`Re-staffing nominatif terminé : ${r.assigned}/${r.attempted} étapes`);
+      toast.success(`Re-staffing nominatif terminé : ${r.filled_total} affectations sur ${r.steps_traites} étapes`);
       await reload();
       onAssignmentsChanged?.();
     } catch (e) {
