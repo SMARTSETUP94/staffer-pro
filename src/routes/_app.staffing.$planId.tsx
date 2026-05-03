@@ -122,6 +122,11 @@ function StaffingPlanPage() {
     };
   }, [planId, refreshKey]);
 
+  // v0.39.0a HOTFIX — hooks AVANT early returns pour stabiliser l'ordre (React #310)
+  const search = Route.useSearch();
+  const navigate = useNavigate();
+  const [bannerDismissed, setBannerDismissed] = useState(false);
+
   if (!rolesLoaded) return null;
   if (!isAdminOrChef) return <Navigate to="/dashboard" />;
 
