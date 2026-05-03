@@ -29,10 +29,12 @@ const METIER_LABEL: Record<MetierConfigKey, string> = {
 
 interface Props {
   affaireId: string;
+  /** Deadline override (ex: plan.date_fin_fab) — fallback si affaire.date_fin_prevue NULL. */
+  deadline?: string | null;
   onApplied?: () => void;
 }
 
-export function PreParametrageSection({ affaireId, onApplied }: Props) {
+export function PreParametrageSection({ affaireId, deadline, onApplied }: Props) {
   const list = useServerFn(listChantierMetierConfig);
   const suggest = useServerFn(suggestPreParametrage);
   const upsert = useServerFn(upsertChantierMetierConfig);
@@ -44,14 +46,16 @@ export function PreParametrageSection({ affaireId, onApplied }: Props) {
   const [fenetreDispo, setFenetreDispo] = useState(0);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [editing, setEditing] = useState<Record<string, Partial<ChantierMetierConfigRow>>>({});
 
   const load = async () => {
     setLoading(true);
+    setErrorMsg(null);
     try {
       const [existing, sugg] = await Promise.all([
         list({ data: { affaire_id: affaireId } }),
-        suggest({ data: { affaire_id: affaireId } }),
+        suggest({ data: { affaire_id: affaireId, deadline: deadline ?? null } }),
       ]);
       // Merge : existant prioritaire, sinon suggestion
       const map = new Map<number, ChantierMetierConfigRow>();
