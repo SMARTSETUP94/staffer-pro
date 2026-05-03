@@ -158,6 +158,20 @@ export const GanttInteractif = forwardRef<
     void reload();
   }, [reload]);
 
+  /** v0.38.4 — Auto-expand objets > 100h au premier chargement (si rien en localStorage) */
+  useEffect(() => {
+    if (!data || expandedInit) return;
+    setExpandedInit(true);
+    if (typeof window !== "undefined") {
+      const raw = window.localStorage.getItem(expandedKey);
+      if (raw && raw !== "[]") return; // état utilisateur déjà persisté
+    }
+    const big = new Set(
+      data.objets.filter((o) => o.heures_total > 100).map((o) => o.id),
+    );
+    if (big.size > 0) setExpandedObjets(big);
+  }, [data, expandedInit, expandedKey]);
+
   useImperativeHandle(ref, () => ({ reload }), [reload]);
 
   /** Observe la largeur réelle du header pour calculer dayWidthPx (drag-to-shift) */
