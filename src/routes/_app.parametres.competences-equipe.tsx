@@ -132,9 +132,9 @@ function CompetencesEquipePage() {
     };
   }, []);
 
-  const cycleCell = async (empId: string, metierId: number) => {
+  const setNiveauCell = async (empId: string, metierId: number, nxt: Cell) => {
     const cur = matrix[empId]?.[metierId] ?? null;
-    const nxt = nextNiveau(cur);
+    if (cur === nxt) return;
     const key = `${empId}:${metierId}`;
     setSavingKey(key);
 
@@ -149,7 +149,6 @@ function CompetencesEquipePage() {
     });
 
     try {
-      // Toujours supprimer la ligne existante puis insérer la nouvelle (ou rien si null)
       const { error: delErr } = await supabase
         .from("employe_metiers")
         .delete()
@@ -176,6 +175,11 @@ function CompetencesEquipePage() {
     } finally {
       setSavingKey(null);
     }
+  };
+
+  const cycleCell = (empId: string, metierId: number) => {
+    const cur = matrix[empId]?.[metierId] ?? null;
+    return setNiveauCell(empId, metierId, nextNiveau(cur));
   };
 
   const filtered = useMemo(() => {
