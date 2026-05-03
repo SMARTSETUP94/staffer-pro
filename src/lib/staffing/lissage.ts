@@ -275,7 +275,15 @@ export function applyLissage(plan: PlanResult, opts: ApplyLissageOptions): PlanR
   }
 
   // 1.b Désempilement métier (résout cumul multi-steps > cap)
-  steps = cascadeMetierOverlaps(steps, opts.configs, holidays, includeWeekends);
+  // Borne plancher = date_debut_fab d'origine (avant lissage) — empêche
+  // l'explosion d'horizon (BUG v0.36 RC : steps reculés de 2 ans).
+  steps = cascadeMetierOverlaps(
+    steps,
+    opts.configs,
+    holidays,
+    includeWeekends,
+    plan.date_debut_fab,
+  );
 
   // 2. BE séquentiel (sauf override)
   steps = sequenceBeSteps(steps, {
