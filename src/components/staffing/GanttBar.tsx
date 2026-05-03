@@ -58,6 +58,25 @@ export function GanttBar({
     snappedDelta: number; // dernier delta en jours déjà snap
   } | null>(null);
 
+  // v0.38.2 — détection overflow label (barre trop étroite → masque texte, tooltip prend le relai)
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const labelRef = useRef<HTMLSpanElement | null>(null);
+  const [labelOverflow, setLabelOverflow] = useState(false);
+  useEffect(() => {
+    if (!containerRef.current || !labelRef.current) return;
+    const measure = () => {
+      const c = containerRef.current;
+      const l = labelRef.current;
+      if (!c || !l) return;
+      // marge buttons (chevrons + croix ~60px) — on tolère un peu
+      setLabelOverflow(l.scrollWidth > c.clientWidth - 8);
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(containerRef.current);
+    return () => ro.disconnect();
+  });
+
   const canDrag = !!onShift && !disableShift && !!dayWidthPx && dayWidthPx > 0;
 
   const handleMouseDown = useCallback(
