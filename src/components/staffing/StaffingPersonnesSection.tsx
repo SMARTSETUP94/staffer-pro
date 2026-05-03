@@ -37,6 +37,8 @@ interface Suggestion {
   score: number;
   tier: 1 | 2 | 3;
   dispo_pct: number;
+  absent_days_in_step: number;
+  absent_today: boolean;
 }
 interface Assignment {
   id: string;
