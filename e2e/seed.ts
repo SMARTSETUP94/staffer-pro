@@ -1,0 +1,239 @@
+/**
+ * v0.36 — Seed idempotent comptes E2E.
+ *
+ * Crée/réactive 3 comptes test + 1 affaire chef + 1 assignation employé semaine en cours.
+ *
+ * Variables d'env requises (ne JAMAIS pointer vers la prod) :
+ *   E2E_SUPABASE_URL                 # ex https://znwffztmdgsshuvvzsvq.supabase.co
+ *   E2E_SUPABASE_SERVICE_ROLE_KEY    # service_role pour bypass RLS + auth admin
+ *   E2E_ADMIN_EMAIL / E2E_ADMIN_PASSWORD
+ *   E2E_CHEF_EMAIL  / E2E_CHEF_PASSWORD
+ *   E2E_EMPLOYE_EMAIL / E2E_EMPLOYE_PASSWORD
+ *
+ * Usage : `bun run e2e/seed.ts`
+ */
+import { createClient } from "@supabase/supabase-js";
+
+function req(name: string): string {
+  const v = process.env[name];
+  if (!v) throw new Error(`[seed] env manquant : ${name}`);
+  return v;
+}
+
+const url = req("E2E_SUPABASE_URL");
+const serviceKey = req("E2E_SUPABASE_SERVICE_ROLE_KEY");
+const admin = createClient(url, serviceKey, {
+  auth: { autoRefreshToken: false, persistSession: false },
+});
+
+type RoleName = "admin" | "chef_chantier" | "employe";
+
+interface Seed {
+  email: string;
+  password: string;
+  role: RoleName;
+  fullName: string;
+  prenom: string;
+  nom: string;
+}
+
+const seeds: Seed[] = [
+  {
+    email: req("E2E_ADMIN_EMAIL"),
+    password: req("E2E_ADMIN_PASSWORD"),
+    role: "admin",
+    fullName: "E2E Admin",
+    prenom: "E2E",
+    nom: "Admin",
+  },
+  {
+    email: req("E2E_CHEF_EMAIL"),
+    password: req("E2E_CHEF_PASSWORD"),
+    role: "chef_chantier",
+    fullName: "E2E Chef",
+    prenom: "E2E",
+    nom: "Chef",
+  },
+  {
+    email: req("E2E_EMPLOYE_EMAIL"),
+    password: req("E2E_EMPLOYE_PASSWORD"),
+    role: "employe",
+    fullName: "E2E Employé",
+    prenom: "E2E",
+    nom: "Employé",
+  },
+];
+
+async function ensureUser(s: Seed): Promise<string> {
+  // listUsers paginé jusqu'à trouver l'email
+  let page = 1;
+  let foundId: string | null = null;
+  while (page < 50) {
+    const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 200 });
+    if (error) throw error;
+    const u = data.users.find((x) => x.email?.toLowerCase() === s.email.toLowerCase());
+    if (u) {
+      foundId = u.id;
+      break;
+    }
+    if (data.users.length < 200) break;
+    page += 1;
+  }
+  if (foundId) {
+    // Reset password + email_confirm pour idempotence
+    const { error } = await admin.auth.admin.updateUserById(foundId, {
+      password: s.password,
+      email_confirm: true,
+    });
+    if (error) throw error;
+    console.log(`[seed] ${s.email} : user existant, password reset`);
+    return foundId;
+  }
+  const { data, error } = await admin.auth.admin.createUser({
+    email: s.email,
+    password: s.password,
+    email_confirm: true,
+    user_metadata: { full_name: s.fullName },
+  });
+  if (error) throw error;
+  console.log(`[seed] ${s.email} : user créé ${data.user.id}`);
+  return data.user.id;
+}
+
+async function ensureProfile(userId: string, s: Seed) {
+  const { error } = await admin
+    .from("profiles")
+    .upsert(
+      { id: userId, email: s.email, full_name: s.fullName },
+      { onConflict: "id" },
+    );
+  if (error) throw error;
+}
+
+async function ensureRole(userId: string, role: RoleName) {
+  // Idempotent : delete + insert sur (user_id, role) UNIQUE
+  const { error: delErr } = await admin
+    .from("user_roles")
+    .delete()
+    .eq("user_id", userId);
+  if (delErr) throw delErr;
+  const { error } = await admin.from("user_roles").insert({ user_id: userId, role });
+  if (error) throw error;
+}
+
+async function ensureEmploye(userId: string, s: Seed): Promise<string> {
+  const { data: existing } = await admin
+    .from("employes")
+    .select("id")
+    .eq("profile_id", userId)
+    .maybeSingle();
+  if (existing) return existing.id;
+  // Récupérer un metier_principal_id valide (premier dispo)
+  const { data: metiers, error: mErr } = await admin
+    .from("metiers")
+    .select("id")
+    .order("ordre")
+    .limit(1);
+  if (mErr) throw mErr;
+  const metierId = metiers?.[0]?.id ?? 1;
+  const { data, error } = await admin
+    .from("employes")
+    .insert({
+      profile_id: userId,
+      prenom: s.prenom,
+      nom: s.nom,
+      email: s.email,
+      type_contrat: "CDI",
+      metier_principal_id: metierId,
+      actif: true,
+    })
+    .select("id")
+    .single();
+  if (error) throw error;
+  return data.id;
+}
+
+async function ensureChefAffaire(chefUserId: string): Promise<string> {
+  const numero = "5E2E1";
+  const { data: existing } = await admin
+    .from("affaires")
+    .select("id")
+    .eq("numero", numero)
+    .maybeSingle();
+  if (existing) {
+    await admin
+      .from("affaires")
+      .update({ chef_chantier_id: chefUserId })
+      .eq("id", existing.id);
+    return existing.id;
+  }
+  const { data, error } = await admin
+    .from("affaires")
+    .insert({
+      numero,
+      nom: "E2E Affaire Chef",
+      client: "E2E Test",
+      statut: "en_cours",
+      phase: "signe",
+      chef_chantier_id: chefUserId,
+    })
+    .select("id")
+    .single();
+  if (error) throw error;
+  return data.id;
+}
+
+async function ensureAssignationSemaine(employeId: string, affaireId: string) {
+  // Lundi de la semaine en cours
+  const today = new Date();
+  const dow = today.getUTCDay();
+  const diffToMon = ((dow + 6) % 7);
+  const monday = new Date(today);
+  monday.setUTCDate(today.getUTCDate() - diffToMon);
+  const dateISO = monday.toISOString().slice(0, 10);
+
+  const { data: existing } = await admin
+    .from("assignations")
+    .select("id")
+    .eq("employe_id", employeId)
+    .eq("affaire_id", affaireId)
+    .eq("date", dateISO)
+    .maybeSingle();
+  if (existing) {
+    console.log(`[seed] assignation E2E déjà présente ${dateISO}`);
+    return;
+  }
+  const { error } = await admin.from("assignations").insert({
+    employe_id: employeId,
+    affaire_id: affaireId,
+    date: dateISO,
+    demi_journee: "journee",
+    heures: 8,
+  });
+  if (error) throw error;
+  console.log(`[seed] assignation employé E2E créée ${dateISO}`);
+}
+
+async function main() {
+  const userIds: Record<RoleName, string> = {} as never;
+  for (const s of seeds) {
+    const id = await ensureUser(s);
+    await ensureProfile(id, s);
+    await ensureRole(id, s.role);
+    userIds[s.role] = id;
+  }
+  // Employés (chef + employe)
+  const chefEmpId = await ensureEmploye(userIds.chef_chantier, seeds[1]);
+  const empId = await ensureEmploye(userIds.employe, seeds[2]);
+  // Affaire chef
+  const affaireId = await ensureChefAffaire(userIds.chef_chantier);
+  console.log(`[seed] chef employe=${chefEmpId} affaire=${affaireId}`);
+  // Assignation employé sur cette semaine
+  await ensureAssignationSemaine(empId, affaireId);
+  console.log("[seed] OK");
+}
+
+main().catch((e) => {
+  console.error("[seed] FAIL", e);
+  process.exit(1);
+});
