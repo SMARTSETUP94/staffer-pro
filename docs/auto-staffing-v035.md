@@ -35,7 +35,7 @@ Sur `/staffing/$planId` :
 ### 3. Affecter les personnes
 
 Section **Personnes** sous le Gantt :
-- Suggestions classées par **Tier** : 1 (CDI métier principal), 2 (CDD/polyvalent), 3 (Intérim).
+- Suggestions classées par **Tier** (voir §Granularité 4 niveaux ci-dessous) : Tier 1 (CDI/CDD Principal) → Tier 2 (CDI/CDD Secondaire) → Tier 3 (Intérim) → Tier 4 (CDI/CDD Dépannage, dernier recours).
 - Chaque candidat affiché avec score, contrat, dispo restante.
 - Clic **Affecter 100%** → INSERT instantané.
 - Slider présence (10-100%) pour split entre 2 chantiers le même jour. Conflits cumul > 100% en rouge.
