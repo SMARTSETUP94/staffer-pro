@@ -64,20 +64,16 @@ interface Props {
   onApplied?: () => void;
 }
 
-export function PreParametrageSection({ affaireId, deadline, onApplied }: Props) {
+export function PreParametrageSection({ affaireId, deadline, onApplied: _onApplied }: Props) {
   const list = useServerFn(listChantierMetierConfig);
   const suggest = useServerFn(suggestPreParametrage);
-  const upsert = useServerFn(upsertChantierMetierConfig);
-  const applyAll = useServerFn(applyPreParametrageSuggestions);
 
   const [rows, setRows] = useState<ChantierMetierConfigRow[]>([]);
   const [conflicts, setConflicts] = useState<Conflict[]>([]);
   const [pipelineDuration, setPipelineDuration] = useState(0);
   const [fenetreDispo, setFenetreDispo] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [busy, setBusy] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [editing, setEditing] = useState<Record<string, Partial<ChantierMetierConfigRow>>>({});
 
   const load = async () => {
     setLoading(true);
@@ -87,14 +83,9 @@ export function PreParametrageSection({ affaireId, deadline, onApplied }: Props)
         list({ data: { affaire_id: affaireId } }),
         suggest({ data: { affaire_id: affaireId, deadline: deadline ?? null } }),
       ]);
-      // Merge : existant prioritaire, sinon suggestion
       const map = new Map<number, ChantierMetierConfigRow>();
       for (const c of sugg.configs) {
-        map.set(c.metier_id, {
-          id: `__suggest_${c.metier_id}`,
-          affaire_id: affaireId,
-          ...c,
-        });
+        map.set(c.metier_id, { id: `__suggest_${c.metier_id}`, affaire_id: affaireId, ...c });
       }
       for (const e of existing) map.set(e.metier_id, e);
       setRows(Array.from(map.values()).sort((a, b) => a.metier_id - b.metier_id));
@@ -102,9 +93,7 @@ export function PreParametrageSection({ affaireId, deadline, onApplied }: Props)
       setPipelineDuration(sugg.pipeline_duration);
       setFenetreDispo(sugg.fenetre_dispo);
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "erreur";
-      // Affiche inline plutôt qu'en toast rouge — le bloc reste visible pour l'utilisateur.
-      setErrorMsg(msg);
+      setErrorMsg(e instanceof Error ? e.message : "erreur");
     } finally {
       setLoading(false);
     }
@@ -115,107 +104,17 @@ export function PreParametrageSection({ affaireId, deadline, onApplied }: Props)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [affaireId, deadline]);
 
-  const patch = (metier_id: number, p: Partial<ChantierMetierConfigRow>) => {
-    setEditing((prev) => ({ ...prev, [metier_id]: { ...prev[metier_id], ...p } }));
-  };
-
   const merged = (r: ChantierMetierConfigRow): ChantierMetierConfigRow => {
-    const base = { ...r, ...(editing[r.metier_id] ?? {}) };
-    const persCible = safeNumber(base.nb_pers_cible, 1, { min: 1 });
+    const persCible = safeNumber(r.nb_pers_cible, 1, { min: 1 });
     return {
-      ...base,
-      total_h_calc: safeNumber(base.total_h_calc, 0),
+      ...r,
+      total_h_calc: safeNumber(r.total_h_calc, 0),
       nb_pers_cible: persCible,
-      duree_cible_j: safeNumber(base.duree_cible_j, 0),
-      capa_max_jour: safeNumber(base.capa_max_jour, persCible, { min: 1 }),
-      lissage_active: safeBool(base.lissage_active, true),
-      be_override: safeBool(base.be_override, false),
+      duree_cible_j: safeNumber(r.duree_cible_j, 0),
+      capa_max_jour: safeNumber(r.capa_max_jour, persCible, { min: 1 }),
+      lissage_active: safeBool(r.lissage_active, true),
+      be_override: safeBool(r.be_override, false),
     };
-  };
-
-  const saveRow = async (r: ChantierMetierConfigRow) => {
-    const base = { ...r, ...(editing[r.metier_id] ?? {}) };
-    const m = merged(r);
-
-    // Détecte les valeurs invalides saisies → auto-correction silencieuse + warning.
-    const corrections: string[] = [];
-    if (
-      base.nb_pers_cible === null ||
-      base.nb_pers_cible === undefined ||
-      String(base.nb_pers_cible).trim() === "" ||
-      !Number.isFinite(Number(base.nb_pers_cible)) ||
-      Number(base.nb_pers_cible) < 1
-    ) {
-      corrections.push(`Pers cible → ${m.nb_pers_cible}`);
-      patch(r.metier_id, { nb_pers_cible: m.nb_pers_cible });
-    }
-    if (
-      base.capa_max_jour === null ||
-      base.capa_max_jour === undefined ||
-      String(base.capa_max_jour).trim() === "" ||
-      !Number.isFinite(Number(base.capa_max_jour)) ||
-      Number(base.capa_max_jour) < 1
-    ) {
-      corrections.push(`Capa max/j → ${m.capa_max_jour}`);
-      patch(r.metier_id, { capa_max_jour: m.capa_max_jour });
-    }
-    if (typeof base.lissage_active !== "boolean") {
-      corrections.push(`Lissage → ${m.lissage_active ? "ON" : "OFF"}`);
-      patch(r.metier_id, { lissage_active: m.lissage_active });
-    }
-
-    if (corrections.length > 0) {
-      toast.warning(
-        `${METIER_LABEL[m.metier_code]} : valeurs corrigées (${corrections.join(", ")})`,
-      );
-    }
-
-    setBusy(true);
-    try {
-      await upsert({
-        data: {
-          affaire_id: affaireId,
-          metier_id: m.metier_id,
-          total_h_calc: m.total_h_calc,
-          nb_pers_cible: m.nb_pers_cible,
-          duree_cible_j: m.duree_cible_j,
-          capa_max_jour: m.capa_max_jour,
-          fenetre_start: m.fenetre_start ?? null,
-          fenetre_end: m.fenetre_end ?? null,
-          lissage_active: m.lissage_active,
-          be_override: m.be_override,
-          override_reason: m.override_reason ?? null,
-        },
-      });
-      toast.success(`${METIER_LABEL[m.metier_code]} : sauvegardé`);
-      setEditing((prev) => {
-        const n = { ...prev };
-        delete n[r.metier_id];
-        return n;
-      });
-      await load();
-      onApplied?.();
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Erreur sauvegarde");
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const applySuggestions = async () => {
-    setBusy(true);
-    try {
-      const { saved } = await applyAll({
-        data: { affaire_id: affaireId, deadline: deadline ?? null },
-      });
-      toast.success(`${saved} métier(s) appliqué(s)`);
-      await load();
-      onApplied?.();
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Erreur application");
-    } finally {
-      setBusy(false);
-    }
   };
 
   if (loading) {
