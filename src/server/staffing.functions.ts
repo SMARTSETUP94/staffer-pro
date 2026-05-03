@@ -133,6 +133,7 @@ export const calculateStaffingPlan = createServerFn({ method: "POST" })
       date_fin_fab: plan.date_fin_fab,
       objets: objetsInput,
       cnc_reserved_dates: cncReservedDates,
+      include_weekends: (plan as { include_weekends?: boolean }).include_weekends === true,
     });
 
     /* 7. Appliquer overrides : si manual_pers, recalcule span ; si manual_shift, décale start_date */
