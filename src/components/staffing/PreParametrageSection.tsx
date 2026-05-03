@@ -131,7 +131,9 @@ export function PreParametrageSection({ affaireId, deadline, onApplied }: Props)
   const applySuggestions = async () => {
     setBusy(true);
     try {
-      const { saved } = await applyAll({ data: { affaire_id: affaireId } });
+      const { saved } = await applyAll({
+        data: { affaire_id: affaireId, deadline: deadline ?? null },
+      });
       toast.success(`${saved} métier(s) appliqué(s)`);
       await load();
       onApplied?.();
@@ -146,6 +148,18 @@ export function PreParametrageSection({ affaireId, deadline, onApplied }: Props)
     return (
       <div className="flex items-center gap-2 rounded-2xl border border-border bg-card p-4 text-sm text-muted-foreground">
         <Loader2 className="h-4 w-4 animate-spin" /> Chargement pré-paramétrage…
+      </div>
+    );
+  }
+
+  if (errorMsg) {
+    return (
+      <div className="flex items-start gap-2 rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-700 dark:text-amber-300">
+        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+        <div>
+          <p className="font-semibold">Pré-paramétrage indisponible</p>
+          <p className="text-xs opacity-90">{errorMsg}</p>
+        </div>
       </div>
     );
   }
