@@ -1,7 +1,7 @@
 // v0.35.2 / Sprint 2.1 — GanttBar (barre individuelle d'une étape métier)
 // v0.35.10 P1 #4 — drag horizontal pour shift au jour près (en plus des chevrons).
 //                  Snap au jour, preview visuel via translation, commit au mouseup.
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { METIER_COLOR } from "./gantt-helpers";
@@ -58,6 +58,25 @@ export function GanttBar({
     snappedDelta: number; // dernier delta en jours déjà snap
   } | null>(null);
 
+  // v0.38.2 — détection overflow label (barre trop étroite → masque texte, tooltip prend le relai)
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const labelRef = useRef<HTMLSpanElement | null>(null);
+  const [labelOverflow, setLabelOverflow] = useState(false);
+  useEffect(() => {
+    if (!containerRef.current || !labelRef.current) return;
+    const measure = () => {
+      const c = containerRef.current;
+      const l = labelRef.current;
+      if (!c || !l) return;
+      // marge buttons (chevrons + croix ~60px) — on tolère un peu
+      setLabelOverflow(l.scrollWidth > c.clientWidth - 8);
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(containerRef.current);
+    return () => ro.disconnect();
+  });
+
   const canDrag = !!onShift && !disableShift && !!dayWidthPx && dayWidthPx > 0;
 
   const handleMouseDown = useCallback(
@@ -112,8 +131,16 @@ export function GanttBar({
   const shiftLabel = manualShift !== 0 ? `${manualShift > 0 ? "+" : ""}${manualShift}j` : null;
   const previewLabel =
     dragging && previewDays !== 0 ? `${previewDays > 0 ? "+" : ""}${previewDays}j` : null;
+  const spanLabel = (() => {
+    const demi = step.span_demi_jours ?? step.span_days * 2;
+    if (demi === 1) return "½j";
+    if (demi % 2 === 0) return `${demi / 2}j`;
+    return `${Math.floor(demi / 2)}½j`;
+  })();
+  const compactLabel = `${step.pers}p × ${spanLabel}`;
   const tooltip =
-    `${metierKey} · ${step.pers}p × ${step.span_days}j × ${step.h_par_jour}h` +
+    `${metierKey} · ${compactLabel} × ${step.h_par_jour}h` +
+    (phaseLabel ? ` · ${phaseLabel}` : "") +
     (shiftLabel ? ` (décalé ${shiftLabel})` : "") +
     (canDrag ? " — glisser pour décaler, chevrons ±1j" : "") +
     (hasWarning ? " — risque détecté" : "") +
@@ -125,6 +152,7 @@ export function GanttBar({
 
   return (
     <div
+      ref={containerRef}
       className={`group relative flex h-7 items-center rounded-md px-2 text-[11px] font-mono text-white shadow-sm ${ringClass} ${
         canDrag ? (dragging ? "cursor-grabbing" : "cursor-grab") : ""
       }`}
@@ -138,6 +166,8 @@ export function GanttBar({
         zIndex: dragging ? 20 : undefined,
       }}
       title={tooltip}
+      data-testid="gantt-bar"
+      data-label={compactLabel}
       onMouseDown={handleMouseDown}
     >
       {onShift && !disableShift && (
@@ -153,14 +183,12 @@ export function GanttBar({
           <ChevronLeft className="h-3 w-3" />
         </Button>
       )}
-      <span className="flex-1 truncate text-center">
-        {step.pers}p × {(() => {
-          const demi = step.span_demi_jours ?? step.span_days * 2;
-          // Affichage : "Nj" si entier en jours, "N½j" si demi-journée résiduelle, "½j" si 1 demi seul
-          if (demi === 1) return "½j";
-          if (demi % 2 === 0) return `${demi / 2}j`;
-          return `${Math.floor(demi / 2)}½j`;
-        })()}
+      <span
+        ref={labelRef}
+        className={`flex-1 truncate text-center ${labelOverflow ? "opacity-0" : ""}`}
+        aria-hidden={labelOverflow}
+      >
+        {compactLabel}
         {phaseLabel && (
           <span className="ml-1 rounded bg-white/30 px-1 text-[9px] font-bold tracking-wider">
             {phaseLabel}
@@ -176,6 +204,14 @@ export function GanttBar({
         )}
         {isOverDeadline && !dragging && <span className="ml-1 font-bold">OUT</span>}
       </span>
+      {labelOverflow && (
+        <span
+          className="pointer-events-none absolute inset-0 flex items-center justify-center text-[10px] font-bold"
+          aria-hidden
+        >
+          •••
+        </span>
+      )}
       {onResetShift && manualShift !== 0 && !disableShift && !dragging && (
         <Button
           size="icon"
