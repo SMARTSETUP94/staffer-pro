@@ -12,6 +12,15 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/parametres/competences-equipe")({
@@ -83,6 +92,15 @@ function CompetencesEquipePage() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("");
   const [savingKey, setSavingKey] = useState<string | null>(null);
+  const [dropdownMode, setDropdownMode] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem("competencesEquipe.dropdownMode") === "1";
+  });
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("competencesEquipe.dropdownMode", dropdownMode ? "1" : "0");
+    }
+  }, [dropdownMode]);
 
   useEffect(() => {
     let cancelled = false;
@@ -114,9 +132,9 @@ function CompetencesEquipePage() {
     };
   }, []);
 
-  const cycleCell = async (empId: string, metierId: number) => {
+  const setNiveauCell = async (empId: string, metierId: number, nxt: Cell) => {
     const cur = matrix[empId]?.[metierId] ?? null;
-    const nxt = nextNiveau(cur);
+    if (cur === nxt) return;
     const key = `${empId}:${metierId}`;
     setSavingKey(key);
 
@@ -131,7 +149,6 @@ function CompetencesEquipePage() {
     });
 
     try {
-      // Toujours supprimer la ligne existante puis insérer la nouvelle (ou rien si null)
       const { error: delErr } = await supabase
         .from("employe_metiers")
         .delete()
@@ -158,6 +175,11 @@ function CompetencesEquipePage() {
     } finally {
       setSavingKey(null);
     }
+  };
+
+  const cycleCell = (empId: string, metierId: number) => {
+    const cur = matrix[empId]?.[metierId] ?? null;
+    return setNiveauCell(empId, metierId, nextNiveau(cur));
   };
 
   const filtered = useMemo(() => {
@@ -199,7 +221,18 @@ function CompetencesEquipePage() {
               {emps.length} employés actifs · {metiers.length} métiers — sauvegarde immédiate
             </CardDescription>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <Switch
+                id="dropdown-mode"
+                checked={dropdownMode}
+                onCheckedChange={setDropdownMode}
+                aria-label="Activer mode dropdown explicite (accessibilité)"
+              />
+              <Label htmlFor="dropdown-mode" className="text-xs cursor-pointer">
+                Dropdown explicite
+              </Label>
+            </div>
             <div className="relative">
               <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
               <Input
@@ -245,26 +278,49 @@ function CompetencesEquipePage() {
                       const isSaving = savingKey === key;
                       return (
                         <TableCell key={m.id} className="text-center">
-                          <button
-                            type="button"
-                            disabled={isPrincipal || isSaving}
-                            onClick={() => cycleCell(e.id, m.id)}
-                            className="inline-flex items-center justify-center disabled:cursor-not-allowed"
-                            aria-label={`${e.prenom} ${e.nom} — ${m.libelle} — ${
-                              isPrincipal ? "Principal" : niveau ?? "Aucun"
-                            }`}
-                            title={
-                              isPrincipal
-                                ? "Métier principal (verrouillé)"
-                                : `Cliquer pour changer (actuel : ${niveau ?? "aucun"})`
-                            }
-                          >
-                            {isSaving ? (
-                              <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
-                            ) : (
-                              <CellBadge niveau={niveau} isPrincipal={isPrincipal} />
-                            )}
-                          </button>
+                          {dropdownMode && !isPrincipal ? (
+                            <Select
+                              value={niveau ?? "aucun"}
+                              disabled={isSaving}
+                              onValueChange={(v) =>
+                                setNiveauCell(e.id, m.id, v === "aucun" ? null : (v as Niveau))
+                              }
+                            >
+                              <SelectTrigger
+                                className="h-7 w-[110px] mx-auto text-xs"
+                                aria-label={`${e.prenom} ${e.nom} — ${m.libelle}`}
+                              >
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="aucun">Aucun</SelectItem>
+                                <SelectItem value="secondaire">S — Secondaire</SelectItem>
+                                <SelectItem value="depannage">D — Dépannage</SelectItem>
+                                <SelectItem value="bloque">X — Bloqué</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          ) : (
+                            <button
+                              type="button"
+                              disabled={isPrincipal || isSaving}
+                              onClick={() => cycleCell(e.id, m.id)}
+                              className="inline-flex items-center justify-center disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md"
+                              aria-label={`${e.prenom} ${e.nom} — ${m.libelle} — ${
+                                isPrincipal ? "Principal (verrouillé)" : `niveau actuel ${niveau ?? "Aucun"}, cliquer pour cycler`
+                              }`}
+                              title={
+                                isPrincipal
+                                  ? "Métier principal (verrouillé)"
+                                  : `Cliquer pour changer (actuel : ${niveau ?? "aucun"})`
+                              }
+                            >
+                              {isSaving ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
+                              ) : (
+                                <CellBadge niveau={niveau} isPrincipal={isPrincipal} />
+                              )}
+                            </button>
+                          )}
                         </TableCell>
                       );
                     })}

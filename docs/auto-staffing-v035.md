@@ -35,7 +35,7 @@ Sur `/staffing/$planId` :
 ### 3. Affecter les personnes
 
 Section **Personnes** sous le Gantt :
-- Suggestions classées par **Tier** : 1 (CDI métier principal), 2 (CDD/polyvalent), 3 (Intérim).
+- Suggestions classées par **Tier** (voir §Granularité 4 niveaux ci-dessous) : Tier 1 (CDI/CDD Principal) → Tier 2 (CDI/CDD Secondaire) → Tier 3 (Intérim) → Tier 4 (CDI/CDD Dépannage, dernier recours).
 - Chaque candidat affiché avec score, contrat, dispo restante.
 - Clic **Affecter 100%** → INSERT instantané.
 - Slider présence (10-100%) pour split entre 2 chantiers le même jour. Conflits cumul > 100% en rouge.
@@ -80,6 +80,49 @@ Bouton **Historique** → drawer timeline des snapshots :
 | LAG Numérique → Bois | ⌈0.3 × span_Num⌉ jours | `algo.ts` |
 | Pic atelier soft | 12 personnes | warning visuel |
 | Heures/jour métier | 8h | `staffing_plan_step.h_par_jour` |
+
+## Granularité compétences — 4 niveaux (v0.35.x)
+
+Depuis v0.35.x, la matrice **`/parametres/competences-equipe`** remplace la checkbox binaire historique par 4 niveaux explicites par cellule employé × métier. Cela permet à l'auto-staffing de distinguer les vrais polyvalents des dépanneurs ponctuels et d'exclure les profils incompétents/à risque.
+
+### Les 4 niveaux
+
+| Symbole | Libellé | Source DB | Utilisable par auto-staffing ? |
+|---|---|---|---|
+| **P** | Principal | `employes.metier_principal_id` | ✅ Tier 1 (CDI/CDD) ou Tier 3 (Intérim) |
+| **S** | Secondaire | `employe_metiers.niveau = 'secondaire'` | ✅ Tier 2 (CDI/CDD) ou Tier 3 (Intérim) |
+| **D** | Dépannage | `employe_metiers.niveau = 'depannage'` | ⚠️ Tier 4 — **CDI/CDD uniquement**, dernier recours pour pic de charge. Intérim "Dépannage" = exclu (incohérent). |
+| **X** | Bloqué | `employe_metiers.niveau = 'bloque'` | ❌ Exclu explicitement du staffing pour ce métier |
+| · | Aucun | (ligne absente) | ❌ Pas de compétence sur ce métier |
+
+### Tableau de scoring (récap)
+
+| Tier | Profil | Score base | Bonus contrat | Score effectif (100% dispo) |
+|---|---|---|---|---|
+| 1 | CDI Principal | 100 | × 1.0 | 200 |
+| 1 | CDD Principal | 100 | × 0.9 | 190 |
+| 2 | CDI Secondaire | 70 | × 1.0 | 170 |
+| 2 | CDD Secondaire | 70 | × 0.9 | 163 |
+| 3 | Intérim Principal/Secondaire | 30 | × 0.3 | 109 |
+| 4 | CDI Dépannage | 10 | × 1.0 | 110 |
+| 4 | CDD Dépannage | 10 | × 0.9 | 109 |
+
+> **Note Tier 4 vs Tier 3** : à dispo égale, les scores sont quasi équivalents (110 vs 109). Tier 4 est conçu comme **filet de sécurité interne** : quand l'intérim est saturé/indisponible, l'algo bascule sur les dépanneurs CDI/CDD. Volontairement limité aux profils internes — l'intérim est déjà la variable d'ajustement, "intérim dépannage" n'a pas de sens.
+
+### Édition (admin / chef) — page `/parametres/competences-equipe`
+
+- **Mode badge (par défaut)** : clic sur la cellule cycle `Aucun → S → D → X → Aucun`.
+- **Mode dropdown explicite** (toggle en haut, persistant en `localStorage`) : sélection ARIA-conforme via `<Select>` à 4 options (Aucun / S / D / X). Recommandé pour clavier/lecteur d'écran.
+- Le **métier principal (P)** est verrouillé : modifiable uniquement sur la fiche employé (`metier_principal_id`).
+- Sauvegarde immédiate par cellule (DELETE + INSERT atomique côté `employe_metiers`), rollback optimiste en cas d'erreur réseau, toast d'erreur explicite.
+
+### Migration
+
+Au déploiement v0.35.x, toutes les compétences "Secondaire" historiques (anciennes coches) ont été migrées en niveau `'secondaire'` par défaut. Les admins doivent affiner manuellement vers `'depannage'` ou `'bloque'` selon le retour terrain.
+
+### Tests
+
+Couverture algo : `src/lib/staffing/__tests__/tier-ranking.test.ts` — 28 tests verts couvrant P/S/D/X × CDI/CDD/Intérim, exclusions (Bloqué, Intérim Dépannage), ranking 4 paliers, fallback Tier 4 quand Intérim saturé.
 
 ## Sécurité (audit v0.35.6)
 
