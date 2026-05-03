@@ -288,15 +288,17 @@ function StaffingPlanPage() {
           affaireId={affaireMeta.id}
           deadline={planDeadline}
           onApplied={async () => {
+            // Mise à jour incrémentale : pas de remount du Gantt (évite reset
+            // zoom/scroll et la cascade de reloads). On recharge les configs
+            // puis on demande au Gantt de re-fetch ses steps via la ref.
             const cfgs = await loadConfigs({ data: { affaire_id: affaireMeta.id } });
             setPreParamConfigs(cfgs);
-            setRefreshKey((k) => k + 1);
+            await ganttRef.current?.reload();
           }}
         />
       )}
       <GanttInteractif
         ref={ganttRef}
-        key={refreshKey}
         planId={planId}
         onDataLoaded={async (d) => {
           setPlanData(d);
