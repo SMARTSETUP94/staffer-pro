@@ -102,47 +102,49 @@ function capForMetier(m: MetierKey): number {
   }
 }
 
-/** v0.37.1 — Stratégie PAR DÉFAUT : prefer_min_pers (étalement).
- *  Logique métier Setup Paris : équipe stable sur toute la fenêtre, pic atelier minimal.
+/** v0.38 — Granularité demi-journée FLOOR strict.
  *  Spec :
- *    1) pers_min = max(min_metier, ceil(h / (fenetre_max * h_jour)))
- *    2) arrondi au binôme (multiple 2) si binome
- *    3) cap par CAPS[metier]
- *    4) span = ceil(h / (pers * h_jour))
- *    5) si span > fenetre_max → augmenter pers d'un cran jusqu'à span ≤ fenetre_max ou cap atteint
+ *    n_demi_min = max(min_metier_demi, ceil(h / (cap * H_HALF)))   // assez d'effectif pour ne PAS dépasser la fenêtre
+ *    n_demi_floor = max(1, floor(h / (pers * H_HALF)))              // FLOOR strict
+ *    pers final : binôme arrondi haut + cap métier
+ *  Compat v0.37 : retourne aussi span_days = ceil(n_demi/2).
+ *  fenetreMax = en JOURS ouvrés ; on convertit en demi-journées.
  */
 export function pickPersAndSpan(
   totalHeures: number,
   metier: MetierKey,
   hParJourOrOpts: number | { fenetreMax?: number; hParJour?: number } = H_DEFAULT,
-): { pers: number; span_days: number } {
-  if (totalHeures <= 0) return { pers: 0, span_days: 0 };
+): { pers: number; span_days: number; span_demi_jours: number } {
+  if (totalHeures <= 0) return { pers: 0, span_days: 0, span_demi_jours: 0 };
   const opts = typeof hParJourOrOpts === "number" ? { hParJour: hParJourOrOpts } : hParJourOrOpts;
   const hParJour = opts.hParJour ?? H_DEFAULT;
-  const fenetreMax = opts.fenetreMax ?? Number.POSITIVE_INFINITY;
+  const fenetreMaxJours = opts.fenetreMax ?? Number.POSITIVE_INFINITY;
+  const fenetreMaxDemi = Number.isFinite(fenetreMaxJours) ? fenetreMaxJours * DEMI_PER_DAY : Number.POSITIVE_INFINITY;
   const cap = capForMetier(metier);
   const binome = isBinome(metier);
   const minMetier = binome ? 2 : 1;
 
   const roundUpBinome = (p: number) => (binome ? p + (p % 2) : p);
 
-  // (1) pers_min basé sur fenêtre
-  let pers = Math.max(minMetier, Math.ceil(totalHeures / (fenetreMax * hParJour)));
+  // (1) pers_min basé sur fenêtre (en demi-journées) — équivalent à étalement max
+  let pers = Math.max(minMetier, Math.ceil(totalHeures / (fenetreMaxDemi * H_HALF)));
   // (2) arrondi binôme
   pers = roundUpBinome(pers);
-  // (3) cap
+  // (3) cap métier
   pers = Math.min(pers, cap);
 
-  // (4) span
-  let span = Math.max(1, Math.ceil(totalHeures / (pers * hParJour)));
+  // (4) span en demi-journées — FLOOR strict (spec v0.38)
+  let nDemi = Math.max(1, Math.floor(totalHeures / (pers * H_HALF)));
 
-  // (5) si encore trop long, augmenter pers d'un binôme
+  // (5) si dépasse fenêtre, augmenter pers d'un cran
   const step = binome ? 2 : 1;
-  while (span > fenetreMax && pers + step <= cap) {
+  while (nDemi > fenetreMaxDemi && pers + step <= cap) {
     pers += step;
-    span = Math.max(1, Math.ceil(totalHeures / (pers * hParJour)));
+    nDemi = Math.max(1, Math.floor(totalHeures / (pers * H_HALF)));
   }
-  return { pers, span_days: span };
+
+  const spanDays = Math.max(1, Math.ceil(nDemi / DEMI_PER_DAY));
+  return { pers, span_days: spanDays, span_demi_jours: nDemi };
 }
 
 /** Helper : nombre de jours ouvrés entre deux dates (inclus), ≥ 1. */
