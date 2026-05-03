@@ -278,26 +278,49 @@ function CompetencesEquipePage() {
                       const isSaving = savingKey === key;
                       return (
                         <TableCell key={m.id} className="text-center">
-                          <button
-                            type="button"
-                            disabled={isPrincipal || isSaving}
-                            onClick={() => cycleCell(e.id, m.id)}
-                            className="inline-flex items-center justify-center disabled:cursor-not-allowed"
-                            aria-label={`${e.prenom} ${e.nom} — ${m.libelle} — ${
-                              isPrincipal ? "Principal" : niveau ?? "Aucun"
-                            }`}
-                            title={
-                              isPrincipal
-                                ? "Métier principal (verrouillé)"
-                                : `Cliquer pour changer (actuel : ${niveau ?? "aucun"})`
-                            }
-                          >
-                            {isSaving ? (
-                              <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
-                            ) : (
-                              <CellBadge niveau={niveau} isPrincipal={isPrincipal} />
-                            )}
-                          </button>
+                          {dropdownMode && !isPrincipal ? (
+                            <Select
+                              value={niveau ?? "aucun"}
+                              disabled={isSaving}
+                              onValueChange={(v) =>
+                                setNiveauCell(e.id, m.id, v === "aucun" ? null : (v as Niveau))
+                              }
+                            >
+                              <SelectTrigger
+                                className="h-7 w-[110px] mx-auto text-xs"
+                                aria-label={`${e.prenom} ${e.nom} — ${m.libelle}`}
+                              >
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="aucun">Aucun</SelectItem>
+                                <SelectItem value="secondaire">S — Secondaire</SelectItem>
+                                <SelectItem value="depannage">D — Dépannage</SelectItem>
+                                <SelectItem value="bloque">X — Bloqué</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          ) : (
+                            <button
+                              type="button"
+                              disabled={isPrincipal || isSaving}
+                              onClick={() => cycleCell(e.id, m.id)}
+                              className="inline-flex items-center justify-center disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md"
+                              aria-label={`${e.prenom} ${e.nom} — ${m.libelle} — ${
+                                isPrincipal ? "Principal (verrouillé)" : `niveau actuel ${niveau ?? "Aucun"}, cliquer pour cycler`
+                              }`}
+                              title={
+                                isPrincipal
+                                  ? "Métier principal (verrouillé)"
+                                  : `Cliquer pour changer (actuel : ${niveau ?? "aucun"})`
+                              }
+                            >
+                              {isSaving ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
+                              ) : (
+                                <CellBadge niveau={niveau} isPrincipal={isPrincipal} />
+                              )}
+                            </button>
+                          )}
                         </TableCell>
                       );
                     })}
