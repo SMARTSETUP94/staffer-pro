@@ -698,16 +698,19 @@ export type Database = {
           employe_id: string
           id: number
           metier_id: number
+          niveau: Database["public"]["Enums"]["competence_niveau"]
         }
         Insert: {
           employe_id: string
           id?: number
           metier_id: number
+          niveau?: Database["public"]["Enums"]["competence_niveau"]
         }
         Update: {
           employe_id?: string
           id?: number
           metier_id?: number
+          niveau?: Database["public"]["Enums"]["competence_niveau"]
         }
         Relationships: [
           {
@@ -2866,6 +2869,7 @@ export type Database = {
       affaire_statut: "prospect" | "en_cours" | "termine" | "annule"
       app_role: "admin" | "chef_chantier" | "employe"
       categorie_permis: "B" | "C" | "CE" | "D"
+      competence_niveau: "secondaire" | "depannage" | "bloque"
       confirmation_status:
         | "non_requise"
         | "en_attente"
@@ -3077,6 +3081,7 @@ export const Constants = {
       affaire_statut: ["prospect", "en_cours", "termine", "annule"],
       app_role: ["admin", "chef_chantier", "employe"],
       categorie_permis: ["B", "C", "CE", "D"],
+      competence_niveau: ["secondaire", "depannage", "bloque"],
       confirmation_status: [
         "non_requise",
         "en_attente",
