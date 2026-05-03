@@ -72,7 +72,9 @@ export function PreParametrageSection({ affaireId, deadline, onApplied }: Props)
       setPipelineDuration(sugg.pipeline_duration);
       setFenetreDispo(sugg.fenetre_dispo);
     } catch (e) {
-      toast.error("Pré-paramétrage : " + (e instanceof Error ? e.message : "erreur"));
+      const msg = e instanceof Error ? e.message : "erreur";
+      // Affiche inline plutôt qu'en toast rouge — le bloc reste visible pour l'utilisateur.
+      setErrorMsg(msg);
     } finally {
       setLoading(false);
     }
@@ -81,7 +83,7 @@ export function PreParametrageSection({ affaireId, deadline, onApplied }: Props)
   useEffect(() => {
     void load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [affaireId]);
+  }, [affaireId, deadline]);
 
   const patch = (metier_id: number, p: Partial<ChantierMetierConfigRow>) => {
     setEditing((prev) => ({ ...prev, [metier_id]: { ...prev[metier_id], ...p } }));
