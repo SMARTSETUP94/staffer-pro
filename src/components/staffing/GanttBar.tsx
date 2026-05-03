@@ -157,7 +157,7 @@ export function GanttBar({
   return (
     <div
       ref={containerRef}
-      className={`group relative flex h-7 items-center rounded-md px-2 text-[11px] font-mono text-white shadow-sm ${ringClass} ${
+      className={`group relative flex h-7 items-center rounded-md px-2 text-[11px] font-mono ${textClass} ${neutralClass} shadow-sm ${ringClass} ${
         canDrag ? (dragging ? "cursor-grabbing" : "cursor-grab") : ""
       }`}
       style={{
