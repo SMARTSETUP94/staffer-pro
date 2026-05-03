@@ -79,6 +79,9 @@ export const GanttInteractif = forwardRef<
   /** Mesure dynamique de la largeur d'une colonne jour pour drag-to-shift */
   const gridRef = useRef<HTMLDivElement | null>(null);
   const [dayWidthPx, setDayWidthPx] = useState(0);
+  /** Ref miroir de data pour pouvoir tester "déjà chargé" sans re-render */
+  const dataRef = useRef<PlanData | null>(null);
+  useEffect(() => { dataRef.current = data; }, [data]);
 
   const reload = useCallback(async () => {
     // v0.35.x — Préserve scroll + pas de spinner plein écran si data déjà là
