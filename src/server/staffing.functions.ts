@@ -137,126 +137,30 @@ export const calculateStaffingPlan = createServerFn({ method: "POST" })
         };
       });
 
-    /* 6. Calcul algo */
+    /* 6. Calcul algo v0.37 (lissage intégré, plus de post-traitement) */
     const result = calculatePlan({
       affaire_id: plan.affaire_id,
       date_fin_fab: plan.date_fin_fab,
+      date_debut_fab_min: plan.date_debut_fab,
       objets: objetsInput,
       cnc_reserved_dates: cncReservedDates,
       include_weekends: (plan as { include_weekends?: boolean }).include_weekends === true,
     });
 
-    /* 6.b v0.36 — Lissage post-traitement (chantier_metier_config)
-       AUTO-CRÉATION : si aucune config en DB, on les génère depuis les totaux
-       du plan + plan.date_fin_fab comme deadline (bypass UI / date_fin_prevue NULL). */
-    let { data: cmcRows } = await supabase
-      .from("chantier_metier_config")
-      .select("metier_id, total_h_calc, nb_pers_cible, duree_cible_j, capa_max_jour, lissage_active, be_override, override_reason")
-      .eq("affaire_id", plan.affaire_id);
-
-    if (!cmcRows || cmcRows.length === 0) {
-      // Totaux par métier depuis les objets actifs du plan
-      const totalsByMetier: Record<string, number> = {
-        BE: 0, Num: 0, Bois: 0, Peint: 0, Tap: 0, Manut: 0,
-      };
-      for (const f of fabObjets) {
-        totalsByMetier.BE += Number(f.heures_prevues_be ?? 0);
-        totalsByMetier.Num += Number(f.heures_prevues_numerique ?? 0);
-        totalsByMetier.Bois += Number(f.heures_prevues_bois ?? 0);
-        totalsByMetier.Peint += Number(f.heures_prevues_peinture ?? 0);
-        totalsByMetier.Tap += Number(f.heures_prevues_tapisserie ?? 0);
-        totalsByMetier.Manut += Number(f.heures_prevues_manutention ?? 0);
-      }
-      const today = new Date().toISOString().slice(0, 10);
-      const sugg = autoSuggestMetierConfig(
-        totalsByMetier as Record<MetierConfigKey, number>,
-        today,
-        plan.date_fin_fab,
-      );
-      const KEY_TO_ID_LOCAL: Record<MetierConfigKey, number> = {
-        BE: 8, Num: 4, Bois: 1, Peint: 3, Tap: 5, Manut: 7,
-      };
-      const seedRows = sugg.configs.map((c: MetierConfig) => ({
-        affaire_id: plan.affaire_id,
-        metier_id: KEY_TO_ID_LOCAL[c.metier_code],
-        total_h_calc: c.total_h_calc,
-        nb_pers_cible: c.nb_pers_cible,
-        duree_cible_j: c.duree_cible_j,
-        capa_max_jour: c.capa_max_jour,
-        lissage_active: c.lissage_active,
-        be_override: false,
-        override_reason: null,
-      }));
-      if (seedRows.length > 0) {
-        await supabase
-          .from("chantier_metier_config")
-          .upsert(seedRows, { onConflict: "affaire_id,metier_id" });
-        const reread = await supabase
-          .from("chantier_metier_config")
-          .select("metier_id, total_h_calc, nb_pers_cible, duree_cible_j, capa_max_jour, lissage_active, be_override, override_reason")
-          .eq("affaire_id", plan.affaire_id);
-        cmcRows = reread.data;
-      }
-    }
-
-    const lissageConfigs: MetierConfig[] = [];
-    let beOverrideFlag = false;
-    for (const r of (cmcRows ?? []) as Array<{
-      metier_id: number;
-      total_h_calc: number;
-      nb_pers_cible: number;
-      duree_cible_j: number;
-      capa_max_jour: number;
-      lissage_active: boolean;
-      be_override: boolean;
-      override_reason: string | null;
-    }>) {
-      const code = METIER_KEY_BY_ID[r.metier_id];
-      if (!code || code === "Metal") continue;
-      lissageConfigs.push({
-        metier_code: code as MetierConfigKey,
-        total_h_calc: Number(r.total_h_calc),
-        nb_pers_cible: Number(r.nb_pers_cible),
-        duree_cible_j: Number(r.duree_cible_j),
-        capa_max_jour: Number(r.capa_max_jour),
-        lissage_active: Boolean(r.lissage_active),
-        cap_reached: false,
+    // v0.37 : pas de post-lissage. Les diagnostics window sont déconnectés.
+    const lissageConfigsCount = 0;
+    const beOverrideFlag = false;
+    const picDiagnostics: Array<{ date: string; load: number; seuil: number }> = result.alerts
+      .filter((a) => a.code === "PIC_GLOBAL_DEPASSE" && a.date)
+      .map((a) => {
+        const m = /^Pic atelier (\d+) pers > seuil (\d+)/.exec(a.message ?? "");
+        return {
+          date: a.date as string,
+          load: m ? Number(m[1]) : 0,
+          seuil: m ? Number(m[2]) : 0,
+        };
       });
-      if (code === "BE" && r.be_override) beOverrideFlag = true;
-    }
-    let picDiagnostics: Array<{ date: string; load: number; seuil: number }> = [];
-    let windowConflicts: Conflict[] = [];
-    if (lissageConfigs.length > 0) {
-      const smoothed = applyLissage(result, {
-        configs: lissageConfigs,
-        beOverride: beOverrideFlag,
-        includeWeekends: (plan as { include_weekends?: boolean }).include_weekends === true,
-      });
-      // Mutate result in place (steps refs preserved for downstream override loop)
-      result.steps = smoothed.steps;
-      result.daily_load = smoothed.daily_load;
-      result.alerts = smoothed.alerts;
-      result.date_debut_fab = smoothed.date_debut_fab;
-      picDiagnostics = smoothed.alerts
-        .filter((a) => a.code === "PIC_GLOBAL_DEPASSE" && a.date)
-        .map((a) => {
-          // Parse "Pic atelier N pers > seuil S le DATE"
-          const m = /^Pic atelier (\d+) pers > seuil (\d+)/.exec(a.message ?? "");
-          return {
-            date: a.date as string,
-            load: m ? Number(m[1]) : 0,
-            seuil: m ? Number(m[2]) : 0,
-          };
-        });
-      // Diagnostics WINDOW_INFEASIBLE via computeMetierWindows
-      const today = new Date().toISOString().slice(0, 10);
-      const { conflicts: wConfs } = computeMetierWindows(
-        lissageConfigs,
-        today,
-        plan.date_fin_fab,
-      );
-      windowConflicts = wConfs;
-    }
+    const windowConflicts: Conflict[] = [];
 
 
     /* 7. Appliquer overrides : si manual_pers, recalcule span ; si manual_shift, décale start_date */
