@@ -281,11 +281,30 @@ function StaffingPlanPage() {
           onSaved={() => ganttRef.current?.reload()}
         />
       )}
+      {affaireMeta && (
+        <PreParametrageSection
+          affaireId={affaireMeta.id}
+          onApplied={async () => {
+            const cfgs = await loadConfigs({ data: { affaire_id: affaireMeta.id } });
+            setPreParamConfigs(cfgs);
+            setRefreshKey((k) => k + 1);
+          }}
+        />
+      )}
       <GanttInteractif
         ref={ganttRef}
         key={refreshKey}
         planId={planId}
-        onDataLoaded={setPlanData}
+        onDataLoaded={async (d) => {
+          setPlanData(d);
+          if (affaireMeta) {
+            try {
+              const cfgs = await loadConfigs({ data: { affaire_id: affaireMeta.id } });
+              setPreParamConfigs(cfgs);
+            } catch { /* silent */ }
+          }
+        }}
+        preParamConfigs={preParamConfigs}
       />
       {planData && (
         <>
