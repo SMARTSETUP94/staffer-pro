@@ -70,8 +70,10 @@ export function smoothMetierLoad(
 
 /**
  * Sérialise les steps BE pour qu'au plus `maxParallel` BE soient actifs en parallèle.
- * Conserve l'ordre par start_date original (croissant). Si 2 BE se chevauchent et
- * `maxParallel=1` (défaut, sans override), recule le 2e d'autant que nécessaire.
+ *
+ * Tri par **score criticité aval** (descendant) : le BE dont l'ancrage de fin est
+ * le plus précoce = celui dont l'aval (Num/Bois) doit démarrer le plus tôt
+ * = priorité maximale. Les BE moins critiques sont reculés.
  *
  * NB : on recule en arrière (backward) — jamais on ne décale en avant pour ne pas
  * pousser au-delà de l'ancrage Num.
@@ -82,12 +84,23 @@ export function sequenceBeSteps(
 ): PlanStep[] {
   const maxParallel = opts.maxParallel ?? 1;
   if (maxParallel >= 99) return steps;
+  // Score criticité aval = end original (start + span - 1) — plus c'est tôt, plus c'est critique.
+  // On traite les plus critiques EN DERNIER pour qu'ils restent à leur place,
+  // forçant les moins critiques à reculer.
   const beSteps = steps
     .filter((s) => s.metier === "BE" && s.start_date !== "TBD")
-    .map((s) => ({ ...s }))
-    .sort((a, b) =>
-      a.start_date < b.start_date ? -1 : a.start_date > b.start_date ? 1 : 0,
-    );
+    .map((s) => {
+      const endOrig = addWorkingDays(
+        s.start_date,
+        s.span_days - 1,
+        opts.holidays,
+        opts.includeWeekends,
+      );
+      return { step: { ...s }, endOrig };
+    })
+    // Moins critiques (end tardif) en premier → reculent ; critiques (end tôt) en dernier
+    .sort((a, b) => (a.endOrig > b.endOrig ? -1 : a.endOrig < b.endOrig ? 1 : 0))
+    .map((x) => x.step);
   if (beSteps.length <= maxParallel) return steps;
 
   // Pour chaque BE : son end original = anchor à respecter (livraison Num).
