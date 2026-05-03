@@ -409,9 +409,17 @@ export const GanttInteractif = forwardRef<
           >
             <div className="px-3 py-2 text-xs font-bold uppercase tracking-wider">Objet / Étape</div>
             {days.map((d) => (
-              <div key={d} className="border-l border-border/40 px-1 py-2 text-center font-mono text-[10px]">
-                <div className="text-muted-foreground">{formatDayName(d)}</div>
-                <div className="font-semibold">{formatShortDate(d)}</div>
+              <div key={d} className="contents">
+                <div className="border-l border-border/60 px-0.5 pt-2 pb-0.5 text-center font-mono text-[10px]">
+                  <div className="text-muted-foreground">{formatDayName(d)}</div>
+                  <div className="font-semibold">{formatShortDate(d)}</div>
+                  <div className="mt-0.5 text-[8px] font-bold text-muted-foreground/70">AM</div>
+                </div>
+                <div className="border-l border-border/20 px-0.5 pt-2 pb-0.5 text-center font-mono text-[10px]">
+                  <div className="text-muted-foreground opacity-0">.</div>
+                  <div className="opacity-0">.</div>
+                  <div className="mt-0.5 text-[8px] font-bold text-muted-foreground/70">PM</div>
+                </div>
               </div>
             ))}
           </div>
