@@ -153,6 +153,71 @@ export const calculateStaffingPlan = createServerFn({ method: "POST" })
       include_weekends: (plan as { include_weekends?: boolean }).include_weekends === true,
     });
 
+    /* 6.b v0.36 — Lissage post-traitement (chantier_metier_config) */
+    const { data: cmcRows } = await supabase
+      .from("chantier_metier_config")
+      .select("metier_id, total_h_calc, nb_pers_cible, duree_cible_j, capa_max_jour, lissage_active, be_override, override_reason")
+      .eq("affaire_id", plan.affaire_id);
+    const lissageConfigs: MetierConfig[] = [];
+    let beOverrideFlag = false;
+    for (const r of (cmcRows ?? []) as Array<{
+      metier_id: number;
+      total_h_calc: number;
+      nb_pers_cible: number;
+      duree_cible_j: number;
+      capa_max_jour: number;
+      lissage_active: boolean;
+      be_override: boolean;
+      override_reason: string | null;
+    }>) {
+      const code = METIER_KEY_BY_ID[r.metier_id];
+      if (!code || code === "Metal") continue;
+      lissageConfigs.push({
+        metier_code: code as MetierConfigKey,
+        total_h_calc: Number(r.total_h_calc),
+        nb_pers_cible: Number(r.nb_pers_cible),
+        duree_cible_j: Number(r.duree_cible_j),
+        capa_max_jour: Number(r.capa_max_jour),
+        lissage_active: Boolean(r.lissage_active),
+        cap_reached: false,
+      });
+      if (code === "BE" && r.be_override) beOverrideFlag = true;
+    }
+    let picDiagnostics: Array<{ date: string; load: number; seuil: number }> = [];
+    let windowConflicts: Conflict[] = [];
+    if (lissageConfigs.length > 0) {
+      const smoothed = applyLissage(result, {
+        configs: lissageConfigs,
+        beOverride: beOverrideFlag,
+        includeWeekends: (plan as { include_weekends?: boolean }).include_weekends === true,
+      });
+      // Mutate result in place (steps refs preserved for downstream override loop)
+      result.steps = smoothed.steps;
+      result.daily_load = smoothed.daily_load;
+      result.alerts = smoothed.alerts;
+      result.date_debut_fab = smoothed.date_debut_fab;
+      picDiagnostics = smoothed.alerts
+        .filter((a) => a.code === "PIC_GLOBAL_DEPASSE" && a.date)
+        .map((a) => {
+          // Parse "Pic atelier N pers > seuil S le DATE"
+          const m = /^Pic atelier (\d+) pers > seuil (\d+)/.exec(a.message ?? "");
+          return {
+            date: a.date as string,
+            load: m ? Number(m[1]) : 0,
+            seuil: m ? Number(m[2]) : 0,
+          };
+        });
+      // Diagnostics WINDOW_INFEASIBLE via computeMetierWindows
+      const today = new Date().toISOString().slice(0, 10);
+      const { conflicts: wConfs } = computeMetierWindows(
+        lissageConfigs,
+        today,
+        plan.date_fin_fab,
+      );
+      windowConflicts = wConfs;
+    }
+
+
     /* 7. Appliquer overrides : si manual_pers, recalcule span ; si manual_shift, décale start_date */
     for (const step of result.steps) {
       if (step.start_date === "TBD") continue;
