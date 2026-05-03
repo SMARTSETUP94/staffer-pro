@@ -139,6 +139,10 @@ export function cascadeMetierOverlaps(
             // Impossible de reculer (déjà au début) → stop pour éviter boucle infinie
             break;
           }
+          // Borne plancher — empêche l'explosion d'horizon (mai 2024 vs livraison 2026)
+          if (floorStart && newStart < floorStart) {
+            break;
+          }
           candidate.start_date = newStart;
           shifted = true;
           break;
