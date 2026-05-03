@@ -111,17 +111,27 @@ export function holidaysRange(fromYear: number, toYear: number): Set<string> {
   return out;
 }
 
-export function isWorkingDay(iso: string, holidays?: Set<string>): boolean {
-  if (isWeekend(iso)) return false;
+/** Si `includeWeekends=true`, samedi/dimanche sont considérés ouvrés (fériés FR restent exclus). */
+export function isWorkingDay(
+  iso: string,
+  holidays?: Set<string>,
+  includeWeekends = false,
+): boolean {
+  if (!includeWeekends && isWeekend(iso)) return false;
   if (holidays && holidays.has(iso)) return false;
   return true;
 }
 
 /** Avance/recule de `n` jours OUVRÉS (n peut être négatif). n=0 → renvoie iso si ouvré, sinon prochain ouvré dans la direction +1. */
-export function addWorkingDays(iso: string, n: number, holidays?: Set<string>): string {
+export function addWorkingDays(
+  iso: string,
+  n: number,
+  holidays?: Set<string>,
+  includeWeekends = false,
+): string {
   if (n === 0) {
     let cur = iso;
-    while (!isWorkingDay(cur, holidays)) cur = addDays(cur, 1);
+    while (!isWorkingDay(cur, holidays, includeWeekends)) cur = addDays(cur, 1);
     return cur;
   }
   const step = n > 0 ? 1 : -1;
@@ -129,44 +139,58 @@ export function addWorkingDays(iso: string, n: number, holidays?: Set<string>): 
   let cur = iso;
   while (remaining > 0) {
     cur = addDays(cur, step);
-    if (isWorkingDay(cur, holidays)) remaining -= 1;
+    if (isWorkingDay(cur, holidays, includeWeekends)) remaining -= 1;
   }
   return cur;
 }
 
-/** Renvoie le jour ouvré ≤ iso (recule jusqu'à un ouvré). */
-export function previousWorkingDay(iso: string, holidays?: Set<string>): string {
+export function previousWorkingDay(
+  iso: string,
+  holidays?: Set<string>,
+  includeWeekends = false,
+): string {
   let cur = iso;
-  while (!isWorkingDay(cur, holidays)) cur = addDays(cur, -1);
+  while (!isWorkingDay(cur, holidays, includeWeekends)) cur = addDays(cur, -1);
   return cur;
 }
 
-/** Renvoie le jour ouvré ≥ iso (avance jusqu'à un ouvré). */
-export function nextWorkingDay(iso: string, holidays?: Set<string>): string {
+export function nextWorkingDay(
+  iso: string,
+  holidays?: Set<string>,
+  includeWeekends = false,
+): string {
   let cur = iso;
-  while (!isWorkingDay(cur, holidays)) cur = addDays(cur, 1);
+  while (!isWorkingDay(cur, holidays, includeWeekends)) cur = addDays(cur, 1);
   return cur;
 }
 
-/** `spanDays` jours OUVRÉS consécutifs à partir de start (inclus, supposé ouvré). */
-export function workingDateRange(start: string, spanDays: number, holidays?: Set<string>): string[] {
+export function workingDateRange(
+  start: string,
+  spanDays: number,
+  holidays?: Set<string>,
+  includeWeekends = false,
+): string[] {
   if (spanDays <= 0) return [];
   const out: string[] = [];
-  let cur = nextWorkingDay(start, holidays);
+  let cur = nextWorkingDay(start, holidays, includeWeekends);
   for (let i = 0; i < spanDays; i++) {
     out.push(cur);
-    if (i < spanDays - 1) cur = addWorkingDays(cur, 1, holidays);
+    if (i < spanDays - 1) cur = addWorkingDays(cur, 1, holidays, includeWeekends);
   }
   return out;
 }
 
-/** Nombre de jours OUVRÉS entre a (inclus) et b (inclus). a ≤ b. */
-export function workingDaysBetween(a: string, b: string, holidays?: Set<string>): number {
+export function workingDaysBetween(
+  a: string,
+  b: string,
+  holidays?: Set<string>,
+  includeWeekends = false,
+): number {
   if (a > b) return 0;
   let n = 0;
   let cur = a;
   while (cur <= b) {
-    if (isWorkingDay(cur, holidays)) n += 1;
+    if (isWorkingDay(cur, holidays, includeWeekends)) n += 1;
     cur = addDays(cur, 1);
   }
   return n;
