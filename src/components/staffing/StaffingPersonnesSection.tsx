@@ -804,7 +804,7 @@ function StepDayRow({
             compact
             onDone={onChanged}
           />
-          <Button onClick={toggleOpen} size="sm" variant={open ? "secondary" : "outline"}>
+          <Button onClick={toggleOpen} size="sm" variant={open ? "secondary" : "outline"} data-write="1">
             <UserPlus className="mr-1 h-3 w-3" />
             {open ? "Fermer" : "Suggestions"}
           </Button>
