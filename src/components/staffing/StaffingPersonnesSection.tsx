@@ -494,7 +494,7 @@ function CalendarView({
           const objLabel = step.objet_id ? (objetsLabel[step.objet_id] ?? step.objet_id) : "Global";
           const stepStart = step.start_date;
           const stepEndD = new Date(stepStart + "T00:00:00Z");
-          stepEndD.setUTCDate(stepEndD.getUTCDate() + step.span_days - 1);
+          stepEndD.setUTCDate(stepEndD.getUTCDate() + effectiveSpanDays(step) - 1);
           const stepEnd = stepEndD.toISOString().slice(0, 10);
 
           return (
