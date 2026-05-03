@@ -189,7 +189,11 @@ export function ChargeMetierSection({ planId, steps, days, objets, preParamConfi
                 </th>
                 {days.map((d) => (
                   <th key={d} className="min-w-[42px] px-1 py-1 text-center font-mono text-[10px]">
-                    {formatShortDate(d)}
+                    <div className="font-semibold">{formatShortDate(d)}</div>
+                    <div className="mt-0.5 flex items-center justify-around text-[8px] font-bold text-muted-foreground/70">
+                      <span>AM</span>
+                      <span>PM</span>
+                    </div>
                   </th>
                 ))}
               </tr>
