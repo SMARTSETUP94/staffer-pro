@@ -344,7 +344,8 @@ export function ChargeMetierSection({
                           );
                         })}
                       </tr>
-                    ))}
+                      );
+                    })}
                   </Fragment>
                 );
               })}
