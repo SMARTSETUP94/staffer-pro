@@ -379,6 +379,15 @@ export const calculateStaffingPlan = createServerFn({ method: "POST" })
       result,
       cnc_reserved_dates: Array.from(cncReservedDates),
       step_overrides: stepOverrides,
+      lissage: {
+        applied: lissageConfigs.length > 0,
+        configs_count: lissageConfigs.length,
+        be_override: beOverrideFlag,
+        diagnostics: {
+          pic_global_depasse: picDiagnostics,
+          window_infeasible: windowConflicts,
+        },
+      },
     };
   });
 
