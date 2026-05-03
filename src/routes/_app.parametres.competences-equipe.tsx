@@ -92,6 +92,15 @@ function CompetencesEquipePage() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("");
   const [savingKey, setSavingKey] = useState<string | null>(null);
+  const [dropdownMode, setDropdownMode] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem("competencesEquipe.dropdownMode") === "1";
+  });
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("competencesEquipe.dropdownMode", dropdownMode ? "1" : "0");
+    }
+  }, [dropdownMode]);
 
   useEffect(() => {
     let cancelled = false;
