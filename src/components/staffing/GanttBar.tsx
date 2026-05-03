@@ -194,12 +194,12 @@ export function GanttBar({
       >
         {compactLabel}
         {phaseLabel && (
-          <span className="ml-1 rounded bg-white/30 px-1 text-[9px] font-bold tracking-wider">
+          <span className="ml-1 rounded bg-foreground/15 px-1 text-[9px] font-bold tracking-wider">
             {phaseLabel}
           </span>
         )}
         {shiftLabel && !dragging && (
-          <span className="ml-1 rounded bg-white/25 px-1 text-[9px] font-bold">{shiftLabel}</span>
+          <span className="ml-1 rounded bg-foreground/15 px-1 text-[9px] font-bold">{shiftLabel}</span>
         )}
         {previewLabel && (
           <span className="ml-1 rounded bg-primary/80 px-1 text-[9px] font-bold ring-1 ring-white/60">
