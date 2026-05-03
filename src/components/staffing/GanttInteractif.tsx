@@ -109,7 +109,7 @@ export const GanttInteractif = forwardRef<
           .single(),
       ]);
       setData(r);
-      onDataLoaded?.(r);
+      onDataLoadedRef.current?.(r);
       if (planMeta.data?.updated_at) {
         initFromPlan(planId, planMeta.data.updated_at as string);
       }
@@ -123,7 +123,7 @@ export const GanttInteractif = forwardRef<
     } finally {
       setLoading(false);
     }
-  }, [calculate, planId, onDataLoaded, initFromPlan]);
+  }, [calculate, planId, initFromPlan]);
 
   useEffect(() => {
     void reload();
