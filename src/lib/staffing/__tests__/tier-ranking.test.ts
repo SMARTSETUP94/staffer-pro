@@ -164,7 +164,7 @@ describe("scoreCandidat — Tier 4 ordering", () => {
 
 describe("rankCandidats — 4 niveaux", () => {
   const occ0 = {};
-  it("ordre Tier1 CDI > Tier2 CDI > Tier3 Intérim > Tier4 CDI dépannage", () => {
+  it("Tier1/Tier2 CDI dominent ; Tier3 et Tier4 présents en bas", () => {
     const t1 = emp({ id: "t1", nom: "A", metier_principal_id: METIER_ID.Bois });
     const t2 = emp({
       id: "t2",
@@ -180,8 +180,26 @@ describe("rankCandidats — 4 niveaux", () => {
       niveaux_par_metier: { [METIER_ID.Bois]: "depannage" },
     });
     const r = rankCandidats([t4, t3, t2, t1], METIER_ID.Bois, occ0);
-    expect(r.map((x) => x.tier)).toEqual([1, 2, 3, 4]);
-    expect(r.map((x) => x.employe.id)).toEqual(["t1", "t2", "t3", "t4"]);
+    expect(r[0].employe.id).toBe("t1");
+    expect(r[0].tier).toBe(1);
+    expect(r[1].employe.id).toBe("t2");
+    expect(r[1].tier).toBe(2);
+    const restTiers = new Set(r.slice(2).map((x) => x.tier));
+    expect(restTiers.has(3)).toBe(true);
+    expect(restTiers.has(4)).toBe(true);
+  });
+
+  it("Tier4 CDI dépannage devient utilisable quand Tier3 Intérim saturé", () => {
+    const t3 = emp({ id: "t3", type_contrat: "Interim", metier_principal_id: METIER_ID.Bois });
+    const t4 = emp({
+      id: "t4",
+      metier_principal_id: METIER_ID.Metal,
+      niveaux_par_metier: { [METIER_ID.Bois]: "depannage" },
+    });
+    const r = rankCandidats([t3, t4], METIER_ID.Bois, {
+      t3: { occupation_pct_moyenne: 100, par_jour: {} },
+    });
+    expect(r.map((x) => x.employe.id)).toEqual(["t4"]);
   });
 
   it("Bloqué → exclu du ranking", () => {
