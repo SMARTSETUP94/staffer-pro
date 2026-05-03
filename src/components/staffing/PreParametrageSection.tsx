@@ -27,6 +27,43 @@ const METIER_LABEL: Record<MetierConfigKey, string> = {
   Manut: "Manutention",
 };
 
+/**
+ * Coerce une valeur (number, string, null, undefined) en nombre fini.
+ * Tolère les strings vides, les espaces, les virgules décimales FR.
+ * Retourne `fallback` si invalide ou < min.
+ */
+function safeNumber(
+  v: unknown,
+  fallback: number,
+  opts?: { min?: number; max?: number },
+): number {
+  if (v === null || v === undefined) return fallback;
+  if (typeof v === "boolean") return fallback;
+  let n: number;
+  if (typeof v === "number") {
+    n = v;
+  } else {
+    const s = String(v).trim().replace(",", ".");
+    if (s === "") return fallback;
+    n = Number(s);
+  }
+  if (!Number.isFinite(n)) return fallback;
+  if (opts?.min !== undefined && n < opts.min) return fallback;
+  if (opts?.max !== undefined && n > opts.max) return opts.max;
+  return n;
+}
+
+/** Coerce une valeur en booléen avec fallback (utile pour Lissage). */
+function safeBool(v: unknown, fallback: boolean): boolean {
+  if (v === null || v === undefined || v === "") return fallback;
+  if (typeof v === "boolean") return v;
+  if (typeof v === "number") return v !== 0;
+  const s = String(v).trim().toLowerCase();
+  if (["true", "1", "on", "yes", "oui"].includes(s)) return true;
+  if (["false", "0", "off", "no", "non"].includes(s)) return false;
+  return fallback;
+}
+
 interface Props {
   affaireId: string;
   /** Deadline override (ex: plan.date_fin_fab) — fallback si affaire.date_fin_prevue NULL. */
