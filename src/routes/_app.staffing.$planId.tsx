@@ -23,6 +23,7 @@ import { StaffingEditToolbar } from "@/components/staffing/StaffingEditToolbar";
 import { AutoStaffPlanButton, type AutoStaffPlanButtonHandle } from "@/components/staffing/AutoStaffPlanButton";
 import { StaffingShortcutsHelp } from "@/components/staffing/StaffingShortcutsHelp";
 import { PreParametrageSection } from "@/components/staffing/PreParametrageSection";
+import { VolumeCard } from "@/components/staffing/VolumeCard";
 import { listChantierMetierConfig, type ChantierMetierConfigRow } from "@/server/staffing-pre-parametrage.functions";
 import { ExpressResultBanner } from "@/components/staffing/ExpressResultBanner";
 import { Button } from "@/components/ui/button";
@@ -311,6 +312,12 @@ function StaffingPlanPage() {
         }}
         preParamConfigs={preParamConfigs}
       />
+      {planData && (
+        <VolumeCard
+          steps={planData.result.steps.filter((s) => s.start_date !== "TBD")}
+          preParamConfigs={preParamConfigs}
+        />
+      )}
       {planData && (
         <>
           <div className="flex items-center gap-2 rounded-2xl border border-border bg-card p-2">
