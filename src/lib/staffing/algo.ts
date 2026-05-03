@@ -128,17 +128,16 @@ export function pickPersAndSpan(
 
   const roundUpBinome = (p: number) => (binome ? p + (p % 2) : p);
 
-  // (1) pers_min basé sur fenêtre (en demi-journées) — équivalent à étalement max
-  let pers = Math.max(minMetier, Math.ceil(totalHeures / (fenetreMaxDemi * H_HALF)));
-  // (2) arrondi binôme
-  pers = roundUpBinome(pers);
-  // (3) cap métier
-  pers = Math.min(pers, cap);
+  // v0.38.1 — Stratégie « binôme MIN flex » : démarrer au minimum métier
+  // (2 binôme, 1 sinon) et n'escalader pers QUE si la fenêtre FLOOR déborde.
+  // Avec FLOOR strict, les heures résiduelles < pers·H_HALF sont absorbées
+  // par la polyvalence (jusqu'à pers·H_HALF - 1h ≈ 7h sur Manut 2p).
+  let pers = Math.min(cap, roundUpBinome(minMetier));
 
-  // (4) span en demi-journées — FLOOR strict (spec v0.38)
+  // span en demi-journées — FLOOR strict (spec v0.38)
   let nDemi = Math.max(1, Math.floor(totalHeures / (pers * H_HALF)));
 
-  // (5) si dépasse fenêtre, augmenter pers d'un cran
+  // si la durée dépasse encore la fenêtre, on ajoute un cran (binôme = +2)
   const step = binome ? 2 : 1;
   while (nDemi > fenetreMaxDemi && pers + step <= cap) {
     pers += step;
