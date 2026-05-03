@@ -287,6 +287,7 @@ export const createStaffingPlan = createServerFn({ method: "POST" })
         date_fin_fab: data.date_fin_fab,
         status: "draft",
         created_by: userId,
+        include_weekends: data.include_weekends === true,
       })
       .select("id")
       .single();
