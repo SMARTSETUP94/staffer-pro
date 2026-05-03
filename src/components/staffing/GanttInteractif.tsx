@@ -311,8 +311,8 @@ export const GanttInteractif = forwardRef<
   const objets = [...data.objets].sort((a, b) => a.display_order - b.display_order);
   const dateLivraison = data.result.date_fin_fab;
 
-  // Grid template
-  const gridTemplate = `220px repeat(${days.length}, minmax(42px, 1fr))`;
+  // v0.38.1b — Grid 2 colonnes par jour (AM | PM)
+  const gridTemplate = `220px repeat(${days.length * 2}, minmax(22px, 1fr))`;
 
   const getObjStepByMetier = (objet_id: string, metier_id: number): PlanStep | undefined =>
     mergedSteps.find(
