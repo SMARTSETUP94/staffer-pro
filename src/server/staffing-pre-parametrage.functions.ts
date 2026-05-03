@@ -236,13 +236,20 @@ export const upsertChantierMetierConfig = createServerFn({ method: "POST" })
 
 export const applyPreParametrageSuggestions = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { affaire_id: string }) =>
-    z.object({ affaire_id: z.string().uuid() }).parse(d),
+  .inputValidator((d: { affaire_id: string; deadline?: string | null }) =>
+    z
+      .object({
+        affaire_id: z.string().uuid(),
+        deadline: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
+      })
+      .parse(d),
   )
   .handler(async ({ data, context }) => {
     const { supabase } = context;
-    // Recalcule + persiste
-    const sugg = await suggestPreParametrage({ data: { affaire_id: data.affaire_id } });
+    // Recalcule + persiste (transmet la deadline override si fournie)
+    const sugg = await suggestPreParametrage({
+      data: { affaire_id: data.affaire_id, deadline: data.deadline ?? null },
+    });
     if (sugg.configs.length === 0) return { saved: 0 };
     const rows = sugg.configs.map((c) => ({
       affaire_id: data.affaire_id,
