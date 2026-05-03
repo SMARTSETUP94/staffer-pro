@@ -61,12 +61,14 @@ export const getPersonnelSuggestions = createServerFn({ method: "POST" })
         .eq("non_staffing", false);
       if (empErr) throw new Error(empErr.message);
 
+      const niveauxMap = await loadNiveauxParEmploye(supabase);
       const employes: EmployeStaffing[] = (emps ?? []).map((e) => ({
         id: e.id as string,
         nom: e.nom as string,
         prenom: e.prenom as string,
         metier_principal_id: e.metier_principal_id as number,
         metiers_secondaires: (e.metiers_secondaires ?? []) as number[],
+        niveaux_par_metier: niveauxMap[e.id as string] ?? {},
         competences_polyvalentes: (e.competences_polyvalentes ?? {}) as Record<string, boolean>,
         niveau_seniorite: (e.niveau_seniorite ?? 3) as number,
         type_contrat: (e.type_contrat as "CDI" | "CDD" | "Interim") ?? "CDI",
