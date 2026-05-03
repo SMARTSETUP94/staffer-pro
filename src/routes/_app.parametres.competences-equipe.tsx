@@ -221,7 +221,18 @@ function CompetencesEquipePage() {
               {emps.length} employés actifs · {metiers.length} métiers — sauvegarde immédiate
             </CardDescription>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <Switch
+                id="dropdown-mode"
+                checked={dropdownMode}
+                onCheckedChange={setDropdownMode}
+                aria-label="Activer mode dropdown explicite (accessibilité)"
+              />
+              <Label htmlFor="dropdown-mode" className="text-xs cursor-pointer">
+                Dropdown explicite
+              </Label>
+            </div>
             <div className="relative">
               <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
               <Input
