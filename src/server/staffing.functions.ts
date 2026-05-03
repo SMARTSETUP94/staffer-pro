@@ -7,6 +7,14 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { calculatePlan } from "@/lib/staffing/algo";
 import { addDays } from "@/lib/staffing/date-utils";
 import type { ObjetInput, PlanResult } from "@/lib/staffing/types";
+import { applyLissage } from "@/lib/staffing/lissage";
+import {
+  computeMetierWindows,
+  type MetierConfig,
+  type MetierConfigKey,
+  type Conflict,
+} from "@/lib/staffing/pre-parametrage";
+import { METIER_KEY_BY_ID } from "@/lib/staffing/types";
 
 /* ------------------------------------------------------------------ */
 /* GET /staffing-plan/:planId/calculate (POST)                         */
