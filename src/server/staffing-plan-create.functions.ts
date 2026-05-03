@@ -173,6 +173,7 @@ export const createStaffingPlan = createServerFn({ method: "POST" })
       date_fin_fab: string;
       objet_ids: string[];
       archive_existing?: boolean;
+      include_weekends?: boolean;
     }) =>
       z
         .object({
@@ -181,6 +182,7 @@ export const createStaffingPlan = createServerFn({ method: "POST" })
           date_fin_fab: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
           objet_ids: z.array(z.string().uuid()).min(1),
           archive_existing: z.boolean().optional(),
+          include_weekends: z.boolean().optional(),
         })
         .parse(d),
   )
