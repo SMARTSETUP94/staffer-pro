@@ -65,6 +65,81 @@ export function smoothMetierLoad(
 }
 
 /* ============================================================ */
+/* 1.b Désempilement métier — résout le cumul multi-steps > cap   */
+/* ============================================================ */
+
+/**
+ * Après lissage par step (smoothMetierLoad), il reste des journées où
+ * plusieurs steps du même métier se chevauchent et dont la somme dépasse
+ * `capa_max_jour`. Cette passe déplace itérativement le step "le plus
+ * tardif" du jour saturé vers la gauche (1 jour ouvré) jusqu'à respecter
+ * le cap. Mute les copies retournées (pas l'entrée).
+ */
+export function cascadeMetierOverlaps(
+  steps: PlanStep[],
+  configs: MetierConfig[],
+  holidays?: Set<string>,
+  includeWeekends = false,
+): PlanStep[] {
+  // Clone des steps actifs (mutables localement)
+  const cloned = steps.map((s) => ({ ...s }));
+  for (const cfg of configs) {
+    if (!cfg.lissage_active) continue;
+    const target = CFG_TO_METIER[cfg.metier_code];
+    const cap = Math.max(1, cfg.capa_max_jour);
+    let safety = 0;
+    while (safety++ < 1000) {
+      const metierSteps = cloned.filter(
+        (s) => s.metier === target && s.start_date !== "TBD",
+      );
+      if (metierSteps.length === 0) break;
+      // Construit map jour → steps présents
+      const dayMap: Record<string, PlanStep[]> = {};
+      for (const s of metierSteps) {
+        for (const d of workingDateRange(
+          s.start_date,
+          s.span_days,
+          holidays,
+          includeWeekends,
+        )) {
+          (dayMap[d] ??= []).push(s);
+        }
+      }
+      // Cherche le 1er jour (chrono) saturé
+      const sortedDays = Object.keys(dayMap).sort();
+      let shifted = false;
+      for (const d of sortedDays) {
+        const load = dayMap[d].reduce((a, s) => a + s.pers, 0);
+        if (load > cap) {
+          // Décale le step au start le plus tardif (= candidat le plus
+          // facile à reculer sans casser la fin)
+          const candidate = [...dayMap[d]].sort((a, b) =>
+            a.start_date < b.start_date ? 1 : a.start_date > b.start_date ? -1 : 0,
+          )[0];
+          const newStart = addWorkingDays(
+            candidate.start_date,
+            -1,
+            holidays,
+            includeWeekends,
+          );
+          if (newStart === candidate.start_date) {
+            // Impossible de reculer (déjà au début) → stop pour éviter boucle infinie
+            break;
+          }
+          candidate.start_date = newStart;
+          shifted = true;
+          break;
+        }
+      }
+      if (!shifted) break;
+    }
+  }
+  // Réinjecte les clones modifiés dans le tableau d'origine (préservation ordre)
+  const byId = new Map(cloned.map((s) => [s.id, s]));
+  return steps.map((s) => byId.get(s.id) ?? s);
+}
+
+/* ============================================================ */
 /* 2. BE séquentiel par objet                                    */
 /* ============================================================ */
 
