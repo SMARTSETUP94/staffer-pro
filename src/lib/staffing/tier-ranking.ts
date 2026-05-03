@@ -1,26 +1,37 @@
-// v0.35.1bis — Tier ranking personnes (déterministe, pas d'IA)
-// Spec : mem://features/auto-staffing-v035-spec
+// v0.35.x — Tier ranking personnes 4 niveaux (déterministe, pas d'IA)
+// Spec : mem://features/competences-4-niveaux
 //
-// Tier1 = CDI/CDD metier_principal_id = step.metier_id              → score base 100
-// Tier2 = CDI/CDD metiers_secondaires contient step.metier_id        → score base 70
-// Tier3 = Intérim                                                    → score base 30
+// Niveaux compétence (par employé × métier) :
+//   - Principal     (employes.metier_principal_id)
+//   - Secondaire    (employe_metiers.niveau = 'secondaire')
+//   - Dépannage     (employe_metiers.niveau = 'depannage')
+//   - Bloqué        (employe_metiers.niveau = 'bloque')   → exclu
 //
-// Score final = tier_base × bonus_contrat + presence_dispo_pct - penalite_polyvalence
-//   bonus_contrat : CDI = 1.0, CDD = 0.9, Intérim = 0.3 (intérim = variable d'ajustement, jamais défaut)
+// Tiers calculés :
+//   Tier 1 = CDI/CDD Principal           → score base 100
+//   Tier 2 = CDI/CDD Secondaire          → score base 70
+//   Tier 3 = Intérim (Principal/Secondaire) → score base 30
+//   Tier 4 = CDI/CDD Dépannage           → score base 10  (dernier recours, après intérim)
 //
-// Manut polyvalent (competences_polyvalentes.{bois|metal|peinture|tap} = true) peut couvrir Tier2.
+// Bonus contrat : CDI 1.0, CDD 0.9, Intérim 0.3.
+// Manut polyvalent (competences_polyvalentes.{bois|metal|peinture|tap}=true) → équivaut Tier 2 (Secondaire)
+// pour le métier couvert.
 
 import type { MetierKey } from "./types";
 import { METIER_ID } from "./types";
 
 export type ContratType = "CDI" | "CDD" | "Interim";
+export type CompetenceNiveau = "secondaire" | "depannage" | "bloque";
 
 export interface EmployeStaffing {
   id: string;
   nom: string;
   prenom: string;
   metier_principal_id: number;
+  /** Conservé pour compat (lecture rapide) — synchronisé avec niveaux_par_metier */
   metiers_secondaires: number[];
+  /** metier_id → niveau ('secondaire' | 'depannage' | 'bloque') pour les non-principaux. */
+  niveaux_par_metier?: Record<number, CompetenceNiveau>;
   /** ex: { bois: true, metal: false, peinture: true, tap: false } */
   competences_polyvalentes: Record<string, boolean>;
   niveau_seniorite: number; // 1..5
@@ -32,40 +43,56 @@ export interface EmployeStaffing {
 export interface ResourceAvailabilityInput {
   date_debut: string;
   date_fin: string;
-  /** Plan id à exclure (pour calculer dispo en ignorant le plan en cours d'édition) */
   exclude_plan_id?: string;
 }
 
 export interface PersonneOccupation {
-  /** % occupation moyen sur la fenêtre (0..100) */
   occupation_pct_moyenne: number;
-  /** Détail jour par jour */
   par_jour: Record<string, number>;
 }
 
 export interface ResourceAvailability {
-  /** Réservations CNC déjà posées (cross-affaires) sur la fenêtre */
   num_machine_reserved: Set<string>;
-  /** employe_id → occupation */
   personnes: Record<string, PersonneOccupation>;
-  /** date → total personnes occupées (pic global) */
   pic_par_jour: Record<string, number>;
-  /** date → métier → personnes */
   pic_par_metier: Record<string, Record<MetierKey, number>>;
-  /** employe_id → set de dates ISO d'absence pleine journée */
   absences_par_personne?: Record<string, Set<string>>;
 }
 
-export const TIER_BASE = { 1: 100, 2: 70, 3: 30 } as const;
+export const TIER_BASE = { 1: 100, 2: 70, 3: 30, 4: 10 } as const;
 export const BONUS_CONTRAT: Record<ContratType, number> = { CDI: 1.0, CDD: 0.9, Interim: 0.3 };
 
-/** Détermine le tier d'un employé pour un step donné. */
-export function getTier(emp: EmployeStaffing, metierStepId: number): 1 | 2 | 3 | null {
+/** Lit le niveau d'un employé pour un métier non-principal. */
+function getNiveau(emp: EmployeStaffing, metierStepId: number): CompetenceNiveau | null {
+  const map = emp.niveaux_par_metier;
+  if (map && map[metierStepId]) return map[metierStepId];
+  // Fallback compat : si listé dans metiers_secondaires sans niveau explicite → secondaire
+  if (emp.metiers_secondaires.includes(metierStepId)) return "secondaire";
+  return null;
+}
+
+/** Détermine le tier d'un employé pour un step donné (1..4) ou null si exclu. */
+export function getTier(emp: EmployeStaffing, metierStepId: number): 1 | 2 | 3 | 4 | null {
   if (!emp.actif || emp.non_staffing) return null;
-  if (emp.type_contrat === "Interim") return 3;
-  if (emp.metier_principal_id === metierStepId) return 1;
-  if (emp.metiers_secondaires.includes(metierStepId)) return 2;
-  // Manut polyvalent → couvre Tier2 sur Bois/Metal/Peint/Tap
+
+  // Principal : 1 (CDI/CDD) ou 3 (Intérim)
+  if (emp.metier_principal_id === metierStepId) {
+    return emp.type_contrat === "Interim" ? 3 : 1;
+  }
+
+  // Bloqué explicitement → exclu
+  const niveau = getNiveau(emp, metierStepId);
+  if (niveau === "bloque") return null;
+
+  if (niveau === "secondaire") {
+    return emp.type_contrat === "Interim" ? 3 : 2;
+  }
+  if (niveau === "depannage") {
+    // CDI/CDD seulement, intérim "dépannage" = aucun sens (intérim déjà variable d'ajustement)
+    return emp.type_contrat === "Interim" ? null : 4;
+  }
+
+  // Manut polyvalent → équivalent Secondaire (Tier 2 si CDI/CDD, Tier 3 si Intérim)
   if (emp.metier_principal_id === METIER_ID.Manut) {
     const polyMap: Partial<Record<number, string>> = {
       [METIER_ID.Bois]: "bois",
@@ -74,48 +101,45 @@ export function getTier(emp: EmployeStaffing, metierStepId: number): 1 | 2 | 3 |
       [METIER_ID.Tap]: "tap",
     };
     const key = polyMap[metierStepId];
-    if (key && emp.competences_polyvalentes?.[key]) return 2;
+    if (key && emp.competences_polyvalentes?.[key]) {
+      return emp.type_contrat === "Interim" ? 3 : 2;
+    }
   }
+
   return null;
 }
 
-/** Score final pour ranker les candidats sur un step.
- *  Plus haut = meilleur candidat. */
 export function scoreCandidat(
   emp: EmployeStaffing,
   metierStepId: number,
-  presenceDispoPct: number // 0..100 (100 = totalement libre)
+  presenceDispoPct: number
 ): number | null {
   const tier = getTier(emp, metierStepId);
   if (tier === null) return null;
   const base = TIER_BASE[tier];
   const bonus = BONUS_CONTRAT[emp.type_contrat];
-  // Séniorité : +1 par niveau (1..5) — micro tie-breaker
   const seniorite = (emp.niveau_seniorite ?? 3) - 3;
   return base * bonus + presenceDispoPct + seniorite;
 }
 
-/** Tri stable des candidats par score décroissant.
- *  Garantit : CDI Tier1 > CDD Tier1 > CDI Tier2 > CDD Tier2 > Intérim. */
 export function rankCandidats(
   employes: EmployeStaffing[],
   metierStepId: number,
   occupations: Record<string, PersonneOccupation>
-): Array<{ employe: EmployeStaffing; score: number; tier: 1 | 2 | 3 }> {
-  const out: Array<{ employe: EmployeStaffing; score: number; tier: 1 | 2 | 3 }> = [];
+): Array<{ employe: EmployeStaffing; score: number; tier: 1 | 2 | 3 | 4 }> {
+  const out: Array<{ employe: EmployeStaffing; score: number; tier: 1 | 2 | 3 | 4 }> = [];
   for (const emp of employes) {
     const tier = getTier(emp, metierStepId);
     if (tier === null) continue;
     const occ = occupations[emp.id];
     const dispoPct = 100 - (occ?.occupation_pct_moyenne ?? 0);
-    if (dispoPct <= 0) continue; // employé saturé
+    if (dispoPct <= 0) continue;
     const score = scoreCandidat(emp, metierStepId, dispoPct);
     if (score === null) continue;
     out.push({ employe: emp, score, tier });
   }
   out.sort((a, b) => {
     if (b.score !== a.score) return b.score - a.score;
-    // Tie-break : tier croissant, puis nom alpha (déterminisme)
     if (a.tier !== b.tier) return a.tier - b.tier;
     return (a.employe.nom + a.employe.prenom).localeCompare(b.employe.nom + b.employe.prenom);
   });

@@ -1,17 +1,16 @@
-// v0.35.x — Matrice compétences employés × métiers (admin/chef).
-// Source : table employe_metiers (métiers secondaires). Le métier principal est
-// affiché en lecture seule (badge primary) et toujours coché.
+// v0.35.x — Matrice compétences employés × métiers (admin/chef) — 4 niveaux
+// Cellule : badge cliquable cyclant Aucun → Secondaire (S) → Dépannage (D) → Bloqué (X) → Aucun
+// "Principal" (P) = lecture seule (verrouillé sur fiche employé : metier_principal_id).
+// Sauvegarde immédiate au clic + toast.
 import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Loader2, Save, Search } from "lucide-react";
+import { Loader2, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { useMetiers } from "@/hooks/use-metiers";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 
@@ -30,15 +29,60 @@ interface Emp {
   non_staffing: boolean;
 }
 
+type Niveau = "secondaire" | "depannage" | "bloque";
+type Cell = Niveau | null; // null = aucun
+
+const CYCLE: Cell[] = [null, "secondaire", "depannage", "bloque"];
+function nextNiveau(cur: Cell): Cell {
+  const i = CYCLE.indexOf(cur);
+  return CYCLE[(i + 1) % CYCLE.length];
+}
+
+function CellBadge({ niveau, isPrincipal }: { niveau: Cell; isPrincipal: boolean }) {
+  if (isPrincipal) {
+    return (
+      <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-primary text-[11px] font-bold text-primary-foreground">
+        P
+      </span>
+    );
+  }
+  if (niveau === null) {
+    return (
+      <span className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-dashed border-border/60 text-[11px] text-muted-foreground/50">
+        ·
+      </span>
+    );
+  }
+  if (niveau === "secondaire") {
+    return (
+      <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-emerald-500/15 text-[11px] font-bold text-emerald-700 dark:text-emerald-300">
+        S
+      </span>
+    );
+  }
+  if (niveau === "depannage") {
+    return (
+      <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-amber-500/20 text-[11px] font-bold text-amber-700 dark:text-amber-300">
+        D
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-destructive/20 text-[11px] font-bold text-destructive">
+      X
+    </span>
+  );
+}
+
 function CompetencesEquipePage() {
   const { isAdminOrChef, rolesLoaded } = useAuth();
   const { metiers, loading: metiersLoading } = useMetiers();
   const [emps, setEmps] = useState<Emp[]>([]);
-  const [matrix, setMatrix] = useState<Record<string, Set<number>>>({});
-  const [dirty, setDirty] = useState<Set<string>>(new Set());
+  /** matrix[empId][metierId] = niveau (omis si null) */
+  const [matrix, setMatrix] = useState<Record<string, Record<number, Niveau>>>({});
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const [filter, setFilter] = useState("");
+  const [savingKey, setSavingKey] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -51,13 +95,15 @@ function CompetencesEquipePage() {
         .order("nom", { ascending: true });
       const { data: em } = await supabase
         .from("employe_metiers")
-        .select("employe_id, metier_id");
+        .select("employe_id, metier_id, niveau");
       if (cancelled) return;
-      const m: Record<string, Set<number>> = {};
+      const m: Record<string, Record<number, Niveau>> = {};
       for (const row of em ?? []) {
         const eid = row.employe_id as string;
-        if (!m[eid]) m[eid] = new Set();
-        m[eid].add(row.metier_id as number);
+        const mid = row.metier_id as number;
+        const niv = ((row as { niveau?: Niveau }).niveau ?? "secondaire") as Niveau;
+        if (!m[eid]) m[eid] = {};
+        m[eid][mid] = niv;
       }
       setEmps((e ?? []) as Emp[]);
       setMatrix(m);
@@ -68,49 +114,49 @@ function CompetencesEquipePage() {
     };
   }, []);
 
-  const toggle = (empId: string, metierId: number, checked: boolean) => {
+  const cycleCell = async (empId: string, metierId: number) => {
+    const cur = matrix[empId]?.[metierId] ?? null;
+    const nxt = nextNiveau(cur);
+    const key = `${empId}:${metierId}`;
+    setSavingKey(key);
+
+    // Optimistic update
     setMatrix((prev) => {
       const next = { ...prev };
-      const s = new Set(next[empId] ?? []);
-      if (checked) s.add(metierId);
-      else s.delete(metierId);
-      next[empId] = s;
+      const row = { ...(next[empId] ?? {}) };
+      if (nxt === null) delete row[metierId];
+      else row[metierId] = nxt;
+      next[empId] = row;
       return next;
     });
-    setDirty((d) => new Set(d).add(empId));
-  };
 
-  const save = async () => {
-    if (dirty.size === 0) return;
-    setSaving(true);
     try {
-      const ids = Array.from(dirty);
-      // Stratégie simple : delete + reinsert pour les employés modifiés
+      // Toujours supprimer la ligne existante puis insérer la nouvelle (ou rien si null)
       const { error: delErr } = await supabase
         .from("employe_metiers")
         .delete()
-        .in("employe_id", ids);
+        .eq("employe_id", empId)
+        .eq("metier_id", metierId);
       if (delErr) throw delErr;
-      const rows: { employe_id: string; metier_id: number }[] = [];
-      for (const eid of ids) {
-        const emp = emps.find((x) => x.id === eid);
-        const set = matrix[eid] ?? new Set();
-        for (const mid of set) {
-          // ne pas dupliquer le métier principal (déjà géré ailleurs)
-          if (emp && mid === emp.metier_principal_id) continue;
-          rows.push({ employe_id: eid, metier_id: mid });
-        }
-      }
-      if (rows.length > 0) {
-        const { error: insErr } = await supabase.from("employe_metiers").insert(rows);
+      if (nxt !== null) {
+        const { error: insErr } = await supabase
+          .from("employe_metiers")
+          .insert({ employe_id: empId, metier_id: metierId, niveau: nxt });
         if (insErr) throw insErr;
       }
-      toast.success(`${dirty.size} employé${dirty.size > 1 ? "s" : ""} mis à jour`);
-      setDirty(new Set());
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Erreur sauvegarde");
+    } catch (err) {
+      // Rollback
+      setMatrix((prev) => {
+        const next = { ...prev };
+        const row = { ...(next[empId] ?? {}) };
+        if (cur === null) delete row[metierId];
+        else row[metierId] = cur;
+        next[empId] = row;
+        return next;
+      });
+      toast.error(err instanceof Error ? err.message : "Erreur sauvegarde");
     } finally {
-      setSaving(false);
+      setSavingKey(null);
     }
   };
 
@@ -129,8 +175,19 @@ function CompetencesEquipePage() {
         <p className="overline">— Paramétrage</p>
         <h1 className="text-2xl font-bold text-foreground">Compétences équipe</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Matrice employés × métiers secondaires. Le métier principal est en gras et
-          toujours actif. Utilisé par l'auto-staffing pour le tier ranking (CDI &gt; CDD &gt; Intérim).
+          Matrice 4 niveaux par cellule. Le métier principal (<span className="font-bold text-primary">P</span>) est défini sur la fiche employé. Cliquez une cellule pour cycler :
+          <span className="mx-1 inline-flex items-center gap-1">
+            <span className="inline-flex h-4 w-4 items-center justify-center rounded bg-emerald-500/15 text-[9px] font-bold text-emerald-700">S</span> Secondaire
+          </span>
+          →
+          <span className="mx-1 inline-flex items-center gap-1">
+            <span className="inline-flex h-4 w-4 items-center justify-center rounded bg-amber-500/20 text-[9px] font-bold text-amber-700">D</span> Dépannage
+          </span>
+          →
+          <span className="mx-1 inline-flex items-center gap-1">
+            <span className="inline-flex h-4 w-4 items-center justify-center rounded bg-destructive/20 text-[9px] font-bold text-destructive">X</span> Bloqué
+          </span>
+          → vide.
         </p>
       </div>
 
@@ -139,7 +196,7 @@ function CompetencesEquipePage() {
           <div>
             <CardTitle className="text-base">Matrice</CardTitle>
             <CardDescription>
-              {emps.length} employés actifs · {metiers.length} métiers
+              {emps.length} employés actifs · {metiers.length} métiers — sauvegarde immédiate
             </CardDescription>
           </div>
           <div className="flex items-center gap-2">
@@ -152,10 +209,6 @@ function CompetencesEquipePage() {
                 className="pl-7 h-8 w-48"
               />
             </div>
-            <Button size="sm" onClick={save} disabled={saving || dirty.size === 0}>
-              {saving ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Save className="mr-1 h-3 w-3" />}
-              Enregistrer{dirty.size > 0 ? ` (${dirty.size})` : ""}
-            </Button>
           </div>
         </CardHeader>
         <CardContent className="overflow-x-auto p-0">
@@ -177,39 +230,46 @@ function CompetencesEquipePage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filtered.map((e) => {
-                  const set = matrix[e.id] ?? new Set();
-                  const isDirty = dirty.has(e.id);
-                  return (
-                    <TableRow key={e.id} className={isDirty ? "bg-amber-50 dark:bg-amber-950/20" : ""}>
-                      <TableCell className="sticky left-0 bg-card font-medium">
-                        {e.prenom} {e.nom}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="text-xs">{e.type_contrat}</Badge>
-                      </TableCell>
-                      {metiers.map((m) => {
-                        const isPrincipal = m.id === e.metier_principal_id;
-                        const checked = isPrincipal || set.has(m.id);
-                        return (
-                          <TableCell key={m.id} className="text-center">
-                            <div className="flex items-center justify-center">
-                              <Checkbox
-                                checked={checked}
-                                disabled={isPrincipal}
-                                onCheckedChange={(v) => toggle(e.id, m.id, v === true)}
-                                aria-label={`${e.prenom} ${e.nom} — ${m.libelle}`}
-                              />
-                              {isPrincipal && (
-                                <span className="ml-1 text-[10px] font-bold text-primary">P</span>
-                              )}
-                            </div>
-                          </TableCell>
-                        );
-                      })}
-                    </TableRow>
-                  );
-                })}
+                {filtered.map((e) => (
+                  <TableRow key={e.id}>
+                    <TableCell className="sticky left-0 bg-card font-medium">
+                      {e.prenom} {e.nom}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="text-xs">{e.type_contrat}</Badge>
+                    </TableCell>
+                    {metiers.map((m) => {
+                      const isPrincipal = m.id === e.metier_principal_id;
+                      const niveau: Cell = matrix[e.id]?.[m.id] ?? null;
+                      const key = `${e.id}:${m.id}`;
+                      const isSaving = savingKey === key;
+                      return (
+                        <TableCell key={m.id} className="text-center">
+                          <button
+                            type="button"
+                            disabled={isPrincipal || isSaving}
+                            onClick={() => cycleCell(e.id, m.id)}
+                            className="inline-flex items-center justify-center disabled:cursor-not-allowed"
+                            aria-label={`${e.prenom} ${e.nom} — ${m.libelle} — ${
+                              isPrincipal ? "Principal" : niveau ?? "Aucun"
+                            }`}
+                            title={
+                              isPrincipal
+                                ? "Métier principal (verrouillé)"
+                                : `Cliquer pour changer (actuel : ${niveau ?? "aucun"})`
+                            }
+                          >
+                            {isSaving ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
+                            ) : (
+                              <CellBadge niveau={niveau} isPrincipal={isPrincipal} />
+                            )}
+                          </button>
+                        </TableCell>
+                      );
+                    })}
+                  </TableRow>
+                ))}
                 {filtered.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={metiers.length + 2} className="text-center text-sm text-muted-foreground py-6">
@@ -223,10 +283,16 @@ function CompetencesEquipePage() {
         </CardContent>
       </Card>
 
-      <p className="text-xs text-muted-foreground">
-        Légende : <span className="font-bold text-primary">P</span> = métier principal (verrouillé,
-        défini sur la fiche employé).
-      </p>
+      <div className="rounded-2xl border border-border bg-muted/30 p-3 text-xs text-muted-foreground space-y-1">
+        <p className="font-semibold text-foreground">Impact auto-staffing :</p>
+        <ul className="list-disc pl-5 space-y-0.5">
+          <li><span className="font-bold text-primary">P</span> Principal CDI/CDD → Tier 1 (score 100)</li>
+          <li><span className="font-bold text-emerald-600">S</span> Secondaire CDI/CDD → Tier 2 (score 70)</li>
+          <li>Intérim Principal/Secondaire → Tier 3 (score 30)</li>
+          <li><span className="font-bold text-amber-600">D</span> Dépannage CDI/CDD → Tier 4 (score 10, dernier recours pour pic de charge)</li>
+          <li><span className="font-bold text-destructive">X</span> Bloqué → exclu du staffing pour ce métier</li>
+        </ul>
+      </div>
     </div>
   );
 }

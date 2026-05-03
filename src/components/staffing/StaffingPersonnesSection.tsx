@@ -51,7 +51,7 @@ import { METIER_COLOR, METIER_LABEL, METIER_ORDER, formatShortDate, formatDayNam
 interface Suggestion {
   employe: { id: string; nom: string; prenom: string; metier_principal_id: number; type_contrat: string };
   score: number;
-  tier: 1 | 2 | 3;
+  tier: 1 | 2 | 3 | 4;
   dispo_pct: number;
   absent_days_in_step: number;
   absent_today: boolean;
@@ -67,10 +67,11 @@ interface Assignment {
   type_contrat: string;
 }
 
-const TIER_COLORS: Record<1 | 2 | 3, { bg: string; text: string; label: string }> = {
+const TIER_COLORS: Record<1 | 2 | 3 | 4, { bg: string; text: string; label: string }> = {
   1: { bg: "bg-emerald-500/15", text: "text-emerald-700 dark:text-emerald-300", label: "Tier 1" },
   2: { bg: "bg-sky-500/15", text: "text-sky-700 dark:text-sky-300", label: "Tier 2" },
   3: { bg: "bg-amber-500/15", text: "text-amber-700 dark:text-amber-300", label: "Tier 3" },
+  4: { bg: "bg-orange-500/15", text: "text-orange-700 dark:text-orange-300", label: "Tier 4 · Dépannage" },
 };
 
 type ViewMode = "list" | "calendar";

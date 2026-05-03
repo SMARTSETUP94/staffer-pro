@@ -192,6 +192,17 @@ export const getEquipeAffaireData = createServerFn({ method: "POST" })
         .eq("non_staffing", false);
       if (empErr) throw new Error(empErr.message);
 
+      // Charge niveaux explicites (secondaire/depannage/bloque) pour exclure les bloqués
+      const { data: nivRows } = await supabase
+        .from("employe_metiers")
+        .select("employe_id, metier_id, niveau");
+      const niveauxMap: Record<string, Record<number, string>> = {};
+      for (const r of nivRows ?? []) {
+        const eid = r.employe_id as string;
+        if (!niveauxMap[eid]) niveauxMap[eid] = {};
+        niveauxMap[eid][r.metier_id as number] = ((r as { niveau?: string }).niveau ?? "secondaire");
+      }
+
       const candidatsByMetier: Record<
         number,
         Array<{ id: string; nom: string; prenom: string; type_contrat: string; tier: 1 | 2 | 3 }>
@@ -200,9 +211,13 @@ export const getEquipeAffaireData = createServerFn({ method: "POST" })
         const list = (emps ?? [])
           .map((e) => {
             const isPrincipal = e.metier_principal_id === m.metier_id;
-            const isSecondaire = ((e.metiers_secondaires ?? []) as number[]).includes(m.metier_id);
-            if (!isPrincipal && !isSecondaire) return null;
-            // Tier-priority CDI > CDD > Interim, et principal > secondaire
+            const niv = niveauxMap[e.id as string]?.[m.metier_id];
+            if (niv === "bloque") return null;
+            // Dépannage = exclu de la vue rapide (Tier 4 réservé à l'auto-staffing fin)
+            if (!isPrincipal && niv !== "secondaire") {
+              const isSecListe = ((e.metiers_secondaires ?? []) as number[]).includes(m.metier_id);
+              if (!isSecListe) return null;
+            }
             const isInterim = e.type_contrat === "Interim";
             const tier: 1 | 2 | 3 = isInterim ? 3 : isPrincipal ? 1 : 2;
             return {
