@@ -262,19 +262,17 @@ export function StaffingPersonnesSection({ planId, steps, onAssignmentsChanged, 
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          {readOnly && (
-            <Button
-              onClick={handleRestaff}
-              disabled={restaffing}
-              variant="default"
-              size="sm"
-              data-testid="restaff-nominatif"
-              title="Re-lancer la suggestion nominative tier-based sur toutes les étapes"
-            >
-              {restaffing ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Wand2 className="mr-1 h-3 w-3" />}
-              Re-staffer nominatif
-            </Button>
-          )}
+          <Button
+            onClick={handleRestaff}
+            disabled={restaffing}
+            variant="default"
+            size="sm"
+            data-testid="restaff-nominatif"
+            title="Re-lancer la suggestion nominative tier-based sur toutes les étapes"
+          >
+            {restaffing ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Wand2 className="mr-1 h-3 w-3" />}
+            Re-staffer nominatif
+          </Button>
           <Button
             onClick={() => setHideFull((v) => !v)}
             variant={hideFull ? "secondary" : "ghost"}
