@@ -121,9 +121,11 @@ interface Props {
   /** Trigger pour réinvalider le Gantt parent après changement (heatmap) */
   onAssignmentsChanged?: () => void;
   objetsLabel: Record<string, string>;
+  /** v0.39.0 — par défaut LECTURE PURE. Édition désactivée, seul "Re-staffer nominatif" reste actif. */
+  readOnly?: boolean;
 }
 
-export function StaffingPersonnesSection({ planId, steps, onAssignmentsChanged, objetsLabel }: Props) {
+export function StaffingPersonnesSection({ planId, steps, onAssignmentsChanged, objetsLabel, readOnly = true }: Props) {
   const fetchAssignments = useServerFn(getPlanAssignments);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [loading, setLoading] = useState(true);
