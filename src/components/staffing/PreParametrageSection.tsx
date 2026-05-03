@@ -1,14 +1,16 @@
 // v0.37 — Section Pré-paramétrage métier (lecture seule).
-// L'algo v0.37 fixe automatiquement pers/durée/capa par métier ; l'opérateur ne saisit plus rien ici.
+// v0.38.1 — Chevron repli/dépli + persistance localStorage.
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, AlertTriangle, Lock } from "lucide-react";
+import { Loader2, AlertTriangle, Lock, ChevronDown, ChevronRight } from "lucide-react";
 import {
   listChantierMetierConfig,
   suggestPreParametrage,
   type ChantierMetierConfigRow,
 } from "@/server/staffing-pre-parametrage.functions";
 import type { Conflict, MetierConfigKey } from "@/lib/staffing/pre-parametrage";
+
+const COLLAPSE_LS_KEY = "staffing.preparam.collapsed.v1";
 
 
 const METIER_LABEL: Record<MetierConfigKey, string> = {
