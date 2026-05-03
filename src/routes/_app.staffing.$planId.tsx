@@ -176,11 +176,15 @@ function StaffingPlanPage() {
       {showExpressBanner && (
         <ExpressResultBanner
           planId={planId}
+          affaireId={affaireMeta?.id ?? null}
           published={search.published === "1"}
           filled={Number(search.filled ?? 0)}
           unfilled={Number(search.unfilled ?? 0)}
           alertesCritiques={Number(search.alertes ?? 0)}
           reason={search.reason ?? ""}
+          joursOuvres={search.jours ? Number(search.jours) : undefined}
+          delaiCourt={search.delaiCourt === "1"}
+          includeWeekends={search.we === "1"}
           onDismiss={() => {
             setBannerDismissed(true);
             navigate({
