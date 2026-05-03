@@ -683,8 +683,25 @@ export const GanttInteractif = forwardRef<
                           style={{ backgroundColor: METIER_COLOR[k] }}
                         />
                         <span className="text-muted-foreground">{METIER_LABEL[k]}</span>
-                        <span className="ml-auto font-mono text-[10px] font-semibold text-muted-foreground">
-                          {Math.round(s.pers * (s.span_demi_jours ?? s.span_days * 2) * 4)}h
+                        <span className="ml-auto flex items-center gap-1.5">
+                          <PersStepper
+                            value={s.pers}
+                            metier={k}
+                            hasWarn={hasImpact}
+                            hasLocalEdit={
+                              edits[s.id]?.pers !== undefined ||
+                              edits[s.id]?.manual_shift !== undefined
+                            }
+                            onChange={(v) => handleSetPers(s, v)}
+                          />
+                          <DateShifter
+                            manualShift={localShift}
+                            onShift={(d) => handleShift(s, d)}
+                            onReset={() => handleResetShift(s.id)}
+                          />
+                          <span className="font-mono text-[10px] font-semibold text-muted-foreground">
+                            {Math.round(s.pers * (s.span_demi_jours ?? s.span_days * 2) * 4)}h
+                          </span>
                         </span>
                         {hasImpact && <ImpactBadge impacts={impactByStep[s.id]!} />}
                       </div>
