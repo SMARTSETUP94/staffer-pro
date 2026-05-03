@@ -184,7 +184,7 @@ export const calculateStaffingPlan = createServerFn({ method: "POST" })
       const KEY_TO_ID_LOCAL: Record<MetierConfigKey, number> = {
         BE: 8, Num: 4, Bois: 1, Peint: 3, Tap: 5, Manut: 7,
       };
-      const seedRows = sugg.configs.map((c) => ({
+      const seedRows = sugg.configs.map((c: MetierConfig) => ({
         affaire_id: plan.affaire_id,
         metier_id: KEY_TO_ID_LOCAL[c.metier_code],
         total_h_calc: c.total_h_calc,
