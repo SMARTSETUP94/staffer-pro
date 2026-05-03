@@ -631,6 +631,15 @@ function PersSlider({
   onChange: (v: number) => void;
 }) {
   const hasWarn = (impacts?.length ?? 0) > 0;
+  // v0.35.x BUGFIX prod : on rend le slider non contrôlé (defaultValue) pour que le thumb
+  // bouge sous le doigt/pointer. onValueChange = preview local immédiat (state interne),
+  // onValueCommit = push dans le store. Sans onValueChange + value seul, Radix bloque
+  // le thumb tant que `value` ne change pas → en prod (build minifié) ça donne l'illusion
+  // d'un slider mort. On sync defaultValue via key={value} quand le store écrit la nouvelle valeur.
+  const [local, setLocal] = useState(value);
+  useEffect(() => {
+    setLocal(value);
+  }, [value]);
   return (
     <div className="flex items-center gap-2">
       <span
@@ -649,16 +658,17 @@ function PersSlider({
         min={2}
         max={12}
         step={2}
-        value={[value]}
+        value={[local]}
         disabled={disabled}
-        onValueCommit={(v) => onChange(v[0] ?? value)}
+        onValueChange={(v) => setLocal(v[0] ?? local)}
+        onValueCommit={(v) => onChange(v[0] ?? local)}
       />
       <span
         className={`w-7 font-mono text-[10px] font-bold tabular-nums ${
           hasWarn ? "text-amber-600 dark:text-amber-400" : ""
         }`}
       >
-        {value}p
+        {local}p
       </span>
       {hasWarn && <AlertTriangle className="h-3 w-3 text-amber-500" />}
     </div>
