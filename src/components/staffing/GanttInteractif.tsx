@@ -374,6 +374,14 @@ export const GanttInteractif = forwardRef<
       {/* Bulk pers par métier (P1 #6) */}
       <BulkPersByMetierBar steps={mergedSteps} />
 
+      {/* Heatmap métier — vue agrégée AVANT le détail Gantt (UX top-down) */}
+      <div>
+        <h3 className="mb-2 text-sm font-bold uppercase tracking-wider text-muted-foreground">
+          Charge par métier
+        </h3>
+        <HeatmapMetier steps={mergedSteps} days={days} />
+      </div>
+
       {/* Gantt */}
       <div className="overflow-x-auto rounded-2xl border border-border bg-card">
         <div className="min-w-[900px]">
