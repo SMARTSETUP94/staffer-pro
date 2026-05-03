@@ -965,11 +965,12 @@ function PersonneSuggestionCard({
             disabled={busy || alreadyAssigned}
             onClick={() => setShowSlider(true)}
             title="Affecter avec %"
+            data-write="1"
             className="h-7 w-7"
           >
             <Sliders className="h-3 w-3" />
           </Button>
-          <Button size="sm" disabled={busy || alreadyAssigned} onClick={() => doAssign(100)}>
+          <Button size="sm" disabled={busy || alreadyAssigned} onClick={() => doAssign(100)} data-write="1">
             {busy ? <Loader2 className="h-3 w-3 animate-spin" /> : alreadyAssigned ? "Affecté" : "Affecter"}
           </Button>
         </div>
