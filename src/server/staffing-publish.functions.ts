@@ -310,6 +310,10 @@ export const restorePlanSnapshot = createServerFn({ method: "POST" })
           objet_id: s.objet_id,
           start_date: s.start_date,
           span_days: s.span_days,
+          // v0.38.1 — préserver granularité demi-journée si présente dans snapshot
+          span_demi_jours: s.span_demi_jours ?? (typeof s.span_days === "number" ? s.span_days * 2 : null),
+          start_half_day: s.start_half_day ?? "AM",
+          phase: s.phase ?? null,
           pers: s.pers,
           h_par_jour: s.h_par_jour ?? 8,
           manual_shift: s.manual_shift ?? 0,
