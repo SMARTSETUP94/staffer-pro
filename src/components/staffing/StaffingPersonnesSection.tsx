@@ -180,11 +180,11 @@ export function StaffingPersonnesSection({ planId, steps, onAssignmentsChanged, 
     onAssignmentsChanged?.();
   }, [reload, onAssignmentsChanged]);
 
-  /** Couverture par step (pers·j) */
+  /** Couverture par step (pers·j) — base = span effectif en jours (ceil demi/2) */
   const coverByStep = useMemo(() => {
     const m: Record<string, { cover: number; target: number; isFull: boolean }> = {};
     for (const s of steps) {
-      const target = s.pers * s.span_days;
+      const target = s.pers * effectiveSpanDays(s);
       const cover =
         assignments.filter((a) => a.step_id === s.id).reduce((acc, a) => acc + a.presence_pct, 0) / 100;
       m[s.id] = { cover, target, isFull: target > 0 && cover >= target };
