@@ -510,11 +510,11 @@ export const GanttInteractif = forwardRef<
                           style={{ backgroundColor: METIER_COLOR[k] }}
                         />
                         <span className="font-semibold">{METIER_LABEL[k]}</span>
-                        <span className="font-mono text-[10px] text-muted-foreground/80">
-                          {stepDateRangeShort(s.start_date, s.span_days)}
-                        </span>
                         <span className="text-[10px] text-muted-foreground">
                           tous objets · {s.pers}p × {s.h_par_jour}h
+                        </span>
+                        <span className="ml-auto font-mono text-[10px] font-semibold text-muted-foreground">
+                          {Math.round(s.pers * (s.span_demi_jours ?? s.span_days * 2) * 4)}h
                         </span>
                         {hasImpact && <ImpactBadge impacts={impactByStep[s.id]!} />}
                       </div>
