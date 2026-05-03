@@ -292,25 +292,6 @@ export function calculatePlanV037(input: PlanInput): PlanResult {
           ? wPlus(input.date_debut_fab_min, 0)
           : wPlus(dateLivraison, 0);
 
-    // -- Manut DÉBUT (concurrent avec Num) --
-    let cursor = objStart;
-    if (hManutDebut > 0) {
-      const { pers, span_days } = pickPersAndSpan(hManutDebut, "Manut");
-      const step: PlanStep = {
-        id: nextId("manut_d"),
-        metier_id: METIER_ID.Manut,
-        metier: "Manut",
-        objet_id: o.objet_id,
-        start_date: objStart,
-        span_days,
-        pers,
-        h_par_jour: H_DEFAULT,
-        source: "auto",
-        phase: "DEBUT",
-      };
-      steps.push(step);
-    }
-
     // Fenêtre Peint max = livraison - MANUT_FIN_DAYS (Peint doit finir avant Manut FIN)
     const peintEndMax = wMinus(previousWorkingDay(dateLivraison, holidays, includeWeekends), MANUT_FIN_DAYS);
 
