@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState, useCallback, useImperativeHandle, useRef,
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, ArrowUp, ArrowDown, RefreshCw, Calendar, Users, Activity, AlertTriangle, Wand2 } from "lucide-react";
+import { Loader2, ArrowUp, ArrowDown, RefreshCw, Calendar, Users, Activity, AlertTriangle, Wand2, ChevronRight, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
@@ -79,6 +79,36 @@ export const GanttInteractif = forwardRef<
   const resetStepShiftStore = useEditStore((s) => s.resetStepShift);
   const edits = useEditStore((s) => s.edits);
 
+  /** v0.38.4 — Treetable expand/collapse par objet (persist localStorage) */
+  const expandedKey = `objet-expanded-${planId}`;
+  const [expandedObjets, setExpandedObjets] = useState<Set<string>>(() => {
+    if (typeof window === "undefined") return new Set();
+    try {
+      const raw = window.localStorage.getItem(expandedKey);
+      if (raw) return new Set(JSON.parse(raw) as string[]);
+    } catch {
+      /* noop */
+    }
+    return new Set();
+  });
+  const [expandedInit, setExpandedInit] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      window.localStorage.setItem(expandedKey, JSON.stringify([...expandedObjets]));
+    } catch {
+      /* noop */
+    }
+  }, [expandedObjets, expandedKey]);
+  const toggleObjet = useCallback((objId: string) => {
+    setExpandedObjets((prev) => {
+      const next = new Set(prev);
+      if (next.has(objId)) next.delete(objId);
+      else next.add(objId);
+      return next;
+    });
+  }, []);
+
   /** Mesure dynamique de la largeur d'une colonne jour pour drag-to-shift */
   const gridRef = useRef<HTMLDivElement | null>(null);
   const [dayWidthPx, setDayWidthPx] = useState(0);
@@ -127,6 +157,20 @@ export const GanttInteractif = forwardRef<
   useEffect(() => {
     void reload();
   }, [reload]);
+
+  /** v0.38.4 — Auto-expand objets > 100h au premier chargement (si rien en localStorage) */
+  useEffect(() => {
+    if (!data || expandedInit) return;
+    setExpandedInit(true);
+    if (typeof window !== "undefined") {
+      const raw = window.localStorage.getItem(expandedKey);
+      if (raw && raw !== "[]") return; // état utilisateur déjà persisté
+    }
+    const big = new Set(
+      data.objets.filter((o) => o.heures_total > 100).map((o) => o.id),
+    );
+    if (big.size > 0) setExpandedObjets(big);
+  }, [data, expandedInit, expandedKey]);
 
   useImperativeHandle(ref, () => ({ reload }), [reload]);
 
@@ -505,19 +549,33 @@ export const GanttInteractif = forwardRef<
             );
             const boisStep = getObjStepByMetier(obj.objet_id, 1);
             const peintStep = getObjStepByMetier(obj.objet_id, 3);
+            const isExpanded = expandedObjets.has(obj.id);
             return (
               <div key={obj.id} className="border-b border-border bg-background/20">
-                {/* Header objet */}
+                {/* Header objet — treetable v0.38.4 : chevron + ref/nom + heures + nb étapes */}
                 <div
                   className="grid items-start border-b border-border/30 py-2"
                   style={{ gridTemplateColumns: gridTemplate }}
                 >
                   <div className="flex items-start gap-2 px-3">
+                    <button
+                      type="button"
+                      onClick={() => toggleObjet(obj.id)}
+                      className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded hover:bg-muted/60"
+                      aria-label={isExpanded ? "Replier" : "Déplier"}
+                      aria-expanded={isExpanded}
+                    >
+                      {isExpanded ? (
+                        <ChevronDown className="h-3.5 w-3.5" />
+                      ) : (
+                        <ChevronRight className="h-3.5 w-3.5" />
+                      )}
+                    </button>
                     <div className="flex flex-col gap-0.5 pt-0.5">
                       <Button
                         size="icon"
                         variant="ghost"
-                        className="h-5 w-5"
+                        className="h-4 w-4"
                         disabled={idx === 0}
                         onClick={() => handleReorder(obj.id, -1)}
                       >
@@ -526,7 +584,7 @@ export const GanttInteractif = forwardRef<
                       <Button
                         size="icon"
                         variant="ghost"
-                        className="h-5 w-5"
+                        className="h-4 w-4"
                         disabled={idx === objets.length - 1}
                         onClick={() => handleReorder(obj.id, 1)}
                       >
@@ -534,13 +592,18 @@ export const GanttInteractif = forwardRef<
                       </Button>
                     </div>
                     <div className="min-w-0 flex-1 space-y-1.5">
-                      <p className="truncate text-sm font-bold text-foreground">
+                      <button
+                        type="button"
+                        onClick={() => toggleObjet(obj.id)}
+                        className="block w-full truncate text-left text-sm font-bold text-foreground hover:text-primary"
+                      >
                         {obj.reference} — {obj.nom}
-                      </p>
+                      </button>
                       <p className="font-mono text-[10px] text-muted-foreground">
-                        {obj.heures_total.toFixed(0)} h
+                        {obj.heures_total.toFixed(0)} h · {objSteps.length} étape
+                        {objSteps.length > 1 ? "s" : ""}
                       </p>
-                      {boisStep && (
+                      {isExpanded && boisStep && (
                         <PersSlider
                           label="Bois"
                           color={METIER_COLOR.Bois}
@@ -550,7 +613,7 @@ export const GanttInteractif = forwardRef<
                           onChange={(v) => handleSetPers(boisStep, v)}
                         />
                       )}
-                      {peintStep && (
+                      {isExpanded && peintStep && (
                         <PersSlider
                           label="Peint"
                           color={METIER_COLOR.Peint}
@@ -564,8 +627,8 @@ export const GanttInteractif = forwardRef<
                   </div>
                 </div>
 
-                {/* Steps de l'objet */}
-                {objSteps.map((s) => {
+                {/* Steps de l'objet — visibles uniquement si expanded (treetable v0.38.4) */}
+                {isExpanded && objSteps.map((s) => {
                   const demi = s.span_demi_jours ?? s.span_days * 2;
                   const halfStart = s.start_half_day ?? "AM";
                   const span = stepSpanInHalves(days, s.start_date, demi, halfStart);
@@ -582,7 +645,8 @@ export const GanttInteractif = forwardRef<
                       className="grid items-center py-1"
                       style={{ gridTemplateColumns: gridTemplate }}
                     >
-                      <div className="flex items-center gap-2 px-3 pl-9 text-xs">
+                      <div className="flex items-center gap-2 px-3 pl-12 text-xs">
+                        <span className="inline-block h-3 w-px self-stretch bg-border" />
                         <span
                           className="inline-block h-2 w-2 rounded-sm"
                           style={{ backgroundColor: METIER_COLOR[k] }}
@@ -614,8 +678,8 @@ export const GanttInteractif = forwardRef<
                   );
                 })}
 
-                {objSteps.length === 0 && (
-                  <div className="px-3 py-2 text-xs italic text-muted-foreground">
+                {isExpanded && objSteps.length === 0 && (
+                  <div className="px-3 py-2 pl-12 text-xs italic text-muted-foreground">
                     Aucune étape (heures à 0)
                   </div>
                 )}
