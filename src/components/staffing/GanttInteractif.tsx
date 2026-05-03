@@ -87,6 +87,11 @@ export const GanttInteractif = forwardRef<
   const dataRef = useRef<PlanData | null>(null);
   useEffect(() => { dataRef.current = data; }, [data]);
 
+  /** Ref miroir du callback onDataLoaded pour éviter de recréer reload à chaque
+   * render parent (sinon useEffect [reload] re-fire en boucle infinie). */
+  const onDataLoadedRef = useRef(onDataLoaded);
+  useEffect(() => { onDataLoadedRef.current = onDataLoaded; }, [onDataLoaded]);
+
   const reload = useCallback(async () => {
     // v0.35.x — Préserve scroll + pas de spinner plein écran si data déjà là
     // (sinon l'unmount reset la position et l'utilisateur perd son repère).
@@ -104,7 +109,7 @@ export const GanttInteractif = forwardRef<
           .single(),
       ]);
       setData(r);
-      onDataLoaded?.(r);
+      onDataLoadedRef.current?.(r);
       if (planMeta.data?.updated_at) {
         initFromPlan(planId, planMeta.data.updated_at as string);
       }
@@ -118,7 +123,7 @@ export const GanttInteractif = forwardRef<
     } finally {
       setLoading(false);
     }
-  }, [calculate, planId, onDataLoaded, initFromPlan]);
+  }, [calculate, planId, initFromPlan]);
 
   useEffect(() => {
     void reload();
