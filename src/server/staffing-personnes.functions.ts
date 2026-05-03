@@ -35,6 +35,8 @@ export const getPersonnelSuggestions = createServerFn({ method: "POST" })
         score: number;
         tier: 1 | 2 | 3;
         dispo_pct: number;
+        absent_days_in_step: number;
+        absent_today: boolean;
       }>;
       step: { id: string; metier_id: number; objet_id: string | null; start_date: string; span_days: number };
     }> => {
