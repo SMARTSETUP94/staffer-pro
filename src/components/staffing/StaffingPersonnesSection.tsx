@@ -46,6 +46,21 @@ import {
   getPlanAssignments,
 } from "@/server/staffing-personnes.functions";
 import { METIER_KEY_BY_ID, METIER_ID, type MetierKey, type PlanStep } from "@/lib/staffing/types";
+
+/** v0.38.1.1 — helpers demi-journée (alignement Gantt) */
+function effectiveDemi(step: PlanStep): number {
+  return step.span_demi_jours ?? (step.span_days ?? 0) * 2;
+}
+function effectiveSpanDays(step: PlanStep): number {
+  return Math.max(1, Math.ceil(effectiveDemi(step) / 2));
+}
+function formatSpanLabel(step: PlanStep): string {
+  const demi = effectiveDemi(step);
+  const full = Math.floor(demi / 2);
+  const half = demi % 2;
+  if (full === 0) return `${half}½j`;
+  return half ? `${full}½j` : `${full}j`;
+}
 import { METIER_COLOR, METIER_LABEL, METIER_ORDER, formatShortDate, formatDayName } from "./gantt-helpers";
 
 interface Suggestion {
@@ -165,11 +180,11 @@ export function StaffingPersonnesSection({ planId, steps, onAssignmentsChanged, 
     onAssignmentsChanged?.();
   }, [reload, onAssignmentsChanged]);
 
-  /** Couverture par step (pers·j) */
+  /** Couverture par step (pers·j) — base = span effectif en jours (ceil demi/2) */
   const coverByStep = useMemo(() => {
     const m: Record<string, { cover: number; target: number; isFull: boolean }> = {};
     for (const s of steps) {
-      const target = s.pers * s.span_days;
+      const target = s.pers * effectiveSpanDays(s);
       const cover =
         assignments.filter((a) => a.step_id === s.id).reduce((acc, a) => acc + a.presence_pct, 0) / 100;
       m[s.id] = { cover, target, isFull: target > 0 && cover >= target };
@@ -329,7 +344,7 @@ function ListView({
     return steps.map((step) => {
       const days: Array<{ date: string; key: string }> = [];
       const start = new Date(step.start_date + "T00:00:00Z");
-      for (let i = 0; i < step.span_days; i++) {
+      for (let i = 0; i < effectiveSpanDays(step); i++) {
         const d = new Date(start);
         d.setUTCDate(d.getUTCDate() + i);
         const dow = d.getUTCDay();
@@ -349,7 +364,7 @@ function ListView({
         const objLabel = step.objet_id ? (objetsLabel[step.objet_id] ?? step.objet_id) : "Global";
         const stepAssigns = assignments.filter((a) => a.step_id === step.id);
         const cov = coverByStep[step.id];
-        const targetPersDays = cov?.target ?? step.pers * step.span_days;
+        const targetPersDays = cov?.target ?? step.pers * effectiveSpanDays(step);
         const coverPersDays = cov?.cover ?? 0;
         const coverRounded = Math.round(coverPersDays * 10) / 10;
         const partialCount = stepAssigns.filter((a) => a.presence_pct < 100).length;
@@ -367,7 +382,7 @@ function ListView({
                   <span className="text-xs text-muted-foreground truncate max-w-[260px]">{objLabel}</span>
                   <span className="ml-auto flex items-center gap-2 text-xs">
                     <span className="font-mono">
-                      {step.pers}p × {step.span_days}j
+                      {step.pers}p × {formatSpanLabel(step)}
                     </span>
                     <Badge
                       variant={isFull ? "secondary" : "outline"}
@@ -440,7 +455,7 @@ function CalendarView({
     const set = new Set<string>();
     for (const s of steps) {
       const start = new Date(s.start_date + "T00:00:00Z");
-      for (let i = 0; i < s.span_days; i++) {
+      for (let i = 0; i < effectiveSpanDays(s); i++) {
         const d = new Date(start);
         d.setUTCDate(d.getUTCDate() + i);
         const dow = d.getUTCDay();
@@ -479,7 +494,7 @@ function CalendarView({
           const objLabel = step.objet_id ? (objetsLabel[step.objet_id] ?? step.objet_id) : "Global";
           const stepStart = step.start_date;
           const stepEndD = new Date(stepStart + "T00:00:00Z");
-          stepEndD.setUTCDate(stepEndD.getUTCDate() + step.span_days - 1);
+          stepEndD.setUTCDate(stepEndD.getUTCDate() + effectiveSpanDays(step) - 1);
           const stepEnd = stepEndD.toISOString().slice(0, 10);
 
           return (
