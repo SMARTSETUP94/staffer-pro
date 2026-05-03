@@ -567,6 +567,9 @@ export const GanttInteractif = forwardRef<
                           style={{ backgroundColor: METIER_COLOR[k] }}
                         />
                         <span className="text-muted-foreground">{METIER_LABEL[k]}</span>
+                        <span className="font-mono text-[10px] text-muted-foreground/70">
+                          {stepDateRangeShort(s.start_date, s.span_days)}
+                        </span>
                         {hasImpact && <ImpactBadge impacts={impactByStep[s.id]!} />}
                       </div>
                       {span.visible && (
