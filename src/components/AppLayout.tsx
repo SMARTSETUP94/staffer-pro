@@ -39,7 +39,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
               <NotificationBell />
             </div>
           </header>
-          <main className="flex-1 overflow-auto bg-background">{children}</main>
+          <main className="flex-1 bg-background">{children}</main>
         </div>
       </div>
       <FeedbackButton />
