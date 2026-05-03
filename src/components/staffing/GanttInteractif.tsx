@@ -549,19 +549,33 @@ export const GanttInteractif = forwardRef<
             );
             const boisStep = getObjStepByMetier(obj.objet_id, 1);
             const peintStep = getObjStepByMetier(obj.objet_id, 3);
+            const isExpanded = expandedObjets.has(obj.id);
             return (
               <div key={obj.id} className="border-b border-border bg-background/20">
-                {/* Header objet */}
+                {/* Header objet — treetable v0.38.4 : chevron + ref/nom + heures + nb étapes */}
                 <div
                   className="grid items-start border-b border-border/30 py-2"
                   style={{ gridTemplateColumns: gridTemplate }}
                 >
                   <div className="flex items-start gap-2 px-3">
+                    <button
+                      type="button"
+                      onClick={() => toggleObjet(obj.id)}
+                      className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded hover:bg-muted/60"
+                      aria-label={isExpanded ? "Replier" : "Déplier"}
+                      aria-expanded={isExpanded}
+                    >
+                      {isExpanded ? (
+                        <ChevronDown className="h-3.5 w-3.5" />
+                      ) : (
+                        <ChevronRight className="h-3.5 w-3.5" />
+                      )}
+                    </button>
                     <div className="flex flex-col gap-0.5 pt-0.5">
                       <Button
                         size="icon"
                         variant="ghost"
-                        className="h-5 w-5"
+                        className="h-4 w-4"
                         disabled={idx === 0}
                         onClick={() => handleReorder(obj.id, -1)}
                       >
@@ -570,7 +584,7 @@ export const GanttInteractif = forwardRef<
                       <Button
                         size="icon"
                         variant="ghost"
-                        className="h-5 w-5"
+                        className="h-4 w-4"
                         disabled={idx === objets.length - 1}
                         onClick={() => handleReorder(obj.id, 1)}
                       >
@@ -578,13 +592,18 @@ export const GanttInteractif = forwardRef<
                       </Button>
                     </div>
                     <div className="min-w-0 flex-1 space-y-1.5">
-                      <p className="truncate text-sm font-bold text-foreground">
+                      <button
+                        type="button"
+                        onClick={() => toggleObjet(obj.id)}
+                        className="block w-full truncate text-left text-sm font-bold text-foreground hover:text-primary"
+                      >
                         {obj.reference} — {obj.nom}
-                      </p>
+                      </button>
                       <p className="font-mono text-[10px] text-muted-foreground">
-                        {obj.heures_total.toFixed(0)} h
+                        {obj.heures_total.toFixed(0)} h · {objSteps.length} étape
+                        {objSteps.length > 1 ? "s" : ""}
                       </p>
-                      {boisStep && (
+                      {isExpanded && boisStep && (
                         <PersSlider
                           label="Bois"
                           color={METIER_COLOR.Bois}
@@ -594,7 +613,7 @@ export const GanttInteractif = forwardRef<
                           onChange={(v) => handleSetPers(boisStep, v)}
                         />
                       )}
-                      {peintStep && (
+                      {isExpanded && peintStep && (
                         <PersSlider
                           label="Peint"
                           color={METIER_COLOR.Peint}
