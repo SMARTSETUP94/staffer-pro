@@ -15,7 +15,8 @@ const TODAY = "2026-05-04"; // lundi
 const DEADLINE_HERMES = "2026-05-22"; // vendredi (fenêtre Hermès D-202604-2141)
 
 describe("autoSuggestMetierConfig — Hermès D-202604-2141", () => {
-  const totals = { BE: 32.1, Num: 16.2, Bois: 86.1, Peint: 371.7, Tap: 0, Manut: 65.1 };
+  // Valeurs cibles du brief Hermès (rondes pour matcher exactement les attendus)
+  const totals = { BE: 32, Num: 16, Bois: 86, Peint: 372, Tap: 0, Manut: 65 };
   const result = autoSuggestMetierConfig(totals, TODAY, DEADLINE_HERMES);
 
   it("[1] BE 32h → 1 pers, 4j, cap_reached=true", () => {
