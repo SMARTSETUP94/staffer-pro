@@ -1188,6 +1188,7 @@ function AutoStaffButton({
       size="sm"
       variant="outline"
       title={label}
+      data-write="1"
       className={compact ? "h-7 px-2" : "h-7 px-2 mr-2"}
     >
       {busy ? <Loader2 className="h-3 w-3 animate-spin" /> : <Wand2 className="h-3 w-3" />}
