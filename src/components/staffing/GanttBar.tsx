@@ -154,7 +154,13 @@ export function GanttBar({
         </Button>
       )}
       <span className="flex-1 truncate text-center">
-        {step.pers}p × {step.span_days}j
+        {step.pers}p × {(() => {
+          const demi = step.span_demi_jours ?? step.span_days * 2;
+          // Affichage : "Nj" si entier en jours, "N½j" si demi-journée résiduelle, "½j" si 1 demi seul
+          if (demi === 1) return "½j";
+          if (demi % 2 === 0) return `${demi / 2}j`;
+          return `${Math.floor(demi / 2)}½j`;
+        })()}
         {phaseLabel && (
           <span className="ml-1 rounded bg-white/30 px-1 text-[9px] font-bold tracking-wider">
             {phaseLabel}
