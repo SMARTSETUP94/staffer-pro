@@ -122,6 +122,7 @@ export function calculatePlan(input: PlanInput): PlanResult {
   const cncReserved = new Set<string>(input.cnc_reserved_dates ?? []);
   const picMax = input.pic_max ?? PIC_ATELIER;
   const dateLivraison = input.date_fin_fab;
+  const includeWeekends = input.include_weekends === true;
 
   // Jours fériés FR sur fenêtre [livraison-2 ans .. livraison] (large pour backward 180j + amont)
   const livYear = fromISO(dateLivraison).getUTCFullYear();
@@ -129,9 +130,9 @@ export function calculatePlan(input: PlanInput): PlanResult {
     input.holidays ?? holidaysRange(livYear - 2, livYear + 1);
 
   // helpers locaux jours ouvrés
-  const dayMinus = (iso: string, n: number) => addWorkingDays(iso, -n, holidays);
-  const stepEnd = (start: string, span: number) => addWorkingDays(start, span - 1, holidays);
-  const stepDates = (start: string, span: number) => workingDateRange(start, span, holidays);
+  const dayMinus = (iso: string, n: number) => addWorkingDays(iso, -n, holidays, includeWeekends);
+  const stepEnd = (start: string, span: number) => addWorkingDays(start, span - 1, holidays, includeWeekends);
+  const stepDates = (start: string, span: number) => workingDateRange(start, span, holidays, includeWeekends);
 
   // Tri objets : ordre d'affichage donné par le caller (display_order)
   const objets = [...input.objets].sort((a, b) => a.display_order - b.display_order);
