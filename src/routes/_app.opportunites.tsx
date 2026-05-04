@@ -84,6 +84,7 @@ const OPPS_SEARCH_DEFAULTS = {
   vue: "kanban" as VueOpportunites,
   q: "",
   preset: "all" as StoredPreset,
+  archived: false,
 };
 
 const oppsSearchSchema = z.object({
@@ -97,6 +98,7 @@ const oppsSearchSchema = z.object({
     z.enum(["all", "7d", "30d", "current_month"] as const),
     "all",
   ).default("all"),
+  archived: fallback(z.boolean(), false).default(false),
 });
 
 type OppsSearch = z.infer<typeof oppsSearchSchema>;
