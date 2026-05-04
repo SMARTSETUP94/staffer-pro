@@ -215,6 +215,7 @@ function OpportunitesPage() {
   // v0.29.2 — Filtrage CA + typologie FUTURE (la typologie dérivée du numero
   // est inutile ici car toutes les opps sont 9XXX = prototype par construction).
   const typoSet = useMemo(() => new Set(typoFilter), [typoFilter]);
+  const normalizedQuery = searchQuery.trim().toLowerCase();
   const oppsFiltrees = useMemo(() => {
     return opps.filter((o) => {
       if (filterCa && filterCa !== "__all__" && o.charge_affaires_id !== filterCa)
@@ -222,9 +223,13 @@ function OpportunitesPage() {
       if (typoSet.size > 0) {
         if (!o.typologie_future || !typoSet.has(o.typologie_future)) return false;
       }
+      if (normalizedQuery) {
+        const haystack = `${o.numero ?? ""} ${o.client ?? ""} ${o.nom ?? ""}`.toLowerCase();
+        if (!haystack.includes(normalizedQuery)) return false;
+      }
       return true;
     });
-  }, [opps, filterCa, typoSet]);
+  }, [opps, filterCa, typoSet, normalizedQuery]);
 
   const typoCounts = useMemo(() => {
     const counts: Partial<Record<AffaireTypologie, number>> = {};
@@ -482,23 +487,29 @@ function OpportunitesPage() {
               </SelectContent>
             </Select>
 
-            <div className="relative">
-              <Input
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Rechercher client/chantier…"
-                className="h-9 w-[240px] rounded-xl pr-8"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery("")}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                  aria-label="Effacer recherche"
-                >
-                  <X className="h-3.5 w-3.5" />
-                </button>
-              )}
-            </div>
+          </>
+        )}
+
+        <div className="relative">
+          <Input
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="N° chantier, client ou nom…"
+            className="h-9 w-[260px] rounded-xl pr-8"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery("")}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              aria-label="Effacer recherche"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
+
+        {vue === "tableur" && (
+          <>
 
             <label className="flex h-9 cursor-pointer items-center gap-2 rounded-xl border border-border bg-card px-3 text-xs font-medium">
               <Switch
