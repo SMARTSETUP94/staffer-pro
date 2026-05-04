@@ -98,6 +98,12 @@ export function DevisImportObjetsHierarchy({ objets, setObjets, integrityChecks 
   const [draggedPoste, setDraggedPoste] = useState<{ objetIdx: number; posteId: string } | null>(
     null,
   );
+  const [mergeDialog, setMergeDialog] = useState<{
+    sectionKey: string;
+    objetIdxs: number[];
+    newNumero: string;
+    newNom: string;
+  } | null>(null);
 
   const toggleSection = (key: string) =>
     setExpandedSections((prev) => {
