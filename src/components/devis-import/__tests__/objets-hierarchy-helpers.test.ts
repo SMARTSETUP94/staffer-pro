@@ -11,6 +11,7 @@ import {
   movePosteBetweenObjets,
   recomputeObjet,
   mergeObjetsInSection,
+  getMergeButtonState,
   removeObjet,
   removePosteFromObjet,
   renamePoste,
@@ -327,5 +328,81 @@ describe("mergeObjetsInSection (v0.39.1)", () => {
     const next = mergeObjetsInSection([o1, o2], [0, 1], "X", "X");
     // (1+4) heuresUnitaires × quantite(3) × sectionQte(2) = 30
     expect(next[0].heures.bois).toBe(30);
+  });
+});
+
+describe("getMergeButtonState (UI guard du bouton Fusionner)", () => {
+  it("canMerge=false si aucun objet sélectionné", () => {
+    const o1 = objet({ numero: "1.1", sectionNumero: "1", selected: false });
+    const o2 = objet({ numero: "1.2", sectionNumero: "1", selected: false });
+    const state = getMergeButtonState([o1, o2], [0, 1]);
+    expect(state.canMerge).toBe(false);
+    expect(state.count).toBe(0);
+    expect(state.selectedIdxs).toEqual([]);
+  });
+
+  it("canMerge=false si un seul objet sélectionné", () => {
+    const o1 = objet({ numero: "1.1", sectionNumero: "1", selected: true });
+    const o2 = objet({ numero: "1.2", sectionNumero: "1", selected: false });
+    const state = getMergeButtonState([o1, o2], [0, 1]);
+    expect(state.canMerge).toBe(false);
+    expect(state.count).toBe(1);
+  });
+
+  it("canMerge=true si ≥2 objets sélectionnés dans la même Section", () => {
+    const o1 = objet({ numero: "1.1", sectionNumero: "1", selected: true });
+    const o2 = objet({ numero: "1.2", sectionNumero: "1", selected: true });
+    const state = getMergeButtonState([o1, o2], [0, 1]);
+    expect(state.canMerge).toBe(true);
+    expect(state.count).toBe(2);
+    expect(state.selectedIdxs).toEqual([0, 1]);
+  });
+
+  it("ne compte que les objets de la Section demandée (cross-section ignoré)", () => {
+    // 2 objets cochés mais dans des sections différentes : la Section "1" n'en
+    // voit qu'un seul → bouton masqué.
+    const o1 = objet({ numero: "1.1", sectionNumero: "1", selected: true });
+    const o2 = objet({ numero: "2.1", sectionNumero: "2", selected: true });
+    const stateSec1 = getMergeButtonState([o1, o2], [0]); // seulement idx 0 dans Section 1
+    expect(stateSec1.canMerge).toBe(false);
+    expect(stateSec1.count).toBe(1);
+  });
+
+  it("canMerge=true sur un sous-ensemble de la Section (3 objets, 2 cochés)", () => {
+    const o1 = objet({ numero: "1.1", sectionNumero: "1", selected: true });
+    const o2 = objet({ numero: "1.2", sectionNumero: "1", selected: false });
+    const o3 = objet({ numero: "1.3", sectionNumero: "1", selected: true });
+    const state = getMergeButtonState([o1, o2, o3], [0, 1, 2]);
+    expect(state.canMerge).toBe(true);
+    expect(state.selectedIdxs).toEqual([0, 2]);
+  });
+
+  it("ignore les indexes invalides ou objets manquants", () => {
+    const o1 = objet({ numero: "1.1", sectionNumero: "1", selected: true });
+    const state = getMergeButtonState([o1], [0, 99]);
+    expect(state.canMerge).toBe(false);
+    expect(state.selectedIdxs).toEqual([0]);
+  });
+
+  it("compatible avec mergeObjetsInSection : pré-sélection prête à fusionner", () => {
+    const o1 = objet({
+      numero: "1.1",
+      sectionNumero: "1",
+      selected: true,
+      postes: [poste({ id: "a", metier: "bois", heuresUnitaires: 2 })],
+    });
+    const o2 = objet({
+      numero: "1.2",
+      sectionNumero: "1",
+      selected: true,
+      postes: [poste({ id: "b", metier: "bois", heuresUnitaires: 3 })],
+    });
+    const o3 = objet({ numero: "1.3", sectionNumero: "1", selected: false });
+    const state = getMergeButtonState([o1, o2, o3], [0, 1, 2]);
+    expect(state.canMerge).toBe(true);
+    const merged = mergeObjetsInSection([o1, o2, o3], state.selectedIdxs, "MRG", "Merged");
+    expect(merged).toHaveLength(2); // 1.1+1.2 fusionnés, 1.3 préservé
+    expect(merged[0].heures.bois).toBe(5);
+    expect(merged[1].numero).toBe("1.3");
   });
 });

@@ -241,3 +241,28 @@ export function mergeObjetsInSection(
   });
   return result;
 }
+
+/**
+ * v0.39.1 — Décrit l'état du bouton "Fusionner" pour une Section donnée.
+ * Le bouton n'est rendu que si `canMerge=true` :
+ *  - ≥ 2 objets cochés (`selected=true`) DANS la même Section,
+ *  - tous appartiennent au sectionKey demandé (garde-fou cross-section).
+ * Retourne aussi les indexes sélectionnés pour pré-remplir la modale.
+ */
+export interface MergeButtonState {
+  canMerge: boolean;
+  selectedIdxs: number[];
+  count: number;
+}
+
+export function getMergeButtonState(
+  objets: EditableObjet[],
+  sectionObjetIdxs: number[],
+): MergeButtonState {
+  const selectedIdxs = sectionObjetIdxs.filter((i) => objets[i]?.selected === true);
+  return {
+    canMerge: selectedIdxs.length >= 2,
+    selectedIdxs,
+    count: selectedIdxs.length,
+  };
+}
