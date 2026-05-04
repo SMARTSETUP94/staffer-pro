@@ -24,6 +24,7 @@ import { AutoStaffPlanButton, type AutoStaffPlanButtonHandle } from "@/component
 import { StaffingShortcutsHelp } from "@/components/staffing/StaffingShortcutsHelp";
 import { PreParametrageSection } from "@/components/staffing/PreParametrageSection";
 import { VolumeCard } from "@/components/staffing/VolumeCard";
+import { useShowDevisPrefix } from "@/components/staffing/ObjetRefLabel";
 import { listChantierMetierConfig, type ChantierMetierConfigRow } from "@/server/staffing-pre-parametrage.functions";
 import { ExpressResultBanner } from "@/components/staffing/ExpressResultBanner";
 import { Button } from "@/components/ui/button";
@@ -342,6 +343,7 @@ function StaffingPlanPage() {
                 <ListChecks className="mr-1 h-3 w-3" /> Détaillé (par créneau)
               </Button>
             </div>
+            <DevisPrefixToggle />
           </div>
           {viewMode === "rapide" && (
             <EquipeAffaireSection
@@ -387,5 +389,25 @@ function StaffingPlanPage() {
         />
       )}
     </div>
+  );
+}
+
+/** v0.39.0f — Toggle global "afficher préfixe devis" pour les libellés objets. */
+function DevisPrefixToggle() {
+  const [showPrefix, setShowPrefix] = useShowDevisPrefix();
+  return (
+    <Button
+      size="sm"
+      variant="ghost"
+      className="ml-auto text-xs text-muted-foreground"
+      onClick={() => setShowPrefix(!showPrefix)}
+      title={
+        showPrefix
+          ? "Masquer le préfixe devis (ex: D-202604-2141 (1)-)"
+          : "Afficher le préfixe devis"
+      }
+    >
+      {showPrefix ? "Masquer préfixe devis" : "Afficher préfixe devis"}
+    </Button>
   );
 }
