@@ -408,31 +408,41 @@ export function DevisImportObjetsHierarchy({ objets, setObjets, integrityChecks 
                       <span className="text-sm font-medium">{sec.nom}</span>
                     </button>
                     <div className="flex items-center gap-2">
-                      {canMerge && (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          className="h-7 gap-1.5 border-primary/40 bg-primary/5 text-xs text-primary hover:bg-primary/10"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            const firstObj = objets[selectedIdxs[0]];
-                            setMergeDialog({
-                              sectionKey: sec.key,
-                              objetIdxs: selectedIdxs,
-                              newNumero: firstObj?.numero ?? "",
-                              newNom: selectedIdxs
-                                .map((i) => objets[i]?.nom)
-                                .filter(Boolean)
-                                .join(" + ")
-                                .slice(0, 80),
-                            });
-                          }}
-                        >
-                          <Merge className="h-3.5 w-3.5" />
-                          Fusionner ({selectedIdxs.length})
-                        </Button>
-                      )}
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={!canMerge}
+                        aria-label={
+                          canMerge
+                            ? `Fusionner ${selectedIdxs.length} objets sélectionnés de la section ${sec.numero}`
+                            : `Fusionner les objets de la section ${sec.numero} (sélectionne au moins 2 objets)`
+                        }
+                        title={
+                          canMerge
+                            ? undefined
+                            : "Sélectionne au moins 2 objets dans cette section pour fusionner"
+                        }
+                        data-testid={`btn-merge-section-${sec.key}`}
+                        className="h-7 gap-1.5 border-primary/40 bg-primary/5 text-xs text-primary hover:bg-primary/10 disabled:cursor-not-allowed disabled:border-border disabled:bg-transparent disabled:text-muted-foreground disabled:opacity-60"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const firstObj = objets[selectedIdxs[0]];
+                          setMergeDialog({
+                            sectionKey: sec.key,
+                            objetIdxs: selectedIdxs,
+                            newNumero: firstObj?.numero ?? "",
+                            newNom: selectedIdxs
+                              .map((i) => objets[i]?.nom)
+                              .filter(Boolean)
+                              .join(" + ")
+                              .slice(0, 80),
+                          });
+                        }}
+                      >
+                        <Merge className="h-3.5 w-3.5" />
+                        Fusionner{canMerge ? ` (${selectedIdxs.length})` : ""}
+                      </Button>
                       <span className="text-xs text-muted-foreground">
                         {sec.objetIdxs.length} objet(s) • {sectionTotalHeures} h
                       </span>
