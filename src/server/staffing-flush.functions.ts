@@ -11,6 +11,7 @@ const editSchema = z.object({
   pers: z.number().int().min(1).max(12).optional(),
   manual_pers: z.boolean().optional(),
   manual_shift: z.number().int().min(-30).max(30).optional(),
+  manual_span_demi: z.number().int().min(1).max(200).nullable().optional(),
 });
 
 export const flushStepEdits = createServerFn({ method: "POST" })
