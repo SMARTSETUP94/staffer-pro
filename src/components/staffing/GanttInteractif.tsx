@@ -346,6 +346,46 @@ export const GanttInteractif = forwardRef<
     [previewImpacts, setStepPersStore],
   );
 
+  /**
+   * v0.39.2 — Vue 2 : modifier la durée d'une étape avec cascade AVAL
+   * (les étapes du même objet qui suivent sont décalées du même delta).
+   * À pers constant : heures totales préservées (algo applyEdits côté serveur).
+   */
+  const handleSetSpanDemiCascade = useCallback(
+    (step: PlanStep, newSpanDemi: number) => {
+      const oldSpanDemi = step.span_demi_jours ?? step.span_days * 2;
+      if (newSpanDemi === oldSpanDemi) return;
+      const oldSpanDays = Math.max(1, Math.ceil(oldSpanDemi / 2));
+      const newSpanDays = Math.max(1, Math.ceil(newSpanDemi / 2));
+      setStepSpanDemiStore(step.id, newSpanDemi);
+      // Cascade aval : décaler les steps suivants du MÊME objet du delta jours
+      const cascade = computeCascadeForDurationChange(mergedSteps, step, oldSpanDays, newSpanDays);
+      for (const c of cascade) {
+        const baseShift = data?.step_overrides[c.stepId]?.manual_shift ?? 0;
+        const currentShift = edits[c.stepId]?.manual_shift ?? baseShift;
+        setStepShiftStore(c.stepId, currentShift + c.deltaDays);
+      }
+    },
+    [mergedSteps, data, edits, setStepSpanDemiStore, setStepShiftStore],
+  );
+
+  /**
+   * v0.39.2 — Vue 2 : décaler une étape avec cascade AVAL (les étapes suivantes
+   * du même objet suivent le mouvement, l'amont reste collé).
+   */
+  const handleShiftCascade = useCallback(
+    (step: PlanStep, delta: number) => {
+      handleShift(step, delta);
+      const cascade = computeCascadeForShift(mergedSteps, step, delta);
+      for (const c of cascade) {
+        const baseShift = data?.step_overrides[c.stepId]?.manual_shift ?? 0;
+        const currentShift = edits[c.stepId]?.manual_shift ?? baseShift;
+        setStepShiftStore(c.stepId, currentShift + c.deltaDays);
+      }
+    },
+    [handleShift, mergedSteps, data, edits, setStepShiftStore],
+  );
+
   const handleReorder = useCallback(
     async (objId: string, direction: -1 | 1) => {
       if (!data) return;
