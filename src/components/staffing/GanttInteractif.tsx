@@ -896,19 +896,37 @@ function StatCard({
   label,
   value,
   valueClassName,
+  detail,
 }: {
   icon: React.ReactNode;
   label: string;
   value: string;
   valueClassName?: string;
+  detail?: React.ReactNode;
 }) {
-  return (
-    <div className="rounded-2xl border border-border bg-card p-4">
+  const card = (
+    <div
+      className={`rounded-2xl border border-border bg-card p-4 ${detail ? "cursor-help transition hover:border-primary/40 hover:shadow-sm" : ""}`}
+    >
       <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
         {icon}
         {label}
+        {detail && <Info className="ml-auto h-3.5 w-3.5 opacity-60" />}
       </div>
       <p className={`mt-1 text-2xl font-bold ${valueClassName ?? "text-foreground"}`}>{value}</p>
     </div>
+  );
+  if (!detail) return card;
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button type="button" className="text-left">
+          {card}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-[420px] max-w-[92vw]">
+        {detail}
+      </PopoverContent>
+    </Popover>
   );
 }
