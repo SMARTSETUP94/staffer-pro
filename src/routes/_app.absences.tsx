@@ -242,22 +242,20 @@ function AbsencesPage() {
     return true;
   }
 
-  // Détecte en live un doublon (même employé, période chevauchante, slot AM/PM/JOURNEE conflictuel)
-  const duplicateAbsence = useMemo(() => {
-    if (!editing || !editing.employe_id || !editing.date_debut || !editing.date_fin) return null;
-    if (editing.date_fin < editing.date_debut) return null;
+  // Détecte en live tous les congés existants qui chevauchent (même employé, période + slot conflictuel)
+  const overlappingAbsences = useMemo(() => {
+    if (!editing || !editing.employe_id || !editing.date_debut || !editing.date_fin) return [];
+    if (editing.date_fin < editing.date_debut) return [];
     const targetSlot = editing.demi_journee ?? "JOURNEE";
-    return (
-      rows.find((a) => {
-        if (editing.id && a.id === editing.id) return false;
-        if (a.employe_id !== editing.employe_id) return false;
-        // chevauchement de période
-        if (a.date_debut > editing.date_fin) return false;
-        if (a.date_fin < editing.date_debut) return false;
-        return slotOverlaps(a.demi_journee, targetSlot);
-      }) ?? null
-    );
+    return rows.filter((a) => {
+      if (editing.id && a.id === editing.id) return false;
+      if (a.employe_id !== editing.employe_id) return false;
+      if (a.date_debut > editing.date_fin) return false;
+      if (a.date_fin < editing.date_debut) return false;
+      return slotOverlaps(a.demi_journee, targetSlot);
+    });
   }, [editing, rows]);
+  const duplicateAbsence = overlappingAbsences[0] ?? null;
 
   async function handleSave() {
     if (!editing) return;
@@ -595,13 +593,26 @@ function AbsencesPage() {
                 Validée
               </label>
 
-              {duplicateAbsence && (
+              {overlappingAbsences.length > 0 && (
                 <div className="rounded-md border border-destructive/40 bg-destructive/10 p-2 text-xs text-destructive">
-                  ⚠️ Doublon : une absence{" "}
-                  <strong>{ABSENCE_LABEL[duplicateAbsence.type]}</strong> existe déjà pour cet
-                  employé du {format(parseISO(duplicateAbsence.date_debut), "dd/MM/yyyy")} au{" "}
-                  {format(parseISO(duplicateAbsence.date_fin), "dd/MM/yyyy")} (
-                  {duplicateAbsence.demi_journee ?? "Toute la période"}).
+                  <div className="mb-1 font-medium">
+                    ⚠️ Chevauchement détecté avec {overlappingAbsences.length} congé
+                    {overlappingAbsences.length > 1 ? "s" : ""} existant
+                    {overlappingAbsences.length > 1 ? "s" : ""} :
+                  </div>
+                  <ul className="space-y-1 pl-4">
+                    {overlappingAbsences.map((a) => (
+                      <li key={a.id} className="list-disc">
+                        <strong>{ABSENCE_LABEL[a.type]}</strong> —{" "}
+                        {format(parseISO(a.date_debut), "dd/MM/yyyy")}
+                        {a.date_debut !== a.date_fin && (
+                          <> → {format(parseISO(a.date_fin), "dd/MM/yyyy")}</>
+                        )}{" "}
+                        ({a.demi_journee ?? "Toute la période"})
+                        {a.valide ? "" : " — non validée"}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               )}
             </div>
