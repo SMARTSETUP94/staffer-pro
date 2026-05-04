@@ -391,8 +391,7 @@ export function DevisImportObjetsHierarchy({ objets, setObjets, integrityChecks 
               const sectionTotalHeures = round2(
                 sectionObjets.reduce((s, o) => s + objetTotalHeures(o), 0),
               );
-              const selectedIdxs = sec.objetIdxs.filter((i) => objets[i]?.selected);
-              const canMerge = selectedIdxs.length >= 2;
+              const { canMerge, selectedIdxs } = getMergeButtonState(objets, sec.objetIdxs);
               return (
                 <div key={sec.key} className="rounded-xl border border-border">
                   {/* En-tête Section */}
