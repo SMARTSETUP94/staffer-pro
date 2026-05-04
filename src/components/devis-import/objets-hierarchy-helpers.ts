@@ -209,13 +209,20 @@ export function mergeObjetsInSection(
   // v0.39.2 — Avant : on bloquait si sections différentes. Maintenant on autorise
   // la fusion cross-section ; le merged prend la section du premier.
   const allPostes: PosteCandidat[] = sources.flatMap((s) => s.obj.postes);
-  const sourceRefs = sources.map((s) => s.obj.numero).join(", ");
+  const sourceRefs = sources
+    .map((s) =>
+      s.obj.sectionNumero && s.obj.sectionNumero !== first.sectionNumero
+        ? `${s.obj.numero} (Sec.${s.obj.sectionNumero})`
+        : s.obj.numero,
+    )
+    .join(", ");
   const sourceDescs = sources
     .map((s) => (s.obj.description ? `[${s.obj.numero}] ${s.obj.description}` : null))
     .filter(Boolean)
     .join("\n");
+  const crossSection = !sources.every((s) => s.obj.sectionNumero === first.sectionNumero);
   const mergedDescription = [
-    `Fusion de : ${sourceRefs}`,
+    `Fusion de : ${sourceRefs}${crossSection ? " (cross-section)" : ""}`,
     sourceDescs || null,
   ]
     .filter(Boolean)
