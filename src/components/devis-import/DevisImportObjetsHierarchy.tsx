@@ -19,6 +19,7 @@ import {
   ChevronRight,
   GripVertical,
   Info,
+  Merge,
   Plus,
   Trash2,
   TriangleAlert,
@@ -40,6 +41,15 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import type { FabMetier } from "@/hooks/use-fabrication";
 import { emptyHeures } from "@/lib/devis-parser/compute-flags";
 import { computeFlagsFromMetiers } from "@/lib/devis-parser/compute-flags";
@@ -48,6 +58,7 @@ import {
   computeCounters,
   effectiveIsMatiere,
   isPosteAutoMapped,
+  mergeObjetsInSection,
   movePosteBetweenObjets,
   objetTotalHeures,
   recomputeObjet,
@@ -87,6 +98,12 @@ export function DevisImportObjetsHierarchy({ objets, setObjets, integrityChecks 
   const [draggedPoste, setDraggedPoste] = useState<{ objetIdx: number; posteId: string } | null>(
     null,
   );
+  const [mergeDialog, setMergeDialog] = useState<{
+    sectionKey: string;
+    objetIdxs: number[];
+    newNumero: string;
+    newNom: string;
+  } | null>(null);
 
   const toggleSection = (key: string) =>
     setExpandedSections((prev) => {
@@ -373,25 +390,54 @@ export function DevisImportObjetsHierarchy({ objets, setObjets, integrityChecks 
               const sectionTotalHeures = round2(
                 sectionObjets.reduce((s, o) => s + objetTotalHeures(o), 0),
               );
+              const selectedIdxs = sec.objetIdxs.filter((i) => objets[i]?.selected);
+              const canMerge = selectedIdxs.length >= 2;
               return (
                 <div key={sec.key} className="rounded-xl border border-border">
                   {/* En-tête Section */}
-                  <button
-                    type="button"
-                    onClick={() => toggleSection(sec.key)}
-                    className="flex w-full items-center justify-between gap-2 rounded-t-xl bg-muted/40 px-3 py-2 text-left hover:bg-muted/60"
-                  >
-                    <div className="flex items-center gap-2">
+                  <div className="flex w-full items-center justify-between gap-2 rounded-t-xl bg-muted/40 px-3 py-2">
+                    <button
+                      type="button"
+                      onClick={() => toggleSection(sec.key)}
+                      className="flex flex-1 items-center gap-2 text-left"
+                    >
                       {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                       <span className="font-mono text-[11px] text-muted-foreground">
                         Section {sec.numero}
                       </span>
                       <span className="text-sm font-medium">{sec.nom}</span>
+                    </button>
+                    <div className="flex items-center gap-2">
+                      {canMerge && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-7 gap-1.5 border-primary/40 bg-primary/5 text-xs text-primary hover:bg-primary/10"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const firstObj = objets[selectedIdxs[0]];
+                            setMergeDialog({
+                              sectionKey: sec.key,
+                              objetIdxs: selectedIdxs,
+                              newNumero: firstObj?.numero ?? "",
+                              newNom: selectedIdxs
+                                .map((i) => objets[i]?.nom)
+                                .filter(Boolean)
+                                .join(" + ")
+                                .slice(0, 80),
+                            });
+                          }}
+                        >
+                          <Merge className="h-3.5 w-3.5" />
+                          Fusionner ({selectedIdxs.length})
+                        </Button>
+                      )}
+                      <span className="text-xs text-muted-foreground">
+                        {sec.objetIdxs.length} objet(s) • {sectionTotalHeures} h
+                      </span>
                     </div>
-                    <span className="text-xs text-muted-foreground">
-                      {sec.objetIdxs.length} objet(s) • {sectionTotalHeures} h
-                    </span>
-                  </button>
+                  </div>
 
                   {/* Objets enfants */}
                   {isOpen && (
@@ -649,6 +695,116 @@ export function DevisImportObjetsHierarchy({ objets, setObjets, integrityChecks 
           </Button>
         </div>
       </CardContent>
+
+      {/* v0.39.1 — Dialog fusion d'objets */}
+      <Dialog open={mergeDialog !== null} onOpenChange={(o) => !o && setMergeDialog(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Merge className="h-4 w-4" />
+              Fusionner {mergeDialog?.objetIdxs.length ?? 0} objets
+            </DialogTitle>
+            <DialogDescription>
+              Les heures de chaque métier seront sommées. Les références sources seront tracées
+              dans la description.
+            </DialogDescription>
+          </DialogHeader>
+
+          {mergeDialog && (
+            <div className="space-y-3">
+              <div className="rounded-md border border-border bg-muted/30 p-2 text-xs">
+                <p className="mb-1 font-medium">Objets sources :</p>
+                <ul className="space-y-0.5">
+                  {mergeDialog.objetIdxs.map((i) => {
+                    const o = objets[i];
+                    if (!o) return null;
+                    return (
+                      <li key={i} className="flex justify-between gap-2">
+                        <span className="truncate">
+                          <span className="font-mono text-muted-foreground">{o.numero}</span>{" "}
+                          {o.nom}
+                        </span>
+                        <span className="tabular-nums text-muted-foreground">
+                          {objetTotalHeures(o)} h
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
+                <p className="mt-1.5 border-t border-border/60 pt-1.5 text-right font-medium">
+                  Total fusionné :{" "}
+                  {round2(
+                    mergeDialog.objetIdxs.reduce(
+                      (s, i) => s + (objets[i] ? objetTotalHeures(objets[i]!) : 0),
+                      0,
+                    ),
+                  )}{" "}
+                  h
+                </p>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="merge-numero" className="text-xs">
+                  Référence du nouvel objet
+                </Label>
+                <Input
+                  id="merge-numero"
+                  value={mergeDialog.newNumero}
+                  onChange={(e) =>
+                    setMergeDialog((m) => (m ? { ...m, newNumero: e.target.value } : m))
+                  }
+                  placeholder="ex: BAR"
+                  className="h-8 font-mono text-sm"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="merge-nom" className="text-xs">
+                  Nom du nouvel objet
+                </Label>
+                <Input
+                  id="merge-nom"
+                  value={mergeDialog.newNom}
+                  onChange={(e) =>
+                    setMergeDialog((m) => (m ? { ...m, newNom: e.target.value } : m))
+                  }
+                  placeholder="ex: Bar complet"
+                  className="h-8 text-sm"
+                />
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setMergeDialog(null)}>
+              Annuler
+            </Button>
+            <Button
+              type="button"
+              disabled={
+                !mergeDialog ||
+                !mergeDialog.newNumero.trim() ||
+                !mergeDialog.newNom.trim()
+              }
+              onClick={() => {
+                if (!mergeDialog) return;
+                setObjets((prev) =>
+                  mergeObjetsInSection(
+                    prev,
+                    mergeDialog.objetIdxs,
+                    mergeDialog.newNumero.trim(),
+                    mergeDialog.newNom.trim(),
+                  ),
+                );
+                setMergeDialog(null);
+              }}
+            >
+              <Merge className="mr-1.5 h-3.5 w-3.5" />
+              Fusionner
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }

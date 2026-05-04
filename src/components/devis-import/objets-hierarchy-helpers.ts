@@ -183,3 +183,61 @@ export function renamePoste(
     };
   });
 }
+
+/**
+ * v0.39.1 — Fusionne plusieurs objets de niveau 2 d'une même Section en un seul.
+ * Garde-fou : tous les objets doivent appartenir à la même `sectionNumero` ; sinon NO-OP.
+ * - Concatène les postes (somme heures via recomputeObjet).
+ * - Conserve la quantité du premier objet ; les heures unitaires des postes restent inchangées
+ *   donc le total = (somme heures unitaires) × quantité du nouvel objet × sectionQuantité.
+ * - Trace les références sources dans la description (auditabilité).
+ * - Supprime les objets sources, insère le merged à la position du premier.
+ */
+export function mergeObjetsInSection(
+  objets: EditableObjet[],
+  indexes: number[],
+  newNumero: string,
+  newNom: string,
+): EditableObjet[] {
+  if (indexes.length < 2) return objets;
+  const sources = indexes
+    .map((i) => ({ idx: i, obj: objets[i] }))
+    .filter((x) => !!x.obj) as { idx: number; obj: EditableObjet }[];
+  if (sources.length < 2) return objets;
+  const sectionKey = sources[0].obj.sectionNumero;
+  if (!sources.every((s) => s.obj.sectionNumero === sectionKey)) return objets;
+
+  const first = sources[0].obj;
+  const allPostes: PosteCandidat[] = sources.flatMap((s) => s.obj.postes);
+  const sourceRefs = sources.map((s) => s.obj.numero).join(", ");
+  const sourceDescs = sources
+    .map((s) => (s.obj.description ? `[${s.obj.numero}] ${s.obj.description}` : null))
+    .filter(Boolean)
+    .join("\n");
+  const mergedDescription = [
+    `Fusion de : ${sourceRefs}`,
+    sourceDescs || null,
+  ]
+    .filter(Boolean)
+    .join("\n\n");
+
+  const merged: EditableObjet = recomputeObjet({
+    ...first,
+    numero: newNumero || first.numero,
+    nom: newNom || first.nom,
+    postes: allPostes,
+    description: mergedDescription,
+    warnings: [],
+    confidence: "medium",
+    manuel: false,
+  });
+
+  const removeSet = new Set(sources.map((s) => s.idx));
+  const firstIdx = sources[0].idx;
+  const result: EditableObjet[] = [];
+  objets.forEach((o, i) => {
+    if (i === firstIdx) result.push(merged);
+    else if (!removeSet.has(i)) result.push(o);
+  });
+  return result;
+}
