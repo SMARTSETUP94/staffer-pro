@@ -130,6 +130,43 @@ test.describe("auto-staffing v0.35 / chef", () => {
     }
   });
 
+  test("S8b — DateShifter gauche/droite conserve la durée en Vue 1 et Vue 2", async ({ page }) => {
+    await page.goto("/charge-atelier");
+    const planLink = page.locator("a[href^='/staffing/']").first();
+    if (!(await planLink.isVisible({ timeout: 5_000 }).catch(() => false))) return;
+    await planLink.click();
+    await expect(page.getByText(/Plan staffing/i)).toBeVisible({ timeout: 15_000 });
+
+    const metierToggle = page.locator("[data-testid^='metier-toggle-']").first();
+    if (await metierToggle.isVisible({ timeout: 5_000 }).catch(() => false)) {
+      await metierToggle.click();
+      const vue1Left = page.getByTestId("date-shifter-left").first();
+      const vue1Right = page.getByTestId("date-shifter-right").first();
+      if (await vue1Left.isVisible({ timeout: 3_000 }).catch(() => false)) {
+        await vue1Left.click();
+        await expect(page.getByText(/-1j/).first()).toBeVisible({ timeout: 3_000 });
+        await vue1Right.click();
+      }
+    }
+
+    const firstObjetToggle = page.getByRole("button", { name: /déplier/i }).first();
+    if (await firstObjetToggle.isVisible({ timeout: 3_000 }).catch(() => false)) {
+      await firstObjetToggle.click();
+    }
+    const bar = page.getByTestId("gantt-bar").first();
+    if (!(await bar.isVisible({ timeout: 5_000 }).catch(() => false))) return;
+    const before = await bar.boundingBox();
+    if (!before) return;
+    await bar.hover();
+    await page.getByTestId("gantt-shift-left").first().click({ force: true });
+    const afterLeft = await bar.boundingBox();
+    expect(afterLeft?.width).toBeCloseTo(before.width, 1);
+    await bar.hover();
+    await page.getByTestId("gantt-shift-right").first().click({ force: true });
+    const afterRight = await bar.boundingBox();
+    expect(afterRight?.width).toBeCloseTo(before.width, 1);
+  });
+
   test("S9 — badge AS visible dans /planning si assignation auto-staffing", async ({ page }) => {
     await page.goto("/planning");
     await expect(page.getByRole("heading", { name: /planning/i }).first()).toBeVisible({
