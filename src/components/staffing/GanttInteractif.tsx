@@ -429,6 +429,78 @@ export const GanttInteractif = forwardRef<
                 ? "text-amber-600 dark:text-amber-400"
                 : "text-foreground"
           }
+          detail={
+            <div className="space-y-3 text-xs">
+              <div>
+                <div className="font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                  Formule
+                </div>
+                <p className="text-foreground">
+                  <span className="font-mono">heures = Σ (pers × ½‑journées × 4 h)</span>
+                </p>
+                <p className="text-muted-foreground mt-1">
+                  Une demi‑journée = {H_HALF} h. Une journée = {DEMI_PER_DAY} demi‑journées.
+                  Le total agrège toutes les étapes (tous métiers, tous objets) du plan courant.
+                </p>
+              </div>
+              <div>
+                <div className="font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                  Décomposition par métier
+                </div>
+                <table className="w-full">
+                  <thead>
+                    <tr className="text-left text-muted-foreground">
+                      <th className="font-medium pb-1">Métier</th>
+                      <th className="font-medium pb-1 text-right">Étapes</th>
+                      <th className="font-medium pb-1 text-right">pers·½j</th>
+                      <th className="font-medium pb-1 text-right">Heures</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {stats.breakdown.map((b) => (
+                      <tr key={b.label} className="border-t border-border/50">
+                        <td className="py-1">{b.label}</td>
+                        <td className="py-1 text-right tabular-nums">{b.steps}</td>
+                        <td className="py-1 text-right tabular-nums">{b.persDemi.toFixed(0)}</td>
+                        <td className="py-1 text-right tabular-nums font-medium">
+                          {b.h.toFixed(0)} h
+                        </td>
+                      </tr>
+                    ))}
+                    <tr className="border-t border-border font-bold">
+                      <td className="py-1">Total</td>
+                      <td className="py-1 text-right tabular-nums">
+                        {stats.breakdown.reduce((a, b) => a + b.steps, 0)}
+                      </td>
+                      <td className="py-1 text-right tabular-nums">
+                        {stats.breakdown.reduce((a, b) => a + b.persDemi, 0).toFixed(0)}
+                      </td>
+                      <td className="py-1 text-right tabular-nums">
+                        {stats.totalH.toFixed(0)} h
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              {stats.hDevis > 0 && (
+                <div className="pt-2 border-t border-border">
+                  <div className="font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                    Comparaison devis
+                  </div>
+                  <p className="text-muted-foreground">
+                    Devis : <span className="font-medium text-foreground">{stats.hDevis.toFixed(0)} h</span>
+                    {" · "}Écart :{" "}
+                    <span className="font-medium text-foreground">
+                      {(stats.totalH - stats.hDevis >= 0 ? "+" : "")}
+                      {(stats.totalH - stats.hDevis).toFixed(0)} h
+                      {" ("}
+                      {(((stats.totalH - stats.hDevis) / stats.hDevis) * 100).toFixed(1)}%{")"}
+                    </span>
+                  </p>
+                </div>
+              )}
+            </div>
+          }
         />
         <StatCard
           icon={<Calendar className="h-4 w-4" />}
