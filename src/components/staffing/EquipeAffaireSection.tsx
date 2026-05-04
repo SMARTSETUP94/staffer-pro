@@ -193,6 +193,8 @@ export function EquipeAffaireSection({ planId, onAssigned }: Props) {
                 candidates={cands}
                 value={sel}
                 onChange={(v) => setSelected((prev) => ({ ...prev, [m.metier_id]: v }))}
+                totalPersJours={m.total_pers_jours}
+                stepsCount={m.steps_count}
               />
 
               <Button
