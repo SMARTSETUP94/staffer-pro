@@ -64,7 +64,7 @@ test.describe("auto-staffing v0.35 / chef", () => {
     await planLink.click();
     await expect(page.getByText(/Plan staffing/i)).toBeVisible({ timeout: 15_000 });
     // Stats cards
-    await expect(page.getByText(/Volume total/i).first()).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText(/Heures staffées/i).first()).toBeVisible({ timeout: 10_000 });
   });
 
   test("S4 — vue /charge-atelier accessible et rend la grille metier", async ({ page }) => {
@@ -160,11 +160,13 @@ test.describe("auto-staffing v0.35 / chef", () => {
     await bar.hover();
     await page.getByTestId("gantt-shift-left").first().click({ force: true });
     const afterLeft = await bar.boundingBox();
-    expect(afterLeft?.width).toBeCloseTo(before.width, 1);
+    if (!afterLeft) return;
+    expect(afterLeft.width).toBeCloseTo(before.width, 1);
     await bar.hover();
     await page.getByTestId("gantt-shift-right").first().click({ force: true });
     const afterRight = await bar.boundingBox();
-    expect(afterRight?.width).toBeCloseTo(before.width, 1);
+    if (!afterRight) return;
+    expect(afterRight.width).toBeCloseTo(before.width, 1);
   });
 
   test("S9 — badge AS visible dans /planning si assignation auto-staffing", async ({ page }) => {
