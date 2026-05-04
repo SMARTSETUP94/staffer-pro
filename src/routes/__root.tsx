@@ -5,6 +5,13 @@ import { AuthProvider } from "@/lib/auth-context";
 import { PreviewProvider } from "@/lib/preview-context";
 import appCss from "../styles.css?url";
 
+declare global {
+  interface Window {
+    __setupParisReactMounted?: boolean;
+    __setupParisBootErrors?: Array<{ type: string; at: string; payload: string }>;
+  }
+}
+
 const BOOTSTRAP_GUARD_SCRIPT = String.raw`
 (function () {
   window.__setupParisBootErrors = window.__setupParisBootErrors || [];
