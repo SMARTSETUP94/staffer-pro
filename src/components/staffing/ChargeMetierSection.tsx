@@ -8,6 +8,7 @@ import { METIER_KEY_BY_ID } from "@/lib/staffing/types";
 import type { ChantierMetierConfigRow } from "@/server/staffing-pre-parametrage.functions";
 import { PersStepper } from "./PersStepper";
 import { DateShifter } from "./DateShifter";
+import { ObjetRefLabel } from "./ObjetRefLabel";
 
 interface ObjetInfo {
   objet_id: string;
@@ -301,12 +302,7 @@ export function ChargeMetierSection({
                               className="inline-block h-3 w-px self-stretch bg-border"
                               aria-hidden="true"
                             />
-                            <span className="font-mono text-[11px] font-semibold text-foreground">
-                              {c.reference}
-                            </span>
-                            {c.nom && (
-                              <span className="truncate text-[10px]">— {c.nom}</span>
-                            )}
+                            <ObjetRefLabel reference={c.reference} nom={c.nom} />
                             <span className="ml-auto flex items-center gap-1.5 text-[10px] font-mono">
                               {ctx && onSetPers && (
                                 <PersStepper

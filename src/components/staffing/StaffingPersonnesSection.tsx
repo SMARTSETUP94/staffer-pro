@@ -63,6 +63,7 @@ function formatSpanLabel(step: PlanStep): string {
   return half ? `${full}½j` : `${full}j`;
 }
 import { METIER_COLOR, METIER_LABEL, METIER_ORDER, formatShortDate, formatDayName } from "./gantt-helpers";
+import { ObjetRefLabel, parseObjetLabel } from "./ObjetRefLabel";
 
 interface Suggestion {
   employe: { id: string; nom: string; prenom: string; metier_principal_id: number; type_contrat: string };
@@ -408,6 +409,7 @@ function ListView({
       {grouped.map(({ step, days }) => {
         const k = METIER_KEY_BY_ID[step.metier_id] ?? "Manut";
         const objLabel = step.objet_id ? (objetsLabel[step.objet_id] ?? step.objet_id) : "Global";
+        const parsed = step.objet_id ? parseObjetLabel(objLabel) : { reference: "Global", nom: "" };
         const stepAssigns = assignments.filter((a) => a.step_id === step.id);
         const cov = coverByStep[step.id];
         const targetPersDays = cov?.target ?? step.pers * effectiveSpanDays(step);
@@ -425,7 +427,11 @@ function ListView({
                     style={{ backgroundColor: METIER_COLOR[k] }}
                   />
                   <span className="font-bold text-sm">{METIER_LABEL[k]}</span>
-                  <span className="text-xs text-muted-foreground truncate max-w-[260px]">{objLabel}</span>
+                  <ObjetRefLabel
+                    reference={parsed.reference}
+                    nom={parsed.nom}
+                    className="max-w-[280px]"
+                  />
                   <span className="ml-auto flex items-center gap-2 text-xs">
                     <span className="font-mono">
                       {step.pers}p × {formatSpanLabel(step)}
@@ -549,12 +555,18 @@ function CalendarView({
               className="grid items-center border-b border-border/30 hover:bg-muted/20"
               style={{ gridTemplateColumns: gridTemplate }}
             >
-              <div className="flex items-center gap-2 px-2 py-1.5 text-xs">
-                <span className="inline-block h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: color }} />
-                <span className="font-semibold">{METIER_LABEL[k]}</span>
-                <span className="truncate text-muted-foreground" title={objLabel}>
-                  · {objLabel}
-                </span>
+              <div className="flex items-center gap-2 px-2 py-1.5 text-xs min-w-0">
+                <span className="inline-block h-2.5 w-2.5 rounded-sm shrink-0" style={{ backgroundColor: color }} />
+                <span className="font-semibold shrink-0">{METIER_LABEL[k]}</span>
+                <span className="text-muted-foreground shrink-0">·</span>
+                {step.objet_id ? (
+                  (() => {
+                    const parsed = parseObjetLabel(objLabel);
+                    return <ObjetRefLabel reference={parsed.reference} nom={parsed.nom} />;
+                  })()
+                ) : (
+                  <span className="font-mono text-[11px] font-semibold">Global</span>
+                )}
               </div>
               {days.map((d) => {
                 const inStep = d >= stepStart && d <= stepEnd;
