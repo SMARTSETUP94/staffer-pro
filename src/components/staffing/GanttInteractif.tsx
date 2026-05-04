@@ -260,10 +260,12 @@ export const GanttInteractif = forwardRef<
       breakdownByMetier[key].steps += 1;
     }
     for (const v of Object.values(mergedDailyLoad)) if (v > pic) pic = v;
-    const hDevis = (preParamConfigs ?? []).reduce(
-      (acc, c) => acc + (Number(c.total_h_calc) || 0),
-      0,
-    );
+    // v0.39.0d FIX — "h devis" = somme des heures des OBJETS inclus dans CE plan
+    // (et non toutes les heures du devis de l'affaire). Permet de comparer
+    // h staffées vs h devis sur le périmètre réellement mis au planning.
+    const hDevis = (data.objets ?? [])
+      .filter((o) => o.included)
+      .reduce((acc, o) => acc + (Number(o.heures_total) || 0), 0);
     const hasHard = data.result.alerts.some((a) => a.severity === "hard");
     const hasSoft = data.result.alerts.some((a) => a.severity === "soft");
     const statut = hasHard ? "Critique" : hasSoft ? "Attention" : "Conforme";
