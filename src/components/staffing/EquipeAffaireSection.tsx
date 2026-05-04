@@ -3,7 +3,9 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Loader2, Check, Users, X } from "lucide-react";
+import { Loader2, Check, Users, X, ArrowDownUp, Info } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { sortByTier as greedySortByTier } from "@/lib/staffing/greedy-allocate";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -191,6 +193,8 @@ export function EquipeAffaireSection({ planId, onAssigned }: Props) {
                 candidates={cands}
                 value={sel}
                 onChange={(v) => setSelected((prev) => ({ ...prev, [m.metier_id]: v }))}
+                totalPersJours={m.total_pers_jours}
+                stepsCount={m.steps_count}
               />
 
               <Button
@@ -282,18 +286,47 @@ function PersonneMultiSelect({
   candidates,
   value,
   onChange,
+  totalPersJours,
+  stepsCount,
 }: {
   candidates: Candidate[];
   value: string[];
   onChange: (v: string[]) => void;
+  totalPersJours?: number;
+  stepsCount?: number;
 }) {
   const [open, setOpen] = useState(false);
   const selectedSet = useMemo(() => new Set(value), [value]);
   const selectedDetails = candidates.filter((c) => selectedSet.has(c.id));
 
+  // v0.39.2b — capacité quotidienne moyenne approximée pour le compteur live
+  const avgDailyCapacity = useMemo(() => {
+    if (!stepsCount || !totalPersJours || stepsCount === 0) return null;
+    return Math.max(1, Math.round(totalPersJours / Math.max(stepsCount, 1)));
+  }, [totalPersJours, stepsCount]);
+
+  // X / Y pers·j alloués (greedy : on plafonne à la capacité réelle)
+  const allocated = useMemo(() => {
+    if (!totalPersJours || selectedDetails.length === 0 || !avgDailyCapacity) return 0;
+    // greedy : par jour on prend min(N sélectionnés, cible). Ici approximé.
+    const perDay = Math.min(selectedDetails.length, avgDailyCapacity);
+    return perDay * (stepsCount ?? 0);
+  }, [selectedDetails.length, totalPersJours, avgDailyCapacity, stepsCount]);
+
+  const overSelected =
+    avgDailyCapacity !== null && selectedDetails.length > avgDailyCapacity;
+
   const toggle = (id: string) => {
     if (selectedSet.has(id)) onChange(value.filter((x) => x !== id));
     else onChange([...value, id]);
+  };
+
+  const handleResort = () => {
+    // Re-trier la SÉLECTION par tier croissant (P1 → P4)
+    const sorted = greedySortByTier(
+      candidates.filter((c) => selectedSet.has(c.id)),
+    );
+    onChange(sorted.map((c) => c.id));
   };
 
   return (
@@ -350,25 +383,73 @@ function PersonneMultiSelect({
       </Popover>
 
       {selectedDetails.length > 0 && (
-        <div className="flex flex-wrap gap-1">
-          {selectedDetails.map((c) => (
-            <Badge
-              key={c.id}
-              variant="secondary"
-              className="text-[10px] flex items-center gap-1 pr-1"
+        <>
+          {/* v0.39.2b — compteur live + badge greedy + bouton re-tri tier */}
+          <div className="flex items-center justify-between gap-2 text-[10px]">
+            <div className="flex items-center gap-1.5">
+              {totalPersJours ? (
+                <span
+                  className="font-mono text-muted-foreground"
+                  data-testid="greedy-counter"
+                >
+                  {allocated} / {totalPersJours} pers·j alloués
+                </span>
+              ) : null}
+              {overSelected && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Badge
+                        variant="outline"
+                        className="h-4 gap-1 border-amber-500/60 bg-amber-50 px-1 text-[9px] text-amber-700 dark:bg-amber-950/30 dark:text-amber-300"
+                        data-testid="greedy-rotation-badge"
+                      >
+                        <Info className="h-2.5 w-2.5" />
+                        rotation greedy
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs text-xs">
+                      Plus de personnes sélectionnées que la capacité quotidienne
+                      moyenne ({avgDailyCapacity}/j). L'algorithme greedy prend
+                      <strong> P1 en premier</strong>, P2 prend le reste, P3 sert
+                      de remplaçant en cas d'absence, etc.
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={handleResort}
+              className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] text-muted-foreground hover:bg-muted hover:text-foreground"
+              data-testid="greedy-resort-tier"
+              title="Re-trier la sélection par tier (P1 → P4)"
             >
-              {c.prenom[0]}. {c.nom}
-              <button
-                type="button"
-                onClick={() => toggle(c.id)}
-                className="ml-0.5 rounded-sm hover:bg-muted-foreground/20"
-                aria-label="Retirer"
+              <ArrowDownUp className="h-2.5 w-2.5" /> Re-trier par tier
+            </button>
+          </div>
+          <div className="flex flex-wrap gap-1">
+            {selectedDetails.map((c, idx) => (
+              <Badge
+                key={c.id}
+                variant="secondary"
+                className="text-[10px] flex items-center gap-1 pr-1"
+                title={`Priorité P${idx + 1} · Tier ${c.tier}`}
               >
-                <X className="h-2.5 w-2.5" />
-              </button>
-            </Badge>
-          ))}
-        </div>
+                <span className="font-mono text-muted-foreground">P{idx + 1}</span>
+                {c.prenom[0]}. {c.nom}
+                <button
+                  type="button"
+                  onClick={() => toggle(c.id)}
+                  className="ml-0.5 rounded-sm hover:bg-muted-foreground/20"
+                  aria-label="Retirer"
+                >
+                  <X className="h-2.5 w-2.5" />
+                </button>
+              </Badge>
+            ))}
+          </div>
+        </>
       )}
     </div>
   );

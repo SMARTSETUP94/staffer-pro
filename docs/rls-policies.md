@@ -93,3 +93,47 @@ Test E2E couvrant : `e2e/heures/chef-saisit-pour-employe.chef.spec.ts`.
 2. Avoir une contrepartie `WITH CHECK` pour INSERT/UPDATE.
 3. Être documentée dans cette matrice **dans la même PR** que la migration.
 4. Passer le linter `supabase--linter` sans warning RLS.
+
+## Anti-patterns évités (v0.39.2b)
+
+> Si vous croisez l'un de ces patterns lors d'un dev, **STOP**, lisez cette
+> doc, demandez confirmation avant de pousser.
+
+1. **Filtre `.eq("user_id", auth.uid())` dans une RPC sans gérer le cas chef/admin**
+   → casse les écrans "saisir pour un employé". Toujours résoudre l'`employe_id`
+   cible côté serveur via le helper `resolveEmployeId({ asUser })`.
+2. **Policy `USING (true)` "temporaire"** → jamais. Préférez ajouter une
+   nouvelle policy nommée explicitement (`*_admin_override`) avec
+   `is_admin()` au minimum.
+3. **`SECURITY DEFINER` sans `SET search_path = public`** → injection possible
+   via `search_path` utilisateur. Tous nos helpers le déclarent.
+4. **`REVOKE EXECUTE` sur les 7 helpers RLS** → casse toutes les policies qui
+   les invoquent. Voir `mem://constraints/rls-helpers-execute-grant`.
+5. **CHECK constraint `expire_at > now()`** → CHECK doit être immutable. Utiliser
+   un trigger BEFORE INSERT/UPDATE pour les validations temporelles.
+6. **Insertion côté client dans `notifications`** → passer par un trigger
+   (la table n'a pas de policy INSERT côté client).
+7. **`employe_id` égal au `profile_id` du chef au lieu de l'employé cible** dans
+   les saisies `heures_saisies` (BUG #33). Toujours utiliser le helper côté serveur.
+
+## Matrice acteur × action × table (v0.39.2b)
+
+Légende : `✅` autorisé direct · `🔒` autorisé sous condition (cf. policy) · `❌` refusé.
+
+| Table                          | admin SELECT | admin WRITE | chef SELECT | chef WRITE | employé SELECT | employé WRITE | intérim SELECT | intérim WRITE |
+| ------------------------------ | :----------: | :---------: | :---------: | :--------: | :------------: | :-----------: | :------------: | :-----------: |
+| `heures_saisies`               | ✅           | ✅          | ✅          | 🔒 devis   | 🔒 self+access | 🔒 self draft | 🔒 self+access | 🔒 self draft |
+| `assignations`                 | ✅           | ✅          | ✅          | 🔒 devis   | 🔒 self+access | 🔒 confirm    | 🔒 self+access | 🔒 confirm    |
+| `affaires`                     | ✅           | ✅          | ✅          | ✅         | 🔒 access      | ❌            | 🔒 access      | ❌            |
+| `staffing_plan*`               | ✅           | ✅          | ✅          | ✅         | 🔒 access      | ❌            | 🔒 access      | ❌            |
+| `fabrication_objets`           | ✅           | ✅          | ✅          | ✅         | ✅             | ❌            | ✅             | ❌            |
+| `devis*`                       | ✅           | ✅          | ✅          | ✅         | ❌             | ❌            | ❌             | ❌            |
+| `profiles`                     | ✅           | ✅          | 🔒 self+chef| 🔒 self    | 🔒 self        | 🔒 self       | 🔒 self        | 🔒 self       |
+| `employes`                     | ✅           | ✅          | ✅          | ✅         | 🔒 self        | ❌            | 🔒 self        | ❌            |
+| `absences`                     | ✅           | ✅          | ✅          | ✅         | 🔒 self        | 🔒 self draft | 🔒 self        | 🔒 self draft |
+| `notifications`                | ✅           | trigger     | 🔒 self     | trigger    | 🔒 self        | trigger       | 🔒 self        | trigger       |
+
+> **Lecture obligatoire** avant tout dev qui touche `heures_saisies`,
+> `assignations`, `staffing_plan*` ou `affaires`. Mention explicite ajoutée
+> à `CONTRIBUTING.md` (sprint v0.39.2b).
+
