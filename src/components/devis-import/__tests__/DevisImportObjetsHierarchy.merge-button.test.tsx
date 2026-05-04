@@ -11,6 +11,7 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { render, screen, cleanup } from "@testing-library/react";
 import "@testing-library/jest-dom/vitest";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { emptyHeures, computeFlagsFromMetiers } from "@/lib/devis-parser/compute-flags";
 import { DevisImportObjetsHierarchy } from "../DevisImportObjetsHierarchy";
 import type { EditableObjet } from "../objets-hierarchy-helpers";
