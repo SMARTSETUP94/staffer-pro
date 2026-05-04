@@ -1,50 +1,52 @@
 /**
- * v0.23 Bloc 4 — Tests du helper importProgbatToAffaire
- * + tests confidence (via fixtures parser).
+ * v0.39.0a-hotfix-import — Tests du helper importProgbatToAffaire (via RPC atomique).
  *
- * Stratégie : mock du client Supabase pour capturer insert/update payloads.
+ * Le helper passe par `supabase.rpc("import_progbat_atomique", ...)` pour garantir
+ * un import tout-ou-rien (rollback PL/pgSQL automatique en cas d'erreur partielle).
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 /* -------------------------------------------------------------------------- */
-/* Mock Supabase                                                              */
+/* Mock Supabase RPC                                                          */
 /* -------------------------------------------------------------------------- */
 
-type Captured = { table: string; op: "insert" | "update"; payload: unknown; eqArgs?: [string, string] };
-const captured: Captured[] = [];
-let nextError: { message: string } | null = null;
-
-function makeChain(table: string, op: "insert" | "update", payload: unknown) {
-  const entry: Captured = { table, op, payload };
-  // .eq returns a thenable resolving to { error }
-  const thenable = {
-    eq: (col: string, val: string) => {
-      entry.eqArgs = [col, val];
-      captured.push(entry);
-      const err = nextError;
-      nextError = null;
-      return Promise.resolve({ error: err, data: null });
-    },
-    then: (resolve: (v: { error: unknown }) => void) => {
-      captured.push(entry);
-      const err = nextError;
-      nextError = null;
-      resolve({ error: err });
-    },
-  };
-  return thenable;
+interface RpcCall {
+  fn: string;
+  args: Record<string, unknown>;
 }
+
+const rpcCalls: RpcCall[] = [];
+let nextRpcResponse: { data: unknown; error: { message: string } | null } = {
+  data: { inserted_objets: 0, conflicts: [] },
+  error: null,
+};
 
 vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
-    from: (table: string) => ({
-      insert: (payload: unknown) => makeChain(table, "insert", payload),
-      update: (payload: unknown) => makeChain(table, "update", payload),
-    }),
+    rpc: (fn: string, args: Record<string, unknown>) => {
+      rpcCalls.push({ fn, args });
+      const inserted = Array.isArray(args.p_objets) ? (args.p_objets as unknown[]).length : 0;
+      // Si pas de réponse explicitement préparée, on calcule depuis args
+      if (
+        nextRpcResponse.error === null &&
+        (nextRpcResponse.data as { inserted_objets: number }).inserted_objets === 0
+      ) {
+        return Promise.resolve({
+          data: { inserted_objets: inserted, conflicts: [] },
+          error: null,
+        });
+      }
+      const res = nextRpcResponse;
+      nextRpcResponse = { data: { inserted_objets: 0, conflicts: [] }, error: null };
+      return Promise.resolve(res);
+    },
   },
 }));
 
-import { importProgbatToAffaire } from "../devis-progbat-import";
+import {
+  importProgbatToAffaire,
+  ImportProgbatConflictError,
+} from "../devis-progbat-import";
 import type { ApplicabilityFlags, HeuresParMetier } from "../devis-parser/compute-flags";
 import { parseDevisProgbatFromMatrix } from "../devis-parser/parse-excel";
 import { FIXTURE_D2153 } from "../devis-parser/__fixtures__/progbat-mocks";
@@ -61,19 +63,19 @@ function emptyFlags(): ApplicabilityFlags {
 }
 
 beforeEach(() => {
-  captured.length = 0;
-  nextError = null;
+  rpcCalls.length = 0;
+  nextRpcResponse = { data: { inserted_objets: 0, conflicts: [] }, error: null };
 });
 afterEach(() => {
   vi.clearAllMocks();
 });
 
 /* -------------------------------------------------------------------------- */
-/* importProgbatToAffaire — bulk insert                                       */
+/* importProgbatToAffaire — appel RPC                                         */
 /* -------------------------------------------------------------------------- */
 
-describe("importProgbatToAffaire — bulk insert objets", () => {
-  it("insère N objets avec tous les champs requis", async () => {
+describe("importProgbatToAffaire — appel RPC atomique", () => {
+  it("appelle import_progbat_atomique avec affaireId + payload objets", async () => {
     const res = await importProgbatToAffaire({
       affaireId: AFF_ID,
       objets: [
@@ -103,22 +105,20 @@ describe("importProgbatToAffaire — bulk insert objets", () => {
     });
 
     expect(res.insertedObjets).toBe(2);
-    const insert = captured.find((c) => c.table === "fabrication_objets" && c.op === "insert");
-    expect(insert).toBeTruthy();
-    const rows = insert!.payload as Array<Record<string, unknown>>;
-    expect(rows).toHaveLength(2);
+    expect(rpcCalls).toHaveLength(1);
+    expect(rpcCalls[0].fn).toBe("import_progbat_atomique");
+    expect(rpcCalls[0].args.p_affaire_id).toBe(AFF_ID);
+    const objets = rpcCalls[0].args.p_objets as Array<Record<string, unknown>>;
+    expect(objets).toHaveLength(2);
 
-    expect(rows[0]).toMatchObject({
-      affaire_id: AFF_ID,
+    expect(objets[0]).toMatchObject({
       devis_id: DEV_ID,
       reference: "1",
       nom: "Bar central",
       quantite: 1,
-      ordre: 0,
       heures_prevues_be: 8,
       heures_prevues_bois: 24,
       heures_prevues_peinture: 6,
-      heures_prevues_numerique: 0,
       budget_materiaux: 800,
       type_finition: "peinture",
       a_dessiner: true,
@@ -126,10 +126,9 @@ describe("importProgbatToAffaire — bulk insert objets", () => {
       est_brut: false,
     });
 
-    expect(rows[1]).toMatchObject({
+    expect(objets[1]).toMatchObject({
       reference: "4",
       quantite: 3,
-      ordre: 1,
       heures_prevues_numerique: 18,
       a_usiner: true,
       a_emballer: true,
@@ -155,11 +154,11 @@ describe("importProgbatToAffaire — bulk insert objets", () => {
       heuresMontage: null,
       heuresDemontage: null,
     });
-    const rows = captured[0].payload as Array<Record<string, unknown>>;
-    expect(rows[0].reference).toBe("OBJ-1");
+    const objets = rpcCalls[0].args.p_objets as Array<Record<string, unknown>>;
+    expect(objets[0].reference).toBe("OBJ-1");
   });
 
-  it("ne fait pas d'insert si liste objets vide", async () => {
+  it("appelle le RPC même si liste objets vide (le RPC gère le cas heures-only)", async () => {
     const res = await importProgbatToAffaire({
       affaireId: AFF_ID,
       objets: [],
@@ -167,12 +166,13 @@ describe("importProgbatToAffaire — bulk insert objets", () => {
       heuresDemontage: null,
     });
     expect(res.insertedObjets).toBe(0);
-    const inserts = captured.filter((c) => c.op === "insert");
-    expect(inserts).toHaveLength(0);
+    expect(rpcCalls).toHaveLength(1);
+    expect(rpcCalls[0].args.p_heures_montage).toBe(10);
+    expect(rpcCalls[0].args.p_heures_demontage).toBeUndefined();
   });
 
-  it("propage une erreur insert", async () => {
-    nextError = { message: "insert failed" };
+  it("propage une erreur RPC simple", async () => {
+    nextRpcResponse = { data: null, error: { message: "DB down" } };
     await expect(
       importProgbatToAffaire({
         affaireId: AFF_ID,
@@ -191,141 +191,89 @@ describe("importProgbatToAffaire — bulk insert objets", () => {
         heuresMontage: null,
         heuresDemontage: null,
       }),
-    ).rejects.toThrow(/insert failed/);
+    ).rejects.toThrow(/DB down/);
+  });
+
+  it("détecte un conflit de référence (CONFLICT_REFERENCE) et lève ImportProgbatConflictError", async () => {
+    const conflicts = [{ reference: "1.1", existing_id: "abc-123", nom: "Bar" }];
+    nextRpcResponse = {
+      data: null,
+      error: { message: `CONFLICT_REFERENCE: ${JSON.stringify(conflicts)}` },
+    };
+    await expect(
+      importProgbatToAffaire({
+        affaireId: AFF_ID,
+        objets: [
+          {
+            nom: "Bar",
+            reference: "1.1",
+            quantite: 1,
+            heures: emptyHeures(),
+            budgetMateriaux: 0,
+            typeFinition: "aucune",
+            flags: emptyFlags(),
+            devisId: null,
+          },
+        ],
+        heuresMontage: null,
+        heuresDemontage: null,
+      }),
+    ).rejects.toThrow(ImportProgbatConflictError);
   });
 });
 
 /* -------------------------------------------------------------------------- */
-/* UPDATE heures chantier conditionnel                                        */
+/* UPDATE heures chantier conditionnel (déléguée au RPC)                      */
 /* -------------------------------------------------------------------------- */
 
-describe("importProgbatToAffaire — UPDATE heures chantier", () => {
-  it("UPDATE les 2 heures si les 2 sont fournies", async () => {
+describe("importProgbatToAffaire — heures chantier", () => {
+  it("transmet les 2 heures si fournies", async () => {
     await importProgbatToAffaire({
       affaireId: AFF_ID,
       objets: [],
       heuresMontage: 40,
       heuresDemontage: 16,
     });
-    const upd = captured.find((c) => c.table === "affaires" && c.op === "update");
-    expect(upd).toBeTruthy();
-    expect(upd!.payload).toEqual({ heures_prevues_montage: 40, heures_prevues_demontage: 16 });
-    expect(upd!.eqArgs).toEqual(["id", AFF_ID]);
+    expect(rpcCalls[0].args.p_heures_montage).toBe(40);
+    expect(rpcCalls[0].args.p_heures_demontage).toBe(16);
   });
 
-  it("UPDATE uniquement montage si démontage = null (pas d'écrasement)", async () => {
+  it("omet démontage si null", async () => {
     await importProgbatToAffaire({
       affaireId: AFF_ID,
       objets: [],
       heuresMontage: 20,
       heuresDemontage: null,
     });
-    const upd = captured.find((c) => c.op === "update");
-    expect(upd!.payload).toEqual({ heures_prevues_montage: 20 });
-    expect((upd!.payload as Record<string, unknown>).heures_prevues_demontage).toBeUndefined();
+    expect(rpcCalls[0].args.p_heures_montage).toBe(20);
+    expect(rpcCalls[0].args.p_heures_demontage).toBeUndefined();
   });
 
-  it("UPDATE uniquement démontage si montage = null", async () => {
+  it("omet montage si null", async () => {
     await importProgbatToAffaire({
       affaireId: AFF_ID,
       objets: [],
       heuresMontage: null,
       heuresDemontage: 8,
     });
-    const upd = captured.find((c) => c.op === "update");
-    expect(upd!.payload).toEqual({ heures_prevues_demontage: 8 });
+    expect(rpcCalls[0].args.p_heures_montage).toBeUndefined();
+    expect(rpcCalls[0].args.p_heures_demontage).toBe(8);
   });
 
-  it("aucun UPDATE si les 2 sont décochés", async () => {
-    await importProgbatToAffaire({
-      affaireId: AFF_ID,
-      objets: [
-        {
-          nom: "X",
-          reference: "X",
-          quantite: 1,
-          heures: emptyHeures(),
-          budgetMateriaux: 0,
-          typeFinition: "aucune",
-          flags: emptyFlags(),
-          devisId: null,
-        },
-      ],
-      heuresMontage: null,
-      heuresDemontage: null,
-    });
-    const updates = captured.filter((c) => c.op === "update");
-    expect(updates).toHaveLength(0);
-  });
-
-  it("autorise heures = 0 (vs null) → UPDATE quand même", async () => {
+  it("autorise heures = 0 (transmis au RPC, pas confondu avec null)", async () => {
     await importProgbatToAffaire({
       affaireId: AFF_ID,
       objets: [],
       heuresMontage: 0,
       heuresDemontage: 0,
     });
-    const upd = captured.find((c) => c.op === "update");
-    expect(upd!.payload).toEqual({ heures_prevues_montage: 0, heures_prevues_demontage: 0 });
+    expect(rpcCalls[0].args.p_heures_montage).toBe(0);
+    expect(rpcCalls[0].args.p_heures_demontage).toBe(0);
   });
 });
 
 /* -------------------------------------------------------------------------- */
-/* Idempotence : re-import → 2 inserts indépendants (pas de dédup applicatif) */
-/* -------------------------------------------------------------------------- */
-
-describe("importProgbatToAffaire — idempotence applicative", () => {
-  it("appel 2× → 2 inserts indépendants (le dédup est de la responsabilité de l'utilisateur)", async () => {
-    const payload = {
-      affaireId: AFF_ID,
-      objets: [
-        {
-          nom: "X",
-          reference: "X",
-          quantite: 1,
-          heures: emptyHeures(),
-          budgetMateriaux: 0,
-          typeFinition: "aucune" as const,
-          flags: emptyFlags(),
-          devisId: null,
-        },
-      ],
-      heuresMontage: null,
-      heuresDemontage: null,
-    };
-    await importProgbatToAffaire(payload);
-    await importProgbatToAffaire(payload);
-    const inserts = captured.filter((c) => c.op === "insert");
-    expect(inserts).toHaveLength(2);
-  });
-
-  it("sanitise nom vide → 'Objet sans nom' n'est pas appliqué côté helper (c'est l'UI qui sanitise)", async () => {
-    // Le helper accepte le nom tel quel ; vérifie qu'il ne mute pas.
-    await importProgbatToAffaire({
-      affaireId: AFF_ID,
-      objets: [
-        {
-          nom: "  Bar  ",
-          reference: "1",
-          quantite: 2,
-          heures: emptyHeures(),
-          budgetMateriaux: 0,
-          typeFinition: "aucune",
-          flags: emptyFlags(),
-          devisId: null,
-        },
-      ],
-      heuresMontage: null,
-      heuresDemontage: null,
-    });
-    const rows = captured[0].payload as Array<Record<string, unknown>>;
-    expect(rows[0].nom).toBe("  Bar  ");
-    expect(rows[0].quantite).toBe(2);
-  });
-});
-
-/* -------------------------------------------------------------------------- */
-/* Confidence : high / medium / low                                           */
+/* Confidence : high / medium / low (parser, inchangé)                        */
 /* -------------------------------------------------------------------------- */
 
 describe("ObjetCandidat.confidence — classification", () => {
@@ -356,7 +304,7 @@ describe("ObjetCandidat.confidence — classification", () => {
       ["N°", "Désignation", "Qté", "Unité", "PU HT", "Total HT", "Temps prévu"],
       ["1", "Banc", 1, "u", null, null, null],
       ["1.1", "Construction bois", 1, "ff", 50, 600, 12],
-      ["1.2", "Liste de matiere pour bois", 1, "ff", null, null, null], // matière sans montant
+      ["1.2", "Liste de matiere pour bois", 1, "ff", null, null, null],
     ];
     const result = parseDevisProgbatFromMatrix(matrix);
     const obj = result.objetsCandidats[0];
@@ -367,7 +315,6 @@ describe("ObjetCandidat.confidence — classification", () => {
 
   it("objet quantité > 1 multiplie correctement les heures", () => {
     const result = parseDevisProgbatFromMatrix(FIXTURE_D2153);
-    // Banquette VIP qté=2 → BE 4h × 2 = 8, Métal 15h × 2 = 30, Tapisserie 12h × 2 = 24
     const banquette = result.objetsCandidats.find((o) => /banquette/i.test(o.nom));
     expect(banquette).toBeTruthy();
     expect(banquette!.quantite).toBe(2);
@@ -378,30 +325,25 @@ describe("ObjetCandidat.confidence — classification", () => {
 });
 
 /* -------------------------------------------------------------------------- */
-/* Filtrage lots devis (logique côté UI testée via shape)                     */
+/* Filtrage lots devis (devisId)                                              */
 /* -------------------------------------------------------------------------- */
 
 describe("Filtrage lot devis (devisId)", () => {
-  it("devisId null → champ devis_id null en base", async () => {
+  it("devisId null → champ devis_id null transmis au RPC", async () => {
     await importProgbatToAffaire({
       affaireId: AFF_ID,
       objets: [
         {
-          nom: "X",
-          reference: "X",
-          quantite: 1,
-          heures: emptyHeures(),
-          budgetMateriaux: 0,
-          typeFinition: "aucune",
-          flags: emptyFlags(),
-          devisId: null,
+          nom: "X", reference: "X", quantite: 1,
+          heures: emptyHeures(), budgetMateriaux: 0,
+          typeFinition: "aucune", flags: emptyFlags(), devisId: null,
         },
       ],
       heuresMontage: null,
       heuresDemontage: null,
     });
-    const rows = captured[0].payload as Array<Record<string, unknown>>;
-    expect(rows[0].devis_id).toBeNull();
+    const objets = rpcCalls[0].args.p_objets as Array<Record<string, unknown>>;
+    expect(objets[0].devis_id).toBeNull();
   });
 
   it("devisId fourni → propagé tel quel", async () => {
@@ -409,21 +351,71 @@ describe("Filtrage lot devis (devisId)", () => {
       affaireId: AFF_ID,
       objets: [
         {
-          nom: "X",
-          reference: "X",
-          quantite: 1,
-          heures: emptyHeures(),
-          budgetMateriaux: 0,
-          typeFinition: "aucune",
-          flags: emptyFlags(),
-          devisId: DEV_ID,
+          nom: "X", reference: "X", quantite: 1,
+          heures: emptyHeures(), budgetMateriaux: 0,
+          typeFinition: "aucune", flags: emptyFlags(), devisId: DEV_ID,
         },
       ],
       heuresMontage: null,
       heuresDemontage: null,
     });
-    const rows = captured[0].payload as Array<Record<string, unknown>>;
-    expect(rows[0].devis_id).toBe(DEV_ID);
+    const objets = rpcCalls[0].args.p_objets as Array<Record<string, unknown>>;
+    expect(objets[0].devis_id).toBe(DEV_ID);
+  });
+});
+
+/* -------------------------------------------------------------------------- */
+/* v0.39.0a-hotfix-import — Garde-fou anti-orphelins                          */
+/* -------------------------------------------------------------------------- */
+
+describe("v0.39.0a-hotfix-import — anti-orphelins", () => {
+  it("RPC atomique : aucun fallback INSERT direct possible", async () => {
+    // Le helper appelle uniquement supabase.rpc, jamais .from().insert().
+    // C'est ce qui garantit le rollback PL/pgSQL en cas d'erreur partielle.
+    await importProgbatToAffaire({
+      affaireId: AFF_ID,
+      objets: [
+        {
+          nom: "Bar", reference: "1", quantite: 1,
+          heures: emptyHeures(), budgetMateriaux: 0,
+          typeFinition: "aucune", flags: emptyFlags(), devisId: null,
+        },
+      ],
+      heuresMontage: 10,
+      heuresDemontage: 5,
+    });
+    expect(rpcCalls).toHaveLength(1);
+    expect(rpcCalls[0].fn).toBe("import_progbat_atomique");
+  });
+
+  it("ImportProgbatConflictError expose la liste des conflits", async () => {
+    const conflicts = [
+      { reference: "1.1", existing_id: "id-1", nom: "Bar" },
+      { reference: "2", existing_id: "id-2", nom: "Totem" },
+    ];
+    nextRpcResponse = {
+      data: null,
+      error: { message: `CONFLICT_REFERENCE: ${JSON.stringify(conflicts)}` },
+    };
+    try {
+      await importProgbatToAffaire({
+        affaireId: AFF_ID,
+        objets: [
+          {
+            nom: "Bar", reference: "1.1", quantite: 1,
+            heures: emptyHeures(), budgetMateriaux: 0,
+            typeFinition: "aucune", flags: emptyFlags(), devisId: null,
+          },
+        ],
+        heuresMontage: null,
+        heuresDemontage: null,
+      });
+      throw new Error("should have thrown");
+    } catch (err) {
+      expect(err).toBeInstanceOf(ImportProgbatConflictError);
+      expect((err as ImportProgbatConflictError).conflicts).toHaveLength(2);
+      expect((err as ImportProgbatConflictError).conflicts[0].reference).toBe("1.1");
+    }
   });
 });
 
@@ -432,7 +424,6 @@ describe("Filtrage lot devis (devisId)", () => {
 /* -------------------------------------------------------------------------- */
 
 describe("Garde RBAC page Progbat (logique)", () => {
-  // La page utilise `useAuth().isAdmin`. On vérifie ici la condition logique.
   function canAccess(role: "admin" | "chef_chantier" | "employe") {
     return role === "admin";
   }

@@ -2800,6 +2800,10 @@ export type Database = {
         Args: { _affaire_id: string; _date: string }
         Returns: boolean
       }
+      cleanup_fabrication_orphelins: {
+        Args: { p_affaire_id: string }
+        Returns: Json
+      }
       compute_affaire_typologie: { Args: { num: string }; Returns: string }
       create_notification: {
         Args: {
@@ -2901,6 +2905,15 @@ export type Database = {
           _new_affaire: Json
           _objets_fab?: Json
           _postes: Json
+        }
+        Returns: Json
+      }
+      import_progbat_atomique: {
+        Args: {
+          p_affaire_id: string
+          p_heures_demontage?: number
+          p_heures_montage?: number
+          p_objets: Json
         }
         Returns: Json
       }
