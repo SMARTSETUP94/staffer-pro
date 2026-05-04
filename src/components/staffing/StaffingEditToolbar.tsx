@@ -23,14 +23,16 @@ import {
 import { useEditStore } from "@/lib/staffing/edit-store";
 import { flushStepEdits } from "@/server/staffing-flush.functions";
 
-const AUTOSAVE_IDLE_MS = 2 * 60 * 1000; // 2 min
+const AUTOSAVE_IDLE_MS = 5 * 60 * 1000; // 5 min (v0.39.0d — réduit fréquence reload)
 
 export function StaffingEditToolbar({
   planId,
   onSaved,
 }: {
   planId: string;
-  /** Appelé après flush réussi pour recharger les données serveur */
+  /** Appelé après flush MANUEL réussi pour recharger les données serveur.
+   * Les flushes silencieux (autosave + unmount) NE déclenchent PAS de reload :
+   * c'est nous qui avons écrit, donc le data local est déjà à jour. */
   onSaved: () => void;
 }) {
   const flush = useServerFn(flushStepEdits);
