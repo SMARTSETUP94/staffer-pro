@@ -266,3 +266,18 @@ export function getMergeButtonState(
     count: selectedIdxs.length,
   };
 }
+
+/**
+ * v0.39.2 — État du bouton "Fusionner (cross-section)" global.
+ * Actif dès que ≥2 objets sont cochés, même répartis sur des sections différentes.
+ */
+export function getGlobalMergeState(objets: EditableObjet[]): MergeButtonState {
+  const selectedIdxs = objets
+    .map((o, i) => (o.selected ? i : -1))
+    .filter((i) => i >= 0);
+  return {
+    canMerge: selectedIdxs.length >= 2,
+    selectedIdxs,
+    count: selectedIdxs.length,
+  };
+}
