@@ -711,8 +711,6 @@ export const GanttInteractif = forwardRef<
             const objSteps = mergedSteps.filter(
               (s) => s.objet_id === obj.objet_id && s.start_date !== "TBD",
             );
-            const boisStep = getObjStepByMetier(obj.objet_id, 1);
-            const peintStep = getObjStepByMetier(obj.objet_id, 3);
             const isExpanded = expandedObjets.has(obj.id);
             return (
               <div key={obj.id} className="border-b border-border bg-background/20">
@@ -767,32 +765,6 @@ export const GanttInteractif = forwardRef<
                         {obj.heures_total.toFixed(0)} h · {objSteps.length} étape
                         {objSteps.length > 1 ? "s" : ""}
                       </p>
-                      {isExpanded && boisStep && (
-                        <PersStepper
-                          value={boisStep.pers}
-                          metier="Bois"
-                          hasWarn={(impactByStep[boisStep.id]?.length ?? 0) > 0}
-                          hasLocalEdit={
-                            edits[boisStep.id]?.pers !== undefined ||
-                            edits[boisStep.id]?.manual_shift !== undefined
-                          }
-                          onChange={(v) => handleSetPers(boisStep, v)}
-                          size="normal"
-                        />
-                      )}
-                      {isExpanded && peintStep && (
-                        <PersStepper
-                          value={peintStep.pers}
-                          metier="Peint"
-                          hasWarn={(impactByStep[peintStep.id]?.length ?? 0) > 0}
-                          hasLocalEdit={
-                            edits[peintStep.id]?.pers !== undefined ||
-                            edits[peintStep.id]?.manual_shift !== undefined
-                          }
-                          onChange={(v) => handleSetPers(peintStep, v)}
-                          size="normal"
-                        />
-                      )}
                     </div>
                   </div>
                 </div>
