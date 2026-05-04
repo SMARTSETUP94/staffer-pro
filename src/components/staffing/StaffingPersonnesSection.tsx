@@ -408,6 +408,7 @@ function ListView({
       {grouped.map(({ step, days }) => {
         const k = METIER_KEY_BY_ID[step.metier_id] ?? "Manut";
         const objLabel = step.objet_id ? (objetsLabel[step.objet_id] ?? step.objet_id) : "Global";
+        const parsed = step.objet_id ? parseObjetLabel(objLabel) : { reference: "Global", nom: "" };
         const stepAssigns = assignments.filter((a) => a.step_id === step.id);
         const cov = coverByStep[step.id];
         const targetPersDays = cov?.target ?? step.pers * effectiveSpanDays(step);
@@ -425,7 +426,11 @@ function ListView({
                     style={{ backgroundColor: METIER_COLOR[k] }}
                   />
                   <span className="font-bold text-sm">{METIER_LABEL[k]}</span>
-                  <span className="text-xs text-muted-foreground truncate max-w-[260px]">{objLabel}</span>
+                  <ObjetRefLabel
+                    reference={parsed.reference}
+                    nom={parsed.nom}
+                    className="max-w-[280px]"
+                  />
                   <span className="ml-auto flex items-center gap-2 text-xs">
                     <span className="font-mono">
                       {step.pers}p × {formatSpanLabel(step)}
