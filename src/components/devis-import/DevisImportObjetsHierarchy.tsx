@@ -695,6 +695,116 @@ export function DevisImportObjetsHierarchy({ objets, setObjets, integrityChecks 
           </Button>
         </div>
       </CardContent>
+
+      {/* v0.39.1 — Dialog fusion d'objets */}
+      <Dialog open={mergeDialog !== null} onOpenChange={(o) => !o && setMergeDialog(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Merge className="h-4 w-4" />
+              Fusionner {mergeDialog?.objetIdxs.length ?? 0} objets
+            </DialogTitle>
+            <DialogDescription>
+              Les heures de chaque métier seront sommées. Les références sources seront tracées
+              dans la description.
+            </DialogDescription>
+          </DialogHeader>
+
+          {mergeDialog && (
+            <div className="space-y-3">
+              <div className="rounded-md border border-border bg-muted/30 p-2 text-xs">
+                <p className="mb-1 font-medium">Objets sources :</p>
+                <ul className="space-y-0.5">
+                  {mergeDialog.objetIdxs.map((i) => {
+                    const o = objets[i];
+                    if (!o) return null;
+                    return (
+                      <li key={i} className="flex justify-between gap-2">
+                        <span className="truncate">
+                          <span className="font-mono text-muted-foreground">{o.numero}</span>{" "}
+                          {o.nom}
+                        </span>
+                        <span className="tabular-nums text-muted-foreground">
+                          {objetTotalHeures(o)} h
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
+                <p className="mt-1.5 border-t border-border/60 pt-1.5 text-right font-medium">
+                  Total fusionné :{" "}
+                  {round2(
+                    mergeDialog.objetIdxs.reduce(
+                      (s, i) => s + (objets[i] ? objetTotalHeures(objets[i]!) : 0),
+                      0,
+                    ),
+                  )}{" "}
+                  h
+                </p>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="merge-numero" className="text-xs">
+                  Référence du nouvel objet
+                </Label>
+                <Input
+                  id="merge-numero"
+                  value={mergeDialog.newNumero}
+                  onChange={(e) =>
+                    setMergeDialog((m) => (m ? { ...m, newNumero: e.target.value } : m))
+                  }
+                  placeholder="ex: BAR"
+                  className="h-8 font-mono text-sm"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="merge-nom" className="text-xs">
+                  Nom du nouvel objet
+                </Label>
+                <Input
+                  id="merge-nom"
+                  value={mergeDialog.newNom}
+                  onChange={(e) =>
+                    setMergeDialog((m) => (m ? { ...m, newNom: e.target.value } : m))
+                  }
+                  placeholder="ex: Bar complet"
+                  className="h-8 text-sm"
+                />
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setMergeDialog(null)}>
+              Annuler
+            </Button>
+            <Button
+              type="button"
+              disabled={
+                !mergeDialog ||
+                !mergeDialog.newNumero.trim() ||
+                !mergeDialog.newNom.trim()
+              }
+              onClick={() => {
+                if (!mergeDialog) return;
+                setObjets((prev) =>
+                  mergeObjetsInSection(
+                    prev,
+                    mergeDialog.objetIdxs,
+                    mergeDialog.newNumero.trim(),
+                    mergeDialog.newNom.trim(),
+                  ),
+                );
+                setMergeDialog(null);
+              }}
+            >
+              <Merge className="mr-1.5 h-3.5 w-3.5" />
+              Fusionner
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
