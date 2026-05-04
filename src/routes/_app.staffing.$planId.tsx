@@ -391,3 +391,23 @@ function StaffingPlanPage() {
     </div>
   );
 }
+
+/** v0.39.0f — Toggle global "afficher préfixe devis" pour les libellés objets. */
+function DevisPrefixToggle() {
+  const [showPrefix, setShowPrefix] = useShowDevisPrefix();
+  return (
+    <Button
+      size="sm"
+      variant="ghost"
+      className="ml-auto text-xs text-muted-foreground"
+      onClick={() => setShowPrefix(!showPrefix)}
+      title={
+        showPrefix
+          ? "Masquer le préfixe devis (ex: D-202604-2141 (1)-)"
+          : "Afficher le préfixe devis"
+      }
+    >
+      {showPrefix ? "Masquer préfixe devis" : "Afficher préfixe devis"}
+    </Button>
+  );
+}
