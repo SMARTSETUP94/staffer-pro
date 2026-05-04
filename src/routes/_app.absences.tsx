@@ -35,6 +35,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { ABSENCE_ICON, ABSENCE_LABEL } from "@/lib/absence-helpers";
+import { fuzzyMatch } from "@/lib/string-normalize";
 import type { AbsenceType } from "@/hooks/use-planning-data";
 
 interface AbsenceRow {
@@ -98,6 +99,7 @@ function AbsencesPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [filter, setFilter] = useState<"all" | "future" | "pending">("future");
+  const [searchEmploye, setSearchEmploye] = useState("");
   const [prefillHandled, setPrefillHandled] = useState(false);
   const [conflicts, setConflicts] = useState<ConflictAssignation[] | null>(null);
   const [conflictBusy, setConflictBusy] = useState(false);
@@ -157,12 +159,19 @@ function AbsencesPage() {
 
   const filtered = useMemo(() => {
     const today = format(new Date(), "yyyy-MM-dd");
+    const q = searchEmploye.trim();
     return rows.filter((r) => {
-      if (filter === "future") return r.date_fin >= today;
-      if (filter === "pending") return !r.valide;
+      if (filter === "future" && r.date_fin < today) return false;
+      if (filter === "pending" && r.valide) return false;
+      if (q && r.employes) {
+        const full = `${r.employes.prenom} ${r.employes.nom}`;
+        if (!fuzzyMatch(full, q)) return false;
+      } else if (q && !r.employes) {
+        return false;
+      }
       return true;
     });
-  }, [rows, filter]);
+  }, [rows, filter, searchEmploye]);
 
   function openNew() {
     setEditing({
@@ -327,20 +336,31 @@ function AbsencesPage() {
         </Button>
       </div>
 
-      <div className="mb-4 flex gap-1 rounded-lg border bg-muted/30 p-1 text-xs">
-        {(["future", "pending", "all"] as const).map((f) => (
-          <button
-            key={f}
-            onClick={() => setFilter(f)}
-            className={`rounded-md px-3 py-1.5 font-semibold transition-colors ${
-              filter === f
-                ? "bg-background text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {f === "future" ? "À venir / en cours" : f === "pending" ? "À valider" : "Toutes"}
-          </button>
-        ))}
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <div className="flex gap-1 rounded-lg border bg-muted/30 p-1 text-xs">
+          {(["future", "pending", "all"] as const).map((f) => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={`rounded-md px-3 py-1.5 font-semibold transition-colors ${
+                filter === f
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {f === "future" ? "À venir / en cours" : f === "pending" ? "À valider" : "Toutes"}
+            </button>
+          ))}
+        </div>
+        <div className="relative flex-1 min-w-[200px] max-w-xs">
+          <Input
+            type="search"
+            placeholder="Rechercher un employé…"
+            value={searchEmploye}
+            onChange={(e) => setSearchEmploye(e.target.value)}
+            className="h-8 text-sm"
+          />
+        </div>
       </div>
 
       {loading ? (
