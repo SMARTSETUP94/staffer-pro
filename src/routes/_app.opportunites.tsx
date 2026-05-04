@@ -215,6 +215,7 @@ function OpportunitesPage() {
   // v0.29.2 — Filtrage CA + typologie FUTURE (la typologie dérivée du numero
   // est inutile ici car toutes les opps sont 9XXX = prototype par construction).
   const typoSet = useMemo(() => new Set(typoFilter), [typoFilter]);
+  const normalizedQuery = searchQuery.trim().toLowerCase();
   const oppsFiltrees = useMemo(() => {
     return opps.filter((o) => {
       if (filterCa && filterCa !== "__all__" && o.charge_affaires_id !== filterCa)
@@ -222,9 +223,13 @@ function OpportunitesPage() {
       if (typoSet.size > 0) {
         if (!o.typologie_future || !typoSet.has(o.typologie_future)) return false;
       }
+      if (normalizedQuery) {
+        const haystack = `${o.numero ?? ""} ${o.client ?? ""} ${o.nom ?? ""}`.toLowerCase();
+        if (!haystack.includes(normalizedQuery)) return false;
+      }
       return true;
     });
-  }, [opps, filterCa, typoSet]);
+  }, [opps, filterCa, typoSet, normalizedQuery]);
 
   const typoCounts = useMemo(() => {
     const counts: Partial<Record<AffaireTypologie, number>> = {};
