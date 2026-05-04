@@ -3,6 +3,7 @@
 // Flush via bouton "Enregistrer (N)" ou autosave 2 min idle ou unmount.
 // v0.35.10 P1 — historique undo (Ctrl+Z) : snapshots des `edits` avant chaque mutation.
 import { create } from "zustand";
+import { addWorkingDays } from "./date-utils";
 
 export interface StepEdit {
   /** undefined = pas modifié */
@@ -172,6 +173,10 @@ export const useEditStore = create<EditState>((set, get) => ({
   },
 }));
 
+export function getStepEndDate(step: { start_date: string; span_days: number }): string {
+  return addWorkingDays(step.start_date, Math.max(1, step.span_days) - 1);
+}
+
 /** Helper hook : retourne le step "merged" = serveur + edits locaux */
 export function applyEdits<T extends { id: string; pers: number; start_date: string; span_days: number; source: string }>(
   step: T,
@@ -198,9 +203,9 @@ export function applyEdits<T extends { id: string; pers: number; start_date: str
   }
   const shiftDelta = (edit.manual_shift ?? baseManualShift) - baseManualShift;
   if (shiftDelta !== 0) {
-    const d = new Date(startDate + "T00:00:00Z");
-    d.setUTCDate(d.getUTCDate() + shiftDelta);
-    startDate = d.toISOString().slice(0, 10);
+    // v0.39.0b — DateShifter doit translater toute la barre :
+    // gauche = start-1 ET end-1, droite = start+1 ET end+1. La durée reste donc constante.
+    startDate = addWorkingDays(startDate, shiftDelta);
     source = "manual";
   }
   return { ...step, pers, start_date: startDate, span_days: spanDays, source };

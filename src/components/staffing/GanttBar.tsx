@@ -179,6 +179,7 @@ export function GanttBar({
           size="icon"
           variant="ghost"
           className="h-5 w-5 shrink-0 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-foreground/10"
+          data-testid="gantt-shift-left"
           onClick={(e) => {
             e.stopPropagation();
             onShift(-1);
@@ -221,6 +222,7 @@ export function GanttBar({
           size="icon"
           variant="ghost"
           className="h-5 w-5 shrink-0 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-foreground/10"
+          data-testid="gantt-shift-right"
           onClick={(e) => {
             e.stopPropagation();
             onResetShift();

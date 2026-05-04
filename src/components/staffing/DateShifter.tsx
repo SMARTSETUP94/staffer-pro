@@ -1,4 +1,4 @@
-// v0.39.0 — Chevrons ±1j pour décaler start_date d'une barre métier.
+// v0.39.0 — Chevrons ±1j pour translater une barre métier complète (durée constante).
 // Réutilise edit-store.manual_shift (déjà branché côté serveur via flush).
 // Cumulatif : delta vient s'ajouter au manual_shift courant.
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
@@ -26,6 +26,7 @@ export function DateShifter({ manualShift, disabled, onShift, onReset, size = "c
         onClick={() => onShift(-1)}
         disabled={disabled}
         aria-label="Décaler -1 jour"
+        data-testid="date-shifter-left"
         title="-1 j"
       >
         <ChevronLeft className="h-3 w-3" />
@@ -43,6 +44,7 @@ export function DateShifter({ manualShift, disabled, onShift, onReset, size = "c
         onClick={() => onShift(1)}
         disabled={disabled}
         aria-label="Décaler +1 jour"
+        data-testid="date-shifter-right"
         title="+1 j"
       >
         <ChevronRight className="h-3 w-3" />
