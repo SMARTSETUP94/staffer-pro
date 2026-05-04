@@ -307,6 +307,35 @@ export function DevisImportObjetsHierarchy({ objets, setObjets, integrityChecks 
             >
               <TriangleAlert className="mr-1 h-3 w-3" />À mapper {counters.manuel} • {counters.heuresManuel} h
             </Badge>
+            {(() => {
+              const globalState = getGlobalMergeState(objets);
+              if (!globalState.canMerge) return null;
+              return (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  data-testid="btn-merge-global"
+                  className="h-7 gap-1.5 border-primary/40 bg-primary/5 text-xs text-primary hover:bg-primary/10"
+                  onClick={() => {
+                    const firstObj = objets[globalState.selectedIdxs[0]];
+                    setMergeDialog({
+                      sectionKey: "_global",
+                      objetIdxs: globalState.selectedIdxs,
+                      newNumero: firstObj?.numero ?? "",
+                      newNom: globalState.selectedIdxs
+                        .map((i) => objets[i]?.nom)
+                        .filter(Boolean)
+                        .join(" + ")
+                        .slice(0, 80),
+                    });
+                  }}
+                >
+                  <Merge className="h-3.5 w-3.5" />
+                  Fusionner ({globalState.count}) cross-section
+                </Button>
+              );
+            })()}
           </div>
         </div>
 
