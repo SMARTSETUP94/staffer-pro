@@ -248,9 +248,17 @@ export const GanttInteractif = forwardRef<
     // v0.39.0b FIX — formule demi-journée (cohérente avec VolumeCard) :
     // pers × span_demi_jours × H_HALF (4h). L'ancienne `pers × 8 × span_days`
     // surévaluait car span_days = ceil(demi/2) (ex: 5 demi → 3j → 24h ≠ 20h).
+    const breakdownByMetier: Record<string, { label: string; h: number; persDemi: number; steps: number }> = {};
     for (const s of mergedSteps) {
       const demi = s.span_demi_jours ?? s.span_days * DEMI_PER_DAY;
-      totalH += s.pers * demi * H_HALF;
+      const h = s.pers * demi * H_HALF;
+      totalH += h;
+      const key = METIER_KEY_BY_ID[s.metier_id] ?? `m${s.metier_id}`;
+      const label = METIER_LABEL[key as keyof typeof METIER_LABEL] ?? key;
+      if (!breakdownByMetier[key]) breakdownByMetier[key] = { label, h: 0, persDemi: 0, steps: 0 };
+      breakdownByMetier[key].h += h;
+      breakdownByMetier[key].persDemi += s.pers * demi;
+      breakdownByMetier[key].steps += 1;
     }
     for (const v of Object.values(mergedDailyLoad)) if (v > pic) pic = v;
     const hDevis = (preParamConfigs ?? []).reduce(
@@ -265,7 +273,8 @@ export const GanttInteractif = forwardRef<
       : hasSoft
         ? "text-amber-600 dark:text-amber-400"
         : "text-emerald-600 dark:text-emerald-400";
-    return { totalH, pic, statut, statutColor, hDevis };
+    const breakdown = Object.values(breakdownByMetier).sort((a, b) => b.h - a.h);
+    return { totalH, pic, statut, statutColor, hDevis, breakdown };
   }, [data, mergedSteps, mergedDailyLoad, preParamConfigs]);
 
   /** Pré-vol : simule l'impact, affiche toast + stocke pour badges (pas de commit serveur) */
