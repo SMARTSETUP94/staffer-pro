@@ -10,6 +10,7 @@ import {
   computeCounters,
   movePosteBetweenObjets,
   recomputeObjet,
+  mergeObjetsInSection,
   removeObjet,
   removePosteFromObjet,
   renamePoste,
