@@ -30,6 +30,11 @@ import { BulkPersByMetierBar } from "./BulkPersByMetierBar";
 import { ChargeMetierSection } from "./ChargeMetierSection";
 import { PersStepper } from "./PersStepper";
 import { DateShifter } from "./DateShifter";
+import { CellEditPopover } from "./CellEditPopover";
+import {
+  computeCascadeForDurationChange,
+  computeCascadeForShift,
+} from "@/lib/staffing/cascade-aval";
 import type { ChantierMetierConfigRow } from "@/server/staffing-pre-parametrage.functions";
 import { AlerteBandeau } from "./AlerteBandeau";
 import { ResolveCncConflictDialog } from "./ResolveCncConflictDialog";
@@ -81,6 +86,8 @@ export const GanttInteractif = forwardRef<
   const setStepPersStore = useEditStore((s) => s.setStepPers);
   const setStepShiftStore = useEditStore((s) => s.setStepShift);
   const resetStepShiftStore = useEditStore((s) => s.resetStepShift);
+  const setStepSpanDemiStore = useEditStore((s) => s.setStepSpanDemi);
+  const resetStepSpanDemiStore = useEditStore((s) => s.resetStepSpanDemi);
   const edits = useEditStore((s) => s.edits);
 
   /** v0.38.4 — Treetable expand/collapse par objet (persist localStorage) */
