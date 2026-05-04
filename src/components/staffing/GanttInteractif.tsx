@@ -844,21 +844,38 @@ export const GanttInteractif = forwardRef<
                         />
                         <span className="text-muted-foreground">{METIER_LABEL[k]}</span>
                         <span className="ml-auto flex items-center gap-1.5">
-                          <PersStepper
-                            value={s.pers}
+                          <CellEditPopover
                             metier={k}
-                            hasWarn={hasImpact}
-                            hasLocalEdit={
-                              edits[s.id]?.pers !== undefined ||
-                              edits[s.id]?.manual_shift !== undefined
-                            }
-                            onChange={(v) => handleSetPers(s, v)}
-                          />
-                          <DateShifter
+                            pers={s.pers}
                             manualShift={localShift}
-                            onShift={(d) => handleShift(s, d)}
-                            onReset={() => handleResetShift(s.id)}
-                          />
+                            spanDemi={s.span_demi_jours ?? s.span_days * 2}
+                            hasShiftOverride={localShift !== 0}
+                            hasDurationOverride={edits[s.id]?.manual_span_demi != null}
+                            hasPersWarn={hasImpact}
+                            hasPersLocalEdit={
+                              edits[s.id]?.pers !== undefined ||
+                              edits[s.id]?.manual_shift !== undefined ||
+                              edits[s.id]?.manual_span_demi !== undefined
+                            }
+                            onShift={(d) => handleShiftCascade(s, d)}
+                            onResetShift={() => handleResetShift(s.id)}
+                            onSetPers={(v) => handleSetPers(s, v)}
+                            onSetSpanDemi={(v) => handleSetSpanDemiCascade(s, v)}
+                            onResetSpanDemi={() => resetStepSpanDemiStore(s.id)}
+                            label="Modifier cette étape (cascade aval)"
+                          >
+                            <button
+                              type="button"
+                              className="inline-flex h-6 items-center gap-1 rounded-md border border-border/60 bg-background px-2 text-[10px] font-semibold hover:bg-muted"
+                              data-testid="cell-edit-trigger"
+                              title="Modifier dates / durée / nb pers"
+                            >
+                              {s.pers}p · {(() => {
+                                const demi = s.span_demi_jours ?? s.span_days * 2;
+                                return demi % 2 === 0 ? `${demi / 2}j` : `${Math.floor(demi / 2)}½j`;
+                              })()}
+                            </button>
+                          </CellEditPopover>
                           <span className="font-mono text-[10px] font-semibold text-muted-foreground">
                             {Math.round(s.pers * (s.span_demi_jours ?? s.span_days * 2) * 4)}h
                           </span>
