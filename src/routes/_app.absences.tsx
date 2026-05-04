@@ -593,13 +593,26 @@ function AbsencesPage() {
                 Validée
               </label>
 
-              {duplicateAbsence && (
+              {overlappingAbsences.length > 0 && (
                 <div className="rounded-md border border-destructive/40 bg-destructive/10 p-2 text-xs text-destructive">
-                  ⚠️ Doublon : une absence{" "}
-                  <strong>{ABSENCE_LABEL[duplicateAbsence.type]}</strong> existe déjà pour cet
-                  employé du {format(parseISO(duplicateAbsence.date_debut), "dd/MM/yyyy")} au{" "}
-                  {format(parseISO(duplicateAbsence.date_fin), "dd/MM/yyyy")} (
-                  {duplicateAbsence.demi_journee ?? "Toute la période"}).
+                  <div className="mb-1 font-medium">
+                    ⚠️ Chevauchement détecté avec {overlappingAbsences.length} congé
+                    {overlappingAbsences.length > 1 ? "s" : ""} existant
+                    {overlappingAbsences.length > 1 ? "s" : ""} :
+                  </div>
+                  <ul className="space-y-1 pl-4">
+                    {overlappingAbsences.map((a) => (
+                      <li key={a.id} className="list-disc">
+                        <strong>{ABSENCE_LABEL[a.type]}</strong> —{" "}
+                        {format(parseISO(a.date_debut), "dd/MM/yyyy")}
+                        {a.date_debut !== a.date_fin && (
+                          <> → {format(parseISO(a.date_fin), "dd/MM/yyyy")}</>
+                        )}{" "}
+                        ({a.demi_journee ?? "Toute la période"})
+                        {a.valide ? "" : " — non validée"}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               )}
             </div>
