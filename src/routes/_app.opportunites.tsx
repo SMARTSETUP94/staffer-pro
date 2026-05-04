@@ -227,11 +227,12 @@ function OpportunitesPage() {
     return counts;
   }, [opps]);
 
-  // Groupage par statut (Kanban)
+  // Groupage par statut (Kanban) — exclut "Archivé" pour rester lisible
   const byStatut = useMemo(() => {
     const m = new Map<OpportuniteStatut, OpportuniteCardData[]>();
-    STATUT_ORDER.forEach((s) => m.set(s, []));
+    KANBAN_STATUT_ORDER.forEach((s) => m.set(s, []));
     oppsFiltrees.forEach((o) => {
+      if (o.statut_opportunite === "termine") return;
       m.get(o.statut_opportunite)?.push(o);
     });
     return m;
