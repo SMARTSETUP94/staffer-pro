@@ -66,19 +66,20 @@ Volume staffé v0.39.0c : KPI "Heures staffées" = Σ(pers × demi_jours × H_HA
 33. ✅ **v0.38.1.1** — Sync StaffingPersonnesSection demi-journée
 34. ✅ **v0.38.2** — UX polish Gantt (overflow label `•••` + ChargeMetierSection drilldown + chevron persist)
 
-### Livré v0.39 (Vue 3 + hotfixes KPI)
-35. ✅ **v0.39.0a** (4 mai 2026) — Vue 3 spec : pers/dates lecture seule, assignations + presence_pct éditables, "Re-staffer nominatif". HOTFIX React #310 useServerFn. BUG A DateShifter Vue 2 days étend dans 2 sens. BUG B autosave reload séquence calculate→SELECT updated_at.
-36. ✅ **v0.39.0b** (4 mai 2026) — BUG A.bis Vue 1 chevron : DateShifter ChargeMetierSection étend window dans 2 sens. KPI "Volume Total 744h" fantôme corrigé : formule `pers × span_demi × H_HALF`. Renommé "Heures staffées" + ratio devis. Boucle de fetch corrigée (useEditStore stable refs).
-37. ✅ **v0.39.0c** (4 mai 2026) — KPI "Heures staffées" auditable : Popover détail (formule, décomposition par métier, comparaison devis) + garde-fou volume = badge ±X.X% (ambre ≥5%, rouge ≥15%) + alerte `VOLUME_ECART_DEVIS` dans AlerteBandeau. Nouveau code AlertCode.
-38. ✅ **v0.39.0a-hotfix-import** (4 mai 2026) — Bug duplicate key import devis. RPC transactionnel `import_progbat_atomique` (pré-check conflits + ROLLBACK) + `cleanup_fabrication_orphelins` + patch `delete_devis_atomique`. Refactor `devis-progbat-import.ts` (plus d'INSERT direct). Cleanup one-shot 13 orphelins prod (affaires 5949/5951/5953). Voir mem://features/devis-import-orphelins-hotfix.
+### Livré v0.39 (Vue 3 + hotfixes KPI + Sprint 1 stabilité)
+35. ✅ **v0.39.0a/b/c** (4 mai 2026) — Vue 3 + KPI "Heures staffées" auditable + garde-fou volume + alerte `VOLUME_ECART_DEVIS`.
+36. ✅ **v0.39.0a-hotfix-import** (4 mai 2026) — RPC transactionnel `import_progbat_atomique` + `cleanup_fabrication_orphelins` + cleanup 13 orphelins prod. Voir mem://features/devis-import-orphelins-hotfix.
+37. ✅ **v0.39.1 Sprint 1 STABILITÉ** (4 mai 2026) — Audit RLS heures_saisies (verdict : RLS OK, BUG #33 non causé par RLS) + matrice `docs/rls-policies.md` + 2 nouveaux tests E2E (chef→employé heures, auto-staffing v0.39 Vue 1/2/3) + audit mutations client (Top 5 RPC à migrer, voir `docs/audit-mutations-client-v0391.md`) + auth-context shallow setSession (anti re-render TOKEN_REFRESHED). Voir mem://features/sprint-1-stabilite-v0391. **API Claude v0.41 REPORTÉE backlog.**
 
 ### À venir
-38. ⏳ **v0.34.x** — Batterie E2E par rôle (admin/chef/employé desktop/employé mobile) — INFRA POSÉE (playwright.config.ts, e2e/fixtures, .github/workflows/e2e.yml 4 shards). Reste seed comptes + ~48 tests.
-39. ⏳ **v0.36** — Sprint dette résiduelle : page admin véhicules + audit findings
-40. ⏳ **v0.37** — Polish UX transversal post-feedback terrain
-41. ⏳ **v0.39.x suite** — Logistique avancée : autorisations véhicules #56 + sous-traitants + historique + stats
-42. ⏳ **v0.40** — Phase 2 horaires précis (heure_debut/fin/pauses + nuit/sup/35h auto + SILAE enrichi)
-43. ⏳ **v0.41** — Claude API auto-staffing UNIQUEMENT 5XXX (proxy edge fn + skill + tools + fallback v0.35 + cache + cap + télémétrie). Tier CDI/CDD avant intérim.
+38. ⏳ **v0.39.2** — Migration RPC #1 bulk-assign-objet + #2 chef-saisit-pour-employe (corrige BUG #33 root cause)
+39. ⏳ **v0.39.3** — Migration RPC #3 bulk-saisie + #5 bulk-staffer
+40. ⏳ **v0.34.x** — Batterie E2E par rôle — INFRA POSÉE, reste seed comptes + ~48 tests
+41. ⏳ **v0.36** — Sprint dette résiduelle : page admin véhicules + audit findings
+42. ⏳ **v0.37** — Polish UX transversal post-feedback terrain
+43. ⏳ **v0.39.x suite** — Logistique avancée : autorisations véhicules #56 + sous-traitants
+44. ⏳ **v0.40** — Phase 2 horaires précis + RPC #4 feuille-route
+45. ⏳ **v0.41 (BACKLOG)** — Claude API auto-staffing — REPORTÉE par Gabin (focus stabilité d'abord)
 
 Voir roadmap consolidée détaillée : mem://roadmap/consolidee-2mai2026.
 
@@ -120,3 +121,4 @@ Voir roadmap consolidée détaillée : mem://roadmap/consolidee-2mai2026.
 - [Staffing personnes refonte UX](mem://features/staffing-personnes-refonte-ux) — v0.35.12
 - [Auth flow différencié rôle](mem://features/auth-flow-roles) — magic link + set-password
 - [E2E Playwright coverage](mem://features/e2e-playwright-coverage) — v0.34
+- [Sprint 1 stabilité v0.39.1](mem://features/sprint-1-stabilite-v0391) — RLS audit + 2 E2E + audit mutations + auth shallow
