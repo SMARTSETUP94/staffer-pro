@@ -647,9 +647,8 @@ export const GanttInteractif = forwardRef<
                   const demi = s.span_demi_jours ?? s.span_days * 2;
                   const halfStart = s.start_half_day ?? "AM";
                   const span = stepSpanInHalves(days, s.start_date, demi, halfStart);
-                  const stepEnd = new Date(s.start_date + "T00:00:00Z");
-                  stepEnd.setUTCDate(stepEnd.getUTCDate() + s.span_days - 1);
-                  const overDL = stepEnd.toISOString().slice(0, 10) > dateLivraison;
+                  const stepEnd = addWorkingDays(s.start_date, Math.max(1, s.span_days) - 1);
+                  const overDL = stepEnd > dateLivraison;
                   const k = METIER_KEY_BY_ID[s.metier_id] ?? "Manut";
                   const baseShift = data.step_overrides[s.id]?.manual_shift ?? 0;
                   const localShift = edits[s.id]?.manual_shift ?? baseShift;
@@ -803,9 +802,8 @@ export const GanttInteractif = forwardRef<
                   const demi = s.span_demi_jours ?? s.span_days * 2;
                   const halfStart = s.start_half_day ?? "AM";
                   const span = stepSpanInHalves(days, s.start_date, demi, halfStart);
-                  const stepEnd = new Date(s.start_date + "T00:00:00Z");
-                  stepEnd.setUTCDate(stepEnd.getUTCDate() + s.span_days - 1);
-                  const overDL = stepEnd.toISOString().slice(0, 10) > dateLivraison;
+                  const stepEnd = addWorkingDays(s.start_date, Math.max(1, s.span_days) - 1);
+                  const overDL = stepEnd > dateLivraison;
                   const k = METIER_KEY_BY_ID[s.metier_id] ?? "Manut";
                   const baseShift = data.step_overrides[s.id]?.manual_shift ?? 0;
                   const localShift = edits[s.id]?.manual_shift ?? baseShift;
