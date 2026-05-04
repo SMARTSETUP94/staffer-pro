@@ -16,6 +16,7 @@ import {
   updatePlanObject,
 } from "@/server/staffing.functions";
 import { useEditStore, applyEdits } from "@/lib/staffing/edit-store";
+import { addWorkingDays } from "@/lib/staffing/date-utils";
 import {
   workingDaysBetween,
   formatDayName,
@@ -233,9 +234,7 @@ export const GanttInteractif = forwardRef<
     for (const s of mergedSteps) {
       if (s.start_date === "TBD") continue;
       if (s.start_date < minStart) minStart = s.start_date;
-      const endD = new Date(s.start_date + "T00:00:00Z");
-      endD.setUTCDate(endD.getUTCDate() + Math.max(1, s.span_days) - 1);
-      const endISO = endD.toISOString().slice(0, 10);
+      const endISO = addWorkingDays(s.start_date, Math.max(1, s.span_days) - 1);
       if (endISO > maxEnd) maxEnd = endISO;
     }
     return workingDaysBetween(minStart, maxEnd);
