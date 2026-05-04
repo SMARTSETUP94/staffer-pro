@@ -159,12 +159,19 @@ function AbsencesPage() {
 
   const filtered = useMemo(() => {
     const today = format(new Date(), "yyyy-MM-dd");
+    const q = searchEmploye.trim();
     return rows.filter((r) => {
-      if (filter === "future") return r.date_fin >= today;
-      if (filter === "pending") return !r.valide;
+      if (filter === "future" && r.date_fin < today) return false;
+      if (filter === "pending" && r.valide) return false;
+      if (q && r.employes) {
+        const full = `${r.employes.prenom} ${r.employes.nom}`;
+        if (!fuzzyMatch(full, q)) return false;
+      } else if (q && !r.employes) {
+        return false;
+      }
       return true;
     });
-  }, [rows, filter]);
+  }, [rows, filter, searchEmploye]);
 
   function openNew() {
     setEditing({
