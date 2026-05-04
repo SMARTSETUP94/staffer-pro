@@ -19,6 +19,7 @@ import {
   ChevronRight,
   GripVertical,
   Info,
+  Merge,
   Plus,
   Trash2,
   TriangleAlert,
