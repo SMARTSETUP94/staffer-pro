@@ -100,6 +100,7 @@ function AbsencesPage() {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [filter, setFilter] = useState<"all" | "future" | "pending">("future");
   const [searchEmploye, setSearchEmploye] = useState("");
+  const [searchEmployeDialog, setSearchEmployeDialog] = useState("");
   const [prefillHandled, setPrefillHandled] = useState(false);
   const [conflicts, setConflicts] = useState<ConflictAssignation[] | null>(null);
   const [conflictBusy, setConflictBusy] = useState(false);
