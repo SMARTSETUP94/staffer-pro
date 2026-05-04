@@ -35,6 +35,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { ABSENCE_ICON, ABSENCE_LABEL } from "@/lib/absence-helpers";
+import { fuzzyMatch } from "@/lib/string-normalize";
 import type { AbsenceType } from "@/hooks/use-planning-data";
 
 interface AbsenceRow {
