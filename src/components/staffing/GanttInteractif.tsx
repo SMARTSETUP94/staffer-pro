@@ -30,6 +30,11 @@ import { BulkPersByMetierBar } from "./BulkPersByMetierBar";
 import { ChargeMetierSection } from "./ChargeMetierSection";
 import { PersStepper } from "./PersStepper";
 import { DateShifter } from "./DateShifter";
+import { CellEditPopover } from "./CellEditPopover";
+import {
+  computeCascadeForDurationChange,
+  computeCascadeForShift,
+} from "@/lib/staffing/cascade-aval";
 import type { ChantierMetierConfigRow } from "@/server/staffing-pre-parametrage.functions";
 import { AlerteBandeau } from "./AlerteBandeau";
 import { ResolveCncConflictDialog } from "./ResolveCncConflictDialog";
@@ -81,6 +86,8 @@ export const GanttInteractif = forwardRef<
   const setStepPersStore = useEditStore((s) => s.setStepPers);
   const setStepShiftStore = useEditStore((s) => s.setStepShift);
   const resetStepShiftStore = useEditStore((s) => s.resetStepShift);
+  const setStepSpanDemiStore = useEditStore((s) => s.setStepSpanDemi);
+  const resetStepSpanDemiStore = useEditStore((s) => s.resetStepSpanDemi);
   const edits = useEditStore((s) => s.edits);
 
   /** v0.38.4 — Treetable expand/collapse par objet (persist localStorage) */
@@ -337,6 +344,46 @@ export const GanttInteractif = forwardRef<
       setStepPersStore(step.id, pers);
     },
     [previewImpacts, setStepPersStore],
+  );
+
+  /**
+   * v0.39.2 — Vue 2 : modifier la durée d'une étape avec cascade AVAL
+   * (les étapes du même objet qui suivent sont décalées du même delta).
+   * À pers constant : heures totales préservées (algo applyEdits côté serveur).
+   */
+  const handleSetSpanDemiCascade = useCallback(
+    (step: PlanStep, newSpanDemi: number) => {
+      const oldSpanDemi = step.span_demi_jours ?? step.span_days * 2;
+      if (newSpanDemi === oldSpanDemi) return;
+      const oldSpanDays = Math.max(1, Math.ceil(oldSpanDemi / 2));
+      const newSpanDays = Math.max(1, Math.ceil(newSpanDemi / 2));
+      setStepSpanDemiStore(step.id, newSpanDemi);
+      // Cascade aval : décaler les steps suivants du MÊME objet du delta jours
+      const cascade = computeCascadeForDurationChange(mergedSteps, step, oldSpanDays, newSpanDays);
+      for (const c of cascade) {
+        const baseShift = data?.step_overrides[c.stepId]?.manual_shift ?? 0;
+        const currentShift = edits[c.stepId]?.manual_shift ?? baseShift;
+        setStepShiftStore(c.stepId, currentShift + c.deltaDays);
+      }
+    },
+    [mergedSteps, data, edits, setStepSpanDemiStore, setStepShiftStore],
+  );
+
+  /**
+   * v0.39.2 — Vue 2 : décaler une étape avec cascade AVAL (les étapes suivantes
+   * du même objet suivent le mouvement, l'amont reste collé).
+   */
+  const handleShiftCascade = useCallback(
+    (step: PlanStep, delta: number) => {
+      handleShift(step, delta);
+      const cascade = computeCascadeForShift(mergedSteps, step, delta);
+      for (const c of cascade) {
+        const baseShift = data?.step_overrides[c.stepId]?.manual_shift ?? 0;
+        const currentShift = edits[c.stepId]?.manual_shift ?? baseShift;
+        setStepShiftStore(c.stepId, currentShift + c.deltaDays);
+      }
+    },
+    [handleShift, mergedSteps, data, edits, setStepShiftStore],
   );
 
   const handleReorder = useCallback(
@@ -797,21 +844,38 @@ export const GanttInteractif = forwardRef<
                         />
                         <span className="text-muted-foreground">{METIER_LABEL[k]}</span>
                         <span className="ml-auto flex items-center gap-1.5">
-                          <PersStepper
-                            value={s.pers}
+                          <CellEditPopover
                             metier={k}
-                            hasWarn={hasImpact}
-                            hasLocalEdit={
-                              edits[s.id]?.pers !== undefined ||
-                              edits[s.id]?.manual_shift !== undefined
-                            }
-                            onChange={(v) => handleSetPers(s, v)}
-                          />
-                          <DateShifter
+                            pers={s.pers}
                             manualShift={localShift}
-                            onShift={(d) => handleShift(s, d)}
-                            onReset={() => handleResetShift(s.id)}
-                          />
+                            spanDemi={s.span_demi_jours ?? s.span_days * 2}
+                            hasShiftOverride={localShift !== 0}
+                            hasDurationOverride={edits[s.id]?.manual_span_demi != null}
+                            hasPersWarn={hasImpact}
+                            hasPersLocalEdit={
+                              edits[s.id]?.pers !== undefined ||
+                              edits[s.id]?.manual_shift !== undefined ||
+                              edits[s.id]?.manual_span_demi !== undefined
+                            }
+                            onShift={(d) => handleShiftCascade(s, d)}
+                            onResetShift={() => handleResetShift(s.id)}
+                            onSetPers={(v) => handleSetPers(s, v)}
+                            onSetSpanDemi={(v) => handleSetSpanDemiCascade(s, v)}
+                            onResetSpanDemi={() => resetStepSpanDemiStore(s.id)}
+                            label="Modifier cette étape (cascade aval)"
+                          >
+                            <button
+                              type="button"
+                              className="inline-flex h-6 items-center gap-1 rounded-md border border-border/60 bg-background px-2 text-[10px] font-semibold hover:bg-muted"
+                              data-testid="cell-edit-trigger"
+                              title="Modifier dates / durée / nb pers"
+                            >
+                              {s.pers}p · {(() => {
+                                const demi = s.span_demi_jours ?? s.span_days * 2;
+                                return demi % 2 === 0 ? `${demi / 2}j` : `${Math.floor(demi / 2)}½j`;
+                              })()}
+                            </button>
+                          </CellEditPopover>
                           <span className="font-mono text-[10px] font-semibold text-muted-foreground">
                             {Math.round(s.pers * (s.span_demi_jours ?? s.span_days * 2) * 4)}h
                           </span>
@@ -829,9 +893,10 @@ export const GanttInteractif = forwardRef<
                           hasWarning={hasImpact}
                           hasLocalEdit={
                             edits[s.id]?.pers !== undefined ||
-                            edits[s.id]?.manual_shift !== undefined
+                            edits[s.id]?.manual_shift !== undefined ||
+                            edits[s.id]?.manual_span_demi !== undefined
                           }
-                          onShift={(d) => handleShift(s, d)}
+                          onShift={(d) => handleShiftCascade(s, d)}
                           onResetShift={() => handleResetShift(s.id)}
                         />
                       )}
