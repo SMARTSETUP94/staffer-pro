@@ -97,21 +97,22 @@ export const calculateStaffingPlan = createServerFn({ method: "POST" })
     if (cncErr) throw new Error(cncErr.message);
     const cncReservedDates = new Set<string>((cncRows ?? []).map((r) => r.date as string));
 
-    /* 4. Charger les overrides existants (manual_shift, manual_pers, pers) */
+    /* 4. Charger les overrides existants (manual_shift, manual_pers, pers, manual_span_demi) */
     const { data: existingSteps } = await supabase
       .from("staffing_plan_step")
-      .select("id, metier_id, objet_id, manual_shift, manual_pers, pers")
+      .select("id, metier_id, objet_id, manual_shift, manual_pers, pers, manual_span_demi")
       .eq("plan_id", planId);
-    type Override = { manual_shift: number; manual_pers: boolean; pers: number };
+    type Override = { manual_shift: number; manual_pers: boolean; pers: number; manual_span_demi: number | null };
     const overrideKey = (metier_id: number, objet_id: string | null) =>
       `${metier_id}|${objet_id ?? "_null_"}`;
     const overridesMap = new Map<string, Override>();
-    for (const s of existingSteps ?? []) {
-      if (s.manual_shift !== 0 || s.manual_pers === true) {
+    for (const s of (existingSteps ?? []) as Array<{ id: string; metier_id: number; objet_id: string | null; manual_shift: number | null; manual_pers: boolean | null; pers: number; manual_span_demi: number | null }>) {
+      if (s.manual_shift !== 0 || s.manual_pers === true || s.manual_span_demi != null) {
         overridesMap.set(overrideKey(s.metier_id, s.objet_id), {
           manual_shift: s.manual_shift ?? 0,
           manual_pers: s.manual_pers ?? false,
           pers: s.pers,
+          manual_span_demi: s.manual_span_demi,
         });
       }
     }
