@@ -100,6 +100,7 @@ function AbsencesPage() {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [filter, setFilter] = useState<"all" | "future" | "pending">("future");
   const [searchEmploye, setSearchEmploye] = useState("");
+  const [searchEmployeDialog, setSearchEmployeDialog] = useState("");
   const [prefillHandled, setPrefillHandled] = useState(false);
   const [conflicts, setConflicts] = useState<ConflictAssignation[] | null>(null);
   const [conflictBusy, setConflictBusy] = useState(false);
@@ -502,14 +503,29 @@ function AbsencesPage() {
                     <SelectValue placeholder="Sélectionner" />
                   </SelectTrigger>
                   <SelectContent>
-                    {employes.map((e) => (
-                      <SelectItem key={e.id} value={e.id}>
-                        {e.prenom} {e.nom}
-                      </SelectItem>
-                    ))}
+                    <div className="p-2 sticky top-0 bg-popover z-10">
+                      <Input
+                        placeholder="Rechercher un employé…"
+                        value={searchEmployeDialog}
+                        onChange={(e) => setSearchEmployeDialog(e.target.value)}
+                        onKeyDown={(e) => e.stopPropagation()}
+                        className="h-8"
+                      />
+                    </div>
+                    {employes
+                      .filter((e) => fuzzyMatch(`${e.prenom} ${e.nom}`, searchEmployeDialog))
+                      .map((e) => (
+                        <SelectItem key={e.id} value={e.id}>
+                          {e.prenom} {e.nom}
+                        </SelectItem>
+                      ))}
+                    {employes.filter((e) => fuzzyMatch(`${e.prenom} ${e.nom}`, searchEmployeDialog)).length === 0 && (
+                      <div className="p-2 text-sm text-muted-foreground text-center">Aucun résultat</div>
+                    )}
                   </SelectContent>
                 </Select>
               </div>
+
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="grid gap-1.5">
