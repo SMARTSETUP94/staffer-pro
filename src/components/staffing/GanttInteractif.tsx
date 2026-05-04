@@ -131,14 +131,15 @@ export const GanttInteractif = forwardRef<
     if (!hasData) setLoading(true);
     setError(null);
     try {
-      const [r, planMeta] = await Promise.all([
-        calculate({ data: { planId } }) as Promise<PlanData>,
-        supabase
-          .from("staffing_plan")
-          .select("updated_at")
-          .eq("id", planId)
-          .single(),
-      ]);
+      // v0.39.0a BUG B — calculate() bumpe staffing_plan.updated_at côté serveur.
+      // On DOIT lire updated_at APRÈS la fin de calculate, sinon baseUpdatedAt
+      // est stale et le prochain flush déclenche un faux conflit "0 modif en attente".
+      const r = (await calculate({ data: { planId } })) as PlanData;
+      const planMeta = await supabase
+        .from("staffing_plan")
+        .select("updated_at")
+        .eq("id", planId)
+        .single();
       setData(r);
       onDataLoadedRef.current?.(r);
       if (planMeta.data?.updated_at) {
@@ -222,13 +223,21 @@ export const GanttInteractif = forwardRef<
 
   const days = useMemo(() => {
     if (!data) return [];
-    // Étendre la fenêtre si un edit local fait commencer un step AVANT date_debut_fab
-    // (réduction pers → span allongé → start avancé). Sans ça, la barre devient invisible.
+    // v0.39.0a BUG A — Étendre la fenêtre des deux côtés si un edit local décale un
+    // step AVANT date_debut_fab (réduction pers / shift -) OU APRÈS date_fin_fab
+    // (shift + qui pousse la fin au-delà). Sans extension à droite, stepSpanInHalves
+    // clampe endCol → la barre paraît raccourcie au lieu d'être décalée.
     let minStart = data.result.date_debut_fab;
+    let maxEnd = data.result.date_fin_fab;
     for (const s of mergedSteps) {
-      if (s.start_date !== "TBD" && s.start_date < minStart) minStart = s.start_date;
+      if (s.start_date === "TBD") continue;
+      if (s.start_date < minStart) minStart = s.start_date;
+      const endD = new Date(s.start_date + "T00:00:00Z");
+      endD.setUTCDate(endD.getUTCDate() + Math.max(1, s.span_days) - 1);
+      const endISO = endD.toISOString().slice(0, 10);
+      if (endISO > maxEnd) maxEnd = endISO;
     }
-    return workingDaysBetween(minStart, data.result.date_fin_fab);
+    return workingDaysBetween(minStart, maxEnd);
   }, [data, mergedSteps]);
 
   const stats = useMemo(() => {
