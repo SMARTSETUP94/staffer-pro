@@ -383,25 +383,73 @@ function PersonneMultiSelect({
       </Popover>
 
       {selectedDetails.length > 0 && (
-        <div className="flex flex-wrap gap-1">
-          {selectedDetails.map((c) => (
-            <Badge
-              key={c.id}
-              variant="secondary"
-              className="text-[10px] flex items-center gap-1 pr-1"
+        <>
+          {/* v0.39.2b — compteur live + badge greedy + bouton re-tri tier */}
+          <div className="flex items-center justify-between gap-2 text-[10px]">
+            <div className="flex items-center gap-1.5">
+              {totalPersJours ? (
+                <span
+                  className="font-mono text-muted-foreground"
+                  data-testid="greedy-counter"
+                >
+                  {allocated} / {totalPersJours} pers·j alloués
+                </span>
+              ) : null}
+              {overSelected && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Badge
+                        variant="outline"
+                        className="h-4 gap-1 border-amber-500/60 bg-amber-50 px-1 text-[9px] text-amber-700 dark:bg-amber-950/30 dark:text-amber-300"
+                        data-testid="greedy-rotation-badge"
+                      >
+                        <Info className="h-2.5 w-2.5" />
+                        rotation greedy
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs text-xs">
+                      Plus de personnes sélectionnées que la capacité quotidienne
+                      moyenne ({avgDailyCapacity}/j). L'algorithme greedy prend
+                      <strong> P1 en premier</strong>, P2 prend le reste, P3 sert
+                      de remplaçant en cas d'absence, etc.
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={handleResort}
+              className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] text-muted-foreground hover:bg-muted hover:text-foreground"
+              data-testid="greedy-resort-tier"
+              title="Re-trier la sélection par tier (P1 → P4)"
             >
-              {c.prenom[0]}. {c.nom}
-              <button
-                type="button"
-                onClick={() => toggle(c.id)}
-                className="ml-0.5 rounded-sm hover:bg-muted-foreground/20"
-                aria-label="Retirer"
+              <ArrowDownUp className="h-2.5 w-2.5" /> Re-trier par tier
+            </button>
+          </div>
+          <div className="flex flex-wrap gap-1">
+            {selectedDetails.map((c, idx) => (
+              <Badge
+                key={c.id}
+                variant="secondary"
+                className="text-[10px] flex items-center gap-1 pr-1"
+                title={`Priorité P${idx + 1} · Tier ${c.tier}`}
               >
-                <X className="h-2.5 w-2.5" />
-              </button>
-            </Badge>
-          ))}
-        </div>
+                <span className="font-mono text-muted-foreground">P{idx + 1}</span>
+                {c.prenom[0]}. {c.nom}
+                <button
+                  type="button"
+                  onClick={() => toggle(c.id)}
+                  className="ml-0.5 rounded-sm hover:bg-muted-foreground/20"
+                  aria-label="Retirer"
+                >
+                  <X className="h-2.5 w-2.5" />
+                </button>
+              </Badge>
+            ))}
+          </div>
+        </>
       )}
     </div>
   );
