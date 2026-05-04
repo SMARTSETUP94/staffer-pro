@@ -26,6 +26,7 @@ export function DateShifter({ manualShift, disabled, onShift, onReset, size = "c
         onClick={() => onShift(-1)}
         disabled={disabled}
         aria-label="Décaler -1 jour"
+        data-testid="date-shifter-left"
         title="-1 j"
       >
         <ChevronLeft className="h-3 w-3" />
@@ -43,6 +44,7 @@ export function DateShifter({ manualShift, disabled, onShift, onReset, size = "c
         onClick={() => onShift(1)}
         disabled={disabled}
         aria-label="Décaler +1 jour"
+        data-testid="date-shifter-right"
         title="+1 j"
       >
         <ChevronRight className="h-3 w-3" />
