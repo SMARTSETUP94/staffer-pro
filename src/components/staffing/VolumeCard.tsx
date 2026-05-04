@@ -1,29 +1,34 @@
 // v0.38.1 — Card "Volume staffé / capa allouée"
-// Compare heures réelles devis (pré-paramétrage) vs capacité allouée par les steps
-// (pers × span_demi × H_HALF). Cible Hermes : ~568h réels / ~560h capa = ~-1.4%.
+// v0.39.0d — "h devis" = somme des heures des objets INCLUS dans ce plan
+// (et non du devis complet). Permet de comparer staffing vs périmètre planifié.
 import { useMemo } from "react";
 import { Activity } from "lucide-react";
 import { H_HALF, DEMI_PER_DAY, type PlanStep } from "@/lib/staffing/types";
-import type { ChantierMetierConfigRow } from "@/server/staffing-pre-parametrage.functions";
+
+interface PlanObjetLite {
+  objet_id: string;
+  included: boolean;
+  heures_total: number;
+}
 
 interface Props {
   steps: PlanStep[];
-  preParamConfigs?: ChantierMetierConfigRow[] | null;
+  /** v0.39.0d — objets du plan (avec included + heures_total). Source de vérité pour h devis. */
+  objets?: PlanObjetLite[] | null;
 }
 
-export function VolumeCard({ steps, preParamConfigs }: Props) {
+export function VolumeCard({ steps, objets }: Props) {
   const { hReels, hCapa, deltaPct } = useMemo(() => {
     const hCapa = steps.reduce((s, st) => {
       const demi = st.span_demi_jours ?? st.span_days * DEMI_PER_DAY;
       return s + st.pers * demi * H_HALF;
     }, 0);
-    const hReels = (preParamConfigs ?? []).reduce(
-      (s, c) => s + (Number(c.total_h_calc) || 0),
-      0,
-    );
+    const hReels = (objets ?? [])
+      .filter((o) => o.included)
+      .reduce((s, o) => s + (Number(o.heures_total) || 0), 0);
     const deltaPct = hReels > 0 ? ((hCapa - hReels) / hReels) * 100 : 0;
     return { hReels, hCapa, deltaPct };
-  }, [steps, preParamConfigs]);
+  }, [steps, objets]);
 
   const colorClass =
     Math.abs(deltaPct) < 5
