@@ -114,6 +114,26 @@ export const useEditStore = create<EditState>((set, get) => ({
       lastChangeAt: Date.now(),
     })),
 
+  setStepSpanDemi: (stepId, manual_span_demi) =>
+    set((s) => ({
+      history: pushHistory(s.history, s.edits),
+      edits: {
+        ...s.edits,
+        [stepId]: { ...s.edits[stepId], manual_span_demi },
+      },
+      lastChangeAt: Date.now(),
+    })),
+
+  resetStepSpanDemi: (stepId) =>
+    set((s) => ({
+      history: pushHistory(s.history, s.edits),
+      edits: {
+        ...s.edits,
+        [stepId]: { ...s.edits[stepId], manual_span_demi: null },
+      },
+      lastChangeAt: Date.now(),
+    })),
+
   bulkSetPers: (entries) =>
     set((s) => {
       const next = { ...s.edits };
