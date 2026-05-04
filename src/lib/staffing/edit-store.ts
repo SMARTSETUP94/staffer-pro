@@ -10,6 +10,8 @@ export interface StepEdit {
   pers?: number;
   manual_pers?: boolean;
   manual_shift?: number;
+  /** v0.39.0d — durée override en demi-jours, à pers constant. null = reset auto. */
+  manual_span_demi?: number | null;
 }
 
 const HISTORY_LIMIT = 50;
