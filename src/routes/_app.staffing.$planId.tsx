@@ -343,6 +343,7 @@ function StaffingPlanPage() {
                 <ListChecks className="mr-1 h-3 w-3" /> Détaillé (par créneau)
               </Button>
             </div>
+            <DevisPrefixToggle />
           </div>
           {viewMode === "rapide" && (
             <EquipeAffaireSection
