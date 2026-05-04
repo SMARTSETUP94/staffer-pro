@@ -8,6 +8,7 @@ import { METIER_KEY_BY_ID } from "@/lib/staffing/types";
 import type { ChantierMetierConfigRow } from "@/server/staffing-pre-parametrage.functions";
 import { PersStepper } from "./PersStepper";
 import { DateShifter } from "./DateShifter";
+import { ObjetRefLabel } from "./ObjetRefLabel";
 
 interface ObjetInfo {
   objet_id: string;
