@@ -15,12 +15,20 @@ export const STATUT_ORDER: OpportuniteStatut[] = [
   "termine",
 ];
 
+/** Statuts affichés dans le Kanban (exclut "Archivé" pour rester lisible). */
+export const KANBAN_STATUT_ORDER: OpportuniteStatut[] = [
+  "a_faire",
+  "envoye",
+  "gagne",
+  "perdu",
+];
+
 export const STATUT_LABEL: Record<OpportuniteStatut, string> = {
   a_faire: "À faire",
   envoye: "Envoyé",
   gagne: "Gagné",
   perdu: "Perdu",
-  termine: "Terminé",
+  termine: "Archivé",
 };
 
 /** Classes Tailwind pour fond de colonne / badge de statut (tokens design system). */
