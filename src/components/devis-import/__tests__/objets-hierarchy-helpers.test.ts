@@ -236,3 +236,96 @@ describe("removePosteFromObjet / removeObjet / renamePoste", () => {
     expect(next[0].postes[0].heuresUnitaires).toBe(2);
   });
 });
+
+describe("mergeObjetsInSection (v0.39.1)", () => {
+  it("fusionne 2 objets de la même Section : somme heures + nouvelle ref + nom", () => {
+    const o1 = objet({
+      numero: "1.1",
+      sectionNumero: "1",
+      nom: "Bar fab",
+      postes: [poste({ id: "a", metier: "bois", heuresUnitaires: 3 })],
+    });
+    const o2 = objet({
+      numero: "1.2",
+      sectionNumero: "1",
+      nom: "Linteau",
+      postes: [poste({ id: "b", metier: "bois", heuresUnitaires: 2 })],
+    });
+    const next = mergeObjetsInSection([o1, o2], [0, 1], "BAR", "Bar complet");
+    expect(next).toHaveLength(1);
+    expect(next[0].numero).toBe("BAR");
+    expect(next[0].nom).toBe("Bar complet");
+    expect(next[0].heures.bois).toBe(5);
+    expect(next[0].postes).toHaveLength(2);
+    expect(next[0].description).toContain("Fusion de : 1.1, 1.2");
+  });
+
+  it("agrège heures par métier distinct", () => {
+    const o1 = objet({
+      numero: "1.1",
+      sectionNumero: "1",
+      postes: [poste({ id: "a", metier: "bois", heuresUnitaires: 4 })],
+    });
+    const o2 = objet({
+      numero: "1.2",
+      sectionNumero: "1",
+      postes: [poste({ id: "b", metier: "metallerie", heuresUnitaires: 6 })],
+    });
+    const next = mergeObjetsInSection([o1, o2], [0, 1], "M1", "Mix");
+    expect(next[0].heures.bois).toBe(4);
+    expect(next[0].heures.metallerie).toBe(6);
+  });
+
+  it("NO-OP si objets de sections différentes", () => {
+    const o1 = objet({ numero: "1.1", sectionNumero: "1" });
+    const o2 = objet({ numero: "2.1", sectionNumero: "2" });
+    const next = mergeObjetsInSection([o1, o2], [0, 1], "X", "X");
+    expect(next).toEqual([o1, o2]);
+  });
+
+  it("NO-OP si moins de 2 indexes", () => {
+    const o1 = objet({ numero: "1.1", sectionNumero: "1" });
+    const next = mergeObjetsInSection([o1], [0], "X", "X");
+    expect(next).toEqual([o1]);
+  });
+
+  it("insère le merged à la position du premier index et conserve les autres objets", () => {
+    const o1 = objet({ numero: "1.1", sectionNumero: "1" });
+    const o2 = objet({ numero: "1.2", sectionNumero: "1" });
+    const o3 = objet({ numero: "1.3", sectionNumero: "1" });
+    const o4 = objet({ numero: "2.1", sectionNumero: "2" });
+    const next = mergeObjetsInSection([o1, o2, o3, o4], [0, 2], "MRG", "Merged");
+    expect(next).toHaveLength(3);
+    expect(next[0].numero).toBe("MRG");
+    expect(next[1].numero).toBe("1.2");
+    expect(next[2].numero).toBe("2.1");
+  });
+
+  it("fallback si newNumero ou newNom vides : reprend ceux du premier objet", () => {
+    const o1 = objet({ numero: "1.1", sectionNumero: "1", nom: "Premier" });
+    const o2 = objet({ numero: "1.2", sectionNumero: "1", nom: "Second" });
+    const next = mergeObjetsInSection([o1, o2], [0, 1], "", "");
+    expect(next[0].numero).toBe("1.1");
+    expect(next[0].nom).toBe("Premier");
+  });
+
+  it("respecte sectionQuantite × quantite dans le total heures fusionné", () => {
+    const o1 = objet({
+      numero: "1.1",
+      sectionNumero: "1",
+      sectionQuantite: 2,
+      quantite: 3,
+      postes: [poste({ id: "a", metier: "bois", heuresUnitaires: 1 })],
+    });
+    const o2 = objet({
+      numero: "1.2",
+      sectionNumero: "1",
+      sectionQuantite: 2,
+      quantite: 3,
+      postes: [poste({ id: "b", metier: "bois", heuresUnitaires: 4 })],
+    });
+    const next = mergeObjetsInSection([o1, o2], [0, 1], "X", "X");
+    // (1+4) heuresUnitaires × quantite(3) × sectionQte(2) = 30
+    expect(next[0].heures.bois).toBe(30);
+  });
+});
