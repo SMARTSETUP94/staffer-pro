@@ -114,7 +114,8 @@ export type AlertCode =
   | "PLAFOND_OBJET_DEPASSE"
   | "MANUT_POOL_DEBORDE"
   | "PEINT_OVERFLOW_MANUT"     // v0.37
-  | "PERS_PEINT_INSUFFISANT";  // v0.37
+  | "PERS_PEINT_INSUFFISANT"   // v0.37
+  | "VOLUME_ECART_DEVIS";      // v0.39.0c — écart heures staffées vs devis
 
 export interface PlanAlert {
   code: AlertCode;

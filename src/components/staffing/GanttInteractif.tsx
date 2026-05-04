@@ -407,7 +407,22 @@ export const GanttInteractif = forwardRef<
       step_id: stepId,
     })),
   );
-  const allAlerts = [...data.result.alerts, ...previewAlerts];
+  // v0.39.0c — Garde-fou volume : alerte si |écart| ≥ 5% (soft) ou ≥ 15% (hard)
+  const volumeAlerts: PlanAlert[] = [];
+  if (stats.hDevis > 0) {
+    const ecart = stats.totalH - stats.hDevis;
+    const ratio = ecart / stats.hDevis;
+    const absPct = Math.abs(ratio) * 100;
+    if (absPct >= 5) {
+      const sign = ecart >= 0 ? "+" : "";
+      volumeAlerts.push({
+        code: "VOLUME_ECART_DEVIS",
+        severity: absPct >= 15 ? "hard" : "soft",
+        message: `Écart volume vs devis : ${sign}${ecart.toFixed(0)} h (${sign}${(ratio * 100).toFixed(1)}%) — staffé ${stats.totalH.toFixed(0)} h / devis ${stats.hDevis.toFixed(0)} h`,
+      });
+    }
+  }
+  const allAlerts = [...data.result.alerts, ...previewAlerts, ...volumeAlerts];
   const hasCncConflict = allAlerts.some((a) => a.code === "NUM_CONFLIT_INSOLUBLE");
 
   return (
@@ -421,6 +436,20 @@ export const GanttInteractif = forwardRef<
             stats.hDevis > 0
               ? `${stats.totalH.toFixed(0)} h / ${stats.hDevis.toFixed(0)} h devis`
               : `${stats.totalH.toFixed(0)} h`
+          }
+          badge={
+            stats.hDevis > 0
+              ? (() => {
+                  const pct = ((stats.totalH - stats.hDevis) / stats.hDevis) * 100;
+                  const abs = Math.abs(pct);
+                  if (abs < 5) return null;
+                  const sign = pct >= 0 ? "+" : "";
+                  return {
+                    label: `${sign}${pct.toFixed(1)}%`,
+                    severity: abs >= 15 ? ("hard" as const) : ("soft" as const),
+                  };
+                })()
+              : null
           }
           valueClassName={
             stats.hDevis > 0 && Math.abs((stats.totalH - stats.hDevis) / stats.hDevis) > 0.15
@@ -897,13 +926,19 @@ function StatCard({
   value,
   valueClassName,
   detail,
+  badge,
 }: {
   icon: React.ReactNode;
   label: string;
   value: string;
   valueClassName?: string;
   detail?: React.ReactNode;
+  badge?: { label: string; severity: "hard" | "soft" } | null;
 }) {
+  const badgeCls =
+    badge?.severity === "hard"
+      ? "bg-destructive/15 text-destructive border-destructive/30"
+      : "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30";
   const card = (
     <div
       className={`rounded-2xl border border-border bg-card p-4 ${detail ? "cursor-help transition hover:border-primary/40 hover:shadow-sm" : ""}`}
@@ -913,7 +948,17 @@ function StatCard({
         {label}
         {detail && <Info className="ml-auto h-3.5 w-3.5 opacity-60" />}
       </div>
-      <p className={`mt-1 text-2xl font-bold ${valueClassName ?? "text-foreground"}`}>{value}</p>
+      <div className="mt-1 flex items-baseline gap-2">
+        <p className={`text-2xl font-bold ${valueClassName ?? "text-foreground"}`}>{value}</p>
+        {badge && (
+          <span
+            className={`inline-flex items-center rounded-md border px-1.5 py-0.5 text-[10px] font-bold ${badgeCls}`}
+            aria-label={`Écart vs devis ${badge.label}`}
+          >
+            {badge.label}
+          </span>
+        )}
+      </div>
     </div>
   );
   if (!detail) return card;
