@@ -78,8 +78,8 @@ export async function importProgbatToAffaire(
   const { data, error } = await supabase.rpc("import_progbat_atomique", {
     p_affaire_id: affaireId,
     p_objets: objetsPayload,
-    p_heures_montage: heuresMontage,
-    p_heures_demontage: heuresDemontage,
+    p_heures_montage: heuresMontage ?? undefined,
+    p_heures_demontage: heuresDemontage ?? undefined,
   });
 
   if (error) {
