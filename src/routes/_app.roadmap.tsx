@@ -43,6 +43,272 @@ interface RoadmapPlanned {
 
 const RELEASES: RoadmapRelease[] = [
   {
+    date: "2026-05-04",
+    version: "v0.39.0a-hotfix-import",
+    title: "🚑 HOTFIX import devis : RPC transactionnel + cleanup orphelins fabrication_objets",
+    entries: [
+      {
+        type: "fix",
+        area: "Devis — Import",
+        title: "Bug duplicate key 'fabrication_objets_affaire_reference_key' au ré-import",
+        description:
+          "Root cause : `src/lib/devis-progbat-import.ts` faisait des INSERT directs côté client sans transaction. Si l'UPDATE/lien devis échouait après l'INSERT, des objets restaient orphelins (devis_id NULL). Au ré-import, leur reference collait avec la nouvelle insertion → violation UNIQUE(affaire_id, reference). 13 orphelins identifiés en prod sur 3 affaires (5949, 5951, 5953).",
+      },
+      {
+        type: "feature",
+        area: "Backend — RPC",
+        title: "Nouveau RPC transactionnel `import_progbat_atomique`",
+        description:
+          "Pré-check des conflits de référence avant tout INSERT → RAISE EXCEPTION 'CONFLICT_REFERENCE: [...]' (JSON parsable côté client). Tout-ou-rien (ROLLBACK PL/pgSQL automatique sur erreur). Plus aucune fuite d'orphelins possible.",
+      },
+      {
+        type: "feature",
+        area: "Backend — RPC",
+        title: "`cleanup_fabrication_orphelins(p_affaire_id)` + patch `delete_devis_atomique`",
+        description:
+          "Nouveau RPC admin-only qui supprime les fabrication_objets avec devis_id NULL ET sans heures/staffing (audit dans devis_deletion_log). `delete_devis_atomique` l'appelle systématiquement en fin pour éviter récidive. Cleanup one-shot des 13 orphelins prod exécuté.",
+      },
+      {
+        type: "refactor",
+        area: "Devis — Client",
+        title: "`devis-progbat-import.ts` réécrit : plus aucun INSERT direct",
+        description:
+          "Tout passe désormais par supabase.rpc('import_progbat_atomique', ...). Nouvelle classe `ImportProgbatConflictError` avec liste des conflits parsée depuis le message SQL.",
+      },
+      {
+        type: "improvement",
+        area: "Tests",
+        title: "Spec dédiée `devis-import-orphelins-v0390a-hotfix.test.ts`",
+        description:
+          "Couvre import nominal via RPC, conflit de référence détecté avant insertion, et cleanup orphelins. 0 orphelin restant en DB après migration.",
+      },
+    ],
+  },
+  {
+    date: "2026-05-04",
+    version: "v0.39.0c",
+    title: "📊 KPI Heures staffées auditable + garde-fou volume vs devis",
+    entries: [
+      {
+        type: "feature",
+        area: "Staffing — KPI",
+        title: "Popover détail formule + breakdown métier sur StatCard",
+        description:
+          "KPI 'Heures staffées' = Σ(pers × demi_jours × H_HALF[4h]). Nouveau Popover qui affiche la formule, la décomposition métier par métier et la comparaison avec le total devis. Plus aucune valeur fantôme non-traçable.",
+      },
+      {
+        type: "feature",
+        area: "Staffing — Alertes",
+        title: "Garde-fou volume : badge ±X.X% + alerte VOLUME_ECART_DEVIS",
+        description:
+          "Badge ambre dès ±5% d'écart vs devis, rouge dès ±15%. Nouveau code AlertCode `VOLUME_ECART_DEVIS` (soft ≥5%, hard ≥15%) propagé dans AlerteBandeau pour visibilité globale du plan.",
+      },
+    ],
+  },
+  {
+    date: "2026-05-04",
+    version: "v0.39.0b",
+    title: "🐛 BUG A.bis chevron Vue 1 + KPI Volume Total fantôme corrigé",
+    entries: [
+      {
+        type: "fix",
+        area: "Staffing — Vue 1",
+        title: "Chevron < (gauche) symétrique : ChargeMetierSection étend la fenêtre dans les 2 sens",
+        description:
+          "DateShifter sur Vue 1 ne raccourcissait que vers la droite. Désormais onShiftLeft() étend bien start_date -=1 ET end_date dans la même logique que Vue 2 (mergedSteps).",
+      },
+      {
+        type: "fix",
+        area: "Staffing — KPI",
+        title: "KPI 'Volume Total 744h' fantôme corrigé → 'Heures staffées' + ratio devis",
+        description:
+          "Ancienne formule `pers × 8 × span_days` surévaluait via ceil(demi/2). Remplacée par `pers × span_demi × H_HALF` (cohérente avec VolumeCard). Ratio devis affiché en sous-texte.",
+      },
+      {
+        type: "fix",
+        area: "Staffing — Perf",
+        title: "Boucle de fetch éliminée (useEditStore stable refs)",
+        description:
+          "Selectors useEditStore stabilisés pour éviter les re-renders en cascade qui déclenchaient des fetchs en boucle sur la page staffing.",
+      },
+    ],
+  },
+  {
+    date: "2026-05-04",
+    version: "v0.39.0a",
+    title: "🎯 Vue 3 Re-staffer nominatif + HOTFIX React #310 + bugs DateShifter/autosave",
+    entries: [
+      {
+        type: "feature",
+        area: "Staffing — Vue 3",
+        title: "Vue 3 : pers/dates lecture seule, assignations + presence_pct éditables",
+        description:
+          "Nouveau mode 'Re-staffer nominatif' : on garde les dates et le nombre de personnes figés du plan publié, et on ne réajuste que les noms et le % de présence. Idéal pour réagir aux indispos sans tout recalculer.",
+      },
+      {
+        type: "fix",
+        area: "Staffing — Stabilité",
+        title: "HOTFIX React #310 : useServerFn + hooks AVANT early return",
+        description:
+          "Page staffing crashait sur changement d'onglet à cause d'un ordre de hooks variable. useServerFn et tous les hooks remontés avant tout early return.",
+      },
+      {
+        type: "fix",
+        area: "Staffing — Vue 2",
+        title: "BUG A : DateShifter Vue 2 étend dans les 2 sens (mergedSteps)",
+        description:
+          "Le chevron > (droite) raccourcissait au lieu d'étendre. Refondu via mergedSteps pour que days étende symétriquement.",
+      },
+      {
+        type: "fix",
+        area: "Staffing — Autosave",
+        title: "BUG B autosave : reload séquence calculate PUIS SELECT updated_at",
+        description:
+          "Race condition : le SELECT updated_at se faisait avant la fin du calculate, écrasant les edits locaux récents. Séquence inversée.",
+      },
+    ],
+  },
+  {
+    date: "2026-05-03",
+    version: "v0.38",
+    title: "🕐 Demi-journée : algo + Gantt AM|PM + sync personnes + polish",
+    entries: [
+      {
+        type: "feature",
+        area: "Staffing — Modèle",
+        title: "v0.38.0-alpha → v0.38.1.1 : migration `span_demi_jours` + `start_half_day` + algo FLOOR strict",
+        description:
+          "Passage du modèle journée entière au demi-journée (AM/PM). Algo binôme MIN flex, VolumeCard adaptée, snapshot/restore en demi-journées. StaffingPersonnesSection sync sur la nouvelle granularité.",
+      },
+      {
+        type: "feature",
+        area: "Staffing — Gantt",
+        title: "v0.38.1b : Gantt grille AM|PM (`220px repeat(days*2)`)",
+        description:
+          "Nouvelle grille CSS qui affiche chaque jour en 2 colonnes (matin / après-midi) avec séparateur visuel.",
+      },
+      {
+        type: "improvement",
+        area: "Staffing — UX",
+        title: "v0.38.2 : overflow label '•••' + ChargeMetierSection drilldown + chevron persist",
+        description:
+          "Quand un label de barre déborde, affichage compacté '•••' avec tooltip. ChargeMetierSection ouvre un drilldown détaillé. État du chevron persisté entre navigations.",
+      },
+    ],
+  },
+  {
+    date: "2026-04-29",
+    version: "v0.35.7 → v0.35.14",
+    title: "🤖 Auto-staffing 5XXX : polish itératif jusqu'à PUBLISHABLE (compétences 4 niveaux)",
+    entries: [
+      {
+        type: "feature",
+        area: "Staffing — Compétences",
+        title: "v0.35.14 : Compétences 4 niveaux (P/S/D/X) + tier-ranking refondu Tier1/2/3/4",
+        description:
+          "Enum P (Principal) / S (Secondaire) / D (Découverte) / X (interdit). Tier-ranking entièrement refondu pour exploiter cette granularité. **PUBLISHABLE.**",
+      },
+      {
+        type: "feature",
+        area: "Staffing — Algo",
+        title: "v0.35.8 : Jours ouvrés FR + absences validées dans algo",
+        description:
+          "Algo backward planning respecte le calendrier français (fériés + week-ends) et exclut les absences validées de chaque candidat.",
+      },
+      {
+        type: "feature",
+        area: "Staffing — UX",
+        title: "v0.35.9 → v0.35.13 : Ctrl+S, Undo Ctrl+Z 50 niveaux, drag-to-shift, Express Mode, refonte personnes",
+        description:
+          "Ctrl+S kbd, ring Gantt edits locaux, Précédent wizard, compteur pers·j (v0.35.9). Undo 50 niveaux + drag-to-shift snap jour + bulk pers Bois/Peint (v0.35.10). Express Mode 1-2 clics (v0.35.11). Refonte StaffingPersonnesSection avec tabs métier + Liste/Calendrier + hide full + badges absences (v0.35.12). Stabilité Gantt : silent reload + scroll restore + mini-dates contextuelles + reorder Heatmap (v0.35.13).",
+      },
+      {
+        type: "feature",
+        area: "Staffing — Polish v0.35.7",
+        title: "Batch edit-store autosave 2min + BE/Num par objet + Num mono-CNC HARD + page compétences équipe",
+        description:
+          "Autosave batché toutes les 2 min, BE/Num gérés par objet, contrainte HARD mono-CNC sur le métier numérique avec ResolveCncConflictDialog, nouvelle page /parametres/competences-equipe, suppression HARD plan admin.",
+      },
+    ],
+  },
+  {
+    date: "2026-04-25",
+    version: "v0.35.0 → v0.35.6",
+    title: "🤖 Auto-staffing Fabrication 5XXX : socle complet (DB + algo + UI Gantt + Wizard)",
+    entries: [
+      {
+        type: "feature",
+        area: "Staffing — Socle",
+        title: "DB + algo backward planning + multi-chantiers + Charge atelier + Wizard intégré",
+        description:
+          "Sprint complet : tables staffing_plan / step / assignment / object / snapshot, algo backward planning depuis date_montage avec chaîne métiers, Charge atelier consolidée multi-affaires, StaffingPersonnesSection tier-based, Wizard intégré, anti-duplication objet, publication+versioning+restore, audit sécu RLS, 10 specs E2E + docs.",
+      },
+    ],
+  },
+  {
+    date: "2026-05-02",
+    version: "v0.33",
+    title: "📋 Vue Tableur Feuille de Route Planning",
+    entries: [
+      {
+        type: "feature",
+        area: "Planning — Tableur",
+        title: "Vue tableur de la Feuille de Route Planning",
+        description:
+          "Nouvelle vue tableur (équivalent spreadsheet) pour la feuille de route planning, avec édition inline et export Excel.",
+      },
+    ],
+  },
+  {
+    date: "2026-05-02",
+    version: "v0.32.1 → v0.32.4",
+    title: "🛡️ Validation imports enrichie + auto-saisie heures hors-planning",
+    entries: [
+      {
+        type: "feature",
+        area: "Devis — Validation",
+        title: "v0.32.1/2 : sommes lignes + cohérence totaux métier + cohérence heures objet × métier",
+        description:
+          "Nouvelles validations centralisées dans `import-validation.ts` : `validateRowSumMatch` (qte×PU vs total), `validateMetierTotalsConsistency`, `validateObjetsHeuresConsistency`. Erreurs inline avec citation des lignes incohérentes.",
+      },
+      {
+        type: "feature",
+        area: "Heures — Hors planning",
+        title: "v0.32.3 : auto-saisie heures hors planning + bouton '+ Autre chantier' + badge",
+        description:
+          "Migration `metier_id` + RPC + helpers + dialog + bouton '+ Autre chantier' sur saisie employé + badge 'hors planning'. Permet à un employé de saisir des heures sur un chantier où il n'est pas staffé.",
+      },
+      {
+        type: "improvement",
+        area: "Heures — Polish",
+        title: "v0.32.4 : polish auto-saisie hors-planning + DATE_FUTURE",
+        description:
+          "Itérations UX post-feedback chefs : visibilité badge, validation simplifiée, garde-fou DATE_FUTURE pour interdire la saisie sur dates futures.",
+      },
+    ],
+  },
+  {
+    date: "2026-05-02",
+    version: "v0.31.5",
+    title: "🚑 HOTFIX parser 2141 + sprint clôture (#112 + #113 + #105)",
+    entries: [
+      {
+        type: "fix",
+        area: "Devis — Parser",
+        title: "HOTFIX bug parser devis 2141",
+        description:
+          "Cas réel d-2141 qui mappait incorrectement certaines lignes. Pattern corrigé + fixture de non-régression ajoutée.",
+      },
+      {
+        type: "feature",
+        area: "Affaires + Logistique + Export",
+        title: "#112 Lieu/Client éditables + #113 patterns Logistique + #105 Excel 'Par chantier'",
+        description:
+          "#112 : édition Lieu et Client sur affaire existante. #113 : nouveaux patterns de mapping métier Logistique. #105 : finalisation Export Excel Planning multi-onglets 'Par chantier'. 1234 tests verts.",
+      },
+    ],
+  },
+  {
     date: "2026-05-02",
     version: "v0.31.4d",
     title: "🛠️ Refonte parser Progbat 3 niveaux + modale UI hiérarchique + édition manuelle",
@@ -2039,19 +2305,7 @@ const RELEASES: RoadmapRelease[] = [
 ];
 
 const PLANNED: RoadmapPlanned[] = [
-  // ========== Roadmap consolidée v0.31.5 → v0.40 (validée 2 mai 2026) ==========
-  {
-    priority: "haute",
-    title: "v0.31.5 — Stabilisation parser Progbat (3-5j prod) + polish modale",
-    description:
-      "Période d'observation post v0.31.4 sur les imports réels : suivi du % auto-mapping, collecte feedback chefs sur la modale hiérarchique (lisibilité compteurs, ergonomie drag&drop, override métier), petits ajustements UX sans nouvelle feature. Pas de changement de schéma. Si écart < 100% sur fixture réelle → patch ciblé pattern.",
-  },
-  {
-    priority: "haute",
-    title: "v0.32.4 — Polish auto-saisie heures hors-planning (post-feedback chefs)",
-    description:
-      "Itérations sur la saisie heures employé sur chantiers non staffés (livrée v0.32.3) : améliorations UX selon retour terrain (visibilité du badge 'hors planning', validation chef simplifiée, filtres dans l'écran de validation). Pas de refonte, juste ajustements pragmatiques.",
-  },
+  // ========== Roadmap consolidée v0.34 → v0.41 (mise à jour 4 mai 2026) ==========
   {
     priority: "haute",
     title: "v0.34.x — Batterie E2E par rôle (admin / chef / employé desktop / employé mobile)",
@@ -2059,16 +2313,10 @@ const PLANNED: RoadmapPlanned[] = [
       "Cible 100 tests E2E Playwright (depuis ~50 actuels). Couverture : flows critiques de chaque rôle (admin paramétrage + invitations, chef création affaire + planning + validation heures, employé desktop /ma-semaine + propositions, employé mobile /mobile/aujourdhui + saisie heures + swaps). Permet de releaser vite sans régression silencieuse.",
   },
   {
-    priority: "haute",
-    title: "v0.35 — Auto-planning déterministe Fabrication 5XXX (PAS d'IA)",
-    description:
-      "Algorithme déterministe local pour suggérer le staffing fabrication : backward planning depuis date_montage, chaîne métiers (BE → Bois/Métal → Peinture → Tapisserie → Numérique), top 3 candidats par poste, modale drag&drop. Règle métier critique : tier-priority CDI/CDD AVANT intérim (bonus contrat CDI 1.0 / CDD 0.9 / Intérim 0.3 — voir mem://features/auto-staffing-tier-priority). Intérim = variable d'ajustement, jamais défaut. Cap aux affaires de typologie fabrication uniquement.",
-  },
-  {
     priority: "moyenne",
-    title: "v0.36 — Sprint dette : compteurs typologies + Lieu/Client éditables + patterns Logistique + Export Excel Planning",
+    title: "v0.36 — Sprint dette résiduelle : page admin véhicules + audit findings",
     description:
-      "Bundle dette technique : #108 cohérence compteurs typologie sur toutes les pages, #112 édition Lieu/Client sur affaire existante (déjà fait sur import devis v0.30.3, à étendre), #113 nouveaux patterns Logistique parser, #105 finalisation Export Excel Planning multi-onglets, + tickets restants de l'audit interne. Pas de feature visible, focus stabilité.",
+      "Bundle dette technique post-v0.35 : page admin véhicules complète, traitement des findings d'audit interne restants (compteurs, RLS edge cases, accessibilité). Pas de feature visible, focus stabilité.",
   },
   {
     priority: "moyenne",
@@ -2078,19 +2326,19 @@ const PLANNED: RoadmapPlanned[] = [
   },
   {
     priority: "moyenne",
-    title: "v0.38 — Phase 2 horaires précis (heure_debut / heure_fin / pauses + nuit/sup/35h auto + SILAE enrichi)",
-    description:
-      "Évolution majeure du modèle heures : passage des heures totales à des plages horaires précises (heure_debut, heure_fin, pauses), calcul automatique des majorations (nuit, dimanche, heures sup au-delà 35h), enrichissement export SILAE avec colonnes dédiées par typologie d'heure. Migration douce : ancien format toléré en lecture, nouveau format obligatoire en saisie après bascule.",
-  },
-  {
-    priority: "moyenne",
-    title: "v0.39 — Logistique avancée : autorisations véhicules + sous-traitants + historique + stats",
+    title: "v0.39.x suite — Logistique avancée : autorisations véhicules + sous-traitants + historique + stats",
     description:
       "Module flotte étendu : #56 autorisations véhicules par employé (B/C/CE/CACES + dates expiration), gestion fine des sous-traitants (carnet, tarifs, notes), historique complet des trajets par véhicule et par chauffeur, stats consommation et km par chantier. Pré-requis pour facturation interne flotte.",
   },
   {
     priority: "moyenne",
-    title: "v0.40 — Claude API auto-staffing (UNIQUEMENT 5XXX, fallback v0.35, cache + cap)",
+    title: "v0.40 — Phase 2 horaires précis (heure_debut / heure_fin / pauses + nuit/sup/35h auto + SILAE enrichi)",
+    description:
+      "Évolution majeure du modèle heures : passage des heures totales à des plages horaires précises (heure_debut, heure_fin, pauses), calcul automatique des majorations (nuit, dimanche, heures sup au-delà 35h), enrichissement export SILAE avec colonnes dédiées par typologie d'heure. Migration douce : ancien format toléré en lecture, nouveau format obligatoire en saisie après bascule.",
+  },
+  {
+    priority: "moyenne",
+    title: "v0.41 — Claude API auto-staffing (UNIQUEMENT 5XXX, fallback v0.35, cache + cap)",
     description:
       "Enrichissement de l'algorithme déterministe v0.35 par Claude API via edge function proxy : skill-based reasoning sur historique de l'employé (déjà bossé avec l'équipe ? sur ce client ? sur ce type d'objet ?), tools structurés (lecture affaires + assignations passées), fallback automatique sur v0.35 si timeout/erreur, cache 1h sur même contexte, hard cap mensuel d'appels (alerte admin avant blocage). Tier CDI/CDD avant intérim conservé. PAS d'autres intégrations Claude (pas de support conv, pas de génération texte).",
   },
