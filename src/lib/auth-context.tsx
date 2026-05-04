@@ -91,19 +91,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    // 1. Listener AVANT getSession (règle Supabase). Aucun await dans le callback.
+    // v0.39.0e — FIX boucle infinie spinner /dashboard
+    // Avec @supabase/supabase-js >= 2.43, onAuthStateChange émet automatiquement
+    // INITIAL_SESSION au montage. On l'utilise comme source de vérité unique pour
+    // initialiser session/user ET pour passer loading=false. Plus d'appel parallèle
+    // à getSession() qui créait une race condition (deux loadUserData concurrents +
+    // setLoading(false) parfois jamais atteint si getSession renvoyait null pendant
+    // un refresh token).
+    //
+    // Filet de sécurité : si INITIAL_SESSION ne tombe jamais (cas dégradé réseau),
+    // on débloque loading après 8s pour ne JAMAIS laisser AppGuard sur le spinner
+    // permanent. L'utilisateur sera redirigé sur /login plutôt que rester bloqué.
     let lastUserId: string | null = null;
+    let initialised = false;
+    const safetyTimer = window.setTimeout(() => {
+      if (!initialised) {
+        console.warn("[auth] INITIAL_SESSION timeout — débloque loading");
+        initialised = true;
+        setRolesLoaded(true);
+        setLoading(false);
+      }
+    }, 8_000);
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, newSession) => {
-      // FIX v0.27.1 : purge le preview admin (sessionStorage) à chaque login/logout
-      // pour éviter qu'un admin reste coincé en "Preview : Employé mobile" après
-      // s'être reconnecté (régression Gabin : redirigé sur /mobile/aujourdhui sans
-      // possibilité de revenir).
       if (event === "SIGNED_IN" || event === "SIGNED_OUT") {
         try {
           window.sessionStorage.removeItem("setup_paris_preview_role");
           window.sessionStorage.removeItem("setup_paris_preview_employe_id");
-          // v0.31.4 : nouvelle session → on oublie le skip onboarding pour
-          // forcer à nouveau le wizard si profile_completed_at est toujours NULL.
           window.sessionStorage.removeItem("onboarding_skipped_v1");
         } catch {
           // ignore (SSR / private mode)
@@ -115,16 +129,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(newSession?.user ?? null);
       }
       if (newUserId) {
-        // FIX v0.27.7 — ANTI-RÉGRESSION popups fermées au changement d'onglet :
-        // Supabase émet TOKEN_REFRESHED / USER_UPDATED quand l'onglet redevient
-        // visible et auto-refresh. Si on remet rolesLoaded=false ici, AppGuard
-        // démonte <Outlet/> (loader plein écran) et toutes les Sheet/Dialog
-        // ouvertes perdent leur state. On ne reload les rôles QUE si on bascule
-        // sur un nouvel utilisateur (login initial ou switch d'utilisateur).
+        // Anti-régression v0.27.7 : ne reload les rôles que si l'userId change.
         if (newUserId !== lastUserId) {
           lastUserId = newUserId;
           setRolesLoaded(false);
-          void loadUserData(newUserId);
+          loadUserData(newUserId).finally(() => {
+            if (!initialised) {
+              initialised = true;
+              setLoading(false);
+            }
+          });
+        } else if (!initialised) {
+          // Même user, mais c'est le 1er event (TOKEN_REFRESHED au boot par ex.)
+          initialised = true;
+          setLoading(false);
         }
       } else {
         lastUserId = null;
@@ -133,23 +151,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setPasswordSetAt(null);
         setProfileCompleted(false);
         setRolesLoaded(true);
+        if (!initialised) {
+          initialised = true;
+          setLoading(false);
+        }
       }
     });
 
-    // 2. Récupération de la session existante
-    supabase.auth.getSession().then(({ data: { session: s } }) => {
-      setSession(s);
-      setUser(s?.user ?? null);
-      if (s?.user) {
-        lastUserId = s.user.id;
-        loadUserData(s.user.id).finally(() => setLoading(false));
-      } else {
-        setRolesLoaded(true);
-        setLoading(false);
-      }
-    });
-
-    return () => subscription.unsubscribe();
+    return () => {
+      window.clearTimeout(safetyTimer);
+      subscription.unsubscribe();
+    };
   }, [loadUserData]);
 
   const signIn = useCallback(async (email: string, password: string) => {
