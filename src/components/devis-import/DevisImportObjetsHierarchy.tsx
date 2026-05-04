@@ -390,25 +390,54 @@ export function DevisImportObjetsHierarchy({ objets, setObjets, integrityChecks 
               const sectionTotalHeures = round2(
                 sectionObjets.reduce((s, o) => s + objetTotalHeures(o), 0),
               );
+              const selectedIdxs = sec.objetIdxs.filter((i) => objets[i]?.selected);
+              const canMerge = selectedIdxs.length >= 2;
               return (
                 <div key={sec.key} className="rounded-xl border border-border">
                   {/* En-tête Section */}
-                  <button
-                    type="button"
-                    onClick={() => toggleSection(sec.key)}
-                    className="flex w-full items-center justify-between gap-2 rounded-t-xl bg-muted/40 px-3 py-2 text-left hover:bg-muted/60"
-                  >
-                    <div className="flex items-center gap-2">
+                  <div className="flex w-full items-center justify-between gap-2 rounded-t-xl bg-muted/40 px-3 py-2">
+                    <button
+                      type="button"
+                      onClick={() => toggleSection(sec.key)}
+                      className="flex flex-1 items-center gap-2 text-left"
+                    >
                       {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                       <span className="font-mono text-[11px] text-muted-foreground">
                         Section {sec.numero}
                       </span>
                       <span className="text-sm font-medium">{sec.nom}</span>
+                    </button>
+                    <div className="flex items-center gap-2">
+                      {canMerge && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-7 gap-1.5 border-primary/40 bg-primary/5 text-xs text-primary hover:bg-primary/10"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const firstObj = objets[selectedIdxs[0]];
+                            setMergeDialog({
+                              sectionKey: sec.key,
+                              objetIdxs: selectedIdxs,
+                              newNumero: firstObj?.numero ?? "",
+                              newNom: selectedIdxs
+                                .map((i) => objets[i]?.nom)
+                                .filter(Boolean)
+                                .join(" + ")
+                                .slice(0, 80),
+                            });
+                          }}
+                        >
+                          <Merge className="h-3.5 w-3.5" />
+                          Fusionner ({selectedIdxs.length})
+                        </Button>
+                      )}
+                      <span className="text-xs text-muted-foreground">
+                        {sec.objetIdxs.length} objet(s) • {sectionTotalHeures} h
+                      </span>
                     </div>
-                    <span className="text-xs text-muted-foreground">
-                      {sec.objetIdxs.length} objet(s) • {sectionTotalHeures} h
-                    </span>
-                  </button>
+                  </div>
 
                   {/* Objets enfants */}
                   {isOpen && (
