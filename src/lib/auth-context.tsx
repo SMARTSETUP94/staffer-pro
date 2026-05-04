@@ -133,9 +133,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(newSession);
         setUser(newSession?.user ?? null);
       } else if (newSession) {
-        // Même user : on garde la référence stable mais on rafraîchit la session
-        // (nouveau access_token) sans toucher à `user`.
-        setSession(newSession);
+        // v0.39.1 — Shallow-eq guard : si le token n'a PAS changé (cas refocus
+        // d'onglet → SIGNED_IN/INITIAL_SESSION ré-émis avec la même session),
+        // on garde la référence existante pour éviter de re-render tous les
+        // hooks dépendants (dashboard clignotant, spinner permanent, modales
+        // qui se ferment au changement d'onglet — cf. mem://constraints/auth-context-tab-refocus).
+        setSession((prev) => {
+          if (
+            prev?.access_token === newSession.access_token &&
+            prev?.refresh_token === newSession.refresh_token &&
+            prev?.user?.id === newSession.user?.id
+          ) {
+            return prev;
+          }
+          return newSession;
+        });
       }
       if (newUserId) {
         // Anti-régression v0.27.7 : ne reload les rôles que si l'userId change.
