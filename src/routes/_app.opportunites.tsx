@@ -30,6 +30,7 @@ import {
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useChargesAffaires } from "@/hooks/use-charges-affaires";
 import {
+  KANBAN_STATUT_ORDER,
   STATUT_LABEL,
   STATUT_ORDER,
   TAILLE_LABEL,
