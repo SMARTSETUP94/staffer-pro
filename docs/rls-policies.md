@@ -1,0 +1,95 @@
+# Matrice RLS — acteur × action × table
+
+> v0.39.1 Sprint 1 (4 mai 2026). Source de vérité : `pg_policy` introspecté sur
+> la base preview/staging. Mise à jour : à chaque migration touchant les
+> policies. Voir `mem://constraints/rls-helpers-execute-grant` pour les 7
+> helpers `SECURITY DEFINER` à NE JAMAIS révoquer.
+
+## Helpers utilisés dans les policies
+
+| Fonction                          | Rôle                                                                 |
+| --------------------------------- | -------------------------------------------------------------------- |
+| `is_admin()`                      | `auth.uid()` a le rôle `admin`                                       |
+| `is_chef_or_admin()`              | `auth.uid()` a le rôle `chef_chantier` ou `admin`                    |
+| `has_role(uuid, app_role)`        | Check générique rôle                                                 |
+| `user_has_affaire_access(uuid)`   | Employé assigné à l'affaire (via `assignations` ou `staffing_plan`)  |
+| `user_is_mentioned_on_affaire(uuid)` | Employé mentionné dans `affaire_commentaires.mentions[]`           |
+| `is_devis_termine(uuid)`          | Le devis est verrouillé (`statut = 'termine'`)                       |
+| `can_saisie_on_affaire(uuid, date)` | Combinaison accès + fenêtre temporelle valide                      |
+
+## Table `heures_saisies` (CRITIQUE — BUG #33)
+
+| Action | Policy                            | Acteurs autorisés                                                                                                          |
+| ------ | --------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| SELECT | `heures_saisies_self_select`      | `is_chef_or_admin()` **OU** `employe_id` matche `auth.uid()` via `employes.profile_id` **OU** `user_has_affaire_access()`  |
+| INSERT | `heures_saisies_self_insert`      | `is_admin()` **OU** (`is_chef_or_admin()` ou propriétaire) ET `can_saisie_on_affaire(affaire_id, date)`                    |
+| UPDATE | `heures_saisies_self_update`      | `is_admin()` **OU** `is_chef_or_admin()` (sauf devis terminé) **OU** propriétaire (statut ∈ brouillon/soumis, devis non terminé) |
+| DELETE | `heures_saisies_admin_chef_delete`| `is_admin()` **OU** (`is_chef_or_admin()` ET devis non terminé)                                                            |
+
+### ✅ Verdict audit BUG #33
+
+La policy `heures_saisies_self_select` **autorise déjà l'employé** à voir ses
+heures, peu importe qui les a insérées (chef ou lui-même), tant que
+`heures_saisies.employe_id` pointe vers son propre `employes.id`. La RLS
+n'est donc **PAS la cause du bug** — la cause est ailleurs (cf. § "Pistes
+restantes" plus bas).
+
+### Pistes restantes pour BUG #33 (hors RLS)
+
+1. **`employe_id` mal renseigné côté RPC** : vérifier `SaisirPourEmployeDialog.tsx`
+   et la fonction RPC chef → s'assurer que `employe_id` = celui de l'employé,
+   pas celui du chef.
+2. **Cache `useMesHeures`** : la query filtre `.eq("employe_id", employeId)`
+   où `employeId` provient de `useResolvedEmploye()` côté employé. Vérifier
+   qu'il n'y a pas de race condition entre login et premier fetch.
+3. **`staffing_plan_id` ou `assignation_id` manquant** : si une saisie chef
+   est créée sans rattachement, vérifier qu'elle apparaît bien dans le filtre
+   semaine (date entre `startStr` et `endStr`).
+4. **Mobile** : vérifier que `/mobile/heures` et `/mobile/aujourdhui` lisent
+   bien la même table sans filtre supplémentaire.
+
+Test E2E couvrant : `e2e/heures/chef-saisit-pour-employe.chef.spec.ts`.
+
+## Table `assignations`
+
+| Action | Policy                            | Acteurs autorisés                                                                  |
+| ------ | --------------------------------- | ---------------------------------------------------------------------------------- |
+| SELECT | `assignations_select_self_or_chef`| `is_chef_or_admin()` **OU** propriétaire **OU** `user_has_affaire_access()`        |
+| INSERT | `assignations_insert_chef_admin`  | `is_chef_or_admin()` ET (devis null OU non terminé OU admin)                       |
+| UPDATE | `assignations_update_chef_admin` + `assignations_self_confirm` | Chef/admin (devis non terminé) OU employé (confirmation only)  |
+| DELETE | `assignations_delete_chef_admin`  | `is_chef_or_admin()` ET (devis null OU non terminé OU admin)                       |
+
+## Table `affaires`
+
+| Action | Policy                             | Acteurs autorisés                                                                |
+| ------ | ---------------------------------- | -------------------------------------------------------------------------------- |
+| SELECT | `affaires_select_chef_admin_or_assigned` | Chef/admin **OU** `user_has_affaire_access()` **OU** `user_is_mentioned_on_affaire()` |
+| ALL    | `affaires_admin_chef_modify`       | Chef/admin uniquement                                                            |
+
+## Table `staffing_plan` + `staffing_plan_step` + `staffing_plan_assignment`
+
+| Table                       | SELECT                                                              | INSERT/UPDATE      | DELETE     |
+| --------------------------- | ------------------------------------------------------------------- | ------------------ | ---------- |
+| `staffing_plan`             | Chef/admin OU `user_has_affaire_access()`                           | Chef/admin         | Admin only |
+| `staffing_plan_step`        | Via `staffing_plan` (chef OU accès affaire)                         | Chef/admin         | Chef/admin |
+| `staffing_plan_assignment`  | Chef/admin OU propriétaire OU accès affaire via plan→step           | Chef/admin         | Chef/admin |
+| `staffing_plan_object`      | Via `staffing_plan` (chef OU accès affaire)                         | Chef/admin         | Chef/admin |
+| `staffing_plan_snapshot`    | Chef/admin                                                          | Chef/admin (insert) | —          |
+
+## Tables transverses
+
+- **`absences`** : SELECT propriétaire/chef ; INSERT propriétaire (`valide=false`) ou chef ; UPDATE/DELETE chef/admin.
+- **`fabrication_objets` / `fabrication_etapes`** : SELECT public authentifié ; modify chef/admin.
+- **`devis` / `devis_postes` / `devis_imports`** : full chef/admin.
+- **`employes` / `profiles`** : SELECT self ou chef ; modify chef/admin (employes), admin (profiles).
+- **`notifications`** : SELECT/UPDATE/DELETE self uniquement (pas d'INSERT côté client — passe par triggers).
+- **`feedbacks`** : SELECT self ou admin ; INSERT chef/admin (auteur = self) ; UPDATE/DELETE admin.
+
+## Règle d'or
+
+**Toute nouvelle policy DOIT** :
+
+1. Utiliser un helper `SECURITY DEFINER` plutôt qu'un `SELECT` inline → évite la récursion RLS.
+2. Avoir une contrepartie `WITH CHECK` pour INSERT/UPDATE.
+3. Être documentée dans cette matrice **dans la même PR** que la migration.
+4. Passer le linter `supabase--linter` sans warning RLS.
