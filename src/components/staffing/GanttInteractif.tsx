@@ -866,21 +866,44 @@ export const GanttInteractif = forwardRef<
                         {hasImpact && <ImpactBadge impacts={impactByStep[s.id]!} />}
                       </div>
                       {span.visible && (
-                        <GanttBar
-                          step={s}
-                          startCol={span.startCol + 1}
-                          endCol={span.endCol + 1}
-                          dayWidthPx={dayWidthPx}
-                          isOverDeadline={overDL}
+                        <CellEditPopover
+                          metier={k}
+                          pers={s.pers}
                           manualShift={localShift}
-                          hasWarning={hasImpact}
-                          hasLocalEdit={
+                          spanDemi={s.span_demi_jours ?? s.span_days * 2}
+                          hasShiftOverride={localShift !== 0}
+                          hasDurationOverride={edits[s.id]?.manual_span_demi != null}
+                          hasPersWarn={hasImpact}
+                          hasPersLocalEdit={
                             edits[s.id]?.pers !== undefined ||
-                            edits[s.id]?.manual_shift !== undefined
+                            edits[s.id]?.manual_shift !== undefined ||
+                            edits[s.id]?.manual_span_demi !== undefined
                           }
-                          onShift={(d) => handleShift(s, d)}
+                          onShift={(d) => handleShiftCascade(s, d)}
                           onResetShift={() => handleResetShift(s.id)}
-                        />
+                          onSetPers={(v) => handleSetPers(s, v)}
+                          onSetSpanDemi={(v) => handleSetSpanDemiCascade(s, v)}
+                          onResetSpanDemi={() => resetStepSpanDemiStore(s.id)}
+                        >
+                          <div className="contents">
+                            <GanttBar
+                              step={s}
+                              startCol={span.startCol + 1}
+                              endCol={span.endCol + 1}
+                              dayWidthPx={dayWidthPx}
+                              isOverDeadline={overDL}
+                              manualShift={localShift}
+                              hasWarning={hasImpact}
+                              hasLocalEdit={
+                                edits[s.id]?.pers !== undefined ||
+                                edits[s.id]?.manual_shift !== undefined ||
+                                edits[s.id]?.manual_span_demi !== undefined
+                              }
+                              onShift={(d) => handleShiftCascade(s, d)}
+                              onResetShift={() => handleResetShift(s.id)}
+                            />
+                          </div>
+                        </CellEditPopover>
                       )}
                     </div>
                   );
