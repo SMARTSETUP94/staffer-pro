@@ -170,7 +170,7 @@ export const calculateStaffingPlan = createServerFn({ method: "POST" })
     const windowConflicts: Conflict[] = [];
 
 
-    /* 7. Appliquer overrides : si manual_pers, recalcule span ; si manual_shift, décale start_date */
+    /* 7. Appliquer overrides : si manual_pers, recalcule span ; si manual_span_demi, étend/réduit la fin à pers constant ; si manual_shift, décale start_date */
     for (const step of result.steps) {
       if (step.start_date === "TBD") continue;
       const ov = overridesMap.get(overrideKey(step.metier_id, step.objet_id));
@@ -182,7 +182,14 @@ export const calculateStaffingPlan = createServerFn({ method: "POST" })
         const oldEnd = addWorkingDays(step.start_date, step.span_days - 1, holidays, includeWeekends);
         step.pers = ov.pers;
         step.span_days = newSpan;
+        step.span_demi_jours = newSpan * 2;
         step.start_date = addWorkingDays(oldEnd, -(newSpan - 1), holidays, includeWeekends);
+        step.source = "manual";
+      }
+      if (ov.manual_span_demi != null && ov.manual_span_demi >= 1) {
+        // v0.39.0d — Override durée à pers constant. Le start reste, la fin bouge.
+        step.span_demi_jours = ov.manual_span_demi;
+        step.span_days = Math.max(1, Math.ceil(ov.manual_span_demi / 2));
         step.source = "manual";
       }
       if (ov.manual_shift !== 0) {
