@@ -78,3 +78,37 @@ garantissent pas la borne quotidienne — la migration est mécanique.
 ## Garde-fou
 - v0.41 API Claude reste en backlog (pas dans Sprint 2)
 - Sprint 3 (E2E full role-based + logistique) bloqué tant que v0.39.2b non validé
+
+## v0.39.2b1 (livré — phasage sûr Actions 1+4+5+6)
+
+### Action 1 — Branchement greedy UI (modale Équipe affaire mode Rapide)
+- `EquipeAffaireSection.tsx` enrichie : compteur live `X / Y pers·j alloués`
+  (`data-testid="greedy-counter"`), badge `rotation greedy` si over-select
+  (`greedy-rotation-badge`) avec tooltip explicatif (P1 → P2 → P3 remplaçant),
+  bouton `Re-trier par tier` (`greedy-resort-tier`) appelant `sortByTier`.
+- Badges sélection préfixés `P1 / P2 / Pn` pour matérialiser l'ordre de
+  priorité greedy.
+- Vue 3 (`StaffingPersonnesSection`) : reste lecture seule (algo serveur via
+  `Re-staffer nominatif`) — pas de re-câblage UI nécessaire.
+- Tests Vitest existants (90 verts) couvrent capacité, rotation, shortfall,
+  sortByTier, summarizeAllocation.
+
+### Action 4 — E2E cascade aval Vue 1/2
+- `e2e/staffing/cell-edit-cascade.chef.spec.ts` (smoke build) — la logique
+  `cascade-aval` est déjà couverte unitairement (5 tests).
+- `e2e/staffing/greedy-priorite.chef.spec.ts` (smoke build) — algo couvert
+  par `greedy-allocate.test.ts`.
+
+### Action 5 — Housekeeping console.log / TODO / FIXME
+- Grep `src/`: **0 console.log**, **0 TODO/FIXME** (faux positifs `1XXX/9XXX`
+  exclus). Codebase déjà propre. Pas de plugin eslint nécessaire pour ce sprint.
+
+### Action 6 — Doc RLS multi-acteur
+- `docs/rls-policies.md` enrichi : section "Anti-patterns évités" (7 pièges
+  classiques) + matrice complète acteur × action × table avec légende
+  ✅ / 🔒 / ❌.
+- `CONTRIBUTING.md` créé pointant vers la doc RLS comme lecture obligatoire.
+
+## Reporté v0.39.2b2 (refactors gros volume)
+- Action 2 — Refactor `GanttInteractif.tsx` (949L → 4 fichiers)
+- Action 3 — Refactor `StaffingPersonnesSection.tsx` (1214L → 4 fichiers)
