@@ -28,6 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Switch } from "@/components/ui/switch";
 import { useChargesAffaires } from "@/hooks/use-charges-affaires";
 import {
   KANBAN_STATUT_ORDER,
