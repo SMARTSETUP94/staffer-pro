@@ -694,11 +694,31 @@ export function DevisImportObjetsHierarchy({ objets, setObjets, integrityChecks 
                                               </SelectContent>
                                             </Select>
                                           )}
-                                          <span className="w-16 text-right text-xs tabular-nums">
-                                            {isMat
-                                              ? `${(p.totalHt ?? 0).toLocaleString("fr-FR")} €`
-                                              : `${round2(p.heuresUnitaires * o.quantite)} h`}
-                                          </span>
+                                          {isMat ? (
+                                            <span className="w-20 text-right text-xs tabular-nums">
+                                              {(p.totalHt ?? 0).toLocaleString("fr-FR")} €
+                                            </span>
+                                          ) : (
+                                            <div className="flex items-center gap-1">
+                                              <Input
+                                                type="number"
+                                                step="0.25"
+                                                min={0}
+                                                value={p.heuresUnitaires}
+                                                onChange={(e) =>
+                                                  updatePoste(objetIdx, p.id, {
+                                                    heuresUnitaires:
+                                                      Math.max(0, Number(e.target.value) || 0),
+                                                  })
+                                                }
+                                                className="h-7 w-16 text-right text-xs tabular-nums"
+                                                title="Heures par unité de cet objet"
+                                              />
+                                              <span className="text-[10px] text-muted-foreground">
+                                                h{o.quantite > 1 ? `×${o.quantite}` : ""}
+                                              </span>
+                                            </div>
+                                          )}
                                           <Button
                                             type="button"
                                             variant="ghost"
