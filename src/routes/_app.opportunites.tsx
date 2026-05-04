@@ -246,28 +246,35 @@ function OpportunitesPage() {
     return m;
   }, [oppsFiltrees]);
 
-  // Conversion en TableurRow pour la vue Tableur
+  // Conversion en TableurRow pour la vue Tableur (filtre "Archivé" si masqué)
   const tableurRows: TableurRow[] = useMemo(
     () =>
-      oppsFiltrees.map((o) => ({
-        id: o.id,
-        affaireId: o.id,
-        numero: o.numero,
-        client: o.client ?? "",
-        nom: o.nom ?? "",
-        charge_affaires_id: o.charge_affaires_id,
-        date_opportunite: o.date_opportunite,
-        taille: o.taille,
-        statut_opportunite: o.statut_opportunite,
-        code_opportunite: null,
-        signed_affaire_numero: null,
-        signed_affaire_id: null,
-        date_pat: o.date_pat,
-        date_montage: o.date_montage,
-        date_demontage: o.date_demontage,
-        notes: o.notes,
-        typologie_future: o.typologie_future,
-      })),
+      oppsFiltrees
+        .filter((o) => showArchived || o.statut_opportunite !== "termine")
+        .map((o) => ({
+          id: o.id,
+          affaireId: o.id,
+          numero: o.numero,
+          client: o.client ?? "",
+          nom: o.nom ?? "",
+          charge_affaires_id: o.charge_affaires_id,
+          date_opportunite: o.date_opportunite,
+          taille: o.taille,
+          statut_opportunite: o.statut_opportunite,
+          code_opportunite: null,
+          signed_affaire_numero: null,
+          signed_affaire_id: null,
+          date_pat: o.date_pat,
+          date_montage: o.date_montage,
+          date_demontage: o.date_demontage,
+          notes: o.notes,
+          typologie_future: o.typologie_future,
+        })),
+    [oppsFiltrees, showArchived],
+  );
+
+  const archivedCount = useMemo(
+    () => oppsFiltrees.filter((o) => o.statut_opportunite === "termine").length,
     [oppsFiltrees],
   );
 
