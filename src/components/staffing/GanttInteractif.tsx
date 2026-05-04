@@ -387,11 +387,6 @@ export const GanttInteractif = forwardRef<
   // v0.38.1b — Grid 2 colonnes par jour (AM | PM)
   const gridTemplate = `220px repeat(${days.length * 2}, minmax(22px, 1fr))`;
 
-  const getObjStepByMetier = (objet_id: string, metier_id: number): PlanStep | undefined =>
-    mergedSteps.find(
-      (s) => s.objet_id === objet_id && s.metier_id === metier_id && s.start_date !== "TBD",
-    );
-
   // Bandeau alertes = officielles serveur + pré-vol pending (transient)
   const previewAlerts: PlanAlert[] = Object.entries(impactByStep).flatMap(([stepId, impacts]) =>
     impacts.map((imp) => ({
