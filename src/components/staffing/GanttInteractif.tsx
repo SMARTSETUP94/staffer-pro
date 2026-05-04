@@ -407,7 +407,22 @@ export const GanttInteractif = forwardRef<
       step_id: stepId,
     })),
   );
-  const allAlerts = [...data.result.alerts, ...previewAlerts];
+  // v0.39.0c — Garde-fou volume : alerte si |écart| ≥ 5% (soft) ou ≥ 15% (hard)
+  const volumeAlerts: PlanAlert[] = [];
+  if (stats.hDevis > 0) {
+    const ecart = stats.totalH - stats.hDevis;
+    const ratio = ecart / stats.hDevis;
+    const absPct = Math.abs(ratio) * 100;
+    if (absPct >= 5) {
+      const sign = ecart >= 0 ? "+" : "";
+      volumeAlerts.push({
+        code: "VOLUME_ECART_DEVIS",
+        severity: absPct >= 15 ? "hard" : "soft",
+        message: `Écart volume vs devis : ${sign}${ecart.toFixed(0)} h (${sign}${(ratio * 100).toFixed(1)}%) — staffé ${stats.totalH.toFixed(0)} h / devis ${stats.hDevis.toFixed(0)} h`,
+      });
+    }
+  }
+  const allAlerts = [...data.result.alerts, ...previewAlerts, ...volumeAlerts];
   const hasCncConflict = allAlerts.some((a) => a.code === "NUM_CONFLIT_INSOLUBLE");
 
   return (
