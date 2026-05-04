@@ -63,6 +63,7 @@ function formatSpanLabel(step: PlanStep): string {
   return half ? `${full}½j` : `${full}j`;
 }
 import { METIER_COLOR, METIER_LABEL, METIER_ORDER, formatShortDate, formatDayName } from "./gantt-helpers";
+import { ObjetRefLabel, parseObjetLabel } from "./ObjetRefLabel";
 
 interface Suggestion {
   employe: { id: string; nom: string; prenom: string; metier_principal_id: number; type_contrat: string };
