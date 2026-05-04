@@ -39,11 +39,13 @@ function makeObjet(over: Partial<EditableObjet> = {}): EditableObjet {
 
 function renderHierarchy(objets: EditableObjet[]) {
   return render(
-    <DevisImportObjetsHierarchy
-      objets={objets}
-      setObjets={() => {}}
-      integrityChecks={[]}
-    />,
+    <TooltipProvider>
+      <DevisImportObjetsHierarchy
+        objets={objets}
+        setObjets={() => {}}
+        integrityChecks={[]}
+      />
+    </TooltipProvider>,
   );
 }
 
