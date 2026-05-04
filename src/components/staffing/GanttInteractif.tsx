@@ -437,6 +437,20 @@ export const GanttInteractif = forwardRef<
               ? `${stats.totalH.toFixed(0)} h / ${stats.hDevis.toFixed(0)} h devis`
               : `${stats.totalH.toFixed(0)} h`
           }
+          badge={
+            stats.hDevis > 0
+              ? (() => {
+                  const pct = ((stats.totalH - stats.hDevis) / stats.hDevis) * 100;
+                  const abs = Math.abs(pct);
+                  if (abs < 5) return null;
+                  const sign = pct >= 0 ? "+" : "";
+                  return {
+                    label: `${sign}${pct.toFixed(1)}%`,
+                    severity: abs >= 15 ? ("hard" as const) : ("soft" as const),
+                  };
+                })()
+              : null
+          }
           valueClassName={
             stats.hDevis > 0 && Math.abs((stats.totalH - stats.hDevis) / stats.hDevis) > 0.15
               ? "text-destructive"
