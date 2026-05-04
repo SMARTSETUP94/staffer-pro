@@ -317,7 +317,7 @@ function StaffingPlanPage() {
       {planData && (
         <VolumeCard
           steps={planData.result.steps.filter((s) => s.start_date !== "TBD")}
-          preParamConfigs={preParamConfigs}
+          objets={planData.objets}
         />
       )}
       {planData && (
