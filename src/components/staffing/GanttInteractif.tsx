@@ -406,8 +406,19 @@ export const GanttInteractif = forwardRef<
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <StatCard
           icon={<Activity className="h-4 w-4" />}
-          label="Volume total"
-          value={`${stats.totalH.toFixed(0)} h`}
+          label="Heures staffées"
+          value={
+            stats.hDevis > 0
+              ? `${stats.totalH.toFixed(0)} h / ${stats.hDevis.toFixed(0)} h devis`
+              : `${stats.totalH.toFixed(0)} h`
+          }
+          valueClassName={
+            stats.hDevis > 0 && Math.abs((stats.totalH - stats.hDevis) / stats.hDevis) > 0.15
+              ? "text-destructive"
+              : stats.hDevis > 0 && Math.abs((stats.totalH - stats.hDevis) / stats.hDevis) > 0.05
+                ? "text-amber-600 dark:text-amber-400"
+                : "text-foreground"
+          }
         />
         <StatCard
           icon={<Calendar className="h-4 w-4" />}
