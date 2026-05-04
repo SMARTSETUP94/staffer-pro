@@ -71,11 +71,12 @@ Volume staffé v0.39.0c : KPI "Heures staffées" = Σ(pers × demi_jours × H_HA
 36. ✅ **v0.39.0a-hotfix-import** (4 mai 2026) — RPC transactionnel `import_progbat_atomique` + `cleanup_fabrication_orphelins` + cleanup 13 orphelins prod. Voir mem://features/devis-import-orphelins-hotfix.
 37. ✅ **v0.39.1 Sprint 1 STABILITÉ** (4 mai 2026) — Audit RLS heures_saisies (verdict : RLS OK, BUG #33 non causé par RLS) + matrice `docs/rls-policies.md` + 2 nouveaux tests E2E (chef→employé heures, auto-staffing v0.39 Vue 1/2/3) + audit mutations client (Top 5 RPC à migrer, voir `docs/audit-mutations-client-v0391.md`) + auth-context shallow setSession (anti re-render TOKEN_REFRESHED). Voir mem://features/sprint-1-stabilite-v0391. **API Claude v0.41 REPORTÉE backlog.**
 
-### Livré v0.39.2a (Sprint 2 polish — partiel)
+### Livré v0.39.2a/b1 (Sprint 2 polish — phasage sûr)
 38. ✅ **v0.39.2a** (4 mai 2026) — (1) Resize popup cellule : `CellEditPopover` + `DurationStepper` ; Vue 1 isolée, Vue 2 cascade aval (`cascade-aval.ts`, 6 tests). (2) Algo `greedy-allocate.ts` + 5 tests. (5) E2E `import-progbat-conflicts.chef.spec.ts` (4 specs tolérantes). 90 tests Vitest staffing verts (+11). Voir mem://features/sprint-2-polish-v0392.
+39. ✅ **v0.39.2b1** (4 mai 2026) — Branchement greedy UI dans `EquipeAffaireSection` (compteur live `X/Y pers·j`, badge `rotation greedy` + tooltip P1→Pn, bouton `Re-trier par tier`, badges sélection P1/P2/Pn). Doc RLS enrichie (anti-patterns + matrice acteur×action×table complète) + `CONTRIBUTING.md` lecture obligatoire. Smoke E2E cascade + greedy. 0 console.log/TODO restants.
 
 ### À venir
-39. ⏳ **v0.39.2b** — Reste Sprint 2 : refactor GanttInteractif 949L→4 fichiers, refactor StaffingPersonnesSection 1214L→4 fichiers, branchement greedy dans Vue 3 + Equipe Affaire Rapide, housekeeping console.log/TODO, doc RLS matrice enrichie.
+40. ⏳ **v0.39.2b2** — Refactors gros volume reportés : `GanttInteractif.tsx` 949L→4 fichiers, `StaffingPersonnesSection.tsx` 1214L→4 fichiers, brancher greedy sur la nouvelle archi.
 40. ⏳ **v0.39.3** — Migration RPC #1 bulk-assign-objet + #2 chef-saisit-pour-employe (corrige BUG #33 root cause)
 39. ⏳ **v0.39.3** — Migration RPC #3 bulk-saisie + #5 bulk-staffer
 40. ⏳ **v0.34.x** — Batterie E2E par rôle — INFRA POSÉE, reste seed comptes + ~48 tests
