@@ -286,18 +286,47 @@ function PersonneMultiSelect({
   candidates,
   value,
   onChange,
+  totalPersJours,
+  stepsCount,
 }: {
   candidates: Candidate[];
   value: string[];
   onChange: (v: string[]) => void;
+  totalPersJours?: number;
+  stepsCount?: number;
 }) {
   const [open, setOpen] = useState(false);
   const selectedSet = useMemo(() => new Set(value), [value]);
   const selectedDetails = candidates.filter((c) => selectedSet.has(c.id));
 
+  // v0.39.2b — capacité quotidienne moyenne approximée pour le compteur live
+  const avgDailyCapacity = useMemo(() => {
+    if (!stepsCount || !totalPersJours || stepsCount === 0) return null;
+    return Math.max(1, Math.round(totalPersJours / Math.max(stepsCount, 1)));
+  }, [totalPersJours, stepsCount]);
+
+  // X / Y pers·j alloués (greedy : on plafonne à la capacité réelle)
+  const allocated = useMemo(() => {
+    if (!totalPersJours || selectedDetails.length === 0 || !avgDailyCapacity) return 0;
+    // greedy : par jour on prend min(N sélectionnés, cible). Ici approximé.
+    const perDay = Math.min(selectedDetails.length, avgDailyCapacity);
+    return perDay * (stepsCount ?? 0);
+  }, [selectedDetails.length, totalPersJours, avgDailyCapacity, stepsCount]);
+
+  const overSelected =
+    avgDailyCapacity !== null && selectedDetails.length > avgDailyCapacity;
+
   const toggle = (id: string) => {
     if (selectedSet.has(id)) onChange(value.filter((x) => x !== id));
     else onChange([...value, id]);
+  };
+
+  const handleResort = () => {
+    // Re-trier la SÉLECTION par tier croissant (P1 → P4)
+    const sorted = greedySortByTier(
+      candidates.filter((c) => selectedSet.has(c.id)),
+    );
+    onChange(sorted.map((c) => c.id));
   };
 
   return (
