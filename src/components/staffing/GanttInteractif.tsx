@@ -276,7 +276,7 @@ export const GanttInteractif = forwardRef<
         : "text-emerald-600 dark:text-emerald-400";
     const breakdown = Object.values(breakdownByMetier).sort((a, b) => b.h - a.h);
     return { totalH, pic, statut, statutColor, hDevis, breakdown };
-  }, [data, mergedSteps, mergedDailyLoad, preParamConfigs]);
+  }, [data, mergedSteps, mergedDailyLoad]);
 
   /** Pré-vol : simule l'impact, affiche toast + stocke pour badges (pas de commit serveur) */
   const previewImpacts = useCallback(
