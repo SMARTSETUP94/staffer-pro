@@ -97,8 +97,8 @@ export function StaffingEditToolbar({
         markSaved(res.updated_at);
         if (!opts?.silent) {
           toast.success(`${res.applied} modification${res.applied > 1 ? "s" : ""} sauvegardée${res.applied > 1 ? "s" : ""}`);
+          onSaved(); // reload UNIQUEMENT pour flush manuel (Ctrl+S / bouton)
         }
-        onSaved();
         return true;
       } catch (e) {
         markFlushing(false);
