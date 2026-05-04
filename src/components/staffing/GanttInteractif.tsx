@@ -33,7 +33,7 @@ import { AlerteBandeau } from "./AlerteBandeau";
 import { ResolveCncConflictDialog } from "./ResolveCncConflictDialog";
 import { updatePlanDateFinFab } from "@/server/staffing-resolve.functions";
 import type { PlanResult, PlanStep, PlanAlert } from "@/lib/staffing/types";
-import { METIER_KEY_BY_ID } from "@/lib/staffing/types";
+import { METIER_KEY_BY_ID, H_HALF, DEMI_PER_DAY } from "@/lib/staffing/types";
 import { simulateStepChange, impactToastMessage, type SliderImpact } from "@/lib/staffing/slider-impact";
 
 export interface PlanData {
@@ -244,8 +244,18 @@ export const GanttInteractif = forwardRef<
     if (!data) return null;
     let totalH = 0;
     let pic = 0;
-    for (const s of mergedSteps) totalH += s.pers * s.h_par_jour * s.span_days;
+    // v0.39.0b FIX — formule demi-journée (cohérente avec VolumeCard) :
+    // pers × span_demi_jours × H_HALF (4h). L'ancienne `pers × 8 × span_days`
+    // surévaluait car span_days = ceil(demi/2) (ex: 5 demi → 3j → 24h ≠ 20h).
+    for (const s of mergedSteps) {
+      const demi = s.span_demi_jours ?? s.span_days * DEMI_PER_DAY;
+      totalH += s.pers * demi * H_HALF;
+    }
     for (const v of Object.values(mergedDailyLoad)) if (v > pic) pic = v;
+    const hDevis = (preParamConfigs ?? []).reduce(
+      (acc, c) => acc + (Number(c.total_h_calc) || 0),
+      0,
+    );
     const hasHard = data.result.alerts.some((a) => a.severity === "hard");
     const hasSoft = data.result.alerts.some((a) => a.severity === "soft");
     const statut = hasHard ? "Critique" : hasSoft ? "Attention" : "Conforme";
@@ -254,8 +264,8 @@ export const GanttInteractif = forwardRef<
       : hasSoft
         ? "text-amber-600 dark:text-amber-400"
         : "text-emerald-600 dark:text-emerald-400";
-    return { totalH, pic, statut, statutColor };
-  }, [data, mergedSteps, mergedDailyLoad]);
+    return { totalH, pic, statut, statutColor, hDevis };
+  }, [data, mergedSteps, mergedDailyLoad, preParamConfigs]);
 
   /** Pré-vol : simule l'impact, affiche toast + stocke pour badges (pas de commit serveur) */
   const previewImpacts = useCallback(
@@ -396,8 +406,19 @@ export const GanttInteractif = forwardRef<
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <StatCard
           icon={<Activity className="h-4 w-4" />}
-          label="Volume total"
-          value={`${stats.totalH.toFixed(0)} h`}
+          label="Heures staffées"
+          value={
+            stats.hDevis > 0
+              ? `${stats.totalH.toFixed(0)} h / ${stats.hDevis.toFixed(0)} h devis`
+              : `${stats.totalH.toFixed(0)} h`
+          }
+          valueClassName={
+            stats.hDevis > 0 && Math.abs((stats.totalH - stats.hDevis) / stats.hDevis) > 0.15
+              ? "text-destructive"
+              : stats.hDevis > 0 && Math.abs((stats.totalH - stats.hDevis) / stats.hDevis) > 0.05
+                ? "text-amber-600 dark:text-amber-400"
+                : "text-foreground"
+          }
         />
         <StatCard
           icon={<Calendar className="h-4 w-4" />}
