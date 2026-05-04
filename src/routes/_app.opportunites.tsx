@@ -498,6 +498,17 @@ function OpportunitesPage() {
                 </button>
               )}
             </div>
+
+            <label className="flex h-9 cursor-pointer items-center gap-2 rounded-xl border border-border bg-card px-3 text-xs font-medium">
+              <Switch
+                checked={showArchived}
+                onCheckedChange={setShowArchived}
+                aria-label="Afficher les archivées"
+              />
+              <span className="text-muted-foreground">
+                Archivées{archivedCount > 0 && ` (${archivedCount})`}
+              </span>
+            </label>
           </>
         )}
       </div>
