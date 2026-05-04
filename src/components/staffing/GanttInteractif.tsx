@@ -926,13 +926,19 @@ function StatCard({
   value,
   valueClassName,
   detail,
+  badge,
 }: {
   icon: React.ReactNode;
   label: string;
   value: string;
   valueClassName?: string;
   detail?: React.ReactNode;
+  badge?: { label: string; severity: "hard" | "soft" } | null;
 }) {
+  const badgeCls =
+    badge?.severity === "hard"
+      ? "bg-destructive/15 text-destructive border-destructive/30"
+      : "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30";
   const card = (
     <div
       className={`rounded-2xl border border-border bg-card p-4 ${detail ? "cursor-help transition hover:border-primary/40 hover:shadow-sm" : ""}`}
@@ -942,7 +948,17 @@ function StatCard({
         {label}
         {detail && <Info className="ml-auto h-3.5 w-3.5 opacity-60" />}
       </div>
-      <p className={`mt-1 text-2xl font-bold ${valueClassName ?? "text-foreground"}`}>{value}</p>
+      <div className="mt-1 flex items-baseline gap-2">
+        <p className={`text-2xl font-bold ${valueClassName ?? "text-foreground"}`}>{value}</p>
+        {badge && (
+          <span
+            className={`inline-flex items-center rounded-md border px-1.5 py-0.5 text-[10px] font-bold ${badgeCls}`}
+            aria-label={`Écart vs devis ${badge.label}`}
+          >
+            {badge.label}
+          </span>
+        )}
+      </div>
     </div>
   );
   if (!detail) return card;
