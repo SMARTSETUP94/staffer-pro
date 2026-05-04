@@ -57,6 +57,7 @@ import type { IntegrityCheck, PosteCandidat } from "@/lib/devis-parser/types";
 import {
   computeCounters,
   effectiveIsMatiere,
+  getGlobalMergeState,
   getMergeButtonState,
   isPosteAutoMapped,
   mergeObjetsInSection,
