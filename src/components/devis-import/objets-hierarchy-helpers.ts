@@ -185,11 +185,11 @@ export function renamePoste(
 }
 
 /**
- * v0.39.1 — Fusionne plusieurs objets de niveau 2 d'une même Section en un seul.
- * Garde-fou : tous les objets doivent appartenir à la même `sectionNumero` ; sinon NO-OP.
+ * v0.39.1 — Fusionne plusieurs objets de niveau 2 en un seul.
+ * v0.39.2 — Autorise la fusion cross-section (le merged hérite de la Section
+ * du premier objet ; les sources d'autres sections sont tracées dans la description).
  * - Concatène les postes (somme heures via recomputeObjet).
- * - Conserve la quantité du premier objet ; les heures unitaires des postes restent inchangées
- *   donc le total = (somme heures unitaires) × quantité du nouvel objet × sectionQuantité.
+ * - Conserve la quantité du premier objet.
  * - Trace les références sources dans la description (auditabilité).
  * - Supprime les objets sources, insère le merged à la position du premier.
  */
@@ -204,10 +204,10 @@ export function mergeObjetsInSection(
     .map((i) => ({ idx: i, obj: objets[i] }))
     .filter((x) => !!x.obj) as { idx: number; obj: EditableObjet }[];
   if (sources.length < 2) return objets;
-  const sectionKey = sources[0].obj.sectionNumero;
-  if (!sources.every((s) => s.obj.sectionNumero === sectionKey)) return objets;
 
   const first = sources[0].obj;
+  // v0.39.2 — Avant : on bloquait si sections différentes. Maintenant on autorise
+  // la fusion cross-section ; le merged prend la section du premier.
   const allPostes: PosteCandidat[] = sources.flatMap((s) => s.obj.postes);
   const sourceRefs = sources.map((s) => s.obj.numero).join(", ");
   const sourceDescs = sources
