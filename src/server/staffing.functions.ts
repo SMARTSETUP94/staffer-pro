@@ -243,6 +243,7 @@ export const calculateStaffingPlan = createServerFn({ method: "POST" })
           h_par_jour: s.h_par_jour,
           manual_shift: ov?.manual_shift ?? 0,
           manual_pers: ov?.manual_pers ?? false,
+          manual_span_demi: ov?.manual_span_demi ?? null,
           source: s.source,
         };
         if (existingId) {
