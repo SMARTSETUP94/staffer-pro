@@ -326,13 +326,14 @@ export const calculateStaffingPlan = createServerFn({ method: "POST" })
       };
     });
 
-    /* step_overrides : map step_db_uuid -> {manual_shift, manual_pers} */
-    const stepOverrides: Record<string, { manual_shift: number; manual_pers: boolean }> = {};
+    /* step_overrides : map step_db_uuid -> {manual_shift, manual_pers, manual_span_demi} */
+    const stepOverrides: Record<string, { manual_shift: number; manual_pers: boolean; manual_span_demi: number | null }> = {};
     for (const s of result.steps) {
       const ov = overridesMap.get(overrideKey(s.metier_id, s.objet_id));
       stepOverrides[s.id] = {
         manual_shift: ov?.manual_shift ?? 0,
         manual_pers: ov?.manual_pers ?? false,
+        manual_span_demi: ov?.manual_span_demi ?? null,
       };
     }
 
