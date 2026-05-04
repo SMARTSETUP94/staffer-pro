@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { usePreview } from "@/lib/preview-context";
@@ -8,7 +8,9 @@ import {
   shouldForceSetPassword,
   shouldRedirectToOnboarding,
   isOnboardingSkipped,
+  markOnboardingSkipped,
 } from "@/lib/auth-redirect-helpers";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app")({
   component: AppGuard,
@@ -25,6 +27,12 @@ const EMPLOYE_DESKTOP_ALLOWED = [
   "/fabrication",
 ];
 
+// v0.39.1 BUG #6 — anti-loop guard. Si AppGuard redirige vers /onboarding
+// plus de N fois pendant la session courante, on stoppe la boucle, on marque
+// `markOnboardingSkipped()` et on affiche un toast clair que Gabin peut
+// transmettre. Évite un freeze/reload en boucle qui bloque tout premier accès.
+const MAX_ONBOARDING_REDIRECTS = 3;
+
 function AppGuard() {
   const navigate = useNavigate();
   const router = useRouterState();
@@ -34,6 +42,7 @@ function AppGuard() {
     passwordSetDone, passwordSetAt, isInviteStatus, profileCompleted, roles,
   } = useAuth();
   const { effIsMobile, effIsAdminOrChef } = usePreview();
+  const onboardingRedirectCountRef = useRef(0);
 
   const isEmployeAllowedPath = EMPLOYE_DESKTOP_ALLOWED.some(
     (p) => currentPath === p || currentPath.startsWith(p + "/"),
@@ -61,9 +70,29 @@ function AppGuard() {
     }
     // Onboarding profil obligatoire (1ʳᵉ connexion)
     if (shouldRedirectToOnboarding({ profileCompleted, currentPath, skipped: isOnboardingSkipped() })) {
+      onboardingRedirectCountRef.current += 1;
+      if (onboardingRedirectCountRef.current > MAX_ONBOARDING_REDIRECTS) {
+        // Boucle détectée : on libère + bannière permanente via skip flag.
+        console.error(
+          "[AppGuard] Onboarding redirect loop detected — count=",
+          onboardingRedirectCountRef.current,
+          "profileCompleted=",
+          profileCompleted,
+          "currentPath=",
+          currentPath,
+        );
+        markOnboardingSkipped();
+        toast.error(
+          "Boucle de redirection onboarding détectée. Profil libéré — vous pouvez compléter plus tard depuis le bandeau en haut de page.",
+          { duration: 10_000 },
+        );
+        return;
+      }
       navigate({ to: "/onboarding" });
       return;
     }
+    // Reset compteur dès qu'on ne redirige PLUS vers /onboarding
+    onboardingRedirectCountRef.current = 0;
     // Preview "Employé mobile" -> bascule mobile
     if (effIsMobile) {
       navigate({ to: "/mobile/aujourdhui" });
