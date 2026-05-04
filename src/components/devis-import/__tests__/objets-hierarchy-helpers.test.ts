@@ -269,11 +269,11 @@ describe("mergeObjetsInSection (v0.39.1)", () => {
     const o2 = objet({
       numero: "1.2",
       sectionNumero: "1",
-      postes: [poste({ id: "b", metier: "metallerie", heuresUnitaires: 6 })],
+      postes: [poste({ id: "b", metier: "metal", heuresUnitaires: 6 })],
     });
     const next = mergeObjetsInSection([o1, o2], [0, 1], "M1", "Mix");
     expect(next[0].heures.bois).toBe(4);
-    expect(next[0].heures.metallerie).toBe(6);
+    expect(next[0].heures.metal).toBe(6);
   });
 
   it("NO-OP si objets de sections différentes", () => {
