@@ -242,6 +242,23 @@ function AbsencesPage() {
     return true;
   }
 
+  // Détecte en live un doublon (même employé, période chevauchante, slot AM/PM/JOURNEE conflictuel)
+  const duplicateAbsence = useMemo(() => {
+    if (!editing || !editing.employe_id || !editing.date_debut || !editing.date_fin) return null;
+    if (editing.date_fin < editing.date_debut) return null;
+    const targetSlot = editing.demi_journee ?? "JOURNEE";
+    return (
+      rows.find((a) => {
+        if (editing.id && a.id === editing.id) return false;
+        if (a.employe_id !== editing.employe_id) return false;
+        // chevauchement de période
+        if (a.date_debut > editing.date_fin) return false;
+        if (a.date_fin < editing.date_debut) return false;
+        return slotOverlaps(a.demi_journee, targetSlot);
+      }) ?? null
+    );
+  }, [editing, rows]);
+
   async function handleSave() {
     if (!editing) return;
     if (!editing.employe_id) {
