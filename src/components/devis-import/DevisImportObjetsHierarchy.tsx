@@ -41,6 +41,15 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import type { FabMetier } from "@/hooks/use-fabrication";
 import { emptyHeures } from "@/lib/devis-parser/compute-flags";
 import { computeFlagsFromMetiers } from "@/lib/devis-parser/compute-flags";
@@ -49,6 +58,7 @@ import {
   computeCounters,
   effectiveIsMatiere,
   isPosteAutoMapped,
+  mergeObjetsInSection,
   movePosteBetweenObjets,
   objetTotalHeures,
   recomputeObjet,
