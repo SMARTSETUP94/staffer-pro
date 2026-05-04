@@ -6,8 +6,9 @@ import { useEffect, useMemo, useState, useCallback, useImperativeHandle, useRef,
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, ArrowUp, ArrowDown, RefreshCw, Calendar, Users, Activity, AlertTriangle, Wand2, ChevronRight, ChevronDown } from "lucide-react";
+import { Loader2, ArrowUp, ArrowDown, RefreshCw, Calendar, Users, Activity, AlertTriangle, Wand2, ChevronRight, ChevronDown, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 // v0.39.0 — Slider supprimé : remplacé par PersStepper inline.
 import { Badge } from "@/components/ui/badge";
 import {
@@ -247,9 +248,17 @@ export const GanttInteractif = forwardRef<
     // v0.39.0b FIX — formule demi-journée (cohérente avec VolumeCard) :
     // pers × span_demi_jours × H_HALF (4h). L'ancienne `pers × 8 × span_days`
     // surévaluait car span_days = ceil(demi/2) (ex: 5 demi → 3j → 24h ≠ 20h).
+    const breakdownByMetier: Record<string, { label: string; h: number; persDemi: number; steps: number }> = {};
     for (const s of mergedSteps) {
       const demi = s.span_demi_jours ?? s.span_days * DEMI_PER_DAY;
-      totalH += s.pers * demi * H_HALF;
+      const h = s.pers * demi * H_HALF;
+      totalH += h;
+      const key = METIER_KEY_BY_ID[s.metier_id] ?? `m${s.metier_id}`;
+      const label = METIER_LABEL[key as keyof typeof METIER_LABEL] ?? key;
+      if (!breakdownByMetier[key]) breakdownByMetier[key] = { label, h: 0, persDemi: 0, steps: 0 };
+      breakdownByMetier[key].h += h;
+      breakdownByMetier[key].persDemi += s.pers * demi;
+      breakdownByMetier[key].steps += 1;
     }
     for (const v of Object.values(mergedDailyLoad)) if (v > pic) pic = v;
     const hDevis = (preParamConfigs ?? []).reduce(
@@ -264,7 +273,8 @@ export const GanttInteractif = forwardRef<
       : hasSoft
         ? "text-amber-600 dark:text-amber-400"
         : "text-emerald-600 dark:text-emerald-400";
-    return { totalH, pic, statut, statutColor, hDevis };
+    const breakdown = Object.values(breakdownByMetier).sort((a, b) => b.h - a.h);
+    return { totalH, pic, statut, statutColor, hDevis, breakdown };
   }, [data, mergedSteps, mergedDailyLoad, preParamConfigs]);
 
   /** Pré-vol : simule l'impact, affiche toast + stocke pour badges (pas de commit serveur) */
@@ -418,6 +428,78 @@ export const GanttInteractif = forwardRef<
               : stats.hDevis > 0 && Math.abs((stats.totalH - stats.hDevis) / stats.hDevis) > 0.05
                 ? "text-amber-600 dark:text-amber-400"
                 : "text-foreground"
+          }
+          detail={
+            <div className="space-y-3 text-xs">
+              <div>
+                <div className="font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                  Formule
+                </div>
+                <p className="text-foreground">
+                  <span className="font-mono">heures = Σ (pers × ½‑journées × 4 h)</span>
+                </p>
+                <p className="text-muted-foreground mt-1">
+                  Une demi‑journée = {H_HALF} h. Une journée = {DEMI_PER_DAY} demi‑journées.
+                  Le total agrège toutes les étapes (tous métiers, tous objets) du plan courant.
+                </p>
+              </div>
+              <div>
+                <div className="font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                  Décomposition par métier
+                </div>
+                <table className="w-full">
+                  <thead>
+                    <tr className="text-left text-muted-foreground">
+                      <th className="font-medium pb-1">Métier</th>
+                      <th className="font-medium pb-1 text-right">Étapes</th>
+                      <th className="font-medium pb-1 text-right">pers·½j</th>
+                      <th className="font-medium pb-1 text-right">Heures</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {stats.breakdown.map((b) => (
+                      <tr key={b.label} className="border-t border-border/50">
+                        <td className="py-1">{b.label}</td>
+                        <td className="py-1 text-right tabular-nums">{b.steps}</td>
+                        <td className="py-1 text-right tabular-nums">{b.persDemi.toFixed(0)}</td>
+                        <td className="py-1 text-right tabular-nums font-medium">
+                          {b.h.toFixed(0)} h
+                        </td>
+                      </tr>
+                    ))}
+                    <tr className="border-t border-border font-bold">
+                      <td className="py-1">Total</td>
+                      <td className="py-1 text-right tabular-nums">
+                        {stats.breakdown.reduce((a, b) => a + b.steps, 0)}
+                      </td>
+                      <td className="py-1 text-right tabular-nums">
+                        {stats.breakdown.reduce((a, b) => a + b.persDemi, 0).toFixed(0)}
+                      </td>
+                      <td className="py-1 text-right tabular-nums">
+                        {stats.totalH.toFixed(0)} h
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              {stats.hDevis > 0 && (
+                <div className="pt-2 border-t border-border">
+                  <div className="font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                    Comparaison devis
+                  </div>
+                  <p className="text-muted-foreground">
+                    Devis : <span className="font-medium text-foreground">{stats.hDevis.toFixed(0)} h</span>
+                    {" · "}Écart :{" "}
+                    <span className="font-medium text-foreground">
+                      {(stats.totalH - stats.hDevis >= 0 ? "+" : "")}
+                      {(stats.totalH - stats.hDevis).toFixed(0)} h
+                      {" ("}
+                      {(((stats.totalH - stats.hDevis) / stats.hDevis) * 100).toFixed(1)}%{")"}
+                    </span>
+                  </p>
+                </div>
+              )}
+            </div>
           }
         />
         <StatCard
@@ -814,19 +896,37 @@ function StatCard({
   label,
   value,
   valueClassName,
+  detail,
 }: {
   icon: React.ReactNode;
   label: string;
   value: string;
   valueClassName?: string;
+  detail?: React.ReactNode;
 }) {
-  return (
-    <div className="rounded-2xl border border-border bg-card p-4">
+  const card = (
+    <div
+      className={`rounded-2xl border border-border bg-card p-4 ${detail ? "cursor-help transition hover:border-primary/40 hover:shadow-sm" : ""}`}
+    >
       <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
         {icon}
         {label}
+        {detail && <Info className="ml-auto h-3.5 w-3.5 opacity-60" />}
       </div>
       <p className={`mt-1 text-2xl font-bold ${valueClassName ?? "text-foreground"}`}>{value}</p>
     </div>
+  );
+  if (!detail) return card;
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button type="button" className="text-left">
+          {card}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-[420px] max-w-[92vw]">
+        {detail}
+      </PopoverContent>
+    </Popover>
   );
 }
