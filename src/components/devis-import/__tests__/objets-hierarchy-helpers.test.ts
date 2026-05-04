@@ -11,6 +11,7 @@ import {
   movePosteBetweenObjets,
   recomputeObjet,
   mergeObjetsInSection,
+  getMergeButtonState,
   removeObjet,
   removePosteFromObjet,
   renamePoste,
