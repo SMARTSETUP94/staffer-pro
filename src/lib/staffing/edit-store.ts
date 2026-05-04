@@ -189,7 +189,8 @@ export const useEditStore = create<EditState>((set, get) => ({
       if (
         v.pers !== undefined ||
         v.manual_shift !== undefined ||
-        v.manual_pers !== undefined
+        v.manual_pers !== undefined ||
+        v.manual_span_demi !== undefined
       ) {
         n++;
       }
