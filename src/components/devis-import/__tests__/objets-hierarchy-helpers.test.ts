@@ -277,11 +277,22 @@ describe("mergeObjetsInSection (v0.39.1)", () => {
     expect(next[0].heures.metal).toBe(6);
   });
 
-  it("NO-OP si objets de sections différentes", () => {
-    const o1 = objet({ numero: "1.1", sectionNumero: "1" });
-    const o2 = objet({ numero: "2.1", sectionNumero: "2" });
+  it("autorise la fusion cross-section (v0.39.2) — merged hérite de la section du premier", () => {
+    const o1 = objet({
+      numero: "1.1",
+      sectionNumero: "1",
+      postes: [poste({ id: "a", heuresUnitaires: 2, metier: "bois" })],
+    });
+    const o2 = objet({
+      numero: "2.1",
+      sectionNumero: "2",
+      postes: [poste({ id: "b", heuresUnitaires: 3, metier: "bois" })],
+    });
     const next = mergeObjetsInSection([o1, o2], [0, 1], "X", "X");
-    expect(next).toEqual([o1, o2]);
+    expect(next).toHaveLength(1);
+    expect(next[0].sectionNumero).toBe("1");
+    expect(next[0].heures.bois).toBe(5);
+    expect(next[0].description).toContain("cross-section");
   });
 
   it("NO-OP si moins de 2 indexes", () => {

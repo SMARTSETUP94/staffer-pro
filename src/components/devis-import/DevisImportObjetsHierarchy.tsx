@@ -57,6 +57,7 @@ import type { IntegrityCheck, PosteCandidat } from "@/lib/devis-parser/types";
 import {
   computeCounters,
   effectiveIsMatiere,
+  getGlobalMergeState,
   getMergeButtonState,
   isPosteAutoMapped,
   mergeObjetsInSection,
@@ -306,6 +307,35 @@ export function DevisImportObjetsHierarchy({ objets, setObjets, integrityChecks 
             >
               <TriangleAlert className="mr-1 h-3 w-3" />À mapper {counters.manuel} • {counters.heuresManuel} h
             </Badge>
+            {(() => {
+              const globalState = getGlobalMergeState(objets);
+              if (!globalState.canMerge) return null;
+              return (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  data-testid="btn-merge-global"
+                  className="h-7 gap-1.5 border-primary/40 bg-primary/5 text-xs text-primary hover:bg-primary/10"
+                  onClick={() => {
+                    const firstObj = objets[globalState.selectedIdxs[0]];
+                    setMergeDialog({
+                      sectionKey: "_global",
+                      objetIdxs: globalState.selectedIdxs,
+                      newNumero: firstObj?.numero ?? "",
+                      newNom: globalState.selectedIdxs
+                        .map((i) => objets[i]?.nom)
+                        .filter(Boolean)
+                        .join(" + ")
+                        .slice(0, 80),
+                    });
+                  }}
+                >
+                  <Merge className="h-3.5 w-3.5" />
+                  Fusionner ({globalState.count}) cross-section
+                </Button>
+              );
+            })()}
           </div>
         </div>
 
@@ -664,11 +694,31 @@ export function DevisImportObjetsHierarchy({ objets, setObjets, integrityChecks 
                                               </SelectContent>
                                             </Select>
                                           )}
-                                          <span className="w-16 text-right text-xs tabular-nums">
-                                            {isMat
-                                              ? `${(p.totalHt ?? 0).toLocaleString("fr-FR")} €`
-                                              : `${round2(p.heuresUnitaires * o.quantite)} h`}
-                                          </span>
+                                          {isMat ? (
+                                            <span className="w-20 text-right text-xs tabular-nums">
+                                              {(p.totalHt ?? 0).toLocaleString("fr-FR")} €
+                                            </span>
+                                          ) : (
+                                            <div className="flex items-center gap-1">
+                                              <Input
+                                                type="number"
+                                                step="0.25"
+                                                min={0}
+                                                value={p.heuresUnitaires}
+                                                onChange={(e) =>
+                                                  updatePoste(objetIdx, p.id, {
+                                                    heuresUnitaires:
+                                                      Math.max(0, Number(e.target.value) || 0),
+                                                  })
+                                                }
+                                                className="h-7 w-16 text-right text-xs tabular-nums"
+                                                title="Heures par unité de cet objet"
+                                              />
+                                              <span className="text-[10px] text-muted-foreground">
+                                                h{o.quantite > 1 ? `×${o.quantite}` : ""}
+                                              </span>
+                                            </div>
+                                          )}
                                           <Button
                                             type="button"
                                             variant="ghost"
