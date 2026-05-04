@@ -35,6 +35,9 @@ interface EditState {
   setStepPers: (stepId: string, pers: number) => void;
   setStepShift: (stepId: string, manual_shift: number) => void;
   resetStepShift: (stepId: string) => void;
+  /** v0.39.0d — Override de durée en demi-jours (à pers constant). */
+  setStepSpanDemi: (stepId: string, manual_span_demi: number) => void;
+  resetStepSpanDemi: (stepId: string) => void;
   /** Bulk : applique pers à plusieurs steps en une seule entrée d'historique */
   bulkSetPers: (entries: Array<{ stepId: string; pers: number }>) => void;
   resetAll: () => void;
