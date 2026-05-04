@@ -2028,6 +2028,7 @@ export type Database = {
           id: string
           manual_pers: boolean
           manual_shift: number
+          manual_span_demi: number | null
           metier_id: number
           objet_id: string | null
           pers: number
@@ -2046,6 +2047,7 @@ export type Database = {
           id?: string
           manual_pers?: boolean
           manual_shift?: number
+          manual_span_demi?: number | null
           metier_id: number
           objet_id?: string | null
           pers: number
@@ -2064,6 +2066,7 @@ export type Database = {
           id?: string
           manual_pers?: boolean
           manual_shift?: number
+          manual_span_demi?: number | null
           metier_id?: number
           objet_id?: string | null
           pers?: number
