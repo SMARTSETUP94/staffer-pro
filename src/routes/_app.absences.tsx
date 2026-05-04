@@ -594,13 +594,23 @@ function AbsencesPage() {
                 />
                 Validée
               </label>
+
+              {duplicateAbsence && (
+                <div className="rounded-md border border-destructive/40 bg-destructive/10 p-2 text-xs text-destructive">
+                  ⚠️ Doublon : une absence{" "}
+                  <strong>{ABSENCE_LABEL[duplicateAbsence.type]}</strong> existe déjà pour cet
+                  employé du {format(parseISO(duplicateAbsence.date_debut), "dd/MM/yyyy")} au{" "}
+                  {format(parseISO(duplicateAbsence.date_fin), "dd/MM/yyyy")} (
+                  {duplicateAbsence.demi_journee ?? "Toute la période"}).
+                </div>
+              )}
             </div>
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
               <X className="mr-1 h-4 w-4" /> Annuler
             </Button>
-            <Button onClick={handleSave}>
+            <Button onClick={handleSave} disabled={!!duplicateAbsence}>
               <Check className="mr-1 h-4 w-4" /> Enregistrer
             </Button>
           </DialogFooter>
