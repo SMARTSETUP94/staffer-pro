@@ -130,7 +130,7 @@ function OpportunitesPage() {
   const { user, isAdmin, isAdminOrChef } = useAuth();
   const navigate = useNavigate({ from: "/opportunites" });
   const search = Route.useSearch();
-  const { typo: typoFilter, vue, q: searchQuery, preset } = search;
+  const { typo: typoFilter, vue, q: searchQuery, preset, archived: showArchived } = search;
 
   const setTypoFilter = (next: AffaireTypologie[]) => {
     navigate({ search: (prev: OppsSearch) => ({ ...prev, typo: next }), replace: true });
@@ -144,6 +144,12 @@ function OpportunitesPage() {
   const setPreset = (next: StoredPreset) => {
     navigate({
       search: (prev: OppsSearch) => ({ ...prev, preset: next }),
+      replace: true,
+    });
+  };
+  const setShowArchived = (next: boolean) => {
+    navigate({
+      search: (prev: OppsSearch) => ({ ...prev, archived: next }),
       replace: true,
     });
   };
