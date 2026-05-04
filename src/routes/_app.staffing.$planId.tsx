@@ -24,6 +24,7 @@ import { AutoStaffPlanButton, type AutoStaffPlanButtonHandle } from "@/component
 import { StaffingShortcutsHelp } from "@/components/staffing/StaffingShortcutsHelp";
 import { PreParametrageSection } from "@/components/staffing/PreParametrageSection";
 import { VolumeCard } from "@/components/staffing/VolumeCard";
+import { useShowDevisPrefix } from "@/components/staffing/ObjetRefLabel";
 import { listChantierMetierConfig, type ChantierMetierConfigRow } from "@/server/staffing-pre-parametrage.functions";
 import { ExpressResultBanner } from "@/components/staffing/ExpressResultBanner";
 import { Button } from "@/components/ui/button";
