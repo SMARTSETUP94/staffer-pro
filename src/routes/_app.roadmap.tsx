@@ -2305,19 +2305,7 @@ const RELEASES: RoadmapRelease[] = [
 ];
 
 const PLANNED: RoadmapPlanned[] = [
-  // ========== Roadmap consolidée v0.31.5 → v0.40 (validée 2 mai 2026) ==========
-  {
-    priority: "haute",
-    title: "v0.31.5 — Stabilisation parser Progbat (3-5j prod) + polish modale",
-    description:
-      "Période d'observation post v0.31.4 sur les imports réels : suivi du % auto-mapping, collecte feedback chefs sur la modale hiérarchique (lisibilité compteurs, ergonomie drag&drop, override métier), petits ajustements UX sans nouvelle feature. Pas de changement de schéma. Si écart < 100% sur fixture réelle → patch ciblé pattern.",
-  },
-  {
-    priority: "haute",
-    title: "v0.32.4 — Polish auto-saisie heures hors-planning (post-feedback chefs)",
-    description:
-      "Itérations sur la saisie heures employé sur chantiers non staffés (livrée v0.32.3) : améliorations UX selon retour terrain (visibilité du badge 'hors planning', validation chef simplifiée, filtres dans l'écran de validation). Pas de refonte, juste ajustements pragmatiques.",
-  },
+  // ========== Roadmap consolidée v0.34 → v0.41 (mise à jour 4 mai 2026) ==========
   {
     priority: "haute",
     title: "v0.34.x — Batterie E2E par rôle (admin / chef / employé desktop / employé mobile)",
@@ -2325,16 +2313,10 @@ const PLANNED: RoadmapPlanned[] = [
       "Cible 100 tests E2E Playwright (depuis ~50 actuels). Couverture : flows critiques de chaque rôle (admin paramétrage + invitations, chef création affaire + planning + validation heures, employé desktop /ma-semaine + propositions, employé mobile /mobile/aujourdhui + saisie heures + swaps). Permet de releaser vite sans régression silencieuse.",
   },
   {
-    priority: "haute",
-    title: "v0.35 — Auto-planning déterministe Fabrication 5XXX (PAS d'IA)",
-    description:
-      "Algorithme déterministe local pour suggérer le staffing fabrication : backward planning depuis date_montage, chaîne métiers (BE → Bois/Métal → Peinture → Tapisserie → Numérique), top 3 candidats par poste, modale drag&drop. Règle métier critique : tier-priority CDI/CDD AVANT intérim (bonus contrat CDI 1.0 / CDD 0.9 / Intérim 0.3 — voir mem://features/auto-staffing-tier-priority). Intérim = variable d'ajustement, jamais défaut. Cap aux affaires de typologie fabrication uniquement.",
-  },
-  {
     priority: "moyenne",
-    title: "v0.36 — Sprint dette : compteurs typologies + Lieu/Client éditables + patterns Logistique + Export Excel Planning",
+    title: "v0.36 — Sprint dette résiduelle : page admin véhicules + audit findings",
     description:
-      "Bundle dette technique : #108 cohérence compteurs typologie sur toutes les pages, #112 édition Lieu/Client sur affaire existante (déjà fait sur import devis v0.30.3, à étendre), #113 nouveaux patterns Logistique parser, #105 finalisation Export Excel Planning multi-onglets, + tickets restants de l'audit interne. Pas de feature visible, focus stabilité.",
+      "Bundle dette technique post-v0.35 : page admin véhicules complète, traitement des findings d'audit interne restants (compteurs, RLS edge cases, accessibilité). Pas de feature visible, focus stabilité.",
   },
   {
     priority: "moyenne",
@@ -2344,19 +2326,19 @@ const PLANNED: RoadmapPlanned[] = [
   },
   {
     priority: "moyenne",
-    title: "v0.38 — Phase 2 horaires précis (heure_debut / heure_fin / pauses + nuit/sup/35h auto + SILAE enrichi)",
-    description:
-      "Évolution majeure du modèle heures : passage des heures totales à des plages horaires précises (heure_debut, heure_fin, pauses), calcul automatique des majorations (nuit, dimanche, heures sup au-delà 35h), enrichissement export SILAE avec colonnes dédiées par typologie d'heure. Migration douce : ancien format toléré en lecture, nouveau format obligatoire en saisie après bascule.",
-  },
-  {
-    priority: "moyenne",
-    title: "v0.39 — Logistique avancée : autorisations véhicules + sous-traitants + historique + stats",
+    title: "v0.39.x suite — Logistique avancée : autorisations véhicules + sous-traitants + historique + stats",
     description:
       "Module flotte étendu : #56 autorisations véhicules par employé (B/C/CE/CACES + dates expiration), gestion fine des sous-traitants (carnet, tarifs, notes), historique complet des trajets par véhicule et par chauffeur, stats consommation et km par chantier. Pré-requis pour facturation interne flotte.",
   },
   {
     priority: "moyenne",
-    title: "v0.40 — Claude API auto-staffing (UNIQUEMENT 5XXX, fallback v0.35, cache + cap)",
+    title: "v0.40 — Phase 2 horaires précis (heure_debut / heure_fin / pauses + nuit/sup/35h auto + SILAE enrichi)",
+    description:
+      "Évolution majeure du modèle heures : passage des heures totales à des plages horaires précises (heure_debut, heure_fin, pauses), calcul automatique des majorations (nuit, dimanche, heures sup au-delà 35h), enrichissement export SILAE avec colonnes dédiées par typologie d'heure. Migration douce : ancien format toléré en lecture, nouveau format obligatoire en saisie après bascule.",
+  },
+  {
+    priority: "moyenne",
+    title: "v0.41 — Claude API auto-staffing (UNIQUEMENT 5XXX, fallback v0.35, cache + cap)",
     description:
       "Enrichissement de l'algorithme déterministe v0.35 par Claude API via edge function proxy : skill-based reasoning sur historique de l'employé (déjà bossé avec l'équipe ? sur ce client ? sur ce type d'objet ?), tools structurés (lecture affaires + assignations passées), fallback automatique sur v0.35 si timeout/erreur, cache 1h sur même contexte, hard cap mensuel d'appels (alerte admin avant blocage). Tier CDI/CDD avant intérim conservé. PAS d'autres intégrations Claude (pas de support conv, pas de génération texte).",
   },
