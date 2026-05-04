@@ -510,10 +510,11 @@ export const GanttInteractif = forwardRef<
               {stats.hDevis > 0 && (
                 <div className="pt-2 border-t border-border">
                   <div className="font-bold uppercase tracking-wider text-muted-foreground mb-1">
-                    Comparaison devis
+                    Comparaison devis (objets du plan)
                   </div>
                   <p className="text-muted-foreground">
-                    Devis : <span className="font-medium text-foreground">{stats.hDevis.toFixed(0)} h</span>
+                    Devis (objets inclus) :{" "}
+                    <span className="font-medium text-foreground">{stats.hDevis.toFixed(0)} h</span>
                     {" · "}Écart :{" "}
                     <span className="font-medium text-foreground">
                       {(stats.totalH - stats.hDevis >= 0 ? "+" : "")}
@@ -521,6 +522,11 @@ export const GanttInteractif = forwardRef<
                       {" ("}
                       {(((stats.totalH - stats.hDevis) / stats.hDevis) * 100).toFixed(1)}%{")"}
                     </span>
+                  </p>
+                  <p className="text-[11px] text-muted-foreground mt-1">
+                    Heures devis = Σ heures prévues des objets fabrication inclus dans ce plan
+                    (BE + Num + Bois + Métal + Peinture + Tap + Manut). Exclut les objets non
+                    cochés et les objets non rattachés à ce plan.
                   </p>
                 </div>
               )}
