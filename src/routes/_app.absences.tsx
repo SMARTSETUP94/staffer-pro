@@ -252,6 +252,29 @@ function AbsencesPage() {
       toast.error("La date de fin doit être après la date de début");
       return;
     }
+    // 0. Vérifier qu'aucune absence existante ne chevauche déjà la période/slot
+    {
+      const { data: existing, error: existErr } = await supabase
+        .from("absences")
+        .select("id, date_debut, date_fin, demi_journee, type")
+        .eq("employe_id", editing.employe_id)
+        .lte("date_debut", editing.date_fin)
+        .gte("date_fin", editing.date_debut);
+      if (existErr) {
+        toast.error(existErr.message);
+        return;
+      }
+      const overlap = (existing ?? []).find((a) => {
+        if (editing.id && a.id === editing.id) return false;
+        return slotOverlaps(a.demi_journee, editing.demi_journee ?? "JOURNEE");
+      });
+      if (overlap) {
+        toast.error(
+          `Une absence existe déjà pour cet employé sur cette période (${overlap.date_debut} → ${overlap.date_fin}).`,
+        );
+        return;
+      }
+    }
     // 1. Vérifier les assignations qui chevauchent l'absence
     const conflictRows = await fetchConflicts();
     if (conflictRows.length > 0) {
