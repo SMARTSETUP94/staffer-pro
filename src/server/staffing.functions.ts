@@ -5,7 +5,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { calculatePlan } from "@/lib/staffing/algo";
-import { addDays } from "@/lib/staffing/date-utils";
+import { addWorkingDays, holidaysRange, fromISO } from "@/lib/staffing/date-utils";
 import type { ObjetInput, PlanResult } from "@/lib/staffing/types";
 import type { Conflict } from "@/lib/staffing/pre-parametrage";
 
@@ -137,6 +137,12 @@ export const calculateStaffingPlan = createServerFn({ method: "POST" })
         };
       });
 
+    const includeWeekends = (plan as { include_weekends?: boolean }).include_weekends === true;
+    const holidays = holidaysRange(
+      fromISO(plan.date_debut_fab).getUTCFullYear() - 1,
+      fromISO(plan.date_fin_fab).getUTCFullYear() + 1,
+    );
+
     /* 6. Calcul algo v0.37 (lissage intégré, plus de post-traitement) */
     const result = calculatePlan({
       affaire_id: plan.affaire_id,
@@ -144,7 +150,7 @@ export const calculateStaffingPlan = createServerFn({ method: "POST" })
       date_debut_fab_min: plan.date_debut_fab,
       objets: objetsInput,
       cnc_reserved_dates: cncReservedDates,
-      include_weekends: (plan as { include_weekends?: boolean }).include_weekends === true,
+      include_weekends: includeWeekends,
     });
 
     // v0.37 : pas de post-lissage. Les diagnostics window sont déconnectés.
@@ -172,14 +178,15 @@ export const calculateStaffingPlan = createServerFn({ method: "POST" })
         const totalH = step.pers * step.h_par_jour * step.span_days;
         const newSpan = Math.max(1, Math.ceil(totalH / (ov.pers * step.h_par_jour)));
         // Réancrer fin = ancienne fin -> nouvelle start = ancienne fin - (newSpan-1)
-        const oldEnd = addDays(step.start_date, step.span_days - 1);
+        const oldEnd = addWorkingDays(step.start_date, step.span_days - 1, holidays, includeWeekends);
         step.pers = ov.pers;
         step.span_days = newSpan;
-        step.start_date = addDays(oldEnd, -(newSpan - 1));
+        step.start_date = addWorkingDays(oldEnd, -(newSpan - 1), holidays, includeWeekends);
         step.source = "manual";
       }
       if (ov.manual_shift !== 0) {
-        step.start_date = addDays(step.start_date, ov.manual_shift);
+        // v0.39.0b — shift symétrique : la durée reste constante, la fin suit le start.
+        step.start_date = addWorkingDays(step.start_date, ov.manual_shift, holidays, includeWeekends);
         step.source = "manual";
       }
     }
