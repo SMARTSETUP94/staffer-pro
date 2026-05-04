@@ -98,7 +98,7 @@ export async function importProgbatToAffaire(
     throw new Error(`Erreur import Progbat : ${error.message}`);
   }
 
-  const result = data as { inserted_objets: number; conflicts: ImportProgbatConflict[] };
+  const result = data as unknown as { inserted_objets: number; conflicts: ImportProgbatConflict[] };
   return {
     insertedObjets: result?.inserted_objets ?? 0,
     conflicts: result?.conflicts ?? [],
