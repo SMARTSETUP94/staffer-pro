@@ -124,9 +124,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
       const newUserId = newSession?.user?.id ?? null;
-      if (!shouldIgnoreTokenRefreshForSameUser({ event, newUserId, lastUserId })) {
+      // v0.39.0f — N'écrase user/session QUE si l'identité change ou au 1er event.
+      // Sinon SIGNED_IN/INITIAL_SESSION/TOKEN_REFRESHED émis au refocus d'onglet
+      // ou au refresh token recréent une nouvelle référence `user` → tous les hooks
+      // dépendants (useDashboardLayout, etc.) repassent en loading=true → spinner cyclique.
+      const identityChanged = newUserId !== lastUserId;
+      if (!initialised || identityChanged) {
         setSession(newSession);
         setUser(newSession?.user ?? null);
+      } else if (newSession) {
+        // Même user : on garde la référence stable mais on rafraîchit la session
+        // (nouveau access_token) sans toucher à `user`.
+        setSession(newSession);
       }
       if (newUserId) {
         // Anti-régression v0.27.7 : ne reload les rôles que si l'userId change.
