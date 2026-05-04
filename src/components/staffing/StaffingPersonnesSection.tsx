@@ -555,12 +555,18 @@ function CalendarView({
               className="grid items-center border-b border-border/30 hover:bg-muted/20"
               style={{ gridTemplateColumns: gridTemplate }}
             >
-              <div className="flex items-center gap-2 px-2 py-1.5 text-xs">
-                <span className="inline-block h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: color }} />
-                <span className="font-semibold">{METIER_LABEL[k]}</span>
-                <span className="truncate text-muted-foreground" title={objLabel}>
-                  · {objLabel}
-                </span>
+              <div className="flex items-center gap-2 px-2 py-1.5 text-xs min-w-0">
+                <span className="inline-block h-2.5 w-2.5 rounded-sm shrink-0" style={{ backgroundColor: color }} />
+                <span className="font-semibold shrink-0">{METIER_LABEL[k]}</span>
+                <span className="text-muted-foreground shrink-0">·</span>
+                {step.objet_id ? (
+                  (() => {
+                    const parsed = parseObjetLabel(objLabel);
+                    return <ObjetRefLabel reference={parsed.reference} nom={parsed.nom} />;
+                  })()
+                ) : (
+                  <span className="font-mono text-[11px] font-semibold">Global</span>
+                )}
               </div>
               {days.map((d) => {
                 const inStep = d >= stepStart && d <= stepEnd;
