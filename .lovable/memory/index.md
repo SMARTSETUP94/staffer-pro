@@ -14,6 +14,7 @@ Compteurs typologie : utiliser countActiveAffairesByTypologie (exclut terminé/a
 Imports : devis_imports a UNIQUE INDEX sur fichier_hash + RPC import_devis_atomique_v3 fait UPSERT (mode='updated' si hash existant). v0.30.6 : ZÉRO garde-fou SQL bloquant. RPC `preflight_import_devis` (lecture) + modale client `DevisReimportConfirmDialog` (3 alertes SOFT). Voir mem://features/devis-import-upsert-mode.
 Suppression cascade devis : RPC `delete_devis_atomique` + modale `DevisDeleteCascadeDialog` branchées sur /devis/historique (v0.31.0) ET /affaires/$id/devis (v0.31.1). Heures validées → archive (devis.archive + objets archive), sinon delete complet. Audit `devis_deletion_log`.
 fabrication_objets.reference : UNIQUE PAR AFFAIRE (affaire_id, reference) depuis v0.31.2 — JAMAIS UNIQUE globale (cassait imports cross-affaires).
+Import Progbat : TOUJOURS via RPC transactionnel `import_progbat_atomique` (jamais INSERT direct côté client, sinon orphelins `devis_id NULL` → duplicate key au ré-import). `delete_devis_atomique` appelle `cleanup_fabrication_orphelins` en fin. Voir mem://features/devis-import-orphelins-hotfix.
 Excel : UNIQUEMENT xlsx-js-style (pas xlsx plain, dedup v0.30.1). Modules d'export lazy-loadés au clic. Voir mem://constraints/xlsx-package-policy.
 Validation imports : `import-validation.ts` centralise toutes les vérifs (PARSE_FAILED, INVALID_NUMBER, INVALID_DATE, TOTAL_MISMATCH, MISSING_HEADER…). v0.32.1 ajoute `validateRowSumMatch` et `validateMetierTotalsConsistency`. v0.32.2 ajoute `validateObjetsHeuresConsistency`.
 Auto-staffing v0.35 + v0.40 : tier-priority CDI/CDD AVANT intérim (bonus contrat CDI 1.0 / CDD 0.9 / Intérim 0.3). Intérim = variable d'ajustement, jamais défaut. Voir mem://features/auto-staffing-tier-priority.
@@ -69,6 +70,7 @@ Volume staffé v0.39.0c : KPI "Heures staffées" = Σ(pers × demi_jours × H_HA
 35. ✅ **v0.39.0a** (4 mai 2026) — Vue 3 spec : pers/dates lecture seule, assignations + presence_pct éditables, "Re-staffer nominatif". HOTFIX React #310 useServerFn. BUG A DateShifter Vue 2 days étend dans 2 sens. BUG B autosave reload séquence calculate→SELECT updated_at.
 36. ✅ **v0.39.0b** (4 mai 2026) — BUG A.bis Vue 1 chevron : DateShifter ChargeMetierSection étend window dans 2 sens. KPI "Volume Total 744h" fantôme corrigé : formule `pers × span_demi × H_HALF`. Renommé "Heures staffées" + ratio devis. Boucle de fetch corrigée (useEditStore stable refs).
 37. ✅ **v0.39.0c** (4 mai 2026) — KPI "Heures staffées" auditable : Popover détail (formule, décomposition par métier, comparaison devis) + garde-fou volume = badge ±X.X% (ambre ≥5%, rouge ≥15%) + alerte `VOLUME_ECART_DEVIS` dans AlerteBandeau. Nouveau code AlertCode.
+38. ✅ **v0.39.0a-hotfix-import** (4 mai 2026) — Bug duplicate key import devis. RPC transactionnel `import_progbat_atomique` (pré-check conflits + ROLLBACK) + `cleanup_fabrication_orphelins` + patch `delete_devis_atomique`. Refactor `devis-progbat-import.ts` (plus d'INSERT direct). Cleanup one-shot 13 orphelins prod (affaires 5949/5951/5953). Voir mem://features/devis-import-orphelins-hotfix.
 
 ### À venir
 38. ⏳ **v0.34.x** — Batterie E2E par rôle (admin/chef/employé desktop/employé mobile) — INFRA POSÉE (playwright.config.ts, e2e/fixtures, .github/workflows/e2e.yml 4 shards). Reste seed comptes + ~48 tests.
@@ -105,6 +107,7 @@ Voir roadmap consolidée détaillée : mem://roadmap/consolidee-2mai2026.
 - [Compteurs typologie actifs](mem://features/typologie-active-counts) — v0.29.2
 - [Fusion Audit + Incident Auth](mem://features/audit-auth-fusion) — v0.29.3
 - [Suppression cascade devis](mem://features/devis-delete-cascade) — v0.31.0+v0.31.1
+- [Devis import orphelins hotfix](mem://features/devis-import-orphelins-hotfix) — v0.39.0a-hotfix-import : RPC transactionnel + cleanup orphelins
 - [Feuille de Route Tableur](mem://features/feuille-route-tableur) — v0.33
 - [HOTFIX parser devis 2141](mem://features/devis-import-hotfix-v0315) — v0.31.5
 - [Sprint clôture v0.31.5](mem://features/sprint-cloture-v0315) — #112+#113+#105+v0.32.4
