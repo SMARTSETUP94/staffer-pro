@@ -127,8 +127,10 @@ interface Props {
 
 export function StaffingPersonnesSection({ planId, steps, onAssignmentsChanged, objetsLabel, readOnly = false }: Props) {
   const fetchAssignments = useServerFn(getPlanAssignments);
+  const restaff = useServerFn(autoStaffPlan);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [restaffing, setRestaffing] = useState(false);
 
   const ALLOWED_METIERS = useMemo<readonly MetierFilter[]>(
     () => ["all", ...METIER_ORDER] as const,
@@ -219,19 +221,6 @@ export function StaffingPersonnesSection({ planId, steps, onAssignmentsChanged, 
     });
   }, [steps, hideFull, metierFilter, coverByStep]);
 
-  if (loading && assignments.length === 0) {
-    return (
-      <div className="flex items-center justify-center py-12 rounded-2xl border border-border bg-card">
-        <Loader2 className="h-5 w-5 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  const totalSteps = steps.filter((s) => s.start_date !== "TBD").length;
-  const fullCount = steps.filter((s) => s.start_date !== "TBD" && coverByStep[s.id]?.isFull).length;
-
-  const restaff = useServerFn(autoStaffPlan);
-  const [restaffing, setRestaffing] = useState(false);
   const handleRestaff = useCallback(async () => {
     setRestaffing(true);
     try {
@@ -245,6 +234,17 @@ export function StaffingPersonnesSection({ planId, steps, onAssignmentsChanged, 
       setRestaffing(false);
     }
   }, [restaff, planId, reload, onAssignmentsChanged]);
+
+  if (loading && assignments.length === 0) {
+    return (
+      <div className="flex items-center justify-center py-12 rounded-2xl border border-border bg-card">
+        <Loader2 className="h-5 w-5 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  const totalSteps = steps.filter((s) => s.start_date !== "TBD").length;
+  const fullCount = steps.filter((s) => s.start_date !== "TBD" && coverByStep[s.id]?.isFull).length;
 
   return (
     <div className="space-y-3 rounded-2xl border border-border bg-card p-4">
