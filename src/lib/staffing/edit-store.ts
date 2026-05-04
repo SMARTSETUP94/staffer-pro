@@ -10,6 +10,8 @@ export interface StepEdit {
   pers?: number;
   manual_pers?: boolean;
   manual_shift?: number;
+  /** v0.39.0d — durée override en demi-jours, à pers constant. null = reset auto. */
+  manual_span_demi?: number | null;
 }
 
 const HISTORY_LIMIT = 50;
@@ -33,6 +35,9 @@ interface EditState {
   setStepPers: (stepId: string, pers: number) => void;
   setStepShift: (stepId: string, manual_shift: number) => void;
   resetStepShift: (stepId: string) => void;
+  /** v0.39.0d — Override de durée en demi-jours (à pers constant). */
+  setStepSpanDemi: (stepId: string, manual_span_demi: number) => void;
+  resetStepSpanDemi: (stepId: string) => void;
   /** Bulk : applique pers à plusieurs steps en une seule entrée d'historique */
   bulkSetPers: (entries: Array<{ stepId: string; pers: number }>) => void;
   resetAll: () => void;
@@ -109,6 +114,26 @@ export const useEditStore = create<EditState>((set, get) => ({
       lastChangeAt: Date.now(),
     })),
 
+  setStepSpanDemi: (stepId, manual_span_demi) =>
+    set((s) => ({
+      history: pushHistory(s.history, s.edits),
+      edits: {
+        ...s.edits,
+        [stepId]: { ...s.edits[stepId], manual_span_demi },
+      },
+      lastChangeAt: Date.now(),
+    })),
+
+  resetStepSpanDemi: (stepId) =>
+    set((s) => ({
+      history: pushHistory(s.history, s.edits),
+      edits: {
+        ...s.edits,
+        [stepId]: { ...s.edits[stepId], manual_span_demi: null },
+      },
+      lastChangeAt: Date.now(),
+    })),
+
   bulkSetPers: (entries) =>
     set((s) => {
       const next = { ...s.edits };
@@ -164,7 +189,8 @@ export const useEditStore = create<EditState>((set, get) => ({
       if (
         v.pers !== undefined ||
         v.manual_shift !== undefined ||
-        v.manual_pers !== undefined
+        v.manual_pers !== undefined ||
+        v.manual_span_demi !== undefined
       ) {
         n++;
       }

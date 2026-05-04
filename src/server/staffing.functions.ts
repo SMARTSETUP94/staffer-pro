@@ -97,21 +97,22 @@ export const calculateStaffingPlan = createServerFn({ method: "POST" })
     if (cncErr) throw new Error(cncErr.message);
     const cncReservedDates = new Set<string>((cncRows ?? []).map((r) => r.date as string));
 
-    /* 4. Charger les overrides existants (manual_shift, manual_pers, pers) */
+    /* 4. Charger les overrides existants (manual_shift, manual_pers, pers, manual_span_demi) */
     const { data: existingSteps } = await supabase
       .from("staffing_plan_step")
-      .select("id, metier_id, objet_id, manual_shift, manual_pers, pers")
+      .select("id, metier_id, objet_id, manual_shift, manual_pers, pers, manual_span_demi")
       .eq("plan_id", planId);
-    type Override = { manual_shift: number; manual_pers: boolean; pers: number };
+    type Override = { manual_shift: number; manual_pers: boolean; pers: number; manual_span_demi: number | null };
     const overrideKey = (metier_id: number, objet_id: string | null) =>
       `${metier_id}|${objet_id ?? "_null_"}`;
     const overridesMap = new Map<string, Override>();
-    for (const s of existingSteps ?? []) {
-      if (s.manual_shift !== 0 || s.manual_pers === true) {
+    for (const s of (existingSteps ?? []) as Array<{ id: string; metier_id: number; objet_id: string | null; manual_shift: number | null; manual_pers: boolean | null; pers: number; manual_span_demi: number | null }>) {
+      if (s.manual_shift !== 0 || s.manual_pers === true || s.manual_span_demi != null) {
         overridesMap.set(overrideKey(s.metier_id, s.objet_id), {
           manual_shift: s.manual_shift ?? 0,
           manual_pers: s.manual_pers ?? false,
           pers: s.pers,
+          manual_span_demi: s.manual_span_demi,
         });
       }
     }
@@ -169,7 +170,7 @@ export const calculateStaffingPlan = createServerFn({ method: "POST" })
     const windowConflicts: Conflict[] = [];
 
 
-    /* 7. Appliquer overrides : si manual_pers, recalcule span ; si manual_shift, décale start_date */
+    /* 7. Appliquer overrides : si manual_pers, recalcule span ; si manual_span_demi, étend/réduit la fin à pers constant ; si manual_shift, décale start_date */
     for (const step of result.steps) {
       if (step.start_date === "TBD") continue;
       const ov = overridesMap.get(overrideKey(step.metier_id, step.objet_id));
@@ -181,7 +182,14 @@ export const calculateStaffingPlan = createServerFn({ method: "POST" })
         const oldEnd = addWorkingDays(step.start_date, step.span_days - 1, holidays, includeWeekends);
         step.pers = ov.pers;
         step.span_days = newSpan;
+        step.span_demi_jours = newSpan * 2;
         step.start_date = addWorkingDays(oldEnd, -(newSpan - 1), holidays, includeWeekends);
+        step.source = "manual";
+      }
+      if (ov.manual_span_demi != null && ov.manual_span_demi >= 1) {
+        // v0.39.0d — Override durée à pers constant. Le start reste, la fin bouge.
+        step.span_demi_jours = ov.manual_span_demi;
+        step.span_days = Math.max(1, Math.ceil(ov.manual_span_demi / 2));
         step.source = "manual";
       }
       if (ov.manual_shift !== 0) {
@@ -235,6 +243,7 @@ export const calculateStaffingPlan = createServerFn({ method: "POST" })
           h_par_jour: s.h_par_jour,
           manual_shift: ov?.manual_shift ?? 0,
           manual_pers: ov?.manual_pers ?? false,
+          manual_span_demi: ov?.manual_span_demi ?? null,
           source: s.source,
         };
         if (existingId) {
@@ -317,13 +326,14 @@ export const calculateStaffingPlan = createServerFn({ method: "POST" })
       };
     });
 
-    /* step_overrides : map step_db_uuid -> {manual_shift, manual_pers} */
-    const stepOverrides: Record<string, { manual_shift: number; manual_pers: boolean }> = {};
+    /* step_overrides : map step_db_uuid -> {manual_shift, manual_pers, manual_span_demi} */
+    const stepOverrides: Record<string, { manual_shift: number; manual_pers: boolean; manual_span_demi: number | null }> = {};
     for (const s of result.steps) {
       const ov = overridesMap.get(overrideKey(s.metier_id, s.objet_id));
       stepOverrides[s.id] = {
         manual_shift: ov?.manual_shift ?? 0,
         manual_pers: ov?.manual_pers ?? false,
+        manual_span_demi: ov?.manual_span_demi ?? null,
       };
     }
 

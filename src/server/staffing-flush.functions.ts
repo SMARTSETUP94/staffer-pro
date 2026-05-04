@@ -11,6 +11,7 @@ const editSchema = z.object({
   pers: z.number().int().min(1).max(12).optional(),
   manual_pers: z.boolean().optional(),
   manual_shift: z.number().int().min(-30).max(30).optional(),
+  manual_span_demi: z.number().int().min(1).max(200).nullable().optional(),
 });
 
 export const flushStepEdits = createServerFn({ method: "POST" })
@@ -76,10 +77,12 @@ export const flushStepEdits = createServerFn({ method: "POST" })
           pers?: number;
           manual_pers?: boolean;
           manual_shift?: number;
+          manual_span_demi?: number | null;
         } = { source: "manual" };
         if (e.pers !== undefined) patch.pers = e.pers;
         if (e.manual_pers !== undefined) patch.manual_pers = e.manual_pers;
         if (e.manual_shift !== undefined) patch.manual_shift = e.manual_shift;
+        if (e.manual_span_demi !== undefined) patch.manual_span_demi = e.manual_span_demi;
         const { error: upErr } = await supabase
           .from("staffing_plan_step")
           .update(patch)
