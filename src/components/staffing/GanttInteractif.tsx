@@ -131,14 +131,15 @@ export const GanttInteractif = forwardRef<
     if (!hasData) setLoading(true);
     setError(null);
     try {
-      const [r, planMeta] = await Promise.all([
-        calculate({ data: { planId } }) as Promise<PlanData>,
-        supabase
-          .from("staffing_plan")
-          .select("updated_at")
-          .eq("id", planId)
-          .single(),
-      ]);
+      // v0.39.0a BUG B — calculate() bumpe staffing_plan.updated_at côté serveur.
+      // On DOIT lire updated_at APRÈS la fin de calculate, sinon baseUpdatedAt
+      // est stale et le prochain flush déclenche un faux conflit "0 modif en attente".
+      const r = (await calculate({ data: { planId } })) as PlanData;
+      const planMeta = await supabase
+        .from("staffing_plan")
+        .select("updated_at")
+        .eq("id", planId)
+        .single();
       setData(r);
       onDataLoadedRef.current?.(r);
       if (planMeta.data?.updated_at) {
