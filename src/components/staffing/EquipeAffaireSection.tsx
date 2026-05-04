@@ -3,7 +3,9 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Loader2, Check, Users, X } from "lucide-react";
+import { Loader2, Check, Users, X, ArrowDownUp, Info } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { sortByTier as greedySortByTier } from "@/lib/staffing/greedy-allocate";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
