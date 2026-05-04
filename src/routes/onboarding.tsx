@@ -66,7 +66,7 @@ type PermisType = (typeof PERMIS_OPTIONS)[number];
 
 function OnboardingPage() {
   const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, refreshRoles } = useAuth();
   const { metiers } = useMetiers();
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -288,6 +288,11 @@ function OnboardingPage() {
     else if (step === 3) {
       ok = await saveStep3(true);
       if (ok) {
+        // v0.39.1 BUG #6 — Avant `navigate('/dashboard')`, on DOIT recharger
+        // les flags auth-context (`profileCompleted`) sinon AppGuard lit la
+        // valeur stale, retombe `shouldRedirectToOnboarding=true` → boucle
+        // infinie /dashboard ↔ /onboarding (cf. mem://features/sprint-1-stabilite-v0391).
+        await refreshRoles();
         toast.success("Profil complété 🎉");
         navigate({ to: "/dashboard" });
         setBusy(false);
