@@ -182,9 +182,8 @@ function AffaireSynthesePage() {
                   const isOpen = expanded[key] ?? false;
                   const hasMultipleDevis = g.devis.length > 1;
                   return (
-                    <>
+                    <Fragment key={key}>
                       <tr
-                        key={key}
                         data-testid={`marge-row-${g.metier_id ?? "null"}`}
                         className={cn(
                           "border-t hover:bg-muted/20",
