@@ -44,6 +44,41 @@ interface RoadmapPlanned {
 const RELEASES: RoadmapRelease[] = [
   {
     date: "2026-05-05",
+    version: "v0.41.0b (Sprint 3b.2)",
+    title: "🤝 Logistique avancée — Carnet sous-traitants (Phase 3b.2 livrée)",
+    entries: [
+      {
+        type: "feature",
+        area: "Sous-traitants",
+        title: "Nouvelle table sous_traitants + carnet partagé",
+        description:
+          "Carnet centralisé : nom, type (transport / manutention / fabrication / autre), contact, email, téléphone, adresse, SIRET 14 chiffres, tarif jour, tarif km, notes, actif. UNIQUE sur lower(nom) pour éviter doublons. RLS lecture authenticated, écriture chefs/admins. Backfill auto depuis trajets.prestataire (transporteurs déjà saisis librement importés en type=transport).",
+      },
+      {
+        type: "feature",
+        area: "Sous-traitants",
+        title: "Page admin /parametres/sous-traitants",
+        description:
+          "Tableau filtrable (recherche nom/contact/email + filtre type + toggle actifs/tous). Ajout/édition via SousTraitantDialog avec validation (nom obligatoire, email RFC, SIRET 14 chiffres, tarifs ≥ 0). Affichage tarifs formatés €/jour et €/km. Entrée sidebar Administration.",
+      },
+      {
+        type: "feature",
+        area: "Sous-traitants",
+        title: "Autocomplete prestataire dans TrajetDialog",
+        description:
+          "Le champ « Prestataire transporteur » du dialog trajet est désormais branché sur le carnet (filtre type=transport, actifs uniquement). Suggestions live au focus/typing avec contact + téléphone visibles. Saisie libre toujours possible (le carnet enrichit, ne contraint pas).",
+      },
+      {
+        type: "improvement",
+        area: "Tests",
+        title: "9 tests Vitest verts sur validation + format",
+        description:
+          "src/lib/__tests__/sous-traitants.test.ts : validateSousTraitantInput (nom obligatoire, email RFC, SIRET 14 chiffres avec espaces, tarifs négatifs rejetés) + formatTarif (null → —, formatage 2 décimales avec suffixe). Total 1429 tests verts. Phases 3b.3 (historique trajets) et 3b.4 (stats flotte) reportées au prochain tour.",
+      },
+    ],
+  },
+  {
+    date: "2026-05-05",
     version: "v0.41.0b (Sprint 3b.1)",
     title: "🚛 Logistique avancée — Autorisations véhicules (Phase 3b.1 livrée)",
     entries: [
