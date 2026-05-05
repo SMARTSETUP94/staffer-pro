@@ -551,108 +551,20 @@ export const GanttInteractif = forwardRef<
       {/* Gantt */}
       <div className="overflow-x-auto rounded-2xl border border-border bg-card">
         <div className="min-w-[900px]">
-          {/* Header dates */}
-          <div
+          {/* Header dates + Steps globaux (Manut FIN + CNC partagée) — extraits Tour 2 */}
+          <DayGrid
             ref={gridRef}
-            data-day-count={days.length}
-            className="grid border-b border-border bg-background/40"
-            style={{ gridTemplateColumns: gridTemplate }}
-          >
-            <div className="px-3 py-2 text-xs font-bold uppercase tracking-wider">Objet / Étape</div>
-            {days.map((d) => (
-              <div key={d} className="contents">
-                <div className="border-l border-border/60 px-0.5 pt-2 pb-0.5 text-center font-mono text-[10px]">
-                  <div className="text-muted-foreground">{formatDayName(d)}</div>
-                  <div className="font-semibold">{formatShortDate(d)}</div>
-                  <div className="mt-0.5 text-[8px] font-bold text-muted-foreground/70">AM</div>
-                </div>
-                <div className="border-l border-border/20 px-0.5 pt-2 pb-0.5 text-center font-mono text-[10px]">
-                  <div className="text-muted-foreground opacity-0">.</div>
-                  <div className="opacity-0">.</div>
-                  <div className="mt-0.5 text-[8px] font-bold text-muted-foreground/70">PM</div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Steps globaux affaire (Num CNC partagée) — affichés UNE SEULE FOIS au top */}
-          {(() => {
-            const globalSteps = mergedSteps.filter(
-              (s) => s.objet_id === null && s.start_date !== "TBD",
-            );
-            if (globalSteps.length === 0) return null;
-            return (
-              <div className="bg-muted/20">
-                <div
-                  className="grid items-center border-b border-border/30 px-3 py-1"
-                  style={{ gridTemplateColumns: gridTemplate }}
-                >
-                  <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                    Phases globales chantier — Manutention FIN (50 %) + ressources partagées (CNC)
-                  </div>
-                </div>
-                {globalSteps.map((s) => {
-                  const demi = s.span_demi_jours ?? s.span_days * 2;
-                  const halfStart = s.start_half_day ?? "AM";
-                  const span = stepSpanInHalves(days, s.start_date, demi, halfStart);
-                  const stepEnd = addWorkingDays(s.start_date, Math.max(1, s.span_days) - 1);
-                  const overDL = stepEnd > dateLivraison;
-                  const k = METIER_KEY_BY_ID[s.metier_id] ?? "Manut";
-                  const baseShift = data.step_overrides[s.id]?.manual_shift ?? 0;
-                  const localShift = edits[s.id]?.manual_shift ?? baseShift;
-                  const hasImpact = (impactByStep[s.id]?.length ?? 0) > 0;
-                  // Détail heures par objet pour ce métier
-                  const totalH =
-                    k === "BE"
-                      ? objets.reduce((acc, o) => {
-                          const f = data.objets.find((x) => x.objet_id === o.objet_id);
-                          return acc + (f?.heures_total ?? 0); // approx, pas de breakdown DB
-                        }, 0)
-                      : 0;
-                  void totalH;
-                  return (
-                    <div
-                      key={s.id}
-                      className="grid items-center border-b border-border/30 py-1.5"
-                      style={{ gridTemplateColumns: gridTemplate }}
-                    >
-                      <div className="flex items-center gap-2 px-3 text-xs">
-                        <span
-                          className="inline-block h-2.5 w-2.5 rounded-sm"
-                          style={{ backgroundColor: METIER_COLOR[k] }}
-                        />
-                        <span className="font-semibold">{METIER_LABEL[k]}</span>
-                        <span className="text-[10px] text-muted-foreground">
-                          tous objets · {s.pers}p × {s.h_par_jour}h
-                        </span>
-                        <span className="ml-auto font-mono text-[10px] font-semibold text-muted-foreground">
-                          {Math.round(s.pers * (s.span_demi_jours ?? s.span_days * 2) * 4)}h
-                        </span>
-                        {hasImpact && <ImpactBadge impacts={impactByStep[s.id]!} />}
-                      </div>
-                      {span.visible && (
-                        <GanttBar
-                          step={s}
-                          startCol={span.startCol + 1}
-                          endCol={span.endCol + 1}
-                          dayWidthPx={dayWidthPx}
-                          isOverDeadline={overDL}
-                          manualShift={localShift}
-                          hasWarning={hasImpact}
-                          hasLocalEdit={
-                            edits[s.id]?.pers !== undefined ||
-                            edits[s.id]?.manual_shift !== undefined
-                          }
-                          onShift={(d) => handleShift(s, d)}
-                          onResetShift={() => handleResetShift(s.id)}
-                        />
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            );
-          })()}
+            days={days}
+            gridTemplate={gridTemplate}
+            mergedSteps={mergedSteps}
+            dateLivraison={dateLivraison}
+            dayWidthPx={dayWidthPx}
+            stepOverrides={data.step_overrides}
+            edits={edits}
+            impactByStep={impactByStep}
+            onShift={handleShift}
+            onResetShift={handleResetShift}
+          />
 
           {/* Par objet — chaque objet affiche : entête + steps métiers (incl. quote-part BE/Num) */}
           {objets.map((obj, idx) => {
