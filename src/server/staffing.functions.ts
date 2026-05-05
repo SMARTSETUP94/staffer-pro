@@ -51,7 +51,7 @@ export const calculateStaffingPlan = createServerFn({ method: "POST" })
     /* 1. Plan */
     const { data: plan, error: planErr } = await supabase
       .from("staffing_plan")
-      .select("id, affaire_id, date_debut_fab, date_fin_fab, status, include_weekends")
+      .select("id, affaire_id, date_debut_fab, date_fin_fab, status, include_weekends, is_manut_absorbed")
       .eq("id", planId)
       .single();
     if (planErr || !plan) throw new Error(planErr?.message ?? "Plan introuvable");
