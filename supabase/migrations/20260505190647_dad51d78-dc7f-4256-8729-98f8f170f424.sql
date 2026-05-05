@@ -1,0 +1,1 @@
+ALTER VIEW public.v_employes_autorisations_actives SET (security_invoker = true);
