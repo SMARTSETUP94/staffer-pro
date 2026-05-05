@@ -1,7 +1,7 @@
 # v0.34 — Workflow E2E Playwright.
 #
 # Déclenchement : push sur main + workflow_dispatch.
-# Stratégie : 4 shards parallèles (cible <15 min) → blob reports → merge HTML.
+# Stratégie : 4 shards parallèles (cible <20 min, 5 shards depuis Sprint 3c) → blob reports → merge HTML.
 #
 # Artefacts :
 #   - playwright-blob-shard-N    : blob brut par shard (mergeable)
@@ -23,13 +23,13 @@ on:
 
 jobs:
   e2e:
-    name: Shard ${{ matrix.shard }}/4
+    name: Shard ${{ matrix.shard }}/5
     runs-on: ubuntu-latest
     timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4]
+        shard: [1, 2, 3, 4, 5]
 
     steps:
       - uses: actions/checkout@v4
@@ -56,7 +56,7 @@ jobs:
           E2E_CHEF_PASSWORD: ${{ secrets.E2E_CHEF_PASSWORD }}
           E2E_EMPLOYE_EMAIL: ${{ secrets.E2E_EMPLOYE_EMAIL }}
           E2E_EMPLOYE_PASSWORD: ${{ secrets.E2E_EMPLOYE_PASSWORD }}
-        run: bunx playwright test --shard=${{ matrix.shard }}/4
+        run: bunx playwright test --shard=${{ matrix.shard }}/5
 
       # Blob report : nécessaire pour le merge cross-shards.
       - name: Upload blob report (shard ${{ matrix.shard }})
