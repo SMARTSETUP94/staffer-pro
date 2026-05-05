@@ -129,17 +129,16 @@ describe("v0.40 — absorption Manut DEBUT+TRANSFERT par défaut", () => {
     expect(MANUT_PCT_FIN).toBe(0.5);
   });
 
-  it("objet sans Bois/Peint/Tap : pas d'absorbeur → pas de Manut DEBUT/TRANSFERT créé non plus (heures perdues, alerte UI à venir)", () => {
-    // Cas dégénéré : Manut sans absorbeur → on ne crée pas de step (totalAbsorber=0)
-    // → ces heures DEBUT+TRANSFERT seraient perdues. Acceptable pour v0.40.0a (UI à venir 0b).
+  it("objet sans Bois/Peint/Tap : fallback automatique vers steps Manut DEBUT/TRANSFERT (rien à absorber)", () => {
+    // Cas dégénéré : Manut sans absorbeur → on retombe sur le comportement legacy
+    // afin de ne pas perdre les heures.
     const r = calculatePlanV037(
       input([obj({ objet_id: "a", heures_metal: 20, heures_manutention: 40 })]),
     );
-    // Manut FIN doit toujours être créée (50%)
     const fin = r.steps.find((s) => s.metier === "Manut" && s.phase === "FIN");
     expect(fin).toBeDefined();
-    // En mode absorbed, sans absorbeur, pas de DEBUT/TRANSFERT
-    expect(r.steps.some((s) => s.metier === "Manut" && s.phase === "DEBUT")).toBe(false);
-    expect(r.steps.some((s) => s.metier === "Manut" && s.phase === "TRANSFERT")).toBe(false);
+    // Fallback : DEBUT/TRANSFERT émis même en mode absorbed
+    expect(r.steps.some((s) => s.metier === "Manut" && s.phase === "DEBUT")).toBe(true);
+    expect(r.steps.some((s) => s.metier === "Manut" && s.phase === "TRANSFERT")).toBe(true);
   });
 });
