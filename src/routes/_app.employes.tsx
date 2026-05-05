@@ -728,6 +728,13 @@ function EmployesPage() {
               )}
             </div>
 
+            {/* Sprint 3b.1 — Autorisations véhicules enrichies (uniquement en édition) */}
+            {form.id && (
+              <div className="space-y-2 rounded-xl border border-border bg-background p-3 sm:col-span-2">
+                <EmployeAutorisationsSection employeId={form.id} canEdit={isAdmin || isChef} />
+              </div>
+            )}
+
             {/* v0.20 — Bloc 2 : Rôles fabrication (indépendants du métier principal) */}
             <div className="space-y-2 rounded-xl border border-border bg-background p-3 sm:col-span-2">
               <div>
