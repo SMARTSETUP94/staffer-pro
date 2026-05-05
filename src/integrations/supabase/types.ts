@@ -1885,6 +1885,60 @@ export type Database = {
         }
         Relationships: []
       }
+      sous_traitants: {
+        Row: {
+          actif: boolean
+          adresse: string | null
+          contact_nom: string | null
+          created_at: string
+          created_by: string | null
+          email: string | null
+          id: string
+          nom: string
+          notes: string | null
+          siret: string | null
+          tarif_jour_eur: number | null
+          tarif_km_eur: number | null
+          telephone: string | null
+          type: Database["public"]["Enums"]["sous_traitant_type"]
+          updated_at: string
+        }
+        Insert: {
+          actif?: boolean
+          adresse?: string | null
+          contact_nom?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          nom: string
+          notes?: string | null
+          siret?: string | null
+          tarif_jour_eur?: number | null
+          tarif_km_eur?: number | null
+          telephone?: string | null
+          type?: Database["public"]["Enums"]["sous_traitant_type"]
+          updated_at?: string
+        }
+        Update: {
+          actif?: boolean
+          adresse?: string | null
+          contact_nom?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          nom?: string
+          notes?: string | null
+          siret?: string | null
+          tarif_jour_eur?: number | null
+          tarif_km_eur?: number | null
+          telephone?: string | null
+          type?: Database["public"]["Enums"]["sous_traitant_type"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       staffing_plan: {
         Row: {
           affaire_id: string
@@ -3156,6 +3210,7 @@ export type Database = {
         | "gros"
         | "tres_gros"
       permis_type: "B" | "C" | "CE"
+      sous_traitant_type: "transport" | "manutention" | "fabrication" | "autre"
       swap_status:
         | "proposee"
         | "acceptee_collegue"
@@ -3377,6 +3432,7 @@ export const Constants = {
       opportunite_statut: ["a_faire", "envoye", "gagne", "perdu", "termine"],
       opportunite_taille: ["tres_petit", "petit", "moyen", "gros", "tres_gros"],
       permis_type: ["B", "C", "CE"],
+      sous_traitant_type: ["transport", "manutention", "fabrication", "autre"],
       swap_status: [
         "proposee",
         "acceptee_collegue",
