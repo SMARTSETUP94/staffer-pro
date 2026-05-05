@@ -44,6 +44,34 @@ interface RoadmapPlanned {
 const RELEASES: RoadmapRelease[] = [
   {
     date: "2026-05-05",
+    version: "v0.39.2b2.2",
+    title: "🧱 Refacto StaffingPersonnesSection — Sprint 2b2.2 terminé (1214L → 322L + 5 modules)",
+    entries: [
+      {
+        type: "refactor",
+        area: "Staffing — Personnes",
+        title: "Nouveau dossier `staffing/personnes/` (5 modules)",
+        description:
+          "Extraction de StaffingPersonnesSection.tsx (1214L) en : shared.ts (types Suggestion/Assignment, helpers demi-journée, palette tier), AutoStaffButton.tsx, PersonneSuggestionCard.tsx, AssignedChip.tsx (+ PresenceSliderModal), ListView.tsx (Accordion étape×jours), CalendarView.tsx (lignes×colonnes jours + popover cellule). StaffingPersonnesSection.tsx ne garde que l'orchestrateur léger (state filtres, reload, cumul, couverture, restaff nominatif).",
+      },
+      {
+        type: "improvement",
+        area: "Staffing — Personnes",
+        title: "StaffingPersonnesSection : 1214L → 322L (-73%)",
+        description:
+          "Cible <350L atteinte. Aucune régression UX (Vue 1 List / Vue 2 Calendar / Vue 3 readOnly preservées). useRef mirrors anti-refire et mémos React Query inchangés. Greedy-allocate via le serveur (autoStaffPlan) toujours branché.",
+      },
+      {
+        type: "improvement",
+        area: "Tests",
+        title: "Test Vitest PersonneSuggestionCard — 1404/1404 verts",
+        description:
+          "Smoke tests : nom + tier + contrat affichés, badge Absent ce jour, bouton Affecter désactivé quand alreadyAssigned. Sprint 2b2 (Gantt + Personnes) entièrement clôturé.",
+      },
+    ],
+  },
+  {
+    date: "2026-05-05",
     version: "v0.39.2b2.1 Tour 3",
     title: "🧱 Refacto Gantt — extraction ObjetRowInteractif (Sprint 2b2.1 terminé)",
     entries: [
