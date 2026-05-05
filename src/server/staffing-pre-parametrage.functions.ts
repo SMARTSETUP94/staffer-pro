@@ -94,6 +94,9 @@ export interface SuggestResult {
   pipeline_duration: number;
   fenetre_dispo: number;
   totals_par_metier: Record<MetierConfigKey, number>;
+  /** v0.40 — Heures Manut absorbées (DEBUT 35% + TRANSFERT 15% = 50% du total Manut)
+   *  réparties au prorata sur Bois/Peint/Tap. Affichées en tooltip dans l'UI. */
+  manut_absorbed_par_metier: { Bois: number; Peint: number; Tap: number };
 }
 
 export const suggestPreParametrage = createServerFn({ method: "POST" })
