@@ -8,7 +8,8 @@
  * - Cellule remplie → affiche heures + badge si saisi_par_chef
  * - Bouton "Saisir en bulk" en haut à droite
  */
-import { createFileRoute, Navigate, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { RoleGuard } from "@/components/auth/RoleGuard";
 import { useAuth } from "@/lib/auth-context";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { addDays, format, isWeekend, startOfWeek } from "date-fns";
@@ -89,7 +90,7 @@ interface Saisie {
 }
 
 function SaisiePourEquipePage() {
-  const { isChef, isAdmin, rolesLoaded } = useAuth();
+  useAuth(); // RoleGuard handles RBAC; useAuth subscription kept for cache parity
   const navigate = useNavigate({ from: "/saisie-pour-equipe" });
   const { type: typeFilter, q: searchQuery } = Route.useSearch();
 
@@ -201,9 +202,8 @@ function SaisiePourEquipePage() {
 
   const metierOf = (id: number) => metiers.find((m) => m.id === id);
 
-  if (rolesLoaded && !isChef && !isAdmin) return <Navigate to="/dashboard" />;
-
   return (
+    <RoleGuard required="chef_or_admin">
     <div className="space-y-6 p-6">
       <PageBreadcrumbs steps={[{ label: "Équipes" }, { label: "Saisie pour l'équipe" }]} />
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -426,5 +426,6 @@ function SaisiePourEquipePage() {
         onCreated={() => setReloadKey((k) => k + 1)}
       />
     </div>
+    </RoleGuard>
   );
 }

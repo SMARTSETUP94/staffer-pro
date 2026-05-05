@@ -137,3 +137,50 @@ Légende : `✅` autorisé direct · `🔒` autorisé sous condition (cf. policy
 > `assignations`, `staffing_plan*` ou `affaires`. Mention explicite ajoutée
 > à `CONTRIBUTING.md` (sprint v0.39.2b).
 
+
+## v0.21.1 — Durcissement édition employé (`heures_saisies`)
+
+### `heures_saisies_self_update`
+
+| Acteur                       | brouillon | soumis | rejete | valide |
+| ---------------------------- | :-------: | :----: | :----: | :----: |
+| admin                        | ✅        | ✅     | ✅     | ✅     |
+| chef_chantier (devis ouvert) | ✅        | ✅     | ✅     | ✅     |
+| chef_chantier (devis terminé)| ❌        | ❌     | ❌     | ❌     |
+| employé propriétaire         | ✅        | ✅     | ✅     | **❌** |
+| autre employé                | ❌        | ❌     | ❌     | ❌     |
+
+> **Changement v0.21.1** : un employé propriétaire ne peut plus éditer
+> une saisie validée par le chef (auparavant : limité à brouillon/soumis,
+> donc le rejet bloquait aussi). La nouvelle règle (`statut <> 'valide'`)
+> autorise la correction post-rejet sans rouvrir la validation.
+
+### `heures_saisies_self_delete_brouillon` (nouvelle policy)
+
+L'employé propriétaire peut supprimer ses saisies **uniquement en
+statut `brouillon`** et tant que le devis n'est pas terminé. Au-delà,
+seuls chef ou admin peuvent supprimer (policy `heures_saisies_admin_chef_delete`).
+
+## v0.21.1 — Unicité chef du jour (`assignations`)
+
+`UNIQUE INDEX assignations_chef_jour_unique (affaire_id, date, demi_journee) WHERE est_chef_jour = true`
+
+Renforce atomiquement le trigger `enforce_unique_chef_jour` : en cas de
+désignations concurrentes par deux admins, la seconde transaction est
+rejetée par contrainte (au lieu d'écraser silencieusement la première
+puis de laisser une fenêtre de course). Le trigger reste en place pour
+la rétro-compatibilité côté UI (downgrade automatique du précédent chef).
+
+## Matrice tests automatisés (Phase 4 — partiellement livrée)
+
+| Cellule matrice                       | Test automatisé                                    |
+| ------------------------------------- | -------------------------------------------------- |
+| RoleGuard admin / chef / employé      | `src/components/auth/__tests__/RoleGuard.test.ts`  |
+| heures_saisies UPDATE/DELETE x statut | `src/lib/__tests__/rls-heures-saisies.test.ts`     |
+| chef_du_jour unicité concurrent       | `src/lib/__tests__/chef-du-jour-unique.test.ts`    |
+| anti-fuite RGPD employé desktop       | `e2e/employe-desktop/anti-fuite-rgpd.employe-desktop.spec.ts` |
+
+Tests d'intégration SQL contre la DB live (avec `service_role` vs `anon`)
+reportés à un sprint dédié (setup CI requis : pool dédié, snapshot/restore
+avant chaque run). Les tests de logique purs ci-dessus suffisent pour
+détecter les régressions applicatives qui dupliquent les règles RLS.

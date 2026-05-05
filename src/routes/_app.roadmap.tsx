@@ -2670,10 +2670,10 @@ const PLANNED: RoadmapPlanned[] = [
       "Phase 1 : pré-remplissage TrajetDialog depuis bandeau « Prête à livrer » (atelier → chantier, date montage-1j, catégorie pose, affaire pré-sélectionnée). Phase 2 : indexes composites perf (`fabrication_etapes(objet_id,statut)`, `fabrication_etapes(assignee_id,statut)`, `staffing_plan_step(plan_id,metier_id)`). Phase 3 : `useObjetsAffaireLight` migré sur React Query (queryKey partagée, staleTime 30s) — fin du N+1 entre sidebar/main/header. Phase 4 : trigger `notify_affaire_pret_livraison` étend la notif au `charge_affaires_id` en plus du chef projet. 1440/1440 Vitest verts.",
   },
   {
-    priority: "moyenne",
-    title: "v0.21.1 sécurité — Garde RBAC UI saisie-pour-equipe + durcissement RLS",
+    priority: "haute",
+    title: "v0.21.1 — Sprint sécurité LIVRÉ (RBAC UI + RLS heures_saisies + UNIQUE INDEX chef du jour)",
     description:
-      "Garde RBAC UI sur `/saisie-pour-equipe`, durcissement RLS, UNIQUE INDEX chef_jour, tests d'intégration SQL.",
+      "Phase 1 : composant `<RoleGuard required='admin|chef_or_admin'>` centralisé, appliqué sur /saisie-pour-equipe, /audit-heures, /audit-auth (loader pendant rolesLoaded, redirect /dashboard + toast si rôle insuffisant). Phase 2 : RLS `heures_saisies_self_update` durcie (employé propriétaire bloqué dès statut='valide', autorise correction post-rejet) + nouvelle policy `heures_saisies_self_delete_brouillon`. Phase 3 : UNIQUE INDEX partiel `assignations_chef_jour_unique (affaire_id, date, demi_journee) WHERE est_chef_jour=true` — anti race-condition concurrente. Phase 4 (partielle) : 19 tests Vitest sur la matrice acteur×statut×action + doc `docs/rls-policies.md` étendue ; tests SQL live reportés (setup CI dédié). 1459+ tests verts.",
   },
   {
     priority: "moyenne",

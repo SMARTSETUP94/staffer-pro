@@ -1,10 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
 import { z } from "zod";
 import { zodValidator, fallback } from "@tanstack/zod-adapter";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageHeader } from "@/components/PageHeader";
-import { useAuth } from "@/lib/auth-context";
+import { RoleGuard } from "@/components/auth/RoleGuard";
 import { ConnexionsTab } from "@/components/audit-auth/ConnexionsTab";
 import { InvitationsTab } from "@/components/audit-auth/InvitationsTab";
 import { EvenementsTab } from "@/components/audit-auth/EvenementsTab";
@@ -23,21 +22,21 @@ export const Route = createFileRoute("/_app/audit-auth")({
 });
 
 function AuditAuthPage() {
-  const { isAdmin, rolesLoaded } = useAuth();
   const navigate = useNavigate({ from: "/audit-auth" });
   const { tab } = Route.useSearch();
-
-  useEffect(() => {
-    if (rolesLoaded && !isAdmin) {
-      navigate({ to: "/dashboard" });
-    }
-  }, [rolesLoaded, isAdmin, navigate]);
-
-  if (!rolesLoaded || !isAdmin) return null;
 
   const setTab = (next: string) => {
     navigate({ search: { tab: next as AuditAuthTab }, replace: true });
   };
+
+  return (
+    <RoleGuard required="admin">
+      <AuditAuthPageInner tab={tab} setTab={setTab} />
+    </RoleGuard>
+  );
+}
+
+function AuditAuthPageInner({ tab, setTab }: { tab: AuditAuthTab; setTab: (v: string) => void }) {
 
   return (
     <div className="space-y-6 p-4 md:p-6">
