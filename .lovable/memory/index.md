@@ -84,12 +84,12 @@ Volume staffé v0.39.0c : KPI "Heures staffées" = Σ(pers × demi_jours × H_HA
 43. ✅ **Hotfix prefill numéro affaire** — Race condition fetch top-200 vs prefill : merge dédupliqué via Set. 3 tests.
 44. ✅ **Hotfix noms objets Plan staffing** — `<ObjetRefLabel />` partout (Gantt + Wizard) → masque préfixe `D-{numero}-`. 7 tests.
 
-### Livré v0.39.2b2.1 (Sprint 2b2 Tour 1+2 — extraction Gantt)
+### Livré v0.39.2b2.1 (Sprint 2b2.1 Gantt — TERMINÉ)
 45. ✅ **v0.39.2b2.1 Tour 1** (5 mai 2026) — Extraction `gantt/GanttHeaderRow.tsx` + `gantt/StatCard.tsx`. `GanttInteractif` 1029L → 857L.
 46. ✅ **v0.39.2b2.1 Tour 2** (5 mai 2026) — Extraction `gantt/DayGrid.tsx` (header dates AM|PM + steps globaux Manut FIN/CNC). `GanttInteractif` 857L → 735L. 4 tests Vitest DayGrid + suppression dead code `stepDateRangeShort`. **1397/1397 verts.**
+47. ✅ **v0.39.2b2.1 Tour 3** (5 mai 2026) — Extraction `gantt/ObjetRowInteractif.tsx` (header objet + steps métiers + CellEditPopover + GanttBar + ImpactBadge). `GanttInteractif` 759L → **603L**. 4 tests Vitest ObjetRowInteractif. **1401/1401 verts.** Sprint 2b2.1 clôturé (3 sous-composants).
 
 ### À venir (priorisé)
-47. ⏳ **Sprint 2b2.1 Tour 3 (PROCHAIN)** — Extraction `gantt/RowInteractif.tsx` (ligne objet treetable + steps métiers + CellEditPopover). Cible `GanttInteractif` ~400L.
 48. ⏳ **Sprint 2b2.2** — Refonte `StaffingPersonnesSection.tsx` 1214L → 4 fichiers (PersonneCard, AssignmentRow, TierFilters, StaffingPersonnesRoot).
 49. ⏳ **Sprint 3** — (a) BUG heures invisibles cache côté employé. (b) Logistique avancée. (c) E2E full role-based (employé desktop + mobile).
 50. ⏳ **v0.20.1 quick wins** — Pré-remplissage trajet sous-traité + cache `useObjetsAffaireLight` + notification CA prêt à livrer.
