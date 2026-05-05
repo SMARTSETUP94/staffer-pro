@@ -5,6 +5,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { calculatePlan } from "@/lib/staffing/algo";
+import { computeManutSummary } from "@/lib/staffing/manut-summary";
 import { addWorkingDays, holidaysRange, fromISO } from "@/lib/staffing/date-utils";
 import type { ObjetInput, PlanResult } from "@/lib/staffing/types";
 import type { Conflict } from "@/lib/staffing/pre-parametrage";
@@ -357,41 +358,7 @@ export const calculateStaffingPlan = createServerFn({ method: "POST" })
       result,
       cnc_reserved_dates: Array.from(cncReservedDates),
       step_overrides: stepOverrides,
-      manut_summary: (() => {
-        const PCT_ABS = 0.5; // DEBUT 35% + TRANSFERT 15%
-        const PCT_FIN = 0.5;
-        let manutTotal = 0;
-        let absorbedBois = 0;
-        let absorbedPeint = 0;
-        let absorbedTap = 0;
-        let fallbackObjets = 0;
-        for (const o of objetsInput) {
-          const hM = o.heures_manutention;
-          if (hM <= 0) continue;
-          manutTotal += hM;
-          if (!isManutAbsorbed) continue;
-          const totalAbs = o.heures_bois + o.heures_peinture + o.heures_tapisserie;
-          if (totalAbs <= 0) {
-            // dégénéré : algo fallback en DEBUT/TRANSFERT, pas absorbé
-            fallbackObjets += 1;
-            continue;
-          }
-          const hAbs = hM * PCT_ABS;
-          absorbedBois += hAbs * (o.heures_bois / totalAbs);
-          absorbedPeint += hAbs * (o.heures_peinture / totalAbs);
-          absorbedTap += hAbs * (o.heures_tapisserie / totalAbs);
-        }
-        return {
-          is_absorbed: isManutAbsorbed,
-          manut_total_h: manutTotal,
-          fin_total_h: manutTotal * PCT_FIN,
-          absorbable_total_h: absorbedBois + absorbedPeint + absorbedTap,
-          absorbed_bois_h: absorbedBois,
-          absorbed_peint_h: absorbedPeint,
-          absorbed_tap_h: absorbedTap,
-          fallback_objets: fallbackObjets,
-        };
-      })(),
+      manut_summary: computeManutSummary(objetsInput, isManutAbsorbed),
       lissage: {
         applied: lissageConfigsCount > 0,
         configs_count: lissageConfigsCount,
