@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { Plus, Pencil, Truck, MapPin, AlertTriangle, Trash2, Loader2 } from "lucide-react";
+import { Plus, Pencil, Truck, MapPin, AlertTriangle, Trash2, Loader2, History, BarChart3 } from "lucide-react";
+import { FlotteHistoriqueTab } from "@/components/flotte/FlotteHistoriqueTab";
+import { FlotteStatsTab } from "@/components/flotte/FlotteStatsTab";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -80,7 +82,7 @@ function AlerteBadge({
 function FlottePage() {
   const { vehicules, isLoading, refetch } = useVehicules();
   const { adresses, isLoading: loadAdr, refetch: refetchAdr } = useAdressesFavorites();
-  const [tab, setTab] = useState<"interne" | "location" | "adresses">("interne");
+  const [tab, setTab] = useState<"interne" | "location" | "adresses" | "historique" | "stats">("interne");
   const [openDlg, setOpenDlg] = useState(false);
   const [editVeh, setEditVeh] = useState<Vehicule | null>(null);
   const [openAdrDlg, setOpenAdrDlg] = useState(false);
@@ -145,11 +147,11 @@ function FlottePage() {
             <Button onClick={handleNewAdresse}>
               <Plus className="h-4 w-4 mr-2" /> Nouvelle adresse
             </Button>
-          ) : (
+          ) : tab === "interne" || tab === "location" ? (
             <Button onClick={handleNewVehicule}>
               <Plus className="h-4 w-4 mr-2" /> Nouveau véhicule
             </Button>
-          )
+          ) : null
         }
       />
 
@@ -163,6 +165,12 @@ function FlottePage() {
           </TabsTrigger>
           <TabsTrigger value="adresses">
             <MapPin className="h-4 w-4 mr-2" /> Adresses favorites ({adresses.length})
+          </TabsTrigger>
+          <TabsTrigger value="historique">
+            <History className="h-4 w-4 mr-2" /> Historique trajets
+          </TabsTrigger>
+          <TabsTrigger value="stats">
+            <BarChart3 className="h-4 w-4 mr-2" /> Statistiques
           </TabsTrigger>
         </TabsList>
 
@@ -192,6 +200,14 @@ function FlottePage() {
             onEdit={handleEditAdresse}
             onDelete={handleDeleteAdresse}
           />
+        </TabsContent>
+
+        <TabsContent value="historique" className="mt-4">
+          <FlotteHistoriqueTab />
+        </TabsContent>
+
+        <TabsContent value="stats" className="mt-4">
+          <FlotteStatsTab />
         </TabsContent>
       </Tabs>
 

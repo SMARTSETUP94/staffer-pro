@@ -130,3 +130,23 @@ isolé pour ne pas polluer les tests employé mobile.
 ### Reste à faire (Sprint 3b suite)
 - 3b.3 — Historique trajets enrichi (filtres avancés, drilldown véhicule).
 - 3b.4 — Stats flotte (KPIs sous-traitance, top transporteurs, € engagés).
+
+### 3b.3 — Historique trajets (livrée)
+- Onglet « Historique trajets » sur `/flotte` avec filtres combinables :
+  range dates (défaut 6 mois), véhicule, statut, catégorie, prestataire
+  (partial), recherche libre. Hook `useTrajetsRange` (limite 2000),
+  affichage 500 max, compteur live.
+
+### 3b.4 — Stats flotte (livrée)
+- Onglet « Statistiques » sur `/flotte` avec recharts. KPIs : trajets +
+  km, sous-traités (taux %), confirmés vs en cours, € engagés (tarif_km
+  sous-traitants × km confirmés). 4 charts : barres catégorie, donut
+  statut, top 10 transporteurs, top 10 véhicules.
+- `src/lib/trajets-stats.ts` pur fonctionnel (filterTrajets +
+  computeFlotteStats) + 11 tests Vitest. Total 1440 verts.
+
+## Sprint 3 complet ✅
+- 3a HOTFIX heures invisibles employé (v0.41.0a)
+- 3c E2E full role-based (3c.1 desktop / 3c.2 mobile / 3c.3 chef+admin)
+- 3b Logistique avancée (3b.1 autorisations / 3b.2 sous-traitants /
+  3b.3 historique / 3b.4 stats)
