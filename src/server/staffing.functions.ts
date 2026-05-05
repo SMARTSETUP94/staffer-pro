@@ -5,6 +5,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { calculatePlan } from "@/lib/staffing/algo";
+import { computeManutSummary } from "@/lib/staffing/manut-summary";
 import { addWorkingDays, holidaysRange, fromISO } from "@/lib/staffing/date-utils";
 import type { ObjetInput, PlanResult } from "@/lib/staffing/types";
 import type { Conflict } from "@/lib/staffing/pre-parametrage";
