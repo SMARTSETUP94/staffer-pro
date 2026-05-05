@@ -87,7 +87,7 @@ describe("DayGrid", () => {
       />,
     );
     expect(screen.getByTestId("day-grid-global-steps")).toBeTruthy();
-    expect(screen.getByText(/Manutention/)).toBeTruthy();
+    expect(screen.getAllByText(/Manutention/).length).toBeGreaterThan(0);
     // 2 × 4 × 4 = 32h
     expect(screen.getByText(/32h/)).toBeTruthy();
   });
