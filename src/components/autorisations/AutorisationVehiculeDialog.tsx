@@ -34,6 +34,7 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   employeId: string;
   existing?: AutorisationVehicule | null;
+  initialType?: AutorisationType;
   onSaved?: () => void;
 }
 
@@ -42,6 +43,7 @@ export function AutorisationVehiculeDialog({
   onOpenChange,
   employeId,
   existing,
+  initialType,
   onSaved,
 }: Props) {
   const [type, setType] = useState<AutorisationType>("PERMIS_B");
@@ -54,14 +56,14 @@ export function AutorisationVehiculeDialog({
 
   useEffect(() => {
     if (open) {
-      setType(existing?.type_autorisation ?? "PERMIS_B");
+      setType(existing?.type_autorisation ?? initialType ?? "PERMIS_B");
       setNumero(existing?.numero ?? "");
       setDateObtention(existing?.date_obtention ?? "");
       setDateExpiration(existing?.date_expiration ?? "");
       setFichierUrl(existing?.fichier_url ?? "");
       setNotes(existing?.notes ?? "");
     }
-  }, [open, existing]);
+  }, [open, existing, initialType]);
 
   async function handleSave() {
     setSaving(true);
