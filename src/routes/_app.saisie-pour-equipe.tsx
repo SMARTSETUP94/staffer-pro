@@ -90,7 +90,7 @@ interface Saisie {
 }
 
 function SaisiePourEquipePage() {
-  const { isChef, isAdmin, rolesLoaded } = useAuth();
+  useAuth(); // RoleGuard handles RBAC; useAuth subscription kept for cache parity
   const navigate = useNavigate({ from: "/saisie-pour-equipe" });
   const { type: typeFilter, q: searchQuery } = Route.useSearch();
 
