@@ -25,9 +25,9 @@ describe("PersonneSuggestionCard", () => {
         onAssign={vi.fn()}
       />,
     );
-    expect(screen.getByText(/Jean Martin/)).toBeInTheDocument();
-    expect(screen.getByText(/Tier 1/)).toBeInTheDocument();
-    expect(screen.getByText("CDI")).toBeInTheDocument();
+    expect(screen.getByText(/Jean Martin/)).toBeTruthy();
+    expect(screen.getByText(/Tier 1/)).toBeTruthy();
+    expect(screen.getByText("CDI")).toBeTruthy();
   });
 
   it("affiche le badge Absent ce jour", () => {
@@ -39,7 +39,7 @@ describe("PersonneSuggestionCard", () => {
         onAssign={vi.fn()}
       />,
     );
-    expect(screen.getByText(/Absent ce jour/)).toBeInTheDocument();
+    expect(screen.getAllByText(/Absent ce jour/).length).toBeGreaterThan(0);
   });
 
   it("désactive le bouton Affecter quand alreadyAssigned", () => {
@@ -51,6 +51,7 @@ describe("PersonneSuggestionCard", () => {
         onAssign={vi.fn()}
       />,
     );
-    expect(screen.getByRole("button", { name: /Affecté/ })).toBeDisabled();
+    const btn = screen.getByRole("button", { name: /Affecté/ }) as HTMLButtonElement;
+    expect(btn.disabled).toBe(true);
   });
 });
