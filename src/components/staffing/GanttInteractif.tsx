@@ -57,6 +57,16 @@ export interface PlanData {
   result: PlanResult;
   cnc_reserved_dates: string[];
   step_overrides: Record<string, { manual_shift: number; manual_pers: boolean }>;
+  manut_summary?: {
+    is_absorbed: boolean;
+    manut_total_h: number;
+    fin_total_h: number;
+    absorbable_total_h: number;
+    absorbed_bois_h: number;
+    absorbed_peint_h: number;
+    absorbed_tap_h: number;
+    fallback_objets: number;
+  };
 }
 
 export interface GanttInteractifHandle {
