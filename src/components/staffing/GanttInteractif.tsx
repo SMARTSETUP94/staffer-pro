@@ -10,6 +10,8 @@ import { Loader2, ArrowUp, ArrowDown, RefreshCw, AlertTriangle, Wand2, ChevronRi
 import { Button } from "@/components/ui/button";
 // v0.39.2b2.1 — Popover/StatCard/ManutStatCard déplacés vers ./gantt/GanttHeaderRow
 import { GanttHeaderRow } from "./gantt/GanttHeaderRow";
+// v0.39.2b2.1 Tour 2 — Header dates + steps globaux extraits vers ./gantt/DayGrid
+import { DayGrid } from "./gantt/DayGrid";
 // v0.39.0 — Slider supprimé : remplacé par PersStepper inline.
 import { Badge } from "@/components/ui/badge";
 import {
