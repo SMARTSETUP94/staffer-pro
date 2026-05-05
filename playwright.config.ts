@@ -86,12 +86,12 @@ export default defineConfig({
     },
     {
       name: "employe-desktop",
-      use: { ...devices["Desktop Chrome"], storageState: "e2e/.auth/employe.json" },
+      use: { ...devices["Desktop Chrome"], storageState: "e2e/.auth/employe-desktop.json" },
       testMatch: /.*\.employe-desktop\.spec\.ts/,
     },
     {
       name: "employe-mobile",
-      use: { ...devices["Pixel 7"], storageState: "e2e/.auth/employe.json" },
+      use: { ...devices["Pixel 7"], storageState: "e2e/.auth/employe-mobile.json" },
       testMatch: /.*\.employe-mobile\.spec\.ts/,
     },
     {
