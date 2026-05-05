@@ -52,3 +52,31 @@ Pas de bug RLS, pas de filtre client erroné. Deux faiblesses cumulées dans
    un cache React Query / state stale.
 3. Activer realtime sur `heures_saisies` (pas activé à ce jour) si on veut
    un push instantané plutôt qu'un refresh sur focus.
+
+## v0.41.0c — Sprint 3c.1 — E2E EMPLOYE DESKTOP + infra split (5 mai 2026)
+
+**Goal** : passer de 0 → 6 tests employé desktop dédiés, avec storage state
+isolé pour ne pas polluer les tests employé mobile.
+
+### Infra
+- `e2e/fixtures/test-accounts.ts` : ajout `employe_desktop` + `employe_mobile`
+  (storageStatePath séparés `e2e/.auth/employe-desktop.json` et `…-mobile.json`),
+  fallback transparent vers `E2E_EMPLOYE_*` si pas de credentials dédiés en CI.
+- `playwright.config.ts` : projects `employe-desktop` et `employe-mobile`
+  pointent désormais sur leurs storageState respectifs (au lieu de partager
+  `employe.json`).
+- `e2e/global-setup.ts` boucle déjà sur `Object.values(TEST_ACCOUNTS)` →
+  les 2 nouveaux storageStates sont générés automatiquement au premier run.
+
+### Tests ajoutés (`e2e/employe-desktop/flows-critiques.employe-desktop.spec.ts`)
+- D1 `/mes-heures` rend la grille semaine (regression v0.41.0a).
+- D2 saisie hors planning desktop (modale Autre chantier ouvre).
+- D3 `/ma-semaine` affiche au moins un repère semaine.
+- D4 `/mobile/profil` accessible aux employés desktop aussi.
+- D5 bouton Se déconnecter visible depuis la sidebar.
+- D6 anti-fuite RGPD : `/staffing/<uuid>` refusé (redirect / 4xx / message).
+
+### Reste à faire (Sprint 3c.2 + 3c.3)
+- 3c.2 : 4 tests EMPLOYE MOBILE (saisie 8h, scroll planning hebdo, hors-planning mobile complet).
+- 3c.3 : améliorations CHEF/ADMIN (auto-link invitations, audit-heures filtres + export, roadmap render).
+- CI : passer shards de 4 à 5 si le total dépasse 50 tests.

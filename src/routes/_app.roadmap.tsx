@@ -2508,13 +2508,13 @@ const PLANNED: RoadmapPlanned[] = [
     priority: "haute",
     title: "Sprint 3 — Features métier post-refacto",
     description:
-      "Sprint 2b2 entièrement terminé : Gantt (Tour 1+2+3) et StaffingPersonnesSection (Sprint 2b2.2) refactorés. Place aux features : bug heures cache + Logistique avancée + E2E full role-based.",
+      "Sprint 2b2 entièrement terminé : Gantt (Tour 1+2+3) et StaffingPersonnesSection (Sprint 2b2.2) refactorés. Sprint 3 en cours : v0.41.0a hotfix heures cache LIVRÉ + v0.41.0c E2E employé desktop LIVRÉ (Phase 3c.1).",
   },
   {
-    priority: "haute",
-    title: "Sprint 3 — Bug heures invisibles cache côté employé",
+    priority: "moyenne",
+    title: "v0.41.0a — LIVRÉ — Hotfix heures invisibles cache côté employé",
     description:
-      "Cause hors RLS confirmée (donnée bien en DB). Investigation cache client React Query / Supabase pour comprendre les saisies qui n'apparaissent pas immédiatement côté employé.",
+      "Refetch sur visibilitychange + focus + deps useMemo complétées (affairesById/metiersById). 1407/1407 tests verts. Test de non-régression dédié.",
   },
   {
     priority: "moyenne",
@@ -2524,10 +2524,11 @@ const PLANNED: RoadmapPlanned[] = [
   },
   {
     priority: "moyenne",
-    title: "Sprint 3 — E2E full role-based (employé desktop + mobile manquants)",
+    title: "v0.41.0c — Phase 3c.1 LIVRÉE — E2E employé desktop (6 tests + infra split)",
     description:
-      "Compléter la batterie E2E sur les rôles employé (desktop /ma-semaine + mobile /mobile/aujourdhui) en s'appuyant sur l'infra v0.34 déjà posée. ~48 tests à écrire.",
+      "Storage states séparés employe-desktop / employe-mobile, projects Playwright dédiés, 6 tests flows critiques (mes-heures, hors-planning desktop, ma-semaine, profil, logout, anti-fuite RGPD). Phases 3c.2 (mobile 4 tests) et 3c.3 (chef/admin) à venir.",
   },
+
   {
     priority: "moyenne",
     title: "v0.20.1 quick wins",
