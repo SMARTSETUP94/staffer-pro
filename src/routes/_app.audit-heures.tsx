@@ -248,9 +248,9 @@ function AuditHeuresPage() {
   }
 
   if (authLoading) return null;
-  if (!isAdmin) return <Navigate to="/dashboard" />;
 
   return (
+    <RoleGuard required="admin">
     <div className="space-y-4">
       <PageHeader
         title="Audit des heures"
