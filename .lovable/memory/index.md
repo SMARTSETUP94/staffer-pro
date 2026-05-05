@@ -68,24 +68,28 @@ Volume staffé v0.39.0c : KPI "Heures staffées" = Σ(pers × demi_jours × H_HA
 
 ### Livré v0.39 (Vue 3 + hotfixes KPI + Sprint 1 stabilité)
 35. ✅ **v0.39.0a/b/c** (4 mai 2026) — Vue 3 + KPI "Heures staffées" auditable + garde-fou volume + alerte `VOLUME_ECART_DEVIS`.
-36. ✅ **v0.39.0a-hotfix-import** (4 mai 2026) — RPC transactionnel `import_progbat_atomique` + `cleanup_fabrication_orphelins` + cleanup 13 orphelins prod. Voir mem://features/devis-import-orphelins-hotfix.
-37. ✅ **v0.39.1 Sprint 1 STABILITÉ** (4 mai 2026) — Audit RLS heures_saisies (verdict : RLS OK, BUG #33 non causé par RLS) + matrice `docs/rls-policies.md` + 2 nouveaux tests E2E (chef→employé heures, auto-staffing v0.39 Vue 1/2/3) + audit mutations client (Top 5 RPC à migrer, voir `docs/audit-mutations-client-v0391.md`) + auth-context shallow setSession (anti re-render TOKEN_REFRESHED). Voir mem://features/sprint-1-stabilite-v0391. **API Claude v0.41 REPORTÉE backlog.**
+36. ✅ **v0.39.0a-hotfix-import** (4 mai 2026) — RPC transactionnel `import_progbat_atomique` + `cleanup_fabrication_orphelins` + cleanup 13 orphelins prod.
+37. ✅ **v0.39.1 Sprint 1 STABILITÉ** (4 mai 2026) — Audit RLS heures_saisies + matrice `docs/rls-policies.md` + 2 E2E + audit mutations client + auth-context shallow setSession. **API Claude v0.41 REPORTÉE backlog.**
 
 ### Livré v0.39.2a/b1 (Sprint 2 polish — phasage sûr)
-38. ✅ **v0.39.2a** (4 mai 2026) — (1) Resize popup cellule : `CellEditPopover` + `DurationStepper` ; Vue 1 isolée, Vue 2 cascade aval (`cascade-aval.ts`, 6 tests). (2) Algo `greedy-allocate.ts` + 5 tests. (5) E2E `import-progbat-conflicts.chef.spec.ts` (4 specs tolérantes). 90 tests Vitest staffing verts (+11). Voir mem://features/sprint-2-polish-v0392.
-39. ✅ **v0.39.2b1** (4 mai 2026) — Branchement greedy UI dans `EquipeAffaireSection` (compteur live `X/Y pers·j`, badge `rotation greedy` + tooltip P1→Pn, bouton `Re-trier par tier`, badges sélection P1/P2/Pn). Doc RLS enrichie (anti-patterns + matrice acteur×action×table complète) + `CONTRIBUTING.md` lecture obligatoire. Smoke E2E cascade + greedy. 0 console.log/TODO restants.
+38. ✅ **v0.39.2a** (4 mai 2026) — `CellEditPopover` + `DurationStepper` ; Vue 1 isolée, Vue 2 cascade aval (`cascade-aval.ts`, 6 tests). Algo `greedy-allocate.ts` + 5 tests. E2E `import-progbat-conflicts.chef.spec.ts` (4 specs).
+39. ✅ **v0.39.2b1** (4 mai 2026) — Greedy UI branché dans `EquipeAffaireSection` (compteur live, badge rotation, bouton re-tri, badges P1/P2/Pn). Doc RLS enrichie + `CONTRIBUTING.md`. Smoke E2E cascade + greedy. 0 console.log/TODO.
 
-### À venir
-40. ⏳ **v0.39.2b2** — Refactors gros volume reportés : `GanttInteractif.tsx` 949L→4 fichiers, `StaffingPersonnesSection.tsx` 1214L→4 fichiers, brancher greedy sur la nouvelle archi.
-40. ⏳ **v0.39.3** — Migration RPC #1 bulk-assign-objet + #2 chef-saisit-pour-employe (corrige BUG #33 root cause)
-39. ⏳ **v0.39.3** — Migration RPC #3 bulk-saisie + #5 bulk-staffer
-40. ⏳ **v0.34.x** — Batterie E2E par rôle — INFRA POSÉE, reste seed comptes + ~48 tests
-41. ⏳ **v0.36** — Sprint dette résiduelle : page admin véhicules + audit findings
-42. ⏳ **v0.37** — Polish UX transversal post-feedback terrain
-43. ⏳ **v0.39.x suite** — Logistique avancée : autorisations véhicules #56 + sous-traitants
-44. 🚧 **v0.40 Refonte algo Manut split** — 0a livré (5 mai 2026) : algo absorption Bois/Peint/Tap au prorata + flag DB `is_manut_absorbed` (default true) + 7 tests Vitest, 1358/1358 verts. Reste 0b (UI Gantt + pre-param 6 lignes + E2E) puis 0c optionnel (replan plans existants, peu prio). Voir mem://features/manut-refonte-v040.
-44b. ⏳ **v0.40+** — Phase 2 horaires précis + RPC #4 feuille-route
-45. ⏳ **v0.41 (BACKLOG)** — Claude API auto-staffing — REPORTÉE par Gabin (focus stabilité d'abord)
+### Livré v0.40 (Refonte Manut split — algo + UI)
+40. ✅ **v0.40.0a** (5 mai 2026) — Algo absorption Manut Bois/Peint/Tap au prorata (35% début + 15% transfert + 50% FIN globale) + flag DB `is_manut_absorbed` + 7 tests Vitest. 1358/1358 verts.
+41. ✅ **v0.40.0b** (5 mai 2026) — UI Gantt nettoyée (suppression barres Manut intermédiaires par objet) + section globale "Manutention FIN (50%) + ressources partagées" + pré-param 6 lignes avec tooltips "Bois 105h dont 19h ex-Manut absorbée" + note bas de page + E2E `manut-refonte-v040.chef.spec.ts`. `ManutStatCard` dédié + `manut-summary.ts` (14 tests). 1372/1372 verts.
+
+### À venir (priorisé)
+42. ⏳ **v0.39.2b2 (PROCHAIN)** — Refactors gros volume : `GanttInteractif.tsx` 1029L → 4 fichiers (HeaderRow, DayGrid, RowInteractif, GanttRoot) + `StaffingPersonnesSection.tsx` 1214L → 4 fichiers (PersonneCard, AssignmentRow, TierFilters, StaffingPersonnesRoot). Tests Vitest unit + snapshot non-régression. Phasage 2b2.1 (Gantt) puis 2b2.2 (Personnes).
+43. ⏳ **v0.40.0c (optionnel, peu prio)** — Script migration plans existants vers algo Manut absorbée. La plupart des autres plans sont brouillons → faisable à la demande seulement.
+44. ⏳ **Sprint 3** — (a) BUG heures invisibles cache côté employé. (b) Logistique avancée : autorisations véhicules #56 + sous-traitants + historique + stats. (c) E2E full role-based (employé desktop + mobile, ~48 tests sur infra v0.34 déjà posée).
+45. ⏳ **v0.20.1 quick wins** — Pré-remplissage trajet sous-traité + cache `useObjetsAffaireLight` + notification CA prêt à livrer.
+46. ⏳ **v0.21.1** — Garde RBAC UI sur `/saisie-pour-equipe` + durcissement RLS + UNIQUE INDEX chef_jour + tests d'intégration SQL.
+47. ⏳ **v0.39.3** — Migration RPC #1 bulk-assign-objet + #2 chef-saisit-pour-employe (corrige BUG #33 root cause) + #3 bulk-saisie + #5 bulk-staffer.
+48. ⏳ **v0.36** — Sprint dette résiduelle : page admin véhicules + audit findings.
+49. ⏳ **v0.37** — Polish UX transversal post-feedback terrain.
+50. ⏳ **v0.40 Phase 2** — Horaires précis SILAE + RPC #4 feuille-route.
+51. ⏳ **v0.41 (BACKLOG long terme)** — Claude API auto-staffing 5XXX uniquement. Reportée par Gabin (focus stabilité). + CNI/passeport profil + suggestion véhicule.
 
 Voir roadmap consolidée détaillée : mem://roadmap/consolidee-2mai2026.
 
