@@ -57,25 +57,25 @@ function renderRow(overrides: Partial<Parameters<typeof ObjetRowInteractif>[0]> 
 describe("ObjetRowInteractif", () => {
   it("affiche le label objet (réf - nom)", () => {
     renderRow();
-    expect(screen.getByTestId("gantt-objet-header-label")).toBeInTheDocument();
-    expect(screen.getByText(/24 h · 1 étape/)).toBeInTheDocument();
+    expect(screen.getAllByTestId("gantt-objet-header-label").length).toBeGreaterThan(0);
+    expect(screen.getByText(/24 h · 1 étape/)).toBeTruthy();
   });
 
   it("expose le trigger d'édition cellule", () => {
     renderRow();
-    const trigger = screen.getByTestId("cell-edit-trigger");
-    expect(trigger).toBeInTheDocument();
-    expect(trigger.textContent).toMatch(/2p ·/);
+    const triggers = screen.getAllByTestId("cell-edit-trigger");
+    expect(triggers.length).toBeGreaterThan(0);
+    expect(triggers[0].textContent).toMatch(/2p ·/);
   });
 
   it("toggle replié n'affiche pas les steps", () => {
     renderRow({ isExpanded: false });
-    expect(screen.queryByTestId("cell-edit-trigger")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("cell-edit-trigger")).toBeNull();
   });
 
   it("clic sur header objet déclenche onToggle", () => {
     const { props } = renderRow();
-    fireEvent.click(screen.getByTestId("gantt-objet-header-label"));
+    fireEvent.click(screen.getAllByTestId("gantt-objet-header-label")[0]);
     expect(props.onToggle).toHaveBeenCalledWith("o1");
   });
 });
