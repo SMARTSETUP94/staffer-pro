@@ -116,31 +116,9 @@ function AutorisationsVehiculesPage() {
     const existing = byEmploye.get(employeId)?.get(type) ?? null;
     setEditingEmployeId(employeId);
     setEditingExisting(existing);
-    if (existing) {
-      setDialogOpen(true);
-    } else {
-      // Pré-sélectionner le type sur création : on passe via existing partial
-      setEditingExisting({
-        id: "",
-        employe_id: employeId,
-        type_autorisation: type,
-        numero: null,
-        date_obtention: null,
-        date_expiration: null,
-        fichier_url: null,
-        notes: null,
-        created_at: "",
-        updated_at: "",
-      });
-      // mais en mode "création" : on remet null après pour ne pas faire d'update sur "" id
-      // On utilise un flag séparé : placeholderType
-      setPlaceholderType(type);
-      setDialogOpen(true);
-    }
+    setInitialType(existing ? undefined : type);
+    setDialogOpen(true);
   }
-
-  // Astuce : pour créer avec un type pré-sélectionné, on injecte un faux existing puis on l'ignore au save
-  const [placeholderType, setPlaceholderType] = useState<AutorisationType | null>(null);
 
   if (!isAdmin) return <Navigate to="/dashboard" />;
 
