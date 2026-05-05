@@ -15,7 +15,7 @@ import {
 } from "../gantt-helpers";
 import { METIER_KEY_BY_ID } from "@/lib/staffing/types";
 import type { PlanStep } from "@/lib/staffing/types";
-import type { EditEntry } from "@/lib/staffing/edit-store";
+import type { StepEdit } from "@/lib/staffing/edit-store";
 import type { SliderImpact } from "@/lib/staffing/slider-impact";
 
 export interface ObjetRowInteractifProps {
