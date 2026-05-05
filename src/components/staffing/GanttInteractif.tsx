@@ -704,8 +704,9 @@ export const GanttInteractif = forwardRef<
                         type="button"
                         onClick={() => toggleObjet(obj.id)}
                         className="block w-full truncate text-left text-sm font-bold text-foreground hover:text-primary"
+                        data-testid="gantt-objet-header-label"
                       >
-                        {obj.reference} — {obj.nom}
+                        <ObjetRefLabel reference={obj.reference} nom={obj.nom} size="sm" truncate={false} />
                       </button>
                       <p className="font-mono text-[10px] text-muted-foreground">
                         {obj.heures_total.toFixed(0)} h · {objSteps.length} étape
