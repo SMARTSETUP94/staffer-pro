@@ -6,14 +6,14 @@ import { useEffect, useMemo, useState, useCallback, useImperativeHandle, useRef,
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, ArrowUp, ArrowDown, RefreshCw, AlertTriangle, Wand2, ChevronRight, ChevronDown } from "lucide-react";
+import { Loader2, RefreshCw, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 // v0.39.2b2.1 — Popover/StatCard/ManutStatCard déplacés vers ./gantt/GanttHeaderRow
 import { GanttHeaderRow } from "./gantt/GanttHeaderRow";
 // v0.39.2b2.1 Tour 2 — Header dates + steps globaux extraits vers ./gantt/DayGrid
 import { DayGrid } from "./gantt/DayGrid";
-// v0.39.0 — Slider supprimé : remplacé par PersStepper inline.
-import { Badge } from "@/components/ui/badge";
+// v0.39.2b2.1 Tour 3 — Ligne objet + steps interactifs extraits vers ./gantt/ObjetRowInteractif
+import { ObjetRowInteractif } from "./gantt/ObjetRowInteractif";
 import {
   calculateStaffingPlan,
   updatePlanObject,
@@ -22,20 +22,10 @@ import { useEditStore, applyEdits } from "@/lib/staffing/edit-store";
 import { addWorkingDays } from "@/lib/staffing/date-utils";
 import {
   workingDaysBetween,
-  formatDayName,
-  formatShortDate,
-  stepSpanInHalves,
-  METIER_COLOR,
   METIER_LABEL,
 } from "./gantt-helpers";
-import { GanttBar } from "./GanttBar";
 import { BulkPersByMetierBar } from "./BulkPersByMetierBar";
 import { ChargeMetierSection } from "./ChargeMetierSection";
-import { ObjetRefLabel } from "./ObjetRefLabel";
-import { PersStepper } from "./PersStepper";
-import { DateShifter } from "./DateShifter";
-import { CellEditPopover } from "./CellEditPopover";
-// v0.39.2b2.1 — ManutStatCard utilisé dans GanttHeaderRow
 import {
   computeCascadeForDurationChange,
   computeCascadeForShift,
