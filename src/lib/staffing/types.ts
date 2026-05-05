@@ -84,6 +84,10 @@ export interface PlanInput {
   heures_numerique_global?: number;
   holidays?: Set<string>;
   include_weekends?: boolean;
+  /** v0.40 — Si true (défaut), Manut DEBUT (35%) + TRANSFERT (15%) sont absorbés
+   *  par Bois/Peint/Tap au prorata des heures de chaque métier sur l'objet.
+   *  Manut FIN (50%) reste agrégée chantier. Si false, comportement v0.37 legacy. */
+  is_manut_absorbed?: boolean;
 }
 
 /** Phase Manutention (uniquement métier Manut) */
