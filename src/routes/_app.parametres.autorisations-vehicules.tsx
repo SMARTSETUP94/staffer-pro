@@ -253,15 +253,12 @@ function AutorisationsVehiculesPage() {
             if (!o) {
               setEditingExisting(null);
               setEditingEmployeId(null);
-              setPlaceholderType(null);
+              setInitialType(undefined);
             }
           }}
           employeId={editingEmployeId}
-          existing={
-            editingExisting && editingExisting.id ? editingExisting : null
-          }
-          // Si c'est un placeholder (création), on délègue le type initial via key
-          key={`${editingEmployeId}-${placeholderType ?? editingExisting?.type_autorisation ?? ""}`}
+          existing={editingExisting}
+          initialType={initialType}
           onSaved={reload}
         />
       )}
