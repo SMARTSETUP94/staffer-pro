@@ -82,7 +82,7 @@ function AlerteBadge({
 function FlottePage() {
   const { vehicules, isLoading, refetch } = useVehicules();
   const { adresses, isLoading: loadAdr, refetch: refetchAdr } = useAdressesFavorites();
-  const [tab, setTab] = useState<"interne" | "location" | "adresses">("interne");
+  const [tab, setTab] = useState<"interne" | "location" | "adresses" | "historique" | "stats">("interne");
   const [openDlg, setOpenDlg] = useState(false);
   const [editVeh, setEditVeh] = useState<Vehicule | null>(null);
   const [openAdrDlg, setOpenAdrDlg] = useState(false);
