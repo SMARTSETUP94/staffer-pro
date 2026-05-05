@@ -1074,6 +1074,7 @@ function StatCard({
   valueClassName,
   detail,
   badge,
+  subline,
 }: {
   icon: React.ReactNode;
   label: string;
@@ -1081,6 +1082,7 @@ function StatCard({
   valueClassName?: string;
   detail?: React.ReactNode;
   badge?: { label: string; severity: "hard" | "soft" } | null;
+  subline?: React.ReactNode;
 }) {
   const badgeCls =
     badge?.severity === "hard"
@@ -1106,6 +1108,7 @@ function StatCard({
           </span>
         )}
       </div>
+      {subline && <div className="mt-1 text-[11px] text-muted-foreground">{subline}</div>}
     </div>
   );
   if (!detail) return card;
