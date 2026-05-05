@@ -20,6 +20,7 @@ import {
   useVehicules, useAdressesFavorites, type Trajet,
 } from "@/hooks/use-vehicules";
 import { getChauffeursAvecStatut } from "@/hooks/use-trajets";
+import { useSousTraitants } from "@/hooks/use-sous-traitants";
 import type { Tables } from "@/integrations/supabase/types";
 import type { Permis } from "@/lib/permis";
 
@@ -503,14 +504,9 @@ export function TrajetDialog({
             <>
               <div>
                 <Label htmlFor="prestataire">Prestataire transporteur</Label>
-                <Input
-                  id="prestataire"
-                  value={prestataire}
-                  onChange={(e) => setPrestataire(e.target.value)}
-                  placeholder="Ex : Transports Dupont, DHL Express…"
-                />
+                <PrestataireAutocomplete value={prestataire} onChange={setPrestataire} />
                 <p className="mt-1 text-[10px] text-muted-foreground">
-                  Laisse vide si tu n'as pas encore choisi le transporteur.
+                  Tape pour rechercher dans le carnet ou saisis un nouveau nom.
                 </p>
               </div>
               <div>
