@@ -22,6 +22,7 @@ import {
   getActivePlansForAffaire,
   createStaffingPlan,
 } from "@/server/staffing-plan-create.functions";
+import { ObjetRefLabel } from "./ObjetRefLabel";
 
 interface Props {
   affaireId: string;
@@ -453,8 +454,7 @@ export function StaffingPlanWizard({
                           locked ? "cursor-not-allowed" : "cursor-pointer",
                         )}
                       >
-                        <span className="font-mono text-xs text-primary">{o.reference}</span>
-                        <span className="truncate text-foreground">{o.nom}</span>
+                        <ObjetRefLabel reference={o.reference} nom={o.nom} size="sm" truncate />
                         {o.quantite > 1 && (
                           <Badge variant="outline" className="h-5 text-[10px]">
                             ×{o.quantite}
