@@ -44,6 +44,34 @@ interface RoadmapPlanned {
 const RELEASES: RoadmapRelease[] = [
   {
     date: "2026-05-05",
+    version: "v0.41.0b (Sprint 3b.3 + 3b.4)",
+    title: "📊 Logistique avancée — Historique trajets + Stats flotte (Phases 3b.3 + 3b.4 livrées)",
+    entries: [
+      {
+        type: "feature",
+        area: "Historique",
+        title: "Onglet « Historique trajets » sur /flotte",
+        description:
+          "Vue dédiée avec filtres avancés combinables : range de dates (défaut 6 derniers mois), véhicule, statut sous-traitance, catégorie, prestataire (recherche partielle), recherche libre (adresse, référence, notes). Compteur résultats live, reset rapide, table jusqu'à 500 lignes (au-delà : message d'affinage filtres). Hook useTrajetsRange chargé à la demande (limite 2000).",
+      },
+      {
+        type: "feature",
+        area: "Statistiques",
+        title: "Onglet « Statistiques » sur /flotte avec recharts",
+        description:
+          "KPIs flotte : trajets totaux + km, sous-traités (% taux), confirmés vs en cours, € engagés (estimés via tarif_km du carnet sous-traitants × km confirmés). 4 graphiques : barres par catégorie, donut par statut, top 10 transporteurs (count + km), top 10 véhicules (km décroissants). Filtre période défaut 1 an. Lib pure (compute_flotte_stats) testée 11 tests Vitest.",
+      },
+      {
+        type: "improvement",
+        area: "Architecture",
+        title: "src/lib/trajets-stats.ts purement fonctionnel",
+        description:
+          "filterTrajets(trajets, filters) + computeFlotteStats(trajets, vehicules, tarifs). Toute la logique d'agrégation testable hors React (11 tests verts) + labels CATEGORIE_LABEL/STATUT_LABEL réutilisables. Total Vitest 1440 tests verts. Sprint 3b cloturé (3b.1 + 3b.2 + 3b.3 + 3b.4).",
+      },
+    ],
+  },
+  {
+    date: "2026-05-05",
     version: "v0.41.0b (Sprint 3b.2)",
     title: "🤝 Logistique avancée — Carnet sous-traitants (Phase 3b.2 livrée)",
     entries: [
