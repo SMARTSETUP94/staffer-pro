@@ -55,6 +55,7 @@ function AutorisationsVehiculesPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingEmployeId, setEditingEmployeId] = useState<string | null>(null);
   const [editingExisting, setEditingExisting] = useState<AutorisationVehicule | null>(null);
+  const [initialType, setInitialType] = useState<AutorisationType | undefined>(undefined);
 
   async function reload() {
     setLoading(true);
