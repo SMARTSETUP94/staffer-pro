@@ -157,7 +157,17 @@ function DevisImportPage() {
       .select("id, numero, nom, client, lieu")
       .order("numero", { ascending: false })
       .limit(200)
-      .then(({ data }) => setAffaires((data ?? []) as AffaireOption[]));
+      .then(({ data }) => {
+        const list = (data ?? []) as AffaireOption[];
+        // v0.40.0d HOTFIX — merge avec items déjà ajoutés (notamment l'affaire pré-sélectionnée
+        // hors top 200 qui pourrait être insérée par l'effet de prefill avant que ce fetch ne résolve).
+        setAffaires((prev) => {
+          if (prev.length === 0) return list;
+          const ids = new Set(list.map((a) => a.id));
+          const extras = prev.filter((a) => !ids.has(a.id));
+          return [...extras, ...list];
+        });
+      });
   }, []);
 
   // v0.25.1 — Si ?affaire_id présent, fetch ciblé (peut être hors top 200) + RLS check
