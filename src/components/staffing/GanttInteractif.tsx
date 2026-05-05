@@ -619,6 +619,19 @@ export const GanttInteractif = forwardRef<
               icon={<Truck className="h-4 w-4" />}
               label={m.is_absorbed ? "Manut FIN + absorbée" : "Manutention (legacy)"}
               value={`${fmt(m.fin_total_h)} FIN`}
+              subline={
+                m.is_absorbed && m.absorbable_total_h > 0 ? (
+                  <span className="tabular-nums">
+                    + absorbé : <span className="font-medium text-foreground">B {fmt(m.absorbed_bois_h)}</span>
+                    {" · "}
+                    <span className="font-medium text-foreground">P {fmt(m.absorbed_peint_h)}</span>
+                    {" · "}
+                    <span className="font-medium text-foreground">T {fmt(m.absorbed_tap_h)}</span>
+                  </span>
+                ) : !m.is_absorbed ? (
+                  <span>Mode legacy — DÉBUT/TRANSFERT par objet</span>
+                ) : null
+              }
               detail={
                 <div className="space-y-3 text-xs">
                   <div>
