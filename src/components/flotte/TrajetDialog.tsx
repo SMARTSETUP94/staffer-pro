@@ -20,7 +20,7 @@ import {
   useVehicules, useAdressesFavorites, type Trajet,
 } from "@/hooks/use-vehicules";
 import { getChauffeursAvecStatut } from "@/hooks/use-trajets";
-import { useSousTraitants } from "@/hooks/use-sous-traitants";
+import { PrestataireAutocomplete } from "@/components/sous-traitants/PrestataireAutocomplete";
 import type { Tables } from "@/integrations/supabase/types";
 import type { Permis } from "@/lib/permis";
 
