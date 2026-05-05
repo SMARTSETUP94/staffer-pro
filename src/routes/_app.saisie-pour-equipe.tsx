@@ -201,9 +201,8 @@ function SaisiePourEquipePage() {
 
   const metierOf = (id: number) => metiers.find((m) => m.id === id);
 
-  if (rolesLoaded && !isChef && !isAdmin) return <Navigate to="/dashboard" />;
-
   return (
+    <RoleGuard required="chef_or_admin">
     <div className="space-y-6 p-6">
       <PageBreadcrumbs steps={[{ label: "Équipes" }, { label: "Saisie pour l'équipe" }]} />
       <div className="flex flex-wrap items-center justify-between gap-3">
