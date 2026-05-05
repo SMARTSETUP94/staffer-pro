@@ -2478,9 +2478,9 @@ const PLANNED: RoadmapPlanned[] = [
   // ========== Roadmap consolidée (mise à jour 5 mai 2026) ==========
   {
     priority: "haute",
-    title: "Sprint 2b2.1 Tour 3 — Extraction `gantt/RowInteractif.tsx` (PROCHAIN)",
+    title: "Sprint 2b2.2 — Refonte `StaffingPersonnesSection.tsx` (1214L → 4 fichiers) [PROCHAIN]",
     description:
-      "Sortir la ligne objet treetable + steps métiers + CellEditPopover de GanttInteractif. Cible : passer de ~735L à ~400L. Tests Vitest unit + validation visuelle HPDN 5905 entre Tour 2 et Tour 3.",
+      "Découpage en PersonneCard, AssignmentRow, TierFilters, StaffingPersonnesRoot. Tests Vitest + snapshot non-régression. Sprint 2b2.1 (Gantt) terminé : 3 sous-composants extraits, GanttInteractif 1430→603L.",
   },
   {
     priority: "haute",
