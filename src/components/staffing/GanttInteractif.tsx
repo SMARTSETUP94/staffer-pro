@@ -481,7 +481,7 @@ export const GanttInteractif = forwardRef<
   return (
     <div className="space-y-4">
       {/* Stats cards */}
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
         <StatCard
           icon={<Activity className="h-4 w-4" />}
           label="Heures staffées"
