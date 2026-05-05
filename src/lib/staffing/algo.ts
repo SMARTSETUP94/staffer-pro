@@ -278,6 +278,8 @@ export function calculatePlanV037(input: PlanInput): PlanResult {
   // Earliest start global pour fab (post-BE)
   let earliestProdStart: string | null = null;
 
+  const isManutAbsorbed = input.is_manut_absorbed !== false; // défaut true (v0.40)
+
   for (const o of objets) {
     const beStep = beStepsByObj.get(o.objet_id);
     const beEnd = beStep ? stepEnd(beStep.start_date, beStep.span_days) : null;
@@ -288,6 +290,23 @@ export function calculatePlanV037(input: PlanInput): PlanResult {
     const hManutTransfert = hManut * MANUT_PCT_TRANSFERT;
     const hManutFin = hManut * MANUT_PCT_FIN;
     manutFinTotalH += hManutFin;
+
+    // v0.40 — Absorption Manut DEBUT+TRANSFERT par Bois/Peint/Tap au prorata
+    const hAbsorbable = hManutDebut + hManutTransfert;
+    const baseBois = o.heures_bois;
+    const basePeint = o.heures_peinture;
+    const baseTap = o.heures_tapisserie;
+    const totalAbsorber = baseBois + basePeint + baseTap;
+    let hBoisEff = baseBois;
+    let hPeintEff = basePeint;
+    let hTapEff = baseTap;
+    let absorbed = false;
+    if (isManutAbsorbed && hAbsorbable > 0 && totalAbsorber > 0) {
+      hBoisEff = baseBois + hAbsorbable * (baseBois / totalAbsorber);
+      hPeintEff = basePeint + hAbsorbable * (basePeint / totalAbsorber);
+      hTapEff = baseTap + hAbsorbable * (baseTap / totalAbsorber);
+      absorbed = true;
+    }
 
     // Ancre démarrage objet : si BE → BE_end + LAG_BE_NUM ; sinon date_debut_fab_min ; sinon livraison-large
     const objStart =
@@ -300,8 +319,8 @@ export function calculatePlanV037(input: PlanInput): PlanResult {
     // Fenêtre Peint max = livraison - MANUT_FIN_DAYS (Peint doit finir avant Manut FIN)
     const peintEndMax = wMinus(previousWorkingDay(dateLivraison, holidays, includeWeekends), MANUT_FIN_DAYS);
 
-    // -- Manut DÉBUT (concurrent avec Num) --
-    if (hManutDebut > 0) {
+    // -- Manut DÉBUT (concurrent avec Num) — émis UNIQUEMENT si non absorbé --
+    if (hManutDebut > 0 && !absorbed) {
       const fenetre = workingWindow(objStart, peintEndMax, holidays, includeWeekends);
       const { pers, span_days, span_demi_jours } = pickPersAndSpan(hManutDebut, "Manut", { fenetreMax: Math.max(1, Math.floor(fenetre / 4)) });
       steps.push({
@@ -341,11 +360,11 @@ export function calculatePlanV037(input: PlanInput): PlanResult {
 
     // -- Bois après Num+LAG_NUM_BOIS --
     let boisEnd: string | null = null;
-    if (o.heures_bois > 0) {
+    if (hBoisEff > 0) {
       const start = numEnd !== null ? wPlus(numEnd, LAG_NUM_BOIS) : objStart;
       // Fenêtre Bois max = peintEndMax - 1j transfert
       const fenetre = workingWindow(start, wMinus(peintEndMax, 1), holidays, includeWeekends);
-      const { pers, span_days, span_demi_jours } = pickPersAndSpan(o.heures_bois, "Bois", { fenetreMax: fenetre });
+      const { pers, span_days, span_demi_jours } = pickPersAndSpan(hBoisEff, "Bois", { fenetreMax: fenetre });
       steps.push({
         id: nextId("bois"), metier_id: METIER_ID.Bois, metier: "Bois",
         objet_id: o.objet_id, start_date: start, span_days, span_demi_jours, start_half_day: "AM", pers,
@@ -370,9 +389,9 @@ export function calculatePlanV037(input: PlanInput): PlanResult {
 
     const productionEnd = [boisEnd, metalEnd, numEnd].filter((x): x is string => x !== null).reduce((a, b) => maxISO(a, b), objStart);
 
-    // -- Manut TRANSFERT --
+    // -- Manut TRANSFERT — émis UNIQUEMENT si non absorbé --
     let transfertEnd = productionEnd;
-    if (hManutTransfert > 0) {
+    if (hManutTransfert > 0 && !absorbed) {
       const start = wPlus(productionEnd, 1);
       const fenetre = workingWindow(start, peintEndMax, holidays, includeWeekends);
       const { pers, span_days, span_demi_jours } = pickPersAndSpan(hManutTransfert, "Manut", { fenetreMax: Math.max(1, Math.min(2, fenetre)) });
@@ -386,10 +405,10 @@ export function calculatePlanV037(input: PlanInput): PlanResult {
 
     // -- Peint --
     let peintEnd: string | null = null;
-    if (o.heures_peinture > 0) {
+    if (hPeintEff > 0) {
       const start = wPlus(transfertEnd, 1);
       const fenetre = workingWindow(start, peintEndMax, holidays, includeWeekends);
-      const { pers, span_days, span_demi_jours } = pickPersAndSpan(o.heures_peinture, "Peint", { fenetreMax: fenetre });
+      const { pers, span_days, span_demi_jours } = pickPersAndSpan(hPeintEff, "Peint", { fenetreMax: fenetre });
       steps.push({
         id: nextId("peint"), metier_id: METIER_ID.Peint, metier: "Peint",
         objet_id: o.objet_id, start_date: start, span_days, span_demi_jours, start_half_day: "AM", pers,
@@ -399,12 +418,12 @@ export function calculatePlanV037(input: PlanInput): PlanResult {
     }
 
     // -- Tap en parallèle de Peint --
-    if (o.heures_tapisserie > 0) {
+    if (hTapEff > 0) {
       const start = peintEnd !== null
         ? steps.find((s) => s.metier === "Peint" && s.objet_id === o.objet_id)!.start_date
         : wPlus(transfertEnd, 1);
       const fenetre = workingWindow(start, peintEndMax, holidays, includeWeekends);
-      const { pers, span_days, span_demi_jours } = pickPersAndSpan(o.heures_tapisserie, "Tap", { fenetreMax: fenetre });
+      const { pers, span_days, span_demi_jours } = pickPersAndSpan(hTapEff, "Tap", { fenetreMax: fenetre });
       steps.push({
         id: nextId("tap"), metier_id: METIER_ID.Tap, metier: "Tap",
         objet_id: o.objet_id, start_date: start, span_days, span_demi_jours, start_half_day: "AM", pers,

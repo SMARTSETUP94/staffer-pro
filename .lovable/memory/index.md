@@ -83,13 +83,15 @@ Volume staffé v0.39.0c : KPI "Heures staffées" = Σ(pers × demi_jours × H_HA
 41. ⏳ **v0.36** — Sprint dette résiduelle : page admin véhicules + audit findings
 42. ⏳ **v0.37** — Polish UX transversal post-feedback terrain
 43. ⏳ **v0.39.x suite** — Logistique avancée : autorisations véhicules #56 + sous-traitants
-44. ⏳ **v0.40** — Phase 2 horaires précis + RPC #4 feuille-route
+44. 🚧 **v0.40 Refonte algo Manut split** — 0a livré (5 mai 2026) : algo absorption Bois/Peint/Tap au prorata + flag DB `is_manut_absorbed` (default true) + 7 tests Vitest, 1358/1358 verts. Reste 0b (UI Gantt + pre-param 6 lignes + E2E) puis 0c optionnel (replan plans existants, peu prio). Voir mem://features/manut-refonte-v040.
+44b. ⏳ **v0.40+** — Phase 2 horaires précis + RPC #4 feuille-route
 45. ⏳ **v0.41 (BACKLOG)** — Claude API auto-staffing — REPORTÉE par Gabin (focus stabilité d'abord)
 
 Voir roadmap consolidée détaillée : mem://roadmap/consolidee-2mai2026.
 
 ## Memories
 - [Roadmap consolidée 2 mai 2026](mem://roadmap/consolidee-2mai2026) — v0.31.4 → v0.40, 11 jalons
+- [Refonte Manut v0.40](mem://features/manut-refonte-v040) — absorption DEBUT+TRANSFERT par Bois/Peint/Tap
 - [Auto-staffing tier priority](mem://features/auto-staffing-tier-priority) — règle CDI/CDD avant intérim
 - [Wizard plan staffing](mem://features/staffing-plan-wizard) — v0.35.4 onglet Fab + bouton Devis
 - [Planning 3 vues](mem://features/planning-views) — CDI / Intérim / Synthèse chantier

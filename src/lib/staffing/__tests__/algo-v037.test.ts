@@ -114,10 +114,12 @@ describe("v0.37 — BE séquentiel global", () => {
   });
 });
 
-describe("v0.37 — Manut split 35/15/50", () => {
+describe("v0.37 — Manut split 35/15/50 (legacy is_manut_absorbed=false)", () => {
   it("3 phases présentes pour 1 objet avec heures_manutention", () => {
     const r = calculatePlanV037(
-      input([obj({ objet_id: "a", heures_bois: 16, heures_peinture: 16, heures_manutention: 40 })]),
+      input([obj({ objet_id: "a", heures_bois: 16, heures_peinture: 16, heures_manutention: 40 })], {
+        is_manut_absorbed: false,
+      }),
     );
     const manut = r.steps.filter((s) => s.metier === "Manut");
     const phases = new Set(manut.map((s) => s.phase));
@@ -131,7 +133,7 @@ describe("v0.37 — Manut split 35/15/50", () => {
       input([
         obj({ objet_id: "a", heures_bois: 16, heures_manutention: 20 }),
         obj({ objet_id: "b", heures_bois: 16, heures_manutention: 20 }),
-      ]),
+      ], { is_manut_absorbed: false }),
     );
     const fin = r.steps.find((s) => s.metier === "Manut" && s.phase === "FIN");
     expect(fin).toBeDefined();

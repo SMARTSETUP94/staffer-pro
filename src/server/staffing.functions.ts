@@ -51,7 +51,7 @@ export const calculateStaffingPlan = createServerFn({ method: "POST" })
     /* 1. Plan */
     const { data: plan, error: planErr } = await supabase
       .from("staffing_plan")
-      .select("id, affaire_id, date_debut_fab, date_fin_fab, status, include_weekends")
+      .select("id, affaire_id, date_debut_fab, date_fin_fab, status, include_weekends, is_manut_absorbed")
       .eq("id", planId)
       .single();
     if (planErr || !plan) throw new Error(planErr?.message ?? "Plan introuvable");
@@ -139,6 +139,7 @@ export const calculateStaffingPlan = createServerFn({ method: "POST" })
       });
 
     const includeWeekends = (plan as { include_weekends?: boolean }).include_weekends === true;
+    const isManutAbsorbed = (plan as { is_manut_absorbed?: boolean }).is_manut_absorbed !== false;
     const holidays = holidaysRange(
       fromISO(plan.date_debut_fab).getUTCFullYear() - 1,
       fromISO(plan.date_fin_fab).getUTCFullYear() + 1,
@@ -152,6 +153,7 @@ export const calculateStaffingPlan = createServerFn({ method: "POST" })
       objets: objetsInput,
       cnc_reserved_dates: cncReservedDates,
       include_weekends: includeWeekends,
+      is_manut_absorbed: isManutAbsorbed,
     });
 
     // v0.37 : pas de post-lissage. Les diagnostics window sont déconnectés.

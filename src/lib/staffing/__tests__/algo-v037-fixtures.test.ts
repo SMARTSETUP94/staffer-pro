@@ -29,6 +29,8 @@ function input(objets: ObjetInput[]): PlanInput {
     date_debut_fab_min: START,
     objets,
     holidays: HOLIDAYS,
+    // v0.40 : fixture v0.37 = comportement legacy (3 phases Manut par objet)
+    is_manut_absorbed: false,
   };
 }
 
