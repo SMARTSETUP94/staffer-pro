@@ -1,4 +1,8 @@
-// v0.39.2b2.1 — Test unit GanttHeaderRow (extraction depuis GanttInteractif).
+/**
+ * @vitest-environment happy-dom
+ *
+ * v0.39.2b2.1 — Test unit GanttHeaderRow (extraction depuis GanttInteractif).
+ */
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { GanttHeaderRow, type GanttStats } from "../gantt/GanttHeaderRow";
