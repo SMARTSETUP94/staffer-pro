@@ -51,7 +51,7 @@ export function FlotteStatsTab() {
   const [dateTo, setDateTo] = useState<string>(TODAY);
   const { trajets, isLoading } = useTrajetsRange(dateFrom, dateTo);
   const { vehicules } = useVehicules();
-  const { sousTraitants } = useSousTraitants();
+  const { data: sousTraitants } = useSousTraitants();
 
   const tarifsParPresta = useMemo(() => {
     const m = new Map<string, number>();
