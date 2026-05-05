@@ -102,3 +102,31 @@ isolé pour ne pas polluer les tests employé mobile.
 
 ### Reste à faire
 - Sprint 3b — Logistique avancée (autorisations véhicules + sous-traitants carnet + historique + stats).
+
+## v0.41.0b — Sprint 3b.1 + 3b.2 — Logistique avancée (5 mai 2026)
+
+### 3b.1 — Autorisations véhicules
+- Table `employes_autorisations_vehicules` + enum `autorisation_vehicule_type`
+  (PERMIS_B/C/CE/D + CACES_R489/R486/R484).
+- Vue `v_employes_autorisations_actives` avec statut calculé
+  (valide / expiration_proche ≤30j / expire). Backfill auto depuis
+  `employes.categories_permis` (legacy conservé).
+- Page admin `/parametres/autorisations-vehicules` : matrice équipe × types,
+  badges statut couleur. Section sur fiche employé. Modale unifiée upsert.
+- `src/lib/autorisations-vehicules.ts` + 13 tests Vitest.
+
+### 3b.2 — Carnet sous-traitants
+- Table `sous_traitants` + enum `sous_traitant_type`
+  (transport / manutention / fabrication / autre). UNIQUE lower(nom),
+  RLS lecture authenticated, écriture chefs/admins. Backfill auto depuis
+  `trajets.prestataire`.
+- Page admin `/parametres/sous-traitants` (recherche + filtre type +
+  toggle actifs) avec dialog création/édition validé (nom, email RFC,
+  SIRET 14 chiffres, tarifs ≥ 0).
+- Autocomplete `PrestataireAutocomplete` branché dans `TrajetDialog`
+  sur le carnet (type=transport, actifs). Saisie libre toujours possible.
+- `src/lib/sous-traitants.ts` + 9 tests Vitest. Total 1429 tests verts.
+
+### Reste à faire (Sprint 3b suite)
+- 3b.3 — Historique trajets enrichi (filtres avancés, drilldown véhicule).
+- 3b.4 — Stats flotte (KPIs sous-traitance, top transporteurs, € engagés).
