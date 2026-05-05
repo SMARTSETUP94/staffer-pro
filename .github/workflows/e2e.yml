@@ -46,7 +46,7 @@ jobs:
           bun add -D @playwright/test
           bunx playwright install --with-deps chromium
 
-      - name: Run E2E tests (shard ${{ matrix.shard }}/4)
+      - name: Run E2E tests (shard ${{ matrix.shard }}/5)
         env:
           CI: "true"
           E2E_BASE_URL: ${{ secrets.E2E_BASE_URL }}
