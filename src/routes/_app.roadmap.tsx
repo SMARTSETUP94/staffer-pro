@@ -43,6 +43,148 @@ interface RoadmapPlanned {
 
 const RELEASES: RoadmapRelease[] = [
   {
+    date: "2026-05-05",
+    version: "v0.39.2b2.1 Tour 2",
+    title: "🧱 Refacto Gantt — extraction DayGrid (header dates AM|PM + steps globaux)",
+    entries: [
+      {
+        type: "refactor",
+        area: "Staffing — Gantt",
+        title: "Nouveau composant `gantt/DayGrid.tsx`",
+        description:
+          "Extraction du header dates (AM|PM) et de la section 'Phases globales chantier' (Manut FIN + ressources partagées CNC) hors de `GanttInteractif.tsx`. Composant pur sans état, ref forwarding pour la mesure dayWidthPx (drag-to-shift).",
+      },
+      {
+        type: "improvement",
+        area: "Staffing — Gantt",
+        title: "GanttInteractif allégé : 857L → 735L",
+        description:
+          "Suppression du dead code `stepDateRangeShort`. Tour 3 (RowInteractif) prévu pour viser ~400L au final.",
+      },
+      {
+        type: "improvement",
+        area: "Tests",
+        title: "4 nouveaux tests Vitest DayGrid — 1397/1397 verts",
+        description:
+          "Couvre le rendu du header AM|PM, l'absence de section globale quand aucun step global, et l'affichage du step Manut FIN avec calcul d'heures (pers × demi × 4).",
+      },
+    ],
+  },
+  {
+    date: "2026-05-05",
+    version: "v0.39.2b2.1 Tour 1",
+    title: "🧱 Refacto Gantt — extraction GanttHeaderRow + StatCard",
+    entries: [
+      {
+        type: "refactor",
+        area: "Staffing — Gantt",
+        title: "Bandeau de 5 KPI cards extrait dans `gantt/GanttHeaderRow.tsx` + `gantt/StatCard.tsx`",
+        description:
+          "Le bloc 'Heures staffées / Livraison / Pic / Statut / Manut' devient un composant dédié, pure presentational. Préparation du découpage en 4 fichiers de GanttInteractif (1029L initial). 1376/1376 tests verts.",
+      },
+    ],
+  },
+  {
+    date: "2026-05-05",
+    version: "v0.40.0f",
+    title: "🔧 Hotfix UX — Plan staffing : noms d'objets propres (masquage préfixe D-)",
+    entries: [
+      {
+        type: "fix",
+        area: "Staffing — UI",
+        title: "GanttInteractif + StaffingPlanWizard utilisent désormais `<ObjetRefLabel />`",
+        description:
+          "Les en-têtes d'objets affichaient `D-202604-2151-1.1` au lieu de `1.1 — M1 - peinture bar`. Le préfixe `D-{numero_devis}-` (généré par RPC `import_devis_atomique_v3` v0.39.0d pour éviter les collisions cross-devis sur même affaire) est maintenant masqué partout via `stripDevisPrefix`. Pas de migration DB (préfixe nécessaire pour la contrainte UNIQUE par affaire).",
+      },
+      {
+        type: "improvement",
+        area: "Tests",
+        title: "7 tests Vitest `ObjetRefLabel` (stripDevisPrefix + visibilité préfixe)",
+      },
+    ],
+  },
+  {
+    date: "2026-05-05",
+    version: "v0.40.0e",
+    title: "📊 Suivi marge par métier — consolidation treetable (1 ligne / métier + drilldown devis)",
+    entries: [
+      {
+        type: "improvement",
+        area: "Affaires — Marges",
+        title: "Section 'Suivi marge par métier' refondue en treetable",
+        description:
+          "Les heures par métier sont désormais agrégées sur tous les devis de l'affaire (ex : Peinture 408,4 h au lieu de 36,7 h + 371,7 h sur 2 lignes). Clic sur la ligne métier → drilldown par devis. Marges/tons/% recalculés au niveau consolidé. Badge 'N devis' sur les métiers multi-quotes.",
+      },
+      {
+        type: "feature",
+        area: "Lib",
+        title: "Nouveau module `affaire-marge-consolidation.ts` (`consolidateByMetier`)",
+        description:
+          "Aggregation pure : group by metier_id, sort by prevues desc, drilldown préservé. 7 tests Vitest.",
+      },
+    ],
+  },
+  {
+    date: "2026-05-05",
+    version: "v0.40.0d",
+    title: "🔧 Hotfix UX — Pré-remplissage numéro d'affaire à l'import devis (race condition)",
+    entries: [
+      {
+        type: "fix",
+        area: "Devis — Import",
+        title: "Race condition fetch top-200 vs prefill",
+        description:
+          "Quand un chef cliquait 'Importer un devis' depuis l'onglet Devis d'une affaire, le formulaire ouvrait avec un numéro vide. Cause : deux `useEffect` concurrents appelaient `setAffaires` ; le top-200 résolvait après le prefill et écrasait l'option pré-remplie. Fix : merge dédupliqué via Set (préserve les options hors top-200). 3 tests Vitest dédiés.",
+      },
+    ],
+  },
+  {
+    date: "2026-05-05",
+    version: "v0.40.0b",
+    title: "🎨 Refonte Manut — UI Gantt nettoyée + pré-paramétrage 6 lignes + tooltips d'absorption",
+    entries: [
+      {
+        type: "feature",
+        area: "Staffing — Gantt",
+        title: "Section globale 'Manutention FIN (50 %) + ressources partagées'",
+        description:
+          "Les barres Manut intermédiaires par objet sont supprimées (absorbées au prorata par Bois/Peint/Tap). Une seule barre Manut FIN s'affiche en tête de Gantt + ressources CNC partagées.",
+      },
+      {
+        type: "feature",
+        area: "Staffing — Pré-paramétrage",
+        title: "6 lignes pré-param avec tooltips d'absorption",
+        description:
+          "Chaque cellule métier affiche désormais 'Bois 105 h dont 19 h ex-Manut absorbée' (tooltip). Note de bas de page explicative. Composant `ManutStatCard` dédié + module `manut-summary.ts` (14 tests).",
+      },
+      {
+        type: "improvement",
+        area: "Tests",
+        title: "E2E `manut-refonte-v040.chef.spec.ts` + 1372/1372 Vitest verts",
+      },
+    ],
+  },
+  {
+    date: "2026-05-05",
+    version: "v0.40.0a",
+    title: "🧮 Refonte Manut — algo absorption (35 % début + 15 % transfert + 50 % FIN)",
+    entries: [
+      {
+        type: "feature",
+        area: "Staffing — Algo",
+        title: "Manut absorbée par Bois/Peint/Tap au prorata",
+        description:
+          "Plus aucune barre Manut intermédiaire par objet : 35 % au début + 15 % en transfert sont reversés aux métiers consommateurs. Seuls les 50 % de FIN globale chantier restent une étape Manut séparée. Flag DB `is_manut_absorbed` pour traçabilité.",
+      },
+      {
+        type: "improvement",
+        area: "Tests",
+        title: "7 tests Vitest dédiés algo absorption + 1358/1358 verts",
+      },
+    ],
+  },
+
+  {
     date: "2026-05-04",
     version: "v0.39.0a-hotfix-import",
     title: "🚑 HOTFIX import devis : RPC transactionnel + cleanup orphelins fabrication_objets",
