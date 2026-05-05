@@ -2506,9 +2506,9 @@ const PLANNED: RoadmapPlanned[] = [
   // ========== Roadmap consolidée (mise à jour 5 mai 2026) ==========
   {
     priority: "haute",
-    title: "Sprint 2b2.2 — Refonte `StaffingPersonnesSection.tsx` (1214L → 4 fichiers) [PROCHAIN]",
+    title: "Sprint 3 — Features métier post-refacto",
     description:
-      "Découpage en PersonneCard, AssignmentRow, TierFilters, StaffingPersonnesRoot. Tests Vitest + snapshot non-régression. Sprint 2b2.1 (Gantt) terminé : 3 sous-composants extraits, GanttInteractif 1430→603L.",
+      "Sprint 2b2 entièrement terminé : Gantt (Tour 1+2+3) et StaffingPersonnesSection (Sprint 2b2.2) refactorés. Place aux features : bug heures cache + Logistique avancée + E2E full role-based.",
   },
   {
     priority: "haute",
