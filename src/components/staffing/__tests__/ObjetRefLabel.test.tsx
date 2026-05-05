@@ -1,9 +1,11 @@
 /**
  * @vitest-environment happy-dom
+ *
+ * v0.39.2b2.1 — ObjetRefLabel : strip prefix + affichage nom.
  */
-// v0.39.2b2.1 — ObjetRefLabel : strip prefix + affichage nom.
-import { describe, it, expect, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { render, screen, cleanup } from "@testing-library/react";
+import "@testing-library/jest-dom/vitest";
 import { ObjetRefLabel, stripDevisPrefix, setShowDevisPrefix } from "../ObjetRefLabel";
 
 describe("stripDevisPrefix", () => {
@@ -23,6 +25,10 @@ describe("stripDevisPrefix", () => {
 
 describe("ObjetRefLabel", () => {
   beforeEach(() => {
+    setShowDevisPrefix(false);
+  });
+  afterEach(() => {
+    cleanup();
     setShowDevisPrefix(false);
   });
   it("affiche REF — NOM avec préfixe masqué par défaut", () => {
