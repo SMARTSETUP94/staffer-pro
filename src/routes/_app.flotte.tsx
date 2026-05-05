@@ -166,6 +166,12 @@ function FlottePage() {
           <TabsTrigger value="adresses">
             <MapPin className="h-4 w-4 mr-2" /> Adresses favorites ({adresses.length})
           </TabsTrigger>
+          <TabsTrigger value="historique">
+            <History className="h-4 w-4 mr-2" /> Historique trajets
+          </TabsTrigger>
+          <TabsTrigger value="stats">
+            <BarChart3 className="h-4 w-4 mr-2" /> Statistiques
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="interne" className="mt-4">
@@ -194,6 +200,14 @@ function FlottePage() {
             onEdit={handleEditAdresse}
             onDelete={handleDeleteAdresse}
           />
+        </TabsContent>
+
+        <TabsContent value="historique" className="mt-4">
+          <FlotteHistoriqueTab />
+        </TabsContent>
+
+        <TabsContent value="stats" className="mt-4">
+          <FlotteStatsTab />
         </TabsContent>
       </Tabs>
 
