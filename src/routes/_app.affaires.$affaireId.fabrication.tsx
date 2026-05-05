@@ -76,6 +76,8 @@ function FabricationPage() {
     typologie: string | null;
   } | null>(null);
   const [openStaffer, setOpenStaffer] = useState(false);
+  const [openSousTraiter, setOpenSousTraiter] = useState(false);
+  const { atelier } = useLieux();
 
   // Charger meta affaire (chef projet, lieu, dates, typologie) — useEffect, pas useState
   useEffect(() => {
