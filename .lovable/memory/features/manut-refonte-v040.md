@@ -30,12 +30,25 @@ Dans 95 % des chantiers Setup Paris, Manut DEBUT (35 %) + TRANSFERT (15 %) sont 
 - `algo-v037.test.ts` et `algo-v037-fixtures.test.ts` ont été passés en mode `is_manut_absorbed: false` pour préserver les invariants legacy.
 - 1358/1358 vitest verts.
 
-## v0.40.0b (à venir)
+## v0.40.0b (livré 5 mai 2026)
 
-- UI Gantt : nettoyer les lignes Manut par objet quand `is_manut_absorbed = true`.
-- Pré-paramétrage 6 lignes (avant le wizard) avec tooltips.
-- Toggle "Manut absorbée" sur le plan (admin uniquement, par défaut activé).
-- E2E `manut-refonte-v040.chef.spec.ts`.
+### UI Gantt (`src/components/staffing/GanttInteractif.tsx`)
+- Section globale renommée : `"Phases globales chantier — Manutention FIN (50 %) + ressources partagées (CNC)"` (ex « Phase amont — ressource partagée »).
+- Aucune intervention sur le rendu par objet : l'algo v0.40.0a n'émettant plus de steps Manut DEBUT/TRANSFERT par objet, les barres correspondantes disparaissent automatiquement.
+- Manut FIN reste affichée dans la section globale (objet_id = null).
+
+### Pré-paramétrage (`PreParametrageSection.tsx` + `staffing-pre-parametrage.functions.ts`)
+- `suggestPreParametrage` retourne désormais `manut_absorbed_par_metier: { Bois, Peint, Tap }`.
+- Les `totalsEffectifs` passés à `autoSuggestMetierConfig` incluent l'absorption (Bois/Peint/Tap majorés au prorata) et `Manut = total * 0.5` (FIN seul).
+- Cellule "Total h" enrichie : suffixe gris `(+19 Manut)` quand absorption > 0 + tooltip natif `"Bois 105h dont 19h ex-Manut absorbée (base 86h)"` (testid `pre-param-totalh-{Metier}`).
+- Footnote refondue : explicite la règle Manut DÉBUT 35 % + TRANSFERT 15 % absorbés / FIN 50 % équipe Manut.
+
+### E2E
+- `e2e/staffing/manut-refonte-v040.chef.spec.ts` (smoke 2 tests : footnote pré-param + header section globale renommée).
+
+### Validation
+- 1358/1358 vitest verts (aucune régression).
+- Reste : test terrain Gabin sur HPDN 5905 + autres plans.
 
 ## v0.40.0c (optionnel — peu prio)
 
