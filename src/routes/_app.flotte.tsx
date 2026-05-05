@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { Plus, Pencil, Truck, MapPin, AlertTriangle, Trash2, Loader2 } from "lucide-react";
+import { Plus, Pencil, Truck, MapPin, AlertTriangle, Trash2, Loader2, History, BarChart3 } from "lucide-react";
+import { FlotteHistoriqueTab } from "@/components/flotte/FlotteHistoriqueTab";
+import { FlotteStatsTab } from "@/components/flotte/FlotteStatsTab";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
