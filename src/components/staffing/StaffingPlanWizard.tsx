@@ -22,6 +22,7 @@ import {
   getActivePlansForAffaire,
   createStaffingPlan,
 } from "@/server/staffing-plan-create.functions";
+import { ObjetRefLabel } from "./ObjetRefLabel";
 
 interface Props {
   affaireId: string;
