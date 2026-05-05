@@ -3,9 +3,13 @@
  *
  * v0.39.2b2.1 — Test unit GanttHeaderRow (extraction depuis GanttInteractif).
  */
-import { describe, it, expect } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, it, expect, afterEach } from "vitest";
+import { render, screen, cleanup } from "@testing-library/react";
+import "@testing-library/jest-dom/vitest";
 import { GanttHeaderRow, type GanttStats } from "../gantt/GanttHeaderRow";
+
+afterEach(() => cleanup());
+
 
 const baseStats: GanttStats = {
   totalH: 800,
