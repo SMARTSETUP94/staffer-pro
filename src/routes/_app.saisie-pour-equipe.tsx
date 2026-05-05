@@ -425,5 +425,6 @@ function SaisiePourEquipePage() {
         onCreated={() => setReloadKey((k) => k + 1)}
       />
     </div>
+    </RoleGuard>
   );
 }
