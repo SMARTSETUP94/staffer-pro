@@ -35,6 +35,18 @@ export const calculateStaffingPlan = createServerFn({ method: "POST" })
     result: PlanResult;
     cnc_reserved_dates: string[];
     step_overrides: Record<string, { manual_shift: number; manual_pers: boolean }>;
+    /** v0.40 — Récap Manut : FIN agrégé chantier + heures absorbées par métier
+     * (Bois/Peint/Tap) au prorata. `is_absorbed=false` = mode legacy v0.37. */
+    manut_summary: {
+      is_absorbed: boolean;
+      manut_total_h: number;
+      fin_total_h: number;
+      absorbable_total_h: number;
+      absorbed_bois_h: number;
+      absorbed_peint_h: number;
+      absorbed_tap_h: number;
+      fallback_objets: number;
+    };
     lissage: {
       applied: boolean;
       configs_count: number;
@@ -345,6 +357,41 @@ export const calculateStaffingPlan = createServerFn({ method: "POST" })
       result,
       cnc_reserved_dates: Array.from(cncReservedDates),
       step_overrides: stepOverrides,
+      manut_summary: (() => {
+        const PCT_ABS = 0.5; // DEBUT 35% + TRANSFERT 15%
+        const PCT_FIN = 0.5;
+        let manutTotal = 0;
+        let absorbedBois = 0;
+        let absorbedPeint = 0;
+        let absorbedTap = 0;
+        let fallbackObjets = 0;
+        for (const o of objetsInput) {
+          const hM = o.heures_manutention;
+          if (hM <= 0) continue;
+          manutTotal += hM;
+          if (!isManutAbsorbed) continue;
+          const totalAbs = o.heures_bois + o.heures_peinture + o.heures_tapisserie;
+          if (totalAbs <= 0) {
+            // dégénéré : algo fallback en DEBUT/TRANSFERT, pas absorbé
+            fallbackObjets += 1;
+            continue;
+          }
+          const hAbs = hM * PCT_ABS;
+          absorbedBois += hAbs * (o.heures_bois / totalAbs);
+          absorbedPeint += hAbs * (o.heures_peinture / totalAbs);
+          absorbedTap += hAbs * (o.heures_tapisserie / totalAbs);
+        }
+        return {
+          is_absorbed: isManutAbsorbed,
+          manut_total_h: manutTotal,
+          fin_total_h: manutTotal * PCT_FIN,
+          absorbable_total_h: absorbedBois + absorbedPeint + absorbedTap,
+          absorbed_bois_h: absorbedBois,
+          absorbed_peint_h: absorbedPeint,
+          absorbed_tap_h: absorbedTap,
+          fallback_objets: fallbackObjets,
+        };
+      })(),
       lissage: {
         applied: lissageConfigsCount > 0,
         configs_count: lissageConfigsCount,

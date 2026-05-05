@@ -50,6 +50,12 @@ Dans 95 % des chantiers Setup Paris, Manut DEBUT (35 %) + TRANSFERT (15 %) sont 
 - 1358/1358 vitest verts (aucune régression).
 - Reste : test terrain Gabin sur HPDN 5905 + autres plans.
 
+## v0.40.0b+1 — Récap Manut header Gantt (livré 5 mai 2026)
+
+- `calculateStaffingPlan` retourne `manut_summary` : `{ is_absorbed, manut_total_h, fin_total_h, absorbable_total_h, absorbed_bois_h, absorbed_peint_h, absorbed_tap_h, fallback_objets }`. Calculé côté serveur depuis `objetsInput` (réplique des constantes 35/15/50).
+- `GanttInteractif` : 5e StatCard "Manut FIN + absorbée" (icône Truck) avec valeur `{X h FIN}`, subline `+ absorbé : B.. · P.. · T..` visible sans clic, et popover détaillé (total devis, FIN, table absorbée, fallback objets dégénérés).
+- Grid stats passé `md:grid-cols-5`. StatCard gagne un prop optionnel `subline`.
+
 ## v0.40.0c (optionnel — peu prio)
 
 Script one-shot pour replanifier les plans publiés existants. **Pas urgent** : Gabin a recréé HPDN 5905 from scratch, la plupart des plans en prod sont des brouillons.
