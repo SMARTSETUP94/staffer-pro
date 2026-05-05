@@ -2447,12 +2447,48 @@ const RELEASES: RoadmapRelease[] = [
 ];
 
 const PLANNED: RoadmapPlanned[] = [
-  // ========== Roadmap consolidée v0.34 → v0.41 (mise à jour 4 mai 2026) ==========
+  // ========== Roadmap consolidée (mise à jour 5 mai 2026) ==========
   {
     priority: "haute",
-    title: "v0.34.x — Batterie E2E par rôle (admin / chef / employé desktop / employé mobile)",
+    title: "Sprint 2b2.1 Tour 3 — Extraction `gantt/RowInteractif.tsx` (PROCHAIN)",
     description:
-      "Cible 100 tests E2E Playwright (depuis ~50 actuels). Couverture : flows critiques de chaque rôle (admin paramétrage + invitations, chef création affaire + planning + validation heures, employé desktop /ma-semaine + propositions, employé mobile /mobile/aujourdhui + saisie heures + swaps). Permet de releaser vite sans régression silencieuse.",
+      "Sortir la ligne objet treetable + steps métiers + CellEditPopover de GanttInteractif. Cible : passer de ~735L à ~400L. Tests Vitest unit + validation visuelle HPDN 5905 entre Tour 2 et Tour 3.",
+  },
+  {
+    priority: "haute",
+    title: "Sprint 2b2.2 — Refonte `StaffingPersonnesSection.tsx` (1214L → 4 fichiers)",
+    description:
+      "Découpage en PersonneCard, AssignmentRow, TierFilters, StaffingPersonnesRoot. Tests Vitest + snapshot non-régression.",
+  },
+  {
+    priority: "haute",
+    title: "Sprint 3 — Bug heures invisibles cache côté employé",
+    description:
+      "Cause hors RLS confirmée (donnée bien en DB). Investigation cache client React Query / Supabase pour comprendre les saisies qui n'apparaissent pas immédiatement côté employé.",
+  },
+  {
+    priority: "moyenne",
+    title: "Sprint 3 — Logistique avancée (autorisations véhicules + sous-traitants + historique + stats)",
+    description:
+      "Reprise complète : autorisations véhicules par employé (#56), carnet sous-traitants, historique trajets, stats d'utilisation flotte.",
+  },
+  {
+    priority: "moyenne",
+    title: "Sprint 3 — E2E full role-based (employé desktop + mobile manquants)",
+    description:
+      "Compléter la batterie E2E sur les rôles employé (desktop /ma-semaine + mobile /mobile/aujourdhui) en s'appuyant sur l'infra v0.34 déjà posée. ~48 tests à écrire.",
+  },
+  {
+    priority: "moyenne",
+    title: "v0.20.1 quick wins",
+    description:
+      "Pré-remplissage trajet sous-traité + cache `useObjetsAffaireLight` + notification CA prêt à livrer.",
+  },
+  {
+    priority: "moyenne",
+    title: "v0.21.1 sécurité — Garde RBAC UI saisie-pour-equipe + durcissement RLS",
+    description:
+      "Garde RBAC UI sur `/saisie-pour-equipe`, durcissement RLS, UNIQUE INDEX chef_jour, tests d'intégration SQL.",
   },
   {
     priority: "moyenne",
