@@ -35,6 +35,18 @@ export const calculateStaffingPlan = createServerFn({ method: "POST" })
     result: PlanResult;
     cnc_reserved_dates: string[];
     step_overrides: Record<string, { manual_shift: number; manual_pers: boolean }>;
+    /** v0.40 — Récap Manut : FIN agrégé chantier + heures absorbées par métier
+     * (Bois/Peint/Tap) au prorata. `is_absorbed=false` = mode legacy v0.37. */
+    manut_summary: {
+      is_absorbed: boolean;
+      manut_total_h: number;
+      fin_total_h: number;
+      absorbable_total_h: number;
+      absorbed_bois_h: number;
+      absorbed_peint_h: number;
+      absorbed_tap_h: number;
+      fallback_objets: number;
+    };
     lissage: {
       applied: boolean;
       configs_count: number;
