@@ -6,9 +6,10 @@ import { useEffect, useMemo, useState, useCallback, useImperativeHandle, useRef,
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, ArrowUp, ArrowDown, RefreshCw, Calendar, Users, Activity, AlertTriangle, Wand2, ChevronRight, ChevronDown, Info } from "lucide-react";
+import { Loader2, ArrowUp, ArrowDown, RefreshCw, AlertTriangle, Wand2, ChevronRight, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { GanttHeaderRow } from "./gantt/GanttHeaderRow";
 // v0.39.0 — Slider supprimé : remplacé par PersStepper inline.
 import { Badge } from "@/components/ui/badge";
 import {
@@ -481,130 +482,12 @@ export const GanttInteractif = forwardRef<
 
   return (
     <div className="space-y-4">
-      {/* Stats cards */}
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
-        <StatCard
-          icon={<Activity className="h-4 w-4" />}
-          label="Heures staffées"
-          value={
-            stats.hDevis > 0
-              ? `${stats.totalH.toFixed(0)} h / ${stats.hDevis.toFixed(0)} h devis`
-              : `${stats.totalH.toFixed(0)} h`
-          }
-          badge={
-            stats.hDevis > 0
-              ? (() => {
-                  const pct = ((stats.totalH - stats.hDevis) / stats.hDevis) * 100;
-                  const abs = Math.abs(pct);
-                  if (abs < 5) return null;
-                  const sign = pct >= 0 ? "+" : "";
-                  return {
-                    label: `${sign}${pct.toFixed(1)}%`,
-                    severity: abs >= 15 ? ("hard" as const) : ("soft" as const),
-                  };
-                })()
-              : null
-          }
-          valueClassName={
-            stats.hDevis > 0 && Math.abs((stats.totalH - stats.hDevis) / stats.hDevis) > 0.15
-              ? "text-destructive"
-              : stats.hDevis > 0 && Math.abs((stats.totalH - stats.hDevis) / stats.hDevis) > 0.05
-                ? "text-amber-600 dark:text-amber-400"
-                : "text-foreground"
-          }
-          detail={
-            <div className="space-y-3 text-xs">
-              <div>
-                <div className="font-bold uppercase tracking-wider text-muted-foreground mb-1">
-                  Formule
-                </div>
-                <p className="text-foreground">
-                  <span className="font-mono">heures = Σ (pers × ½‑journées × 4 h)</span>
-                </p>
-                <p className="text-muted-foreground mt-1">
-                  Une demi‑journée = {H_HALF} h. Une journée = {DEMI_PER_DAY} demi‑journées.
-                  Le total agrège toutes les étapes (tous métiers, tous objets) du plan courant.
-                </p>
-              </div>
-              <div>
-                <div className="font-bold uppercase tracking-wider text-muted-foreground mb-1">
-                  Décomposition par métier
-                </div>
-                <table className="w-full">
-                  <thead>
-                    <tr className="text-left text-muted-foreground">
-                      <th className="font-medium pb-1">Métier</th>
-                      <th className="font-medium pb-1 text-right">Étapes</th>
-                      <th className="font-medium pb-1 text-right">pers·½j</th>
-                      <th className="font-medium pb-1 text-right">Heures</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {stats.breakdown.map((b) => (
-                      <tr key={b.label} className="border-t border-border/50">
-                        <td className="py-1">{b.label}</td>
-                        <td className="py-1 text-right tabular-nums">{b.steps}</td>
-                        <td className="py-1 text-right tabular-nums">{b.persDemi.toFixed(0)}</td>
-                        <td className="py-1 text-right tabular-nums font-medium">
-                          {b.h.toFixed(0)} h
-                        </td>
-                      </tr>
-                    ))}
-                    <tr className="border-t border-border font-bold">
-                      <td className="py-1">Total</td>
-                      <td className="py-1 text-right tabular-nums">
-                        {stats.breakdown.reduce((a, b) => a + b.steps, 0)}
-                      </td>
-                      <td className="py-1 text-right tabular-nums">
-                        {stats.breakdown.reduce((a, b) => a + b.persDemi, 0).toFixed(0)}
-                      </td>
-                      <td className="py-1 text-right tabular-nums">
-                        {stats.totalH.toFixed(0)} h
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-              {stats.hDevis > 0 && (
-                <div className="pt-2 border-t border-border">
-                  <div className="font-bold uppercase tracking-wider text-muted-foreground mb-1">
-                    Comparaison devis (objets du plan)
-                  </div>
-                  <p className="text-muted-foreground">
-                    Devis (objets inclus) :{" "}
-                    <span className="font-medium text-foreground">{stats.hDevis.toFixed(0)} h</span>
-                    {" · "}Écart :{" "}
-                    <span className="font-medium text-foreground">
-                      {(stats.totalH - stats.hDevis >= 0 ? "+" : "")}
-                      {(stats.totalH - stats.hDevis).toFixed(0)} h
-                      {" ("}
-                      {(((stats.totalH - stats.hDevis) / stats.hDevis) * 100).toFixed(1)}%{")"}
-                    </span>
-                  </p>
-                  <p className="text-[11px] text-muted-foreground mt-1">
-                    Heures devis = Σ heures prévues des objets fabrication inclus dans ce plan
-                    (BE + Num + Bois + Métal + Peinture + Tap + Manut). Exclut les objets non
-                    cochés et les objets non rattachés à ce plan.
-                  </p>
-                </div>
-              )}
-            </div>
-          }
-        />
-        <StatCard
-          icon={<Calendar className="h-4 w-4" />}
-          label="Livraison HARD"
-          value={formatShortDate(dateLivraison)}
-        />
-        <StatCard icon={<Users className="h-4 w-4" />} label="Pic atelier" value={`${stats.pic} pers`} />
-        <StatCard
-          icon={<Activity className="h-4 w-4" />}
-          label="Statut"
-          value={stats.statut}
-          valueClassName={stats.statutColor}
-        />
-        <ManutStatCard summary={data.manut_summary} />
-      </div>
+      {/* Stats cards (extracted v0.39.2b2.1) */}
+      <GanttHeaderRow
+        stats={stats}
+        manutSummary={data.manut_summary}
+        dateLivraison={dateLivraison}
+      />
 
       {/* Alertes (officielles + pré-vol) */}
       <AlerteBandeau alerts={allAlerts} />
@@ -969,61 +852,4 @@ function ImpactBadge({ impacts }: { impacts: SliderImpact[] }) {
 }
 
 
-function StatCard({
-  icon,
-  label,
-  value,
-  valueClassName,
-  detail,
-  badge,
-  subline,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  valueClassName?: string;
-  detail?: React.ReactNode;
-  badge?: { label: string; severity: "hard" | "soft" } | null;
-  subline?: React.ReactNode;
-}) {
-  const badgeCls =
-    badge?.severity === "hard"
-      ? "bg-destructive/15 text-destructive border-destructive/30"
-      : "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30";
-  const card = (
-    <div
-      className={`rounded-2xl border border-border bg-card p-4 ${detail ? "cursor-help transition hover:border-primary/40 hover:shadow-sm" : ""}`}
-    >
-      <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-        {icon}
-        {label}
-        {detail && <Info className="ml-auto h-3.5 w-3.5 opacity-60" />}
-      </div>
-      <div className="mt-1 flex items-baseline gap-2">
-        <p className={`text-2xl font-bold ${valueClassName ?? "text-foreground"}`}>{value}</p>
-        {badge && (
-          <span
-            className={`inline-flex items-center rounded-md border px-1.5 py-0.5 text-[10px] font-bold ${badgeCls}`}
-            aria-label={`Écart vs devis ${badge.label}`}
-          >
-            {badge.label}
-          </span>
-        )}
-      </div>
-      {subline && <div className="mt-1 text-[11px] text-muted-foreground">{subline}</div>}
-    </div>
-  );
-  if (!detail) return card;
-  return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <button type="button" className="text-left">
-          {card}
-        </button>
-      </PopoverTrigger>
-      <PopoverContent align="start" className="w-[420px] max-w-[92vw]">
-        {detail}
-      </PopoverContent>
-    </Popover>
-  );
-}
+
