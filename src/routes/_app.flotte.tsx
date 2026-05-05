@@ -147,11 +147,11 @@ function FlottePage() {
             <Button onClick={handleNewAdresse}>
               <Plus className="h-4 w-4 mr-2" /> Nouvelle adresse
             </Button>
-          ) : (
+          ) : tab === "interne" || tab === "location" ? (
             <Button onClick={handleNewVehicule}>
               <Plus className="h-4 w-4 mr-2" /> Nouveau véhicule
             </Button>
-          )
+          ) : null
         }
       />
 
