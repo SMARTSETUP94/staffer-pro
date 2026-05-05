@@ -735,19 +735,7 @@ export const GanttInteractif = forwardRef<
   );
 });
 
-/** "12-15/05" : plage compacte du step (calendar days, dd-dd/MM ; dd/MM-dd/MM si mois différents) */
-function stepDateRangeShort(startISO: string, spanDays: number): string {
-  if (!startISO || startISO === "TBD" || spanDays <= 0) return "";
-  const s = new Date(startISO + "T00:00:00Z");
-  const e = new Date(s);
-  e.setUTCDate(e.getUTCDate() + spanDays - 1);
-  const dd = (d: Date) => String(d.getUTCDate()).padStart(2, "0");
-  const mm = (d: Date) => String(d.getUTCMonth() + 1).padStart(2, "0");
-  if (s.getUTCMonth() === e.getUTCMonth()) {
-    return `${dd(s)}–${dd(e)}/${mm(s)}`;
-  }
-  return `${dd(s)}/${mm(s)}–${dd(e)}/${mm(e)}`;
-}
+
 
 GanttInteractif.displayName = "GanttInteractif";
 
