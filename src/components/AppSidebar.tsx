@@ -138,6 +138,7 @@ function buildSections(role: EffRole, validationCount: number): NavSection[] {
         { title: "Rôles fabrication", url: "/parametres/roles-fabrication", icon: Hammer, show: () => true },
         { title: "Compétences équipe", url: "/parametres/competences-equipe", icon: Users, show: () => true },
         { title: "Lieux entreprise", url: "/parametres/lieux", icon: Warehouse, show: () => true },
+        { title: "Autorisations véhicules", url: "/parametres/autorisations-vehicules", icon: BadgeCheck, show: () => true },
         { title: "Rattachement devis", url: "/devis/rattachement-historique", icon: ClipboardList, show: () => true },
         { title: "Audit heures", url: "/audit-heures", icon: ClipboardCheck, show: () => true },
         { title: "Audit Auth", url: "/audit-auth", icon: ClipboardCheck, show: () => true },
