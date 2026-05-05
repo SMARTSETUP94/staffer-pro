@@ -227,10 +227,13 @@ function FabricationPage() {
               >
                 <Truck className="mr-1 h-3 w-3" /> Staffer véhicule interne
               </Button>
-              <Button asChild size="sm" variant="outline" className="rounded-xl">
-                <Link to="/export/demandes-devis">
-                  <Send className="mr-1 h-3 w-3" /> Demander trajet sous-traité
-                </Link>
+              <Button
+                size="sm"
+                variant="outline"
+                className="rounded-xl"
+                onClick={() => setOpenSousTraiter(true)}
+              >
+                <Send className="mr-1 h-3 w-3" /> Demander trajet sous-traité
               </Button>
             </div>
           </div>
