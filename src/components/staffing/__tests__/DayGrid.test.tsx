@@ -1,3 +1,6 @@
+/**
+ * @vitest-environment happy-dom
+ */
 // v0.39.2b2.1 Tour 2 — Tests unitaires DayGrid
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
