@@ -285,7 +285,7 @@ function AffaireSynthesePage() {
                             <td className="py-2 pr-3 text-center text-muted-foreground">—</td>
                           </tr>
                         ))}
-                    </>
+                    </Fragment>
                   );
                 })}
               </tbody>
