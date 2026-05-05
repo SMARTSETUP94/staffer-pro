@@ -29,6 +29,7 @@ import {
 import { GanttBar } from "./GanttBar";
 import { BulkPersByMetierBar } from "./BulkPersByMetierBar";
 import { ChargeMetierSection } from "./ChargeMetierSection";
+import { ObjetRefLabel } from "./ObjetRefLabel";
 import { PersStepper } from "./PersStepper";
 import { DateShifter } from "./DateShifter";
 import { CellEditPopover } from "./CellEditPopover";
