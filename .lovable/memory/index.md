@@ -90,8 +90,12 @@ Volume staffé v0.39.0c : KPI "Heures staffées" = Σ(pers × demi_jours × H_HA
 47. ✅ **v0.39.2b2.1 Tour 3** (5 mai 2026) — Extraction `gantt/ObjetRowInteractif.tsx`. `GanttInteractif` 759L → **603L**. **1401/1401 verts.** Sprint 2b2.1 clôturé.
 48. ✅ **v0.39.2b2.2** (5 mai 2026) — Refonte `StaffingPersonnesSection.tsx` 1214L → **322L** + dossier `staffing/personnes/` (shared, AutoStaffButton, PersonneSuggestionCard, AssignedChip, ListView, CalendarView). Test Vitest PersonneSuggestionCard. **1404/1404 verts.** Sprint 2b2 entièrement clôturé.
 
+### Sprint 3 features métier (en cours)
+49. ✅ **v0.41.0a** (5 mai 2026) — Hotfix BUG #33 heures invisibles côté employé : `use-mes-heures` deps `useMemo` rows complétées (affairesById/metiersById) + refetch sur `visibilitychange`+`focus`. Test non-régression invariants. **1407/1407 verts.** Voir mem://features/sprint-3-features-v041.
+
 ### À venir (priorisé)
-49. ⏳ **Sprint 3** — (a) BUG heures invisibles cache côté employé. (b) Logistique avancée. (c) E2E full role-based (employé desktop + mobile).
+49b. ⏳ **Sprint 3c** — E2E full role-based (employé desktop + mobile).
+49c. ⏳ **Sprint 3b** — Logistique avancée.
 50. ⏳ **v0.20.1 quick wins** — Pré-remplissage trajet sous-traité + cache `useObjetsAffaireLight` + notification CA prêt à livrer.
 51. ⏳ **v0.21.1** — Garde RBAC UI `/saisie-pour-equipe` + durcissement RLS + UNIQUE INDEX chef_jour + tests SQL.
 52. ⏳ **v0.39.3** — Migration RPC #1/2/3/5 (bulk-assign-objet, chef-saisit-pour-employe, bulk-saisie, bulk-staffer).
@@ -139,6 +143,7 @@ Voir roadmap consolidée détaillée : mem://roadmap/consolidee-2mai2026.
 - [Staffing P1 Undo+Drag+Bulk](mem://features/staffing-undo-drag-bulk) — v0.35.10
 - [Staffing Express Mode](mem://features/staffing-express-mode) — v0.35.11
 - [Staffing personnes refonte UX](mem://features/staffing-personnes-refonte-ux) — v0.35.12
+- [Sprint 3 features v0.41](mem://features/sprint-3-features-v041) — v0.41.0a hotfix heures invisibles employé
 - [Auth flow différencié rôle](mem://features/auth-flow-roles) — magic link + set-password
 - [E2E Playwright coverage](mem://features/e2e-playwright-coverage) — v0.34
 - [Sprint 1 stabilité v0.39.1](mem://features/sprint-1-stabilite-v0391) — RLS audit + 2 E2E + audit mutations + auth shallow

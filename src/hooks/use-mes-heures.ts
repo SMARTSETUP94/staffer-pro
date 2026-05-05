@@ -240,6 +240,24 @@ export function useMesHeures({ weekStart, employeIdOverride }: UseMesHeuresOptio
     return () => { cancelled = true; };
   }, [employeId, startStr, endStr, reloadKey]);
 
+  // v0.41.0a — Refetch automatique au retour sur l'onglet ou au focus fenêtre.
+  // Évite que l'employé reste bloqué sur un cache stale pendant qu'un chef
+  // saisit/valide ses heures depuis un autre onglet ou une autre session.
+  useEffect(() => {
+    if (!employeId) return;
+    const handler = () => {
+      if (typeof document === "undefined" || document.visibilityState === "visible") {
+        setReloadKey((k) => k + 1);
+      }
+    };
+    window.addEventListener("visibilitychange", handler);
+    window.addEventListener("focus", handler);
+    return () => {
+      window.removeEventListener("visibilitychange", handler);
+      window.removeEventListener("focus", handler);
+    };
+  }, [employeId]);
+
   // Combiner assignations + saisies
   const rows = useMemo<SaisieCombined[]>(() => {
     const byKey = new Map<string, SaisieCombined>();
@@ -293,7 +311,11 @@ export function useMesHeures({ weekStart, employeIdOverride }: UseMesHeuresOptio
       const order = { AM: 0, JOURNEE: 1, PM: 2 };
       return order[a.demi_journee] - order[b.demi_journee];
     });
-  }, [assignations, saisies]);
+    // v0.41.0a — affairesById/metiersById doivent figurer dans les deps,
+    // sinon le label "(chargement…)" reste figé après lookup async (visible
+    // surtout sur les saisies hors planning créées par un chef pour un
+    // employé qui n'a pas d'assignation sur l'affaire).
+  }, [assignations, saisies, affairesById, metiersById]);
 
   // Pré-remplissage automatique des jours passés (J-1 et avant) sans saisie
   useEffect(() => {
