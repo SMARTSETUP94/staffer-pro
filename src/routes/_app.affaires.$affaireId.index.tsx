@@ -79,32 +79,15 @@ function AffaireSynthesePage() {
     }
   };
 
-  const enriched = useMemo(() => {
-    return lines.map((l) => {
-      const prevues = Number(l.heures_prevues ?? 0);
-      const staffees = Number(l.heures_assignees ?? 0);
-      const validees = Number(l.heures_reelles_validees ?? 0);
-      const soumises = Number(l.heures_reelles_soumises ?? 0);
-      const realisees = validees + soumises; // tout ce qui a été déclaré par l'employé
-      const pctStaff = prevues > 0 ? (staffees / prevues) * 100 : 0;
-      const pctReal = prevues > 0 ? (realisees / prevues) * 100 : 0;
-      const pctValide = prevues > 0 ? (validees / prevues) * 100 : 0;
-      const ecart = prevues - validees; // marge officielle = budget - validées
-      // Statut basé sur le max des engagements (planning ou réalisé)
-      const pctMax = Math.max(pctStaff, pctReal);
-      let tone: "ok" | "warn" | "danger" = "ok";
-      if (pctMax > 100) tone = "danger";
-      else if (pctMax >= 85) tone = "warn";
-      return { ...l, prevues, staffees, validees, soumises, realisees, pctStaff, pctReal, pctValide, ecart, tone };
-    });
-  }, [lines]);
+  // v0.40.0e — Consolidation par métier (1 ligne par métier, drilldown par devis).
+  const groups = useMemo(() => consolidateByMetier(lines), [lines]);
 
-  const totals = enriched.reduce(
-    (acc, l) => {
-      acc.prevues += l.prevues;
-      acc.staffees += l.staffees;
-      acc.validees += l.validees;
-      acc.soumises += l.soumises;
+  const totals = groups.reduce(
+    (acc, g) => {
+      acc.prevues += g.prevues;
+      acc.staffees += g.staffees;
+      acc.validees += g.validees;
+      acc.soumises += g.soumises;
       return acc;
     },
     { prevues: 0, staffees: 0, validees: 0, soumises: 0 },
