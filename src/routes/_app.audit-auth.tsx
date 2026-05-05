@@ -22,21 +22,21 @@ export const Route = createFileRoute("/_app/audit-auth")({
 });
 
 function AuditAuthPage() {
-  const { isAdmin, rolesLoaded } = useAuth();
   const navigate = useNavigate({ from: "/audit-auth" });
   const { tab } = Route.useSearch();
-
-  useEffect(() => {
-    if (rolesLoaded && !isAdmin) {
-      navigate({ to: "/dashboard" });
-    }
-  }, [rolesLoaded, isAdmin, navigate]);
-
-  if (!rolesLoaded || !isAdmin) return null;
 
   const setTab = (next: string) => {
     navigate({ search: { tab: next as AuditAuthTab }, replace: true });
   };
+
+  return (
+    <RoleGuard required="admin">
+      <AuditAuthPageInner tab={tab} setTab={setTab} />
+    </RoleGuard>
+  );
+}
+
+function AuditAuthPageInner({ tab, setTab }: { tab: AuditAuthTab; setTab: (v: string) => void }) {
 
   return (
     <div className="space-y-6 p-4 md:p-6">
