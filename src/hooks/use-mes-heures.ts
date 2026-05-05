@@ -293,7 +293,11 @@ export function useMesHeures({ weekStart, employeIdOverride }: UseMesHeuresOptio
       const order = { AM: 0, JOURNEE: 1, PM: 2 };
       return order[a.demi_journee] - order[b.demi_journee];
     });
-  }, [assignations, saisies]);
+    // v0.41.0a — affairesById/metiersById doivent figurer dans les deps,
+    // sinon le label "(chargement…)" reste figé après lookup async (visible
+    // surtout sur les saisies hors planning créées par un chef pour un
+    // employé qui n'a pas d'assignation sur l'affaire).
+  }, [assignations, saisies, affairesById, metiersById]);
 
   // Pré-remplissage automatique des jours passés (J-1 et avant) sans saisie
   useEffect(() => {
