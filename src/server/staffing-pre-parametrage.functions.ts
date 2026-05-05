@@ -147,17 +147,43 @@ export const suggestPreParametrage = createServerFn({ method: "POST" })
     const totals: Record<MetierConfigKey, number> = {
       BE: 0, Num: 0, Bois: 0, Peint: 0, Tap: 0, Manut: 0,
     };
+    // v0.40 — Calcul de l'absorption Manut DEBUT+TRANSFERT par Bois/Peint/Tap
+    // (50% du total Manut absorbé, réparti par objet au prorata des heures de base).
+    // Pour le pré-paramétrage on agrège objet par objet pour rester fidèle à l'algo.
+    let manutAbsBois = 0;
+    let manutAbsPeint = 0;
+    let manutAbsTap = 0;
     for (const o of objs ?? []) {
+      const hBois = Number(o.heures_prevues_bois ?? 0);
+      const hPeint = Number(o.heures_prevues_peinture ?? 0);
+      const hTap = Number(o.heures_prevues_tapisserie ?? 0);
+      const hManut = Number(o.heures_prevues_manutention ?? 0);
       totals.BE += Number(o.heures_prevues_be ?? 0);
       totals.Num += Number(o.heures_prevues_numerique ?? 0);
-      totals.Bois += Number(o.heures_prevues_bois ?? 0);
-      totals.Peint += Number(o.heures_prevues_peinture ?? 0);
-      totals.Tap += Number(o.heures_prevues_tapisserie ?? 0);
-      totals.Manut += Number(o.heures_prevues_manutention ?? 0);
+      totals.Bois += hBois;
+      totals.Peint += hPeint;
+      totals.Tap += hTap;
+      totals.Manut += hManut;
+      const denom = hBois + hPeint + hTap;
+      const hAbsorbable = hManut * 0.5; // 35% DEBUT + 15% TRANSFERT
+      if (denom > 0 && hAbsorbable > 0) {
+        manutAbsBois += hAbsorbable * (hBois / denom);
+        manutAbsPeint += hAbsorbable * (hPeint / denom);
+        manutAbsTap += hAbsorbable * (hTap / denom);
+      }
     }
+    // Totals "effectifs" passés à autoSuggest = totals base + absorption (cohérent algo défaut)
+    const totalsEffectifs: Record<MetierConfigKey, number> = {
+      BE: totals.BE,
+      Num: totals.Num,
+      Bois: totals.Bois + manutAbsBois,
+      Peint: totals.Peint + manutAbsPeint,
+      Tap: totals.Tap + manutAbsTap,
+      Manut: totals.Manut * 0.5, // seul Manut FIN reste exécuté par l'équipe Manut
+    };
 
     const today = data.today ?? new Date().toISOString().slice(0, 10);
-    const result = autoSuggestMetierConfig(totals, today, resolvedDeadline);
+    const result = autoSuggestMetierConfig(totalsEffectifs, today, resolvedDeadline);
 
     return {
       configs: result.configs.map((c) => ({
@@ -177,6 +203,11 @@ export const suggestPreParametrage = createServerFn({ method: "POST" })
       pipeline_duration: result.pipeline_duration,
       fenetre_dispo: result.fenetre_dispo,
       totals_par_metier: totals,
+      manut_absorbed_par_metier: {
+        Bois: Math.round(manutAbsBois * 10) / 10,
+        Peint: Math.round(manutAbsPeint * 10) / 10,
+        Tap: Math.round(manutAbsTap * 10) / 10,
+      },
     };
   });
 
