@@ -74,6 +74,9 @@ export function PreParametrageSection({ affaireId, deadline, onApplied: _onAppli
   const [conflicts, setConflicts] = useState<Conflict[]>([]);
   const [pipelineDuration, setPipelineDuration] = useState(0);
   const [fenetreDispo, setFenetreDispo] = useState(0);
+  const [manutAbsorbed, setManutAbsorbed] = useState<{ Bois: number; Peint: number; Tap: number }>({
+    Bois: 0, Peint: 0, Tap: 0,
+  });
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [collapsed, setCollapsed] = useState<boolean>(() => {
@@ -105,6 +108,7 @@ export function PreParametrageSection({ affaireId, deadline, onApplied: _onAppli
       setConflicts(sugg.conflicts);
       setPipelineDuration(sugg.pipeline_duration);
       setFenetreDispo(sugg.fenetre_dispo);
+      setManutAbsorbed(sugg.manut_absorbed_par_metier);
     } catch (e) {
       setErrorMsg(e instanceof Error ? e.message : "erreur");
     } finally {
