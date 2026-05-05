@@ -44,7 +44,7 @@ describe("DayGrid", () => {
       />,
     );
     const header = screen.getByTestId("day-grid-header");
-    expect(header).toBeInTheDocument();
+    expect(header).toBeTruthy();
     // 1 colonne label + 2 colonnes (AM/PM) par jour
     const amCells = header.querySelectorAll("div.contents");
     expect(amCells.length).toBe(days.length);
@@ -68,7 +68,7 @@ describe("DayGrid", () => {
         onResetShift={() => {}}
       />,
     );
-    expect(screen.queryByTestId("day-grid-global-steps")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("day-grid-global-steps")).toBeNull();
   });
 
   it("affiche un step global Manut FIN avec heures = pers × demi × 4", () => {
@@ -86,10 +86,10 @@ describe("DayGrid", () => {
         onResetShift={() => {}}
       />,
     );
-    expect(screen.getByTestId("day-grid-global-steps")).toBeInTheDocument();
-    expect(screen.getByText(/Manutention/)).toBeInTheDocument();
+    expect(screen.getByTestId("day-grid-global-steps")).toBeTruthy();
+    expect(screen.getByText(/Manutention/)).toBeTruthy();
     // 2 × 4 × 4 = 32h
-    expect(screen.getByText(/32h/)).toBeInTheDocument();
+    expect(screen.getByText(/32h/)).toBeTruthy();
   });
 
   it("appelle onShift quand le GanttBar le déclenche", () => {
