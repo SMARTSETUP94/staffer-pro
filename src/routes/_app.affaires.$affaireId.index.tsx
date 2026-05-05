@@ -33,6 +33,8 @@ function AffaireSynthesePage() {
   const [hMontage, setHMontage] = useState<string>("0");
   const [hDemontage, setHDemontage] = useState<string>("0");
   const [savingMD, setSavingMD] = useState(false);
+  // v0.40.0e — état d'expansion par métier (drilldown devis)
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     let cancelled = false;
