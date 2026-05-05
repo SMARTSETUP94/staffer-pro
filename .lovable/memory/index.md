@@ -79,17 +79,26 @@ Volume staffé v0.39.0c : KPI "Heures staffées" = Σ(pers × demi_jours × H_HA
 40. ✅ **v0.40.0a** (5 mai 2026) — Algo absorption Manut Bois/Peint/Tap au prorata (35% début + 15% transfert + 50% FIN globale) + flag DB `is_manut_absorbed` + 7 tests Vitest. 1358/1358 verts.
 41. ✅ **v0.40.0b** (5 mai 2026) — UI Gantt nettoyée (suppression barres Manut intermédiaires par objet) + section globale "Manutention FIN (50%) + ressources partagées" + pré-param 6 lignes avec tooltips "Bois 105h dont 19h ex-Manut absorbée" + note bas de page + E2E `manut-refonte-v040.chef.spec.ts`. `ManutStatCard` dédié + `manut-summary.ts` (14 tests). 1372/1372 verts.
 
+### Livré v0.40.0e + hotfixes UX (5 mai 2026)
+42. ✅ **v0.40.0e** — Consolidation "Suivi marge par métier" en treetable (1 ligne par métier + drilldown par devis). Lib `affaire-marge-consolidation.ts` + 7 tests.
+43. ✅ **Hotfix prefill numéro affaire** — Race condition fetch top-200 vs prefill : merge dédupliqué via Set. 3 tests.
+44. ✅ **Hotfix noms objets Plan staffing** — `<ObjetRefLabel />` partout (Gantt + Wizard) → masque préfixe `D-{numero}-`. 7 tests.
+
+### Livré v0.39.2b2.1 (Sprint 2b2 Tour 1+2 — extraction Gantt)
+45. ✅ **v0.39.2b2.1 Tour 1** (5 mai 2026) — Extraction `gantt/GanttHeaderRow.tsx` + `gantt/StatCard.tsx`. `GanttInteractif` 1029L → 857L.
+46. ✅ **v0.39.2b2.1 Tour 2** (5 mai 2026) — Extraction `gantt/DayGrid.tsx` (header dates AM|PM + steps globaux Manut FIN/CNC). `GanttInteractif` 857L → 735L. 4 tests Vitest DayGrid + suppression dead code `stepDateRangeShort`. **1397/1397 verts.**
+
 ### À venir (priorisé)
-42. ⏳ **v0.39.2b2 (PROCHAIN)** — Refactors gros volume : `GanttInteractif.tsx` 1029L → 4 fichiers (HeaderRow, DayGrid, RowInteractif, GanttRoot) + `StaffingPersonnesSection.tsx` 1214L → 4 fichiers (PersonneCard, AssignmentRow, TierFilters, StaffingPersonnesRoot). Tests Vitest unit + snapshot non-régression. Phasage 2b2.1 (Gantt) puis 2b2.2 (Personnes).
-43. ⏳ **v0.40.0c (optionnel, peu prio)** — Script migration plans existants vers algo Manut absorbée. La plupart des autres plans sont brouillons → faisable à la demande seulement.
-44. ⏳ **Sprint 3** — (a) BUG heures invisibles cache côté employé. (b) Logistique avancée : autorisations véhicules #56 + sous-traitants + historique + stats. (c) E2E full role-based (employé desktop + mobile, ~48 tests sur infra v0.34 déjà posée).
-45. ⏳ **v0.20.1 quick wins** — Pré-remplissage trajet sous-traité + cache `useObjetsAffaireLight` + notification CA prêt à livrer.
-46. ⏳ **v0.21.1** — Garde RBAC UI sur `/saisie-pour-equipe` + durcissement RLS + UNIQUE INDEX chef_jour + tests d'intégration SQL.
-47. ⏳ **v0.39.3** — Migration RPC #1 bulk-assign-objet + #2 chef-saisit-pour-employe (corrige BUG #33 root cause) + #3 bulk-saisie + #5 bulk-staffer.
-48. ⏳ **v0.36** — Sprint dette résiduelle : page admin véhicules + audit findings.
-49. ⏳ **v0.37** — Polish UX transversal post-feedback terrain.
-50. ⏳ **v0.40 Phase 2** — Horaires précis SILAE + RPC #4 feuille-route.
-51. ⏳ **v0.41 (BACKLOG long terme)** — Claude API auto-staffing 5XXX uniquement. Reportée par Gabin (focus stabilité). + CNI/passeport profil + suggestion véhicule.
+47. ⏳ **Sprint 2b2.1 Tour 3 (PROCHAIN)** — Extraction `gantt/RowInteractif.tsx` (ligne objet treetable + steps métiers + CellEditPopover). Cible `GanttInteractif` ~400L.
+48. ⏳ **Sprint 2b2.2** — Refonte `StaffingPersonnesSection.tsx` 1214L → 4 fichiers (PersonneCard, AssignmentRow, TierFilters, StaffingPersonnesRoot).
+49. ⏳ **Sprint 3** — (a) BUG heures invisibles cache côté employé. (b) Logistique avancée. (c) E2E full role-based (employé desktop + mobile).
+50. ⏳ **v0.20.1 quick wins** — Pré-remplissage trajet sous-traité + cache `useObjetsAffaireLight` + notification CA prêt à livrer.
+51. ⏳ **v0.21.1** — Garde RBAC UI `/saisie-pour-equipe` + durcissement RLS + UNIQUE INDEX chef_jour + tests SQL.
+52. ⏳ **v0.39.3** — Migration RPC #1/2/3/5 (bulk-assign-objet, chef-saisit-pour-employe, bulk-saisie, bulk-staffer).
+53. ⏳ **v0.36** — Sprint dette résiduelle : page admin véhicules + audit findings.
+54. ⏳ **v0.37** — Polish UX transversal post-feedback terrain.
+55. ⏳ **v0.40 Phase 2** — Horaires précis SILAE + RPC #4 feuille-route.
+56. ⏳ **v0.41 (BACKLOG)** — Claude API auto-staffing 5XXX + CNI/passeport profil + suggestion véhicule.
 
 Voir roadmap consolidée détaillée : mem://roadmap/consolidee-2mai2026.
 
