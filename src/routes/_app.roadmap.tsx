@@ -2484,12 +2484,6 @@ const PLANNED: RoadmapPlanned[] = [
   },
   {
     priority: "haute",
-    title: "Sprint 2b2.2 — Refonte `StaffingPersonnesSection.tsx` (1214L → 4 fichiers)",
-    description:
-      "Découpage en PersonneCard, AssignmentRow, TierFilters, StaffingPersonnesRoot. Tests Vitest + snapshot non-régression.",
-  },
-  {
-    priority: "haute",
     title: "Sprint 3 — Bug heures invisibles cache côté employé",
     description:
       "Cause hors RLS confirmée (donnée bien en DB). Investigation cache client React Query / Supabase pour comprendre les saisies qui n'apparaissent pas immédiatement côté employé.",
