@@ -13,20 +13,11 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { consolidateByMetier, type RawConsoLine } from "@/lib/affaire-marge-consolidation";
 
-interface ConsoLine {
-  devis_id: string | null;
-  devis_numero: string | null;
-  metier_id: number | null;
-  metier: string | null;
-  couleur: string | null;
-  heures_prevues: number | null;
-  heures_assignees: number | null;
-  heures_reelles_validees: number | null;
-  heures_reelles_soumises: number | null;
+type ConsoLine = RawConsoLine & {
   heures_restantes: number | null;
   pct_consomme: number | null;
   pct_consomme_reel: number | null;
-}
+};
 
 export const Route = createFileRoute("/_app/affaires/$affaireId/")({
   component: AffaireSynthesePage,
