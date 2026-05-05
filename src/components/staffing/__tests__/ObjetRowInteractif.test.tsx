@@ -2,8 +2,10 @@
  * @vitest-environment happy-dom
  */
 // v0.39.2b2.1 Tour 3 — Smoke test ObjetRowInteractif
-import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, afterEach } from "vitest";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
+
+afterEach(() => cleanup());
 import { ObjetRowInteractif } from "../gantt/ObjetRowInteractif";
 import type { PlanStep } from "@/lib/staffing/types";
 
