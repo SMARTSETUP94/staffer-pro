@@ -28,8 +28,7 @@ export const Route = createFileRoute("/_app/parametres/sous-traitants")({
 });
 
 function SousTraitantsPage() {
-  const { isAdmin, hasRole } = useAuth();
-  const isChefOrAdmin = isAdmin || hasRole("chef_chantier");
+  const { isAdminOrChef } = useAuth();
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<"__all__" | SousTraitantType>("__all__");
   const [actifOnly, setActifOnly] = useState(true);
@@ -50,7 +49,7 @@ function SousTraitantsPage() {
     });
   }, [data, search, typeFilter]);
 
-  if (!isChefOrAdmin) return <Navigate to="/dashboard" />;
+  if (!isAdminOrChef) return <Navigate to="/dashboard" />;
 
   function openCreate() {
     setEditing(null);
