@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2, ArrowUp, ArrowDown, RefreshCw, AlertTriangle, Wand2, ChevronRight, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+// v0.39.2b2.1 — Popover/StatCard/ManutStatCard déplacés vers ./gantt/GanttHeaderRow
 import { GanttHeaderRow } from "./gantt/GanttHeaderRow";
 // v0.39.0 — Slider supprimé : remplacé par PersStepper inline.
 import { Badge } from "@/components/ui/badge";
@@ -32,7 +32,7 @@ import { ChargeMetierSection } from "./ChargeMetierSection";
 import { PersStepper } from "./PersStepper";
 import { DateShifter } from "./DateShifter";
 import { CellEditPopover } from "./CellEditPopover";
-import { ManutStatCard } from "./ManutStatCard";
+// v0.39.2b2.1 — ManutStatCard utilisé dans GanttHeaderRow
 import {
   computeCascadeForDurationChange,
   computeCascadeForShift,
