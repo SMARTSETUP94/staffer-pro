@@ -46,7 +46,9 @@ import { EditerObjetDialog } from "@/components/fabrication/EditerObjetDialog";
 import { EtapeDialog } from "@/components/fabrication/EtapeDialog";
 import { StafferVehiculeInterneDialog } from "@/components/fabrication/StafferVehiculeInterneDialog";
 import { ObjetCardMobile } from "@/components/fabrication/ObjetCardMobile";
-import { Link } from "@tanstack/react-router";
+import { TrajetDialog } from "@/components/flotte/TrajetDialog";
+import { useLieux } from "@/hooks/use-lieux";
+import { addDays, format as fmt } from "date-fns";
 import { StaffingPlanWizard } from "@/components/staffing/StaffingPlanWizard";
 import { MettreAuPlanningExpressButton } from "@/components/staffing/MettreAuPlanningExpressButton";
 
