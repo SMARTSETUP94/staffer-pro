@@ -432,6 +432,31 @@ function FabricationPage() {
           onCreated={reload}
         />
       )}
+
+      {/* v0.20.1 Phase 1 — Modale "Demander trajet sous-traité" pré-remplie */}
+      {affaireMeta && openSousTraiter && (
+        <TrajetDialog
+          open={openSousTraiter}
+          onOpenChange={setOpenSousTraiter}
+          trajet={null}
+          defaultDate={
+            affaireMeta.date_montage
+              ? fmt(addDays(new Date(affaireMeta.date_montage), -1), "yyyy-MM-dd")
+              : undefined
+          }
+          defaultVehiculeId={null}
+          defaultAdresseDepart={atelier?.adresse_complete ?? ""}
+          defaultAdresseArrivee={affaireMeta.lieu ?? ""}
+          defaultCategorie="pose"
+          defaultAffaireId={affaireId}
+          affaires={[{ id: affaireId, numero: affaireMeta.numero, nom: affaireMeta.nom }]}
+          employesLivreurs={[]}
+          onSaved={() => {
+            setOpenSousTraiter(false);
+            toast.success("Demande de trajet sous-traité créée");
+          }}
+        />
+      )}
     </div>
   );
 }
