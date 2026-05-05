@@ -928,6 +928,56 @@ export type Database = {
           },
         ]
       }
+      employes_autorisations_vehicules: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          date_expiration: string | null
+          date_obtention: string | null
+          employe_id: string
+          fichier_url: string | null
+          id: string
+          notes: string | null
+          numero: string | null
+          type_autorisation: Database["public"]["Enums"]["autorisation_vehicule_type"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          date_expiration?: string | null
+          date_obtention?: string | null
+          employe_id: string
+          fichier_url?: string | null
+          id?: string
+          notes?: string | null
+          numero?: string | null
+          type_autorisation: Database["public"]["Enums"]["autorisation_vehicule_type"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          date_expiration?: string | null
+          date_obtention?: string | null
+          employe_id?: string
+          fichier_url?: string | null
+          id?: string
+          notes?: string | null
+          numero?: string | null
+          type_autorisation?: Database["public"]["Enums"]["autorisation_vehicule_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employes_autorisations_vehicules_employe_id_fkey"
+            columns: ["employe_id"]
+            isOneToOne: false
+            referencedRelation: "employes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fabrication_etapes: {
         Row: {
           assignee_id: string | null
@@ -2580,6 +2630,68 @@ export type Database = {
           },
         ]
       }
+      v_employes_autorisations_actives: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          date_expiration: string | null
+          date_obtention: string | null
+          employe_id: string | null
+          fichier_url: string | null
+          id: string | null
+          jours_restants: number | null
+          notes: string | null
+          numero: string | null
+          statut_validite: string | null
+          type_autorisation:
+            | Database["public"]["Enums"]["autorisation_vehicule_type"]
+            | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          date_expiration?: string | null
+          date_obtention?: string | null
+          employe_id?: string | null
+          fichier_url?: string | null
+          id?: string | null
+          jours_restants?: never
+          notes?: string | null
+          numero?: string | null
+          statut_validite?: never
+          type_autorisation?:
+            | Database["public"]["Enums"]["autorisation_vehicule_type"]
+            | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          date_expiration?: string | null
+          date_obtention?: string | null
+          employe_id?: string | null
+          fichier_url?: string | null
+          id?: string | null
+          jours_restants?: never
+          notes?: string | null
+          numero?: string | null
+          statut_validite?: never
+          type_autorisation?:
+            | Database["public"]["Enums"]["autorisation_vehicule_type"]
+            | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employes_autorisations_vehicules_employe_id_fkey"
+            columns: ["employe_id"]
+            isOneToOne: false
+            referencedRelation: "employes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       v_feedbacks_public: {
         Row: {
           author_id: string | null
@@ -2979,6 +3091,14 @@ export type Database = {
       affaire_phase: "opportunite" | "signe"
       affaire_statut: "prospect" | "en_cours" | "termine" | "annule"
       app_role: "admin" | "chef_chantier" | "employe"
+      autorisation_vehicule_type:
+        | "PERMIS_B"
+        | "PERMIS_C"
+        | "PERMIS_CE"
+        | "PERMIS_D"
+        | "CACES_R489"
+        | "CACES_R486"
+        | "CACES_R484"
       categorie_permis: "B" | "C" | "CE" | "D"
       competence_niveau: "secondaire" | "depannage" | "bloque"
       confirmation_status:
@@ -3191,6 +3311,15 @@ export const Constants = {
       affaire_phase: ["opportunite", "signe"],
       affaire_statut: ["prospect", "en_cours", "termine", "annule"],
       app_role: ["admin", "chef_chantier", "employe"],
+      autorisation_vehicule_type: [
+        "PERMIS_B",
+        "PERMIS_C",
+        "PERMIS_CE",
+        "PERMIS_D",
+        "CACES_R489",
+        "CACES_R486",
+        "CACES_R484",
+      ],
       categorie_permis: ["B", "C", "CE", "D"],
       competence_niveau: ["secondaire", "depannage", "bloque"],
       confirmation_status: [

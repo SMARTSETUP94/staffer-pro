@@ -44,6 +44,41 @@ interface RoadmapPlanned {
 const RELEASES: RoadmapRelease[] = [
   {
     date: "2026-05-05",
+    version: "v0.41.0b (Sprint 3b.1)",
+    title: "🚛 Logistique avancée — Autorisations véhicules (Phase 3b.1 livrée)",
+    entries: [
+      {
+        type: "feature",
+        area: "Autorisations véhicules",
+        title: "Nouvelle table employes_autorisations_vehicules + 7 types",
+        description:
+          "Permis B / C / CE / D et CACES R489 (chariot) / R486 (PEMP nacelle) / R484 (transpalette accompagnant). Numéro, date d'obtention, date d'expiration, lien fichier scan, notes. UNIQUE (employe_id, type) — 1 actif par type. Backfill auto depuis employes.categories_permis (legacy conservé pour compatibilité staffing flotte, dépréciation reportée). Vue v_employes_autorisations_actives avec statut calculé (valide / expiration_proche ≤30j / expire).",
+      },
+      {
+        type: "feature",
+        area: "Autorisations véhicules",
+        title: "Page admin /parametres/autorisations-vehicules — matrice équipe × types",
+        description:
+          "Matrice cliquable employés × 7 autorisations, badges statut couleur (vert valide, ambre <30j, rouge expirée, dashed manquante). Recherche par nom. KPI global : valides / expirent bientôt / expirées. Click cellule = ouvre la modale d'édition pré-remplie ou de création.",
+      },
+      {
+        type: "feature",
+        area: "Autorisations véhicules",
+        title: "Section sur fiche employé + modale d'édition unifiée",
+        description:
+          "EmployeAutorisationsSection ajoutée au dialog d'édition employé (visible uniquement en mode édition). Tableau liste avec badges statut, lien scan, edit/delete inline. AutorisationVehiculeDialog (création + mise à jour) avec upsert sur (employe_id, type). Coexiste avec le bloc legacy 'Catégories de permis' pour compatibilité staffing flotte.",
+      },
+      {
+        type: "improvement",
+        area: "Tests",
+        title: "13 tests Vitest verts sur les helpers",
+        description:
+          "src/lib/__tests__/autorisations-vehicules.test.ts : statutFromExpiration (valide / expire / proche / today), joursAvantExpiration (positif/négatif/null), autorisationToPermisLegacy (mapping permis et CACES → null), autorisationsCompatiblesVehicule (filtre VL/poids_lourd + exclusion expirées). Phases 3b.2 (sous-traitants), 3b.3 (historique trajets) et 3b.4 (stats flotte) reportées au prochain tour pour validation visuelle de 3b.1 d'abord.",
+      },
+    ],
+  },
+  {
+    date: "2026-05-05",
     version: "v0.41.0c (Sprint 3c.2 + 3c.3)",
     title: "🧪 E2E full role-based — employé mobile + extras chef/admin (Sprint 3c terminé)",
     entries: [

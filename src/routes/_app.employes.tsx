@@ -8,6 +8,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { MetierBadge } from "@/components/MetierBadge";
 import { MultiFilter } from "@/components/planning/MultiFilter";
 import { EmployesSpreadsheet, type SpreadsheetRow } from "@/components/employes/EmployesSpreadsheet";
+import { EmployeAutorisationsSection } from "@/components/autorisations/EmployeAutorisationsSection";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -727,6 +728,13 @@ function EmployesPage() {
                 </div>
               )}
             </div>
+
+            {/* Sprint 3b.1 — Autorisations véhicules enrichies (uniquement en édition) */}
+            {form.id && (
+              <div className="space-y-2 rounded-xl border border-border bg-background p-3 sm:col-span-2">
+                <EmployeAutorisationsSection employeId={form.id} canEdit={isAdminOrChef} />
+              </div>
+            )}
 
             {/* v0.20 — Bloc 2 : Rôles fabrication (indépendants du métier principal) */}
             <div className="space-y-2 rounded-xl border border-border bg-background p-3 sm:col-span-2">

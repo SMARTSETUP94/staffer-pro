@@ -56,6 +56,7 @@ import { Route as AppParametresRolesFabricationRouteImport } from './routes/_app
 import { Route as AppParametresMetiersRouteImport } from './routes/_app.parametres.metiers'
 import { Route as AppParametresLieuxRouteImport } from './routes/_app.parametres.lieux'
 import { Route as AppParametresCompetencesEquipeRouteImport } from './routes/_app.parametres.competences-equipe'
+import { Route as AppParametresAutorisationsVehiculesRouteImport } from './routes/_app.parametres.autorisations-vehicules'
 import { Route as AppOpportunitesImportRouteImport } from './routes/_app.opportunites.import'
 import { Route as AppFabricationMesEtapesRouteImport } from './routes/_app.fabrication.mes-etapes'
 import { Route as AppExportDemandesDevisRouteImport } from './routes/_app.export.demandes-devis'
@@ -310,6 +311,12 @@ const AppParametresCompetencesEquipeRoute =
     path: '/parametres/competences-equipe',
     getParentRoute: () => AppRoute,
   } as any)
+const AppParametresAutorisationsVehiculesRoute =
+  AppParametresAutorisationsVehiculesRouteImport.update({
+    id: '/parametres/autorisations-vehicules',
+    path: '/parametres/autorisations-vehicules',
+    getParentRoute: () => AppRoute,
+  } as any)
 const AppOpportunitesImportRoute = AppOpportunitesImportRouteImport.update({
   id: '/import',
   path: '/import',
@@ -445,6 +452,7 @@ export interface FileRoutesByFullPath {
   '/export/demandes-devis': typeof AppExportDemandesDevisRoute
   '/fabrication/mes-etapes': typeof AppFabricationMesEtapesRoute
   '/opportunites/import': typeof AppOpportunitesImportRoute
+  '/parametres/autorisations-vehicules': typeof AppParametresAutorisationsVehiculesRoute
   '/parametres/competences-equipe': typeof AppParametresCompetencesEquipeRoute
   '/parametres/lieux': typeof AppParametresLieuxRoute
   '/parametres/metiers': typeof AppParametresMetiersRoute
@@ -507,6 +515,7 @@ export interface FileRoutesByTo {
   '/export/demandes-devis': typeof AppExportDemandesDevisRoute
   '/fabrication/mes-etapes': typeof AppFabricationMesEtapesRoute
   '/opportunites/import': typeof AppOpportunitesImportRoute
+  '/parametres/autorisations-vehicules': typeof AppParametresAutorisationsVehiculesRoute
   '/parametres/competences-equipe': typeof AppParametresCompetencesEquipeRoute
   '/parametres/lieux': typeof AppParametresLieuxRoute
   '/parametres/metiers': typeof AppParametresMetiersRoute
@@ -573,6 +582,7 @@ export interface FileRoutesById {
   '/_app/export/demandes-devis': typeof AppExportDemandesDevisRoute
   '/_app/fabrication/mes-etapes': typeof AppFabricationMesEtapesRoute
   '/_app/opportunites/import': typeof AppOpportunitesImportRoute
+  '/_app/parametres/autorisations-vehicules': typeof AppParametresAutorisationsVehiculesRoute
   '/_app/parametres/competences-equipe': typeof AppParametresCompetencesEquipeRoute
   '/_app/parametres/lieux': typeof AppParametresLieuxRoute
   '/_app/parametres/metiers': typeof AppParametresMetiersRoute
@@ -639,6 +649,7 @@ export interface FileRouteTypes {
     | '/export/demandes-devis'
     | '/fabrication/mes-etapes'
     | '/opportunites/import'
+    | '/parametres/autorisations-vehicules'
     | '/parametres/competences-equipe'
     | '/parametres/lieux'
     | '/parametres/metiers'
@@ -701,6 +712,7 @@ export interface FileRouteTypes {
     | '/export/demandes-devis'
     | '/fabrication/mes-etapes'
     | '/opportunites/import'
+    | '/parametres/autorisations-vehicules'
     | '/parametres/competences-equipe'
     | '/parametres/lieux'
     | '/parametres/metiers'
@@ -766,6 +778,7 @@ export interface FileRouteTypes {
     | '/_app/export/demandes-devis'
     | '/_app/fabrication/mes-etapes'
     | '/_app/opportunites/import'
+    | '/_app/parametres/autorisations-vehicules'
     | '/_app/parametres/competences-equipe'
     | '/_app/parametres/lieux'
     | '/_app/parametres/metiers'
@@ -1132,6 +1145,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppParametresCompetencesEquipeRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/parametres/autorisations-vehicules': {
+      id: '/_app/parametres/autorisations-vehicules'
+      path: '/parametres/autorisations-vehicules'
+      fullPath: '/parametres/autorisations-vehicules'
+      preLoaderRoute: typeof AppParametresAutorisationsVehiculesRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/opportunites/import': {
       id: '/_app/opportunites/import'
       path: '/import'
@@ -1335,6 +1355,7 @@ interface AppRouteChildren {
   AppDevisProgbatImportRoute: typeof AppDevisProgbatImportRoute
   AppDevisRattachementHistoriqueRoute: typeof AppDevisRattachementHistoriqueRoute
   AppFabricationMesEtapesRoute: typeof AppFabricationMesEtapesRoute
+  AppParametresAutorisationsVehiculesRoute: typeof AppParametresAutorisationsVehiculesRoute
   AppParametresCompetencesEquipeRoute: typeof AppParametresCompetencesEquipeRoute
   AppParametresLieuxRoute: typeof AppParametresLieuxRoute
   AppParametresMetiersRoute: typeof AppParametresMetiersRoute
@@ -1377,6 +1398,8 @@ const AppRouteChildren: AppRouteChildren = {
   AppDevisProgbatImportRoute: AppDevisProgbatImportRoute,
   AppDevisRattachementHistoriqueRoute: AppDevisRattachementHistoriqueRoute,
   AppFabricationMesEtapesRoute: AppFabricationMesEtapesRoute,
+  AppParametresAutorisationsVehiculesRoute:
+    AppParametresAutorisationsVehiculesRoute,
   AppParametresCompetencesEquipeRoute: AppParametresCompetencesEquipeRoute,
   AppParametresLieuxRoute: AppParametresLieuxRoute,
   AppParametresMetiersRoute: AppParametresMetiersRoute,
