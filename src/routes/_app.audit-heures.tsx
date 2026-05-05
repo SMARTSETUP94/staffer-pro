@@ -409,6 +409,7 @@ function AuditHeuresPage() {
         </CardContent>
       </Card>
     </div>
+    </RoleGuard>
   );
 }
 
