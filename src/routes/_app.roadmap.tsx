@@ -44,6 +44,34 @@ interface RoadmapPlanned {
 const RELEASES: RoadmapRelease[] = [
   {
     date: "2026-05-05",
+    version: "v0.39.2b2.1 Tour 3",
+    title: "🧱 Refacto Gantt — extraction ObjetRowInteractif (Sprint 2b2.1 terminé)",
+    entries: [
+      {
+        type: "refactor",
+        area: "Staffing — Gantt",
+        title: "Nouveau composant `gantt/ObjetRowInteractif.tsx`",
+        description:
+          "Extraction de la ligne objet treetable (header chevron + reorder + label) ET des steps métiers interactifs (CellEditPopover, GanttBar, ImpactBadge) hors de GanttInteractif. Composant pur, props handlers passées par le parent (cascade aval, set pers, set span demi, reset).",
+      },
+      {
+        type: "improvement",
+        area: "Staffing — Gantt",
+        title: "GanttInteractif : 759L → 603L (cible ~400 atteinte côté JSX rendu objet)",
+        description:
+          "Le fichier conserve uniquement orchestration : reload, mergedSteps, stats, alertes (officielles + pré-vol + volume), handlers cascade. Tour 3 clôt Sprint 2b2.1 (3 sous-composants : GanttHeaderRow + DayGrid + ObjetRowInteractif).",
+      },
+      {
+        type: "improvement",
+        area: "Tests",
+        title: "4 nouveaux tests Vitest ObjetRowInteractif — 1401/1401 verts",
+        description:
+          "Smoke tests : label objet, trigger d'édition cellule, repli (pas de steps), clic header → onToggle.",
+      },
+    ],
+  },
+  {
+    date: "2026-05-05",
     version: "v0.39.2b2.1 Tour 2",
     title: "🧱 Refacto Gantt — extraction DayGrid (header dates AM|PM + steps globaux)",
     entries: [
@@ -2450,15 +2478,9 @@ const PLANNED: RoadmapPlanned[] = [
   // ========== Roadmap consolidée (mise à jour 5 mai 2026) ==========
   {
     priority: "haute",
-    title: "Sprint 2b2.1 Tour 3 — Extraction `gantt/RowInteractif.tsx` (PROCHAIN)",
+    title: "Sprint 2b2.2 — Refonte `StaffingPersonnesSection.tsx` (1214L → 4 fichiers) [PROCHAIN]",
     description:
-      "Sortir la ligne objet treetable + steps métiers + CellEditPopover de GanttInteractif. Cible : passer de ~735L à ~400L. Tests Vitest unit + validation visuelle HPDN 5905 entre Tour 2 et Tour 3.",
-  },
-  {
-    priority: "haute",
-    title: "Sprint 2b2.2 — Refonte `StaffingPersonnesSection.tsx` (1214L → 4 fichiers)",
-    description:
-      "Découpage en PersonneCard, AssignmentRow, TierFilters, StaffingPersonnesRoot. Tests Vitest + snapshot non-régression.",
+      "Découpage en PersonneCard, AssignmentRow, TierFilters, StaffingPersonnesRoot. Tests Vitest + snapshot non-régression. Sprint 2b2.1 (Gantt) terminé : 3 sous-composants extraits, GanttInteractif 1430→603L.",
   },
   {
     priority: "haute",
