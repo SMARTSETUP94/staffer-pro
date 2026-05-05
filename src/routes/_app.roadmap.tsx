@@ -2665,9 +2665,9 @@ const PLANNED: RoadmapPlanned[] = [
 
   {
     priority: "moyenne",
-    title: "v0.20.1 quick wins",
+    title: "v0.20.1 — Quick wins LIVRÉS (4 phases)",
     description:
-      "Pré-remplissage trajet sous-traité + cache `useObjetsAffaireLight` + notification CA prêt à livrer.",
+      "Phase 1 : pré-remplissage TrajetDialog depuis bandeau « Prête à livrer » (atelier → chantier, date montage-1j, catégorie pose, affaire pré-sélectionnée). Phase 2 : indexes composites perf (`fabrication_etapes(objet_id,statut)`, `fabrication_etapes(assignee_id,statut)`, `staffing_plan_step(plan_id,metier_id)`). Phase 3 : `useObjetsAffaireLight` migré sur React Query (queryKey partagée, staleTime 30s) — fin du N+1 entre sidebar/main/header. Phase 4 : trigger `notify_affaire_pret_livraison` étend la notif au `charge_affaires_id` en plus du chef projet. 1440/1440 Vitest verts.",
   },
   {
     priority: "moyenne",
