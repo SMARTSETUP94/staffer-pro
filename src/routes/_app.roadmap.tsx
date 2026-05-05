@@ -2776,6 +2776,14 @@ const PLANNED: RoadmapPlanned[] = [
       "Enrichissement de l'algorithme déterministe v0.35 par Claude API via edge function proxy : skill-based reasoning sur historique de l'employé (déjà bossé avec l'équipe ? sur ce client ? sur ce type d'objet ?), tools structurés (lecture affaires + assignations passées), fallback automatique sur v0.35 si timeout/erreur, cache 1h sur même contexte, hard cap mensuel d'appels (alerte admin avant blocage). Tier CDI/CDD avant intérim conservé. PAS d'autres intégrations Claude (pas de support conv, pas de génération texte).",
   },
 
+  // ========== Backlog HEURES — REPORTING ==========
+  {
+    priority: "moyenne",
+    title: "HEURES — REPORTING — Centre d'analyse heures consolidé",
+    description:
+      "Onglet centralisé heures saisies + à valider, 8 filtres combinables (chantier / employé / date / semaine / mois / devis / nuit / statut), export Excel / CSV / PDF / SILAE. KPIs (total / validées / nuit / coût estimé), pagination 50, sort colonnes, filtres persistés en URL, vue mobile cards. Admin voit tout, chef filtré RLS sur son équipe. Spec complète : mem://features/centre-analyse-heures. ~8-10h.",
+  },
+
   // ========== v0.26+ ==========
   {
     priority: "moyenne",
