@@ -44,6 +44,76 @@ interface RoadmapPlanned {
 const RELEASES: RoadmapRelease[] = [
   {
     date: "2026-05-05",
+    version: "v0.21.1",
+    title: "🔒 Sprint sécurité — RBAC UI + RLS heures_saisies + UNIQUE INDEX chef du jour",
+    entries: [
+      {
+        type: "feature",
+        area: "Sécurité",
+        title: "RoleGuard UI centralisé",
+        description:
+          "Nouveau composant src/components/auth/RoleGuard.tsx avec prop required: 'admin' | 'chef_or_admin'. Loader pendant chargement des rôles, redirect /dashboard + toast d'erreur si rôle insuffisant. Appliqué sur /saisie-pour-equipe, /audit-heures et /audit-auth. 5 tests Vitest sur la matrice rôle × requirement.",
+      },
+      {
+        type: "improvement",
+        area: "Sécurité",
+        title: "Durcissement RLS heures_saisies",
+        description:
+          "Policy update employé : statut <> 'valide' (au lieu de IN brouillon/soumis) — autorise la correction post-rejet, bloque l'édition une fois validé. Nouvelle policy heures_saisies_self_delete_brouillon : l'employé peut supprimer ses brouillons (capacité auparavant absente). 9 tests Vitest sur la matrice acteur × statut × action.",
+      },
+      {
+        type: "improvement",
+        area: "Sécurité",
+        title: "UNIQUE INDEX partiel chef du jour",
+        description:
+          "CREATE UNIQUE INDEX assignations_chef_jour_unique ON assignations(affaire_id, date, demi_journee) WHERE est_chef_jour = true. Renforce atomiquement le trigger enforce_unique_chef_jour : en cas de désignations concurrentes par 2 admins, la 2e transaction est rejetée par contrainte. 5 tests Vitest sur l'invariant.",
+      },
+      {
+        type: "improvement",
+        area: "Documentation",
+        title: "docs/rls-policies.md étendue",
+        description:
+          "Section v0.21.1 ajoutée avec matrice complète acteur × statut × action et référence des 19 nouveaux tests automatisés. Total Vitest 1459+ tests verts.",
+      },
+    ],
+  },
+  {
+    date: "2026-05-05",
+    version: "v0.20.1",
+    title: "⚡ Quick Wins — Pré-remplissage trajet + perfs DB + cache React Query + notif CA",
+    entries: [
+      {
+        type: "feature",
+        area: "Logistique",
+        title: "Pré-remplissage trajet sous-traité depuis bandeau « Prête à livrer »",
+        description:
+          "Le bouton « Sous-traiter » sur /affaires/$id/fabrication ouvre désormais TrajetDialog directement (au lieu de naviguer). Pré-remplissage automatique : adresse_depart=Atelier, adresse_arrivee=Chantier, date_souhaitee=Date Montage − 1j, catégorie=pose. Gain : 5 clics → 1 clic.",
+      },
+      {
+        type: "improvement",
+        area: "Performance",
+        title: "Indexes composites DB (3 nouveaux)",
+        description:
+          "idx_fab_etapes_objet_statut sur fabrication_etapes(objet_id, statut), idx_fab_etapes_assignee_statut sur fabrication_etapes(assignee_id, statut), idx_staffing_plan_step_plan_metier sur staffing_plan_step(plan_id, metier_id). EXPLAIN ANALYZE validé < 100 ms sur les requêtes tableau de bord fabrication.",
+      },
+      {
+        type: "improvement",
+        area: "Performance",
+        title: "Cache React Query sur useObjetsAffaireLight",
+        description:
+          "Refactor avec @tanstack/react-query : queryKey partagée + staleTime 30s. Élimine les fetches N+1 redondants entre sidebar, vue principale et header de la page affaire.",
+      },
+      {
+        type: "feature",
+        area: "Notifications",
+        title: "Chargé d'affaires inclus dans notif « Prête à livrer »",
+        description:
+          "Trigger notify_affaire_pret_livraison mis à jour : le charge_affaires_id reçoit aussi la notification, en plus du chef de projet. Phase 5 (volume) reportée — fabrication_objets ne stocke pas de volume actuellement.",
+      },
+    ],
+  },
+  {
+    date: "2026-05-05",
     version: "v0.41.0b (Sprint 3b.3 + 3b.4)",
     title: "📊 Logistique avancée — Historique trajets + Stats flotte (Phases 3b.3 + 3b.4 livrées)",
     entries: [
