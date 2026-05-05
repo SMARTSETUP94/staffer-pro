@@ -35,7 +35,7 @@ export interface ObjetRowInteractifProps {
   dateLivraison: string;
   dayWidthPx: number;
   stepOverrides: Record<string, { manual_shift: number; manual_pers: boolean }>;
-  edits: Record<string, EditEntry>;
+  edits: Record<string, StepEdit>;
   impactByStep: Record<string, SliderImpact[]>;
   onToggle: (id: string) => void;
   onReorder: (id: string, dir: -1 | 1) => void;
