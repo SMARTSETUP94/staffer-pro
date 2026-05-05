@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState, useCallback, useImperativeHandle, useRef,
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, ArrowUp, ArrowDown, RefreshCw, Calendar, Users, Activity, AlertTriangle, Wand2, ChevronRight, ChevronDown, Info } from "lucide-react";
+import { Loader2, ArrowUp, ArrowDown, RefreshCw, Calendar, Users, Activity, AlertTriangle, Wand2, ChevronRight, ChevronDown, Info, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 // v0.39.0 — Slider supprimé : remplacé par PersStepper inline.
