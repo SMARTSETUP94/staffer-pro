@@ -44,6 +44,42 @@ interface RoadmapPlanned {
 const RELEASES: RoadmapRelease[] = [
   {
     date: "2026-05-05",
+    version: "v0.41.0c (Sprint 3c.2 + 3c.3)",
+    title: "🧪 E2E full role-based — employé mobile + extras chef/admin (Sprint 3c terminé)",
+    entries: [
+      {
+        type: "feature",
+        area: "Tests E2E — Employé mobile",
+        title: "4 nouveaux tests employé mobile (Pixel 7 viewport)",
+        description:
+          "e2e/employe-mobile/flows-critiques.employe-mobile.spec.ts : M1 /mobile/aujourdhui rend la vue du jour, M2 /mobile/heures grille de saisie, M3 modale + Autre chantier compacte (boundingBox ≤ viewport), M4 anti-fuite RGPD /staffing/<uuid>. Défensif : skip propre si DB sans assignation.",
+      },
+      {
+        type: "feature",
+        area: "Tests E2E — Chef extras",
+        title: "+2 tests chef (validation 4 onglets + auto-staff complet)",
+        description:
+          "e2e/chef/extras-validation-staffing.chef.spec.ts : C1 onglet 'Hors planning' sélectionnable sur /validation-heures (vérif aria-selected), C2 bouton 'Auto-staff complet' visible sur /staffing/<id> (navigation depuis /planning).",
+      },
+      {
+        type: "feature",
+        area: "Tests E2E — Admin extras",
+        title: "+3 tests admin (invitation + auto-link + audit-heures export)",
+        description:
+          "e2e/admin/extras-utilisateurs-audit.admin.spec.ts : A1 bouton 'Inviter un utilisateur' ouvre dialog avec champ email, A2 bouton 'Auto-lier employés' enabled (utilisateurs ou employés), A3 bouton export visible sur /audit-heures.",
+      },
+      {
+        type: "improvement",
+        area: "CI",
+        title: "Workflow E2E : 4 → 5 shards parallèles (timeout <20 min)",
+        description:
+          ".github/workflows/e2e.yml : matrix [1..5] et --shard=N/5. Couverture E2E passe de 12 à 27+ tests sur 4 rôles (admin / chef / employé-desktop / employé-mobile + smoke).",
+      },
+    ],
+  },
+
+  {
+    date: "2026-05-05",
     version: "v0.39.2b2.2",
     title: "🧱 Refacto StaffingPersonnesSection — Sprint 2b2.2 terminé (1214L → 322L + 5 modules)",
     entries: [

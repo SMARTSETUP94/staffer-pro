@@ -76,7 +76,29 @@ isolé pour ne pas polluer les tests employé mobile.
 - D5 bouton Se déconnecter visible depuis la sidebar.
 - D6 anti-fuite RGPD : `/staffing/<uuid>` refusé (redirect / 4xx / message).
 
-### Reste à faire (Sprint 3c.2 + 3c.3)
-- 3c.2 : 4 tests EMPLOYE MOBILE (saisie 8h, scroll planning hebdo, hors-planning mobile complet).
-- 3c.3 : améliorations CHEF/ADMIN (auto-link invitations, audit-heures filtres + export, roadmap render).
-- CI : passer shards de 4 à 5 si le total dépasse 50 tests.
+## v0.41.0c — Sprint 3c.2 + 3c.3 — E2E mobile + extras chef/admin (5 mai 2026)
+
+### 3c.2 — Employé mobile (Pixel 7 viewport)
+`e2e/employe-mobile/flows-critiques.employe-mobile.spec.ts` :
+- M1 `/mobile/aujourdhui` rend vue du jour.
+- M2 `/mobile/heures` grille de saisie.
+- M3 modale `+ Autre chantier` compacte (boundingBox ≤ viewport).
+- M4 anti-fuite RGPD `/staffing/<uuid>` refusé.
+
+### 3c.3 — Chef extras
+`e2e/chef/extras-validation-staffing.chef.spec.ts` :
+- C1 onglet 'Hors planning' sélectionnable sur `/validation-heures`.
+- C2 bouton 'Auto-staff complet' visible sur `/staffing/<id>`.
+
+### 3c.3 — Admin extras
+`e2e/admin/extras-utilisateurs-audit.admin.spec.ts` :
+- A1 bouton 'Inviter un utilisateur' ouvre dialog email.
+- A2 bouton 'Auto-lier employés' enabled (utilisateurs ou employés).
+- A3 bouton export visible sur `/audit-heures`.
+
+### CI
+- `.github/workflows/e2e.yml` : 4 → 5 shards parallèles, timeout 20 min/shard.
+- Couverture totale : 12 → 27+ tests E2E sur 4 rôles (admin / chef / employé-desktop / employé-mobile + smoke).
+
+### Reste à faire
+- Sprint 3b — Logistique avancée (autorisations véhicules + sous-traitants carnet + historique + stats).
