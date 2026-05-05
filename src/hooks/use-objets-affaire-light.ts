@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 export interface ObjetLight {
@@ -8,38 +9,31 @@ export interface ObjetLight {
 }
 
 /**
- * Hook léger : liste des objets de fabrication non archivés d'une affaire.
- * Utilisé dans la modale de saisie d'heures pour le dropdown "Sur quoi as-tu travaillé ?".
+ * v0.20.1 Phase 3 — React Query partagée :
+ * tous les composants qui appellent useObjetsAffaireLight(affaireId) sur la
+ * même page partagent la même cache (queryKey ['objets-affaire-light', id]).
+ * staleTime 30s pour limiter les refetchs entre sidebar/main/header.
  */
 export function useObjetsAffaireLight(affaireId: string | null | undefined) {
-  const [objets, setObjets] = useState<ObjetLight[]>([]);
-  const [loading, setLoading] = useState(false);
+  const { data, isLoading } = useQuery<ObjetLight[]>({
+    queryKey: ["objets-affaire-light", affaireId ?? null],
+    queryFn: async () => {
+      if (!affaireId) return [];
+      const { data, error } = await supabase
+        .from("fabrication_objets")
+        .select("id, reference, nom")
+        .eq("affaire_id", affaireId)
+        .eq("archive", false)
+        .order("ordre", { ascending: true })
+        .order("created_at", { ascending: true });
+      if (error) throw error;
+      return (data ?? []) as ObjetLight[];
+    },
+    enabled: !!affaireId,
+    staleTime: 30_000,
+  });
 
-  useEffect(() => {
-    if (!affaireId) {
-      setObjets([]);
-      return;
-    }
-    let cancelled = false;
-    setLoading(true);
-    void supabase
-      .from("fabrication_objets")
-      .select("id, reference, nom")
-      .eq("affaire_id", affaireId)
-      .eq("archive", false)
-      .order("ordre", { ascending: true })
-      .order("created_at", { ascending: true })
-      .then(({ data }) => {
-        if (cancelled) return;
-        setObjets((data ?? []) as ObjetLight[]);
-        setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [affaireId]);
-
-  return { objets, loading };
+  return { objets: data ?? [], loading: isLoading };
 }
 
 /**

@@ -2665,9 +2665,9 @@ const PLANNED: RoadmapPlanned[] = [
 
   {
     priority: "moyenne",
-    title: "v0.20.1 quick wins",
+    title: "v0.20.1 — Quick wins LIVRÉS (4 phases)",
     description:
-      "Pré-remplissage trajet sous-traité + cache `useObjetsAffaireLight` + notification CA prêt à livrer.",
+      "Phase 1 : pré-remplissage TrajetDialog depuis bandeau « Prête à livrer » (atelier → chantier, date montage-1j, catégorie pose, affaire pré-sélectionnée). Phase 2 : indexes composites perf (`fabrication_etapes(objet_id,statut)`, `fabrication_etapes(assignee_id,statut)`, `staffing_plan_step(plan_id,metier_id)`). Phase 3 : `useObjetsAffaireLight` migré sur React Query (queryKey partagée, staleTime 30s) — fin du N+1 entre sidebar/main/header. Phase 4 : trigger `notify_affaire_pret_livraison` étend la notif au `charge_affaires_id` en plus du chef projet. 1440/1440 Vitest verts.",
   },
   {
     priority: "moyenne",
@@ -2713,31 +2713,7 @@ const PLANNED: RoadmapPlanned[] = [
     description:
       "🔮 Ajouter upload sécurisé de pièce d'identité (CNI ou passeport) sur le profil employé : champ photo recto/verso, type de pièce, numéro, date d'expiration. Stockage privé (bucket Lovable Cloud avec RLS stricte : seuls admin + l'employé lui-même peuvent voir), expiration alerte 60j avant. Use case : conformité chantiers, contrôle accès sites sécurisés.",
   },
-  // ========== v0.20.1 — Hotfixes & finitions Fabrication ==========
-  {
-    priority: "haute",
-    title: "v0.20.1 — Pré-remplissage trajet sous-traité depuis bandeau « Prête à livrer »",
-    description:
-      "🔴 HIGH identifié à l'audit v0.20 : les boutons « Demander trajet sous-traité » du dashboard /fabrication et de la fiche affaire ouvrent /flotte sans passer ?affaireId=… ni les adresses pré-remplies. À fixer : query params + auto-ouverture du TrajetDialog en mode création avec affaire_id, adresse arrivée client, statut_soustraitance='a_sous_traiter' pré-positionnés.",
-  },
-  {
-    priority: "moyenne",
-    title: "v0.20.1 — Indexes composites dashboard fabrication (perf)",
-    description:
-      "🟡 MEDIUM identifié à l'audit : sur grosse base, les requêtes 'charge par assignee' et 'étapes non assignées' du dashboard /fabrication peuvent ralentir. Ajouter index composites (assignee_id, statut) et (statut, type_etape) sur fabrication_etapes. À déclencher si latence dashboard > 1s en prod.",
-  },
-  {
-    priority: "moyenne",
-    title: "v0.20.1 — Cache useObjetsAffaireLight partagé (anti N+1)",
-    description:
-      "🟡 MEDIUM identifié à l'audit : si plusieurs lignes de saisie d'heures pour la même affaire sont ouvertes simultanément, le hook fetche les objets N fois. Refactor avec queryKey partagée par affaire_id pour mutualiser le cache TanStack Query.",
-  },
-  {
-    priority: "moyenne",
-    title: "v0.20.1 — Notification « prête à livrer » étendue au chargé d'affaires",
-    description:
-      "Aujourd'hui notif chef projet uniquement (spec d'origine). À itérer selon retour terrain : si un chargé d'affaires est défini sur l'affaire et différent du chef projet, lui pousser aussi la notif. À cadrer avec Gabin après 2-3 livraisons réelles.",
-  },
+  // ========== v0.20.1 — LIVRÉ (cf entrée plus haut) ==========
   {
     priority: "basse",
     title: "v0.20.1 — Suggestion intelligente type véhicule pour staffing interne",

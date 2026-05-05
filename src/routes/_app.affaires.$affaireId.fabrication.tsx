@@ -46,7 +46,9 @@ import { EditerObjetDialog } from "@/components/fabrication/EditerObjetDialog";
 import { EtapeDialog } from "@/components/fabrication/EtapeDialog";
 import { StafferVehiculeInterneDialog } from "@/components/fabrication/StafferVehiculeInterneDialog";
 import { ObjetCardMobile } from "@/components/fabrication/ObjetCardMobile";
-import { Link } from "@tanstack/react-router";
+import { TrajetDialog } from "@/components/flotte/TrajetDialog";
+import { useLieux } from "@/hooks/use-lieux";
+import { addDays, format as fmt } from "date-fns";
 import { StaffingPlanWizard } from "@/components/staffing/StaffingPlanWizard";
 import { MettreAuPlanningExpressButton } from "@/components/staffing/MettreAuPlanningExpressButton";
 
@@ -74,6 +76,8 @@ function FabricationPage() {
     typologie: string | null;
   } | null>(null);
   const [openStaffer, setOpenStaffer] = useState(false);
+  const [openSousTraiter, setOpenSousTraiter] = useState(false);
+  const { atelier } = useLieux();
 
   // Charger meta affaire (chef projet, lieu, dates, typologie) — useEffect, pas useState
   useEffect(() => {
@@ -223,10 +227,13 @@ function FabricationPage() {
               >
                 <Truck className="mr-1 h-3 w-3" /> Staffer véhicule interne
               </Button>
-              <Button asChild size="sm" variant="outline" className="rounded-xl">
-                <Link to="/export/demandes-devis">
-                  <Send className="mr-1 h-3 w-3" /> Demander trajet sous-traité
-                </Link>
+              <Button
+                size="sm"
+                variant="outline"
+                className="rounded-xl"
+                onClick={() => setOpenSousTraiter(true)}
+              >
+                <Send className="mr-1 h-3 w-3" /> Demander trajet sous-traité
               </Button>
             </div>
           </div>
@@ -423,6 +430,31 @@ function FabricationPage() {
           dateMontage={affaireMeta.date_montage}
           objetsCount={objetsActifs.length}
           onCreated={reload}
+        />
+      )}
+
+      {/* v0.20.1 Phase 1 — Modale "Demander trajet sous-traité" pré-remplie */}
+      {affaireMeta && openSousTraiter && (
+        <TrajetDialog
+          open={openSousTraiter}
+          onOpenChange={setOpenSousTraiter}
+          trajet={null}
+          defaultDate={
+            affaireMeta.date_montage
+              ? fmt(addDays(new Date(affaireMeta.date_montage), -1), "yyyy-MM-dd")
+              : undefined
+          }
+          defaultVehiculeId={null}
+          defaultAdresseDepart={atelier?.adresse_complete ?? ""}
+          defaultAdresseArrivee={affaireMeta.lieu ?? ""}
+          defaultCategorie="pose"
+          defaultAffaireId={affaireId}
+          affaires={[{ id: affaireId, numero: affaireMeta.numero, nom: affaireMeta.nom }]}
+          employesLivreurs={[]}
+          onSaved={() => {
+            setOpenSousTraiter(false);
+            toast.success("Demande de trajet sous-traité créée");
+          }}
         />
       )}
     </div>
