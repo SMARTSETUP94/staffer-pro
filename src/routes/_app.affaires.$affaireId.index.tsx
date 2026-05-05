@@ -149,7 +149,7 @@ function AffaireSynthesePage() {
 
       <section>
         <p className="overline mb-3">— Suivi marge par métier (Staffé / Réalisé / Validé)</p>
-        {enriched.length === 0 ? (
+        {groups.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
             Aucun poste de devis renseigné. Ajoutez un devis dans l'onglet Devis pour suivre la consommation.
           </div>
@@ -174,56 +174,117 @@ function AffaireSynthesePage() {
                 </tr>
               </thead>
               <tbody>
-                {enriched.map((l, i) => {
-                  const m = l.metier_id ? byId(l.metier_id) : undefined;
+                {groups.map((g) => {
+                  const m = g.metier_id ? byId(g.metier_id) : undefined;
+                  const key = `m-${g.metier_id ?? g.metier ?? "?"}`;
+                  const isOpen = expanded[key] ?? false;
+                  const hasMultipleDevis = g.devis.length > 1;
                   return (
-                    <tr key={`${l.devis_id}-${l.metier_id}-${i}`} className="border-t hover:bg-muted/20">
-                      <td className="p-3">
-                        <div className="flex items-center gap-2">
-                          {m && <MetierBadge libelle={m.libelle} couleur={m.couleur} />}
-                          <span className="font-mono text-[10px] text-muted-foreground">{l.devis_numero}</span>
-                        </div>
-                      </td>
-                      <td className="p-3 text-right font-mono">{l.prevues.toFixed(1)}</td>
-                      <td className="p-3 text-right font-mono">
-                        {l.staffees.toFixed(1)}
-                        <div className="text-[10px] text-muted-foreground">({l.pctStaff.toFixed(0)}%)</div>
-                      </td>
-                      <td className="p-3 text-right font-mono">
-                        {l.realisees.toFixed(1)}
-                        <div className="text-[10px] text-muted-foreground">
-                          {l.soumises > 0 ? `+${l.soumises.toFixed(1)}h en attente` : `(${l.pctReal.toFixed(0)}%)`}
-                        </div>
-                      </td>
-                      <td className="p-3 text-right font-mono">
-                        <span className="font-semibold">{l.validees.toFixed(1)}</span>
-                        <div className="text-[10px] text-muted-foreground">({l.pctValide.toFixed(0)}%)</div>
-                      </td>
-                      <td
+                    <>
+                      <tr
+                        key={key}
+                        data-testid={`marge-row-${g.metier_id ?? "null"}`}
                         className={cn(
-                          "p-3 text-right font-mono font-semibold",
-                          l.ecart < 0
-                            ? "text-destructive"
-                            : l.ecart < l.prevues * 0.15
-                              ? "text-warning"
-                              : "text-success",
+                          "border-t hover:bg-muted/20",
+                          hasMultipleDevis && "cursor-pointer",
                         )}
+                        onClick={
+                          hasMultipleDevis
+                            ? () => setExpanded((s) => ({ ...s, [key]: !isOpen }))
+                            : undefined
+                        }
                       >
-                        {l.ecart >= 0 ? "+" : ""}
-                        {l.ecart.toFixed(1)} h
-                      </td>
-                      <td className="p-3 text-center">
-                        <MargeBadge tone={l.tone} />
-                        <DualProgress
-                          staffees={l.staffees}
-                          realisees={l.validees}
-                          budget={l.prevues}
-                          size="sm"
-                          showLabel={false}
-                          className="mt-1.5"
-                        />
-                      </td>
-                    </tr>
+                        <td className="p-3">
+                          <div className="flex items-center gap-2">
+                            {hasMultipleDevis ? (
+                              <ChevronRight
+                                className={cn(
+                                  "h-3.5 w-3.5 text-muted-foreground transition-transform",
+                                  isOpen && "rotate-90",
+                                )}
+                                aria-label={isOpen ? "Replier" : "Déplier"}
+                              />
+                            ) : (
+                              <span className="inline-block w-3.5" />
+                            )}
+                            {m && <MetierBadge libelle={m.libelle} couleur={m.couleur} />}
+                            {hasMultipleDevis && (
+                              <span className="rounded-full bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
+                                {g.devis.length} devis
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="p-3 text-right font-mono font-semibold">{g.prevues.toFixed(1)}</td>
+                        <td className="p-3 text-right font-mono">
+                          {g.staffees.toFixed(1)}
+                          <div className="text-[10px] text-muted-foreground">({g.pctStaff.toFixed(0)}%)</div>
+                        </td>
+                        <td className="p-3 text-right font-mono">
+                          {g.realisees.toFixed(1)}
+                          <div className="text-[10px] text-muted-foreground">
+                            {g.soumises > 0 ? `+${g.soumises.toFixed(1)}h en attente` : `(${g.pctReal.toFixed(0)}%)`}
+                          </div>
+                        </td>
+                        <td className="p-3 text-right font-mono">
+                          <span className="font-semibold">{g.validees.toFixed(1)}</span>
+                          <div className="text-[10px] text-muted-foreground">({g.pctValide.toFixed(0)}%)</div>
+                        </td>
+                        <td
+                          className={cn(
+                            "p-3 text-right font-mono font-semibold",
+                            g.ecart < 0
+                              ? "text-destructive"
+                              : g.ecart < g.prevues * 0.15
+                                ? "text-warning"
+                                : "text-success",
+                          )}
+                        >
+                          {g.ecart >= 0 ? "+" : ""}
+                          {g.ecart.toFixed(1)} h
+                        </td>
+                        <td className="p-3 text-center">
+                          <MargeBadge tone={g.tone} />
+                          <DualProgress
+                            staffees={g.staffees}
+                            realisees={g.validees}
+                            budget={g.prevues}
+                            size="sm"
+                            showLabel={false}
+                            className="mt-1.5"
+                          />
+                        </td>
+                      </tr>
+                      {isOpen &&
+                        hasMultipleDevis &&
+                        g.devis.map((d, i) => (
+                          <tr
+                            key={`${key}-${d.devis_id ?? i}`}
+                            data-testid={`marge-detail-${g.metier_id ?? "null"}-${i}`}
+                            className="border-t border-dashed bg-muted/10 text-xs"
+                          >
+                            <td className="py-2 pl-10 pr-3">
+                              <span className="font-mono text-[11px] text-muted-foreground">
+                                ↳ {d.devis_numero ?? "(sans devis)"}
+                              </span>
+                            </td>
+                            <td className="py-2 pr-3 text-right font-mono">{d.prevues.toFixed(1)}</td>
+                            <td className="py-2 pr-3 text-right font-mono">{d.staffees.toFixed(1)}</td>
+                            <td className="py-2 pr-3 text-right font-mono">{d.realisees.toFixed(1)}</td>
+                            <td className="py-2 pr-3 text-right font-mono">{d.validees.toFixed(1)}</td>
+                            <td
+                              className={cn(
+                                "py-2 pr-3 text-right font-mono",
+                                d.ecart < 0 ? "text-destructive" : "text-muted-foreground",
+                              )}
+                            >
+                              {d.ecart >= 0 ? "+" : ""}
+                              {d.ecart.toFixed(1)} h
+                            </td>
+                            <td className="py-2 pr-3 text-center text-muted-foreground">—</td>
+                          </tr>
+                        ))}
+                    </>
                   );
                 })}
               </tbody>
