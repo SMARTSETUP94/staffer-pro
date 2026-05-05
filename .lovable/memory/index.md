@@ -143,6 +143,7 @@ Voir roadmap consolidée détaillée : mem://roadmap/consolidee-2mai2026.
 - [Staffing P1 Undo+Drag+Bulk](mem://features/staffing-undo-drag-bulk) — v0.35.10
 - [Staffing Express Mode](mem://features/staffing-express-mode) — v0.35.11
 - [Staffing personnes refonte UX](mem://features/staffing-personnes-refonte-ux) — v0.35.12
+- [Sprint 3 features v0.41](mem://features/sprint-3-features-v041) — v0.41.0a hotfix heures invisibles employé
 - [Auth flow différencié rôle](mem://features/auth-flow-roles) — magic link + set-password
 - [E2E Playwright coverage](mem://features/e2e-playwright-coverage) — v0.34
 - [Sprint 1 stabilité v0.39.1](mem://features/sprint-1-stabilite-v0391) — RLS audit + 2 E2E + audit mutations + auth shallow
