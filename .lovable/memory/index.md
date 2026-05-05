@@ -107,6 +107,7 @@ Volume staffé v0.39.0c : KPI "Heures staffées" = Σ(pers × demi_jours × H_HA
 Voir roadmap consolidée détaillée : mem://roadmap/consolidee-2mai2026.
 
 ## Memories
+- [Centre d'analyse heures](mem://features/centre-analyse-heures) — BACKLOG : onglet consolidé heures + 8 filtres + exports
 - [Roadmap consolidée 2 mai 2026](mem://roadmap/consolidee-2mai2026) — v0.31.4 → v0.40, 11 jalons
 - [Refonte Manut v0.40](mem://features/manut-refonte-v040) — absorption DEBUT+TRANSFERT par Bois/Peint/Tap
 - [Auto-staffing tier priority](mem://features/auto-staffing-tier-priority) — règle CDI/CDD avant intérim
