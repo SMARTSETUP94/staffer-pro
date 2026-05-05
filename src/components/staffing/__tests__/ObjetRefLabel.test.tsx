@@ -1,3 +1,6 @@
+/**
+ * @vitest-environment happy-dom
+ */
 // v0.39.2b2.1 — ObjetRefLabel : strip prefix + affichage nom.
 import { describe, it, expect, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
