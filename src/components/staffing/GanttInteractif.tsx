@@ -31,6 +31,7 @@ import { ChargeMetierSection } from "./ChargeMetierSection";
 import { PersStepper } from "./PersStepper";
 import { DateShifter } from "./DateShifter";
 import { CellEditPopover } from "./CellEditPopover";
+import { ManutStatCard } from "./ManutStatCard";
 import {
   computeCascadeForDurationChange,
   computeCascadeForShift,
