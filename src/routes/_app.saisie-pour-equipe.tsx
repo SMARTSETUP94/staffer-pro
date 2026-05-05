@@ -9,6 +9,7 @@
  * - Bouton "Saisir en bulk" en haut à droite
  */
 import { createFileRoute, Navigate, useNavigate } from "@tanstack/react-router";
+import { RoleGuard } from "@/components/auth/RoleGuard";
 import { useAuth } from "@/lib/auth-context";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { addDays, format, isWeekend, startOfWeek } from "date-fns";
