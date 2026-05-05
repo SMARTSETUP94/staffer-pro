@@ -690,7 +690,7 @@ export const GanttInteractif = forwardRef<
                   style={{ gridTemplateColumns: gridTemplate }}
                 >
                   <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                    Phase amont — ressource partagée (CNC)
+                    Phases globales chantier — Manutention FIN (50 %) + ressources partagées (CNC)
                   </div>
                 </div>
                 {globalSteps.map((s) => {

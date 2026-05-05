@@ -74,6 +74,9 @@ export function PreParametrageSection({ affaireId, deadline, onApplied: _onAppli
   const [conflicts, setConflicts] = useState<Conflict[]>([]);
   const [pipelineDuration, setPipelineDuration] = useState(0);
   const [fenetreDispo, setFenetreDispo] = useState(0);
+  const [manutAbsorbed, setManutAbsorbed] = useState<{ Bois: number; Peint: number; Tap: number }>({
+    Bois: 0, Peint: 0, Tap: 0,
+  });
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [collapsed, setCollapsed] = useState<boolean>(() => {
@@ -105,6 +108,7 @@ export function PreParametrageSection({ affaireId, deadline, onApplied: _onAppli
       setConflicts(sugg.conflicts);
       setPipelineDuration(sugg.pipeline_duration);
       setFenetreDispo(sugg.fenetre_dispo);
+      setManutAbsorbed(sugg.manut_absorbed_par_metier);
     } catch (e) {
       setErrorMsg(e instanceof Error ? e.message : "erreur");
     } finally {
@@ -222,6 +226,14 @@ export function PreParametrageSection({ affaireId, deadline, onApplied: _onAppli
               <tbody>
                 {rows.map((r) => {
                   const m = merged(r);
+                  const absorbed =
+                    m.metier_code === "Bois" ? manutAbsorbed.Bois :
+                    m.metier_code === "Peint" ? manutAbsorbed.Peint :
+                    m.metier_code === "Tap" ? manutAbsorbed.Tap : 0;
+                  const baseH = m.total_h_calc - absorbed;
+                  const tooltip = absorbed > 0
+                    ? `${m.metier_code} ${m.total_h_calc.toFixed(0)}h dont ${absorbed.toFixed(0)}h ex-Manut absorbée (base ${baseH.toFixed(0)}h)`
+                    : undefined;
                   return (
                     <tr
                       key={r.metier_id}
@@ -229,7 +241,18 @@ export function PreParametrageSection({ affaireId, deadline, onApplied: _onAppli
                       className="border-b border-border/40"
                     >
                       <td className="px-2 py-1.5 font-semibold">{METIER_LABEL[m.metier_code]}</td>
-                      <td className="px-2 py-1.5 text-right font-mono">{m.total_h_calc.toFixed(0)}</td>
+                      <td
+                        className="px-2 py-1.5 text-right font-mono"
+                        title={tooltip}
+                        data-testid={`pre-param-totalh-${m.metier_code}`}
+                      >
+                        {m.total_h_calc.toFixed(0)}
+                        {absorbed > 0 && (
+                          <span className="ml-1 text-[9px] font-normal text-muted-foreground">
+                            (+{absorbed.toFixed(0)} Manut)
+                          </span>
+                        )}
+                      </td>
                       <td className="px-2 py-1.5 text-right font-mono" data-testid={`pre-param-pers-${m.metier_code}`}>
                         {m.nb_pers_cible}
                       </td>
@@ -244,8 +267,9 @@ export function PreParametrageSection({ affaireId, deadline, onApplied: _onAppli
             </table>
           </div>
           <p className="text-[11px] text-muted-foreground">
-            Les valeurs sont déduites automatiquement par l'algo v0.37 (pipeline par objet, splits Manut 35/15/50,
-            binômes obligatoires Bois/Peint/Tap/Manut). Plus de réglage manuel nécessaire.
+            Algo v0.40 — pipeline par objet, splits Manut 35/15/50, binômes Bois/Peint/Tap/Manut.
+            <strong className="ml-1">Manut DÉBUT (35 %) + TRANSFERT (15 %)</strong> sont absorbés au prorata par
+            Bois/Peinture/Tapisserie ; seul Manut FIN (50 %) reste exécuté par l'équipe Manutention.
           </p>
         </div>
       )}
