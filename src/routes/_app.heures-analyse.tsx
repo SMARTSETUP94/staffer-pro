@@ -377,9 +377,139 @@ function HeuresAnalysePage() {
       ]),
     ];
     const ws = XLSX.utils.aoa_to_sheet(data);
+    ws["!cols"] = [
+      { wch: 11 }, { wch: 22 }, { wch: 28 }, { wch: 10 }, { wch: 14 },
+      { wch: 8 }, { wch: 9 }, { wch: 11 }, { wch: 14 }, { wch: 16 },
+      { wch: 22 }, { wch: 30 },
+    ];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Heures");
     XLSX.writeFile(wb, `heures-analyse-${from}_${to}.xlsx`);
+  }
+
+  async function exportPdf() {
+    const { default: jsPDF } = await import("jspdf");
+    const { default: autoTable } = await import("jspdf-autotable");
+    const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
+    const pageWidth = doc.internal.pageSize.getWidth();
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(14);
+    doc.text("Centre d'analyse heures", 40, 40);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(110);
+    const filterParts: string[] = [`Période : ${from} → ${to}`];
+    if (search.statut.length) filterParts.push(`Statut : ${search.statut.map((s) => STATUT_META[s].label).join(", ")}`);
+    if (search.saisi_par !== "all") filterParts.push(`Saisi par : ${search.saisi_par}`);
+    if (search.nuit) filterParts.push("Nuit uniquement");
+    if (search.metier !== "all") filterParts.push(`Métier : ${metiers.find((m) => String(m.id) === search.metier)?.libelle ?? search.metier}`);
+    if (search.employe.trim()) filterParts.push(`Employé : ${search.employe}`);
+    if (search.chantier.trim()) filterParts.push(`Chantier : ${search.chantier}`);
+    if (search.devis.trim()) filterParts.push(`Devis : ${search.devis}`);
+    doc.text(filterParts.join("  ·  "), 40, 56, { maxWidth: pageWidth - 80 });
+    doc.text(
+      `Total : ${kpis.total.toFixed(1)} h  ·  Validées : ${kpis.validees.toFixed(1)} h (${kpis.pctValidees}%)  ·  Nuit : ${kpis.nuit.toFixed(1)} h  ·  À valider : ${kpis.aValider}  ·  ${kpis.lignes} ligne(s)`,
+      40,
+      70,
+    );
+    doc.setTextColor(0);
+
+    autoTable(doc, {
+      startY: 84,
+      head: [["Date", "Employé", "Chantier", "Devis", "Métier", "H", "Nuit", "Statut", "Saisie", "Validée le", "Validateur", "Commentaire"]],
+      body: filtered.map((r) => [
+        r.date,
+        r.employe ? `${r.employe.prenom} ${r.employe.nom}` : "",
+        r.affaire ? `${r.affaire.numero} — ${r.affaire.nom}` : "",
+        r.devis?.numero ?? "",
+        r.metier?.libelle ?? "",
+        (r.heures_reelles ?? 0).toFixed(1),
+        (r.heures_nuit ?? 0) > 0 ? (r.heures_nuit ?? 0).toFixed(1) : "—",
+        STATUT_META[r.statut]?.label ?? r.statut,
+        r.saisi_par_chef ? "Chef" : "Employé",
+        r.valide_le ? format(parseISO(r.valide_le), "dd/MM/yy HH:mm") : "",
+        r.valideur?.full_name ?? r.valideur?.email ?? "",
+        (r.commentaire ?? "").slice(0, 80),
+      ]),
+      styles: { fontSize: 7, cellPadding: 3, overflow: "linebreak" },
+      headStyles: { fillColor: [37, 37, 37], textColor: 255, fontSize: 7.5 },
+      alternateRowStyles: { fillColor: [248, 248, 250] },
+      columnStyles: {
+        0: { cellWidth: 50 },
+        1: { cellWidth: 90 },
+        2: { cellWidth: 130 },
+        3: { cellWidth: 50 },
+        4: { cellWidth: 65 },
+        5: { cellWidth: 28, halign: "right" },
+        6: { cellWidth: 30, halign: "right" },
+        7: { cellWidth: 50 },
+        8: { cellWidth: 45 },
+        9: { cellWidth: 60 },
+        10: { cellWidth: 80 },
+        11: { cellWidth: "auto" },
+      },
+      margin: { left: 30, right: 30 },
+      didDrawPage: (data) => {
+        const pageHeight = doc.internal.pageSize.getHeight();
+        doc.setFontSize(8);
+        doc.setTextColor(120);
+        doc.text(
+          `Page ${data.pageNumber}  ·  Généré le ${format(new Date(), "dd/MM/yyyy HH:mm")}`,
+          pageWidth / 2,
+          pageHeight - 14,
+          { align: "center" },
+        );
+        doc.setTextColor(0);
+      },
+    });
+
+    doc.save(`heures-analyse-${from}_${to}.pdf`);
+  }
+
+  async function exportSilae() {
+    const { exportHeuresSilae } = await import("@/lib/heures-export");
+    const silaeRows = filtered.map((r) => ({
+      id: r.id,
+      date: r.date,
+      heure_debut: r.heure_debut,
+      heure_fin: r.heure_fin,
+      heures_reelles: r.heures_reelles,
+      heures_nuit: r.heures_nuit,
+      commentaire: r.commentaire,
+      statut: r.statut,
+      valide_le: r.valide_le,
+      motif_rejet: r.motif_rejet,
+      employe: r.employe
+        ? {
+            prenom: r.employe.prenom,
+            nom: r.employe.nom,
+            type_contrat: r.employe.type_contrat ?? null,
+            metier_principal: r.employe.metier_principal ?? null,
+            profile: r.employe.profile ?? null,
+          }
+        : null,
+      affaire: r.affaire
+        ? {
+            numero: r.affaire.numero,
+            nom: r.affaire.nom,
+            lieu: r.affaire.lieu ?? null,
+            phase: r.affaire.phase ?? null,
+          }
+        : null,
+      assignation: r.assignation ?? null,
+      valideur: r.valideur ?? null,
+      devis_id: r.devis_id,
+    }));
+    try {
+      const res = await exportHeuresSilae(silaeRows, {
+        weekStart: parseISO(from),
+        weekEnd: parseISO(to),
+      });
+      toast.success(`Export SILAE généré (${res.count} lignes)`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Échec export SILAE");
+    }
   }
 
   async function copyShareLink() {
