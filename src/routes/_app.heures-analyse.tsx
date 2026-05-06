@@ -99,20 +99,30 @@ export const Route = createFileRoute("/_app/heures-analyse")({
 interface Row {
   id: string;
   date: string;
+  heure_debut: string | null;
+  heure_fin: string | null;
   heures_reelles: number | null;
   heures_nuit: number;
   statut: Statut;
   commentaire: string | null;
+  motif_rejet: string | null;
   saisi_par_chef: boolean;
   affaire_id: string;
   devis_id: string | null;
   metier_id: number | null;
   employe_id: string;
   valide_le: string | null;
-  employe?: { prenom: string; nom: string } | null;
-  affaire?: { numero: string; nom: string } | null;
+  employe?: {
+    prenom: string;
+    nom: string;
+    type_contrat: string | null;
+    metier_principal: { libelle: string } | null;
+    profile: { matricule_silae: string | null } | null;
+  } | null;
+  affaire?: { numero: string; nom: string; lieu: string | null; phase: string | null } | null;
   devis?: { numero: string } | null;
   metier?: { libelle: string } | null;
+  assignation?: { metier: { libelle: string } | null } | null;
   valideur?: { full_name: string | null; email: string } | null;
 }
 
