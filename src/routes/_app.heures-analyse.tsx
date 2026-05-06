@@ -467,9 +467,8 @@ function HeuresAnalysePage() {
     doc.save(`heures-analyse-${from}_${to}.pdf`);
   }
 
-  async function exportSilae() {
-    const { exportHeuresSilae } = await import("@/lib/heures-export");
-    const silaeRows = filtered.map((r) => ({
+  function buildSilaeRows() {
+    return filtered.map((r) => ({
       id: r.id,
       date: r.date,
       heure_debut: r.heure_debut,
@@ -501,8 +500,12 @@ function HeuresAnalysePage() {
       valideur: r.valideur ?? null,
       devis_id: r.devis_id,
     }));
+  }
+
+  async function performSilaeExport() {
+    const { exportHeuresSilae } = await import("@/lib/heures-export");
     try {
-      const res = await exportHeuresSilae(silaeRows, {
+      const res = await exportHeuresSilae(buildSilaeRows(), {
         weekStart: parseISO(from),
         weekEnd: parseISO(to),
       });
@@ -510,6 +513,16 @@ function HeuresAnalysePage() {
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Échec export SILAE");
     }
+  }
+
+  async function exportSilae() {
+    const { validateHeuresForSilae } = await import("@/lib/heures-export");
+    const report = validateHeuresForSilae(buildSilaeRows());
+    if (report.errors.length > 0 || report.warnings.length > 0) {
+      setSilaeReport(report);
+      return;
+    }
+    await performSilaeExport();
   }
 
   async function copyShareLink() {
