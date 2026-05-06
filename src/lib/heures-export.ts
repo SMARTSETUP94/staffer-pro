@@ -405,6 +405,131 @@ export async function exportHeuresSilae(rows: HeuresExportRow[], opts: HeuresExp
 // Conserver l'ancien nom pour rétro-compatibilité éventuelle
 export const exportHeuresXlsx = exportHeuresSilae;
 
+// ============================================================================
+// Validation schéma SILAE
+// ============================================================================
+
+export type SilaeErrorCode =
+  | "MISSING_MATRICULE"
+  | "MISSING_NOM"
+  | "MISSING_PRENOM"
+  | "MISSING_CATEGORIE"
+  | "MISSING_DATE"
+  | "INVALID_DATE"
+  | "MISSING_CODE_AFFAIRE"
+  | "MISSING_HEURES"
+  | "INVALID_HEURES"
+  | "NUIT_GT_TOTAL"
+  | "STATUT_NON_VALIDE";
+
+export interface SilaeValidationError {
+  rowIndex: number; // index 0-based dans rows
+  code: SilaeErrorCode;
+  field: string;
+  message: string;
+  context: {
+    date: string;
+    employe: string;
+    affaire: string;
+  };
+}
+
+export interface SilaeValidationReport {
+  ok: boolean;
+  totalRows: number;
+  errorRows: number;
+  warningRows: number;
+  errors: SilaeValidationError[]; // bloquants
+  warnings: SilaeValidationError[]; // non bloquants (ex: statut non validé)
+}
+
+const SILAE_ERROR_LABELS: Record<SilaeErrorCode, string> = {
+  MISSING_MATRICULE: "Matricule SILAE manquant",
+  MISSING_NOM: "Nom manquant",
+  MISSING_PRENOM: "Prénom manquant",
+  MISSING_CATEGORIE: "Catégorie de contrat manquante",
+  MISSING_DATE: "Date manquante",
+  INVALID_DATE: "Date invalide",
+  MISSING_CODE_AFFAIRE: "Code affaire manquant",
+  MISSING_HEURES: "Heures totales manquantes",
+  INVALID_HEURES: "Heures totales invalides (≤ 0 ou non numériques)",
+  NUIT_GT_TOTAL: "Heures de nuit supérieures aux heures totales",
+  STATUT_NON_VALIDE: "Saisie non validée (sera transmise à SILAE en l'état)",
+};
+
+/**
+ * Valide les lignes contre le schéma SILAE attendu.
+ * Renvoie un rapport listant les erreurs ligne par ligne.
+ * - errors  : champs requis manquants ou incohérents → bloquants par défaut
+ * - warnings: incohérences souples (statut non validé) → non bloquants
+ */
+export function validateHeuresForSilae(rows: HeuresExportRow[]): SilaeValidationReport {
+  const errors: SilaeValidationError[] = [];
+  const warnings: SilaeValidationError[] = [];
+  const errorRowSet = new Set<number>();
+  const warnRowSet = new Set<number>();
+
+  rows.forEach((r, i) => {
+    const ctx = {
+      date: r.date ?? "",
+      employe: r.employe ? `${r.employe.prenom} ${r.employe.nom}` : "—",
+      affaire: r.affaire ? `${r.affaire.numero} ${r.affaire.nom}` : "—",
+    };
+    const push = (code: SilaeErrorCode, field: string, target: "err" | "warn" = "err") => {
+      const entry: SilaeValidationError = {
+        rowIndex: i,
+        code,
+        field,
+        message: SILAE_ERROR_LABELS[code],
+        context: ctx,
+      };
+      if (target === "err") {
+        errors.push(entry);
+        errorRowSet.add(i);
+      } else {
+        warnings.push(entry);
+        warnRowSet.add(i);
+      }
+    };
+
+    if (!r.employe?.profile?.matricule_silae?.trim()) push("MISSING_MATRICULE", "matricule_silae");
+    if (!r.employe?.nom?.trim()) push("MISSING_NOM", "nom");
+    if (!r.employe?.prenom?.trim()) push("MISSING_PRENOM", "prenom");
+    if (!r.employe?.type_contrat) push("MISSING_CATEGORIE", "type_contrat");
+
+    if (!r.date) {
+      push("MISSING_DATE", "date");
+    } else if (!/^\d{4}-\d{2}-\d{2}$/.test(r.date) || Number.isNaN(new Date(r.date + "T00:00:00").getTime())) {
+      push("INVALID_DATE", "date");
+    }
+
+    if (!r.affaire?.numero?.trim()) push("MISSING_CODE_AFFAIRE", "affaire.numero");
+
+    const h = r.heures_reelles;
+    if (h === null || h === undefined) {
+      push("MISSING_HEURES", "heures_reelles");
+    } else if (typeof h !== "number" || Number.isNaN(h) || h <= 0) {
+      push("INVALID_HEURES", "heures_reelles");
+    } else {
+      const nuit = Number(r.heures_nuit ?? 0);
+      if (nuit > h + 0.001) push("NUIT_GT_TOTAL", "heures_nuit");
+    }
+
+    if (r.statut !== "valide") push("STATUT_NON_VALIDE", "statut", "warn");
+  });
+
+  return {
+    ok: errors.length === 0,
+    totalRows: rows.length,
+    errorRows: errorRowSet.size,
+    warningRows: warnRowSet.size,
+    errors,
+    warnings,
+  };
+}
+
+export const SILAE_ERROR_LABELS_EXPORT = SILAE_ERROR_LABELS;
+
 // Export utilitaire pour tests
 export const _internals = {
   isFerie,
