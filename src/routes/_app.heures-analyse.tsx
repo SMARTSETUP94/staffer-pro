@@ -543,6 +543,8 @@ function HeuresAnalysePage() {
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem onClick={exportCsv}>CSV (UTF-8)</DropdownMenuItem>
                   <DropdownMenuItem onClick={exportXlsx}>Excel (.xlsx)</DropdownMenuItem>
+                  <DropdownMenuItem onClick={exportPdf}>PDF (A4 paysage)</DropdownMenuItem>
+                  <DropdownMenuItem onClick={exportSilae}>Format SILAE (CSV + XLSX)</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
