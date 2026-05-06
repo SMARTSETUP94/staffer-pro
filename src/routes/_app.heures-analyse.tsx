@@ -829,6 +829,16 @@ function HeuresAnalysePage() {
             )}
           </CardContent>
         </Card>
+
+        <SilaeValidationDialog
+          report={silaeReport}
+          rows={filtered}
+          onCancel={() => setSilaeReport(null)}
+          onConfirm={async () => {
+            setSilaeReport(null);
+            await performSilaeExport();
+          }}
+        />
       </div>
     </RoleGuard>
   );
