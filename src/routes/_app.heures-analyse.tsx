@@ -844,6 +844,113 @@ function HeuresAnalysePage() {
   );
 }
 
+function SilaeValidationDialog({
+  report,
+  rows,
+  onCancel,
+  onConfirm,
+}: {
+  report: SilaeValidationReport | null;
+  rows: Row[];
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  if (!report) return null;
+  const hasErrors = report.errors.length > 0;
+  const merged = [...report.errors.map((e) => ({ ...e, severity: "error" as const })),
+                  ...report.warnings.map((e) => ({ ...e, severity: "warning" as const }))];
+
+  return (
+    <Dialog open onOpenChange={(o) => { if (!o) onCancel(); }}>
+      <DialogContent className="max-w-3xl">
+        <DialogHeader>
+          <DialogTitle>
+            {hasErrors ? "Validation SILAE — erreurs détectées" : "Validation SILAE — avertissements"}
+          </DialogTitle>
+          <DialogDescription>
+            {report.totalRows} ligne(s) à exporter ·{" "}
+            <span className="text-destructive font-semibold">{report.errorRows} en erreur</span>
+            {" · "}
+            <span className="text-amber-600 font-semibold">{report.warningRows} avec avertissement</span>
+          </DialogDescription>
+        </DialogHeader>
+
+        {hasErrors && (
+          <div className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+            Des champs requis sont manquants ou invalides. L'export est bloqué tant que ces lignes ne sont pas corrigées.
+          </div>
+        )}
+        {!hasErrors && report.warnings.length > 0 && (
+          <div className="rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-700">
+            Les avertissements n'empêchent pas l'export — vérifiez avant transmission RH.
+          </div>
+        )}
+
+        <div className="max-h-[50vh] overflow-y-auto rounded-md border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[60px]">Ligne</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Employé</TableHead>
+                <TableHead>Chantier</TableHead>
+                <TableHead>Sévérité</TableHead>
+                <TableHead>Champ</TableHead>
+                <TableHead>Erreur</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {merged.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center text-muted-foreground py-6">
+                    Aucune erreur.
+                  </TableCell>
+                </TableRow>
+              )}
+              {merged.map((e, idx) => {
+                const r = rows[e.rowIndex];
+                return (
+                  <TableRow key={`${e.rowIndex}-${e.code}-${idx}`}>
+                    <TableCell className="font-mono text-xs">#{e.rowIndex + 1}</TableCell>
+                    <TableCell className="text-xs">{e.context.date || (r?.date ?? "—")}</TableCell>
+                    <TableCell className="text-xs">{e.context.employe}</TableCell>
+                    <TableCell className="text-xs">{e.context.affaire}</TableCell>
+                    <TableCell>
+                      <Badge
+                        variant="outline"
+                        className={
+                          e.severity === "error"
+                            ? "border-destructive/40 bg-destructive/15 text-destructive"
+                            : "border-amber-500/40 bg-amber-500/15 text-amber-700"
+                        }
+                      >
+                        {e.severity === "error" ? "Erreur" : "Warning"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="font-mono text-xs">{e.field}</TableCell>
+                    <TableCell className="text-xs">{e.message}</TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={onCancel}>
+            {hasErrors ? "Fermer" : "Annuler"}
+          </Button>
+          {!hasErrors && (
+            <Button onClick={onConfirm}>
+              Exporter quand même ({report.totalRows} lignes)
+            </Button>
+          )}
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function KpiCard({
   label,
   value,
