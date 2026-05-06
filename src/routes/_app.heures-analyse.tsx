@@ -186,7 +186,7 @@ function HeuresAnalysePage() {
 
   // Helper update
   function updateSearch(patch: Partial<SearchParams>) {
-    void navigate({ search: (prev) => ({ ...prev, ...patch }) as SearchParams });
+    void navigate({ search: (prev: SearchParams) => ({ ...prev, ...patch }) });
   }
 
   function setPreset(p: PresetKey) {
