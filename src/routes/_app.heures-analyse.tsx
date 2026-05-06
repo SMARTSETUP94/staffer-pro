@@ -218,7 +218,7 @@ function HeuresAnalysePage() {
   function toggleStatut(s: Statut) {
     const has = search.statut.includes(s);
     updateSearch({
-      statut: has ? search.statut.filter((x) => x !== s) : [...search.statut, s],
+      statut: has ? search.statut.filter((x: Statut) => x !== s) : [...search.statut, s],
     });
   }
 
