@@ -400,7 +400,7 @@ function HeuresAnalysePage() {
     doc.setFontSize(9);
     doc.setTextColor(110);
     const filterParts: string[] = [`Période : ${from} → ${to}`];
-    if (search.statut.length) filterParts.push(`Statut : ${search.statut.map((s) => STATUT_META[s].label).join(", ")}`);
+    if (search.statut.length) filterParts.push(`Statut : ${search.statut.map((s: Statut) => STATUT_META[s].label).join(", ")}`);
     if (search.saisi_par !== "all") filterParts.push(`Saisi par : ${search.saisi_par}`);
     if (search.nuit) filterParts.push("Nuit uniquement");
     if (search.metier !== "all") filterParts.push(`Métier : ${metiers.find((m) => String(m.id) === search.metier)?.libelle ?? search.metier}`);
