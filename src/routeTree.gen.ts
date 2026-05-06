@@ -37,6 +37,7 @@ import { Route as AppMaSemaineRouteImport } from './routes/_app.ma-semaine'
 import { Route as AppInterimairesRouteImport } from './routes/_app.interimaires'
 import { Route as AppIncidentAuthRouteImport } from './routes/_app.incident-auth'
 import { Route as AppImportsRouteImport } from './routes/_app.imports'
+import { Route as AppHeuresAnalyseRouteImport } from './routes/_app.heures-analyse'
 import { Route as AppFlotteRouteImport } from './routes/_app.flotte'
 import { Route as AppExportRouteImport } from './routes/_app.export'
 import { Route as AppEmployesRouteImport } from './routes/_app.employes'
@@ -212,6 +213,11 @@ const AppIncidentAuthRoute = AppIncidentAuthRouteImport.update({
 const AppImportsRoute = AppImportsRouteImport.update({
   id: '/imports',
   path: '/imports',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppHeuresAnalyseRoute = AppHeuresAnalyseRouteImport.update({
+  id: '/heures-analyse',
+  path: '/heures-analyse',
   getParentRoute: () => AppRoute,
 } as any)
 const AppFlotteRoute = AppFlotteRouteImport.update({
@@ -425,6 +431,7 @@ export interface FileRoutesByFullPath {
   '/employes': typeof AppEmployesRouteWithChildren
   '/export': typeof AppExportRouteWithChildren
   '/flotte': typeof AppFlotteRoute
+  '/heures-analyse': typeof AppHeuresAnalyseRoute
   '/imports': typeof AppImportsRoute
   '/incident-auth': typeof AppIncidentAuthRoute
   '/interimaires': typeof AppInterimairesRoute
@@ -490,6 +497,7 @@ export interface FileRoutesByTo {
   '/dashboard-employe': typeof AppDashboardEmployeRoute
   '/employes': typeof AppEmployesRouteWithChildren
   '/flotte': typeof AppFlotteRoute
+  '/heures-analyse': typeof AppHeuresAnalyseRoute
   '/imports': typeof AppImportsRoute
   '/incident-auth': typeof AppIncidentAuthRoute
   '/interimaires': typeof AppInterimairesRoute
@@ -557,6 +565,7 @@ export interface FileRoutesById {
   '/_app/employes': typeof AppEmployesRouteWithChildren
   '/_app/export': typeof AppExportRouteWithChildren
   '/_app/flotte': typeof AppFlotteRoute
+  '/_app/heures-analyse': typeof AppHeuresAnalyseRoute
   '/_app/imports': typeof AppImportsRoute
   '/_app/incident-auth': typeof AppIncidentAuthRoute
   '/_app/interimaires': typeof AppInterimairesRoute
@@ -625,6 +634,7 @@ export interface FileRouteTypes {
     | '/employes'
     | '/export'
     | '/flotte'
+    | '/heures-analyse'
     | '/imports'
     | '/incident-auth'
     | '/interimaires'
@@ -690,6 +700,7 @@ export interface FileRouteTypes {
     | '/dashboard-employe'
     | '/employes'
     | '/flotte'
+    | '/heures-analyse'
     | '/imports'
     | '/incident-auth'
     | '/interimaires'
@@ -756,6 +767,7 @@ export interface FileRouteTypes {
     | '/_app/employes'
     | '/_app/export'
     | '/_app/flotte'
+    | '/_app/heures-analyse'
     | '/_app/imports'
     | '/_app/incident-auth'
     | '/_app/interimaires'
@@ -1023,6 +1035,13 @@ declare module '@tanstack/react-router' {
       path: '/imports'
       fullPath: '/imports'
       preLoaderRoute: typeof AppImportsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/heures-analyse': {
+      id: '/_app/heures-analyse'
+      path: '/heures-analyse'
+      fullPath: '/heures-analyse'
+      preLoaderRoute: typeof AppHeuresAnalyseRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/flotte': {
@@ -1354,6 +1373,7 @@ interface AppRouteChildren {
   AppEmployesRoute: typeof AppEmployesRouteWithChildren
   AppExportRoute: typeof AppExportRouteWithChildren
   AppFlotteRoute: typeof AppFlotteRoute
+  AppHeuresAnalyseRoute: typeof AppHeuresAnalyseRoute
   AppImportsRoute: typeof AppImportsRoute
   AppIncidentAuthRoute: typeof AppIncidentAuthRoute
   AppInterimairesRoute: typeof AppInterimairesRoute
@@ -1398,6 +1418,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppEmployesRoute: AppEmployesRouteWithChildren,
   AppExportRoute: AppExportRouteWithChildren,
   AppFlotteRoute: AppFlotteRoute,
+  AppHeuresAnalyseRoute: AppHeuresAnalyseRoute,
   AppImportsRoute: AppImportsRoute,
   AppIncidentAuthRoute: AppIncidentAuthRoute,
   AppInterimairesRoute: AppInterimairesRoute,
