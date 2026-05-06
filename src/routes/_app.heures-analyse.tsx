@@ -251,9 +251,9 @@ function HeuresAnalysePage() {
         .select(
           `id, date, heure_debut, heure_fin, heures_reelles, heures_nuit, statut, commentaire, motif_rejet, saisi_par_chef,
            affaire_id, devis_id, metier_id, employe_id, valide_le,
-           employe:employes!heures_saisies_employe_id_fkey(prenom, nom, type_contrat,
+           employe:employes(prenom, nom, type_contrat,
              metier_principal:metiers!employes_metier_principal_id_fkey(libelle),
-             profile:profiles!employes_profile_id_fkey(matricule_silae)),
+             profile:profiles(matricule_silae)),
            affaire:affaires!heures_saisies_affaire_id_fkey(numero, nom, lieu, phase),
            devis:devis(numero),
            metier:metiers(libelle),
