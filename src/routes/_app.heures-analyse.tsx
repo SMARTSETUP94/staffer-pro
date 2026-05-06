@@ -202,6 +202,7 @@ function HeuresAnalysePage() {
   const [rows, setRows] = useState<Row[]>([]);
   const [metiers, setMetiers] = useState<{ id: number; libelle: string }[]>([]);
   const [loading, setLoading] = useState(true);
+  const [silaeReport, setSilaeReport] = useState<SilaeValidationReport | null>(null);
 
   // Helper update
   function updateSearch(patch: Partial<SearchParams>) {
