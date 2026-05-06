@@ -249,10 +249,12 @@ function HeuresAnalysePage() {
       const { data, error } = await supabase
         .from("heures_saisies")
         .select(
-          `id, date, heures_reelles, heures_nuit, statut, commentaire, saisi_par_chef,
+          `id, date, heure_debut, heure_fin, heures_reelles, heures_nuit, statut, commentaire, motif_rejet, saisi_par_chef,
            affaire_id, devis_id, metier_id, employe_id, valide_le,
-           employe:employes!heures_saisies_employe_id_fkey(prenom, nom),
-           affaire:affaires!heures_saisies_affaire_id_fkey(numero, nom),
+           employe:employes!heures_saisies_employe_id_fkey(prenom, nom, type_contrat,
+             metier_principal:metiers!employes_metier_principal_id_fkey(libelle),
+             profile:profiles!employes_profile_id_fkey(matricule_silae)),
+           affaire:affaires!heures_saisies_affaire_id_fkey(numero, nom, lieu, phase),
            devis:devis(numero),
            metier:metiers(libelle),
            valideur:profiles!heures_saisies_valide_par_fkey(full_name, email)`,
