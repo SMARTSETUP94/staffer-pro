@@ -1,28 +1,30 @@
 /**
  * v0.22 — Centre d'analyse heures consolidé (admin + chef)
  *
- * Tableau complet des `heures_saisies` avec filtres combinables,
- * KPIs et exports CSV / Excel. Spec : mem://features/centre-analyse-heures.
+ * Tableau complet des `heures_saisies` avec filtres combinables persistés
+ * dans l'URL (lien partageable), compteur live, KPIs et exports CSV / Excel.
+ * Spec : mem://features/centre-analyse-heures.
  *
- * Filtres :
- *  - Période (presets + custom)
- *  - Chantier (multi via recherche)
- *  - Employé (recherche fuzzy nom/prénom)
- *  - Devis
- *  - Métier
- *  - Statut (multi)
- *  - Heures de nuit (toggle)
- *  - Saisi par (employé / chef / tous)
+ * Filtres URL (validateSearch + zodValidator) :
+ *  - preset (7j, 30j, semaine, mois, mois_precedent, custom)
+ *  - from / to (YYYY-MM-DD)
+ *  - statut (multi : brouillon|soumis|valide|rejete)
+ *  - saisi_par (all|employe|chef)
+ *  - nuit (0|1)
+ *  - employe (recherche fuzzy nom/prénom)
+ *  - chantier (numéro ou nom)
+ *  - devis (numéro)
+ *  - metier (id ou "all")
  *
- * Filtrage RLS côté DB (heures_saisies_self_select) garantit que le chef
- * ne voit que les heures de son périmètre. Pas de logique de RBAC
- * supplémentaire ici, RoleGuard `chef_or_admin` suffit pour l'UI.
+ * Filtrage RLS côté DB garantit que le chef ne voit que son périmètre.
  */
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { zodValidator, fallback } from "@tanstack/zod-adapter";
+import { z } from "zod";
 import { useEffect, useMemo, useState } from "react";
 import { format, parseISO, startOfMonth, startOfWeek, subDays, subMonths } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Download, Filter, Loader2, Moon } from "lucide-react";
+import { Download, Filter, Loader2, Moon, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { RoleGuard } from "@/components/auth/RoleGuard";
@@ -54,12 +56,45 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  ToggleGroup,
+  ToggleGroupItem,
+} from "@/components/ui/toggle-group";
+
+// ============================================================================
+// Search params schema
+// ============================================================================
+
+const STATUTS = ["brouillon", "soumis", "valide", "rejete"] as const;
+type Statut = (typeof STATUTS)[number];
+
+const PRESETS = ["7j", "30j", "semaine", "mois", "mois_precedent", "custom"] as const;
+type PresetKey = (typeof PRESETS)[number];
+
+const searchSchema = z.object({
+  preset: fallback(z.enum(PRESETS), "30j").default("30j"),
+  from: fallback(z.string(), "").default(""),
+  to: fallback(z.string(), "").default(""),
+  // Multi-select statut sous forme de string CSV (compact en URL)
+  statut: fallback(z.array(z.enum(STATUTS)), []).default([]),
+  saisi_par: fallback(z.enum(["all", "employe", "chef"]), "all").default("all"),
+  nuit: fallback(z.boolean(), false).default(false),
+  employe: fallback(z.string(), "").default(""),
+  chantier: fallback(z.string(), "").default(""),
+  devis: fallback(z.string(), "").default(""),
+  metier: fallback(z.string(), "all").default("all"),
+});
+
+type SearchParams = z.infer<typeof searchSchema>;
 
 export const Route = createFileRoute("/_app/heures-analyse")({
+  validateSearch: zodValidator(searchSchema),
   component: HeuresAnalysePage,
 });
 
-type Statut = "brouillon" | "soumis" | "valide" | "rejete";
+// ============================================================================
+// Types & helpers
+// ============================================================================
 
 interface Row {
   id: string;
@@ -74,7 +109,6 @@ interface Row {
   metier_id: number | null;
   employe_id: string;
   valide_le: string | null;
-  // joined
   employe?: { prenom: string; nom: string } | null;
   affaire?: { numero: string; nom: string } | null;
   devis?: { numero: string } | null;
@@ -88,8 +122,6 @@ const STATUT_META: Record<Statut, { label: string; tone: string }> = {
   valide: { label: "Validée", tone: "bg-emerald-500/15 text-emerald-600 border-emerald-500/30" },
   rejete: { label: "Rejetée", tone: "bg-destructive/15 text-destructive border-destructive/30" },
 };
-
-type PresetKey = "7j" | "30j" | "semaine" | "mois" | "mois_precedent" | "custom";
 
 function presetRange(key: PresetKey): { from: string; to: string } {
   const today = new Date();
@@ -115,22 +147,80 @@ function presetRange(key: PresetKey): { from: string; to: string } {
   }
 }
 
+/** Résolution from/to effectifs : si preset != custom, on dérive ; sinon on prend l'URL ou un défaut. */
+function resolveRange(search: SearchParams): { from: string; to: string } {
+  if (search.preset !== "custom") return presetRange(search.preset);
+  const def = presetRange("30j");
+  return {
+    from: search.from || def.from,
+    to: search.to || def.to,
+  };
+}
+
+/** Compte le nombre de filtres actifs (hors période). */
+function countActiveFilters(s: SearchParams): number {
+  let n = 0;
+  if (s.statut.length > 0) n++;
+  if (s.saisi_par !== "all") n++;
+  if (s.nuit) n++;
+  if (s.employe.trim()) n++;
+  if (s.chantier.trim()) n++;
+  if (s.devis.trim()) n++;
+  if (s.metier !== "all") n++;
+  return n;
+}
+
+// ============================================================================
+// Page
+// ============================================================================
+
 function HeuresAnalysePage() {
-  const [preset, setPreset] = useState<PresetKey>("30j");
-  const initial = presetRange("30j");
-  const [from, setFrom] = useState(initial.from);
-  const [to, setTo] = useState(initial.to);
-  const [statutFilter, setStatutFilter] = useState<"all" | Statut>("all");
-  const [saisiParFilter, setSaisiParFilter] = useState<"all" | "employe" | "chef">("all");
-  const [nuitOnly, setNuitOnly] = useState(false);
-  const [employeQuery, setEmployeQuery] = useState("");
-  const [chantierQuery, setChantierQuery] = useState("");
-  const [devisQuery, setDevisQuery] = useState("");
-  const [metierFilter, setMetierFilter] = useState<string>("all");
+  const search = Route.useSearch();
+  const navigate = useNavigate({ from: Route.fullPath });
+
+  const { from, to } = resolveRange(search);
 
   const [rows, setRows] = useState<Row[]>([]);
   const [metiers, setMetiers] = useState<{ id: number; libelle: string }[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Helper update
+  function updateSearch(patch: Partial<SearchParams>) {
+    void navigate({ search: (prev: SearchParams) => ({ ...prev, ...patch }) });
+  }
+
+  function setPreset(p: PresetKey) {
+    if (p === "custom") {
+      updateSearch({ preset: "custom", from: from, to: to });
+    } else {
+      // On vide from/to (le preset les régénère)
+      updateSearch({ preset: p, from: "", to: "" });
+    }
+  }
+
+  function resetFilters() {
+    void navigate({
+      search: {
+        preset: "30j",
+        from: "",
+        to: "",
+        statut: [],
+        saisi_par: "all",
+        nuit: false,
+        employe: "",
+        chantier: "",
+        devis: "",
+        metier: "all",
+      },
+    });
+  }
+
+  function toggleStatut(s: Statut) {
+    const has = search.statut.includes(s);
+    updateSearch({
+      statut: has ? search.statut.filter((x: Statut) => x !== s) : [...search.statut, s],
+    });
+  }
 
   // Charger métiers une fois
   useEffect(() => {
@@ -141,15 +231,7 @@ function HeuresAnalysePage() {
       .then(({ data }) => setMetiers(data ?? []));
   }, []);
 
-  // Quand on change preset, mettre à jour from/to (sauf custom)
-  useEffect(() => {
-    if (preset === "custom") return;
-    const r = presetRange(preset);
-    setFrom(r.from);
-    setTo(r.to);
-  }, [preset]);
-
-  // Charger données
+  // Charger heures (re-fetch sur changement de période)
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
@@ -186,29 +268,29 @@ function HeuresAnalysePage() {
 
   const filtered = useMemo(() => {
     return rows.filter((r) => {
-      if (statutFilter !== "all" && r.statut !== statutFilter) return false;
-      if (saisiParFilter === "employe" && r.saisi_par_chef) return false;
-      if (saisiParFilter === "chef" && !r.saisi_par_chef) return false;
-      if (nuitOnly && (r.heures_nuit ?? 0) <= 0) return false;
-      if (metierFilter !== "all" && String(r.metier_id ?? "") !== metierFilter) return false;
-      if (employeQuery.trim()) {
-        const q = employeQuery.toLowerCase();
+      if (search.statut.length > 0 && !search.statut.includes(r.statut)) return false;
+      if (search.saisi_par === "employe" && r.saisi_par_chef) return false;
+      if (search.saisi_par === "chef" && !r.saisi_par_chef) return false;
+      if (search.nuit && (r.heures_nuit ?? 0) <= 0) return false;
+      if (search.metier !== "all" && String(r.metier_id ?? "") !== search.metier) return false;
+      if (search.employe.trim()) {
+        const q = search.employe.toLowerCase();
         const name = r.employe ? `${r.employe.prenom} ${r.employe.nom}`.toLowerCase() : "";
         if (!name.includes(q)) return false;
       }
-      if (chantierQuery.trim()) {
-        const q = chantierQuery.toLowerCase();
+      if (search.chantier.trim()) {
+        const q = search.chantier.toLowerCase();
         const aff = r.affaire ? `${r.affaire.numero} ${r.affaire.nom}`.toLowerCase() : "";
         if (!aff.includes(q)) return false;
       }
-      if (devisQuery.trim()) {
-        const q = devisQuery.toLowerCase();
+      if (search.devis.trim()) {
+        const q = search.devis.toLowerCase();
         const dv = r.devis?.numero?.toLowerCase() ?? "";
         if (!dv.includes(q)) return false;
       }
       return true;
     });
-  }, [rows, statutFilter, saisiParFilter, nuitOnly, metierFilter, employeQuery, chantierQuery, devisQuery]);
+  }, [rows, search]);
 
   const kpis = useMemo(() => {
     const total = filtered.reduce((acc, r) => acc + (r.heures_reelles ?? 0), 0);
@@ -227,6 +309,8 @@ function HeuresAnalysePage() {
       lignes: filtered.length,
     };
   }, [filtered]);
+
+  const activeCount = countActiveFilters(search);
 
   function exportCsv() {
     const header = [
@@ -286,6 +370,15 @@ function HeuresAnalysePage() {
     XLSX.writeFile(wb, `heures-analyse-${from}_${to}.xlsx`);
   }
 
+  async function copyShareLink() {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      toast.success("Lien copié — filtres inclus");
+    } catch {
+      toast.error("Impossible de copier le lien");
+    }
+  }
+
   return (
     <RoleGuard required="chef_or_admin">
       <div className="space-y-4">
@@ -295,20 +388,26 @@ function HeuresAnalysePage() {
           title="Centre d'analyse heures"
           description="Toutes les heures saisies, à valider et validées avec filtres et exports."
           actions={
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" disabled={!filtered.length}>
-                  <Download className="mr-1.5 h-4 w-4" /> Exporter
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={exportCsv}>CSV (UTF-8)</DropdownMenuItem>
-                <DropdownMenuItem onClick={exportXlsx}>Excel (.xlsx)</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="sm" onClick={copyShareLink}>
+                Copier le lien
+              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" disabled={!filtered.length}>
+                    <Download className="mr-1.5 h-4 w-4" /> Exporter
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={exportCsv}>CSV (UTF-8)</DropdownMenuItem>
+                  <DropdownMenuItem onClick={exportXlsx}>Excel (.xlsx)</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           }
         />
 
+        {/* KPIs */}
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
           <KpiCard label="Heures totales" value={kpis.total.toFixed(1) + " h"} subline={`${kpis.lignes} saisies`} />
           <KpiCard
@@ -326,117 +425,159 @@ function HeuresAnalysePage() {
           <KpiCard label="À valider" value={String(kpis.aValider)} subline="saisies en attente" tone="info" />
         </div>
 
+        {/* Bandeau compteur live */}
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border bg-muted/30 px-3 py-2">
+          <div className="flex flex-wrap items-center gap-2 text-sm">
+            <Badge variant="secondary" className="font-mono">
+              {kpis.lignes} résultat{kpis.lignes > 1 ? "s" : ""}
+            </Badge>
+            <span className="text-muted-foreground">
+              · Période <strong className="text-foreground">{from}</strong> → <strong className="text-foreground">{to}</strong>
+            </span>
+            {activeCount > 0 && (
+              <Badge variant="outline" className="bg-indigo-500/15 text-indigo-600 border-indigo-500/30">
+                {activeCount} filtre{activeCount > 1 ? "s" : ""} actif{activeCount > 1 ? "s" : ""}
+              </Badge>
+            )}
+          </div>
+          {activeCount > 0 && (
+            <Button variant="ghost" size="sm" onClick={resetFilters}>
+              <X className="mr-1 h-3.5 w-3.5" /> Réinitialiser
+            </Button>
+          )}
+        </div>
+
+        {/* Filtres */}
         <Card>
-          <CardContent className="grid gap-3 pt-4 md:grid-cols-3 lg:grid-cols-4">
-            <div className="grid gap-1">
-              <Label className="text-xs">Période</Label>
-              <Select value={preset} onValueChange={(v) => setPreset(v as PresetKey)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="7j">7 derniers jours</SelectItem>
-                  <SelectItem value="30j">30 derniers jours</SelectItem>
-                  <SelectItem value="semaine">Cette semaine</SelectItem>
-                  <SelectItem value="mois">Ce mois</SelectItem>
-                  <SelectItem value="mois_precedent">Mois précédent</SelectItem>
-                  <SelectItem value="custom">Personnalisé</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid gap-1">
-              <Label className="text-xs">Du</Label>
-              <Input
-                type="date"
-                value={from}
-                onChange={(e) => {
-                  setPreset("custom");
-                  setFrom(e.target.value);
-                }}
-              />
-            </div>
-            <div className="grid gap-1">
-              <Label className="text-xs">Au</Label>
-              <Input
-                type="date"
-                value={to}
-                onChange={(e) => {
-                  setPreset("custom");
-                  setTo(e.target.value);
-                }}
-              />
-            </div>
-            <div className="grid gap-1">
-              <Label className="text-xs">Statut</Label>
-              <Select value={statutFilter} onValueChange={(v) => setStatutFilter(v as typeof statutFilter)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tous</SelectItem>
-                  <SelectItem value="brouillon">Brouillon</SelectItem>
-                  <SelectItem value="soumis">À valider</SelectItem>
-                  <SelectItem value="valide">Validée</SelectItem>
-                  <SelectItem value="rejete">Rejetée</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid gap-1">
-              <Label className="text-xs">Métier</Label>
-              <Select value={metierFilter} onValueChange={setMetierFilter}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tous</SelectItem>
-                  {metiers.map((m) => (
-                    <SelectItem key={m.id} value={String(m.id)}>{m.libelle}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid gap-1">
-              <Label className="text-xs">Saisi par</Label>
-              <Select value={saisiParFilter} onValueChange={(v) => setSaisiParFilter(v as typeof saisiParFilter)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tous</SelectItem>
-                  <SelectItem value="employe">Employé lui-même</SelectItem>
-                  <SelectItem value="chef">Chef pour employé</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid gap-1">
-              <Label className="text-xs">Employé</Label>
-              <div className="relative">
-                <Filter className="absolute left-2 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+          <CardContent className="space-y-4 pt-4">
+            <div className="grid gap-3 md:grid-cols-3 lg:grid-cols-4">
+              <div className="grid gap-1">
+                <Label className="text-xs">Période</Label>
+                <Select value={search.preset} onValueChange={(v) => setPreset(v as PresetKey)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="7j">7 derniers jours</SelectItem>
+                    <SelectItem value="30j">30 derniers jours</SelectItem>
+                    <SelectItem value="semaine">Cette semaine</SelectItem>
+                    <SelectItem value="mois">Ce mois</SelectItem>
+                    <SelectItem value="mois_precedent">Mois précédent</SelectItem>
+                    <SelectItem value="custom">Personnalisé</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-1">
+                <Label className="text-xs">Du</Label>
                 <Input
-                  className="pl-7"
-                  placeholder="Nom / prénom"
-                  value={employeQuery}
-                  onChange={(e) => setEmployeQuery(e.target.value)}
+                  type="date"
+                  value={from}
+                  onChange={(e) => updateSearch({ preset: "custom", from: e.target.value, to })}
+                />
+              </div>
+              <div className="grid gap-1">
+                <Label className="text-xs">Au</Label>
+                <Input
+                  type="date"
+                  value={to}
+                  onChange={(e) => updateSearch({ preset: "custom", from, to: e.target.value })}
+                />
+              </div>
+              <div className="grid gap-1">
+                <Label className="text-xs">Métier</Label>
+                <Select value={search.metier} onValueChange={(v) => updateSearch({ metier: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tous</SelectItem>
+                    {metiers.map((m) => (
+                      <SelectItem key={m.id} value={String(m.id)}>{m.libelle}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-1">
+                <Label className="text-xs">Saisi par</Label>
+                <Select
+                  value={search.saisi_par}
+                  onValueChange={(v) => updateSearch({ saisi_par: v as SearchParams["saisi_par"] })}
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tous</SelectItem>
+                    <SelectItem value="employe">Employé lui-même</SelectItem>
+                    <SelectItem value="chef">Chef pour employé</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-1">
+                <Label className="text-xs">Employé</Label>
+                <div className="relative">
+                  <Filter className="absolute left-2 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+                  <Input
+                    className="pl-7"
+                    placeholder="Nom / prénom"
+                    value={search.employe}
+                    onChange={(e) => updateSearch({ employe: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div className="grid gap-1">
+                <Label className="text-xs">Chantier</Label>
+                <Input
+                  placeholder="Numéro ou nom"
+                  value={search.chantier}
+                  onChange={(e) => updateSearch({ chantier: e.target.value })}
+                />
+              </div>
+              <div className="grid gap-1">
+                <Label className="text-xs">Devis</Label>
+                <Input
+                  placeholder="D-XXXXXX-YYYY"
+                  value={search.devis}
+                  onChange={(e) => updateSearch({ devis: e.target.value })}
                 />
               </div>
             </div>
-            <div className="grid gap-1">
-              <Label className="text-xs">Chantier</Label>
-              <Input
-                placeholder="Numéro ou nom"
-                value={chantierQuery}
-                onChange={(e) => setChantierQuery(e.target.value)}
-              />
-            </div>
-            <div className="grid gap-1">
-              <Label className="text-xs">Devis</Label>
-              <Input
-                placeholder="D-XXXXXX-YYYY"
-                value={devisQuery}
-                onChange={(e) => setDevisQuery(e.target.value)}
-              />
-            </div>
-            <div className="flex items-end gap-2 pb-1">
-              <Switch id="nuit" checked={nuitOnly} onCheckedChange={setNuitOnly} />
-              <Label htmlFor="nuit" className="cursor-pointer text-sm">
-                Nuit uniquement
-              </Label>
+
+            {/* Statut multi + nuit */}
+            <div className="flex flex-wrap items-center gap-4 border-t pt-3">
+              <div className="grid gap-1">
+                <Label className="text-xs">Statut (multi-sélection)</Label>
+                <ToggleGroup
+                  type="multiple"
+                  value={search.statut}
+                  onValueChange={(v) => updateSearch({ statut: v as Statut[] })}
+                  variant="outline"
+                  size="sm"
+                >
+                  {STATUTS.map((s) => (
+                    <ToggleGroupItem
+                      key={s}
+                      value={s}
+                      onClick={(e) => {
+                        // ToggleGroup gère déjà via onValueChange ; pas de double toggle
+                        e.preventDefault();
+                        toggleStatut(s);
+                      }}
+                    >
+                      {STATUT_META[s].label}
+                    </ToggleGroupItem>
+                  ))}
+                </ToggleGroup>
+              </div>
+              <div className="flex items-center gap-2 pt-5">
+                <Switch
+                  id="nuit"
+                  checked={search.nuit}
+                  onCheckedChange={(v) => updateSearch({ nuit: v })}
+                />
+                <Label htmlFor="nuit" className="cursor-pointer text-sm flex items-center gap-1">
+                  <Moon className="h-3.5 w-3.5" /> Nuit uniquement
+                </Label>
+              </div>
             </div>
           </CardContent>
         </Card>
 
+        {/* Tableau */}
         <Card>
           <CardContent className="p-0">
             {loading ? (
