@@ -33,6 +33,7 @@ export const ALL_WIDGET_IDS = [
   "chef_projet_mois",
   "tip_du_jour",
   "quiz_du_jour",
+] as const;
 
 export type WidgetId = (typeof ALL_WIDGET_IDS)[number];
 
@@ -66,6 +67,8 @@ export const ROLE_PRESETS: Record<AppRole, WidgetId[]> = {
     "chef_projet_mois",
     "tip_du_jour",
     "quiz_du_jour",
+  ],
+  employe: [
     "mes_etapes_fab",
     "anniversaires",
     "saint_du_jour",
@@ -73,7 +76,8 @@ export const ROLE_PRESETS: Record<AppRole, WidgetId[]> = {
     "chef_projet_mois",
     "tip_du_jour",
     "quiz_du_jour",
-
+  ],
+};
 /**
  * Le rôle "chargé d'affaires" n'existe pas encore comme AppRole distinct.
  * On le détecte via la présence dans la table charges_affaires (hook séparé).
