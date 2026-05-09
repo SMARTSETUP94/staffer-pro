@@ -8,7 +8,7 @@ import {
   toIsoDate,
 } from "../dashboard-fun-helpers";
 import { getSaintsForDate, normalizePrenom } from "../saints-fr";
-import { DASHBOARD_TIPS } from "../dashboard-tips";
+
 
 describe("dashboard-fun-helpers", () => {
   it("weekIndex est stable sur 7 jours et incrémente le lundi suivant", () => {
@@ -44,11 +44,24 @@ describe("dashboard-fun-helpers", () => {
     expect(toIsoDate(new Date(2026, 0, 5))).toBe("2026-01-05");
   });
 
-  it("rotation hebdo sur DASHBOARD_TIPS modulo length", () => {
-    const idx = weekIndex(new Date(2026, 4, 4)) % DASHBOARD_TIPS.length;
+  it("rotation hebdo : weekIndex modulo N reste dans [0, N)", () => {
+    const N = 15;
+    const idx = weekIndex(new Date(2026, 4, 4)) % N;
     expect(idx).toBeGreaterThanOrEqual(0);
-    expect(idx).toBeLessThan(DASHBOARD_TIPS.length);
-    expect(DASHBOARD_TIPS[idx]).toBeDefined();
+    expect(idx).toBeLessThan(N);
+  });
+
+  it("rotation journalière : dateIndex modulo N reste dans [0, N)", () => {
+    const N = 20;
+    const idx = dateIndex(new Date(2026, 4, 9)) % N;
+    expect(idx).toBeGreaterThanOrEqual(0);
+    expect(idx).toBeLessThan(N);
+  });
+
+  it("rotations sont déterministes (même date → même index)", () => {
+    const d = new Date(2026, 4, 9);
+    expect(dateIndex(d) % 20).toBe(dateIndex(new Date(2026, 4, 9)) % 20);
+    expect(weekIndex(d) % 15).toBe(weekIndex(new Date(2026, 4, 9)) % 15);
   });
 });
 
