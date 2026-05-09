@@ -36,13 +36,14 @@ export function QuizLeaderboardWidget() {
         setRows([]);
         return;
       }
-      const ids = stats.map((s) => s.user_id);
+      const validStats = stats.filter((s): s is typeof s & { user_id: string } => s.user_id !== null);
+      const ids = validStats.map((s) => s.user_id);
       const { data: profiles } = await supabase
         .from("profiles")
         .select("id, full_name, avatar_url")
         .in("id", ids);
       const profMap = new Map((profiles ?? []).map((p) => [p.id, p]));
-      const merged: Row[] = stats.map((s) => ({
+      const merged: Row[] = validStats.map((s) => ({
         user_id: s.user_id,
         total_points: s.total_points ?? 0,
         week_points: s.week_points ?? 0,
