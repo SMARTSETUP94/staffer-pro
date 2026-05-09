@@ -118,15 +118,17 @@ export function computePresetForRoles(roles: AppRole[]): WidgetId[] {
  */
 export function getAllowedWidgetsForRole(role: AppRole): Set<WidgetId> {
   if (role === "admin") return new Set(ALL_WIDGET_IDS);
+  const fun: WidgetId[] = ["anniversaires", "saint_du_jour", "top_constructeur", "chef_projet_mois", "tip_du_jour"];
   if (role === "chef_chantier") {
-    return new Set([
+    return new Set<WidgetId>([
       "meteo_chantiers", "montages_j7", "tension_budget", "absences_semaine",
       "flotte_kpis", "charge_atelier", "objets_en_retard", "charge_equipe",
       "mes_etapes_fab", "heures_a_valider", "sous_effectif_J7",
+      ...fun,
     ]);
   }
-  // employe : strict — uniquement widgets personnels
-  return new Set<WidgetId>(["mes_etapes_fab", "heures_a_valider"]);
+  // employe : widgets personnels + humanisation équipe
+  return new Set<WidgetId>(["mes_etapes_fab", "heures_a_valider", ...fun]);
 }
 
 /**
