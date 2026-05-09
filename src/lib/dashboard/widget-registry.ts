@@ -184,7 +184,7 @@ export const CATEGORY_LABELS: Record<WidgetCategory, string> = {
   fun: "Cohésion équipe",
 };
 
-export const CATEGORY_ORDER: WidgetCategory[] = ["commerce", "ops", "fab", "perso"];
+export const CATEGORY_ORDER: WidgetCategory[] = ["commerce", "ops", "fab", "perso", "fun"];
 
 /**
  * Registre dynamique des composants widgets.
