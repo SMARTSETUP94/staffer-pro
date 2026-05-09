@@ -59,7 +59,7 @@ describe("saints-fr", () => {
   });
 
   it("getSaintsForDate trouve un saint connu", () => {
-    expect(getSaintsForDate(new Date(2026, 4, 25))).toContain("marc");
+    expect(getSaintsForDate(new Date(2026, 3, 25))).toContain("marc");
     expect(getSaintsForDate(new Date(2026, 1, 14))).toContain("valentin");
   });
 
