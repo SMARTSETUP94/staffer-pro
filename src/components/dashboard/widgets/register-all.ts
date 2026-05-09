@@ -25,6 +25,7 @@ import { SaintDuJourWidget } from "./SaintDuJourWidget";
 import { TopConstructeurWidget } from "./TopConstructeurWidget";
 import { ChefProjetMoisWidget } from "./ChefProjetMoisWidget";
 import { TipDuJourWidget } from "./TipDuJourWidget";
+import { QuizDuJourWidget } from "./QuizDuJourWidget";
 
 let registered = false;
 
@@ -52,5 +53,6 @@ export function registerAllWidgets(): void {
   registerWidget("top_constructeur", TopConstructeurWidget);
   registerWidget("chef_projet_mois", ChefProjetMoisWidget);
   registerWidget("tip_du_jour", TipDuJourWidget);
+  registerWidget("quiz_du_jour", QuizDuJourWidget);
   registered = true;
 }
