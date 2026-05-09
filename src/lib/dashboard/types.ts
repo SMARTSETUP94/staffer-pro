@@ -26,6 +26,12 @@ export const ALL_WIDGET_IDS = [
   "mes_etapes_fab",
   "heures_a_valider",
   "sous_effectif_J7",
+  // Humanisation équipe (5) — v0.40.x
+  "anniversaires",
+  "saint_du_jour",
+  "top_constructeur",
+  "chef_projet_mois",
+  "tip_du_jour",
 ] as const;
 
 export type WidgetId = (typeof ALL_WIDGET_IDS)[number];
