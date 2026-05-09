@@ -530,6 +530,45 @@ export type Database = {
           },
         ]
       }
+      dashboard_tips: {
+        Row: {
+          active: boolean
+          auteur: string | null
+          categorie: string
+          created_at: string
+          created_by: string | null
+          emoji: string
+          id: string
+          ordre: number
+          texte: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          auteur?: string | null
+          categorie?: string
+          created_at?: string
+          created_by?: string | null
+          emoji?: string
+          id?: string
+          ordre?: number
+          texte: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          auteur?: string | null
+          categorie?: string
+          created_at?: string
+          created_by?: string | null
+          emoji?: string
+          id?: string
+          ordre?: number
+          texte?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       devis: {
         Row: {
           affaire_id: string
