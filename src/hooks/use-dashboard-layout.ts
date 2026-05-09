@@ -59,7 +59,12 @@ export function useDashboardLayout(): UseDashboardLayoutResult {
       // de "sauvegardé vide" (stored.visible.length === 0). Un user qui décoche
       // tout doit voir un dashboard vide, pas le preset par défaut.
       if (rawLayout != null && stored) {
-        setLayout(clampLayoutToRole(stored, effectiveRole));
+        // Merge new preset widgets that didn't exist when user saved layout (auto-append).
+        const preset = computePresetForRoles([effectiveRole]);
+        const knownIds = new Set([...stored.visible, ...(stored.hidden ?? [])]);
+        const missing = preset.filter((id) => !knownIds.has(id));
+        const merged = { ...stored, visible: [...stored.visible, ...missing] };
+        setLayout(clampLayoutToRole(merged, effectiveRole));
         setIsPreset(false);
       } else {
         setLayout(computePreset());
