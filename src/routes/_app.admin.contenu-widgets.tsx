@@ -71,6 +71,13 @@ const ASTUCE_CATS = [
   { value: "securite", label: "Sécurité" },
   { value: "livraison", label: "Livraison" },
   { value: "RH", label: "RH" },
+  { value: "montage", label: "Montage" },
+  { value: "menuiserie", label: "Menuiserie" },
+  { value: "devis", label: "Devis" },
+  { value: "logistique", label: "Logistique" },
+  { value: "peinture", label: "Peinture" },
+  { value: "tapisserie", label: "Tapisserie" },
+  { value: "culture", label: "Culture" },
 ] as const;
 type AstuceCat = (typeof ASTUCE_CATS)[number]["value"];
 
