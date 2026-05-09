@@ -81,3 +81,38 @@ describe("saints-fr", () => {
     expect(Array.isArray(r)).toBe(true);
   });
 });
+
+import { pickDailyQuizIds } from "../../components/dashboard/widgets/QuizDuJourWidget";
+
+describe("pickDailyQuizIds", () => {
+  const ids = Array.from({ length: 20 }, (_, i) => `quiz-${String(i).padStart(2, "0")}`);
+
+  it("renvoie 5 IDs distincts par jour", () => {
+    const picked = pickDailyQuizIds(ids, new Date(2026, 4, 9));
+    expect(picked).toHaveLength(5);
+    expect(new Set(picked).size).toBe(5);
+  });
+
+  it("déterministe : même date → même résultat (tous les utilisateurs voient les mêmes quiz)", () => {
+    const a = pickDailyQuizIds(ids, new Date(2026, 4, 9));
+    const b = pickDailyQuizIds(ids, new Date(2026, 4, 9));
+    expect(a).toEqual(b);
+  });
+
+  it("change le lendemain", () => {
+    const a = pickDailyQuizIds(ids, new Date(2026, 4, 9));
+    const b = pickDailyQuizIds(ids, new Date(2026, 4, 10));
+    expect(a).not.toEqual(b);
+  });
+
+  it("renvoie tableau vide si aucun quiz", () => {
+    expect(pickDailyQuizIds([], new Date())).toEqual([]);
+  });
+
+  it("renvoie nb dispo si moins de 5 quiz en base", () => {
+    const small = ["a", "b", "c"];
+    const picked = pickDailyQuizIds(small, new Date(2026, 4, 9));
+    expect(picked).toHaveLength(3);
+    expect(new Set(picked).size).toBe(3);
+  });
+});
