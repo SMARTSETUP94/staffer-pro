@@ -545,7 +545,7 @@ function HeuresAnalysePage() {
   }
 
   return (
-    <RoleGuard required="chef_or_admin">
+    <RoleGuard required="admin">
       <div className="space-y-4">
         <PageHeader
           number="03"
