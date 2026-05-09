@@ -26,13 +26,14 @@ export const ALL_WIDGET_IDS = [
   "mes_etapes_fab",
   "heures_a_valider",
   "sous_effectif_J7",
-  // Humanisation équipe (5) — v0.40.x
+  // Humanisation équipe — v0.40.x
   "anniversaires",
   "saint_du_jour",
   "top_constructeur",
   "chef_projet_mois",
-  "tip_du_jour",
+  "astuces_marquee",
   "quiz_du_jour",
+  "quiz_leaderboard",
 ] as const;
 
 export type WidgetId = (typeof ALL_WIDGET_IDS)[number];
@@ -65,8 +66,9 @@ export const ROLE_PRESETS: Record<AppRole, WidgetId[]> = {
     "saint_du_jour",
     "top_constructeur",
     "chef_projet_mois",
-    "tip_du_jour",
+    "astuces_marquee",
     "quiz_du_jour",
+    "quiz_leaderboard",
   ],
   employe: [
     "mes_etapes_fab",
@@ -74,8 +76,9 @@ export const ROLE_PRESETS: Record<AppRole, WidgetId[]> = {
     "saint_du_jour",
     "top_constructeur",
     "chef_projet_mois",
-    "tip_du_jour",
+    "astuces_marquee",
     "quiz_du_jour",
+    "quiz_leaderboard",
   ],
 };
 /**
@@ -120,7 +123,7 @@ export function computePresetForRoles(roles: AppRole[]): WidgetId[] {
  */
 export function getAllowedWidgetsForRole(role: AppRole): Set<WidgetId> {
   if (role === "admin") return new Set(ALL_WIDGET_IDS);
-  const fun: WidgetId[] = ["anniversaires", "saint_du_jour", "top_constructeur", "chef_projet_mois", "tip_du_jour", "quiz_du_jour"];
+  const fun: WidgetId[] = ["anniversaires", "saint_du_jour", "top_constructeur", "chef_projet_mois", "astuces_marquee", "quiz_du_jour", "quiz_leaderboard"];
   if (role === "chef_chantier") {
     return new Set<WidgetId>([
       "meteo_chantiers", "montages_j7", "tension_budget", "absences_semaine",

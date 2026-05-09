@@ -24,8 +24,9 @@ import { AnniversairesWidget } from "./AnniversairesWidget";
 import { SaintDuJourWidget } from "./SaintDuJourWidget";
 import { TopConstructeurWidget } from "./TopConstructeurWidget";
 import { ChefProjetMoisWidget } from "./ChefProjetMoisWidget";
-import { TipDuJourWidget } from "./TipDuJourWidget";
+import { AstucesMarqueeWidget } from "./AstucesMarqueeWidget";
 import { QuizDuJourWidget } from "./QuizDuJourWidget";
+import { QuizLeaderboardWidget } from "./QuizLeaderboardWidget";
 
 let registered = false;
 
@@ -52,7 +53,8 @@ export function registerAllWidgets(): void {
   registerWidget("saint_du_jour", SaintDuJourWidget);
   registerWidget("top_constructeur", TopConstructeurWidget);
   registerWidget("chef_projet_mois", ChefProjetMoisWidget);
-  registerWidget("tip_du_jour", TipDuJourWidget);
+  registerWidget("astuces_marquee", AstucesMarqueeWidget);
   registerWidget("quiz_du_jour", QuizDuJourWidget);
+  registerWidget("quiz_leaderboard", QuizLeaderboardWidget);
   registered = true;
 }
