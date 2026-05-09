@@ -530,16 +530,14 @@ export type Database = {
           },
         ]
       }
-      dashboard_tips: {
+      content_astuces: {
         Row: {
           active: boolean
           auteur: string | null
           categorie: string
           created_at: string
           created_by: string | null
-          emoji: string
           id: string
-          ordre: number
           texte: string
           updated_at: string
         }
@@ -549,9 +547,7 @@ export type Database = {
           categorie?: string
           created_at?: string
           created_by?: string | null
-          emoji?: string
           id?: string
-          ordre?: number
           texte: string
           updated_at?: string
         }
@@ -561,10 +557,50 @@ export type Database = {
           categorie?: string
           created_at?: string
           created_by?: string | null
-          emoji?: string
           id?: string
-          ordre?: number
           texte?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      content_quiz: {
+        Row: {
+          active: boolean
+          bonne_reponse_index: number
+          categorie: string
+          created_at: string
+          created_by: string | null
+          difficulte: string
+          explication: string | null
+          id: string
+          question: string
+          reponses: Json
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          bonne_reponse_index: number
+          categorie?: string
+          created_at?: string
+          created_by?: string | null
+          difficulte?: string
+          explication?: string | null
+          id?: string
+          question: string
+          reponses: Json
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          bonne_reponse_index?: number
+          categorie?: string
+          created_at?: string
+          created_by?: string | null
+          difficulte?: string
+          explication?: string | null
+          id?: string
+          question?: string
+          reponses?: Json
           updated_at?: string
         }
         Relationships: []
