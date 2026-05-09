@@ -26,6 +26,13 @@ const CAT_LABEL: Record<string, string> = {
   securite: "Sécurité",
   livraison: "Livraison",
   RH: "RH",
+  montage: "Montage",
+  menuiserie: "Menuiserie",
+  devis: "Devis",
+  logistique: "Logistique",
+  peinture: "Peinture",
+  tapisserie: "Tapisserie",
+  culture: "Culture",
 };
 
 const CAT_COLOR: Record<string, string> = {
@@ -34,6 +41,13 @@ const CAT_COLOR: Record<string, string> = {
   securite: "bg-red-500",
   livraison: "bg-amber-500",
   RH: "bg-emerald-500",
+  montage: "bg-cyan-500",
+  menuiserie: "bg-orange-500",
+  devis: "bg-indigo-500",
+  logistique: "bg-yellow-500",
+  peinture: "bg-pink-500",
+  tapisserie: "bg-fuchsia-500",
+  culture: "bg-teal-500",
 };
 
 export function AstucesMarqueeWidget() {
