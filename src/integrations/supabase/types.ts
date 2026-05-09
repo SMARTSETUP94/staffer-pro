@@ -1960,6 +1960,50 @@ export type Database = {
         }
         Relationships: []
       }
+      quiz_responses: {
+        Row: {
+          answer_index: number
+          answered_at: string
+          answered_day_paris: string
+          id: string
+          is_correct: boolean
+          points_earned: number
+          quiz_id: string
+          streak_at_answer: number
+          user_id: string
+        }
+        Insert: {
+          answer_index: number
+          answered_at?: string
+          answered_day_paris?: string
+          id?: string
+          is_correct: boolean
+          points_earned?: number
+          quiz_id: string
+          streak_at_answer?: number
+          user_id: string
+        }
+        Update: {
+          answer_index?: number
+          answered_at?: string
+          answered_day_paris?: string
+          id?: string
+          is_correct?: boolean
+          points_earned?: number
+          quiz_id?: string
+          streak_at_answer?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_responses_quiz_id_fkey"
+            columns: ["quiz_id"]
+            isOneToOne: false
+            referencedRelation: "content_quiz"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sous_traitants: {
         Row: {
           actif: boolean
@@ -2694,6 +2738,22 @@ export type Database = {
       }
     }
     Views: {
+      user_quiz_stats: {
+        Row: {
+          accuracy_pct: number | null
+          best_streak: number | null
+          current_streak: number | null
+          last_answered_at: string | null
+          rank_global: number | null
+          rank_weekly: number | null
+          total_answered: number | null
+          total_correct: number | null
+          total_points: number | null
+          user_id: string | null
+          week_points: number | null
+        }
+        Relationships: []
+      }
       v_affaire_consommation: {
         Row: {
           affaire_id: string | null
@@ -3175,6 +3235,7 @@ export type Database = {
         Args: { _affaire_id?: string; _fichier_hash: string }
         Returns: Json
       }
+      refresh_user_quiz_stats: { Args: never; Returns: undefined }
       set_vehicule_chauffeurs_autorises: {
         Args: { _employe_ids: string[]; _vehicule_id: string }
         Returns: undefined
@@ -3182,6 +3243,10 @@ export type Database = {
       sign_opportunite: {
         Args: { _affaire_id: string; _new_code: string }
         Returns: string
+      }
+      submit_quiz_answer: {
+        Args: { p_answer_index: number; p_quiz_id: string }
+        Returns: Json
       }
       upsert_feuille_route_ligne: {
         Args: { _affaire_id: string; _date: string; _patch: Json }
