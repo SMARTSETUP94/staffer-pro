@@ -47,5 +47,10 @@ export function registerAllWidgets(): void {
   registerWidget("mes_etapes_fab", MesEtapesFabWidget);
   registerWidget("heures_a_valider", HeuresAValiderWidget);
   registerWidget("sous_effectif_J7", SousEffectifJ7Widget);
+  registerWidget("anniversaires", AnniversairesWidget);
+  registerWidget("saint_du_jour", SaintDuJourWidget);
+  registerWidget("top_constructeur", TopConstructeurWidget);
+  registerWidget("chef_projet_mois", ChefProjetMoisWidget);
+  registerWidget("tip_du_jour", TipDuJourWidget);
   registered = true;
 }
