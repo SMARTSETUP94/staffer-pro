@@ -20,6 +20,11 @@ import { ChargeEquipeWidget } from "./ChargeEquipeWidget";
 import { MesEtapesFabWidget } from "./MesEtapesFabWidget";
 import { HeuresAValiderWidget } from "./HeuresAValiderWidget";
 import { SousEffectifJ7Widget } from "./SousEffectifJ7Widget";
+import { AnniversairesWidget } from "./AnniversairesWidget";
+import { SaintDuJourWidget } from "./SaintDuJourWidget";
+import { TopConstructeurWidget } from "./TopConstructeurWidget";
+import { ChefProjetMoisWidget } from "./ChefProjetMoisWidget";
+import { TipDuJourWidget } from "./TipDuJourWidget";
 
 let registered = false;
 
@@ -42,5 +47,10 @@ export function registerAllWidgets(): void {
   registerWidget("mes_etapes_fab", MesEtapesFabWidget);
   registerWidget("heures_a_valider", HeuresAValiderWidget);
   registerWidget("sous_effectif_J7", SousEffectifJ7Widget);
+  registerWidget("anniversaires", AnniversairesWidget);
+  registerWidget("saint_du_jour", SaintDuJourWidget);
+  registerWidget("top_constructeur", TopConstructeurWidget);
+  registerWidget("chef_projet_mois", ChefProjetMoisWidget);
+  registerWidget("tip_du_jour", TipDuJourWidget);
   registered = true;
 }

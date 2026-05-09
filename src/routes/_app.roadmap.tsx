@@ -2776,6 +2776,14 @@ const PLANNED: RoadmapPlanned[] = [
       "Enrichissement de l'algorithme déterministe v0.35 par Claude API via edge function proxy : skill-based reasoning sur historique de l'employé (déjà bossé avec l'équipe ? sur ce client ? sur ce type d'objet ?), tools structurés (lecture affaires + assignations passées), fallback automatique sur v0.35 si timeout/erreur, cache 1h sur même contexte, hard cap mensuel d'appels (alerte admin avant blocage). Tier CDI/CDD avant intérim conservé. PAS d'autres intégrations Claude (pas de support conv, pas de génération texte).",
   },
 
+  // ========== v0.40.x — Widgets dashboard humanisation (Phases 1-3 LIVRÉES) ==========
+  {
+    priority: "haute",
+    title: "v0.40.x — Dashboard cohésion équipe (5/6 widgets livrés)",
+    description:
+      "✅ Livré : Anniversaires du jour (confetti CSS, RGPD pas d'année), Saint du jour (liste FR hardcodée + match prénom employés), Top constructeur de la semaine (Σ heures validées atelier, reset lundi), Chef projet du mois (ratio livraisons à temps, reset 1er du mois), Astuce de la semaine (rotation hebdo 25 tips). Tous masquables via sheet « Personnaliser », auto-hide si 0 donnée, accessibles admin/chef/employé via whitelist mise à jour. Reste à livrer Phase 4 : Quiz scéno (90+ questions, table user_quiz_responses, score + streak) — sub-tour suivant car nécessite migration DB. Spec : mem://features/dashboard-widgets-sympa.",
+  },
+
   // ========== Backlog HEURES — REPORTING ==========
   {
     priority: "moyenne",
