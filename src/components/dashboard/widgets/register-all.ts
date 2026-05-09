@@ -20,6 +20,11 @@ import { ChargeEquipeWidget } from "./ChargeEquipeWidget";
 import { MesEtapesFabWidget } from "./MesEtapesFabWidget";
 import { HeuresAValiderWidget } from "./HeuresAValiderWidget";
 import { SousEffectifJ7Widget } from "./SousEffectifJ7Widget";
+import { AnniversairesWidget } from "./AnniversairesWidget";
+import { SaintDuJourWidget } from "./SaintDuJourWidget";
+import { TopConstructeurWidget } from "./TopConstructeurWidget";
+import { ChefProjetMoisWidget } from "./ChefProjetMoisWidget";
+import { TipDuJourWidget } from "./TipDuJourWidget";
 
 let registered = false;
 
