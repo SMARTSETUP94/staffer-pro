@@ -26,12 +26,11 @@ export function AnniversairesWidget() {
       const today = new Date();
       const { data } = await supabase
         .from("employes")
-        .select("id, prenom, date_naissance, profiles:profile_id(avatar_url)")
-        .eq("actif", true)
-        .not("date_naissance", "is", null);
+        .select("id, prenom, date_naissance, profiles:profile_id(avatar_url, date_naissance)")
+        .eq("actif", true);
       if (cancelled) return;
       const matches: Birthday[] = (data ?? [])
-        .filter((e: any) => isBirthdayToday(e.date_naissance, today))
+        .filter((e: any) => isBirthdayToday(e.date_naissance ?? e.profiles?.date_naissance, today))
         .map((e: any) => ({
           id: e.id,
           prenom: e.prenom,

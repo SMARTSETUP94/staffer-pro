@@ -8,6 +8,7 @@ import { useAuth } from "@/lib/auth-context";
 import { usePreview } from "@/lib/preview-context";
 import { PersonnaliserDashboardSheet } from "@/components/dashboard/PersonnaliserDashboardSheet";
 import { registerAllWidgets } from "@/components/dashboard/widgets/register-all";
+import { MesQuizStatsWidget } from "@/components/dashboard/widgets/MesQuizStatsWidget";
 import { getWidgetComponent, WIDGET_META } from "@/lib/dashboard/widget-registry";
 import { getAllowedWidgetsForRole, type WidgetId } from "@/lib/dashboard/types";
 
@@ -65,6 +66,8 @@ function DashboardPage() {
           ) : null
         }
       />
+
+      <MesQuizStatsWidget />
 
       {unreadCount > 0 && (
         <div className="flex items-center justify-between rounded-xl border border-primary/30 bg-primary/5 px-4 py-3">
