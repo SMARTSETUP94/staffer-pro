@@ -138,7 +138,23 @@ export function QuizDuJourWidget() {
   };
 
   if (!loaded) return null;
-  if (allQuiz.length === 0) return null;
+  if (allQuiz.length === 0) {
+    return (
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <Brain className="h-4 w-4 text-violet-500" />
+            Quiz du jour
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-xs text-muted-foreground">
+            Pas de quiz disponible — ajoute des questions via <code className="font-mono">/admin/contenu-widgets</code>.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>

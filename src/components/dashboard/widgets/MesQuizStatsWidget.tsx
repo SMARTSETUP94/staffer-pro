@@ -32,7 +32,13 @@ export function MesQuizStatsWidget() {
     return () => { cancelled = true; };
   }, [user?.id]);
 
-  if (!stats || stats.total_answered === 0) return null;
+  if (!stats || stats.total_answered === 0) {
+    return (
+      <div className="text-xs text-muted-foreground">
+        🎯 Quiz : réponds à ta première question pour démarrer ta série !
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
