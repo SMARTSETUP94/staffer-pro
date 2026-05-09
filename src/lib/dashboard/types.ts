@@ -32,6 +32,7 @@ export const ALL_WIDGET_IDS = [
   "top_constructeur",
   "chef_projet_mois",
   "tip_du_jour",
+  "quiz_du_jour",
 ] as const;
 
 export type WidgetId = (typeof ALL_WIDGET_IDS)[number];
@@ -65,6 +66,7 @@ export const ROLE_PRESETS: Record<AppRole, WidgetId[]> = {
     "top_constructeur",
     "chef_projet_mois",
     "tip_du_jour",
+    "quiz_du_jour",
   ],
   employe: [
     "mes_etapes_fab",
@@ -73,9 +75,9 @@ export const ROLE_PRESETS: Record<AppRole, WidgetId[]> = {
     "top_constructeur",
     "chef_projet_mois",
     "tip_du_jour",
+    "quiz_du_jour",
   ],
 };
-
 /**
  * Le rôle "chargé d'affaires" n'existe pas encore comme AppRole distinct.
  * On le détecte via la présence dans la table charges_affaires (hook séparé).
@@ -118,7 +120,7 @@ export function computePresetForRoles(roles: AppRole[]): WidgetId[] {
  */
 export function getAllowedWidgetsForRole(role: AppRole): Set<WidgetId> {
   if (role === "admin") return new Set(ALL_WIDGET_IDS);
-  const fun: WidgetId[] = ["anniversaires", "saint_du_jour", "top_constructeur", "chef_projet_mois", "tip_du_jour"];
+  const fun: WidgetId[] = ["anniversaires", "saint_du_jour", "top_constructeur", "chef_projet_mois", "tip_du_jour", "quiz_du_jour"];
   if (role === "chef_chantier") {
     return new Set<WidgetId>([
       "meteo_chantiers", "montages_j7", "tension_budget", "absences_semaine",

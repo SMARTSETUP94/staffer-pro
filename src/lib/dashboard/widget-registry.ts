@@ -174,6 +174,13 @@ export const WIDGET_META: Record<WidgetId, WidgetMeta> = {
     category: "fun",
     width: 1,
   },
+  quiz_du_jour: {
+    id: "quiz_du_jour",
+    title: "Quiz du jour",
+    description: "Question scéno/menuiserie/sécurité, rotation quotidienne",
+    category: "fun",
+    width: 1,
+  },
 };
 
 export const CATEGORY_LABELS: Record<WidgetCategory, string> = {
