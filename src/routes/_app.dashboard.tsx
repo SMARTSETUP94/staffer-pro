@@ -9,6 +9,7 @@ import { usePreview } from "@/lib/preview-context";
 import { PersonnaliserDashboardSheet } from "@/components/dashboard/PersonnaliserDashboardSheet";
 import { registerAllWidgets } from "@/components/dashboard/widgets/register-all";
 import { MesQuizStatsWidget } from "@/components/dashboard/widgets/MesQuizStatsWidget";
+import { AstucesMarqueeWidget } from "@/components/dashboard/widgets/AstucesMarqueeWidget";
 import { getWidgetComponent, WIDGET_META } from "@/lib/dashboard/widget-registry";
 import { getAllowedWidgetsForRole, type WidgetId } from "@/lib/dashboard/types";
 
@@ -42,11 +43,13 @@ function DashboardPage() {
   //  - changement de rôle preview en cours de session
   const allowed = getAllowedWidgetsForRole(effectiveRole);
   const visibleWidgets = layout.visible.filter(
-    (id): id is WidgetId => !!WIDGET_META[id] && allowed.has(id),
+    (id): id is WidgetId => !!WIDGET_META[id] && allowed.has(id) && id !== "astuces_marquee",
   );
+  const showMarquee = layout.visible.includes("astuces_marquee") && allowed.has("astuces_marquee");
 
   return (
     <div className="space-y-6 p-6">
+      {showMarquee && <AstucesMarqueeWidget />}
       <PageHeader
         number="00"
         eyebrow="Pilotage / Tableau de bord"

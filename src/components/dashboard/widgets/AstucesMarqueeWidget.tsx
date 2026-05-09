@@ -68,7 +68,15 @@ export function AstucesMarqueeWidget() {
     return () => { cancelled = true; };
   }, []);
 
-  if (!astuces || astuces.length === 0) return null;
+  if (astuces === null) return null;
+  if (astuces.length === 0) {
+    return (
+      <div className="flex items-center gap-2 rounded-lg border border-dashed bg-muted/30 px-4 py-3 text-xs text-muted-foreground">
+        <Lightbulb className="h-4 w-4 text-amber-500" />
+        Aucune astuce active — ajoute du contenu via <code className="font-mono">/admin/contenu-widgets</code>.
+      </div>
+    );
+  }
 
   const speed = isMobile ? 40 : 70;
 

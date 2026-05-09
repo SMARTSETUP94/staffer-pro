@@ -41,7 +41,22 @@ export function AnniversairesWidget() {
     return () => { cancelled = true; };
   }, []);
 
-  if (list === null || list.length === 0) return null;
+  if (list === null) return null;
+  if (list.length === 0) {
+    return (
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <Cake className="h-4 w-4 text-pink-500" />
+            Anniversaires du jour
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-xs text-muted-foreground">Aucun anniversaire aujourd'hui 🎂</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="overflow-hidden">

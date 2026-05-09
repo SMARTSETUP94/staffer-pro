@@ -63,8 +63,7 @@ export function QuizLeaderboardWidget() {
     .sort((a, b) => (tab === "week" ? b.week_points - a.week_points : b.total_points - a.total_points))
     .slice(0, 5);
 
-  // Auto-hide si <3 users actifs sur la période
-  if (sorted.length < 3) return null;
+  const showEmpty = sorted.length === 0;
 
   return (
     <Card>
@@ -93,6 +92,11 @@ export function QuizLeaderboardWidget() {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-1">
+        {showEmpty && (
+          <p className="px-2 py-3 text-xs text-muted-foreground">
+            Pas encore de réponses {tab === "week" ? "cette semaine" : ""} — sois le premier !
+          </p>
+        )}
         {sorted.map((r, i) => {
           const initials = (r.full_name ?? "?").split(" ").map((s) => s[0]).slice(0, 2).join("").toUpperCase();
           const points = tab === "week" ? r.week_points : r.total_points;
