@@ -138,6 +138,42 @@ export const WIDGET_META: Record<WidgetId, WidgetMeta> = {
     category: "perso",
     width: 1,
   },
+  // Humanisation équipe (5) — v0.40.x
+  anniversaires: {
+    id: "anniversaires",
+    title: "Anniversaires du jour",
+    description: "Bon anniversaire aux employés du jour 🎂",
+    category: "fun",
+    width: 1,
+  },
+  saint_du_jour: {
+    id: "saint_du_jour",
+    title: "Bonne fête !",
+    description: "Match prénom employé ↔ saint du jour",
+    category: "fun",
+    width: 1,
+  },
+  top_constructeur: {
+    id: "top_constructeur",
+    title: "Top constructeur de la semaine",
+    description: "Top heures validées atelier (reset chaque lundi)",
+    category: "fun",
+    width: 1,
+  },
+  chef_projet_mois: {
+    id: "chef_projet_mois",
+    title: "Chef projet du mois",
+    description: "Meilleur ratio livraisons à temps (reset 1er du mois)",
+    category: "fun",
+    width: 1,
+  },
+  tip_du_jour: {
+    id: "tip_du_jour",
+    title: "Astuce de la semaine",
+    description: "Astuce produit, rotation hebdomadaire",
+    category: "fun",
+    width: 1,
+  },
 };
 
 export const CATEGORY_LABELS: Record<WidgetCategory, string> = {
@@ -145,6 +181,7 @@ export const CATEGORY_LABELS: Record<WidgetCategory, string> = {
   ops: "Opérationnel",
   fab: "Fabrication",
   perso: "Personnel",
+  fun: "Cohésion équipe",
 };
 
 export const CATEGORY_ORDER: WidgetCategory[] = ["commerce", "ops", "fab", "perso"];
