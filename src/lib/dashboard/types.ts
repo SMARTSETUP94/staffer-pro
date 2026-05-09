@@ -36,7 +36,7 @@ export const ALL_WIDGET_IDS = [
 
 export type WidgetId = (typeof ALL_WIDGET_IDS)[number];
 
-export type WidgetCategory = "commerce" | "ops" | "fab" | "perso";
+export type WidgetCategory = "commerce" | "ops" | "fab" | "perso" | "fun";
 
 export interface DashboardLayout {
   visible: WidgetId[];
