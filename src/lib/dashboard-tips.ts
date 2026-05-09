@@ -1,0 +1,30 @@
+/**
+ * v0.40.x — Tips affichés dans le widget "Astuce du jour" (rotation hebdo).
+ */
+export const DASHBOARD_TIPS: { text: string; emoji: string }[] = [
+  { text: "Bouton « + Autre chantier » sur /mes-heures pour saisir des heures hors planning.", emoji: "⏱️" },
+  { text: "Cmd+K ouvre la recherche universelle (raccourci macOS).", emoji: "⌨️" },
+  { text: "Sur le Plan staffing, chevron droit décale une étape de +1 demi-jour, gauche -1.", emoji: "↔️" },
+  { text: "L’onglet Statistiques sur /flotte donne le coût estimé des trajets sous-traités.", emoji: "🚚" },
+  { text: "Sur Suivi marge affaire, chevron pour voir le détail par devis.", emoji: "💶" },
+  { text: "Cmd+Shift+R pour un hard refresh si la page bug visuellement.", emoji: "♻️" },
+  { text: "Auto-staff complet remplit en 1 clic les créneaux vides du Gantt.", emoji: "✨" },
+  { text: "Clic sur une cellule pour modifier nb pers + dates en groupe (popup resize).", emoji: "🖱️" },
+  { text: "Bouton « Re-trier par tier » sur Équipe Affaire pour ordonner P > S > D.", emoji: "🏆" },
+  { text: "Vue 1 = édition charge métier isolée, Vue 2 = cascade objet/étape complète.", emoji: "🧭" },
+  { text: "Le RoleGuard te redirige si tu n’as pas le droit ; Cmd+K pour chercher la bonne page.", emoji: "🔐" },
+  { text: "Heures de nuit calculées automatiquement (passage minuit détecté).", emoji: "🌙" },
+  { text: "Suppression d’un devis : cascade DELETE postes/objets sans toucher aux heures validées.", emoji: "🧹" },
+  { text: "Notification « prêt à livrer » envoyée chef projet ET chargé d’affaires.", emoji: "📬" },
+  { text: "Saint du jour : utilisé pour humaniser le dashboard, fériés inclus.", emoji: "🎉" },
+  { text: "Pré-remplissage trajet sous-traité depuis le bandeau « Prêt à livrer » (atelier→chantier).", emoji: "🛣️" },
+  { text: "Toggle « Cacher 100% staffées » sur la Vue 3 pour ne voir que les pers libres.", emoji: "👀" },
+  { text: "Refetch auto au refocus du tab : tes heures sont à jour si le chef saisit pour toi.", emoji: "🔄" },
+  { text: "Validation hors-planning : 4ᵉ onglet sur /validation-heures.", emoji: "✅" },
+  { text: "CACES R489/R486/R484 tracés dans /parametres/autorisations-vehicules — alerte 30j avant expiration.", emoji: "🪪" },
+  { text: "Top constructeur reset chaque lundi, Top chef projet reset chaque 1er du mois.", emoji: "📆" },
+  { text: "Toggle préfixe D-{numéro}- visible/masqué dans la barre du Plan staffing.", emoji: "🏷️" },
+  { text: "Cellule barre Vue 1 : popup edit nb pers + dates groupé.", emoji: "🪟" },
+  { text: "Tu peux re-staffer nominatif depuis la Vue 3 sans rejouer l’algo.", emoji: "🎯" },
+  { text: "Devis multi-section : bouton « Fusionner cross-section » pour merger plusieurs objets.", emoji: "🧩" },
+];
