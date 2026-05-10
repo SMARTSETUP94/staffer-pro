@@ -24,6 +24,8 @@ export function ViewAsSwitcher({ collapsed }: Props) {
     setPreviewRole(role === "admin" ? null : role);
     if (role === "employe_mobile") {
       navigate({ to: "/mobile/aujourdhui" });
+    } else if (role === "chef_mobile") {
+      navigate({ to: "/mobile/chef" });
     } else {
       // Repasser sur le planning desktop si on revenait du mobile
       navigate({ to: "/planning" });
@@ -51,6 +53,7 @@ export function ViewAsSwitcher({ collapsed }: Props) {
         <SelectContent>
           <SelectItem value="admin">Admin</SelectItem>
           <SelectItem value="chef_chantier">Chef d'équipe</SelectItem>
+          <SelectItem value="chef_mobile">Chef mobile</SelectItem>
           <SelectItem value="employe_desktop">Employé desktop</SelectItem>
           <SelectItem value="employe_mobile">Employé mobile</SelectItem>
         </SelectContent>
