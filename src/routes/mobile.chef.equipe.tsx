@@ -2,18 +2,20 @@
  * v0.43.0 Sprint 1 — Onglet "Mon équipe" du Hub chef mobile.
  * 3 sous-actions : Staffer rapide, Saisir heures équipe, lien Validation.
  */
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { CheckCircle2, ClipboardList, UsersRound, ChevronRight, Plus } from "lucide-react";
+import { CheckCircle2, ClipboardList, UsersRound, Plus } from "lucide-react";
 import { RoleGuard } from "@/components/auth/RoleGuard";
 import { ChefMobileHeader } from "@/components/mobile-chef/ChefMobileHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { StafferMobileForm } from "@/components/staffer/StafferMobileForm";
 import { SaisirPourEmployeDialog } from "@/components/heures/SaisirPourEmployeDialog";
 import { BulkSaisieDialog } from "@/components/heures/BulkSaisieDialog";
 import { useChefAValider } from "@/hooks/use-chef-a-valider";
+import { ValiderHeuresList } from "@/components/mobile-chef/ValiderHeuresList";
 
 export const Route = createFileRoute("/mobile/chef/equipe")({
   head: () => ({ meta: [{ title: "Hub chef — Mon équipe" }] }),
@@ -78,21 +80,24 @@ function ChefEquipe() {
           </TabsContent>
 
           <TabsContent value="valider" className="mt-3">
-            <Link to="/mobile/chef/a-valider" className="block">
-              <Card className="hover:bg-accent transition-colors">
-                <CardContent className="flex items-center justify-between p-4">
-                  <div>
-                    <div className="text-sm font-semibold flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4" /> File de validation
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {totalCount > 0 ? `${totalCount} item${totalCount > 1 ? "s" : ""} en attente` : "Tout est à jour"}
-                    </p>
-                  </div>
-                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
+            {totalCount === 0 ? (
+              <Card>
+                <CardContent className="p-6 text-center text-sm text-muted-foreground">
+                  <CheckCircle2 className="mx-auto mb-2 h-6 w-6 text-emerald-500" />
+                  Tout est à jour.
                 </CardContent>
               </Card>
-            </Link>
+            ) : (
+              <>
+                <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Heures à valider
+                  <Badge variant="destructive" className="h-4 px-1 text-[10px]">
+                    {totalCount}
+                  </Badge>
+                </div>
+                <ValiderHeuresList />
+              </>
+            )}
           </TabsContent>
         </Tabs>
       </div>
