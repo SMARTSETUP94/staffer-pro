@@ -19,7 +19,6 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
 import { normalizeForMatch as normalize } from "@/lib/string-normalize";
 import { generateContratV1 } from "@/lib/contrats-signature";
-import { triggerEmail } from "@/lib/contrats-signature";
 
 export const Route = createFileRoute("/_app/staffer-mobile")({
   component: () => (
@@ -183,19 +182,18 @@ function StafferMobile() {
       if (error) throw new Error(error.message);
       const result = data as { assignations_count: number; contrat_id: string | null; requires_contract: boolean };
 
-      // Si contrat créé, génère le PDF v1 + email
+      // Si contrat créé, génère le PDF v1 disponible dans l'app employé
       if (result.contrat_id) {
         try {
           await generateContratV1(result.contrat_id);
-          await triggerEmail("new_contract", result.contrat_id);
         } catch (e) {
-          console.warn("Génération PDF/email échec (mission OK):", e);
+          console.warn("Génération PDF échec (mission OK):", e);
         }
       }
 
       toast.success(
         result.contrat_id
-          ? `${result.assignations_count} demi-journée(s) staffée(s) + contrat envoyé pour signature`
+          ? `${result.assignations_count} demi-journée(s) staffée(s) + contrat disponible à signer`
           : `${result.assignations_count} demi-journée(s) staffée(s)`,
       );
       reset();
