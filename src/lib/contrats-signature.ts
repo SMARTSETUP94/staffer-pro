@@ -125,8 +125,8 @@ export async function signContratAsEmploye(contratId: string, signatureDataUrl: 
     p_signature_image_url: sigUrl,
     p_pdf_v2_url: pdfV2Url,
     p_pdf_hash_sha256: hash,
-    p_client_ip: null,
-    p_user_agent: ua,
+    p_client_ip: undefined,
+    p_user_agent: ua ?? undefined,
   });
   if (error) throw new Error(error.message);
 
