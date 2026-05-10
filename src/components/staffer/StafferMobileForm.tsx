@@ -159,6 +159,7 @@ export function StafferMobileForm() {
     setEmployeId(null);
     setChantierId(null);
     setMetierId(null);
+    setPoste("");
     setSearchEmploye("");
     setSearchChantier("");
     setDateDebut("");
@@ -177,6 +178,7 @@ export function StafferMobileForm() {
         _date_debut: dateDebut,
         _date_fin: dateFin,
         _slot: slot,
+        _poste: poste.trim() || null,
       });
       if (error) throw new Error(error.message);
       const result = data as { assignations_count: number; contrat_id: string | null; requires_contract: boolean };
