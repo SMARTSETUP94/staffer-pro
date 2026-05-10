@@ -61,6 +61,7 @@ function RhContrats() {
   const [tab, setTab] = useState<"a_creer" | "signes" | "archives" | "tous">("a_creer");
   const [search, setSearch] = useState("");
   const [signDialog, setSignDialog] = useState<{ id: string; pdfUrl: string | null } | null>(null);
+  const [testTplOpen, setTestTplOpen] = useState(false);
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["rh-contrats"],
@@ -300,9 +301,21 @@ function RhContrats() {
         </TabsContent>
 
         <TabsContent value="template" className="mt-4">
+          <div className="flex justify-end mb-3">
+            <Button variant="outline" size="sm" onClick={() => setTestTplOpen(true)}>
+              <FlaskConical className="h-4 w-4 mr-2" />
+              Tester le template (5 fixtures)
+            </Button>
+          </div>
           <ContratTemplateEditor onChanged={refetch} />
         </TabsContent>
       </Tabs>
+
+      <TemplateTestDialog
+        open={testTplOpen}
+        onOpenChange={setTestTplOpen}
+        templateHtml={null}
+      />
 
       {signDialog && (
         <SignContractDialog
