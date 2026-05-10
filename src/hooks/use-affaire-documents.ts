@@ -251,6 +251,7 @@ export function useAffaireDocuments(
     error,
     reload,
     getSignedUrl,
+    prefetchSignedUrls,
     upload,
     updateDocument,
     deleteDocument,
