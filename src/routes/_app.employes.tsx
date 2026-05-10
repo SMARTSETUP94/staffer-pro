@@ -948,6 +948,7 @@ function EmployesPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <EmployesImportPostesDialog open={importPostesOpen} onOpenChange={setImportPostesOpen} onApplied={fetchAll} />
     </div>
   );
 }
