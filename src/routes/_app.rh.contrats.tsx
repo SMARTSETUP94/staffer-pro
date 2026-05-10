@@ -46,16 +46,7 @@ interface ContratRow {
   contrats_signatures?: { role_signature: "employe" | "employeur"; signed_at: string }[] | null;
 }
 
-const POSTES_COURANTS = [
-  "Technicien de plateau",
-  "Machiniste",
-  "Constructeur",
-  "Peintre décorateur",
-  "Régisseur",
-  "Éclairagiste",
-  "Sonorisateur",
-  "Opérateur caméra",
-] as const;
+// Postes chargés depuis la table `postes_catalogue` (gérés en /parametres/postes).
 
 async function updatePoste(id: string, poste: string) {
   const { error } = await supabase
