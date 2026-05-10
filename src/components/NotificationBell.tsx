@@ -26,6 +26,7 @@ const typeIcon: Record<Notification["type"], string> = {
   fabrication_assignation: "🔨",
   fabrication_pret_livraison: "🚚",
   staffing_publie: "📋",
+  system: "🔔",
 };
 
 function formatRelative(iso: string) {

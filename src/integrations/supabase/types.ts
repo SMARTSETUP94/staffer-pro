@@ -3682,6 +3682,7 @@ export type Database = {
         | "fabrication_assignation"
         | "affaire_signee"
         | "staffing_publie"
+        | "system"
       objet_fab_statut_chef: "a_faire" | "en_cours" | "bloque" | "fini"
       opportunite_statut: "a_faire" | "envoye" | "gagne" | "perdu" | "termine"
       opportunite_taille:
@@ -3923,6 +3924,7 @@ export const Constants = {
         "fabrication_assignation",
         "affaire_signee",
         "staffing_publie",
+        "system",
       ],
       objet_fab_statut_chef: ["a_faire", "en_cours", "bloque", "fini"],
       opportunite_statut: ["a_faire", "envoye", "gagne", "perdu", "termine"],
