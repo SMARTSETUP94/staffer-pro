@@ -55,7 +55,15 @@ const POSTES_COURANTS = [
   "Éclairagiste",
   "Sonorisateur",
   "Opérateur caméra",
-];
+] as const;
+
+async function updatePoste(id: string, poste: string) {
+  const { error } = await supabase
+    .from("contrats_intermittents")
+    .update({ poste: poste.trim() || "Technicien de plateau" })
+    .eq("id", id);
+  if (error) throw error;
+}
 
 const STATUT_LABELS: Record<ContratRow["statut"], string> = {
   a_signer_employe: "À signer (employé)",
