@@ -284,7 +284,7 @@ function RhContrats() {
                     );
                   })}
                   {filteredRows.length === 0 && (
-                    <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                    <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">
                       <FileText className="mx-auto h-8 w-8 opacity-30 mb-2" />
                       Aucun contrat
                     </TableCell></TableRow>
