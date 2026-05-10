@@ -1,4 +1,4 @@
-import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { ChefMobileBottomNav } from "@/components/mobile-chef/ChefMobileBottomNav";
 
 export const Route = createFileRoute("/mobile/chef")({
