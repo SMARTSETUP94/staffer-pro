@@ -105,6 +105,7 @@ function AffaireDetailLayout() {
       ? [{ to: `/affaires/${affaire.id}/fabrication`, label: "Fabrication", match: path.endsWith("/fabrication") }]
       : []),
     { to: `/affaires/${affaire.id}/staffing`, label: "Staffing", match: path.endsWith("/staffing") },
+    { to: `/affaires/${affaire.id}/documents`, label: "Documents", match: path.endsWith("/documents") },
     { to: `/affaires/${affaire.id}/journal`, label: "Journal", match: path.endsWith("/journal") },
   ];
 
