@@ -57,7 +57,7 @@ export function PreviewBanner() {
   if (!isPreviewing || !previewRole) return null;
 
   const handleExit = () => {
-    const wasMobile = previewRole === "employe_mobile";
+    const wasMobile = previewRole === "employe_mobile" || previewRole === "chef_mobile";
     setPreviewRole(null);
     if (wasMobile) {
       navigate({ to: "/planning" });
