@@ -1,156 +1,117 @@
-# v0.44.1 — Refonte UX Hub Chef Mobile
+# Sprint A — v0.45 RLS Hardening Chef Métier scoped (~8h)
 
-Plan d'archi à valider AVANT migration DB et code.
+## Objectif
 
----
+Introduire un nouveau niveau d'accès **chef_metier_scoped** (par-affaire stricte) à côté du **chef_chantier** actuel (global). Aucune migration forcée des comptes existants : tous les chefs actuels gardent leur accès global. Les nouveaux chefs métier (peinture, bois, manut, etc.) sont ajoutés avec le nouveau rôle. Audit + adaptation des pages desktop qui supposent un accès global, pgTAP pour vérouiller l'isolation.
 
-## 1. Fix doublon validation heures
+## 1. Modèle de rôles (DB)
 
-**État actuel** :
-- `/mobile/chef/equipe` (sous-tabs : Staffer + Saisir)
-- `/mobile/chef/a-valider` (sous-tabs : Heures + Objets)
-- → "Valider heures" est dupliqué entre les deux onglets.
+### 1.1 Enum `app_role` étendu
 
-**Cible** :
-- `/mobile/chef/equipe` → 3 sous-tabs : **Staffer / Saisir / Valider** (heures).
-- `/mobile/chef/atelier` (renommage) → **plus de sous-tab Heures**.
-
-**Implémentation** :
-- Déplacer le composant existant `ValiderHeuresEquipe` (ou équivalent) de `mobile.chef.a-valider.heures.tsx` vers un nouveau sous-tab dans `mobile.chef.equipe.tsx`.
-- Supprimer la route `/mobile/chef/a-valider/heures`.
-- Conserver la logique métier intacte (audit `heures_validations`, RLS `current_user_is_chef_on_affaire`).
-
----
-
-## 2. Rename "À valider" → "Atelier"
-
-**Routes** :
-- `mobile.chef.a-valider.tsx` → `mobile.chef.atelier.tsx`
-- `mobile.chef.a-valider.objets.tsx` → `mobile.chef.atelier.objets.tsx`
-- (nouveaux) `mobile.chef.atelier.chantiers.tsx`, `mobile.chef.atelier.photos.tsx`
-- Ajouter un index redirect `mobile.chef.atelier.index.tsx` → `objets`.
-
-**Bottom nav** (`ChefMobileBottomNav.tsx`) :
-- Label : "Atelier"
-- Icône : `Hammer` (lucide-react)
-- Badge compteur : reste sur objets en attente de validation (hook `useChefAValider` réutilisé, mais ne compte plus les heures puisqu'elles ont migré).
-
-**Hook `useChefAValider`** : adapter pour ne plus retourner `heuresCount` dans `totalCount` du badge Atelier. Le compteur "heures à valider" peut être affiché dans le sous-tab Valider de l'onglet Équipe (badge sur sous-tab interne).
-
----
-
-## 3. 3 sous-tabs Atelier
-
-### 3a. Objets fab (existant, inchangé)
-- Validation objet via `fabrication_objets.statut_chef` + `statut_chef_updated_by` + `statut_chef_updated_at`.
-- Garder le composant tel quel, juste réimporté dans la nouvelle route.
-
-### 3b. Vue chantier kanban (NOUVEAU)
-**Layout** :
-- Filtres en haut : multi-select chantier (mes affaires actives où je suis chef) + multi-select métier.
-- Kanban horizontal scrollable, 4 colonnes : **Bois → Peinture → Manut → Validé**.
-- Chaque carte = un objet (`fabrication_objets`) : nom + référence + thumbnail (1ère photo si dispo) + badge chantier.
-- Tap carte → bottom-sheet détail objet avec actions :
-  - Avancer étape (mutation `statut_chef` ou progression `fabrication_etapes`).
-  - Valider (mutation `statut_chef='valide'`).
-  - Voir photos (lien vers galerie objet 3c).
-
-**Source de données** :
-- Hook `useChantierKanbanObjets({ affaireIds, metierIds })` : joint `fabrication_objets` + `fabrication_etapes` (dernière étape) + `affaires` + 1ère `affaire_documents` (thumbnail) where `objet_id = objet.id`.
-- Mapping étape → colonne kanban : on déduit la colonne via `fabrication_etapes.type_etape` la plus avancée non terminée. Si `statut_chef='valide'` → colonne "Validé".
-
-### 3c. Photos par objet (NOUVEAU)
-**Workflow** :
-1. Liste des objets de mes chantiers actifs (groupés par affaire, accordion).
-2. Tap objet → galerie photos filtrée `affaire_documents WHERE objet_id = X`.
-3. FAB "Prendre photo" → input file `capture="environment"` → compression client → upload bucket `affaires-photos` (existant) avec `affaire_id` parent + `objet_id` renseigné.
-4. Lightbox + caption + date (réutilisation `PhotoLightbox` Sprint 2).
-
----
-
-## 4. DB Migration : extension `affaire_documents`
-
-**Décision à valider** :
-```sql
-ALTER TABLE public.affaire_documents
-  ADD COLUMN objet_id uuid REFERENCES public.fabrication_objets(id) ON DELETE SET NULL;
-
-CREATE INDEX idx_affaire_documents_objet_id
-  ON public.affaire_documents(objet_id)
-  WHERE deleted_at IS NULL AND objet_id IS NOT NULL;
+```text
+admin                 (full)
+chef_chantier         (global, existant — comportement inchangé)
+chef_metier_scoped    (NOUVEAU — accès UNIQUEMENT aux affaires où il est référencé)
+employe               (ses heures uniquement)
 ```
 
-**Justification du choix (vs nouvelle table `objet_photos`)** :
-- ✅ Une photo a UNE et une seule affaire ; rattacher à un objet est optionnel → 1:N naturel via FK nullable.
-- ✅ RLS existantes inchangées (toujours scoping par `affaire_id`).
-- ✅ Galerie globale affaire (Sprint 2) continue de fonctionner sans modification (pas de filtre `objet_id`).
-- ✅ Galerie objet = même table + filtre `WHERE objet_id = X`.
-- ✅ `ON DELETE SET NULL` : si l'objet est supprimé, la photo reste rattachée au chantier (pas perdue).
-- ❌ Alternative table dédiée `objet_photos` : duplication RLS, double bucket potentiel, complique vue globale chantier.
+`chef_metier_scoped` est référencé sur une affaire de l'une des 3 façons existantes :
+- `affaires.chef_chantier_id` (lead chantier)
+- `affaires.responsable_montage_id` / `affaires.responsable_demontage_id`
+- `fabrication_objets.respo_fab_id` (chef métier sur un objet de l'affaire)
 
-**Pas de changement RLS** — les policies actuelles (`is_admin OR user_has_affaire_access OR user_is_mentioned_on_affaire` pour SELECT, `current_user_is_chef_on_affaire` pour INSERT) couvrent déjà le cas. `objet_id` est métadonnée pure.
+### 1.2 Helpers RLS modifiés (SECURITY DEFINER)
 
-**Storage path inchangé** : `{affaire_id}/{document_id}.{ext}` — l'objet_id n'apparaît pas dans le path (sinon déplacement = re-upload). Le filtre se fait sur la colonne BDD.
+Tous existants — pas de REVOKE EXECUTE (cf. core memory) :
 
----
+- `is_chef_or_admin()` → reste `admin ∪ chef_chantier ∪ chef_metier_scoped`. **Sémantique préservée** : aucune politique RLS existante ne casse.
+- `is_chef_global()` → **NOUVEAU** : `admin ∪ chef_chantier` (PAS `chef_metier_scoped`). Utilisé là où l'on veut vraiment l'accès global.
+- `current_user_is_chef_on_affaire(_affaire_id)` → étendu : retourne TRUE si admin, chef_chantier global, ou si chef_metier_scoped référencé sur l'affaire (chef_chantier_id, respo_montage/demontage, respo_fab d'un objet de l'affaire, ou ligne dans `mes_affaires_chef`).
+- `user_has_affaire_access(_affaire_id)` → inchangé.
 
-## 5. Front
+### 1.3 RLS durcie sur 4 tables sensibles
 
-**Nouveau hook** `src/hooks/use-objet-photos.ts` :
-- `useObjetPhotos(objetId)` → wrapper `useAffaireDocuments` filtré client-side OU server fn dédiée `listObjetDocuments({ objetId })`.
-- `uploadObjetPhoto(objetId, affaireId, file)` → réutilise `confirmAffaireDocumentUpload` en passant `objet_id` dans le payload.
+Politiques `chef_metier_scoped` = `current_user_is_chef_on_affaire(affaire_id)` :
 
-**Server functions** (`src/lib/affaire-documents.functions.ts`) :
-- Étendre `createAffaireDocumentUploadUrl` et `confirmAffaireDocumentUpload` pour accepter `objetId?: string` optionnel.
-- Ajouter `listObjetDocuments({ objetId })` avec check : `user_has_affaire_access` sur l'affaire parent de l'objet.
+| Table | Avant (chef_or_admin) | Après chef_metier_scoped |
+|---|---|---|
+| `heures_saisies` | global | scoped par-affaire (SELECT + INSERT + UPDATE + DELETE) |
+| `fabrication_objets` | global modify | SELECT all auth (inchangé) ; MODIFY scoped par-affaire |
+| `contrats_intermittents` | admin-only modify (inchangé) | SELECT élargi : chef_metier_scoped sur affaires de ses staffings |
+| `affaire_documents` | déjà scopé via `current_user_is_chef_on_affaire` | aucun changement (déjà OK) |
 
-**Composants** (réutilisation max Sprint 2) :
-- `AffaireDocumentsGallery` → ajouter prop `objetId?: string` pour filtrer.
-- `AffaireDocumentUploader` → ajouter prop `objetId?: string` propagée à l'upload.
-- Nouveau : `ObjetSelector.tsx` (liste objets de mes chantiers actifs avec accordion par affaire).
-- Nouveau : `ChantierKanban.tsx` (4 colonnes scrollables).
-- Nouveau : `KanbanFilters.tsx` (multi-select chantier + métier).
-- Nouveau : `ObjetDetailSheet.tsx` (bottom-sheet actions rapides).
+NB : `affaires` & `assignations` gardent leur SELECT large via `is_chef_or_admin()` car le filtrage est délégué aux requêtes app (`mes_affaires_chef`). Durcir `affaires` casserait trop de queries.
 
----
+## 2. Audit pages desktop concernées
 
-## 6. Tests E2E
+Inventaire des pages qui supposent un accès chef global :
 
-**Nouveau fichier** `e2e/mobile-chef/sprint-v0441-atelier.chef.spec.ts` :
-1. Login chef → `/mobile/chef/atelier` → 3 sous-tabs visibles (Objets / Chantiers / Photos).
-2. Sous-tab Chantiers → kanban 4 colonnes, filtre chantier OK.
-3. Sous-tab Photos → sélection objet "Chaise Beech 1" → FAB caméra → upload → photo apparaît galerie objet.
-4. Vérification : la même photo apparaît aussi dans `/mobile/chef/affaires/<id>` (galerie globale Sprint 2).
-5. Login chef → `/mobile/chef/equipe` → 3 sous-tabs (Staffer / Saisir / Valider).
-6. Sous-tab Valider → liste heures à valider (même comportement qu'avant le déplacement).
-7. Vérifier que `/mobile/chef/a-valider` redirige ou 404 propre (pour pas casser bookmarks → on ajoute redirect `/mobile/chef/a-valider` → `/mobile/chef/atelier`).
+| Page | Constat | Adaptation |
+|---|---|---|
+| `/validation-heures` | Liste toutes les heures à valider | Filtrer par `mes_affaires_chef` quand `chef_metier_scoped` |
+| `/audit-heures` | Audit transversal | Bandeau "Vue scopée à vos affaires" + filtre auto |
+| `/planning` | Vue planning global | OK : RLS sur assignations laisse passer; le chef voit ce qui le concerne |
+| `/affaires` | Liste affaires | Filtrage app via `useMesAffairesChef` si scoped |
+| `/equipe` | Roster équipe | `is_chef_global()` pour autoriser ; sinon redirect |
+| `/parametres/*` | Réservé admin (inchangé) | — |
 
----
+Pattern UI :
+- Nouveau hook `useChefScope()` → retourne `{ isGlobal: boolean, isScoped: boolean }` à partir de `has_role()`.
+- Bandeau réutilisable `<ScopedAccessBanner />` sur les pages où le scope a un effet visible.
 
-## Ordre d'exécution
+## 3. Migration DB (idempotente)
 
-1. **DB migration** : ajout colonne `objet_id` + index (à approuver via `supabase--migration`).
-2. **Server fns** : étendre upload/list pour `objetId`, ajouter `listObjetDocuments`.
-3. **Hook** `use-objet-photos.ts`.
-4. **Routes Atelier** : créer `mobile.chef.atelier.{tsx,objets,chantiers,photos}.tsx`, redirect ancienne route.
-5. **Composants kanban** + filtres + bottom-sheet.
-6. **Routes Équipe** : ajouter sous-tab Valider, déplacer composant heures.
-7. **Bottom nav** : Hammer + label Atelier.
-8. **E2E** spec v0.44.1.
-9. **Memory** + checklist v0.44.1.
+```text
+1) ALTER TYPE app_role ADD VALUE 'chef_metier_scoped' (si absent)
+2) CREATE OR REPLACE FUNCTION is_chef_global() — admin ∪ chef_chantier
+3) CREATE OR REPLACE FUNCTION current_user_is_chef_on_affaire(_id uuid)
+     — ajout branche chef_metier_scoped via mes_affaires_chef
+4) Politiques RLS sur heures_saisies / fabrication_objets / contrats_intermittents :
+     — DROP + RECREATE chaque policy SELECT/INSERT/UPDATE/DELETE
+     — chef_chantier global continue de passer, chef_metier_scoped passe via la nouvelle branche
+5) GRANT EXECUTE on ces functions to authenticated (jamais REVOKE — core rule)
+```
 
----
+Aucun chef actuel n'est touché. Bascule d'un compte = simple INSERT dans `user_roles (user_id, role='chef_metier_scoped')` + delete éventuel de la ligne chef_chantier — opération manuelle admin via SQL ou page `/admin/utilisateurs` existante.
 
-## Points d'attention
+## 4. Tests pgTAP
 
-- **Storage path** : on NE change PAS le path (pas de `{affaire_id}/{objet_id}/...`). L'objet_id est purement métadonnée DB, sinon on devrait déplacer les fichiers existants.
-- **Backward compat URL** : redirect `/mobile/chef/a-valider/*` → `/mobile/chef/atelier/*` (1 route stub avec `redirect`).
-- **Badge bottom nav** : si on retire le compteur heures du badge Atelier, vérifier que le badge reflète bien uniquement objets à valider (sinon UX perturbante).
-- **Kanban performance** : limiter aux affaires actives du chef (via `mes_affaires_chef`), pagination/lazy si > 100 objets.
+Fichier `supabase/tests/v0.45_rls_chef_metier_scoped.sql` :
 
----
+1. Setup : 2 affaires (A1 où chef_test est respo_fab d'un objet, A2 où il n'est rien).
+2. Test : chef_metier_scoped SELECT heures_saisies sur A1 → ≥0 lignes, JAMAIS sur A2 → 0 ligne.
+3. Test : INSERT heures_saisies sur A2 → ÉCHEC (violates RLS).
+4. Test : UPDATE/DELETE heures_saisies sur A2 → ÉCHEC.
+5. Test : SELECT/UPDATE fabrication_objets sur A2 → SELECT autorisé (vue large), UPDATE refusé.
+6. Test : SELECT affaires : voit A1, ne voit pas A2 via `mes_affaires_chef`.
+7. Test : chef_chantier global garde accès complet aux 2 affaires.
+8. Test : admin accède à tout.
+
+## 5. Livrables
+
+- Migration `20260510_xxxxxx_v0.45_chef_metier_scoped.sql` (irreversible + idempotent)
+- Helper `is_chef_global()` + `current_user_is_chef_on_affaire()` étendu
+- Page `/admin/utilisateurs` : nouveau choix de rôle chef_metier_scoped (UI uniquement)
+- Hook `src/hooks/use-chef-scope.ts`
+- Composant `src/components/auth/ScopedAccessBanner.tsx`
+- Adaptations : `/validation-heures`, `/audit-heures`, `/affaires` (filtrage `useMesAffairesChef`)
+- Tests `supabase/tests/v0.45_rls_chef_metier_scoped.sql` (8 cas)
+- E2E `e2e/admin/v045-chef-metier-scoped.admin.spec.ts` (3 specs : isolation SELECT + INSERT refusé + UI bandeau)
+- Doc `docs/sprint-v045-checklist.md`
+- Memory `mem://features/chef-metier-scoped` + entrée roadmap
+
+## 6. Risques & mitigation
+
+- **Risque** : politique RLS cassée pour les chefs actuels. **Mitigation** : `is_chef_or_admin()` inchangé (sémantique élargie), tous les chefs actuels passent toujours. Tests pgTAP couvrent l'invariant.
+- **Risque** : `mes_affaires_chef` ne référence pas `responsable_montage_id` ou `respo_fab_id`. **Mitigation** : audit + extension de la vue/RPC si nécessaire (vérification à faire en premier).
+- **Risque** : énumération de rôle bloquée par Postgres (ALTER TYPE ADD VALUE doit être hors transaction). **Mitigation** : migration en 2 étapes (1 commit ADD VALUE, 2 commit policies) si Supabase migration refuse l'inline.
+
+## 7. Hors scope (v0.46+)
+
+- Migration forcée des chefs actuels vers `chef_metier_scoped` (décision business)
+- Page admin dédiée à la gestion des affectations chef×affaire (déjà géré via `affaires.chef_chantier_id` UI existante)
+- RLS sur `affaires` durcie (trop de queries app à refactorer)
 
 ## Estimation
-~12-15h. Migration triviale (1 colonne + index). Le gros du travail est le kanban + nouvelle UX Photos par objet.
 
-**Question avant code** : OK pour étendre `affaire_documents.objet_id` (vs créer table dédiée `objet_photos`) ?
+~8h : 2h DB+helpers, 1h tests pgTAP, 3h audit+adaptation pages, 1h E2E, 1h docs/memory.
