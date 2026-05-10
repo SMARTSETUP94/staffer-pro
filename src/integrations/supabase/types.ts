@@ -2104,6 +2104,81 @@ export type Database = {
         }
         Relationships: []
       }
+      parametres_entreprise: {
+        Row: {
+          adresse_ligne1: string
+          caisse_conges_spectacles: string
+          caisse_retraite: string
+          code_postal: string
+          convention_collective_brochure: string
+          convention_collective_nom: string
+          created_at: string
+          employeur_email_contact: string
+          id: string
+          label: string
+          lieu_signature_defaut: string
+          marque_commerciale: string
+          medecine_travail: string
+          naf: string
+          raison_sociale: string
+          representant_legal_nom: string
+          representant_legal_titre: string
+          singleton: boolean
+          siret: string
+          updated_at: string
+          urssaf: string
+          ville: string
+        }
+        Insert: {
+          adresse_ligne1: string
+          caisse_conges_spectacles: string
+          caisse_retraite: string
+          code_postal: string
+          convention_collective_brochure: string
+          convention_collective_nom: string
+          created_at?: string
+          employeur_email_contact?: string
+          id?: string
+          label: string
+          lieu_signature_defaut: string
+          marque_commerciale: string
+          medecine_travail: string
+          naf: string
+          raison_sociale: string
+          representant_legal_nom: string
+          representant_legal_titre: string
+          singleton?: boolean
+          siret: string
+          updated_at?: string
+          urssaf: string
+          ville: string
+        }
+        Update: {
+          adresse_ligne1?: string
+          caisse_conges_spectacles?: string
+          caisse_retraite?: string
+          code_postal?: string
+          convention_collective_brochure?: string
+          convention_collective_nom?: string
+          created_at?: string
+          employeur_email_contact?: string
+          id?: string
+          label?: string
+          lieu_signature_defaut?: string
+          marque_commerciale?: string
+          medecine_travail?: string
+          naf?: string
+          raison_sociale?: string
+          representant_legal_nom?: string
+          representant_legal_titre?: string
+          singleton?: boolean
+          siret?: string
+          updated_at?: string
+          urssaf?: string
+          ville?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           adresse_code_postal: string | null
