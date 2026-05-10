@@ -46,16 +46,7 @@ interface ContratRow {
   contrats_signatures?: { role_signature: "employe" | "employeur"; signed_at: string }[] | null;
 }
 
-const POSTES_COURANTS = [
-  "Technicien de plateau",
-  "Machiniste",
-  "Constructeur",
-  "Peintre décorateur",
-  "Régisseur",
-  "Éclairagiste",
-  "Sonorisateur",
-  "Opérateur caméra",
-] as const;
+// Postes chargés depuis la table `postes_catalogue` (gérés en /parametres/postes).
 
 async function updatePoste(id: string, poste: string) {
   const { error } = await supabase
@@ -77,6 +68,20 @@ function RhContrats() {
   const [tab, setTab] = useState<"a_creer" | "signes" | "archives" | "tous">("a_creer");
   const [search, setSearch] = useState("");
   const [signDialog, setSignDialog] = useState<{ id: string; pdfUrl: string | null } | null>(null);
+
+  const { data: postesCatalogue } = useQuery({
+    queryKey: ["postes-catalogue-actifs"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("postes_catalogue")
+        .select("libelle")
+        .eq("actif", true)
+        .order("ordre")
+        .order("libelle");
+      if (error) throw error;
+      return (data ?? []) as { libelle: string }[];
+    },
+  });
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["rh-contrats"],
@@ -231,7 +236,7 @@ function RhContrats() {
                             }}
                           />
                           <datalist id={`postes-${r.id}`}>
-                            {POSTES_COURANTS.map((p) => <option key={p} value={p} />)}
+                            {(postesCatalogue ?? []).map((p) => <option key={p.libelle} value={p.libelle} />)}
                           </datalist>
                         </TableCell>
                         <TableCell className="text-xs">

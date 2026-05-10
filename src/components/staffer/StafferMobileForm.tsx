@@ -45,6 +45,7 @@ export function StafferMobileForm() {
   const [employeId, setEmployeId] = useState<string | null>(null);
   const [chantierId, setChantierId] = useState<string | null>(null);
   const [metierId, setMetierId] = useState<number | null>(null);
+  const [poste, setPoste] = useState<string>("");
   const [dateDebut, setDateDebut] = useState("");
   const [dateFin, setDateFin] = useState("");
   const [slot, setSlot] = useState<"matin" | "apres_midi" | "journee">("journee");
@@ -82,6 +83,20 @@ export function StafferMobileForm() {
       const { data, error } = await supabase.from("metiers").select("id, libelle").order("ordre");
       if (error) throw error;
       return data as MetierOption[];
+    },
+  });
+
+  const postesQuery = useQuery({
+    queryKey: ["staffer-mobile-postes"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("postes_catalogue")
+        .select("libelle")
+        .eq("actif", true)
+        .order("ordre")
+        .order("libelle");
+      if (error) throw error;
+      return (data ?? []) as { libelle: string }[];
     },
   });
 
@@ -144,6 +159,7 @@ export function StafferMobileForm() {
     setEmployeId(null);
     setChantierId(null);
     setMetierId(null);
+    setPoste("");
     setSearchEmploye("");
     setSearchChantier("");
     setDateDebut("");
@@ -162,6 +178,7 @@ export function StafferMobileForm() {
         _date_debut: dateDebut,
         _date_fin: dateFin,
         _slot: slot,
+        _poste: poste.trim() || undefined,
       });
       if (error) throw new Error(error.message);
       const result = data as { assignations_count: number; contrat_id: string | null; requires_contract: boolean };
@@ -292,6 +309,22 @@ export function StafferMobileForm() {
               </SelectContent>
             </Select>
           </div>
+          {eligibleContrat && (
+            <div>
+              <Label>Poste (contrat)</Label>
+              <Select value={poste} onValueChange={setPoste}>
+                <SelectTrigger><SelectValue placeholder="Sélectionner le poste…" /></SelectTrigger>
+                <SelectContent>
+                  {(postesQuery.data ?? []).map((p) => (
+                    <SelectItem key={p.libelle} value={p.libelle}>{p.libelle}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-[11px] text-muted-foreground mt-1">
+                Imprimé sur le CDDU. Par défaut : Technicien de plateau. Liste gérée dans Paramètres → Postes.
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
 
