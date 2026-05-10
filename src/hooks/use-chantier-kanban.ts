@@ -28,6 +28,8 @@ export interface KanbanObjet {
   statut_chef: "a_faire" | "en_cours" | "bloque" | "fini";
   column: KanbanColumn;
   thumbnail_path: string | null;
+  date_fin_souhaitee: string | null;
+  is_en_retard: boolean;
 }
 
 const KANBAN_LABEL: Record<KanbanColumn, string> = {
