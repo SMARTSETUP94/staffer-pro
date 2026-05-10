@@ -75,7 +75,7 @@ function ChefMoi() {
             </div>
           </div>
           {employeId ? (
-            <MesHeuresGrid employeId={employeId} weekStart={weekStart} />
+            <MesHeuresGrid weekStart={weekStart} variant="mobile" employeIdOverride={employeId} />
           ) : (
             <Card><CardContent className="p-4 text-sm text-muted-foreground">Profil employé introuvable.</CardContent></Card>
           )}
