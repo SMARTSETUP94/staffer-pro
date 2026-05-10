@@ -114,7 +114,7 @@ function HeureRow({ heure, onChanged }: { heure: HeureAValider; onChanged: () =>
       .eq("id", heure.id);
     setBusy(null);
     if (error) {
-      toast({ title: "Erreur", description: error.message, variant: "destructive" });
+      toast.error("Erreur");
       return;
     }
     toast({ title: "Heures validées", description: `${heure.employe_nom} • ${dateLabel}` });
@@ -209,7 +209,7 @@ function CorrectHeureDialog({
   async function submit() {
     const num = Number(valeur);
     if (!Number.isFinite(num) || num < 0 || num > 24) {
-      toast({ title: "Valeur invalide", description: "Entre 0 et 24h.", variant: "destructive" });
+      toast.error("Valeur invalide", { description: "Entre 0 et 24h." });
       return;
     }
     setBusy(true);
@@ -224,10 +224,10 @@ function CorrectHeureDialog({
       .eq("id", heure.id);
     setBusy(false);
     if (error) {
-      toast({ title: "Erreur", description: error.message, variant: "destructive" });
+      toast.error("Erreur");
       return;
     }
-    toast({ title: "Heures corrigées et validées" });
+    toast.success("Heures corrigées et validées");
     onOpenChange(false);
     onDone();
   }
@@ -303,7 +303,7 @@ function RejectHeureDialog({
 
   async function submit() {
     if (!motif.trim()) {
-      toast({ title: "Motif requis", variant: "destructive" });
+      toast.error("Motif requis");
       return;
     }
     setBusy(true);
@@ -317,10 +317,10 @@ function RejectHeureDialog({
       .eq("id", heure.id);
     setBusy(false);
     if (error) {
-      toast({ title: "Erreur", description: error.message, variant: "destructive" });
+      toast.error("Erreur");
       return;
     }
-    toast({ title: "Heures rejetées", description: heure.employe_nom });
+    toast.success("Heures rejetées");
     onOpenChange(false);
     onDone();
   }
@@ -441,11 +441,7 @@ function ValidateObjetDialog({
           .from("fabrication-objets-photos")
           .upload(path, photo);
         if (upErr) {
-          toast({
-            title: "Photo non envoyée",
-            description: upErr.message,
-            variant: "destructive",
-          });
+          toast.error("Photo non envoyée");
         } else {
           await supabase.from("fabrication_objets_photos").insert({
             objet_id: objet.id,
@@ -455,12 +451,12 @@ function ValidateObjetDialog({
         }
       }
 
-      toast({ title: "Objet mis à jour", description: objet.reference });
+      toast.success("Objet mis à jour");
       onOpenChange(false);
       onDone();
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Erreur inconnue";
-      toast({ title: "Erreur", description: msg, variant: "destructive" });
+      toast.error("Erreur");
     } finally {
       setBusy(false);
     }
