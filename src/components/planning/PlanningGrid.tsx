@@ -691,7 +691,7 @@ export function PlanningGrid({
                                       onChanged?.();
                                     } catch (e) {
                                       console.error(e);
-                                      toast.error("Échec de la suppression");
+                                      toast.error(...formatBusinessError(e));
                                     }
                                   }
                             }
