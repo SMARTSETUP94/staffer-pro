@@ -211,21 +211,19 @@ function RhContrats() {
                           <div className="text-sm">{r.affaires?.nom}</div>
                         </TableCell>
                         <TableCell>
-                          <Input
-                            list={`postes-${r.id}`}
-                            defaultValue={r.poste ?? "Technicien de plateau"}
-                            disabled={r.statut === "signe" || r.statut === "annule"}
-                            className="h-8 text-xs w-44"
-                            onBlur={async (e) => {
-                              const val = e.target.value.trim();
-                              if (val === (r.poste ?? "Technicien de plateau")) return;
-                              try { await updatePoste(r.id, val); toast.success("Poste mis à jour"); refetch(); }
-                              catch (err) { toast.error((err as Error).message); }
-                            }}
-                          />
-                          <datalist id={`postes-${r.id}`}>
-                            {(postesCatalogue ?? []).map((p) => <option key={p.libelle} value={p.libelle} />)}
-                          </datalist>
+                          <div className="text-sm">
+                            {r.employes?.poste_principal?.trim() || (
+                              <span className="italic text-muted-foreground">{POSTE_FALLBACK}</span>
+                            )}
+                          </div>
+                          <Link
+                            to="/employes"
+                            className="mt-0.5 inline-flex items-center gap-1 text-[10px] text-muted-foreground hover:text-primary"
+                            title="Défini sur la fiche employé — cliquer pour modifier"
+                          >
+                            <ExternalLink className="h-2.5 w-2.5" />
+                            Fiche employé
+                          </Link>
                         </TableCell>
                         <TableCell className="text-xs">
                           {new Date(r.date_debut).toLocaleDateString("fr-FR")} → {new Date(r.date_fin).toLocaleDateString("fr-FR")}
