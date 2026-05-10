@@ -225,6 +225,23 @@ function AffairesPage() {
 
       <ScopedAccessBanner />
 
+      {(isScoped || mesAffairesIds.size > 0) && (
+        <div className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2">
+          <Switch
+            id="only-mine"
+            checked={onlyMine}
+            onCheckedChange={setOnlyMine}
+            disabled={mesAffairesLoading}
+          />
+          <Label htmlFor="only-mine" className="cursor-pointer text-sm">
+            Mes chantiers uniquement
+            <span className="ml-1.5 text-xs text-muted-foreground">
+              ({mesAffairesIds.size})
+            </span>
+          </Label>
+        </div>
+      )}
+
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="relative w-full sm:max-w-sm">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
