@@ -195,6 +195,7 @@ function RhContrats() {
                 <TableHeader><TableRow>
                   <TableHead>Employé</TableHead>
                   <TableHead>Chantier</TableHead>
+                  <TableHead>Poste</TableHead>
                   <TableHead>Période</TableHead>
                   <TableHead>Heures</TableHead>
                   <TableHead>Statut</TableHead>
@@ -215,6 +216,23 @@ function RhContrats() {
                         <TableCell>
                           <div className="font-mono text-xs">{r.affaires?.numero}</div>
                           <div className="text-sm">{r.affaires?.nom}</div>
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            list={`postes-${r.id}`}
+                            defaultValue={r.poste ?? "Technicien de plateau"}
+                            disabled={r.statut === "signe" || r.statut === "annule"}
+                            className="h-8 text-xs w-44"
+                            onBlur={async (e) => {
+                              const val = e.target.value.trim();
+                              if (val === (r.poste ?? "Technicien de plateau")) return;
+                              try { await updatePoste(r.id, val); toast.success("Poste mis à jour"); refetch(); }
+                              catch (err) { toast.error((err as Error).message); }
+                            }}
+                          />
+                          <datalist id={`postes-${r.id}`}>
+                            {POSTES_COURANTS.map((p) => <option key={p} value={p} />)}
+                          </datalist>
                         </TableCell>
                         <TableCell className="text-xs">
                           {new Date(r.date_debut).toLocaleDateString("fr-FR")} → {new Date(r.date_fin).toLocaleDateString("fr-FR")}
