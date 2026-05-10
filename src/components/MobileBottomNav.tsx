@@ -7,15 +7,17 @@ import {
   ClipboardList,
   CalendarOff,
   User,
+  FileSignature,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useResolvedEmploye } from "@/hooks/use-resolved-employe";
 
 type NavItem = {
-  to: "/mobile/aujourdhui" | "/mobile/heures" | "/mobile/swaps" | "/mobile/propositions" | "/mobile/absences" | "/mobile/profil";
+  to: "/mobile/aujourdhui" | "/mobile/heures" | "/mobile/swaps" | "/mobile/propositions" | "/mobile/absences" | "/mobile/contrats" | "/mobile/profil";
   label: string;
   icon: typeof CalendarDays;
+  badge?: number;
 };
 
 const BASE_ITEMS: NavItem[] = [
