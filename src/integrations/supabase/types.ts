@@ -2182,6 +2182,33 @@ export type Database = {
         }
         Relationships: []
       }
+      postes_catalogue: {
+        Row: {
+          actif: boolean
+          created_at: string
+          id: string
+          libelle: string
+          ordre: number
+          updated_at: string
+        }
+        Insert: {
+          actif?: boolean
+          created_at?: string
+          id?: string
+          libelle: string
+          ordre?: number
+          updated_at?: string
+        }
+        Update: {
+          actif?: boolean
+          created_at?: string
+          id?: string
+          libelle?: string
+          ordre?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           adresse_code_postal: string | null
@@ -3646,6 +3673,7 @@ export type Database = {
           _date_fin: string
           _employee_id: string
           _metier_id: number
+          _poste?: string
           _slot: string
         }
         Returns: Json
