@@ -102,7 +102,7 @@ export function SignContractDialog({ open, onOpenChange, contratId, role, pdfUrl
 
         <DialogFooter className="gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>Annuler</Button>
-          <Button onClick={handleSign} disabled={submitting || empty}>
+          <Button onClick={handleSign} disabled={submitting}>
             {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
             {role === "employe" ? "Signer" : "Contre-signer & finaliser"}
           </Button>
