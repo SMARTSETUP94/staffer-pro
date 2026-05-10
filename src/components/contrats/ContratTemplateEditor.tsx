@@ -58,7 +58,7 @@ export function ContratTemplateEditor({ onChanged }: Props) {
   useEffect(() => {
     if (!selectedTemplate || !editor) return;
     setNom(selectedTemplate.nom);
-    editor.commands.setContent(selectedTemplate.contenu_html || DEFAULT_CONTRAT_TEMPLATE_HTML, false);
+    editor.commands.setContent(selectedTemplate.contenu_html || DEFAULT_CONTRAT_TEMPLATE_HTML, { emitUpdate: false });
   }, [editor, selectedTemplate]);
 
   const html = editor?.getHTML() ?? "";
