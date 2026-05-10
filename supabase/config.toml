@@ -2,3 +2,7 @@ project_id = "znwffztmdgsshuvvzsvq"
 
 [functions.notify-feedback-email]
 verify_jwt = false
+
+[functions.contrat-pdf]
+verify_jwt = false
+
