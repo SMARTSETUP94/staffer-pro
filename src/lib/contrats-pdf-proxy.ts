@@ -35,21 +35,19 @@ export async function createContratPdfObjectUrl(contratId: string, version?: 1 |
   return URL.createObjectURL(blob);
 }
 
-/** Ouvre le PDF dans un nouvel onglet (preview inline). */
+/** Ouvre le PDF dans un nouvel onglet (preview inline).
+ *  Utilise un <a target="_blank"> click — non bloqué par Chrome (vs window.open après await). */
 export async function openContratPdf(contratId: string, version?: 1 | 2 | 3): Promise<void> {
   const blob = await fetchContratPdfBlob(contratId, { version });
   const url = URL.createObjectURL(blob);
-  const w = window.open(url, "_blank", "noopener,noreferrer");
-  // libère après un délai (le tab a chargé)
+  const a = document.createElement("a");
+  a.href = url;
+  a.target = "_blank";
+  a.rel = "noopener noreferrer";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 60_000);
-  if (!w) {
-    // fallback : déclenche un téléchargement si la popup est bloquée
-    const a = document.createElement("a");
-    a.href = url;
-    a.target = "_blank";
-    a.rel = "noopener noreferrer";
-    a.click();
-  }
 }
 
 /** Télécharge le PDF (Content-Disposition attachment). */

@@ -18,7 +18,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { SignContractDialog } from "@/components/contrats/SignContractDialog";
 import { ContratTemplateEditor } from "@/components/contrats/ContratTemplateEditor";
-import { openContratPdf } from "@/lib/contrats-pdf-proxy";
+import { openContratPdf, downloadContratPdf } from "@/lib/contrats-pdf-proxy";
 
 export const Route = createFileRoute("/_app/rh/contrats")({
   component: () => (
@@ -216,13 +216,24 @@ function RhContrats() {
                         </TableCell>
                         <TableCell className="text-right space-x-1">
                           {currentPdf && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => openContratPdf(r.id).catch((e) => toast.error(e.message))}
-                            >
-                              <Download className="h-3.5 w-3.5" />
-                            </Button>
+                            <>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                title="Aperçu PDF (nouvel onglet)"
+                                onClick={() => openContratPdf(r.id).catch((e) => toast.error(e.message))}
+                              >
+                                <FileText className="h-3.5 w-3.5" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                title="Télécharger le PDF"
+                                onClick={() => downloadContratPdf(r.id).catch((e) => toast.error(e.message))}
+                              >
+                                <Download className="h-3.5 w-3.5" />
+                              </Button>
+                            </>
                           )}
                           {r.statut === "a_signer_employeur" && (
                             <Button size="sm" variant="default" onClick={() => setSignDialog({ id: r.id, pdfUrl: r.pdf_v2_url })}>
