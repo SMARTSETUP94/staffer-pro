@@ -592,7 +592,7 @@ function QuizAdmin() {
                         </SelectContent>
                       </Select>
                     ) : (
-                      <Badge variant="outline">{quizCatLabel(r.categorie)}</Badge>
+                      <Badge variant="outline" className={quizCatColor(r.categorie)}>{quizCatLabel(r.categorie)}</Badge>
                     )}
                   </TableCell>
                   <TableCell>
