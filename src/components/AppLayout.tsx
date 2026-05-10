@@ -18,7 +18,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
       <CommandPalette />
       <div className="flex min-h-screen w-full bg-background">
         <AppSidebar />
-        <div className="flex flex-1 flex-col">
+        <div className="flex flex-1 flex-col min-w-0">
           <PreviewBanner />
           <ProfileIncompleteBanner />
           <header className="flex h-14 items-center gap-3 border-b border-border bg-background/80 px-4 backdrop-blur">
