@@ -38,6 +38,8 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 <span>Rechercher</span>
                 <kbd className="ml-1 rounded border bg-muted px-1.5 py-0.5 font-mono text-[10px]">⌘K</kbd>
               </Button>
+              <SaintHeaderIcon />
+              <BirthdaysHeaderIcon />
               <NotificationBell />
             </div>
           </header>
