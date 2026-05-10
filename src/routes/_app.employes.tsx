@@ -331,6 +331,10 @@ function EmployesPage() {
       est_bureau_etude: row.est_bureau_etude,
       est_usinage_numerique: row.est_usinage_numerique,
       secondaires: row.secondaires.filter((id) => id !== row.metier_principal_id),
+      taux_horaire_brut: row.taux_horaire_brut?.toString() ?? "",
+      taux_horaire_charge: row.taux_horaire_charge?.toString() ?? "",
+      forfait: row.forfait ?? false,
+      statut_contrat: row.statut_contrat ?? "",
     });
     setOpen(true);
   };
