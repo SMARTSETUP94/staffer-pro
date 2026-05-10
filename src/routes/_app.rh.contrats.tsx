@@ -18,8 +18,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { SignContractDialog } from "@/components/contrats/SignContractDialog";
 import { ContratTemplateEditor } from "@/components/contrats/ContratTemplateEditor";
+import { TemplateTestDialog } from "@/components/contrats/TemplateTestDialog";
 import { openContratPdf, downloadContratPdf } from "@/lib/contrats-pdf-proxy";
 import { POSTE_FALLBACK } from "@/lib/postes-suggestions";
+import { FlaskConical } from "lucide-react";
 
 export const Route = createFileRoute("/_app/rh/contrats")({
   component: () => (

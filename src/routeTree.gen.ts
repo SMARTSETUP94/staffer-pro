@@ -81,6 +81,7 @@ import { Route as AppDevisImportRouteImport } from './routes/_app.devis.import'
 import { Route as AppDevisHistoriqueRouteImport } from './routes/_app.devis.historique'
 import { Route as AppAffairesAffaireIdRouteImport } from './routes/_app.affaires.$affaireId'
 import { Route as AppAdminFeedbackRouteImport } from './routes/_app.admin.feedback'
+import { Route as AppAdminEmployesPostePrincipalRouteImport } from './routes/_app.admin.employes-poste-principal'
 import { Route as AppAdminEmailPreviewRouteImport } from './routes/_app.admin.email-preview'
 import { Route as AppAdminContenuWidgetsRouteImport } from './routes/_app.admin.contenu-widgets'
 import { Route as AppAffairesAffaireIdIndexRouteImport } from './routes/_app.affaires.$affaireId.index'
@@ -454,6 +455,12 @@ const AppAdminFeedbackRoute = AppAdminFeedbackRouteImport.update({
   path: '/admin/feedback',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAdminEmployesPostePrincipalRoute =
+  AppAdminEmployesPostePrincipalRouteImport.update({
+    id: '/admin/employes-poste-principal',
+    path: '/admin/employes-poste-principal',
+    getParentRoute: () => AppRoute,
+  } as any)
 const AppAdminEmailPreviewRoute = AppAdminEmailPreviewRouteImport.update({
   id: '/admin/email-preview',
   path: '/admin/email-preview',
@@ -538,6 +545,7 @@ export interface FileRoutesByFullPath {
   '/mobile/swaps': typeof MobileSwapsRoute
   '/admin/contenu-widgets': typeof AppAdminContenuWidgetsRoute
   '/admin/email-preview': typeof AppAdminEmailPreviewRoute
+  '/admin/employes-poste-principal': typeof AppAdminEmployesPostePrincipalRoute
   '/admin/feedback': typeof AppAdminFeedbackRoute
   '/affaires/$affaireId': typeof AppAffairesAffaireIdRouteWithChildren
   '/devis/historique': typeof AppDevisHistoriqueRoute
@@ -616,6 +624,7 @@ export interface FileRoutesByTo {
   '/mobile/swaps': typeof MobileSwapsRoute
   '/admin/contenu-widgets': typeof AppAdminContenuWidgetsRoute
   '/admin/email-preview': typeof AppAdminEmailPreviewRoute
+  '/admin/employes-poste-principal': typeof AppAdminEmployesPostePrincipalRoute
   '/admin/feedback': typeof AppAdminFeedbackRoute
   '/devis/historique': typeof AppDevisHistoriqueRoute
   '/devis/import': typeof AppDevisImportRoute
@@ -697,6 +706,7 @@ export interface FileRoutesById {
   '/mobile/swaps': typeof MobileSwapsRoute
   '/_app/admin/contenu-widgets': typeof AppAdminContenuWidgetsRoute
   '/_app/admin/email-preview': typeof AppAdminEmailPreviewRoute
+  '/_app/admin/employes-poste-principal': typeof AppAdminEmployesPostePrincipalRoute
   '/_app/admin/feedback': typeof AppAdminFeedbackRoute
   '/_app/affaires/$affaireId': typeof AppAffairesAffaireIdRouteWithChildren
   '/_app/devis/historique': typeof AppDevisHistoriqueRoute
@@ -779,6 +789,7 @@ export interface FileRouteTypes {
     | '/mobile/swaps'
     | '/admin/contenu-widgets'
     | '/admin/email-preview'
+    | '/admin/employes-poste-principal'
     | '/admin/feedback'
     | '/affaires/$affaireId'
     | '/devis/historique'
@@ -857,6 +868,7 @@ export interface FileRouteTypes {
     | '/mobile/swaps'
     | '/admin/contenu-widgets'
     | '/admin/email-preview'
+    | '/admin/employes-poste-principal'
     | '/admin/feedback'
     | '/devis/historique'
     | '/devis/import'
@@ -937,6 +949,7 @@ export interface FileRouteTypes {
     | '/mobile/swaps'
     | '/_app/admin/contenu-widgets'
     | '/_app/admin/email-preview'
+    | '/_app/admin/employes-poste-principal'
     | '/_app/admin/feedback'
     | '/_app/affaires/$affaireId'
     | '/_app/devis/historique'
@@ -1501,6 +1514,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminFeedbackRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/admin/employes-poste-principal': {
+      id: '/_app/admin/employes-poste-principal'
+      path: '/admin/employes-poste-principal'
+      fullPath: '/admin/employes-poste-principal'
+      preLoaderRoute: typeof AppAdminEmployesPostePrincipalRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/admin/email-preview': {
       id: '/_app/admin/email-preview'
       path: '/admin/email-preview'
@@ -1637,6 +1657,7 @@ interface AppRouteChildren {
   AppValidationHeuresRoute: typeof AppValidationHeuresRoute
   AppAdminContenuWidgetsRoute: typeof AppAdminContenuWidgetsRoute
   AppAdminEmailPreviewRoute: typeof AppAdminEmailPreviewRoute
+  AppAdminEmployesPostePrincipalRoute: typeof AppAdminEmployesPostePrincipalRoute
   AppAdminFeedbackRoute: typeof AppAdminFeedbackRoute
   AppAffairesAffaireIdRoute: typeof AppAffairesAffaireIdRouteWithChildren
   AppDevisHistoriqueRoute: typeof AppDevisHistoriqueRoute
@@ -1686,6 +1707,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppValidationHeuresRoute: AppValidationHeuresRoute,
   AppAdminContenuWidgetsRoute: AppAdminContenuWidgetsRoute,
   AppAdminEmailPreviewRoute: AppAdminEmailPreviewRoute,
+  AppAdminEmployesPostePrincipalRoute: AppAdminEmployesPostePrincipalRoute,
   AppAdminFeedbackRoute: AppAdminFeedbackRoute,
   AppAffairesAffaireIdRoute: AppAffairesAffaireIdRouteWithChildren,
   AppDevisHistoriqueRoute: AppDevisHistoriqueRoute,
@@ -1757,12 +1779,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}

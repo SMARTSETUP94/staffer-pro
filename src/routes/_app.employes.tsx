@@ -1,6 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Plus, Pencil, Search, Loader2, Table2, List } from "lucide-react";
+import { Plus, Pencil, Search, Loader2, Table2, List, Download, Upload, ClipboardList } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { fetchEmployesForExport, exportEmployesXlsx } from "@/lib/employes-excel";
+import { EmployesImportPostesDialog } from "@/components/employes/EmployesImportPostesDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useMetiers } from "@/hooks/use-metiers";
 import { useAuth } from "@/lib/auth-context";
@@ -173,6 +176,7 @@ function EmployesPage() {
   const [form, setForm] = useState<FormState>(emptyForm);
   const [saving, setSaving] = useState(false);
   const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [importPostesOpen, setImportPostesOpen] = useState(false);
 
   const toggleActif = async (row: EmployeRow) => {
     if (!isAdminOrChef) return;
@@ -438,9 +442,25 @@ function EmployesPage() {
         description={`${rows.filter((r) => r.actif).length} actif(s) sur ${rows.length} fiche(s).`}
         actions={
           isAdminOrChef && (
-            <Button onClick={openCreate} className="rounded-xl bg-primary text-primary-foreground hover:bg-primary/90">
-              <Plus className="mr-2 h-4 w-4" /> Nouvel employé
-            </Button>
+            <div className="flex gap-2">
+              {isAdmin && (
+                <Button asChild variant="outline" className="rounded-xl">
+                  <Link to="/admin/employes-poste-principal"><ClipboardList className="mr-1 h-4 w-4" />Postes principaux</Link>
+                </Button>
+              )}
+              <Button variant="outline" className="rounded-xl" onClick={async () => {
+                try { const d = await fetchEmployesForExport(); await exportEmployesXlsx(d); toast.success(`${d.length} employés exportés`); }
+                catch (e) { toast.error("Export impossible", { description: (e as Error).message }); }
+              }}><Download className="mr-1 h-4 w-4" />Exporter Excel</Button>
+              {isAdmin && (
+                <Button variant="outline" className="rounded-xl" onClick={() => setImportPostesOpen(true)}>
+                  <Upload className="mr-1 h-4 w-4" />Importer postes
+                </Button>
+              )}
+              <Button onClick={openCreate} className="rounded-xl bg-primary text-primary-foreground hover:bg-primary/90">
+                <Plus className="mr-2 h-4 w-4" /> Nouvel employé
+              </Button>
+            </div>
           )
         }
       />
@@ -928,6 +948,7 @@ function EmployesPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <EmployesImportPostesDialog open={importPostesOpen} onOpenChange={setImportPostesOpen} onApplied={fetchAll} />
     </div>
   );
 }
