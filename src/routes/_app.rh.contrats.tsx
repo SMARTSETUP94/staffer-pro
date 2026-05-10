@@ -301,9 +301,21 @@ function RhContrats() {
         </TabsContent>
 
         <TabsContent value="template" className="mt-4">
+          <div className="flex justify-end mb-3">
+            <Button variant="outline" size="sm" onClick={() => setTestTplOpen(true)}>
+              <FlaskConical className="h-4 w-4 mr-2" />
+              Tester le template (5 fixtures)
+            </Button>
+          </div>
           <ContratTemplateEditor onChanged={refetch} />
         </TabsContent>
       </Tabs>
+
+      <TemplateTestDialog
+        open={testTplOpen}
+        onOpenChange={setTestTplOpen}
+        templateHtml={null}
+      />
 
       {signDialog && (
         <SignContractDialog
