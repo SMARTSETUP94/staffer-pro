@@ -96,11 +96,29 @@ function RhContrats() {
     const now = new Date();
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
     const aSigner = rows.filter((r) => r.statut !== "signe" && r.statut !== "annule" && r.created_at >= monthStart).length;
+    const aContresigner = rows.filter((r) => r.statut === "a_signer_employeur").length;
     const totalFacturable = rows
       .filter((r) => r.statut === "signe")
       .reduce((s, r) => s + (r.taux_horaire_brut ?? 0) * (r.heures_estimees ?? 0), 0);
-    return { aSigner, totalFacturable };
+    return { aSigner, aContresigner, totalFacturable };
   }, [data]);
+
+  const filteredRows = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return (data ?? [])
+      .filter((r) => {
+        if (tab === "a_creer") return r.statut === "a_signer_employe" || r.statut === "a_signer_employeur";
+        if (tab === "signes") return r.statut === "signe";
+        if (tab === "archives") return r.statut === "annule";
+        return true;
+      })
+      .filter((r) => {
+        if (!q) return true;
+        return `${r.employes?.prenom ?? ""} ${r.employes?.nom ?? ""} ${r.affaires?.numero ?? ""} ${r.affaires?.nom ?? ""}`
+          .toLowerCase()
+          .includes(q);
+      });
+  }, [data, search, tab]);
 
   const handleAnnuler = async (id: string) => {
     if (!confirm("Annuler ce contrat ? Les assignations déjà créées ne seront pas supprimées.")) return;
@@ -113,10 +131,14 @@ function RhContrats() {
     <div className="container mx-auto p-6 space-y-6">
       <PageHeader title="Contrats intermittents" description="Gestion RH — signatures, suivi, archive" />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card><CardContent className="pt-6">
           <div className="text-sm text-muted-foreground">À signer ce mois</div>
           <div className="text-3xl font-bold">{stats.aSigner}</div>
+        </CardContent></Card>
+        <Card><CardContent className="pt-6">
+          <div className="text-sm text-muted-foreground">À contre-signer RH</div>
+          <div className="text-3xl font-bold">{stats.aContresigner}</div>
         </CardContent></Card>
         <Card><CardContent className="pt-6">
           <div className="text-sm text-muted-foreground">Facturable signé (estim.)</div>
@@ -124,9 +146,16 @@ function RhContrats() {
         </CardContent></Card>
       </div>
 
+      <Input
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        placeholder="Filtrer par employé, chantier ou numéro…"
+        className="max-w-md"
+      />
+
       <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
         <TabsList>
-          <TabsTrigger value="a_creer">À traiter</TabsTrigger>
+          <TabsTrigger value="a_creer">À traiter{stats.aContresigner > 0 ? ` (${stats.aContresigner})` : ""}</TabsTrigger>
           <TabsTrigger value="signes">Signés</TabsTrigger>
           <TabsTrigger value="archives">Archivés</TabsTrigger>
           <TabsTrigger value="tous">Tous</TabsTrigger>
