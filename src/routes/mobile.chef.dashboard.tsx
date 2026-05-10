@@ -273,7 +273,7 @@ function KpiCard({
   value: number;
   icon: typeof Users;
   loading: boolean;
-  href?: "/mobile/chef/equipe" | "/mobile/chef/contrats" | "/mobile/chef/a-valider" | "/mobile/chef/planning";
+  href?: "/mobile/chef/equipe" | "/mobile/chef/contrats" | "/mobile/chef/atelier" | "/mobile/chef/planning";
 }) {
   const inner = (
     <Card className="h-full">
