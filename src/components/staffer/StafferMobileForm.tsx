@@ -17,6 +17,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
 import { normalizeForMatch as normalize } from "@/lib/string-normalize";
 import { generateContratV1 } from "@/lib/contrats-signature";
+import { useMesAffairesChefIds } from "@/hooks/use-mes-affaires-chef";
+import { useAuth } from "@/lib/auth-context";
 
 interface EmployeOption {
   id: string;
