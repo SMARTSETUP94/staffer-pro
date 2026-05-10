@@ -13,6 +13,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 interface Entry {
   id: string;
   prenom: string;
+  nom: string;
   avatar_url: string | null;
   daysAhead: number; // 0 = today, 1..7 = upcoming
   monthDay: string; // MM-DD for display
@@ -43,7 +44,7 @@ export function BirthdaysHeaderIcon() {
       const today = new Date();
       const { data } = await supabase
         .from("employes")
-        .select("id, prenom, date_naissance, profiles:profile_id(avatar_url, date_naissance)")
+        .select("id, prenom, nom, date_naissance, profiles:profile_id(avatar_url, date_naissance)")
         .eq("actif", true);
       if (cancelled) return;
       const list: Entry[] = [];
@@ -55,6 +56,7 @@ export function BirthdaysHeaderIcon() {
         list.push({
           id: e.id,
           prenom: e.prenom,
+          nom: e.nom ?? "",
           avatar_url: e.profiles?.avatar_url ?? null,
           daysAhead: days,
           monthDay: `${String(dob.m + 1).padStart(2, "0")}-${String(dob.d).padStart(2, "0")}`,
@@ -117,7 +119,7 @@ export function BirthdaysHeaderIcon() {
                     {p.avatar_url ? <AvatarImage src={p.avatar_url} alt={p.prenom} /> : null}
                     <AvatarFallback className="text-[9px]">{p.prenom.slice(0, 1)}</AvatarFallback>
                   </Avatar>
-                  <span className="text-xs font-medium">{p.prenom}</span>
+                  <span className="text-xs font-medium">{p.prenom}{p.nom ? ` ${p.nom}` : ""}</span>
                 </div>
               ))}
             </div>
@@ -139,7 +141,7 @@ export function BirthdaysHeaderIcon() {
                       {p.avatar_url ? <AvatarImage src={p.avatar_url} alt={p.prenom} /> : null}
                       <AvatarFallback className="text-[9px]">{p.prenom.slice(0, 1)}</AvatarFallback>
                     </Avatar>
-                    <span>{p.prenom}</span>
+                    <span>{p.prenom}{p.nom ? ` ${p.nom}` : ""}</span>
                   </div>
                   <span className="text-xs text-muted-foreground">
                     J+{p.daysAhead} · {p.monthDay.replace("-", "/")}
