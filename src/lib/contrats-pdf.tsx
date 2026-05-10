@@ -13,7 +13,9 @@ if (typeof globalThis !== "undefined" && !(globalThis as { Buffer?: unknown }).B
   (globalThis as { Buffer: typeof Buffer }).Buffer = Buffer;
 }
 import { Document, Page, Text, View, StyleSheet, Image, pdf } from "@react-pdf/renderer";
+import Html from "react-pdf-html";
 import type { ReactElement } from "react";
+import { DEFAULT_CONTRAT_TEMPLATE_HTML, interpolateContratTemplate } from "./contrats-templates";
 
 export interface ContratPdfData {
   numero_contrat?: string;
@@ -35,6 +37,10 @@ export interface ContratPdfData {
   signed_at_employe?: string | null;
   signed_at_employeur?: string | null;
   hash_sha256?: string | null;
+  template_html?: string | null;
+  poste?: string | null;
+  employeur_signataire?: string | null;
+  convention_collective?: string | null;
 }
 
 const styles = StyleSheet.create({
@@ -48,6 +54,7 @@ const styles = StyleSheet.create({
   label: { width: 130, color: "#555" },
   value: { flex: 1, fontWeight: 700 },
   paragraph: { lineHeight: 1.5, marginBottom: 8, textAlign: "justify" },
+  htmlBody: { fontSize: 10, lineHeight: 1.45, marginBottom: 8 },
   signatureRow: { flexDirection: "row", justifyContent: "space-between", marginTop: 30 },
   signatureBox: { width: "45%", borderTop: "1px solid #1a1a1a", paddingTop: 6 },
   sigImg: { height: 60, marginBottom: 4, objectFit: "contain" },
@@ -66,6 +73,27 @@ function fmtDate(iso?: string | null): string {
 function fmtNum(n?: number | null): string {
   if (n == null) return "—";
   return n.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function renderTemplateHtml(data: ContratPdfData): string {
+  return interpolateContratTemplate(data.template_html || DEFAULT_CONTRAT_TEMPLATE_HTML, {
+    employe_nom: data.employe_nom,
+    employe_prenom: data.employe_prenom,
+    employe_adresse: data.employe_adresse,
+    employe_email: data.employe_email,
+    date_debut: fmtDate(data.date_debut),
+    date_fin: fmtDate(data.date_fin),
+    lieu_mission: data.chantier_lieu,
+    chantier_nom: data.chantier_nom,
+    chantier_numero: data.chantier_numero,
+    taux_horaire_brut: data.taux_horaire_brut == null ? null : `${fmtNum(data.taux_horaire_brut)} €`,
+    nb_heures: data.heures_estimees == null ? null : `${data.heures_estimees} h`,
+    poste: data.poste ?? data.statut_contrat,
+    employeur_signataire: data.employeur_signataire ?? "Setup Paris",
+    numero_contrat: data.numero_contrat,
+    convention_collective: data.convention_collective ?? "Convention collective applicable",
+    statut_contrat: data.statut_contrat,
+  });
 }
 
 export function ContratIntermittentDocument({ data }: { data: ContratPdfData }): ReactElement {
@@ -108,15 +136,7 @@ export function ContratIntermittentDocument({ data }: { data: ContratPdfData }):
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Conditions générales</Text>
-          <Text style={styles.paragraph}>
-            Le présent contrat à durée déterminée d'usage (CDDU) est conclu en application des articles L.1242-2 3° et D.1242-1 du Code du Travail
-            relatifs aux secteurs d'activité dans lesquels il est d'usage constant de ne pas recourir au contrat à durée indéterminée.
-            Le salarié reconnaît avoir pris connaissance des conditions générales d'emploi de Setup Paris et s'engage à respecter le règlement intérieur en vigueur.
-          </Text>
-          <Text style={styles.paragraph}>
-            La signature électronique apposée par les deux parties vaut consentement au sens de l'article 1367 du Code Civil.
-            Un horodatage, une adresse IP, un user-agent et un hash cryptographique SHA-256 sont conservés à des fins probatoires.
-          </Text>
+          <Html style={styles.htmlBody}>{renderTemplateHtml(data)}</Html>
         </View>
 
         <View style={styles.signatureRow}>

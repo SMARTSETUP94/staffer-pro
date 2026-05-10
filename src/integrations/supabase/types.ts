@@ -605,6 +605,39 @@ export type Database = {
         }
         Relationships: []
       }
+      contrat_templates: {
+        Row: {
+          actif: boolean
+          contenu_html: string
+          created_at: string
+          created_by: string | null
+          id: string
+          nom: string
+          updated_at: string
+          version_int: number
+        }
+        Insert: {
+          actif?: boolean
+          contenu_html: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          nom: string
+          updated_at?: string
+          version_int: number
+        }
+        Update: {
+          actif?: boolean
+          contenu_html?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          nom?: string
+          updated_at?: string
+          version_int?: number
+        }
+        Relationships: []
+      }
       contrats_intermittents: {
         Row: {
           chantier_id: string
@@ -623,6 +656,7 @@ export type Database = {
           staffing_id: string | null
           statut: Database["public"]["Enums"]["contrat_intermittent_statut"]
           taux_horaire_brut: number | null
+          template_version_id: string | null
           updated_at: string
         }
         Insert: {
@@ -642,6 +676,7 @@ export type Database = {
           staffing_id?: string | null
           statut?: Database["public"]["Enums"]["contrat_intermittent_statut"]
           taux_horaire_brut?: number | null
+          template_version_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -661,6 +696,7 @@ export type Database = {
           staffing_id?: string | null
           statut?: Database["public"]["Enums"]["contrat_intermittent_statut"]
           taux_horaire_brut?: number | null
+          template_version_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -683,6 +719,13 @@ export type Database = {
             columns: ["employee_id"]
             isOneToOne: false
             referencedRelation: "employes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contrats_intermittents_template_version_id_fkey"
+            columns: ["template_version_id"]
+            isOneToOne: false
+            referencedRelation: "contrat_templates"
             referencedColumns: ["id"]
           },
         ]
@@ -3247,6 +3290,10 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      activate_contrat_template: {
+        Args: { p_template_id: string }
+        Returns: undefined
+      }
       admin_get_auth_events: {
         Args: {
           p_from?: string
@@ -3310,15 +3357,31 @@ export type Database = {
         Returns: Json
       }
       compute_affaire_typologie: { Args: { num: string }; Returns: string }
-      create_contrat_intermittent: {
-        Args: {
-          _chantier_id: string
-          _date_debut: string
-          _date_fin: string
-          _employee_id: string
-          _heures_estimees: number
-          _staffing_id?: string
-        }
+      create_contrat_intermittent:
+        | {
+            Args: {
+              _chantier_id: string
+              _date_debut: string
+              _date_fin: string
+              _employee_id: string
+              _heures_estimees: number
+              _staffing_id?: string
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              _chantier_id: string
+              _date_debut: string
+              _date_fin: string
+              _employee_id: string
+              _heures_estimees?: number
+              _staffing_id: string
+            }
+            Returns: string
+          }
+      create_contrat_template_version: {
+        Args: { p_actif?: boolean; p_contenu_html: string; p_nom: string }
         Returns: string
       }
       create_notification: {
@@ -3353,6 +3416,7 @@ export type Database = {
         Args: { metier: string }
         Returns: Database["public"]["Enums"]["fabrication_etape_type"]
       }
+      get_active_contrat_template_id: { Args: never; Returns: string }
       get_last_used_codes: {
         Args: { _n?: number; _prefix: number }
         Returns: {

@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { SignContractDialog } from "@/components/contrats/SignContractDialog";
+import { ContratTemplateEditor } from "@/components/contrats/ContratTemplateEditor";
 import { openContratPdf } from "@/lib/contrats-pdf-proxy";
 
 export const Route = createFileRoute("/_app/rh/contrats")({
@@ -52,6 +53,7 @@ const STATUT_LABELS: Record<ContratRow["statut"], string> = {
 };
 
 function RhContrats() {
+  const [sectionTab, setSectionTab] = useState<"liste" | "template">("liste");
   const [tab, setTab] = useState<"a_creer" | "signes" | "archives" | "tous">("a_creer");
   const [search, setSearch] = useState("");
   const [signDialog, setSignDialog] = useState<{ id: string; pdfUrl: string | null } | null>(null);
@@ -146,22 +148,29 @@ function RhContrats() {
         </CardContent></Card>
       </div>
 
-      <Input
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        placeholder="Filtrer par employé, chantier ou numéro…"
-        className="max-w-md"
-      />
-
-      <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
+      <Tabs value={sectionTab} onValueChange={(v) => setSectionTab(v as typeof sectionTab)}>
         <TabsList>
-          <TabsTrigger value="a_creer">À traiter{stats.aContresigner > 0 ? ` (${stats.aContresigner})` : ""}</TabsTrigger>
-          <TabsTrigger value="signes">Signés</TabsTrigger>
-          <TabsTrigger value="archives">Archivés</TabsTrigger>
-          <TabsTrigger value="tous">Tous</TabsTrigger>
+          <TabsTrigger value="liste">Liste</TabsTrigger>
+          <TabsTrigger value="template">Template contrat</TabsTrigger>
         </TabsList>
 
-        <TabsContent value={tab} className="mt-4">
+        <TabsContent value="liste" className="mt-4 space-y-4">
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Filtrer par employé, chantier ou numéro…"
+            className="max-w-md"
+          />
+
+          <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
+            <TabsList>
+              <TabsTrigger value="a_creer">À traiter{stats.aContresigner > 0 ? ` (${stats.aContresigner})` : ""}</TabsTrigger>
+              <TabsTrigger value="signes">Signés</TabsTrigger>
+              <TabsTrigger value="archives">Archivés</TabsTrigger>
+              <TabsTrigger value="tous">Tous</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value={tab} className="mt-4">
           {isLoading ? (
             <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin" /></div>
           ) : (
@@ -239,6 +248,12 @@ function RhContrats() {
               </Table>
             </CardContent></Card>
           )}
+            </TabsContent>
+          </Tabs>
+        </TabsContent>
+
+        <TabsContent value="template" className="mt-4">
+          <ContratTemplateEditor onChanged={refetch} />
         </TabsContent>
       </Tabs>
 
