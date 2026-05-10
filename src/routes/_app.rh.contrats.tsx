@@ -2,10 +2,10 @@
  * Tour 2 — /rh/contrats : page admin contrats intermittents (4 onglets + filtres + stats).
  * Squelette livré ; raffinements UI/filtres avancés en Tour 3.
  */
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Loader2, FileText, Download, FileSignature, X, Trash2 } from "lucide-react";
+import { Loader2, FileText, Download, FileSignature, X, Trash2, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { RoleGuard } from "@/components/auth/RoleGuard";
 import { PageHeader } from "@/components/PageHeader";
@@ -19,6 +19,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { SignContractDialog } from "@/components/contrats/SignContractDialog";
 import { ContratTemplateEditor } from "@/components/contrats/ContratTemplateEditor";
 import { openContratPdf, downloadContratPdf } from "@/lib/contrats-pdf-proxy";
+import { POSTE_FALLBACK } from "@/lib/postes-suggestions";
 
 export const Route = createFileRoute("/_app/rh/contrats")({
   component: () => (
@@ -30,30 +31,20 @@ export const Route = createFileRoute("/_app/rh/contrats")({
 
 interface ContratRow {
   id: string;
+  employee_id: string;
   date_debut: string;
   date_fin: string;
   taux_horaire_brut: number | null;
   forfait: boolean;
   heures_estimees: number | null;
-  poste: string | null;
   statut: "a_signer_employe" | "a_signer_employeur" | "signe" | "annule";
   pdf_v1_url: string | null;
   pdf_v2_url: string | null;
   pdf_v3_url: string | null;
   created_at: string;
-  employes: { nom: string; prenom: string; statut_contrat: string | null } | null;
+  employes: { nom: string; prenom: string; statut_contrat: string | null; poste_principal: string | null } | null;
   affaires: { numero: string; nom: string } | null;
   contrats_signatures?: { role_signature: "employe" | "employeur"; signed_at: string }[] | null;
-}
-
-// Postes chargés depuis la table `postes_catalogue` (gérés en /parametres/postes).
-
-async function updatePoste(id: string, poste: string) {
-  const { error } = await supabase
-    .from("contrats_intermittents")
-    .update({ poste: poste.trim() || "Technicien de plateau" })
-    .eq("id", id);
-  if (error) throw error;
 }
 
 const STATUT_LABELS: Record<ContratRow["statut"], string> = {
@@ -69,29 +60,15 @@ function RhContrats() {
   const [search, setSearch] = useState("");
   const [signDialog, setSignDialog] = useState<{ id: string; pdfUrl: string | null } | null>(null);
 
-  const { data: postesCatalogue } = useQuery({
-    queryKey: ["postes-catalogue-actifs"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("postes_catalogue")
-        .select("libelle")
-        .eq("actif", true)
-        .order("ordre")
-        .order("libelle");
-      if (error) throw error;
-      return (data ?? []) as { libelle: string }[];
-    },
-  });
-
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["rh-contrats"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("contrats_intermittents")
         .select(`
-          id, date_debut, date_fin, taux_horaire_brut, forfait, heures_estimees, poste,
+          id, employee_id, date_debut, date_fin, taux_horaire_brut, forfait, heures_estimees,
           statut, pdf_v1_url, pdf_v2_url, pdf_v3_url, created_at,
-          employes:employee_id ( nom, prenom, statut_contrat ),
+          employes:employee_id ( nom, prenom, statut_contrat, poste_principal ),
           affaires:chantier_id ( numero, nom ),
           contrats_signatures ( role_signature, signed_at )
         `)
