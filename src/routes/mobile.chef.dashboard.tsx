@@ -145,7 +145,7 @@ function ChefDashboard() {
     <>
       <ChefMobileHeader title="Hub chef" />
       <div className="mx-auto max-w-xl space-y-4 p-4">
-        {/* KPI grid */}
+        {/* KPI grid (2x3 = 6 cards) */}
         <div className="grid grid-cols-2 gap-3">
           <KpiCard
             label="Mes affaires actives"
@@ -159,14 +159,21 @@ function ChefDashboard() {
             value={heures.length}
             icon={Clock}
             loading={false}
-            href="/mobile/chef/a-valider"
+            href="/mobile/chef/equipe"
           />
           <KpiCard
             label="Objets à valider"
             value={objets.length}
             icon={Hammer}
             loading={false}
-            href="/mobile/chef/a-valider"
+            href="/mobile/chef/atelier"
+          />
+          <KpiCard
+            label="Photos récentes (7j)"
+            value={photosQ.data ?? 0}
+            icon={Camera}
+            loading={photosQ.isLoading}
+            href="/mobile/chef/atelier"
           />
           <KpiCard
             label="Équipe (7j)"
