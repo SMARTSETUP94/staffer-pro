@@ -44,7 +44,7 @@ export function BirthdaysHeaderIcon() {
       const today = new Date();
       const { data } = await supabase
         .from("employes")
-        .select("id, prenom, date_naissance, profiles:profile_id(avatar_url, date_naissance)")
+        .select("id, prenom, nom, date_naissance, profiles:profile_id(avatar_url, date_naissance)")
         .eq("actif", true);
       if (cancelled) return;
       const list: Entry[] = [];
@@ -56,6 +56,7 @@ export function BirthdaysHeaderIcon() {
         list.push({
           id: e.id,
           prenom: e.prenom,
+          nom: e.nom ?? "",
           avatar_url: e.profiles?.avatar_url ?? null,
           daysAhead: days,
           monthDay: `${String(dob.m + 1).padStart(2, "0")}-${String(dob.d).padStart(2, "0")}`,
