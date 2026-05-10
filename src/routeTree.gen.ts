@@ -61,6 +61,7 @@ import { Route as MobileChefFabricationRouteImport } from './routes/mobile.chef.
 import { Route as MobileChefEquipeRouteImport } from './routes/mobile.chef.equipe'
 import { Route as MobileChefDashboardRouteImport } from './routes/mobile.chef.dashboard'
 import { Route as MobileChefContratsRouteImport } from './routes/mobile.chef.contrats'
+import { Route as MobileChefAValiderRouteImport } from './routes/mobile.chef.a-valider'
 import { Route as AppStaffingPlanIdRouteImport } from './routes/_app.staffing.$planId'
 import { Route as AppRhContratsRouteImport } from './routes/_app.rh.contrats'
 import { Route as AppParametresUtilisateursRouteImport } from './routes/_app.parametres.utilisateurs'
@@ -349,6 +350,11 @@ const MobileChefContratsRoute = MobileChefContratsRouteImport.update({
   path: '/contrats',
   getParentRoute: () => MobileChefRoute,
 } as any)
+const MobileChefAValiderRoute = MobileChefAValiderRouteImport.update({
+  id: '/a-valider',
+  path: '/a-valider',
+  getParentRoute: () => MobileChefRoute,
+} as any)
 const AppStaffingPlanIdRoute = AppStaffingPlanIdRouteImport.update({
   id: '/staffing/$planId',
   path: '/staffing/$planId',
@@ -566,6 +572,7 @@ export interface FileRoutesByFullPath {
   '/parametres/utilisateurs': typeof AppParametresUtilisateursRoute
   '/rh/contrats': typeof AppRhContratsRoute
   '/staffing/$planId': typeof AppStaffingPlanIdRoute
+  '/mobile/chef/a-valider': typeof MobileChefAValiderRoute
   '/mobile/chef/contrats': typeof MobileChefContratsRoute
   '/mobile/chef/dashboard': typeof MobileChefDashboardRoute
   '/mobile/chef/equipe': typeof MobileChefEquipeRoute
@@ -644,6 +651,7 @@ export interface FileRoutesByTo {
   '/parametres/utilisateurs': typeof AppParametresUtilisateursRoute
   '/rh/contrats': typeof AppRhContratsRoute
   '/staffing/$planId': typeof AppStaffingPlanIdRoute
+  '/mobile/chef/a-valider': typeof MobileChefAValiderRoute
   '/mobile/chef/contrats': typeof MobileChefContratsRoute
   '/mobile/chef/dashboard': typeof MobileChefDashboardRoute
   '/mobile/chef/equipe': typeof MobileChefEquipeRoute
@@ -727,6 +735,7 @@ export interface FileRoutesById {
   '/_app/parametres/utilisateurs': typeof AppParametresUtilisateursRoute
   '/_app/rh/contrats': typeof AppRhContratsRoute
   '/_app/staffing/$planId': typeof AppStaffingPlanIdRoute
+  '/mobile/chef/a-valider': typeof MobileChefAValiderRoute
   '/mobile/chef/contrats': typeof MobileChefContratsRoute
   '/mobile/chef/dashboard': typeof MobileChefDashboardRoute
   '/mobile/chef/equipe': typeof MobileChefEquipeRoute
@@ -810,6 +819,7 @@ export interface FileRouteTypes {
     | '/parametres/utilisateurs'
     | '/rh/contrats'
     | '/staffing/$planId'
+    | '/mobile/chef/a-valider'
     | '/mobile/chef/contrats'
     | '/mobile/chef/dashboard'
     | '/mobile/chef/equipe'
@@ -888,6 +898,7 @@ export interface FileRouteTypes {
     | '/parametres/utilisateurs'
     | '/rh/contrats'
     | '/staffing/$planId'
+    | '/mobile/chef/a-valider'
     | '/mobile/chef/contrats'
     | '/mobile/chef/dashboard'
     | '/mobile/chef/equipe'
@@ -970,6 +981,7 @@ export interface FileRouteTypes {
     | '/_app/parametres/utilisateurs'
     | '/_app/rh/contrats'
     | '/_app/staffing/$planId'
+    | '/mobile/chef/a-valider'
     | '/mobile/chef/contrats'
     | '/mobile/chef/dashboard'
     | '/mobile/chef/equipe'
@@ -1374,6 +1386,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MobileChefContratsRouteImport
       parentRoute: typeof MobileChefRoute
     }
+    '/mobile/chef/a-valider': {
+      id: '/mobile/chef/a-valider'
+      path: '/a-valider'
+      fullPath: '/mobile/chef/a-valider'
+      preLoaderRoute: typeof MobileChefAValiderRouteImport
+      parentRoute: typeof MobileChefRoute
+    }
     '/_app/staffing/$planId': {
       id: '/_app/staffing/$planId'
       path: '/staffing/$planId'
@@ -1734,6 +1753,7 @@ const AppRouteChildren: AppRouteChildren = {
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 interface MobileChefRouteChildren {
+  MobileChefAValiderRoute: typeof MobileChefAValiderRoute
   MobileChefContratsRoute: typeof MobileChefContratsRoute
   MobileChefDashboardRoute: typeof MobileChefDashboardRoute
   MobileChefEquipeRoute: typeof MobileChefEquipeRoute
@@ -1744,6 +1764,7 @@ interface MobileChefRouteChildren {
 }
 
 const MobileChefRouteChildren: MobileChefRouteChildren = {
+  MobileChefAValiderRoute: MobileChefAValiderRoute,
   MobileChefContratsRoute: MobileChefContratsRoute,
   MobileChefDashboardRoute: MobileChefDashboardRoute,
   MobileChefEquipeRoute: MobileChefEquipeRoute,
