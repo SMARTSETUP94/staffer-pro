@@ -1,120 +1,209 @@
-# v0.42.2 — Plan d'architecture
 
-3 items à enchaîner. Estimation : ~600 lignes nettes, 3 fichiers nouveaux, 2 fichiers modifiés.
+# Sprint 1 — Hub Chef Mobile (`/m/chef`)
 
-## ITEM 1 — Saisie en lot poste principal
+Basé sur le diagnostic schéma : pas de table chefs, uniquement 5 colonnes UUID sur `affaires` + `respo_fab_id` sur `fabrication_objets`. Toutes les décisions D1→D6 intégrées.
 
-**Arbitrage UX** : nouvelle route dédiée `/admin/employes-poste-principal` (pas sous-onglet) car :
-- La page `/employes` est déjà dense (spreadsheet + dialogs CRUD)
-- Action one-shot RH (162 fiches → 0 à terme), mérite un écran focus
-- Plus simple à découvrir via lien direct depuis bandeau de complétion
+## Phase 0 — DB foundations (migration unique, à valider avant Phase 1)
 
-**Fichier** : `src/routes/_app.admin.employes-poste-principal.tsx` (nouveau)
+### 0.1 Vue `v_chefs_par_affaire`
 
-**Layout** :
+```sql
+CREATE OR REPLACE VIEW public.v_chefs_par_affaire AS
+SELECT id AS affaire_id, chef_projet_id        AS employe_id, 'chef_projet'      AS role FROM affaires WHERE chef_projet_id        IS NOT NULL
+UNION ALL
+SELECT id, chef_chantier_id,         'chef_chantier'         FROM affaires WHERE chef_chantier_id         IS NOT NULL
+UNION ALL
+SELECT id, responsable_montage_id,   'responsable_montage'   FROM affaires WHERE responsable_montage_id   IS NOT NULL
+UNION ALL
+SELECT id, responsable_demontage_id, 'responsable_demontage' FROM affaires WHERE responsable_demontage_id IS NOT NULL
+UNION ALL
+SELECT id, charge_affaires_id,       'charge_affaires'       FROM affaires WHERE charge_affaires_id       IS NOT NULL
+UNION ALL
+SELECT affaire_id, respo_fab_id,     'respo_fab'             FROM fabrication_objets WHERE respo_fab_id  IS NOT NULL
+ORDER BY affaire_id, role;
 ```
-┌──────────────────────────────────────────────────┐
-│ ← Retour Employés    Postes principaux à saisir │
-│                                                  │
-│ [Compteur sticky] 47 / 162 fiches à compléter   │
-│ [Filtres] Statut contrat ▾  Chantier ▾  🔍 Nom │
-│                                                  │
-│ ┌─ Table ──────────────────────────────────────┐│
-│ │ Nom   │Prénom│Email│Stat│3 chantiers│Poste ⌨ ││
-│ │ ...   │ ...  │ ... │ .. │ 9231-Atel │ [____] ││
-│ └────────────────────────────────────────────┘ │
-│         [💾 Sauvegarder tout (12 modifs)]       │
-└──────────────────────────────────────────────────┘
+Vue `security_invoker = on` pour respecter les RLS de `affaires`.
+
+### 0.2 RPC `is_chef_on_affaire`
+
+```sql
+CREATE OR REPLACE FUNCTION public.is_chef_on_affaire(_employe_id uuid, _affaire_id uuid)
+RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path=public AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM v_chefs_par_affaire
+    WHERE affaire_id = _affaire_id AND employe_id = _employe_id
+  )
+$$;
 ```
 
-**Logique** :
-- Query : `employes` WHERE (poste_principal IS NULL OR poste_principal = '') AND actif=true
-- Subquery 3 derniers chantiers : via `assignations` JOIN `affaires` ORDER BY date DESC LIMIT 3 GROUP BY employe
-- Local state `Map<employeId, posteValue>` modifié, autosave on blur (debounce 500ms)
-- Bouton bulk save = boucle UPDATE par chunks de 50
-- Suggestion intelligente : top 1 métier des 3 derniers chantiers → mappe vers POSTES_SUGGESTIONS via heuristique (metier "machinerie" → "Machiniste", etc.) → injecté en `placeholder=`
+Helper compagnon pour RLS (auth.uid → employe.profile_id) :
+```sql
+CREATE OR REPLACE FUNCTION public.current_user_is_chef_on_affaire(_affaire_id uuid)
+RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path=public AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM v_chefs_par_affaire v
+    JOIN employes e ON e.id = v.employe_id
+    WHERE v.affaire_id = _affaire_id AND e.profile_id = auth.uid()
+  )
+$$;
+```
 
-**Filtres** :
-- Statut contrat : multi-select (Checkbox group) sur enum `contrat_type` + `statut_contrat`
-- Chantier récent : Combobox autocomplete sur `affaires` actives, filtre via assignations.affaire_id IN (...)
-- Recherche nom/prénom : input free text (fuzzy)
+### 0.3 RPC `mes_affaires_chef`
 
-**Datalist** : `<datalist id="postes-suggestions">` avec POSTES_SUGGESTIONS (centralisé dans lib existante)
+```sql
+CREATE OR REPLACE FUNCTION public.mes_affaires_chef(_employe_id uuid)
+RETURNS TABLE(LIKE affaires, mes_roles text[])
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path=public AS $$
+  SELECT a.*, ARRAY_AGG(v.role ORDER BY v.role) AS mes_roles
+  FROM affaires a
+  JOIN v_chefs_par_affaire v ON v.affaire_id = a.id
+  WHERE v.employe_id = _employe_id
+  GROUP BY a.id
+  ORDER BY a.date_debut DESC NULLS LAST;
+$$;
+```
 
-**Lien dans sidebar** : ajout entrée Admin "Postes principaux" avec badge count si > 0.
+### 0.4 Table audit `heures_validations`
 
-## ITEM 2 — Export/Import Excel employés
+```sql
+CREATE TABLE public.heures_validations (
+  id uuid PK default gen_random_uuid(),
+  heure_saisie_id uuid NOT NULL REFERENCES heures_saisies(id) ON DELETE CASCADE,
+  valide_par_chef_id uuid NOT NULL REFERENCES employes(id),
+  valide_at timestamptz NOT NULL DEFAULT now(),
+  action text NOT NULL CHECK (action IN ('validate','correct','reject')),
+  valeur_avant numeric,
+  valeur_apres numeric NOT NULL,
+  commentaire text,
+  role_au_moment text NOT NULL  -- snapshot, ex 'chef_chantier'
+);
+CREATE INDEX ON heures_validations(heure_saisie_id);
+CREATE INDEX ON heures_validations(valide_par_chef_id, valide_at DESC);
+```
+RLS : INSERT par chef sur ses affaires uniquement (via jointure `heures_saisies.affaire_id`), SELECT chef + admin + employé concerné.
 
-**Fichier** : `src/lib/employes-excel.ts` (nouveau, lazy-loaded)
+### 0.5 RLS additionnelles « scope chef »
 
-**Export** :
-- Bouton "Exporter Excel" ajouté dans `_app.employes.tsx` (header) + page `/admin/employes-poste-principal`
-- Lib : `xlsx-js-style` (déjà policy projet)
-- Colonnes : Nom, Prénom, Email, Statut contrat, Poste principal, Taux brut, Taux chargé, Date dernière activité (max(assignations.date)), Chantier récent
-- Filename : `employes-setup-paris-${date}.xlsx`
+Ajouter (en complément, sans casser l'existant qui donne déjà tout au rôle système `chef_chantier`) — politique additive permissive ciblée pour les futurs rôles plus restreints, ET sur `fabrication_objets` photo upload :
 
-**Import inverse** :
-- Bouton "Importer Excel postes" dans `_app.employes.tsx` + page admin
-- Drop zone → parse → matching par `normalizeName(nom+' '+prenom)` (helper existant)
-- Modal diff preview : "X mises à jour | Y inchangés | Z non trouvés"
-- Validation finale → `UPDATE employes SET poste_principal=$1 WHERE id=$2` boucle
-- Idempotent : si poste_principal Excel == DB, skip
+| Table | Nouvelle policy SELECT/UPDATE | Condition |
+|---|---|---|
+| `heures_saisies` | (déjà OK via `user_has_affaire_access`) | rien à ajouter |
+| `fabrication_objets` | UPDATE chef → seulement champs `statut_chef`, `commentaire_chef`, `statut_chef_updated_*` | trigger column-guard |
+| `heures_validations` | INSERT WITH CHECK | `current_user_is_chef_on_affaire((SELECT affaire_id FROM heures_saisies WHERE id = heure_saisie_id))` |
+| `fabrication_objets_photos` | INSERT chef | `current_user_is_chef_on_affaire(fo.affaire_id)` (déjà via `is_chef_or_admin` global, on conserve) |
 
-**Sécurité** : RLS update employes déjà chef_or_admin (pas de migration nécessaire)
+⚠️ **Choix conscient** : on **ne durcit pas** le rôle système `chef_chantier` global dans ce sprint (cela casserait l'app desktop existante). Le scoping par affaire vaut pour les **nouvelles** opérations (audit `heures_validations`, photos preuve) et l'UI mobile filtre côté query. Durcissement RLS chef-scope-par-affaire = **sprint séparé** (à inscrire roadmap v0.43).
 
-## ITEM 3 — Validation E2E template PDF
+### 0.6 Trigger `t_audit_validation_heures`
 
-**Fichier** : enrichissement `src/routes/_app.rh.contrats.tsx` onglet "Template"
+À chaque `UPDATE` de `heures_saisies` qui passe `statut` brouillon→valide ou modifie `heures_reelles` par un user dont l'employé est chef sur l'affaire, INSERT auto dans `heures_validations` avec snapshot `before/after`. Si UPDATE par admin → `role_au_moment='admin'`.
 
-**Bouton "Tester le template"** → ouvre `TemplateTestDialog` avec :
+---
 
-**5 cas de test prédéfinis** (en mémoire, pas DB) :
-| # | Cas | Données |
-|---|-----|---------|
-| A | Poste renseigné | SAVOYEN, poste="Constructeur", chantier 9231 court |
-| B | Fallback null | DUPONT, poste=null → "Technicien de plateau" |
-| C | Adresse longue | MARTIN, adresse 90 chars |
-| D | Libellé chantier long | DURAND, "Atelier mandarine M&Ms version pilote 2" |
-| E | Intérim vs CDDU | LEROY intérim avec agence_interim |
+## Phase 1 — Server functions (`src/lib/chef.functions.ts`)
 
-**Implémentation** :
-- Réutilise `renderContratHtml()` de `contrats-templates.ts` avec fixtures hardcodées
-- Génère 5 PDF via fonction existante `generateContratPdf()` côté client (jsPDF/html2canvas) ou edge function `contrat-pdf`
-- Affiche en grid 5 thumbnails (iframes srcDoc HTML) avec bouton "Télécharger PDF" + "Ouvrir plein écran"
+Toutes protégées par `requireSupabaseAuth` :
+- `getMesAffairesChef()` → wrap `mes_affaires_chef(auth.employe_id)`
+- `getDashboardChef()` → KPI agrégés (heures à valider, objets à valider, taille équipe semaine, alertes)
+- `getPlanningChef({ semaine })` → assignations + objets sur affaires du chef
+- `getEquipeChef({ affaire_id?, metier_id? })` → employés staffés sur ses affaires
+- `getHeuresAValider({ affaire_id?, employe_id? })` → `heures_saisies` statut `soumis`/`brouillon` sur ses affaires
+- `getObjetsAValider()` → `fabrication_objets` où respo_fab=me ET statut_chef≠'fini'
+- `validerHeure({ heure_saisie_id, action, valeur_apres, commentaire })` → UPDATE + INSERT validation
+- `validerObjet({ objet_id, statut_chef, commentaire, photo_path? })` → UPDATE statut + photo storage
+- `saisirHeureEquipe({ employe_id, affaire_id, date, heures, ... })` → check `is_chef_on_affaire` puis INSERT pour le compte de l'employé (`saisi_par_chef=true`)
 
-**Tests Playwright** (bonus) — `e2e/contrats/template-validation.admin.spec.ts` :
-1. Ouvre /rh/contrats?tab=template → clic "Tester le template"
-2. Pour chaque iframe : `expect(html).not.toMatch(/\{\{[^}]+\}\}/)`
-3. Sections attendues : array de 15 titres, chaque `expect(html).toContain(title)`
-4. Page count : impose en CSS `@page` count via parsing du PDF (skip si trop complexe → check `<div class="page">` count == 4)
+Toutes vérifient `current_user_is_chef_on_affaire(affaire_id)` côté handler avant écriture.
 
-## Fichiers touchés
+---
 
-| Fichier | Action |
-|---|---|
-| `src/routes/_app.admin.employes-poste-principal.tsx` | NEW |
-| `src/lib/employes-excel.ts` | NEW |
-| `src/components/employes/EmployesImportPostesDialog.tsx` | NEW |
-| `src/components/contrats/TemplateTestDialog.tsx` | NEW |
-| `src/lib/contrats-template-fixtures.ts` | NEW (5 fixtures) |
-| `src/routes/_app.employes.tsx` | EDIT (boutons export/import) |
-| `src/routes/_app.rh.contrats.tsx` | EDIT (bouton Tester template) |
-| `src/components/AppSidebar.tsx` | EDIT (lien Postes principaux) |
-| `src/routes/_app.roadmap.tsx` | EDIT (entrée v0.42.2) |
-| `e2e/contrats/template-validation.admin.spec.ts` | NEW (bonus) |
+## Phase 2 — UI mobile (route shell + 5 onglets)
 
-## Pas de migration DB requise
+### Arborescence routes
 
-Tout réutilise `employes.poste_principal` (déjà ajouté en v0.42.x précédent), RLS existante.
+```
+src/routes/_authenticated/m/chef.tsx                 # layout + bottom nav 5
+src/routes/_authenticated/m/chef.index.tsx           # → redirect dashboard
+src/routes/_authenticated/m/chef.dashboard.tsx       # Onglet 1
+src/routes/_authenticated/m/chef.planning.tsx        # Onglet 2
+src/routes/_authenticated/m/chef.equipe.tsx          # Onglet 3 (tabs internes a/b/c)
+src/routes/_authenticated/m/chef.a-valider.tsx       # Onglet 4 (sections heures/objets)
+src/routes/_authenticated/m/chef.moi.tsx             # Onglet 5
+```
 
-## Ordre d'exécution
+`beforeLoad` du layout : `if (!estChefSurAuMoinsUneAffaire) redirect('/m/employe')`.
 
-1. ITEM 1 (route + filtres + autosave) — ~30 min
-2. ITEM 2 (export + import + diff modal) — ~25 min
-3. ITEM 3 (5 fixtures + dialog gallery) — ~20 min
-4. Roadmap + sidebar link — ~5 min
-5. Bonus E2E Playwright — ~15 min
+### Composants nouveaux
 
-Total : ~1h30 de génération, livrable PR cohérent.
+```
+src/components/mobile/chef/
+  ChefBottomNav.tsx               # 5 icons + badge counts
+  ChefDashboardKPI.tsx
+  ChefAffaireCard.tsx             # multi-badges roles
+  ChefPlanningWeek.tsx            # lecture seule
+  ChefEquipeTabs.tsx              # 3 tabs : Staffer / Saisir / Valider
+  ChefSaisirHeuresEquipeForm.tsx  # batch journée
+  ChefValiderHeuresList.tsx       # swipe approve/correct
+  ChefValiderObjetCard.tsx        # photo upload optionnelle
+  ChefMoiHub.tsx                  # ré-utilise composants /m/employe
+```
 
-**OK pour lancer ?**
+Réutilisation directe (pas de fork) : `StafferMobileForm` (avec props `restrictAffaireIds` + `restrictEquipeMetierIds`), `MesHeuresMobile`, `MonProfilMobile`, `MesContratsMobile`.
+
+### Bottom nav badges
+
+- Onglet 4 : count `getHeuresAValider().length + getObjetsAValider().length`
+- Auto-refresh via `useQuery` polling 60s.
+
+---
+
+## Phase 3 — Storage photos preuve validation objet
+
+- Bucket existant `fabrication-objets-photos` réutilisé.
+- Path : `{affaire_id}/{objet_id}/validation-{timestamp}.jpg`
+- `commentaire` photo = "Validation chef + {role_au_moment}" préfixé auto.
+
+---
+
+## Phase 4 — Tests E2E (`tests/e2e/m-chef-*.spec.ts`)
+
+7 specs Playwright correspondant exactement aux 7 cas exigés (login chef, heures perso, heures équipe, validation heures + audit row, validation objet, staffing, blocage 403 sur affaire non-assignée).
+
+---
+
+## Estimé d'effort réel
+
+| Phase | Tâche | h |
+|---|---|---|
+| 0 | Migration vue + 2 RPC + helper RLS + table audit + trigger + tests SQL | **5** |
+| 1 | 9 server functions + types + handlers de scope | **6** |
+| 2 | Layout + bottom nav + 5 routes squelettes + redirect guard | **3** |
+| 2 | Onglet Dashboard (KPI cards + alertes) | **3** |
+| 2 | Onglet Planning (lecture seule + filtres) | **4** |
+| 2 | Onglet Équipe (3 tabs : staffer / saisir / valider swipe) | **6** |
+| 2 | Onglet À valider (heures + objets + photo) | **4** |
+| 2 | Onglet Moi (réutilisation pure) | **1** |
+| 3 | Photos preuve (upload + commentaire) | **1** |
+| 4 | 7 specs E2E Playwright | **4** |
+| QA | QA mobile manuelle 1015×768 + 390×844 + ajustements | **2** |
+| **Total** | | **39h** (tampon ±10% : 35-43h) |
+
+Légèrement au-dessus de ton estimé 30-35h à cause du trigger d'audit + des 7 specs E2E exhaustives. Si on déscope les specs E2E à 3 critiques (login/audit/403), on retombe à **34h**.
+
+---
+
+## Hors scope explicitement (renvoyés Sprint 2+)
+
+- Module documents/photos par affaire (Sprint 2 dédié, comme convenu)
+- Durcissement RLS « chef ne voit que ses affaires » au niveau rôle système → **v0.43**
+- Granularité « chef peintre / chef bois » au niveau affaire (table `affaire_chefs_metier`) → **v0.43+**, on filtre par `employes.metier_principal_id` côté query en attendant
+- Notifications push pour alertes chef → backlog
+
+---
+
+## Pré-requis avant code
+
+1. ✅ Ton GO sur le plan
+2. Compte chef de test créé par Gabin (avec au moins 2 affaires dont au moins 1 multi-rôles)
+3. Décision : on commit avec ou sans les 7 specs E2E (impact 4h)

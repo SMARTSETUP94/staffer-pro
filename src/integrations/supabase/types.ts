@@ -1923,6 +1923,60 @@ export type Database = {
           },
         ]
       }
+      heures_validations: {
+        Row: {
+          action: string
+          commentaire: string | null
+          created_at: string
+          heure_saisie_id: string
+          id: string
+          role_au_moment: string
+          valeur_apres: number
+          valeur_avant: number | null
+          valide_at: string
+          valide_par_chef_id: string
+        }
+        Insert: {
+          action: string
+          commentaire?: string | null
+          created_at?: string
+          heure_saisie_id: string
+          id?: string
+          role_au_moment: string
+          valeur_apres: number
+          valeur_avant?: number | null
+          valide_at?: string
+          valide_par_chef_id: string
+        }
+        Update: {
+          action?: string
+          commentaire?: string | null
+          created_at?: string
+          heure_saisie_id?: string
+          id?: string
+          role_au_moment?: string
+          valeur_apres?: number
+          valeur_avant?: number | null
+          valide_at?: string
+          valide_par_chef_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "heures_validations_heure_saisie_id_fkey"
+            columns: ["heure_saisie_id"]
+            isOneToOne: false
+            referencedRelation: "heures_saisies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "heures_validations_valide_par_chef_id_fkey"
+            columns: ["valide_par_chef_id"]
+            isOneToOne: false
+            referencedRelation: "employes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lieux: {
         Row: {
           actif: boolean
@@ -3132,6 +3186,14 @@ export type Database = {
         }
         Relationships: []
       }
+      v_chefs_par_affaire: {
+        Row: {
+          affaire_id: string | null
+          employe_id: string | null
+          role: string | null
+        }
+        Relationships: []
+      }
       v_devis_consommation: {
         Row: {
           affaire_id: string | null
@@ -3529,6 +3591,10 @@ export type Database = {
         }
         Returns: string
       }
+      current_user_is_chef_on_affaire: {
+        Args: { _affaire_id: string }
+        Returns: boolean
+      }
       delete_devis_atomique: { Args: { p_devis_id: string }; Returns: Json }
       delete_my_hors_planning_saisie: {
         Args: { _saisie_id: string }
@@ -3621,9 +3687,20 @@ export type Database = {
       }
       is_admin: { Args: never; Returns: boolean }
       is_affaire_open: { Args: { _affaire_id: string }; Returns: boolean }
+      is_chef_on_affaire: {
+        Args: { _affaire_id: string; _employe_id: string }
+        Returns: boolean
+      }
       is_chef_or_admin: { Args: never; Returns: boolean }
       is_devis_termine: { Args: { _devis_id: string }; Returns: boolean }
       is_profile_complete: { Args: { p_id: string }; Returns: boolean }
+      mes_affaires_chef: {
+        Args: { _employe_id: string }
+        Returns: {
+          affaire: Database["public"]["Tables"]["affaires"]["Row"]
+          mes_roles: string[]
+        }[]
+      }
       next_affaire_numero: { Args: { _prefix: number }; Returns: string }
       preflight_delete_devis: { Args: { p_devis_id: string }; Returns: Json }
       preflight_import_devis: {
