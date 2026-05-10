@@ -3,7 +3,7 @@
  * Squelette livré ; raffinements UI/filtres avancés en Tour 3.
  */
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2, FileText, Download, FileSignature, X } from "lucide-react";
 import { toast } from "sonner";
@@ -13,6 +13,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { SignContractDialog } from "@/components/contrats/SignContractDialog";
@@ -40,6 +41,7 @@ interface ContratRow {
   created_at: string;
   employes: { nom: string; prenom: string; statut_contrat: string | null } | null;
   affaires: { numero: string; nom: string } | null;
+  contrats_signatures?: { role_signature: "employe" | "employeur"; signed_at: string }[] | null;
 }
 
 const STATUT_LABELS: Record<ContratRow["statut"], string> = {
@@ -51,30 +53,43 @@ const STATUT_LABELS: Record<ContratRow["statut"], string> = {
 
 function RhContrats() {
   const [tab, setTab] = useState<"a_creer" | "signes" | "archives" | "tous">("a_creer");
+  const [search, setSearch] = useState("");
   const [signDialog, setSignDialog] = useState<{ id: string; pdfUrl: string | null } | null>(null);
 
   const { data, isLoading, refetch } = useQuery({
-    queryKey: ["rh-contrats", tab],
+    queryKey: ["rh-contrats"],
     queryFn: async () => {
-      let q = supabase
+      const { data, error } = await supabase
         .from("contrats_intermittents")
         .select(`
           id, date_debut, date_fin, taux_horaire_brut, forfait, heures_estimees,
           statut, pdf_v1_url, pdf_v2_url, pdf_v3_url, created_at,
           employes:employee_id ( nom, prenom, statut_contrat ),
-          affaires:chantier_id ( numero, nom )
+          affaires:chantier_id ( numero, nom ),
+          contrats_signatures ( role_signature, signed_at )
         `)
         .order("created_at", { ascending: false });
-
-      if (tab === "a_creer") q = q.in("statut", ["a_signer_employe", "a_signer_employeur"]);
-      else if (tab === "signes") q = q.eq("statut", "signe");
-      else if (tab === "archives") q = q.eq("statut", "annule");
-
-      const { data, error } = await q;
       if (error) throw error;
       return data as unknown as ContratRow[];
     },
   });
+
+  useEffect(() => {
+    const channel = supabase
+      .channel("rh-contrats-signatures")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "contrats_signatures" },
+        (payload) => {
+          if ((payload.new as { role_signature?: string }).role_signature === "employe") {
+            toast.success("Contrat signé par l’employé — contre-signature RH à traiter");
+            refetch();
+          }
+        },
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [refetch]);
 
   const stats = useMemo(() => {
     const rows = data ?? [];
