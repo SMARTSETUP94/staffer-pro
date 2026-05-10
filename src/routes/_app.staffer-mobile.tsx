@@ -17,7 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
-import { normalize } from "@/lib/string-normalize";
+import { normalizeForMatch as normalize } from "@/lib/string-normalize";
 import { generateContratV1 } from "@/lib/contrats-signature";
 import { triggerEmail } from "@/lib/contrats-signature";
 
@@ -208,7 +208,7 @@ function StafferMobile() {
 
   return (
     <div className="mx-auto max-w-xl space-y-4 p-4">
-      <PageHeader title="Staffer rapide" subtitle="Affectation mobile + contrat intermittent auto" />
+      <PageHeader title="Staffer rapide" description="Affectation mobile + contrat intermittent auto" />
 
       <Card>
         <CardHeader>
