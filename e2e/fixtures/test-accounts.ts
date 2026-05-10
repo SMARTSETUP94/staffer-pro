@@ -16,6 +16,7 @@
 export type TestRole =
   | "admin"
   | "chef_chantier"
+  | "chef_metier_scoped"
   | "employe"
   | "employe_desktop"
   | "employe_mobile";
@@ -56,6 +57,14 @@ export const TEST_ACCOUNTS: Record<TestRole, TestAccount> = {
     email: required("E2E_CHEF_EMAIL"),
     password: required("E2E_CHEF_PASSWORD"),
     storageStatePath: "e2e/.auth/chef.json",
+  },
+  // v0.44.4 — Chef scopé par métier (sous-rôle de chef_chantier avec filtre métier).
+  // Utilisé par les specs e2e/chef/sprint-v0443-rls-scoped.chef.spec.ts.
+  chef_metier_scoped: {
+    role: "chef_metier_scoped",
+    email: optional("E2E_CHEF_SCOPED_EMAIL", "e2e-chef-scoped@staffer.test"),
+    password: optional("E2E_CHEF_SCOPED_PASSWORD", "Chef-Scoped-E2E-2026!"),
+    storageStatePath: "e2e/.auth/chef-scoped.json",
   },
   employe: {
     role: "employe",

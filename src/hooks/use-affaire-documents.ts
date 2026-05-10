@@ -104,6 +104,40 @@ export function useAffaireDocuments(
     [signedUrls],
   );
 
+  /**
+   * v0.44.4 — Préfetch en lot pour les galeries.
+   * 1 appel HTTP `createSignedUrls` au lieu de N — réduit 20 photos à 1 round-trip.
+   * Filtre les paths déjà en cache non-expirés.
+   */
+  const prefetchSignedUrls = useCallback(
+    async (storagePaths: string[]): Promise<void> => {
+      if (storagePaths.length === 0) return;
+      const now = Date.now();
+      const toFetch = storagePaths.filter((p) => {
+        const c = signedUrls[p];
+        return !c || c.expiresAt - now <= SIGN_REFRESH_MARGIN_MS;
+      });
+      if (toFetch.length === 0) return;
+      const { data, error: err } = await supabase.storage
+        .from("affaires-photos")
+        .createSignedUrls(toFetch, SIGN_TTL_SEC);
+      if (err || !data) return;
+      setSignedUrls((prev) => {
+        const next = { ...prev };
+        for (const entry of data) {
+          if (entry.signedUrl && entry.path) {
+            next[entry.path] = {
+              url: entry.signedUrl,
+              expiresAt: now + SIGN_TTL_SEC * 1000,
+            };
+          }
+        }
+        return next;
+      });
+    },
+    [signedUrls],
+  );
+
   const upload = useCallback(
     async (
       file: File,
@@ -217,6 +251,7 @@ export function useAffaireDocuments(
     error,
     reload,
     getSignedUrl,
+    prefetchSignedUrls,
     upload,
     updateDocument,
     deleteDocument,

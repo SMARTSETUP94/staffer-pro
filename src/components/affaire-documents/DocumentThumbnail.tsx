@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FileText, Image as ImageIcon, Loader2 } from "lucide-react";
 import type { AffaireDocument } from "@/hooks/use-affaire-documents";
 
@@ -12,14 +12,42 @@ interface Props {
 export function DocumentThumbnail({ doc, getSignedUrl, onClick, className }: Props) {
   const [url, setUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [inView, setInView] = useState(false);
+  const wrapperRef = useRef<HTMLButtonElement | null>(null);
   const isImage = doc.mime_type.startsWith("image/");
 
+  // v0.44.4 — Lazy resolve : on n'appelle getSignedUrl QUE quand la miniature entre
+  // dans (ou à proximité de) la fenêtre. La galerie a déjà préfetché les URLs en lot,
+  // donc cet appel touche en général le cache → résolution synchrone.
   useEffect(() => {
-    let cancelled = false;
-    if (!isImage) {
+    if (!isImage || !wrapperRef.current) {
       setLoading(false);
       return;
     }
+    if (typeof IntersectionObserver === "undefined") {
+      setInView(true);
+      return;
+    }
+    const el = wrapperRef.current;
+    const obs = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) {
+            setInView(true);
+            obs.disconnect();
+            break;
+          }
+        }
+      },
+      { rootMargin: "200px" }, // précharge avant l'apparition à l'écran
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [isImage]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!isImage || !inView) return;
     void getSignedUrl(doc.storage_path).then((u) => {
       if (!cancelled) {
         setUrl(u);
@@ -29,10 +57,11 @@ export function DocumentThumbnail({ doc, getSignedUrl, onClick, className }: Pro
     return () => {
       cancelled = true;
     };
-  }, [doc.storage_path, isImage, getSignedUrl]);
+  }, [doc.storage_path, isImage, inView, getSignedUrl]);
 
   return (
     <button
+      ref={wrapperRef}
       type="button"
       onClick={onClick}
       className={[
@@ -41,7 +70,7 @@ export function DocumentThumbnail({ doc, getSignedUrl, onClick, className }: Pro
       ].join(" ")}
     >
       {isImage ? (
-        loading ? (
+        !inView || loading ? (
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         ) : url ? (
           <img
@@ -49,6 +78,7 @@ export function DocumentThumbnail({ doc, getSignedUrl, onClick, className }: Pro
             alt={doc.description ?? doc.filename}
             className="h-full w-full object-cover transition-transform group-hover:scale-105"
             loading="lazy"
+            decoding="async"
           />
         ) : (
           <ImageIcon className="h-8 w-8 text-muted-foreground" />

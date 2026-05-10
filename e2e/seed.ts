@@ -26,7 +26,7 @@ const admin = createClient(url, serviceKey, {
   auth: { autoRefreshToken: false, persistSession: false },
 });
 
-type RoleName = "admin" | "chef_chantier" | "employe";
+type RoleName = "admin" | "chef_chantier" | "employe" | "chef_metier_scoped";
 
 interface Seed {
   email: string;
@@ -35,6 +35,13 @@ interface Seed {
   fullName: string;
   prenom: string;
   nom: string;
+  /** v0.44.4 — pour chef_metier_scoped : id du métier auquel le chef est rattaché.
+   *  Si non fourni, on prend le premier métier disponible. */
+  metierOrdre?: number;
+}
+
+function optional(name: string, fallback: string): string {
+  return process.env[name] ?? fallback;
 }
 
 const seeds: Seed[] = [
@@ -61,6 +68,17 @@ const seeds: Seed[] = [
     fullName: "E2E Employé",
     prenom: "E2E",
     nom: "Employé",
+  },
+  // v0.44.4 — Chef scopé par métier (peinture par défaut).
+  // Si les vars E2E_CHEF_SCOPED_* ne sont pas définies, on dérive du chef global.
+  {
+    email: optional("E2E_CHEF_SCOPED_EMAIL", "e2e-chef-scoped@staffer.test"),
+    password: optional("E2E_CHEF_SCOPED_PASSWORD", "Chef-Scoped-E2E-2026!"),
+    role: "chef_metier_scoped",
+    fullName: "E2E Chef Scopé",
+    prenom: "E2E",
+    nom: "ChefScoped",
+    metierOrdre: 3, // peinture
   },
 ];
 
@@ -128,12 +146,17 @@ async function ensureEmploye(userId: string, s: Seed): Promise<string> {
     .eq("profile_id", userId)
     .maybeSingle();
   if (existing) return existing.id;
-  // Récupérer un metier_principal_id valide (premier dispo)
-  const { data: metiers, error: mErr } = await admin
-    .from("metiers")
-    .select("id")
-    .order("ordre")
-    .limit(1);
+  // Récupérer un metier_principal_id valide.
+  // Si le seed précise metierOrdre, on le respecte ; sinon premier dispo.
+  let metierQuery = admin.from("metiers").select("id").order("ordre").limit(1);
+  if (s.metierOrdre !== undefined) {
+    metierQuery = admin
+      .from("metiers")
+      .select("id")
+      .eq("ordre", s.metierOrdre)
+      .limit(1);
+  }
+  const { data: metiers, error: mErr } = await metierQuery;
   if (mErr) throw mErr;
   const metierId = metiers?.[0]?.id ?? 1;
   const { data, error } = await admin
@@ -153,8 +176,11 @@ async function ensureEmploye(userId: string, s: Seed): Promise<string> {
   return data.id;
 }
 
-async function ensureChefAffaire(chefUserId: string): Promise<string> {
-  const numero = "5E2E1";
+async function ensureChefAffaire(
+  chefUserId: string,
+  numero = "5E2E1",
+  nom = "E2E Affaire Chef",
+): Promise<string> {
   const { data: existing } = await admin
     .from("affaires")
     .select("id")
@@ -171,7 +197,7 @@ async function ensureChefAffaire(chefUserId: string): Promise<string> {
     .from("affaires")
     .insert({
       numero,
-      nom: "E2E Affaire Chef",
+      nom,
       client: "E2E Test",
       statut: "en_cours",
       phase: "signe",
@@ -222,13 +248,23 @@ async function main() {
     await ensureRole(id, s.role);
     userIds[s.role] = id;
   }
-  // Employés (chef + employe)
+  // Employés (chef global + employe + chef scopé)
   const chefEmpId = await ensureEmploye(userIds.chef_chantier, seeds[1]);
   const empId = await ensureEmploye(userIds.employe, seeds[2]);
-  // Affaire chef
+  const chefScopedEmpId = await ensureEmploye(userIds.chef_metier_scoped, seeds[3]);
+  // Affaire chef global (5E2E1)
   const affaireId = await ensureChefAffaire(userIds.chef_chantier);
-  console.log(`[seed] chef employe=${chefEmpId} affaire=${affaireId}`);
-  // Assignation employé sur cette semaine
+  console.log(`[seed] chef global employe=${chefEmpId} affaire=${affaireId}`);
+  // Affaire chef scopé (5E2E2) — distincte pour vérifier le filtre app-side
+  const affaireScopedId = await ensureChefAffaire(
+    userIds.chef_metier_scoped,
+    "5E2E2",
+    "E2E Affaire Chef Scopé",
+  );
+  console.log(
+    `[seed] chef scopé employe=${chefScopedEmpId} affaire=${affaireScopedId}`,
+  );
+  // Assignation employé sur cette semaine (sur l'affaire chef global)
   await ensureAssignationSemaine(empId, affaireId);
   console.log("[seed] OK");
 }
