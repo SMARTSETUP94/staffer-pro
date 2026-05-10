@@ -119,7 +119,7 @@ export function BirthdaysHeaderIcon() {
                     {p.avatar_url ? <AvatarImage src={p.avatar_url} alt={p.prenom} /> : null}
                     <AvatarFallback className="text-[9px]">{p.prenom.slice(0, 1)}</AvatarFallback>
                   </Avatar>
-                  <span className="text-xs font-medium">{p.prenom}</span>
+                  <span className="text-xs font-medium">{p.prenom}{p.nom ? ` ${p.nom}` : ""}</span>
                 </div>
               ))}
             </div>
