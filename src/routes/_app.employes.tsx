@@ -72,6 +72,7 @@ interface EmployeRow {
   taux_horaire_charge: number | null;
   forfait: boolean;
   statut_contrat: StatutContrat | null;
+  poste_principal: string | null;
 }
 
 interface FormState {
@@ -107,6 +108,7 @@ interface FormState {
   taux_horaire_charge: string;
   forfait: boolean;
   statut_contrat: StatutContrat | "";
+  poste_principal: string;
 }
 
 const emptyForm: FormState = {
@@ -140,6 +142,7 @@ const emptyForm: FormState = {
   taux_horaire_charge: "",
   forfait: false,
   statut_contrat: "",
+  poste_principal: "",
 };
 
 // v0.18.1 — Bloc 3 : options pour la section "Capacités / Permis" du dialog
@@ -190,7 +193,7 @@ function EmployesPage() {
     setLoading(true);
     const { data: emps, error } = await supabase
       .from("employes")
-      .select("id, prenom, nom, email, telephone, mobile, type_contrat, sous_type_contrat, is_apprenti, agence_interim, metier_principal_id, actif, non_staffing, est_livreur, categories_permis, date_naissance, adresse, notes, profile_id, taux_horaire_brut, taux_horaire_charge, forfait, statut_contrat")
+      .select("id, prenom, nom, email, telephone, mobile, type_contrat, sous_type_contrat, is_apprenti, agence_interim, metier_principal_id, actif, non_staffing, est_livreur, categories_permis, date_naissance, adresse, notes, profile_id, taux_horaire_brut, taux_horaire_charge, forfait, statut_contrat, poste_principal")
       .order("nom", { ascending: true })
       .limit(2000);
     if (error) {
@@ -335,6 +338,7 @@ function EmployesPage() {
       taux_horaire_charge: row.taux_horaire_charge?.toString() ?? "",
       forfait: row.forfait ?? false,
       statut_contrat: row.statut_contrat ?? "",
+      poste_principal: row.poste_principal ?? "",
     });
     setOpen(true);
   };
@@ -367,6 +371,7 @@ function EmployesPage() {
       date_naissance: form.date_naissance || null,
       adresse: form.adresse.trim() || null,
       notes: form.notes.trim() || null,
+      poste_principal: form.poste_principal.trim() || null,
     };
     // Champs admin-only (rémunération + statut contrat fin)
     const payload = isAdmin
