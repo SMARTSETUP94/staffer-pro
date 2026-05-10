@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Component, useEffect, useState, type ErrorInfo, type ReactNode } from "react";
 import { AuthProvider } from "@/lib/auth-context";
 import { PreviewProvider } from "@/lib/preview-context";
+import { Toaster } from "@/components/ui/sonner";
 import appCss from "../styles.css?url";
 
 declare global {
@@ -167,6 +168,7 @@ function RootComponent() {
         <AuthProvider>
           <PreviewProvider>
             <Outlet />
+            <Toaster richColors closeButton position="top-center" />
           </PreviewProvider>
         </AuthProvider>
       </QueryClientProvider>
