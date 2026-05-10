@@ -141,7 +141,7 @@ export function BirthdaysHeaderIcon() {
                       {p.avatar_url ? <AvatarImage src={p.avatar_url} alt={p.prenom} /> : null}
                       <AvatarFallback className="text-[9px]">{p.prenom.slice(0, 1)}</AvatarFallback>
                     </Avatar>
-                    <span>{p.prenom}</span>
+                    <span>{p.prenom}{p.nom ? ` ${p.nom}` : ""}</span>
                   </div>
                   <span className="text-xs text-muted-foreground">
                     J+{p.daysAhead} · {p.monthDay.replace("-", "/")}
