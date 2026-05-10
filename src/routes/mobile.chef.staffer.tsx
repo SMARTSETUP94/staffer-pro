@@ -10,7 +10,10 @@ export const Route = createFileRoute("/mobile/chef/staffer")({
       <>
         <ChefMobileHeader title="Staffer rapide" />
         <div className="mx-auto max-w-xl p-4">
-          <StafferMobileForm />
+          <StafferMobileForm scopeToChef />
+          <p className="text-xs text-muted-foreground mt-3">
+            Seuls les chantiers et les coéquipiers de votre périmètre s'affichent.
+          </p>
         </div>
       </>
     </RoleGuard>
