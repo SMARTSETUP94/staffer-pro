@@ -16,64 +16,60 @@ export type ContratTemplate = {
 export type ContratTemplateVariables = Record<string, string | number | null | undefined>;
 
 export type PlaceholderKey =
-  | "employe_nom" | "employe_prenom" | "employe_adresse" | "employe_email" | "date_naissance" | "numero_secu"
-  | "date_debut" | "date_fin" | "lieu_mission" | "chantier_nom" | "chantier_numero" | "poste"
-  | "taux_horaire_brut" | "taux_horaire_charge" | "nb_heures"
-  | "employeur_nom" | "employeur_signataire" | "numero_contrat" | "convention_collective" | "statut_contrat"
-  | "date_signature_employe" | "date_signature_employeur";
+  // Employé (6)
+  | "employe_civilite" | "employe_nom" | "employe_prenom"
+  | "employe_adresse_ligne1" | "employe_code_postal" | "employe_ville"
+  // Mission (7)
+  | "poste" | "nom_emission" | "categorie"
+  | "date_debut" | "date_fin"
+  | "duree_minimale_texte" | "duree_hebdomadaire_heures"
+  // Tarif (1)
+  | "taux_horaire_brut"
+  // Signature (2)
+  | "date_signature" | "lieu_signature";
 
 export interface PlaceholderDef {
   key: PlaceholderKey;
   label: string;
   example: string;
+  defaut?: string;
 }
 
 export const PLACEHOLDER_GROUPS: Array<{ groupe: string; items: PlaceholderDef[] }> = [
   {
     groupe: "Employé",
     items: [
-      { key: "employe_nom", label: "Nom", example: "AUBERT" },
-      { key: "employe_prenom", label: "Prénom", example: "Valentin" },
-      { key: "employe_adresse", label: "Adresse", example: "12 rue de la Paix, 75002 Paris" },
-      { key: "employe_email", label: "Email", example: "valentin.aubert@example.com" },
-      { key: "date_naissance", label: "Date de naissance", example: "14 mars 1990" },
-      { key: "numero_secu", label: "N° sécurité sociale", example: "1 90 03 75 056 042 12" },
+      { key: "employe_civilite", label: "Civilité", example: "Monsieur" },
+      { key: "employe_nom", label: "Nom", example: "DUPONT" },
+      { key: "employe_prenom", label: "Prénom", example: "Jean" },
+      { key: "employe_adresse_ligne1", label: "Adresse", example: "12 rue de la Paix" },
+      { key: "employe_code_postal", label: "Code postal", example: "75002" },
+      { key: "employe_ville", label: "Ville", example: "Paris" },
     ],
   },
   {
     groupe: "Mission",
     items: [
-      { key: "date_debut", label: "Date début", example: "12 mai 2026" },
-      { key: "date_fin", label: "Date fin", example: "16 mai 2026" },
-      { key: "lieu_mission", label: "Lieu de mission", example: "Grand Palais Éphémère, Paris" },
-      { key: "chantier_nom", label: "Nom du chantier", example: "Salon exemple" },
-      { key: "chantier_numero", label: "N° chantier", example: "4123" },
       { key: "poste", label: "Poste", example: "Technicien montage" },
-      { key: "nb_heures", label: "Nombre d'heures", example: "35 h" },
+      { key: "nom_emission", label: "Nom de l'émission", example: "THE VOICE", defaut: "non précisée" },
+      { key: "categorie", label: "Catégorie", example: "Non-cadre", defaut: "Non-cadre" },
+      { key: "date_debut", label: "Date de début (JJ/MM/AAAA)", example: "06/05/2026" },
+      { key: "date_fin", label: "Date de fin (JJ/MM/AAAA)", example: "22/05/2026" },
+      { key: "duree_minimale_texte", label: "Durée minimale", example: "1 jour", defaut: "1 jour" },
+      { key: "duree_hebdomadaire_heures", label: "Durée hebdo (h)", example: "35", defaut: "35" },
     ],
   },
   {
     groupe: "Tarif",
     items: [
       { key: "taux_horaire_brut", label: "Taux horaire brut", example: "18,00 €" },
-      { key: "taux_horaire_charge", label: "Taux horaire chargé", example: "26,40 €" },
-    ],
-  },
-  {
-    groupe: "Employeur",
-    items: [
-      { key: "employeur_nom", label: "Raison sociale", example: "Setup Paris SAS" },
-      { key: "employeur_signataire", label: "Signataire employeur", example: "Gabin — Setup Paris" },
-      { key: "numero_contrat", label: "N° contrat", example: "C-2026-042" },
-      { key: "convention_collective", label: "Convention collective", example: "CCN entreprises techniques de la création et de l'événement" },
-      { key: "statut_contrat", label: "Statut contrat", example: "CDDU intermittent" },
     ],
   },
   {
     groupe: "Signature",
     items: [
-      { key: "date_signature_employe", label: "Date signature employé", example: "10 mai 2026" },
-      { key: "date_signature_employeur", label: "Date signature employeur", example: "11 mai 2026" },
+      { key: "date_signature", label: "Date de signature (JJ/MM/AAAA)", example: "10/05/2026" },
+      { key: "lieu_signature", label: "Lieu de signature", example: "Vitry sur Seine", defaut: "Vitry sur Seine" },
     ],
   },
 ];
