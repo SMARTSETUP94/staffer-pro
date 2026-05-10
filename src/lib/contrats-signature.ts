@@ -98,6 +98,7 @@ function buildPdfData(c: FullContratRecord, sigEmploye?: string | null, sigEmplo
     signed_at_employe: sigE?.signed_at ?? null,
     signed_at_employeur: sigEr?.signed_at ?? null,
     template_html: c.contrat_templates?.contenu_html ?? null,
+    poste: c.poste ?? null,
   };
 }
 
