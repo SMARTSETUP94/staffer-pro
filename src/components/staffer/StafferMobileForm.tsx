@@ -45,6 +45,7 @@ export function StafferMobileForm() {
   const [employeId, setEmployeId] = useState<string | null>(null);
   const [chantierId, setChantierId] = useState<string | null>(null);
   const [metierId, setMetierId] = useState<number | null>(null);
+  const [poste, setPoste] = useState<string>("");
   const [dateDebut, setDateDebut] = useState("");
   const [dateFin, setDateFin] = useState("");
   const [slot, setSlot] = useState<"matin" | "apres_midi" | "journee">("journee");
