@@ -42,8 +42,11 @@ function DashboardPage() {
   //  - bug futur dans clampLayoutToRole
   //  - changement de rôle preview en cours de session
   const allowed = getAllowedWidgetsForRole(effectiveRole);
+  // v0.40.x — anniversaires + saint_du_jour migrés en icônes header (compaction).
+  const HEADER_MIGRATED: ReadonlySet<WidgetId> = new Set(["anniversaires", "saint_du_jour"]);
   const visibleWidgets = layout.visible.filter(
-    (id): id is WidgetId => !!WIDGET_META[id] && allowed.has(id) && id !== "astuces_marquee",
+    (id): id is WidgetId =>
+      !!WIDGET_META[id] && allowed.has(id) && id !== "astuces_marquee" && !HEADER_MIGRATED.has(id),
   );
   const showMarquee = layout.visible.includes("astuces_marquee") && allowed.has("astuces_marquee");
 
