@@ -20,6 +20,7 @@ import { Route as MobileProfilRouteImport } from './routes/mobile.profil'
 import { Route as MobileMoisRouteImport } from './routes/mobile.mois'
 import { Route as MobileHeuresRouteImport } from './routes/mobile.heures'
 import { Route as MobileContratsRouteImport } from './routes/mobile.contrats'
+import { Route as MobileChefRouteImport } from './routes/mobile.chef'
 import { Route as MobileAujourdhuiRouteImport } from './routes/mobile.aujourdhui'
 import { Route as MobileAbsencesRouteImport } from './routes/mobile.absences'
 import { Route as AuthSetPasswordRouteImport } from './routes/auth.set-password'
@@ -49,10 +50,17 @@ import { Route as AppChargeAtelierRouteImport } from './routes/_app.charge-ateli
 import { Route as AppAuditHeuresRouteImport } from './routes/_app.audit-heures'
 import { Route as AppAuditAuthRouteImport } from './routes/_app.audit-auth'
 import { Route as AppAbsencesRouteImport } from './routes/_app.absences'
+import { Route as MobileChefIndexRouteImport } from './routes/mobile.chef.index'
 import { Route as AppFabricationIndexRouteImport } from './routes/_app.fabrication.index'
 import { Route as AppExportIndexRouteImport } from './routes/_app.export.index'
 import { Route as AppDevisIndexRouteImport } from './routes/_app.devis.index'
 import { Route as AppAffairesIndexRouteImport } from './routes/_app.affaires.index'
+import { Route as MobileChefStafferRouteImport } from './routes/mobile.chef.staffer'
+import { Route as MobileChefPlanningRouteImport } from './routes/mobile.chef.planning'
+import { Route as MobileChefFabricationRouteImport } from './routes/mobile.chef.fabrication'
+import { Route as MobileChefEquipeRouteImport } from './routes/mobile.chef.equipe'
+import { Route as MobileChefDashboardRouteImport } from './routes/mobile.chef.dashboard'
+import { Route as MobileChefContratsRouteImport } from './routes/mobile.chef.contrats'
 import { Route as AppStaffingPlanIdRouteImport } from './routes/_app.staffing.$planId'
 import { Route as AppRhContratsRouteImport } from './routes/_app.rh.contrats'
 import { Route as AppParametresUtilisateursRouteImport } from './routes/_app.parametres.utilisateurs'
@@ -132,6 +140,11 @@ const MobileHeuresRoute = MobileHeuresRouteImport.update({
 const MobileContratsRoute = MobileContratsRouteImport.update({
   id: '/mobile/contrats',
   path: '/mobile/contrats',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MobileChefRoute = MobileChefRouteImport.update({
+  id: '/mobile/chef',
+  path: '/mobile/chef',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MobileAujourdhuiRoute = MobileAujourdhuiRouteImport.update({
@@ -279,6 +292,11 @@ const AppAbsencesRoute = AppAbsencesRouteImport.update({
   path: '/absences',
   getParentRoute: () => AppRoute,
 } as any)
+const MobileChefIndexRoute = MobileChefIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => MobileChefRoute,
+} as any)
 const AppFabricationIndexRoute = AppFabricationIndexRouteImport.update({
   id: '/fabrication/',
   path: '/fabrication/',
@@ -298,6 +316,36 @@ const AppAffairesIndexRoute = AppAffairesIndexRouteImport.update({
   id: '/affaires/',
   path: '/affaires/',
   getParentRoute: () => AppRoute,
+} as any)
+const MobileChefStafferRoute = MobileChefStafferRouteImport.update({
+  id: '/staffer',
+  path: '/staffer',
+  getParentRoute: () => MobileChefRoute,
+} as any)
+const MobileChefPlanningRoute = MobileChefPlanningRouteImport.update({
+  id: '/planning',
+  path: '/planning',
+  getParentRoute: () => MobileChefRoute,
+} as any)
+const MobileChefFabricationRoute = MobileChefFabricationRouteImport.update({
+  id: '/fabrication',
+  path: '/fabrication',
+  getParentRoute: () => MobileChefRoute,
+} as any)
+const MobileChefEquipeRoute = MobileChefEquipeRouteImport.update({
+  id: '/equipe',
+  path: '/equipe',
+  getParentRoute: () => MobileChefRoute,
+} as any)
+const MobileChefDashboardRoute = MobileChefDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => MobileChefRoute,
+} as any)
+const MobileChefContratsRoute = MobileChefContratsRouteImport.update({
+  id: '/contrats',
+  path: '/contrats',
+  getParentRoute: () => MobileChefRoute,
 } as any)
 const AppStaffingPlanIdRoute = AppStaffingPlanIdRouteImport.update({
   id: '/staffing/$planId',
@@ -475,6 +523,7 @@ export interface FileRoutesByFullPath {
   '/auth/set-password': typeof AuthSetPasswordRoute
   '/mobile/absences': typeof MobileAbsencesRoute
   '/mobile/aujourdhui': typeof MobileAujourdhuiRoute
+  '/mobile/chef': typeof MobileChefRouteWithChildren
   '/mobile/contrats': typeof MobileContratsRoute
   '/mobile/heures': typeof MobileHeuresRoute
   '/mobile/mois': typeof MobileMoisRoute
@@ -502,10 +551,17 @@ export interface FileRoutesByFullPath {
   '/parametres/utilisateurs': typeof AppParametresUtilisateursRoute
   '/rh/contrats': typeof AppRhContratsRoute
   '/staffing/$planId': typeof AppStaffingPlanIdRoute
+  '/mobile/chef/contrats': typeof MobileChefContratsRoute
+  '/mobile/chef/dashboard': typeof MobileChefDashboardRoute
+  '/mobile/chef/equipe': typeof MobileChefEquipeRoute
+  '/mobile/chef/fabrication': typeof MobileChefFabricationRoute
+  '/mobile/chef/planning': typeof MobileChefPlanningRoute
+  '/mobile/chef/staffer': typeof MobileChefStafferRoute
   '/affaires/': typeof AppAffairesIndexRoute
   '/devis/': typeof AppDevisIndexRoute
   '/export/': typeof AppExportIndexRoute
   '/fabrication/': typeof AppFabricationIndexRoute
+  '/mobile/chef/': typeof MobileChefIndexRoute
   '/affaires/$affaireId/devis': typeof AppAffairesAffaireIdDevisRoute
   '/affaires/$affaireId/fabrication': typeof AppAffairesAffaireIdFabricationRoute
   '/affaires/$affaireId/journal': typeof AppAffairesAffaireIdJournalRoute
@@ -571,10 +627,17 @@ export interface FileRoutesByTo {
   '/parametres/utilisateurs': typeof AppParametresUtilisateursRoute
   '/rh/contrats': typeof AppRhContratsRoute
   '/staffing/$planId': typeof AppStaffingPlanIdRoute
+  '/mobile/chef/contrats': typeof MobileChefContratsRoute
+  '/mobile/chef/dashboard': typeof MobileChefDashboardRoute
+  '/mobile/chef/equipe': typeof MobileChefEquipeRoute
+  '/mobile/chef/fabrication': typeof MobileChefFabricationRoute
+  '/mobile/chef/planning': typeof MobileChefPlanningRoute
+  '/mobile/chef/staffer': typeof MobileChefStafferRoute
   '/affaires': typeof AppAffairesIndexRoute
   '/devis': typeof AppDevisIndexRoute
   '/export': typeof AppExportIndexRoute
   '/fabrication': typeof AppFabricationIndexRoute
+  '/mobile/chef': typeof MobileChefIndexRoute
   '/affaires/$affaireId/devis': typeof AppAffairesAffaireIdDevisRoute
   '/affaires/$affaireId/fabrication': typeof AppAffairesAffaireIdFabricationRoute
   '/affaires/$affaireId/journal': typeof AppAffairesAffaireIdJournalRoute
@@ -617,6 +680,7 @@ export interface FileRoutesById {
   '/auth/set-password': typeof AuthSetPasswordRoute
   '/mobile/absences': typeof MobileAbsencesRoute
   '/mobile/aujourdhui': typeof MobileAujourdhuiRoute
+  '/mobile/chef': typeof MobileChefRouteWithChildren
   '/mobile/contrats': typeof MobileContratsRoute
   '/mobile/heures': typeof MobileHeuresRoute
   '/mobile/mois': typeof MobileMoisRoute
@@ -644,10 +708,17 @@ export interface FileRoutesById {
   '/_app/parametres/utilisateurs': typeof AppParametresUtilisateursRoute
   '/_app/rh/contrats': typeof AppRhContratsRoute
   '/_app/staffing/$planId': typeof AppStaffingPlanIdRoute
+  '/mobile/chef/contrats': typeof MobileChefContratsRoute
+  '/mobile/chef/dashboard': typeof MobileChefDashboardRoute
+  '/mobile/chef/equipe': typeof MobileChefEquipeRoute
+  '/mobile/chef/fabrication': typeof MobileChefFabricationRoute
+  '/mobile/chef/planning': typeof MobileChefPlanningRoute
+  '/mobile/chef/staffer': typeof MobileChefStafferRoute
   '/_app/affaires/': typeof AppAffairesIndexRoute
   '/_app/devis/': typeof AppDevisIndexRoute
   '/_app/export/': typeof AppExportIndexRoute
   '/_app/fabrication/': typeof AppFabricationIndexRoute
+  '/mobile/chef/': typeof MobileChefIndexRoute
   '/_app/affaires/$affaireId/devis': typeof AppAffairesAffaireIdDevisRoute
   '/_app/affaires/$affaireId/fabrication': typeof AppAffairesAffaireIdFabricationRoute
   '/_app/affaires/$affaireId/journal': typeof AppAffairesAffaireIdJournalRoute
@@ -690,6 +761,7 @@ export interface FileRouteTypes {
     | '/auth/set-password'
     | '/mobile/absences'
     | '/mobile/aujourdhui'
+    | '/mobile/chef'
     | '/mobile/contrats'
     | '/mobile/heures'
     | '/mobile/mois'
@@ -717,10 +789,17 @@ export interface FileRouteTypes {
     | '/parametres/utilisateurs'
     | '/rh/contrats'
     | '/staffing/$planId'
+    | '/mobile/chef/contrats'
+    | '/mobile/chef/dashboard'
+    | '/mobile/chef/equipe'
+    | '/mobile/chef/fabrication'
+    | '/mobile/chef/planning'
+    | '/mobile/chef/staffer'
     | '/affaires/'
     | '/devis/'
     | '/export/'
     | '/fabrication/'
+    | '/mobile/chef/'
     | '/affaires/$affaireId/devis'
     | '/affaires/$affaireId/fabrication'
     | '/affaires/$affaireId/journal'
@@ -786,10 +865,17 @@ export interface FileRouteTypes {
     | '/parametres/utilisateurs'
     | '/rh/contrats'
     | '/staffing/$planId'
+    | '/mobile/chef/contrats'
+    | '/mobile/chef/dashboard'
+    | '/mobile/chef/equipe'
+    | '/mobile/chef/fabrication'
+    | '/mobile/chef/planning'
+    | '/mobile/chef/staffer'
     | '/affaires'
     | '/devis'
     | '/export'
     | '/fabrication'
+    | '/mobile/chef'
     | '/affaires/$affaireId/devis'
     | '/affaires/$affaireId/fabrication'
     | '/affaires/$affaireId/journal'
@@ -831,6 +917,7 @@ export interface FileRouteTypes {
     | '/auth/set-password'
     | '/mobile/absences'
     | '/mobile/aujourdhui'
+    | '/mobile/chef'
     | '/mobile/contrats'
     | '/mobile/heures'
     | '/mobile/mois'
@@ -858,10 +945,17 @@ export interface FileRouteTypes {
     | '/_app/parametres/utilisateurs'
     | '/_app/rh/contrats'
     | '/_app/staffing/$planId'
+    | '/mobile/chef/contrats'
+    | '/mobile/chef/dashboard'
+    | '/mobile/chef/equipe'
+    | '/mobile/chef/fabrication'
+    | '/mobile/chef/planning'
+    | '/mobile/chef/staffer'
     | '/_app/affaires/'
     | '/_app/devis/'
     | '/_app/export/'
     | '/_app/fabrication/'
+    | '/mobile/chef/'
     | '/_app/affaires/$affaireId/devis'
     | '/_app/affaires/$affaireId/fabrication'
     | '/_app/affaires/$affaireId/journal'
@@ -880,6 +974,7 @@ export interface RootRouteChildren {
   AuthSetPasswordRoute: typeof AuthSetPasswordRoute
   MobileAbsencesRoute: typeof MobileAbsencesRoute
   MobileAujourdhuiRoute: typeof MobileAujourdhuiRoute
+  MobileChefRoute: typeof MobileChefRouteWithChildren
   MobileContratsRoute: typeof MobileContratsRoute
   MobileHeuresRoute: typeof MobileHeuresRoute
   MobileMoisRoute: typeof MobileMoisRoute
@@ -965,6 +1060,13 @@ declare module '@tanstack/react-router' {
       path: '/mobile/contrats'
       fullPath: '/mobile/contrats'
       preLoaderRoute: typeof MobileContratsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mobile/chef': {
+      id: '/mobile/chef'
+      path: '/mobile/chef'
+      fullPath: '/mobile/chef'
+      preLoaderRoute: typeof MobileChefRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mobile/aujourdhui': {
@@ -1170,6 +1272,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAbsencesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/mobile/chef/': {
+      id: '/mobile/chef/'
+      path: '/'
+      fullPath: '/mobile/chef/'
+      preLoaderRoute: typeof MobileChefIndexRouteImport
+      parentRoute: typeof MobileChefRoute
+    }
     '/_app/fabrication/': {
       id: '/_app/fabrication/'
       path: '/fabrication'
@@ -1197,6 +1306,48 @@ declare module '@tanstack/react-router' {
       fullPath: '/affaires/'
       preLoaderRoute: typeof AppAffairesIndexRouteImport
       parentRoute: typeof AppRoute
+    }
+    '/mobile/chef/staffer': {
+      id: '/mobile/chef/staffer'
+      path: '/staffer'
+      fullPath: '/mobile/chef/staffer'
+      preLoaderRoute: typeof MobileChefStafferRouteImport
+      parentRoute: typeof MobileChefRoute
+    }
+    '/mobile/chef/planning': {
+      id: '/mobile/chef/planning'
+      path: '/planning'
+      fullPath: '/mobile/chef/planning'
+      preLoaderRoute: typeof MobileChefPlanningRouteImport
+      parentRoute: typeof MobileChefRoute
+    }
+    '/mobile/chef/fabrication': {
+      id: '/mobile/chef/fabrication'
+      path: '/fabrication'
+      fullPath: '/mobile/chef/fabrication'
+      preLoaderRoute: typeof MobileChefFabricationRouteImport
+      parentRoute: typeof MobileChefRoute
+    }
+    '/mobile/chef/equipe': {
+      id: '/mobile/chef/equipe'
+      path: '/equipe'
+      fullPath: '/mobile/chef/equipe'
+      preLoaderRoute: typeof MobileChefEquipeRouteImport
+      parentRoute: typeof MobileChefRoute
+    }
+    '/mobile/chef/dashboard': {
+      id: '/mobile/chef/dashboard'
+      path: '/dashboard'
+      fullPath: '/mobile/chef/dashboard'
+      preLoaderRoute: typeof MobileChefDashboardRouteImport
+      parentRoute: typeof MobileChefRoute
+    }
+    '/mobile/chef/contrats': {
+      id: '/mobile/chef/contrats'
+      path: '/contrats'
+      fullPath: '/mobile/chef/contrats'
+      preLoaderRoute: typeof MobileChefContratsRouteImport
+      parentRoute: typeof MobileChefRoute
     }
     '/_app/staffing/$planId': {
       id: '/_app/staffing/$planId'
@@ -1539,6 +1690,30 @@ const AppRouteChildren: AppRouteChildren = {
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
+interface MobileChefRouteChildren {
+  MobileChefContratsRoute: typeof MobileChefContratsRoute
+  MobileChefDashboardRoute: typeof MobileChefDashboardRoute
+  MobileChefEquipeRoute: typeof MobileChefEquipeRoute
+  MobileChefFabricationRoute: typeof MobileChefFabricationRoute
+  MobileChefPlanningRoute: typeof MobileChefPlanningRoute
+  MobileChefStafferRoute: typeof MobileChefStafferRoute
+  MobileChefIndexRoute: typeof MobileChefIndexRoute
+}
+
+const MobileChefRouteChildren: MobileChefRouteChildren = {
+  MobileChefContratsRoute: MobileChefContratsRoute,
+  MobileChefDashboardRoute: MobileChefDashboardRoute,
+  MobileChefEquipeRoute: MobileChefEquipeRoute,
+  MobileChefFabricationRoute: MobileChefFabricationRoute,
+  MobileChefPlanningRoute: MobileChefPlanningRoute,
+  MobileChefStafferRoute: MobileChefStafferRoute,
+  MobileChefIndexRoute: MobileChefIndexRoute,
+}
+
+const MobileChefRouteWithChildren = MobileChefRoute._addFileChildren(
+  MobileChefRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
@@ -1550,6 +1725,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthSetPasswordRoute: AuthSetPasswordRoute,
   MobileAbsencesRoute: MobileAbsencesRoute,
   MobileAujourdhuiRoute: MobileAujourdhuiRoute,
+  MobileChefRoute: MobileChefRouteWithChildren,
   MobileContratsRoute: MobileContratsRoute,
   MobileHeuresRoute: MobileHeuresRoute,
   MobileMoisRoute: MobileMoisRoute,
