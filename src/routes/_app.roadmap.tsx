@@ -43,6 +43,62 @@ interface RoadmapPlanned {
 
 const RELEASES: RoadmapRelease[] = [
   {
+    date: "2026-05-10",
+    version: "v0.42.0",
+    title: "📝 Module Template Contrat CDDU + paramètres entreprise + hotfixes signature",
+    entries: [
+      {
+        type: "feature",
+        area: "Contrats",
+        title: "Éditeur de template contrat (TipTap) dans /rh/contrats",
+        description:
+          "Nouvel onglet « Template contrat » avec éditeur riche TipTap (H1-H3, listes, tables, alignement, soulignement, sauts de page). Toolbar « Insérer variable » groupée par catégorie (Employé, Mission, Tarif, Employeur, Signature). Placeholder NodeView custom rendu en badge stylé dans l'éditeur, sérialisé `{{variable}}` pour interpolation. Live preview 300 ms (toggle Brut / Interpolé). Sidebar versions : Sauvegarder brouillon, Sauvegarder + activer (AlertDialog), Restaurer.",
+      },
+      {
+        type: "feature",
+        area: "Contrats",
+        title: "Versioning + snapshot template legal",
+        description:
+          "Migration : `contenu_json` (AST TipTap) + `notes` sur `contrat_templates`. Trigger DB `trg_contrats_set_template_version` sur `contrats_intermittents` : assigne automatiquement le `template_version_id` actif à la création — traçabilité légale figée même si le template évolue ensuite.",
+      },
+      {
+        type: "feature",
+        area: "Paramètres",
+        title: "Table singleton parametres_entreprise (SMART RESTRUCTURING / SET UP PARIS)",
+        description:
+          "Nouvelle table `parametres_entreprise` (singleton) seedée avec données officielles : raison sociale, marque commerciale, SIRET, NAF, représentant légal, adresse, contact. Utilisée par le moteur d'interpolation des contrats CDDU.",
+      },
+      {
+        type: "feature",
+        area: "Contrats",
+        title: "Template v1 + v2 CDDU Technicien du spectacle",
+        description:
+          "v1 seedée avec texte légal officiel SMART RESTRUCTURING. v2 corrige 3 problèmes constatés en prod (contrat 71D95622) : suppression des placeholders inexistants au schéma Staffer-Pro (civilité, adresse employé, nom_emission, durée_min/hebdo, lieu/date signature), suppression du doublon d'entête, qualification « Technicien de plateau » au lieu de « Intérim ».",
+      },
+      {
+        type: "fix",
+        area: "Notifications",
+        title: "Enum notification_type étendu avec valeur 'system'",
+        description:
+          "Migration ajoute la valeur `system` à l'enum `notification_type`. Corrige l'erreur `invalid input value for enum notification_type: \"system\"` rencontrée par les employés au clic sur un contrat à signer.",
+      },
+      {
+        type: "fix",
+        area: "Contrats",
+        title: "PDF contrat — déblocage Chrome via proxy server function",
+        description:
+          "Refonte `contrats-pdf-proxy.ts` + `_app.rh.contrats.tsx` : le PDF passe par un server function qui force `Content-Disposition: inline` + `Content-Type: application/pdf`, supprimant le blocage Chrome et permettant la prévisualisation directe du contrat signé.",
+      },
+      {
+        type: "improvement",
+        area: "UI",
+        title: "Suppression carte « Facturable signé (estim.) » sur /rh/contrats",
+        description:
+          "Carte stat retirée à la demande RH (passage grid 3 → 2 colonnes). Conservation des cartes À signer ce mois et À contre-signer RH.",
+      },
+    ],
+  },
+  {
     date: "2026-05-05",
     version: "v0.21.1",
     title: "🔒 Sprint sécurité — RBAC UI + RLS heures_saisies + UNIQUE INDEX chef du jour",
