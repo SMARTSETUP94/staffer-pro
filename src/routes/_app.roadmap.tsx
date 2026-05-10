@@ -44,6 +44,34 @@ interface RoadmapPlanned {
 const RELEASES: RoadmapRelease[] = [
   {
     date: "2026-05-10",
+    version: "v0.42.1",
+    title: "🧰 Template contrat v2.1 + catalogue postes + suppression admin contrats",
+    entries: [
+      {
+        type: "feature",
+        area: "Contrats",
+        title: "Template v4 (v2.1) — fixes layout + placeholder {{poste}}",
+        description:
+          "Corrections après test PDF FABAFCD3 (SAVOYEN Hadrien / 9231) : H1 centré, line-height 1.4, font-size 18pt (plus de chevauchement sur 2 lignes). Réordonnancement « Engagement et objet » (Catégorie avant Mission). Compaction CGE (margins/line-height resserrés sur h2/p/li) → tient désormais sur 2 pages au lieu de 3. Email contact employeur passé à `edwige.a@setup.paris` dans `parametres_entreprise`. Nouveau placeholder dynamique `{{poste}}` interpolé dans le template, par défaut « Technicien de plateau ».",
+      },
+      {
+        type: "feature",
+        area: "Contrats",
+        title: "Catalogue de postes contractuels centralisé",
+        description:
+          "Nouvelle table `postes_catalogue` (libelle / ordre / actif) seedée avec 8 postes officiels : Tapissier, Serrurier, Technicien de plateau, Décorateur, Dessinateur, Chef constructeur de décors, Chauffeur, Menuisier de décors. Page admin/RH `/parametres/postes` (CRUD + ordre + activation). Lien ajouté dans la sidebar. Le poste devient sélectionnable dès le staffing (Select dans `StafferMobileForm` quand l'employé est éligible CDDU/CDD/Intérim) puis transmis à la RPC `staffer_mobile_create_mission` (paramètre `_poste`) et au moteur de contrat. Édition possible a posteriori sur `/rh/contrats` via le datalist alimenté dynamiquement.",
+      },
+      {
+        type: "feature",
+        area: "Contrats",
+        title: "Suppression définitive admin d'un contrat (cascade signatures)",
+        description:
+          "Bouton 🗑️ « Supprimer définitivement (admin) » sur `/rh/contrats` (réservé aux contrats non signés / annulés). Cascade : suppression des `contrats_signatures` liées puis du `contrats_intermittents`. Le contrat disparaît immédiatement côté employé via RLS. Pensé pour purger les contrats de test (cas Hadrien) sans passer par un script SQL.",
+      },
+    ],
+  },
+  {
+    date: "2026-05-10",
     version: "v0.42.0",
     title: "📝 Module Template Contrat CDDU + paramètres entreprise + hotfixes signature",
     entries: [
