@@ -19,12 +19,14 @@ import { Route as MobilePropositionsRouteImport } from './routes/mobile.proposit
 import { Route as MobileProfilRouteImport } from './routes/mobile.profil'
 import { Route as MobileMoisRouteImport } from './routes/mobile.mois'
 import { Route as MobileHeuresRouteImport } from './routes/mobile.heures'
+import { Route as MobileContratsRouteImport } from './routes/mobile.contrats'
 import { Route as MobileAujourdhuiRouteImport } from './routes/mobile.aujourdhui'
 import { Route as MobileAbsencesRouteImport } from './routes/mobile.absences'
 import { Route as AuthSetPasswordRouteImport } from './routes/auth.set-password'
 import { Route as AuthResetPasswordRouteImport } from './routes/auth.reset-password'
 import { Route as AuthForgotPasswordRouteImport } from './routes/auth.forgot-password'
 import { Route as AppValidationHeuresRouteImport } from './routes/_app.validation-heures'
+import { Route as AppStafferMobileRouteImport } from './routes/_app.staffer-mobile'
 import { Route as AppSignalementsRouteImport } from './routes/_app.signalements'
 import { Route as AppSaisiePourEquipeRouteImport } from './routes/_app.saisie-pour-equipe'
 import { Route as AppRoadmapRouteImport } from './routes/_app.roadmap'
@@ -52,6 +54,7 @@ import { Route as AppExportIndexRouteImport } from './routes/_app.export.index'
 import { Route as AppDevisIndexRouteImport } from './routes/_app.devis.index'
 import { Route as AppAffairesIndexRouteImport } from './routes/_app.affaires.index'
 import { Route as AppStaffingPlanIdRouteImport } from './routes/_app.staffing.$planId'
+import { Route as AppRhContratsRouteImport } from './routes/_app.rh.contrats'
 import { Route as AppParametresUtilisateursRouteImport } from './routes/_app.parametres.utilisateurs'
 import { Route as AppParametresSousTraitantsRouteImport } from './routes/_app.parametres.sous-traitants'
 import { Route as AppParametresRolesFabricationRouteImport } from './routes/_app.parametres.roles-fabrication'
@@ -126,6 +129,11 @@ const MobileHeuresRoute = MobileHeuresRouteImport.update({
   path: '/mobile/heures',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MobileContratsRoute = MobileContratsRouteImport.update({
+  id: '/mobile/contrats',
+  path: '/mobile/contrats',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MobileAujourdhuiRoute = MobileAujourdhuiRouteImport.update({
   id: '/mobile/aujourdhui',
   path: '/mobile/aujourdhui',
@@ -154,6 +162,11 @@ const AuthForgotPasswordRoute = AuthForgotPasswordRouteImport.update({
 const AppValidationHeuresRoute = AppValidationHeuresRouteImport.update({
   id: '/validation-heures',
   path: '/validation-heures',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppStafferMobileRoute = AppStafferMobileRouteImport.update({
+  id: '/staffer-mobile',
+  path: '/staffer-mobile',
   getParentRoute: () => AppRoute,
 } as any)
 const AppSignalementsRoute = AppSignalementsRouteImport.update({
@@ -289,6 +302,11 @@ const AppAffairesIndexRoute = AppAffairesIndexRouteImport.update({
 const AppStaffingPlanIdRoute = AppStaffingPlanIdRouteImport.update({
   id: '/staffing/$planId',
   path: '/staffing/$planId',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppRhContratsRoute = AppRhContratsRouteImport.update({
+  id: '/rh/contrats',
+  path: '/rh/contrats',
   getParentRoute: () => AppRoute,
 } as any)
 const AppParametresUtilisateursRoute =
@@ -450,12 +468,14 @@ export interface FileRoutesByFullPath {
   '/roadmap': typeof AppRoadmapRoute
   '/saisie-pour-equipe': typeof AppSaisiePourEquipeRoute
   '/signalements': typeof AppSignalementsRoute
+  '/staffer-mobile': typeof AppStafferMobileRoute
   '/validation-heures': typeof AppValidationHeuresRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/auth/set-password': typeof AuthSetPasswordRoute
   '/mobile/absences': typeof MobileAbsencesRoute
   '/mobile/aujourdhui': typeof MobileAujourdhuiRoute
+  '/mobile/contrats': typeof MobileContratsRoute
   '/mobile/heures': typeof MobileHeuresRoute
   '/mobile/mois': typeof MobileMoisRoute
   '/mobile/profil': typeof MobileProfilRoute
@@ -480,6 +500,7 @@ export interface FileRoutesByFullPath {
   '/parametres/roles-fabrication': typeof AppParametresRolesFabricationRoute
   '/parametres/sous-traitants': typeof AppParametresSousTraitantsRoute
   '/parametres/utilisateurs': typeof AppParametresUtilisateursRoute
+  '/rh/contrats': typeof AppRhContratsRoute
   '/staffing/$planId': typeof AppStaffingPlanIdRoute
   '/affaires/': typeof AppAffairesIndexRoute
   '/devis/': typeof AppDevisIndexRoute
@@ -517,12 +538,14 @@ export interface FileRoutesByTo {
   '/roadmap': typeof AppRoadmapRoute
   '/saisie-pour-equipe': typeof AppSaisiePourEquipeRoute
   '/signalements': typeof AppSignalementsRoute
+  '/staffer-mobile': typeof AppStafferMobileRoute
   '/validation-heures': typeof AppValidationHeuresRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/auth/set-password': typeof AuthSetPasswordRoute
   '/mobile/absences': typeof MobileAbsencesRoute
   '/mobile/aujourdhui': typeof MobileAujourdhuiRoute
+  '/mobile/contrats': typeof MobileContratsRoute
   '/mobile/heures': typeof MobileHeuresRoute
   '/mobile/mois': typeof MobileMoisRoute
   '/mobile/profil': typeof MobileProfilRoute
@@ -546,6 +569,7 @@ export interface FileRoutesByTo {
   '/parametres/roles-fabrication': typeof AppParametresRolesFabricationRoute
   '/parametres/sous-traitants': typeof AppParametresSousTraitantsRoute
   '/parametres/utilisateurs': typeof AppParametresUtilisateursRoute
+  '/rh/contrats': typeof AppRhContratsRoute
   '/staffing/$planId': typeof AppStaffingPlanIdRoute
   '/affaires': typeof AppAffairesIndexRoute
   '/devis': typeof AppDevisIndexRoute
@@ -586,12 +610,14 @@ export interface FileRoutesById {
   '/_app/roadmap': typeof AppRoadmapRoute
   '/_app/saisie-pour-equipe': typeof AppSaisiePourEquipeRoute
   '/_app/signalements': typeof AppSignalementsRoute
+  '/_app/staffer-mobile': typeof AppStafferMobileRoute
   '/_app/validation-heures': typeof AppValidationHeuresRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/auth/set-password': typeof AuthSetPasswordRoute
   '/mobile/absences': typeof MobileAbsencesRoute
   '/mobile/aujourdhui': typeof MobileAujourdhuiRoute
+  '/mobile/contrats': typeof MobileContratsRoute
   '/mobile/heures': typeof MobileHeuresRoute
   '/mobile/mois': typeof MobileMoisRoute
   '/mobile/profil': typeof MobileProfilRoute
@@ -616,6 +642,7 @@ export interface FileRoutesById {
   '/_app/parametres/roles-fabrication': typeof AppParametresRolesFabricationRoute
   '/_app/parametres/sous-traitants': typeof AppParametresSousTraitantsRoute
   '/_app/parametres/utilisateurs': typeof AppParametresUtilisateursRoute
+  '/_app/rh/contrats': typeof AppRhContratsRoute
   '/_app/staffing/$planId': typeof AppStaffingPlanIdRoute
   '/_app/affaires/': typeof AppAffairesIndexRoute
   '/_app/devis/': typeof AppDevisIndexRoute
@@ -656,12 +683,14 @@ export interface FileRouteTypes {
     | '/roadmap'
     | '/saisie-pour-equipe'
     | '/signalements'
+    | '/staffer-mobile'
     | '/validation-heures'
     | '/auth/forgot-password'
     | '/auth/reset-password'
     | '/auth/set-password'
     | '/mobile/absences'
     | '/mobile/aujourdhui'
+    | '/mobile/contrats'
     | '/mobile/heures'
     | '/mobile/mois'
     | '/mobile/profil'
@@ -686,6 +715,7 @@ export interface FileRouteTypes {
     | '/parametres/roles-fabrication'
     | '/parametres/sous-traitants'
     | '/parametres/utilisateurs'
+    | '/rh/contrats'
     | '/staffing/$planId'
     | '/affaires/'
     | '/devis/'
@@ -723,12 +753,14 @@ export interface FileRouteTypes {
     | '/roadmap'
     | '/saisie-pour-equipe'
     | '/signalements'
+    | '/staffer-mobile'
     | '/validation-heures'
     | '/auth/forgot-password'
     | '/auth/reset-password'
     | '/auth/set-password'
     | '/mobile/absences'
     | '/mobile/aujourdhui'
+    | '/mobile/contrats'
     | '/mobile/heures'
     | '/mobile/mois'
     | '/mobile/profil'
@@ -752,6 +784,7 @@ export interface FileRouteTypes {
     | '/parametres/roles-fabrication'
     | '/parametres/sous-traitants'
     | '/parametres/utilisateurs'
+    | '/rh/contrats'
     | '/staffing/$planId'
     | '/affaires'
     | '/devis'
@@ -791,12 +824,14 @@ export interface FileRouteTypes {
     | '/_app/roadmap'
     | '/_app/saisie-pour-equipe'
     | '/_app/signalements'
+    | '/_app/staffer-mobile'
     | '/_app/validation-heures'
     | '/auth/forgot-password'
     | '/auth/reset-password'
     | '/auth/set-password'
     | '/mobile/absences'
     | '/mobile/aujourdhui'
+    | '/mobile/contrats'
     | '/mobile/heures'
     | '/mobile/mois'
     | '/mobile/profil'
@@ -821,6 +856,7 @@ export interface FileRouteTypes {
     | '/_app/parametres/roles-fabrication'
     | '/_app/parametres/sous-traitants'
     | '/_app/parametres/utilisateurs'
+    | '/_app/rh/contrats'
     | '/_app/staffing/$planId'
     | '/_app/affaires/'
     | '/_app/devis/'
@@ -844,6 +880,7 @@ export interface RootRouteChildren {
   AuthSetPasswordRoute: typeof AuthSetPasswordRoute
   MobileAbsencesRoute: typeof MobileAbsencesRoute
   MobileAujourdhuiRoute: typeof MobileAujourdhuiRoute
+  MobileContratsRoute: typeof MobileContratsRoute
   MobileHeuresRoute: typeof MobileHeuresRoute
   MobileMoisRoute: typeof MobileMoisRoute
   MobileProfilRoute: typeof MobileProfilRoute
@@ -923,6 +960,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MobileHeuresRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/mobile/contrats': {
+      id: '/mobile/contrats'
+      path: '/mobile/contrats'
+      fullPath: '/mobile/contrats'
+      preLoaderRoute: typeof MobileContratsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/mobile/aujourdhui': {
       id: '/mobile/aujourdhui'
       path: '/mobile/aujourdhui'
@@ -963,6 +1007,13 @@ declare module '@tanstack/react-router' {
       path: '/validation-heures'
       fullPath: '/validation-heures'
       preLoaderRoute: typeof AppValidationHeuresRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/staffer-mobile': {
+      id: '/_app/staffer-mobile'
+      path: '/staffer-mobile'
+      fullPath: '/staffer-mobile'
+      preLoaderRoute: typeof AppStafferMobileRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/signalements': {
@@ -1152,6 +1203,13 @@ declare module '@tanstack/react-router' {
       path: '/staffing/$planId'
       fullPath: '/staffing/$planId'
       preLoaderRoute: typeof AppStaffingPlanIdRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/rh/contrats': {
+      id: '/_app/rh/contrats'
+      path: '/rh/contrats'
+      fullPath: '/rh/contrats'
+      preLoaderRoute: typeof AppRhContratsRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/parametres/utilisateurs': {
@@ -1405,6 +1463,7 @@ interface AppRouteChildren {
   AppRoadmapRoute: typeof AppRoadmapRoute
   AppSaisiePourEquipeRoute: typeof AppSaisiePourEquipeRoute
   AppSignalementsRoute: typeof AppSignalementsRoute
+  AppStafferMobileRoute: typeof AppStafferMobileRoute
   AppValidationHeuresRoute: typeof AppValidationHeuresRoute
   AppAdminContenuWidgetsRoute: typeof AppAdminContenuWidgetsRoute
   AppAdminEmailPreviewRoute: typeof AppAdminEmailPreviewRoute
@@ -1422,6 +1481,7 @@ interface AppRouteChildren {
   AppParametresRolesFabricationRoute: typeof AppParametresRolesFabricationRoute
   AppParametresSousTraitantsRoute: typeof AppParametresSousTraitantsRoute
   AppParametresUtilisateursRoute: typeof AppParametresUtilisateursRoute
+  AppRhContratsRoute: typeof AppRhContratsRoute
   AppStaffingPlanIdRoute: typeof AppStaffingPlanIdRoute
   AppAffairesIndexRoute: typeof AppAffairesIndexRoute
   AppDevisIndexRoute: typeof AppDevisIndexRoute
@@ -1451,6 +1511,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppRoadmapRoute: AppRoadmapRoute,
   AppSaisiePourEquipeRoute: AppSaisiePourEquipeRoute,
   AppSignalementsRoute: AppSignalementsRoute,
+  AppStafferMobileRoute: AppStafferMobileRoute,
   AppValidationHeuresRoute: AppValidationHeuresRoute,
   AppAdminContenuWidgetsRoute: AppAdminContenuWidgetsRoute,
   AppAdminEmailPreviewRoute: AppAdminEmailPreviewRoute,
@@ -1469,6 +1530,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppParametresRolesFabricationRoute: AppParametresRolesFabricationRoute,
   AppParametresSousTraitantsRoute: AppParametresSousTraitantsRoute,
   AppParametresUtilisateursRoute: AppParametresUtilisateursRoute,
+  AppRhContratsRoute: AppRhContratsRoute,
   AppStaffingPlanIdRoute: AppStaffingPlanIdRoute,
   AppAffairesIndexRoute: AppAffairesIndexRoute,
   AppDevisIndexRoute: AppDevisIndexRoute,
@@ -1488,6 +1550,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthSetPasswordRoute: AuthSetPasswordRoute,
   MobileAbsencesRoute: MobileAbsencesRoute,
   MobileAujourdhuiRoute: MobileAujourdhuiRoute,
+  MobileContratsRoute: MobileContratsRoute,
   MobileHeuresRoute: MobileHeuresRoute,
   MobileMoisRoute: MobileMoisRoute,
   MobileProfilRoute: MobileProfilRoute,

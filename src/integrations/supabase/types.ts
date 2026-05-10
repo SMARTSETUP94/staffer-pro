@@ -3250,6 +3250,10 @@ export type Database = {
           user_id: string
         }[]
       }
+      annuler_contrat_intermittent: {
+        Args: { p_contrat_id: string; p_motif?: string }
+        Returns: undefined
+      }
       can_saisie_on_affaire: {
         Args: { _affaire_id: string; _date: string }
         Returns: boolean
@@ -3266,7 +3270,7 @@ export type Database = {
           _date_fin: string
           _employee_id: string
           _heures_estimees: number
-          _staffing_id: string
+          _staffing_id?: string
         }
         Returns: string
       }
@@ -3394,6 +3398,10 @@ export type Database = {
         Returns: Json
       }
       refresh_user_quiz_stats: { Args: never; Returns: undefined }
+      set_contrat_pdf_url: {
+        Args: { p_contrat_id: string; p_url: string; p_version: number }
+        Returns: undefined
+      }
       set_vehicule_chauffeurs_autorises: {
         Args: { _employe_ids: string[]; _vehicule_id: string }
         Returns: undefined
@@ -3401,6 +3409,39 @@ export type Database = {
       sign_opportunite: {
         Args: { _affaire_id: string; _new_code: string }
         Returns: string
+      }
+      signer_contrat_employe: {
+        Args: {
+          p_client_ip?: string
+          p_contrat_id: string
+          p_pdf_hash_sha256: string
+          p_pdf_v2_url: string
+          p_signature_image_url: string
+          p_user_agent?: string
+        }
+        Returns: string
+      }
+      signer_contrat_employeur: {
+        Args: {
+          p_client_ip?: string
+          p_contrat_id: string
+          p_pdf_hash_sha256: string
+          p_pdf_v3_url: string
+          p_signature_image_url: string
+          p_user_agent?: string
+        }
+        Returns: string
+      }
+      staffer_mobile_create_mission: {
+        Args: {
+          _chantier_id: string
+          _date_debut: string
+          _date_fin: string
+          _employee_id: string
+          _metier_id: number
+          _slot: string
+        }
+        Returns: Json
       }
       submit_quiz_answer: {
         Args: { p_answer_index: number; p_quiz_id: string }
