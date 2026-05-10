@@ -5,7 +5,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Loader2, FileText, Download, FileSignature, X } from "lucide-react";
+import { Loader2, FileText, Download, FileSignature, X, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { RoleGuard } from "@/components/auth/RoleGuard";
 import { PageHeader } from "@/components/PageHeader";
