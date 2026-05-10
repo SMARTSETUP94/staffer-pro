@@ -35,6 +35,7 @@ interface ContratRow {
   taux_horaire_brut: number | null;
   forfait: boolean;
   heures_estimees: number | null;
+  poste: string | null;
   statut: "a_signer_employe" | "a_signer_employeur" | "signe" | "annule";
   pdf_v1_url: string | null;
   pdf_v2_url: string | null;
@@ -43,6 +44,25 @@ interface ContratRow {
   employes: { nom: string; prenom: string; statut_contrat: string | null } | null;
   affaires: { numero: string; nom: string } | null;
   contrats_signatures?: { role_signature: "employe" | "employeur"; signed_at: string }[] | null;
+}
+
+const POSTES_COURANTS = [
+  "Technicien de plateau",
+  "Machiniste",
+  "Constructeur",
+  "Peintre décorateur",
+  "Régisseur",
+  "Éclairagiste",
+  "Sonorisateur",
+  "Opérateur caméra",
+] as const;
+
+async function updatePoste(id: string, poste: string) {
+  const { error } = await supabase
+    .from("contrats_intermittents")
+    .update({ poste: poste.trim() || "Technicien de plateau" })
+    .eq("id", id);
+  if (error) throw error;
 }
 
 const STATUT_LABELS: Record<ContratRow["statut"], string> = {
@@ -64,7 +84,7 @@ function RhContrats() {
       const { data, error } = await supabase
         .from("contrats_intermittents")
         .select(`
-          id, date_debut, date_fin, taux_horaire_brut, forfait, heures_estimees,
+          id, date_debut, date_fin, taux_horaire_brut, forfait, heures_estimees, poste,
           statut, pdf_v1_url, pdf_v2_url, pdf_v3_url, created_at,
           employes:employee_id ( nom, prenom, statut_contrat ),
           affaires:chantier_id ( numero, nom ),
@@ -175,6 +195,7 @@ function RhContrats() {
                 <TableHeader><TableRow>
                   <TableHead>Employé</TableHead>
                   <TableHead>Chantier</TableHead>
+                  <TableHead>Poste</TableHead>
                   <TableHead>Période</TableHead>
                   <TableHead>Heures</TableHead>
                   <TableHead>Statut</TableHead>
@@ -195,6 +216,23 @@ function RhContrats() {
                         <TableCell>
                           <div className="font-mono text-xs">{r.affaires?.numero}</div>
                           <div className="text-sm">{r.affaires?.nom}</div>
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            list={`postes-${r.id}`}
+                            defaultValue={r.poste ?? "Technicien de plateau"}
+                            disabled={r.statut === "signe" || r.statut === "annule"}
+                            className="h-8 text-xs w-44"
+                            onBlur={async (e) => {
+                              const val = e.target.value.trim();
+                              if (val === (r.poste ?? "Technicien de plateau")) return;
+                              try { await updatePoste(r.id, val); toast.success("Poste mis à jour"); refetch(); }
+                              catch (err) { toast.error((err as Error).message); }
+                            }}
+                          />
+                          <datalist id={`postes-${r.id}`}>
+                            {POSTES_COURANTS.map((p) => <option key={p} value={p} />)}
+                          </datalist>
                         </TableCell>
                         <TableCell className="text-xs">
                           {new Date(r.date_debut).toLocaleDateString("fr-FR")} → {new Date(r.date_fin).toLocaleDateString("fr-FR")}
@@ -246,7 +284,7 @@ function RhContrats() {
                     );
                   })}
                   {filteredRows.length === 0 && (
-                    <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                    <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">
                       <FileText className="mx-auto h-8 w-8 opacity-30 mb-2" />
                       Aucun contrat
                     </TableCell></TableRow>

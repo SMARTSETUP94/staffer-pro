@@ -26,7 +26,8 @@ export type PlaceholderKey =
   | "employe_adresse_complete"
   | "employe_email"
   | "statut_contrat"
-  // Mission (5)
+  // Mission (6)
+  | "poste"
   | "chantier_numero"
   | "chantier_libelle"
   | "date_debut"
@@ -58,7 +59,8 @@ export const PLACEHOLDER_GROUPS: Array<{ groupe: string; items: PlaceholderDef[]
   {
     groupe: "Mission",
     items: [
-      { key: "chantier_numero", label: "N° chantier", example: "9236" },
+      { key: "poste", label: "Poste / qualité", example: "Constructeur" },
+      { key: "chantier_numero", label: "N° chantier", example: "9231" },
       { key: "chantier_libelle", label: "Libellé chantier", example: "13th maker" },
       { key: "date_debut", label: "Date de début (JJ/MM/AAAA)", example: "11/05/2026" },
       { key: "date_fin", label: "Date de fin (JJ/MM/AAAA)", example: "12/05/2026" },

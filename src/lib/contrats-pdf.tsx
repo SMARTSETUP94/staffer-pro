@@ -91,6 +91,7 @@ function renderTemplateHtml(data: ContratPdfData): string {
     employe_email: data.employe_email ?? "—",
     statut_contrat: data.statut_contrat,
     // Mission
+    poste: data.poste && data.poste.trim() !== "" ? data.poste : "Technicien de plateau",
     chantier_numero: data.chantier_numero,
     chantier_libelle: data.chantier_nom,
     date_debut: fmtDateShort(data.date_debut),
