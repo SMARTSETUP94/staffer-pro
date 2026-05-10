@@ -605,6 +605,135 @@ export type Database = {
         }
         Relationships: []
       }
+      contrats_intermittents: {
+        Row: {
+          chantier_id: string
+          created_at: string
+          created_by: string | null
+          date_debut: string
+          date_fin: string
+          employee_id: string
+          forfait: boolean
+          heures_estimees: number | null
+          id: string
+          pdf_hash_sha256: string | null
+          pdf_v1_url: string | null
+          pdf_v2_url: string | null
+          pdf_v3_url: string | null
+          staffing_id: string | null
+          statut: Database["public"]["Enums"]["contrat_intermittent_statut"]
+          taux_horaire_brut: number | null
+          updated_at: string
+        }
+        Insert: {
+          chantier_id: string
+          created_at?: string
+          created_by?: string | null
+          date_debut: string
+          date_fin: string
+          employee_id: string
+          forfait?: boolean
+          heures_estimees?: number | null
+          id?: string
+          pdf_hash_sha256?: string | null
+          pdf_v1_url?: string | null
+          pdf_v2_url?: string | null
+          pdf_v3_url?: string | null
+          staffing_id?: string | null
+          statut?: Database["public"]["Enums"]["contrat_intermittent_statut"]
+          taux_horaire_brut?: number | null
+          updated_at?: string
+        }
+        Update: {
+          chantier_id?: string
+          created_at?: string
+          created_by?: string | null
+          date_debut?: string
+          date_fin?: string
+          employee_id?: string
+          forfait?: boolean
+          heures_estimees?: number | null
+          id?: string
+          pdf_hash_sha256?: string | null
+          pdf_v1_url?: string | null
+          pdf_v2_url?: string | null
+          pdf_v3_url?: string | null
+          staffing_id?: string | null
+          statut?: Database["public"]["Enums"]["contrat_intermittent_statut"]
+          taux_horaire_brut?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contrats_intermittents_chantier_id_fkey"
+            columns: ["chantier_id"]
+            isOneToOne: false
+            referencedRelation: "affaires"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contrats_intermittents_chantier_id_fkey"
+            columns: ["chantier_id"]
+            isOneToOne: false
+            referencedRelation: "v_affaire_consommation"
+            referencedColumns: ["affaire_id"]
+          },
+          {
+            foreignKeyName: "contrats_intermittents_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contrats_signatures: {
+        Row: {
+          client_ip: string | null
+          contrat_id: string
+          created_at: string
+          id: string
+          pdf_hash_sha256: string | null
+          role_signature: Database["public"]["Enums"]["signataire_role"]
+          signataire_id: string
+          signature_image_url: string | null
+          signed_at: string
+          user_agent: string | null
+        }
+        Insert: {
+          client_ip?: string | null
+          contrat_id: string
+          created_at?: string
+          id?: string
+          pdf_hash_sha256?: string | null
+          role_signature: Database["public"]["Enums"]["signataire_role"]
+          signataire_id: string
+          signature_image_url?: string | null
+          signed_at?: string
+          user_agent?: string | null
+        }
+        Update: {
+          client_ip?: string | null
+          contrat_id?: string
+          created_at?: string
+          id?: string
+          pdf_hash_sha256?: string | null
+          role_signature?: Database["public"]["Enums"]["signataire_role"]
+          signataire_id?: string
+          signature_image_url?: string | null
+          signed_at?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contrats_signatures_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "contrats_intermittents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       devis: {
         Row: {
           affaire_id: string
@@ -907,6 +1036,7 @@ export type Database = {
           date_sortie: string | null
           email: string | null
           est_livreur: boolean
+          forfait: boolean
           id: string
           is_apprenti: boolean
           metier_principal_id: number
@@ -919,6 +1049,11 @@ export type Database = {
           prenom: string
           profile_id: string | null
           sous_type_contrat: string | null
+          statut_contrat:
+            | Database["public"]["Enums"]["statut_contrat_type"]
+            | null
+          taux_horaire_brut: number | null
+          taux_horaire_charge: number | null
           telephone: string | null
           type_contrat: Database["public"]["Enums"]["contrat_type"]
           updated_at: string
@@ -935,6 +1070,7 @@ export type Database = {
           date_sortie?: string | null
           email?: string | null
           est_livreur?: boolean
+          forfait?: boolean
           id?: string
           is_apprenti?: boolean
           metier_principal_id: number
@@ -947,6 +1083,11 @@ export type Database = {
           prenom: string
           profile_id?: string | null
           sous_type_contrat?: string | null
+          statut_contrat?:
+            | Database["public"]["Enums"]["statut_contrat_type"]
+            | null
+          taux_horaire_brut?: number | null
+          taux_horaire_charge?: number | null
           telephone?: string | null
           type_contrat?: Database["public"]["Enums"]["contrat_type"]
           updated_at?: string
@@ -963,6 +1104,7 @@ export type Database = {
           date_sortie?: string | null
           email?: string | null
           est_livreur?: boolean
+          forfait?: boolean
           id?: string
           is_apprenti?: boolean
           metier_principal_id?: number
@@ -975,6 +1117,11 @@ export type Database = {
           prenom?: string
           profile_id?: string | null
           sous_type_contrat?: string | null
+          statut_contrat?:
+            | Database["public"]["Enums"]["statut_contrat_type"]
+            | null
+          taux_horaire_brut?: number | null
+          taux_horaire_charge?: number | null
           telephone?: string | null
           type_contrat?: Database["public"]["Enums"]["contrat_type"]
           updated_at?: string
@@ -3112,6 +3259,17 @@ export type Database = {
         Returns: Json
       }
       compute_affaire_typologie: { Args: { num: string }; Returns: string }
+      create_contrat_intermittent: {
+        Args: {
+          _chantier_id: string
+          _date_debut: string
+          _date_fin: string
+          _employee_id: string
+          _heures_estimees: number
+          _staffing_id: string
+        }
+        Returns: string
+      }
       create_notification: {
         Args: {
           _lien?: string
@@ -3270,6 +3428,22 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      upsert_intermittent: {
+        Args: {
+          _adresse: string
+          _cp: string
+          _date_naissance: string
+          _email: string
+          _forfait: boolean
+          _nom_complet: string
+          _poste: string
+          _statut: string
+          _taux_brut: number
+          _taux_charge: number
+          _ville: string
+        }
+        Returns: string
+      }
       user_has_affaire_access: {
         Args: { _affaire_id: string }
         Returns: boolean
@@ -3300,6 +3474,12 @@ export type Database = {
         | "en_attente"
         | "confirmee"
         | "refusee"
+      contrat_intermittent_statut:
+        | "a_signer_employe"
+        | "a_signer_employeur"
+        | "signe"
+        | "archive"
+        | "annule"
       contrat_type: "CDI" | "Interim" | "CDD" | "Independant"
       demi_journee_type: "AM" | "PM" | "JOURNEE"
       devis_statut:
@@ -3350,7 +3530,14 @@ export type Database = {
         | "gros"
         | "tres_gros"
       permis_type: "B" | "C" | "CE"
+      signataire_role: "employe" | "employeur"
       sous_traitant_type: "transport" | "manutention" | "fabrication" | "autre"
+      statut_contrat_type:
+        | "CDI"
+        | "CDDU intermittent"
+        | "CDD chantier"
+        | "Intérim"
+        | "Apprenti"
       swap_status:
         | "proposee"
         | "acceptee_collegue"
@@ -3523,6 +3710,13 @@ export const Constants = {
         "confirmee",
         "refusee",
       ],
+      contrat_intermittent_statut: [
+        "a_signer_employe",
+        "a_signer_employeur",
+        "signe",
+        "archive",
+        "annule",
+      ],
       contrat_type: ["CDI", "Interim", "CDD", "Independant"],
       demi_journee_type: ["AM", "PM", "JOURNEE"],
       devis_statut: [
@@ -3572,7 +3766,15 @@ export const Constants = {
       opportunite_statut: ["a_faire", "envoye", "gagne", "perdu", "termine"],
       opportunite_taille: ["tres_petit", "petit", "moyen", "gros", "tres_gros"],
       permis_type: ["B", "C", "CE"],
+      signataire_role: ["employe", "employeur"],
       sous_traitant_type: ["transport", "manutention", "fabrication", "autre"],
+      statut_contrat_type: [
+        "CDI",
+        "CDDU intermittent",
+        "CDD chantier",
+        "Intérim",
+        "Apprenti",
+      ],
       swap_status: [
         "proposee",
         "acceptee_collegue",
