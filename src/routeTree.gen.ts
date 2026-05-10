@@ -66,6 +66,7 @@ import { Route as AppRhContratsRouteImport } from './routes/_app.rh.contrats'
 import { Route as AppParametresUtilisateursRouteImport } from './routes/_app.parametres.utilisateurs'
 import { Route as AppParametresSousTraitantsRouteImport } from './routes/_app.parametres.sous-traitants'
 import { Route as AppParametresRolesFabricationRouteImport } from './routes/_app.parametres.roles-fabrication'
+import { Route as AppParametresPostesRouteImport } from './routes/_app.parametres.postes'
 import { Route as AppParametresMetiersRouteImport } from './routes/_app.parametres.metiers'
 import { Route as AppParametresLieuxRouteImport } from './routes/_app.parametres.lieux'
 import { Route as AppParametresCompetencesEquipeRouteImport } from './routes/_app.parametres.competences-equipe'
@@ -375,6 +376,11 @@ const AppParametresRolesFabricationRoute =
     path: '/parametres/roles-fabrication',
     getParentRoute: () => AppRoute,
   } as any)
+const AppParametresPostesRoute = AppParametresPostesRouteImport.update({
+  id: '/parametres/postes',
+  path: '/parametres/postes',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppParametresMetiersRoute = AppParametresMetiersRouteImport.update({
   id: '/parametres/metiers',
   path: '/parametres/metiers',
@@ -546,6 +552,7 @@ export interface FileRoutesByFullPath {
   '/parametres/competences-equipe': typeof AppParametresCompetencesEquipeRoute
   '/parametres/lieux': typeof AppParametresLieuxRoute
   '/parametres/metiers': typeof AppParametresMetiersRoute
+  '/parametres/postes': typeof AppParametresPostesRoute
   '/parametres/roles-fabrication': typeof AppParametresRolesFabricationRoute
   '/parametres/sous-traitants': typeof AppParametresSousTraitantsRoute
   '/parametres/utilisateurs': typeof AppParametresUtilisateursRoute
@@ -622,6 +629,7 @@ export interface FileRoutesByTo {
   '/parametres/competences-equipe': typeof AppParametresCompetencesEquipeRoute
   '/parametres/lieux': typeof AppParametresLieuxRoute
   '/parametres/metiers': typeof AppParametresMetiersRoute
+  '/parametres/postes': typeof AppParametresPostesRoute
   '/parametres/roles-fabrication': typeof AppParametresRolesFabricationRoute
   '/parametres/sous-traitants': typeof AppParametresSousTraitantsRoute
   '/parametres/utilisateurs': typeof AppParametresUtilisateursRoute
@@ -703,6 +711,7 @@ export interface FileRoutesById {
   '/_app/parametres/competences-equipe': typeof AppParametresCompetencesEquipeRoute
   '/_app/parametres/lieux': typeof AppParametresLieuxRoute
   '/_app/parametres/metiers': typeof AppParametresMetiersRoute
+  '/_app/parametres/postes': typeof AppParametresPostesRoute
   '/_app/parametres/roles-fabrication': typeof AppParametresRolesFabricationRoute
   '/_app/parametres/sous-traitants': typeof AppParametresSousTraitantsRoute
   '/_app/parametres/utilisateurs': typeof AppParametresUtilisateursRoute
@@ -784,6 +793,7 @@ export interface FileRouteTypes {
     | '/parametres/competences-equipe'
     | '/parametres/lieux'
     | '/parametres/metiers'
+    | '/parametres/postes'
     | '/parametres/roles-fabrication'
     | '/parametres/sous-traitants'
     | '/parametres/utilisateurs'
@@ -860,6 +870,7 @@ export interface FileRouteTypes {
     | '/parametres/competences-equipe'
     | '/parametres/lieux'
     | '/parametres/metiers'
+    | '/parametres/postes'
     | '/parametres/roles-fabrication'
     | '/parametres/sous-traitants'
     | '/parametres/utilisateurs'
@@ -940,6 +951,7 @@ export interface FileRouteTypes {
     | '/_app/parametres/competences-equipe'
     | '/_app/parametres/lieux'
     | '/_app/parametres/metiers'
+    | '/_app/parametres/postes'
     | '/_app/parametres/roles-fabrication'
     | '/_app/parametres/sous-traitants'
     | '/_app/parametres/utilisateurs'
@@ -1384,6 +1396,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppParametresRolesFabricationRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/parametres/postes': {
+      id: '/_app/parametres/postes'
+      path: '/parametres/postes'
+      fullPath: '/parametres/postes'
+      preLoaderRoute: typeof AppParametresPostesRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/parametres/metiers': {
       id: '/_app/parametres/metiers'
       path: '/parametres/metiers'
@@ -1629,6 +1648,7 @@ interface AppRouteChildren {
   AppParametresCompetencesEquipeRoute: typeof AppParametresCompetencesEquipeRoute
   AppParametresLieuxRoute: typeof AppParametresLieuxRoute
   AppParametresMetiersRoute: typeof AppParametresMetiersRoute
+  AppParametresPostesRoute: typeof AppParametresPostesRoute
   AppParametresRolesFabricationRoute: typeof AppParametresRolesFabricationRoute
   AppParametresSousTraitantsRoute: typeof AppParametresSousTraitantsRoute
   AppParametresUtilisateursRoute: typeof AppParametresUtilisateursRoute
@@ -1678,6 +1698,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppParametresCompetencesEquipeRoute: AppParametresCompetencesEquipeRoute,
   AppParametresLieuxRoute: AppParametresLieuxRoute,
   AppParametresMetiersRoute: AppParametresMetiersRoute,
+  AppParametresPostesRoute: AppParametresPostesRoute,
   AppParametresRolesFabricationRoute: AppParametresRolesFabricationRoute,
   AppParametresSousTraitantsRoute: AppParametresSousTraitantsRoute,
   AppParametresUtilisateursRoute: AppParametresUtilisateursRoute,
