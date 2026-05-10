@@ -18,6 +18,7 @@ import {
   type DragEndEvent,
 } from "@dnd-kit/core";
 import { toast } from "sonner";
+import { formatBusinessError } from "@/lib/business-errors";
 import { supabase } from "@/integrations/supabase/client";
 import type {
   Absence,
@@ -411,7 +412,7 @@ export function PlanningGrid({
       onChanged?.();
     } catch (e) {
       console.error(e);
-      toast.error("Échec de l'opération");
+      toast.error(...formatBusinessError(e));
     }
   }
   // ─────────────────────────────────────────────────────────────────────────
@@ -690,7 +691,7 @@ export function PlanningGrid({
                                       onChanged?.();
                                     } catch (e) {
                                       console.error(e);
-                                      toast.error("Échec de la suppression");
+                                      toast.error(...formatBusinessError(e));
                                     }
                                   }
                             }

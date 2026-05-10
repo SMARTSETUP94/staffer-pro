@@ -3,6 +3,7 @@ import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { formatBusinessError } from "@/lib/business-errors";
 import {
   Dialog,
   DialogContent,
@@ -116,7 +117,7 @@ export function BulkAssignDialog({
     const { error } = await supabase.from("assignations").insert(payloads);
     setSaving(false);
     if (error) {
-      toast.error(`Erreur : ${error.message}`);
+      toast.error(...formatBusinessError(error));
       return;
     }
     toast.success(`${cells.length} assignations créées`);
