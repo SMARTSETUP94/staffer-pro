@@ -48,6 +48,7 @@ export interface FullContratRecord {
 const BUCKET = "contrats-intermittents";
 
 async function uploadBlob(path: string, blob: Blob, contentType: string): Promise<string> {
+  console.log("[contrat-signature][upload:start]", { path, contentType, size: blob.size });
   const { error } = await supabase.storage.from(BUCKET).upload(path, blob, {
     upsert: true,
     contentType,
@@ -56,6 +57,7 @@ async function uploadBlob(path: string, blob: Blob, contentType: string): Promis
   // signed URL valide 1 an (privé)
   const { data, error: urlErr } = await supabase.storage.from(BUCKET).createSignedUrl(path, 60 * 60 * 24 * 365);
   if (urlErr || !data) throw new Error(`URL signée échec: ${urlErr?.message}`);
+  console.log("[contrat-signature][upload:ok]", { path, signedUrlLength: data.signedUrl.length });
   return data.signedUrl;
 }
 
@@ -104,7 +106,9 @@ export async function generateContratV1(contratId: string): Promise<string> {
 
 /** Workflow employé : signature PNG → upload → PDF v2 → RPC. */
 export async function signContratAsEmploye(contratId: string, signatureDataUrl: string): Promise<void> {
+  console.log("[contrat-signature][employe:start]", { contratId, signatureLength: signatureDataUrl.length });
   const c = await fetchContratFull(contratId);
+  console.log("[contrat-signature][employe:contrat]", { id: c.id, employee_id: c.employee_id, statut: c.statut, signatures: c.contrats_signatures?.length ?? 0 });
   const ts = Date.now();
 
   // 1. Upload PNG signature
@@ -112,14 +116,18 @@ export async function signContratAsEmploye(contratId: string, signatureDataUrl: 
   const sigUrl = await uploadBlob(`${c.employee_id}/${c.id}/sig_employe_${ts}.png`, sigBlob, "image/png");
 
   // 2. Génère PDF v2 avec signature incrustée
+  console.log("[contrat-signature][employe:pdf:start]");
   const pdfBlob = await generateContratPdfBlob(buildPdfData(c, sigUrl, null));
+  console.log("[contrat-signature][employe:pdf:ok]", { size: pdfBlob.size });
   const pdfV2Url = await uploadBlob(`${c.employee_id}/${c.id}/v2.pdf`, pdfBlob, "application/pdf");
   const hash = await sha256OfBlob(pdfBlob);
+  console.log("[contrat-signature][employe:hash]", { hash });
 
   // 3. Capture user-agent + IP (IP côté serveur via header X-Forwarded-For — laissé NULL ici)
   const ua = typeof navigator !== "undefined" ? navigator.userAgent : null;
 
   // 4. RPC transaction atomique
+  console.log("[contrat-signature][employe:rpc:start]", { contratId, hasSigUrl: !!sigUrl, hasPdfUrl: !!pdfV2Url, ua: !!ua });
   const { error } = await supabase.rpc("signer_contrat_employe", {
     p_contrat_id: contratId,
     p_signature_image_url: sigUrl,
@@ -128,22 +136,29 @@ export async function signContratAsEmploye(contratId: string, signatureDataUrl: 
     p_client_ip: null as unknown as string | undefined,
     p_user_agent: (ua ?? null) as unknown as string | undefined,
   });
+  console.log("[contrat-signature][employe:rpc:response]", { error });
   if (error) throw new Error(error.message);
 }
 
 export async function signContratAsEmployeur(contratId: string, signatureDataUrl: string): Promise<void> {
+  console.log("[contrat-signature][employeur:start]", { contratId, signatureLength: signatureDataUrl.length });
   const c = await fetchContratFull(contratId);
+  console.log("[contrat-signature][employeur:contrat]", { id: c.id, employee_id: c.employee_id, statut: c.statut, signatures: c.contrats_signatures?.length ?? 0 });
   const ts = Date.now();
 
   const sigBlob = dataUrlToBlob(signatureDataUrl);
   const sigUrl = await uploadBlob(`${c.employee_id}/${c.id}/sig_employeur_${ts}.png`, sigBlob, "image/png");
 
   const sigE = c.contrats_signatures?.find((s) => s.role_signature === "employe");
+  console.log("[contrat-signature][employeur:pdf:start]", { hasEmployeSignature: !!sigE?.signature_image_url });
   const pdfBlob = await generateContratPdfBlob(buildPdfData(c, sigE?.signature_image_url ?? null, sigUrl));
+  console.log("[contrat-signature][employeur:pdf:ok]", { size: pdfBlob.size });
   const pdfV3Url = await uploadBlob(`${c.employee_id}/${c.id}/v3.pdf`, pdfBlob, "application/pdf");
   const hash = await sha256OfBlob(pdfBlob);
+  console.log("[contrat-signature][employeur:hash]", { hash });
   const ua = typeof navigator !== "undefined" ? navigator.userAgent : null;
 
+  console.log("[contrat-signature][employeur:rpc:start]", { contratId, hasSigUrl: !!sigUrl, hasPdfUrl: !!pdfV3Url, ua: !!ua });
   const { error } = await supabase.rpc("signer_contrat_employeur", {
     p_contrat_id: contratId,
     p_signature_image_url: sigUrl,
@@ -152,10 +167,12 @@ export async function signContratAsEmployeur(contratId: string, signatureDataUrl
     p_client_ip: null as unknown as string | undefined,
     p_user_agent: (ua ?? null) as unknown as string | undefined,
   });
+  console.log("[contrat-signature][employeur:rpc:response]", { error });
   if (error) throw new Error(error.message);
 }
 
 async function fetchContratFull(contratId: string): Promise<FullContratRecord> {
+  console.log("[contrat-signature][fetchContratFull:start]", { contratId });
   const { data, error } = await supabase
     .from("contrats_intermittents")
     .select(`
@@ -168,6 +185,7 @@ async function fetchContratFull(contratId: string): Promise<FullContratRecord> {
     `)
     .eq("id", contratId)
     .single();
+  console.log("[contrat-signature][fetchContratFull:response]", { hasData: !!data, error });
   if (error || !data) throw new Error(error?.message ?? "Contrat introuvable");
   return data as unknown as FullContratRecord;
 }
