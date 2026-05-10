@@ -93,7 +93,12 @@ Volume staffé v0.39.0c : KPI "Heures staffées" = Σ(pers × demi_jours × H_HA
 ### Sprint 3 features métier (en cours)
 49. ✅ **v0.41.0a** (5 mai 2026) — Hotfix BUG #33 heures invisibles côté employé : `use-mes-heures` deps `useMemo` rows complétées (affairesById/metiersById) + refetch sur `visibilitychange`+`focus`. Test non-régression invariants. **1407/1407 verts.** Voir mem://features/sprint-3-features-v041.
 
-### À venir (priorisé)
+### Livré v0.43.x (Hub Chef Mobile)
+49b. ✅ **v0.43.0/1** (10 mai 2026) — Sprint 1 Hub Chef Mobile : 5 onglets (Dashboard/Planning/Équipe/À valider/Moi), badges multi-rôles, scope dur StafferMobileForm via `mes_affaires_chef`, 7 specs E2E. Option D : scope app-side, RLS strict différé en v0.45.
+
+### Livré v0.44.0 (Sprint 2 Documents/Photos par affaire)
+49c. ✅ **v0.44.0** (10 mai 2026) — Module Documents/Photos : bucket privé `affaires-photos` + table `affaire_documents` (soft delete) + RLS scopée chef (Option D) + galerie desktop `/affaires/$id/documents` (onglet) + galerie mobile chef `/mobile/chef/affaires/$id` avec caméra native + compression JPEG q=80 max 2560px + lightbox édition caption/date + 3 E2E. Voir mem://features/affaire-documents.
+
 49b. ⏳ **Sprint 3c** — E2E full role-based (employé desktop + mobile).
 49c. ⏳ **Sprint 3b** — Logistique avancée.
 50. ⏳ **v0.20.1 quick wins** — Pré-remplissage trajet sous-traité + cache `useObjetsAffaireLight` + notification CA prêt à livrer.
