@@ -1354,6 +1354,7 @@ export type Database = {
           archive: boolean
           budget_materiaux: number
           commentaire: string | null
+          commentaire_chef: string | null
           created_at: string
           created_by: string | null
           devis_id: string | null
@@ -1371,6 +1372,9 @@ export type Database = {
           quantite: number
           reference: string
           respo_fab_id: string | null
+          statut_chef: Database["public"]["Enums"]["objet_fab_statut_chef"]
+          statut_chef_updated_at: string | null
+          statut_chef_updated_by: string | null
           type_finition: Database["public"]["Enums"]["fabrication_finition_type"]
           updated_at: string
         }
@@ -1383,6 +1387,7 @@ export type Database = {
           archive?: boolean
           budget_materiaux?: number
           commentaire?: string | null
+          commentaire_chef?: string | null
           created_at?: string
           created_by?: string | null
           devis_id?: string | null
@@ -1400,6 +1405,9 @@ export type Database = {
           quantite?: number
           reference: string
           respo_fab_id?: string | null
+          statut_chef?: Database["public"]["Enums"]["objet_fab_statut_chef"]
+          statut_chef_updated_at?: string | null
+          statut_chef_updated_by?: string | null
           type_finition?: Database["public"]["Enums"]["fabrication_finition_type"]
           updated_at?: string
         }
@@ -1412,6 +1420,7 @@ export type Database = {
           archive?: boolean
           budget_materiaux?: number
           commentaire?: string | null
+          commentaire_chef?: string | null
           created_at?: string
           created_by?: string | null
           devis_id?: string | null
@@ -1429,6 +1438,9 @@ export type Database = {
           quantite?: number
           reference?: string
           respo_fab_id?: string | null
+          statut_chef?: Database["public"]["Enums"]["objet_fab_statut_chef"]
+          statut_chef_updated_at?: string | null
+          statut_chef_updated_by?: string | null
           type_finition?: Database["public"]["Enums"]["fabrication_finition_type"]
           updated_at?: string
         }
@@ -1473,6 +1485,41 @@ export type Database = {
             columns: ["respo_fab_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fabrication_objets_photos: {
+        Row: {
+          commentaire: string | null
+          id: string
+          objet_id: string
+          storage_path: string
+          uploaded_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          commentaire?: string | null
+          id?: string
+          objet_id: string
+          storage_path: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          commentaire?: string | null
+          id?: string
+          objet_id?: string
+          storage_path?: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fabrication_objets_photos_objet_id_fkey"
+            columns: ["objet_id"]
+            isOneToOne: false
+            referencedRelation: "fabrication_objets"
             referencedColumns: ["id"]
           },
         ]
@@ -3447,6 +3494,14 @@ export type Database = {
         Args: { p_answer_index: number; p_quiz_id: string }
         Returns: Json
       }
+      update_objet_statut_chef: {
+        Args: {
+          _commentaire?: string
+          _objet_id: string
+          _statut: Database["public"]["Enums"]["objet_fab_statut_chef"]
+        }
+        Returns: undefined
+      }
       upsert_feuille_route_ligne: {
         Args: { _affaire_id: string; _date: string; _patch: Json }
         Returns: {
@@ -3563,6 +3618,7 @@ export type Database = {
         | "fabrication_assignation"
         | "affaire_signee"
         | "staffing_publie"
+      objet_fab_statut_chef: "a_faire" | "en_cours" | "bloque" | "fini"
       opportunite_statut: "a_faire" | "envoye" | "gagne" | "perdu" | "termine"
       opportunite_taille:
         | "tres_petit"
@@ -3804,6 +3860,7 @@ export const Constants = {
         "affaire_signee",
         "staffing_publie",
       ],
+      objet_fab_statut_chef: ["a_faire", "en_cours", "bloque", "fini"],
       opportunite_statut: ["a_faire", "envoye", "gagne", "perdu", "termine"],
       opportunite_taille: ["tres_petit", "petit", "moyen", "gros", "tres_gros"],
       permis_type: ["B", "C", "CE"],
