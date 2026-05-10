@@ -86,8 +86,13 @@ function MesContrats() {
               </div>
               <div className="flex items-center gap-2 pt-1">
                 {pdf && (
-                  <Button variant="outline" size="sm" asChild className="flex-1">
-                    <a href={pdf} target="_blank" rel="noopener noreferrer"><Download className="h-3.5 w-3.5" />Lire</a>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => openContratPdf(r.id).catch((e) => toast.error(e.message))}
+                  >
+                    <Download className="h-3.5 w-3.5" />Lire
                   </Button>
                 )}
                 {r.statut === "a_signer_employe" && (
