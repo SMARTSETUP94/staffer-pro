@@ -24,17 +24,25 @@ export function SignContractDialog({ open, onOpenChange, contratId, role, pdfUrl
   const sigRef = useRef<SignatureCanvasHandle>(null);
   const [submitting, setSubmitting] = useState(false);
   const [empty, setEmpty] = useState(true);
+  const [lastError, setLastError] = useState<string | null>(null);
+  const [dataUrlLength, setDataUrlLength] = useState(0);
+  const [lastRpcParams, setLastRpcParams] = useState<Record<string, unknown> | null>(null);
+  const debug = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("debug") === "1";
 
   const handleSign = async () => {
     console.log("[contrat-signature][dialog.submitClick]", { contratId, role, empty, submitting, hasCanvasRef: !!sigRef.current });
+    setLastError(null);
     const dataUrl = sigRef.current?.getDataUrl();
+    setDataUrlLength(dataUrl?.length ?? 0);
     console.log("[contrat-signature][dialog.signatureState]", { hasDataUrl: !!dataUrl, length: dataUrl?.length ?? 0, empty });
     if (!dataUrl) {
+      setLastError("Signature requise");
       console.warn("[contrat-signature][dialog.blocked:no-signature]", { contratId, role, empty });
       toast.error("Signature requise");
       return;
     }
     setSubmitting(true);
+    setLastRpcParams({ contratId, role, signatureLength: dataUrl.length });
     console.log("[contrat-signature][dialog.submitting:start]", { contratId, role });
     try {
       if (role === "employe") {
@@ -51,8 +59,11 @@ export function SignContractDialog({ open, onOpenChange, contratId, role, pdfUrl
       console.log("[contrat-signature][dialog.close:after-success]");
       onOpenChange(false);
     } catch (e) {
+      const message = e instanceof Error ? e.message : "Erreur signature";
+      setLastError(message);
+      console.error("SIGN ERROR", e);
       console.error("[contrat-signature][dialog.rpc:error]", e);
-      toast.error(e instanceof Error ? e.message : "Erreur lors de la signature");
+      toast.error(message || "Erreur signature");
     } finally {
       console.log("[contrat-signature][dialog.submitting:stop]", { contratId, role });
       setSubmitting(false);
@@ -96,6 +107,14 @@ export function SignContractDialog({ open, onOpenChange, contratId, role, pdfUrl
             {role === "employe" ? "Signer" : "Contre-signer & finaliser"}
           </Button>
         </DialogFooter>
+        {debug && (
+          <div className="fixed bottom-3 left-3 z-[80] max-w-[calc(100vw-1.5rem)] rounded-md border bg-background/95 p-3 text-xs shadow-lg backdrop-blur sm:max-w-md">
+            <div className="mb-2 font-semibold text-foreground">Debug signature</div>
+            <pre className="max-h-52 overflow-auto whitespace-pre-wrap text-muted-foreground">
+{JSON.stringify({ empty, dataUrlLength, submitting, lastError, lastRpcParams }, null, 2)}
+            </pre>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );
