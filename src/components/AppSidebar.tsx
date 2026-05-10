@@ -98,6 +98,8 @@ function buildSections(role: EffRole, validationCount: number): NavSection[] {
           count: validationCount,
         },
         { title: "Saisie pour l'équipe", url: "/saisie-pour-equipe", icon: ClipboardList, show: (r) => r === "admin" || r === "chef_chantier" },
+        { title: "Staffer rapide", url: "/staffer-mobile", icon: Smartphone, show: (r) => r === "admin" || r === "chef_chantier" },
+        { title: "Contrats RH", url: "/rh/contrats", icon: FileSignature, show: (r) => r === "admin" },
         { title: "Analyse heures", url: "/heures-analyse", icon: Clock, show: (r) => r === "admin" },
       ],
     },

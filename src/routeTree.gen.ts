@@ -19,6 +19,7 @@ import { Route as MobilePropositionsRouteImport } from './routes/mobile.proposit
 import { Route as MobileProfilRouteImport } from './routes/mobile.profil'
 import { Route as MobileMoisRouteImport } from './routes/mobile.mois'
 import { Route as MobileHeuresRouteImport } from './routes/mobile.heures'
+import { Route as MobileContratsRouteImport } from './routes/mobile.contrats'
 import { Route as MobileAujourdhuiRouteImport } from './routes/mobile.aujourdhui'
 import { Route as MobileAbsencesRouteImport } from './routes/mobile.absences'
 import { Route as AuthSetPasswordRouteImport } from './routes/auth.set-password'
@@ -126,6 +127,11 @@ const MobileMoisRoute = MobileMoisRouteImport.update({
 const MobileHeuresRoute = MobileHeuresRouteImport.update({
   id: '/mobile/heures',
   path: '/mobile/heures',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MobileContratsRoute = MobileContratsRouteImport.update({
+  id: '/mobile/contrats',
+  path: '/mobile/contrats',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MobileAujourdhuiRoute = MobileAujourdhuiRouteImport.update({
@@ -469,6 +475,7 @@ export interface FileRoutesByFullPath {
   '/auth/set-password': typeof AuthSetPasswordRoute
   '/mobile/absences': typeof MobileAbsencesRoute
   '/mobile/aujourdhui': typeof MobileAujourdhuiRoute
+  '/mobile/contrats': typeof MobileContratsRoute
   '/mobile/heures': typeof MobileHeuresRoute
   '/mobile/mois': typeof MobileMoisRoute
   '/mobile/profil': typeof MobileProfilRoute
@@ -538,6 +545,7 @@ export interface FileRoutesByTo {
   '/auth/set-password': typeof AuthSetPasswordRoute
   '/mobile/absences': typeof MobileAbsencesRoute
   '/mobile/aujourdhui': typeof MobileAujourdhuiRoute
+  '/mobile/contrats': typeof MobileContratsRoute
   '/mobile/heures': typeof MobileHeuresRoute
   '/mobile/mois': typeof MobileMoisRoute
   '/mobile/profil': typeof MobileProfilRoute
@@ -609,6 +617,7 @@ export interface FileRoutesById {
   '/auth/set-password': typeof AuthSetPasswordRoute
   '/mobile/absences': typeof MobileAbsencesRoute
   '/mobile/aujourdhui': typeof MobileAujourdhuiRoute
+  '/mobile/contrats': typeof MobileContratsRoute
   '/mobile/heures': typeof MobileHeuresRoute
   '/mobile/mois': typeof MobileMoisRoute
   '/mobile/profil': typeof MobileProfilRoute
@@ -681,6 +690,7 @@ export interface FileRouteTypes {
     | '/auth/set-password'
     | '/mobile/absences'
     | '/mobile/aujourdhui'
+    | '/mobile/contrats'
     | '/mobile/heures'
     | '/mobile/mois'
     | '/mobile/profil'
@@ -750,6 +760,7 @@ export interface FileRouteTypes {
     | '/auth/set-password'
     | '/mobile/absences'
     | '/mobile/aujourdhui'
+    | '/mobile/contrats'
     | '/mobile/heures'
     | '/mobile/mois'
     | '/mobile/profil'
@@ -820,6 +831,7 @@ export interface FileRouteTypes {
     | '/auth/set-password'
     | '/mobile/absences'
     | '/mobile/aujourdhui'
+    | '/mobile/contrats'
     | '/mobile/heures'
     | '/mobile/mois'
     | '/mobile/profil'
@@ -868,6 +880,7 @@ export interface RootRouteChildren {
   AuthSetPasswordRoute: typeof AuthSetPasswordRoute
   MobileAbsencesRoute: typeof MobileAbsencesRoute
   MobileAujourdhuiRoute: typeof MobileAujourdhuiRoute
+  MobileContratsRoute: typeof MobileContratsRoute
   MobileHeuresRoute: typeof MobileHeuresRoute
   MobileMoisRoute: typeof MobileMoisRoute
   MobileProfilRoute: typeof MobileProfilRoute
@@ -945,6 +958,13 @@ declare module '@tanstack/react-router' {
       path: '/mobile/heures'
       fullPath: '/mobile/heures'
       preLoaderRoute: typeof MobileHeuresRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mobile/contrats': {
+      id: '/mobile/contrats'
+      path: '/mobile/contrats'
+      fullPath: '/mobile/contrats'
+      preLoaderRoute: typeof MobileContratsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mobile/aujourdhui': {
@@ -1530,6 +1550,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthSetPasswordRoute: AuthSetPasswordRoute,
   MobileAbsencesRoute: MobileAbsencesRoute,
   MobileAujourdhuiRoute: MobileAujourdhuiRoute,
+  MobileContratsRoute: MobileContratsRoute,
   MobileHeuresRoute: MobileHeuresRoute,
   MobileMoisRoute: MobileMoisRoute,
   MobileProfilRoute: MobileProfilRoute,
