@@ -184,7 +184,7 @@ async function fetchContratFull(contratId: string): Promise<FullContratRecord> {
     .from("contrats_intermittents")
     .select(`
       id, employee_id, chantier_id, date_debut, date_fin,
-      taux_horaire_brut, forfait, heures_estimees,
+      taux_horaire_brut, forfait, heures_estimees, poste,
       pdf_v1_url, pdf_v2_url, pdf_v3_url, statut, template_version_id,
       employes:employee_id ( nom, prenom, adresse, email, statut_contrat ),
       affaires:chantier_id ( numero, nom, lieu ),
