@@ -14,6 +14,7 @@ import { isBirthdayToday } from "@/lib/dashboard-fun-helpers";
 interface Birthday {
   id: string;
   prenom: string;
+  nom: string;
   avatar_url: string | null;
 }
 
