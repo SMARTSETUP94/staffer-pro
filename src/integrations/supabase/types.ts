@@ -141,6 +141,7 @@ export type Database = {
         Row: {
           affaire_id: string
           deleted_at: string | null
+          deleted_by: string | null
           description: string | null
           filename: string
           id: string
@@ -156,6 +157,7 @@ export type Database = {
         Insert: {
           affaire_id: string
           deleted_at?: string | null
+          deleted_by?: string | null
           description?: string | null
           filename: string
           id?: string
@@ -171,6 +173,7 @@ export type Database = {
         Update: {
           affaire_id?: string
           deleted_at?: string | null
+          deleted_by?: string | null
           description?: string | null
           filename?: string
           id?: string
@@ -1614,6 +1617,8 @@ export type Database = {
       fabrication_objets_photos: {
         Row: {
           commentaire: string | null
+          deleted_at: string | null
+          deleted_by: string | null
           id: string
           objet_id: string
           storage_path: string
@@ -1622,6 +1627,8 @@ export type Database = {
         }
         Insert: {
           commentaire?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
           id?: string
           objet_id: string
           storage_path: string
@@ -1630,6 +1637,8 @@ export type Database = {
         }
         Update: {
           commentaire?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
           id?: string
           objet_id?: string
           storage_path?: string
@@ -3299,6 +3308,20 @@ export type Database = {
           },
         ]
       }
+      v_documents_supprimes_30j: {
+        Row: {
+          affaire_id: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          deleted_by_email: string | null
+          filename: string | null
+          id: string | null
+          source: string | null
+          uploaded_at: string | null
+          uploaded_by: string | null
+        }
+        Relationships: []
+      }
       v_employes_autorisations_actives: {
         Row: {
           created_at: string | null
@@ -3814,6 +3837,11 @@ export type Database = {
         }
         Returns: string
       }
+      soft_delete_affaire_document: {
+        Args: { _id: string }
+        Returns: undefined
+      }
+      soft_delete_objet_photo: { Args: { _id: string }; Returns: undefined }
       staffer_mobile_create_mission: {
         Args: {
           _chantier_id: string

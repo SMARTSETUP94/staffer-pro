@@ -35,6 +35,7 @@ import { WeekPicker } from "@/components/planning/WeekPicker";
 import { cn } from "@/lib/utils";
 import type { HeuresExportRow } from "@/lib/heures-export";
 import { PageBreadcrumbs } from "@/components/PageBreadcrumbs";
+import { ScopedAccessBanner } from "@/components/auth/ScopedAccessBanner";
 import { SaisirPourEmployeDialog } from "@/components/heures/SaisirPourEmployeDialog";
 import { SaisieChefBadge } from "@/components/heures/SaisieChefBadge";
 import { UserCog } from "lucide-react";
@@ -249,6 +250,7 @@ function ValidationHeuresPage() {
   return (
     <div className="space-y-6 p-6">
       <PageBreadcrumbs steps={[{ label: "Équipes" }, { label: "Validation des heures" }]} />
+      <ScopedAccessBanner />
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <ClipboardCheck className="h-6 w-6 text-primary" />

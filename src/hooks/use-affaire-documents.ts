@@ -192,11 +192,10 @@ export function useAffaireDocuments(
 
   const deleteDocument = useCallback(
     async (doc: AffaireDocument) => {
-      // Soft delete
-      const { error: err } = await supabase
-        .from("affaire_documents")
-        .update({ deleted_at: new Date().toISOString() })
-        .eq("id", doc.id);
+      // v0.44.3 — Soft delete via RPC (audit trail deleted_by)
+      const { error: err } = await supabase.rpc("soft_delete_affaire_document", {
+        _id: doc.id,
+      });
       if (err) return { ok: false, error: err.message };
       // Best effort : suppression objet storage (admin/auteur)
       await supabase.storage.from("affaires-photos").remove([doc.storage_path]);

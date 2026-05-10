@@ -21,6 +21,7 @@ import {
 import { RoleGuard } from "@/components/auth/RoleGuard";
 import { ChefMobileHeader } from "@/components/mobile-chef/ChefMobileHeader";
 import { RolesAffaireBadges } from "@/components/mobile-chef/RolesAffaireBadges";
+import { ScopedAccessBanner } from "@/components/auth/ScopedAccessBanner";
 import { useMesAffairesChef } from "@/hooks/use-mes-affaires-chef";
 import { useChefAValider } from "@/hooks/use-chef-a-valider";
 import { supabase } from "@/integrations/supabase/client";
@@ -145,6 +146,7 @@ function ChefDashboard() {
     <>
       <ChefMobileHeader title="Hub chef" />
       <div className="mx-auto max-w-xl space-y-4 p-4">
+        <ScopedAccessBanner compact />
         {/* KPI grid (2x3 = 6 cards) */}
         <div className="grid grid-cols-2 gap-3">
           <KpiCard
