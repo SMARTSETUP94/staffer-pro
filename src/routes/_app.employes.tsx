@@ -102,6 +102,11 @@ interface FormState {
   est_bureau_etude: boolean;
   est_usinage_numerique: boolean;
   secondaires: number[];
+  // Rémunération (admin only)
+  taux_horaire_brut: string;
+  taux_horaire_charge: string;
+  forfait: boolean;
+  statut_contrat: StatutContrat | "";
 }
 
 const emptyForm: FormState = {
@@ -131,6 +136,10 @@ const emptyForm: FormState = {
   est_bureau_etude: false,
   est_usinage_numerique: false,
   secondaires: [],
+  taux_horaire_brut: "",
+  taux_horaire_charge: "",
+  forfait: false,
+  statut_contrat: "",
 };
 
 // v0.18.1 — Bloc 3 : options pour la section "Capacités / Permis" du dialog
