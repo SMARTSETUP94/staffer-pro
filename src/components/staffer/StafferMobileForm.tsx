@@ -309,6 +309,22 @@ export function StafferMobileForm() {
               </SelectContent>
             </Select>
           </div>
+          {eligibleContrat && (
+            <div>
+              <Label>Poste (contrat)</Label>
+              <Select value={poste} onValueChange={setPoste}>
+                <SelectTrigger><SelectValue placeholder="Sélectionner le poste…" /></SelectTrigger>
+                <SelectContent>
+                  {(postesQuery.data ?? []).map((p) => (
+                    <SelectItem key={p.libelle} value={p.libelle}>{p.libelle}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-[11px] text-muted-foreground mt-1">
+                Imprimé sur le CDDU. Par défaut : Technicien de plateau. Liste gérée dans Paramètres → Postes.
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
 
