@@ -67,6 +67,11 @@ interface EmployeRow {
   est_bureau_etude: boolean;
   est_usinage_numerique: boolean;
   secondaires: number[];
+  // Rémunération (admin only)
+  taux_horaire_brut: number | null;
+  taux_horaire_charge: number | null;
+  forfait: boolean;
+  statut_contrat: StatutContrat | null;
 }
 
 interface FormState {
