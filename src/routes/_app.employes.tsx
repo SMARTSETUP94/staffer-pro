@@ -797,6 +797,62 @@ function EmployesPage() {
               </div>
             )}
 
+            {/* Tour 1 — Rémunération + statut contrat fin (admin only) */}
+            {isAdmin && (
+              <div className="space-y-3 rounded-xl border border-border bg-background p-3 sm:col-span-2">
+                <div>
+                  <p className="text-sm font-semibold text-foreground">Rémunération</p>
+                  <p className="text-xs text-muted-foreground">
+                    Confidentiel — visible uniquement par les administrateurs.
+                  </p>
+                </div>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div className="space-y-1">
+                    <Label className="text-xs">Statut contrat</Label>
+                    <Select
+                      value={form.statut_contrat || "__none__"}
+                      onValueChange={(v) => setForm({ ...form, statut_contrat: v === "__none__" ? "" : (v as StatutContrat) })}
+                    >
+                      <SelectTrigger className="h-10 rounded-xl"><SelectValue placeholder="—" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__none__">—</SelectItem>
+                        {STATUT_CONTRAT_OPTIONS.map((s) => (
+                          <SelectItem key={s} value={s}>{s}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <label className="flex items-end gap-2 pb-2">
+                    <Checkbox
+                      checked={form.forfait}
+                      onCheckedChange={(v) => setForm({ ...form, forfait: Boolean(v) })}
+                    />
+                    <span className="text-xs font-medium">Forfait (hors taux horaire)</span>
+                  </label>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Taux horaire brut (€)</Label>
+                    <Input
+                      type="number" step="0.01" min="0"
+                      value={form.taux_horaire_brut}
+                      onChange={(e) => setForm({ ...form, taux_horaire_brut: e.target.value })}
+                      className="h-10 rounded-xl"
+                      placeholder="ex. 18.50"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Taux horaire chargé (€)</Label>
+                    <Input
+                      type="number" step="0.01" min="0"
+                      value={form.taux_horaire_charge}
+                      onChange={(e) => setForm({ ...form, taux_horaire_charge: e.target.value })}
+                      className="h-10 rounded-xl"
+                      placeholder="ex. 27.30"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* v0.20 — Bloc 2 : Rôles fabrication (indépendants du métier principal) */}
             <div className="space-y-2 rounded-xl border border-border bg-background p-3 sm:col-span-2">
               <div>
