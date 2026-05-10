@@ -1,22 +1,16 @@
 /**
- * v0.22 — Centre d'analyse heures consolidé (admin + chef)
+ * v0.22.2 — Centre d'analyse heures consolidé (admin + chef)
  *
- * Tableau complet des `heures_saisies` avec filtres combinables persistés
- * dans l'URL (lien partageable), compteur live, KPIs et exports CSV / Excel.
- * Spec : mem://features/centre-analyse-heures.
+ * Évolutions Option B :
+ * - P0 : KPI coût estimé (heures × tarif horaire moyen 65€/h) + toggle heures sup
+ *        (>8h/jour) + multi-select chantier/employé/devis + tri colonnes +
+ *        pagination 50/page.
+ * - Bulk actions : sélection multi-cases + barre flottante Valider / Rejeter.
+ * - Modal export avec checkbox "Anonymiser noms" (admin only RGPD), appliquée
+ *   à CSV / Excel / PDF.
  *
- * Filtres URL (validateSearch + zodValidator) :
- *  - preset (7j, 30j, semaine, mois, mois_precedent, custom)
- *  - from / to (YYYY-MM-DD)
- *  - statut (multi : brouillon|soumis|valide|rejete)
- *  - saisi_par (all|employe|chef)
- *  - nuit (0|1)
- *  - employe (recherche fuzzy nom/prénom)
- *  - chantier (numéro ou nom)
- *  - devis (numéro)
- *  - metier (id ou "all")
- *
- * Filtrage RLS côté DB garantit que le chef ne voit que son périmètre.
+ * Backwards compat : URLs anciennes acceptées via `fallback()` (les valeurs
+ * string sur chantier/employe/devis sont remplacées par tableau vide).
  */
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { zodValidator, fallback } from "@tanstack/zod-adapter";
@@ -24,17 +18,33 @@ import { z } from "zod";
 import { useEffect, useMemo, useState } from "react";
 import { format, parseISO, startOfMonth, startOfWeek, subDays, subMonths } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Download, Filter, Loader2, Moon, X } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Download,
+  Loader2,
+  Moon,
+  ShieldAlert,
+  TrendingUp,
+  X,
+} from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth-context";
 import { RoleGuard } from "@/components/auth/RoleGuard";
 import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -51,12 +61,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
   ToggleGroup,
   ToggleGroupItem,
 } from "@/components/ui/toggle-group";
@@ -68,10 +72,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { MultiSelectCombo } from "@/components/ui/multi-select-combo";
 import type { SilaeValidationReport } from "@/lib/heures-export";
 
 // ============================================================================
-// Search params schema
+// Constantes + Schema search
 // ============================================================================
 
 const STATUTS = ["brouillon", "soumis", "valide", "rejete"] as const;
@@ -80,18 +85,37 @@ type Statut = (typeof STATUTS)[number];
 const PRESETS = ["7j", "30j", "semaine", "mois", "mois_precedent", "custom"] as const;
 type PresetKey = (typeof PRESETS)[number];
 
+const SORT_FIELDS = ["date", "employe", "chantier", "heures", "statut"] as const;
+type SortField = (typeof SORT_FIELDS)[number];
+
+/** Tarif horaire moyen pour estimation coût (€/h, charges comprises). */
+const TARIF_HORAIRE_MOYEN = 65;
+/** Seuil heures sup : > 8h sur une saisie journalière. */
+const SEUIL_HEURES_SUP = 8;
+const PAGE_SIZE = 50;
+
+const arrayOfString = z
+  .preprocess((v) => {
+    if (Array.isArray(v)) return v.filter((x) => typeof x === "string");
+    if (typeof v === "string" && v) return [v];
+    return [];
+  }, z.array(z.string()));
+
 const searchSchema = z.object({
   preset: fallback(z.enum(PRESETS), "30j").default("30j"),
   from: fallback(z.string(), "").default(""),
   to: fallback(z.string(), "").default(""),
-  // Multi-select statut sous forme de string CSV (compact en URL)
   statut: fallback(z.array(z.enum(STATUTS)), []).default([]),
   saisi_par: fallback(z.enum(["all", "employe", "chef"]), "all").default("all"),
   nuit: fallback(z.boolean(), false).default(false),
-  employe: fallback(z.string(), "").default(""),
-  chantier: fallback(z.string(), "").default(""),
-  devis: fallback(z.string(), "").default(""),
+  heures_sup: fallback(z.boolean(), false).default(false),
+  employe: fallback(arrayOfString, []).default([]),
+  chantier: fallback(arrayOfString, []).default([]),
+  devis: fallback(arrayOfString, []).default([]),
   metier: fallback(z.string(), "all").default("all"),
+  sort: fallback(z.enum(SORT_FIELDS), "date").default("date"),
+  dir: fallback(z.enum(["asc", "desc"]), "desc").default("desc"),
+  page: fallback(z.number().int().min(1), 1).default(1),
 });
 
 type SearchParams = z.infer<typeof searchSchema>;
@@ -166,7 +190,6 @@ function presetRange(key: PresetKey): { from: string; to: string } {
   }
 }
 
-/** Résolution from/to effectifs : si preset != custom, on dérive ; sinon on prend l'URL ou un défaut. */
 function resolveRange(search: SearchParams): { from: string; to: string } {
   if (search.preset !== "custom") return presetRange(search.preset);
   const def = presetRange("30j");
@@ -176,17 +199,24 @@ function resolveRange(search: SearchParams): { from: string; to: string } {
   };
 }
 
-/** Compte le nombre de filtres actifs (hors période). */
 function countActiveFilters(s: SearchParams): number {
   let n = 0;
   if (s.statut.length > 0) n++;
   if (s.saisi_par !== "all") n++;
   if (s.nuit) n++;
-  if (s.employe.trim()) n++;
-  if (s.chantier.trim()) n++;
-  if (s.devis.trim()) n++;
+  if (s.heures_sup) n++;
+  if (s.employe.length > 0) n++;
+  if (s.chantier.length > 0) n++;
+  if (s.devis.length > 0) n++;
   if (s.metier !== "all") n++;
   return n;
+}
+
+/** Identifiant anonyme stable pour un employé (matricule SILAE → fallback hash id). */
+function anonId(r: Row): string {
+  const matricule = r.employe?.profile?.matricule_silae?.trim();
+  if (matricule) return `EMP-${matricule}`;
+  return `EMP-${r.employe_id.slice(0, 6).toUpperCase()}`;
 }
 
 // ============================================================================
@@ -196,6 +226,7 @@ function countActiveFilters(s: SearchParams): number {
 function HeuresAnalysePage() {
   const search = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
+  const { isAdmin } = useAuth();
 
   const { from, to } = resolveRange(search);
 
@@ -203,17 +234,25 @@ function HeuresAnalysePage() {
   const [metiers, setMetiers] = useState<{ id: number; libelle: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [silaeReport, setSilaeReport] = useState<SilaeValidationReport | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  // Helper update
+  // Bulk + export state
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [rejectOpen, setRejectOpen] = useState(false);
+  const [rejectMotif, setRejectMotif] = useState("");
+  const [bulkBusy, setBulkBusy] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
+  const [exportFormat, setExportFormat] = useState<"csv" | "xlsx" | "pdf" | "silae">("csv");
+  const [anonymise, setAnonymise] = useState(false);
+
   function updateSearch(patch: Partial<SearchParams>) {
-    void navigate({ search: (prev: SearchParams) => ({ ...prev, ...patch }) });
+    void navigate({ search: (prev: SearchParams) => ({ ...prev, ...patch, page: patch.page ?? 1 }) });
   }
 
   function setPreset(p: PresetKey) {
     if (p === "custom") {
       updateSearch({ preset: "custom", from: from, to: to });
     } else {
-      // On vide from/to (le preset les régénère)
       updateSearch({ preset: p, from: "", to: "" });
     }
   }
@@ -227,10 +266,14 @@ function HeuresAnalysePage() {
         statut: [],
         saisi_par: "all",
         nuit: false,
-        employe: "",
-        chantier: "",
-        devis: "",
+        heures_sup: false,
+        employe: [],
+        chantier: [],
+        devis: [],
         metier: "all",
+        sort: "date",
+        dir: "desc",
+        page: 1,
       },
     });
   }
@@ -242,6 +285,18 @@ function HeuresAnalysePage() {
     });
   }
 
+  function toggleSort(field: SortField) {
+    if (search.sort === field) {
+      void navigate({
+        search: (prev: SearchParams) => ({ ...prev, dir: prev.dir === "asc" ? "desc" : "asc" }),
+      });
+    } else {
+      void navigate({
+        search: (prev: SearchParams) => ({ ...prev, sort: field, dir: "desc" }),
+      });
+    }
+  }
+
   // Charger métiers une fois
   useEffect(() => {
     void supabase
@@ -251,7 +306,7 @@ function HeuresAnalysePage() {
       .then(({ data }) => setMetiers(data ?? []));
   }, []);
 
-  // Charger heures (re-fetch sur changement de période)
+  // Charger heures
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
@@ -272,7 +327,7 @@ function HeuresAnalysePage() {
         .gte("date", from)
         .lte("date", to)
         .order("date", { ascending: false })
-        .limit(2000);
+        .limit(5000);
 
       if (cancelled) return;
       if (error) {
@@ -281,37 +336,92 @@ function HeuresAnalysePage() {
         return;
       }
       setRows((data ?? []) as unknown as Row[]);
+      setSelectedIds(new Set()); // reset sélection au refetch
       setLoading(false);
     })();
     return () => {
       cancelled = true;
     };
-  }, [from, to]);
+  }, [from, to, refreshKey]);
+
+  // Options multi-select dérivées des données chargées
+  const employeOptions = useMemo(() => {
+    const map = new Map<string, { value: string; label: string; hint?: string }>();
+    rows.forEach((r) => {
+      if (!r.employe || map.has(r.employe_id)) return;
+      map.set(r.employe_id, {
+        value: r.employe_id,
+        label: `${r.employe.prenom} ${r.employe.nom}`,
+        hint: r.employe.type_contrat ?? undefined,
+      });
+    });
+    return Array.from(map.values()).sort((a, b) => a.label.localeCompare(b.label));
+  }, [rows]);
+
+  const chantierOptions = useMemo(() => {
+    const map = new Map<string, { value: string; label: string; hint?: string }>();
+    rows.forEach((r) => {
+      if (!r.affaire || map.has(r.affaire_id)) return;
+      map.set(r.affaire_id, {
+        value: r.affaire_id,
+        label: r.affaire.nom,
+        hint: r.affaire.numero,
+      });
+    });
+    return Array.from(map.values()).sort((a, b) =>
+      (a.hint ?? "").localeCompare(b.hint ?? ""),
+    );
+  }, [rows]);
+
+  const devisOptions = useMemo(() => {
+    const map = new Map<string, { value: string; label: string }>();
+    rows.forEach((r) => {
+      if (!r.devis_id || !r.devis?.numero || map.has(r.devis_id)) return;
+      map.set(r.devis_id, { value: r.devis_id, label: r.devis.numero });
+    });
+    return Array.from(map.values()).sort((a, b) => a.label.localeCompare(b.label));
+  }, [rows]);
 
   const filtered = useMemo(() => {
-    return rows.filter((r) => {
+    const list = rows.filter((r) => {
       if (search.statut.length > 0 && !search.statut.includes(r.statut)) return false;
       if (search.saisi_par === "employe" && r.saisi_par_chef) return false;
       if (search.saisi_par === "chef" && !r.saisi_par_chef) return false;
       if (search.nuit && (r.heures_nuit ?? 0) <= 0) return false;
+      if (search.heures_sup && (r.heures_reelles ?? 0) <= SEUIL_HEURES_SUP) return false;
       if (search.metier !== "all" && String(r.metier_id ?? "") !== search.metier) return false;
-      if (search.employe.trim()) {
-        const q = search.employe.toLowerCase();
-        const name = r.employe ? `${r.employe.prenom} ${r.employe.nom}`.toLowerCase() : "";
-        if (!name.includes(q)) return false;
-      }
-      if (search.chantier.trim()) {
-        const q = search.chantier.toLowerCase();
-        const aff = r.affaire ? `${r.affaire.numero} ${r.affaire.nom}`.toLowerCase() : "";
-        if (!aff.includes(q)) return false;
-      }
-      if (search.devis.trim()) {
-        const q = search.devis.toLowerCase();
-        const dv = r.devis?.numero?.toLowerCase() ?? "";
-        if (!dv.includes(q)) return false;
-      }
+      if (search.employe.length > 0 && !search.employe.includes(r.employe_id)) return false;
+      if (search.chantier.length > 0 && !search.chantier.includes(r.affaire_id)) return false;
+      if (search.devis.length > 0 && (!r.devis_id || !search.devis.includes(r.devis_id))) return false;
       return true;
     });
+
+    const dirMul = search.dir === "asc" ? 1 : -1;
+    list.sort((a, b) => {
+      let cmp = 0;
+      switch (search.sort) {
+        case "date":
+          cmp = a.date.localeCompare(b.date);
+          break;
+        case "employe": {
+          const an = a.employe ? `${a.employe.nom} ${a.employe.prenom}` : "";
+          const bn = b.employe ? `${b.employe.nom} ${b.employe.prenom}` : "";
+          cmp = an.localeCompare(bn);
+          break;
+        }
+        case "chantier":
+          cmp = (a.affaire?.numero ?? "").localeCompare(b.affaire?.numero ?? "");
+          break;
+        case "heures":
+          cmp = (a.heures_reelles ?? 0) - (b.heures_reelles ?? 0);
+          break;
+        case "statut":
+          cmp = a.statut.localeCompare(b.statut);
+          break;
+      }
+      return cmp * dirMul;
+    });
+    return list;
   }, [rows, search]);
 
   const kpis = useMemo(() => {
@@ -321,6 +431,7 @@ function HeuresAnalysePage() {
       .reduce((acc, r) => acc + (r.heures_reelles ?? 0), 0);
     const nuit = filtered.reduce((acc, r) => acc + (r.heures_nuit ?? 0), 0);
     const aValider = filtered.filter((r) => r.statut === "soumis").length;
+    const cout = total * TARIF_HORAIRE_MOYEN;
     return {
       total,
       validees,
@@ -328,31 +439,128 @@ function HeuresAnalysePage() {
       nuit,
       pctNuit: total > 0 ? Math.round((nuit / total) * 100) : 0,
       aValider,
+      cout,
       lignes: filtered.length,
     };
   }, [filtered]);
 
+  // Pagination
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const currentPage = Math.min(search.page, totalPages);
+  const pageStart = (currentPage - 1) * PAGE_SIZE;
+  const paginated = filtered.slice(pageStart, pageStart + PAGE_SIZE);
+
   const activeCount = countActiveFilters(search);
 
-  function exportCsv() {
+  // Sélection bulk
+  const allPageSelected = paginated.length > 0 && paginated.every((r) => selectedIds.has(r.id));
+  function togglePageSelection() {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (allPageSelected) paginated.forEach((r) => next.delete(r.id));
+      else paginated.forEach((r) => next.add(r.id));
+      return next;
+    });
+  }
+  function toggleRow(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+  function clearSelection() {
+    setSelectedIds(new Set());
+  }
+
+  const selectedRows = useMemo(
+    () => filtered.filter((r) => selectedIds.has(r.id)),
+    [filtered, selectedIds],
+  );
+  const selectableForValidate = selectedRows.filter((r) => r.statut === "soumis").length;
+  const selectableForReject = selectedRows.filter((r) => r.statut === "soumis").length;
+
+  async function bulkValidate() {
+    const ids = selectedRows.filter((r) => r.statut === "soumis").map((r) => r.id);
+    if (ids.length === 0) {
+      toast.warning("Aucune saisie 'À valider' dans la sélection.");
+      return;
+    }
+    setBulkBusy(true);
+    const { error, count } = await supabase
+      .from("heures_saisies")
+      .update({ statut: "valide" }, { count: "exact" })
+      .in("id", ids)
+      .eq("statut", "soumis");
+    setBulkBusy(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success(`${count ?? ids.length} saisie(s) validée(s)`);
+    clearSelection();
+    setRefreshKey((k) => k + 1);
+  }
+
+  async function bulkReject() {
+    const ids = selectedRows.filter((r) => r.statut === "soumis").map((r) => r.id);
+    if (ids.length === 0) {
+      toast.warning("Aucune saisie 'À valider' dans la sélection.");
+      return;
+    }
+    if (!rejectMotif.trim()) {
+      toast.error("Motif de rejet obligatoire.");
+      return;
+    }
+    setBulkBusy(true);
+    const { error, count } = await supabase
+      .from("heures_saisies")
+      .update({ statut: "rejete", motif_rejet: rejectMotif.trim() }, { count: "exact" })
+      .in("id", ids)
+      .eq("statut", "soumis");
+    setBulkBusy(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success(`${count ?? ids.length} saisie(s) rejetée(s)`);
+    setRejectOpen(false);
+    setRejectMotif("");
+    clearSelection();
+    setRefreshKey((k) => k + 1);
+  }
+
+  // ============================================================================
+  // Exports (avec option anonymisation)
+  // ============================================================================
+
+  function rowEmployeName(r: Row, anon: boolean): string {
+    if (anon) return anonId(r);
+    return r.employe ? `${r.employe.prenom} ${r.employe.nom}` : "";
+  }
+
+  function exportCsv(anon: boolean) {
     const header = [
       "Date", "Employé", "Chantier", "Devis", "Métier", "Heures",
-      "Dont nuit", "Statut", "Saisi par chef", "Validée le", "Validateur", "Commentaire",
+      "Dont nuit", "Heures sup", "Statut", "Saisi par chef", "Validée le",
+      anon ? "Validateur (anonymisé)" : "Validateur", "Commentaire",
     ];
     const lines = filtered.map((r) =>
       [
         r.date,
-        r.employe ? `${r.employe.prenom} ${r.employe.nom}` : "",
+        rowEmployeName(r, anon),
         r.affaire ? `${r.affaire.numero} - ${r.affaire.nom}` : "",
         r.devis?.numero ?? "",
         r.metier?.libelle ?? "",
         r.heures_reelles ?? 0,
         r.heures_nuit ?? 0,
+        (r.heures_reelles ?? 0) > SEUIL_HEURES_SUP ? "oui" : "",
         STATUT_META[r.statut]?.label ?? r.statut,
         r.saisi_par_chef ? "oui" : "non",
         r.valide_le ? format(parseISO(r.valide_le), "yyyy-MM-dd HH:mm") : "",
-        r.valideur?.full_name ?? r.valideur?.email ?? "",
-        (r.commentaire ?? "").replace(/[\r\n]+/g, " "),
+        anon ? (r.valideur ? "VAL-***" : "") : (r.valideur?.full_name ?? r.valideur?.email ?? ""),
+        anon ? "" : (r.commentaire ?? "").replace(/[\r\n]+/g, " "),
       ]
         .map((v) => `"${String(v).replace(/"/g, '""')}"`)
         .join(";"),
@@ -362,42 +570,43 @@ function HeuresAnalysePage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `heures-analyse-${from}_${to}.csv`;
+    a.download = `heures-analyse-${from}_${to}${anon ? "-anonyme" : ""}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   }
 
-  async function exportXlsx() {
+  async function exportXlsx(anon: boolean) {
     const XLSX = await import("xlsx-js-style");
     const data = [
-      ["Date", "Employé", "Chantier", "Devis", "Métier", "Heures", "Dont nuit", "Statut", "Saisi par chef", "Validée le", "Validateur", "Commentaire"],
+      ["Date", "Employé", "Chantier", "Devis", "Métier", "Heures", "Dont nuit", "Heures sup", "Statut", "Saisi par chef", "Validée le", anon ? "Validateur (anon.)" : "Validateur", "Commentaire"],
       ...filtered.map((r) => [
         r.date,
-        r.employe ? `${r.employe.prenom} ${r.employe.nom}` : "",
+        rowEmployeName(r, anon),
         r.affaire ? `${r.affaire.numero} - ${r.affaire.nom}` : "",
         r.devis?.numero ?? "",
         r.metier?.libelle ?? "",
         r.heures_reelles ?? 0,
         r.heures_nuit ?? 0,
+        (r.heures_reelles ?? 0) > SEUIL_HEURES_SUP ? "oui" : "",
         STATUT_META[r.statut]?.label ?? r.statut,
         r.saisi_par_chef ? "oui" : "non",
         r.valide_le ? format(parseISO(r.valide_le), "yyyy-MM-dd HH:mm") : "",
-        r.valideur?.full_name ?? r.valideur?.email ?? "",
-        r.commentaire ?? "",
+        anon ? (r.valideur ? "VAL-***" : "") : (r.valideur?.full_name ?? r.valideur?.email ?? ""),
+        anon ? "" : (r.commentaire ?? ""),
       ]),
     ];
     const ws = XLSX.utils.aoa_to_sheet(data);
     ws["!cols"] = [
       { wch: 11 }, { wch: 22 }, { wch: 28 }, { wch: 10 }, { wch: 14 },
-      { wch: 8 }, { wch: 9 }, { wch: 11 }, { wch: 14 }, { wch: 16 },
+      { wch: 8 }, { wch: 9 }, { wch: 10 }, { wch: 11 }, { wch: 14 }, { wch: 16 },
       { wch: 22 }, { wch: 30 },
     ];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Heures");
-    XLSX.writeFile(wb, `heures-analyse-${from}_${to}.xlsx`);
+    XLSX.writeFile(wb, `heures-analyse-${from}_${to}${anon ? "-anonyme" : ""}.xlsx`);
   }
 
-  async function exportPdf() {
+  async function exportPdf(anon: boolean) {
     const { default: jsPDF } = await import("jspdf");
     const { default: autoTable } = await import("jspdf-autotable");
     const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
@@ -405,7 +614,7 @@ function HeuresAnalysePage() {
 
     doc.setFont("helvetica", "bold");
     doc.setFontSize(14);
-    doc.text("Centre d'analyse heures", 40, 40);
+    doc.text(`Centre d'analyse heures${anon ? " (anonymisé)" : ""}`, 40, 40);
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
     doc.setTextColor(110);
@@ -413,13 +622,14 @@ function HeuresAnalysePage() {
     if (search.statut.length) filterParts.push(`Statut : ${search.statut.map((s: Statut) => STATUT_META[s].label).join(", ")}`);
     if (search.saisi_par !== "all") filterParts.push(`Saisi par : ${search.saisi_par}`);
     if (search.nuit) filterParts.push("Nuit uniquement");
+    if (search.heures_sup) filterParts.push(`Heures sup (>${SEUIL_HEURES_SUP}h)`);
     if (search.metier !== "all") filterParts.push(`Métier : ${metiers.find((m) => String(m.id) === search.metier)?.libelle ?? search.metier}`);
-    if (search.employe.trim()) filterParts.push(`Employé : ${search.employe}`);
-    if (search.chantier.trim()) filterParts.push(`Chantier : ${search.chantier}`);
-    if (search.devis.trim()) filterParts.push(`Devis : ${search.devis}`);
+    if (search.employe.length) filterParts.push(`Employé : ${search.employe.length} sélectionné(s)`);
+    if (search.chantier.length) filterParts.push(`Chantier : ${search.chantier.length} sélectionné(s)`);
+    if (search.devis.length) filterParts.push(`Devis : ${search.devis.length} sélectionné(s)`);
     doc.text(filterParts.join("  ·  "), 40, 56, { maxWidth: pageWidth - 80 });
     doc.text(
-      `Total : ${kpis.total.toFixed(1)} h  ·  Validées : ${kpis.validees.toFixed(1)} h (${kpis.pctValidees}%)  ·  Nuit : ${kpis.nuit.toFixed(1)} h  ·  À valider : ${kpis.aValider}  ·  ${kpis.lignes} ligne(s)`,
+      `Total : ${kpis.total.toFixed(1)} h  ·  Validées : ${kpis.validees.toFixed(1)} h (${kpis.pctValidees}%)  ·  Nuit : ${kpis.nuit.toFixed(1)} h  ·  À valider : ${kpis.aValider}  ·  Coût estimé : ${formatEuro(kpis.cout)}  ·  ${kpis.lignes} ligne(s)`,
       40,
       70,
     );
@@ -427,45 +637,31 @@ function HeuresAnalysePage() {
 
     autoTable(doc, {
       startY: 84,
-      head: [["Date", "Employé", "Chantier", "Devis", "Métier", "H", "Nuit", "Statut", "Saisie", "Validée le", "Validateur", "Commentaire"]],
+      head: [["Date", "Employé", "Chantier", "Devis", "Métier", "H", "Nuit", "Sup", "Statut", "Saisie", "Validée le", anon ? "Validateur (anon.)" : "Validateur"]],
       body: filtered.map((r) => [
         r.date,
-        r.employe ? `${r.employe.prenom} ${r.employe.nom}` : "",
+        rowEmployeName(r, anon),
         r.affaire ? `${r.affaire.numero} — ${r.affaire.nom}` : "",
         r.devis?.numero ?? "",
         r.metier?.libelle ?? "",
         (r.heures_reelles ?? 0).toFixed(1),
         (r.heures_nuit ?? 0) > 0 ? (r.heures_nuit ?? 0).toFixed(1) : "—",
+        (r.heures_reelles ?? 0) > SEUIL_HEURES_SUP ? "✓" : "",
         STATUT_META[r.statut]?.label ?? r.statut,
         r.saisi_par_chef ? "Chef" : "Employé",
         r.valide_le ? format(parseISO(r.valide_le), "dd/MM/yy HH:mm") : "",
-        r.valideur?.full_name ?? r.valideur?.email ?? "",
-        (r.commentaire ?? "").slice(0, 80),
+        anon ? (r.valideur ? "VAL-***" : "") : (r.valideur?.full_name ?? r.valideur?.email ?? ""),
       ]),
       styles: { fontSize: 7, cellPadding: 3, overflow: "linebreak" },
       headStyles: { fillColor: [37, 37, 37], textColor: 255, fontSize: 7.5 },
       alternateRowStyles: { fillColor: [248, 248, 250] },
-      columnStyles: {
-        0: { cellWidth: 50 },
-        1: { cellWidth: 90 },
-        2: { cellWidth: 130 },
-        3: { cellWidth: 50 },
-        4: { cellWidth: 65 },
-        5: { cellWidth: 28, halign: "right" },
-        6: { cellWidth: 30, halign: "right" },
-        7: { cellWidth: 50 },
-        8: { cellWidth: 45 },
-        9: { cellWidth: 60 },
-        10: { cellWidth: 80 },
-        11: { cellWidth: "auto" },
-      },
       margin: { left: 30, right: 30 },
       didDrawPage: (data) => {
         const pageHeight = doc.internal.pageSize.getHeight();
         doc.setFontSize(8);
         doc.setTextColor(120);
         doc.text(
-          `Page ${data.pageNumber}  ·  Généré le ${format(new Date(), "dd/MM/yyyy HH:mm")}`,
+          `Page ${data.pageNumber}  ·  Généré le ${format(new Date(), "dd/MM/yyyy HH:mm")}${anon ? "  ·  RGPD anonymisé" : ""}`,
           pageWidth / 2,
           pageHeight - 14,
           { align: "center" },
@@ -474,7 +670,7 @@ function HeuresAnalysePage() {
       },
     });
 
-    doc.save(`heures-analyse-${from}_${to}.pdf`);
+    doc.save(`heures-analyse-${from}_${to}${anon ? "-anonyme" : ""}.pdf`);
   }
 
   function buildSilaeRows() {
@@ -535,6 +731,14 @@ function HeuresAnalysePage() {
     await performSilaeExport();
   }
 
+  async function runExport() {
+    setExportOpen(false);
+    if (exportFormat === "csv") exportCsv(anonymise);
+    else if (exportFormat === "xlsx") await exportXlsx(anonymise);
+    else if (exportFormat === "pdf") await exportPdf(anonymise);
+    else if (exportFormat === "silae") await exportSilae();
+  }
+
   async function copyShareLink() {
     try {
       await navigator.clipboard.writeText(window.location.href);
@@ -546,7 +750,7 @@ function HeuresAnalysePage() {
 
   return (
     <RoleGuard required="admin">
-      <div className="space-y-4">
+      <div className="space-y-4 pb-24">
         <PageHeader
           number="03"
           eyebrow="Heures / Reporting"
@@ -557,25 +761,15 @@ function HeuresAnalysePage() {
               <Button variant="ghost" size="sm" onClick={copyShareLink}>
                 Copier le lien
               </Button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" disabled={!filtered.length}>
-                    <Download className="mr-1.5 h-4 w-4" /> Exporter
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={exportCsv}>CSV (UTF-8)</DropdownMenuItem>
-                  <DropdownMenuItem onClick={exportXlsx}>Excel (.xlsx)</DropdownMenuItem>
-                  <DropdownMenuItem onClick={exportPdf}>PDF (A4 paysage)</DropdownMenuItem>
-                  <DropdownMenuItem onClick={exportSilae}>Format SILAE (CSV + XLSX)</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <Button variant="outline" disabled={!filtered.length} onClick={() => setExportOpen(true)}>
+                <Download className="mr-1.5 h-4 w-4" /> Exporter
+              </Button>
             </div>
           }
         />
 
         {/* KPIs */}
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
           <KpiCard label="Heures totales" value={kpis.total.toFixed(1) + " h"} subline={`${kpis.lignes} saisies`} />
           <KpiCard
             label="Heures validées"
@@ -590,6 +784,13 @@ function HeuresAnalysePage() {
             tone="warning"
           />
           <KpiCard label="À valider" value={String(kpis.aValider)} subline="saisies en attente" tone="info" />
+          <KpiCard
+            label="Coût estimé"
+            value={formatEuro(kpis.cout)}
+            subline={`${TARIF_HORAIRE_MOYEN} €/h moyen`}
+            tone="default"
+            icon={<TrendingUp className="h-3.5 w-3.5 text-muted-foreground" />}
+          />
         </div>
 
         {/* Bandeau compteur live */}
@@ -675,36 +876,38 @@ function HeuresAnalysePage() {
                 </Select>
               </div>
               <div className="grid gap-1">
-                <Label className="text-xs">Employé</Label>
-                <div className="relative">
-                  <Filter className="absolute left-2 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
-                  <Input
-                    className="pl-7"
-                    placeholder="Nom / prénom"
-                    value={search.employe}
-                    onChange={(e) => updateSearch({ employe: e.target.value })}
-                  />
-                </div>
+                <Label className="text-xs">Employé(s)</Label>
+                <MultiSelectCombo
+                  options={employeOptions}
+                  selected={search.employe}
+                  onChange={(v) => updateSearch({ employe: v })}
+                  placeholder="Tous les employés"
+                  searchPlaceholder="Rechercher un employé…"
+                />
               </div>
               <div className="grid gap-1">
-                <Label className="text-xs">Chantier</Label>
-                <Input
-                  placeholder="Numéro ou nom"
-                  value={search.chantier}
-                  onChange={(e) => updateSearch({ chantier: e.target.value })}
+                <Label className="text-xs">Chantier(s)</Label>
+                <MultiSelectCombo
+                  options={chantierOptions}
+                  selected={search.chantier}
+                  onChange={(v) => updateSearch({ chantier: v })}
+                  placeholder="Tous les chantiers"
+                  searchPlaceholder="Rechercher (numéro / nom)…"
                 />
               </div>
               <div className="grid gap-1">
                 <Label className="text-xs">Devis</Label>
-                <Input
-                  placeholder="D-XXXXXX-YYYY"
-                  value={search.devis}
-                  onChange={(e) => updateSearch({ devis: e.target.value })}
+                <MultiSelectCombo
+                  options={devisOptions}
+                  selected={search.devis}
+                  onChange={(v) => updateSearch({ devis: v })}
+                  placeholder="Tous les devis"
+                  searchPlaceholder="Rechercher un devis…"
                 />
               </div>
             </div>
 
-            {/* Statut multi + nuit */}
+            {/* Statut + nuit + heures sup */}
             <div className="flex flex-wrap items-center gap-4 border-t pt-3">
               <div className="grid gap-1">
                 <Label className="text-xs">Statut (multi-sélection)</Label>
@@ -720,7 +923,6 @@ function HeuresAnalysePage() {
                       key={s}
                       value={s}
                       onClick={(e) => {
-                        // ToggleGroup gère déjà via onValueChange ; pas de double toggle
                         e.preventDefault();
                         toggleStatut(s);
                       }}
@@ -738,6 +940,16 @@ function HeuresAnalysePage() {
                 />
                 <Label htmlFor="nuit" className="cursor-pointer text-sm flex items-center gap-1">
                   <Moon className="h-3.5 w-3.5" /> Nuit uniquement
+                </Label>
+              </div>
+              <div className="flex items-center gap-2 pt-5">
+                <Switch
+                  id="heures-sup"
+                  checked={search.heures_sup}
+                  onCheckedChange={(v) => updateSearch({ heures_sup: v })}
+                />
+                <Label htmlFor="heures-sup" className="cursor-pointer text-sm flex items-center gap-1">
+                  <TrendingUp className="h-3.5 w-3.5" /> Heures sup (&gt;{SEUIL_HEURES_SUP}h)
                 </Label>
               </div>
             </div>
@@ -760,22 +972,48 @@ function HeuresAnalysePage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-24">Date</TableHead>
-                      <TableHead>Employé</TableHead>
-                      <TableHead>Chantier</TableHead>
+                      <TableHead className="w-10">
+                        <Checkbox
+                          checked={allPageSelected}
+                          onCheckedChange={togglePageSelection}
+                          aria-label="Tout sélectionner"
+                        />
+                      </TableHead>
+                      <SortHeader field="date" current={search.sort} dir={search.dir} onSort={toggleSort} className="w-24">
+                        Date
+                      </SortHeader>
+                      <SortHeader field="employe" current={search.sort} dir={search.dir} onSort={toggleSort}>
+                        Employé
+                      </SortHeader>
+                      <SortHeader field="chantier" current={search.sort} dir={search.dir} onSort={toggleSort}>
+                        Chantier
+                      </SortHeader>
                       <TableHead>Devis</TableHead>
                       <TableHead>Métier</TableHead>
-                      <TableHead className="text-right">Heures</TableHead>
-                      <TableHead>Statut</TableHead>
+                      <SortHeader field="heures" current={search.sort} dir={search.dir} onSort={toggleSort} className="text-right">
+                        Heures
+                      </SortHeader>
+                      <SortHeader field="statut" current={search.sort} dir={search.dir} onSort={toggleSort}>
+                        Statut
+                      </SortHeader>
                       <TableHead>Saisi par</TableHead>
                       <TableHead>Validée</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filtered.slice(0, 500).map((r) => {
+                    {paginated.map((r) => {
                       const meta = STATUT_META[r.statut];
+                      const isSup = (r.heures_reelles ?? 0) > SEUIL_HEURES_SUP;
+                      const checked = selectedIds.has(r.id);
                       return (
-                        <TableRow key={r.id}>
+                        <TableRow key={r.id} data-state={checked ? "selected" : undefined}>
+                          <TableCell>
+                            <Checkbox
+                              checked={checked}
+                              onCheckedChange={() => toggleRow(r.id)}
+                              aria-label={`Sélectionner ${r.date}`}
+                            />
+                          </TableCell>
                           <TableCell className="text-xs">
                             {format(parseISO(r.date), "dd/MM/yy", { locale: fr })}
                           </TableCell>
@@ -793,7 +1031,14 @@ function HeuresAnalysePage() {
                           <TableCell className="text-xs font-mono">{r.devis?.numero ?? "—"}</TableCell>
                           <TableCell className="text-xs">{r.metier?.libelle ?? "—"}</TableCell>
                           <TableCell className="text-right text-xs">
-                            <div className="font-semibold">{(r.heures_reelles ?? 0).toFixed(1)}h</div>
+                            <div className="flex items-center justify-end gap-1.5">
+                              <span className="font-semibold">{(r.heures_reelles ?? 0).toFixed(1)}h</span>
+                              {isSup && (
+                                <Badge variant="outline" className="bg-amber-500/15 text-amber-600 border-amber-500/30 px-1 py-0 text-[10px]">
+                                  Sup
+                                </Badge>
+                              )}
+                            </div>
                             {(r.heures_nuit ?? 0) > 0 && (
                               <div className="flex items-center justify-end gap-0.5 text-amber-600">
                                 <Moon className="h-3 w-3" /> {r.heures_nuit.toFixed(1)}h
@@ -820,15 +1065,155 @@ function HeuresAnalysePage() {
                     })}
                   </TableBody>
                 </Table>
-                {filtered.length > 500 && (
-                  <div className="border-t p-3 text-center text-xs text-muted-foreground">
-                    Affichage limité à 500 lignes. Affinez les filtres ou utilisez l'export pour la liste complète ({filtered.length} résultats).
+                {/* Pagination */}
+                <div className="flex items-center justify-between border-t px-3 py-2 text-xs text-muted-foreground">
+                  <div>
+                    {pageStart + 1}–{Math.min(pageStart + PAGE_SIZE, filtered.length)} sur {filtered.length}
                   </div>
-                )}
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={currentPage <= 1}
+                      onClick={() => updateSearch({ page: currentPage - 1 })}
+                    >
+                      <ChevronLeft className="h-3.5 w-3.5" />
+                    </Button>
+                    <span className="font-mono">
+                      {currentPage} / {totalPages}
+                    </span>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={currentPage >= totalPages}
+                      onClick={() => updateSearch({ page: currentPage + 1 })}
+                    >
+                      <ChevronRight className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </div>
               </div>
             )}
           </CardContent>
         </Card>
+
+        {/* Barre d'actions bulk flottante */}
+        {selectedIds.size > 0 && (
+          <div className="fixed bottom-4 left-1/2 z-40 flex -translate-x-1/2 items-center gap-2 rounded-lg border bg-background/95 p-2 pl-3 shadow-lg backdrop-blur">
+            <Badge variant="secondary" className="font-mono">
+              {selectedIds.size} sélectionné{selectedIds.size > 1 ? "s" : ""}
+            </Badge>
+            <span className="text-xs text-muted-foreground">
+              {selectableForValidate} à valider
+            </span>
+            <div className="mx-1 h-5 w-px bg-border" />
+            <Button
+              size="sm"
+              onClick={bulkValidate}
+              disabled={bulkBusy || selectableForValidate === 0}
+            >
+              <Check className="mr-1 h-3.5 w-3.5" /> Valider
+            </Button>
+            <Button
+              size="sm"
+              variant="destructive"
+              onClick={() => setRejectOpen(true)}
+              disabled={bulkBusy || selectableForReject === 0}
+            >
+              <X className="mr-1 h-3.5 w-3.5" /> Rejeter
+            </Button>
+            <Button size="sm" variant="ghost" onClick={clearSelection}>
+              Annuler
+            </Button>
+          </div>
+        )}
+
+        {/* Dialog rejet bulk */}
+        <Dialog open={rejectOpen} onOpenChange={(o) => { if (!o) { setRejectOpen(false); setRejectMotif(""); } }}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Rejeter {selectableForReject} saisie(s)</DialogTitle>
+              <DialogDescription>
+                Le motif sera envoyé à l'employé. Seules les saisies "À valider" seront rejetées.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-2">
+              <Label htmlFor="motif-bulk">Motif de rejet (obligatoire)</Label>
+              <Textarea
+                id="motif-bulk"
+                value={rejectMotif}
+                onChange={(e) => setRejectMotif(e.target.value)}
+                placeholder="Ex : heures incorrectes, à reprendre…"
+                rows={3}
+              />
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => { setRejectOpen(false); setRejectMotif(""); }}>
+                Annuler
+              </Button>
+              <Button variant="destructive" onClick={bulkReject} disabled={bulkBusy || !rejectMotif.trim()}>
+                Confirmer le rejet
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Dialog export */}
+        <Dialog open={exportOpen} onOpenChange={setExportOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Exporter les heures</DialogTitle>
+              <DialogDescription>
+                {filtered.length} ligne(s) seront exportées avec les filtres actifs.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="grid gap-1">
+                <Label className="text-xs">Format</Label>
+                <Select value={exportFormat} onValueChange={(v) => setExportFormat(v as typeof exportFormat)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="csv">CSV (UTF-8 ; séparateur ;)</SelectItem>
+                    <SelectItem value="xlsx">Excel (.xlsx)</SelectItem>
+                    <SelectItem value="pdf">PDF (A4 paysage)</SelectItem>
+                    <SelectItem value="silae">Format SILAE (paie)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {isAdmin && exportFormat !== "silae" && (
+                <div className="rounded-md border bg-muted/30 p-3">
+                  <label className="flex items-start gap-2 cursor-pointer">
+                    <Checkbox
+                      checked={anonymise}
+                      onCheckedChange={(v) => setAnonymise(v === true)}
+                      className="mt-0.5"
+                    />
+                    <div className="space-y-0.5">
+                      <div className="text-sm font-medium flex items-center gap-1">
+                        <ShieldAlert className="h-3.5 w-3.5 text-indigo-600" />
+                        Anonymiser les noms (RGPD)
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        Remplace les noms par un identifiant stable (matricule SILAE ou EMP-XXXXXX). Commentaires retirés.
+                      </div>
+                    </div>
+                  </label>
+                </div>
+              )}
+              {exportFormat === "silae" && (
+                <div className="rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-xs text-amber-700">
+                  L'export SILAE conserve les noms (requis pour la paie) et n'accepte pas l'anonymisation.
+                </div>
+              )}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setExportOpen(false)}>Annuler</Button>
+              <Button onClick={runExport}>
+                <Download className="mr-1.5 h-4 w-4" /> Exporter
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         <SilaeValidationDialog
           report={silaeReport}
@@ -842,6 +1227,49 @@ function HeuresAnalysePage() {
       </div>
     </RoleGuard>
   );
+}
+
+// ============================================================================
+// Sub-components
+// ============================================================================
+
+function SortHeader({
+  field,
+  current,
+  dir,
+  onSort,
+  children,
+  className,
+}: {
+  field: SortField;
+  current: SortField;
+  dir: "asc" | "desc";
+  onSort: (f: SortField) => void;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  const active = current === field;
+  const Icon = !active ? ArrowUpDown : dir === "asc" ? ArrowUp : ArrowDown;
+  return (
+    <TableHead className={className}>
+      <button
+        type="button"
+        onClick={() => onSort(field)}
+        className="inline-flex items-center gap-1 hover:text-foreground"
+      >
+        {children}
+        <Icon className={`h-3 w-3 ${active ? "text-foreground" : "text-muted-foreground/50"}`} />
+      </button>
+    </TableHead>
+  );
+}
+
+function formatEuro(n: number): string {
+  return new Intl.NumberFormat("fr-FR", {
+    style: "currency",
+    currency: "EUR",
+    maximumFractionDigits: 0,
+  }).format(n);
 }
 
 function SilaeValidationDialog({
@@ -956,11 +1384,13 @@ function KpiCard({
   value,
   subline,
   tone = "default",
+  icon,
 }: {
   label: string;
   value: string;
   subline?: string;
   tone?: "default" | "success" | "warning" | "info";
+  icon?: React.ReactNode;
 }) {
   const toneCls = {
     default: "text-foreground",
@@ -971,7 +1401,10 @@ function KpiCard({
   return (
     <Card>
       <CardContent className="pt-4">
-        <div className="text-xs text-muted-foreground">{label}</div>
+        <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <span>{label}</span>
+          {icon}
+        </div>
         <div className={`mt-1 text-2xl font-bold ${toneCls}`}>{value}</div>
         {subline && <div className="mt-0.5 text-xs text-muted-foreground">{subline}</div>}
       </CardContent>
