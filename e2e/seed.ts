@@ -248,13 +248,23 @@ async function main() {
     await ensureRole(id, s.role);
     userIds[s.role] = id;
   }
-  // Employés (chef + employe)
+  // Employés (chef global + employe + chef scopé)
   const chefEmpId = await ensureEmploye(userIds.chef_chantier, seeds[1]);
   const empId = await ensureEmploye(userIds.employe, seeds[2]);
-  // Affaire chef
+  const chefScopedEmpId = await ensureEmploye(userIds.chef_metier_scoped, seeds[3]);
+  // Affaire chef global (5E2E1)
   const affaireId = await ensureChefAffaire(userIds.chef_chantier);
-  console.log(`[seed] chef employe=${chefEmpId} affaire=${affaireId}`);
-  // Assignation employé sur cette semaine
+  console.log(`[seed] chef global employe=${chefEmpId} affaire=${affaireId}`);
+  // Affaire chef scopé (5E2E2) — distincte pour vérifier le filtre app-side
+  const affaireScopedId = await ensureChefAffaire(
+    userIds.chef_metier_scoped,
+    "5E2E2",
+    "E2E Affaire Chef Scopé",
+  );
+  console.log(
+    `[seed] chef scopé employe=${chefScopedEmpId} affaire=${affaireScopedId}`,
+  );
+  // Assignation employé sur cette semaine (sur l'affaire chef global)
   await ensureAssignationSemaine(empId, affaireId);
   console.log("[seed] OK");
 }
