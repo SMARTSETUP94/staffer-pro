@@ -96,8 +96,11 @@ Volume staffé v0.39.0c : KPI "Heures staffées" = Σ(pers × demi_jours × H_HA
 ### Livré v0.43.x (Hub Chef Mobile — Sprint 1)
 50. ✅ **v0.43.0/1** (10 mai 2026) — Sprint 1 Hub Chef Mobile : 5 onglets (Dashboard/Planning/Équipe/À valider/Moi), badges multi-rôles, scope dur StafferMobileForm via `mes_affaires_chef`, 7 specs E2E. Option D : scope app-side, RLS strict différé en v0.45. Voir mem://features/sprint-1-hub-chef-mobile.
 
-### Livré v0.44.0 (Sprint 2 Documents/Photos par affaire)
+### Livré v0.44 (Documents/Photos + Refonte Atelier)
 51. ✅ **v0.44.0** (10 mai 2026) — Bucket privé `affaires-photos` + table `affaire_documents` (soft delete) + RLS scopée chef (Option D) + galerie desktop `/affaires/$id/documents` + galerie mobile chef `/mobile/chef/affaires/$id` avec caméra native + compression JPEG q=80 max 2560px + lightbox édition caption/date + 3 E2E. Voir mem://features/affaire-documents.
+51.1. ✅ **v0.44.1** (10 mai 2026) — Refonte UX Hub Chef Mobile : (a) ValiderHeures déplacé de "À valider" vers /equipe sous-tab Valider (fix doublon), (b) "À valider" renommé "Atelier" (icône Hammer), (c) 3 sous-tabs Atelier : Objets fab + Kanban chantier (Bois/Peinture/Manut/Validé) + Photos par objet, (d) migration `affaire_documents.objet_id` FK nullable ON DELETE SET NULL (1:N affaire→photo, photos restent attachées au chantier si objet supprimé). Hook `useChantierKanban` + `useObjetPhotos`. Bottom nav badge ne compte que les objets.
+51.2. ✅ **v0.44.2** (10 mai 2026) — Polish post-v0.44.1 : (1) redirect `/mobile/chef/a-valider` → `/mobile/chef/atelier` via `beforeLoad` TanStack (préserve les bookmarks), (2) dashboard mobile chef 5 KPI cards : Heures à valider → /equipe, Objets à valider → /atelier, nouvelle card "Photos récentes (7j)" → /atelier, Équipe (7j), Mes affaires actives, (3) Kanban Vue chantier : badges compteur par colonne, empty states icône `Inbox`, tri "en retard d'abord puis échéance puis ref" via `fabrication_etapes.date_fin` (min des étapes non terminées), filtres chantier persistés en `localStorage` (`v0.44.2:kanban-filter-affaires`), animations 200ms ease-out, badge "Retard" rouge sur cards en dépassement, (4) E2E `e2e/mobile-chef/sprint-v0442-polish.chef.spec.ts` (6 specs : redirect + KPI dashboard + sous-tab Valider equipe + Kanban 4 colonnes + Photos par objet + bottom nav badge). Drag-drop bonus reporté.
+
 
 ### À venir
 52. ⏳ **v0.45 RLS hardening chef** — Audit RLS strict côté DB (remplacement scope app-side Option D), migration de comptes contrôlée, tests par rôle.
