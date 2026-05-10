@@ -25,6 +25,7 @@ import { Route as AuthSetPasswordRouteImport } from './routes/auth.set-password'
 import { Route as AuthResetPasswordRouteImport } from './routes/auth.reset-password'
 import { Route as AuthForgotPasswordRouteImport } from './routes/auth.forgot-password'
 import { Route as AppValidationHeuresRouteImport } from './routes/_app.validation-heures'
+import { Route as AppStafferMobileRouteImport } from './routes/_app.staffer-mobile'
 import { Route as AppSignalementsRouteImport } from './routes/_app.signalements'
 import { Route as AppSaisiePourEquipeRouteImport } from './routes/_app.saisie-pour-equipe'
 import { Route as AppRoadmapRouteImport } from './routes/_app.roadmap'
@@ -154,6 +155,11 @@ const AuthForgotPasswordRoute = AuthForgotPasswordRouteImport.update({
 const AppValidationHeuresRoute = AppValidationHeuresRouteImport.update({
   id: '/validation-heures',
   path: '/validation-heures',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppStafferMobileRoute = AppStafferMobileRouteImport.update({
+  id: '/staffer-mobile',
+  path: '/staffer-mobile',
   getParentRoute: () => AppRoute,
 } as any)
 const AppSignalementsRoute = AppSignalementsRouteImport.update({
@@ -450,6 +456,7 @@ export interface FileRoutesByFullPath {
   '/roadmap': typeof AppRoadmapRoute
   '/saisie-pour-equipe': typeof AppSaisiePourEquipeRoute
   '/signalements': typeof AppSignalementsRoute
+  '/staffer-mobile': typeof AppStafferMobileRoute
   '/validation-heures': typeof AppValidationHeuresRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
@@ -517,6 +524,7 @@ export interface FileRoutesByTo {
   '/roadmap': typeof AppRoadmapRoute
   '/saisie-pour-equipe': typeof AppSaisiePourEquipeRoute
   '/signalements': typeof AppSignalementsRoute
+  '/staffer-mobile': typeof AppStafferMobileRoute
   '/validation-heures': typeof AppValidationHeuresRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
@@ -586,6 +594,7 @@ export interface FileRoutesById {
   '/_app/roadmap': typeof AppRoadmapRoute
   '/_app/saisie-pour-equipe': typeof AppSaisiePourEquipeRoute
   '/_app/signalements': typeof AppSignalementsRoute
+  '/_app/staffer-mobile': typeof AppStafferMobileRoute
   '/_app/validation-heures': typeof AppValidationHeuresRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
@@ -656,6 +665,7 @@ export interface FileRouteTypes {
     | '/roadmap'
     | '/saisie-pour-equipe'
     | '/signalements'
+    | '/staffer-mobile'
     | '/validation-heures'
     | '/auth/forgot-password'
     | '/auth/reset-password'
@@ -723,6 +733,7 @@ export interface FileRouteTypes {
     | '/roadmap'
     | '/saisie-pour-equipe'
     | '/signalements'
+    | '/staffer-mobile'
     | '/validation-heures'
     | '/auth/forgot-password'
     | '/auth/reset-password'
@@ -791,6 +802,7 @@ export interface FileRouteTypes {
     | '/_app/roadmap'
     | '/_app/saisie-pour-equipe'
     | '/_app/signalements'
+    | '/_app/staffer-mobile'
     | '/_app/validation-heures'
     | '/auth/forgot-password'
     | '/auth/reset-password'
@@ -963,6 +975,13 @@ declare module '@tanstack/react-router' {
       path: '/validation-heures'
       fullPath: '/validation-heures'
       preLoaderRoute: typeof AppValidationHeuresRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/staffer-mobile': {
+      id: '/_app/staffer-mobile'
+      path: '/staffer-mobile'
+      fullPath: '/staffer-mobile'
+      preLoaderRoute: typeof AppStafferMobileRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/signalements': {
@@ -1405,6 +1424,7 @@ interface AppRouteChildren {
   AppRoadmapRoute: typeof AppRoadmapRoute
   AppSaisiePourEquipeRoute: typeof AppSaisiePourEquipeRoute
   AppSignalementsRoute: typeof AppSignalementsRoute
+  AppStafferMobileRoute: typeof AppStafferMobileRoute
   AppValidationHeuresRoute: typeof AppValidationHeuresRoute
   AppAdminContenuWidgetsRoute: typeof AppAdminContenuWidgetsRoute
   AppAdminEmailPreviewRoute: typeof AppAdminEmailPreviewRoute
@@ -1451,6 +1471,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppRoadmapRoute: AppRoadmapRoute,
   AppSaisiePourEquipeRoute: AppSaisiePourEquipeRoute,
   AppSignalementsRoute: AppSignalementsRoute,
+  AppStafferMobileRoute: AppStafferMobileRoute,
   AppValidationHeuresRoute: AppValidationHeuresRoute,
   AppAdminContenuWidgetsRoute: AppAdminContenuWidgetsRoute,
   AppAdminEmailPreviewRoute: AppAdminEmailPreviewRoute,
