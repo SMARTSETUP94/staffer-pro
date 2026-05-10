@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 import type { AppRole } from "@/lib/auth-context";
 import { useAuth } from "@/lib/auth-context";
 
-export type PreviewRole = "admin" | "chef_chantier" | "employe_desktop" | "employe_mobile";
+export type PreviewRole = "admin" | "chef_chantier" | "chef_mobile" | "employe_desktop" | "employe_mobile";
 
 const STORAGE_KEY = "setup_paris_preview_role";
 const STORAGE_KEY_EMP = "setup_paris_preview_employe_id";
