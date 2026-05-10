@@ -117,7 +117,7 @@ function HeureRow({ heure, onChanged }: { heure: HeureAValider; onChanged: () =>
       toast.error("Erreur");
       return;
     }
-    toast({ title: "Heures validées", description: `${heure.employe_nom} • ${dateLabel}` });
+    toast.success("Heures validées", { description: `${heure.employe_nom} • ${dateLabel}` });
     onChanged();
   }
 
