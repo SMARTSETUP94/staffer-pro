@@ -93,21 +93,23 @@ Volume staffé v0.39.0c : KPI "Heures staffées" = Σ(pers × demi_jours × H_HA
 ### Sprint 3 features métier (en cours)
 49. ✅ **v0.41.0a** (5 mai 2026) — Hotfix BUG #33 heures invisibles côté employé : `use-mes-heures` deps `useMemo` rows complétées (affairesById/metiersById) + refetch sur `visibilitychange`+`focus`. Test non-régression invariants. **1407/1407 verts.** Voir mem://features/sprint-3-features-v041.
 
-### Livré v0.43.x (Hub Chef Mobile)
-49b. ✅ **v0.43.0/1** (10 mai 2026) — Sprint 1 Hub Chef Mobile : 5 onglets (Dashboard/Planning/Équipe/À valider/Moi), badges multi-rôles, scope dur StafferMobileForm via `mes_affaires_chef`, 7 specs E2E. Option D : scope app-side, RLS strict différé en v0.45.
+### Livré v0.43.x (Hub Chef Mobile — Sprint 1)
+50. ✅ **v0.43.0/1** (10 mai 2026) — Sprint 1 Hub Chef Mobile : 5 onglets (Dashboard/Planning/Équipe/À valider/Moi), badges multi-rôles, scope dur StafferMobileForm via `mes_affaires_chef`, 7 specs E2E. Option D : scope app-side, RLS strict différé en v0.45. Voir mem://features/sprint-1-hub-chef-mobile.
 
 ### Livré v0.44.0 (Sprint 2 Documents/Photos par affaire)
-49c. ✅ **v0.44.0** (10 mai 2026) — Module Documents/Photos : bucket privé `affaires-photos` + table `affaire_documents` (soft delete) + RLS scopée chef (Option D) + galerie desktop `/affaires/$id/documents` (onglet) + galerie mobile chef `/mobile/chef/affaires/$id` avec caméra native + compression JPEG q=80 max 2560px + lightbox édition caption/date + 3 E2E. Voir mem://features/affaire-documents.
+51. ✅ **v0.44.0** (10 mai 2026) — Bucket privé `affaires-photos` + table `affaire_documents` (soft delete) + RLS scopée chef (Option D) + galerie desktop `/affaires/$id/documents` + galerie mobile chef `/mobile/chef/affaires/$id` avec caméra native + compression JPEG q=80 max 2560px + lightbox édition caption/date + 3 E2E. Voir mem://features/affaire-documents.
 
-49b. ⏳ **Sprint 3c** — E2E full role-based (employé desktop + mobile).
-49c. ⏳ **Sprint 3b** — Logistique avancée.
-50. ⏳ **v0.20.1 quick wins** — Pré-remplissage trajet sous-traité + cache `useObjetsAffaireLight` + notification CA prêt à livrer.
-51. ⏳ **v0.21.1** — Garde RBAC UI `/saisie-pour-equipe` + durcissement RLS + UNIQUE INDEX chef_jour + tests SQL.
-52. ⏳ **v0.39.3** — Migration RPC #1/2/3/5 (bulk-assign-objet, chef-saisit-pour-employe, bulk-saisie, bulk-staffer).
-53. ⏳ **v0.36** — Sprint dette résiduelle : page admin véhicules + audit findings.
-54. ⏳ **v0.37** — Polish UX transversal post-feedback terrain.
-55. ⏳ **v0.40 Phase 2** — Horaires précis SILAE + RPC #4 feuille-route.
-56. ⏳ **v0.41 (BACKLOG)** — Claude API auto-staffing 5XXX + CNI/passeport profil + suggestion véhicule.
+### À venir
+52. ⏳ **v0.45 RLS hardening chef** — Audit RLS strict côté DB (remplacement scope app-side Option D), migration de comptes contrôlée, tests par rôle.
+53. ⏳ **Sprint 3c** — E2E full role-based (employé desktop + mobile).
+54. ⏳ **Sprint 3b** — Logistique avancée (autorisations véhicules + sous-traitants + historique + stats).
+55. ⏳ **v0.20.1 quick wins** — Pré-remplissage trajet sous-traité + cache `useObjetsAffaireLight` + notification CA prêt à livrer.
+56. ⏳ **v0.21.1** — Garde RBAC UI `/saisie-pour-equipe` + durcissement RLS + UNIQUE INDEX chef_jour + tests SQL.
+57. ⏳ **v0.39.3** — Migration RPC #1/2/3/5 (bulk-assign-objet, chef-saisit-pour-employe, bulk-saisie, bulk-staffer).
+58. ⏳ **v0.36** — Sprint dette résiduelle : page admin véhicules + audit findings.
+59. ⏳ **v0.37** — Polish UX transversal post-feedback terrain.
+60. ⏳ **v0.40 Phase 2** — Horaires précis SILAE + RPC #4 feuille-route.
+61. ⏳ **v0.41 (BACKLOG)** — Claude API auto-staffing 5XXX + CNI/passeport profil + suggestion véhicule.
 
 Voir roadmap consolidée détaillée : mem://roadmap/consolidee-2mai2026.
 
