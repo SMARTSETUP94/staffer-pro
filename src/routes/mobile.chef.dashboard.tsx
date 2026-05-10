@@ -65,6 +65,22 @@ function ChefDashboard() {
     },
   });
 
+  // KPI : photos uploadées sur mes affaires ces 7 derniers jours
+  const photosQ = useQuery({
+    queryKey: ["chef-photos-7j", affaireIds.length],
+    enabled: affaireIds.length > 0,
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("affaire_documents")
+        .select("id", { count: "exact", head: true })
+        .in("affaire_id", affaireIds)
+        .is("deleted_at", null)
+        .ilike("mime_type", "image/%")
+        .gte("uploaded_at", subDays(new Date(), 7).toISOString());
+      return count ?? 0;
+    },
+  });
+
   // Alertes : objets en retard (date_fin_souhaitee < today + statut != fini),
   // heures non saisies depuis 3 jours (hors planning),
   // contrats à signer.
