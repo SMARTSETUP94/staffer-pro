@@ -253,3 +253,64 @@
 .animate-confetti {
   animation: confetti-fall 3s ease-out forwards;
 }
+
+/* TipTap éditeur template contrat — badge placeholder + structure de tables */
+.tiptap-placeholder-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 6px;
+  margin: 0 1px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.78em;
+  font-weight: 600;
+  color: hsl(var(--primary));
+  background: color-mix(in oklch, hsl(var(--primary)) 12%, transparent);
+  border: 1px solid color-mix(in oklch, hsl(var(--primary)) 35%, transparent);
+  border-radius: 4px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.tiptap-template-editor table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.5em 0;
+}
+.tiptap-template-editor th,
+.tiptap-template-editor td {
+  border: 1px solid var(--border);
+  padding: 4px 8px;
+  min-width: 60px;
+}
+.tiptap-template-editor th {
+  background: color-mix(in oklch, var(--muted) 60%, transparent);
+  font-weight: 600;
+}
+.tiptap-template-editor hr.page-break {
+  border: none;
+  border-top: 2px dashed color-mix(in oklch, hsl(var(--primary)) 50%, transparent);
+  margin: 1.5em 0;
+  page-break-after: always;
+}
+.contrat-template-preview {
+  font-size: 0.85rem;
+  line-height: 1.55;
+}
+.contrat-template-preview h1 { font-size: 1.4rem; font-weight: 700; margin: 0.6em 0 0.4em; }
+.contrat-template-preview h2 { font-size: 1.15rem; font-weight: 700; margin: 0.6em 0 0.3em; }
+.contrat-template-preview h3 { font-size: 1rem; font-weight: 600; margin: 0.5em 0 0.3em; }
+.contrat-template-preview p { margin: 0.5em 0; text-align: justify; }
+.contrat-template-preview ul { list-style: disc; margin: 0.4em 0 0.4em 1.4em; }
+.contrat-template-preview ol { list-style: decimal; margin: 0.4em 0 0.4em 1.4em; }
+.contrat-template-preview table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.6em 0;
+  font-size: 0.78rem;
+}
+.contrat-template-preview th,
+.contrat-template-preview td {
+  border: 1px solid var(--border);
+  padding: 4px 6px;
+}
+.contrat-template-preview hr.page-break { border: none; border-top: 1px dashed var(--border); margin: 1em 0; }
+
