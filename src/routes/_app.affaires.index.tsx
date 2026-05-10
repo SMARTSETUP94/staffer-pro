@@ -133,12 +133,13 @@ function AffairesPage() {
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return rows.filter((r) => {
+      if (onlyMine && !mesAffairesIds.has(r.id)) return false;
       if (filter !== "all" && r.statut !== filter) return false;
       if (typoSet.size > 0 && (!r.typologie || !typoSet.has(r.typologie))) return false;
       if (!q) return true;
       return `${r.numero} ${r.nom} ${r.client ?? ""} ${r.lieu ?? ""}`.toLowerCase().includes(q);
     });
-  }, [rows, search, filter, typoSet]);
+  }, [rows, search, filter, typoSet, onlyMine, mesAffairesIds]);
 
   const setTypoFilter = (next: AffaireTypologie[]) => {
     navigate({ search: { typo: next }, replace: true });
