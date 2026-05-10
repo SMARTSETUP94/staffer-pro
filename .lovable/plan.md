@@ -1,95 +1,85 @@
-# Plan livraison — Module Staffer-Mobile + Workflow contrat intérim
 
-Brief XL (12-16h, 2 tours). Avant d'exécuter Tour 1, je propose les décisions par défaut sur **4 points d'archi** qui ont un impact transverse, pour qu'on les fige une fois.
+# Hub mobile chef d'équipe — Plan archi (Tour 1 + Tour 2)
 
----
+## Décisions archi figées (5 points)
 
-## Décisions par défaut (à confirmer ou amender)
+**a) Route naming** — Convention existante = `mobile.*` (flat dot routes TanStack → `/mobile/...`) cf. `mobile.aujourdhui.tsx`, `mobile.heures.tsx`, etc. + employé desktop `_app.dashboard-employe.tsx`. **Décision : `/mobile/chef/*`** (pas `/m/chef`) pour rester cohérent avec l'existant. Fichiers : `mobile.chef.tsx` (layout + bottom nav) et `mobile.chef.dashboard.tsx`, `mobile.chef.planning.tsx`, `mobile.chef.staffer.tsx`, `mobile.chef.contrats.tsx`, `mobile.chef.equipe.tsx`, `mobile.chef.fabrication.tsx`.
 
-### D1. Nom de la table employé
-Le brief dit `employees` ; le projet utilise `employes` (FR, déjà en prod avec `type_contrat`, `metier_principal_id`, etc., et toutes les RLS y sont rattachées). **Default : on ajoute les 4 champs sur `employes`** — pas de renommage, pas de nouvelle table.
+**b) Réutilisation `/staffer-mobile`** — **Refactor en composant partagé** `<StafferMobileForm />` extrait de `_app.staffer-mobile.tsx`. La route `_app.staffer-mobile.tsx` continue d'exister (admin desktop), et `mobile.chef.staffer.tsx` rend le même composant. Pas de reroute (mauvaise UX dans bottom nav).
 
-### D2. Coexistence `type_contrat` ↔ `statut_contrat`
-`employes.type_contrat` existe déjà (`CDI` / `CDD` / `Interim` / `Independant`) et est utilisé partout (auto-staffing tier-priority, planning, exports SILAE). Le brief demande un nouvel enum `statut_contrat` plus fin (`CDI` / `CDDU intermittent` / `CDD chantier` / `Intérim` / `Apprenti`).
-**Default :**
-- On garde `type_contrat` intact (ne casse rien)
-- On AJOUTE `statut_contrat` (nouvel enum) comme **champ de précision RH** indépendant
-- Détection intermittent pour workflow contrat = `statut_contrat IN ('CDDU intermittent','CDD chantier','Intérim')`
-- Backfill : pour les employés existants `type_contrat='Interim'` → `statut_contrat='Intérim'` ; `type_contrat='CDI'` → `'CDI'` ; `type_contrat='CDD'` → `'CDD chantier'` ; `Independant` → laissé NULL pour saisie manuelle.
+**c) Layout bottom nav** — Pattern existant `MobileBottomNav.tsx` (Link TanStack + path matching). **Création d'un `ChefMobileBottomNav.tsx` jumeau** dédié, branché sur `mobile.chef.tsx` (route layout avec `<Outlet/>`). Pas de lib externe. Header = composant `ChefMobileHeader` (cloche notif réutilise `use-notifications`, avatar = `useResolvedEmploye`).
 
-### D3. Mobile « Heures/jour 8 » vs modèle demi-journée existant
-Le système actuel travaille en **demi-journées 4h** (`assignations.demi_journee` MATIN / APRES_MIDI, `heures` default 4). Le mobile simplifié demande « heures/jour default 8, max 12 ».
-**Default :**
-- Le mobile expose 3 options visuelles : ½ journée matin (4h) / ½ journée après-midi (4h) / **journée complète (8h)** — la valeur par défaut est journée complète.
-- Côté DB : on crée **N assignations** (1 par demi-journée couverte) sur la plage `date_debut → date_fin`, en sautant les jours non ouvrés (réutilise le helper existant `staffing/date-utils.ts`).
-- Pas de support 12h sur mobile en Tour 1 (dépasse le modèle 4h ; à voir avec phase 2 horaires précis prévue v0.40). L'input « heures » devient un Select { 4 / 8 } pour Tour 1. Si tu veux absolument 12h saisis, je le note pour v0.40.
+**d) Validation heures mobile** — **Nouvelle page mobile dédiée** `mobile.chef.equipe.tsx` (sous-onglet "Heures à valider" + "Absences"). Le composant desktop `_app.audit-heures.tsx` est trop dense (DataTable). On extrait la logique dans un hook `use-validation-heures-queue.ts` (déjà existe partiellement → `use-validation-count.ts`) et on crée un UI mobile cards + swipe (lib existante : pas de swipe lib → on fait Tap "Valider/Rejeter" boutons larges, MVP, swipe en polish v2).
 
-### D4. Convention de routes
-Pas de dossier `/rh/` aujourd'hui ; convention TanStack `_app.<segment>.tsx`.
-**Default :**
-- `/staffer-mobile` → `src/routes/_app.staffer-mobile.tsx` (RoleGuard admin/chef)
-- `/rh/contrats` → `src/routes/_app.rh.contrats.tsx` (RoleGuard admin)
-- Tour 2 : `/mobile/contrats` → `src/routes/mobile.contrats.tsx` (employé mobile only) + entrée bottom-nav
+**e) Statut chef sur objets fab** — **Nouveaux champs dédiés** sur `fabrication_objets` :
+- `statut_chef` (enum `objet_fab_statut_chef` : `a_faire | en_cours | bloque | fini`, default `a_faire`)
+- `commentaire_chef` (text)
+- `statut_chef_updated_at`, `statut_chef_updated_by`
++ nouvelle table `fabrication_objets_photos` (`id, objet_id, storage_path, uploaded_by, uploaded_at, commentaire`).
+Bucket Storage `fabrication-photos` (privé, RLS chef/admin + employés assignés via `user_has_affaire_access`).
+
+Le statut existant `fabrication_etapes.statut` reste pour le suivi fin par étape (BE/Num/Bois/etc.). `statut_chef` est une vue **macro chef de chantier** indépendante = pilotage opérationnel terrain.
 
 ---
 
-## Tour 1 (~6-8h) — ce que je livre
+## Tour 1 (~6-8h) — Foundations + Phase A
 
-### A. Migration `employes` + RLS rémunération
-- Ajout colonnes : `taux_horaire_brut numeric NULL`, `taux_horaire_charge numeric NULL`, `forfait boolean NOT NULL DEFAULT false`, `statut_contrat statut_contrat_type NULL` (nouvel enum)
-- Backfill `statut_contrat` (cf D2)
-- Helper SQL `is_admin()` déjà présent → policies SELECT/UPDATE colonnes `taux_*` admin only via **policies au niveau colonne** (column-level GRANT + RLS dédiée). Concrètement : ajouter une policy `employes_select_remu_admin_only` n'est pas suffisant (RLS ne supporte pas encore le mask colonne en select policy unique) — j'utilise un **GRANT SELECT (col1, col2) TO admin_role** + masquage côté code via vue `employes_safe` filtrant les colonnes. À défaut (Supabase n'expose pas de role admin SQL natif côté client), je fais le filtrage **côté code** dans tous les select de fiche employé (admin only) ET je documente. → ⚠️ je peux pousser plus loin si tu veux du masquage hard SQL avec une fonction wrapper, dis-le.
-- UI fiche employé : nouvelle section « Rémunération » conditionnelle `isAdmin`.
+### Migration SQL
+- enum `objet_fab_statut_chef`
+- ALTER `fabrication_objets` ADD `statut_chef`, `commentaire_chef`, `statut_chef_updated_*`
+- CREATE `fabrication_objets_photos` + RLS
+- CREATE bucket `fabrication-photos` + storage policies (chef/admin write, lecture chef/admin + assigned)
 
-### B. RPC `upsert_intermittent` (seed-ready)
-- Type signature exact comme demandé. Clé idempotence = `LOWER(TRIM(nom_complet))` matché contre `LOWER(TRIM(nom||' '||prenom))` ou `prenom||' '||nom`. Si match → UPDATE only des champs NULL. Sinon → INSERT avec `actif=false`, `type_contrat` mappé selon `statut`, `metier_principal_id` résolu via `poste` (lookup `metiers.libelle ILIKE`).
-- Tu pousses ton seed SQL ensuite, la RPC sera prête.
+### Composants partagés
+- `src/components/mobile-chef/ChefMobileBottomNav.tsx` (5 onglets : Dashboard / Planning / Staffer / Équipe / Contrats — avec badge nb sur Équipe = heures en attente, et sur Contrats = nb à signer côté chef)
+- `src/components/mobile-chef/ChefMobileHeader.tsx`
+- `src/components/staffer/StafferMobileForm.tsx` (refactor extrait de `_app.staffer-mobile.tsx`)
 
-### C. Module `/staffer-mobile`
-- Form mobile-first sticky bottom button « Confirmer ».
-- Recherche fuzzy personne (réutilise `MultiSelectCombo` créé hier + `string-normalize`).
-- Recherche chantier (numéro + nom).
-- Métier auto-rempli depuis `employe.metier_principal`, modifiable.
-- Date range picker compact + select 4h/8h (cf D3).
-- **Détection conflit dispo** : warning si la personne a déjà une assignation OU une absence validée chevauchante → modale « Continuer ? » (non bloquant, juste warn).
-- Submit :
-  1. Crée N assignations (1 par demi-journée jours ouvrés, hors absences validées)
-  2. Si `statut_contrat IN (intermittent / CDD chantier / Intérim)` → crée 1 ligne `contrats_intermittents` (statut `'À signer (employé)'`) + 1 notification `notifications` push pour l'employé
-  3. Toast succès + reset form
+### Routes
+- `mobile.chef.tsx` — layout : RoleGuard (admin|chef sinon redirect `/mobile/aujourdhui`), header + `<Outlet/>` + ChefMobileBottomNav, désactive `MobileBottomNav` employé via flag layout
+- `mobile.chef.index.tsx` → redirect `/mobile/chef/dashboard`
+- `mobile.chef.dashboard.tsx` — KPI cards (mes chantiers actifs aujourd'hui, équipe présents/absents, heures à valider, contrats en attente) + liste "Aujourd'hui" compacte
+- `mobile.chef.planning.tsx` — semaine compacte (Lun→Dim) qui-fait-quoi équipe, swipe sem-1 / sem+1 (boutons + flèches, swipe natif via `touchstart/end` simple)
+- `mobile.chef.staffer.tsx` — wrapper `<StafferMobileForm />`
+- `mobile.chef.contrats.tsx` — liste contrats déclenchés par chef (filter `created_by = current user`), grouping par statut, bouton "Relancer" → `sms:` / `mailto:` / `https://wa.me/` selon dispo téléphone employé
 
-### D. Page admin `/rh/contrats`
-- 4 onglets `Tabs` (À créer / Signés / Archivés / Tous)
-- Filtres : période, employé (multi-select), chantier (multi-select)
-- Stats header : nb à signer ce mois, montant facturable estimé (`SUM(taux_brut × heures)` agrégat)
-- Action ligne : voir détail (modale) + bouton « Relancer signature » (Tour 2 → email Resend) + « Télécharger PDF » (Tour 2 → si v3 url existe)
-- En Tour 1 : tout le squelette UI + listing fonctionnel ; les actions PDF/email seront branchées Tour 2.
+### Hooks
+- `use-chef-dashboard.ts` (queries Supabase parallèles → KPIs + liste jour)
+- `use-chef-planning-semaine.ts`
+- `use-mes-contrats-declenches.ts`
 
-### I (partiel). Tables DB
-- `contrats_intermittents` (toutes colonnes du brief) + RLS (admin all + employé voit ses propres via `employes.profile_id = auth.uid()`). INSERT bloqué client-side ; uniquement via RPC SECURITY DEFINER appelée par `/staffer-mobile`.
-- `contrats_signatures` créée AVEC les RLS (mais utilisée Tour 2).
-- Enums : `statut_contrat_type`, `contrat_intermittent_statut`, `signataire_role`.
-
-### Hors-scope Tour 1 (→ Tour 2)
-- F. Génération PDF react-pdf (template TSX figé)
-- G. Signature canvas react-signature-canvas + upload Storage + hash SHA-256
-- H. Workflow 2 étapes séquentielles + 3 versions PDF
-- E. Onglet mobile « Mes contrats » + bottom nav
-- K. Emails Resend (3 templates) — push notifs Tour 1 OK
-- L. Tests E2E Playwright
+### Tests Tour 1
+- E2E smoke `chef-mobile-hub-nav.chef.spec.ts` : login chef mobile → /mobile/chef → 5 onglets cliquables → assertions URL + 1 KPI visible
 
 ---
 
-## Tour 2 (~5-7h) — ce que je livrerai après
+## Tour 2 (~6-8h) — Phase B + Fabrication
 
-E + F + G + H + K + L tels que décrits. Bucket Storage privé `contrats-intermittents` créé. Edge Function (ou server fn) `sign-contract` qui orchestre upload signature + incrust PDF + hash + transition statut + email Resend.
+### Onglet Mon équipe
+- `mobile.chef.equipe.tsx` — Tabs sub-nav `Heures (n)` / `Absences (n)`
+- `mobile.chef.equipe.heures.tsx` (ou state local) — queue cards heures statut `soumis` employés du chef, boutons Valider / Rejeter (motif modal) / Voir détail
+- `mobile.chef.equipe.absences.tsx` — demandes `valide=false`, boutons Valider/Refuser
+- Hook `use-equipe-validation-queue.ts` factorise comptes + items
+
+### Onglet Fabrication (accessible depuis Dashboard quick-action + lien Planning)
+- `mobile.chef.fabrication.tsx` — liste objets fab où chef est respo (chantier `chef_chantier_id = me` OU `respo_fab_id = me` ou métiers équipe)
+- Carte objet : nom, ref, chantier, badge `statut_chef`, bouton large 4 statuts (segmented), input commentaire bref, bouton appareil photo (input file capture=environment) → upload Supabase Storage → ligne dans `fabrication_objets_photos`
+- RPC server-fn `update_objet_statut_chef(objet_id, statut, commentaire)` avec audit trigger optionnel (out of scope MVP, simple UPDATE)
+
+### Tests E2E Tour 2
+- `chef-mobile-validation-heures.chef.spec.ts` : valider une heure équipe en attente → assertion statut bascule
+- `chef-mobile-fabrication-photo.chef.spec.ts` : marquer objet `fini` + upload photo (mock blob) → assertion ligne photos + statut
 
 ---
 
-## Risques / questions ouvertes
+## Hors scope (figé en fin de Tour 2)
+- Swipe gestures natifs (pour MVP : boutons larges)
+- WhatsApp Business API (juste deeplink `wa.me`)
+- Notifications push (cloche = lecture in-app uniquement)
+- Workflow signature contrats côté chef (intentionnel : chef ≠ signataire)
 
-1. **Masquage taux_horaire** — RLS column-level n'est pas natif Supabase. Filtrage côté code (admin-only select) est la voie réaliste. Confirme que ça te va, sinon on bascule sur une vue SQL wrapper (~1h de plus).
-2. **« role='intermittent' »** dans le brief B — il n'y a pas de `role` sur `employes`. J'interprète comme `statut_contrat='CDDU intermittent'` + `actif=false`. OK ?
-3. **12h/jour mobile** — pas supportable proprement avant phase 2 horaires précis. OK pour Select 4h/8h en Tour 1 ?
-4. **Signature simple eIDAS** confirmée recevable Article 1367 — pas de Yousign Phase 1, OK noté.
+---
 
-Si tu valides ces 4 décisions par défaut **en réponse rapide** (« go » suffit, ou liste les amendements), j'enchaîne Tour 1 immédiatement.
+## Fichiers (estimation)
+**Tour 1** : 1 migration SQL, 6 routes, 3 composants partagés, 3 hooks, 1 test E2E (~14 fichiers)
+**Tour 2** : 1 migration (si trigger audit), 3 routes, 4 composants (cards heures, modal motif, card objet fab, upload photo), 2 hooks, 1 server-fn, 2 tests E2E (~13 fichiers)
