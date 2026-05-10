@@ -62,7 +62,7 @@ export function useChantierKanban(filterAffaireIds: string[] | null) {
       // 1. Objets fab non archivés des affaires cibles
       const { data: objets, error: objErr } = await supabase
         .from("fabrication_objets")
-        .select("id, affaire_id, reference, nom, quantite, statut_chef, archive, date_fin_souhaitee, affaires(numero,nom)")
+        .select("id, affaire_id, reference, nom, quantite, statut_chef, archive, affaires(numero,nom)")
         .eq("archive", false)
         .in("affaire_id", targetIds)
         .order("reference");
@@ -71,18 +71,23 @@ export function useChantierKanban(filterAffaireIds: string[] | null) {
       const objetIds = (objets ?? []).map((o) => o.id);
       if (objetIds.length === 0) return [];
 
-      // 2. Étapes non terminées par objet (pour déduire la colonne)
+      // 2. Étapes non terminées par objet (pour déduire colonne + deadline)
       const { data: etapes } = await supabase
         .from("fabrication_etapes")
-        .select("objet_id, type_etape, statut")
+        .select("objet_id, type_etape, statut, date_fin")
         .in("objet_id", objetIds)
         .neq("statut", "termine");
 
       const etapesParObjet = new Map<string, string[]>();
+      const deadlineParObjet = new Map<string, string>();
       (etapes ?? []).forEach((e) => {
         const arr = etapesParObjet.get(e.objet_id) ?? [];
         arr.push(e.type_etape);
         etapesParObjet.set(e.objet_id, arr);
+        if (e.date_fin) {
+          const cur = deadlineParObjet.get(e.objet_id);
+          if (!cur || e.date_fin < cur) deadlineParObjet.set(e.objet_id, e.date_fin);
+        }
       });
 
       // 3. Thumbnails (1ère photo par objet)
@@ -112,8 +117,8 @@ export function useChantierKanban(filterAffaireIds: string[] | null) {
           else if (types.includes("finition")) column = "peinture";
           else column = "bois";
         }
-        const is_en_retard =
-          o.statut_chef !== "fini" && !!o.date_fin_souhaitee && o.date_fin_souhaitee < today;
+        const deadline = deadlineParObjet.get(o.id) ?? null;
+        const is_en_retard = o.statut_chef !== "fini" && !!deadline && deadline < today;
         return {
           id: o.id,
           affaire_id: o.affaire_id,
@@ -125,12 +130,12 @@ export function useChantierKanban(filterAffaireIds: string[] | null) {
           statut_chef: o.statut_chef,
           column,
           thumbnail_path: thumbParObjet.get(o.id) ?? null,
-          date_fin_souhaitee: o.date_fin_souhaitee ?? null,
+          date_fin_souhaitee: deadline,
           is_en_retard,
         };
       });
 
-      // Tri global : en retard d'abord, puis date_fin_souhaitee asc, puis ref alphabétique
+      // Tri : en retard d'abord, puis deadline asc, puis reference
       mapped.sort((a, b) => {
         if (a.is_en_retard !== b.is_en_retard) return a.is_en_retard ? -1 : 1;
         const da = a.date_fin_souhaitee ?? "9999-12-31";
