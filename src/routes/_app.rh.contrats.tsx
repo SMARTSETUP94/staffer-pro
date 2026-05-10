@@ -18,7 +18,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { SignContractDialog } from "@/components/contrats/SignContractDialog";
 import { ContratTemplateEditor } from "@/components/contrats/ContratTemplateEditor";
-import { openContratPdf } from "@/lib/contrats-pdf-proxy";
+import { openContratPdf, downloadContratPdf } from "@/lib/contrats-pdf-proxy";
 
 export const Route = createFileRoute("/_app/rh/contrats")({
   component: () => (
