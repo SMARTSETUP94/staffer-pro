@@ -146,12 +146,17 @@ async function ensureEmploye(userId: string, s: Seed): Promise<string> {
     .eq("profile_id", userId)
     .maybeSingle();
   if (existing) return existing.id;
-  // Récupérer un metier_principal_id valide (premier dispo)
-  const { data: metiers, error: mErr } = await admin
-    .from("metiers")
-    .select("id")
-    .order("ordre")
-    .limit(1);
+  // Récupérer un metier_principal_id valide.
+  // Si le seed précise metierOrdre, on le respecte ; sinon premier dispo.
+  let metierQuery = admin.from("metiers").select("id").order("ordre").limit(1);
+  if (s.metierOrdre !== undefined) {
+    metierQuery = admin
+      .from("metiers")
+      .select("id")
+      .eq("ordre", s.metierOrdre)
+      .limit(1);
+  }
+  const { data: metiers, error: mErr } = await metierQuery;
   if (mErr) throw mErr;
   const metierId = metiers?.[0]?.id ?? 1;
   const { data, error } = await admin
