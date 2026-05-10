@@ -19,7 +19,7 @@ import { RoleGuard } from "@/components/auth/RoleGuard";
 import { ChefMobileHeader } from "@/components/mobile-chef/ChefMobileHeader";
 import { useChefAValider, type HeureAValider, type ObjetAValider } from "@/hooks/use-chef-a-valider";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
 
