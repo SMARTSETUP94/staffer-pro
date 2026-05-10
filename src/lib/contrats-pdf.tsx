@@ -84,7 +84,7 @@ function fmtDateShort(iso?: string | null): string {
 }
 
 function renderTemplateHtml(data: ContratPdfData): string {
-  return interpolateContratTemplate(data.template_html || DEFAULT_CONTRAT_TEMPLATE_HTML, {
+  const interpolated = interpolateContratTemplate(data.template_html || DEFAULT_CONTRAT_TEMPLATE_HTML, {
     // Salarié
     employe_nom_complet: `${data.employe_nom.toUpperCase()} ${data.employe_prenom}`.trim(),
     employe_adresse_complete: data.employe_adresse ?? "—",
@@ -103,7 +103,10 @@ function renderTemplateHtml(data: ContratPdfData): string {
     date_signature_employe: fmtDateShort(data.signed_at_employe ?? null),
     date_signature_employeur: fmtDateShort(data.signed_at_employeur ?? null),
   });
+  // Strip [[ZONE_*]] markers — les signatures réelles sont rendues par le wrapper PDF en bas de page.
+  return interpolated.replace(/\[\[ZONE_[A-Z0-9_]+\]\]/g, "");
 }
+
 
 export function ContratIntermittentDocument({ data }: { data: ContratPdfData }): ReactElement {
   const isVierge = !data.signature_employe_url && !data.signature_employeur_url;
