@@ -402,13 +402,17 @@ export function useMesHeures({ weekStart, employeIdOverride }: UseMesHeuresOptio
         fabrication_etape_type: patch.fabrication_etape_type ?? null,
         statut: "brouillon" as const,
       };
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("heures_saisies")
         .insert(insert)
         .select(
           SAISIE_SELECT,
         )
         .maybeSingle();
+      if (error) {
+        toast.error(...formatBusinessError(error));
+        return;
+      }
       if (data) {
         setSaisies((prev) => [...prev, data as unknown as SaisieRow]);
       }
