@@ -291,10 +291,19 @@ function RhContrats() {
                             </Button>
                           )}
                           {r.statut !== "signe" && r.statut !== "annule" && (
-                            <Button size="sm" variant="ghost" onClick={() => handleAnnuler(r.id)}>
+                            <Button size="sm" variant="ghost" onClick={() => handleAnnuler(r.id)} title="Annuler">
                               <X className="h-3.5 w-3.5" />
                             </Button>
                           )}
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            title="Supprimer définitivement (admin)"
+                            onClick={() => handleDelete(r)}
+                            className="text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
                         </TableCell>
                       </TableRow>
                     );
