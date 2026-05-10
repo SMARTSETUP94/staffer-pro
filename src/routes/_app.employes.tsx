@@ -345,7 +345,11 @@ function EmployesPage() {
       return;
     }
     setSaving(true);
-    const payload = {
+    const parseNum = (s: string): number | null => {
+      const v = parseFloat(s.replace(",", "."));
+      return Number.isFinite(v) ? v : null;
+    };
+    const basePayload = {
       prenom: form.prenom.trim(),
       nom: form.nom.trim(),
       email: form.email.trim() || null,
@@ -364,6 +368,16 @@ function EmployesPage() {
       adresse: form.adresse.trim() || null,
       notes: form.notes.trim() || null,
     };
+    // Champs admin-only (rémunération + statut contrat fin)
+    const payload = isAdmin
+      ? {
+          ...basePayload,
+          taux_horaire_brut: parseNum(form.taux_horaire_brut),
+          taux_horaire_charge: parseNum(form.taux_horaire_charge),
+          forfait: form.forfait,
+          statut_contrat: form.statut_contrat || null,
+        }
+      : basePayload;
 
     let employeId = form.id;
     if (employeId) {
