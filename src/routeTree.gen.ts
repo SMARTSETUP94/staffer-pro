@@ -87,6 +87,7 @@ import { Route as AppAdminFeedbackRouteImport } from './routes/_app.admin.feedba
 import { Route as AppAdminEmployesPostePrincipalRouteImport } from './routes/_app.admin.employes-poste-principal'
 import { Route as AppAdminEmailPreviewRouteImport } from './routes/_app.admin.email-preview'
 import { Route as AppAdminContenuWidgetsRouteImport } from './routes/_app.admin.contenu-widgets'
+import { Route as AppAdminAuditRouteImport } from './routes/_app.admin.audit'
 import { Route as AppAffairesAffaireIdIndexRouteImport } from './routes/_app.affaires.$affaireId.index'
 import { Route as MobileChefAffairesAffaireIdRouteImport } from './routes/mobile.chef.affaires.$affaireId'
 import { Route as AppAffairesAffaireIdStaffingRouteImport } from './routes/_app.affaires.$affaireId.staffing'
@@ -491,6 +492,11 @@ const AppAdminContenuWidgetsRoute = AppAdminContenuWidgetsRouteImport.update({
   path: '/admin/contenu-widgets',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAdminAuditRoute = AppAdminAuditRouteImport.update({
+  id: '/admin/audit',
+  path: '/admin/audit',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAffairesAffaireIdIndexRoute =
   AppAffairesAffaireIdIndexRouteImport.update({
     id: '/',
@@ -575,6 +581,7 @@ export interface FileRoutesByFullPath {
   '/mobile/profil': typeof MobileProfilRoute
   '/mobile/propositions': typeof MobilePropositionsRoute
   '/mobile/swaps': typeof MobileSwapsRoute
+  '/admin/audit': typeof AppAdminAuditRoute
   '/admin/contenu-widgets': typeof AppAdminContenuWidgetsRoute
   '/admin/email-preview': typeof AppAdminEmailPreviewRoute
   '/admin/employes-poste-principal': typeof AppAdminEmployesPostePrincipalRoute
@@ -659,6 +666,7 @@ export interface FileRoutesByTo {
   '/mobile/profil': typeof MobileProfilRoute
   '/mobile/propositions': typeof MobilePropositionsRoute
   '/mobile/swaps': typeof MobileSwapsRoute
+  '/admin/audit': typeof AppAdminAuditRoute
   '/admin/contenu-widgets': typeof AppAdminContenuWidgetsRoute
   '/admin/email-preview': typeof AppAdminEmailPreviewRoute
   '/admin/employes-poste-principal': typeof AppAdminEmployesPostePrincipalRoute
@@ -746,6 +754,7 @@ export interface FileRoutesById {
   '/mobile/profil': typeof MobileProfilRoute
   '/mobile/propositions': typeof MobilePropositionsRoute
   '/mobile/swaps': typeof MobileSwapsRoute
+  '/_app/admin/audit': typeof AppAdminAuditRoute
   '/_app/admin/contenu-widgets': typeof AppAdminContenuWidgetsRoute
   '/_app/admin/email-preview': typeof AppAdminEmailPreviewRoute
   '/_app/admin/employes-poste-principal': typeof AppAdminEmployesPostePrincipalRoute
@@ -834,6 +843,7 @@ export interface FileRouteTypes {
     | '/mobile/profil'
     | '/mobile/propositions'
     | '/mobile/swaps'
+    | '/admin/audit'
     | '/admin/contenu-widgets'
     | '/admin/email-preview'
     | '/admin/employes-poste-principal'
@@ -918,6 +928,7 @@ export interface FileRouteTypes {
     | '/mobile/profil'
     | '/mobile/propositions'
     | '/mobile/swaps'
+    | '/admin/audit'
     | '/admin/contenu-widgets'
     | '/admin/email-preview'
     | '/admin/employes-poste-principal'
@@ -1004,6 +1015,7 @@ export interface FileRouteTypes {
     | '/mobile/profil'
     | '/mobile/propositions'
     | '/mobile/swaps'
+    | '/_app/admin/audit'
     | '/_app/admin/contenu-widgets'
     | '/_app/admin/email-preview'
     | '/_app/admin/employes-poste-principal'
@@ -1618,6 +1630,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminContenuWidgetsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/admin/audit': {
+      id: '/_app/admin/audit'
+      path: '/admin/audit'
+      fullPath: '/admin/audit'
+      preLoaderRoute: typeof AppAdminAuditRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/affaires/$affaireId/': {
       id: '/_app/affaires/$affaireId/'
       path: '/'
@@ -1754,6 +1773,7 @@ interface AppRouteChildren {
   AppSignalementsRoute: typeof AppSignalementsRoute
   AppStafferMobileRoute: typeof AppStafferMobileRoute
   AppValidationHeuresRoute: typeof AppValidationHeuresRoute
+  AppAdminAuditRoute: typeof AppAdminAuditRoute
   AppAdminContenuWidgetsRoute: typeof AppAdminContenuWidgetsRoute
   AppAdminEmailPreviewRoute: typeof AppAdminEmailPreviewRoute
   AppAdminEmployesPostePrincipalRoute: typeof AppAdminEmployesPostePrincipalRoute
@@ -1804,6 +1824,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppSignalementsRoute: AppSignalementsRoute,
   AppStafferMobileRoute: AppStafferMobileRoute,
   AppValidationHeuresRoute: AppValidationHeuresRoute,
+  AppAdminAuditRoute: AppAdminAuditRoute,
   AppAdminContenuWidgetsRoute: AppAdminContenuWidgetsRoute,
   AppAdminEmailPreviewRoute: AppAdminEmailPreviewRoute,
   AppAdminEmployesPostePrincipalRoute: AppAdminEmployesPostePrincipalRoute,

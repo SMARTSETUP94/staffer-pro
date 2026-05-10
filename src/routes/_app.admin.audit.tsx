@@ -413,7 +413,7 @@ function DocumentsSupprimesTab({ enabled }: { enabled: boolean }) {
         setLoading(false);
         return;
       }
-      const list = (data ?? []) as DocDeletedRow[];
+      const list = ((data ?? []) as unknown) as DocDeletedRow[];
       const affaireIds = Array.from(
         new Set(list.map((r) => r.affaire_id).filter((v): v is string => !!v)),
       );
