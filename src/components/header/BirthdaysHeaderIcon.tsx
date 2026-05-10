@@ -13,6 +13,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 interface Entry {
   id: string;
   prenom: string;
+  nom: string;
   avatar_url: string | null;
   daysAhead: number; // 0 = today, 1..7 = upcoming
   monthDay: string; // MM-DD for display
