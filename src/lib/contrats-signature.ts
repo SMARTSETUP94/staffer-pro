@@ -25,6 +25,7 @@ export interface FullContratRecord {
   pdf_v2_url: string | null;
   pdf_v3_url: string | null;
   statut: string;
+  template_version_id: string | null;
   // joins
   employes?: {
     nom: string;
@@ -37,6 +38,9 @@ export interface FullContratRecord {
     numero: string;
     nom: string;
     lieu: string | null;
+  } | null;
+  contrat_templates?: {
+    contenu_html: string;
   } | null;
   contrats_signatures?: Array<{
     role_signature: string;
@@ -92,6 +96,7 @@ function buildPdfData(c: FullContratRecord, sigEmploye?: string | null, sigEmplo
     signature_employeur_url: sigEmployeur ?? sigEr?.signature_image_url ?? null,
     signed_at_employe: sigE?.signed_at ?? null,
     signed_at_employeur: sigEr?.signed_at ?? null,
+    template_html: c.contrat_templates?.contenu_html ?? null,
   };
 }
 
@@ -178,9 +183,10 @@ async function fetchContratFull(contratId: string): Promise<FullContratRecord> {
     .select(`
       id, employee_id, chantier_id, date_debut, date_fin,
       taux_horaire_brut, forfait, heures_estimees,
-      pdf_v1_url, pdf_v2_url, pdf_v3_url, statut,
+      pdf_v1_url, pdf_v2_url, pdf_v3_url, statut, template_version_id,
       employes:employee_id ( nom, prenom, adresse, email, statut_contrat ),
       affaires:chantier_id ( numero, nom, lieu ),
+      contrat_templates:template_version_id ( contenu_html ),
       contrats_signatures ( role_signature, signature_image_url, signed_at )
     `)
     .eq("id", contratId)
