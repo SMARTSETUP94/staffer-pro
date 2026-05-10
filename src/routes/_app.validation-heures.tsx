@@ -70,6 +70,10 @@ interface SaisieRow {
 type StatutFilter = "soumis" | "valide" | "rejete" | "all";
 
 function ValidationHeuresPage() {
+  const { isScoped } = useChefScope();
+  const { ids: mesAffairesIds, isLoading: mesAffairesLoading } = useMesAffairesChefIds();
+  const [onlyMine, setOnlyMine] = useState(isScoped);
+  useEffect(() => { if (isScoped) setOnlyMine(true); }, [isScoped]);
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
   const [statutFilter, setStatutFilter] = useState<StatutFilter>("soumis");
   const [employeFilter, setEmployeFilter] = useState<string>("all");
