@@ -176,8 +176,11 @@ async function ensureEmploye(userId: string, s: Seed): Promise<string> {
   return data.id;
 }
 
-async function ensureChefAffaire(chefUserId: string): Promise<string> {
-  const numero = "5E2E1";
+async function ensureChefAffaire(
+  chefUserId: string,
+  numero = "5E2E1",
+  nom = "E2E Affaire Chef",
+): Promise<string> {
   const { data: existing } = await admin
     .from("affaires")
     .select("id")
@@ -194,7 +197,7 @@ async function ensureChefAffaire(chefUserId: string): Promise<string> {
     .from("affaires")
     .insert({
       numero,
-      nom: "E2E Affaire Chef",
+      nom,
       client: "E2E Test",
       statut: "en_cours",
       phase: "signe",
