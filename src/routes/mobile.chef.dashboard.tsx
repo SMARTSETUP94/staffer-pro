@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   AlertTriangle,
+  Camera,
   CheckCircle2,
   Clock,
   Hammer,
