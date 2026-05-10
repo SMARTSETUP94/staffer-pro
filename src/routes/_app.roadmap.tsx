@@ -44,6 +44,41 @@ interface RoadmapPlanned {
 const RELEASES: RoadmapRelease[] = [
   {
     date: "2026-05-10",
+    version: "v0.42.2",
+    title: "👤 Poste principal employé + saisie en lot + import/export Excel + validation E2E template",
+    entries: [
+      {
+        type: "refactor",
+        area: "Contrats",
+        title: "Refacto {{poste}} → poste_principal de l'employé (caractéristique pérenne)",
+        description:
+          "Le placeholder {{poste}} pointe désormais vers `employes.poste_principal` (nouvelle colonne) et non plus vers un champ par contrat. Logique métier : un machiniste reste machiniste sur tous ses contrats. Suppression du paramètre `_poste` dans `create_contrat_intermittent` et `staffer_mobile_create_mission` (RPCs simplifiées). Fallback « Technicien de plateau » si null/vide. Datalist 8 suggestions sur `/employes` (édition fiche).",
+      },
+      {
+        type: "feature",
+        area: "Admin",
+        title: "Page saisie en lot /admin/employes-poste-principal",
+        description:
+          "Nouvelle page admin pour combler les ~162 fiches employés sans poste_principal. Compteur live, filtres (statut_contrat multi-select + chantier autocomplete), suggestions intelligentes basées sur metier_principal (Peinture → Peintre décorateur, Métallerie → Serrurier…), datalist `POSTES_SUGGESTIONS`. Autosave debounce 500ms à blur + bulk save par chunks de 50.",
+      },
+      {
+        type: "feature",
+        area: "Admin",
+        title: "Export/Import Excel des postes principaux",
+        description:
+          "`src/lib/employes-excel.ts` lazy-loadé (xlsx-js-style). Export 8 colonnes (Nom, Prénom, Email, Statut, Poste, Taux brut, Taux chargé, Activité). Import via `EmployesImportPostesDialog` avec matching `normalizeName`, modale de diff (Updates / Not Found) avant application, idempotent. Boutons Exporter / Importer ajoutés dans le header `/employes`.",
+      },
+      {
+        type: "feature",
+        area: "Contrats",
+        title: "Validation E2E template — 5 fixtures + bouton « Tester le template »",
+        description:
+          "Bouton 🧪 sur l'onglet Template de `/rh/contrats` ouvrant `TemplateTestDialog`. Génère 5 PDF preview avec fixtures hardcodées (A=SAVOYEN Constructeur 9231, B=DUPONT fallback poste vide, C=MARTIN adresse longue, D=DURAND nom chantier long, E=LEROY intérim). Détection automatique des placeholders {{...}} non interpolés + checklist des 15 sections obligatoires (Engagement, Durée, Rémunération, RI, Cotisations, CGE, Hygiène, Mesures sanitaires, Lu et approuvé…). Permet de valider visuellement toute modification du template avant prod.",
+      },
+    ],
+  },
+  {
+    date: "2026-05-10",
     version: "v0.42.1",
     title: "🧰 Template contrat v2.1 + catalogue postes + suppression admin contrats",
     entries: [
