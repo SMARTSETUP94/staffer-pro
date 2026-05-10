@@ -217,7 +217,7 @@ function ChefDashboard() {
               affairesActives.slice(0, 10).map((a) => (
                 <Link
                   key={a.id}
-                  to="/affaires/$affaireId"
+                  to="/mobile/chef/affaires/$affaireId"
                   params={{ affaireId: a.id }}
                   className="block rounded-md border px-3 py-2 hover:bg-accent"
                 >

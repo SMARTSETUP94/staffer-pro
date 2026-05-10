@@ -137,6 +137,66 @@ export type Database = {
         }
         Relationships: []
       }
+      affaire_documents: {
+        Row: {
+          affaire_id: string
+          deleted_at: string | null
+          description: string | null
+          filename: string
+          id: string
+          mime_type: string
+          prise_le: string | null
+          storage_path: string
+          taille_bytes: number
+          updated_at: string
+          uploaded_at: string
+          uploaded_by: string
+        }
+        Insert: {
+          affaire_id: string
+          deleted_at?: string | null
+          description?: string | null
+          filename: string
+          id?: string
+          mime_type: string
+          prise_le?: string | null
+          storage_path: string
+          taille_bytes: number
+          updated_at?: string
+          uploaded_at?: string
+          uploaded_by: string
+        }
+        Update: {
+          affaire_id?: string
+          deleted_at?: string | null
+          description?: string | null
+          filename?: string
+          id?: string
+          mime_type?: string
+          prise_le?: string | null
+          storage_path?: string
+          taille_bytes?: number
+          updated_at?: string
+          uploaded_at?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affaire_documents_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "affaires"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affaire_documents_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "v_affaire_consommation"
+            referencedColumns: ["affaire_id"]
+          },
+        ]
+      }
       affaires: {
         Row: {
           charge_affaires_id: string | null
