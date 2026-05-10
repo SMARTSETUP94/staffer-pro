@@ -356,11 +356,17 @@ function CreateAstuceDialog({ open, onOpenChange, onCreated }: {
 // ─────────────────────────────────────────────────────────────────
 
 const QUIZ_CATS = [
-  { value: "sceno", label: "Scéno" },
-  { value: "menuiserie", label: "Menuiserie" },
-  { value: "securite", label: "Sécurité" },
-  { value: "event", label: "Event" },
-  { value: "culture-G", label: "Culture G" },
+  { value: "securite", label: "Sécurité", color: "bg-red-500/15 text-red-700 dark:text-red-400 border-red-500/30" },
+  { value: "menuiserie", label: "Menuiserie", color: "bg-amber-700/15 text-amber-800 dark:text-amber-400 border-amber-700/30" },
+  { value: "sceno", label: "Scéno", color: "bg-purple-500/15 text-purple-700 dark:text-purple-400 border-purple-500/30" },
+  { value: "event", label: "Event", color: "bg-pink-500/15 text-pink-700 dark:text-pink-400 border-pink-500/30" },
+  { value: "culture-G", label: "Culture générale", color: "bg-blue-500/15 text-blue-700 dark:text-blue-400 border-blue-500/30" },
+  { value: "decor-culture-g", label: "Décor (difficile)", color: "bg-indigo-500/15 text-indigo-700 dark:text-indigo-400 border-indigo-500/30" },
+  { value: "setup-histoire", label: "Histoire SETUP", color: "bg-orange-500/15 text-orange-700 dark:text-orange-400 border-orange-500/30" },
+  { value: "setup-orga", label: "Organisation SETUP", color: "bg-teal-500/15 text-teal-700 dark:text-teal-400 border-teal-500/30" },
+  { value: "setup-clients", label: "Clients SETUP", color: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30" },
+  { value: "setup-outils", label: "Outils internes", color: "bg-cyan-500/15 text-cyan-700 dark:text-cyan-400 border-cyan-500/30" },
+  { value: "setup-machines", label: "Parc machines", color: "bg-slate-500/15 text-slate-700 dark:text-slate-300 border-slate-500/30" },
 ] as const;
 type QuizCat = (typeof QUIZ_CATS)[number]["value"];
 const DIFFS = ["facile", "moyen", "difficile"] as const;
@@ -380,6 +386,9 @@ interface Quiz {
 
 function quizCatLabel(v: string) {
   return QUIZ_CATS.find((c) => c.value === v)?.label ?? v;
+}
+function quizCatColor(v: string) {
+  return QUIZ_CATS.find((c) => c.value === v)?.color ?? "";
 }
 
 function QuizAdmin() {
@@ -481,7 +490,7 @@ function QuizAdmin() {
 
       <div className="flex flex-wrap gap-2">
         {QUIZ_CATS.map((c) => (
-          <Badge key={c.value} variant="secondary">{c.label} : {counters.byCat[c.value] ?? 0}</Badge>
+          <Badge key={c.value} variant="outline" className={c.color}>{c.label} : {counters.byCat[c.value] ?? 0}</Badge>
         ))}
       </div>
 
@@ -583,7 +592,7 @@ function QuizAdmin() {
                         </SelectContent>
                       </Select>
                     ) : (
-                      <Badge variant="outline">{quizCatLabel(r.categorie)}</Badge>
+                      <Badge variant="outline" className={quizCatColor(r.categorie)}>{quizCatLabel(r.categorie)}</Badge>
                     )}
                   </TableCell>
                   <TableCell>
