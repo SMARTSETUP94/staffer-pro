@@ -250,16 +250,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const roles = useMemo(() => roleRows.map((r) => r.role), [roleRows]);
   const isAdmin = roles.includes("admin");
   const isChef = roles.includes("chef_chantier");
-  const isAdminOrChef = isAdmin || isChef;
+  const isChefMetierScoped = roles.includes("chef_metier_scoped");
+  const isChefAny = isChef || isChefMetierScoped;
+  const isChefGlobal = isAdmin || isChef;
+  const isAdminOrChef = isAdmin || isChef || isChefMetierScoped;
   const isInviteStatus = roleRows.some((r) => r.status === "invite");
   const value = useMemo<AuthContextValue>(() => ({
     user, session, roles, loading, rolesLoaded,
-    isAdmin, isChef, isAdminOrChef,
+    isAdmin, isChef, isChefAny, isChefGlobal, isChefMetierScoped, isAdminOrChef,
     passwordSetDone, passwordSetAt, isInviteStatus, profileCompleted,
     signIn, signInWithMagicLink, signUp, signOut, refreshRoles,
   }), [
     user, session, roles, loading, rolesLoaded,
-    isAdmin, isChef, isAdminOrChef,
+    isAdmin, isChef, isChefAny, isChefGlobal, isChefMetierScoped, isAdminOrChef,
     passwordSetDone, passwordSetAt, isInviteStatus, profileCompleted,
     signIn, signInWithMagicLink, signUp, signOut, refreshRoles,
   ]);
