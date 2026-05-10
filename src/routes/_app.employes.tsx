@@ -176,6 +176,7 @@ function EmployesPage() {
   const [form, setForm] = useState<FormState>(emptyForm);
   const [saving, setSaving] = useState(false);
   const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [importPostesOpen, setImportPostesOpen] = useState(false);
 
   const toggleActif = async (row: EmployeRow) => {
     if (!isAdminOrChef) return;
