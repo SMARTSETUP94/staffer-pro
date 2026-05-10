@@ -173,11 +173,14 @@ function RhContrats() {
                   <TableHead>Période</TableHead>
                   <TableHead>Heures</TableHead>
                   <TableHead>Statut</TableHead>
+                  <TableHead>Dernière action</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow></TableHeader>
                 <TableBody>
-                  {(data ?? []).map((r) => {
+                  {filteredRows.map((r) => {
                     const currentPdf = r.pdf_v3_url ?? r.pdf_v2_url ?? r.pdf_v1_url;
+                    const lastAction = [...(r.contrats_signatures ?? [])]
+                      .sort((a, b) => new Date(b.signed_at).getTime() - new Date(a.signed_at).getTime())[0];
                     return (
                       <TableRow key={r.id}>
                         <TableCell>
@@ -197,6 +200,11 @@ function RhContrats() {
                             {STATUT_LABELS[r.statut]}
                           </Badge>
                         </TableCell>
+                        <TableCell className="text-xs text-muted-foreground">
+                          {lastAction
+                            ? `${lastAction.role_signature === "employe" ? "Employé" : "Employeur"} · ${new Date(lastAction.signed_at).toLocaleString("fr-FR")}`
+                            : new Date(r.created_at).toLocaleString("fr-FR")}
+                        </TableCell>
                         <TableCell className="text-right space-x-1">
                           {currentPdf && (
                             <Button
@@ -209,7 +217,7 @@ function RhContrats() {
                           )}
                           {r.statut === "a_signer_employeur" && (
                             <Button size="sm" variant="default" onClick={() => setSignDialog({ id: r.id, pdfUrl: r.pdf_v2_url })}>
-                              <FileSignature className="h-3.5 w-3.5" />Contre-signer
+                              <FileSignature className="h-3.5 w-3.5" />Signer en tant qu'employeur
                             </Button>
                           )}
                           {r.statut !== "signe" && r.statut !== "annule" && (
@@ -221,8 +229,8 @@ function RhContrats() {
                       </TableRow>
                     );
                   })}
-                  {(data?.length ?? 0) === 0 && (
-                    <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                  {filteredRows.length === 0 && (
+                    <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">
                       <FileText className="mx-auto h-8 w-8 opacity-30 mb-2" />
                       Aucun contrat
                     </TableCell></TableRow>
