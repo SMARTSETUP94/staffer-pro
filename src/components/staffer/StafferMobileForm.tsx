@@ -17,6 +17,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
 import { normalizeForMatch as normalize } from "@/lib/string-normalize";
 import { generateContratV1 } from "@/lib/contrats-signature";
+import { useMesAffairesChefIds } from "@/hooks/use-mes-affaires-chef";
+import { useAuth } from "@/lib/auth-context";
 
 interface EmployeOption {
   id: string;
@@ -39,7 +41,17 @@ interface MetierOption {
   libelle: string;
 }
 
-export function StafferMobileForm() {
+/**
+ * Props :
+ *  - scopeToChef : si true, restreint chantiers et employés au périmètre
+ *    du chef connecté (via mes_affaires_chef + filtre métier_principal).
+ *    Admin n'est jamais filtré (override implicite via isAdmin).
+ */
+export function StafferMobileForm({ scopeToChef = false }: { scopeToChef?: boolean } = {}) {
+  const { isAdmin } = useAuth();
+  const { ids: affaireIdsChef, isLoading: idsLoading } = useMesAffairesChefIds();
+  const enforceChefScope = scopeToChef && !isAdmin;
+
   const [searchEmploye, setSearchEmploye] = useState("");
   const [searchChantier, setSearchChantier] = useState("");
   const [employeId, setEmployeId] = useState<string | null>(null);
@@ -88,21 +100,45 @@ export function StafferMobileForm() {
   // Note v0.42.2 : le poste vient désormais du POSTE PRINCIPAL pérenne de l'employé
   // (employes.poste_principal). Plus de sélecteur ici — modifiable sur la fiche /employes.
 
+  // (filteredEmployes / filteredChantiers définis plus bas avec scope chef)
+
+  // Récupère le métier principal du chef connecté (pour filtrage équipe).
+  const chefMetierQuery = useQuery({
+    queryKey: ["staffer-mobile-chef-metier"],
+    enabled: enforceChefScope,
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+      const { data } = await supabase
+        .from("employes")
+        .select("metier_principal_id")
+        .eq("profile_id", user.id)
+        .maybeSingle();
+      return data?.metier_principal_id ?? null;
+    },
+  });
+
   const filteredEmployes = useMemo(() => {
     const q = normalize(searchEmploye);
-    if (!q) return employesQuery.data?.slice(0, 8) ?? [];
-    return (employesQuery.data ?? [])
-      .filter((e) => normalize(`${e.prenom} ${e.nom}`).includes(q))
-      .slice(0, 8);
-  }, [employesQuery.data, searchEmploye]);
+    let pool = employesQuery.data ?? [];
+    // Scope chef : si métier principal connu, n'affiche que les employés du même métier.
+    if (enforceChefScope && chefMetierQuery.data != null) {
+      pool = pool.filter((e) => e.metier_principal_id === chefMetierQuery.data);
+    }
+    if (!q) return pool.slice(0, 8);
+    return pool.filter((e) => normalize(`${e.prenom} ${e.nom}`).includes(q)).slice(0, 8);
+  }, [employesQuery.data, searchEmploye, enforceChefScope, chefMetierQuery.data]);
 
   const filteredChantiers = useMemo(() => {
     const q = normalize(searchChantier);
-    if (!q) return chantiersQuery.data?.slice(0, 8) ?? [];
-    return (chantiersQuery.data ?? [])
-      .filter((c) => normalize(`${c.numero} ${c.nom}`).includes(q))
-      .slice(0, 8);
-  }, [chantiersQuery.data, searchChantier]);
+    let pool = chantiersQuery.data ?? [];
+    // Scope chef DUR : ne montre QUE les affaires où l'utilisateur est chef.
+    if (enforceChefScope && !idsLoading) {
+      pool = pool.filter((c) => affaireIdsChef.has(c.id));
+    }
+    if (!q) return pool.slice(0, 8);
+    return pool.filter((c) => normalize(`${c.numero} ${c.nom}`).includes(q)).slice(0, 8);
+  }, [chantiersQuery.data, searchChantier, enforceChefScope, idsLoading, affaireIdsChef]);
 
   const employe = employesQuery.data?.find((e) => e.id === employeId) ?? null;
   const chantier = chantiersQuery.data?.find((c) => c.id === chantierId) ?? null;
