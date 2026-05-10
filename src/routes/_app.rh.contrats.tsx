@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { SignContractDialog } from "@/components/contrats/SignContractDialog";
+import { openContratPdf } from "@/lib/contrats-pdf-proxy";
 
 export const Route = createFileRoute("/_app/rh/contrats")({
   component: () => (
