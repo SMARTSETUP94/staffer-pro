@@ -297,13 +297,8 @@ export function StafferMobileForm() {
           </div>
         </CardContent>
       </Card>
-              <p className="text-[11px] text-muted-foreground mt-1">
-                Imprimé sur le CDDU. Par défaut : Technicien de plateau. Liste gérée dans Paramètres → Postes.
-              </p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+
+
 
       {hasConflict && (
         <Alert variant="default" className="border-amber-500/50 bg-amber-500/5">
