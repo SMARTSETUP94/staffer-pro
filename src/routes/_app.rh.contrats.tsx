@@ -133,7 +133,7 @@ function RhContrats() {
     <div className="container mx-auto p-6 space-y-6">
       <PageHeader title="Contrats intermittents" description="Gestion RH — signatures, suivi, archive" />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card><CardContent className="pt-6">
           <div className="text-sm text-muted-foreground">À signer ce mois</div>
           <div className="text-3xl font-bold">{stats.aSigner}</div>
@@ -141,10 +141,6 @@ function RhContrats() {
         <Card><CardContent className="pt-6">
           <div className="text-sm text-muted-foreground">À contre-signer RH</div>
           <div className="text-3xl font-bold">{stats.aContresigner}</div>
-        </CardContent></Card>
-        <Card><CardContent className="pt-6">
-          <div className="text-sm text-muted-foreground">Facturable signé (estim.)</div>
-          <div className="text-3xl font-bold">{stats.totalFacturable.toLocaleString("fr-FR", { style: "currency", currency: "EUR" })}</div>
         </CardContent></Card>
       </div>
 
