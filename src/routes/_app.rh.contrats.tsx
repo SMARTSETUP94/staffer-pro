@@ -5,7 +5,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Loader2, FileText, Download, FileSignature, X } from "lucide-react";
+import { Loader2, FileText, Download, FileSignature, X, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { RoleGuard } from "@/components/auth/RoleGuard";
 import { PageHeader } from "@/components/PageHeader";
@@ -154,6 +154,17 @@ function RhContrats() {
     else { toast.success("Contrat annulé"); refetch(); }
   };
 
+  const handleDelete = async (r: ContratRow) => {
+    const nom = `${r.employes?.prenom ?? ""} ${r.employes?.nom ?? ""}`.trim();
+    if (!confirm(`Supprimer définitivement le contrat de ${nom} (${r.affaires?.numero ?? ""}) ?\n\nCette action est irréversible et le contrat disparaîtra également côté employé.`)) return;
+    // Supprimer d'abord les signatures (FK), puis le contrat
+    const { error: sigErr } = await supabase.from("contrats_signatures").delete().eq("contrat_id", r.id);
+    if (sigErr) { toast.error(`Suppression signatures impossible : ${sigErr.message}`); return; }
+    const { error } = await supabase.from("contrats_intermittents").delete().eq("id", r.id);
+    if (error) toast.error(`Suppression impossible : ${error.message}`);
+    else { toast.success("Contrat supprimé"); refetch(); }
+  };
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       <PageHeader title="Contrats intermittents" description="Gestion RH — signatures, suivi, archive" />
@@ -280,10 +291,19 @@ function RhContrats() {
                             </Button>
                           )}
                           {r.statut !== "signe" && r.statut !== "annule" && (
-                            <Button size="sm" variant="ghost" onClick={() => handleAnnuler(r.id)}>
+                            <Button size="sm" variant="ghost" onClick={() => handleAnnuler(r.id)} title="Annuler">
                               <X className="h-3.5 w-3.5" />
                             </Button>
                           )}
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            title="Supprimer définitivement (admin)"
+                            onClick={() => handleDelete(r)}
+                            className="text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
                         </TableCell>
                       </TableRow>
                     );
