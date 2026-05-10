@@ -3,7 +3,7 @@ import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
 
-export type AppRole = "admin" | "chef_chantier" | "employe";
+export type AppRole = "admin" | "chef_chantier" | "chef_metier_scoped" | "employe";
 
 export interface AuthContextValue {
   user: User | null;
@@ -13,6 +13,13 @@ export interface AuthContextValue {
   rolesLoaded: boolean;
   isAdmin: boolean;
   isChef: boolean;
+  /** chef_chantier OU chef_metier_scoped (n'inclut pas admin seul) */
+  isChefAny: boolean;
+  /** admin + chef_chantier (vue globale, exclut chef_metier_scoped) */
+  isChefGlobal: boolean;
+  /** chef_metier_scoped uniquement (accès par-affaire) */
+  isChefMetierScoped: boolean;
+  /** Élargi v0.45 : admin + chef_chantier + chef_metier_scoped */
   isAdminOrChef: boolean;
   passwordSetDone: boolean | null;
   passwordSetAt: string | null;
