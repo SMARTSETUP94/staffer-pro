@@ -15,6 +15,7 @@ import { usePreview, type PreviewRole } from "@/lib/preview-context";
 const LABELS: Record<PreviewRole, string> = {
   admin: "Admin",
   chef_chantier: "Chef d'équipe",
+  chef_mobile: "Chef mobile",
   employe_desktop: "Employé desktop",
   employe_mobile: "Employé mobile",
 };
@@ -56,7 +57,7 @@ export function PreviewBanner() {
   if (!isPreviewing || !previewRole) return null;
 
   const handleExit = () => {
-    const wasMobile = previewRole === "employe_mobile";
+    const wasMobile = previewRole === "employe_mobile" || previewRole === "chef_mobile";
     setPreviewRole(null);
     if (wasMobile) {
       navigate({ to: "/planning" });

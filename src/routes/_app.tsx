@@ -93,10 +93,13 @@ function AppGuard() {
     }
     // Reset compteur dès qu'on ne redirige PLUS vers /onboarding
     onboardingRedirectCountRef.current = 0;
-    // Preview "Employé mobile" -> bascule mobile
+    // Preview "Employé mobile" / "Chef mobile" -> bascule mobile
     if (effIsMobile) {
-      navigate({ to: "/mobile/aujourdhui" });
-      return;
+      const isChefMobile = currentPath.startsWith("/mobile/chef");
+      if (!isChefMobile && !currentPath.startsWith("/mobile/")) {
+        navigate({ to: "/mobile/aujourdhui" });
+        return;
+      }
     }
     // Pas admin/chef sur desktop : autorisé uniquement sur les pages employé.
     // v0.27.5 : redirige vers /ma-semaine (route sémantique employé) plutôt
