@@ -69,6 +69,20 @@ function RhContrats() {
   const [search, setSearch] = useState("");
   const [signDialog, setSignDialog] = useState<{ id: string; pdfUrl: string | null } | null>(null);
 
+  const { data: postesCatalogue } = useQuery({
+    queryKey: ["postes-catalogue-actifs"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("postes_catalogue")
+        .select("libelle")
+        .eq("actif", true)
+        .order("ordre")
+        .order("libelle");
+      if (error) throw error;
+      return (data ?? []) as { libelle: string }[];
+    },
+  });
+
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["rh-contrats"],
     queryFn: async () => {
