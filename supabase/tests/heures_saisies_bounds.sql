@@ -41,7 +41,7 @@ END $$;
 SELECT throws_ok(
   format(
     $q$INSERT INTO public.heures_saisies (employe_id, affaire_id, date, heures_reelles, heures_nuit, statut)
-       VALUES (%L, %L, CURRENT_DATE, 25, 0, 'saisi')$q$,
+       VALUES (%L, %L, CURRENT_DATE, 25, 0, 'brouillon')$q$,
     current_setting('test.employe_id'),
     current_setting('test.affaire_id')
   ),
@@ -53,7 +53,7 @@ SELECT throws_ok(
 SELECT throws_ok(
   format(
     $q$INSERT INTO public.heures_saisies (employe_id, affaire_id, date, heures_reelles, heures_nuit, statut)
-       VALUES (%L, %L, CURRENT_DATE, -1, 0, 'saisi')$q$,
+       VALUES (%L, %L, CURRENT_DATE, -1, 0, 'brouillon')$q$,
     current_setting('test.employe_id'),
     current_setting('test.affaire_id')
   ),
@@ -65,7 +65,7 @@ SELECT throws_ok(
 SELECT throws_ok(
   format(
     $q$INSERT INTO public.heures_saisies (employe_id, affaire_id, date, heures_reelles, heures_nuit, statut)
-       VALUES (%L, %L, CURRENT_DATE, 8, 25, 'saisi')$q$,
+       VALUES (%L, %L, CURRENT_DATE, 8, 25, 'brouillon')$q$,
     current_setting('test.employe_id'),
     current_setting('test.affaire_id')
   ),
@@ -77,7 +77,7 @@ SELECT throws_ok(
 SELECT throws_ok(
   format(
     $q$INSERT INTO public.heures_saisies (employe_id, affaire_id, date, heures_reelles, heures_nuit, statut)
-       VALUES (%L, %L, CURRENT_DATE, 4, 8, 'saisi')$q$,
+       VALUES (%L, %L, CURRENT_DATE, 4, 8, 'brouillon')$q$,
     current_setting('test.employe_id'),
     current_setting('test.affaire_id')
   ),
@@ -89,7 +89,7 @@ SELECT throws_ok(
 SELECT lives_ok(
   format(
     $q$INSERT INTO public.heures_saisies (employe_id, affaire_id, date, heures_reelles, heures_nuit, statut)
-       VALUES (%L, %L, CURRENT_DATE - INTERVAL '1 day', 24, 0, 'saisi')$q$,
+       VALUES (%L, %L, CURRENT_DATE - INTERVAL '1 day', 24, 0, 'brouillon')$q$,
     current_setting('test.employe_id'),
     current_setting('test.affaire_id')
   ),
@@ -100,7 +100,7 @@ SELECT lives_ok(
 SELECT lives_ok(
   format(
     $q$INSERT INTO public.heures_saisies (employe_id, affaire_id, date, heures_reelles, heures_nuit, statut)
-       VALUES (%L, %L, CURRENT_DATE - INTERVAL '2 days', 0, 0, 'saisi')$q$,
+       VALUES (%L, %L, CURRENT_DATE - INTERVAL '2 days', 0, 0, 'brouillon')$q$,
     current_setting('test.employe_id'),
     current_setting('test.affaire_id')
   ),
@@ -117,7 +117,7 @@ BEGIN
     current_setting('test.employe_id')::uuid,
     current_setting('test.affaire_id')::uuid,
     CURRENT_DATE - INTERVAL '3 days',
-    8, 2, 'saisi'
+    8, 2, 'brouillon'
   )
   RETURNING id INTO v_id;
   PERFORM set_config('test.heures_id', v_id::text, false);
