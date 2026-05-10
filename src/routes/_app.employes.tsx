@@ -441,9 +441,25 @@ function EmployesPage() {
         description={`${rows.filter((r) => r.actif).length} actif(s) sur ${rows.length} fiche(s).`}
         actions={
           isAdminOrChef && (
-            <Button onClick={openCreate} className="rounded-xl bg-primary text-primary-foreground hover:bg-primary/90">
-              <Plus className="mr-2 h-4 w-4" /> Nouvel employé
-            </Button>
+            <div className="flex gap-2">
+              {isAdmin && (
+                <Button asChild variant="outline" className="rounded-xl">
+                  <Link to="/admin/employes-poste-principal"><ClipboardList className="mr-1 h-4 w-4" />Postes principaux</Link>
+                </Button>
+              )}
+              <Button variant="outline" className="rounded-xl" onClick={async () => {
+                try { const d = await fetchEmployesForExport(); await exportEmployesXlsx(d); toast.success(`${d.length} employés exportés`); }
+                catch (e) { toast.error("Export impossible", { description: (e as Error).message }); }
+              }}><Download className="mr-1 h-4 w-4" />Exporter Excel</Button>
+              {isAdmin && (
+                <Button variant="outline" className="rounded-xl" onClick={() => setImportPostesOpen(true)}>
+                  <Upload className="mr-1 h-4 w-4" />Importer postes
+                </Button>
+              )}
+              <Button onClick={openCreate} className="rounded-xl bg-primary text-primary-foreground hover:bg-primary/90">
+                <Plus className="mr-2 h-4 w-4" /> Nouvel employé
+              </Button>
+            </div>
           )
         }
       />
