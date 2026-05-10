@@ -1,6 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Plus, Pencil, Search, Loader2, Table2, List } from "lucide-react";
+import { Plus, Pencil, Search, Loader2, Table2, List, Download, Upload, ClipboardList } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { fetchEmployesForExport, exportEmployesXlsx } from "@/lib/employes-excel";
+import { EmployesImportPostesDialog } from "@/components/employes/EmployesImportPostesDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useMetiers } from "@/hooks/use-metiers";
 import { useAuth } from "@/lib/auth-context";
