@@ -145,6 +145,7 @@ export type Database = {
           filename: string
           id: string
           mime_type: string
+          objet_id: string | null
           prise_le: string | null
           storage_path: string
           taille_bytes: number
@@ -159,6 +160,7 @@ export type Database = {
           filename: string
           id?: string
           mime_type: string
+          objet_id?: string | null
           prise_le?: string | null
           storage_path: string
           taille_bytes: number
@@ -173,6 +175,7 @@ export type Database = {
           filename?: string
           id?: string
           mime_type?: string
+          objet_id?: string | null
           prise_le?: string | null
           storage_path?: string
           taille_bytes?: number
@@ -194,6 +197,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_affaire_consommation"
             referencedColumns: ["affaire_id"]
+          },
+          {
+            foreignKeyName: "affaire_documents_objet_id_fkey"
+            columns: ["objet_id"]
+            isOneToOne: false
+            referencedRelation: "fabrication_objets"
+            referencedColumns: ["id"]
           },
         ]
       }
