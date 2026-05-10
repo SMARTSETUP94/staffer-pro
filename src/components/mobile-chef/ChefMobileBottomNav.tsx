@@ -1,14 +1,13 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, CalendarRange, Users, CheckCircle2, FileSignature } from "lucide-react";
+import { LayoutDashboard, CalendarRange, Users, CheckCircle2, UserCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useChefBadgeCounts } from "@/hooks/use-chef-badge-counts";
 import { useChefAValider } from "@/hooks/use-chef-a-valider";
 
 type Item = {
-  to: "/mobile/chef/dashboard" | "/mobile/chef/planning" | "/mobile/chef/equipe" | "/mobile/chef/a-valider" | "/mobile/chef/contrats";
+  to: "/mobile/chef/dashboard" | "/mobile/chef/planning" | "/mobile/chef/equipe" | "/mobile/chef/a-valider" | "/mobile/chef/moi";
   label: string;
   icon: typeof LayoutDashboard;
-  badgeKey?: "heuresAValider" | "contratsAttente" | "aValider";
+  badgeKey?: "aValider";
 };
 
 const ITEMS: Item[] = [
@@ -16,14 +15,13 @@ const ITEMS: Item[] = [
   { to: "/mobile/chef/planning", label: "Planning", icon: CalendarRange },
   { to: "/mobile/chef/equipe", label: "Équipe", icon: Users },
   { to: "/mobile/chef/a-valider", label: "À valider", icon: CheckCircle2, badgeKey: "aValider" },
-  { to: "/mobile/chef/contrats", label: "Contrats", icon: FileSignature, badgeKey: "contratsAttente" },
+  { to: "/mobile/chef/moi", label: "Moi", icon: UserCircle },
 ];
 
 export function ChefMobileBottomNav() {
   const path = useRouterState({ select: (s) => s.location.pathname });
-  const counts = useChefBadgeCounts();
   const { totalCount: aValider } = useChefAValider();
-  const allCounts: Record<string, number> = { ...counts, aValider };
+  const allCounts: Record<string, number> = { aValider };
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 backdrop-blur">
