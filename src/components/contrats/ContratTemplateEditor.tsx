@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
@@ -28,6 +28,7 @@ interface Props {
 export function ContratTemplateEditor({ onChanged }: Props) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [nom, setNom] = useState("Template contrat intermittent");
+  const [html, setHtml] = useState(DEFAULT_CONTRAT_TEMPLATE_HTML);
   const [saving, setSaving] = useState<"draft" | "active" | "activate" | null>(null);
 
   const { data: templates = [], isLoading, refetch } = useQuery({
@@ -48,6 +49,7 @@ export function ContratTemplateEditor({ onChanged }: Props) {
     ],
     content: DEFAULT_CONTRAT_TEMPLATE_HTML,
     immediatelyRender: false,
+    onUpdate: ({ editor }) => setHtml(editor.getHTML()),
     editorProps: {
       attributes: {
         class: "min-h-[420px] focus:outline-none prose prose-sm max-w-none text-foreground",
@@ -58,10 +60,11 @@ export function ContratTemplateEditor({ onChanged }: Props) {
   useEffect(() => {
     if (!selectedTemplate || !editor) return;
     setNom(selectedTemplate.nom);
-    editor.commands.setContent(selectedTemplate.contenu_html || DEFAULT_CONTRAT_TEMPLATE_HTML, { emitUpdate: false });
+    const nextHtml = selectedTemplate.contenu_html || DEFAULT_CONTRAT_TEMPLATE_HTML;
+    setHtml(nextHtml);
+    editor.commands.setContent(nextHtml, { emitUpdate: false });
   }, [editor, selectedTemplate]);
 
-  const html = editor?.getHTML() ?? "";
   const previewHtml = useMemo(
     () => interpolateContratTemplate(html, EXAMPLE_CONTRAT_TEMPLATE_VALUES),
     [html],
@@ -215,7 +218,7 @@ export function ContratTemplateEditor({ onChanged }: Props) {
   );
 }
 
-function ToolbarButton({ active, onClick, children }: { active?: boolean; onClick: () => void; children: React.ReactNode }) {
+function ToolbarButton({ active, onClick, children }: { active?: boolean; onClick: () => void; children: ReactNode }) {
   return (
     <Button type="button" variant={active ? "secondary" : "ghost"} size="icon" onClick={onClick} className="h-8 w-8">
       {children}
