@@ -3270,7 +3270,7 @@ export type Database = {
           _date_fin: string
           _employee_id: string
           _heures_estimees: number
-          _staffing_id: string
+          _staffing_id?: string
         }
         Returns: string
       }
@@ -3431,6 +3431,17 @@ export type Database = {
           p_user_agent?: string
         }
         Returns: string
+      }
+      staffer_mobile_create_mission: {
+        Args: {
+          _chantier_id: string
+          _date_debut: string
+          _date_fin: string
+          _employee_id: string
+          _metier_id: number
+          _slot: string
+        }
+        Returns: Json
       }
       submit_quiz_answer: {
         Args: { p_answer_index: number; p_quiz_id: string }
