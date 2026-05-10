@@ -156,3 +156,4 @@ Voir roadmap consolidée détaillée : mem://roadmap/consolidee-2mai2026.
 - [E2E Playwright coverage](mem://features/e2e-playwright-coverage) — v0.34
 - [Sprint 1 stabilité v0.39.1](mem://features/sprint-1-stabilite-v0391) — RLS audit + 2 E2E + audit mutations + auth shallow
 - [Sprint 1 Hub Chef Mobile v0.43](mem://features/sprint-1-hub-chef-mobile) — 5 onglets mobile + audit trail validations + scope app-side
+- [Documents/Photos par affaire v0.44](mem://features/affaire-documents) — bucket privé + RLS scope chef + galerie desktop/mobile + caméra native
