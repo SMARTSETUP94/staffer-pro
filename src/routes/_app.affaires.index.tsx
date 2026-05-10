@@ -24,6 +24,9 @@ import {
 import { TypologieBadge } from "@/components/typologie/TypologieBadge";
 import { TypologieMultiFilter } from "@/components/typologie/TypologieMultiFilter";
 import { ScopedAccessBanner } from "@/components/auth/ScopedAccessBanner";
+import { useChefScope } from "@/hooks/use-chef-scope";
+import { useMesAffairesChefIds } from "@/hooks/use-mes-affaires-chef";
+import { Switch } from "@/components/ui/switch";
 import { type AffaireTypologie, AFFAIRE_TYPOLOGIES, getAffaireTypologie } from "@/lib/affaire-typologie";
 import { toast } from "sonner";
 
