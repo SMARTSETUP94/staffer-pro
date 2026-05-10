@@ -27,6 +27,16 @@ import { toast } from "sonner";
 
 type ContratType = "CDI" | "CDD" | "Interim" | "Independant";
 
+type StatutContrat = "CDI" | "CDDU intermittent" | "CDD chantier" | "Intérim" | "Apprenti";
+
+const STATUT_CONTRAT_OPTIONS: StatutContrat[] = [
+  "CDI",
+  "CDDU intermittent",
+  "CDD chantier",
+  "Intérim",
+  "Apprenti",
+];
+
 type Permis = "B" | "C" | "CE" | "D";
 
 interface EmployeRow {
@@ -57,6 +67,11 @@ interface EmployeRow {
   est_bureau_etude: boolean;
   est_usinage_numerique: boolean;
   secondaires: number[];
+  // Rémunération (admin only)
+  taux_horaire_brut: number | null;
+  taux_horaire_charge: number | null;
+  forfait: boolean;
+  statut_contrat: StatutContrat | null;
 }
 
 interface FormState {
@@ -87,6 +102,11 @@ interface FormState {
   est_bureau_etude: boolean;
   est_usinage_numerique: boolean;
   secondaires: number[];
+  // Rémunération (admin only)
+  taux_horaire_brut: string;
+  taux_horaire_charge: string;
+  forfait: boolean;
+  statut_contrat: StatutContrat | "";
 }
 
 const emptyForm: FormState = {
@@ -116,6 +136,10 @@ const emptyForm: FormState = {
   est_bureau_etude: false,
   est_usinage_numerique: false,
   secondaires: [],
+  taux_horaire_brut: "",
+  taux_horaire_charge: "",
+  forfait: false,
+  statut_contrat: "",
 };
 
 // v0.18.1 — Bloc 3 : options pour la section "Capacités / Permis" du dialog
@@ -166,7 +190,7 @@ function EmployesPage() {
     setLoading(true);
     const { data: emps, error } = await supabase
       .from("employes")
-      .select("id, prenom, nom, email, telephone, mobile, type_contrat, sous_type_contrat, is_apprenti, agence_interim, metier_principal_id, actif, non_staffing, est_livreur, categories_permis, date_naissance, adresse, notes, profile_id")
+      .select("id, prenom, nom, email, telephone, mobile, type_contrat, sous_type_contrat, is_apprenti, agence_interim, metier_principal_id, actif, non_staffing, est_livreur, categories_permis, date_naissance, adresse, notes, profile_id, taux_horaire_brut, taux_horaire_charge, forfait, statut_contrat")
       .order("nom", { ascending: true })
       .limit(2000);
     if (error) {
@@ -211,11 +235,21 @@ function EmployesPage() {
     setRows(
       (emps ?? []).map((e) => {
         const permis = (e as unknown as { categories_permis?: Permis[] | null }).categories_permis;
+        const extra = e as unknown as {
+          taux_horaire_brut: number | null;
+          taux_horaire_charge: number | null;
+          forfait: boolean | null;
+          statut_contrat: StatutContrat | null;
+        };
         const prof = e.profile_id ? profileMap[e.profile_id] : undefined;
         return {
           ...e,
           categories_permis: (permis ?? []) as Permis[],
           secondaires: secMap[e.id] ?? [],
+          taux_horaire_brut: extra.taux_horaire_brut ?? null,
+          taux_horaire_charge: extra.taux_horaire_charge ?? null,
+          forfait: extra.forfait ?? false,
+          statut_contrat: extra.statut_contrat ?? null,
           matricule_silae: prof?.matricule_silae ?? null,
           est_chef_projet: prof?.est_chef_projet ?? false,
           est_respo_fab: prof?.est_respo_fab ?? false,
@@ -297,6 +331,10 @@ function EmployesPage() {
       est_bureau_etude: row.est_bureau_etude,
       est_usinage_numerique: row.est_usinage_numerique,
       secondaires: row.secondaires.filter((id) => id !== row.metier_principal_id),
+      taux_horaire_brut: row.taux_horaire_brut?.toString() ?? "",
+      taux_horaire_charge: row.taux_horaire_charge?.toString() ?? "",
+      forfait: row.forfait ?? false,
+      statut_contrat: row.statut_contrat ?? "",
     });
     setOpen(true);
   };
@@ -307,7 +345,11 @@ function EmployesPage() {
       return;
     }
     setSaving(true);
-    const payload = {
+    const parseNum = (s: string): number | null => {
+      const v = parseFloat(s.replace(",", "."));
+      return Number.isFinite(v) ? v : null;
+    };
+    const basePayload = {
       prenom: form.prenom.trim(),
       nom: form.nom.trim(),
       email: form.email.trim() || null,
@@ -326,6 +368,16 @@ function EmployesPage() {
       adresse: form.adresse.trim() || null,
       notes: form.notes.trim() || null,
     };
+    // Champs admin-only (rémunération + statut contrat fin)
+    const payload = isAdmin
+      ? {
+          ...basePayload,
+          taux_horaire_brut: parseNum(form.taux_horaire_brut),
+          taux_horaire_charge: parseNum(form.taux_horaire_charge),
+          forfait: form.forfait,
+          statut_contrat: form.statut_contrat || null,
+        }
+      : basePayload;
 
     let employeId = form.id;
     if (employeId) {
@@ -742,6 +794,62 @@ function EmployesPage() {
             {form.id && (
               <div className="space-y-2 rounded-xl border border-border bg-background p-3 sm:col-span-2">
                 <EmployeAutorisationsSection employeId={form.id} canEdit={isAdminOrChef} />
+              </div>
+            )}
+
+            {/* Tour 1 — Rémunération + statut contrat fin (admin only) */}
+            {isAdmin && (
+              <div className="space-y-3 rounded-xl border border-border bg-background p-3 sm:col-span-2">
+                <div>
+                  <p className="text-sm font-semibold text-foreground">Rémunération</p>
+                  <p className="text-xs text-muted-foreground">
+                    Confidentiel — visible uniquement par les administrateurs.
+                  </p>
+                </div>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div className="space-y-1">
+                    <Label className="text-xs">Statut contrat</Label>
+                    <Select
+                      value={form.statut_contrat || "__none__"}
+                      onValueChange={(v) => setForm({ ...form, statut_contrat: v === "__none__" ? "" : (v as StatutContrat) })}
+                    >
+                      <SelectTrigger className="h-10 rounded-xl"><SelectValue placeholder="—" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__none__">—</SelectItem>
+                        {STATUT_CONTRAT_OPTIONS.map((s) => (
+                          <SelectItem key={s} value={s}>{s}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <label className="flex items-end gap-2 pb-2">
+                    <Checkbox
+                      checked={form.forfait}
+                      onCheckedChange={(v) => setForm({ ...form, forfait: Boolean(v) })}
+                    />
+                    <span className="text-xs font-medium">Forfait (hors taux horaire)</span>
+                  </label>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Taux horaire brut (€)</Label>
+                    <Input
+                      type="number" step="0.01" min="0"
+                      value={form.taux_horaire_brut}
+                      onChange={(e) => setForm({ ...form, taux_horaire_brut: e.target.value })}
+                      className="h-10 rounded-xl"
+                      placeholder="ex. 18.50"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Taux horaire chargé (€)</Label>
+                    <Input
+                      type="number" step="0.01" min="0"
+                      value={form.taux_horaire_charge}
+                      onChange={(e) => setForm({ ...form, taux_horaire_charge: e.target.value })}
+                      className="h-10 rounded-xl"
+                      placeholder="ex. 27.30"
+                    />
+                  </div>
+                </div>
               </div>
             )}
 
