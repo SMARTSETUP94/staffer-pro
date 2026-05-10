@@ -27,6 +27,16 @@ import { toast } from "sonner";
 
 type ContratType = "CDI" | "CDD" | "Interim" | "Independant";
 
+type StatutContrat = "CDI" | "CDDU intermittent" | "CDD chantier" | "Intérim" | "Apprenti";
+
+const STATUT_CONTRAT_OPTIONS: StatutContrat[] = [
+  "CDI",
+  "CDDU intermittent",
+  "CDD chantier",
+  "Intérim",
+  "Apprenti",
+];
+
 type Permis = "B" | "C" | "CE" | "D";
 
 interface EmployeRow {
