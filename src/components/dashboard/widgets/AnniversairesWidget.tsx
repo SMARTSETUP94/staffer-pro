@@ -27,7 +27,7 @@ export function AnniversairesWidget() {
       const today = new Date();
       const { data } = await supabase
         .from("employes")
-        .select("id, prenom, date_naissance, profiles:profile_id(avatar_url, date_naissance)")
+        .select("id, prenom, nom, date_naissance, profiles:profile_id(avatar_url, date_naissance)")
         .eq("actif", true);
       if (cancelled) return;
       const matches: Birthday[] = (data ?? [])
@@ -35,6 +35,7 @@ export function AnniversairesWidget() {
         .map((e: any) => ({
           id: e.id,
           prenom: e.prenom,
+          nom: e.nom ?? "",
           avatar_url: e.profiles?.avatar_url ?? null,
         }));
       setList(matches);
