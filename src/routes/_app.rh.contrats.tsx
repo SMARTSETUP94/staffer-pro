@@ -76,7 +76,7 @@ function RhContrats() {
       const { data, error } = await supabase
         .from("contrats_intermittents")
         .select(`
-          id, date_debut, date_fin, taux_horaire_brut, forfait, heures_estimees,
+          id, date_debut, date_fin, taux_horaire_brut, forfait, heures_estimees, poste,
           statut, pdf_v1_url, pdf_v2_url, pdf_v3_url, created_at,
           employes:employee_id ( nom, prenom, statut_contrat ),
           affaires:chantier_id ( numero, nom ),
