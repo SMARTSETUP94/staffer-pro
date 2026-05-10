@@ -61,6 +61,7 @@ function RhContrats() {
   const [tab, setTab] = useState<"a_creer" | "signes" | "archives" | "tous">("a_creer");
   const [search, setSearch] = useState("");
   const [signDialog, setSignDialog] = useState<{ id: string; pdfUrl: string | null } | null>(null);
+  const [testTplOpen, setTestTplOpen] = useState(false);
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["rh-contrats"],
