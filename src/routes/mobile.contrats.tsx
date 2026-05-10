@@ -12,9 +12,10 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useResolvedEmploye } from "@/hooks/use-resolved-employe";
 import { SignContractDialog } from "@/components/contrats/SignContractDialog";
-import { openContratPdf } from "@/lib/contrats-pdf-proxy";
+import { createContratPdfObjectUrl, downloadContratPdf } from "@/lib/contrats-pdf-proxy";
 import { toast } from "sonner";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/mobile/contrats")({
   component: MesContrats,
@@ -42,6 +43,8 @@ const LABEL: Record<Row["statut"], string> = {
 function MesContrats() {
   const { employeId } = useResolvedEmploye();
   const [sign, setSign] = useState<{ id: string; pdfUrl: string | null } | null>(null);
+  const [preview, setPreview] = useState<{ title: string; url: string } | null>(null);
+  const [loadingPdfId, setLoadingPdfId] = useState<string | null>(null);
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["mes-contrats", employeId],
@@ -69,6 +72,7 @@ function MesContrats() {
 
       {(data ?? []).map((r) => {
         const pdf = r.pdf_v3_url ?? r.pdf_v2_url ?? r.pdf_v1_url;
+        const title = `${r.affaires?.numero ?? "Contrat"} — ${r.affaires?.nom ?? r.id.slice(0, 8)}`;
         return (
           <Card key={r.id}>
             <CardContent className="pt-4 space-y-2">
@@ -91,9 +95,31 @@ function MesContrats() {
                     variant="outline"
                     size="sm"
                     className="flex-1"
-                    onClick={() => openContratPdf(r.id).catch((e) => toast.error(e.message))}
+                    disabled={loadingPdfId === r.id}
+                    onClick={async () => {
+                      setLoadingPdfId(r.id);
+                      try {
+                        const url = await createContratPdfObjectUrl(r.id);
+                        setPreview({ title, url });
+                      } catch (e) {
+                        toast.error(e instanceof Error ? e.message : "PDF indisponible");
+                      } finally {
+                        setLoadingPdfId(null);
+                      }
+                    }}
                   >
-                    <Download className="h-3.5 w-3.5" />Lire
+                    {loadingPdfId === r.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileText className="h-3.5 w-3.5" />}
+                    Lire
+                  </Button>
+                )}
+                {pdf && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => downloadContratPdf(r.id).catch((e) => toast.error(e instanceof Error ? e.message : "Téléchargement impossible"))}
+                  >
+                    <Download className="h-3.5 w-3.5" />Télécharger
                   </Button>
                 )}
                 {r.statut === "a_signer_employe" && (
@@ -124,6 +150,19 @@ function MesContrats() {
           onSigned={() => { setSign(null); refetch(); }}
         />
       )}
+      <Dialog open={!!preview} onOpenChange={(open) => {
+        if (!open && preview) {
+          URL.revokeObjectURL(preview.url);
+          setPreview(null);
+        }
+      }}>
+        <DialogContent className="h-[88vh] max-w-4xl p-0">
+          <DialogHeader className="px-4 pt-4">
+            <DialogTitle className="text-base">{preview?.title}</DialogTitle>
+          </DialogHeader>
+          {preview && <iframe title={preview.title} src={preview.url} className="h-full min-h-0 w-full flex-1 rounded-b-lg" />}
+        </DialogContent>
+      </Dialog>
       <MobileBottomNav />
     </div>
   );

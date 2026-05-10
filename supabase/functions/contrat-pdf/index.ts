@@ -1,6 +1,6 @@
 // Edge function : proxy PDF contrat-intermittent
 // Contourne les adblockers qui ciblent les URL signées Supabase Storage longues (ERR_BLOCKED_BY_CLIENT).
-// Auth : admin OU employé concerné (contrat.employee_id == user.employes.id).
+// Auth : admin/chef OU employé concerné (contrat.employee_id == employes.profile_id).
 // Query : ?id=<contrat_id>&v=1|2|3 (default = dernière dispo) &download=0|1
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -20,11 +20,17 @@ Deno.serve(async (req) => {
     const contratId = url.searchParams.get("id");
     const versionRaw = url.searchParams.get("v");
     const download = url.searchParams.get("download") === "1";
-    if (!contratId) return new Response("missing id", { status: 400, headers: corsHeaders });
+    if (!contratId) {
+      console.warn("[contrat-pdf] missing id");
+      return new Response("missing id", { status: 400, headers: corsHeaders });
+    }
 
     const authHeader = req.headers.get("Authorization") ?? "";
     const token = authHeader.replace(/^Bearer\s+/i, "");
-    if (!token) return new Response("unauthorized", { status: 401, headers: corsHeaders });
+    if (!token) {
+      console.warn("[contrat-pdf] missing bearer", { contratId });
+      return new Response("unauthorized", { status: 401, headers: corsHeaders });
+    }
 
     const SB_URL = Deno.env.get("SUPABASE_URL")!;
     const SB_ANON = Deno.env.get("SUPABASE_ANON_KEY")!;
@@ -33,7 +39,10 @@ Deno.serve(async (req) => {
     // 1. Identifier user
     const userClient = createClient(SB_URL, SB_ANON, { global: { headers: { Authorization: authHeader } } });
     const { data: userData, error: userErr } = await userClient.auth.getUser(token);
-    if (userErr || !userData?.user) return new Response("unauthorized", { status: 401, headers: corsHeaders });
+    if (userErr || !userData?.user) {
+      console.warn("[contrat-pdf] invalid bearer", { contratId, message: userErr?.message });
+      return new Response("unauthorized", { status: 401, headers: corsHeaders });
+    }
     const userId = userData.user.id;
 
     // 2. Service client pour lookup + storage download (RLS bypass après check manuel)
@@ -45,7 +54,10 @@ Deno.serve(async (req) => {
       .select("id, employee_id, pdf_v1_url, pdf_v2_url, pdf_v3_url")
       .eq("id", contratId)
       .single();
-    if (cErr || !contrat) return new Response("not found", { status: 404, headers: corsHeaders });
+    if (cErr || !contrat) {
+      console.warn("[contrat-pdf] contrat not found", { contratId, message: cErr?.message });
+      return new Response("not found", { status: 404, headers: corsHeaders });
+    }
 
     // 4. Auth check : admin OR employé concerné
     let allowed = false;
@@ -53,15 +65,18 @@ Deno.serve(async (req) => {
     if (roles?.some((r) => r.role === "admin" || r.role === "chef_chantier")) {
       allowed = true;
     } else {
-      // employé : son employees.user_id doit matcher
+      // employé : sa fiche employé référence profiles.id via profile_id
       const { data: emp } = await admin
         .from("employes")
         .select("id")
-        .eq("user_id", userId)
+        .eq("profile_id", userId)
         .maybeSingle();
       if (emp?.id && emp.id === contrat.employee_id) allowed = true;
     }
-    if (!allowed) return new Response("forbidden", { status: 403, headers: corsHeaders });
+    if (!allowed) {
+      console.warn("[contrat-pdf] forbidden", { contratId, userId, employeeId: contrat.employee_id });
+      return new Response("forbidden", { status: 403, headers: corsHeaders });
+    }
 
     // 5. Determine version
     let version: 1 | 2 | 3 = 1;
@@ -75,10 +90,14 @@ Deno.serve(async (req) => {
     // 6. Download from storage via admin
     const path = `${contrat.employee_id}/${contrat.id}/v${version}.pdf`;
     const { data: blob, error: dlErr } = await admin.storage.from(BUCKET).download(path);
-    if (dlErr || !blob) return new Response(`pdf indisponible: ${dlErr?.message ?? "not found"}`, { status: 404, headers: corsHeaders });
+    if (dlErr || !blob) {
+      console.warn("[contrat-pdf] storage miss", { contratId, path, message: dlErr?.message });
+      return new Response(`pdf indisponible: ${dlErr?.message ?? "not found"}`, { status: 404, headers: corsHeaders });
+    }
 
     const buf = await blob.arrayBuffer();
     const filename = `contrat-${contratId.slice(0, 8)}-v${version}.pdf`;
+    console.log("[contrat-pdf] ok", { contratId, userId, version, path, bytes: buf.byteLength, download });
     return new Response(buf, {
       status: 200,
       headers: {

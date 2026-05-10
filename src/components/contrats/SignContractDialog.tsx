@@ -9,6 +9,7 @@ import { Loader2, FileText, Download } from "lucide-react";
 import { toast } from "sonner";
 import { SignatureCanvas, type SignatureCanvasHandle } from "./SignatureCanvas";
 import { signContratAsEmploye, signContratAsEmployeur } from "@/lib/contrats-signature";
+import { openContratPdf } from "@/lib/contrats-pdf-proxy";
 
 interface Props {
   open: boolean;
@@ -63,8 +64,8 @@ export function SignContractDialog({ open, onOpenChange, contratId, role, pdfUrl
         {pdfUrl && (
           <div className="rounded-md border bg-muted/30 p-3 flex items-center justify-between text-sm">
             <span className="flex items-center gap-2"><FileText className="h-4 w-4" />Contrat à signer</span>
-            <Button variant="outline" size="sm" asChild>
-              <a href={pdfUrl} target="_blank" rel="noopener noreferrer"><Download className="h-3.5 w-3.5" />Lire le PDF</a>
+            <Button variant="outline" size="sm" onClick={() => openContratPdf(contratId).catch((e) => toast.error(e instanceof Error ? e.message : "PDF indisponible"))}>
+              <Download className="h-3.5 w-3.5" />Lire le PDF
             </Button>
           </div>
         )}

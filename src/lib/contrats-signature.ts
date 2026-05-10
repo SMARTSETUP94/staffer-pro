@@ -7,7 +7,7 @@
  *  3. Upload PDF dans `contrats-intermittents/{employee_id}/{contrat_id}/v{2|3}.pdf`
  *  4. Hash SHA-256 du PDF
  *  5. Appel RPC `signer_contrat_employe` ou `signer_contrat_employeur`
- *  6. Edge function `notify-contrat-email` déclenchée pour envoi email
+ *  6. Notification RH in-app via realtime sur `contrats_signatures`
  */
 import { supabase } from "@/integrations/supabase/client";
 import { generateContratPdfBlob, sha256OfBlob, type ContratPdfData } from "./contrats-pdf";
@@ -116,7 +116,7 @@ export async function signContratAsEmploye(contratId: string, signatureDataUrl: 
   const pdfV2Url = await uploadBlob(`${c.employee_id}/${c.id}/v2.pdf`, pdfBlob, "application/pdf");
   const hash = await sha256OfBlob(pdfBlob);
 
-  // 3. Capture user-agent + IP (IP côté serveur via header X-Forwarded-For — laissé NULL ici, à enrichir via edge function)
+  // 3. Capture user-agent + IP (IP côté serveur via header X-Forwarded-For — laissé NULL ici)
   const ua = typeof navigator !== "undefined" ? navigator.userAgent : null;
 
   // 4. RPC transaction atomique
@@ -125,13 +125,10 @@ export async function signContratAsEmploye(contratId: string, signatureDataUrl: 
     p_signature_image_url: sigUrl,
     p_pdf_v2_url: pdfV2Url,
     p_pdf_hash_sha256: hash,
-    p_client_ip: undefined,
-    p_user_agent: ua ?? undefined,
+    p_client_ip: null as unknown as string | undefined,
+    p_user_agent: (ua ?? null) as unknown as string | undefined,
   });
   if (error) throw new Error(error.message);
-
-  // 5. Email admin (best-effort, ne bloque pas)
-  await triggerEmail("employee_signed", contratId).catch((e) => console.warn("Email échec:", e));
 }
 
 export async function signContratAsEmployeur(contratId: string, signatureDataUrl: string): Promise<void> {
@@ -152,12 +149,10 @@ export async function signContratAsEmployeur(contratId: string, signatureDataUrl
     p_signature_image_url: sigUrl,
     p_pdf_v3_url: pdfV3Url,
     p_pdf_hash_sha256: hash,
-    p_client_ip: undefined,
-    p_user_agent: ua ?? undefined,
+    p_client_ip: null as unknown as string | undefined,
+    p_user_agent: (ua ?? null) as unknown as string | undefined,
   });
   if (error) throw new Error(error.message);
-
-  await triggerEmail("fully_signed", contratId).catch((e) => console.warn("Email échec:", e));
 }
 
 async function fetchContratFull(contratId: string): Promise<FullContratRecord> {
@@ -177,10 +172,3 @@ async function fetchContratFull(contratId: string): Promise<FullContratRecord> {
   return data as unknown as FullContratRecord;
 }
 
-async function triggerEmail(kind: "new_contract" | "employee_signed" | "fully_signed", contratId: string): Promise<void> {
-  await supabase.functions.invoke("notify-contrat-email", {
-    body: { kind, contrat_id: contratId },
-  });
-}
-
-export { triggerEmail };

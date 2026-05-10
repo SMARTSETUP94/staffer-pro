@@ -3,7 +3,7 @@
  * Squelette livré ; raffinements UI/filtres avancés en Tour 3.
  */
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2, FileText, Download, FileSignature, X } from "lucide-react";
 import { toast } from "sonner";
@@ -13,6 +13,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { SignContractDialog } from "@/components/contrats/SignContractDialog";
@@ -40,6 +41,7 @@ interface ContratRow {
   created_at: string;
   employes: { nom: string; prenom: string; statut_contrat: string | null } | null;
   affaires: { numero: string; nom: string } | null;
+  contrats_signatures?: { role_signature: "employe" | "employeur"; signed_at: string }[] | null;
 }
 
 const STATUT_LABELS: Record<ContratRow["statut"], string> = {
@@ -51,41 +53,72 @@ const STATUT_LABELS: Record<ContratRow["statut"], string> = {
 
 function RhContrats() {
   const [tab, setTab] = useState<"a_creer" | "signes" | "archives" | "tous">("a_creer");
+  const [search, setSearch] = useState("");
   const [signDialog, setSignDialog] = useState<{ id: string; pdfUrl: string | null } | null>(null);
 
   const { data, isLoading, refetch } = useQuery({
-    queryKey: ["rh-contrats", tab],
+    queryKey: ["rh-contrats"],
     queryFn: async () => {
-      let q = supabase
+      const { data, error } = await supabase
         .from("contrats_intermittents")
         .select(`
           id, date_debut, date_fin, taux_horaire_brut, forfait, heures_estimees,
           statut, pdf_v1_url, pdf_v2_url, pdf_v3_url, created_at,
           employes:employee_id ( nom, prenom, statut_contrat ),
-          affaires:chantier_id ( numero, nom )
+          affaires:chantier_id ( numero, nom ),
+          contrats_signatures ( role_signature, signed_at )
         `)
         .order("created_at", { ascending: false });
-
-      if (tab === "a_creer") q = q.in("statut", ["a_signer_employe", "a_signer_employeur"]);
-      else if (tab === "signes") q = q.eq("statut", "signe");
-      else if (tab === "archives") q = q.eq("statut", "annule");
-
-      const { data, error } = await q;
       if (error) throw error;
       return data as unknown as ContratRow[];
     },
   });
+
+  useEffect(() => {
+    const channel = supabase
+      .channel("rh-contrats-signatures")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "contrats_signatures" },
+        (payload) => {
+          if ((payload.new as { role_signature?: string }).role_signature === "employe") {
+            toast.success("Contrat signé par l’employé — contre-signature RH à traiter");
+            refetch();
+          }
+        },
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [refetch]);
 
   const stats = useMemo(() => {
     const rows = data ?? [];
     const now = new Date();
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
     const aSigner = rows.filter((r) => r.statut !== "signe" && r.statut !== "annule" && r.created_at >= monthStart).length;
+    const aContresigner = rows.filter((r) => r.statut === "a_signer_employeur").length;
     const totalFacturable = rows
       .filter((r) => r.statut === "signe")
       .reduce((s, r) => s + (r.taux_horaire_brut ?? 0) * (r.heures_estimees ?? 0), 0);
-    return { aSigner, totalFacturable };
+    return { aSigner, aContresigner, totalFacturable };
   }, [data]);
+
+  const filteredRows = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return (data ?? [])
+      .filter((r) => {
+        if (tab === "a_creer") return r.statut === "a_signer_employe" || r.statut === "a_signer_employeur";
+        if (tab === "signes") return r.statut === "signe";
+        if (tab === "archives") return r.statut === "annule";
+        return true;
+      })
+      .filter((r) => {
+        if (!q) return true;
+        return `${r.employes?.prenom ?? ""} ${r.employes?.nom ?? ""} ${r.affaires?.numero ?? ""} ${r.affaires?.nom ?? ""}`
+          .toLowerCase()
+          .includes(q);
+      });
+  }, [data, search, tab]);
 
   const handleAnnuler = async (id: string) => {
     if (!confirm("Annuler ce contrat ? Les assignations déjà créées ne seront pas supprimées.")) return;
@@ -98,10 +131,14 @@ function RhContrats() {
     <div className="container mx-auto p-6 space-y-6">
       <PageHeader title="Contrats intermittents" description="Gestion RH — signatures, suivi, archive" />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card><CardContent className="pt-6">
           <div className="text-sm text-muted-foreground">À signer ce mois</div>
           <div className="text-3xl font-bold">{stats.aSigner}</div>
+        </CardContent></Card>
+        <Card><CardContent className="pt-6">
+          <div className="text-sm text-muted-foreground">À contre-signer RH</div>
+          <div className="text-3xl font-bold">{stats.aContresigner}</div>
         </CardContent></Card>
         <Card><CardContent className="pt-6">
           <div className="text-sm text-muted-foreground">Facturable signé (estim.)</div>
@@ -109,9 +146,16 @@ function RhContrats() {
         </CardContent></Card>
       </div>
 
+      <Input
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        placeholder="Filtrer par employé, chantier ou numéro…"
+        className="max-w-md"
+      />
+
       <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
         <TabsList>
-          <TabsTrigger value="a_creer">À traiter</TabsTrigger>
+          <TabsTrigger value="a_creer">À traiter{stats.aContresigner > 0 ? ` (${stats.aContresigner})` : ""}</TabsTrigger>
           <TabsTrigger value="signes">Signés</TabsTrigger>
           <TabsTrigger value="archives">Archivés</TabsTrigger>
           <TabsTrigger value="tous">Tous</TabsTrigger>
@@ -129,11 +173,14 @@ function RhContrats() {
                   <TableHead>Période</TableHead>
                   <TableHead>Heures</TableHead>
                   <TableHead>Statut</TableHead>
+                  <TableHead>Dernière action</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow></TableHeader>
                 <TableBody>
-                  {(data ?? []).map((r) => {
+                  {filteredRows.map((r) => {
                     const currentPdf = r.pdf_v3_url ?? r.pdf_v2_url ?? r.pdf_v1_url;
+                    const lastAction = [...(r.contrats_signatures ?? [])]
+                      .sort((a, b) => new Date(b.signed_at).getTime() - new Date(a.signed_at).getTime())[0];
                     return (
                       <TableRow key={r.id}>
                         <TableCell>
@@ -153,6 +200,11 @@ function RhContrats() {
                             {STATUT_LABELS[r.statut]}
                           </Badge>
                         </TableCell>
+                        <TableCell className="text-xs text-muted-foreground">
+                          {lastAction
+                            ? `${lastAction.role_signature === "employe" ? "Employé" : "Employeur"} · ${new Date(lastAction.signed_at).toLocaleString("fr-FR")}`
+                            : new Date(r.created_at).toLocaleString("fr-FR")}
+                        </TableCell>
                         <TableCell className="text-right space-x-1">
                           {currentPdf && (
                             <Button
@@ -165,7 +217,7 @@ function RhContrats() {
                           )}
                           {r.statut === "a_signer_employeur" && (
                             <Button size="sm" variant="default" onClick={() => setSignDialog({ id: r.id, pdfUrl: r.pdf_v2_url })}>
-                              <FileSignature className="h-3.5 w-3.5" />Contre-signer
+                              <FileSignature className="h-3.5 w-3.5" />Signer en tant qu'employeur
                             </Button>
                           )}
                           {r.statut !== "signe" && r.statut !== "annule" && (
@@ -177,8 +229,8 @@ function RhContrats() {
                       </TableRow>
                     );
                   })}
-                  {(data?.length ?? 0) === 0 && (
-                    <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                  {filteredRows.length === 0 && (
+                    <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">
                       <FileText className="mx-auto h-8 w-8 opacity-30 mb-2" />
                       Aucun contrat
                     </TableCell></TableRow>

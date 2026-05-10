@@ -13,6 +13,7 @@ import { useAuth } from "@/lib/auth-context";
 import { usePreview } from "@/lib/preview-context";
 import { Button } from "@/components/ui/button";
 import { useValidationCount } from "@/hooks/use-validation-count";
+import { useContratsRhCount } from "@/hooks/use-contrats-rh-count";
 
 import { ViewAsSwitcher } from "./ViewAsSwitcher";
 
@@ -46,7 +47,7 @@ interface NavSection {
   items: NavItem[];
 }
 
-function buildSections(role: EffRole, validationCount: number): NavSection[] {
+function buildSections(role: EffRole, validationCount: number, contratsRhCount: number): NavSection[] {
   const isAdmin = role === "admin";
 
   // ===== Vue Employé : 3 items flat =====
@@ -99,7 +100,7 @@ function buildSections(role: EffRole, validationCount: number): NavSection[] {
         },
         { title: "Saisie pour l'équipe", url: "/saisie-pour-equipe", icon: ClipboardList, show: (r) => r === "admin" || r === "chef_chantier" },
         { title: "Staffer rapide", url: "/staffer-mobile", icon: Smartphone, show: (r) => r === "admin" || r === "chef_chantier" },
-        { title: "Contrats RH", url: "/rh/contrats", icon: FileSignature, show: (r) => r === "admin" },
+        { title: "Contrats RH", url: "/rh/contrats", icon: FileSignature, show: (r) => r === "admin", count: contratsRhCount },
         { title: "Analyse heures", url: "/heures-analyse", icon: Clock, show: (r) => r === "admin" },
       ],
     },
@@ -166,9 +167,10 @@ export function AppSidebar() {
   const routerState = useRouterState();
   const currentPath = routerState.location.pathname;
   const validationCount = useValidationCount();
+  const contratsRhCount = useContratsRhCount();
 
   // RBAC visuel : on s'appuie sur effectiveRole pour respecter le mode preview.
-  const sections = buildSections(effectiveRole as EffRole, validationCount);
+  const sections = buildSections(effectiveRole as EffRole, validationCount, contratsRhCount);
 
   // En preview "employé" (desktop ou mobile), un admin doit pouvoir naviguer
   // vers les pages mobiles pour QA. (basé sur le vrai isAdmin, pas effectif)
