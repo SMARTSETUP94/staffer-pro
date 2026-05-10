@@ -108,13 +108,43 @@ export function StafferMobileForm({ scopeToChef = false }: { scopeToChef?: boole
       .slice(0, 8);
   }, [employesQuery.data, searchEmploye]);
 
+  // Récupère le métier principal du chef connecté (pour filtrage équipe).
+  const chefMetierQuery = useQuery({
+    queryKey: ["staffer-mobile-chef-metier"],
+    enabled: enforceChefScope,
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+      const { data } = await supabase
+        .from("employes")
+        .select("metier_principal_id")
+        .eq("profile_id", user.id)
+        .maybeSingle();
+      return data?.metier_principal_id ?? null;
+    },
+  });
+
+  const filteredEmployes = useMemo(() => {
+    const q = normalize(searchEmploye);
+    let pool = employesQuery.data ?? [];
+    // Scope chef : si métier principal connu, n'affiche que les employés du même métier.
+    if (enforceChefScope && chefMetierQuery.data != null) {
+      pool = pool.filter((e) => e.metier_principal_id === chefMetierQuery.data);
+    }
+    if (!q) return pool.slice(0, 8);
+    return pool.filter((e) => normalize(`${e.prenom} ${e.nom}`).includes(q)).slice(0, 8);
+  }, [employesQuery.data, searchEmploye, enforceChefScope, chefMetierQuery.data]);
+
   const filteredChantiers = useMemo(() => {
     const q = normalize(searchChantier);
-    if (!q) return chantiersQuery.data?.slice(0, 8) ?? [];
-    return (chantiersQuery.data ?? [])
-      .filter((c) => normalize(`${c.numero} ${c.nom}`).includes(q))
-      .slice(0, 8);
-  }, [chantiersQuery.data, searchChantier]);
+    let pool = chantiersQuery.data ?? [];
+    // Scope chef DUR : ne montre QUE les affaires où l'utilisateur est chef.
+    if (enforceChefScope && !idsLoading) {
+      pool = pool.filter((c) => affaireIdsChef.has(c.id));
+    }
+    if (!q) return pool.slice(0, 8);
+    return pool.filter((c) => normalize(`${c.numero} ${c.nom}`).includes(q)).slice(0, 8);
+  }, [chantiersQuery.data, searchChantier, enforceChefScope, idsLoading, affaireIdsChef]);
 
   const employe = employesQuery.data?.find((e) => e.id === employeId) ?? null;
   const chantier = chantiersQuery.data?.find((c) => c.id === chantierId) ?? null;
