@@ -86,6 +86,20 @@ export function StafferMobileForm() {
     },
   });
 
+  const postesQuery = useQuery({
+    queryKey: ["staffer-mobile-postes"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("postes_catalogue")
+        .select("libelle")
+        .eq("actif", true)
+        .order("ordre")
+        .order("libelle");
+      if (error) throw error;
+      return (data ?? []) as { libelle: string }[];
+    },
+  });
+
   const filteredEmployes = useMemo(() => {
     const q = normalize(searchEmploye);
     if (!q) return employesQuery.data?.slice(0, 8) ?? [];
