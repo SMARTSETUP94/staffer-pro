@@ -91,7 +91,7 @@ export function AnniversairesWidget() {
                 {p.avatar_url ? <AvatarImage src={p.avatar_url} alt={p.prenom} /> : null}
                 <AvatarFallback className="text-[10px]">{p.prenom.slice(0, 1)}</AvatarFallback>
               </Avatar>
-              <span className="text-sm font-medium">{p.prenom}</span>
+              <span className="text-sm font-medium">{p.prenom}{p.nom ? ` ${p.nom}` : ""}</span>
             </div>
           ))}
           <p className="ml-1 text-xs text-muted-foreground">Bon anniversaire 🎂</p>
