@@ -196,7 +196,7 @@ function ChefDashboard() {
             </CardHeader>
             <CardContent className="space-y-1.5 text-sm">
               {alertesQ.data.objetsRetard.length > 0 && (
-                <Link to="/mobile/chef/a-valider" className="flex justify-between hover:underline">
+                <Link to="/mobile/chef/atelier" className="flex justify-between hover:underline">
                   <span>📦 Objets en retard</span>
                   <span className="font-bold tabular-nums">{alertesQ.data.objetsRetard.length}</span>
                 </Link>
