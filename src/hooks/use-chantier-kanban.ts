@@ -62,7 +62,7 @@ export function useChantierKanban(filterAffaireIds: string[] | null) {
       // 1. Objets fab non archivés des affaires cibles
       const { data: objets, error: objErr } = await supabase
         .from("fabrication_objets")
-        .select("id, affaire_id, reference, nom, quantite, statut_chef, archive, affaires(numero,nom)")
+        .select("id, affaire_id, reference, nom, quantite, statut_chef, archive, date_fin_souhaitee, affaires(numero,nom)")
         .eq("archive", false)
         .in("affaire_id", targetIds)
         .order("reference");
@@ -99,8 +99,10 @@ export function useChantierKanban(filterAffaireIds: string[] | null) {
           if (p.objet_id && !thumbParObjet.has(p.objet_id)) thumbParObjet.set(p.objet_id, p.storage_path);
         });
 
+      const today = new Date().toISOString().slice(0, 10);
+
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return (objets ?? []).map((o: any): KanbanObjet => {
+      const mapped = (objets ?? []).map((o: any): KanbanObjet => {
         let column: KanbanColumn = "bois";
         if (o.statut_chef === "fini") {
           column = "valide";
@@ -110,6 +112,8 @@ export function useChantierKanban(filterAffaireIds: string[] | null) {
           else if (types.includes("finition")) column = "peinture";
           else column = "bois";
         }
+        const is_en_retard =
+          o.statut_chef !== "fini" && !!o.date_fin_souhaitee && o.date_fin_souhaitee < today;
         return {
           id: o.id,
           affaire_id: o.affaire_id,
@@ -121,8 +125,20 @@ export function useChantierKanban(filterAffaireIds: string[] | null) {
           statut_chef: o.statut_chef,
           column,
           thumbnail_path: thumbParObjet.get(o.id) ?? null,
+          date_fin_souhaitee: o.date_fin_souhaitee ?? null,
+          is_en_retard,
         };
       });
+
+      // Tri global : en retard d'abord, puis date_fin_souhaitee asc, puis ref alphabétique
+      mapped.sort((a, b) => {
+        if (a.is_en_retard !== b.is_en_retard) return a.is_en_retard ? -1 : 1;
+        const da = a.date_fin_souhaitee ?? "9999-12-31";
+        const db = b.date_fin_souhaitee ?? "9999-12-31";
+        if (da !== db) return da.localeCompare(db);
+        return a.reference.localeCompare(b.reference);
+      });
+      return mapped;
     },
   });
 }
