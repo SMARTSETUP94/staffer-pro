@@ -28,6 +28,8 @@ export interface KanbanObjet {
   statut_chef: "a_faire" | "en_cours" | "bloque" | "fini";
   column: KanbanColumn;
   thumbnail_path: string | null;
+  date_fin_souhaitee: string | null;
+  is_en_retard: boolean;
 }
 
 const KANBAN_LABEL: Record<KanbanColumn, string> = {
@@ -69,18 +71,23 @@ export function useChantierKanban(filterAffaireIds: string[] | null) {
       const objetIds = (objets ?? []).map((o) => o.id);
       if (objetIds.length === 0) return [];
 
-      // 2. Étapes non terminées par objet (pour déduire la colonne)
+      // 2. Étapes non terminées par objet (pour déduire colonne + deadline)
       const { data: etapes } = await supabase
         .from("fabrication_etapes")
-        .select("objet_id, type_etape, statut")
+        .select("objet_id, type_etape, statut, date_fin")
         .in("objet_id", objetIds)
         .neq("statut", "termine");
 
       const etapesParObjet = new Map<string, string[]>();
+      const deadlineParObjet = new Map<string, string>();
       (etapes ?? []).forEach((e) => {
         const arr = etapesParObjet.get(e.objet_id) ?? [];
         arr.push(e.type_etape);
         etapesParObjet.set(e.objet_id, arr);
+        if (e.date_fin) {
+          const cur = deadlineParObjet.get(e.objet_id);
+          if (!cur || e.date_fin < cur) deadlineParObjet.set(e.objet_id, e.date_fin);
+        }
       });
 
       // 3. Thumbnails (1ère photo par objet)
@@ -97,8 +104,10 @@ export function useChantierKanban(filterAffaireIds: string[] | null) {
           if (p.objet_id && !thumbParObjet.has(p.objet_id)) thumbParObjet.set(p.objet_id, p.storage_path);
         });
 
+      const today = new Date().toISOString().slice(0, 10);
+
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return (objets ?? []).map((o: any): KanbanObjet => {
+      const mapped = (objets ?? []).map((o: any): KanbanObjet => {
         let column: KanbanColumn = "bois";
         if (o.statut_chef === "fini") {
           column = "valide";
@@ -108,6 +117,8 @@ export function useChantierKanban(filterAffaireIds: string[] | null) {
           else if (types.includes("finition")) column = "peinture";
           else column = "bois";
         }
+        const deadline = deadlineParObjet.get(o.id) ?? null;
+        const is_en_retard = o.statut_chef !== "fini" && !!deadline && deadline < today;
         return {
           id: o.id,
           affaire_id: o.affaire_id,
@@ -119,8 +130,20 @@ export function useChantierKanban(filterAffaireIds: string[] | null) {
           statut_chef: o.statut_chef,
           column,
           thumbnail_path: thumbParObjet.get(o.id) ?? null,
+          date_fin_souhaitee: deadline,
+          is_en_retard,
         };
       });
+
+      // Tri : en retard d'abord, puis deadline asc, puis reference
+      mapped.sort((a, b) => {
+        if (a.is_en_retard !== b.is_en_retard) return a.is_en_retard ? -1 : 1;
+        const da = a.date_fin_souhaitee ?? "9999-12-31";
+        const db = b.date_fin_souhaitee ?? "9999-12-31";
+        if (da !== db) return da.localeCompare(db);
+        return a.reference.localeCompare(b.reference);
+      });
+      return mapped;
     },
   });
 }

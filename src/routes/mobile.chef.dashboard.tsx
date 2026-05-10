@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   AlertTriangle,
+  Camera,
   CheckCircle2,
   Clock,
   Hammer,
@@ -61,6 +62,22 @@ function ChefDashboard() {
         .lte("date", today);
       const set = new Set((data ?? []).map((r) => r.employe_id));
       return set.size;
+    },
+  });
+
+  // KPI : photos uploadées sur mes affaires ces 7 derniers jours
+  const photosQ = useQuery({
+    queryKey: ["chef-photos-7j", affaireIds.length],
+    enabled: affaireIds.length > 0,
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("affaire_documents")
+        .select("id", { count: "exact", head: true })
+        .in("affaire_id", affaireIds)
+        .is("deleted_at", null)
+        .ilike("mime_type", "image/%")
+        .gte("uploaded_at", subDays(new Date(), 7).toISOString());
+      return count ?? 0;
     },
   });
 
@@ -128,7 +145,7 @@ function ChefDashboard() {
     <>
       <ChefMobileHeader title="Hub chef" />
       <div className="mx-auto max-w-xl space-y-4 p-4">
-        {/* KPI grid */}
+        {/* KPI grid (2x3 = 6 cards) */}
         <div className="grid grid-cols-2 gap-3">
           <KpiCard
             label="Mes affaires actives"
@@ -142,14 +159,21 @@ function ChefDashboard() {
             value={heures.length}
             icon={Clock}
             loading={false}
-            href="/mobile/chef/a-valider"
+            href="/mobile/chef/equipe"
           />
           <KpiCard
             label="Objets à valider"
             value={objets.length}
             icon={Hammer}
             loading={false}
-            href="/mobile/chef/a-valider"
+            href="/mobile/chef/atelier"
+          />
+          <KpiCard
+            label="Photos récentes (7j)"
+            value={photosQ.data ?? 0}
+            icon={Camera}
+            loading={photosQ.isLoading}
+            href="/mobile/chef/atelier"
           />
           <KpiCard
             label="Équipe (7j)"
@@ -172,7 +196,7 @@ function ChefDashboard() {
             </CardHeader>
             <CardContent className="space-y-1.5 text-sm">
               {alertesQ.data.objetsRetard.length > 0 && (
-                <Link to="/mobile/chef/a-valider" className="flex justify-between hover:underline">
+                <Link to="/mobile/chef/atelier" className="flex justify-between hover:underline">
                   <span>📦 Objets en retard</span>
                   <span className="font-bold tabular-nums">{alertesQ.data.objetsRetard.length}</span>
                 </Link>
@@ -249,7 +273,7 @@ function KpiCard({
   value: number;
   icon: typeof Users;
   loading: boolean;
-  href?: "/mobile/chef/equipe" | "/mobile/chef/contrats" | "/mobile/chef/a-valider" | "/mobile/chef/planning";
+  href?: "/mobile/chef/equipe" | "/mobile/chef/contrats" | "/mobile/chef/atelier" | "/mobile/chef/planning";
 }) {
   const inner = (
     <Card className="h-full">
