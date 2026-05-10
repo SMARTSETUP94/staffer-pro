@@ -36,6 +36,9 @@ import { cn } from "@/lib/utils";
 import type { HeuresExportRow } from "@/lib/heures-export";
 import { PageBreadcrumbs } from "@/components/PageBreadcrumbs";
 import { ScopedAccessBanner } from "@/components/auth/ScopedAccessBanner";
+import { useChefScope } from "@/hooks/use-chef-scope";
+import { useMesAffairesChefIds } from "@/hooks/use-mes-affaires-chef";
+import { Switch } from "@/components/ui/switch";
 import { SaisirPourEmployeDialog } from "@/components/heures/SaisirPourEmployeDialog";
 import { SaisieChefBadge } from "@/components/heures/SaisieChefBadge";
 import { UserCog } from "lucide-react";
@@ -67,6 +70,10 @@ interface SaisieRow {
 type StatutFilter = "soumis" | "valide" | "rejete" | "all";
 
 function ValidationHeuresPage() {
+  const { isScoped } = useChefScope();
+  const { ids: mesAffairesIds, isLoading: mesAffairesLoading } = useMesAffairesChefIds();
+  const [onlyMine, setOnlyMine] = useState(isScoped);
+  useEffect(() => { if (isScoped) setOnlyMine(true); }, [isScoped]);
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
   const [statutFilter, setStatutFilter] = useState<StatutFilter>("soumis");
   const [employeFilter, setEmployeFilter] = useState<string>("all");
@@ -120,11 +127,12 @@ function ValidationHeuresPage() {
     });
   }, [startStr, endStr, statutFilter, employeFilter, affaireFilter, reloadKey]);
 
-  // Grouper par employé pour bulk semaine
+  // Grouper par employé pour bulk semaine (avec filtre "mes chantiers")
   const groupedByEmploye = useMemo(() => {
     const map = new Map<string, { employe: { id: string; prenom: string; nom: string }; rows: SaisieRow[] }>();
     for (const r of rows) {
       if (!r.employe) continue;
+      if (onlyMine && !mesAffairesIds.has(r.affaire_id)) continue;
       const k = r.employe_id;
       if (!map.has(k)) {
         map.set(k, { employe: { id: k, prenom: r.employe.prenom, nom: r.employe.nom }, rows: [] });
@@ -132,7 +140,7 @@ function ValidationHeuresPage() {
       map.get(k)!.rows.push(r);
     }
     return Array.from(map.values()).sort((a, b) => a.employe.nom.localeCompare(b.employe.nom));
-  }, [rows]);
+  }, [rows, onlyMine, mesAffairesIds]);
 
   const toggleSelect = (id: string) => {
     setSelected((prev) => {
@@ -251,6 +259,20 @@ function ValidationHeuresPage() {
     <div className="space-y-6 p-6">
       <PageBreadcrumbs steps={[{ label: "Équipes" }, { label: "Validation des heures" }]} />
       <ScopedAccessBanner />
+      {(isScoped || mesAffairesIds.size > 0) && (
+        <div className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2">
+          <Switch
+            id="only-mine-validation"
+            checked={onlyMine}
+            onCheckedChange={setOnlyMine}
+            disabled={mesAffairesLoading}
+          />
+          <Label htmlFor="only-mine-validation" className="cursor-pointer text-sm">
+            Mes chantiers uniquement
+            <span className="ml-1.5 text-xs text-muted-foreground">({mesAffairesIds.size})</span>
+          </Label>
+        </div>
+      )}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <ClipboardCheck className="h-6 w-6 text-primary" />

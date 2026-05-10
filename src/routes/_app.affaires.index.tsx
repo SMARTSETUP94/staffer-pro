@@ -24,6 +24,9 @@ import {
 import { TypologieBadge } from "@/components/typologie/TypologieBadge";
 import { TypologieMultiFilter } from "@/components/typologie/TypologieMultiFilter";
 import { ScopedAccessBanner } from "@/components/auth/ScopedAccessBanner";
+import { useChefScope } from "@/hooks/use-chef-scope";
+import { useMesAffairesChefIds } from "@/hooks/use-mes-affaires-chef";
+import { Switch } from "@/components/ui/switch";
 import { type AffaireTypologie, AFFAIRE_TYPOLOGIES, getAffaireTypologie } from "@/lib/affaire-typologie";
 import { toast } from "sonner";
 
@@ -88,6 +91,10 @@ function AffairesPage() {
   const { isAdminOrChef } = useAuth();
   const navigate = useNavigate({ from: "/affaires/" });
   const { typo: typoFilter } = Route.useSearch();
+  const { isScoped } = useChefScope();
+  const { ids: mesAffairesIds, isLoading: mesAffairesLoading } = useMesAffairesChefIds();
+  const [onlyMine, setOnlyMine] = useState(isScoped);
+  useEffect(() => { if (isScoped) setOnlyMine(true); }, [isScoped]);
   const [rows, setRows] = useState<AffaireRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -126,12 +133,13 @@ function AffairesPage() {
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return rows.filter((r) => {
+      if (onlyMine && !mesAffairesIds.has(r.id)) return false;
       if (filter !== "all" && r.statut !== filter) return false;
       if (typoSet.size > 0 && (!r.typologie || !typoSet.has(r.typologie))) return false;
       if (!q) return true;
       return `${r.numero} ${r.nom} ${r.client ?? ""} ${r.lieu ?? ""}`.toLowerCase().includes(q);
     });
-  }, [rows, search, filter, typoSet]);
+  }, [rows, search, filter, typoSet, onlyMine, mesAffairesIds]);
 
   const setTypoFilter = (next: AffaireTypologie[]) => {
     navigate({ search: { typo: next }, replace: true });
@@ -216,6 +224,23 @@ function AffairesPage() {
       />
 
       <ScopedAccessBanner />
+
+      {(isScoped || mesAffairesIds.size > 0) && (
+        <div className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2">
+          <Switch
+            id="only-mine"
+            checked={onlyMine}
+            onCheckedChange={setOnlyMine}
+            disabled={mesAffairesLoading}
+          />
+          <Label htmlFor="only-mine" className="cursor-pointer text-sm">
+            Mes chantiers uniquement
+            <span className="ml-1.5 text-xs text-muted-foreground">
+              ({mesAffairesIds.size})
+            </span>
+          </Label>
+        </div>
+      )}
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="relative w-full sm:max-w-sm">
