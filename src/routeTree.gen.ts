@@ -57,6 +57,7 @@ import { Route as AppDevisIndexRouteImport } from './routes/_app.devis.index'
 import { Route as AppAffairesIndexRouteImport } from './routes/_app.affaires.index'
 import { Route as MobileChefStafferRouteImport } from './routes/mobile.chef.staffer'
 import { Route as MobileChefPlanningRouteImport } from './routes/mobile.chef.planning'
+import { Route as MobileChefMoiRouteImport } from './routes/mobile.chef.moi'
 import { Route as MobileChefFabricationRouteImport } from './routes/mobile.chef.fabrication'
 import { Route as MobileChefEquipeRouteImport } from './routes/mobile.chef.equipe'
 import { Route as MobileChefDashboardRouteImport } from './routes/mobile.chef.dashboard'
@@ -330,6 +331,11 @@ const MobileChefPlanningRoute = MobileChefPlanningRouteImport.update({
   path: '/planning',
   getParentRoute: () => MobileChefRoute,
 } as any)
+const MobileChefMoiRoute = MobileChefMoiRouteImport.update({
+  id: '/moi',
+  path: '/moi',
+  getParentRoute: () => MobileChefRoute,
+} as any)
 const MobileChefFabricationRoute = MobileChefFabricationRouteImport.update({
   id: '/fabrication',
   path: '/fabrication',
@@ -577,6 +583,7 @@ export interface FileRoutesByFullPath {
   '/mobile/chef/dashboard': typeof MobileChefDashboardRoute
   '/mobile/chef/equipe': typeof MobileChefEquipeRoute
   '/mobile/chef/fabrication': typeof MobileChefFabricationRoute
+  '/mobile/chef/moi': typeof MobileChefMoiRoute
   '/mobile/chef/planning': typeof MobileChefPlanningRoute
   '/mobile/chef/staffer': typeof MobileChefStafferRoute
   '/affaires/': typeof AppAffairesIndexRoute
@@ -656,6 +663,7 @@ export interface FileRoutesByTo {
   '/mobile/chef/dashboard': typeof MobileChefDashboardRoute
   '/mobile/chef/equipe': typeof MobileChefEquipeRoute
   '/mobile/chef/fabrication': typeof MobileChefFabricationRoute
+  '/mobile/chef/moi': typeof MobileChefMoiRoute
   '/mobile/chef/planning': typeof MobileChefPlanningRoute
   '/mobile/chef/staffer': typeof MobileChefStafferRoute
   '/affaires': typeof AppAffairesIndexRoute
@@ -740,6 +748,7 @@ export interface FileRoutesById {
   '/mobile/chef/dashboard': typeof MobileChefDashboardRoute
   '/mobile/chef/equipe': typeof MobileChefEquipeRoute
   '/mobile/chef/fabrication': typeof MobileChefFabricationRoute
+  '/mobile/chef/moi': typeof MobileChefMoiRoute
   '/mobile/chef/planning': typeof MobileChefPlanningRoute
   '/mobile/chef/staffer': typeof MobileChefStafferRoute
   '/_app/affaires/': typeof AppAffairesIndexRoute
@@ -824,6 +833,7 @@ export interface FileRouteTypes {
     | '/mobile/chef/dashboard'
     | '/mobile/chef/equipe'
     | '/mobile/chef/fabrication'
+    | '/mobile/chef/moi'
     | '/mobile/chef/planning'
     | '/mobile/chef/staffer'
     | '/affaires/'
@@ -903,6 +913,7 @@ export interface FileRouteTypes {
     | '/mobile/chef/dashboard'
     | '/mobile/chef/equipe'
     | '/mobile/chef/fabrication'
+    | '/mobile/chef/moi'
     | '/mobile/chef/planning'
     | '/mobile/chef/staffer'
     | '/affaires'
@@ -986,6 +997,7 @@ export interface FileRouteTypes {
     | '/mobile/chef/dashboard'
     | '/mobile/chef/equipe'
     | '/mobile/chef/fabrication'
+    | '/mobile/chef/moi'
     | '/mobile/chef/planning'
     | '/mobile/chef/staffer'
     | '/_app/affaires/'
@@ -1356,6 +1368,13 @@ declare module '@tanstack/react-router' {
       path: '/planning'
       fullPath: '/mobile/chef/planning'
       preLoaderRoute: typeof MobileChefPlanningRouteImport
+      parentRoute: typeof MobileChefRoute
+    }
+    '/mobile/chef/moi': {
+      id: '/mobile/chef/moi'
+      path: '/moi'
+      fullPath: '/mobile/chef/moi'
+      preLoaderRoute: typeof MobileChefMoiRouteImport
       parentRoute: typeof MobileChefRoute
     }
     '/mobile/chef/fabrication': {
@@ -1758,6 +1777,7 @@ interface MobileChefRouteChildren {
   MobileChefDashboardRoute: typeof MobileChefDashboardRoute
   MobileChefEquipeRoute: typeof MobileChefEquipeRoute
   MobileChefFabricationRoute: typeof MobileChefFabricationRoute
+  MobileChefMoiRoute: typeof MobileChefMoiRoute
   MobileChefPlanningRoute: typeof MobileChefPlanningRoute
   MobileChefStafferRoute: typeof MobileChefStafferRoute
   MobileChefIndexRoute: typeof MobileChefIndexRoute
@@ -1769,6 +1789,7 @@ const MobileChefRouteChildren: MobileChefRouteChildren = {
   MobileChefDashboardRoute: MobileChefDashboardRoute,
   MobileChefEquipeRoute: MobileChefEquipeRoute,
   MobileChefFabricationRoute: MobileChefFabricationRoute,
+  MobileChefMoiRoute: MobileChefMoiRoute,
   MobileChefPlanningRoute: MobileChefPlanningRoute,
   MobileChefStafferRoute: MobileChefStafferRoute,
   MobileChefIndexRoute: MobileChefIndexRoute,
