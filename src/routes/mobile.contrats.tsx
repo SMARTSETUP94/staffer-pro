@@ -14,6 +14,7 @@ import { useResolvedEmploye } from "@/hooks/use-resolved-employe";
 import { SignContractDialog } from "@/components/contrats/SignContractDialog";
 import { openContratPdf } from "@/lib/contrats-pdf-proxy";
 import { toast } from "sonner";
+import { MobileBottomNav } from "@/components/MobileBottomNav";
 
 export const Route = createFileRoute("/mobile/contrats")({
   component: MesContrats,
