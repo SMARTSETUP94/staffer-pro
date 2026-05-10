@@ -28,6 +28,7 @@ const FONT_STACK =
 
 function rolesToLabel(roles: InvitationRoleLabel[]): string {
   if (roles.includes("chef_chantier")) return "Chef de Chantier";
+  if (roles.includes("chef_metier_scoped")) return "Chef Métier";
   if (roles.includes("admin")) return "Administrateur";
   return "Employé";
 }
