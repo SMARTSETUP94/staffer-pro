@@ -1,100 +1,120 @@
-# Plan d'archi — Feature Template Contrat (onglet RH/Contrats)
+# v0.42.2 — Plan d'architecture
 
-## État actuel (déjà en place, à compléter)
+3 items à enchaîner. Estimation : ~600 lignes nettes, 3 fichiers nouveaux, 2 fichiers modifiés.
 
-- ✅ Table `contrat_templates` créée (id, nom, contenu_html, version_int, actif, created_by, timestamps) + UNIQUE partial sur `actif=true`.
-- ✅ RPC `create_contrat_template_version` + `activate_contrat_template`.
-- ✅ Colonne `contrats_intermittents.template_version_id` (snapshot juridique).
-- ✅ `src/lib/contrats-templates.ts` (placeholders, interpolation, listing, RPC wrappers).
-- ✅ `ContratTemplateEditor.tsx` (TipTap basique avec preview).
-- ✅ `react-pdf-html` câblé dans `contrats-pdf.tsx`.
-- ✅ RLS : SELECT actif/admin/employé concerné, INSERT/UPDATE/DELETE admin only.
+## ITEM 1 — Saisie en lot poste principal
 
-## Gaps à combler (le travail de ce tour)
+**Arbitrage UX** : nouvelle route dédiée `/admin/employes-poste-principal` (pas sous-onglet) car :
+- La page `/employes` est déjà dense (spreadsheet + dialogs CRUD)
+- Action one-shot RH (162 fiches → 0 à terme), mérite un écran focus
+- Plus simple à découvrir via lien direct depuis bandeau de complétion
 
-### 1. Schéma DB — additif
-Migration additive (ne casse rien) :
-- `contrat_templates.contenu_json jsonb null` — pour stocker l'AST TipTap (édition fidèle, pas juste round-trip HTML).
-- `contrat_templates.notes text null` — note de version (changelog).
-- Adapter `create_contrat_template_version(p_nom, p_contenu_html, p_contenu_json, p_actif, p_notes)`.
-- Seed v1 actif **uniquement si table vide** (prend le HTML hardcodé actuel `DEFAULT_CONTRAT_TEMPLATE_HTML` comme v1 — pas de réécriture juridique, c'est le job de Gabin).
+**Fichier** : `src/routes/_app.admin.employes-poste-principal.tsx` (nouveau)
 
-### 2. Routing & RBAC — onglets dans `/rh/contrats`
-- Garder la route `_app.rh.contrats.tsx` mais réorganiser en 2 sous-onglets (`<Tabs>` shadcn) :
-  - **Liste contrats** (contenu actuel)
-  - **Template contrat** (visible si `is_admin` ou rôle RH — réutilise garde existante de la route)
-- Pas de nouvelle route, juste un state `tab` local + URL search param `?tab=template` pour deeplink.
+**Layout** :
+```
+┌──────────────────────────────────────────────────┐
+│ ← Retour Employés    Postes principaux à saisir │
+│                                                  │
+│ [Compteur sticky] 47 / 162 fiches à compléter   │
+│ [Filtres] Statut contrat ▾  Chantier ▾  🔍 Nom │
+│                                                  │
+│ ┌─ Table ──────────────────────────────────────┐│
+│ │ Nom   │Prénom│Email│Stat│3 chantiers│Poste ⌨ ││
+│ │ ...   │ ...  │ ... │ .. │ 9231-Atel │ [____] ││
+│ └────────────────────────────────────────────┘ │
+│         [💾 Sauvegarder tout (12 modifs)]       │
+└──────────────────────────────────────────────────┘
+```
 
-### 3. Éditeur TipTap enrichi (`ContratTemplateEditor.tsx`)
-Étend l'existant avec :
-- **Extensions** : StarterKit (déjà), Underline, TextAlign, Table + TableRow + TableCell + TableHeader, HardBreak (saut de page CSS `page-break-after`), BulletList/OrderedList (StarterKit OK).
-- **Custom Node `Placeholder`** : node atomic inline `{{var}}` rendu en badge stylé (Tailwind `bg-primary/10 text-primary rounded px-1.5 py-0.5 text-xs font-mono`). Sérialise en `{{var}}` côté HTML pour interpolation côté PDF.
-- **Toolbar** : groupes
-  - Format : B / I / U
-  - Titres : H1 / H2 / H3 / paragraphe
-  - Listes : • / 1.
-  - Alignement : ←  ↔  →
-  - Tableau : insérer 3×3
-  - Saut de page : bouton dédié
-  - **Insérer variable** : `<DropdownMenu>` groupé par catégorie (Employé / Mission / Tarif / Employeur / Signature) → insère le node Placeholder.
-- Bundle : `@tiptap/extension-underline`, `@tiptap/extension-text-align`, `@tiptap/extension-table*` (4 packages).
+**Logique** :
+- Query : `employes` WHERE (poste_principal IS NULL OR poste_principal = '') AND actif=true
+- Subquery 3 derniers chantiers : via `assignations` JOIN `affaires` ORDER BY date DESC LIMIT 3 GROUP BY employe
+- Local state `Map<employeId, posteValue>` modifié, autosave on blur (debounce 500ms)
+- Bouton bulk save = boucle UPDATE par chunks de 50
+- Suggestion intelligente : top 1 métier des 3 derniers chantiers → mappe vers POSTES_SUGGESTIONS via heuristique (metier "machinerie" → "Machiniste", etc.) → injecté en `placeholder=`
 
-### 4. Preview live (panneau droit)
-- Layout 2 colonnes (≥ lg) : éditeur gauche, preview droite scrollable, sticky header.
-- Debounce 300ms (lodash ou custom hook `useDebounce`).
-- Rendu = `interpolateContratTemplate(html, EXAMPLE_CONTRAT_TEMPLATE_VALUES)` injecté via `dangerouslySetInnerHTML` dans une `div.prose` mimant le style PDF (a4-like, padding, fonts).
-- Switch « Voir avec placeholders bruts / Voir interpolé ».
+**Filtres** :
+- Statut contrat : multi-select (Checkbox group) sur enum `contrat_type` + `statut_contrat`
+- Chantier récent : Combobox autocomplete sur `affaires` actives, filtre via assignations.affaire_id IN (...)
+- Recherche nom/prénom : input free text (fuzzy)
 
-### 5. Sidebar versions (panneau secondaire)
-- Liste `listContratTemplates()` triée par `version_int desc`.
-- Carte par version : badge "Actif" si `actif=true`, date FR, auteur (résolu via `profiles`), notes.
-- Actions par carte :
-  - **Charger dans l'éditeur** (lecture seule si pas active, sinon édition).
-  - **Activer cette version** (RPC `activate_contrat_template`).
-  - **Restaurer** : clone le contenu_html/json dans l'éditeur en mode "nouveau brouillon" (n'écrase pas la version source).
+**Datalist** : `<datalist id="postes-suggestions">` avec POSTES_SUGGESTIONS (centralisé dans lib existante)
 
-### 6. Boutons d'action
-- **Sauvegarder brouillon** → `create_contrat_template_version(actif=false)`.
-- **Sauvegarder et activer** → RPC unique `create_contrat_template_version(actif=true)` (qui désactive l'ancienne actif via trigger ou dans la fonction).
-- Toast succès + invalidation react-query `["contrat_templates"]`.
-- Confirmation `<AlertDialog>` avant activation ("Cette version remplacera celle utilisée pour les nouveaux contrats. Les contrats existants restent rattachés à leur version d'origine.").
+**Lien dans sidebar** : ajout entrée Admin "Postes principaux" avec badge count si > 0.
 
-### 7. Génération PDF — snapshot juridique
-- Au moment de créer un `contrat_intermittent` (recherche dans `contrats-signature.ts` / là où le contrat est inséré) :
-  - SELECT template actif → set `template_version_id` sur la ligne.
-  - Fallback : si aucun template actif → utilise `DEFAULT_CONTRAT_TEMPLATE_HTML` (sécurité).
-- Edge function `contrat-pdf` :
-  - Lit `contrats_intermittents.template_version_id` → fetch `contrat_templates.contenu_html` correspondant.
-  - Construit le `values` (employé, dates, taux…) → `interpolateContratTemplate(html, values)` → injecte dans `react-pdf-html`.
-  - Si `template_version_id` null → fallback hardcode.
+## ITEM 2 — Export/Import Excel employés
 
-### 8. Mapping placeholders → données contrat
-Helper `buildContratValues(contrat, employe, affaire, signatures)` côté edge fn qui retourne le dict pour interpolation. Gère les formats FR (dates `dd MMMM yyyy`, montants `18,00 €`, etc.).
+**Fichier** : `src/lib/employes-excel.ts` (nouveau, lazy-loaded)
 
-## Ordre d'implémentation
+**Export** :
+- Bouton "Exporter Excel" ajouté dans `_app.employes.tsx` (header) + page `/admin/employes-poste-principal`
+- Lib : `xlsx-js-style` (déjà policy projet)
+- Colonnes : Nom, Prénom, Email, Statut contrat, Poste principal, Taux brut, Taux chargé, Date dernière activité (max(assignations.date)), Chantier récent
+- Filename : `employes-setup-paris-${date}.xlsx`
 
-1. Migration DB additive (`contenu_json`, `notes`, RPC v2, seed v1).
-2. Custom Node Placeholder TipTap + extensions (Underline/TextAlign/Table).
-3. Toolbar enrichie + dropdown "Insérer variable" groupé.
-4. Layout 3 colonnes (versions / éditeur / preview).
-5. Câblage actions Sauver brouillon / Activer / Restaurer.
-6. Branchement onglets `<Tabs>` dans `_app.rh.contrats.tsx`.
-7. Branchement `template_version_id` à la création contrat.
-8. Edge function `contrat-pdf` lit template DB + fallback.
-9. Mapping `buildContratValues` complet (16 placeholders).
-10. Test E2E manuel selon scénario Gabin.
+**Import inverse** :
+- Bouton "Importer Excel postes" dans `_app.employes.tsx` + page admin
+- Drop zone → parse → matching par `normalizeName(nom+' '+prenom)` (helper existant)
+- Modal diff preview : "X mises à jour | Y inchangés | Z non trouvés"
+- Validation finale → `UPDATE employes SET poste_principal=$1 WHERE id=$2` boucle
+- Idempotent : si poste_principal Excel == DB, skip
 
-## Hors-scope (rappel)
+**Sécurité** : RLS update employes déjà chef_or_admin (pas de migration nécessaire)
 
-- ❌ Pas de réécriture du texte juridique : seed v1 = contenu hardcodé actuel tel quel, Gabin l'éditera lui-même.
-- ❌ Pas de modification UI Liste contrats (déjà OK).
-- ❌ Pas de re-fix Signer / PDF (résolus).
+## ITEM 3 — Validation E2E template PDF
 
-## Risques / points d'attention
+**Fichier** : enrichissement `src/routes/_app.rh.contrats.tsx` onglet "Template"
 
-- **TipTap Table dans react-pdf-html** : `react-pdf-html` ne supporte pas tous les CSS — tester rendu `<table>` PDF, fallback `border-collapse` inline si besoin.
-- **Placeholder Node sérialisation** : doit produire `{{var}}` exact dans `getHTML()` pour que l'interpolation regex matche.
-- **Atomicité activation** : si la RPC actuelle ne fait pas le toggle dans une transaction, l'ajuster (UPDATE actif=false WHERE actif=true; UPDATE actif=true WHERE id=p_id; dans un BEGIN/COMMIT plpgsql).
-- **Rollback** : si table vide ou template corrompu → fallback hardcode systématique.
+**Bouton "Tester le template"** → ouvre `TemplateTestDialog` avec :
 
-Validez ce plan et je commit.
+**5 cas de test prédéfinis** (en mémoire, pas DB) :
+| # | Cas | Données |
+|---|-----|---------|
+| A | Poste renseigné | SAVOYEN, poste="Constructeur", chantier 9231 court |
+| B | Fallback null | DUPONT, poste=null → "Technicien de plateau" |
+| C | Adresse longue | MARTIN, adresse 90 chars |
+| D | Libellé chantier long | DURAND, "Atelier mandarine M&Ms version pilote 2" |
+| E | Intérim vs CDDU | LEROY intérim avec agence_interim |
+
+**Implémentation** :
+- Réutilise `renderContratHtml()` de `contrats-templates.ts` avec fixtures hardcodées
+- Génère 5 PDF via fonction existante `generateContratPdf()` côté client (jsPDF/html2canvas) ou edge function `contrat-pdf`
+- Affiche en grid 5 thumbnails (iframes srcDoc HTML) avec bouton "Télécharger PDF" + "Ouvrir plein écran"
+
+**Tests Playwright** (bonus) — `e2e/contrats/template-validation.admin.spec.ts` :
+1. Ouvre /rh/contrats?tab=template → clic "Tester le template"
+2. Pour chaque iframe : `expect(html).not.toMatch(/\{\{[^}]+\}\}/)`
+3. Sections attendues : array de 15 titres, chaque `expect(html).toContain(title)`
+4. Page count : impose en CSS `@page` count via parsing du PDF (skip si trop complexe → check `<div class="page">` count == 4)
+
+## Fichiers touchés
+
+| Fichier | Action |
+|---|---|
+| `src/routes/_app.admin.employes-poste-principal.tsx` | NEW |
+| `src/lib/employes-excel.ts` | NEW |
+| `src/components/employes/EmployesImportPostesDialog.tsx` | NEW |
+| `src/components/contrats/TemplateTestDialog.tsx` | NEW |
+| `src/lib/contrats-template-fixtures.ts` | NEW (5 fixtures) |
+| `src/routes/_app.employes.tsx` | EDIT (boutons export/import) |
+| `src/routes/_app.rh.contrats.tsx` | EDIT (bouton Tester template) |
+| `src/components/AppSidebar.tsx` | EDIT (lien Postes principaux) |
+| `src/routes/_app.roadmap.tsx` | EDIT (entrée v0.42.2) |
+| `e2e/contrats/template-validation.admin.spec.ts` | NEW (bonus) |
+
+## Pas de migration DB requise
+
+Tout réutilise `employes.poste_principal` (déjà ajouté en v0.42.x précédent), RLS existante.
+
+## Ordre d'exécution
+
+1. ITEM 1 (route + filtres + autosave) — ~30 min
+2. ITEM 2 (export + import + diff modal) — ~25 min
+3. ITEM 3 (5 fixtures + dialog gallery) — ~20 min
+4. Roadmap + sidebar link — ~5 min
+5. Bonus E2E Playwright — ~15 min
+
+Total : ~1h30 de génération, livrable PR cohérent.
+
+**OK pour lancer ?**
