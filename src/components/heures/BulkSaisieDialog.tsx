@@ -16,6 +16,7 @@ import { fr } from "date-fns/locale";
 import { Loader2, Users } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { formatBusinessError } from "@/lib/business-errors";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -189,7 +190,7 @@ export function BulkSaisieDialog({
       .in("employe_id", empIds)
       .in("date", validDays);
     if (error) {
-      toast.error(error.message);
+      toast.error(...formatBusinessError(error));
       return;
     }
     const existing = new Set((data ?? []).map((r) => `${r.employe_id}|${r.date}`));
@@ -272,8 +273,7 @@ export function BulkSaisieDialog({
       onCreated?.();
       onOpenChange(false);
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "Erreur lors du bulk";
-      toast.error(msg);
+      toast.error(...formatBusinessError(e));
     } finally {
       setSubmitting(false);
     }
