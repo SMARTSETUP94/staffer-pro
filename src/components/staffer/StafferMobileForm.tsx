@@ -41,7 +41,17 @@ interface MetierOption {
   libelle: string;
 }
 
-export function StafferMobileForm() {
+/**
+ * Props :
+ *  - scopeToChef : si true, restreint chantiers et employés au périmètre
+ *    du chef connecté (via mes_affaires_chef + filtre métier_principal).
+ *    Admin n'est jamais filtré (override implicite via isAdmin).
+ */
+export function StafferMobileForm({ scopeToChef = false }: { scopeToChef?: boolean } = {}) {
+  const { isAdmin } = useAuth();
+  const { ids: affaireIdsChef, isLoading: idsLoading } = useMesAffairesChefIds();
+  const enforceChefScope = scopeToChef && !isAdmin;
+
   const [searchEmploye, setSearchEmploye] = useState("");
   const [searchChantier, setSearchChantier] = useState("");
   const [employeId, setEmployeId] = useState<string | null>(null);
