@@ -62,6 +62,7 @@ import { Route as MobileChefFabricationRouteImport } from './routes/mobile.chef.
 import { Route as MobileChefEquipeRouteImport } from './routes/mobile.chef.equipe'
 import { Route as MobileChefDashboardRouteImport } from './routes/mobile.chef.dashboard'
 import { Route as MobileChefContratsRouteImport } from './routes/mobile.chef.contrats'
+import { Route as MobileChefAtelierRouteImport } from './routes/mobile.chef.atelier'
 import { Route as MobileChefAValiderRouteImport } from './routes/mobile.chef.a-valider'
 import { Route as AppStaffingPlanIdRouteImport } from './routes/_app.staffing.$planId'
 import { Route as AppRhContratsRouteImport } from './routes/_app.rh.contrats'
@@ -358,6 +359,11 @@ const MobileChefContratsRoute = MobileChefContratsRouteImport.update({
   path: '/contrats',
   getParentRoute: () => MobileChefRoute,
 } as any)
+const MobileChefAtelierRoute = MobileChefAtelierRouteImport.update({
+  id: '/atelier',
+  path: '/atelier',
+  getParentRoute: () => MobileChefRoute,
+} as any)
 const MobileChefAValiderRoute = MobileChefAValiderRouteImport.update({
   id: '/a-valider',
   path: '/a-valider',
@@ -593,6 +599,7 @@ export interface FileRoutesByFullPath {
   '/rh/contrats': typeof AppRhContratsRoute
   '/staffing/$planId': typeof AppStaffingPlanIdRoute
   '/mobile/chef/a-valider': typeof MobileChefAValiderRoute
+  '/mobile/chef/atelier': typeof MobileChefAtelierRoute
   '/mobile/chef/contrats': typeof MobileChefContratsRoute
   '/mobile/chef/dashboard': typeof MobileChefDashboardRoute
   '/mobile/chef/equipe': typeof MobileChefEquipeRoute
@@ -675,6 +682,7 @@ export interface FileRoutesByTo {
   '/rh/contrats': typeof AppRhContratsRoute
   '/staffing/$planId': typeof AppStaffingPlanIdRoute
   '/mobile/chef/a-valider': typeof MobileChefAValiderRoute
+  '/mobile/chef/atelier': typeof MobileChefAtelierRoute
   '/mobile/chef/contrats': typeof MobileChefContratsRoute
   '/mobile/chef/dashboard': typeof MobileChefDashboardRoute
   '/mobile/chef/equipe': typeof MobileChefEquipeRoute
@@ -762,6 +770,7 @@ export interface FileRoutesById {
   '/_app/rh/contrats': typeof AppRhContratsRoute
   '/_app/staffing/$planId': typeof AppStaffingPlanIdRoute
   '/mobile/chef/a-valider': typeof MobileChefAValiderRoute
+  '/mobile/chef/atelier': typeof MobileChefAtelierRoute
   '/mobile/chef/contrats': typeof MobileChefContratsRoute
   '/mobile/chef/dashboard': typeof MobileChefDashboardRoute
   '/mobile/chef/equipe': typeof MobileChefEquipeRoute
@@ -849,6 +858,7 @@ export interface FileRouteTypes {
     | '/rh/contrats'
     | '/staffing/$planId'
     | '/mobile/chef/a-valider'
+    | '/mobile/chef/atelier'
     | '/mobile/chef/contrats'
     | '/mobile/chef/dashboard'
     | '/mobile/chef/equipe'
@@ -931,6 +941,7 @@ export interface FileRouteTypes {
     | '/rh/contrats'
     | '/staffing/$planId'
     | '/mobile/chef/a-valider'
+    | '/mobile/chef/atelier'
     | '/mobile/chef/contrats'
     | '/mobile/chef/dashboard'
     | '/mobile/chef/equipe'
@@ -1017,6 +1028,7 @@ export interface FileRouteTypes {
     | '/_app/rh/contrats'
     | '/_app/staffing/$planId'
     | '/mobile/chef/a-valider'
+    | '/mobile/chef/atelier'
     | '/mobile/chef/contrats'
     | '/mobile/chef/dashboard'
     | '/mobile/chef/equipe'
@@ -1431,6 +1443,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MobileChefContratsRouteImport
       parentRoute: typeof MobileChefRoute
     }
+    '/mobile/chef/atelier': {
+      id: '/mobile/chef/atelier'
+      path: '/atelier'
+      fullPath: '/mobile/chef/atelier'
+      preLoaderRoute: typeof MobileChefAtelierRouteImport
+      parentRoute: typeof MobileChefRoute
+    }
     '/mobile/chef/a-valider': {
       id: '/mobile/chef/a-valider'
       path: '/a-valider'
@@ -1815,6 +1834,7 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 interface MobileChefRouteChildren {
   MobileChefAValiderRoute: typeof MobileChefAValiderRoute
+  MobileChefAtelierRoute: typeof MobileChefAtelierRoute
   MobileChefContratsRoute: typeof MobileChefContratsRoute
   MobileChefDashboardRoute: typeof MobileChefDashboardRoute
   MobileChefEquipeRoute: typeof MobileChefEquipeRoute
@@ -1828,6 +1848,7 @@ interface MobileChefRouteChildren {
 
 const MobileChefRouteChildren: MobileChefRouteChildren = {
   MobileChefAValiderRoute: MobileChefAValiderRoute,
+  MobileChefAtelierRoute: MobileChefAtelierRoute,
   MobileChefContratsRoute: MobileChefContratsRoute,
   MobileChefDashboardRoute: MobileChefDashboardRoute,
   MobileChefEquipeRoute: MobileChefEquipeRoute,
