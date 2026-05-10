@@ -26,6 +26,7 @@ export interface FullContratRecord {
   pdf_v3_url: string | null;
   statut: string;
   template_version_id: string | null;
+  poste: string | null;
   // joins
   employes?: {
     nom: string;
