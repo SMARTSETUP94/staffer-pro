@@ -259,6 +259,20 @@ function ValidationHeuresPage() {
     <div className="space-y-6 p-6">
       <PageBreadcrumbs steps={[{ label: "Équipes" }, { label: "Validation des heures" }]} />
       <ScopedAccessBanner />
+      {(isScoped || mesAffairesIds.size > 0) && (
+        <div className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2">
+          <Switch
+            id="only-mine-validation"
+            checked={onlyMine}
+            onCheckedChange={setOnlyMine}
+            disabled={mesAffairesLoading}
+          />
+          <Label htmlFor="only-mine-validation" className="cursor-pointer text-sm">
+            Mes chantiers uniquement
+            <span className="ml-1.5 text-xs text-muted-foreground">({mesAffairesIds.size})</span>
+          </Label>
+        </div>
+      )}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <ClipboardCheck className="h-6 w-6 text-primary" />
