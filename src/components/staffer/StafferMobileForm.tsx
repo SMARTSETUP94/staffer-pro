@@ -100,13 +100,7 @@ export function StafferMobileForm({ scopeToChef = false }: { scopeToChef?: boole
   // Note v0.42.2 : le poste vient désormais du POSTE PRINCIPAL pérenne de l'employé
   // (employes.poste_principal). Plus de sélecteur ici — modifiable sur la fiche /employes.
 
-  const filteredEmployes = useMemo(() => {
-    const q = normalize(searchEmploye);
-    if (!q) return employesQuery.data?.slice(0, 8) ?? [];
-    return (employesQuery.data ?? [])
-      .filter((e) => normalize(`${e.prenom} ${e.nom}`).includes(q))
-      .slice(0, 8);
-  }, [employesQuery.data, searchEmploye]);
+  // (filteredEmployes / filteredChantiers définis plus bas avec scope chef)
 
   // Récupère le métier principal du chef connecté (pour filtrage équipe).
   const chefMetierQuery = useQuery({
