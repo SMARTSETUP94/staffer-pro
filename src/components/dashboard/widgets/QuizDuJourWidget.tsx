@@ -37,11 +37,17 @@ interface AnswerResult {
 }
 
 const CAT_LABEL: Record<string, string> = {
-  sceno: "Scéno",
-  menuiserie: "Menuiserie",
   securite: "Sécurité",
+  menuiserie: "Menuiserie",
+  sceno: "Scéno",
   event: "Event",
-  "culture-G": "Culture G",
+  "culture-G": "Culture générale",
+  "decor-culture-g": "Décor (difficile)",
+  "setup-histoire": "Histoire SETUP",
+  "setup-orga": "Organisation SETUP",
+  "setup-clients": "Clients SETUP",
+  "setup-outils": "Outils internes",
+  "setup-machines": "Parc machines",
 };
 
 const DIFF_COLOR: Record<string, string> = {
