@@ -412,7 +412,7 @@ export function PlanningGrid({
       onChanged?.();
     } catch (e) {
       console.error(e);
-      toast.error("Échec de l'opération");
+      toast.error(...formatBusinessError(e));
     }
   }
   // ─────────────────────────────────────────────────────────────────────────
