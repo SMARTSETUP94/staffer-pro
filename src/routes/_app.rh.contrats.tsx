@@ -155,8 +155,12 @@ function RhContrats() {
                         </TableCell>
                         <TableCell className="text-right space-x-1">
                           {currentPdf && (
-                            <Button variant="ghost" size="sm" asChild>
-                              <a href={currentPdf} target="_blank" rel="noopener noreferrer"><Download className="h-3.5 w-3.5" /></a>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => openContratPdf(r.id).catch((e) => toast.error(e.message))}
+                            >
+                              <Download className="h-3.5 w-3.5" />
                             </Button>
                           )}
                           {r.statut === "a_signer_employeur" && (
