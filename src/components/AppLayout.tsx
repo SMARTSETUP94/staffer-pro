@@ -3,6 +3,8 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
 import { PreviewBanner } from "./PreviewBanner";
 import { NotificationBell } from "./NotificationBell";
+import { SaintHeaderIcon } from "./header/SaintHeaderIcon";
+import { BirthdaysHeaderIcon } from "./header/BirthdaysHeaderIcon";
 import { CommandPalette } from "./CommandPalette";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
