@@ -149,6 +149,7 @@ function buildSections(role: EffRole, validationCount: number, contratsRhCount: 
         { title: "Rattachement devis", url: "/devis/rattachement-historique", icon: ClipboardList, show: () => true },
         { title: "Audit heures", url: "/audit-heures", icon: ClipboardCheck, show: () => true },
         { title: "Audit Auth", url: "/audit-auth", icon: ClipboardCheck, show: () => true },
+        { title: "Audit Admin (docs + validations)", url: "/admin/audit", icon: ClipboardCheck, show: () => true },
         { title: "Signalements", url: "/admin/feedback", icon: MessageCircle, show: () => true },
         { title: "Contenu widgets", url: "/admin/contenu-widgets", icon: Lightbulb, show: () => true },
         { title: "Roadmap", url: "/roadmap", icon: Map, show: () => true },
