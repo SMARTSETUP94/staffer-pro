@@ -377,7 +377,11 @@ export function useMesHeures({ weekStart, employeIdOverride }: UseMesHeuresOptio
             SAISIE_SELECT,
           )
           .maybeSingle();
-        if (!error && data) {
+        if (error) {
+          toast.error(...formatBusinessError(error));
+          return;
+        }
+        if (data) {
           setSaisies((prev) => prev.map((s) => (s.id === next.id ? (data as unknown as SaisieRow) : s)));
         }
         return;
