@@ -26,7 +26,7 @@ const admin = createClient(url, serviceKey, {
   auth: { autoRefreshToken: false, persistSession: false },
 });
 
-type RoleName = "admin" | "chef_chantier" | "employe";
+type RoleName = "admin" | "chef_chantier" | "employe" | "chef_metier_scoped";
 
 interface Seed {
   email: string;
@@ -35,6 +35,13 @@ interface Seed {
   fullName: string;
   prenom: string;
   nom: string;
+  /** v0.44.4 — pour chef_metier_scoped : id du métier auquel le chef est rattaché.
+   *  Si non fourni, on prend le premier métier disponible. */
+  metierOrdre?: number;
+}
+
+function optional(name: string, fallback: string): string {
+  return process.env[name] ?? fallback;
 }
 
 const seeds: Seed[] = [
@@ -61,6 +68,17 @@ const seeds: Seed[] = [
     fullName: "E2E Employé",
     prenom: "E2E",
     nom: "Employé",
+  },
+  // v0.44.4 — Chef scopé par métier (peinture par défaut).
+  // Si les vars E2E_CHEF_SCOPED_* ne sont pas définies, on dérive du chef global.
+  {
+    email: optional("E2E_CHEF_SCOPED_EMAIL", "e2e-chef-scoped@staffer.test"),
+    password: optional("E2E_CHEF_SCOPED_PASSWORD", "Chef-Scoped-E2E-2026!"),
+    role: "chef_metier_scoped",
+    fullName: "E2E Chef Scopé",
+    prenom: "E2E",
+    nom: "ChefScoped",
+    metierOrdre: 3, // peinture
   },
 ];
 
