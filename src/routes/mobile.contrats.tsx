@@ -124,6 +124,7 @@ function MesContrats() {
           onSigned={() => { setSign(null); refetch(); }}
         />
       )}
+      <MobileBottomNav />
     </div>
   );
 }
