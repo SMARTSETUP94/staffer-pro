@@ -102,9 +102,19 @@ Volume staffé v0.39.0c : KPI "Heures staffées" = Σ(pers × demi_jours × H_HA
 51.2. ✅ **v0.44.2** (10 mai 2026) — Polish post-v0.44.1 : (1) redirect `/mobile/chef/a-valider` → `/mobile/chef/atelier` via `beforeLoad` TanStack (préserve les bookmarks), (2) dashboard mobile chef 5 KPI cards : Heures à valider → /equipe, Objets à valider → /atelier, nouvelle card "Photos récentes (7j)" → /atelier, Équipe (7j), Mes affaires actives, (3) Kanban Vue chantier : badges compteur par colonne, empty states icône `Inbox`, tri "en retard d'abord puis échéance puis ref" via `fabrication_etapes.date_fin` (min des étapes non terminées), filtres chantier persistés en `localStorage` (`v0.44.2:kanban-filter-affaires`), animations 200ms ease-out, badge "Retard" rouge sur cards en dépassement, (4) E2E `e2e/mobile-chef/sprint-v0442-polish.chef.spec.ts` (6 specs : redirect + KPI dashboard + sous-tab Valider equipe + Kanban 4 colonnes + Photos par objet + bottom nav badge). Drag-drop bonus reporté.
 
 
-### À venir
-52. ⏳ **v0.45 RLS hardening chef** — Audit RLS strict côté DB (remplacement scope app-side Option D), migration de comptes contrôlée, tests par rôle.
-53. ⏳ **Sprint 3c** — E2E full role-based (employé desktop + mobile).
+### Audit technique v0.43-v0.44 (10 mai 2026)
+51.3. ✅ **Audit `docs/audit-v0.43-v0.44.md`** — 7 angles (sécu/perf/qualité/DB/UX-A11Y/métier/doc). Verdict global 🟡 À surveiller. Top 5 actions ~11h. Sprints v0.45/v0.46/v0.47 **SUSPENDUS** en attente arbitrage Gabin sur sprint correctif v0.44.3.
+
+### En cours v0.45 (RLS hardening chef — DB livrée, UI en attente)
+51.4. 🟡 **v0.45 partiel** (10 mai 2026) — DB : enum `chef_metier_scoped` + helpers `is_chef_global()`/`is_chef_metier_scoped()` + RLS durcie sur `heures_saisies`/`fabrication_objets`/`assignations`/`assignation_objets` + auth-context `isChefMetierScoped`/`isChefGlobal`/`isChefAny` + hook `useChefScope` + libellés invitation/dashboard. **Reste UI** : `ScopedAccessBanner` + filtrage `/affaires`/`/validation-heures`/`/audit-heures` + tests pgTAP + E2E isolement.
+
+### À venir (PRIORITÉ post-audit)
+52. ⏳ **v0.44.3 Sprint correctif** (~7h) — Top 3 audit : finaliser v0.45 UI+tests + triggers business (heures ≤24, dates contrat, taux>0) + audit trail upload/delete documents (`deleted_by` + trigger).
+53. ⏳ **v0.44.4 Polish audit** (~4h) — Top 5 audit : batch signed URLs galerie + index `uploaded_at DESC` + lazy-loading + 3 ADR (RLS scoped, objet_id, TipTap) + purge dead code `/a-valider`.
+54. ⏸️ **v0.45 RLS hardening (suite)** — SUSPENDU jusqu'à v0.44.3 livrée.
+55. ⏸️ **v0.46 SILAE Phase 2 horaires précis** — SUSPENDU.
+56. ⏸️ **v0.47 Centre Analyse Heures (Option B)** — SUSPENDU.
+57. ⏳ **Sprint 3c** — E2E full role-based (employé desktop + mobile).
 54. ⏳ **Sprint 3b** — Logistique avancée (autorisations véhicules + sous-traitants + historique + stats).
 55. ⏳ **v0.20.1 quick wins** — Pré-remplissage trajet sous-traité + cache `useObjetsAffaireLight` + notification CA prêt à livrer.
 56. ⏳ **v0.21.1** — Garde RBAC UI `/saisie-pour-equipe` + durcissement RLS + UNIQUE INDEX chef_jour + tests SQL.
