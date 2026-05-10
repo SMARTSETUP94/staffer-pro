@@ -29,10 +29,16 @@ export const SignatureCanvas = forwardRef<SignatureCanvasHandle, Props>(function
 
   useImperativeHandle(ref, () => ({
     getDataUrl: () => {
-      if (!padRef.current || padRef.current.isEmpty()) return null;
-      return padRef.current.getCanvas().toDataURL("image/png");
+      const hasPad = !!padRef.current;
+      const isEmpty = padRef.current?.isEmpty() ?? true;
+      console.log("[contrat-signature][canvas.getDataUrl]", { hasPad, isEmpty });
+      if (!padRef.current || isEmpty) return null;
+      const dataUrl = padRef.current.getCanvas().toDataURL("image/png");
+      console.log("[contrat-signature][canvas.getDataUrl:ok]", { length: dataUrl.length, prefix: dataUrl.slice(0, 32) });
+      return dataUrl;
     },
     clear: () => {
+      console.log("[contrat-signature][canvas.clear]");
       padRef.current?.clear();
       setEmpty(true);
       onChange?.(true);
@@ -53,6 +59,7 @@ export const SignatureCanvas = forwardRef<SignatureCanvasHandle, Props>(function
           }}
           onEnd={() => {
             const isEmpty = padRef.current?.isEmpty() ?? true;
+            console.log("[contrat-signature][canvas.onEnd]", { isEmpty });
             setEmpty(isEmpty);
             onChange?.(isEmpty);
           }}
@@ -65,6 +72,7 @@ export const SignatureCanvas = forwardRef<SignatureCanvasHandle, Props>(function
           variant="ghost"
           size="sm"
           onClick={() => {
+            console.log("[contrat-signature][canvas.eraseClick]");
             padRef.current?.clear();
             setEmpty(true);
             onChange?.(true);
