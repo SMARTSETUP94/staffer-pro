@@ -127,11 +127,12 @@ function ValidationHeuresPage() {
     });
   }, [startStr, endStr, statutFilter, employeFilter, affaireFilter, reloadKey]);
 
-  // Grouper par employé pour bulk semaine
+  // Grouper par employé pour bulk semaine (avec filtre "mes chantiers")
   const groupedByEmploye = useMemo(() => {
     const map = new Map<string, { employe: { id: string; prenom: string; nom: string }; rows: SaisieRow[] }>();
     for (const r of rows) {
       if (!r.employe) continue;
+      if (onlyMine && !mesAffairesIds.has(r.affaire_id)) continue;
       const k = r.employe_id;
       if (!map.has(k)) {
         map.set(k, { employe: { id: k, prenom: r.employe.prenom, nom: r.employe.nom }, rows: [] });
@@ -139,7 +140,7 @@ function ValidationHeuresPage() {
       map.get(k)!.rows.push(r);
     }
     return Array.from(map.values()).sort((a, b) => a.employe.nom.localeCompare(b.employe.nom));
-  }, [rows]);
+  }, [rows, onlyMine, mesAffairesIds]);
 
   const toggleSelect = (id: string) => {
     setSelected((prev) => {
