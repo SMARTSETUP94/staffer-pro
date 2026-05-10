@@ -35,6 +35,7 @@ interface ContratRow {
   taux_horaire_brut: number | null;
   forfait: boolean;
   heures_estimees: number | null;
+  poste: string | null;
   statut: "a_signer_employe" | "a_signer_employeur" | "signe" | "annule";
   pdf_v1_url: string | null;
   pdf_v2_url: string | null;
@@ -44,6 +45,17 @@ interface ContratRow {
   affaires: { numero: string; nom: string } | null;
   contrats_signatures?: { role_signature: "employe" | "employeur"; signed_at: string }[] | null;
 }
+
+const POSTES_COURANTS = [
+  "Technicien de plateau",
+  "Machiniste",
+  "Constructeur",
+  "Peintre décorateur",
+  "Régisseur",
+  "Éclairagiste",
+  "Sonorisateur",
+  "Opérateur caméra",
+];
 
 const STATUT_LABELS: Record<ContratRow["statut"], string> = {
   a_signer_employe: "À signer (employé)",
