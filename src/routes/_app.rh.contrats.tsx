@@ -154,6 +154,17 @@ function RhContrats() {
     else { toast.success("Contrat annulé"); refetch(); }
   };
 
+  const handleDelete = async (r: ContratRow) => {
+    const nom = `${r.employes?.prenom ?? ""} ${r.employes?.nom ?? ""}`.trim();
+    if (!confirm(`Supprimer définitivement le contrat de ${nom} (${r.affaires?.numero ?? ""}) ?\n\nCette action est irréversible et le contrat disparaîtra également côté employé.`)) return;
+    // Supprimer d'abord les signatures (FK), puis le contrat
+    const { error: sigErr } = await supabase.from("contrats_signatures").delete().eq("contrat_id", r.id);
+    if (sigErr) { toast.error(`Suppression signatures impossible : ${sigErr.message}`); return; }
+    const { error } = await supabase.from("contrats_intermittents").delete().eq("id", r.id);
+    if (error) toast.error(`Suppression impossible : ${error.message}`);
+    else { toast.success("Contrat supprimé"); refetch(); }
+  };
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       <PageHeader title="Contrats intermittents" description="Gestion RH — signatures, suivi, archive" />
