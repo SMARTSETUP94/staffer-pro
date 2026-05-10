@@ -26,7 +26,6 @@ export interface FullContratRecord {
   pdf_v3_url: string | null;
   statut: string;
   template_version_id: string | null;
-  poste: string | null;
   // joins
   employes?: {
     nom: string;
@@ -34,6 +33,7 @@ export interface FullContratRecord {
     adresse: string | null;
     email: string | null;
     statut_contrat: string | null;
+    poste_principal: string | null;
   } | null;
   affaires?: {
     numero: string;
@@ -98,7 +98,9 @@ function buildPdfData(c: FullContratRecord, sigEmploye?: string | null, sigEmplo
     signed_at_employe: sigE?.signed_at ?? null,
     signed_at_employeur: sigEr?.signed_at ?? null,
     template_html: c.contrat_templates?.contenu_html ?? null,
-    poste: c.poste ?? null,
+    // {{poste}} provient du POSTE PRINCIPAL pérenne de l'employé.
+    // Fallback "Technicien de plateau" géré dans contrats-pdf.tsx si null/vide.
+    poste: c.employes?.poste_principal ?? null,
   };
 }
 
@@ -184,9 +186,9 @@ async function fetchContratFull(contratId: string): Promise<FullContratRecord> {
     .from("contrats_intermittents")
     .select(`
       id, employee_id, chantier_id, date_debut, date_fin,
-      taux_horaire_brut, forfait, heures_estimees, poste,
+      taux_horaire_brut, forfait, heures_estimees,
       pdf_v1_url, pdf_v2_url, pdf_v3_url, statut, template_version_id,
-      employes:employee_id ( nom, prenom, adresse, email, statut_contrat ),
+      employes:employee_id ( nom, prenom, adresse, email, statut_contrat, poste_principal ),
       affaires:chantier_id ( numero, nom, lieu ),
       contrat_templates:template_version_id ( contenu_html ),
       contrats_signatures ( role_signature, signature_image_url, signed_at )

@@ -659,7 +659,6 @@ export type Database = {
           pdf_v1_url: string | null
           pdf_v2_url: string | null
           pdf_v3_url: string | null
-          poste: string
           staffing_id: string | null
           statut: Database["public"]["Enums"]["contrat_intermittent_statut"]
           taux_horaire_brut: number | null
@@ -680,7 +679,6 @@ export type Database = {
           pdf_v1_url?: string | null
           pdf_v2_url?: string | null
           pdf_v3_url?: string | null
-          poste?: string
           staffing_id?: string | null
           statut?: Database["public"]["Enums"]["contrat_intermittent_statut"]
           taux_horaire_brut?: number | null
@@ -701,7 +699,6 @@ export type Database = {
           pdf_v1_url?: string | null
           pdf_v2_url?: string | null
           pdf_v3_url?: string | null
-          poste?: string
           staffing_id?: string | null
           statut?: Database["public"]["Enums"]["contrat_intermittent_statut"]
           taux_horaire_brut?: number | null
@@ -1098,6 +1095,7 @@ export type Database = {
           nom: string
           non_staffing: boolean
           notes: string | null
+          poste_principal: string | null
           prenom: string
           profile_id: string | null
           sous_type_contrat: string | null
@@ -1132,6 +1130,7 @@ export type Database = {
           nom: string
           non_staffing?: boolean
           notes?: string | null
+          poste_principal?: string | null
           prenom: string
           profile_id?: string | null
           sous_type_contrat?: string | null
@@ -1166,6 +1165,7 @@ export type Database = {
           nom?: string
           non_staffing?: boolean
           notes?: string | null
+          poste_principal?: string | null
           prenom?: string
           profile_id?: string | null
           sous_type_contrat?: string | null
@@ -3486,8 +3486,7 @@ export type Database = {
               _date_debut: string
               _date_fin: string
               _employee_id: string
-              _heures_estimees?: number
-              _poste?: string
+              _heures_estimees: number
               _staffing_id: string
             }
             Returns: string
@@ -3673,7 +3672,6 @@ export type Database = {
           _date_fin: string
           _employee_id: string
           _metier_id: number
-          _poste?: string
           _slot: string
         }
         Returns: Json
