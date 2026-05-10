@@ -144,7 +144,6 @@ export function ContratIntermittentDocument({ data }: { data: ContratPdfData }):
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Conditions générales</Text>
           <Html style={styles.htmlBody}>{renderTemplateHtml(data)}</Html>
         </View>
 
