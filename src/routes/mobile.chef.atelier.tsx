@@ -2,13 +2,13 @@
  * v0.44.1 — Onglet "Atelier" (ex-"À valider") du Hub chef mobile.
  * 3 sous-tabs : Objets fab à valider / Vue chantier kanban / Photos par objet.
  */
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Hammer, Columns3, Camera, ChevronRight, ArrowLeft } from "lucide-react";
+import { Hammer, Columns3, Camera, ChevronRight, ArrowLeft, Inbox, AlertCircle } from "lucide-react";
 import { RoleGuard } from "@/components/auth/RoleGuard";
 import { ChefMobileHeader } from "@/components/mobile-chef/ChefMobileHeader";
 import { ValiderObjetsList } from "@/components/mobile-chef/ValiderObjetsList";
@@ -19,6 +19,8 @@ import { useObjetPhotos } from "@/hooks/use-objet-photos";
 import { AffaireDocumentsGallery } from "@/components/affaire-documents/AffaireDocumentsGallery";
 import { AffaireDocumentUploader } from "@/components/affaire-documents/AffaireDocumentUploader";
 import { supabase } from "@/integrations/supabase/client";
+
+const KANBAN_FILTER_LS_KEY = "v0.44.2:kanban-filter-affaires";
 
 export const Route = createFileRoute("/mobile/chef/atelier")({
   head: () => ({ meta: [{ title: "Hub chef — Atelier" }] }),
