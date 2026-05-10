@@ -26,30 +26,44 @@ export function SignContractDialog({ open, onOpenChange, contratId, role, pdfUrl
   const [empty, setEmpty] = useState(true);
 
   const handleSign = async () => {
+    console.log("[contrat-signature][dialog.submitClick]", { contratId, role, empty, submitting, hasCanvasRef: !!sigRef.current });
     const dataUrl = sigRef.current?.getDataUrl();
+    console.log("[contrat-signature][dialog.signatureState]", { hasDataUrl: !!dataUrl, length: dataUrl?.length ?? 0, empty });
     if (!dataUrl) {
+      console.warn("[contrat-signature][dialog.blocked:no-signature]", { contratId, role, empty });
       toast.error("Signature requise");
       return;
     }
     setSubmitting(true);
+    console.log("[contrat-signature][dialog.submitting:start]", { contratId, role });
     try {
       if (role === "employe") {
+        console.log("[contrat-signature][dialog.preRpc:employe]", { contratId });
         await signContratAsEmploye(contratId, dataUrl);
       } else {
+        console.log("[contrat-signature][dialog.preRpc:employeur]", { contratId });
         await signContratAsEmployeur(contratId, dataUrl);
       }
+      console.log("[contrat-signature][dialog.rpc:success]", { contratId, role });
       toast.success(role === "employe" ? "Contrat signé — en attente de l'employeur" : "Contrat finalisé");
+      console.log("[contrat-signature][dialog.onSigned]");
       onSigned?.();
+      console.log("[contrat-signature][dialog.close:after-success]");
       onOpenChange(false);
     } catch (e) {
+      console.error("[contrat-signature][dialog.rpc:error]", e);
       toast.error(e instanceof Error ? e.message : "Erreur lors de la signature");
     } finally {
+      console.log("[contrat-signature][dialog.submitting:stop]", { contratId, role });
       setSubmitting(false);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(value) => {
+      console.log("[contrat-signature][dialog.onOpenChange]", { value, submitting, contratId, role });
+      onOpenChange(value);
+    }}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>
@@ -70,7 +84,10 @@ export function SignContractDialog({ open, onOpenChange, contratId, role, pdfUrl
           </div>
         )}
 
-        <SignatureCanvas ref={sigRef} onChange={setEmpty} />
+        <SignatureCanvas ref={sigRef} onChange={(isEmpty) => {
+          console.log("[contrat-signature][dialog.canvasChange]", { isEmpty, contratId, role });
+          setEmpty(isEmpty);
+        }} />
 
         <DialogFooter className="gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>Annuler</Button>
