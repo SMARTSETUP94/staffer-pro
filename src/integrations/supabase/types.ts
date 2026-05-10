@@ -3757,6 +3757,8 @@ export type Database = {
       }
       is_admin: { Args: never; Returns: boolean }
       is_affaire_open: { Args: { _affaire_id: string }; Returns: boolean }
+      is_chef_global: { Args: never; Returns: boolean }
+      is_chef_metier_scoped: { Args: never; Returns: boolean }
       is_chef_on_affaire: {
         Args: { _affaire_id: string; _employe_id: string }
         Returns: boolean
@@ -3887,7 +3889,7 @@ export type Database = {
       adresse_favorite_type: "entrepot" | "client" | "fournisseur" | "autre"
       affaire_phase: "opportunite" | "signe"
       affaire_statut: "prospect" | "en_cours" | "termine" | "annule"
-      app_role: "admin" | "chef_chantier" | "employe"
+      app_role: "admin" | "chef_chantier" | "employe" | "chef_metier_scoped"
       autorisation_vehicule_type:
         | "PERMIS_B"
         | "PERMIS_C"
@@ -4123,7 +4125,7 @@ export const Constants = {
       adresse_favorite_type: ["entrepot", "client", "fournisseur", "autre"],
       affaire_phase: ["opportunite", "signe"],
       affaire_statut: ["prospect", "en_cours", "termine", "annule"],
-      app_role: ["admin", "chef_chantier", "employe"],
+      app_role: ["admin", "chef_chantier", "employe", "chef_metier_scoped"],
       autorisation_vehicule_type: [
         "PERMIS_B",
         "PERMIS_C",
