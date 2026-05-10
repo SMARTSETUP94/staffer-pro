@@ -453,7 +453,8 @@ export function useMesHeures({ weekStart, employeIdOverride }: UseMesHeuresOptio
         .select(SAISIE_SELECT)
         .maybeSingle();
       if (error || !data) {
-        return { ok: false, error: error?.message ?? "Insertion échouée" };
+        const [msg] = formatBusinessError(error ?? new Error("Insertion échouée"));
+        return { ok: false, error: msg };
       }
       // Optimistic update + déclenche le re-render avec la nouvelle saisie
       setSaisies((prev) => [...prev, data as unknown as SaisieRow]);
@@ -470,7 +471,10 @@ export function useMesHeures({ weekStart, employeIdOverride }: UseMesHeuresOptio
       const { error } = await supabase.rpc("delete_my_hors_planning_saisie", {
         _saisie_id: saisieId,
       });
-      if (error) return { ok: false, error: error.message };
+      if (error) {
+        const [msg] = formatBusinessError(error);
+        return { ok: false, error: msg };
+      }
       setSaisies((prev) => prev.filter((s) => s.id !== saisieId));
       return { ok: true };
     },
@@ -497,7 +501,10 @@ export function useMesHeures({ weekStart, employeIdOverride }: UseMesHeuresOptio
       .from("heures_saisies")
       .update({ statut: "soumis" })
       .in("id", ids);
-    if (error) return { ok: false, error: error.message, count: 0 };
+    if (error) {
+      const [msg] = formatBusinessError(error);
+      return { ok: false, error: msg, count: 0 };
+    }
     setReloadKey((k) => k + 1);
     return { ok: true, count: valid.length };
   }, [employeId, saisies, hasBlockingRejet]);
