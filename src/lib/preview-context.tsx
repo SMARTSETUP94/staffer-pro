@@ -122,7 +122,7 @@ export function PreviewProvider({ children }: { children: ReactNode }) {
   const previewToAppRole = (p: PreviewRole | null): AppRole | null => {
     if (!p) return null;
     if (p === "admin") return "admin";
-    if (p === "chef_chantier") return "chef_chantier";
+    if (p === "chef_chantier" || p === "chef_mobile") return "chef_chantier";
     return "employe"; // employe_desktop ou employe_mobile
   };
 
@@ -135,7 +135,7 @@ export function PreviewProvider({ children }: { children: ReactNode }) {
   const effIsAdmin = effectiveRole === "admin";
   const effIsChef = effectiveRole === "chef_chantier";
   const effIsAdminOrChef = effIsAdmin || effIsChef;
-  const effIsMobile = previewRole === "employe_mobile";
+  const effIsMobile = previewRole === "employe_mobile" || previewRole === "chef_mobile";
   const isEmployePreview =
     previewRole === "employe_desktop" || previewRole === "employe_mobile";
 
