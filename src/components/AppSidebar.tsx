@@ -145,6 +145,7 @@ function buildSections(role: EffRole, validationCount: number, contratsRhCount: 
         { title: "Autorisations véhicules", url: "/parametres/autorisations-vehicules", icon: BadgeCheck, show: () => true },
         { title: "Sous-traitants", url: "/parametres/sous-traitants", icon: Truck, show: () => true },
         { title: "Postes contractuels", url: "/parametres/postes", icon: FileSignature, show: () => true },
+        { title: "Postes principaux (saisie lot)", url: "/admin/employes-poste-principal", icon: FileSignature, show: () => true },
         { title: "Rattachement devis", url: "/devis/rattachement-historique", icon: ClipboardList, show: () => true },
         { title: "Audit heures", url: "/audit-heures", icon: ClipboardCheck, show: () => true },
         { title: "Audit Auth", url: "/audit-auth", icon: ClipboardCheck, show: () => true },
