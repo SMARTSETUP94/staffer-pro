@@ -689,6 +689,29 @@ function EmployesPage() {
                 </SelectContent>
               </Select>
             </div>
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label>Poste principal (contrat)</Label>
+              <Input
+                list="postes-principal-suggestions"
+                value={form.poste_principal}
+                onChange={(e) => setForm({ ...form, poste_principal: e.target.value })}
+                placeholder="Ex. Constructeur, Machiniste, Cintrier…"
+                className="h-10 rounded-xl"
+              />
+              <datalist id="postes-principal-suggestions">
+                <option value="Technicien de plateau" />
+                <option value="Machiniste" />
+                <option value="Constructeur" />
+                <option value="Peintre décorateur" />
+                <option value="Régisseur" />
+                <option value="Éclairagiste" />
+                <option value="Sonorisateur" />
+                <option value="Opérateur caméra" />
+              </datalist>
+              <p className="text-[10px] text-muted-foreground">
+                Caractéristique pérenne — imprimée comme « qualité » sur tous ses contrats CDDU. Vide = « Technicien de plateau » par défaut.
+              </p>
+            </div>
             <div className="space-y-2 sm:col-span-2">
               <Label>Compétences secondaires</Label>
               <div className="grid grid-cols-2 gap-2 rounded-xl border border-border bg-background p-3 sm:grid-cols-3">
