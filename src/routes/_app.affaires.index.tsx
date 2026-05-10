@@ -91,6 +91,10 @@ function AffairesPage() {
   const { isAdminOrChef } = useAuth();
   const navigate = useNavigate({ from: "/affaires/" });
   const { typo: typoFilter } = Route.useSearch();
+  const { isScoped } = useChefScope();
+  const { ids: mesAffairesIds, isLoading: mesAffairesLoading } = useMesAffairesChefIds();
+  const [onlyMine, setOnlyMine] = useState(isScoped);
+  useEffect(() => { if (isScoped) setOnlyMine(true); }, [isScoped]);
   const [rows, setRows] = useState<AffaireRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
