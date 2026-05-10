@@ -32,7 +32,7 @@ function readStored(): PreviewRole | null {
   if (typeof window === "undefined") return null;
   try {
     const v = window.sessionStorage.getItem(STORAGE_KEY);
-    if (v === "admin" || v === "chef_chantier" || v === "employe_desktop" || v === "employe_mobile") {
+    if (v === "admin" || v === "chef_chantier" || v === "chef_mobile" || v === "employe_desktop" || v === "employe_mobile") {
       return v;
     }
   } catch {
