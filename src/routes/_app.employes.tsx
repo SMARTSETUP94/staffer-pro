@@ -181,7 +181,7 @@ function EmployesPage() {
     setLoading(true);
     const { data: emps, error } = await supabase
       .from("employes")
-      .select("id, prenom, nom, email, telephone, mobile, type_contrat, sous_type_contrat, is_apprenti, agence_interim, metier_principal_id, actif, non_staffing, est_livreur, categories_permis, date_naissance, adresse, notes, profile_id")
+      .select("id, prenom, nom, email, telephone, mobile, type_contrat, sous_type_contrat, is_apprenti, agence_interim, metier_principal_id, actif, non_staffing, est_livreur, categories_permis, date_naissance, adresse, notes, profile_id, taux_horaire_brut, taux_horaire_charge, forfait, statut_contrat")
       .order("nom", { ascending: true })
       .limit(2000);
     if (error) {
@@ -226,11 +226,21 @@ function EmployesPage() {
     setRows(
       (emps ?? []).map((e) => {
         const permis = (e as unknown as { categories_permis?: Permis[] | null }).categories_permis;
+        const extra = e as unknown as {
+          taux_horaire_brut: number | null;
+          taux_horaire_charge: number | null;
+          forfait: boolean | null;
+          statut_contrat: StatutContrat | null;
+        };
         const prof = e.profile_id ? profileMap[e.profile_id] : undefined;
         return {
           ...e,
           categories_permis: (permis ?? []) as Permis[],
           secondaires: secMap[e.id] ?? [],
+          taux_horaire_brut: extra.taux_horaire_brut ?? null,
+          taux_horaire_charge: extra.taux_horaire_charge ?? null,
+          forfait: extra.forfait ?? false,
+          statut_contrat: extra.statut_contrat ?? null,
           matricule_silae: prof?.matricule_silae ?? null,
           est_chef_projet: prof?.est_chef_projet ?? false,
           est_respo_fab: prof?.est_respo_fab ?? false,
