@@ -16,6 +16,7 @@ import { fr } from "date-fns/locale";
 import { CalendarIcon, Loader2, UserCog } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { formatBusinessError } from "@/lib/business-errors";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -190,8 +191,7 @@ export function SaisirPourEmployeDialog({
       onCreated?.();
       onOpenChange(false);
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "Erreur lors de la saisie";
-      toast.error(msg);
+      toast.error(...formatBusinessError(e));
     } finally {
       setSubmitting(false);
     }

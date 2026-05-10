@@ -22,6 +22,7 @@ import { Check, X, Pencil, AlertTriangle } from "lucide-react";
 import { useChefAValider, type HeureAValider } from "@/hooks/use-chef-a-valider";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { formatBusinessError } from "@/lib/business-errors";
 import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
 
@@ -63,7 +64,7 @@ function HeureRow({ heure, onChanged }: { heure: HeureAValider; onChanged: () =>
       .eq("id", heure.id);
     setBusy(null);
     if (error) {
-      toast.error("Erreur");
+      toast.error(...formatBusinessError(error));
       return;
     }
     toast.success("Heures validées", { description: `${heure.employe_nom} • ${dateLabel}` });
@@ -149,7 +150,7 @@ function CorrectHeureDialog({
       .eq("id", heure.id);
     setBusy(false);
     if (error) {
-      toast.error("Erreur");
+      toast.error(...formatBusinessError(error));
       return;
     }
     toast.success("Heures corrigées et validées");
@@ -238,7 +239,7 @@ function RejectHeureDialog({
       .eq("id", heure.id);
     setBusy(false);
     if (error) {
-      toast.error("Erreur");
+      toast.error(...formatBusinessError(error));
       return;
     }
     toast.success("Heures rejetées");
