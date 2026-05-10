@@ -308,8 +308,7 @@ export function CellEditDialog({
       onChanged();
       onOpenChange(false);
     } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      toast.error(...formatBusinessError(msg));
+      toast.error(...formatBusinessError(e));
     } finally {
       setSaving(false);
     }
