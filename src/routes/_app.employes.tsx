@@ -573,6 +573,15 @@ function EmployesPage() {
               <Input value={form.telephone} onChange={(e) => setForm({ ...form, telephone: e.target.value })} className="h-10 rounded-xl" />
             </div>
             <div className="space-y-1.5">
+              <Label>Date de naissance</Label>
+              <Input
+                type="date"
+                value={form.date_naissance}
+                onChange={(e) => setForm({ ...form, date_naissance: e.target.value })}
+                className="h-10 rounded-xl"
+              />
+            </div>
+            <div className="space-y-1.5">
               <Label>Type de contrat</Label>
               <Select value={form.type_contrat} onValueChange={(v) => setForm({ ...form, type_contrat: v as ContratType })}>
                 <SelectTrigger className="h-10 rounded-xl"><SelectValue /></SelectTrigger>
