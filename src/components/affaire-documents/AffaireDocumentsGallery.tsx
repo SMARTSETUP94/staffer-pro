@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAffaireDocuments } from "@/hooks/use-affaire-documents";
 import { useAuth } from "@/lib/auth-context";
 import { DocumentThumbnail } from "./DocumentThumbnail";
@@ -20,12 +20,23 @@ export function AffaireDocumentsGallery({ affaireId, variant = "desktop", canUpl
     loading,
     error,
     getSignedUrl,
+    prefetchSignedUrls,
     upload,
     updateDocument,
     deleteDocument,
     stats,
   } = useAffaireDocuments(affaireId);
   const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
+
+  // v0.44.4 — Préfetch en lot des URLs signées des images dès que la liste change.
+  // 1 appel HTTP pour N photos au lieu de N appels.
+  useEffect(() => {
+    const paths = documents
+      .filter((d) => d.mime_type.startsWith("image/"))
+      .map((d) => d.storage_path);
+    if (paths.length > 0) void prefetchSignedUrls(paths);
+  }, [documents, prefetchSignedUrls]);
+
 
   const gridClasses =
     variant === "mobile"
