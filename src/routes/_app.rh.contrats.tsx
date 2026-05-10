@@ -236,7 +236,7 @@ function RhContrats() {
                             }}
                           />
                           <datalist id={`postes-${r.id}`}>
-                            {POSTES_COURANTS.map((p) => <option key={p} value={p} />)}
+                            {(postesCatalogue ?? []).map((p) => <option key={p.libelle} value={p.libelle} />)}
                           </datalist>
                         </TableCell>
                         <TableCell className="text-xs">
