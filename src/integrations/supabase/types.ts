@@ -609,30 +609,36 @@ export type Database = {
         Row: {
           actif: boolean
           contenu_html: string
+          contenu_json: Json | null
           created_at: string
           created_by: string | null
           id: string
           nom: string
+          notes: string | null
           updated_at: string
           version_int: number
         }
         Insert: {
           actif?: boolean
           contenu_html: string
+          contenu_json?: Json | null
           created_at?: string
           created_by?: string | null
           id?: string
           nom: string
+          notes?: string | null
           updated_at?: string
           version_int: number
         }
         Update: {
           actif?: boolean
           contenu_html?: string
+          contenu_json?: Json | null
           created_at?: string
           created_by?: string | null
           id?: string
           nom?: string
+          notes?: string | null
           updated_at?: string
           version_int?: number
         }
@@ -3380,10 +3386,21 @@ export type Database = {
             }
             Returns: string
           }
-      create_contrat_template_version: {
-        Args: { p_actif?: boolean; p_contenu_html: string; p_nom: string }
-        Returns: string
-      }
+      create_contrat_template_version:
+        | {
+            Args: { p_actif?: boolean; p_contenu_html: string; p_nom: string }
+            Returns: string
+          }
+        | {
+            Args: {
+              p_actif?: boolean
+              p_contenu_html: string
+              p_contenu_json?: Json
+              p_nom: string
+              p_notes?: string
+            }
+            Returns: string
+          }
       create_notification: {
         Args: {
           _lien?: string
