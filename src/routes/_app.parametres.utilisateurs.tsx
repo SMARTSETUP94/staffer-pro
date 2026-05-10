@@ -61,6 +61,7 @@ interface UserRow {
 const ROLE_LABEL: Record<AppRole, string> = {
   admin: "Admin",
   chef_chantier: "Chef d'équipe",
+  chef_metier_scoped: "Chef métier (scoped)",
   employe: "Employé",
 };
 
