@@ -3,6 +3,7 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Check, Clock, Loader2, MapPin, X } from "lucide-react";
 import { toast } from "sonner";
+import { formatBusinessError } from "@/lib/business-errors";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -54,7 +55,7 @@ export function PropositionsList({ rows, onChanged, emptyMessage, compact }: Pro
       .eq("id", row.id);
     setBusy(null);
     if (error) {
-      toast.error(error.message);
+      toast.error(...formatBusinessError(error));
       return;
     }
     toast.success("Mission confirmée. Le chef est notifié.");
@@ -77,7 +78,7 @@ export function PropositionsList({ rows, onChanged, emptyMessage, compact }: Pro
       .eq("id", refusDialog.row.id);
     setBusy(null);
     if (error) {
-      toast.error(error.message);
+      toast.error(...formatBusinessError(error));
       return;
     }
     toast.success("Refus enregistré. Le chef est notifié.");

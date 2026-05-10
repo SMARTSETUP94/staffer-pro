@@ -6,6 +6,7 @@ import { ArrowLeftRight, Check, ClipboardCheck, Clock, Download, Filter, History
 import { useMesSwaps } from "@/hooks/use-mes-swaps";
 import { SwapsList } from "@/components/swaps/SwapsList";
 import { toast } from "sonner";
+import { formatBusinessError } from "@/lib/business-errors";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -120,7 +121,7 @@ function ValidationHeuresPage() {
     if (employeFilter !== "all") q = q.eq("employe_id", employeFilter);
     if (affaireFilter !== "all") q = q.eq("affaire_id", affaireFilter);
     q.then(({ data, error }) => {
-      if (error) toast.error(error.message);
+      if (error) toast.error(...formatBusinessError(error));
       setRows((data ?? []) as unknown as SaisieRow[]);
       setSelected(new Set());
       setLoading(false);
@@ -160,7 +161,7 @@ function ValidationHeuresPage() {
       .eq("statut", "soumis")
       .select("id");
     if (error) {
-      toast.error(error.message);
+      toast.error(...formatBusinessError(error));
       return;
     }
     const updated = data?.length ?? 0;
@@ -193,7 +194,7 @@ function ValidationHeuresPage() {
       .eq("statut", "soumis")
       .select("id");
     if (error) {
-      toast.error(error.message);
+      toast.error(...formatBusinessError(error));
       return;
     }
     const updated = data?.length ?? 0;
@@ -614,7 +615,7 @@ function HistoryDrawer({ saisieId }: { saisieId: string }) {
       .eq("heure_saisie_id", saisieId)
       .order("created_at", { ascending: false })
       .then(({ data, error }) => {
-        if (error) toast.error(error.message);
+        if (error) toast.error(...formatBusinessError(error));
         setItems((data ?? []) as unknown as HistoriqueRow[]);
         setLoading(false);
       });

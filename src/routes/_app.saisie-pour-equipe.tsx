@@ -16,6 +16,7 @@ import { addDays, format, isWeekend, startOfWeek } from "date-fns";
 import { fr } from "date-fns/locale";
 import { ClipboardList, Filter, Loader2, Plus, Search, Users } from "lucide-react";
 import { toast } from "sonner";
+import { formatBusinessError } from "@/lib/business-errors";
 import { z } from "zod";
 import { zodValidator, fallback } from "@tanstack/zod-adapter";
 import { stripSearchParams } from "@tanstack/react-router";
@@ -169,7 +170,7 @@ function SaisiePourEquipePage() {
       .limit(2000);
     if (affaireFilter !== "all") q = q.eq("affaire_id", affaireFilter);
     q.then(({ data, error }) => {
-      if (error) toast.error(error.message);
+      if (error) toast.error(...formatBusinessError(error));
       setSaisies((data ?? []) as unknown as Saisie[]);
       setLoading(false);
     });

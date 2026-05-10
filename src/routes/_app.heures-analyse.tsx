@@ -33,6 +33,7 @@ import {
   X,
 } from "lucide-react";
 import { toast } from "sonner";
+import { formatBusinessError } from "@/lib/business-errors";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { RoleGuard } from "@/components/auth/RoleGuard";
@@ -331,7 +332,7 @@ function HeuresAnalysePage() {
 
       if (cancelled) return;
       if (error) {
-        toast.error(error.message);
+        toast.error(...formatBusinessError(error));
         setLoading(false);
         return;
       }
@@ -495,7 +496,7 @@ function HeuresAnalysePage() {
       .eq("statut", "soumis");
     setBulkBusy(false);
     if (error) {
-      toast.error(error.message);
+      toast.error(...formatBusinessError(error));
       return;
     }
     toast.success(`${count ?? ids.length} saisie(s) validée(s)`);
@@ -521,7 +522,7 @@ function HeuresAnalysePage() {
       .eq("statut", "soumis");
     setBulkBusy(false);
     if (error) {
-      toast.error(error.message);
+      toast.error(...formatBusinessError(error));
       return;
     }
     toast.success(`${count ?? ids.length} saisie(s) rejetée(s)`);

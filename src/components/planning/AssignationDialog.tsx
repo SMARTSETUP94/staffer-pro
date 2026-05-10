@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { toast } from "sonner";
+import { formatBusinessError } from "@/lib/business-errors";
 import {
   Dialog,
   DialogContent,
@@ -420,7 +421,7 @@ export function AssignationDialog({
       const { error } = await supabase.from("assignations").update(payload).eq("id", editingId);
       if (error) {
         setSaving(false);
-        toast.error(`Erreur : ${error.message}`);
+        toast.error(...formatBusinessError(error));
         return;
       }
     } else {
@@ -500,7 +501,7 @@ export function AssignationDialog({
     setSaving(false);
     setConfirmDelete(false);
     if (error) {
-      toast.error(`Erreur : ${error.message}`);
+      toast.error(...formatBusinessError(error));
       return;
     }
     toast.success("Assignation supprimée");

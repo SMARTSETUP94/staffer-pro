@@ -12,6 +12,7 @@ import { addDays, format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { AlertTriangle, Calendar as CalIcon, Loader2, Search, Users } from "lucide-react";
 import { toast } from "sonner";
+import { formatBusinessError } from "@/lib/business-errors";
 import {
   Dialog,
   DialogContent,
@@ -256,7 +257,7 @@ export function BulkStafferDialog({
     const { error } = await supabase.from("assignations").insert(payloads);
     setSaving(false);
     if (error) {
-      toast.error(`Erreur : ${error.message}`);
+      toast.error(...formatBusinessError(error));
       return;
     }
     toast.success(

@@ -3,6 +3,7 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Loader2, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { formatBusinessError } from "@/lib/business-errors";
 import {
   Dialog,
   DialogContent,
@@ -308,7 +309,7 @@ export function CellEditDialog({
       onOpenChange(false);
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
-      toast.error(`Erreur : ${msg}`);
+      toast.error(...formatBusinessError(msg));
     } finally {
       setSaving(false);
     }
