@@ -75,26 +75,38 @@ function fmtNum(n?: number | null): string {
   return n.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-function renderTemplateHtml(data: ContratPdfData): string {
-  return interpolateContratTemplate(data.template_html || DEFAULT_CONTRAT_TEMPLATE_HTML, {
-    employe_nom: data.employe_nom,
-    employe_prenom: data.employe_prenom,
-    employe_adresse: data.employe_adresse,
-    employe_email: data.employe_email,
-    date_debut: fmtDate(data.date_debut),
-    date_fin: fmtDate(data.date_fin),
-    lieu_mission: data.chantier_lieu,
-    chantier_nom: data.chantier_nom,
-    chantier_numero: data.chantier_numero,
-    taux_horaire_brut: data.taux_horaire_brut == null ? null : `${fmtNum(data.taux_horaire_brut)} €`,
-    nb_heures: data.heures_estimees == null ? null : `${data.heures_estimees} h`,
-    poste: data.poste ?? data.statut_contrat,
-    employeur_signataire: data.employeur_signataire ?? "Setup Paris",
-    numero_contrat: data.numero_contrat,
-    convention_collective: data.convention_collective ?? "Convention collective applicable",
-    statut_contrat: data.statut_contrat,
-  });
+function fmtDateShort(iso?: string | null): string {
+  if (!iso) return "—";
+  try {
+    const d = new Date(iso);
+    return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
+  } catch { return iso; }
 }
+
+function renderTemplateHtml(data: ContratPdfData): string {
+  const interpolated = interpolateContratTemplate(data.template_html || DEFAULT_CONTRAT_TEMPLATE_HTML, {
+    // Salarié
+    employe_nom_complet: `${data.employe_nom.toUpperCase()} ${data.employe_prenom}`.trim(),
+    employe_adresse_complete: data.employe_adresse ?? "—",
+    employe_email: data.employe_email ?? "—",
+    statut_contrat: data.statut_contrat,
+    // Mission
+    chantier_numero: data.chantier_numero,
+    chantier_libelle: data.chantier_nom,
+    date_debut: fmtDateShort(data.date_debut),
+    date_fin: fmtDateShort(data.date_fin),
+    heures_estimees: data.heures_estimees == null ? "—" : String(data.heures_estimees),
+    // Rémunération
+    taux_horaire_brut: data.taux_horaire_brut == null ? "—" : `${fmtNum(data.taux_horaire_brut)} €`,
+    // Métadonnées
+    numero_contrat: data.numero_contrat ?? "—",
+    date_signature_employe: fmtDateShort(data.signed_at_employe ?? null),
+    date_signature_employeur: fmtDateShort(data.signed_at_employeur ?? null),
+  });
+  // Strip [[ZONE_*]] markers — les signatures réelles sont rendues par le wrapper PDF en bas de page.
+  return interpolated.replace(/\[\[ZONE_[A-Z0-9_]+\]\]/g, "");
+}
+
 
 export function ContratIntermittentDocument({ data }: { data: ContratPdfData }): ReactElement {
   const isVierge = !data.signature_employe_url && !data.signature_employeur_url;
@@ -135,7 +147,6 @@ export function ContratIntermittentDocument({ data }: { data: ContratPdfData }):
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Conditions générales</Text>
           <Html style={styles.htmlBody}>{renderTemplateHtml(data)}</Html>
         </View>
 

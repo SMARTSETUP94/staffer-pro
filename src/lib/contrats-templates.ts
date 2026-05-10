@@ -15,77 +15,89 @@ export type ContratTemplate = {
 
 export type ContratTemplateVariables = Record<string, string | number | null | undefined>;
 
+/**
+ * Placeholders v2 — adaptés aux champs réels de la DB Staffer-Pro.
+ * Les constantes employeur (raison sociale, adresse, SIRET, qualité, etc.) sont
+ * hardcodées dans le template HTML et ne sont PAS des placeholders.
+ */
 export type PlaceholderKey =
-  // Employé (6)
-  | "employe_civilite" | "employe_nom" | "employe_prenom"
-  | "employe_adresse_ligne1" | "employe_code_postal" | "employe_ville"
-  // Mission (7)
-  | "poste" | "nom_emission" | "categorie"
-  | "date_debut" | "date_fin"
-  | "duree_minimale_texte" | "duree_hebdomadaire_heures"
-  // Tarif (1)
+  // Salarié (4)
+  | "employe_nom_complet"
+  | "employe_adresse_complete"
+  | "employe_email"
+  | "statut_contrat"
+  // Mission (5)
+  | "chantier_numero"
+  | "chantier_libelle"
+  | "date_debut"
+  | "date_fin"
+  | "heures_estimees"
+  // Rémunération (1)
   | "taux_horaire_brut"
-  // Signature (2)
-  | "date_signature" | "lieu_signature";
+  // Métadonnées (3)
+  | "numero_contrat"
+  | "date_signature_employe"
+  | "date_signature_employeur";
 
 export interface PlaceholderDef {
   key: PlaceholderKey;
   label: string;
   example: string;
-  defaut?: string;
 }
 
 export const PLACEHOLDER_GROUPS: Array<{ groupe: string; items: PlaceholderDef[] }> = [
   {
-    groupe: "Employé",
+    groupe: "Salarié",
     items: [
-      { key: "employe_civilite", label: "Civilité", example: "Monsieur" },
-      { key: "employe_nom", label: "Nom", example: "DUPONT" },
-      { key: "employe_prenom", label: "Prénom", example: "Jean" },
-      { key: "employe_adresse_ligne1", label: "Adresse", example: "12 rue de la Paix" },
-      { key: "employe_code_postal", label: "Code postal", example: "75002" },
-      { key: "employe_ville", label: "Ville", example: "Paris" },
+      { key: "employe_nom_complet", label: "Nom complet", example: "SAVOYEN Hadrien" },
+      { key: "employe_adresse_complete", label: "Adresse complète", example: "40 Rue Etienne Dolet, 75020 Paris" },
+      { key: "employe_email", label: "Email", example: "hadrien@example.com" },
+      { key: "statut_contrat", label: "Statut contrat (juridique)", example: "Intérim" },
     ],
   },
   {
     groupe: "Mission",
     items: [
-      { key: "poste", label: "Poste", example: "Technicien montage" },
-      { key: "nom_emission", label: "Nom de l'émission", example: "THE VOICE", defaut: "non précisée" },
-      { key: "categorie", label: "Catégorie", example: "Non-cadre", defaut: "Non-cadre" },
-      { key: "date_debut", label: "Date de début (JJ/MM/AAAA)", example: "06/05/2026" },
-      { key: "date_fin", label: "Date de fin (JJ/MM/AAAA)", example: "22/05/2026" },
-      { key: "duree_minimale_texte", label: "Durée minimale", example: "1 jour", defaut: "1 jour" },
-      { key: "duree_hebdomadaire_heures", label: "Durée hebdo (h)", example: "35", defaut: "35" },
+      { key: "chantier_numero", label: "N° chantier", example: "9236" },
+      { key: "chantier_libelle", label: "Libellé chantier", example: "13th maker" },
+      { key: "date_debut", label: "Date de début (JJ/MM/AAAA)", example: "11/05/2026" },
+      { key: "date_fin", label: "Date de fin (JJ/MM/AAAA)", example: "12/05/2026" },
+      { key: "heures_estimees", label: "Heures estimées", example: "16" },
     ],
   },
   {
-    groupe: "Tarif",
+    groupe: "Rémunération",
     items: [
-      { key: "taux_horaire_brut", label: "Taux horaire brut", example: "18,00 €" },
+      { key: "taux_horaire_brut", label: "Taux horaire brut", example: "17,00 €" },
     ],
   },
   {
-    groupe: "Signature",
+    groupe: "Métadonnées",
     items: [
-      { key: "date_signature", label: "Date de signature (JJ/MM/AAAA)", example: "10/05/2026" },
-      { key: "lieu_signature", label: "Lieu de signature", example: "Vitry sur Seine", defaut: "Vitry sur Seine" },
+      { key: "numero_contrat", label: "N° contrat (court)", example: "71D95622" },
+      { key: "date_signature_employe", label: "Date signature salarié", example: "10/05/2026" },
+      { key: "date_signature_employeur", label: "Date signature employeur", example: "10/05/2026" },
     ],
   },
 ];
 
 export const CONTRAT_TEMPLATE_PLACEHOLDERS = PLACEHOLDER_GROUPS.flatMap((g) => g.items.map((i) => i.key));
 
-export const DEFAULT_CONTRAT_TEMPLATE_HTML = `<h2>Conditions générales</h2><p>Le présent contrat à durée déterminée d'usage (CDDU) est conclu en application des articles L.1242-2 3° et D.1242-1 du Code du Travail relatifs aux secteurs d'activité dans lesquels il est d'usage constant de ne pas recourir au contrat à durée indéterminée.</p><p>Le salarié reconnaît avoir pris connaissance des conditions générales d'emploi de Setup Paris et s'engage à respecter le règlement intérieur en vigueur.</p><p>La signature électronique apposée par les deux parties vaut consentement au sens de l'article 1367 du Code Civil. Un horodatage, une adresse IP, un user-agent et un hash cryptographique SHA-256 sont conservés à des fins probatoires.</p>`;
+/** Fallback minimal si aucun template actif en base. NE PAS utiliser comme source de vérité légale. */
+export const DEFAULT_CONTRAT_TEMPLATE_HTML = `<p>Aucun template actif. Veuillez activer un template depuis l'éditeur Template contrat.</p>`;
 
 export const EXAMPLE_CONTRAT_TEMPLATE_VALUES: ContratTemplateVariables = Object.fromEntries(
   PLACEHOLDER_GROUPS.flatMap((g) => g.items.map((i) => [i.key, i.example])),
 );
 
+/**
+ * Interpolation : remplace {{key}} par la valeur fournie.
+ * Si la valeur est null/undefined/"", le placeholder est remplacé par "—" (jamais affiché en raw au PDF final).
+ */
 export function interpolateContratTemplate(html: string, values: ContratTemplateVariables): string {
-  return html.replace(/{{\s*([a-zA-Z0-9_]+)\s*}}/g, (match, key: string) => {
+  return html.replace(/{{\s*([a-zA-Z0-9_]+)\s*}}/g, (_match, key: string) => {
     const value = values[key];
-    if (value === null || value === undefined || value === "") return match;
+    if (value === null || value === undefined || value === "") return "—";
     return String(value);
   });
 }
