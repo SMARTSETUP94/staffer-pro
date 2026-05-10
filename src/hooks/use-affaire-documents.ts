@@ -39,7 +39,16 @@ export interface UploadProgress {
   message?: string;
 }
 
-export function useAffaireDocuments(affaireId: string | null | undefined) {
+export interface UseAffaireDocumentsOptions {
+  /** Filtre côté requête : ne renvoie que les documents liés à cet objet */
+  objetId?: string | null;
+}
+
+export function useAffaireDocuments(
+  affaireId: string | null | undefined,
+  options: UseAffaireDocumentsOptions = {},
+) {
+  const { objetId } = options;
   const [documents, setDocuments] = useState<AffaireDocument[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -53,12 +62,15 @@ export function useAffaireDocuments(affaireId: string | null | undefined) {
     }
     setLoading(true);
     setError(null);
-    const { data, error: err } = await supabase
+    let q = supabase
       .from("affaire_documents")
       .select("*")
       .eq("affaire_id", affaireId)
-      .is("deleted_at", null)
-      .order("uploaded_at", { ascending: false });
+      .is("deleted_at", null);
+    if (objetId !== undefined) {
+      q = objetId === null ? q.is("objet_id", null) : q.eq("objet_id", objetId);
+    }
+    const { data, error: err } = await q.order("uploaded_at", { ascending: false });
     if (err) {
       setError(err.message);
       setDocuments([]);
@@ -66,7 +78,7 @@ export function useAffaireDocuments(affaireId: string | null | undefined) {
       setDocuments(data as AffaireDocument[]);
     }
     setLoading(false);
-  }, [affaireId]);
+  }, [affaireId, objetId]);
 
   useEffect(() => {
     void reload();
@@ -96,6 +108,7 @@ export function useAffaireDocuments(affaireId: string | null | undefined) {
     async (
       file: File,
       onProgress?: (p: UploadProgress) => void,
+      uploadObjetId?: string | null,
     ): Promise<{ ok: boolean; error?: string }> => {
       if (!affaireId) return { ok: false, error: "Pas d'affaire" };
 
@@ -138,9 +151,11 @@ export function useAffaireDocuments(affaireId: string | null | undefined) {
       }
 
       // 2. Insert row
+      const linkedObjetId = uploadObjetId !== undefined ? uploadObjetId : objetId ?? null;
       const { error: insErr } = await supabase.from("affaire_documents").insert({
         id: documentId,
         affaire_id: affaireId,
+        objet_id: linkedObjetId,
         storage_path: storagePath,
         filename: file.name,
         mime_type: compressed.mimeType,
@@ -159,7 +174,7 @@ export function useAffaireDocuments(affaireId: string | null | undefined) {
       await reload();
       return { ok: true };
     },
-    [affaireId, reload],
+    [affaireId, objetId, reload],
   );
 
   const updateDocument = useCallback(
