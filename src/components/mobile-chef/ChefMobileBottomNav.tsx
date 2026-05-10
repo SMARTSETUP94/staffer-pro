@@ -1,20 +1,21 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, CalendarRange, UserPlus2, Users, FileSignature } from "lucide-react";
+import { LayoutDashboard, CalendarRange, Users, CheckCircle2, FileSignature } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useChefBadgeCounts } from "@/hooks/use-chef-badge-counts";
+import { useChefAValider } from "@/hooks/use-chef-a-valider";
 
 type Item = {
-  to: "/mobile/chef/dashboard" | "/mobile/chef/planning" | "/mobile/chef/staffer" | "/mobile/chef/equipe" | "/mobile/chef/contrats";
+  to: "/mobile/chef/dashboard" | "/mobile/chef/planning" | "/mobile/chef/equipe" | "/mobile/chef/a-valider" | "/mobile/chef/contrats";
   label: string;
   icon: typeof LayoutDashboard;
-  badgeKey?: "heuresAValider" | "contratsAttente";
+  badgeKey?: "heuresAValider" | "contratsAttente" | "aValider";
 };
 
 const ITEMS: Item[] = [
   { to: "/mobile/chef/dashboard", label: "Hub", icon: LayoutDashboard },
   { to: "/mobile/chef/planning", label: "Planning", icon: CalendarRange },
-  { to: "/mobile/chef/staffer", label: "Staffer", icon: UserPlus2 },
-  { to: "/mobile/chef/equipe", label: "Équipe", icon: Users, badgeKey: "heuresAValider" },
+  { to: "/mobile/chef/equipe", label: "Équipe", icon: Users },
+  { to: "/mobile/chef/a-valider", label: "À valider", icon: CheckCircle2, badgeKey: "aValider" },
   { to: "/mobile/chef/contrats", label: "Contrats", icon: FileSignature, badgeKey: "contratsAttente" },
 ];
 
