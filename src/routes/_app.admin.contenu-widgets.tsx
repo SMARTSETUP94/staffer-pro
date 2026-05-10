@@ -490,7 +490,7 @@ function QuizAdmin() {
 
       <div className="flex flex-wrap gap-2">
         {QUIZ_CATS.map((c) => (
-          <Badge key={c.value} variant="secondary">{c.label} : {counters.byCat[c.value] ?? 0}</Badge>
+          <Badge key={c.value} variant="outline" className={c.color}>{c.label} : {counters.byCat[c.value] ?? 0}</Badge>
         ))}
       </div>
 
