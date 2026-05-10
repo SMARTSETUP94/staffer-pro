@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/table";
 import { TypologieBadge } from "@/components/typologie/TypologieBadge";
 import { TypologieMultiFilter } from "@/components/typologie/TypologieMultiFilter";
+import { ScopedAccessBanner } from "@/components/auth/ScopedAccessBanner";
 import { type AffaireTypologie, AFFAIRE_TYPOLOGIES, getAffaireTypologie } from "@/lib/affaire-typologie";
 import { toast } from "sonner";
 
@@ -213,6 +214,8 @@ function AffairesPage() {
           )
         }
       />
+
+      <ScopedAccessBanner />
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="relative w-full sm:max-w-sm">
