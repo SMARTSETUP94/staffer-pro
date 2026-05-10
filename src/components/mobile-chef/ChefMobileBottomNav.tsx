@@ -20,9 +20,8 @@ const ITEMS: Item[] = [
 
 export function ChefMobileBottomNav() {
   const path = useRouterState({ select: (s) => s.location.pathname });
-  const counts = useChefBadgeCounts();
   const { totalCount: aValider } = useChefAValider();
-  const allCounts: Record<string, number> = { ...counts, aValider };
+  const allCounts: Record<string, number> = { aValider };
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 backdrop-blur">
