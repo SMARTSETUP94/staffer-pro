@@ -5,6 +5,7 @@ import { compressImageIfPossible } from "@/lib/image-compression";
 export interface AffaireDocument {
   id: string;
   affaire_id: string;
+  objet_id: string | null;
   storage_path: string;
   filename: string;
   mime_type: string;
