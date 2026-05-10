@@ -22,8 +22,17 @@ export async function fetchContratPdfBlob(
   const res = await fetch(`${FN_URL}?${params.toString()}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
-  if (!res.ok) throw new Error(`PDF indisponible (${res.status})`);
+  if (!res.ok) {
+    const detail = await res.text().catch(() => "");
+    throw new Error(`PDF indisponible (${res.status})${detail ? ` — ${detail}` : ""}`);
+  }
   return await res.blob();
+}
+
+/** Retourne une URL blob affichable dans un iframe/viewer inline. L'appelant doit revoke l'URL. */
+export async function createContratPdfObjectUrl(contratId: string, version?: 1 | 2 | 3): Promise<string> {
+  const blob = await fetchContratPdfBlob(contratId, { version });
+  return URL.createObjectURL(blob);
 }
 
 /** Ouvre le PDF dans un nouvel onglet (preview inline). */
