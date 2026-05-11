@@ -6,7 +6,7 @@
  *  B. Fallback poste null → "Technicien de plateau"
  *  C. Adresse longue (risque débordement)
  *  D. Libellé chantier long (risque césure H1)
- *  E. Intérim (avec agence) vs CDDU (formats potentiellement distincts)
+ *  E. Cadre (vs Non cadre) — vérifier rendu placeholder catégorie pro
  */
 import type { ContratPdfData } from "@/lib/contrats-pdf";
 
