@@ -1241,6 +1241,7 @@ export type Database = {
           date_naissance: string | null
           date_sortie: string | null
           email: string | null
+          est_cadre: boolean
           est_livreur: boolean
           forfait: boolean
           id: string
@@ -1276,6 +1277,7 @@ export type Database = {
           date_naissance?: string | null
           date_sortie?: string | null
           email?: string | null
+          est_cadre?: boolean
           est_livreur?: boolean
           forfait?: boolean
           id?: string
@@ -1311,6 +1313,7 @@ export type Database = {
           date_naissance?: string | null
           date_sortie?: string | null
           email?: string | null
+          est_cadre?: boolean
           est_livreur?: boolean
           forfait?: boolean
           id?: string
