@@ -1246,6 +1246,7 @@ export type Database = {
           forfait: boolean
           id: string
           is_apprenti: boolean
+          matricule_silae: string | null
           metier_principal_id: number
           metiers_secondaires: number[]
           mobile: string | null
@@ -1282,6 +1283,7 @@ export type Database = {
           forfait?: boolean
           id?: string
           is_apprenti?: boolean
+          matricule_silae?: string | null
           metier_principal_id: number
           metiers_secondaires?: number[]
           mobile?: string | null
@@ -1318,6 +1320,7 @@ export type Database = {
           forfait?: boolean
           id?: string
           is_apprenti?: boolean
+          matricule_silae?: string | null
           metier_principal_id?: number
           metiers_secondaires?: number[]
           mobile?: string | null

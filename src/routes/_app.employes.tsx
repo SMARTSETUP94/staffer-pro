@@ -200,7 +200,7 @@ function EmployesPage() {
     setLoading(true);
     const { data: emps, error } = await supabase
       .from("employes")
-      .select("id, prenom, nom, email, telephone, mobile, type_contrat, sous_type_contrat, is_apprenti, agence_interim, metier_principal_id, actif, non_staffing, est_livreur, categories_permis, date_naissance, adresse, notes, profile_id, taux_horaire_brut, taux_horaire_charge, forfait, statut_contrat, poste_principal, est_cadre")
+      .select("id, prenom, nom, email, telephone, mobile, type_contrat, sous_type_contrat, is_apprenti, agence_interim, metier_principal_id, actif, non_staffing, est_livreur, categories_permis, date_naissance, adresse, notes, profile_id, taux_horaire_brut, taux_horaire_charge, forfait, statut_contrat, poste_principal, est_cadre, matricule_silae")
       .order("nom", { ascending: true })
       .limit(2000);
     if (error) {
@@ -251,6 +251,7 @@ function EmployesPage() {
           forfait: boolean | null;
           statut_contrat: StatutContrat | null;
           est_cadre: boolean | null;
+          matricule_silae: string | null;
         };
         const prof = e.profile_id ? profileMap[e.profile_id] : undefined;
         return {
@@ -262,7 +263,7 @@ function EmployesPage() {
           forfait: extra.forfait ?? false,
           statut_contrat: extra.statut_contrat ?? null,
           est_cadre: extra.est_cadre ?? false,
-          matricule_silae: prof?.matricule_silae ?? null,
+          matricule_silae: extra.matricule_silae ?? null,
           est_chef_projet: prof?.est_chef_projet ?? false,
           est_respo_fab: prof?.est_respo_fab ?? false,
           est_finition: prof?.est_finition ?? false,
@@ -382,6 +383,7 @@ function EmployesPage() {
       adresse: form.adresse.trim() || null,
       notes: form.notes.trim() || null,
       poste_principal: form.poste_principal.trim() || null,
+      matricule_silae: form.matricule_silae.trim() || null,
     };
     // Champs admin-only (rémunération + statut contrat fin)
     const payload = isAdmin
@@ -414,13 +416,11 @@ function EmployesPage() {
         .insert(sec.map((metier_id) => ({ employe_id: employeId!, metier_id })));
     }
 
-    // Matricule SILAE + flags rôles fabrication : update sur profiles si lié et admin
+    // Flags rôles fabrication : update sur profiles si lié et admin (matricule_silae est désormais sur employes)
     if (form.profile_id && isAdmin) {
-      const newMat = form.matricule_silae.trim() || null;
       const { error: profErr } = await supabase
         .from("profiles")
         .update({
-          matricule_silae: newMat,
           est_chef_projet: form.est_chef_projet,
           est_respo_fab: form.est_respo_fab,
           est_finition: form.est_finition,
@@ -689,13 +689,12 @@ function EmployesPage() {
               <Label>
                 Matricule SILAE
                 {!isAdmin && <span className="ml-2 text-[10px] font-normal text-muted-foreground">(admin uniquement)</span>}
-                {!form.profile_id && <span className="ml-2 text-[10px] font-normal text-muted-foreground">(employé non lié à un compte)</span>}
               </Label>
               <Input
                 value={form.matricule_silae}
                 onChange={(e) => setForm({ ...form, matricule_silae: e.target.value })}
                 placeholder="Ex. 00123"
-                disabled={!isAdmin || !form.profile_id}
+                disabled={!isAdmin}
                 className="h-10 rounded-xl font-mono"
               />
               <p className="text-[10px] text-muted-foreground">
