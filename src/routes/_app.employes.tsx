@@ -872,7 +872,7 @@ function EmployesPage() {
                       <SelectContent>
                         <SelectItem value="__none__">—</SelectItem>
                         {STATUT_CONTRAT_OPTIONS.map((s) => (
-                          <SelectItem key={s} value={s}>{s}</SelectItem>
+                          <SelectItem key={s} value={s}>{s === "Intérim" ? "Intermittent" : s}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
