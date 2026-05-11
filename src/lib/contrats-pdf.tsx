@@ -32,6 +32,7 @@ export interface ContratPdfData {
   taux_horaire_brut?: number | null;
   forfait: boolean;
   statut_contrat: string;
+  categorie_pro?: string | null;
   signature_employe_url?: string | null;
   signature_employeur_url?: string | null;
   signed_at_employe?: string | null;
