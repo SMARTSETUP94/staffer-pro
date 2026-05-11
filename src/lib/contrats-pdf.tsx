@@ -130,6 +130,7 @@ export function ContratIntermittentDocument({ data }: { data: ContratPdfData }):
           {data.employe_adresse && <View style={styles.row}><Text style={styles.label}>Adresse</Text><Text style={styles.value}>{data.employe_adresse}</Text></View>}
           {data.employe_email && <View style={styles.row}><Text style={styles.label}>Email</Text><Text style={styles.value}>{data.employe_email}</Text></View>}
           <View style={styles.row}><Text style={styles.label}>Statut contrat</Text><Text style={styles.value}>{data.statut_contrat}</Text></View>
+          <View style={styles.row}><Text style={styles.label}>Catégorie pro</Text><Text style={styles.value}>{data.categorie_pro && data.categorie_pro.trim() !== "" ? data.categorie_pro : "Non cadre"}</Text></View>
         </View>
 
         <View style={styles.section}>
