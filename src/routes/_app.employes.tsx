@@ -250,6 +250,7 @@ function EmployesPage() {
           taux_horaire_charge: number | null;
           forfait: boolean | null;
           statut_contrat: StatutContrat | null;
+          est_cadre: boolean | null;
         };
         const prof = e.profile_id ? profileMap[e.profile_id] : undefined;
         return {
