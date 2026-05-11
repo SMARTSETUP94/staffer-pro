@@ -4,7 +4,7 @@ description: Table agrégée affaire×chef×employé alimentée par trigger temp
 type: feature
 ---
 
-# v0.43 — `affaire_equipe_historique`
+# v0.45 — `affaire_equipe_historique`
 
 ## Quoi
 Table d'agrégat (1 ligne par `affaire × chef × employé`) dérivée d'`assignations`. Sert :
