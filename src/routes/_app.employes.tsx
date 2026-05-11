@@ -113,6 +113,7 @@ interface FormState {
   forfait: boolean;
   statut_contrat: StatutContrat | "";
   poste_principal: string;
+  est_cadre: boolean;
 }
 
 const emptyForm: FormState = {
