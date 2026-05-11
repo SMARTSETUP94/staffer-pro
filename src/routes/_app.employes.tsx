@@ -76,6 +76,7 @@ interface EmployeRow {
   forfait: boolean;
   statut_contrat: StatutContrat | null;
   poste_principal: string | null;
+  est_cadre: boolean;
 }
 
 interface FormState {
@@ -112,6 +113,7 @@ interface FormState {
   forfait: boolean;
   statut_contrat: StatutContrat | "";
   poste_principal: string;
+  est_cadre: boolean;
 }
 
 const emptyForm: FormState = {
@@ -146,6 +148,7 @@ const emptyForm: FormState = {
   forfait: false,
   statut_contrat: "",
   poste_principal: "",
+  est_cadre: false,
 };
 
 // v0.18.1 — Bloc 3 : options pour la section "Capacités / Permis" du dialog
@@ -197,7 +200,7 @@ function EmployesPage() {
     setLoading(true);
     const { data: emps, error } = await supabase
       .from("employes")
-      .select("id, prenom, nom, email, telephone, mobile, type_contrat, sous_type_contrat, is_apprenti, agence_interim, metier_principal_id, actif, non_staffing, est_livreur, categories_permis, date_naissance, adresse, notes, profile_id, taux_horaire_brut, taux_horaire_charge, forfait, statut_contrat, poste_principal")
+      .select("id, prenom, nom, email, telephone, mobile, type_contrat, sous_type_contrat, is_apprenti, agence_interim, metier_principal_id, actif, non_staffing, est_livreur, categories_permis, date_naissance, adresse, notes, profile_id, taux_horaire_brut, taux_horaire_charge, forfait, statut_contrat, poste_principal, est_cadre")
       .order("nom", { ascending: true })
       .limit(2000);
     if (error) {
@@ -247,6 +250,7 @@ function EmployesPage() {
           taux_horaire_charge: number | null;
           forfait: boolean | null;
           statut_contrat: StatutContrat | null;
+          est_cadre: boolean | null;
         };
         const prof = e.profile_id ? profileMap[e.profile_id] : undefined;
         return {
@@ -257,6 +261,7 @@ function EmployesPage() {
           taux_horaire_charge: extra.taux_horaire_charge ?? null,
           forfait: extra.forfait ?? false,
           statut_contrat: extra.statut_contrat ?? null,
+          est_cadre: extra.est_cadre ?? false,
           matricule_silae: prof?.matricule_silae ?? null,
           est_chef_projet: prof?.est_chef_projet ?? false,
           est_respo_fab: prof?.est_respo_fab ?? false,
@@ -343,6 +348,7 @@ function EmployesPage() {
       forfait: row.forfait ?? false,
       statut_contrat: row.statut_contrat ?? "",
       poste_principal: row.poste_principal ?? "",
+      est_cadre: row.est_cadre ?? false,
     });
     setOpen(true);
   };
@@ -385,6 +391,7 @@ function EmployesPage() {
           taux_horaire_charge: parseNum(form.taux_horaire_charge),
           forfait: form.forfait,
           statut_contrat: form.statut_contrat || null,
+          est_cadre: form.est_cadre,
         }
       : basePayload;
 
@@ -876,6 +883,13 @@ function EmployesPage() {
                       onCheckedChange={(v) => setForm({ ...form, forfait: Boolean(v) })}
                     />
                     <span className="text-xs font-medium">Forfait (hors taux horaire)</span>
+                  </label>
+                  <label className="flex items-end gap-2 pb-2">
+                    <Checkbox
+                      checked={form.est_cadre}
+                      onCheckedChange={(v) => setForm({ ...form, est_cadre: Boolean(v) })}
+                    />
+                    <span className="text-xs font-medium">Statut cadre (sinon non cadre)</span>
                   </label>
                   <div className="space-y-1">
                     <Label className="text-xs">Taux horaire brut (€)</Label>

@@ -26,6 +26,7 @@ export type PlaceholderKey =
   | "employe_adresse_complete"
   | "employe_email"
   | "statut_contrat"
+  | "categorie_pro"
   // Mission (6)
   | "poste"
   | "chantier_numero"
@@ -53,7 +54,8 @@ export const PLACEHOLDER_GROUPS: Array<{ groupe: string; items: PlaceholderDef[]
       { key: "employe_nom_complet", label: "Nom complet", example: "SAVOYEN Hadrien" },
       { key: "employe_adresse_complete", label: "Adresse complète", example: "40 Rue Etienne Dolet, 75020 Paris" },
       { key: "employe_email", label: "Email", example: "hadrien@example.com" },
-      { key: "statut_contrat", label: "Statut contrat (juridique)", example: "Intérim" },
+      { key: "statut_contrat", label: "Statut contrat (juridique)", example: "CDDU intermittent du spectacle" },
+      { key: "categorie_pro", label: "Catégorie professionnelle", example: "Non cadre" },
     ],
   },
   {

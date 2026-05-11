@@ -6,7 +6,7 @@
  *  B. Fallback poste null → "Technicien de plateau"
  *  C. Adresse longue (risque débordement)
  *  D. Libellé chantier long (risque césure H1)
- *  E. Intérim (avec agence) vs CDDU (formats potentiellement distincts)
+ *  E. Cadre (vs Non cadre) — vérifier rendu placeholder catégorie pro
  */
 import type { ContratPdfData } from "@/lib/contrats-pdf";
 
@@ -40,6 +40,7 @@ const baseFixture = (overrides: Partial<ContratPdfData>): ContratPdfData => ({
   signed_at_employeur: null,
   template_html: TEMPLATE_PLACEHOLDER,
   poste: null,
+  categorie_pro: "Non cadre",
   ...overrides,
 });
 
@@ -95,14 +96,15 @@ export const CONTRAT_TEST_FIXTURES: ContratTestCase[] = [
     }),
   },
   {
-    id: "e-interim",
-    label: "E · Intérim (vs CDDU)",
-    description: "LEROY Paul · statut Intérim — format potentiellement distinct",
+    id: "e-cadre",
+    label: "E · Cadre (vs Non cadre)",
+    description: "LEROY Paul · catégorie Cadre — vérifier rendu placeholder",
     data: baseFixture({
       numero_contrat: "IN000005",
       employe_nom: "LEROY",
       employe_prenom: "Paul",
-      statut_contrat: "Intérim",
+      statut_contrat: "CDDU intermittent du spectacle",
+      categorie_pro: "Cadre",
       poste: "Régisseur",
       taux_horaire_brut: 19.5,
     }),

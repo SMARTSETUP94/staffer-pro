@@ -34,6 +34,7 @@ export interface FullContratRecord {
     email: string | null;
     statut_contrat: string | null;
     poste_principal: string | null;
+    est_cadre: boolean | null;
   } | null;
   affaires?: {
     numero: string;
@@ -92,7 +93,8 @@ function buildPdfData(c: FullContratRecord, sigEmploye?: string | null, sigEmplo
     heures_estimees: c.heures_estimees,
     taux_horaire_brut: c.taux_horaire_brut,
     forfait: c.forfait,
-    statut_contrat: c.employes?.statut_contrat ?? "Intermittent",
+    statut_contrat: c.employes?.statut_contrat ?? "CDDU intermittent du spectacle",
+    categorie_pro: c.employes?.est_cadre ? "Cadre" : "Non cadre",
     signature_employe_url: sigEmploye ?? sigE?.signature_image_url ?? null,
     signature_employeur_url: sigEmployeur ?? sigEr?.signature_image_url ?? null,
     signed_at_employe: sigE?.signed_at ?? null,
@@ -188,7 +190,7 @@ async function fetchContratFull(contratId: string): Promise<FullContratRecord> {
       id, employee_id, chantier_id, date_debut, date_fin,
       taux_horaire_brut, forfait, heures_estimees,
       pdf_v1_url, pdf_v2_url, pdf_v3_url, statut, template_version_id,
-      employes:employee_id ( nom, prenom, adresse, email, statut_contrat, poste_principal ),
+      employes:employee_id ( nom, prenom, adresse, email, statut_contrat, poste_principal, est_cadre ),
       affaires:chantier_id ( numero, nom, lieu ),
       contrat_templates:template_version_id ( contenu_html ),
       contrats_signatures ( role_signature, signature_image_url, signed_at )

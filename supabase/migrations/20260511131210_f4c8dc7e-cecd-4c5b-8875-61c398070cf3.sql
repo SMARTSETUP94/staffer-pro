@@ -1,0 +1,2 @@
+ALTER TABLE public.employes ADD COLUMN IF NOT EXISTS est_cadre boolean NOT NULL DEFAULT false;
+COMMENT ON COLUMN public.employes.est_cadre IS 'Statut cadre / non cadre (convention collective). Apparaît sur le contrat CDDU intermittent du spectacle.';

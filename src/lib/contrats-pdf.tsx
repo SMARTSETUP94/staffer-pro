@@ -32,6 +32,7 @@ export interface ContratPdfData {
   taux_horaire_brut?: number | null;
   forfait: boolean;
   statut_contrat: string;
+  categorie_pro?: string | null;
   signature_employe_url?: string | null;
   signature_employeur_url?: string | null;
   signed_at_employe?: string | null;
@@ -90,6 +91,7 @@ function renderTemplateHtml(data: ContratPdfData): string {
     employe_adresse_complete: data.employe_adresse ?? "—",
     employe_email: data.employe_email ?? "—",
     statut_contrat: data.statut_contrat,
+    categorie_pro: data.categorie_pro && data.categorie_pro.trim() !== "" ? data.categorie_pro : "Non cadre",
     // Mission
     poste: data.poste && data.poste.trim() !== "" ? data.poste : "Technicien de plateau",
     chantier_numero: data.chantier_numero,
@@ -128,6 +130,7 @@ export function ContratIntermittentDocument({ data }: { data: ContratPdfData }):
           {data.employe_adresse && <View style={styles.row}><Text style={styles.label}>Adresse</Text><Text style={styles.value}>{data.employe_adresse}</Text></View>}
           {data.employe_email && <View style={styles.row}><Text style={styles.label}>Email</Text><Text style={styles.value}>{data.employe_email}</Text></View>}
           <View style={styles.row}><Text style={styles.label}>Statut contrat</Text><Text style={styles.value}>{data.statut_contrat}</Text></View>
+          <View style={styles.row}><Text style={styles.label}>Catégorie pro</Text><Text style={styles.value}>{data.categorie_pro && data.categorie_pro.trim() !== "" ? data.categorie_pro : "Non cadre"}</Text></View>
         </View>
 
         <View style={styles.section}>

@@ -97,7 +97,7 @@ export function TemplateTestDialog({ open, onOpenChange, templateHtml }: Props) 
         <DialogHeader>
           <DialogTitle>Tester le template — 5 cas critiques</DialogTitle>
           <DialogDescription>
-            Génération automatique de 5 PDF preview couvrant les cas à risque (poste renseigné, fallback, adresse longue, libellé long, intérim).
+            Génération automatique de 5 PDF preview couvrant les cas à risque (poste renseigné, fallback, adresse longue, libellé long, statut cadre).
             Vérifie l'absence de placeholder {`{{...}}`} raw et la présence des sections clés.
           </DialogDescription>
         </DialogHeader>
