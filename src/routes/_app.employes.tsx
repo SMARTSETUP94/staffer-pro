@@ -389,6 +389,7 @@ function EmployesPage() {
           taux_horaire_charge: parseNum(form.taux_horaire_charge),
           forfait: form.forfait,
           statut_contrat: form.statut_contrat || null,
+          est_cadre: form.est_cadre,
         }
       : basePayload;
 
