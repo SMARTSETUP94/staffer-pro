@@ -49,7 +49,7 @@ interface MyAbsence {
 }
 
 const ABSENCE_TYPES: AbsenceType[] = ["conges", "rtt", "formation", "arret_maladie", "autre"];
-// Les intérimaires gèrent leurs absences via leur agence — pas via cette appli.
+// Les intermittents gèrent leurs absences via leur agence — pas via cette appli.
 const ELIGIBLE_CONTRATS: ContratType[] = ["CDI", "CDD", "Independant"];
 
 export const Route = createFileRoute("/mobile/absences")({
@@ -202,7 +202,7 @@ function MobileAbsences() {
       <Shell>
         <EmptyState
           title="Absences gérées par votre agence"
-          message="En tant qu'intérimaire, vos absences sont gérées par votre agence d'intérim. Cette fonctionnalité n'est pas disponible ici."
+          message="En tant qu'intermittent, vos absences sont gérées par votre agence d'intermittent. Cette fonctionnalité n'est pas disponible ici."
         />
       </Shell>
     );

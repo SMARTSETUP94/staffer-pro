@@ -288,7 +288,7 @@ export function PlanningSynthese({
                 )}
                 {interim.length > 0 && (
                   <div className="flex items-center gap-1.5">
-                    <Badge variant="outline" className="text-[10px]">Intérim</Badge>
+                    <Badge variant="outline" className="text-[10px]">Intermittent</Badge>
                     <span className="text-muted-foreground">
                       {interim.map((e) => `${e.prenom} ${e.nom[0]}.`).join(", ")}
                     </span>

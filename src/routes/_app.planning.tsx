@@ -110,8 +110,8 @@ function PlanningPage() {
     () => employesFiltres.filter((e) => e.type_contrat === "CDI" || e.type_contrat === "CDD"),
     [employesFiltres],
   );
-  // Intérim/Indép. : ceux qui ont au moins une assignation sur la semaine
-  // OU ceux ajoutés manuellement via le bouton "Ajouter un intérimaire"
+  // Intermittent/Indép. : ceux qui ont au moins une assignation sur la semaine
+  // OU ceux ajoutés manuellement via le bouton "Ajouter un intermittent"
   const [extraInterims, setExtraInterims] = useState<Employe[]>([]);
   const [autoOpen, setAutoOpen] = useState<{ employe: Employe; date: Date } | null>(null);
   const [addInterimOpen, setAddInterimOpen] = useState(false);
@@ -234,7 +234,7 @@ function PlanningPage() {
       tab === "cdi"
         ? "CDI / CDD"
         : tab === "interim"
-          ? "Intérim / Indép."
+          ? "Intermittent / Indép."
           : tab === "parchantier"
             ? "Planning par chantier"
             : tab === "parobjet"
@@ -369,7 +369,7 @@ function PlanningPage() {
                 onClick={handleExportWeekXlsx}
                 disabled={exporting || loading}
                 className="h-8 px-2.5 sm:h-9 sm:px-3"
-                title="Export Excel complet (CDI, Intérim, Synthèse, Heures, Flotte)"
+                title="Export Excel complet (CDI, Intermittent, Synthèse, Heures, Flotte)"
               >
                 {exporting ? (
                   <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
@@ -477,7 +477,7 @@ function PlanningPage() {
                     CDI / CDD <span className="ml-1.5 text-[10px] opacity-60">({employesCDI.length})</span>
                   </TabsTrigger>
                   <TabsTrigger value="interim">
-                    Intérim <span className="ml-1.5 text-[10px] opacity-60">({employesInterim.length})</span>
+                    Intermittent <span className="ml-1.5 text-[10px] opacity-60">({employesInterim.length})</span>
                   </TabsTrigger>
                   <TabsTrigger value="parchantier">
                     <span className="hidden sm:inline">Planning par chantier</span>
@@ -526,12 +526,12 @@ function PlanningPage() {
               <TabsContent value="interim" className="mt-4">
                 <div className="mb-3 flex items-center justify-between gap-2">
                   <p className="text-xs text-muted-foreground">
-                    Affiche les intérim. / indép. déjà staffés cette semaine. Utilise « Ajouter »
-                    pour staffer un nouvel intérimaire depuis la base.
+                    Affiche les intermittent. / indép. déjà staffés cette semaine. Utilise « Ajouter »
+                    pour staffer un nouvel intermittent depuis la base.
                   </p>
                   <Button size="sm" onClick={() => setAddInterimOpen(true)}>
                     <UserPlus className="mr-1.5 h-3.5 w-3.5" />
-                    Ajouter un intérimaire
+                    Ajouter un intermittent
                   </Button>
                 </div>
                 <PlanningGrid
@@ -547,7 +547,7 @@ function PlanningPage() {
                   filterDevisIds={filterDevisStr}
                   devisLots={devisLots}
                   showWeekend={showWeekend}
-                  emptyMessage="Aucun employé intérimaire / indépendant staffé cette semaine. Clique sur « Ajouter un intérimaire »."
+                  emptyMessage="Aucun employé intermittent / indépendant staffé cette semaine. Clique sur « Ajouter un intermittent »."
                   onChanged={refresh}
                   swapAssignationIds={swapAssignationIds}
                   openAssignationFor={autoOpen}
@@ -697,7 +697,7 @@ function PlanningPage() {
         onOpenChange={setAddInterimOpen}
         alreadyVisibleIds={new Set(employesInterim.map((e) => e.id))}
         onSelect={(emp) => {
-          // Switch sur l'onglet intérim au cas où on ouvrirait depuis ailleurs
+          // Switch sur l'onglet intermittent au cas où on ouvrirait depuis ailleurs
           setTab("interim");
           // Ajoute à la liste visible si pas déjà là
           setExtraInterims((prev) =>

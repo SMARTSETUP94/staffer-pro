@@ -106,7 +106,7 @@ function categorieContrat(t: string | null | undefined): string {
     case "CDD":
       return "CDD";
     case "Interim":
-      return "Intérim";
+      return "Intermittent";
     case "Independant":
       return "Indépendant";
     default:

@@ -150,8 +150,8 @@ describe("mapPosteToMetier", () => {
     expect(mapPosteToMetier("OPÉRATEUR COMMANDE NUMÉRIQUE")).toBe("numerique");
   });
 
-  it("inclusion : 'Peintre déco - intérimaire' → peinture", () => {
-    expect(mapPosteToMetier("Peintre déco - intérimaire")).toBe("peinture");
+  it("inclusion : 'Peintre déco - intermittent' → peinture", () => {
+    expect(mapPosteToMetier("Peintre déco - intermittent")).toBe("peinture");
   });
 
   it("poste vide → null", () => {

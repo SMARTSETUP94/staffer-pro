@@ -62,7 +62,7 @@ interface Props {
 const TIER_LABEL: Record<1 | 2 | 3, string> = {
   1: "Principal",
   2: "Polyvalent",
-  3: "Intérim",
+  3: "Intermittent",
 };
 
 export function EquipeAffaireSection({ planId, onAssigned }: Props) {

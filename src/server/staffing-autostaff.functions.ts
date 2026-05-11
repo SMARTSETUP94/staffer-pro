@@ -1,6 +1,6 @@
 // v0.35.9 — Auto-staffing 1 clic : remplit les slots manquants d'un step
 // (1 jour ou tous les jours) en prenant les top candidats disponibles.
-// Déterministe : utilise rankCandidats (tier-based CDI > CDD > Intérim).
+// Déterministe : utilise rankCandidats (tier-based CDI > CDD > Intermittent).
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";

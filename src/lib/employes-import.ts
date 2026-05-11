@@ -224,7 +224,7 @@ export function mapPosteToMetier(poste: string): MetierCode | null {
   const n = norm(poste);
   if (!n) return null;
   if (POSTE_TO_METIER[n]) return POSTE_TO_METIER[n];
-  // Recherche par inclusion (ex. "Peintre déco - intérimaire").
+  // Recherche par inclusion (ex. "Peintre déco - intermittent").
   for (const [k, v] of Object.entries(POSTE_TO_METIER)) {
     if (n.startsWith(k) || n.includes(k)) return v;
   }

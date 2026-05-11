@@ -278,7 +278,7 @@ function SaisiePourEquipePage() {
             >
               <ToggleGroupItem value="all" className="px-3">Tous</ToggleGroupItem>
               <ToggleGroupItem value="cdi" className="px-3">CDI / CDD</ToggleGroupItem>
-              <ToggleGroupItem value="interim" className="px-3">Intérim / Indép.</ToggleGroupItem>
+              <ToggleGroupItem value="interim" className="px-3">Intermittent / Indép.</ToggleGroupItem>
             </ToggleGroup>
           </div>
           <div className="min-w-[220px] flex-1">

@@ -18,7 +18,7 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   /** IDs déjà visibles dans la grille — on les marque "déjà ajouté" */
   alreadyVisibleIds: Set<string>;
-  /** Callback quand l'utilisateur sélectionne un intérimaire à staffer */
+  /** Callback quand l'utilisateur sélectionne un intermittent à staffer */
   onSelect: (employe: Employe) => void;
 }
 
@@ -66,10 +66,10 @@ export function AddInterimDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <UserPlus className="h-4 w-4 text-primary" />
-            Ajouter un intérimaire / indépendant
+            Ajouter un intermittent / indépendant
           </DialogTitle>
           <DialogDescription>
-            Recherche dans tous les intérim. et indép. actifs de la base, puis sélectionne pour
+            Recherche dans tous les intermittent. et indép. actifs de la base, puis sélectionne pour
             créer une assignation.
           </DialogDescription>
         </DialogHeader>

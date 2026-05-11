@@ -121,7 +121,7 @@ describe("workflow validation heures — notifications attendues (trigger DB)", 
     expect(notifs[0].type).toBe("heures_rejetees");
   });
 
-  it("aucune notif si l'employé n'a pas de profil (intérim sans compte)", () => {
+  it("aucune notif si l'employé n'a pas de profil (intermittent sans compte)", () => {
     const notifs = expectedNotificationsFor(
       { from: "soumis", to: "valide" },
       { saisieId: "s", employeProfileId: null },

@@ -1,6 +1,6 @@
 /**
  * v0.23.1 FIX 2 — Export "all-in-one" : un zip contenant le .xlsx multi-vues
- * (CDI/Intérim/Synthèse/Heures/Véhicules) + la Feuille de route .xlsx pour la
+ * (CDI/Intermittent/Synthèse/Heures/Véhicules) + la Feuille de route .xlsx pour la
  * même plage.
  */
 // v0.24.1 — jszip lazy-loadé dans la fonction d'export (gain bundle initial).
@@ -68,7 +68,7 @@ interface ProfileLite {
 
 /**
  * Génère et télécharge un zip "planning-export-{start}-{end}.zip" contenant :
- *  - planning multi-vues (.xlsx) : CDI-CDD / Intérim / Synthèse / Heures / Véhicules
+ *  - planning multi-vues (.xlsx) : CDI-CDD / Intermittent / Synthèse / Heures / Véhicules
  *  - feuille de route (.xlsx) : un onglet par jour de la plage
  */
 export async function exportPlanningZip(opts: ExportZipOpts): Promise<{

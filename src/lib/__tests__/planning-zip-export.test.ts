@@ -124,12 +124,12 @@ describe("buildPlanningWorkbookRange — onglets", () => {
     expect(buildPlanningWorkbookRange({ ...baseOpts, weekStarts: [] })).toBeNull();
   });
 
-  it("contient CDI-CDD / Intérim / Synthèse / Heures sur 1 semaine", () => {
+  it("contient CDI-CDD / Intermittent / Synthèse / Heures sur 1 semaine", () => {
     const built = buildPlanningWorkbookRange({ ...baseOpts, weekStarts: [weekStart] });
     expect(built).not.toBeNull();
     const names = built!.wb.SheetNames;
     expect(names.some((n) => n.includes("CDI-CDD"))).toBe(true);
-    expect(names.some((n) => n.includes("Intérim"))).toBe(true);
+    expect(names.some((n) => n.includes("Intermittent"))).toBe(true);
     expect(names.some((n) => n.includes("Synthèse"))).toBe(true);
     expect(names.some((n) => n.includes("Heures"))).toBe(true);
   });

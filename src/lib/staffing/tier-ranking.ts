@@ -10,10 +10,10 @@
 // Tiers calculés :
 //   Tier 1 = CDI/CDD Principal           → score base 100
 //   Tier 2 = CDI/CDD Secondaire          → score base 70
-//   Tier 3 = Intérim (Principal/Secondaire) → score base 30
-//   Tier 4 = CDI/CDD Dépannage           → score base 10  (dernier recours, après intérim)
+//   Tier 3 = Intermittent (Principal/Secondaire) → score base 30
+//   Tier 4 = CDI/CDD Dépannage           → score base 10  (dernier recours, après intermittent)
 //
-// Bonus contrat : CDI 1.0, CDD 0.9, Intérim 0.3.
+// Bonus contrat : CDI 1.0, CDD 0.9, Intermittent 0.3.
 // Manut polyvalent (competences_polyvalentes.{bois|metal|peinture|tap}=true) → équivaut Tier 2 (Secondaire)
 // pour le métier couvert.
 
@@ -75,7 +75,7 @@ function getNiveau(emp: EmployeStaffing, metierStepId: number): CompetenceNiveau
 export function getTier(emp: EmployeStaffing, metierStepId: number): 1 | 2 | 3 | 4 | null {
   if (!emp.actif || emp.non_staffing) return null;
 
-  // Principal : 1 (CDI/CDD) ou 3 (Intérim)
+  // Principal : 1 (CDI/CDD) ou 3 (Intermittent)
   if (emp.metier_principal_id === metierStepId) {
     return emp.type_contrat === "Interim" ? 3 : 1;
   }
@@ -88,11 +88,11 @@ export function getTier(emp: EmployeStaffing, metierStepId: number): 1 | 2 | 3 |
     return emp.type_contrat === "Interim" ? 3 : 2;
   }
   if (niveau === "depannage") {
-    // CDI/CDD seulement, intérim "dépannage" = aucun sens (intérim déjà variable d'ajustement)
+    // CDI/CDD seulement, intermittent "dépannage" = aucun sens (intermittent déjà variable d'ajustement)
     return emp.type_contrat === "Interim" ? null : 4;
   }
 
-  // Manut polyvalent → équivalent Secondaire (Tier 2 si CDI/CDD, Tier 3 si Intérim)
+  // Manut polyvalent → équivalent Secondaire (Tier 2 si CDI/CDD, Tier 3 si Intermittent)
   if (emp.metier_principal_id === METIER_ID.Manut) {
     const polyMap: Partial<Record<number, string>> = {
       [METIER_ID.Bois]: "bois",

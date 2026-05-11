@@ -73,7 +73,7 @@ const RELEASES: RoadmapRelease[] = [
         area: "Contrats",
         title: "Validation E2E template — 5 fixtures + bouton « Tester le template »",
         description:
-          "Bouton 🧪 sur l'onglet Template de `/rh/contrats` ouvrant `TemplateTestDialog`. Génère 5 PDF preview avec fixtures hardcodées (A=SAVOYEN Constructeur 9231, B=DUPONT fallback poste vide, C=MARTIN adresse longue, D=DURAND nom chantier long, E=LEROY intérim). Détection automatique des placeholders {{...}} non interpolés + checklist des 15 sections obligatoires (Engagement, Durée, Rémunération, RI, Cotisations, CGE, Hygiène, Mesures sanitaires, Lu et approuvé…). Permet de valider visuellement toute modification du template avant prod.",
+          "Bouton 🧪 sur l'onglet Template de `/rh/contrats` ouvrant `TemplateTestDialog`. Génère 5 PDF preview avec fixtures hardcodées (A=SAVOYEN Constructeur 9231, B=DUPONT fallback poste vide, C=MARTIN adresse longue, D=DURAND nom chantier long, E=LEROY intermittent). Détection automatique des placeholders {{...}} non interpolés + checklist des 15 sections obligatoires (Engagement, Durée, Rémunération, RI, Cotisations, CGE, Hygiène, Mesures sanitaires, Lu et approuvé…). Permet de valider visuellement toute modification du template avant prod.",
       },
     ],
   },
@@ -94,7 +94,7 @@ const RELEASES: RoadmapRelease[] = [
         area: "Contrats",
         title: "Catalogue de postes contractuels centralisé",
         description:
-          "Nouvelle table `postes_catalogue` (libelle / ordre / actif) seedée avec 8 postes officiels : Tapissier, Serrurier, Technicien de plateau, Décorateur, Dessinateur, Chef constructeur de décors, Chauffeur, Menuisier de décors. Page admin/RH `/parametres/postes` (CRUD + ordre + activation). Lien ajouté dans la sidebar. Le poste devient sélectionnable dès le staffing (Select dans `StafferMobileForm` quand l'employé est éligible CDDU/CDD/Intérim) puis transmis à la RPC `staffer_mobile_create_mission` (paramètre `_poste`) et au moteur de contrat. Édition possible a posteriori sur `/rh/contrats` via le datalist alimenté dynamiquement.",
+          "Nouvelle table `postes_catalogue` (libelle / ordre / actif) seedée avec 8 postes officiels : Tapissier, Serrurier, Technicien de plateau, Décorateur, Dessinateur, Chef constructeur de décors, Chauffeur, Menuisier de décors. Page admin/RH `/parametres/postes` (CRUD + ordre + activation). Lien ajouté dans la sidebar. Le poste devient sélectionnable dès le staffing (Select dans `StafferMobileForm` quand l'employé est éligible CDDU/CDD/Intermittent) puis transmis à la RPC `staffer_mobile_create_mission` (paramètre `_poste`) et au moteur de contrat. Édition possible a posteriori sur `/rh/contrats` via le datalist alimenté dynamiquement.",
       },
       {
         type: "feature",
@@ -136,7 +136,7 @@ const RELEASES: RoadmapRelease[] = [
         area: "Contrats",
         title: "Template v1 + v2 CDDU Technicien du spectacle",
         description:
-          "v1 seedée avec texte légal officiel SMART RESTRUCTURING. v2 corrige 3 problèmes constatés en prod (contrat 71D95622) : suppression des placeholders inexistants au schéma Staffer-Pro (civilité, adresse employé, nom_emission, durée_min/hebdo, lieu/date signature), suppression du doublon d'entête, qualification « Technicien de plateau » au lieu de « Intérim ».",
+          "v1 seedée avec texte légal officiel SMART RESTRUCTURING. v2 corrige 3 problèmes constatés en prod (contrat 71D95622) : suppression des placeholders inexistants au schéma Staffer-Pro (civilité, adresse employé, nom_emission, durée_min/hebdo, lieu/date signature), suppression du doublon d'entête, qualification « Technicien de plateau » au lieu de « Intermittent ».",
       },
       {
         type: "fix",
@@ -984,9 +984,9 @@ const RELEASES: RoadmapRelease[] = [
       {
         type: "feature",
         area: "Planning",
-        title: "Bouton 'Export Excel' sur onglets CDI / Intérim / Synthèse budget",
+        title: "Bouton 'Export Excel' sur onglets CDI / Intermittent / Synthèse budget",
         description:
-          "Réutilise exportPlanningExcel (workbook complet : CDI-CDD, Intérim, Synthèse chantier, Heures par employé, Flotte si trajets). Le bouton 'Export Excel objets' reste exclusif à l'onglet Planning par objet.",
+          "Réutilise exportPlanningExcel (workbook complet : CDI-CDD, Intermittent, Synthèse chantier, Heures par employé, Flotte si trajets). Le bouton 'Export Excel objets' reste exclusif à l'onglet Planning par objet.",
       },
       {
         type: "improvement",
@@ -1439,13 +1439,13 @@ const RELEASES: RoadmapRelease[] = [
         type: "improvement",
         title: "🛠️ Export Planning all-in-one (.zip)",
         description:
-          "Bouton « Exporter toutes les vues (.zip) » sur /export. Génère un zip `planning-export-{YYYY-MM-DD}-{YYYY-MM-DD}.zip` contenant : (1) le .xlsx multi-vues (CDI-CDD / Intérim / Synthèse / Heures par employé / Flotte avec onglet Véhicules ajouté), (2) la Feuille de route .xlsx (un onglet par jour de la plage). 100% client-side via JSZip — aucune nouvelle surface serveur, aucun nouveau secret. Plage limitée à 4 semaines comme l'export simple.",
+          "Bouton « Exporter toutes les vues (.zip) » sur /export. Génère un zip `planning-export-{YYYY-MM-DD}-{YYYY-MM-DD}.zip` contenant : (1) le .xlsx multi-vues (CDI-CDD / Intermittent / Synthèse / Heures par employé / Flotte avec onglet Véhicules ajouté), (2) la Feuille de route .xlsx (un onglet par jour de la plage). 100% client-side via JSZip — aucune nouvelle surface serveur, aucun nouveau secret. Plage limitée à 4 semaines comme l'export simple.",
       },
       {
         type: "improvement",
         title: "🛠️ Filtres Saisie pour équipe (typologie + recherche fuzzy)",
         description:
-          "Page /saisie-pour-equipe : ajout d'un ToggleGroup typologie (Tous / CDI-CDD / Intérim-Indép.) + Input recherche nom (debounce 200ms, fuzzy maison lowercase + NFD strip diacritics + includes — « Léa » match « lea », « François » match « francois »). Persistance de l'état en query string via validateSearch + zod-adapter (`fallback()` + `stripSearchParams`) — partageable et restauré au reload. 0 nouvelle dépendance fuzzy.",
+          "Page /saisie-pour-equipe : ajout d'un ToggleGroup typologie (Tous / CDI-CDD / Intermittent-Indép.) + Input recherche nom (debounce 200ms, fuzzy maison lowercase + NFD strip diacritics + includes — « Léa » match « lea », « François » match « francois »). Persistance de l'état en query string via validateSearch + zod-adapter (`fallback()` + `stripSearchParams`) — partageable et restauré au reload. 0 nouvelle dépendance fuzzy.",
       },
       {
         type: "improvement",
@@ -1618,7 +1618,7 @@ const RELEASES: RoadmapRelease[] = [
         type: "feature",
         title: "Bulk staffing Planning (Ctrl+clic + modale dédiée)",
         description:
-          "Sélection multi-cellules par Ctrl+clic avec cadre violet épais (ring-4) et barre flottante sticky « N cellules sélectionnées » → bouton « Affecter ces N cellules » qui ouvre la modale d'affectation pré-remplie. Nouvelle modale « + Staffer en bulk » à côté du WeekPicker : multi-select employés (groupés par métier avec raccourcis « Tous CDI / Tous Intérim »), multi-select dates, aperçu avec cellules occupées en jaune (skip auto), création en lot. Helper computeBulkPreview centralisé + 12 tests Vitest.",
+          "Sélection multi-cellules par Ctrl+clic avec cadre violet épais (ring-4) et barre flottante sticky « N cellules sélectionnées » → bouton « Affecter ces N cellules » qui ouvre la modale d'affectation pré-remplie. Nouvelle modale « + Staffer en bulk » à côté du WeekPicker : multi-select employés (groupés par métier avec raccourcis « Tous CDI / Tous Intermittent »), multi-select dates, aperçu avec cellules occupées en jaune (skip auto), création en lot. Helper computeBulkPreview centralisé + 12 tests Vitest.",
       },
       {
         type: "feature",
@@ -1658,9 +1658,9 @@ const RELEASES: RoadmapRelease[] = [
       },
       {
         type: "fix",
-        title: "Intérimaire : date d'assignation désormais éditable",
+        title: "Intermittent : date d'assignation désormais éditable",
         description:
-          "Correction d'un bug qui forçait silencieusement la date au lundi de la semaine courante lors de la création d'une assignation pour un intérimaire. La date est maintenant éditable via le Calendar comme pour les CDI.",
+          "Correction d'un bug qui forçait silencieusement la date au lundi de la semaine courante lors de la création d'une assignation pour un intermittent. La date est maintenant éditable via le Calendar comme pour les CDI.",
       },
       {
         type: "improvement",
@@ -1819,7 +1819,7 @@ const RELEASES: RoadmapRelease[] = [
         area: "Cohérence routing",
         title: "Item sidebar « Demandes transport » pointe vers la bonne page",
         description:
-          "Vérification : l'autre Export planning Excel (matriciel multi-semaines CDI/Intérim/Synthèse/Heures) existe bien à /export en section Administration — pas de doublon à supprimer. La route /export/demandes-devis est désormais cohérente avec son nom et son item sidebar LOGISTIQUE > Demandes transport.",
+          "Vérification : l'autre Export planning Excel (matriciel multi-semaines CDI/Intermittent/Synthèse/Heures) existe bien à /export en section Administration — pas de doublon à supprimer. La route /export/demandes-devis est désormais cohérente avec son nom et son item sidebar LOGISTIQUE > Demandes transport.",
       },
       {
         type: "fix",
@@ -1961,7 +1961,7 @@ const RELEASES: RoadmapRelease[] = [
         area: "Audit",
         title: "✅ Data prod cohérente : 91 affaires, 370 employés (219 actifs), 5 devis, 8 véhicules",
         description:
-          "Sondage prod : 91 affaires (toutes en phase=signe), 0 opportunité créée pour l'instant, 219 employés actifs sur 370, 6 employés liés à un compte (les autres sont intérimaires sans login), 8 véhicules dont 1 loué, 1 atelier + 1 stockage configurés, 6 trajets, 0 feedback reçu sur 7 jours.",
+          "Sondage prod : 91 affaires (toutes en phase=signe), 0 opportunité créée pour l'instant, 219 employés actifs sur 370, 6 employés liés à un compte (les autres sont intermittents sans login), 8 véhicules dont 1 loué, 1 atelier + 1 stockage configurés, 6 trajets, 0 feedback reçu sur 7 jours.",
       },
       {
         type: "fix",
@@ -2276,7 +2276,7 @@ const RELEASES: RoadmapRelease[] = [
         area: "Navigation",
         title: "Sidebar regroupée en 5 sections cohérentes",
         description:
-          "Pilotage (Dashboard, Planning) / Chantiers (Chantiers, Devis, Demandes de devis) / Équipes (Employés, Intérimaires, Absences, Validation heures) / Véhicules / Administration (admin only). Fini la section « Outils » fourre-tout pour les chefs ; les exports et demandes de devis vivent désormais à l'endroit logique.",
+          "Pilotage (Dashboard, Planning) / Chantiers (Chantiers, Devis, Demandes de devis) / Équipes (Employés, Intermittents, Absences, Validation heures) / Véhicules / Administration (admin only). Fini la section « Outils » fourre-tout pour les chefs ; les exports et demandes de devis vivent désormais à l'endroit logique.",
       },
       {
         type: "fix",
@@ -2514,7 +2514,7 @@ const RELEASES: RoadmapRelease[] = [
         area: "Mobile",
         title: "Route /mobile/absences pour les employés (CDI/CDD/Indépendant)",
         description:
-          "Liste des absences personnelles + bouton « Demander une absence » (création en valide=false). Onglet dédié dans la bottom nav, masqué pour les intérimaires (redirigés vers leur agence).",
+          "Liste des absences personnelles + bouton « Demander une absence » (création en valide=false). Onglet dédié dans la bottom nav, masqué pour les intermittents (redirigés vers leur agence).",
       },
       {
         type: "feature",
@@ -2698,7 +2698,7 @@ const RELEASES: RoadmapRelease[] = [
       {
         type: "feature",
         area: "Planning",
-        title: "3 vues : CDI, Intérim, Synthèse chantier",
+        title: "3 vues : CDI, Intermittent, Synthèse chantier",
         description:
           "Tabs dédiés avec sélecteur de semaine et sidebar des heures restantes par devis.",
       },
@@ -2892,7 +2892,7 @@ const PLANNED: RoadmapPlanned[] = [
     priority: "moyenne",
     title: "v0.41 — Claude API auto-staffing (UNIQUEMENT 5XXX, fallback v0.35, cache + cap)",
     description:
-      "Enrichissement de l'algorithme déterministe v0.35 par Claude API via edge function proxy : skill-based reasoning sur historique de l'employé (déjà bossé avec l'équipe ? sur ce client ? sur ce type d'objet ?), tools structurés (lecture affaires + assignations passées), fallback automatique sur v0.35 si timeout/erreur, cache 1h sur même contexte, hard cap mensuel d'appels (alerte admin avant blocage). Tier CDI/CDD avant intérim conservé. PAS d'autres intégrations Claude (pas de support conv, pas de génération texte).",
+      "Enrichissement de l'algorithme déterministe v0.35 par Claude API via edge function proxy : skill-based reasoning sur historique de l'employé (déjà bossé avec l'équipe ? sur ce client ? sur ce type d'objet ?), tools structurés (lecture affaires + assignations passées), fallback automatique sur v0.35 si timeout/erreur, cache 1h sur même contexte, hard cap mensuel d'appels (alerte admin avant blocage). Tier CDI/CDD avant intermittent conservé. PAS d'autres intégrations Claude (pas de support conv, pas de génération texte).",
   },
 
   // ========== v0.40.x — Widgets dashboard humanisation (Phases 1-3 LIVRÉES) ==========
@@ -2987,7 +2987,7 @@ const PLANNED: RoadmapPlanned[] = [
     priority: "moyenne",
     title: "Filtre MultiFilter Métier sur /interimaires",
     description:
-      "Ajouter un MultiFilter multi-select Métier principal sur la page de classement intérimaires, combiné en AND avec la recherche existante. Permet de comparer le top staffing par corps de métier.",
+      "Ajouter un MultiFilter multi-select Métier principal sur la page de classement intermittents, combiné en AND avec la recherche existante. Permet de comparer le top staffing par corps de métier.",
   },
   {
     priority: "moyenne",
@@ -3133,7 +3133,7 @@ const PLANNED: RoadmapPlanned[] = [
     priority: "basse",
     title: "Statistiques personnelles employé (gamification light)",
     description:
-      "Page /mobile/profil enrichie : nb d'heures validées sur le mois/année, nb chantiers différents, métier le plus utilisé, taux de confirmation des propositions (intérimaires).",
+      "Page /mobile/profil enrichie : nb d'heures validées sur le mois/année, nb chantiers différents, métier le plus utilisé, taux de confirmation des propositions (intermittents).",
   },
   {
     priority: "basse",
