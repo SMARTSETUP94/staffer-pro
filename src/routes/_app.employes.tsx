@@ -882,6 +882,13 @@ function EmployesPage() {
                     />
                     <span className="text-xs font-medium">Forfait (hors taux horaire)</span>
                   </label>
+                  <label className="flex items-end gap-2 pb-2">
+                    <Checkbox
+                      checked={form.est_cadre}
+                      onCheckedChange={(v) => setForm({ ...form, est_cadre: Boolean(v) })}
+                    />
+                    <span className="text-xs font-medium">Statut cadre (sinon non cadre)</span>
+                  </label>
                   <div className="space-y-1">
                     <Label className="text-xs">Taux horaire brut (€)</Label>
                     <Input
