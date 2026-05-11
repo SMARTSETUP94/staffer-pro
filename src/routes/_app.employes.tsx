@@ -689,13 +689,12 @@ function EmployesPage() {
               <Label>
                 Matricule SILAE
                 {!isAdmin && <span className="ml-2 text-[10px] font-normal text-muted-foreground">(admin uniquement)</span>}
-                {!form.profile_id && <span className="ml-2 text-[10px] font-normal text-muted-foreground">(employé non lié à un compte)</span>}
               </Label>
               <Input
                 value={form.matricule_silae}
                 onChange={(e) => setForm({ ...form, matricule_silae: e.target.value })}
                 placeholder="Ex. 00123"
-                disabled={!isAdmin || !form.profile_id}
+                disabled={!isAdmin}
                 className="h-10 rounded-xl font-mono"
               />
               <p className="text-[10px] text-muted-foreground">
