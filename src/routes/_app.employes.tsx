@@ -148,6 +148,7 @@ const emptyForm: FormState = {
   forfait: false,
   statut_contrat: "",
   poste_principal: "",
+  est_cadre: false,
 };
 
 // v0.18.1 — Bloc 3 : options pour la section "Capacités / Permis" du dialog
