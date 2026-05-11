@@ -114,6 +114,7 @@ const searchSchema = z.object({
   chantier: fallback(arrayOfString, []).default([]),
   devis: fallback(arrayOfString, []).default([]),
   metier: fallback(z.string(), "all").default("all"),
+  contrat: fallback(z.enum(["all", "CDI", "Interim", "Apprenti"]), "all").default("all"),
   sort: fallback(z.enum(SORT_FIELDS), "date").default("date"),
   dir: fallback(z.enum(["asc", "desc"]), "desc").default("desc"),
   page: fallback(z.number().int().min(1), 1).default(1),
@@ -210,6 +211,7 @@ function countActiveFilters(s: SearchParams): number {
   if (s.chantier.length > 0) n++;
   if (s.devis.length > 0) n++;
   if (s.metier !== "all") n++;
+  if (s.contrat !== "all") n++;
   return n;
 }
 
@@ -272,6 +274,7 @@ function HeuresAnalysePage() {
         chantier: [],
         devis: [],
         metier: "all",
+        contrat: "all",
         sort: "date",
         dir: "desc",
         page: 1,
@@ -391,6 +394,7 @@ function HeuresAnalysePage() {
       if (search.nuit && (r.heures_nuit ?? 0) <= 0) return false;
       if (search.heures_sup && (r.heures_reelles ?? 0) <= SEUIL_HEURES_SUP) return false;
       if (search.metier !== "all" && String(r.metier_id ?? "") !== search.metier) return false;
+      if (search.contrat !== "all" && (r.employe?.type_contrat ?? "") !== search.contrat) return false;
       if (search.employe.length > 0 && !search.employe.includes(r.employe_id)) return false;
       if (search.chantier.length > 0 && !search.chantier.includes(r.affaire_id)) return false;
       if (search.devis.length > 0 && (!r.devis_id || !search.devis.includes(r.devis_id))) return false;
@@ -625,6 +629,7 @@ function HeuresAnalysePage() {
     if (search.nuit) filterParts.push("Nuit uniquement");
     if (search.heures_sup) filterParts.push(`Heures sup (>${SEUIL_HEURES_SUP}h)`);
     if (search.metier !== "all") filterParts.push(`Métier : ${metiers.find((m) => String(m.id) === search.metier)?.libelle ?? search.metier}`);
+    if (search.contrat !== "all") filterParts.push(`Contrat : ${search.contrat === "Interim" ? "Intérim" : search.contrat}`);
     if (search.employe.length) filterParts.push(`Employé : ${search.employe.length} sélectionné(s)`);
     if (search.chantier.length) filterParts.push(`Chantier : ${search.chantier.length} sélectionné(s)`);
     if (search.devis.length) filterParts.push(`Devis : ${search.devis.length} sélectionné(s)`);
@@ -873,6 +878,21 @@ function HeuresAnalysePage() {
                     <SelectItem value="all">Tous</SelectItem>
                     <SelectItem value="employe">Employé lui-même</SelectItem>
                     <SelectItem value="chef">Chef pour employé</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-1">
+                <Label className="text-xs">Type de contrat</Label>
+                <Select
+                  value={search.contrat}
+                  onValueChange={(v) => updateSearch({ contrat: v as SearchParams["contrat"] })}
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tous</SelectItem>
+                    <SelectItem value="CDI">CDI</SelectItem>
+                    <SelectItem value="Interim">Intérim</SelectItem>
+                    <SelectItem value="Apprenti">Apprenti</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
