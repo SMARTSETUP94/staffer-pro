@@ -76,6 +76,7 @@ interface EmployeRow {
   forfait: boolean;
   statut_contrat: StatutContrat | null;
   poste_principal: string | null;
+  est_cadre: boolean;
 }
 
 interface FormState {
