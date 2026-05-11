@@ -190,7 +190,7 @@ async function fetchContratFull(contratId: string): Promise<FullContratRecord> {
       id, employee_id, chantier_id, date_debut, date_fin,
       taux_horaire_brut, forfait, heures_estimees,
       pdf_v1_url, pdf_v2_url, pdf_v3_url, statut, template_version_id,
-      employes:employee_id ( nom, prenom, adresse, email, statut_contrat, poste_principal ),
+      employes:employee_id ( nom, prenom, adresse, email, statut_contrat, poste_principal, est_cadre ),
       affaires:chantier_id ( numero, nom, lieu ),
       contrat_templates:template_version_id ( contenu_html ),
       contrats_signatures ( role_signature, signature_image_url, signed_at )
