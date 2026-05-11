@@ -91,6 +91,7 @@ function renderTemplateHtml(data: ContratPdfData): string {
     employe_adresse_complete: data.employe_adresse ?? "—",
     employe_email: data.employe_email ?? "—",
     statut_contrat: data.statut_contrat,
+    categorie_pro: data.categorie_pro && data.categorie_pro.trim() !== "" ? data.categorie_pro : "Non cadre",
     // Mission
     poste: data.poste && data.poste.trim() !== "" ? data.poste : "Technicien de plateau",
     chantier_numero: data.chantier_numero,
