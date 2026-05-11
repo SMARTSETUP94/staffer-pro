@@ -55,7 +55,7 @@ export function MonEquipeTypeWidget() {
     setLoading(true);
     (async () => {
       const { data, error } = await supabase.rpc("get_mon_equipe_type", {
-        _typologie: typologie === "all" ? null : typologie,
+        _typologie: typologie === "all" ? undefined : typologie,
         _limit: 8,
         _months: 12,
       });
