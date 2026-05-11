@@ -274,6 +274,7 @@ function HeuresAnalysePage() {
         chantier: [],
         devis: [],
         metier: "all",
+        contrat: "all",
         sort: "date",
         dir: "desc",
         page: 1,
