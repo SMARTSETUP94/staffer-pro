@@ -169,6 +169,7 @@ Voir roadmap consolidée détaillée : mem://roadmap/consolidee-2mai2026.
 - [Staffing P1 Undo+Drag+Bulk](mem://features/staffing-undo-drag-bulk) — v0.35.10
 - [Staffing Express Mode](mem://features/staffing-express-mode) — v0.35.11
 - [Staffing personnes refonte UX](mem://features/staffing-personnes-refonte-ux) — v0.35.12
+- [Historique équipe par chantier](mem://features/affaire-equipe-historique) — v0.45 table + RPC + widget
 - [Dashboard widgets sympa](mem://features/dashboard-widgets-sympa) — v0.40.x Phases 1-3 livrées (5/6), Quiz à venir
 - [Sprint 3 features v0.41](mem://features/sprint-3-features-v041) — v0.41.0a hotfix heures invisibles employé
 - [Sécurité v0.21.1](mem://features/securite-v0211) — RoleGuard + RLS heures_saisies durci + UNIQUE INDEX chef_jour

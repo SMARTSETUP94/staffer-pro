@@ -210,6 +210,90 @@ export type Database = {
           },
         ]
       }
+      affaire_equipe_historique: {
+        Row: {
+          a_ete_absent: boolean
+          a_refuse: boolean
+          affaire_cloturee: boolean
+          affaire_id: string
+          affaire_numero: string | null
+          affaire_statut: string | null
+          chef_id: string
+          chef_role: string
+          client: string | null
+          created_at: string
+          date_debut_affaire: string | null
+          date_fin_affaire: string | null
+          dernier_jour: string | null
+          derniere_assignation_at: string | null
+          employe_id: string
+          id: string
+          metier_principal_id: number | null
+          nb_demi_jours: number
+          nb_jours_distincts: number
+          phase: string | null
+          premier_jour: string | null
+          presence_pct_moyen: number
+          type_contrat: string | null
+          typologie: string | null
+          updated_at: string
+        }
+        Insert: {
+          a_ete_absent?: boolean
+          a_refuse?: boolean
+          affaire_cloturee?: boolean
+          affaire_id: string
+          affaire_numero?: string | null
+          affaire_statut?: string | null
+          chef_id: string
+          chef_role: string
+          client?: string | null
+          created_at?: string
+          date_debut_affaire?: string | null
+          date_fin_affaire?: string | null
+          dernier_jour?: string | null
+          derniere_assignation_at?: string | null
+          employe_id: string
+          id?: string
+          metier_principal_id?: number | null
+          nb_demi_jours?: number
+          nb_jours_distincts?: number
+          phase?: string | null
+          premier_jour?: string | null
+          presence_pct_moyen?: number
+          type_contrat?: string | null
+          typologie?: string | null
+          updated_at?: string
+        }
+        Update: {
+          a_ete_absent?: boolean
+          a_refuse?: boolean
+          affaire_cloturee?: boolean
+          affaire_id?: string
+          affaire_numero?: string | null
+          affaire_statut?: string | null
+          chef_id?: string
+          chef_role?: string
+          client?: string | null
+          created_at?: string
+          date_debut_affaire?: string | null
+          date_fin_affaire?: string | null
+          dernier_jour?: string | null
+          derniere_assignation_at?: string | null
+          employe_id?: string
+          id?: string
+          metier_principal_id?: number | null
+          nb_demi_jours?: number
+          nb_jours_distincts?: number
+          phase?: string | null
+          premier_jour?: string | null
+          presence_pct_moyen?: number
+          type_contrat?: string | null
+          typologie?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       affaires: {
         Row: {
           charge_affaires_id: string | null
@@ -3707,6 +3791,22 @@ export type Database = {
           signed_at: string
         }[]
       }
+      get_mon_equipe_type: {
+        Args: { _limit?: number; _months?: number; _typologie?: string }
+        Returns: {
+          derniere_collab: string
+          employe_id: string
+          metier_principal_id: number
+          nb_chantiers: number
+          nom: string
+          poste_principal: string
+          prenom: string
+          presence_pct_moyen: number
+          score: number
+          total_demi_jours: number
+          type_contrat: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -3801,6 +3901,10 @@ export type Database = {
       preflight_import_devis: {
         Args: { _affaire_id?: string; _fichier_hash: string }
         Returns: Json
+      }
+      refresh_affaire_equipe_historique: {
+        Args: { _affaire_id: string }
+        Returns: undefined
       }
       refresh_user_quiz_stats: { Args: never; Returns: undefined }
       set_contrat_pdf_url: {
