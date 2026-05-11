@@ -40,6 +40,7 @@ const baseFixture = (overrides: Partial<ContratPdfData>): ContratPdfData => ({
   signed_at_employeur: null,
   template_html: TEMPLATE_PLACEHOLDER,
   poste: null,
+  categorie_pro: "Non cadre",
   ...overrides,
 });
 
