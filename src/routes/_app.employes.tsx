@@ -383,6 +383,7 @@ function EmployesPage() {
       adresse: form.adresse.trim() || null,
       notes: form.notes.trim() || null,
       poste_principal: form.poste_principal.trim() || null,
+      matricule_silae: form.matricule_silae.trim() || null,
     };
     // Champs admin-only (rémunération + statut contrat fin)
     const payload = isAdmin
@@ -415,13 +416,11 @@ function EmployesPage() {
         .insert(sec.map((metier_id) => ({ employe_id: employeId!, metier_id })));
     }
 
-    // Matricule SILAE + flags rôles fabrication : update sur profiles si lié et admin
+    // Flags rôles fabrication : update sur profiles si lié et admin (matricule_silae est désormais sur employes)
     if (form.profile_id && isAdmin) {
-      const newMat = form.matricule_silae.trim() || null;
       const { error: profErr } = await supabase
         .from("profiles")
         .update({
-          matricule_silae: newMat,
           est_chef_projet: form.est_chef_projet,
           est_respo_fab: form.est_respo_fab,
           est_finition: form.est_finition,
