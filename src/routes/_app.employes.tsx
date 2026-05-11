@@ -261,6 +261,7 @@ function EmployesPage() {
           taux_horaire_charge: extra.taux_horaire_charge ?? null,
           forfait: extra.forfait ?? false,
           statut_contrat: extra.statut_contrat ?? null,
+          est_cadre: extra.est_cadre ?? false,
           matricule_silae: prof?.matricule_silae ?? null,
           est_chef_projet: prof?.est_chef_projet ?? false,
           est_respo_fab: prof?.est_respo_fab ?? false,
