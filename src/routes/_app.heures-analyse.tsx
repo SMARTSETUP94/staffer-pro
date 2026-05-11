@@ -629,6 +629,7 @@ function HeuresAnalysePage() {
     if (search.nuit) filterParts.push("Nuit uniquement");
     if (search.heures_sup) filterParts.push(`Heures sup (>${SEUIL_HEURES_SUP}h)`);
     if (search.metier !== "all") filterParts.push(`Métier : ${metiers.find((m) => String(m.id) === search.metier)?.libelle ?? search.metier}`);
+    if (search.contrat !== "all") filterParts.push(`Contrat : ${search.contrat === "Interim" ? "Intérim" : search.contrat}`);
     if (search.employe.length) filterParts.push(`Employé : ${search.employe.length} sélectionné(s)`);
     if (search.chantier.length) filterParts.push(`Chantier : ${search.chantier.length} sélectionné(s)`);
     if (search.devis.length) filterParts.push(`Devis : ${search.devis.length} sélectionné(s)`);
