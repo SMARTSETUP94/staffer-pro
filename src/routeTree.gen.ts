@@ -33,6 +33,7 @@ import { Route as AppSaisiePourEquipeRouteImport } from './routes/_app.saisie-po
 import { Route as AppRoadmapRouteImport } from './routes/_app.roadmap'
 import { Route as AppPlanningRouteImport } from './routes/_app.planning'
 import { Route as AppOpportunitesRouteImport } from './routes/_app.opportunites'
+import { Route as AppMonEquipeTypeRouteImport } from './routes/_app.mon-equipe-type'
 import { Route as AppMesSwapsRouteImport } from './routes/_app.mes-swaps'
 import { Route as AppMesPropositionsRouteImport } from './routes/_app.mes-propositions'
 import { Route as AppMesHeuresRouteImport } from './routes/_app.mes-heures'
@@ -213,6 +214,11 @@ const AppPlanningRoute = AppPlanningRouteImport.update({
 const AppOpportunitesRoute = AppOpportunitesRouteImport.update({
   id: '/opportunites',
   path: '/opportunites',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppMonEquipeTypeRoute = AppMonEquipeTypeRouteImport.update({
+  id: '/mon-equipe-type',
+  path: '/mon-equipe-type',
   getParentRoute: () => AppRoute,
 } as any)
 const AppMesSwapsRoute = AppMesSwapsRouteImport.update({
@@ -562,6 +568,7 @@ export interface FileRoutesByFullPath {
   '/mes-heures': typeof AppMesHeuresRoute
   '/mes-propositions': typeof AppMesPropositionsRoute
   '/mes-swaps': typeof AppMesSwapsRoute
+  '/mon-equipe-type': typeof AppMonEquipeTypeRoute
   '/opportunites': typeof AppOpportunitesRouteWithChildren
   '/planning': typeof AppPlanningRoute
   '/roadmap': typeof AppRoadmapRoute
@@ -648,6 +655,7 @@ export interface FileRoutesByTo {
   '/mes-heures': typeof AppMesHeuresRoute
   '/mes-propositions': typeof AppMesPropositionsRoute
   '/mes-swaps': typeof AppMesSwapsRoute
+  '/mon-equipe-type': typeof AppMonEquipeTypeRoute
   '/opportunites': typeof AppOpportunitesRouteWithChildren
   '/planning': typeof AppPlanningRoute
   '/roadmap': typeof AppRoadmapRoute
@@ -735,6 +743,7 @@ export interface FileRoutesById {
   '/_app/mes-heures': typeof AppMesHeuresRoute
   '/_app/mes-propositions': typeof AppMesPropositionsRoute
   '/_app/mes-swaps': typeof AppMesSwapsRoute
+  '/_app/mon-equipe-type': typeof AppMonEquipeTypeRoute
   '/_app/opportunites': typeof AppOpportunitesRouteWithChildren
   '/_app/planning': typeof AppPlanningRoute
   '/_app/roadmap': typeof AppRoadmapRoute
@@ -824,6 +833,7 @@ export interface FileRouteTypes {
     | '/mes-heures'
     | '/mes-propositions'
     | '/mes-swaps'
+    | '/mon-equipe-type'
     | '/opportunites'
     | '/planning'
     | '/roadmap'
@@ -910,6 +920,7 @@ export interface FileRouteTypes {
     | '/mes-heures'
     | '/mes-propositions'
     | '/mes-swaps'
+    | '/mon-equipe-type'
     | '/opportunites'
     | '/planning'
     | '/roadmap'
@@ -996,6 +1007,7 @@ export interface FileRouteTypes {
     | '/_app/mes-heures'
     | '/_app/mes-propositions'
     | '/_app/mes-swaps'
+    | '/_app/mon-equipe-type'
     | '/_app/opportunites'
     | '/_app/planning'
     | '/_app/roadmap'
@@ -1250,6 +1262,13 @@ declare module '@tanstack/react-router' {
       path: '/opportunites'
       fullPath: '/opportunites'
       preLoaderRoute: typeof AppOpportunitesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/mon-equipe-type': {
+      id: '/_app/mon-equipe-type'
+      path: '/mon-equipe-type'
+      fullPath: '/mon-equipe-type'
+      preLoaderRoute: typeof AppMonEquipeTypeRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/mes-swaps': {
@@ -1766,6 +1785,7 @@ interface AppRouteChildren {
   AppMesHeuresRoute: typeof AppMesHeuresRoute
   AppMesPropositionsRoute: typeof AppMesPropositionsRoute
   AppMesSwapsRoute: typeof AppMesSwapsRoute
+  AppMonEquipeTypeRoute: typeof AppMonEquipeTypeRoute
   AppOpportunitesRoute: typeof AppOpportunitesRouteWithChildren
   AppPlanningRoute: typeof AppPlanningRoute
   AppRoadmapRoute: typeof AppRoadmapRoute
@@ -1817,6 +1837,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppMesHeuresRoute: AppMesHeuresRoute,
   AppMesPropositionsRoute: AppMesPropositionsRoute,
   AppMesSwapsRoute: AppMesSwapsRoute,
+  AppMonEquipeTypeRoute: AppMonEquipeTypeRoute,
   AppOpportunitesRoute: AppOpportunitesRouteWithChildren,
   AppPlanningRoute: AppPlanningRoute,
   AppRoadmapRoute: AppRoadmapRoute,

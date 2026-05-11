@@ -6,6 +6,7 @@
  */
 import { useEffect, useMemo, useState } from "react";
 import { Users, ArrowRight } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -130,8 +131,13 @@ export function MonEquipeTypeWidget() {
             </ul>
           </>
         )}
-        <div className="mt-3 flex items-center justify-end text-[11px] text-muted-foreground">
-          <span>Calculé en temps réel <ArrowRight className="inline h-3 w-3" /></span>
+        <div className="mt-3 flex items-center justify-end text-[11px]">
+          <Link
+            to="/mon-equipe-type"
+            className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground hover:underline"
+          >
+            Voir le détail <ArrowRight className="h-3 w-3" />
+          </Link>
         </div>
       </CardContent>
     </Card>
