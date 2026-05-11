@@ -98,7 +98,7 @@ export const AutoStaffPlanButton = forwardRef<AutoStaffPlanButtonHandle, Props>(
                   automatiquement les meilleurs candidats disponibles selon la règle :
                 </p>
                 <ul className="list-disc pl-5 text-xs">
-                  <li>Priorité <strong>CDI</strong> &gt; <strong>CDD</strong> &gt; <strong>Intérim</strong></li>
+                  <li>Priorité <strong>CDI</strong> &gt; <strong>CDD</strong> &gt; <strong>Intermittent</strong></li>
                   <li>Compétence métier principale puis polyvalente</li>
                   <li>Disponibilité réelle (autres plans publiés + ce plan)</li>
                 </ul>

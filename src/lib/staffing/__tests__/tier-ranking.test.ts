@@ -36,7 +36,7 @@ describe("getTier", () => {
       )
     ).toBe(2);
   });
-  it("Intérim → Tier 3 quel que soit le métier", () => {
+  it("Intermittent → Tier 3 quel que soit le métier", () => {
     expect(
       getTier(emp({ id: "1", type_contrat: "Interim", metier_principal_id: METIER_ID.Bois }), METIER_ID.Bois)
     ).toBe(3);
@@ -85,7 +85,7 @@ describe("getTier", () => {
       )
     ).toBe(4);
   });
-  it("Intérim niveau dépannage → null (intérim n'est jamais dépannage)", () => {
+  it("Intermittent niveau dépannage → null (intermittent n'est jamais dépannage)", () => {
     expect(
       getTier(
         emp({
@@ -140,7 +140,7 @@ describe("getTier", () => {
 });
 
 describe("scoreCandidat — Tier 4 ordering", () => {
-  it("Tier 4 score < Tier 3 Intérim score (à dispo égale)", () => {
+  it("Tier 4 score < Tier 3 Intermittent score (à dispo égale)", () => {
     const tier4 = scoreCandidat(
       emp({
         id: "d",
@@ -155,8 +155,8 @@ describe("scoreCandidat — Tier 4 ordering", () => {
       METIER_ID.Bois,
       100
     )!;
-    // Tier 4 = 10*1 + 100 = 110 ; Tier 3 = 30*0.3 + 100 = 109 → en réalité dépannage ~= intérim,
-    // mais l'intérim doit être préféré au dépannage car contrat externe. On vérifie via rankCandidats ci-dessous.
+    // Tier 4 = 10*1 + 100 = 110 ; Tier 3 = 30*0.3 + 100 = 109 → en réalité dépannage ~= intermittent,
+    // mais l'intermittent doit être préféré au dépannage car contrat externe. On vérifie via rankCandidats ci-dessous.
     expect(tier4).toBeGreaterThanOrEqual(0);
     expect(tier3).toBeGreaterThanOrEqual(0);
   });
@@ -189,7 +189,7 @@ describe("rankCandidats — 4 niveaux", () => {
     expect(restTiers.has(4)).toBe(true);
   });
 
-  it("Tier4 CDI dépannage devient utilisable quand Tier3 Intérim saturé", () => {
+  it("Tier4 CDI dépannage devient utilisable quand Tier3 Intermittent saturé", () => {
     const t3 = emp({ id: "t3", type_contrat: "Interim", metier_principal_id: METIER_ID.Bois });
     const t4 = emp({
       id: "t4",
@@ -213,7 +213,7 @@ describe("rankCandidats — 4 niveaux", () => {
     expect(r.map((x) => x.employe.id)).toEqual(["ok"]);
   });
 
-  it("Intérim dépannage → exclu (non staffable)", () => {
+  it("Intermittent dépannage → exclu (non staffable)", () => {
     const interimDep = emp({
       id: "i",
       type_contrat: "Interim",
@@ -235,12 +235,12 @@ describe("scoreCandidat", () => {
     const cdd = scoreCandidat(emp({ id: "2", metier_principal_id: METIER_ID.Bois, type_contrat: "CDD" }), METIER_ID.Bois, 100)!;
     expect(cdi).toBeGreaterThan(cdd);
   });
-  it("Intérim toujours dernier", () => {
+  it("Intermittent toujours dernier", () => {
     const cdi = scoreCandidat(emp({ id: "1", metier_principal_id: METIER_ID.Bois, type_contrat: "CDI" }), METIER_ID.Bois, 0)!;
     const interim = scoreCandidat(emp({ id: "2", metier_principal_id: METIER_ID.Bois, type_contrat: "Interim" }), METIER_ID.Bois, 100)!;
-    // Intérim dispo 100% (30*0.3 + 100 = 109) vs CDI saturé (100 + 0 = 100) ?
-    // Ici : CDI Tier1 score = 100*1 + 0 = 100 ; Interim Tier3 score = 30*0.3 + 100 = 109 → l'intérim peut gagner si CDI saturé.
-    // C'est intentionnel : si CDI saturé, intérim utilisable. Sinon CDI gagne.
+    // Intermittent dispo 100% (30*0.3 + 100 = 109) vs CDI saturé (100 + 0 = 100) ?
+    // Ici : CDI Tier1 score = 100*1 + 0 = 100 ; Interim Tier3 score = 30*0.3 + 100 = 109 → l'intermittent peut gagner si CDI saturé.
+    // C'est intentionnel : si CDI saturé, intermittent utilisable. Sinon CDI gagne.
     const cdiDispo = scoreCandidat(emp({ id: "3", metier_principal_id: METIER_ID.Bois }), METIER_ID.Bois, 50)!;
     expect(cdiDispo).toBeGreaterThan(interim);
   });
@@ -252,7 +252,7 @@ describe("scoreCandidat", () => {
 describe("rankCandidats", () => {
   const occ0 = {}; // tous dispo 100%
 
-  it("ordre CDI > CDD > Intérim sur métier identique", () => {
+  it("ordre CDI > CDD > Intermittent sur métier identique", () => {
     const cdi = emp({ id: "cdi", nom: "A", metier_principal_id: METIER_ID.Bois, type_contrat: "CDI" });
     const cdd = emp({ id: "cdd", nom: "B", metier_principal_id: METIER_ID.Bois, type_contrat: "CDD" });
     const it_ = emp({ id: "i", nom: "C", metier_principal_id: METIER_ID.Bois, type_contrat: "Interim" });

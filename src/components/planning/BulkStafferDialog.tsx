@@ -366,7 +366,7 @@ export function BulkStafferDialog({
                   </Label>
                   <div className="flex gap-1">
                     <Button size="sm" variant="ghost" onClick={selectAllCDI}>Tous CDI</Button>
-                    <Button size="sm" variant="ghost" onClick={selectAllInterim}>Tous Intérim</Button>
+                    <Button size="sm" variant="ghost" onClick={selectAllInterim}>Tous Intermittent</Button>
                     <Button size="sm" variant="ghost" onClick={() => setSelectedEmployes(new Set())}>Aucun</Button>
                   </div>
                 </div>

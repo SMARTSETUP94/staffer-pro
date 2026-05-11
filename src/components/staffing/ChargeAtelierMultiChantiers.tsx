@@ -463,7 +463,7 @@ export function ChargeAtelierMultiChantiers() {
             ))}
             {analysis.picGlobal > 12 && (
               <li>
-                Pic global {analysis.picGlobal} pers (max 12) — répartir sur plusieurs semaines ou ajouter de l'intérim.
+                Pic global {analysis.picGlobal} pers (max 12) — répartir sur plusieurs semaines ou ajouter de l'intermittent.
               </li>
             )}
           </ul>

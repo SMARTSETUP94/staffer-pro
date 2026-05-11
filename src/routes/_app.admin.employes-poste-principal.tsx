@@ -45,7 +45,7 @@ interface EmpRow {
   recent_chantiers: { numero: string; nom: string }[];
 }
 
-const STATUTS = ["CDI", "CDDU intermittent", "CDD chantier", "Intérim", "Apprenti"] as const;
+const STATUTS = ["CDI", "CDDU intermittent", "CDD chantier", "Intermittent", "Apprenti"] as const;
 
 /** Heuristique métier → poste suggéré. */
 function suggestPosteFromMetierLibelle(libelle: string | null): string | null {

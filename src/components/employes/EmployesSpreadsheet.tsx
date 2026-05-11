@@ -117,7 +117,7 @@ export function EmployesSpreadsheet({ rows, onSaved }: Props) {
               <TableHead className="min-w-[140px]">Mobile</TableHead>
               <TableHead className="min-w-[120px]">Contrat</TableHead>
               <TableHead className="min-w-[110px]">Sous-type</TableHead>
-              <TableHead className="min-w-[140px]">Agence intérim</TableHead>
+              <TableHead className="min-w-[140px]">Agence intermittent</TableHead>
               <TableHead className="min-w-[180px]">Métier principal</TableHead>
               <TableHead className="w-[80px] text-center">Actif</TableHead>
               <TableHead className="w-[100px] text-center">Hors staffing</TableHead>
@@ -174,7 +174,7 @@ export function EmployesSpreadsheet({ rows, onSaved }: Props) {
                       <SelectContent>
                         <SelectItem value="CDI">CDI</SelectItem>
                         <SelectItem value="CDD">CDD</SelectItem>
-                        <SelectItem value="Interim">Intérim</SelectItem>
+                        <SelectItem value="Interim">Intermittent</SelectItem>
                         <SelectItem value="Independant">Indépendant</SelectItem>
                       </SelectContent>
                     </Select>

@@ -30,10 +30,10 @@ import { normalizeName } from "@/lib/string-normalize";
 export const Route = createFileRoute("/_app/interimaires")({
   head: () => ({
     meta: [
-      { title: "Intérimaires — Classement staffing" },
+      { title: "Intermittents — Classement staffing" },
       {
         name: "description",
-        content: "Classement des intérimaires les plus staffés par période.",
+        content: "Classement des intermittents les plus staffés par période.",
       },
     ],
   }),
@@ -135,7 +135,7 @@ function InterimairesPage() {
     };
   }, [start.getTime(), end.getTime()]);
 
-  // Calcule pour chaque intérimaire: demi-journées, jours équivalents, heures, nb assignations
+  // Calcule pour chaque intermittent: demi-journées, jours équivalents, heures, nb assignations
   const ranking = useMemo(() => {
     const stats = new Map<
       string,
@@ -182,7 +182,7 @@ function InterimairesPage() {
         <div className="flex items-center gap-3">
           <Trophy className="h-6 w-6 text-primary" />
           <div>
-            <h1 className="text-2xl font-bold">Classement intérimaires</h1>
+            <h1 className="text-2xl font-bold">Classement intermittents</h1>
             <p className="text-xs text-muted-foreground">
               {periodLabel(periode, start, end)}
             </p>
@@ -202,7 +202,7 @@ function InterimairesPage() {
         <Card>
           <CardHeader className="pb-1">
             <CardTitle className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-              Intérim. staffés
+              Intermittent. staffés
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -259,7 +259,7 @@ function InterimairesPage() {
           <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
           <Input
             type="search"
-            placeholder="Rechercher un intérimaire ou agence…"
+            placeholder="Rechercher un intermittent ou agence…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="h-9 pl-8"
@@ -277,7 +277,7 @@ function InterimairesPage() {
             <TableHeader>
               <TableRow>
                 <TableHead className="w-12 text-center">#</TableHead>
-                <TableHead>Intérimaire</TableHead>
+                <TableHead>Intermittent</TableHead>
                 <TableHead>Métier</TableHead>
                 <TableHead>Agence / Type</TableHead>
                 <TableHead className="text-right">Demi-journées</TableHead>
@@ -291,7 +291,7 @@ function InterimairesPage() {
               {ranking.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={9} className="h-24 text-center text-sm text-muted-foreground">
-                    Aucun intérimaire / indépendant actif.
+                    Aucun intermittent / indépendant actif.
                   </TableCell>
                 </TableRow>
               ) : (

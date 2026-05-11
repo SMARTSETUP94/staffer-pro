@@ -174,7 +174,7 @@ export function StafferMobileForm({ scopeToChef = false }: { scopeToChef?: boole
     || (conflictQuery.data?.assignations.length ?? 0) > 0;
 
   const eligibleContrat = employe
-    ? ["CDDU intermittent", "CDD chantier", "Intérim"].includes(employe.statut_contrat ?? "")
+    ? ["CDDU intermittent", "CDD chantier", "Intermittent"].includes(employe.statut_contrat ?? "")
     : false;
 
   const canSubmit = !!employeId && !!chantierId && !!metierId && !!dateDebut && !!dateFin && dateDebut <= dateFin && !submitting;

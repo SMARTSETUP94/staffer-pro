@@ -344,7 +344,7 @@ function CompetencesEquipePage() {
         <ul className="list-disc pl-5 space-y-0.5">
           <li><span className="font-bold text-primary">P</span> Principal CDI/CDD → Tier 1 (score 100)</li>
           <li><span className="font-bold text-emerald-600">S</span> Secondaire CDI/CDD → Tier 2 (score 70)</li>
-          <li>Intérim Principal/Secondaire → Tier 3 (score 30)</li>
+          <li>Intermittent Principal/Secondaire → Tier 3 (score 30)</li>
           <li><span className="font-bold text-amber-600">D</span> Dépannage CDI/CDD → Tier 4 (score 10, dernier recours pour pic de charge)</li>
           <li><span className="font-bold text-destructive">X</span> Bloqué → exclu du staffing pour ce métier</li>
         </ul>

@@ -30,13 +30,13 @@ import { toast } from "sonner";
 
 type ContratType = "CDI" | "CDD" | "Interim" | "Independant";
 
-type StatutContrat = "CDI" | "CDDU intermittent" | "CDD chantier" | "Intérim" | "Apprenti";
+type StatutContrat = "CDI" | "CDDU intermittent" | "CDD chantier" | "Intermittent" | "Apprenti";
 
 const STATUT_CONTRAT_OPTIONS: StatutContrat[] = [
   "CDI",
   "CDDU intermittent",
   "CDD chantier",
-  "Intérim",
+  "Intermittent",
   "Apprenti",
 ];
 
@@ -495,7 +495,7 @@ function EmployesPage() {
               <TabsTrigger value="all" className="rounded-lg">Tous</TabsTrigger>
               <TabsTrigger value="CDI" className="rounded-lg">CDI</TabsTrigger>
               <TabsTrigger value="Apprenti" className="rounded-lg">Apprentis</TabsTrigger>
-              <TabsTrigger value="Interim" className="rounded-lg">Intérim</TabsTrigger>
+              <TabsTrigger value="Interim" className="rounded-lg">Intermittent</TabsTrigger>
             </TabsList>
           </Tabs>
           <Tabs value={filterActif} onValueChange={(v) => setFilterActif(v as typeof filterActif)}>
@@ -671,12 +671,12 @@ function EmployesPage() {
                 <SelectTrigger className="h-10 rounded-xl"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="CDI">CDI</SelectItem>
-                  <SelectItem value="Interim">Intérim</SelectItem>
+                  <SelectItem value="Interim">Intermittent</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label>Agence intérim</Label>
+              <Label>Agence intermittent</Label>
               <Input
                 disabled={form.type_contrat !== "Interim"}
                 value={form.agence_interim}
@@ -985,7 +985,7 @@ function ContratPill({ type, agence, isApprenti }: { type: ContratType; agence: 
   return (
     <span className="inline-flex items-center gap-1.5">
       <span className="inline-flex items-center rounded-full bg-[var(--cream-deep)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-foreground">
-        Intérim
+        Intermittent
       </span>
       {agence && <span className="text-xs text-muted-foreground">{agence}</span>}
     </span>

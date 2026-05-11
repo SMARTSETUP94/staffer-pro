@@ -57,7 +57,7 @@ interface Props {
   readonly?: boolean;
   swapAssignationIds?: Set<string>;
   /** Ouvre automatiquement le dialog d'assignation pour cet employé sur la date donnée
-   *  (utilisé par le bouton "Ajouter un intérimaire" du parent). Le parent doit
+   *  (utilisé par le bouton "Ajouter un intermittent" du parent). Le parent doit
    *  remettre la valeur à null après consommation pour pouvoir re-déclencher. */
   openAssignationFor?: { employe: Employe; date: Date } | null;
   onAutoOpenConsumed?: () => void;
@@ -280,7 +280,7 @@ export function PlanningGrid({
     date: Date | null;
   }>({ open: false, employe: null, date: null });
 
-  // Auto-ouverture déclenchée par le parent (ex: ajout d'un intérimaire depuis le bouton)
+  // Auto-ouverture déclenchée par le parent (ex: ajout d'un intermittent depuis le bouton)
   useEffect(() => {
     if (openAssignationFor) {
       setDialogState({

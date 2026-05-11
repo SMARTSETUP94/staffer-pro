@@ -211,7 +211,7 @@ function ExportPage() {
           </CardTitle>
           <CardDescription>
             Sélectionne 1 à {MAX_WEEKS} semaines consécutives. Le classeur contient 4 feuilles par
-            semaine (CDI/CDD, Intérim, Synthèse, Heures), suffixées par S{"{n°}"}.
+            semaine (CDI/CDD, Intermittent, Synthèse, Heures), suffixées par S{"{n°}"}.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-5">
@@ -278,7 +278,7 @@ function ExportPage() {
             <StatCard icon={Users} label="CDI / CDD" value={cdiCount} loading={data.loading} />
             <StatCard
               icon={Briefcase}
-              label="Intérim / Indép. staffés"
+              label="Intermittent / Indép. staffés"
               value={interimCount}
               loading={data.loading}
             />
@@ -340,9 +340,9 @@ function ExportPage() {
               </span>
             </li>
             <li className="flex gap-2">
-              <span className="font-semibold text-primary">S{"{n°}"} Intérim :</span>
+              <span className="font-semibold text-primary">S{"{n°}"} Intermittent :</span>
               <span className="text-muted-foreground">
-                Idem, restreint aux intérimaires et indépendants staffés sur la semaine.
+                Idem, restreint aux intermittents et indépendants staffés sur la semaine.
               </span>
             </li>
             <li className="flex gap-2">

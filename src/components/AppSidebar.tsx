@@ -23,7 +23,7 @@ type EffRole = "admin" | "chef_chantier" | "employe";
  * v0.14 — Refonte IA : 5 sections
  *  • PILOTAGE      : Dashboard, Planning
  *  • CHANTIERS     : Chantiers (ex Affaires), Devis (clients)
- *  • ÉQUIPES       : Employés, Intérimaires, Absences, Validation heures (badge count)
+ *  • ÉQUIPES       : Employés, Intermittents, Absences, Validation heures (badge count)
  *  • LOGISTIQUE    : Véhicules (flotte), Demandes transport (sous-traitance)
  *  • ADMINISTRATION (admin only) : Utilisateurs, Imports, Exports, Paramètres, Roadmap
  *
@@ -89,7 +89,7 @@ function buildSections(role: EffRole, validationCount: number, contratsRhCount: 
       label: "Équipes",
       items: [
         { title: "Employés", url: "/employes", icon: Users, show: () => true },
-        { title: "Intérimaires", url: "/interimaires", icon: Trophy, show: () => true },
+        { title: "Intermittents", url: "/interimaires", icon: Trophy, show: () => true },
         { title: "Absences", url: "/absences", icon: CalendarOff, show: () => true },
         {
           title: "Validation heures",

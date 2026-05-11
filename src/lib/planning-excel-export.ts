@@ -965,7 +965,7 @@ export function exportPlanningExcel(opts: BuildOpts): void {
 
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, buildEmployeSheet("CDI / CDD", cdiCdd, opts), "CDI-CDD");
-  XLSX.utils.book_append_sheet(wb, buildEmployeSheet("Intérim / Indép.", interim, opts), "Intérim");
+  XLSX.utils.book_append_sheet(wb, buildEmployeSheet("Intermittent / Indép.", interim, opts), "Intermittent");
   XLSX.utils.book_append_sheet(wb, buildSyntheseSheet(opts), "Synthèse chantier");
   XLSX.utils.book_append_sheet(wb, buildParChantierSheet(opts), "Par chantier");
   XLSX.utils.book_append_sheet(wb, buildHeuresEmployeSheet(cdiCdd, opts), "Heures par employé");
@@ -1028,8 +1028,8 @@ export function buildPlanningWorkbookRange(
     );
     XLSX.utils.book_append_sheet(
       wb,
-      buildEmployeSheet("Intérim / Indép.", interim, weekOpts),
-      `S${weekNum} Intérim`,
+      buildEmployeSheet("Intermittent / Indép.", interim, weekOpts),
+      `S${weekNum} Intermittent`,
     );
     XLSX.utils.book_append_sheet(wb, buildSyntheseSheet(weekOpts), `S${weekNum} Synthèse`);
     XLSX.utils.book_append_sheet(wb, buildParChantierSheet(weekOpts), `S${weekNum} Par chantier`);
