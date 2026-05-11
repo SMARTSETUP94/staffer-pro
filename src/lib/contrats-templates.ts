@@ -26,6 +26,7 @@ export type PlaceholderKey =
   | "employe_adresse_complete"
   | "employe_email"
   | "statut_contrat"
+  | "categorie_pro"
   // Mission (6)
   | "poste"
   | "chantier_numero"
