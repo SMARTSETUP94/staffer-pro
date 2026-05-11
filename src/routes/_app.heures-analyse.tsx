@@ -394,6 +394,7 @@ function HeuresAnalysePage() {
       if (search.nuit && (r.heures_nuit ?? 0) <= 0) return false;
       if (search.heures_sup && (r.heures_reelles ?? 0) <= SEUIL_HEURES_SUP) return false;
       if (search.metier !== "all" && String(r.metier_id ?? "") !== search.metier) return false;
+      if (search.contrat !== "all" && (r.employe?.type_contrat ?? "") !== search.contrat) return false;
       if (search.employe.length > 0 && !search.employe.includes(r.employe_id)) return false;
       if (search.chantier.length > 0 && !search.chantier.includes(r.affaire_id)) return false;
       if (search.devis.length > 0 && (!r.devis_id || !search.devis.includes(r.devis_id))) return false;
