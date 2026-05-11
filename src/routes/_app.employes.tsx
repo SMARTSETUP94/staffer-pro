@@ -30,13 +30,13 @@ import { toast } from "sonner";
 
 type ContratType = "CDI" | "CDD" | "Interim" | "Independant";
 
-type StatutContrat = "CDI" | "CDDU intermittent" | "CDD chantier" | "Intermittent" | "Apprenti";
+type StatutContrat = "CDI" | "CDDU intermittent" | "CDD chantier" | "Intérim" | "Apprenti";
 
 const STATUT_CONTRAT_OPTIONS: StatutContrat[] = [
   "CDI",
   "CDDU intermittent",
   "CDD chantier",
-  "Intermittent",
+  "Intérim",
   "Apprenti",
 ];
 
