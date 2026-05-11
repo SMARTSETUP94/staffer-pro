@@ -881,6 +881,21 @@ function HeuresAnalysePage() {
                 </Select>
               </div>
               <div className="grid gap-1">
+                <Label className="text-xs">Type de contrat</Label>
+                <Select
+                  value={search.contrat}
+                  onValueChange={(v) => updateSearch({ contrat: v as SearchParams["contrat"] })}
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tous</SelectItem>
+                    <SelectItem value="CDI">CDI</SelectItem>
+                    <SelectItem value="Interim">Intérim</SelectItem>
+                    <SelectItem value="Apprenti">Apprenti</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-1">
                 <Label className="text-xs">Employé(s)</Label>
                 <MultiSelectCombo
                   options={employeOptions}
