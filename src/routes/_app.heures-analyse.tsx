@@ -892,7 +892,7 @@ function HeuresAnalysePage() {
                     <SelectItem value="all">Tous</SelectItem>
                     <SelectItem value="CDI">CDI</SelectItem>
                     <SelectItem value="Interim">Intérim</SelectItem>
-                    <SelectItem value="Apprenti">Apprenti</SelectItem>
+                    
                   </SelectContent>
                 </Select>
               </div>
