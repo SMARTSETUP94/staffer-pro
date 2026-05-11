@@ -346,6 +346,7 @@ function EmployesPage() {
       forfait: row.forfait ?? false,
       statut_contrat: row.statut_contrat ?? "",
       poste_principal: row.poste_principal ?? "",
+      est_cadre: row.est_cadre ?? false,
     });
     setOpen(true);
   };
