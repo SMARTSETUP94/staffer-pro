@@ -1,0 +1,2 @@
+ALTER TABLE public.employes ADD COLUMN IF NOT EXISTS matricule_silae text;
+CREATE INDEX IF NOT EXISTS idx_employes_matricule_silae ON public.employes(matricule_silae) WHERE matricule_silae IS NOT NULL;
