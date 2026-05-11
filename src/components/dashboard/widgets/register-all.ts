@@ -27,6 +27,7 @@ import { ChefProjetMoisWidget } from "./ChefProjetMoisWidget";
 import { AstucesMarqueeWidget } from "./AstucesMarqueeWidget";
 import { QuizDuJourWidget } from "./QuizDuJourWidget";
 import { QuizLeaderboardWidget } from "./QuizLeaderboardWidget";
+import { MonEquipeTypeWidget } from "./MonEquipeTypeWidget";
 
 let registered = false;
 
@@ -56,5 +57,6 @@ export function registerAllWidgets(): void {
   registerWidget("astuces_marquee", AstucesMarqueeWidget);
   registerWidget("quiz_du_jour", QuizDuJourWidget);
   registerWidget("quiz_leaderboard", QuizLeaderboardWidget);
+  registerWidget("mon_equipe_type", MonEquipeTypeWidget);
   registered = true;
 }

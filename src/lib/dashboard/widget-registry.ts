@@ -188,6 +188,14 @@ export const WIDGET_META: Record<WidgetId, WidgetMeta> = {
     category: "fun",
     width: 1,
   },
+  // Insights chef — v0.43
+  mon_equipe_type: {
+    id: "mon_equipe_type",
+    title: "Mon équipe type",
+    description: "Top coéquipiers fréquemment staffés avec vous (12 mois), par typologie",
+    category: "perso",
+    width: 1,
+  },
 };
 
 export const CATEGORY_LABELS: Record<WidgetCategory, string> = {

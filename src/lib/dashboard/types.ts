@@ -34,6 +34,9 @@ export const ALL_WIDGET_IDS = [
   "astuces_marquee",
   "quiz_du_jour",
   "quiz_leaderboard",
+  "quiz_leaderboard",
+  // Insights chef — v0.43
+  "mon_equipe_type",
 ] as const;
 
 export type WidgetId = (typeof ALL_WIDGET_IDS)[number];
@@ -62,6 +65,7 @@ export const ROLE_PRESETS: Record<AppRole, WidgetId[]> = {
     "heures_a_valider",
     "sous_effectif_J7",
     "objets_en_retard",
+    "mon_equipe_type",
     "anniversaires",
     "saint_du_jour",
     "top_constructeur",
@@ -80,6 +84,7 @@ export const ROLE_PRESETS: Record<AppRole, WidgetId[]> = {
     "mes_etapes_fab",
     "heures_a_valider",
     "objets_en_retard",
+    "mon_equipe_type",
     "anniversaires",
     "saint_du_jour",
     "astuces_marquee",
@@ -144,6 +149,7 @@ export function getAllowedWidgetsForRole(role: AppRole): Set<WidgetId> {
       "meteo_chantiers", "montages_j7", "tension_budget", "absences_semaine",
       "flotte_kpis", "charge_atelier", "objets_en_retard", "charge_equipe",
       "mes_etapes_fab", "heures_a_valider", "sous_effectif_J7",
+      "mon_equipe_type",
       ...fun,
     ]);
   }
