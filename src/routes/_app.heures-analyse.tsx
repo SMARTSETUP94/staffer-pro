@@ -211,6 +211,7 @@ function countActiveFilters(s: SearchParams): number {
   if (s.chantier.length > 0) n++;
   if (s.devis.length > 0) n++;
   if (s.metier !== "all") n++;
+  if (s.contrat !== "all") n++;
   return n;
 }
 
