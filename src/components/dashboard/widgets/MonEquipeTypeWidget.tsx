@@ -6,6 +6,7 @@
  */
 import { useEffect, useMemo, useState } from "react";
 import { Users, ArrowRight } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
