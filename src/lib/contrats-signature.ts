@@ -34,6 +34,7 @@ export interface FullContratRecord {
     email: string | null;
     statut_contrat: string | null;
     poste_principal: string | null;
+    est_cadre: boolean | null;
   } | null;
   affaires?: {
     numero: string;
