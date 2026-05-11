@@ -114,7 +114,7 @@ const searchSchema = z.object({
   chantier: fallback(arrayOfString, []).default([]),
   devis: fallback(arrayOfString, []).default([]),
   metier: fallback(z.string(), "all").default("all"),
-  contrat: fallback(z.enum(["all", "CDI", "Interim", "Apprenti"]), "all").default("all"),
+  contrat: fallback(z.enum(["all", "CDI", "Interim"]), "all").default("all"),
   sort: fallback(z.enum(SORT_FIELDS), "date").default("date"),
   dir: fallback(z.enum(["asc", "desc"]), "desc").default("desc"),
   page: fallback(z.number().int().min(1), 1).default(1),
@@ -892,7 +892,7 @@ function HeuresAnalysePage() {
                     <SelectItem value="all">Tous</SelectItem>
                     <SelectItem value="CDI">CDI</SelectItem>
                     <SelectItem value="Interim">Intérim</SelectItem>
-                    <SelectItem value="Apprenti">Apprenti</SelectItem>
+                    
                   </SelectContent>
                 </Select>
               </div>
