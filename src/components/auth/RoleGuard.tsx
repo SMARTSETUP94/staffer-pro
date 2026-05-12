@@ -19,6 +19,7 @@ import { useEffect, useRef, type ReactNode } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth-context";
 import { usePreview } from "@/lib/preview-context";
+import { checkMobileChefAccessForAdmin } from "@/lib/post-login-routing";
 
 export type RoleRequirement = "admin" | "chef_or_admin";
 
