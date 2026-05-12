@@ -90,10 +90,7 @@ export const ROLE_PRESETS: Record<AppRole, WidgetId[]> = {
     "astuces_marquee",
     "quiz_du_jour",
   ],
-  employe: [
-    "mes_etapes_fab",
-    "heures_a_valider",
-  ],
+  employe: [],
 };
 /**
  * Le rôle "chargé d'affaires" n'existe pas encore comme AppRole distinct.
