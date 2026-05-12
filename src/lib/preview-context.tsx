@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import type { AppRole } from "@/lib/auth-context";
 import { useAuth } from "@/lib/auth-context";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export type PreviewRole = "admin" | "chef_chantier" | "chef_mobile" | "employe_desktop" | "employe_mobile";
 
