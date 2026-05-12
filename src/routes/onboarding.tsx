@@ -309,7 +309,7 @@ function OnboardingPage() {
     // profile_completed_at IS NULL (cf. v0.31.4).
     markOnboardingSkipped();
     toast.info("Vous pourrez compléter votre profil plus tard depuis le bandeau en haut de page.");
-    navigate({ to: "/dashboard" });
+    navigate({ to: "/" });
   }
 
   async function handleAvatarUpload(file: File) {
