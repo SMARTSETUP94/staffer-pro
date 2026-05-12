@@ -160,37 +160,31 @@ describe("Presets par rôle — pas de régression", () => {
 });
 
 describe("Scénario E2E — fuite RGPD bloquée", () => {
-  it("Scénario A : employé arrive sur dashboard, layout BDD null → preset employé strict", () => {
+  it("Scénario A : employé arrive sur dashboard, layout BDD null → preset employé vide", () => {
     const visible = computePresetForRoles(["employe"]);
     const allowed = getAllowedWidgetsForRole("employe");
     const rendered = visible.filter((id) => allowed.has(id));
-    expect(rendered).toEqual(["mes_etapes_fab"]);
+    expect(rendered).toEqual([]);
   });
 
   it("Scénario B : layout BDD employé contient kpi_top (corruption) → masqué au rendu", () => {
     const stored = sanitizeLayout({ visible: ["kpi_top", "mes_etapes_fab", "pipeline_charge_affaires"] });
     expect(stored).not.toBeNull();
     const clamped = clampLayoutToRole(stored!, "employe");
-    expect(clamped.visible).toEqual(["mes_etapes_fab"]);
+    expect(clamped.visible).toEqual([]);
   });
 
-  it("Scénario C : admin en preview employé → ne voit QUE le preset employé", () => {
-    // useDashboardLayout utilise computePresetForRoles([effectiveRole])
-    // Quand admin passe en preview "employe_mobile" / "employe_desktop",
-    // effectiveRole devient "employe".
+  it("Scénario C : admin en preview employé → ne voit AUCUN widget", () => {
     const previewRole = "employe" as const;
     const preset = computePresetForRoles([previewRole]);
     const allowed = getAllowedWidgetsForRole(previewRole);
     const rendered = preset.filter((id) => allowed.has(id));
-    expect(rendered).toEqual(["mes_etapes_fab"]);
-    expect(rendered).not.toContain("kpi_top");
-    expect(rendered).not.toContain("opportunites_priorite");
+    expect(rendered).toEqual([]);
   });
 
-  it("Scénario D : Sheet Personnaliser ne propose QUE 2 widgets pour un employé", () => {
+  it("Scénario D : Sheet Personnaliser ne propose AUCUN widget pour un employé", () => {
     const allowed = getAllowedWidgetsForRole("employe");
     const proposable = ALL_WIDGET_IDS.filter((id) => allowed.has(id));
-    expect(proposable.length).toBe(2);
-    expect(proposable).toEqual(expect.arrayContaining(["mes_etapes_fab", "heures_a_valider"]));
+    expect(proposable.length).toBe(0);
   });
 });
