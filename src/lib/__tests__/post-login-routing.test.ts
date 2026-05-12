@@ -155,6 +155,7 @@ describe("Flows mock auth — 5 cas E2E synthétiques", () => {
     // Étape 2 : après set-password → /onboarding (pas profile_completed)
     // Étape 3 : après onboarding finalisé → /ma-semaine pour employé
     const finalTarget = resolvePostLoginTarget({
+      isAdmin: false,
       isAdminOrChef: false,
       effIsMobile: false,
     });
@@ -164,6 +165,7 @@ describe("Flows mock auth — 5 cas E2E synthétiques", () => {
   /** Mock du flow login email+password admin */
   it("Flow 2 — Login admin email+password → /dashboard", () => {
     const target = resolvePostLoginTarget({
+      isAdmin: true,
       isAdminOrChef: true,
       effIsMobile: false,
     });
@@ -173,6 +175,7 @@ describe("Flows mock auth — 5 cas E2E synthétiques", () => {
   /** Mock du flow magic link chef */
   it("Flow 3 — Magic link chef → /dashboard", () => {
     const target = resolvePostLoginTarget({
+      isAdmin: false,
       isAdminOrChef: true,
       effIsMobile: false,
     });
@@ -183,10 +186,10 @@ describe("Flows mock auth — 5 cas E2E synthétiques", () => {
   it("Flow 4 — Reset password puis re-login → routing rôle normal", () => {
     // Après reset, le user revient sur /login puis se connecte normalement
     expect(
-      resolvePostLoginTarget({ isAdminOrChef: false, effIsMobile: false }),
+      resolvePostLoginTarget({ isAdmin: false, isAdminOrChef: false, effIsMobile: false }),
     ).toBe("/ma-semaine");
     expect(
-      resolvePostLoginTarget({ isAdminOrChef: true, effIsMobile: false }),
+      resolvePostLoginTarget({ isAdmin: true, isAdminOrChef: true, effIsMobile: false }),
     ).toBe("/dashboard");
   });
 
