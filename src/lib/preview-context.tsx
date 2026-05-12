@@ -53,6 +53,7 @@ function readStoredEmp(): string | null {
 
 export function PreviewProvider({ children }: { children: ReactNode }) {
   const { isAdmin, roles, user } = useAuth();
+  const isViewportMobile = useIsMobile();
   const [previewRole, setPreviewRoleState] = useState<PreviewRole | null>(() => readStored());
   const [previewEmployeId, setPreviewEmployeIdState] = useState<string | null>(() => readStoredEmp());
 
