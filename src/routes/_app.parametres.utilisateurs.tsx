@@ -98,7 +98,7 @@ function UtilisateursPage() {
   const [bulkOpen, setBulkOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteFullName, setInviteFullName] = useState("");
-  const [inviteRole, setInviteRole] = useState<AppRole>("employe");
+  const [inviteRole, setInviteRole] = useState<AppRole>("chef_chantier");
   const [inviting, setInviting] = useState(false);
 
   const [confirmDelete, setConfirmDelete] = useState<UserRow | null>(null);
