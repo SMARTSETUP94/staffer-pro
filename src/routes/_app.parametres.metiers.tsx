@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
+import { MetiersPostesTabs } from "@/components/parametres/MetiersPostesTabs";
 
 export const Route = createFileRoute("/_app/parametres/metiers")({
   head: () => ({ meta: [{ title: "Métiers — Paramètres" }] }),
@@ -247,6 +248,7 @@ function MetiersPage() {
 
   return (
     <div className="p-6 space-y-6">
+      <MetiersPostesTabs current="metiers" />
       <div className="flex items-center gap-3">
         <Palette className="h-6 w-6 text-primary" />
         <h1 className="text-2xl font-bold">Gestion des métiers</h1>

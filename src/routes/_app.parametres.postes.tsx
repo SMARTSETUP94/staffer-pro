@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
+import { MetiersPostesTabs } from "@/components/parametres/MetiersPostesTabs";
 
 export const Route = createFileRoute("/_app/parametres/postes")({
   head: () => ({ meta: [{ title: "Postes contractuels — Paramètres" }] }),
@@ -97,6 +98,7 @@ function PostesPage() {
 
   return (
     <div className="p-6 space-y-6">
+      <MetiersPostesTabs current="postes" />
       <div className="flex items-center gap-3">
         <Briefcase className="h-6 w-6 text-primary" />
         <h1 className="text-2xl font-bold">Postes contractuels</h1>
