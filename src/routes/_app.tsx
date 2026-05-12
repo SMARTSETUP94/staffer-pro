@@ -10,6 +10,7 @@ import {
   isOnboardingSkipped,
   markOnboardingSkipped,
 } from "@/lib/auth-redirect-helpers";
+import { resolvePostLoginTarget } from "@/lib/post-login-routing";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app")({
