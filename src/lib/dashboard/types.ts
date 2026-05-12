@@ -147,8 +147,8 @@ export function getAllowedWidgetsForRole(role: AppRole): Set<WidgetId> {
       ...fun,
     ]);
   }
-  // employe : UNIQUEMENT widgets personnels (pas de fun/quiz)
-  return new Set<WidgetId>(["mes_etapes_fab", "heures_a_valider"]);
+  // employe : AUCUN widget (ni quiz, ni astuces, ni perso) — accède à /ma-semaine et /mes-heures uniquement
+  return new Set<WidgetId>();
 }
 
 /**
