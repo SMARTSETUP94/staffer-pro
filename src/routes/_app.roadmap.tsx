@@ -91,6 +91,7 @@ const RELEASES: RoadmapRelease[] = [
       },
     ],
   },
+  {
     date: "2026-05-10",
     version: "v0.42.2",
     title: "👤 Poste principal employé + saisie en lot + import/export Excel + validation E2E template",
