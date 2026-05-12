@@ -92,13 +92,7 @@ export const ROLE_PRESETS: Record<AppRole, WidgetId[]> = {
   ],
   employe: [
     "mes_etapes_fab",
-    "anniversaires",
-    "saint_du_jour",
-    "top_constructeur",
-    "chef_projet_mois",
-    "astuces_marquee",
-    "quiz_du_jour",
-    "quiz_leaderboard",
+    "heures_a_valider",
   ],
 };
 /**
