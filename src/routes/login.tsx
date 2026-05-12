@@ -21,11 +21,10 @@ export const Route = createFileRoute("/login")({
 
 function LoginPage() {
   const navigate = useNavigate();
-  const { user, loading, signIn, signInWithMagicLink, signUp } = useAuth();
-  const [tab, setTab] = useState<"signin" | "magic" | "signup">("signin");
+  const { user, loading, signIn, signInWithMagicLink } = useAuth();
+  const [tab, setTab] = useState<"signin" | "magic">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [fullName, setFullName] = useState("");
   const [busy, setBusy] = useState(false);
   const [magicSent, setMagicSent] = useState(false);
 
