@@ -58,24 +58,23 @@ describe("Dashboard preset par rôle — getAllowedWidgetsForRole", () => {
     expect(allowed.has("mes_etapes_fab")).toBe(true);
   });
 
-  it("employe n'a accès QU'aux widgets perso (mes_etapes_fab + heures_a_valider)", () => {
+  it("employe n'a accès à AUCUN widget (anti-fuite RGPD totale)", () => {
     const allowed = getAllowedWidgetsForRole("employe");
-    expect(allowed.has("mes_etapes_fab")).toBe(true);
-    expect(allowed.has("heures_a_valider")).toBe(true);
-    // tout le reste interdit
+    // tout interdit, y compris widgets perso
     const interdits: WidgetId[] = [
       ...COMMERCE_WIDGETS,
       ...OPS_ADMIN_ONLY,
       "charge_atelier", "objets_en_retard", "charge_equipe", "sous_effectif_J7",
+      "mes_etapes_fab", "heures_a_valider",
     ];
     for (const id of interdits) {
       expect(allowed.has(id), `employe MUST NOT see ${id}`).toBe(false);
     }
   });
 
-  it("employe n'a accès qu'à exactement 2 widgets (anti-régression)", () => {
+  it("employe n'a accès à 0 widget (anti-régression)", () => {
     const allowed = getAllowedWidgetsForRole("employe");
-    expect(allowed.size).toBe(2);
+    expect(allowed.size).toBe(0);
   });
 });
 
