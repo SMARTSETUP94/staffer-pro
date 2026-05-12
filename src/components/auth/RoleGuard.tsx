@@ -77,8 +77,8 @@ export function RoleGuard({
     return <Navigate to={redirectTo} />;
   }
 
-  if (realAdminOnChefMobile) {
-    return <Navigate to="/dashboard" />;
+  if (adminMobileChefRedirect) {
+    return <Navigate to={adminMobileChefRedirect} />;
   }
 
   return <>{children}</>;
