@@ -12,7 +12,7 @@ export const Route = createFileRoute("/")({
 function IndexRedirect() {
   const navigate = useNavigate();
   const { user, loading, rolesLoaded, isAdminOrChef, isAdmin } = useAuth();
-  const { effIsMobile } = usePreview();
+  const { effIsMobile, effIsAdminOrChef, isPreviewing } = usePreview();
   const [hashRedirectChecked, setHashRedirectChecked] = useState(false);
 
   // FIX v0.26.1 : si la racine reçoit un hash de lien d'invitation/recovery,
@@ -39,10 +39,10 @@ function IndexRedirect() {
       navigate({ to: "/login" });
       return;
     }
-    if (effIsMobile && !isAdmin) {
-      // v0.46.1 : admin → toujours /dashboard desktop (pas de version mobile admin).
-      // chef mobile → /mobile/chef/dashboard. employé mobile → /mobile/aujourdhui.
-      navigate({ to: isAdminOrChef ? "/mobile/chef/dashboard" : "/mobile/aujourdhui" });
+    if (effIsMobile && (!isAdmin || isPreviewing)) {
+      // v0.46.2 : admin réel → toujours /dashboard desktop sur smartphone.
+      // Seuls les vrais non-admins (ou un admin en mode preview) basculent mobile.
+      navigate({ to: effIsAdminOrChef ? "/mobile/chef/dashboard" : "/mobile/aujourdhui" });
       return;
     }
     if (isAdminOrChef) {
@@ -51,7 +51,7 @@ function IndexRedirect() {
       // v0.27.5 : employé desktop → /ma-semaine (pas /dashboard pour anti-fuite RGPD)
       navigate({ to: "/ma-semaine" });
     }
-  }, [hashRedirectChecked, loading, rolesLoaded, user, isAdminOrChef, effIsMobile, navigate]);
+  }, [hashRedirectChecked, loading, rolesLoaded, user, isAdminOrChef, isAdmin, effIsMobile, effIsAdminOrChef, isPreviewing, navigate]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background">
