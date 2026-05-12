@@ -72,10 +72,10 @@ describe("Post-login routing par rôle (v0.27.5)", () => {
     expect(target).not.toBe("/dashboard");
   });
 
-  it("preview employé mobile → /mobile/aujourdhui (peu importe le rôle réel)", () => {
+  it("mobile (vrai smartphone ou preview) : chef/admin → /mobile/chef/dashboard, employé → /mobile/aujourdhui", () => {
     expect(
       resolvePostLoginTarget({ isAdminOrChef: true, effIsMobile: true }),
-    ).toBe("/mobile/aujourdhui");
+    ).toBe("/mobile/chef/dashboard");
     expect(
       resolvePostLoginTarget({ isAdminOrChef: false, effIsMobile: true }),
     ).toBe("/mobile/aujourdhui");
