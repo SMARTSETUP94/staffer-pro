@@ -58,8 +58,8 @@ describe("ROLE_PRESETS", () => {
     expect(ROLE_PRESETS.chef_chantier).toContain("sous_effectif_J7");
   });
 
-  it("employe = uniquement mes_etapes_fab", () => {
-    expect(ROLE_PRESETS.employe).toEqual(["mes_etapes_fab"]);
+  it("employe = aucun widget (anti-fuite RGPD totale)", () => {
+    expect(ROLE_PRESETS.employe).toEqual([]);
   });
 
   it("CHARGE_AFFAIRES_PRESET = 7 widgets commerce + tension_budget", () => {

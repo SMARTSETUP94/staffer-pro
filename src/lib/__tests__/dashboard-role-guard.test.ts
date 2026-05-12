@@ -58,35 +58,31 @@ describe("Dashboard preset par rôle — getAllowedWidgetsForRole", () => {
     expect(allowed.has("mes_etapes_fab")).toBe(true);
   });
 
-  it("employe n'a accès QU'aux widgets perso (mes_etapes_fab + heures_a_valider)", () => {
+  it("employe n'a accès à AUCUN widget (anti-fuite RGPD totale)", () => {
     const allowed = getAllowedWidgetsForRole("employe");
-    expect(allowed.has("mes_etapes_fab")).toBe(true);
-    expect(allowed.has("heures_a_valider")).toBe(true);
-    // tout le reste interdit
+    // tout interdit, y compris widgets perso
     const interdits: WidgetId[] = [
       ...COMMERCE_WIDGETS,
       ...OPS_ADMIN_ONLY,
       "charge_atelier", "objets_en_retard", "charge_equipe", "sous_effectif_J7",
+      "mes_etapes_fab", "heures_a_valider",
     ];
     for (const id of interdits) {
       expect(allowed.has(id), `employe MUST NOT see ${id}`).toBe(false);
     }
   });
 
-  it("employe n'a accès qu'à exactement 2 widgets (anti-régression)", () => {
+  it("employe n'a accès à 0 widget (anti-régression)", () => {
     const allowed = getAllowedWidgetsForRole("employe");
-    expect(allowed.size).toBe(2);
+    expect(allowed.size).toBe(0);
   });
 });
 
 describe("clampLayoutToRole — defense in depth", () => {
-  it("FUITE BLOQUÉE : layout BDD corrompu employé contenant tous les widgets → ne garde QUE perso", () => {
+  it("FUITE BLOQUÉE : layout BDD corrompu employé contenant tous les widgets → vide", () => {
     const corrupted = { visible: [...ALL_WIDGET_IDS] };
     const clamped = clampLayoutToRole(corrupted, "employe");
-    expect(clamped.visible).toEqual(["mes_etapes_fab", "heures_a_valider"]);
-    expect(clamped.visible).not.toContain("opportunites_priorite");
-    expect(clamped.visible).not.toContain("pipeline_charge_affaires");
-    expect(clamped.visible).not.toContain("kpi_top");
+    expect(clamped.visible).toEqual([]);
   });
 
   it("FUITE BLOQUÉE : layout employé contenant uniquement des widgets commerce → vide", () => {
@@ -119,14 +115,13 @@ describe("clampLayoutToRole — defense in depth", () => {
     expect(twice.visible).toEqual(once.visible);
   });
 
-  it("préserve le champ hidden en le clampant aussi", () => {
+  it("préserve le champ hidden en le clampant aussi (employe → hidden vidé)", () => {
     const layout = {
       visible: ["mes_etapes_fab"] as WidgetId[],
       hidden: ["kpi_top", "heures_a_valider"] as WidgetId[],
     };
     const clamped = clampLayoutToRole(layout, "employe");
-    expect(clamped.hidden).not.toContain("kpi_top");
-    expect(clamped.hidden).toContain("heures_a_valider");
+    expect(clamped.hidden).toEqual([]);
   });
 });
 
@@ -165,37 +160,31 @@ describe("Presets par rôle — pas de régression", () => {
 });
 
 describe("Scénario E2E — fuite RGPD bloquée", () => {
-  it("Scénario A : employé arrive sur dashboard, layout BDD null → preset employé strict", () => {
+  it("Scénario A : employé arrive sur dashboard, layout BDD null → preset employé vide", () => {
     const visible = computePresetForRoles(["employe"]);
     const allowed = getAllowedWidgetsForRole("employe");
     const rendered = visible.filter((id) => allowed.has(id));
-    expect(rendered).toEqual(["mes_etapes_fab"]);
+    expect(rendered).toEqual([]);
   });
 
   it("Scénario B : layout BDD employé contient kpi_top (corruption) → masqué au rendu", () => {
     const stored = sanitizeLayout({ visible: ["kpi_top", "mes_etapes_fab", "pipeline_charge_affaires"] });
     expect(stored).not.toBeNull();
     const clamped = clampLayoutToRole(stored!, "employe");
-    expect(clamped.visible).toEqual(["mes_etapes_fab"]);
+    expect(clamped.visible).toEqual([]);
   });
 
-  it("Scénario C : admin en preview employé → ne voit QUE le preset employé", () => {
-    // useDashboardLayout utilise computePresetForRoles([effectiveRole])
-    // Quand admin passe en preview "employe_mobile" / "employe_desktop",
-    // effectiveRole devient "employe".
+  it("Scénario C : admin en preview employé → ne voit AUCUN widget", () => {
     const previewRole = "employe" as const;
     const preset = computePresetForRoles([previewRole]);
     const allowed = getAllowedWidgetsForRole(previewRole);
     const rendered = preset.filter((id) => allowed.has(id));
-    expect(rendered).toEqual(["mes_etapes_fab"]);
-    expect(rendered).not.toContain("kpi_top");
-    expect(rendered).not.toContain("opportunites_priorite");
+    expect(rendered).toEqual([]);
   });
 
-  it("Scénario D : Sheet Personnaliser ne propose QUE 2 widgets pour un employé", () => {
+  it("Scénario D : Sheet Personnaliser ne propose AUCUN widget pour un employé", () => {
     const allowed = getAllowedWidgetsForRole("employe");
     const proposable = ALL_WIDGET_IDS.filter((id) => allowed.has(id));
-    expect(proposable.length).toBe(2);
-    expect(proposable).toEqual(expect.arrayContaining(["mes_etapes_fab", "heures_a_valider"]));
+    expect(proposable.length).toBe(0);
   });
 });
