@@ -11,7 +11,7 @@ export const Route = createFileRoute("/")({
 
 function IndexRedirect() {
   const navigate = useNavigate();
-  const { user, loading, rolesLoaded, isAdminOrChef } = useAuth();
+  const { user, loading, rolesLoaded, isAdminOrChef, isAdmin } = useAuth();
   const { effIsMobile } = usePreview();
   const [hashRedirectChecked, setHashRedirectChecked] = useState(false);
 
@@ -39,8 +39,9 @@ function IndexRedirect() {
       navigate({ to: "/login" });
       return;
     }
-    if (effIsMobile) {
-      // v0.46 : chef/admin mobile -> /mobile/chef/dashboard, sinon employé -> /mobile/aujourdhui
+    if (effIsMobile && !isAdmin) {
+      // v0.46.1 : admin → toujours /dashboard desktop (pas de version mobile admin).
+      // chef mobile → /mobile/chef/dashboard. employé mobile → /mobile/aujourdhui.
       navigate({ to: isAdminOrChef ? "/mobile/chef/dashboard" : "/mobile/aujourdhui" });
       return;
     }
