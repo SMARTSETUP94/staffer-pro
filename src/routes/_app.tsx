@@ -41,7 +41,7 @@ function AppGuard() {
     user, loading, rolesLoaded, isAdminOrChef,
     passwordSetDone, passwordSetAt, isInviteStatus, profileCompleted, roles,
   } = useAuth();
-  const { effIsMobile, effIsAdminOrChef } = usePreview();
+  const { effIsMobile, effIsAdminOrChef, isPreviewing } = usePreview();
   const onboardingRedirectCountRef = useRef(0);
 
   const isEmployeAllowedPath = EMPLOYE_DESKTOP_ALLOWED.some(
@@ -93,9 +93,9 @@ function AppGuard() {
     }
     // Reset compteur dès qu'on ne redirige PLUS vers /onboarding
     onboardingRedirectCountRef.current = 0;
-    // Mobile (vrai smartphone OU preview "Employé/Chef mobile") -> bascule mobile.
-    // v0.46 : route vers /mobile/chef/dashboard pour les chefs/admin, sinon /mobile/aujourdhui.
-    if (effIsMobile) {
+    // Mobile (vrai smartphone OU preview "Employé/Chef mobile") -> bascule mobile,
+    // sauf admin réel hors-preview : pas de version mobile admin, on reste desktop.
+    if (effIsMobile && (!roles.includes("admin") || isPreviewing)) {
       if (!currentPath.startsWith("/mobile/")) {
         navigate({ to: effIsAdminOrChef ? "/mobile/chef/dashboard" : "/mobile/aujourdhui" });
         return;
@@ -110,7 +110,7 @@ function AppGuard() {
     }
   }, [
     loading, rolesLoaded, user, isAdminOrChef, effIsAdminOrChef,
-    effIsMobile, isEmployeAllowedPath, mustSetPassword, profileCompleted, currentPath, navigate,
+    effIsMobile, isEmployeAllowedPath, mustSetPassword, profileCompleted, currentPath, navigate, roles, isPreviewing,
   ]);
 
   if (loading || !rolesLoaded || !user) {

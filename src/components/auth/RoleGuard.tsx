@@ -13,11 +13,12 @@
  * Remplace les patterns ad-hoc `if (!isAdmin) return <Navigate />` éparpillés
  * dans les routes admin/chef pour avoir un comportement uniforme et auditable.
  */
-import { Navigate } from "@tanstack/react-router";
+import { Navigate, useRouterState } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
 import { useEffect, useRef, type ReactNode } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth-context";
+import { usePreview } from "@/lib/preview-context";
 
 export type RoleRequirement = "admin" | "chef_or_admin";
 
@@ -42,9 +43,17 @@ export function RoleGuard({
   toastMessage,
 }: RoleGuardProps) {
   const { rolesLoaded, isAdmin, isAdminOrChef } = useAuth();
+  const { isPreviewing } = usePreview();
+  const currentPath = useRouterState({ select: (state) => state.location.pathname });
   const toastShownRef = useRef(false);
 
   const allowed = required === "admin" ? isAdmin : isAdminOrChef;
+  const realAdminOnChefMobile =
+    rolesLoaded &&
+    isAdmin &&
+    !isPreviewing &&
+    required === "chef_or_admin" &&
+    currentPath.startsWith("/mobile/chef");
 
   useEffect(() => {
     if (rolesLoaded && !allowed && !toastShownRef.current) {
@@ -67,6 +76,10 @@ export function RoleGuard({
 
   if (!allowed) {
     return <Navigate to={redirectTo} />;
+  }
+
+  if (realAdminOnChefMobile) {
+    return <Navigate to="/dashboard" />;
   }
 
   return <>{children}</>;
