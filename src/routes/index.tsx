@@ -40,7 +40,8 @@ function IndexRedirect() {
       return;
     }
     if (effIsMobile) {
-      navigate({ to: "/mobile/aujourdhui" });
+      // v0.46 : chef/admin mobile -> /mobile/chef/dashboard, sinon employé -> /mobile/aujourdhui
+      navigate({ to: isAdminOrChef ? "/mobile/chef/dashboard" : "/mobile/aujourdhui" });
       return;
     }
     if (isAdminOrChef) {
