@@ -294,7 +294,7 @@ function OnboardingPage() {
         // infinie /dashboard ↔ /onboarding (cf. mem://features/sprint-1-stabilite-v0391).
         await refreshRoles();
         toast.success("Profil complété 🎉");
-        navigate({ to: "/dashboard" });
+        navigate({ to: "/" });
         setBusy(false);
         return;
       }
