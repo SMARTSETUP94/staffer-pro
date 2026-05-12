@@ -21,7 +21,7 @@ interface PostLoginCtx {
 
 /** Réplique la logique de routes/index.tsx (IndexRedirect) pour tester. */
 function resolvePostLoginTarget(ctx: PostLoginCtx): string {
-  if (ctx.effIsMobile) return "/mobile/aujourdhui";
+  if (ctx.effIsMobile) return ctx.isAdminOrChef ? "/mobile/chef/dashboard" : "/mobile/aujourdhui";
   if (ctx.isAdminOrChef) return "/dashboard";
   return "/ma-semaine";
 }
