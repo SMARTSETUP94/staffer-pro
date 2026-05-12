@@ -210,6 +210,7 @@ function EmployesPostePrincipalPage() {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
+      <MetiersPostesTabs current="employes-poste" />
       <PageHeader
         eyebrow="Admin"
         title="Postes principaux"
