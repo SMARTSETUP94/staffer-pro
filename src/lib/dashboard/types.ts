@@ -147,8 +147,8 @@ export function getAllowedWidgetsForRole(role: AppRole): Set<WidgetId> {
       ...fun,
     ]);
   }
-  // employe : widgets personnels + humanisation équipe
-  return new Set<WidgetId>(["mes_etapes_fab", "heures_a_valider", ...fun]);
+  // employe : UNIQUEMENT widgets personnels (pas de fun/quiz)
+  return new Set<WidgetId>(["mes_etapes_fab", "heures_a_valider"]);
 }
 
 /**
