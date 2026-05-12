@@ -61,6 +61,7 @@ function buildSections(role: EffRole, validationCount: number, contratsRhCount: 
           { title: "Mes étapes fab", url: "/fabrication/mes-etapes", icon: Wrench, show: () => true },
           { title: "Mes échanges", url: "/mes-swaps", icon: ArrowLeftRight, show: () => true },
           { title: "Mes propositions", url: "/mes-propositions", icon: ClipboardList, show: () => true },
+          { title: "Mes contrats", url: "/mes-contrats", icon: FileSignature, show: () => true },
         ],
       },
     ];
