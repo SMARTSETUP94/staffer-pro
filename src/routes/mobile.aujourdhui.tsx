@@ -39,7 +39,7 @@ interface AssignationLite {
 }
 
 function MobileSemaine() {
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const { isPreviewing, setPreviewRole } = usePreview();
   const { employe, employeId, resolved: employeResolved } = useResolvedEmploye();
   const employeNom = employe ? `${employe.prenom} ${employe.nom}` : "";

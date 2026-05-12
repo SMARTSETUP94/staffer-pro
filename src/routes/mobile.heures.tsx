@@ -48,9 +48,7 @@ function MobileHeures() {
               Quitter
             </Button>
           ) : (
-            <Button size="sm" variant="outline" onClick={() => signOut()}>
-              Déconnexion
-            </Button>
+            <LogoutConfirmButton />
           )}
         </div>
       </header>
