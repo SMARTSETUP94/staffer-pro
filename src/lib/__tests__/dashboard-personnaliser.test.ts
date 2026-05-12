@@ -88,12 +88,12 @@ describe("Group widgets by category (UI Sheet)", () => {
     expect(groups[3].category).toBe("perso");
   });
 
-  it("aucun widget orphelin (somme = 17)", () => {
+  it("aucun widget orphelin (somme = 25)", () => {
     const total = CATEGORY_ORDER.reduce(
       (acc, cat) => acc + ALL_WIDGET_IDS.filter((id) => WIDGET_META[id].category === cat).length,
       0,
     );
-    expect(total).toBe(17);
+    expect(total).toBe(25);
   });
 });
 
