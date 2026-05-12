@@ -11,6 +11,7 @@
  */
 
 import { describe, it, expect } from "vitest";
+import { resolvePostLoginTarget as resolveReal, type PostLoginCtx as RealCtx } from "@/lib/post-login-routing";
 
 type Role = "admin" | "chef_chantier" | "employe";
 
@@ -21,13 +22,16 @@ interface PostLoginCtx {
   isPreviewing?: boolean;
 }
 
-/** Réplique la logique de routes/index.tsx (IndexRedirect) pour tester. */
+/** Wrapper qui appelle le vrai module (effIsAdminOrChef = isAdminOrChef en l'absence de preview). */
 function resolvePostLoginTarget(ctx: PostLoginCtx): string {
-  if (ctx.effIsMobile && (!ctx.isAdmin || ctx.isPreviewing)) {
-    return ctx.isAdminOrChef ? "/mobile/chef/dashboard" : "/mobile/aujourdhui";
-  }
-  if (ctx.isAdminOrChef) return "/dashboard";
-  return "/ma-semaine";
+  const real: RealCtx = {
+    isAdmin: ctx.isAdmin,
+    isAdminOrChef: ctx.isAdminOrChef,
+    effIsMobile: ctx.effIsMobile,
+    effIsAdminOrChef: ctx.isAdminOrChef,
+    isPreviewing: ctx.isPreviewing ?? false,
+  };
+  return resolveReal(real);
 }
 
 const EMPLOYE_DESKTOP_ALLOWED = [
