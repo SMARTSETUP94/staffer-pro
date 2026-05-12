@@ -92,13 +92,7 @@ export const ROLE_PRESETS: Record<AppRole, WidgetId[]> = {
   ],
   employe: [
     "mes_etapes_fab",
-    "anniversaires",
-    "saint_du_jour",
-    "top_constructeur",
-    "chef_projet_mois",
-    "astuces_marquee",
-    "quiz_du_jour",
-    "quiz_leaderboard",
+    "heures_a_valider",
   ],
 };
 /**
@@ -153,8 +147,8 @@ export function getAllowedWidgetsForRole(role: AppRole): Set<WidgetId> {
       ...fun,
     ]);
   }
-  // employe : widgets personnels + humanisation équipe
-  return new Set<WidgetId>(["mes_etapes_fab", "heures_a_valider", ...fun]);
+  // employe : UNIQUEMENT widgets personnels (pas de fun/quiz)
+  return new Set<WidgetId>(["mes_etapes_fab", "heures_a_valider"]);
 }
 
 /**
