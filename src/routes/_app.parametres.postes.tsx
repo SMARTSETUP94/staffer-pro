@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
+import { MetiersPostesTabs } from "@/components/parametres/MetiersPostesTabs";
 
 export const Route = createFileRoute("/_app/parametres/postes")({
   head: () => ({ meta: [{ title: "Postes contractuels — Paramètres" }] }),
