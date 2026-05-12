@@ -125,11 +125,10 @@ function LoginPage() {
           </p>
 
           <div className="mt-6 rounded-2xl border border-border bg-card p-6 shadow-sm">
-            <Tabs value={tab} onValueChange={(v) => { setMagicSent(false); setTab(v as "signin" | "magic" | "signup"); }}>
-              <TabsList className="grid w-full grid-cols-3 rounded-xl bg-muted">
+            <Tabs value={tab} onValueChange={(v) => { setMagicSent(false); setTab(v as "signin" | "magic"); }}>
+              <TabsList className="grid w-full grid-cols-2 rounded-xl bg-muted">
                 <TabsTrigger value="signin" className="rounded-lg text-xs"><KeyRound className="mr-1 h-3.5 w-3.5" />Mot de passe</TabsTrigger>
                 <TabsTrigger value="magic" className="rounded-lg text-xs"><Mail className="mr-1 h-3.5 w-3.5" />Lien magique</TabsTrigger>
-                <TabsTrigger value="signup" className="rounded-lg text-xs">Créer</TabsTrigger>
               </TabsList>
 
               <TabsContent value="signin" className="mt-6">
