@@ -108,7 +108,7 @@ function OnboardingPage() {
         .eq("id", user.id)
         .maybeSingle();
       if (profile?.profile_completed_at) {
-        navigate({ to: "/dashboard" });
+        navigate({ to: "/" });
         return;
       }
       const { data: emp } = await supabase
@@ -294,7 +294,7 @@ function OnboardingPage() {
         // infinie /dashboard ↔ /onboarding (cf. mem://features/sprint-1-stabilite-v0391).
         await refreshRoles();
         toast.success("Profil complété 🎉");
-        navigate({ to: "/dashboard" });
+        navigate({ to: "/" });
         setBusy(false);
         return;
       }
@@ -309,7 +309,7 @@ function OnboardingPage() {
     // profile_completed_at IS NULL (cf. v0.31.4).
     markOnboardingSkipped();
     toast.info("Vous pourrez compléter votre profil plus tard depuis le bandeau en haut de page.");
-    navigate({ to: "/dashboard" });
+    navigate({ to: "/" });
   }
 
   async function handleAvatarUpload(file: File) {

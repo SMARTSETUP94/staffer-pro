@@ -21,11 +21,10 @@ export const Route = createFileRoute("/login")({
 
 function LoginPage() {
   const navigate = useNavigate();
-  const { user, loading, signIn, signInWithMagicLink, signUp } = useAuth();
-  const [tab, setTab] = useState<"signin" | "magic" | "signup">("signin");
+  const { user, loading, signIn, signInWithMagicLink } = useAuth();
+  const [tab, setTab] = useState<"signin" | "magic">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [fullName, setFullName] = useState("");
   const [busy, setBusy] = useState(false);
   const [magicSent, setMagicSent] = useState(false);
 
@@ -98,26 +97,9 @@ function LoginPage() {
     }
   };
 
-  const onSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (busy) return;
-    setBusy(true);
-    try {
-      const { error } = await signUp(email, password, fullName);
-      if (error) {
-        toast.error("Inscription impossible", { description: error });
-      } else {
-        toast.success("Compte créé", { description: "Vous pouvez vous connecter." });
-        setTab("signin");
-      }
-    } catch (err) {
-      console.error("[login] signUp threw", err);
-      const message = err instanceof Error ? err.message : "Erreur inconnue, réessaie.";
-      toast.error("Inscription impossible", { description: message });
-    } finally {
-      setBusy(false);
-    }
-  };
+  // Self-signup désactivé : seuls les admins peuvent inviter (chef d'équipe par défaut),
+  // les employés sont créés via leur fiche employé et invités séparément.
+
 
   return (
     <div className="grid min-h-screen lg:grid-cols-[1fr_1.2fr]">
@@ -143,11 +125,10 @@ function LoginPage() {
           </p>
 
           <div className="mt-6 rounded-2xl border border-border bg-card p-6 shadow-sm">
-            <Tabs value={tab} onValueChange={(v) => { setMagicSent(false); setTab(v as "signin" | "magic" | "signup"); }}>
-              <TabsList className="grid w-full grid-cols-3 rounded-xl bg-muted">
+            <Tabs value={tab} onValueChange={(v) => { setMagicSent(false); setTab(v as "signin" | "magic"); }}>
+              <TabsList className="grid w-full grid-cols-2 rounded-xl bg-muted">
                 <TabsTrigger value="signin" className="rounded-lg text-xs"><KeyRound className="mr-1 h-3.5 w-3.5" />Mot de passe</TabsTrigger>
                 <TabsTrigger value="magic" className="rounded-lg text-xs"><Mail className="mr-1 h-3.5 w-3.5" />Lien magique</TabsTrigger>
-                <TabsTrigger value="signup" className="rounded-lg text-xs">Créer</TabsTrigger>
               </TabsList>
 
               <TabsContent value="signin" className="mt-6">
@@ -193,32 +174,6 @@ function LoginPage() {
                     </Button>
                   </form>
                 )}
-              </TabsContent>
-
-              <TabsContent value="signup" className="mt-6">
-                <form onSubmit={onSignUp} className="space-y-4">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="fullName" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Nom complet</Label>
-                    <Input id="fullName" required value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Prénom Nom" className="h-11 rounded-xl" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="email-up" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Email</Label>
-                    <Input id="email-up" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="prenom@setup.paris" className="h-11 rounded-xl" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="password-up" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Mot de passe</Label>
-                    <Input id="password-up" type="password" required minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} className="h-11 rounded-xl" />
-                    <p className="text-xs text-muted-foreground">8 caractères minimum.</p>
-                  </div>
-                  <Button type="submit" disabled={busy} className="group h-11 w-full rounded-xl bg-primary text-primary-foreground hover:bg-primary/90">
-                    {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                    Créer le compte
-                    <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-                  </Button>
-                  <p className="text-xs text-muted-foreground">
-                    Rôle par défaut : employé. L'admin assigne ensuite chef de chantier ou admin.
-                  </p>
-                </form>
               </TabsContent>
             </Tabs>
           </div>
