@@ -3888,6 +3888,10 @@ export type Database = {
       is_affaire_open: { Args: { _affaire_id: string }; Returns: boolean }
       is_chef_global: { Args: never; Returns: boolean }
       is_chef_metier_scoped: { Args: never; Returns: boolean }
+      is_chef_metier_scoped_for_employe: {
+        Args: { _employe_id: string }
+        Returns: boolean
+      }
       is_chef_on_affaire: {
         Args: { _affaire_id: string; _employe_id: string }
         Returns: boolean
