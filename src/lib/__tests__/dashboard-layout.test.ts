@@ -15,9 +15,9 @@ import {
   getRegisteredWidgetIds,
 } from "@/lib/dashboard/widget-registry";
 
-describe("dashboard catalogue (v0.26.0)", () => {
-  it("expose 17 widgets exactement", () => {
-    expect(ALL_WIDGET_IDS).toHaveLength(17);
+describe("dashboard catalogue (v0.47.x — 25 widgets)", () => {
+  it("expose 25 widgets exactement", () => {
+    expect(ALL_WIDGET_IDS).toHaveLength(25);
   });
 
   it("ne contient aucun doublon", () => {
@@ -39,9 +39,9 @@ describe("dashboard catalogue (v0.26.0)", () => {
     }
   });
 
-  it("expose 4 catégories libellées", () => {
-    expect(Object.keys(CATEGORY_LABELS)).toHaveLength(4);
-    expect(CATEGORY_ORDER).toHaveLength(4);
+  it("expose 5 catégories libellées", () => {
+    expect(Object.keys(CATEGORY_LABELS)).toHaveLength(5);
+    expect(CATEGORY_ORDER).toHaveLength(5);
   });
 });
 
