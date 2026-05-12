@@ -15,13 +15,17 @@ import { describe, it, expect } from "vitest";
 type Role = "admin" | "chef_chantier" | "employe";
 
 interface PostLoginCtx {
+  isAdmin: boolean;
   isAdminOrChef: boolean;
   effIsMobile: boolean;
+  isPreviewing?: boolean;
 }
 
 /** Réplique la logique de routes/index.tsx (IndexRedirect) pour tester. */
 function resolvePostLoginTarget(ctx: PostLoginCtx): string {
-  if (ctx.effIsMobile) return ctx.isAdminOrChef ? "/mobile/chef/dashboard" : "/mobile/aujourdhui";
+  if (ctx.effIsMobile && (!ctx.isAdmin || ctx.isPreviewing)) {
+    return ctx.isAdminOrChef ? "/mobile/chef/dashboard" : "/mobile/aujourdhui";
+  }
   if (ctx.isAdminOrChef) return "/dashboard";
   return "/ma-semaine";
 }
@@ -53,18 +57,19 @@ function resolveAppGuardTarget(role: Role, currentPath: string): string | null {
 describe("Post-login routing par rôle (v0.27.5)", () => {
   it("admin desktop → /dashboard", () => {
     expect(
-      resolvePostLoginTarget({ isAdminOrChef: true, effIsMobile: false }),
+      resolvePostLoginTarget({ isAdmin: true, isAdminOrChef: true, effIsMobile: false }),
     ).toBe("/dashboard");
   });
 
   it("chef_chantier desktop → /dashboard", () => {
     expect(
-      resolvePostLoginTarget({ isAdminOrChef: true, effIsMobile: false }),
+      resolvePostLoginTarget({ isAdmin: false, isAdminOrChef: true, effIsMobile: false }),
     ).toBe("/dashboard");
   });
 
   it("employé desktop → /ma-semaine (PAS /dashboard pour anti-fuite RGPD)", () => {
     const target = resolvePostLoginTarget({
+      isAdmin: false,
       isAdminOrChef: false,
       effIsMobile: false,
     });
@@ -72,13 +77,25 @@ describe("Post-login routing par rôle (v0.27.5)", () => {
     expect(target).not.toBe("/dashboard");
   });
 
-  it("mobile (vrai smartphone ou preview) : chef/admin → /mobile/chef/dashboard, employé → /mobile/aujourdhui", () => {
+  it("admin réel sur mobile → /dashboard (pas de version mobile admin)", () => {
     expect(
-      resolvePostLoginTarget({ isAdminOrChef: true, effIsMobile: true }),
+      resolvePostLoginTarget({ isAdmin: true, isAdminOrChef: true, effIsMobile: true }),
+    ).toBe("/dashboard");
+  });
+
+  it("mobile non-admin : chef → /mobile/chef/dashboard, employé → /mobile/aujourdhui", () => {
+    expect(
+      resolvePostLoginTarget({ isAdmin: false, isAdminOrChef: true, effIsMobile: true }),
     ).toBe("/mobile/chef/dashboard");
     expect(
-      resolvePostLoginTarget({ isAdminOrChef: false, effIsMobile: true }),
+      resolvePostLoginTarget({ isAdmin: false, isAdminOrChef: false, effIsMobile: true }),
     ).toBe("/mobile/aujourdhui");
+  });
+
+  it("admin en preview chef mobile → /mobile/chef/dashboard", () => {
+    expect(
+      resolvePostLoginTarget({ isAdmin: true, isAdminOrChef: true, effIsMobile: true, isPreviewing: true }),
+    ).toBe("/mobile/chef/dashboard");
   });
 });
 
