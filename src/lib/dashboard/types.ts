@@ -34,7 +34,6 @@ export const ALL_WIDGET_IDS = [
   "astuces_marquee",
   "quiz_du_jour",
   "quiz_leaderboard",
-  "quiz_leaderboard",
   // Insights chef — v0.43
   "mon_equipe_type",
 ] as const;

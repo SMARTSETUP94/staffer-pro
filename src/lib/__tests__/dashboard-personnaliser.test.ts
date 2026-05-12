@@ -53,19 +53,18 @@ describe("Personnaliser sheet — buildLayoutFromDraft", () => {
   it("layout vide = visible:[], hidden:[ALL]", () => {
     const l = buildLayoutFromDraft(new Set());
     expect(l.visible).toEqual([]);
-    expect(l.hidden).toHaveLength(17);
+    expect(l.hidden).toHaveLength(25);
   });
 
   it("layout complet = visible:[ALL], hidden:[]", () => {
     const l = buildLayoutFromDraft(new Set(ALL_WIDGET_IDS));
-    expect(l.visible).toHaveLength(17);
+    expect(l.visible).toHaveLength(25);
     expect(l.hidden).toEqual([]);
   });
 
   it("ordre stable basé sur ALL_WIDGET_IDS", () => {
     const draft = new Set<WidgetId>(["meteo_chantiers", "kpi_top"]);
     const l = buildLayoutFromDraft(draft);
-    // kpi_top apparaît avant meteo_chantiers dans ALL_WIDGET_IDS
     expect(l.visible.indexOf("kpi_top")).toBeLessThan(l.visible.indexOf("meteo_chantiers"));
   });
 
@@ -73,7 +72,7 @@ describe("Personnaliser sheet — buildLayoutFromDraft", () => {
     const draft = new Set<WidgetId>(["kpi_top", "absences_semaine", "mes_etapes_fab"]);
     const l = buildLayoutFromDraft(draft);
     const union = new Set([...l.visible, ...(l.hidden ?? [])]);
-    expect(union.size).toBe(17);
+    expect(union.size).toBe(25);
   });
 });
 
@@ -89,12 +88,12 @@ describe("Group widgets by category (UI Sheet)", () => {
     expect(groups[3].category).toBe("perso");
   });
 
-  it("aucun widget orphelin (somme = 17)", () => {
+  it("aucun widget orphelin (somme = 25)", () => {
     const total = CATEGORY_ORDER.reduce(
       (acc, cat) => acc + ALL_WIDGET_IDS.filter((id) => WIDGET_META[id].category === cat).length,
       0,
     );
-    expect(total).toBe(17);
+    expect(total).toBe(25);
   });
 });
 
