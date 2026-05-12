@@ -24,17 +24,26 @@ export function ChefMobileBottomNav() {
   const allCounts: Record<string, number> = { objets: objets.length };
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 backdrop-blur">
+    <nav
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 backdrop-blur"
+      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+    >
       <ul className="mx-auto grid max-w-md grid-cols-5">
         {ITEMS.map(({ to, label, icon: Icon, badgeKey }) => {
           const active = path === to || path.startsWith(to + "/");
           const badge = badgeKey ? allCounts[badgeKey] ?? 0 : 0;
+          const ariaLabel =
+            badge > 0 && badgeKey === "objets"
+              ? `${label} — ${badge} objet${badge > 1 ? "s" : ""} à valider`
+              : label;
           return (
             <li key={to} className="relative">
               <Link
                 to={to}
+                preload="intent"
+                aria-label={ariaLabel}
                 className={cn(
-                  "flex flex-col items-center gap-0.5 px-2 py-2.5 text-[10px] font-semibold uppercase tracking-wider transition-colors",
+                  "flex min-h-12 flex-col items-center justify-center gap-0.5 px-2 py-3 text-[10px] font-semibold uppercase tracking-wider transition-colors active:bg-accent/50",
                   active ? "text-primary" : "text-muted-foreground hover:text-foreground",
                 )}
               >
