@@ -19,6 +19,7 @@ import { useEffect, useRef, type ReactNode } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth-context";
 import { usePreview } from "@/lib/preview-context";
+import { checkMobileChefAccessForAdmin } from "@/lib/post-login-routing";
 
 export type RoleRequirement = "admin" | "chef_or_admin";
 
@@ -48,12 +49,10 @@ export function RoleGuard({
   const toastShownRef = useRef(false);
 
   const allowed = required === "admin" ? isAdmin : isAdminOrChef;
-  const realAdminOnChefMobile =
-    rolesLoaded &&
-    isAdmin &&
-    !isPreviewing &&
-    required === "chef_or_admin" &&
-    currentPath.startsWith("/mobile/chef");
+  const adminMobileChefRedirect =
+    rolesLoaded && required === "chef_or_admin"
+      ? checkMobileChefAccessForAdmin({ isAdmin, isPreviewing, currentPath })
+      : null;
 
   useEffect(() => {
     if (rolesLoaded && !allowed && !toastShownRef.current) {
@@ -78,8 +77,8 @@ export function RoleGuard({
     return <Navigate to={redirectTo} />;
   }
 
-  if (realAdminOnChefMobile) {
-    return <Navigate to="/dashboard" />;
+  if (adminMobileChefRedirect) {
+    return <Navigate to={adminMobileChefRedirect} />;
   }
 
   return <>{children}</>;

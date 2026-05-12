@@ -10,6 +10,7 @@ import {
   isOnboardingSkipped,
   markOnboardingSkipped,
 } from "@/lib/auth-redirect-helpers";
+import { resolvePostLoginTarget } from "@/lib/post-login-routing";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app")({
@@ -93,19 +94,22 @@ function AppGuard() {
     }
     // Reset compteur dès qu'on ne redirige PLUS vers /onboarding
     onboardingRedirectCountRef.current = 0;
-    // Mobile (vrai smartphone OU preview "Employé/Chef mobile") -> bascule mobile,
-    // sauf admin réel hors-preview : pas de version mobile admin, on reste desktop.
-    if (effIsMobile && (!roles.includes("admin") || isPreviewing)) {
-      if (!currentPath.startsWith("/mobile/")) {
-        navigate({ to: effIsAdminOrChef ? "/mobile/chef/dashboard" : "/mobile/aujourdhui" });
-        return;
-      }
+    // Routing role-aware centralisé (mobile/desktop, admin/chef/employé).
+    // Voir src/lib/post-login-routing.ts.
+    const target = resolvePostLoginTarget({
+      isAdmin: roles.includes("admin"),
+      isAdminOrChef,
+      effIsMobile,
+      effIsAdminOrChef,
+      isPreviewing,
+    });
+    // Mobile : si la cible est /mobile/* et qu'on n'y est pas → bascule.
+    if (target.startsWith("/mobile/") && !currentPath.startsWith("/mobile/")) {
+      navigate({ to: target });
+      return;
     }
-    // Pas admin/chef sur desktop : autorisé uniquement sur les pages employé.
-    // v0.27.5 : redirige vers /ma-semaine (route sémantique employé) plutôt
-    // que /dashboard pour éviter toute confusion avec la vue admin et
-    // matérialiser dans l'URL le périmètre employé.
-    if (!effIsAdminOrChef && !isEmployeAllowedPath) {
+    // Desktop employé : autorisé uniquement sur whitelist (sinon → /ma-semaine).
+    if (!effIsAdminOrChef && !isEmployeAllowedPath && !currentPath.startsWith("/mobile/")) {
       navigate({ to: "/ma-semaine" });
     }
   }, [

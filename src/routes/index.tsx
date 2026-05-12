@@ -4,6 +4,7 @@ import { Loader2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { usePreview } from "@/lib/preview-context";
 import { isAuthHashPresent } from "@/lib/auth-redirect-helpers";
+import { resolvePostLoginTarget } from "@/lib/post-login-routing";
 
 export const Route = createFileRoute("/")({
   component: IndexRedirect,
@@ -39,18 +40,14 @@ function IndexRedirect() {
       navigate({ to: "/login" });
       return;
     }
-    if (effIsMobile && (!isAdmin || isPreviewing)) {
-      // v0.46.2 : admin réel → toujours /dashboard desktop sur smartphone.
-      // Seuls les vrais non-admins (ou un admin en mode preview) basculent mobile.
-      navigate({ to: effIsAdminOrChef ? "/mobile/chef/dashboard" : "/mobile/aujourdhui" });
-      return;
-    }
-    if (isAdminOrChef) {
-      navigate({ to: "/dashboard" });
-    } else {
-      // v0.27.5 : employé desktop → /ma-semaine (pas /dashboard pour anti-fuite RGPD)
-      navigate({ to: "/ma-semaine" });
-    }
+    const target = resolvePostLoginTarget({
+      isAdmin,
+      isAdminOrChef,
+      effIsMobile,
+      effIsAdminOrChef,
+      isPreviewing,
+    });
+    navigate({ to: target });
   }, [hashRedirectChecked, loading, rolesLoaded, user, isAdminOrChef, isAdmin, effIsMobile, effIsAdminOrChef, isPreviewing, navigate]);
 
   return (

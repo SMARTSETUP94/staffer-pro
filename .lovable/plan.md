@@ -1,60 +1,117 @@
-## Contexte
+# Sprint Simplification v0.47
 
-Deux sujets liés :
+Tu as retenu 5 chantiers : **#9 Auth/routing**, **#7 Poste management**, **#6 Absences/congés**, **#10 Dashboard widgets registry**, **#1 "Mon équipe type" widget→teaser**.
 
-**Bug critique de routing mobile**
-Aujourd'hui `effIsMobile` (dans `src/lib/preview-context.tsx`) est uniquement vrai quand l'admin active le preview "chef_mobile" / "employe_mobile". Pour un vrai chef ou employé qui ouvre l'app sur smartphone, `effIsMobile = false` → il atterrit sur `/dashboard` ou `/ma-semaine` (version desktop) au lieu de `/mobile/chef` ou `/mobile/aujourdhui`.
+Je propose de les livrer dans cet ordre (du plus safe au plus structurant) en 4 sous-versions.
 
-**Audit qualité des pages mobiles existantes**
-20 pages `mobile.*` (chef + employé) à passer en revue : ergonomie tactile, performance, gestes, navigation, états vides/erreurs, accessibilité, cohérence visuelle.
+---
 
-## Plan d'action
+## v0.47.0 — Quick wins UI (≈ 1 itération)
 
-### 1. Fix routing mobile réel (priorité haute)
+### #1 — "Mon équipe type" widget devient teaser
+- `src/components/dashboard/MonEquipeTypeWidget.tsx` (ou équivalent) : ne montre plus que **top 3 + 1 KPI agrégé** (nb coéquipiers fréquents).
+- Bouton CTA unique "Voir mon équipe type →" → `/mon-equipe-type`.
+- Suppression des filtres typologie/période et du drilldown Sheet **dans le widget** (conservés sur la page).
+- Mise à jour test E2E si présent.
 
-- Dans `preview-context.tsx`, étendre `effIsMobile` pour OR avec la détection viewport réel (`useIsMobile()` < 1024px) :
-  - Si admin avec preview "chef_mobile/employe_mobile" → mobile
-  - Sinon si viewport réel < 1024px → mobile
-- Adapter `src/routes/index.tsx` : routing post-login déjà conditionné sur `effIsMobile`, donc ça suffira. Ajouter cas chef mobile : si `effIsMobile && effIsChef` → `/mobile/chef`, sinon `/mobile/aujourdhui`.
-- Vérifier que `AppGuard` ne re-redirige pas vers `/dashboard` quand un employé navigue manuellement vers `/ma-semaine` sur mobile (rappel anti-fuite RGPD).
+### #10 — Dashboard widgets registry
+- Nouveau `src/components/dashboard/widgets-registry.ts` :
+  ```ts
+  export type WidgetRole = "admin" | "chef_global" | "chef_scoped" | "employe";
+  export interface WidgetDef {
+    id: string;
+    component: ComponentType;
+    roles: WidgetRole[];      // whitelist (cf. mem://features/dashboard-role-guard)
+    layout?: { col: number; row: number };
+  }
+  export const dashboardWidgets: WidgetDef[] = [...];
+  ```
+- Refacto `src/routes/_app.dashboard.tsx` : map sur le registry au lieu des `if !isAdmin return null` éparpillés.
+- Suppression des gardes inline dans chaque widget (ChiffreAffaires, MonEquipeType, etc.).
+- Test : `widgets-registry.test.ts` (admin → tout, chef → pas commerce, employe → perso uniquement).
 
-### 2. Audit mobile — méthode
+---
 
-Pour chaque page mobile (groupes ci-dessous), je passe en revue :
+## v0.47.1 — Auth/routing unifié (#9)
 
-- **Ergonomie tactile** : taille des cibles tap (≥44px), espacement, scroll bloquant
-- **Navigation** : bottom nav, retour, deep links, back-button
-- **Performance** : lazy-load, requêtes en cascade, listes longues sans virtualisation
-- **États** : loading, vide, erreur, hors ligne
-- **Accessibilité** : contraste, labels ARIA, focus visible
-- **Cohérence design** : tokens semantic, pas de couleurs hardcodées
-- **Données** : RLS appliquée, pas de fuite cross-affaire / cross-employé
+### Nouveau module `src/lib/post-login-routing.ts` (déjà partiellement testé)
+- Centralise **toute** la logique de redirection post-login :
+  ```ts
+  export interface RoutingCtx {
+    user: User | null;
+    rolesLoaded: boolean;
+    isAdmin: boolean;
+    isAdminOrChef: boolean;
+    effIsMobile: boolean;
+    effIsAdminOrChef: boolean;
+    isPreviewing: boolean;
+  }
+  export function resolvePostLoginTarget(ctx: RoutingCtx): string | null;
+  ```
+- Règles (synthèse mem://features/route-ma-semaine + v0.46.2) :
+  - pas de user → `/login`
+  - admin réel + mobile + pas preview → `/dashboard`
+  - mobile + chef → `/mobile/chef/dashboard`
+  - mobile + employé → `/mobile/aujourdhui`
+  - desktop + admin/chef → `/dashboard`
+  - desktop + employé → `/ma-semaine`
 
-**Périmètre Employé (10 pages)** :
-`mobile.aujourdhui`, `mobile.heures`, `mobile.mois`, `mobile.absences`, `mobile.contrats`, `mobile.propositions`, `mobile.swaps`, `mobile.profil` + bottom nav.
+### Refacto consommateurs
+- `src/routes/index.tsx` : remplace le bloc `useEffect` par `resolvePostLoginTarget(ctx)` + `navigate({ to: target })`.
+- `src/routes/_app.tsx` : idem (mobile redirect).
+- `src/components/auth/RoleGuard.tsx` : utilise une variante `enforcePostLoginGuard()` exportée du même module pour le cas "admin réel sur /mobile/chef".
+- Tests `src/lib/__tests__/post-login-routing.test.ts` : ajouter scénarios manquants (chef desktop, employé mobile).
 
-**Périmètre Chef (10 pages)** :
-`mobile.chef.dashboard`, `mobile.chef.planning`, `mobile.chef.equipe`, `mobile.chef.atelier`, `mobile.chef.fabrication`, `mobile.chef.staffer`, `mobile.chef.a-valider`, `mobile.chef.contrats`, `mobile.chef.moi`, `mobile.chef.affaires.$affaireId`.
+---
 
-### 3. Livrables
+## v0.47.2 — Poste management unifié (#7)
 
-- **Code** : patch `preview-context.tsx` + `index.tsx` (fix routing).
-- **Rapport** : un document `/mnt/documents/audit-mobile-2026-05-12.md` listant, par page :
-  - ✅ ce qui est OK
-  - ⚠️ findings classés P0/P1/P2 avec localisation fichier:ligne
-  - 💡 recommandations concrètes
-- **Tickets de suivi** : synthèse des P0 à corriger en priorité, présentée en fin de réponse pour que tu valides ce qu'on enchaîne (correctifs en v0.46.x).
+### Constat
+- 3 surfaces : `parametres/postes` (catalogue), `admin/employes-poste-principal` (saisie en lot), `parametres/metiers` (référentiel métier).
 
-### 4. Hors scope
+### Refonte
+- Nouvelle page **`/parametres/metiers-postes`** avec 3 onglets :
+  1. **Métiers** (8 métiers, lecture seule + couleur)
+  2. **Postes catalogue** (CRUD ex-`/parametres/postes`)
+  3. **Affectation employés** (ex-`/admin/employes-poste-principal`, autosave + import Excel conservés)
+- Anciennes routes → redirect 301 vers le bon onglet (`?tab=postes` etc.) pour ne pas casser les liens.
+- Sidebar : 1 entrée "Métiers & postes" au lieu de 2.
 
-- Refonte UI/UX globale (juste audit + recommandations, pas d'implémentation des changements visuels)
-- Tests E2E mobile (déjà tracés v0.34.x roadmap)
-- Le fix routing sera vérifié via `browser--navigate_to_sandbox` en viewport mobile après build.
+---
 
-## Détails techniques
+## v0.47.3 — Unification Absences / Congés (#6)
 
-- Dépendance : `useIsMobile()` est SSR-safe (renvoie `false` puis re-render après mount). En SSR/prerender, on rendra brièvement le composant Loader puis le bon redirect côté client. Acceptable car `/` est un IndexRedirect, pas une page indexable SEO.
-- Garder le comportement preview admin : `previewRole === "chef_mobile"` force mobile même sur grand écran (utile pour QA depuis desktop).
-- Pas de changement DB ni RLS.
+### Audit préalable (à faire avant migration)
+- Inventaire des 2 modèles (`absences` vs ce qui ressemble à des "congés" — probablement même table déjà, à confirmer via `code--view src/hooks/use-planning-data.ts` + `src/routes/_app.absences.tsx` + `src/routes/mobile.absences.tsx`).
+- Si une seule table existe déjà : la simplification se réduit à **fusionner les UI** (1 module unique avec filtre type) → faible risque.
+- Si deux tables → migration `congés → absences` avec mapping type, garde-fou anti-doublon, conservation historique.
 
-Confirme et j'enchaîne : (a) fix routing puis (b) audit complet avec rapport.
+### Livrables (cas table unique, hypothèse probable)
+- 1 hook unifié `useAbsences()` (suppression d'éventuels `useConges()` doublons).
+- Module mobile + desktop sur le même composant `AbsenceForm` avec props `variant: "mobile" | "desktop"`.
+- Anti-doublon UI live (déjà en place v0.39.1) factorisé dans le composant.
+
+---
+
+## Détails techniques transverses
+
+- **Aucune migration DB** sur v0.47.0/1/2. v0.47.3 dépend de l'audit.
+- **Tests** : chaque sous-version livre ses tests vitest + au moins 1 spec E2E mise à jour.
+- **Rollback safe** : chaque sous-version est indépendante, peut être publiée seule.
+- **Memory** : nouvelles entrées
+  - `mem://features/dashboard-widgets-registry` (v0.47.0)
+  - `mem://features/post-login-routing-module` (v0.47.1)
+  - `mem://features/metiers-postes-unifie` (v0.47.2)
+  - mise à jour `mem://features/auth-flow-roles` pour pointer vers le nouveau module
+
+---
+
+## Ordre d'exécution proposé
+
+```text
+v0.47.0  ──►  v0.47.1  ──►  v0.47.2  ──►  v0.47.3
+ (UI)        (routing)      (postes)     (absences)
+ 1 PR         1 PR           1 PR          1 PR
+```
+
+Je commence par v0.47.0 dès validation. Tu veux que je livre les 4 d'affilée, ou seulement v0.47.0 puis pause pour validation ?
