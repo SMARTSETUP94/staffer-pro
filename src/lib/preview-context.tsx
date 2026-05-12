@@ -137,7 +137,15 @@ export function PreviewProvider({ children }: { children: ReactNode }) {
   const effIsAdmin = effectiveRole === "admin";
   const effIsChef = effectiveRole === "chef_chantier";
   const effIsAdminOrChef = effIsAdmin || effIsChef;
-  const effIsMobile = previewRole === "employe_mobile" || previewRole === "chef_mobile";
+  // v0.46 : effIsMobile = vrai dès que le viewport est étroit (< 1024px) OU quand
+  // l'admin force un preview mobile depuis desktop (chef_mobile / employe_mobile).
+  // Avant : seul le preview admin déclenchait `effIsMobile` → un vrai chef/employé
+  // sur smartphone atterrissait sur la version desktop. Anti-régression : sans admin
+  // preview, le viewport seul suffit.
+  const effIsMobile =
+    isViewportMobile ||
+    previewRole === "employe_mobile" ||
+    previewRole === "chef_mobile";
   const isEmployePreview =
     previewRole === "employe_desktop" || previewRole === "employe_mobile";
 
