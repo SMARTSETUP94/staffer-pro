@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   addDays,
   endOfWeek,
@@ -15,6 +16,7 @@ import { usePreview } from "@/lib/preview-context";
 import { useResolvedEmploye } from "@/hooks/use-resolved-employe";
 import { PreviewBanner } from "@/components/PreviewBanner";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
+import { LogoutConfirmButton } from "@/components/mobile/LogoutConfirmButton";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
@@ -37,15 +39,13 @@ interface AssignationLite {
 }
 
 function MobileSemaine() {
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const { isPreviewing, setPreviewRole } = usePreview();
   const { employe, employeId, resolved: employeResolved } = useResolvedEmploye();
   const employeNom = employe ? `${employe.prenom} ${employe.nom}` : "";
   const navigate = useNavigate();
 
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
-  const [assignations, setAssignations] = useState<AssignationLite[]>([]);
-  const [loading, setLoading] = useState(true);
 
   const weekEnd = useMemo(() => endOfWeek(weekStart, { weekStartsOn: 1 }), [weekStart]);
   const days = useMemo(
@@ -53,41 +53,37 @@ function MobileSemaine() {
     [weekStart],
   );
 
-  // Si résolution terminée sans employé : on arrête le loading
-  useEffect(() => {
-    if (employeResolved && !employeId) setLoading(false);
-  }, [employeResolved, employeId]);
+  const startStr = format(weekStart, "yyyy-MM-dd");
+  const endStr = format(weekEnd, "yyyy-MM-dd");
 
-  // Charger les assignations de la semaine
-  useEffect(() => {
-    if (!employeId) return;
-    setLoading(true);
-    const startStr = format(weekStart, "yyyy-MM-dd");
-    const endStr = format(weekEnd, "yyyy-MM-dd");
-    supabase
-      .from("assignations")
-      .select(
-        "id, date, demi_journee, heures, notes, metier_id, affaire:affaires(numero, nom, lieu), metier:metiers(libelle, couleur), assignation_objets(objet:fabrication_objets(reference, nom))",
-      )
-      .eq("employe_id", employeId)
-      .gte("date", startStr)
-      .lte("date", endStr)
-      .order("date")
-      .then(({ data }) => {
-        const rows = (data ?? []).map((a) => {
-          const links = (a as unknown as { assignation_objets?: { objet: { reference: string; nom: string } | null }[] })
-            .assignation_objets ?? [];
-          return {
-            ...(a as unknown as AssignationLite),
-            objets: links
-              .map((l) => l.objet)
-              .filter((o): o is { reference: string; nom: string } => o !== null),
-          };
-        });
-        setAssignations(rows);
-        setLoading(false);
-      });
-  }, [employeId, weekStart, weekEnd]);
+  const { data: assignations = [], isLoading } = useQuery({
+    queryKey: ["mobile-aujourdhui", employeId, startStr, endStr],
+    enabled: employeResolved && !!employeId,
+    staleTime: 30_000,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("assignations")
+        .select(
+          "id, date, demi_journee, heures, notes, metier_id, affaire:affaires(numero, nom, lieu), metier:metiers(libelle, couleur), assignation_objets(objet:fabrication_objets(reference, nom))",
+        )
+        .eq("employe_id", employeId!)
+        .gte("date", startStr)
+        .lte("date", endStr)
+        .order("date");
+      return (data ?? []).map((a) => {
+        const links = (a as unknown as { assignation_objets?: { objet: { reference: string; nom: string } | null }[] })
+          .assignation_objets ?? [];
+        return {
+          ...(a as unknown as AssignationLite),
+          objets: links
+            .map((l) => l.objet)
+            .filter((o): o is { reference: string; nom: string } => o !== null),
+        };
+      }) as AssignationLite[];
+    },
+  });
+
+  const loading = (employeResolved && !!employeId && isLoading) || (!employeResolved);
 
   const handleQuitPreview = () => {
     setPreviewRole(null);
@@ -116,9 +112,7 @@ function MobileSemaine() {
               Quitter
             </Button>
           ) : (
-            <Button size="sm" variant="outline" onClick={() => signOut()}>
-              Déconnexion
-            </Button>
+            <LogoutConfirmButton />
           )}
         </div>
       </header>

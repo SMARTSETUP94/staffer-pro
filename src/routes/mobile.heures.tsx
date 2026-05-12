@@ -9,6 +9,7 @@ import { useResolvedEmploye } from "@/hooks/use-resolved-employe";
 import { PreviewBanner } from "@/components/PreviewBanner";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { Button } from "@/components/ui/button";
+import { LogoutConfirmButton } from "@/components/mobile/LogoutConfirmButton";
 import { MesHeuresGrid } from "@/components/heures/MesHeuresGrid";
 
 export const Route = createFileRoute("/mobile/heures")({
@@ -17,7 +18,7 @@ export const Route = createFileRoute("/mobile/heures")({
 });
 
 function MobileHeures() {
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const { isPreviewing, setPreviewRole, isEmployePreview, previewEmployeId } = usePreview();
   const { employeId } = useResolvedEmploye();
   const override = isEmployePreview ? (previewEmployeId ?? employeId) : null;
@@ -48,9 +49,7 @@ function MobileHeures() {
               Quitter
             </Button>
           ) : (
-            <Button size="sm" variant="outline" onClick={() => signOut()}>
-              Déconnexion
-            </Button>
+            <LogoutConfirmButton />
           )}
         </div>
       </header>
