@@ -168,10 +168,10 @@ export const inviteUser = createServerFn({ method: "POST" })
       const { supabase, userId } = context;
       await assertCallerIsAdmin(supabase, userId);
 
-      // 1. Générer le lien d'invitation (crée l'utilisateur s'il n'existe pas)
+      // 1. Génère le lien d'invitation (crée l'utilisateur s'il n'existe pas)
       // CRITIQUE : redirectTo force l'arrivée sur /auth/set-password (et non /)
       const redirectTo = resolveSetPasswordRedirect(data.siteUrl);
-      const { data: linkData, error: linkErr } = await supabaseAdmin.auth.admin.generateLink({
+      let { data: linkData, error: linkErr } = await supabaseAdmin.auth.admin.generateLink({
         type: "invite",
         email: data.email,
         options: {
@@ -183,6 +183,31 @@ export const inviteUser = createServerFn({ method: "POST" })
           },
         },
       });
+
+      // FALLBACK : si l'email existe déjà dans auth.users, generateLink type=invite
+      // échoue ("User already registered" / email_exists). On bascule sur un
+      // recovery link (équivalent UX : "définis ton mot de passe / réactive ton compte").
+      if (linkErr) {
+        const code = (linkErr as { code?: string }).code ?? "";
+        const msg = (linkErr.message ?? "").toLowerCase();
+        const alreadyExists =
+          code === "email_exists" ||
+          code === "user_already_exists" ||
+          msg.includes("already registered") ||
+          msg.includes("already been registered") ||
+          msg.includes("already exists");
+        if (alreadyExists) {
+          console.info("[inviteUser] email already registered, falling back to recovery link");
+          const fb = await supabaseAdmin.auth.admin.generateLink({
+            type: "recovery",
+            email: data.email,
+            options: { redirectTo },
+          });
+          linkData = fb.data;
+          linkErr = fb.error;
+        }
+      }
+
       if (linkErr || !linkData?.user) {
         return {
           ok: false as const,
@@ -215,6 +240,7 @@ export const inviteUser = createServerFn({ method: "POST" })
           userId: newUserId,
         };
       }
+
 
       // 3. Auto-lier l'employé matchant (case-insensitive)
       const linkedEmployeId = await tryAutoLinkEmploye(newUserId, data.email);

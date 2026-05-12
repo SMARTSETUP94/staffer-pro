@@ -70,35 +70,43 @@ export const sendPasswordReset = createServerFn({ method: "POST" })
         return { ok: false as const, error: "Service email non configuré" };
       }
 
-      // 1. Vérifie que l'utilisateur existe (sinon retour générique anti-énumération)
-      const { data: profile } = await supabaseAdmin
-        .from("profiles")
-        .select("id, email, full_name")
-        .ilike("email", data.email)
-        .maybeSingle();
-
-      // Réponse générique pour ne pas leaker l'existence des comptes
-      if (!profile) {
-        return { ok: true as const, sent: false };
-      }
-
-      // 2. Génère un recovery link via admin API
+      // 1. Génère directement le recovery link (source de vérité = auth.users,
+      //    pas profiles : évite les faux négatifs quand profiles est désynchro).
       const redirectTo = `${data.redirectOrigin.replace(/\/$/, "")}/auth/reset-password`;
       const { data: linkData, error: linkErr } = await supabaseAdmin.auth.admin.generateLink({
         type: "recovery",
-        email: profile.email,
+        email: data.email,
         options: { redirectTo },
       });
-      if (linkErr || !linkData?.properties?.action_link) {
+      if (linkErr || !linkData?.properties?.action_link || !linkData?.user) {
+        const code = (linkErr as { code?: string } | null)?.code ?? "";
+        const msg = (linkErr?.message ?? "").toLowerCase();
+        // user_not_found / "User not found" → réponse générique anti-énumération
+        if (code === "user_not_found" || msg.includes("user not found") || msg.includes("not found")) {
+          return { ok: true as const, sent: false };
+        }
         return {
           ok: false as const,
           error: linkErr?.message ?? "Impossible de générer le lien de réinitialisation",
         };
       }
 
+      const targetEmail = linkData.user.email ?? data.email;
+      // Best-effort : récupère full_name depuis profiles (sans bloquer si absent)
+      const { data: profile } = await supabaseAdmin
+        .from("profiles")
+        .select("full_name")
+        .eq("id", linkData.user.id)
+        .maybeSingle();
+      const fullName =
+        (linkData.user.user_metadata?.full_name as string | undefined) ??
+        profile?.full_name ??
+        undefined;
+
+
       // 3. Envoie l'email via Resend gateway (from onboarding@setup.paris)
       const html = buildPasswordResetEmailHtml({
-        fullName: profile.full_name ?? undefined,
+        fullName,
         resetLink: linkData.properties.action_link,
         expiresInMinutes: 60,
       });
@@ -112,7 +120,7 @@ export const sendPasswordReset = createServerFn({ method: "POST" })
         },
         body: JSON.stringify({
           from: "Setup Paris <onboarding@setup.paris>",
-          to: [profile.email],
+          to: [targetEmail],
           reply_to: "smart@setup.paris",
           subject: "Réinitialisation de ton mot de passe — Setup Paris",
           html,
