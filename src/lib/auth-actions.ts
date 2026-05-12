@@ -106,7 +106,7 @@ export const sendPasswordReset = createServerFn({ method: "POST" })
 
       // 3. Envoie l'email via Resend gateway (from onboarding@setup.paris)
       const html = buildPasswordResetEmailHtml({
-        fullName: profile.full_name ?? undefined,
+        fullName,
         resetLink: linkData.properties.action_link,
         expiresInMinutes: 60,
       });
@@ -120,7 +120,7 @@ export const sendPasswordReset = createServerFn({ method: "POST" })
         },
         body: JSON.stringify({
           from: "Setup Paris <onboarding@setup.paris>",
-          to: [profile.email],
+          to: [targetEmail],
           reply_to: "smart@setup.paris",
           subject: "Réinitialisation de ton mot de passe — Setup Paris",
           html,
