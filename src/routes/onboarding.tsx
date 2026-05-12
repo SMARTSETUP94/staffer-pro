@@ -108,7 +108,7 @@ function OnboardingPage() {
         .eq("id", user.id)
         .maybeSingle();
       if (profile?.profile_completed_at) {
-        navigate({ to: "/dashboard" });
+        navigate({ to: "/" });
         return;
       }
       const { data: emp } = await supabase
