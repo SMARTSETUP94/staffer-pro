@@ -97,26 +97,9 @@ function LoginPage() {
     }
   };
 
-  const onSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (busy) return;
-    setBusy(true);
-    try {
-      const { error } = await signUp(email, password, fullName);
-      if (error) {
-        toast.error("Inscription impossible", { description: error });
-      } else {
-        toast.success("Compte créé", { description: "Vous pouvez vous connecter." });
-        setTab("signin");
-      }
-    } catch (err) {
-      console.error("[login] signUp threw", err);
-      const message = err instanceof Error ? err.message : "Erreur inconnue, réessaie.";
-      toast.error("Inscription impossible", { description: message });
-    } finally {
-      setBusy(false);
-    }
-  };
+  // Self-signup désactivé : seuls les admins peuvent inviter (chef d'équipe par défaut),
+  // les employés sont créés via leur fiche employé et invités séparément.
+
 
   return (
     <div className="grid min-h-screen lg:grid-cols-[1fr_1.2fr]">
