@@ -10,7 +10,7 @@ export const Route = createFileRoute("/_app/mes-contrats")({
 function MesContratsPage() {
   return (
     <div className="p-6 space-y-4 max-w-4xl">
-      <PageHeader title="Mes contrats" subtitle="Vos contrats intermittents : lecture, téléchargement et signature." />
+      <PageHeader title="Mes contrats" description="Vos contrats intermittents : lecture, téléchargement et signature." />
       <MesContratsList />
     </div>
   );
