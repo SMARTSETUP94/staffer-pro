@@ -93,11 +93,11 @@ function AppGuard() {
     }
     // Reset compteur dès qu'on ne redirige PLUS vers /onboarding
     onboardingRedirectCountRef.current = 0;
-    // Preview "Employé mobile" / "Chef mobile" -> bascule mobile
+    // Mobile (vrai smartphone OU preview "Employé/Chef mobile") -> bascule mobile.
+    // v0.46 : route vers /mobile/chef/dashboard pour les chefs/admin, sinon /mobile/aujourdhui.
     if (effIsMobile) {
-      const isChefMobile = currentPath.startsWith("/mobile/chef");
-      if (!isChefMobile && !currentPath.startsWith("/mobile/")) {
-        navigate({ to: "/mobile/aujourdhui" });
+      if (!currentPath.startsWith("/mobile/")) {
+        navigate({ to: effIsAdminOrChef ? "/mobile/chef/dashboard" : "/mobile/aujourdhui" });
         return;
       }
     }
