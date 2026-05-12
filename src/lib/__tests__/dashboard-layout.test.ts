@@ -169,7 +169,7 @@ describe("WIDGET_META widths cohérents", () => {
   });
 });
 
-describe("Catégorisation des 17 widgets", () => {
+describe("Catégorisation des 25 widgets", () => {
   const byCat = (cat: string) => ALL_WIDGET_IDS.filter((id) => WIDGET_META[id].category === cat);
 
   it("Commerce : 6 widgets", () => {
@@ -181,7 +181,10 @@ describe("Catégorisation des 17 widgets", () => {
   it("Fab : 3 widgets", () => {
     expect(byCat("fab")).toHaveLength(3);
   });
-  it("Perso : 3 widgets", () => {
-    expect(byCat("perso")).toHaveLength(3);
+  it("Perso : 4 widgets", () => {
+    expect(byCat("perso")).toHaveLength(4);
+  });
+  it("Fun : 7 widgets", () => {
+    expect(byCat("fun")).toHaveLength(7);
   });
 });
