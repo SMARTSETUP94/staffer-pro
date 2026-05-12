@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   addDays,
   endOfWeek,
@@ -15,6 +16,7 @@ import { usePreview } from "@/lib/preview-context";
 import { useResolvedEmploye } from "@/hooks/use-resolved-employe";
 import { PreviewBanner } from "@/components/PreviewBanner";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
+import { LogoutConfirmButton } from "@/components/mobile/LogoutConfirmButton";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
