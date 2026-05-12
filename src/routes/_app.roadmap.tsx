@@ -43,6 +43,55 @@ interface RoadmapPlanned {
 
 const RELEASES: RoadmapRelease[] = [
   {
+    date: "2026-05-12",
+    version: "v0.46.0",
+    title: "📱 Polish mobile chef + employé + politique de création de comptes verrouillée",
+    entries: [
+      {
+        type: "fix",
+        area: "Mobile",
+        title: "Détection viewport mobile sur smartphone (plus de version desktop par défaut)",
+        description:
+          "`effIsMobile` combine désormais `useIsMobile()` (< 1024px) et le preview admin. Routing post-login : smartphone + chef/admin → /mobile/chef/dashboard, smartphone + employé → /mobile/aujourdhui, desktop inchangé. AppGuard suit la même règle pour les rebonds en cours de session. `useIsMobile` initialisé synchronement via `window.matchMedia` → plus de flash desktop au premier paint.",
+      },
+      {
+        type: "fix",
+        area: "Mobile chef",
+        title: "Header chef : avatar + cloche pointaient sur la page employé",
+        description:
+          "`ChefMobileHeader` redirigeait l'avatar et la cloche vers `/mobile/profil` (page employé avec mauvaise nav). Les deux pointent désormais vers `/mobile/chef/moi` (onglet « Moi » du hub chef). Aria-label cloche dynamique (`Notifications — N non lues`), tooltip sur titre tronqué, padding-top safe-area iOS.",
+      },
+      {
+        type: "improvement",
+        area: "Mobile",
+        title: "Bottom navs employé + chef : tap targets, safe-area, feedback tactile",
+        description:
+          "Padding vertical `py-3` + `min-h-12` (≥48px, conforme iOS HIG / WCAG 2.5.5). `active:bg-accent/50` pour feedback au tap. `paddingBottom: env(safe-area-inset-bottom)` pour les iPhone X+ (la home indicator ne chevauche plus la nav). `preload=\"intent\"` sur tous les Links → préchargement au tap-down. Aria-label dynamique sur badges (« Atelier — 4 objets à valider »).",
+      },
+      {
+        type: "improvement",
+        area: "Mobile employé",
+        title: "Confirmation avant déconnexion (anti tap accidentel)",
+        description:
+          "Nouveau composant `LogoutConfirmButton` (AlertDialog shadcn) sur les headers `mobile.aujourdhui` et `mobile.heures`. Empêche les déconnexions involontaires sur la zone proche du bouton « Quitter preview ».",
+      },
+      {
+        type: "improvement",
+        area: "Performance",
+        title: "Mobile.aujourdhui migré sur React Query (cache 30s)",
+        description:
+          "Fetch Supabase brut via `useEffect` remplacé par `useQuery` avec `queryKey: [\"mobile-aujourdhui\", employeId, weekStart, weekEnd]` et `staleTime: 30s`. Élimine les re-fetch lourds à chaque retour sur la page (changement d'onglet, tap-back). Aligné avec `mobile.chef.dashboard`.",
+      },
+      {
+        type: "feature",
+        area: "Sécurité",
+        title: "Self-signup désactivé + politique de rôles verrouillée",
+        description:
+          "Création de comptes auto-service désactivée (Supabase `disable_signup: true` + suppression de l'onglet « Créer » sur `/login`). Les invitations admin créent désormais des chefs par défaut (`/parametres/utilisateurs`, défaut `chef_chantier`). Les employés sont créés via une fiche `employes` + auto-link email à la première connexion. L'onboarding redirige vers `/` (et non `/dashboard`) pour bénéficier du routing role-aware : un employé qui valide le questionnaire atterrit sur `/mobile/aujourdhui` (mobile) ou `/ma-semaine` (desktop), pas sur le dashboard avec widgets quizz.",
+      },
+    ],
+  },
+  {
     date: "2026-05-10",
     version: "v0.42.2",
     title: "👤 Poste principal employé + saisie en lot + import/export Excel + validation E2E template",
