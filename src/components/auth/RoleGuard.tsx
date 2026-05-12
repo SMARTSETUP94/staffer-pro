@@ -49,12 +49,10 @@ export function RoleGuard({
   const toastShownRef = useRef(false);
 
   const allowed = required === "admin" ? isAdmin : isAdminOrChef;
-  const realAdminOnChefMobile =
-    rolesLoaded &&
-    isAdmin &&
-    !isPreviewing &&
-    required === "chef_or_admin" &&
-    currentPath.startsWith("/mobile/chef");
+  const adminMobileChefRedirect =
+    rolesLoaded && required === "chef_or_admin"
+      ? checkMobileChefAccessForAdmin({ isAdmin, isPreviewing, currentPath })
+      : null;
 
   useEffect(() => {
     if (rolesLoaded && !allowed && !toastShownRef.current) {
