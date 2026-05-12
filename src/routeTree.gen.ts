@@ -37,6 +37,7 @@ import { Route as AppMonEquipeTypeRouteImport } from './routes/_app.mon-equipe-t
 import { Route as AppMesSwapsRouteImport } from './routes/_app.mes-swaps'
 import { Route as AppMesPropositionsRouteImport } from './routes/_app.mes-propositions'
 import { Route as AppMesHeuresRouteImport } from './routes/_app.mes-heures'
+import { Route as AppMesContratsRouteImport } from './routes/_app.mes-contrats'
 import { Route as AppMaSemaineRouteImport } from './routes/_app.ma-semaine'
 import { Route as AppInterimairesRouteImport } from './routes/_app.interimaires'
 import { Route as AppIncidentAuthRouteImport } from './routes/_app.incident-auth'
@@ -234,6 +235,11 @@ const AppMesPropositionsRoute = AppMesPropositionsRouteImport.update({
 const AppMesHeuresRoute = AppMesHeuresRouteImport.update({
   id: '/mes-heures',
   path: '/mes-heures',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppMesContratsRoute = AppMesContratsRouteImport.update({
+  id: '/mes-contrats',
+  path: '/mes-contrats',
   getParentRoute: () => AppRoute,
 } as any)
 const AppMaSemaineRoute = AppMaSemaineRouteImport.update({
@@ -565,6 +571,7 @@ export interface FileRoutesByFullPath {
   '/incident-auth': typeof AppIncidentAuthRoute
   '/interimaires': typeof AppInterimairesRoute
   '/ma-semaine': typeof AppMaSemaineRoute
+  '/mes-contrats': typeof AppMesContratsRoute
   '/mes-heures': typeof AppMesHeuresRoute
   '/mes-propositions': typeof AppMesPropositionsRoute
   '/mes-swaps': typeof AppMesSwapsRoute
@@ -652,6 +659,7 @@ export interface FileRoutesByTo {
   '/incident-auth': typeof AppIncidentAuthRoute
   '/interimaires': typeof AppInterimairesRoute
   '/ma-semaine': typeof AppMaSemaineRoute
+  '/mes-contrats': typeof AppMesContratsRoute
   '/mes-heures': typeof AppMesHeuresRoute
   '/mes-propositions': typeof AppMesPropositionsRoute
   '/mes-swaps': typeof AppMesSwapsRoute
@@ -740,6 +748,7 @@ export interface FileRoutesById {
   '/_app/incident-auth': typeof AppIncidentAuthRoute
   '/_app/interimaires': typeof AppInterimairesRoute
   '/_app/ma-semaine': typeof AppMaSemaineRoute
+  '/_app/mes-contrats': typeof AppMesContratsRoute
   '/_app/mes-heures': typeof AppMesHeuresRoute
   '/_app/mes-propositions': typeof AppMesPropositionsRoute
   '/_app/mes-swaps': typeof AppMesSwapsRoute
@@ -830,6 +839,7 @@ export interface FileRouteTypes {
     | '/incident-auth'
     | '/interimaires'
     | '/ma-semaine'
+    | '/mes-contrats'
     | '/mes-heures'
     | '/mes-propositions'
     | '/mes-swaps'
@@ -917,6 +927,7 @@ export interface FileRouteTypes {
     | '/incident-auth'
     | '/interimaires'
     | '/ma-semaine'
+    | '/mes-contrats'
     | '/mes-heures'
     | '/mes-propositions'
     | '/mes-swaps'
@@ -1004,6 +1015,7 @@ export interface FileRouteTypes {
     | '/_app/incident-auth'
     | '/_app/interimaires'
     | '/_app/ma-semaine'
+    | '/_app/mes-contrats'
     | '/_app/mes-heures'
     | '/_app/mes-propositions'
     | '/_app/mes-swaps'
@@ -1290,6 +1302,13 @@ declare module '@tanstack/react-router' {
       path: '/mes-heures'
       fullPath: '/mes-heures'
       preLoaderRoute: typeof AppMesHeuresRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/mes-contrats': {
+      id: '/_app/mes-contrats'
+      path: '/mes-contrats'
+      fullPath: '/mes-contrats'
+      preLoaderRoute: typeof AppMesContratsRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/ma-semaine': {
@@ -1782,6 +1801,7 @@ interface AppRouteChildren {
   AppIncidentAuthRoute: typeof AppIncidentAuthRoute
   AppInterimairesRoute: typeof AppInterimairesRoute
   AppMaSemaineRoute: typeof AppMaSemaineRoute
+  AppMesContratsRoute: typeof AppMesContratsRoute
   AppMesHeuresRoute: typeof AppMesHeuresRoute
   AppMesPropositionsRoute: typeof AppMesPropositionsRoute
   AppMesSwapsRoute: typeof AppMesSwapsRoute
@@ -1834,6 +1854,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppIncidentAuthRoute: AppIncidentAuthRoute,
   AppInterimairesRoute: AppInterimairesRoute,
   AppMaSemaineRoute: AppMaSemaineRoute,
+  AppMesContratsRoute: AppMesContratsRoute,
   AppMesHeuresRoute: AppMesHeuresRoute,
   AppMesPropositionsRoute: AppMesPropositionsRoute,
   AppMesSwapsRoute: AppMesSwapsRoute,
