@@ -243,7 +243,7 @@ function UtilisateursPage() {
       setInviteOpen(false);
       setInviteEmail("");
       setInviteFullName("");
-      setInviteRole("employe");
+      setInviteRole("chef_chantier");
       loadUsers();
     } catch (e) {
       const msg = await readServerFnError(e);
