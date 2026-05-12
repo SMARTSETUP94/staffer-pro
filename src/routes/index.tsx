@@ -4,6 +4,7 @@ import { Loader2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { usePreview } from "@/lib/preview-context";
 import { isAuthHashPresent } from "@/lib/auth-redirect-helpers";
+import { resolvePostLoginTarget } from "@/lib/post-login-routing";
 
 export const Route = createFileRoute("/")({
   component: IndexRedirect,
