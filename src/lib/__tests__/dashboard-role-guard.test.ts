@@ -79,13 +79,10 @@ describe("Dashboard preset par rôle — getAllowedWidgetsForRole", () => {
 });
 
 describe("clampLayoutToRole — defense in depth", () => {
-  it("FUITE BLOQUÉE : layout BDD corrompu employé contenant tous les widgets → ne garde QUE perso", () => {
+  it("FUITE BLOQUÉE : layout BDD corrompu employé contenant tous les widgets → vide", () => {
     const corrupted = { visible: [...ALL_WIDGET_IDS] };
     const clamped = clampLayoutToRole(corrupted, "employe");
-    expect(clamped.visible).toEqual(["mes_etapes_fab", "heures_a_valider"]);
-    expect(clamped.visible).not.toContain("opportunites_priorite");
-    expect(clamped.visible).not.toContain("pipeline_charge_affaires");
-    expect(clamped.visible).not.toContain("kpi_top");
+    expect(clamped.visible).toEqual([]);
   });
 
   it("FUITE BLOQUÉE : layout employé contenant uniquement des widgets commerce → vide", () => {
@@ -118,14 +115,13 @@ describe("clampLayoutToRole — defense in depth", () => {
     expect(twice.visible).toEqual(once.visible);
   });
 
-  it("préserve le champ hidden en le clampant aussi", () => {
+  it("préserve le champ hidden en le clampant aussi (employe → hidden vidé)", () => {
     const layout = {
       visible: ["mes_etapes_fab"] as WidgetId[],
       hidden: ["kpi_top", "heures_a_valider"] as WidgetId[],
     };
     const clamped = clampLayoutToRole(layout, "employe");
-    expect(clamped.hidden).not.toContain("kpi_top");
-    expect(clamped.hidden).toContain("heures_a_valider");
+    expect(clamped.hidden).toEqual([]);
   });
 });
 
