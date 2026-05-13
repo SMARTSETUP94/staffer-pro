@@ -141,7 +141,6 @@ function buildSections(role: EffRole, validationCount: number, contratsRhCount: 
         { title: "Utilisateurs", url: "/parametres/utilisateurs", icon: UserCircle, show: () => true },
         { title: "Métiers & postes", url: "/parametres/metiers", icon: Palette, show: () => true },
         { title: "Rôles fabrication", url: "/parametres/roles-fabrication", icon: Hammer, show: () => true },
-        { title: "Compétences équipe", url: "/parametres/competences-equipe", icon: Users, show: () => true },
         { title: "Lieux entreprise", url: "/parametres/lieux", icon: Warehouse, show: () => true },
         { title: "Autorisations véhicules", url: "/parametres/autorisations-vehicules", icon: BadgeCheck, show: () => true },
         { title: "Sous-traitants", url: "/parametres/sous-traitants", icon: Truck, show: () => true },
