@@ -14,6 +14,8 @@ import { GanttHeaderRow } from "./gantt/GanttHeaderRow";
 import { DayGrid } from "./gantt/DayGrid";
 // v0.39.2b2.1 Tour 3 — Ligne objet + steps interactifs extraits vers ./gantt/ObjetRowInteractif
 import { ObjetRowInteractif } from "./gantt/ObjetRowInteractif";
+// v0.48 — Bandes grises absences validées au-dessus des objets
+import { AbsencesBand } from "./gantt/AbsencesBand";
 import {
   calculateStaffingPlan,
   updatePlanObject,
@@ -555,6 +557,10 @@ export const GanttInteractif = forwardRef<
             onShift={handleShift}
             onResetShift={handleResetShift}
           />
+
+          {/* v0.48 — Absences validées : bandes grises pour expliquer pourquoi
+              certaines personnes ne sont pas staffables ce jour-là */}
+          <AbsencesBand days={days} gridTemplate={gridTemplate} />
 
           {/* Par objet — chaque objet affiche : entête + steps métiers (incl. quote-part BE/Num) */}
           {objets.map((obj, idx) => {
