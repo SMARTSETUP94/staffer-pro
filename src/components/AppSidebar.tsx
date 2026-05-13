@@ -133,22 +133,37 @@ function buildSections(role: EffRole, validationCount: number, contratsRhCount: 
     ],
   });
 
-  // ===== Administration : admin only (rôle effectif) =====
+  // ===== Administration : admin only — éclatée en 3 sous-sections lisibles =====
   if (isAdmin) {
     sections.push({
-      label: "Administration",
+      label: "Admin · Comptes & accès",
       items: [
         { title: "Utilisateurs", url: "/parametres/utilisateurs", icon: UserCircle, show: () => true },
+        { title: "Audit Auth", url: "/audit-auth", icon: ClipboardCheck, show: () => true },
+      ],
+    });
+    sections.push({
+      label: "Admin · Référentiels",
+      items: [
         { title: "Métiers & postes", url: "/parametres/metiers", icon: Palette, show: () => true },
         { title: "Rôles fabrication", url: "/parametres/roles-fabrication", icon: Hammer, show: () => true },
         { title: "Lieux entreprise", url: "/parametres/lieux", icon: Warehouse, show: () => true },
         { title: "Autorisations véhicules", url: "/parametres/autorisations-vehicules", icon: BadgeCheck, show: () => true },
         { title: "Sous-traitants", url: "/parametres/sous-traitants", icon: Truck, show: () => true },
-        { title: "Rattachement devis", url: "/devis/rattachement-historique", icon: ClipboardList, show: () => true },
+      ],
+    });
+    sections.push({
+      label: "Admin · Audit & qualité",
+      items: [
         { title: "Audit heures", url: "/audit-heures", icon: ClipboardCheck, show: () => true },
-        { title: "Audit Auth", url: "/audit-auth", icon: ClipboardCheck, show: () => true },
         { title: "Audit Admin (docs + validations)", url: "/admin/audit", icon: ClipboardCheck, show: () => true },
+        { title: "Rattachement devis", url: "/devis/rattachement-historique", icon: ClipboardList, show: () => true },
         { title: "Signalements", url: "/admin/feedback", icon: MessageCircle, show: () => true },
+      ],
+    });
+    sections.push({
+      label: "Admin · Système",
+      items: [
         { title: "Contenu widgets", url: "/admin/contenu-widgets", icon: Lightbulb, show: () => true },
         { title: "Roadmap", url: "/roadmap", icon: Map, show: () => true },
       ],
