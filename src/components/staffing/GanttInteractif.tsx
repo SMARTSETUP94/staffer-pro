@@ -14,6 +14,8 @@ import { GanttHeaderRow } from "./gantt/GanttHeaderRow";
 import { DayGrid } from "./gantt/DayGrid";
 // v0.39.2b2.1 Tour 3 — Ligne objet + steps interactifs extraits vers ./gantt/ObjetRowInteractif
 import { ObjetRowInteractif } from "./gantt/ObjetRowInteractif";
+// v0.48 — Bandes grises absences validées au-dessus des objets
+import { AbsencesBand } from "./gantt/AbsencesBand";
 import {
   calculateStaffingPlan,
   updatePlanObject,
