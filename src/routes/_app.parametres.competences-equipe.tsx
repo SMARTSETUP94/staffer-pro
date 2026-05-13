@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { MetiersPostesTabs } from "@/components/parametres/MetiersPostesTabs";
 
 export const Route = createFileRoute("/_app/parametres/competences-equipe")({
   head: () => ({ meta: [{ title: "Compétences équipe — Paramètres" }] }),
@@ -193,6 +194,7 @@ function CompetencesEquipePage() {
 
   return (
     <div className="space-y-4 px-2 py-4 md:px-6">
+      <MetiersPostesTabs current="competences" />
       <div>
         <p className="overline">— Paramétrage</p>
         <h1 className="text-2xl font-bold text-foreground">Compétences équipe</h1>

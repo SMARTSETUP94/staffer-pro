@@ -6,15 +6,16 @@
  * Sidebar consolidée : une seule entrée "Métiers & postes" → tab Métiers.
  */
 import { Link } from "@tanstack/react-router";
-import { Palette, FileSignature, UserCog } from "lucide-react";
+import { Palette, FileSignature, UserCog, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type Tab = "metiers" | "postes" | "employes-poste";
+type Tab = "metiers" | "postes" | "employes-poste" | "competences";
 
 const TABS: { id: Tab; label: string; to: string; icon: typeof Palette }[] = [
   { id: "metiers", label: "Métiers", to: "/parametres/metiers", icon: Palette },
   { id: "postes", label: "Postes contractuels", to: "/parametres/postes", icon: FileSignature },
   { id: "employes-poste", label: "Postes principaux (employés)", to: "/admin/employes-poste-principal", icon: UserCog },
+  { id: "competences", label: "Compétences équipe", to: "/parametres/competences-equipe", icon: Users },
 ];
 
 interface Props {
