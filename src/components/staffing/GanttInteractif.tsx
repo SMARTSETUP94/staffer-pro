@@ -558,6 +558,10 @@ export const GanttInteractif = forwardRef<
             onResetShift={handleResetShift}
           />
 
+          {/* v0.48 — Absences validées : bandes grises pour expliquer pourquoi
+              certaines personnes ne sont pas staffables ce jour-là */}
+          <AbsencesBand days={days} gridTemplate={gridTemplate} />
+
           {/* Par objet — chaque objet affiche : entête + steps métiers (incl. quote-part BE/Num) */}
           {objets.map((obj, idx) => {
             const objSteps = mergedSteps.filter(
