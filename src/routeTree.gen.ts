@@ -84,6 +84,7 @@ import { Route as AppDevisRattachementHistoriqueRouteImport } from './routes/_ap
 import { Route as AppDevisProgbatImportRouteImport } from './routes/_app.devis.progbat-import'
 import { Route as AppDevisImportRouteImport } from './routes/_app.devis.import'
 import { Route as AppDevisHistoriqueRouteImport } from './routes/_app.devis.historique'
+import { Route as AppAffairesBudgetPlanningRouteImport } from './routes/_app.affaires.budget-planning'
 import { Route as AppAffairesAffaireIdRouteImport } from './routes/_app.affaires.$affaireId'
 import { Route as AppAdminFeedbackRouteImport } from './routes/_app.admin.feedback'
 import { Route as AppAdminEmployesPostePrincipalRouteImport } from './routes/_app.admin.employes-poste-principal'
@@ -478,6 +479,12 @@ const AppDevisHistoriqueRoute = AppDevisHistoriqueRouteImport.update({
   path: '/devis/historique',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAffairesBudgetPlanningRoute =
+  AppAffairesBudgetPlanningRouteImport.update({
+    id: '/affaires/budget-planning',
+    path: '/affaires/budget-planning',
+    getParentRoute: () => AppRoute,
+  } as any)
 const AppAffairesAffaireIdRoute = AppAffairesAffaireIdRouteImport.update({
   id: '/affaires/$affaireId',
   path: '/affaires/$affaireId',
@@ -601,6 +608,7 @@ export interface FileRoutesByFullPath {
   '/admin/employes-poste-principal': typeof AppAdminEmployesPostePrincipalRoute
   '/admin/feedback': typeof AppAdminFeedbackRoute
   '/affaires/$affaireId': typeof AppAffairesAffaireIdRouteWithChildren
+  '/affaires/budget-planning': typeof AppAffairesBudgetPlanningRoute
   '/devis/historique': typeof AppDevisHistoriqueRoute
   '/devis/import': typeof AppDevisImportRoute
   '/devis/progbat-import': typeof AppDevisProgbatImportRoute
@@ -687,6 +695,7 @@ export interface FileRoutesByTo {
   '/admin/email-preview': typeof AppAdminEmailPreviewRoute
   '/admin/employes-poste-principal': typeof AppAdminEmployesPostePrincipalRoute
   '/admin/feedback': typeof AppAdminFeedbackRoute
+  '/affaires/budget-planning': typeof AppAffairesBudgetPlanningRoute
   '/devis/historique': typeof AppDevisHistoriqueRoute
   '/devis/import': typeof AppDevisImportRoute
   '/devis/progbat-import': typeof AppDevisProgbatImportRoute
@@ -778,6 +787,7 @@ export interface FileRoutesById {
   '/_app/admin/employes-poste-principal': typeof AppAdminEmployesPostePrincipalRoute
   '/_app/admin/feedback': typeof AppAdminFeedbackRoute
   '/_app/affaires/$affaireId': typeof AppAffairesAffaireIdRouteWithChildren
+  '/_app/affaires/budget-planning': typeof AppAffairesBudgetPlanningRoute
   '/_app/devis/historique': typeof AppDevisHistoriqueRoute
   '/_app/devis/import': typeof AppDevisImportRoute
   '/_app/devis/progbat-import': typeof AppDevisProgbatImportRoute
@@ -869,6 +879,7 @@ export interface FileRouteTypes {
     | '/admin/employes-poste-principal'
     | '/admin/feedback'
     | '/affaires/$affaireId'
+    | '/affaires/budget-planning'
     | '/devis/historique'
     | '/devis/import'
     | '/devis/progbat-import'
@@ -955,6 +966,7 @@ export interface FileRouteTypes {
     | '/admin/email-preview'
     | '/admin/employes-poste-principal'
     | '/admin/feedback'
+    | '/affaires/budget-planning'
     | '/devis/historique'
     | '/devis/import'
     | '/devis/progbat-import'
@@ -1045,6 +1057,7 @@ export interface FileRouteTypes {
     | '/_app/admin/employes-poste-principal'
     | '/_app/admin/feedback'
     | '/_app/affaires/$affaireId'
+    | '/_app/affaires/budget-planning'
     | '/_app/devis/historique'
     | '/_app/devis/import'
     | '/_app/devis/progbat-import'
@@ -1633,6 +1646,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDevisHistoriqueRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/affaires/budget-planning': {
+      id: '/_app/affaires/budget-planning'
+      path: '/affaires/budget-planning'
+      fullPath: '/affaires/budget-planning'
+      preLoaderRoute: typeof AppAffairesBudgetPlanningRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/affaires/$affaireId': {
       id: '/_app/affaires/$affaireId'
       path: '/affaires/$affaireId'
@@ -1819,6 +1839,7 @@ interface AppRouteChildren {
   AppAdminEmployesPostePrincipalRoute: typeof AppAdminEmployesPostePrincipalRoute
   AppAdminFeedbackRoute: typeof AppAdminFeedbackRoute
   AppAffairesAffaireIdRoute: typeof AppAffairesAffaireIdRouteWithChildren
+  AppAffairesBudgetPlanningRoute: typeof AppAffairesBudgetPlanningRoute
   AppDevisHistoriqueRoute: typeof AppDevisHistoriqueRoute
   AppDevisImportRoute: typeof AppDevisImportRoute
   AppDevisProgbatImportRoute: typeof AppDevisProgbatImportRoute
@@ -1872,6 +1893,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAdminEmployesPostePrincipalRoute: AppAdminEmployesPostePrincipalRoute,
   AppAdminFeedbackRoute: AppAdminFeedbackRoute,
   AppAffairesAffaireIdRoute: AppAffairesAffaireIdRouteWithChildren,
+  AppAffairesBudgetPlanningRoute: AppAffairesBudgetPlanningRoute,
   AppDevisHistoriqueRoute: AppDevisHistoriqueRoute,
   AppDevisImportRoute: AppDevisImportRoute,
   AppDevisProgbatImportRoute: AppDevisProgbatImportRoute,
