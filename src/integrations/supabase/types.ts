@@ -3708,6 +3708,18 @@ export type Database = {
         Args: { _affaire_id: string; _date: string }
         Returns: boolean
       }
+      capacite_par_metier: {
+        Args: never
+        Returns: {
+          capacite_cdi_cdd: number
+          capacite_interim: number
+          capacite_totale: number
+          metier_couleur: string
+          metier_id: number
+          metier_libelle: string
+          metier_ordre: number
+        }[]
+      }
       cleanup_fabrication_orphelins: {
         Args: { p_affaire_id: string }
         Returns: Json
@@ -3966,6 +3978,30 @@ export type Database = {
           _slot: string
         }
         Returns: Json
+      }
+      staffing_par_pole_consolide: {
+        Args: {
+          p_filtres_chantier_ids?: string[]
+          p_filtres_metier_ids?: number[]
+          p_filtres_statut?: string[]
+          p_inclure_opportunites?: boolean
+          p_periode_debut: string
+          p_periode_fin: string
+        }
+        Returns: {
+          chantier_id: string
+          chantier_nom: string
+          chantier_numero: string
+          chantier_statut: string
+          chantier_typologie: string
+          metier_couleur: string
+          metier_id: number
+          metier_libelle: string
+          metier_ordre: number
+          nb_personnes: number
+          total_demi_jours: number
+          total_heures: number
+        }[]
       }
       submit_quiz_answer: {
         Args: { p_answer_index: number; p_quiz_id: string }
