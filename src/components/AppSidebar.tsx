@@ -119,6 +119,7 @@ function buildSections(role: EffRole, validationCount: number, contratsRhCount: 
       label: "Logistique",
       items: [
         { title: "Véhicules", url: "/flotte", icon: Truck, show: () => true },
+        { title: "Véhicules planning", url: "/logistique/vehicules-planning", icon: Calendar, show: () => true },
         // v0.14 : "Demandes de devis" → "Demandes transport" (lever ambiguïté avec devis clients)
         { title: "Demandes transport", url: "/export/demandes-devis", icon: FileQuestion, show: () => true },
       ],
