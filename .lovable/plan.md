@@ -1,117 +1,135 @@
-# Sprint Simplification v0.47
+## v0.48 — Vue Planning « Par pôle (consolidé) »
 
-Tu as retenu 5 chantiers : **#9 Auth/routing**, **#7 Poste management**, **#6 Absences/congés**, **#10 Dashboard widgets registry**, **#1 "Mon équipe type" widget→teaser**.
-
-Je propose de les livrer dans cet ordre (du plus safe au plus structurant) en 4 sous-versions.
+Objectif : ajouter un 8ᵉ onglet à `/planning` donnant la vue stratégique directeur/coordinateur — matrice **chantier × métier** avec nb personnes + heures par cellule, capacités sticky en haut et utilisation par pôle sticky en bas. Aucune modification des 7 onglets existants.
 
 ---
 
-## v0.47.0 — Quick wins UI (≈ 1 itération)
+### 1. Backend — 2 RPC SECURITY DEFINER (RLS-safe via helpers existants)
 
-### #1 — "Mon équipe type" widget devient teaser
-- `src/components/dashboard/MonEquipeTypeWidget.tsx` (ou équivalent) : ne montre plus que **top 3 + 1 KPI agrégé** (nb coéquipiers fréquents).
-- Bouton CTA unique "Voir mon équipe type →" → `/mon-equipe-type`.
-- Suppression des filtres typologie/période et du drilldown Sheet **dans le widget** (conservés sur la page).
-- Mise à jour test E2E si présent.
-
-### #10 — Dashboard widgets registry
-- Nouveau `src/components/dashboard/widgets-registry.ts` :
-  ```ts
-  export type WidgetRole = "admin" | "chef_global" | "chef_scoped" | "employe";
-  export interface WidgetDef {
-    id: string;
-    component: ComponentType;
-    roles: WidgetRole[];      // whitelist (cf. mem://features/dashboard-role-guard)
-    layout?: { col: number; row: number };
-  }
-  export const dashboardWidgets: WidgetDef[] = [...];
-  ```
-- Refacto `src/routes/_app.dashboard.tsx` : map sur le registry au lieu des `if !isAdmin return null` éparpillés.
-- Suppression des gardes inline dans chaque widget (ChiffreAffaires, MonEquipeType, etc.).
-- Test : `widgets-registry.test.ts` (admin → tout, chef → pas commerce, employe → perso uniquement).
-
----
-
-## v0.47.1 — Auth/routing unifié (#9)
-
-### Nouveau module `src/lib/post-login-routing.ts` (déjà partiellement testé)
-- Centralise **toute** la logique de redirection post-login :
-  ```ts
-  export interface RoutingCtx {
-    user: User | null;
-    rolesLoaded: boolean;
-    isAdmin: boolean;
-    isAdminOrChef: boolean;
-    effIsMobile: boolean;
-    effIsAdminOrChef: boolean;
-    isPreviewing: boolean;
-  }
-  export function resolvePostLoginTarget(ctx: RoutingCtx): string | null;
-  ```
-- Règles (synthèse mem://features/route-ma-semaine + v0.46.2) :
-  - pas de user → `/login`
-  - admin réel + mobile + pas preview → `/dashboard`
-  - mobile + chef → `/mobile/chef/dashboard`
-  - mobile + employé → `/mobile/aujourdhui`
-  - desktop + admin/chef → `/dashboard`
-  - desktop + employé → `/ma-semaine`
-
-### Refacto consommateurs
-- `src/routes/index.tsx` : remplace le bloc `useEffect` par `resolvePostLoginTarget(ctx)` + `navigate({ to: target })`.
-- `src/routes/_app.tsx` : idem (mobile redirect).
-- `src/components/auth/RoleGuard.tsx` : utilise une variante `enforcePostLoginGuard()` exportée du même module pour le cas "admin réel sur /mobile/chef".
-- Tests `src/lib/__tests__/post-login-routing.test.ts` : ajouter scénarios manquants (chef desktop, employé mobile).
-
----
-
-## v0.47.2 — Poste management unifié (#7)
-
-### Constat
-- 3 surfaces : `parametres/postes` (catalogue), `admin/employes-poste-principal` (saisie en lot), `parametres/metiers` (référentiel métier).
-
-### Refonte
-- Nouvelle page **`/parametres/metiers-postes`** avec 3 onglets :
-  1. **Métiers** (8 métiers, lecture seule + couleur)
-  2. **Postes catalogue** (CRUD ex-`/parametres/postes`)
-  3. **Affectation employés** (ex-`/admin/employes-poste-principal`, autosave + import Excel conservés)
-- Anciennes routes → redirect 301 vers le bon onglet (`?tab=postes` etc.) pour ne pas casser les liens.
-- Sidebar : 1 entrée "Métiers & postes" au lieu de 2.
-
----
-
-## v0.47.3 — Unification Absences / Congés (#6)
-
-### Audit préalable (à faire avant migration)
-- Inventaire des 2 modèles (`absences` vs ce qui ressemble à des "congés" — probablement même table déjà, à confirmer via `code--view src/hooks/use-planning-data.ts` + `src/routes/_app.absences.tsx` + `src/routes/mobile.absences.tsx`).
-- Si une seule table existe déjà : la simplification se réduit à **fusionner les UI** (1 module unique avec filtre type) → faible risque.
-- Si deux tables → migration `congés → absences` avec mapping type, garde-fou anti-doublon, conservation historique.
-
-### Livrables (cas table unique, hypothèse probable)
-- 1 hook unifié `useAbsences()` (suppression d'éventuels `useConges()` doublons).
-- Module mobile + desktop sur le même composant `AbsenceForm` avec props `variant: "mobile" | "desktop"`.
-- Anti-doublon UI live (déjà en place v0.39.1) factorisé dans le composant.
-
----
-
-## Détails techniques transverses
-
-- **Aucune migration DB** sur v0.47.0/1/2. v0.47.3 dépend de l'audit.
-- **Tests** : chaque sous-version livre ses tests vitest + au moins 1 spec E2E mise à jour.
-- **Rollback safe** : chaque sous-version est indépendante, peut être publiée seule.
-- **Memory** : nouvelles entrées
-  - `mem://features/dashboard-widgets-registry` (v0.47.0)
-  - `mem://features/post-login-routing-module` (v0.47.1)
-  - `mem://features/metiers-postes-unifie` (v0.47.2)
-  - mise à jour `mem://features/auth-flow-roles` pour pointer vers le nouveau module
-
----
-
-## Ordre d'exécution proposé
-
+#### 1.1 `staffing_par_pole_consolide`
 ```text
-v0.47.0  ──►  v0.47.1  ──►  v0.47.2  ──►  v0.47.3
- (UI)        (routing)      (postes)     (absences)
- 1 PR         1 PR           1 PR          1 PR
+staffing_par_pole_consolide(
+  p_periode_debut date,
+  p_periode_fin   date,
+  p_inclure_opportunites boolean default false,
+  p_filtres_chantier_ids uuid[]    default null,
+  p_filtres_metier_ids   integer[] default null,
+  p_filtres_statut       text[]    default null
+) RETURNS TABLE (
+  chantier_id        uuid,
+  chantier_numero    text,
+  chantier_nom       text,
+  chantier_typologie text,           -- pour badge PRÉV (9XXX)
+  chantier_statut    text,
+  metier_id          integer,
+  metier_libelle     text,
+  metier_couleur     text,
+  nb_personnes       integer,        -- COUNT(DISTINCT a.employe_id)
+  total_demi_jours   integer,        -- SUM des assignations sur la période
+  total_heures       numeric         -- demi_jours × 4
+)
 ```
 
-Je commence par v0.47.0 dès validation. Tu veux que je livre les 4 d'affilée, ou seulement v0.47.0 puis pause pour validation ?
+Source : `assignations` jointes `affaires` + `metiers` (PAS `heures_saisies` — l'agrégat décrit du **planifié**, comme les autres onglets planning ; les heures saisies sont historiques).
+- Filtre période : `a.date BETWEEN p_periode_debut AND p_periode_fin`.
+- Filtre opportunités : si `p_inclure_opportunites = false`, exclure `affaires.numero LIKE '9%'`.
+- Filtres optionnels : `chantier_ids`, `metier_ids`, `statut`.
+- `metier_id` = `COALESCE(a.metier_id, e.metier_principal_id)` pour rattacher l'assignation à un pôle (fallback si `a.metier_id` NULL).
+- Une ligne par cellule **(chantier, métier) NON-NULL** qui a au moins 1 assignation. Le client remplit les vides.
+- GRANT EXECUTE TO `authenticated`. Filtrage RLS hérité via `affaires` lecture (helpers RLS existants — voir `mem://constraints/rls-helpers-execute-grant`, NE PAS REVOKE).
+
+#### 1.2 `capacite_par_metier`
+```text
+capacite_par_metier() RETURNS TABLE (
+  metier_id           integer,
+  metier_libelle      text,
+  metier_couleur      text,
+  metier_ordre        integer,
+  capacite_cdi_cdd    integer,   -- statut_contrat IN ('CDI','CDD')
+  capacite_interim    integer,
+  capacite_totale     integer
+)
+```
+Source : `employes` filtrés `actif = true AND non_staffing = false`, regroupés par `metier_principal_id`. GRANT EXECUTE TO `authenticated`.
+
+Aucune nouvelle table. Aucune modification de table existante.
+
+---
+
+### 2. Frontend — composant `StaffingParPole`
+
+Arborescence :
+```
+src/components/planning/par-pole/
+├── StaffingParPole.tsx              # orchestrateur (data + layout)
+├── PoleCapaciteHeader.tsx           # sticky top : capacités par métier
+├── PoleMatriceTable.tsx             # matrice chantiers × métiers
+├── PoleMatriceCell.tsx              # cellule "3p / 90h" (compact = "3p")
+├── PoleUtilisationFooter.tsx        # sticky bottom : total + % util colorisé
+├── PoleAlertesBanner.tsx            # KPI saturation / sous-utilisation
+├── PoleDrilldownDialog.tsx          # liste des noms staffés sur (chantier × métier)
+└── pole-export-excel.ts             # export xlsx-js-style (lazy)
+```
+
+Hook data : `src/hooks/use-planning-par-pole.ts` — wrap les 2 RPC via `supabase.rpc(...)` + cache `react-query` keyé sur `(debut, fin, inclureOpp, filtres)`.
+
+Layout dans la matrice :
+- Colonne 1 sticky-left = `Chantier (numero — nom)` triée par numéro croissant.
+- Colonnes suivantes = métiers dans `ordre` croissant (table `metiers`).
+- Cellule vide → tiret discret. Cellule remplie → `Xp` (compact) ou `Xp / Yh` (détaillée).
+- Lignes 9XXX (typologie prototype) : `border-dashed`, `opacity-60`, badge `PRÉV` à côté du numéro.
+- Sticky header capacités (haut) + sticky footer total/% (bas) figés via `position: sticky` dans le scroll container.
+- Couleurs % utilisation : `≤1.0` vert (token `success`), `1.0-1.2` ambre, `>1.2` rouge saturé.
+- Scroll horizontal sur écrans étroits, `Chantier` reste collé à gauche.
+- ARIA : `role="table"`, `role="columnheader"`, `role="row"`, `aria-label` par cellule.
+
+Filtres haut de page : sélecteur de semaine (réutilise `WeekPicker` du tab `parchantier`), toggle « Inclure opportunités » (relié au state global du planning, **même variable** que celle déjà en place sur les autres onglets), filtre statut chantier (multi-select), filtre métiers (multi-select), bouton « Vue compacte / Vue détaillée » (toggle local, défaut compact).
+
+Drilldown : click cellule → `PoleDrilldownDialog` qui requête `assignations` filtrées sur `(affaire_id, metier_id, période)` et liste les noms (réutilise `useResolvedEmploye`). Bouton « Ouvrir dans Par chantier » qui navigue vers le tab `parchantier` avec query params `?chantier=<id>&metier=<id>`.
+
+Export : `xlsx-js-style` lazy-loadé (cf. `mem://constraints/xlsx-package-policy`). Feuille 1 = matrice. Feuille 2 « Détail par personne » = liste plate `chantier | métier | nom | demi_jours | heures`.
+
+---
+
+### 3. Intégration dans `_app.planning.tsx`
+
+Ajout d'1 `TabsTrigger` `value="parpole"` (libellé « Par pôle ») entre `parobjet` et `budget`, et 1 `TabsContent` correspondant qui rend `<StaffingParPole filters={…} />`. Aucun autre tab modifié. État des filtres existants (semaine + inclure-opp) déjà partagé au niveau parent — on lit la même source.
+
+---
+
+### 4. Tests E2E (`e2e/planning/par-pole.chef.spec.ts`)
+
+1. Navigation onglet → matrice rendue avec données semaine courante.
+2. Toggle « Inclure opportunités » OFF → 9XXX absents ; ON → présents avec badge `PRÉV`.
+3. Click cellule → dialog drilldown avec noms.
+4. Filtre métier multi-select → colonnes filtrées.
+5. Export Excel → fichier généré, en-têtes corrects, feuille 2 présente.
+
+---
+
+### 5. Migration mémoire
+
+- Créer `mem://features/planning-par-pole-v048` (description matrice, RPC, drilldown, export).
+- Mettre à jour `mem://index.md` : ajouter v0.48 dans Roadmap livré.
+
+---
+
+### 6. Hors scope (à confirmer)
+
+- Pas de heatmap couleur dans la matrice (juste valeurs + différenciation pointillé pour 9XXX).
+- Pas de modification du calcul d'heures côté autres onglets.
+- Capacité = nombre d'employés actifs ; pas de pondération absences/congés (simplification v1, à revisiter v0.49 si besoin).
+- Drilldown via Dialog + lien « Ouvrir dans Par chantier » plutôt que navigation directe (préserve contexte).
+
+---
+
+### Effort estimé
+
+~18h : 3h RPC, 5h matrice + sticky, 2h diff visuelle 9XXX, 2h drilldown, 2h KPI alertes, 2h export, 2h tests E2E.
+
+### Points à valider avant code
+
+1. **RPC sur `assignations` (planifié) plutôt que `heures_saisies`** — cohérent avec les autres tabs planning. OK ?
+2. **Capacité = `actif AND NOT non_staffing` regroupé par `metier_principal_id`**, sans pondération absences. OK pour v1 ?
+3. **Drilldown = Dialog + lien** vers `parchantier` (pas navigation forcée). OK ?
+4. **Position du tab** : entre `parobjet` et `budget`. OK ?
