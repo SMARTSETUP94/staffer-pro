@@ -374,7 +374,7 @@ function PlanningPage() {
                 <span className="hidden sm:inline">Export Excel objets</span>
                 <span className="sm:hidden">Excel</span>
               </Button>
-            ) : (tab === "cdi" || tab === "interim" || tab === "budget") ? (
+            ) : (tab === "cdi" || tab === "interim") ? (
               <Button
                 size="sm"
                 variant="outline"
