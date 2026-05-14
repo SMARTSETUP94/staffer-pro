@@ -85,20 +85,8 @@ function PlanningPage() {
   const [weekStart, setWeekStart] = useState<Date>(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
   const weekEnd = addDays(weekStart, 6);
   const [tab, setTab] = useState<"cdi" | "interim" | "parchantier" | "parobjet" | "parpole">("cdi");
-  const [trajetDlgOpen, setTrajetDlgOpen] = useState(false);
-  const [exportSousTraitanceOpen, setExportSousTraitanceOpen] = useState(false);
-  const [editTrajet, setEditTrajet] = useState<Trajet | null>(null);
-  const [defaultTrajetVehId, setDefaultTrajetVehId] = useState<string | null>(null);
-  const [defaultTrajetDate, setDefaultTrajetDate] = useState<string | undefined>(undefined);
-  // v0.18.1 — prefill depuis suggestion auto
-  const [defaultPrefill, setDefaultPrefill] = useState<{
-    adresseDepart?: string;
-    adresseArrivee?: string;
-    categorie?: "pose" | "depose" | "livraison_fourniture" | "recuperation_materiel" | "autre";
-    affaireId?: string | null;
-  }>({});
   const { vehicules } = useVehicules();
-  const { trajets, refresh: refreshTrajets } = useTrajetsWeek(weekStart, weekEnd);
+  const { trajets } = useTrajetsWeek(weekStart, weekEnd);
   const [filterAffaire, setFilterAffaire] = useState<Set<string | number>>(new Set());
   const [filterMetier, setFilterMetier] = useState<Set<string | number>>(new Set());
   const [filterDevis, setFilterDevis] = useState<Set<string | number>>(new Set());
