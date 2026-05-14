@@ -57,7 +57,7 @@ function BudgetPlanningPage() {
           assignations={assignations}
           consommation={consommation}
           chefsById={chefsById}
-          onSelectAffaire={(id) => { window.location.href = `/affaires/${id}`; }}
+          onSelectAffaire={(id) => navigate({ to: "/affaires/$affaireId", params: { affaireId: id } })}
         />
       )}
     </div>
