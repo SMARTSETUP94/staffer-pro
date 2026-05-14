@@ -131,6 +131,7 @@ function buildSections(role: EffRole, validationCount: number, contratsRhCount: 
     label: "Outils",
     items: [
       { title: "Export planning", url: "/export", icon: FileDown, show: () => true },
+      { title: "Feuille de route", url: "/export/feuille-de-route", icon: ClipboardList, show: () => true },
       { title: "Imports", url: "/employes/import", icon: FileUp, show: () => true },
     ],
   });
