@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { startOfWeek, addDays } from "date-fns";
 import { Calendar, Loader2 } from "lucide-react";
