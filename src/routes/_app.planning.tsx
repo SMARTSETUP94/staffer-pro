@@ -52,7 +52,16 @@ const planningSearchSchema = z.object({
     z.array(z.enum(AFFAIRE_TYPOLOGIES as [AffaireTypologie, ...AffaireTypologie[]])),
     [],
   ).default([]),
+  // v0.48 — Legacy ?tab= : redirigé vers les nouvelles pages dédiées
+  tab: fallback(z.string().optional(), undefined).optional(),
 });
+
+const LEGACY_TAB_REDIRECTS: Record<string, string> = {
+  flotte: "/logistique/vehicules-planning",
+  vehicules: "/logistique/vehicules-planning",
+  budget: "/affaires/budget-planning",
+  feuilleroute: "/export/feuille-de-route",
+};
 
 export const Route = createFileRoute("/_app/planning")({
   head: () => ({
@@ -63,6 +72,12 @@ export const Route = createFileRoute("/_app/planning")({
   }),
   validateSearch: zodValidator(planningSearchSchema),
   search: { middlewares: [stripSearchParams(PLANNING_SEARCH_DEFAULTS)] },
+  beforeLoad: ({ search }) => {
+    const tab = (search as { tab?: string }).tab;
+    if (tab && LEGACY_TAB_REDIRECTS[tab]) {
+      throw redirect({ to: LEGACY_TAB_REDIRECTS[tab], replace: true });
+    }
+  },
   component: PlanningPage,
 });
 
