@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, stripSearchParams, redirect } from "@tans
 import { zodValidator, fallback } from "@tanstack/zod-adapter";
 import { z } from "zod";
 import { useMemo, useRef, useState } from "react";
-import { startOfWeek, addDays, format } from "date-fns";
+import { startOfWeek, addDays } from "date-fns";
 import { Calendar, Loader2, Search, FileDown, UserPlus, Users } from "lucide-react";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
