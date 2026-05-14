@@ -23,6 +23,7 @@ import { BulkStafferDialog } from "@/components/planning/BulkStafferDialog";
 import { FlotteGrid } from "@/components/planning/FlotteGrid";
 import { FeuilleRouteTableurView } from "@/components/planning/FeuilleRouteTableurView";
 import { SuggestionsTrajetsBloc } from "@/components/planning/SuggestionsTrajetsBloc";
+import { StaffingParPole } from "@/components/planning/par-pole/StaffingParPole";
 import { TrajetDialog } from "@/components/flotte/TrajetDialog";
 import { ExportTrajetsSoustraitanceDialog } from "@/components/flotte/ExportTrajetsSoustraitanceDialog";
 import { useVehicules, type Trajet } from "@/hooks/use-vehicules";
@@ -68,7 +69,7 @@ export const Route = createFileRoute("/_app/planning")({
 function PlanningPage() {
   const [weekStart, setWeekStart] = useState<Date>(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
   const weekEnd = addDays(weekStart, 6);
-  const [tab, setTab] = useState<"cdi" | "interim" | "parchantier" | "parobjet" | "budget" | "flotte" | "feuilleroute">("cdi");
+  const [tab, setTab] = useState<"cdi" | "interim" | "parchantier" | "parobjet" | "parpole" | "budget" | "flotte" | "feuilleroute">("cdi");
   const [trajetDlgOpen, setTrajetDlgOpen] = useState(false);
   const [exportSousTraitanceOpen, setExportSousTraitanceOpen] = useState(false);
   const [editTrajet, setEditTrajet] = useState<Trajet | null>(null);
@@ -486,6 +487,10 @@ function PlanningPage() {
                   <TabsTrigger value="parobjet">
                     <span className="hidden sm:inline">Planning par objet</span>
                     <span className="sm:hidden">Par objet</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="parpole">
+                    <span className="hidden sm:inline">Par pôle</span>
+                    <span className="sm:hidden">Pôle</span>
                   </TabsTrigger>
                   <TabsTrigger value="budget">
                     <span className="hidden sm:inline">Budget chantier</span>
