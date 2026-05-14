@@ -77,13 +77,16 @@ import { Route as AppParametresLieuxRouteImport } from './routes/_app.parametres
 import { Route as AppParametresCompetencesEquipeRouteImport } from './routes/_app.parametres.competences-equipe'
 import { Route as AppParametresAutorisationsVehiculesRouteImport } from './routes/_app.parametres.autorisations-vehicules'
 import { Route as AppOpportunitesImportRouteImport } from './routes/_app.opportunites.import'
+import { Route as AppLogistiqueVehiculesPlanningRouteImport } from './routes/_app.logistique.vehicules-planning'
 import { Route as AppFabricationMesEtapesRouteImport } from './routes/_app.fabrication.mes-etapes'
+import { Route as AppExportFeuilleDeRouteRouteImport } from './routes/_app.export.feuille-de-route'
 import { Route as AppExportDemandesDevisRouteImport } from './routes/_app.export.demandes-devis'
 import { Route as AppEmployesImportRouteImport } from './routes/_app.employes.import'
 import { Route as AppDevisRattachementHistoriqueRouteImport } from './routes/_app.devis.rattachement-historique'
 import { Route as AppDevisProgbatImportRouteImport } from './routes/_app.devis.progbat-import'
 import { Route as AppDevisImportRouteImport } from './routes/_app.devis.import'
 import { Route as AppDevisHistoriqueRouteImport } from './routes/_app.devis.historique'
+import { Route as AppAffairesBudgetPlanningRouteImport } from './routes/_app.affaires.budget-planning'
 import { Route as AppAffairesAffaireIdRouteImport } from './routes/_app.affaires.$affaireId'
 import { Route as AppAdminFeedbackRouteImport } from './routes/_app.admin.feedback'
 import { Route as AppAdminEmployesPostePrincipalRouteImport } from './routes/_app.admin.employes-poste-principal'
@@ -442,10 +445,21 @@ const AppOpportunitesImportRoute = AppOpportunitesImportRouteImport.update({
   path: '/import',
   getParentRoute: () => AppOpportunitesRoute,
 } as any)
+const AppLogistiqueVehiculesPlanningRoute =
+  AppLogistiqueVehiculesPlanningRouteImport.update({
+    id: '/logistique/vehicules-planning',
+    path: '/logistique/vehicules-planning',
+    getParentRoute: () => AppRoute,
+  } as any)
 const AppFabricationMesEtapesRoute = AppFabricationMesEtapesRouteImport.update({
   id: '/fabrication/mes-etapes',
   path: '/fabrication/mes-etapes',
   getParentRoute: () => AppRoute,
+} as any)
+const AppExportFeuilleDeRouteRoute = AppExportFeuilleDeRouteRouteImport.update({
+  id: '/feuille-de-route',
+  path: '/feuille-de-route',
+  getParentRoute: () => AppExportRoute,
 } as any)
 const AppExportDemandesDevisRoute = AppExportDemandesDevisRouteImport.update({
   id: '/demandes-devis',
@@ -478,6 +492,12 @@ const AppDevisHistoriqueRoute = AppDevisHistoriqueRouteImport.update({
   path: '/devis/historique',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAffairesBudgetPlanningRoute =
+  AppAffairesBudgetPlanningRouteImport.update({
+    id: '/affaires/budget-planning',
+    path: '/affaires/budget-planning',
+    getParentRoute: () => AppRoute,
+  } as any)
 const AppAffairesAffaireIdRoute = AppAffairesAffaireIdRouteImport.update({
   id: '/affaires/$affaireId',
   path: '/affaires/$affaireId',
@@ -601,13 +621,16 @@ export interface FileRoutesByFullPath {
   '/admin/employes-poste-principal': typeof AppAdminEmployesPostePrincipalRoute
   '/admin/feedback': typeof AppAdminFeedbackRoute
   '/affaires/$affaireId': typeof AppAffairesAffaireIdRouteWithChildren
+  '/affaires/budget-planning': typeof AppAffairesBudgetPlanningRoute
   '/devis/historique': typeof AppDevisHistoriqueRoute
   '/devis/import': typeof AppDevisImportRoute
   '/devis/progbat-import': typeof AppDevisProgbatImportRoute
   '/devis/rattachement-historique': typeof AppDevisRattachementHistoriqueRoute
   '/employes/import': typeof AppEmployesImportRoute
   '/export/demandes-devis': typeof AppExportDemandesDevisRoute
+  '/export/feuille-de-route': typeof AppExportFeuilleDeRouteRoute
   '/fabrication/mes-etapes': typeof AppFabricationMesEtapesRoute
+  '/logistique/vehicules-planning': typeof AppLogistiqueVehiculesPlanningRoute
   '/opportunites/import': typeof AppOpportunitesImportRoute
   '/parametres/autorisations-vehicules': typeof AppParametresAutorisationsVehiculesRoute
   '/parametres/competences-equipe': typeof AppParametresCompetencesEquipeRoute
@@ -687,13 +710,16 @@ export interface FileRoutesByTo {
   '/admin/email-preview': typeof AppAdminEmailPreviewRoute
   '/admin/employes-poste-principal': typeof AppAdminEmployesPostePrincipalRoute
   '/admin/feedback': typeof AppAdminFeedbackRoute
+  '/affaires/budget-planning': typeof AppAffairesBudgetPlanningRoute
   '/devis/historique': typeof AppDevisHistoriqueRoute
   '/devis/import': typeof AppDevisImportRoute
   '/devis/progbat-import': typeof AppDevisProgbatImportRoute
   '/devis/rattachement-historique': typeof AppDevisRattachementHistoriqueRoute
   '/employes/import': typeof AppEmployesImportRoute
   '/export/demandes-devis': typeof AppExportDemandesDevisRoute
+  '/export/feuille-de-route': typeof AppExportFeuilleDeRouteRoute
   '/fabrication/mes-etapes': typeof AppFabricationMesEtapesRoute
+  '/logistique/vehicules-planning': typeof AppLogistiqueVehiculesPlanningRoute
   '/opportunites/import': typeof AppOpportunitesImportRoute
   '/parametres/autorisations-vehicules': typeof AppParametresAutorisationsVehiculesRoute
   '/parametres/competences-equipe': typeof AppParametresCompetencesEquipeRoute
@@ -778,13 +804,16 @@ export interface FileRoutesById {
   '/_app/admin/employes-poste-principal': typeof AppAdminEmployesPostePrincipalRoute
   '/_app/admin/feedback': typeof AppAdminFeedbackRoute
   '/_app/affaires/$affaireId': typeof AppAffairesAffaireIdRouteWithChildren
+  '/_app/affaires/budget-planning': typeof AppAffairesBudgetPlanningRoute
   '/_app/devis/historique': typeof AppDevisHistoriqueRoute
   '/_app/devis/import': typeof AppDevisImportRoute
   '/_app/devis/progbat-import': typeof AppDevisProgbatImportRoute
   '/_app/devis/rattachement-historique': typeof AppDevisRattachementHistoriqueRoute
   '/_app/employes/import': typeof AppEmployesImportRoute
   '/_app/export/demandes-devis': typeof AppExportDemandesDevisRoute
+  '/_app/export/feuille-de-route': typeof AppExportFeuilleDeRouteRoute
   '/_app/fabrication/mes-etapes': typeof AppFabricationMesEtapesRoute
+  '/_app/logistique/vehicules-planning': typeof AppLogistiqueVehiculesPlanningRoute
   '/_app/opportunites/import': typeof AppOpportunitesImportRoute
   '/_app/parametres/autorisations-vehicules': typeof AppParametresAutorisationsVehiculesRoute
   '/_app/parametres/competences-equipe': typeof AppParametresCompetencesEquipeRoute
@@ -869,13 +898,16 @@ export interface FileRouteTypes {
     | '/admin/employes-poste-principal'
     | '/admin/feedback'
     | '/affaires/$affaireId'
+    | '/affaires/budget-planning'
     | '/devis/historique'
     | '/devis/import'
     | '/devis/progbat-import'
     | '/devis/rattachement-historique'
     | '/employes/import'
     | '/export/demandes-devis'
+    | '/export/feuille-de-route'
     | '/fabrication/mes-etapes'
+    | '/logistique/vehicules-planning'
     | '/opportunites/import'
     | '/parametres/autorisations-vehicules'
     | '/parametres/competences-equipe'
@@ -955,13 +987,16 @@ export interface FileRouteTypes {
     | '/admin/email-preview'
     | '/admin/employes-poste-principal'
     | '/admin/feedback'
+    | '/affaires/budget-planning'
     | '/devis/historique'
     | '/devis/import'
     | '/devis/progbat-import'
     | '/devis/rattachement-historique'
     | '/employes/import'
     | '/export/demandes-devis'
+    | '/export/feuille-de-route'
     | '/fabrication/mes-etapes'
+    | '/logistique/vehicules-planning'
     | '/opportunites/import'
     | '/parametres/autorisations-vehicules'
     | '/parametres/competences-equipe'
@@ -1045,13 +1080,16 @@ export interface FileRouteTypes {
     | '/_app/admin/employes-poste-principal'
     | '/_app/admin/feedback'
     | '/_app/affaires/$affaireId'
+    | '/_app/affaires/budget-planning'
     | '/_app/devis/historique'
     | '/_app/devis/import'
     | '/_app/devis/progbat-import'
     | '/_app/devis/rattachement-historique'
     | '/_app/employes/import'
     | '/_app/export/demandes-devis'
+    | '/_app/export/feuille-de-route'
     | '/_app/fabrication/mes-etapes'
+    | '/_app/logistique/vehicules-planning'
     | '/_app/opportunites/import'
     | '/_app/parametres/autorisations-vehicules'
     | '/_app/parametres/competences-equipe'
@@ -1584,12 +1622,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppOpportunitesImportRouteImport
       parentRoute: typeof AppOpportunitesRoute
     }
+    '/_app/logistique/vehicules-planning': {
+      id: '/_app/logistique/vehicules-planning'
+      path: '/logistique/vehicules-planning'
+      fullPath: '/logistique/vehicules-planning'
+      preLoaderRoute: typeof AppLogistiqueVehiculesPlanningRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/fabrication/mes-etapes': {
       id: '/_app/fabrication/mes-etapes'
       path: '/fabrication/mes-etapes'
       fullPath: '/fabrication/mes-etapes'
       preLoaderRoute: typeof AppFabricationMesEtapesRouteImport
       parentRoute: typeof AppRoute
+    }
+    '/_app/export/feuille-de-route': {
+      id: '/_app/export/feuille-de-route'
+      path: '/feuille-de-route'
+      fullPath: '/export/feuille-de-route'
+      preLoaderRoute: typeof AppExportFeuilleDeRouteRouteImport
+      parentRoute: typeof AppExportRoute
     }
     '/_app/export/demandes-devis': {
       id: '/_app/export/demandes-devis'
@@ -1631,6 +1683,13 @@ declare module '@tanstack/react-router' {
       path: '/devis/historique'
       fullPath: '/devis/historique'
       preLoaderRoute: typeof AppDevisHistoriqueRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/affaires/budget-planning': {
+      id: '/_app/affaires/budget-planning'
+      path: '/affaires/budget-planning'
+      fullPath: '/affaires/budget-planning'
+      preLoaderRoute: typeof AppAffairesBudgetPlanningRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/affaires/$affaireId': {
@@ -1741,11 +1800,13 @@ const AppEmployesRouteWithChildren = AppEmployesRoute._addFileChildren(
 
 interface AppExportRouteChildren {
   AppExportDemandesDevisRoute: typeof AppExportDemandesDevisRoute
+  AppExportFeuilleDeRouteRoute: typeof AppExportFeuilleDeRouteRoute
   AppExportIndexRoute: typeof AppExportIndexRoute
 }
 
 const AppExportRouteChildren: AppExportRouteChildren = {
   AppExportDemandesDevisRoute: AppExportDemandesDevisRoute,
+  AppExportFeuilleDeRouteRoute: AppExportFeuilleDeRouteRoute,
   AppExportIndexRoute: AppExportIndexRoute,
 }
 
@@ -1819,11 +1880,13 @@ interface AppRouteChildren {
   AppAdminEmployesPostePrincipalRoute: typeof AppAdminEmployesPostePrincipalRoute
   AppAdminFeedbackRoute: typeof AppAdminFeedbackRoute
   AppAffairesAffaireIdRoute: typeof AppAffairesAffaireIdRouteWithChildren
+  AppAffairesBudgetPlanningRoute: typeof AppAffairesBudgetPlanningRoute
   AppDevisHistoriqueRoute: typeof AppDevisHistoriqueRoute
   AppDevisImportRoute: typeof AppDevisImportRoute
   AppDevisProgbatImportRoute: typeof AppDevisProgbatImportRoute
   AppDevisRattachementHistoriqueRoute: typeof AppDevisRattachementHistoriqueRoute
   AppFabricationMesEtapesRoute: typeof AppFabricationMesEtapesRoute
+  AppLogistiqueVehiculesPlanningRoute: typeof AppLogistiqueVehiculesPlanningRoute
   AppParametresAutorisationsVehiculesRoute: typeof AppParametresAutorisationsVehiculesRoute
   AppParametresCompetencesEquipeRoute: typeof AppParametresCompetencesEquipeRoute
   AppParametresLieuxRoute: typeof AppParametresLieuxRoute
@@ -1872,11 +1935,13 @@ const AppRouteChildren: AppRouteChildren = {
   AppAdminEmployesPostePrincipalRoute: AppAdminEmployesPostePrincipalRoute,
   AppAdminFeedbackRoute: AppAdminFeedbackRoute,
   AppAffairesAffaireIdRoute: AppAffairesAffaireIdRouteWithChildren,
+  AppAffairesBudgetPlanningRoute: AppAffairesBudgetPlanningRoute,
   AppDevisHistoriqueRoute: AppDevisHistoriqueRoute,
   AppDevisImportRoute: AppDevisImportRoute,
   AppDevisProgbatImportRoute: AppDevisProgbatImportRoute,
   AppDevisRattachementHistoriqueRoute: AppDevisRattachementHistoriqueRoute,
   AppFabricationMesEtapesRoute: AppFabricationMesEtapesRoute,
+  AppLogistiqueVehiculesPlanningRoute: AppLogistiqueVehiculesPlanningRoute,
   AppParametresAutorisationsVehiculesRoute:
     AppParametresAutorisationsVehiculesRoute,
   AppParametresCompetencesEquipeRoute: AppParametresCompetencesEquipeRoute,

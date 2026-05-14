@@ -1,9 +1,9 @@
-import { createFileRoute, useNavigate, stripSearchParams } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, stripSearchParams, redirect } from "@tanstack/react-router";
 import { zodValidator, fallback } from "@tanstack/zod-adapter";
 import { z } from "zod";
 import { useMemo, useRef, useState } from "react";
-import { startOfWeek, addDays, format } from "date-fns";
-import { Calendar, Loader2, Search, FileDown, UserPlus, Truck, Users, ClipboardList } from "lucide-react";
+import { startOfWeek, addDays } from "date-fns";
+import { Calendar, Loader2, Search, FileDown, UserPlus, Users } from "lucide-react";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
@@ -13,29 +13,20 @@ import { Button } from "@/components/ui/button";
 import { usePlanningData, type Employe } from "@/hooks/use-planning-data";
 import { WeekPicker } from "@/components/planning/WeekPicker";
 import { PlanningGrid } from "@/components/planning/PlanningGrid";
-import { PlanningSynthese } from "@/components/planning/PlanningSynthese";
 import { PlanningParChantier } from "@/components/planning/PlanningParChantier";
 import { PlanningParObjet } from "@/components/planning/PlanningParObjet";
 import { HeuresRestantesSidebar } from "@/components/planning/HeuresRestantesSidebar";
 import { MultiFilter } from "@/components/planning/MultiFilter";
 import { AddInterimDialog } from "@/components/planning/AddInterimDialog";
 import { BulkStafferDialog } from "@/components/planning/BulkStafferDialog";
-import { FlotteGrid } from "@/components/planning/FlotteGrid";
-import { FeuilleRouteTableurView } from "@/components/planning/FeuilleRouteTableurView";
-import { SuggestionsTrajetsBloc } from "@/components/planning/SuggestionsTrajetsBloc";
 import { StaffingParPole } from "@/components/planning/par-pole/StaffingParPole";
-import { TrajetDialog } from "@/components/flotte/TrajetDialog";
-import { ExportTrajetsSoustraitanceDialog } from "@/components/flotte/ExportTrajetsSoustraitanceDialog";
-import { useVehicules, type Trajet } from "@/hooks/use-vehicules";
+import { useVehicules } from "@/hooks/use-vehicules";
 import { useTrajetsWeek } from "@/hooks/use-trajets";
 import { exportPlanningToPDF } from "@/lib/planning-export";
 // PERF v0.30.1 — xlsx-js-style (~600 KB) chargé dynamiquement au clic export.
-// Les exports planning Excel ne sont utilisés qu'occasionnellement → on évite
-// de les embarquer dans le chunk initial de la page Planning.
 //   import { exportPlanningParObjetToXlsx, buildPlanningObjetXlsxFilename } from "@/lib/planning-objet-xlsx-export";
 //   import { exportPlanningExcel } from "@/lib/planning-excel-export";
 //   import { downloadBlob } from "@/lib/trajets-soustraitance-export";
-import type { TrajetSuggestion } from "@/lib/trajets-suggestions";
 import { TypologieMultiFilter } from "@/components/typologie/TypologieMultiFilter";
 import { normalizeName } from "@/lib/string-normalize";
 import {
@@ -52,7 +43,16 @@ const planningSearchSchema = z.object({
     z.array(z.enum(AFFAIRE_TYPOLOGIES as [AffaireTypologie, ...AffaireTypologie[]])),
     [],
   ).default([]),
+  // v0.48 — Legacy ?tab= : redirigé vers les nouvelles pages dédiées
+  tab: fallback(z.string().optional(), undefined).optional(),
 });
+
+const LEGACY_TAB_REDIRECTS: Record<string, string> = {
+  flotte: "/logistique/vehicules-planning",
+  vehicules: "/logistique/vehicules-planning",
+  budget: "/affaires/budget-planning",
+  feuilleroute: "/export/feuille-de-route",
+};
 
 export const Route = createFileRoute("/_app/planning")({
   head: () => ({
@@ -63,27 +63,21 @@ export const Route = createFileRoute("/_app/planning")({
   }),
   validateSearch: zodValidator(planningSearchSchema),
   search: { middlewares: [stripSearchParams(PLANNING_SEARCH_DEFAULTS)] },
+  beforeLoad: ({ search }) => {
+    const tab = (search as { tab?: string }).tab;
+    if (tab && LEGACY_TAB_REDIRECTS[tab]) {
+      throw redirect({ to: LEGACY_TAB_REDIRECTS[tab], replace: true });
+    }
+  },
   component: PlanningPage,
 });
 
 function PlanningPage() {
   const [weekStart, setWeekStart] = useState<Date>(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
   const weekEnd = addDays(weekStart, 6);
-  const [tab, setTab] = useState<"cdi" | "interim" | "parchantier" | "parobjet" | "parpole" | "budget" | "flotte" | "feuilleroute">("cdi");
-  const [trajetDlgOpen, setTrajetDlgOpen] = useState(false);
-  const [exportSousTraitanceOpen, setExportSousTraitanceOpen] = useState(false);
-  const [editTrajet, setEditTrajet] = useState<Trajet | null>(null);
-  const [defaultTrajetVehId, setDefaultTrajetVehId] = useState<string | null>(null);
-  const [defaultTrajetDate, setDefaultTrajetDate] = useState<string | undefined>(undefined);
-  // v0.18.1 — prefill depuis suggestion auto
-  const [defaultPrefill, setDefaultPrefill] = useState<{
-    adresseDepart?: string;
-    adresseArrivee?: string;
-    categorie?: "pose" | "depose" | "livraison_fourniture" | "recuperation_materiel" | "autre";
-    affaireId?: string | null;
-  }>({});
+  const [tab, setTab] = useState<"cdi" | "interim" | "parchantier" | "parobjet" | "parpole">("cdi");
   const { vehicules } = useVehicules();
-  const { trajets, refresh: refreshTrajets } = useTrajetsWeek(weekStart, weekEnd);
+  const { trajets } = useTrajetsWeek(weekStart, weekEnd);
   const [filterAffaire, setFilterAffaire] = useState<Set<string | number>>(new Set());
   const [filterMetier, setFilterMetier] = useState<Set<string | number>>(new Set());
   const [filterDevis, setFilterDevis] = useState<Set<string | number>>(new Set());
@@ -240,11 +234,7 @@ function PlanningPage() {
             ? "Planning par chantier"
             : tab === "parobjet"
               ? "Planning par objet"
-              : tab === "budget"
-                ? "Budget chantier"
-                : tab === "feuilleroute"
-                  ? "Feuille de route"
-                  : "Véhicules staffés";
+              : "Par pôle";
     setExporting(true);
     try {
       await exportPlanningToPDF(target, { weekStart, tabLabel });
@@ -363,7 +353,7 @@ function PlanningPage() {
                 <span className="hidden sm:inline">Export Excel objets</span>
                 <span className="sm:hidden">Excel</span>
               </Button>
-            ) : (tab === "cdi" || tab === "interim" || tab === "budget") ? (
+            ) : (tab === "cdi" || tab === "interim") ? (
               <Button
                 size="sm"
                 variant="outline"
@@ -492,19 +482,6 @@ function PlanningPage() {
                     <span className="hidden sm:inline">Par pôle</span>
                     <span className="sm:hidden">Pôle</span>
                   </TabsTrigger>
-                  <TabsTrigger value="budget">
-                    <span className="hidden sm:inline">Budget chantier</span>
-                    <span className="sm:hidden">Budget</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="flotte">
-                    <span className="hidden sm:inline">Véhicules staffés ({vehicules.filter((v) => v.actif).length})</span>
-                    <span className="sm:hidden">Véhic. ({vehicules.filter((v) => v.actif).length})</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="feuilleroute">
-                    <ClipboardList className="mr-1 h-3.5 w-3.5" />
-                    <span className="hidden sm:inline">Feuille de route</span>
-                    <span className="sm:hidden">Feuille</span>
-                  </TabsTrigger>
                 </TabsList>
               </div>
 
@@ -603,97 +580,6 @@ function PlanningPage() {
                 />
               </TabsContent>
 
-              <TabsContent value="budget" className="mt-4">
-                <PlanningSynthese
-                  weekStart={weekStart}
-                  affaires={affaires}
-                  employes={employes}
-                  metiers={metiers}
-                  assignations={assignations}
-                  consommation={consommation}
-                  chefsById={chefsById}
-                  onSelectAffaire={handleSelectAffaireFromSynthese}
-                />
-              </TabsContent>
-
-              <TabsContent value="flotte" className="mt-4 space-y-4">
-                <div className="flex items-center justify-end">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setExportSousTraitanceOpen(true)}
-                  >
-                    <Truck className="mr-1.5 h-3.5 w-3.5" />
-                    Exporter trajets sous-traités
-                  </Button>
-                </div>
-                <SuggestionsTrajetsBloc
-                  weekStart={weekStart}
-                  weekEnd={weekEnd}
-                  affaires={affaires.map((a) => ({
-                    id: a.id,
-                    numero: a.numero,
-                    nom: a.nom,
-                    lieu: a.lieu,
-                    date_montage: a.date_montage,
-                    date_demontage: a.date_demontage,
-                  }))}
-                  trajets={trajets.map((t) => ({
-                    affaire_id: t.affaire_id,
-                    date: t.date,
-                    adresse_depart: t.adresse_depart,
-                    adresse_arrivee: t.adresse_arrivee,
-                  }))}
-                  onAccepter={(s: TrajetSuggestion, altAdresse?: string) => {
-                    setEditTrajet(null);
-                    setDefaultTrajetVehId(null);
-                    setDefaultTrajetDate(s.date);
-                    setDefaultPrefill({
-                      adresseDepart: s.adresse_depart,
-                      adresseArrivee: altAdresse ?? s.adresse_arrivee,
-                      categorie: s.type === "montage" ? "pose" : "depose",
-                      affaireId: s.affaire.id,
-                    });
-                    setTrajetDlgOpen(true);
-                  }}
-                />
-                <FlotteGrid
-                  weekStart={weekStart}
-                  vehicules={vehicules}
-                  trajets={trajets}
-                  employesById={new Map(employes.map((e) => [e.id, { id: e.id, prenom: e.prenom, nom: e.nom }]))}
-                  affairesById={new Map(affaires.map((a) => [a.id, { id: a.id, numero: a.numero }]))}
-                  showWeekend={showWeekend}
-                  onAddTrajet={(vId, d) => {
-                    setEditTrajet(null);
-                    setDefaultTrajetVehId(vId);
-                    setDefaultTrajetDate(format(d, "yyyy-MM-dd"));
-                    setDefaultPrefill({});
-                    setTrajetDlgOpen(true);
-                  }}
-                  onEditTrajet={(t) => {
-                    setEditTrajet(t);
-                    setDefaultTrajetVehId(null);
-                    setDefaultTrajetDate(undefined);
-                    setDefaultPrefill({});
-                    setTrajetDlgOpen(true);
-                  }}
-                  onAddTrajetSousTraite={(d) => {
-                    setEditTrajet(null);
-                    setDefaultTrajetVehId(null);
-                    setDefaultTrajetDate(format(d, "yyyy-MM-dd"));
-                    setDefaultPrefill({});
-                    setTrajetDlgOpen(true);
-                  }}
-                />
-              </TabsContent>
-
-              <TabsContent value="feuilleroute" className="mt-4">
-                <FeuilleRouteTableurView
-                  employes={employes}
-                  vehicules={vehicules}
-                />
-              </TabsContent>
             </Tabs>
           </div>
         )}
@@ -735,34 +621,6 @@ function PlanningPage() {
         onSaved={refresh}
       />
 
-      <TrajetDialog
-        open={trajetDlgOpen}
-        onOpenChange={setTrajetDlgOpen}
-        trajet={editTrajet}
-        defaultDate={defaultTrajetDate}
-        defaultVehiculeId={defaultTrajetVehId}
-        defaultAdresseDepart={defaultPrefill.adresseDepart}
-        defaultAdresseArrivee={defaultPrefill.adresseArrivee}
-        defaultCategorie={defaultPrefill.categorie}
-        defaultAffaireId={defaultPrefill.affaireId}
-        affaires={affaires.map((a) => ({ id: a.id, numero: a.numero, nom: a.nom }))}
-        employesLivreurs={employes
-          .filter((e) => e.est_livreur)
-          .map((e) => ({
-            id: e.id,
-            prenom: e.prenom,
-            nom: e.nom,
-            est_livreur: true,
-            actif: true,
-            categories_permis: e.categories_permis ?? [],
-          }))}
-        onSaved={() => void refreshTrajets()}
-      />
-
-      <ExportTrajetsSoustraitanceDialog
-        open={exportSousTraitanceOpen}
-        onOpenChange={setExportSousTraitanceOpen}
-      />
     </div>
   );
 }

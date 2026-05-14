@@ -1,81 +1,115 @@
-# v0.48 RÉVISÉ — Par pôle simplifié + différenciation visuelle 9XXX
+# v0.48 FINAL — Vue Par pôle simplifiée + refonte navigation (planning recentré staffing)
 
-Refonte drastique du scope initial : on aligne la nouvelle vue sur la structure familière "Par chantier", on retire tous les ornements (capacités, alertes, export, compact/détaillé), et on ajoute la teinte ambrée 9XXX là où elle a du sens.
+Plan révisé intégrant les 4 modifications demandées par Gabin. Effort total ~22h (déjà ~5h livrées sur la modif #1 vue Par pôle + teinte 9XXX, qui restent valables).
 
-## 1. Nouvelle vue "Par pôle" — structure alignée sur "Par chantier"
+## Modif 1 — Vue "Par pôle" simplifiée (DÉJÀ LIVRÉE, conservée)
 
-**Matrice** : lignes = métiers (ordre `metiers.ordre`), colonnes = jours de la semaine (lun→ven, +sam/dim si toggle week-end actif, identique aux autres onglets via la même `WeekPicker` / état global partagé).
+Matrice métiers × jours, badge nb personnes, hover popover vignettes, badge `PRÉV` pour 9XXX. RPC `staffing_par_pole_jours` en place. Aucun changement.
 
-**Cellule** :
-- Badge simple avec un chiffre = nb de personnes DISTINCT staffées sur ce métier ce jour.
-- Vide (cellule grisée discrète) si 0.
-- Pas de heures, pas de coloration utilisation, pas de bordure dashed sur la cellule elle-même.
+## Modif 2 — Toggle "Inclure opportunités" (DÉJÀ BRANCHÉ, conservé)
 
-**Hover popover** :
-- Réutilise le composant vignette existant (celui de "Par chantier") : avatar/initiales + nom court (`Achille V.J`).
-- Sous chaque nom : numéro + nom court du chantier d'affectation.
-- Si la personne est staffée sur un chantier 9XXX → badge `PRÉV` ambré sur sa vignette (icône + bg `amber-100` text `amber-800`) pour distinguer confirmé vs prévisionnel d'un coup d'œil.
+Géré par `p_inclure_opportunites` dans la RPC. OK.
 
-**Click cellule** : no-op pour ce sprint (drilldown reporté).
+## Modif 3 — Teinte ambrée 9XXX sur "Par chantier" (DÉJÀ LIVRÉE, conservée)
 
-**Filtres branchés** (état global du planning, déjà partagé entre onglets) :
-- Semaine (`WeekPicker`)
-- Toggle "Inclure opportunités (proto)" → si OFF, les personnes staffées uniquement sur des 9XXX ne sont pas comptées dans le badge ; si ON, comptées normalement.
-- Statut chantier (multi-select existant)
-- Métiers (multi-select existant) → filtre les lignes affichées.
+`bg-amber-50/40 dark:bg-amber-950/20` + `data-opportunite="true"` sur les `<td>` des lignes 9XXX. OK.
 
-**Supprimé du scope** : sticky header capacités, sticky footer total/%, KPI alertes, toggle Compact/Détaillé, export Excel, RPC `capacite_par_metier` (plus appelée — on la garde en DB pour usage futur mais on ne la branche pas en UI).
+## Modif 4 — Refonte navigation : 3 onglets sortis du planning vers leur section native (NOUVEAU)
 
-## 2. RPC simplifiée
+### 4.a Création de 3 nouvelles routes
 
-Réécriture de `staffing_par_pole_consolide` (ou nouvelle `staffing_par_pole_jours`) :
-- Input : `p_periode_debut`, `p_periode_fin`, `p_inclure_opportunites`, `p_filtres_metier_ids`, `p_filtres_statut`.
-- Sortie : 1 ligne par `(metier_id, date_jour)` avec :
-  - `nb_personnes` (DISTINCT employe_id)
-  - `personnes` JSONB array `[{ employe_id, prenom, nom_court, avatar_url, chantier_id, chantier_numero, chantier_nom, est_opportunite }]` pour alimenter le popover sans seconde requête.
-- Source : `assignations` joint à `affaires` + `employes`. Métier = `COALESCE(a.metier_id, e.metier_principal_id)`.
-- Si `p_inclure_opportunites = false` : exclut les rows où `affaires.numero LIKE '9%'` AVANT agrégation (donc le badge ne les compte pas).
-- SECURITY INVOKER, RLS héritée.
+```text
+/logistique/vehicules-planning   ← ex onglet "Véhicules staffés" (FlotteGrid)
+/affaires/budget-planning         ← ex onglet "Budget chantier" (PlanningSynthese)
+/export/feuille-de-route          ← ex onglet "Feuille de route" (FeuilleRouteTableurView)
+```
 
-## 3. Teinte ambrée 9XXX sur la vue "Par chantier" existante
+Fichiers TanStack à créer :
+- `src/routes/_app.logistique.vehicules-planning.tsx`
+- `src/routes/_app.affaires.budget-planning.tsx`
+- `src/routes/_app.export.feuille-de-route.tsx`
 
-**Endroit** : `src/components/planning/.../par-chantier/...` (le composant qui rend la table actuelle Par chantier).
+Chaque page :
+- Réutilise telle quelle le composant existant (`FlotteGrid`, `PlanningSynthese`, `FeuilleRouteTableurView`).
+- Réimplémente le **bandeau filtres partagé** (sélecteur de semaine + toggle "Inclure opportunités" + multi-filter Métier/Affaire/Devis + toggle weekend) en se basant sur le hook `usePlanningData` déjà utilisé par `/planning`. Pas de Zustand : on extrait un petit composant `<PlanningFiltresBar>` factorisable, partagé entre la page `/planning` et les 3 nouvelles pages. Chaque page a son propre état local de filtres (pas de cross-page sync — c'est intentionnel, chaque vue a son contexte métier).
+- Breadcrumb en haut de page :
+  - `Accueil > Logistique > Véhicules planning`
+  - `Accueil > Chantiers > Budget chantier`
+  - `Accueil > Outils > Feuille de route`
+  Composant `<PageBreadcrumb items={[…]} />` léger (Link TanStack + ChevronRight) si pas déjà existant, sinon réutilise le composant Breadcrumb shadcn.
 
-**Règle** : pour toute ligne dont `chantier.numero` commence par `9` :
-- Les **cellules de staffing** (pas le label ligne) reçoivent un background subtil `bg-amber-50/40` (light) / `bg-amber-950/20` (dark) — harmonisé avec le chip "PROTOTYPE 187" existant.
-- Les vignettes des personnes restent inchangées (typo, couleur normales) — seul le fond de cellule signale.
-- Pas de bordure dashed, pas d'opacity-60 (on garde ça pour la vue Par pôle popover uniquement).
+### 4.b Sidebar — ajout des 3 entrées
 
-## 4. Composants à créer / modifier
+Dans `src/components/AppSidebar.tsx` :
+- Section **Logistique** : ajouter `{ title: "Véhicules planning", url: "/logistique/vehicules-planning", icon: CalendarRange }` entre Véhicules et Demandes transport.
+- Section **Chantiers** : ajouter `{ title: "Budget chantier", url: "/affaires/budget-planning", icon: TrendingUp }` après Devis.
+- Section **Outils** : ajouter `{ title: "Feuille de route", url: "/export/feuille-de-route", icon: ClipboardList }` après Export planning.
 
-**Nouveaux** :
-- `src/components/planning/par-pole/ParPoleMatrice.tsx` — table métiers × jours, cellules badge.
-- `src/components/planning/par-pole/ParPoleCellPopover.tsx` — popover hover réutilisant la vignette existante + badge PRÉV.
+### 4.c Suppression des 3 onglets du planning
 
-**Modifiés** :
-- `src/hooks/use-planning-par-pole.ts` — réécrit, appelle uniquement la nouvelle RPC, plus de capacités.
-- `src/components/planning/par-pole/StaffingParPole.tsx` — devient un simple wrapper qui rend `ParPoleMatrice` (on retire sticky header/footer, KPI, toggle compact, export).
-- `src/routes/_app.planning.tsx` — onglet déjà en place, juste vérifier que les filtres globaux sont passés en props.
-- Composant Par chantier existant (à identifier précisément à l'implémentation) — ajout de la classe conditionnelle `bg-amber-50/40` sur les `<td>` staffing quand `numero.startsWith('9')`.
+Dans `src/routes/_app.planning.tsx` :
+- Retirer les `TabsTrigger` `value="budget"`, `value="flotte"`, `value="feuilleroute"` (lignes ~495-507).
+- Retirer les `TabsContent` correspondants (lignes ~606, ~619, ~691).
+- Retirer les imports devenus inutiles (`PlanningSynthese`, `FlotteGrid`, `FeuilleRouteTableurView`) — utilisés UNIQUEMENT dans les nouvelles pages.
+- Retirer du type union `tab` les valeurs `"budget" | "flotte" | "feuilleroute"`.
+- Le planning passe à **5 onglets** : `cdi | interim | parchantier | parobjet | parpole`.
 
-**Supprimés** :
-- `src/components/planning/par-pole/PoleDrilldownDialog.tsx`
-- `src/components/planning/par-pole/pole-export-excel.ts`
+### 4.d Redirects depuis anciens query params
 
-## 5. Tests E2E (battery `e2e/staffing/`)
+Pas de "redirect HTTP 301" possible côté SPA TanStack (le serveur ne sait pas distinguer). On gère côté client dans le `loader` (ou `beforeLoad`) de `/planning` :
 
-3 specs (au lieu de 5) :
-1. `par-pole-matrice.chef.spec.ts` — la matrice rend les métiers en lignes et 5 jours en colonnes, badge cohérent avec le seed.
-2. `par-pole-toggle-opp.chef.spec.ts` — toggle "Inclure opportunités" OFF → badge décrémente sur métiers où seuls 9XXX étaient staffés ; ON → badge ré-incrémente.
-3. `par-chantier-9xxx-tint.chef.spec.ts` — sur Par chantier, les `<td>` staffing des lignes 9XXX ont la classe `bg-amber-50/40`, les autres non.
+```typescript
+beforeLoad: ({ search }) => {
+  const tab = (search as any)?.tab;
+  const map: Record<string, string> = {
+    flotte: "/logistique/vehicules-planning",
+    vehicules: "/logistique/vehicules-planning",
+    budget: "/affaires/budget-planning",
+    feuilleroute: "/export/feuille-de-route",
+  };
+  if (tab && map[tab]) {
+    throw redirect({ to: map[tab], replace: true });
+  }
+},
+```
 
-## 6. Mémoire
+Pas de changement HTTP-status (impossible en SPA), mais l'utilisateur arrive sur la bonne page au lieu d'un onglet inexistant. `replace: true` évite de polluer l'historique.
 
-Mise à jour de `mem://features/planning-par-pole-v048.md` : retirer mentions sticky header/footer/export/compact, ajouter règle hover popover + teinte 9XXX Par chantier.
+### 4.e Tests E2E
 
-## Effort révisé
+3 specs minimales dans `e2e/planning/` :
+- `par-pole-matrice.chef.spec.ts` (déjà prévu modif 1)
+- `nav-refonte-redirect.chef.spec.ts` — vérifie que `/planning?tab=flotte` redirige vers `/logistique/vehicules-planning`, `?tab=budget` vers `/affaires/budget-planning`, `?tab=feuilleroute` vers `/export/feuille-de-route`.
+- `par-chantier-9xxx-tint.chef.spec.ts` (déjà prévu modif 3)
 
-~10h : 1h RPC + 4h matrice + 2h popover + 1h teinte 9XXX + 1h filtres + 1h tests.
+### 4.f Mémoire
+
+`mem://features/planning-par-pole-v048.md` mis à jour pour acter la refonte nav (planning à 5 onglets). Ajout d'une note `Core` dans `mem://index.md` :
+
+> v0.48 : `/planning` recentré staffing (5 onglets). Vues Véhicules, Budget, Feuille de route extraites vers `/logistique/vehicules-planning`, `/affaires/budget-planning`, `/export/feuille-de-route`. Redirect côté client depuis anciens `?tab=`.
+
+## Composant partagé `PlanningFiltresBar`
+
+Pour éviter 4 copies de la barre filtres, extraction dans `src/components/planning/PlanningFiltresBar.tsx` :
+- Props : `weekStart`, `setWeekStart`, `showWeekend`, `setShowWeekend`, `includeOpportunites`, `setIncludeOpportunites`, listes filtre (metiers, affaires) optionnelles.
+- Chaque page déclare son propre `useState` pour l'état des filtres.
+
+## Effort & livraison
+
+| Lot | Effort | Status |
+|---|---|---|
+| Modif 1 vue Par pôle | 7h | ✅ déjà livré |
+| Modif 2 toggle opp | 0h | ✅ déjà branché |
+| Modif 3 teinte 9XXX Par chantier | 1h | ✅ déjà livré |
+| Modif 4.a 3 nouvelles routes + breadcrumbs | 4h | ⏳ |
+| Modif 4.b Sidebar 3 entrées | 1h | ⏳ |
+| Modif 4.c Suppression 3 onglets planning | 1h | ⏳ |
+| Modif 4.d Redirects ?tab= | 1h | ⏳ |
+| Modif 4.e 3 tests E2E | 2h | ⏳ |
+| Modif 4.f Mémoire | 0.5h | ⏳ |
+| Extraction `PlanningFiltresBar` | 2h | ⏳ |
+
+Total restant : ~12h.
 
 ## Validation
 
