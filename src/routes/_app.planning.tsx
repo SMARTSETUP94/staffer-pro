@@ -593,6 +593,15 @@ function PlanningPage() {
                 />
               </TabsContent>
 
+              <TabsContent value="parpole" className="mt-4">
+                <StaffingParPole
+                  weekStart={weekStart}
+                  weekEnd={weekEnd}
+                  inclureOpportunites={includeOpportunites}
+                  filtresMetierIds={filterMetierNum.length > 0 ? filterMetierNum : undefined}
+                />
+              </TabsContent>
+
               <TabsContent value="budget" className="mt-4">
                 <PlanningSynthese
                   weekStart={weekStart}
