@@ -598,7 +598,7 @@ function PlanningPage() {
                   weekStart={weekStart}
                   weekEnd={weekEnd}
                   inclureOpportunites={includeOpportunites}
-                  filtresMetierIds={filterMetierNum.length > 0 ? filterMetierNum : undefined}
+                  filtresMetierIds={filterMetierNum.size > 0 ? Array.from(filterMetierNum) : undefined}
                 />
               </TabsContent>
 
