@@ -78,6 +78,7 @@ import { Route as AppParametresCompetencesEquipeRouteImport } from './routes/_ap
 import { Route as AppParametresAutorisationsVehiculesRouteImport } from './routes/_app.parametres.autorisations-vehicules'
 import { Route as AppOpportunitesImportRouteImport } from './routes/_app.opportunites.import'
 import { Route as AppFabricationMesEtapesRouteImport } from './routes/_app.fabrication.mes-etapes'
+import { Route as AppExportFeuilleDeRouteRouteImport } from './routes/_app.export.feuille-de-route'
 import { Route as AppExportDemandesDevisRouteImport } from './routes/_app.export.demandes-devis'
 import { Route as AppEmployesImportRouteImport } from './routes/_app.employes.import'
 import { Route as AppDevisRattachementHistoriqueRouteImport } from './routes/_app.devis.rattachement-historique'
@@ -448,6 +449,11 @@ const AppFabricationMesEtapesRoute = AppFabricationMesEtapesRouteImport.update({
   path: '/fabrication/mes-etapes',
   getParentRoute: () => AppRoute,
 } as any)
+const AppExportFeuilleDeRouteRoute = AppExportFeuilleDeRouteRouteImport.update({
+  id: '/feuille-de-route',
+  path: '/feuille-de-route',
+  getParentRoute: () => AppExportRoute,
+} as any)
 const AppExportDemandesDevisRoute = AppExportDemandesDevisRouteImport.update({
   id: '/demandes-devis',
   path: '/demandes-devis',
@@ -615,6 +621,7 @@ export interface FileRoutesByFullPath {
   '/devis/rattachement-historique': typeof AppDevisRattachementHistoriqueRoute
   '/employes/import': typeof AppEmployesImportRoute
   '/export/demandes-devis': typeof AppExportDemandesDevisRoute
+  '/export/feuille-de-route': typeof AppExportFeuilleDeRouteRoute
   '/fabrication/mes-etapes': typeof AppFabricationMesEtapesRoute
   '/opportunites/import': typeof AppOpportunitesImportRoute
   '/parametres/autorisations-vehicules': typeof AppParametresAutorisationsVehiculesRoute
@@ -702,6 +709,7 @@ export interface FileRoutesByTo {
   '/devis/rattachement-historique': typeof AppDevisRattachementHistoriqueRoute
   '/employes/import': typeof AppEmployesImportRoute
   '/export/demandes-devis': typeof AppExportDemandesDevisRoute
+  '/export/feuille-de-route': typeof AppExportFeuilleDeRouteRoute
   '/fabrication/mes-etapes': typeof AppFabricationMesEtapesRoute
   '/opportunites/import': typeof AppOpportunitesImportRoute
   '/parametres/autorisations-vehicules': typeof AppParametresAutorisationsVehiculesRoute
@@ -794,6 +802,7 @@ export interface FileRoutesById {
   '/_app/devis/rattachement-historique': typeof AppDevisRattachementHistoriqueRoute
   '/_app/employes/import': typeof AppEmployesImportRoute
   '/_app/export/demandes-devis': typeof AppExportDemandesDevisRoute
+  '/_app/export/feuille-de-route': typeof AppExportFeuilleDeRouteRoute
   '/_app/fabrication/mes-etapes': typeof AppFabricationMesEtapesRoute
   '/_app/opportunites/import': typeof AppOpportunitesImportRoute
   '/_app/parametres/autorisations-vehicules': typeof AppParametresAutorisationsVehiculesRoute
@@ -886,6 +895,7 @@ export interface FileRouteTypes {
     | '/devis/rattachement-historique'
     | '/employes/import'
     | '/export/demandes-devis'
+    | '/export/feuille-de-route'
     | '/fabrication/mes-etapes'
     | '/opportunites/import'
     | '/parametres/autorisations-vehicules'
@@ -973,6 +983,7 @@ export interface FileRouteTypes {
     | '/devis/rattachement-historique'
     | '/employes/import'
     | '/export/demandes-devis'
+    | '/export/feuille-de-route'
     | '/fabrication/mes-etapes'
     | '/opportunites/import'
     | '/parametres/autorisations-vehicules'
@@ -1064,6 +1075,7 @@ export interface FileRouteTypes {
     | '/_app/devis/rattachement-historique'
     | '/_app/employes/import'
     | '/_app/export/demandes-devis'
+    | '/_app/export/feuille-de-route'
     | '/_app/fabrication/mes-etapes'
     | '/_app/opportunites/import'
     | '/_app/parametres/autorisations-vehicules'
@@ -1604,6 +1616,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppFabricationMesEtapesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/export/feuille-de-route': {
+      id: '/_app/export/feuille-de-route'
+      path: '/feuille-de-route'
+      fullPath: '/export/feuille-de-route'
+      preLoaderRoute: typeof AppExportFeuilleDeRouteRouteImport
+      parentRoute: typeof AppExportRoute
+    }
     '/_app/export/demandes-devis': {
       id: '/_app/export/demandes-devis'
       path: '/demandes-devis'
@@ -1761,11 +1780,13 @@ const AppEmployesRouteWithChildren = AppEmployesRoute._addFileChildren(
 
 interface AppExportRouteChildren {
   AppExportDemandesDevisRoute: typeof AppExportDemandesDevisRoute
+  AppExportFeuilleDeRouteRoute: typeof AppExportFeuilleDeRouteRoute
   AppExportIndexRoute: typeof AppExportIndexRoute
 }
 
 const AppExportRouteChildren: AppExportRouteChildren = {
   AppExportDemandesDevisRoute: AppExportDemandesDevisRoute,
+  AppExportFeuilleDeRouteRoute: AppExportFeuilleDeRouteRoute,
   AppExportIndexRoute: AppExportIndexRoute,
 }
 
