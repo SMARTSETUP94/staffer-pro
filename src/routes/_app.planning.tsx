@@ -503,19 +503,6 @@ function PlanningPage() {
                     <span className="hidden sm:inline">Par pôle</span>
                     <span className="sm:hidden">Pôle</span>
                   </TabsTrigger>
-                  <TabsTrigger value="budget">
-                    <span className="hidden sm:inline">Budget chantier</span>
-                    <span className="sm:hidden">Budget</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="flotte">
-                    <span className="hidden sm:inline">Véhicules staffés ({vehicules.filter((v) => v.actif).length})</span>
-                    <span className="sm:hidden">Véhic. ({vehicules.filter((v) => v.actif).length})</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="feuilleroute">
-                    <ClipboardList className="mr-1 h-3.5 w-3.5" />
-                    <span className="hidden sm:inline">Feuille de route</span>
-                    <span className="sm:hidden">Feuille</span>
-                  </TabsTrigger>
                 </TabsList>
               </div>
 
