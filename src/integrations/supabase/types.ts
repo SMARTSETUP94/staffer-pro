@@ -4003,6 +4003,24 @@ export type Database = {
           total_heures: number
         }[]
       }
+      staffing_par_pole_jours: {
+        Args: {
+          p_filtres_metier_ids?: number[]
+          p_filtres_statut?: string[]
+          p_inclure_opportunites?: boolean
+          p_periode_debut: string
+          p_periode_fin: string
+        }
+        Returns: {
+          date_jour: string
+          metier_couleur: string
+          metier_id: number
+          metier_libelle: string
+          metier_ordre: number
+          nb_personnes: number
+          personnes: Json
+        }[]
+      }
       submit_quiz_answer: {
         Args: { p_answer_index: number; p_quiz_id: string }
         Returns: Json

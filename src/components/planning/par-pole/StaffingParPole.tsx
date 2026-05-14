@@ -1,314 +1,211 @@
-import { useMemo, useState } from "react";
-import { format } from "date-fns";
+import { useMemo } from "react";
+import { addDays, format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Loader2, AlertTriangle, FileDown, Layers } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { cn } from "@/lib/utils";
-import { usePlanningParPole, type PoleCellRow } from "@/hooks/use-planning-par-pole";
-import { PoleDrilldownDialog } from "./PoleDrilldownDialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Badge } from "@/components/ui/badge";
+import { usePlanningParPole, type PoleJourRow, type PolePersonne } from "@/hooks/use-planning-par-pole";
 
 interface Props {
   weekStart: Date;
   weekEnd: Date;
+  showWeekend?: boolean;
   inclureOpportunites: boolean;
   filtresMetierIds?: number[];
   filtresStatut?: string[];
 }
 
+/**
+ * v0.48 — Vue "Par pôle" simplifiée.
+ * Lignes = métiers (ordre `metiers.ordre`).
+ * Colonnes = jours de la semaine (lun→ven, +sam/dim si toggle).
+ * Cellules = badge nb personnes ; hover = popover vignettes (chantier en dessous).
+ * Personnes staffées sur 9XXX → badge "PRÉV" ambré sur la vignette.
+ */
 export function StaffingParPole({
   weekStart,
   weekEnd,
+  showWeekend = false,
   inclureOpportunites,
   filtresMetierIds,
   filtresStatut,
 }: Props) {
-  const { cells, capacites, loading, error } = usePlanningParPole({
+  const { rows, loading, error } = usePlanningParPole({
     weekStart,
     weekEnd,
     inclureOpportunites,
     filtresMetierIds,
     filtresStatut,
   });
-  const [view, setView] = useState<"compact" | "detail">("compact");
-  const [drill, setDrill] = useState<{ chantierId: string; chantierLabel: string; metierId: number; metierLabel: string } | null>(null);
 
-  // Index cellules par (chantier, metier)
-  const cellMap = useMemo(() => {
-    const map = new Map<string, PoleCellRow>();
-    for (const c of cells) map.set(`${c.chantier_id}::${c.metier_id}`, c);
-    return map;
-  }, [cells]);
+  const days = useMemo(
+    () => Array.from({ length: showWeekend ? 7 : 5 }, (_, i) => addDays(weekStart, i)),
+    [weekStart.getTime(), showWeekend],
+  );
 
-  // Liste chantiers (déduplication, tri par numéro)
-  const chantiers = useMemo(() => {
-    const seen = new Map<string, { id: string; numero: string; nom: string; typologie: string | null; statut: string }>();
-    for (const c of cells) {
-      if (!seen.has(c.chantier_id)) {
-        seen.set(c.chantier_id, {
-          id: c.chantier_id,
-          numero: c.chantier_numero,
-          nom: c.chantier_nom,
-          typologie: c.chantier_typologie,
-          statut: c.chantier_statut,
+  // Index : metier_id -> Map<dateISO, row>
+  const { metiers, byCell } = useMemo(() => {
+    const metiersMap = new Map<
+      number,
+      { id: number; libelle: string; couleur: string; ordre: number }
+    >();
+    const cellMap = new Map<string, PoleJourRow>();
+    for (const r of rows) {
+      if (!metiersMap.has(r.metier_id)) {
+        metiersMap.set(r.metier_id, {
+          id: r.metier_id,
+          libelle: r.metier_libelle,
+          couleur: r.metier_couleur,
+          ordre: r.metier_ordre,
         });
       }
+      cellMap.set(`${r.metier_id}::${r.date_jour}`, r);
     }
-    return Array.from(seen.values()).sort((a, b) => a.numero.localeCompare(b.numero, "fr", { numeric: true }));
-  }, [cells]);
-
-  // Métiers à afficher = capacités (ordonnées) éventuellement filtrées
-  const metiersToShow = useMemo(() => {
-    const filter = filtresMetierIds && filtresMetierIds.length > 0 ? new Set(filtresMetierIds) : null;
-    return capacites.filter((m) => !filter || filter.has(m.metier_id));
-  }, [capacites, filtresMetierIds]);
-
-  // Totaux par métier (footer)
-  const totalsByMetier = useMemo(() => {
-    const map = new Map<number, { nb: number; h: number }>();
-    for (const c of cells) {
-      const cur = map.get(c.metier_id) ?? { nb: 0, h: 0 };
-      cur.nb += c.nb_personnes;
-      cur.h += Number(c.total_heures);
-      map.set(c.metier_id, cur);
-    }
-    return map;
-  }, [cells]);
-
-  // Alertes
-  const alertes = useMemo(() => {
-    const satures: string[] = [];
-    const sousUtilises: string[] = [];
-    for (const m of metiersToShow) {
-      const cap = m.capacite_totale;
-      if (cap === 0) continue;
-      const tot = totalsByMetier.get(m.metier_id)?.nb ?? 0;
-      const ratio = tot / cap;
-      if (ratio > 1.0) satures.push(m.metier_libelle);
-      else if (ratio < 0.5) sousUtilises.push(m.metier_libelle);
-    }
-    return { satures, sousUtilises };
-  }, [metiersToShow, totalsByMetier]);
-
-  const handleExport = async () => {
-    const { exportPoleMatriceXlsx } = await import("./pole-export-excel");
-    await exportPoleMatriceXlsx({ chantiers, metiers: metiersToShow, capacites, cellMap, weekStart, weekEnd });
-  };
+    const metiersList = Array.from(metiersMap.values()).sort((a, b) => a.ordre - b.ordre);
+    return { metiers: metiersList, byCell: cellMap };
+  }, [rows]);
 
   if (loading) {
     return (
-      <div className="flex h-64 items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
+        Chargement…
       </div>
     );
   }
   if (error) {
     return (
-      <div className="rounded-md border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
+      <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-4 text-sm text-destructive">
         Erreur : {error}
+      </div>
+    );
+  }
+  if (metiers.length === 0) {
+    return (
+      <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
+        Aucun staffing cette semaine.
       </div>
     );
   }
 
   return (
-    <div className="space-y-3">
-      {/* Bandeau alertes + actions */}
-      <div className="flex flex-wrap items-center gap-2">
-        {alertes.satures.length > 0 && (
-          <Badge variant="destructive" className="gap-1">
-            <AlertTriangle className="h-3 w-3" />
-            {alertes.satures.length} pôle{alertes.satures.length > 1 ? "s" : ""} saturé{alertes.satures.length > 1 ? "s" : ""} : {alertes.satures.join(", ")}
-          </Badge>
-        )}
-        {alertes.sousUtilises.length > 0 && (
-          <Badge variant="secondary" className="gap-1">
-            <Layers className="h-3 w-3" />
-            {alertes.sousUtilises.length} pôle{alertes.sousUtilises.length > 1 ? "s" : ""} sous-utilisé{alertes.sousUtilises.length > 1 ? "s" : ""} : {alertes.sousUtilises.join(", ")}
-          </Badge>
-        )}
-        <div className="ml-auto flex items-center gap-2">
-          <ToggleGroup type="single" size="sm" value={view} onValueChange={(v) => v && setView(v as "compact" | "detail")}>
-            <ToggleGroupItem value="compact">Compact</ToggleGroupItem>
-            <ToggleGroupItem value="detail">Détaillé</ToggleGroupItem>
-          </ToggleGroup>
-          <Button variant="outline" size="sm" onClick={handleExport}>
-            <FileDown className="mr-1.5 h-3.5 w-3.5" />
-            Exporter Excel
-          </Button>
-        </div>
-      </div>
-
-      {/* Matrice */}
-      <div className="relative max-h-[70vh] overflow-auto rounded-md border" role="table" aria-label="Matrice chantier × métier">
-        <table className="w-full border-collapse text-xs">
-          <thead className="sticky top-0 z-20 bg-background shadow-sm">
-            <tr role="row">
+    <div className="overflow-x-auto rounded-lg border bg-card">
+      <table className="w-full min-w-[700px] border-collapse text-xs">
+        <thead className="bg-muted/50">
+          <tr>
+            <th className="sticky left-0 z-10 w-[200px] border-b bg-muted/50 p-2 text-left font-semibold">
+              Métier
+            </th>
+            {days.map((d) => (
               <th
-                role="columnheader"
-                className="sticky left-0 z-30 min-w-[260px] border-b border-r bg-background px-3 py-2 text-left font-semibold"
+                key={d.toISOString()}
+                className="border-b border-l p-2 text-center font-semibold"
               >
-                Chantier
+                <div className="text-[11px] uppercase">
+                  {format(d, "EEE", { locale: fr })}
+                </div>
                 <div className="text-[10px] font-normal text-muted-foreground">
-                  Capacité totale : {capacites.reduce((s, m) => s + m.capacite_totale, 0)} pers.
+                  {format(d, "dd/MM")}
                 </div>
               </th>
-              {metiersToShow.map((m) => (
-                <th
-                  role="columnheader"
-                  key={m.metier_id}
-                  className="min-w-[110px] border-b border-r px-2 py-2 text-center font-semibold"
-                  style={{ borderTopColor: m.metier_couleur, borderTopWidth: 3 }}
-                >
-                  <div className="truncate">{m.metier_libelle}</div>
-                  <div className="text-[10px] font-normal text-muted-foreground">
-                    {m.capacite_cdi_cdd} CDI/CDD
-                    {m.capacite_interim > 0 ? ` · ${m.capacite_interim} int.` : ""}
-                  </div>
-                </th>
-              ))}
-            </tr>
-          </thead>
-
-          <tbody>
-            {chantiers.length === 0 ? (
-              <tr>
-                <td colSpan={metiersToShow.length + 1} className="p-8 text-center text-muted-foreground">
-                  Aucune assignation sur la période sélectionnée.
-                </td>
-              </tr>
-            ) : (
-              chantiers.map((ch) => {
-                const isProto = ch.numero.startsWith("9");
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {metiers.map((m) => (
+            <tr key={m.id} className="hover:bg-muted/30">
+              <td className="sticky left-0 z-10 border-b bg-card p-2 align-middle hover:bg-muted/30">
+                <div className="flex items-center gap-2">
+                  <span
+                    className="h-2.5 w-2.5 shrink-0 rounded-full"
+                    style={{ backgroundColor: m.couleur || "#94a3b8" }}
+                    aria-hidden
+                  />
+                  <span className="truncate font-medium">{m.libelle}</span>
+                </div>
+              </td>
+              {days.map((d) => {
+                const dayStr = format(d, "yyyy-MM-dd");
+                const cell = byCell.get(`${m.id}::${dayStr}`);
+                const isWeekend = d.getDay() === 0 || d.getDay() === 6;
                 return (
-                  <tr
-                    key={ch.id}
-                    role="row"
+                  <td
+                    key={d.toISOString()}
                     className={cn(
-                      "border-b transition-colors hover:bg-muted/30",
-                      isProto && "opacity-60",
+                      "border-b border-l p-2 text-center align-middle",
+                      isWeekend && "bg-muted/20",
                     )}
                   >
-                    <td
-                      className={cn(
-                        "sticky left-0 z-10 border-r bg-background px-3 py-2",
-                        isProto && "border-dashed",
-                      )}
-                    >
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-mono text-xs font-semibold">{ch.numero}</span>
-                        {isProto && (
-                          <Badge variant="outline" className="h-4 border-dashed px-1 text-[9px]">
-                            PRÉV
-                          </Badge>
-                        )}
-                      </div>
-                      <div className="truncate text-[11px] text-muted-foreground" title={ch.nom}>
-                        {ch.nom}
-                      </div>
-                    </td>
-                    {metiersToShow.map((m) => {
-                      const cell = cellMap.get(`${ch.id}::${m.metier_id}`);
-                      if (!cell) {
-                        return (
-                          <td
-                            key={m.metier_id}
-                            className={cn("border-r px-2 py-2 text-center text-muted-foreground/40", isProto && "border-dashed")}
+                    {cell && cell.nb_personnes > 0 ? (
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <button
+                            type="button"
+                            className="inline-flex h-7 min-w-7 items-center justify-center rounded-full bg-primary/10 px-2 text-xs font-semibold text-primary hover:bg-primary/20 focus:outline-none focus:ring-2 focus:ring-primary"
+                            data-testid="par-pole-cell-badge"
+                            data-nb={cell.nb_personnes}
                           >
-                            –
-                          </td>
-                        );
-                      }
-                      return (
-                        <td
-                          key={m.metier_id}
-                          className={cn(
-                            "cursor-pointer border-r px-2 py-2 text-center hover:bg-accent",
-                            isProto && "border-dashed",
-                          )}
-                          onClick={() =>
-                            setDrill({
-                              chantierId: ch.id,
-                              chantierLabel: `${ch.numero} — ${ch.nom}`,
-                              metierId: m.metier_id,
-                              metierLabel: m.metier_libelle,
-                            })
-                          }
-                          aria-label={`${ch.numero} — ${m.metier_libelle} : ${cell.nb_personnes} personnes, ${cell.total_heures}h`}
-                        >
-                          <div className="font-semibold">{cell.nb_personnes}p</div>
-                          {view === "detail" && (
-                            <div className="text-[10px] text-muted-foreground">{cell.total_heures}h</div>
-                          )}
-                        </td>
-                      );
-                    })}
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-
-          <tfoot className="sticky bottom-0 z-20 bg-muted/80 backdrop-blur">
-            <tr role="row">
-              <td className="sticky left-0 z-30 border-r border-t bg-muted/95 px-3 py-2 text-left text-[11px] font-semibold">
-                Total staffé / pôle
-              </td>
-              {metiersToShow.map((m) => {
-                const tot = totalsByMetier.get(m.metier_id)?.nb ?? 0;
-                return (
-                  <td key={m.metier_id} className="border-r border-t px-2 py-2 text-center text-xs font-semibold">
-                    {tot}
+                            {cell.nb_personnes}
+                          </button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-72 p-2" align="center">
+                          <div className="mb-2 border-b pb-1.5 text-[11px] font-semibold uppercase text-muted-foreground">
+                            {m.libelle} · {format(d, "EEEE dd MMM", { locale: fr })}
+                          </div>
+                          <ul className="space-y-1.5">
+                            {cell.personnes.map((p) => (
+                              <PersonneVignette key={`${p.employe_id}::${p.chantier_id}`} p={p} />
+                            ))}
+                          </ul>
+                        </PopoverContent>
+                      </Popover>
+                    ) : (
+                      <span className="text-[10px] text-muted-foreground/30">·</span>
+                    )}
                   </td>
                 );
               })}
             </tr>
-            <tr role="row">
-              <td className="sticky left-0 z-30 border-r bg-muted/95 px-3 py-2 text-left text-[11px] font-semibold">
-                % utilisation
-              </td>
-              {metiersToShow.map((m) => {
-                const tot = totalsByMetier.get(m.metier_id)?.nb ?? 0;
-                const cap = m.capacite_totale;
-                if (cap === 0) {
-                  return (
-                    <td key={m.metier_id} className="border-r px-2 py-2 text-center text-[11px] text-muted-foreground">
-                      –
-                    </td>
-                  );
-                }
-                const ratio = tot / cap;
-                const color =
-                  ratio > 1.2 ? "bg-destructive text-destructive-foreground" :
-                  ratio > 1.0 ? "bg-amber-500/20 text-amber-900 dark:text-amber-200" :
-                  "bg-emerald-500/20 text-emerald-900 dark:text-emerald-200";
-                return (
-                  <td key={m.metier_id} className={cn("border-r px-2 py-2 text-center text-[11px] font-semibold", color)}>
-                    {Math.round(ratio * 100)}%
-                  </td>
-                );
-              })}
-            </tr>
-          </tfoot>
-        </table>
-      </div>
-
-      <div className="text-[10px] text-muted-foreground">
-        Période : {format(weekStart, "EEE d MMM", { locale: fr })} → {format(weekEnd, "EEE d MMM yyyy", { locale: fr })}
-      </div>
-
-      {drill && (
-        <PoleDrilldownDialog
-          open
-          onOpenChange={(o) => !o && setDrill(null)}
-          chantierId={drill.chantierId}
-          chantierLabel={drill.chantierLabel}
-          metierId={drill.metierId}
-          metierLabel={drill.metierLabel}
-          weekStart={weekStart}
-          weekEnd={weekEnd}
-        />
-      )}
+          ))}
+        </tbody>
+      </table>
     </div>
+  );
+}
+
+function PersonneVignette({ p }: { p: PolePersonne }) {
+  const initiales = `${(p.prenom ?? "?")[0] ?? ""}${(p.nom ?? "?")[0] ?? ""}`.toUpperCase();
+  return (
+    <li className="flex items-center gap-2 rounded-md border bg-card px-2 py-1.5">
+      <span
+        className={cn(
+          "flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold",
+          p.est_opportunite
+            ? "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200"
+            : "bg-muted text-muted-foreground",
+        )}
+        aria-hidden
+      >
+        {initiales || "?"}
+      </span>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-1.5">
+          <span className="truncate text-xs font-semibold">
+            {p.prenom} {p.nom ? `${p.nom.charAt(0)}.` : ""}
+          </span>
+          {p.est_opportunite && (
+            <Badge
+              variant="outline"
+              className="h-4 border-amber-300 bg-amber-50 px-1 text-[9px] font-bold text-amber-800 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-200"
+            >
+              PRÉV
+            </Badge>
+          )}
+        </div>
+        <div className="truncate text-[10px] text-muted-foreground">
+          <span className="font-mono font-semibold">{p.chantier_numero}</span>{" "}
+          · {p.chantier_nom}
+        </div>
+      </div>
+    </li>
   );
 }

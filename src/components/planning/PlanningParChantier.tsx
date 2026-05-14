@@ -304,13 +304,17 @@ export function PlanningParChantier({
                     });
                     const isWeekend = d.getDay() === 0 || d.getDay() === 6;
                     const isEmpty = byEmploye.size === 0;
+                    const isOpportunite = af.numero?.startsWith("9") ?? false;
                     return (
                       <td
                         key={d.toISOString()}
+                        data-opportunite={isOpportunite ? "true" : undefined}
                         onClick={(e) => handleCellClick(e, af, dayStr, cellAssigns)}
                         className={cn(
                           "border-b border-l align-top transition-colors",
                           isWeekend && "bg-muted/20",
+                          // v0.48 — teinte ambrée subtile pour chantiers prototypes 9XXX
+                          isOpportunite && "bg-amber-50/40 dark:bg-amber-950/20",
                           !isLocked && "cursor-pointer hover:bg-primary/5",
                           isLocked && "cursor-not-allowed opacity-60",
                           isSelected && "ring-4 ring-primary ring-inset bg-primary/10",

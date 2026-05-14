@@ -597,6 +597,7 @@ function PlanningPage() {
                 <StaffingParPole
                   weekStart={weekStart}
                   weekEnd={weekEnd}
+                  showWeekend={showWeekend}
                   inclureOpportunites={includeOpportunites}
                   filtresMetierIds={filterMetierNum.size > 0 ? Array.from(filterMetierNum) : undefined}
                 />
