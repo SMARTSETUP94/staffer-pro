@@ -13,29 +13,20 @@ import { Button } from "@/components/ui/button";
 import { usePlanningData, type Employe } from "@/hooks/use-planning-data";
 import { WeekPicker } from "@/components/planning/WeekPicker";
 import { PlanningGrid } from "@/components/planning/PlanningGrid";
-import { PlanningSynthese } from "@/components/planning/PlanningSynthese";
 import { PlanningParChantier } from "@/components/planning/PlanningParChantier";
 import { PlanningParObjet } from "@/components/planning/PlanningParObjet";
 import { HeuresRestantesSidebar } from "@/components/planning/HeuresRestantesSidebar";
 import { MultiFilter } from "@/components/planning/MultiFilter";
 import { AddInterimDialog } from "@/components/planning/AddInterimDialog";
 import { BulkStafferDialog } from "@/components/planning/BulkStafferDialog";
-import { FlotteGrid } from "@/components/planning/FlotteGrid";
-import { FeuilleRouteTableurView } from "@/components/planning/FeuilleRouteTableurView";
-import { SuggestionsTrajetsBloc } from "@/components/planning/SuggestionsTrajetsBloc";
 import { StaffingParPole } from "@/components/planning/par-pole/StaffingParPole";
-import { TrajetDialog } from "@/components/flotte/TrajetDialog";
-import { ExportTrajetsSoustraitanceDialog } from "@/components/flotte/ExportTrajetsSoustraitanceDialog";
-import { useVehicules, type Trajet } from "@/hooks/use-vehicules";
+import { useVehicules } from "@/hooks/use-vehicules";
 import { useTrajetsWeek } from "@/hooks/use-trajets";
 import { exportPlanningToPDF } from "@/lib/planning-export";
 // PERF v0.30.1 — xlsx-js-style (~600 KB) chargé dynamiquement au clic export.
-// Les exports planning Excel ne sont utilisés qu'occasionnellement → on évite
-// de les embarquer dans le chunk initial de la page Planning.
 //   import { exportPlanningParObjetToXlsx, buildPlanningObjetXlsxFilename } from "@/lib/planning-objet-xlsx-export";
 //   import { exportPlanningExcel } from "@/lib/planning-excel-export";
 //   import { downloadBlob } from "@/lib/trajets-soustraitance-export";
-import type { TrajetSuggestion } from "@/lib/trajets-suggestions";
 import { TypologieMultiFilter } from "@/components/typologie/TypologieMultiFilter";
 import { normalizeName } from "@/lib/string-normalize";
 import {
