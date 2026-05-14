@@ -642,34 +642,6 @@ function PlanningPage() {
         onSaved={refresh}
       />
 
-      <TrajetDialog
-        open={trajetDlgOpen}
-        onOpenChange={setTrajetDlgOpen}
-        trajet={editTrajet}
-        defaultDate={defaultTrajetDate}
-        defaultVehiculeId={defaultTrajetVehId}
-        defaultAdresseDepart={defaultPrefill.adresseDepart}
-        defaultAdresseArrivee={defaultPrefill.adresseArrivee}
-        defaultCategorie={defaultPrefill.categorie}
-        defaultAffaireId={defaultPrefill.affaireId}
-        affaires={affaires.map((a) => ({ id: a.id, numero: a.numero, nom: a.nom }))}
-        employesLivreurs={employes
-          .filter((e) => e.est_livreur)
-          .map((e) => ({
-            id: e.id,
-            prenom: e.prenom,
-            nom: e.nom,
-            est_livreur: true,
-            actif: true,
-            categories_permis: e.categories_permis ?? [],
-          }))}
-        onSaved={() => void refreshTrajets()}
-      />
-
-      <ExportTrajetsSoustraitanceDialog
-        open={exportSousTraitanceOpen}
-        onOpenChange={setExportSousTraitanceOpen}
-      />
     </div>
   );
 }
