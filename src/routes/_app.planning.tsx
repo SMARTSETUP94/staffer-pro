@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate, stripSearchParams } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, stripSearchParams, redirect } from "@tanstack/react-router";
 import { zodValidator, fallback } from "@tanstack/zod-adapter";
 import { z } from "zod";
 import { useMemo, useRef, useState } from "react";
