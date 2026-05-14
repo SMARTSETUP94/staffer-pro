@@ -59,9 +59,9 @@ export function usePlanningParPole({
           p_periode_debut: debut,
           p_periode_fin: fin,
           p_inclure_opportunites: inclureOpportunites,
-          p_filtres_chantier_ids: null,
-          p_filtres_metier_ids: filtresMetierIds && filtresMetierIds.length > 0 ? filtresMetierIds : null,
-          p_filtres_statut: filtresStatut && filtresStatut.length > 0 ? filtresStatut : null,
+          p_filtres_chantier_ids: undefined,
+          p_filtres_metier_ids: filtresMetierIds && filtresMetierIds.length > 0 ? filtresMetierIds : undefined,
+          p_filtres_statut: filtresStatut && filtresStatut.length > 0 ? filtresStatut : undefined,
         }),
         supabase.rpc("capacite_par_metier"),
       ]);
