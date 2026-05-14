@@ -84,6 +84,7 @@ function buildSections(role: EffRole, validationCount: number, contratsRhCount: 
         // Renommé v0.13 : "Affaires" → "Chantiers" (route /affaires conservée)
         { title: "Chantiers", url: "/affaires", icon: Building2, show: () => true },
         { title: "Devis", url: "/devis", icon: FileText, show: () => true },
+        { title: "Budget chantier", url: "/affaires/budget-planning", icon: Calendar, show: () => true },
       ],
     },
     {
