@@ -18,6 +18,7 @@ export const Route = createFileRoute("/_app/affaires/budget-planning")({
 });
 
 function BudgetPlanningPage() {
+  const navigate = useNavigate();
   const [weekStart, setWeekStart] = useState<Date>(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
   const weekEnd = addDays(weekStart, 6);
   const { metiers, employes, affaires, assignations, consommation, chefsById, loading, error } =
