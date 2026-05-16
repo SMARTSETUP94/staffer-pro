@@ -82,7 +82,6 @@ function PlanningPage() {
   const [filterMetier, setFilterMetier] = useState<Set<string | number>>(new Set());
   const [filterDevis, setFilterDevis] = useState<Set<string | number>>(new Set());
   const [showWeekend, setShowWeekend] = useState(false);
-  const [includeOpportunites, setIncludeOpportunites] = useState(false);
   const [searchEmploye, setSearchEmploye] = useState("");
 
   const navigate = useNavigate({ from: "/planning" });
