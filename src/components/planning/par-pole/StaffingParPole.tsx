@@ -135,7 +135,7 @@ export function StaffingParPole({
 
   return (
     <div className="space-y-2">
-      <Legende />
+      
       <div className="overflow-x-auto rounded-lg border bg-card">
         <table className="w-full min-w-[700px] border-collapse text-xs">
           <thead className="bg-muted/50">
