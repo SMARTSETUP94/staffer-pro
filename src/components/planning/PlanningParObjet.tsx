@@ -526,6 +526,7 @@ export function PlanningParObjet({
                                 className={cn(
                                   "border-b border-l align-top transition-colors",
                                   isWeekend && "bg-muted/20",
+                                  TYPO_CELL_TINT_CLASSES[typologieColorFromNumero(af.numero)],
                                   isLocked && "cursor-not-allowed opacity-60",
                                   !isLocked && "cursor-pointer hover:bg-primary/5",
                                   isDragOver && "ring-2 ring-primary ring-inset bg-primary/10",
