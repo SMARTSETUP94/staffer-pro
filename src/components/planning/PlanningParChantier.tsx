@@ -318,6 +318,7 @@ export function PlanningParChantier({
                     const isWeekend = d.getDay() === 0 || d.getDay() === 6;
                     const isEmpty = byEmploye.size === 0;
                     const isOpportunite = af.numero?.startsWith("9") ?? false;
+                    const typoTint = TYPO_CELL_TINT_CLASSES[typologieColorFromNumero(af.numero)];
                     return (
                       <td
                         key={d.toISOString()}
@@ -326,8 +327,8 @@ export function PlanningParChantier({
                         className={cn(
                           "border-b border-l align-top transition-colors",
                           isWeekend && "bg-muted/20",
-                          // v0.48 — teinte ambrée subtile pour chantiers prototypes 9XXX
-                          isOpportunite && "bg-amber-50/40 dark:bg-amber-950/20",
+                          // Teinte typologique unifiée (gris/bleu/vert/orange)
+                          typoTint,
                           !isLocked && "cursor-pointer hover:bg-primary/5",
                           isLocked && "cursor-not-allowed opacity-60",
                           isSelected && "ring-4 ring-primary ring-inset bg-primary/10",
