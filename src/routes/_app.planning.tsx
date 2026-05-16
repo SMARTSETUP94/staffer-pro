@@ -89,6 +89,10 @@ function PlanningPage() {
   const setTypoFilter = (next: AffaireTypologie[]) => {
     navigate({ search: { typo: next }, replace: true });
   };
+  // v0.48.1 — Plus de toggle "Inclure opportunités" : dérivé du filtre typologie.
+  // typoFilter vide = aucune restriction → tout passe (proto inclus).
+  // typoFilter actif = ne passent que les typologies cochées.
+  const includeOpportunites = typoFilter.length === 0 || typoFilter.includes("prototype");
 
   const { metiers, employes, affaires, assignations, consommation, absences, chefsById, swapAssignationIds, devisLots, loading, error, refresh } =
     usePlanningData(weekStart, weekEnd);
