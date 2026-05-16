@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/badge";
 import { usePlanningParPole, type PoleJourRow, type PolePersonne } from "@/hooks/use-planning-par-pole";
 import {
   TYPO_COLOR_CLASSES,
-  TYPO_LEGEND,
   typologieColorFromNumero,
   type TypologieColor,
 } from "@/lib/planning-typologie-colors";
@@ -135,7 +134,7 @@ export function StaffingParPole({
 
   return (
     <div className="space-y-2">
-      <Legende />
+      
       <div className="overflow-x-auto rounded-lg border bg-card">
         <table className="w-full min-w-[700px] border-collapse text-xs">
           <thead className="bg-muted/50">
@@ -239,25 +238,6 @@ export function StaffingParPole({
   );
 }
 
-function Legende() {
-  return (
-    <div className="flex flex-wrap items-center gap-3 px-1 text-[11px] text-muted-foreground">
-      <span className="font-medium">Légende :</span>
-      {TYPO_LEGEND.map((i) => (
-        <div key={i.t} className="flex items-center gap-1.5">
-          <span
-            className={cn(
-              "inline-block h-3 w-3 rounded-full",
-              TYPO_CLASSES[i.t].split(" ").filter((c) => c.startsWith("bg-")).join(" "),
-            )}
-            aria-hidden
-          />
-          <span>{i.label}</span>
-        </div>
-      ))}
-    </div>
-  );
-}
 
 function PersonneVignette({ p }: { p: PolePersonne }) {
   const initiales = `${(p.prenom ?? "?")[0] ?? ""}${(p.nom ?? "?")[0] ?? ""}`.toUpperCase();
