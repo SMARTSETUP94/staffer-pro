@@ -15,12 +15,66 @@ interface Props {
   filtresStatut?: string[];
 }
 
+type Typologie = "gris" | "jaune" | "vert" | "orange" | "neutre";
+
+const TYPO_CLASSES: Record<Typologie, string> = {
+  gris: "bg-slate-200 text-slate-800 hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600",
+  jaune:
+    "bg-yellow-200 text-yellow-900 hover:bg-yellow-300 dark:bg-yellow-900/50 dark:text-yellow-100 dark:hover:bg-yellow-900/70",
+  vert: "bg-emerald-200 text-emerald-900 hover:bg-emerald-300 dark:bg-emerald-900/50 dark:text-emerald-100 dark:hover:bg-emerald-900/70",
+  orange:
+    "bg-orange-200 text-orange-900 hover:bg-orange-300 dark:bg-orange-900/50 dark:text-orange-100 dark:hover:bg-orange-900/70",
+  neutre: "bg-muted text-muted-foreground hover:bg-muted/70",
+};
+
+function typologieFromNumero(numero: string): Typologie {
+  const first = numero?.[0];
+  if (first === "1" || first === "2") return "gris";
+  if (first === "3") return "jaune";
+  if (first === "4" || first === "5") return "vert";
+  if (first === "9") return "orange";
+  return "neutre";
+}
+
+interface GroupedChantier {
+  chantier_id: string;
+  chantier_numero: string;
+  chantier_nom: string;
+  personnes: PolePersonne[];
+}
+
+function groupByChantier(personnes: PolePersonne[]): GroupedChantier[] {
+  const map = new Map<string, GroupedChantier>();
+  for (const p of personnes) {
+    const g = map.get(p.chantier_id);
+    if (g) {
+      // dédoublonne par employe_id (au cas où plusieurs assignations même jour)
+      if (!g.personnes.some((x) => x.employe_id === p.employe_id)) {
+        g.personnes.push(p);
+      }
+    } else {
+      map.set(p.chantier_id, {
+        chantier_id: p.chantier_id,
+        chantier_numero: p.chantier_numero,
+        chantier_nom: p.chantier_nom,
+        personnes: [p],
+      });
+    }
+  }
+  // tri : 9XXX en dernier, puis par numéro
+  return Array.from(map.values()).sort((a, b) => {
+    const ao = a.chantier_numero.startsWith("9") ? 1 : 0;
+    const bo = b.chantier_numero.startsWith("9") ? 1 : 0;
+    if (ao !== bo) return ao - bo;
+    return a.chantier_numero.localeCompare(b.chantier_numero);
+  });
+}
+
 /**
- * v0.48 — Vue "Par pôle" simplifiée.
- * Lignes = métiers (ordre `metiers.ordre`).
- * Colonnes = jours de la semaine (lun→ven, +sam/dim si toggle).
- * Cellules = badge nb personnes ; hover = popover vignettes (chantier en dessous).
- * Personnes staffées sur 9XXX → badge "PRÉV" ambré sur la vignette.
+ * v0.48 — Vue "Par pôle".
+ * Lignes = métiers ; Colonnes = jours.
+ * Cellules = une bulle PAR chantier (couleur dérivée de la typologie du numéro) ;
+ * hover = popover liste personnes pour ce chantier.
  */
 export function StaffingParPole({
   weekStart,
@@ -43,7 +97,6 @@ export function StaffingParPole({
     [weekStart.getTime(), showWeekend],
   );
 
-  // Index : metier_id -> Map<dateISO, row>
   const { metiers, byCell } = useMemo(() => {
     const metiersMap = new Map<
       number,
@@ -88,86 +141,133 @@ export function StaffingParPole({
   }
 
   return (
-    <div className="overflow-x-auto rounded-lg border bg-card">
-      <table className="w-full min-w-[700px] border-collapse text-xs">
-        <thead className="bg-muted/50">
-          <tr>
-            <th className="sticky left-0 z-10 w-[200px] border-b bg-muted/50 p-2 text-left font-semibold">
-              Métier
-            </th>
-            {days.map((d) => (
-              <th
-                key={d.toISOString()}
-                className="border-b border-l p-2 text-center font-semibold"
-              >
-                <div className="text-[11px] uppercase">
-                  {format(d, "EEE", { locale: fr })}
-                </div>
-                <div className="text-[10px] font-normal text-muted-foreground">
-                  {format(d, "dd/MM")}
-                </div>
+    <div className="space-y-2">
+      <Legende />
+      <div className="overflow-x-auto rounded-lg border bg-card">
+        <table className="w-full min-w-[700px] border-collapse text-xs">
+          <thead className="bg-muted/50">
+            <tr>
+              <th className="sticky left-0 z-10 w-[200px] border-b bg-muted/50 p-2 text-left font-semibold">
+                Métier
               </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {metiers.map((m) => (
-            <tr key={m.id} className="hover:bg-muted/30">
-              <td className="sticky left-0 z-10 border-b bg-card p-2 align-middle hover:bg-muted/30">
-                <div className="flex items-center gap-2">
-                  <span
-                    className="h-2.5 w-2.5 shrink-0 rounded-full"
-                    style={{ backgroundColor: m.couleur || "#94a3b8" }}
-                    aria-hidden
-                  />
-                  <span className="truncate font-medium">{m.libelle}</span>
-                </div>
-              </td>
-              {days.map((d) => {
-                const dayStr = format(d, "yyyy-MM-dd");
-                const cell = byCell.get(`${m.id}::${dayStr}`);
-                const isWeekend = d.getDay() === 0 || d.getDay() === 6;
-                return (
-                  <td
-                    key={d.toISOString()}
-                    className={cn(
-                      "border-b border-l p-2 text-center align-middle",
-                      isWeekend && "bg-muted/20",
-                    )}
-                  >
-                    {cell && cell.nb_personnes > 0 ? (
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <button
-                            type="button"
-                            className="inline-flex h-7 min-w-7 items-center justify-center rounded-full bg-primary/10 px-2 text-xs font-semibold text-primary hover:bg-primary/20 focus:outline-none focus:ring-2 focus:ring-primary"
-                            data-testid="par-pole-cell-badge"
-                            data-nb={cell.nb_personnes}
-                          >
-                            {cell.nb_personnes}
-                          </button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-72 p-2" align="center">
-                          <div className="mb-2 border-b pb-1.5 text-[11px] font-semibold uppercase text-muted-foreground">
-                            {m.libelle} · {format(d, "EEEE dd MMM", { locale: fr })}
-                          </div>
-                          <ul className="space-y-1.5">
-                            {cell.personnes.map((p) => (
-                              <PersonneVignette key={`${p.employe_id}::${p.chantier_id}`} p={p} />
-                            ))}
-                          </ul>
-                        </PopoverContent>
-                      </Popover>
-                    ) : (
-                      <span className="text-[10px] text-muted-foreground/30">·</span>
-                    )}
-                  </td>
-                );
-              })}
+              {days.map((d) => (
+                <th
+                  key={d.toISOString()}
+                  className="border-b border-l p-2 text-center font-semibold"
+                >
+                  <div className="text-[11px] uppercase">{format(d, "EEE", { locale: fr })}</div>
+                  <div className="text-[10px] font-normal text-muted-foreground">
+                    {format(d, "dd/MM")}
+                  </div>
+                </th>
+              ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {metiers.map((m) => (
+              <tr key={m.id} className="hover:bg-muted/30">
+                <td className="sticky left-0 z-10 border-b bg-card p-2 align-middle hover:bg-muted/30">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="h-2.5 w-2.5 shrink-0 rounded-full"
+                      style={{ backgroundColor: m.couleur || "#94a3b8" }}
+                      aria-hidden
+                    />
+                    <span className="truncate font-medium">{m.libelle}</span>
+                  </div>
+                </td>
+                {days.map((d) => {
+                  const dayStr = format(d, "yyyy-MM-dd");
+                  const cell = byCell.get(`${m.id}::${dayStr}`);
+                  const isWeekend = d.getDay() === 0 || d.getDay() === 6;
+                  const groups = cell ? groupByChantier(cell.personnes) : [];
+                  return (
+                    <td
+                      key={d.toISOString()}
+                      className={cn(
+                        "border-b border-l p-2 align-middle",
+                        isWeekend && "bg-muted/20",
+                      )}
+                    >
+                      {groups.length > 0 ? (
+                        <div className="flex flex-wrap justify-center gap-1">
+                          {groups.map((g) => {
+                            const t = typologieFromNumero(g.chantier_numero);
+                            return (
+                              <Popover key={g.chantier_id}>
+                                <PopoverTrigger asChild>
+                                  <button
+                                    type="button"
+                                    title={`${g.chantier_numero} — ${g.chantier_nom}`}
+                                    className={cn(
+                                      "inline-flex h-6 min-w-6 items-center justify-center rounded-full px-1.5 text-[11px] font-semibold focus:outline-none focus:ring-2 focus:ring-ring",
+                                      TYPO_CLASSES[t],
+                                    )}
+                                    data-testid="par-pole-cell-bubble"
+                                    data-typologie={t}
+                                    data-chantier={g.chantier_numero}
+                                    data-nb={g.personnes.length}
+                                  >
+                                    {g.personnes.length}
+                                  </button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-72 p-2" align="center">
+                                  <div className="mb-2 border-b pb-1.5 text-[11px] font-semibold uppercase text-muted-foreground">
+                                    {m.libelle} — {format(d, "EEEE dd MMM", { locale: fr })}
+                                  </div>
+                                  <div className="mb-1.5 text-[11px] text-muted-foreground">
+                                    <span className="font-mono font-semibold text-foreground">
+                                      {g.chantier_numero}
+                                    </span>{" "}
+                                    — {g.chantier_nom}
+                                  </div>
+                                  <ul className="space-y-1.5">
+                                    {g.personnes.map((p) => (
+                                      <PersonneVignette key={p.employe_id} p={p} />
+                                    ))}
+                                  </ul>
+                                </PopoverContent>
+                              </Popover>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <div className="text-center text-[10px] text-muted-foreground/30">·</div>
+                      )}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function Legende() {
+  const items: Array<{ t: Typologie; label: string }> = [
+    { t: "gris", label: "1XXX / 2XXX" },
+    { t: "jaune", label: "3XXX" },
+    { t: "vert", label: "4XXX / 5XXX" },
+    { t: "orange", label: "9XXX" },
+  ];
+  return (
+    <div className="flex flex-wrap items-center gap-3 px-1 text-[11px] text-muted-foreground">
+      <span className="font-medium">Légende :</span>
+      {items.map((i) => (
+        <div key={i.t} className="flex items-center gap-1.5">
+          <span
+            className={cn(
+              "inline-block h-3 w-3 rounded-full",
+              TYPO_CLASSES[i.t].split(" ").filter((c) => c.startsWith("bg-")).join(" "),
+            )}
+            aria-hidden
+          />
+          <span>{i.label}</span>
+        </div>
+      ))}
     </div>
   );
 }
@@ -200,10 +300,6 @@ function PersonneVignette({ p }: { p: PolePersonne }) {
               PRÉV
             </Badge>
           )}
-        </div>
-        <div className="truncate text-[10px] text-muted-foreground">
-          <span className="font-mono font-semibold">{p.chantier_numero}</span>{" "}
-          · {p.chantier_nom}
         </div>
       </div>
     </li>
