@@ -19,6 +19,11 @@ Excel : UNIQUEMENT xlsx-js-style (pas xlsx plain, dedup v0.30.1). Modules d'expo
 Validation imports : `import-validation.ts` centralise toutes les vérifs (PARSE_FAILED, INVALID_NUMBER, INVALID_DATE, TOTAL_MISMATCH, MISSING_HEADER…). v0.32.1 ajoute `validateRowSumMatch` et `validateMetierTotalsConsistency`. v0.32.2 ajoute `validateObjetsHeuresConsistency`.
 Auto-staffing v0.35 + v0.40 : tier-priority CDI/CDD AVANT intérim (bonus contrat CDI 1.0 / CDD 0.9 / Intérim 0.3). Intérim = variable d'ajustement, jamais défaut. Voir mem://features/auto-staffing-tier-priority.
 Volume staffé v0.39.0c : KPI "Heures staffées" = Σ(pers × demi_jours × H_HALF[4h]). Garde-fou auto : badge ±X.X% (ambre ≥5%, rouge ≥15%) + alerte `VOLUME_ECART_DEVIS` (soft ≥5%, hard ≥15%) dans AlerteBandeau. Popover formule + breakdown métier sur StatCard.
+Création comptes v0.46 : self-signup DÉSACTIVÉ (Supabase + UI). Invitations admin → défaut `chef_chantier`. Employés via fiche `employes` + auto-link email. Onboarding redirige vers `/` (pas `/dashboard`) pour routing role-aware. Voir mem://features/role-creation-policy.
+Routing post-login centralisé v0.47.1 : module unique `src/lib/post-login-routing.ts` (`resolvePostLoginTarget` + `checkMobileChefAccessForAdmin`). Voir mem://features/post-login-routing-module.
+Métiers/postes v0.47.3 : 4 surfaces unifiées via bandeau `MetiersPostesTabs` (Métiers / Postes contractuels / Postes principaux / Compétences équipe), sidebar consolidée à 1 entrée. Voir mem://features/metiers-postes-hub.
+Absences = 1 seule table `absences` avec colonne `type`. JAMAIS créer module congés séparé. Voir mem://constraints/absences-une-seule-table.
+v0.48 : `/planning` recentré staffing (5 onglets : CDI/CDD, Intérim, Par chantier, Par objet, Par pôle). Vues Véhicules, Budget, Feuille de route extraites vers `/logistique/vehicules-planning`, `/affaires/budget-planning`, `/export/feuille-de-route`. Redirect SPA depuis anciens `?tab=`. Voir mem://features/planning-par-pole-v048.
 
 ## Roadmap
 
@@ -67,74 +72,79 @@ Volume staffé v0.39.0c : KPI "Heures staffées" = Σ(pers × demi_jours × H_HA
 34. ✅ **v0.38.2** — UX polish Gantt (overflow label `•••` + ChargeMetierSection drilldown + chevron persist)
 
 ### Livré v0.39 (Vue 3 + hotfixes KPI + Sprint 1 stabilité)
-35. ✅ **v0.39.0a/b/c** (4 mai 2026) — Vue 3 + KPI "Heures staffées" auditable + garde-fou volume + alerte `VOLUME_ECART_DEVIS`.
+35. ✅ **v0.39.0a/b/c/d** (4 mai 2026) — Vue 3 + KPI "Heures staffées" auditable + garde-fou volume + alerte `VOLUME_ECART_DEVIS`.
 36. ✅ **v0.39.0a-hotfix-import** (4 mai 2026) — RPC transactionnel `import_progbat_atomique` + `cleanup_fabrication_orphelins` + cleanup 13 orphelins prod.
 37. ✅ **v0.39.1 Sprint 1 STABILITÉ** (4 mai 2026) — Audit RLS heures_saisies + matrice `docs/rls-policies.md` + 2 E2E + audit mutations client + auth-context shallow setSession. **API Claude v0.41 REPORTÉE backlog.**
 
-### Livré v0.39.2a/b1 (Sprint 2 polish — phasage sûr)
+### Livré v0.39.2a/b1/b2 (Sprint 2 polish — phasage sûr)
 38. ✅ **v0.39.2a** (4 mai 2026) — `CellEditPopover` + `DurationStepper` ; Vue 1 isolée, Vue 2 cascade aval (`cascade-aval.ts`, 6 tests). Algo `greedy-allocate.ts` + 5 tests. E2E `import-progbat-conflicts.chef.spec.ts` (4 specs).
 39. ✅ **v0.39.2b1** (4 mai 2026) — Greedy UI branché dans `EquipeAffaireSection` (compteur live, badge rotation, bouton re-tri, badges P1/P2/Pn). Doc RLS enrichie + `CONTRIBUTING.md`. Smoke E2E cascade + greedy. 0 console.log/TODO.
+40. ✅ **v0.39.2b2** (5 mai 2026) — Extraction `gantt/GanttHeaderRow.tsx` + `gantt/StatCard.tsx`. `GanttInteractif` 1029L → 603L. Refonte `StaffingPersonnesSection.tsx` 1214L → 322L + dossier `staffing/personnes/`. **1404/1404 verts.** Sprint 2b2 clôturé.
 
 ### Livré v0.40 (Refonte Manut split — algo + UI)
-40. ✅ **v0.40.0a** (5 mai 2026) — Algo absorption Manut Bois/Peint/Tap au prorata (35% début + 15% transfert + 50% FIN globale) + flag DB `is_manut_absorbed` + 7 tests Vitest. 1358/1358 verts.
-41. ✅ **v0.40.0b** (5 mai 2026) — UI Gantt nettoyée (suppression barres Manut intermédiaires par objet) + section globale "Manutention FIN (50%) + ressources partagées" + pré-param 6 lignes avec tooltips "Bois 105h dont 19h ex-Manut absorbée" + note bas de page + E2E `manut-refonte-v040.chef.spec.ts`. `ManutStatCard` dédié + `manut-summary.ts` (14 tests). 1372/1372 verts.
+41. ✅ **v0.40.0a/b** (5 mai 2026) — Algo absorption Manut Bois/Peint/Tap au prorata (35% début + 15% transfert + 50% FIN globale) + flag DB `is_manut_absorbed` + UI Gantt nettoyée + pré-param 6 lignes + E2E `manut-refonte-v040.chef.spec.ts` + `ManutStatCard`. **1372/1372 verts.**
+42. ✅ **v0.40.0e** (5 mai 2026) — Consolidation "Suivi marge par métier" en treetable (1 ligne par métier + drilldown par devis). Lib `affaire-marge-consolidation.ts` + 7 tests.
+43. ✅ **Hotfixes v0.40** — Prefill numéro affaire (race condition fix) + noms objets Plan staffing (`<ObjetRefLabel />`).
 
-### Livré v0.40.0e + hotfixes UX (5 mai 2026)
-42. ✅ **v0.40.0e** — Consolidation "Suivi marge par métier" en treetable (1 ligne par métier + drilldown par devis). Lib `affaire-marge-consolidation.ts` + 7 tests.
-43. ✅ **Hotfix prefill numéro affaire** — Race condition fetch top-200 vs prefill : merge dédupliqué via Set. 3 tests.
-44. ✅ **Hotfix noms objets Plan staffing** — `<ObjetRefLabel />` partout (Gantt + Wizard) → masque préfixe `D-{numero}-`. 7 tests.
+### Livré v0.41.0a (Hotfix heures invisibles employé)
+44. ✅ **v0.41.0a** (5 mai 2026) — BUG #33 heures invisibles côté employé : `use-mes-heures` deps `useMemo` rows complétées + refetch sur `visibilitychange`+`focus`. **1407/1407 verts.**
 
-### Livré v0.39.2b2 (Sprint 2b2 Gantt + Personnes — TERMINÉ)
-45. ✅ **v0.39.2b2.1 Tour 1** (5 mai 2026) — Extraction `gantt/GanttHeaderRow.tsx` + `gantt/StatCard.tsx`. `GanttInteractif` 1029L → 857L.
-46. ✅ **v0.39.2b2.1 Tour 2** (5 mai 2026) — Extraction `gantt/DayGrid.tsx`. `GanttInteractif` 857L → 735L. **1397/1397 verts.**
-47. ✅ **v0.39.2b2.1 Tour 3** (5 mai 2026) — Extraction `gantt/ObjetRowInteractif.tsx`. `GanttInteractif` 759L → **603L**. **1401/1401 verts.** Sprint 2b2.1 clôturé.
-48. ✅ **v0.39.2b2.2** (5 mai 2026) — Refonte `StaffingPersonnesSection.tsx` 1214L → **322L** + dossier `staffing/personnes/` (shared, AutoStaffButton, PersonneSuggestionCard, AssignedChip, ListView, CalendarView). Test Vitest PersonneSuggestionCard. **1404/1404 verts.** Sprint 2b2 entièrement clôturé.
-
-### Sprint 3 features métier (en cours)
-49. ✅ **v0.41.0a** (5 mai 2026) — Hotfix BUG #33 heures invisibles côté employé : `use-mes-heures` deps `useMemo` rows complétées (affairesById/metiersById) + refetch sur `visibilitychange`+`focus`. Test non-régression invariants. **1407/1407 verts.** Voir mem://features/sprint-3-features-v041.
+### Livré v0.42 (Module Template Contrat CDDU)
+45. ✅ **v0.42.0** (10 mai 2026) — Module Template Contrat CDDU + paramètres entreprise + hotfixes signature.
+46. ✅ **v0.42.1** (10 mai 2026) — Template v2.1 (layout H1, CGE 2 pages, placeholder `{{poste}}`) + catalogue postes (`postes_catalogue` 8 postes seed) + page `/parametres/postes` CRUD + suppression définitive admin contrats (cascade signatures).
+47. ✅ **v0.42.2** (10 mai 2026) — Refacto `{{poste}}` → `employes.poste_principal` + page admin `/admin/employes-poste-principal` (saisie en lot 162 fiches, suggestions par metier_principal, autosave) + export/import Excel postes (`employes-excel.ts` + `EmployesImportPostesDialog` diff preview) + validation E2E template (`TemplateTestDialog` 5 fixtures + détection `{{...}}` non interpolés + checklist 15 sections).
 
 ### Livré v0.43.x (Hub Chef Mobile — Sprint 1)
-50. ✅ **v0.43.0/1** (10 mai 2026) — Sprint 1 Hub Chef Mobile : 5 onglets (Dashboard/Planning/Équipe/À valider/Moi), badges multi-rôles, scope dur StafferMobileForm via `mes_affaires_chef`, 7 specs E2E. Option D : scope app-side, RLS strict différé en v0.45. Voir mem://features/sprint-1-hub-chef-mobile.
+48. ✅ **v0.43.0/1** (10 mai 2026) — Sprint 1 Hub Chef Mobile : 5 onglets (Dashboard/Planning/Équipe/À valider/Moi), badges multi-rôles, scope dur StafferMobileForm via `mes_affaires_chef`, 7 specs E2E. Option D : scope app-side, RLS strict différé en v0.45.
 
 ### Livré v0.44 (Documents/Photos + Refonte Atelier)
-51. ✅ **v0.44.0** (10 mai 2026) — Bucket privé `affaires-photos` + table `affaire_documents` (soft delete) + RLS scopée chef (Option D) + galerie desktop `/affaires/$id/documents` + galerie mobile chef `/mobile/chef/affaires/$id` avec caméra native + compression JPEG q=80 max 2560px + lightbox édition caption/date + 3 E2E. Voir mem://features/affaire-documents.
-51.1. ✅ **v0.44.1** (10 mai 2026) — Refonte UX Hub Chef Mobile : (a) ValiderHeures déplacé de "À valider" vers /equipe sous-tab Valider (fix doublon), (b) "À valider" renommé "Atelier" (icône Hammer), (c) 3 sous-tabs Atelier : Objets fab + Kanban chantier (Bois/Peinture/Manut/Validé) + Photos par objet, (d) migration `affaire_documents.objet_id` FK nullable ON DELETE SET NULL (1:N affaire→photo, photos restent attachées au chantier si objet supprimé). Hook `useChantierKanban` + `useObjetPhotos`. Bottom nav badge ne compte que les objets.
-51.2. ✅ **v0.44.2** (10 mai 2026) — Polish post-v0.44.1 : (1) redirect `/mobile/chef/a-valider` → `/mobile/chef/atelier` via `beforeLoad` TanStack (préserve les bookmarks), (2) dashboard mobile chef 5 KPI cards : Heures à valider → /equipe, Objets à valider → /atelier, nouvelle card "Photos récentes (7j)" → /atelier, Équipe (7j), Mes affaires actives, (3) Kanban Vue chantier : badges compteur par colonne, empty states icône `Inbox`, tri "en retard d'abord puis échéance puis ref" via `fabrication_etapes.date_fin` (min des étapes non terminées), filtres chantier persistés en `localStorage` (`v0.44.2:kanban-filter-affaires`), animations 200ms ease-out, badge "Retard" rouge sur cards en dépassement, (4) E2E `e2e/mobile-chef/sprint-v0442-polish.chef.spec.ts` (6 specs : redirect + KPI dashboard + sous-tab Valider equipe + Kanban 4 colonnes + Photos par objet + bottom nav badge). Drag-drop bonus reporté.
+49. ✅ **v0.44.0** (10 mai 2026) — Bucket privé `affaires-photos` + table `affaire_documents` (soft delete) + RLS scopée chef (Option D) + galerie desktop `/affaires/$id/documents` + galerie mobile chef `/mobile/chef/affaires/$id` avec caméra native + compression JPEG q=80 max 2560px + lightbox édition caption/date + 3 E2E.
+50. ✅ **v0.44.1** (10 mai 2026) — Refonte UX Hub Chef Mobile : (a) ValiderHeures déplacé de "À valider" vers /equipe sous-tab Valider, (b) "À valider" renommé "Atelier" (icône Hammer), (c) 3 sous-tabs Atelier : Objets fab + Kanban chantier (Bois/Peinture/Manut/Validé) + Photos par objet, (d) migration `affaire_documents.objet_id` FK nullable ON DELETE SET NULL.
+51. ✅ **v0.44.2** (10 mai 2026) — Polish post-v0.44.1 : redirect `/mobile/chef/a-valider` → `/mobile/chef/atelier`, 5 KPI cards dashboard mobile, Kanban Vue chantier (badges compteur par colonne, empty states, tri, filtres persistés, animations, badge "Retard"), 6 specs E2E.
 
+### Audit v0.43-v0.44 (10 mai 2026)
+52. ✅ **Audit `docs/audit-v0.43-v0.44.md`** — 7 angles (sécu/perf/qualité/DB/UX-A11Y/métier/doc). Verdict global 🟡 À surveiller. Top 5 actions ~11h. Sprints v0.44.3/v0.44.4 déclenchés.
+53. ✅ **v0.44.3** (10 mai 2026, ~7h) — Top 3 audit : `ScopedAccessBanner` chef_metier_scoped sur 3 pages + E2E stub ; 3 triggers business ; soft-delete audit trail (`deleted_by` + RPC + vue 30j) ; page `/admin/audit` 3 onglets + CSV ; pgTAP 8/8 verts.
+54. ✅ **v0.44.4** (10 mai 2026, ~4h) — Top 5 audit : Batch signed URLs via `createSignedUrls` (20→1 RT) ; `DocumentThumbnail` lazy IntersectionObserver ; `formatBusinessError` mapper + 6/6 tests ; 3 ADRs (RLS scoped, objet_id, TipTap) ; seed E2E `chef_metier_scoped`.
+55. ✅ **v0.44.5** (10 mai 2026, ~1h) — Bloc 🟠 : RLS `affaire_documents_select` masque soft-deleted ; trigger `enforce_signed_at_server_side` force `signed_at=now()` côté serveur ; `formatBusinessError` câblé dans 3 composants.
+56. ✅ **v0.44.6** (10 mai 2026, ~1h) — Bloc 🟡 clôture : ADR-004 convention `DROP POLICY IF EXISTS` ; `docs/db-schema.md` index 60+ tables ; Audit TTL signed URLs ; états vides Atelier/Hub vérifiés.
+57. ✅ **v0.44.7** (10 mai 2026, ~30min) — Filtrage UI `chef_metier_scoped` : toggle "Mes chantiers uniquement" (auto-on pour scoped) sur `/affaires` et `/validation-heures` via `useMesAffairesChefIds`. `/audit-heures` reste admin-only.
 
-### Audit technique v0.43-v0.44 (10 mai 2026)
-51.3. ✅ **Audit `docs/audit-v0.43-v0.44.md`** — 7 angles (sécu/perf/qualité/DB/UX-A11Y/métier/doc). Verdict global 🟡 À surveiller. Top 5 actions ~11h. Sprints v0.45/v0.46/v0.47 **SUSPENDUS** en attente arbitrage Gabin sur sprint correctif v0.44.3.
+### Livré v0.45 (Historique équipes par chantier)
+58. ✅ **v0.45.0** (11 mai 2026) — Table `affaire_equipe_historique` agrégée (1 ligne par affaire×chef×employé) alimentée par triggers temps réel sur `assignations` + `affaires`. RPC `get_mon_equipe_type` (score contextuel par typologie). Widget dashboard "Mon équipe type" whitelist chef/admin (top 8 sur 12 mois). Backfill initial inclus. Feature store pour future IA v0.41.
+59. ✅ **v0.45.1** (11 mai 2026) — Page détaillée `/mon-equipe-type` (top 50, filtres typologie + période, KPI agrégés, drilldown Sheet par coéquipier). Widget pointe vers cette page.
 
-### En cours v0.45 (RLS hardening chef — DB livrée, UI en attente)
-51.4. 🟡 **v0.45 partiel** (10 mai 2026) — DB : enum `chef_metier_scoped` + helpers `is_chef_global()`/`is_chef_metier_scoped()` + RLS durcie sur `heures_saisies`/`fabrication_objets`/`assignations`/`assignation_objets` + auth-context `isChefMetierScoped`/`isChefGlobal`/`isChefAny` + hook `useChefScope` + libellés invitation/dashboard. **Reste UI** : `ScopedAccessBanner` + filtrage `/affaires`/`/validation-heures`/`/audit-heures` + tests pgTAP + E2E isolement.
+### Livré v0.46 (Création comptes — invitations admin)
+60. ✅ **v0.46** (11-13 mai 2026) — Self-signup DÉSACTIVÉ (Supabase + UI). Invitations admin → défaut `chef_chantier`. Employés via fiche `employes` + auto-link email. Onboarding redirige vers `/` (pas `/dashboard`) pour routing role-aware.
 
-### Audit v0.43-v0.44 — CLÔTURÉ ✅
-52. ✅ **v0.44.3** (10 mai 2026, ~7h) — Top 3 audit : (a) `ScopedAccessBanner` chef_metier_scoped sur 3 pages + E2E stub ; (b) 3 triggers business (`validate_heures_saisies_bounds`/`validate_contrat_intermittent`/`validate_assignation_heures`) avec codes `HEURES_INVALIDES`/`DATES_CONTRAT_INVALIDES`/`TAUX_INVALIDE` ; (c) Soft-delete audit trail (`deleted_by` + RPC + vue 30j) ; (d) Page `/admin/audit` 3 onglets + CSV ; (e) pgTAP 8/8 verts. Voir `docs/sprint-v0443-checklist.md`.
-53. ✅ **v0.44.4** (10 mai 2026, ~4h) — Top 5 audit : (a) Batch signed URLs via `createSignedUrls` (20→1 RT) ; (b) `DocumentThumbnail` lazy IntersectionObserver ; (c) `formatBusinessError` mapper + 6/6 tests ; (d) 3 ADRs (RLS scoped, objet_id, TipTap) ; (e) Seed E2E `chef_metier_scoped`. Voir `docs/sprint-v0444-checklist.md`.
-54. ✅ **v0.44.5** (10 mai 2026, ~1h) — Bloc 🟠 : (a) RLS `affaire_documents_select` masque soft-deleted ; (b) Trigger `enforce_signed_at_server_side` force `signed_at=now()` côté serveur ; (c) `formatBusinessError` câblé dans `ValiderHeuresList`/`SaisirPourEmployeDialog`/`BulkSaisieDialog` → toasts FR au lieu de RLS bruts.
-55. ✅ **v0.44.6** (10 mai 2026, ~1h) — Bloc 🟡 clôture : (a) ADR-004 convention `DROP POLICY IF EXISTS` ; (b) `docs/db-schema.md` index humain 60+ tables par domaine ; (c) Audit TTL signed URLs (5/6 OK, dette `contrats-intermittents` 1 an → refactor signed-on-demand reporté v0.46+) ; (d) États vides Atelier/Hub vérifiés (faux positifs audit). Voir `docs/sprint-v0446-checklist.md`. **Audit clôturé, reprise roadmap normale.**
-56. ✅ **v0.44.7** (10 mai 2026, ~30min) — Filtrage UI pour `chef_metier_scoped` aligné sur portée RLS : toggle "Mes chantiers uniquement" (auto-on pour scoped) sur `/affaires` et `/validation-heures` via `useMesAffairesChefIds`. Compteur affiché. `/audit-heures` reste admin-only (RoleGuard redirige scoped vers /dashboard — c'est l'expression correcte du scope, doc inline ajoutée).
+### Livré v0.47 (Routing centralisé + Métiers/Postes hub)
+61. ✅ **v0.47.1** (13 mai 2026) — Routing post-login centralisé : module unique `src/lib/post-login-routing.ts` (`resolvePostLoginTarget` + `checkMobileChefAccessForAdmin`).
+62. ✅ **v0.47.3** (13 mai 2026) — 4 surfaces unifiées via bandeau `MetiersPostesTabs` (Métiers / Postes contractuels / Postes principaux / Compétences équipe), sidebar consolidée à 1 entrée.
 
-### Roadmap reprise
-56. ⏳ **v0.45 RLS hardening DB** — pgTAP CI sur `mes_affaires_chef` + policies DB scopées heures/assignations/docs/photos + E2E isolement chef scopé. **PROCHAIN SPRINT**.
-55. ⏸️ **v0.46 SILAE Phase 2 horaires précis** — SUSPENDU.
-56. ⏸️ **v0.47 Centre Analyse Heures (Option B)** — SUSPENDU.
-57. ⏳ **Sprint 3c** — E2E full role-based (employé desktop + mobile).
-54. ⏳ **Sprint 3b** — Logistique avancée (autorisations véhicules + sous-traitants + historique + stats).
-55. ⏳ **v0.20.1 quick wins** — Pré-remplissage trajet sous-traité + cache `useObjetsAffaireLight` + notification CA prêt à livrer.
-56. ⏳ **v0.21.1** — Garde RBAC UI `/saisie-pour-equipe` + durcissement RLS + UNIQUE INDEX chef_jour + tests SQL.
-57. ⏳ **v0.39.3** — Migration RPC #1/2/3/5 (bulk-assign-objet, chef-saisit-pour-employe, bulk-saisie, bulk-staffer).
-58. ⏳ **v0.36** — Sprint dette résiduelle : page admin véhicules + audit findings.
-59. ⏳ **v0.37** — Polish UX transversal post-feedback terrain.
-60. ⏳ **v0.40 Phase 2** — Horaires précis SILAE + RPC #4 feuille-route.
-61. ⏳ **v0.41 (BACKLOG)** — Claude API auto-staffing 5XXX + CNI/passeport profil + suggestion véhicule.
+### Livré v0.34.x (Battery role-smoke E2E)
+63. ✅ **v0.34.x** (13 mai 2026) — Battery role-smoke E2E livrée : 4 specs (admin 45 routes / chef 24+8 / employé desktop 7+20 / employé mobile 8+13) avec garde-fou anti-fuite RGPD. Helper `e2e/helpers/role-smoke.ts`.
+
+### Livré v0.48 (Planning par pôle + Refonte navigation)
+64. ✅ **v0.48** (14-16 mai 2026) — (a) Onglet "Par pôle" : matrice métiers × jours, badge nb personnes, hover popover vignettes, badge `PRÉV` pour 9XXX, RPC `staffing_par_pole_jours`, teinte ambrée 9XXX sur Par chantier existant. (b) Refonte navigation : 3 onglets sortis du planning vers routes natives (`/logistique/vehicules-planning`, `/affaires/budget-planning`, `/export/feuille-de-route`). Planning recentré à 5 onglets staffing. Redirects SPA depuis anciens `?tab=`. Sidebar mise à jour.
+
+### Roadmap — À venir
+65. ⏳ **v0.45 RLS hardening DB (suite)** — pgTAP CI sur `mes_affaires_chef` + policies DB scopées heures/assignations/docs/photos + E2E isolement chef scopé. UI `ScopedAccessBanner` reste en attente depuis v0.44.3. **PROCHAIN SPRINT**.
+66. ⏳ **v0.36** — Sprint dette résiduelle : page admin véhicules + audit findings.
+67. ⏳ **v0.37** — Polish UX transversal post-feedback terrain.
+68. ⏳ **Sprint 3c** — E2E full role-based (employé desktop + mobile).
+69. ⏳ **v0.39.3** — Migration RPC #1/2/3/5 (bulk-assign-objet, chef-saisit-pour-employe, bulk-saisie, bulk-staffer).
+70. ⏳ **Sprint 3b** — Logistique avancée : autorisations véhicules #56 + sous-traitants + historique + stats.
+71. ⏳ **v0.20.1** — Quick wins : pré-remplissage trajet sous-traité + cache `useObjetsAffaireLight` + notification CA prêt à livrer.
+72. ⏳ **v0.21.1** — Garde RBAC UI `/saisie-pour-equipe` + durcissement RLS + UNIQUE INDEX chef_jour + tests SQL.
+73. ⏸️ **v0.40 Phase 2** — Horaires précis SILAE (heure_debut/fin/pauses + nuit/sup/35h auto) — SUSPENDU.
+74. ⏸️ **v0.41 (BACKLOG)** — Claude API auto-staffing UNIQUEMENT 5XXX (proxy + skill + tools + fallback v0.35 + cache + cap + télémétrie). Tier CDI/CDD avant intérim. Utilisera `affaire_equipe_historique` comme feature store contextuel.
+75. ⏸️ **v0.47 (BACKLOG)** — Centre Analyse Heures (Option B) : onglet consolidé heures + 8 filtres + exports.
 
 Voir roadmap consolidée détaillée : mem://roadmap/consolidee-2mai2026.
 
 ## Memories
 - [Centre d'analyse heures](mem://features/centre-analyse-heures) — BACKLOG : onglet consolidé heures + 8 filtres + exports
 - [Roadmap consolidée 2 mai 2026](mem://roadmap/consolidee-2mai2026) — v0.31.4 → v0.40, 11 jalons
-- [Refonte Manut v0.40](mem://features/manut-refonte-v040) — absorption DEBUT+TRANSFERT par Bois/Peint/Tap
 - [Auto-staffing tier priority](mem://features/auto-staffing-tier-priority) — règle CDI/CDD avant intérim
 - [Wizard plan staffing](mem://features/staffing-plan-wizard) — v0.35.4 onglet Fab + bouton Devis
 - [Planning 3 vues](mem://features/planning-views) — CDI / Intérim / Synthèse chantier
@@ -179,3 +189,4 @@ Voir roadmap consolidée détaillée : mem://roadmap/consolidee-2mai2026.
 - [Sprint 1 Hub Chef Mobile v0.43](mem://features/sprint-1-hub-chef-mobile) — 5 onglets mobile + audit trail validations + scope app-side
 - [Documents/Photos par affaire v0.44](mem://features/affaire-documents) — bucket privé + RLS scope chef + galerie desktop/mobile + caméra native
 - [Audit technique v0.43-v0.44](docs/audit-v0.43-v0.44.md) — 10 mai 2026, verdict 🟡, top 5 actions ~11h, déclencheur sprints v0.44.3/v0.44.4
+- [Planning par pôle consolidé v0.48](mem://features/planning-par-pole-v048) — matrice métiers × jours + popover hover + refonte nav 3 routes extraites
