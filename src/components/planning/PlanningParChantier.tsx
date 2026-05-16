@@ -10,6 +10,11 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { isAffaireSelectable, affaireLockReason } from "@/lib/affaire-lock";
+import {
+  TYPO_CELL_TINT_CLASSES,
+  TYPO_COLOR_CLASSES,
+  typologieColorFromNumero,
+} from "@/lib/planning-typologie-colors";
 import { AssignationDialog } from "./AssignationDialog";
 import { ParChantierAssignDialog } from "./ParChantierAssignDialog";
 import type {
@@ -250,7 +255,15 @@ export function PlanningParChantier({
                       }
                     >
                       <div className="flex items-center gap-1.5">
-                        <span className="rounded bg-muted px-1.5 py-0.5 font-mono text-[10px] font-bold">
+                        <span
+                          className={cn(
+                            "rounded px-1.5 py-0.5 font-mono text-[10px] font-bold",
+                            TYPO_COLOR_CLASSES[typologieColorFromNumero(af.numero)]
+                              .split(" ")
+                              .filter((c) => c.startsWith("bg-") || c.startsWith("text-") || c.startsWith("dark:"))
+                              .join(" "),
+                          )}
+                        >
                           {af.numero}
                         </span>
                         {isLocked && (
@@ -305,6 +318,7 @@ export function PlanningParChantier({
                     const isWeekend = d.getDay() === 0 || d.getDay() === 6;
                     const isEmpty = byEmploye.size === 0;
                     const isOpportunite = af.numero?.startsWith("9") ?? false;
+                    const typoTint = TYPO_CELL_TINT_CLASSES[typologieColorFromNumero(af.numero)];
                     return (
                       <td
                         key={d.toISOString()}
@@ -313,8 +327,8 @@ export function PlanningParChantier({
                         className={cn(
                           "border-b border-l align-top transition-colors",
                           isWeekend && "bg-muted/20",
-                          // v0.48 — teinte ambrée subtile pour chantiers prototypes 9XXX
-                          isOpportunite && "bg-amber-50/40 dark:bg-amber-950/20",
+                          // Teinte typologique unifiée (gris/bleu/vert/orange)
+                          typoTint,
                           !isLocked && "cursor-pointer hover:bg-primary/5",
                           isLocked && "cursor-not-allowed opacity-60",
                           isSelected && "ring-4 ring-primary ring-inset bg-primary/10",

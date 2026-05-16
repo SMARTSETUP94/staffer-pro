@@ -20,6 +20,11 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { isAffaireSelectable, affaireLockReason } from "@/lib/affaire-lock";
+import {
+  TYPO_CELL_TINT_CLASSES,
+  TYPO_COLOR_CLASSES,
+  typologieColorFromNumero,
+} from "@/lib/planning-typologie-colors";
 import { supabase } from "@/integrations/supabase/client";
 import { AssignationDialog } from "./AssignationDialog";
 import { CellEditDialog } from "./CellEditDialog";
@@ -353,12 +358,23 @@ export function PlanningParObjet({
                   const isLocked = !isAffaireSelectable(af);
                   return (
                     <FragmentWithKey key={af.id}>
-                      <tr className="bg-muted/30">
+                      <tr className={cn("bg-muted/30", TYPO_CELL_TINT_CLASSES[typologieColorFromNumero(af.numero)])}>
                         <td
                           colSpan={days.length + 1}
-                          className="sticky left-0 z-10 border-b bg-muted/30 px-2 py-1.5 text-[11px]"
+                          className={cn(
+                            "sticky left-0 z-10 border-b px-2 py-1.5 text-[11px]",
+                            TYPO_CELL_TINT_CLASSES[typologieColorFromNumero(af.numero)] || "bg-muted/30",
+                          )}
                         >
-                          <span className="rounded bg-background px-1.5 py-0.5 font-mono font-bold">
+                          <span
+                            className={cn(
+                              "rounded px-1.5 py-0.5 font-mono font-bold",
+                              TYPO_COLOR_CLASSES[typologieColorFromNumero(af.numero)]
+                                .split(" ")
+                                .filter((c) => c.startsWith("bg-") || c.startsWith("text-") || c.startsWith("dark:"))
+                                .join(" "),
+                            )}
+                          >
                             {af.numero}
                           </span>
                           <span className="ml-2 font-semibold">{af.nom}</span>
@@ -510,6 +526,7 @@ export function PlanningParObjet({
                                 className={cn(
                                   "border-b border-l align-top transition-colors",
                                   isWeekend && "bg-muted/20",
+                                  TYPO_CELL_TINT_CLASSES[typologieColorFromNumero(af.numero)],
                                   isLocked && "cursor-not-allowed opacity-60",
                                   !isLocked && "cursor-pointer hover:bg-primary/5",
                                   isDragOver && "ring-2 ring-primary ring-inset bg-primary/10",
