@@ -240,16 +240,10 @@ export function StaffingParPole({
 }
 
 function Legende() {
-  const items: Array<{ t: Typologie; label: string }> = [
-    { t: "gris", label: "1XXX / 2XXX" },
-    { t: "jaune", label: "3XXX" },
-    { t: "vert", label: "4XXX / 5XXX" },
-    { t: "orange", label: "9XXX" },
-  ];
   return (
     <div className="flex flex-wrap items-center gap-3 px-1 text-[11px] text-muted-foreground">
       <span className="font-medium">Légende :</span>
-      {items.map((i) => (
+      {TYPO_LEGEND.map((i) => (
         <div key={i.t} className="flex items-center gap-1.5">
           <span
             className={cn(
