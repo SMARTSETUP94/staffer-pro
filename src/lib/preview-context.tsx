@@ -139,11 +139,14 @@ export function PreviewProvider({ children }: { children: ReactNode }) {
   const effIsAdminOrChef = effIsAdmin || effIsChef;
   // v0.46 : effIsMobile = vrai dès que le viewport est étroit (< 1024px) OU quand
   // l'admin force un preview mobile depuis desktop (chef_mobile / employe_mobile).
-  // Avant : seul le preview admin déclenchait `effIsMobile` → un vrai chef/employé
-  // sur smartphone atterrissait sur la version desktop. Anti-régression : sans admin
-  // preview, le viewport seul suffit.
+  // v0.48.1 : quand l'admin preview explicitement un rôle DESKTOP (chef_chantier
+  // ou employe_desktop), on ignore le viewport étroit — sinon un admin sur petit
+  // écran (≤1023px, ex. fenêtre 1015px) qui choisit "Chef d'équipe" était
+  // redirigé vers /mobile/chef/dashboard au lieu de la version desktop voulue.
+  const isExplicitDesktopPreview =
+    previewRole === "chef_chantier" || previewRole === "employe_desktop";
   const effIsMobile =
-    isViewportMobile ||
+    (isViewportMobile && !isExplicitDesktopPreview) ||
     previewRole === "employe_mobile" ||
     previewRole === "chef_mobile";
   const isEmployePreview =
