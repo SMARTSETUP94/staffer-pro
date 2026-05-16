@@ -42,14 +42,19 @@ export const AFFAIRE_TYPOLOGIE_SHORT_LABELS: Record<AffaireTypologie, string> = 
 };
 
 /**
- * Clés de design tokens dans src/styles.css (--typologie-{key}).
+ * Couleurs alignées sur la légende unifiée du planning
+ * (voir src/lib/planning-typologie-colors.ts) :
+ *  - 1/3 → gris (slate)
+ *  - 2   → bleu (sky)
+ *  - 4/5 → vert (emerald)  ← M/D et Fabrication partagent le même vert
+ *  - 9   → orange
  */
 export const AFFAIRE_TYPOLOGIE_COLORS: Record<AffaireTypologie, { bg: string; fg: string }> = {
-  non_operationnel: { bg: "var(--typologie-non-op)", fg: "var(--typologie-non-op-foreground)" },
-  montage_demontage: { bg: "var(--typologie-md)", fg: "var(--typologie-md-foreground)" },
-  fabrication: { bg: "var(--typologie-fab)", fg: "var(--typologie-fab-foreground)" },
-  stockage: { bg: "var(--typologie-stockage)", fg: "var(--typologie-stockage-foreground)" },
-  prototype: { bg: "var(--typologie-proto)", fg: "var(--typologie-proto-foreground)" },
+  non_operationnel: { bg: "#E2E8F0", fg: "#334155" }, // slate-200 / slate-700
+  montage_demontage: { bg: "#A7F3D0", fg: "#065F46" }, // emerald-200 / emerald-800
+  fabrication: { bg: "#A7F3D0", fg: "#065F46" }, // emerald-200 / emerald-800
+  stockage: { bg: "#BAE6FD", fg: "#075985" }, // sky-200 / sky-800
+  prototype: { bg: "#FED7AA", fg: "#9A3412" }, // orange-200 / orange-800
 };
 
 /**
