@@ -427,16 +427,6 @@ function PlanningPage() {
               Week-end
             </Label>
           </div>
-          <div className="ml-2 flex items-center gap-2">
-            <Switch
-              id="opp-toggle"
-              checked={includeOpportunites}
-              onCheckedChange={setIncludeOpportunites}
-            />
-            <Label htmlFor="opp-toggle" className="text-xs text-muted-foreground cursor-pointer">
-              Inclure opportunités (proto)
-            </Label>
-          </div>
           {(filterAffaire.size > 0 || filterMetier.size > 0 || filterDevis.size > 0 || searchEmploye) && (
             <button
               onClick={() => {
