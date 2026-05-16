@@ -82,7 +82,6 @@ function PlanningPage() {
   const [filterMetier, setFilterMetier] = useState<Set<string | number>>(new Set());
   const [filterDevis, setFilterDevis] = useState<Set<string | number>>(new Set());
   const [showWeekend, setShowWeekend] = useState(false);
-  const [includeOpportunites, setIncludeOpportunites] = useState(false);
   const [searchEmploye, setSearchEmploye] = useState("");
 
   const navigate = useNavigate({ from: "/planning" });
@@ -90,6 +89,10 @@ function PlanningPage() {
   const setTypoFilter = (next: AffaireTypologie[]) => {
     navigate({ search: { typo: next }, replace: true });
   };
+  // v0.48.1 — Plus de toggle "Inclure opportunités" : dérivé du filtre typologie.
+  // typoFilter vide = aucune restriction → tout passe (proto inclus).
+  // typoFilter actif = ne passent que les typologies cochées.
+  const includeOpportunites = typoFilter.length === 0 || typoFilter.includes("prototype");
 
   const { metiers, employes, affaires, assignations, consommation, absences, chefsById, swapAssignationIds, devisLots, loading, error, refresh } =
     usePlanningData(weekStart, weekEnd);
@@ -422,16 +425,6 @@ function PlanningPage() {
             />
             <Label htmlFor="weekend-toggle" className="text-xs text-muted-foreground cursor-pointer">
               Week-end
-            </Label>
-          </div>
-          <div className="ml-2 flex items-center gap-2">
-            <Switch
-              id="opp-toggle"
-              checked={includeOpportunites}
-              onCheckedChange={setIncludeOpportunites}
-            />
-            <Label htmlFor="opp-toggle" className="text-xs text-muted-foreground cursor-pointer">
-              Inclure opportunités (proto)
             </Label>
           </div>
           {(filterAffaire.size > 0 || filterMetier.size > 0 || filterDevis.size > 0 || searchEmploye) && (
