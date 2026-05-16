@@ -255,7 +255,15 @@ export function PlanningParChantier({
                       }
                     >
                       <div className="flex items-center gap-1.5">
-                        <span className="rounded bg-muted px-1.5 py-0.5 font-mono text-[10px] font-bold">
+                        <span
+                          className={cn(
+                            "rounded px-1.5 py-0.5 font-mono text-[10px] font-bold",
+                            TYPO_COLOR_CLASSES[typologieColorFromNumero(af.numero)]
+                              .split(" ")
+                              .filter((c) => c.startsWith("bg-") || c.startsWith("text-") || c.startsWith("dark:"))
+                              .join(" "),
+                          )}
+                        >
                           {af.numero}
                         </span>
                         {isLocked && (
