@@ -165,7 +165,7 @@ interface DraggableBadgeProps {
 }
 
 function DraggableBadge({ group: g, metier, affaire, dnd, onDelete }: DraggableBadgeProps) {
-  const bg = pastelForAffaire(g.affaire_id);
+  const bg = bgForAffaire(affaire?.numero);
   const metierColor = metier?.couleur ?? "#94a3b8";
   const slotLabel = g.slot === "JOURNEE" ? "J" : g.slot;
   const [confirmOpen, setConfirmOpen] = useState(false);
