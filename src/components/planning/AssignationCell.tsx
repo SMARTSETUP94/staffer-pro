@@ -59,32 +59,14 @@ export interface DragGroupPayload {
   assignationIds: string[];
 }
 
-/** Palette pastels pour les chantiers — fond clair + texte foncé fixe. */
-const PASTEL_PALETTE = [
-  "#DBEAFE", // blue-100
-  "#D1FAE5", // emerald-100
-  "#FED7AA", // orange-200
-  "#FCE7F3", // pink-100
-  "#E9D5FF", // purple-200
-  "#FEF3C7", // amber-100
-  "#CFFAFE", // cyan-100
-  "#FEE2E2", // red-100
-  "#E0E7FF", // indigo-100
-  "#D9F99D", // lime-200
-  "#FBCFE8", // pink-200
-  "#BAE6FD", // sky-200
-];
+import { TYPO_COLOR_HEX, TYPO_TEXT_HEX, typologieColorFromNumero } from "@/lib/planning-typologie-colors";
 
-/** Hash stable d'une string en index palette. */
-function pastelForAffaire(affaireId: string): string {
-  let hash = 0;
-  for (let i = 0; i < affaireId.length; i++) {
-    hash = (hash * 31 + affaireId.charCodeAt(i)) >>> 0;
-  }
-  return PASTEL_PALETTE[hash % PASTEL_PALETTE.length];
+/** Couleur de fond dérivée de la typologie d'affaire (numéro). */
+function bgForAffaire(numero: string | null | undefined): string {
+  return TYPO_COLOR_HEX[typologieColorFromNumero(numero)];
 }
 
-const PASTEL_TEXT = "#1F2937"; // gray-800
+const PASTEL_TEXT = TYPO_TEXT_HEX;
 
 /** Cellule jour — regroupe les assignations par (affaire + métier), fusionne AM+PM en JOURNEE */
 export function AssignationCell({
@@ -183,7 +165,7 @@ interface DraggableBadgeProps {
 }
 
 function DraggableBadge({ group: g, metier, affaire, dnd, onDelete }: DraggableBadgeProps) {
-  const bg = pastelForAffaire(g.affaire_id);
+  const bg = bgForAffaire(affaire?.numero);
   const metierColor = metier?.couleur ?? "#94a3b8";
   const slotLabel = g.slot === "JOURNEE" ? "J" : g.slot;
   const [confirmOpen, setConfirmOpen] = useState(false);

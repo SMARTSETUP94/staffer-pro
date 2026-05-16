@@ -5,6 +5,12 @@ import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
 import { usePlanningParPole, type PoleJourRow, type PolePersonne } from "@/hooks/use-planning-par-pole";
+import {
+  TYPO_COLOR_CLASSES,
+  TYPO_LEGEND,
+  typologieColorFromNumero,
+  type TypologieColor,
+} from "@/lib/planning-typologie-colors";
 
 interface Props {
   weekStart: Date;
@@ -15,25 +21,12 @@ interface Props {
   filtresStatut?: string[];
 }
 
-type Typologie = "gris" | "jaune" | "vert" | "orange" | "neutre";
+type Typologie = TypologieColor;
 
-const TYPO_CLASSES: Record<Typologie, string> = {
-  gris: "bg-slate-200 text-slate-800 hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600",
-  jaune:
-    "bg-yellow-200 text-yellow-900 hover:bg-yellow-300 dark:bg-yellow-900/50 dark:text-yellow-100 dark:hover:bg-yellow-900/70",
-  vert: "bg-emerald-200 text-emerald-900 hover:bg-emerald-300 dark:bg-emerald-900/50 dark:text-emerald-100 dark:hover:bg-emerald-900/70",
-  orange:
-    "bg-orange-200 text-orange-900 hover:bg-orange-300 dark:bg-orange-900/50 dark:text-orange-100 dark:hover:bg-orange-900/70",
-  neutre: "bg-muted text-muted-foreground hover:bg-muted/70",
-};
+const TYPO_CLASSES = TYPO_COLOR_CLASSES;
 
 function typologieFromNumero(numero: string): Typologie {
-  const first = numero?.[0];
-  if (first === "1" || first === "2") return "gris";
-  if (first === "3") return "jaune";
-  if (first === "4" || first === "5") return "vert";
-  if (first === "9") return "orange";
-  return "neutre";
+  return typologieColorFromNumero(numero);
 }
 
 interface GroupedChantier {
@@ -247,16 +240,10 @@ export function StaffingParPole({
 }
 
 function Legende() {
-  const items: Array<{ t: Typologie; label: string }> = [
-    { t: "gris", label: "1XXX / 2XXX" },
-    { t: "jaune", label: "3XXX" },
-    { t: "vert", label: "4XXX / 5XXX" },
-    { t: "orange", label: "9XXX" },
-  ];
   return (
     <div className="flex flex-wrap items-center gap-3 px-1 text-[11px] text-muted-foreground">
       <span className="font-medium">Légende :</span>
-      {items.map((i) => (
+      {TYPO_LEGEND.map((i) => (
         <div key={i.t} className="flex items-center gap-1.5">
           <span
             className={cn(
