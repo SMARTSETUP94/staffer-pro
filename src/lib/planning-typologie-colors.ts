@@ -31,6 +31,19 @@ export const TYPO_COLOR_HEX: Record<TypologieColor, string> = {
 /** Texte foncé fixe pour rester lisible sur fond pastel. */
 export const TYPO_TEXT_HEX = "#1F2937"; // gray-800
 
+/**
+ * Teinte très légère pour fond de cellule/ligne (vue Par chantier, Par objet).
+ * Volontairement plus pâle que TYPO_COLOR_CLASSES pour rester lisible derrière
+ * des badges + texte.
+ */
+export const TYPO_CELL_TINT_CLASSES: Record<TypologieColor, string> = {
+  gris: "bg-slate-100/60 dark:bg-slate-800/30",
+  bleu: "bg-sky-50/70 dark:bg-sky-950/25",
+  vert: "bg-emerald-50/70 dark:bg-emerald-950/25",
+  orange: "bg-orange-50/70 dark:bg-orange-950/25",
+  neutre: "",
+};
+
 /** Détermine la couleur typologique à partir du numéro d'affaire. */
 export function typologieColorFromNumero(numero: string | null | undefined): TypologieColor {
   const first = numero?.[0];
