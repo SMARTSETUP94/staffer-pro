@@ -10,6 +10,11 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { isAffaireSelectable, affaireLockReason } from "@/lib/affaire-lock";
+import {
+  TYPO_CELL_TINT_CLASSES,
+  TYPO_COLOR_CLASSES,
+  typologieColorFromNumero,
+} from "@/lib/planning-typologie-colors";
 import { AssignationDialog } from "./AssignationDialog";
 import { ParChantierAssignDialog } from "./ParChantierAssignDialog";
 import type {
