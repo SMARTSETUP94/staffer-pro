@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/badge";
 import { usePlanningParPole, type PoleJourRow, type PolePersonne } from "@/hooks/use-planning-par-pole";
 import {
   TYPO_COLOR_CLASSES,
-  TYPO_LEGEND,
   typologieColorFromNumero,
   type TypologieColor,
 } from "@/lib/planning-typologie-colors";
