@@ -26,11 +26,11 @@ export const AFFAIRE_TYPOLOGIES: AffaireTypologie[] = [
 ];
 
 export const AFFAIRE_TYPOLOGIE_LABELS: Record<AffaireTypologie, string> = {
-  non_operationnel: "Non opérationnel",
-  montage_demontage: "Montage / Démontage",
-  fabrication: "Fabrication",
-  stockage: "Stockage",
-  prototype: "Prototype",
+  non_operationnel: "Non opérationnel (1XXX/3XXX)",
+  montage_demontage: "Montage / Démontage (4XXX)",
+  fabrication: "Fabrication (5XXX)",
+  stockage: "Stockage (2XXXX)",
+  prototype: "Prototype (9XXX)",
 };
 
 export const AFFAIRE_TYPOLOGIE_SHORT_LABELS: Record<AffaireTypologie, string> = {
