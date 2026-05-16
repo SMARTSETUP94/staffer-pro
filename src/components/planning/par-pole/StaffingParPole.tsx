@@ -21,25 +21,12 @@ interface Props {
   filtresStatut?: string[];
 }
 
-type Typologie = "gris" | "jaune" | "vert" | "orange" | "neutre";
+type Typologie = TypologieColor;
 
-const TYPO_CLASSES: Record<Typologie, string> = {
-  gris: "bg-slate-200 text-slate-800 hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600",
-  jaune:
-    "bg-yellow-200 text-yellow-900 hover:bg-yellow-300 dark:bg-yellow-900/50 dark:text-yellow-100 dark:hover:bg-yellow-900/70",
-  vert: "bg-emerald-200 text-emerald-900 hover:bg-emerald-300 dark:bg-emerald-900/50 dark:text-emerald-100 dark:hover:bg-emerald-900/70",
-  orange:
-    "bg-orange-200 text-orange-900 hover:bg-orange-300 dark:bg-orange-900/50 dark:text-orange-100 dark:hover:bg-orange-900/70",
-  neutre: "bg-muted text-muted-foreground hover:bg-muted/70",
-};
+const TYPO_CLASSES = TYPO_COLOR_CLASSES;
 
 function typologieFromNumero(numero: string): Typologie {
-  const first = numero?.[0];
-  if (first === "1" || first === "2") return "gris";
-  if (first === "3") return "jaune";
-  if (first === "4" || first === "5") return "vert";
-  if (first === "9") return "orange";
-  return "neutre";
+  return typologieColorFromNumero(numero);
 }
 
 interface GroupedChantier {
