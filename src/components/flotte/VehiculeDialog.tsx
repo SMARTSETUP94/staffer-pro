@@ -119,14 +119,27 @@ export function VehiculeDialog({ open, onOpenChange, vehicule, onSaved }: Props)
     }
     setSaving(true);
     try {
+      // Strip generated columns avant l'UPDATE/INSERT
+      const {
+        id: _id,
+        created_at: _ca,
+        updated_at: _ua,
+        ...rest
+      } = draft as Record<string, unknown>;
+      void _id; void _ca; void _ua;
+      const payload = rest as TablesInsert<"vehicules">;
+
       let vehiculeId = vehicule?.id;
       if (vehicule) {
-        const { error } = await supabase.from("vehicules").update(draft).eq("id", vehicule.id);
+        const { error } = await supabase
+          .from("vehicules")
+          .update(payload)
+          .eq("id", vehicule.id);
         if (error) throw error;
       } else {
         const { data, error } = await supabase
           .from("vehicules")
-          .insert(draft)
+          .insert(payload)
           .select("id")
           .single();
         if (error) throw error;
@@ -147,7 +160,13 @@ export function VehiculeDialog({ open, onOpenChange, vehicule, onSaved }: Props)
       onSaved();
       onOpenChange(false);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Erreur inconnue";
+      // Surface l'erreur Supabase complète (message + details + hint + code)
+      console.error("[VehiculeDialog] save error", err);
+      const e = err as { message?: string; details?: string; hint?: string; code?: string };
+      const msg =
+        [e?.message, e?.details, e?.hint, e?.code ? `(code ${e.code})` : null]
+          .filter(Boolean)
+          .join(" — ") || "Erreur inconnue";
       toast.error("Sauvegarde impossible", { description: msg });
     } finally {
       setSaving(false);
