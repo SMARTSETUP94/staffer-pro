@@ -278,7 +278,7 @@ export function BulkStafferDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Users className="h-5 w-5 text-primary" />
-            Staffer en bulk
+            {vocab.assignerEnLot}
           </DialogTitle>
           <DialogDescription>
             Affecte plusieurs employés sur plusieurs jours d'un même chantier en une fois.
