@@ -342,44 +342,14 @@ export function ChargeAtelierMultiChantiers() {
                     return (
                       <td key={d} className="px-0.5 py-0.5">
                         {isCncConflict ? (
-                          <Popover>
-                            <PopoverTrigger asChild>{cellInner}</PopoverTrigger>
-                            <PopoverContent className="w-72 p-3">
-                              <p className="text-xs font-bold uppercase tracking-wider text-destructive">
-                                Conflit CNC — {formatShortDate(d)}
-                              </p>
-                              <p className="mt-1 text-[11px] text-muted-foreground">
-                                {uniq.length} chantiers réservent la CNC le même jour.
-                              </p>
-                              <ul className="mt-2 space-y-1">
-                                {uniq.map((a) => {
-                                  const info = analysis.affaireInfo.get(a);
-                                  const planId = analysis.affairePlanId.get(a);
-                                  return (
-                                    <li key={a} className="flex items-center gap-2 text-xs">
-                                      <span
-                                        className="inline-block h-3 w-3 rounded-sm shrink-0"
-                                        style={{ backgroundColor: analysis.affaireColor.get(a) ?? "#5F5E5A" }}
-                                      />
-                                      <span className="font-mono">{info?.numero ?? a.slice(0, 6)}</span>
-                                      <span className="text-muted-foreground truncate flex-1">
-                                        {info?.nom}
-                                      </span>
-                                      {planId && (
-                                        <Link
-                                          to="/staffing/$planId"
-                                          params={{ planId }}
-                                          className="text-primary hover:underline"
-                                        >
-                                          <ExternalLink className="h-3 w-3" />
-                                        </Link>
-                                      )}
-                                    </li>
-                                  );
-                                })}
-                              </ul>
-                            </PopoverContent>
-                          </Popover>
+                          <button
+                            type="button"
+                            onClick={() => setCncDialogDate(d)}
+                            className="w-full text-left"
+                            aria-label={`Conflit CNC du ${formatShortDate(d)} — ouvrir le détail`}
+                          >
+                            {cellInner}
+                          </button>
                         ) : (
                           cellInner
                         )}
