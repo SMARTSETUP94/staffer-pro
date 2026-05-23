@@ -22,8 +22,10 @@ import { TemplateTestDialog } from "@/components/contrats/TemplateTestDialog";
 import { openContratPdf, downloadContratPdf } from "@/lib/contrats-pdf-proxy";
 import { POSTE_FALLBACK } from "@/lib/postes-suggestions";
 import { FlaskConical } from "lucide-react";
+import { requireCapability } from "@/lib/capability-guard";
 
 export const Route = createFileRoute("/_app/rh/contrats")({
+  beforeLoad: () => requireCapability("rh.hub.view"),
   component: () => (
     <RoleGuard required="admin">
       <RhContrats />

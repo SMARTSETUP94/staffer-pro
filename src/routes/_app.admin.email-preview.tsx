@@ -9,8 +9,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageHeader } from "@/components/PageHeader";
 import { useAuth, type AppRole } from "@/lib/auth-context";
 import { buildInvitationEmailHtml } from "@/lib/email-templates/invitation";
+import { requireCapability } from "@/lib/capability-guard";
 
 export const Route = createFileRoute("/_app/admin/email-preview")({
+  beforeLoad: () => requireCapability("admin.email_preview.view"),
   head: () => ({ meta: [{ title: "Preview Emails — Admin" }] }),
   component: EmailPreviewPage,
 });

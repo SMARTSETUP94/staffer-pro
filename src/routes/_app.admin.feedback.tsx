@@ -32,8 +32,10 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import type { Database } from "@/integrations/supabase/types";
+import { requireCapability } from "@/lib/capability-guard";
 
 export const Route = createFileRoute("/_app/admin/feedback")({
+  beforeLoad: () => requireCapability("admin.feedback.view"),
   component: FeedbackAdminPage,
 });
 

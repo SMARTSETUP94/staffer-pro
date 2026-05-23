@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { useValidationCount } from "@/hooks/use-validation-count";
 import { useContratsRhCount } from "@/hooks/use-contrats-rh-count";
 import { useCapabilitiesSet } from "@/hooks/use-capability";
+import { useFeatureFlag } from "@/hooks/use-feature-flag";
 
 import { ViewAsSwitcher } from "./ViewAsSwitcher";
 
@@ -185,13 +186,14 @@ export function AppSidebar() {
   const validationCount = useValidationCount();
   const contratsRhCount = useContratsRhCount();
   const { data: caps, isLoading: capsLoading } = useCapabilitiesSet();
+  // Lot 7.0d — Flag-first : gating capability-driven activable sélectivement.
+  // Off (défaut) → fallback ancien comportement (tous les items visibles, sécurité
+  // garantie par les guards beforeLoad sur chaque route). On → filtrage caps actif.
+  const capGatingEnabled = useFeatureFlag("sidebar_capability_v1");
 
   // RBAC visuel : on s'appuie sur effectiveRole pour respecter le mode preview.
   const rawSections = buildSections(effectiveRole as EffRole, validationCount, contratsRhCount);
-  // Lot 7.2 — Filtrage capability-driven : un item sans `cap` est toujours visible ;
-  // un item avec `cap` n'est rendu que si l'utilisateur la possède. En cours de
-  // chargement on affiche tout pour éviter un flash de sidebar vide.
-  const sections = capsLoading
+  const sections = (!capGatingEnabled || capsLoading)
     ? rawSections
     : rawSections
         .map((s) => ({ ...s, items: s.items.filter((it) => !it.cap || caps.has(it.cap)) }))
