@@ -529,7 +529,6 @@ export const updateObjetIdentite = createServerFn({ method: "POST" })
       .select("role")
       .eq("user_id", userId);
     const roles = (rolesRows ?? []).map((r: { role: string }) => r.role);
-    const { getEditableFields } = await import("@/lib/objet-fiche-permissions");
     const allowedFields = getEditableFields(roles);
 
     // Construire la liste des colonnes autorisées
