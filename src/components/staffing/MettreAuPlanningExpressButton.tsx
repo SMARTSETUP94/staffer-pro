@@ -225,7 +225,7 @@ export function MettreAuPlanningExpressButton({
           {running ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : (
-            <Wand2 className="mr-2 h-4 w-4" />
+            <Wand2 className="mr-2 h-4 w-4 motion-safe:animate-[pulse_2.4s_ease-in-out_infinite]" />
           )}
           Mettre au planning
           {includeWeekends && (
