@@ -3,7 +3,7 @@
  * Branded cream / ink / indigo, responsive, Inter-like font stack.
  */
 
-export type InvitationRoleLabel = "admin" | "chef_chantier" | "chef_metier_scoped" | "employe";
+export type InvitationRoleLabel = "admin" | "chef_chantier" | "chef_metier_scoped" | "employe" | "rh";
 
 export interface InvitationEmailParams {
   fullName?: string;
@@ -30,8 +30,10 @@ function rolesToLabel(roles: InvitationRoleLabel[]): string {
   if (roles.includes("chef_chantier")) return "Chef de Chantier";
   if (roles.includes("chef_metier_scoped")) return "Chef Métier";
   if (roles.includes("admin")) return "Administrateur";
+  if (roles.includes("rh")) return "RH";
   return "Employé";
 }
+
 
 export function buildInvitationEmailHtml(params: InvitationEmailParams): string {
   const greeting = params.fullName ? `Bonjour ${escapeHtml(params.fullName)},` : "Bonjour,";
