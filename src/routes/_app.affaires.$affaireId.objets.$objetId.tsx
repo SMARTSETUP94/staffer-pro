@@ -66,12 +66,12 @@ function FicheObjetPage() {
     queryFn: async () => {
       const { data: rows } = await supabase
         .from("profiles")
-        .select("id, display_name, est_respo_fab")
+        .select("id, full_name, est_respo_fab")
         .eq("est_respo_fab", true)
-        .order("display_name");
+        .order("full_name");
       return (rows ?? []).map((r) => ({
         id: r.id,
-        label: (r as { display_name: string | null }).display_name ?? "?",
+        label: (r as { full_name: string | null }).full_name ?? "?",
       }));
     },
   });

@@ -393,10 +393,10 @@ export const getObjetFiche = createServerFn({ method: "POST" })
     if (obj.respo_fab_id) {
       const { data: prof } = await supabase
         .from("profiles")
-        .select("display_name")
+        .select("full_name")
         .eq("id", obj.respo_fab_id)
         .maybeSingle();
-      respo_fab_name = (prof as { display_name: string | null } | null)?.display_name ?? null;
+      respo_fab_name = (prof as { full_name: string | null } | null)?.full_name ?? null;
     }
 
     // 3. Affaire (numero + nom pour breadcrumb)
