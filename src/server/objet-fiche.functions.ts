@@ -557,7 +557,8 @@ export const updateObjetIdentite = createServerFn({ method: "POST" })
 
     const { error } = await supabase
       .from("fabrication_objets")
-      .update(finalPatch)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .update(finalPatch as any)
       .eq("id", data.objetId);
     if (error) throw new Error(error.message);
 
