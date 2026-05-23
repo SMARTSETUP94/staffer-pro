@@ -1,14 +1,16 @@
 // v0.35.2 / Sprint 2.1 — Vue Charge atelier multi-chantiers (chef+admin)
-// Drill-down : cellules CNC conflit + cellules pic global > 12 cliquables (Popover)
+// Lot 2.2 — CNC conflit converti en Dialog (drill-down + plus de place), férié FR marqué.
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Link } from "@tanstack/react-router";
 import { Loader2, ChevronLeft, ChevronRight, AlertTriangle, Activity, Hammer, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getChargeAtelier } from "@/server/staffing.functions";
 import { workingDaysBetween, formatShortDate, formatDayName, METIER_COLOR, METIER_LABEL, METIER_ORDER } from "./gantt-helpers";
+import { isJourFerieFR, labelJourFerieFR } from "@/lib/jours-feries";
 import type { MetierKey } from "@/lib/staffing/types";
 import { METIER_ID } from "@/lib/staffing/types";
 
@@ -60,6 +62,8 @@ export function ChargeAtelierMultiChantiers() {
   const [data, setData] = useState<{ plans: PlanRow[]; steps: StepRow[]; cnc: CncRow[] } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // Lot 2.2 #8 — Drill-down conflit CNC en Dialog (vs Popover trop étroit)
+  const [cncDialogDate, setCncDialogDate] = useState<string | null>(null);
 
   const window = useMemo(() => {
     const today = new Date();
@@ -262,12 +266,29 @@ export function ChargeAtelierMultiChantiers() {
           <thead>
             <tr className="border-b border-border bg-background/40">
               <th className="sticky left-0 z-10 bg-background/40 px-3 py-2 text-left font-semibold">Métier</th>
-              {days.map((d) => (
-                <th key={d} className="min-w-[44px] px-1 py-2 text-center font-mono text-[10px]">
-                  <div className="text-muted-foreground">{formatDayName(d)}</div>
-                  <div className="font-semibold">{formatShortDate(d)}</div>
-                </th>
-              ))}
+              {days.map((d) => {
+                const ferie = isJourFerieFR(d);
+                const ferieLabel = ferie ? labelJourFerieFR(d) : null;
+                return (
+                  <th
+                    key={d}
+                    className={`min-w-[44px] px-1 py-2 text-center font-mono text-[10px] ${
+                      ferie ? "bg-amber-500/15" : ""
+                    }`}
+                    title={ferieLabel ?? undefined}
+                  >
+                    <div className="text-muted-foreground">{formatDayName(d)}</div>
+                    <div className={`font-semibold ${ferie ? "text-amber-700 dark:text-amber-300" : ""}`}>
+                      {formatShortDate(d)}
+                    </div>
+                    {ferie && (
+                      <div className="text-[8px] uppercase text-amber-700 dark:text-amber-300 leading-none mt-0.5">
+                        Férié
+                      </div>
+                    )}
+                  </th>
+                );
+              })}
             </tr>
           </thead>
           <tbody>
@@ -321,44 +342,14 @@ export function ChargeAtelierMultiChantiers() {
                     return (
                       <td key={d} className="px-0.5 py-0.5">
                         {isCncConflict ? (
-                          <Popover>
-                            <PopoverTrigger asChild>{cellInner}</PopoverTrigger>
-                            <PopoverContent className="w-72 p-3">
-                              <p className="text-xs font-bold uppercase tracking-wider text-destructive">
-                                Conflit CNC — {formatShortDate(d)}
-                              </p>
-                              <p className="mt-1 text-[11px] text-muted-foreground">
-                                {uniq.length} chantiers réservent la CNC le même jour.
-                              </p>
-                              <ul className="mt-2 space-y-1">
-                                {uniq.map((a) => {
-                                  const info = analysis.affaireInfo.get(a);
-                                  const planId = analysis.affairePlanId.get(a);
-                                  return (
-                                    <li key={a} className="flex items-center gap-2 text-xs">
-                                      <span
-                                        className="inline-block h-3 w-3 rounded-sm shrink-0"
-                                        style={{ backgroundColor: analysis.affaireColor.get(a) ?? "#5F5E5A" }}
-                                      />
-                                      <span className="font-mono">{info?.numero ?? a.slice(0, 6)}</span>
-                                      <span className="text-muted-foreground truncate flex-1">
-                                        {info?.nom}
-                                      </span>
-                                      {planId && (
-                                        <Link
-                                          to="/staffing/$planId"
-                                          params={{ planId }}
-                                          className="text-primary hover:underline"
-                                        >
-                                          <ExternalLink className="h-3 w-3" />
-                                        </Link>
-                                      )}
-                                    </li>
-                                  );
-                                })}
-                              </ul>
-                            </PopoverContent>
-                          </Popover>
+                          <button
+                            type="button"
+                            onClick={() => setCncDialogDate(d)}
+                            className="w-full text-left"
+                            aria-label={`Conflit CNC du ${formatShortDate(d)} — ouvrir le détail`}
+                          >
+                            {cellInner}
+                          </button>
                         ) : (
                           cellInner
                         )}
@@ -477,6 +468,69 @@ export function ChargeAtelierMultiChantiers() {
           </ul>
         </div>
       )}
+
+      {/* Lot 2.2 #8 — Dialog drill-down conflit CNC (remplace Popover trop étroit) */}
+      <Dialog open={cncDialogDate !== null} onOpenChange={(o) => !o && setCncDialogDate(null)}>
+        <DialogContent className="max-w-lg">
+          {cncDialogDate && (() => {
+            const list = analysis.matrix.get(METIER_ID.Num)?.get(cncDialogDate) ?? [];
+            const uniq = Array.from(new Set(list.map((l) => l.affaire_id)));
+            return (
+              <>
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2 text-destructive">
+                    <AlertTriangle className="h-4 w-4" />
+                    Conflit CNC — {formatShortDate(cncDialogDate)}
+                  </DialogTitle>
+                  <DialogDescription>
+                    {uniq.length} chantiers réservent la CNC le même jour. Décale BE ou Num sur un
+                    chantier non-critique pour libérer la machine.
+                  </DialogDescription>
+                </DialogHeader>
+                <ul className="space-y-2">
+                  {uniq.map((a) => {
+                    const info = analysis.affaireInfo.get(a);
+                    const planId = analysis.affairePlanId.get(a);
+                    const persJour = list
+                      .filter((l) => l.affaire_id === a)
+                      .reduce((s, l) => s + l.pers, 0);
+                    return (
+                      <li
+                        key={a}
+                        className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 p-2.5"
+                      >
+                        <span
+                          className="inline-block h-5 w-5 rounded-sm shrink-0"
+                          style={{ backgroundColor: analysis.affaireColor.get(a) ?? "#5F5E5A" }}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="font-mono text-sm font-bold">
+                            {info?.numero ?? a.slice(0, 6)}
+                          </div>
+                          <div className="text-xs text-muted-foreground truncate">{info?.nom}</div>
+                        </div>
+                        <span className="font-mono text-xs text-muted-foreground">
+                          {persJour}p
+                        </span>
+                        {planId && (
+                          <Link
+                            to="/staffing/$planId"
+                            params={{ planId }}
+                            className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs text-primary hover:bg-primary/10"
+                            onClick={() => setCncDialogDate(null)}
+                          >
+                            Ouvrir plan <ExternalLink className="h-3 w-3" />
+                          </Link>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

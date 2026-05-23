@@ -97,11 +97,21 @@ function CompetencesEquipePage() {
     if (typeof window === "undefined") return false;
     return window.localStorage.getItem("competencesEquipe.dropdownMode") === "1";
   });
+  // Lot 2.2 #10 — Filtre "Modifiés uniquement" (employés ayant au moins une compétence S/D/X saisie)
+  const [modifiedOnly, setModifiedOnly] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem("competencesEquipe.modifiedOnly") === "1";
+  });
   useEffect(() => {
     if (typeof window !== "undefined") {
       window.localStorage.setItem("competencesEquipe.dropdownMode", dropdownMode ? "1" : "0");
     }
   }, [dropdownMode]);
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("competencesEquipe.modifiedOnly", modifiedOnly ? "1" : "0");
+    }
+  }, [modifiedOnly]);
 
   useEffect(() => {
     let cancelled = false;
@@ -185,9 +195,13 @@ function CompetencesEquipePage() {
 
   const filtered = useMemo(() => {
     const q = filter.trim().toLowerCase();
-    if (!q) return emps;
-    return emps.filter((e) => `${e.prenom} ${e.nom}`.toLowerCase().includes(q));
-  }, [emps, filter]);
+    let base = emps;
+    if (q) base = base.filter((e) => `${e.prenom} ${e.nom}`.toLowerCase().includes(q));
+    if (modifiedOnly) {
+      base = base.filter((e) => Object.keys(matrix[e.id] ?? {}).length > 0);
+    }
+    return base;
+  }, [emps, filter, modifiedOnly, matrix]);
 
   if (!rolesLoaded) return null;
   if (!isAdminOrChef) return <Navigate to="/dashboard" />;
@@ -223,7 +237,18 @@ function CompetencesEquipePage() {
               {emps.length} employés actifs · {metiers.length} métiers — sauvegarde immédiate
             </CardDescription>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex items-center gap-2">
+              <Switch
+                id="modified-only"
+                checked={modifiedOnly}
+                onCheckedChange={setModifiedOnly}
+                aria-label="Afficher uniquement les employés avec compétences saisies"
+              />
+              <Label htmlFor="modified-only" className="text-xs cursor-pointer">
+                Modifiés uniquement
+              </Label>
+            </div>
             <div className="flex items-center gap-2">
               <Switch
                 id="dropdown-mode"

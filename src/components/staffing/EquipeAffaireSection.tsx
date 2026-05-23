@@ -70,7 +70,33 @@ export function EquipeAffaireSection({ planId, onAssigned }: Props) {
   const assign = useServerFn(assignTeamToMetier);
   const [metiers, setMetiers] = useState<MetierEntry[]>([]);
   const [candidatsByMetier, setCandidatsByMetier] = useState<Record<number, Candidate[]>>({});
-  const [selected, setSelected] = useState<Record<number, string[]>>({});
+  // Lot 2.2 #11 — Mémoriser sélection par planId dans localStorage pour éviter de tout re-cocher
+  // en cas de F5 / navigation.
+  const lsKey = `staffing.equipeAffaire.selected.${planId}`;
+  const [selected, setSelected] = useState<Record<number, string[]>>(() => {
+    if (typeof window === "undefined") return {};
+    try {
+      const raw = window.localStorage.getItem(lsKey);
+      if (!raw) return {};
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === "object") return parsed as Record<number, string[]>;
+    } catch {
+      /* ignore */
+    }
+    return {};
+  });
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      if (Object.keys(selected).length === 0) {
+        window.localStorage.removeItem(lsKey);
+      } else {
+        window.localStorage.setItem(lsKey, JSON.stringify(selected));
+      }
+    } catch {
+      /* quota → ignore */
+    }
+  }, [selected, lsKey]);
   const [loading, setLoading] = useState(true);
   const [busyMetier, setBusyMetier] = useState<number | null>(null);
   // v0.35.x audit UX #5 — confirmation pré-affectation
