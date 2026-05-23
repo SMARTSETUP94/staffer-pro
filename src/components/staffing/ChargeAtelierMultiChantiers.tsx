@@ -179,7 +179,14 @@ export function ChargeAtelierMultiChantiers() {
   }, [data, days]);
 
   if (loading) {
-    return <div className="flex justify-center py-16"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
+    return (
+      <div className="space-y-3 py-4" aria-busy="true" aria-label="Chargement de la charge atelier">
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-24 w-full" />
+        <Skeleton className="h-24 w-full" />
+        <Skeleton className="h-24 w-full" />
+      </div>
+    );
   }
   if (error) {
     return <div className="rounded-2xl border border-destructive/30 bg-destructive/10 p-6 text-sm text-destructive">{error}</div>;
