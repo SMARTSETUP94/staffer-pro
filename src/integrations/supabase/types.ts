@@ -202,6 +202,13 @@ export type Database = {
             referencedColumns: ["affaire_id"]
           },
           {
+            foreignKeyName: "affaire_documents_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "v_affaires_avec_plan_status"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "affaire_documents_objet_id_fkey"
             columns: ["objet_id"]
             isOneToOne: false
@@ -554,6 +561,13 @@ export type Database = {
             referencedColumns: ["affaire_id"]
           },
           {
+            foreignKeyName: "assignations_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "v_affaires_avec_plan_status"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "assignations_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
@@ -697,6 +711,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_affaire_consommation"
             referencedColumns: ["affaire_id"]
+          },
+          {
+            foreignKeyName: "chantier_metier_config_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "v_affaires_avec_plan_status"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "chantier_metier_config_metier_id_fkey"
@@ -905,6 +926,13 @@ export type Database = {
             referencedColumns: ["affaire_id"]
           },
           {
+            foreignKeyName: "contrats_intermittents_chantier_id_fkey"
+            columns: ["chantier_id"]
+            isOneToOne: false
+            referencedRelation: "v_affaires_avec_plan_status"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "contrats_intermittents_employee_id_fkey"
             columns: ["employee_id"]
             isOneToOne: false
@@ -1033,6 +1061,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_affaire_consommation"
             referencedColumns: ["affaire_id"]
+          },
+          {
+            foreignKeyName: "devis_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "v_affaires_avec_plan_status"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "devis_livre_par_fkey"
@@ -1702,6 +1737,13 @@ export type Database = {
             referencedColumns: ["affaire_id"]
           },
           {
+            foreignKeyName: "fabrication_objets_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "v_affaires_avec_plan_status"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "fabrication_objets_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
@@ -2020,6 +2062,13 @@ export type Database = {
             referencedColumns: ["affaire_id"]
           },
           {
+            foreignKeyName: "heures_saisies_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "v_affaires_avec_plan_status"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "heures_saisies_assignation_id_fkey"
             columns: ["assignation_id"]
             isOneToOne: false
@@ -2299,6 +2348,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_affaire_consommation"
             referencedColumns: ["affaire_id"]
+          },
+          {
+            foreignKeyName: "machine_reservation_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "v_affaires_avec_plan_status"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "machine_reservation_step_id_fkey"
@@ -2864,6 +2920,13 @@ export type Database = {
             referencedColumns: ["affaire_id"]
           },
           {
+            foreignKeyName: "staffing_plan_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "v_affaires_avec_plan_status"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "staffing_plan_parent_plan_id_fkey"
             columns: ["parent_plan_id"]
             isOneToOne: false
@@ -3279,6 +3342,13 @@ export type Database = {
             referencedColumns: ["affaire_id"]
           },
           {
+            foreignKeyName: "trajets_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "v_affaires_avec_plan_status"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "trajets_chauffeur_id_fkey"
             columns: ["chauffeur_id"]
             isOneToOne: false
@@ -3528,6 +3598,153 @@ export type Database = {
         }
         Relationships: []
       }
+      v_affaires_avec_plan_status: {
+        Row: {
+          charge_affaires_id: string | null
+          chef_chantier_id: string | null
+          chef_projet_id: string | null
+          client: string | null
+          code_opportunite: string | null
+          created_at: string | null
+          date_debut: string | null
+          date_demontage: string | null
+          date_fin_prevue: string | null
+          date_montage: string | null
+          date_opportunite: string | null
+          date_pat: string | null
+          heures_prevues_demontage: number | null
+          heures_prevues_montage: number | null
+          id: string | null
+          lieu: string | null
+          nom: string | null
+          notes: string | null
+          numero: string | null
+          phase: Database["public"]["Enums"]["affaire_phase"] | null
+          plan_count: number | null
+          plan_published_at: string | null
+          plan_status: string | null
+          responsable_demontage_id: string | null
+          responsable_montage_id: string | null
+          signed_at: string | null
+          statut: Database["public"]["Enums"]["affaire_statut"] | null
+          statut_opportunite:
+            | Database["public"]["Enums"]["opportunite_statut"]
+            | null
+          taille: Database["public"]["Enums"]["opportunite_taille"] | null
+          typologie: string | null
+          typologie_future: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          charge_affaires_id?: string | null
+          chef_chantier_id?: string | null
+          chef_projet_id?: string | null
+          client?: string | null
+          code_opportunite?: string | null
+          created_at?: string | null
+          date_debut?: string | null
+          date_demontage?: string | null
+          date_fin_prevue?: string | null
+          date_montage?: string | null
+          date_opportunite?: string | null
+          date_pat?: string | null
+          heures_prevues_demontage?: number | null
+          heures_prevues_montage?: number | null
+          id?: string | null
+          lieu?: string | null
+          nom?: string | null
+          notes?: string | null
+          numero?: string | null
+          phase?: Database["public"]["Enums"]["affaire_phase"] | null
+          plan_count?: never
+          plan_published_at?: never
+          plan_status?: never
+          responsable_demontage_id?: string | null
+          responsable_montage_id?: string | null
+          signed_at?: string | null
+          statut?: Database["public"]["Enums"]["affaire_statut"] | null
+          statut_opportunite?:
+            | Database["public"]["Enums"]["opportunite_statut"]
+            | null
+          taille?: Database["public"]["Enums"]["opportunite_taille"] | null
+          typologie?: string | null
+          typologie_future?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          charge_affaires_id?: string | null
+          chef_chantier_id?: string | null
+          chef_projet_id?: string | null
+          client?: string | null
+          code_opportunite?: string | null
+          created_at?: string | null
+          date_debut?: string | null
+          date_demontage?: string | null
+          date_fin_prevue?: string | null
+          date_montage?: string | null
+          date_opportunite?: string | null
+          date_pat?: string | null
+          heures_prevues_demontage?: number | null
+          heures_prevues_montage?: number | null
+          id?: string | null
+          lieu?: string | null
+          nom?: string | null
+          notes?: string | null
+          numero?: string | null
+          phase?: Database["public"]["Enums"]["affaire_phase"] | null
+          plan_count?: never
+          plan_published_at?: never
+          plan_status?: never
+          responsable_demontage_id?: string | null
+          responsable_montage_id?: string | null
+          signed_at?: string | null
+          statut?: Database["public"]["Enums"]["affaire_statut"] | null
+          statut_opportunite?:
+            | Database["public"]["Enums"]["opportunite_statut"]
+            | null
+          taille?: Database["public"]["Enums"]["opportunite_taille"] | null
+          typologie?: string | null
+          typologie_future?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affaires_charge_affaires_id_fkey"
+            columns: ["charge_affaires_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affaires_chef_chantier_id_fkey"
+            columns: ["chef_chantier_id"]
+            isOneToOne: false
+            referencedRelation: "employes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affaires_chef_projet_id_fkey"
+            columns: ["chef_projet_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affaires_responsable_demontage_id_fkey"
+            columns: ["responsable_demontage_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affaires_responsable_montage_id_fkey"
+            columns: ["responsable_montage_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       v_chefs_par_affaire: {
         Row: {
           affaire_id: string | null
@@ -3568,6 +3785,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_affaire_consommation"
             referencedColumns: ["affaire_id"]
+          },
+          {
+            foreignKeyName: "devis_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "v_affaires_avec_plan_status"
+            referencedColumns: ["id"]
           },
         ]
       }
