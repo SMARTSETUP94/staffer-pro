@@ -13,6 +13,7 @@ import { fr } from "date-fns/locale";
 import { AlertTriangle, Calendar as CalIcon, Loader2, Search, Users } from "lucide-react";
 import { toast } from "sonner";
 import { formatBusinessError } from "@/lib/business-errors";
+import { useVocab } from "@/hooks/use-vocab";
 import {
   Dialog,
   DialogContent,
@@ -76,6 +77,7 @@ export function BulkStafferDialog({
   assignations,
   onSaved,
 }: Props) {
+  const vocab = useVocab();
   // état formulaire
   const [affaireId, setAffaireId] = useState<string>("");
   const [devisId, setDevisId] = useState<string>("");
