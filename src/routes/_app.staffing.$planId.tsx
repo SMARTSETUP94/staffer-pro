@@ -3,7 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link, Navigate, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowLeft, History, Send, Zap, ListChecks, Trash2 } from "lucide-react";
+import { ArrowLeft, History, Send, Zap, ListChecks, Trash2, MoreVertical } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -138,6 +144,12 @@ function StaffingPlanPage() {
     }
   }
 
+  const status = planMeta?.status ?? planData?.plan?.status ?? "draft";
+  const isDraft = status === "draft";
+  const isPublished = status === "published";
+  const isArchived = status === "archived";
+
+  const statusLabel = isPublished ? "publié" : isArchived ? "archivé" : "brouillon";
   const breadcrumbSteps: { label: string; to?: string }[] = [
     { label: "Affaires", to: "/affaires" },
   ];
@@ -147,12 +159,7 @@ function StaffingPlanPage() {
       to: `/affaires/${affaireMeta.id}/fabrication`,
     });
   }
-  breadcrumbSteps.push({ label: "Plan staffing" });
-
-  const status = planMeta?.status ?? planData?.plan?.status ?? "draft";
-  const isDraft = status === "draft";
-  const isPublished = status === "published";
-  const isArchived = status === "archived";
+  breadcrumbSteps.push({ label: `Plan staffing — ${statusLabel}` });
 
   // Calcul jours / personnes affectés (pour le dialog publish)
   const stepsWithDate = (planData?.result.steps ?? []).filter(
@@ -225,7 +232,7 @@ function StaffingPlanPage() {
                 Archivé (remplacé par version suivante)
               </Badge>
             )}
-            <Badge variant="secondary">v0.35</Badge>
+            
           </div>
           <p className="mt-1 font-mono text-xs text-muted-foreground">{planId}</p>
         </div>
@@ -257,14 +264,27 @@ function StaffingPlanPage() {
             </Button>
           )}
           {isAdmin && affaireMeta && (
-            <Button
-              size="sm"
-              variant="outline"
-              className="border-destructive/50 text-destructive hover:bg-destructive/10"
-              onClick={() => setDeleteOpen(true)}
-            >
-              <Trash2 className="mr-1 h-3 w-3" /> Supprimer
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  aria-label="Actions avancées"
+                  title="Actions avancées"
+                >
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  onSelect={() => setDeleteOpen(true)}
+                  className="text-destructive focus:text-destructive"
+                >
+                  <Trash2 className="mr-2 h-3.5 w-3.5" />
+                  Supprimer le plan
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
           {affaireMeta ? (
             <Button asChild variant="outline" size="sm">

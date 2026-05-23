@@ -281,7 +281,7 @@ export function StaffingPlanWizard({
             <div className="flex items-center gap-2">
               <h2 className="text-lg font-semibold text-foreground">Planning fabrication</h2>
               <Badge variant="secondary" className="gap-1">
-                <Sparkles className="h-3 w-3" /> Auto-staffing v0.35
+                <Sparkles className="h-3 w-3" /> Auto-staffing
               </Badge>
             </div>
             <p className="mt-1 text-xs text-muted-foreground">

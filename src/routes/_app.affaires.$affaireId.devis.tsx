@@ -732,7 +732,7 @@ function AffaireDevisPage() {
               Mettre au planning fabrication
             </DialogTitle>
             <DialogDescription>
-              Auto-staffing v0.35 — Calcul rétrograde depuis la livraison.
+              Calcul rétrograde depuis la livraison.
             </DialogDescription>
           </DialogHeader>
           {planningOpen && (

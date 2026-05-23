@@ -102,7 +102,8 @@ export function StaffingEditToolbar({
         return true;
       } catch (e) {
         markFlushing(false);
-        toast.error(e instanceof Error ? e.message : "Erreur sauvegarde");
+        const msg = e instanceof Error ? e.message : "Erreur sauvegarde";
+        toast.error(msg, { id: `staffing-flush-error:${msg}` });
         return false;
       }
     },

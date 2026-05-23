@@ -6,6 +6,7 @@ import { Link } from "@tanstack/react-router";
 import { Loader2, ChevronLeft, ChevronRight, AlertTriangle, Activity, Hammer, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Skeleton } from "@/components/ui/skeleton";
 import { getChargeAtelier } from "@/server/staffing.functions";
 import { workingDaysBetween, formatShortDate, formatDayName, METIER_COLOR, METIER_LABEL, METIER_ORDER } from "./gantt-helpers";
 import type { MetierKey } from "@/lib/staffing/types";
@@ -179,7 +180,14 @@ export function ChargeAtelierMultiChantiers() {
   }, [data, days]);
 
   if (loading) {
-    return <div className="flex justify-center py-16"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
+    return (
+      <div className="space-y-3 py-4" aria-busy="true" aria-label="Chargement de la charge atelier">
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-24 w-full" />
+        <Skeleton className="h-24 w-full" />
+        <Skeleton className="h-24 w-full" />
+      </div>
+    );
   }
   if (error) {
     return <div className="rounded-2xl border border-destructive/30 bg-destructive/10 p-6 text-sm text-destructive">{error}</div>;
