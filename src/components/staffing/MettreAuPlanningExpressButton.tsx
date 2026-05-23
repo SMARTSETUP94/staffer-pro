@@ -87,7 +87,6 @@ function estimateDateDebut(dateFinIso: string, totalH: number, includeWeekends: 
   return shiftBusinessDays(dateFinIso, -joursOuvres, includeWeekends);
 }
 
-import { useVocab } from "@/hooks/use-vocab";
 
 export function MettreAuPlanningExpressButton({
   affaireId,
