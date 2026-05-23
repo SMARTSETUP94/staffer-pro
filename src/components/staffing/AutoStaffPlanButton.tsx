@@ -16,6 +16,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { autoStaffPlan } from "@/server/staffing-autostaff-plan.functions";
+import { useVocab } from "@/hooks/use-vocab";
 
 export interface AutoStaffPlanButtonHandle {
   /** Ouvre le dialog de confirmation (raccourci clavier A). */
@@ -32,6 +33,7 @@ interface Props {
 
 export const AutoStaffPlanButton = forwardRef<AutoStaffPlanButtonHandle, Props>(
   function AutoStaffPlanButton({ planId, stepsCount, onCompleted }, ref) {
+  const vocab = useVocab();
   const autoStaff = useServerFn(autoStaffPlan);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [running, setRunning] = useState(false);
@@ -79,7 +81,7 @@ export const AutoStaffPlanButton = forwardRef<AutoStaffPlanButtonHandle, Props>(
         ) : (
           <Wand2 className="mr-1 h-3 w-3" />
         )}
-        Auto-staff complet
+        {vocab.autoRemplirComplet}
       </Button>
 
       {/* Confirm */}
@@ -88,7 +90,7 @@ export const AutoStaffPlanButton = forwardRef<AutoStaffPlanButtonHandle, Props>(
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
               <Wand2 className="h-5 w-5 text-violet-600" />
-              Auto-staff plan complet
+              {vocab.autoRemplirPlanComplet}
             </AlertDialogTitle>
             <AlertDialogDescription asChild>
               <div className="space-y-2 text-sm">
@@ -127,7 +129,7 @@ export const AutoStaffPlanButton = forwardRef<AutoStaffPlanButtonHandle, Props>(
               ) : (
                 <AlertTriangle className="h-5 w-5 text-amber-500" />
               )}
-              Auto-staff terminé
+              {vocab.autoRemplirTermine}
             </AlertDialogTitle>
             <AlertDialogDescription asChild>
               <div className="space-y-2 text-sm">

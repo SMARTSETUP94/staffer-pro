@@ -11,14 +11,14 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { useVocab } from "@/hooks/use-vocab";
 
-const SHORTCUTS: Array<{ keys: string[]; label: string }> = [
-  { keys: ["⌘", "S"], label: "Enregistrer les modifications" },
-  { keys: ["A"], label: "Auto-staff plan complet (brouillon uniquement)" },
-  { keys: ["P"], label: "Publier le plan (brouillon uniquement)" },
-  { keys: ["?"], label: "Afficher cette aide" },
-  { keys: ["Échap"], label: "Fermer dialog / popover" },
-];
+interface Props {
+  /** Callback déclenché par la touche A (auto-staff plan). null = désactivé. */
+  onAutoStaff?: (() => void) | null;
+  /** Callback déclenché par la touche P (ouvre le dialog Publier). null = désactivé. */
+  onPublish?: (() => void) | null;
+}
 
 interface Props {
   /** Callback déclenché par la touche A (auto-staff plan). null = désactivé. */
