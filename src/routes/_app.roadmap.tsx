@@ -2986,45 +2986,7 @@ const PLANNED: RoadmapPlanned[] = [
       "Création d'une vue SQL consolidée exposant pour chaque affaire les statuts dérivés (a-t-elle un plan publié ? un brouillon ? un plan archivé ? écart staffing vs devis ?). Échantillon de retour à valider avant migration. Permettra de simplifier les listes affaires + dashboard sans recalcul côté client.",
   },
 
-  // ========== Roadmap consolidée (mise à jour 5 mai 2026) ==========
-  {
-    priority: "haute",
-    title: "Sprint 3 — Features métier post-refacto",
-    description:
-      "Sprint 2b2 entièrement terminé : Gantt (Tour 1+2+3) et StaffingPersonnesSection (Sprint 2b2.2) refactorés. Sprint 3 en cours : v0.41.0a hotfix heures cache LIVRÉ + v0.41.0c E2E employé desktop LIVRÉ (Phase 3c.1).",
-  },
-
-  {
-    priority: "moyenne",
-    title: "v0.41.0a — LIVRÉ — Hotfix heures invisibles cache côté employé",
-    description:
-      "Refetch sur visibilitychange + focus + deps useMemo complétées (affairesById/metiersById). 1407/1407 tests verts. Test de non-régression dédié.",
-  },
-  {
-    priority: "moyenne",
-    title: "Sprint 3 — Logistique avancée (autorisations véhicules + sous-traitants + historique + stats)",
-    description:
-      "Reprise complète : autorisations véhicules par employé (#56), carnet sous-traitants, historique trajets, stats d'utilisation flotte.",
-  },
-  {
-    priority: "moyenne",
-    title: "v0.41.0c — Phase 3c.1 LIVRÉE — E2E employé desktop (6 tests + infra split)",
-    description:
-      "Storage states séparés employe-desktop / employe-mobile, projects Playwright dédiés, 6 tests flows critiques (mes-heures, hors-planning desktop, ma-semaine, profil, logout, anti-fuite RGPD). Phases 3c.2 (mobile 4 tests) et 3c.3 (chef/admin) à venir.",
-  },
-
-  {
-    priority: "moyenne",
-    title: "v0.20.1 — Quick wins LIVRÉS (4 phases)",
-    description:
-      "Phase 1 : pré-remplissage TrajetDialog depuis bandeau « Prête à livrer » (atelier → chantier, date montage-1j, catégorie pose, affaire pré-sélectionnée). Phase 2 : indexes composites perf (`fabrication_etapes(objet_id,statut)`, `fabrication_etapes(assignee_id,statut)`, `staffing_plan_step(plan_id,metier_id)`). Phase 3 : `useObjetsAffaireLight` migré sur React Query (queryKey partagée, staleTime 30s) — fin du N+1 entre sidebar/main/header. Phase 4 : trigger `notify_affaire_pret_livraison` étend la notif au `charge_affaires_id` en plus du chef projet. 1440/1440 Vitest verts.",
-  },
-  {
-    priority: "haute",
-    title: "v0.21.1 — Sprint sécurité LIVRÉ (RBAC UI + RLS heures_saisies + UNIQUE INDEX chef du jour)",
-    description:
-      "Phase 1 : composant `<RoleGuard required='admin|chef_or_admin'>` centralisé, appliqué sur /saisie-pour-equipe, /audit-heures, /audit-auth (loader pendant rolesLoaded, redirect /dashboard + toast si rôle insuffisant). Phase 2 : RLS `heures_saisies_self_update` durcie (employé propriétaire bloqué dès statut='valide', autorise correction post-rejet) + nouvelle policy `heures_saisies_self_delete_brouillon`. Phase 3 : UNIQUE INDEX partiel `assignations_chef_jour_unique (affaire_id, date, demi_journee) WHERE est_chef_jour=true` — anti race-condition concurrente. Phase 4 (partielle) : 19 tests Vitest sur la matrice acteur×statut×action + doc `docs/rls-policies.md` étendue ; tests SQL live reportés (setup CI dédié). 1459+ tests verts.",
-  },
+  // ========== Sprints majeurs planifiés ==========
   {
     priority: "moyenne",
     title: "v0.36 — Sprint dette résiduelle : page admin véhicules + audit findings",
@@ -3039,7 +3001,7 @@ const PLANNED: RoadmapPlanned[] = [
   },
   {
     priority: "moyenne",
-    title: "v0.39.x suite — Logistique avancée : autorisations véhicules + sous-traitants + historique + stats",
+    title: "v0.39.x suite — Logistique avancée (autorisations véhicules + sous-traitants + historique + stats)",
     description:
       "Module flotte étendu : #56 autorisations véhicules par employé (B/C/CE/CACES + dates expiration), gestion fine des sous-traitants (carnet, tarifs, notes), historique complet des trajets par véhicule et par chauffeur, stats consommation et km par chantier. Pré-requis pour facturation interne flotte.",
   },
@@ -3056,12 +3018,12 @@ const PLANNED: RoadmapPlanned[] = [
       "Enrichissement de l'algorithme déterministe v0.35 par Claude API via edge function proxy : skill-based reasoning sur historique de l'employé (déjà bossé avec l'équipe ? sur ce client ? sur ce type d'objet ?), tools structurés (lecture affaires + assignations passées), fallback automatique sur v0.35 si timeout/erreur, cache 1h sur même contexte, hard cap mensuel d'appels (alerte admin avant blocage). Tier CDI/CDD avant intermittent conservé. PAS d'autres intégrations Claude (pas de support conv, pas de génération texte).",
   },
 
-  // ========== v0.40.x — Widgets dashboard humanisation (Phases 1-3 LIVRÉES) ==========
+  // ========== Phase 4 Dashboard (reste à livrer) ==========
   {
-    priority: "haute",
-    title: "v0.40.x — Dashboard cohésion équipe (5/6 widgets livrés)",
+    priority: "moyenne",
+    title: "Dashboard — Phase 4 Quiz scéno (90+ questions)",
     description:
-      "✅ Livré : Anniversaires du jour (confetti CSS, RGPD pas d'année), Saint du jour (liste FR hardcodée + match prénom employés), Top constructeur de la semaine (Σ heures validées atelier, reset lundi), Chef projet du mois (ratio livraisons à temps, reset 1er du mois), Astuce de la semaine (rotation hebdo 25 tips). Tous masquables via sheet « Personnaliser », auto-hide si 0 donnée, accessibles admin/chef/employé via whitelist mise à jour. Reste à livrer Phase 4 : Quiz scéno (90+ questions, table user_quiz_responses, score + streak) — sub-tour suivant car nécessite migration DB. Spec : mem://features/dashboard-widgets-sympa.",
+      "Dernier widget de la série « dashboard cohésion équipe » (Phases 1-3 livrées en v0.40.x : anniversaires, saint du jour, top constructeur, chef du mois, astuce hebdo). Quiz tournant avec table `user_quiz_responses`, score + streak hebdomadaire, classement opt-in. Nécessite migration DB dédiée.",
   },
 
   // ========== Backlog HEURES — REPORTING ==========
@@ -3072,25 +3034,12 @@ const PLANNED: RoadmapPlanned[] = [
       "Onglet centralisé heures saisies + à valider, 8 filtres combinables (chantier / employé / date / semaine / mois / devis / nuit / statut), export Excel / CSV / PDF / SILAE. KPIs (total / validées / nuit / coût estimé), pagination 50, sort colonnes, filtres persistés en URL, vue mobile cards. Admin voit tout, chef filtré RLS sur son équipe. Spec complète : mem://features/centre-analyse-heures. ~8-10h.",
   },
 
-  // ========== v0.26+ ==========
+  // ========== Conformité / RH ==========
   {
     priority: "moyenne",
-    title: "v0.26+ — Pièce d'identité (CNI / passeport) sur profil utilisateur",
+    title: "Pièce d'identité (CNI / passeport) sur profil utilisateur",
     description:
-      "🔮 Ajouter upload sécurisé de pièce d'identité (CNI ou passeport) sur le profil employé : champ photo recto/verso, type de pièce, numéro, date d'expiration. Stockage privé (bucket Lovable Cloud avec RLS stricte : seuls admin + l'employé lui-même peuvent voir), expiration alerte 60j avant. Use case : conformité chantiers, contrôle accès sites sécurisés.",
-  },
-  // ========== v0.20.1 — LIVRÉ (cf entrée plus haut) ==========
-  {
-    priority: "basse",
-    title: "v0.20.1 — Suggestion intelligente type véhicule pour staffing interne",
-    description:
-      "Aujourd'hui par défaut Camion 20m³ pour le bouton « Staffer véhicule interne ». À itérer : suggérer le type selon le volume cumulé estimé des objets prêts à livrer (VL si < 3 m³, Camion 20m³ entre 3-15 m³, Poids lourd > 15 m³). Nécessite de saisir un volume estimé sur fabrication_objets.",
-  },
-  {
-    priority: "basse",
-    title: "v0.20.1 — Tests Vitest triggers DB fabrication",
-    description:
-      "Couvrir en tests d'intégration : trigger sync_fabrication_etapes_on_flags_change (bascule auto a_faire ↔ non_applicable), trigger d'historique fabrication_etapes_historique, transitions de statut a_faire → en_cours → termine. Aujourd'hui validés manuellement uniquement.",
+      "Upload sécurisé de pièce d'identité (CNI ou passeport) sur le profil employé : champ photo recto/verso, type de pièce, numéro, date d'expiration. Stockage privé (bucket Lovable Cloud avec RLS stricte : seuls admin + l'employé lui-même peuvent voir), expiration alerte 60j avant. Use case : conformité chantiers, contrôle accès sites sécurisés.",
   },
 
   // ========== HAUTE PRIORITÉ ==========
@@ -3108,12 +3057,6 @@ const PLANNED: RoadmapPlanned[] = [
   },
   {
     priority: "haute",
-    title: "Suggestions automatiques de staffing (IA Lovable AI)",
-    description:
-      "À l'ouverture du planning, proposer automatiquement les meilleurs candidats pour combler les manques d'un devis : disponibles, bon métier, pas en absence, expérience similaire (déjà bossé sur le même client). Score + raisons. Powered by gemini-2.5-flash.",
-  },
-  {
-    priority: "haute",
     title: "Détection de conflits de planning en temps réel",
     description:
       "Avant validation d'une assignation : vérifier double-booking (déjà sur autre chantier le même slot), absence validée chevauchante, dépassement budget heures du devis. Dialog bloquant ou warning selon gravité.",
@@ -3122,7 +3065,7 @@ const PLANNED: RoadmapPlanned[] = [
     priority: "haute",
     title: "Contrainte EXCLUDE anti-chevauchement sur la table absences",
     description:
-      "Migration : CREATE EXTENSION btree_gist + contrainte EXCLUDE (employe_id, daterange, slot) pour empêcher tout chevauchement d'absences en base, en complément du dialog de conflits côté UI.",
+      "Migration : CREATE EXTENSION btree_gist + contrainte EXCLUDE (employe_id, daterange, slot) pour empêcher tout chevauchement d'absences en base, en complément du dialog de conflits déjà livré côté UI (v0.39.1).",
   },
   {
     priority: "haute",
@@ -3141,6 +3084,12 @@ const PLANNED: RoadmapPlanned[] = [
     title: "Dashboard direction : marge prévisionnelle par chantier",
     description:
       "Vue admin avec, par affaire en cours : montant devis HT, coût main d'œuvre prévu (heures × taux par métier), coût flotte, marge brute prévisionnelle vs réelle (heures validées). Alertes sur les chantiers qui dérapent.",
+  },
+  {
+    priority: "haute",
+    title: "Vue Gantt par chantier (timeline visuelle)",
+    description:
+      "Représentation visuelle horizontale des affaires sur calendrier (montage → démontage), avec barres colorées par chef ou statut. Pratique pour visualiser le carnet de commandes et anticiper les conflits multi-chantiers. Complète la feuille de route quotidienne livrée en v0.21.",
   },
 
   // ========== MOYENNE PRIORITÉ ==========
@@ -3207,61 +3156,26 @@ const PLANNED: RoadmapPlanned[] = [
     description:
       "Étendre la command palette pour rechercher au-delà des routes : affaires (numéro/nom/client), employés (prénom/nom), devis. Navigation directe vers la fiche.",
   },
-
-  // ========== v0.21.1 — Findings audit v0.21 + chantiers reportés ==========
-  {
-    priority: "haute",
-    title: "v0.21.1 — Garde RBAC UI sur /saisie-pour-equipe",
-    description:
-      "🔴 HIGH identifié à l'audit v0.21 : la route /saisie-pour-equipe n'a pas de garde useAuth côté UI (la RLS protège mais l'UI est accessible aux employés et trompeuse). Ajouter Navigate vers /dashboard si !isChef && !isAdmin, et conditionner l'item sidebar sur le même critère.",
-  },
   {
     priority: "moyenne",
-    title: "v0.21.1 — Durcissement RLS heures_saisies_self_update (Option B)",
+    title: "Pagination intra-jour pour PDF feuille de route chargée",
     description:
-      "🟡 MEDIUM identifié à l'audit v0.21 : la policy update employé n'inclut pas can_saisie_on_affaire(affaire_id, date), ce qui permet à un employé d'éditer une saisie en brouillon/soumis après que l'affaire est fermée. Cohérence Option B à durcir côté RLS.",
+      "Identifié à l'audit v0.21 : aucun test ni garde sur le débordement de page si plus de 5 chantiers dans la même journée. Ajouter pagination intra-jour ou réduction automatique de la taille de bloc.",
   },
-  {
-    priority: "moyenne",
-    title: "v0.21.1 — UNIQUE INDEX partiel chef_jour (anti race condition)",
-    description:
-      "🟡 MEDIUM identifié à l'audit v0.21 : sous bulk-insert simultané sur même (affaire, date) avec plusieurs est_chef_jour=true, le trigger BEFORE peut produire un état final unique mais le verrouillage est ligne par ligne. Ajouter CREATE UNIQUE INDEX ... ON assignations(affaire_id, date) WHERE est_chef_jour = true comme garde-fou DB.",
-  },
-  {
-    priority: "moyenne",
-    title: "v0.21.1 — Tests d'intégration SQL (audit v0.21 gaps)",
-    description:
-      "🟡 MEDIUM identifié à l'audit v0.21 : 4 cas non couverts par tests automatisés — can_saisie_on_affaire avec date_demontage NULL + statut termine, set_saisie_authorship quand chef = employé (auto-saisie), trigger enforce_unique_chef_jour (bascule), export Excel feuille de route avec 0 chantier ce jour. À ajouter via tests RPC ou tests purs sur la logique TS.",
-  },
-  {
-    priority: "moyenne",
-    title: "v0.21.1 — Pagination intra-jour pour PDF feuille de route chargée",
-    description:
-      "🟡 MEDIUM identifié à l'audit v0.21 : aucun test ni garde sur le débordement de page si plus de 5 chantiers dans la même journée. Ajouter pagination intra-jour ou réduction automatique de la taille de bloc.",
-  },
-
-  // ========== Chantiers prioritaires identifiés à l'audit v0.20 — reportés ==========
-  {
-    priority: "haute",
-    title: "Vue Gantt par chantier (timeline visuelle)",
-    description:
-      "Identifié comme prioritaire à l'audit v0.20. Représentation visuelle horizontale des affaires sur calendrier (montage → démontage), avec barres colorées par chef ou statut. Pratique pour visualiser le carnet de commandes et anticiper les conflits multi-chantiers. Complète la feuille de route quotidienne livrée en v0.21.",
-  },
-  {
-    priority: "haute",
-    title: "Module Absences / Congés annuels (compteurs + soldes)",
-    description:
-      "Identifié comme prioritaire à l'audit v0.20. Suivi des compteurs CP / RTT par employé : acquis, posés, restants. Affichage sur fiche employé + alerte chef si solde insuffisant lors d'une demande d'absence. Justificatifs photo (cf. carte dédiée).",
-  },
-  {
-    priority: "moyenne",
-    title: "Consolidation des redondances code (audit v0.20)",
-    description:
-      "Identifié à l'audit v0.20. Plusieurs helpers et hooks dupliqués (notamment autour de planning/data, employes/affaires). Audit dédié + refactor en lib/ partagée pour réduire la dette technique avant v0.22.",
-  },
-
 
   // ========== BASSE PRIORITÉ ==========
+  {
+    priority: "basse",
+    title: "Suggestion intelligente type véhicule pour staffing interne",
+    description:
+      "Aujourd'hui par défaut Camion 20m³ pour le bouton « Staffer véhicule interne ». À itérer : suggérer le type selon le volume cumulé estimé des objets prêts à livrer (VL si < 3 m³, Camion 20m³ entre 3-15 m³, Poids lourd > 15 m³). Nécessite de saisir un volume estimé sur fabrication_objets.",
+  },
+  {
+    priority: "basse",
+    title: "Tests Vitest triggers DB fabrication",
+    description:
+      "Couvrir en tests d'intégration : trigger sync_fabrication_etapes_on_flags_change (bascule auto a_faire ↔ non_applicable), trigger d'historique fabrication_etapes_historique, transitions de statut a_faire → en_cours → termine. Aujourd'hui validés manuellement uniquement.",
+  },
   {
     priority: "basse",
     title: "Heuristique de mapping métier améliorée + override en bulk",
