@@ -36,7 +36,7 @@ import {
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { listFabObjetsForWizard } from "@/server/staffing-plan-create.functions";
+import { listFabObjetsForWizard, getActivePlansForAffaire } from "@/server/staffing-plan-create.functions";
 import { createPlanExpress } from "@/server/staffing-express.functions";
 import { useWizardPrefetch } from "@/hooks/use-wizard-prefetch";
 
