@@ -1,14 +1,16 @@
 // v0.35.2 / Sprint 2.1 — Vue Charge atelier multi-chantiers (chef+admin)
-// Drill-down : cellules CNC conflit + cellules pic global > 12 cliquables (Popover)
+// Lot 2.2 — CNC conflit converti en Dialog (drill-down + plus de place), férié FR marqué.
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Link } from "@tanstack/react-router";
 import { Loader2, ChevronLeft, ChevronRight, AlertTriangle, Activity, Hammer, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getChargeAtelier } from "@/server/staffing.functions";
 import { workingDaysBetween, formatShortDate, formatDayName, METIER_COLOR, METIER_LABEL, METIER_ORDER } from "./gantt-helpers";
+import { isJourFerieFR, labelJourFerieFR } from "@/lib/jours-feries";
 import type { MetierKey } from "@/lib/staffing/types";
 import { METIER_ID } from "@/lib/staffing/types";
 
