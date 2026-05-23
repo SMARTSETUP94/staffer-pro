@@ -55,19 +55,36 @@ function todayISO(): string {
 function defaultDateFin(dateMontage: string | null | undefined): string {
   if (dateMontage) {
     try {
-      return format(addDays(parseISO(dateMontage), -2), "yyyy-MM-dd");
+      // Recule de 2 jours OUVRÉS avant la date de montage (sécurité chantier).
+      return shiftBusinessDays(format(parseISO(dateMontage), "yyyy-MM-dd"), -2, false);
     } catch {
       // ignore
     }
   }
-  return format(addDays(new Date(), 30), "yyyy-MM-dd");
+  // 30 jours ouvrés par défaut depuis aujourd'hui
+  return shiftBusinessDays(format(new Date(), "yyyy-MM-dd"), 30, false);
+}
+
+/** Décale une date ISO de N jours ouvrés (positif ou négatif). includeWeekends=true → jours calendaires. */
+function shiftBusinessDays(dateIso: string, days: number, includeWeekends: boolean): string {
+  if (includeWeekends) {
+    return format(addDays(parseISO(dateIso), days), "yyyy-MM-dd");
+  }
+  let remaining = Math.abs(days);
+  const step = days >= 0 ? 1 : -1;
+  let cur = parseISO(dateIso);
+  while (remaining > 0) {
+    cur = addDays(cur, step);
+    const iso = format(cur, "yyyy-MM-dd");
+    if (!isJourNonOuvreFR(iso)) remaining -= 1;
+  }
+  return format(cur, "yyyy-MM-dd");
 }
 
 function estimateDateDebut(dateFinIso: string, totalH: number, includeWeekends: boolean): string {
-  // Avec WE inclus, vitesse théorique × (7/5) → divise les semaines par 7/5.
-  const weeks = Math.ceil((totalH / 40) * 1.3 * (includeWeekends ? 5 / 7 : 1));
-  const days = Math.max(7, weeks * 7);
-  return format(addDays(parseISO(dateFinIso), -days), "yyyy-MM-dd");
+  // Estimation : ~6h productives par jour ouvré, +30% buffer aléas → recule en jours OUVRÉS.
+  const joursOuvres = Math.max(5, Math.ceil((totalH / 6) * 1.3));
+  return shiftBusinessDays(dateFinIso, -joursOuvres, includeWeekends);
 }
 
 const STEPS = ["Création", "Calcul", "Auto-staff", "Publication"] as const;
