@@ -326,3 +326,239 @@ export const assignPersonneToObjetStep = createServerFn({ method: "POST" })
       details,
     };
   });
+
+/* ================================================================== */
+/* Lot 8.2 — getObjetFiche : identité complète + matrice heures        */
+/* ================================================================== */
+export interface ObjetFicheIdentite {
+  id: string;
+  affaire_id: string;
+  reference: string;
+  nom: string;
+  quantite: number;
+  commentaire: string | null;
+  respo_fab_id: string | null;
+  respo_fab_name: string | null;
+  type_finition: string;
+  budget_materiaux: number;
+  a_dessiner: boolean;
+  a_construire: boolean;
+  est_brut: boolean;
+  a_emballer: boolean;
+  a_usiner: boolean;
+  heures_prevues_be: number;
+  heures_prevues_numerique: number;
+  heures_prevues_bois: number;
+  heures_prevues_metal: number;
+  heures_prevues_peinture: number;
+  heures_prevues_tapisserie: number;
+  heures_prevues_manutention: number;
+  archive: boolean;
+}
+
+export interface ObjetFicheAffaire {
+  id: string;
+  numero: string;
+  nom: string;
+}
+
+export interface GetObjetFicheResult {
+  objet: ObjetFicheIdentite;
+  affaire: ObjetFicheAffaire;
+  heures: ObjetHeuresMetier[];
+}
+
+export const getObjetFiche = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { objetId: string }) =>
+    z.object({ objetId: z.string().uuid() }).parse(d),
+  )
+  .handler(async ({ data, context }): Promise<GetObjetFicheResult> => {
+    const { supabase } = context;
+
+    // 1. Objet + identité (RLS scope)
+    const { data: obj, error: oErr } = await supabase
+      .from("fabrication_objets")
+      .select(
+        "id, affaire_id, reference, nom, quantite, commentaire, respo_fab_id, type_finition, budget_materiaux, a_dessiner, a_construire, est_brut, a_emballer, a_usiner, heures_prevues_be, heures_prevues_numerique, heures_prevues_bois, heures_prevues_metal, heures_prevues_peinture, heures_prevues_tapisserie, heures_prevues_manutention, archive",
+      )
+      .eq("id", data.objetId)
+      .maybeSingle();
+    if (oErr) throw new Error(oErr.message);
+    if (!obj) throw new Error("Objet introuvable ou accès refusé");
+
+    // 2. Respo fab name (optionnel)
+    let respo_fab_name: string | null = null;
+    if (obj.respo_fab_id) {
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("display_name")
+        .eq("id", obj.respo_fab_id)
+        .maybeSingle();
+      respo_fab_name = (prof as { display_name: string | null } | null)?.display_name ?? null;
+    }
+
+    // 3. Affaire (numero + nom pour breadcrumb)
+    const { data: aff } = await supabase
+      .from("affaires")
+      .select("id, numero, nom")
+      .eq("id", obj.affaire_id)
+      .maybeSingle();
+
+    // 4. Matrice heures (réutilise la logique getObjetTeam mais sans personnes)
+    const { data: metiers } = await supabase
+      .from("metiers")
+      .select("id, code, libelle")
+      .order("id");
+
+    const { data: stepsRows } = await supabase
+      .from("staffing_plan_step")
+      .select("metier_id, pers, span_demi_jours, span_days, h_par_jour")
+      .eq("objet_id", data.objetId);
+    const planifByMetier = new Map<number, number>();
+    for (const s of (stepsRows ?? []) as Array<{
+      metier_id: number;
+      pers: number;
+      span_demi_jours: number | null;
+      span_days: number;
+      h_par_jour: number;
+    }>) {
+      // Formule v0.39.0b/c : pers × span_demi × 4h (H_HALF).
+      // Fallback span_days × h_par_jour si span_demi_jours pas renseigné.
+      const h = s.span_demi_jours != null
+        ? (s.pers ?? 0) * s.span_demi_jours * 4
+        : (s.pers ?? 0) * (s.span_days ?? 0) * (s.h_par_jour ?? 0);
+      planifByMetier.set(s.metier_id, (planifByMetier.get(s.metier_id) ?? 0) + h);
+    }
+
+    const { data: reelRows } = await supabaseAdmin
+      .from("v_objet_heures_consolidees")
+      .select("metier_id, heures_reelles")
+      .eq("objet_id", data.objetId);
+    const reelByMetier = new Map<number, number>();
+    for (const r of (reelRows ?? []) as Array<{ metier_id: number; heures_reelles: number }>) {
+      reelByMetier.set(r.metier_id, Number(r.heures_reelles ?? 0));
+    }
+
+    const heures: ObjetHeuresMetier[] = (metiers ?? [] as Array<{ id: number; code: string; libelle: string }>).map(
+      (m: { id: number; code: string; libelle: string }) => {
+        const prevuCol = METIER_CODE_TO_PREVU_COL[m.code];
+        const prevu = prevuCol
+          ? Number((obj as unknown as Record<string, number>)[prevuCol] ?? 0)
+          : 0;
+        const planif = planifByMetier.get(m.id) ?? 0;
+        const reel = reelByMetier.get(m.id) ?? 0;
+        return {
+          metier_id: m.id,
+          metier_code: m.code,
+          metier_libelle: m.libelle,
+          heures_prevues: prevu,
+          heures_planifiees: Number(planif.toFixed(2)),
+          heures_reelles: Number(reel.toFixed(2)),
+          progression_pct: prevu > 0 ? Math.round((reel / prevu) * 100) : null,
+        };
+      },
+    );
+
+    return {
+      objet: { ...(obj as ObjetFicheIdentite), respo_fab_name },
+      affaire: (aff as ObjetFicheAffaire | null) ?? { id: obj.affaire_id, numero: "?", nom: "?" },
+      heures,
+    };
+  });
+
+/* ================================================================== */
+/* Lot 8.2 — updateObjetIdentite : édition role-aware                  */
+/* ================================================================== */
+const UpdateInputSchema = z.object({
+  objetId: z.string().uuid(),
+  patch: z
+    .object({
+      nom: z.string().min(1).max(200).optional(),
+      quantite: z.number().int().min(1).max(10000).optional(),
+      commentaire: z.string().max(2000).nullable().optional(),
+      respo_fab_id: z.string().uuid().nullable().optional(),
+      heures_prevues_be: z.number().min(0).max(10000).optional(),
+      heures_prevues_numerique: z.number().min(0).max(10000).optional(),
+      heures_prevues_bois: z.number().min(0).max(10000).optional(),
+      heures_prevues_metal: z.number().min(0).max(10000).optional(),
+      heures_prevues_peinture: z.number().min(0).max(10000).optional(),
+      heures_prevues_tapisserie: z.number().min(0).max(10000).optional(),
+      heures_prevues_manutention: z.number().min(0).max(10000).optional(),
+    })
+    .refine((p) => Object.keys(p).length > 0, { message: "Patch vide" }),
+});
+
+export interface UpdateObjetIdentiteResult {
+  ok: boolean;
+  applied: string[];
+  rejected: string[];
+}
+
+/** Mapping champ logique → liste de colonnes DB qu'il autorise. */
+const FIELD_TO_COLUMNS: Record<string, string[]> = {
+  nom: ["nom"],
+  quantite: ["quantite"],
+  commentaire: ["commentaire"],
+  respo_fab_id: ["respo_fab_id"],
+  heures_prevues: [
+    "heures_prevues_be",
+    "heures_prevues_numerique",
+    "heures_prevues_bois",
+    "heures_prevues_metal",
+    "heures_prevues_peinture",
+    "heures_prevues_tapisserie",
+    "heures_prevues_manutention",
+  ],
+};
+
+export const updateObjetIdentite = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => UpdateInputSchema.parse(d))
+  .handler(async ({ data, context }): Promise<UpdateObjetIdentiteResult> => {
+    const { supabase, userId } = context;
+
+    // 1. Vérif accès via RLS (lecture)
+    await assertUserCanAccessObjet(supabase, data.objetId);
+
+    // 2. Reconstituer la matrice côté serveur (defense in depth — on ne
+    // se base PAS sur ce que le client a envoyé)
+    const { data: rolesRows } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId);
+    const roles = (rolesRows ?? []).map((r: { role: string }) => r.role);
+    const { getEditableFields } = await import("@/lib/objet-fiche-permissions");
+    const allowedFields = getEditableFields(roles);
+
+    // Construire la liste des colonnes autorisées
+    const allowedCols = new Set<string>();
+    for (const f of allowedFields) {
+      for (const c of FIELD_TO_COLUMNS[f] ?? []) allowedCols.add(c);
+    }
+
+    // 3. Filtrer le patch
+    const applied: string[] = [];
+    const rejected: string[] = [];
+    const finalPatch: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(data.patch)) {
+      if (allowedCols.has(k)) {
+        finalPatch[k] = v;
+        applied.push(k);
+      } else {
+        rejected.push(k);
+      }
+    }
+
+    if (Object.keys(finalPatch).length === 0) {
+      return { ok: false, applied, rejected };
+    }
+
+    const { error } = await supabase
+      .from("fabrication_objets")
+      .update(finalPatch)
+      .eq("id", data.objetId);
+    if (error) throw new Error(error.message);
+
+    return { ok: true, applied, rejected };
+  });
