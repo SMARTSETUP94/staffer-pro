@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Loader2, Plus, Upload, MoreVertical, Pencil, Truck, Send } from "lucide-react";
+import { Loader2, Plus, Upload, MoreVertical, Pencil, Truck, Send, ExternalLink } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { useFeatureFlag } from "@/hooks/use-feature-flag";
+import { useCapability } from "@/hooks/use-capability";
 import {
   DropdownMenu,
   DropdownMenuContent,
