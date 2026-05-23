@@ -73,8 +73,10 @@ function buildSections(role: EffRole, validationCount: number, contratsRhCount: 
       label: "Pilotage",
       items: [
         { title: "Tableau de bord", url: "/dashboard", icon: LayoutDashboard, show: () => true },
+        { title: "Inbox", url: "/inbox", icon: Inbox, show: () => true },
         { title: "Planning", url: "/planning", icon: Calendar, show: () => true },
       ],
+
     },
     {
       label: "Chantiers",
