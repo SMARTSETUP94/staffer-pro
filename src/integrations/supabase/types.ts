@@ -604,6 +604,33 @@ export type Database = {
           },
         ]
       }
+      capabilities: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          key: string
+          label: string
+          sort_order: number
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description?: string | null
+          key: string
+          label: string
+          sort_order?: number
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          key?: string
+          label?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
       chantier_metier_config: {
         Row: {
           affaire_id: string
@@ -2605,6 +2632,38 @@ export type Database = {
           },
         ]
       }
+      role_capabilities: {
+        Row: {
+          capability: string
+          granted: boolean
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          capability: string
+          granted?: boolean
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          capability?: string
+          granted?: boolean
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "role_capabilities_capability_fkey"
+            columns: ["capability"]
+            isOneToOne: false
+            referencedRelation: "capabilities"
+            referencedColumns: ["key"]
+          },
+        ]
+      }
       sous_traitants: {
         Row: {
           actif: boolean
@@ -3816,6 +3875,10 @@ export type Database = {
         }
         Returns: string
       }
+      current_user_has_capability: {
+        Args: { _cap_key: string }
+        Returns: boolean
+      }
       current_user_is_chef_on_affaire: {
         Args: { _affaire_id: string }
         Returns: boolean
@@ -4106,6 +4169,10 @@ export type Database = {
         Args: { _affaire_id: string }
         Returns: boolean
       }
+      user_has_capability: {
+        Args: { _cap_key: string; _user_id: string }
+        Returns: boolean
+      }
       user_is_mentioned_on_affaire: {
         Args: { _affaire_id: string }
         Returns: boolean
@@ -4116,7 +4183,12 @@ export type Database = {
       adresse_favorite_type: "entrepot" | "client" | "fournisseur" | "autre"
       affaire_phase: "opportunite" | "signe"
       affaire_statut: "prospect" | "en_cours" | "termine" | "annule"
-      app_role: "admin" | "chef_chantier" | "employe" | "chef_metier_scoped"
+      app_role:
+        | "admin"
+        | "chef_chantier"
+        | "employe"
+        | "chef_metier_scoped"
+        | "rh"
       autorisation_vehicule_type:
         | "PERMIS_B"
         | "PERMIS_C"
@@ -4352,7 +4424,13 @@ export const Constants = {
       adresse_favorite_type: ["entrepot", "client", "fournisseur", "autre"],
       affaire_phase: ["opportunite", "signe"],
       affaire_statut: ["prospect", "en_cours", "termine", "annule"],
-      app_role: ["admin", "chef_chantier", "employe", "chef_metier_scoped"],
+      app_role: [
+        "admin",
+        "chef_chantier",
+        "employe",
+        "chef_metier_scoped",
+        "rh",
+      ],
       autorisation_vehicule_type: [
         "PERMIS_B",
         "PERMIS_C",
