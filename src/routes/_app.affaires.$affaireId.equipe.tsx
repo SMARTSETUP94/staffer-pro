@@ -36,20 +36,34 @@ function AffaireEquipePage() {
     let cancelled = false;
     (async () => {
       setLoading(true);
-      const { data } = await supabase
+      const { data: histo } = await supabase
         .from("affaire_equipe_historique")
         .select(
-          "employe_id, chef_id, type_contrat, nb_demi_jours, nb_jours_distincts, premier_jour, dernier_jour, presence_pct_moyen, a_refuse, a_ete_absent, derniere_assignation_at, employe:employes!affaire_equipe_historique_employe_id_fkey(id, nom, prenom, poste_principal), chef:employes!affaire_equipe_historique_chef_id_fkey(id, nom, prenom)",
+          "employe_id, chef_id, type_contrat, nb_demi_jours, nb_jours_distincts, premier_jour, dernier_jour, presence_pct_moyen, a_refuse, a_ete_absent, derniere_assignation_at",
         )
         .eq("affaire_id", affaireId);
+      const ids = Array.from(
+        new Set([...(histo ?? []).map((r: any) => r.employe_id), ...(histo ?? []).map((r: any) => r.chef_id)]),
+      );
+      const { data: emps } = ids.length
+        ? await supabase.from("employes").select("id, nom, prenom, poste_principal").in("id", ids)
+        : { data: [] as any[] };
+      const empMap = new Map((emps ?? []).map((e: any) => [e.id, e]));
       if (cancelled) return;
-      setRows((data ?? []) as unknown as Row[]);
+      setRows(
+        ((histo ?? []) as any[]).map((r) => ({
+          ...r,
+          employe: empMap.get(r.employe_id),
+          chef: empMap.get(r.chef_id),
+        })) as Row[],
+      );
       setLoading(false);
     })();
     return () => {
       cancelled = true;
     };
   }, [affaireId]);
+
 
   const sorted = useMemo(() => {
     const r = [...rows];
