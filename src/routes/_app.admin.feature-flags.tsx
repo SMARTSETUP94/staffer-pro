@@ -12,7 +12,7 @@
  */
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Plus, Trash2, Save, X, Search, Flag } from "lucide-react";
+import { Plus, Trash2, Save, X, Search } from "lucide-react";
 import { toast } from "sonner";
 import { RoleGuard } from "@/components/auth/RoleGuard";
 import { PageHeader } from "@/components/PageHeader";
@@ -129,10 +129,11 @@ function FeatureFlagsAdminPage() {
   return (
     <div className="container mx-auto p-6 space-y-4">
       <PageHeader
-        icon={Flag}
+        eyebrow="Admin / Plateforme"
         title="Feature Flags"
         description="Active progressivement les nouvelles features par rôle ou par utilisateur."
       />
+
 
       <Card>
         <CardContent className="pt-6 space-y-4">
