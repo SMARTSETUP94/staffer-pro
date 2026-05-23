@@ -16,6 +16,8 @@ import { useValidationCount } from "@/hooks/use-validation-count";
 import { useContratsRhCount } from "@/hooks/use-contrats-rh-count";
 import { useCapabilitiesSet } from "@/hooks/use-capability";
 import { useFeatureFlag } from "@/hooks/use-feature-flag";
+import { useVocab } from "@/hooks/use-vocab";
+import type { VocabKey } from "@/lib/labels";
 
 import { ViewAsSwitcher } from "./ViewAsSwitcher";
 
@@ -50,7 +52,7 @@ interface NavSection {
 }
 
 
-function buildSections(role: EffRole, validationCount: number, contratsRhCount: number): NavSection[] {
+function buildSections(role: EffRole, validationCount: number, contratsRhCount: number, vocab: Record<VocabKey, string>): NavSection[] {
   const isAdmin = role === "admin";
 
   // ===== Vue Employé : items flat (gating au niveau du template) =====
@@ -96,14 +98,14 @@ function buildSections(role: EffRole, validationCount: number, contratsRhCount: 
         { title: "Intermittents", url: "/interimaires", icon: Trophy, cap: "employes.view" },
         { title: "Absences", url: "/absences", icon: CalendarOff, cap: "heures.equipe.saisir" },
         {
-          title: "Validation heures",
+          title: vocab.validerHeures,
           url: "/validation-heures",
           icon: ClipboardCheck,
           cap: "heures.valider",
           count: validationCount,
         },
         { title: "Saisie pour l'équipe", url: "/saisie-pour-equipe", icon: ClipboardList, cap: "heures.equipe.saisir" },
-        { title: "Staffer rapide", url: "/staffer-mobile", icon: Smartphone, cap: "staffing.assignations.edit" },
+        { title: vocab.assignerPonctuel, url: "/staffer-mobile", icon: Smartphone, cap: "staffing.assignations.edit" },
         { title: "Module RH", url: "/rh", icon: FileSignature, cap: "rh.hub.view" },
         { title: "Contrats RH", url: "/rh/contrats", icon: FileSignature, cap: "contrats.view", count: contratsRhCount },
         { title: "Analyse heures", url: "/heures-analyse", icon: Clock, cap: "heures.audit" },
@@ -186,13 +188,14 @@ export function AppSidebar() {
   const validationCount = useValidationCount();
   const contratsRhCount = useContratsRhCount();
   const { data: caps, isLoading: capsLoading } = useCapabilitiesSet();
+  const vocab = useVocab();
   // Lot 7.0d — Flag-first : gating capability-driven activable sélectivement.
   // Off (défaut) → fallback ancien comportement (tous les items visibles, sécurité
   // garantie par les guards beforeLoad sur chaque route). On → filtrage caps actif.
   const capGatingEnabled = useFeatureFlag("sidebar_capability_v1");
 
   // RBAC visuel : on s'appuie sur effectiveRole pour respecter le mode preview.
-  const rawSections = buildSections(effectiveRole as EffRole, validationCount, contratsRhCount);
+  const rawSections = buildSections(effectiveRole as EffRole, validationCount, contratsRhCount, vocab);
   const sections = (!capGatingEnabled || capsLoading)
     ? rawSections
     : rawSections

@@ -36,6 +36,7 @@ import { ExpressResultBanner } from "@/components/staffing/ExpressResultBanner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PageBreadcrumbs } from "@/components/PageBreadcrumbs";
+import { useVocab } from "@/hooks/use-vocab";
 
 interface ExpressSearch {
   express?: string;
@@ -67,6 +68,7 @@ export const Route = createFileRoute("/_app/staffing/$planId")({
 function StaffingPlanPage() {
   const { planId } = Route.useParams();
   const { isAdminOrChef, rolesLoaded, isAdmin } = useAuth();
+  const vocab = useVocab();
   const [planData, setPlanData] = useState<PlanData | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const ganttRef = useRef<GanttInteractifHandle>(null);
@@ -159,7 +161,7 @@ function StaffingPlanPage() {
       to: `/affaires/${affaireMeta.id}/fabrication`,
     });
   }
-  breadcrumbSteps.push({ label: `Plan staffing — ${statusLabel}` });
+  breadcrumbSteps.push({ label: `${vocab.planDeFab} — ${statusLabel}` });
 
   // Calcul jours / personnes affectés (pour le dialog publish)
   const stepsWithDate = (planData?.result.steps ?? []).filter(
@@ -217,7 +219,7 @@ function StaffingPlanPage() {
       )}
       <div className="flex items-start justify-between gap-2 flex-wrap">
         <div>
-          <p className="overline">— Auto-staffing Fabrication 5XXX</p>
+          <p className="overline">— {vocab.autoRemplirFabrication5XXX}</p>
           <div className="mt-1 flex items-center gap-2 flex-wrap">
             <h1 className="text-2xl font-bold text-foreground">Plan de staffing</h1>
             {isDraft && <Badge variant="outline" className="bg-muted">Brouillon</Badge>}

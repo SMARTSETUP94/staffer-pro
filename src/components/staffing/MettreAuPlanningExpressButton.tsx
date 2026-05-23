@@ -40,6 +40,7 @@ import { listFabObjetsForWizard, getActivePlansForAffaire } from "@/server/staff
 import { createPlanExpress } from "@/server/staffing-express.functions";
 import { useWizardPrefetch } from "@/hooks/use-wizard-prefetch";
 import { isJourNonOuvreFR } from "@/lib/jours-feries";
+import { useVocab } from "@/hooks/use-vocab";
 
 interface Props {
   affaireId: string;
@@ -87,7 +88,6 @@ function estimateDateDebut(dateFinIso: string, totalH: number, includeWeekends: 
   return shiftBusinessDays(dateFinIso, -joursOuvres, includeWeekends);
 }
 
-const STEPS = ["Création", "Calcul", "Auto-staff", "Publication"] as const;
 
 export function MettreAuPlanningExpressButton({
   affaireId,
@@ -95,6 +95,8 @@ export function MettreAuPlanningExpressButton({
   onConfigurer,
   disabled,
 }: Props) {
+  const vocab = useVocab();
+  const STEPS = ["Création", "Calcul", vocab.autoRemplirStepLabel, "Publication"] as const;
   const navigate = useNavigate();
   const expressFn = useServerFn(createPlanExpress);
   const listFn = useServerFn(listFabObjetsForWizard);

@@ -90,3 +90,74 @@ export function affaireRoleLabel(role: string | null | undefined): string {
   if (!role) return "—";
   return AFFAIRE_ROLE_LABELS[role] ?? role;
 }
+
+// ---------------------------------------------------------------------------
+// Vocabulaire métier 2026 (Lot 7.1 bis) — gated by feature flag vocab_metier_v1
+//
+// Règle : « Express » est conservé tel quel (mot français court et compris :
+// TGV Express, livraison Express). Les autres termes anglo-techniques
+// (Staffer, Auto-staffing) sont francisés vers Assigner / Auto-remplir.
+//
+// LEGACY = chaîne actuelle (rollback si flag off).
+// NEXT   = nouvelle chaîne (affichée si flag on).
+//
+// Cleanup deadline : 2 semaines après bascule enabled_globally=true.
+// Au-delà : supprimer VOCAB_LABELS_LEGACY + simplifier useVocab() en
+// retournant directement VOCAB_LABELS_NEXT.
+// ---------------------------------------------------------------------------
+
+export type VocabKey =
+  | "assignerEnLot"            // ex-"Staffer en bulk"
+  | "assignerPonctuel"         // ex-"Staffer rapide"
+  | "assignerPonctuelCourt"    // sidebar serrée
+  | "autoRemplir"              // ex-"Auto-staffing" (overline / inline)
+  | "autoRemplirComplet"       // ex-"Auto-staff complet" (bouton)
+  | "autoRemplirPlanComplet"   // ex-"Auto-staff plan complet"
+  | "autoRemplirTermine"       // ex-"Auto-staff terminé"
+  | "autoRemplirStepLabel"     // étape de progression ex-"Auto-staff"
+  | "autoRemplirFabrication"   // ex-"Auto-staffing fabrication"
+  | "autoRemplirFabrication5XXX" // ex-"Auto-staffing Fabrication 5XXX"
+  | "planDeFab"                // ex-"Plan staffing"
+  | "validerHeures"            // sidebar court
+  | "validerHeuresLong"        // meta title / page;
+
+export const VOCAB_LABELS_NEXT: Record<VocabKey, string> = {
+  assignerEnLot: "Assigner en lot",
+  assignerPonctuel: "Assigner ponctuel",
+  assignerPonctuelCourt: "Assigner vite",
+  autoRemplir: "Auto-remplir",
+  autoRemplirComplet: "Auto-remplir complet",
+  autoRemplirPlanComplet: "Auto-remplir plan complet",
+  autoRemplirTermine: "Auto-remplir terminé",
+  autoRemplirStepLabel: "Auto-remplir",
+  autoRemplirFabrication: "Auto-remplir fabrication",
+  autoRemplirFabrication5XXX: "Auto-remplir Fabrication 5XXX",
+  planDeFab: "Plan de fab",
+  validerHeures: "Valider heures",
+  validerHeuresLong: "Valider les heures de l'équipe",
+};
+
+export const VOCAB_LABELS_LEGACY: Record<VocabKey, string> = {
+  assignerEnLot: "Staffer en bulk",
+  assignerPonctuel: "Staffer rapide",
+  assignerPonctuelCourt: "Staffer rapide",
+  autoRemplir: "Auto-staffing",
+  autoRemplirComplet: "Auto-staff complet",
+  autoRemplirPlanComplet: "Auto-staff plan complet",
+  autoRemplirTermine: "Auto-staff terminé",
+  autoRemplirStepLabel: "Auto-staff",
+  autoRemplirFabrication: "Auto-staffing fabrication",
+  autoRemplirFabrication5XXX: "Auto-staffing Fabrication 5XXX",
+  planDeFab: "Plan staffing",
+  validerHeures: "Validation heures",
+  validerHeuresLong: "Validation heures",
+};
+
+/**
+ * Résout un libellé vocab en fonction de l'état du flag vocab_metier_v1.
+ * Pour usage NON-React (head/meta, server). Pour les composants, préférer
+ * useVocab() qui se branche sur le hook useFeatureFlag.
+ */
+export function resolveVocab(key: VocabKey, flagEnabled: boolean): string {
+  return flagEnabled ? VOCAB_LABELS_NEXT[key] : VOCAB_LABELS_LEGACY[key];
+}

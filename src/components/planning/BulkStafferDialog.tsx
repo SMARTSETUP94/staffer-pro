@@ -13,6 +13,7 @@ import { fr } from "date-fns/locale";
 import { AlertTriangle, Calendar as CalIcon, Loader2, Search, Users } from "lucide-react";
 import { toast } from "sonner";
 import { formatBusinessError } from "@/lib/business-errors";
+import { useVocab } from "@/hooks/use-vocab";
 import {
   Dialog,
   DialogContent,
@@ -76,6 +77,7 @@ export function BulkStafferDialog({
   assignations,
   onSaved,
 }: Props) {
+  const vocab = useVocab();
   // état formulaire
   const [affaireId, setAffaireId] = useState<string>("");
   const [devisId, setDevisId] = useState<string>("");
@@ -278,7 +280,7 @@ export function BulkStafferDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Users className="h-5 w-5 text-primary" />
-            Staffer en bulk
+            {vocab.assignerEnLot}
           </DialogTitle>
           <DialogDescription>
             Affecte plusieurs employés sur plusieurs jours d'un même chantier en une fois.

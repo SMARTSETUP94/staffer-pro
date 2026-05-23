@@ -11,14 +11,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-
-const SHORTCUTS: Array<{ keys: string[]; label: string }> = [
-  { keys: ["⌘", "S"], label: "Enregistrer les modifications" },
-  { keys: ["A"], label: "Auto-staff plan complet (brouillon uniquement)" },
-  { keys: ["P"], label: "Publier le plan (brouillon uniquement)" },
-  { keys: ["?"], label: "Afficher cette aide" },
-  { keys: ["Échap"], label: "Fermer dialog / popover" },
-];
+import { useVocab } from "@/hooks/use-vocab";
 
 interface Props {
   /** Callback déclenché par la touche A (auto-staff plan). null = désactivé. */
@@ -28,9 +21,18 @@ interface Props {
 }
 
 export function StaffingShortcutsHelp({ onAutoStaff, onPublish }: Props) {
+  const vocab = useVocab();
   const [open, setOpen] = useState(false);
+  const SHORTCUTS: Array<{ keys: string[]; label: string }> = [
+    { keys: ["⌘", "S"], label: "Enregistrer les modifications" },
+    { keys: ["A"], label: `${vocab.autoRemplirPlanComplet} (brouillon uniquement)` },
+    { keys: ["P"], label: "Publier le plan (brouillon uniquement)" },
+    { keys: ["?"], label: "Afficher cette aide" },
+    { keys: ["Échap"], label: "Fermer dialog / popover" },
+  ];
 
   useEffect(() => {
+
     const handler = (ev: KeyboardEvent) => {
       // ignore si focus dans input/textarea
       const target = ev.target as HTMLElement | null;
@@ -76,7 +78,7 @@ export function StaffingShortcutsHelp({ onAutoStaff, onPublish }: Props) {
             Raccourcis clavier
           </DialogTitle>
           <DialogDescription>
-            Pour aller plus vite sur la page Plan staffing.
+            Pour aller plus vite sur la page {vocab.planDeFab}.
           </DialogDescription>
         </DialogHeader>
         <ul className="divide-y divide-border">

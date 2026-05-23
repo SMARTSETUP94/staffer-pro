@@ -3,7 +3,10 @@ import {
   roleLabel,
   previewRoleLabel,
   affaireRoleLabel,
+  resolveVocab,
   USER_ROLE_OPTIONS,
+  VOCAB_LABELS_LEGACY,
+  VOCAB_LABELS_NEXT,
 } from "@/lib/labels";
 
 describe("labels — vocabulaire centralisé (Lot 7.1)", () => {
@@ -65,4 +68,35 @@ describe("labels — vocabulaire centralisé (Lot 7.1)", () => {
       expect(affaireRoleLabel("charge_affaires")).toBe("Chargé affaires");
     });
   });
+
+  describe("vocab métier (Lot 7.1 bis)", () => {
+    it("resolveVocab(flag=true) renvoie les NOUVEAUX libellés", () => {
+      expect(resolveVocab("assignerEnLot", true)).toBe("Assigner en lot");
+      expect(resolveVocab("autoRemplir", true)).toBe("Auto-remplir");
+      expect(resolveVocab("planDeFab", true)).toBe("Plan de fab");
+      expect(resolveVocab("validerHeures", true)).toBe("Valider heures");
+    });
+
+    it("resolveVocab(flag=false) renvoie les libellés LEGACY (rollback)", () => {
+      expect(resolveVocab("assignerEnLot", false)).toBe("Staffer en bulk");
+      expect(resolveVocab("autoRemplir", false)).toBe("Auto-staffing");
+      expect(resolveVocab("planDeFab", false)).toBe("Plan staffing");
+      expect(resolveVocab("validerHeures", false)).toBe("Validation heures");
+    });
+
+    it("Express n'apparaît dans aucune map (volontairement conservé tel quel)", () => {
+      const allLabels = [
+        ...Object.values(VOCAB_LABELS_NEXT),
+        ...Object.values(VOCAB_LABELS_LEGACY),
+      ].join(" | ");
+      expect(allLabels).not.toMatch(/Express/);
+    });
+
+    it("NEXT et LEGACY ont exactement les mêmes clés", () => {
+      expect(Object.keys(VOCAB_LABELS_NEXT).sort()).toEqual(
+        Object.keys(VOCAB_LABELS_LEGACY).sort(),
+      );
+    });
+  });
 });
+

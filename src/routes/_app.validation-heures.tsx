@@ -45,7 +45,7 @@ import { SaisieChefBadge } from "@/components/heures/SaisieChefBadge";
 import { UserCog } from "lucide-react";
 
 export const Route = createFileRoute("/_app/validation-heures")({
-  head: () => ({ meta: [{ title: "Validation heures — Planning chantiers" }] }),
+  head: () => ({ meta: [{ title: "Valider les heures de l'équipe — Planning chantiers" }] }),
   component: ValidationHeuresPage,
 });
 

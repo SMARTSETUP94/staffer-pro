@@ -35,6 +35,7 @@ import {
   getAffaireTypologie,
 } from "@/lib/affaire-typologie";
 import { countActiveAffairesByTypologie } from "@/lib/typologie-active-counts";
+import { useVocab } from "@/hooks/use-vocab";
 
 const PLANNING_SEARCH_DEFAULTS = { typo: [] as AffaireTypologie[] };
 
@@ -73,6 +74,7 @@ export const Route = createFileRoute("/_app/planning")({
 });
 
 function PlanningPage() {
+  const vocab = useVocab();
   const [weekStart, setWeekStart] = useState<Date>(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
   const weekEnd = addDays(weekStart, 6);
   const [tab, setTab] = useState<"cdi" | "interim" | "parchantier" | "parobjet" | "parpole">("cdi");
@@ -321,8 +323,8 @@ function PlanningPage() {
               className="h-8 px-2.5 sm:h-9 sm:px-3"
             >
               <Users className="mr-1.5 h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Staffer en bulk</span>
-              <span className="sm:hidden">Staffer</span>
+              <span className="hidden sm:inline">{vocab.assignerEnLot}</span>
+              <span className="sm:hidden">{vocab.assignerEnLot.split(" ")[0]}</span>
             </Button>
             <Button
               size="sm"
