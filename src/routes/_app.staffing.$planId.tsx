@@ -226,7 +226,7 @@ function StaffingPlanPage() {
                 Archivé (remplacé par version suivante)
               </Badge>
             )}
-            <Badge variant="secondary">v0.35</Badge>
+            
           </div>
           <p className="mt-1 font-mono text-xs text-muted-foreground">{planId}</p>
         </div>
