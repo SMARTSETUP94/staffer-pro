@@ -43,6 +43,8 @@ function AffaireDetailLayout() {
   const [loading, setLoading] = useState(true);
   const [confirmAction, setConfirmAction] = useState<"close" | "reopen" | null>(null);
   const [savingStatut, setSavingStatut] = useState(false);
+  const canSeeEquipe = useCapability("affaire.equipe.view");
+
 
   const fetchAffaire = async (id: string, signal?: { cancelled: boolean }) => {
     const { data } = await supabase
