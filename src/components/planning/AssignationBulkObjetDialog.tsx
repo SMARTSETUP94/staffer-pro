@@ -12,6 +12,7 @@ import { addDays, format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Calendar as CalIcon, Loader2, Search, Users } from "lucide-react";
 import { toast } from "sonner";
+import { useVocab } from "@/hooks/use-vocab";
 import {
   Dialog,
   DialogContent,
@@ -99,6 +100,7 @@ export function AssignationBulkObjetDialog({
   links,
   onSaved,
 }: Props) {
+  const vocab = useVocab();
   const [metierId, setMetierId] = useState<number | null>(null);
   const [slot, setSlot] = useState<Slot>("JOURNEE");
   const [heuresParJour, setHeuresParJour] = useState(8);
@@ -246,7 +248,7 @@ export function AssignationBulkObjetDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Users className="h-5 w-5 text-primary" />
-            Staffer en bulk — {objet.reference} {objet.nom}
+            {vocab.assignerEnLot} — {objet.reference} {objet.nom}
           </DialogTitle>
           <DialogDescription>
             Affectez plusieurs employés sur plusieurs jours pour cet objet.
