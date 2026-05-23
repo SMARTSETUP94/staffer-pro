@@ -26,18 +26,10 @@ interface Kpis {
 }
 
 function RhHubPage() {
-  const { isAdmin, isRh, rolesLoaded } = useAuth();
-  const navigate = useNavigate();
+  // Gating géré par requireCapability("rh.hub.view") en beforeLoad.
   const [kpis, setKpis] = useState<Kpis | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (!rolesLoaded) return;
-    if (!isAdmin && !isRh) {
-      navigate({ to: "/dashboard" });
-      return;
-    }
-  }, [rolesLoaded, isAdmin, isRh, navigate]);
 
   useEffect(() => {
     let cancelled = false;
