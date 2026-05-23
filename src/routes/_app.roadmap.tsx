@@ -44,9 +44,38 @@ interface RoadmapPlanned {
 const RELEASES: RoadmapRelease[] = [
   {
     date: "2026-05-23",
+    version: "v0.48.1",
+    title: "🔐 Lot 7.0 — Capabilities wiring & sécurisation routes (dette Bloc 0-6)",
+    entries: [
+      {
+        type: "refactor",
+        area: "Lot 7.0a — Migration capabilities",
+        title: "6 nouvelles capabilities + 6 rôles futurs seedés",
+        description:
+          "Ajout en base de 6 capabilities : `inbox.view`, `rh.hub.view`, `affaire.equipe.view`, `affaire.kpi.view`, `admin.permissions.manage`, `admin.feature_flags.manage`. Extension de l'enum `app_role` avec 6 rôles futurs prêts à l'emploi : `commercial`, `bureau_etude`, `atelier_chef`, `atelier_metier`, `logistique`, `poseur` (matrice de permissions par défaut seedée pour chacun). Les 11 rôles disposent maintenant d'une matrice fonctionnelle pré-configurée — modifiable à chaud via `/admin/permissions`.",
+      },
+      {
+        type: "feature",
+        area: "Lot 7.0b — Wiring capabilities",
+        title: "Helpers `requireCapability` + composant `<CapabilityGuard>`",
+        description:
+          "Nouveau helper `src/lib/capability-guard.ts` avec `requireCapability(capKey)` pour gating route-level dans `beforeLoad` (cache module 5 min, toast « Accès refusé » via sessionStorage + redirection /dashboard). Composant React `CapabilityGuard` pour rendu conditionnel (boutons, onglets, sections). Routes gatées : `/admin/permissions`, `/admin/feature-flags`, `/rh` (suppression check hardcodé legacy), `/affaires/$id/equipe`. Onglet « Équipe » et `AffaireKpiBar` désormais conditionnels via `useCapability`.",
+      },
+      {
+        type: "feature",
+        area: "Lot 7.0c — Tests E2E capabilities",
+        title: "5 specs E2E × 15 scénarios (succès + route directe + sidebar)",
+        description:
+          "6 fichiers dans `e2e/capabilities/` couvrant les 3 rôles (admin / chef / employé desktop) sur 5 routes sensibles (`/admin/permissions`, `/admin/feature-flags`, `/inbox`, `/affaires/$id/equipe`, `/rh`). Chaque rôle teste : succès (le bon rôle accède), échec route directe (mauvais rôle bloqué via `beforeLoad`), échec sidebar (entrée invisible). Helpers `visitAllowedRoutes` + `assertForbiddenRoutes` réutilisés depuis la battery role-smoke v0.34.x. Garde-fou anti-fuite RGPD validé.",
+      },
+    ],
+  },
+  {
+    date: "2026-05-23",
     version: "v0.48.0",
     title: "🏗️ Refonte UX/UI Staffer Pro — Blocs 0 à 6 (fondations + RH)",
     entries: [
+
       {
         type: "refactor",
         area: "Bloc 0 — Audit & Feature Flags",
@@ -2939,6 +2968,26 @@ const RELEASES: RoadmapRelease[] = [
 ];
 
 const PLANNED: RoadmapPlanned[] = [
+  // ========== Sprint v0.48.x — Suite refonte UX/UI (Lot 7.1 → 7.3) ==========
+  {
+    priority: "haute",
+    title: "Lot 7.1 — Vocabulaire UI centralisé (`labels.ts`)",
+    description:
+      "Création d'une source unique `src/lib/labels.ts` (helper `roleLabel()`) pour uniformiser l'affichage des rôles à travers les 9 surfaces UI qui divergent actuellement (« Chef d'équipe » / « Chef de chantier » / « Chef chantier » / « Chef de Chantier »). L'enum DB `chef_chantier` est conservé tel quel (RLS + 9 migrations + 7 helpers SECURITY DEFINER intouchables). Migration vocabulaire future = changer uniquement ce fichier. Inventaire `rg` complet validé (42 fichiers `src/`, 5 fichiers `e2e/`).",
+  },
+  {
+    priority: "haute",
+    title: "Lot 7.2 — Sidebar capability-driven",
+    description:
+      "Refonte de `AppSidebar.tsx` pour que chaque entrée soit gatée par une capability plutôt que par un check de rôle hardcodé. Mock attendu pour 3 personas (admin / chef / rh) à valider avant édition. Permettra à l'admin de masquer/afficher dynamiquement des entrées via `/admin/permissions` sans déploiement.",
+  },
+  {
+    priority: "haute",
+    title: "Lot 7.3 — Vue `v_affaires_avec_plan_status` (statuts dérivés)",
+    description:
+      "Création d'une vue SQL consolidée exposant pour chaque affaire les statuts dérivés (a-t-elle un plan publié ? un brouillon ? un plan archivé ? écart staffing vs devis ?). Échantillon de retour à valider avant migration. Permettra de simplifier les listes affaires + dashboard sans recalcul côté client.",
+  },
+
   // ========== Roadmap consolidée (mise à jour 5 mai 2026) ==========
   {
     priority: "haute",
@@ -2946,6 +2995,7 @@ const PLANNED: RoadmapPlanned[] = [
     description:
       "Sprint 2b2 entièrement terminé : Gantt (Tour 1+2+3) et StaffingPersonnesSection (Sprint 2b2.2) refactorés. Sprint 3 en cours : v0.41.0a hotfix heures cache LIVRÉ + v0.41.0c E2E employé desktop LIVRÉ (Phase 3c.1).",
   },
+
   {
     priority: "moyenne",
     title: "v0.41.0a — LIVRÉ — Hotfix heures invisibles cache côté employé",
