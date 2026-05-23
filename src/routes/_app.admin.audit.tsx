@@ -112,6 +112,9 @@ function AdminAuditPage() {
             <TabsTrigger value="documents-uploads">
               <ImageIcon className="mr-1.5 h-4 w-4" /> Uploads récents
             </TabsTrigger>
+            <TabsTrigger value="divergence">
+              <AlertTriangle className="mr-1.5 h-4 w-4" /> Divergence Plan/Planning
+            </TabsTrigger>
           </TabsList>
           <TabsContent value="validations" className="mt-4">
             <ValidationsTab enabled={isAdmin} />
@@ -121,6 +124,9 @@ function AdminAuditPage() {
           </TabsContent>
           <TabsContent value="documents-uploads" className="mt-4">
             <DocumentsUploadsTab enabled={isAdmin} />
+          </TabsContent>
+          <TabsContent value="divergence" className="mt-4">
+            <StaffingDivergenceTab enabled={isAdmin} />
           </TabsContent>
         </Tabs>
       </div>
