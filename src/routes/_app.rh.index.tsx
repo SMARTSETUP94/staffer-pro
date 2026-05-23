@@ -1,14 +1,17 @@
 // v0.48 Bloc 6 — /rh hub : module RH (KPIs + raccourcis)
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+// Lot 7.0b — gating via capability `rh.hub.view` (remplace l'ancien check
+// `isAdmin || isRh` côté composant). beforeLoad bloque l'accès direct par URL.
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Users, Calendar, FileSignature, Loader2, ArrowRight, UserMinus, Cake } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth-context";
 import { PageHeader } from "@/components/PageHeader";
+import { requireCapability } from "@/lib/capability-guard";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_app/rh/")({
   head: () => ({ meta: [{ title: "RH — Setup Paris" }] }),
+  beforeLoad: () => requireCapability("rh.hub.view"),
   component: RhHubPage,
 });
 
@@ -23,18 +26,10 @@ interface Kpis {
 }
 
 function RhHubPage() {
-  const { isAdmin, isRh, rolesLoaded } = useAuth();
-  const navigate = useNavigate();
+  // Gating géré par requireCapability("rh.hub.view") en beforeLoad.
   const [kpis, setKpis] = useState<Kpis | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (!rolesLoaded) return;
-    if (!isAdmin && !isRh) {
-      navigate({ to: "/dashboard" });
-      return;
-    }
-  }, [rolesLoaded, isAdmin, isRh, navigate]);
 
   useEffect(() => {
     let cancelled = false;
@@ -101,7 +96,7 @@ function RhHubPage() {
     };
   }, []);
 
-  if (!rolesLoaded || (!isAdmin && !isRh)) {
+  if (loading || !kpis) {
     return (
       <div className="flex h-full items-center justify-center">
         <Loader2 className="h-5 w-5 animate-spin text-primary" />

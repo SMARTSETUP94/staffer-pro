@@ -12,6 +12,8 @@ import { toast } from "sonner";
 import { StatutPill } from "./_app.affaires.index";
 import { PageBreadcrumbs } from "@/components/PageBreadcrumbs";
 import { AffaireKpiBar } from "@/components/affaire/AffaireKpiBar";
+import { CapabilityGuard } from "@/components/auth/CapabilityGuard";
+import { useCapability } from "@/hooks/use-capability";
 
 
 interface AffaireDetail {
@@ -100,6 +102,8 @@ function AffaireDetailLayout() {
     );
   }
 
+  const canSeeEquipe = useCapability("affaire.equipe.view");
+
   const tabs = [
     { to: `/affaires/${affaire.id}`, label: "Synthèse", match: path === `/affaires/${affaire.id}` },
     { to: `/affaires/${affaire.id}/devis`, label: "Devis", match: path.endsWith("/devis") },
@@ -107,7 +111,9 @@ function AffaireDetailLayout() {
       ? [{ to: `/affaires/${affaire.id}/fabrication`, label: "Fabrication", match: path.endsWith("/fabrication") }]
       : []),
     { to: `/affaires/${affaire.id}/staffing`, label: "Staffing", match: path.endsWith("/staffing") },
-    { to: `/affaires/${affaire.id}/equipe`, label: "Équipe", match: path.endsWith("/equipe") },
+    ...(canSeeEquipe
+      ? [{ to: `/affaires/${affaire.id}/equipe`, label: "Équipe", match: path.endsWith("/equipe") }]
+      : []),
     { to: `/affaires/${affaire.id}/documents`, label: "Documents", match: path.endsWith("/documents") },
     { to: `/affaires/${affaire.id}/journal`, label: "Journal", match: path.endsWith("/journal") },
   ];
@@ -170,10 +176,12 @@ function AffaireDetailLayout() {
         </div>
       </div>
 
-      {/* KPI Bar Bloc 5 */}
-      <div className="mt-4">
-        <AffaireKpiBar affaireId={affaire.id} />
-      </div>
+      {/* KPI Bar Bloc 5 — gated par capability affaire.kpi.view */}
+      <CapabilityGuard cap="affaire.kpi.view">
+        <div className="mt-4">
+          <AffaireKpiBar affaireId={affaire.id} />
+        </div>
+      </CapabilityGuard>
 
       {/* Onglets */}
       <nav className="mt-4 flex gap-1 border-b border-border overflow-x-auto">

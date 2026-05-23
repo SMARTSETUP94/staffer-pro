@@ -11,6 +11,7 @@ import {
   markOnboardingSkipped,
 } from "@/lib/auth-redirect-helpers";
 import { resolvePostLoginTarget } from "@/lib/post-login-routing";
+import { consumeCapDenied } from "@/lib/capability-guard";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app")({
@@ -116,6 +117,16 @@ function AppGuard() {
     loading, rolesLoaded, user, isAdminOrChef, effIsAdminOrChef,
     effIsMobile, isEmployeAllowedPath, mustSetPassword, profileCompleted, currentPath, navigate, roles, isPreviewing,
   ]);
+
+  // Lot 7.0b — toast "Accès refusé" après redirect depuis requireCapability().
+  useEffect(() => {
+    const denied = consumeCapDenied();
+    if (denied) {
+      toast.error("Accès refusé", {
+        description: `Vous n'avez pas la permission requise (${denied}).`,
+      });
+    }
+  }, [currentPath]);
 
   if (loading || !rolesLoaded || !user) {
     return (
