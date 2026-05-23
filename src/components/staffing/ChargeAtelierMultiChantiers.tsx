@@ -266,12 +266,29 @@ export function ChargeAtelierMultiChantiers() {
           <thead>
             <tr className="border-b border-border bg-background/40">
               <th className="sticky left-0 z-10 bg-background/40 px-3 py-2 text-left font-semibold">Métier</th>
-              {days.map((d) => (
-                <th key={d} className="min-w-[44px] px-1 py-2 text-center font-mono text-[10px]">
-                  <div className="text-muted-foreground">{formatDayName(d)}</div>
-                  <div className="font-semibold">{formatShortDate(d)}</div>
-                </th>
-              ))}
+              {days.map((d) => {
+                const ferie = isJourFerieFR(d);
+                const ferieLabel = ferie ? labelJourFerieFR(d) : null;
+                return (
+                  <th
+                    key={d}
+                    className={`min-w-[44px] px-1 py-2 text-center font-mono text-[10px] ${
+                      ferie ? "bg-amber-500/15" : ""
+                    }`}
+                    title={ferieLabel ?? undefined}
+                  >
+                    <div className="text-muted-foreground">{formatDayName(d)}</div>
+                    <div className={`font-semibold ${ferie ? "text-amber-700 dark:text-amber-300" : ""}`}>
+                      {formatShortDate(d)}
+                    </div>
+                    {ferie && (
+                      <div className="text-[8px] uppercase text-amber-700 dark:text-amber-300 leading-none mt-0.5">
+                        Férié
+                      </div>
+                    )}
+                  </th>
+                );
+              })}
             </tr>
           </thead>
           <tbody>
