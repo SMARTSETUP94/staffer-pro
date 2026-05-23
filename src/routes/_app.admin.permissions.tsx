@@ -21,6 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_app/admin/permissions")({
+  beforeLoad: () => requireCapability("admin.permissions.manage"),
   component: () => (
     <RoleGuard required="admin">
       <PermissionsAdminPage />
