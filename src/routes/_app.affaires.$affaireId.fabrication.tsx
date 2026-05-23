@@ -334,8 +334,25 @@ function FabricationPage() {
               </TableHeader>
               <TableBody>
                 {objets.map((o) => (
-                  <TableRow key={o.id}>
-                    <TableCell className="font-mono text-xs">{o.reference}</TableCell>
+                  <TableRow key={o.id} data-objet-id={o.id}>
+                    <TableCell className="font-mono text-xs">
+                      <div className="flex items-center gap-1.5">
+                        <span>{o.reference}</span>
+                        {showFicheLink && (
+                          // TODO(8.5): remplacer par le lien intégré natif depuis la liste.
+                          <Link
+                            to="/affaires/$affaireId/objets/$objetId"
+                            params={{ affaireId, objetId: o.id }}
+                            data-testid="objet-fiche-link"
+                            data-objet-id={o.id}
+                            title="Voir la fiche objet"
+                            className="text-muted-foreground hover:text-foreground"
+                          >
+                            <ExternalLink className="h-3 w-3" />
+                          </Link>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell className="font-medium">{o.nom}</TableCell>
                     <TableCell className="text-center">{o.quantite}</TableCell>
                     <TableCell className="text-xs">
