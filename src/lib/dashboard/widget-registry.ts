@@ -196,7 +196,16 @@ export const WIDGET_META: Record<WidgetId, WidgetMeta> = {
     category: "perso",
     width: 1,
   },
+  // Bloc 4 — Inbox unifiée
+  inbox: {
+    id: "inbox",
+    title: "Inbox",
+    description: "Items en attente : refus, divergences, absences, feedbacks",
+    category: "perso",
+    width: 1,
+  },
 };
+
 
 export const CATEGORY_LABELS: Record<WidgetCategory, string> = {
   commerce: "Commerce",
