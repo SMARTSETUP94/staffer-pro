@@ -43,6 +43,70 @@ interface RoadmapPlanned {
 
 const RELEASES: RoadmapRelease[] = [
   {
+    date: "2026-05-23",
+    version: "v0.48.0",
+    title: "🏗️ Refonte UX/UI Staffer Pro — Blocs 0 à 6 (fondations + RH)",
+    entries: [
+      {
+        type: "refactor",
+        area: "Bloc 0 — Audit & Feature Flags",
+        title: "Audit divergence Plan vs Planning + système de Feature Flags",
+        description:
+          "Décision architecturale : duplicité contrôlée Plan/Planning (Option B). Fonction SQL `audit_staffing_divergence` + table `staffing_divergence_log` (cron quotidien 3h UTC) + onglet « Cohérence » dans /admin/audit. Statuts `statut_chef` (validation mobile) et `statut_chaine` (pipeline physique) maintenus séparés (cycles différents). Système Feature Flags complet : table + RPC `is_feature_flag_enabled` (global / par rôle / par UUID) + hook `useFeatureFlag` + page admin `/admin/feature-flags` (CRUD temps réel sans déploiement).",
+      },
+      {
+        type: "feature",
+        area: "Bloc 1 — Capabilities & rôle RH",
+        title: "Système de permissions granulaires + nouveau rôle RH",
+        description:
+          "Rôle `rh` ajouté à l'enum `app_role` (câblé partout : AppRole, `isRh`, sidebar, presets dashboard, email d'invitation). Tables `capabilities` (30 perms référencées) + `role_capabilities` (matrice). Fonction `user_has_capability` SECURITY DEFINER + seed matrice par défaut. Hook `useCapability` + page admin `/admin/permissions` pour piloter la matrice.",
+      },
+      {
+        type: "improvement",
+        area: "Bloc 2 — Quick wins UX (Lot 2.1 & 2.2)",
+        title: "Sécurisation et polish des vues planning",
+        description:
+          "Suppression plan déplacée dans menu kebab (anti-clic accidentel). `Skeleton` loaders sur Gantt et Heatmap (remplacent spinners). Haptic feedback mobile sur succès staffing. Breadcrumbs enrichis avec statut plan (brouillon/publié/archivé). Jours fériés FR intégrés au heatmap atelier. Conflit CNC → Dialog plein écran (plus visible que popover). Filtre « Modifiés uniquement » sur matrice compétences. Sélection employés par rôle persistée (localStorage) dans `EquipeAffaireSection`.",
+      },
+      {
+        type: "feature",
+        area: "Bloc 2 — Quick wins UX (Lot 2.3 & 2.4)",
+        title: "Express+ : raccourcis clavier, badges et anti-doublon",
+        description:
+          "Animation pulse sur l'icône baguette Express. Bouton Publier ringé + pulse quand brouillon complet (aucun TBD). Raccourci `P` ouvre dialog Publier + modale d'aide `?` mise à jour. Badge « Plan actif » remplace le bouton Express si plan publié existe (navigation directe). Dates Express par défaut en jours ouvrés FR (`isJourNonOuvreFR`). Fenêtre Undo 10 min sur plans Express récents.",
+      },
+      {
+        type: "feature",
+        area: "Bloc 3 — Détecteur de divergence (DB)",
+        title: "Audit quotidien Plan ↔ Planning opérationnel",
+        description:
+          "Table `staffing_divergence_log` détecte 4 types : MISSING_ASSIGNATION (plan sans planning), ORPHAN_ASSIGNATION (planning hors plan), PRESENCE_MISMATCH (écart > 0.5h), OBJET_LINK_MISSING. RPC `audit_staffing_divergence()` + `run_staffing_divergence_audit()` (déclenchement admin manuel). Job pg_cron quotidien 3h UTC. Backfill `assignation_objets` sur tous les plans publiés existants. Onglet « Divergence Plan/Planning » dans /admin/audit pour consultation + résolution.",
+      },
+      {
+        type: "feature",
+        area: "Bloc 4 — Inbox unifiée",
+        title: "Page /inbox + widget dashboard agrégeant 4 sources",
+        description:
+          "Table `inbox_dismissed` (masquage per-user). RPC `get_inbox_items()` agrège : refus d'affectations, divergences plan non résolues, absences en attente de validation, nouveaux feedbacks (admin). Route `/inbox` avec filtres source/sévérité + « Masquer » optimiste avec Undo. Widget `InboxWidget` (compteur badge + items prioritaires) ajouté aux presets dashboard manager. Entrée sidebar dédiée. Capabilities `inbox.view` + `inbox.dismiss`.",
+      },
+      {
+        type: "feature",
+        area: "Bloc 5 — Vue Affaire 360°",
+        title: "KpiBar sticky + onglet Équipe historique",
+        description:
+          "`AffaireKpiBar` : heures planifiées vs staffées (badges d'écart colorés), heures consommées vs budget (tons d'alerte si dépassement), effectif total. Nouvel onglet « Équipe » (`/affaires/$id/equipe`) : vue historique de toutes les personnes ayant travaillé sur l'affaire (chefs, refus, absences). Tri par volume (demi-journées), activité récente ou nom. Type de contrat + pourcentage moyen de présence intégrés. Layout affaire mis à jour.",
+      },
+      {
+        type: "feature",
+        area: "Bloc 6 — Module RH",
+        title: "Hub /rh avec KPIs, raccourcis et anniversaires",
+        description:
+          "Page `/rh` accessible admin + rh : 4 KPIs temps réel (effectif actif, absences à valider, absences semaine, contrats actifs + créés ce mois) + 3 cartes raccourcis (Équipe, Absences, Contrats CDDU avec compteurs colorés) + bloc anniversaires du mois + raccourcis postes principaux / catalogue postes. Garde côté composant (admin OU rh) + intégration sidebar « Module RH ». Tous les modules sous-jacents (`/employes`, `/absences`, `/rh/contrats`) restent inchangés — seul le hub est nouveau.",
+      },
+    ],
+  },
+  {
+
     date: "2026-05-12",
     version: "v0.46.0",
     title: "📱 Polish mobile chef + employé + politique de création de comptes verrouillée",
