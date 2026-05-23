@@ -6,6 +6,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { getEditableFields } from "@/lib/objet-fiche-permissions";
 
 /** Mapping codes métier (DB) → colonnes heures_prevues_* de fabrication_objets */
 const METIER_CODE_TO_PREVU_COL: Record<string, string | null> = {
