@@ -37,6 +37,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_app/admin/feature-flags")({
+  beforeLoad: () => requireCapability("admin.feature_flags.manage"),
   component: () => (
     <RoleGuard required="admin">
       <FeatureFlagsAdminPage />
