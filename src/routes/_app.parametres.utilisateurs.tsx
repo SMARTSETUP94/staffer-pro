@@ -63,7 +63,9 @@ const ROLE_LABEL: Record<AppRole, string> = {
   chef_chantier: "Chef d'équipe",
   chef_metier_scoped: "Chef métier (scoped)",
   employe: "Employé",
+  rh: "RH",
 };
+
 
 const STATUS_META: Record<
   UserStatus,
