@@ -23,8 +23,10 @@ import {
   SOURCE_LABELS,
   SEVERITY_STYLES,
 } from "@/lib/inbox";
+import { requireCapability } from "@/lib/capability-guard";
 
 export const Route = createFileRoute("/_app/inbox")({
+  beforeLoad: () => requireCapability("inbox.view"),
   head: () => ({ meta: [{ title: "Inbox — Setup Paris" }] }),
   component: InboxPage,
 });
