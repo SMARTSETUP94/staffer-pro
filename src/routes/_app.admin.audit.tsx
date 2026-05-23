@@ -2,7 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { format, parseISO, subDays } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Loader2, FileText, Image as ImageIcon, ShieldCheck, Download } from "lucide-react";
+import { Loader2, FileText, Image as ImageIcon, ShieldCheck, Download, AlertTriangle } from "lucide-react";
+import { StaffingDivergenceTab } from "@/components/admin/StaffingDivergenceTab";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
@@ -111,6 +112,9 @@ function AdminAuditPage() {
             <TabsTrigger value="documents-uploads">
               <ImageIcon className="mr-1.5 h-4 w-4" /> Uploads récents
             </TabsTrigger>
+            <TabsTrigger value="divergence">
+              <AlertTriangle className="mr-1.5 h-4 w-4" /> Divergence Plan/Planning
+            </TabsTrigger>
           </TabsList>
           <TabsContent value="validations" className="mt-4">
             <ValidationsTab enabled={isAdmin} />
@@ -120,6 +124,9 @@ function AdminAuditPage() {
           </TabsContent>
           <TabsContent value="documents-uploads" className="mt-4">
             <DocumentsUploadsTab enabled={isAdmin} />
+          </TabsContent>
+          <TabsContent value="divergence" className="mt-4">
+            <StaffingDivergenceTab enabled={isAdmin} />
           </TabsContent>
         </Tabs>
       </div>

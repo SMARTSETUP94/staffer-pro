@@ -2718,6 +2718,69 @@ export type Database = {
         }
         Relationships: []
       }
+      staffing_divergence_log: {
+        Row: {
+          acknowledged_at: string | null
+          acknowledged_by: string | null
+          affaire_id: string | null
+          assignation_id: string | null
+          code: string
+          date: string | null
+          details: Json
+          detected_at: string
+          employe_id: string | null
+          id: string
+          metier_id: number | null
+          notes: string | null
+          objet_id: string | null
+          plan_id: string | null
+          resolved_at: string | null
+          run_id: string
+          severity: string
+          step_id: string | null
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          affaire_id?: string | null
+          assignation_id?: string | null
+          code: string
+          date?: string | null
+          details?: Json
+          detected_at?: string
+          employe_id?: string | null
+          id?: string
+          metier_id?: number | null
+          notes?: string | null
+          objet_id?: string | null
+          plan_id?: string | null
+          resolved_at?: string | null
+          run_id: string
+          severity?: string
+          step_id?: string | null
+        }
+        Update: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          affaire_id?: string | null
+          assignation_id?: string | null
+          code?: string
+          date?: string | null
+          details?: Json
+          detected_at?: string
+          employe_id?: string | null
+          id?: string
+          metier_id?: number | null
+          notes?: string | null
+          objet_id?: string | null
+          plan_id?: string | null
+          resolved_at?: string | null
+          run_id?: string
+          severity?: string
+          step_id?: string | null
+        }
+        Relationships: []
+      }
       staffing_plan: {
         Row: {
           affaire_id: string
@@ -3793,6 +3856,13 @@ export type Database = {
         Args: { p_contrat_id: string; p_motif?: string }
         Returns: undefined
       }
+      audit_staffing_divergence: {
+        Args: never
+        Returns: {
+          run_id: string
+          total_findings: number
+        }[]
+      }
       can_saisie_on_affaire: {
         Args: { _affaire_id: string; _date: string }
         Returns: boolean
@@ -4023,6 +4093,13 @@ export type Database = {
         Returns: undefined
       }
       refresh_user_quiz_stats: { Args: never; Returns: undefined }
+      run_staffing_divergence_audit: {
+        Args: never
+        Returns: {
+          run_id: string
+          total_findings: number
+        }[]
+      }
       set_contrat_pdf_url: {
         Args: { p_contrat_id: string; p_url: string; p_version: number }
         Returns: undefined
