@@ -1,4 +1,4 @@
-**Bloc 2 — Quick wins UX** — Lot 2.1 polish ✅ · Lot 2.2 Heatmap & compétences ✅ · Lot 2.3 Express+ ✅ (pulse Wand2 + CTA Publier + shortcuts E/P + stepper 4 étapes + badge "Plan actif" J) · Lot 2.4 Express avancé ⏳ (F undo 5min, G jours ouvrés défauts)
+**Bloc 2 — Quick wins UX** — Lot 2.1 ✅ · Lot 2.2 ✅ · Lot 2.3 ✅ · Lot 2.4 ✅ (F undo 10min déjà livré v0.35.12 · G défauts dates Express en jours OUVRÉS via `shiftBusinessDays` + `isJourNonOuvreFR`). **Bloc 2 complet.**
 
 ## Statut des frictions par audit
 
