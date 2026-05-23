@@ -29,7 +29,7 @@ export function RolesAffaireBadges({ roles, className }: { roles: string[]; clas
           variant="outline"
           className={cn("text-[10px] font-medium px-1.5 py-0 h-5", ROLE_COLORS[r] ?? "")}
         >
-          {ROLE_LABELS[r] ?? r}
+          {affaireRoleLabel(r)}
         </Badge>
       ))}
     </div>
