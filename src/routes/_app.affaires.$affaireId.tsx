@@ -176,10 +176,12 @@ function AffaireDetailLayout() {
         </div>
       </div>
 
-      {/* KPI Bar Bloc 5 */}
-      <div className="mt-4">
-        <AffaireKpiBar affaireId={affaire.id} />
-      </div>
+      {/* KPI Bar Bloc 5 — gated par capability affaire.kpi.view */}
+      <CapabilityGuard cap="affaire.kpi.view">
+        <div className="mt-4">
+          <AffaireKpiBar affaireId={affaire.id} />
+        </div>
+      </CapabilityGuard>
 
       {/* Onglets */}
       <nav className="mt-4 flex gap-1 border-b border-border overflow-x-auto">
