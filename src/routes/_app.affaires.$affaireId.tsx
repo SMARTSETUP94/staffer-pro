@@ -102,6 +102,8 @@ function AffaireDetailLayout() {
     );
   }
 
+  const canSeeEquipe = useCapability("affaire.equipe.view");
+
   const tabs = [
     { to: `/affaires/${affaire.id}`, label: "Synthèse", match: path === `/affaires/${affaire.id}` },
     { to: `/affaires/${affaire.id}/devis`, label: "Devis", match: path.endsWith("/devis") },
@@ -109,7 +111,9 @@ function AffaireDetailLayout() {
       ? [{ to: `/affaires/${affaire.id}/fabrication`, label: "Fabrication", match: path.endsWith("/fabrication") }]
       : []),
     { to: `/affaires/${affaire.id}/staffing`, label: "Staffing", match: path.endsWith("/staffing") },
-    { to: `/affaires/${affaire.id}/equipe`, label: "Équipe", match: path.endsWith("/equipe") },
+    ...(canSeeEquipe
+      ? [{ to: `/affaires/${affaire.id}/equipe`, label: "Équipe", match: path.endsWith("/equipe") }]
+      : []),
     { to: `/affaires/${affaire.id}/documents`, label: "Documents", match: path.endsWith("/documents") },
     { to: `/affaires/${affaire.id}/journal`, label: "Journal", match: path.endsWith("/journal") },
   ];
