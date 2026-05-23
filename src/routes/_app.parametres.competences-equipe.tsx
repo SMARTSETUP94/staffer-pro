@@ -237,7 +237,18 @@ function CompetencesEquipePage() {
               {emps.length} employés actifs · {metiers.length} métiers — sauvegarde immédiate
             </CardDescription>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex items-center gap-2">
+              <Switch
+                id="modified-only"
+                checked={modifiedOnly}
+                onCheckedChange={setModifiedOnly}
+                aria-label="Afficher uniquement les employés avec compétences saisies"
+              />
+              <Label htmlFor="modified-only" className="text-xs cursor-pointer">
+                Modifiés uniquement
+              </Label>
+            </div>
             <div className="flex items-center gap-2">
               <Switch
                 id="dropdown-mode"
