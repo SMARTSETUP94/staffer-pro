@@ -184,9 +184,18 @@ export function AppSidebar() {
   const currentPath = routerState.location.pathname;
   const validationCount = useValidationCount();
   const contratsRhCount = useContratsRhCount();
+  const { data: caps, isLoading: capsLoading } = useCapabilitiesSet();
 
   // RBAC visuel : on s'appuie sur effectiveRole pour respecter le mode preview.
-  const sections = buildSections(effectiveRole as EffRole, validationCount, contratsRhCount);
+  const rawSections = buildSections(effectiveRole as EffRole, validationCount, contratsRhCount);
+  // Lot 7.2 — Filtrage capability-driven : un item sans `cap` est toujours visible ;
+  // un item avec `cap` n'est rendu que si l'utilisateur la possède. En cours de
+  // chargement on affiche tout pour éviter un flash de sidebar vide.
+  const sections = capsLoading
+    ? rawSections
+    : rawSections
+        .map((s) => ({ ...s, items: s.items.filter((it) => !it.cap || caps.has(it.cap)) }))
+        .filter((s) => s.items.length > 0);
 
   // En preview "employé" (desktop ou mobile), un admin doit pouvoir naviguer
   // vers les pages mobiles pour QA. (basé sur le vrai isAdmin, pas effectif)
