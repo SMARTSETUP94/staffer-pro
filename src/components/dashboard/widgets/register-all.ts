@@ -60,5 +60,7 @@ export function registerAllWidgets(): void {
   registerWidget("quiz_du_jour", QuizDuJourWidget);
   registerWidget("quiz_leaderboard", QuizLeaderboardWidget);
   registerWidget("mon_equipe_type", MonEquipeTypeWidget);
+  registerWidget("inbox", InboxWidget);
   registered = true;
 }
+
