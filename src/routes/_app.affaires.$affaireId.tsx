@@ -12,6 +12,8 @@ import { toast } from "sonner";
 import { StatutPill } from "./_app.affaires.index";
 import { PageBreadcrumbs } from "@/components/PageBreadcrumbs";
 import { AffaireKpiBar } from "@/components/affaire/AffaireKpiBar";
+import { CapabilityGuard } from "@/components/auth/CapabilityGuard";
+import { useCapability } from "@/hooks/use-capability";
 
 
 interface AffaireDetail {
