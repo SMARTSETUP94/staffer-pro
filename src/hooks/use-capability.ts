@@ -19,7 +19,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 
-function useCapabilitiesSet(): { data: Set<string>; isLoading: boolean } {
+export function useCapabilitiesSet(): { data: Set<string>; isLoading: boolean } {
   const { user, loading } = useAuth();
 
   const query = useQuery({
