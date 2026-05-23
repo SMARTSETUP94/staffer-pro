@@ -51,6 +51,7 @@ import { useLieux } from "@/hooks/use-lieux";
 import { addDays, format as fmt } from "date-fns";
 import { StaffingPlanWizard } from "@/components/staffing/StaffingPlanWizard";
 import { MettreAuPlanningExpressButton } from "@/components/staffing/MettreAuPlanningExpressButton";
+import { useVocab } from "@/hooks/use-vocab";
 
 export const Route = createFileRoute("/_app/affaires/$affaireId/fabrication")({
   head: () => ({ meta: [{ title: "Fabrication — Setup Paris" }] }),
@@ -60,6 +61,7 @@ export const Route = createFileRoute("/_app/affaires/$affaireId/fabrication")({
 function FabricationPage() {
   const { affaireId } = Route.useParams();
   const { isAdminOrChef, isAdmin } = useAuth();
+  const vocab = useVocab();
   const { objets, loading, reload } = useFabricationObjets(affaireId);
   const { profiles } = useProfilesWithRoles();
   const [openAjouter, setOpenAjouter] = useState(false);
@@ -247,7 +249,7 @@ function FabricationPage() {
             <div className="flex items-center justify-between gap-2 flex-wrap">
               <div>
                 <p className="text-sm font-semibold text-foreground">
-                  Auto-staffing fabrication
+                  {vocab.autoRemplirFabrication}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   Express : 1 clic pour créer + staffer + publier (si aucun conflit). Sinon utilisez le wizard ci-dessous.
