@@ -11,7 +11,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Loader2, ShieldCheck } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { RoleGuard } from "@/components/auth/RoleGuard";
 import { PageHeader } from "@/components/PageHeader";
@@ -162,7 +162,6 @@ function PermissionsAdminPage() {
         eyebrow="Admin / Plateforme"
         title="Permissions par rôle"
         description="Matrice fine des capabilities. Toute modification est appliquée immédiatement et journalisée."
-        icon={ShieldCheck}
       />
 
       <Card className="border-amber-200 bg-amber-50/40 dark:border-amber-900/50 dark:bg-amber-950/20">
