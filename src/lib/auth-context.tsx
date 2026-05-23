@@ -3,7 +3,7 @@ import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
 
-export type AppRole = "admin" | "chef_chantier" | "chef_metier_scoped" | "employe";
+export type AppRole = "admin" | "chef_chantier" | "chef_metier_scoped" | "employe" | "rh";
 
 export interface AuthContextValue {
   user: User | null;
@@ -21,6 +21,9 @@ export interface AuthContextValue {
   isChefMetierScoped: boolean;
   /** Élargi v0.45 : admin + chef_chantier + chef_metier_scoped */
   isAdminOrChef: boolean;
+  /** v0.48 Bloc 6 — rôle RH (accès module RH) */
+  isRh: boolean;
+
   passwordSetDone: boolean | null;
   passwordSetAt: string | null;
   isInviteStatus: boolean;
@@ -254,18 +257,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isChefAny = isChef || isChefMetierScoped;
   const isChefGlobal = isAdmin || isChef;
   const isAdminOrChef = isAdmin || isChef || isChefMetierScoped;
+  const isRh = isAdmin || roles.includes("rh");
   const isInviteStatus = roleRows.some((r) => r.status === "invite");
   const value = useMemo<AuthContextValue>(() => ({
     user, session, roles, loading, rolesLoaded,
-    isAdmin, isChef, isChefAny, isChefGlobal, isChefMetierScoped, isAdminOrChef,
+    isAdmin, isChef, isChefAny, isChefGlobal, isChefMetierScoped, isAdminOrChef, isRh,
     passwordSetDone, passwordSetAt, isInviteStatus, profileCompleted,
     signIn, signInWithMagicLink, signUp, signOut, refreshRoles,
   }), [
     user, session, roles, loading, rolesLoaded,
-    isAdmin, isChef, isChefAny, isChefGlobal, isChefMetierScoped, isAdminOrChef,
+    isAdmin, isChef, isChefAny, isChefGlobal, isChefMetierScoped, isAdminOrChef, isRh,
     passwordSetDone, passwordSetAt, isInviteStatus, profileCompleted,
     signIn, signInWithMagicLink, signUp, signOut, refreshRoles,
   ]);
+
 
   return (
     <AuthContext.Provider value={value}>

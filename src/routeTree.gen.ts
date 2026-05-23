@@ -54,6 +54,7 @@ import { Route as AppAuditHeuresRouteImport } from './routes/_app.audit-heures'
 import { Route as AppAuditAuthRouteImport } from './routes/_app.audit-auth'
 import { Route as AppAbsencesRouteImport } from './routes/_app.absences'
 import { Route as MobileChefIndexRouteImport } from './routes/mobile.chef.index'
+import { Route as AppRhIndexRouteImport } from './routes/_app.rh.index'
 import { Route as AppFabricationIndexRouteImport } from './routes/_app.fabrication.index'
 import { Route as AppExportIndexRouteImport } from './routes/_app.export.index'
 import { Route as AppDevisIndexRouteImport } from './routes/_app.devis.index'
@@ -328,6 +329,11 @@ const MobileChefIndexRoute = MobileChefIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => MobileChefRoute,
+} as any)
+const AppRhIndexRoute = AppRhIndexRouteImport.update({
+  id: '/rh/',
+  path: '/rh/',
+  getParentRoute: () => AppRoute,
 } as any)
 const AppFabricationIndexRoute = AppFabricationIndexRouteImport.update({
   id: '/fabrication/',
@@ -683,6 +689,7 @@ export interface FileRoutesByFullPath {
   '/devis/': typeof AppDevisIndexRoute
   '/export/': typeof AppExportIndexRoute
   '/fabrication/': typeof AppFabricationIndexRoute
+  '/rh/': typeof AppRhIndexRoute
   '/mobile/chef/': typeof MobileChefIndexRoute
   '/affaires/$affaireId/devis': typeof AppAffairesAffaireIdDevisRoute
   '/affaires/$affaireId/documents': typeof AppAffairesAffaireIdDocumentsRoute
@@ -776,6 +783,7 @@ export interface FileRoutesByTo {
   '/devis': typeof AppDevisIndexRoute
   '/export': typeof AppExportIndexRoute
   '/fabrication': typeof AppFabricationIndexRoute
+  '/rh': typeof AppRhIndexRoute
   '/mobile/chef': typeof MobileChefIndexRoute
   '/affaires/$affaireId/devis': typeof AppAffairesAffaireIdDevisRoute
   '/affaires/$affaireId/documents': typeof AppAffairesAffaireIdDocumentsRoute
@@ -874,6 +882,7 @@ export interface FileRoutesById {
   '/_app/devis/': typeof AppDevisIndexRoute
   '/_app/export/': typeof AppExportIndexRoute
   '/_app/fabrication/': typeof AppFabricationIndexRoute
+  '/_app/rh/': typeof AppRhIndexRoute
   '/mobile/chef/': typeof MobileChefIndexRoute
   '/_app/affaires/$affaireId/devis': typeof AppAffairesAffaireIdDevisRoute
   '/_app/affaires/$affaireId/documents': typeof AppAffairesAffaireIdDocumentsRoute
@@ -972,6 +981,7 @@ export interface FileRouteTypes {
     | '/devis/'
     | '/export/'
     | '/fabrication/'
+    | '/rh/'
     | '/mobile/chef/'
     | '/affaires/$affaireId/devis'
     | '/affaires/$affaireId/documents'
@@ -1065,6 +1075,7 @@ export interface FileRouteTypes {
     | '/devis'
     | '/export'
     | '/fabrication'
+    | '/rh'
     | '/mobile/chef'
     | '/affaires/$affaireId/devis'
     | '/affaires/$affaireId/documents'
@@ -1162,6 +1173,7 @@ export interface FileRouteTypes {
     | '/_app/devis/'
     | '/_app/export/'
     | '/_app/fabrication/'
+    | '/_app/rh/'
     | '/mobile/chef/'
     | '/_app/affaires/$affaireId/devis'
     | '/_app/affaires/$affaireId/documents'
@@ -1509,6 +1521,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/mobile/chef/'
       preLoaderRoute: typeof MobileChefIndexRouteImport
       parentRoute: typeof MobileChefRoute
+    }
+    '/_app/rh/': {
+      id: '/_app/rh/'
+      path: '/rh'
+      fullPath: '/rh/'
+      preLoaderRoute: typeof AppRhIndexRouteImport
+      parentRoute: typeof AppRoute
     }
     '/_app/fabrication/': {
       id: '/_app/fabrication/'
@@ -1982,6 +2001,7 @@ interface AppRouteChildren {
   AppAffairesIndexRoute: typeof AppAffairesIndexRoute
   AppDevisIndexRoute: typeof AppDevisIndexRoute
   AppFabricationIndexRoute: typeof AppFabricationIndexRoute
+  AppRhIndexRoute: typeof AppRhIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -2041,6 +2061,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAffairesIndexRoute: AppAffairesIndexRoute,
   AppDevisIndexRoute: AppDevisIndexRoute,
   AppFabricationIndexRoute: AppFabricationIndexRoute,
+  AppRhIndexRoute: AppRhIndexRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
