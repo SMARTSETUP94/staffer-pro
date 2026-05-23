@@ -28,6 +28,8 @@ import { AstucesMarqueeWidget } from "./AstucesMarqueeWidget";
 import { QuizDuJourWidget } from "./QuizDuJourWidget";
 import { QuizLeaderboardWidget } from "./QuizLeaderboardWidget";
 import { MonEquipeTypeWidget } from "./MonEquipeTypeWidget";
+import { InboxWidget } from "./InboxWidget";
+
 
 let registered = false;
 
