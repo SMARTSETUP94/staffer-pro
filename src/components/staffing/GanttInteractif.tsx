@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2, RefreshCw, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 // v0.39.2b2.1 — Popover/StatCard/ManutStatCard déplacés vers ./gantt/GanttHeaderRow
 import { GanttHeaderRow } from "./gantt/GanttHeaderRow";
 // v0.39.2b2.1 Tour 2 — Header dates + steps globaux extraits vers ./gantt/DayGrid
