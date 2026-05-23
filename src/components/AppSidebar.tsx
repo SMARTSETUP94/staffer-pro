@@ -2,7 +2,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import {
   Calendar, Building2, Users, FileUp, FileDown, ClipboardCheck, LogOut, Clock, CalendarOff,
   Smartphone, UserCircle, LayoutDashboard, FileText, Trophy, Map, ArrowLeftRight, ClipboardList,
-  Truck, FileQuestion, Palette, MessageCircle, Warehouse, Hammer, Wrench, BadgeCheck, Lightbulb, FileSignature,
+  Truck, FileQuestion, Palette, MessageCircle, Warehouse, Hammer, Wrench, BadgeCheck, Lightbulb, FileSignature, Inbox,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -73,8 +73,10 @@ function buildSections(role: EffRole, validationCount: number, contratsRhCount: 
       label: "Pilotage",
       items: [
         { title: "Tableau de bord", url: "/dashboard", icon: LayoutDashboard, show: () => true },
+        { title: "Inbox", url: "/inbox", icon: Inbox, show: () => true },
         { title: "Planning", url: "/planning", icon: Calendar, show: () => true },
       ],
+
     },
     {
       label: "Chantiers",

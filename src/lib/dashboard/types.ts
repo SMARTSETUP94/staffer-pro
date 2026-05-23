@@ -36,7 +36,10 @@ export const ALL_WIDGET_IDS = [
   "quiz_leaderboard",
   // Insights chef — v0.43
   "mon_equipe_type",
+  // Bloc 4 — Inbox unifiée
+  "inbox",
 ] as const;
+
 
 export type WidgetId = (typeof ALL_WIDGET_IDS)[number];
 
@@ -54,6 +57,7 @@ export interface DashboardLayout {
 export const ROLE_PRESETS: Record<AppRole, WidgetId[]> = {
   admin: [...ALL_WIDGET_IDS],
   chef_chantier: [
+    "inbox",
     "meteo_chantiers",
     "montages_j7",
     "tension_budget",
@@ -73,13 +77,16 @@ export const ROLE_PRESETS: Record<AppRole, WidgetId[]> = {
     "quiz_du_jour",
     "quiz_leaderboard",
   ],
+
   // v0.45 — chef_metier_scoped : même preset que chef_chantier (UI globale,
   // RLS borne ce qu'il voit réellement par-affaire).
   chef_metier_scoped: [
+    "inbox",
     "meteo_chantiers",
     "montages_j7",
     "absences_semaine",
     "charge_equipe",
+
     "mes_etapes_fab",
     "heures_a_valider",
     "objets_en_retard",
@@ -136,6 +143,7 @@ export function getAllowedWidgetsForRole(role: AppRole): Set<WidgetId> {
   const fun: WidgetId[] = ["anniversaires", "saint_du_jour", "top_constructeur", "chef_projet_mois", "astuces_marquee", "quiz_du_jour", "quiz_leaderboard"];
   if (role === "chef_chantier") {
     return new Set<WidgetId>([
+      "inbox",
       "meteo_chantiers", "montages_j7", "tension_budget", "absences_semaine",
       "flotte_kpis", "charge_atelier", "objets_en_retard", "charge_equipe",
       "mes_etapes_fab", "heures_a_valider", "sous_effectif_J7",
@@ -143,6 +151,7 @@ export function getAllowedWidgetsForRole(role: AppRole): Set<WidgetId> {
       ...fun,
     ]);
   }
+
   // employe : AUCUN widget (ni quiz, ni astuces, ni perso) — accède à /ma-semaine et /mes-heures uniquement
   return new Set<WidgetId>();
 }

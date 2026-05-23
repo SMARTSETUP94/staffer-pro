@@ -2203,6 +2203,27 @@ export type Database = {
           },
         ]
       }
+      inbox_dismissed: {
+        Row: {
+          created_at: string
+          id: string
+          item_key: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_key: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_key?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       lieux: {
         Row: {
           actif: boolean
@@ -3958,11 +3979,28 @@ export type Database = {
         Args: { _saisie_id: string }
         Returns: boolean
       }
+      dismiss_inbox_item: { Args: { p_item_key: string }; Returns: undefined }
       etape_for_metier: {
         Args: { metier: string }
         Returns: Database["public"]["Enums"]["fabrication_etape_type"]
       }
       get_active_contrat_template_id: { Args: never; Returns: string }
+      get_inbox_count: { Args: never; Returns: number }
+      get_inbox_items: {
+        Args: { p_limit?: number }
+        Returns: {
+          action_route: string
+          affaire_id: string
+          affaire_numero: string
+          created_at: string
+          item_key: string
+          severity: string
+          source: string
+          source_id: string
+          subtitle: string
+          title: string
+        }[]
+      }
       get_last_used_codes: {
         Args: { _n?: number; _prefix: number }
         Returns: {
@@ -4093,6 +4131,7 @@ export type Database = {
         Returns: undefined
       }
       refresh_user_quiz_stats: { Args: never; Returns: undefined }
+      restore_inbox_item: { Args: { p_item_key: string }; Returns: undefined }
       run_staffing_divergence_audit: {
         Args: never
         Returns: {

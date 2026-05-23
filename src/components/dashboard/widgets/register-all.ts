@@ -28,6 +28,8 @@ import { AstucesMarqueeWidget } from "./AstucesMarqueeWidget";
 import { QuizDuJourWidget } from "./QuizDuJourWidget";
 import { QuizLeaderboardWidget } from "./QuizLeaderboardWidget";
 import { MonEquipeTypeWidget } from "./MonEquipeTypeWidget";
+import { InboxWidget } from "./InboxWidget";
+
 
 let registered = false;
 
@@ -58,5 +60,7 @@ export function registerAllWidgets(): void {
   registerWidget("quiz_du_jour", QuizDuJourWidget);
   registerWidget("quiz_leaderboard", QuizLeaderboardWidget);
   registerWidget("mon_equipe_type", MonEquipeTypeWidget);
+  registerWidget("inbox", InboxWidget);
   registered = true;
 }
+

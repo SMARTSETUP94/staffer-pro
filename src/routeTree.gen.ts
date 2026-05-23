@@ -41,6 +41,7 @@ import { Route as AppMesContratsRouteImport } from './routes/_app.mes-contrats'
 import { Route as AppMaSemaineRouteImport } from './routes/_app.ma-semaine'
 import { Route as AppInterimairesRouteImport } from './routes/_app.interimaires'
 import { Route as AppIncidentAuthRouteImport } from './routes/_app.incident-auth'
+import { Route as AppInboxRouteImport } from './routes/_app.inbox'
 import { Route as AppImportsRouteImport } from './routes/_app.imports'
 import { Route as AppHeuresAnalyseRouteImport } from './routes/_app.heures-analyse'
 import { Route as AppFlotteRouteImport } from './routes/_app.flotte'
@@ -260,6 +261,11 @@ const AppInterimairesRoute = AppInterimairesRouteImport.update({
 const AppIncidentAuthRoute = AppIncidentAuthRouteImport.update({
   id: '/incident-auth',
   path: '/incident-auth',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppInboxRoute = AppInboxRouteImport.update({
+  id: '/inbox',
+  path: '/inbox',
   getParentRoute: () => AppRoute,
 } as any)
 const AppImportsRoute = AppImportsRouteImport.update({
@@ -600,6 +606,7 @@ export interface FileRoutesByFullPath {
   '/flotte': typeof AppFlotteRoute
   '/heures-analyse': typeof AppHeuresAnalyseRoute
   '/imports': typeof AppImportsRoute
+  '/inbox': typeof AppInboxRoute
   '/incident-auth': typeof AppIncidentAuthRoute
   '/interimaires': typeof AppInterimairesRoute
   '/ma-semaine': typeof AppMaSemaineRoute
@@ -693,6 +700,7 @@ export interface FileRoutesByTo {
   '/flotte': typeof AppFlotteRoute
   '/heures-analyse': typeof AppHeuresAnalyseRoute
   '/imports': typeof AppImportsRoute
+  '/inbox': typeof AppInboxRoute
   '/incident-auth': typeof AppIncidentAuthRoute
   '/interimaires': typeof AppInterimairesRoute
   '/ma-semaine': typeof AppMaSemaineRoute
@@ -787,6 +795,7 @@ export interface FileRoutesById {
   '/_app/flotte': typeof AppFlotteRoute
   '/_app/heures-analyse': typeof AppHeuresAnalyseRoute
   '/_app/imports': typeof AppImportsRoute
+  '/_app/inbox': typeof AppInboxRoute
   '/_app/incident-auth': typeof AppIncidentAuthRoute
   '/_app/interimaires': typeof AppInterimairesRoute
   '/_app/ma-semaine': typeof AppMaSemaineRoute
@@ -883,6 +892,7 @@ export interface FileRouteTypes {
     | '/flotte'
     | '/heures-analyse'
     | '/imports'
+    | '/inbox'
     | '/incident-auth'
     | '/interimaires'
     | '/ma-semaine'
@@ -976,6 +986,7 @@ export interface FileRouteTypes {
     | '/flotte'
     | '/heures-analyse'
     | '/imports'
+    | '/inbox'
     | '/incident-auth'
     | '/interimaires'
     | '/ma-semaine'
@@ -1069,6 +1080,7 @@ export interface FileRouteTypes {
     | '/_app/flotte'
     | '/_app/heures-analyse'
     | '/_app/imports'
+    | '/_app/inbox'
     | '/_app/incident-auth'
     | '/_app/interimaires'
     | '/_app/ma-semaine'
@@ -1392,6 +1404,13 @@ declare module '@tanstack/react-router' {
       path: '/incident-auth'
       fullPath: '/incident-auth'
       preLoaderRoute: typeof AppIncidentAuthRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/inbox': {
+      id: '/_app/inbox'
+      path: '/inbox'
+      fullPath: '/inbox'
+      preLoaderRoute: typeof AppInboxRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/imports': {
@@ -1897,6 +1916,7 @@ interface AppRouteChildren {
   AppFlotteRoute: typeof AppFlotteRoute
   AppHeuresAnalyseRoute: typeof AppHeuresAnalyseRoute
   AppImportsRoute: typeof AppImportsRoute
+  AppInboxRoute: typeof AppInboxRoute
   AppIncidentAuthRoute: typeof AppIncidentAuthRoute
   AppInterimairesRoute: typeof AppInterimairesRoute
   AppMaSemaineRoute: typeof AppMaSemaineRoute
@@ -1954,6 +1974,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppFlotteRoute: AppFlotteRoute,
   AppHeuresAnalyseRoute: AppHeuresAnalyseRoute,
   AppImportsRoute: AppImportsRoute,
+  AppInboxRoute: AppInboxRoute,
   AppIncidentAuthRoute: AppIncidentAuthRoute,
   AppInterimairesRoute: AppInterimairesRoute,
   AppMaSemaineRoute: AppMaSemaineRoute,
