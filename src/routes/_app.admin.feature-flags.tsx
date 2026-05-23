@@ -15,6 +15,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Plus, Trash2, Save, X, Search } from "lucide-react";
 import { toast } from "sonner";
 import { RoleGuard } from "@/components/auth/RoleGuard";
+import { requireCapability } from "@/lib/capability-guard";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
