@@ -243,6 +243,7 @@ function StaffingPlanPage() {
                 ? () => autoStaffRef.current?.trigger()
                 : null
             }
+            onPublish={isDraft && planData ? () => setPublishOpen(true) : null}
           />
           <Button variant="outline" size="sm" onClick={() => setHistoryOpen(true)}>
             <History className="mr-1 h-3 w-3" /> Historique
@@ -258,11 +259,25 @@ function StaffingPlanPage() {
               }}
             />
           )}
-          {isDraft && planData && (
-            <Button size="sm" onClick={() => setPublishOpen(true)}>
-              <Send className="mr-1 h-3 w-3" /> Publier le plan
-            </Button>
-          )}
+          {isDraft && planData && (() => {
+            const ready =
+              stepsWithDate.length > 0 &&
+              stepsWithDate.length === planData.result.steps.length;
+            return (
+              <Button
+                size="sm"
+                onClick={() => setPublishOpen(true)}
+                className={
+                  ready
+                    ? "ring-2 ring-primary/40 shadow-[0_0_0_4px_hsl(var(--primary)/0.08)] motion-safe:animate-[pulse_2.6s_ease-in-out_infinite]"
+                    : ""
+                }
+                title={ready ? "Plan prêt à publier (P)" : "Publier le plan (P)"}
+              >
+                <Send className="mr-1 h-3 w-3" /> Publier le plan
+              </Button>
+            );
+          })()}
           {isAdmin && affaireMeta && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

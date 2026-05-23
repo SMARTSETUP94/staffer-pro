@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 const SHORTCUTS: Array<{ keys: string[]; label: string }> = [
   { keys: ["⌘", "S"], label: "Enregistrer les modifications" },
   { keys: ["A"], label: "Auto-staff plan complet (brouillon uniquement)" },
+  { keys: ["P"], label: "Publier le plan (brouillon uniquement)" },
   { keys: ["?"], label: "Afficher cette aide" },
   { keys: ["Échap"], label: "Fermer dialog / popover" },
 ];
@@ -22,9 +23,11 @@ const SHORTCUTS: Array<{ keys: string[]; label: string }> = [
 interface Props {
   /** Callback déclenché par la touche A (auto-staff plan). null = désactivé. */
   onAutoStaff?: (() => void) | null;
+  /** Callback déclenché par la touche P (ouvre le dialog Publier). null = désactivé. */
+  onPublish?: (() => void) | null;
 }
 
-export function StaffingShortcutsHelp({ onAutoStaff }: Props) {
+export function StaffingShortcutsHelp({ onAutoStaff, onPublish }: Props) {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -45,10 +48,14 @@ export function StaffingShortcutsHelp({ onAutoStaff }: Props) {
         ev.preventDefault();
         onAutoStaff();
       }
+      if ((ev.key === "p" || ev.key === "P") && onPublish) {
+        ev.preventDefault();
+        onPublish();
+      }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [onAutoStaff]);
+  }, [onAutoStaff, onPublish]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
