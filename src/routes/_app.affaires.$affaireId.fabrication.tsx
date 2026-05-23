@@ -308,6 +308,11 @@ function FabricationPage() {
                 key={o.id}
                 objet={o}
                 isAdminOrChef={isAdminOrChef}
+                ficheHref={
+                  showFicheLink
+                    ? `/affaires/${affaireId}/objets/${o.id}`
+                    : null
+                }
                 onEditObjet={(obj) => setEditObjet(obj)}
                 onEditEtape={(obj, etape) => setEditEtape({ objet: obj, etape })}
               />
