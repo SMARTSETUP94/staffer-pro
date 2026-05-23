@@ -11,6 +11,8 @@ import {
 import { toast } from "sonner";
 import { StatutPill } from "./_app.affaires.index";
 import { PageBreadcrumbs } from "@/components/PageBreadcrumbs";
+import { AffaireKpiBar } from "@/components/affaire/AffaireKpiBar";
+
 
 interface AffaireDetail {
   id: string;
@@ -105,9 +107,11 @@ function AffaireDetailLayout() {
       ? [{ to: `/affaires/${affaire.id}/fabrication`, label: "Fabrication", match: path.endsWith("/fabrication") }]
       : []),
     { to: `/affaires/${affaire.id}/staffing`, label: "Staffing", match: path.endsWith("/staffing") },
+    { to: `/affaires/${affaire.id}/equipe`, label: "Équipe", match: path.endsWith("/equipe") },
     { to: `/affaires/${affaire.id}/documents`, label: "Documents", match: path.endsWith("/documents") },
     { to: `/affaires/${affaire.id}/journal`, label: "Journal", match: path.endsWith("/journal") },
   ];
+
 
   // Fil d'ariane dynamique selon l'onglet courant
   const currentTab = tabs.find((t) => t.match);
@@ -166,8 +170,14 @@ function AffaireDetailLayout() {
         </div>
       </div>
 
+      {/* KPI Bar Bloc 5 */}
+      <div className="mt-4">
+        <AffaireKpiBar affaireId={affaire.id} />
+      </div>
+
       {/* Onglets */}
-      <nav className="mt-4 flex gap-1 border-b border-border">
+      <nav className="mt-4 flex gap-1 border-b border-border overflow-x-auto">
+
         {tabs.map((t) => (
           <Link
             key={t.to}
