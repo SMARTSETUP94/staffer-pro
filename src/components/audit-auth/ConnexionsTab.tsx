@@ -7,12 +7,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Loader2 } from "lucide-react";
 import { useUserConnectionStats, type ConnectionStatRow } from "@/hooks/use-audit-auth";
 import { fuzzyMatch } from "@/lib/string-normalize";
+import { roleLabel } from "@/lib/labels";
 
 const ROLE_LABEL: Record<string, string> = {
-  admin: "Admin",
-  chef_chantier: "Chef de chantier",
+  admin: roleLabel("admin"),
+  chef_chantier: roleLabel("chef_chantier"),
   charge_affaires: "Chargé d'affaires",
-  employe: "Employé",
+  employe: roleLabel("employe"),
 };
 
 function fmtDate(iso: string | null) {
@@ -61,7 +62,7 @@ export function ConnexionsTab() {
           <SelectContent>
             <SelectItem value="all">Tous les rôles</SelectItem>
             <SelectItem value="admin">Admin</SelectItem>
-            <SelectItem value="chef_chantier">Chef de chantier</SelectItem>
+            <SelectItem value="chef_chantier">{roleLabel("chef_chantier")}</SelectItem>
             <SelectItem value="charge_affaires">Chargé d'affaires</SelectItem>
             <SelectItem value="employe">Employé</SelectItem>
           </SelectContent>

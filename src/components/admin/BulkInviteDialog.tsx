@@ -24,6 +24,7 @@ import { inviteUser } from "@/lib/admin-actions";
 import { parseServerFnError, type ServerFnErrorDetail } from "@/lib/server-fn-error";
 import { withAuthRetry } from "@/lib/with-auth-retry";
 import type { AppRole } from "@/lib/auth-context";
+import { roleLabel } from "@/lib/labels";
 
 interface BulkInviteDialogProps {
   open: boolean;
@@ -314,7 +315,7 @@ export function BulkInviteDialog({ open, onOpenChange, onComplete }: BulkInviteD
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="admin">Admin</SelectItem>
-                    <SelectItem value="chef_chantier">Chef d'équipe</SelectItem>
+                    <SelectItem value="chef_chantier">{roleLabel("chef_chantier")}</SelectItem>
                     <SelectItem value="employe">Employé</SelectItem>
                   </SelectContent>
                 </Select>

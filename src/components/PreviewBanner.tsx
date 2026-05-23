@@ -11,13 +11,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { usePreview, type PreviewRole } from "@/lib/preview-context";
+import { previewRoleLabel } from "@/lib/labels";
 
 const LABELS: Record<PreviewRole, string> = {
-  admin: "Admin",
-  chef_chantier: "Chef d'équipe",
-  chef_mobile: "Chef mobile",
-  employe_desktop: "Employé desktop",
-  employe_mobile: "Employé mobile",
+  admin: previewRoleLabel("admin"),
+  chef_chantier: previewRoleLabel("chef_chantier"),
+  chef_mobile: previewRoleLabel("chef_mobile"),
+  employe_desktop: previewRoleLabel("employe_desktop"),
+  employe_mobile: previewRoleLabel("employe_mobile"),
 };
 
 interface EmployeOption {

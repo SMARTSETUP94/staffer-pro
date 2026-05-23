@@ -30,15 +30,11 @@ export const Route = createFileRoute("/_app/admin/permissions")({
   ),
 });
 
-type AppRole = "admin" | "chef_chantier" | "chef_metier_scoped" | "rh" | "employe";
+import { USER_ROLE_OPTIONS, type AppRole as _AppRole } from "@/lib/labels";
 
-const ROLES: { value: AppRole; label: string; hint?: string }[] = [
-  { value: "admin", label: "Admin" },
-  { value: "chef_chantier", label: "Chef chantier", hint: "global" },
-  { value: "chef_metier_scoped", label: "Chef métier", hint: "scopé" },
-  { value: "rh", label: "RH" },
-  { value: "employe", label: "Employé" },
-];
+type AppRole = _AppRole;
+
+const ROLES: { value: AppRole; label: string; hint?: string }[] = USER_ROLE_OPTIONS;
 
 const CATEGORY_LABELS: Record<string, string> = {
   planning: "Planning",

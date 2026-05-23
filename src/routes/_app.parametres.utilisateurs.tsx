@@ -58,12 +58,14 @@ interface UserRow {
   employe_id: string | null;
 }
 
+import { roleLabel } from "@/lib/labels";
+
 const ROLE_LABEL: Record<AppRole, string> = {
-  admin: "Admin",
-  chef_chantier: "Chef d'équipe",
-  chef_metier_scoped: "Chef métier (scoped)",
-  employe: "Employé",
-  rh: "RH",
+  admin: roleLabel("admin"),
+  chef_chantier: roleLabel("chef_chantier"),
+  chef_metier_scoped: roleLabel("chef_metier_scoped"),
+  employe: roleLabel("employe"),
+  rh: roleLabel("rh"),
 };
 
 
@@ -475,7 +477,7 @@ function UtilisateursPage() {
                                   Admin
                                 </span>
                               </SelectItem>
-                              <SelectItem value="chef_chantier">Chef d'équipe</SelectItem>
+                              <SelectItem value="chef_chantier">{roleLabel("chef_chantier")}</SelectItem>
                               <SelectItem value="employe">Employé</SelectItem>
                             </SelectContent>
                           </Select>
@@ -611,7 +613,7 @@ function UtilisateursPage() {
                       Admin
                     </span>
                   </SelectItem>
-                  <SelectItem value="chef_chantier">Chef d'équipe</SelectItem>
+                  <SelectItem value="chef_chantier">{roleLabel("chef_chantier")}</SelectItem>
                   <SelectItem value="employe">Employé</SelectItem>
                 </SelectContent>
               </Select>

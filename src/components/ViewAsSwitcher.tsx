@@ -5,6 +5,7 @@ import {
 } from "@/components/ui/select";
 import { useAuth } from "@/lib/auth-context";
 import { usePreview, type PreviewRole } from "@/lib/preview-context";
+import { previewRoleLabel } from "@/lib/labels";
 
 interface Props {
   collapsed?: boolean;
@@ -51,11 +52,11 @@ export function ViewAsSwitcher({ collapsed }: Props) {
           </div>
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="admin">Admin</SelectItem>
-          <SelectItem value="chef_chantier">Chef d'équipe</SelectItem>
-          <SelectItem value="chef_mobile">Chef mobile</SelectItem>
-          <SelectItem value="employe_desktop">Employé desktop</SelectItem>
-          <SelectItem value="employe_mobile">Employé mobile</SelectItem>
+          <SelectItem value="admin">{previewRoleLabel("admin")}</SelectItem>
+          <SelectItem value="chef_chantier">{previewRoleLabel("chef_chantier")}</SelectItem>
+          <SelectItem value="chef_mobile">{previewRoleLabel("chef_mobile")}</SelectItem>
+          <SelectItem value="employe_desktop">{previewRoleLabel("employe_desktop")}</SelectItem>
+          <SelectItem value="employe_mobile">{previewRoleLabel("employe_mobile")}</SelectItem>
         </SelectContent>
       </Select>
     </div>
