@@ -138,6 +138,12 @@ function StaffingPlanPage() {
     }
   }
 
+  const status = planMeta?.status ?? planData?.plan?.status ?? "draft";
+  const isDraft = status === "draft";
+  const isPublished = status === "published";
+  const isArchived = status === "archived";
+
+  const statusLabel = isPublished ? "publié" : isArchived ? "archivé" : "brouillon";
   const breadcrumbSteps: { label: string; to?: string }[] = [
     { label: "Affaires", to: "/affaires" },
   ];
@@ -147,12 +153,7 @@ function StaffingPlanPage() {
       to: `/affaires/${affaireMeta.id}/fabrication`,
     });
   }
-  breadcrumbSteps.push({ label: "Plan staffing" });
-
-  const status = planMeta?.status ?? planData?.plan?.status ?? "draft";
-  const isDraft = status === "draft";
-  const isPublished = status === "published";
-  const isArchived = status === "archived";
+  breadcrumbSteps.push({ label: `Plan staffing — ${statusLabel}` });
 
   // Calcul jours / personnes affectés (pour le dialog publish)
   const stepsWithDate = (planData?.result.steps ?? []).filter(
