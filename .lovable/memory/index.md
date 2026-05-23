@@ -191,3 +191,5 @@ Voir roadmap consolidée détaillée : mem://roadmap/consolidee-2mai2026.
 - [Documents/Photos par affaire v0.44](mem://features/affaire-documents) — bucket privé + RLS scope chef + galerie desktop/mobile + caméra native
 - [Audit technique v0.43-v0.44](docs/audit-v0.43-v0.44.md) — 10 mai 2026, verdict 🟡, top 5 actions ~11h, déclencheur sprints v0.44.3/v0.44.4
 - [Planning par pôle consolidé v0.48](mem://features/planning-par-pole-v048) — matrice métiers × jours + popover hover + refonte nav 3 routes extraites
+- [Fiche Objet — Lot 8.1](mem://features/fiche-objet) — MV v_objet_heures_consolidees (réel) + 4 caps + flag fiche_objet_v1 + getObjetTeam/assignPersonneToObjetStep
+- [Dette : RLS bypass BE objet.edit](mem://constraints/rls-bypass-bureau-etude-objet-edit) — BE peut UPDATE tout via API directe ; UI cache mais ne protège pas. Trigger ou split server fn à prévoir.

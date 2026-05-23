@@ -143,6 +143,7 @@ export type Database = {
           deleted_at: string | null
           deleted_by: string | null
           description: string | null
+          fabrication_objet_id: string | null
           filename: string
           id: string
           mime_type: string
@@ -159,6 +160,7 @@ export type Database = {
           deleted_at?: string | null
           deleted_by?: string | null
           description?: string | null
+          fabrication_objet_id?: string | null
           filename: string
           id?: string
           mime_type: string
@@ -175,6 +177,7 @@ export type Database = {
           deleted_at?: string | null
           deleted_by?: string | null
           description?: string | null
+          fabrication_objet_id?: string | null
           filename?: string
           id?: string
           mime_type?: string
@@ -209,11 +212,32 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "affaire_documents_fabrication_objet_id_fkey"
+            columns: ["fabrication_objet_id"]
+            isOneToOne: false
+            referencedRelation: "fabrication_objets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affaire_documents_fabrication_objet_id_fkey"
+            columns: ["fabrication_objet_id"]
+            isOneToOne: false
+            referencedRelation: "v_objet_heures_consolidees"
+            referencedColumns: ["objet_id"]
+          },
+          {
             foreignKeyName: "affaire_documents_objet_id_fkey"
             columns: ["objet_id"]
             isOneToOne: false
             referencedRelation: "fabrication_objets"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affaire_documents_objet_id_fkey"
+            columns: ["objet_id"]
+            isOneToOne: false
+            referencedRelation: "v_objet_heures_consolidees"
+            referencedColumns: ["objet_id"]
           },
         ]
       }
@@ -473,6 +497,13 @@ export type Database = {
             referencedRelation: "fabrication_objets"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "assignation_objets_objet_id_fkey"
+            columns: ["objet_id"]
+            isOneToOne: false
+            referencedRelation: "v_objet_heures_consolidees"
+            referencedColumns: ["objet_id"]
+          },
         ]
       }
       assignations: {
@@ -610,6 +641,13 @@ export type Database = {
             referencedColumns: ["metier_id"]
           },
           {
+            foreignKeyName: "assignations_metier_id_fkey"
+            columns: ["metier_id"]
+            isOneToOne: false
+            referencedRelation: "v_objet_heures_consolidees"
+            referencedColumns: ["metier_id"]
+          },
+          {
             foreignKeyName: "assignations_staffing_plan_id_fkey"
             columns: ["staffing_plan_id"]
             isOneToOne: false
@@ -731,6 +769,13 @@ export type Database = {
             columns: ["metier_id"]
             isOneToOne: false
             referencedRelation: "v_devis_consommation"
+            referencedColumns: ["metier_id"]
+          },
+          {
+            foreignKeyName: "chantier_metier_config_metier_id_fkey"
+            columns: ["metier_id"]
+            isOneToOne: false
+            referencedRelation: "v_objet_heures_consolidees"
             referencedColumns: ["metier_id"]
           },
         ]
@@ -1246,6 +1291,13 @@ export type Database = {
             referencedRelation: "v_devis_consommation"
             referencedColumns: ["metier_id"]
           },
+          {
+            foreignKeyName: "devis_postes_metier_id_fkey"
+            columns: ["metier_id"]
+            isOneToOne: false
+            referencedRelation: "v_objet_heures_consolidees"
+            referencedColumns: ["metier_id"]
+          },
         ]
       }
       employe_metiers: {
@@ -1287,6 +1339,13 @@ export type Database = {
             columns: ["metier_id"]
             isOneToOne: false
             referencedRelation: "v_devis_consommation"
+            referencedColumns: ["metier_id"]
+          },
+          {
+            foreignKeyName: "employe_metiers_metier_id_fkey"
+            columns: ["metier_id"]
+            isOneToOne: false
+            referencedRelation: "v_objet_heures_consolidees"
             referencedColumns: ["metier_id"]
           },
         ]
@@ -1419,6 +1478,13 @@ export type Database = {
             referencedColumns: ["metier_id"]
           },
           {
+            foreignKeyName: "employes_metier_principal_id_fkey"
+            columns: ["metier_principal_id"]
+            isOneToOne: false
+            referencedRelation: "v_objet_heures_consolidees"
+            referencedColumns: ["metier_id"]
+          },
+          {
             foreignKeyName: "employes_profile_id_fkey"
             columns: ["profile_id"]
             isOneToOne: false
@@ -1531,6 +1597,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "fabrication_objets"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fabrication_etapes_objet_id_fkey"
+            columns: ["objet_id"]
+            isOneToOne: false
+            referencedRelation: "v_objet_heures_consolidees"
+            referencedColumns: ["objet_id"]
           },
           {
             foreignKeyName: "fabrication_etapes_validateur_id_fkey"
@@ -1811,6 +1884,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "fabrication_objets"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fabrication_objets_photos_objet_id_fkey"
+            columns: ["objet_id"]
+            isOneToOne: false
+            referencedRelation: "v_objet_heures_consolidees"
+            referencedColumns: ["objet_id"]
           },
         ]
       }
@@ -2104,6 +2184,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "heures_saisies_fabrication_objet_id_fkey"
+            columns: ["fabrication_objet_id"]
+            isOneToOne: false
+            referencedRelation: "v_objet_heures_consolidees"
+            referencedColumns: ["objet_id"]
+          },
+          {
             foreignKeyName: "heures_saisies_metier_id_fkey"
             columns: ["metier_id"]
             isOneToOne: false
@@ -2115,6 +2202,13 @@ export type Database = {
             columns: ["metier_id"]
             isOneToOne: false
             referencedRelation: "v_devis_consommation"
+            referencedColumns: ["metier_id"]
+          },
+          {
+            foreignKeyName: "heures_saisies_metier_id_fkey"
+            columns: ["metier_id"]
+            isOneToOne: false
+            referencedRelation: "v_objet_heures_consolidees"
             referencedColumns: ["metier_id"]
           },
           {
@@ -3011,6 +3105,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "staffing_plan_object_objet_id_fkey"
+            columns: ["objet_id"]
+            isOneToOne: false
+            referencedRelation: "v_objet_heures_consolidees"
+            referencedColumns: ["objet_id"]
+          },
+          {
             foreignKeyName: "staffing_plan_object_plan_id_fkey"
             columns: ["plan_id"]
             isOneToOne: false
@@ -3128,11 +3229,25 @@ export type Database = {
             referencedColumns: ["metier_id"]
           },
           {
+            foreignKeyName: "staffing_plan_step_metier_id_fkey"
+            columns: ["metier_id"]
+            isOneToOne: false
+            referencedRelation: "v_objet_heures_consolidees"
+            referencedColumns: ["metier_id"]
+          },
+          {
             foreignKeyName: "staffing_plan_step_objet_id_fkey"
             columns: ["objet_id"]
             isOneToOne: false
             referencedRelation: "fabrication_objets"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staffing_plan_step_objet_id_fkey"
+            columns: ["objet_id"]
+            isOneToOne: false
+            referencedRelation: "v_objet_heures_consolidees"
+            referencedColumns: ["objet_id"]
           },
           {
             foreignKeyName: "staffing_plan_step_plan_id_fkey"
@@ -3923,6 +4038,40 @@ export type Database = {
             columns: ["author_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_objet_heures_consolidees: {
+        Row: {
+          affaire_id: string | null
+          derniere_validation_le: string | null
+          heures_reelles: number | null
+          metier_code: string | null
+          metier_id: number | null
+          nb_saisies: number | null
+          objet_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fabrication_objets_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "affaires"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fabrication_objets_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "v_affaire_consommation"
+            referencedColumns: ["affaire_id"]
+          },
+          {
+            foreignKeyName: "fabrication_objets_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "v_affaires_avec_plan_status"
             referencedColumns: ["id"]
           },
         ]
