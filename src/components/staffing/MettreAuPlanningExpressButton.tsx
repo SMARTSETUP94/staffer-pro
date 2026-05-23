@@ -148,6 +148,14 @@ export function MettreAuPlanningExpressButton({
 
       clearStepper();
       toast.dismiss(toastId);
+      // Quick win I — feedback haptique mobile sur succès
+      if (typeof navigator !== "undefined" && typeof navigator.vibrate === "function") {
+        try {
+          navigator.vibrate(res.published ? [40, 60, 40] : 50);
+        } catch {
+          /* noop */
+        }
+      }
       const sec = (res.duration_ms / 1000).toFixed(1);
       const weHint = res.include_weekends ? " · WE inclus" : "";
       if (res.published) {
