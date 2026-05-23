@@ -97,7 +97,10 @@ export const ROLE_PRESETS: Record<AppRole, WidgetId[]> = {
     "quiz_du_jour",
   ],
   employe: [],
+  // v0.48 Bloc 6 — preset RH minimal (absences + anniversaires)
+  rh: ["inbox", "absences_semaine", "anniversaires", "saint_du_jour"],
 };
+
 /**
  * Le rôle "chargé d'affaires" n'existe pas encore comme AppRole distinct.
  * On le détecte via la présence dans la table charges_affaires (hook séparé).
@@ -152,9 +155,16 @@ export function getAllowedWidgetsForRole(role: AppRole): Set<WidgetId> {
     ]);
   }
 
+  if (role === "rh") {
+    return new Set<WidgetId>([
+      "inbox", "absences_semaine", "anniversaires", "saint_du_jour", "astuces_marquee",
+    ]);
+  }
+
   // employe : AUCUN widget (ni quiz, ni astuces, ni perso) — accède à /ma-semaine et /mes-heures uniquement
   return new Set<WidgetId>();
 }
+
 
 /**
  * Filtre un layout pour ne garder que les widgets autorisés au rôle donné.
