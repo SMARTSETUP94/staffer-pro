@@ -243,6 +243,7 @@ function StaffingPlanPage() {
                 ? () => autoStaffRef.current?.trigger()
                 : null
             }
+            onPublish={isDraft && planData ? () => setPublishOpen(true) : null}
           />
           <Button variant="outline" size="sm" onClick={() => setHistoryOpen(true)}>
             <History className="mr-1 h-3 w-3" /> Historique
