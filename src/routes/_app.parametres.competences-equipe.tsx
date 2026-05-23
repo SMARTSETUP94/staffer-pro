@@ -97,11 +97,21 @@ function CompetencesEquipePage() {
     if (typeof window === "undefined") return false;
     return window.localStorage.getItem("competencesEquipe.dropdownMode") === "1";
   });
+  // Lot 2.2 #10 — Filtre "Modifiés uniquement" (employés ayant au moins une compétence S/D/X saisie)
+  const [modifiedOnly, setModifiedOnly] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem("competencesEquipe.modifiedOnly") === "1";
+  });
   useEffect(() => {
     if (typeof window !== "undefined") {
       window.localStorage.setItem("competencesEquipe.dropdownMode", dropdownMode ? "1" : "0");
     }
   }, [dropdownMode]);
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("competencesEquipe.modifiedOnly", modifiedOnly ? "1" : "0");
+    }
+  }, [modifiedOnly]);
 
   useEffect(() => {
     let cancelled = false;
