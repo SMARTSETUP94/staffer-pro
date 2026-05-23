@@ -44,9 +44,38 @@ interface RoadmapPlanned {
 const RELEASES: RoadmapRelease[] = [
   {
     date: "2026-05-23",
+    version: "v0.48.1",
+    title: "🔐 Lot 7.0 — Capabilities wiring & sécurisation routes (dette Bloc 0-6)",
+    entries: [
+      {
+        type: "refactor",
+        area: "Lot 7.0a — Migration capabilities",
+        title: "6 nouvelles capabilities + 6 rôles futurs seedés",
+        description:
+          "Ajout en base de 6 capabilities : `inbox.view`, `rh.hub.view`, `affaire.equipe.view`, `affaire.kpi.view`, `admin.permissions.manage`, `admin.feature_flags.manage`. Extension de l'enum `app_role` avec 6 rôles futurs prêts à l'emploi : `commercial`, `bureau_etude`, `atelier_chef`, `atelier_metier`, `logistique`, `poseur` (matrice de permissions par défaut seedée pour chacun). Les 11 rôles disposent maintenant d'une matrice fonctionnelle pré-configurée — modifiable à chaud via `/admin/permissions`.",
+      },
+      {
+        type: "feature",
+        area: "Lot 7.0b — Wiring capabilities",
+        title: "Helpers `requireCapability` + composant `<CapabilityGuard>`",
+        description:
+          "Nouveau helper `src/lib/capability-guard.ts` avec `requireCapability(capKey)` pour gating route-level dans `beforeLoad` (cache module 5 min, toast « Accès refusé » via sessionStorage + redirection /dashboard). Composant React `CapabilityGuard` pour rendu conditionnel (boutons, onglets, sections). Routes gatées : `/admin/permissions`, `/admin/feature-flags`, `/rh` (suppression check hardcodé legacy), `/affaires/$id/equipe`. Onglet « Équipe » et `AffaireKpiBar` désormais conditionnels via `useCapability`.",
+      },
+      {
+        type: "feature",
+        area: "Lot 7.0c — Tests E2E capabilities",
+        title: "5 specs E2E × 15 scénarios (succès + route directe + sidebar)",
+        description:
+          "6 fichiers dans `e2e/capabilities/` couvrant les 3 rôles (admin / chef / employé desktop) sur 5 routes sensibles (`/admin/permissions`, `/admin/feature-flags`, `/inbox`, `/affaires/$id/equipe`, `/rh`). Chaque rôle teste : succès (le bon rôle accède), échec route directe (mauvais rôle bloqué via `beforeLoad`), échec sidebar (entrée invisible). Helpers `visitAllowedRoutes` + `assertForbiddenRoutes` réutilisés depuis la battery role-smoke v0.34.x. Garde-fou anti-fuite RGPD validé.",
+      },
+    ],
+  },
+  {
+    date: "2026-05-23",
     version: "v0.48.0",
     title: "🏗️ Refonte UX/UI Staffer Pro — Blocs 0 à 6 (fondations + RH)",
     entries: [
+
       {
         type: "refactor",
         area: "Bloc 0 — Audit & Feature Flags",
