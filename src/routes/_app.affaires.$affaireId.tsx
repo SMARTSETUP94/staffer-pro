@@ -104,7 +104,8 @@ function AffaireDetailLayout() {
     );
   }
 
-  const canSeeEquipe = useCapability("affaire.equipe.view");
+
+
 
   const tabs = [
     { to: `/affaires/${affaire.id}`, label: "Synthèse", match: path === `/affaires/${affaire.id}` },
