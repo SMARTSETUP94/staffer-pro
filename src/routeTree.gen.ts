@@ -89,6 +89,7 @@ import { Route as AppDevisHistoriqueRouteImport } from './routes/_app.devis.hist
 import { Route as AppAffairesBudgetPlanningRouteImport } from './routes/_app.affaires.budget-planning'
 import { Route as AppAffairesAffaireIdRouteImport } from './routes/_app.affaires.$affaireId'
 import { Route as AppAdminFeedbackRouteImport } from './routes/_app.admin.feedback'
+import { Route as AppAdminFeatureFlagsRouteImport } from './routes/_app.admin.feature-flags'
 import { Route as AppAdminEmployesPostePrincipalRouteImport } from './routes/_app.admin.employes-poste-principal'
 import { Route as AppAdminEmailPreviewRouteImport } from './routes/_app.admin.email-preview'
 import { Route as AppAdminContenuWidgetsRouteImport } from './routes/_app.admin.contenu-widgets'
@@ -508,6 +509,11 @@ const AppAdminFeedbackRoute = AppAdminFeedbackRouteImport.update({
   path: '/admin/feedback',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAdminFeatureFlagsRoute = AppAdminFeatureFlagsRouteImport.update({
+  id: '/admin/feature-flags',
+  path: '/admin/feature-flags',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAdminEmployesPostePrincipalRoute =
   AppAdminEmployesPostePrincipalRouteImport.update({
     id: '/admin/employes-poste-principal',
@@ -619,6 +625,7 @@ export interface FileRoutesByFullPath {
   '/admin/contenu-widgets': typeof AppAdminContenuWidgetsRoute
   '/admin/email-preview': typeof AppAdminEmailPreviewRoute
   '/admin/employes-poste-principal': typeof AppAdminEmployesPostePrincipalRoute
+  '/admin/feature-flags': typeof AppAdminFeatureFlagsRoute
   '/admin/feedback': typeof AppAdminFeedbackRoute
   '/affaires/$affaireId': typeof AppAffairesAffaireIdRouteWithChildren
   '/affaires/budget-planning': typeof AppAffairesBudgetPlanningRoute
@@ -709,6 +716,7 @@ export interface FileRoutesByTo {
   '/admin/contenu-widgets': typeof AppAdminContenuWidgetsRoute
   '/admin/email-preview': typeof AppAdminEmailPreviewRoute
   '/admin/employes-poste-principal': typeof AppAdminEmployesPostePrincipalRoute
+  '/admin/feature-flags': typeof AppAdminFeatureFlagsRoute
   '/admin/feedback': typeof AppAdminFeedbackRoute
   '/affaires/budget-planning': typeof AppAffairesBudgetPlanningRoute
   '/devis/historique': typeof AppDevisHistoriqueRoute
@@ -802,6 +810,7 @@ export interface FileRoutesById {
   '/_app/admin/contenu-widgets': typeof AppAdminContenuWidgetsRoute
   '/_app/admin/email-preview': typeof AppAdminEmailPreviewRoute
   '/_app/admin/employes-poste-principal': typeof AppAdminEmployesPostePrincipalRoute
+  '/_app/admin/feature-flags': typeof AppAdminFeatureFlagsRoute
   '/_app/admin/feedback': typeof AppAdminFeedbackRoute
   '/_app/affaires/$affaireId': typeof AppAffairesAffaireIdRouteWithChildren
   '/_app/affaires/budget-planning': typeof AppAffairesBudgetPlanningRoute
@@ -896,6 +905,7 @@ export interface FileRouteTypes {
     | '/admin/contenu-widgets'
     | '/admin/email-preview'
     | '/admin/employes-poste-principal'
+    | '/admin/feature-flags'
     | '/admin/feedback'
     | '/affaires/$affaireId'
     | '/affaires/budget-planning'
@@ -986,6 +996,7 @@ export interface FileRouteTypes {
     | '/admin/contenu-widgets'
     | '/admin/email-preview'
     | '/admin/employes-poste-principal'
+    | '/admin/feature-flags'
     | '/admin/feedback'
     | '/affaires/budget-planning'
     | '/devis/historique'
@@ -1078,6 +1089,7 @@ export interface FileRouteTypes {
     | '/_app/admin/contenu-widgets'
     | '/_app/admin/email-preview'
     | '/_app/admin/employes-poste-principal'
+    | '/_app/admin/feature-flags'
     | '/_app/admin/feedback'
     | '/_app/affaires/$affaireId'
     | '/_app/affaires/budget-planning'
@@ -1706,6 +1718,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminFeedbackRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/admin/feature-flags': {
+      id: '/_app/admin/feature-flags'
+      path: '/admin/feature-flags'
+      fullPath: '/admin/feature-flags'
+      preLoaderRoute: typeof AppAdminFeatureFlagsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/admin/employes-poste-principal': {
       id: '/_app/admin/employes-poste-principal'
       path: '/admin/employes-poste-principal'
@@ -1878,6 +1897,7 @@ interface AppRouteChildren {
   AppAdminContenuWidgetsRoute: typeof AppAdminContenuWidgetsRoute
   AppAdminEmailPreviewRoute: typeof AppAdminEmailPreviewRoute
   AppAdminEmployesPostePrincipalRoute: typeof AppAdminEmployesPostePrincipalRoute
+  AppAdminFeatureFlagsRoute: typeof AppAdminFeatureFlagsRoute
   AppAdminFeedbackRoute: typeof AppAdminFeedbackRoute
   AppAffairesAffaireIdRoute: typeof AppAffairesAffaireIdRouteWithChildren
   AppAffairesBudgetPlanningRoute: typeof AppAffairesBudgetPlanningRoute
@@ -1933,6 +1953,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAdminContenuWidgetsRoute: AppAdminContenuWidgetsRoute,
   AppAdminEmailPreviewRoute: AppAdminEmailPreviewRoute,
   AppAdminEmployesPostePrincipalRoute: AppAdminEmployesPostePrincipalRoute,
+  AppAdminFeatureFlagsRoute: AppAdminFeatureFlagsRoute,
   AppAdminFeedbackRoute: AppAdminFeedbackRoute,
   AppAffairesAffaireIdRoute: AppAffairesAffaireIdRouteWithChildren,
   AppAffairesBudgetPlanningRoute: AppAffairesBudgetPlanningRoute,
