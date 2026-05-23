@@ -143,6 +143,7 @@ export function getAllowedWidgetsForRole(role: AppRole): Set<WidgetId> {
   const fun: WidgetId[] = ["anniversaires", "saint_du_jour", "top_constructeur", "chef_projet_mois", "astuces_marquee", "quiz_du_jour", "quiz_leaderboard"];
   if (role === "chef_chantier") {
     return new Set<WidgetId>([
+      "inbox",
       "meteo_chantiers", "montages_j7", "tension_budget", "absences_semaine",
       "flotte_kpis", "charge_atelier", "objets_en_retard", "charge_equipe",
       "mes_etapes_fab", "heures_a_valider", "sous_effectif_J7",
@@ -150,6 +151,7 @@ export function getAllowedWidgetsForRole(role: AppRole): Set<WidgetId> {
       ...fun,
     ]);
   }
+
   // employe : AUCUN widget (ni quiz, ni astuces, ni perso) — accède à /ma-semaine et /mes-heures uniquement
   return new Set<WidgetId>();
 }
