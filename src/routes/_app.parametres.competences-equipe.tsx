@@ -195,9 +195,13 @@ function CompetencesEquipePage() {
 
   const filtered = useMemo(() => {
     const q = filter.trim().toLowerCase();
-    if (!q) return emps;
-    return emps.filter((e) => `${e.prenom} ${e.nom}`.toLowerCase().includes(q));
-  }, [emps, filter]);
+    let base = emps;
+    if (q) base = base.filter((e) => `${e.prenom} ${e.nom}`.toLowerCase().includes(q));
+    if (modifiedOnly) {
+      base = base.filter((e) => Object.keys(matrix[e.id] ?? {}).length > 0);
+    }
+    return base;
+  }, [emps, filter, modifiedOnly, matrix]);
 
   if (!rolesLoaded) return null;
   if (!isAdminOrChef) return <Navigate to="/dashboard" />;
