@@ -80,6 +80,7 @@ export function MettreAuPlanningExpressButton({
   const navigate = useNavigate();
   const expressFn = useServerFn(createPlanExpress);
   const listFn = useServerFn(listFabObjetsForWizard);
+  const getActivePlansFn = useServerFn(getActivePlansForAffaire);
   const { prefetch } = useWizardPrefetch(affaireId);
   const [running, setRunning] = useState(false);
   const [includeWeekends, setIncludeWeekends] = useState(false);
@@ -88,6 +89,14 @@ export function MettreAuPlanningExpressButton({
     reason: "",
   });
   const stepperTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  // Quick win J — détecte si un plan publié actif existe pour cette affaire.
+  const { data: activePlans } = useQuery({
+    queryKey: ["active-plans-for-affaire", affaireId],
+    queryFn: () => getActivePlansFn({ data: { affaire_id: affaireId } }),
+    staleTime: 30_000,
+  });
+  const publishedPlan = activePlans?.find((p) => p.status === "published") ?? null;
 
   const startStepper = useCallback((toastId: string | number, total: number) => {
     // Affiche stepper progressif basé sur estimation : 4 ticks équirépartis sur durée moyenne 6s.
