@@ -61,10 +61,13 @@ Helpers purs testables : `src/lib/objet-fiche-helpers.ts` (15 tests Vitest verts
 
 `fiche_objet_v1` (désactivé au seed) — pilote les routes/UI livrées en 8.2+.
 
-## Lots restants
+## Lots livrés / restants
 
-- 8.2 : route + page + identité + heures table (avec bascule unitaire/total)
+- 8.1 ✅ fondations data (MV + caps + flag + server fn)
+- 8.2 ✅ route + page + identité + heures table (bascule Total/Unitaire)
+- 8.2b ✅ (23 mai 2026) lien temporaire `data-testid="objet-fiche-link"` depuis `/affaires/$id/fabrication` (desktop row + mobile card), gated par flag `fiche_objet_v1` + cap `objet.view`. TODO(8.5): remplacer par lien intégré natif. + Seed 3 comptes test (commercial / bureau_etude / atelier_chef) dans `e2e/seed.ts` + 3 projects Playwright + flag activé pour ces UUIDs lors du seed.
 - 8.3 : étapes + équipe + AssignerPersonneSheet
 - 8.4 : journal + photos auto-taggées
-- 8.5 : liens croisés Gantt/Planning/Devis/Kanban
+- 8.5 : liens croisés Gantt/Planning/Devis/Kanban (remplace le lien temporaire de 8.2b)
 - 8.6 : polish + responsive 380px + tests complets
+

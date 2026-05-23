@@ -8,7 +8,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreVertical, Pencil } from "lucide-react";
+import { MoreVertical, Pencil, ExternalLink } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import {
   ETAPE_LABELS,
@@ -22,6 +23,8 @@ import {
 interface ObjetCardMobileProps {
   objet: FabricationObjet;
   isAdminOrChef: boolean;
+  /** Lot 8.2b — Lien temporaire vers la Fiche Objet (null = caché). */
+  ficheHref?: string | null;
   onEditObjet: (objet: FabricationObjet) => void;
   onEditEtape: (objet: FabricationObjet, etape: FabricationEtape) => void;
 }
@@ -48,14 +51,29 @@ export function ObjetCardMobile({
   isAdminOrChef,
   onEditObjet,
   onEditEtape,
+  ficheHref = null,
 }: ObjetCardMobileProps) {
   const avancement = calcAvancementObjet(objet);
   return (
-    <div className="rounded-xl border border-border bg-card p-3 shadow-sm">
+    <div className="rounded-xl border border-border bg-card p-3 shadow-sm" data-objet-id={objet.id}>
       {/* Header */}
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
-          <p className="font-mono text-[11px] text-muted-foreground">{objet.reference}</p>
+          <p className="font-mono text-[11px] text-muted-foreground flex items-center gap-1.5">
+            <span>{objet.reference}</span>
+            {ficheHref && (
+              // TODO(8.5): remplacer par lien intégré natif.
+              <Link
+                to={ficheHref}
+                data-testid="objet-fiche-link"
+                data-objet-id={objet.id}
+                title="Voir la fiche objet"
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <ExternalLink className="h-3 w-3" />
+              </Link>
+            )}
+          </p>
           <h3 className="text-sm font-semibold leading-tight text-foreground">{objet.nom}</h3>
           <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px]">
             <Badge variant="outline" className="h-5 px-1.5 text-[10px]">

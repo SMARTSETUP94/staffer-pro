@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Loader2, Plus, Upload, MoreVertical, Pencil, Truck, Send } from "lucide-react";
+import { Loader2, Plus, Upload, MoreVertical, Pencil, Truck, Send, ExternalLink } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { useFeatureFlag } from "@/hooks/use-feature-flag";
+import { useCapability } from "@/hooks/use-capability";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -62,6 +65,10 @@ function FabricationPage() {
   const { affaireId } = Route.useParams();
   const { isAdminOrChef, isAdmin } = useAuth();
   const vocab = useVocab();
+  // Lot 8.2b — Lien temporaire vers la Fiche Objet (sera remplacé en 8.5 par un lien intégré natif).
+  const ficheFlagOn = useFeatureFlag("fiche_objet_v1");
+  const canViewFiche = useCapability("objet.view");
+  const showFicheLink = ficheFlagOn && canViewFiche;
   const { objets, loading, reload } = useFabricationObjets(affaireId);
   const { profiles } = useProfilesWithRoles();
   const [openAjouter, setOpenAjouter] = useState(false);
@@ -301,6 +308,11 @@ function FabricationPage() {
                 key={o.id}
                 objet={o}
                 isAdminOrChef={isAdminOrChef}
+                ficheHref={
+                  showFicheLink
+                    ? `/affaires/${affaireId}/objets/${o.id}`
+                    : null
+                }
                 onEditObjet={(obj) => setEditObjet(obj)}
                 onEditEtape={(obj, etape) => setEditEtape({ objet: obj, etape })}
               />
@@ -327,8 +339,25 @@ function FabricationPage() {
               </TableHeader>
               <TableBody>
                 {objets.map((o) => (
-                  <TableRow key={o.id}>
-                    <TableCell className="font-mono text-xs">{o.reference}</TableCell>
+                  <TableRow key={o.id} data-objet-id={o.id}>
+                    <TableCell className="font-mono text-xs">
+                      <div className="flex items-center gap-1.5">
+                        <span>{o.reference}</span>
+                        {showFicheLink && (
+                          // TODO(8.5): remplacer par le lien intégré natif depuis la liste.
+                          <Link
+                            to="/affaires/$affaireId/objets/$objetId"
+                            params={{ affaireId, objetId: o.id }}
+                            data-testid="objet-fiche-link"
+                            data-objet-id={o.id}
+                            title="Voir la fiche objet"
+                            className="text-muted-foreground hover:text-foreground"
+                          >
+                            <ExternalLink className="h-3 w-3" />
+                          </Link>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell className="font-medium">{o.nom}</TableCell>
                     <TableCell className="text-center">{o.quantite}</TableCell>
                     <TableCell className="text-xs">

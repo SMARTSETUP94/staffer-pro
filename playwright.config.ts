@@ -99,6 +99,22 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"] },
       testMatch: /.*\.smoke\.spec\.ts/,
     },
+    // Lot 8.2b — Comptes test matrice Fiche Objet.
+    {
+      name: "commercial-desktop",
+      use: { ...devices["Desktop Chrome"], storageState: "e2e/.auth/commercial.json" },
+      testMatch: /.*\.commercial\.spec\.ts/,
+    },
+    {
+      name: "bureau-etude-desktop",
+      use: { ...devices["Desktop Chrome"], storageState: "e2e/.auth/bureau-etude.json" },
+      testMatch: /.*\.bureau-etude\.spec\.ts/,
+    },
+    {
+      name: "atelier-chef-desktop",
+      use: { ...devices["Desktop Chrome"], storageState: "e2e/.auth/atelier-chef.json" },
+      testMatch: /.*\.atelier-chef\.spec\.ts/,
+    },
   ],
 
   webServer: isCI

@@ -26,7 +26,14 @@ const admin = createClient(url, serviceKey, {
   auth: { autoRefreshToken: false, persistSession: false },
 });
 
-type RoleName = "admin" | "chef_chantier" | "employe" | "chef_metier_scoped";
+type RoleName =
+  | "admin"
+  | "chef_chantier"
+  | "employe"
+  | "chef_metier_scoped"
+  | "commercial"
+  | "bureau_etude"
+  | "atelier_chef";
 
 interface Seed {
   email: string;
@@ -79,6 +86,31 @@ const seeds: Seed[] = [
     prenom: "E2E",
     nom: "ChefScoped",
     metierOrdre: 3, // peinture
+  },
+  // Lot 8.2b — 3 comptes test pour matrice Fiche Objet (commercial / BE / atelier_chef).
+  {
+    email: optional("E2E_COMMERCIAL_EMAIL", "test_commercial@setupparis.test"),
+    password: optional("E2E_COMMERCIAL_PASSWORD", "Commercial-E2E-2026!"),
+    role: "commercial",
+    fullName: "E2E Commercial",
+    prenom: "E2E",
+    nom: "Commercial",
+  },
+  {
+    email: optional("E2E_BUREAU_ETUDE_EMAIL", "test_bureau_etude@setupparis.test"),
+    password: optional("E2E_BUREAU_ETUDE_PASSWORD", "BureauEtude-E2E-2026!"),
+    role: "bureau_etude",
+    fullName: "E2E Bureau d'étude",
+    prenom: "E2E",
+    nom: "BureauEtude",
+  },
+  {
+    email: optional("E2E_ATELIER_CHEF_EMAIL", "test_atelier_chef@setupparis.test"),
+    password: optional("E2E_ATELIER_CHEF_PASSWORD", "AtelierChef-E2E-2026!"),
+    role: "atelier_chef",
+    fullName: "E2E Atelier Chef",
+    prenom: "E2E",
+    nom: "AtelierChef",
   },
 ];
 
@@ -266,7 +298,38 @@ async function main() {
   );
   // Assignation employé sur cette semaine (sur l'affaire chef global)
   await ensureAssignationSemaine(empId, affaireId);
+
+  // Lot 8.2b — Activer le flag fiche_objet_v1 pour tous les comptes test.
+  // L'admin & le chef ont besoin du flag pour voir le lien "Voir fiche" sur la page Fab.
+  // Commercial / BE / atelier_chef en ont besoin pour ouvrir la fiche elle-même.
+  await enableFeatureFlagForUsers("fiche_objet_v1", [
+    userIds.admin,
+    userIds.chef_chantier,
+    userIds.commercial,
+    userIds.bureau_etude,
+    userIds.atelier_chef,
+  ]);
   console.log("[seed] OK");
+}
+
+async function enableFeatureFlagForUsers(flagKey: string, userIds: string[]) {
+  const { data: existing, error: selErr } = await admin
+    .from("feature_flags")
+    .select("flag_key, enabled_for_user_ids")
+    .eq("flag_key", flagKey)
+    .maybeSingle();
+  if (selErr) throw selErr;
+  const current = new Set<string>(
+    (existing?.enabled_for_user_ids as string[] | null) ?? [],
+  );
+  for (const id of userIds) current.add(id);
+  const next = Array.from(current);
+  const { error } = await admin
+    .from("feature_flags")
+    .update({ enabled_for_user_ids: next })
+    .eq("flag_key", flagKey);
+  if (error) throw error;
+  console.log(`[seed] flag ${flagKey} → ${userIds.length} test users autorisés`);
 }
 
 main().catch((e) => {
