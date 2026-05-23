@@ -87,7 +87,7 @@ function estimateDateDebut(dateFinIso: string, totalH: number, includeWeekends: 
   return shiftBusinessDays(dateFinIso, -joursOuvres, includeWeekends);
 }
 
-const STEPS = ["Création", "Calcul", "Auto-staff", "Publication"] as const;
+import { useVocab } from "@/hooks/use-vocab";
 
 export function MettreAuPlanningExpressButton({
   affaireId,
@@ -95,6 +95,8 @@ export function MettreAuPlanningExpressButton({
   onConfigurer,
   disabled,
 }: Props) {
+  const vocab = useVocab();
+  const STEPS = ["Création", "Calcul", vocab.autoRemplirStepLabel, "Publication"] as const;
   const navigate = useNavigate();
   const expressFn = useServerFn(createPlanExpress);
   const listFn = useServerFn(listFabObjetsForWizard);
