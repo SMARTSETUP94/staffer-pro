@@ -3,7 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link, Navigate, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowLeft, History, Send, Zap, ListChecks, Trash2 } from "lucide-react";
+import { ArrowLeft, History, Send, Zap, ListChecks, Trash2, MoreVertical } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
 import {
