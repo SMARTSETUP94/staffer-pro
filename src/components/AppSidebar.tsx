@@ -17,7 +17,7 @@ import { useContratsRhCount } from "@/hooks/use-contrats-rh-count";
 
 import { ViewAsSwitcher } from "./ViewAsSwitcher";
 
-type EffRole = "admin" | "chef_chantier" | "employe";
+type EffRole = "admin" | "chef_chantier" | "employe" | "rh";
 
 /**
  * v0.14 — Refonte IA : 5 sections
