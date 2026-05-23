@@ -96,7 +96,7 @@ function RhHubPage() {
     };
   }, []);
 
-  if (!rolesLoaded || (!isAdmin && !isRh)) {
+  if (loading || !kpis) {
     return (
       <div className="flex h-full items-center justify-center">
         <Loader2 className="h-5 w-5 animate-spin text-primary" />
