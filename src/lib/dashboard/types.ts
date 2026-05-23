@@ -81,10 +81,12 @@ export const ROLE_PRESETS: Record<AppRole, WidgetId[]> = {
   // v0.45 — chef_metier_scoped : même preset que chef_chantier (UI globale,
   // RLS borne ce qu'il voit réellement par-affaire).
   chef_metier_scoped: [
+    "inbox",
     "meteo_chantiers",
     "montages_j7",
     "absences_semaine",
     "charge_equipe",
+
     "mes_etapes_fab",
     "heures_a_valider",
     "objets_en_retard",
