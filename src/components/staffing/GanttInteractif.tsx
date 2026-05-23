@@ -420,8 +420,12 @@ export const GanttInteractif = forwardRef<
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-16">
-        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      <div className="space-y-3 py-4" aria-busy="true" aria-label="Chargement du plan">
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-16 w-full" />
+        <Skeleton className="h-16 w-full" />
+        <Skeleton className="h-16 w-full" />
+        <Skeleton className="h-16 w-full" />
       </div>
     );
   }
