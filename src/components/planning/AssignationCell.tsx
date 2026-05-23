@@ -241,7 +241,7 @@ function DraggableBadge({ group: g, metier, affaire, dnd, onDelete }: DraggableB
               {g.hasAutoStaffing && (
                 <span
                   className="shrink-0 rounded bg-primary/15 px-1 text-[8px] font-bold uppercase tracking-wider text-primary"
-                  title="Créneau issu d'un plan Auto-staffing v0.35"
+                  title="Créneau issu d'un plan Auto-staffing"
                 >
                   AS
                 </span>
