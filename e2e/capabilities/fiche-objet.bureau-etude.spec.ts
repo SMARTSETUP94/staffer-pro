@@ -1,15 +1,39 @@
 /**
- * Lot 8.2 — Fiche Objet : matrice bureau_etude.
+ * Lot 8.2b — Fiche Objet : matrice bureau_etude.
  *
- * STUB — nécessite un compte test bureau_etude seedé.
- * Attendu : édite commentaire + (futur) plans_url ; reste disabled.
- *
- * TODO(8.2.x) : seeder `E2E_BUREAU_ETUDE_EMAIL` + ajouter project Playwright.
+ * Attendu :
+ *   - Voit la fiche.
+ *   - Bouton Éditer visible (commentaire + plans CAD).
+ *   - nom + quantité + heures DISABLED, commentaire activable.
  */
-import { test } from "@playwright/test";
+import { test, expect } from "@playwright/test";
 
-test.describe.skip("fiche-objet :: bureau_etude (commentaire + plans)", () => {
-  test("nom + heures disabled, commentaire éditable", async () => {
-    // À implémenter quand le compte test bureau_etude sera seedé.
+test.describe("fiche-objet :: bureau_etude (commentaire + plans)", () => {
+  test("nom/qté disabled, commentaire éditable", async ({ page }) => {
+    await page.goto("/affaires?typologie=fabrication");
+    const firstAffaire = page.locator('a[href*="/affaires/"][href*="-"]').first();
+    if ((await firstAffaire.count()) === 0) {
+      test.skip(true, "Aucune affaire fab seedée");
+      return;
+    }
+    await firstAffaire.click();
+    await page.getByRole("link", { name: /fabrication/i }).first().click();
+    await page.waitForURL(/\/fabrication$/);
+
+    const ficheLink = page.getByTestId("objet-fiche-link").first();
+    if ((await ficheLink.count()) === 0) {
+      test.skip(true, "Lien Fiche absent — flag OFF");
+      return;
+    }
+    await ficheLink.click();
+    await page.waitForURL(/\/objets\//);
+
+    await expect(page.getByTestId("fiche-objet-title")).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByTestId("btn-editer-objet")).toBeVisible();
+
+    await page.getByTestId("btn-editer-objet").click();
+    await expect(page.locator("#fo-nom")).toBeDisabled();
+    await expect(page.locator("#fo-qte")).toBeDisabled();
+    await expect(page.locator("#fo-comm")).toBeEnabled();
   });
 });
