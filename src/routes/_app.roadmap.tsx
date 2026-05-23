@@ -2968,6 +2968,26 @@ const RELEASES: RoadmapRelease[] = [
 ];
 
 const PLANNED: RoadmapPlanned[] = [
+  // ========== Sprint v0.48.x — Suite refonte UX/UI (Lot 7.1 → 7.3) ==========
+  {
+    priority: "haute",
+    title: "Lot 7.1 — Vocabulaire UI centralisé (`labels.ts`)",
+    description:
+      "Création d'une source unique `src/lib/labels.ts` (helper `roleLabel()`) pour uniformiser l'affichage des rôles à travers les 9 surfaces UI qui divergent actuellement (« Chef d'équipe » / « Chef de chantier » / « Chef chantier » / « Chef de Chantier »). L'enum DB `chef_chantier` est conservé tel quel (RLS + 9 migrations + 7 helpers SECURITY DEFINER intouchables). Migration vocabulaire future = changer uniquement ce fichier. Inventaire `rg` complet validé (42 fichiers `src/`, 5 fichiers `e2e/`).",
+  },
+  {
+    priority: "haute",
+    title: "Lot 7.2 — Sidebar capability-driven",
+    description:
+      "Refonte de `AppSidebar.tsx` pour que chaque entrée soit gatée par une capability plutôt que par un check de rôle hardcodé. Mock attendu pour 3 personas (admin / chef / rh) à valider avant édition. Permettra à l'admin de masquer/afficher dynamiquement des entrées via `/admin/permissions` sans déploiement.",
+  },
+  {
+    priority: "haute",
+    title: "Lot 7.3 — Vue `v_affaires_avec_plan_status` (statuts dérivés)",
+    description:
+      "Création d'une vue SQL consolidée exposant pour chaque affaire les statuts dérivés (a-t-elle un plan publié ? un brouillon ? un plan archivé ? écart staffing vs devis ?). Échantillon de retour à valider avant migration. Permettra de simplifier les listes affaires + dashboard sans recalcul côté client.",
+  },
+
   // ========== Roadmap consolidée (mise à jour 5 mai 2026) ==========
   {
     priority: "haute",
@@ -2975,6 +2995,7 @@ const PLANNED: RoadmapPlanned[] = [
     description:
       "Sprint 2b2 entièrement terminé : Gantt (Tour 1+2+3) et StaffingPersonnesSection (Sprint 2b2.2) refactorés. Sprint 3 en cours : v0.41.0a hotfix heures cache LIVRÉ + v0.41.0c E2E employé desktop LIVRÉ (Phase 3c.1).",
   },
+
   {
     priority: "moyenne",
     title: "v0.41.0a — LIVRÉ — Hotfix heures invisibles cache côté employé",
