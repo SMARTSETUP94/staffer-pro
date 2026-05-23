@@ -1,8 +1,10 @@
 // v0.48 Bloc 5 — Onglet Équipe : historique des personnes mobilisées sur l'affaire
+// Lot 7.0b — gating via capability `affaire.equipe.view` (beforeLoad).
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Loader2, Users, Crown, AlertCircle, UserMinus, ArrowUpDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { requireCapability } from "@/lib/capability-guard";
 import { cn } from "@/lib/utils";
 
 interface Row {
