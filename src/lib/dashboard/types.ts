@@ -36,7 +36,10 @@ export const ALL_WIDGET_IDS = [
   "quiz_leaderboard",
   // Insights chef — v0.43
   "mon_equipe_type",
+  // Bloc 4 — Inbox unifiée
+  "inbox",
 ] as const;
+
 
 export type WidgetId = (typeof ALL_WIDGET_IDS)[number];
 
