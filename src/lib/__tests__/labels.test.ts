@@ -3,7 +3,10 @@ import {
   roleLabel,
   previewRoleLabel,
   affaireRoleLabel,
+  resolveVocab,
   USER_ROLE_OPTIONS,
+  VOCAB_LABELS_LEGACY,
+  VOCAB_LABELS_NEXT,
 } from "@/lib/labels";
 
 describe("labels — vocabulaire centralisé (Lot 7.1)", () => {
