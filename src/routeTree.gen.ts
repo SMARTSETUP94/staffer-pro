@@ -88,6 +88,7 @@ import { Route as AppDevisImportRouteImport } from './routes/_app.devis.import'
 import { Route as AppDevisHistoriqueRouteImport } from './routes/_app.devis.historique'
 import { Route as AppAffairesBudgetPlanningRouteImport } from './routes/_app.affaires.budget-planning'
 import { Route as AppAffairesAffaireIdRouteImport } from './routes/_app.affaires.$affaireId'
+import { Route as AppAdminPermissionsRouteImport } from './routes/_app.admin.permissions'
 import { Route as AppAdminFeedbackRouteImport } from './routes/_app.admin.feedback'
 import { Route as AppAdminFeatureFlagsRouteImport } from './routes/_app.admin.feature-flags'
 import { Route as AppAdminEmployesPostePrincipalRouteImport } from './routes/_app.admin.employes-poste-principal'
@@ -504,6 +505,11 @@ const AppAffairesAffaireIdRoute = AppAffairesAffaireIdRouteImport.update({
   path: '/affaires/$affaireId',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAdminPermissionsRoute = AppAdminPermissionsRouteImport.update({
+  id: '/admin/permissions',
+  path: '/admin/permissions',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAdminFeedbackRoute = AppAdminFeedbackRouteImport.update({
   id: '/admin/feedback',
   path: '/admin/feedback',
@@ -627,6 +633,7 @@ export interface FileRoutesByFullPath {
   '/admin/employes-poste-principal': typeof AppAdminEmployesPostePrincipalRoute
   '/admin/feature-flags': typeof AppAdminFeatureFlagsRoute
   '/admin/feedback': typeof AppAdminFeedbackRoute
+  '/admin/permissions': typeof AppAdminPermissionsRoute
   '/affaires/$affaireId': typeof AppAffairesAffaireIdRouteWithChildren
   '/affaires/budget-planning': typeof AppAffairesBudgetPlanningRoute
   '/devis/historique': typeof AppDevisHistoriqueRoute
@@ -718,6 +725,7 @@ export interface FileRoutesByTo {
   '/admin/employes-poste-principal': typeof AppAdminEmployesPostePrincipalRoute
   '/admin/feature-flags': typeof AppAdminFeatureFlagsRoute
   '/admin/feedback': typeof AppAdminFeedbackRoute
+  '/admin/permissions': typeof AppAdminPermissionsRoute
   '/affaires/budget-planning': typeof AppAffairesBudgetPlanningRoute
   '/devis/historique': typeof AppDevisHistoriqueRoute
   '/devis/import': typeof AppDevisImportRoute
@@ -812,6 +820,7 @@ export interface FileRoutesById {
   '/_app/admin/employes-poste-principal': typeof AppAdminEmployesPostePrincipalRoute
   '/_app/admin/feature-flags': typeof AppAdminFeatureFlagsRoute
   '/_app/admin/feedback': typeof AppAdminFeedbackRoute
+  '/_app/admin/permissions': typeof AppAdminPermissionsRoute
   '/_app/affaires/$affaireId': typeof AppAffairesAffaireIdRouteWithChildren
   '/_app/affaires/budget-planning': typeof AppAffairesBudgetPlanningRoute
   '/_app/devis/historique': typeof AppDevisHistoriqueRoute
@@ -907,6 +916,7 @@ export interface FileRouteTypes {
     | '/admin/employes-poste-principal'
     | '/admin/feature-flags'
     | '/admin/feedback'
+    | '/admin/permissions'
     | '/affaires/$affaireId'
     | '/affaires/budget-planning'
     | '/devis/historique'
@@ -998,6 +1008,7 @@ export interface FileRouteTypes {
     | '/admin/employes-poste-principal'
     | '/admin/feature-flags'
     | '/admin/feedback'
+    | '/admin/permissions'
     | '/affaires/budget-planning'
     | '/devis/historique'
     | '/devis/import'
@@ -1091,6 +1102,7 @@ export interface FileRouteTypes {
     | '/_app/admin/employes-poste-principal'
     | '/_app/admin/feature-flags'
     | '/_app/admin/feedback'
+    | '/_app/admin/permissions'
     | '/_app/affaires/$affaireId'
     | '/_app/affaires/budget-planning'
     | '/_app/devis/historique'
@@ -1711,6 +1723,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAffairesAffaireIdRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/admin/permissions': {
+      id: '/_app/admin/permissions'
+      path: '/admin/permissions'
+      fullPath: '/admin/permissions'
+      preLoaderRoute: typeof AppAdminPermissionsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/admin/feedback': {
       id: '/_app/admin/feedback'
       path: '/admin/feedback'
@@ -1899,6 +1918,7 @@ interface AppRouteChildren {
   AppAdminEmployesPostePrincipalRoute: typeof AppAdminEmployesPostePrincipalRoute
   AppAdminFeatureFlagsRoute: typeof AppAdminFeatureFlagsRoute
   AppAdminFeedbackRoute: typeof AppAdminFeedbackRoute
+  AppAdminPermissionsRoute: typeof AppAdminPermissionsRoute
   AppAffairesAffaireIdRoute: typeof AppAffairesAffaireIdRouteWithChildren
   AppAffairesBudgetPlanningRoute: typeof AppAffairesBudgetPlanningRoute
   AppDevisHistoriqueRoute: typeof AppDevisHistoriqueRoute
@@ -1955,6 +1975,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAdminEmployesPostePrincipalRoute: AppAdminEmployesPostePrincipalRoute,
   AppAdminFeatureFlagsRoute: AppAdminFeatureFlagsRoute,
   AppAdminFeedbackRoute: AppAdminFeedbackRoute,
+  AppAdminPermissionsRoute: AppAdminPermissionsRoute,
   AppAffairesAffaireIdRoute: AppAffairesAffaireIdRouteWithChildren,
   AppAffairesBudgetPlanningRoute: AppAffairesBudgetPlanningRoute,
   AppDevisHistoriqueRoute: AppDevisHistoriqueRoute,
