@@ -52,137 +52,128 @@ interface NavSection {
 function buildSections(role: EffRole, validationCount: number, contratsRhCount: number): NavSection[] {
   const isAdmin = role === "admin";
 
-  // ===== Vue Employé : 3 items flat =====
+  // ===== Vue Employé : items flat (gating au niveau du template) =====
   if (role === "employe") {
     return [
       {
         label: "Espace personnel",
         items: [
-          { title: "Ma semaine", url: "/ma-semaine", icon: LayoutDashboard, show: () => true },
-          { title: "Mes heures", url: "/mes-heures", icon: Clock, show: () => true },
-          { title: "Mes étapes fab", url: "/fabrication/mes-etapes", icon: Wrench, show: () => true },
-          { title: "Mes échanges", url: "/mes-swaps", icon: ArrowLeftRight, show: () => true },
-          { title: "Mes propositions", url: "/mes-propositions", icon: ClipboardList, show: () => true },
-          { title: "Mes contrats", url: "/mes-contrats", icon: FileSignature, show: () => true },
+          { title: "Ma semaine", url: "/ma-semaine", icon: LayoutDashboard },
+          { title: "Mes heures", url: "/mes-heures", icon: Clock, cap: "heures.personnelles.saisir" },
+          { title: "Mes étapes fab", url: "/fabrication/mes-etapes", icon: Wrench },
+          { title: "Mes échanges", url: "/mes-swaps", icon: ArrowLeftRight },
+          { title: "Mes propositions", url: "/mes-propositions", icon: ClipboardList },
+          { title: "Mes contrats", url: "/mes-contrats", icon: FileSignature, cap: "contrats.view_own" },
         ],
       },
     ];
   }
 
-  // ===== Vue Chef / Admin =====
+  // ===== Vue Chef / Admin — items gatés par capability =====
   const sections: NavSection[] = [
     {
       label: "Pilotage",
       items: [
-        { title: "Tableau de bord", url: "/dashboard", icon: LayoutDashboard, show: () => true },
-        { title: "Inbox", url: "/inbox", icon: Inbox, show: () => true },
-        { title: "Planning", url: "/planning", icon: Calendar, show: () => true },
+        { title: "Tableau de bord", url: "/dashboard", icon: LayoutDashboard },
+        { title: "Inbox", url: "/inbox", icon: Inbox, cap: "inbox.view" },
+        { title: "Planning", url: "/planning", icon: Calendar, cap: "planning.view" },
       ],
-
     },
     {
       label: "Chantiers",
       items: [
-        // v0.17 — Pipeline commercial amont (opportunités 9XXX)
-        { title: "Opportunités", url: "/opportunites", icon: Trophy, show: () => true },
-        // Renommé v0.13 : "Affaires" → "Chantiers" (route /affaires conservée)
-        { title: "Chantiers", url: "/affaires", icon: Building2, show: () => true },
-        { title: "Devis", url: "/devis", icon: FileText, show: () => true },
-        { title: "Budget chantier", url: "/affaires/budget-planning", icon: Calendar, show: () => true },
+        { title: "Opportunités", url: "/opportunites", icon: Trophy, cap: "affaires.view" },
+        { title: "Chantiers", url: "/affaires", icon: Building2, cap: "affaires.view" },
+        { title: "Devis", url: "/devis", icon: FileText, cap: "devis.view" },
+        { title: "Budget chantier", url: "/affaires/budget-planning", icon: Calendar, cap: "affaires.view" },
       ],
     },
     {
       label: "Équipes",
       items: [
-        { title: "Employés", url: "/employes", icon: Users, show: () => true },
-        { title: "Intermittents", url: "/interimaires", icon: Trophy, show: () => true },
-        { title: "Absences", url: "/absences", icon: CalendarOff, show: () => true },
+        { title: "Employés", url: "/employes", icon: Users, cap: "employes.view" },
+        { title: "Intermittents", url: "/interimaires", icon: Trophy, cap: "employes.view" },
+        { title: "Absences", url: "/absences", icon: CalendarOff, cap: "heures.equipe.saisir" },
         {
           title: "Validation heures",
           url: "/validation-heures",
           icon: ClipboardCheck,
-          show: () => true,
+          cap: "heures.valider",
           count: validationCount,
         },
-        { title: "Saisie pour l'équipe", url: "/saisie-pour-equipe", icon: ClipboardList, show: (r) => r === "admin" || r === "chef_chantier" },
-        { title: "Staffer rapide", url: "/staffer-mobile", icon: Smartphone, show: (r) => r === "admin" || r === "chef_chantier" },
-        { title: "Module RH", url: "/rh", icon: FileSignature, show: (r) => r === "admin" || r === "rh" },
-        { title: "Contrats RH", url: "/rh/contrats", icon: FileSignature, show: (r) => r === "admin" || r === "rh", count: contratsRhCount },
-
-        { title: "Analyse heures", url: "/heures-analyse", icon: Clock, show: (r) => r === "admin" },
+        { title: "Saisie pour l'équipe", url: "/saisie-pour-equipe", icon: ClipboardList, cap: "heures.equipe.saisir" },
+        { title: "Staffer rapide", url: "/staffer-mobile", icon: Smartphone, cap: "staffing.assignations.edit" },
+        { title: "Module RH", url: "/rh", icon: FileSignature, cap: "rh.hub.view" },
+        { title: "Contrats RH", url: "/rh/contrats", icon: FileSignature, cap: "contrats.view", count: contratsRhCount },
+        { title: "Analyse heures", url: "/heures-analyse", icon: Clock, cap: "heures.audit" },
       ],
     },
     {
-      // v0.20 — Atelier : dashboard fabrication global + accès "Mes étapes" perso
       label: "Atelier",
       items: [
-        { title: "Dashboard fabrication", url: "/fabrication", icon: Hammer, show: () => true },
-        { title: "Mes étapes", url: "/fabrication/mes-etapes", icon: Wrench, show: () => true },
+        { title: "Dashboard fabrication", url: "/fabrication", icon: Hammer, cap: "affaires.view" },
+        { title: "Mes étapes", url: "/fabrication/mes-etapes", icon: Wrench },
       ],
     },
     {
-      // v0.14 : section "Véhicules" → "Logistique" (englobe flotte interne + sous-traitance)
       label: "Logistique",
       items: [
-        { title: "Véhicules", url: "/flotte", icon: Truck, show: () => true },
-        { title: "Véhicules planning", url: "/logistique/vehicules-planning", icon: Calendar, show: () => true },
-        // v0.14 : "Demandes de devis" → "Demandes transport" (lever ambiguïté avec devis clients)
-        { title: "Demandes transport", url: "/export/demandes-devis", icon: FileQuestion, show: () => true },
+        { title: "Véhicules", url: "/flotte", icon: Truck },
+        { title: "Véhicules planning", url: "/logistique/vehicules-planning", icon: Calendar },
+        { title: "Demandes transport", url: "/export/demandes-devis", icon: FileQuestion },
+      ],
+    },
+    {
+      label: "Outils",
+      items: [
+        { title: "Export planning", url: "/export", icon: FileDown, cap: "planning.view" },
+        { title: "Feuille de route", url: "/export/feuille-de-route", icon: ClipboardList, cap: "planning.view" },
+        { title: "Imports", url: "/employes/import", icon: FileUp, cap: "employes.import" },
       ],
     },
   ];
 
-  // ===== Outils : exports + imports accessibles aux chefs et admins =====
-  sections.push({
-    label: "Outils",
-    items: [
-      { title: "Export planning", url: "/export", icon: FileDown, show: () => true },
-      { title: "Feuille de route", url: "/export/feuille-de-route", icon: ClipboardList, show: () => true },
-      { title: "Imports", url: "/employes/import", icon: FileUp, show: () => true },
-    ],
-  });
-
-  // ===== Administration : admin only — éclatée en 3 sous-sections lisibles =====
   if (isAdmin) {
     sections.push({
       label: "Admin · Comptes & accès",
       items: [
-        { title: "Utilisateurs", url: "/parametres/utilisateurs", icon: UserCircle, show: () => true },
-        { title: "Audit Auth", url: "/audit-auth", icon: ClipboardCheck, show: () => true },
+        { title: "Utilisateurs", url: "/parametres/utilisateurs", icon: UserCircle, cap: "parametres.utilisateurs" },
+        { title: "Audit Auth", url: "/audit-auth", icon: ClipboardCheck, cap: "admin.audit" },
+        { title: "Permissions", url: "/admin/permissions", icon: BadgeCheck, cap: "admin.permissions" },
+        { title: "Feature flags", url: "/admin/feature-flags", icon: Lightbulb, cap: "admin.feature_flags" },
       ],
     });
     sections.push({
       label: "Admin · Référentiels",
       items: [
-        { title: "Métiers & postes", url: "/parametres/metiers", icon: Palette, show: () => true },
-        { title: "Rôles fabrication", url: "/parametres/roles-fabrication", icon: Hammer, show: () => true },
-        { title: "Lieux entreprise", url: "/parametres/lieux", icon: Warehouse, show: () => true },
-        { title: "Autorisations véhicules", url: "/parametres/autorisations-vehicules", icon: BadgeCheck, show: () => true },
-        { title: "Sous-traitants", url: "/parametres/sous-traitants", icon: Truck, show: () => true },
+        { title: "Métiers & postes", url: "/parametres/metiers", icon: Palette, cap: "parametres.view" },
+        { title: "Rôles fabrication", url: "/parametres/roles-fabrication", icon: Hammer, cap: "parametres.view" },
+        { title: "Lieux entreprise", url: "/parametres/lieux", icon: Warehouse, cap: "parametres.view" },
+        { title: "Autorisations véhicules", url: "/parametres/autorisations-vehicules", icon: BadgeCheck, cap: "parametres.view" },
+        { title: "Sous-traitants", url: "/parametres/sous-traitants", icon: Truck, cap: "parametres.view" },
       ],
     });
     sections.push({
       label: "Admin · Audit & qualité",
       items: [
-        { title: "Audit heures", url: "/audit-heures", icon: ClipboardCheck, show: () => true },
-        { title: "Audit Admin (docs + validations)", url: "/admin/audit", icon: ClipboardCheck, show: () => true },
-        { title: "Rattachement devis", url: "/devis/rattachement-historique", icon: ClipboardList, show: () => true },
-        { title: "Signalements", url: "/admin/feedback", icon: MessageCircle, show: () => true },
+        { title: "Audit heures", url: "/audit-heures", icon: ClipboardCheck, cap: "heures.audit" },
+        { title: "Audit Admin (docs + validations)", url: "/admin/audit", icon: ClipboardCheck, cap: "admin.audit" },
+        { title: "Rattachement devis", url: "/devis/rattachement-historique", icon: ClipboardList, cap: "devis.view" },
+        { title: "Signalements", url: "/admin/feedback", icon: MessageCircle, cap: "admin.audit" },
       ],
     });
     sections.push({
       label: "Admin · Système",
       items: [
-        { title: "Contenu widgets", url: "/admin/contenu-widgets", icon: Lightbulb, show: () => true },
-        { title: "Roadmap", url: "/roadmap", icon: Map, show: () => true },
+        { title: "Contenu widgets", url: "/admin/contenu-widgets", icon: Lightbulb, cap: "admin.feature_flags" },
+        { title: "Roadmap", url: "/roadmap", icon: Map },
       ],
     });
   }
 
-  return sections
-    .map((s) => ({ ...s, items: s.items.filter((it) => it.show(role)) }))
-    .filter((s) => s.items.length > 0);
+  return sections;
 }
+
 
 export function AppSidebar() {
   const { state } = useSidebar();
