@@ -314,7 +314,7 @@ export function BulkInviteDialog({ open, onOpenChange, onComplete }: BulkInviteD
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="admin">Admin</SelectItem>
-                    <SelectItem value="chef_chantier">Chef d'équipe</SelectItem>
+                    <SelectItem value="chef_chantier">{roleLabel("chef_chantier")}</SelectItem>
                     <SelectItem value="employe">Employé</SelectItem>
                   </SelectContent>
                 </Select>

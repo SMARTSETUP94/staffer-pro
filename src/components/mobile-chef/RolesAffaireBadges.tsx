@@ -4,15 +4,11 @@
  */
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { affaireRoleLabel } from "@/lib/labels";
 
-const ROLE_LABELS: Record<string, string> = {
-  chef_projet: "Chef projet",
-  chef_chantier: "Chef chantier",
-  charge_affaires: "Chargé affaires",
-  responsable_montage: "Resp. montage",
-  responsable_demontage: "Resp. démontage",
-  respo_fab: "Resp. fab",
-};
+// Note Lot 7.1 : ici "chef_chantier" est le rôle MÉTIER terrain sur l'affaire
+// (chef de chantier), distinct du rôle applicatif app_role.chef_chantier qui
+// s'affiche « Chef d'équipe ». Voir src/lib/labels.ts.
 
 const ROLE_COLORS: Record<string, string> = {
   chef_projet: "bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-500/30",

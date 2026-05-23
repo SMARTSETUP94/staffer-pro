@@ -45,15 +45,13 @@ export const Route = createFileRoute("/_app/admin/feature-flags")({
   ),
 });
 
-type AppRole = "admin" | "chef_chantier" | "employe" | "chef_metier_scoped" | "rh";
+import { USER_ROLE_OPTIONS, type AppRole as _AppRole } from "@/lib/labels";
 
-const ROLE_OPTIONS: { value: AppRole; label: string }[] = [
-  { value: "admin", label: "Admin" },
-  { value: "chef_chantier", label: "Chef chantier" },
-  { value: "chef_metier_scoped", label: "Chef métier (scopé)" },
-  { value: "rh", label: "RH" },
-  { value: "employe", label: "Employé" },
-];
+type AppRole = _AppRole;
+
+const ROLE_OPTIONS: { value: AppRole; label: string }[] = USER_ROLE_OPTIONS.map(
+  ({ value, label }) => ({ value, label }),
+);
 
 interface FlagRow {
   flag_key: string;
