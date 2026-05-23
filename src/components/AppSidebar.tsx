@@ -14,29 +14,30 @@ import { usePreview } from "@/lib/preview-context";
 import { Button } from "@/components/ui/button";
 import { useValidationCount } from "@/hooks/use-validation-count";
 import { useContratsRhCount } from "@/hooks/use-contrats-rh-count";
+import { useCapabilities } from "@/hooks/use-capability";
 
 import { ViewAsSwitcher } from "./ViewAsSwitcher";
 
 type EffRole = "admin" | "chef_chantier" | "employe" | "rh";
 
 /**
- * v0.14 — Refonte IA : 5 sections
- *  • PILOTAGE      : Dashboard, Planning
- *  • CHANTIERS     : Chantiers (ex Affaires), Devis (clients)
- *  • ÉQUIPES       : Employés, Intermittents, Absences, Validation heures (badge count)
- *  • LOGISTIQUE    : Véhicules (flotte), Demandes transport (sous-traitance)
- *  • ADMINISTRATION (admin only) : Utilisateurs, Imports, Exports, Paramètres, Roadmap
+ * v0.48 Lot 7.2 — Sidebar capability-driven.
  *
- * RBAC strict : on filtre sur `effectiveRole` (et non `isAdmin` réel) pour que
- * la preview "Chef" cache bien la section ADMINISTRATION à un admin.
+ *  • Chaque item peut déclarer une `cap` (string). Si présente, l'item n'est
+ *    rendu QUE si l'utilisateur possède cette capability (via `useCapabilities`,
+ *    un seul fetch batché).
+ *  • `role` sert encore à choisir le **template de sidebar** (employé flat vs
+ *    chef/admin sectionné) et à révéler la sous-section "Vue mobile (preview)"
+ *    réservée à un admin en mode preview. Pour la visibilité fine des items
+ *    on s'appuie désormais sur les caps — plus de tests `r === "admin"` en dur.
  */
 
 interface NavItem {
   title: string;
   url: string;
   icon: typeof Calendar;
-  /** Visibilité selon le rôle effectif. */
-  show: (role: EffRole) => boolean;
+  /** Capability requise pour afficher l'item. Si omise, item toujours visible. */
+  cap?: string;
   /** Compteur optionnel (badge indigo si > 0). */
   count?: number;
 }
@@ -46,6 +47,7 @@ interface NavSection {
   label: string;
   items: NavItem[];
 }
+
 
 function buildSections(role: EffRole, validationCount: number, contratsRhCount: number): NavSection[] {
   const isAdmin = role === "admin";
