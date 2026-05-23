@@ -468,6 +468,69 @@ export function ChargeAtelierMultiChantiers() {
           </ul>
         </div>
       )}
+
+      {/* Lot 2.2 #8 — Dialog drill-down conflit CNC (remplace Popover trop étroit) */}
+      <Dialog open={cncDialogDate !== null} onOpenChange={(o) => !o && setCncDialogDate(null)}>
+        <DialogContent className="max-w-lg">
+          {cncDialogDate && (() => {
+            const list = analysis.matrix.get(METIER_ID.Num)?.get(cncDialogDate) ?? [];
+            const uniq = Array.from(new Set(list.map((l) => l.affaire_id)));
+            return (
+              <>
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2 text-destructive">
+                    <AlertTriangle className="h-4 w-4" />
+                    Conflit CNC — {formatShortDate(cncDialogDate)}
+                  </DialogTitle>
+                  <DialogDescription>
+                    {uniq.length} chantiers réservent la CNC le même jour. Décale BE ou Num sur un
+                    chantier non-critique pour libérer la machine.
+                  </DialogDescription>
+                </DialogHeader>
+                <ul className="space-y-2">
+                  {uniq.map((a) => {
+                    const info = analysis.affaireInfo.get(a);
+                    const planId = analysis.affairePlanId.get(a);
+                    const persJour = list
+                      .filter((l) => l.affaire_id === a)
+                      .reduce((s, l) => s + l.pers, 0);
+                    return (
+                      <li
+                        key={a}
+                        className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 p-2.5"
+                      >
+                        <span
+                          className="inline-block h-5 w-5 rounded-sm shrink-0"
+                          style={{ backgroundColor: analysis.affaireColor.get(a) ?? "#5F5E5A" }}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="font-mono text-sm font-bold">
+                            {info?.numero ?? a.slice(0, 6)}
+                          </div>
+                          <div className="text-xs text-muted-foreground truncate">{info?.nom}</div>
+                        </div>
+                        <span className="font-mono text-xs text-muted-foreground">
+                          {persJour}p
+                        </span>
+                        {planId && (
+                          <Link
+                            to="/staffing/$planId"
+                            params={{ planId }}
+                            className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs text-primary hover:bg-primary/10"
+                            onClick={() => setCncDialogDate(null)}
+                          >
+                            Ouvrir plan <ExternalLink className="h-3 w-3" />
+                          </Link>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
