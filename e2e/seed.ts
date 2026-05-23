@@ -298,7 +298,38 @@ async function main() {
   );
   // Assignation employé sur cette semaine (sur l'affaire chef global)
   await ensureAssignationSemaine(empId, affaireId);
+
+  // Lot 8.2b — Activer le flag fiche_objet_v1 pour tous les comptes test.
+  // L'admin & le chef ont besoin du flag pour voir le lien "Voir fiche" sur la page Fab.
+  // Commercial / BE / atelier_chef en ont besoin pour ouvrir la fiche elle-même.
+  await enableFeatureFlagForUsers("fiche_objet_v1", [
+    userIds.admin,
+    userIds.chef_chantier,
+    userIds.commercial,
+    userIds.bureau_etude,
+    userIds.atelier_chef,
+  ]);
   console.log("[seed] OK");
+}
+
+async function enableFeatureFlagForUsers(flagKey: string, userIds: string[]) {
+  const { data: existing, error: selErr } = await admin
+    .from("feature_flags")
+    .select("flag_key, enabled_for_user_ids")
+    .eq("flag_key", flagKey)
+    .maybeSingle();
+  if (selErr) throw selErr;
+  const current = new Set<string>(
+    (existing?.enabled_for_user_ids as string[] | null) ?? [],
+  );
+  for (const id of userIds) current.add(id);
+  const next = Array.from(current);
+  const { error } = await admin
+    .from("feature_flags")
+    .update({ enabled_for_user_ids: next })
+    .eq("flag_key", flagKey);
+  if (error) throw error;
+  console.log(`[seed] flag ${flagKey} → ${userIds.length} test users autorisés`);
 }
 
 main().catch((e) => {
