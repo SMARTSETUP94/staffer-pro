@@ -305,71 +305,36 @@ const RELEASES: RoadmapRelease[] = [
   },
   {
     date: "2026-05-05",
-    version: "v0.21.1",
-    title: "🔒 Sprint sécurité — RBAC UI + RLS heures_saisies + UNIQUE INDEX chef du jour",
+    version: "v0.41.0c (Sprint 3c.2 + 3c.3)",
+    title: "🧪 E2E full role-based — employé mobile + extras chef/admin (Sprint 3c terminé)",
     entries: [
       {
         type: "feature",
-        area: "Sécurité",
-        title: "RoleGuard UI centralisé",
+        area: "Tests E2E — Employé mobile",
+        title: "4 nouveaux tests employé mobile (Pixel 7 viewport)",
         description:
-          "Nouveau composant src/components/auth/RoleGuard.tsx avec prop required: 'admin' | 'chef_or_admin'. Loader pendant chargement des rôles, redirect /dashboard + toast d'erreur si rôle insuffisant. Appliqué sur /saisie-pour-equipe, /audit-heures et /audit-auth. 5 tests Vitest sur la matrice rôle × requirement.",
-      },
-      {
-        type: "improvement",
-        area: "Sécurité",
-        title: "Durcissement RLS heures_saisies",
-        description:
-          "Policy update employé : statut <> 'valide' (au lieu de IN brouillon/soumis) — autorise la correction post-rejet, bloque l'édition une fois validé. Nouvelle policy heures_saisies_self_delete_brouillon : l'employé peut supprimer ses brouillons (capacité auparavant absente). 9 tests Vitest sur la matrice acteur × statut × action.",
-      },
-      {
-        type: "improvement",
-        area: "Sécurité",
-        title: "UNIQUE INDEX partiel chef du jour",
-        description:
-          "CREATE UNIQUE INDEX assignations_chef_jour_unique ON assignations(affaire_id, date, demi_journee) WHERE est_chef_jour = true. Renforce atomiquement le trigger enforce_unique_chef_jour : en cas de désignations concurrentes par 2 admins, la 2e transaction est rejetée par contrainte. 5 tests Vitest sur l'invariant.",
-      },
-      {
-        type: "improvement",
-        area: "Documentation",
-        title: "docs/rls-policies.md étendue",
-        description:
-          "Section v0.21.1 ajoutée avec matrice complète acteur × statut × action et référence des 19 nouveaux tests automatisés. Total Vitest 1459+ tests verts.",
-      },
-    ],
-  },
-  {
-    date: "2026-05-05",
-    version: "v0.20.1",
-    title: "⚡ Quick Wins — Pré-remplissage trajet + perfs DB + cache React Query + notif CA",
-    entries: [
-      {
-        type: "feature",
-        area: "Logistique",
-        title: "Pré-remplissage trajet sous-traité depuis bandeau « Prête à livrer »",
-        description:
-          "Le bouton « Sous-traiter » sur /affaires/$id/fabrication ouvre désormais TrajetDialog directement (au lieu de naviguer). Pré-remplissage automatique : adresse_depart=Atelier, adresse_arrivee=Chantier, date_souhaitee=Date Montage − 1j, catégorie=pose. Gain : 5 clics → 1 clic.",
-      },
-      {
-        type: "improvement",
-        area: "Performance",
-        title: "Indexes composites DB (3 nouveaux)",
-        description:
-          "idx_fab_etapes_objet_statut sur fabrication_etapes(objet_id, statut), idx_fab_etapes_assignee_statut sur fabrication_etapes(assignee_id, statut), idx_staffing_plan_step_plan_metier sur staffing_plan_step(plan_id, metier_id). EXPLAIN ANALYZE validé < 100 ms sur les requêtes tableau de bord fabrication.",
-      },
-      {
-        type: "improvement",
-        area: "Performance",
-        title: "Cache React Query sur useObjetsAffaireLight",
-        description:
-          "Refactor avec @tanstack/react-query : queryKey partagée + staleTime 30s. Élimine les fetches N+1 redondants entre sidebar, vue principale et header de la page affaire.",
+          "e2e/employe-mobile/flows-critiques.employe-mobile.spec.ts : M1 /mobile/aujourdhui rend la vue du jour, M2 /mobile/heures grille de saisie, M3 modale + Autre chantier compacte (boundingBox ≤ viewport), M4 anti-fuite RGPD /staffing/<uuid>. Défensif : skip propre si DB sans assignation.",
       },
       {
         type: "feature",
-        area: "Notifications",
-        title: "Chargé d'affaires inclus dans notif « Prête à livrer »",
+        area: "Tests E2E — Chef extras",
+        title: "+2 tests chef (validation 4 onglets + auto-staff complet)",
         description:
-          "Trigger notify_affaire_pret_livraison mis à jour : le charge_affaires_id reçoit aussi la notification, en plus du chef de projet. Phase 5 (volume) reportée — fabrication_objets ne stocke pas de volume actuellement.",
+          "e2e/chef/extras-validation-staffing.chef.spec.ts : C1 onglet 'Hors planning' sélectionnable sur /validation-heures (vérif aria-selected), C2 bouton 'Auto-staff complet' visible sur /staffing/<id> (navigation depuis /planning).",
+      },
+      {
+        type: "feature",
+        area: "Tests E2E — Admin extras",
+        title: "+3 tests admin (invitation + auto-link + audit-heures export)",
+        description:
+          "e2e/admin/extras-utilisateurs-audit.admin.spec.ts : A1 bouton 'Inviter un utilisateur' ouvre dialog avec champ email, A2 bouton 'Auto-lier employés' enabled (utilisateurs ou employés), A3 bouton export visible sur /audit-heures.",
+      },
+      {
+        type: "improvement",
+        area: "CI",
+        title: "Workflow E2E : 4 → 5 shards parallèles (timeout <20 min)",
+        description:
+          ".github/workflows/e2e.yml : matrix [1..5] et --shard=N/5. Couverture E2E passe de 12 à 27+ tests sur 4 rôles (admin / chef / employé-desktop / employé-mobile + smoke).",
       },
     ],
   },
@@ -473,40 +438,103 @@ const RELEASES: RoadmapRelease[] = [
   },
   {
     date: "2026-05-05",
-    version: "v0.41.0c (Sprint 3c.2 + 3c.3)",
-    title: "🧪 E2E full role-based — employé mobile + extras chef/admin (Sprint 3c terminé)",
+    version: "v0.40.0f",
+    title: "🔧 Hotfix UX — Plan staffing : noms d'objets propres (masquage préfixe D-)",
     entries: [
       {
-        type: "feature",
-        area: "Tests E2E — Employé mobile",
-        title: "4 nouveaux tests employé mobile (Pixel 7 viewport)",
+        type: "fix",
+        area: "Staffing — UI",
+        title: "GanttInteractif + StaffingPlanWizard utilisent désormais `<ObjetRefLabel />`",
         description:
-          "e2e/employe-mobile/flows-critiques.employe-mobile.spec.ts : M1 /mobile/aujourdhui rend la vue du jour, M2 /mobile/heures grille de saisie, M3 modale + Autre chantier compacte (boundingBox ≤ viewport), M4 anti-fuite RGPD /staffing/<uuid>. Défensif : skip propre si DB sans assignation.",
-      },
-      {
-        type: "feature",
-        area: "Tests E2E — Chef extras",
-        title: "+2 tests chef (validation 4 onglets + auto-staff complet)",
-        description:
-          "e2e/chef/extras-validation-staffing.chef.spec.ts : C1 onglet 'Hors planning' sélectionnable sur /validation-heures (vérif aria-selected), C2 bouton 'Auto-staff complet' visible sur /staffing/<id> (navigation depuis /planning).",
-      },
-      {
-        type: "feature",
-        area: "Tests E2E — Admin extras",
-        title: "+3 tests admin (invitation + auto-link + audit-heures export)",
-        description:
-          "e2e/admin/extras-utilisateurs-audit.admin.spec.ts : A1 bouton 'Inviter un utilisateur' ouvre dialog avec champ email, A2 bouton 'Auto-lier employés' enabled (utilisateurs ou employés), A3 bouton export visible sur /audit-heures.",
+          "Les en-têtes d'objets affichaient `D-202604-2151-1.1` au lieu de `1.1 — M1 - peinture bar`. Le préfixe `D-{numero_devis}-` (généré par RPC `import_devis_atomique_v3` v0.39.0d pour éviter les collisions cross-devis sur même affaire) est maintenant masqué partout via `stripDevisPrefix`. Pas de migration DB (préfixe nécessaire pour la contrainte UNIQUE par affaire).",
       },
       {
         type: "improvement",
-        area: "CI",
-        title: "Workflow E2E : 4 → 5 shards parallèles (timeout <20 min)",
-        description:
-          ".github/workflows/e2e.yml : matrix [1..5] et --shard=N/5. Couverture E2E passe de 12 à 27+ tests sur 4 rôles (admin / chef / employé-desktop / employé-mobile + smoke).",
+        area: "Tests",
+        title: "7 tests Vitest `ObjetRefLabel` (stripDevisPrefix + visibilité préfixe)",
       },
     ],
   },
-
+  {
+    date: "2026-05-05",
+    version: "v0.40.0e",
+    title: "📊 Suivi marge par métier — consolidation treetable (1 ligne / métier + drilldown devis)",
+    entries: [
+      {
+        type: "improvement",
+        area: "Affaires — Marges",
+        title: "Section 'Suivi marge par métier' refondue en treetable",
+        description:
+          "Les heures par métier sont désormais agrégées sur tous les devis de l'affaire (ex : Peinture 408,4 h au lieu de 36,7 h + 371,7 h sur 2 lignes). Clic sur la ligne métier → drilldown par devis. Marges/tons/% recalculés au niveau consolidé. Badge 'N devis' sur les métiers multi-quotes.",
+      },
+      {
+        type: "feature",
+        area: "Lib",
+        title: "Nouveau module `affaire-marge-consolidation.ts` (`consolidateByMetier`)",
+        description:
+          "Aggregation pure : group by metier_id, sort by prevues desc, drilldown préservé. 7 tests Vitest.",
+      },
+    ],
+  },
+  {
+    date: "2026-05-05",
+    version: "v0.40.0d",
+    title: "🔧 Hotfix UX — Pré-remplissage numéro d'affaire à l'import devis (race condition)",
+    entries: [
+      {
+        type: "fix",
+        area: "Devis — Import",
+        title: "Race condition fetch top-200 vs prefill",
+        description:
+          "Quand un chef cliquait 'Importer un devis' depuis l'onglet Devis d'une affaire, le formulaire ouvrait avec un numéro vide. Cause : deux `useEffect` concurrents appelaient `setAffaires` ; le top-200 résolvait après le prefill et écrasait l'option pré-remplie. Fix : merge dédupliqué via Set (préserve les options hors top-200). 3 tests Vitest dédiés.",
+      },
+    ],
+  },
+  {
+    date: "2026-05-05",
+    version: "v0.40.0b",
+    title: "🎨 Refonte Manut — UI Gantt nettoyée + pré-paramétrage 6 lignes + tooltips d'absorption",
+    entries: [
+      {
+        type: "feature",
+        area: "Staffing — Gantt",
+        title: "Section globale 'Manutention FIN (50 %) + ressources partagées'",
+        description:
+          "Les barres Manut intermédiaires par objet sont supprimées (absorbées au prorata par Bois/Peint/Tap). Une seule barre Manut FIN s'affiche en tête de Gantt + ressources CNC partagées.",
+      },
+      {
+        type: "feature",
+        area: "Staffing — Pré-paramétrage",
+        title: "6 lignes pré-param avec tooltips d'absorption",
+        description:
+          "Chaque cellule métier affiche désormais 'Bois 105 h dont 19 h ex-Manut absorbée' (tooltip). Note de bas de page explicative. Composant `ManutStatCard` dédié + module `manut-summary.ts` (14 tests).",
+      },
+      {
+        type: "improvement",
+        area: "Tests",
+        title: "E2E `manut-refonte-v040.chef.spec.ts` + 1372/1372 Vitest verts",
+      },
+    ],
+  },
+  {
+    date: "2026-05-05",
+    version: "v0.40.0a",
+    title: "🧮 Refonte Manut — algo absorption (35 % début + 15 % transfert + 50 % FIN)",
+    entries: [
+      {
+        type: "feature",
+        area: "Staffing — Algo",
+        title: "Manut absorbée par Bois/Peint/Tap au prorata",
+        description:
+          "Plus aucune barre Manut intermédiaire par objet : 35 % au début + 15 % en transfert sont reversés aux métiers consommateurs. Seuls les 50 % de FIN globale chantier restent une étape Manut séparée. Flag DB `is_manut_absorbed` pour traçabilité.",
+      },
+      {
+        type: "improvement",
+        area: "Tests",
+        title: "7 tests Vitest dédiés algo absorption + 1358/1358 verts",
+      },
+    ],
+  },
   {
     date: "2026-05-05",
     version: "v0.39.2b2.2",
@@ -606,148 +634,6 @@ const RELEASES: RoadmapRelease[] = [
     ],
   },
   {
-    date: "2026-05-05",
-    version: "v0.40.0f",
-    title: "🔧 Hotfix UX — Plan staffing : noms d'objets propres (masquage préfixe D-)",
-    entries: [
-      {
-        type: "fix",
-        area: "Staffing — UI",
-        title: "GanttInteractif + StaffingPlanWizard utilisent désormais `<ObjetRefLabel />`",
-        description:
-          "Les en-têtes d'objets affichaient `D-202604-2151-1.1` au lieu de `1.1 — M1 - peinture bar`. Le préfixe `D-{numero_devis}-` (généré par RPC `import_devis_atomique_v3` v0.39.0d pour éviter les collisions cross-devis sur même affaire) est maintenant masqué partout via `stripDevisPrefix`. Pas de migration DB (préfixe nécessaire pour la contrainte UNIQUE par affaire).",
-      },
-      {
-        type: "improvement",
-        area: "Tests",
-        title: "7 tests Vitest `ObjetRefLabel` (stripDevisPrefix + visibilité préfixe)",
-      },
-    ],
-  },
-  {
-    date: "2026-05-05",
-    version: "v0.40.0e",
-    title: "📊 Suivi marge par métier — consolidation treetable (1 ligne / métier + drilldown devis)",
-    entries: [
-      {
-        type: "improvement",
-        area: "Affaires — Marges",
-        title: "Section 'Suivi marge par métier' refondue en treetable",
-        description:
-          "Les heures par métier sont désormais agrégées sur tous les devis de l'affaire (ex : Peinture 408,4 h au lieu de 36,7 h + 371,7 h sur 2 lignes). Clic sur la ligne métier → drilldown par devis. Marges/tons/% recalculés au niveau consolidé. Badge 'N devis' sur les métiers multi-quotes.",
-      },
-      {
-        type: "feature",
-        area: "Lib",
-        title: "Nouveau module `affaire-marge-consolidation.ts` (`consolidateByMetier`)",
-        description:
-          "Aggregation pure : group by metier_id, sort by prevues desc, drilldown préservé. 7 tests Vitest.",
-      },
-    ],
-  },
-  {
-    date: "2026-05-05",
-    version: "v0.40.0d",
-    title: "🔧 Hotfix UX — Pré-remplissage numéro d'affaire à l'import devis (race condition)",
-    entries: [
-      {
-        type: "fix",
-        area: "Devis — Import",
-        title: "Race condition fetch top-200 vs prefill",
-        description:
-          "Quand un chef cliquait 'Importer un devis' depuis l'onglet Devis d'une affaire, le formulaire ouvrait avec un numéro vide. Cause : deux `useEffect` concurrents appelaient `setAffaires` ; le top-200 résolvait après le prefill et écrasait l'option pré-remplie. Fix : merge dédupliqué via Set (préserve les options hors top-200). 3 tests Vitest dédiés.",
-      },
-    ],
-  },
-  {
-    date: "2026-05-05",
-    version: "v0.40.0b",
-    title: "🎨 Refonte Manut — UI Gantt nettoyée + pré-paramétrage 6 lignes + tooltips d'absorption",
-    entries: [
-      {
-        type: "feature",
-        area: "Staffing — Gantt",
-        title: "Section globale 'Manutention FIN (50 %) + ressources partagées'",
-        description:
-          "Les barres Manut intermédiaires par objet sont supprimées (absorbées au prorata par Bois/Peint/Tap). Une seule barre Manut FIN s'affiche en tête de Gantt + ressources CNC partagées.",
-      },
-      {
-        type: "feature",
-        area: "Staffing — Pré-paramétrage",
-        title: "6 lignes pré-param avec tooltips d'absorption",
-        description:
-          "Chaque cellule métier affiche désormais 'Bois 105 h dont 19 h ex-Manut absorbée' (tooltip). Note de bas de page explicative. Composant `ManutStatCard` dédié + module `manut-summary.ts` (14 tests).",
-      },
-      {
-        type: "improvement",
-        area: "Tests",
-        title: "E2E `manut-refonte-v040.chef.spec.ts` + 1372/1372 Vitest verts",
-      },
-    ],
-  },
-  {
-    date: "2026-05-05",
-    version: "v0.40.0a",
-    title: "🧮 Refonte Manut — algo absorption (35 % début + 15 % transfert + 50 % FIN)",
-    entries: [
-      {
-        type: "feature",
-        area: "Staffing — Algo",
-        title: "Manut absorbée par Bois/Peint/Tap au prorata",
-        description:
-          "Plus aucune barre Manut intermédiaire par objet : 35 % au début + 15 % en transfert sont reversés aux métiers consommateurs. Seuls les 50 % de FIN globale chantier restent une étape Manut séparée. Flag DB `is_manut_absorbed` pour traçabilité.",
-      },
-      {
-        type: "improvement",
-        area: "Tests",
-        title: "7 tests Vitest dédiés algo absorption + 1358/1358 verts",
-      },
-    ],
-  },
-
-  {
-    date: "2026-05-04",
-    version: "v0.39.0a-hotfix-import",
-    title: "🚑 HOTFIX import devis : RPC transactionnel + cleanup orphelins fabrication_objets",
-    entries: [
-      {
-        type: "fix",
-        area: "Devis — Import",
-        title: "Bug duplicate key 'fabrication_objets_affaire_reference_key' au ré-import",
-        description:
-          "Root cause : `src/lib/devis-progbat-import.ts` faisait des INSERT directs côté client sans transaction. Si l'UPDATE/lien devis échouait après l'INSERT, des objets restaient orphelins (devis_id NULL). Au ré-import, leur reference collait avec la nouvelle insertion → violation UNIQUE(affaire_id, reference). 13 orphelins identifiés en prod sur 3 affaires (5949, 5951, 5953).",
-      },
-      {
-        type: "feature",
-        area: "Backend — RPC",
-        title: "Nouveau RPC transactionnel `import_progbat_atomique`",
-        description:
-          "Pré-check des conflits de référence avant tout INSERT → RAISE EXCEPTION 'CONFLICT_REFERENCE: [...]' (JSON parsable côté client). Tout-ou-rien (ROLLBACK PL/pgSQL automatique sur erreur). Plus aucune fuite d'orphelins possible.",
-      },
-      {
-        type: "feature",
-        area: "Backend — RPC",
-        title: "`cleanup_fabrication_orphelins(p_affaire_id)` + patch `delete_devis_atomique`",
-        description:
-          "Nouveau RPC admin-only qui supprime les fabrication_objets avec devis_id NULL ET sans heures/staffing (audit dans devis_deletion_log). `delete_devis_atomique` l'appelle systématiquement en fin pour éviter récidive. Cleanup one-shot des 13 orphelins prod exécuté.",
-      },
-      {
-        type: "refactor",
-        area: "Devis — Client",
-        title: "`devis-progbat-import.ts` réécrit : plus aucun INSERT direct",
-        description:
-          "Tout passe désormais par supabase.rpc('import_progbat_atomique', ...). Nouvelle classe `ImportProgbatConflictError` avec liste des conflits parsée depuis le message SQL.",
-      },
-      {
-        type: "improvement",
-        area: "Tests",
-        title: "Spec dédiée `devis-import-orphelins-v0390a-hotfix.test.ts`",
-        description:
-          "Couvre import nominal via RPC, conflit de référence détecté avant insertion, et cleanup orphelins. 0 orphelin restant en DB après migration.",
-      },
-    ],
-  },
-  {
     date: "2026-05-04",
     version: "v0.39.0c",
     title: "📊 KPI Heures staffées auditable + garde-fou volume vs devis",
@@ -793,6 +679,48 @@ const RELEASES: RoadmapRelease[] = [
         title: "Boucle de fetch éliminée (useEditStore stable refs)",
         description:
           "Selectors useEditStore stabilisés pour éviter les re-renders en cascade qui déclenchaient des fetchs en boucle sur la page staffing.",
+      },
+    ],
+  },
+  {
+    date: "2026-05-04",
+    version: "v0.39.0a-hotfix-import",
+    title: "🚑 HOTFIX import devis : RPC transactionnel + cleanup orphelins fabrication_objets",
+    entries: [
+      {
+        type: "fix",
+        area: "Devis — Import",
+        title: "Bug duplicate key 'fabrication_objets_affaire_reference_key' au ré-import",
+        description:
+          "Root cause : `src/lib/devis-progbat-import.ts` faisait des INSERT directs côté client sans transaction. Si l'UPDATE/lien devis échouait après l'INSERT, des objets restaient orphelins (devis_id NULL). Au ré-import, leur reference collait avec la nouvelle insertion → violation UNIQUE(affaire_id, reference). 13 orphelins identifiés en prod sur 3 affaires (5949, 5951, 5953).",
+      },
+      {
+        type: "feature",
+        area: "Backend — RPC",
+        title: "Nouveau RPC transactionnel `import_progbat_atomique`",
+        description:
+          "Pré-check des conflits de référence avant tout INSERT → RAISE EXCEPTION 'CONFLICT_REFERENCE: [...]' (JSON parsable côté client). Tout-ou-rien (ROLLBACK PL/pgSQL automatique sur erreur). Plus aucune fuite d'orphelins possible.",
+      },
+      {
+        type: "feature",
+        area: "Backend — RPC",
+        title: "`cleanup_fabrication_orphelins(p_affaire_id)` + patch `delete_devis_atomique`",
+        description:
+          "Nouveau RPC admin-only qui supprime les fabrication_objets avec devis_id NULL ET sans heures/staffing (audit dans devis_deletion_log). `delete_devis_atomique` l'appelle systématiquement en fin pour éviter récidive. Cleanup one-shot des 13 orphelins prod exécuté.",
+      },
+      {
+        type: "refactor",
+        area: "Devis — Client",
+        title: "`devis-progbat-import.ts` réécrit : plus aucun INSERT direct",
+        description:
+          "Tout passe désormais par supabase.rpc('import_progbat_atomique', ...). Nouvelle classe `ImportProgbatConflictError` avec liste des conflits parsée depuis le message SQL.",
+      },
+      {
+        type: "improvement",
+        area: "Tests",
+        title: "Spec dédiée `devis-import-orphelins-v0390a-hotfix.test.ts`",
+        description:
+          "Couvre import nominal via RPC, conflit de référence détecté avant insertion, et cleanup orphelins. 0 orphelin restant en DB après migration.",
       },
     ],
   },
@@ -1721,6 +1649,41 @@ const RELEASES: RoadmapRelease[] = [
     ],
   },
   {
+    date: "2026-05-05",
+    version: "v0.21.1",
+    title: "🔒 Sprint sécurité — RBAC UI + RLS heures_saisies + UNIQUE INDEX chef du jour",
+    entries: [
+      {
+        type: "feature",
+        area: "Sécurité",
+        title: "RoleGuard UI centralisé",
+        description:
+          "Nouveau composant src/components/auth/RoleGuard.tsx avec prop required: 'admin' | 'chef_or_admin'. Loader pendant chargement des rôles, redirect /dashboard + toast d'erreur si rôle insuffisant. Appliqué sur /saisie-pour-equipe, /audit-heures et /audit-auth. 5 tests Vitest sur la matrice rôle × requirement.",
+      },
+      {
+        type: "improvement",
+        area: "Sécurité",
+        title: "Durcissement RLS heures_saisies",
+        description:
+          "Policy update employé : statut <> 'valide' (au lieu de IN brouillon/soumis) — autorise la correction post-rejet, bloque l'édition une fois validé. Nouvelle policy heures_saisies_self_delete_brouillon : l'employé peut supprimer ses brouillons (capacité auparavant absente). 9 tests Vitest sur la matrice acteur × statut × action.",
+      },
+      {
+        type: "improvement",
+        area: "Sécurité",
+        title: "UNIQUE INDEX partiel chef du jour",
+        description:
+          "CREATE UNIQUE INDEX assignations_chef_jour_unique ON assignations(affaire_id, date, demi_journee) WHERE est_chef_jour = true. Renforce atomiquement le trigger enforce_unique_chef_jour : en cas de désignations concurrentes par 2 admins, la 2e transaction est rejetée par contrainte. 5 tests Vitest sur l'invariant.",
+      },
+      {
+        type: "improvement",
+        area: "Documentation",
+        title: "docs/rls-policies.md étendue",
+        description:
+          "Section v0.21.1 ajoutée avec matrice complète acteur × statut × action et référence des 19 nouveaux tests automatisés. Total Vitest 1459+ tests verts.",
+      },
+    ],
+  },
+  {
     date: "2026-04-28",
     version: "v0.21.0",
     title:
@@ -1821,6 +1784,41 @@ const RELEASES: RoadmapRelease[] = [
         title: "Audit pré-publish v0.21 — RLS / triggers / perf",
         description:
           "Audit en lecture stricte sur 10 axes : RLS et récursion (helpers SECURITY DEFINER avec search_path = public, pas de référence auto-récursive sur heures_saisies), triggers DB (pas de boucle infinie, anti-spam notif validé), régression saisie employé (compatibilité pré-v0.21 préservée, badge 👤 absent sur vieilles lignes), saisie chef (statut 'valide' uniformément appliqué), verrouillage affaires (Option B respectée), bulk staffing (skip occupées + filtrage isAffaireSelectable), feuille de route (4 niveaux de fallback testés), édition par chantier (lock cohérent), tests gaps identifiés, cohérence UI (ordre onglets Planning + sidebar). 0 BLOCKER. Findings MEDIUM reportés en v0.21.1.",
+      },
+    ],
+  },
+  {
+    date: "2026-05-05",
+    version: "v0.20.1",
+    title: "⚡ Quick Wins — Pré-remplissage trajet + perfs DB + cache React Query + notif CA",
+    entries: [
+      {
+        type: "feature",
+        area: "Logistique",
+        title: "Pré-remplissage trajet sous-traité depuis bandeau « Prête à livrer »",
+        description:
+          "Le bouton « Sous-traiter » sur /affaires/$id/fabrication ouvre désormais TrajetDialog directement (au lieu de naviguer). Pré-remplissage automatique : adresse_depart=Atelier, adresse_arrivee=Chantier, date_souhaitee=Date Montage − 1j, catégorie=pose. Gain : 5 clics → 1 clic.",
+      },
+      {
+        type: "improvement",
+        area: "Performance",
+        title: "Indexes composites DB (3 nouveaux)",
+        description:
+          "idx_fab_etapes_objet_statut sur fabrication_etapes(objet_id, statut), idx_fab_etapes_assignee_statut sur fabrication_etapes(assignee_id, statut), idx_staffing_plan_step_plan_metier sur staffing_plan_step(plan_id, metier_id). EXPLAIN ANALYZE validé < 100 ms sur les requêtes tableau de bord fabrication.",
+      },
+      {
+        type: "improvement",
+        area: "Performance",
+        title: "Cache React Query sur useObjetsAffaireLight",
+        description:
+          "Refactor avec @tanstack/react-query : queryKey partagée + staleTime 30s. Élimine les fetches N+1 redondants entre sidebar, vue principale et header de la page affaire.",
+      },
+      {
+        type: "feature",
+        area: "Notifications",
+        title: "Chargé d'affaires inclus dans notif « Prête à livrer »",
+        description:
+          "Trigger notify_affaire_pret_livraison mis à jour : le charge_affaires_id reçoit aussi la notification, en plus du chef de projet. Phase 5 (volume) reportée — fabrication_objets ne stocke pas de volume actuellement.",
       },
     ],
   },
@@ -2074,69 +2072,6 @@ const RELEASES: RoadmapRelease[] = [
   },
   {
     date: "2026-04-22",
-    version: "Audit v0.18.1",
-    title: "Audit de stabilité post-prod — empilement v0.15 → v0.17 → v0.18 → v0.18.1",
-    entries: [
-      {
-        type: "improvement",
-        area: "Audit",
-        title: "✅ Sanité technique : 0 erreur TypeScript, 156/156 tests Vitest, Supabase linter clean",
-        description:
-          "tsc --noEmit silencieux. 6 fichiers de tests, 156 assertions vertes (employes, devis, opportunités, flotte, demandes-devis). supabase--linter remonte 0 issue. Build production stable.",
-      },
-      {
-        type: "improvement",
-        area: "Audit",
-        title: "✅ Cohérence DB : 25 tables, 23 RLS actives, 44 FK, 167 contraintes CHECK, 0 orphelin",
-        description:
-          "Toutes les colonnes/tables ajoutées en v0.15-v0.18.1 sont présentes (affaires.phase/code_opportunite/charge_affaires_id/taille, assignations.devis_id/metier_id, heures_saisies.heures_nuit, profiles.matricule_silae, employes.est_livreur/categories_permis, vehicules.date_fin_location/prestataire_location, lieux, vehicule_chauffeurs_autorises, opportunites_imports, trajets). Vue v_affaire_consommation correctement à jour (somme assignations.heures sans filtre devis_id, correctif v0.18.1 confirmé). 0 ligne orpheline sur 5 FK testées (assignations→devis/affaires, heures→employe, trajets→chauffeur/vehicule).",
-      },
-      {
-        type: "improvement",
-        area: "Audit",
-        title: "✅ RLS : matricule SILAE admin only, lieux admin only, vehicule_chauffeurs_autorises chef/admin",
-        description:
-          "Trigger guard_matricule_silae_admin_only confirmé actif. Policy lieux_admin_modify (admin only en écriture, lecture authentifiée). Policy vca_admin_chef_modify (chef/admin en écriture). 28 triggers actifs sur tables critiques (notifications, guards, log historique). Aucune policy USING(true) sur table sensible.",
-      },
-      {
-        type: "improvement",
-        area: "Audit",
-        title: "✅ Data prod cohérente : 91 affaires, 370 employés (219 actifs), 5 devis, 8 véhicules",
-        description:
-          "Sondage prod : 91 affaires (toutes en phase=signe), 0 opportunité créée pour l'instant, 219 employés actifs sur 370, 6 employés liés à un compte (les autres sont intermittents sans login), 8 véhicules dont 1 loué, 1 atelier + 1 stockage configurés, 6 trajets, 0 feedback reçu sur 7 jours.",
-      },
-      {
-        type: "fix",
-        area: "Audit — mineurs",
-        title: "⚠️ Doublon contrainte UNIQUE affaires_numero_key vs affaires_numero_unique",
-        description:
-          "Deux contraintes UNIQUE redondantes sur affaires.numero (affaires_numero_key + affaires_numero_unique). Sans gravité fonctionnelle, juste de la dette. À nettoyer en v0.18.2 via DROP CONSTRAINT affaires_numero_unique.",
-      },
-      {
-        type: "fix",
-        area: "Audit — mineurs",
-        title: "⚠️ Policy heures_saisies_self_update : USING/CHECK incohérents",
-        description:
-          "Le USING exige statut='brouillon' (correct) mais le WITH CHECK accepte encore brouillon OR soumis. Pas exploitable car USING bloque déjà la lecture, mais à aligner pour clarté en v0.18.2.",
-      },
-      {
-        type: "fix",
-        area: "Audit — cosmétique",
-        title: "⚠️ 3207 erreurs Prettier (formatage auto-fixable) + ~24 warnings ESLint réels",
-        description:
-          "Aucune erreur fonctionnelle. Le projet n'est pas formaté Prettier (à régler via `bunx eslint --fix`). 24 warnings ESLint réels : quelques `any` dans 4-5 fichiers, dépendances exhaustives manquantes sur useMemo/useEffect (weekStart/weekEnd dans use-trajets.ts), warnings react-refresh sur fichiers exportant constantes ET composants. À nettoyer progressivement.",
-      },
-      {
-        type: "improvement",
-        area: "Audit",
-        title: "🟢 Recommandation finale : app stable, GO pour v0.16 ou v0.18.2",
-        description:
-          "Aucun bloquant. Aucun majeur. Les 3 mineurs/cosmétiques peuvent être groupés dans une v0.18.2 légère (1 migration DROP CONSTRAINT + alignement policy + bunx eslint --fix). Sinon, on peut directement attaquer v0.16 (auto-envoi devis Resend) sans risque. La consolidation post-empilement v0.15→v0.18.1 est validée.",
-      },
-    ],
-  },
-  {
-    date: "2026-04-22",
     version: "v0.18.1",
     title: "Correctifs post-publish v0.18 — Flotte, livreur/chauffeur, lieux entreprise, suggestions trajets, export sous-traitance + polish UI",
     entries: [
@@ -2216,6 +2151,69 @@ const RELEASES: RoadmapRelease[] = [
         title: "Polish UI Kanban opportunités — focus visible + KeyboardSensor",
         description:
           "Cartes opportunités : ajout de `focus-within:ring-2 focus-within:ring-ring` et bouton de drag avec focus-visible cohérent. Ajout du `KeyboardSensor` @dnd-kit avec `sortableKeyboardCoordinates` pour permettre le déplacement des cartes au clavier (espace pour saisir, flèches pour déplacer, espace pour valider). Tokens sémantiques utilisés partout (warning, primary, ring) — aucune couleur hard-codée résiduelle dans les composants Flotte.",
+      },
+    ],
+  },
+  {
+    date: "2026-04-22",
+    version: "Audit v0.18.1",
+    title: "Audit de stabilité post-prod — empilement v0.15 → v0.17 → v0.18 → v0.18.1",
+    entries: [
+      {
+        type: "improvement",
+        area: "Audit",
+        title: "✅ Sanité technique : 0 erreur TypeScript, 156/156 tests Vitest, Supabase linter clean",
+        description:
+          "tsc --noEmit silencieux. 6 fichiers de tests, 156 assertions vertes (employes, devis, opportunités, flotte, demandes-devis). supabase--linter remonte 0 issue. Build production stable.",
+      },
+      {
+        type: "improvement",
+        area: "Audit",
+        title: "✅ Cohérence DB : 25 tables, 23 RLS actives, 44 FK, 167 contraintes CHECK, 0 orphelin",
+        description:
+          "Toutes les colonnes/tables ajoutées en v0.15-v0.18.1 sont présentes (affaires.phase/code_opportunite/charge_affaires_id/taille, assignations.devis_id/metier_id, heures_saisies.heures_nuit, profiles.matricule_silae, employes.est_livreur/categories_permis, vehicules.date_fin_location/prestataire_location, lieux, vehicule_chauffeurs_autorises, opportunites_imports, trajets). Vue v_affaire_consommation correctement à jour (somme assignations.heures sans filtre devis_id, correctif v0.18.1 confirmé). 0 ligne orpheline sur 5 FK testées (assignations→devis/affaires, heures→employe, trajets→chauffeur/vehicule).",
+      },
+      {
+        type: "improvement",
+        area: "Audit",
+        title: "✅ RLS : matricule SILAE admin only, lieux admin only, vehicule_chauffeurs_autorises chef/admin",
+        description:
+          "Trigger guard_matricule_silae_admin_only confirmé actif. Policy lieux_admin_modify (admin only en écriture, lecture authentifiée). Policy vca_admin_chef_modify (chef/admin en écriture). 28 triggers actifs sur tables critiques (notifications, guards, log historique). Aucune policy USING(true) sur table sensible.",
+      },
+      {
+        type: "improvement",
+        area: "Audit",
+        title: "✅ Data prod cohérente : 91 affaires, 370 employés (219 actifs), 5 devis, 8 véhicules",
+        description:
+          "Sondage prod : 91 affaires (toutes en phase=signe), 0 opportunité créée pour l'instant, 219 employés actifs sur 370, 6 employés liés à un compte (les autres sont intermittents sans login), 8 véhicules dont 1 loué, 1 atelier + 1 stockage configurés, 6 trajets, 0 feedback reçu sur 7 jours.",
+      },
+      {
+        type: "fix",
+        area: "Audit — mineurs",
+        title: "⚠️ Doublon contrainte UNIQUE affaires_numero_key vs affaires_numero_unique",
+        description:
+          "Deux contraintes UNIQUE redondantes sur affaires.numero (affaires_numero_key + affaires_numero_unique). Sans gravité fonctionnelle, juste de la dette. À nettoyer en v0.18.2 via DROP CONSTRAINT affaires_numero_unique.",
+      },
+      {
+        type: "fix",
+        area: "Audit — mineurs",
+        title: "⚠️ Policy heures_saisies_self_update : USING/CHECK incohérents",
+        description:
+          "Le USING exige statut='brouillon' (correct) mais le WITH CHECK accepte encore brouillon OR soumis. Pas exploitable car USING bloque déjà la lecture, mais à aligner pour clarté en v0.18.2.",
+      },
+      {
+        type: "fix",
+        area: "Audit — cosmétique",
+        title: "⚠️ 3207 erreurs Prettier (formatage auto-fixable) + ~24 warnings ESLint réels",
+        description:
+          "Aucune erreur fonctionnelle. Le projet n'est pas formaté Prettier (à régler via `bunx eslint --fix`). 24 warnings ESLint réels : quelques `any` dans 4-5 fichiers, dépendances exhaustives manquantes sur useMemo/useEffect (weekStart/weekEnd dans use-trajets.ts), warnings react-refresh sur fichiers exportant constantes ET composants. À nettoyer progressivement.",
+      },
+      {
+        type: "improvement",
+        area: "Audit",
+        title: "🟢 Recommandation finale : app stable, GO pour v0.16 ou v0.18.2",
+        description:
+          "Aucun bloquant. Aucun majeur. Les 3 mineurs/cosmétiques peuvent être groupés dans une v0.18.2 légère (1 migration DROP CONSTRAINT + alignement policy + bunx eslint --fix). Sinon, on peut directement attaquer v0.16 (auto-envoi devis Resend) sans risque. La consolidation post-empilement v0.15→v0.18.1 est validée.",
       },
     ],
   },
@@ -2494,6 +2492,20 @@ const RELEASES: RoadmapRelease[] = [
   },
   {
     date: "2026-04-21",
+    version: "v0.12.1",
+    title: "Fix déconnexion mobile",
+    entries: [
+      {
+        type: "fix",
+        area: "Mobile",
+        title: "Bouton « Se déconnecter » sur /mobile/profil sans effet",
+        description:
+          "Les routes /mobile/* ne sont pas sous le guard _app : après signOut() Supabase, aucune redirection ne se déclenchait et l'écran restait figé. Ajout d'une navigation explicite vers /login après la déconnexion sur mobile.",
+      },
+    ],
+  },
+  {
+    date: "2026-04-21",
     version: "v0.12",
     title: "Module signalements + roadmap enrichie",
     entries: [
@@ -2524,20 +2536,6 @@ const RELEASES: RoadmapRelease[] = [
         title: "Migration feedbacks + bucket feedback-screenshots",
         description:
           "Nouvelle table feedbacks (RLS : insert chef/admin, select own/admin, update/delete admin only), enums feedback_type/priorite/statut, triggers notify_feedback_created (notif admins) + guard_feedback_resolution (auto-fill resolved_at). Bucket privé avec policies storage scopées par auth.uid().",
-      },
-    ],
-  },
-  {
-    date: "2026-04-21",
-    version: "v0.12.1",
-    title: "Fix déconnexion mobile",
-    entries: [
-      {
-        type: "fix",
-        area: "Mobile",
-        title: "Bouton « Se déconnecter » sur /mobile/profil sans effet",
-        description:
-          "Les routes /mobile/* ne sont pas sous le guard _app : après signOut() Supabase, aucune redirection ne se déclenchait et l'écran restait figé. Ajout d'une navigation explicite vers /login après la déconnexion sur mobile.",
       },
     ],
   },
