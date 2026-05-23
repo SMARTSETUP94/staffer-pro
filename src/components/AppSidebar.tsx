@@ -14,7 +14,7 @@ import { usePreview } from "@/lib/preview-context";
 import { Button } from "@/components/ui/button";
 import { useValidationCount } from "@/hooks/use-validation-count";
 import { useContratsRhCount } from "@/hooks/use-contrats-rh-count";
-import { useCapabilities } from "@/hooks/use-capability";
+import { useCapabilitiesSet } from "@/hooks/use-capability";
 
 import { ViewAsSwitcher } from "./ViewAsSwitcher";
 
