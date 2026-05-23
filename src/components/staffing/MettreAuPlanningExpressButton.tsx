@@ -40,6 +40,7 @@ import { listFabObjetsForWizard, getActivePlansForAffaire } from "@/server/staff
 import { createPlanExpress } from "@/server/staffing-express.functions";
 import { useWizardPrefetch } from "@/hooks/use-wizard-prefetch";
 import { isJourNonOuvreFR } from "@/lib/jours-feries";
+import { useVocab } from "@/hooks/use-vocab";
 
 interface Props {
   affaireId: string;
