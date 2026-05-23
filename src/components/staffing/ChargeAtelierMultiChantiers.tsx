@@ -62,6 +62,8 @@ export function ChargeAtelierMultiChantiers() {
   const [data, setData] = useState<{ plans: PlanRow[]; steps: StepRow[]; cnc: CncRow[] } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // Lot 2.2 #8 — Drill-down conflit CNC en Dialog (vs Popover trop étroit)
+  const [cncDialogDate, setCncDialogDate] = useState<string | null>(null);
 
   const window = useMemo(() => {
     const today = new Date();
