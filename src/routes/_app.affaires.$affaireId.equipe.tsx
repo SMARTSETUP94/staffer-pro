@@ -25,6 +25,7 @@ interface Row {
 
 export const Route = createFileRoute("/_app/affaires/$affaireId/equipe")({
   head: () => ({ meta: [{ title: "Équipe — Setup Paris" }] }),
+  beforeLoad: () => requireCapability("affaire.equipe.view"),
   component: AffaireEquipePage,
 });
 
