@@ -23,6 +23,8 @@ import {
 interface ObjetCardMobileProps {
   objet: FabricationObjet;
   isAdminOrChef: boolean;
+  /** Lot 8.2b — Lien temporaire vers la Fiche Objet (null = caché). */
+  ficheHref?: string | null;
   onEditObjet: (objet: FabricationObjet) => void;
   onEditEtape: (objet: FabricationObjet, etape: FabricationEtape) => void;
 }
