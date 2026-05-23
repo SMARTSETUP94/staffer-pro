@@ -1745,6 +1745,36 @@ export type Database = {
           },
         ]
       }
+      feature_flags: {
+        Row: {
+          created_at: string
+          description: string | null
+          enabled_for_roles: string[]
+          enabled_for_user_ids: string[]
+          enabled_globally: boolean
+          flag_key: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          enabled_for_roles?: string[]
+          enabled_for_user_ids?: string[]
+          enabled_globally?: boolean
+          flag_key: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          enabled_for_roles?: string[]
+          enabled_for_user_ids?: string[]
+          enabled_globally?: boolean
+          flag_key?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       feedbacks: {
         Row: {
           author_id: string
@@ -3910,6 +3940,7 @@ export type Database = {
       }
       is_chef_or_admin: { Args: never; Returns: boolean }
       is_devis_termine: { Args: { _devis_id: string }; Returns: boolean }
+      is_feature_flag_enabled: { Args: { _flag_key: string }; Returns: boolean }
       is_profile_complete: { Args: { p_id: string }; Returns: boolean }
       mes_affaires_chef: {
         Args: { _employe_id: string }
