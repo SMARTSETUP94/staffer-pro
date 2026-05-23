@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
+import { useQuery } from "@tanstack/react-query";
 import {
   ChevronDown,
   Wand2,
@@ -10,8 +11,10 @@ import {
   Loader2,
   AlertTriangle,
   CalendarRange,
+  CheckCircle2,
 } from "lucide-react";
 import { format, addDays, parseISO } from "date-fns";
+
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -33,7 +36,7 @@ import {
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { listFabObjetsForWizard } from "@/server/staffing-plan-create.functions";
+import { listFabObjetsForWizard, getActivePlansForAffaire } from "@/server/staffing-plan-create.functions";
 import { createPlanExpress } from "@/server/staffing-express.functions";
 import { useWizardPrefetch } from "@/hooks/use-wizard-prefetch";
 
@@ -77,6 +80,7 @@ export function MettreAuPlanningExpressButton({
   const navigate = useNavigate();
   const expressFn = useServerFn(createPlanExpress);
   const listFn = useServerFn(listFabObjetsForWizard);
+  const getActivePlansFn = useServerFn(getActivePlansForAffaire);
   const { prefetch } = useWizardPrefetch(affaireId);
   const [running, setRunning] = useState(false);
   const [includeWeekends, setIncludeWeekends] = useState(false);
@@ -85,6 +89,14 @@ export function MettreAuPlanningExpressButton({
     reason: "",
   });
   const stepperTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  // Quick win J — détecte si un plan publié actif existe pour cette affaire.
+  const { data: activePlans } = useQuery({
+    queryKey: ["active-plans-for-affaire", affaireId],
+    queryFn: () => getActivePlansFn({ data: { affaire_id: affaireId } }),
+    staleTime: 30_000,
+  });
+  const publishedPlan = activePlans?.find((p) => p.status === "published") ?? null;
 
   const startStepper = useCallback((toastId: string | number, total: number) => {
     // Affiche stepper progressif basé sur estimation : 4 ticks équirépartis sur durée moyenne 6s.
@@ -206,6 +218,58 @@ export function MettreAuPlanningExpressButton({
     clearStepper,
   ]);
 
+  // Quick win J — si un plan publié existe, propose l'accès direct plutôt qu'un Express.
+  if (publishedPlan) {
+    return (
+      <div className="inline-flex rounded-xl border border-emerald-500/50 overflow-hidden">
+        <Button
+          variant="outline"
+          onClick={() =>
+            navigate({ to: "/staffing/$planId", params: { planId: publishedPlan.id } })
+          }
+          disabled={disabled}
+          className="rounded-none border-0 text-emerald-700 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950"
+          title="Un plan publié actif existe pour cette affaire — cliquer pour l'ouvrir"
+        >
+          <CheckCircle2 className="mr-2 h-4 w-4" />
+          Plan actif
+        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="outline"
+              disabled={disabled || running}
+              className="rounded-none border-0 border-l border-emerald-500/50 px-2 text-emerald-700 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950"
+              aria-label="Options"
+            >
+              <ChevronDown className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-64">
+            <DropdownMenuItem
+              onClick={() =>
+                navigate({ to: "/staffing/$planId", params: { planId: publishedPlan.id } })
+              }
+            >
+              <CheckCircle2 className="mr-2 h-4 w-4" />
+              Ouvrir le plan publié
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                prefetch();
+                onConfigurer();
+              }}
+              disabled={running}
+            >
+              <Settings className="mr-2 h-4 w-4" />
+              Nouveau plan (archive l'actuel)…
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    );
+  }
+
   return (
     <>
       <div className="inline-flex rounded-xl border border-primary/40 overflow-hidden">
@@ -278,6 +342,7 @@ export function MettreAuPlanningExpressButton({
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
 
       <AlertDialog
         open={warnEmpty.open}

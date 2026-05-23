@@ -1,4 +1,4 @@
-**Bloc 2 — Quick wins UX** — Lot 2.1 polish ✅ · Lot 2.2 Heatmap & compétences ✅ (jours-feries.ts + CNC Dialog + Modifiés uniquement + selected persisted par planId) · Lot 2.3 Express+ ⏳ · Lot 2.4 Express avancé ⏳
+**Bloc 2 — Quick wins UX** — Lot 2.1 polish ✅ · Lot 2.2 Heatmap & compétences ✅ · Lot 2.3 Express+ ✅ (pulse Wand2 + CTA Publier + shortcuts E/P + stepper 4 étapes + badge "Plan actif" J) · Lot 2.4 Express avancé ⏳ (F undo 5min, G jours ouvrés défauts)
 
 ## Statut des frictions par audit
 
