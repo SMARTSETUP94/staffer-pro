@@ -24,6 +24,7 @@ Routing post-login centralisé v0.47.1 : module unique `src/lib/post-login-routi
 Métiers/postes v0.47.3 : 4 surfaces unifiées via bandeau `MetiersPostesTabs` (Métiers / Postes contractuels / Postes principaux / Compétences équipe), sidebar consolidée à 1 entrée. Voir mem://features/metiers-postes-hub.
 Absences = 1 seule table `absences` avec colonne `type`. JAMAIS créer module congés séparé. Voir mem://constraints/absences-une-seule-table.
 v0.48 : `/planning` recentré staffing (5 onglets : CDI/CDD, Intérim, Par chantier, Par objet, Par pôle). Vues Véhicules, Budget, Feuille de route extraites vers `/logistique/vehicules-planning`, `/affaires/budget-planning`, `/export/feuille-de-route`. Redirect SPA depuis anciens `?tab=`. Voir mem://features/planning-par-pole-v048.
+Vocabulaire métier v0.48.x (Lot 7.1 bis) : libellés UI passent par `useVocab()` (`src/hooks/use-vocab.ts`) + flag `vocab_metier_v1` (off par défaut). Staffer→Assigner, Auto-staffing→Auto-remplir, Plan staffing→Plan de fab, Validation→Valider. Express CONSERVÉ. Routes/RPCs/queryKeys/composants TS INCHANGÉS. Cleanup deadline : 2 semaines après bascule globale. Voir mem://constraints/vocabulaire-metier-centralise.
 
 ## Roadmap
 
