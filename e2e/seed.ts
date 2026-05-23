@@ -26,7 +26,14 @@ const admin = createClient(url, serviceKey, {
   auth: { autoRefreshToken: false, persistSession: false },
 });
 
-type RoleName = "admin" | "chef_chantier" | "employe" | "chef_metier_scoped";
+type RoleName =
+  | "admin"
+  | "chef_chantier"
+  | "employe"
+  | "chef_metier_scoped"
+  | "commercial"
+  | "bureau_etude"
+  | "atelier_chef";
 
 interface Seed {
   email: string;
@@ -79,6 +86,31 @@ const seeds: Seed[] = [
     prenom: "E2E",
     nom: "ChefScoped",
     metierOrdre: 3, // peinture
+  },
+  // Lot 8.2b — 3 comptes test pour matrice Fiche Objet (commercial / BE / atelier_chef).
+  {
+    email: optional("E2E_COMMERCIAL_EMAIL", "test_commercial@setupparis.test"),
+    password: optional("E2E_COMMERCIAL_PASSWORD", "Commercial-E2E-2026!"),
+    role: "commercial",
+    fullName: "E2E Commercial",
+    prenom: "E2E",
+    nom: "Commercial",
+  },
+  {
+    email: optional("E2E_BUREAU_ETUDE_EMAIL", "test_bureau_etude@setupparis.test"),
+    password: optional("E2E_BUREAU_ETUDE_PASSWORD", "BureauEtude-E2E-2026!"),
+    role: "bureau_etude",
+    fullName: "E2E Bureau d'étude",
+    prenom: "E2E",
+    nom: "BureauEtude",
+  },
+  {
+    email: optional("E2E_ATELIER_CHEF_EMAIL", "test_atelier_chef@setupparis.test"),
+    password: optional("E2E_ATELIER_CHEF_PASSWORD", "AtelierChef-E2E-2026!"),
+    role: "atelier_chef",
+    fullName: "E2E Atelier Chef",
+    prenom: "E2E",
+    nom: "AtelierChef",
   },
 ];
 
