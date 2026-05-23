@@ -61,14 +61,15 @@ function RhHubPage() {
           .gte("date_debut", today)
           .lte("date_debut", in7),
         supabase
-          .from("contrats")
+          .from("contrats_intermittents")
           .select("*", { count: "exact", head: true })
           .lte("date_debut", today)
           .gte("date_fin", today),
         supabase
-          .from("contrats")
+          .from("contrats_intermittents")
           .select("*", { count: "exact", head: true })
           .gte("date_debut", new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().slice(0, 10)),
+
       ]);
 
       // Anniversaires du mois
@@ -110,7 +111,7 @@ function RhHubPage() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-6 p-6">
-      <PageHeader title="Module RH" subtitle="Pilotage équipe, absences et contrats" />
+      <PageHeader title="Module RH" description="Pilotage équipe, absences et contrats" />
 
       {/* KPI strip */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
