@@ -1,6 +1,4 @@
-# Bloc 2 — Quick wins UX en dette
-
-Spec §6 demande de tirer les frictions identifiées dans `docs/audit-ux-v035.md` et `docs/audit-ux-auto-staffing-v0311.md` **non encore livrées**. J'ai croisé les 2 audits avec ce qui est déjà mémorisé comme livré (v0.35.7 → v0.35.14 + v0.39.x).
+**Bloc 2 — Quick wins UX** — Lot 2.1 polish ✅ · Lot 2.2 Heatmap & compétences ✅ (jours-feries.ts + CNC Dialog + Modifiés uniquement + selected persisted par planId) · Lot 2.3 Express+ ⏳ · Lot 2.4 Express avancé ⏳
 
 ## Statut des frictions par audit
 
