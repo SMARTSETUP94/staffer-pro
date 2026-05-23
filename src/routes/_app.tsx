@@ -118,6 +118,16 @@ function AppGuard() {
     effIsMobile, isEmployeAllowedPath, mustSetPassword, profileCompleted, currentPath, navigate, roles, isPreviewing,
   ]);
 
+  // Lot 7.0b — toast "Accès refusé" après redirect depuis requireCapability().
+  useEffect(() => {
+    const denied = consumeCapDenied();
+    if (denied) {
+      toast.error("Accès refusé", {
+        description: `Vous n'avez pas la permission requise (${denied}).`,
+      });
+    }
+  }, [currentPath]);
+
   if (loading || !rolesLoaded || !user) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
