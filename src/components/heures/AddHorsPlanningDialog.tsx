@@ -31,6 +31,8 @@ import {
   HORS_PLANNING_ERROR_LABELS,
   type HorsPlanningInput,
 } from "@/lib/hors-planning-helpers";
+import { SaisieHeritageBandeau } from "@/components/heures/SaisieHeritageBandeau";
+import { useResolvedEmploye } from "@/hooks/use-resolved-employe";
 
 interface Props {
   defaultDate?: string; // YYYY-MM-DD
@@ -45,6 +47,7 @@ export function AddHorsPlanningDialog({ defaultDate, variant, defaultMetierId, o
   const [affaires, setAffaires] = useState<Affaire[]>([]);
   const [loadingAffaires, setLoadingAffaires] = useState(false);
   const { metiers } = useMetiers();
+  const { employeId } = useResolvedEmploye();
 
   const [affaireId, setAffaireId] = useState<string>("");
   const [metierId, setMetierId] = useState<string>("");
