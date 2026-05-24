@@ -27,8 +27,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import {
-  assignManualToObjet,
-  listCandidatsForMetier,
+  addManualMemberToObjet,
+  listObjetEquipeCandidats,
 } from "@/server/objet-equipe-mutations.functions";
 import { EmployePickerList, type CandidatRow } from "./EmployePickerList";
 
@@ -52,8 +52,8 @@ export function AddPersonneSheet({
   const [presence, setPresence] = useState(100);
   const qc = useQueryClient();
 
-  const fetchCandidats = useServerFn(listCandidatsForMetier);
-  const assignMutation = useServerFn(assignManualToObjet);
+  const fetchCandidats = useServerFn(listObjetEquipeCandidats);
+  const assignMutation = useServerFn(addManualMemberToObjet);
 
   const { data: candidats, isLoading } = useQuery<CandidatRow[]>({
     queryKey: ["objet-candidats", metierId],

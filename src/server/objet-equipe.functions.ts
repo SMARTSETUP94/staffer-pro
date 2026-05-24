@@ -12,7 +12,7 @@
  * Cap : `objet.view` (alignée avec `getObjetFiche`).
  *
  * NB : Lot 8.3a ne fait que de la lecture. Les mutations (assign / remove /
- * autoStaffObjet) sont prévues pour 8.3b.
+ * autoStaffObjetEquipe) sont prévues pour 8.3b.
  */
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
