@@ -193,3 +193,6 @@ Voir roadmap consolidée détaillée : mem://roadmap/consolidee-2mai2026.
 - [Planning par pôle consolidé v0.48](mem://features/planning-par-pole-v048) — matrice métiers × jours + popover hover + refonte nav 3 routes extraites
 - [Fiche Objet — Lot 8.1](mem://features/fiche-objet) — MV v_objet_heures_consolidees (réel) + 4 caps + flag fiche_objet_v1 + getObjetTeam/assignPersonneToObjetStep
 - [Dette : RLS bypass BE objet.edit](mem://constraints/rls-bypass-bureau-etude-objet-edit) — BE peut UPDATE tout via API directe ; UI cache mais ne protège pas. Trigger ou split server fn à prévoir.
+- [Fiche objet — section Équipe affectée](mem://features/fiche-objet-equipe) — règles draft/published, préférence published, manual_assignment_origin='fiche_objet'
+- [Dette : renommer loadPublishedStepsForObjet](mem://debts/load-active-steps-for-objet-rename) — charge draft+published depuis hotfix v8.3 ; renommer en loadActiveStepsForObjet au Lot 8.6
+- [Dette : Specs E2E 8.3b — scénario #11 révisé + #11bis](mem://debts/e2e-specs-83b-scenario-11-revision) — 13 scénarios au lieu de 12 (no_plan + draft)
