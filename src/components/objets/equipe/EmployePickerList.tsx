@@ -6,7 +6,7 @@
  * casting chantier (Sprint C / C1).
  *
  * Props :
- * - candidats : liste rankée (Tier 1→4) renvoyée par `listCandidatsForMetier`
+ * - candidats : liste rankée (Tier 1→4) renvoyée par `listObjetEquipeCandidats`
  * - isLoading : état de chargement
  * - selectedId : id employé sélectionné (controlled)
  * - onSelect : callback de sélection

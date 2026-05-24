@@ -23,7 +23,7 @@ import {
 import { Plus, Wand2, AlertTriangle, Check, Info, X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { getObjetEquipe } from "@/server/objet-equipe.functions";
-import { autoStaffObjet } from "@/server/objet-equipe-mutations.functions";
+import { autoStaffObjetEquipe } from "@/server/objet-equipe-mutations.functions";
 import { useCapability } from "@/hooks/use-capability";
 import { useFeatureFlag } from "@/hooks/use-feature-flag";
 import { supabase } from "@/integrations/supabase/client";
@@ -50,7 +50,7 @@ interface RemoveDialogState {
 
 export function ObjetEquipeSection({ objetId }: Props) {
   const fetchEquipe = useServerFn(getObjetEquipe);
-  const autoStaffFn = useServerFn(autoStaffObjet);
+  const autoStaffFn = useServerFn(autoStaffObjetEquipe);
   const canManage = useCapability("objet.team.manage");
   const qc = useQueryClient();
 

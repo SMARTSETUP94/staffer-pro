@@ -4,17 +4,17 @@
  * 3 server functions accessibles à toute personne avec la capability
  * `objet.team.manage` (admin, chef_chantier, chef_metier_scoped, atelier_chef) :
  *
- *   - `autoStaffObjet({ objetId })` : extrait la logique de `autoStaffStep` et
+ *   - `autoStaffObjetEquipe({ objetId })` : extrait la logique de `autoStaffStep` et
  *     l'applique à TOUS les steps publiés liés à l'objet. Aucune écriture si
  *     pas de plan publié (renvoie no_plan).
  *
- *   - `assignManualToObjet({ objetId, employeId, metierId, presencePct })` :
+ *   - `addManualMemberToObjet({ objetId, employeId, metierId, presencePct })` :
  *     ajoute une assignation manuelle sur le step (objet, métier) du plan
  *     publié, pour TOUS les jours ouvrés couverts. `manual_assignment_origin`
  *     est passé à `true` pour exclure ces lignes du check PRESENCE_MISMATCH
  *     côté cron divergence. `presencePct` par défaut = 100.
  *
- *   - `removeEmployeFromObjet({ objetId, employeId, metierId })` : supprime
+ *   - `removeMemberFromObjet({ objetId, employeId, metierId })` : supprime
  *     toutes les assignations de l'employé sur les steps (objet, métier)
  *     du plan publié.
  *
@@ -116,7 +116,7 @@ async function loadPublishedStepsForObjet(
 }
 
 // ────────────────────────────────────────────────────────────
-// 1) autoStaffObjet — auto-remplit tous les steps de l'objet
+// 1) autoStaffObjetEquipe — auto-remplit tous les steps de l'objet
 // ────────────────────────────────────────────────────────────
 
 interface AutoStaffObjetResult {
@@ -127,7 +127,7 @@ interface AutoStaffObjetResult {
   per_step: Array<{ step_id: string; metier_id: number; filled: number; skipped: number }>;
 }
 
-export const autoStaffObjet = createServerFn({ method: "POST" })
+export const autoStaffObjetEquipe = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { objetId: string }) =>
     z.object({ objetId: z.string().uuid() }).parse(d)
@@ -292,7 +292,7 @@ export const autoStaffObjet = createServerFn({ method: "POST" })
   });
 
 // ────────────────────────────────────────────────────────────
-// 2) assignManualToObjet — ajout manuel
+// 2) addManualMemberToObjet — ajout manuel
 // ────────────────────────────────────────────────────────────
 
 interface AssignManualResult {
@@ -303,7 +303,7 @@ interface AssignManualResult {
   warning_cumul?: { date: string; total_pct: number }[];
 }
 
-export const assignManualToObjet = createServerFn({ method: "POST" })
+export const addManualMemberToObjet = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: {
     objetId: string;
@@ -427,7 +427,7 @@ export const assignManualToObjet = createServerFn({ method: "POST" })
   });
 
 // ────────────────────────────────────────────────────────────
-// 3) removeEmployeFromObjet — retrait
+// 3) removeMemberFromObjet — retrait
 // ────────────────────────────────────────────────────────────
 
 interface RemoveResult {
@@ -435,7 +435,7 @@ interface RemoveResult {
   deleted: number;
 }
 
-export const removeEmployeFromObjet = createServerFn({ method: "POST" })
+export const removeMemberFromObjet = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { objetId: string; employeId: string; metierId: number }) =>
     z
@@ -479,7 +479,7 @@ export interface CandidatEmploye {
   is_principal: boolean;
 }
 
-export const listCandidatsForMetier = createServerFn({ method: "POST" })
+export const listObjetEquipeCandidats = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { metierId: number }) =>
     z.object({ metierId: z.number().int().min(1).max(20) }).parse(d)

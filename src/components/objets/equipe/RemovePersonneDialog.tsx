@@ -14,7 +14,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { removeEmployeFromObjet } from "@/server/objet-equipe-mutations.functions";
+import { removeMemberFromObjet } from "@/server/objet-equipe-mutations.functions";
 
 interface Props {
   open: boolean;
@@ -36,7 +36,7 @@ export function RemovePersonneDialog({
   metierLabel,
 }: Props) {
   const qc = useQueryClient();
-  const remove = useServerFn(removeEmployeFromObjet);
+  const remove = useServerFn(removeMemberFromObjet);
 
   const mutation = useMutation({
     mutationFn: () => remove({ data: { objetId, employeId, metierId } }),

@@ -88,6 +88,7 @@ import { Route as AppDevisRattachementHistoriqueRouteImport } from './routes/_ap
 import { Route as AppDevisProgbatImportRouteImport } from './routes/_app.devis.progbat-import'
 import { Route as AppDevisImportRouteImport } from './routes/_app.devis.import'
 import { Route as AppDevisHistoriqueRouteImport } from './routes/_app.devis.historique'
+import { Route as AppDevAtomsRouteImport } from './routes/_app.dev.atoms'
 import { Route as AppAffairesBudgetPlanningRouteImport } from './routes/_app.affaires.budget-planning'
 import { Route as AppAffairesAffaireIdRouteImport } from './routes/_app.affaires.$affaireId'
 import { Route as AppAdminPermissionsRouteImport } from './routes/_app.admin.permissions'
@@ -509,6 +510,11 @@ const AppDevisHistoriqueRoute = AppDevisHistoriqueRouteImport.update({
   path: '/devis/historique',
   getParentRoute: () => AppRoute,
 } as any)
+const AppDevAtomsRoute = AppDevAtomsRouteImport.update({
+  id: '/dev/atoms',
+  path: '/dev/atoms',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAffairesBudgetPlanningRoute =
   AppAffairesBudgetPlanningRouteImport.update({
     id: '/affaires/budget-planning',
@@ -670,6 +676,7 @@ export interface FileRoutesByFullPath {
   '/admin/permissions': typeof AppAdminPermissionsRoute
   '/affaires/$affaireId': typeof AppAffairesAffaireIdRouteWithChildren
   '/affaires/budget-planning': typeof AppAffairesBudgetPlanningRoute
+  '/dev/atoms': typeof AppDevAtomsRoute
   '/devis/historique': typeof AppDevisHistoriqueRoute
   '/devis/import': typeof AppDevisImportRoute
   '/devis/progbat-import': typeof AppDevisProgbatImportRoute
@@ -766,6 +773,7 @@ export interface FileRoutesByTo {
   '/admin/feedback': typeof AppAdminFeedbackRoute
   '/admin/permissions': typeof AppAdminPermissionsRoute
   '/affaires/budget-planning': typeof AppAffairesBudgetPlanningRoute
+  '/dev/atoms': typeof AppDevAtomsRoute
   '/devis/historique': typeof AppDevisHistoriqueRoute
   '/devis/import': typeof AppDevisImportRoute
   '/devis/progbat-import': typeof AppDevisProgbatImportRoute
@@ -867,6 +875,7 @@ export interface FileRoutesById {
   '/_app/admin/permissions': typeof AppAdminPermissionsRoute
   '/_app/affaires/$affaireId': typeof AppAffairesAffaireIdRouteWithChildren
   '/_app/affaires/budget-planning': typeof AppAffairesBudgetPlanningRoute
+  '/_app/dev/atoms': typeof AppDevAtomsRoute
   '/_app/devis/historique': typeof AppDevisHistoriqueRoute
   '/_app/devis/import': typeof AppDevisImportRoute
   '/_app/devis/progbat-import': typeof AppDevisProgbatImportRoute
@@ -968,6 +977,7 @@ export interface FileRouteTypes {
     | '/admin/permissions'
     | '/affaires/$affaireId'
     | '/affaires/budget-planning'
+    | '/dev/atoms'
     | '/devis/historique'
     | '/devis/import'
     | '/devis/progbat-import'
@@ -1064,6 +1074,7 @@ export interface FileRouteTypes {
     | '/admin/feedback'
     | '/admin/permissions'
     | '/affaires/budget-planning'
+    | '/dev/atoms'
     | '/devis/historique'
     | '/devis/import'
     | '/devis/progbat-import'
@@ -1164,6 +1175,7 @@ export interface FileRouteTypes {
     | '/_app/admin/permissions'
     | '/_app/affaires/$affaireId'
     | '/_app/affaires/budget-planning'
+    | '/_app/dev/atoms'
     | '/_app/devis/historique'
     | '/_app/devis/import'
     | '/_app/devis/progbat-import'
@@ -1786,6 +1798,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDevisHistoriqueRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/dev/atoms': {
+      id: '/_app/dev/atoms'
+      path: '/dev/atoms'
+      fullPath: '/dev/atoms'
+      preLoaderRoute: typeof AppDevAtomsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/affaires/budget-planning': {
       id: '/_app/affaires/budget-planning'
       path: '/affaires/budget-planning'
@@ -2027,6 +2046,7 @@ interface AppRouteChildren {
   AppAdminPermissionsRoute: typeof AppAdminPermissionsRoute
   AppAffairesAffaireIdRoute: typeof AppAffairesAffaireIdRouteWithChildren
   AppAffairesBudgetPlanningRoute: typeof AppAffairesBudgetPlanningRoute
+  AppDevAtomsRoute: typeof AppDevAtomsRoute
   AppDevisHistoriqueRoute: typeof AppDevisHistoriqueRoute
   AppDevisImportRoute: typeof AppDevisImportRoute
   AppDevisProgbatImportRoute: typeof AppDevisProgbatImportRoute
@@ -2086,6 +2106,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAdminPermissionsRoute: AppAdminPermissionsRoute,
   AppAffairesAffaireIdRoute: AppAffairesAffaireIdRouteWithChildren,
   AppAffairesBudgetPlanningRoute: AppAffairesBudgetPlanningRoute,
+  AppDevAtomsRoute: AppDevAtomsRoute,
   AppDevisHistoriqueRoute: AppDevisHistoriqueRoute,
   AppDevisImportRoute: AppDevisImportRoute,
   AppDevisProgbatImportRoute: AppDevisProgbatImportRoute,
