@@ -192,22 +192,46 @@ function FicheObjetPage() {
       {/* Lot 8.3 — Étapes Kanban */}
       <ObjetEtapesGrid objetId={objet.id} />
 
-      {/* Lot 8.4 à venir */}
-      <div className="grid gap-4 md:grid-cols-1">
-        <Placeholder title="Journal photos" sub="Lot 8.4 — à venir" />
-      </div>
+      {/* Lot 8.4 MVP — Journal (timeline / photos / commentaires) */}
+      <ObjetJournalSection objetId={objet.id} affaireId={affaireId} />
     </div>
   );
 }
 
-function Placeholder({ title, sub }: { title: string; sub: string }) {
+function ObjetJournalSection({ objetId, affaireId }: { objetId: string; affaireId: string }) {
+  const canRead = useCapability("objet.read");
+  // Fallback : si la cap n'est pas explicite mais que la fiche est déjà
+  // ouverte (cap `objet.view` validée en beforeLoad), on autorise la lecture.
+  const canView = useCapability("objet.view");
+  if (!canRead && !canView) return null;
   return (
-    <Card className="border-dashed bg-muted/30">
+    <Card data-testid="objet-journal-section">
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm text-muted-foreground">{title}</CardTitle>
+        <CardTitle className="text-sm">Journal</CardTitle>
       </CardHeader>
-      <CardContent className="py-6 text-center text-xs text-muted-foreground">
-        {sub}
+      <CardContent>
+        <Tabs defaultValue="timeline" className="w-full">
+          <TabsList className="grid w-full grid-cols-3 md:w-auto md:inline-grid">
+            <TabsTrigger value="timeline" data-testid="journal-tab-timeline">
+              Timeline
+            </TabsTrigger>
+            <TabsTrigger value="photos" data-testid="journal-tab-photos">
+              Photos
+            </TabsTrigger>
+            <TabsTrigger value="commentaires" data-testid="journal-tab-commentaires">
+              Commentaires
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent value="timeline" className="mt-3">
+            <ObjetJournalTimeline objetId={objetId} />
+          </TabsContent>
+          <TabsContent value="photos" className="mt-3">
+            <ObjetPhotosGrid objetId={objetId} />
+          </TabsContent>
+          <TabsContent value="commentaires" className="mt-3">
+            <ObjetCommentaires objetId={objetId} affaireId={affaireId} />
+          </TabsContent>
+        </Tabs>
       </CardContent>
     </Card>
   );
