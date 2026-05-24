@@ -300,6 +300,14 @@ function AffaireCastingPage() {
           phase={removeTarget.phase}
         />
       )}
+
+      {publishedPlanId && (
+        <RepublishConflictDialog
+          open={republishOpen}
+          onOpenChange={setRepublishOpen}
+          planId={publishedPlanId}
+        />
+      )}
     </div>
   );
 }
