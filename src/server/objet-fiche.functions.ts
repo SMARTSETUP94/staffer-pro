@@ -487,13 +487,13 @@ const UpdateInputSchema = z.object({
       quantite: z.number().int().min(1).max(10000).optional(),
       commentaire: z.string().max(2000).nullable().optional(),
       respo_fab_id: z.string().uuid().nullable().optional(),
-      heures_prevues_be: z.number().min(0).max(10000).optional(),
-      heures_prevues_numerique: z.number().min(0).max(10000).optional(),
-      heures_prevues_bois: z.number().min(0).max(10000).optional(),
-      heures_prevues_metal: z.number().min(0).max(10000).optional(),
-      heures_prevues_peinture: z.number().min(0).max(10000).optional(),
-      heures_prevues_tapisserie: z.number().min(0).max(10000).optional(),
-      heures_prevues_manutention: z.number().min(0).max(10000).optional(),
+      // Lot 8.2c — heures_prevues_* RETIRÉES (édition via réimport devis + cell-edit).
+      // Lot 8.2c — Dimensions (mm) + matériaux + finition détaillée
+      largeur_mm: z.number().int().min(1).max(100000).nullable().optional(),
+      longueur_mm: z.number().int().min(1).max(100000).nullable().optional(),
+      hauteur_mm: z.number().int().min(1).max(100000).nullable().optional(),
+      materiaux: z.string().max(2000).nullable().optional(),
+      finition_detail: z.string().max(500).nullable().optional(),
     })
     .refine((p) => Object.keys(p).length > 0, { message: "Patch vide" }),
 });
@@ -504,22 +504,20 @@ export interface UpdateObjetIdentiteResult {
   rejected: string[];
 }
 
-/** Mapping champ logique → liste de colonnes DB qu'il autorise. */
+/** Mapping champ logique (matrice perms) → liste de colonnes DB qu'il autorise. */
 const FIELD_TO_COLUMNS: Record<string, string[]> = {
   nom: ["nom"],
   quantite: ["quantite"],
   commentaire: ["commentaire"],
   respo_fab_id: ["respo_fab_id"],
-  heures_prevues: [
-    "heures_prevues_be",
-    "heures_prevues_numerique",
-    "heures_prevues_bois",
-    "heures_prevues_metal",
-    "heures_prevues_peinture",
-    "heures_prevues_tapisserie",
-    "heures_prevues_manutention",
-  ],
+  // Lot 8.2c
+  largeur_mm: ["largeur_mm"],
+  longueur_mm: ["longueur_mm"],
+  hauteur_mm: ["hauteur_mm"],
+  materiaux: ["materiaux"],
+  finition_detail: ["finition_detail"],
 };
+
 
 export const updateObjetIdentite = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
