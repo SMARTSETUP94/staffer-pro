@@ -38,126 +38,35 @@ function normalizePhase(raw: string | null | undefined): string {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type SupaCtx = any;
 
+/**
+ * Sync équipes 3 niveaux depuis un plan staffing.
+ *
+ * Implémentation : délègue à la RPC SQL `sync_equipes_from_plan(plan_id, user_id)`
+ * (SECURITY DEFINER, atomique, bypass du trigger enforce_objet_equipe_strict
+ * via SET LOCAL dans la même session — cf. mem://debts/bypass-objet-equipe-strict-temp).
+ *
+ * Ne modifie JAMAIS staffing_plan.status. Idempotent.
+ */
 export async function syncEquipesFromPlan(
   supabase: SupaCtx,
   planId: string,
   userId: string | null,
 ): Promise<{ n2_upserts: number; n3_upserts: number; phase_updates: number }> {
-  // 1. Charger plan + steps + assignments
-  const { data: plan } = await supabase
-    .from("staffing_plan")
-    .select("id, affaire_id")
-    .eq("id", planId)
-    .single();
-  if (!plan) return { n2_upserts: 0, n3_upserts: 0, phase_updates: 0 };
-
-  const { data: steps } = await supabase
-    .from("staffing_plan_step")
-    .select("id, phase, objet_id, metier_id")
-    .eq("plan_id", planId);
-  const stepsArr = steps ?? [];
-  if (stepsArr.length === 0) {
-    return { n2_upserts: 0, n3_upserts: 0, phase_updates: 0 };
-  }
-
-  const stepIds = stepsArr.map((s: { id: string }) => s.id as string);
-  const { data: asg } = await supabase
-    .from("staffing_plan_assignment")
-    .select("step_id, employe_id")
-    .in("step_id", stepIds);
-  const asgArr = asg ?? [];
-
-  const stepById = new Map<string, (typeof stepsArr)[number]>();
-  for (const s of stepsArr) stepById.set(s.id as string, s);
-
-  // 2. Calculer set unique (affaire_id, employe_id, phase) pour N2
-  const n2Set = new Map<string, { affaire_id: string; employe_id: string; phase: string }>();
-  // Et set unique (objet_id, employe_id) pour N3
-  const n3Set = new Map<string, { objet_id: string; employe_id: string }>();
-
-  for (const a of asgArr) {
-    const step = stepById.get(a.step_id as string);
-    if (!step) continue;
-    const phase = normalizePhase(step.phase as string | null);
-    const employeId = a.employe_id as string;
-
-    const n2Key = `${plan.affaire_id}|${employeId}|${phase}`;
-    if (!n2Set.has(n2Key)) {
-      n2Set.set(n2Key, { affaire_id: plan.affaire_id as string, employe_id: employeId, phase });
-    }
-    if (step.objet_id) {
-      const n3Key = `${step.objet_id as string}|${employeId}`;
-      if (!n3Set.has(n3Key)) {
-        n3Set.set(n3Key, { objet_id: step.objet_id as string, employe_id: employeId });
-      }
-    }
-  }
-
-  // 3. UPSERT N2 affaire_equipe (note : trigger enforce_objet_equipe_strict
-  //    n'agit que sur fabrication_objet_equipe → N2 sans bypass nécessaire)
-  let n2_upserts = 0;
-  if (n2Set.size > 0) {
-    const rowsN2 = Array.from(n2Set.values()).map((r) => ({
-      affaire_id: r.affaire_id,
-      employe_id: r.employe_id,
-      phase: r.phase,
-      added_by: userId,
-      removed_at: null,
-      removed_by: null,
-    }));
-    const { error: errN2 } = await supabase
-      .from("affaire_equipe")
-      .upsert(rowsN2 as never, { onConflict: "affaire_id,employe_id,phase" });
-    if (errN2) throw new Error(`syncEquipes N2: ${errN2.message}`);
-    n2_upserts = rowsN2.length;
-  }
-
-  // 4. UPSERT N3 fabrication_objet_equipe
-  //    Bypass temporaire du trigger enforce_objet_equipe_strict via session GUC
-  //    (cf. mem://debts/bypass-objet-equipe-strict-temp)
-  let n3_upserts = 0;
-  if (n3Set.size > 0) {
-    await supabase.rpc("set_config_local", {
-      _name: "app.bypass_objet_equipe_strict",
-      _value: "on",
-    } as never);
-
-    const rowsN3 = Array.from(n3Set.values()).map((r) => ({
-      objet_id: r.objet_id,
-      employe_id: r.employe_id,
-      added_by: userId,
-      removed_at: null,
-      removed_by: null,
-    }));
-    const { error: errN3 } = await supabase
-      .from("fabrication_objet_equipe")
-      .upsert(rowsN3 as never, { onConflict: "objet_id,employe_id" });
-    if (errN3) throw new Error(`syncEquipes N3: ${errN3.message}`);
-    n3_upserts = rowsN3.length;
-  }
-
-  // 5. Propager phase steps → assignations
-  //    Pour chaque step ayant une phase valide, UPDATE assignations.phase
-  let phase_updates = 0;
-  for (const step of stepsArr) {
-    const ph = step.phase as string | null;
-    if (!ph) continue;
-    const { count } = await supabase
-      .from("assignations")
-      .update({ phase: ph }, { count: "exact" })
-      .eq("staffing_plan_id", planId)
-      .eq("metier_id", step.metier_id as number)
-      .is("phase", null);
-    phase_updates += count ?? 0;
-  }
-
-  return { n2_upserts, n3_upserts, phase_updates };
-}
-
-// Helper type uniquement pour le typage du paramètre supabase ci-dessus
-// (évite la dépendance directe au type généré qui change souvent).
-function createSupabaseClientType(): never {
-  throw new Error("type-only");
+  const { data, error } = await supabase.rpc("sync_equipes_from_plan", {
+    p_plan_id: planId,
+    p_user_id: userId,
+  });
+  if (error) throw new Error(`sync_equipes_from_plan: ${error.message}`);
+  const r = (data ?? {}) as {
+    n2_upserts?: number;
+    n3_upserts?: number;
+    phase_updates?: number;
+  };
+  return {
+    n2_upserts: r.n2_upserts ?? 0,
+    n3_upserts: r.n3_upserts ?? 0,
+    phase_updates: r.phase_updates ?? 0,
+  };
 }
 
 /* ------------------------------------------------------------------ */
