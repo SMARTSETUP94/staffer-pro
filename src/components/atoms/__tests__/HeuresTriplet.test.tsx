@@ -102,16 +102,17 @@ describe("HeuresTriplet — Sprint A.5 modes enrichis", () => {
     expect(container.firstChild).toHaveClass("grid");
   });
 
-  it("unit=total (défaut) n'ajoute pas /pers", () => {
+  it("unit=per_person (défaut) n'ajoute pas de suffixe tot.", () => {
     render(<HeuresTriplet prevues={120} staffees={100} realisees={80} />);
-    expect(screen.queryByText(/\/pers/)).toBeNull();
+    expect(screen.queryByText(/tot\./)).toBeNull();
   });
 
-  it("unit=per_person affiche suffixe /pers", () => {
+  it("unit=total affiche suffixe tot.", () => {
     render(
-      <HeuresTriplet prevues={12} staffees={10} realisees={8} unit="per_person" />,
+      <HeuresTriplet prevues={12} staffees={10} realisees={8} unit="total" />,
     );
-    expect(screen.getAllByText(/\/pers/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/tot\./i).length).toBeGreaterThan(0);
   });
 });
+
 
