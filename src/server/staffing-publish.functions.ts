@@ -206,7 +206,7 @@ export const publishStaffingPlan = createServerFn({ method: "POST" })
     }
 
     /* 6.bis SPRINT B — Sync équipes 3 niveaux (N2 affaire_equipe + N3 objet_equipe) */
-    const equipesResult = await syncEquipesFromPlan(supabase, planId, userId);
+    const equipesResult = await syncEquipesFromPlan(supabase, planId, userId, strategy);
 
     /* 7. Notifications aux employés affectés */
     const employeIds = Array.from(new Set(assignments.map((a) => a.employe_id)));
