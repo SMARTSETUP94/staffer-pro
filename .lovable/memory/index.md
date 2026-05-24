@@ -25,6 +25,9 @@ Métiers/postes v0.47.3 : 4 surfaces unifiées via bandeau `MetiersPostesTabs` (
 Absences = 1 seule table `absences` avec colonne `type`. JAMAIS créer module congés séparé. Voir mem://constraints/absences-une-seule-table.
 v0.48 : `/planning` recentré staffing (5 onglets : CDI/CDD, Intérim, Par chantier, Par objet, Par pôle). Vues Véhicules, Budget, Feuille de route extraites vers `/logistique/vehicules-planning`, `/affaires/budget-planning`, `/export/feuille-de-route`. Redirect SPA depuis anciens `?tab=`. Voir mem://features/planning-par-pole-v048.
 Vocabulaire métier v0.48.x (Lot 7.1 bis) : libellés UI passent par `useVocab()` (`src/hooks/use-vocab.ts`) + flag `vocab_metier_v1` (off par défaut). Staffer→Assigner, Auto-staffing→Auto-remplir, Plan staffing→Plan de fab, Validation→Valider. Express CONSERVÉ. Routes/RPCs/queryKeys/composants TS INCHANGÉS. Cleanup deadline : 2 semaines après bascule globale. Voir mem://constraints/vocabulaire-metier-centralise.
+Modèle staffing 3 niveaux (Sprint A) : `affaire_equipe(affaire_id, employe_id, phase, role_terrain)` + `fabrication_objet_equipe(objet_id, employe_id)` + `assignations.phase`. Trigger `enforce_objet_equipe_strict` avec flag bypass TEMPORAIRE Sprints A→C (voir mem://debts/bypass-objet-equipe-strict-temp). Atomes design: `PhaseBadge`, `HeuresTriplet`, `RoleSwitcher` dans `src/components/atoms/`.
+
+
 
 ## Roadmap
 

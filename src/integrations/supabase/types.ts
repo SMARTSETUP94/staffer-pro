@@ -241,6 +241,80 @@ export type Database = {
           },
         ]
       }
+      affaire_equipe: {
+        Row: {
+          added_at: string
+          added_by: string | null
+          affaire_id: string
+          created_at: string
+          employe_id: string
+          id: string
+          notes: string | null
+          phase: string
+          removed_at: string | null
+          removed_by: string | null
+          role_terrain: string | null
+          updated_at: string
+        }
+        Insert: {
+          added_at?: string
+          added_by?: string | null
+          affaire_id: string
+          created_at?: string
+          employe_id: string
+          id?: string
+          notes?: string | null
+          phase: string
+          removed_at?: string | null
+          removed_by?: string | null
+          role_terrain?: string | null
+          updated_at?: string
+        }
+        Update: {
+          added_at?: string
+          added_by?: string | null
+          affaire_id?: string
+          created_at?: string
+          employe_id?: string
+          id?: string
+          notes?: string | null
+          phase?: string
+          removed_at?: string | null
+          removed_by?: string | null
+          role_terrain?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affaire_equipe_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "affaires"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affaire_equipe_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "v_affaire_consommation"
+            referencedColumns: ["affaire_id"]
+          },
+          {
+            foreignKeyName: "affaire_equipe_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "v_affaires_avec_plan_status"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affaire_equipe_employe_id_fkey"
+            columns: ["employe_id"]
+            isOneToOne: false
+            referencedRelation: "employes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       affaire_equipe_historique: {
         Row: {
           a_ete_absent: boolean
@@ -524,6 +598,7 @@ export type Database = {
           metier_id: number | null
           motif_refus: string | null
           notes: string | null
+          phase: string | null
           refusee_le: string | null
           staffing_plan_id: string | null
           statut_confirmation: Database["public"]["Enums"]["confirmation_status"]
@@ -547,6 +622,7 @@ export type Database = {
           metier_id?: number | null
           motif_refus?: string | null
           notes?: string | null
+          phase?: string | null
           refusee_le?: string | null
           staffing_plan_id?: string | null
           statut_confirmation?: Database["public"]["Enums"]["confirmation_status"]
@@ -570,6 +646,7 @@ export type Database = {
           metier_id?: number | null
           motif_refus?: string | null
           notes?: string | null
+          phase?: string | null
           refusee_le?: string | null
           staffing_plan_id?: string | null
           statut_confirmation?: Database["public"]["Enums"]["confirmation_status"]
@@ -1691,6 +1768,67 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      fabrication_objet_equipe: {
+        Row: {
+          added_at: string
+          added_by: string | null
+          created_at: string
+          employe_id: string
+          id: string
+          notes: string | null
+          objet_id: string
+          removed_at: string | null
+          removed_by: string | null
+          updated_at: string
+        }
+        Insert: {
+          added_at?: string
+          added_by?: string | null
+          created_at?: string
+          employe_id: string
+          id?: string
+          notes?: string | null
+          objet_id: string
+          removed_at?: string | null
+          removed_by?: string | null
+          updated_at?: string
+        }
+        Update: {
+          added_at?: string
+          added_by?: string | null
+          created_at?: string
+          employe_id?: string
+          id?: string
+          notes?: string | null
+          objet_id?: string
+          removed_at?: string | null
+          removed_by?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fabrication_objet_equipe_employe_id_fkey"
+            columns: ["employe_id"]
+            isOneToOne: false
+            referencedRelation: "employes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fabrication_objet_equipe_objet_id_fkey"
+            columns: ["objet_id"]
+            isOneToOne: false
+            referencedRelation: "fabrication_objets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fabrication_objet_equipe_objet_id_fkey"
+            columns: ["objet_id"]
+            isOneToOne: false
+            referencedRelation: "v_objet_heures_consolidees"
+            referencedColumns: ["objet_id"]
           },
         ]
       }
@@ -2837,6 +2975,7 @@ export type Database = {
           matricule_silae: string | null
           password_set_at: string | null
           password_set_done: boolean
+          preferred_role: string | null
           profile_completed_at: string | null
           rgpd_consent_at: string | null
           telephone: string | null
@@ -2869,6 +3008,7 @@ export type Database = {
           matricule_silae?: string | null
           password_set_at?: string | null
           password_set_done?: boolean
+          preferred_role?: string | null
           profile_completed_at?: string | null
           rgpd_consent_at?: string | null
           telephone?: string | null
@@ -2901,6 +3041,7 @@ export type Database = {
           matricule_silae?: string | null
           password_set_at?: string | null
           password_set_done?: boolean
+          preferred_role?: string | null
           profile_completed_at?: string | null
           rgpd_consent_at?: string | null
           telephone?: string | null
