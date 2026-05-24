@@ -37,7 +37,6 @@ import {
   useFabricationObjets,
   useProfilesWithRoles,
   calcAvancementAffaire,
-  calcAvancementObjet,
   ETAPE_LABELS,
   ETAPES_ORDER,
   STATUT_ICONS,
