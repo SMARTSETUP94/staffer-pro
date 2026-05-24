@@ -382,9 +382,8 @@ function FabricationPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-24">Réf</TableHead>
-                  <TableHead>Objet</TableHead>
-                  <TableHead className="w-16 text-center">Qté</TableHead>
+                  <TableHead className="min-w-[200px]">Objet</TableHead>
+                  <TableHead className="w-10 text-center">Qté</TableHead>
                   {ETAPES_ORDER.map((t) => (
                     <TableHead key={t} className="w-32 text-center">
                       {ETAPE_LABELS[t]}
@@ -397,9 +396,7 @@ function FabricationPage() {
               <TableBody>
                 {filteredObjets.map((o) => (
                   <TableRow key={o.id} data-objet-id={o.id}>
-                    <TableCell className="font-mono text-xs">
-                      {o.reference}
-                    </TableCell>
+
 
                     <TableCell className="font-medium">
                       <InlineNomEdit
