@@ -153,14 +153,14 @@ export function ObjetCardMobile({
           size="sm"
           className="mt-3 w-full gap-1.5"
         >
-          <Link
-            to={ficheHref}
+          <a
+            href={ficheHref}
             data-testid="objet-fiche-link"
             data-objet-id={objet.id}
           >
             <ExternalLink className="h-3.5 w-3.5" />
             <span>Voir la fiche</span>
-          </Link>
+          </a>
         </Button>
       )}
     </div>
