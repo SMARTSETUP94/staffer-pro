@@ -164,7 +164,7 @@ export function ObjetEquipeSection({ objetId }: Props) {
             </span>
           </div>
         )}
-
+        {isLoading && (
           <>
             <Skeleton className="h-12 w-full" />
             <Skeleton className="h-12 w-full" />
