@@ -198,4 +198,5 @@ Vocabulaire métier v0.48.x (Lot 7.1 bis) : libellés UI passent par `useVocab()
 - [Dette : RLS bypass BE objet.edit](mem://constraints/rls-bypass-bureau-etude-objet-edit) — BE peut UPDATE tout via API directe ; UI cache mais ne protège pas. Trigger ou split server fn à prévoir.
 - [Fiche objet — section Équipe affectée](mem://features/fiche-objet-equipe) — règles draft/published, préférence published, manual_assignment_origin='fiche_objet'
 - [Dette : renommer loadPublishedStepsForObjet](mem://debts/load-active-steps-for-objet-rename) — charge draft+published depuis hotfix v8.3 ; renommer en loadActiveStepsForObjet au Lot 8.6
+- [Dette : Dialog vs Sheet AddPersonne](mem://debts/equipe-add-personne-dialog-vs-sheet) — AddPersonneDialog (modal centré) à migrer en Sheet latérale au Lot 8.6
 - [Dette : Specs E2E 8.3b — scénario #11 révisé + #11bis](mem://debts/e2e-specs-83b-scenario-11-revision) — 13 scénarios au lieu de 12 (no_plan + draft)
