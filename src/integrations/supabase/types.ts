@@ -1709,6 +1709,8 @@ export type Database = {
           created_by: string | null
           devis_id: string | null
           est_brut: boolean
+          finition_detail: string | null
+          hauteur_mm: number | null
           heures_prevues_be: number
           heures_prevues_bois: number
           heures_prevues_manutention: number
@@ -1717,6 +1719,9 @@ export type Database = {
           heures_prevues_peinture: number
           heures_prevues_tapisserie: number
           id: string
+          largeur_mm: number | null
+          longueur_mm: number | null
+          materiaux: string | null
           nom: string
           ordre: number
           quantite: number
@@ -1742,6 +1747,8 @@ export type Database = {
           created_by?: string | null
           devis_id?: string | null
           est_brut?: boolean
+          finition_detail?: string | null
+          hauteur_mm?: number | null
           heures_prevues_be?: number
           heures_prevues_bois?: number
           heures_prevues_manutention?: number
@@ -1750,6 +1757,9 @@ export type Database = {
           heures_prevues_peinture?: number
           heures_prevues_tapisserie?: number
           id?: string
+          largeur_mm?: number | null
+          longueur_mm?: number | null
+          materiaux?: string | null
           nom: string
           ordre?: number
           quantite?: number
@@ -1775,6 +1785,8 @@ export type Database = {
           created_by?: string | null
           devis_id?: string | null
           est_brut?: boolean
+          finition_detail?: string | null
+          hauteur_mm?: number | null
           heures_prevues_be?: number
           heures_prevues_bois?: number
           heures_prevues_manutention?: number
@@ -1783,6 +1795,9 @@ export type Database = {
           heures_prevues_peinture?: number
           heures_prevues_tapisserie?: number
           id?: string
+          largeur_mm?: number | null
+          longueur_mm?: number | null
+          materiaux?: string | null
           nom?: string
           ordre?: number
           quantite?: number
@@ -4520,6 +4535,8 @@ export type Database = {
         Args: { _employe_ids: string[]; _vehicule_id: string }
         Returns: undefined
       }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
       sign_opportunite: {
         Args: { _affaire_id: string; _new_code: string }
         Returns: string

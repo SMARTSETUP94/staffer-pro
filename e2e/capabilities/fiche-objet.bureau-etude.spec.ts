@@ -35,5 +35,13 @@ test.describe("fiche-objet :: bureau_etude (commentaire + plans)", () => {
     await expect(page.locator("#fo-nom")).toBeDisabled();
     await expect(page.locator("#fo-qte")).toBeDisabled();
     await expect(page.locator("#fo-comm")).toBeEnabled();
+
+    // Lot 8.2c — dimensions + matériaux + finition_detail éditables pour bureau_etude
+    await expect(page.getByTestId("fo-longueur")).toBeEnabled();
+    await expect(page.getByTestId("fo-largeur")).toBeEnabled();
+    await expect(page.getByTestId("fo-hauteur")).toBeEnabled();
+    await expect(page.getByTestId("fo-materiaux")).toBeEnabled();
+    await expect(page.getByTestId("fo-finition-detail")).toBeEnabled();
   });
 });
+

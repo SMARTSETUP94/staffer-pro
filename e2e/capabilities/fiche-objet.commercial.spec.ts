@@ -42,5 +42,13 @@ test.describe("fiche-objet :: commercial (commentaire only)", () => {
     await expect(page.locator("#fo-nom")).toBeDisabled();
     await expect(page.locator("#fo-qte")).toBeDisabled();
     await expect(page.locator("#fo-comm")).toBeEnabled();
+
+    // Lot 8.2c — Les 5 nouveaux champs sont read-only pour commercial.
+    await expect(page.getByTestId("fo-longueur")).toBeDisabled();
+    await expect(page.getByTestId("fo-largeur")).toBeDisabled();
+    await expect(page.getByTestId("fo-hauteur")).toBeDisabled();
+    await expect(page.getByTestId("fo-materiaux")).toBeDisabled();
+    await expect(page.getByTestId("fo-finition-detail")).toBeDisabled();
   });
 });
+

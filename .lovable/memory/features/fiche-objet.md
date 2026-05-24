@@ -71,3 +71,43 @@ Helpers purs testables : `src/lib/objet-fiche-helpers.ts` (15 tests Vitest verts
 - 8.5 : liens croisés Gantt/Planning/Devis/Kanban (remplace le lien temporaire de 8.2b)
 - 8.6 : polish + responsive 380px + tests complets
 
+
+## Lot 8.2c — Polish fiche (24 mai 2026)
+
+### Décisions livrées
+
+1. **Heures dé-dupliquées** : suppression du bloc "Heures prévues (devis) — par métier" dans `ObjetIdentiteForm` (read + edit). Source unique = `ObjetHeuresTable` (Prévu / Planifié / Réel / Écart). Les champs `heures_prevues_*` restent dans `ObjetIdentiteValues` (utilisés ailleurs : import devis, recap, staffing) mais ne sont PLUS éditables depuis la fiche — `updateObjetIdentite` whiteliste sans eux, défense en profondeur côté serveur via `getEditableFields`.
+
+2. **Algo écart corrigé** (`src/lib/objet-heures-helpers.ts` → `computeEcart(prevu, reel)`) :
+   - prevu=0/reel=0 → muted '—'
+   - prevu=0/reel>0 → warning '+Xh non prévues'
+   - prevu>0/reel=0 → muted 'Non démarré'
+   - prevu>0/reel>0 → pct; |pct|≤5 success, -25<pct<-5 info, pct≤-25 warning, 5<pct≤15 warning, pct>15 destructive
+   - **Palier -25% conservé** : un objet à 1h/8h n'est pas "sous-budget" mais "pas commencé sérieusement" → ambre.
+   - Tests : `src/lib/__tests__/objet-heures-helpers-ecart.test.ts` (10 cas).
+
+3. **5 nouveaux champs DB** sur `fabrication_objets` :
+   - `largeur_mm`, `longueur_mm`, `hauteur_mm` (integer, CHECK > 0 si renseigné)
+   - `materiaux` (text, textarea 2 lignes)
+   - `finition_detail` (text, input, précise l'enum `type_finition`)
+   - Index GIN trigram (`pg_trgm`) sur `materiaux` et `finition_detail` (anticipé pour recherche fuzzy sprint analytique).
+   - **Pas de migration parser Progbat** : NULL par défaut, alimentés manuellement.
+
+4. **Matrice permissions étendue** (`src/lib/objet-fiche-permissions.ts`) :
+   - `largeur/longueur/hauteur_mm` + `materiaux` → admin, chef_chantier, bureau_etude
+   - `finition_detail` → admin, chef_chantier, bureau_etude, **atelier_chef**
+   - Commercial = lecture seule sur les 5 nouveaux champs (cohérent avec sa posture sur la fab).
+
+5. **Bouton "Fiche" plus visible** sur `/affaires/$id/fabrication` :
+   - Desktop : nouvelle colonne dédiée "Détail" (à droite de Avanc.) avec `<Button variant="outline" size="sm">Fiche</Button>` + icône `ExternalLink`. Visible uniquement si `showFicheLink` (flag + cap).
+   - Mobile (`ObjetCardMobile`) : bouton outline full-width "Voir la fiche" en bas de card.
+   - `data-testid="objet-fiche-link"` conservé.
+
+### Hors-scope explicite (à trancher Lot 8.3+)
+
+- **Bascule Total/Unitaire** sur `ObjetHeuresTable` : non testée pour qté > 1, comportement actuel = division simple.
+- **Logistique dans `ObjetHeuresTable`** : la ligne s'affiche avec `planifié = —` (le staffing ne couvre pas ce métier). À documenter par tooltip "Logistique gérée hors planning fabrication" — décision reportée au moment où le besoin sera trianglé en prod.
+
+### Convention de rôle confirmée
+
+Le rôle DB est **`atelier_chef`** (et NON `chef_atelier`). Toutes les nouvelles entrées de matrice utilisent cette graphie.

@@ -59,22 +59,9 @@ export function ObjetCardMobile({
       {/* Header */}
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
-          <p className="font-mono text-[11px] text-muted-foreground flex items-center gap-1.5">
-            <span>{objet.reference}</span>
-            {ficheHref && (
-              // TODO(8.5): remplacer par lien intégré natif.
-              <Link
-                to={ficheHref}
-                data-testid="objet-fiche-link"
-                data-objet-id={objet.id}
-                title="Voir la fiche objet"
-                className="text-muted-foreground hover:text-foreground"
-              >
-                <ExternalLink className="h-3 w-3" />
-              </Link>
-            )}
-          </p>
+          <p className="font-mono text-[11px] text-muted-foreground">{objet.reference}</p>
           <h3 className="text-sm font-semibold leading-tight text-foreground">{objet.nom}</h3>
+
           <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px]">
             <Badge variant="outline" className="h-5 px-1.5 text-[10px]">
               Qté {objet.quantite}
@@ -157,6 +144,26 @@ export function ObjetCardMobile({
           );
         })}
       </div>
+
+      {/* Lot 8.2c — Bouton "Fiche" full-width en bas de card */}
+      {ficheHref && (
+        <Button
+          asChild
+          variant="outline"
+          size="sm"
+          className="mt-3 w-full gap-1.5"
+        >
+          <Link
+            to={ficheHref}
+            data-testid="objet-fiche-link"
+            data-objet-id={objet.id}
+          >
+            <ExternalLink className="h-3.5 w-3.5" />
+            <span>Voir la fiche</span>
+          </Link>
+        </Button>
+      )}
     </div>
   );
 }
+

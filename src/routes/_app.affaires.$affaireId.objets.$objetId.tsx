@@ -167,7 +167,13 @@ function FicheObjetPage() {
             heures_prevues_peinture: Number(objet.heures_prevues_peinture),
             heures_prevues_tapisserie: Number(objet.heures_prevues_tapisserie),
             heures_prevues_manutention: Number(objet.heures_prevues_manutention),
+            largeur_mm: objet.largeur_mm,
+            longueur_mm: objet.longueur_mm,
+            hauteur_mm: objet.hauteur_mm,
+            materiaux: objet.materiaux,
+            finition_detail: objet.finition_detail,
           }}
+
           respoOptions={respoOptions}
         />
         <ObjetHeuresTable heures={heures} quantite={objet.quantite} />
