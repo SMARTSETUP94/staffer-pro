@@ -27,7 +27,7 @@ import { autoStaffObjet } from "@/server/objet-equipe-mutations.functions";
 import { useCapability } from "@/hooks/use-capability";
 import { useFeatureFlag } from "@/hooks/use-feature-flag";
 import { supabase } from "@/integrations/supabase/client";
-import { AddPersonneDialog } from "./AddPersonneDialog";
+import { AddPersonneSheet } from "./AddPersonneSheet";
 import { RemovePersonneDialog } from "./RemovePersonneDialog";
 
 interface Props {
@@ -306,7 +306,7 @@ export function ObjetEquipeSection({ objetId }: Props) {
       </CardContent>
 
       {addDialog.open && (
-        <AddPersonneDialog
+        <AddPersonneSheet
           open={addDialog.open}
           onOpenChange={(o) => setAddDialog((s) => ({ ...s, open: o }))}
           objetId={objetId}
