@@ -375,7 +375,7 @@ export const assignManualToObjet = createServerFn({ method: "POST" })
     for (const r of (cumulRows ?? []) as unknown as CRow[]) {
       const sps = r.staffing_plan_step;
       const sp = Array.isArray(sps.staffing_plan) ? sps.staffing_plan[0] : sps.staffing_plan;
-      if (sp?.status !== "published") continue;
+      if (sp?.status !== "published" && sp?.status !== "draft") continue;
       cumulByDate[r.date] = (cumulByDate[r.date] ?? 0) + (r.presence_pct ?? 0);
     }
 
