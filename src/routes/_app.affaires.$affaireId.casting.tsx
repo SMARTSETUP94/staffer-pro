@@ -16,7 +16,7 @@
  * Mobile : sections empilées, cartes en grid-cols-1 sous 640px.
  */
 import { createFileRoute } from "@tanstack/react-router";
-import { Loader2, UserCircle2, Users, Info, Plus, X } from "lucide-react";
+import { Loader2, UserCircle2, Info, Plus, X } from "lucide-react";
 import { useCastingChantier } from "@/hooks/use-casting-chantier";
 import { PhaseBadge, type AffairePhase } from "@/components/atoms/PhaseBadge";
 import { useFeatureFlag } from "@/hooks/use-feature-flag";
