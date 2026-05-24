@@ -620,28 +620,33 @@ export const publishStaffingPlanV2 = createServerFn({ method: "POST" })
       .single();
     if (!plan) throw new Error("Plan introuvable");
 
-    if ((plan.status as string) === "published") {
-      const r = await syncEquipesFromPlan(
-        supabase,
-        data.planId,
-        userId,
-        data.mergeStrategy,
+    // Plan déjà publié (cas attendu pour le dialog republish v2)
+    if ((plan.status as string) !== "published") {
+      throw new Error(
+        "publishStaffingPlanV2 attend un plan déjà publié (cas republish). Utilisez publishStaffingPlan pour la première publication.",
       );
-      await supabase.from("staffing_plan_snapshot").insert({
-        plan_id: data.planId,
-        reason: `republish_v2_${data.mergeStrategy}`,
-        created_by: userId,
-        snapshot_data: { strategy: data.mergeStrategy, equipes: r } as never,
-      } as never);
-      return {
-        ok: true,
-        mode: "resync" as const,
-        strategy: data.mergeStrategy,
-        equipes_n2: r.n2_upserts,
-        equipes_n3: r.n3_upserts,
-        phase_updates: r.phase_updates,
-      };
     }
+    const r = await syncEquipesFromPlan(
+      supabase,
+      data.planId,
+      userId,
+      data.mergeStrategy,
+    );
+    await supabase.from("staffing_plan_snapshot").insert({
+      plan_id: data.planId,
+      reason: `republish_v2_${data.mergeStrategy}`,
+      created_by: userId,
+      snapshot_data: { strategy: data.mergeStrategy, equipes: r } as never,
+    } as never);
+    return {
+      ok: true,
+      mode: "resync" as const,
+      strategy: data.mergeStrategy,
+      equipes_n2: r.n2_upserts,
+      equipes_n3: r.n3_upserts,
+      phase_updates: r.phase_updates,
+    };
+  });
 
     // Sinon : publication standard avec stratégie passée à syncEquipesFromPlan
     return publishStaffingPlan({
