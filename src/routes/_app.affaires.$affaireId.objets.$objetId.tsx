@@ -25,6 +25,8 @@ import { getObjetFiche } from "@/server/objet-fiche.functions";
 import { useFeatureFlag } from "@/hooks/use-feature-flag";
 import { ObjetIdentiteSection } from "@/components/objets/ObjetIdentiteSection";
 import { ObjetHeuresTable } from "@/components/objets/ObjetHeuresTable";
+import { ObjetEquipeSection } from "@/components/objets/equipe/ObjetEquipeSection";
+import { ObjetEtapesGrid } from "@/components/objets/etapes/ObjetEtapesGrid";
 
 export const Route = createFileRoute("/_app/affaires/$affaireId/objets/$objetId")({
   beforeLoad: async () => {
