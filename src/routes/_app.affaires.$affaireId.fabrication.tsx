@@ -88,6 +88,25 @@ function FabricationPage() {
   const [openSousTraiter, setOpenSousTraiter] = useState(false);
   const { atelier } = useLieux();
 
+  // Vue par défaut : tableur dense (matrice objets × étapes), persistée en localStorage
+  const [viewMode, setViewMode] = useState<"tableur" | "cards">(() => {
+    if (typeof window === "undefined") return "tableur";
+    const v = window.localStorage.getItem("fabrication-view-mode");
+    return v === "cards" ? "cards" : "tableur";
+  });
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem("fabrication-view-mode", viewMode);
+  }, [viewMode]);
+  // Filtre statut global appliqué uniquement à la vue tableur
+  const [statutFilter, setStatutFilter] = useState<"all" | "a_faire" | "en_cours" | "termine">("all");
+  const filteredObjets = (() => {
+    if (statutFilter === "all") return objets;
+    return objets.filter((o) =>
+      o.etapes.some((e) => e.statut === statutFilter),
+    );
+  })();
+
   // Charger meta affaire (chef projet, lieu, dates, typologie) — useEffect, pas useState
   useEffect(() => {
     void supabase
@@ -301,22 +320,64 @@ function FabricationPage() {
         </div>
       ) : (
         <>
-          {/* Vue cards mobile (<lg) — Bloc 4 v0.20 */}
-          <div className="space-y-3 lg:hidden">
-            {objets.map((o) => (
-              <ObjetCardMobile
-                key={o.id}
-                objet={o}
-                isAdminOrChef={isAdminOrChef}
-                affaireIdForFiche={showFicheLink ? affaireId : null}
-                onEditObjet={(obj) => setEditObjet(obj)}
-                onEditEtape={(obj, etape) => setEditEtape({ objet: obj, etape })}
-              />
-            ))}
+          {/* Barre de bascule vue + filtre statut */}
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="inline-flex rounded-xl border border-border bg-card p-0.5 text-xs">
+              <button
+                type="button"
+                onClick={() => setViewMode("tableur")}
+                className={`px-3 py-1.5 rounded-lg transition-colors ${viewMode === "tableur" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                Tableur
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode("cards")}
+                className={`px-3 py-1.5 rounded-lg transition-colors ${viewMode === "cards" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                Cards
+              </button>
+            </div>
+            {viewMode === "tableur" && (
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">Filtre statut</span>
+                <Select value={statutFilter} onValueChange={(v) => setStatutFilter(v as typeof statutFilter)}>
+                  <SelectTrigger className="h-8 w-[160px] text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tous les objets</SelectItem>
+                    <SelectItem value="en_cours">Au moins 1 en cours</SelectItem>
+                    <SelectItem value="a_faire">Au moins 1 à faire</SelectItem>
+                    <SelectItem value="termine">Au moins 1 terminé</SelectItem>
+                  </SelectContent>
+                </Select>
+                <span className="text-xs text-muted-foreground tabular-nums">
+                  {filteredObjets.length}/{objets.length}
+                </span>
+              </div>
+            )}
           </div>
 
-          {/* Vue tableau desktop (>=lg) */}
-          <div className="hidden rounded-xl border border-border bg-card overflow-hidden lg:block">
+          {/* Vue cards — Bloc 4 v0.20 */}
+          {viewMode === "cards" && (
+            <div className="space-y-3">
+              {objets.map((o) => (
+                <ObjetCardMobile
+                  key={o.id}
+                  objet={o}
+                  isAdminOrChef={isAdminOrChef}
+                  affaireIdForFiche={showFicheLink ? affaireId : null}
+                  onEditObjet={(obj) => setEditObjet(obj)}
+                  onEditEtape={(obj, etape) => setEditEtape({ objet: obj, etape })}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* Vue tableur dense (matrice objets × étapes) */}
+          {viewMode === "tableur" && (
+          <div className="rounded-xl border border-border bg-card overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -335,7 +396,7 @@ function FabricationPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {objets.map((o) => (
+                {filteredObjets.map((o) => (
                   <TableRow key={o.id} data-objet-id={o.id}>
                     <TableCell className="font-mono text-xs">
                       {o.reference}
@@ -415,6 +476,7 @@ function FabricationPage() {
               </TableBody>
             </Table>
           </div>
+          )}
         </>
       )}
 
