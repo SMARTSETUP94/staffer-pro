@@ -647,9 +647,3 @@ export const publishStaffingPlanV2 = createServerFn({ method: "POST" })
       phase_updates: r.phase_updates,
     };
   });
-
-    // Sinon : publication standard avec stratégie passée à syncEquipesFromPlan
-    return publishStaffingPlan({
-      data: { planId: data.planId, mergeStrategy: data.mergeStrategy },
-    }) as ReturnType<typeof publishStaffingPlan>;
-  });
