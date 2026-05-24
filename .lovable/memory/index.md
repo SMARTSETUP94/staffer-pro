@@ -147,8 +147,6 @@ Vocabulaire métier v0.48.x (Lot 7.1 bis) : libellés UI passent par `useVocab()
 76. ⏸️ **Logistique avancée** — Autorisations véhicules #56 + sous-traitants + historique + stats (`Sprint 3b` BACKLOG).
 77. ⏸️ **Sprint dette résiduelle v0.36** — Page admin véhicules + audit findings (BACKLOG).
 
-Voir roadmap consolidée détaillée : mem://roadmap/consolidee-2mai2026.
-
 ## Memories
 - [Centre d'analyse heures](mem://features/centre-analyse-heures) — BACKLOG : onglet consolidé heures + 8 filtres + exports
 - [Roadmap consolidée 2 mai 2026](mem://roadmap/consolidee-2mai2026) — v0.31.4 → v0.40, 11 jalons
