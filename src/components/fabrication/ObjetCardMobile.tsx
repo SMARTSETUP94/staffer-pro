@@ -146,21 +146,22 @@ export function ObjetCardMobile({
       </div>
 
       {/* Lot 8.2c — Bouton "Fiche" full-width en bas de card */}
-      {ficheHref && (
+      {affaireIdForFiche && (
         <Button
           asChild
           variant="outline"
           size="sm"
           className="mt-3 w-full gap-1.5"
         >
-          <a
-            href={ficheHref}
+          <Link
+            to="/affaires/$affaireId/objets/$objetId"
+            params={{ affaireId: affaireIdForFiche, objetId: objet.id }}
             data-testid="objet-fiche-link"
             data-objet-id={objet.id}
           >
             <ExternalLink className="h-3.5 w-3.5" />
             <span>Voir la fiche</span>
-          </a>
+          </Link>
         </Button>
       )}
     </div>
