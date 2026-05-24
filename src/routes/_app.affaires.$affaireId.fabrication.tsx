@@ -313,6 +313,7 @@ function FabricationPage() {
                     ? `/affaires/${affaireId}/objets/${o.id}`
                     : null
                 }
+                affaireIdForFiche={showFicheLink ? affaireId : null}
                 onEditObjet={(obj) => setEditObjet(obj)}
                 onEditEtape={(obj, etape) => setEditEtape({ objet: obj, etape })}
               />
