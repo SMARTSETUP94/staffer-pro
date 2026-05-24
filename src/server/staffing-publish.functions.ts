@@ -325,21 +325,9 @@ export const publishStaffingPlan = createServerFn({ method: "POST" })
       }
     }
 
-    /* 8. Audit enrichi (Sprint B) */
-    await supabase.from("staffing_audit").insert({
-      action: "publish_plan",
-      affaire_id: plan.affaire_id,
-      plan_id: planId,
-      user_id: userId,
-      payload: {
-        assignments: assignments.length,
-        equipes_generated: {
-          n2: equipesResult.n2_upserts,
-          n3: equipesResult.n3_upserts,
-        },
-        phase_updates: equipesResult.phase_updates,
-      },
-    } as never);
+    /* 8. Audit enrichi (Sprint B) — note : table staffing_audit n'existe pas
+       encore (à créer Sprint D avec ux_telemetry_events). Pour l'instant
+       les compteurs equipes sont retournés dans le payload de la fn. */
 
     return {
       ok: true,
