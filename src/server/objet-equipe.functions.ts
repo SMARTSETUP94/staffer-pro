@@ -112,10 +112,11 @@ export const getObjetEquipe = createServerFn({ method: "POST" })
     };
 
     // 2) Steps du plan staffing publié liés à cet objet
+    // Lot 8.3a hotfix (audit 23 mai P0#1) — la table embed est `staffing_plan` (singulier).
     const { data: steps } = await supabase
       .from("staffing_plan_step")
       .select(
-        "id, metier_id, start_date, span_days, pers, plan_id, staffing_plans!inner(status)"
+        "id, metier_id, start_date, span_days, pers, plan_id, staffing_plan!inner(status)"
       )
       .eq("objet_id", objetId);
 
@@ -126,13 +127,13 @@ export const getObjetEquipe = createServerFn({ method: "POST" })
       span_days: number;
       pers: number;
       plan_id: string;
-      staffing_plans: { status: string } | { status: string }[];
+      staffing_plan: { status: string } | { status: string }[];
     };
     const allSteps = (steps ?? []) as unknown as StepRow[];
 
     // Filtre : on garde les steps de plans publiés en priorité ; sinon draft.
     const publishedSteps = allSteps.filter((s) => {
-      const sp = Array.isArray(s.staffing_plans) ? s.staffing_plans[0] : s.staffing_plans;
+      const sp = Array.isArray(s.staffing_plan) ? s.staffing_plan[0] : s.staffing_plan;
       return sp?.status === "published";
     });
     const useSteps = publishedSteps.length > 0 ? publishedSteps : allSteps;
