@@ -75,7 +75,7 @@ export function ObjetEquipeSection({ objetId }: Props) {
     mutationFn: () => autoStaffFn({ data: { objetId } }),
     onSuccess: (res) => {
       if (res.status === "no_plan") {
-        toast.error("Aucun plan publié sur cet objet.");
+        toast.error("Aucun plan staffing — créez un plan brouillon ou publié.");
         return;
       }
       if (res.status === "all_full") {
