@@ -34,6 +34,11 @@ import { loadNiveauxParEmploye } from "./staffing-competences.server";
 // Helpers communs
 // ────────────────────────────────────────────────────────────
 
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/integrations/supabase/types";
+
+type SupaCtx = SupabaseClient<Database>;
+
 /** Liste les jours ouvrés (lun–ven) couverts par un step. */
 function workingDaysOfStep(start: string, span: number): string[] {
   const out: string[] = [];
@@ -55,11 +60,6 @@ async function assertCanManageEquipe(supabase: SupaCtx) {
   if (!data) throw new Error("Accès refusé : capability objet.team.manage requise");
 }
 
-type SupaCtx = Parameters<
-  Parameters<
-    ReturnType<typeof createServerFn>["middleware"]
-  >[0][number]["middleware"]
->[0]["context"]["supabase"];
 
 interface PublishedStep {
   id: string;
