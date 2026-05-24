@@ -181,10 +181,14 @@ function FicheObjetPage() {
         <ObjetHeuresTable heures={heures} quantite={objet.quantite} />
       </div>
 
-      {/* Placeholders Lots 8.3 → 8.5 */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Placeholder title="Équipe affectée" sub="Lot 8.3 — à venir" />
-        <Placeholder title="Étapes Kanban" sub="Lot 8.3 — à venir" />
+      {/* Lot 8.3 — Zone Équipe */}
+      <ObjetEquipeSection objetId={objet.id} />
+
+      {/* Lot 8.3 — Étapes Kanban */}
+      <ObjetEtapesGrid objetId={objet.id} />
+
+      {/* Lot 8.4 à venir */}
+      <div className="grid gap-4 md:grid-cols-1">
         <Placeholder title="Journal photos" sub="Lot 8.4 — à venir" />
       </div>
     </div>
