@@ -90,12 +90,14 @@ export function ObjetEquipeSection({ objetId }: Props) {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const hasPublishedPlan = data?.plan_status === "published";
-  const mutationsEnabled = Boolean(canManage && hasPublishedPlan);
+  const hasMutablePlan =
+    data?.plan_status === "published" || data?.plan_status === "draft";
+  const isDraft = data?.plan_status === "draft";
+  const mutationsEnabled = Boolean(canManage && hasMutablePlan);
   const disabledReason = !canManage
     ? "Capability `objet.team.manage` requise"
-    : !hasPublishedPlan
-      ? "Nécessite un plan publié"
+    : !hasMutablePlan
+      ? "Aucun plan staffing — créez un plan brouillon ou publié"
       : "";
 
   return (
