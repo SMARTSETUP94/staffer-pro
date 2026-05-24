@@ -354,8 +354,15 @@ export interface ObjetFicheIdentite {
   heures_prevues_peinture: number;
   heures_prevues_tapisserie: number;
   heures_prevues_manutention: number;
+  // Lot 8.2c — Dimensions + matériaux + finition détaillée
+  largeur_mm: number | null;
+  longueur_mm: number | null;
+  hauteur_mm: number | null;
+  materiaux: string | null;
+  finition_detail: string | null;
   archive: boolean;
 }
+
 
 export interface ObjetFicheAffaire {
   id: string;
