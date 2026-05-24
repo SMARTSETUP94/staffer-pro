@@ -396,7 +396,7 @@ function FabricationPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {objets.map((o) => (
+                {filteredObjets.map((o) => (
                   <TableRow key={o.id} data-objet-id={o.id}>
                     <TableCell className="font-mono text-xs">
                       {o.reference}
