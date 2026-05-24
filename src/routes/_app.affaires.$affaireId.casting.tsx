@@ -97,6 +97,26 @@ function AffaireCastingPage() {
   const [numero, setNumero] = useState<string | null>(null);
   const [addPhase, setAddPhase] = useState<CastingPhase | null>(null);
   const [removeTarget, setRemoveTarget] = useState<ActiveRemove | null>(null);
+  const [publishedPlanId, setPublishedPlanId] = useState<string | null>(null);
+  const [republishOpen, setRepublishOpen] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    void supabase
+      .from("staffing_plan")
+      .select("id")
+      .eq("affaire_id", affaireId)
+      .eq("status", "published")
+      .order("published_at", { ascending: false })
+      .limit(1)
+      .maybeSingle()
+      .then(({ data: p }) => {
+        if (!cancelled) setPublishedPlanId(p?.id ?? null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [affaireId]);
 
   useEffect(() => {
     let cancelled = false;
