@@ -4808,6 +4808,23 @@ export type Database = {
         Returns: undefined
       }
       refresh_user_quiz_stats: { Args: never; Returns: undefined }
+      resolve_saisie_heures: {
+        Args: {
+          p_affaire_id: string
+          p_date: string
+          p_employe_id: string
+          p_objet_id?: string
+        }
+        Returns: {
+          autorisee: boolean
+          details: Json
+          niveau: number
+          objet_id: string
+          phase: string
+          role_terrain: string
+          source: string
+        }[]
+      }
       restore_inbox_item: { Args: { p_item_key: string }; Returns: undefined }
       run_staffing_divergence_audit: {
         Args: never
