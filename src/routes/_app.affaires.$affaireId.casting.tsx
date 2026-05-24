@@ -75,11 +75,27 @@ function orderedPhasesFor(typo: Typologie): AffairePhase[] {
   return ALL_PHASES;
 }
 
+const PHASE_LABELS: Record<AffairePhase, string> = {
+  commercial_etude: "Commercial / Étude",
+  fabrication: "Fabrication",
+  montage: "Montage",
+  demontage: "Démontage",
+};
+
+interface ActiveRemove {
+  employeId: string;
+  employeLabel: string;
+  phase: CastingPhase;
+}
+
 function AffaireCastingPage() {
   const { affaireId } = Route.useParams();
   const flagOn = useFeatureFlag("equipes_3_niveaux_lecture");
+  const canEdit = useCapability("affaire.team.manage");
   const { data, isLoading } = useCastingChantier(affaireId);
   const [numero, setNumero] = useState<string | null>(null);
+  const [addPhase, setAddPhase] = useState<CastingPhase | null>(null);
+  const [removeTarget, setRemoveTarget] = useState<ActiveRemove | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -122,21 +138,6 @@ function AffaireCastingPage() {
     );
   }
 
-  if (!data || data.total === 0) {
-    return (
-      <div className="rounded-2xl border border-dashed border-border bg-muted/20 px-6 py-10 text-center">
-        <Users className="mx-auto h-8 w-8 text-muted-foreground" />
-        <p className="mt-2 text-sm font-semibold text-foreground">
-          Aucun membre dans le casting
-        </p>
-        <p className="mt-1 text-xs text-muted-foreground">
-          L'équipe se peuple automatiquement lors de la publication d'un plan staffing,
-          ou en édition manuelle (Sprint C).
-        </p>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
       <header className="flex flex-wrap items-end justify-between gap-3 border-b border-border pb-3">
@@ -145,58 +146,99 @@ function AffaireCastingPage() {
           <p className="mt-0.5 text-xs text-muted-foreground">
             Équipe nominative par phase{typo ? ` · typologie ${typo.replace("_", " ")}` : ""}
             {" · "}
-            <span className="font-mono">{data.total}</span> membre{data.total > 1 ? "s" : ""}
+            <span className="font-mono">{data?.total ?? 0}</span> membre{(data?.total ?? 0) > 1 ? "s" : ""}
+            {canEdit && (
+              <span className="ml-2 text-[11px] italic text-muted-foreground">
+                · édition manuelle activée
+              </span>
+            )}
           </p>
         </div>
       </header>
 
       <div className="space-y-6">
         {phases.map((phase) => {
-          const members = data.phases[phase] ?? [];
+          const members = data?.phases[phase] ?? [];
           return (
             <section key={phase} data-testid={`casting-section-${phase}`}>
-              <div className="mb-2 flex items-center gap-2">
-                <PhaseBadge phase={phase} variant="solid" size="md" />
-                <span className="text-xs text-muted-foreground">
-                  {members.length} pers.
-                </span>
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <PhaseBadge phase={phase} variant="solid" size="md" />
+                  <span className="text-xs text-muted-foreground">
+                    {members.length} pers.
+                  </span>
+                </div>
+                {canEdit && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 gap-1 text-xs"
+                    onClick={() => setAddPhase(phase)}
+                    data-testid={`casting-add-${phase}`}
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    Personne
+                  </Button>
+                )}
               </div>
               {members.length === 0 ? (
                 <p className="rounded-md border border-dashed border-border bg-muted/10 px-3 py-3 text-xs italic text-muted-foreground">
-                  Aucun membre — l'équipe se peuple à la publication d'un plan staffing.
+                  Aucun membre — ajoutez une personne ou publiez un plan staffing.
                 </p>
               ) : (
                 <TooltipProvider>
                   <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
                     {members.map((m) => (
-                      <Tooltip key={m.id}>
-                        <TooltipTrigger asChild>
-                          <article className="flex items-start gap-3 rounded-lg border border-border bg-card p-3 transition hover:border-primary/40">
-                            <UserCircle2 className="h-7 w-7 shrink-0 text-muted-foreground" />
-                            <div className="min-w-0 flex-1">
-                              <p className="truncate text-sm font-semibold text-foreground">
-                                {m.prenom} {m.nom}
-                              </p>
-                              {m.role_terrain ? (
-                                <p className="mt-0.5 truncate text-[11px] font-medium text-primary">
-                                  {m.role_terrain}
+                      <article
+                        key={m.id}
+                        className="group relative flex items-start gap-3 rounded-lg border border-border bg-card p-3 transition hover:border-primary/40"
+                      >
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="flex flex-1 items-start gap-3 min-w-0">
+                              <UserCircle2 className="h-7 w-7 shrink-0 text-muted-foreground" />
+                              <div className="min-w-0 flex-1">
+                                <p className="truncate text-sm font-semibold text-foreground">
+                                  {m.prenom} {m.nom}
                                 </p>
-                              ) : (
-                                <p className="mt-0.5 text-[11px] italic text-muted-foreground">
-                                  Pas de rôle terrain défini
-                                </p>
-                              )}
+                                {m.role_terrain ? (
+                                  <p className="mt-0.5 truncate text-[11px] font-medium text-primary">
+                                    {m.role_terrain}
+                                  </p>
+                                ) : (
+                                  <p className="mt-0.5 text-[11px] italic text-muted-foreground">
+                                    Pas de rôle terrain défini
+                                  </p>
+                                )}
+                              </div>
                             </div>
-                          </article>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <div className="space-y-1 text-xs">
-                            <p className="font-semibold">{m.prenom} {m.nom}</p>
-                            <p>Ajouté le {new Date(m.added_at).toLocaleDateString("fr-FR")}</p>
-                            {m.notes && <p className="italic text-muted-foreground">{m.notes}</p>}
-                          </div>
-                        </TooltipContent>
-                      </Tooltip>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <div className="space-y-1 text-xs">
+                              <p className="font-semibold">{m.prenom} {m.nom}</p>
+                              <p>Ajouté le {new Date(m.added_at).toLocaleDateString("fr-FR")}</p>
+                              {m.notes && <p className="italic text-muted-foreground">{m.notes}</p>}
+                            </div>
+                          </TooltipContent>
+                        </Tooltip>
+                        {canEdit && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setRemoveTarget({
+                                employeId: m.employe_id,
+                                employeLabel: `${m.prenom} ${m.nom}`,
+                                phase,
+                              })
+                            }
+                            className="absolute right-2 top-2 rounded p-1 text-muted-foreground opacity-0 transition hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
+                            aria-label={`Retirer ${m.prenom} ${m.nom}`}
+                            data-testid={`casting-remove-${m.employe_id}-${phase}`}
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        )}
+                      </article>
                     ))}
                   </div>
                 </TooltipProvider>
@@ -205,6 +247,28 @@ function AffaireCastingPage() {
           );
         })}
       </div>
+
+      {addPhase && (
+        <AddCastingMemberSheet
+          open={!!addPhase}
+          onOpenChange={(o) => !o && setAddPhase(null)}
+          affaireId={affaireId}
+          phase={addPhase}
+          phaseLabel={PHASE_LABELS[addPhase]}
+          excludeEmployeIds={(data?.phases[addPhase] ?? []).map((m) => m.employe_id)}
+        />
+      )}
+
+      {removeTarget && (
+        <RemoveCastingMemberDialog
+          open={!!removeTarget}
+          onOpenChange={(o) => !o && setRemoveTarget(null)}
+          affaireId={affaireId}
+          employeId={removeTarget.employeId}
+          employeLabel={removeTarget.employeLabel}
+          phase={removeTarget.phase}
+        />
+      )}
     </div>
   );
 }
