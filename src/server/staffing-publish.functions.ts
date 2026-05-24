@@ -47,25 +47,31 @@ type SupaCtx = any;
  *
  * Ne modifie JAMAIS staffing_plan.status. Idempotent.
  */
+export type RepublishStrategy = "auto" | "merge" | "manual";
+
 export async function syncEquipesFromPlan(
   supabase: SupaCtx,
   planId: string,
   userId: string | null,
-): Promise<{ n2_upserts: number; n3_upserts: number; phase_updates: number }> {
+  strategy: RepublishStrategy = "auto",
+): Promise<{ n2_upserts: number; n3_upserts: number; phase_updates: number; strategy: RepublishStrategy }> {
   const { data, error } = await supabase.rpc("sync_equipes_from_plan", {
     p_plan_id: planId,
     p_user_id: userId,
+    p_strategy: strategy,
   });
   if (error) throw new Error(`sync_equipes_from_plan: ${error.message}`);
   const r = (data ?? {}) as {
     n2_upserts?: number;
     n3_upserts?: number;
     phase_updates?: number;
+    strategy?: RepublishStrategy;
   };
   return {
     n2_upserts: r.n2_upserts ?? 0,
     n3_upserts: r.n3_upserts ?? 0,
     phase_updates: r.phase_updates ?? 0,
+    strategy: r.strategy ?? strategy,
   };
 }
 
@@ -74,12 +80,18 @@ export async function syncEquipesFromPlan(
 /* ------------------------------------------------------------------ */
 export const publishStaffingPlan = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { planId: string }) =>
-    z.object({ planId: z.string().uuid() }).parse(d),
+  .inputValidator((d: { planId: string; mergeStrategy?: RepublishStrategy }) =>
+    z
+      .object({
+        planId: z.string().uuid(),
+        mergeStrategy: z.enum(["auto", "merge", "manual"]).optional().default("auto"),
+      })
+      .parse(d),
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { planId } = data;
+    const strategy: RepublishStrategy = data.mergeStrategy ?? "auto";
 
     /* 1. Plan + objets + steps + assignments — snapshot complet */
     const { data: plan, error: planErr } = await supabase
@@ -194,7 +206,7 @@ export const publishStaffingPlan = createServerFn({ method: "POST" })
     }
 
     /* 6.bis SPRINT B — Sync équipes 3 niveaux (N2 affaire_equipe + N3 objet_equipe) */
-    const equipesResult = await syncEquipesFromPlan(supabase, planId, userId);
+    const equipesResult = await syncEquipesFromPlan(supabase, planId, userId, strategy);
 
     /* 7. Notifications aux employés affectés */
     const employeIds = Array.from(new Set(assignments.map((a) => a.employe_id)));
@@ -521,3 +533,117 @@ export const restorePlanSnapshot = createServerFn({ method: "POST" })
   });
 
 void addDays;
+
+/* ------------------------------------------------------------------ */
+/* Sprint C / C2 — detectEquipeOverrides + publishStaffingPlanV2       */
+/* ------------------------------------------------------------------ */
+
+export interface EquipeOverridesReport {
+  overrides: number;
+  n2_added: number;
+  n2_removed: number;
+  n3_added: number;
+  n3_removed: number;
+  total_slots: number;
+  ratio: number;
+  /** Stratégie recommandée par défaut selon le ratio. */
+  suggested_strategy: RepublishStrategy;
+}
+
+export const detectEquipeOverrides = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { planId: string }) =>
+    z.object({ planId: z.string().uuid() }).parse(d),
+  )
+  .handler(async ({ data, context }): Promise<EquipeOverridesReport> => {
+    const { supabase } = context;
+    const { data: raw, error } = await supabase.rpc("detect_equipe_overrides", {
+      p_plan_id: data.planId,
+    });
+    if (error) throw new Error(error.message);
+    const r = (raw ?? {}) as {
+      overrides?: number;
+      n2_added?: number;
+      n2_removed?: number;
+      n3_added?: number;
+      n3_removed?: number;
+      total_slots?: number;
+      ratio?: number;
+    };
+    const overrides = r.overrides ?? 0;
+    const ratio = Number(r.ratio ?? 0);
+    let suggested: RepublishStrategy = "auto";
+    if (overrides === 0) suggested = "auto";
+    else if (ratio <= 30) suggested = "merge";
+    else suggested = "manual";
+    return {
+      overrides,
+      n2_added: r.n2_added ?? 0,
+      n2_removed: r.n2_removed ?? 0,
+      n3_added: r.n3_added ?? 0,
+      n3_removed: r.n3_removed ?? 0,
+      total_slots: r.total_slots ?? 0,
+      ratio,
+      suggested_strategy: suggested,
+    };
+  });
+
+/**
+ * publishStaffingPlanV2 — alias explicite avec mergeStrategy obligatoire.
+ *
+ * Wrap fin de `publishStaffingPlan` : le caller doit choisir la stratégie
+ * (UI : RepublishConflictDialog). Le statut draft → published reste géré
+ * par le handler parent, comme aussi le snapshot pré-publication.
+ */
+export const publishStaffingPlanV2 = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { planId: string; mergeStrategy: RepublishStrategy }) =>
+    z
+      .object({
+        planId: z.string().uuid(),
+        mergeStrategy: z.enum(["auto", "merge", "manual"]),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    // Délègue à la fn principale (factorisé pour éviter les divergences).
+    // On ne peut pas appeler un serverFn depuis un autre handler directement :
+    // on duplique le minimum nécessaire en réutilisant les helpers internes.
+    const { supabase, userId } = context;
+
+    // Si le plan est déjà published, on ne fait QUE re-sync avec la stratégie
+    // (cas "republier sans changer le draft", appliqué à un plan déjà publié).
+    const { data: plan } = await supabase
+      .from("staffing_plan")
+      .select("status")
+      .eq("id", data.planId)
+      .single();
+    if (!plan) throw new Error("Plan introuvable");
+
+    // Plan déjà publié (cas attendu pour le dialog republish v2)
+    if ((plan.status as string) !== "published") {
+      throw new Error(
+        "publishStaffingPlanV2 attend un plan déjà publié (cas republish). Utilisez publishStaffingPlan pour la première publication.",
+      );
+    }
+    const r = await syncEquipesFromPlan(
+      supabase,
+      data.planId,
+      userId,
+      data.mergeStrategy,
+    );
+    await supabase.from("staffing_plan_snapshot").insert({
+      plan_id: data.planId,
+      reason: `republish_v2_${data.mergeStrategy}`,
+      created_by: userId,
+      snapshot_data: { strategy: data.mergeStrategy, equipes: r } as never,
+    } as never);
+    return {
+      ok: true,
+      mode: "resync" as const,
+      strategy: data.mergeStrategy,
+      equipes_n2: r.n2_upserts,
+      equipes_n3: r.n3_upserts,
+      phase_updates: r.phase_updates,
+    };
+  });

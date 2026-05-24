@@ -4645,6 +4645,7 @@ export type Database = {
         Args: { _saisie_id: string }
         Returns: boolean
       }
+      detect_equipe_overrides: { Args: { p_plan_id: string }; Returns: Json }
       dismiss_inbox_item: { Args: { p_item_key: string }; Returns: undefined }
       etape_for_metier: {
         Args: { metier: string }
@@ -4931,10 +4932,12 @@ export type Database = {
         Args: { p_answer_index: number; p_quiz_id: string }
         Returns: Json
       }
-      sync_equipes_from_plan: {
-        Args: { p_plan_id: string; p_user_id?: string }
-        Returns: Json
-      }
+      sync_equipes_from_plan:
+        | { Args: { p_plan_id: string; p_user_id?: string }; Returns: Json }
+        | {
+            Args: { p_plan_id: string; p_strategy?: string; p_user_id?: string }
+            Returns: Json
+          }
       update_objet_statut_chef: {
         Args: {
           _commentaire?: string
