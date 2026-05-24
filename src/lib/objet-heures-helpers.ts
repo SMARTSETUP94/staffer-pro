@@ -266,11 +266,14 @@ export function computeEcart(prevu: number, reel: number): EcartResult {
   const display = `${sign}${pct.toFixed(decimals)}%`;
 
   let tone: EcartTone;
-  if (abs <= 5) tone = "success";
-  else if (pct < 0 && pct > -25) tone = "info";
-  else if (pct <= -25) tone = "warning";
-  else if (pct <= 15) tone = "warning";
+  // Tolérance float : 5.0000000001 doit compter comme 5.
+  const EPS = 1e-9;
+  if (abs <= 5 + EPS) tone = "success";
+  else if (pct < 0 && pct > -25 + EPS) tone = "info";
+  else if (pct <= -25 + EPS) tone = "warning";
+  else if (pct <= 15 + EPS) tone = "warning";
   else tone = "destructive";
+
 
   return { display, tone };
 }
