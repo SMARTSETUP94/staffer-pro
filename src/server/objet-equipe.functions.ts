@@ -98,23 +98,25 @@ export const getObjetEquipe = createServerFn({ method: "POST" })
       .single();
     if (objErr || !objRow) throw new Error(objErr?.message ?? "Objet introuvable");
 
-    const q = Number(objRow.quantite ?? 1) || 1;
+    // Lot 8.3a hotfix (audit 23 mai P1.2) — convention "heures DB = TOTAL déjà multiplié"
+    // alignée avec getObjetFiche (Lot 8.1 / Gabin). On ne multiplie PLUS par quantite ici.
     const heuresDevis: ObjetHeuresMap = {
-      be: Number(objRow.heures_prevues_be ?? 0) * q,
-      numerique: Number(objRow.heures_prevues_numerique ?? 0) * q,
-      bois: Number(objRow.heures_prevues_bois ?? 0) * q,
-      metal: Number(objRow.heures_prevues_metal ?? 0) * q,
-      peinture: Number(objRow.heures_prevues_peinture ?? 0) * q,
-      tapisserie: Number(objRow.heures_prevues_tapisserie ?? 0) * q,
+      be: Number(objRow.heures_prevues_be ?? 0),
+      numerique: Number(objRow.heures_prevues_numerique ?? 0),
+      bois: Number(objRow.heures_prevues_bois ?? 0),
+      metal: Number(objRow.heures_prevues_metal ?? 0),
+      peinture: Number(objRow.heures_prevues_peinture ?? 0),
+      tapisserie: Number(objRow.heures_prevues_tapisserie ?? 0),
       machiniste: 0,
-      manutention: Number(objRow.heures_prevues_manutention ?? 0) * q,
+      manutention: Number(objRow.heures_prevues_manutention ?? 0),
     };
 
     // 2) Steps du plan staffing publié liés à cet objet
+    // Lot 8.3a hotfix (audit 23 mai P0#1) — la table embed est `staffing_plan` (singulier).
     const { data: steps } = await supabase
       .from("staffing_plan_step")
       .select(
-        "id, metier_id, start_date, span_days, pers, plan_id, staffing_plans!inner(status)"
+        "id, metier_id, start_date, span_days, pers, plan_id, staffing_plan!inner(status)"
       )
       .eq("objet_id", objetId);
 
@@ -125,13 +127,13 @@ export const getObjetEquipe = createServerFn({ method: "POST" })
       span_days: number;
       pers: number;
       plan_id: string;
-      staffing_plans: { status: string } | { status: string }[];
+      staffing_plan: { status: string } | { status: string }[];
     };
     const allSteps = (steps ?? []) as unknown as StepRow[];
 
     // Filtre : on garde les steps de plans publiés en priorité ; sinon draft.
     const publishedSteps = allSteps.filter((s) => {
-      const sp = Array.isArray(s.staffing_plans) ? s.staffing_plans[0] : s.staffing_plans;
+      const sp = Array.isArray(s.staffing_plan) ? s.staffing_plan[0] : s.staffing_plan;
       return sp?.status === "published";
     });
     const useSteps = publishedSteps.length > 0 ? publishedSteps : allSteps;
