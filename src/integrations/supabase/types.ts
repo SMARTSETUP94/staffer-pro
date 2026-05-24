@@ -3050,6 +3050,7 @@ export type Database = {
           date: string
           employe_id: string
           id: string
+          manual_assignment_origin: boolean
           presence_pct: number
           step_id: string
         }
@@ -3058,6 +3059,7 @@ export type Database = {
           date: string
           employe_id: string
           id?: string
+          manual_assignment_origin?: boolean
           presence_pct?: number
           step_id: string
         }
@@ -3066,6 +3068,7 @@ export type Database = {
           date?: string
           employe_id?: string
           id?: string
+          manual_assignment_origin?: boolean
           presence_pct?: number
           step_id?: string
         }
