@@ -381,6 +381,23 @@ function FabricationPage() {
                     <TableCell className="text-center text-xs font-semibold">
                       {calcAvancementObjet(o)}%
                     </TableCell>
+                    {showFicheLink && (
+                      <TableCell className="text-center">
+                        <Button asChild variant="outline" size="sm" className="h-7 gap-1 px-2">
+                          <Link
+                            to="/affaires/$affaireId/objets/$objetId"
+                            params={{ affaireId, objetId: o.id }}
+                            data-testid="objet-fiche-link"
+                            data-objet-id={o.id}
+                            title="Voir la fiche objet"
+                          >
+                            <ExternalLink className="h-3 w-3" />
+                            <span className="text-xs">Fiche</span>
+                          </Link>
+                        </Button>
+                      </TableCell>
+                    )}
+
                     {isAdminOrChef && (
                       <TableCell>
                         <DropdownMenu>
