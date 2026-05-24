@@ -379,19 +379,18 @@ function FabricationPage() {
           {/* Vue tableur dense (matrice objets × étapes) */}
           {viewMode === "tableur" && (
           <div className="rounded-xl border border-border bg-card overflow-x-auto">
+            <TooltipProvider delayDuration={150}>
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-24">Réf</TableHead>
                   <TableHead>Objet</TableHead>
                   <TableHead className="w-16 text-center">Qté</TableHead>
-                  <TableHead className="w-32">Respo Fab</TableHead>
                   {ETAPES_ORDER.map((t) => (
                     <TableHead key={t} className="w-32 text-center">
                       {ETAPE_LABELS[t]}
                     </TableHead>
                   ))}
-                  <TableHead className="w-20 text-center">Avanc.</TableHead>
                   {showFicheLink && <TableHead className="w-20 text-center">Détail</TableHead>}
                   {isAdminOrChef && <TableHead className="w-12"></TableHead>}
                 </TableRow>
@@ -403,42 +402,53 @@ function FabricationPage() {
                       {o.reference}
                     </TableCell>
 
-                    <TableCell className="font-medium">{o.nom}</TableCell>
-                    <TableCell className="text-center">{o.quantite}</TableCell>
-                    <TableCell className="text-xs">
-                      {o.respo_fab_name ?? <span className="text-muted-foreground">—</span>}
+                    <TableCell className="font-medium">
+                      <InlineNomEdit
+                        objetId={o.id}
+                        initialNom={o.nom}
+                        canEdit={isAdminOrChef}
+                        onSaved={reload}
+                      />
                     </TableCell>
+                    <TableCell className="text-center">{o.quantite}</TableCell>
                     {ETAPES_ORDER.map((t) => {
                       const e = o.etapes.find((x) => x.type_etape === t);
                       if (!e) return <TableCell key={t} className="text-center text-muted-foreground">—</TableCell>;
                       return (
                         <TableCell key={t} className="text-center">
-                          <button
-                            type="button"
-                            onClick={() => isAdminOrChef && setEditEtape({ objet: o, etape: e })}
-                            disabled={!isAdminOrChef}
-                            className="flex w-full flex-col items-center gap-0.5 rounded-md p-1 text-xs transition-colors hover:bg-muted disabled:cursor-default disabled:hover:bg-transparent"
-                            title={isAdminOrChef ? "Modifier l'étape" : STATUT_LABELS[e.statut]}
-                          >
-                            <span className="text-base leading-none">{STATUT_ICONS[e.statut]}</span>
-                            {e.assignee_name && e.statut === "termine" && (
-                              <span className="text-[10px] text-muted-foreground">
-                                {e.assignee_name}
-                                {e.date_fin && (
-                                  <> · {new Date(e.date_fin).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" })}</>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                type="button"
+                                onClick={() => isAdminOrChef && setEditEtape({ objet: o, etape: e })}
+                                disabled={!isAdminOrChef}
+                                className="flex w-full flex-col items-center gap-0.5 rounded-md p-1 text-xs transition-colors hover:bg-muted disabled:cursor-default disabled:hover:bg-transparent"
+                              >
+                                <span className="text-base leading-none">{STATUT_ICONS[e.statut]}</span>
+                                {e.assignee_name && e.statut === "termine" && (
+                                  <span className="text-[10px] text-muted-foreground">
+                                    {e.assignee_name}
+                                    {e.date_fin && (
+                                      <> · {new Date(e.date_fin).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" })}</>
+                                    )}
+                                  </span>
                                 )}
-                              </span>
-                            )}
-                            {e.assignee_name && e.statut === "en_cours" && (
-                              <span className="text-[10px] text-muted-foreground">{e.assignee_name}</span>
-                            )}
-                          </button>
+                                {e.assignee_name && e.statut === "en_cours" && (
+                                  <span className="text-[10px] text-muted-foreground">{e.assignee_name}</span>
+                                )}
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent side="top" className="text-xs">
+                              <div className="space-y-0.5">
+                                <div className="font-semibold">{ETAPE_LABELS[t]} — {STATUT_LABELS[e.statut]}</div>
+                                <div>Responsable pôle : {e.assignee_name ?? "—"}</div>
+                                <div>Respo Fab objet : {o.respo_fab_name ?? "—"}</div>
+                              </div>
+                            </TooltipContent>
+                          </Tooltip>
                         </TableCell>
                       );
                     })}
-                    <TableCell className="text-center text-xs font-semibold">
-                      {calcAvancementObjet(o)}%
-                    </TableCell>
                     {showFicheLink && (
                       <TableCell className="text-center">
                         <Button asChild variant="outline" size="sm" className="h-7 gap-1 px-2">
@@ -476,6 +486,7 @@ function FabricationPage() {
                 ))}
               </TableBody>
             </Table>
+            </TooltipProvider>
           </div>
           )}
         </>
