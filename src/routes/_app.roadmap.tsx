@@ -43,6 +43,48 @@ interface RoadmapPlanned {
 
 const RELEASES: RoadmapRelease[] = [
   {
+    date: "2026-05-24",
+    version: "v0.49.0 (Bloc 8 — en cours)",
+    title: "🗂️ Fiche Objet — fondations, équipe affectée, journal & photos (DB)",
+    entries: [
+      {
+        type: "feature",
+        area: "Bloc 8 — Lots 8.1 → 8.2c",
+        title: "Fiche objet : route, onglets, heures consommées, matrice permissions",
+        description:
+          "Nouvelle fiche objet (`/affaires/$id/objets/$objetId`) avec onglets Vue d'ensemble, Équipe, Heures, Journal. Tableau heures consommées (filtres métier/personne, totaux par étape). Matrice de permissions fine par rôle (admin / chef / employé / RH). Algo de détection des gaps de staffing (objets sans plan ou plan incomplet). Liens natifs depuis Gantt, Planning, Kanban et Devis.",
+      },
+      {
+        type: "feature",
+        area: "Bloc 8 — Lot 8.3b (Équipe affectée)",
+        title: "Mutations équipe depuis la fiche objet (+ Personne, Auto-remplir, Retirer)",
+        description:
+          "Section « Équipe affectée » avec ajout manuel (`AddPersonneDialog`), auto-staffing par étape et retrait avec confirmation (`RemovePersonneDialog`). Server functions dédiées (`objet-equipe-mutations.functions.ts`) qui poussent dans `assignations` avec `manual_assignment_origin = 'fiche_objet'` (protège contre `PRESENCE_MISMATCH` à la republication du plan). Migration SQL associée.",
+      },
+      {
+        type: "fix",
+        area: "Bloc 8 — Hotfix Lot 8.3",
+        title: "Mutations autorisées sur plan brouillon (workflow chef réel)",
+        description:
+          "Le terrain a révélé que bloquer les mutations sur plan `draft` ne correspond pas au workflow : les chefs créent un brouillon et veulent staffer dessus avant publication. Les boutons « + Personne / Auto-remplir / Retirer » sont désormais actifs si `plan_status ∈ {draft, published}`, désactivés uniquement sur `no_plan`. Bandeau ambre d'information sur les plans brouillon. `loadPublishedStepsForObjet` charge maintenant `published || draft` (préfère `published` si les deux coexistent). Renommage prévu en 8.6.",
+      },
+      {
+        type: "feature",
+        area: "Bloc 8 — Lot 8.4 (DB)",
+        title: "Journal & photos : table d'événements + commentaires + 6 triggers",
+        description:
+          "Migration DB pour le futur module Journal : table `objet_journal_events` (événements typés auto-tagués par étape), table `objet_commentaires` (commentaires libres), extension `fabrication_objets_photos` (légende, étape, auteur). 6 triggers d'audit alimentent automatiquement le journal (création objet, changement étape, ajout/retrait équipe, upload photo, commentaire). UI à venir en 8.4 (compression client WebP, upload signed URL, scroll infini).",
+      },
+      {
+        type: "feature",
+        area: "Bloc 8 — À venir",
+        title: "8.4 UI / 8.5 liens croisés / 8.6 polish + mobile + E2E (~25h restant)",
+        description:
+          "8.4 UI : server functions signed URLs + upload + composant `ObjetJournalPhotos` (~8h). 8.5 : liens natifs croisés entre Gantt, Planning, Devis et Kanban (~4h). 8.6 : polish, responsive 380px, rename `loadActiveStepsForObjet`, 13 specs E2E (incl. #11 `no_plan` + #11bis `draft`) (~8h). Bloc 8 complet visé fin semaine prochaine.",
+      },
+    ],
+  },
+  {
     date: "2026-05-23",
     version: "v0.48.1",
     title: "🔐 Lot 7.0 — Capabilities wiring & sécurisation routes (dette Bloc 0-6)",
