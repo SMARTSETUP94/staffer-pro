@@ -27,6 +27,11 @@ import { ObjetIdentiteSection } from "@/components/objets/ObjetIdentiteSection";
 import { ObjetHeuresTable } from "@/components/objets/ObjetHeuresTable";
 import { ObjetEquipeSection } from "@/components/objets/equipe/ObjetEquipeSection";
 import { ObjetEtapesGrid } from "@/components/objets/etapes/ObjetEtapesGrid";
+import { ObjetJournalTimeline } from "@/components/objets/journal/ObjetJournalTimeline";
+import { ObjetPhotosGrid } from "@/components/objets/journal/ObjetPhotosGrid";
+import { ObjetCommentaires } from "@/components/objets/journal/ObjetCommentaires";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useCapability } from "@/hooks/use-capability";
 
 export const Route = createFileRoute("/_app/affaires/$affaireId/objets/$objetId")({
   beforeLoad: async () => {
