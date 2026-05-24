@@ -149,7 +149,6 @@ Vocabulaire métier v0.48.x (Lot 7.1 bis) : libellés UI passent par `useVocab()
 
 ## Memories
 - [Centre d'analyse heures](mem://features/centre-analyse-heures) — BACKLOG : onglet consolidé heures + 8 filtres + exports
-- [Roadmap consolidée 2 mai 2026](mem://roadmap/consolidee-2mai2026) — v0.31.4 → v0.40, 11 jalons
 - [Auto-staffing tier priority](mem://features/auto-staffing-tier-priority) — règle CDI/CDD avant intérim
 - [Wizard plan staffing](mem://features/staffing-plan-wizard) — v0.35.4 onglet Fab + bouton Devis
 - [Planning 3 vues](mem://features/planning-views) — CDI / Intérim / Synthèse chantier
