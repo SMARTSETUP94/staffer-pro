@@ -4931,6 +4931,10 @@ export type Database = {
         Args: { p_answer_index: number; p_quiz_id: string }
         Returns: Json
       }
+      sync_equipes_from_plan: {
+        Args: { p_plan_id: string; p_user_id?: string }
+        Returns: Json
+      }
       update_objet_statut_chef: {
         Args: {
           _commentaire?: string
