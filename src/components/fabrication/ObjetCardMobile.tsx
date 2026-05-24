@@ -23,8 +23,8 @@ import {
 interface ObjetCardMobileProps {
   objet: FabricationObjet;
   isAdminOrChef: boolean;
-  /** Lot 8.2b — Lien temporaire vers la Fiche Objet (null = caché). */
-  ficheHref?: string | null;
+  /** Lot 8.2b — Affaire pour construire le lien typé Fiche Objet (null = caché). */
+  affaireIdForFiche?: string | null;
   onEditObjet: (objet: FabricationObjet) => void;
   onEditEtape: (objet: FabricationObjet, etape: FabricationEtape) => void;
 }
@@ -51,7 +51,7 @@ export function ObjetCardMobile({
   isAdminOrChef,
   onEditObjet,
   onEditEtape,
-  ficheHref = null,
+  affaireIdForFiche = null,
 }: ObjetCardMobileProps) {
   const avancement = calcAvancementObjet(objet);
   return (
@@ -146,7 +146,7 @@ export function ObjetCardMobile({
       </div>
 
       {/* Lot 8.2c — Bouton "Fiche" full-width en bas de card */}
-      {ficheHref && (
+      {affaireIdForFiche && (
         <Button
           asChild
           variant="outline"
@@ -154,7 +154,8 @@ export function ObjetCardMobile({
           className="mt-3 w-full gap-1.5"
         >
           <Link
-            to={ficheHref}
+            to="/affaires/$affaireId/objets/$objetId"
+            params={{ affaireId: affaireIdForFiche, objetId: objet.id }}
             data-testid="objet-fiche-link"
             data-objet-id={objet.id}
           >
