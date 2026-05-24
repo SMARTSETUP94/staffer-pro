@@ -42,8 +42,8 @@ type SupaCtx = any;
  * Sync équipes 3 niveaux depuis un plan staffing.
  *
  * Implémentation : délègue à la RPC SQL `sync_equipes_from_plan(plan_id, user_id)`
- * (SECURITY DEFINER, atomique, bypass du trigger enforce_objet_equipe_strict
- * via SET LOCAL dans la même session — cf. mem://debts/bypass-objet-equipe-strict-temp).
+ * (SECURITY DEFINER, atomique). Depuis Sprint C / C4, la RPC garantit
+ * elle-même la cascade N2(fabrication) → N3 ; aucun bypass de trigger.
  *
  * Ne modifie JAMAIS staffing_plan.status. Idempotent.
  */
