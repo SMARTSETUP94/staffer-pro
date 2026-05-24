@@ -88,12 +88,14 @@ describe("HeuresTriplet — Sprint A.5 modes enrichis", () => {
     expect(container.firstChild).toHaveClass("inline-flex");
   });
 
-  it("mode=compact affiche un seul triplet condensé", () => {
+  it("mode=compact affiche un seul chiffre principal (staffé)", () => {
     const { container } = render(
       <HeuresTriplet prevues={10} staffees={8} realisees={5} mode="compact" />,
     );
-    expect(container.textContent).toMatch(/10.*8.*5/);
+    expect(container.textContent).toContain("8");
+    expect(container.firstChild).toHaveClass("inline-flex");
   });
+
 
   it("mode=card affiche en bloc avec labels", () => {
     const { container } = render(
