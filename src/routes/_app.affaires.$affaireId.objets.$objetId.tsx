@@ -13,7 +13,7 @@ import {
   useNavigate,
   Link,
 } from "@tanstack/react-router";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,8 @@ import { getObjetFiche } from "@/server/objet-fiche.functions";
 import { useFeatureFlag } from "@/hooks/use-feature-flag";
 import { ObjetIdentiteSection } from "@/components/objets/ObjetIdentiteSection";
 import { ObjetHeuresTable } from "@/components/objets/ObjetHeuresTable";
+import { ObjetEquipeSection } from "@/components/objets/equipe/ObjetEquipeSection";
+import { ObjetEtapesGrid } from "@/components/objets/etapes/ObjetEtapesGrid";
 
 export const Route = createFileRoute("/_app/affaires/$affaireId/objets/$objetId")({
   beforeLoad: async () => {
@@ -39,7 +41,7 @@ function FicheObjetPage() {
   const navigate = useNavigate();
   const flagEnabled = useFeatureFlag("fiche_objet_v1");
   const fetchFiche = useServerFn(getObjetFiche);
-  const qc = useQueryClient();
+  
 
   // Redirect propre si flag OFF (on rend pas le contenu côté client)
   useEffect(() => {
@@ -179,10 +181,14 @@ function FicheObjetPage() {
         <ObjetHeuresTable heures={heures} quantite={objet.quantite} />
       </div>
 
-      {/* Placeholders Lots 8.3 → 8.5 */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Placeholder title="Équipe affectée" sub="Lot 8.3 — à venir" />
-        <Placeholder title="Étapes Kanban" sub="Lot 8.3 — à venir" />
+      {/* Lot 8.3 — Zone Équipe */}
+      <ObjetEquipeSection objetId={objet.id} />
+
+      {/* Lot 8.3 — Étapes Kanban */}
+      <ObjetEtapesGrid objetId={objet.id} />
+
+      {/* Lot 8.4 à venir */}
+      <div className="grid gap-4 md:grid-cols-1">
         <Placeholder title="Journal photos" sub="Lot 8.4 — à venir" />
       </div>
     </div>
