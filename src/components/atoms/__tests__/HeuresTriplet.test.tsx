@@ -79,3 +79,39 @@ describe("HeuresTriplet — variantes affichage", () => {
     expect(container.firstChild).toHaveClass("text-xs");
   });
 });
+
+describe("HeuresTriplet — Sprint A.5 modes enrichis", () => {
+  afterEach(cleanup);
+
+  it("mode=row (défaut) inline horizontal", () => {
+    const { container } = render(<HeuresTriplet prevues={10} staffees={8} realisees={5} />);
+    expect(container.firstChild).toHaveClass("inline-flex");
+  });
+
+  it("mode=compact affiche un seul triplet condensé", () => {
+    const { container } = render(
+      <HeuresTriplet prevues={10} staffees={8} realisees={5} mode="compact" />,
+    );
+    expect(container.textContent).toMatch(/10.*8.*5/);
+  });
+
+  it("mode=card affiche en bloc avec labels", () => {
+    const { container } = render(
+      <HeuresTriplet prevues={10} staffees={8} realisees={5} mode="card" />,
+    );
+    expect(container.firstChild).toHaveClass("grid");
+  });
+
+  it("unit=total (défaut) n'ajoute pas /pers", () => {
+    render(<HeuresTriplet prevues={120} staffees={100} realisees={80} />);
+    expect(screen.queryByText(/\/pers/)).toBeNull();
+  });
+
+  it("unit=per_person affiche suffixe /pers", () => {
+    render(
+      <HeuresTriplet prevues={12} staffees={10} realisees={8} unit="per_person" />,
+    );
+    expect(screen.getAllByText(/\/pers/i).length).toBeGreaterThan(0);
+  });
+});
+
