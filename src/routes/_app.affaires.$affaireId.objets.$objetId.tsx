@@ -41,7 +41,7 @@ function FicheObjetPage() {
   const navigate = useNavigate();
   const flagEnabled = useFeatureFlag("fiche_objet_v1");
   const fetchFiche = useServerFn(getObjetFiche);
-  const qc = useQueryClient();
+  
 
   // Redirect propre si flag OFF (on rend pas le contenu côté client)
   useEffect(() => {
