@@ -66,10 +66,12 @@ Helpers purs testables : `src/lib/objet-fiche-helpers.ts` (15 tests Vitest verts
 - 8.1 ✅ fondations data (MV + caps + flag + server fn)
 - 8.2 ✅ route + page + identité + heures table (bascule Total/Unitaire)
 - 8.2b ✅ (23 mai 2026) lien temporaire `data-testid="objet-fiche-link"` depuis `/affaires/$id/fabrication` (desktop row + mobile card), gated par flag `fiche_objet_v1` + cap `objet.view`. TODO(8.5): remplacer par lien intégré natif. + Seed 3 comptes test (commercial / bureau_etude / atelier_chef) dans `e2e/seed.ts` + 3 projects Playwright + flag activé pour ces UUIDs lors du seed.
-- 8.3 : étapes + équipe + AssignerPersonneSheet
-- 8.4 : journal + photos auto-taggées
-- 8.5 : liens croisés Gantt/Planning/Devis/Kanban (remplace le lien temporaire de 8.2b)
-- 8.6 : polish + responsive 380px + tests complets
+- 8.2c ✅ (24 mai 2026) 5 corrections polish : heures dé-dupliquées, algo écart corrigé, 5 champs DB, matrice permissions, bouton Fiche visible.
+- 8.3b ✅ (24 mai 2026) Mutations équipe : AddPersonneDialog + RemovePersonneDialog + auto-remplir/retirer. HOTFIX draft/published mutables (no_plan bloqué). 2 dettes tracées.
+- 8.4 DB ✅ (24 mai 2026) Journal & Photos : `objet_journal_events` + `objet_commentaires` + `fabrication_objets_photos` enrichie + 6 triggers auto-log + backfill.
+- 8.4 UI ⏳ (~8h) — SF signed URLs/upload/aggregation + UI `ObjetJournalPhotos` (timeline + commentaires + upload WebP + galerie par étape).
+- 8.5 ⏳ (~4h) — Liens croisés natifs (Gantt/Planning/Devis/Kanban → fiche objet). Choix drawer vs nav à trancher.
+- 8.6 ⏳ (~8h) — Polish + responsive 380px + E2E 8.3b (13 scénarios) + E2E 8.4 + 3 dettes (rename SF, Sheet AddPersonne, édition commentaire).
 
 
 ## Lot 8.2c — Polish fiche (24 mai 2026)
