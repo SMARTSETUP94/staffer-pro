@@ -229,7 +229,20 @@ export function AddHorsPlanningDialog({ defaultDate, variant, defaultMetierId, o
                   {errorFor(["HEURES_INVALIDE", "HEURES_HORS_BORNES"])}
                 </p>
               )}
-            </div>
+          </div>
+
+          {/* Sprint B / B6 — bandeau héritage saisie (4 états selon le niveau résolu) */}
+          {affaireId && date && (
+            <SaisieHeritageBandeau
+              employeId={employeId}
+              affaireId={affaireId}
+              date={date}
+              position="inline"
+              dismissKey={`hors-planning-${affaireId}-${date}`}
+            />
+          )}
+
+
           </div>
 
           <div>
