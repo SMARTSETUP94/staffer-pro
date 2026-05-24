@@ -47,25 +47,31 @@ type SupaCtx = any;
  *
  * Ne modifie JAMAIS staffing_plan.status. Idempotent.
  */
+export type RepublishStrategy = "auto" | "merge" | "manual";
+
 export async function syncEquipesFromPlan(
   supabase: SupaCtx,
   planId: string,
   userId: string | null,
-): Promise<{ n2_upserts: number; n3_upserts: number; phase_updates: number }> {
+  strategy: RepublishStrategy = "auto",
+): Promise<{ n2_upserts: number; n3_upserts: number; phase_updates: number; strategy: RepublishStrategy }> {
   const { data, error } = await supabase.rpc("sync_equipes_from_plan", {
     p_plan_id: planId,
     p_user_id: userId,
+    p_strategy: strategy,
   });
   if (error) throw new Error(`sync_equipes_from_plan: ${error.message}`);
   const r = (data ?? {}) as {
     n2_upserts?: number;
     n3_upserts?: number;
     phase_updates?: number;
+    strategy?: RepublishStrategy;
   };
   return {
     n2_upserts: r.n2_upserts ?? 0,
     n3_upserts: r.n3_upserts ?? 0,
     phase_updates: r.phase_updates ?? 0,
+    strategy: r.strategy ?? strategy,
   };
 }
 
