@@ -35,8 +35,11 @@ function normalizePhase(raw: string | null | undefined): string {
 /* Pure idempotent — peut être appelée sur draft OU published.         */
 /* Ne touche JAMAIS staffing_plan.status.                              */
 /* ------------------------------------------------------------------ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type SupaCtx = any;
+
 export async function syncEquipesFromPlan(
-  supabase: ReturnType<typeof createSupabaseClientType>,
+  supabase: SupaCtx,
   planId: string,
   userId: string | null,
 ): Promise<{ n2_upserts: number; n3_upserts: number; phase_updates: number }> {
