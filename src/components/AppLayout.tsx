@@ -11,6 +11,7 @@ import { Search } from "lucide-react";
 import { Toaster } from "@/components/ui/sonner";
 import { FeedbackButton } from "./feedback/FeedbackButton";
 import { ProfileIncompleteBanner } from "./onboarding/ProfileIncompleteBanner";
+import { RoleSwitcher } from "./atoms/RoleSwitcher";
 
 export function AppLayout({ children }: { children: ReactNode }) {
   return (
@@ -41,6 +42,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
               <SaintHeaderIcon />
               <BirthdaysHeaderIcon />
               <NotificationBell />
+              <RoleSwitcher />
             </div>
           </header>
           <main className="flex-1 bg-background">{children}</main>
