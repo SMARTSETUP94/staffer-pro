@@ -80,12 +80,18 @@ export async function syncEquipesFromPlan(
 /* ------------------------------------------------------------------ */
 export const publishStaffingPlan = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { planId: string }) =>
-    z.object({ planId: z.string().uuid() }).parse(d),
+  .inputValidator((d: { planId: string; mergeStrategy?: RepublishStrategy }) =>
+    z
+      .object({
+        planId: z.string().uuid(),
+        mergeStrategy: z.enum(["auto", "merge", "manual"]).optional().default("auto"),
+      })
+      .parse(d),
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { planId } = data;
+    const strategy: RepublishStrategy = data.mergeStrategy ?? "auto";
 
     /* 1. Plan + objets + steps + assignments — snapshot complet */
     const { data: plan, error: planErr } = await supabase
