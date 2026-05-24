@@ -90,16 +90,26 @@ async function loadPublishedStepsForObjet(
     staffing_plan: { status: string; affaire_id: string } | { status: string; affaire_id: string }[];
   };
   const all = (data ?? []) as unknown as Row[];
-  const published = all.filter((r) => {
+  // Hotfix 8.3 : autorise mutations sur plan draft OU published.
+  // Préfère un plan publié s'il en existe un, sinon prend le brouillon.
+  const mutable = all.filter((r) => {
     const sp = Array.isArray(r.staffing_plan) ? r.staffing_plan[0] : r.staffing_plan;
-    return sp?.status === "published";
+    return sp?.status === "published" || sp?.status === "draft";
   });
-  if (published.length === 0) return { steps: [], planId: null, affaireId: null };
+  if (mutable.length === 0) return { steps: [], planId: null, affaireId: null };
 
-  const first = published[0];
+  const getStatus = (r: Row) =>
+    (Array.isArray(r.staffing_plan) ? r.staffing_plan[0] : r.staffing_plan)?.status;
+  const publishedOnly = mutable.filter((r) => getStatus(r) === "published");
+  const picked = publishedOnly.length > 0 ? publishedOnly : mutable;
+  const pickedPlanId = picked[0].plan_id;
+  // Garde uniquement les steps du plan choisi (évite mix draft+published).
+  const sameplan = picked.filter((r) => r.plan_id === pickedPlanId);
+
+  const first = sameplan[0];
   const sp = Array.isArray(first.staffing_plan) ? first.staffing_plan[0] : first.staffing_plan;
   return {
-    steps: published.map(({ staffing_plan: _sp, ...rest }) => rest),
+    steps: sameplan.map(({ staffing_plan: _sp, ...rest }) => rest),
     planId: first.plan_id,
     affaireId: sp.affaire_id,
   };
@@ -365,7 +375,7 @@ export const assignManualToObjet = createServerFn({ method: "POST" })
     for (const r of (cumulRows ?? []) as unknown as CRow[]) {
       const sps = r.staffing_plan_step;
       const sp = Array.isArray(sps.staffing_plan) ? sps.staffing_plan[0] : sps.staffing_plan;
-      if (sp?.status !== "published") continue;
+      if (sp?.status !== "published" && sp?.status !== "draft") continue;
       cumulByDate[r.date] = (cumulByDate[r.date] ?? 0) + (r.presence_pct ?? 0);
     }
 

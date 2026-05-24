@@ -75,7 +75,7 @@ export function ObjetEquipeSection({ objetId }: Props) {
     mutationFn: () => autoStaffFn({ data: { objetId } }),
     onSuccess: (res) => {
       if (res.status === "no_plan") {
-        toast.error("Aucun plan publié sur cet objet.");
+        toast.error("Aucun plan staffing — créez un plan brouillon ou publié.");
         return;
       }
       if (res.status === "all_full") {
@@ -90,12 +90,14 @@ export function ObjetEquipeSection({ objetId }: Props) {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const hasPublishedPlan = data?.plan_status === "published";
-  const mutationsEnabled = Boolean(canManage && hasPublishedPlan);
+  const hasMutablePlan =
+    data?.plan_status === "published" || data?.plan_status === "draft";
+  const isDraft = data?.plan_status === "draft";
+  const mutationsEnabled = Boolean(canManage && hasMutablePlan);
   const disabledReason = !canManage
     ? "Capability `objet.team.manage` requise"
-    : !hasPublishedPlan
-      ? "Nécessite un plan publié"
+    : !hasMutablePlan
+      ? "Aucun plan staffing — créez un plan brouillon ou publié"
       : "";
 
   return (
@@ -153,6 +155,15 @@ export function ObjetEquipeSection({ objetId }: Props) {
         )}
       </CardHeader>
       <CardContent className="space-y-3">
+        {isDraft && canManage && (
+          <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-200">
+            <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+            <span>
+              Plan brouillon — les assignations manuelles sont conservées même si
+              le plan est republié (protégées contre PRESENCE_MISMATCH).
+            </span>
+          </div>
+        )}
         {isLoading && (
           <>
             <Skeleton className="h-12 w-full" />
