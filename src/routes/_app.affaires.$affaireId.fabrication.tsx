@@ -564,3 +564,64 @@ function FabricationPage() {
     </div>
   );
 }
+
+function InlineNomEdit({
+  objetId,
+  initialNom,
+  canEdit,
+  onSaved,
+}: {
+  objetId: string;
+  initialNom: string;
+  canEdit: boolean;
+  onSaved: () => void;
+}) {
+  const [value, setValue] = useState(initialNom);
+  const [saving, setSaving] = useState(false);
+  useEffect(() => {
+    setValue(initialNom);
+  }, [initialNom]);
+
+  if (!canEdit) {
+    return <span>{initialNom}</span>;
+  }
+
+  const commit = async () => {
+    const trimmed = value.trim();
+    if (!trimmed || trimmed === initialNom) {
+      setValue(initialNom);
+      return;
+    }
+    setSaving(true);
+    const { error } = await supabase
+      .from("fabrication_objets")
+      .update({ nom: trimmed })
+      .eq("id", objetId);
+    setSaving(false);
+    if (error) {
+      toast.error("Modification impossible", { description: error.message });
+      setValue(initialNom);
+      return;
+    }
+    toast.success("Nom mis à jour");
+    onSaved();
+  };
+
+  return (
+    <Input
+      value={value}
+      onChange={(e) => setValue(e.target.value)}
+      onBlur={commit}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          e.currentTarget.blur();
+        } else if (e.key === "Escape") {
+          setValue(initialNom);
+          e.currentTarget.blur();
+        }
+      }}
+      disabled={saving}
+      className="h-7 border-transparent bg-transparent px-1 text-sm font-medium shadow-none hover:border-input focus-visible:border-input"
+    />
+  );
+}
