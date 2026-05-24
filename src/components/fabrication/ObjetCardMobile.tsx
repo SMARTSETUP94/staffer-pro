@@ -51,7 +51,7 @@ export function ObjetCardMobile({
   isAdminOrChef,
   onEditObjet,
   onEditEtape,
-  ficheHref = null,
+  affaireIdForFiche = null,
 }: ObjetCardMobileProps) {
   const avancement = calcAvancementObjet(objet);
   return (
