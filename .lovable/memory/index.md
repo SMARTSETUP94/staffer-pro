@@ -128,18 +128,24 @@ Vocabulaire métier v0.48.x (Lot 7.1 bis) : libellés UI passent par `useVocab()
 ### Livré v0.48 (Planning par pôle + Refonte navigation)
 64. ✅ **v0.48** (14-16 mai 2026) — (a) Onglet "Par pôle" : matrice métiers × jours, badge nb personnes, hover popover vignettes, badge `PRÉV` pour 9XXX, RPC `staffing_par_pole_jours`, teinte ambrée 9XXX sur Par chantier existant. (b) Refonte navigation : 3 onglets sortis du planning vers routes natives (`/logistique/vehicules-planning`, `/affaires/budget-planning`, `/export/feuille-de-route`). Planning recentré à 5 onglets staffing. Redirects SPA depuis anciens `?tab=`. Sidebar mise à jour.
 
+### Livré Bloc 8 — Fiche Objet enrichie (mai 2026)
+65. ✅ **8.1** (23 mai 2026) — Fondations data : vue matérialisée `v_objet_heures_consolidees` (réel uniquement) + 4 capabilities (`objet.view/edit/team.manage/photo.upload`) + flag `fiche_objet_v1` + SF `getObjetTeam` / `assignPersonneToObjetStep`. Helpers testables (15 tests Vitest).
+66. ✅ **8.2** (23 mai 2026) — Route `/affaires/$id/objets/$objetId` + page `FicheObjetPage` + `ObjetIdentiteSection` (read/edit) + `ObjetHeuresTable` (Prévu/Planifié/Réel/Écart). Lien temporaire depuis `/affaires/$id/fabrication` (desktop + mobile) gated par flag+cap.
+67. ✅ **8.2c** (24 mai 2026) — 5 corrections polish : heures dé-dupliquées (retrait bloc devis de l'identité), algo écart corrigé (10 cas testés), 5 nouveaux champs DB (dimensions + matériaux + finition), matrice permissions étendue, bouton "Fiche" plus visible.
+68. ✅ **8.3b** (24 mai 2026) — Mutations équipe : `AddPersonneDialog` + `RemovePersonneDialog` + SF `autoStaffObjet`/`addPersonneToObjet`/`removePersonneFromObjet`. **HOTFIX** : mutations autorisées sur `plan_status IN ('draft','published')` (bloquées seulement sur `no_plan`). Mini-warning amber sur draft. 2 dettes tracées (rename SF + specs E2E).
+69. ✅ **8.4 DB** (24 mai 2026) — Journal & Photos : table `objet_journal_events` (13 types d'événements) + `objet_commentaires` (CRD, pas d'édition) + `fabrication_objets_photos` enrichie (`affaire_id`, `etape_id`, `thumb_path`, dimensions) + 6 triggers auto-log (étapes, identité, commentaires, photos, staffing, plan republication) + backfill `journal_started`. Cap `objet.photo.delete` admin uniquement.
+
 ### Roadmap — À venir
-65. ⏳ **v0.45 RLS hardening DB (suite)** — pgTAP CI sur `mes_affaires_chef` + policies DB scopées heures/assignations/docs/photos + E2E isolement chef scopé. UI `ScopedAccessBanner` reste en attente depuis v0.44.3. **PROCHAIN SPRINT**.
-66. ⏳ **v0.36** — Sprint dette résiduelle : page admin véhicules + audit findings.
-67. ⏳ **v0.37** — Polish UX transversal post-feedback terrain.
-68. ⏳ **Sprint 3c** — E2E full role-based (employé desktop + mobile).
-69. ⏳ **v0.39.3** — Migration RPC #1/2/3/5 (bulk-assign-objet, chef-saisit-pour-employe, bulk-saisie, bulk-staffer).
-70. ⏳ **Sprint 3b** — Logistique avancée : autorisations véhicules #56 + sous-traitants + historique + stats.
-71. ⏳ **v0.20.1** — Quick wins : pré-remplissage trajet sous-traité + cache `useObjetsAffaireLight` + notification CA prêt à livrer.
-72. ⏳ **v0.21.1** — Garde RBAC UI `/saisie-pour-equipe` + durcissement RLS + UNIQUE INDEX chef_jour + tests SQL.
+70. ⏳ **8.4 UI** (~8h) — Server functions (signed URLs, upload, aggregation journal) + composant `ObjetJournalPhotos` (onglet Journal : timeline filtrable + commentaires + upload WebP compressé + galerie par étape + lazy IntersectionObserver).
+71. ⏳ **8.5** (~4h) — Liens croisés : remplacer lien temporaire 8.2b par navigation intégrée native (Gantt → fiche objet, Planning → fiche objet, Devis ligne → fiche objet, Kanban étape → fiche objet). Choix drawer vs nav à trancher.
+72. ⏳ **8.6** (~8h) — Polish + responsive 380px + E2E 8.3b (13 scénarios) + E2E 8.4 + 3 dettes (rename SF `loadActiveStepsForObjet`, Sheet vs Dialog AddPersonne, édition commentaire).
+
+### Backlog (non planifié)
 73. ⏸️ **v0.40 Phase 2** — Horaires précis SILAE (heure_debut/fin/pauses + nuit/sup/35h auto) — SUSPENDU.
-74. ⏸️ **v0.41 (BACKLOG)** — Claude API auto-staffing UNIQUEMENT 5XXX (proxy + skill + tools + fallback v0.35 + cache + cap + télémétrie). Tier CDI/CDD avant intérim. Utilisera `affaire_equipe_historique` comme feature store contextuel.
-75. ⏸️ **v0.47 (BACKLOG)** — Centre Analyse Heures (Option B) : onglet consolidé heures + 8 filtres + exports.
+74. ⏸️ **v0.41** — Claude API auto-staffing UNIQUEMENT 5XXX (proxy + skill + tools + fallback v0.35 + cache + cap + télémétrie). Tier CDI/CDD avant intérim. Utilisera `affaire_equipe_historique` comme feature store contextuel.
+75. ⏸️ **Centre Analyse Heures** — Onglet consolidé heures + 8 filtres + exports (`v0.47` BACKLOG).
+76. ⏸️ **Logistique avancée** — Autorisations véhicules #56 + sous-traitants + historique + stats (`Sprint 3b` BACKLOG).
+77. ⏸️ **Sprint dette résiduelle v0.36** — Page admin véhicules + audit findings (BACKLOG).
 
 Voir roadmap consolidée détaillée : mem://roadmap/consolidee-2mai2026.
 
