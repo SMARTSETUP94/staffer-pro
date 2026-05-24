@@ -25,6 +25,8 @@ import { toast } from "sonner";
 import { getObjetEquipe } from "@/server/objet-equipe.functions";
 import { autoStaffObjet } from "@/server/objet-equipe-mutations.functions";
 import { useCapability } from "@/hooks/use-capability";
+import { useFeatureFlag } from "@/hooks/use-feature-flag";
+import { supabase } from "@/integrations/supabase/client";
 import { AddPersonneDialog } from "./AddPersonneDialog";
 import { RemovePersonneDialog } from "./RemovePersonneDialog";
 
@@ -323,7 +325,71 @@ export function ObjetEquipeSection({ objetId }: Props) {
           employeLabel={removeDialog.employeLabel}
         />
       )}
+      <ObjetEquipeN3Section objetId={objetId} />
     </Card>
+  );
+}
+
+/**
+ * Sprint B / B5 — Sous-section lecture `fabrication_objet_equipe` (N3).
+ *
+ * Gating : feature flag `equipes_3_niveaux_lecture`. Si OFF → ne rend rien
+ * (l'utilisateur ne voit que l'ancienne section dérivée de staffing_plan_assignment).
+ * Si ON → affiche la liste des membres N3 persistés (refacto Sprint B).
+ *
+ * Coexistence : le bloc historique au-dessus reste actif (lecture
+ * staffing_plan_assignment via getObjetEquipe). Cette section est additive
+ * pendant la phase de test interne — bascule sèche prévue Sprint C.
+ */
+function ObjetEquipeN3Section({ objetId }: { objetId: string }) {
+  const flagOn = useFeatureFlag("equipes_3_niveaux_lecture");
+  const { data, isLoading } = useQuery({
+    queryKey: ["objet-equipe-n3", objetId],
+    enabled: flagOn,
+    staleTime: 30_000,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("fabrication_objet_equipe")
+        .select("id, employe_id, notes, added_at, employes!inner(nom, prenom)")
+        .eq("objet_id", objetId)
+        .is("removed_at", null)
+        .order("added_at", { ascending: true });
+      if (error) throw new Error(error.message);
+      return data ?? [];
+    },
+  });
+
+  if (!flagOn) return null;
+
+  return (
+    <CardContent className="border-t border-border pt-3">
+      <div className="mb-2 flex items-center gap-2">
+        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary">
+          N3 · Équipe objet
+        </span>
+        <span className="text-[11px] text-muted-foreground">
+          Lecture du nouveau modèle <code className="font-mono">fabrication_objet_equipe</code>
+        </span>
+      </div>
+      {isLoading && <Skeleton className="h-10 w-full" />}
+      {!isLoading && (data?.length ?? 0) === 0 && (
+        <p className="text-xs italic text-muted-foreground">
+          Aucun membre persisté à ce jour (sera alimenté à la prochaine publication de plan).
+        </p>
+      )}
+      {!isLoading && data && data.length > 0 && (
+        <div className="flex flex-wrap gap-1.5" data-testid="objet-equipe-n3-list">
+          {data.map((m) => {
+            const emp = (m as { employes: { nom: string; prenom: string } | null }).employes;
+            return (
+              <Badge key={m.id} variant="outline" className="font-normal">
+                {emp?.prenom} {emp?.nom?.charAt(0)}.
+              </Badge>
+            );
+          })}
+        </div>
+      )}
+    </CardContent>
   );
 }
 

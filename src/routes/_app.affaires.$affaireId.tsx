@@ -14,6 +14,7 @@ import { PageBreadcrumbs } from "@/components/PageBreadcrumbs";
 import { AffaireKpiBar } from "@/components/affaire/AffaireKpiBar";
 import { CapabilityGuard } from "@/components/auth/CapabilityGuard";
 import { useCapability } from "@/hooks/use-capability";
+import { useFeatureFlag } from "@/hooks/use-feature-flag";
 
 
 interface AffaireDetail {
@@ -44,6 +45,7 @@ function AffaireDetailLayout() {
   const [confirmAction, setConfirmAction] = useState<"close" | "reopen" | null>(null);
   const [savingStatut, setSavingStatut] = useState(false);
   const canSeeEquipe = useCapability("affaire.equipe.view");
+  const castingFlagOn = useFeatureFlag("equipes_3_niveaux_lecture");
 
 
   const fetchAffaire = async (id: string, signal?: { cancelled: boolean }) => {
@@ -116,6 +118,9 @@ function AffaireDetailLayout() {
     { to: `/affaires/${affaire.id}/staffing`, label: "Staffing", match: path.endsWith("/staffing") },
     ...(canSeeEquipe
       ? [{ to: `/affaires/${affaire.id}/equipe`, label: "Équipe", match: path.endsWith("/equipe") }]
+      : []),
+    ...(castingFlagOn && canSeeEquipe
+      ? [{ to: `/affaires/${affaire.id}/casting`, label: "Casting", match: path.endsWith("/casting") }]
       : []),
     { to: `/affaires/${affaire.id}/documents`, label: "Documents", match: path.endsWith("/documents") },
     { to: `/affaires/${affaire.id}/journal`, label: "Journal", match: path.endsWith("/journal") },

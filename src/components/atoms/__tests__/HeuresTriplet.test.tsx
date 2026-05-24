@@ -79,3 +79,42 @@ describe("HeuresTriplet — variantes affichage", () => {
     expect(container.firstChild).toHaveClass("text-xs");
   });
 });
+
+describe("HeuresTriplet — Sprint A.5 modes enrichis", () => {
+  afterEach(cleanup);
+
+  it("mode=row (défaut) inline horizontal", () => {
+    const { container } = render(<HeuresTriplet prevues={10} staffees={8} realisees={5} />);
+    expect(container.firstChild).toHaveClass("inline-flex");
+  });
+
+  it("mode=compact affiche un seul chiffre principal (staffé)", () => {
+    const { container } = render(
+      <HeuresTriplet prevues={10} staffees={8} realisees={5} mode="compact" />,
+    );
+    expect(container.textContent).toContain("8");
+    expect(container.firstChild).toHaveClass("inline-flex");
+  });
+
+
+  it("mode=card affiche en bloc avec labels", () => {
+    const { container } = render(
+      <HeuresTriplet prevues={10} staffees={8} realisees={5} mode="card" />,
+    );
+    expect(container.firstChild).toHaveClass("grid");
+  });
+
+  it("unit=per_person (défaut) n'ajoute pas de suffixe tot.", () => {
+    render(<HeuresTriplet prevues={120} staffees={100} realisees={80} />);
+    expect(screen.queryByText(/tot\./)).toBeNull();
+  });
+
+  it("unit=total affiche suffixe tot.", () => {
+    render(
+      <HeuresTriplet prevues={12} staffees={10} realisees={8} unit="total" />,
+    );
+    expect(screen.getAllByText(/tot\./i).length).toBeGreaterThan(0);
+  });
+});
+
+
