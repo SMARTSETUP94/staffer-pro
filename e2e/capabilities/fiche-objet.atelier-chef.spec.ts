@@ -35,7 +35,14 @@ test.describe("fiche-objet :: atelier_chef (nom + respo + commentaire)", () => {
     await expect(page.locator("#fo-nom")).toBeEnabled();
     await expect(page.locator("#fo-comm")).toBeEnabled();
     await expect(page.locator("#fo-qte")).toBeDisabled();
-    // Heures prévues : tous les champs heures sont disabled pour atelier_chef.
-    await expect(page.locator("#fo-h-bois")).toBeDisabled();
+
+    // Lot 8.2c — finition_detail éditable pour atelier_chef,
+    // dimensions + matériaux read-only.
+    await expect(page.getByTestId("fo-finition-detail")).toBeEnabled();
+    await expect(page.getByTestId("fo-longueur")).toBeDisabled();
+    await expect(page.getByTestId("fo-largeur")).toBeDisabled();
+    await expect(page.getByTestId("fo-hauteur")).toBeDisabled();
+    await expect(page.getByTestId("fo-materiaux")).toBeDisabled();
   });
 });
+
