@@ -320,22 +320,64 @@ function FabricationPage() {
         </div>
       ) : (
         <>
-          {/* Vue cards mobile (<lg) — Bloc 4 v0.20 */}
-          <div className="space-y-3 lg:hidden">
-            {objets.map((o) => (
-              <ObjetCardMobile
-                key={o.id}
-                objet={o}
-                isAdminOrChef={isAdminOrChef}
-                affaireIdForFiche={showFicheLink ? affaireId : null}
-                onEditObjet={(obj) => setEditObjet(obj)}
-                onEditEtape={(obj, etape) => setEditEtape({ objet: obj, etape })}
-              />
-            ))}
+          {/* Barre de bascule vue + filtre statut */}
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="inline-flex rounded-xl border border-border bg-card p-0.5 text-xs">
+              <button
+                type="button"
+                onClick={() => setViewMode("tableur")}
+                className={`px-3 py-1.5 rounded-lg transition-colors ${viewMode === "tableur" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                Tableur
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode("cards")}
+                className={`px-3 py-1.5 rounded-lg transition-colors ${viewMode === "cards" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                Cards
+              </button>
+            </div>
+            {viewMode === "tableur" && (
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">Filtre statut</span>
+                <Select value={statutFilter} onValueChange={(v) => setStatutFilter(v as typeof statutFilter)}>
+                  <SelectTrigger className="h-8 w-[160px] text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tous les objets</SelectItem>
+                    <SelectItem value="en_cours">Au moins 1 en cours</SelectItem>
+                    <SelectItem value="a_faire">Au moins 1 à faire</SelectItem>
+                    <SelectItem value="termine">Au moins 1 terminé</SelectItem>
+                  </SelectContent>
+                </Select>
+                <span className="text-xs text-muted-foreground tabular-nums">
+                  {filteredObjets.length}/{objets.length}
+                </span>
+              </div>
+            )}
           </div>
 
-          {/* Vue tableau desktop (>=lg) */}
-          <div className="hidden rounded-xl border border-border bg-card overflow-hidden lg:block">
+          {/* Vue cards — Bloc 4 v0.20 */}
+          {viewMode === "cards" && (
+            <div className="space-y-3">
+              {objets.map((o) => (
+                <ObjetCardMobile
+                  key={o.id}
+                  objet={o}
+                  isAdminOrChef={isAdminOrChef}
+                  affaireIdForFiche={showFicheLink ? affaireId : null}
+                  onEditObjet={(obj) => setEditObjet(obj)}
+                  onEditEtape={(obj, etape) => setEditEtape({ objet: obj, etape })}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* Vue tableur dense (matrice objets × étapes) */}
+          {viewMode === "tableur" && (
+          <div className="rounded-xl border border-border bg-card overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
