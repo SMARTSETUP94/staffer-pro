@@ -1,8 +1,161 @@
-// v0.35.5 / Sprint 5 — Publication plan staffing + snapshots + restore + history
+// v0.35.5 → Sprint B (refonte staffing) — Publication plan + sync équipes 3 niveaux
+//
+// Sprint B C1 : extraction `syncEquipesFromPlan` interne, appelée par :
+//   - publishStaffingPlan (status='published' AVANT)
+//   - backfillEquipesFromExistingPlans (B9, sans toucher au statut)
+//
+// Objectifs sync :
+//   - UPSERT affaire_equipe  (N2) : 1 ligne par (affaire_id, employe_id, phase)
+//   - UPSERT fabrication_objet_equipe (N3) : 1 ligne par (objet_id, employe_id)
+//   - UPDATE assignations.phase depuis steps.phase (propagation)
+//
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { addDays } from "@/lib/staffing/date-utils";
+
+/* ------------------------------------------------------------------ */
+/* Phases acceptées par affaire_equipe.phase (CHECK constraint)        */
+/* ------------------------------------------------------------------ */
+const VALID_AFFAIRE_PHASES = new Set([
+  "commercial_etude",
+  "fabrication",
+  "montage",
+  "demontage",
+]);
+
+function normalizePhase(raw: string | null | undefined): string {
+  if (raw && VALID_AFFAIRE_PHASES.has(raw)) return raw;
+  return "fabrication"; // défaut sain pour plans staffing fabrication
+}
+
+/* ------------------------------------------------------------------ */
+/* syncEquipesFromPlan (interne)                                       */
+/*                                                                     */
+/* Pure idempotent — peut être appelée sur draft OU published.         */
+/* Ne touche JAMAIS staffing_plan.status.                              */
+/* ------------------------------------------------------------------ */
+export async function syncEquipesFromPlan(
+  supabase: ReturnType<typeof createSupabaseClientType>,
+  planId: string,
+  userId: string | null,
+): Promise<{ n2_upserts: number; n3_upserts: number; phase_updates: number }> {
+  // 1. Charger plan + steps + assignments
+  const { data: plan } = await supabase
+    .from("staffing_plan")
+    .select("id, affaire_id")
+    .eq("id", planId)
+    .single();
+  if (!plan) return { n2_upserts: 0, n3_upserts: 0, phase_updates: 0 };
+
+  const { data: steps } = await supabase
+    .from("staffing_plan_step")
+    .select("id, phase, objet_id, metier_id")
+    .eq("plan_id", planId);
+  const stepsArr = steps ?? [];
+  if (stepsArr.length === 0) {
+    return { n2_upserts: 0, n3_upserts: 0, phase_updates: 0 };
+  }
+
+  const stepIds = stepsArr.map((s) => s.id as string);
+  const { data: asg } = await supabase
+    .from("staffing_plan_assignment")
+    .select("step_id, employe_id")
+    .in("step_id", stepIds);
+  const asgArr = asg ?? [];
+
+  const stepById = new Map<string, (typeof stepsArr)[number]>();
+  for (const s of stepsArr) stepById.set(s.id as string, s);
+
+  // 2. Calculer set unique (affaire_id, employe_id, phase) pour N2
+  const n2Set = new Map<string, { affaire_id: string; employe_id: string; phase: string }>();
+  // Et set unique (objet_id, employe_id) pour N3
+  const n3Set = new Map<string, { objet_id: string; employe_id: string }>();
+
+  for (const a of asgArr) {
+    const step = stepById.get(a.step_id as string);
+    if (!step) continue;
+    const phase = normalizePhase(step.phase as string | null);
+    const employeId = a.employe_id as string;
+
+    const n2Key = `${plan.affaire_id}|${employeId}|${phase}`;
+    if (!n2Set.has(n2Key)) {
+      n2Set.set(n2Key, { affaire_id: plan.affaire_id as string, employe_id: employeId, phase });
+    }
+    if (step.objet_id) {
+      const n3Key = `${step.objet_id as string}|${employeId}`;
+      if (!n3Set.has(n3Key)) {
+        n3Set.set(n3Key, { objet_id: step.objet_id as string, employe_id: employeId });
+      }
+    }
+  }
+
+  // 3. UPSERT N2 affaire_equipe (note : trigger enforce_objet_equipe_strict
+  //    n'agit que sur fabrication_objet_equipe → N2 sans bypass nécessaire)
+  let n2_upserts = 0;
+  if (n2Set.size > 0) {
+    const rowsN2 = Array.from(n2Set.values()).map((r) => ({
+      affaire_id: r.affaire_id,
+      employe_id: r.employe_id,
+      phase: r.phase,
+      added_by: userId,
+      removed_at: null,
+      removed_by: null,
+    }));
+    const { error: errN2 } = await supabase
+      .from("affaire_equipe")
+      .upsert(rowsN2 as never, { onConflict: "affaire_id,employe_id,phase" });
+    if (errN2) throw new Error(`syncEquipes N2: ${errN2.message}`);
+    n2_upserts = rowsN2.length;
+  }
+
+  // 4. UPSERT N3 fabrication_objet_equipe
+  //    Bypass temporaire du trigger enforce_objet_equipe_strict via session GUC
+  //    (cf. mem://debts/bypass-objet-equipe-strict-temp)
+  let n3_upserts = 0;
+  if (n3Set.size > 0) {
+    await supabase.rpc("set_config_local", {
+      _name: "app.bypass_objet_equipe_strict",
+      _value: "on",
+    } as never);
+
+    const rowsN3 = Array.from(n3Set.values()).map((r) => ({
+      objet_id: r.objet_id,
+      employe_id: r.employe_id,
+      added_by: userId,
+      removed_at: null,
+      removed_by: null,
+    }));
+    const { error: errN3 } = await supabase
+      .from("fabrication_objet_equipe")
+      .upsert(rowsN3 as never, { onConflict: "objet_id,employe_id" });
+    if (errN3) throw new Error(`syncEquipes N3: ${errN3.message}`);
+    n3_upserts = rowsN3.length;
+  }
+
+  // 5. Propager phase steps → assignations
+  //    Pour chaque step ayant une phase valide, UPDATE assignations.phase
+  let phase_updates = 0;
+  for (const step of stepsArr) {
+    const ph = step.phase as string | null;
+    if (!ph) continue;
+    const { count } = await supabase
+      .from("assignations")
+      .update({ phase: ph }, { count: "exact" })
+      .eq("staffing_plan_id", planId)
+      .eq("metier_id", step.metier_id as number)
+      .is("phase", null);
+    phase_updates += count ?? 0;
+  }
+
+  return { n2_upserts, n3_upserts, phase_updates };
+}
+
+// Helper type uniquement pour le typage du paramètre supabase ci-dessus
+// (évite la dépendance directe au type généré qui change souvent).
+function createSupabaseClientType(): never {
+  throw new Error("type-only");
+}
 
 /* ------------------------------------------------------------------ */
 /* publishStaffingPlan                                                 */
@@ -73,16 +226,11 @@ export const publishStaffingPlan = createServerFn({ method: "POST" })
       .neq("id", planId);
     if (oldPublished && oldPublished.length > 0) {
       const oldIds = oldPublished.map((p) => p.id as string);
-      // Archive : status=archived + parent_plan_id chainage
       await supabase
         .from("staffing_plan")
         .update({ status: "archived", parent_plan_id: planId })
         .in("id", oldIds);
-      // Cleanup créneaux Planning issus de l'ancien plan
-      await supabase
-        .from("assignations")
-        .delete()
-        .in("staffing_plan_id", oldIds);
+      await supabase.from("assignations").delete().in("staffing_plan_id", oldIds);
     }
 
     /* 4. Passer ce plan en published */
@@ -96,14 +244,7 @@ export const publishStaffingPlan = createServerFn({ method: "POST" })
       .eq("id", planId);
     if (upErr) throw new Error(upErr.message);
 
-    /* 5. machine_reservation : déjà gérées par calculate (cnc_principale).
-       On s'assure d'avoir bien (re)posé les Num du plan */
-    // (handled by calculate; rien à faire de plus ici)
-
-    /* 6. Propagation vers Planning principal — assignations
-       Pour chaque assignment (step × employe × date), créer une assignations row
-       avec staffing_plan_id, type_operation='auto_staffing', metier_id, heures.
-       Les anciennes du même plan_id sont supprimées d'abord pour idempotence. */
+    /* 6. Propagation vers Planning principal — assignations */
     await supabase.from("assignations").delete().eq("staffing_plan_id", planId);
 
     if (assignments.length > 0 && steps && steps.length > 0) {
@@ -127,6 +268,7 @@ export const publishStaffingPlan = createServerFn({ method: "POST" })
             heures,
             type_operation: "auto_staffing",
             staffing_plan_id: planId,
+            phase: (step.phase as string | null) ?? null,
             created_by: userId,
             statut_confirmation: "non_requise" as const,
           };
@@ -138,6 +280,9 @@ export const publishStaffingPlan = createServerFn({ method: "POST" })
         if (assErr) throw new Error(`Propagation assignations : ${assErr.message}`);
       }
     }
+
+    /* 6.bis SPRINT B — Sync équipes 3 niveaux (N2 affaire_equipe + N3 objet_equipe) */
+    const equipesResult = await syncEquipesFromPlan(supabase, planId, userId);
 
     /* 7. Notifications aux employés affectés */
     const employeIds = Array.from(new Set(assignments.map((a) => a.employe_id)));
@@ -177,11 +322,128 @@ export const publishStaffingPlan = createServerFn({ method: "POST" })
       }
     }
 
+    /* 8. Audit enrichi (Sprint B) */
+    await supabase.from("staffing_audit").insert({
+      action: "publish_plan",
+      affaire_id: plan.affaire_id,
+      plan_id: planId,
+      user_id: userId,
+      payload: {
+        assignments: assignments.length,
+        equipes_generated: {
+          n2: equipesResult.n2_upserts,
+          n3: equipesResult.n3_upserts,
+        },
+        phase_updates: equipesResult.phase_updates,
+      },
+    } as never);
+
     return {
       ok: true,
       published_assignments: assignments.length,
       notified_users: employeIds.length,
       affected_days: new Set(assignments.map((a) => a.date)).size,
+      equipes_n2: equipesResult.n2_upserts,
+      equipes_n3: equipesResult.n3_upserts,
+      phase_updates: equipesResult.phase_updates,
+    };
+  });
+
+/* ------------------------------------------------------------------ */
+/* backfillEquipesFromExistingPlans (Sprint B — B9)                    */
+/*                                                                     */
+/* Re-synchronise les équipes 3 niveaux depuis les plans existants     */
+/* SANS modifier leur statut. Idempotent.                              */
+/*                                                                     */
+/* Admin uniquement (filtré côté serveur).                             */
+/* ------------------------------------------------------------------ */
+export const backfillEquipesFromExistingPlans = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { statusFilter?: "draft" | "published" | "all" }) =>
+    z.object({ statusFilter: z.enum(["draft", "published", "all"]).optional() }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+
+    // Garde-fou rôle admin
+    const { data: roles } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId as string);
+    const isAdmin = (roles ?? []).some((r) => (r.role as string) === "admin");
+    if (!isAdmin) throw new Error("Accès admin requis pour backfill équipes");
+
+    const filter = data.statusFilter ?? "draft";
+
+    // Snapshot statuts AVANT (garde-fou C1)
+    let q = supabase.from("staffing_plan").select("id, status, affaire_id");
+    if (filter !== "all") q = q.eq("status", filter);
+    const { data: plans, error } = await q;
+    if (error) throw new Error(error.message);
+
+    const statusBefore = new Map<string, string>();
+    for (const p of plans ?? []) {
+      statusBefore.set(p.id as string, p.status as string);
+    }
+
+    const results: Array<{
+      plan_id: string;
+      affaire_id: string;
+      n2: number;
+      n3: number;
+      phase_updates: number;
+    }> = [];
+
+    for (const p of plans ?? []) {
+      try {
+        const r = await syncEquipesFromPlan(supabase, p.id as string, userId);
+        results.push({
+          plan_id: p.id as string,
+          affaire_id: p.affaire_id as string,
+          n2: r.n2_upserts,
+          n3: r.n3_upserts,
+          phase_updates: r.phase_updates,
+        });
+      } catch (err) {
+        results.push({
+          plan_id: p.id as string,
+          affaire_id: p.affaire_id as string,
+          n2: -1,
+          n3: -1,
+          phase_updates: -1,
+        });
+        console.error(`backfill plan ${p.id} error`, err);
+      }
+    }
+
+    // Vérification statuts APRÈS (garde-fou C1)
+    const { data: plansAfter } = await supabase
+      .from("staffing_plan")
+      .select("id, status")
+      .in("id", Array.from(statusBefore.keys()));
+    const statusDrift: Array<{ plan_id: string; before: string; after: string }> = [];
+    for (const p of plansAfter ?? []) {
+      const before = statusBefore.get(p.id as string);
+      const after = p.status as string;
+      if (before && before !== after) {
+        statusDrift.push({ plan_id: p.id as string, before, after });
+      }
+    }
+    if (statusDrift.length > 0) {
+      throw new Error(
+        `INVARIANT BROKEN — statuts modifiés involontairement : ${JSON.stringify(statusDrift)}`,
+      );
+    }
+
+    return {
+      ok: true,
+      plans_processed: results.length,
+      status_preserved: true,
+      total_n2: results.reduce((s, r) => s + Math.max(0, r.n2), 0),
+      total_n3: results.reduce((s, r) => s + Math.max(0, r.n3), 0),
+      total_phase_updates: results.reduce((s, r) => s + Math.max(0, r.phase_updates), 0),
+      errors: results.filter((r) => r.n2 === -1).length,
+      details: results,
     };
   });
 
@@ -263,7 +525,6 @@ export const restorePlanSnapshot = createServerFn({ method: "POST" })
       assignments?: Array<Record<string, unknown>>;
     };
 
-    /* Snapshot pré-restore */
     const { data: curSteps } = await supabase
       .from("staffing_plan_step")
       .select("*")
@@ -291,7 +552,6 @@ export const restorePlanSnapshot = createServerFn({ method: "POST" })
       } as never,
     } as never);
 
-    /* DELETE actuel + RESTORE depuis snapshot */
     if (curStepIds.length > 0) {
       await supabase
         .from("staffing_plan_assignment")
@@ -300,7 +560,6 @@ export const restorePlanSnapshot = createServerFn({ method: "POST" })
     }
     await supabase.from("staffing_plan_step").delete().eq("plan_id", data.planId);
 
-    /* Réinsérer steps avec NEW ids et garder un mapping old->new pour assignments */
     const stepIdMap = new Map<string, string>();
     if (Array.isArray(sd.steps) && sd.steps.length > 0) {
       const stepsRows = sd.steps.map((s) => {
@@ -310,7 +569,6 @@ export const restorePlanSnapshot = createServerFn({ method: "POST" })
           objet_id: s.objet_id,
           start_date: s.start_date,
           span_days: s.span_days,
-          // v0.38.1 — préserver granularité demi-journée si présente dans snapshot
           span_demi_jours: s.span_demi_jours ?? (typeof s.span_days === "number" ? s.span_days * 2 : null),
           start_half_day: s.start_half_day ?? "AM",
           phase: s.phase ?? null,
@@ -327,7 +585,6 @@ export const restorePlanSnapshot = createServerFn({ method: "POST" })
         .insert(stepsRows as never)
         .select("id, metier_id, objet_id, start_date");
       if (insErr) throw new Error(insErr.message);
-      // Map (metier_id|objet_id|start_date) -> new id
       const newKey = new Map<string, string>();
       for (const r of insSteps ?? []) {
         newKey.set(
@@ -342,7 +599,6 @@ export const restorePlanSnapshot = createServerFn({ method: "POST" })
       }
     }
 
-    /* Réinsérer assignments */
     if (Array.isArray(sd.assignments) && sd.assignments.length > 0) {
       const asgRows = sd.assignments
         .map((a) => {
@@ -361,10 +617,7 @@ export const restorePlanSnapshot = createServerFn({ method: "POST" })
       }
     }
 
-    /* Plan_object : on laisse en place (la structure objets ne change pas via UI) */
-
     return { ok: true };
   });
 
-// keep addDays used elsewhere — silence unused warning
 void addDays;
