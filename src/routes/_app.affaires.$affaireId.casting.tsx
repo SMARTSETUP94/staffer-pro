@@ -16,10 +16,12 @@
  * Mobile : sections empilées, cartes en grid-cols-1 sous 640px.
  */
 import { createFileRoute } from "@tanstack/react-router";
-import { Loader2, UserCircle2, Users, Info } from "lucide-react";
+import { Loader2, UserCircle2, Users, Info, Plus, X } from "lucide-react";
 import { useCastingChantier } from "@/hooks/use-casting-chantier";
 import { PhaseBadge, type AffairePhase } from "@/components/atoms/PhaseBadge";
 import { useFeatureFlag } from "@/hooks/use-feature-flag";
+import { useCapability } from "@/hooks/use-capability";
+import { Button } from "@/components/ui/button";
 import {
   Tooltip,
   TooltipContent,
@@ -28,6 +30,9 @@ import {
 } from "@/components/ui/tooltip";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
+import { AddCastingMemberSheet } from "@/components/casting/AddCastingMemberSheet";
+import { RemoveCastingMemberDialog } from "@/components/casting/RemoveCastingMemberDialog";
+import type { CastingPhase } from "@/server/casting-chantier.functions";
 
 export const Route = createFileRoute("/_app/affaires/$affaireId/casting")({
   head: () => ({ meta: [{ title: "Casting du chantier — Setup Paris" }] }),
