@@ -396,9 +396,7 @@ function FabricationPage() {
               <TableBody>
                 {filteredObjets.map((o) => (
                   <TableRow key={o.id} data-objet-id={o.id}>
-                    <TableCell className="font-mono text-xs">
-                      {o.reference}
-                    </TableCell>
+
 
                     <TableCell className="font-medium">
                       <InlineNomEdit
