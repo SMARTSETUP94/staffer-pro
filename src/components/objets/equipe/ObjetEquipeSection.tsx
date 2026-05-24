@@ -1,0 +1,205 @@
+/**
+ * Lot 8.3a — Zone Équipe (lecture).
+ * Affiche une ligne par métier requis avec :
+ *   - KPI pers staffées / requises + heures staffées / devis
+ *   - Chips des employés assignés (présence cumulée sur la fenêtre)
+ *   - Boutons d'action (+ Personne, Auto-remplir, Retirer) en placeholder
+ *     pour le Lot 8.3b ; visibles seulement si cap `objet.team.manage`.
+ */
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Plus, Wand2, AlertTriangle, Check, Info } from "lucide-react";
+import { getObjetEquipe } from "@/server/objet-equipe.functions";
+import { useCapability } from "@/hooks/use-capability";
+
+interface Props {
+  objetId: string;
+}
+
+export function ObjetEquipeSection({ objetId }: Props) {
+  const fetchEquipe = useServerFn(getObjetEquipe);
+  const canManage = useCapability("objet.team.manage");
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["objet-equipe", objetId],
+    queryFn: () => fetchEquipe({ data: { objetId } }),
+    staleTime: 30_000,
+  });
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between gap-2 pb-3">
+        <div className="min-w-0">
+          <CardTitle className="text-base">Équipe affectée</CardTitle>
+          {data && (
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              {data.plan_status === "published" && data.window && (
+                <>
+                  Plan publié · fenêtre {fmtDate(data.window.start)} →{" "}
+                  {fmtDate(data.window.end)}
+                </>
+              )}
+              {data.plan_status === "draft" && data.window && (
+                <>
+                  Plan brouillon · fenêtre {fmtDate(data.window.start)} →{" "}
+                  {fmtDate(data.window.end)}
+                </>
+              )}
+              {data.plan_status === "no_plan" && (
+                <>Aucun plan publié — équipe dérivée du devis</>
+              )}
+            </p>
+          )}
+        </div>
+        {canManage && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled
+                    className="gap-1.5"
+                    data-testid="objet-equipe-autostaff"
+                  >
+                    <Wand2 className="h-3.5 w-3.5" />
+                    Auto-remplir
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>Bientôt disponible (Lot 8.3b)</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {isLoading && (
+          <>
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-12 w-full" />
+          </>
+        )}
+        {!isLoading && data && data.metiers.length === 0 && (
+          <p className="py-6 text-center text-sm text-muted-foreground">
+            Aucun métier requis pour cet objet.
+          </p>
+        )}
+        {!isLoading &&
+          data?.metiers.map((row) => {
+            const personsAssigned = row.assignations.length;
+            const heuresPct =
+              row.heures_devis > 0
+                ? Math.round((row.heures_staffees / row.heures_devis) * 100)
+                : 0;
+            let statusBadge: { icon: typeof Check; tone: string; label: string };
+            if (row.pers_requis === 0) {
+              statusBadge = { icon: Info, tone: "text-muted-foreground", label: "—" };
+            } else if (personsAssigned === 0) {
+              statusBadge = {
+                icon: AlertTriangle,
+                tone: "text-amber-600",
+                label: `${row.pers_requis} manque${row.pers_requis > 1 ? "s" : ""}`,
+              };
+            } else if (personsAssigned < row.pers_requis) {
+              statusBadge = {
+                icon: AlertTriangle,
+                tone: "text-amber-600",
+                label: `${row.pers_requis - personsAssigned} manque${row.pers_requis - personsAssigned > 1 ? "s" : ""}`,
+              };
+            } else if (heuresPct > 115) {
+              statusBadge = { icon: Info, tone: "text-blue-600", label: "Sur-staffé" };
+            } else {
+              statusBadge = { icon: Check, tone: "text-emerald-600", label: "OK" };
+            }
+            const Icon = statusBadge.icon;
+
+            return (
+              <div
+                key={row.metier_id}
+                className="rounded-md border border-border bg-card/50 p-3"
+                data-testid={`equipe-metier-${row.metier_key}`}
+              >
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="font-medium">
+                      {row.metier_label}
+                    </Badge>
+                    <span className="text-xs text-muted-foreground">
+                      {personsAssigned}/{row.pers_requis || "—"} pers ·{" "}
+                      {fmtHeures(row.heures_staffees)}/{fmtHeures(row.heures_devis)} h
+                    </span>
+                  </div>
+                  <span className={`flex items-center gap-1 text-xs ${statusBadge.tone}`}>
+                    <Icon className="h-3.5 w-3.5" />
+                    {statusBadge.label}
+                  </span>
+                </div>
+
+                <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                  {row.assignations.length === 0 && (
+                    <span className="text-xs italic text-muted-foreground">
+                      Aucun assigné
+                    </span>
+                  )}
+                  {row.assignations.map((a) => (
+                    <Badge
+                      key={a.employe_id}
+                      variant="secondary"
+                      className="gap-1 font-normal"
+                    >
+                      {a.prenom} {a.nom.charAt(0)}.
+                      <span className="text-[10px] text-muted-foreground">
+                        {a.jours_count}j
+                      </span>
+                    </Badge>
+                  ))}
+                  {canManage && (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              disabled
+                              className="h-6 gap-1 px-2 text-xs"
+                              data-testid={`equipe-add-${row.metier_key}`}
+                            >
+                              <Plus className="h-3 w-3" />
+                              Personne
+                            </Button>
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent>Bientôt disponible (Lot 8.3b)</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+      </CardContent>
+    </Card>
+  );
+}
+
+function fmtDate(iso: string): string {
+  const d = new Date(iso + "T00:00:00Z");
+  return d.toLocaleDateString("fr-FR", { day: "2-digit", month: "short" });
+}
+
+function fmtHeures(h: number): string {
+  return h % 1 === 0 ? String(h) : h.toFixed(1);
+}
