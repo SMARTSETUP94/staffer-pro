@@ -155,7 +155,16 @@ export function ObjetEquipeSection({ objetId }: Props) {
         )}
       </CardHeader>
       <CardContent className="space-y-3">
-        {isLoading && (
+        {isDraft && canManage && (
+          <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-200">
+            <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+            <span>
+              Plan brouillon — les assignations manuelles sont conservées même si
+              le plan est republié (protégées contre PRESENCE_MISMATCH).
+            </span>
+          </div>
+        )}
+
           <>
             <Skeleton className="h-12 w-full" />
             <Skeleton className="h-12 w-full" />
