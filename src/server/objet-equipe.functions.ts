@@ -98,16 +98,17 @@ export const getObjetEquipe = createServerFn({ method: "POST" })
       .single();
     if (objErr || !objRow) throw new Error(objErr?.message ?? "Objet introuvable");
 
-    const q = Number(objRow.quantite ?? 1) || 1;
+    // Lot 8.3a hotfix (audit 23 mai P1.2) — convention "heures DB = TOTAL déjà multiplié"
+    // alignée avec getObjetFiche (Lot 8.1 / Gabin). On ne multiplie PLUS par quantite ici.
     const heuresDevis: ObjetHeuresMap = {
-      be: Number(objRow.heures_prevues_be ?? 0) * q,
-      numerique: Number(objRow.heures_prevues_numerique ?? 0) * q,
-      bois: Number(objRow.heures_prevues_bois ?? 0) * q,
-      metal: Number(objRow.heures_prevues_metal ?? 0) * q,
-      peinture: Number(objRow.heures_prevues_peinture ?? 0) * q,
-      tapisserie: Number(objRow.heures_prevues_tapisserie ?? 0) * q,
+      be: Number(objRow.heures_prevues_be ?? 0),
+      numerique: Number(objRow.heures_prevues_numerique ?? 0),
+      bois: Number(objRow.heures_prevues_bois ?? 0),
+      metal: Number(objRow.heures_prevues_metal ?? 0),
+      peinture: Number(objRow.heures_prevues_peinture ?? 0),
+      tapisserie: Number(objRow.heures_prevues_tapisserie ?? 0),
       machiniste: 0,
-      manutention: Number(objRow.heures_prevues_manutention ?? 0) * q,
+      manutention: Number(objRow.heures_prevues_manutention ?? 0),
     };
 
     // 2) Steps du plan staffing publié liés à cet objet
