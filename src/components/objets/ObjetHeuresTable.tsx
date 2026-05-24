@@ -107,7 +107,7 @@ export function ObjetHeuresTable({ heures, quantite }: Props) {
                 const p = m.heures_prevues / div;
                 const pl = m.heures_planifiees / div;
                 const r = m.heures_reelles / div;
-                const ec = ecartBadge(m.heures_reelles, m.heures_prevues);
+                const ec = computeEcart(m.heures_prevues, m.heures_reelles);
                 return (
                   <TableRow key={m.metier_id} data-testid={`row-metier-${m.metier_code}`}>
                     <TableCell className="font-medium">{m.metier_libelle}</TableCell>
@@ -117,15 +117,9 @@ export function ObjetHeuresTable({ heures, quantite }: Props) {
                     <TableCell className="text-right">
                       <Badge
                         variant="outline"
-                        className={cn(
-                          "text-xs",
-                          ec.tone === "ok" && "border-emerald-300 text-emerald-700",
-                          ec.tone === "warn" && "border-amber-300 text-amber-700",
-                          ec.tone === "bad" && "border-red-300 text-red-700",
-                          ec.tone === "neutral" && "text-muted-foreground",
-                        )}
+                        className={cn("text-xs whitespace-nowrap", ECART_BADGE_CLASS[ec.tone])}
                       >
-                        {ec.label}
+                        {ec.display}
                       </Badge>
                     </TableCell>
                   </TableRow>
@@ -141,7 +135,7 @@ export function ObjetHeuresTable({ heures, quantite }: Props) {
             const p = m.heures_prevues / div;
             const pl = m.heures_planifiees / div;
             const r = m.heures_reelles / div;
-            const ec = ecartBadge(m.heures_reelles, m.heures_prevues);
+            const ec = computeEcart(m.heures_prevues, m.heures_reelles);
             return (
               <div
                 key={m.metier_id}
@@ -152,16 +146,12 @@ export function ObjetHeuresTable({ heures, quantite }: Props) {
                   <span className="font-medium">{m.metier_libelle}</span>
                   <Badge
                     variant="outline"
-                    className={cn(
-                      "text-xs",
-                      ec.tone === "ok" && "border-emerald-300 text-emerald-700",
-                      ec.tone === "warn" && "border-amber-300 text-amber-700",
-                      ec.tone === "bad" && "border-red-300 text-red-700",
-                    )}
+                    className={cn("text-xs whitespace-nowrap", ECART_BADGE_CLASS[ec.tone])}
                   >
-                    {ec.label}
+                    {ec.display}
                   </Badge>
                 </div>
+
                 <div className="grid grid-cols-3 gap-2 text-xs text-muted-foreground">
                   <div>
                     <div>Prévu</div>
