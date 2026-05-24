@@ -105,6 +105,7 @@ import { Route as AppAffairesAffaireIdFabricationRouteImport } from './routes/_a
 import { Route as AppAffairesAffaireIdEquipeRouteImport } from './routes/_app.affaires.$affaireId.equipe'
 import { Route as AppAffairesAffaireIdDocumentsRouteImport } from './routes/_app.affaires.$affaireId.documents'
 import { Route as AppAffairesAffaireIdDevisRouteImport } from './routes/_app.affaires.$affaireId.devis'
+import { Route as AppAffairesAffaireIdCastingRouteImport } from './routes/_app.affaires.$affaireId.casting'
 import { Route as AppAffairesAffaireIdObjetsObjetIdRouteImport } from './routes/_app.affaires.$affaireId.objets.$objetId'
 
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -603,6 +604,12 @@ const AppAffairesAffaireIdDevisRoute =
     path: '/devis',
     getParentRoute: () => AppAffairesAffaireIdRoute,
   } as any)
+const AppAffairesAffaireIdCastingRoute =
+  AppAffairesAffaireIdCastingRouteImport.update({
+    id: '/casting',
+    path: '/casting',
+    getParentRoute: () => AppAffairesAffaireIdRoute,
+  } as any)
 const AppAffairesAffaireIdObjetsObjetIdRoute =
   AppAffairesAffaireIdObjetsObjetIdRouteImport.update({
     id: '/objets/$objetId',
@@ -698,6 +705,7 @@ export interface FileRoutesByFullPath {
   '/fabrication/': typeof AppFabricationIndexRoute
   '/rh/': typeof AppRhIndexRoute
   '/mobile/chef/': typeof MobileChefIndexRoute
+  '/affaires/$affaireId/casting': typeof AppAffairesAffaireIdCastingRoute
   '/affaires/$affaireId/devis': typeof AppAffairesAffaireIdDevisRoute
   '/affaires/$affaireId/documents': typeof AppAffairesAffaireIdDocumentsRoute
   '/affaires/$affaireId/equipe': typeof AppAffairesAffaireIdEquipeRoute
@@ -793,6 +801,7 @@ export interface FileRoutesByTo {
   '/fabrication': typeof AppFabricationIndexRoute
   '/rh': typeof AppRhIndexRoute
   '/mobile/chef': typeof MobileChefIndexRoute
+  '/affaires/$affaireId/casting': typeof AppAffairesAffaireIdCastingRoute
   '/affaires/$affaireId/devis': typeof AppAffairesAffaireIdDevisRoute
   '/affaires/$affaireId/documents': typeof AppAffairesAffaireIdDocumentsRoute
   '/affaires/$affaireId/equipe': typeof AppAffairesAffaireIdEquipeRoute
@@ -893,6 +902,7 @@ export interface FileRoutesById {
   '/_app/fabrication/': typeof AppFabricationIndexRoute
   '/_app/rh/': typeof AppRhIndexRoute
   '/mobile/chef/': typeof MobileChefIndexRoute
+  '/_app/affaires/$affaireId/casting': typeof AppAffairesAffaireIdCastingRoute
   '/_app/affaires/$affaireId/devis': typeof AppAffairesAffaireIdDevisRoute
   '/_app/affaires/$affaireId/documents': typeof AppAffairesAffaireIdDocumentsRoute
   '/_app/affaires/$affaireId/equipe': typeof AppAffairesAffaireIdEquipeRoute
@@ -993,6 +1003,7 @@ export interface FileRouteTypes {
     | '/fabrication/'
     | '/rh/'
     | '/mobile/chef/'
+    | '/affaires/$affaireId/casting'
     | '/affaires/$affaireId/devis'
     | '/affaires/$affaireId/documents'
     | '/affaires/$affaireId/equipe'
@@ -1088,6 +1099,7 @@ export interface FileRouteTypes {
     | '/fabrication'
     | '/rh'
     | '/mobile/chef'
+    | '/affaires/$affaireId/casting'
     | '/affaires/$affaireId/devis'
     | '/affaires/$affaireId/documents'
     | '/affaires/$affaireId/equipe'
@@ -1187,6 +1199,7 @@ export interface FileRouteTypes {
     | '/_app/fabrication/'
     | '/_app/rh/'
     | '/mobile/chef/'
+    | '/_app/affaires/$affaireId/casting'
     | '/_app/affaires/$affaireId/devis'
     | '/_app/affaires/$affaireId/documents'
     | '/_app/affaires/$affaireId/equipe'
@@ -1892,6 +1905,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAffairesAffaireIdDevisRouteImport
       parentRoute: typeof AppAffairesAffaireIdRoute
     }
+    '/_app/affaires/$affaireId/casting': {
+      id: '/_app/affaires/$affaireId/casting'
+      path: '/casting'
+      fullPath: '/affaires/$affaireId/casting'
+      preLoaderRoute: typeof AppAffairesAffaireIdCastingRouteImport
+      parentRoute: typeof AppAffairesAffaireIdRoute
+    }
     '/_app/affaires/$affaireId/objets/$objetId': {
       id: '/_app/affaires/$affaireId/objets/$objetId'
       path: '/objets/$objetId'
@@ -1943,6 +1963,7 @@ const AppOpportunitesRouteWithChildren = AppOpportunitesRoute._addFileChildren(
 )
 
 interface AppAffairesAffaireIdRouteChildren {
+  AppAffairesAffaireIdCastingRoute: typeof AppAffairesAffaireIdCastingRoute
   AppAffairesAffaireIdDevisRoute: typeof AppAffairesAffaireIdDevisRoute
   AppAffairesAffaireIdDocumentsRoute: typeof AppAffairesAffaireIdDocumentsRoute
   AppAffairesAffaireIdEquipeRoute: typeof AppAffairesAffaireIdEquipeRoute
@@ -1954,6 +1975,7 @@ interface AppAffairesAffaireIdRouteChildren {
 }
 
 const AppAffairesAffaireIdRouteChildren: AppAffairesAffaireIdRouteChildren = {
+  AppAffairesAffaireIdCastingRoute: AppAffairesAffaireIdCastingRoute,
   AppAffairesAffaireIdDevisRoute: AppAffairesAffaireIdDevisRoute,
   AppAffairesAffaireIdDocumentsRoute: AppAffairesAffaireIdDocumentsRoute,
   AppAffairesAffaireIdEquipeRoute: AppAffairesAffaireIdEquipeRoute,
