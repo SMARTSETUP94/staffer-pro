@@ -32,6 +32,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { AddCastingMemberSheet } from "@/components/casting/AddCastingMemberSheet";
 import { RemoveCastingMemberDialog } from "@/components/casting/RemoveCastingMemberDialog";
+import { RepublishConflictDialog } from "@/components/staffing/RepublishConflictDialog";
 import type { CastingPhase } from "@/server/casting-chantier.functions";
 
 export const Route = createFileRoute("/_app/affaires/$affaireId/casting")({
