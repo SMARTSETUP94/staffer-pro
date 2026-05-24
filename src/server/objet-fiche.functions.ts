@@ -388,10 +388,11 @@ export const getObjetFiche = createServerFn({ method: "POST" })
     const { data: obj, error: oErr } = await supabase
       .from("fabrication_objets")
       .select(
-        "id, affaire_id, reference, nom, quantite, commentaire, respo_fab_id, type_finition, budget_materiaux, a_dessiner, a_construire, est_brut, a_emballer, a_usiner, heures_prevues_be, heures_prevues_numerique, heures_prevues_bois, heures_prevues_metal, heures_prevues_peinture, heures_prevues_tapisserie, heures_prevues_manutention, archive",
+        "id, affaire_id, reference, nom, quantite, commentaire, respo_fab_id, type_finition, budget_materiaux, a_dessiner, a_construire, est_brut, a_emballer, a_usiner, heures_prevues_be, heures_prevues_numerique, heures_prevues_bois, heures_prevues_metal, heures_prevues_peinture, heures_prevues_tapisserie, heures_prevues_manutention, largeur_mm, longueur_mm, hauteur_mm, materiaux, finition_detail, archive",
       )
       .eq("id", data.objetId)
       .maybeSingle();
+
     if (oErr) throw new Error(oErr.message);
     if (!obj) throw new Error("Objet introuvable ou accès refusé");
 
