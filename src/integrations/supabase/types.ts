@@ -1863,36 +1863,61 @@ export type Database = {
       }
       fabrication_objets_photos: {
         Row: {
+          affaire_id: string
           commentaire: string | null
           deleted_at: string | null
           deleted_by: string | null
+          etape_id: string | null
+          height: number | null
           id: string
           objet_id: string
+          size_bytes: number | null
           storage_path: string
+          thumb_path: string | null
           uploaded_at: string
           uploaded_by: string | null
+          width: number | null
         }
         Insert: {
+          affaire_id: string
           commentaire?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
+          etape_id?: string | null
+          height?: number | null
           id?: string
           objet_id: string
+          size_bytes?: number | null
           storage_path: string
+          thumb_path?: string | null
           uploaded_at?: string
           uploaded_by?: string | null
+          width?: number | null
         }
         Update: {
+          affaire_id?: string
           commentaire?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
+          etape_id?: string | null
+          height?: number | null
           id?: string
           objet_id?: string
+          size_bytes?: number | null
           storage_path?: string
+          thumb_path?: string | null
           uploaded_at?: string
           uploaded_by?: string | null
+          width?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "fabrication_objets_photos_etape_id_fkey"
+            columns: ["etape_id"]
+            isOneToOne: false
+            referencedRelation: "fabrication_etapes"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "fabrication_objets_photos_objet_id_fkey"
             columns: ["objet_id"]
@@ -2536,6 +2561,115 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      objet_commentaires: {
+        Row: {
+          affaire_id: string
+          author_id: string
+          content: string
+          created_at: string
+          etape_id: string | null
+          id: string
+          objet_id: string
+        }
+        Insert: {
+          affaire_id: string
+          author_id: string
+          content: string
+          created_at?: string
+          etape_id?: string | null
+          id?: string
+          objet_id: string
+        }
+        Update: {
+          affaire_id?: string
+          author_id?: string
+          content?: string
+          created_at?: string
+          etape_id?: string | null
+          id?: string
+          objet_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "objet_commentaires_etape_id_fkey"
+            columns: ["etape_id"]
+            isOneToOne: false
+            referencedRelation: "fabrication_etapes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "objet_commentaires_objet_id_fkey"
+            columns: ["objet_id"]
+            isOneToOne: false
+            referencedRelation: "fabrication_objets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "objet_commentaires_objet_id_fkey"
+            columns: ["objet_id"]
+            isOneToOne: false
+            referencedRelation: "v_objet_heures_consolidees"
+            referencedColumns: ["objet_id"]
+          },
+        ]
+      }
+      objet_journal_events: {
+        Row: {
+          actor_id: string | null
+          actor_label: string | null
+          affaire_id: string
+          created_at: string
+          etape_id: string | null
+          event_type: Database["public"]["Enums"]["objet_journal_event_type"]
+          id: string
+          metier_id: number | null
+          objet_id: string
+          occurred_at: string
+          payload: Json
+        }
+        Insert: {
+          actor_id?: string | null
+          actor_label?: string | null
+          affaire_id: string
+          created_at?: string
+          etape_id?: string | null
+          event_type: Database["public"]["Enums"]["objet_journal_event_type"]
+          id?: string
+          metier_id?: number | null
+          objet_id: string
+          occurred_at?: string
+          payload?: Json
+        }
+        Update: {
+          actor_id?: string | null
+          actor_label?: string | null
+          affaire_id?: string
+          created_at?: string
+          etape_id?: string | null
+          event_type?: Database["public"]["Enums"]["objet_journal_event_type"]
+          id?: string
+          metier_id?: number | null
+          objet_id?: string
+          occurred_at?: string
+          payload?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "objet_journal_events_objet_id_fkey"
+            columns: ["objet_id"]
+            isOneToOne: false
+            referencedRelation: "fabrication_objets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "objet_journal_events_objet_id_fkey"
+            columns: ["objet_id"]
+            isOneToOne: false
+            referencedRelation: "v_objet_heures_consolidees"
+            referencedColumns: ["objet_id"]
+          },
+        ]
       }
       opportunites_imports: {
         Row: {
@@ -4512,6 +4646,17 @@ export type Database = {
         }[]
       }
       next_affaire_numero: { Args: { _prefix: number }; Returns: string }
+      objet_journal_log: {
+        Args: {
+          p_actor_id: string
+          p_etape_id: string
+          p_event_type: Database["public"]["Enums"]["objet_journal_event_type"]
+          p_metier_id: number
+          p_objet_id: string
+          p_payload: Json
+        }
+        Returns: undefined
+      }
       preflight_delete_devis: { Args: { p_devis_id: string }; Returns: Json }
       preflight_import_devis: {
         Args: { _affaire_id?: string; _fichier_hash: string }
@@ -4769,6 +4914,20 @@ export type Database = {
         | "staffing_publie"
         | "system"
       objet_fab_statut_chef: "a_faire" | "en_cours" | "bloque" | "fini"
+      objet_journal_event_type:
+        | "journal_started"
+        | "etape_validee"
+        | "etape_invalidee"
+        | "etape_statut_change"
+        | "personne_assignee"
+        | "personne_retiree"
+        | "presence_modifiee"
+        | "photo_uploaded"
+        | "photo_supprimee"
+        | "commentaire"
+        | "commentaire_supprime"
+        | "identite_modifiee"
+        | "plan_republie"
       opportunite_statut: "a_faire" | "envoye" | "gagne" | "perdu" | "termine"
       opportunite_taille:
         | "tres_petit"
@@ -5024,6 +5183,21 @@ export const Constants = {
         "system",
       ],
       objet_fab_statut_chef: ["a_faire", "en_cours", "bloque", "fini"],
+      objet_journal_event_type: [
+        "journal_started",
+        "etape_validee",
+        "etape_invalidee",
+        "etape_statut_change",
+        "personne_assignee",
+        "personne_retiree",
+        "presence_modifiee",
+        "photo_uploaded",
+        "photo_supprimee",
+        "commentaire",
+        "commentaire_supprime",
+        "identite_modifiee",
+        "plan_republie",
+      ],
       opportunite_statut: ["a_faire", "envoye", "gagne", "perdu", "termine"],
       opportunite_taille: ["tres_petit", "petit", "moyen", "gros", "tres_gros"],
       permis_type: ["B", "C", "CE"],
