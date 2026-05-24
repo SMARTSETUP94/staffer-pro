@@ -215,3 +215,63 @@ export function buildProRataInputsForMetier(
     quantite: Number(o.quantite ?? 1) || 1,
   }));
 }
+
+/* ================================================================== */
+/* Lot 8.2c — computeEcart : label + tone pour la colonne "Écart"     */
+/* ================================================================== */
+
+export type EcartTone =
+  | "muted"
+  | "success"
+  | "info"
+  | "warning"
+  | "destructive";
+
+export interface EcartResult {
+  display: string;
+  tone: EcartTone;
+}
+
+/**
+ * Calcul de l'écart entre heures réelles et heures prévues.
+ *
+ * Règles (validées Lot 8.2c, palier -25% conservé) :
+ *   prévu = 0, réel = 0   → "—"               muted
+ *   prévu = 0, réel > 0   → "+{r}h non prévues" warning (ambre)
+ *   prévu > 0, réel = 0   → "Non démarré"     muted
+ *   prévu > 0, réel > 0   → pct = (réel - prévu) / prévu * 100
+ *     |pct| ≤ 5             → success      (vert, on-target)
+ *     -25 < pct < -5        → info         (vert clair, sous-conso modérée)
+ *     pct ≤ -25             → warning      (ambre, sous-conso forte = peut-être pas fini)
+ *     5  < pct ≤ 15         → warning      (ambre, léger dépassement)
+ *     pct > 15              → destructive  (rouge, gros dépassement)
+ *
+ *   Format : 1 décimale si |pct| < 10, sinon 0 décimale.
+ */
+export function computeEcart(prevu: number, reel: number): EcartResult {
+  const p = Number(prevu) || 0;
+  const r = Number(reel) || 0;
+
+  if (p === 0 && r === 0) return { display: "—", tone: "muted" };
+  if (p === 0 && r > 0) {
+    const fmt = r.toFixed(r < 10 ? 1 : 0);
+    return { display: `+${fmt}h non prévues`, tone: "warning" };
+  }
+  if (p > 0 && r === 0) return { display: "Non démarré", tone: "muted" };
+
+  const pct = ((r - p) / p) * 100;
+  const abs = Math.abs(pct);
+  const decimals = abs < 10 ? 1 : 0;
+  const sign = pct >= 0 ? "+" : "";
+  const display = `${sign}${pct.toFixed(decimals)}%`;
+
+  let tone: EcartTone;
+  if (abs <= 5) tone = "success";
+  else if (pct < 0 && pct > -25) tone = "info";
+  else if (pct <= -25) tone = "warning";
+  else if (pct <= 15) tone = "warning";
+  else tone = "destructive";
+
+  return { display, tone };
+}
+
