@@ -175,6 +175,16 @@ function AffaireCastingPage() {
             )}
           </p>
         </div>
+        {canEdit && publishedPlanId && (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setRepublishOpen(true)}
+            data-testid="casting-republish"
+          >
+            Republier le plan
+          </Button>
+        )}
       </header>
 
       <div className="space-y-6">
