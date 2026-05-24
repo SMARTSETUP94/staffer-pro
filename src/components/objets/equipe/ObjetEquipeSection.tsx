@@ -1,12 +1,14 @@
 /**
- * Lot 8.3a — Zone Équipe (lecture).
- * Affiche une ligne par métier requis avec :
- *   - KPI pers staffées / requises + heures staffées / devis
- *   - Chips des employés assignés (présence cumulée sur la fenêtre)
- *   - Boutons d'action (+ Personne, Auto-remplir, Retirer) en placeholder
- *     pour le Lot 8.3b ; visibles seulement si cap `objet.team.manage`.
+ * Lot 8.3a/b — Zone Équipe.
+ *
+ * 8.3a (lecture) : KPIs par métier, chips employés assignés.
+ * 8.3b (mutations) : Auto-remplir / + Personne / Retirer (cap `objet.team.manage`).
+ *
+ * Les boutons ne sont rendus actifs que si la cap est présente ET qu'un plan
+ * publié couvre l'objet. Sinon ils sont disabled avec tooltip explicatif.
  */
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -18,23 +20,83 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Plus, Wand2, AlertTriangle, Check, Info } from "lucide-react";
+import { Plus, Wand2, AlertTriangle, Check, Info, X, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { getObjetEquipe } from "@/server/objet-equipe.functions";
+import { autoStaffObjet } from "@/server/objet-equipe-mutations.functions";
 import { useCapability } from "@/hooks/use-capability";
+import { AddPersonneDialog } from "./AddPersonneDialog";
+import { RemovePersonneDialog } from "./RemovePersonneDialog";
 
 interface Props {
   objetId: string;
 }
 
+interface AddDialogState {
+  open: boolean;
+  metierId: number;
+  metierLabel: string;
+}
+
+interface RemoveDialogState {
+  open: boolean;
+  metierId: number;
+  metierLabel: string;
+  employeId: string;
+  employeLabel: string;
+}
+
 export function ObjetEquipeSection({ objetId }: Props) {
   const fetchEquipe = useServerFn(getObjetEquipe);
+  const autoStaffFn = useServerFn(autoStaffObjet);
   const canManage = useCapability("objet.team.manage");
+  const qc = useQueryClient();
+
+  const [addDialog, setAddDialog] = useState<AddDialogState>({
+    open: false,
+    metierId: 0,
+    metierLabel: "",
+  });
+  const [removeDialog, setRemoveDialog] = useState<RemoveDialogState>({
+    open: false,
+    metierId: 0,
+    metierLabel: "",
+    employeId: "",
+    employeLabel: "",
+  });
 
   const { data, isLoading } = useQuery({
     queryKey: ["objet-equipe", objetId],
     queryFn: () => fetchEquipe({ data: { objetId } }),
     staleTime: 30_000,
   });
+
+  const autoStaffMutation = useMutation({
+    mutationFn: () => autoStaffFn({ data: { objetId } }),
+    onSuccess: (res) => {
+      if (res.status === "no_plan") {
+        toast.error("Aucun plan publié sur cet objet.");
+        return;
+      }
+      if (res.status === "all_full") {
+        toast.info("Tous les besoins sont déjà couverts.");
+        return;
+      }
+      const skipMsg = res.skipped > 0 ? ` · ${res.skipped} restant(s) non comblé(s)` : "";
+      toast.success(`${res.filled} affectation(s) ajoutée(s)${skipMsg}`);
+      qc.invalidateQueries({ queryKey: ["objet-equipe", objetId] });
+      qc.invalidateQueries({ queryKey: ["fiche-objet", objetId] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const hasPublishedPlan = data?.plan_status === "published";
+  const mutationsEnabled = Boolean(canManage && hasPublishedPlan);
+  const disabledReason = !canManage
+    ? "Capability `objet.team.manage` requise"
+    : !hasPublishedPlan
+      ? "Nécessite un plan publié"
+      : "";
 
   return (
     <Card>
@@ -69,16 +131,23 @@ export function ObjetEquipeSection({ objetId }: Props) {
                   <Button
                     variant="outline"
                     size="sm"
-                    disabled
+                    disabled={!mutationsEnabled || autoStaffMutation.isPending}
+                    onClick={() => autoStaffMutation.mutate()}
                     className="gap-1.5"
                     data-testid="objet-equipe-autostaff"
                   >
-                    <Wand2 className="h-3.5 w-3.5" />
+                    {autoStaffMutation.isPending ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Wand2 className="h-3.5 w-3.5" />
+                    )}
                     Auto-remplir
                   </Button>
                 </span>
               </TooltipTrigger>
-              <TooltipContent>Bientôt disponible (Lot 8.3b)</TooltipContent>
+              {!mutationsEnabled && (
+                <TooltipContent>{disabledReason}</TooltipContent>
+              )}
             </Tooltip>
           </TooltipProvider>
         )}
@@ -153,18 +222,40 @@ export function ObjetEquipeSection({ objetId }: Props) {
                       Aucun assigné
                     </span>
                   )}
-                  {row.assignations.map((a) => (
-                    <Badge
-                      key={a.employe_id}
-                      variant="secondary"
-                      className="gap-1 font-normal"
-                    >
-                      {a.prenom} {a.nom.charAt(0)}.
-                      <span className="text-[10px] text-muted-foreground">
-                        {a.jours_count}j
-                      </span>
-                    </Badge>
-                  ))}
+                  {row.assignations.map((a) => {
+                    const label = `${a.prenom} ${a.nom.charAt(0)}.`;
+                    return (
+                      <Badge
+                        key={a.employe_id}
+                        variant="secondary"
+                        className="gap-1 pr-1 font-normal"
+                      >
+                        {label}
+                        <span className="text-[10px] text-muted-foreground">
+                          {a.jours_count}j
+                        </span>
+                        {mutationsEnabled && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setRemoveDialog({
+                                open: true,
+                                metierId: row.metier_id,
+                                metierLabel: row.metier_label,
+                                employeId: a.employe_id,
+                                employeLabel: `${a.prenom} ${a.nom}`,
+                              })
+                            }
+                            className="ml-0.5 rounded p-0.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                            aria-label={`Retirer ${label}`}
+                            data-testid={`equipe-remove-${row.metier_key}-${a.employe_id}`}
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        )}
+                      </Badge>
+                    );
+                  })}
                   {canManage && (
                     <TooltipProvider>
                       <Tooltip>
@@ -173,7 +264,14 @@ export function ObjetEquipeSection({ objetId }: Props) {
                             <Button
                               variant="ghost"
                               size="sm"
-                              disabled
+                              disabled={!mutationsEnabled}
+                              onClick={() =>
+                                setAddDialog({
+                                  open: true,
+                                  metierId: row.metier_id,
+                                  metierLabel: row.metier_label,
+                                })
+                              }
                               className="h-6 gap-1 px-2 text-xs"
                               data-testid={`equipe-add-${row.metier_key}`}
                             >
@@ -182,7 +280,9 @@ export function ObjetEquipeSection({ objetId }: Props) {
                             </Button>
                           </span>
                         </TooltipTrigger>
-                        <TooltipContent>Bientôt disponible (Lot 8.3b)</TooltipContent>
+                        {!mutationsEnabled && (
+                          <TooltipContent>{disabledReason}</TooltipContent>
+                        )}
                       </Tooltip>
                     </TooltipProvider>
                   )}
@@ -191,6 +291,27 @@ export function ObjetEquipeSection({ objetId }: Props) {
             );
           })}
       </CardContent>
+
+      {addDialog.open && (
+        <AddPersonneDialog
+          open={addDialog.open}
+          onOpenChange={(o) => setAddDialog((s) => ({ ...s, open: o }))}
+          objetId={objetId}
+          metierId={addDialog.metierId}
+          metierLabel={addDialog.metierLabel}
+        />
+      )}
+      {removeDialog.open && (
+        <RemovePersonneDialog
+          open={removeDialog.open}
+          onOpenChange={(o) => setRemoveDialog((s) => ({ ...s, open: o }))}
+          objetId={objetId}
+          metierId={removeDialog.metierId}
+          metierLabel={removeDialog.metierLabel}
+          employeId={removeDialog.employeId}
+          employeLabel={removeDialog.employeLabel}
+        />
+      )}
     </Card>
   );
 }
