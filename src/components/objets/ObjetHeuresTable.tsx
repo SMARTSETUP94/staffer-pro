@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import type { ObjetHeuresMetier } from "@/server/objet-fiche.functions";
+import { computeEcart, type EcartTone } from "@/lib/objet-heures-helpers";
 
 type Mode = "total" | "unitaire";
 const LS_KEY = "objet-heures-mode";
@@ -30,14 +31,14 @@ function fmt(h: number): string {
   return h === 0 ? "—" : `${h.toFixed(1)} h`;
 }
 
-function ecartBadge(reel: number, prevu: number): { label: string; tone: "ok" | "warn" | "bad" | "neutral" } {
-  if (prevu === 0) return { label: "—", tone: "neutral" };
-  const pct = ((reel - prevu) / prevu) * 100;
-  const abs = Math.abs(pct);
-  const tone: "ok" | "warn" | "bad" | "neutral" =
-    abs < 5 ? "ok" : abs < 15 ? "warn" : "bad";
-  return { label: `${pct >= 0 ? "+" : ""}${pct.toFixed(0)}%`, tone };
-}
+const ECART_BADGE_CLASS: Record<EcartTone, string> = {
+  muted: "text-muted-foreground border-border",
+  success: "border-emerald-300 text-emerald-700 dark:text-emerald-300",
+  info: "border-emerald-200 text-emerald-600 dark:text-emerald-400",
+  warning: "border-amber-300 text-amber-700 dark:text-amber-300",
+  destructive: "border-red-300 text-red-700 dark:text-red-300",
+};
+
 
 interface Props {
   heures: ObjetHeuresMetier[];
