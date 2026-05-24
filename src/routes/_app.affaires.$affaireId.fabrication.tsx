@@ -88,6 +88,25 @@ function FabricationPage() {
   const [openSousTraiter, setOpenSousTraiter] = useState(false);
   const { atelier } = useLieux();
 
+  // Vue par défaut : tableur dense (matrice objets × étapes), persistée en localStorage
+  const [viewMode, setViewMode] = useState<"tableur" | "cards">(() => {
+    if (typeof window === "undefined") return "tableur";
+    const v = window.localStorage.getItem("fabrication-view-mode");
+    return v === "cards" ? "cards" : "tableur";
+  });
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem("fabrication-view-mode", viewMode);
+  }, [viewMode]);
+  // Filtre statut global appliqué uniquement à la vue tableur
+  const [statutFilter, setStatutFilter] = useState<"all" | "a_faire" | "en_cours" | "termine">("all");
+  const filteredObjets = (() => {
+    if (statutFilter === "all") return objets;
+    return objets.filter((o) =>
+      o.etapes.some((e) => e.statut === statutFilter),
+    );
+  })();
+
   // Charger meta affaire (chef projet, lieu, dates, typologie) — useEffect, pas useState
   useEffect(() => {
     void supabase
