@@ -60,7 +60,7 @@ export async function syncEquipesFromPlan(
     return { n2_upserts: 0, n3_upserts: 0, phase_updates: 0 };
   }
 
-  const stepIds = stepsArr.map((s) => s.id as string);
+  const stepIds = stepsArr.map((s: { id: string }) => s.id as string);
   const { data: asg } = await supabase
     .from("staffing_plan_assignment")
     .select("step_id, employe_id")
