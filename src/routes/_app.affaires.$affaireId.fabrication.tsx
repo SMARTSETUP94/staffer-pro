@@ -476,6 +476,7 @@ function FabricationPage() {
               </TableBody>
             </Table>
           </div>
+          )}
         </>
       )}
 
