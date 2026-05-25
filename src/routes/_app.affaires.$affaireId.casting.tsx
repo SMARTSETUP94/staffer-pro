@@ -34,9 +34,9 @@ import { AddCastingMemberSheet } from "@/components/casting/AddCastingMemberShee
 import { RemoveCastingMemberDialog } from "@/components/casting/RemoveCastingMemberDialog";
 import { RepublishConflictDialog } from "@/components/staffing/RepublishConflictDialog";
 import { EquipeCapaciteIndicator } from "@/components/atoms/EquipeCapaciteIndicator";
-import { useAffaireCapacite } from "@/hooks/use-affaire-capacite";
+import { useAffaireCapacite, useAffaireCapaciteMetier } from "@/hooks/use-affaire-capacite";
 import type { CastingMembre, CastingPhase } from "@/server/casting-chantier.functions";
-import { FAB_SOUS_ETAPES, getSousEtapeKey } from "@/lib/fab-sous-etapes";
+import { FAB_METIERS, isFabMetier } from "@/lib/fab-sous-etapes";
 
 export const Route = createFileRoute("/_app/affaires/$affaireId/casting")({
   head: () => ({ meta: [{ title: "Casting du chantier — Setup Paris" }] }),
