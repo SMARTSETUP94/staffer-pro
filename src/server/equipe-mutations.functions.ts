@@ -87,16 +87,7 @@ export const removeAffaireEquipeMember = createServerFn({ method: "POST" })
     employeId: string;
     phase: "commercial_etude" | "fabrication" | "montage" | "demontage";
     cascadeObjets?: boolean;
-  }) =>
-    z
-      .object({
-        affaireId: z.string().uuid(),
-        employeId: z.string().uuid(),
-        phase: PHASE_ENUM,
-        cascadeObjets: z.boolean().optional().default(false),
-      })
-      .parse(d),
-  )
+  }) => removeAffaireEquipeSchema.parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await assertCap(supabase, "affaire.team.manage");
