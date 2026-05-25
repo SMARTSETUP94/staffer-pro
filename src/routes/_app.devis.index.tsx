@@ -35,6 +35,17 @@ interface DevisRow {
   total_heures: number;
   nb_postes: number;
   nb_assignations: number;
+  heures_reelles_validees: number;
+  heures_reelles_soumises: number;
+}
+
+function pctRealisationBadge(prevues: number, validees: number) {
+  if (prevues <= 0) return { label: "—", cls: "text-muted-foreground" };
+  const pct = (validees / prevues) * 100;
+  const txt = `${pct.toFixed(0)} %`;
+  if (pct > 115) return { label: txt, cls: "bg-destructive/15 text-destructive font-semibold" };
+  if (pct >= 95) return { label: txt, cls: "bg-amber-500/15 text-amber-700 dark:text-amber-400 font-semibold" };
+  return { label: txt, cls: "bg-green-500/15 text-green-700 dark:text-green-400 font-semibold" };
 }
 
 export const Route = createFileRoute("/_app/devis/")({
@@ -62,6 +73,7 @@ function DevisPage() {
     const ids = (dv ?? []).map((d) => d.id);
     let postesByDevis = new Map<string, { count: number; heures: number }>();
     let assignByDevis = new Map<string, number>();
+    let consoByDevis = new Map<string, { validees: number; soumises: number }>();
     if (ids.length) {
       const { data: pst } = await supabase
         .from("devis_postes").select("devis_id, heures_prevues").in("devis_id", ids);
@@ -75,6 +87,17 @@ function DevisPage() {
       (ass ?? []).forEach((a) => {
         if (!a.devis_id) return;
         assignByDevis.set(a.devis_id, (assignByDevis.get(a.devis_id) ?? 0) + 1);
+      });
+      const { data: cons } = await supabase
+        .from("v_devis_consommation")
+        .select("devis_id, heures_reelles_validees, heures_reelles_soumises")
+        .in("devis_id", ids);
+      (cons ?? []).forEach((c) => {
+        if (!c.devis_id) return;
+        const cur = consoByDevis.get(c.devis_id) ?? { validees: 0, soumises: 0 };
+        cur.validees += Number(c.heures_reelles_validees ?? 0);
+        cur.soumises += Number(c.heures_reelles_soumises ?? 0);
+        consoByDevis.set(c.devis_id, cur);
       });
     }
     setRows(
@@ -90,6 +113,8 @@ function DevisPage() {
         total_heures: postesByDevis.get(d.id)?.heures ?? 0,
         nb_postes: postesByDevis.get(d.id)?.count ?? 0,
         nb_assignations: assignByDevis.get(d.id) ?? 0,
+        heures_reelles_validees: consoByDevis.get(d.id)?.validees ?? 0,
+        heures_reelles_soumises: consoByDevis.get(d.id)?.soumises ?? 0,
       })),
     );
     setLoading(false);
@@ -227,7 +252,10 @@ function DevisPage() {
                 <TableHead>Libellé</TableHead>
                 <TableHead>Statut</TableHead>
                 <TableHead className="text-right">Postes</TableHead>
-                <TableHead className="text-right">Heures</TableHead>
+                <TableHead className="text-right">Heures prévues</TableHead>
+                <TableHead className="text-right" title="Heures saisies validées">Consommé validé</TableHead>
+                <TableHead className="text-right" title="Heures saisies en attente de validation">En attente</TableHead>
+                <TableHead className="text-right" title="Heures validées / Heures prévues">% réalisation</TableHead>
                 <TableHead className="text-right">Montant HT</TableHead>
                 <TableHead className="text-right">Assignations</TableHead>
                 <TableHead className="w-[120px]"></TableHead>
@@ -251,6 +279,18 @@ function DevisPage() {
                   <TableCell><DevisStatutBadge statut={r.statut} /></TableCell>
                   <TableCell className="text-right font-mono text-sm">{r.nb_postes}</TableCell>
                   <TableCell className="text-right font-mono text-sm">{r.total_heures.toFixed(1)} h</TableCell>
+                  <TableCell className="text-right font-mono text-sm">
+                    {r.heures_reelles_validees > 0 ? `${r.heures_reelles_validees.toFixed(1)} h` : <span className="text-muted-foreground">—</span>}
+                  </TableCell>
+                  <TableCell className="text-right font-mono text-sm text-muted-foreground">
+                    {r.heures_reelles_soumises > 0 ? `${r.heures_reelles_soumises.toFixed(1)} h` : "—"}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {(() => {
+                      const b = pctRealisationBadge(r.total_heures, r.heures_reelles_validees);
+                      return <span className={`inline-flex rounded-full px-2 py-0.5 font-mono text-xs ${b.cls}`}>{b.label}</span>;
+                    })()}
+                  </TableCell>
                   <TableCell className="text-right font-mono text-sm text-muted-foreground">
                     {r.montant_ht != null ? `${Number(r.montant_ht).toLocaleString("fr-FR")} €` : "—"}
                   </TableCell>
