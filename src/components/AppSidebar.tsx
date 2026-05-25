@@ -88,7 +88,7 @@ function buildSections(role: EffRole, validationCount: number, contratsRhCount: 
         { title: "Opportunités", url: "/opportunites", icon: Trophy, cap: "affaires.view" },
         { title: "Chantiers", url: "/affaires", icon: Building2, cap: "affaires.view" },
         { title: "Devis", url: "/devis", icon: FileText, cap: "devis.view" },
-        { title: "Budget chantier", url: "/affaires/budget-planning", icon: Calendar, cap: "affaires.view" },
+        
       ],
     },
     {
