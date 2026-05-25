@@ -59,8 +59,6 @@ interface Poste {
 
 /** Heures réellement assignées à un (devis, métier) — calculé depuis assignations. */
 type HeuresAssignParCouple = Map<string, number>; // key: `${devis_id}::${metier_id}`
-/** Sprint C / Bonus V2 — heures réelles (validées + soumises) depuis v_devis_consommation. */
-type HeuresReellesParCouple = Map<string, { validees: number; soumises: number }>;
 
 export const Route = createFileRoute("/_app/affaires/$affaireId/devis")({
   component: AffaireDevisPage,
