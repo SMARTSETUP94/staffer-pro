@@ -82,6 +82,8 @@ export function AddCastingMemberSheet({
   phase,
   phaseLabel,
   excludeEmployeIds = [],
+  restrictMetierIds,
+  subEtapeLabel,
 }: Props) {
   const qc = useQueryClient();
   const fetchEmployes = useServerFn(listAllActiveEmployes);
@@ -100,15 +102,23 @@ export function AddCastingMemberSheet({
   });
 
   const excludeSet = useMemo(() => new Set(excludeEmployeIds), [excludeEmployeIds]);
+  const restrictSet = useMemo(
+    () => (restrictMetierIds && restrictMetierIds.length > 0 ? new Set(restrictMetierIds) : null),
+    [restrictMetierIds],
+  );
 
   /**
    * Liste affichée : déjà casting (disabled, top) → puis CDI → CDD → Intérim,
    * chaque groupe trié par nom. La recherche filtre les deux nom/prénom.
+   * Si restrictMetierIds est fourni, filtre sur metier_principal_id.
    */
   const sorted = useMemo(() => {
     const all = (employes ?? []) as EmpRow[];
     const q = search.trim().toLowerCase();
     const filtered = all.filter((e) => {
+      if (restrictSet && (e.metier_principal_id == null || !restrictSet.has(e.metier_principal_id))) {
+        return false;
+      }
       if (!q) return true;
       return (
         e.nom.toLowerCase().includes(q) || e.prenom.toLowerCase().includes(q)
@@ -123,7 +133,7 @@ export function AddCastingMemberSheet({
       if (at !== bt) return at - bt;
       return (a.nom + a.prenom).localeCompare(b.nom + b.prenom, "fr");
     });
-  }, [employes, search, excludeSet]);
+  }, [employes, search, excludeSet, restrictSet]);
 
   const selectableCount = sorted.filter((e) => !excludeSet.has(e.id)).length;
   const selectedCount = selectedIds.size;
