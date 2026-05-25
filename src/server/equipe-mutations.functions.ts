@@ -132,13 +132,7 @@ export const removeAffaireEquipeMember = createServerFn({ method: "POST" })
 export const upsertObjetEquipeMember = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { objetId: string; employeId: string; notes?: string | null }) =>
-    z
-      .object({
-        objetId: z.string().uuid(),
-        employeId: z.string().uuid(),
-        notes: NOTES,
-      })
-      .parse(d),
+    upsertObjetEquipeSchema.parse(d),
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
