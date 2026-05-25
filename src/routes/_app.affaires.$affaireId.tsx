@@ -115,7 +115,7 @@ function AffaireDetailLayout() {
     ...(affaire.phase === "signe"
       ? [{ to: `/affaires/${affaire.id}/fabrication`, label: "Fabrication", match: path.endsWith("/fabrication") }]
       : []),
-    { to: `/affaires/${affaire.id}/staffing`, label: "Staffing", match: path.endsWith("/staffing") },
+    { to: `/affaires/${affaire.id}/staffing`, label: "Planning fab", match: path.endsWith("/staffing") },
     ...(canSeeEquipe
       ? [{ to: `/affaires/${affaire.id}/equipe`, label: "Équipe", match: path.endsWith("/equipe") }]
       : []),

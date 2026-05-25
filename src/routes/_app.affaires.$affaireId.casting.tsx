@@ -33,6 +33,8 @@ import { useEffect, useState } from "react";
 import { AddCastingMemberSheet } from "@/components/casting/AddCastingMemberSheet";
 import { RemoveCastingMemberDialog } from "@/components/casting/RemoveCastingMemberDialog";
 import { RepublishConflictDialog } from "@/components/staffing/RepublishConflictDialog";
+import { EquipeCapaciteIndicator } from "@/components/atoms/EquipeCapaciteIndicator";
+import { useAffaireCapacite } from "@/hooks/use-affaire-capacite";
 import type { CastingPhase } from "@/server/casting-chantier.functions";
 
 export const Route = createFileRoute("/_app/affaires/$affaireId/casting")({
@@ -92,8 +94,10 @@ interface ActiveRemove {
 function AffaireCastingPage() {
   const { affaireId } = Route.useParams();
   const flagOn = useFeatureFlag("equipes_3_niveaux_lecture");
+  const alertsFlagOn = useFeatureFlag("equipes_3_niveaux_alertes");
   const canEdit = useCapability("affaire.team.manage");
   const { data, isLoading } = useCastingChantier(affaireId);
+  const { data: capacite } = useAffaireCapacite(affaireId);
   const [numero, setNumero] = useState<string | null>(null);
   const [addPhase, setAddPhase] = useState<CastingPhase | null>(null);
   const [removeTarget, setRemoveTarget] = useState<ActiveRemove | null>(null);
@@ -193,11 +197,25 @@ function AffaireCastingPage() {
           return (
             <section key={phase} data-testid={`casting-section-${phase}`}>
               <div className="mb-2 flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <PhaseBadge phase={phase} variant="solid" size="md" />
                   <span className="text-xs text-muted-foreground">
                     {members.length} pers.
                   </span>
+                  {alertsFlagOn && capacite?.[phase] && (
+                    <EquipeCapaciteIndicator
+                      statut={capacite[phase].statut}
+                      nbPersonnes={capacite[phase].nb_personnes_castees}
+                      joursOuvres={capacite[phase].jours_ouvres_phase}
+                      capaciteEstimeeH={Number(capacite[phase].capacite_estimee_h)}
+                      heuresPrevues={Number(capacite[phase].heures_prevues)}
+                      ratio={
+                        capacite[phase].ratio_capacite_vs_prevu !== null
+                          ? Number(capacite[phase].ratio_capacite_vs_prevu)
+                          : null
+                      }
+                    />
+                  )}
                 </div>
                 {canEdit && (
                   <Button

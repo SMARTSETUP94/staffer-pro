@@ -38,7 +38,7 @@ const ROLES: { value: AppRole; label: string; hint?: string }[] = USER_ROLE_OPTI
 
 const CATEGORY_LABELS: Record<string, string> = {
   planning: "Planning",
-  staffing: "Staffing",
+  staffing: "Planning fab",
   affaires: "Affaires",
   devis: "Devis",
   heures: "Heures",
