@@ -104,6 +104,58 @@ export type Database = {
         }
         Relationships: []
       }
+      affaire_alertes_optin: {
+        Row: {
+          active: boolean
+          affaire_id: string
+          alerte_code: string
+          created_at: string
+          created_by: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          affaire_id: string
+          alerte_code: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          affaire_id?: string
+          alerte_code?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affaire_alertes_optin_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "affaires"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affaire_alertes_optin_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "v_affaire_consommation"
+            referencedColumns: ["affaire_id"]
+          },
+          {
+            foreignKeyName: "affaire_alertes_optin_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "v_affaires_avec_plan_status"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       affaire_commentaires: {
         Row: {
           affaire_id: string
@@ -3793,6 +3845,24 @@ export type Database = {
           },
         ]
       }
+      typologie_phases: {
+        Row: {
+          phases: string[]
+          typologie: string
+          updated_at: string
+        }
+        Insert: {
+          phases: string[]
+          typologie: string
+          updated_at?: string
+        }
+        Update: {
+          phases?: string[]
+          typologie?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           activated_at: string | null
@@ -4667,6 +4737,10 @@ export type Database = {
         Returns: Database["public"]["Enums"]["fabrication_etape_type"]
       }
       get_active_contrat_template_id: { Args: never; Returns: string }
+      get_active_phases_for_affaire: {
+        Args: { p_affaire_id: string }
+        Returns: string[]
+      }
       get_inbox_count: { Args: never; Returns: number }
       get_inbox_items: {
         Args: { p_limit?: number }
