@@ -35,6 +35,17 @@ interface DevisRow {
   total_heures: number;
   nb_postes: number;
   nb_assignations: number;
+  heures_reelles_validees: number;
+  heures_reelles_soumises: number;
+}
+
+function pctRealisationBadge(prevues: number, validees: number) {
+  if (prevues <= 0) return { label: "—", cls: "text-muted-foreground" };
+  const pct = (validees / prevues) * 100;
+  const txt = `${pct.toFixed(0)} %`;
+  if (pct > 115) return { label: txt, cls: "bg-destructive/15 text-destructive font-semibold" };
+  if (pct >= 95) return { label: txt, cls: "bg-amber-500/15 text-amber-700 dark:text-amber-400 font-semibold" };
+  return { label: txt, cls: "bg-green-500/15 text-green-700 dark:text-green-400 font-semibold" };
 }
 
 export const Route = createFileRoute("/_app/devis/")({
