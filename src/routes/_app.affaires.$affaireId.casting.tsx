@@ -94,8 +94,10 @@ interface ActiveRemove {
 function AffaireCastingPage() {
   const { affaireId } = Route.useParams();
   const flagOn = useFeatureFlag("equipes_3_niveaux_lecture");
+  const alertsFlagOn = useFeatureFlag("equipes_3_niveaux_alertes");
   const canEdit = useCapability("affaire.team.manage");
   const { data, isLoading } = useCastingChantier(affaireId);
+  const { data: capacite } = useAffaireCapacite(affaireId);
   const [numero, setNumero] = useState<string | null>(null);
   const [addPhase, setAddPhase] = useState<CastingPhase | null>(null);
   const [removeTarget, setRemoveTarget] = useState<ActiveRemove | null>(null);
