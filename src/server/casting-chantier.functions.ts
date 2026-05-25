@@ -31,6 +31,7 @@ export interface CastingMembre {
   role_terrain: string | null;
   notes: string | null;
   added_at: string;
+  metier_principal_id: number | null;
 }
 
 export interface CastingChantierData {
