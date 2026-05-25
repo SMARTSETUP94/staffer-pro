@@ -13,6 +13,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { addDays } from "@/lib/staffing/date-utils";
+import { resolveRepublishStrategy } from "@/lib/republish-strategy";
 
 /* ------------------------------------------------------------------ */
 /* Phases acceptées par affaire_equipe.phase (CHECK constraint)        */
