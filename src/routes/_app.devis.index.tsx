@@ -279,6 +279,18 @@ function DevisPage() {
                   <TableCell><DevisStatutBadge statut={r.statut} /></TableCell>
                   <TableCell className="text-right font-mono text-sm">{r.nb_postes}</TableCell>
                   <TableCell className="text-right font-mono text-sm">{r.total_heures.toFixed(1)} h</TableCell>
+                  <TableCell className="text-right font-mono text-sm">
+                    {r.heures_reelles_validees > 0 ? `${r.heures_reelles_validees.toFixed(1)} h` : <span className="text-muted-foreground">—</span>}
+                  </TableCell>
+                  <TableCell className="text-right font-mono text-sm text-muted-foreground">
+                    {r.heures_reelles_soumises > 0 ? `${r.heures_reelles_soumises.toFixed(1)} h` : "—"}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {(() => {
+                      const b = pctRealisationBadge(r.total_heures, r.heures_reelles_validees);
+                      return <span className={`inline-flex rounded-full px-2 py-0.5 font-mono text-xs ${b.cls}`}>{b.label}</span>;
+                    })()}
+                  </TableCell>
                   <TableCell className="text-right font-mono text-sm text-muted-foreground">
                     {r.montant_ht != null ? `${Number(r.montant_ht).toLocaleString("fr-FR")} €` : "—"}
                   </TableCell>
