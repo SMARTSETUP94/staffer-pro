@@ -323,21 +323,35 @@ function AffaireCastingPage() {
                 )}
               </div>
 
-              {/* FABRICATION : 3 sous-blocs Numérique / Construction / Finition + Autre */}
+              {/* FABRICATION : 6 sous-blocs par métier individuel + Autre */}
               {isFab && fabBuckets ? (
                 <TooltipProvider>
                   <div className="space-y-4 pl-1">
-                    {FAB_SOUS_ETAPES.map((se) => {
-                      const list = fabBuckets[se.key];
+                    {FAB_METIERS.map((fm) => {
+                      const list = fabBuckets.byMetier[fm.metierId] ?? [];
+                      const cap = capaciteMetier?.[fm.metierId];
                       return (
-                        <div key={se.key} data-testid={`casting-fab-${se.key}`}>
-                          <div className="mb-1.5 flex items-center justify-between gap-2">
-                            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                              {se.label}{" "}
-                              <span className="font-mono text-foreground/70">
-                                ({list.length})
-                              </span>
-                            </p>
+                        <div key={fm.metierId} data-testid={`casting-fab-metier-${fm.code}`}>
+                          <div className="mb-1.5 flex items-center justify-between gap-2 flex-wrap">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                {fm.label}{" "}
+                                <span className="font-mono text-foreground/70">
+                                  ({list.length})
+                                </span>
+                              </p>
+                              {alertsFlagOn && cap && (
+                                <EquipeCapaciteIndicator
+                                  size="sm"
+                                  statut={cap.statut}
+                                  nbPersonnes={cap.nb_personnes_castees}
+                                  joursOuvres={cap.jours_ouvres_phase}
+                                  capaciteEstimeeH={cap.capacite_estimee_h !== null ? Number(cap.capacite_estimee_h) : null}
+                                  heuresPrevues={cap.heures_prevues !== null ? Number(cap.heures_prevues) : null}
+                                  ratio={cap.ratio_capacite_vs_prevu !== null ? Number(cap.ratio_capacite_vs_prevu) : null}
+                                />
+                              )}
+                            </div>
                             {canEdit && (
                               <Button
                                 size="sm"
@@ -346,11 +360,11 @@ function AffaireCastingPage() {
                                 onClick={() =>
                                   setAddCtx({
                                     phase: "fabrication",
-                                    restrictMetierIds: se.metierIds,
-                                    subEtapeLabel: se.label,
+                                    restrictMetierIds: [fm.metierId],
+                                    subEtapeLabel: fm.label,
                                   })
                                 }
-                                data-testid={`casting-add-fab-${se.key}`}
+                                data-testid={`casting-add-fab-metier-${fm.code}`}
                               >
                                 <Plus className="h-3 w-3" />
                                 Personne
@@ -359,7 +373,7 @@ function AffaireCastingPage() {
                           </div>
                           {list.length === 0 ? (
                             <p className="rounded-md border border-dashed border-border bg-muted/10 px-3 py-2 text-[11px] italic text-muted-foreground">
-                              Aucune personne en {se.label.toLowerCase()}.
+                              Aucune personne en {fm.label.toLowerCase()}.
                             </p>
                           ) : (
                             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
