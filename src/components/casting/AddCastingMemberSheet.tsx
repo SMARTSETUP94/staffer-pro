@@ -203,7 +203,10 @@ export function AddCastingMemberSheet({
     <Sheet open={open} onOpenChange={(o) => (o ? onOpenChange(true) : handleClose())}>
       <SheetContent side="right" className="flex w-full flex-col gap-4 sm:max-w-md">
         <SheetHeader className="space-y-1">
-          <SheetTitle>Ajouter au casting — {phaseLabel}</SheetTitle>
+          <SheetTitle>
+            Ajouter au casting — {phaseLabel}
+            {subEtapeLabel ? <span className="ml-1 text-muted-foreground">/ {subEtapeLabel}</span> : null}
+          </SheetTitle>
           <SheetDescription>
             Sélectionnez une ou plusieurs personnes. Elles seront ajoutées à
             l'équipe affaire (N2) et pourront saisir leurs heures par héritage.
