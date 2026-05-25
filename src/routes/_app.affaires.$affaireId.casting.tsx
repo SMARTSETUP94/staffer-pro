@@ -35,7 +35,8 @@ import { RemoveCastingMemberDialog } from "@/components/casting/RemoveCastingMem
 import { RepublishConflictDialog } from "@/components/staffing/RepublishConflictDialog";
 import { EquipeCapaciteIndicator } from "@/components/atoms/EquipeCapaciteIndicator";
 import { useAffaireCapacite } from "@/hooks/use-affaire-capacite";
-import type { CastingPhase } from "@/server/casting-chantier.functions";
+import type { CastingMembre, CastingPhase } from "@/server/casting-chantier.functions";
+import { FAB_SOUS_ETAPES, getSousEtapeKey } from "@/lib/fab-sous-etapes";
 
 export const Route = createFileRoute("/_app/affaires/$affaireId/casting")({
   head: () => ({ meta: [{ title: "Casting du chantier — Setup Paris" }] }),
@@ -103,6 +104,13 @@ interface ActiveRemove {
   phase: CastingPhase;
 }
 
+interface ActiveAdd {
+  phase: CastingPhase;
+  /** Si renseigné : filtre métiers + sous-titre du sheet. */
+  restrictMetierIds?: number[];
+  subEtapeLabel?: string;
+}
+
 function AffaireCastingPage() {
   const { affaireId } = Route.useParams();
   const flagOn = useFeatureFlag("equipes_3_niveaux_lecture");
@@ -111,7 +119,7 @@ function AffaireCastingPage() {
   const { data, isLoading } = useCastingChantier(affaireId);
   const { data: capacite } = useAffaireCapacite(affaireId);
   const [numero, setNumero] = useState<string | null>(null);
-  const [addPhase, setAddPhase] = useState<CastingPhase | null>(null);
+  const [addCtx, setAddCtx] = useState<ActiveAdd | null>(null);
   const [removeTarget, setRemoveTarget] = useState<ActiveRemove | null>(null);
   const [publishedPlanId, setPublishedPlanId] = useState<string | null>(null);
   const [republishOpen, setRepublishOpen] = useState(false);
@@ -206,6 +214,81 @@ function AffaireCastingPage() {
       <div className="space-y-6">
         {phases.map((phase) => {
           const members = data?.phases[phase] ?? [];
+          const isFab = phase === "fabrication";
+
+          // Pour fabrication : décomposition en sous-étapes Numérique / Construction / Finition + Autre
+          const fabBuckets = isFab
+            ? (() => {
+                const buckets: Record<string, CastingMembre[]> = {
+                  numerique: [],
+                  construction: [],
+                  finition: [],
+                  autre: [],
+                };
+                for (const m of members) {
+                  const k =
+                    (m.metier_principal_id != null
+                      ? getSousEtapeKey(m.metier_principal_id)
+                      : undefined) ?? "autre";
+                  buckets[k].push(m);
+                }
+                return buckets;
+              })()
+            : null;
+
+          const renderMemberCard = (m: CastingMembre) => (
+            <article
+              key={m.id}
+              className="group relative flex items-start gap-3 rounded-lg border border-border bg-card p-3 transition hover:border-primary/40"
+            >
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex flex-1 items-start gap-3 min-w-0">
+                    <UserCircle2 className="h-7 w-7 shrink-0 text-muted-foreground" />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-foreground">
+                        {m.prenom} {m.nom}
+                      </p>
+                      {m.role_terrain ? (
+                        <p className="mt-0.5 truncate text-[11px] font-medium text-primary">
+                          {m.role_terrain}
+                        </p>
+                      ) : (
+                        <p className="mt-0.5 text-[11px] italic text-muted-foreground">
+                          Pas de rôle terrain défini
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <div className="space-y-1 text-xs">
+                    <p className="font-semibold">{m.prenom} {m.nom}</p>
+                    <p>Ajouté le {new Date(m.added_at).toLocaleDateString("fr-FR")}</p>
+                    {m.notes && <p className="italic text-muted-foreground">{m.notes}</p>}
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+              {canEdit && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    setRemoveTarget({
+                      employeId: m.employe_id,
+                      employeLabel: `${m.prenom} ${m.nom}`,
+                      phase,
+                    })
+                  }
+                  className="absolute right-2 top-2 rounded p-1 text-muted-foreground opacity-0 transition hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
+                  aria-label={`Retirer ${m.prenom} ${m.nom}`}
+                  data-testid={`casting-remove-${m.employe_id}-${phase}`}
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </article>
+          );
+
           return (
             <section key={phase} data-testid={`casting-section-${phase}`}>
               <div className="mb-2 flex items-center justify-between gap-2">
@@ -229,12 +312,12 @@ function AffaireCastingPage() {
                     />
                   )}
                 </div>
-                {canEdit && (
+                {canEdit && !isFab && (
                   <Button
                     size="sm"
                     variant="outline"
                     className="h-7 gap-1 text-xs"
-                    onClick={() => setAddPhase(phase)}
+                    onClick={() => setAddCtx({ phase })}
                     data-testid={`casting-add-${phase}`}
                   >
                     <Plus className="h-3.5 w-3.5" />
@@ -242,65 +325,76 @@ function AffaireCastingPage() {
                   </Button>
                 )}
               </div>
-              {members.length === 0 ? (
+
+              {/* FABRICATION : 3 sous-blocs Numérique / Construction / Finition + Autre */}
+              {isFab && fabBuckets ? (
+                <TooltipProvider>
+                  <div className="space-y-4 pl-1">
+                    {FAB_SOUS_ETAPES.map((se) => {
+                      const list = fabBuckets[se.key];
+                      return (
+                        <div key={se.key} data-testid={`casting-fab-${se.key}`}>
+                          <div className="mb-1.5 flex items-center justify-between gap-2">
+                            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                              {se.label}{" "}
+                              <span className="font-mono text-foreground/70">
+                                ({list.length})
+                              </span>
+                            </p>
+                            {canEdit && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-6 gap-1 text-[11px]"
+                                onClick={() =>
+                                  setAddCtx({
+                                    phase: "fabrication",
+                                    restrictMetierIds: se.metierIds,
+                                    subEtapeLabel: se.label,
+                                  })
+                                }
+                                data-testid={`casting-add-fab-${se.key}`}
+                              >
+                                <Plus className="h-3 w-3" />
+                                Personne
+                              </Button>
+                            )}
+                          </div>
+                          {list.length === 0 ? (
+                            <p className="rounded-md border border-dashed border-border bg-muted/10 px-3 py-2 text-[11px] italic text-muted-foreground">
+                              Aucune personne en {se.label.toLowerCase()}.
+                            </p>
+                          ) : (
+                            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                              {list.map(renderMemberCard)}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                    {fabBuckets.autre.length > 0 && (
+                      <div data-testid="casting-fab-autre">
+                        <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                          Autre{" "}
+                          <span className="font-mono text-foreground/70">
+                            ({fabBuckets.autre.length})
+                          </span>
+                        </p>
+                        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                          {fabBuckets.autre.map(renderMemberCard)}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </TooltipProvider>
+              ) : members.length === 0 ? (
                 <p className="rounded-md border border-dashed border-border bg-muted/10 px-3 py-3 text-xs italic text-muted-foreground">
                   Aucun membre — ajoutez une personne ou publiez un plan staffing.
                 </p>
               ) : (
                 <TooltipProvider>
                   <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                    {members.map((m) => (
-                      <article
-                        key={m.id}
-                        className="group relative flex items-start gap-3 rounded-lg border border-border bg-card p-3 transition hover:border-primary/40"
-                      >
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div className="flex flex-1 items-start gap-3 min-w-0">
-                              <UserCircle2 className="h-7 w-7 shrink-0 text-muted-foreground" />
-                              <div className="min-w-0 flex-1">
-                                <p className="truncate text-sm font-semibold text-foreground">
-                                  {m.prenom} {m.nom}
-                                </p>
-                                {m.role_terrain ? (
-                                  <p className="mt-0.5 truncate text-[11px] font-medium text-primary">
-                                    {m.role_terrain}
-                                  </p>
-                                ) : (
-                                  <p className="mt-0.5 text-[11px] italic text-muted-foreground">
-                                    Pas de rôle terrain défini
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <div className="space-y-1 text-xs">
-                              <p className="font-semibold">{m.prenom} {m.nom}</p>
-                              <p>Ajouté le {new Date(m.added_at).toLocaleDateString("fr-FR")}</p>
-                              {m.notes && <p className="italic text-muted-foreground">{m.notes}</p>}
-                            </div>
-                          </TooltipContent>
-                        </Tooltip>
-                        {canEdit && (
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setRemoveTarget({
-                                employeId: m.employe_id,
-                                employeLabel: `${m.prenom} ${m.nom}`,
-                                phase,
-                              })
-                            }
-                            className="absolute right-2 top-2 rounded p-1 text-muted-foreground opacity-0 transition hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
-                            aria-label={`Retirer ${m.prenom} ${m.nom}`}
-                            data-testid={`casting-remove-${m.employe_id}-${phase}`}
-                          >
-                            <X className="h-3.5 w-3.5" />
-                          </button>
-                        )}
-                      </article>
-                    ))}
+                    {members.map(renderMemberCard)}
                   </div>
                 </TooltipProvider>
               )}
@@ -309,14 +403,16 @@ function AffaireCastingPage() {
         })}
       </div>
 
-      {addPhase && (
+      {addCtx && (
         <AddCastingMemberSheet
-          open={!!addPhase}
-          onOpenChange={(o) => !o && setAddPhase(null)}
+          open={!!addCtx}
+          onOpenChange={(o) => !o && setAddCtx(null)}
           affaireId={affaireId}
-          phase={addPhase}
-          phaseLabel={PHASE_LABELS[addPhase]}
-          excludeEmployeIds={(data?.phases[addPhase] ?? []).map((m) => m.employe_id)}
+          phase={addCtx.phase}
+          phaseLabel={PHASE_LABELS[addCtx.phase]}
+          restrictMetierIds={addCtx.restrictMetierIds}
+          subEtapeLabel={addCtx.subEtapeLabel}
+          excludeEmployeIds={(data?.phases[addCtx.phase] ?? []).map((m) => m.employe_id)}
         />
       )}
 

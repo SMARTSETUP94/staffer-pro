@@ -41,6 +41,10 @@ interface Props {
   phaseLabel: string;
   /** Ids déjà présents dans la phase (grisés mais affichés en tête). */
   excludeEmployeIds?: string[];
+  /** Si fourni, ne montre que les employés dont `metier_principal_id` ∈ liste. */
+  restrictMetierIds?: number[];
+  /** Sous-titre injecté dans le sheet (ex. "Numérique"). */
+  subEtapeLabel?: string;
 }
 
 const PHASE_LABEL_INLINE: Record<CastingPhase, string> = {
@@ -78,6 +82,8 @@ export function AddCastingMemberSheet({
   phase,
   phaseLabel,
   excludeEmployeIds = [],
+  restrictMetierIds,
+  subEtapeLabel,
 }: Props) {
   const qc = useQueryClient();
   const fetchEmployes = useServerFn(listAllActiveEmployes);
@@ -96,15 +102,23 @@ export function AddCastingMemberSheet({
   });
 
   const excludeSet = useMemo(() => new Set(excludeEmployeIds), [excludeEmployeIds]);
+  const restrictSet = useMemo(
+    () => (restrictMetierIds && restrictMetierIds.length > 0 ? new Set(restrictMetierIds) : null),
+    [restrictMetierIds],
+  );
 
   /**
    * Liste affichée : déjà casting (disabled, top) → puis CDI → CDD → Intérim,
    * chaque groupe trié par nom. La recherche filtre les deux nom/prénom.
+   * Si restrictMetierIds est fourni, filtre sur metier_principal_id.
    */
   const sorted = useMemo(() => {
     const all = (employes ?? []) as EmpRow[];
     const q = search.trim().toLowerCase();
     const filtered = all.filter((e) => {
+      if (restrictSet && (e.metier_principal_id == null || !restrictSet.has(e.metier_principal_id))) {
+        return false;
+      }
       if (!q) return true;
       return (
         e.nom.toLowerCase().includes(q) || e.prenom.toLowerCase().includes(q)
@@ -119,7 +133,7 @@ export function AddCastingMemberSheet({
       if (at !== bt) return at - bt;
       return (a.nom + a.prenom).localeCompare(b.nom + b.prenom, "fr");
     });
-  }, [employes, search, excludeSet]);
+  }, [employes, search, excludeSet, restrictSet]);
 
   const selectableCount = sorted.filter((e) => !excludeSet.has(e.id)).length;
   const selectedCount = selectedIds.size;
@@ -189,7 +203,10 @@ export function AddCastingMemberSheet({
     <Sheet open={open} onOpenChange={(o) => (o ? onOpenChange(true) : handleClose())}>
       <SheetContent side="right" className="flex w-full flex-col gap-4 sm:max-w-md">
         <SheetHeader className="space-y-1">
-          <SheetTitle>Ajouter au casting — {phaseLabel}</SheetTitle>
+          <SheetTitle>
+            Ajouter au casting — {phaseLabel}
+            {subEtapeLabel ? <span className="ml-1 text-muted-foreground">/ {subEtapeLabel}</span> : null}
+          </SheetTitle>
           <SheetDescription>
             Sélectionnez une ou plusieurs personnes. Elles seront ajoutées à
             l'équipe affaire (N2) et pourront saisir leurs heures par héritage.
