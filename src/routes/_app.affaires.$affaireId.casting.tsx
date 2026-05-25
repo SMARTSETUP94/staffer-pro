@@ -299,13 +299,14 @@ function AffaireCastingPage() {
                       statut={capacite[phase].statut}
                       nbPersonnes={capacite[phase].nb_personnes_castees}
                       joursOuvres={capacite[phase].jours_ouvres_phase}
-                      capaciteEstimeeH={Number(capacite[phase].capacite_estimee_h)}
-                      heuresPrevues={Number(capacite[phase].heures_prevues)}
+                      capaciteEstimeeH={capacite[phase].capacite_estimee_h !== null ? Number(capacite[phase].capacite_estimee_h) : null}
+                      heuresPrevues={capacite[phase].heures_prevues !== null ? Number(capacite[phase].heures_prevues) : null}
                       ratio={
                         capacite[phase].ratio_capacite_vs_prevu !== null
                           ? Number(capacite[phase].ratio_capacite_vs_prevu)
                           : null
                       }
+                      datesCtaHref={capacite[phase].statut === "dates_manquantes" ? `/affaires/${affaireId}/synthese` : undefined}
                     />
                   )}
                 </div>
