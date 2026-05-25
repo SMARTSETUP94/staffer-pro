@@ -19,6 +19,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 export type CastingPhase =
   | "commercial_etude"
   | "fabrication"
+  | "logistique"
   | "montage"
   | "demontage";
 
@@ -41,6 +42,7 @@ export interface CastingChantierData {
 const EMPTY_PHASES = (): Record<CastingPhase, CastingMembre[]> => ({
   commercial_etude: [],
   fabrication: [],
+  logistique: [],
   montage: [],
   demontage: [],
 });

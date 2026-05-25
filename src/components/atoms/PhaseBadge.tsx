@@ -1,6 +1,11 @@
 import { cn } from "@/lib/utils";
 
-export type AffairePhase = "commercial_etude" | "fabrication" | "montage" | "demontage";
+export type AffairePhase =
+  | "commercial_etude"
+  | "fabrication"
+  | "logistique"
+  | "montage"
+  | "demontage";
 
 const PHASE_META: Record<
   AffairePhase,
@@ -8,6 +13,7 @@ const PHASE_META: Record<
 > = {
   commercial_etude: { label: "Commercial / Étude", short: "C&E",  color: "#6366f1", bg: "#6366f114", border: "#6366f140" },
   fabrication:      { label: "Fabrication",         short: "Fab",  color: "#0ea5e9", bg: "#0ea5e914", border: "#0ea5e940" },
+  logistique:       { label: "Logistique",          short: "Log",  color: "#10b981", bg: "#10b98114", border: "#10b98140" },
   montage:          { label: "Montage",             short: "Mont", color: "#f59e0b", bg: "#f59e0b14", border: "#f59e0b40" },
   demontage:        { label: "Démontage",           short: "Dém",  color: "#ef4444", bg: "#ef444414", border: "#ef444440" },
 };

@@ -8,6 +8,7 @@ import { z } from "zod";
 export const PHASE_ENUM = z.enum([
   "commercial_etude",
   "fabrication",
+  "logistique",
   "montage",
   "demontage",
 ]);

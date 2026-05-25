@@ -46,6 +46,7 @@ interface Props {
 const PHASE_LABEL_INLINE: Record<CastingPhase, string> = {
   commercial_etude: "Commercial / Étude",
   fabrication: "Fabrication",
+  logistique: "Logistique",
   montage: "Montage",
   demontage: "Démontage",
 };

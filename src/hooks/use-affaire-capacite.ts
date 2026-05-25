@@ -13,9 +13,9 @@ import type { CapaciteStatut } from "@/components/atoms/EquipeCapaciteIndicator"
 export interface CapacitePhaseRow {
   phase: string;
   nb_personnes_castees: number;
-  heures_prevues: number;
+  heures_prevues: number | null;
   jours_ouvres_phase: number;
-  capacite_estimee_h: number;
+  capacite_estimee_h: number | null;
   ratio_capacite_vs_prevu: number | null;
   statut: CapaciteStatut;
   phase_start: string | null;

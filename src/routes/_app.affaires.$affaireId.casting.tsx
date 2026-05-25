@@ -64,16 +64,27 @@ function deriveTypologie(numero: string | null | undefined): Typologie {
 const ALL_PHASES: AffairePhase[] = [
   "commercial_etude",
   "fabrication",
+  "logistique",
   "montage",
   "demontage",
 ];
 
 function orderedPhasesFor(typo: Typologie): AffairePhase[] {
+  // Sprint D / Batch 2 — ordre par typologie, filtré par typologie_phases côté DB.
   if (typo === "montage_demontage") {
-    return ["commercial_etude", "montage", "demontage", "fabrication"];
+    return ["commercial_etude", "logistique", "montage", "demontage"];
   }
   if (typo === "prototype") {
-    return ["fabrication", "commercial_etude", "montage", "demontage"];
+    return ["commercial_etude", "fabrication"];
+  }
+  if (typo === "fabrication") {
+    return ["commercial_etude", "fabrication", "logistique"];
+  }
+  if (typo === "stockage") {
+    return ["commercial_etude", "logistique"];
+  }
+  if (typo === "non_operationnel") {
+    return ["commercial_etude"];
   }
   return ALL_PHASES;
 }
@@ -81,6 +92,7 @@ function orderedPhasesFor(typo: Typologie): AffairePhase[] {
 const PHASE_LABELS: Record<AffairePhase, string> = {
   commercial_etude: "Commercial / Étude",
   fabrication: "Fabrication",
+  logistique: "Logistique",
   montage: "Montage",
   demontage: "Démontage",
 };
