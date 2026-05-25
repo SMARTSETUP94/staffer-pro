@@ -13,6 +13,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { addDays } from "@/lib/staffing/date-utils";
+import { resolveRepublishStrategy } from "@/lib/republish-strategy";
 
 /* ------------------------------------------------------------------ */
 /* Phases acceptées par affaire_equipe.phase (CHECK constraint)        */
@@ -572,10 +573,7 @@ export const detectEquipeOverrides = createServerFn({ method: "POST" })
     };
     const overrides = r.overrides ?? 0;
     const ratio = Number(r.ratio ?? 0);
-    let suggested: RepublishStrategy = "auto";
-    if (overrides === 0) suggested = "auto";
-    else if (ratio <= 30) suggested = "merge";
-    else suggested = "manual";
+    const suggested = resolveRepublishStrategy({ overrides, ratio });
     return {
       overrides,
       n2_added: r.n2_added ?? 0,

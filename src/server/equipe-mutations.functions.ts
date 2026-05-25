@@ -21,12 +21,13 @@
  * réactive un removed_at NULL si la ligne existait en soft-delete.
  */
 import { createServerFn } from "@tanstack/react-start";
-import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-
-const PHASE_ENUM = z.enum(["commercial_etude", "fabrication", "montage", "demontage"]);
-const NOTES = z.string().trim().max(200).optional().nullable();
-const ROLE = z.string().trim().max(200).optional().nullable();
+import {
+  upsertAffaireEquipeSchema,
+  removeAffaireEquipeSchema,
+  upsertObjetEquipeSchema,
+  removeObjetEquipeSchema,
+} from "@/lib/equipe-mutations-schemas";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type SupaCtx = any;
@@ -50,17 +51,7 @@ export const upsertAffaireEquipeMember = createServerFn({ method: "POST" })
     phase: "commercial_etude" | "fabrication" | "montage" | "demontage";
     roleTerrain?: string | null;
     notes?: string | null;
-  }) =>
-    z
-      .object({
-        affaireId: z.string().uuid(),
-        employeId: z.string().uuid(),
-        phase: PHASE_ENUM,
-        roleTerrain: ROLE,
-        notes: NOTES,
-      })
-      .parse(d),
-  )
+  }) => upsertAffaireEquipeSchema.parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await assertCap(supabase, "affaire.team.manage");
@@ -96,16 +87,7 @@ export const removeAffaireEquipeMember = createServerFn({ method: "POST" })
     employeId: string;
     phase: "commercial_etude" | "fabrication" | "montage" | "demontage";
     cascadeObjets?: boolean;
-  }) =>
-    z
-      .object({
-        affaireId: z.string().uuid(),
-        employeId: z.string().uuid(),
-        phase: PHASE_ENUM,
-        cascadeObjets: z.boolean().optional().default(false),
-      })
-      .parse(d),
-  )
+  }) => removeAffaireEquipeSchema.parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await assertCap(supabase, "affaire.team.manage");
@@ -150,13 +132,7 @@ export const removeAffaireEquipeMember = createServerFn({ method: "POST" })
 export const upsertObjetEquipeMember = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { objetId: string; employeId: string; notes?: string | null }) =>
-    z
-      .object({
-        objetId: z.string().uuid(),
-        employeId: z.string().uuid(),
-        notes: NOTES,
-      })
-      .parse(d),
+    upsertObjetEquipeSchema.parse(d),
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
@@ -212,12 +188,7 @@ export const upsertObjetEquipeMember = createServerFn({ method: "POST" })
 export const removeObjetEquipeMember = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { objetId: string; employeId: string }) =>
-    z
-      .object({
-        objetId: z.string().uuid(),
-        employeId: z.string().uuid(),
-      })
-      .parse(d),
+    removeObjetEquipeSchema.parse(d),
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
