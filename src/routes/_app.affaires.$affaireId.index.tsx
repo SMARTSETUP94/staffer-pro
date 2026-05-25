@@ -380,6 +380,46 @@ function AffaireSynthesePage() {
         </section>
       )}
 
+      {isAdminOrChef && (
+        <section>
+          <p className="overline mb-3 flex items-center gap-2">
+            <Hammer className="h-3 w-3" />— Dates clés chantier
+          </p>
+          <div className="rounded-2xl border border-border bg-card p-4">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="d-montage" className="text-xs">Début montage</Label>
+                <Input id="d-montage" type="date" value={dMontage} onChange={(e) => setDMontage(e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="d-evt-debut" className="text-xs">Début événement</Label>
+                <Input id="d-evt-debut" type="date" value={dEvtDebut} onChange={(e) => setDEvtDebut(e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="d-evt-fin" className="text-xs">Fin événement</Label>
+                <Input id="d-evt-fin" type="date" value={dEvtFin} onChange={(e) => setDEvtFin(e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="d-demontage" className="text-xs">Fin démontage</Label>
+                <Input id="d-demontage" type="date" value={dDemontage} onChange={(e) => setDDemontage(e.target.value)} />
+              </div>
+            </div>
+            {datesWarning && (
+              <p className="mt-3 text-xs text-amber-600 dark:text-amber-400">⚠ {datesWarning}</p>
+            )}
+            <div className="mt-4 flex justify-end">
+              <Button onClick={saveDatesCles} disabled={savingDates} className="rounded-xl">
+                {savingDates && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Enregistrer les dates
+              </Button>
+            </div>
+            <p className="mt-2 text-[11px] text-muted-foreground">
+              Utilisées pour le Gantt « Planning chantier ». Ordre attendu : montage ≤ événement ≤ démontage.
+            </p>
+          </div>
+        </section>
+      )}
+
       {notes && (
         <section>
           <p className="overline mb-2">— Notes affaire</p>
