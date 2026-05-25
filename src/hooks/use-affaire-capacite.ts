@@ -29,12 +29,11 @@ export function useAffaireCapacite(affaireId: string | undefined) {
     staleTime: 30_000,
     queryFn: async (): Promise<Record<string, CapacitePhaseRow>> => {
       const { data, error } = await supabase
-        // @ts-expect-error vue récente, types regen async
         .from("v_affaire_equipe_capacite")
         .select(
           "phase,nb_personnes_castees,heures_prevues,jours_ouvres_phase,capacite_estimee_h,ratio_capacite_vs_prevu,statut,phase_start,phase_end",
         )
-        .eq("affaire_id", affaireId);
+        .eq("affaire_id", affaireId!);
       if (error) throw error;
       const map: Record<string, CapacitePhaseRow> = {};
       for (const r of (data ?? []) as CapacitePhaseRow[]) {
