@@ -43,7 +43,7 @@ describe("C1 / upsertAffaireEquipeSchema", () => {
 
   it("rejette une phase inconnue", () => {
     expect(() =>
-      upsertAffaireEquipeSchema.parse({ ...base, phase: "logistique" as never }),
+      upsertAffaireEquipeSchema.parse({ ...base, phase: "phase_inexistante" as never }),
     ).toThrow();
   });
 
