@@ -4006,6 +4006,21 @@ export type Database = {
         }
         Relationships: []
       }
+      v_affaire_equipe_capacite: {
+        Row: {
+          affaire_id: string | null
+          capacite_estimee_h: number | null
+          heures_prevues: number | null
+          jours_ouvres_phase: number | null
+          nb_personnes_castees: number | null
+          phase: string | null
+          phase_end: string | null
+          phase_start: string | null
+          ratio_capacite_vs_prevu: number | null
+          statut: string | null
+        }
+        Relationships: []
+      }
       v_affaires_avec_plan_status: {
         Row: {
           charge_affaires_id: string | null
@@ -4780,6 +4795,10 @@ export type Database = {
       is_devis_termine: { Args: { _devis_id: string }; Returns: boolean }
       is_feature_flag_enabled: { Args: { _flag_key: string }; Returns: boolean }
       is_profile_complete: { Args: { p_id: string }; Returns: boolean }
+      jours_ouvres_entre: {
+        Args: { _d1: string; _d2: string }
+        Returns: number
+      }
       mes_affaires_chef: {
         Args: { _employe_id: string }
         Returns: {
