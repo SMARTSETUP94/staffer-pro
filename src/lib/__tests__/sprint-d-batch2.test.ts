@@ -8,6 +8,9 @@ import {
   FAB_SOUS_ETAPES,
   getSousEtapeKey,
   getSousEtapeForMetier,
+  FAB_METIERS,
+  FAB_METIER_IDS,
+  isFabMetier,
 } from "@/lib/fab-sous-etapes";
 import {
   ALERTE_CODES,
