@@ -252,7 +252,10 @@ function DevisPage() {
                 <TableHead>Libellé</TableHead>
                 <TableHead>Statut</TableHead>
                 <TableHead className="text-right">Postes</TableHead>
-                <TableHead className="text-right">Heures</TableHead>
+                <TableHead className="text-right">Heures prévues</TableHead>
+                <TableHead className="text-right" title="Heures saisies validées">Consommé validé</TableHead>
+                <TableHead className="text-right" title="Heures saisies en attente de validation">En attente</TableHead>
+                <TableHead className="text-right" title="Heures validées / Heures prévues">% réalisation</TableHead>
                 <TableHead className="text-right">Montant HT</TableHead>
                 <TableHead className="text-right">Assignations</TableHead>
                 <TableHead className="w-[120px]"></TableHead>
