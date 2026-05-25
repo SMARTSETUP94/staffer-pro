@@ -41,6 +41,10 @@ interface Props {
   phaseLabel: string;
   /** Ids déjà présents dans la phase (grisés mais affichés en tête). */
   excludeEmployeIds?: string[];
+  /** Si fourni, ne montre que les employés dont `metier_principal_id` ∈ liste. */
+  restrictMetierIds?: number[];
+  /** Sous-titre injecté dans le sheet (ex. "Numérique"). */
+  subEtapeLabel?: string;
 }
 
 const PHASE_LABEL_INLINE: Record<CastingPhase, string> = {
