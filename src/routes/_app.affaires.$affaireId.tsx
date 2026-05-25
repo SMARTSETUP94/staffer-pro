@@ -111,6 +111,7 @@ function AffaireDetailLayout() {
 
   const tabs = [
     { to: `/affaires/${affaire.id}`, label: "Synthèse", match: path === `/affaires/${affaire.id}` },
+    { to: `/affaires/${affaire.id}/planning-chantier`, label: "Planning chantier", match: path.endsWith("/planning-chantier") },
     { to: `/affaires/${affaire.id}/devis`, label: "Devis", match: path.endsWith("/devis") },
     ...(affaire.phase === "signe"
       ? [{ to: `/affaires/${affaire.id}/fabrication`, label: "Fabrication", match: path.endsWith("/fabrication") }]
