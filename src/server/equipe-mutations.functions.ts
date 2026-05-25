@@ -21,12 +21,13 @@
  * réactive un removed_at NULL si la ligne existait en soft-delete.
  */
 import { createServerFn } from "@tanstack/react-start";
-import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-
-const PHASE_ENUM = z.enum(["commercial_etude", "fabrication", "montage", "demontage"]);
-const NOTES = z.string().trim().max(200).optional().nullable();
-const ROLE = z.string().trim().max(200).optional().nullable();
+import {
+  upsertAffaireEquipeSchema,
+  removeAffaireEquipeSchema,
+  upsertObjetEquipeSchema,
+  removeObjetEquipeSchema,
+} from "@/lib/equipe-mutations-schemas";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type SupaCtx = any;
