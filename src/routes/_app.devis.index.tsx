@@ -73,6 +73,7 @@ function DevisPage() {
     const ids = (dv ?? []).map((d) => d.id);
     let postesByDevis = new Map<string, { count: number; heures: number }>();
     let assignByDevis = new Map<string, number>();
+    let consoByDevis = new Map<string, { validees: number; soumises: number }>();
     if (ids.length) {
       const { data: pst } = await supabase
         .from("devis_postes").select("devis_id, heures_prevues").in("devis_id", ids);
@@ -86,6 +87,17 @@ function DevisPage() {
       (ass ?? []).forEach((a) => {
         if (!a.devis_id) return;
         assignByDevis.set(a.devis_id, (assignByDevis.get(a.devis_id) ?? 0) + 1);
+      });
+      const { data: cons } = await supabase
+        .from("v_devis_consommation")
+        .select("devis_id, heures_reelles_validees, heures_reelles_soumises")
+        .in("devis_id", ids);
+      (cons ?? []).forEach((c) => {
+        if (!c.devis_id) return;
+        const cur = consoByDevis.get(c.devis_id) ?? { validees: 0, soumises: 0 };
+        cur.validees += Number(c.heures_reelles_validees ?? 0);
+        cur.soumises += Number(c.heures_reelles_soumises ?? 0);
+        consoByDevis.set(c.devis_id, cur);
       });
     }
     setRows(
@@ -101,6 +113,8 @@ function DevisPage() {
         total_heures: postesByDevis.get(d.id)?.heures ?? 0,
         nb_postes: postesByDevis.get(d.id)?.count ?? 0,
         nb_assignations: assignByDevis.get(d.id) ?? 0,
+        heures_reelles_validees: consoByDevis.get(d.id)?.validees ?? 0,
+        heures_reelles_soumises: consoByDevis.get(d.id)?.soumises ?? 0,
       })),
     );
     setLoading(false);
