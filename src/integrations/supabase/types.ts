@@ -461,6 +461,8 @@ export type Database = {
           created_at: string
           date_debut: string | null
           date_demontage: string | null
+          date_evenement_debut: string | null
+          date_evenement_fin: string | null
           date_fin_prevue: string | null
           date_montage: string | null
           date_opportunite: string | null
@@ -494,6 +496,8 @@ export type Database = {
           created_at?: string
           date_debut?: string | null
           date_demontage?: string | null
+          date_evenement_debut?: string | null
+          date_evenement_fin?: string | null
           date_fin_prevue?: string | null
           date_montage?: string | null
           date_opportunite?: string | null
@@ -527,6 +531,8 @@ export type Database = {
           created_at?: string
           date_debut?: string | null
           date_demontage?: string | null
+          date_evenement_debut?: string | null
+          date_evenement_fin?: string | null
           date_fin_prevue?: string | null
           date_montage?: string | null
           date_opportunite?: string | null

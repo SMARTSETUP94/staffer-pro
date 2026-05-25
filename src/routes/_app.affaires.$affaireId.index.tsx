@@ -33,6 +33,12 @@ function AffaireSynthesePage() {
   const [hMontage, setHMontage] = useState<string>("0");
   const [hDemontage, setHDemontage] = useState<string>("0");
   const [savingMD, setSavingMD] = useState(false);
+  // Sprint D Batch 3 — dates clés chantier
+  const [dMontage, setDMontage] = useState<string>("");
+  const [dEvtDebut, setDEvtDebut] = useState<string>("");
+  const [dEvtFin, setDEvtFin] = useState<string>("");
+  const [dDemontage, setDDemontage] = useState<string>("");
+  const [savingDates, setSavingDates] = useState(false);
   // v0.40.0e — état d'expansion par métier (drilldown devis)
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
@@ -49,7 +55,7 @@ function AffaireSynthesePage() {
           .eq("affaire_id", affaireId),
         supabase
           .from("affaires")
-          .select("notes, heures_prevues_montage, heures_prevues_demontage")
+          .select("notes, heures_prevues_montage, heures_prevues_demontage, date_montage, date_evenement_debut, date_evenement_fin, date_demontage")
           .eq("id", affaireId)
           .maybeSingle(),
       ]);
@@ -58,6 +64,10 @@ function AffaireSynthesePage() {
       setNotes((aff?.notes as string | null) ?? null);
       setHMontage(String(aff?.heures_prevues_montage ?? 0));
       setHDemontage(String(aff?.heures_prevues_demontage ?? 0));
+      setDMontage((aff?.date_montage as string | null) ?? "");
+      setDEvtDebut((aff?.date_evenement_debut as string | null) ?? "");
+      setDEvtFin((aff?.date_evenement_fin as string | null) ?? "");
+      setDDemontage((aff?.date_demontage as string | null) ?? "");
       setLoading(false);
     })();
     return () => {
@@ -80,6 +90,34 @@ function AffaireSynthesePage() {
       toast.success("Heures montage/démontage enregistrées");
     }
   };
+
+  const saveDatesCles = async () => {
+    setSavingDates(true);
+    const { error } = await supabase
+      .from("affaires")
+      .update({
+        date_montage: dMontage || null,
+        date_evenement_debut: dEvtDebut || null,
+        date_evenement_fin: dEvtFin || null,
+        date_demontage: dDemontage || null,
+      })
+      .eq("id", affaireId);
+    setSavingDates(false);
+    if (error) {
+      toast.error("Enregistrement impossible", { description: error.message });
+    } else {
+      toast.success("Dates clés enregistrées");
+    }
+  };
+
+  const datesWarning = (() => {
+    const dates = [dMontage, dEvtDebut, dEvtFin, dDemontage].filter(Boolean);
+    for (let i = 1; i < dates.length; i++) {
+      if (dates[i] < dates[i - 1]) return "L'ordre chronologique n'est pas respecté (montage ≤ événement ≤ démontage).";
+    }
+    return null;
+  })();
+
 
   // v0.40.0e — Consolidation par métier (1 ligne par métier, drilldown par devis).
   const groups = useMemo(() => consolidateByMetier(lines), [lines]);
@@ -337,6 +375,46 @@ function AffaireSynthesePage() {
               <span className="font-semibold text-foreground">
                 {((Number(hMontage) || 0) + (Number(hDemontage) || 0)).toFixed(1)} h
               </span>
+            </p>
+          </div>
+        </section>
+      )}
+
+      {isAdminOrChef && (
+        <section>
+          <p className="overline mb-3 flex items-center gap-2">
+            <Hammer className="h-3 w-3" />— Dates clés chantier
+          </p>
+          <div className="rounded-2xl border border-border bg-card p-4">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="d-montage" className="text-xs">Début montage</Label>
+                <Input id="d-montage" type="date" value={dMontage} onChange={(e) => setDMontage(e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="d-evt-debut" className="text-xs">Début événement</Label>
+                <Input id="d-evt-debut" type="date" value={dEvtDebut} onChange={(e) => setDEvtDebut(e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="d-evt-fin" className="text-xs">Fin événement</Label>
+                <Input id="d-evt-fin" type="date" value={dEvtFin} onChange={(e) => setDEvtFin(e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="d-demontage" className="text-xs">Fin démontage</Label>
+                <Input id="d-demontage" type="date" value={dDemontage} onChange={(e) => setDDemontage(e.target.value)} />
+              </div>
+            </div>
+            {datesWarning && (
+              <p className="mt-3 text-xs text-amber-600 dark:text-amber-400">⚠ {datesWarning}</p>
+            )}
+            <div className="mt-4 flex justify-end">
+              <Button onClick={saveDatesCles} disabled={savingDates} className="rounded-xl">
+                {savingDates && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Enregistrer les dates
+              </Button>
+            </div>
+            <p className="mt-2 text-[11px] text-muted-foreground">
+              Utilisées pour le Gantt « Planning chantier ». Ordre attendu : montage ≤ événement ≤ démontage.
             </p>
           </div>
         </section>

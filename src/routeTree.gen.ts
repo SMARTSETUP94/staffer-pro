@@ -100,6 +100,7 @@ import { Route as AppAdminAuditRouteImport } from './routes/_app.admin.audit'
 import { Route as AppAffairesAffaireIdIndexRouteImport } from './routes/_app.affaires.$affaireId.index'
 import { Route as MobileChefAffairesAffaireIdRouteImport } from './routes/mobile.chef.affaires.$affaireId'
 import { Route as AppAffairesAffaireIdStaffingRouteImport } from './routes/_app.affaires.$affaireId.staffing'
+import { Route as AppAffairesAffaireIdPlanningChantierRouteImport } from './routes/_app.affaires.$affaireId.planning-chantier'
 import { Route as AppAffairesAffaireIdJournalRouteImport } from './routes/_app.affaires.$affaireId.journal'
 import { Route as AppAffairesAffaireIdFabricationRouteImport } from './routes/_app.affaires.$affaireId.fabrication'
 import { Route as AppAffairesAffaireIdEquipeRouteImport } from './routes/_app.affaires.$affaireId.equipe'
@@ -573,6 +574,12 @@ const AppAffairesAffaireIdStaffingRoute =
     path: '/staffing',
     getParentRoute: () => AppAffairesAffaireIdRoute,
   } as any)
+const AppAffairesAffaireIdPlanningChantierRoute =
+  AppAffairesAffaireIdPlanningChantierRouteImport.update({
+    id: '/planning-chantier',
+    path: '/planning-chantier',
+    getParentRoute: () => AppAffairesAffaireIdRoute,
+  } as any)
 const AppAffairesAffaireIdJournalRoute =
   AppAffairesAffaireIdJournalRouteImport.update({
     id: '/journal',
@@ -710,6 +717,7 @@ export interface FileRoutesByFullPath {
   '/affaires/$affaireId/equipe': typeof AppAffairesAffaireIdEquipeRoute
   '/affaires/$affaireId/fabrication': typeof AppAffairesAffaireIdFabricationRoute
   '/affaires/$affaireId/journal': typeof AppAffairesAffaireIdJournalRoute
+  '/affaires/$affaireId/planning-chantier': typeof AppAffairesAffaireIdPlanningChantierRoute
   '/affaires/$affaireId/staffing': typeof AppAffairesAffaireIdStaffingRoute
   '/mobile/chef/affaires/$affaireId': typeof MobileChefAffairesAffaireIdRoute
   '/affaires/$affaireId/': typeof AppAffairesAffaireIdIndexRoute
@@ -806,6 +814,7 @@ export interface FileRoutesByTo {
   '/affaires/$affaireId/equipe': typeof AppAffairesAffaireIdEquipeRoute
   '/affaires/$affaireId/fabrication': typeof AppAffairesAffaireIdFabricationRoute
   '/affaires/$affaireId/journal': typeof AppAffairesAffaireIdJournalRoute
+  '/affaires/$affaireId/planning-chantier': typeof AppAffairesAffaireIdPlanningChantierRoute
   '/affaires/$affaireId/staffing': typeof AppAffairesAffaireIdStaffingRoute
   '/mobile/chef/affaires/$affaireId': typeof MobileChefAffairesAffaireIdRoute
   '/affaires/$affaireId': typeof AppAffairesAffaireIdIndexRoute
@@ -907,6 +916,7 @@ export interface FileRoutesById {
   '/_app/affaires/$affaireId/equipe': typeof AppAffairesAffaireIdEquipeRoute
   '/_app/affaires/$affaireId/fabrication': typeof AppAffairesAffaireIdFabricationRoute
   '/_app/affaires/$affaireId/journal': typeof AppAffairesAffaireIdJournalRoute
+  '/_app/affaires/$affaireId/planning-chantier': typeof AppAffairesAffaireIdPlanningChantierRoute
   '/_app/affaires/$affaireId/staffing': typeof AppAffairesAffaireIdStaffingRoute
   '/mobile/chef/affaires/$affaireId': typeof MobileChefAffairesAffaireIdRoute
   '/_app/affaires/$affaireId/': typeof AppAffairesAffaireIdIndexRoute
@@ -1008,6 +1018,7 @@ export interface FileRouteTypes {
     | '/affaires/$affaireId/equipe'
     | '/affaires/$affaireId/fabrication'
     | '/affaires/$affaireId/journal'
+    | '/affaires/$affaireId/planning-chantier'
     | '/affaires/$affaireId/staffing'
     | '/mobile/chef/affaires/$affaireId'
     | '/affaires/$affaireId/'
@@ -1104,6 +1115,7 @@ export interface FileRouteTypes {
     | '/affaires/$affaireId/equipe'
     | '/affaires/$affaireId/fabrication'
     | '/affaires/$affaireId/journal'
+    | '/affaires/$affaireId/planning-chantier'
     | '/affaires/$affaireId/staffing'
     | '/mobile/chef/affaires/$affaireId'
     | '/affaires/$affaireId'
@@ -1204,6 +1216,7 @@ export interface FileRouteTypes {
     | '/_app/affaires/$affaireId/equipe'
     | '/_app/affaires/$affaireId/fabrication'
     | '/_app/affaires/$affaireId/journal'
+    | '/_app/affaires/$affaireId/planning-chantier'
     | '/_app/affaires/$affaireId/staffing'
     | '/mobile/chef/affaires/$affaireId'
     | '/_app/affaires/$affaireId/'
@@ -1869,6 +1882,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAffairesAffaireIdStaffingRouteImport
       parentRoute: typeof AppAffairesAffaireIdRoute
     }
+    '/_app/affaires/$affaireId/planning-chantier': {
+      id: '/_app/affaires/$affaireId/planning-chantier'
+      path: '/planning-chantier'
+      fullPath: '/affaires/$affaireId/planning-chantier'
+      preLoaderRoute: typeof AppAffairesAffaireIdPlanningChantierRouteImport
+      parentRoute: typeof AppAffairesAffaireIdRoute
+    }
     '/_app/affaires/$affaireId/journal': {
       id: '/_app/affaires/$affaireId/journal'
       path: '/journal'
@@ -1968,6 +1988,7 @@ interface AppAffairesAffaireIdRouteChildren {
   AppAffairesAffaireIdEquipeRoute: typeof AppAffairesAffaireIdEquipeRoute
   AppAffairesAffaireIdFabricationRoute: typeof AppAffairesAffaireIdFabricationRoute
   AppAffairesAffaireIdJournalRoute: typeof AppAffairesAffaireIdJournalRoute
+  AppAffairesAffaireIdPlanningChantierRoute: typeof AppAffairesAffaireIdPlanningChantierRoute
   AppAffairesAffaireIdStaffingRoute: typeof AppAffairesAffaireIdStaffingRoute
   AppAffairesAffaireIdIndexRoute: typeof AppAffairesAffaireIdIndexRoute
   AppAffairesAffaireIdObjetsObjetIdRoute: typeof AppAffairesAffaireIdObjetsObjetIdRoute
@@ -1980,6 +2001,8 @@ const AppAffairesAffaireIdRouteChildren: AppAffairesAffaireIdRouteChildren = {
   AppAffairesAffaireIdEquipeRoute: AppAffairesAffaireIdEquipeRoute,
   AppAffairesAffaireIdFabricationRoute: AppAffairesAffaireIdFabricationRoute,
   AppAffairesAffaireIdJournalRoute: AppAffairesAffaireIdJournalRoute,
+  AppAffairesAffaireIdPlanningChantierRoute:
+    AppAffairesAffaireIdPlanningChantierRoute,
   AppAffairesAffaireIdStaffingRoute: AppAffairesAffaireIdStaffingRoute,
   AppAffairesAffaireIdIndexRoute: AppAffairesAffaireIdIndexRoute,
   AppAffairesAffaireIdObjetsObjetIdRoute:
