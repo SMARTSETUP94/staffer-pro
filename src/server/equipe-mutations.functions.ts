@@ -85,7 +85,7 @@ export const removeAffaireEquipeMember = createServerFn({ method: "POST" })
   .inputValidator((d: {
     affaireId: string;
     employeId: string;
-    phase: "commercial_etude" | "fabrication" | "montage" | "demontage";
+    phase: "commercial_etude" | "fabrication" | "logistique" | "montage" | "demontage";
     cascadeObjets?: boolean;
   }) => removeAffaireEquipeSchema.parse(d))
   .handler(async ({ data, context }) => {
