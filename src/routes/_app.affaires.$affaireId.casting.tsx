@@ -33,6 +33,8 @@ import { useEffect, useState } from "react";
 import { AddCastingMemberSheet } from "@/components/casting/AddCastingMemberSheet";
 import { RemoveCastingMemberDialog } from "@/components/casting/RemoveCastingMemberDialog";
 import { RepublishConflictDialog } from "@/components/staffing/RepublishConflictDialog";
+import { EquipeCapaciteIndicator } from "@/components/atoms/EquipeCapaciteIndicator";
+import { useAffaireCapacite } from "@/hooks/use-affaire-capacite";
 import type { CastingPhase } from "@/server/casting-chantier.functions";
 
 export const Route = createFileRoute("/_app/affaires/$affaireId/casting")({
