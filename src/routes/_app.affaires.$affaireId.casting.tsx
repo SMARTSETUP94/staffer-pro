@@ -104,6 +104,13 @@ interface ActiveRemove {
   phase: CastingPhase;
 }
 
+interface ActiveAdd {
+  phase: CastingPhase;
+  /** Si renseigné : filtre métiers + sous-titre du sheet. */
+  restrictMetierIds?: number[];
+  subEtapeLabel?: string;
+}
+
 function AffaireCastingPage() {
   const { affaireId } = Route.useParams();
   const flagOn = useFeatureFlag("equipes_3_niveaux_lecture");
@@ -112,7 +119,7 @@ function AffaireCastingPage() {
   const { data, isLoading } = useCastingChantier(affaireId);
   const { data: capacite } = useAffaireCapacite(affaireId);
   const [numero, setNumero] = useState<string | null>(null);
-  const [addPhase, setAddPhase] = useState<CastingPhase | null>(null);
+  const [addCtx, setAddCtx] = useState<ActiveAdd | null>(null);
   const [removeTarget, setRemoveTarget] = useState<ActiveRemove | null>(null);
   const [publishedPlanId, setPublishedPlanId] = useState<string | null>(null);
   const [republishOpen, setRepublishOpen] = useState(false);
