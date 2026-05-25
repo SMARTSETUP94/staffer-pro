@@ -89,7 +89,6 @@ import { Route as AppDevisProgbatImportRouteImport } from './routes/_app.devis.p
 import { Route as AppDevisImportRouteImport } from './routes/_app.devis.import'
 import { Route as AppDevisHistoriqueRouteImport } from './routes/_app.devis.historique'
 import { Route as AppDevAtomsRouteImport } from './routes/_app.dev.atoms'
-import { Route as AppAffairesBudgetPlanningRouteImport } from './routes/_app.affaires.budget-planning'
 import { Route as AppAffairesAffaireIdRouteImport } from './routes/_app.affaires.$affaireId'
 import { Route as AppAdminPermissionsRouteImport } from './routes/_app.admin.permissions'
 import { Route as AppAdminFeedbackRouteImport } from './routes/_app.admin.feedback'
@@ -515,12 +514,6 @@ const AppDevAtomsRoute = AppDevAtomsRouteImport.update({
   path: '/dev/atoms',
   getParentRoute: () => AppRoute,
 } as any)
-const AppAffairesBudgetPlanningRoute =
-  AppAffairesBudgetPlanningRouteImport.update({
-    id: '/affaires/budget-planning',
-    path: '/affaires/budget-planning',
-    getParentRoute: () => AppRoute,
-  } as any)
 const AppAffairesAffaireIdRoute = AppAffairesAffaireIdRouteImport.update({
   id: '/affaires/$affaireId',
   path: '/affaires/$affaireId',
@@ -675,7 +668,6 @@ export interface FileRoutesByFullPath {
   '/admin/feedback': typeof AppAdminFeedbackRoute
   '/admin/permissions': typeof AppAdminPermissionsRoute
   '/affaires/$affaireId': typeof AppAffairesAffaireIdRouteWithChildren
-  '/affaires/budget-planning': typeof AppAffairesBudgetPlanningRoute
   '/dev/atoms': typeof AppDevAtomsRoute
   '/devis/historique': typeof AppDevisHistoriqueRoute
   '/devis/import': typeof AppDevisImportRoute
@@ -772,7 +764,6 @@ export interface FileRoutesByTo {
   '/admin/feature-flags': typeof AppAdminFeatureFlagsRoute
   '/admin/feedback': typeof AppAdminFeedbackRoute
   '/admin/permissions': typeof AppAdminPermissionsRoute
-  '/affaires/budget-planning': typeof AppAffairesBudgetPlanningRoute
   '/dev/atoms': typeof AppDevAtomsRoute
   '/devis/historique': typeof AppDevisHistoriqueRoute
   '/devis/import': typeof AppDevisImportRoute
@@ -874,7 +865,6 @@ export interface FileRoutesById {
   '/_app/admin/feedback': typeof AppAdminFeedbackRoute
   '/_app/admin/permissions': typeof AppAdminPermissionsRoute
   '/_app/affaires/$affaireId': typeof AppAffairesAffaireIdRouteWithChildren
-  '/_app/affaires/budget-planning': typeof AppAffairesBudgetPlanningRoute
   '/_app/dev/atoms': typeof AppDevAtomsRoute
   '/_app/devis/historique': typeof AppDevisHistoriqueRoute
   '/_app/devis/import': typeof AppDevisImportRoute
@@ -976,7 +966,6 @@ export interface FileRouteTypes {
     | '/admin/feedback'
     | '/admin/permissions'
     | '/affaires/$affaireId'
-    | '/affaires/budget-planning'
     | '/dev/atoms'
     | '/devis/historique'
     | '/devis/import'
@@ -1073,7 +1062,6 @@ export interface FileRouteTypes {
     | '/admin/feature-flags'
     | '/admin/feedback'
     | '/admin/permissions'
-    | '/affaires/budget-planning'
     | '/dev/atoms'
     | '/devis/historique'
     | '/devis/import'
@@ -1174,7 +1162,6 @@ export interface FileRouteTypes {
     | '/_app/admin/feedback'
     | '/_app/admin/permissions'
     | '/_app/affaires/$affaireId'
-    | '/_app/affaires/budget-planning'
     | '/_app/dev/atoms'
     | '/_app/devis/historique'
     | '/_app/devis/import'
@@ -1805,13 +1792,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDevAtomsRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/affaires/budget-planning': {
-      id: '/_app/affaires/budget-planning'
-      path: '/affaires/budget-planning'
-      fullPath: '/affaires/budget-planning'
-      preLoaderRoute: typeof AppAffairesBudgetPlanningRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/_app/affaires/$affaireId': {
       id: '/_app/affaires/$affaireId'
       path: '/affaires/$affaireId'
@@ -2045,7 +2025,6 @@ interface AppRouteChildren {
   AppAdminFeedbackRoute: typeof AppAdminFeedbackRoute
   AppAdminPermissionsRoute: typeof AppAdminPermissionsRoute
   AppAffairesAffaireIdRoute: typeof AppAffairesAffaireIdRouteWithChildren
-  AppAffairesBudgetPlanningRoute: typeof AppAffairesBudgetPlanningRoute
   AppDevAtomsRoute: typeof AppDevAtomsRoute
   AppDevisHistoriqueRoute: typeof AppDevisHistoriqueRoute
   AppDevisImportRoute: typeof AppDevisImportRoute
@@ -2105,7 +2084,6 @@ const AppRouteChildren: AppRouteChildren = {
   AppAdminFeedbackRoute: AppAdminFeedbackRoute,
   AppAdminPermissionsRoute: AppAdminPermissionsRoute,
   AppAffairesAffaireIdRoute: AppAffairesAffaireIdRouteWithChildren,
-  AppAffairesBudgetPlanningRoute: AppAffairesBudgetPlanningRoute,
   AppDevAtomsRoute: AppDevAtomsRoute,
   AppDevisHistoriqueRoute: AppDevisHistoriqueRoute,
   AppDevisImportRoute: AppDevisImportRoute,
@@ -2186,3 +2164,12 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
