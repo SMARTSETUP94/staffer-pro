@@ -118,6 +118,7 @@ function AffaireCastingPage() {
   const canEdit = useCapability("affaire.team.manage");
   const { data, isLoading } = useCastingChantier(affaireId);
   const { data: capacite } = useAffaireCapacite(affaireId);
+  const { data: capaciteMetier } = useAffaireCapaciteMetier(affaireId);
   const [numero, setNumero] = useState<string | null>(null);
   const [addCtx, setAddCtx] = useState<ActiveAdd | null>(null);
   const [removeTarget, setRemoveTarget] = useState<ActiveRemove | null>(null);
