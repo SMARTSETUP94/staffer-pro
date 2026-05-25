@@ -48,7 +48,7 @@ export const upsertAffaireEquipeMember = createServerFn({ method: "POST" })
   .inputValidator((d: {
     affaireId: string;
     employeId: string;
-    phase: "commercial_etude" | "fabrication" | "montage" | "demontage";
+    phase: "commercial_etude" | "fabrication" | "logistique" | "montage" | "demontage";
     roleTerrain?: string | null;
     notes?: string | null;
   }) => upsertAffaireEquipeSchema.parse(d))
