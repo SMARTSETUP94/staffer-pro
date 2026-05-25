@@ -217,23 +217,19 @@ function AffaireCastingPage() {
           const members = data?.phases[phase] ?? [];
           const isFab = phase === "fabrication";
 
-          // Pour fabrication : décomposition en sous-étapes Numérique / Construction / Finition + Autre
+          // Pour fabrication : décomposition par 6 métiers individuels + Autre
           const fabBuckets = isFab
             ? (() => {
-                const buckets: Record<string, CastingMembre[]> = {
-                  numerique: [],
-                  construction: [],
-                  finition: [],
-                  autre: [],
-                };
+                const byMetier: Record<number, CastingMembre[]> = {};
+                const autre: CastingMembre[] = [];
                 for (const m of members) {
-                  const k =
-                    (m.metier_principal_id != null
-                      ? getSousEtapeKey(m.metier_principal_id)
-                      : undefined) ?? "autre";
-                  buckets[k].push(m);
+                  if (m.metier_principal_id != null && isFabMetier(m.metier_principal_id)) {
+                    (byMetier[m.metier_principal_id] ||= []).push(m);
+                  } else {
+                    autre.push(m);
+                  }
                 }
-                return buckets;
+                return { byMetier, autre };
               })()
             : null;
 
