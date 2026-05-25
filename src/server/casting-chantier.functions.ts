@@ -59,7 +59,7 @@ export const getCastingChantier = createServerFn({ method: "GET" })
     const { data: rows, error } = await supabase
       .from("affaire_equipe")
       .select(
-        "id, employe_id, phase, role_terrain, notes, added_at, employes!inner(nom, prenom)",
+        "id, employe_id, phase, role_terrain, notes, added_at, employes!inner(nom, prenom, metier_principal_id)",
       )
       .eq("affaire_id", data.affaireId)
       .is("removed_at", null)
@@ -73,7 +73,9 @@ export const getCastingChantier = createServerFn({ method: "GET" })
     for (const r of rows ?? []) {
       const ph = r.phase as CastingPhase;
       if (!(ph in phases)) continue;
-      const emp = (r as { employes: { nom: string; prenom: string } | null }).employes;
+      const emp = (r as {
+        employes: { nom: string; prenom: string; metier_principal_id: number | null } | null;
+      }).employes;
       phases[ph].push({
         id: r.id,
         employe_id: r.employe_id,
@@ -82,6 +84,7 @@ export const getCastingChantier = createServerFn({ method: "GET" })
         role_terrain: r.role_terrain,
         notes: r.notes,
         added_at: r.added_at,
+        metier_principal_id: emp?.metier_principal_id ?? null,
       });
       total += 1;
     }
