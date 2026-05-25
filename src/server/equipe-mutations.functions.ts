@@ -51,17 +51,7 @@ export const upsertAffaireEquipeMember = createServerFn({ method: "POST" })
     phase: "commercial_etude" | "fabrication" | "montage" | "demontage";
     roleTerrain?: string | null;
     notes?: string | null;
-  }) =>
-    z
-      .object({
-        affaireId: z.string().uuid(),
-        employeId: z.string().uuid(),
-        phase: PHASE_ENUM,
-        roleTerrain: ROLE,
-        notes: NOTES,
-      })
-      .parse(d),
-  )
+  }) => upsertAffaireEquipeSchema.parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await assertCap(supabase, "affaire.team.manage");
