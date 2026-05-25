@@ -4091,6 +4091,19 @@ export type Database = {
         }
         Relationships: []
       }
+      v_affaire_equipe_capacite_metier: {
+        Row: {
+          affaire_id: string | null
+          capacite_estimee_h: number | null
+          heures_prevues: number | null
+          jours_ouvres_phase: number | null
+          metier_id: number | null
+          nb_personnes_castees: number | null
+          ratio_capacite_vs_prevu: number | null
+          statut: string | null
+        }
+        Relationships: []
+      }
       v_affaires_avec_plan_status: {
         Row: {
           charge_affaires_id: string | null

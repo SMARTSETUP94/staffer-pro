@@ -8,6 +8,9 @@ import {
   FAB_SOUS_ETAPES,
   getSousEtapeKey,
   getSousEtapeForMetier,
+  FAB_METIERS,
+  FAB_METIER_IDS,
+  isFabMetier,
 } from "@/lib/fab-sous-etapes";
 import {
   ALERTE_CODES,
@@ -48,6 +51,29 @@ describe("Sprint D Batch 2 — phases & sous-étapes", () => {
     expect(getSousEtapeKey(3)).toBe("finition"); // peinture
     expect(getSousEtapeKey(8)).toBe("numerique"); // BE
     expect(getSousEtapeForMetier(999)).toBeUndefined();
+  });
+});
+
+describe("Sprint D Batch 2 finition — FAB_METIERS (6 métiers individuels)", () => {
+  it("FAB_METIERS contient exactement les 6 métiers fab dans l'ordre canonique", () => {
+    expect(FAB_METIERS.map((m) => m.code)).toEqual([
+      "numerique",
+      "construction",
+      "metallerie",
+      "peinture",
+      "tapisserie",
+      "impression_uv",
+    ]);
+    expect(FAB_METIER_IDS).toEqual([4, 1, 2, 3, 5, 9]);
+  });
+
+  it("isFabMetier distingue métiers fab des autres", () => {
+    expect(isFabMetier(4)).toBe(true);  // numérique
+    expect(isFabMetier(9)).toBe(true);  // impression UV
+    expect(isFabMetier(7)).toBe(false); // logistique → Autre
+    expect(isFabMetier(8)).toBe(false); // BE → Autre
+    expect(isFabMetier(null)).toBe(false);
+    expect(isFabMetier(undefined)).toBe(false);
   });
 });
 
