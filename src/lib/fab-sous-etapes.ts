@@ -59,3 +59,36 @@ export function getSousEtapeForMetier(metierId: number): FabSousEtape | undefine
 export function getSousEtapeKey(metierId: number): FabSousEtapeKey | undefined {
   return getSousEtapeForMetier(metierId)?.key;
 }
+
+/**
+ * Sprint D / Batch 2 finition — Décomposition Casting UI par 6 métiers fab
+ * individuels (et non 3 sous-étapes regroupées).
+ *
+ * Ordre d'affichage = ordre canonique du flux fab :
+ *   Numérique → Bois → Métal → Peinture → Tapisserie → Impression UV
+ *
+ * Tout employé casté en fab dont metier_principal_id n'est pas dans cette
+ * liste tombe dans un bucket "Autre" affiché en dessous.
+ */
+export interface FabMetier {
+  metierId: number;
+  /** Code métier DB (`metiers.code`). */
+  code: string;
+  /** Libellé affiché en UI. */
+  label: string;
+}
+
+export const FAB_METIERS: readonly FabMetier[] = [
+  { metierId: 4, code: "numerique",     label: "Numérique" },
+  { metierId: 1, code: "construction",  label: "Bois" },
+  { metierId: 2, code: "metallerie",    label: "Métal" },
+  { metierId: 3, code: "peinture",      label: "Peinture" },
+  { metierId: 5, code: "tapisserie",    label: "Tapisserie" },
+  { metierId: 9, code: "impression_uv", label: "Impression UV" },
+] as const;
+
+export const FAB_METIER_IDS = FAB_METIERS.map((m) => m.metierId);
+
+export function isFabMetier(metierId: number | null | undefined): boolean {
+  return metierId != null && FAB_METIER_IDS.includes(metierId);
+}
