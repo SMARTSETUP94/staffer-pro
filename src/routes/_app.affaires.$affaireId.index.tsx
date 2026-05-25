@@ -33,6 +33,12 @@ function AffaireSynthesePage() {
   const [hMontage, setHMontage] = useState<string>("0");
   const [hDemontage, setHDemontage] = useState<string>("0");
   const [savingMD, setSavingMD] = useState(false);
+  // Sprint D Batch 3 — dates clés chantier
+  const [dMontage, setDMontage] = useState<string>("");
+  const [dEvtDebut, setDEvtDebut] = useState<string>("");
+  const [dEvtFin, setDEvtFin] = useState<string>("");
+  const [dDemontage, setDDemontage] = useState<string>("");
+  const [savingDates, setSavingDates] = useState(false);
   // v0.40.0e — état d'expansion par métier (drilldown devis)
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
@@ -49,7 +55,7 @@ function AffaireSynthesePage() {
           .eq("affaire_id", affaireId),
         supabase
           .from("affaires")
-          .select("notes, heures_prevues_montage, heures_prevues_demontage")
+          .select("notes, heures_prevues_montage, heures_prevues_demontage, date_montage, date_evenement_debut, date_evenement_fin, date_demontage")
           .eq("id", affaireId)
           .maybeSingle(),
       ]);
@@ -58,6 +64,10 @@ function AffaireSynthesePage() {
       setNotes((aff?.notes as string | null) ?? null);
       setHMontage(String(aff?.heures_prevues_montage ?? 0));
       setHDemontage(String(aff?.heures_prevues_demontage ?? 0));
+      setDMontage((aff?.date_montage as string | null) ?? "");
+      setDEvtDebut((aff?.date_evenement_debut as string | null) ?? "");
+      setDEvtFin((aff?.date_evenement_fin as string | null) ?? "");
+      setDDemontage((aff?.date_demontage as string | null) ?? "");
       setLoading(false);
     })();
     return () => {
@@ -80,6 +90,34 @@ function AffaireSynthesePage() {
       toast.success("Heures montage/démontage enregistrées");
     }
   };
+
+  const saveDatesCles = async () => {
+    setSavingDates(true);
+    const { error } = await supabase
+      .from("affaires")
+      .update({
+        date_montage: dMontage || null,
+        date_evenement_debut: dEvtDebut || null,
+        date_evenement_fin: dEvtFin || null,
+        date_demontage: dDemontage || null,
+      })
+      .eq("id", affaireId);
+    setSavingDates(false);
+    if (error) {
+      toast.error("Enregistrement impossible", { description: error.message });
+    } else {
+      toast.success("Dates clés enregistrées");
+    }
+  };
+
+  const datesWarning = (() => {
+    const dates = [dMontage, dEvtDebut, dEvtFin, dDemontage].filter(Boolean);
+    for (let i = 1; i < dates.length; i++) {
+      if (dates[i] < dates[i - 1]) return "L'ordre chronologique n'est pas respecté (montage ≤ événement ≤ démontage).";
+    }
+    return null;
+  })();
+
 
   // v0.40.0e — Consolidation par métier (1 ligne par métier, drilldown par devis).
   const groups = useMemo(() => consolidateByMetier(lines), [lines]);
