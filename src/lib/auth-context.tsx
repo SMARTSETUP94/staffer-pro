@@ -3,7 +3,19 @@ import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
 
-export type AppRole = "admin" | "chef_chantier" | "chef_metier_scoped" | "employe" | "rh";
+export type AppRole =
+  | "admin"
+  | "chef_chantier"
+  | "chef_metier_scoped"
+  | "employe"
+  | "rh"
+  // Sprint A — rôles métier ajoutés en DB, désormais typés côté front
+  | "commercial"
+  | "bureau_etude"
+  | "atelier_chef"
+  | "atelier_metier"
+  | "logistique"
+  | "poseur";
 
 export interface AuthContextValue {
   user: User | null;
