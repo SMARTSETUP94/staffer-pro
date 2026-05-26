@@ -84,13 +84,14 @@ export function MobileBottomNav() {
       ? { to: "/mobile/propositions", label: "Proposit.", icon: ClipboardList }
       : { to: "/mobile/absences", label: "Absences", icon: CalendarOff };
 
-  // BASE_ITEMS = [Semaine, Missions(pose), Heures, Swaps, Profil].
-  // Composition : Semaine, Missions, Heures, middleItem (absences/propositions),
+  // BASE_ITEMS v0.49 Batch 9.7 = [Semaine, Missions(pose), Équipe(chantiers), Heures, Profil].
+  // Composition : Semaine, Missions, Équipe, Heures, middleItem (absences/propositions),
   // [Contrats si existants], Profil.
   const items: NavItem[] = [
     BASE_ITEMS[0],
     BASE_ITEMS[1],
     BASE_ITEMS[2],
+    BASE_ITEMS[3],
     middleItem,
     ...(contratsCount > 0
       ? [{ to: "/mobile/contrats", label: "Contrats", icon: FileSignature, badge: contratsToSign } as NavItem]
