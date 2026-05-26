@@ -105,6 +105,9 @@ function CarteMissionPage() {
     );
   }
 
+  const invalidate = () =>
+    qc.invalidateQueries({ queryKey: ["mission-detail", affaireId, phase] });
+
   return (
     <div className="min-h-screen bg-background pb-32" data-testid="mission-detail-page">
       <PreviewBanner />
@@ -116,12 +119,10 @@ function CarteMissionPage() {
         <ContactsSection detail={data} />
         <EquipeSection detail={data} />
         <EventsTimeline events={data.events} />
+        <MesHeuresSection detail={data} onSaved={invalidate} />
       </main>
-      <ActionsBar
-        affaireId={affaireId}
-        phase={phase}
-        onRecorded={() => qc.invalidateQueries({ queryKey: ["mission-detail", affaireId, phase] })}
-      />
+      <PhotoFab affaireId={affaireId} phase={phase} events={data.events} onUploaded={invalidate} />
+      <ActionsBar affaireId={affaireId} phase={phase} onRecorded={invalidate} />
     </div>
   );
 }
