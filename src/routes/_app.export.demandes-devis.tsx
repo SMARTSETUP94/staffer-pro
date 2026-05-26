@@ -69,7 +69,7 @@ export const Route = createFileRoute("/_app/export/demandes-devis")({
 });
 
 type StatutSousTraitance = Trajet["statut_soustraitance"];
-type AffaireLite = Pick<Tables<"affaires">, "id" | "numero" | "nom" | "client" | "lieu">;
+type AffaireLite = Pick<Tables<"affaires">, "id" | "numero" | "nom" | "client" | "lieu" | "phase" | "statut">;
 type EmployeLite = {
   id: string;
   prenom: string;
