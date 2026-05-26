@@ -690,8 +690,3 @@ function countdownLabel(
   if (diff <= 7) return { label: `Dans ${diff} j`, tone: "soon" };
   return { label: `Dans ${diff} j`, tone: "later" };
 }
-
-// dummy import suppression (lint)
-void ChevronRight;
-void Clock;
-void CheckCircle2;
