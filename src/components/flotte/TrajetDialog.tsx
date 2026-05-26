@@ -478,15 +478,37 @@ export function TrajetDialog({
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label>Affaire</Label>
-              <Select value={affaireId ?? ""} onValueChange={(v) => setAffaireId(v || null)}>
-                <SelectTrigger><SelectValue placeholder="Aucune" /></SelectTrigger>
-                <SelectContent>
-                  {affaires.map((a) => (
-                    <SelectItem key={a.id} value={a.id}>{a.numero} — {a.nom}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex items-center justify-between">
+                <Label>Affaire</Label>
+                {affaireId && (
+                  <button
+                    type="button"
+                    onClick={() => setAffaireId(null)}
+                    className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="h-3 w-3" />
+                    Aucune
+                  </button>
+                )}
+              </div>
+              <AffaireCombobox
+                affaires={affaires.map<Affaire>((a) => ({
+                  id: a.id,
+                  numero: a.numero,
+                  nom: a.nom,
+                  lieu: a.lieu ?? null,
+                  client: a.client ?? null,
+                  chef_chantier_id: null,
+                  date_montage: null,
+                  date_demontage: null,
+                  phase: a.phase ?? "signe",
+                  statut: a.statut ?? "en_cours",
+                }))}
+                value={affaireId ?? ""}
+                onChange={(id) => setAffaireId(id || null)}
+                showOpportuniteToggle
+                placeholder="Rechercher chantier (n°, nom, client)…"
+              />
             </div>
             <div>
               <Label>Catégorie</Label>
