@@ -262,7 +262,6 @@ export const getPlanningChantierMacro = createServerFn({ method: "GET" })
       { key: "signature", label: "Signature", date: signedAt },
       { key: "publication", label: "Publication plan", date: null },
       { key: "debut_fab", label: "Début fab", date: signedAt },
-      { key: "livraison", label: "Livraison", date: dMontage },
     ];
 
     // 8. Fenêtre globale clamp : signed_at (ou created_at) → date_demontage + 7j (ou +30j fallback)
