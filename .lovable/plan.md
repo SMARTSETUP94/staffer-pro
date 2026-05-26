@@ -28,6 +28,7 @@
 | Bloc 9 Carte Mission | En cours | 9.6 bis | 9.1→9.6 bis livrés. 9.3→9.5 à finaliser selon Gabin |
 | Lot L2 Capabilities | Livré | L2 | 59 capabilities seedées, helpers SQL, catalogue front |
 | Batch 9.7 Mobile Wiring | Livré | v0.49 | AppRole 11 rôles, nav mobile câblée, cleanup routes orphelines |
+| Lot L3 Permissions | Prêt | L3 | Audit terminé. L3.0 users + L3.1 fab + L3.2-5 refacto. ~30-40h |
 | Bloc 10 Fiche Opportunité | Prêt | — | Analyse livrée, ~38-42h, 11 lots |
 
 ---
