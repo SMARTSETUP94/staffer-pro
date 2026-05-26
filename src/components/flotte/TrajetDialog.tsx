@@ -21,8 +21,11 @@ import {
 } from "@/hooks/use-vehicules";
 import { getChauffeursAvecStatut } from "@/hooks/use-trajets";
 import { PrestataireAutocomplete } from "@/components/sous-traitants/PrestataireAutocomplete";
+import { AffaireCombobox } from "@/components/planning/AffaireCombobox";
+import { X } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 import type { Permis } from "@/lib/permis";
+import type { Affaire } from "@/hooks/use-planning-data";
 
 type TrajetCategorie = Trajet["categorie"];
 type SoustraitanceStatut = Trajet["statut_soustraitance"];
