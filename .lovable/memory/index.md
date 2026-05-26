@@ -138,6 +138,21 @@ Modèle staffing 3 niveaux (Sprint A) : `affaire_equipe(affaire_id, employe_id, 
 68. ✅ **8.3b** (24 mai 2026) — Mutations équipe : `AddPersonneDialog` + `RemovePersonneDialog` + SF `autoStaffObjet`/`addPersonneToObjet`/`removePersonneFromObjet`. **HOTFIX** : mutations autorisées sur `plan_status IN ('draft','published')` (bloquées seulement sur `no_plan`). Mini-warning amber sur draft. 2 dettes tracées (rename SF + specs E2E).
 69. ✅ **8.4 DB** (24 mai 2026) — Journal & Photos : table `objet_journal_events` (13 types d'événements) + `objet_commentaires` (CRD, pas d'édition) + `fabrication_objets_photos` enrichie (`affaire_id`, `etape_id`, `thumb_path`, dimensions) + 6 triggers auto-log (étapes, identité, commentaires, photos, staffing, plan republication) + backfill `journal_started`. Cap `objet.photo.delete` admin uniquement.
 
+### Livré Sprint D Casting — Refonte modèle équipes 3 niveaux (mai 2026)
+70. ✅ **v0.34.x** (13 mai 2026) — Battery role-smoke E2E livrée : 4 specs (admin 45 / chef 24+8 / employé desktop 7+20 / employé mobile 8+13) anti-fuite RGPD. Helper `e2e/helpers/role-smoke.ts`.
+71. ✅ **Sprint D Batch 1** (12 mai 2026) — Typologie phases (`type_affaire.typologie_phase`) + alertes équipe opt-in (`affaire_alertes_optin`) + widget capacité casting.
+72. ✅ **Sprint D Batch 2** (13 mai 2026) — Phase logistique dans `affaire_equipe.phase` + casting 5 phases + FAB_SOUS_ETAPES 3 sous-blocs + FAB_METIERS 6 métiers + opt-in alertes UI.
+73. ✅ **Sprint D Batch 3** (14 mai 2026) — Planning chantier macro Gantt (7 phases + jalons + sous-blocs fab 7 métiers incl. BE + Impression UV + dates fallback + badges gris).
+74. ✅ **Sprint D Batch 4** (15 mai 2026) — 4 specs E2E (casting-capacite / inbox-alertes / planning-macro / staffing-rename) + récap final. 0 régression.
+
+### Livré Batch 9.7 — Mobile Wiring & Role Sync (v0.49, mai 2026)
+75. ✅ **Batch 9.7 P1** (25 mai 2026) — AppRole étendu : 6 rôles Sprint A typés front (commercial, bureau_etude, atelier_chef, atelier_metier, logistique, poseur) + helpers isXxx + labels + ROLE_PRESETS + USER_ROLE_OPTIONS.
+76. ✅ **Batch 9.7 P2+P3** (25 mai 2026) — Câblage nav mobile : onglet "Équipe" employé `/mobile/equipe-chantiers` + onglet "Missions" chef `/mobile/mes-missions`.
+77. ✅ **Batch 9.7 P4** (25 mai 2026) — Nettoyage 3 routes orphelines supprimées (`/mobile/mois`, `/mobile/chef/fabrication`, `/mobile/chef/staffer`). E2E ajustés. Dettes orphelines tracées.
+
+### Livré Lot L2 — Seed matrice capabilities définitif (26 mai 2026)
+78. ✅ **L2** (26 mai 2026) — Enum `chef_pose` + 59 capabilities seedées DB avec `scope` (all/team/metier/own/none). Helpers SQL `user_has_cap`/`user_cap_scope`. Catalogue front `src/lib/capabilities/catalog.ts` + integrity tests. Page `/admin/permissions` 12 colonnes. Backfill `chef_metier_scoped` → `atelier_chef`.
+
 ### Roadmap — À venir
 70. ⏳ **8.4 UI** (~8h) — Server functions (signed URLs, upload, aggregation journal) + composant `ObjetJournalPhotos` (onglet Journal : timeline filtrable + commentaires + upload WebP compressé + galerie par étape + lazy IntersectionObserver).
 71. ⏳ **8.5** (~4h) — Liens croisés : remplacer lien temporaire 8.2b par navigation intégrée native (Gantt → fiche objet, Planning → fiche objet, Devis ligne → fiche objet, Kanban étape → fiche objet). Choix drawer vs nav à trancher.
