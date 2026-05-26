@@ -192,6 +192,7 @@ export type Database = {
       affaire_documents: {
         Row: {
           affaire_id: string
+          categorie: string | null
           deleted_at: string | null
           deleted_by: string | null
           description: string | null
@@ -199,6 +200,7 @@ export type Database = {
           filename: string
           id: string
           mime_type: string
+          mission_phase: string | null
           objet_id: string | null
           prise_le: string | null
           storage_path: string
@@ -209,6 +211,7 @@ export type Database = {
         }
         Insert: {
           affaire_id: string
+          categorie?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
           description?: string | null
@@ -216,6 +219,7 @@ export type Database = {
           filename: string
           id?: string
           mime_type: string
+          mission_phase?: string | null
           objet_id?: string | null
           prise_le?: string | null
           storage_path: string
@@ -226,6 +230,7 @@ export type Database = {
         }
         Update: {
           affaire_id?: string
+          categorie?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
           description?: string | null
@@ -233,6 +238,7 @@ export type Database = {
           filename?: string
           id?: string
           mime_type?: string
+          mission_phase?: string | null
           objet_id?: string | null
           prise_le?: string | null
           storage_path?: string

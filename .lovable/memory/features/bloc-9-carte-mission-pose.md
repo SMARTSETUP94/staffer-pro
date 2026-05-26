@@ -1,6 +1,6 @@
 ---
 name: Bloc 9 — Carte mission pose
-description: Cartes mission pose mobile (montage/démontage). Lots 9.1+9.2+9.3 livrés. 2 routes mobiles (/mobile/mes-missions + /mobile/mission/$affaireId/$phase), bonus section "Infos pose & livraison" sur synthèse affaire, vitest helper + 2 specs E2E.
+description: Cartes mission pose mobile (montage/démontage). Lots 9.1 → 9.4 livrés. 2 routes mobiles + bonus infos pose + section heures auto + FAB photo auto-tag. Helpers `mission-card-helpers.ts` (computeHeuresFromEvents + autoTagCategoryByMissionState). Migration `affaire_documents.categorie` + `mission_phase`. GPS lien universel (Google Maps cross-OS, plus Apple Maps). 4 vitest + 4 specs E2E.
 type: feature
 ---
 
@@ -44,6 +44,21 @@ Sprint en cours après validation terrain Sprint D. Décisions validées en bloc
 - `e2e/employe-mobile/mes-missions.employe-mobile.spec.ts` : 2 specs (rendu liste + bottom nav).
 - `e2e/employe-mobile/mission-detail.employe-mobile.spec.ts` : 2 specs (rendu détail OU fallback introuvable + dialogue Signaler).
 
-## Lots restants
-- 9.4 Saisie heures auto à partir des events arrivee/depart + photos auto-taggées (utilisera `src/lib/image-compress.ts`).
-- 9.5 Polish signaler + 7e spec E2E multi-mission/jour (Q5).
+## Lot 9.4 — Saisie heures + photos auto-tag ✅ LIVRÉ
+
+- **GPS cross-OS** : `https://www.google.com/maps/search/?api=1&query=...` (ouvre Plans sur iOS, Google Maps sur Android via intent). Apple Maps retiré.
+- **Migration** : `affaire_documents` + colonnes `categorie text` et `mission_phase text` (CHECK montage|demontage), index partiel.
+- **Helpers** `src/lib/mission-card-helpers.ts` :
+  - `computeHeuresFromEvents(events, date)` : 1re arrivée + dernier départ → `{heure_debut, heure_fin, heures_reelles}` arrondi 15min.
+  - `autoTagCategoryByMissionState(phase, state)` : priorité `incident` si probleme < 2h, sinon `avant/pendant/après_{montage|demontage}`.
+- **Section MesHeures** : apparaît après 1er `depart`, pré-remplie, soumet `statut='soumis'` avec `assignation_id` + `metier_id`. Upsert (employe, date, affaire).
+- **Photo FAB** flottant : input `capture="environment"`, compression, upload `affaires-photos`, insert `affaire_documents` avec `categorie` + `mission_phase`, puis `recordMissionEvent` type=photo.
+- **Server fn** : `getCarteMission.assignations[].metier_id` exposé.
+
+## Tests Lot 9.4 ✅ LIVRÉ
+- `src/lib/__tests__/mission-card-helpers.test.ts` : 4 tests verts.
+- `e2e/employe-mobile/mission-arrivee-depart.poseur.spec.ts` + `mission-photos.poseur.spec.ts` (skip propre si pas de seed).
+
+## Lot 9.5 — à venir
+- Polish signaler + 7e spec E2E multi-mission/jour (Q5).
+- Récap final consolidé Bloc 9.

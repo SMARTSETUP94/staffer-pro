@@ -74,6 +74,7 @@ export interface CarteMissionDetail {
     date: string;
     demi_journee: "AM" | "PM" | "JOURNEE";
     heures: number;
+    metier_id: number | null;
     metier_libelle: string | null;
     statut_confirmation: string;
   }[];
@@ -235,7 +236,7 @@ export const getCarteMission = createServerFn({ method: "POST" })
     const { data: assigs } = await supabase
       .from("assignations")
       .select(
-        "id, date, demi_journee, heures, statut_confirmation, metier:metiers(libelle)",
+        "id, date, demi_journee, heures, statut_confirmation, metier_id, metier:metiers(libelle)",
       )
       .eq("employe_id", emp.id)
       .eq("affaire_id", affaireId)
@@ -314,6 +315,7 @@ export const getCarteMission = createServerFn({ method: "POST" })
         date: a.date,
         demi_journee: a.demi_journee as "AM" | "PM" | "JOURNEE",
         heures: Number(a.heures),
+        metier_id: (a as { metier_id: number | null }).metier_id ?? null,
         // @ts-ignore supabase relation typing
         metier_libelle: a.metier?.libelle ?? null,
         statut_confirmation: a.statut_confirmation,
