@@ -453,11 +453,16 @@ export type Database = {
       }
       affaires: {
         Row: {
+          acces_livraison: string | null
           charge_affaires_id: string | null
           chef_chantier_id: string | null
           chef_projet_id: string | null
           client: string | null
+          code_acces: string | null
           code_opportunite: string | null
+          consignes_tenue: string | null
+          contact_site_nom: string | null
+          contact_site_tel: string | null
           created_at: string
           date_debut: string | null
           date_demontage: string | null
@@ -488,11 +493,16 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          acces_livraison?: string | null
           charge_affaires_id?: string | null
           chef_chantier_id?: string | null
           chef_projet_id?: string | null
           client?: string | null
+          code_acces?: string | null
           code_opportunite?: string | null
+          consignes_tenue?: string | null
+          contact_site_nom?: string | null
+          contact_site_tel?: string | null
           created_at?: string
           date_debut?: string | null
           date_demontage?: string | null
@@ -523,11 +533,16 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          acces_livraison?: string | null
           charge_affaires_id?: string | null
           chef_chantier_id?: string | null
           chef_projet_id?: string | null
           client?: string | null
+          code_acces?: string | null
           code_opportunite?: string | null
+          consignes_tenue?: string | null
+          contact_site_nom?: string | null
+          contact_site_tel?: string | null
           created_at?: string
           date_debut?: string | null
           date_demontage?: string | null
@@ -2718,6 +2733,87 @@ export type Database = {
           ordre?: number
         }
         Relationships: []
+      }
+      mission_events: {
+        Row: {
+          affaire_id: string
+          created_at: string
+          created_by: string | null
+          employe_id: string
+          id: string
+          latitude: number | null
+          longitude: number | null
+          note: string | null
+          occurred_at: string
+          phase: string
+          photo_doc_id: string | null
+          type: Database["public"]["Enums"]["mission_event_type"]
+        }
+        Insert: {
+          affaire_id: string
+          created_at?: string
+          created_by?: string | null
+          employe_id: string
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          note?: string | null
+          occurred_at?: string
+          phase: string
+          photo_doc_id?: string | null
+          type: Database["public"]["Enums"]["mission_event_type"]
+        }
+        Update: {
+          affaire_id?: string
+          created_at?: string
+          created_by?: string | null
+          employe_id?: string
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          note?: string | null
+          occurred_at?: string
+          phase?: string
+          photo_doc_id?: string | null
+          type?: Database["public"]["Enums"]["mission_event_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mission_events_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "affaires"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mission_events_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "v_affaire_consommation"
+            referencedColumns: ["affaire_id"]
+          },
+          {
+            foreignKeyName: "mission_events_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "v_affaires_avec_plan_status"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mission_events_employe_id_fkey"
+            columns: ["employe_id"]
+            isOneToOne: false
+            referencedRelation: "employes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mission_events_photo_doc_id_fkey"
+            columns: ["photo_doc_id"]
+            isOneToOne: false
+            referencedRelation: "affaire_documents"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       notifications: {
         Row: {
@@ -5173,6 +5269,12 @@ export type Database = {
       feedback_type: "bug" | "idee" | "amelioration" | "question"
       heures_statut: "brouillon" | "soumis" | "valide" | "rejete"
       lieu_type: "atelier" | "stockage"
+      mission_event_type:
+        | "arrivee"
+        | "depart"
+        | "probleme"
+        | "photo"
+        | "message"
       notification_type:
         | "assignation_creee"
         | "assignation_modifiee"
@@ -5190,6 +5292,7 @@ export type Database = {
         | "affaire_signee"
         | "staffing_publie"
         | "system"
+        | "mission_probleme"
       objet_fab_statut_chef: "a_faire" | "en_cours" | "bloque" | "fini"
       objet_journal_event_type:
         | "journal_started"
@@ -5441,6 +5544,7 @@ export const Constants = {
       feedback_type: ["bug", "idee", "amelioration", "question"],
       heures_statut: ["brouillon", "soumis", "valide", "rejete"],
       lieu_type: ["atelier", "stockage"],
+      mission_event_type: ["arrivee", "depart", "probleme", "photo", "message"],
       notification_type: [
         "assignation_creee",
         "assignation_modifiee",
@@ -5458,6 +5562,7 @@ export const Constants = {
         "affaire_signee",
         "staffing_publie",
         "system",
+        "mission_probleme",
       ],
       objet_fab_statut_chef: ["a_faire", "en_cours", "bloque", "fini"],
       objet_journal_event_type: [
