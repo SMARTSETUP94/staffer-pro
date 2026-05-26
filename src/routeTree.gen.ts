@@ -18,6 +18,7 @@ import { Route as MobileSwapsRouteImport } from './routes/mobile.swaps'
 import { Route as MobilePropositionsRouteImport } from './routes/mobile.propositions'
 import { Route as MobileProfilRouteImport } from './routes/mobile.profil'
 import { Route as MobileMoisRouteImport } from './routes/mobile.mois'
+import { Route as MobileMesMissionsRouteImport } from './routes/mobile.mes-missions'
 import { Route as MobileHeuresRouteImport } from './routes/mobile.heures'
 import { Route as MobileContratsRouteImport } from './routes/mobile.contrats'
 import { Route as MobileChefRouteImport } from './routes/mobile.chef'
@@ -151,6 +152,11 @@ const MobileProfilRoute = MobileProfilRouteImport.update({
 const MobileMoisRoute = MobileMoisRouteImport.update({
   id: '/mobile/mois',
   path: '/mobile/mois',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MobileMesMissionsRoute = MobileMesMissionsRouteImport.update({
+  id: '/mobile/mes-missions',
+  path: '/mobile/mes-missions',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MobileHeuresRoute = MobileHeuresRouteImport.update({
@@ -663,6 +669,7 @@ export interface FileRoutesByFullPath {
   '/mobile/chef': typeof MobileChefRouteWithChildren
   '/mobile/contrats': typeof MobileContratsRoute
   '/mobile/heures': typeof MobileHeuresRoute
+  '/mobile/mes-missions': typeof MobileMesMissionsRoute
   '/mobile/mois': typeof MobileMoisRoute
   '/mobile/profil': typeof MobileProfilRoute
   '/mobile/propositions': typeof MobilePropositionsRoute
@@ -761,6 +768,7 @@ export interface FileRoutesByTo {
   '/mobile/aujourdhui': typeof MobileAujourdhuiRoute
   '/mobile/contrats': typeof MobileContratsRoute
   '/mobile/heures': typeof MobileHeuresRoute
+  '/mobile/mes-missions': typeof MobileMesMissionsRoute
   '/mobile/mois': typeof MobileMoisRoute
   '/mobile/profil': typeof MobileProfilRoute
   '/mobile/propositions': typeof MobilePropositionsRoute
@@ -862,6 +870,7 @@ export interface FileRoutesById {
   '/mobile/chef': typeof MobileChefRouteWithChildren
   '/mobile/contrats': typeof MobileContratsRoute
   '/mobile/heures': typeof MobileHeuresRoute
+  '/mobile/mes-missions': typeof MobileMesMissionsRoute
   '/mobile/mois': typeof MobileMoisRoute
   '/mobile/profil': typeof MobileProfilRoute
   '/mobile/propositions': typeof MobilePropositionsRoute
@@ -964,6 +973,7 @@ export interface FileRouteTypes {
     | '/mobile/chef'
     | '/mobile/contrats'
     | '/mobile/heures'
+    | '/mobile/mes-missions'
     | '/mobile/mois'
     | '/mobile/profil'
     | '/mobile/propositions'
@@ -1062,6 +1072,7 @@ export interface FileRouteTypes {
     | '/mobile/aujourdhui'
     | '/mobile/contrats'
     | '/mobile/heures'
+    | '/mobile/mes-missions'
     | '/mobile/mois'
     | '/mobile/profil'
     | '/mobile/propositions'
@@ -1162,6 +1173,7 @@ export interface FileRouteTypes {
     | '/mobile/chef'
     | '/mobile/contrats'
     | '/mobile/heures'
+    | '/mobile/mes-missions'
     | '/mobile/mois'
     | '/mobile/profil'
     | '/mobile/propositions'
@@ -1237,6 +1249,7 @@ export interface RootRouteChildren {
   MobileChefRoute: typeof MobileChefRouteWithChildren
   MobileContratsRoute: typeof MobileContratsRoute
   MobileHeuresRoute: typeof MobileHeuresRoute
+  MobileMesMissionsRoute: typeof MobileMesMissionsRoute
   MobileMoisRoute: typeof MobileMoisRoute
   MobileProfilRoute: typeof MobileProfilRoute
   MobilePropositionsRoute: typeof MobilePropositionsRoute
@@ -1306,6 +1319,13 @@ declare module '@tanstack/react-router' {
       path: '/mobile/mois'
       fullPath: '/mobile/mois'
       preLoaderRoute: typeof MobileMoisRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mobile/mes-missions': {
+      id: '/mobile/mes-missions'
+      path: '/mobile/mes-missions'
+      fullPath: '/mobile/mes-missions'
+      preLoaderRoute: typeof MobileMesMissionsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mobile/heures': {
@@ -2179,6 +2199,7 @@ const rootRouteChildren: RootRouteChildren = {
   MobileChefRoute: MobileChefRouteWithChildren,
   MobileContratsRoute: MobileContratsRoute,
   MobileHeuresRoute: MobileHeuresRoute,
+  MobileMesMissionsRoute: MobileMesMissionsRoute,
   MobileMoisRoute: MobileMoisRoute,
   MobileProfilRoute: MobileProfilRoute,
   MobilePropositionsRoute: MobilePropositionsRoute,
