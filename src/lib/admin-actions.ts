@@ -551,3 +551,86 @@ export const updateUserFullName = createServerFn({ method: "POST" })
     return { success: true, fullName: data.fullName };
   });
 
+// ============================================================================
+// L3a — updateUserRoles : assignation multi-rôles transactionnelle
+// ============================================================================
+const ALL_APP_ROLES = [
+  "admin",
+  "chef_chantier",
+  "chef_metier_scoped",
+  "employe",
+  "rh",
+  "commercial",
+  "bureau_etude",
+  "atelier_chef",
+  "atelier_metier",
+  "logistique",
+  "poseur",
+  "chef_pose",
+] as const;
+type AnyAppRole = (typeof ALL_APP_ROLES)[number];
+
+export const updateUserRoles = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => {
+    if (!input || typeof input !== "object") throw new Error("Payload invalide");
+    const i = input as Record<string, unknown>;
+    const targetUserId = String(i.targetUserId ?? "");
+    if (!/^[0-9a-f-]{36}$/i.test(targetUserId)) throw new Error("targetUserId invalide");
+    const rawRoles = Array.isArray(i.roles) ? i.roles : [];
+    const cleanRoles = Array.from(
+      new Set(
+        rawRoles
+          .map((r) => String(r))
+          .filter((r): r is AnyAppRole => (ALL_APP_ROLES as readonly string[]).includes(r)),
+      ),
+    );
+    return { targetUserId, roles: cleanRoles };
+  })
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    await assertCallerIsAdmin(supabase, userId);
+
+    // Garde-fou anti-suicide admin : on ne peut pas se retirer admin soi-même
+    if (data.targetUserId === userId && !data.roles.includes("admin")) {
+      throw new Error("Vous ne pouvez pas retirer votre propre rôle admin");
+    }
+
+    // RPC SECURITY DEFINER : DELETE absents + INSERT idempotent + préserve chef_metier_scoped
+    // Bypass: on appelle via admin client pour ne pas dépendre du JWT user.
+    const { error } = await supabaseAdmin.rpc("replace_user_roles", {
+      _user_id: data.targetUserId,
+      _roles: data.roles.length > 0 ? data.roles : ["employe"],
+    });
+    if (error) throw new Error("Erreur mise à jour rôles : " + error.message);
+
+    return {
+      success: true,
+      applied: data.roles.length > 0 ? data.roles : (["employe"] as AnyAppRole[]),
+    };
+  });
+
+// ============================================================================
+// L3a — getUserEffectiveCaps : caps résolues d'un user (panneau debug admin)
+// ============================================================================
+export const getUserEffectiveCaps = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => {
+    if (!input || typeof input !== "object") throw new Error("Payload invalide");
+    const i = input as Record<string, unknown>;
+    const targetUserId = String(i.targetUserId ?? "");
+    if (!/^[0-9a-f-]{36}$/i.test(targetUserId)) throw new Error("targetUserId invalide");
+    return { targetUserId };
+  })
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    await assertCallerIsAdmin(supabase, userId);
+
+    const { data: caps, error } = await supabaseAdmin.rpc("get_user_effective_caps", {
+      _user_id: data.targetUserId,
+    });
+    if (error) throw new Error("Erreur lecture caps : " + error.message);
+    return { caps: caps ?? [] };
+  });
+
+
