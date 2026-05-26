@@ -1,10 +1,16 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, CalendarRange, Users, Hammer, UserCircle } from "lucide-react";
+import { LayoutDashboard, CalendarRange, Users, Hammer, UserCircle, PackageCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useChefAValider } from "@/hooks/use-chef-a-valider";
 
 type Item = {
-  to: "/mobile/chef/dashboard" | "/mobile/chef/planning" | "/mobile/chef/equipe" | "/mobile/chef/atelier" | "/mobile/chef/moi";
+  to:
+    | "/mobile/chef/dashboard"
+    | "/mobile/chef/planning"
+    | "/mobile/chef/equipe"
+    | "/mobile/mes-missions"
+    | "/mobile/chef/atelier"
+    | "/mobile/chef/moi";
   label: string;
   icon: typeof LayoutDashboard;
   badgeKey?: "objets";
@@ -14,6 +20,7 @@ const ITEMS: Item[] = [
   { to: "/mobile/chef/dashboard", label: "Hub", icon: LayoutDashboard },
   { to: "/mobile/chef/planning", label: "Planning", icon: CalendarRange },
   { to: "/mobile/chef/equipe", label: "Équipe", icon: Users },
+  { to: "/mobile/mes-missions", label: "Missions", icon: PackageCheck },
   { to: "/mobile/chef/atelier", label: "Atelier", icon: Hammer, badgeKey: "objets" },
   { to: "/mobile/chef/moi", label: "Moi", icon: UserCircle },
 ];
