@@ -150,26 +150,27 @@ function UtilisateursPage() {
       return;
     }
 
-    // Index : 1 ligne par user (rôle prioritaire admin > chef > employe)
+    // L3a — agrégation MULTI-rôles par user (+ statut prioritaire)
     const rolesByUser = new Map<
       string,
-      { role: AppRole; status: UserStatus; invited_at: string | null }
+      { roles: AppRole[]; status: UserStatus; invited_at: string | null }
     >();
     rolesQ.data?.forEach((r) => {
       const existing = rolesByUser.get(r.user_id);
-      const incoming = {
-        role: r.role as AppRole,
-        status: r.status as UserStatus,
-        invited_at: r.invited_at,
-      };
+      const role = r.role as AppRole;
+      const incomingStatus = r.status as UserStatus;
       if (!existing) {
-        rolesByUser.set(r.user_id, incoming);
+        rolesByUser.set(r.user_id, {
+          roles: [role],
+          status: incomingStatus,
+          invited_at: r.invited_at,
+        });
       } else {
-        const order = (x: AppRole) =>
-          x === "admin" ? 0 : x === "chef_chantier" ? 1 : 2;
-        if (order(incoming.role) < order(existing.role)) {
-          rolesByUser.set(r.user_id, incoming);
-        }
+        if (!existing.roles.includes(role)) existing.roles.push(role);
+        // Statut le plus "fort" : actif > invite > desactive
+        const rank = (s: UserStatus) => (s === "actif" ? 0 : s === "invite" ? 1 : 2);
+        if (rank(incomingStatus) < rank(existing.status)) existing.status = incomingStatus;
+        if (!existing.invited_at && r.invited_at) existing.invited_at = r.invited_at;
       }
     });
 
@@ -194,7 +195,7 @@ function UtilisateursPage() {
         id: p.id,
         email: p.email,
         full_name: p.full_name,
-        role: r?.role ?? null,
+        roles: r?.roles ?? [],
         status: r?.status ?? "actif",
         invited_at: r?.invited_at ?? null,
         derniere_connexion_le: p.derniere_connexion_le,
