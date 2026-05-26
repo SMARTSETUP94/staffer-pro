@@ -158,12 +158,12 @@ export const getPlanningChantierMacro = createServerFn({ method: "GET" })
       fabAgg.peinture + fabAgg.tapisserie + fabAgg.be;
 
     const fab_sous_blocs: FabSousBloc[] = [
+      { key: "be",         label: "Bureau d'étude", heures_prevues: fabAgg.be,     heures_consommees: null },
       { key: "numerique",  label: "Numérique",  heures_prevues: fabAgg.numerique,  heures_consommees: null },
       { key: "bois",       label: "Bois",       heures_prevues: fabAgg.bois,       heures_consommees: null },
       { key: "metal",      label: "Métal",      heures_prevues: fabAgg.metal,      heures_consommees: null },
       { key: "peinture",   label: "Peinture",   heures_prevues: fabAgg.peinture,   heures_consommees: null },
       { key: "tapisserie", label: "Tapisserie", heures_prevues: fabAgg.tapisserie, heures_consommees: null },
-      { key: "be",         label: "Bureau d'étude", heures_prevues: fabAgg.be,     heures_consommees: null },
     ];
 
     // 5. Agrégats consommation
