@@ -212,19 +212,6 @@ export function PlanningChantierGantt({ data, width = 960 }: Props) {
                       {ratioTxt}
                     </text>
                   )}
-                  {/* Logistique retour : rond rouge sur la ligne démontage */}
-                  {p.key === "demontage" && logRetour?.start && (
-                    <circle
-                      cx={dayToX(logRetour.start)}
-                      cy={cy}
-                      r={7}
-                      fill="#dc2626"
-                      stroke="hsl(var(--background))"
-                      strokeWidth={1.5}
-                    >
-                      <title>{`Logistique retour — ${fmt(logRetour.start)}`}</title>
-                    </circle>
-                  )}
                 </g>
               ) : (
                 <g>
