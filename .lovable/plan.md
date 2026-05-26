@@ -1,6 +1,6 @@
 # Roadmap Setup Paris — Vue consolidée
 
-**Dernière mise à jour : 26 mai 2026**
+**Dernière mise à jour : 26 mai 2026 — post-audit L3**
 
 ---
 
@@ -28,6 +28,7 @@
 | Bloc 9 Carte Mission | En cours | 9.6 bis | 9.1→9.6 bis livrés. 9.3→9.5 à finaliser selon Gabin |
 | Lot L2 Capabilities | Livré | L2 | 59 capabilities seedées, helpers SQL, catalogue front |
 | Batch 9.7 Mobile Wiring | Livré | v0.49 | AppRole 11 rôles, nav mobile câblée, cleanup routes orphelines |
+| Lot L3 Permissions | Prêt | L3 | Audit terminé. L3.0 users + L3.1 fab + L3.2-5 refacto. ~30-40h |
 | Bloc 10 Fiche Opportunité | Prêt | — | Analyse livrée, ~38-42h, 11 lots |
 
 ---
@@ -66,13 +67,16 @@
 
 ## En cours / Prochaines étapes (priorisé)
 
-### Immédiat (validation Gabin en cours)
-1. **Finaliser Bloc 9** — 9.3, 9.4, 9.5 selon retours test
-2. **Lot L3** — Refonte code : remplacer `isAdmin/isChef` par `user_has_cap()` (~15h, dépend de la spec L1 validée)
-3. **Bloc 10** — Fiche opportunité (~38-42h, 11 lots). Prêt à démarrer dès analyse validée.
+### Immédiat
+1. **Lot L3** — Refonte permissions : audit terminé 26/05, prêt à démarrer (~30-40h).
+   - L3.0 `/parametres/utilisateurs` multi-select 11 rôles + caps debug panel (~4h)
+   - L3.1 double-filtre fab `casting.edit_phase_fabrication` (~1h)
+   - L3.2-L3.5 refacto `isAdmin/isChef` → `user_has_cap()` 200+ call sites (~25-35h)
+2. **Finaliser Bloc 9** — 9.3, 9.4, 9.5 selon retours test Gabin (~17-20h).
+3. **Bloc 10** — Fiche opportunité (~38-42h, 11 lots). Prêt à démarrer, à prioriser post-L3 ou parallèle selon dispo Gabin.
 
 ### Court terme
-4. **Lot L4** — Seed data capabilities + MobileBottomNav adaptative (1 seule nav, pas 2)
+4. **Lot L4** — Seed data capabilities + MobileBottomNav adaptative unique (1 seule nav, pas 2) + fabrication atelier mobile + fiche affaire mobile enrichie
 5. **Lot L5** — Nettoyage legacy isAdmin/isChef + tests E2E permissions
 6. **Bloc 8 suite** — 8.4 UI (journal/photos), 8.5 (liens croisés), 8.6 (polish + E2E)
 
@@ -90,12 +94,17 @@
 | Dette | Fichier | Statut | Cible |
 |-------|---------|--------|-------|
 | Scope UI admin permissions | `l2-scope-ui-admin-permissions` | En attente | L3 |
+| Users multi-select 11 rôles | `parametres-utilisateurs-multi-select` | En attente | L3.0 |
 | Mobile fabrication atelier | `mobile-fabrication-a-livrer-en-L4` | En attente | L4 |
 | Fiche affaire mobile enrichie | `mobile-fiche-affaire-a-enrichir-en-L4` | En attente | L4 |
 | Tests E2E 8.3b scénario 11 | `e2e-specs-83b-scenario-11-revision` | En attente | 8.6 |
 | Rename loadActiveStepsForObjet | `load-active-steps-for-objet-rename` | En attente | 8.6 |
 | Dialog vs Sheet AddPersonne | `equipe-add-personne-dialog-vs-sheet` | En attente | 8.6 |
 | RLS bypass BE objet.edit | `rls-bypass-bureau-etude-objet-edit` | En attente | — |
+
+### Dettes résolues (depuis dernière mise à jour)
+- AppRole TS incomplet (`types-app-role-incomplet`) — résolu v0.49 Batch 9.7 P1
+- Routes mobile orphelines (`routes-mobile-orphelines`) — résolu v0.49 Batch 9.7 P4
 
 ---
 
