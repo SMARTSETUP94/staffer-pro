@@ -62,6 +62,8 @@ function buildSections(role: EffRole, validationCount: number, contratsRhCount: 
         label: "Espace personnel",
         items: [
           { title: "Ma semaine", url: "/ma-semaine", icon: LayoutDashboard },
+          { title: "Mes missions pose", url: "/mobile/mes-missions", icon: PackageCheck },
+          { title: "Mes équipes chantiers", url: "/mobile/equipe-chantiers", icon: UsersRound },
           { title: "Mes heures", url: "/mes-heures", icon: Clock, cap: "heures.personnelles.saisir" },
           { title: "Mes étapes fab", url: "/fabrication/mes-etapes", icon: Wrench },
           { title: "Mes échanges", url: "/mes-swaps", icon: ArrowLeftRight },
