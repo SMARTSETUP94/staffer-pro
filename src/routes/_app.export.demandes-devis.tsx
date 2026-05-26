@@ -192,7 +192,7 @@ function DemandesTransportPage() {
       const [{ data: aff }, { data: emp }] = await Promise.all([
         supabase
           .from("affaires")
-          .select("id, numero, nom, client, lieu")
+          .select("id, numero, nom, client, lieu, phase, statut")
           .order("numero", { ascending: false })
           .limit(500),
         supabase
