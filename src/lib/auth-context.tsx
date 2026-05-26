@@ -35,6 +35,13 @@ export interface AuthContextValue {
   isAdminOrChef: boolean;
   /** v0.48 Bloc 6 — rôle RH (accès module RH) */
   isRh: boolean;
+  // v0.49 Batch 9.7 — flags Sprint A (cf. mem://debts/types-app-role-incomplet)
+  isCommercial: boolean;
+  isBureauEtude: boolean;
+  isAtelierChef: boolean;
+  isAtelierMetier: boolean;
+  isLogistique: boolean;
+  isPoseur: boolean;
 
   passwordSetDone: boolean | null;
   passwordSetAt: string | null;
