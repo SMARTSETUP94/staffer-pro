@@ -8,13 +8,22 @@ import {
   CalendarOff,
   User,
   FileSignature,
+  PackageCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useResolvedEmploye } from "@/hooks/use-resolved-employe";
 
 type NavItem = {
-  to: "/mobile/aujourdhui" | "/mobile/heures" | "/mobile/swaps" | "/mobile/propositions" | "/mobile/absences" | "/mobile/contrats" | "/mobile/profil";
+  to:
+    | "/mobile/aujourdhui"
+    | "/mobile/heures"
+    | "/mobile/swaps"
+    | "/mobile/propositions"
+    | "/mobile/absences"
+    | "/mobile/contrats"
+    | "/mobile/profil"
+    | "/mobile/mes-missions";
   label: string;
   icon: typeof CalendarDays;
   badge?: number;
@@ -22,6 +31,7 @@ type NavItem = {
 
 const BASE_ITEMS: NavItem[] = [
   { to: "/mobile/aujourdhui", label: "Semaine", icon: CalendarDays },
+  { to: "/mobile/mes-missions", label: "Missions", icon: PackageCheck },
   { to: "/mobile/heures", label: "Heures", icon: Clock },
   { to: "/mobile/swaps", label: "Swaps", icon: ArrowLeftRight },
   { to: "/mobile/profil", label: "Profil", icon: User },
