@@ -266,7 +266,7 @@ export const getPlanningChantierMacro = createServerFn({ method: "GET" })
     ];
 
     // 8. Fenêtre globale clamp : signed_at (ou created_at) → date_demontage + 7j (ou +30j fallback)
-    const winStart = signedAt ?? createdAt ?? new Date().toISOString().slice(0, 10);
+    const winStart = createdAt ?? signedAt ?? new Date().toISOString().slice(0, 10);
     const winEnd = dDemontage ? addDays(dDemontage, 7) : addDays(winStart, 90);
 
     return {
