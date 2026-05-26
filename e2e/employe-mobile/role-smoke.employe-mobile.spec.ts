@@ -12,7 +12,6 @@ import {
 const MOBILE_ALLOWED_ROUTES = [
   "/mobile/aujourdhui",
   "/mobile/heures",
-  "/mobile/mois",
   "/mobile/absences",
   "/mobile/contrats",
   "/mobile/propositions",

@@ -24,12 +24,7 @@ test.describe("employé mobile / parcours quotidien", () => {
     await expect(page.getByText(/heures/i).first()).toBeVisible({ timeout: 15_000 });
   });
 
-  test("M4 — /mobile/mois rend la vue mensuelle", async ({ page }) => {
-    await page.goto("/mobile/mois");
-    await expect(page.getByText(/mois|janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre/i).first()).toBeVisible({
-      timeout: 15_000,
-    });
-  });
+  // M4 supprimé — /mobile/mois retiré v0.49 Batch 9.7 P4 (route morte hors spec L1).
 
   test("M5 — /mobile/swaps accessible", async ({ page }) => {
     await page.goto("/mobile/swaps");

@@ -213,4 +213,6 @@ Modèle staffing 3 niveaux (Sprint A) : `affaire_equipe(affaire_id, employe_id, 
 - [Bloc 9 — Carte mission pose](mem://features/bloc-9-carte-mission-pose) — 9.1 fondations DB livré (mission_events + 5 colonnes infos terrain + 3 server fns + fallback notif via notifications existante)
 - [Bloc 10 — Fiche opportunité analyse](mem://features/bloc-10-fiche-opportunite-analyse) — note pré-implémentation : DB existante (phase/statut_opportunite/code_opportunite/typologie_future…) à enrichir 5 champs + 2 tables `affaires_visites/echantillons` (artefacts → réutilise `affaire_documents.categorie`), 11 lots ~38h sans mobile / 42h avec, RPC `sign_opportunite` à enrichir notif `atelier_chef`
 - [Dette : AppRole TS incomplet (résolu)](mem://debts/types-app-role-incomplet) — Sprint A 6 rôles désormais typés front (v0.49 Batch 9.7)
-- [Dette : Routes mobile orphelines](mem://debts/routes-mobile-orphelines) — /mobile/mois, /mobile/chef/fabrication (stub), /mobile/chef/staffer (doublon), /mobile/chef/affaires/$id (minimaliste)
+- [Dette : Routes mobile orphelines (résolu)](mem://debts/routes-mobile-orphelines) — 3 routes supprimées v0.49 Batch 9.7 P4 (/mobile/mois, /mobile/chef/fabrication stub, /mobile/chef/staffer doublon)
+- [Dette : Mobile fabrication atelier à livrer en L4](mem://debts/mobile-fabrication-a-livrer-en-L4) — remplacement propre du stub via cap `mobile.fabrication_atelier`
+- [Dette : Fiche affaire mobile à enrichir en L4](mem://debts/mobile-fiche-affaire-a-enrichir-en-L4) — gallery seul en V1, sections gated par caps en L4

@@ -10,7 +10,6 @@ test.describe("Hub mobile chef — navigation 5 onglets", () => {
 
     for (const [path, label] of [
       ["/mobile/chef/planning", /Mon planning équipe/i],
-      ["/mobile/chef/staffer", /Staffer rapide/i],
       ["/mobile/chef/equipe", /Mon équipe/i],
       ["/mobile/chef/contrats", /Mes contrats déclenchés/i],
     ] as const) {

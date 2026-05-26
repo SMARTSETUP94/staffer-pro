@@ -1,7 +1,8 @@
 /**
- * Composant partagé extrait de /staffer-mobile (Tour 2 contrats) — réutilisé
- * par la route admin desktop `_app/staffer-mobile` et par l'onglet
- * `mobile.chef.staffer` du Hub mobile chef d'équipe.
+ * Composant partagé extrait de /staffer-mobile (Tour 2 contrats) — utilisé
+ * par la route admin desktop `_app/staffer-mobile`. L'onglet chef mobile
+ * `mobile.chef.staffer` a été supprimé v0.49 Batch 9.7 P4 (doublon de
+ * l'onglet Staffer dans `/mobile/chef/equipe`).
  */
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
