@@ -44,6 +44,34 @@ interface RoadmapPlanned {
 const RELEASES: RoadmapRelease[] = [
   {
     date: "2026-05-26",
+    version: "v0.51.0 (Bloc 9 — LIVRÉ)",
+    title: "📱 Carte mission pose mobile — J'arrive/Je pars, heures auto, photos, signalement",
+    entries: [
+      {
+        type: "feature",
+        area: "Bloc 9 — Lots 9.1 → 9.3",
+        title: "Fondations DB + liste missions + carte détail mobile",
+        description:
+          "Table `mission_events` (immutable, RLS self-only) avec enum `mission_event_type`. 5 colonnes `affaires` pour infos pose & livraison (`acces_livraison`, `code_acces`, `consignes_tenue`, `contact_site_nom`, `contact_site_tel`). Route `/mobile/mes-missions` (4 buckets : Cette semaine / Semaine prochaine / Plus tard / Passées). Route `/mobile/mission/$affaireId/$phase` avec 7 sections (MissionHero, Assignations, InfosTerrain, Contacts, Équipe, Timeline, Actions). Actions J'arrive / Je pars avec géoloc best-effort (timeout 5s). Signaler problème via `SignalProblemeDialog`. Section « Infos pose & livraison » éditable sur la fiche affaire (admin/chef).",
+      },
+      {
+        type: "feature",
+        area: "Bloc 9 — Lot 9.4",
+        title: "Saisie heures auto-préremplie + photos auto-tag",
+        description:
+          "Section `MesHeures` apparaît après le premier départ, pré-remplie par `computeHeuresFromEvents` (arrivée→départ, arrondi 15 min). Upsert `(employe, date, affaire)` avec `statut='soumis'`. Photo FAB flottant `capture='environment'` avec compression WebP, upload `affaires-photos`, insert `affaire_documents` (`categorie`, `mission_phase`). GPS cross-OS via Google Maps universel (iOS/Android).",
+      },
+      {
+        type: "feature",
+        area: "Bloc 9 — Lots 9.5 + 9.6 bis",
+        title: "Signalement enrichi + nav équipes + accessibilité",
+        description:
+          "4 niveaux de sévérité (info / warning / urgent / bloque) encodés en préfixe `[SEV]` dans `mission_events.note`. GPS auto (4s timeout) + toast personnalisé avec nom du chef notifié. Skeleton buckets + bouton Actualiser sur `/mobile/mes-missions`. Entrées nav ajoutées : sidebar « Mes missions pose » + « Mes équipes chantiers », bottom nav « Missions ». Route `/mobile/equipe-chantiers` listant les affaires actives par phase (montage/démontage tappables → carte mission). 2 specs E2E nav + équipes. Effort total ~14h (vs 30h estimé).",
+      },
+    ],
+  },
+  {
+    date: "2026-05-26",
     version: "v0.50.0 (Sprint D — LIVRÉ)",
     title: "🏗️ Refonte modèle équipes 3 niveaux — Casting, alertes inbox, Gantt macro",
     entries: [
