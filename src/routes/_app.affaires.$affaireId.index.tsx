@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { consolidateByMetier, type RawConsoLine } from "@/lib/affaire-marge-consolidation";
+import { AffaireInfosPoseSection } from "@/components/affaire/AffaireInfosPoseSection";
 
 type ConsoLine = RawConsoLine & {
   heures_restantes: number | null;
