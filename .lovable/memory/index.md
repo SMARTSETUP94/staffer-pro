@@ -210,3 +210,4 @@ Modèle staffing 3 niveaux (Sprint A) : `affaire_equipe(affaire_id, employe_id, 
 - [Dette : renommer loadPublishedStepsForObjet](mem://debts/load-active-steps-for-objet-rename) — charge draft+published depuis hotfix v8.3 ; renommer en loadActiveStepsForObjet au Lot 8.6
 - [Dette : Dialog vs Sheet AddPersonne](mem://debts/equipe-add-personne-dialog-vs-sheet) — AddPersonneDialog (modal centré) à migrer en Sheet latérale au Lot 8.6
 - [Dette : Specs E2E 8.3b — scénario #11 révisé + #11bis](mem://debts/e2e-specs-83b-scenario-11-revision) — 13 scénarios au lieu de 12 (no_plan + draft)
+- [Bloc 9 — Carte mission pose](mem://features/bloc-9-carte-mission-pose) — 9.1 fondations DB livré (mission_events + 5 colonnes infos terrain + 3 server fns + fallback notif via notifications existante)
