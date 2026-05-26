@@ -37,6 +37,7 @@ type AppRole = _AppRole;
 const ROLES: { value: AppRole; label: string; hint?: string }[] = USER_ROLE_OPTIONS;
 
 const CATEGORY_LABELS: Record<string, string> = {
+  // Legacy
   planning: "Planning",
   staffing: "Planning fab",
   affaires: "Affaires",
@@ -45,6 +46,15 @@ const CATEGORY_LABELS: Record<string, string> = {
   rh: "Employés & RH",
   parametres: "Paramètres",
   admin: "Admin plateforme",
+  fabrication: "Fabrication (legacy)",
+  inbox: "Inbox / alertes",
+  "mon-poste": "Mon poste (mobile legacy)",
+  // L2 — nouvelles catégories matrice définitive
+  sections: "Sections (navigation)",
+  data: "Données sensibles",
+  actions: "Actions",
+  mobile: "Mobile",
+  casting: "Casting par phase",
 };
 
 interface Capability {
