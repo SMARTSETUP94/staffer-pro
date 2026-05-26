@@ -434,6 +434,9 @@ function AffaireSynthesePage() {
         </section>
       )}
 
+      {isAdminOrChef && <AffaireInfosPoseSection affaireId={affaireId} />}
+
+
       {notes && (
         <section>
           <p className="overline mb-2">— Notes affaire</p>

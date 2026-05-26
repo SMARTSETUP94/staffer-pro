@@ -99,6 +99,7 @@ import { Route as AppAdminEmailPreviewRouteImport } from './routes/_app.admin.em
 import { Route as AppAdminContenuWidgetsRouteImport } from './routes/_app.admin.contenu-widgets'
 import { Route as AppAdminAuditRouteImport } from './routes/_app.admin.audit'
 import { Route as AppAffairesAffaireIdIndexRouteImport } from './routes/_app.affaires.$affaireId.index'
+import { Route as MobileMissionAffaireIdPhaseRouteImport } from './routes/mobile.mission.$affaireId.$phase'
 import { Route as MobileChefAffairesAffaireIdRouteImport } from './routes/mobile.chef.affaires.$affaireId'
 import { Route as AppAffairesAffaireIdStaffingRouteImport } from './routes/_app.affaires.$affaireId.staffing'
 import { Route as AppAffairesAffaireIdPlanningChantierRouteImport } from './routes/_app.affaires.$affaireId.planning-chantier'
@@ -568,6 +569,12 @@ const AppAffairesAffaireIdIndexRoute =
     path: '/',
     getParentRoute: () => AppAffairesAffaireIdRoute,
   } as any)
+const MobileMissionAffaireIdPhaseRoute =
+  MobileMissionAffaireIdPhaseRouteImport.update({
+    id: '/mobile/mission/$affaireId/$phase',
+    path: '/mobile/mission/$affaireId/$phase',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const MobileChefAffairesAffaireIdRoute =
   MobileChefAffairesAffaireIdRouteImport.update({
     id: '/affaires/$affaireId',
@@ -727,6 +734,7 @@ export interface FileRoutesByFullPath {
   '/affaires/$affaireId/planning-chantier': typeof AppAffairesAffaireIdPlanningChantierRoute
   '/affaires/$affaireId/staffing': typeof AppAffairesAffaireIdStaffingRoute
   '/mobile/chef/affaires/$affaireId': typeof MobileChefAffairesAffaireIdRoute
+  '/mobile/mission/$affaireId/$phase': typeof MobileMissionAffaireIdPhaseRoute
   '/affaires/$affaireId/': typeof AppAffairesAffaireIdIndexRoute
   '/affaires/$affaireId/objets/$objetId': typeof AppAffairesAffaireIdObjetsObjetIdRoute
 }
@@ -825,6 +833,7 @@ export interface FileRoutesByTo {
   '/affaires/$affaireId/planning-chantier': typeof AppAffairesAffaireIdPlanningChantierRoute
   '/affaires/$affaireId/staffing': typeof AppAffairesAffaireIdStaffingRoute
   '/mobile/chef/affaires/$affaireId': typeof MobileChefAffairesAffaireIdRoute
+  '/mobile/mission/$affaireId/$phase': typeof MobileMissionAffaireIdPhaseRoute
   '/affaires/$affaireId': typeof AppAffairesAffaireIdIndexRoute
   '/affaires/$affaireId/objets/$objetId': typeof AppAffairesAffaireIdObjetsObjetIdRoute
 }
@@ -928,6 +937,7 @@ export interface FileRoutesById {
   '/_app/affaires/$affaireId/planning-chantier': typeof AppAffairesAffaireIdPlanningChantierRoute
   '/_app/affaires/$affaireId/staffing': typeof AppAffairesAffaireIdStaffingRoute
   '/mobile/chef/affaires/$affaireId': typeof MobileChefAffairesAffaireIdRoute
+  '/mobile/mission/$affaireId/$phase': typeof MobileMissionAffaireIdPhaseRoute
   '/_app/affaires/$affaireId/': typeof AppAffairesAffaireIdIndexRoute
   '/_app/affaires/$affaireId/objets/$objetId': typeof AppAffairesAffaireIdObjetsObjetIdRoute
 }
@@ -1031,6 +1041,7 @@ export interface FileRouteTypes {
     | '/affaires/$affaireId/planning-chantier'
     | '/affaires/$affaireId/staffing'
     | '/mobile/chef/affaires/$affaireId'
+    | '/mobile/mission/$affaireId/$phase'
     | '/affaires/$affaireId/'
     | '/affaires/$affaireId/objets/$objetId'
   fileRoutesByTo: FileRoutesByTo
@@ -1129,6 +1140,7 @@ export interface FileRouteTypes {
     | '/affaires/$affaireId/planning-chantier'
     | '/affaires/$affaireId/staffing'
     | '/mobile/chef/affaires/$affaireId'
+    | '/mobile/mission/$affaireId/$phase'
     | '/affaires/$affaireId'
     | '/affaires/$affaireId/objets/$objetId'
   id:
@@ -1231,6 +1243,7 @@ export interface FileRouteTypes {
     | '/_app/affaires/$affaireId/planning-chantier'
     | '/_app/affaires/$affaireId/staffing'
     | '/mobile/chef/affaires/$affaireId'
+    | '/mobile/mission/$affaireId/$phase'
     | '/_app/affaires/$affaireId/'
     | '/_app/affaires/$affaireId/objets/$objetId'
   fileRoutesById: FileRoutesById
@@ -1254,6 +1267,7 @@ export interface RootRouteChildren {
   MobileProfilRoute: typeof MobileProfilRoute
   MobilePropositionsRoute: typeof MobilePropositionsRoute
   MobileSwapsRoute: typeof MobileSwapsRoute
+  MobileMissionAffaireIdPhaseRoute: typeof MobileMissionAffaireIdPhaseRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1888,6 +1902,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAffairesAffaireIdIndexRouteImport
       parentRoute: typeof AppAffairesAffaireIdRoute
     }
+    '/mobile/mission/$affaireId/$phase': {
+      id: '/mobile/mission/$affaireId/$phase'
+      path: '/mobile/mission/$affaireId/$phase'
+      fullPath: '/mobile/mission/$affaireId/$phase'
+      preLoaderRoute: typeof MobileMissionAffaireIdPhaseRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/mobile/chef/affaires/$affaireId': {
       id: '/mobile/chef/affaires/$affaireId'
       path: '/affaires/$affaireId'
@@ -2204,6 +2225,7 @@ const rootRouteChildren: RootRouteChildren = {
   MobileProfilRoute: MobileProfilRoute,
   MobilePropositionsRoute: MobilePropositionsRoute,
   MobileSwapsRoute: MobileSwapsRoute,
+  MobileMissionAffaireIdPhaseRoute: MobileMissionAffaireIdPhaseRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
