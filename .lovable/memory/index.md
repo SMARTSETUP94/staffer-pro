@@ -170,7 +170,7 @@ Modèle staffing 3 niveaux (Sprint A) : `affaire_equipe(affaire_id, employe_id, 
 88. ⏳ **Analyse livrée** (26 mai 2026) — Note pré-implémentation dans `mem://features/bloc-10-fiche-opportunite-analyse`. DB déjà partiellement équipée (phase, statut_opportunite, code_opportunite, typologie_future). À enrichir 5 champs + 2 tables `affaires_visites/echantillons`. 11 lots. RPC `sign_opportunite` à enrichir notif `atelier_chef`.
 
 ### Lots L3 → L5 (suite refonte permissions)
-89. ⏳ **L3** — Refonte code : remplacer `isAdmin/isChef` par `user_has_cap()` (~15h). Attend validation spec L1 par Gabin.
+89. ⏳ **L3** — Refonte permissions : audit terminé 26/05. 4 sous-lots : L3.0 `/parametres/utilisateurs` multi-select 11 rôles + caps debug panel (~4h), L3.1 double-filtre fab `casting.edit_phase_fabrication` (~1h), L3.2-L3.5 refacto `isAdmin/isChef` → `user_has_cap()` 200+ call sites (~25-35h). ~30-40h total.
 90. ⏳ **L4** — Seed data capabilities + MobileBottomNav adaptative unique (1 nav, pas 2).
 91. ⏳ **L5** — Nettoyage legacy isAdmin/isChef + tests E2E permissions.
 

@@ -1,6 +1,6 @@
 # Roadmap Setup Paris — Vue consolidée
 
-**Dernière mise à jour : 26 mai 2026**
+**Dernière mise à jour : 26 mai 2026 — post-audit L3**
 
 ---
 
@@ -66,13 +66,16 @@
 
 ## En cours / Prochaines étapes (priorisé)
 
-### Immédiat (validation Gabin en cours)
-1. **Finaliser Bloc 9** — 9.3, 9.4, 9.5 selon retours test
-2. **Lot L3** — Refonte code : remplacer `isAdmin/isChef` par `user_has_cap()` (~15h, dépend de la spec L1 validée)
-3. **Bloc 10** — Fiche opportunité (~38-42h, 11 lots). Prêt à démarrer dès analyse validée.
+### Immédiat
+1. **Lot L3** — Refonte permissions : audit terminé 26/05, prêt à démarrer (~30-40h).
+   - L3.0 `/parametres/utilisateurs` multi-select 11 rôles + caps debug panel (~4h)
+   - L3.1 double-filtre fab `casting.edit_phase_fabrication` (~1h)
+   - L3.2-L3.5 refacto `isAdmin/isChef` → `user_has_cap()` 200+ call sites (~25-35h)
+2. **Finaliser Bloc 9** — 9.3, 9.4, 9.5 selon retours test Gabin (~17-20h).
+3. **Bloc 10** — Fiche opportunité (~38-42h, 11 lots). Prêt à démarrer, à prioriser post-L3 ou parallèle selon dispo Gabin.
 
 ### Court terme
-4. **Lot L4** — Seed data capabilities + MobileBottomNav adaptative (1 seule nav, pas 2)
+4. **Lot L4** — Seed data capabilities + MobileBottomNav adaptative unique (1 seule nav, pas 2) + fabrication atelier mobile + fiche affaire mobile enrichie
 5. **Lot L5** — Nettoyage legacy isAdmin/isChef + tests E2E permissions
 6. **Bloc 8 suite** — 8.4 UI (journal/photos), 8.5 (liens croisés), 8.6 (polish + E2E)
 
