@@ -392,7 +392,11 @@ function AffaireSynthesePage() {
             <Hammer className="h-3 w-3" />— Dates clés chantier
           </p>
           <div className="rounded-2xl border border-border bg-card p-4">
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
+              <div className="space-y-1.5">
+                <Label htmlFor="d-created" className="text-xs">Date de création</Label>
+                <Input id="d-created" type="date" value={dCreatedAt} onChange={(e) => setDCreatedAt(e.target.value)} />
+              </div>
               <div className="space-y-1.5">
                 <Label htmlFor="d-signed" className="text-xs">Signature devis</Label>
                 <Input id="d-signed" type="date" value={dSignedAt} onChange={(e) => setDSignedAt(e.target.value)} />
