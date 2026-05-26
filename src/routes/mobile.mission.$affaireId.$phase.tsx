@@ -54,7 +54,15 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { compressImageIfPossible } from "@/lib/image-compress";
+import {
+  autoTagCategoryByMissionState,
+  computeHeuresFromEvents,
+  type PhotoCategorie,
+} from "@/lib/mission-card-helpers";
 
 export const Route = createFileRoute("/mobile/mission/$affaireId/$phase")({
   head: () => ({ meta: [{ title: "Mission pose — Setup Paris" }] }),
