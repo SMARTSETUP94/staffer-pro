@@ -52,10 +52,17 @@ export function roleLabel(role: string | null | undefined): string {
 /** Liste ordonnée des rôles pour les <Select> admin. */
 export const USER_ROLE_OPTIONS: { value: AppRole; label: string; hint?: string }[] = [
   { value: "admin", label: USER_ROLE_LABELS.admin },
+  { value: "commercial", label: USER_ROLE_LABELS.commercial },
+  { value: "bureau_etude", label: USER_ROLE_LABELS.bureau_etude },
   { value: "chef_chantier", label: USER_ROLE_LABELS.chef_chantier, hint: "global" },
-  { value: "chef_metier_scoped", label: USER_ROLE_LABELS.chef_metier_scoped, hint: "scopé" },
+  { value: "atelier_chef", label: USER_ROLE_LABELS.atelier_chef, hint: "métier" },
+  { value: "atelier_metier", label: USER_ROLE_LABELS.atelier_metier },
+  { value: "chef_pose", label: "Chef pose" },
+  { value: "poseur", label: USER_ROLE_LABELS.poseur },
+  { value: "logistique", label: USER_ROLE_LABELS.logistique },
   { value: "rh", label: USER_ROLE_LABELS.rh },
   { value: "employe", label: USER_ROLE_LABELS.employe },
+  { value: "chef_metier_scoped", label: USER_ROLE_LABELS.chef_metier_scoped, hint: "déprécié" },
 ];
 
 // ---------------------------------------------------------------------------
