@@ -141,7 +141,7 @@ export const getPlanningChantierMacro = createServerFn({ method: "GET" })
       .eq("affaire_id", affaireId)
       .eq("archive", false);
 
-    const fabAgg = { numerique: 0, bois: 0, metal: 0, peinture: 0, tapisserie: 0, be: 0 };
+    const fabAgg = { numerique: 0, bois: 0, metal: 0, peinture: 0, tapisserie: 0, be: 0, uv: 0 };
     let fabTotal = 0;
     for (const o of objets ?? []) {
       const q = Math.max(1, Number(o.quantite ?? 1));
@@ -151,19 +151,21 @@ export const getPlanningChantierMacro = createServerFn({ method: "GET" })
       fabAgg.peinture   += Number(o.heures_prevues_peinture   ?? 0) * q;
       fabAgg.tapisserie += Number(o.heures_prevues_tapisserie ?? 0) * q;
       fabAgg.be         += Number(o.heures_prevues_be         ?? 0) * q;
+      // NOTE: colonne heures_prevues_uv n'existe pas encore en DB — affiché à 0 avec badge gris
       fabTotal += fabAgg.numerique; // accumulated; recompute total below
     }
     fabTotal =
       fabAgg.numerique + fabAgg.bois + fabAgg.metal +
-      fabAgg.peinture + fabAgg.tapisserie + fabAgg.be;
+      fabAgg.peinture + fabAgg.tapisserie + fabAgg.be + fabAgg.uv;
 
     const fab_sous_blocs: FabSousBloc[] = [
-      { key: "be",         label: "Bureau d'étude", heures_prevues: fabAgg.be,     heures_consommees: null },
-      { key: "numerique",  label: "Numérique",  heures_prevues: fabAgg.numerique,  heures_consommees: null },
-      { key: "bois",       label: "Bois",       heures_prevues: fabAgg.bois,       heures_consommees: null },
-      { key: "metal",      label: "Métal",      heures_prevues: fabAgg.metal,      heures_consommees: null },
-      { key: "peinture",   label: "Peinture",   heures_prevues: fabAgg.peinture,   heures_consommees: null },
-      { key: "tapisserie", label: "Tapisserie", heures_prevues: fabAgg.tapisserie, heures_consommees: null },
+      { key: "be",         label: "Bureau d'étude", heures_prevues: fabAgg.be,         heures_consommees: null },
+      { key: "numerique",  label: "Numérique",      heures_prevues: fabAgg.numerique,  heures_consommees: null },
+      { key: "bois",       label: "Bois",           heures_prevues: fabAgg.bois,       heures_consommees: null },
+      { key: "metal",      label: "Métal",          heures_prevues: fabAgg.metal,      heures_consommees: null },
+      { key: "peinture",   label: "Peinture",       heures_prevues: fabAgg.peinture,   heures_consommees: null },
+      { key: "tapisserie", label: "Tapisserie",     heures_prevues: fabAgg.tapisserie, heures_consommees: null },
+      { key: "uv",         label: "Impression UV",  heures_prevues: fabAgg.uv,         heures_consommees: null },
     ];
 
     // 5. Agrégats consommation
