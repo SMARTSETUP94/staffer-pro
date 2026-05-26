@@ -61,15 +61,21 @@ function PlanningChantierPage() {
 
       <PlanningChantierGantt data={data} />
 
-      {/* Sous-blocs fab */}
-      {data.fab_sous_blocs.some((b) => b.heures_prevues > 0) && (
+      {/* Sous-blocs fab — toujours afficher les 7 blocs (même à 0h) */}
+      {data.fab_sous_blocs.length > 0 && (
         <div className="rounded-xl border border-border bg-card p-4">
           <h3 className="text-sm font-bold mb-3">Répartition fabrication</h3>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-6">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7">
             {data.fab_sous_blocs.map((b) => (
-              <div key={b.key} className="rounded-lg border border-border bg-background p-2 text-center">
+              <div key={b.key} className={`rounded-lg border p-2 text-center ${b.heures_prevues > 0 ? "border-border bg-background" : "border-dashed border-muted-foreground/30 bg-muted/30"}`}>
                 <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{b.label}</p>
-                <p className="mt-1 text-base font-bold">{Math.round(b.heures_prevues)}<span className="text-xs font-normal text-muted-foreground"> h</span></p>
+                <p className="mt-1 text-base font-bold">
+                  {b.heures_prevues > 0 ? (
+                    <>{Math.round(b.heures_prevues)}<span className="text-xs font-normal text-muted-foreground"> h</span></>
+                  ) : (
+                    <span className="text-sm text-muted-foreground">—</span>
+                  )}
+                </p>
               </div>
             ))}
           </div>
