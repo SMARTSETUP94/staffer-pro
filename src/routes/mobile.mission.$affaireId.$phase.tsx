@@ -701,3 +701,301 @@ function countdownLabel(
   if (diff <= 7) return { label: `Dans ${diff} j`, tone: "soon" };
   return { label: `Dans ${diff} j`, tone: "later" };
 }
+
+// ---------------------------------------------------------------------------
+// Bloc 9 Lot 9.4 — Section heures pré-remplie depuis events arrivee/depart
+// ---------------------------------------------------------------------------
+function MesHeuresSection({
+  detail,
+  onSaved,
+}: {
+  detail: CarteMissionDetail;
+  onSaved: () => void;
+}) {
+  // Date "active" = aujourd'hui si dans la fenêtre, sinon dernière date avec events
+  const today = new Date().toISOString().slice(0, 10);
+  const eventDates = Array.from(
+    new Set(detail.events.map((e) => e.occurred_at.slice(0, 10))),
+  ).sort();
+  const activeDate = eventDates.includes(today)
+    ? today
+    : (eventDates[eventDates.length - 1] ?? null);
+
+  const computed = useMemo(
+    () => (activeDate ? computeHeuresFromEvents(detail.events, activeDate) : null),
+    [detail.events, activeDate],
+  );
+
+  const [debut, setDebut] = useState(computed?.heure_debut ?? "");
+  const [fin, setFin] = useState(computed?.heure_fin ?? "");
+  const [commentaire, setCommentaire] = useState("");
+  const [pauseMin, setPauseMin] = useState<number>(60);
+  const [submitting, setSubmitting] = useState(false);
+
+  // re-sync si computed change
+  useEffect(() => {
+    if (computed) {
+      setDebut(computed.heure_debut);
+      setFin(computed.heure_fin);
+    }
+  }, [computed?.heure_debut, computed?.heure_fin]);
+
+  // Section masquée tant qu'aucun depart n'a été enregistré
+  const hasDepart = detail.events.some((e) => e.type === "depart");
+  if (!hasDepart || !activeDate) return null;
+
+  // Récupère l'assignation correspondant à la date (sinon la 1ère)
+  const matchAssig =
+    detail.assignations.find((a) => a.date === activeDate) ??
+    detail.assignations[0] ??
+    null;
+
+  async function submit() {
+    if (!debut || !fin || !matchAssig) return;
+    setSubmitting(true);
+    try {
+      const [hd, md] = debut.split(":").map(Number);
+      const [hf, mf] = fin.split(":").map(Number);
+      const dureeMin = Math.max(0, hf * 60 + mf - (hd * 60 + md) - pauseMin);
+      const heuresReelles = Math.round((dureeMin / 60) * 100) / 100;
+
+      // Résoudre employe_id
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData.user?.id;
+      if (!userId) throw new Error("Non authentifié");
+      const { data: emp } = await supabase
+        .from("employes")
+        .select("id")
+        .eq("profile_id", userId)
+        .maybeSingle();
+      if (!emp) throw new Error("Profil employé introuvable");
+
+      // Upsert sur (employe, date, affaire)
+      const { data: existing } = await supabase
+        .from("heures_saisies")
+        .select("id")
+        .eq("employe_id", emp.id)
+        .eq("date", activeDate)
+        .eq("affaire_id", detail.affaire_id)
+        .maybeSingle();
+
+      const payload = {
+        employe_id: emp.id,
+        date: activeDate,
+        affaire_id: detail.affaire_id,
+        assignation_id: matchAssig.id,
+        metier_id: matchAssig.metier_id,
+        heure_debut: debut + ":00",
+        heure_fin: fin + ":00",
+        duree_pause_minutes: pauseMin,
+        heures_reelles: heuresReelles,
+        heures_nuit: 0,
+        commentaire: commentaire.trim() || null,
+        statut: "soumis" as const,
+        saisi_par: userId,
+        saisi_par_chef: false,
+      };
+
+      if (existing) {
+        const { error } = await supabase
+          .from("heures_saisies")
+          .update(payload)
+          .eq("id", existing.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("heures_saisies").insert(payload);
+        if (error) throw error;
+      }
+      toast.success("Heures envoyées au chef pour validation");
+      onSaved();
+    } catch (e) {
+      toast.error("Échec de l'enregistrement", {
+        description: e instanceof Error ? e.message : String(e),
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <section data-testid="mission-heures-section">
+      <p className="overline mb-2">— Mes heures sur cette mission</p>
+      <div className="space-y-3 rounded-2xl border border-border bg-card p-3">
+        <div className="grid grid-cols-3 gap-2">
+          <div>
+            <Label htmlFor="h-debut" className="text-[10px] uppercase tracking-wider">
+              Début
+            </Label>
+            <Input
+              id="h-debut"
+              data-testid="mission-heures-debut"
+              type="time"
+              value={debut}
+              onChange={(e) => setDebut(e.target.value)}
+            />
+          </div>
+          <div>
+            <Label htmlFor="h-fin" className="text-[10px] uppercase tracking-wider">
+              Fin
+            </Label>
+            <Input
+              id="h-fin"
+              data-testid="mission-heures-fin"
+              type="time"
+              value={fin}
+              onChange={(e) => setFin(e.target.value)}
+            />
+          </div>
+          <div>
+            <Label htmlFor="h-pause" className="text-[10px] uppercase tracking-wider">
+              Pause (min)
+            </Label>
+            <Input
+              id="h-pause"
+              type="number"
+              min={0}
+              max={240}
+              value={pauseMin}
+              onChange={(e) => setPauseMin(Number(e.target.value) || 0)}
+            />
+          </div>
+        </div>
+        <Textarea
+          value={commentaire}
+          onChange={(e) => setCommentaire(e.target.value)}
+          rows={2}
+          maxLength={500}
+          placeholder="Commentaire (optionnel)"
+        />
+        <Button
+          onClick={submit}
+          disabled={submitting || !debut || !fin || !matchAssig}
+          className="w-full h-10"
+          data-testid="mission-heures-submit"
+        >
+          {submitting && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />}
+          Envoyer au chef
+        </Button>
+      </div>
+    </section>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Bloc 9 Lot 9.4 — Bouton photo flottant (auto-tag selon état mission)
+// ---------------------------------------------------------------------------
+function PhotoFab({
+  affaireId,
+  phase,
+  events,
+  onUploaded,
+}: {
+  affaireId: string;
+  phase: MissionPhase;
+  events: MissionEvent[];
+  onUploaded: () => void;
+}) {
+  const [busy, setBusy] = useState(false);
+  const recordFn = useServerFn(recordMissionEvent);
+  const hasArrivee = events.some((e) => e.type === "arrivee");
+  const hasDepart = events.some((e) => e.type === "depart");
+  // Heuristique : un signalement "ouvert" = problème dans les 2 dernières heures
+  const problemeOpen = events.some(
+    (e) =>
+      e.type === "probleme" &&
+      Date.now() - new Date(e.occurred_at).getTime() < 2 * 3600_000,
+  );
+  const categorie: PhotoCategorie = autoTagCategoryByMissionState(phase, {
+    hasArrivee,
+    hasDepart,
+    problemeOpen,
+  });
+
+  async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setBusy(true);
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData.user?.id;
+      if (!userId) throw new Error("Non authentifié");
+      const compressed = await compressImageIfPossible(file);
+      if (compressed.compressedSize > 10 * 1024 * 1024) {
+        throw new Error("Photo > 10 Mo après compression");
+      }
+      const docId = crypto.randomUUID();
+      const storagePath = `${affaireId}/${docId}.${compressed.extension}`;
+      const { error: upErr } = await supabase.storage
+        .from("affaires-photos")
+        .upload(storagePath, compressed.blob, {
+          contentType: compressed.mimeType,
+          upsert: false,
+        });
+      if (upErr) throw upErr;
+      const { error: insErr } = await supabase.from("affaire_documents").insert({
+        id: docId,
+        affaire_id: affaireId,
+        storage_path: storagePath,
+        filename: file.name,
+        mime_type: compressed.mimeType,
+        taille_bytes: compressed.compressedSize,
+        uploaded_by: userId,
+        categorie,
+        mission_phase: phase,
+      } as never);
+      if (insErr) {
+        await supabase.storage.from("affaires-photos").remove([storagePath]);
+        throw insErr;
+      }
+      // Journalise dans mission_events pour apparaître dans la timeline
+      await recordFn({
+        data: { affaireId, phase, type: "photo", photoDocId: docId, note: categorie },
+      });
+      toast.success("Photo ajoutée", { description: `Tag : ${categorie}` });
+      onUploaded();
+    } catch (err) {
+      toast.error("Échec de l'envoi", {
+        description: err instanceof Error ? err.message : String(err),
+      });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div
+      className="fixed bottom-[calc(env(safe-area-inset-bottom)+5rem)] right-4 z-40 flex flex-col items-end gap-1"
+      data-testid="mission-photo-fab"
+    >
+      <span
+        className="rounded-full bg-card/95 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground shadow"
+        data-testid="mission-photo-categorie"
+      >
+        {categorie.replace(/_/g, " ")}
+      </span>
+      <label
+        className={cn(
+          "flex h-14 w-14 cursor-pointer items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg active:scale-95",
+          busy && "opacity-60",
+        )}
+        aria-label="Prendre une photo"
+      >
+        {busy ? (
+          <Loader2 className="h-5 w-5 animate-spin" />
+        ) : (
+          <Camera className="h-6 w-6" />
+        )}
+        <input
+          data-testid="mission-photo-input"
+          type="file"
+          accept="image/*"
+          capture="environment"
+          className="hidden"
+          disabled={busy}
+          onChange={onFile}
+        />
+      </label>
+    </div>
+  );
+}
