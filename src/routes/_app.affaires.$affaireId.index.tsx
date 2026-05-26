@@ -34,6 +34,7 @@ function AffaireSynthesePage() {
   const [hDemontage, setHDemontage] = useState<string>("0");
   const [savingMD, setSavingMD] = useState(false);
   // Sprint D Batch 3 — dates clés chantier
+  const [dSignedAt, setDSignedAt] = useState<string>("");
   const [dMontage, setDMontage] = useState<string>("");
   const [dEvtDebut, setDEvtDebut] = useState<string>("");
   const [dEvtFin, setDEvtFin] = useState<string>("");
@@ -55,7 +56,7 @@ function AffaireSynthesePage() {
           .eq("affaire_id", affaireId),
         supabase
           .from("affaires")
-          .select("notes, heures_prevues_montage, heures_prevues_demontage, date_montage, date_evenement_debut, date_evenement_fin, date_demontage")
+          .select("notes, heures_prevues_montage, heures_prevues_demontage, signed_at, date_montage, date_evenement_debut, date_evenement_fin, date_demontage")
           .eq("id", affaireId)
           .maybeSingle(),
       ]);
@@ -64,6 +65,7 @@ function AffaireSynthesePage() {
       setNotes((aff?.notes as string | null) ?? null);
       setHMontage(String(aff?.heures_prevues_montage ?? 0));
       setHDemontage(String(aff?.heures_prevues_demontage ?? 0));
+      setDSignedAt(((aff?.signed_at as string | null) ?? "").slice(0, 10));
       setDMontage((aff?.date_montage as string | null) ?? "");
       setDEvtDebut((aff?.date_evenement_debut as string | null) ?? "");
       setDEvtFin((aff?.date_evenement_fin as string | null) ?? "");
@@ -96,6 +98,7 @@ function AffaireSynthesePage() {
     const { error } = await supabase
       .from("affaires")
       .update({
+        signed_at: dSignedAt ? new Date(dSignedAt + "T00:00:00Z").toISOString() : null,
         date_montage: dMontage || null,
         date_evenement_debut: dEvtDebut || null,
         date_evenement_fin: dEvtFin || null,
@@ -386,7 +389,11 @@ function AffaireSynthesePage() {
             <Hammer className="h-3 w-3" />— Dates clés chantier
           </p>
           <div className="rounded-2xl border border-border bg-card p-4">
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+              <div className="space-y-1.5">
+                <Label htmlFor="d-signed" className="text-xs">Signature devis</Label>
+                <Input id="d-signed" type="date" value={dSignedAt} onChange={(e) => setDSignedAt(e.target.value)} />
+              </div>
               <div className="space-y-1.5">
                 <Label htmlFor="d-montage" className="text-xs">Début montage</Label>
                 <Input id="d-montage" type="date" value={dMontage} onChange={(e) => setDMontage(e.target.value)} />
