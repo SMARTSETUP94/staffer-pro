@@ -143,6 +143,13 @@ Modèle staffing 3 niveaux (Sprint A) : `affaire_equipe(affaire_id, employe_id, 
 71. ⏳ **8.5** (~4h) — Liens croisés : remplacer lien temporaire 8.2b par navigation intégrée native (Gantt → fiche objet, Planning → fiche objet, Devis ligne → fiche objet, Kanban étape → fiche objet). Choix drawer vs nav à trancher.
 72. ⏳ **8.6** (~8h) — Polish + responsive 380px + E2E 8.3b (13 scénarios) + E2E 8.4 + 3 dettes (rename SF `loadActiveStepsForObjet`, Sheet vs Dialog AddPersonne, édition commentaire).
 
+### Bloc 9 — Carte mission pose (en cours, ~30h)
+72b. ✅ **9.1 Fondations DB** (26 mai 2026) — Table `mission_events` + enum + RLS self (Q2) + 5 colonnes infos terrain `affaires` (acces_livraison, code_acces, consignes_tenue, contact_site_nom, contact_site_tel) + enum `notification_type` += `mission_probleme` + 2 nouvelles capabilities + matrice rôles. 3 server fns `getMesMissions`/`getCarteMission`/`recordMissionEvent` dans `src/server/mission-card.functions.ts`. Fallback notif chef via table `notifications` existante (pas de table à créer). Helper `src/lib/image-compress.ts` alias de `image-compression.ts`. Voir mem://features/bloc-9-carte-mission-pose.
+72c. ⏳ **9.2 Liste `/mobile/mes-missions`** (~3-4h) — filtres Cette semaine/Suivante/Passées.
+72d. ⏳ **9.3 Carte détaillée `/mobile/mission/$id`** (~5-6h) — hero countdown + GPS + tel + sections accès/équipe/historique events.
+72e. ⏳ **9.4 Heures auto + photos** (~5-7h) — pré-remplissage depuis events arrivee/depart + auto-tag photos.
+72f. ⏳ **9.5 Signaler problème + 7 specs E2E** (~5-7h) — bouton signaler → recordMissionEvent(probleme) + notif chef + 7e spec multi-mission/jour (Q5).
+
 ### Backlog (non planifié)
 73. ⏸️ **v0.40 Phase 2** — Horaires précis SILAE (heure_debut/fin/pauses + nuit/sup/35h auto) — SUSPENDU.
 74. ⏸️ **v0.41** — Claude API auto-staffing UNIQUEMENT 5XXX (proxy + skill + tools + fallback v0.35 + cache + cap + télémétrie). Tier CDI/CDD avant intérim. Utilisera `affaire_equipe_historique` comme feature store contextuel.
