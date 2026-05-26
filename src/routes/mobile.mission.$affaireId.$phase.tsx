@@ -595,6 +595,18 @@ function ActionsBar({
   );
 }
 
+const SEVERITY_CHOICES: {
+  value: "info" | "warning" | "urgent" | "bloque";
+  label: string;
+  hint: string;
+  cls: string;
+}[] = [
+  { value: "info", label: "ℹ️ Info", hint: "Pour info", cls: "border-muted-foreground/40" },
+  { value: "warning", label: "⚠️ Attention", hint: "À surveiller", cls: "border-amber-500/60 text-amber-700 dark:text-amber-400" },
+  { value: "urgent", label: "🚨 Urgent", hint: "Intervention rapide", cls: "border-orange-600/70 text-orange-700 dark:text-orange-400" },
+  { value: "bloque", label: "⛔ Bloqué", hint: "Chantier à l'arrêt", cls: "border-destructive text-destructive" },
+];
+
 function SignalProblemeDialog({
   open,
   onOpenChange,
@@ -609,8 +621,17 @@ function SignalProblemeDialog({
   onSent: () => void;
 }) {
   const [note, setNote] = useState("");
+  const [severity, setSeverity] = useState<"info" | "warning" | "urgent" | "bloque">("warning");
   const [busy, setBusy] = useState(false);
   const recordFn = useServerFn(recordMissionEvent);
+
+  // reset à l'ouverture
+  useEffect(() => {
+    if (open) {
+      setNote("");
+      setSeverity("warning");
+    }
+  }, [open]);
 
   async function submit() {
     if (note.trim().length === 0) {
@@ -619,11 +640,39 @@ function SignalProblemeDialog({
     }
     setBusy(true);
     try {
-      await recordFn({
-        data: { affaireId, phase, type: "probleme", note: note.trim() },
+      // GPS best-effort (timeout 4s)
+      let latitude: number | null = null;
+      let longitude: number | null = null;
+      if (typeof navigator !== "undefined" && navigator.geolocation) {
+        try {
+          const pos = await new Promise<GeolocationPosition>((resolve, reject) =>
+            navigator.geolocation.getCurrentPosition(resolve, reject, {
+              timeout: 4000,
+              maximumAge: 60_000,
+            }),
+          );
+          latitude = pos.coords.latitude;
+          longitude = pos.coords.longitude;
+        } catch {
+          // ignore
+        }
+      }
+
+      const res = await recordFn({
+        data: {
+          affaireId,
+          phase,
+          type: "probleme",
+          note: note.trim(),
+          severity,
+          latitude,
+          longitude,
+        },
       });
-      toast.success("Problème signalé au chef");
-      setNote("");
+      const chefLabel = res?.chefName ?? "Le chef d'équipe";
+      toast.success("Problème signalé.", {
+        description: `${chefLabel} a été prévenu${severity === "urgent" || severity === "bloque" ? " en priorité" : ""}.`,
+      });
       onOpenChange(false);
       onSent();
     } catch (e) {
@@ -637,42 +686,82 @@ function SignalProblemeDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-destructive" />
             Signaler un problème
           </DialogTitle>
           <DialogDescription>
-            Le chef d'équipe recevra une notification immédiatement.
+            Le chef d'équipe est notifié immédiatement avec ta géolocalisation.
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-2">
-          <Label htmlFor="probleme-note" className="text-xs">
-            Description (obligatoire)
-          </Label>
-          <Textarea
-            id="probleme-note"
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            rows={4}
-            maxLength={2000}
-            placeholder="Ex : accès bloqué, matériel manquant, équipe sous-dimensionnée…"
-            data-testid="probleme-note-input"
-          />
+        <div className="space-y-4">
+          <div>
+            <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+              Sévérité
+            </Label>
+            <div
+              className="mt-1.5 grid grid-cols-2 gap-1.5"
+              role="radiogroup"
+              aria-label="Sévérité"
+            >
+              {SEVERITY_CHOICES.map((s) => {
+                const active = severity === s.value;
+                return (
+                  <button
+                    key={s.value}
+                    type="button"
+                    role="radio"
+                    aria-checked={active}
+                    data-testid={`probleme-severity-${s.value}`}
+                    onClick={() => setSeverity(s.value)}
+                    className={cn(
+                      "rounded-xl border-2 px-2.5 py-2 text-left text-xs transition-colors active:scale-[0.98]",
+                      s.cls,
+                      active ? "bg-accent/50 ring-1 ring-primary" : "bg-card hover:bg-accent/30",
+                    )}
+                  >
+                    <div className="font-semibold">{s.label}</div>
+                    <div className="text-[10px] text-muted-foreground">{s.hint}</div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="probleme-note" className="text-[10px] uppercase tracking-wider text-muted-foreground">
+              Description (obligatoire)
+            </Label>
+            <Textarea
+              id="probleme-note"
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              rows={4}
+              maxLength={2000}
+              placeholder="Ex : accès bloqué, matériel manquant, équipe sous-dimensionnée…"
+              data-testid="probleme-note-input"
+            />
+            <p className="text-right text-[10px] text-muted-foreground">{note.length}/2000</p>
+          </div>
+          <p className="text-[10px] text-muted-foreground">
+            Astuce : pour joindre une photo, ferme cette fenêtre et utilise le bouton appareil photo
+            en bas à droite — elle sera taguée automatiquement « incident ».
+          </p>
         </div>
-        <DialogFooter>
+        <DialogFooter className="gap-2">
           <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={busy}>
             Annuler
           </Button>
           <Button
             variant="destructive"
             onClick={submit}
-            disabled={busy}
+            disabled={busy || note.trim().length === 0}
             data-testid="probleme-submit"
+            className="min-w-32"
           >
             {busy && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />}
-            Envoyer
+            Signaler
           </Button>
         </DialogFooter>
       </DialogContent>

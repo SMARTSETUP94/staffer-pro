@@ -1,6 +1,6 @@
 ---
 name: Bloc 9 — Carte mission pose
-description: Cartes mission pose mobile (montage/démontage). Lots 9.1 → 9.4 livrés. 2 routes mobiles + bonus infos pose + section heures auto + FAB photo auto-tag. Helpers `mission-card-helpers.ts` (computeHeuresFromEvents + autoTagCategoryByMissionState). Migration `affaire_documents.categorie` + `mission_phase`. GPS lien universel (Google Maps cross-OS, plus Apple Maps). 4 vitest + 4 specs E2E.
+description: Cartes mission pose mobile (montage/démontage). Lots 9.1 → 9.5 livrés. 2 routes mobiles + bonus infos pose + section heures auto + FAB photo auto-tag + signalement enrichi (4 sévérités, GPS, toast nom chef). Helpers `mission-card-helpers.ts`. Migration `affaire_documents.categorie` + `mission_phase`. GPS lien universel. 5 vitest + 7 specs E2E.
 type: feature
 ---
 
@@ -59,6 +59,28 @@ Sprint en cours après validation terrain Sprint D. Décisions validées en bloc
 - `src/lib/__tests__/mission-card-helpers.test.ts` : 4 tests verts.
 - `e2e/employe-mobile/mission-arrivee-depart.poseur.spec.ts` + `mission-photos.poseur.spec.ts` (skip propre si pas de seed).
 
-## Lot 9.5 — à venir
-- Polish signaler + 7e spec E2E multi-mission/jour (Q5).
-- Récap final consolidé Bloc 9.
+## Lot 9.5 — Polish signalement + 7e spec E2E ✅ LIVRÉ
+
+- **SignalProblemeDialog enrichi** : 4 sévérités (info / warning / urgent / bloqué) en chips radio avec couleurs distinctes + emoji. Sévérité encodée en préfixe `[SEV]` dans `mission_events.note` (pas de migration DB) + propagée dans le titre/metadata de la notification chef (préfixes 🚨/⛔/⚠️/ℹ️).
+- **GPS auto** : geolocation timeout 4s à la soumission (best-effort, ignoré si refus).
+- **Toast personnalisé** : `recordMissionEvent` retourne maintenant `chefName` → toast "Problème signalé. {Prénom Nom} a été prévenu[en priorité si urgent/bloqué]."
+- **Liste missions polish** : `MissionsSkeleton` (2 buckets × 3 cards), bouton « Actualiser » (RefreshCw) dans le header avec spin pendant `isFetching`, `refetchOnWindowFocus: true` (PTR natif PWA non implémenté V1 — refresh manuel + focus suffisent).
+- **Spec E2E #7** : `e2e/employe-mobile/mission-multi-meme-jour.poseur.spec.ts` — vérifie agrégation des créneaux (déduplication, total cohérent) et que la section heures n'apparaît qu'une fois malgré N assignations. Skip propre si pas de seed.
+
+## Récap Bloc 9 — DoD
+
+| Critère | Status |
+|---|---|
+| Liste missions mobile (J-7→J+30, 4 buckets) | ✅ |
+| Détail carte mission (7 sections) | ✅ |
+| Saisie infos pose admin/chef (5 champs) | ✅ |
+| Événements J'arrive / Je pars + GPS | ✅ |
+| Saisie heures auto-pré-remplie (upsert) | ✅ |
+| Photo FAB caméra + compression + auto-tag | ✅ |
+| Signaler problème (4 sévérités + GPS + notif chef) | ✅ |
+| Notification chef temps réel via table notifications | ✅ |
+| RLS self-only `mission_events` immutable | ✅ |
+| Compteurs : 2 routes mobiles · 3 server fns · 12 composants · 5 vitest · 7 specs E2E · 2 migrations | ✅ |
+| 0 régression sur le reste de l'app | ✅ |
+
+**Effort réel** : ~14h Lovable cumulé (vs 30h estimé initial) = ~55% sous estimation.

@@ -14,7 +14,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { addDays, endOfWeek, format, isAfter, isBefore, parseISO, startOfWeek } from "date-fns";
 import { fr } from "date-fns/locale";
-import { ChevronRight, Inbox, Loader2, MapPin, PackageCheck, Wrench } from "lucide-react";
+import { ChevronRight, Inbox, MapPin, PackageCheck, RefreshCw, Wrench } from "lucide-react";
 import { getMesMissions, type MissionListItem } from "@/server/mission-card.functions";
 import { useAuth } from "@/lib/auth-context";
 import { usePreview } from "@/lib/preview-context";
@@ -35,10 +35,11 @@ function MesMissionsPage() {
   const navigate = useNavigate();
   const fetchMissions = useServerFn(getMesMissions);
 
-  const { data, isLoading, isError, refetch } = useQuery({
+  const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["mes-missions"],
     queryFn: () => fetchMissions(),
     staleTime: 60_000,
+    refetchOnWindowFocus: true,
   });
 
   const missions = data?.missions ?? [];
@@ -66,22 +67,32 @@ function MesMissionsPage() {
                 : `${missions.length} mission${missions.length > 1 ? "s" : ""} sur 30 jours`}
             </p>
           </div>
-          {isPreviewing ? (
-            <Button size="sm" variant="outline" onClick={handleQuitPreview}>
-              Quitter
+          <div className="flex items-center gap-1.5">
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={() => refetch()}
+              disabled={isFetching}
+              aria-label="Actualiser"
+              data-testid="mes-missions-refresh"
+              className="h-9 w-9"
+            >
+              <RefreshCw className={cn("h-4 w-4", isFetching && "animate-spin")} />
             </Button>
-          ) : (
-            <LogoutConfirmButton />
-          )}
+            {isPreviewing ? (
+              <Button size="sm" variant="outline" onClick={handleQuitPreview}>
+                Quitter
+              </Button>
+            ) : (
+              <LogoutConfirmButton />
+            )}
+          </div>
         </div>
       </header>
 
       <main className="mx-auto max-w-md px-4 py-4" data-testid="mes-missions-main">
         {isLoading ? (
-          <div className="flex items-center justify-center py-12 text-muted-foreground">
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Chargement…
-          </div>
+          <MissionsSkeleton />
         ) : isError ? (
           <div className="rounded-2xl border border-destructive/40 bg-destructive/5 p-4 text-sm text-destructive">
             Impossible de charger les missions.
@@ -102,6 +113,33 @@ function MesMissionsPage() {
       </main>
 
       <MobileBottomNav />
+    </div>
+  );
+}
+
+function MissionsSkeleton() {
+  return (
+    <div className="space-y-6" data-testid="mes-missions-skeleton">
+      {[0, 1].map((b) => (
+        <section key={b}>
+          <div className="mb-2 h-3 w-32 animate-pulse rounded bg-muted" />
+          <ul className="space-y-2">
+            {[0, 1, 2].map((i) => (
+              <li
+                key={i}
+                className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3"
+              >
+                <div className="h-10 w-10 flex-shrink-0 animate-pulse rounded-xl bg-muted" />
+                <div className="min-w-0 flex-1 space-y-2">
+                  <div className="h-3 w-2/3 animate-pulse rounded bg-muted" />
+                  <div className="h-2.5 w-1/2 animate-pulse rounded bg-muted/70" />
+                  <div className="h-2 w-1/3 animate-pulse rounded bg-muted/50" />
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
     </div>
   );
 }
