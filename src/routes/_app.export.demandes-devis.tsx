@@ -69,7 +69,7 @@ export const Route = createFileRoute("/_app/export/demandes-devis")({
 });
 
 type StatutSousTraitance = Trajet["statut_soustraitance"];
-type AffaireLite = Pick<Tables<"affaires">, "id" | "numero" | "nom" | "client" | "lieu">;
+type AffaireLite = Pick<Tables<"affaires">, "id" | "numero" | "nom" | "client" | "lieu" | "phase" | "statut">;
 type EmployeLite = {
   id: string;
   prenom: string;
@@ -192,7 +192,7 @@ function DemandesTransportPage() {
       const [{ data: aff }, { data: emp }] = await Promise.all([
         supabase
           .from("affaires")
-          .select("id, numero, nom, client, lieu")
+          .select("id, numero, nom, client, lieu, phase, statut")
           .order("numero", { ascending: false })
           .limit(500),
         supabase
@@ -752,7 +752,15 @@ function DemandesTransportPage() {
           open={dialogOpen}
           onOpenChange={setDialogOpen}
           trajet={editingTrajet}
-          affaires={affaires.map((a) => ({ id: a.id, numero: a.numero, nom: a.nom }))}
+          affaires={affaires.map((a) => ({
+            id: a.id,
+            numero: a.numero,
+            nom: a.nom,
+            client: a.client,
+            lieu: a.lieu,
+            phase: a.phase,
+            statut: a.statut,
+          }))}
           employesLivreurs={employesLivreurs}
           onSaved={() => {
             void refresh();

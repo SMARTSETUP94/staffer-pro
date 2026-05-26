@@ -21,8 +21,11 @@ import {
 } from "@/hooks/use-vehicules";
 import { getChauffeursAvecStatut } from "@/hooks/use-trajets";
 import { PrestataireAutocomplete } from "@/components/sous-traitants/PrestataireAutocomplete";
+import { AffaireCombobox } from "@/components/planning/AffaireCombobox";
+import { X } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 import type { Permis } from "@/lib/permis";
+import type { Affaire } from "@/hooks/use-planning-data";
 
 type TrajetCategorie = Trajet["categorie"];
 type SoustraitanceStatut = Trajet["statut_soustraitance"];
@@ -49,6 +52,11 @@ interface AffaireLite {
   id: string;
   numero: string;
   nom: string;
+  /** v0.51+ — passés à AffaireCombobox pour la logique active/archive/proto. */
+  phase?: "opportunite" | "signe";
+  statut?: "prospect" | "en_cours" | "termine" | "annule";
+  client?: string | null;
+  lieu?: string | null;
 }
 
 interface Props {
@@ -470,15 +478,37 @@ export function TrajetDialog({
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label>Affaire</Label>
-              <Select value={affaireId ?? ""} onValueChange={(v) => setAffaireId(v || null)}>
-                <SelectTrigger><SelectValue placeholder="Aucune" /></SelectTrigger>
-                <SelectContent>
-                  {affaires.map((a) => (
-                    <SelectItem key={a.id} value={a.id}>{a.numero} — {a.nom}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex items-center justify-between">
+                <Label>Affaire</Label>
+                {affaireId && (
+                  <button
+                    type="button"
+                    onClick={() => setAffaireId(null)}
+                    className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="h-3 w-3" />
+                    Aucune
+                  </button>
+                )}
+              </div>
+              <AffaireCombobox
+                affaires={affaires.map<Affaire>((a) => ({
+                  id: a.id,
+                  numero: a.numero,
+                  nom: a.nom,
+                  lieu: a.lieu ?? null,
+                  client: a.client ?? null,
+                  chef_chantier_id: null,
+                  date_montage: null,
+                  date_demontage: null,
+                  phase: a.phase ?? "signe",
+                  statut: a.statut ?? "en_cours",
+                }))}
+                value={affaireId ?? ""}
+                onChange={(id) => setAffaireId(id || null)}
+                showOpportuniteToggle
+                placeholder="Rechercher chantier (n°, nom, client)…"
+              />
             </div>
             <div>
               <Label>Catégorie</Label>
