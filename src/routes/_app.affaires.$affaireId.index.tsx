@@ -98,6 +98,7 @@ function AffaireSynthesePage() {
     const { error } = await supabase
       .from("affaires")
       .update({
+        signed_at: dSignedAt ? new Date(dSignedAt + "T00:00:00Z").toISOString() : null,
         date_montage: dMontage || null,
         date_evenement_debut: dEvtDebut || null,
         date_evenement_fin: dEvtFin || null,
