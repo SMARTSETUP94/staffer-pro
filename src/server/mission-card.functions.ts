@@ -332,6 +332,9 @@ export const getCarteMission = createServerFn({ method: "POST" })
 // 3) recordMissionEvent -----------------------------------------------------
 // ---------------------------------------------------------------------------
 
+const SEVERITIES = ["info", "warning", "urgent", "bloque"] as const;
+export type ProblemeSeverity = (typeof SEVERITIES)[number];
+
 const RecordEventSchema = z.object({
   affaireId: z.string().uuid(),
   phase: z.enum(["montage", "demontage"]),
@@ -340,7 +343,22 @@ const RecordEventSchema = z.object({
   latitude: z.number().min(-90).max(90).optional().nullable(),
   longitude: z.number().min(-180).max(180).optional().nullable(),
   photoDocId: z.string().uuid().optional().nullable(),
+  severity: z.enum(SEVERITIES).optional().nullable(),
 });
+
+const SEVERITY_LABEL: Record<ProblemeSeverity, string> = {
+  info: "Info",
+  warning: "Attention",
+  urgent: "Urgent",
+  bloque: "Bloqué",
+};
+
+const SEVERITY_PREFIX: Record<ProblemeSeverity, string> = {
+  info: "ℹ️",
+  warning: "⚠️",
+  urgent: "🚨",
+  bloque: "⛔",
+};
 
 export const recordMissionEvent = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -355,7 +373,13 @@ export const recordMissionEvent = createServerFn({ method: "POST" })
       .maybeSingle();
     if (!emp) throw new Error("Profil employé introuvable");
 
-    // RLS mission_events_insert_self vérifie que employe_id correspond
+    // Encode severity dans la note (pas de migration nécessaire)
+    let storedNote = data.note ?? null;
+    if (data.type === "probleme" && data.severity) {
+      const tag = `[${data.severity.toUpperCase()}]`;
+      storedNote = storedNote ? `${tag} ${storedNote}` : tag;
+    }
+
     const { data: inserted, error } = await supabase
       .from("mission_events")
       .insert({
@@ -363,7 +387,7 @@ export const recordMissionEvent = createServerFn({ method: "POST" })
         employe_id: emp.id,
         phase: data.phase,
         type: data.type,
-        note: data.note ?? null,
+        note: storedNote,
         latitude: data.latitude ?? null,
         longitude: data.longitude ?? null,
         photo_doc_id: data.photoDocId ?? null,
@@ -374,7 +398,7 @@ export const recordMissionEvent = createServerFn({ method: "POST" })
 
     if (error) throw new Error(error.message);
 
-    // Fallback notif chef sur problème (Q4)
+    let chefName: string | null = null;
     if (data.type === "probleme") {
       const { data: aff } = await supabaseAdmin
         .from("affaires")
@@ -382,10 +406,12 @@ export const recordMissionEvent = createServerFn({ method: "POST" })
         .eq("id", data.affaireId)
         .maybeSingle();
       if (aff?.chef_chantier_id) {
+        const sev = data.severity ?? "warning";
+        const prefix = SEVERITY_PREFIX[sev];
         await supabaseAdmin.from("notifications").insert({
           user_id: aff.chef_chantier_id,
           type: "mission_probleme",
-          titre: `Problème signalé — ${aff.numero}`,
+          titre: `${prefix} ${SEVERITY_LABEL[sev]} — ${aff.numero}`,
           message: `${emp.prenom} ${emp.nom} a signalé un problème en ${data.phase} sur ${aff.nom}${data.note ? ` : ${data.note.slice(0, 140)}` : "."}`,
           lien: `/affaires/${data.affaireId}`,
           metadata: {
@@ -393,11 +419,18 @@ export const recordMissionEvent = createServerFn({ method: "POST" })
             phase: data.phase,
             mission_event_id: inserted.id,
             employe_id: emp.id,
+            severity: sev,
           },
           lu: false,
         });
+        const { data: chef } = await supabaseAdmin
+          .from("employes")
+          .select("prenom, nom")
+          .eq("profile_id", aff.chef_chantier_id)
+          .maybeSingle();
+        if (chef) chefName = [chef.prenom, chef.nom].filter(Boolean).join(" ").trim() || null;
       }
     }
 
-    return { id: inserted.id, occurred_at: inserted.occurred_at };
+    return { id: inserted.id, occurred_at: inserted.occurred_at, chefName };
   });
