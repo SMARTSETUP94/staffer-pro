@@ -27,7 +27,24 @@ export type AppRole =
   | "atelier_chef"
   | "atelier_metier"
   | "logistique"
-  | "poseur";
+  | "poseur"
+  // Lot L2 — nouveau rôle "Chef pose" (assignation manuelle post-L5)
+  | "chef_pose";
+
+const USER_ROLE_LABELS: Record<AppRole, string> = {
+  admin: "Admin",
+  chef_chantier: "Chef d'équipe",
+  chef_metier_scoped: "Chef métier (scopé)",
+  rh: "RH",
+  employe: "Employé",
+  commercial: "Commercial",
+  bureau_etude: "Bureau d'étude",
+  atelier_chef: "Chef d'atelier",
+  atelier_metier: "Atelier (métier)",
+  logistique: "Logistique",
+  poseur: "Poseur",
+  chef_pose: "Chef pose",
+};
 
 const USER_ROLE_LABELS: Record<AppRole, string> = {
   admin: "Admin",
