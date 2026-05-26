@@ -240,3 +240,6 @@ Modèle staffing 3 niveaux (Sprint A) : `affaire_equipe(affaire_id, employe_id, 
 - [Dette : Routes mobile orphelines (résolu)](mem://debts/routes-mobile-orphelines) — 3 routes supprimées v0.49 Batch 9.7 P4 (/mobile/mois, /mobile/chef/fabrication stub, /mobile/chef/staffer doublon)
 - [Dette : Mobile fabrication atelier à livrer en L4](mem://debts/mobile-fabrication-a-livrer-en-L4) — remplacement propre du stub via cap `mobile.fabrication_atelier`
 - [Dette : Fiche affaire mobile à enrichir en L4](mem://debts/mobile-fiche-affaire-a-enrichir-en-L4) — gallery seul en V1, sections gated par caps en L4
+- [Lot L2 — Seed matrice capabilities](mem://features/lot-l2-seed-capabilities) — 59 caps DB + helpers SQL + catalogue front + integrity tests + backfill atelier_chef (26 mai 2026)
+- [Batch 9.7 — Mobile wiring & role sync](mem://features/batch-97-mobile-wiring) — AppRole 11 rôles + nav employé/chef + cleanup routes orphelines (25-26 mai 2026)
+- [Dette : Scope UI admin permissions](mem://debts/l2-scope-ui-admin-permissions) — Édition du champ `scope` (all/team/metier/own/none) non supportée dans `/admin/permissions` UI. Attend L3.
