@@ -43,6 +43,41 @@ interface RoadmapPlanned {
 
 const RELEASES: RoadmapRelease[] = [
   {
+    date: "2026-05-26",
+    version: "v0.50.0 (Sprint D — LIVRÉ)",
+    title: "🏗️ Refonte modèle équipes 3 niveaux — Casting, alertes inbox, Gantt macro",
+    entries: [
+      {
+        type: "feature",
+        area: "Sprint D — Batch 1",
+        title: "Typologie phases + alertes équipe opt-in + widget capacité casting",
+        description:
+          "Colonne `type_affaire.typologie_phase` pour piloter quelles phases s'affichent par typologie d'affaire. Table `affaire_alertes_optin` (opt-in explicite par affaire pour activer les 4 sources d'alertes équipe). Nouveau widget dashboard « Capacité casting » (admin/chef) : vue d'ensemble par phase × métier des affaires actives, dates manquantes mises en évidence. Compteurs typologie consolidés via `countActiveAffairesByTypologie` (exclut terminé/annulé/démontage passé).",
+      },
+      {
+        type: "feature",
+        area: "Sprint D — Batch 2",
+        title: "Casting 5 phases + fabrication 3 sous-blocs (Num/Construction/Finition)",
+        description:
+          "Phase `logistique` ajoutée à `affaire_equipe.phase`. Casting refondu en 5 phases (étude, fabrication, logistique aller, montage, démontage). Phase fabrication éclatée en 3 sous-blocs via `FAB_SOUS_ETAPES` (Numérique, Construction, Finition) + bucket Autre. Chaque sous-bloc a son bouton « + Personne » qui passe `restrictMetierIds` à `AddCastingMemberSheet` (plus de bouton add global sur la phase fab). 6 métiers individuels FAB_METIERS. Toggle UI opt-in alertes équipe par affaire.",
+      },
+      {
+        type: "feature",
+        area: "Sprint D — Batch 3",
+        title: "Planning chantier macro Gantt — 7 phases + jalons + sous-blocs fab",
+        description:
+          "Nouvelle vue `/affaires/$id/planning-chantier` : Gantt macro du cycle de vie chantier (création → signature → fabrication → logistique → montage → événement → démontage). 7 phases avec sous-blocs fabrication par métier (BE, Numérique, Construction, Métallerie, Peinture, Tapisserie, Impression UV). Logistique aller et retour rendues comme 2 mouvements distincts (cercles rouges). Événement = triangle noir. Jalons Signature/Début fab/Livraison. Fenêtre Gantt étendue jusqu'à `created_at` pour visualiser le workflow commercial complet. Date de création éditable depuis l'onglet Synthèse.",
+      },
+      {
+        type: "feature",
+        area: "Sprint D — Batch 4",
+        title: "Inbox alertes équipe 4 sources + battery E2E Sprint D",
+        description:
+          "Inbox unifiée enrichie de 4 sources d'alertes équipe : `sous_dim` (sous-dimensionnement), `depassement` (dépassement budget), `cumul_100` (cumul ≥100% sur 1 personne), `hors_equipe` (assignation hors équipe casting). Gating via feature flag `equipes_3_niveaux_alertes` + opt-in par affaire. CTE générique `divergence` exclut `CUMUL_OVER_100` (redondance). 4 specs E2E livrées (casting-capacite / inbox-alertes / planning-macro / staffing-rename). 0 régression nouvelle. Documentation consolidée mem://roadmap/sprint-d-recap.",
+      },
+    ],
+  },
+  {
     date: "2026-05-24",
     version: "v0.49.0 (Bloc 8 — en cours)",
     title: "🗂️ Fiche Objet — fondations, équipe affectée, journal & photos (DB)",
