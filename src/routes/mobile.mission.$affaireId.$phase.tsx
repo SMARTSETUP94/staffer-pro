@@ -260,8 +260,10 @@ function InfosTerrainSection({ detail }: { detail: CarteMissionDetail }) {
             action={
               <a
                 className="inline-flex items-center gap-1 text-primary hover:underline"
-                href={`https://maps.apple.com/?q=${encodeURIComponent(detail.lieu)}`}
-                aria-label="Ouvrir dans Plans"
+                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(detail.lieu)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Ouvrir l'itinéraire (Google Maps universel iOS/Android)"
               >
                 <NavIcon className="h-3 w-3" />
                 GPS
