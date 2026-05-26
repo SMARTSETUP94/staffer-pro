@@ -3,7 +3,18 @@
  * Branded cream / ink / indigo, responsive, Inter-like font stack.
  */
 
-export type InvitationRoleLabel = "admin" | "chef_chantier" | "chef_metier_scoped" | "employe" | "rh";
+export type InvitationRoleLabel =
+  | "admin"
+  | "chef_chantier"
+  | "chef_metier_scoped"
+  | "employe"
+  | "rh"
+  | "commercial"
+  | "bureau_etude"
+  | "atelier_chef"
+  | "atelier_metier"
+  | "logistique"
+  | "poseur";
 
 export interface InvitationEmailParams {
   fullName?: string;
