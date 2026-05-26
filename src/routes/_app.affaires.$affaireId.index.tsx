@@ -66,6 +66,7 @@ function AffaireSynthesePage() {
       setNotes((aff?.notes as string | null) ?? null);
       setHMontage(String(aff?.heures_prevues_montage ?? 0));
       setHDemontage(String(aff?.heures_prevues_demontage ?? 0));
+      setDCreatedAt(((aff?.created_at as string | null) ?? "").slice(0, 10));
       setDSignedAt(((aff?.signed_at as string | null) ?? "").slice(0, 10));
       setDMontage((aff?.date_montage as string | null) ?? "");
       setDEvtDebut((aff?.date_evenement_debut as string | null) ?? "");
