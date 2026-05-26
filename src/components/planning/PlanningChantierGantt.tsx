@@ -55,7 +55,11 @@ export function PlanningChantierGantt({ data, width = 960 }: Props) {
     return LEFT_AXIS + (d / totalDays) * innerW;
   };
 
-  const rowCount = data.phases.length;
+  // Logistique retour : groupée avec démontage (pas de ligne propre)
+  const displayPhases = data.phases.filter((p) => p.key !== "logistique_retour");
+  const logRetour = data.phases.find((p) => p.key === "logistique_retour");
+
+  const rowCount = displayPhases.length;
   const height = TOP_PAD + rowCount * (ROW_HEIGHT + ROW_GAP) + BOTTOM_PAD;
 
   // Ticks mensuels approximatifs
@@ -112,13 +116,14 @@ export function PlanningChantierGantt({ data, width = 960 }: Props) {
         ))}
 
         {/* Lignes axe Y + barres phase */}
-        {data.phases.map((p, idx) => {
+        {displayPhases.map((p, idx) => {
           const y = TOP_PAD + idx * (ROW_HEIGHT + ROW_GAP);
           const color = PHASE_COLORS[p.key];
           const hasDates = p.start && p.end;
           const x1 = hasDates ? dayToX(p.start!) : 0;
           const x2 = hasDates ? dayToX(p.end!) : 0;
           const barW = Math.max(2, x2 - x1);
+          const cy = y + ROW_HEIGHT / 2;
           const ratioTxt =
             p.ratio_consomme_pct != null
               ? `${p.equipe_count}/${p.equipe_total ?? "-"} · ${p.ratio_consomme_pct}%`
@@ -129,12 +134,15 @@ export function PlanningChantierGantt({ data, width = 960 }: Props) {
             ? `${p.label} · ${fmt(p.start)} → ${fmt(p.end)}${p.ratio_consomme_pct != null ? ` · ${p.ratio_consomme_pct}% consommé (${p.heures_consommees ?? 0}/${p.heures_prevues ?? 0} h)` : ""}${p.equipe_count > 0 ? ` · ${p.equipe_count} pers castées` : ""}`
             : `${p.label} — dates manquantes`;
 
+          // Rendu spécial : événement = triangle noir, logistique aller = rond rouge
+          const isMarker = p.key === "evenement" || p.key === "logistique_aller";
+
           return (
             <g key={p.key}>
               {/* Label axe Y */}
               <text
                 x={LEFT_AXIS - 12}
-                y={y + ROW_HEIGHT / 2 + 4}
+                y={cy + 4}
                 textAnchor="end"
                 fontSize={12}
                 fontWeight={600}
@@ -148,13 +156,35 @@ export function PlanningChantierGantt({ data, width = 960 }: Props) {
               <line
                 x1={LEFT_AXIS}
                 x2={width - RIGHT_PAD}
-                y1={y + ROW_HEIGHT / 2}
-                y2={y + ROW_HEIGHT / 2}
+                y1={cy}
+                y2={cy}
                 stroke="currentColor"
                 strokeOpacity={0.06}
               />
 
-              {hasDates ? (
+              {hasDates && isMarker ? (
+                p.key === "evenement" ? (
+                  <polygon
+                    points={`${x1},${cy - 9} ${x1 + 10},${cy + 7} ${x1 - 10},${cy + 7}`}
+                    fill="#0a0a0a"
+                    stroke="hsl(var(--background))"
+                    strokeWidth={1.5}
+                  >
+                    <title>{tooltip}</title>
+                  </polygon>
+                ) : (
+                  <circle
+                    cx={x1}
+                    cy={cy}
+                    r={7}
+                    fill="#dc2626"
+                    stroke="hsl(var(--background))"
+                    strokeWidth={1.5}
+                  >
+                    <title>{tooltip}</title>
+                  </circle>
+                )
+              ) : hasDates ? (
                 <g>
                   <rect
                     x={x1}
@@ -173,7 +203,7 @@ export function PlanningChantierGantt({ data, width = 960 }: Props) {
                   {ratioTxt && barW > 60 && (
                     <text
                       x={x1 + 8}
-                      y={y + ROW_HEIGHT / 2 + 4}
+                      y={cy + 4}
                       fontSize={11}
                       fontWeight={600}
                       fill="white"
@@ -181,6 +211,19 @@ export function PlanningChantierGantt({ data, width = 960 }: Props) {
                     >
                       {ratioTxt}
                     </text>
+                  )}
+                  {/* Logistique retour : rond rouge sur la ligne démontage */}
+                  {p.key === "demontage" && logRetour?.start && (
+                    <circle
+                      cx={dayToX(logRetour.start)}
+                      cy={cy}
+                      r={7}
+                      fill="#dc2626"
+                      stroke="hsl(var(--background))"
+                      strokeWidth={1.5}
+                    >
+                      <title>{`Logistique retour — ${fmt(logRetour.start)}`}</title>
+                    </circle>
                   )}
                 </g>
               ) : (
@@ -201,7 +244,7 @@ export function PlanningChantierGantt({ data, width = 960 }: Props) {
                   </rect>
                   <text
                     x={LEFT_AXIS + 14}
-                    y={y + ROW_HEIGHT / 2 + 4}
+                    y={cy + 4}
                     fontSize={11}
                     fill="currentColor"
                     opacity={0.5}
@@ -213,6 +256,7 @@ export function PlanningChantierGantt({ data, width = 960 }: Props) {
             </g>
           );
         })}
+
 
         {/* Jalons (losanges) — stagger labels when proches pour éviter chevauchement */}
         {(() => {
