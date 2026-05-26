@@ -5228,6 +5228,7 @@ export type Database = {
         | "atelier_metier"
         | "logistique"
         | "poseur"
+        | "chef_pose"
       autorisation_vehicule_type:
         | "PERMIS_B"
         | "PERMIS_C"
@@ -5496,6 +5497,7 @@ export const Constants = {
         "atelier_metier",
         "logistique",
         "poseur",
+        "chef_pose",
       ],
       autorisation_vehicule_type: [
         "PERMIS_B",
