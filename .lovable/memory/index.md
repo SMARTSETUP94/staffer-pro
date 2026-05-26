@@ -3,7 +3,7 @@
 ## Core
 App planning chantiers Setup Paris. FR language UI.
 Supabase Cloud backend. TanStack Start + Tailwind v4.
-3 rôles : admin (full), chef_chantier (CRUD sauf paramétrage), employe (ses heures uniquement).
+11 rôles métier : admin (full), chef_chantier, employe, commercial, bureau_etude, atelier_chef, atelier_metier, logistique, poseur, chef_pose, chef_chantier (legacy). Capabilities matrice 59 caps × 11 rôles via `user_has_cap()`.
 8 métiers : construction, métallerie, peinture, numérique, tapisserie, machiniste, logistique, suivi_projet.
 5 typologies affaires (dérivées de numero) : non_operationnel(1XXX/3XXX), montage_demontage(4XXX), fabrication(5XXX), stockage(2XXXX), prototype(9XXX).
 JAMAIS REVOKE EXECUTE sur les 7 helpers RLS SECURITY DEFINER (is_chef_or_admin, is_admin, has_role, user_has_affaire_access, is_devis_termine, can_saisie_on_affaire, user_is_mentioned_on_affaire) — voir mem://constraints/rls-helpers-execute-grant.
@@ -138,24 +138,48 @@ Modèle staffing 3 niveaux (Sprint A) : `affaire_equipe(affaire_id, employe_id, 
 68. ✅ **8.3b** (24 mai 2026) — Mutations équipe : `AddPersonneDialog` + `RemovePersonneDialog` + SF `autoStaffObjet`/`addPersonneToObjet`/`removePersonneFromObjet`. **HOTFIX** : mutations autorisées sur `plan_status IN ('draft','published')` (bloquées seulement sur `no_plan`). Mini-warning amber sur draft. 2 dettes tracées (rename SF + specs E2E).
 69. ✅ **8.4 DB** (24 mai 2026) — Journal & Photos : table `objet_journal_events` (13 types d'événements) + `objet_commentaires` (CRD, pas d'édition) + `fabrication_objets_photos` enrichie (`affaire_id`, `etape_id`, `thumb_path`, dimensions) + 6 triggers auto-log (étapes, identité, commentaires, photos, staffing, plan republication) + backfill `journal_started`. Cap `objet.photo.delete` admin uniquement.
 
+### Livré Sprint D Casting — Refonte modèle équipes 3 niveaux (mai 2026)
+70. ✅ **v0.34.x** (13 mai 2026) — Battery role-smoke E2E livrée : 4 specs (admin 45 / chef 24+8 / employé desktop 7+20 / employé mobile 8+13) anti-fuite RGPD. Helper `e2e/helpers/role-smoke.ts`.
+71. ✅ **Sprint D Batch 1** (12 mai 2026) — Typologie phases (`type_affaire.typologie_phase`) + alertes équipe opt-in (`affaire_alertes_optin`) + widget capacité casting.
+72. ✅ **Sprint D Batch 2** (13 mai 2026) — Phase logistique dans `affaire_equipe.phase` + casting 5 phases + FAB_SOUS_ETAPES 3 sous-blocs + FAB_METIERS 6 métiers + opt-in alertes UI.
+73. ✅ **Sprint D Batch 3** (14 mai 2026) — Planning chantier macro Gantt (7 phases + jalons + sous-blocs fab 7 métiers incl. BE + Impression UV + dates fallback + badges gris).
+74. ✅ **Sprint D Batch 4** (15 mai 2026) — 4 specs E2E (casting-capacite / inbox-alertes / planning-macro / staffing-rename) + récap final. 0 régression.
+
+### Livré Batch 9.7 — Mobile Wiring & Role Sync (v0.49, mai 2026)
+75. ✅ **Batch 9.7 P1** (25 mai 2026) — AppRole étendu : 6 rôles Sprint A typés front (commercial, bureau_etude, atelier_chef, atelier_metier, logistique, poseur) + helpers isXxx + labels + ROLE_PRESETS + USER_ROLE_OPTIONS.
+76. ✅ **Batch 9.7 P2+P3** (25 mai 2026) — Câblage nav mobile : onglet "Équipe" employé `/mobile/equipe-chantiers` + onglet "Missions" chef `/mobile/mes-missions`.
+77. ✅ **Batch 9.7 P4** (25 mai 2026) — Nettoyage 3 routes orphelines supprimées (`/mobile/mois`, `/mobile/chef/fabrication`, `/mobile/chef/staffer`). E2E ajustés. Dettes orphelines tracées.
+
+### Livré Lot L2 — Seed matrice capabilities définitif (26 mai 2026)
+78. ✅ **L2** (26 mai 2026) — Enum `chef_pose` + 59 capabilities seedées DB avec `scope` (all/team/metier/own/none). Helpers SQL `user_has_cap`/`user_cap_scope`. Catalogue front `src/lib/capabilities/catalog.ts` + integrity tests. Page `/admin/permissions` 12 colonnes. Backfill `chef_metier_scoped` → `atelier_chef`.
+
 ### Roadmap — À venir
-70. ⏳ **8.4 UI** (~8h) — Server functions (signed URLs, upload, aggregation journal) + composant `ObjetJournalPhotos` (onglet Journal : timeline filtrable + commentaires + upload WebP compressé + galerie par étape + lazy IntersectionObserver).
-71. ⏳ **8.5** (~4h) — Liens croisés : remplacer lien temporaire 8.2b par navigation intégrée native (Gantt → fiche objet, Planning → fiche objet, Devis ligne → fiche objet, Kanban étape → fiche objet). Choix drawer vs nav à trancher.
-72. ⏳ **8.6** (~8h) — Polish + responsive 380px + E2E 8.3b (13 scénarios) + E2E 8.4 + 3 dettes (rename SF `loadActiveStepsForObjet`, Sheet vs Dialog AddPersonne, édition commentaire).
+79. ⏳ **8.4 UI** (~8h) — Server functions (signed URLs, upload, aggregation journal) + composant `ObjetJournalPhotos` (onglet Journal : timeline filtrable + commentaires + upload WebP compressé + galerie par étape + lazy IntersectionObserver).
+80. ⏳ **8.5** (~4h) — Liens croisés : remplacer lien temporaire 8.2b par navigation intégrée native (Gantt → fiche objet, Planning → fiche objet, Devis ligne → fiche objet, Kanban étape → fiche objet). Choix drawer vs nav à trancher.
+81. ⏳ **8.6** (~8h) — Polish + responsive 380px + E2E 8.3b (13 scénarios) + E2E 8.4 + 3 dettes (rename SF `loadActiveStepsForObjet`, Sheet vs Dialog AddPersonne, édition commentaire).
 
 ### Bloc 9 — Carte mission pose (en cours, ~30h)
-72b. ✅ **9.1 Fondations DB** (26 mai 2026) — Table `mission_events` + enum + RLS self (Q2) + 5 colonnes infos terrain `affaires` (acces_livraison, code_acces, consignes_tenue, contact_site_nom, contact_site_tel) + enum `notification_type` += `mission_probleme` + 2 nouvelles capabilities + matrice rôles. 3 server fns `getMesMissions`/`getCarteMission`/`recordMissionEvent` dans `src/server/mission-card.functions.ts`. Fallback notif chef via table `notifications` existante (pas de table à créer). Helper `src/lib/image-compress.ts` alias de `image-compression.ts`. Voir mem://features/bloc-9-carte-mission-pose.
-72c. ⏳ **9.2 Liste `/mobile/mes-missions`** (~3-4h) — filtres Cette semaine/Suivante/Passées.
-72d. ⏳ **9.3 Carte détaillée `/mobile/mission/$id`** (~5-6h) — hero countdown + GPS + tel + sections accès/équipe/historique events.
-72e. ⏳ **9.4 Heures auto + photos** (~5-7h) — pré-remplissage depuis events arrivee/depart + auto-tag photos.
-72f. ⏳ **9.5 Signaler problème + 7 specs E2E** (~5-7h) — bouton signaler → recordMissionEvent(probleme) + notif chef + 7e spec multi-mission/jour (Q5).
+82. ✅ **9.1 Fondations DB** (26 mai 2026) — Table `mission_events` + enum + RLS self (Q2) + 5 colonnes infos terrain `affaires` + enum `notification_type` += `mission_probleme` + 2 capabilities + matrice rôles. 3 SF `getMesMissions`/`getCarteMission`/`recordMissionEvent`. Fallback notif chef via table `notifications`. Voir mem://features/bloc-9-carte-mission-pose.
+83. ✅ **9.2 Liste `/mobile/mes-missions`** (~3-4h) — Filtres Cette semaine / Suivante / Passées. Livrée, testée par Gabin.
+84. ✅ **9.6 bis** (26 mai 2026) — Navigation mobile + équipe chantiers + masquage role_terrain (validé par Gabin). Inclut wiring nav employé/chef + routes cleanup Batch 9.7.
+85. ⏳ **9.3 Carte détaillée `/mobile/mission/$id`** (~5-6h) — hero countdown + GPS + tel + sections accès/équipe/historique events.
+86. ⏳ **9.4 Heures auto + photos** (~5-7h) — pré-remplissage depuis events arrivee/depart + auto-tag photos.
+87. ⏳ **9.5 Signaler problème + 7 specs E2E** (~5-7h) — bouton signaler → recordMissionEvent(probleme) + notif chef + 7e spec multi-mission/jour.
+
+### Bloc 10 — Fiche opportunité (prêt à démarrer, ~38-42h)
+88. ⏳ **Analyse livrée** (26 mai 2026) — Note pré-implémentation dans `mem://features/bloc-10-fiche-opportunite-analyse`. DB déjà partiellement équipée (phase, statut_opportunite, code_opportunite, typologie_future). À enrichir 5 champs + 2 tables `affaires_visites/echantillons`. 11 lots. RPC `sign_opportunite` à enrichir notif `atelier_chef`.
+
+### Lots L3 → L5 (suite refonte permissions)
+89. ⏳ **L3** — Refonte code : remplacer `isAdmin/isChef` par `user_has_cap()` (~15h). Attend validation spec L1 par Gabin.
+90. ⏳ **L4** — Seed data capabilities + MobileBottomNav adaptative unique (1 nav, pas 2).
+91. ⏳ **L5** — Nettoyage legacy isAdmin/isChef + tests E2E permissions.
 
 ### Backlog (non planifié)
-73. ⏸️ **v0.40 Phase 2** — Horaires précis SILAE (heure_debut/fin/pauses + nuit/sup/35h auto) — SUSPENDU.
-74. ⏸️ **v0.41** — Claude API auto-staffing UNIQUEMENT 5XXX (proxy + skill + tools + fallback v0.35 + cache + cap + télémétrie). Tier CDI/CDD avant intérim. Utilisera `affaire_equipe_historique` comme feature store contextuel.
-75. ⏸️ **Centre Analyse Heures** — Onglet consolidé heures + 8 filtres + exports (`v0.47` BACKLOG).
-76. ⏸️ **Logistique avancée** — Autorisations véhicules #56 + sous-traitants + historique + stats (`Sprint 3b` BACKLOG).
-77. ⏸️ **Sprint dette résiduelle v0.36** — Page admin véhicules + audit findings (BACKLOG).
+92. ⏸️ **v0.40 Phase 2** — Horaires précis SILAE (heure_debut/fin/pauses + nuit/sup/35h auto) — SUSPENDU.
+93. ⏸️ **v0.41** — Claude API auto-staffing UNIQUEMENT 5XXX (proxy + skill + tools + fallback v0.35 + cache + cap + télémétrie). Tier CDI/CDD avant intérim. Utilisera `affaire_equipe_historique` comme feature store contextuel.
+94. ⏸️ **Centre Analyse Heures** — Onglet consolidé heures + 8 filtres + exports (`v0.47` BACKLOG).
+95. ⏸️ **Logistique avancée** — Autorisations véhicules #56 + sous-traitants + historique + stats (`Sprint 3b` BACKLOG).
+96. ⏸️ **Sprint dette résiduelle v0.36** — Page admin véhicules + audit findings (BACKLOG).
 
 ## Memories
 - [Centre d'analyse heures](mem://features/centre-analyse-heures) — BACKLOG : onglet consolidé heures + 8 filtres + exports
@@ -216,3 +240,6 @@ Modèle staffing 3 niveaux (Sprint A) : `affaire_equipe(affaire_id, employe_id, 
 - [Dette : Routes mobile orphelines (résolu)](mem://debts/routes-mobile-orphelines) — 3 routes supprimées v0.49 Batch 9.7 P4 (/mobile/mois, /mobile/chef/fabrication stub, /mobile/chef/staffer doublon)
 - [Dette : Mobile fabrication atelier à livrer en L4](mem://debts/mobile-fabrication-a-livrer-en-L4) — remplacement propre du stub via cap `mobile.fabrication_atelier`
 - [Dette : Fiche affaire mobile à enrichir en L4](mem://debts/mobile-fiche-affaire-a-enrichir-en-L4) — gallery seul en V1, sections gated par caps en L4
+- [Lot L2 — Seed matrice capabilities](mem://features/lot-l2-seed-capabilities) — 59 caps DB + helpers SQL + catalogue front + integrity tests + backfill atelier_chef (26 mai 2026)
+- [Batch 9.7 — Mobile wiring & role sync](mem://features/batch-97-mobile-wiring) — AppRole 11 rôles + nav employé/chef + cleanup routes orphelines (25-26 mai 2026)
+- [Dette : Scope UI admin permissions](mem://debts/l2-scope-ui-admin-permissions) — Édition du champ `scope` (all/team/metier/own/none) non supportée dans `/admin/permissions` UI. Attend L3.

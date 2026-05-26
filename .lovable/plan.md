@@ -1,82 +1,106 @@
-**Bloc 2 — Quick wins UX** — Lot 2.1 ✅ · Lot 2.2 ✅ · Lot 2.3 ✅ · Lot 2.4 ✅ (F undo 10min déjà livré v0.35.12 · G défauts dates Express en jours OUVRÉS via `shiftBusinessDays` + `isJourNonOuvreFR`). **Bloc 2 complet.**
+# Roadmap Setup Paris — Vue consolidée
 
-## Statut des frictions par audit
-
-### `audit-ux-v035.md`
-| # | Friction | Statut | Action |
-|---|----------|--------|--------|
-| 1 | Ctrl+S explicite | ✅ v0.35.9 | — |
-| 2 | Ring orange Gantt edits locaux | ✅ v0.35.9 | — |
-| 3 | Précédent wizard | ✅ v0.35.9 | — |
-| 4 | Compteur Σ presence_pct | ✅ v0.35.9 | — |
-| 5 | Récap "couvrira N jours / métiers" | ✅ v0.35.9 | — |
-| 6 | Dédup toasts erreur batch | ⏳ | **À livrer** (30min) |
-| 7 | Background hatché WE + badge férié heatmap | ⏳ | **À livrer** (2h) |
-| 8 | Conflit CNC : Popover → Dialog/Drawer | ⏳ | **À livrer** (1h) |
-| 9 | Bouton Supprimer plan dans menu kebab | ⏳ | **À livrer** (30min) |
-| 10 | Filtre "modifiés uniquement" matrice compétences | ⏳ | **À livrer** (1h) |
-| 11 | Mémoriser filtres EquipeAffaireSection (localStorage keyed planId) | ⏳ | **À livrer** (1h) |
-| 12 | Skeleton Gantt + Heatmap | ⏳ | **À livrer** (30min) |
-| 13 | Retirer badges "v0.35" partout | ⏳ | **À livrer** (15min) |
-| 14 | Breadcrumb plan staffing : subLabel `draft`/`publié` | ⏳ | **À livrer** (30min) |
-| 15 | Modale `?` shortcuts | ✅ existe (`StaffingShortcutsHelp`) | Vérifier seulement |
-
-### `audit-ux-auto-staffing-v0311.md`
-| # | Friction | Statut | Action |
-|---|----------|--------|--------|
-| A | Pulse Wand2 sur 1ère visite | ⏳ | **À livrer** (1h) |
-| B | Express depuis liste affaires (batch) | ⏳ | **Reporter** — gros chantier 4h, mieux dans sprint dédié |
-| C | Bouton Publier = CTA primaire quand `blocking=false` + auto-focus | ⏳ | **À livrer** (30min) |
-| D | Raccourci `E` (Express) + `P` (publish) | ⏳ | **À livrer** (1h) |
-| E | Toast stepper 4 étapes Express | ⏳ | **À livrer** (1h) |
-| F | "Annuler ce plan" 5 min après création | ⏳ | **À livrer** (2h) |
-| G | `getJoursOuvres` pour défauts dates Express + alerte délai court | ⏳ | **À livrer** (2h) |
-| H | Doublon interface `Props` `ExpressResultBanner` | ⏳ | **À livrer** (5min) |
-| I | Vibration mobile succès Express | ⏳ | **À livrer** (15min) |
-| J | Bouton Express = "✓ Plan actif" si plan publié | ⏳ | **À livrer** (1h) |
-| K | Gamification temps économisé | ❌ | **Skip** (attendre feedback terrain) |
-
-## Périmètre proposé pour Bloc 2
-
-**Inclure (16 items, ~16h) :**
-- audit-v035 : #6, #7, #8, #9, #10, #11, #12, #13, #14
-- audit-v0311 : A, C, D, E, F, G, H, I, J
-
-**Exclure :**
-- audit-v035 #15 (déjà fait — juste vérifier)
-- audit-v0311 B (gros, sprint dédié plus tard)
-- audit-v0311 K (pas le moment)
-
-## Découpage en livraisons
-
-**Lot 2.1 — Polish rapide (~3h)** : #6, #9, #12, #13, #14, H, I
-→ Wins visibles immédiats, zéro risque.
-
-**Lot 2.2 — Heatmap & compétences (~4h)** : #7, #8, #10, #11
-→ Affichage calendrier/matrices.
-
-**Lot 2.3 — Express+ (~6h)** : A, C, D, E, J
-→ Adoption Express (combo recommandé par l'audit original).
-
-**Lot 2.4 — Express avancé (~4h)** : F (undo), G (jours ouvrés défaut)
-→ Plus de logique → tester plus.
-
-## Approche
-
-Je livre **Lot par lot** en t'envoyant un point à chaque lot (fichiers touchés + tests). Tu valides avant le suivant.
-
-## Stack technique (court)
-
-- **#7 Heatmap WE/férié** : `src/components/staffing/ChargeAtelierHeatmap.tsx` + helper `isJourFerieFR` déjà dans `src/lib/jours-feries.ts`.
-- **#8 Conflit CNC Dialog** : `ResolveCncConflictDialog` existe déjà comme Dialog en v0.35.7 — probable que ça référence un autre Popover. À identifier (search `cnc.*Popover`).
-- **#11 localStorage planId** : hook `useLocalStorage` existe.
-- **A pulse Wand2** : Tailwind `animate-pulse` + ring sur `WandSplitButton`, persist `localStorage` key `express-pulse-seen-{userId}`.
-- **D raccourcis** : Étendre `useStaffingShortcuts` hook + mettre à jour `StaffingShortcutsHelp`.
-- **F undo plan** : Server fn `softDeletePlanRecent` + RLS check `created_at > now() - interval '5 min'`.
-- **G jours ouvrés Express** : `recomputeExpressDates` dans `src/server/staffing-express.functions.ts` utilise `getJoursOuvres`.
-
-Pas de migration DB. Pas de breaking change. Tous les changements sont frontend ou server function.
+**Dernière mise à jour : 26 mai 2026**
 
 ---
 
-**Confirmes-tu ce périmètre + découpage en 4 lots, ou tu veux ajuster (retirer/ajouter des items, regrouper différemment) ?**
+## Vue d'ensemble
+
+| Bloc | Statut | Version | Détails |
+|------|--------|---------|---------|
+| Socle v0.27–v0.32 | Livré | v0.32.4 | Planning, RLS, cascade devis, validation imports |
+| v0.33 Feuille de route | Livré | v0.33 | Vue tableur exportable |
+| v0.35 Auto-staffing Fab | Livré | v0.35.14 | Algo backward planning, Gantt, Express, compétences 4 niveaux |
+| v0.38 Demi-journée | Livré | v0.38.2 | span_demi_jours, grille AM/PM |
+| v0.39 Vue 3 + Stabilité | Livré | v0.39.2b2 | Vue 3 éditable, greedy, E2E |
+| v0.40 Refonte Manut | Livré | v0.40.0e | Absorption Bois/Peint/Tap, treetable marge |
+| v0.41 Hotfix heures | Livré | v0.41.0a | Heures invisibles employé fix |
+| v0.42 Contrats CDDU | Livré | v0.42.2 | Template v2.1, catalogue postes, import Excel |
+| v0.43 Hub Chef Mobile S1 | Livré | v0.43.1 | 5 onglets, badges, scope app-side |
+| v0.44 Docs/Atelier | Livré | v0.44.7 | Bucket photos, galerie mobile, Kanban atelier, audit |
+| v0.45 Historique équipes | Livré | v0.45.1 | Table agrégée, widget, page /mon-equipe-type |
+| v0.46 Création comptes | Livré | v0.46 | Invitations admin, self-signup OFF |
+| v0.47 Routing + Hub | Livré | v0.47.3 | Post-login centralisé, 4 onglets métiers/postes |
+| v0.34.x E2E role-smoke | Livré | v0.34.x | 4 specs anti-fuite RGPD |
+| v0.48 Planning par pôle | Livré | v0.48 | Matrice métiers × jours, refonte nav 3 routes extraites |
+| Bloc 8 Fiche Objet | Livré partiel | 8.4 DB | 8.1→8.4 DB OK. 8.4 UI, 8.5, 8.6 en attente |
+| Sprint D Casting | Livré | v0.49 Sprint D | Typologie phases, alertes équipe 3 sources, planning macro Gantt, E2E |
+| Bloc 9 Carte Mission | En cours | 9.6 bis | 9.1→9.6 bis livrés. 9.3→9.5 à finaliser selon Gabin |
+| Lot L2 Capabilities | Livré | L2 | 59 capabilities seedées, helpers SQL, catalogue front |
+| Batch 9.7 Mobile Wiring | Livré | v0.49 | AppRole 11 rôles, nav mobile câblée, cleanup routes orphelines |
+| Bloc 10 Fiche Opportunité | Prêt | — | Analyse livrée, ~38-42h, 11 lots |
+
+---
+
+## Livrés récents (depuis mi-mai 2026)
+
+### Sprint D Casting (v0.49) — Livré complet
+- Batch 1 : Typologie phases + alertes équipe opt-in + widget capacité casting
+- Batch 2 : Phase logistique dans affaire_equipe.phase + FAB_SOUS_ETAPES 3 sous-blocs + FAB_METIERS 6 métiers + opt-in UI
+- Batch 3 : Planning chantier macro Gantt (7 phases + jalons + sous-blocs fab 7 métiers)
+- Batch 4 : 4 specs E2E (casting-capacite / inbox-alertes / planning-macro / staffing-rename)
+
+### Bloc 9 — Carte mission pose
+- 9.1 ✅ Fondations DB (mission_events + 5 colonnes infos terrain + 3 SF + fallback notif)
+- 9.2 ✅ Liste `/mobile/mes-missions` (filtres Cette semaine / Suivante / Passées)
+- 9.3 ⏳ Carte détaillée `/mobile/mission/$id` (~5-6h)
+- 9.4 ⏳ Heures auto + photos (~5-7h)
+- 9.5 ⏳ Signaler problème + 7 specs E2E (~5-7h)
+- 9.6 bis ✅ Navigation mobile + équipe chantiers + masquage role_terrain (validé par Gabin)
+
+### Lot L2 — Seed matrice rôles × capabilities (définitif)
+- Enum `chef_pose` ajouté à `app_role`
+- 59 capabilities seedées en DB avec `scope` (all/team/metier/own/none)
+- Helpers SQL `user_has_cap(_cap text)` et `user_cap_scope(_cap text)`
+- Catalogue front typé `src/lib/capabilities/catalog.ts` + integrity tests Vitest
+- Page `/admin/permissions` étendue à 12 colonnes (11 rôles + legacy)
+- Backfill `chef_metier_scoped` → `atelier_chef`
+
+### Batch 9.7 — Mobile Wiring & Role Synchronization
+- P1 ✅ : AppRole étendu (11 rôles : +commercial, bureau_etude, atelier_chef, atelier_metier, logistique, poseur, chef_pose), helpers isXxx dans auth-context
+- P2 ✅ : Employé nav → onglet "Équipe" `/mobile/equipe-chantiers`
+- P3 ✅ : Chef nav → onglet "Missions" `/mobile/mes-missions`
+- P4 ✅ : Nettoyage 3 routes orphelines supprimées (`/mobile/mois`, `/mobile/chef/fabrication`, `/mobile/chef/staffer`)
+
+---
+
+## En cours / Prochaines étapes (priorisé)
+
+### Immédiat (validation Gabin en cours)
+1. **Finaliser Bloc 9** — 9.3, 9.4, 9.5 selon retours test
+2. **Lot L3** — Refonte code : remplacer `isAdmin/isChef` par `user_has_cap()` (~15h, dépend de la spec L1 validée)
+3. **Bloc 10** — Fiche opportunité (~38-42h, 11 lots). Prêt à démarrer dès analyse validée.
+
+### Court terme
+4. **Lot L4** — Seed data capabilities + MobileBottomNav adaptative (1 seule nav, pas 2)
+5. **Lot L5** — Nettoyage legacy isAdmin/isChef + tests E2E permissions
+6. **Bloc 8 suite** — 8.4 UI (journal/photos), 8.5 (liens croisés), 8.6 (polish + E2E)
+
+### Moyen terme — Backlog
+7. **v0.40 Phase 2** — Horaires précis SILAE (heure_debut/fin/pauses + nuit/sup/35h auto) — SUSPENDU
+8. **v0.41 Claude API** — Auto-staffing intelligent 5XXX (utilise affaire_equipe_historique comme feature store)
+9. **Centre Analyse Heures** — Onglet consolidé heures + 8 filtres + exports
+10. **Logistique avancée** — Autorisations véhicules #56 + sous-traitants + historique + stats
+11. **Sprint dette résiduelle v0.36** — Page admin véhicules + audit findings
+
+---
+
+## Dettes actives
+
+| Dette | Fichier | Statut | Cible |
+|-------|---------|--------|-------|
+| Scope UI admin permissions | `l2-scope-ui-admin-permissions` | En attente | L3 |
+| Mobile fabrication atelier | `mobile-fabrication-a-livrer-en-L4` | En attente | L4 |
+| Fiche affaire mobile enrichie | `mobile-fiche-affaire-a-enrichir-en-L4` | En attente | L4 |
+| Tests E2E 8.3b scénario 11 | `e2e-specs-83b-scenario-11-revision` | En attente | 8.6 |
+| Rename loadActiveStepsForObjet | `load-active-steps-for-objet-rename` | En attente | 8.6 |
+| Dialog vs Sheet AddPersonne | `equipe-add-personne-dialog-vs-sheet` | En attente | 8.6 |
+| RLS bypass BE objet.edit | `rls-bypass-bureau-etude-objet-edit` | En attente | — |
+
+---
+
+## Historique complet des versions
+
+Voir `.lovable/memory/index.md` pour la mémoire détaillée (règles métier, contraintes techniques, contexte par feature).
+
+*Ce document est la vue consolidée. Pour le détail technique d'une livraison, consulter la mémoire associée.*
