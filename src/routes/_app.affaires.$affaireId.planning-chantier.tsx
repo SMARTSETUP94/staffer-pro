@@ -69,7 +69,7 @@ function PlanningChantierPage() {
             {data.fab_sous_blocs.map((b) => (
               <div key={b.key} className="rounded-lg border border-border bg-background p-2 text-center">
                 <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{b.label}</p>
-                <p className="mt-1 text-base font-bold">{b.heures_prevues}<span className="text-xs font-normal text-muted-foreground"> h</span></p>
+                <p className="mt-1 text-base font-bold">{Math.round(b.heures_prevues)}<span className="text-xs font-normal text-muted-foreground"> h</span></p>
               </div>
             ))}
           </div>
