@@ -43,6 +43,7 @@ function rolesToLabel(roles: InvitationRoleLabel[]): string {
   if (roles.includes("chef_chantier")) return "Chef de Chantier";
   if (roles.includes("chef_metier_scoped")) return "Chef Métier";
   if (roles.includes("atelier_chef")) return "Chef d'atelier";
+  if (roles.includes("chef_pose")) return "Chef pose";
   if (roles.includes("bureau_etude")) return "Bureau d'étude";
   if (roles.includes("commercial")) return "Commercial";
   if (roles.includes("logistique")) return "Logistique";
