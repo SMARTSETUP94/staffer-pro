@@ -46,19 +46,6 @@ const USER_ROLE_LABELS: Record<AppRole, string> = {
   chef_pose: "Chef pose",
 };
 
-const USER_ROLE_LABELS: Record<AppRole, string> = {
-  admin: "Admin",
-  chef_chantier: "Chef d'équipe",
-  chef_metier_scoped: "Chef métier (scopé)",
-  rh: "RH",
-  employe: "Employé",
-  commercial: "Commercial",
-  bureau_etude: "Bureau d'étude",
-  atelier_chef: "Chef d'atelier",
-  atelier_metier: "Atelier (métier)",
-  logistique: "Logistique",
-  poseur: "Poseur",
-};
 
 /** Libellé d'affichage pour un rôle applicatif. Fallback = la clé brute. */
 export function roleLabel(role: string | null | undefined): string {
