@@ -162,7 +162,7 @@ export const getMesMissions = createServerFn({ method: "POST" })
         agg = {
           affaire_id: r.affaire_id,
           phase: r.phase as MissionPhase,
-          // @ts-expect-error supabase relation typing varies
+          // @ts-ignore supabase relation typing varies
           affaire: r.affaire,
           dates: new Set(),
           nb_demi_jours: 0,
@@ -261,7 +261,7 @@ export const getCarteMission = createServerFn({ method: "POST" })
     for (const r of teamRows ?? []) {
       if (seen.has(r.employe_id)) continue;
       seen.add(r.employe_id);
-      // @ts-expect-error supabase relation typing
+      // @ts-ignore supabase relation typing
       const e = r.employe;
       if (!e) continue;
       equipe.push({
@@ -314,7 +314,7 @@ export const getCarteMission = createServerFn({ method: "POST" })
         date: a.date,
         demi_journee: a.demi_journee as "AM" | "PM" | "JOURNEE",
         heures: Number(a.heures),
-        // @ts-expect-error supabase relation typing
+        // @ts-ignore supabase relation typing
         metier_libelle: a.metier?.libelle ?? null,
         statut_confirmation: a.statut_confirmation,
       })),
