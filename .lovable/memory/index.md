@@ -3,7 +3,7 @@
 ## Core
 App planning chantiers Setup Paris. FR language UI.
 Supabase Cloud backend. TanStack Start + Tailwind v4.
-3 rôles : admin (full), chef_chantier (CRUD sauf paramétrage), employe (ses heures uniquement).
+11 rôles métier : admin (full), chef_chantier, employe, commercial, bureau_etude, atelier_chef, atelier_metier, logistique, poseur, chef_pose, chef_chantier (legacy). Capabilities matrice 59 caps × 11 rôles via `user_has_cap()`.
 8 métiers : construction, métallerie, peinture, numérique, tapisserie, machiniste, logistique, suivi_projet.
 5 typologies affaires (dérivées de numero) : non_operationnel(1XXX/3XXX), montage_demontage(4XXX), fabrication(5XXX), stockage(2XXXX), prototype(9XXX).
 JAMAIS REVOKE EXECUTE sur les 7 helpers RLS SECURITY DEFINER (is_chef_or_admin, is_admin, has_role, user_has_affaire_access, is_devis_termine, can_saisie_on_affaire, user_is_mentioned_on_affaire) — voir mem://constraints/rls-helpers-execute-grant.
