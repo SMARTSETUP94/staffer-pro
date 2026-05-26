@@ -14,7 +14,8 @@ export type InvitationRoleLabel =
   | "atelier_chef"
   | "atelier_metier"
   | "logistique"
-  | "poseur";
+  | "poseur"
+  | "chef_pose";
 
 export interface InvitationEmailParams {
   fullName?: string;
