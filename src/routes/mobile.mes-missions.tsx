@@ -14,7 +14,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { addDays, endOfWeek, format, isAfter, isBefore, parseISO, startOfWeek } from "date-fns";
 import { fr } from "date-fns/locale";
-import { ChevronRight, Inbox, Loader2, MapPin, PackageCheck, RefreshCw, Wrench } from "lucide-react";
+import { ChevronRight, Inbox, MapPin, PackageCheck, RefreshCw, Wrench } from "lucide-react";
 import { getMesMissions, type MissionListItem } from "@/server/mission-card.functions";
 import { useAuth } from "@/lib/auth-context";
 import { usePreview } from "@/lib/preview-context";
