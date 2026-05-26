@@ -752,7 +752,15 @@ function DemandesTransportPage() {
           open={dialogOpen}
           onOpenChange={setDialogOpen}
           trajet={editingTrajet}
-          affaires={affaires.map((a) => ({ id: a.id, numero: a.numero, nom: a.nom }))}
+          affaires={affaires.map((a) => ({
+            id: a.id,
+            numero: a.numero,
+            nom: a.nom,
+            client: a.client,
+            lieu: a.lieu,
+            phase: a.phase,
+            statut: a.statut,
+          }))}
           employesLivreurs={employesLivreurs}
           onSaved={() => {
             void refresh();
