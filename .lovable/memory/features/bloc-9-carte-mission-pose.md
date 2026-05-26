@@ -1,6 +1,6 @@
 ---
 name: Bloc 9 — Carte mission pose
-description: Cartes mission pose mobile (montage/démontage). Lots 9.1 → 9.4 livrés. 2 routes mobiles + bonus infos pose + section heures auto + FAB photo auto-tag. Helpers `mission-card-helpers.ts` (computeHeuresFromEvents + autoTagCategoryByMissionState). Migration `affaire_documents.categorie` + `mission_phase`. GPS lien universel (Google Maps cross-OS, plus Apple Maps). 4 vitest + 4 specs E2E.
+description: Cartes mission pose mobile (montage/démontage). Lots 9.1 → 9.5 livrés. 2 routes mobiles + bonus infos pose + section heures auto + FAB photo auto-tag + signalement enrichi (4 sévérités, GPS, toast nom chef). Helpers `mission-card-helpers.ts`. Migration `affaire_documents.categorie` + `mission_phase`. GPS lien universel. 5 vitest + 7 specs E2E.
 type: feature
 ---
 
