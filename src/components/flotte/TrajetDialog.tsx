@@ -52,6 +52,11 @@ interface AffaireLite {
   id: string;
   numero: string;
   nom: string;
+  /** v0.51+ — passés à AffaireCombobox pour la logique active/archive/proto. */
+  phase?: "opportunite" | "signe";
+  statut?: "prospect" | "en_cours" | "termine" | "annule";
+  client?: string | null;
+  lieu?: string | null;
 }
 
 interface Props {
