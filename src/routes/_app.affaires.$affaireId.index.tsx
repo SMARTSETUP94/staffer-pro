@@ -57,7 +57,7 @@ function AffaireSynthesePage() {
           .eq("affaire_id", affaireId),
         supabase
           .from("affaires")
-          .select("notes, heures_prevues_montage, heures_prevues_demontage, signed_at, date_montage, date_evenement_debut, date_evenement_fin, date_demontage")
+          .select("notes, heures_prevues_montage, heures_prevues_demontage, created_at, signed_at, date_montage, date_evenement_debut, date_evenement_fin, date_demontage")
           .eq("id", affaireId)
           .maybeSingle(),
       ]);
