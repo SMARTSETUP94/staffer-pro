@@ -15,7 +15,9 @@ export type AppRole =
   | "atelier_chef"
   | "atelier_metier"
   | "logistique"
-  | "poseur";
+  | "poseur"
+  // Lot L2/L3a — Chef pose
+  | "chef_pose";
 
 export interface AuthContextValue {
   user: User | null;

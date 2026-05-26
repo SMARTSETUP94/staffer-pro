@@ -4906,6 +4906,15 @@ export type Database = {
           type_contrat: string
         }[]
       }
+      get_user_effective_caps: {
+        Args: { _user_id: string }
+        Returns: {
+          capability: string
+          granted: boolean
+          scope_resolved: string
+          source_roles: Database["public"]["Enums"]["app_role"][]
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -5026,6 +5035,13 @@ export type Database = {
         Returns: undefined
       }
       refresh_user_quiz_stats: { Args: never; Returns: undefined }
+      replace_user_roles: {
+        Args: {
+          _roles: Database["public"]["Enums"]["app_role"][]
+          _user_id: string
+        }
+        Returns: undefined
+      }
       resolve_saisie_heures: {
         Args: {
           p_affaire_id: string

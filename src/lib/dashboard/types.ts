@@ -106,6 +106,7 @@ export const ROLE_PRESETS: Record<AppRole, WidgetId[]> = {
   atelier_metier: ["inbox", "mes_etapes_fab"],
   logistique: ["inbox", "flotte_kpis", "montages_j7"],
   poseur: ["inbox", "montages_j7", "meteo_chantiers"],
+  chef_pose: ["inbox", "montages_j7", "meteo_chantiers", "absences_semaine"],
 };
 
 /**
