@@ -214,14 +214,23 @@ export function PlanningChantierGantt({ data, width = 960 }: Props) {
           );
         })}
 
-        {/* Jalons (losanges) */}
-        {data.jalons
-          .filter((j) => j.date)
-          .map((j) => {
-            const x = dayToX(j.date!);
+        {/* Jalons (losanges) — stagger labels when proches pour éviter chevauchement */}
+        {(() => {
+          const jalons = data.jalons
+            .filter((j) => j.date)
+            .map((j) => ({ ...j, x: dayToX(j.date!) }))
+            .sort((a, b) => a.x - b.x);
+          const MIN_GAP = 60;
+          let lastX = -Infinity;
+          let lastLevel = 1;
+          return jalons.map((j) => {
+            const level = j.x - lastX < MIN_GAP ? (lastLevel === 0 ? 1 : 0) : 0;
+            lastX = j.x;
+            lastLevel = level;
             const y = height - BOTTOM_PAD + 14;
+            const labelY = 20 + level * 12;
             return (
-              <g key={j.key} transform={`translate(${x},${y})`}>
+              <g key={j.key} transform={`translate(${j.x},${y})`}>
                 <polygon
                   points="0,-6 6,0 0,6 -6,0"
                   fill="hsl(var(--primary))"
@@ -232,7 +241,7 @@ export function PlanningChantierGantt({ data, width = 960 }: Props) {
                 </polygon>
                 <text
                   x={0}
-                  y={20}
+                  y={labelY}
                   textAnchor="middle"
                   fontSize={9}
                   fill="currentColor"
@@ -242,7 +251,9 @@ export function PlanningChantierGantt({ data, width = 960 }: Props) {
                 </text>
               </g>
             );
-          })}
+          });
+        })()}
+
       </svg>
     </div>
   );
