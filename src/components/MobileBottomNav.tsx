@@ -8,13 +8,22 @@ import {
   CalendarOff,
   User,
   FileSignature,
+  PackageCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useResolvedEmploye } from "@/hooks/use-resolved-employe";
 
 type NavItem = {
-  to: "/mobile/aujourdhui" | "/mobile/heures" | "/mobile/swaps" | "/mobile/propositions" | "/mobile/absences" | "/mobile/contrats" | "/mobile/profil";
+  to:
+    | "/mobile/aujourdhui"
+    | "/mobile/heures"
+    | "/mobile/swaps"
+    | "/mobile/propositions"
+    | "/mobile/absences"
+    | "/mobile/contrats"
+    | "/mobile/profil"
+    | "/mobile/mes-missions";
   label: string;
   icon: typeof CalendarDays;
   badge?: number;
@@ -22,6 +31,7 @@ type NavItem = {
 
 const BASE_ITEMS: NavItem[] = [
   { to: "/mobile/aujourdhui", label: "Semaine", icon: CalendarDays },
+  { to: "/mobile/mes-missions", label: "Missions", icon: PackageCheck },
   { to: "/mobile/heures", label: "Heures", icon: Clock },
   { to: "/mobile/swaps", label: "Swaps", icon: ArrowLeftRight },
   { to: "/mobile/profil", label: "Profil", icon: User },
@@ -69,26 +79,32 @@ export function MobileBottomNav() {
 
   const middleItem: NavItem =
     isInterim
-      ? { to: "/mobile/propositions", label: "Missions", icon: ClipboardList }
+      ? { to: "/mobile/propositions", label: "Proposit.", icon: ClipboardList }
       : { to: "/mobile/absences", label: "Absences", icon: CalendarOff };
 
-  // Onglet Contrats inséré uniquement si l'employé en a (intermittents principalement).
-  const items: NavItem[] = contratsCount > 0
-    ? [
-        BASE_ITEMS[0],
-        BASE_ITEMS[1],
-        { to: "/mobile/contrats", label: "Contrats", icon: FileSignature, badge: contratsToSign },
-        middleItem,
-        BASE_ITEMS[3],
-      ]
-    : [BASE_ITEMS[0], BASE_ITEMS[1], BASE_ITEMS[2], middleItem, BASE_ITEMS[3]];
+  // BASE_ITEMS = [Semaine, Missions(pose), Heures, Swaps, Profil].
+  // Composition : Semaine, Missions, Heures, middleItem (absences/propositions),
+  // [Contrats si existants], Profil.
+  const items: NavItem[] = [
+    BASE_ITEMS[0],
+    BASE_ITEMS[1],
+    BASE_ITEMS[2],
+    middleItem,
+    ...(contratsCount > 0
+      ? [{ to: "/mobile/contrats", label: "Contrats", icon: FileSignature, badge: contratsToSign } as NavItem]
+      : []),
+    BASE_ITEMS[4],
+  ];
 
   return (
     <nav
       className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 backdrop-blur"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
-      <ul className="mx-auto grid max-w-md grid-cols-5">
+      <ul
+        className="mx-auto grid max-w-md"
+        style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}
+      >
         {items.map(({ to, label, icon: Icon, badge }) => {
           const active = path === to;
           const ariaLabel = badge && badge > 0 ? `${label} — ${badge} en attente` : label;

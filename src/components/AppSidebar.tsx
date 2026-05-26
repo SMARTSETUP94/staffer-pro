@@ -2,7 +2,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import {
   Calendar, Building2, Users, FileUp, FileDown, ClipboardCheck, LogOut, Clock, CalendarOff,
   Smartphone, UserCircle, LayoutDashboard, FileText, Trophy, Map, ArrowLeftRight, ClipboardList,
-  Truck, FileQuestion, Palette, MessageCircle, Warehouse, Hammer, Wrench, BadgeCheck, Lightbulb, FileSignature, Inbox,
+  Truck, FileQuestion, Palette, MessageCircle, Warehouse, Hammer, Wrench, BadgeCheck, Lightbulb, FileSignature, Inbox, PackageCheck, UsersRound,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -62,6 +62,8 @@ function buildSections(role: EffRole, validationCount: number, contratsRhCount: 
         label: "Espace personnel",
         items: [
           { title: "Ma semaine", url: "/ma-semaine", icon: LayoutDashboard },
+          { title: "Mes missions pose", url: "/mobile/mes-missions", icon: PackageCheck },
+          { title: "Mes équipes chantiers", url: "/mobile/equipe-chantiers", icon: UsersRound },
           { title: "Mes heures", url: "/mes-heures", icon: Clock, cap: "heures.personnelles.saisir" },
           { title: "Mes étapes fab", url: "/fabrication/mes-etapes", icon: Wrench },
           { title: "Mes échanges", url: "/mes-swaps", icon: ArrowLeftRight },

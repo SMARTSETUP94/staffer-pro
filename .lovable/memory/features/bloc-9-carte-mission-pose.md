@@ -84,3 +84,27 @@ Sprint en cours après validation terrain Sprint D. Décisions validées en bloc
 | 0 régression sur le reste de l'app | ✅ |
 
 **Effort réel** : ~14h Lovable cumulé (vs 30h estimé initial) = ~55% sous estimation.
+
+## Bloc 9.6 bis — Nav + équipes chantiers mobile (26 mai 2026)
+
+Correctifs accessibilité Bloc 9 :
+
+- **A** — Entrées nav ajoutées :
+  - `AppSidebar` (rôle employé) : « Mes missions pose » + « Mes équipes chantiers ».
+  - `MobileBottomNav` : nouvel onglet « Missions » (PackageCheck) + grille
+    dynamique `gridTemplateColumns: repeat(N, 1fr)` pour absorber 5–6 items
+    (contrats inclus). L'onglet propositions intérim a été renommé « Proposit. »
+    pour éviter la collision de label.
+- **B** — `/_app/affaires/$id/casting` : suppression du libellé « Pas de rôle
+  terrain défini » quand `role_terrain` est vide (chip ligne supprimée).
+- **C** — Nouvelle route `/mobile/equipe-chantiers` (+ serverFn
+  `getMesEquipesChantiers`) : liste les affaires actives où l'employé est dans
+  le casting (`affaire_equipe.removed_at IS NULL`, exclut statuts
+  annulee/terminee), avec décomposition par phase (commercial_etude /
+  fabrication / logistique / montage / demontage). Les blocs montage/démontage
+  sont tappables → carte mission. Indépendant des assignations jour.
+- **D** — 2 specs E2E ajoutées :
+  - `e2e/employe-mobile/nav-mes-missions.employe-mobile.spec.ts`
+  - `e2e/employe-mobile/equipe-chantiers.employe-mobile.spec.ts`
+
+Effort : ~1h vs 4–6h estimé.

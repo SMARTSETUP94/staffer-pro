@@ -250,11 +250,7 @@ function AffaireCastingPage() {
                         <p className="mt-0.5 truncate text-[11px] font-medium text-primary">
                           {m.role_terrain}
                         </p>
-                      ) : (
-                        <p className="mt-0.5 text-[11px] italic text-muted-foreground">
-                          Pas de rôle terrain défini
-                        </p>
-                      )}
+                      ) : null}
                     </div>
                   </div>
                 </TooltipTrigger>
