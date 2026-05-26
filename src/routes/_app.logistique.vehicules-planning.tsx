@@ -158,7 +158,15 @@ function VehiculesPlanningPage() {
         defaultAdresseArrivee={defaultPrefill.adresseArrivee}
         defaultCategorie={defaultPrefill.categorie}
         defaultAffaireId={defaultPrefill.affaireId}
-        affaires={affaires.map((a) => ({ id: a.id, numero: a.numero, nom: a.nom }))}
+        affaires={affaires.map((a) => ({
+          id: a.id,
+          numero: a.numero,
+          nom: a.nom,
+          phase: a.phase,
+          statut: a.statut,
+          client: a.client,
+          lieu: a.lieu,
+        }))}
         employesLivreurs={employes
           .filter((e) => e.est_livreur)
           .map((e) => ({
