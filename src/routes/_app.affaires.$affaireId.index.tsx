@@ -56,7 +56,7 @@ function AffaireSynthesePage() {
           .eq("affaire_id", affaireId),
         supabase
           .from("affaires")
-          .select("notes, heures_prevues_montage, heures_prevues_demontage, date_montage, date_evenement_debut, date_evenement_fin, date_demontage")
+          .select("notes, heures_prevues_montage, heures_prevues_demontage, signed_at, date_montage, date_evenement_debut, date_evenement_fin, date_demontage")
           .eq("id", affaireId)
           .maybeSingle(),
       ]);
@@ -65,6 +65,7 @@ function AffaireSynthesePage() {
       setNotes((aff?.notes as string | null) ?? null);
       setHMontage(String(aff?.heures_prevues_montage ?? 0));
       setHDemontage(String(aff?.heures_prevues_demontage ?? 0));
+      setDSignedAt(((aff?.signed_at as string | null) ?? "").slice(0, 10));
       setDMontage((aff?.date_montage as string | null) ?? "");
       setDEvtDebut((aff?.date_evenement_debut as string | null) ?? "");
       setDEvtFin((aff?.date_evenement_fin as string | null) ?? "");
