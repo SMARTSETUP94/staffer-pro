@@ -17,7 +17,6 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as MobileSwapsRouteImport } from './routes/mobile.swaps'
 import { Route as MobilePropositionsRouteImport } from './routes/mobile.propositions'
 import { Route as MobileProfilRouteImport } from './routes/mobile.profil'
-import { Route as MobileMoisRouteImport } from './routes/mobile.mois'
 import { Route as MobileMesMissionsRouteImport } from './routes/mobile.mes-missions'
 import { Route as MobileHeuresRouteImport } from './routes/mobile.heures'
 import { Route as MobileEquipeChantiersRouteImport } from './routes/mobile.equipe-chantiers'
@@ -61,10 +60,8 @@ import { Route as AppFabricationIndexRouteImport } from './routes/_app.fabricati
 import { Route as AppExportIndexRouteImport } from './routes/_app.export.index'
 import { Route as AppDevisIndexRouteImport } from './routes/_app.devis.index'
 import { Route as AppAffairesIndexRouteImport } from './routes/_app.affaires.index'
-import { Route as MobileChefStafferRouteImport } from './routes/mobile.chef.staffer'
 import { Route as MobileChefPlanningRouteImport } from './routes/mobile.chef.planning'
 import { Route as MobileChefMoiRouteImport } from './routes/mobile.chef.moi'
-import { Route as MobileChefFabricationRouteImport } from './routes/mobile.chef.fabrication'
 import { Route as MobileChefEquipeRouteImport } from './routes/mobile.chef.equipe'
 import { Route as MobileChefDashboardRouteImport } from './routes/mobile.chef.dashboard'
 import { Route as MobileChefContratsRouteImport } from './routes/mobile.chef.contrats'
@@ -149,11 +146,6 @@ const MobilePropositionsRoute = MobilePropositionsRouteImport.update({
 const MobileProfilRoute = MobileProfilRouteImport.update({
   id: '/mobile/profil',
   path: '/mobile/profil',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MobileMoisRoute = MobileMoisRouteImport.update({
-  id: '/mobile/mois',
-  path: '/mobile/mois',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MobileMesMissionsRoute = MobileMesMissionsRouteImport.update({
@@ -371,11 +363,6 @@ const AppAffairesIndexRoute = AppAffairesIndexRouteImport.update({
   path: '/affaires/',
   getParentRoute: () => AppRoute,
 } as any)
-const MobileChefStafferRoute = MobileChefStafferRouteImport.update({
-  id: '/staffer',
-  path: '/staffer',
-  getParentRoute: () => MobileChefRoute,
-} as any)
 const MobileChefPlanningRoute = MobileChefPlanningRouteImport.update({
   id: '/planning',
   path: '/planning',
@@ -384,11 +371,6 @@ const MobileChefPlanningRoute = MobileChefPlanningRouteImport.update({
 const MobileChefMoiRoute = MobileChefMoiRouteImport.update({
   id: '/moi',
   path: '/moi',
-  getParentRoute: () => MobileChefRoute,
-} as any)
-const MobileChefFabricationRoute = MobileChefFabricationRouteImport.update({
-  id: '/fabrication',
-  path: '/fabrication',
   getParentRoute: () => MobileChefRoute,
 } as any)
 const MobileChefEquipeRoute = MobileChefEquipeRouteImport.update({
@@ -684,7 +666,6 @@ export interface FileRoutesByFullPath {
   '/mobile/equipe-chantiers': typeof MobileEquipeChantiersRoute
   '/mobile/heures': typeof MobileHeuresRoute
   '/mobile/mes-missions': typeof MobileMesMissionsRoute
-  '/mobile/mois': typeof MobileMoisRoute
   '/mobile/profil': typeof MobileProfilRoute
   '/mobile/propositions': typeof MobilePropositionsRoute
   '/mobile/swaps': typeof MobileSwapsRoute
@@ -722,10 +703,8 @@ export interface FileRoutesByFullPath {
   '/mobile/chef/contrats': typeof MobileChefContratsRoute
   '/mobile/chef/dashboard': typeof MobileChefDashboardRoute
   '/mobile/chef/equipe': typeof MobileChefEquipeRoute
-  '/mobile/chef/fabrication': typeof MobileChefFabricationRoute
   '/mobile/chef/moi': typeof MobileChefMoiRoute
   '/mobile/chef/planning': typeof MobileChefPlanningRoute
-  '/mobile/chef/staffer': typeof MobileChefStafferRoute
   '/affaires/': typeof AppAffairesIndexRoute
   '/devis/': typeof AppDevisIndexRoute
   '/export/': typeof AppExportIndexRoute
@@ -785,7 +764,6 @@ export interface FileRoutesByTo {
   '/mobile/equipe-chantiers': typeof MobileEquipeChantiersRoute
   '/mobile/heures': typeof MobileHeuresRoute
   '/mobile/mes-missions': typeof MobileMesMissionsRoute
-  '/mobile/mois': typeof MobileMoisRoute
   '/mobile/profil': typeof MobileProfilRoute
   '/mobile/propositions': typeof MobilePropositionsRoute
   '/mobile/swaps': typeof MobileSwapsRoute
@@ -822,10 +800,8 @@ export interface FileRoutesByTo {
   '/mobile/chef/contrats': typeof MobileChefContratsRoute
   '/mobile/chef/dashboard': typeof MobileChefDashboardRoute
   '/mobile/chef/equipe': typeof MobileChefEquipeRoute
-  '/mobile/chef/fabrication': typeof MobileChefFabricationRoute
   '/mobile/chef/moi': typeof MobileChefMoiRoute
   '/mobile/chef/planning': typeof MobileChefPlanningRoute
-  '/mobile/chef/staffer': typeof MobileChefStafferRoute
   '/affaires': typeof AppAffairesIndexRoute
   '/devis': typeof AppDevisIndexRoute
   '/export': typeof AppExportIndexRoute
@@ -889,7 +865,6 @@ export interface FileRoutesById {
   '/mobile/equipe-chantiers': typeof MobileEquipeChantiersRoute
   '/mobile/heures': typeof MobileHeuresRoute
   '/mobile/mes-missions': typeof MobileMesMissionsRoute
-  '/mobile/mois': typeof MobileMoisRoute
   '/mobile/profil': typeof MobileProfilRoute
   '/mobile/propositions': typeof MobilePropositionsRoute
   '/mobile/swaps': typeof MobileSwapsRoute
@@ -927,10 +902,8 @@ export interface FileRoutesById {
   '/mobile/chef/contrats': typeof MobileChefContratsRoute
   '/mobile/chef/dashboard': typeof MobileChefDashboardRoute
   '/mobile/chef/equipe': typeof MobileChefEquipeRoute
-  '/mobile/chef/fabrication': typeof MobileChefFabricationRoute
   '/mobile/chef/moi': typeof MobileChefMoiRoute
   '/mobile/chef/planning': typeof MobileChefPlanningRoute
-  '/mobile/chef/staffer': typeof MobileChefStafferRoute
   '/_app/affaires/': typeof AppAffairesIndexRoute
   '/_app/devis/': typeof AppDevisIndexRoute
   '/_app/export/': typeof AppExportIndexRoute
@@ -994,7 +967,6 @@ export interface FileRouteTypes {
     | '/mobile/equipe-chantiers'
     | '/mobile/heures'
     | '/mobile/mes-missions'
-    | '/mobile/mois'
     | '/mobile/profil'
     | '/mobile/propositions'
     | '/mobile/swaps'
@@ -1032,10 +1004,8 @@ export interface FileRouteTypes {
     | '/mobile/chef/contrats'
     | '/mobile/chef/dashboard'
     | '/mobile/chef/equipe'
-    | '/mobile/chef/fabrication'
     | '/mobile/chef/moi'
     | '/mobile/chef/planning'
-    | '/mobile/chef/staffer'
     | '/affaires/'
     | '/devis/'
     | '/export/'
@@ -1095,7 +1065,6 @@ export interface FileRouteTypes {
     | '/mobile/equipe-chantiers'
     | '/mobile/heures'
     | '/mobile/mes-missions'
-    | '/mobile/mois'
     | '/mobile/profil'
     | '/mobile/propositions'
     | '/mobile/swaps'
@@ -1132,10 +1101,8 @@ export interface FileRouteTypes {
     | '/mobile/chef/contrats'
     | '/mobile/chef/dashboard'
     | '/mobile/chef/equipe'
-    | '/mobile/chef/fabrication'
     | '/mobile/chef/moi'
     | '/mobile/chef/planning'
-    | '/mobile/chef/staffer'
     | '/affaires'
     | '/devis'
     | '/export'
@@ -1198,7 +1165,6 @@ export interface FileRouteTypes {
     | '/mobile/equipe-chantiers'
     | '/mobile/heures'
     | '/mobile/mes-missions'
-    | '/mobile/mois'
     | '/mobile/profil'
     | '/mobile/propositions'
     | '/mobile/swaps'
@@ -1236,10 +1202,8 @@ export interface FileRouteTypes {
     | '/mobile/chef/contrats'
     | '/mobile/chef/dashboard'
     | '/mobile/chef/equipe'
-    | '/mobile/chef/fabrication'
     | '/mobile/chef/moi'
     | '/mobile/chef/planning'
-    | '/mobile/chef/staffer'
     | '/_app/affaires/'
     | '/_app/devis/'
     | '/_app/export/'
@@ -1276,7 +1240,6 @@ export interface RootRouteChildren {
   MobileEquipeChantiersRoute: typeof MobileEquipeChantiersRoute
   MobileHeuresRoute: typeof MobileHeuresRoute
   MobileMesMissionsRoute: typeof MobileMesMissionsRoute
-  MobileMoisRoute: typeof MobileMoisRoute
   MobileProfilRoute: typeof MobileProfilRoute
   MobilePropositionsRoute: typeof MobilePropositionsRoute
   MobileSwapsRoute: typeof MobileSwapsRoute
@@ -1339,13 +1302,6 @@ declare module '@tanstack/react-router' {
       path: '/mobile/profil'
       fullPath: '/mobile/profil'
       preLoaderRoute: typeof MobileProfilRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/mobile/mois': {
-      id: '/mobile/mois'
-      path: '/mobile/mois'
-      fullPath: '/mobile/mois'
-      preLoaderRoute: typeof MobileMoisRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mobile/mes-missions': {
@@ -1649,13 +1605,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAffairesIndexRouteImport
       parentRoute: typeof AppRoute
     }
-    '/mobile/chef/staffer': {
-      id: '/mobile/chef/staffer'
-      path: '/staffer'
-      fullPath: '/mobile/chef/staffer'
-      preLoaderRoute: typeof MobileChefStafferRouteImport
-      parentRoute: typeof MobileChefRoute
-    }
     '/mobile/chef/planning': {
       id: '/mobile/chef/planning'
       path: '/planning'
@@ -1668,13 +1617,6 @@ declare module '@tanstack/react-router' {
       path: '/moi'
       fullPath: '/mobile/chef/moi'
       preLoaderRoute: typeof MobileChefMoiRouteImport
-      parentRoute: typeof MobileChefRoute
-    }
-    '/mobile/chef/fabrication': {
-      id: '/mobile/chef/fabrication'
-      path: '/fabrication'
-      fullPath: '/mobile/chef/fabrication'
-      preLoaderRoute: typeof MobileChefFabricationRouteImport
       parentRoute: typeof MobileChefRoute
     }
     '/mobile/chef/equipe': {
@@ -2200,10 +2142,8 @@ interface MobileChefRouteChildren {
   MobileChefContratsRoute: typeof MobileChefContratsRoute
   MobileChefDashboardRoute: typeof MobileChefDashboardRoute
   MobileChefEquipeRoute: typeof MobileChefEquipeRoute
-  MobileChefFabricationRoute: typeof MobileChefFabricationRoute
   MobileChefMoiRoute: typeof MobileChefMoiRoute
   MobileChefPlanningRoute: typeof MobileChefPlanningRoute
-  MobileChefStafferRoute: typeof MobileChefStafferRoute
   MobileChefIndexRoute: typeof MobileChefIndexRoute
   MobileChefAffairesAffaireIdRoute: typeof MobileChefAffairesAffaireIdRoute
 }
@@ -2214,10 +2154,8 @@ const MobileChefRouteChildren: MobileChefRouteChildren = {
   MobileChefContratsRoute: MobileChefContratsRoute,
   MobileChefDashboardRoute: MobileChefDashboardRoute,
   MobileChefEquipeRoute: MobileChefEquipeRoute,
-  MobileChefFabricationRoute: MobileChefFabricationRoute,
   MobileChefMoiRoute: MobileChefMoiRoute,
   MobileChefPlanningRoute: MobileChefPlanningRoute,
-  MobileChefStafferRoute: MobileChefStafferRoute,
   MobileChefIndexRoute: MobileChefIndexRoute,
   MobileChefAffairesAffaireIdRoute: MobileChefAffairesAffaireIdRoute,
 }
@@ -2242,7 +2180,6 @@ const rootRouteChildren: RootRouteChildren = {
   MobileEquipeChantiersRoute: MobileEquipeChantiersRoute,
   MobileHeuresRoute: MobileHeuresRoute,
   MobileMesMissionsRoute: MobileMesMissionsRoute,
-  MobileMoisRoute: MobileMoisRoute,
   MobileProfilRoute: MobileProfilRoute,
   MobilePropositionsRoute: MobilePropositionsRoute,
   MobileSwapsRoute: MobileSwapsRoute,
@@ -2251,3 +2188,12 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
