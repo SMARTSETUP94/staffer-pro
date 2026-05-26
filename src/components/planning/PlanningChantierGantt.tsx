@@ -26,7 +26,7 @@ const ROW_GAP = 6;
 const LEFT_AXIS = 200;
 const RIGHT_PAD = 20;
 const TOP_PAD = 32;
-const BOTTOM_PAD = 40;
+const BOTTOM_PAD = 52;
 
 function diffDays(a: string, b: string): number {
   return (
