@@ -279,8 +279,8 @@ function UtilisateursPage() {
   async function handleChangeRole(u: UserRow, role: AppRole) {
     setActingOn(u.id);
     try {
-      await withAuthRetry(() => updateUserRole({ data: { targetUserId: u.id, role } }));
-      toast.success(`Rôle ${ROLE_LABEL[role]} appliqué à ${u.email}`);
+      await withAuthRetry(() => updateUserRoles({ data: { targetUserId: u.id, roles: [role] } }));
+      toast.success(`Rôle ${roleLabel(role)} appliqué à ${u.email}`);
       loadUsers();
     } catch (e) {
       toast.error(await readServerFnError(e));
@@ -468,11 +468,11 @@ function UtilisateursPage() {
                         />
                       </TableCell>
                       <TableCell>
-                        {u.role ? (
+                        {u.roles && u.roles.length > 0 ? (
                           <Select
-                            value={u.role}
+                            value={u.roles[0]}
                             onValueChange={(v) => handleChangeRole(u, v as AppRole)}
-                            disabled={busy || (isMe && u.role === "admin")}
+                            disabled={busy || (isMe && u.roles.includes("admin"))}
                           >
                             <SelectTrigger className="h-7 w-[140px] text-xs">
                               <SelectValue />
