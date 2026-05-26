@@ -3,7 +3,19 @@ import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
 
-export type AppRole = "admin" | "chef_chantier" | "chef_metier_scoped" | "employe" | "rh";
+export type AppRole =
+  | "admin"
+  | "chef_chantier"
+  | "chef_metier_scoped"
+  | "employe"
+  | "rh"
+  // Sprint A — rôles métier ajoutés en DB, désormais typés côté front
+  | "commercial"
+  | "bureau_etude"
+  | "atelier_chef"
+  | "atelier_metier"
+  | "logistique"
+  | "poseur";
 
 export interface AuthContextValue {
   user: User | null;
@@ -23,6 +35,13 @@ export interface AuthContextValue {
   isAdminOrChef: boolean;
   /** v0.48 Bloc 6 — rôle RH (accès module RH) */
   isRh: boolean;
+  // v0.49 Batch 9.7 — flags Sprint A (cf. mem://debts/types-app-role-incomplet)
+  isCommercial: boolean;
+  isBureauEtude: boolean;
+  isAtelierChef: boolean;
+  isAtelierMetier: boolean;
+  isLogistique: boolean;
+  isPoseur: boolean;
 
   passwordSetDone: boolean | null;
   passwordSetAt: string | null;
@@ -258,15 +277,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isChefGlobal = isAdmin || isChef;
   const isAdminOrChef = isAdmin || isChef || isChefMetierScoped;
   const isRh = isAdmin || roles.includes("rh");
+  const isCommercial = roles.includes("commercial");
+  const isBureauEtude = roles.includes("bureau_etude");
+  const isAtelierChef = roles.includes("atelier_chef");
+  const isAtelierMetier = roles.includes("atelier_metier");
+  const isLogistique = roles.includes("logistique");
+  const isPoseur = roles.includes("poseur");
   const isInviteStatus = roleRows.some((r) => r.status === "invite");
   const value = useMemo<AuthContextValue>(() => ({
     user, session, roles, loading, rolesLoaded,
     isAdmin, isChef, isChefAny, isChefGlobal, isChefMetierScoped, isAdminOrChef, isRh,
+    isCommercial, isBureauEtude, isAtelierChef, isAtelierMetier, isLogistique, isPoseur,
     passwordSetDone, passwordSetAt, isInviteStatus, profileCompleted,
     signIn, signInWithMagicLink, signUp, signOut, refreshRoles,
   }), [
     user, session, roles, loading, rolesLoaded,
     isAdmin, isChef, isChefAny, isChefGlobal, isChefMetierScoped, isAdminOrChef, isRh,
+    isCommercial, isBureauEtude, isAtelierChef, isAtelierMetier, isLogistique, isPoseur,
     passwordSetDone, passwordSetAt, isInviteStatus, profileCompleted,
     signIn, signInWithMagicLink, signUp, signOut, refreshRoles,
   ]);

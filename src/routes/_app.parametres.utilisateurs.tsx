@@ -66,6 +66,12 @@ const ROLE_LABEL: Record<AppRole, string> = {
   chef_metier_scoped: roleLabel("chef_metier_scoped"),
   employe: roleLabel("employe"),
   rh: roleLabel("rh"),
+  commercial: roleLabel("commercial"),
+  bureau_etude: roleLabel("bureau_etude"),
+  atelier_chef: roleLabel("atelier_chef"),
+  atelier_metier: roleLabel("atelier_metier"),
+  logistique: roleLabel("logistique"),
+  poseur: roleLabel("poseur"),
 };
 
 

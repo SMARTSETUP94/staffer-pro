@@ -3,7 +3,18 @@
  * Branded cream / ink / indigo, responsive, Inter-like font stack.
  */
 
-export type InvitationRoleLabel = "admin" | "chef_chantier" | "chef_metier_scoped" | "employe" | "rh";
+export type InvitationRoleLabel =
+  | "admin"
+  | "chef_chantier"
+  | "chef_metier_scoped"
+  | "employe"
+  | "rh"
+  | "commercial"
+  | "bureau_etude"
+  | "atelier_chef"
+  | "atelier_metier"
+  | "logistique"
+  | "poseur";
 
 export interface InvitationEmailParams {
   fullName?: string;
@@ -27,9 +38,15 @@ const FONT_STACK =
   "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif";
 
 function rolesToLabel(roles: InvitationRoleLabel[]): string {
+  if (roles.includes("admin")) return "Administrateur";
   if (roles.includes("chef_chantier")) return "Chef de Chantier";
   if (roles.includes("chef_metier_scoped")) return "Chef Métier";
-  if (roles.includes("admin")) return "Administrateur";
+  if (roles.includes("atelier_chef")) return "Chef d'atelier";
+  if (roles.includes("bureau_etude")) return "Bureau d'étude";
+  if (roles.includes("commercial")) return "Commercial";
+  if (roles.includes("logistique")) return "Logistique";
+  if (roles.includes("poseur")) return "Poseur";
+  if (roles.includes("atelier_metier")) return "Atelier";
   if (roles.includes("rh")) return "RH";
   return "Employé";
 }

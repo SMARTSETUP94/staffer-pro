@@ -20,7 +20,14 @@ export type AppRole =
   | "chef_chantier"
   | "chef_metier_scoped"
   | "rh"
-  | "employe";
+  | "employe"
+  // v0.49 Batch 9.7 — rôles Sprint A désormais typés côté front (cf. mem://debts/types-app-role-incomplet)
+  | "commercial"
+  | "bureau_etude"
+  | "atelier_chef"
+  | "atelier_metier"
+  | "logistique"
+  | "poseur";
 
 const USER_ROLE_LABELS: Record<AppRole, string> = {
   admin: "Admin",
@@ -28,6 +35,12 @@ const USER_ROLE_LABELS: Record<AppRole, string> = {
   chef_metier_scoped: "Chef métier (scopé)",
   rh: "RH",
   employe: "Employé",
+  commercial: "Commercial",
+  bureau_etude: "Bureau d'étude",
+  atelier_chef: "Chef d'atelier",
+  atelier_metier: "Atelier (métier)",
+  logistique: "Logistique",
+  poseur: "Poseur",
 };
 
 /** Libellé d'affichage pour un rôle applicatif. Fallback = la clé brute. */

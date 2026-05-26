@@ -99,6 +99,13 @@ export const ROLE_PRESETS: Record<AppRole, WidgetId[]> = {
   employe: [],
   // v0.48 Bloc 6 — preset RH minimal (absences + anniversaires)
   rh: ["inbox", "absences_semaine", "anniversaires", "saint_du_jour"],
+  // v0.49 Batch 9.7 — presets minimaux pour les rôles Sprint A (à enrichir au cas par cas)
+  commercial: ["inbox", "pipeline_charge_affaires", "opportunites_priorite", "conversions_recentes"],
+  bureau_etude: ["inbox", "mes_etapes_fab", "objets_en_retard"],
+  atelier_chef: ["inbox", "mes_etapes_fab", "objets_en_retard", "charge_atelier"],
+  atelier_metier: ["inbox", "mes_etapes_fab"],
+  logistique: ["inbox", "flotte_kpis", "montages_j7"],
+  poseur: ["inbox", "montages_j7", "meteo_chantiers"],
 };
 
 /**
