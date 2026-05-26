@@ -34,6 +34,7 @@ function AffaireSynthesePage() {
   const [hDemontage, setHDemontage] = useState<string>("0");
   const [savingMD, setSavingMD] = useState(false);
   // Sprint D Batch 3 — dates clés chantier
+  const [dSignedAt, setDSignedAt] = useState<string>("");
   const [dMontage, setDMontage] = useState<string>("");
   const [dEvtDebut, setDEvtDebut] = useState<string>("");
   const [dEvtFin, setDEvtFin] = useState<string>("");
