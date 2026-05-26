@@ -58,7 +58,6 @@ export function PlanningChantierGantt({ data, width = 960 }: Props) {
   // Logistique retour : groupée avec démontage (pas de ligne propre)
   const displayPhases = data.phases.filter((p) => p.key !== "logistique_retour");
   const logRetour = data.phases.find((p) => p.key === "logistique_retour");
-  const demontageIdx = displayPhases.findIndex((p) => p.key === "demontage");
 
   const rowCount = displayPhases.length;
   const height = TOP_PAD + rowCount * (ROW_HEIGHT + ROW_GAP) + BOTTOM_PAD;
