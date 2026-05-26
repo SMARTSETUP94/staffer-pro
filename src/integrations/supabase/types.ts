@@ -3258,6 +3258,7 @@ export type Database = {
           capability: string
           granted: boolean
           role: Database["public"]["Enums"]["app_role"]
+          scope: string
           updated_at: string
           updated_by: string | null
         }
@@ -3265,6 +3266,7 @@ export type Database = {
           capability: string
           granted?: boolean
           role: Database["public"]["Enums"]["app_role"]
+          scope?: string
           updated_at?: string
           updated_by?: string | null
         }
@@ -3272,6 +3274,7 @@ export type Database = {
           capability?: string
           granted?: boolean
           role?: Database["public"]["Enums"]["app_role"]
+          scope?: string
           updated_at?: string
           updated_by?: string | null
         }
@@ -5198,10 +5201,12 @@ export type Database = {
         }
         Returns: string
       }
+      user_cap_scope: { Args: { _cap: string }; Returns: string }
       user_has_affaire_access: {
         Args: { _affaire_id: string }
         Returns: boolean
       }
+      user_has_cap: { Args: { _cap: string }; Returns: boolean }
       user_has_capability: {
         Args: { _cap_key: string; _user_id: string }
         Returns: boolean
