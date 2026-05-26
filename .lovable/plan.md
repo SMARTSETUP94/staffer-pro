@@ -93,12 +93,17 @@
 | Dette | Fichier | Statut | Cible |
 |-------|---------|--------|-------|
 | Scope UI admin permissions | `l2-scope-ui-admin-permissions` | En attente | L3 |
+| Users multi-select 11 rôles | `parametres-utilisateurs-multi-select` | En attente | L3.0 |
 | Mobile fabrication atelier | `mobile-fabrication-a-livrer-en-L4` | En attente | L4 |
 | Fiche affaire mobile enrichie | `mobile-fiche-affaire-a-enrichir-en-L4` | En attente | L4 |
 | Tests E2E 8.3b scénario 11 | `e2e-specs-83b-scenario-11-revision` | En attente | 8.6 |
 | Rename loadActiveStepsForObjet | `load-active-steps-for-objet-rename` | En attente | 8.6 |
 | Dialog vs Sheet AddPersonne | `equipe-add-personne-dialog-vs-sheet` | En attente | 8.6 |
 | RLS bypass BE objet.edit | `rls-bypass-bureau-etude-objet-edit` | En attente | — |
+
+### Dettes résolues (depuis dernière mise à jour)
+- AppRole TS incomplet (`types-app-role-incomplet`) — résolu v0.49 Batch 9.7 P1
+- Routes mobile orphelines (`routes-mobile-orphelines`) — résolu v0.49 Batch 9.7 P4
 
 ---
 
