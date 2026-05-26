@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, useMemo } from "react";
 import {
   Loader2, Mail, Shield, UserCog, UserPlus, Send, Power, Trash2, MoreHorizontal,
-  CheckCircle2, Clock, XCircle, Link2, Users,
+  CheckCircle2, Clock, XCircle, Link2, Users, Eye,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -12,12 +12,16 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import {
+  Popover, PopoverContent, PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -29,15 +33,17 @@ import { toast } from "sonner";
 import { useAuth, type AppRole } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  inviteUser, resendInvitation, updateUserRole, setUserActive, deleteUser, linkExistingUsers,
+  inviteUser, resendInvitation, updateUserRoles, setUserActive, deleteUser, linkExistingUsers,
   updateUserFullName,
 } from "@/lib/admin-actions";
 import { readServerFnError } from "@/lib/server-fn-error";
 import { withAuthRetry } from "@/lib/with-auth-retry";
 import { PageHeader } from "@/components/PageHeader";
 import { BulkInviteDialog } from "@/components/admin/BulkInviteDialog";
+import { UserCapsDebugModal } from "@/components/admin/UserCapsDebugModal";
 import { format, formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
+import { roleLabel } from "@/lib/labels";
 
 export const Route = createFileRoute("/_app/parametres/utilisateurs")({
   head: () => ({ meta: [{ title: "Utilisateurs — Paramètres" }] }),
@@ -50,7 +56,7 @@ interface UserRow {
   id: string;
   email: string;
   full_name: string | null;
-  role: AppRole | null;
+  roles: AppRole[];
   status: UserStatus;
   invited_at: string | null;
   derniere_connexion_le: string | null;
@@ -58,21 +64,15 @@ interface UserRow {
   employe_id: string | null;
 }
 
-import { roleLabel } from "@/lib/labels";
-
-const ROLE_LABEL: Record<AppRole, string> = {
-  admin: roleLabel("admin"),
-  chef_chantier: roleLabel("chef_chantier"),
-  chef_metier_scoped: roleLabel("chef_metier_scoped"),
-  employe: roleLabel("employe"),
-  rh: roleLabel("rh"),
-  commercial: roleLabel("commercial"),
-  bureau_etude: roleLabel("bureau_etude"),
-  atelier_chef: roleLabel("atelier_chef"),
-  atelier_metier: roleLabel("atelier_metier"),
-  logistique: roleLabel("logistique"),
-  poseur: roleLabel("poseur"),
-};
+// L3a — Groupement des 11 rôles par catégorie pour la grille de checkboxes.
+// chef_metier_scoped est masqué de l'UI (legacy, conservé en DB pour rollback L5).
+const ROLE_GROUPS: { label: string; roles: AppRole[] }[] = [
+  { label: "Direction & Admin", roles: ["admin", "rh"] },
+  { label: "Commerce & Étude", roles: ["commercial", "bureau_etude"] },
+  { label: "Production & Chantier", roles: ["chef_chantier", "atelier_chef", "chef_pose"] },
+  { label: "Terrain & Atelier", roles: ["atelier_metier", "poseur", "logistique"] },
+  { label: "Défaut", roles: ["employe"] },
+];
 
 
 const STATUS_META: Record<
