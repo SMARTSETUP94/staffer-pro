@@ -20,6 +20,7 @@ import { Route as MobileProfilRouteImport } from './routes/mobile.profil'
 import { Route as MobileMoisRouteImport } from './routes/mobile.mois'
 import { Route as MobileMesMissionsRouteImport } from './routes/mobile.mes-missions'
 import { Route as MobileHeuresRouteImport } from './routes/mobile.heures'
+import { Route as MobileEquipeChantiersRouteImport } from './routes/mobile.equipe-chantiers'
 import { Route as MobileContratsRouteImport } from './routes/mobile.contrats'
 import { Route as MobileChefRouteImport } from './routes/mobile.chef'
 import { Route as MobileAujourdhuiRouteImport } from './routes/mobile.aujourdhui'
@@ -163,6 +164,11 @@ const MobileMesMissionsRoute = MobileMesMissionsRouteImport.update({
 const MobileHeuresRoute = MobileHeuresRouteImport.update({
   id: '/mobile/heures',
   path: '/mobile/heures',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MobileEquipeChantiersRoute = MobileEquipeChantiersRouteImport.update({
+  id: '/mobile/equipe-chantiers',
+  path: '/mobile/equipe-chantiers',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MobileContratsRoute = MobileContratsRouteImport.update({
@@ -675,6 +681,7 @@ export interface FileRoutesByFullPath {
   '/mobile/aujourdhui': typeof MobileAujourdhuiRoute
   '/mobile/chef': typeof MobileChefRouteWithChildren
   '/mobile/contrats': typeof MobileContratsRoute
+  '/mobile/equipe-chantiers': typeof MobileEquipeChantiersRoute
   '/mobile/heures': typeof MobileHeuresRoute
   '/mobile/mes-missions': typeof MobileMesMissionsRoute
   '/mobile/mois': typeof MobileMoisRoute
@@ -775,6 +782,7 @@ export interface FileRoutesByTo {
   '/mobile/absences': typeof MobileAbsencesRoute
   '/mobile/aujourdhui': typeof MobileAujourdhuiRoute
   '/mobile/contrats': typeof MobileContratsRoute
+  '/mobile/equipe-chantiers': typeof MobileEquipeChantiersRoute
   '/mobile/heures': typeof MobileHeuresRoute
   '/mobile/mes-missions': typeof MobileMesMissionsRoute
   '/mobile/mois': typeof MobileMoisRoute
@@ -878,6 +886,7 @@ export interface FileRoutesById {
   '/mobile/aujourdhui': typeof MobileAujourdhuiRoute
   '/mobile/chef': typeof MobileChefRouteWithChildren
   '/mobile/contrats': typeof MobileContratsRoute
+  '/mobile/equipe-chantiers': typeof MobileEquipeChantiersRoute
   '/mobile/heures': typeof MobileHeuresRoute
   '/mobile/mes-missions': typeof MobileMesMissionsRoute
   '/mobile/mois': typeof MobileMoisRoute
@@ -982,6 +991,7 @@ export interface FileRouteTypes {
     | '/mobile/aujourdhui'
     | '/mobile/chef'
     | '/mobile/contrats'
+    | '/mobile/equipe-chantiers'
     | '/mobile/heures'
     | '/mobile/mes-missions'
     | '/mobile/mois'
@@ -1082,6 +1092,7 @@ export interface FileRouteTypes {
     | '/mobile/absences'
     | '/mobile/aujourdhui'
     | '/mobile/contrats'
+    | '/mobile/equipe-chantiers'
     | '/mobile/heures'
     | '/mobile/mes-missions'
     | '/mobile/mois'
@@ -1184,6 +1195,7 @@ export interface FileRouteTypes {
     | '/mobile/aujourdhui'
     | '/mobile/chef'
     | '/mobile/contrats'
+    | '/mobile/equipe-chantiers'
     | '/mobile/heures'
     | '/mobile/mes-missions'
     | '/mobile/mois'
@@ -1261,6 +1273,7 @@ export interface RootRouteChildren {
   MobileAujourdhuiRoute: typeof MobileAujourdhuiRoute
   MobileChefRoute: typeof MobileChefRouteWithChildren
   MobileContratsRoute: typeof MobileContratsRoute
+  MobileEquipeChantiersRoute: typeof MobileEquipeChantiersRoute
   MobileHeuresRoute: typeof MobileHeuresRoute
   MobileMesMissionsRoute: typeof MobileMesMissionsRoute
   MobileMoisRoute: typeof MobileMoisRoute
@@ -1347,6 +1360,13 @@ declare module '@tanstack/react-router' {
       path: '/mobile/heures'
       fullPath: '/mobile/heures'
       preLoaderRoute: typeof MobileHeuresRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mobile/equipe-chantiers': {
+      id: '/mobile/equipe-chantiers'
+      path: '/mobile/equipe-chantiers'
+      fullPath: '/mobile/equipe-chantiers'
+      preLoaderRoute: typeof MobileEquipeChantiersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mobile/contrats': {
@@ -2219,6 +2239,7 @@ const rootRouteChildren: RootRouteChildren = {
   MobileAujourdhuiRoute: MobileAujourdhuiRoute,
   MobileChefRoute: MobileChefRouteWithChildren,
   MobileContratsRoute: MobileContratsRoute,
+  MobileEquipeChantiersRoute: MobileEquipeChantiersRoute,
   MobileHeuresRoute: MobileHeuresRoute,
   MobileMesMissionsRoute: MobileMesMissionsRoute,
   MobileMoisRoute: MobileMoisRoute,
