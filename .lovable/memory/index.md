@@ -242,4 +242,6 @@ Modèle staffing 3 niveaux (Sprint A) : `affaire_equipe(affaire_id, employe_id, 
 - [Dette : Fiche affaire mobile à enrichir en L4](mem://debts/mobile-fiche-affaire-a-enrichir-en-L4) — gallery seul en V1, sections gated par caps en L4
 - [Lot L2 — Seed matrice capabilities](mem://features/lot-l2-seed-capabilities) — 59 caps DB + helpers SQL + catalogue front + integrity tests + backfill atelier_chef (26 mai 2026)
 - [Batch 9.7 — Mobile wiring & role sync](mem://features/batch-97-mobile-wiring) — AppRole 11 rôles + nav employé/chef + cleanup routes orphelines (25-26 mai 2026)
+- [Lot L3 — Refonte permissions](mem://features/lot-l3-refonte-permissions) — Audit terminé 26/05. L3.0 users multi-select + L3.1 fab filter + L3.2-5 refacto isAdmin/isChef → user_has_cap(). ~30-40h
 - [Dette : Scope UI admin permissions](mem://debts/l2-scope-ui-admin-permissions) — Édition du champ `scope` (all/team/metier/own/none) non supportée dans `/admin/permissions` UI. Attend L3.
+- [Dette : Users multi-select /parametres/utilisateurs](mem://debts/users-multi-select-parametres) — UI mono-select 3 rôles vs DB multi 11 rôles. Verrou critique résolu par L3.0.
