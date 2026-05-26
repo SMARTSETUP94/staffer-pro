@@ -30,7 +30,7 @@ describe("D5 / inbox alertes équipe (admin)", () => {
   });
 
   it("opt-in map active une alerte à la fois", () => {
-    const rows = [{ affaire_id: "aaa", alerte_code: "sous_dim" as const, optin: true }];
+    const rows = [{ id: "1", affaire_id: "aaa", alerte_code: "sous_dim" as const, active: true }];
     const map = toOptinMap(rows);
     expect(map.sous_dim).toBe(true);
     expect(map.depassement).toBe(false);
