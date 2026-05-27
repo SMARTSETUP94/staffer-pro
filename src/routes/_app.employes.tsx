@@ -6,7 +6,7 @@ import { fetchEmployesForExport, exportEmployesXlsx } from "@/lib/employes-excel
 import { EmployesImportPostesDialog } from "@/components/employes/EmployesImportPostesDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useMetiers } from "@/hooks/use-metiers";
-import { useAuth } from "@/lib/auth-context";
+
 import { useCapability } from "@/hooks/use-capability";
 import { PageHeader } from "@/components/PageHeader";
 import { MetierBadge } from "@/components/MetierBadge";
