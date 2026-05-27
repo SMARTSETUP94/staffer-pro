@@ -4,7 +4,7 @@ import { Plus, Loader2, Pencil, Trash2, FileText, CheckCircle2, Lock, AlertTrian
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth-context";
+import { useCapability } from "@/hooks/use-capability";
 import { useMetiers } from "@/hooks/use-metiers";
 import { MetierBadge } from "@/components/MetierBadge";
 import { Button } from "@/components/ui/button";
@@ -81,7 +81,14 @@ function formatLibelleSource(raw: string | null): string {
 
 function AffaireDevisPage() {
   const { affaireId } = Route.useParams();
-  const { isAdminOrChef, isAdmin } = useAuth();
+  // L3b1-B : remplace isAdminOrChef/isAdmin par caps explicites.
+  // - canManageDevis : créer/éditer/supprimer un devis + lignes + bouton livrer.
+  //   Mapping sur action.create_devis (cap admin+chef_chantier+commercial+BE).
+  //   NOTE : la livraison ("Terminer ce lot") garde la même gate, à reconsidérer
+  //   si une cap dédiée action.deliver_devis émerge.
+  // - canAdminOverride : ré-ouvrir un devis terminé + bypass lock livré.
+  const canManageDevis = useCapability("action.create_devis");
+  const canAdminOverride = useCapability("section.admin");
   const { metiers, byId } = useMetiers();
 
   const [devis, setDevis] = useState<Devis[]>([]);
