@@ -89,8 +89,9 @@ export function CommandPalette() {
   const navItems = useMemo(() => {
     if (effectiveRole === "employe") {
       return [
-        { label: "Mes heures", to: "/mobile/heures", icon: Clock },
-        { label: "Mon profil", to: "/mobile/profil", icon: Users },
+        { label: "Mes heures", to: "/mes-heures", icon: Clock },
+        // L4d : pas de route /profil dédiée — cf. mem://debts/profil-route-manquante
+        { label: "Mon profil", to: "/aujourdhui", icon: Users },
       ];
     }
     return [
@@ -106,7 +107,7 @@ export function CommandPalette() {
       { label: "Import devis", to: "/devis/import", icon: FileUp },
       { label: "Export planning", to: "/export", icon: FileDown },
       ...(effectiveRole === "admin"
-        ? [{ label: "Paramètres utilisateurs", to: "/parametres/utilisateurs", icon: Settings }]
+        ? [{ label: "Paramètres utilisateurs", to: "/admin/utilisateurs", icon: Settings }]
         : []),
     ];
   }, [effectiveRole]);

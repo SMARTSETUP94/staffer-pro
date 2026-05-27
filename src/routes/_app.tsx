@@ -2,7 +2,6 @@ import { createFileRoute, Outlet, useNavigate, useRouterState } from "@tanstack/
 import { useEffect, useRef } from "react";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
-import { usePreview } from "@/lib/preview-context";
 import { AppLayout } from "@/components/AppLayout";
 import {
   shouldForceSetPassword,
@@ -34,10 +33,9 @@ function AppGuard() {
   const router = useRouterState();
   const currentPath = router.location.pathname;
   const {
-    user, loading, rolesLoaded, isAdminOrChef,
+    user, loading, rolesLoaded,
     passwordSetDone, passwordSetAt, isInviteStatus, profileCompleted, roles,
   } = useAuth();
-  const { effIsMobile, effIsAdminOrChef, isPreviewing } = usePreview();
   const onboardingRedirectCountRef = useRef(0);
 
 
@@ -65,7 +63,6 @@ function AppGuard() {
     if (shouldRedirectToOnboarding({ profileCompleted, currentPath, skipped: isOnboardingSkipped() })) {
       onboardingRedirectCountRef.current += 1;
       if (onboardingRedirectCountRef.current > MAX_ONBOARDING_REDIRECTS) {
-        // Boucle détectée : on libère + bannière permanente via skip flag.
         console.error(
           "[AppGuard] Onboarding redirect loop detected — count=",
           onboardingRedirectCountRef.current,
@@ -84,26 +81,15 @@ function AppGuard() {
       navigate({ to: "/onboarding" });
       return;
     }
-    // Reset compteur dès qu'on ne redirige PLUS vers /onboarding
     onboardingRedirectCountRef.current = 0;
-    // Routing role-aware centralisé (mobile/desktop, admin/chef/employé).
-    // Voir src/lib/post-login-routing.ts.
-    const target = resolvePostLoginTarget({
-      isAdmin: roles.includes("admin"),
-      isAdminOrChef,
-      effIsMobile,
-      effIsAdminOrChef,
-      isPreviewing,
-    });
-    // Mobile : si la cible est /mobile/* et qu'on n'y est pas → bascule.
-    if (target.startsWith("/mobile/") && !currentPath.startsWith("/mobile/")) {
-      navigate({ to: target });
-      return;
-    }
-    // L4c — plus de whitelist côté layout. requireCapability() côté route protège l'accès.
+    // L4d — plus de whitelist côté layout, plus de routing mobile/desktop.
+    // resolvePostLoginTarget() = constante /aujourdhui ; l'index s'en sert.
+    // Ici on ne redirige plus depuis _app : requireCapability() côté route
+    // protège l'accès.
+    void resolvePostLoginTarget;
   }, [
-    loading, rolesLoaded, user, isAdminOrChef, effIsAdminOrChef,
-    effIsMobile, mustSetPassword, profileCompleted, currentPath, navigate, roles, isPreviewing,
+    loading, rolesLoaded, user,
+    mustSetPassword, profileCompleted, currentPath, navigate, roles,
   ]);
 
   // Lot 7.0b — toast "Accès refusé" après redirect depuis requireCapability().

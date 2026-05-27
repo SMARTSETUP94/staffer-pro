@@ -18,7 +18,7 @@ import { useContratsRhCount } from "@/hooks/use-contrats-rh-count";
 import { useCapabilitiesSet } from "@/hooks/use-capability";
 import { useVocab } from "@/hooks/use-vocab";
 
-import { ViewAsSwitcher } from "./ViewAsSwitcher";
+
 
 /**
  * v0.48 Lot L4b — Sidebar unique capability-driven, responsive.
@@ -123,7 +123,7 @@ function buildSections(
     {
       label: "Admin",
       items: [
-        { title: "Utilisateurs", url: "/parametres/utilisateurs", icon: UserCircle, cap: "section.admin" },
+        { title: "Utilisateurs", url: "/admin/utilisateurs", icon: UserCircle, cap: "section.admin" },
         { title: "Permissions", url: "/admin/permissions", icon: BadgeCheck, cap: "section.admin" },
         { title: "Feature flags", url: "/admin/feature-flags", icon: Lightbulb, cap: "section.admin" },
         { title: "Métiers & postes", url: "/parametres/metiers", icon: Palette, cap: "section.admin" },
@@ -187,7 +187,7 @@ export function AppSidebar() {
             </span>
           )}
         </Link>
-        <ViewAsSwitcher collapsed={collapsed} />
+        
       </SidebarHeader>
 
       <SidebarContent className="px-1">
