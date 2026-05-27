@@ -20,8 +20,10 @@ export const Route = createFileRoute("/_app")({
 
 // Pages accessibles à un employé en desktop (vue restreinte)
 const EMPLOYE_DESKTOP_ALLOWED = [
+  "/aujourdhui",
   "/dashboard",
   "/dashboard-employe",
+  "/inbox",
   "/ma-semaine",
   "/mes-heures",
   "/mes-swaps",
