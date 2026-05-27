@@ -2,7 +2,6 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
-import { usePreview } from "@/lib/preview-context";
 import { isAuthHashPresent } from "@/lib/auth-redirect-helpers";
 import { resolvePostLoginTarget } from "@/lib/post-login-routing";
 
@@ -12,13 +11,9 @@ export const Route = createFileRoute("/")({
 
 function IndexRedirect() {
   const navigate = useNavigate();
-  const { user, loading, rolesLoaded, isAdminOrChef, isAdmin } = useAuth();
-  const { effIsMobile, effIsAdminOrChef, isPreviewing } = usePreview();
+  const { user, loading, rolesLoaded } = useAuth();
   const [hashRedirectChecked, setHashRedirectChecked] = useState(false);
 
-  // FIX v0.26.1 : si la racine reçoit un hash de lien d'invitation/recovery,
-  // on redirige vers /auth/set-password en préservant le hash AVANT que
-  // detectSessionInUrl ne consomme la session sur la mauvaise route.
   useEffect(() => {
     if (typeof window === "undefined") {
       setHashRedirectChecked(true);
@@ -26,9 +21,8 @@ function IndexRedirect() {
     }
     const hash = window.location.hash;
     if (isAuthHashPresent(hash)) {
-      // window.location.assign préserve le hash dans l'URL cible
       window.location.replace(`/auth/set-password${hash}`);
-      return; // pas besoin de setHashRedirectChecked, on quitte la page
+      return;
     }
     setHashRedirectChecked(true);
   }, []);
@@ -40,15 +34,8 @@ function IndexRedirect() {
       navigate({ to: "/login" });
       return;
     }
-    const target = resolvePostLoginTarget({
-      isAdmin,
-      isAdminOrChef,
-      effIsMobile,
-      effIsAdminOrChef,
-      isPreviewing,
-    });
-    navigate({ to: target });
-  }, [hashRedirectChecked, loading, rolesLoaded, user, isAdminOrChef, isAdmin, effIsMobile, effIsAdminOrChef, isPreviewing, navigate]);
+    navigate({ to: resolvePostLoginTarget() });
+  }, [hashRedirectChecked, loading, rolesLoaded, user, navigate]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background">

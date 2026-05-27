@@ -1,7 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import type { AppRole } from "@/lib/auth-context";
 import { useAuth } from "@/lib/auth-context";
-import { useIsMobile } from "@/hooks/use-mobile";
 
 export type PreviewRole = "admin" | "chef_chantier" | "chef_mobile" | "employe_desktop" | "employe_mobile";
 
@@ -22,7 +21,6 @@ interface PreviewContextValue {
   effIsAdmin: boolean;
   effIsChef: boolean;
   effIsAdminOrChef: boolean;
-  effIsMobile: boolean;
   /** True si on est en preview "Employé desktop" ou "Employé mobile" (utile pour afficher le sélecteur) */
   isEmployePreview: boolean;
 }
@@ -53,7 +51,6 @@ function readStoredEmp(): string | null {
 
 export function PreviewProvider({ children }: { children: ReactNode }) {
   const { isAdmin, roles, user } = useAuth();
-  const isViewportMobile = useIsMobile();
   const [previewRole, setPreviewRoleState] = useState<PreviewRole | null>(() => readStored());
   const [previewEmployeId, setPreviewEmployeIdState] = useState<string | null>(() => readStoredEmp());
 
@@ -137,18 +134,6 @@ export function PreviewProvider({ children }: { children: ReactNode }) {
   const effIsAdmin = effectiveRole === "admin";
   const effIsChef = effectiveRole === "chef_chantier";
   const effIsAdminOrChef = effIsAdmin || effIsChef;
-  // v0.46 : effIsMobile = vrai dès que le viewport est étroit (< 1024px) OU quand
-  // l'admin force un preview mobile depuis desktop (chef_mobile / employe_mobile).
-  // v0.48.1 : quand l'admin preview explicitement un rôle DESKTOP (chef_chantier
-  // ou employe_desktop), on ignore le viewport étroit — sinon un admin sur petit
-  // écran (≤1023px, ex. fenêtre 1015px) qui choisit "Chef d'équipe" était
-  // redirigé vers /mobile/chef/dashboard au lieu de la version desktop voulue.
-  const isExplicitDesktopPreview =
-    previewRole === "chef_chantier" || previewRole === "employe_desktop";
-  const effIsMobile =
-    (isViewportMobile && !isExplicitDesktopPreview) ||
-    previewRole === "employe_mobile" ||
-    previewRole === "chef_mobile";
   const isEmployePreview =
     previewRole === "employe_desktop" || previewRole === "employe_mobile";
 
@@ -164,7 +149,6 @@ export function PreviewProvider({ children }: { children: ReactNode }) {
         effIsAdmin,
         effIsChef,
         effIsAdminOrChef,
-        effIsMobile,
         isEmployePreview,
       }}
     >

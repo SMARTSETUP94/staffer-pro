@@ -182,6 +182,7 @@ Modèle staffing 3 niveaux (Sprint A) : `affaire_equipe(affaire_id, employe_id, 
 96. ⏸️ **Sprint dette résiduelle v0.36** — Page admin véhicules + audit findings (BACKLOG).
 
 ## Memories
+- [L4d cleanup final](mem://features/l4d-cleanup-final) — v0.50 suppression 20 stubs mobile + nav legacy + ViewAsSwitcher + effIsMobile + migration /parametres/utilisateurs → /admin/utilisateurs
 - [Centre d'analyse heures](mem://features/centre-analyse-heures) — BACKLOG : onglet consolidé heures + 8 filtres + exports
 - [Auto-staffing tier priority](mem://features/auto-staffing-tier-priority) — règle CDI/CDD avant intérim
 - [Wizard plan staffing](mem://features/staffing-plan-wizard) — v0.35.4 onglet Fab + bouton Devis

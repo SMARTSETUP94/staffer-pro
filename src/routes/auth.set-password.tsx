@@ -152,8 +152,7 @@ function SetPasswordPage() {
       }
       await refreshRoles();
       toast.success("Mot de passe créé", { description: "Bienvenue chez Setup Paris !" });
-      const isChefOrAdmin = roles.includes("admin") || roles.includes("chef_chantier");
-      navigate({ to: isChefOrAdmin ? "/dashboard" : "/mobile/aujourdhui" });
+      navigate({ to: "/aujourdhui" });
     } catch (e) {
       console.error("[set-password] uncaught:", e);
       toast.error("Une erreur inattendue est survenue", {

@@ -13,46 +13,32 @@
  * Remplace les patterns ad-hoc `if (!isAdmin) return <Navigate />` éparpillés
  * dans les routes admin/chef pour avoir un comportement uniforme et auditable.
  */
-import { Navigate, useRouterState } from "@tanstack/react-router";
+import { Navigate } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
 import { useEffect, useRef, type ReactNode } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth-context";
-import { usePreview } from "@/lib/preview-context";
-import { checkMobileChefAccessForAdmin } from "@/lib/post-login-routing";
 
 export type RoleRequirement = "admin" | "chef_or_admin";
 
 interface RoleGuardProps {
   required: RoleRequirement;
   children: ReactNode;
-  /**
-   * Route de redirection si le rôle est insuffisant.
-   * @default "/dashboard"
-   */
+  /** @default "/aujourdhui" */
   redirectTo?: string;
-  /**
-   * Message du toast affiché en cas de redirection.
-   */
   toastMessage?: string;
 }
 
 export function RoleGuard({
   required,
   children,
-  redirectTo = "/dashboard",
+  redirectTo = "/aujourdhui",
   toastMessage,
 }: RoleGuardProps) {
   const { rolesLoaded, isAdmin, isAdminOrChef } = useAuth();
-  const { isPreviewing } = usePreview();
-  const currentPath = useRouterState({ select: (state) => state.location.pathname });
   const toastShownRef = useRef(false);
 
   const allowed = required === "admin" ? isAdmin : isAdminOrChef;
-  const adminMobileChefRedirect =
-    rolesLoaded && required === "chef_or_admin"
-      ? checkMobileChefAccessForAdmin({ isAdmin, isPreviewing, currentPath })
-      : null;
 
   useEffect(() => {
     if (rolesLoaded && !allowed && !toastShownRef.current) {
@@ -75,10 +61,6 @@ export function RoleGuard({
 
   if (!allowed) {
     return <Navigate to={redirectTo} />;
-  }
-
-  if (adminMobileChefRedirect) {
-    return <Navigate to={adminMobileChefRedirect} />;
   }
 
   return <>{children}</>;
