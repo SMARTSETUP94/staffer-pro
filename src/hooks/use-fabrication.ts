@@ -127,6 +127,21 @@ export interface ProfileRole {
   est_manutention: boolean;
   est_bureau_etude: boolean;
   est_usinage_numerique: boolean;
+  /** L3a — true si le profil possède la capability `casting.edit_phase_fabrication`. */
+  has_cap_fab_edit: boolean;
+}
+
+/**
+ * L3a — Double-filtre fabrication : un profil n'est éligible à une étape que si
+ * il a le flag métier ET la capability `casting.edit_phase_fabrication`.
+ * Garde-fou contre une incohérence DB (ex: flag activé mais rôle sans cap).
+ */
+export function isEligibleForEtape(
+  p: ProfileRole,
+  etape: FabricationEtapeType,
+): boolean {
+  const flag = ETAPE_TO_FLAG[etape];
+  return Boolean(p[flag]) && p.has_cap_fab_edit;
 }
 
 /**
