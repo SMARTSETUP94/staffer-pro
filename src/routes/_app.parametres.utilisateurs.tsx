@@ -611,14 +611,14 @@ function UtilisateursPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="admin">
-                    <span className="flex items-center gap-1.5">
-                      <Shield className="h-3.5 w-3.5" />
-                      Admin
-                    </span>
-                  </SelectItem>
-                  <SelectItem value="chef_chantier">{roleLabel("chef_chantier")}</SelectItem>
-                  <SelectItem value="employe">Employé</SelectItem>
+                  {ROLE_GROUPS.flatMap((g) => g.roles).map((r) => (
+                    <SelectItem key={r} value={r}>
+                      <span className="flex items-center gap-1.5">
+                        {r === "admin" && <Shield className="h-3.5 w-3.5" />}
+                        {roleLabel(r)}
+                      </span>
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
