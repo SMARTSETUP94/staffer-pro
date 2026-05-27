@@ -6,7 +6,8 @@ import { fetchEmployesForExport, exportEmployesXlsx } from "@/lib/employes-excel
 import { EmployesImportPostesDialog } from "@/components/employes/EmployesImportPostesDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useMetiers } from "@/hooks/use-metiers";
-import { useAuth } from "@/lib/auth-context";
+
+import { useCapability } from "@/hooks/use-capability";
 import { PageHeader } from "@/components/PageHeader";
 import { MetierBadge } from "@/components/MetierBadge";
 import { MultiFilter } from "@/components/planning/MultiFilter";
@@ -165,7 +166,18 @@ export const Route = createFileRoute("/_app/employes")({
 });
 
 function EmployesPage() {
-  const { isAdminOrChef, isAdmin } = useAuth();
+  // L3b1-A — Refacto rôles → capabilities.
+  // - canEdit (gestion fiches employés : create/update/toggle actif/édition autorisations véhicules) → employes.edit
+  // - canViewSalaries (bloc rémunération confidentiel) → data.salaries
+  // - canViewRh (matricule SILAE, clé export paie) → data.employee_rh
+  // - canManagePostes (lien /admin/employes-poste-principal + import postes XLSX) → employes.import
+  // - canEditFabRoles (toggle est_chef_projet / est_bureau_etude / etc. sur profiles) → section.admin
+  //   (réservé admin : c'est de la gestion de rôles applicatifs, pas du métier RH)
+  const canEdit = useCapability("employes.edit");
+  const canViewSalaries = useCapability("data.salaries");
+  const canViewRh = useCapability("data.employee_rh");
+  const canManagePostes = useCapability("employes.import");
+  const canEditFabRoles = useCapability("section.admin");
   const { metiers, byId } = useMetiers();
   const [rows, setRows] = useState<EmployeRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -182,7 +194,7 @@ function EmployesPage() {
   const [importPostesOpen, setImportPostesOpen] = useState(false);
 
   const toggleActif = async (row: EmployeRow) => {
-    if (!isAdminOrChef) return;
+    if (!canEdit) return;
     setTogglingId(row.id);
     const next = !row.actif;
     setRows((rs) => rs.map((r) => (r.id === row.id ? { ...r, actif: next } : r)));
@@ -386,7 +398,7 @@ function EmployesPage() {
       matricule_silae: form.matricule_silae.trim() || null,
     };
     // Champs admin-only (rémunération + statut contrat fin)
-    const payload = isAdmin
+    const payload = canViewSalaries
       ? {
           ...basePayload,
           taux_horaire_brut: parseNum(form.taux_horaire_brut),
@@ -417,7 +429,7 @@ function EmployesPage() {
     }
 
     // Flags rôles fabrication : update sur profiles si lié et admin (matricule_silae est désormais sur employes)
-    if (form.profile_id && isAdmin) {
+    if (form.profile_id && canEditFabRoles) {
       const { error: profErr } = await supabase
         .from("profiles")
         .update({
@@ -448,9 +460,9 @@ function EmployesPage() {
         title="Employés"
         description={`${rows.filter((r) => r.actif).length} actif(s) sur ${rows.length} fiche(s).`}
         actions={
-          isAdminOrChef && (
+          canEdit && (
             <div className="flex gap-2">
-              {isAdmin && (
+              {canManagePostes && (
                 <Button asChild variant="outline" className="rounded-xl">
                   <Link to="/admin/employes-poste-principal"><ClipboardList className="mr-1 h-4 w-4" />Postes principaux</Link>
                 </Button>
@@ -459,7 +471,7 @@ function EmployesPage() {
                 try { const d = await fetchEmployesForExport(); await exportEmployesXlsx(d); toast.success(`${d.length} employés exportés`); }
                 catch (e) { toast.error("Export impossible", { description: (e as Error).message }); }
               }}><Download className="mr-1 h-4 w-4" />Exporter Excel</Button>
-              {isAdmin && (
+              {canManagePostes && (
                 <Button variant="outline" className="rounded-xl" onClick={() => setImportPostesOpen(true)}>
                   <Upload className="mr-1 h-4 w-4" />Importer postes
                 </Button>
@@ -586,7 +598,7 @@ function EmployesPage() {
                       <div className="text-xs text-muted-foreground">{r.telephone ?? "—"}</div>
                     </TableCell>
                     <TableCell>
-                      {isAdminOrChef ? (
+                      {canEdit ? (
                         <button
                           type="button"
                           onClick={() => toggleActif(r)}
@@ -613,7 +625,7 @@ function EmployesPage() {
                       )}
                     </TableCell>
                     <TableCell>
-                      {isAdminOrChef && (
+                      {canEdit && (
                         <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg" onClick={() => openEdit(r)}>
                           <Pencil className="h-4 w-4" />
                         </Button>
@@ -688,13 +700,13 @@ function EmployesPage() {
             <div className="space-y-1.5 sm:col-span-2">
               <Label>
                 Matricule SILAE
-                {!isAdmin && <span className="ml-2 text-[10px] font-normal text-muted-foreground">(admin uniquement)</span>}
+                {!canViewRh && <span className="ml-2 text-[10px] font-normal text-muted-foreground">(admin uniquement)</span>}
               </Label>
               <Input
                 value={form.matricule_silae}
                 onChange={(e) => setForm({ ...form, matricule_silae: e.target.value })}
                 placeholder="Ex. 00123"
-                disabled={!isAdmin}
+                disabled={!canViewRh}
                 className="h-10 rounded-xl font-mono"
               />
               <p className="text-[10px] text-muted-foreground">
@@ -847,12 +859,12 @@ function EmployesPage() {
             {/* Sprint 3b.1 — Autorisations véhicules enrichies (uniquement en édition) */}
             {form.id && (
               <div className="space-y-2 rounded-xl border border-border bg-background p-3 sm:col-span-2">
-                <EmployeAutorisationsSection employeId={form.id} canEdit={isAdminOrChef} />
+                <EmployeAutorisationsSection employeId={form.id} canEdit={canEdit} />
               </div>
             )}
 
             {/* Tour 1 — Rémunération + statut contrat fin (admin only) */}
-            {isAdmin && (
+            {canViewSalaries && (
               <div className="space-y-3 rounded-xl border border-border bg-background p-3 sm:col-span-2">
                 <div>
                   <p className="text-sm font-semibold text-foreground">Rémunération</p>
@@ -922,7 +934,7 @@ function EmployesPage() {
                   {form.profile_id
                     ? "Active les rôles atelier (indépendants du métier principal). Filtre les assignees dans le module Fabrication."
                     : "Disponible uniquement pour les employés liés à un compte utilisateur."}
-                  {!isAdmin && form.profile_id && " Lecture seule (admin requis pour modifier)."}
+                  {!canEditFabRoles && form.profile_id && " Lecture seule (admin requis pour modifier)."}
                 </p>
               </div>
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
@@ -937,12 +949,12 @@ function EmployesPage() {
                   <label
                     key={flag.key}
                     className={`flex items-center gap-2 rounded-lg border border-border bg-card px-2 py-1.5 text-xs ${
-                      !form.profile_id || !isAdmin ? "opacity-60" : ""
+                      !form.profile_id || !canEditFabRoles ? "opacity-60" : ""
                     }`}
                   >
                     <Checkbox
                       checked={form[flag.key]}
-                      disabled={!form.profile_id || !isAdmin}
+                      disabled={!form.profile_id || !canEditFabRoles}
                       onCheckedChange={(v) => setForm((f) => ({ ...f, [flag.key]: Boolean(v) }))}
                     />
                     <span className="font-medium">{flag.label}</span>
