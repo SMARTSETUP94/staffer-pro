@@ -277,11 +277,20 @@ function UtilisateursPage() {
     }
   }
 
-  async function handleChangeRole(u: UserRow, role: AppRole) {
+  async function handleSaveRoles(u: UserRow, nextRoles: AppRole[]) {
+    // L3a — garde-fou : jamais d'utilisateur sans aucun rôle (sinon lockout).
+    const safe = nextRoles.length === 0 ? (["employe"] as AppRole[]) : nextRoles;
+    const forced = nextRoles.length === 0;
     setActingOn(u.id);
     try {
-      await withAuthRetry(() => updateUserRoles({ data: { targetUserId: u.id, roles: [role] } }));
-      toast.success(`Rôle ${roleLabel(role)} appliqué à ${u.email}`);
+      await withAuthRetry(() =>
+        updateUserRoles({ data: { targetUserId: u.id, roles: safe } }),
+      );
+      toast.success(
+        forced
+          ? `Rôle ${roleLabel("employe")} imposé par défaut à ${u.email} (aucun rôle sélectionné)`
+          : `${safe.length} rôle${safe.length > 1 ? "s" : ""} appliqué${safe.length > 1 ? "s" : ""} à ${u.email}`,
+      );
       loadUsers();
     } catch (e) {
       toast.error(await readServerFnError(e));
