@@ -15,7 +15,7 @@ export interface ResolvedEmploye {
  * - Sinon → lookup standard sur employes.profile_id = auth.uid().
  *
  * Permet à l'admin (qui n'a pas de fiche employé liée) de tester les flows
- * employé via le ViewAsSwitcher en sélectionnant une fiche démo.
+ * employé via le PreviewBanner en sélectionnant une fiche démo.
  */
 export function useResolvedEmploye() {
   const { user } = useAuth();
