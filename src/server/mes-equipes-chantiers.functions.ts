@@ -81,7 +81,7 @@ export const getMesEquipesChantiers = createServerFn({ method: "POST" })
         "id, numero, nom, client, lieu, statut, date_evenement_debut, date_evenement_fin",
       )
       .in("id", affaireIds)
-      .not("statut", "in", "(annulee,terminee,annule,termine)")
+      .not("statut", "in", "(annule,termine)")
       .order("date_evenement_debut", { ascending: true, nullsFirst: false });
     if (affErr) throw new Error(affErr.message);
 
