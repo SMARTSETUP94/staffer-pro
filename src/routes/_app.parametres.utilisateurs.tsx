@@ -529,6 +529,11 @@ function UtilisateursPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => setCapsDebug(u)}>
+                              <Eye className="mr-2 h-4 w-4" />
+                              Caps effectives
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
                             {u.status === "invite" && (
                               <DropdownMenuItem onClick={() => handleResend(u)}>
                                 <Send className="mr-2 h-4 w-4" />
