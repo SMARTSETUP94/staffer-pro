@@ -100,13 +100,10 @@ function AppGuard() {
       navigate({ to: target });
       return;
     }
-    // Desktop employé : autorisé uniquement sur whitelist (sinon → /ma-semaine).
-    if (!effIsAdminOrChef && !isEmployeAllowedPath && !currentPath.startsWith("/mobile/")) {
-      navigate({ to: "/ma-semaine" });
-    }
+    // L4c — plus de whitelist côté layout. requireCapability() côté route protège l'accès.
   }, [
     loading, rolesLoaded, user, isAdminOrChef, effIsAdminOrChef,
-    effIsMobile, isEmployeAllowedPath, mustSetPassword, profileCompleted, currentPath, navigate, roles, isPreviewing,
+    effIsMobile, mustSetPassword, profileCompleted, currentPath, navigate, roles, isPreviewing,
   ]);
 
   // Lot 7.0b — toast "Accès refusé" après redirect depuis requireCapability().
