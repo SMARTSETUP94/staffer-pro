@@ -265,6 +265,15 @@ export function useProfilesWithRoles() {
     setLoading(false);
   }, []);
 
+  useEffect(() => {
+    void reload();
+  }, [reload]);
+
+  return { profiles, loading, reload };
+}
+
+
+
 
 /** Calcule l'avancement d'un objet (étapes terminées ou non applicables / total). */
 export function calcAvancementObjet(objet: FabricationObjet): number {
