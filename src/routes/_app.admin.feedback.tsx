@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth-context";
+import { useCapability } from "@/hooks/use-capability";
 import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -74,7 +74,8 @@ const STATUT_META: Record<Statut, { label: string; className: string }> = {
 };
 
 function FeedbackAdminPage() {
-  const { isAdmin } = useAuth();
+  // L3b1 — cap-driven : beforeLoad gère déjà la redirection si pas admin.feedback.view.
+  const isAdmin = useCapability("admin.feedback.view");
   const navigate = useNavigate();
   const [rows, setRows] = useState<Feedback[]>([]);
   const [loading, setLoading] = useState(true);
@@ -84,9 +85,11 @@ function FeedbackAdminPage() {
 
   useEffect(() => {
     if (!isAdmin) {
+      // Défense-en-profondeur : beforeLoad redirige déjà, mais on garde un fallback.
       navigate({ to: "/dashboard" });
     }
   }, [isAdmin, navigate]);
+
 
   const load = async () => {
     setLoading(true);
