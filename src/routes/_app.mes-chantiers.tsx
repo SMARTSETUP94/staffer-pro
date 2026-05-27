@@ -45,8 +45,6 @@ const PHASE_ORDER: EquipePhase[] = [
 
 function EquipeChantiersPage() {
   const { user } = useAuth();
-  const { isPreviewing, setPreviewRole } = usePreview();
-  const navigate = useNavigate();
   const fetchFn = useServerFn(getMesEquipesChantiers);
 
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
@@ -58,16 +56,10 @@ function EquipeChantiersPage() {
 
   const chantiers = data?.chantiers ?? [];
 
-  const handleQuitPreview = () => {
-    setPreviewRole(null);
-    navigate({ to: "/planning" });
-  };
-
   return (
-    <div className="min-h-screen bg-background pb-20">
-
+    <div className="pb-6">
       <header className="border-b border-border bg-card px-4 py-4">
-        <div className="mx-auto flex max-w-md items-start justify-between gap-2">
+        <div className="mx-auto flex max-w-2xl items-start justify-between gap-2">
           <div className="min-w-0">
             <p className="overline">— Mes équipes</p>
             <h1 className="mt-1 text-xl font-bold tracking-tight text-foreground">
@@ -79,30 +71,21 @@ function EquipeChantiersPage() {
                 : `${chantiers.length} chantier${chantiers.length > 1 ? "s" : ""}`}
             </p>
           </div>
-          <div className="flex items-center gap-1.5">
-            <Button
-              size="icon"
-              variant="ghost"
-              onClick={() => refetch()}
-              disabled={isFetching}
-              aria-label="Actualiser"
-              data-testid="equipe-chantiers-refresh"
-              className="h-9 w-9"
-            >
-              <RefreshCw className={cn("h-4 w-4", isFetching && "animate-spin")} />
-            </Button>
-            {isPreviewing ? (
-              <Button size="sm" variant="outline" onClick={handleQuitPreview}>
-                Quitter
-              </Button>
-            ) : (
-              <LogoutConfirmButton />
-            )}
-          </div>
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={() => refetch()}
+            disabled={isFetching}
+            aria-label="Actualiser"
+            data-testid="equipe-chantiers-refresh"
+            className="h-9 w-9"
+          >
+            <RefreshCw className={cn("h-4 w-4", isFetching && "animate-spin")} />
+          </Button>
         </div>
       </header>
 
-      <main className="mx-auto max-w-md px-4 py-4" data-testid="equipe-chantiers-main">
+      <main className="mx-auto max-w-2xl px-4 py-4" data-testid="equipe-chantiers-main">
         {isLoading ? (
           <SkeletonList />
         ) : isError ? (
@@ -122,10 +105,10 @@ function EquipeChantiersPage() {
           </ul>
         )}
       </main>
-
     </div>
   );
 }
+
 
 function ChantierCard({ chantier }: { chantier: EquipeChantierItem }) {
   const dateRange = formatRange(chantier.date_evenement_debut, chantier.date_evenement_fin);
