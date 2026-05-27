@@ -74,3 +74,37 @@ export function useCapabilities(capKeys: string[]): Record<string, boolean> {
   const { data } = useCapabilitiesSet();
   return Object.fromEntries(capKeys.map((k) => [k, data.has(k)]));
 }
+
+/**
+ * L3b1 — Scope effectif d'une capability pour l'utilisateur courant.
+ *
+ * Résultat : `'all' | 'team' | 'metier' | 'own' | 'none'`.
+ * Multi-rôles : le RPC `user_cap_scope` retourne le scope MAX accordé
+ * (admin all > chef team > metier > own > none).
+ *
+ * Usage typique :
+ *   const scope = useCapabilityScope("action.casting.manage");
+ *   if (scope === 'none') return null;
+ *   if (scope !== 'all') query.eq('owner_id', userId);
+ */
+export type CapabilityScope = "all" | "team" | "metier" | "own" | "none";
+
+export function useCapabilityScope(capKey: string): CapabilityScope {
+  const { user, loading } = useAuth();
+  const query = useQuery({
+    queryKey: ["capability-scope", user?.id ?? null, capKey],
+    enabled: !loading && !!user,
+    staleTime: 5 * 60_000,
+    gcTime: 10 * 60_000,
+    queryFn: async (): Promise<CapabilityScope> => {
+      const { data, error } = await supabase.rpc("user_cap_scope", { _cap: capKey });
+      if (error) {
+        console.warn("[useCapabilityScope] error:", error.message);
+        return "none";
+      }
+      return ((data as CapabilityScope | null) ?? "none");
+    },
+  });
+  return query.data ?? "none";
+}
+
