@@ -40,9 +40,6 @@ function AppGuard() {
   const { effIsMobile, effIsAdminOrChef, isPreviewing } = usePreview();
   const onboardingRedirectCountRef = useRef(0);
 
-  const isEmployeAllowedPath = EMPLOYE_DESKTOP_ALLOWED.some(
-    (p) => currentPath === p || currentPath.startsWith(p + "/"),
-  );
 
   const isChefOrAdmin = roles.includes("admin") || roles.includes("chef_chantier");
   const mustSetPassword = shouldForceSetPassword({
