@@ -124,14 +124,6 @@ function AppGuard() {
     );
   }
 
-  // Employe sur desktop sans page autorisée : on attend la redirection
-  if (!effIsAdminOrChef && !isEmployeAllowedPath) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
 
   return (
     <AppLayout>
