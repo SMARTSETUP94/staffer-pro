@@ -238,25 +238,35 @@ export function useProfilesWithRoles() {
 
   const reload = useCallback(async () => {
     setLoading(true);
-    const [profilesQ, capsQ] = await Promise.all([
+    const [profilesQ, capRolesQ] = await Promise.all([
       supabase
         .from("profiles")
         .select(
           "id, full_name, email, est_chef_projet, est_respo_fab, est_finition, est_manutention, est_bureau_etude, est_usinage_numerique",
         )
         .order("full_name", { ascending: true, nullsFirst: false }),
-      // L3a — Profils ayant la cap `casting.edit_phase_fabrication`
-      // via au moins un de leurs rôles (jointure user_roles × role_capabilities).
+      // L3a — rôles qui possèdent la cap `casting.edit_phase_fabrication`
       supabase
-        .from("user_roles")
-        .select("user_id, role_capabilities!inner(capability, granted)")
-        .eq("role_capabilities.capability", "casting.edit_phase_fabrication")
-        .eq("role_capabilities.granted", true),
+        .from("role_capabilities")
+        .select("role")
+        .eq("capability", "casting.edit_phase_fabrication")
+        .eq("granted", true),
     ]);
 
-    const capUserIds = new Set<string>(
-      (capsQ.data ?? []).map((r: { user_id: string }) => r.user_id),
+    const rolesWithCap = new Set<string>(
+      (capRolesQ.data ?? []).map((r: { role: string }) => r.role),
     );
+
+    // Récupère les user_id qui ont au moins un rôle dans rolesWithCap
+    const capUserIds = new Set<string>();
+    if (rolesWithCap.size > 0) {
+      const { data: userRolesData } = await supabase
+        .from("user_roles")
+        .select("user_id, role")
+        .in("role", Array.from(rolesWithCap) as never);
+      (userRolesData ?? []).forEach((r: { user_id: string }) => capUserIds.add(r.user_id));
+    }
+
     const profiles: ProfileRole[] = (profilesQ.data ?? []).map((p) => ({
       ...(p as Omit<ProfileRole, "has_cap_fab_edit">),
       has_cap_fab_edit: capUserIds.has(p.id),
@@ -264,6 +274,7 @@ export function useProfilesWithRoles() {
     setProfiles(profiles);
     setLoading(false);
   }, []);
+
 
   useEffect(() => {
     void reload();
