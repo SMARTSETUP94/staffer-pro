@@ -6,7 +6,7 @@
  *
  * Tap sur une phase montage/démontage → carte mission (si dispo).
  */
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { format, parseISO } from "date-fns";
