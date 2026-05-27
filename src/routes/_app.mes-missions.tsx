@@ -17,7 +17,6 @@ import { fr } from "date-fns/locale";
 import { ChevronRight, Inbox, MapPin, PackageCheck, RefreshCw, Wrench } from "lucide-react";
 import { getMesMissions, type MissionListItem } from "@/server/mission-card.functions";
 import { useAuth } from "@/lib/auth-context";
-import { usePreview } from "@/lib/preview-context";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
