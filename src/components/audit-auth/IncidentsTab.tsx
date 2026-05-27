@@ -26,7 +26,7 @@ const TROUBLESHOOTING: Array<{
     ],
     actions: [
       "Vérifier le statut dans l'onglet Connexions",
-      "Renvoyer une invitation depuis /parametres/utilisateurs",
+      "Renvoyer une invitation depuis /admin/utilisateurs",
       "Proposer un reset via /auth/forgot-password",
     ],
   },
@@ -283,7 +283,7 @@ export function IncidentsTab() {
 
           <div className="flex flex-wrap gap-2 pt-2">
             <Button asChild variant="outline" size="sm">
-              <Link to="/parametres/utilisateurs">
+              <Link to="/admin/utilisateurs">
                 <ExternalLink className="h-4 w-4 mr-2" />
                 Gestion utilisateurs
               </Link>
