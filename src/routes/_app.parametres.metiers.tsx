@@ -98,7 +98,8 @@ const EMPTY_EDIT: EditState = {
 
 function MetiersPage() {
   const navigate = useNavigate();
-  const { isAdmin, loading } = useAuth();
+  const { loading } = useAuth();
+  const canAdmin = useCapability("section.admin");
   const [rows, setRows] = useState<MetierRow[]>([]);
   const [loadingRows, setLoadingRows] = useState(true);
   const [edit, setEdit] = useState<EditState>(EMPTY_EDIT);
@@ -107,12 +108,13 @@ function MetiersPage() {
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
-    if (!loading && !isAdmin) navigate({ to: "/planning" });
-  }, [loading, isAdmin, navigate]);
+    if (!loading && !canAdmin) navigate({ to: "/planning" });
+  }, [loading, canAdmin, navigate]);
 
   useEffect(() => {
-    if (isAdmin) loadRows();
-  }, [isAdmin]);
+    if (canAdmin) loadRows();
+  }, [canAdmin]);
+
 
   async function loadRows() {
     setLoadingRows(true);
