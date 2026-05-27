@@ -28,9 +28,10 @@ export const Route = createFileRoute("/_app/mes-missions")({
 
 function MesMissionsPage() {
   const { user } = useAuth();
-  const { isPreviewing, setPreviewRole } = usePreview();
   const navigate = useNavigate();
   const fetchMissions = useServerFn(getMesMissions);
+  // Suppress unused (kept for diff minimal post-fusion)
+  void navigate;
 
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["mes-missions"],
@@ -42,16 +43,10 @@ function MesMissionsPage() {
   const missions = data?.missions ?? [];
   const buckets = useMemo(() => bucketize(missions), [missions]);
 
-  const handleQuitPreview = () => {
-    setPreviewRole(null);
-    navigate({ to: "/planning" });
-  };
-
   return (
-    <div className="min-h-screen bg-background pb-20">
-
+    <div className="pb-6">
       <header className="border-b border-border bg-card px-4 py-4">
-        <div className="mx-auto flex max-w-md items-start justify-between gap-2">
+        <div className="mx-auto flex max-w-2xl items-start justify-between gap-2">
           <div className="min-w-0">
             <p className="overline">— Mes missions pose</p>
             <h1 className="mt-1 text-xl font-bold tracking-tight text-foreground">
@@ -63,30 +58,21 @@ function MesMissionsPage() {
                 : `${missions.length} mission${missions.length > 1 ? "s" : ""} sur 30 jours`}
             </p>
           </div>
-          <div className="flex items-center gap-1.5">
-            <Button
-              size="icon"
-              variant="ghost"
-              onClick={() => refetch()}
-              disabled={isFetching}
-              aria-label="Actualiser"
-              data-testid="mes-missions-refresh"
-              className="h-9 w-9"
-            >
-              <RefreshCw className={cn("h-4 w-4", isFetching && "animate-spin")} />
-            </Button>
-            {isPreviewing ? (
-              <Button size="sm" variant="outline" onClick={handleQuitPreview}>
-                Quitter
-              </Button>
-            ) : (
-              <LogoutConfirmButton />
-            )}
-          </div>
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={() => refetch()}
+            disabled={isFetching}
+            aria-label="Actualiser"
+            data-testid="mes-missions-refresh"
+            className="h-9 w-9"
+          >
+            <RefreshCw className={cn("h-4 w-4", isFetching && "animate-spin")} />
+          </Button>
         </div>
       </header>
 
-      <main className="mx-auto max-w-md px-4 py-4" data-testid="mes-missions-main">
+      <main className="mx-auto max-w-2xl px-4 py-4" data-testid="mes-missions-main">
         {isLoading ? (
           <MissionsSkeleton />
         ) : isError ? (
@@ -107,10 +93,10 @@ function MesMissionsPage() {
           </div>
         )}
       </main>
-
     </div>
   );
 }
+
 
 function MissionsSkeleton() {
   return (
