@@ -114,6 +114,7 @@ function UtilisateursPage() {
   const [confirmDelete, setConfirmDelete] = useState<UserRow | null>(null);
   const [actingOn, setActingOn] = useState<string | null>(null);
   const [linking, setLinking] = useState(false);
+  const [capsDebug, setCapsDebug] = useState<UserRow | null>(null);
 
   useEffect(() => {
     if (!loading && !isAdmin) navigate({ to: "/dashboard" });
