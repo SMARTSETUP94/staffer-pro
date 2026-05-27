@@ -669,9 +669,147 @@ function UtilisateursPage() {
         onComplete={loadUsers}
       />
 
+      {/* L3a — Debug caps effectives */}
+      <UserCapsDebugModal
+        open={!!capsDebug}
+        onOpenChange={(o) => !o && setCapsDebug(null)}
+        targetUserId={capsDebug?.id ?? null}
+        targetLabel={capsDebug?.full_name || capsDebug?.email || ""}
+      />
+
     </div>
   );
 }
+
+/**
+ * L3a — Popover de sélection multi-rôles (11 rôles groupés en 5 catégories).
+ * Affiche les badges en cumul, applique le changement à la fermeture.
+ */
+function RoleMultiSelectPopover({
+  current,
+  disabled,
+  onSave,
+}: {
+  current: AppRole[];
+  disabled?: boolean;
+  onSave: (next: AppRole[]) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [draft, setDraft] = useState<AppRole[]>(current);
+
+  useEffect(() => {
+    if (!open) setDraft(current);
+  }, [open, current]);
+
+  const dirty =
+    draft.length !== current.length || draft.some((r) => !current.includes(r));
+
+  function toggle(role: AppRole) {
+    setDraft((prev) =>
+      prev.includes(role) ? prev.filter((r) => r !== role) : [...prev, role],
+    );
+  }
+
+  function apply() {
+    setOpen(false);
+    if (dirty) onSave(draft);
+  }
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={disabled}
+          className="h-7 max-w-[260px] justify-start gap-1 px-2 text-xs"
+          title="Cliquer pour modifier les rôles"
+        >
+          {current.length === 0 ? (
+            <span className="italic text-muted-foreground">aucun rôle</span>
+          ) : (
+            <span className="flex flex-wrap items-center gap-1">
+              {current.slice(0, 2).map((r) => (
+                <Badge key={r} variant="secondary" className="h-5 px-1.5 text-[10px]">
+                  {r === "admin" && <Shield className="mr-0.5 h-2.5 w-2.5" />}
+                  {roleLabel(r)}
+                </Badge>
+              ))}
+              {current.length > 2 && (
+                <Badge variant="outline" className="h-5 px-1.5 text-[10px]">
+                  +{current.length - 2}
+                </Badge>
+              )}
+            </span>
+          )}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-72 p-0">
+        <div className="max-h-[60vh] overflow-y-auto p-3">
+          {ROLE_GROUPS.map((group) => (
+            <div key={group.label} className="mb-3 last:mb-0">
+              <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                {group.label}
+              </p>
+              <div className="space-y-1.5">
+                {group.roles.map((role) => {
+                  const checked = draft.includes(role);
+                  const id = `role-${role}`;
+                  return (
+                    <label
+                      key={role}
+                      htmlFor={id}
+                      className="flex cursor-pointer items-center gap-2 rounded px-1.5 py-1 text-sm hover:bg-muted"
+                    >
+                      <Checkbox
+                        id={id}
+                        checked={checked}
+                        onCheckedChange={() => toggle(role)}
+                      />
+                      <span className="flex-1">{roleLabel(role)}</span>
+                      {role === "admin" && (
+                        <Shield className="h-3 w-3 text-muted-foreground" />
+                      )}
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="flex items-center justify-between gap-2 border-t border-border bg-muted/30 px-3 py-2">
+          <p
+            className="text-[10px] text-muted-foreground"
+            title="Si vous décochez tout, le rôle Employé sera imposé pour éviter un lockout."
+          >
+            {draft.length === 0
+              ? "→ Employé imposé par défaut"
+              : `${draft.length} rôle${draft.length > 1 ? "s" : ""} sélectionné${draft.length > 1 ? "s" : ""}`}
+          </p>
+          <div className="flex gap-1">
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 px-2 text-xs"
+              onClick={() => setOpen(false)}
+            >
+              Annuler
+            </Button>
+            <Button
+              size="sm"
+              className="h-7 px-2 text-xs"
+              disabled={!dirty}
+              onClick={apply}
+            >
+              Appliquer
+            </Button>
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 
 function StatBlock({
   label, value, className,
