@@ -1,8 +1,10 @@
 import { Link, useRouterState } from "@tanstack/react-router";
+import type { LucideIcon } from "lucide-react";
 import {
-  Calendar, Building2, Users, FileUp, FileDown, ClipboardCheck, LogOut, Clock, CalendarOff,
-  Smartphone, UserCircle, LayoutDashboard, FileText, Trophy, Map, ArrowLeftRight, ClipboardList,
-  Truck, FileQuestion, Palette, MessageCircle, Warehouse, Hammer, Wrench, BadgeCheck, Lightbulb, FileSignature, Inbox, PackageCheck, UsersRound,
+  Clock, Calendar, Building2, Users, FileDown, ClipboardCheck, LogOut, CalendarOff,
+  UserCircle, LayoutDashboard, FileText, Trophy, Map, ClipboardList,
+  Truck, Palette, Warehouse, Hammer, Wrench, BadgeCheck, Lightbulb,
+  FileSignature, Inbox, PackageCheck, UsersRound, Briefcase, Settings,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -10,227 +12,166 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/lib/auth-context";
-import { usePreview } from "@/lib/preview-context";
 import { Button } from "@/components/ui/button";
 import { useValidationCount } from "@/hooks/use-validation-count";
 import { useContratsRhCount } from "@/hooks/use-contrats-rh-count";
 import { useCapabilitiesSet } from "@/hooks/use-capability";
-import { useFeatureFlag } from "@/hooks/use-feature-flag";
 import { useVocab } from "@/hooks/use-vocab";
-import type { VocabKey } from "@/lib/labels";
 
 import { ViewAsSwitcher } from "./ViewAsSwitcher";
 
-type EffRole = "admin" | "chef_chantier" | "employe" | "rh";
-
 /**
- * v0.48 Lot 7.2 — Sidebar capability-driven.
+ * v0.48 Lot L4b — Sidebar unique capability-driven, responsive.
  *
- *  • Chaque item peut déclarer une `cap` (string). Si présente, l'item n'est
- *    rendu QUE si l'utilisateur possède cette capability (via `useCapabilities`,
- *    un seul fetch batché).
- *  • `role` sert encore à choisir le **template de sidebar** (employé flat vs
- *    chef/admin sectionné) et à révéler la sous-section "Vue mobile (preview)"
- *    réservée à un admin en mode preview. Pour la visibilité fine des items
- *    on s'appuie désormais sur les caps — plus de tests `r === "admin"` en dur.
+ *  • UN SEUL composant pour tous les viewports et tous les rôles.
+ *  • Aucun check `isAdmin/isChef` hardcodé : visibilité via `useCapabilitiesSet`.
+ *  • Item "Aujourd'hui" toujours visible (page d'accueil universelle).
+ *  • Section visible si AU MOINS UN item visible (cap satisfaite).
+ *  • Sur viewport étroit, le composant shadcn `Sidebar` bascule auto
+ *    en drawer Sheet (collapsible="icon" + SidebarTrigger dans AppLayout).
  */
+
+type CapKey = string;
+type Cap = CapKey | CapKey[] | undefined;
 
 interface NavItem {
   title: string;
   url: string;
-  icon: typeof Calendar;
-  /** Capability requise pour afficher l'item. Si omise, item toujours visible. */
-  cap?: string;
-  /** Compteur optionnel (badge indigo si > 0). */
+  icon: LucideIcon;
+  /** Cap requise. Si omise, item toujours visible. Si tableau, OR logique. */
+  cap?: Cap;
+  /** Badge compteur (indigo si > 0). */
   count?: number;
 }
 
 interface NavSection {
-  /** Libellé affiché en overline. */
   label: string;
   items: NavItem[];
 }
 
+function hasAnyCap(caps: Set<string>, cap: Cap): boolean {
+  if (!cap) return true;
+  const list = Array.isArray(cap) ? cap : [cap];
+  return list.some((c) => caps.has(c));
+}
 
-function buildSections(role: EffRole, validationCount: number, contratsRhCount: number, vocab: Record<VocabKey, string>): NavSection[] {
-  const isAdmin = role === "admin";
-
-  // ===== Vue Employé : items flat (gating au niveau du template) =====
-  if (role === "employe") {
-    return [
-      {
-        label: "Espace personnel",
-        items: [
-          { title: "Ma semaine", url: "/ma-semaine", icon: LayoutDashboard },
-          { title: "Mes missions pose", url: "/mobile/mes-missions", icon: PackageCheck },
-          { title: "Mes équipes chantiers", url: "/mobile/equipe-chantiers", icon: UsersRound },
-          { title: "Mes heures", url: "/mes-heures", icon: Clock, cap: "heures.personnelles.saisir" },
-          { title: "Mes étapes fab", url: "/fabrication/mes-etapes", icon: Wrench },
-          { title: "Mes échanges", url: "/mes-swaps", icon: ArrowLeftRight },
-          { title: "Mes propositions", url: "/mes-propositions", icon: ClipboardList },
-          { title: "Mes contrats", url: "/mes-contrats", icon: FileSignature, cap: "contrats.view_own" },
-        ],
-      },
-    ];
-  }
-
-  // ===== Vue Chef / Admin — items gatés par capability =====
-  const sections: NavSection[] = [
+function buildSections(
+  validationCount: number,
+  contratsRhCount: number,
+  vocab: ReturnType<typeof useVocab>,
+): NavSection[] {
+  return [
+    {
+      label: "Mon poste",
+      items: [
+        // Toujours visible — pas de cap.
+        { title: "Aujourd'hui", url: "/aujourdhui", icon: Clock },
+        { title: "Ma semaine", url: "/ma-semaine", icon: LayoutDashboard, cap: "section.ma_semaine" },
+        { title: "Mes missions pose", url: "/mobile/mes-missions", icon: PackageCheck, cap: "section.ma_semaine" },
+        { title: "Mes équipes chantiers", url: "/mobile/equipe-chantiers", icon: UsersRound, cap: "section.ma_semaine" },
+        { title: "Mes heures", url: "/mes-heures", icon: Clock, cap: "heures.personnelles.saisir" },
+        { title: "Mes contrats", url: "/mes-contrats", icon: FileSignature, cap: "contrats.view_own" },
+      ],
+    },
     {
       label: "Pilotage",
       items: [
-        { title: "Tableau de bord", url: "/dashboard", icon: LayoutDashboard },
-        { title: "Inbox", url: "/inbox", icon: Inbox, cap: "inbox.view" },
-        { title: "Planning", url: "/planning", icon: Calendar, cap: "planning.view" },
+        { title: "Tableau de bord", url: "/dashboard", icon: LayoutDashboard, cap: "section.tableau_de_bord" },
+        { title: "Inbox", url: "/inbox", icon: Inbox, cap: "section.inbox" },
+        { title: "Planning fab", url: "/planning", icon: Calendar, cap: "section.planning_fab" },
+        { title: "Pipeline opportunités", url: "/opportunites", icon: Trophy, cap: "section.pipeline_opportunites" },
       ],
     },
     {
-      label: "Chantiers",
+      label: "Production",
       items: [
-        { title: "Opportunités", url: "/opportunites", icon: Trophy, cap: "affaires.view" },
-        { title: "Chantiers", url: "/affaires", icon: Building2, cap: "affaires.view" },
-        { title: "Devis", url: "/devis", icon: FileText, cap: "devis.view" },
-        
-      ],
-    },
-    {
-      label: "Équipes",
-      items: [
-        { title: "Employés", url: "/employes", icon: Users, cap: "employes.view" },
-        { title: "Intermittents", url: "/interimaires", icon: Trophy, cap: "employes.view" },
-        { title: "Absences", url: "/absences", icon: CalendarOff, cap: "heures.equipe.saisir" },
-        {
-          title: vocab.validerHeures,
-          url: "/validation-heures",
-          icon: ClipboardCheck,
-          cap: "heures.valider",
-          count: validationCount,
-        },
-        { title: "Saisie pour l'équipe", url: "/saisie-pour-equipe", icon: ClipboardList, cap: "heures.equipe.saisir" },
-        { title: vocab.assignerPonctuel, url: "/staffer-mobile", icon: Smartphone, cap: "staffing.assignations.edit" },
-        { title: "Module RH", url: "/rh", icon: FileSignature, cap: "rh.hub.view" },
-        { title: "Contrats RH", url: "/rh/contrats", icon: FileSignature, cap: "contrats.view", count: contratsRhCount },
-        { title: "Analyse heures", url: "/heures-analyse", icon: Clock, cap: "heures.audit" },
-      ],
-    },
-    {
-      label: "Atelier",
-      items: [
-        { title: "Dashboard fabrication", url: "/fabrication", icon: Hammer, cap: "affaires.view" },
-        { title: "Mes étapes", url: "/fabrication/mes-etapes", icon: Wrench },
+        { title: "Chantiers", url: "/affaires", icon: Building2, cap: "section.affaires" },
+        { title: "Devis", url: "/devis", icon: FileText, cap: "section.devis" },
+        { title: "Fabrication atelier", url: "/fabrication", icon: Hammer, cap: "section.fabrication" },
       ],
     },
     {
       label: "Logistique",
       items: [
-        { title: "Véhicules", url: "/flotte", icon: Truck },
-        { title: "Véhicules planning", url: "/logistique/vehicules-planning", icon: Calendar },
-        { title: "Demandes transport", url: "/export/demandes-devis", icon: FileQuestion },
+        { title: "Véhicules", url: "/flotte", icon: Truck, cap: "section.logistique" },
+        { title: "Planning véhicules", url: "/logistique/vehicules-planning", icon: Calendar, cap: "section.logistique" },
+        { title: "Demandes transport", url: "/export/demandes-devis", icon: ClipboardList, cap: "section.logistique" },
       ],
     },
     {
-      label: "Outils",
+      label: "Équipes",
       items: [
-        { title: "Export planning", url: "/export", icon: FileDown, cap: "planning.view" },
-        { title: "Feuille de route", url: "/export/feuille-de-route", icon: ClipboardList, cap: "planning.view" },
-        { title: "Imports", url: "/employes/import", icon: FileUp, cap: "employes.import" },
+        { title: "Employés", url: "/employes", icon: Users, cap: "section.equipes" },
+        { title: "Intermittents", url: "/interimaires", icon: Briefcase, cap: "section.equipes" },
+        { title: "Absences", url: "/absences", icon: CalendarOff, cap: "section.equipes" },
+        {
+          title: vocab.validerHeures,
+          url: "/validation-heures",
+          icon: ClipboardCheck,
+          cap: "action.validate_hours",
+          count: validationCount,
+        },
+      ],
+    },
+    {
+      label: "Module RH",
+      items: [
+        { title: "Hub RH", url: "/rh", icon: FileSignature, cap: "section.contrats_rh" },
+        { title: "Contrats CDDU", url: "/rh/contrats", icon: FileSignature, cap: "section.contrats_rh", count: contratsRhCount },
+      ],
+    },
+    {
+      label: "Admin",
+      items: [
+        { title: "Utilisateurs", url: "/parametres/utilisateurs", icon: UserCircle, cap: "section.admin" },
+        { title: "Permissions", url: "/admin/permissions", icon: BadgeCheck, cap: "section.admin" },
+        { title: "Feature flags", url: "/admin/feature-flags", icon: Lightbulb, cap: "section.admin" },
+        { title: "Métiers & postes", url: "/parametres/metiers", icon: Palette, cap: "section.admin" },
+        { title: "Lieux entreprise", url: "/parametres/lieux", icon: Warehouse, cap: "section.admin" },
+        { title: "Audit Admin", url: "/admin/audit", icon: ClipboardCheck, cap: "section.admin" },
+        { title: "Exports", url: "/export", icon: FileDown, cap: "section.admin" },
+        { title: "Roadmap", url: "/roadmap", icon: Map, cap: "section.admin" },
+        { title: "Réglages compétences", url: "/parametres/competences-equipe", icon: Settings, cap: "section.admin" },
+        { title: "Rôles fabrication", url: "/parametres/roles-fabrication", icon: Wrench, cap: "section.admin" },
       ],
     },
   ];
-
-  if (isAdmin) {
-    sections.push({
-      label: "Admin · Comptes & accès",
-      items: [
-        { title: "Utilisateurs", url: "/parametres/utilisateurs", icon: UserCircle, cap: "parametres.utilisateurs" },
-        { title: "Audit Auth", url: "/audit-auth", icon: ClipboardCheck, cap: "admin.audit" },
-        { title: "Permissions", url: "/admin/permissions", icon: BadgeCheck, cap: "admin.permissions" },
-        { title: "Feature flags", url: "/admin/feature-flags", icon: Lightbulb, cap: "admin.feature_flags" },
-      ],
-    });
-    sections.push({
-      label: "Admin · Référentiels",
-      items: [
-        { title: "Métiers & postes", url: "/parametres/metiers", icon: Palette, cap: "parametres.view" },
-        { title: "Rôles fabrication", url: "/parametres/roles-fabrication", icon: Hammer, cap: "parametres.view" },
-        { title: "Lieux entreprise", url: "/parametres/lieux", icon: Warehouse, cap: "parametres.view" },
-        { title: "Autorisations véhicules", url: "/parametres/autorisations-vehicules", icon: BadgeCheck, cap: "parametres.view" },
-        { title: "Sous-traitants", url: "/parametres/sous-traitants", icon: Truck, cap: "parametres.view" },
-      ],
-    });
-    sections.push({
-      label: "Admin · Audit & qualité",
-      items: [
-        { title: "Audit heures", url: "/audit-heures", icon: ClipboardCheck, cap: "heures.audit" },
-        { title: "Audit Admin (docs + validations)", url: "/admin/audit", icon: ClipboardCheck, cap: "admin.audit" },
-        { title: "Rattachement devis", url: "/devis/rattachement-historique", icon: ClipboardList, cap: "devis.view" },
-        { title: "Signalements", url: "/admin/feedback", icon: MessageCircle, cap: "admin.audit" },
-      ],
-    });
-    sections.push({
-      label: "Admin · Système",
-      items: [
-        { title: "Contenu widgets", url: "/admin/contenu-widgets", icon: Lightbulb, cap: "admin.feature_flags" },
-        { title: "Roadmap", url: "/roadmap", icon: Map },
-      ],
-    });
-  }
-
-  return sections;
 }
-
 
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
-  const { user, roles, signOut, isAdmin } = useAuth();
-  const { effectiveRole, isPreviewing, previewRole } = usePreview();
+  const { user, roles, signOut } = useAuth();
   const routerState = useRouterState();
   const currentPath = routerState.location.pathname;
   const validationCount = useValidationCount();
   const contratsRhCount = useContratsRhCount();
   const { data: caps, isLoading: capsLoading } = useCapabilitiesSet();
   const vocab = useVocab();
-  // Lot 7.0d — Flag-first : gating capability-driven activable sélectivement.
-  // Off (défaut) → fallback ancien comportement (tous les items visibles, sécurité
-  // garantie par les guards beforeLoad sur chaque route). On → filtrage caps actif.
-  const capGatingEnabled = useFeatureFlag("sidebar_capability_v1");
 
-  // RBAC visuel : on s'appuie sur effectiveRole pour respecter le mode preview.
-  const rawSections = buildSections(effectiveRole as EffRole, validationCount, contratsRhCount, vocab);
-  const sections = (!capGatingEnabled || capsLoading)
-    ? rawSections
+  // Filtrage : un item est visible si pas de cap OU cap satisfaite.
+  // "Aujourd'hui" reste TOUJOURS visible (pas de cap déclarée).
+  const rawSections = buildSections(validationCount, contratsRhCount, vocab);
+  const sections = capsLoading
+    ? // Pendant le load : on n'affiche que les items toujours visibles
+      // (évite le flash "toutes les sections puis disparition").
+      rawSections
+        .map((s) => ({ ...s, items: s.items.filter((it) => !it.cap) }))
+        .filter((s) => s.items.length > 0)
     : rawSections
-        .map((s) => ({ ...s, items: s.items.filter((it) => !it.cap || caps.has(it.cap)) }))
+        .map((s) => ({ ...s, items: s.items.filter((it) => hasAnyCap(caps, it.cap)) }))
         .filter((s) => s.items.length > 0);
-
-  // En preview "employé" (desktop ou mobile), un admin doit pouvoir naviguer
-  // vers les pages mobiles pour QA. (basé sur le vrai isAdmin, pas effectif)
-  const showMobilePreview =
-    isAdmin && (previewRole === "employe_desktop" || previewRole === "employe_mobile");
-  const mobileItems = [
-    { title: "Aujourd'hui", url: "/mobile/aujourdhui", icon: Smartphone },
-    { title: "Mes heures (mobile)", url: "/mobile/heures", icon: Clock },
-    { title: "Mes échanges (mobile)", url: "/mobile/swaps", icon: ArrowLeftRight },
-    { title: "Mes propositions (mobile)", url: "/mobile/propositions", icon: ClipboardList },
-    { title: "Mon profil", url: "/mobile/profil", icon: UserCircle },
-  ];
 
   const isActive = (url: string) =>
     currentPath === url || currentPath.startsWith(url + "/");
 
-  // Rôle réel canonique (admin > chef > employe)
-  const realRole = roles.includes("admin")
-    ? "admin"
-    : roles.includes("chef_chantier")
-      ? "chef_chantier"
-      : (roles[0] ?? "—");
-  const displayedRole = isPreviewing ? `${effectiveRole} (preview)` : realRole;
+  // Rôles affichés (multi-rôles séparés par virgule)
+  const displayedRoles = roles.length > 0 ? roles.join(" + ") : "—";
 
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border">
-        <div className="flex items-center px-2 py-4">
+        <Link to="/aujourdhui" className="flex items-center px-2 py-4">
           {collapsed ? (
             <span className="brand-dot mx-auto" aria-label="Staffing by Setup Paris" />
           ) : (
@@ -245,7 +186,7 @@ export function AppSidebar() {
               </span>
             </span>
           )}
-        </div>
+        </Link>
         <ViewAsSwitcher collapsed={collapsed} />
       </SidebarHeader>
 
@@ -287,38 +228,6 @@ export function AppSidebar() {
             </SidebarGroupContent>
           </SidebarGroup>
         ))}
-
-        {showMobilePreview && (
-          <SidebarGroup>
-            {!collapsed && (
-              <SidebarGroupLabel className="overline !text-sidebar-foreground/60">
-                — Vue mobile (preview)
-              </SidebarGroupLabel>
-            )}
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {mobileItems.map((item) => {
-                  const active = isActive(item.url);
-                  return (
-                    <SidebarMenuItem key={item.url}>
-                      <SidebarMenuButton
-                        asChild
-                        isActive={active}
-                        tooltip={item.title}
-                        className="rounded-xl data-[active=true]:bg-primary data-[active=true]:text-primary-foreground"
-                      >
-                        <Link to={item.url}>
-                          <item.icon className="h-4 w-4" />
-                          <span className="text-sm font-medium">{item.title}</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  );
-                })}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        )}
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border">
@@ -328,7 +237,7 @@ export function AppSidebar() {
               {user.email}
             </p>
             <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">
-              {displayedRole}
+              {displayedRoles}
             </p>
           </div>
         )}
