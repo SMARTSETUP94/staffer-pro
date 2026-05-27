@@ -28,6 +28,10 @@ const EMPLOYE_DESKTOP_ALLOWED = [
   "/mes-heures",
   "/mes-swaps",
   "/mes-propositions",
+  "/mes-missions",
+  "/mes-chantiers",
+  "/mes-contrats",
+  "/missions",
   "/fabrication",
 ];
 
