@@ -18,22 +18,10 @@ export const Route = createFileRoute("/_app")({
   component: AppGuard,
 });
 
-// Pages accessibles à un employé en desktop (vue restreinte)
-const EMPLOYE_DESKTOP_ALLOWED = [
-  "/aujourdhui",
-  "/dashboard",
-  "/dashboard-employe",
-  "/inbox",
-  "/ma-semaine",
-  "/mes-heures",
-  "/mes-swaps",
-  "/mes-propositions",
-  "/mes-missions",
-  "/mes-chantiers",
-  "/mes-contrats",
-  "/missions",
-  "/fabrication",
-];
+// L4c (27 mai 2026) — La whitelist EMPLOYE_DESKTOP_ALLOWED a été supprimée.
+// L'accès aux routes est désormais gouverné UNIQUEMENT par la matrice de
+// capabilities via requireCapability() dans le beforeLoad de chaque route
+// sensible. Voir mem://debts/audit-requirecapability-toutes-routes.
 
 // v0.39.1 BUG #6 — anti-loop guard. Si AppGuard redirige vers /onboarding
 // plus de N fois pendant la session courante, on stoppe la boucle, on marque
