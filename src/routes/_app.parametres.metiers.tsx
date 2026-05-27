@@ -16,6 +16,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth-context";
+import { useCapability } from "@/hooks/use-capability";
 import { supabase } from "@/integrations/supabase/client";
 import { MetiersPostesTabs } from "@/components/parametres/MetiersPostesTabs";
 
@@ -97,7 +98,8 @@ const EMPTY_EDIT: EditState = {
 
 function MetiersPage() {
   const navigate = useNavigate();
-  const { isAdmin, loading } = useAuth();
+  const { loading } = useAuth();
+  const canAdmin = useCapability("section.admin");
   const [rows, setRows] = useState<MetierRow[]>([]);
   const [loadingRows, setLoadingRows] = useState(true);
   const [edit, setEdit] = useState<EditState>(EMPTY_EDIT);
@@ -106,12 +108,13 @@ function MetiersPage() {
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
-    if (!loading && !isAdmin) navigate({ to: "/planning" });
-  }, [loading, isAdmin, navigate]);
+    if (!loading && !canAdmin) navigate({ to: "/planning" });
+  }, [loading, canAdmin, navigate]);
 
   useEffect(() => {
-    if (isAdmin) loadRows();
-  }, [isAdmin]);
+    if (canAdmin) loadRows();
+  }, [canAdmin]);
+
 
   async function loadRows() {
     setLoadingRows(true);
@@ -236,7 +239,7 @@ function MetiersPage() {
     [rows],
   );
 
-  if (loading || !isAdmin) {
+  if (loading || !canAdmin) {
     return (
       <div className="flex h-full items-center justify-center">
         <Loader2 className="h-6 w-6 animate-spin text-primary" />
