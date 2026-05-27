@@ -1,14 +1,16 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import { useCapability } from "@/hooks/use-capability";
 
 /** Compte les contrats signés employé qui attendent une contre-signature RH. */
 export function useContratsRhCount(): number {
-  const { isAdmin, user } = useAuth();
+  const { user } = useAuth();
+  const canSignEmployeur = useCapability("contrats.sign_employeur");
   const [count, setCount] = useState(0);
 
   useEffect(() => {
-    if (!isAdmin || !user) {
+    if (!canSignEmployeur || !user) {
       setCount(0);
       return;
     }
@@ -36,7 +38,7 @@ export function useContratsRhCount(): number {
       cancelled = true;
       supabase.removeChannel(channel);
     };
-  }, [isAdmin, user]);
+  }, [canSignEmployeur, user]);
 
   return count;
 }

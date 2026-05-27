@@ -14,6 +14,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useMesAffairesChef } from "@/hooks/use-mes-affaires-chef";
 import { useAuth } from "@/lib/auth-context";
+import { useCapability } from "@/hooks/use-capability";
 
 export type KanbanColumn = "bois" | "peinture" | "manut" | "valide";
 
@@ -46,7 +47,8 @@ export function kanbanLabel(c: KanbanColumn) {
 }
 
 export function useChantierKanban(filterAffaireIds: string[] | null) {
-  const { user, isAdminOrChef } = useAuth();
+  const { user } = useAuth();
+  const canViewKpi = useCapability("affaire.kpi.view");
   const { data: affaires } = useMesAffairesChef();
   const mineIds = (affaires ?? []).map((a) => a.id);
   const targetIds =
@@ -56,7 +58,7 @@ export function useChantierKanban(filterAffaireIds: string[] | null) {
 
   return useQuery<KanbanObjet[]>({
     queryKey: ["chantier-kanban", user?.id, targetIds.join(",")],
-    enabled: isAdminOrChef && targetIds.length > 0,
+    enabled: canViewKpi && targetIds.length > 0,
     staleTime: 30_000,
     queryFn: async () => {
       // 1. Objets fab non archivés des affaires cibles

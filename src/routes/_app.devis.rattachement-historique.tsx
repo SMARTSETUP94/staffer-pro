@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useAuth } from "@/lib/auth-context";
+import { useCapability } from "@/hooks/use-capability";
 import { PageHeader } from "@/components/PageHeader";
 
 export const Route = createFileRoute("/_app/devis/rattachement-historique")({
@@ -40,7 +40,7 @@ interface AffaireMulti {
 }
 
 function RattachementPage() {
-  const { isAdmin } = useAuth();
+  const canAdmin = useCapability("section.admin");
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<AffaireMulti[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
@@ -117,8 +117,8 @@ function RattachementPage() {
   }
 
   useEffect(() => {
-    if (isAdmin) void load();
-  }, [isAdmin]);
+    if (canAdmin) void load();
+  }, [canAdmin]);
 
   async function handleApply(affaireId: string) {
     const devisId = choices[affaireId];
@@ -154,7 +154,7 @@ function RattachementPage() {
     [data],
   );
 
-  if (!isAdmin) {
+  if (!canAdmin) {
     return (
       <div className="p-6">
         <Card>

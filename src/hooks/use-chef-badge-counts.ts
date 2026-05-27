@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import { useCapability } from "@/hooks/use-capability";
 
 /**
  * Compteurs pour les badges du bottom nav chef :
@@ -9,11 +10,12 @@ import { useAuth } from "@/lib/auth-context";
  * - contratsAttente : contrats déclenchés par moi en attente côté employé/employeur
  */
 export function useChefBadgeCounts() {
-  const { user, isAdminOrChef } = useAuth();
+  const { user } = useAuth();
+  const canValider = useCapability("heures.valider");
 
   const heuresQ = useQuery({
     queryKey: ["chef-badge-heures", user?.id],
-    enabled: isAdminOrChef && !!user?.id,
+    enabled: canValider && !!user?.id,
     refetchInterval: 60_000,
     queryFn: async () => {
       const { count } = await supabase
@@ -26,7 +28,7 @@ export function useChefBadgeCounts() {
 
   const contratsQ = useQuery({
     queryKey: ["chef-badge-contrats", user?.id],
-    enabled: isAdminOrChef && !!user?.id,
+    enabled: canValider && !!user?.id,
     refetchInterval: 60_000,
     queryFn: async () => {
       const { count } = await supabase

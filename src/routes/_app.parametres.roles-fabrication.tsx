@@ -2,7 +2,7 @@ import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Loader2, Save } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth-context";
+import { useCapability } from "@/hooks/use-capability";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
@@ -35,13 +35,13 @@ const FLAGS: { key: FlagKey; label: string; description: string }[] = [
 ];
 
 function RolesFabricationPage() {
-  const { isAdmin } = useAuth();
+  const canAdmin = useCapability("section.admin");
   const { profiles, loading, reload } = useProfilesWithRoles();
   const [search, setSearch] = useState("");
   const [drafts, setDrafts] = useState<Map<string, Partial<Record<FlagKey, boolean>>>>(new Map());
   const [saving, setSaving] = useState(false);
 
-  if (!isAdmin) {
+  if (!canAdmin) {
     return (
       <div className="mx-auto max-w-3xl p-6">
         <p className="text-sm text-muted-foreground">Accès réservé aux administrateurs.</p>

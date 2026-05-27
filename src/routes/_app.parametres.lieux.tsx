@@ -16,6 +16,7 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/lib/auth-context";
+import { useCapability } from "@/hooks/use-capability";
 import { supabase } from "@/integrations/supabase/client";
 import { useLieux, type LieuType } from "@/hooks/use-lieux";
 import { AddressAutocomplete } from "@/components/flotte/AddressAutocomplete";
@@ -51,7 +52,8 @@ const TYPE_LABEL: Record<LieuType, string> = {
 
 function LieuxPage() {
   const navigate = useNavigate();
-  const { isAdmin, loading } = useAuth();
+  const { loading } = useAuth();
+  const canAdmin = useCapability("section.admin");
   const { lieux, atelier, refresh } = useLieux();
   const { adresses } = useAdressesFavorites();
   const [edit, setEdit] = useState<EditState>(EMPTY);
@@ -59,8 +61,8 @@ function LieuxPage() {
   const [confirmDelete, setConfirmDelete] = useState<typeof lieux[number] | null>(null);
 
   useEffect(() => {
-    if (!loading && !isAdmin) navigate({ to: "/planning" });
-  }, [loading, isAdmin, navigate]);
+    if (!loading && !canAdmin) navigate({ to: "/planning" });
+  }, [loading, canAdmin, navigate]);
 
   function openCreate(type: LieuType) {
     if (type === "atelier" && atelier) {
@@ -128,7 +130,7 @@ function LieuxPage() {
     void refresh();
   }
 
-  if (loading || !isAdmin) {
+  if (loading || !canAdmin) {
     return (
       <div className="flex h-full items-center justify-center">
         <Loader2 className="h-6 w-6 animate-spin text-primary" />

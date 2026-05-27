@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageHeader } from "@/components/PageHeader";
 import { useAuth, type AppRole } from "@/lib/auth-context";
+import { useCapability } from "@/hooks/use-capability";
 import { buildInvitationEmailHtml } from "@/lib/email-templates/invitation";
 import { requireCapability } from "@/lib/capability-guard";
 
@@ -19,7 +20,8 @@ export const Route = createFileRoute("/_app/admin/email-preview")({
 
 function EmailPreviewPage() {
   const navigate = useNavigate();
-  const { isAdmin, loading } = useAuth();
+  const { loading } = useAuth();
+  const canView = useCapability("admin.email_preview.view");
 
   const [fullName, setFullName] = useState("Jean Dupont");
   const [role, setRole] = useState<AppRole>("chef_chantier");
@@ -28,8 +30,8 @@ function EmailPreviewPage() {
   );
 
   useEffect(() => {
-    if (!loading && !isAdmin) navigate({ to: "/dashboard" });
-  }, [loading, isAdmin, navigate]);
+    if (!loading && !canView) navigate({ to: "/dashboard" });
+  }, [loading, canView, navigate]);
 
   const html = useMemo(
     () =>
@@ -41,7 +43,7 @@ function EmailPreviewPage() {
     [fullName, role, inviteLink],
   );
 
-  if (loading || !isAdmin) {
+  if (loading || !canView) {
     return (
       <div className="flex h-full items-center justify-center">
         <Loader2 className="h-6 w-6 animate-spin text-primary" />

@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useMesAffairesChef } from "@/hooks/use-mes-affaires-chef";
 import { useAuth } from "@/lib/auth-context";
+import { useCapability } from "@/hooks/use-capability";
 
 export interface HeureAValider {
   id: string;
@@ -31,13 +32,14 @@ export interface ObjetAValider {
 }
 
 export function useChefAValider() {
-  const { user, isAdminOrChef } = useAuth();
+  const { user } = useAuth();
+  const canValider = useCapability("heures.valider");
   const { data: affaires } = useMesAffairesChef();
   const affaireIds = (affaires ?? []).map((a) => a.id);
 
   const heuresQ = useQuery<HeureAValider[]>({
     queryKey: ["chef-a-valider-heures", user?.id, affaireIds.length],
-    enabled: isAdminOrChef && affaireIds.length > 0,
+    enabled: canValider && affaireIds.length > 0,
     refetchInterval: 60_000,
     queryFn: async () => {
       const { data, error } = await supabase
@@ -70,7 +72,7 @@ export function useChefAValider() {
 
   const objetsQ = useQuery<ObjetAValider[]>({
     queryKey: ["chef-a-valider-objets", user?.id, affaireIds.length],
-    enabled: isAdminOrChef && affaireIds.length > 0,
+    enabled: canValider && affaireIds.length > 0,
     refetchInterval: 60_000,
     queryFn: async () => {
       const { data, error } = await supabase

@@ -7,6 +7,7 @@ import { StaffingDivergenceTab } from "@/components/admin/StaffingDivergenceTab"
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import { useCapability } from "@/hooks/use-capability";
 import { RoleGuard } from "@/components/auth/RoleGuard";
 import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
@@ -90,7 +91,8 @@ const ACTION_LABEL: Record<string, { label: string; tone: string }> = {
 };
 
 function AdminAuditPage() {
-  const { isAdmin, loading: authLoading } = useAuth();
+  const { loading: authLoading } = useAuth();
+  const canAudit = useCapability("admin.audit");
 
   if (authLoading) return null;
 
@@ -117,16 +119,16 @@ function AdminAuditPage() {
             </TabsTrigger>
           </TabsList>
           <TabsContent value="validations" className="mt-4">
-            <ValidationsTab enabled={isAdmin} />
+            <ValidationsTab enabled={canAudit} />
           </TabsContent>
           <TabsContent value="documents-supprimes" className="mt-4">
-            <DocumentsSupprimesTab enabled={isAdmin} />
+            <DocumentsSupprimesTab enabled={canAudit} />
           </TabsContent>
           <TabsContent value="documents-uploads" className="mt-4">
-            <DocumentsUploadsTab enabled={isAdmin} />
+            <DocumentsUploadsTab enabled={canAudit} />
           </TabsContent>
           <TabsContent value="divergence" className="mt-4">
-            <StaffingDivergenceTab enabled={isAdmin} />
+            <StaffingDivergenceTab enabled={canAudit} />
           </TabsContent>
         </Tabs>
       </div>
