@@ -67,8 +67,12 @@ export function EtapeDialog({ objet, etape, open, onOpenChange, onSaved }: Props
   const [loadingHistorique, setLoadingHistorique] = useState(false);
 
   const flag = ETAPE_TO_FLAG[etape.type_etape];
-  const eligibles = voirTous ? profiles : profiles.filter((p) => p[flag]);
-  const currentUserCanSelfAssign = user && profiles.some((p) => p.id === user.id && p[flag]);
+  // L3a — double-filtre : flag métier ET cap `casting.edit_phase_fabrication`
+  const eligibles = voirTous
+    ? profiles
+    : profiles.filter((p) => p[flag] && p.has_cap_fab_edit);
+  const currentUserCanSelfAssign =
+    user && profiles.some((p) => p.id === user.id && p[flag] && p.has_cap_fab_edit);
 
   // Reset state when opening with new etape
   useEffect(() => {
