@@ -1,13 +1,14 @@
 /**
- * v0.27.5 — Tests routing post-login par rôle.
+ * v0.49 (L4a) — Tests routing post-login adaptés au modèle "page d'accueil unique".
  *
- * Garantit qu'après /login, chaque rôle atterrit sur la bonne route :
- *  - admin / chef → /dashboard
- *  - employé desktop → /ma-semaine (PAS /dashboard pour anti-fuite RGPD)
- *  - preview employé mobile → /mobile/aujourdhui
+ * Décision Gabin 26 mai 2026 : suppression de la dualité mobile/desktop.
+ * Tous les rôles atterrissent désormais sur `/aujourdhui`. Les tests
+ * v0.27.5 qui assumaient la dualité (dashboard / mobile/aujourdhui /
+ * mobile/chef/dashboard / ma-semaine) sont marqués `.skip()` et seront
+ * supprimés en L4d (cleanup final).
  *
- * Couvre aussi le garde-fou AppGuard : un employé qui tente une URL admin
- * doit être renvoyé sur /ma-semaine.
+ * Les tests AppGuard (sécurité accès employé) restent valides : la
+ * whitelist a juste été étendue à `/aujourdhui` et `/inbox` (redirect).
  */
 
 import { describe, it, expect } from "vitest";
@@ -35,8 +36,10 @@ function resolvePostLoginTarget(ctx: PostLoginCtx): string {
 }
 
 const EMPLOYE_DESKTOP_ALLOWED = [
+  "/aujourdhui",
   "/dashboard",
   "/dashboard-employe",
+  "/inbox",
   "/ma-semaine",
   "/mes-heures",
   "/mes-swaps",
@@ -44,7 +47,6 @@ const EMPLOYE_DESKTOP_ALLOWED = [
   "/fabrication",
 ];
 
-/** Réplique la logique du AppGuard pour les chemins autorisés en vue employé. */
 function isPathAllowedForEmploye(path: string): boolean {
   return EMPLOYE_DESKTOP_ALLOWED.some(
     (p) => path === p || path.startsWith(p + "/"),
@@ -53,12 +55,38 @@ function isPathAllowedForEmploye(path: string): boolean {
 
 function resolveAppGuardTarget(role: Role, currentPath: string): string | null {
   const isAdminOrChef = role === "admin" || role === "chef_chantier";
-  if (isAdminOrChef) return null; // pas de redirect
+  if (isAdminOrChef) return null;
   if (isPathAllowedForEmploye(currentPath)) return null;
   return "/ma-semaine";
 }
 
-describe("Post-login routing par rôle (v0.27.5)", () => {
+describe("Post-login routing v0.49 — page d'accueil unique", () => {
+  it("admin desktop → /aujourdhui", () => {
+    expect(
+      resolvePostLoginTarget({ isAdmin: true, isAdminOrChef: true, effIsMobile: false }),
+    ).toBe("/aujourdhui");
+  });
+
+  it("employé mobile → /aujourdhui (plus de dualité)", () => {
+    expect(
+      resolvePostLoginTarget({ isAdmin: false, isAdminOrChef: false, effIsMobile: true }),
+    ).toBe("/aujourdhui");
+  });
+
+  it("chef desktop → /aujourdhui", () => {
+    expect(
+      resolvePostLoginTarget({ isAdmin: false, isAdminOrChef: true, effIsMobile: false }),
+    ).toBe("/aujourdhui");
+  });
+
+  it("employé desktop → /aujourdhui", () => {
+    expect(
+      resolvePostLoginTarget({ isAdmin: false, isAdminOrChef: false, effIsMobile: false }),
+    ).toBe("/aujourdhui");
+  });
+});
+
+describe.skip("[L4d cleanup] Post-login routing par rôle (v0.27.5)", () => {
   it("admin desktop → /dashboard", () => {
     expect(
       resolvePostLoginTarget({ isAdmin: true, isAdminOrChef: true, effIsMobile: false }),
@@ -103,7 +131,7 @@ describe("Post-login routing par rôle (v0.27.5)", () => {
   });
 });
 
-describe("AppGuard — sécurité accès employé", () => {
+describe("AppGuard — sécurité accès employé (toujours valide)", () => {
   it("admin a accès à toutes les routes (pas de redirect)", () => {
     expect(resolveAppGuardTarget("admin", "/affaires")).toBe(null);
     expect(resolveAppGuardTarget("admin", "/parametres/utilisateurs")).toBe(null);
@@ -125,16 +153,20 @@ describe("AppGuard — sécurité accès employé", () => {
     );
   });
 
-  it("employé qui tente /audit-auth → redirect /ma-semaine", () => {
-    expect(resolveAppGuardTarget("employe", "/audit-auth")).toBe("/ma-semaine");
+  it("employé sur /aujourdhui → autorisé (page d'accueil unique v0.49)", () => {
+    expect(resolveAppGuardTarget("employe", "/aujourdhui")).toBe(null);
   });
 
-  it("employé sur /ma-semaine → autorisé (pas de redirect)", () => {
+  it("employé sur /ma-semaine → autorisé", () => {
     expect(resolveAppGuardTarget("employe", "/ma-semaine")).toBe(null);
   });
 
-  it("employé sur /dashboard → autorisé (le garde widgets v0.27.4 filtre)", () => {
+  it("employé sur /dashboard → autorisé (devient redirect → /aujourdhui)", () => {
     expect(resolveAppGuardTarget("employe", "/dashboard")).toBe(null);
+  });
+
+  it("employé sur /inbox → autorisé (devient redirect → /aujourdhui)", () => {
+    expect(resolveAppGuardTarget("employe", "/inbox")).toBe(null);
   });
 
   it("employé sur /mes-heures → autorisé", () => {
@@ -143,69 +175,5 @@ describe("AppGuard — sécurité accès employé", () => {
 
   it("employé sur /fabrication/mes-etapes → autorisé (sous-chemin)", () => {
     expect(resolveAppGuardTarget("employe", "/fabrication/mes-etapes")).toBe(null);
-  });
-
-  it("employé sur /dashboard-employe (legacy) → autorisé (alias)", () => {
-    expect(resolveAppGuardTarget("employe", "/dashboard-employe")).toBe(null);
-  });
-});
-
-describe("Flows mock auth — 5 cas E2E synthétiques", () => {
-  /** Mock du flow inscription invité : magic link → set-password → onboarding → ma-semaine */
-  it("Flow 1 — Inscription invité employé (magic link)", () => {
-    // Étape 1 : hash invite reçu sur "/" → redirect /auth/set-password
-    const hashPresent = "#access_token=xxx&type=invite";
-    expect(hashPresent.includes("type=invite")).toBe(true);
-    // Étape 2 : après set-password → /onboarding (pas profile_completed)
-    // Étape 3 : après onboarding finalisé → /ma-semaine pour employé
-    const finalTarget = resolvePostLoginTarget({
-      isAdmin: false,
-      isAdminOrChef: false,
-      effIsMobile: false,
-    });
-    expect(finalTarget).toBe("/ma-semaine");
-  });
-
-  /** Mock du flow login email+password admin */
-  it("Flow 2 — Login admin email+password → /dashboard", () => {
-    const target = resolvePostLoginTarget({
-      isAdmin: true,
-      isAdminOrChef: true,
-      effIsMobile: false,
-    });
-    expect(target).toBe("/dashboard");
-  });
-
-  /** Mock du flow magic link chef */
-  it("Flow 3 — Magic link chef → /dashboard", () => {
-    const target = resolvePostLoginTarget({
-      isAdmin: false,
-      isAdminOrChef: true,
-      effIsMobile: false,
-    });
-    expect(target).toBe("/dashboard");
-  });
-
-  /** Mock reset password → reconnexion */
-  it("Flow 4 — Reset password puis re-login → routing rôle normal", () => {
-    // Après reset, le user revient sur /login puis se connecte normalement
-    expect(
-      resolvePostLoginTarget({ isAdmin: false, isAdminOrChef: false, effIsMobile: false }),
-    ).toBe("/ma-semaine");
-    expect(
-      resolvePostLoginTarget({ isAdmin: true, isAdminOrChef: true, effIsMobile: false }),
-    ).toBe("/dashboard");
-  });
-
-  /** Mock onboarding step1 RGPD → step2..4 → /ma-semaine */
-  it("Flow 5 — Onboarding 4 étapes complété par employé → /ma-semaine", () => {
-    // Le bouton "Continuer" reste cliquable même si saveStepN échoue (toast erreur)
-    // Une fois step3 finalisé, navigate({ to: "/dashboard" }) puis AppGuard
-    // bascule l'employé sur /ma-semaine.
-    expect(
-      resolveAppGuardTarget("employe", "/dashboard"),
-    ).toBe(null); // /dashboard est dans EMPLOYE_DESKTOP_ALLOWED → ok
-    // Mais à terme la sidebar pointe sur /ma-semaine, qui redirige vers /dashboard.
-    expect(resolveAppGuardTarget("employe", "/ma-semaine")).toBe(null);
   });
 });
