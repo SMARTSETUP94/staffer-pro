@@ -13,7 +13,10 @@
  * dans un lot ultérieur (voir mem://debts/aujourdhui-10-sources-backend).
  */
 import { test, expect } from "@playwright/test";
-import { loginAs, ACCOUNTS } from "../fixtures/test-accounts";
+import { loginAs } from "./helpers/auth";
+import { TEST_ACCOUNTS } from "./fixtures/test-accounts";
+
+const ACCOUNTS = TEST_ACCOUNTS;
 
 test.describe("/aujourdhui — page d'accueil unique L4a", () => {
   test("Admin atterrit sur /aujourdhui après login", async ({ page }) => {

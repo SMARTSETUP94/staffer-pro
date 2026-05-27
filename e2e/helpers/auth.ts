@@ -13,9 +13,11 @@ export async function loginAs(page: Page, account: TestAccount): Promise<void> {
   await page.getByLabel(/mot de passe/i).fill(account.password);
   await page.getByRole("button", { name: /se connecter|connexion/i }).click();
 
-  // Attente d'une route post-login : admin/chef → /dashboard, employé → /ma-semaine
+  // v0.49 (L4a) — Tous les rôles atterrissent sur /aujourdhui (page d'accueil
+  // unique capability-driven). Anciennes routes (/dashboard, /ma-semaine,
+  // /mobile/aujourdhui) gardées tolérées car redirects 301 transitoires.
   await page.waitForURL(
-    (url) => /\/(dashboard|ma-semaine|mobile\/aujourdhui)/.test(url.pathname),
+    (url) => /\/(aujourdhui|dashboard|ma-semaine|mobile\/aujourdhui)/.test(url.pathname),
     { timeout: 15_000 },
   );
 }
