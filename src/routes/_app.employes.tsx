@@ -165,7 +165,18 @@ export const Route = createFileRoute("/_app/employes")({
 });
 
 function EmployesPage() {
-  const { isAdminOrChef, isAdmin } = useAuth();
+  // L3b1-A — Refacto rôles → capabilities.
+  // - canEdit (gestion fiches employés : create/update/toggle actif/édition autorisations véhicules) → employes.edit
+  // - canViewSalaries (bloc rémunération confidentiel) → data.salaries
+  // - canViewRh (matricule SILAE, clé export paie) → data.employee_rh
+  // - canManagePostes (lien /admin/employes-poste-principal + import postes XLSX) → employes.import
+  // - canEditFabRoles (toggle est_chef_projet / est_bureau_etude / etc. sur profiles) → section.admin
+  //   (réservé admin : c'est de la gestion de rôles applicatifs, pas du métier RH)
+  const canEdit = useCapability("employes.edit");
+  const canViewSalaries = useCapability("data.salaries");
+  const canViewRh = useCapability("data.employee_rh");
+  const canManagePostes = useCapability("employes.import");
+  const canEditFabRoles = useCapability("section.admin");
   const { metiers, byId } = useMetiers();
   const [rows, setRows] = useState<EmployeRow[]>([]);
   const [loading, setLoading] = useState(true);
