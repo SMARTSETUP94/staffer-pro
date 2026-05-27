@@ -45,7 +45,7 @@ import { format, formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 import { roleLabel } from "@/lib/labels";
 
-export const Route = createFileRoute("/_app/parametres/utilisateurs")({
+export const Route = createFileRoute("/_app/admin/utilisateurs")({
   head: () => ({ meta: [{ title: "Utilisateurs — Paramètres" }] }),
   component: UtilisateursPage,
 });

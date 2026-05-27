@@ -54,7 +54,6 @@ import { Route as AppDevisIndexRouteImport } from './routes/_app.devis.index'
 import { Route as AppAffairesIndexRouteImport } from './routes/_app.affaires.index'
 import { Route as AppStaffingPlanIdRouteImport } from './routes/_app.staffing.$planId'
 import { Route as AppRhContratsRouteImport } from './routes/_app.rh.contrats'
-import { Route as AppParametresUtilisateursRouteImport } from './routes/_app.parametres.utilisateurs'
 import { Route as AppParametresSousTraitantsRouteImport } from './routes/_app.parametres.sous-traitants'
 import { Route as AppParametresRolesFabricationRouteImport } from './routes/_app.parametres.roles-fabrication'
 import { Route as AppParametresPostesRouteImport } from './routes/_app.parametres.postes'
@@ -74,6 +73,7 @@ import { Route as AppDevisImportRouteImport } from './routes/_app.devis.import'
 import { Route as AppDevisHistoriqueRouteImport } from './routes/_app.devis.historique'
 import { Route as AppDevAtomsRouteImport } from './routes/_app.dev.atoms'
 import { Route as AppAffairesAffaireIdRouteImport } from './routes/_app.affaires.$affaireId'
+import { Route as AppAdminUtilisateursRouteImport } from './routes/_app.admin.utilisateurs'
 import { Route as AppAdminPermissionsRouteImport } from './routes/_app.admin.permissions'
 import { Route as AppAdminFeedbackRouteImport } from './routes/_app.admin.feedback'
 import { Route as AppAdminFeatureFlagsRouteImport } from './routes/_app.admin.feature-flags'
@@ -317,12 +317,6 @@ const AppRhContratsRoute = AppRhContratsRouteImport.update({
   path: '/rh/contrats',
   getParentRoute: () => AppRoute,
 } as any)
-const AppParametresUtilisateursRoute =
-  AppParametresUtilisateursRouteImport.update({
-    id: '/parametres/utilisateurs',
-    path: '/parametres/utilisateurs',
-    getParentRoute: () => AppRoute,
-  } as any)
 const AppParametresSousTraitantsRoute =
   AppParametresSousTraitantsRouteImport.update({
     id: '/parametres/sous-traitants',
@@ -422,6 +416,11 @@ const AppDevAtomsRoute = AppDevAtomsRouteImport.update({
 const AppAffairesAffaireIdRoute = AppAffairesAffaireIdRouteImport.update({
   id: '/affaires/$affaireId',
   path: '/affaires/$affaireId',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAdminUtilisateursRoute = AppAdminUtilisateursRouteImport.update({
+  id: '/admin/utilisateurs',
+  path: '/admin/utilisateurs',
   getParentRoute: () => AppRoute,
 } as any)
 const AppAdminPermissionsRoute = AppAdminPermissionsRouteImport.update({
@@ -572,6 +571,7 @@ export interface FileRoutesByFullPath {
   '/admin/feature-flags': typeof AppAdminFeatureFlagsRoute
   '/admin/feedback': typeof AppAdminFeedbackRoute
   '/admin/permissions': typeof AppAdminPermissionsRoute
+  '/admin/utilisateurs': typeof AppAdminUtilisateursRoute
   '/affaires/$affaireId': typeof AppAffairesAffaireIdRouteWithChildren
   '/dev/atoms': typeof AppDevAtomsRoute
   '/devis/historique': typeof AppDevisHistoriqueRoute
@@ -591,7 +591,6 @@ export interface FileRoutesByFullPath {
   '/parametres/postes': typeof AppParametresPostesRoute
   '/parametres/roles-fabrication': typeof AppParametresRolesFabricationRoute
   '/parametres/sous-traitants': typeof AppParametresSousTraitantsRoute
-  '/parametres/utilisateurs': typeof AppParametresUtilisateursRoute
   '/rh/contrats': typeof AppRhContratsRoute
   '/staffing/$planId': typeof AppStaffingPlanIdRoute
   '/affaires/': typeof AppAffairesIndexRoute
@@ -655,6 +654,7 @@ export interface FileRoutesByTo {
   '/admin/feature-flags': typeof AppAdminFeatureFlagsRoute
   '/admin/feedback': typeof AppAdminFeedbackRoute
   '/admin/permissions': typeof AppAdminPermissionsRoute
+  '/admin/utilisateurs': typeof AppAdminUtilisateursRoute
   '/dev/atoms': typeof AppDevAtomsRoute
   '/devis/historique': typeof AppDevisHistoriqueRoute
   '/devis/import': typeof AppDevisImportRoute
@@ -673,7 +673,6 @@ export interface FileRoutesByTo {
   '/parametres/postes': typeof AppParametresPostesRoute
   '/parametres/roles-fabrication': typeof AppParametresRolesFabricationRoute
   '/parametres/sous-traitants': typeof AppParametresSousTraitantsRoute
-  '/parametres/utilisateurs': typeof AppParametresUtilisateursRoute
   '/rh/contrats': typeof AppRhContratsRoute
   '/staffing/$planId': typeof AppStaffingPlanIdRoute
   '/affaires': typeof AppAffairesIndexRoute
@@ -740,6 +739,7 @@ export interface FileRoutesById {
   '/_app/admin/feature-flags': typeof AppAdminFeatureFlagsRoute
   '/_app/admin/feedback': typeof AppAdminFeedbackRoute
   '/_app/admin/permissions': typeof AppAdminPermissionsRoute
+  '/_app/admin/utilisateurs': typeof AppAdminUtilisateursRoute
   '/_app/affaires/$affaireId': typeof AppAffairesAffaireIdRouteWithChildren
   '/_app/dev/atoms': typeof AppDevAtomsRoute
   '/_app/devis/historique': typeof AppDevisHistoriqueRoute
@@ -759,7 +759,6 @@ export interface FileRoutesById {
   '/_app/parametres/postes': typeof AppParametresPostesRoute
   '/_app/parametres/roles-fabrication': typeof AppParametresRolesFabricationRoute
   '/_app/parametres/sous-traitants': typeof AppParametresSousTraitantsRoute
-  '/_app/parametres/utilisateurs': typeof AppParametresUtilisateursRoute
   '/_app/rh/contrats': typeof AppRhContratsRoute
   '/_app/staffing/$planId': typeof AppStaffingPlanIdRoute
   '/_app/affaires/': typeof AppAffairesIndexRoute
@@ -826,6 +825,7 @@ export interface FileRouteTypes {
     | '/admin/feature-flags'
     | '/admin/feedback'
     | '/admin/permissions'
+    | '/admin/utilisateurs'
     | '/affaires/$affaireId'
     | '/dev/atoms'
     | '/devis/historique'
@@ -845,7 +845,6 @@ export interface FileRouteTypes {
     | '/parametres/postes'
     | '/parametres/roles-fabrication'
     | '/parametres/sous-traitants'
-    | '/parametres/utilisateurs'
     | '/rh/contrats'
     | '/staffing/$planId'
     | '/affaires/'
@@ -909,6 +908,7 @@ export interface FileRouteTypes {
     | '/admin/feature-flags'
     | '/admin/feedback'
     | '/admin/permissions'
+    | '/admin/utilisateurs'
     | '/dev/atoms'
     | '/devis/historique'
     | '/devis/import'
@@ -927,7 +927,6 @@ export interface FileRouteTypes {
     | '/parametres/postes'
     | '/parametres/roles-fabrication'
     | '/parametres/sous-traitants'
-    | '/parametres/utilisateurs'
     | '/rh/contrats'
     | '/staffing/$planId'
     | '/affaires'
@@ -993,6 +992,7 @@ export interface FileRouteTypes {
     | '/_app/admin/feature-flags'
     | '/_app/admin/feedback'
     | '/_app/admin/permissions'
+    | '/_app/admin/utilisateurs'
     | '/_app/affaires/$affaireId'
     | '/_app/dev/atoms'
     | '/_app/devis/historique'
@@ -1012,7 +1012,6 @@ export interface FileRouteTypes {
     | '/_app/parametres/postes'
     | '/_app/parametres/roles-fabrication'
     | '/_app/parametres/sous-traitants'
-    | '/_app/parametres/utilisateurs'
     | '/_app/rh/contrats'
     | '/_app/staffing/$planId'
     | '/_app/affaires/'
@@ -1361,13 +1360,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRhContratsRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/parametres/utilisateurs': {
-      id: '/_app/parametres/utilisateurs'
-      path: '/parametres/utilisateurs'
-      fullPath: '/parametres/utilisateurs'
-      preLoaderRoute: typeof AppParametresUtilisateursRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/_app/parametres/sous-traitants': {
       id: '/_app/parametres/sous-traitants'
       path: '/parametres/sous-traitants'
@@ -1499,6 +1491,13 @@ declare module '@tanstack/react-router' {
       path: '/affaires/$affaireId'
       fullPath: '/affaires/$affaireId'
       preLoaderRoute: typeof AppAffairesAffaireIdRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/admin/utilisateurs': {
+      id: '/_app/admin/utilisateurs'
+      path: '/admin/utilisateurs'
+      fullPath: '/admin/utilisateurs'
+      preLoaderRoute: typeof AppAdminUtilisateursRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/admin/permissions': {
@@ -1739,6 +1738,7 @@ interface AppRouteChildren {
   AppAdminFeatureFlagsRoute: typeof AppAdminFeatureFlagsRoute
   AppAdminFeedbackRoute: typeof AppAdminFeedbackRoute
   AppAdminPermissionsRoute: typeof AppAdminPermissionsRoute
+  AppAdminUtilisateursRoute: typeof AppAdminUtilisateursRoute
   AppAffairesAffaireIdRoute: typeof AppAffairesAffaireIdRouteWithChildren
   AppDevAtomsRoute: typeof AppDevAtomsRoute
   AppDevisHistoriqueRoute: typeof AppDevisHistoriqueRoute
@@ -1754,7 +1754,6 @@ interface AppRouteChildren {
   AppParametresPostesRoute: typeof AppParametresPostesRoute
   AppParametresRolesFabricationRoute: typeof AppParametresRolesFabricationRoute
   AppParametresSousTraitantsRoute: typeof AppParametresSousTraitantsRoute
-  AppParametresUtilisateursRoute: typeof AppParametresUtilisateursRoute
   AppRhContratsRoute: typeof AppRhContratsRoute
   AppStaffingPlanIdRoute: typeof AppStaffingPlanIdRoute
   AppAffairesIndexRoute: typeof AppAffairesIndexRoute
@@ -1802,6 +1801,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAdminFeatureFlagsRoute: AppAdminFeatureFlagsRoute,
   AppAdminFeedbackRoute: AppAdminFeedbackRoute,
   AppAdminPermissionsRoute: AppAdminPermissionsRoute,
+  AppAdminUtilisateursRoute: AppAdminUtilisateursRoute,
   AppAffairesAffaireIdRoute: AppAffairesAffaireIdRouteWithChildren,
   AppDevAtomsRoute: AppDevAtomsRoute,
   AppDevisHistoriqueRoute: AppDevisHistoriqueRoute,
@@ -1818,7 +1818,6 @@ const AppRouteChildren: AppRouteChildren = {
   AppParametresPostesRoute: AppParametresPostesRoute,
   AppParametresRolesFabricationRoute: AppParametresRolesFabricationRoute,
   AppParametresSousTraitantsRoute: AppParametresSousTraitantsRoute,
-  AppParametresUtilisateursRoute: AppParametresUtilisateursRoute,
   AppRhContratsRoute: AppRhContratsRoute,
   AppStaffingPlanIdRoute: AppStaffingPlanIdRoute,
   AppAffairesIndexRoute: AppAffairesIndexRoute,
