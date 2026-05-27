@@ -51,6 +51,7 @@ import { Route as AppEmployesRouteImport } from './routes/_app.employes'
 import { Route as AppDashboardEmployeRouteImport } from './routes/_app.dashboard-employe'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppChargeAtelierRouteImport } from './routes/_app.charge-atelier'
+import { Route as AppAujourdhuiRouteImport } from './routes/_app.aujourdhui'
 import { Route as AppAuditHeuresRouteImport } from './routes/_app.audit-heures'
 import { Route as AppAuditAuthRouteImport } from './routes/_app.audit-auth'
 import { Route as AppAbsencesRouteImport } from './routes/_app.absences'
@@ -316,6 +317,11 @@ const AppDashboardRoute = AppDashboardRouteImport.update({
 const AppChargeAtelierRoute = AppChargeAtelierRouteImport.update({
   id: '/charge-atelier',
   path: '/charge-atelier',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAujourdhuiRoute = AppAujourdhuiRouteImport.update({
+  id: '/aujourdhui',
+  path: '/aujourdhui',
   getParentRoute: () => AppRoute,
 } as any)
 const AppAuditHeuresRoute = AppAuditHeuresRouteImport.update({
@@ -632,6 +638,7 @@ export interface FileRoutesByFullPath {
   '/absences': typeof AppAbsencesRoute
   '/audit-auth': typeof AppAuditAuthRoute
   '/audit-heures': typeof AppAuditHeuresRoute
+  '/aujourdhui': typeof AppAujourdhuiRoute
   '/charge-atelier': typeof AppChargeAtelierRoute
   '/dashboard': typeof AppDashboardRoute
   '/dashboard-employe': typeof AppDashboardEmployeRoute
@@ -732,6 +739,7 @@ export interface FileRoutesByTo {
   '/absences': typeof AppAbsencesRoute
   '/audit-auth': typeof AppAuditAuthRoute
   '/audit-heures': typeof AppAuditHeuresRoute
+  '/aujourdhui': typeof AppAujourdhuiRoute
   '/charge-atelier': typeof AppChargeAtelierRoute
   '/dashboard': typeof AppDashboardRoute
   '/dashboard-employe': typeof AppDashboardEmployeRoute
@@ -831,6 +839,7 @@ export interface FileRoutesById {
   '/_app/absences': typeof AppAbsencesRoute
   '/_app/audit-auth': typeof AppAuditAuthRoute
   '/_app/audit-heures': typeof AppAuditHeuresRoute
+  '/_app/aujourdhui': typeof AppAujourdhuiRoute
   '/_app/charge-atelier': typeof AppChargeAtelierRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/dashboard-employe': typeof AppDashboardEmployeRoute
@@ -933,6 +942,7 @@ export interface FileRouteTypes {
     | '/absences'
     | '/audit-auth'
     | '/audit-heures'
+    | '/aujourdhui'
     | '/charge-atelier'
     | '/dashboard'
     | '/dashboard-employe'
@@ -1033,6 +1043,7 @@ export interface FileRouteTypes {
     | '/absences'
     | '/audit-auth'
     | '/audit-heures'
+    | '/aujourdhui'
     | '/charge-atelier'
     | '/dashboard'
     | '/dashboard-employe'
@@ -1131,6 +1142,7 @@ export interface FileRouteTypes {
     | '/_app/absences'
     | '/_app/audit-auth'
     | '/_app/audit-heures'
+    | '/_app/aujourdhui'
     | '/_app/charge-atelier'
     | '/_app/dashboard'
     | '/_app/dashboard-employe'
@@ -1540,6 +1552,13 @@ declare module '@tanstack/react-router' {
       path: '/charge-atelier'
       fullPath: '/charge-atelier'
       preLoaderRoute: typeof AppChargeAtelierRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/aujourdhui': {
+      id: '/_app/aujourdhui'
+      path: '/aujourdhui'
+      fullPath: '/aujourdhui'
+      preLoaderRoute: typeof AppAujourdhuiRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/audit-heures': {
@@ -2019,6 +2038,7 @@ interface AppRouteChildren {
   AppAbsencesRoute: typeof AppAbsencesRoute
   AppAuditAuthRoute: typeof AppAuditAuthRoute
   AppAuditHeuresRoute: typeof AppAuditHeuresRoute
+  AppAujourdhuiRoute: typeof AppAujourdhuiRoute
   AppChargeAtelierRoute: typeof AppChargeAtelierRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppDashboardEmployeRoute: typeof AppDashboardEmployeRoute
@@ -2078,6 +2098,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAbsencesRoute: AppAbsencesRoute,
   AppAuditAuthRoute: AppAuditAuthRoute,
   AppAuditHeuresRoute: AppAuditHeuresRoute,
+  AppAujourdhuiRoute: AppAujourdhuiRoute,
   AppChargeAtelierRoute: AppChargeAtelierRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppDashboardEmployeRoute: AppDashboardEmployeRoute,
