@@ -188,7 +188,7 @@ function FabricationPage() {
               <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Chef de projet
               </span>
-              {isAdminOrChef ? (
+              {canEditFab ? (
                 <Select
                   value={chefProjetId ?? "none"}
                   onValueChange={handleSetChefProjet}
@@ -226,7 +226,7 @@ function FabricationPage() {
               <Badge variant="outline">✅ {compteurs.termine} terminés</Badge>
             </div>
           </div>
-          {isAdminOrChef && (
+          {canEditFab && (
             <div className="flex flex-col gap-2 sm:flex-row">
               <Button onClick={() => setOpenAjouter(true)} className="rounded-xl">
                 <Plus className="mr-1 h-4 w-4" /> Ajouter un objet
@@ -249,7 +249,7 @@ function FabricationPage() {
       </div>
 
       {/* v0.20 Bloc 7 — Bandeau "prête à livrer" */}
-      {pretALivrer && isAdminOrChef && (
+      {pretALivrer && canEditFab && (
         <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-3">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">
@@ -278,7 +278,7 @@ function FabricationPage() {
       )}
 
       {/* v0.35.4 — Wizard / v0.35.11 — Express en option principale */}
-      {isAdminOrChef &&
+      {canEditFab &&
         affaireMeta?.typologie === "fabrication" && (
           <div className="rounded-xl border border-border bg-card p-4 space-y-3">
             <div className="flex items-center justify-between gap-2 flex-wrap">
@@ -321,7 +321,7 @@ function FabricationPage() {
           <p className="text-sm text-muted-foreground">
             Aucun objet de fabrication pour cette affaire.
           </p>
-          {isAdminOrChef && (
+          {canEditFab && (
             <Button onClick={() => setOpenAjouter(true)} variant="outline" className="mt-4 rounded-xl">
               <Plus className="mr-1 h-4 w-4" /> Créer le premier objet
             </Button>
@@ -375,7 +375,7 @@ function FabricationPage() {
                 <ObjetCardMobile
                   key={o.id}
                   objet={o}
-                  isAdminOrChef={isAdminOrChef}
+                  canEditFab={canEditFab}
                   affaireIdForFiche={showFicheLink ? affaireId : null}
                   onEditObjet={(obj) => setEditObjet(obj)}
                   onEditEtape={(obj, etape) => setEditEtape({ objet: obj, etape })}
@@ -399,7 +399,7 @@ function FabricationPage() {
                     </TableHead>
                   ))}
                   {showFicheLink && <TableHead className="w-20 text-center">Détail</TableHead>}
-                  {isAdminOrChef && <TableHead className="w-12"></TableHead>}
+                  {canEditFab && <TableHead className="w-12"></TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -411,7 +411,7 @@ function FabricationPage() {
                       <InlineNomEdit
                         objetId={o.id}
                         initialNom={o.nom}
-                        canEdit={isAdminOrChef}
+                        canEdit={canEditFab}
                         onSaved={reload}
                       />
                     </TableCell>
@@ -425,8 +425,8 @@ function FabricationPage() {
                             <TooltipTrigger asChild>
                               <button
                                 type="button"
-                                onClick={() => isAdminOrChef && setEditEtape({ objet: o, etape: e })}
-                                disabled={!isAdminOrChef}
+                                onClick={() => canEditFab && setEditEtape({ objet: o, etape: e })}
+                                disabled={!canEditFab}
                                 className="flex w-full flex-col items-center gap-0.5 rounded-md p-1 text-xs transition-colors hover:bg-muted disabled:cursor-default disabled:hover:bg-transparent"
                               >
                                 <span className="text-base leading-none">{STATUT_ICONS[e.statut]}</span>
@@ -471,7 +471,7 @@ function FabricationPage() {
                       </TableCell>
                     )}
 
-                    {isAdminOrChef && (
+                    {canEditFab && (
                       <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -499,8 +499,8 @@ function FabricationPage() {
 
       <p className="text-xs text-muted-foreground">
         Légende : ⬜ À faire · 🔄 En cours · ✅ Terminé · — Non applicable
-        {!isAdminOrChef && " · Lecture seule (consultation)"}
-        {isAdmin && " · Admin : peut tout modifier"}
+        {!canEditFab && " · Lecture seule (consultation)"}
+        {canSeeAdminHint && " · Admin : peut tout modifier"}
       </p>
 
       <AjouterObjetDialog
