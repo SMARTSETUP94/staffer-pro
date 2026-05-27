@@ -4,7 +4,7 @@ import { Plus, Loader2, Pencil, Trash2, FileText, CheckCircle2, Lock, AlertTrian
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth-context";
+import { useCapability } from "@/hooks/use-capability";
 import { useMetiers } from "@/hooks/use-metiers";
 import { MetierBadge } from "@/components/MetierBadge";
 import { Button } from "@/components/ui/button";
@@ -81,7 +81,14 @@ function formatLibelleSource(raw: string | null): string {
 
 function AffaireDevisPage() {
   const { affaireId } = Route.useParams();
-  const { isAdminOrChef, isAdmin } = useAuth();
+  // L3b1-B : remplace canManageDevis/canAdminOverride par caps explicites.
+  // - canManageDevis : créer/éditer/supprimer un devis + lignes + bouton livrer.
+  //   Mapping sur action.create_devis (cap admin+chef_chantier+commercial+BE).
+  //   NOTE : la livraison ("Terminer ce lot") garde la même gate, à reconsidérer
+  //   si une cap dédiée action.deliver_devis émerge.
+  // - canAdminOverride : ré-ouvrir un devis terminé + bypass lock livré.
+  const canManageDevis = useCapability("action.create_devis");
+  const canAdminOverride = useCapability("section.admin");
   const { metiers, byId } = useMetiers();
 
   const [devis, setDevis] = useState<Devis[]>([]);
@@ -312,7 +319,7 @@ function AffaireDevisPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <p className="overline">— Devis ({devis.length})</p>
-        {isAdminOrChef && (
+        {canManageDevis && (
           <div className="flex flex-wrap items-center gap-2">
             {affaireMeta?.typologie === "fabrication" && (
               <MettreAuPlanningExpressButton
@@ -347,9 +354,9 @@ function AffaireDevisPage() {
           const totals = totauxParDevis.get(d.id) ?? { prevues: 0, assignees: 0 };
           const pct = totals.prevues > 0 ? Math.round((totals.assignees / totals.prevues) * 100) : 0;
           const isLivre = d.statut === "termine";
-          const peutLivrer = isAdminOrChef && d.statut === "signe";
-          const peutReouvrir = isAdmin && d.statut === "termine";
-          const lockedForChef = isLivre && !isAdmin;
+          const peutLivrer = canManageDevis && d.statut === "signe";
+          const peutReouvrir = canAdminOverride && d.statut === "termine";
+          const lockedForChef = isLivre && !canAdminOverride;
 
           return (
             <div key={d.id} className={cn(
@@ -394,7 +401,7 @@ function AffaireDevisPage() {
                       Ré-ouvrir (admin)
                     </Button>
                   )}
-                  {isAdminOrChef && !lockedForChef && (
+                  {canManageDevis && !lockedForChef && (
                     <>
                       <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg" onClick={() => openEditDevis(d)}>
                         <Pencil className="h-4 w-4" />
@@ -463,7 +470,7 @@ function AffaireDevisPage() {
                       <TableHead className="text-right">Heures prévues</TableHead>
                       <TableHead className="text-right">Heures assignées</TableHead>
                       <TableHead className="text-right">Montant HT</TableHead>
-                      {isAdminOrChef && !lockedForChef && <TableHead className="w-[80px]"></TableHead>}
+                      {canManageDevis && !lockedForChef && <TableHead className="w-[80px]"></TableHead>}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -485,7 +492,7 @@ function AffaireDevisPage() {
                           <TableCell className="text-right font-mono text-sm text-muted-foreground">
                             {p.montant_ht != null ? `${Number(p.montant_ht).toLocaleString("fr-FR")} €` : "—"}
                           </TableCell>
-                          {isAdminOrChef && !lockedForChef && (
+                          {canManageDevis && !lockedForChef && (
                             <TableCell>
                               <div className="flex justify-end gap-1">
                                 <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => openEditPoste(p)}>
@@ -505,7 +512,7 @@ function AffaireDevisPage() {
                 </Table>
               )}
 
-              {isAdminOrChef && !lockedForChef && (
+              {canManageDevis && !lockedForChef && (
                 <div className="border-t border-border bg-background/40 px-4 py-2">
                   <Button variant="ghost" size="sm" className="rounded-lg text-primary" onClick={() => openCreatePoste(d.id)}>
                     <Plus className="mr-1 h-3.5 w-3.5" /> Ajouter une ligne
