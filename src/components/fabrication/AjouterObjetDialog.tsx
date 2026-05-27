@@ -87,7 +87,8 @@ export function AjouterObjetDialog({ affaireId, open, onOpenChange, onCreated }:
 
   const eligiblesForEtape = (etape: FabricationEtapeType): ProfileRole[] => {
     const flag = ETAPE_TO_FLAG[etape];
-    return profiles.filter((p) => p[flag]);
+    // L3a — double-filtre : flag métier ET cap `casting.edit_phase_fabrication`
+    return profiles.filter((p) => p[flag] && p.has_cap_fab_edit);
   };
 
   useEffect(() => {

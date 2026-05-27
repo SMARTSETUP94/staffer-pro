@@ -114,6 +114,7 @@ function UtilisateursPage() {
   const [confirmDelete, setConfirmDelete] = useState<UserRow | null>(null);
   const [actingOn, setActingOn] = useState<string | null>(null);
   const [linking, setLinking] = useState(false);
+  const [capsDebug, setCapsDebug] = useState<UserRow | null>(null);
 
   useEffect(() => {
     if (!loading && !isAdmin) navigate({ to: "/dashboard" });
@@ -276,11 +277,20 @@ function UtilisateursPage() {
     }
   }
 
-  async function handleChangeRole(u: UserRow, role: AppRole) {
+  async function handleSaveRoles(u: UserRow, nextRoles: AppRole[]) {
+    // L3a — garde-fou : jamais d'utilisateur sans aucun rôle (sinon lockout).
+    const safe = nextRoles.length === 0 ? (["employe"] as AppRole[]) : nextRoles;
+    const forced = nextRoles.length === 0;
     setActingOn(u.id);
     try {
-      await withAuthRetry(() => updateUserRoles({ data: { targetUserId: u.id, roles: [role] } }));
-      toast.success(`Rôle ${roleLabel(role)} appliqué à ${u.email}`);
+      await withAuthRetry(() =>
+        updateUserRoles({ data: { targetUserId: u.id, roles: safe } }),
+      );
+      toast.success(
+        forced
+          ? `Rôle ${roleLabel("employe")} imposé par défaut à ${u.email} (aucun rôle sélectionné)`
+          : `${safe.length} rôle${safe.length > 1 ? "s" : ""} appliqué${safe.length > 1 ? "s" : ""} à ${u.email}`,
+      );
       loadUsers();
     } catch (e) {
       toast.error(await readServerFnError(e));
@@ -468,29 +478,11 @@ function UtilisateursPage() {
                         />
                       </TableCell>
                       <TableCell>
-                        {u.roles && u.roles.length > 0 ? (
-                          <Select
-                            value={u.roles[0]}
-                            onValueChange={(v) => handleChangeRole(u, v as AppRole)}
-                            disabled={busy || (isMe && u.roles.includes("admin"))}
-                          >
-                            <SelectTrigger className="h-7 w-[140px] text-xs">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="admin">
-                                <span className="flex items-center gap-1.5">
-                                  <Shield className="h-3 w-3" />
-                                  Admin
-                                </span>
-                              </SelectItem>
-                              <SelectItem value="chef_chantier">{roleLabel("chef_chantier")}</SelectItem>
-                              <SelectItem value="employe">Employé</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">—</span>
-                        )}
+                        <RoleMultiSelectPopover
+                          current={u.roles}
+                          disabled={busy || (isMe && u.roles.includes("admin"))}
+                          onSave={(next) => handleSaveRoles(u, next)}
+                        />
                       </TableCell>
                       <TableCell>
                         <Badge variant="outline" className={meta.className}>
@@ -537,6 +529,11 @@ function UtilisateursPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => setCapsDebug(u)}>
+                              <Eye className="mr-2 h-4 w-4" />
+                              Caps effectives
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
                             {u.status === "invite" && (
                               <DropdownMenuItem onClick={() => handleResend(u)}>
                                 <Send className="mr-2 h-4 w-4" />
@@ -614,14 +611,14 @@ function UtilisateursPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="admin">
-                    <span className="flex items-center gap-1.5">
-                      <Shield className="h-3.5 w-3.5" />
-                      Admin
-                    </span>
-                  </SelectItem>
-                  <SelectItem value="chef_chantier">{roleLabel("chef_chantier")}</SelectItem>
-                  <SelectItem value="employe">Employé</SelectItem>
+                  {ROLE_GROUPS.flatMap((g) => g.roles).map((r) => (
+                    <SelectItem key={r} value={r}>
+                      <span className="flex items-center gap-1.5">
+                        {r === "admin" && <Shield className="h-3.5 w-3.5" />}
+                        {roleLabel(r)}
+                      </span>
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -672,9 +669,147 @@ function UtilisateursPage() {
         onComplete={loadUsers}
       />
 
+      {/* L3a — Debug caps effectives */}
+      <UserCapsDebugModal
+        open={!!capsDebug}
+        onOpenChange={(o) => !o && setCapsDebug(null)}
+        targetUserId={capsDebug?.id ?? null}
+        targetLabel={capsDebug?.full_name || capsDebug?.email || ""}
+      />
+
     </div>
   );
 }
+
+/**
+ * L3a — Popover de sélection multi-rôles (11 rôles groupés en 5 catégories).
+ * Affiche les badges en cumul, applique le changement à la fermeture.
+ */
+function RoleMultiSelectPopover({
+  current,
+  disabled,
+  onSave,
+}: {
+  current: AppRole[];
+  disabled?: boolean;
+  onSave: (next: AppRole[]) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [draft, setDraft] = useState<AppRole[]>(current);
+
+  useEffect(() => {
+    if (!open) setDraft(current);
+  }, [open, current]);
+
+  const dirty =
+    draft.length !== current.length || draft.some((r) => !current.includes(r));
+
+  function toggle(role: AppRole) {
+    setDraft((prev) =>
+      prev.includes(role) ? prev.filter((r) => r !== role) : [...prev, role],
+    );
+  }
+
+  function apply() {
+    setOpen(false);
+    if (dirty) onSave(draft);
+  }
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={disabled}
+          className="h-7 max-w-[260px] justify-start gap-1 px-2 text-xs"
+          title="Cliquer pour modifier les rôles"
+        >
+          {current.length === 0 ? (
+            <span className="italic text-muted-foreground">aucun rôle</span>
+          ) : (
+            <span className="flex flex-wrap items-center gap-1">
+              {current.slice(0, 2).map((r) => (
+                <Badge key={r} variant="secondary" className="h-5 px-1.5 text-[10px]">
+                  {r === "admin" && <Shield className="mr-0.5 h-2.5 w-2.5" />}
+                  {roleLabel(r)}
+                </Badge>
+              ))}
+              {current.length > 2 && (
+                <Badge variant="outline" className="h-5 px-1.5 text-[10px]">
+                  +{current.length - 2}
+                </Badge>
+              )}
+            </span>
+          )}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-72 p-0">
+        <div className="max-h-[60vh] overflow-y-auto p-3">
+          {ROLE_GROUPS.map((group) => (
+            <div key={group.label} className="mb-3 last:mb-0">
+              <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                {group.label}
+              </p>
+              <div className="space-y-1.5">
+                {group.roles.map((role) => {
+                  const checked = draft.includes(role);
+                  const id = `role-${role}`;
+                  return (
+                    <label
+                      key={role}
+                      htmlFor={id}
+                      className="flex cursor-pointer items-center gap-2 rounded px-1.5 py-1 text-sm hover:bg-muted"
+                    >
+                      <Checkbox
+                        id={id}
+                        checked={checked}
+                        onCheckedChange={() => toggle(role)}
+                      />
+                      <span className="flex-1">{roleLabel(role)}</span>
+                      {role === "admin" && (
+                        <Shield className="h-3 w-3 text-muted-foreground" />
+                      )}
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="flex items-center justify-between gap-2 border-t border-border bg-muted/30 px-3 py-2">
+          <p
+            className="text-[10px] text-muted-foreground"
+            title="Si vous décochez tout, le rôle Employé sera imposé pour éviter un lockout."
+          >
+            {draft.length === 0
+              ? "→ Employé imposé par défaut"
+              : `${draft.length} rôle${draft.length > 1 ? "s" : ""} sélectionné${draft.length > 1 ? "s" : ""}`}
+          </p>
+          <div className="flex gap-1">
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 px-2 text-xs"
+              onClick={() => setOpen(false)}
+            >
+              Annuler
+            </Button>
+            <Button
+              size="sm"
+              className="h-7 px-2 text-xs"
+              disabled={!dirty}
+              onClick={apply}
+            >
+              Appliquer
+            </Button>
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 
 function StatBlock({
   label, value, className,

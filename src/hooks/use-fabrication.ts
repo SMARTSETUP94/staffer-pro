@@ -127,6 +127,21 @@ export interface ProfileRole {
   est_manutention: boolean;
   est_bureau_etude: boolean;
   est_usinage_numerique: boolean;
+  /** L3a — true si le profil possède la capability `casting.edit_phase_fabrication`. */
+  has_cap_fab_edit: boolean;
+}
+
+/**
+ * L3a — Double-filtre fabrication : un profil n'est éligible à une étape que si
+ * il a le flag métier ET la capability `casting.edit_phase_fabrication`.
+ * Garde-fou contre une incohérence DB (ex: flag activé mais rôle sans cap).
+ */
+export function isEligibleForEtape(
+  p: ProfileRole,
+  etape: FabricationEtapeType,
+): boolean {
+  const flag = ETAPE_TO_FLAG[etape];
+  return Boolean(p[flag]) && p.has_cap_fab_edit;
 }
 
 /**
@@ -223,13 +238,43 @@ export function useProfilesWithRoles() {
 
   const reload = useCallback(async () => {
     setLoading(true);
-    const { data } = await supabase
-      .from("profiles")
-      .select("id, full_name, email, est_chef_projet, est_respo_fab, est_finition, est_manutention, est_bureau_etude, est_usinage_numerique")
-      .order("full_name", { ascending: true, nullsFirst: false });
-    setProfiles((data ?? []) as ProfileRole[]);
+    const [profilesQ, capRolesQ] = await Promise.all([
+      supabase
+        .from("profiles")
+        .select(
+          "id, full_name, email, est_chef_projet, est_respo_fab, est_finition, est_manutention, est_bureau_etude, est_usinage_numerique",
+        )
+        .order("full_name", { ascending: true, nullsFirst: false }),
+      // L3a — rôles qui possèdent la cap `casting.edit_phase_fabrication`
+      supabase
+        .from("role_capabilities")
+        .select("role")
+        .eq("capability", "casting.edit_phase_fabrication")
+        .eq("granted", true),
+    ]);
+
+    const rolesWithCap = new Set<string>(
+      (capRolesQ.data ?? []).map((r: { role: string }) => r.role),
+    );
+
+    // Récupère les user_id qui ont au moins un rôle dans rolesWithCap
+    const capUserIds = new Set<string>();
+    if (rolesWithCap.size > 0) {
+      const { data: userRolesData } = await supabase
+        .from("user_roles")
+        .select("user_id, role")
+        .in("role", Array.from(rolesWithCap) as never);
+      (userRolesData ?? []).forEach((r: { user_id: string }) => capUserIds.add(r.user_id));
+    }
+
+    const profiles: ProfileRole[] = (profilesQ.data ?? []).map((p) => ({
+      ...(p as Omit<ProfileRole, "has_cap_fab_edit">),
+      has_cap_fab_edit: capUserIds.has(p.id),
+    }));
+    setProfiles(profiles);
     setLoading(false);
   }, []);
+
 
   useEffect(() => {
     void reload();
@@ -237,6 +282,9 @@ export function useProfilesWithRoles() {
 
   return { profiles, loading, reload };
 }
+
+
+
 
 /** Calcule l'avancement d'un objet (étapes terminées ou non applicables / total). */
 export function calcAvancementObjet(objet: FabricationObjet): number {
