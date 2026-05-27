@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { useAuth, type AppRole } from "@/lib/auth-context";
+import { useCapability } from "@/hooks/use-capability";
 import { supabase } from "@/integrations/supabase/client";
 import {
   inviteUser, resendInvitation, updateUserRoles, setUserActive, deleteUser, linkExistingUsers,
