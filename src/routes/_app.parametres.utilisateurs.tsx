@@ -478,29 +478,11 @@ function UtilisateursPage() {
                         />
                       </TableCell>
                       <TableCell>
-                        {u.roles && u.roles.length > 0 ? (
-                          <Select
-                            value={u.roles[0]}
-                            onValueChange={(v) => handleChangeRole(u, v as AppRole)}
-                            disabled={busy || (isMe && u.roles.includes("admin"))}
-                          >
-                            <SelectTrigger className="h-7 w-[140px] text-xs">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="admin">
-                                <span className="flex items-center gap-1.5">
-                                  <Shield className="h-3 w-3" />
-                                  Admin
-                                </span>
-                              </SelectItem>
-                              <SelectItem value="chef_chantier">{roleLabel("chef_chantier")}</SelectItem>
-                              <SelectItem value="employe">Employé</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">—</span>
-                        )}
+                        <RoleMultiSelectPopover
+                          current={u.roles}
+                          disabled={busy || (isMe && u.roles.includes("admin"))}
+                          onSave={(next) => handleSaveRoles(u, next)}
+                        />
                       </TableCell>
                       <TableCell>
                         <Badge variant="outline" className={meta.className}>
