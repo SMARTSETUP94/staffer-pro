@@ -183,12 +183,12 @@ function OpportunitesPage() {
   const [filterCa, setFilterCa] = useState<string>("");
   useEffect(() => {
     if (filterCa) return;
-    if (isAdmin) {
+    if (oppScope === "all") {
       setFilterCa("__all__");
     } else if (user?.id) {
       setFilterCa(user.id);
     }
-  }, [isAdmin, user?.id, filterCa]);
+  }, [oppScope, user?.id, filterCa]);
 
   const chargesById = useMemo(() => {
     const m = new Map();
@@ -390,7 +390,7 @@ function OpportunitesPage() {
         title="Opportunités"
         description={`${opps.length} opportunité${opps.length > 1 ? "s" : ""} 9XXX en pipeline. ${vue === "kanban" ? "Glissez les cartes entre colonnes pour changer leur statut." : "Saisie ligne par ligne (auto-save)."}`}
         actions={
-          isAdminOrChef && vue === "kanban" && (
+          canManageOpps && vue === "kanban" && (
             <Button
               onClick={() => setCreateOpen(true)}
               className="rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
@@ -555,9 +555,9 @@ function OpportunitesPage() {
           rows={tableurRows}
           charges={charges}
           filters={tableurFilters}
-          canEdit={isAdminOrChef}
-          isAdminOrChef={isAdminOrChef}
-          isAdmin={isAdmin}
+          canEdit={canManageOpps}
+          canManage={canManageOpps}
+          canForceCode5xxx={canForceCode5xxx}
           currentUserId={user?.id ?? null}
           defaultChargeId={user?.id ?? null}
           onRowsMutated={() => setRefreshTick((t) => t + 1)}
@@ -572,7 +572,7 @@ function OpportunitesPage() {
             Créez votre première opportunité 9XXX ou importez le CRM Excel pour
             initialiser le pipeline.
           </p>
-          {isAdminOrChef && (
+          {canManageOpps && (
             <Button
               size="sm"
               onClick={() => setCreateOpen(true)}
@@ -596,8 +596,8 @@ function OpportunitesPage() {
                 items={byStatut.get(s) ?? []}
                 chargesById={chargesById}
                 onSign={handleSign}
-                onDelete={isAdminOrChef ? handleDeleteRequest : undefined}
-                draggable={isAdminOrChef}
+                onDelete={canManageOpps ? handleDeleteRequest : undefined}
+                draggable={canManageOpps}
               />
             ))}
           </div>
