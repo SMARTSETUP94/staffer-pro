@@ -1,14 +1,17 @@
 /**
  * v0.26.2 — Hooks Audit Auth (admin only).
- * Appellent les RPC `admin_get_*` côté Supabase. Le check admin est fait en SQL,
- * mais on désactive aussi les hooks côté front quand !isAdmin pour éviter
- * un appel réseau inutile.
+ *
+ * L3b1 — Migré sur `useCapability("admin.audit")` au lieu de `useAuth().isAdmin`.
+ * Les RPC `admin_get_*` restent gatées côté SQL (SECURITY DEFINER + check admin),
+ * on désactive aussi les hooks côté front quand la cap manque pour éviter un
+ * appel réseau inutile.
  */
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth-context";
+import { useCapability } from "@/hooks/use-capability";
 import type { DatePreset } from "@/lib/audit-auth-helpers";
 import { presetRange } from "@/lib/audit-auth-helpers";
+
 
 export interface AuthEventRow {
   id: string;
