@@ -7,7 +7,7 @@ import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Loader2, Search, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth-context";
+import { useCapability } from "@/hooks/use-capability";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
   Table,
@@ -46,7 +46,7 @@ interface Emp {
 }
 
 function AutorisationsVehiculesPage() {
-  const { isAdmin } = useAuth();
+  const canAdmin = useCapability("section.admin");
   const [employes, setEmployes] = useState<Emp[]>([]);
   const [autorisations, setAutorisations] = useState<AutorisationVehicule[]>([]);
   const [loading, setLoading] = useState(true);
@@ -120,7 +120,7 @@ function AutorisationsVehiculesPage() {
     setDialogOpen(true);
   }
 
-  if (!isAdmin) return <Navigate to="/dashboard" />;
+  if (!canAdmin) return <Navigate to="/dashboard" />;
 
   return (
     <div className="container mx-auto space-y-4 p-4 md:p-6">

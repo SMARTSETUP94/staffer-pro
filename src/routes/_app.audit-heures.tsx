@@ -12,6 +12,7 @@ import {
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import { useCapability } from "@/hooks/use-capability";
 import { RoleGuard } from "@/components/auth/RoleGuard";
 import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
@@ -78,7 +79,8 @@ const ACTION_META: Record<string, { label: string; tone: string }> = {
 };
 
 function AuditHeuresPage() {
-  const { isAdmin, loading: authLoading } = useAuth();
+  const { loading: authLoading } = useAuth();
+  const canAudit = useCapability("heures.audit");
   const [rows, setRows] = useState<AuditRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [from, setFrom] = useState(format(subDays(new Date(), 14), "yyyy-MM-dd"));
@@ -87,7 +89,7 @@ function AuditHeuresPage() {
   const [employeQuery, setEmployeQuery] = useState("");
 
   useEffect(() => {
-    if (!isAdmin) return;
+    if (!canAudit) return;
     let cancelled = false;
     setLoading(true);
 
@@ -189,7 +191,7 @@ function AuditHeuresPage() {
     return () => {
       cancelled = true;
     };
-  }, [isAdmin, from, to]);
+  }, [canAudit, from, to]);
 
   const filtered = useMemo(() => {
     return rows.filter((r) => {
