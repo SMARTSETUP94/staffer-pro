@@ -17,6 +17,7 @@ import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import { useCapability, useCapabilityScope } from "@/hooks/use-capability";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -128,7 +129,16 @@ interface OppRowFull extends OpportuniteCardData {
 }
 
 function OpportunitesPage() {
-  const { user, isAdmin, isAdminOrChef } = useAuth();
+  const { user } = useAuth();
+  // L3b1-B : caps déduites de la matrice (voir mem://features/lot-l3-refonte-permissions).
+  // - canManageOpps : créer/éditer/supprimer/draguer une opp. AMBIGU — mapping
+  //   pragmatique sur action.sign_opportunite (cap accordée à admin+chef_chantier),
+  //   à reconsidérer si une cap "opportunite.manage" dédiée émerge.
+  // - canForceCode5xxx : admin override pour signer même quand non-owner.
+  // - oppScope : 'all' pour admin → défaut "Tous CA", sinon défaut "moi".
+  const canManageOpps = useCapability("action.sign_opportunite");
+  const canForceCode5xxx = useCapability("section.admin");
+  const oppScope = useCapabilityScope("section.pipeline_opportunites");
   const navigate = useNavigate({ from: "/opportunites" });
   const search = Route.useSearch();
   const { typo: typoFilter, vue, q: searchQuery, preset, archived: showArchived } = search;
