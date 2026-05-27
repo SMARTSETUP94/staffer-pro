@@ -99,7 +99,8 @@ const STATUS_META: Record<
 
 function UtilisateursPage() {
   const navigate = useNavigate();
-  const { isAdmin, loading, user: currentUser } = useAuth();
+  const { loading, user: currentUser } = useAuth();
+  const canAdmin = useCapability("section.admin");
   const [users, setUsers] = useState<UserRow[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
   const [filterStatus, setFilterStatus] = useState<UserStatus | "all">("all");
@@ -118,12 +119,13 @@ function UtilisateursPage() {
   const [capsDebug, setCapsDebug] = useState<UserRow | null>(null);
 
   useEffect(() => {
-    if (!loading && !isAdmin) navigate({ to: "/dashboard" });
-  }, [loading, isAdmin, navigate]);
+    if (!loading && !canAdmin) navigate({ to: "/dashboard" });
+  }, [loading, canAdmin, navigate]);
 
   useEffect(() => {
-    if (isAdmin) loadUsers();
-  }, [isAdmin]);
+    if (canAdmin) loadUsers();
+  }, [canAdmin]);
+
 
   async function loadUsers() {
     setLoadingUsers(true);
