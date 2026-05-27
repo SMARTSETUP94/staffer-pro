@@ -42,7 +42,6 @@ import {
   type MissionEvent,
   type MissionPhase,
 } from "@/server/mission-card.functions";
-import { PreviewBanner } from "@/components/PreviewBanner";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -103,7 +102,7 @@ function CarteMissionPage() {
             <Button
               size="sm"
               variant="ghost"
-              onClick={() => navigate({ to: "/mobile/mes-missions" })}
+              onClick={() => navigate({ to: "/mes-missions" })}
             >
               Retour
             </Button>
@@ -118,7 +117,6 @@ function CarteMissionPage() {
 
   return (
     <div className="min-h-screen bg-background pb-32" data-testid="mission-detail-page">
-      <PreviewBanner />
       <TopBar phase={phase} />
       <main className="mx-auto max-w-md space-y-4 px-4 py-4">
         <MissionHero detail={data} />
@@ -149,7 +147,7 @@ function TopBar({ phase }: { phase: MissionPhase }) {
     <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur">
       <div className="mx-auto flex max-w-md items-center justify-between px-4 py-3">
         <Link
-          to="/mobile/mes-missions"
+          to="/mes-missions"
           className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
           aria-label="Retour à la liste"
         >

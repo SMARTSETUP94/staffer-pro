@@ -26,7 +26,7 @@ import { LogoutConfirmButton } from "@/components/mobile/LogoutConfirmButton";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/mobile/equipe-chantiers")({
+export const Route = createFileRoute("/_app/mes-chantiers")({
   head: () => ({ meta: [{ title: "Mes équipes chantiers — Setup Paris" }] }),
   component: EquipeChantiersPage,
 });
