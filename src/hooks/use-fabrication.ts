@@ -238,20 +238,33 @@ export function useProfilesWithRoles() {
 
   const reload = useCallback(async () => {
     setLoading(true);
-    const { data } = await supabase
-      .from("profiles")
-      .select("id, full_name, email, est_chef_projet, est_respo_fab, est_finition, est_manutention, est_bureau_etude, est_usinage_numerique")
-      .order("full_name", { ascending: true, nullsFirst: false });
-    setProfiles((data ?? []) as ProfileRole[]);
+    const [profilesQ, capsQ] = await Promise.all([
+      supabase
+        .from("profiles")
+        .select(
+          "id, full_name, email, est_chef_projet, est_respo_fab, est_finition, est_manutention, est_bureau_etude, est_usinage_numerique",
+        )
+        .order("full_name", { ascending: true, nullsFirst: false }),
+      // L3a — Profils ayant la cap `casting.edit_phase_fabrication`
+      // via au moins un de leurs rôles (jointure user_roles × role_capabilities).
+      supabase
+        .from("user_roles")
+        .select("user_id, role_capabilities!inner(capability, granted)")
+        .eq("role_capabilities.capability", "casting.edit_phase_fabrication")
+        .eq("role_capabilities.granted", true),
+    ]);
+
+    const capUserIds = new Set<string>(
+      (capsQ.data ?? []).map((r: { user_id: string }) => r.user_id),
+    );
+    const profiles: ProfileRole[] = (profilesQ.data ?? []).map((p) => ({
+      ...(p as Omit<ProfileRole, "has_cap_fab_edit">),
+      has_cap_fab_edit: capUserIds.has(p.id),
+    }));
+    setProfiles(profiles);
     setLoading(false);
   }, []);
 
-  useEffect(() => {
-    void reload();
-  }, [reload]);
-
-  return { profiles, loading, reload };
-}
 
 /** Calcule l'avancement d'un objet (étapes terminées ou non applicables / total). */
 export function calcAvancementObjet(objet: FabricationObjet): number {
