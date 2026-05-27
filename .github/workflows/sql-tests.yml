@@ -1,0 +1,89 @@
+# L4a-ter — Workflow CI pgTAP : valide get_inbox_items cap-gating sur 6 sources.
+#
+# Stratégie :
+#   1. Postgres 15 en service container
+#   2. Installe Supabase CLI + pgTAP + pg_prove
+#   3. Applique TOUTES les migrations Supabase (db reset)
+#   4. Exécute pg_prove sur supabase/tests/*.spec.sql
+#   5. Fail si une assertion rouge
+#
+# Déclenchement : push sur main + PRs touchant migrations/specs + manual.
+
+name: SQL Tests (pgTAP)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'supabase/migrations/**'
+      - 'supabase/tests/**'
+      - '.github/workflows/sql-tests.yml'
+  pull_request:
+    paths:
+      - 'supabase/migrations/**'
+      - 'supabase/tests/**'
+      - '.github/workflows/sql-tests.yml'
+  workflow_dispatch:
+
+jobs:
+  pgtap:
+    name: pgTAP on Postgres 15
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=10
+
+    env:
+      PGHOST: localhost
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: postgres
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/postgres
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install psql + pgTAP + pg_prove
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client postgresql-15-pgtap perl cpanminus
+          sudo cpanm --notest TAP::Parser::SourceHandler::pgTAP || true
+          # pg_prove ships with libtap-parser-sourcehandler-pgtap-perl on debian/ubuntu
+          sudo apt-get install -y libtap-parser-sourcehandler-pgtap-perl
+
+      - name: Verify pgTAP installed in container
+        run: |
+          PGPASSWORD=postgres psql -h localhost -U postgres -d postgres \
+            -c "CREATE EXTENSION IF NOT EXISTS pgtap;"
+          PGPASSWORD=postgres psql -h localhost -U postgres -d postgres \
+            -c "CREATE EXTENSION IF NOT EXISTS pgcrypto;"
+
+      - name: Apply all Supabase migrations
+        run: |
+          set -e
+          for f in $(ls supabase/migrations/*.sql | sort); do
+            echo "Applying $f"
+            PGPASSWORD=postgres psql -h localhost -U postgres -d postgres \
+              -v ON_ERROR_STOP=1 -f "$f"
+          done
+
+      - name: Run pgTAP specs
+        run: |
+          set -e
+          # pg_prove parcourt récursivement et affiche TAP + résumé
+          pg_prove --host localhost --port 5432 --username postgres --dbname postgres \
+            --verbose supabase/tests/*.spec.sql
