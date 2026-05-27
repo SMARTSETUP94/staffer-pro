@@ -14,6 +14,7 @@ import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { useAuth } from "@/lib/auth-context";
+import { useCapability } from "@/hooks/use-capability";
 import { supabase } from "@/integrations/supabase/client";
 import { MetiersPostesTabs } from "@/components/parametres/MetiersPostesTabs";
 
@@ -42,14 +43,15 @@ const EMPTY: EditState = { open: false, mode: "create", libelle: "", ordre: 100,
 
 function PostesPage() {
   const navigate = useNavigate();
-  const { isAdmin, loading } = useAuth();
+  const { loading } = useAuth();
+  const canAdmin = useCapability("section.admin");
   const [edit, setEdit] = useState<EditState>(EMPTY);
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<Poste | null>(null);
 
   useEffect(() => {
-    if (!loading && !isAdmin) navigate({ to: "/planning" });
-  }, [loading, isAdmin, navigate]);
+    if (!loading && !canAdmin) navigate({ to: "/planning" });
+  }, [loading, canAdmin, navigate]);
 
   const { data: postes, refetch, isLoading } = useQuery({
     queryKey: ["postes-catalogue"],
@@ -92,7 +94,7 @@ function PostesPage() {
     void refetch();
   }
 
-  if (loading || !isAdmin) {
+  if (loading || !canAdmin) {
     return <div className="flex h-full items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
   }
 
