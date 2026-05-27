@@ -18,22 +18,10 @@ export const Route = createFileRoute("/_app")({
   component: AppGuard,
 });
 
-// Pages accessibles à un employé en desktop (vue restreinte)
-const EMPLOYE_DESKTOP_ALLOWED = [
-  "/aujourdhui",
-  "/dashboard",
-  "/dashboard-employe",
-  "/inbox",
-  "/ma-semaine",
-  "/mes-heures",
-  "/mes-swaps",
-  "/mes-propositions",
-  "/mes-missions",
-  "/mes-chantiers",
-  "/mes-contrats",
-  "/missions",
-  "/fabrication",
-];
+// L4c (27 mai 2026) — La whitelist EMPLOYE_DESKTOP_ALLOWED a été supprimée.
+// L'accès aux routes est désormais gouverné UNIQUEMENT par la matrice de
+// capabilities via requireCapability() dans le beforeLoad de chaque route
+// sensible. Voir mem://debts/audit-requirecapability-toutes-routes.
 
 // v0.39.1 BUG #6 — anti-loop guard. Si AppGuard redirige vers /onboarding
 // plus de N fois pendant la session courante, on stoppe la boucle, on marque
@@ -52,9 +40,6 @@ function AppGuard() {
   const { effIsMobile, effIsAdminOrChef, isPreviewing } = usePreview();
   const onboardingRedirectCountRef = useRef(0);
 
-  const isEmployeAllowedPath = EMPLOYE_DESKTOP_ALLOWED.some(
-    (p) => currentPath === p || currentPath.startsWith(p + "/"),
-  );
 
   const isChefOrAdmin = roles.includes("admin") || roles.includes("chef_chantier");
   const mustSetPassword = shouldForceSetPassword({
@@ -115,13 +100,10 @@ function AppGuard() {
       navigate({ to: target });
       return;
     }
-    // Desktop employé : autorisé uniquement sur whitelist (sinon → /ma-semaine).
-    if (!effIsAdminOrChef && !isEmployeAllowedPath && !currentPath.startsWith("/mobile/")) {
-      navigate({ to: "/ma-semaine" });
-    }
+    // L4c — plus de whitelist côté layout. requireCapability() côté route protège l'accès.
   }, [
     loading, rolesLoaded, user, isAdminOrChef, effIsAdminOrChef,
-    effIsMobile, isEmployeAllowedPath, mustSetPassword, profileCompleted, currentPath, navigate, roles, isPreviewing,
+    effIsMobile, mustSetPassword, profileCompleted, currentPath, navigate, roles, isPreviewing,
   ]);
 
   // Lot 7.0b — toast "Accès refusé" après redirect depuis requireCapability().
@@ -142,14 +124,6 @@ function AppGuard() {
     );
   }
 
-  // Employe sur desktop sans page autorisée : on attend la redirection
-  if (!effIsAdminOrChef && !isEmployeAllowedPath) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
 
   return (
     <AppLayout>
