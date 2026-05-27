@@ -109,13 +109,29 @@ function AujourdhuiPage() {
   const { data: capsSet } = useCapabilitiesSet();
   const canSeeHeuresWidget = useCapability("inbox.heures_saisir");
 
+  // L4a-bis hotfix : Supabase errors sont des objets {message,code,details,hint},
+  // PAS des Error instances → String(e) donnait "[object Object]" et masquait
+  // l'erreur SQL réelle (ex : "column a.phase does not exist").
+  const extractMessage = (e: unknown): string => {
+    if (e instanceof Error) return e.message;
+    if (e && typeof e === "object") {
+      const obj = e as { message?: unknown; details?: unknown; hint?: unknown };
+      if (typeof obj.message === "string" && obj.message) return obj.message;
+      if (typeof obj.details === "string" && obj.details) return obj.details;
+      if (typeof obj.hint === "string" && obj.hint) return obj.hint;
+      try { return JSON.stringify(e); } catch { return String(e); }
+    }
+    return String(e);
+  };
+
   const load = useCallback(async () => {
     setLoading(true);
     try {
       const list = await fetchInboxItems(200);
       setItems(list);
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : String(e);
+      const msg = extractMessage(e);
+      console.error("[aujourdhui] fetchInboxItems failed", e);
       toast.error(`Impossible de charger la page : ${msg}`, { id: "aujourdhui-load-err" });
     } finally {
       setLoading(false);
@@ -142,7 +158,8 @@ function AujourdhuiPage() {
           },
         });
       } catch (e: unknown) {
-        const msg = e instanceof Error ? e.message : String(e);
+        const msg = extractMessage(e);
+        console.error("[aujourdhui] dismissInboxItem failed", e);
         toast.error(`Échec : ${msg}`, { id: "aujourdhui-dismiss-err" });
         void load();
       } finally {
