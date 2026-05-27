@@ -85,8 +85,10 @@ interface Props {
   charges: ChargeAffaires[];
   filters: TableurFilters;
   canEdit: boolean;
-  isAdminOrChef: boolean;
-  isAdmin: boolean;
+  /** L3b1-B : remplace isAdminOrChef. Gate sur action.sign_opportunite côté parent. */
+  canManage: boolean;
+  /** L3b1-B : remplace isAdmin. Gate sur section.admin pour override Code 5XXX non-owner. */
+  canForceCode5xxx: boolean;
   /** v0.29.1 — id du user courant pour vérifier la propriété sur Code 5XXX. */
   currentUserId: string | null;
   defaultChargeId: string | null;
@@ -103,8 +105,8 @@ export function OpportunitesTableurView({
   charges,
   filters,
   canEdit,
-  isAdminOrChef,
-  isAdmin,
+  canManage,
+  canForceCode5xxx,
   currentUserId,
   defaultChargeId,
   onRowsMutated,
@@ -537,14 +539,14 @@ export function OpportunitesTableurView({
               <th className="px-2 py-2 text-left font-semibold">Montage</th>
               <th className="px-2 py-2 text-left font-semibold">Démontage</th>
               <th className="px-2 py-2 text-left font-semibold">Commentaires</th>
-              {isAdminOrChef && <th className="px-2 py-2"></th>}
+              {canManage && <th className="px-2 py-2"></th>}
             </tr>
           </thead>
           <tbody>
             {pageRows.length === 0 && (
               <tr>
                 <td
-                  colSpan={isAdminOrChef ? 12 : 11}
+                  colSpan={canManage ? 12 : 11}
                   className="px-4 py-8 text-center text-xs text-muted-foreground"
                 >
                   Aucune opportunité ne correspond aux filtres.
@@ -562,7 +564,7 @@ export function OpportunitesTableurView({
                 !!currentUserId && row.charge_affaires_id === currentUserId;
               const code5xxxEditable = canEditCode5XXX({
                 statut: row.statut_opportunite,
-                isAdmin,
+                isAdmin: canForceCode5xxx,
                 isOwner,
                 alreadySigned: !!row.signed_affaire_id,
               });
@@ -781,7 +783,7 @@ export function OpportunitesTableurView({
                       className="h-8 min-h-[2rem] min-w-[200px] resize-none py-1"
                     />
                   </td>
-                  {isAdminOrChef && (
+                  {canManage && (
                     <td className="px-2 py-1">
                       <div className="flex items-center gap-1">
                         {/* Indicateur discret de save en cours / réussi */}
