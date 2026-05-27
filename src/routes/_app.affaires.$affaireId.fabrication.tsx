@@ -63,7 +63,16 @@ export const Route = createFileRoute("/_app/affaires/$affaireId/fabrication")({
 
 function FabricationPage() {
   const { affaireId } = Route.useParams();
-  const { isAdminOrChef, isAdmin } = useAuth();
+  // L3b1-A — Refacto rôles → capabilities.
+  // - canEditFab : pilote tous les contrôles d'édition (select chef projet,
+  //   ajouter/éditer objet & étapes, bandeau "prête à livrer", wizard staffing
+  //   express, dropdowns Modifier). Mappé sur casting.edit_phase_fabrication
+  //   conformément au plan L3b1 §2 (les rôles ayant ce droit sont exactement
+  //   ceux qui pilotent la production atelier).
+  // - canSeeAdminHint : libellé "Admin : peut tout modifier" en pied de page →
+  //   section.admin (info contextuelle réservée admin, pas une action).
+  const canEditFab = useCapability("casting.edit_phase_fabrication");
+  const canSeeAdminHint = useCapability("section.admin");
   const vocab = useVocab();
   // Lot 8.2b — Lien temporaire vers la Fiche Objet (sera remplacé en 8.5 par un lien intégré natif).
   const ficheFlagOn = useFeatureFlag("fiche_objet_v1");
