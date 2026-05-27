@@ -37,8 +37,10 @@ import { Route as AppOpportunitesRouteImport } from './routes/_app.opportunites'
 import { Route as AppMonEquipeTypeRouteImport } from './routes/_app.mon-equipe-type'
 import { Route as AppMesSwapsRouteImport } from './routes/_app.mes-swaps'
 import { Route as AppMesPropositionsRouteImport } from './routes/_app.mes-propositions'
+import { Route as AppMesMissionsRouteImport } from './routes/_app.mes-missions'
 import { Route as AppMesHeuresRouteImport } from './routes/_app.mes-heures'
 import { Route as AppMesContratsRouteImport } from './routes/_app.mes-contrats'
+import { Route as AppMesChantiersRouteImport } from './routes/_app.mes-chantiers'
 import { Route as AppMaSemaineRouteImport } from './routes/_app.ma-semaine'
 import { Route as AppInterimairesRouteImport } from './routes/_app.interimaires'
 import { Route as AppIncidentAuthRouteImport } from './routes/_app.incident-auth'
@@ -100,6 +102,7 @@ import { Route as AppAdminAuditRouteImport } from './routes/_app.admin.audit'
 import { Route as AppAffairesAffaireIdIndexRouteImport } from './routes/_app.affaires.$affaireId.index'
 import { Route as MobileMissionAffaireIdPhaseRouteImport } from './routes/mobile.mission.$affaireId.$phase'
 import { Route as MobileChefAffairesAffaireIdRouteImport } from './routes/mobile.chef.affaires.$affaireId'
+import { Route as AppMissionsAffaireIdPhaseRouteImport } from './routes/_app.missions.$affaireId.$phase'
 import { Route as AppAffairesAffaireIdStaffingRouteImport } from './routes/_app.affaires.$affaireId.staffing'
 import { Route as AppAffairesAffaireIdPlanningChantierRouteImport } from './routes/_app.affaires.$affaireId.planning-chantier'
 import { Route as AppAffairesAffaireIdJournalRouteImport } from './routes/_app.affaires.$affaireId.journal'
@@ -249,6 +252,11 @@ const AppMesPropositionsRoute = AppMesPropositionsRouteImport.update({
   path: '/mes-propositions',
   getParentRoute: () => AppRoute,
 } as any)
+const AppMesMissionsRoute = AppMesMissionsRouteImport.update({
+  id: '/mes-missions',
+  path: '/mes-missions',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppMesHeuresRoute = AppMesHeuresRouteImport.update({
   id: '/mes-heures',
   path: '/mes-heures',
@@ -257,6 +265,11 @@ const AppMesHeuresRoute = AppMesHeuresRouteImport.update({
 const AppMesContratsRoute = AppMesContratsRouteImport.update({
   id: '/mes-contrats',
   path: '/mes-contrats',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppMesChantiersRoute = AppMesChantiersRouteImport.update({
+  id: '/mes-chantiers',
+  path: '/mes-chantiers',
   getParentRoute: () => AppRoute,
 } as any)
 const AppMaSemaineRoute = AppMaSemaineRouteImport.update({
@@ -575,6 +588,12 @@ const MobileChefAffairesAffaireIdRoute =
     path: '/affaires/$affaireId',
     getParentRoute: () => MobileChefRoute,
   } as any)
+const AppMissionsAffaireIdPhaseRoute =
+  AppMissionsAffaireIdPhaseRouteImport.update({
+    id: '/missions/$affaireId/$phase',
+    path: '/missions/$affaireId/$phase',
+    getParentRoute: () => AppRoute,
+  } as any)
 const AppAffairesAffaireIdStaffingRoute =
   AppAffairesAffaireIdStaffingRouteImport.update({
     id: '/staffing',
@@ -651,8 +670,10 @@ export interface FileRoutesByFullPath {
   '/incident-auth': typeof AppIncidentAuthRoute
   '/interimaires': typeof AppInterimairesRoute
   '/ma-semaine': typeof AppMaSemaineRoute
+  '/mes-chantiers': typeof AppMesChantiersRoute
   '/mes-contrats': typeof AppMesContratsRoute
   '/mes-heures': typeof AppMesHeuresRoute
+  '/mes-missions': typeof AppMesMissionsRoute
   '/mes-propositions': typeof AppMesPropositionsRoute
   '/mes-swaps': typeof AppMesSwapsRoute
   '/mon-equipe-type': typeof AppMonEquipeTypeRoute
@@ -726,6 +747,7 @@ export interface FileRoutesByFullPath {
   '/affaires/$affaireId/journal': typeof AppAffairesAffaireIdJournalRoute
   '/affaires/$affaireId/planning-chantier': typeof AppAffairesAffaireIdPlanningChantierRoute
   '/affaires/$affaireId/staffing': typeof AppAffairesAffaireIdStaffingRoute
+  '/missions/$affaireId/$phase': typeof AppMissionsAffaireIdPhaseRoute
   '/mobile/chef/affaires/$affaireId': typeof MobileChefAffairesAffaireIdRoute
   '/mobile/mission/$affaireId/$phase': typeof MobileMissionAffaireIdPhaseRoute
   '/affaires/$affaireId/': typeof AppAffairesAffaireIdIndexRoute
@@ -751,8 +773,10 @@ export interface FileRoutesByTo {
   '/incident-auth': typeof AppIncidentAuthRoute
   '/interimaires': typeof AppInterimairesRoute
   '/ma-semaine': typeof AppMaSemaineRoute
+  '/mes-chantiers': typeof AppMesChantiersRoute
   '/mes-contrats': typeof AppMesContratsRoute
   '/mes-heures': typeof AppMesHeuresRoute
+  '/mes-missions': typeof AppMesMissionsRoute
   '/mes-propositions': typeof AppMesPropositionsRoute
   '/mes-swaps': typeof AppMesSwapsRoute
   '/mon-equipe-type': typeof AppMonEquipeTypeRoute
@@ -824,6 +848,7 @@ export interface FileRoutesByTo {
   '/affaires/$affaireId/journal': typeof AppAffairesAffaireIdJournalRoute
   '/affaires/$affaireId/planning-chantier': typeof AppAffairesAffaireIdPlanningChantierRoute
   '/affaires/$affaireId/staffing': typeof AppAffairesAffaireIdStaffingRoute
+  '/missions/$affaireId/$phase': typeof AppMissionsAffaireIdPhaseRoute
   '/mobile/chef/affaires/$affaireId': typeof MobileChefAffairesAffaireIdRoute
   '/mobile/mission/$affaireId/$phase': typeof MobileMissionAffaireIdPhaseRoute
   '/affaires/$affaireId': typeof AppAffairesAffaireIdIndexRoute
@@ -852,8 +877,10 @@ export interface FileRoutesById {
   '/_app/incident-auth': typeof AppIncidentAuthRoute
   '/_app/interimaires': typeof AppInterimairesRoute
   '/_app/ma-semaine': typeof AppMaSemaineRoute
+  '/_app/mes-chantiers': typeof AppMesChantiersRoute
   '/_app/mes-contrats': typeof AppMesContratsRoute
   '/_app/mes-heures': typeof AppMesHeuresRoute
+  '/_app/mes-missions': typeof AppMesMissionsRoute
   '/_app/mes-propositions': typeof AppMesPropositionsRoute
   '/_app/mes-swaps': typeof AppMesSwapsRoute
   '/_app/mon-equipe-type': typeof AppMonEquipeTypeRoute
@@ -927,6 +954,7 @@ export interface FileRoutesById {
   '/_app/affaires/$affaireId/journal': typeof AppAffairesAffaireIdJournalRoute
   '/_app/affaires/$affaireId/planning-chantier': typeof AppAffairesAffaireIdPlanningChantierRoute
   '/_app/affaires/$affaireId/staffing': typeof AppAffairesAffaireIdStaffingRoute
+  '/_app/missions/$affaireId/$phase': typeof AppMissionsAffaireIdPhaseRoute
   '/mobile/chef/affaires/$affaireId': typeof MobileChefAffairesAffaireIdRoute
   '/mobile/mission/$affaireId/$phase': typeof MobileMissionAffaireIdPhaseRoute
   '/_app/affaires/$affaireId/': typeof AppAffairesAffaireIdIndexRoute
@@ -955,8 +983,10 @@ export interface FileRouteTypes {
     | '/incident-auth'
     | '/interimaires'
     | '/ma-semaine'
+    | '/mes-chantiers'
     | '/mes-contrats'
     | '/mes-heures'
+    | '/mes-missions'
     | '/mes-propositions'
     | '/mes-swaps'
     | '/mon-equipe-type'
@@ -1030,6 +1060,7 @@ export interface FileRouteTypes {
     | '/affaires/$affaireId/journal'
     | '/affaires/$affaireId/planning-chantier'
     | '/affaires/$affaireId/staffing'
+    | '/missions/$affaireId/$phase'
     | '/mobile/chef/affaires/$affaireId'
     | '/mobile/mission/$affaireId/$phase'
     | '/affaires/$affaireId/'
@@ -1055,8 +1086,10 @@ export interface FileRouteTypes {
     | '/incident-auth'
     | '/interimaires'
     | '/ma-semaine'
+    | '/mes-chantiers'
     | '/mes-contrats'
     | '/mes-heures'
+    | '/mes-missions'
     | '/mes-propositions'
     | '/mes-swaps'
     | '/mon-equipe-type'
@@ -1128,6 +1161,7 @@ export interface FileRouteTypes {
     | '/affaires/$affaireId/journal'
     | '/affaires/$affaireId/planning-chantier'
     | '/affaires/$affaireId/staffing'
+    | '/missions/$affaireId/$phase'
     | '/mobile/chef/affaires/$affaireId'
     | '/mobile/mission/$affaireId/$phase'
     | '/affaires/$affaireId'
@@ -1155,8 +1189,10 @@ export interface FileRouteTypes {
     | '/_app/incident-auth'
     | '/_app/interimaires'
     | '/_app/ma-semaine'
+    | '/_app/mes-chantiers'
     | '/_app/mes-contrats'
     | '/_app/mes-heures'
+    | '/_app/mes-missions'
     | '/_app/mes-propositions'
     | '/_app/mes-swaps'
     | '/_app/mon-equipe-type'
@@ -1230,6 +1266,7 @@ export interface FileRouteTypes {
     | '/_app/affaires/$affaireId/journal'
     | '/_app/affaires/$affaireId/planning-chantier'
     | '/_app/affaires/$affaireId/staffing'
+    | '/_app/missions/$affaireId/$phase'
     | '/mobile/chef/affaires/$affaireId'
     | '/mobile/mission/$affaireId/$phase'
     | '/_app/affaires/$affaireId/'
@@ -1456,6 +1493,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppMesPropositionsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/mes-missions': {
+      id: '/_app/mes-missions'
+      path: '/mes-missions'
+      fullPath: '/mes-missions'
+      preLoaderRoute: typeof AppMesMissionsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/mes-heures': {
       id: '/_app/mes-heures'
       path: '/mes-heures'
@@ -1468,6 +1512,13 @@ declare module '@tanstack/react-router' {
       path: '/mes-contrats'
       fullPath: '/mes-contrats'
       preLoaderRoute: typeof AppMesContratsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/mes-chantiers': {
+      id: '/_app/mes-chantiers'
+      path: '/mes-chantiers'
+      fullPath: '/mes-chantiers'
+      preLoaderRoute: typeof AppMesChantiersRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/ma-semaine': {
@@ -1897,6 +1948,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MobileChefAffairesAffaireIdRouteImport
       parentRoute: typeof MobileChefRoute
     }
+    '/_app/missions/$affaireId/$phase': {
+      id: '/_app/missions/$affaireId/$phase'
+      path: '/missions/$affaireId/$phase'
+      fullPath: '/missions/$affaireId/$phase'
+      preLoaderRoute: typeof AppMissionsAffaireIdPhaseRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/affaires/$affaireId/staffing': {
       id: '/_app/affaires/$affaireId/staffing'
       path: '/staffing'
@@ -2051,8 +2109,10 @@ interface AppRouteChildren {
   AppIncidentAuthRoute: typeof AppIncidentAuthRoute
   AppInterimairesRoute: typeof AppInterimairesRoute
   AppMaSemaineRoute: typeof AppMaSemaineRoute
+  AppMesChantiersRoute: typeof AppMesChantiersRoute
   AppMesContratsRoute: typeof AppMesContratsRoute
   AppMesHeuresRoute: typeof AppMesHeuresRoute
+  AppMesMissionsRoute: typeof AppMesMissionsRoute
   AppMesPropositionsRoute: typeof AppMesPropositionsRoute
   AppMesSwapsRoute: typeof AppMesSwapsRoute
   AppMonEquipeTypeRoute: typeof AppMonEquipeTypeRoute
@@ -2092,6 +2152,7 @@ interface AppRouteChildren {
   AppDevisIndexRoute: typeof AppDevisIndexRoute
   AppFabricationIndexRoute: typeof AppFabricationIndexRoute
   AppRhIndexRoute: typeof AppRhIndexRoute
+  AppMissionsAffaireIdPhaseRoute: typeof AppMissionsAffaireIdPhaseRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -2111,8 +2172,10 @@ const AppRouteChildren: AppRouteChildren = {
   AppIncidentAuthRoute: AppIncidentAuthRoute,
   AppInterimairesRoute: AppInterimairesRoute,
   AppMaSemaineRoute: AppMaSemaineRoute,
+  AppMesChantiersRoute: AppMesChantiersRoute,
   AppMesContratsRoute: AppMesContratsRoute,
   AppMesHeuresRoute: AppMesHeuresRoute,
+  AppMesMissionsRoute: AppMesMissionsRoute,
   AppMesPropositionsRoute: AppMesPropositionsRoute,
   AppMesSwapsRoute: AppMesSwapsRoute,
   AppMonEquipeTypeRoute: AppMonEquipeTypeRoute,
@@ -2153,6 +2216,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppDevisIndexRoute: AppDevisIndexRoute,
   AppFabricationIndexRoute: AppFabricationIndexRoute,
   AppRhIndexRoute: AppRhIndexRoute,
+  AppMissionsAffaireIdPhaseRoute: AppMissionsAffaireIdPhaseRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)

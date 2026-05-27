@@ -1,12 +1,5 @@
-/**
- * v0.44.2 — Redirect legacy /mobile/chef/a-valider → /mobile/chef/atelier
- * Conserve les bookmarks existants des chefs après la refonte v0.44.1.
- */
 import { createFileRoute, redirect } from "@tanstack/react-router";
-
+/** v0.50 (L4c) — Fusionnée dans /audit-heures. Stub redirect. */
 export const Route = createFileRoute("/mobile/chef/a-valider")({
-  beforeLoad: () => {
-    throw redirect({ to: "/mobile/chef/atelier", replace: true });
-  },
-  component: () => null,
+  beforeLoad: () => { throw redirect({ to: "/audit-heures", replace: true }); },
 });
