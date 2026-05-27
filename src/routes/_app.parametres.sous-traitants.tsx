@@ -2,7 +2,7 @@
 import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Loader2, Search, Plus, Pencil } from "lucide-react";
-import { useAuth } from "@/lib/auth-context";
+import { useCapability } from "@/hooks/use-capability";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -28,7 +28,7 @@ export const Route = createFileRoute("/_app/parametres/sous-traitants")({
 });
 
 function SousTraitantsPage() {
-  const { isAdminOrChef } = useAuth();
+  const canAdmin = useCapability("section.admin");
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<"__all__" | SousTraitantType>("__all__");
   const [actifOnly, setActifOnly] = useState(true);
@@ -49,7 +49,7 @@ function SousTraitantsPage() {
     });
   }, [data, search, typeFilter]);
 
-  if (!isAdminOrChef) return <Navigate to="/dashboard" />;
+  if (!canAdmin) return <Navigate to="/dashboard" />;
 
   function openCreate() {
     setEditing(null);
