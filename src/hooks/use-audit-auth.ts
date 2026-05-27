@@ -56,7 +56,7 @@ export function useAuthEvents(filters: {
   preset?: DatePreset;
   limit?: number;
 }) {
-  const { isAdmin } = useAuth();
+  const isAdmin = useCapability("admin.audit");
   const { types, preset = "7d", limit = 500 } = filters;
   const range = presetRange(preset);
 
@@ -79,7 +79,7 @@ export function useAuthEvents(filters: {
 }
 
 export function useUserConnectionStats() {
-  const { isAdmin } = useAuth();
+  const isAdmin = useCapability("admin.audit");
   return useQuery({
     queryKey: ["admin", "auth-connection-stats"],
     enabled: isAdmin,
@@ -93,7 +93,7 @@ export function useUserConnectionStats() {
 }
 
 export function useInvitationsList() {
-  const { isAdmin } = useAuth();
+  const isAdmin = useCapability("admin.audit");
   return useQuery({
     queryKey: ["admin", "auth-invitations"],
     enabled: isAdmin,
