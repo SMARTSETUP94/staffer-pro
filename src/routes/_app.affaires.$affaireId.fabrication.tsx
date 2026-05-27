@@ -375,7 +375,7 @@ function FabricationPage() {
                 <ObjetCardMobile
                   key={o.id}
                   objet={o}
-                  canEditFab={canEditFab}
+                  isAdminOrChef={canEditFab}
                   affaireIdForFiche={showFicheLink ? affaireId : null}
                   onEditObjet={(obj) => setEditObjet(obj)}
                   onEditEtape={(obj, etape) => setEditEtape({ objet: obj, etape })}
