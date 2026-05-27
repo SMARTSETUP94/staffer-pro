@@ -18,9 +18,6 @@ import { ChevronRight, Inbox, MapPin, PackageCheck, RefreshCw, Wrench } from "lu
 import { getMesMissions, type MissionListItem } from "@/server/mission-card.functions";
 import { useAuth } from "@/lib/auth-context";
 import { usePreview } from "@/lib/preview-context";
-import { PreviewBanner } from "@/components/PreviewBanner";
-import { MobileBottomNav } from "@/components/MobileBottomNav";
-import { LogoutConfirmButton } from "@/components/mobile/LogoutConfirmButton";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -52,7 +49,6 @@ function MesMissionsPage() {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <PreviewBanner />
 
       <header className="border-b border-border bg-card px-4 py-4">
         <div className="mx-auto flex max-w-md items-start justify-between gap-2">
@@ -112,7 +108,6 @@ function MesMissionsPage() {
         )}
       </main>
 
-      <MobileBottomNav />
     </div>
   );
 }
@@ -208,7 +203,7 @@ function MissionCard({ mission, muted }: { mission: MissionListItem; muted?: boo
   return (
     <li>
       <Link
-        to="/mobile/mission/$affaireId/$phase"
+        to="/missions/$affaireId/$phase"
         params={{ affaireId: mission.affaire_id, phase: mission.phase }}
         preload="intent"
         data-testid={`mission-card-${mission.affaire_id}-${mission.phase}`}
