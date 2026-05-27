@@ -596,9 +596,11 @@ export const updateUserRoles = createServerFn({ method: "POST" })
       throw new Error("Vous ne pouvez pas retirer votre propre rôle admin");
     }
 
-    // RPC SECURITY DEFINER : DELETE absents + INSERT idempotent + préserve chef_metier_scoped
-    // Bypass: on appelle via admin client pour ne pas dépendre du JWT user.
-    const { error } = await supabaseAdmin.rpc("replace_user_roles", {
+    // RPC SECURITY DEFINER : DELETE absents + INSERT idempotent + préserve chef_metier_scoped.
+    // IMPORTANT : appel via le client authentifié (supabase, JWT user) — PAS supabaseAdmin,
+    // sinon auth.uid() est NULL côté RPC et le check user_has_cap('section.admin') échoue.
+    // assertCallerIsAdmin ci-dessus garantit déjà que l'appelant a la cap.
+    const { error } = await supabase.rpc("replace_user_roles", {
       _user_id: data.targetUserId,
       _roles: data.roles.length > 0 ? data.roles : ["employe"],
     });
