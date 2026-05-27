@@ -19,10 +19,6 @@ import {
   type EquipeChantierMembre,
 } from "@/server/mes-equipes-chantiers.functions";
 import { useAuth } from "@/lib/auth-context";
-import { usePreview } from "@/lib/preview-context";
-import { PreviewBanner } from "@/components/PreviewBanner";
-import { MobileBottomNav } from "@/components/MobileBottomNav";
-import { LogoutConfirmButton } from "@/components/mobile/LogoutConfirmButton";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -69,7 +65,6 @@ function EquipeChantiersPage() {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <PreviewBanner />
 
       <header className="border-b border-border bg-card px-4 py-4">
         <div className="mx-auto flex max-w-md items-start justify-between gap-2">
@@ -128,7 +123,6 @@ function EquipeChantiersPage() {
         )}
       </main>
 
-      <MobileBottomNav />
     </div>
   );
 }
@@ -234,7 +228,7 @@ function PhaseBlock({
   if (tappable) {
     return (
       <Link
-        to="/mobile/mission/$affaireId/$phase"
+        to="/missions/$affaireId/$phase"
         params={{ affaireId, phase }}
         preload="intent"
         data-testid={`phase-link-${affaireId}-${phase}`}
