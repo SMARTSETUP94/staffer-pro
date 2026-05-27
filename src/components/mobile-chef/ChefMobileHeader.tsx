@@ -29,7 +29,7 @@ export function ChefMobileHeader({ title }: { title: string }) {
       </TooltipProvider>
       <div className="flex items-center gap-2 flex-shrink-0">
         <Link
-          to="/mobile/chef/moi"
+          to="/aujourdhui"
           className="relative inline-flex h-11 w-11 items-center justify-center rounded-full hover:bg-accent active:bg-accent/70"
           aria-label={
             unreadCount > 0
@@ -45,7 +45,7 @@ export function ChefMobileHeader({ title }: { title: string }) {
           )}
         </Link>
         <Link
-          to="/mobile/chef/moi"
+          to="/aujourdhui"
           aria-label="Mon profil"
           className="inline-flex h-11 w-11 items-center justify-center rounded-full hover:bg-accent active:bg-accent/70"
         >
