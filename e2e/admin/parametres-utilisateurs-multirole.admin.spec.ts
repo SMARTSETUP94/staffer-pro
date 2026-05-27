@@ -1,54 +1,53 @@
 /**
  * L3a — E2E admin : page /parametres/utilisateurs en mode multi-rôles.
  *
- * Scénario :
+ * Scénario déterministe (plus de skip défensif) :
  *  1. login admin → /parametres/utilisateurs
- *  2. ouvrir le popover de rôles sur un user test (pas l'admin courant)
- *  3. cocher 3 rôles cumulés (commercial + bureau_etude + chef_chantier)
- *  4. "Appliquer" → toast OK
- *  5. recharger la page
- *  6. assert : 3 badges de rôles distincts visibles sur la ligne du user test
+ *  2. localiser la ligne du user test `test_commercial@setupparis.test`
+ *     (compte seedé par e2e/seed.ts — Lot 8.2b)
+ *  3. ouvrir le popover multi-rôles
+ *  4. cocher 3 rôles cumulés : commercial + bureau_etude + chef_chantier
+ *  5. "Appliquer" → toast OK
+ *  6. recharger la page
+ *  7. assert : les 3 badges de rôles sont visibles sur la ligne du user test
  *
- * Défensif : skip si aucun user test cible n'est trouvé (ex: seed pas joué).
- * Auth : utilise la storage state admin (cf. global-setup).
+ * Prérequis : `bun run e2e/seed.ts` exécuté (compte commercial seedé).
+ * Auth : storage state admin via global-setup.
  */
 import { expect, test } from "@playwright/test";
 
+const TARGET_EMAIL = "test_commercial@setupparis.test";
+
 const TARGET_ROLES = [
-  { key: "commercial", label: /commercial/i },
+  { key: "commercial", label: /^commercial$/i },
   { key: "bureau_etude", label: /bureau.*[ée]tude/i },
   { key: "chef_chantier", label: /chef.*[ée]quipe|chef.*chantier/i },
 ];
 
 test.describe("L3a — /parametres/utilisateurs multi-rôles", () => {
-  test("admin coche 3 rôles cumulés → 3 badges persistés après reload", async ({ page }) => {
+  test("admin coche 3 rôles cumulés → 3 badges persistés après reload", async ({
+    page,
+  }) => {
     await page.goto("/parametres/utilisateurs");
     await expect(
       page.getByRole("heading", { name: /utilisateur/i }).first(),
     ).toBeVisible({ timeout: 15_000 });
 
-    // Cible un user test non-admin (email contenant `test_` ou `e2e`).
-    // Premier match dans le tableau.
-    const rows = page.getByRole("row");
-    const candidate = rows
-      .filter({ hasText: /test_|e2e|@setupparis\.test/i })
-      .filter({ hasNot: page.locator("text=/admin/i") })
-      .first();
+    // Ligne cible : déterministe sur l'email seedé.
+    const row = page.getByRole("row").filter({ hasText: TARGET_EMAIL }).first();
+    await expect(
+      row,
+      `Compte test ${TARGET_EMAIL} introuvable — lancer 'bun run e2e/seed.ts'`,
+    ).toBeVisible({ timeout: 10_000 });
 
-    if (!(await candidate.isVisible({ timeout: 5_000 }).catch(() => false))) {
-      test.skip(true, "Aucun user test cible trouvé dans la table (seed E2E absent).");
-    }
-
-    // Ouvrir le popover multi-rôles (bouton avec un libellé contenant "rôle" ou icône).
-    const roleTrigger = candidate
+    // Ouvrir le popover multi-rôles.
+    const roleTrigger = row
       .getByRole("button", { name: /r[ôo]le|modifier|changer/i })
       .first();
-    if (!(await roleTrigger.isVisible({ timeout: 3_000 }).catch(() => false))) {
-      test.skip(true, "Trigger popover rôles introuvable (UI variante).");
-    }
+    await expect(roleTrigger).toBeVisible({ timeout: 5_000 });
     await roleTrigger.click();
 
-    // Cocher les 3 rôles cibles via leur checkbox.
+    // Cocher les 3 rôles cibles.
     for (const r of TARGET_ROLES) {
       const cb = page.getByRole("checkbox", { name: r.label }).first();
       await expect(cb).toBeVisible({ timeout: 5_000 });
@@ -58,35 +57,35 @@ test.describe("L3a — /parametres/utilisateurs multi-rôles", () => {
     }
 
     // Appliquer.
-    const apply = page
+    await page
       .getByRole("button", { name: /appliquer|enregistrer|valider/i })
-      .first();
-    await apply.click();
+      .first()
+      .click();
 
-    // Toast / feedback succès (best-effort).
+    // Feedback succès (best-effort).
     await page
       .getByText(/r[ôo]les?.*(mis|appliqu|enregistr)/i)
       .first()
       .waitFor({ timeout: 5_000 })
       .catch(() => undefined);
 
-    // Reload pour s'assurer que la persistance est OK (pas juste state local).
+    // Reload → vérifier persistance.
     await page.reload();
     await expect(
       page.getByRole("heading", { name: /utilisateur/i }).first(),
     ).toBeVisible({ timeout: 15_000 });
 
-    // Retrouver la ligne et vérifier que les 3 rôles sont affichés.
-    const reloadedRow = rows
-      .filter({ hasText: /test_|e2e|@setupparis\.test/i })
-      .filter({ hasNot: page.locator("text=/^admin$/i") })
+    const reloadedRow = page
+      .getByRole("row")
+      .filter({ hasText: TARGET_EMAIL })
       .first();
     await expect(reloadedRow).toBeVisible({ timeout: 10_000 });
 
     for (const r of TARGET_ROLES) {
-      await expect(reloadedRow.getByText(r.label).first()).toBeVisible({
-        timeout: 5_000,
-      });
+      await expect(
+        reloadedRow.getByText(r.label).first(),
+        `Badge rôle "${r.key}" attendu sur la ligne ${TARGET_EMAIL}`,
+      ).toBeVisible({ timeout: 5_000 });
     }
   });
 });
