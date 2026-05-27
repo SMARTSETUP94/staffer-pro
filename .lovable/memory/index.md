@@ -245,3 +245,4 @@ Modèle staffing 3 niveaux (Sprint A) : `affaire_equipe(affaire_id, employe_id, 
 - [Lot L3 — Refonte permissions](mem://features/lot-l3-refonte-permissions) — Audit terminé 26/05. L3.0 users multi-select + L3.1 fab filter + L3.2-5 refacto isAdmin/isChef → user_has_cap(). ~30-40h
 - [Dette : Scope UI admin permissions](mem://debts/l2-scope-ui-admin-permissions) — Édition du champ `scope` (all/team/metier/own/none) non supportée dans `/admin/permissions` UI. Attend L3.
 - [Dette : Users multi-select /parametres/utilisateurs](mem://debts/users-multi-select-parametres) — UI mono-select 3 rôles vs DB multi 11 rôles. Verrou critique résolu par L3.0.
+- [L4b — Sidebar unique cap-driven](mem://features/l4b-sidebar-unique) — AppSidebar refondu 7 sections (Mon poste/Pilotage/Production/Logistique/Équipes/RH/Admin), "Aujourd'hui" toujours visible, drawer auto sur mobile via shadcn Sidebar
