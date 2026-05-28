@@ -160,38 +160,47 @@ Modèle staffing 3 niveaux (Sprint A) : `affaire_equipe(affaire_id, employe_id, 
 82. ✅ **10.4 Listing refactor + import** (28 mai 2026) — RPC `list_opportunites_active()` agrégé (prochaine action / dernier jalon / compteur actions) avec 3 index d'optimisation. Colonnes Kanban (badge urgence) + Tableur (3 colonnes). Filtres header URL-persistés (`actionsDues`, `noCa` admin-only). Dashboard `PipelineCommercialBloc` badges urgence. EXPLAIN ANALYZE ~48ms < 100ms.
 82bis. ✅ **10.5 Tests + cleanup final** (28 mai 2026) — E2E `scenario-complet.admin.spec.ts` (parcours admin bout-en-bout) + 12 assertions Vitest sur 4 SF (input validation 3 cas × 4 fns) + memory récap globale `mem://features/bloc-10-fiche-opportunite`. Dette `inbox-opp-action-create-table` marquée RÉSOLUE (cap câblée en 10.2).
 
+### Livré Lot L3b2 + L5-A + L4c — Refonte permissions & cleanup (28 mai 2026)
+83. ✅ **L3b2-A** — Groupe Paramètres + Admin : sous-traitants, compétences, employés-poste-principal, contrats, postes, métiers (resserrement chef→admin only flaggé).
+84. ✅ **L3b2-B** — Groupe Devis + Imports (6 fichiers) : `_app.devis.{rattachement-historique,index,import,historique}.tsx`, `_app.opportunites.import.tsx`, `_app.employes.import.tsx`. Caps : `section.devis`, `action.create_devis`, `section.admin` pour suppression.
+85. ✅ **L3b2-C** — Groupe Affaires + Staffing (5 fichiers) : `_app.affaires.{index,$affaireId,$affaireId.index}.tsx`, `_app.staffing.$planId.tsx`, `_app.charge-atelier.tsx`. Suppression flags legacy `isAdmin|isChef…` au profit de `requireCapability()`.
+86. ✅ **Sidebar cleanup + test cohérence** — Items stubs « Ma semaine » et « Tableau de bord » retirés de `AppSidebar.tsx`. Test garde cohérence sidebar ↔ routes (`src/lib/__tests__/sidebar-cap-coherence.test.ts`, 2 tests). 4 mismatches résolus (`/rh`, `/rh/contrats`, `/admin/permissions`, `/admin/feature-flags`).
+87. ✅ **L5-A safe** — Suppression rôle `chef_metier_scoped` côté code applicatif (44 lignes orphelines `role_capabilities`, cleanup ~10 fichiers TS, suppression `use-chef-scope.ts` + `ScopedAccessBanner.tsx`, adaptation routes `validation-heures` + `affaires.index`). Flag `sidebar_capability_v1` confirmé actif globalement.
+88. ✅ **L5-A-bis Phase 1** — Retrait applicatif complet `chef_metier_scoped` côté DB : DROP 14 policies + recréation sans branche `is_chef_metier_scoped()`, DROP helpers `is_chef_metier_scoped()` + `is_chef_metier_scoped_for_employe(uuid)`, simplification `is_chef_or_admin()` + `replace_user_roles()`. Phase 2 (DROP valeur enum) reportée — impact runtime nul.
+89. ✅ **L4c** — Cleanup stubs routes orphelines + commentaires obsolètes (`RoleGuard.tsx`, `_app.audit-heures.tsx`, test fixtures `auth-redirect-helpers.test.ts`). 35/35 tests verts.
+
 ### Roadmap — À venir
-83. ⏳ **8.4 UI** (~8h) — Server functions (signed URLs, upload, aggregation journal) + composant `ObjetJournalPhotos` (onglet Journal : timeline filtrable + commentaires + upload WebP compressé + galerie par étape + lazy IntersectionObserver).
-84. ⏳ **8.5** (~4h) — Liens croisés : remplacer lien temporaire 8.2b par navigation intégrée native (Gantt → fiche objet, Planning → fiche objet, Devis ligne → fiche objet, Kanban étape → fiche objet). Choix drawer vs nav à trancher.
-85. ⏳ **8.6** (~8h) — Polish + responsive 380px + E2E 8.3b (13 scénarios) + E2E 8.4 + 3 dettes (rename SF `loadActiveStepsForObjet`, Sheet vs Dialog AddPersonne, édition commentaire).
+90. ⏳ **8.4 UI** (~8h) — Server functions (signed URLs, upload, aggregation journal) + composant `ObjetJournalPhotos` (onglet Journal : timeline filtrable + commentaires + upload WebP compressé + galerie par étape + lazy IntersectionObserver).
+91. ⏳ **8.5** (~4h) — Liens croisés : remplacer lien temporaire 8.2b par navigation intégrée native (Gantt → fiche objet, Planning → fiche objet, Devis ligne → fiche objet, Kanban étape → fiche objet). Choix drawer vs nav à trancher.
+92. ⏳ **8.6** (~8h) — Polish + responsive 380px + E2E 8.3b (13 scénarios) + E2E 8.4 + 3 dettes (rename SF `loadActiveStepsForObjet`, Sheet vs Dialog AddPersonne, édition commentaire).
 
 ### Bloc 9 — Carte mission pose (en cours, ~30h)
-86. ✅ **9.1 Fondations DB** (26 mai 2026) — Table `mission_events` + enum + RLS self (Q2) + 5 colonnes infos terrain `affaires` + enum `notification_type` += `mission_probleme` + 2 capabilities + matrice rôles. 3 SF `getMesMissions`/`getCarteMission`/`recordMissionEvent`. Fallback notif chef via table `notifications`. Voir mem://features/bloc-9-carte-mission-pose.
-87. ✅ **9.2 Liste `/mobile/mes-missions`** (~3-4h) — Filtres Cette semaine / Suivante / Passées. Livrée, testée par Gabin.
-88. ✅ **9.6 bis** (26 mai 2026) — Navigation mobile + équipe chantiers + masquage role_terrain (validé par Gabin). Inclut wiring nav employé/chef + routes cleanup Batch 9.7.
-89. ⏳ **9.3 Carte détaillée `/mobile/mission/$id`** (~5-6h) — hero countdown + GPS + tel + sections accès/équipe/historique events.
-90. ⏳ **9.4 Heures auto + photos** (~5-7h) — pré-remplissage depuis events arrivee/depart + auto-tag photos.
-91. ⏳ **9.5 Signaler problème + 7 specs E2E** (~5-7h) — bouton signaler → recordMissionEvent(probleme) + notif chef + 7e spec multi-mission/jour.
+93. ✅ **9.1 Fondations DB** (26 mai 2026) — Table `mission_events` + enum + RLS self (Q2) + 5 colonnes infos terrain `affaires` + enum `notification_type` += `mission_probleme` + 2 capabilities + matrice rôles. 3 SF `getMesMissions`/`getCarteMission`/`recordMissionEvent`. Fallback notif chef via table `notifications`. Voir mem://features/bloc-9-carte-mission-pose.
+94. ✅ **9.2 Liste `/mobile/mes-missions`** (~3-4h) — Filtres Cette semaine / Suivante / Passées. Livrée, testée par Gabin.
+95. ✅ **9.6 bis** (26 mai 2026) — Navigation mobile + équipe chantiers + masquage role_terrain (validé par Gabin). Inclut wiring nav employé/chef + routes cleanup Batch 9.7.
+96. ⏳ **9.3 Carte détaillée `/mobile/mission/$id`** (~5-6h) — hero countdown + GPS + tel + sections accès/équipe/historique events.
+97. ⏳ **9.4 Heures auto + photos** (~5-7h) — pré-remplissage depuis events arrivee/depart + auto-tag photos.
+98. ⏳ **9.5 Signaler problème + 7 specs E2E** (~5-7h) — bouton signaler → recordMissionEvent(probleme) + notif chef + 7e spec multi-mission/jour.
 
 ### Bloc 10 — Fiche opportunité (reste ~15h, 10.1→10.5 livrés le 28 mai)
-92. ⏳ **10.5 Visites chantier** (~5h) — Table `affaires_visites` + CRUD + UI + storage photos. Reporté depuis 10.3.
-93. ⏳ **10.6 Échantillons matériaux** (~4h) — Table `affaires_echantillons` + CRUD + UI.
-94. ⏳ **10.7 Moodboard / artefacts** (~5h) — Réutilisation `affaire_documents` catégories `moodboard|esquisse_commerciale` + galerie.
-95. ⏳ **10.8 Enrichissement signature** (~3h) — Notification `atelier_chef` + log journal affaire dans RPC `sign_opportunite`.
-96. ⏳ **10.9 Mobile nouvelle visite** (~4h) — Formulaire terrain + photos + compte-rendu (optionnel V2).
-97. ⏳ **10.10 Tests E2E complets** (~4h) — Visite + échantillon + transfert 5XXX + vérification notif.
+99. ⏳ **10.5 Visites chantier** (~5h) — Table `affaires_visites` + CRUD + UI + storage photos. Reporté depuis 10.3.
+100. ⏳ **10.6 Échantillons matériaux** (~4h) — Table `affaires_echantillons` + CRUD + UI.
+101. ⏳ **10.7 Moodboard / artefacts** (~5h) — Réutilisation `affaire_documents` catégories `moodboard|esquisse_commerciale` + galerie.
+102. ⏳ **10.8 Enrichissement signature** (~3h) — Notification `atelier_chef` + log journal affaire dans RPC `sign_opportunite`.
+103. ⏳ **10.9 Mobile nouvelle visite** (~4h) — Formulaire terrain + photos + compte-rendu (optionnel V2).
+104. ⏳ **10.10 Tests E2E complets** (~4h) — Visite + échantillon + transfert 5XXX + vérification notif.
 
 ### Lots L3 → L5 (suite refonte permissions)
-98. ⏳ **L3** — Refonte permissions : audit terminé 26/05. 4 sous-lots : L3.0 `/parametres/utilisateurs` multi-select 11 rôles + caps debug panel (~4h), L3.1 double-filtre fab `casting.edit_phase_fabrication` (~1h), L3.2-L3.5 refacto `isAdmin/isChef` → `user_has_cap()` 200+ call sites (~25-35h). ~30-40h total.
-99. ⏳ **L4** — Seed data capabilities + MobileBottomNav adaptative unique (1 nav, pas 2).
-100. ⏳ **L5** — Nettoyage legacy isAdmin/isChef + tests E2E permissions.
+105. ⏳ **L3 restant** — L3.0 `/parametres/utilisateurs` multi-select 11 rôles + caps debug panel (~4h), L3.1 double-filtre fab `casting.edit_phase_fabrication` (~1h), L3.2-L3.5 suite refacto `isAdmin/isChef` → `user_has_cap()` call sites restants (~10-15h). ~15-20h total (L3b2 livré).
+106. ⏳ **L4** — Seed data capabilities + MobileBottomNav adaptative unique (1 nav, pas 2).
+107. ⏳ **L5-B** — Nettoyage bridge layer complet `isAdmin/isChef` dans `auth-context.tsx` + règle ESLint anti-régression + 11 specs E2E par rôle + seed users test.
 
 ### Backlog (non planifié)
-101. ⏸️ **v0.40 Phase 2** — Horaires précis SILAE (heure_debut/fin/pauses + nuit/sup/35h auto) — SUSPENDU.
-102. ⏸️ **v0.41** — Claude API auto-staffing UNIQUEMENT 5XXX (proxy + skill + tools + fallback v0.35 + cache + cap + télémétrie). Tier CDI/CDD avant intérim. Utilisera `affaire_equipe_historique` comme feature store contextuel.
-103. ⏸️ **Centre Analyse Heures** — Onglet consolidé heures + 8 filtres + exports (`v0.47` BACKLOG).
-104. ⏸️ **Logistique avancée** — Autorisations véhicules #56 + sous-traitants + historique + stats (`Sprint 3b` BACKLOG).
-105. ⏸️ **Sprint dette résiduelle v0.36** — Page admin véhicules + audit findings (BACKLOG).
+108. ⏸️ **v0.40 Phase 2** — Horaires précis SILAE (heure_debut/fin/pauses + nuit/sup/35h auto) — SUSPENDU.
+109. ⏸️ **v0.41** — Claude API auto-staffing UNIQUEMENT 5XXX (proxy + skill + tools + fallback v0.35 + cache + cap + télémétrie). Tier CDI/CDD avant intérim. Utilisera `affaire_equipe_historique` comme feature store contextuel.
+110. ⏸️ **Centre Analyse Heures** — Onglet consolidé heures + 8 filtres + exports (`v0.47` BACKLOG).
+111. ⏸️ **Logistique avancée** — Autorisations véhicules #56 + sous-traitants + historique + stats (`Sprint 3b` BACKLOG).
+112. ⏸️ **Sprint dette résiduelle v0.36** — Page admin véhicules + audit findings (BACKLOG).
 
 ## Memories
 - [Bloc 10 — Fiche opportunité (récap global 10.1→10.5)](mem://features/bloc-10-fiche-opportunite) — 28 mai 2026, phase 'opportunite' sur affaires, RPC sign_opportunite, 5 caps, 196 opps archivées, 12 Vitest + 2 E2E + 3 pgTAP
