@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageHeader } from "@/components/PageHeader";
 import { useAuth } from "@/lib/auth-context";
+import { useCapability } from "@/hooks/use-capability";
 
 export const Route = createFileRoute("/_app/roadmap")({
   component: RoadmapPage,
@@ -3377,7 +3378,7 @@ function formatDate(iso: string) {
 }
 
 function RoadmapPage() {
-  const { isAdmin } = useAuth();
+  const canManageRoadmap = useCapability("admin.roadmap.manage");
 
   const stats = useMemo(() => {
     let features = 0;
@@ -3393,7 +3394,7 @@ function RoadmapPage() {
     return { features, fixes, improvements, releases: RELEASES.length };
   }, []);
 
-  if (!isAdmin) {
+  if (!canManageRoadmap) {
     return (
       <div className="p-6">
         <Card>
