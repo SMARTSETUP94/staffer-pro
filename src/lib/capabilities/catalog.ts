@@ -35,6 +35,9 @@ export const CAPABILITY_CATALOG = {
   actions: [
     { key: "action.create_devis", label: "Créer un devis" },
     { key: "action.sign_opportunite", label: "Signer une opportunité" },
+    { key: "action.create_opportunite", label: "Créer une opportunité" },
+    { key: "action.edit_opportunite", label: "Éditer une opportunité" },
+    { key: "action.delete_opportunite", label: "Supprimer une opportunité" },
     { key: "action.publish_plan_fab", label: "Publier un plan fab" },
     { key: "action.delete_plan_fab", label: "Supprimer un plan fab" },
     { key: "action.validate_hours", label: "Valider des heures" },
