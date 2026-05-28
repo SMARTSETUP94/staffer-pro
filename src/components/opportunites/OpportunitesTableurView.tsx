@@ -795,6 +795,17 @@ export function OpportunitesTableurView({
                           ) : null}
                         </span>
                         <Button
+                          asChild
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
+                          aria-label="Ouvrir la fiche"
+                        >
+                          <Link to="/opportunites/$affaireId" params={{ affaireId: row.id }}>
+                            <ExternalLink className="h-3.5 w-3.5" />
+                          </Link>
+                        </Button>
+                        <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => setDeleteTarget(row)}

@@ -28,6 +28,7 @@ import { OpportuniteNextActionCard } from "@/components/opportunites/fiche/Oppor
 import { SignerOpportuniteDialog } from "@/components/opportunites/SignerOpportuniteDialog";
 import { AFFAIRE_TYPOLOGIES, type AffaireTypologie } from "@/lib/affaire-typologie";
 import { TAILLE_LABEL, type OpportuniteTaille } from "@/lib/opportunites";
+import type { TypologieFuture } from "@/lib/typologie-future";
 
 export const Route = createFileRoute("/_app/opportunites/$affaireId")({
   component: OpportuniteFichePage,
@@ -100,24 +101,12 @@ function OpportuniteFichePage() {
 
       {signOpen && (
         <SignerOpportuniteDialog
-          opp={{
-            id: data.affaire.id,
-            numero: data.affaire.numero,
-            client: data.affaire.client,
-            nom: data.affaire.nom,
-            statut_opportunite: (data.affaire.statut_opportunite ?? "a_faire") as
-              | "a_faire"
-              | "envoye"
-              | "gagne"
-              | "perdu"
-              | "termine",
-            charge_affaires_id: data.affaire.charge_affaires_id,
-            taille: (data.affaire.taille ?? null) as OpportuniteTaille | null,
-            date_opportunite: data.affaire.date_opportunite,
-            notes: data.affaire.notes,
-          }}
           open={signOpen}
           onOpenChange={setSignOpen}
+          affaireId={data.affaire.id}
+          oldCode={data.affaire.numero}
+          clientLabel={data.affaire.client}
+          typologieFuture={(data.affaire.typologie_future ?? null) as TypologieFuture | null}
           onSigned={() => {
             setSignOpen(false);
             refetch();

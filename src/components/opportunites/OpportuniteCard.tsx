@@ -1,6 +1,7 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Sparkles, Trophy, GripVertical, MoreVertical, Trash2 } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -55,8 +56,13 @@ export function OpportuniteCard({
   onDelete,
   draggable = true,
 }: Props) {
+  const navigate = useNavigate();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: opp.id, disabled: !draggable, data: { opp } });
+
+  const goToFiche = () => {
+    navigate({ to: "/opportunites/$affaireId", params: { affaireId: opp.id } });
+  };
 
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
@@ -99,7 +105,18 @@ export function OpportuniteCard({
             <GripVertical className="h-4 w-4" />
           </button>
         )}
-        <div className="min-w-0 flex-1">
+        <div
+          className="min-w-0 flex-1 cursor-pointer"
+          role="button"
+          tabIndex={0}
+          onClick={goToFiche}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              goToFiche();
+            }
+          }}
+        >
           <div className="flex items-baseline justify-between gap-2">
             <span className="font-mono text-xs font-bold text-primary">{opp.numero}</span>
             <div className="flex items-center gap-1">
