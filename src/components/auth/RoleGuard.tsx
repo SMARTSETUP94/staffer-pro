@@ -7,7 +7,7 @@
  *
  * Comportement :
  * - Si rôles pas encore chargés : affiche un loader léger
- * - Si rôle insuffisant : redirige vers /dashboard avec toast
+ * - Si rôle insuffisant : redirige vers `redirectTo` (défaut `/`) avec toast
  * - Sinon : rend les enfants
  *
  * Remplace les patterns ad-hoc `if (!isAdmin) return <Navigate />` éparpillés

@@ -112,7 +112,7 @@ describe("shouldForceSetPassword", () => {
 
 describe("onboarding guard idempotence", () => {
   it("profil incomplet hors onboarding → redirect onboarding", () => {
-    expect(shouldRedirectToOnboarding({ profileCompleted: false, currentPath: "/dashboard" })).toBe(true);
+    expect(shouldRedirectToOnboarding({ profileCompleted: false, currentPath: "/" })).toBe(true);
   });
 
   it("profil incomplet déjà sur /onboarding → pas de redirect en boucle", () => {
@@ -121,18 +121,18 @@ describe("onboarding guard idempotence", () => {
   });
 
   it("profil complet → jamais de redirect onboarding", () => {
-    expect(shouldRedirectToOnboarding({ profileCompleted: true, currentPath: "/dashboard" })).toBe(false);
+    expect(shouldRedirectToOnboarding({ profileCompleted: true, currentPath: "/" })).toBe(false);
   });
 
   it("v0.31.4 : skipped=true (Compléter plus tard) → pas de redirect même profil incomplet", () => {
     expect(
-      shouldRedirectToOnboarding({ profileCompleted: false, currentPath: "/dashboard", skipped: true }),
+      shouldRedirectToOnboarding({ profileCompleted: false, currentPath: "/", skipped: true }),
     ).toBe(false);
   });
 
   it("v0.31.4 : skipped=true ne force pas si profil complet (no-op)", () => {
     expect(
-      shouldRedirectToOnboarding({ profileCompleted: true, currentPath: "/dashboard", skipped: true }),
+      shouldRedirectToOnboarding({ profileCompleted: true, currentPath: "/", skipped: true }),
     ).toBe(false);
   });
 
