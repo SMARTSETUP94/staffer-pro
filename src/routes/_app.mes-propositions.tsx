@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useMesPropositions, type ConfirmationStatus } from "@/hooks/use-mes-propositions";
 import { PropositionsList } from "@/components/propositions/PropositionsList";
+import { requireCapability } from "@/lib/capability-guard";
 
 import { ScopeSelector, ScopeNotImplementedBanner, type UrlScope } from "@/components/scope/ScopeSelector";
 
@@ -16,6 +17,7 @@ export const Route = createFileRoute("/_app/mes-propositions")({
     const r = s.scope;
     return { scope: r === "team" || r === "all" ? r : "mine" };
   },
+  beforeLoad: () => requireCapability("mes_propositions.view"),
   head: () => ({ meta: [{ title: "Mes propositions — Setup Paris" }] }),
   component: MesPropositionsPage,
 });
