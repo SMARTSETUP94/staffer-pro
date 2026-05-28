@@ -182,6 +182,7 @@ Modèle staffing 3 niveaux (Sprint A) : `affaire_equipe(affaire_id, employe_id, 
 96. ⏸️ **Sprint dette résiduelle v0.36** — Page admin véhicules + audit findings (BACKLOG).
 
 ## Memories
+- [L5-B bridge auth-context purgé](mem://constraints/auth-context-no-role-bridge) — 28 mai 2026, ESLint no-restricted-syntax verrouille toute réintroduction de isAdmin/isChef/... sur useAuth()
 - [L4d cleanup final](mem://features/l4d-cleanup-final) — v0.50 suppression 20 stubs mobile + nav legacy + ViewAsSwitcher + effIsMobile + migration /parametres/utilisateurs → /admin/utilisateurs
 - [Centre d'analyse heures](mem://features/centre-analyse-heures) — BACKLOG : onglet consolidé heures + 8 filtres + exports
 - [Auto-staffing tier priority](mem://features/auto-staffing-tier-priority) — règle CDI/CDD avant intérim
