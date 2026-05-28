@@ -25,8 +25,10 @@ import {
   FileSignature,
   ClipboardCheck,
   ArrowLeftRight,
-
+  Users,
+  CalendarDays,
 } from "lucide-react";
+
 import { format, startOfWeek } from "date-fns";
 import { fr } from "date-fns/locale";
 import { toast } from "sonner";
@@ -106,20 +108,25 @@ interface MesWidgetSpec {
   icon: typeof Briefcase;
   title: string;
   subtitle: string;
+  cta?: string;
+  scope?: "mine" | "team" | "all";
 }
 
 const MES_WIDGETS: MesWidgetSpec[] = [
-  { capKey: "mes_missions.view", to: "/mes-missions", icon: Briefcase, title: "Mes missions pose", subtitle: "Montage & démontage planifiés" },
-  { capKey: "mes_chantiers.view", to: "/mes-chantiers", icon: HardHat, title: "Mes chantiers", subtitle: "Équipes où je suis casté" },
-  { capKey: "mes_contrats.view", to: "/mes-contrats", icon: FileSignature, title: "Mes contrats", subtitle: "Lecture & signature" },
-  { capKey: "mes_propositions.view", to: "/mes-propositions", icon: ClipboardCheck, title: "Mes propositions", subtitle: "Créneaux à confirmer" },
-  { capKey: "mes_swaps.view", to: "/mes-swaps", icon: ArrowLeftRight, title: "Mes échanges", subtitle: "Swaps avec collègues" },
+  { capKey: "mes_missions.view", to: "/mes-missions", icon: Briefcase, title: "Mes missions pose", subtitle: "Montage & démontage planifiés", scope: "mine" },
+  { capKey: "mes_chantiers.view", to: "/mes-chantiers", icon: HardHat, title: "Mes chantiers", subtitle: "Équipes où je suis casté", scope: "mine" },
+  { capKey: "mes_contrats.view", to: "/mes-contrats", icon: FileSignature, title: "Mes contrats", subtitle: "Lecture & signature", scope: "mine" },
+  { capKey: "mes_propositions.view", to: "/mes-propositions", icon: ClipboardCheck, title: "Mes propositions", subtitle: "Créneaux à confirmer", scope: "mine" },
+  { capKey: "mes_swaps.view", to: "/mes-swaps", icon: ArrowLeftRight, title: "Mes échanges", subtitle: "Swaps avec collègues", scope: "mine" },
+  { capKey: "dashboard.team.view", to: "/mon-equipe-type", icon: Users, title: "Mon équipe type", subtitle: "Coéquipiers récurrents", cta: "Voir" },
+  { capKey: "planning.view", to: "/planning", icon: CalendarDays, title: "Planning", subtitle: "Vue chantier & affectations", cta: "Ouvrir" },
 ];
 
 function MesWidgetCard({ spec }: { spec: MesWidgetSpec }) {
   const canSee = useCapability(spec.capKey);
   if (!canSee) return null;
   const Icon = spec.icon;
+
   return (
     <Card>
       <CardContent className="flex items-center gap-4 p-4">
@@ -131,12 +138,16 @@ function MesWidgetCard({ spec }: { spec: MesWidgetSpec }) {
           <p className="text-xs text-muted-foreground truncate">{spec.subtitle}</p>
         </div>
         <Button asChild variant="outline" size="sm">
-          <Link to={spec.to} search={{ scope: "mine" }}>Ouvrir</Link>
+          <Link to={spec.to} search={spec.scope ? { scope: spec.scope } : undefined}>
+            {spec.cta ?? "Ouvrir"}
+          </Link>
         </Button>
+
       </CardContent>
     </Card>
   );
 }
+
 
 function HomePage() {
   const [items, setItems] = useState<InboxItem[]>([]);
