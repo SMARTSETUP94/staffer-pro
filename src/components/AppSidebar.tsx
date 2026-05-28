@@ -124,8 +124,8 @@ function buildSections(
       label: "Admin",
       items: [
         { title: "Utilisateurs", url: "/admin/utilisateurs", icon: UserCircle, cap: "section.admin" },
-        { title: "Permissions", url: "/admin/permissions", icon: BadgeCheck, cap: "section.admin" },
-        { title: "Feature flags", url: "/admin/feature-flags", icon: Lightbulb, cap: "section.admin" },
+        { title: "Permissions", url: "/admin/permissions", icon: BadgeCheck, cap: "admin.permissions.manage" },
+        { title: "Feature flags", url: "/admin/feature-flags", icon: Lightbulb, cap: "admin.feature_flags.manage" },
         { title: "Métiers & postes", url: "/parametres/metiers", icon: Palette, cap: "section.admin" },
         { title: "Lieux entreprise", url: "/parametres/lieux", icon: Warehouse, cap: "section.admin" },
         { title: "Audit Admin", url: "/admin/audit", icon: ClipboardCheck, cap: "section.admin" },
