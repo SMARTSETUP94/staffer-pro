@@ -1,12 +1,12 @@
 /**
- * v0.50 (L4d) — Routing post-login simplifié au maximum.
+ * v0.51 (L6-A) — Page d'accueil unique `/` capability-driven.
  *
- * Décision Gabin 26 mai 2026 : suppression totale de la dualité
- * mobile/desktop. Tous les rôles atterrissent sur `/aujourdhui`
- * (page d'accueil unique capability-driven).
+ * Tous les rôles atterrissent sur `/`, qui filtre ses widgets selon les
+ * capabilities accordées. Plus de dualité mobile/desktop, plus de
+ * `/aujourdhui` séparée.
  */
 
 /** Renvoie la route cible post-login pour un user authentifié. */
 export function resolvePostLoginTarget(): string {
-  return "/aujourdhui";
+  return "/";
 }

@@ -8,10 +8,19 @@ import {
   shouldRedirectToOnboarding,
   isOnboardingSkipped,
   markOnboardingSkipped,
+  isAuthHashPresent,
 } from "@/lib/auth-redirect-helpers";
-import { resolvePostLoginTarget } from "@/lib/post-login-routing";
 import { consumeCapDenied } from "@/lib/capability-guard";
 import { toast } from "sonner";
+
+// v0.51 (L6-A) — Garde-fou hash auth Supabase (invite/recovery/magiclink) :
+// si l'utilisateur atterrit sur n'importe quelle route `_app` avec un hash
+// `#access_token=...&type=invite`, on le bascule immédiatement sur
+// /auth/set-password AVANT que `detectSessionInUrl` n'ouvre la session sur
+// la mauvaise route. Exécuté en synchrone au top du module (browser-only).
+if (typeof window !== "undefined" && isAuthHashPresent(window.location.hash)) {
+  window.location.replace(`/auth/set-password${window.location.hash}`);
+}
 
 export const Route = createFileRoute("/_app")({
   component: AppGuard,
@@ -82,11 +91,8 @@ function AppGuard() {
       return;
     }
     onboardingRedirectCountRef.current = 0;
-    // L4d — plus de whitelist côté layout, plus de routing mobile/desktop.
-    // resolvePostLoginTarget() = constante /aujourdhui ; l'index s'en sert.
-    // Ici on ne redirige plus depuis _app : requireCapability() côté route
-    // protège l'accès.
-    void resolvePostLoginTarget;
+    // L6-A — `/` est désormais la page d'accueil unique capability-driven.
+    // requireCapability() côté route protège l'accès aux pages sensibles.
   }, [
     loading, rolesLoaded, user,
     mustSetPassword, profileCompleted, currentPath, navigate, roles,
