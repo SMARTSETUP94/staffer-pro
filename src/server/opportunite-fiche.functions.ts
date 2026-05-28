@@ -256,13 +256,14 @@ export const updateOpportuniteFields = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-const ADD_ACTION = z.object({
+export const ADD_ACTION_SCHEMA = z.object({
   affaireId: z.string().uuid(),
   type: z.enum(OPP_ACTION_TYPES),
   texte: z.string().min(1).max(2000),
   date: z.string().optional(),
   prochaine_action_due_le: z.string().nullable().optional(),
 });
+const ADD_ACTION = ADD_ACTION_SCHEMA;
 
 export const addOpportuniteAction = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
