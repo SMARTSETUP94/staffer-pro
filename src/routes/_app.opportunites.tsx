@@ -126,6 +126,9 @@ interface OppRowFull extends OpportuniteCardData {
   date_montage: string | null;
   date_demontage: string | null;
   typologie_future: AffaireTypologie | null;
+  next_action_due_le: string | null;
+  last_jalon_etape: string | null;
+  actions_count: number | null;
 }
 
 function OpportunitesPage() {
