@@ -553,6 +553,26 @@ function OpportunitesPage() {
           )}
         </div>
 
+        <label className="flex h-9 cursor-pointer items-center gap-2 rounded-xl border border-border bg-card px-3 text-xs font-medium">
+          <Switch
+            checked={actionsDues}
+            onCheckedChange={setActionsDues}
+            aria-label="Actions dues sous 7 jours"
+          />
+          <span className="text-muted-foreground">Actions dues ≤ 7j</span>
+        </label>
+
+        {oppScope === "all" && (
+          <label className="flex h-9 cursor-pointer items-center gap-2 rounded-xl border border-border bg-card px-3 text-xs font-medium">
+            <Switch
+              checked={noCa}
+              onCheckedChange={setNoCa}
+              aria-label="Sans chargé d'affaires"
+            />
+            <span className="text-muted-foreground">Sans CA</span>
+          </label>
+        )}
+
         {vue === "tableur" && (
           <>
 
