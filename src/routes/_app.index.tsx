@@ -140,9 +140,11 @@ function MesWidgetCard({ spec }: { spec: MesWidgetSpec }) {
           <p className="text-xs text-muted-foreground truncate">{spec.subtitle}</p>
         </div>
         <Button asChild variant="outline" size="sm">
-          {/* @ts-expect-error TanStack Link typing for dynamic to+search */}
-          <Link {...linkProps}>{spec.cta ?? "Ouvrir"}</Link>
+          <Link to={spec.to} search={spec.scope ? { scope: spec.scope } : undefined}>
+            {spec.cta ?? "Ouvrir"}
+          </Link>
         </Button>
+
       </CardContent>
     </Card>
   );
