@@ -79,9 +79,8 @@ describe("Sidebar ↔ route capability coherence", () => {
     const missing: string[] = [];
     for (const { url } of items) {
       if (url.includes("$")) continue; // URL dynamique, skip
-      const file = path.join(ROUTES_DIR, urlToRouteFile(url));
-      if (!fs.existsSync(file)) {
-        missing.push(`  • ${url}  →  ${urlToRouteFile(url)} introuvable`);
+      if (!resolveRouteFile(url)) {
+        missing.push(`  • ${url}  →  ni _app.<seg>.tsx ni _app.<seg>.index.tsx`);
       }
     }
     if (missing.length > 0) {
@@ -97,17 +96,19 @@ describe("Sidebar ↔ route capability coherence", () => {
 
     for (const { url, caps } of items) {
       if (url.includes("$")) continue;
-      const file = path.join(ROUTES_DIR, urlToRouteFile(url));
+      const file = resolveRouteFile(url);
+      if (!file) continue; // déjà signalé par le test précédent
       const required = extractRouteRequiredCap(file);
       // Pas de requireCapability route-side → rien à vérifier (legit).
       if (!required) continue;
       // Sidebar OK si la cap route fait partie des caps déclarées (OR logique).
       if (!caps.includes(required)) {
         mismatches.push(
-          `  • ${url}\n      sidebar cap = [${caps.map((c) => `"${c}"`).join(", ")}]\n      route requireCapability = "${required}"  (${urlToRouteFile(url)})`,
+          `  • ${url}\n      sidebar cap = [${caps.map((c) => `"${c}"`).join(", ")}]\n      route requireCapability = "${required}"  (${path.basename(file)})`,
         );
       }
     }
+
 
     if (mismatches.length > 0) {
       throw new Error(
