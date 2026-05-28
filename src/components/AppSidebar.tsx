@@ -2,7 +2,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import type { LucideIcon } from "lucide-react";
 import {
   Clock, Calendar, Building2, Users, FileDown, ClipboardCheck, LogOut, CalendarOff,
-  UserCircle, LayoutDashboard, FileText, Trophy, Map, ClipboardList,
+  UserCircle, FileText, Trophy, Map, ClipboardList,
   Truck, Palette, Warehouse, Hammer, Wrench, BadgeCheck, Lightbulb,
   FileSignature, Inbox, PackageCheck, UsersRound, Briefcase, Settings,
 } from "lucide-react";
