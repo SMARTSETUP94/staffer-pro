@@ -287,13 +287,14 @@ export const addOpportuniteAction = createServerFn({ method: "POST" })
     return { id: row.id as string };
   });
 
-const UPDATE_JALON = z.object({
+export const UPDATE_JALON_SCHEMA = z.object({
   affaireId: z.string().uuid(),
   etape: z.enum(OPP_JALON_ETAPES),
   date_prevue: z.string().nullable().optional(),
   date_atteinte: z.string().nullable().optional(),
   notes: z.string().max(2000).nullable().optional(),
 });
+const UPDATE_JALON = UPDATE_JALON_SCHEMA;
 
 export const updateJalonStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
