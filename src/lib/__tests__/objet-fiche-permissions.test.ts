@@ -67,14 +67,13 @@ describe("objet-fiche-permissions (Lot 8.2c)", () => {
     expect(f.has("finition_detail")).toBe(false);
   });
 
-  it("poseur / atelier_metier / employe / rh / logistique / chef_metier_scoped = lecture seule", () => {
+  it("poseur / atelier_metier / employe / rh / logistique = lecture seule", () => {
     for (const role of [
       "poseur",
       "atelier_metier",
       "employe",
       "rh",
       "logistique",
-      "chef_metier_scoped",
     ]) {
       expect(getEditableFields([role]).size).toBe(0);
     }

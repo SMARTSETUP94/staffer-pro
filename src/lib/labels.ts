@@ -3,12 +3,12 @@
  *
  * Lot 7.1 — Vocabulaire centralisé.
  *
- * IMPORTANT — L'enum DB `app_role` (admin / chef_chantier / chef_metier_scoped /
- * rh / employe) reste INCHANGÉ. Toute la chaîne RLS + 9 migrations + 7 helpers
- * SECURITY DEFINER (is_admin, is_chef_or_admin, has_role, etc.) dépend de cette
- * valeur littérale. On ne traduit qu'à l'affichage.
+ * IMPORTANT — L'enum DB `app_role` est utilisé partout (RLS, helpers SECURITY
+ * DEFINER, migrations). Toute évolution du vocabulaire UI doit se faire
+ * UNIQUEMENT dans ce fichier — on ne traduit qu'à l'affichage.
  *
- * Pour faire évoluer le vocabulaire UI à l'avenir : modifier UNIQUEMENT ce fichier.
+ * L5-A (28 mai 2026) : rôle `chef_metier_scoped` retiré du code applicatif
+ * (0 user assigné). La valeur reste dans l'enum DB (cleanup en dette).
  */
 
 // ---------------------------------------------------------------------------
@@ -18,7 +18,6 @@
 export type AppRole =
   | "admin"
   | "chef_chantier"
-  | "chef_metier_scoped"
   | "rh"
   | "employe"
   // v0.49 Batch 9.7 — rôles Sprint A désormais typés côté front (cf. mem://debts/types-app-role-incomplet)
@@ -28,13 +27,12 @@ export type AppRole =
   | "atelier_metier"
   | "logistique"
   | "poseur"
-  // Lot L2 — nouveau rôle "Chef pose" (assignation manuelle post-L5)
+  // Lot L2 — Chef pose
   | "chef_pose";
 
 const USER_ROLE_LABELS: Record<AppRole, string> = {
   admin: "Admin",
   chef_chantier: "Chef d'équipe",
-  chef_metier_scoped: "Chef métier (scopé)",
   rh: "RH",
   employe: "Employé",
   commercial: "Commercial",
@@ -66,7 +64,6 @@ export const USER_ROLE_OPTIONS: { value: AppRole; label: string; hint?: string }
   { value: "logistique", label: USER_ROLE_LABELS.logistique },
   { value: "rh", label: USER_ROLE_LABELS.rh },
   { value: "employe", label: USER_ROLE_LABELS.employe },
-  { value: "chef_metier_scoped", label: USER_ROLE_LABELS.chef_metier_scoped, hint: "déprécié" },
 ];
 
 // ---------------------------------------------------------------------------

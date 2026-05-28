@@ -6,7 +6,6 @@
 export type InvitationRoleLabel =
   | "admin"
   | "chef_chantier"
-  | "chef_metier_scoped"
   | "employe"
   | "rh"
   | "commercial"
@@ -41,7 +40,6 @@ const FONT_STACK =
 function rolesToLabel(roles: InvitationRoleLabel[]): string {
   if (roles.includes("admin")) return "Administrateur";
   if (roles.includes("chef_chantier")) return "Chef de Chantier";
-  if (roles.includes("chef_metier_scoped")) return "Chef Métier";
   if (roles.includes("atelier_chef")) return "Chef d'atelier";
   if (roles.includes("chef_pose")) return "Chef pose";
   if (roles.includes("bureau_etude")) return "Bureau d'étude";

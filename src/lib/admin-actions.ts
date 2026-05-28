@@ -557,7 +557,6 @@ export const updateUserFullName = createServerFn({ method: "POST" })
 const ALL_APP_ROLES = [
   "admin",
   "chef_chantier",
-  "chef_metier_scoped",
   "employe",
   "rh",
   "commercial",
@@ -596,7 +595,7 @@ export const updateUserRoles = createServerFn({ method: "POST" })
       throw new Error("Vous ne pouvez pas retirer votre propre rôle admin");
     }
 
-    // RPC SECURITY DEFINER : DELETE absents + INSERT idempotent + préserve chef_metier_scoped.
+    // RPC SECURITY DEFINER : DELETE absents + INSERT idempotent.
     // IMPORTANT : appel via le client authentifié (supabase, JWT user) — PAS supabaseAdmin,
     // sinon auth.uid() est NULL côté RPC et le check user_has_cap('section.admin') échoue.
     // assertCallerIsAdmin ci-dessus garantit déjà que l'appelant a la cap.

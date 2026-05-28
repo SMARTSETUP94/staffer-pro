@@ -36,8 +36,6 @@ import { WeekPicker } from "@/components/planning/WeekPicker";
 import { cn } from "@/lib/utils";
 import type { HeuresExportRow } from "@/lib/heures-export";
 import { PageBreadcrumbs } from "@/components/PageBreadcrumbs";
-import { ScopedAccessBanner } from "@/components/auth/ScopedAccessBanner";
-import { useChefScope } from "@/hooks/use-chef-scope";
 import { useMesAffairesChefIds } from "@/hooks/use-mes-affaires-chef";
 import { Switch } from "@/components/ui/switch";
 import { SaisirPourEmployeDialog } from "@/components/heures/SaisirPourEmployeDialog";
@@ -71,10 +69,8 @@ interface SaisieRow {
 type StatutFilter = "soumis" | "valide" | "rejete" | "all";
 
 function ValidationHeuresPage() {
-  const { isScoped } = useChefScope();
   const { ids: mesAffairesIds, isLoading: mesAffairesLoading } = useMesAffairesChefIds();
-  const [onlyMine, setOnlyMine] = useState(isScoped);
-  useEffect(() => { if (isScoped) setOnlyMine(true); }, [isScoped]);
+  const [onlyMine, setOnlyMine] = useState(false);
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
   const [statutFilter, setStatutFilter] = useState<StatutFilter>("soumis");
   const [employeFilter, setEmployeFilter] = useState<string>("all");
@@ -259,8 +255,7 @@ function ValidationHeuresPage() {
   return (
     <div className="space-y-6 p-6">
       <PageBreadcrumbs steps={[{ label: "Équipes" }, { label: "Validation des heures" }]} />
-      <ScopedAccessBanner />
-      {(isScoped || mesAffairesIds.size > 0) && (
+      {mesAffairesIds.size > 0 && (
         <div className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2">
           <Switch
             id="only-mine-validation"

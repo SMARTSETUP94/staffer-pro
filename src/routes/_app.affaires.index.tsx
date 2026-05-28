@@ -23,8 +23,6 @@ import {
 } from "@/components/ui/table";
 import { TypologieBadge } from "@/components/typologie/TypologieBadge";
 import { TypologieMultiFilter } from "@/components/typologie/TypologieMultiFilter";
-import { ScopedAccessBanner } from "@/components/auth/ScopedAccessBanner";
-import { useChefScope } from "@/hooks/use-chef-scope";
 import { useMesAffairesChefIds } from "@/hooks/use-mes-affaires-chef";
 import { Switch } from "@/components/ui/switch";
 import { type AffaireTypologie, AFFAIRE_TYPOLOGIES, getAffaireTypologie } from "@/lib/affaire-typologie";
@@ -91,10 +89,8 @@ function AffairesPage() {
   const canManageAffaires = useCapability("section.affaires");
   const navigate = useNavigate({ from: "/affaires/" });
   const { typo: typoFilter } = Route.useSearch();
-  const { isScoped } = useChefScope();
   const { ids: mesAffairesIds, isLoading: mesAffairesLoading } = useMesAffairesChefIds();
-  const [onlyMine, setOnlyMine] = useState(isScoped);
-  useEffect(() => { if (isScoped) setOnlyMine(true); }, [isScoped]);
+  const [onlyMine, setOnlyMine] = useState(false);
   const [rows, setRows] = useState<AffaireRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -223,9 +219,7 @@ function AffairesPage() {
         }
       />
 
-      <ScopedAccessBanner />
-
-      {(isScoped || mesAffairesIds.size > 0) && (
+      {mesAffairesIds.size > 0 && (
         <div className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2">
           <Switch
             id="only-mine"

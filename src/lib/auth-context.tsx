@@ -6,7 +6,6 @@ import { supabase } from "@/integrations/supabase/client";
 export type AppRole =
   | "admin"
   | "chef_chantier"
-  | "chef_metier_scoped"
   | "employe"
   | "rh"
   // Sprint A — rôles métier ajoutés en DB, désormais typés côté front
@@ -27,13 +26,9 @@ export interface AuthContextValue {
   rolesLoaded: boolean;
   isAdmin: boolean;
   isChef: boolean;
-  /** chef_chantier OU chef_metier_scoped (n'inclut pas admin seul) */
-  isChefAny: boolean;
-  /** admin + chef_chantier (vue globale, exclut chef_metier_scoped) */
+  /** admin + chef_chantier (vue globale) */
   isChefGlobal: boolean;
-  /** chef_metier_scoped uniquement (accès par-affaire) */
-  isChefMetierScoped: boolean;
-  /** Élargi v0.45 : admin + chef_chantier + chef_metier_scoped */
+  /** admin + chef_chantier */
   isAdminOrChef: boolean;
   /** v0.48 Bloc 6 — rôle RH (accès module RH) */
   isRh: boolean;
@@ -274,10 +269,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const roles = useMemo(() => roleRows.map((r) => r.role), [roleRows]);
   const isAdmin = roles.includes("admin");
   const isChef = roles.includes("chef_chantier");
-  const isChefMetierScoped = roles.includes("chef_metier_scoped");
-  const isChefAny = isChef || isChefMetierScoped;
   const isChefGlobal = isAdmin || isChef;
-  const isAdminOrChef = isAdmin || isChef || isChefMetierScoped;
+  const isAdminOrChef = isAdmin || isChef;
   const isRh = isAdmin || roles.includes("rh");
   const isCommercial = roles.includes("commercial");
   const isBureauEtude = roles.includes("bureau_etude");
@@ -288,13 +281,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isInviteStatus = roleRows.some((r) => r.status === "invite");
   const value = useMemo<AuthContextValue>(() => ({
     user, session, roles, loading, rolesLoaded,
-    isAdmin, isChef, isChefAny, isChefGlobal, isChefMetierScoped, isAdminOrChef, isRh,
+    isAdmin, isChef, isChefGlobal, isAdminOrChef, isRh,
     isCommercial, isBureauEtude, isAtelierChef, isAtelierMetier, isLogistique, isPoseur,
     passwordSetDone, passwordSetAt, isInviteStatus, profileCompleted,
     signIn, signInWithMagicLink, signUp, signOut, refreshRoles,
   }), [
     user, session, roles, loading, rolesLoaded,
-    isAdmin, isChef, isChefAny, isChefGlobal, isChefMetierScoped, isAdminOrChef, isRh,
+    isAdmin, isChef, isChefGlobal, isAdminOrChef, isRh,
     isCommercial, isBureauEtude, isAtelierChef, isAtelierMetier, isLogistique, isPoseur,
     passwordSetDone, passwordSetAt, isInviteStatus, profileCompleted,
     signIn, signInWithMagicLink, signUp, signOut, refreshRoles,
