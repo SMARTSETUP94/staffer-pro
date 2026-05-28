@@ -1,115 +1,136 @@
-# Roadmap Setup Paris — Vue consolidée
+# Plan L5-A — Suppression définitive de `chef_metier_scoped`
 
-**Dernière mise à jour : 26 mai 2026 — post-audit L3**
+État DB : 0 user, 44 lignes `role_capabilities` orphelines, valeur encore dans l'enum `app_role`, 14 policies RLS et 2 helpers SQL dépendent encore d'elle.
 
----
+Décision produit déjà actée : on supprime la notion "chef scopé par affaire" — `use-chef-scope.ts` + `ScopedAccessBanner` + leurs consommateurs partent.
 
-## Vue d'ensemble
+## 1. Migration SQL unique atomique (1 transaction)
 
-| Bloc | Statut | Version | Détails |
-|------|--------|---------|---------|
-| Socle v0.27–v0.32 | Livré | v0.32.4 | Planning, RLS, cascade devis, validation imports |
-| v0.33 Feuille de route | Livré | v0.33 | Vue tableur exportable |
-| v0.35 Auto-staffing Fab | Livré | v0.35.14 | Algo backward planning, Gantt, Express, compétences 4 niveaux |
-| v0.38 Demi-journée | Livré | v0.38.2 | span_demi_jours, grille AM/PM |
-| v0.39 Vue 3 + Stabilité | Livré | v0.39.2b2 | Vue 3 éditable, greedy, E2E |
-| v0.40 Refonte Manut | Livré | v0.40.0e | Absorption Bois/Peint/Tap, treetable marge |
-| v0.41 Hotfix heures | Livré | v0.41.0a | Heures invisibles employé fix |
-| v0.42 Contrats CDDU | Livré | v0.42.2 | Template v2.1, catalogue postes, import Excel |
-| v0.43 Hub Chef Mobile S1 | Livré | v0.43.1 | 5 onglets, badges, scope app-side |
-| v0.44 Docs/Atelier | Livré | v0.44.7 | Bucket photos, galerie mobile, Kanban atelier, audit |
-| v0.45 Historique équipes | Livré | v0.45.1 | Table agrégée, widget, page /mon-equipe-type |
-| v0.46 Création comptes | Livré | v0.46 | Invitations admin, self-signup OFF |
-| v0.47 Routing + Hub | Livré | v0.47.3 | Post-login centralisé, 4 onglets métiers/postes |
-| v0.34.x E2E role-smoke | Livré | v0.34.x | 4 specs anti-fuite RGPD |
-| v0.48 Planning par pôle | Livré | v0.48 | Matrice métiers × jours, refonte nav 3 routes extraites |
-| Bloc 8 Fiche Objet | Livré partiel | 8.4 DB | 8.1→8.4 DB OK. 8.4 UI, 8.5, 8.6 en attente |
-| Sprint D Casting | Livré | v0.49 Sprint D | Typologie phases, alertes équipe 3 sources, planning macro Gantt, E2E |
-| Bloc 9 Carte Mission | En cours | 9.6 bis | 9.1→9.6 bis livrés. 9.3→9.5 à finaliser selon Gabin |
-| Lot L2 Capabilities | Livré | L2 | 59 capabilities seedées, helpers SQL, catalogue front |
-| Batch 9.7 Mobile Wiring | Livré | v0.49 | AppRole 11 rôles, nav mobile câblée, cleanup routes orphelines |
-| Lot L3 Permissions | Prêt | L3 | Audit terminé. L3.0 users + L3.1 fab + L3.2-5 refacto. ~30-40h |
-| Bloc 10 Fiche Opportunité | Prêt | — | Analyse livrée, ~38-42h, 11 lots |
+Découpage en 1 seule migration parce que toutes les étapes sont interdépendantes (DROP TYPE bloqué tant que policies/fonctions y réfèrent, mais ALTER POLICY exige DROP+CREATE).
 
----
+### 1.1 Refacto 14 policies RLS
 
-## Livrés récents (depuis mi-mai 2026)
+Pour chaque policy, retirer la branche `OR (is_chef_metier_scoped() AND <quelque_chose>)`. La sémantique restante = admin + chef_chantier global.
 
-### Sprint D Casting (v0.49) — Livré complet
-- Batch 1 : Typologie phases + alertes équipe opt-in + widget capacité casting
-- Batch 2 : Phase logistique dans affaire_equipe.phase + FAB_SOUS_ETAPES 3 sous-blocs + FAB_METIERS 6 métiers + opt-in UI
-- Batch 3 : Planning chantier macro Gantt (7 phases + jalons + sous-blocs fab 7 métiers)
-- Batch 4 : 4 specs E2E (casting-capacite / inbox-alertes / planning-macro / staffing-rename)
+Tables impactées :
+- `affaire_equipe` — `affaire_equipe_modify_chef_admin`
+- `assignation_objets` — insert + delete
+- `assignations` — insert + update + delete
+- `employes` — `employes_select_self_or_chef` (perd branche scoped employés)
+- `fabrication_objet_equipe` — `foe_modify_chef_admin`
+- `fabrication_objets` — `fabrication_objets_modify_chef_admin`
+- `heures_saisies` — select + insert + update + delete (4)
+- `storage.objects` — `fab_photos_storage_select_scoped`
 
-### Bloc 9 — Carte mission pose
-- 9.1 ✅ Fondations DB (mission_events + 5 colonnes infos terrain + 3 SF + fallback notif)
-- 9.2 ✅ Liste `/mobile/mes-missions` (filtres Cette semaine / Suivante / Passées)
-- 9.3 ⏳ Carte détaillée `/mobile/mission/$id` (~5-6h)
-- 9.4 ⏳ Heures auto + photos (~5-7h)
-- 9.5 ⏳ Signaler problème + 7 specs E2E (~5-7h)
-- 9.6 bis ✅ Navigation mobile + équipe chantiers + masquage role_terrain (validé par Gabin)
+Pattern : `DROP POLICY ...; CREATE POLICY ... (...)` avec la branche scoped retirée.
 
-### Lot L2 — Seed matrice rôles × capabilities (définitif)
-- Enum `chef_pose` ajouté à `app_role`
-- 59 capabilities seedées en DB avec `scope` (all/team/metier/own/none)
-- Helpers SQL `user_has_cap(_cap text)` et `user_cap_scope(_cap text)`
-- Catalogue front typé `src/lib/capabilities/catalog.ts` + integrity tests Vitest
-- Page `/admin/permissions` étendue à 12 colonnes (11 rôles + legacy)
-- Backfill `chef_metier_scoped` → `atelier_chef`
+### 1.2 DROP helpers SQL
 
-### Batch 9.7 — Mobile Wiring & Role Synchronization
-- P1 ✅ : AppRole étendu (11 rôles : +commercial, bureau_etude, atelier_chef, atelier_metier, logistique, poseur, chef_pose), helpers isXxx dans auth-context
-- P2 ✅ : Employé nav → onglet "Équipe" `/mobile/equipe-chantiers`
-- P3 ✅ : Chef nav → onglet "Missions" `/mobile/mes-missions`
-- P4 ✅ : Nettoyage 3 routes orphelines supprimées (`/mobile/mois`, `/mobile/chef/fabrication`, `/mobile/chef/staffer`)
+```sql
+DROP FUNCTION public.is_chef_metier_scoped();
+DROP FUNCTION public.is_chef_metier_scoped_for_employe(uuid);
+```
 
----
+### 1.3 DROP + recréation fonctions typées `app_role`
 
-## En cours / Prochaines étapes (priorisé)
+Signatures dépendent du type → drop obligatoire avant DROP TYPE :
+- `has_role(uuid, app_role) → boolean` — recréée à l'identique
+- `replace_user_roles(uuid, app_role[]) → void` — recréée SANS la ligne `AND role <> 'chef_metier_scoped'`
+- `get_user_effective_caps(uuid) → TABLE(..., source_roles app_role[])` — recréée à l'identique
 
-### Immédiat
-1. **Lot L3** — Refonte permissions : audit terminé 26/05, prêt à démarrer (~30-40h).
-   - L3.0 `/parametres/utilisateurs` multi-select 11 rôles + caps debug panel (~4h)
-   - L3.1 double-filtre fab `casting.edit_phase_fabrication` (~1h)
-   - L3.2-L3.5 refacto `isAdmin/isChef` → `user_has_cap()` 200+ call sites (~25-35h)
-2. **Finaliser Bloc 9** — 9.3, 9.4, 9.5 selon retours test Gabin (~17-20h).
-3. **Bloc 10** — Fiche opportunité (~38-42h, 11 lots). Prêt à démarrer, à prioriser post-L3 ou parallèle selon dispo Gabin.
+### 1.4 Cleanup data + enum
 
-### Court terme
-4. **Lot L4** — Seed data capabilities + MobileBottomNav adaptative unique (1 seule nav, pas 2) + fabrication atelier mobile + fiche affaire mobile enrichie
-5. **Lot L5** — Nettoyage legacy isAdmin/isChef + tests E2E permissions
-6. **Bloc 8 suite** — 8.4 UI (journal/photos), 8.5 (liens croisés), 8.6 (polish + E2E)
+```sql
+DELETE FROM public.role_capabilities WHERE role = 'chef_metier_scoped';
+ALTER TABLE public.user_roles      ALTER COLUMN role TYPE text;
+ALTER TABLE public.role_capabilities ALTER COLUMN role TYPE text;
+DROP TYPE public.app_role;
+CREATE TYPE public.app_role AS ENUM (
+  'admin','rh','commercial','bureau_etude','chef_chantier',
+  'atelier_chef','atelier_metier','chef_pose','poseur','logistique','employe'
+);
+ALTER TABLE public.user_roles      ALTER COLUMN role TYPE public.app_role USING role::public.app_role;
+ALTER TABLE public.role_capabilities ALTER COLUMN role TYPE public.app_role USING role::public.app_role;
+```
 
-### Moyen terme — Backlog
-7. **v0.40 Phase 2** — Horaires précis SILAE (heure_debut/fin/pauses + nuit/sup/35h auto) — SUSPENDU
-8. **v0.41 Claude API** — Auto-staffing intelligent 5XXX (utilise affaire_equipe_historique comme feature store)
-9. **Centre Analyse Heures** — Onglet consolidé heures + 8 filtres + exports
-10. **Logistique avancée** — Autorisations véhicules #56 + sous-traitants + historique + stats
-11. **Sprint dette résiduelle v0.36** — Page admin véhicules + audit findings
+### 1.5 GRANTs (contrat mémoire core : NEVER REVOKE EXECUTE)
 
----
+```sql
+GRANT EXECUTE ON FUNCTION public.has_role(uuid, public.app_role)        TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.replace_user_roles(uuid, public.app_role[]) TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.get_user_effective_caps(uuid)          TO authenticated, service_role;
+```
 
-## Dettes actives
+## 2. Cleanup TypeScript (parallel writes)
 
-| Dette | Fichier | Statut | Cible |
-|-------|---------|--------|-------|
-| Scope UI admin permissions | `l2-scope-ui-admin-permissions` | En attente | L3 |
-| Users multi-select 11 rôles | `parametres-utilisateurs-multi-select` | En attente | L3.0 |
-| Mobile fabrication atelier | `mobile-fabrication-a-livrer-en-L4` | En attente | L4 |
-| Fiche affaire mobile enrichie | `mobile-fiche-affaire-a-enrichir-en-L4` | En attente | L4 |
-| Tests E2E 8.3b scénario 11 | `e2e-specs-83b-scenario-11-revision` | En attente | 8.6 |
-| Rename loadActiveStepsForObjet | `load-active-steps-for-objet-rename` | En attente | 8.6 |
-| Dialog vs Sheet AddPersonne | `equipe-add-personne-dialog-vs-sheet` | En attente | 8.6 |
-| RLS bypass BE objet.edit | `rls-bypass-bureau-etude-objet-edit` | En attente | — |
+### Suppressions de fichiers
+- `src/hooks/use-chef-scope.ts`
+- `src/components/auth/ScopedAccessBanner.tsx`
 
-### Dettes résolues (depuis dernière mise à jour)
-- AppRole TS incomplet (`types-app-role-incomplet`) — résolu v0.49 Batch 9.7 P1
-- Routes mobile orphelines (`routes-mobile-orphelines`) — résolu v0.49 Batch 9.7 P4
+### Patches
+| Fichier | Action |
+|---|---|
+| `src/lib/auth-context.tsx` | Retirer `"chef_metier_scoped"` du type `AppRole`, props `isChefMetierScoped` + `isChefAny`, leurs dérivations lignes 277-278 et value object lignes 291-298 |
+| `src/lib/labels.ts` | Retirer du type union, de `USER_ROLE_LABELS`, de `USER_ROLE_OPTIONS` |
+| `src/components/atoms/RoleSwitcher.tsx` | Retirer de `ROLE_PRIORITY` |
+| `src/lib/admin-actions.ts` | Retirer ligne 560 + commentaire ligne 599 |
+| `src/lib/email-templates/invitation.ts` | Retirer du type union ligne 9 + if ligne 44 |
+| `src/lib/dashboard/types.ts` | Retirer preset `chef_metier_scoped` lignes 81-83 |
+| `src/routes/_app.validation-heures.tsx` | Retirer import `useChefScope` + `ScopedAccessBanner` + leur usage (lignes 39-40, 74, 262) |
+| `src/routes/_app.affaires.index.tsx` | Idem (lignes 26-27, 94, 226) |
+| `src/routes/_app.admin.feature-flags.tsx` | Retirer mention dans le commentaire ligne 7 |
+| `src/routes/_app.audit-heures.tsx` | Retirer mention dans le commentaire ligne 41 |
+| `src/routes/_app.admin.utilisateurs.tsx` | Retirer commentaire ligne 69 |
+| `src/lib/objet-fiche-permissions.ts` | Mettre à jour commentaires lignes 12 + 69 |
+| `src/server/objet-equipe-mutations.functions.ts` | Commentaire ligne 5 |
+| `src/components/dashboard/widgets/MonEquipeTypeWidget.tsx` | Commentaire ligne 5 |
+| `src/lib/__tests__/labels.test.ts` | Retirer assertions sur `chef_metier_scoped` lignes 20 + 44 |
+| `src/lib/__tests__/objet-fiche-permissions.test.ts` | Retirer du tableau lignes 70 + 77 |
 
----
+`src/integrations/supabase/types.ts` : régénéré automatiquement après la migration, ne pas y toucher.
 
-## Historique complet des versions
+## 3. Vérifications post-livraison
 
-Voir `.lovable/memory/index.md` pour la mémoire détaillée (règles métier, contraintes techniques, contexte par feature).
+```bash
+rg -n "chef_metier_scoped" -g "*.ts" -g "*.tsx" src/   # doit être vide
+```
 
-*Ce document est la vue consolidée. Pour le détail technique d'une livraison, consulter la mémoire associée.*
+```sql
+-- enum
+SELECT array_agg(unnest::text ORDER BY unnest::text)
+FROM unnest(enum_range(NULL::app_role));
+-- doit retourner SANS 'chef_metier_scoped'
+
+-- policies
+SELECT count(*) FROM pg_policies
+WHERE qual LIKE '%chef_metier_scoped%' OR with_check LIKE '%chef_metier_scoped%';
+-- doit retourner 0
+
+-- helpers
+SELECT count(*) FROM pg_proc WHERE proname LIKE 'is_chef_metier_scoped%';
+-- doit retourner 0
+```
+
+Build + typecheck doivent passer (TanStack regen types après migration).
+
+## 4. Hors scope (reportés)
+
+- **L5-B** (sprint dédié) : suppression complète du bridge layer `auth-context` (les ~12 autres bools `isAdmin/isChef/isRh/...`), règle ESLint `no-restricted-syntax` + extension MemberExpression, 11 specs E2E par rôle + seed users test, adapter `e2e/helpers/auth.ts`.
+- **Flag `sidebar_capability_v1`** : déjà actif globalement, rien à faire.
+
+## 5. Risques résiduels
+
+- Les 14 ALTER POLICY retirent un accès qui était potentiellement encore consommé par RLS pour des users avec `chef_metier_scoped`. Mais : **0 user n'a ce rôle en DB**, donc en pratique aucun comportement runtime ne change.
+- L'enum recreation via `text` détour fonctionne sur Supabase Postgres standard.
+- Si la migration échoue à mi-parcours, la transaction rollback automatiquement.
+
+## 6. Format de livraison
+
+- 1 migration SQL atomique (1 appel `supabase--migration`)
+- ~17 patches TS + 2 suppressions (en parallèle après migration approuvée)
+- Mise à jour `mem://index.md` roadmap : L5-A livré, L5-B en attente
+- Pas de test E2E nouveau (reporté en L5-B)
+
+**Volume estimé** : 1 migration ~250 lignes SQL + ~17 patches TS = 2-3h Lovable d'exécution une fois validé.
+
+Tu valides ?
