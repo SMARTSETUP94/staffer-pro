@@ -153,6 +153,12 @@ Modèle staffing 3 niveaux (Sprint A) : `affaire_equipe(affaire_id, employe_id, 
 ### Livré Lot L2 — Seed matrice capabilities définitif (26 mai 2026)
 78. ✅ **L2** (26 mai 2026) — Enum `chef_pose` + 59 capabilities seedées DB avec `scope` (all/team/metier/own/none). Helpers SQL `user_has_cap`/`user_cap_scope`. Catalogue front `src/lib/capabilities/catalog.ts` + integrity tests. Page `/admin/permissions` 12 colonnes. Backfill `chef_metier_scoped` → `atelier_chef`.
 
+### Livré Bloc 10 — Fiche opportunité (28 mai 2026)
+79. ✅ **10.1 Fondations DB** (28 mai 2026) — Tables `opportunite_actions` + `opportunite_jalons` (pipeline 4 étapes), enum `opp_action_type` (10 types), RPC `sign_opportunite` atomique 9XXX→5XXX avec advisory lock + 4 caps + RLS. Seed 784 jalons (196 opps × 4). Voir mem://features/bloc-10-1-fondations-db.
+80. ✅ **10.2 Inbox extension + Cleanup Risque #1** (28 mai 2026) — Colonne `archived_at` + index + RPC `archive_affaire`. 196 opps legacy archivées (191 sans CA + 5 test). Extension `get_inbox_items` source `opp_action` cap-gated (`inbox.opp_action`). Test pgTAP 3 assertions.
+81. ✅ **10.3 Fiche UI** (28 mai 2026) — Route `/opportunites/$affaireId`, 3 composants extraits (`OpportuniteFicheHeader`, `OpportuniteJalonsBar`, `OpportuniteNextActionCard`) + sections inlinées. 1 server fn file avec 4 fns. Nav câblée Kanban+Tableur. Tests E2E+Vitest. Voir mem://features/bloc-10-3-fiche-ui.
+82. ✅ **10.4 Listing refactor + import** (28 mai 2026) — RPC `list_opportunites_active()` agrégé (prochaine action / dernier jalon / compteur actions) avec 3 index d'optimisation. Colonnes Kanban (badge urgence) + Tableur (3 colonnes). Filtres header URL-persistés (`actionsDues`, `noCa` admin-only). Dashboard `PipelineCommercialBloc` badges urgence. EXPLAIN ANALYZE ~48ms < 100ms.
+
 ### Roadmap — À venir
 79. ⏳ **8.4 UI** (~8h) — Server functions (signed URLs, upload, aggregation journal) + composant `ObjetJournalPhotos` (onglet Journal : timeline filtrable + commentaires + upload WebP compressé + galerie par étape + lazy IntersectionObserver).
 80. ⏳ **8.5** (~4h) — Liens croisés : remplacer lien temporaire 8.2b par navigation intégrée native (Gantt → fiche objet, Planning → fiche objet, Devis ligne → fiche objet, Kanban étape → fiche objet). Choix drawer vs nav à trancher.
@@ -166,8 +172,13 @@ Modèle staffing 3 niveaux (Sprint A) : `affaire_equipe(affaire_id, employe_id, 
 86. ⏳ **9.4 Heures auto + photos** (~5-7h) — pré-remplissage depuis events arrivee/depart + auto-tag photos.
 87. ⏳ **9.5 Signaler problème + 7 specs E2E** (~5-7h) — bouton signaler → recordMissionEvent(probleme) + notif chef + 7e spec multi-mission/jour.
 
-### Bloc 10 — Fiche opportunité (prêt à démarrer, ~38-42h)
-88. ⏳ **Analyse livrée** (26 mai 2026) — Note pré-implémentation dans `mem://features/bloc-10-fiche-opportunite-analyse`. DB déjà partiellement équipée (phase, statut_opportunite, code_opportunite, typologie_future). À enrichir 5 champs + 2 tables `affaires_visites/echantillons`. 11 lots. RPC `sign_opportunite` à enrichir notif `atelier_chef`.
+### Bloc 10 — Fiche opportunité (reste ~15h, 10.1→10.4 livrés le 28 mai)
+92. ⏳ **10.5 Visites chantier** (~5h) — Table `affaires_visites` + CRUD + UI + storage photos. Reporté depuis 10.3.
+93. ⏳ **10.6 Échantillons matériaux** (~4h) — Table `affaires_echantillons` + CRUD + UI.
+94. ⏳ **10.7 Moodboard / artefacts** (~5h) — Réutilisation `affaire_documents` catégories `moodboard|esquisse_commerciale` + galerie.
+95. ⏳ **10.8 Enrichissement signature** (~3h) — Notification `atelier_chef` + log journal affaire dans RPC `sign_opportunite`.
+96. ⏳ **10.9 Mobile nouvelle visite** (~4h) — Formulaire terrain + photos + compte-rendu (optionnel V2).
+97. ⏳ **10.10 Tests E2E complets** (~4h) — Visite + échantillon + transfert 5XXX + vérification notif.
 
 ### Lots L3 → L5 (suite refonte permissions)
 89. ⏳ **L3** — Refonte permissions : audit terminé 26/05. 4 sous-lots : L3.0 `/parametres/utilisateurs` multi-select 11 rôles + caps debug panel (~4h), L3.1 double-filtre fab `casting.edit_phase_fabrication` (~1h), L3.2-L3.5 refacto `isAdmin/isChef` → `user_has_cap()` 200+ call sites (~25-35h). ~30-40h total.
