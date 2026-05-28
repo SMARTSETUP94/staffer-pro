@@ -2,12 +2,11 @@
 // Cellule : badge cliquable cyclant Aucun → Secondaire (S) → Dépannage (D) → Bloqué (X) → Aucun
 // "Principal" (P) = lecture seule (verrouillé sur fiche employé : metier_principal_id).
 // Sauvegarde immédiate au clic + toast.
-import { createFileRoute, Navigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Loader2, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
-import { useCapability } from "@/hooks/use-capability";
 import { useMetiers } from "@/hooks/use-metiers";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -89,7 +88,6 @@ function CellBadge({ niveau, isPrincipal }: { niveau: Cell; isPrincipal: boolean
 
 function CompetencesEquipePage() {
   const { rolesLoaded } = useAuth();
-  const canAdmin = useCapability("section.admin");
   const { metiers, loading: metiersLoading } = useMetiers();
   const [emps, setEmps] = useState<Emp[]>([]);
   /** matrix[empId][metierId] = niveau (omis si null) */
@@ -208,7 +206,6 @@ function CompetencesEquipePage() {
   }, [emps, filter, modifiedOnly, matrix]);
 
   if (!rolesLoaded) return null;
-  if (!canAdmin) return <Navigate to="/" />;
 
   return (
     <div className="space-y-4 px-2 py-4 md:px-6">

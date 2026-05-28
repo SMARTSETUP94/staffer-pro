@@ -8,7 +8,6 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { useCapability } from "@/hooks/use-capability";
-import { RoleGuard } from "@/components/auth/RoleGuard";
 import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -99,7 +98,6 @@ function AdminAuditPage() {
   if (authLoading) return null;
 
   return (
-    <RoleGuard required="admin">
       <div className="space-y-4">
         <PageHeader
           title="Audit Admin"
@@ -134,7 +132,6 @@ function AdminAuditPage() {
           </TabsContent>
         </Tabs>
       </div>
-    </RoleGuard>
   );
 }
 

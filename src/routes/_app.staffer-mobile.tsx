@@ -7,7 +7,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2, AlertTriangle, CheckCircle2, FileSignature } from "lucide-react";
 import { toast } from "sonner";
-import { RoleGuard } from "@/components/auth/RoleGuard";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,9 +22,7 @@ import { useVocab } from "@/hooks/use-vocab";
 
 export const Route = createFileRoute("/_app/staffer-mobile")({
   component: () => (
-    <RoleGuard required="chef_or_admin">
       <StafferMobile />
-    </RoleGuard>
   ),
 });
 

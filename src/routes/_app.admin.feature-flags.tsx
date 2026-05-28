@@ -14,7 +14,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Plus, Trash2, Save, X, Search } from "lucide-react";
 import { toast } from "sonner";
-import { RoleGuard } from "@/components/auth/RoleGuard";
 import { requireCapability } from "@/lib/capability-guard";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -39,9 +38,7 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/_app/admin/feature-flags")({
   beforeLoad: () => requireCapability("admin.feature_flags.manage"),
   component: () => (
-    <RoleGuard required="admin">
       <FeatureFlagsAdminPage />
-    </RoleGuard>
   ),
 });
 

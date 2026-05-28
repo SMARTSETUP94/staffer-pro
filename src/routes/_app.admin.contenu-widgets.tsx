@@ -13,7 +13,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Plus, Search, Pencil, Check, X, RotateCcw, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { RoleGuard } from "@/components/auth/RoleGuard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -41,7 +40,6 @@ export const Route = createFileRoute("/_app/admin/contenu-widgets")({
 
 function ContenuWidgetsPage() {
   return (
-    <RoleGuard required="admin">
       <div className="container mx-auto p-6 space-y-4">
         <header>
           <h1 className="text-2xl font-bold">Contenu widgets dashboard</h1>
@@ -59,7 +57,6 @@ function ContenuWidgetsPage() {
           <TabsContent value="quiz"><QuizAdmin /></TabsContent>
         </Tabs>
       </div>
-    </RoleGuard>
   );
 }
 

@@ -13,7 +13,6 @@ import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { RoleGuard } from "@/components/auth/RoleGuard";
 import { requireCapability } from "@/lib/capability-guard";
 import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
@@ -24,9 +23,7 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/_app/admin/permissions")({
   beforeLoad: () => requireCapability("admin.permissions.manage"),
   component: () => (
-    <RoleGuard required="admin">
       <PermissionsAdminPage />
-    </RoleGuard>
   ),
 });
 

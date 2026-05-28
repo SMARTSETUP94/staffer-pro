@@ -3,7 +3,6 @@ import { z } from "zod";
 import { zodValidator, fallback } from "@tanstack/zod-adapter";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageHeader } from "@/components/PageHeader";
-import { RoleGuard } from "@/components/auth/RoleGuard";
 import { ConnexionsTab } from "@/components/audit-auth/ConnexionsTab";
 import { InvitationsTab } from "@/components/audit-auth/InvitationsTab";
 import { EvenementsTab } from "@/components/audit-auth/EvenementsTab";
@@ -32,9 +31,7 @@ function AuditAuthPage() {
   };
 
   return (
-    <RoleGuard required="admin">
       <AuditAuthPageInner tab={tab} setTab={setTab} />
-    </RoleGuard>
   );
 }
 
