@@ -11,7 +11,7 @@ import { useQueryClient } from "@tanstack/react-query";
 
 const STORAGE_KEY = "preferred_role";
 
-const ROLE_PRIORITY: AppRole[] = ["admin", "chef_chantier", "chef_metier_scoped", "rh", "employe"];
+const ROLE_PRIORITY: AppRole[] = ["admin", "chef_chantier", "rh", "employe"];
 
 function emitRoleSwitched(role: AppRole) {
   window.dispatchEvent(new CustomEvent("role:switched", { detail: { role } }));

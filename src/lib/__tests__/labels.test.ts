@@ -17,7 +17,6 @@ describe("labels — vocabulaire centralisé (Lot 7.1)", () => {
 
     it("traduit les autres rôles applicatifs", () => {
       expect(roleLabel("admin")).toBe("Admin");
-      expect(roleLabel("chef_metier_scoped")).toBe("Chef métier (scopé)");
       expect(roleLabel("rh")).toBe("RH");
       expect(roleLabel("employe")).toBe("Employé");
     });
@@ -39,10 +38,12 @@ describe("labels — vocabulaire centralisé (Lot 7.1)", () => {
       expect(opt?.hint).toBe("global");
     });
 
-    it("contient les 5 rôles app_role", () => {
-      expect(USER_ROLE_OPTIONS.map((o) => o.value).sort()).toEqual(
-        ["admin", "chef_chantier", "chef_metier_scoped", "employe", "rh"].sort(),
-      );
+    it("contient les rôles app_role principaux", () => {
+      const values = USER_ROLE_OPTIONS.map((o) => o.value);
+      for (const expected of ["admin", "chef_chantier", "employe", "rh"]) {
+        expect(values).toContain(expected);
+      }
+      expect(values).not.toContain("chef_metier_scoped");
     });
   });
 

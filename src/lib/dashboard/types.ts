@@ -78,24 +78,6 @@ export const ROLE_PRESETS: Record<AppRole, WidgetId[]> = {
     "quiz_leaderboard",
   ],
 
-  // v0.45 — chef_metier_scoped : même preset que chef_chantier (UI globale,
-  // RLS borne ce qu'il voit réellement par-affaire).
-  chef_metier_scoped: [
-    "inbox",
-    "meteo_chantiers",
-    "montages_j7",
-    "absences_semaine",
-    "charge_equipe",
-
-    "mes_etapes_fab",
-    "heures_a_valider",
-    "objets_en_retard",
-    "mon_equipe_type",
-    "anniversaires",
-    "saint_du_jour",
-    "astuces_marquee",
-    "quiz_du_jour",
-  ],
   employe: [],
   // v0.48 Bloc 6 — preset RH minimal (absences + anniversaires)
   rh: ["inbox", "absences_semaine", "anniversaires", "saint_du_jour"],
