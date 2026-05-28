@@ -51,8 +51,7 @@ describe("updateOpportuniteFields — validation input", () => {
     expect(() =>
       UPDATE_FIELDS_INPUT_SCHEMA.parse({
         affaireId: UUID,
-        // @ts-expect-error — valeur volontairement invalide
-        patch: { taille: "gigantesque" },
+        patch: { taille: "gigantesque" as unknown as "petit" },
       }),
     ).toThrow();
   });
