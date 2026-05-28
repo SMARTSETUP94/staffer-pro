@@ -3107,24 +3107,18 @@ const RELEASES: RoadmapRelease[] = [
 ];
 
 const PLANNED: RoadmapPlanned[] = [
-  // ========== Sprint v0.48.x — Suite refonte UX/UI (Lot 7.1 → 7.3) ==========
+  // ========== En cours ==========
   {
     priority: "haute",
-    title: "Lot 7.1 — Vocabulaire UI centralisé (`labels.ts`)",
+    title: "Bloc 10 — Fiche opportunité enrichie (10.2 → 10.5)",
     description:
-      "Création d'une source unique `src/lib/labels.ts` (helper `roleLabel()`) pour uniformiser l'affichage des rôles à travers les 9 surfaces UI qui divergent actuellement (« Chef d'équipe » / « Chef de chantier » / « Chef chantier » / « Chef de Chantier »). L'enum DB `chef_chantier` est conservé tel quel (RLS + 9 migrations + 7 helpers SECURITY DEFINER intouchables). Migration vocabulaire future = changer uniquement ce fichier. Inventaire `rg` complet validé (42 fichiers `src/`, 5 fichiers `e2e/`).",
-  },
-  {
-    priority: "haute",
-    title: "Lot 7.2 — Sidebar capability-driven",
-    description:
-      "Refonte de `AppSidebar.tsx` pour que chaque entrée soit gatée par une capability plutôt que par un check de rôle hardcodé. Mock attendu pour 3 personas (admin / chef / rh) à valider avant édition. Permettra à l'admin de masquer/afficher dynamiquement des entrées via `/admin/permissions` sans déploiement.",
+      "10.1 DB livré (actions + jalons + RPC sign_opportunite). 10.2 : extension RPC get_inbox_items avec opp_action + cap gating. 10.3 : UI fiche opportunité complète (timeline, pipeline 4 jalons, actions commerciales, signalement). 10.4 : refactor listing opportunités. 10.5 : tests E2E + cleanup. ~20h restant.",
   },
   {
     priority: "haute",
     title: "Lot 7.3 — Vue `v_affaires_avec_plan_status` (statuts dérivés)",
     description:
-      "Création d'une vue SQL consolidée exposant pour chaque affaire les statuts dérivés (a-t-elle un plan publié ? un brouillon ? un plan archivé ? écart staffing vs devis ?). Échantillon de retour à valider avant migration. Permettra de simplifier les listes affaires + dashboard sans recalcul côté client.",
+      "Création d'une vue SQL consolidée exposant pour chaque affaire les statuts dérivés (a-t-elle un plan publié ? un brouillon ? un plan archivé ? écart staffing vs devis ?). Permettra de simplifier les listes affaires + dashboard sans recalcul côté client.",
   },
 
   // ========== Sprints majeurs planifiés ==========
@@ -3142,21 +3136,21 @@ const PLANNED: RoadmapPlanned[] = [
   },
   {
     priority: "moyenne",
-    title: "v0.39.x suite — Logistique avancée (autorisations véhicules + sous-traitants + historique + stats)",
+    title: "v0.39.x — Logistique avancée : autorisations véhicules (sous-traitants/historique/stats livrés v0.41.0b)",
     description:
-      "Module flotte étendu : #56 autorisations véhicules par employé (B/C/CE/CACES + dates expiration), gestion fine des sous-traitants (carnet, tarifs, notes), historique complet des trajets par véhicule et par chauffeur, stats consommation et km par chantier. Pré-requis pour facturation interne flotte.",
+      "Module flotte : autorisations véhicules par employé (B/C/CE/CACES + dates expiration) reste à livrer. Carnet sous-traitants, historique trajets et stats flotte déjà livrés en v0.41.0b. Pré-requis pour facturation interne flotte.",
   },
   {
     priority: "moyenne",
-    title: "v0.40 — Phase 2 horaires précis (heure_debut / heure_fin / pauses + nuit/sup/35h auto + SILAE enrichi)",
+    title: "v0.40 — Phase 2 horaires précis (SUSPENDU)",
     description:
-      "Évolution majeure du modèle heures : passage des heures totales à des plages horaires précises (heure_debut, heure_fin, pauses), calcul automatique des majorations (nuit, dimanche, heures sup au-delà 35h), enrichissement export SILAE avec colonnes dédiées par typologie d'heure. Migration douce : ancien format toléré en lecture, nouveau format obligatoire en saisie après bascule.",
+      "Évolution majeure du modèle heures : passage des heures totales à des plages horaires précises (heure_debut, heure_fin, pauses), calcul automatique des majorations (nuit, dimanche, heures sup au-delà 35h), enrichissement export SILAE avec colonnes dédiées par typologie d'heure. SUSPENDU — décision métier en attente.",
   },
   {
     priority: "moyenne",
-    title: "v0.41 — Claude API auto-staffing (UNIQUEMENT 5XXX, fallback v0.35, cache + cap)",
+    title: "v0.41 — Claude API auto-staffing (BACKLOG)",
     description:
-      "Enrichissement de l'algorithme déterministe v0.35 par Claude API via edge function proxy : skill-based reasoning sur historique de l'employé (déjà bossé avec l'équipe ? sur ce client ? sur ce type d'objet ?), tools structurés (lecture affaires + assignations passées), fallback automatique sur v0.35 si timeout/erreur, cache 1h sur même contexte, hard cap mensuel d'appels (alerte admin avant blocage). Tier CDI/CDD avant intermittent conservé. PAS d'autres intégrations Claude (pas de support conv, pas de génération texte).",
+      "Enrichissement de l'algorithme déterministe v0.35 par Claude API via edge function proxy : skill-based reasoning sur historique de l'employé, tools structurés, fallback v0.35, cache, hard cap mensuel. BACKLOG — pas de date prévue.",
   },
 
   // ========== Phase 4 Dashboard (reste à livrer) ==========
