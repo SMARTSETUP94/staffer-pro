@@ -460,6 +460,7 @@ export type Database = {
       affaires: {
         Row: {
           acces_livraison: string | null
+          archived_at: string | null
           charge_affaires_id: string | null
           chef_chantier_id: string | null
           chef_projet_id: string | null
@@ -500,6 +501,7 @@ export type Database = {
         }
         Insert: {
           acces_livraison?: string | null
+          archived_at?: string | null
           charge_affaires_id?: string | null
           chef_chantier_id?: string | null
           chef_projet_id?: string | null
@@ -540,6 +542,7 @@ export type Database = {
         }
         Update: {
           acces_livraison?: string | null
+          archived_at?: string | null
           charge_affaires_id?: string | null
           chef_chantier_id?: string | null
           chef_projet_id?: string | null
@@ -4878,6 +4881,7 @@ export type Database = {
         Args: { p_contrat_id: string; p_motif?: string }
         Returns: undefined
       }
+      archive_affaire: { Args: { _affaire_id: string }; Returns: undefined }
       audit_staffing_divergence: {
         Args: never
         Returns: {
