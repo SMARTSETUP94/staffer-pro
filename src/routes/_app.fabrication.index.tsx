@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
+import { requireCapability } from "@/lib/capability-guard";
   Hammer, Loader2, Box, Brush, Pencil, Wrench, Truck, AlertCircle, Send, Cog,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -25,6 +26,7 @@ import {
 import { countActiveAffairesByTypologie } from "@/lib/typologie-active-counts";
 
 export const Route = createFileRoute("/_app/fabrication/")({
+  beforeLoad: () => requireCapability("section.planning_fab"),
   head: () => ({ meta: [{ title: "Dashboard fabrication — Setup Paris" }] }),
   component: FabricationDashboardPage,
   errorComponent: ({ error }) => (

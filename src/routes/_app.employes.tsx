@@ -6,6 +6,7 @@ import { fetchEmployesForExport, exportEmployesXlsx } from "@/lib/employes-excel
 import { EmployesImportPostesDialog } from "@/components/employes/EmployesImportPostesDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useMetiers } from "@/hooks/use-metiers";
+import { requireCapability } from "@/lib/capability-guard";
 
 import { useCapability } from "@/hooks/use-capability";
 import { PageHeader } from "@/components/PageHeader";
@@ -161,6 +162,7 @@ const PERMIS_OPTIONS: { value: Permis; label: string }[] = [
 ];
 
 export const Route = createFileRoute("/_app/employes")({
+  beforeLoad: () => requireCapability("section.equipes"),
   head: () => ({ meta: [{ title: "Employés — Setup Paris" }] }),
   component: EmployesPage,
 });

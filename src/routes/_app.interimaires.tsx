@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import {
+import { requireCapability } from "@/lib/capability-guard";
   startOfWeek,
   endOfWeek,
   startOfMonth,
@@ -28,6 +29,7 @@ import { cn } from "@/lib/utils";
 import { normalizeName } from "@/lib/string-normalize";
 
 export const Route = createFileRoute("/_app/interimaires")({
+  beforeLoad: () => requireCapability("section.equipes"),
   head: () => ({
     meta: [
       { title: "Intermittents — Classement staffing" },

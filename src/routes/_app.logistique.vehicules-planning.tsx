@@ -15,8 +15,10 @@ import { TrajetDialog } from "@/components/flotte/TrajetDialog";
 import { ExportTrajetsSoustraitanceDialog } from "@/components/flotte/ExportTrajetsSoustraitanceDialog";
 import { PageBreadcrumbs } from "@/components/PageBreadcrumbs";
 import type { TrajetSuggestion } from "@/lib/trajets-suggestions";
+import { requireCapability } from "@/lib/capability-guard";
 
 export const Route = createFileRoute("/_app/logistique/vehicules-planning")({
+  beforeLoad: () => requireCapability("section.logistique"),
   head: () => ({
     meta: [
       { title: "Véhicules planning — Logistique" },

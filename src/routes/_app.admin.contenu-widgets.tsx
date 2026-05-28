@@ -22,6 +22,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
+import { requireCapability } from "@/lib/capability-guard";
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
@@ -34,6 +35,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_app/admin/contenu-widgets")({
+  beforeLoad: () => requireCapability("section.admin"),
   component: ContenuWidgetsPage,
 });
 

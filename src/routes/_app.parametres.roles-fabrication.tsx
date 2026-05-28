@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import {
+import { requireCapability } from "@/lib/capability-guard";
   Table,
   TableBody,
   TableCell,
@@ -19,6 +20,7 @@ import { useProfilesWithRoles, type ProfileRole } from "@/hooks/use-fabrication"
 import { PageHeader } from "@/components/PageHeader";
 
 export const Route = createFileRoute("/_app/parametres/roles-fabrication")({
+  beforeLoad: () => requireCapability("section.admin"),
   head: () => ({ meta: [{ title: "Rôles fabrication — Setup Paris" }] }),
   component: RolesFabricationPage,
 });

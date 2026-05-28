@@ -19,6 +19,7 @@ import { useEffect, useMemo, useState } from "react";
 import { format, parseISO, startOfMonth, startOfWeek, subDays, subMonths } from "date-fns";
 import { fr } from "date-fns/locale";
 import {
+import { requireCapability } from "@/lib/capability-guard";
   ArrowDown,
   ArrowUp,
   ArrowUpDown,
@@ -124,6 +125,7 @@ const searchSchema = z.object({
 type SearchParams = z.infer<typeof searchSchema>;
 
 export const Route = createFileRoute("/_app/heures-analyse")({
+  beforeLoad: () => requireCapability("heures.audit"),
   validateSearch: zodValidator(searchSchema),
   component: HeuresAnalysePage,
 });

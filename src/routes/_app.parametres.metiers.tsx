@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
+import { requireCapability } from "@/lib/capability-guard";
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
 import {
@@ -21,6 +22,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { MetiersPostesTabs } from "@/components/parametres/MetiersPostesTabs";
 
 export const Route = createFileRoute("/_app/parametres/metiers")({
+  beforeLoad: () => requireCapability("section.admin"),
   head: () => ({ meta: [{ title: "Métiers — Paramètres" }] }),
   component: MetiersPage,
 });

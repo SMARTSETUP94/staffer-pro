@@ -26,8 +26,10 @@ import { useMetiers } from "@/hooks/use-metiers";
 import { fuzzyMatch } from "@/lib/string-normalize";
 import { fetchEmployesForExport, exportEmployesXlsx } from "@/lib/employes-excel";
 import { EmployesImportPostesDialog } from "@/components/employes/EmployesImportPostesDialog";
+import { requireCapability } from "@/lib/capability-guard";
 
 export const Route = createFileRoute("/_app/admin/employes-poste-principal")({
+  beforeLoad: () => requireCapability("section.admin"),
   component: () => (
     <RoleGuard required="admin">
       <EmployesPostePrincipalPage />

@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { ImportErrorPanel } from "@/components/imports/ImportErrorPanel";
 import { ImportErrorBoundary } from "@/components/imports/ImportErrorBoundary";
 import {
+import { requireCapability } from "@/lib/capability-guard";
   exceptionToIssue,
   legacyStringsToIssues,
   makeIssue,
@@ -57,6 +58,7 @@ const importSearchSchema = z.object({
 });
 
 export const Route = createFileRoute("/_app/devis/import")({
+  beforeLoad: () => requireCapability("section.admin"),
   head: () => ({ meta: [{ title: "Import devis Excel — Setup Paris" }] }),
   validateSearch: zodValidator(importSearchSchema),
   component: () => (

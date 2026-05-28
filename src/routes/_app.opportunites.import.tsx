@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
+import { requireCapability } from "@/lib/capability-guard";
   Table,
   TableBody,
   TableCell,
@@ -35,6 +36,7 @@ import {
 } from "@/lib/import-validation";
 
 export const Route = createFileRoute("/_app/opportunites/import")({
+  beforeLoad: () => requireCapability("section.admin"),
   head: () => ({ meta: [{ title: "Import opportunités — Setup Paris" }] }),
   component: () => (
     <ImportErrorBoundary label="Import opportunités">

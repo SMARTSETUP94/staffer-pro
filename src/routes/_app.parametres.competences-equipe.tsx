@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import {
+import { requireCapability } from "@/lib/capability-guard";
   Select,
   SelectContent,
   SelectItem,
@@ -26,6 +27,7 @@ import { toast } from "sonner";
 import { MetiersPostesTabs } from "@/components/parametres/MetiersPostesTabs";
 
 export const Route = createFileRoute("/_app/parametres/competences-equipe")({
+  beforeLoad: () => requireCapability("section.admin"),
   head: () => ({ meta: [{ title: "Compétences équipe — Paramètres" }] }),
   component: CompetencesEquipePage,
 });

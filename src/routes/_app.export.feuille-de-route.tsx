@@ -6,8 +6,10 @@ import { usePlanningData } from "@/hooks/use-planning-data";
 import { useVehicules } from "@/hooks/use-vehicules";
 import { FeuilleRouteTableurView } from "@/components/planning/FeuilleRouteTableurView";
 import { PageBreadcrumbs } from "@/components/PageBreadcrumbs";
+import { requireCapability } from "@/lib/capability-guard";
 
 export const Route = createFileRoute("/_app/export/feuille-de-route")({
+  beforeLoad: () => requireCapability("section.admin"),
   head: () => ({
     meta: [
       { title: "Feuille de route — Planning" },

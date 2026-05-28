@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
+import { requireCapability } from "@/lib/capability-guard";
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import {
@@ -23,6 +24,7 @@ import { AddressAutocomplete } from "@/components/flotte/AddressAutocomplete";
 import { useAdressesFavorites } from "@/hooks/use-vehicules";
 
 export const Route = createFileRoute("/_app/parametres/lieux")({
+  beforeLoad: () => requireCapability("section.admin"),
   head: () => ({ meta: [{ title: "Lieux entreprise — Paramètres" }] }),
   component: LieuxPage,
 });

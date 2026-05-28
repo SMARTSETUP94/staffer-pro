@@ -8,8 +8,10 @@ import { useQuery } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { getPlanningChantierMacro } from "@/server/planning-chantier-macro.functions";
 import { PlanningChantierGantt } from "@/components/planning/PlanningChantierGantt";
+import { requireCapability } from "@/lib/capability-guard";
 
 export const Route = createFileRoute("/_app/affaires/$affaireId/planning-chantier")({
+  beforeLoad: () => requireCapability("section.affaires"),
   component: PlanningChantierPage,
 });
 

@@ -14,6 +14,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import {
+import { requireCapability } from "@/lib/capability-guard";
   Select,
   SelectContent,
   SelectItem,
@@ -43,6 +44,7 @@ import { SaisieChefBadge } from "@/components/heures/SaisieChefBadge";
 import { UserCog } from "lucide-react";
 
 export const Route = createFileRoute("/_app/validation-heures")({
+  beforeLoad: () => requireCapability("action.validate_hours"),
   head: () => ({ meta: [{ title: "Valider les heures de l'équipe — Planning chantiers" }] }),
   component: ValidationHeuresPage,
 });

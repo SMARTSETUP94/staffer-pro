@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
+import { requireCapability } from "@/lib/capability-guard";
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -79,6 +80,7 @@ const searchSchema = z.object({
 });
 
 export const Route = createFileRoute("/_app/affaires/")({
+  beforeLoad: () => requireCapability("section.affaires"),
   head: () => ({ meta: [{ title: "Affaires — Setup Paris" }] }),
   validateSearch: zodValidator(searchSchema),
   search: { middlewares: [stripSearchParams(SEARCH_DEFAULTS)] },

@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
+import { requireCapability } from "@/lib/capability-guard";
   Table,
   TableBody,
   TableCell,
@@ -26,6 +27,7 @@ import {
 } from "@/components/ui/table";
 
 export const Route = createFileRoute("/_app/admin/audit")({
+  beforeLoad: () => requireCapability("section.admin"),
   component: AdminAuditPage,
 });
 

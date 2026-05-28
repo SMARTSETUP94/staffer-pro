@@ -14,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
+import { requireCapability } from "@/lib/capability-guard";
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import {
@@ -61,6 +62,7 @@ interface Poste {
 type HeuresAssignParCouple = Map<string, number>; // key: `${devis_id}::${metier_id}`
 
 export const Route = createFileRoute("/_app/affaires/$affaireId/devis")({
+  beforeLoad: () => requireCapability("section.affaires"),
   component: AffaireDevisPage,
 });
 

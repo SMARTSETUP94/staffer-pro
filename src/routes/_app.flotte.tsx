@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import {
+import { requireCapability } from "@/lib/capability-guard";
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { PageHeader } from "@/components/PageHeader";
@@ -22,6 +23,7 @@ import { VehiculeDialog } from "@/components/flotte/VehiculeDialog";
 import { AdresseFavoriteDialog } from "@/components/flotte/AdresseFavoriteDialog";
 
 export const Route = createFileRoute("/_app/flotte")({
+  beforeLoad: () => requireCapability("section.logistique"),
   head: () => ({ meta: [{ title: "Flotte — Setup Paris" }] }),
   component: FlottePage,
 });

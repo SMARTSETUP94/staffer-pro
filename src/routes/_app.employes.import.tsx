@@ -13,6 +13,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
+import { requireCapability } from "@/lib/capability-guard";
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { toast } from "sonner";
@@ -21,6 +22,7 @@ import {
 } from "@/lib/employes-import";
 
 export const Route = createFileRoute("/_app/employes/import")({
+  beforeLoad: () => requireCapability("section.admin"),
   head: () => ({ meta: [{ title: "Import employés — Setup Paris" }] }),
   component: EmployesImportPage,
 });

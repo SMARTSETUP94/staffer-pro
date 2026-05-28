@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import {
+import { requireCapability } from "@/lib/capability-guard";
   Select,
   SelectContent,
   SelectItem,
@@ -31,6 +32,7 @@ import { TAILLE_LABEL, type OpportuniteTaille } from "@/lib/opportunites";
 import type { TypologieFuture } from "@/lib/typologie-future";
 
 export const Route = createFileRoute("/_app/opportunites/$affaireId")({
+  beforeLoad: () => requireCapability("section.pipeline_opportunites"),
   component: OpportuniteFichePage,
 });
 

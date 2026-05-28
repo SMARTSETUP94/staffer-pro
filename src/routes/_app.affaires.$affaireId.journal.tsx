@@ -8,8 +8,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { requireCapability } from "@/lib/capability-guard";
 
 export const Route = createFileRoute("/_app/affaires/$affaireId/journal")({
+  beforeLoad: () => requireCapability("section.affaires"),
   component: JournalPage,
 });
 

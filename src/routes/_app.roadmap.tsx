@@ -17,6 +17,7 @@ import { useAuth } from "@/lib/auth-context";
 import { useCapability } from "@/hooks/use-capability";
 
 export const Route = createFileRoute("/_app/roadmap")({
+  beforeLoad: () => requireCapability("section.admin"),
   component: RoadmapPage,
 });
 

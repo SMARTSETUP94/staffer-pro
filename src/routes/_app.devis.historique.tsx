@@ -12,8 +12,10 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { DevisDeleteCascadeDialog } from "@/components/devis-import/DevisDeleteCascadeDialog";
+import { requireCapability } from "@/lib/capability-guard";
 
 export const Route = createFileRoute("/_app/devis/historique")({
+  beforeLoad: () => requireCapability("section.devis"),
   head: () => ({ meta: [{ title: "Historique des imports devis — Setup Paris" }] }),
   component: DevisHistoriquePage,
 });

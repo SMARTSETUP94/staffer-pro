@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, useMemo } from "react";
 import {
+import { requireCapability } from "@/lib/capability-guard";
   Loader2, Mail, Shield, UserCog, UserPlus, Send, Power, Trash2, MoreHorizontal,
   CheckCircle2, Clock, XCircle, Link2, Users, Eye,
 } from "lucide-react";
@@ -47,6 +48,7 @@ import { fr } from "date-fns/locale";
 import { roleLabel } from "@/lib/labels";
 
 export const Route = createFileRoute("/_app/admin/utilisateurs")({
+  beforeLoad: () => requireCapability("section.admin"),
   head: () => ({ meta: [{ title: "Utilisateurs — Paramètres" }] }),
   component: UtilisateursPage,
 });

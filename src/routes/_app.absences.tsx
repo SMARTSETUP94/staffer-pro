@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
+import { requireCapability } from "@/lib/capability-guard";
   Select,
   SelectContent,
   SelectItem,
@@ -72,6 +73,7 @@ interface AbsencesSearch {
 }
 
 export const Route = createFileRoute("/_app/absences")({
+  beforeLoad: () => requireCapability("section.equipes"),
   validateSearch: (search: Record<string, unknown>): AbsencesSearch => ({
     employe: typeof search.employe === "string" ? search.employe : undefined,
     date: typeof search.date === "string" ? search.date : undefined,

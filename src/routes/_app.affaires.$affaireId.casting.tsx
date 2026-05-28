@@ -23,6 +23,7 @@ import { useFeatureFlag } from "@/hooks/use-feature-flag";
 import { useCapability } from "@/hooks/use-capability";
 import { Button } from "@/components/ui/button";
 import {
+import { requireCapability } from "@/lib/capability-guard";
   Tooltip,
   TooltipContent,
   TooltipProvider,
@@ -39,6 +40,7 @@ import type { CastingMembre, CastingPhase } from "@/server/casting-chantier.func
 import { FAB_METIERS, isFabMetier } from "@/lib/fab-sous-etapes";
 
 export const Route = createFileRoute("/_app/affaires/$affaireId/casting")({
+  beforeLoad: () => requireCapability("section.affaires"),
   head: () => ({ meta: [{ title: "Casting du chantier — Setup Paris" }] }),
   component: AffaireCastingPage,
 });

@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
+import { requireCapability } from "@/lib/capability-guard";
   Select,
   SelectContent,
   SelectItem,
@@ -17,6 +18,7 @@ import { useCapability } from "@/hooks/use-capability";
 import { PageHeader } from "@/components/PageHeader";
 
 export const Route = createFileRoute("/_app/devis/rattachement-historique")({
+  beforeLoad: () => requireCapability("section.devis"),
   head: () => ({
     meta: [
       { title: "Rattachement historique des devis — Admin" },

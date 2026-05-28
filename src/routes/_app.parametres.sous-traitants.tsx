@@ -5,6 +5,7 @@ import { Loader2, Search, Plus, Pencil } from "lucide-react";
 import { useCapability } from "@/hooks/use-capability";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
+import { requireCapability } from "@/lib/capability-guard";
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
@@ -23,6 +24,7 @@ import {
 } from "@/lib/sous-traitants";
 
 export const Route = createFileRoute("/_app/parametres/sous-traitants")({
+  beforeLoad: () => requireCapability("section.admin"),
   head: () => ({ meta: [{ title: "Sous-traitants — Paramètres" }] }),
   component: SousTraitantsPage,
 });

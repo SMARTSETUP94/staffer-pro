@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { startOfWeek, addDays, addWeeks, format, differenceInCalendarWeeks } from "date-fns";
 import { fr } from "date-fns/locale";
 import {
+import { requireCapability } from "@/lib/capability-guard";
   FileDown,
   Loader2,
   FileSpreadsheet,
@@ -29,6 +30,7 @@ import {
 import { countActiveAffairesByTypologie } from "@/lib/typologie-active-counts";
 
 export const Route = createFileRoute("/_app/export/")({
+  beforeLoad: () => requireCapability("section.admin"),
   head: () => ({ meta: [{ title: "Export planning — Planning chantiers" }] }),
   component: ExportPage,
 });

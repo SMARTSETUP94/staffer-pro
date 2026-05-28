@@ -18,6 +18,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
 import {
+import { requireCapability } from "@/lib/capability-guard";
   AlertTriangle,
   ArrowLeft,
   Camera,
@@ -64,6 +65,7 @@ import {
 } from "@/lib/mission-card-helpers";
 
 export const Route = createFileRoute("/_app/missions/$affaireId/$phase")({
+  beforeLoad: () => requireCapability("mobile.mes_missions"),
   head: () => ({ meta: [{ title: "Mission pose — Setup Paris" }] }),
   component: CarteMissionPage,
 });

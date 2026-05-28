@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCapability } from "@/hooks/use-capability";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
+import { requireCapability } from "@/lib/capability-guard";
   Table,
   TableBody,
   TableCell,
@@ -34,6 +35,7 @@ import {
 } from "@/lib/autorisations-vehicules";
 
 export const Route = createFileRoute("/_app/parametres/autorisations-vehicules")({
+  beforeLoad: () => requireCapability("section.admin"),
   head: () => ({ meta: [{ title: "Autorisations véhicules — Paramètres" }] }),
   component: AutorisationsVehiculesPage,
 });

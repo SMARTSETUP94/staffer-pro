@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { format, parseISO, subDays } from "date-fns";
 import { fr } from "date-fns/locale";
 import {
+import { requireCapability } from "@/lib/capability-guard";
   Loader2,
   User as UserIcon,
   ShieldCheck,
@@ -42,6 +43,7 @@ import {
  * supprimé du code applicatif, plus de cas particulier.)
  */
 export const Route = createFileRoute("/_app/audit-heures")({
+  beforeLoad: () => requireCapability("heures.audit"),
   component: AuditHeuresPage,
 });
 

@@ -14,6 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
+import { requireCapability } from "@/lib/capability-guard";
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
@@ -27,6 +28,7 @@ import {
 } from "@/components/ui/tooltip";
 
 export const Route = createFileRoute("/_app/mon-equipe-type")({
+  beforeLoad: () => requireCapability("section.equipes"),
   head: () => ({ meta: [{ title: "Mon équipe type — Setup Paris" }] }),
   component: MonEquipeTypePage,
 });

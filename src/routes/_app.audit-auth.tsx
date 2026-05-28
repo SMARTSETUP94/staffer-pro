@@ -8,6 +8,7 @@ import { ConnexionsTab } from "@/components/audit-auth/ConnexionsTab";
 import { InvitationsTab } from "@/components/audit-auth/InvitationsTab";
 import { EvenementsTab } from "@/components/audit-auth/EvenementsTab";
 import { IncidentsTab } from "@/components/audit-auth/IncidentsTab";
+import { requireCapability } from "@/lib/capability-guard";
 
 const TAB_VALUES = ["connexions", "invitations", "evenements", "incidents"] as const;
 type AuditAuthTab = (typeof TAB_VALUES)[number];
@@ -17,6 +18,7 @@ const auditAuthSearchSchema = z.object({
 });
 
 export const Route = createFileRoute("/_app/audit-auth")({
+  beforeLoad: () => requireCapability("section.admin"),
   validateSearch: zodValidator(auditAuthSearchSchema),
   component: AuditAuthPage,
 });

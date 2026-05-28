@@ -4,6 +4,7 @@ import { z } from "zod";
 import { useEffect, useMemo, useState } from "react";
 import { Plus, Loader2, Filter, Trophy, LayoutGrid, Table as TableIcon, X } from "lucide-react";
 import {
+import { requireCapability } from "@/lib/capability-guard";
   DndContext,
   type DragEndEvent,
   type DragStartEvent,
@@ -110,6 +111,7 @@ const oppsSearchSchema = z.object({
 type OppsSearch = z.infer<typeof oppsSearchSchema>;
 
 export const Route = createFileRoute("/_app/opportunites")({
+  beforeLoad: () => requireCapability("section.pipeline_opportunites"),
   head: () => ({
     meta: [
       { title: "Opportunités — Pipeline commercial" },

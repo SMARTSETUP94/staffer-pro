@@ -1,4 +1,5 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
+import { requireCapability } from "@/lib/capability-guard";
 
 /**
  * Layout route pour /export/*
@@ -12,6 +13,7 @@ import { createFileRoute, Outlet } from "@tanstack/react-router";
  * encore l'écran Export planning).
  */
 export const Route = createFileRoute("/_app/export")({
+  beforeLoad: () => requireCapability("section.admin"),
   component: ExportLayout,
 });
 

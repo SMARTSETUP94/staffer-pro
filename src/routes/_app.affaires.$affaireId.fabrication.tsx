@@ -5,6 +5,7 @@ import { Link } from "@tanstack/react-router";
 import { useFeatureFlag } from "@/hooks/use-feature-flag";
 import { useCapability } from "@/hooks/use-capability";
 import {
+import { requireCapability } from "@/lib/capability-guard";
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -57,6 +58,7 @@ import { MettreAuPlanningExpressButton } from "@/components/staffing/MettreAuPla
 import { useVocab } from "@/hooks/use-vocab";
 
 export const Route = createFileRoute("/_app/affaires/$affaireId/fabrication")({
+  beforeLoad: () => requireCapability("section.affaires"),
   head: () => ({ meta: [{ title: "Fabrication — Setup Paris" }] }),
   component: FabricationPage,
 });

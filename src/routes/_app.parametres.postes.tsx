@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
+import { requireCapability } from "@/lib/capability-guard";
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { useAuth } from "@/lib/auth-context";
@@ -19,6 +20,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { MetiersPostesTabs } from "@/components/parametres/MetiersPostesTabs";
 
 export const Route = createFileRoute("/_app/parametres/postes")({
+  beforeLoad: () => requireCapability("section.admin"),
   head: () => ({ meta: [{ title: "Postes contractuels — Paramètres" }] }),
   component: PostesPage,
 });

@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { consolidateByMetier, type RawConsoLine } from "@/lib/affaire-marge-consolidation";
 import { AffaireInfosPoseSection } from "@/components/affaire/AffaireInfosPoseSection";
+import { requireCapability } from "@/lib/capability-guard";
 
 type ConsoLine = RawConsoLine & {
   heures_restantes: number | null;
@@ -21,6 +22,7 @@ type ConsoLine = RawConsoLine & {
 };
 
 export const Route = createFileRoute("/_app/affaires/$affaireId/")({
+  beforeLoad: () => requireCapability("section.affaires"),
   component: AffaireSynthesePage,
 });
 

@@ -1,7 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AffaireDocumentsGallery } from "@/components/affaire-documents/AffaireDocumentsGallery";
+import { requireCapability } from "@/lib/capability-guard";
 
 export const Route = createFileRoute("/_app/affaires/$affaireId/documents")({
+  beforeLoad: () => requireCapability("section.affaires"),
   head: () => ({ meta: [{ title: "Documents — Affaire — Setup Paris" }] }),
   component: AffaireDocumentsPage,
 });

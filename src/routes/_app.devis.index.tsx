@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
+import { requireCapability } from "@/lib/capability-guard";
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import {
@@ -49,6 +50,7 @@ function pctRealisationBadge(prevues: number, validees: number) {
 }
 
 export const Route = createFileRoute("/_app/devis/")({
+  beforeLoad: () => requireCapability("section.devis"),
   head: () => ({ meta: [{ title: "Devis — Setup Paris" }] }),
   component: DevisPage,
 });

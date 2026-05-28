@@ -26,6 +26,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
+import { requireCapability } from "@/lib/capability-guard";
   Select,
   SelectContent,
   SelectItem,
@@ -51,6 +52,7 @@ const searchSchema = z.object({
 });
 
 export const Route = createFileRoute("/_app/saisie-pour-equipe")({
+  beforeLoad: () => requireCapability("action.validate_hours"),
   head: () => ({ meta: [{ title: "Saisie équipe — Planning chantiers" }] }),
   validateSearch: zodValidator(searchSchema),
   search: { middlewares: [stripSearchParams(SEARCH_DEFAULTS)] },
