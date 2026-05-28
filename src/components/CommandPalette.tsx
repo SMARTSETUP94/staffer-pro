@@ -91,11 +91,11 @@ export function CommandPalette() {
       return [
         { label: "Mes heures", to: "/mes-heures", icon: Clock },
         // L4d : pas de route /profil dédiée — cf. mem://debts/profil-route-manquante
-        { label: "Mon profil", to: "/aujourdhui", icon: Users },
+        { label: "Mon profil", to: "/", icon: Users },
       ];
     }
     return [
-      { label: "Tableau de bord", to: "/dashboard", icon: LayoutDashboard },
+      { label: "Tableau de bord", to: "/", icon: LayoutDashboard },
       { label: "Planning", to: "/planning", icon: Calendar },
       { label: "Chantiers", to: "/affaires", icon: Building2 },
       { label: "Employés", to: "/employes", icon: Users },

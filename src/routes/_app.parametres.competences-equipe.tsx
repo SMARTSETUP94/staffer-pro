@@ -206,7 +206,7 @@ function CompetencesEquipePage() {
   }, [emps, filter, modifiedOnly, matrix]);
 
   if (!rolesLoaded) return null;
-  if (!canAdmin) return <Navigate to="/dashboard" />;
+  if (!canAdmin) return <Navigate to="/" />;
 
   return (
     <div className="space-y-4 px-2 py-4 md:px-6">

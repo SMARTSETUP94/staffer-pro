@@ -313,7 +313,7 @@ function StaffingPlanPage() {
             </Button>
           ) : (
             <Button asChild variant="outline" size="sm">
-              <Link to="/dashboard">
+              <Link to="/">
                 <ArrowLeft className="mr-1 h-3 w-3" /> Retour
               </Link>
             </Button>

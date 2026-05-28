@@ -49,7 +49,7 @@ export function InboxWidget() {
           )}
         </CardTitle>
         <Button asChild variant="ghost" size="sm">
-          <Link to="/inbox">
+          <Link to="/">
             Tout voir <ArrowRight className="ml-1 h-3 w-3" />
           </Link>
         </Button>

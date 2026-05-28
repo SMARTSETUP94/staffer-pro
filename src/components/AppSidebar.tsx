@@ -65,7 +65,7 @@ function buildSections(
       label: "Mon poste",
       items: [
         // Toujours visible — pas de cap.
-        { title: "Aujourd'hui", url: "/aujourdhui", icon: Clock },
+        { title: "Aujourd'hui", url: "/", icon: Clock },
         
         { title: "Mes missions pose", url: "/mes-missions", icon: PackageCheck, cap: "section.ma_semaine" },
         { title: "Mes équipes chantiers", url: "/mes-chantiers", icon: UsersRound, cap: "section.ma_semaine" },
@@ -76,8 +76,7 @@ function buildSections(
     {
       label: "Pilotage",
       items: [
-        
-        { title: "Inbox", url: "/inbox", icon: Inbox, cap: "section.inbox" },
+        // L6-A : Inbox fusionnée dans `/` (item « Aujourd'hui »).
         { title: "Planning fab", url: "/planning", icon: Calendar, cap: "section.planning_fab" },
         { title: "Pipeline opportunités", url: "/opportunites", icon: Trophy, cap: "section.pipeline_opportunites" },
       ],
@@ -171,7 +170,7 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border">
-        <Link to="/aujourdhui" className="flex items-center px-2 py-4">
+        <Link to="/" className="flex items-center px-2 py-4">
           {collapsed ? (
             <span className="brand-dot mx-auto" aria-label="Staffing by Setup Paris" />
           ) : (

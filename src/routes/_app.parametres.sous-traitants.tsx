@@ -49,7 +49,7 @@ function SousTraitantsPage() {
     });
   }, [data, search, typeFilter]);
 
-  if (!canAdmin) return <Navigate to="/dashboard" />;
+  if (!canAdmin) return <Navigate to="/" />;
 
   function openCreate() {
     setEditing(null);

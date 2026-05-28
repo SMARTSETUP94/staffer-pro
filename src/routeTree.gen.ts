@@ -13,7 +13,7 @@ import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppRouteImport } from './routes/_app'
-import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppIndexRouteImport } from './routes/_app.index'
 import { Route as AuthSetPasswordRouteImport } from './routes/auth.set-password'
 import { Route as AuthResetPasswordRouteImport } from './routes/auth.reset-password'
 import { Route as AuthForgotPasswordRouteImport } from './routes/auth.forgot-password'
@@ -113,10 +113,10 @@ const AppRoute = AppRouteImport.update({
   id: '/_app',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
+const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AppRoute,
 } as any)
 const AuthSetPasswordRoute = AuthSetPasswordRouteImport.update({
   id: '/auth/set-password',
@@ -534,7 +534,7 @@ const AppAffairesAffaireIdObjetsObjetIdRoute =
   } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
+  '/': typeof AppIndexRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
   '/privacy': typeof PrivacyRoute
@@ -619,7 +619,6 @@ export interface FileRoutesByFullPath {
   '/affaires/$affaireId/objets/$objetId': typeof AppAffairesAffaireIdObjetsObjetIdRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
   '/privacy': typeof PrivacyRoute
@@ -655,6 +654,7 @@ export interface FileRoutesByTo {
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/auth/set-password': typeof AuthSetPasswordRoute
+  '/': typeof AppIndexRoute
   '/admin/audit': typeof AppAdminAuditRoute
   '/admin/contenu-widgets': typeof AppAdminContenuWidgetsRoute
   '/admin/email-preview': typeof AppAdminEmailPreviewRoute
@@ -703,7 +703,6 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
   '/_app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
@@ -741,6 +740,7 @@ export interface FileRoutesById {
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/auth/set-password': typeof AuthSetPasswordRoute
+  '/_app/': typeof AppIndexRoute
   '/_app/admin/audit': typeof AppAdminAuditRoute
   '/_app/admin/contenu-widgets': typeof AppAdminContenuWidgetsRoute
   '/_app/admin/email-preview': typeof AppAdminEmailPreviewRoute
@@ -876,7 +876,6 @@ export interface FileRouteTypes {
     | '/affaires/$affaireId/objets/$objetId'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/'
     | '/login'
     | '/onboarding'
     | '/privacy'
@@ -912,6 +911,7 @@ export interface FileRouteTypes {
     | '/auth/forgot-password'
     | '/auth/reset-password'
     | '/auth/set-password'
+    | '/'
     | '/admin/audit'
     | '/admin/contenu-widgets'
     | '/admin/email-preview'
@@ -959,7 +959,6 @@ export interface FileRouteTypes {
     | '/affaires/$affaireId/objets/$objetId'
   id:
     | '__root__'
-    | '/'
     | '/_app'
     | '/login'
     | '/onboarding'
@@ -997,6 +996,7 @@ export interface FileRouteTypes {
     | '/auth/forgot-password'
     | '/auth/reset-password'
     | '/auth/set-password'
+    | '/_app/'
     | '/_app/admin/audit'
     | '/_app/admin/contenu-widgets'
     | '/_app/admin/email-preview'
@@ -1046,7 +1046,6 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
   LoginRoute: typeof LoginRoute
   OnboardingRoute: typeof OnboardingRoute
@@ -1086,12 +1085,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
+    '/_app/': {
+      id: '/_app/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRoute
     }
     '/auth/set-password': {
       id: '/auth/set-password'
@@ -1751,6 +1750,7 @@ interface AppRouteChildren {
   AppSignalementsRoute: typeof AppSignalementsRoute
   AppStafferMobileRoute: typeof AppStafferMobileRoute
   AppValidationHeuresRoute: typeof AppValidationHeuresRoute
+  AppIndexRoute: typeof AppIndexRoute
   AppAdminAuditRoute: typeof AppAdminAuditRoute
   AppAdminContenuWidgetsRoute: typeof AppAdminContenuWidgetsRoute
   AppAdminEmailPreviewRoute: typeof AppAdminEmailPreviewRoute
@@ -1815,6 +1815,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppSignalementsRoute: AppSignalementsRoute,
   AppStafferMobileRoute: AppStafferMobileRoute,
   AppValidationHeuresRoute: AppValidationHeuresRoute,
+  AppIndexRoute: AppIndexRoute,
   AppAdminAuditRoute: AppAdminAuditRoute,
   AppAdminContenuWidgetsRoute: AppAdminContenuWidgetsRoute,
   AppAdminEmailPreviewRoute: AppAdminEmailPreviewRoute,
@@ -1852,7 +1853,6 @@ const AppRouteChildren: AppRouteChildren = {
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
   LoginRoute: LoginRoute,
   OnboardingRoute: OnboardingRoute,
@@ -1864,12 +1864,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}

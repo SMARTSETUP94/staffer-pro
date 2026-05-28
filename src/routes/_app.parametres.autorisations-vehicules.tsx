@@ -120,7 +120,7 @@ function AutorisationsVehiculesPage() {
     setDialogOpen(true);
   }
 
-  if (!canAdmin) return <Navigate to="/dashboard" />;
+  if (!canAdmin) return <Navigate to="/" />;
 
   return (
     <div className="container mx-auto space-y-4 p-4 md:p-6">

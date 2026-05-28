@@ -1,9 +1,6 @@
-import { createFileRoute, Navigate } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
-/**
- * v0.26.0 — Route fusionnée dans /dashboard universel (presets par rôle).
- * Conservée comme redirect pour ne pas casser les anciens liens.
- */
+/** v0.51 (L6-A) — Fusionné dans `/`. */
 export const Route = createFileRoute("/_app/dashboard-employe")({
-  component: () => <Navigate to="/dashboard" replace />,
+  beforeLoad: () => { throw redirect({ to: "/", replace: true }); },
 });

@@ -50,7 +50,7 @@ export function DeletePlanDialog({
       if (affaireId) {
         await navigate({ to: "/affaires/$affaireId/fabrication", params: { affaireId } });
       } else {
-        await navigate({ to: "/dashboard" });
+        await navigate({ to: "/" });
       }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erreur suppression");

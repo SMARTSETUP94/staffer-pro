@@ -24,7 +24,7 @@ export type RoleRequirement = "admin" | "chef_or_admin";
 interface RoleGuardProps {
   required: RoleRequirement;
   children: ReactNode;
-  /** @default "/aujourdhui" */
+  /** @default "/" */
   redirectTo?: string;
   toastMessage?: string;
 }
@@ -32,7 +32,7 @@ interface RoleGuardProps {
 export function RoleGuard({
   required,
   children,
-  redirectTo = "/aujourdhui",
+  redirectTo = "/",
   toastMessage,
 }: RoleGuardProps) {
   const { rolesLoaded, roles } = useAuth();
