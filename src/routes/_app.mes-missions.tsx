@@ -33,6 +33,7 @@ export const Route = createFileRoute("/_app/mes-missions")({
 function MesMissionsPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const fetchMissions = useServerFn(getMesMissions);
   const { scope } = Route.useSearch();
   void navigate;
 
