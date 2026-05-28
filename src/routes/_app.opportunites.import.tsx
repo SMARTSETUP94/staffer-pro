@@ -4,6 +4,7 @@ import { FileUp, Loader2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import { useCapability } from "@/hooks/use-capability";
 import { useChargesAffaires } from "@/hooks/use-charges-affaires";
 import { PageHeader } from "@/components/PageHeader";
 import { PageBreadcrumbs } from "@/components/PageBreadcrumbs";
