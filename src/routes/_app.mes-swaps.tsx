@@ -17,7 +17,13 @@ import {
   type SwapStatus,
 } from "@/hooks/use-mes-swaps";
 
+import { ScopeSelector, ScopeNotImplementedBanner, type UrlScope } from "@/components/scope/ScopeSelector";
+
 export const Route = createFileRoute("/_app/mes-swaps")({
+  validateSearch: (s: Record<string, unknown>): { scope: UrlScope } => {
+    const r = s.scope;
+    return { scope: r === "team" || r === "all" ? r : "mine" };
+  },
   head: () => ({ meta: [{ title: "Mes échanges — Setup Paris" }] }),
   component: MesSwapsPage,
 });
