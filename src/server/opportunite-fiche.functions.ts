@@ -223,7 +223,7 @@ export const getOpportuniteFiche = createServerFn({ method: "GET" })
     } as OpportuniteFicheData;
   });
 
-const UPDATE_FIELDS = z.object({
+export const UPDATE_FIELDS_SCHEMA = z.object({
   nom: z.string().min(1).max(255).optional(),
   client: z.string().max(255).nullable().optional(),
   lieu: z.string().max(255).nullable().optional(),
@@ -235,6 +235,11 @@ const UPDATE_FIELDS = z.object({
   date_evenement_fin: z.string().nullable().optional(),
   charge_affaires_id: z.string().uuid().nullable().optional(),
 });
+export const UPDATE_FIELDS_INPUT_SCHEMA = z.object({
+  affaireId: z.string().uuid(),
+  patch: UPDATE_FIELDS_SCHEMA,
+});
+const UPDATE_FIELDS = UPDATE_FIELDS_SCHEMA;
 
 export const updateOpportuniteFields = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
