@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_app/rh/")({
   head: () => ({ meta: [{ title: "RH — Setup Paris" }] }),
-  beforeLoad: () => requireCapability("rh.hub.view"),
+  beforeLoad: () => requireCapability("section.contrats_rh"),
   component: RhHubPage,
 });
 
