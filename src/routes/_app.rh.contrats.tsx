@@ -25,7 +25,7 @@ import { FlaskConical } from "lucide-react";
 import { requireCapability } from "@/lib/capability-guard";
 
 export const Route = createFileRoute("/_app/rh/contrats")({
-  beforeLoad: () => requireCapability("rh.hub.view"),
+  beforeLoad: () => requireCapability("section.contrats_rh"),
   component: () => (
     <RoleGuard required="admin">
       <RhContrats />
