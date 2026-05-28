@@ -87,6 +87,8 @@ const OPPS_SEARCH_DEFAULTS = {
   q: "",
   preset: "all" as StoredPreset,
   archived: false,
+  actionsDues: false,
+  noCa: false,
 };
 
 const oppsSearchSchema = z.object({
@@ -101,6 +103,8 @@ const oppsSearchSchema = z.object({
     "all",
   ).default("all"),
   archived: fallback(z.boolean(), false).default(false),
+  actionsDues: fallback(z.boolean(), false).default(false),
+  noCa: fallback(z.boolean(), false).default(false),
 });
 
 type OppsSearch = z.infer<typeof oppsSearchSchema>;
