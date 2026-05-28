@@ -105,7 +105,18 @@ export function OpportuniteCard({
             <GripVertical className="h-4 w-4" />
           </button>
         )}
-        <div className="min-w-0 flex-1">
+        <div
+          className="min-w-0 flex-1 cursor-pointer"
+          role="button"
+          tabIndex={0}
+          onClick={goToFiche}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              goToFiche();
+            }
+          }}
+        >
           <div className="flex items-baseline justify-between gap-2">
             <span className="font-mono text-xs font-bold text-primary">{opp.numero}</span>
             <div className="flex items-center gap-1">
