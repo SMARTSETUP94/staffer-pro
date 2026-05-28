@@ -25,8 +25,10 @@ import {
   FileSignature,
   ClipboardCheck,
   ArrowLeftRight,
-
+  Users,
+  CalendarDays,
 } from "lucide-react";
+
 import { format, startOfWeek } from "date-fns";
 import { fr } from "date-fns/locale";
 import { toast } from "sonner";
