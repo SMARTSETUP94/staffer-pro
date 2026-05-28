@@ -223,7 +223,7 @@ export const getOpportuniteFiche = createServerFn({ method: "GET" })
     } as OpportuniteFicheData;
   });
 
-const UPDATE_FIELDS = z.object({
+export const UPDATE_FIELDS_SCHEMA = z.object({
   nom: z.string().min(1).max(255).optional(),
   client: z.string().max(255).nullable().optional(),
   lieu: z.string().max(255).nullable().optional(),
@@ -235,6 +235,11 @@ const UPDATE_FIELDS = z.object({
   date_evenement_fin: z.string().nullable().optional(),
   charge_affaires_id: z.string().uuid().nullable().optional(),
 });
+export const UPDATE_FIELDS_INPUT_SCHEMA = z.object({
+  affaireId: z.string().uuid(),
+  patch: UPDATE_FIELDS_SCHEMA,
+});
+const UPDATE_FIELDS = UPDATE_FIELDS_SCHEMA;
 
 export const updateOpportuniteFields = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -251,13 +256,14 @@ export const updateOpportuniteFields = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-const ADD_ACTION = z.object({
+export const ADD_ACTION_SCHEMA = z.object({
   affaireId: z.string().uuid(),
   type: z.enum(OPP_ACTION_TYPES),
   texte: z.string().min(1).max(2000),
   date: z.string().optional(),
   prochaine_action_due_le: z.string().nullable().optional(),
 });
+const ADD_ACTION = ADD_ACTION_SCHEMA;
 
 export const addOpportuniteAction = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -281,13 +287,14 @@ export const addOpportuniteAction = createServerFn({ method: "POST" })
     return { id: row.id as string };
   });
 
-const UPDATE_JALON = z.object({
+export const UPDATE_JALON_SCHEMA = z.object({
   affaireId: z.string().uuid(),
   etape: z.enum(OPP_JALON_ETAPES),
   date_prevue: z.string().nullable().optional(),
   date_atteinte: z.string().nullable().optional(),
   notes: z.string().max(2000).nullable().optional(),
 });
+const UPDATE_JALON = UPDATE_JALON_SCHEMA;
 
 export const updateJalonStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

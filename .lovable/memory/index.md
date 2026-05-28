@@ -158,6 +158,7 @@ Modèle staffing 3 niveaux (Sprint A) : `affaire_equipe(affaire_id, employe_id, 
 80. ✅ **10.2 Inbox extension + Cleanup Risque #1** (28 mai 2026) — Colonne `archived_at` + index + RPC `archive_affaire`. 196 opps legacy archivées (191 sans CA + 5 test). Extension `get_inbox_items` source `opp_action` cap-gated (`inbox.opp_action`). Test pgTAP 3 assertions.
 81. ✅ **10.3 Fiche UI** (28 mai 2026) — Route `/opportunites/$affaireId`, 3 composants extraits (`OpportuniteFicheHeader`, `OpportuniteJalonsBar`, `OpportuniteNextActionCard`) + sections inlinées. 1 server fn file avec 4 fns. Nav câblée Kanban+Tableur. Tests E2E+Vitest. Voir mem://features/bloc-10-3-fiche-ui.
 82. ✅ **10.4 Listing refactor + import** (28 mai 2026) — RPC `list_opportunites_active()` agrégé (prochaine action / dernier jalon / compteur actions) avec 3 index d'optimisation. Colonnes Kanban (badge urgence) + Tableur (3 colonnes). Filtres header URL-persistés (`actionsDues`, `noCa` admin-only). Dashboard `PipelineCommercialBloc` badges urgence. EXPLAIN ANALYZE ~48ms < 100ms.
+82bis. ✅ **10.5 Tests + cleanup final** (28 mai 2026) — E2E `scenario-complet.admin.spec.ts` (parcours admin bout-en-bout) + 12 assertions Vitest sur 4 SF (input validation 3 cas × 4 fns) + memory récap globale `mem://features/bloc-10-fiche-opportunite`. Dette `inbox-opp-action-create-table` marquée RÉSOLUE (cap câblée en 10.2).
 
 ### Roadmap — À venir
 83. ⏳ **8.4 UI** (~8h) — Server functions (signed URLs, upload, aggregation journal) + composant `ObjetJournalPhotos` (onglet Journal : timeline filtrable + commentaires + upload WebP compressé + galerie par étape + lazy IntersectionObserver).
@@ -172,7 +173,7 @@ Modèle staffing 3 niveaux (Sprint A) : `affaire_equipe(affaire_id, employe_id, 
 90. ⏳ **9.4 Heures auto + photos** (~5-7h) — pré-remplissage depuis events arrivee/depart + auto-tag photos.
 91. ⏳ **9.5 Signaler problème + 7 specs E2E** (~5-7h) — bouton signaler → recordMissionEvent(probleme) + notif chef + 7e spec multi-mission/jour.
 
-### Bloc 10 — Fiche opportunité (reste ~15h, 10.1→10.4 livrés le 28 mai)
+### Bloc 10 — Fiche opportunité (reste ~15h, 10.1→10.5 livrés le 28 mai)
 92. ⏳ **10.5 Visites chantier** (~5h) — Table `affaires_visites` + CRUD + UI + storage photos. Reporté depuis 10.3.
 93. ⏳ **10.6 Échantillons matériaux** (~4h) — Table `affaires_echantillons` + CRUD + UI.
 94. ⏳ **10.7 Moodboard / artefacts** (~5h) — Réutilisation `affaire_documents` catégories `moodboard|esquisse_commerciale` + galerie.
@@ -193,6 +194,7 @@ Modèle staffing 3 niveaux (Sprint A) : `affaire_equipe(affaire_id, employe_id, 
 105. ⏸️ **Sprint dette résiduelle v0.36** — Page admin véhicules + audit findings (BACKLOG).
 
 ## Memories
+- [Bloc 10 — Fiche opportunité (récap global 10.1→10.5)](mem://features/bloc-10-fiche-opportunite) — 28 mai 2026, phase 'opportunite' sur affaires, RPC sign_opportunite, 5 caps, 196 opps archivées, 12 Vitest + 2 E2E + 3 pgTAP
 - [Bloc 10.4 Listing refactor opportunités](mem://features/bloc-10-4-listing-refactor) — 28 mai 2026, RPC list_opportunites_active() + badges urgence + filtres URL + EXPLAIN ~48ms
 - [Bloc 10.3 Fiche opportunité UI](mem://features/bloc-10-3-fiche-ui) — route /opportunites/$affaireId, 3 composants extraits + 1 server fn (4 fns), nav câblée Kanban+Tableur
 - [Bloc 10.2 Inbox extension + Cleanup Risque #1](mem://features/bloc-10-2-inbox-extension) — 28 mai 2026, colonne archived_at + archivage 196 opps legacy + get_inbox_items source opp_action cap-gated + pgTAP 3 assertions
