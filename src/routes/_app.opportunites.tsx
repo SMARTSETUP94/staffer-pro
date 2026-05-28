@@ -148,7 +148,7 @@ function OpportunitesPage() {
   const oppScope = useCapabilityScope("section.pipeline_opportunites");
   const navigate = useNavigate({ from: "/opportunites" });
   const search = Route.useSearch();
-  const { typo: typoFilter, vue, q: searchQuery, preset, archived: showArchived } = search;
+  const { typo: typoFilter, vue, q: searchQuery, preset, archived: showArchived, actionsDues, noCa } = search;
 
   const setTypoFilter = (next: AffaireTypologie[]) => {
     navigate({ search: (prev: OppsSearch) => ({ ...prev, typo: next }), replace: true });
@@ -168,6 +168,18 @@ function OpportunitesPage() {
   const setShowArchived = (next: boolean) => {
     navigate({
       search: (prev: OppsSearch) => ({ ...prev, archived: next }),
+      replace: true,
+    });
+  };
+  const setActionsDues = (next: boolean) => {
+    navigate({
+      search: (prev: OppsSearch) => ({ ...prev, actionsDues: next }),
+      replace: true,
+    });
+  };
+  const setNoCa = (next: boolean) => {
+    navigate({
+      search: (prev: OppsSearch) => ({ ...prev, noCa: next }),
       replace: true,
     });
   };
