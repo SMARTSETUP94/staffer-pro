@@ -229,7 +229,7 @@ const UPDATE_FIELDS = z.object({
   lieu: z.string().max(255).nullable().optional(),
   notes: z.string().max(5000).nullable().optional(),
   typologie_future: z.string().max(50).nullable().optional(),
-  taille: z.enum(["S", "M", "L", "XL"]).nullable().optional(),
+  taille: z.enum(["tres_petit", "petit", "moyen", "gros", "tres_gros"]).nullable().optional(),
   date_pat: z.string().nullable().optional(),
   date_evenement_debut: z.string().nullable().optional(),
   date_evenement_fin: z.string().nullable().optional(),
