@@ -126,9 +126,7 @@ function MesWidgetCard({ spec }: { spec: MesWidgetSpec }) {
   const canSee = useCapability(spec.capKey);
   if (!canSee) return null;
   const Icon = spec.icon;
-  const linkProps = spec.scope
-    ? { to: spec.to, search: { scope: spec.scope } as const }
-    : { to: spec.to };
+
   return (
     <Card>
       <CardContent className="flex items-center gap-4 p-4">
