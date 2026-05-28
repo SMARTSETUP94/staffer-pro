@@ -9,7 +9,13 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useMesPropositions, type ConfirmationStatus } from "@/hooks/use-mes-propositions";
 import { PropositionsList } from "@/components/propositions/PropositionsList";
 
+import { ScopeSelector, ScopeNotImplementedBanner, type UrlScope } from "@/components/scope/ScopeSelector";
+
 export const Route = createFileRoute("/_app/mes-propositions")({
+  validateSearch: (s: Record<string, unknown>): { scope: UrlScope } => {
+    const r = s.scope;
+    return { scope: r === "team" || r === "all" ? r : "mine" };
+  },
   head: () => ({ meta: [{ title: "Mes propositions — Setup Paris" }] }),
   component: MesPropositionsPage,
 });
