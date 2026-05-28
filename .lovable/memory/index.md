@@ -160,17 +160,17 @@ Modèle staffing 3 niveaux (Sprint A) : `affaire_equipe(affaire_id, employe_id, 
 82. ✅ **10.4 Listing refactor + import** (28 mai 2026) — RPC `list_opportunites_active()` agrégé (prochaine action / dernier jalon / compteur actions) avec 3 index d'optimisation. Colonnes Kanban (badge urgence) + Tableur (3 colonnes). Filtres header URL-persistés (`actionsDues`, `noCa` admin-only). Dashboard `PipelineCommercialBloc` badges urgence. EXPLAIN ANALYZE ~48ms < 100ms.
 
 ### Roadmap — À venir
-79. ⏳ **8.4 UI** (~8h) — Server functions (signed URLs, upload, aggregation journal) + composant `ObjetJournalPhotos` (onglet Journal : timeline filtrable + commentaires + upload WebP compressé + galerie par étape + lazy IntersectionObserver).
-80. ⏳ **8.5** (~4h) — Liens croisés : remplacer lien temporaire 8.2b par navigation intégrée native (Gantt → fiche objet, Planning → fiche objet, Devis ligne → fiche objet, Kanban étape → fiche objet). Choix drawer vs nav à trancher.
-81. ⏳ **8.6** (~8h) — Polish + responsive 380px + E2E 8.3b (13 scénarios) + E2E 8.4 + 3 dettes (rename SF `loadActiveStepsForObjet`, Sheet vs Dialog AddPersonne, édition commentaire).
+83. ⏳ **8.4 UI** (~8h) — Server functions (signed URLs, upload, aggregation journal) + composant `ObjetJournalPhotos` (onglet Journal : timeline filtrable + commentaires + upload WebP compressé + galerie par étape + lazy IntersectionObserver).
+84. ⏳ **8.5** (~4h) — Liens croisés : remplacer lien temporaire 8.2b par navigation intégrée native (Gantt → fiche objet, Planning → fiche objet, Devis ligne → fiche objet, Kanban étape → fiche objet). Choix drawer vs nav à trancher.
+85. ⏳ **8.6** (~8h) — Polish + responsive 380px + E2E 8.3b (13 scénarios) + E2E 8.4 + 3 dettes (rename SF `loadActiveStepsForObjet`, Sheet vs Dialog AddPersonne, édition commentaire).
 
 ### Bloc 9 — Carte mission pose (en cours, ~30h)
-82. ✅ **9.1 Fondations DB** (26 mai 2026) — Table `mission_events` + enum + RLS self (Q2) + 5 colonnes infos terrain `affaires` + enum `notification_type` += `mission_probleme` + 2 capabilities + matrice rôles. 3 SF `getMesMissions`/`getCarteMission`/`recordMissionEvent`. Fallback notif chef via table `notifications`. Voir mem://features/bloc-9-carte-mission-pose.
-83. ✅ **9.2 Liste `/mobile/mes-missions`** (~3-4h) — Filtres Cette semaine / Suivante / Passées. Livrée, testée par Gabin.
-84. ✅ **9.6 bis** (26 mai 2026) — Navigation mobile + équipe chantiers + masquage role_terrain (validé par Gabin). Inclut wiring nav employé/chef + routes cleanup Batch 9.7.
-85. ⏳ **9.3 Carte détaillée `/mobile/mission/$id`** (~5-6h) — hero countdown + GPS + tel + sections accès/équipe/historique events.
-86. ⏳ **9.4 Heures auto + photos** (~5-7h) — pré-remplissage depuis events arrivee/depart + auto-tag photos.
-87. ⏳ **9.5 Signaler problème + 7 specs E2E** (~5-7h) — bouton signaler → recordMissionEvent(probleme) + notif chef + 7e spec multi-mission/jour.
+86. ✅ **9.1 Fondations DB** (26 mai 2026) — Table `mission_events` + enum + RLS self (Q2) + 5 colonnes infos terrain `affaires` + enum `notification_type` += `mission_probleme` + 2 capabilities + matrice rôles. 3 SF `getMesMissions`/`getCarteMission`/`recordMissionEvent`. Fallback notif chef via table `notifications`. Voir mem://features/bloc-9-carte-mission-pose.
+87. ✅ **9.2 Liste `/mobile/mes-missions`** (~3-4h) — Filtres Cette semaine / Suivante / Passées. Livrée, testée par Gabin.
+88. ✅ **9.6 bis** (26 mai 2026) — Navigation mobile + équipe chantiers + masquage role_terrain (validé par Gabin). Inclut wiring nav employé/chef + routes cleanup Batch 9.7.
+89. ⏳ **9.3 Carte détaillée `/mobile/mission/$id`** (~5-6h) — hero countdown + GPS + tel + sections accès/équipe/historique events.
+90. ⏳ **9.4 Heures auto + photos** (~5-7h) — pré-remplissage depuis events arrivee/depart + auto-tag photos.
+91. ⏳ **9.5 Signaler problème + 7 specs E2E** (~5-7h) — bouton signaler → recordMissionEvent(probleme) + notif chef + 7e spec multi-mission/jour.
 
 ### Bloc 10 — Fiche opportunité (reste ~15h, 10.1→10.4 livrés le 28 mai)
 92. ⏳ **10.5 Visites chantier** (~5h) — Table `affaires_visites` + CRUD + UI + storage photos. Reporté depuis 10.3.
@@ -181,16 +181,16 @@ Modèle staffing 3 niveaux (Sprint A) : `affaire_equipe(affaire_id, employe_id, 
 97. ⏳ **10.10 Tests E2E complets** (~4h) — Visite + échantillon + transfert 5XXX + vérification notif.
 
 ### Lots L3 → L5 (suite refonte permissions)
-89. ⏳ **L3** — Refonte permissions : audit terminé 26/05. 4 sous-lots : L3.0 `/parametres/utilisateurs` multi-select 11 rôles + caps debug panel (~4h), L3.1 double-filtre fab `casting.edit_phase_fabrication` (~1h), L3.2-L3.5 refacto `isAdmin/isChef` → `user_has_cap()` 200+ call sites (~25-35h). ~30-40h total.
-90. ⏳ **L4** — Seed data capabilities + MobileBottomNav adaptative unique (1 nav, pas 2).
-91. ⏳ **L5** — Nettoyage legacy isAdmin/isChef + tests E2E permissions.
+98. ⏳ **L3** — Refonte permissions : audit terminé 26/05. 4 sous-lots : L3.0 `/parametres/utilisateurs` multi-select 11 rôles + caps debug panel (~4h), L3.1 double-filtre fab `casting.edit_phase_fabrication` (~1h), L3.2-L3.5 refacto `isAdmin/isChef` → `user_has_cap()` 200+ call sites (~25-35h). ~30-40h total.
+99. ⏳ **L4** — Seed data capabilities + MobileBottomNav adaptative unique (1 nav, pas 2).
+100. ⏳ **L5** — Nettoyage legacy isAdmin/isChef + tests E2E permissions.
 
 ### Backlog (non planifié)
-92. ⏸️ **v0.40 Phase 2** — Horaires précis SILAE (heure_debut/fin/pauses + nuit/sup/35h auto) — SUSPENDU.
-93. ⏸️ **v0.41** — Claude API auto-staffing UNIQUEMENT 5XXX (proxy + skill + tools + fallback v0.35 + cache + cap + télémétrie). Tier CDI/CDD avant intérim. Utilisera `affaire_equipe_historique` comme feature store contextuel.
-94. ⏸️ **Centre Analyse Heures** — Onglet consolidé heures + 8 filtres + exports (`v0.47` BACKLOG).
-95. ⏸️ **Logistique avancée** — Autorisations véhicules #56 + sous-traitants + historique + stats (`Sprint 3b` BACKLOG).
-96. ⏸️ **Sprint dette résiduelle v0.36** — Page admin véhicules + audit findings (BACKLOG).
+101. ⏸️ **v0.40 Phase 2** — Horaires précis SILAE (heure_debut/fin/pauses + nuit/sup/35h auto) — SUSPENDU.
+102. ⏸️ **v0.41** — Claude API auto-staffing UNIQUEMENT 5XXX (proxy + skill + tools + fallback v0.35 + cache + cap + télémétrie). Tier CDI/CDD avant intérim. Utilisera `affaire_equipe_historique` comme feature store contextuel.
+103. ⏸️ **Centre Analyse Heures** — Onglet consolidé heures + 8 filtres + exports (`v0.47` BACKLOG).
+104. ⏸️ **Logistique avancée** — Autorisations véhicules #56 + sous-traitants + historique + stats (`Sprint 3b` BACKLOG).
+105. ⏸️ **Sprint dette résiduelle v0.36** — Page admin véhicules + audit findings (BACKLOG).
 
 ## Memories
 - [Bloc 10.3 Fiche opportunité UI](mem://features/bloc-10-3-fiche-ui) — route /opportunites/$affaireId, 3 composants extraits + 1 server fn (4 fns), nav câblée Kanban+Tableur
