@@ -19,8 +19,13 @@ import { getMesMissions, type MissionListItem } from "@/server/mission-card.func
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { ScopeSelector, ScopeNotImplementedBanner, type UrlScope } from "@/components/scope/ScopeSelector";
 
 export const Route = createFileRoute("/_app/mes-missions")({
+  validateSearch: (s: Record<string, unknown>): { scope: UrlScope } => {
+    const r = s.scope;
+    return { scope: r === "team" || r === "all" ? r : "mine" };
+  },
   head: () => ({ meta: [{ title: "Mes missions pose — Setup Paris" }] }),
   component: MesMissionsPage,
 });
@@ -29,7 +34,7 @@ function MesMissionsPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const fetchMissions = useServerFn(getMesMissions);
-  // Suppress unused (kept for diff minimal post-fusion)
+  const { scope } = Route.useSearch();
   void navigate;
 
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
@@ -68,6 +73,10 @@ function MesMissionsPage() {
           >
             <RefreshCw className={cn("h-4 w-4", isFetching && "animate-spin")} />
           </Button>
+        </div>
+        <div className="mx-auto mt-3 max-w-2xl space-y-2">
+          <ScopeSelector capKey="mes_missions.view" routeId="/_app/mes-missions" />
+          <ScopeNotImplementedBanner scope={scope} />
         </div>
       </header>
 

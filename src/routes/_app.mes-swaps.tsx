@@ -17,7 +17,13 @@ import {
   type SwapStatus,
 } from "@/hooks/use-mes-swaps";
 
+import { ScopeSelector, ScopeNotImplementedBanner, type UrlScope } from "@/components/scope/ScopeSelector";
+
 export const Route = createFileRoute("/_app/mes-swaps")({
+  validateSearch: (s: Record<string, unknown>): { scope: UrlScope } => {
+    const r = s.scope;
+    return { scope: r === "team" || r === "all" ? r : "mine" };
+  },
   head: () => ({ meta: [{ title: "Mes échanges — Setup Paris" }] }),
   component: MesSwapsPage,
 });
@@ -37,6 +43,7 @@ type Tab = "en_cours" | "historique";
 function MesSwapsPage() {
   const { user } = useAuth();
   const { employeId } = useResolvedEmploye();
+  const { scope } = Route.useSearch();
   const [tab, setTab] = useState<Tab>("en_cours");
   const [createOpen, setCreateOpen] = useState(false);
   const [myAssignations, setMyAssignations] = useState<MyAssignation[]>([]);
@@ -99,6 +106,10 @@ function MesSwapsPage() {
           </Button>
         }
       />
+
+      <ScopeSelector capKey="mes_swaps.view" routeId="/_app/mes-swaps" />
+      <ScopeNotImplementedBanner scope={scope} />
+
 
       <div className="flex items-center justify-between gap-3">
         <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)}>

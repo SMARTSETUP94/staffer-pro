@@ -22,7 +22,13 @@ import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
+import { ScopeSelector, ScopeNotImplementedBanner, type UrlScope } from "@/components/scope/ScopeSelector";
+
 export const Route = createFileRoute("/_app/mes-chantiers")({
+  validateSearch: (s: Record<string, unknown>): { scope: UrlScope } => {
+    const r = s.scope;
+    return { scope: r === "team" || r === "all" ? r : "mine" };
+  },
   head: () => ({ meta: [{ title: "Mes équipes chantiers — Setup Paris" }] }),
   component: EquipeChantiersPage,
 });
@@ -46,6 +52,7 @@ const PHASE_ORDER: EquipePhase[] = [
 function EquipeChantiersPage() {
   const { user } = useAuth();
   const fetchFn = useServerFn(getMesEquipesChantiers);
+  const { scope } = Route.useSearch();
 
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["mes-equipes-chantiers"],
@@ -82,6 +89,10 @@ function EquipeChantiersPage() {
           >
             <RefreshCw className={cn("h-4 w-4", isFetching && "animate-spin")} />
           </Button>
+        </div>
+        <div className="mx-auto mt-3 max-w-2xl space-y-2">
+          <ScopeSelector capKey="mes_chantiers.view" routeId="/_app/mes-chantiers" />
+          <ScopeNotImplementedBanner scope={scope} />
         </div>
       </header>
 

@@ -9,7 +9,13 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useMesPropositions, type ConfirmationStatus } from "@/hooks/use-mes-propositions";
 import { PropositionsList } from "@/components/propositions/PropositionsList";
 
+import { ScopeSelector, ScopeNotImplementedBanner, type UrlScope } from "@/components/scope/ScopeSelector";
+
 export const Route = createFileRoute("/_app/mes-propositions")({
+  validateSearch: (s: Record<string, unknown>): { scope: UrlScope } => {
+    const r = s.scope;
+    return { scope: r === "team" || r === "all" ? r : "mine" };
+  },
   head: () => ({ meta: [{ title: "Mes propositions — Setup Paris" }] }),
   component: MesPropositionsPage,
 });
@@ -19,6 +25,7 @@ type Tab = "en_attente" | "confirmees" | "refusees";
 function MesPropositionsPage() {
   const { user } = useAuth();
   const { employeId } = useResolvedEmploye();
+  const { scope } = Route.useSearch();
   const [tab, setTab] = useState<Tab>("en_attente");
 
   const { rows, loading, refresh } = useMesPropositions(employeId);
@@ -62,6 +69,10 @@ function MesPropositionsPage() {
         title="Mes propositions de mission"
         description="Confirme ou refuse les créneaux que le chef te propose. Tant que tu n'as pas répondu, le créneau reste 'en attente'."
       />
+
+      <ScopeSelector capKey="mes_propositions.view" routeId="/_app/mes-propositions" />
+      <ScopeNotImplementedBanner scope={scope} />
+
 
       <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)}>
         <TabsList>
