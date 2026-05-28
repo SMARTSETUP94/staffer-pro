@@ -58,6 +58,7 @@ import { Route as AppParametresLieuxRouteImport } from './routes/_app.parametres
 import { Route as AppParametresCompetencesEquipeRouteImport } from './routes/_app.parametres.competences-equipe'
 import { Route as AppParametresAutorisationsVehiculesRouteImport } from './routes/_app.parametres.autorisations-vehicules'
 import { Route as AppOpportunitesImportRouteImport } from './routes/_app.opportunites.import'
+import { Route as AppOpportunitesAffaireIdRouteImport } from './routes/_app.opportunites.$affaireId'
 import { Route as AppLogistiqueVehiculesPlanningRouteImport } from './routes/_app.logistique.vehicules-planning'
 import { Route as AppFabricationMesEtapesRouteImport } from './routes/_app.fabrication.mes-etapes'
 import { Route as AppExportFeuilleDeRouteRouteImport } from './routes/_app.export.feuille-de-route'
@@ -338,6 +339,12 @@ const AppOpportunitesImportRoute = AppOpportunitesImportRouteImport.update({
   path: '/import',
   getParentRoute: () => AppOpportunitesRoute,
 } as any)
+const AppOpportunitesAffaireIdRoute =
+  AppOpportunitesAffaireIdRouteImport.update({
+    id: '/$affaireId',
+    path: '/$affaireId',
+    getParentRoute: () => AppOpportunitesRoute,
+  } as any)
 const AppLogistiqueVehiculesPlanningRoute =
   AppLogistiqueVehiculesPlanningRouteImport.update({
     id: '/logistique/vehicules-planning',
@@ -555,6 +562,7 @@ export interface FileRoutesByFullPath {
   '/export/feuille-de-route': typeof AppExportFeuilleDeRouteRoute
   '/fabrication/mes-etapes': typeof AppFabricationMesEtapesRoute
   '/logistique/vehicules-planning': typeof AppLogistiqueVehiculesPlanningRoute
+  '/opportunites/$affaireId': typeof AppOpportunitesAffaireIdRoute
   '/opportunites/import': typeof AppOpportunitesImportRoute
   '/parametres/autorisations-vehicules': typeof AppParametresAutorisationsVehiculesRoute
   '/parametres/competences-equipe': typeof AppParametresCompetencesEquipeRoute
@@ -633,6 +641,7 @@ export interface FileRoutesByTo {
   '/export/feuille-de-route': typeof AppExportFeuilleDeRouteRoute
   '/fabrication/mes-etapes': typeof AppFabricationMesEtapesRoute
   '/logistique/vehicules-planning': typeof AppLogistiqueVehiculesPlanningRoute
+  '/opportunites/$affaireId': typeof AppOpportunitesAffaireIdRoute
   '/opportunites/import': typeof AppOpportunitesImportRoute
   '/parametres/autorisations-vehicules': typeof AppParametresAutorisationsVehiculesRoute
   '/parametres/competences-equipe': typeof AppParametresCompetencesEquipeRoute
@@ -715,6 +724,7 @@ export interface FileRoutesById {
   '/_app/export/feuille-de-route': typeof AppExportFeuilleDeRouteRoute
   '/_app/fabrication/mes-etapes': typeof AppFabricationMesEtapesRoute
   '/_app/logistique/vehicules-planning': typeof AppLogistiqueVehiculesPlanningRoute
+  '/_app/opportunites/$affaireId': typeof AppOpportunitesAffaireIdRoute
   '/_app/opportunites/import': typeof AppOpportunitesImportRoute
   '/_app/parametres/autorisations-vehicules': typeof AppParametresAutorisationsVehiculesRoute
   '/_app/parametres/competences-equipe': typeof AppParametresCompetencesEquipeRoute
@@ -797,6 +807,7 @@ export interface FileRouteTypes {
     | '/export/feuille-de-route'
     | '/fabrication/mes-etapes'
     | '/logistique/vehicules-planning'
+    | '/opportunites/$affaireId'
     | '/opportunites/import'
     | '/parametres/autorisations-vehicules'
     | '/parametres/competences-equipe'
@@ -875,6 +886,7 @@ export interface FileRouteTypes {
     | '/export/feuille-de-route'
     | '/fabrication/mes-etapes'
     | '/logistique/vehicules-planning'
+    | '/opportunites/$affaireId'
     | '/opportunites/import'
     | '/parametres/autorisations-vehicules'
     | '/parametres/competences-equipe'
@@ -956,6 +968,7 @@ export interface FileRouteTypes {
     | '/_app/export/feuille-de-route'
     | '/_app/fabrication/mes-etapes'
     | '/_app/logistique/vehicules-planning'
+    | '/_app/opportunites/$affaireId'
     | '/_app/opportunites/import'
     | '/_app/parametres/autorisations-vehicules'
     | '/_app/parametres/competences-equipe'
@@ -1340,6 +1353,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppOpportunitesImportRouteImport
       parentRoute: typeof AppOpportunitesRoute
     }
+    '/_app/opportunites/$affaireId': {
+      id: '/_app/opportunites/$affaireId'
+      path: '/$affaireId'
+      fullPath: '/opportunites/$affaireId'
+      preLoaderRoute: typeof AppOpportunitesAffaireIdRouteImport
+      parentRoute: typeof AppOpportunitesRoute
+    }
     '/_app/logistique/vehicules-planning': {
       id: '/_app/logistique/vehicules-planning'
       path: '/logistique/vehicules-planning'
@@ -1582,10 +1602,12 @@ const AppExportRouteWithChildren = AppExportRoute._addFileChildren(
 )
 
 interface AppOpportunitesRouteChildren {
+  AppOpportunitesAffaireIdRoute: typeof AppOpportunitesAffaireIdRoute
   AppOpportunitesImportRoute: typeof AppOpportunitesImportRoute
 }
 
 const AppOpportunitesRouteChildren: AppOpportunitesRouteChildren = {
+  AppOpportunitesAffaireIdRoute: AppOpportunitesAffaireIdRoute,
   AppOpportunitesImportRoute: AppOpportunitesImportRoute,
 }
 
