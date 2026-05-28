@@ -28,6 +28,7 @@ import { OpportuniteNextActionCard } from "@/components/opportunites/fiche/Oppor
 import { SignerOpportuniteDialog } from "@/components/opportunites/SignerOpportuniteDialog";
 import { AFFAIRE_TYPOLOGIES, type AffaireTypologie } from "@/lib/affaire-typologie";
 import { TAILLE_LABEL, type OpportuniteTaille } from "@/lib/opportunites";
+import type { TypologieFuture } from "@/lib/typologie-future";
 
 export const Route = createFileRoute("/_app/opportunites/$affaireId")({
   component: OpportuniteFichePage,
