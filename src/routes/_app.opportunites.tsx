@@ -245,10 +245,26 @@ function OpportunitesPage() {
   // est inutile ici car toutes les opps sont 9XXX = prototype par construction).
   const typoSet = useMemo(() => new Set(typoFilter), [typoFilter]);
   const normalizedQuery = searchQuery.trim().toLowerCase();
+  const today = useMemo(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }, []);
+  const sevenDaysAhead = useMemo(() => {
+    const d = new Date(today);
+    d.setDate(d.getDate() + 7);
+    return d;
+  }, [today]);
   const oppsFiltrees = useMemo(() => {
     return opps.filter((o) => {
       if (filterCa && filterCa !== "__all__" && o.charge_affaires_id !== filterCa)
         return false;
+      if (noCa && o.charge_affaires_id !== null) return false;
+      if (actionsDues) {
+        if (!o.next_action_due_le) return false;
+        const due = new Date(o.next_action_due_le + "T00:00:00");
+        if (due > sevenDaysAhead) return false;
+      }
       if (typoSet.size > 0) {
         if (!o.typologie_future || !typoSet.has(o.typologie_future)) return false;
       }
@@ -258,7 +274,7 @@ function OpportunitesPage() {
       }
       return true;
     });
-  }, [opps, filterCa, typoSet, normalizedQuery]);
+  }, [opps, filterCa, noCa, actionsDues, sevenDaysAhead, typoSet, normalizedQuery]);
 
   const typoCounts = useMemo(() => {
     const counts: Partial<Record<AffaireTypologie, number>> = {};
