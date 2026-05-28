@@ -34,7 +34,8 @@ interface PipelineData {
  * v0.26.0
  */
 export function useOpportunitesPipeline(): PipelineData {
-  const { user, isAdmin } = useAuth();
+  const { user } = useAuth();
+  const isAdmin = useCapability("opportunites.read.all");
   const { data: charges } = useChargesAffaires();
   const [scope, setScope] = useState<"mine" | "all">(isAdmin ? "all" : "mine");
   const [opps, setOpps] = useState<OppRow[]>([]);

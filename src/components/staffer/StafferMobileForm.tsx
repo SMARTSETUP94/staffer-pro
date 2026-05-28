@@ -49,7 +49,7 @@ interface MetierOption {
  *    Admin n'est jamais filtré (override implicite via isAdmin).
  */
 export function StafferMobileForm({ scopeToChef = false }: { scopeToChef?: boolean } = {}) {
-  const { isAdmin } = useAuth();
+  const isAdmin = useCapability("staffer.mobile.admin_override");
   const { ids: affaireIdsChef, isLoading: idsLoading } = useMesAffairesChefIds();
   const enforceChefScope = scopeToChef && !isAdmin;
 

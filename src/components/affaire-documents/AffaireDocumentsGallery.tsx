@@ -14,7 +14,8 @@ interface Props {
 }
 
 export function AffaireDocumentsGallery({ affaireId, variant = "desktop", canUpload = true }: Props) {
-  const { user, isAdmin } = useAuth();
+  const { user } = useAuth();
+  const isAdmin = useCapability("affaire.documents.delete");
   const {
     documents,
     loading,

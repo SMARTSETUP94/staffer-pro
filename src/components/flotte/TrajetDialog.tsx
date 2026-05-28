@@ -80,7 +80,7 @@ export function TrajetDialog({
   defaultAdresseDepart, defaultAdresseArrivee, defaultCategorie, defaultAffaireId,
   affaires, employesLivreurs, onSaved,
 }: Props) {
-  const { isAdmin } = useAuth();
+  const isAdmin = useCapability("flotte.trajet.delete");
   const { vehicules } = useVehicules();
   const { adresses } = useAdressesFavorites();
 

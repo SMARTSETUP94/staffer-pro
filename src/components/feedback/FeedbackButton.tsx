@@ -47,7 +47,8 @@ interface Props {
 }
 
 export function FeedbackButton({ floating = true, variant = "icon", className }: Props) {
-  const { user, isAdminOrChef } = useAuth();
+  const { user } = useAuth();
+  const isAdminOrChef = useCapability("feedback.create");
   const path = useRouterState({ select: (s) => s.location.pathname });
   const [open, setOpen] = useState(false);
   const [type, setType] = useState<FeedbackType>("bug");

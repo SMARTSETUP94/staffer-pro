@@ -101,7 +101,9 @@ function fmtDate(iso: string | null): string {
 
 function MonEquipeTypePage() {
   const navigate = useNavigate();
-  const { isAdmin, isAdminOrChef, loading: authLoading } = useAuth();
+  const { loading: authLoading } = useAuth();
+  const isAdminOrChef = useCapability("dashboard.team.view");
+  const isAdmin = useCapability("admin.roadmap.manage");
   const { employeId: chefId } = useResolvedEmploye();
 
   const [typologie, setTypologie] = useState<string>("all");

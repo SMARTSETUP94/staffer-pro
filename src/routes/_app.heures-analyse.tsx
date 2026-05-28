@@ -229,7 +229,7 @@ function anonId(r: Row): string {
 function HeuresAnalysePage() {
   const search = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
-  const { isAdmin } = useAuth();
+  const isAdmin = useCapability("heures.export.admin_formats");
 
   const { from, to } = resolveRange(search);
 
