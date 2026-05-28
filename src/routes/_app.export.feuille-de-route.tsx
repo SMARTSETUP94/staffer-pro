@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { requireCapability } from "@/lib/capability-guard";
 import { startOfWeek, addDays } from "date-fns";
 import { ClipboardList, Loader2 } from "lucide-react";
 import { useState } from "react";
@@ -8,6 +9,7 @@ import { FeuilleRouteTableurView } from "@/components/planning/FeuilleRouteTable
 import { PageBreadcrumbs } from "@/components/PageBreadcrumbs";
 
 export const Route = createFileRoute("/_app/export/feuille-de-route")({
+  beforeLoad: () => requireCapability("section.admin"),
   head: () => ({
     meta: [
       { title: "Feuille de route — Planning" },

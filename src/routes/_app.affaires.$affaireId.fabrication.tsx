@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { requireCapability } from "@/lib/capability-guard";
 import { createFileRoute } from "@tanstack/react-router";
 import { Loader2, Plus, Upload, MoreVertical, Pencil, Truck, Send, ExternalLink } from "lucide-react";
 import { Link } from "@tanstack/react-router";
@@ -57,6 +58,7 @@ import { MettreAuPlanningExpressButton } from "@/components/staffing/MettreAuPla
 import { useVocab } from "@/hooks/use-vocab";
 
 export const Route = createFileRoute("/_app/affaires/$affaireId/fabrication")({
+  beforeLoad: () => requireCapability("section.affaires"),
   head: () => ({ meta: [{ title: "Fabrication — Setup Paris" }] }),
   component: FabricationPage,
 });

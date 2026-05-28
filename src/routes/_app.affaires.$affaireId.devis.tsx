@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { requireCapability } from "@/lib/capability-guard";
 import { useEffect, useMemo, useState } from "react";
 import { Plus, Loader2, Pencil, Trash2, FileText, CheckCircle2, Lock, AlertTriangle, Download, Sparkles } from "lucide-react";
 import { format } from "date-fns";
@@ -61,6 +62,7 @@ interface Poste {
 type HeuresAssignParCouple = Map<string, number>; // key: `${devis_id}::${metier_id}`
 
 export const Route = createFileRoute("/_app/affaires/$affaireId/devis")({
+  beforeLoad: () => requireCapability("section.affaires"),
   component: AffaireDevisPage,
 });
 

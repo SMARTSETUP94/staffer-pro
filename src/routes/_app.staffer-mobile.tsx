@@ -3,11 +3,11 @@
  * Recherche personne + chantier, dates, slot 4h/8h, conflit dispo, contrat auto si éligible.
  */
 import { createFileRoute } from "@tanstack/react-router";
+import { requireCapability } from "@/lib/capability-guard";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2, AlertTriangle, CheckCircle2, FileSignature } from "lucide-react";
 import { toast } from "sonner";
-import { RoleGuard } from "@/components/auth/RoleGuard";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,10 +22,9 @@ import { generateContratV1 } from "@/lib/contrats-signature";
 import { useVocab } from "@/hooks/use-vocab";
 
 export const Route = createFileRoute("/_app/staffer-mobile")({
+  beforeLoad: () => requireCapability("mobile.staffer_rapide"),
   component: () => (
-    <RoleGuard required="chef_or_admin">
       <StafferMobile />
-    </RoleGuard>
   ),
 });
 

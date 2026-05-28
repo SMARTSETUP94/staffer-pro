@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { requireCapability } from "@/lib/capability-guard";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { Loader2, Paperclip, Send, X, Trash2, Download, AtSign } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/affaires/$affaireId/journal")({
+  beforeLoad: () => requireCapability("section.affaires"),
   component: JournalPage,
 });
 

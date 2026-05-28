@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { requireCapability } from "@/lib/capability-guard";
 import { useMemo, useRef, useState } from "react";
 import { FileUp, Loader2, Upload, AlertCircle, CheckCircle2, XCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,6 +22,7 @@ import {
 } from "@/lib/employes-import";
 
 export const Route = createFileRoute("/_app/employes/import")({
+  beforeLoad: () => requireCapability("section.admin"),
   head: () => ({ meta: [{ title: "Import employés — Setup Paris" }] }),
   component: EmployesImportPage,
 });

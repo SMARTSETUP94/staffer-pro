@@ -13,6 +13,7 @@
  * string sur chantier/employe/devis sont remplacées par tableau vide).
  */
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { requireCapability } from "@/lib/capability-guard";
 import { zodValidator, fallback } from "@tanstack/zod-adapter";
 import { z } from "zod";
 import { useEffect, useMemo, useState } from "react";
@@ -37,7 +38,6 @@ import { formatBusinessError } from "@/lib/business-errors";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { useCapability } from "@/hooks/use-capability";
-import { RoleGuard } from "@/components/auth/RoleGuard";
 import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -124,6 +124,7 @@ const searchSchema = z.object({
 type SearchParams = z.infer<typeof searchSchema>;
 
 export const Route = createFileRoute("/_app/heures-analyse")({
+  beforeLoad: () => requireCapability("heures.audit"),
   validateSearch: zodValidator(searchSchema),
   component: HeuresAnalysePage,
 });
@@ -756,7 +757,6 @@ function HeuresAnalysePage() {
   }
 
   return (
-    <RoleGuard required="admin">
       <div className="space-y-4 pb-24">
         <PageHeader
           number="03"
@@ -1247,7 +1247,6 @@ function HeuresAnalysePage() {
           }}
         />
       </div>
-    </RoleGuard>
   );
 }
 

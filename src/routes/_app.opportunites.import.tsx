@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { requireCapability } from "@/lib/capability-guard";
 import { useMemo, useRef, useState } from "react";
 import { FileUp, Loader2, Upload } from "lucide-react";
 import { toast } from "sonner";
@@ -35,6 +36,7 @@ import {
 } from "@/lib/import-validation";
 
 export const Route = createFileRoute("/_app/opportunites/import")({
+  beforeLoad: () => requireCapability("section.admin"),
   head: () => ({ meta: [{ title: "Import opportunités — Setup Paris" }] }),
   component: () => (
     <ImportErrorBoundary label="Import opportunités">

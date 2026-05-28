@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { requireCapability } from "@/lib/capability-guard";
 import { useEffect, useState } from "react";
 import { Loader2, Plus, Save, Trash2, Warehouse, Building2, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
@@ -23,6 +24,7 @@ import { AddressAutocomplete } from "@/components/flotte/AddressAutocomplete";
 import { useAdressesFavorites } from "@/hooks/use-vehicules";
 
 export const Route = createFileRoute("/_app/parametres/lieux")({
+  beforeLoad: () => requireCapability("section.admin"),
   head: () => ({ meta: [{ title: "Lieux entreprise — Paramètres" }] }),
   component: LieuxPage,
 });

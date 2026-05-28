@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { requireCapability } from "@/lib/capability-guard";
 import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { z } from "zod";
@@ -57,6 +58,7 @@ const importSearchSchema = z.object({
 });
 
 export const Route = createFileRoute("/_app/devis/import")({
+  beforeLoad: () => requireCapability("section.admin"),
   head: () => ({ meta: [{ title: "Import devis Excel — Setup Paris" }] }),
   validateSearch: zodValidator(importSearchSchema),
   component: () => (

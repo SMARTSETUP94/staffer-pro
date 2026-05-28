@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { requireCapability } from "@/lib/capability-guard";
 import { useMemo, useState } from "react";
 import { Plus, Pencil, Truck, MapPin, AlertTriangle, Trash2, Loader2, History, BarChart3 } from "lucide-react";
 import { FlotteHistoriqueTab } from "@/components/flotte/FlotteHistoriqueTab";
@@ -22,6 +23,7 @@ import { VehiculeDialog } from "@/components/flotte/VehiculeDialog";
 import { AdresseFavoriteDialog } from "@/components/flotte/AdresseFavoriteDialog";
 
 export const Route = createFileRoute("/_app/flotte")({
+  beforeLoad: () => requireCapability("section.logistique"),
   head: () => ({ meta: [{ title: "Flotte — Setup Paris" }] }),
   component: FlottePage,
 });

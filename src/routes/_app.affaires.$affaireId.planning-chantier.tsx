@@ -3,6 +3,7 @@
  * Vue macro 7 phases du chantier (SVG Gantt) + jalons + sous-blocs fab.
  */
 import { createFileRoute } from "@tanstack/react-router";
+import { requireCapability } from "@/lib/capability-guard";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
@@ -10,6 +11,7 @@ import { getPlanningChantierMacro } from "@/server/planning-chantier-macro.funct
 import { PlanningChantierGantt } from "@/components/planning/PlanningChantierGantt";
 
 export const Route = createFileRoute("/_app/affaires/$affaireId/planning-chantier")({
+  beforeLoad: () => requireCapability("section.affaires"),
   component: PlanningChantierPage,
 });
 

@@ -1,9 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { requireCapability } from "@/lib/capability-guard";
 import { z } from "zod";
 import { zodValidator, fallback } from "@tanstack/zod-adapter";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageHeader } from "@/components/PageHeader";
-import { RoleGuard } from "@/components/auth/RoleGuard";
 import { ConnexionsTab } from "@/components/audit-auth/ConnexionsTab";
 import { InvitationsTab } from "@/components/audit-auth/InvitationsTab";
 import { EvenementsTab } from "@/components/audit-auth/EvenementsTab";
@@ -17,6 +17,7 @@ const auditAuthSearchSchema = z.object({
 });
 
 export const Route = createFileRoute("/_app/audit-auth")({
+  beforeLoad: () => requireCapability("section.admin"),
   validateSearch: zodValidator(auditAuthSearchSchema),
   component: AuditAuthPage,
 });
@@ -30,9 +31,7 @@ function AuditAuthPage() {
   };
 
   return (
-    <RoleGuard required="admin">
       <AuditAuthPageInner tab={tab} setTab={setTab} />
-    </RoleGuard>
   );
 }
 

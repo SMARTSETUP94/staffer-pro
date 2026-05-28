@@ -1,8 +1,8 @@
 // Sprint 3b.2 — Page admin : carnet sous-traitants
-import { createFileRoute, Navigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
+import { requireCapability } from "@/lib/capability-guard";
 import { useMemo, useState } from "react";
 import { Loader2, Search, Plus, Pencil } from "lucide-react";
-import { useCapability } from "@/hooks/use-capability";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -23,12 +23,12 @@ import {
 } from "@/lib/sous-traitants";
 
 export const Route = createFileRoute("/_app/parametres/sous-traitants")({
+  beforeLoad: () => requireCapability("section.admin"),
   head: () => ({ meta: [{ title: "Sous-traitants — Paramètres" }] }),
   component: SousTraitantsPage,
 });
 
 function SousTraitantsPage() {
-  const canAdmin = useCapability("section.admin");
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<"__all__" | SousTraitantType>("__all__");
   const [actifOnly, setActifOnly] = useState(true);
@@ -48,8 +48,6 @@ function SousTraitantsPage() {
       );
     });
   }, [data, search, typeFilter]);
-
-  if (!canAdmin) return <Navigate to="/" />;
 
   function openCreate() {
     setEditing(null);

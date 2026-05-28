@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { requireCapability } from "@/lib/capability-guard";
 import { useEffect, useMemo, useState } from "react";
 import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -72,6 +73,7 @@ interface AbsencesSearch {
 }
 
 export const Route = createFileRoute("/_app/absences")({
+  beforeLoad: () => requireCapability("section.equipes"),
   validateSearch: (search: Record<string, unknown>): AbsencesSearch => ({
     employe: typeof search.employe === "string" ? search.employe : undefined,
     date: typeof search.date === "string" ? search.date : undefined,

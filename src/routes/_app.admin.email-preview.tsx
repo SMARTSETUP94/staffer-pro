@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { requireCapability } from "@/lib/capability-guard";
 import { useEffect, useMemo, useState } from "react";
 import { Loader2, Mail, Eye, Code2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,7 +11,6 @@ import { PageHeader } from "@/components/PageHeader";
 import { useAuth, type AppRole } from "@/lib/auth-context";
 import { useCapability } from "@/hooks/use-capability";
 import { buildInvitationEmailHtml } from "@/lib/email-templates/invitation";
-import { requireCapability } from "@/lib/capability-guard";
 
 export const Route = createFileRoute("/_app/admin/email-preview")({
   beforeLoad: () => requireCapability("admin.email_preview.view"),

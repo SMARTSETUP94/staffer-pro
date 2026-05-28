@@ -3,11 +3,11 @@
 // - Colonnes : 7 types d'autorisation (4 permis + 3 CACES)
 // - Cellule : badge statut (valide / expiration_proche / expire / manquant)
 // - Click cellule : ouvre la modale d'édition
-import { createFileRoute, Navigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
+import { requireCapability } from "@/lib/capability-guard";
 import { useEffect, useMemo, useState } from "react";
 import { Loader2, Search, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useCapability } from "@/hooks/use-capability";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
   Table,
@@ -34,6 +34,7 @@ import {
 } from "@/lib/autorisations-vehicules";
 
 export const Route = createFileRoute("/_app/parametres/autorisations-vehicules")({
+  beforeLoad: () => requireCapability("section.admin"),
   head: () => ({ meta: [{ title: "Autorisations véhicules — Paramètres" }] }),
   component: AutorisationsVehiculesPage,
 });
@@ -46,7 +47,6 @@ interface Emp {
 }
 
 function AutorisationsVehiculesPage() {
-  const canAdmin = useCapability("section.admin");
   const [employes, setEmployes] = useState<Emp[]>([]);
   const [autorisations, setAutorisations] = useState<AutorisationVehicule[]>([]);
   const [loading, setLoading] = useState(true);
@@ -119,8 +119,6 @@ function AutorisationsVehiculesPage() {
     setInitialType(existing ? undefined : type);
     setDialogOpen(true);
   }
-
-  if (!canAdmin) return <Navigate to="/" />;
 
   return (
     <div className="container mx-auto space-y-4 p-4 md:p-6">

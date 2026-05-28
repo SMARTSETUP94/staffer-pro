@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { requireCapability } from "@/lib/capability-guard";
 import { useEffect, useMemo, useState } from "react";
 import { Loader2, Search, ArrowRight, Trash2, FileText, ExternalLink, Plus, Pencil } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -49,6 +50,7 @@ function pctRealisationBadge(prevues: number, validees: number) {
 }
 
 export const Route = createFileRoute("/_app/devis/")({
+  beforeLoad: () => requireCapability("section.devis"),
   head: () => ({ meta: [{ title: "Devis — Setup Paris" }] }),
   component: DevisPage,
 });

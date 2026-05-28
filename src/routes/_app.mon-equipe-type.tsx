@@ -4,6 +4,7 @@
  * Réservé chef_chantier (global ou scoped) + admin.
  */
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { requireCapability } from "@/lib/capability-guard";
 import { useEffect, useMemo, useState } from "react";
 import { Users, ArrowLeft, Info, Loader2, Building2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -27,6 +28,7 @@ import {
 } from "@/components/ui/tooltip";
 
 export const Route = createFileRoute("/_app/mon-equipe-type")({
+  beforeLoad: () => requireCapability("section.equipes"),
   head: () => ({ meta: [{ title: "Mon équipe type — Setup Paris" }] }),
   component: MonEquipeTypePage,
 });

@@ -9,7 +9,7 @@
  * - Bouton "Saisir en bulk" en haut à droite
  */
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { RoleGuard } from "@/components/auth/RoleGuard";
+import { requireCapability } from "@/lib/capability-guard";
 import { useAuth } from "@/lib/auth-context";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { addDays, format, isWeekend, startOfWeek } from "date-fns";
@@ -51,6 +51,7 @@ const searchSchema = z.object({
 });
 
 export const Route = createFileRoute("/_app/saisie-pour-equipe")({
+  beforeLoad: () => requireCapability("action.validate_hours"),
   head: () => ({ meta: [{ title: "Saisie équipe — Planning chantiers" }] }),
   validateSearch: zodValidator(searchSchema),
   search: { middlewares: [stripSearchParams(SEARCH_DEFAULTS)] },
@@ -204,7 +205,6 @@ function SaisiePourEquipePage() {
   const metierOf = (id: number) => metiers.find((m) => m.id === id);
 
   return (
-    <RoleGuard required="chef_or_admin">
     <div className="space-y-6 p-6">
       <PageBreadcrumbs steps={[{ label: "Équipes" }, { label: "Saisie pour l'équipe" }]} />
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -427,6 +427,5 @@ function SaisiePourEquipePage() {
         onCreated={() => setReloadKey((k) => k + 1)}
       />
     </div>
-    </RoleGuard>
   );
 }

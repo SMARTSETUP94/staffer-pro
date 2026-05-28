@@ -2,11 +2,11 @@
 // Lot 7.0b — gating via capability `rh.hub.view` (remplace l'ancien check
 // `isAdmin || isRh` côté composant). beforeLoad bloque l'accès direct par URL.
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { requireCapability } from "@/lib/capability-guard";
 import { useEffect, useState } from "react";
 import { Users, Calendar, FileSignature, Loader2, ArrowRight, UserMinus, Cake } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/PageHeader";
-import { requireCapability } from "@/lib/capability-guard";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_app/rh/")({

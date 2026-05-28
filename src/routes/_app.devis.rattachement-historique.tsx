@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { requireCapability } from "@/lib/capability-guard";
 import { useEffect, useMemo, useState } from "react";
 import { Loader2, Wrench, ArrowLeft, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
@@ -17,6 +18,7 @@ import { useCapability } from "@/hooks/use-capability";
 import { PageHeader } from "@/components/PageHeader";
 
 export const Route = createFileRoute("/_app/devis/rattachement-historique")({
+  beforeLoad: () => requireCapability("section.devis"),
   head: () => ({
     meta: [
       { title: "Rattachement historique des devis — Admin" },

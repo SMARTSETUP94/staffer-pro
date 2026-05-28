@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { requireCapability } from "@/lib/capability-guard";
 import { useEffect, useMemo, useState } from "react";
 import { addDays, format, startOfWeek } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -43,6 +44,7 @@ import { SaisieChefBadge } from "@/components/heures/SaisieChefBadge";
 import { UserCog } from "lucide-react";
 
 export const Route = createFileRoute("/_app/validation-heures")({
+  beforeLoad: () => requireCapability("action.validate_hours"),
   head: () => ({ meta: [{ title: "Valider les heures de l'équipe — Planning chantiers" }] }),
   component: ValidationHeuresPage,
 });

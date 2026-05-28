@@ -3,6 +3,7 @@
 // rejetées) par employé × phase × métier. L'historique d'assignation est
 // déplacé dans un panneau secondaire "Mobilisation" en bas de page.
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { requireCapability } from "@/lib/capability-guard";
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
@@ -18,7 +19,6 @@ import {
   XOctagon,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { requireCapability } from "@/lib/capability-guard";
 import { cn } from "@/lib/utils";
 import { useMetiers } from "@/hooks/use-metiers";
 import { getAffaireHeuresReelles } from "@/server/affaire-heures-reelles.functions";

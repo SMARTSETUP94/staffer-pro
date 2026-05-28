@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { requireCapability } from "@/lib/capability-guard";
 import { useEffect, useMemo, useState } from "react";
 import { format, startOfMonth, addMonths } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -64,6 +65,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import type { Tables } from "@/integrations/supabase/types";
 
 export const Route = createFileRoute("/_app/export/demandes-devis")({
+  beforeLoad: () => requireCapability("section.admin"),
   head: () => ({ meta: [{ title: "Demandes transport — Logistique" }] }),
   component: DemandesTransportPage,
 });

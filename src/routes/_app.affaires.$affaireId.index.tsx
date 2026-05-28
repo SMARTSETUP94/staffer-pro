@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { requireCapability } from "@/lib/capability-guard";
 import { Fragment, useEffect, useMemo, useState } from "react";
 import { Loader2, TrendingUp, TrendingDown, AlertTriangle, CheckCircle2, ClipboardCheck, Clock, Send, Hammer, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
@@ -21,6 +22,7 @@ type ConsoLine = RawConsoLine & {
 };
 
 export const Route = createFileRoute("/_app/affaires/$affaireId/")({
+  beforeLoad: () => requireCapability("section.affaires"),
   component: AffaireSynthesePage,
 });
 

@@ -16,6 +16,7 @@
  * Mobile : sections empilées, cartes en grid-cols-1 sous 640px.
  */
 import { createFileRoute } from "@tanstack/react-router";
+import { requireCapability } from "@/lib/capability-guard";
 import { Loader2, UserCircle2, Info, Plus, X } from "lucide-react";
 import { useCastingChantier } from "@/hooks/use-casting-chantier";
 import { PhaseBadge, type AffairePhase } from "@/components/atoms/PhaseBadge";
@@ -39,6 +40,7 @@ import type { CastingMembre, CastingPhase } from "@/server/casting-chantier.func
 import { FAB_METIERS, isFabMetier } from "@/lib/fab-sous-etapes";
 
 export const Route = createFileRoute("/_app/affaires/$affaireId/casting")({
+  beforeLoad: () => requireCapability("section.affaires"),
   head: () => ({ meta: [{ title: "Casting du chantier — Setup Paris" }] }),
   component: AffaireCastingPage,
 });

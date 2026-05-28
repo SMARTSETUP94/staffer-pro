@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate, stripSearchParams } from "@tanstack/react-router";
+import { requireCapability } from "@/lib/capability-guard";
 import { zodValidator, fallback } from "@tanstack/zod-adapter";
 import { z } from "zod";
 import { useEffect, useMemo, useState } from "react";
@@ -110,6 +111,7 @@ const oppsSearchSchema = z.object({
 type OppsSearch = z.infer<typeof oppsSearchSchema>;
 
 export const Route = createFileRoute("/_app/opportunites")({
+  beforeLoad: () => requireCapability("section.pipeline_opportunites"),
   head: () => ({
     meta: [
       { title: "Opportunités — Pipeline commercial" },

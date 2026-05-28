@@ -7,6 +7,7 @@
  *   - Feature flag `fiche_objet_v1` (sinon → redirect vers /affaires/$/fabrication)
  */
 import { useState, useEffect } from "react";
+import { requireCapability } from "@/lib/capability-guard";
 import {
   createFileRoute,
   redirect,
@@ -19,7 +20,6 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { requireCapability } from "@/lib/capability-guard";
 import { supabase } from "@/integrations/supabase/client";
 import { getObjetFiche } from "@/server/objet-fiche.functions";
 import { useFeatureFlag } from "@/hooks/use-feature-flag";

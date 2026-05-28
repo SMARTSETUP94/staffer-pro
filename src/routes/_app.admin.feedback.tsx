@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { requireCapability } from "@/lib/capability-guard";
 import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -32,7 +33,6 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import type { Database } from "@/integrations/supabase/types";
-import { requireCapability } from "@/lib/capability-guard";
 
 export const Route = createFileRoute("/_app/admin/feedback")({
   beforeLoad: () => requireCapability("admin.feedback.view"),

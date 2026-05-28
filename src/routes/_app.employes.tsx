@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { requireCapability } from "@/lib/capability-guard";
 import { useEffect, useMemo, useState } from "react";
 import { Plus, Pencil, Search, Loader2, Table2, List, Download, Upload, ClipboardList } from "lucide-react";
 import { Link } from "@tanstack/react-router";
@@ -161,6 +162,7 @@ const PERMIS_OPTIONS: { value: Permis; label: string }[] = [
 ];
 
 export const Route = createFileRoute("/_app/employes")({
+  beforeLoad: () => requireCapability("section.equipes"),
   head: () => ({ meta: [{ title: "Employés — Setup Paris" }] }),
   component: EmployesPage,
 });

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { requireCapability } from "@/lib/capability-guard";
 import { createFileRoute } from "@tanstack/react-router";
 import { Loader2, Save } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,6 +20,7 @@ import { useProfilesWithRoles, type ProfileRole } from "@/hooks/use-fabrication"
 import { PageHeader } from "@/components/PageHeader";
 
 export const Route = createFileRoute("/_app/parametres/roles-fabrication")({
+  beforeLoad: () => requireCapability("section.admin"),
   head: () => ({ meta: [{ title: "Rôles fabrication — Setup Paris" }] }),
   component: RolesFabricationPage,
 });

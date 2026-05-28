@@ -1,6 +1,7 @@
 // v0.35.5 / Sprint 5 — Page Gantt staffing + Wizard + Publication + Historique
 // v0.35.x BATCH — Toolbar batch edition (sliders + shifts) + autosave 2 min idle.
 import { useEffect, useRef, useState } from "react";
+import { requireCapability } from "@/lib/capability-guard";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { ArrowLeft, History, Send, Zap, ListChecks, Trash2, MoreVertical } from "lucide-react";
@@ -11,7 +12,6 @@ import {
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 import { useCapability } from "@/hooks/use-capability";
-import { requireCapability } from "@/lib/capability-guard";
 import { supabase } from "@/integrations/supabase/client";
 import {
   GanttInteractif,

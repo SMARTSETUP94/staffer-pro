@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate, stripSearchParams } from "@tanstack/react-router";
+import { requireCapability } from "@/lib/capability-guard";
 import { zodValidator, fallback } from "@tanstack/zod-adapter";
 import { z } from "zod";
 import { useEffect, useMemo, useState } from "react";
@@ -79,6 +80,7 @@ const searchSchema = z.object({
 });
 
 export const Route = createFileRoute("/_app/affaires/")({
+  beforeLoad: () => requireCapability("section.affaires"),
   head: () => ({ meta: [{ title: "Affaires — Setup Paris" }] }),
   validateSearch: zodValidator(searchSchema),
   search: { middlewares: [stripSearchParams(SEARCH_DEFAULTS)] },

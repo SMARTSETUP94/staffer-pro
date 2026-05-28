@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { requireCapability } from "@/lib/capability-guard";
 import { useMemo } from "react";
 import {
   CheckCircle2,
@@ -17,6 +18,7 @@ import { useAuth } from "@/lib/auth-context";
 import { useCapability } from "@/hooks/use-capability";
 
 export const Route = createFileRoute("/_app/roadmap")({
+  beforeLoad: () => requireCapability("section.admin"),
   component: RoadmapPage,
 });
 

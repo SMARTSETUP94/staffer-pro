@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { requireCapability } from "@/lib/capability-guard";
 import { useEffect, useMemo, useState } from "react";
 import { format, parseISO, subDays } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -13,7 +14,6 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { useCapability } from "@/hooks/use-capability";
-import { RoleGuard } from "@/components/auth/RoleGuard";
 import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -42,6 +42,7 @@ import {
  * supprimé du code applicatif, plus de cas particulier.)
  */
 export const Route = createFileRoute("/_app/audit-heures")({
+  beforeLoad: () => requireCapability("heures.audit"),
   component: AuditHeuresPage,
 });
 
@@ -258,7 +259,6 @@ function AuditHeuresPage() {
   if (authLoading) return null;
 
   return (
-    <RoleGuard required="admin">
     <div className="space-y-4">
       <PageHeader
         title="Audit des heures"
@@ -417,7 +417,6 @@ function AuditHeuresPage() {
         </CardContent>
       </Card>
     </div>
-    </RoleGuard>
   );
 }
 

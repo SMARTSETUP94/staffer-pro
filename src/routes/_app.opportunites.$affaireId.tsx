@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { requireCapability } from "@/lib/capability-guard";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
@@ -31,6 +32,7 @@ import { TAILLE_LABEL, type OpportuniteTaille } from "@/lib/opportunites";
 import type { TypologieFuture } from "@/lib/typologie-future";
 
 export const Route = createFileRoute("/_app/opportunites/$affaireId")({
+  beforeLoad: () => requireCapability("section.pipeline_opportunites"),
   component: OpportuniteFichePage,
 });
 

@@ -12,6 +12,7 @@
  *   - Barre d'actions (boutons J'arrive / Je pars / Signaler — 9.4/9.5)
  */
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { requireCapability } from "@/lib/capability-guard";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -64,6 +65,7 @@ import {
 } from "@/lib/mission-card-helpers";
 
 export const Route = createFileRoute("/_app/missions/$affaireId/$phase")({
+  beforeLoad: () => requireCapability("mobile.mes_missions"),
   head: () => ({ meta: [{ title: "Mission pose — Setup Paris" }] }),
   component: CarteMissionPage,
 });
