@@ -74,6 +74,10 @@ function MesMissionsPage() {
             <RefreshCw className={cn("h-4 w-4", isFetching && "animate-spin")} />
           </Button>
         </div>
+        <div className="mx-auto mt-3 max-w-2xl space-y-2">
+          <ScopeSelector capKey="mes_missions.view" routeId="/_app/mes-missions" />
+          <ScopeNotImplementedBanner scope={scope} />
+        </div>
       </header>
 
       <main className="mx-auto max-w-2xl px-4 py-4" data-testid="mes-missions-main">
