@@ -38,9 +38,8 @@ import {
 
 /**
  * /audit-heures — Admin uniquement (RoleGuard required="admin").
- * Les chef_chantier (global) et chef_metier_scoped sont redirigés vers /dashboard.
- * La portée RLS pour scoped est donc "aucun accès UI" — pas de filtrage à faire ici,
- * la redirection est l'expression correcte du scope. (v0.44.7)
+ * Les chef_chantier sont redirigés vers /. (L5-A-bis : rôle chef_metier_scoped
+ * supprimé du code applicatif, plus de cas particulier.)
  */
 export const Route = createFileRoute("/_app/audit-heures")({
   component: AuditHeuresPage,
