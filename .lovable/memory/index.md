@@ -193,8 +193,10 @@ Modèle staffing 3 niveaux (Sprint A) : `affaire_equipe(affaire_id, employe_id, 
 105. ⏸️ **Sprint dette résiduelle v0.36** — Page admin véhicules + audit findings (BACKLOG).
 
 ## Memories
+- [Bloc 10.4 Listing refactor opportunités](mem://features/bloc-10-4-listing-refactor) — 28 mai 2026, RPC list_opportunites_active() + badges urgence + filtres URL + EXPLAIN ~48ms
 - [Bloc 10.3 Fiche opportunité UI](mem://features/bloc-10-3-fiche-ui) — route /opportunites/$affaireId, 3 composants extraits + 1 server fn (4 fns), nav câblée Kanban+Tableur
-- [Bloc 10.1 Fondations DB opportunités](mem://features/bloc-10-1-fondations-db) — 28 mai 2026, tables opportunite_actions + opportunite_jalons, RPC sign_opportunite atomique 9XXX→5XXX, 4 caps, seed 784 jalons. Audit Risque #1 : 196 opps toutes en statut 'termine' + 191/196 sans charge_affaires → décision archivage attendue
+- [Bloc 10.2 Inbox extension + Cleanup Risque #1](mem://features/bloc-10-2-inbox-extension) — 28 mai 2026, colonne archived_at + archivage 196 opps legacy + get_inbox_items source opp_action cap-gated + pgTAP 3 assertions
+- [Bloc 10.1 Fondations DB opportunités](mem://features/bloc-10-1-fondations-db) — 28 mai 2026, tables opportunite_actions + opportunite_jalons, RPC sign_opportunite atomique 9XXX→5XXX, 4 caps, seed 784 jalons. Risque #1 RÉSOLU : 196 opps archivées (191 sans CA + 5 test)
 - [L5-B bridge auth-context purgé](mem://constraints/auth-context-no-role-bridge) — 28 mai 2026, ESLint no-restricted-syntax verrouille toute réintroduction de isAdmin/isChef/... sur useAuth()
 - [L5-B clôture — 11 comptes E2E + 4 sidebar specs](mem://debts/e2e-seed-passwords-strategy) — 28 mai 2026, ajout rh/atelier_metier/logistique/poseur dans test-accounts.ts + seed.ts + 4 specs sidebar-capability + projects Playwright. Choix : seed reste TS (service role) — seed.test.sql SQL pur impossible sans bcrypt côté serveur (dette tracée).
 - [L4d cleanup final](mem://features/l4d-cleanup-final) — v0.50 suppression 20 stubs mobile + nav legacy + ViewAsSwitcher + effIsMobile + migration /parametres/utilisateurs → /admin/utilisateurs
