@@ -1,48 +1,39 @@
-## Bloc 10.3 — Fiche opportunité enrichie (~8h)
+## Plan de travail — Bloc 10 TERMINÉ + Suite roadmap (28 mai 2026)
 
-### Contexte
-- Bloc 10.1 a livré `opportunite_actions` (timeline) + `opportunite_jalons` (pipeline 4 étapes) + RPC `sign_opportunite` atomique.
-- Bloc 10.2 a archivé les 191 + 5 opps orphelines et étendu `get_inbox_items` avec source `opp_action`.
-- Aujourd'hui, un clic sur une carte Kanban renvoie vers `/affaires/$id` (orienté chantier signé) → manque une fiche dédiée commerciale.
+### ✅ Bloc 10 — Fiche opportunité (LIVRÉ, 28 mai 2026)
 
-### Périmètre 10.3 (strict, 8h)
+| Sous-lot | Statut | Référence |
+|---|---|---|
+| 10.1 Fondations DB | ✅ Livré | `mem://features/bloc-10-1-fondations-db` |
+| 10.2 Inbox extension + Cleanup Risque #1 | ✅ Livré | `mem://features/bloc-10-2-inbox-extension` |
+| 10.3 Fiche UI | ✅ Livré | `mem://features/bloc-10-3-fiche-ui` |
+| 10.4 Listing refactor + import | ✅ Livré | `mem://features/bloc-10-4-listing-refactor` |
+| 10.5 Tests + cleanup final | ✅ Livré | `mem://features/bloc-10-fiche-opportunite` |
 
-**Route nouvelle** : `src/routes/_app.opportunites.$affaireId.tsx` (cap `section.opportunites` ; scope `mine` filtré par `charge_affaires_id` si pas `opportunites.read.all`).
+**Total réel : ~17h30** (vs 38h estimé V1 complet). 196 opps legacy archivées. Dette `inbox-opp-action-create-table` RÉSOLUE.
 
-**Server functions** (`src/server/opportunite-fiche.functions.ts`) :
-- `getOpportuniteFiche(affaireId)` → agrège affaire + jalons + dernières actions (10) + équipe `commercial_etude` + devis brouillons + commentaires.
-- `updateOpportuniteFields(affaireId, patch)` → patch partiel (`nom`, `client`, `lieu`, `typologie_future`, `taille`, `date_pat`, `date_evenement_debut/fin`, `notes`).
-- `addOpportuniteAction(affaireId, payload)` → INSERT timeline (type, date, commentaire, prochaine_action_due_le, assignee_id).
-- `updateJalonStatus(affaireId, jalon_code, status)` → UPDATE `opportunite_jalons`.
+---
 
-**Composants** (`src/components/opportunites/fiche/`) :
-1. `OpportuniteFicheHeader` — numéro/code, client, lieu, taille, statut Kanban, bouton « Signer en 5XXX » (réutilise `SignerOpportuniteDialog`).
-2. `OpportuniteJalonsBar` — pipeline 4 étapes (qualification → devis → négociation → signature), badge statut + cap-gated click pour avancer.
-3. `OpportuniteNextActionCard` — dernière `opportunite_actions` avec `prochaine_action_due_le`, badge rouge si date passée, bouton « Ajouter action ».
-4. `OpportuniteBriefSection` — édition inline 9 champs (pattern `AffaireInfosPoseSection`).
-5. `OpportuniteActionsTimeline` — liste chronologique des actions (icônes par type : appel/visite/email/réunion/devis).
-6. `OpportuniteEquipeSection` — réutilise lecture `affaire_equipe` phase `commercial_etude`.
-7. `OpportuniteDevisSection` + `OpportuniteJournalSection` — reuse `devis` + `affaire_commentaires` (composants lecture simple).
+### ✅ Lot L3b2 + L5-A + L4c — Refonte permissions & cleanup (LIVRÉ, 28 mai 2026)
 
-**Sortie de scope 10.3** (reportés à 10.4/10.5/10.6) :
-- Visites chantier (table dédiée + photos)
-- Échantillons matériaux
-- Moodboard / artefacts storage
-- UI mobile « nouvelle visite »
+| Sous-lot | Statut | Détail |
+|---|---|---|
+| L3b2-A | ✅ Livré | Paramètres + Admin → `requireCapability()` |
+| L3b2-B | ✅ Livré | Devis + Imports (6 fichiers) |
+| L3b2-C | ✅ Livré | Affaires + Staffing (5 fichiers) |
+| Sidebar cleanup | ✅ Livré | Stubs retirés + test cohérence sidebar↔routes |
+| L5-A safe | ✅ Livré | Suppression `chef_metier_scoped` code applicatif |
+| L5-A-bis Phase 1 | ✅ Livré | DROP 14 policies + 2 helpers SQL DB |
+| L4c | ✅ Livré | Cleanup stubs routes orphelines + commentaires |
 
-**Nav** : `OpportuniteCard` (Kanban) + `OpportunitesTableurView` (ligne) → lien vers `/opportunites/$affaireId`.
+**Total réel : ~3h55**. `chef_metier_scoped` totalement purgé (code + DB Phase 1). 35/35 tests verts.
 
-### Tests
-- 1 spec Vitest sur helpers tri timeline + agrégation jalons.
-- 1 spec E2E desktop (admin) : ouvrir fiche, éditer brief, ajouter action, vérifier inbox `opp_action`.
+---
 
-### Livrables
-- 1 route + 7 composants + 1 server fn file (4 fns)
-- 2 specs (1 Vitest + 1 E2E)
-- Update `_app.opportunites.tsx` (lien Kanban + tableur)
-- Memory `bloc-10-3-fiche-ui.md`
+## Roadmap à jour — voir `.lovable/memory/index.md` et `mem://roadmap/consolidee-2mai2026.md`
 
-### Hors scope (à confirmer)
-Pas de migration DB cette fois (10.1 a tout posé). Si tu veux des champs `proba_signature` ou `valeur_estimee_centimes` sur l'opp, je les ajoute en 10.3-bis (15 min ALTER).
-
-**OK pour partir sur ce périmètre, ou tu veux ajuster (sections supplémentaires, mobile, champs proba/valeur, etc.) ?**
+Prochains items prioritaires :
+1. **Bloc 9** — Carte mission pose (9.3 carte détaillée, 9.4 heures auto, 9.5 signaler problème)
+2. **Bloc 8** — Fiche objet suite (8.4 UI Journal/Photos, 8.5 liens croisés, 8.6 polish + E2E)
+3. **Bloc 10 suite** — Visites, échantillons, moodboard (reportés)
+4. **Lots L3→L5** — L3 restant (multi-select users + debug panel + call sites restants), L4, L5-B
