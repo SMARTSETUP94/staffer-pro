@@ -14,6 +14,8 @@ export const CAPABILITY_CATALOG = {
     { key: "section.ma_semaine", label: "Ma semaine" },
     { key: "section.tableau_de_bord", label: "Tableau de bord" },
     { key: "section.pipeline_opportunites", label: "Pipeline opportunités" },
+    { key: "opportunites.read.all", label: "Lire toutes les opportunités" },
+    { key: "opportunites.read.mine", label: "Lire ses propres opportunités" },
     { key: "section.affaires", label: "Affaires" },
     { key: "section.devis", label: "Devis" },
     { key: "section.fabrication", label: "Fabrication" },
