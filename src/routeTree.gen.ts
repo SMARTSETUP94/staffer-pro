@@ -31,19 +31,14 @@ import { Route as AppMesMissionsRouteImport } from './routes/_app.mes-missions'
 import { Route as AppMesHeuresRouteImport } from './routes/_app.mes-heures'
 import { Route as AppMesContratsRouteImport } from './routes/_app.mes-contrats'
 import { Route as AppMesChantiersRouteImport } from './routes/_app.mes-chantiers'
-import { Route as AppMaSemaineRouteImport } from './routes/_app.ma-semaine'
 import { Route as AppInterimairesRouteImport } from './routes/_app.interimaires'
 import { Route as AppIncidentAuthRouteImport } from './routes/_app.incident-auth'
-import { Route as AppInboxRouteImport } from './routes/_app.inbox'
 import { Route as AppImportsRouteImport } from './routes/_app.imports'
 import { Route as AppHeuresAnalyseRouteImport } from './routes/_app.heures-analyse'
 import { Route as AppFlotteRouteImport } from './routes/_app.flotte'
 import { Route as AppExportRouteImport } from './routes/_app.export'
 import { Route as AppEmployesRouteImport } from './routes/_app.employes'
-import { Route as AppDashboardEmployeRouteImport } from './routes/_app.dashboard-employe'
-import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppChargeAtelierRouteImport } from './routes/_app.charge-atelier'
-import { Route as AppAujourdhuiRouteImport } from './routes/_app.aujourdhui'
 import { Route as AppAuditHeuresRouteImport } from './routes/_app.audit-heures'
 import { Route as AppAuditAuthRouteImport } from './routes/_app.audit-auth'
 import { Route as AppAbsencesRouteImport } from './routes/_app.absences'
@@ -203,11 +198,6 @@ const AppMesChantiersRoute = AppMesChantiersRouteImport.update({
   path: '/mes-chantiers',
   getParentRoute: () => AppRoute,
 } as any)
-const AppMaSemaineRoute = AppMaSemaineRouteImport.update({
-  id: '/ma-semaine',
-  path: '/ma-semaine',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppInterimairesRoute = AppInterimairesRouteImport.update({
   id: '/interimaires',
   path: '/interimaires',
@@ -216,11 +206,6 @@ const AppInterimairesRoute = AppInterimairesRouteImport.update({
 const AppIncidentAuthRoute = AppIncidentAuthRouteImport.update({
   id: '/incident-auth',
   path: '/incident-auth',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppInboxRoute = AppInboxRouteImport.update({
-  id: '/inbox',
-  path: '/inbox',
   getParentRoute: () => AppRoute,
 } as any)
 const AppImportsRoute = AppImportsRouteImport.update({
@@ -248,24 +233,9 @@ const AppEmployesRoute = AppEmployesRouteImport.update({
   path: '/employes',
   getParentRoute: () => AppRoute,
 } as any)
-const AppDashboardEmployeRoute = AppDashboardEmployeRouteImport.update({
-  id: '/dashboard-employe',
-  path: '/dashboard-employe',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppDashboardRoute = AppDashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppChargeAtelierRoute = AppChargeAtelierRouteImport.update({
   id: '/charge-atelier',
   path: '/charge-atelier',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppAujourdhuiRoute = AppAujourdhuiRouteImport.update({
-  id: '/aujourdhui',
-  path: '/aujourdhui',
   getParentRoute: () => AppRoute,
 } as any)
 const AppAuditHeuresRoute = AppAuditHeuresRouteImport.update({
@@ -541,19 +511,14 @@ export interface FileRoutesByFullPath {
   '/absences': typeof AppAbsencesRoute
   '/audit-auth': typeof AppAuditAuthRoute
   '/audit-heures': typeof AppAuditHeuresRoute
-  '/aujourdhui': typeof AppAujourdhuiRoute
   '/charge-atelier': typeof AppChargeAtelierRoute
-  '/dashboard': typeof AppDashboardRoute
-  '/dashboard-employe': typeof AppDashboardEmployeRoute
   '/employes': typeof AppEmployesRouteWithChildren
   '/export': typeof AppExportRouteWithChildren
   '/flotte': typeof AppFlotteRoute
   '/heures-analyse': typeof AppHeuresAnalyseRoute
   '/imports': typeof AppImportsRoute
-  '/inbox': typeof AppInboxRoute
   '/incident-auth': typeof AppIncidentAuthRoute
   '/interimaires': typeof AppInterimairesRoute
-  '/ma-semaine': typeof AppMaSemaineRoute
   '/mes-chantiers': typeof AppMesChantiersRoute
   '/mes-contrats': typeof AppMesContratsRoute
   '/mes-heures': typeof AppMesHeuresRoute
@@ -625,18 +590,13 @@ export interface FileRoutesByTo {
   '/absences': typeof AppAbsencesRoute
   '/audit-auth': typeof AppAuditAuthRoute
   '/audit-heures': typeof AppAuditHeuresRoute
-  '/aujourdhui': typeof AppAujourdhuiRoute
   '/charge-atelier': typeof AppChargeAtelierRoute
-  '/dashboard': typeof AppDashboardRoute
-  '/dashboard-employe': typeof AppDashboardEmployeRoute
   '/employes': typeof AppEmployesRouteWithChildren
   '/flotte': typeof AppFlotteRoute
   '/heures-analyse': typeof AppHeuresAnalyseRoute
   '/imports': typeof AppImportsRoute
-  '/inbox': typeof AppInboxRoute
   '/incident-auth': typeof AppIncidentAuthRoute
   '/interimaires': typeof AppInterimairesRoute
-  '/ma-semaine': typeof AppMaSemaineRoute
   '/mes-chantiers': typeof AppMesChantiersRoute
   '/mes-contrats': typeof AppMesContratsRoute
   '/mes-heures': typeof AppMesHeuresRoute
@@ -710,19 +670,14 @@ export interface FileRoutesById {
   '/_app/absences': typeof AppAbsencesRoute
   '/_app/audit-auth': typeof AppAuditAuthRoute
   '/_app/audit-heures': typeof AppAuditHeuresRoute
-  '/_app/aujourdhui': typeof AppAujourdhuiRoute
   '/_app/charge-atelier': typeof AppChargeAtelierRoute
-  '/_app/dashboard': typeof AppDashboardRoute
-  '/_app/dashboard-employe': typeof AppDashboardEmployeRoute
   '/_app/employes': typeof AppEmployesRouteWithChildren
   '/_app/export': typeof AppExportRouteWithChildren
   '/_app/flotte': typeof AppFlotteRoute
   '/_app/heures-analyse': typeof AppHeuresAnalyseRoute
   '/_app/imports': typeof AppImportsRoute
-  '/_app/inbox': typeof AppInboxRoute
   '/_app/incident-auth': typeof AppIncidentAuthRoute
   '/_app/interimaires': typeof AppInterimairesRoute
-  '/_app/ma-semaine': typeof AppMaSemaineRoute
   '/_app/mes-chantiers': typeof AppMesChantiersRoute
   '/_app/mes-contrats': typeof AppMesContratsRoute
   '/_app/mes-heures': typeof AppMesHeuresRoute
@@ -798,19 +753,14 @@ export interface FileRouteTypes {
     | '/absences'
     | '/audit-auth'
     | '/audit-heures'
-    | '/aujourdhui'
     | '/charge-atelier'
-    | '/dashboard'
-    | '/dashboard-employe'
     | '/employes'
     | '/export'
     | '/flotte'
     | '/heures-analyse'
     | '/imports'
-    | '/inbox'
     | '/incident-auth'
     | '/interimaires'
-    | '/ma-semaine'
     | '/mes-chantiers'
     | '/mes-contrats'
     | '/mes-heures'
@@ -882,18 +832,13 @@ export interface FileRouteTypes {
     | '/absences'
     | '/audit-auth'
     | '/audit-heures'
-    | '/aujourdhui'
     | '/charge-atelier'
-    | '/dashboard'
-    | '/dashboard-employe'
     | '/employes'
     | '/flotte'
     | '/heures-analyse'
     | '/imports'
-    | '/inbox'
     | '/incident-auth'
     | '/interimaires'
-    | '/ma-semaine'
     | '/mes-chantiers'
     | '/mes-contrats'
     | '/mes-heures'
@@ -966,19 +911,14 @@ export interface FileRouteTypes {
     | '/_app/absences'
     | '/_app/audit-auth'
     | '/_app/audit-heures'
-    | '/_app/aujourdhui'
     | '/_app/charge-atelier'
-    | '/_app/dashboard'
-    | '/_app/dashboard-employe'
     | '/_app/employes'
     | '/_app/export'
     | '/_app/flotte'
     | '/_app/heures-analyse'
     | '/_app/imports'
-    | '/_app/inbox'
     | '/_app/incident-auth'
     | '/_app/interimaires'
-    | '/_app/ma-semaine'
     | '/_app/mes-chantiers'
     | '/_app/mes-contrats'
     | '/_app/mes-heures'
@@ -1211,13 +1151,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppMesChantiersRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/ma-semaine': {
-      id: '/_app/ma-semaine'
-      path: '/ma-semaine'
-      fullPath: '/ma-semaine'
-      preLoaderRoute: typeof AppMaSemaineRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/_app/interimaires': {
       id: '/_app/interimaires'
       path: '/interimaires'
@@ -1230,13 +1163,6 @@ declare module '@tanstack/react-router' {
       path: '/incident-auth'
       fullPath: '/incident-auth'
       preLoaderRoute: typeof AppIncidentAuthRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/inbox': {
-      id: '/_app/inbox'
-      path: '/inbox'
-      fullPath: '/inbox'
-      preLoaderRoute: typeof AppInboxRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/imports': {
@@ -1274,32 +1200,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppEmployesRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/dashboard-employe': {
-      id: '/_app/dashboard-employe'
-      path: '/dashboard-employe'
-      fullPath: '/dashboard-employe'
-      preLoaderRoute: typeof AppDashboardEmployeRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/dashboard': {
-      id: '/_app/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof AppDashboardRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/_app/charge-atelier': {
       id: '/_app/charge-atelier'
       path: '/charge-atelier'
       fullPath: '/charge-atelier'
       preLoaderRoute: typeof AppChargeAtelierRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/aujourdhui': {
-      id: '/_app/aujourdhui'
-      path: '/aujourdhui'
-      fullPath: '/aujourdhui'
-      preLoaderRoute: typeof AppAujourdhuiRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/audit-heures': {
@@ -1723,19 +1628,14 @@ interface AppRouteChildren {
   AppAbsencesRoute: typeof AppAbsencesRoute
   AppAuditAuthRoute: typeof AppAuditAuthRoute
   AppAuditHeuresRoute: typeof AppAuditHeuresRoute
-  AppAujourdhuiRoute: typeof AppAujourdhuiRoute
   AppChargeAtelierRoute: typeof AppChargeAtelierRoute
-  AppDashboardRoute: typeof AppDashboardRoute
-  AppDashboardEmployeRoute: typeof AppDashboardEmployeRoute
   AppEmployesRoute: typeof AppEmployesRouteWithChildren
   AppExportRoute: typeof AppExportRouteWithChildren
   AppFlotteRoute: typeof AppFlotteRoute
   AppHeuresAnalyseRoute: typeof AppHeuresAnalyseRoute
   AppImportsRoute: typeof AppImportsRoute
-  AppInboxRoute: typeof AppInboxRoute
   AppIncidentAuthRoute: typeof AppIncidentAuthRoute
   AppInterimairesRoute: typeof AppInterimairesRoute
-  AppMaSemaineRoute: typeof AppMaSemaineRoute
   AppMesChantiersRoute: typeof AppMesChantiersRoute
   AppMesContratsRoute: typeof AppMesContratsRoute
   AppMesHeuresRoute: typeof AppMesHeuresRoute
@@ -1788,19 +1688,14 @@ const AppRouteChildren: AppRouteChildren = {
   AppAbsencesRoute: AppAbsencesRoute,
   AppAuditAuthRoute: AppAuditAuthRoute,
   AppAuditHeuresRoute: AppAuditHeuresRoute,
-  AppAujourdhuiRoute: AppAujourdhuiRoute,
   AppChargeAtelierRoute: AppChargeAtelierRoute,
-  AppDashboardRoute: AppDashboardRoute,
-  AppDashboardEmployeRoute: AppDashboardEmployeRoute,
   AppEmployesRoute: AppEmployesRouteWithChildren,
   AppExportRoute: AppExportRouteWithChildren,
   AppFlotteRoute: AppFlotteRoute,
   AppHeuresAnalyseRoute: AppHeuresAnalyseRoute,
   AppImportsRoute: AppImportsRoute,
-  AppInboxRoute: AppInboxRoute,
   AppIncidentAuthRoute: AppIncidentAuthRoute,
   AppInterimairesRoute: AppInterimairesRoute,
-  AppMaSemaineRoute: AppMaSemaineRoute,
   AppMesChantiersRoute: AppMesChantiersRoute,
   AppMesContratsRoute: AppMesContratsRoute,
   AppMesHeuresRoute: AppMesHeuresRoute,
@@ -1864,3 +1759,12 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
