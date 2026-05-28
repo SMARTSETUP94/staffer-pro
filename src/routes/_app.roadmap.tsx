@@ -44,6 +44,41 @@ interface RoadmapPlanned {
 
 const RELEASES: RoadmapRelease[] = [
   {
+    date: "2026-05-28",
+    version: "L5 + Bloc 10.1 (LIVRÉ)",
+    title: "🔐 Refonte permissions capability-driven 100% + Fondations DB Opportunités",
+    entries: [
+      {
+        type: "refactor",
+        area: "L5-A + L5-A-bis — Purge rôle chef_metier_scoped",
+        title: "Suppression applicative + DB du rôle obsolète chef_metier_scoped",
+        description:
+          "L5-A safe : suppression de 44 lignes role_capabilities et ~10 fichiers (auth-context, labels, RoleSwitcher, admin-actions, tests). L5-A-bis Phase 1 : migration DB DROP 14 policies RLS + recreation sans branche is_chef_metier_scoped(), simplification is_chef_or_admin() (admin OR chef_chantier uniquement). 0 impact runtime (0 user avec ce rôle).",
+      },
+      {
+        type: "refactor",
+        area: "L5-B — Fermeture bridge auth-context",
+        title: "Purge booléens isAdmin/isChef + ESLint anti-régression + 11 specs E2E",
+        description:
+          "Suppression des 12 booléens legacy (isAdmin, isChef, isAdminOrChef, isRh, isCommercial…) de auth-context.tsx. Remplacement par useCapability() sur 11 call-sites. Règle ESLint no-restricted-syntax verrouillant toute réintroduction. 11 comptes E2E seedés (admin/chef/employé/commercial/BE/atelier_chef/atelier_metier/logistique/poseur/rh). 4 nouvelles specs sidebar-capability (rh, atelier_metier, logistique, poseur). Bridge réduit aux 8 champs essentiels.",
+      },
+      {
+        type: "feature",
+        area: "L3b2 — Hotfix sidebar↔route + catalog capabilities",
+        title: "Alignement sidebar/routes + 12 caps manquantes + cohérence tests",
+        description:
+          "Correction 4 mismatches sidebar↔routes (/rh, /rh/contrats, /admin/permissions, /admin/feature-flags). 12 capabilities ajoutées au catalogue (admin.permissions.manage, admin.feature_flags.manage, heures.audit…). Test sidebar-cap-coherence.ts (2 tests, 4 mismatches résolus).",
+      },
+      {
+        type: "feature",
+        area: "Bloc 10.1 — Fondations DB",
+        title: "Tables opportunite_actions + opportunite_jalons + RPC sign_opportunite",
+        description:
+          "Timeline commerciale (10 types d'actions : email, rdv, relance, devis_envoye…) et pipeline 4 jalons (qualification, devis_envoye, negociation, signature). RPC sign_opportunite() atomique : advisory lock + calcul prochain 5XXX libre + UPDATE phase='signe'. 4 capabilities (create/edit/delete/read.mine). Seed 784 jalons (196 opps × 4). Tests pgTAP : race condition + RLS.",
+      },
+    ],
+  },
+  {
     date: "2026-05-26",
     version: "v0.51.0 (Bloc 9 — LIVRÉ)",
     title: "📱 Carte mission pose mobile — J'arrive/Je pars, heures auto, photos, signalement",
@@ -3072,24 +3107,18 @@ const RELEASES: RoadmapRelease[] = [
 ];
 
 const PLANNED: RoadmapPlanned[] = [
-  // ========== Sprint v0.48.x — Suite refonte UX/UI (Lot 7.1 → 7.3) ==========
+  // ========== En cours ==========
   {
     priority: "haute",
-    title: "Lot 7.1 — Vocabulaire UI centralisé (`labels.ts`)",
+    title: "Bloc 10 — Fiche opportunité enrichie (10.2 → 10.5)",
     description:
-      "Création d'une source unique `src/lib/labels.ts` (helper `roleLabel()`) pour uniformiser l'affichage des rôles à travers les 9 surfaces UI qui divergent actuellement (« Chef d'équipe » / « Chef de chantier » / « Chef chantier » / « Chef de Chantier »). L'enum DB `chef_chantier` est conservé tel quel (RLS + 9 migrations + 7 helpers SECURITY DEFINER intouchables). Migration vocabulaire future = changer uniquement ce fichier. Inventaire `rg` complet validé (42 fichiers `src/`, 5 fichiers `e2e/`).",
-  },
-  {
-    priority: "haute",
-    title: "Lot 7.2 — Sidebar capability-driven",
-    description:
-      "Refonte de `AppSidebar.tsx` pour que chaque entrée soit gatée par une capability plutôt que par un check de rôle hardcodé. Mock attendu pour 3 personas (admin / chef / rh) à valider avant édition. Permettra à l'admin de masquer/afficher dynamiquement des entrées via `/admin/permissions` sans déploiement.",
+      "10.1 DB livré (actions + jalons + RPC sign_opportunite). 10.2 : extension RPC get_inbox_items avec opp_action + cap gating. 10.3 : UI fiche opportunité complète (timeline, pipeline 4 jalons, actions commerciales, signalement). 10.4 : refactor listing opportunités. 10.5 : tests E2E + cleanup. ~20h restant.",
   },
   {
     priority: "haute",
     title: "Lot 7.3 — Vue `v_affaires_avec_plan_status` (statuts dérivés)",
     description:
-      "Création d'une vue SQL consolidée exposant pour chaque affaire les statuts dérivés (a-t-elle un plan publié ? un brouillon ? un plan archivé ? écart staffing vs devis ?). Échantillon de retour à valider avant migration. Permettra de simplifier les listes affaires + dashboard sans recalcul côté client.",
+      "Création d'une vue SQL consolidée exposant pour chaque affaire les statuts dérivés (a-t-elle un plan publié ? un brouillon ? un plan archivé ? écart staffing vs devis ?). Permettra de simplifier les listes affaires + dashboard sans recalcul côté client.",
   },
 
   // ========== Sprints majeurs planifiés ==========
@@ -3107,21 +3136,21 @@ const PLANNED: RoadmapPlanned[] = [
   },
   {
     priority: "moyenne",
-    title: "v0.39.x suite — Logistique avancée (autorisations véhicules + sous-traitants + historique + stats)",
+    title: "v0.39.x — Logistique avancée : autorisations véhicules (sous-traitants/historique/stats livrés v0.41.0b)",
     description:
-      "Module flotte étendu : #56 autorisations véhicules par employé (B/C/CE/CACES + dates expiration), gestion fine des sous-traitants (carnet, tarifs, notes), historique complet des trajets par véhicule et par chauffeur, stats consommation et km par chantier. Pré-requis pour facturation interne flotte.",
+      "Module flotte : autorisations véhicules par employé (B/C/CE/CACES + dates expiration) reste à livrer. Carnet sous-traitants, historique trajets et stats flotte déjà livrés en v0.41.0b. Pré-requis pour facturation interne flotte.",
   },
   {
     priority: "moyenne",
-    title: "v0.40 — Phase 2 horaires précis (heure_debut / heure_fin / pauses + nuit/sup/35h auto + SILAE enrichi)",
+    title: "v0.40 — Phase 2 horaires précis (SUSPENDU)",
     description:
-      "Évolution majeure du modèle heures : passage des heures totales à des plages horaires précises (heure_debut, heure_fin, pauses), calcul automatique des majorations (nuit, dimanche, heures sup au-delà 35h), enrichissement export SILAE avec colonnes dédiées par typologie d'heure. Migration douce : ancien format toléré en lecture, nouveau format obligatoire en saisie après bascule.",
+      "Évolution majeure du modèle heures : passage des heures totales à des plages horaires précises (heure_debut, heure_fin, pauses), calcul automatique des majorations (nuit, dimanche, heures sup au-delà 35h), enrichissement export SILAE avec colonnes dédiées par typologie d'heure. SUSPENDU — décision métier en attente.",
   },
   {
     priority: "moyenne",
-    title: "v0.41 — Claude API auto-staffing (UNIQUEMENT 5XXX, fallback v0.35, cache + cap)",
+    title: "v0.41 — Claude API auto-staffing (BACKLOG)",
     description:
-      "Enrichissement de l'algorithme déterministe v0.35 par Claude API via edge function proxy : skill-based reasoning sur historique de l'employé (déjà bossé avec l'équipe ? sur ce client ? sur ce type d'objet ?), tools structurés (lecture affaires + assignations passées), fallback automatique sur v0.35 si timeout/erreur, cache 1h sur même contexte, hard cap mensuel d'appels (alerte admin avant blocage). Tier CDI/CDD avant intermittent conservé. PAS d'autres intégrations Claude (pas de support conv, pas de génération texte).",
+      "Enrichissement de l'algorithme déterministe v0.35 par Claude API via edge function proxy : skill-based reasoning sur historique de l'employé, tools structurés, fallback v0.35, cache, hard cap mensuel. BACKLOG — pas de date prévue.",
   },
 
   // ========== Phase 4 Dashboard (reste à livrer) ==========
