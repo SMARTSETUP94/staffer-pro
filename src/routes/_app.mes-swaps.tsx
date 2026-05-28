@@ -43,6 +43,7 @@ type Tab = "en_cours" | "historique";
 function MesSwapsPage() {
   const { user } = useAuth();
   const { employeId } = useResolvedEmploye();
+  const { scope } = Route.useSearch();
   const [tab, setTab] = useState<Tab>("en_cours");
   const [createOpen, setCreateOpen] = useState(false);
   const [myAssignations, setMyAssignations] = useState<MyAssignation[]>([]);
