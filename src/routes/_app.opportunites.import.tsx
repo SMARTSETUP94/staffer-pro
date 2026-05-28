@@ -57,7 +57,8 @@ async function sha256Hex(buf: ArrayBuffer): Promise<string> {
 }
 
 function OpportunitesImportPage() {
-  const { user, isAdminOrChef } = useAuth();
+  const { user } = useAuth();
+  const canImport = useCapability("section.admin");
   const { data: charges } = useChargesAffaires();
   const fileRef = useRef<HTMLInputElement>(null);
   const [rows, setRows] = useState<RowState[]>([]);
@@ -264,12 +265,12 @@ function OpportunitesImportPage() {
     });
   }
 
-  if (!isAdminOrChef) {
+  if (!canImport) {
     return (
       <div className="mx-auto max-w-3xl p-6">
         <Card>
           <CardContent className="p-6 text-sm text-muted-foreground">
-            Accès réservé aux chefs de chantier et administrateurs.
+            Accès réservé aux administrateurs.
           </CardContent>
         </Card>
       </div>

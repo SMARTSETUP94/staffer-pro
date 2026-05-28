@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { History, FileText, ExternalLink, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth-context";
+import { useCapability } from "@/hooks/use-capability";
 import { PageHeader } from "@/components/PageHeader";
 import { PageBreadcrumbs } from "@/components/PageBreadcrumbs";
 import { ImportsTabsNav } from "@/components/ImportsTabsNav";
@@ -52,7 +52,7 @@ function fmtNumber(n: number | null | undefined): string {
 }
 
 function DevisHistoriquePage() {
-  const { isAdminOrChef } = useAuth();
+  const canViewDevis = useCapability("section.devis");
   const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState<ImportRow[]>([]);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
@@ -86,19 +86,19 @@ function DevisHistoriquePage() {
   };
 
   useEffect(() => {
-    if (!isAdminOrChef) {
+    if (!canViewDevis) {
       setLoading(false);
       return;
     }
     fetchRows();
-  }, [isAdminOrChef]);
+  }, [canViewDevis]);
 
-  if (!isAdminOrChef) {
+  if (!canViewDevis) {
     return (
       <div className="mx-auto max-w-3xl p-6">
         <Card>
           <CardContent className="p-6 text-sm text-muted-foreground">
-            Accès réservé aux chefs de chantier et administrateurs.
+            Accès réservé aux utilisateurs habilités à consulter les devis.
           </CardContent>
         </Card>
       </div>

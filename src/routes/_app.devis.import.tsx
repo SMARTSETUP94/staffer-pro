@@ -5,7 +5,7 @@ import { z } from "zod";
 import { zodValidator, fallback } from "@tanstack/zod-adapter";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth-context";
+import { useCapability } from "@/hooks/use-capability";
 import { useMetiers } from "@/hooks/use-metiers";
 import { PageHeader } from "@/components/PageHeader";
 import { PageBreadcrumbs } from "@/components/PageBreadcrumbs";
@@ -80,7 +80,7 @@ function toIso(d: Date | undefined): string | null {
 // MACHINISTE_METIER_ID extrait dans @/lib/devis-import-v2-helpers (testé unitairement)
 
 function DevisImportPage() {
-  const { isAdminOrChef } = useAuth();
+  const canImport = useCapability("section.admin");
   const { metiers, byId } = useMetiers();
   const { affaire_id: prefilledAffaireId } = Route.useSearch();
 
@@ -685,12 +685,12 @@ function DevisImportPage() {
   }, [affaireId, affaires, newAffaireNumero, newAffaireNom]);
 
 
-  if (!isAdminOrChef) {
+  if (!canImport) {
     return (
       <div className="mx-auto max-w-3xl p-6">
         <Card>
           <CardContent className="p-6 text-sm text-muted-foreground">
-            Accès réservé aux chefs de chantier et administrateurs.
+            Accès réservé aux administrateurs.
           </CardContent>
         </Card>
       </div>
