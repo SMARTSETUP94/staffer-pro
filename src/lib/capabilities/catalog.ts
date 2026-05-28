@@ -48,6 +48,23 @@ export const CAPABILITY_CATALOG = {
     { key: "action.upload_photo", label: "Uploader une photo" },
     { key: "action.delete_photo", label: "Supprimer une photo" },
     { key: "action.archive_affaire", label: "Archiver une affaire" },
+    { key: "affaire.team.manage", label: "Gérer l'équipe d'une affaire" },
+    { key: "employes.edit", label: "Éditer les fiches employés" },
+    { key: "heures.personnelles.saisir", label: "Saisir ses heures personnelles" },
+  ],
+  admin: [
+    { key: "rh.hub.view", label: "Voir le hub RH (alias legacy)" },
+    { key: "admin.email_preview.view", label: "Voir l'aperçu emails" },
+    { key: "admin.feature_flags.manage", label: "Gérer les feature flags" },
+    { key: "admin.feedback.view", label: "Voir les feedbacks" },
+    { key: "admin.permissions.manage", label: "Gérer la matrice de permissions" },
+    { key: "admin.audit", label: "Voir l'audit admin" },
+    { key: "heures.audit", label: "Auditer les heures" },
+  ],
+  affaire: [
+    { key: "affaire.equipe.view", label: "Voir l'équipe d'une affaire" },
+    { key: "objet.view", label: "Voir la fiche d'un objet" },
+    { key: "contrats.view_own", label: "Voir ses propres contrats" },
   ],
   inbox: [
     { key: "inbox.mission_pose", label: "Missions de pose" },
