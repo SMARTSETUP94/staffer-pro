@@ -25,6 +25,7 @@ type Tab = "en_attente" | "confirmees" | "refusees";
 function MesPropositionsPage() {
   const { user } = useAuth();
   const { employeId } = useResolvedEmploye();
+  const { scope } = Route.useSearch();
   const [tab, setTab] = useState<Tab>("en_attente");
 
   const { rows, loading, refresh } = useMesPropositions(employeId);
