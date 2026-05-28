@@ -114,4 +114,29 @@ export const TEST_ACCOUNTS: Record<TestRole, TestAccount> = {
     password: optional("E2E_ATELIER_CHEF_PASSWORD", "AtelierChef-E2E-2026!"),
     storageStatePath: "e2e/.auth/atelier-chef.json",
   },
+  // L5-B clôture — 4 nouveaux comptes pour couvrir la matrice rôles complète.
+  rh: {
+    role: "rh",
+    email: optional("E2E_RH_EMAIL", "rh.test@setup-paris.fr"),
+    password: optional("E2E_RH_PASSWORD", "Rh-E2E-2026!"),
+    storageStatePath: "e2e/.auth/rh.json",
+  },
+  atelier_metier: {
+    role: "atelier_metier",
+    email: optional("E2E_ATELIER_METIER_EMAIL", "atelier_metier.test@setup-paris.fr"),
+    password: optional("E2E_ATELIER_METIER_PASSWORD", "AtelierMetier-E2E-2026!"),
+    storageStatePath: "e2e/.auth/atelier-metier.json",
+  },
+  logistique: {
+    role: "logistique",
+    email: optional("E2E_LOGISTIQUE_EMAIL", "logistique.test@setup-paris.fr"),
+    password: optional("E2E_LOGISTIQUE_PASSWORD", "Logistique-E2E-2026!"),
+    storageStatePath: "e2e/.auth/logistique.json",
+  },
+  poseur: {
+    role: "poseur",
+    email: optional("E2E_POSEUR_EMAIL", "poseur.test@setup-paris.fr"),
+    password: optional("E2E_POSEUR_PASSWORD", "Poseur-E2E-2026!"),
+    storageStatePath: "e2e/.auth/poseur.json",
+  },
 };
