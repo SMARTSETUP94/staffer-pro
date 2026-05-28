@@ -70,6 +70,10 @@ function MesPropositionsPage() {
         description="Confirme ou refuse les créneaux que le chef te propose. Tant que tu n'as pas répondu, le créneau reste 'en attente'."
       />
 
+      <ScopeSelector capKey="mes_propositions.view" routeId="/_app/mes-propositions" />
+      <ScopeNotImplementedBanner scope={scope} />
+
+
       <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)}>
         <TabsList>
           <TabsTrigger value="en_attente">À répondre ({counts.en_attente})</TabsTrigger>
