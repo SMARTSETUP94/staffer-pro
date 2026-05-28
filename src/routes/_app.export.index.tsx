@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { requireCapability } from "@/lib/capability-guard";
 import { useMemo, useState } from "react";
 import { startOfWeek, addDays, addWeeks, format, differenceInCalendarWeeks } from "date-fns";
 import { fr } from "date-fns/locale";
 import {
-import { requireCapability } from "@/lib/capability-guard";
   FileDown,
   Loader2,
   FileSpreadsheet,

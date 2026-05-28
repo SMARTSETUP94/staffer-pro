@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { requireCapability } from "@/lib/capability-guard";
 import { useEffect, useMemo, useState } from "react";
 import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -7,7 +8,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useMetiers } from "@/hooks/use-metiers";
 import { MetierBadge } from "@/components/MetierBadge";
 import { Button } from "@/components/ui/button";
-import { requireCapability } from "@/lib/capability-guard";
 
 export const Route = createFileRoute("/_app/affaires/$affaireId/staffing")({
   beforeLoad: () => requireCapability("section.affaires"),

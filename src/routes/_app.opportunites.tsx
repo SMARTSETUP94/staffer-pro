@@ -1,10 +1,10 @@
 import { createFileRoute, Link, useNavigate, stripSearchParams } from "@tanstack/react-router";
+import { requireCapability } from "@/lib/capability-guard";
 import { zodValidator, fallback } from "@tanstack/zod-adapter";
 import { z } from "zod";
 import { useEffect, useMemo, useState } from "react";
 import { Plus, Loader2, Filter, Trophy, LayoutGrid, Table as TableIcon, X } from "lucide-react";
 import {
-import { requireCapability } from "@/lib/capability-guard";
   DndContext,
   type DragEndEvent,
   type DragStartEvent,

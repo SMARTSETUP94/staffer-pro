@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { requireCapability } from "@/lib/capability-guard";
 import { useEffect, useMemo, useState } from "react";
 import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -9,7 +10,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
-import { requireCapability } from "@/lib/capability-guard";
   Select,
   SelectContent,
   SelectItem,

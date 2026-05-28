@@ -4,6 +4,7 @@
  * Réservé chef_chantier (global ou scoped) + admin.
  */
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { requireCapability } from "@/lib/capability-guard";
 import { useEffect, useMemo, useState } from "react";
 import { Users, ArrowLeft, Info, Loader2, Building2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,7 +15,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-import { requireCapability } from "@/lib/capability-guard";
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {

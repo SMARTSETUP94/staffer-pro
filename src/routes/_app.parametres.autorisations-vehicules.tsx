@@ -4,12 +4,12 @@
 // - Cellule : badge statut (valide / expiration_proche / expire / manquant)
 // - Click cellule : ouvre la modale d'édition
 import { createFileRoute } from "@tanstack/react-router";
+import { requireCapability } from "@/lib/capability-guard";
 import { useEffect, useMemo, useState } from "react";
 import { Loader2, Search, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
-import { requireCapability } from "@/lib/capability-guard";
   Table,
   TableBody,
   TableCell,

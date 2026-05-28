@@ -9,6 +9,7 @@
  * - Bouton "Saisir en bulk" en haut à droite
  */
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { requireCapability } from "@/lib/capability-guard";
 import { useAuth } from "@/lib/auth-context";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { addDays, format, isWeekend, startOfWeek } from "date-fns";
@@ -25,7 +26,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-import { requireCapability } from "@/lib/capability-guard";
   Select,
   SelectContent,
   SelectItem,

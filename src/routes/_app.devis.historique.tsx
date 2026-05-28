@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { requireCapability } from "@/lib/capability-guard";
 import { useEffect, useState } from "react";
 import { History, FileText, ExternalLink, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -12,7 +13,6 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { DevisDeleteCascadeDialog } from "@/components/devis-import/DevisDeleteCascadeDialog";
-import { requireCapability } from "@/lib/capability-guard";
 
 export const Route = createFileRoute("/_app/devis/historique")({
   beforeLoad: () => requireCapability("section.devis"),

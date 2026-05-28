@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { requireCapability } from "@/lib/capability-guard";
 import { z } from "zod";
 import { zodValidator, fallback } from "@tanstack/zod-adapter";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -7,7 +8,6 @@ import { ConnexionsTab } from "@/components/audit-auth/ConnexionsTab";
 import { InvitationsTab } from "@/components/audit-auth/InvitationsTab";
 import { EvenementsTab } from "@/components/audit-auth/EvenementsTab";
 import { IncidentsTab } from "@/components/audit-auth/IncidentsTab";
-import { requireCapability } from "@/lib/capability-guard";
 
 const TAB_VALUES = ["connexions", "invitations", "evenements", "incidents"] as const;
 type AuditAuthTab = (typeof TAB_VALUES)[number];

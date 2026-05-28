@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { requireCapability } from "@/lib/capability-guard";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { Loader2, Paperclip, Send, X, Trash2, Download, AtSign } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,7 +9,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { requireCapability } from "@/lib/capability-guard";
 
 export const Route = createFileRoute("/_app/affaires/$affaireId/journal")({
   beforeLoad: () => requireCapability("section.affaires"),

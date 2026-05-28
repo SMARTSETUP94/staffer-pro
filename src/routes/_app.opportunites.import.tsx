@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { requireCapability } from "@/lib/capability-guard";
 import { useMemo, useRef, useState } from "react";
 import { FileUp, Loader2, Upload } from "lucide-react";
 import { toast } from "sonner";
@@ -13,7 +14,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
-import { requireCapability } from "@/lib/capability-guard";
   Table,
   TableBody,
   TableCell,

@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { requireCapability } from "@/lib/capability-guard";
 import { Fragment, useEffect, useMemo, useState } from "react";
 import { Loader2, TrendingUp, TrendingDown, AlertTriangle, CheckCircle2, ClipboardCheck, Clock, Send, Hammer, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
@@ -13,7 +14,6 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { consolidateByMetier, type RawConsoLine } from "@/lib/affaire-marge-consolidation";
 import { AffaireInfosPoseSection } from "@/components/affaire/AffaireInfosPoseSection";
-import { requireCapability } from "@/lib/capability-guard";
 
 type ConsoLine = RawConsoLine & {
   heures_restantes: number | null;

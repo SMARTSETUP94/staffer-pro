@@ -13,13 +13,13 @@
  * string sur chantier/employe/devis sont remplacées par tableau vide).
  */
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { requireCapability } from "@/lib/capability-guard";
 import { zodValidator, fallback } from "@tanstack/zod-adapter";
 import { z } from "zod";
 import { useEffect, useMemo, useState } from "react";
 import { format, parseISO, startOfMonth, startOfWeek, subDays, subMonths } from "date-fns";
 import { fr } from "date-fns/locale";
 import {
-import { requireCapability } from "@/lib/capability-guard";
   ArrowDown,
   ArrowUp,
   ArrowUpDown,

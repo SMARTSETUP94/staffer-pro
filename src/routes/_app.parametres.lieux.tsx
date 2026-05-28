@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { requireCapability } from "@/lib/capability-guard";
 import { useEffect, useState } from "react";
 import { Loader2, Plus, Save, Trash2, Warehouse, Building2, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
@@ -8,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-import { requireCapability } from "@/lib/capability-guard";
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import {

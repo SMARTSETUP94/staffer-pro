@@ -16,6 +16,7 @@
  * Mobile : sections empilées, cartes en grid-cols-1 sous 640px.
  */
 import { createFileRoute } from "@tanstack/react-router";
+import { requireCapability } from "@/lib/capability-guard";
 import { Loader2, UserCircle2, Info, Plus, X } from "lucide-react";
 import { useCastingChantier } from "@/hooks/use-casting-chantier";
 import { PhaseBadge, type AffairePhase } from "@/components/atoms/PhaseBadge";
@@ -23,7 +24,6 @@ import { useFeatureFlag } from "@/hooks/use-feature-flag";
 import { useCapability } from "@/hooks/use-capability";
 import { Button } from "@/components/ui/button";
 import {
-import { requireCapability } from "@/lib/capability-guard";
   Tooltip,
   TooltipContent,
   TooltipProvider,

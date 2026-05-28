@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
-import { requireCapability } from "@/lib/capability-guard";
 
+import { requireCapability } from "@/lib/capability-guard";
 /**
  * Layout route pour /export/*
  *

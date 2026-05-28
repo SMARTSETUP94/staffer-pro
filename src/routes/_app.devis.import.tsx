@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { requireCapability } from "@/lib/capability-guard";
 import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { z } from "zod";
@@ -16,7 +17,6 @@ import { toast } from "sonner";
 import { ImportErrorPanel } from "@/components/imports/ImportErrorPanel";
 import { ImportErrorBoundary } from "@/components/imports/ImportErrorBoundary";
 import {
-import { requireCapability } from "@/lib/capability-guard";
   exceptionToIssue,
   legacyStringsToIssues,
   makeIssue,

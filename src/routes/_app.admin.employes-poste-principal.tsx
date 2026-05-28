@@ -9,6 +9,7 @@
  * - Filtres : statut contrat, recherche nom, chantier récent
  */
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { requireCapability } from "@/lib/capability-guard";
 import { useEffect, useMemo, useState, useRef } from "react";
 import { ArrowLeft, Loader2, Save, Search, Download, Upload } from "lucide-react";
 import { toast } from "sonner";
@@ -25,7 +26,6 @@ import { useMetiers } from "@/hooks/use-metiers";
 import { fuzzyMatch } from "@/lib/string-normalize";
 import { fetchEmployesForExport, exportEmployesXlsx } from "@/lib/employes-excel";
 import { EmployesImportPostesDialog } from "@/components/employes/EmployesImportPostesDialog";
-import { requireCapability } from "@/lib/capability-guard";
 
 export const Route = createFileRoute("/_app/admin/employes-poste-principal")({
   beforeLoad: () => requireCapability("section.admin"),

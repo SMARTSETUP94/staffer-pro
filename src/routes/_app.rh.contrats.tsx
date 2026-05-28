@@ -3,6 +3,7 @@
  * Squelette livré ; raffinements UI/filtres avancés en Tour 3.
  */
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { requireCapability } from "@/lib/capability-guard";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2, FileText, Download, FileSignature, X, Trash2, ExternalLink } from "lucide-react";
@@ -21,7 +22,6 @@ import { TemplateTestDialog } from "@/components/contrats/TemplateTestDialog";
 import { openContratPdf, downloadContratPdf } from "@/lib/contrats-pdf-proxy";
 import { POSTE_FALLBACK } from "@/lib/postes-suggestions";
 import { FlaskConical } from "lucide-react";
-import { requireCapability } from "@/lib/capability-guard";
 
 export const Route = createFileRoute("/_app/rh/contrats")({
   beforeLoad: () => requireCapability("section.contrats_rh"),

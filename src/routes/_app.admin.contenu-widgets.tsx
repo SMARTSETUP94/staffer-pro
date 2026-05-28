@@ -10,6 +10,7 @@
  * Garde : RoleGuard required="admin".
  */
 import { createFileRoute } from "@tanstack/react-router";
+import { requireCapability } from "@/lib/capability-guard";
 import { useEffect, useMemo, useState } from "react";
 import { Plus, Search, Pencil, Check, X, RotateCcw, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -21,7 +22,6 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
-import { requireCapability } from "@/lib/capability-guard";
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {

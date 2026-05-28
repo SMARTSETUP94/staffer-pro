@@ -11,10 +11,10 @@
  * Pour consommer un flag côté client, utiliser `useFeatureFlag("ma_cle")`.
  */
 import { createFileRoute } from "@tanstack/react-router";
+import { requireCapability } from "@/lib/capability-guard";
 import { useEffect, useMemo, useState } from "react";
 import { Plus, Trash2, Save, X, Search } from "lucide-react";
 import { toast } from "sonner";
-import { requireCapability } from "@/lib/capability-guard";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { requireCapability } from "@/lib/capability-guard";
 import { createFileRoute } from "@tanstack/react-router";
 import { Loader2, Save } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import {
-import { requireCapability } from "@/lib/capability-guard";
   Table,
   TableBody,
   TableCell,

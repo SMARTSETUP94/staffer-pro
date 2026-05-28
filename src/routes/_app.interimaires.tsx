@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { requireCapability } from "@/lib/capability-guard";
 import { useEffect, useMemo, useState } from "react";
 import {
-import { requireCapability } from "@/lib/capability-guard";
   startOfWeek,
   endOfWeek,
   startOfMonth,

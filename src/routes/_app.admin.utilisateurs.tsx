@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { requireCapability } from "@/lib/capability-guard";
 import { useEffect, useState, useMemo } from "react";
 import {
-import { requireCapability } from "@/lib/capability-guard";
   Loader2, Mail, Shield, UserCog, UserPlus, Send, Power, Trash2, MoreHorizontal,
   CheckCircle2, Clock, XCircle, Link2, Users, Eye,
 } from "lucide-react";

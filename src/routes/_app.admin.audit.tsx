@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { requireCapability } from "@/lib/capability-guard";
 import { useEffect, useState } from "react";
 import { format, parseISO, subDays } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -16,7 +17,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
-import { requireCapability } from "@/lib/capability-guard";
   Table,
   TableBody,
   TableCell,

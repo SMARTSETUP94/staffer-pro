@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { requireCapability } from "@/lib/capability-guard";
 import { useEffect, useMemo, useState } from "react";
 import { Loader2, Wrench, ArrowLeft, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
@@ -7,7 +8,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-import { requireCapability } from "@/lib/capability-guard";
   Select,
   SelectContent,
   SelectItem,

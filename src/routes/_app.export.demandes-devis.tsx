@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { requireCapability } from "@/lib/capability-guard";
 import { useEffect, useMemo, useState } from "react";
 import { format, startOfMonth, addMonths } from "date-fns";
 import { fr } from "date-fns/locale";
 import {
-import { requireCapability } from "@/lib/capability-guard";
   Loader2,
   Truck,
   Search,

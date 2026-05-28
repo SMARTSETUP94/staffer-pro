@@ -3,6 +3,7 @@
 // "Principal" (P) = lecture seule (verrouillé sur fiche employé : metier_principal_id).
 // Sauvegarde immédiate au clic + toast.
 import { createFileRoute } from "@tanstack/react-router";
+import { requireCapability } from "@/lib/capability-guard";
 import { useEffect, useMemo, useState } from "react";
 import { Loader2, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,7 +16,6 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import {
-import { requireCapability } from "@/lib/capability-guard";
   Select,
   SelectContent,
   SelectItem,

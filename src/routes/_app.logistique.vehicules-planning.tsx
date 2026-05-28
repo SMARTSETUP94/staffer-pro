@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { requireCapability } from "@/lib/capability-guard";
 import { useState } from "react";
 import { startOfWeek, addDays, format } from "date-fns";
 import { Truck, Loader2 } from "lucide-react";
@@ -15,7 +16,6 @@ import { TrajetDialog } from "@/components/flotte/TrajetDialog";
 import { ExportTrajetsSoustraitanceDialog } from "@/components/flotte/ExportTrajetsSoustraitanceDialog";
 import { PageBreadcrumbs } from "@/components/PageBreadcrumbs";
 import type { TrajetSuggestion } from "@/lib/trajets-suggestions";
-import { requireCapability } from "@/lib/capability-guard";
 
 export const Route = createFileRoute("/_app/logistique/vehicules-planning")({
   beforeLoad: () => requireCapability("section.logistique"),

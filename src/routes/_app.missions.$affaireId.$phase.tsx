@@ -12,13 +12,13 @@
  *   - Barre d'actions (boutons J'arrive / Je pars / Signaler — 9.4/9.5)
  */
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { requireCapability } from "@/lib/capability-guard";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
 import {
-import { requireCapability } from "@/lib/capability-guard";
   AlertTriangle,
   ArrowLeft,
   Camera,
