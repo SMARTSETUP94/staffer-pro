@@ -2969,6 +2969,132 @@ export type Database = {
           },
         ]
       }
+      opportunite_actions: {
+        Row: {
+          affaire_id: string
+          attachments: Json
+          auteur_id: string | null
+          created_at: string
+          date: string
+          id: string
+          prochaine_action_due_le: string | null
+          texte: string
+          type: Database["public"]["Enums"]["opp_action_type"]
+          updated_at: string
+        }
+        Insert: {
+          affaire_id: string
+          attachments?: Json
+          auteur_id?: string | null
+          created_at?: string
+          date?: string
+          id?: string
+          prochaine_action_due_le?: string | null
+          texte: string
+          type: Database["public"]["Enums"]["opp_action_type"]
+          updated_at?: string
+        }
+        Update: {
+          affaire_id?: string
+          attachments?: Json
+          auteur_id?: string | null
+          created_at?: string
+          date?: string
+          id?: string
+          prochaine_action_due_le?: string | null
+          texte?: string
+          type?: Database["public"]["Enums"]["opp_action_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "opportunite_actions_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "affaires"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "opportunite_actions_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "v_affaire_consommation"
+            referencedColumns: ["affaire_id"]
+          },
+          {
+            foreignKeyName: "opportunite_actions_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "v_affaires_avec_plan_status"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "opportunite_actions_auteur_id_fkey"
+            columns: ["auteur_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      opportunite_jalons: {
+        Row: {
+          affaire_id: string
+          created_at: string
+          date_atteinte: string | null
+          date_prevue: string | null
+          etape: Database["public"]["Enums"]["opp_jalon_etape"]
+          id: string
+          notes: string | null
+          ordre: number
+          updated_at: string
+        }
+        Insert: {
+          affaire_id: string
+          created_at?: string
+          date_atteinte?: string | null
+          date_prevue?: string | null
+          etape: Database["public"]["Enums"]["opp_jalon_etape"]
+          id?: string
+          notes?: string | null
+          ordre: number
+          updated_at?: string
+        }
+        Update: {
+          affaire_id?: string
+          created_at?: string
+          date_atteinte?: string | null
+          date_prevue?: string | null
+          etape?: Database["public"]["Enums"]["opp_jalon_etape"]
+          id?: string
+          notes?: string | null
+          ordre?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "opportunite_jalons_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "affaires"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "opportunite_jalons_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "v_affaire_consommation"
+            referencedColumns: ["affaire_id"]
+          },
+          {
+            foreignKeyName: "opportunite_jalons_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "v_affaires_avec_plan_status"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       opportunites_imports: {
         Row: {
           created_at: string
@@ -5072,10 +5198,17 @@ export type Database = {
       }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
-      sign_opportunite: {
-        Args: { _affaire_id: string; _new_code: string }
-        Returns: string
-      }
+      sign_opportunite:
+        | {
+            Args: { _affaire_id: string }
+            Returns: {
+              affaire_id: string
+              ancien_numero: string
+              nouveau_numero: string
+              signed_at: string
+            }[]
+          }
+        | { Args: { _affaire_id: string; _new_code: string }; Returns: string }
       signer_contrat_employe: {
         Args: {
           p_client_ip?: string
@@ -5331,6 +5464,22 @@ export type Database = {
         | "commentaire_supprime"
         | "identite_modifiee"
         | "plan_republie"
+      opp_action_type:
+        | "email_envoye"
+        | "email_recu"
+        | "rdv_planifie"
+        | "rdv_realise"
+        | "relance_tel"
+        | "relance_email"
+        | "note_interne"
+        | "devis_envoye"
+        | "echantillon_presente"
+        | "autre"
+      opp_jalon_etape:
+        | "qualification"
+        | "devis_envoye"
+        | "negociation"
+        | "signature"
       opportunite_statut: "a_faire" | "envoye" | "gagne" | "perdu" | "termine"
       opportunite_taille:
         | "tres_petit"
@@ -5603,6 +5752,24 @@ export const Constants = {
         "commentaire_supprime",
         "identite_modifiee",
         "plan_republie",
+      ],
+      opp_action_type: [
+        "email_envoye",
+        "email_recu",
+        "rdv_planifie",
+        "rdv_realise",
+        "relance_tel",
+        "relance_email",
+        "note_interne",
+        "devis_envoye",
+        "echantillon_presente",
+        "autre",
+      ],
+      opp_jalon_etape: [
+        "qualification",
+        "devis_envoye",
+        "negociation",
+        "signature",
       ],
       opportunite_statut: ["a_faire", "envoye", "gagne", "perdu", "termine"],
       opportunite_taille: ["tres_petit", "petit", "moyen", "gros", "tres_gros"],
