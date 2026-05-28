@@ -43,6 +43,11 @@ import {
   AFFAIRE_TYPOLOGIE_COLORS,
   getAffaireTypologie,
 } from "@/lib/affaire-typologie";
+import {
+  actionUrgency,
+  URGENCY_CLASS,
+  fmtActionDate,
+} from "@/lib/opportunite-action-urgency";
 
 interface OppRow {
   id: string;
@@ -88,6 +93,7 @@ export function PipelineCommercialBloc() {
   const { data: charges } = useChargesAffaires();
   const [scope, setScope] = useState<"mine" | "all">("all");
   const [opps, setOpps] = useState<OppRow[]>([]);
+  const [nextActionByAffaire, setNextActionByAffaire] = useState<Map<string, string>>(new Map());
   const [loading, setLoading] = useState(true);
 
   // Init scope par défaut une fois user chargé
@@ -119,7 +125,27 @@ export function PipelineCommercialBloc() {
       if (error) {
         setOpps([]);
       } else {
-        setOpps((data ?? []) as unknown as OppRow[]);
+        const rows = (data ?? []) as unknown as OppRow[];
+        setOpps(rows);
+        // Bloc 10.4 — fetch next pending action per opp pour badge urgence
+        const oppIds = rows.map((r) => r.id);
+        if (oppIds.length > 0) {
+          const { data: actions } = await supabase
+            .from("opportunite_actions")
+            .select("affaire_id, prochaine_action_due_le")
+            .in("affaire_id", oppIds)
+            .not("prochaine_action_due_le", "is", null)
+            .order("prochaine_action_due_le", { ascending: true });
+          if (!cancelled && actions) {
+            const map = new Map<string, string>();
+            (actions as Array<{ affaire_id: string; prochaine_action_due_le: string }>).forEach(
+              (a) => {
+                if (!map.has(a.affaire_id)) map.set(a.affaire_id, a.prochaine_action_due_le);
+              },
+            );
+            setNextActionByAffaire(map);
+          }
+        }
       }
       setLoading(false);
     })();
@@ -359,10 +385,17 @@ export function PipelineCommercialBloc() {
                   const caName = opp.charge_affaires_id
                     ? chargesById.get(opp.charge_affaires_id)?.name ?? "—"
                     : "Non assigné";
+                  const dueIso = nextActionByAffaire.get(opp.id) ?? null;
+                  const urgency = actionUrgency(dueIso);
+                  const overdue = urgency === "overdue";
                   return (
                     <li
                       key={opp.id}
-                      className="flex items-center justify-between gap-2 rounded-md border border-border/50 px-2.5 py-1.5 hover:bg-muted/30"
+                      className={`flex items-center justify-between gap-2 rounded-md border px-2.5 py-1.5 hover:bg-muted/30 ${
+                        overdue
+                          ? "border-rose-300 dark:border-rose-900 bg-rose-50/40 dark:bg-rose-950/20"
+                          : "border-border/50"
+                      }`}
                     >
                       <div className="flex min-w-0 items-center gap-2">
                         <span className="text-sm" aria-hidden>
@@ -379,9 +412,20 @@ export function PipelineCommercialBloc() {
                           </p>
                         </div>
                       </div>
-                      <Badge variant="outline" className="shrink-0 text-[10px] tabular-nums">
-                        {ageDays}j
-                      </Badge>
+                      <div className="flex shrink-0 items-center gap-1.5">
+                        {urgency && (
+                          <Badge
+                            variant="outline"
+                            className={`text-[10px] tabular-nums ${URGENCY_CLASS[urgency]}`}
+                            title="Prochaine action commerciale"
+                          >
+                            {fmtActionDate(dueIso)}
+                          </Badge>
+                        )}
+                        <Badge variant="outline" className="text-[10px] tabular-nums">
+                          {ageDays}j
+                        </Badge>
+                      </div>
                     </li>
                   );
                 })}

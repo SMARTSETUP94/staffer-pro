@@ -87,6 +87,8 @@ const OPPS_SEARCH_DEFAULTS = {
   q: "",
   preset: "all" as StoredPreset,
   archived: false,
+  actionsDues: false,
+  noCa: false,
 };
 
 const oppsSearchSchema = z.object({
@@ -101,6 +103,8 @@ const oppsSearchSchema = z.object({
     "all",
   ).default("all"),
   archived: fallback(z.boolean(), false).default(false),
+  actionsDues: fallback(z.boolean(), false).default(false),
+  noCa: fallback(z.boolean(), false).default(false),
 });
 
 type OppsSearch = z.infer<typeof oppsSearchSchema>;
@@ -144,7 +148,7 @@ function OpportunitesPage() {
   const oppScope = useCapabilityScope("section.pipeline_opportunites");
   const navigate = useNavigate({ from: "/opportunites" });
   const search = Route.useSearch();
-  const { typo: typoFilter, vue, q: searchQuery, preset, archived: showArchived } = search;
+  const { typo: typoFilter, vue, q: searchQuery, preset, archived: showArchived, actionsDues, noCa } = search;
 
   const setTypoFilter = (next: AffaireTypologie[]) => {
     navigate({ search: (prev: OppsSearch) => ({ ...prev, typo: next }), replace: true });
@@ -164,6 +168,18 @@ function OpportunitesPage() {
   const setShowArchived = (next: boolean) => {
     navigate({
       search: (prev: OppsSearch) => ({ ...prev, archived: next }),
+      replace: true,
+    });
+  };
+  const setActionsDues = (next: boolean) => {
+    navigate({
+      search: (prev: OppsSearch) => ({ ...prev, actionsDues: next }),
+      replace: true,
+    });
+  };
+  const setNoCa = (next: boolean) => {
+    navigate({
+      search: (prev: OppsSearch) => ({ ...prev, noCa: next }),
       replace: true,
     });
   };
@@ -229,10 +245,26 @@ function OpportunitesPage() {
   // est inutile ici car toutes les opps sont 9XXX = prototype par construction).
   const typoSet = useMemo(() => new Set(typoFilter), [typoFilter]);
   const normalizedQuery = searchQuery.trim().toLowerCase();
+  const today = useMemo(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }, []);
+  const sevenDaysAhead = useMemo(() => {
+    const d = new Date(today);
+    d.setDate(d.getDate() + 7);
+    return d;
+  }, [today]);
   const oppsFiltrees = useMemo(() => {
     return opps.filter((o) => {
       if (filterCa && filterCa !== "__all__" && o.charge_affaires_id !== filterCa)
         return false;
+      if (noCa && o.charge_affaires_id !== null) return false;
+      if (actionsDues) {
+        if (!o.next_action_due_le) return false;
+        const due = new Date(o.next_action_due_le + "T00:00:00");
+        if (due > sevenDaysAhead) return false;
+      }
       if (typoSet.size > 0) {
         if (!o.typologie_future || !typoSet.has(o.typologie_future)) return false;
       }
@@ -242,7 +274,7 @@ function OpportunitesPage() {
       }
       return true;
     });
-  }, [opps, filterCa, typoSet, normalizedQuery]);
+  }, [opps, filterCa, noCa, actionsDues, sevenDaysAhead, typoSet, normalizedQuery]);
 
   const typoCounts = useMemo(() => {
     const counts: Partial<Record<AffaireTypologie, number>> = {};
@@ -520,6 +552,26 @@ function OpportunitesPage() {
             </button>
           )}
         </div>
+
+        <label className="flex h-9 cursor-pointer items-center gap-2 rounded-xl border border-border bg-card px-3 text-xs font-medium">
+          <Switch
+            checked={actionsDues}
+            onCheckedChange={setActionsDues}
+            aria-label="Actions dues sous 7 jours"
+          />
+          <span className="text-muted-foreground">Actions dues ≤ 7j</span>
+        </label>
+
+        {oppScope === "all" && (
+          <label className="flex h-9 cursor-pointer items-center gap-2 rounded-xl border border-border bg-card px-3 text-xs font-medium">
+            <Switch
+              checked={noCa}
+              onCheckedChange={setNoCa}
+              aria-label="Sans chargé d'affaires"
+            />
+            <span className="text-muted-foreground">Sans CA</span>
+          </label>
+        )}
 
         {vue === "tableur" && (
           <>
