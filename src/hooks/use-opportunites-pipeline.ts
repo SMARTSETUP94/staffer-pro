@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import { useCapability } from "@/hooks/use-capability";
 import { useChargesAffaires } from "@/hooks/use-charges-affaires";
 import type { OpportuniteStatut, OpportuniteTaille } from "@/lib/opportunites";
 

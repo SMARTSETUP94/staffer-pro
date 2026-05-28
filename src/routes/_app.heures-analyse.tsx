@@ -36,6 +36,7 @@ import { toast } from "sonner";
 import { formatBusinessError } from "@/lib/business-errors";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import { useCapability } from "@/hooks/use-capability";
 import { RoleGuard } from "@/components/auth/RoleGuard";
 import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";

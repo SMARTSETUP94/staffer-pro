@@ -5,6 +5,7 @@ import { toPng } from "html-to-image";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import { useCapability } from "@/hooks/use-capability";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
