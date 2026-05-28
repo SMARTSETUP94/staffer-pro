@@ -49,7 +49,7 @@ export function ScopeSelector({ capKey, routeId }: Props) {
   const handleChange = (v: string) => {
     navigate({
       to: routeId,
-      search: (prev) => ({ ...(prev as Record<string, unknown>), scope: v as UrlScope }),
+      search: (prev: Record<string, unknown>) => ({ ...prev, scope: v as UrlScope }),
       replace: true,
     } as never);
   };
