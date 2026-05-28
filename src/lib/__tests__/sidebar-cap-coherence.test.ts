@@ -46,11 +46,22 @@ function extractSidebarItems(): SidebarItem[] {
   return items;
 }
 
-/** Convertit "/admin/utilisateurs" → "_app.admin.utilisateurs.tsx". */
-function urlToRouteFile(url: string): string {
+/**
+ * Convertit "/admin/utilisateurs" → liste des chemins candidats :
+ *  - "_app.admin.utilisateurs.tsx"        (route feuille)
+ *  - "_app.admin.utilisateurs.index.tsx"  (route layout + index)
+ * Renvoie le premier qui existe, ou null.
+ */
+function resolveRouteFile(url: string): string | null {
   const seg = url.replace(/^\//, "").split("/").filter(Boolean).join(".");
-  return `_app.${seg}.tsx`;
+  const candidates = [`_app.${seg}.tsx`, `_app.${seg}.index.tsx`];
+  for (const c of candidates) {
+    const p = path.join(ROUTES_DIR, c);
+    if (fs.existsSync(p)) return p;
+  }
+  return null;
 }
+
 
 /** Renvoie la cap requise par le beforeLoad de la route, ou null si aucune. */
 function extractRouteRequiredCap(filePath: string): string | null {
