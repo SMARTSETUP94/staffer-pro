@@ -50,7 +50,8 @@ function readStoredEmp(): string | null {
 }
 
 export function PreviewProvider({ children }: { children: ReactNode }) {
-  const { isAdmin, roles, user } = useAuth();
+  const { roles, user } = useAuth();
+  const isAdmin = roles.includes("admin");
   const [previewRole, setPreviewRoleState] = useState<PreviewRole | null>(() => readStored());
   const [previewEmployeId, setPreviewEmployeIdState] = useState<string | null>(() => readStoredEmp());
 
