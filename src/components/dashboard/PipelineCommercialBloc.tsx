@@ -113,7 +113,8 @@ export function PipelineCommercialBloc() {
         .select(
           "id, numero, nom, client, charge_affaires_id, taille, statut_opportunite, date_opportunite, signed_at, code_opportunite, updated_at, phase",
         )
-        .or("phase.eq.opportunite,code_opportunite.not.is.null");
+        .or("phase.eq.opportunite,code_opportunite.not.is.null")
+        .is("archived_at", null);
       if (cancelled) return;
       if (error) {
         setOpps([]);

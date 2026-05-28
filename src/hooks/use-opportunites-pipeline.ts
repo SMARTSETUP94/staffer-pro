@@ -51,7 +51,8 @@ export function useOpportunitesPipeline(): PipelineData {
         .select(
           "id, numero, nom, client, charge_affaires_id, taille, statut_opportunite, date_opportunite, signed_at, code_opportunite, updated_at",
         )
-        .or("phase.eq.opportunite,code_opportunite.not.is.null");
+        .or("phase.eq.opportunite,code_opportunite.not.is.null")
+        .is("archived_at", null);
       if (cancelled) return;
       if (error) setOpps([]);
       else setOpps((data ?? []) as unknown as OppRow[]);
