@@ -33,7 +33,11 @@ type RoleName =
   | "chef_metier_scoped"
   | "commercial"
   | "bureau_etude"
-  | "atelier_chef";
+  | "atelier_chef"
+  | "rh"
+  | "atelier_metier"
+  | "logistique"
+  | "poseur";
 
 interface Seed {
   email: string;
