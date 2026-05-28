@@ -115,7 +115,7 @@ function buildSections(
     {
       label: "Module RH",
       items: [
-        { title: "Hub RH", url: "/rh", icon: FileSignature, cap: "section.contrats_rh" },
+        { title: "Management RH", url: "/rh", icon: FileSignature, cap: "section.contrats_rh" },
         { title: "Contrats CDDU", url: "/rh/contrats", icon: FileSignature, cap: "section.contrats_rh", count: contratsRhCount },
       ],
     },
