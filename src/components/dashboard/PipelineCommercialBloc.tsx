@@ -43,6 +43,11 @@ import {
   AFFAIRE_TYPOLOGIE_COLORS,
   getAffaireTypologie,
 } from "@/lib/affaire-typologie";
+import {
+  actionUrgency,
+  URGENCY_CLASS,
+  fmtActionDate,
+} from "@/lib/opportunite-action-urgency";
 
 interface OppRow {
   id: string;
