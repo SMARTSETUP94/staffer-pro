@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate, stripSearchParams, redirect } from "@tanstack/react-router";
+import { requireCapability } from "@/lib/capability-guard";
 import { zodValidator, fallback } from "@tanstack/zod-adapter";
 import { z } from "zod";
 import { useMemo, useRef, useState } from "react";
@@ -64,11 +65,12 @@ export const Route = createFileRoute("/_app/planning")({
   }),
   validateSearch: zodValidator(planningSearchSchema),
   search: { middlewares: [stripSearchParams(PLANNING_SEARCH_DEFAULTS)] },
-  beforeLoad: ({ search }) => {
+  beforeLoad: async ({ search }) => {
     const tab = (search as { tab?: string }).tab;
     if (tab && LEGACY_TAB_REDIRECTS[tab]) {
       throw redirect({ to: LEGACY_TAB_REDIRECTS[tab], replace: true });
     }
+    return requireCapability("section.planning_fab");
   },
   component: PlanningPage,
 });
