@@ -76,7 +76,7 @@ function buildSections(
     {
       label: "Pilotage",
       items: [
-        { title: "Tableau de bord", url: "/dashboard", icon: LayoutDashboard, cap: "section.tableau_de_bord" },
+        
         { title: "Inbox", url: "/inbox", icon: Inbox, cap: "section.inbox" },
         { title: "Planning fab", url: "/planning", icon: Calendar, cap: "section.planning_fab" },
         { title: "Pipeline opportunités", url: "/opportunites", icon: Trophy, cap: "section.pipeline_opportunites" },
