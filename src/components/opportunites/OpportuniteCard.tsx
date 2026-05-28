@@ -33,6 +33,10 @@ export interface OpportuniteCardData {
   statut_opportunite: "a_faire" | "envoye" | "gagne" | "perdu" | "termine";
   /** v0.29.2 — typologie cible déclarée (override le getAffaireTypologie 9XXX par défaut). */
   typologie_future?: AffaireTypologie | null;
+  /** Bloc 10.4 — enrichissement listing. */
+  next_action_due_le?: string | null;
+  last_jalon_etape?: string | null;
+  actions_count?: number | null;
 }
 
 interface Props {
