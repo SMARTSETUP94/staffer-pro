@@ -100,6 +100,44 @@ function HeuresSemaineWidget() {
   );
 }
 
+interface MesWidgetSpec {
+  capKey: string;
+  to: string;
+  icon: typeof Briefcase;
+  title: string;
+  subtitle: string;
+}
+
+const MES_WIDGETS: MesWidgetSpec[] = [
+  { capKey: "mes_missions.view", to: "/mes-missions", icon: Briefcase, title: "Mes missions pose", subtitle: "Montage & démontage planifiés" },
+  { capKey: "mes_chantiers.view", to: "/mes-chantiers", icon: HardHat, title: "Mes chantiers", subtitle: "Équipes où je suis casté" },
+  { capKey: "mes_contrats.view", to: "/mes-contrats", icon: FileSignature, title: "Mes contrats", subtitle: "Lecture & signature" },
+  { capKey: "mes_propositions.view", to: "/mes-propositions", icon: ClipboardCheck, title: "Mes propositions", subtitle: "Créneaux à confirmer" },
+  { capKey: "mes_swaps.view", to: "/mes-swaps", icon: ArrowLeftRight, title: "Mes échanges", subtitle: "Swaps avec collègues" },
+];
+
+function MesWidgetCard({ spec }: { spec: MesWidgetSpec }) {
+  const canSee = useCapability(spec.capKey);
+  if (!canSee) return null;
+  const Icon = spec.icon;
+  return (
+    <Card>
+      <CardContent className="flex items-center gap-4 p-4">
+        <div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary/10 text-primary">
+          <Icon className="h-5 w-5" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium">{spec.title}</p>
+          <p className="text-xs text-muted-foreground truncate">{spec.subtitle}</p>
+        </div>
+        <Button asChild variant="outline" size="sm">
+          <Link to={spec.to} search={{ scope: "mine" }}>Ouvrir</Link>
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
 function HomePage() {
   const [items, setItems] = useState<InboxItem[]>([]);
   const [loading, setLoading] = useState(true);
