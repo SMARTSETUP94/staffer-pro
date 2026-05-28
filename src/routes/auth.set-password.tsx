@@ -152,7 +152,7 @@ function SetPasswordPage() {
       }
       await refreshRoles();
       toast.success("Mot de passe créé", { description: "Bienvenue chez Setup Paris !" });
-      navigate({ to: "/aujourdhui" });
+      navigate({ to: "/" });
     } catch (e) {
       console.error("[set-password] uncaught:", e);
       toast.error("Une erreur inattendue est survenue", {

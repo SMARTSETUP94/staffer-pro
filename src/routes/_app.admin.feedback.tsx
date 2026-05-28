@@ -86,7 +86,7 @@ function FeedbackAdminPage() {
   useEffect(() => {
     if (!isAdmin) {
       // Défense-en-profondeur : beforeLoad redirige déjà, mais on garde un fallback.
-      navigate({ to: "/dashboard" });
+      navigate({ to: "/" });
     }
   }, [isAdmin, navigate]);
 

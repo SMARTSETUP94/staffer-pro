@@ -117,7 +117,7 @@ function MonEquipeTypePage() {
 
   useEffect(() => {
     if (!authLoading && !isAdminOrChef) {
-      navigate({ to: "/dashboard" });
+      navigate({ to: "/" });
     }
   }, [authLoading, isAdminOrChef, navigate]);
 
@@ -185,7 +185,7 @@ function MonEquipeTypePage() {
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
           <Button asChild variant="ghost" size="sm" className="mb-1 -ml-2 h-7">
-            <Link to="/dashboard"><ArrowLeft className="mr-1 h-3.5 w-3.5" /> Dashboard</Link>
+            <Link to="/"><ArrowLeft className="mr-1 h-3.5 w-3.5" /> Dashboard</Link>
           </Button>
           <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
             <Users className="h-6 w-6 text-primary" /> Mon équipe type

@@ -119,7 +119,7 @@ function UtilisateursPage() {
   const [capsDebug, setCapsDebug] = useState<UserRow | null>(null);
 
   useEffect(() => {
-    if (!loading && !canAdmin) navigate({ to: "/dashboard" });
+    if (!loading && !canAdmin) navigate({ to: "/" });
   }, [loading, canAdmin, navigate]);
 
   useEffect(() => {

@@ -30,7 +30,7 @@ function EmailPreviewPage() {
   );
 
   useEffect(() => {
-    if (!loading && !canView) navigate({ to: "/dashboard" });
+    if (!loading && !canView) navigate({ to: "/" });
   }, [loading, canView, navigate]);
 
   const html = useMemo(

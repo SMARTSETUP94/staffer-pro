@@ -51,7 +51,7 @@ const planningSearchSchema = z.object({
 const LEGACY_TAB_REDIRECTS: Record<string, string> = {
   flotte: "/logistique/vehicules-planning",
   vehicules: "/logistique/vehicules-planning",
-  budget: "/dashboard",
+  budget: "/",
   feuilleroute: "/export/feuille-de-route",
 };
 
