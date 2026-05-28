@@ -4,6 +4,7 @@ import { FileUp, Loader2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import { useCapability } from "@/hooks/use-capability";
 import { useChargesAffaires } from "@/hooks/use-charges-affaires";
 import { PageHeader } from "@/components/PageHeader";
 import { PageBreadcrumbs } from "@/components/PageBreadcrumbs";
@@ -57,7 +58,8 @@ async function sha256Hex(buf: ArrayBuffer): Promise<string> {
 }
 
 function OpportunitesImportPage() {
-  const { user, isAdminOrChef } = useAuth();
+  const { user } = useAuth();
+  const canImport = useCapability("section.admin");
   const { data: charges } = useChargesAffaires();
   const fileRef = useRef<HTMLInputElement>(null);
   const [rows, setRows] = useState<RowState[]>([]);
@@ -264,12 +266,12 @@ function OpportunitesImportPage() {
     });
   }
 
-  if (!isAdminOrChef) {
+  if (!canImport) {
     return (
       <div className="mx-auto max-w-3xl p-6">
         <Card>
           <CardContent className="p-6 text-sm text-muted-foreground">
-            Accès réservé aux chefs de chantier et administrateurs.
+            Accès réservé aux administrateurs.
           </CardContent>
         </Card>
       </div>

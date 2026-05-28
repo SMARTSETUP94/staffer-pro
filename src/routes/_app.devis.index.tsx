@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Loader2, Search, ArrowRight, Trash2, FileText, ExternalLink, Plus, Pencil } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth-context";
+import { useCapability } from "@/hooks/use-capability";
 import { PageHeader } from "@/components/PageHeader";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -54,7 +54,8 @@ export const Route = createFileRoute("/_app/devis/")({
 });
 
 function DevisPage() {
-  const { isAdminOrChef } = useAuth();
+  const canCreateDevis = useCapability("action.create_devis");
+  const canDeleteDevis = useCapability("section.admin");
   const [rows, setRows] = useState<DevisRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -182,7 +183,7 @@ function DevisPage() {
         title="Devis"
         description="Tous les devis importés ou créés. Édition par affaire, suppression avec détachement des assignations."
         actions={
-          isAdminOrChef && (
+          canCreateDevis && (
             <Button asChild className="rounded-xl">
               <Link to="/devis/import">
                 <Plus className="h-4 w-4" />
@@ -297,7 +298,7 @@ function DevisPage() {
                   <TableCell className="text-right font-mono text-sm text-muted-foreground">{r.nb_assignations}</TableCell>
                   <TableCell>
                     <div className="flex justify-end gap-1">
-                      {isAdminOrChef && (
+                      {canCreateDevis && (
                         <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg" title="Modifier le devis"
                           onClick={() => setEditForm(r)}>
                           <Pencil className="h-4 w-4" />
@@ -310,7 +311,7 @@ function DevisPage() {
                           </Link>
                         </Button>
                       )}
-                      {isAdminOrChef && (
+                      {canDeleteDevis && (
                         <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-destructive"
                           onClick={() => setToDelete(r)} title="Supprimer">
                           <Trash2 className="h-4 w-4" />

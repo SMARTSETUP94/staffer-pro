@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useRef, useState } from "react";
 import { FileUp, Loader2, Upload, AlertCircle, CheckCircle2, XCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth-context";
+import { useCapability } from "@/hooks/use-capability";
 import { useMetiers } from "@/hooks/use-metiers";
 import { PageHeader } from "@/components/PageHeader";
 import { PageBreadcrumbs } from "@/components/PageBreadcrumbs";
@@ -38,7 +38,7 @@ interface RowState extends ParsedEmployeRow {
 }
 
 function EmployesImportPage() {
-  const { isAdminOrChef } = useAuth();
+  const canImport = useCapability("section.admin");
   const { metiers, byId } = useMetiers();
   const fileRef = useRef<HTMLInputElement>(null);
   const [rows, setRows] = useState<RowState[]>([]);
@@ -242,10 +242,10 @@ function EmployesImportPage() {
     });
   };
 
-  if (!isAdminOrChef) {
+  if (!canImport) {
     return (
       <div className="mx-auto max-w-3xl p-6">
-        <Card><CardContent className="p-6 text-sm text-muted-foreground">Accès réservé aux chefs de chantier et administrateurs.</CardContent></Card>
+        <Card><CardContent className="p-6 text-sm text-muted-foreground">Accès réservé aux administrateurs.</CardContent></Card>
       </div>
     );
   }
