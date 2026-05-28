@@ -272,6 +272,10 @@ Modèle staffing 3 niveaux (Sprint A) : `affaire_equipe(affaire_id, employe_id, 
 - [Lot L2 — Seed matrice capabilities](mem://features/lot-l2-seed-capabilities) — 59 caps DB + helpers SQL + catalogue front + integrity tests + backfill atelier_chef (26 mai 2026)
 - [Batch 9.7 — Mobile wiring & role sync](mem://features/batch-97-mobile-wiring) — AppRole 11 rôles + nav employé/chef + cleanup routes orphelines (25-26 mai 2026)
 - [Lot L3 — Refonte permissions](mem://features/lot-l3-refonte-permissions) — Audit terminé 26/05. L3.0 users multi-select + L3.1 fab filter + L3.2-5 refacto isAdmin/isChef → user_has_cap(). ~30-40h
+- [Lot L3b2 — Migration routes capability-driven](mem://features/lot-l3b2-migration-routes) — L3b2-A/B/C + sidebar cleanup + test cohérence + L5-A safe + L5-A-bis Phase 1 + L4c. Livré 28 mai 2026.
+- [L5-A safe — Suppression chef_metier_scoped code](mem://constraints/auth-context-no-role-bridge) — 44 lignes role_capabilities, cleanup ~10 fichiers TS, suppression use-chef-scope + ScopedAccessBanner. Voir aussi mem://debts/e2e-seed-passwords-strategy.
+- [L5-A-bis Phase 1 — DROP DB chef_metier_scoped](mem://features/l5a-bis-phase1-db-cleanup) — DROP 14 policies + 2 helpers SQL, simplification is_chef_or_admin() + replace_user_roles(). 28 mai 2026.
+- [L4c — Cleanup stubs routes orphelines](mem://features/l4c-cleanup-stubs) — Commentaires obsolètes RoleGuard + audit-heures + fixtures tests. 35/35 verts. 28 mai 2026.
 - [Dette : Scope UI admin permissions](mem://debts/l2-scope-ui-admin-permissions) — Édition du champ `scope` (all/team/metier/own/none) non supportée dans `/admin/permissions` UI. Attend L3.
 - [Dette : Users multi-select /parametres/utilisateurs](mem://debts/users-multi-select-parametres) — UI mono-select 3 rôles vs DB multi 11 rôles. Verrou critique résolu par L3.0.
 - [L4b — Sidebar unique cap-driven](mem://features/l4b-sidebar-unique) — AppSidebar refondu 7 sections (Mon poste/Pilotage/Production/Logistique/Équipes/RH/Admin), "Aujourd'hui" toujours visible, drawer auto sur mobile via shadcn Sidebar
