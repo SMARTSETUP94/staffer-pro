@@ -75,6 +75,12 @@ import {
 } from "@/lib/opportunite-delete";
 import { TypologieFutureSelect } from "@/components/typologie/TypologieFutureSelect";
 import type { AffaireTypologie } from "@/lib/affaire-typologie";
+import {
+  actionUrgency,
+  URGENCY_CLASS,
+  fmtActionDate,
+  jalonLabel,
+} from "@/lib/opportunite-action-urgency";
 
 const PAGE_SIZE = 50;
 /** v0.29.1 — Debounce passé de 300ms à 800ms (spec hotfix). */
