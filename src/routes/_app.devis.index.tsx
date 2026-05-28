@@ -54,7 +54,8 @@ export const Route = createFileRoute("/_app/devis/")({
 });
 
 function DevisPage() {
-  const { isAdminOrChef } = useAuth();
+  const canCreateDevis = useCapability("action.create_devis");
+  const canDeleteDevis = useCapability("section.admin");
   const [rows, setRows] = useState<DevisRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
