@@ -5190,6 +5190,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      resolve_notification_link: {
+        Args: { _raw_link: string; _user_id: string }
+        Returns: string
+      }
       resolve_saisie_heures: {
         Args: {
           p_affaire_id: string
