@@ -93,6 +93,7 @@ export function PipelineCommercialBloc() {
   const { data: charges } = useChargesAffaires();
   const [scope, setScope] = useState<"mine" | "all">("all");
   const [opps, setOpps] = useState<OppRow[]>([]);
+  const [nextActionByAffaire, setNextActionByAffaire] = useState<Map<string, string>>(new Map());
   const [loading, setLoading] = useState(true);
 
   // Init scope par défaut une fois user chargé
