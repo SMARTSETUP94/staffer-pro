@@ -250,6 +250,14 @@ function HomePage() {
 
       {canSeeHeuresWidget && <HeuresSemaineWidget />}
 
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {MES_WIDGETS.map((spec) => (
+          <MesWidgetCard key={spec.capKey} spec={spec} />
+        ))}
+      </div>
+
+
+
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Filter className="h-4 w-4" />
