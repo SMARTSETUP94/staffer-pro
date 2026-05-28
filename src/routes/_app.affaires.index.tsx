@@ -4,7 +4,7 @@ import { z } from "zod";
 import { useEffect, useMemo, useState } from "react";
 import { Plus, Search, Loader2, ArrowRight, Pencil, RotateCcw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth-context";
+import { useCapability } from "@/hooks/use-capability";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
