@@ -125,7 +125,27 @@ export function PipelineCommercialBloc() {
       if (error) {
         setOpps([]);
       } else {
-        setOpps((data ?? []) as unknown as OppRow[]);
+        const rows = (data ?? []) as unknown as OppRow[];
+        setOpps(rows);
+        // Bloc 10.4 — fetch next pending action per opp pour badge urgence
+        const oppIds = rows.map((r) => r.id);
+        if (oppIds.length > 0) {
+          const { data: actions } = await supabase
+            .from("opportunite_actions")
+            .select("affaire_id, prochaine_action_due_le")
+            .in("affaire_id", oppIds)
+            .not("prochaine_action_due_le", "is", null)
+            .order("prochaine_action_due_le", { ascending: true });
+          if (!cancelled && actions) {
+            const map = new Map<string, string>();
+            (actions as Array<{ affaire_id: string; prochaine_action_due_le: string }>).forEach(
+              (a) => {
+                if (!map.has(a.affaire_id)) map.set(a.affaire_id, a.prochaine_action_due_le);
+              },
+            );
+            setNextActionByAffaire(map);
+          }
+        }
       }
       setLoading(false);
     })();
