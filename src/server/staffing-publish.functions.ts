@@ -238,7 +238,7 @@ export const publishStaffingPlan = createServerFn({ method: "POST" })
           type: "staffing_publie" as const,
           titre: "Nouveau staffing publié",
           message: `${aff?.numero ?? ""} — ${aff?.nom ?? ""} : créneaux du ${fmt(dMin)} au ${fmt(dMax)}.`,
-          lien: `/ma-semaine`,
+          lien: `/`,
           metadata: { plan_id: planId, affaire_id: plan.affaire_id },
         }));
 
