@@ -75,6 +75,12 @@ import {
 } from "@/lib/opportunite-delete";
 import { TypologieFutureSelect } from "@/components/typologie/TypologieFutureSelect";
 import type { AffaireTypologie } from "@/lib/affaire-typologie";
+import {
+  actionUrgency,
+  URGENCY_CLASS,
+  fmtActionDate,
+  jalonLabel,
+} from "@/lib/opportunite-action-urgency";
 
 const PAGE_SIZE = 50;
 /** v0.29.1 — Debounce passé de 300ms à 800ms (spec hotfix). */
@@ -535,6 +541,9 @@ export function OpportunitesTableurView({
               <th className="px-2 py-2 text-left font-semibold">Taille</th>
               <th className="px-2 py-2 text-left font-semibold">Typo. future</th>
               <th className="px-2 py-2 text-left font-semibold">Statut</th>
+              <th className="px-2 py-2 text-left font-semibold">Prochaine action</th>
+              <th className="px-2 py-2 text-left font-semibold">Dernier jalon</th>
+              <th className="px-2 py-2 text-left font-semibold">Actions</th>
               <th className="px-2 py-2 text-left font-semibold">Code 5XXX</th>
               <th className="px-2 py-2 text-left font-semibold">Montage</th>
               <th className="px-2 py-2 text-left font-semibold">Démontage</th>
@@ -546,7 +555,7 @@ export function OpportunitesTableurView({
             {pageRows.length === 0 && (
               <tr>
                 <td
-                  colSpan={canManage ? 12 : 11}
+                  colSpan={canManage ? 15 : 14}
                   className="px-4 py-8 text-center text-xs text-muted-foreground"
                 >
                   Aucune opportunité ne correspond aux filtres.
@@ -706,6 +715,38 @@ export function OpportunitesTableurView({
                         ))}
                       </SelectContent>
                     </Select>
+                  </td>
+                  {/* Bloc 10.4 — Prochaine action (read-only) */}
+                  <td className="px-2 py-1">
+                    {row.next_action_due_le ? (() => {
+                      const urg = actionUrgency(row.next_action_due_le);
+                      return (
+                        <span
+                          className={cn(
+                            "inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold whitespace-nowrap",
+                            urg ? URGENCY_CLASS[urg] : "bg-muted text-muted-foreground border-border",
+                          )}
+                        >
+                          {fmtActionDate(row.next_action_due_le)}
+                        </span>
+                      );
+                    })() : (
+                      <span className="text-[10px] text-muted-foreground">—</span>
+                    )}
+                  </td>
+                  {/* Bloc 10.4 — Dernier jalon atteint */}
+                  <td className="px-2 py-1">
+                    {row.last_jalon_etape ? (
+                      <span className="inline-flex items-center rounded-full border border-border bg-muted/40 px-2 py-0.5 text-[10px] font-medium text-foreground whitespace-nowrap">
+                        {jalonLabel(row.last_jalon_etape)}
+                      </span>
+                    ) : (
+                      <span className="text-[10px] text-muted-foreground">—</span>
+                    )}
+                  </td>
+                  {/* Bloc 10.4 — Total actions */}
+                  <td className="px-2 py-1 text-center text-xs tabular-nums text-muted-foreground">
+                    {row.actions_count ?? 0}
                   </td>
                   {/* Code 5XXX — éditable conditionnel (v0.29.1) */}
                   <td className="px-2 py-1 font-mono text-xs">

@@ -1,6 +1,6 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Sparkles, Trophy, GripVertical, MoreVertical, Trash2 } from "lucide-react";
+import { Sparkles, Trophy, GripVertical, MoreVertical, Trash2, Clock } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,6 +20,11 @@ import type { ChargeAffaires } from "@/hooks/use-charges-affaires";
 import { TypologieBadge } from "@/components/typologie/TypologieBadge";
 import { getAffaireTypologie, type AffaireTypologie } from "@/lib/affaire-typologie";
 import { checkCanDeleteOpportunite } from "@/lib/opportunite-delete";
+import {
+  actionUrgency,
+  URGENCY_CLASS,
+  fmtActionDate,
+} from "@/lib/opportunite-action-urgency";
 
 export interface OpportuniteCardData {
   id: string;
@@ -33,6 +38,10 @@ export interface OpportuniteCardData {
   statut_opportunite: "a_faire" | "envoye" | "gagne" | "perdu" | "termine";
   /** v0.29.2 — typologie cible déclarée (override le getAffaireTypologie 9XXX par défaut). */
   typologie_future?: AffaireTypologie | null;
+  /** Bloc 10.4 — enrichissement listing. */
+  next_action_due_le?: string | null;
+  last_jalon_etape?: string | null;
+  actions_count?: number | null;
 }
 
 interface Props {
@@ -181,6 +190,23 @@ export function OpportuniteCard({
               </span>
             )}
           </div>
+
+          {opp.next_action_due_le && (() => {
+            const urg = actionUrgency(opp.next_action_due_le);
+            if (!urg) return null;
+            return (
+              <div
+                className={cn(
+                  "mt-2 inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold",
+                  URGENCY_CLASS[urg],
+                )}
+                title={urg === "overdue" ? "Action en retard" : urg === "soon" ? "Action due bientôt" : "Action planifiée"}
+              >
+                <Clock className="h-2.5 w-2.5" />
+                Action {urg === "overdue" ? "en retard" : "due"} · {fmtActionDate(opp.next_action_due_le)}
+              </div>
+            );
+          })()}
 
           {isGagne && onSign && (
             <Button

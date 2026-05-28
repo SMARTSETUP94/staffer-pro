@@ -84,6 +84,10 @@ export interface TableurRow {
   notes: string | null;
   /** v0.29.2 — Typologie cible déclarée par le CA (pré-remplit le préfixe à la signature). */
   typologie_future: AffaireTypologie | null;
+  /** Bloc 10.4 — enrichissement listing (read-only). */
+  next_action_due_le?: string | null;
+  last_jalon_etape?: string | null;
+  actions_count?: number | null;
 }
 
 /** Calcule la cellule cible pour Tab (right-then-down) ou Enter (down). */

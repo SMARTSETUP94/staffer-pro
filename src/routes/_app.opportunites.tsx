@@ -126,6 +126,9 @@ interface OppRowFull extends OpportuniteCardData {
   date_montage: string | null;
   date_demontage: string | null;
   typologie_future: AffaireTypologie | null;
+  next_action_due_le: string | null;
+  last_jalon_etape: string | null;
+  actions_count: number | null;
 }
 
 function OpportunitesPage() {
@@ -201,13 +204,7 @@ function OpportunitesPage() {
     let cancelled = false;
     setLoading(true);
     supabase
-      .from("affaires")
-      .select(
-        "id, numero, client, nom, charge_affaires_id, taille, date_opportunite, notes, statut_opportunite, date_pat, date_montage, date_demontage, typologie_future",
-      )
-      .eq("phase", "opportunite")
-      .is("archived_at", null)
-      .order("date_opportunite", { ascending: false, nullsFirst: false })
+      .rpc("list_opportunites_active")
       .then(({ data, error }) => {
         if (cancelled) return;
         if (error) {
@@ -215,7 +212,12 @@ function OpportunitesPage() {
           setLoading(false);
           return;
         }
-        setOpps((data ?? []) as OppRowFull[]);
+        const rows = (data ?? []).map((r: Record<string, unknown>) => ({
+          ...(r as object),
+          statut_opportunite: r.statut_opportunite ?? "a_faire",
+          nom: r.nom ?? r.client ?? "",
+        })) as OppRowFull[];
+        setOpps(rows);
         setLoading(false);
       });
     return () => {

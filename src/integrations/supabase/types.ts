@@ -5131,6 +5131,29 @@ export type Database = {
         Args: { _d1: string; _d2: string }
         Returns: number
       }
+      list_opportunites_active: {
+        Args: never
+        Returns: {
+          actions_count: number
+          charge_affaires_id: string
+          client: string
+          date_demontage: string
+          date_montage: string
+          date_opportunite: string
+          date_pat: string
+          id: string
+          last_jalon_date_atteinte: string
+          last_jalon_etape: string
+          next_action_due_le: string
+          next_action_text: string
+          nom: string
+          notes: string
+          numero: string
+          statut_opportunite: Database["public"]["Enums"]["opportunite_statut"]
+          taille: Database["public"]["Enums"]["opportunite_taille"]
+          typologie_future: string
+        }[]
+      }
       mes_affaires_chef: {
         Args: { _employe_id: string }
         Returns: {
