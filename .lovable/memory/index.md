@@ -173,7 +173,7 @@ Modèle staffing 3 niveaux (Sprint A) : `affaire_equipe(affaire_id, employe_id, 
 90. ⏳ **9.4 Heures auto + photos** (~5-7h) — pré-remplissage depuis events arrivee/depart + auto-tag photos.
 91. ⏳ **9.5 Signaler problème + 7 specs E2E** (~5-7h) — bouton signaler → recordMissionEvent(probleme) + notif chef + 7e spec multi-mission/jour.
 
-### Bloc 10 — Fiche opportunité (reste ~15h, 10.1→10.4 livrés le 28 mai)
+### Bloc 10 — Fiche opportunité (reste ~15h, 10.1→10.5 livrés le 28 mai)
 92. ⏳ **10.5 Visites chantier** (~5h) — Table `affaires_visites` + CRUD + UI + storage photos. Reporté depuis 10.3.
 93. ⏳ **10.6 Échantillons matériaux** (~4h) — Table `affaires_echantillons` + CRUD + UI.
 94. ⏳ **10.7 Moodboard / artefacts** (~5h) — Réutilisation `affaire_documents` catégories `moodboard|esquisse_commerciale` + galerie.
