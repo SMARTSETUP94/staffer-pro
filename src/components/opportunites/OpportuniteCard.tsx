@@ -56,8 +56,13 @@ export function OpportuniteCard({
   onDelete,
   draggable = true,
 }: Props) {
+  const navigate = useNavigate();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: opp.id, disabled: !draggable, data: { opp } });
+
+  const goToFiche = () => {
+    navigate({ to: "/opportunites/$affaireId", params: { affaireId: opp.id } });
+  };
 
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
