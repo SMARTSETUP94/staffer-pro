@@ -52,6 +52,7 @@ const PHASE_ORDER: EquipePhase[] = [
 function EquipeChantiersPage() {
   const { user } = useAuth();
   const fetchFn = useServerFn(getMesEquipesChantiers);
+  const { scope } = Route.useSearch();
 
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["mes-equipes-chantiers"],
