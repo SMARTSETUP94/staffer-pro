@@ -44,6 +44,41 @@ interface RoadmapPlanned {
 
 const RELEASES: RoadmapRelease[] = [
   {
+    date: "2026-05-28",
+    version: "L5 + Bloc 10.1 (LIVRÉ)",
+    title: "🔐 Refonte permissions capability-driven 100% + Fondations DB Opportunités",
+    entries: [
+      {
+        type: "refactor",
+        area: "L5-A + L5-A-bis — Purge rôle chef_metier_scoped",
+        title: "Suppression applicative + DB du rôle obsolète chef_metier_scoped",
+        description:
+          "L5-A safe : suppression de 44 lignes role_capabilities et ~10 fichiers (auth-context, labels, RoleSwitcher, admin-actions, tests). L5-A-bis Phase 1 : migration DB DROP 14 policies RLS + recreation sans branche is_chef_metier_scoped(), simplification is_chef_or_admin() (admin OR chef_chantier uniquement). 0 impact runtime (0 user avec ce rôle).",
+      },
+      {
+        type: "refactor",
+        area: "L5-B — Fermeture bridge auth-context",
+        title: "Purge booléens isAdmin/isChef + ESLint anti-régression + 11 specs E2E",
+        description:
+          "Suppression des 12 booléens legacy (isAdmin, isChef, isAdminOrChef, isRh, isCommercial…) de auth-context.tsx. Remplacement par useCapability() sur 11 call-sites. Règle ESLint no-restricted-syntax verrouillant toute réintroduction. 11 comptes E2E seedés (admin/chef/employé/commercial/BE/atelier_chef/atelier_metier/logistique/poseur/rh). 4 nouvelles specs sidebar-capability (rh, atelier_metier, logistique, poseur). Bridge réduit aux 8 champs essentiels.",
+      },
+      {
+        type: "feature",
+        area: "L3b2 — Hotfix sidebar↔route + catalog capabilities",
+        title: "Alignement sidebar/routes + 12 caps manquantes + cohérence tests",
+        description:
+          "Correction 4 mismatches sidebar↔routes (/rh, /rh/contrats, /admin/permissions, /admin/feature-flags). 12 capabilities ajoutées au catalogue (admin.permissions.manage, admin.feature_flags.manage, heures.audit…). Test sidebar-cap-coherence.ts (2 tests, 4 mismatches résolus).",
+      },
+      {
+        type: "feature",
+        area: "Bloc 10.1 — Fondations DB",
+        title: "Tables opportunite_actions + opportunite_jalons + RPC sign_opportunite",
+        description:
+          "Timeline commerciale (10 types d'actions : email, rdv, relance, devis_envoye…) et pipeline 4 jalons (qualification, devis_envoye, negociation, signature). RPC sign_opportunite() atomique : advisory lock + calcul prochain 5XXX libre + UPDATE phase='signe'. 4 capabilities (create/edit/delete/read.mine). Seed 784 jalons (196 opps × 4). Tests pgTAP : race condition + RLS.",
+      },
+    ],
+  },
+  {
     date: "2026-05-26",
     version: "v0.51.0 (Bloc 9 — LIVRÉ)",
     title: "📱 Carte mission pose mobile — J'arrive/Je pars, heures auto, photos, signalement",
