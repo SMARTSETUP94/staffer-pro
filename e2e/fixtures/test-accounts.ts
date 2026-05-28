@@ -26,7 +26,12 @@ export type TestRole =
   | "employe_mobile"
   | "commercial"
   | "bureau_etude"
-  | "atelier_chef";
+  | "atelier_chef"
+  // L5-B clôture — 4 rôles manquants pour matrice complète.
+  | "rh"
+  | "atelier_metier"
+  | "logistique"
+  | "poseur";
 
 export interface TestAccount {
   role: TestRole;
