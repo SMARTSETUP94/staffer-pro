@@ -170,7 +170,7 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border">
-        <Link to="/aujourdhui" className="flex items-center px-2 py-4">
+        <Link to="/" className="flex items-center px-2 py-4">
           {collapsed ? (
             <span className="brand-dot mx-auto" aria-label="Staffing by Setup Paris" />
           ) : (
