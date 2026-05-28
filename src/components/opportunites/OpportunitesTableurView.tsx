@@ -535,6 +535,9 @@ export function OpportunitesTableurView({
               <th className="px-2 py-2 text-left font-semibold">Taille</th>
               <th className="px-2 py-2 text-left font-semibold">Typo. future</th>
               <th className="px-2 py-2 text-left font-semibold">Statut</th>
+              <th className="px-2 py-2 text-left font-semibold">Prochaine action</th>
+              <th className="px-2 py-2 text-left font-semibold">Dernier jalon</th>
+              <th className="px-2 py-2 text-left font-semibold">Actions</th>
               <th className="px-2 py-2 text-left font-semibold">Code 5XXX</th>
               <th className="px-2 py-2 text-left font-semibold">Montage</th>
               <th className="px-2 py-2 text-left font-semibold">Démontage</th>
@@ -546,7 +549,7 @@ export function OpportunitesTableurView({
             {pageRows.length === 0 && (
               <tr>
                 <td
-                  colSpan={canManage ? 12 : 11}
+                  colSpan={canManage ? 15 : 14}
                   className="px-4 py-8 text-center text-xs text-muted-foreground"
                 >
                   Aucune opportunité ne correspond aux filtres.
