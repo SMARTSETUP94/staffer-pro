@@ -33,7 +33,11 @@ type RoleName =
   | "chef_metier_scoped"
   | "commercial"
   | "bureau_etude"
-  | "atelier_chef";
+  | "atelier_chef"
+  | "rh"
+  | "atelier_metier"
+  | "logistique"
+  | "poseur";
 
 interface Seed {
   email: string;
@@ -111,6 +115,39 @@ const seeds: Seed[] = [
     fullName: "E2E Atelier Chef",
     prenom: "E2E",
     nom: "AtelierChef",
+  },
+  // L5-B clôture — 4 rôles manquants pour matrice complète.
+  {
+    email: optional("E2E_RH_EMAIL", "rh.test@setup-paris.fr"),
+    password: optional("E2E_RH_PASSWORD", "Rh-E2E-2026!"),
+    role: "rh",
+    fullName: "E2E RH",
+    prenom: "E2E",
+    nom: "Rh",
+  },
+  {
+    email: optional("E2E_ATELIER_METIER_EMAIL", "atelier_metier.test@setup-paris.fr"),
+    password: optional("E2E_ATELIER_METIER_PASSWORD", "AtelierMetier-E2E-2026!"),
+    role: "atelier_metier",
+    fullName: "E2E Atelier Métier",
+    prenom: "E2E",
+    nom: "AtelierMetier",
+  },
+  {
+    email: optional("E2E_LOGISTIQUE_EMAIL", "logistique.test@setup-paris.fr"),
+    password: optional("E2E_LOGISTIQUE_PASSWORD", "Logistique-E2E-2026!"),
+    role: "logistique",
+    fullName: "E2E Logistique",
+    prenom: "E2E",
+    nom: "Logistique",
+  },
+  {
+    email: optional("E2E_POSEUR_EMAIL", "poseur.test@setup-paris.fr"),
+    password: optional("E2E_POSEUR_PASSWORD", "Poseur-E2E-2026!"),
+    role: "poseur",
+    fullName: "E2E Poseur",
+    prenom: "E2E",
+    nom: "Poseur",
   },
 ];
 

@@ -56,6 +56,15 @@ jobs:
           E2E_CHEF_PASSWORD: ${{ secrets.E2E_CHEF_PASSWORD }}
           E2E_EMPLOYE_EMAIL: ${{ secrets.E2E_EMPLOYE_EMAIL }}
           E2E_EMPLOYE_PASSWORD: ${{ secrets.E2E_EMPLOYE_PASSWORD }}
+          # L5-B clôture — 4 rôles supplémentaires (défauts en code si secret absent).
+          E2E_RH_EMAIL: ${{ secrets.E2E_RH_EMAIL }}
+          E2E_RH_PASSWORD: ${{ secrets.E2E_RH_PASSWORD }}
+          E2E_ATELIER_METIER_EMAIL: ${{ secrets.E2E_ATELIER_METIER_EMAIL }}
+          E2E_ATELIER_METIER_PASSWORD: ${{ secrets.E2E_ATELIER_METIER_PASSWORD }}
+          E2E_LOGISTIQUE_EMAIL: ${{ secrets.E2E_LOGISTIQUE_EMAIL }}
+          E2E_LOGISTIQUE_PASSWORD: ${{ secrets.E2E_LOGISTIQUE_PASSWORD }}
+          E2E_POSEUR_EMAIL: ${{ secrets.E2E_POSEUR_EMAIL }}
+          E2E_POSEUR_PASSWORD: ${{ secrets.E2E_POSEUR_PASSWORD }}
         run: bunx playwright test --shard=${{ matrix.shard }}/5
 
       # Blob report : nécessaire pour le merge cross-shards.

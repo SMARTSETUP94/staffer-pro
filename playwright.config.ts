@@ -115,6 +115,27 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"], storageState: "e2e/.auth/atelier-chef.json" },
       testMatch: /.*\.atelier-chef\.spec\.ts/,
     },
+    // L5-B clôture — 4 rôles manquants.
+    {
+      name: "rh-desktop",
+      use: { ...devices["Desktop Chrome"], storageState: "e2e/.auth/rh.json" },
+      testMatch: /.*\.rh\.spec\.ts/,
+    },
+    {
+      name: "atelier-metier-desktop",
+      use: { ...devices["Desktop Chrome"], storageState: "e2e/.auth/atelier-metier.json" },
+      testMatch: /.*\.atelier-metier\.spec\.ts/,
+    },
+    {
+      name: "logistique-desktop",
+      use: { ...devices["Desktop Chrome"], storageState: "e2e/.auth/logistique.json" },
+      testMatch: /.*\.logistique\.spec\.ts/,
+    },
+    {
+      name: "poseur-mobile",
+      use: { ...devices["Pixel 7"], storageState: "e2e/.auth/poseur.json" },
+      testMatch: /.*\.poseur\.spec\.ts/,
+    },
   ],
 
   webServer: isCI
