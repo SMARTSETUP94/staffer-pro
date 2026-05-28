@@ -20,6 +20,7 @@ import { normalizeForMatch as normalize } from "@/lib/string-normalize";
 import { generateContratV1 } from "@/lib/contrats-signature";
 import { useMesAffairesChefIds } from "@/hooks/use-mes-affaires-chef";
 import { useAuth } from "@/lib/auth-context";
+import { useCapability } from "@/hooks/use-capability";
 
 interface EmployeOption {
   id: string;
@@ -49,7 +50,7 @@ interface MetierOption {
  *    Admin n'est jamais filtré (override implicite via isAdmin).
  */
 export function StafferMobileForm({ scopeToChef = false }: { scopeToChef?: boolean } = {}) {
-  const { isAdmin } = useAuth();
+  const isAdmin = useCapability("staffer.mobile.admin_override");
   const { ids: affaireIdsChef, isLoading: idsLoading } = useMesAffairesChefIds();
   const enforceChefScope = scopeToChef && !isAdmin;
 

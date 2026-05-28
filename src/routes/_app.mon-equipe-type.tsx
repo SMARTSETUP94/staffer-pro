@@ -8,6 +8,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Users, ArrowLeft, Info, Loader2, Building2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import { useCapability } from "@/hooks/use-capability";
 import { useResolvedEmploye } from "@/hooks/use-resolved-employe";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -101,7 +102,9 @@ function fmtDate(iso: string | null): string {
 
 function MonEquipeTypePage() {
   const navigate = useNavigate();
-  const { isAdmin, isAdminOrChef, loading: authLoading } = useAuth();
+  const { loading: authLoading } = useAuth();
+  const isAdminOrChef = useCapability("dashboard.team.view");
+  const isAdmin = useCapability("admin.roadmap.manage");
   const { employeId: chefId } = useResolvedEmploye();
 
   const [typologie, setTypologie] = useState<string>("all");

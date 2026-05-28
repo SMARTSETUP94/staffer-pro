@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAffaireDocuments } from "@/hooks/use-affaire-documents";
 import { useAuth } from "@/lib/auth-context";
+import { useCapability } from "@/hooks/use-capability";
 import { DocumentThumbnail } from "./DocumentThumbnail";
 import { PhotoLightbox } from "./PhotoLightbox";
 import { AffaireDocumentUploader } from "./AffaireDocumentUploader";
@@ -14,7 +15,8 @@ interface Props {
 }
 
 export function AffaireDocumentsGallery({ affaireId, variant = "desktop", canUpload = true }: Props) {
-  const { user, isAdmin } = useAuth();
+  const { user } = useAuth();
+  const isAdmin = useCapability("affaire.documents.delete");
   const {
     documents,
     loading,

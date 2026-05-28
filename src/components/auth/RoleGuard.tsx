@@ -35,9 +35,11 @@ export function RoleGuard({
   redirectTo = "/aujourdhui",
   toastMessage,
 }: RoleGuardProps) {
-  const { rolesLoaded, isAdmin, isAdminOrChef } = useAuth();
+  const { rolesLoaded, roles } = useAuth();
   const toastShownRef = useRef(false);
 
+  const isAdmin = roles.includes("admin");
+  const isAdminOrChef = isAdmin || roles.includes("chef_chantier");
   const allowed = required === "admin" ? isAdmin : isAdminOrChef;
 
   useEffect(() => {

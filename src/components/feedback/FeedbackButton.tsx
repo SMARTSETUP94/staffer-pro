@@ -5,6 +5,7 @@ import { toPng } from "html-to-image";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import { useCapability } from "@/hooks/use-capability";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -47,7 +48,8 @@ interface Props {
 }
 
 export function FeedbackButton({ floating = true, variant = "icon", className }: Props) {
-  const { user, isAdminOrChef } = useAuth();
+  const { user } = useAuth();
+  const isAdminOrChef = useCapability("feedback.create");
   const path = useRouterState({ select: (s) => s.location.pathname });
   const [open, setOpen] = useState(false);
   const [type, setType] = useState<FeedbackType>("bug");

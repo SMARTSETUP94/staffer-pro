@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-context";
+import { useCapability } from "@/hooks/use-capability";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
@@ -80,7 +81,7 @@ export function TrajetDialog({
   defaultAdresseDepart, defaultAdresseArrivee, defaultCategorie, defaultAffaireId,
   affaires, employesLivreurs, onSaved,
 }: Props) {
-  const { isAdmin } = useAuth();
+  const isAdmin = useCapability("flotte.trajet.delete");
   const { vehicules } = useVehicules();
   const { adresses } = useAdressesFavorites();
 

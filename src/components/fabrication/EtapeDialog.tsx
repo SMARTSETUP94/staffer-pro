@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Loader2, History, RotateCcw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import { useCapability } from "@/hooks/use-capability";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -56,7 +57,8 @@ interface Props {
 const STATUT_OPTIONS: FabricationEtapeStatut[] = ["a_faire", "en_cours", "termine", "non_applicable"];
 
 export function EtapeDialog({ objet, etape, open, onOpenChange, onSaved }: Props) {
-  const { user, isAdmin } = useAuth();
+  const { user } = useAuth();
+  const isAdmin = useCapability("fabrication.etape.admin_override");
   const { profiles } = useProfilesWithRoles();
   const [statut, setStatut] = useState<FabricationEtapeStatut>(etape.statut);
   const [assigneeId, setAssigneeId] = useState<string>(etape.assignee_id ?? "none");

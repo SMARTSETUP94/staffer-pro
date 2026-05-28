@@ -23,6 +23,7 @@ import {
 } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import { useCapability } from "@/hooks/use-capability";
 import { useChargesAffaires } from "@/hooks/use-charges-affaires";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -82,7 +83,8 @@ function fmtShort(iso: string | null) {
  * Toggle "Moi / Tous" — défaut user connecté (admin = Tous).
  */
 export function PipelineCommercialBloc() {
-  const { user, isAdmin } = useAuth();
+  const { user } = useAuth();
+  const isAdmin = useCapability("dashboard.commerce.view");
   const { data: charges } = useChargesAffaires();
   const [scope, setScope] = useState<"mine" | "all">("all");
   const [opps, setOpps] = useState<OppRow[]>([]);

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import { useCapability } from "@/hooks/use-capability";
 import { useChargesAffaires } from "@/hooks/use-charges-affaires";
 import type { OpportuniteStatut, OpportuniteTaille } from "@/lib/opportunites";
 
@@ -34,7 +35,8 @@ interface PipelineData {
  * v0.26.0
  */
 export function useOpportunitesPipeline(): PipelineData {
-  const { user, isAdmin } = useAuth();
+  const { user } = useAuth();
+  const isAdmin = useCapability("opportunites.read.all");
   const { data: charges } = useChargesAffaires();
   const [scope, setScope] = useState<"mine" | "all">(isAdmin ? "all" : "mine");
   const [opps, setOpps] = useState<OppRow[]>([]);
