@@ -1,6 +1,6 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Sparkles, Trophy, GripVertical, MoreVertical, Trash2 } from "lucide-react";
+import { Sparkles, Trophy, GripVertical, MoreVertical, Trash2, Clock } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,6 +20,11 @@ import type { ChargeAffaires } from "@/hooks/use-charges-affaires";
 import { TypologieBadge } from "@/components/typologie/TypologieBadge";
 import { getAffaireTypologie, type AffaireTypologie } from "@/lib/affaire-typologie";
 import { checkCanDeleteOpportunite } from "@/lib/opportunite-delete";
+import {
+  actionUrgency,
+  URGENCY_CLASS,
+  fmtActionDate,
+} from "@/lib/opportunite-action-urgency";
 
 export interface OpportuniteCardData {
   id: string;
