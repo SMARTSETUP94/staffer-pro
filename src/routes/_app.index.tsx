@@ -20,6 +20,12 @@ import {
   Loader2,
   Clock3,
   PartyPopper,
+  Briefcase,
+  HardHat,
+  FileSignature,
+  ClipboardCheck,
+  ArrowLeftRight,
+
 } from "lucide-react";
 import { format, startOfWeek } from "date-fns";
 import { fr } from "date-fns/locale";
