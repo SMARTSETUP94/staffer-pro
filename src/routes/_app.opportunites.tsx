@@ -206,6 +206,7 @@ function OpportunitesPage() {
         "id, numero, client, nom, charge_affaires_id, taille, date_opportunite, notes, statut_opportunite, date_pat, date_montage, date_demontage, typologie_future",
       )
       .eq("phase", "opportunite")
+      .is("archived_at", null)
       .order("date_opportunite", { ascending: false, nullsFirst: false })
       .then(({ data, error }) => {
         if (cancelled) return;
