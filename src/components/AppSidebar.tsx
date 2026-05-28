@@ -66,7 +66,7 @@ function buildSections(
       items: [
         // Toujours visible — pas de cap.
         { title: "Aujourd'hui", url: "/aujourdhui", icon: Clock },
-        { title: "Ma semaine", url: "/ma-semaine", icon: LayoutDashboard, cap: "section.ma_semaine" },
+        
         { title: "Mes missions pose", url: "/mes-missions", icon: PackageCheck, cap: "section.ma_semaine" },
         { title: "Mes équipes chantiers", url: "/mes-chantiers", icon: UsersRound, cap: "section.ma_semaine" },
         { title: "Mes heures", url: "/mes-heures", icon: Clock, cap: "heures.personnelles.saisir" },
