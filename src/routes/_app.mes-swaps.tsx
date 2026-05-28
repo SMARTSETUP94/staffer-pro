@@ -107,6 +107,10 @@ function MesSwapsPage() {
         }
       />
 
+      <ScopeSelector capKey="mes_swaps.view" routeId="/_app/mes-swaps" />
+      <ScopeNotImplementedBanner scope={scope} />
+
+
       <div className="flex items-center justify-between gap-3">
         <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)}>
           <TabsList>
