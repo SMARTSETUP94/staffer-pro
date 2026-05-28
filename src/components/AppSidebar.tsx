@@ -2,7 +2,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import type { LucideIcon } from "lucide-react";
 import {
   Clock, Calendar, Building2, Users, FileDown, ClipboardCheck, LogOut, CalendarOff,
-  UserCircle, LayoutDashboard, FileText, Trophy, Map, ClipboardList,
+  UserCircle, FileText, Trophy, Map, ClipboardList,
   Truck, Palette, Warehouse, Hammer, Wrench, BadgeCheck, Lightbulb,
   FileSignature, Inbox, PackageCheck, UsersRound, Briefcase, Settings,
 } from "lucide-react";
@@ -66,7 +66,7 @@ function buildSections(
       items: [
         // Toujours visible — pas de cap.
         { title: "Aujourd'hui", url: "/aujourdhui", icon: Clock },
-        { title: "Ma semaine", url: "/ma-semaine", icon: LayoutDashboard, cap: "section.ma_semaine" },
+        
         { title: "Mes missions pose", url: "/mes-missions", icon: PackageCheck, cap: "section.ma_semaine" },
         { title: "Mes équipes chantiers", url: "/mes-chantiers", icon: UsersRound, cap: "section.ma_semaine" },
         { title: "Mes heures", url: "/mes-heures", icon: Clock, cap: "heures.personnelles.saisir" },
@@ -76,7 +76,7 @@ function buildSections(
     {
       label: "Pilotage",
       items: [
-        { title: "Tableau de bord", url: "/dashboard", icon: LayoutDashboard, cap: "section.tableau_de_bord" },
+        
         { title: "Inbox", url: "/inbox", icon: Inbox, cap: "section.inbox" },
         { title: "Planning fab", url: "/planning", icon: Calendar, cap: "section.planning_fab" },
         { title: "Pipeline opportunités", url: "/opportunites", icon: Trophy, cap: "section.pipeline_opportunites" },
