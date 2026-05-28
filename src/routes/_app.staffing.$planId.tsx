@@ -1,7 +1,7 @@
 // v0.35.5 / Sprint 5 — Page Gantt staffing + Wizard + Publication + Historique
 // v0.35.x BATCH — Toolbar batch edition (sliders + shifts) + autosave 2 min idle.
 import { useEffect, useRef, useState } from "react";
-import { createFileRoute, Link, Navigate, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { ArrowLeft, History, Send, Zap, ListChecks, Trash2, MoreVertical } from "lucide-react";
 import {
@@ -10,7 +10,8 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
-import { useAuth } from "@/lib/auth-context";
+import { useCapability } from "@/hooks/use-capability";
+import { requireCapability } from "@/lib/capability-guard";
 import { supabase } from "@/integrations/supabase/client";
 import {
   GanttInteractif,
@@ -51,6 +52,7 @@ interface ExpressSearch {
 }
 
 export const Route = createFileRoute("/_app/staffing/$planId")({
+  beforeLoad: () => requireCapability("section.planning_fab"),
   component: StaffingPlanPage,
   validateSearch: (search: Record<string, unknown>): ExpressSearch => ({
     express: typeof search.express === "string" ? search.express : undefined,
@@ -67,7 +69,8 @@ export const Route = createFileRoute("/_app/staffing/$planId")({
 
 function StaffingPlanPage() {
   const { planId } = Route.useParams();
-  const { isAdminOrChef, rolesLoaded, isAdmin } = useAuth();
+  const canManagePlan = useCapability("section.planning_fab");
+  const canDeletePlan = useCapability("action.delete_plan_fab");
   const vocab = useVocab();
   const [planData, setPlanData] = useState<PlanData | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -136,8 +139,7 @@ function StaffingPlanPage() {
   const navigate = useNavigate();
   const [bannerDismissed, setBannerDismissed] = useState(false);
 
-  if (!rolesLoaded) return null;
-  if (!isAdminOrChef) return <Navigate to="/dashboard" />;
+  // Guard de capability appliqué dans beforeLoad (requireCapability("section.planning_fab"))
 
   const objetsLabel: Record<string, string> = {};
   if (planData) {
@@ -280,7 +282,7 @@ function StaffingPlanPage() {
               </Button>
             );
           })()}
-          {isAdmin && affaireMeta && (
+          {canDeletePlan && affaireMeta && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -410,7 +412,7 @@ function StaffingPlanPage() {
       )}
       <PlanHistoryDrawer
         planId={planId}
-        canRestore={isAdminOrChef}
+        canRestore={canManagePlan}
         open={historyOpen}
         onOpenChange={setHistoryOpen}
         onRestored={() => setRefreshKey((k) => k + 1)}
