@@ -1,136 +1,163 @@
-# Plan L5-A — Suppression définitive de `chef_metier_scoped`
+# Refonte routes universelles + purge bridge auth
 
-État DB : 0 user, 44 lignes `role_capabilities` orphelines, valeur encore dans l'enum `app_role`, 14 policies RLS et 2 helpers SQL dépendent encore d'elle.
+Validé par utilisateur : Go full refonte (L5-B → L6-A → L6-B → L6-C).
+Total estimé : ~15h. Découpé en lots commitables indépendamment.
 
-Décision produit déjà actée : on supprime la notion "chef scopé par affaire" — `use-chef-scope.ts` + `ScopedAccessBanner` + leurs consommateurs partent.
+---
 
-## 1. Migration SQL unique atomique (1 transaction)
+## L5-B — Purge bridge `auth-context` (3-4h)
 
-Découpage en 1 seule migration parce que toutes les étapes sont interdépendantes (DROP TYPE bloqué tant que policies/fonctions y réfèrent, mais ALTER POLICY exige DROP+CREATE).
+### Audit (terminé)
 
-### 1.1 Refacto 14 policies RLS
+**12 call-sites du bridge `useAuth().isXxx` :**
 
-Pour chaque policy, retirer la branche `OR (is_chef_metier_scoped() AND <quelque_chose>)`. La sémantique restante = admin + chef_chantier global.
+| Fichier | Bool consommé | Cap candidate |
+|---|---|---|
+| `src/routes/_app.roadmap.tsx:3380` | `isAdmin` | `admin.roadmap.manage` (à créer si absente) ou `section.admin` |
+| `src/routes/_app.mon-equipe-type.tsx:104` | `isAdmin`, `isAdminOrChef` | `dashboard.team.view` |
+| `src/routes/_app.heures-analyse.tsx:232` | `isAdmin` | `heures.analyse.view` |
+| `src/components/auth/RoleGuard.tsx:38` | `isAdmin`, `isAdminOrChef` | **à supprimer**, remplacer par `<CapabilityGuard cap="…" />` |
+| `src/components/flotte/TrajetDialog.tsx:83` | `isAdmin` | `flotte.trajet.delete` |
+| `src/components/affaire-documents/AffaireDocumentsGallery.tsx:17` | `isAdmin` | `affaire.documents.delete` |
+| `src/components/feedback/FeedbackButton.tsx:50` | `isAdminOrChef` | `feedback.create` (déjà large) |
+| `src/components/fabrication/EtapeDialog.tsx:59` | `isAdmin` | `fabrication.etape.admin_override` |
+| `src/components/staffer/StafferMobileForm.tsx:52` | `isAdmin` | `staffer.mobile.admin_override` |
+| `src/components/dashboard/PipelineCommercialBloc.tsx:85` | `isAdmin` | `dashboard.commerce.view` |
+| `src/hooks/use-opportunites-pipeline.ts:37` | `isAdmin` | `opportunites.read.all` |
+| `src/lib/preview-context.tsx:53` | `isAdmin`, `roles` | **garder** — c'est le PreviewRoleProvider, doit lire le rôle réel pour bypass |
 
-Tables impactées :
-- `affaire_equipe` — `affaire_equipe_modify_chef_admin`
-- `assignation_objets` — insert + delete
-- `assignations` — insert + update + delete
-- `employes` — `employes_select_self_or_chef` (perd branche scoped employés)
-- `fabrication_objet_equipe` — `foe_modify_chef_admin`
-- `fabrication_objets` — `fabrication_objets_modify_chef_admin`
-- `heures_saisies` — select + insert + update + delete (4)
-- `storage.objects` — `fab_photos_storage_select_scoped`
+### Plan d'exécution L5-B
 
-Pattern : `DROP POLICY ...; CREATE POLICY ... (...)` avec la branche scoped retirée.
+**Étape 1 — Créer les caps manquantes** (~30min)
+- Vérifier table `role_capabilities` quelles caps existent déjà
+- Migration SQL si besoin pour : `admin.roadmap.manage`, `heures.analyse.view`, `flotte.trajet.delete`, `affaire.documents.delete`, `fabrication.etape.admin_override`, `staffer.mobile.admin_override`, `opportunites.read.all` (réutiliser existantes quand possible)
 
-### 1.2 DROP helpers SQL
+**Étape 2 — Migrer les 11 call-sites** (`preview-context.tsx` reste) (~1h30)
+- Remplacer `const { isXxx } = useAuth()` par `const canXxx = useCapability("xxx.cap")`
+- Adapter le rendu conditionnel
 
-```sql
-DROP FUNCTION public.is_chef_metier_scoped();
-DROP FUNCTION public.is_chef_metier_scoped_for_employe(uuid);
+**Étape 3 — Supprimer `RoleGuard.tsx`** (~30min)
+- Remplacer ses usages par `<CapabilityGuard>` existant (ou créer si absent)
+- Supprimer fichier + test
+
+**Étape 4 — Purger les bools de `auth-context.tsx`** (~30min)
+- Garder : `user`, `session`, `roles`, `loading`, `rolesLoaded`, `passwordSetDone/At`, `isInviteStatus`, `profileCompleted`, `signIn/Out/Up`, `refreshRoles`
+- Supprimer : `isAdmin`, `isChef`, `isChefGlobal`, `isAdminOrChef`, `isRh`, `isCommercial`, `isBureauEtude`, `isAtelierChef`, `isAtelierMetier`, `isLogistique`, `isPoseur`
+- `preview-context.tsx` lit `roles` directement (pas via bool)
+
+**Étape 5 — Règle ESLint anti-régression** (~30min)
+```js
+// eslint.config.js
+"no-restricted-syntax": ["error", {
+  selector: "MemberExpression[object.callee.name='useAuth'][property.name=/^is(Admin|Chef|Rh|Commercial|BureauEtude|AtelierChef|AtelierMetier|Logistique|Poseur)/]",
+  message: "Bridge auth supprimé — utiliser useCapability(...)"
+}]
 ```
 
-### 1.3 DROP + recréation fonctions typées `app_role`
+**Étape 6 — Tests**
+- Build + typecheck verts
+- Exécuter `src/lib/__tests__/auth-flows.test.ts` + `auth-redirect-helpers.test.ts`
+- Adapter si nécessaire
 
-Signatures dépendent du type → drop obligatoire avant DROP TYPE :
-- `has_role(uuid, app_role) → boolean` — recréée à l'identique
-- `replace_user_roles(uuid, app_role[]) → void` — recréée SANS la ligne `AND role <> 'chef_metier_scoped'`
-- `get_user_effective_caps(uuid) → TABLE(..., source_roles app_role[])` — recréée à l'identique
+---
 
-### 1.4 Cleanup data + enum
+## L6-A — Fusion home unifiée `/` (5-6h)
 
-```sql
-DELETE FROM public.role_capabilities WHERE role = 'chef_metier_scoped';
-ALTER TABLE public.user_roles      ALTER COLUMN role TYPE text;
-ALTER TABLE public.role_capabilities ALTER COLUMN role TYPE text;
-DROP TYPE public.app_role;
-CREATE TYPE public.app_role AS ENUM (
-  'admin','rh','commercial','bureau_etude','chef_chantier',
-  'atelier_chef','atelier_metier','chef_pose','poseur','logistique','employe'
-);
-ALTER TABLE public.user_roles      ALTER COLUMN role TYPE public.app_role USING role::public.app_role;
-ALTER TABLE public.role_capabilities ALTER COLUMN role TYPE public.app_role USING role::public.app_role;
+### État actuel
+- `/dashboard` — admin/chef (widgets équipe)
+- `/dashboard-employe` — employe (variante safe)
+- `/aujourdhui` — employe (inbox + missions jour, cible login)
+- `/ma-semaine` — employe desktop (planning perso, cible login)
+
+### Cible
+**Une seule route `/` (`_app.index.tsx`)** rendant un orchestrateur de widgets :
+
+```tsx
+function HomePage() {
+  return (
+    <DashboardLayout>
+      <Widget cap="dashboard.commerce.view"><PipelineCommercialBloc /></Widget>
+      <Widget cap="dashboard.team.view"><EquipeKpiBloc /></Widget>
+      <Widget cap="dashboard.inbox.view"><InboxBloc /></Widget>
+      <Widget cap="dashboard.semaine.view"><MaSemaineBloc /></Widget>
+      <Widget cap="dashboard.missions.view"><MissionsJourBloc /></Widget>
+      {/* etc. */}
+    </DashboardLayout>
+  );
+}
 ```
 
-### 1.5 GRANTs (contrat mémoire core : NEVER REVOKE EXECUTE)
+`<Widget cap="…">` rend null si la cap n'est pas accordée (zéro fuite RGPD car composant jamais instancié).
 
-```sql
-GRANT EXECUTE ON FUNCTION public.has_role(uuid, public.app_role)        TO authenticated, service_role;
-GRANT EXECUTE ON FUNCTION public.replace_user_roles(uuid, public.app_role[]) TO authenticated, service_role;
-GRANT EXECUTE ON FUNCTION public.get_user_effective_caps(uuid)          TO authenticated, service_role;
-```
+### Étapes
+1. **Inventaire widgets existants** — lister tous les widgets utilisés par les 4 pages source, définir leur cap
+2. **Migration SQL caps widgets** — créer les caps `dashboard.xxx.view`, assigner aux rôles selon matrice actuelle :
+   - admin : tout
+   - chef_chantier : tout sauf `dashboard.commerce.view` (déjà la règle Core)
+   - rh : `dashboard.rh.view`
+   - employe : `dashboard.inbox.view`, `dashboard.semaine.view`, `dashboard.missions.view` uniquement
+3. **Créer `_app.index.tsx`** orchestrateur
+4. **Redirects 301** : `/dashboard`, `/dashboard-employe`, `/aujourdhui`, `/ma-semaine` → `<Navigate to="/" replace />`
+5. **Test E2E role-smoke** : vérifier qu'employé sur `/` ne voit aucun widget équipe (DOM inspection)
 
-## 2. Cleanup TypeScript (parallel writes)
+### Anti-régression RGPD
+La règle actuelle "employé ne doit JAMAIS voir agrégat équipe" est garantie au niveau widget (cap), plus au niveau route. Test E2E `e2e/dashboard-rgpd.spec.ts` à créer : login employé → `/` → assert `queryByTestId('widget-equipe')` is null.
 
-### Suppressions de fichiers
-- `src/hooks/use-chef-scope.ts`
-- `src/components/auth/ScopedAccessBanner.tsx`
+---
 
-### Patches
-| Fichier | Action |
-|---|---|
-| `src/lib/auth-context.tsx` | Retirer `"chef_metier_scoped"` du type `AppRole`, props `isChefMetierScoped` + `isChefAny`, leurs dérivations lignes 277-278 et value object lignes 291-298 |
-| `src/lib/labels.ts` | Retirer du type union, de `USER_ROLE_LABELS`, de `USER_ROLE_OPTIONS` |
-| `src/components/atoms/RoleSwitcher.tsx` | Retirer de `ROLE_PRIORITY` |
-| `src/lib/admin-actions.ts` | Retirer ligne 560 + commentaire ligne 599 |
-| `src/lib/email-templates/invitation.ts` | Retirer du type union ligne 9 + if ligne 44 |
-| `src/lib/dashboard/types.ts` | Retirer preset `chef_metier_scoped` lignes 81-83 |
-| `src/routes/_app.validation-heures.tsx` | Retirer import `useChefScope` + `ScopedAccessBanner` + leur usage (lignes 39-40, 74, 262) |
-| `src/routes/_app.affaires.index.tsx` | Idem (lignes 26-27, 94, 226) |
-| `src/routes/_app.admin.feature-flags.tsx` | Retirer mention dans le commentaire ligne 7 |
-| `src/routes/_app.audit-heures.tsx` | Retirer mention dans le commentaire ligne 41 |
-| `src/routes/_app.admin.utilisateurs.tsx` | Retirer commentaire ligne 69 |
-| `src/lib/objet-fiche-permissions.ts` | Mettre à jour commentaires lignes 12 + 69 |
-| `src/server/objet-equipe-mutations.functions.ts` | Commentaire ligne 5 |
-| `src/components/dashboard/widgets/MonEquipeTypeWidget.tsx` | Commentaire ligne 5 |
-| `src/lib/__tests__/labels.test.ts` | Retirer assertions sur `chef_metier_scoped` lignes 20 + 44 |
-| `src/lib/__tests__/objet-fiche-permissions.test.ts` | Retirer du tableau lignes 70 + 77 |
+## L6-B — Fusion `/mes-*` via `?scope=` (4-5h)
 
-`src/integrations/supabase/types.ts` : régénéré automatiquement après la migration, ne pas y toucher.
+### État actuel
+6 routes : `/mes-missions`, `/mes-chantiers`, `/mes-heures`, `/mes-contrats`, `/mes-propositions`, `/mes-swaps`
 
-## 3. Vérifications post-livraison
+### Cible
+6 routes universelles avec query param `?scope=mine|team|all` :
+- `/missions?scope=mine|team|all`
+- `/chantiers?scope=mine|team|all`
+- `/heures?scope=mine|team|all`
+- `/contrats?scope=mine|team|all`
+- `/propositions?scope=mine|team|all`
+- `/swaps?scope=mine|team|all`
 
-```bash
-rg -n "chef_metier_scoped" -g "*.ts" -g "*.tsx" src/   # doit être vide
-```
+### Règles scope
+- Validation zod : `scope: fallback(z.enum(["mine","team","all"]), "mine").default("mine")`
+- Sélecteur scope visible uniquement si user a cap `xxx.scope.team` ou `xxx.scope.all`
+- Sidebar libellés conservés ("Mes heures") mais URL = `/heures?scope=mine`
+- RLS Supabase filtre déjà côté DB : si user demande `scope=team` sans droits, requête retourne 0 lignes (pas de fuite)
 
-```sql
--- enum
-SELECT array_agg(unnest::text ORDER BY unnest::text)
-FROM unnest(enum_range(NULL::app_role));
--- doit retourner SANS 'chef_metier_scoped'
+### Étapes
+1. Pour chaque feature, créer la route universelle (copy/paste de `/mes-xxx` + ajout `validateSearch`)
+2. Ajouter `<ScopeSelector>` cappé dans le header de page
+3. Adapter le hook de fetch pour passer `scope` au server fn
+4. Redirects 301 `/mes-xxx` → `/xxx?scope=mine`
+5. MAJ sidebar (`AppSidebar.tsx`) avec nouvelles URL + linkOptions
 
--- policies
-SELECT count(*) FROM pg_policies
-WHERE qual LIKE '%chef_metier_scoped%' OR with_check LIKE '%chef_metier_scoped%';
--- doit retourner 0
+---
 
--- helpers
-SELECT count(*) FROM pg_proc WHERE proname LIKE 'is_chef_metier_scoped%';
--- doit retourner 0
-```
+## L6-C — Nettoyage routing legacy (2h)
 
-Build + typecheck doivent passer (TanStack regen types après migration).
+1. Supprimer `src/lib/post-login-routing.ts` (90 lignes)
+2. Tous les `navigate({to: ...})` post-login pointent sur `/`
+3. Supprimer routes legacy : `_app.dashboard.tsx`, `_app.dashboard-employe.tsx`, `_app.aujourdhui.tsx`, `_app.ma-semaine.tsx`, `_app.mes-*.tsx` (6)
+4. MAJ `e2e/helpers/auth.ts` et 4 specs role-smoke (URLs cibles)
+5. MAJ memories :
+   - `mem://features/route-ma-semaine` → DELETE
+   - `mem://features/post-login-routing-module` → DELETE
+   - `mem://features/dashboard-role-guard` → UPDATE (cap widget-level, pas route)
+   - `mem://constraints/role-routes-bannies` → CREATE (règle Core)
+6. MAJ index.md Core : remplacer ligne "Routing post-login" par "Routing post-login : toujours `/`. Widgets gated par cap dans `<DashboardLayout>`."
 
-## 4. Hors scope (reportés)
+---
 
-- **L5-B** (sprint dédié) : suppression complète du bridge layer `auth-context` (les ~12 autres bools `isAdmin/isChef/isRh/...`), règle ESLint `no-restricted-syntax` + extension MemberExpression, 11 specs E2E par rôle + seed users test, adapter `e2e/helpers/auth.ts`.
-- **Flag `sidebar_capability_v1`** : déjà actif globalement, rien à faire.
+## Risques identifiés
 
-## 5. Risques résiduels
+1. **Mapping bool → cap imprécis (L5-B)** : si `isAdmin` cachait en réalité 2 intentions différentes, je peux régresser. Mitigation : revue PR par lot de 3-4 fichiers.
+2. **Widget non-cappé sur `/` (L6-A)** : fuite RGPD. Mitigation : test E2E par rôle + lint custom (futur).
+3. **Bookmarks utilisateurs cassés** : redirects 301 dans L6-C les rattrapent.
+4. **Code-splitting du orchestrateur `/` (L6-A)** : bundle plus gros pour employés qui n'ont que 3 widgets. Mitigation : lazy() chaque widget.
 
-- Les 14 ALTER POLICY retirent un accès qui était potentiellement encore consommé par RLS pour des users avec `chef_metier_scoped`. Mais : **0 user n'a ce rôle en DB**, donc en pratique aucun comportement runtime ne change.
-- L'enum recreation via `text` détour fonctionne sur Supabase Postgres standard.
-- Si la migration échoue à mi-parcours, la transaction rollback automatiquement.
+---
 
-## 6. Format de livraison
+## Prochaine étape demandée
 
-- 1 migration SQL atomique (1 appel `supabase--migration`)
-- ~17 patches TS + 2 suppressions (en parallèle après migration approuvée)
-- Mise à jour `mem://index.md` roadmap : L5-A livré, L5-B en attente
-- Pas de test E2E nouveau (reporté en L5-B)
-
-**Volume estimé** : 1 migration ~250 lignes SQL + ~17 patches TS = 2-3h Lovable d'exécution une fois validé.
-
-Tu valides ?
+Valider le **mapping bool → cap** dans la table ci-dessus avant migration. Si OK, je commence par L5-B étape 1 (vérification caps existantes en DB).
