@@ -385,10 +385,17 @@ export function PipelineCommercialBloc() {
                   const caName = opp.charge_affaires_id
                     ? chargesById.get(opp.charge_affaires_id)?.name ?? "—"
                     : "Non assigné";
+                  const dueIso = nextActionByAffaire.get(opp.id) ?? null;
+                  const urgency = actionUrgency(dueIso);
+                  const overdue = urgency === "overdue";
                   return (
                     <li
                       key={opp.id}
-                      className="flex items-center justify-between gap-2 rounded-md border border-border/50 px-2.5 py-1.5 hover:bg-muted/30"
+                      className={`flex items-center justify-between gap-2 rounded-md border px-2.5 py-1.5 hover:bg-muted/30 ${
+                        overdue
+                          ? "border-rose-300 dark:border-rose-900 bg-rose-50/40 dark:bg-rose-950/20"
+                          : "border-border/50"
+                      }`}
                     >
                       <div className="flex min-w-0 items-center gap-2">
                         <span className="text-sm" aria-hidden>
@@ -405,9 +412,20 @@ export function PipelineCommercialBloc() {
                           </p>
                         </div>
                       </div>
-                      <Badge variant="outline" className="shrink-0 text-[10px] tabular-nums">
-                        {ageDays}j
-                      </Badge>
+                      <div className="flex shrink-0 items-center gap-1.5">
+                        {urgency && (
+                          <Badge
+                            variant="outline"
+                            className={`text-[10px] tabular-nums ${URGENCY_CLASS[urgency]}`}
+                            title="Prochaine action commerciale"
+                          >
+                            {fmtActionDate(dueIso)}
+                          </Badge>
+                        )}
+                        <Badge variant="outline" className="text-[10px] tabular-nums">
+                          {ageDays}j
+                        </Badge>
+                      </div>
                     </li>
                   );
                 })}
