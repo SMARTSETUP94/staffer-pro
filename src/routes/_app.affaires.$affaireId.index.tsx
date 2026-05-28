@@ -3,7 +3,7 @@ import { Fragment, useEffect, useMemo, useState } from "react";
 import { Loader2, TrendingUp, TrendingDown, AlertTriangle, CheckCircle2, ClipboardCheck, Clock, Send, Hammer, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth-context";
+import { useCapability } from "@/hooks/use-capability";
 import { useMetiers } from "@/hooks/use-metiers";
 import { MetierBadge } from "@/components/MetierBadge";
 import { DualProgress } from "@/components/ui/dual-progress";
@@ -27,7 +27,7 @@ export const Route = createFileRoute("/_app/affaires/$affaireId/")({
 function AffaireSynthesePage() {
   const { affaireId } = Route.useParams();
   const { byId } = useMetiers();
-  const { isAdminOrChef } = useAuth();
+  const canManageAffaires = useCapability("section.affaires");
   const [lines, setLines] = useState<ConsoLine[]>([]);
   const [loading, setLoading] = useState(true);
   const [notes, setNotes] = useState<string | null>(null);
@@ -339,7 +339,7 @@ function AffaireSynthesePage() {
         )}
       </section>
 
-      {isAdminOrChef && (
+      {canManageAffaires && (
         <section>
           <p className="overline mb-3 flex items-center gap-2">
             <Hammer className="h-3 w-3" />— Heures Montage / Démontage chantier
@@ -387,7 +387,7 @@ function AffaireSynthesePage() {
         </section>
       )}
 
-      {isAdminOrChef && (
+      {canManageAffaires && (
         <section>
           <p className="overline mb-3 flex items-center gap-2">
             <Hammer className="h-3 w-3" />— Dates clés chantier
@@ -435,7 +435,7 @@ function AffaireSynthesePage() {
         </section>
       )}
 
-      {isAdminOrChef && <AffaireInfosPoseSection affaireId={affaireId} />}
+      {canManageAffaires && <AffaireInfosPoseSection affaireId={affaireId} />}
 
 
       {notes && (

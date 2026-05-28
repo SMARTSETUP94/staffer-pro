@@ -2,7 +2,7 @@ import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-r
 import { useEffect, useState } from "react";
 import { ArrowLeft, Loader2, MapPin, User, Calendar, Lock, Unlock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth-context";
+
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -39,7 +39,8 @@ function AffaireDetailLayout() {
   const { affaireId } = Route.useParams();
   const routerState = useRouterState();
   const path = routerState.location.pathname;
-  const { isAdmin, isAdminOrChef } = useAuth();
+  const canManageAffaires = useCapability("section.affaires");
+  const canAdminReopen = useCapability("section.admin");
   const [affaire, setAffaire] = useState<AffaireDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [confirmAction, setConfirmAction] = useState<"close" | "reopen" | null>(null);
@@ -167,9 +168,9 @@ function AffaireDetailLayout() {
         </div>
         <div className="flex flex-col items-end gap-2">
           <StatutPill statut={affaire.statut} />
-          {isAdminOrChef && affaire.statut !== "annule" && (
+          {canManageAffaires && affaire.statut !== "annule" && (
             affaire.statut === "termine" ? (
-              isAdmin && (
+              canAdminReopen && (
                 <Button size="sm" variant="outline" className="rounded-xl"
                   onClick={() => setConfirmAction("reopen")}>
                   <Unlock className="mr-1.5 h-3.5 w-3.5" /> Rouvrir

@@ -4,7 +4,7 @@ import { z } from "zod";
 import { useEffect, useMemo, useState } from "react";
 import { Plus, Search, Loader2, ArrowRight, Pencil, RotateCcw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth-context";
+import { useCapability } from "@/hooks/use-capability";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -88,7 +88,7 @@ export const Route = createFileRoute("/_app/affaires/")({
 });
 
 function AffairesPage() {
-  const { isAdminOrChef } = useAuth();
+  const canManageAffaires = useCapability("section.affaires");
   const navigate = useNavigate({ from: "/affaires/" });
   const { typo: typoFilter } = Route.useSearch();
   const { isScoped } = useChefScope();
@@ -215,7 +215,7 @@ function AffairesPage() {
         title="Affaires"
         description={`${rows.filter((r) => r.statut === "en_cours").length} en cours sur ${rows.length} fiche(s).`}
         actions={
-          isAdminOrChef && (
+          canManageAffaires && (
             <Button onClick={openCreate} className="rounded-xl bg-primary text-primary-foreground hover:bg-primary/90">
               <Plus className="mr-2 h-4 w-4" /> Nouvelle affaire
             </Button>
@@ -331,7 +331,7 @@ function AffairesPage() {
                     {formatPeriode(r.date_debut, r.date_fin_prevue)}
                   </TableCell>
                   <TableCell>
-                    {isAdminOrChef ? (
+                    {canManageAffaires ? (
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <button type="button" className="cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-full" title="Changer le statut">
@@ -360,7 +360,7 @@ function AffairesPage() {
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center justify-end gap-1">
-                      {isAdminOrChef && isClotured && (
+                      {canManageAffaires && isClotured && (
                         <Button
                           variant="ghost"
                           size="sm"
@@ -371,7 +371,7 @@ function AffairesPage() {
                           <RotateCcw className="mr-1 h-3.5 w-3.5" /> Réouvrir
                         </Button>
                       )}
-                      {isAdminOrChef && (
+                      {canManageAffaires && (
                         <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg" onClick={() => openEdit(r)}>
                           <Pencil className="h-4 w-4" />
                         </Button>
