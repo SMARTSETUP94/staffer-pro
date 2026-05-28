@@ -294,7 +294,11 @@ export const updateJalonStatus = createServerFn({ method: "POST" })
   .inputValidator((input: z.infer<typeof UPDATE_JALON>) => UPDATE_JALON.parse(input))
   .handler(async ({ data, context }) => {
     const { supabase } = context;
-    const patch: Record<string, string | null> = {};
+    const patch: {
+      date_prevue?: string | null;
+      date_atteinte?: string | null;
+      notes?: string | null;
+    } = {};
     if (data.date_prevue !== undefined) patch.date_prevue = data.date_prevue;
     if (data.date_atteinte !== undefined) patch.date_atteinte = data.date_atteinte;
     if (data.notes !== undefined) patch.notes = data.notes;
