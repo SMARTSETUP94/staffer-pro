@@ -186,12 +186,12 @@ export const getOpportuniteFiche = createServerFn({ method: "GET" })
     if (authorIds.size > 0) {
       const { data: profs } = await supabase
         .from("profiles")
-        .select("id, display_name, email")
+        .select("id, full_name, email")
         .in("id", Array.from(authorIds));
       (profs ?? []).forEach((p) => {
-        const display = (p as { display_name?: string | null }).display_name;
+        const full = (p as { full_name?: string | null }).full_name;
         const email = (p as { email?: string | null }).email;
-        authorMap.set(p.id as string, display ?? email ?? "");
+        authorMap.set(p.id as string, full ?? email ?? "");
       });
     }
 
