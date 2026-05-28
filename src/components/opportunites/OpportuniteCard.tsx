@@ -191,6 +191,23 @@ export function OpportuniteCard({
             )}
           </div>
 
+          {opp.next_action_due_le && (() => {
+            const urg = actionUrgency(opp.next_action_due_le);
+            if (!urg) return null;
+            return (
+              <div
+                className={cn(
+                  "mt-2 inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold",
+                  URGENCY_CLASS[urg],
+                )}
+                title={urg === "overdue" ? "Action en retard" : urg === "soon" ? "Action due bientôt" : "Action planifiée"}
+              >
+                <Clock className="h-2.5 w-2.5" />
+                Action {urg === "overdue" ? "en retard" : "due"} · {fmtActionDate(opp.next_action_due_le)}
+              </div>
+            );
+          })()}
+
           {isGagne && onSign && (
             <Button
               type="button"
