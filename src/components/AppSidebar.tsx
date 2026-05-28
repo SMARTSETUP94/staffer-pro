@@ -65,7 +65,7 @@ function buildSections(
       label: "Mon poste",
       items: [
         // Toujours visible — pas de cap.
-        { title: "Aujourd'hui", url: "/aujourdhui", icon: Clock },
+        { title: "Aujourd'hui", url: "/", icon: Clock },
         
         { title: "Mes missions pose", url: "/mes-missions", icon: PackageCheck, cap: "section.ma_semaine" },
         { title: "Mes équipes chantiers", url: "/mes-chantiers", icon: UsersRound, cap: "section.ma_semaine" },
