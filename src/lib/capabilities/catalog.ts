@@ -111,6 +111,8 @@ export const CAPABILITY_CATEGORY_LABELS: Record<Group, string> = {
   sections: "Sections (navigation)",
   data: "Données sensibles",
   actions: "Actions",
+  admin: "Administration",
+  affaire: "Affaires & objets",
   inbox: "Inbox (sources d'alerte)",
   mobile: "Mobile",
   casting: "Casting par phase",
