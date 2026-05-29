@@ -86,7 +86,7 @@ function buildSections(
       items: [
         { title: "Chantiers", url: "/affaires", icon: Building2, cap: "section.affaires" },
         { title: "Devis", url: "/devis", icon: FileText, cap: "section.devis" },
-        { title: "Fabrication atelier", url: "/fabrication", icon: Hammer, cap: "section.fabrication" },
+        { title: "Fabrication atelier", url: "/fabrication", icon: Hammer, cap: "section.planning_fab" },
       ],
     },
     {
@@ -94,7 +94,7 @@ function buildSections(
       items: [
         { title: "Véhicules", url: "/flotte", icon: Truck, cap: "section.logistique" },
         { title: "Planning véhicules", url: "/logistique/vehicules-planning", icon: Calendar, cap: "section.logistique" },
-        { title: "Demandes transport", url: "/export/demandes-devis", icon: ClipboardList, cap: "section.logistique" },
+        { title: "Demandes transport", url: "/export/demandes-devis", icon: ClipboardList, cap: "section.admin" },
       ],
     },
     {
