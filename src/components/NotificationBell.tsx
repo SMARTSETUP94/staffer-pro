@@ -1,4 +1,4 @@
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, Link } from "@tanstack/react-router";
 import { Bell, Check, CheckCheck, Trash2 } from "lucide-react";
 import {
   Popover,

@@ -24,6 +24,7 @@ import { Route as AppSaisiePourEquipeRouteImport } from './routes/_app.saisie-po
 import { Route as AppRoadmapRouteImport } from './routes/_app.roadmap'
 import { Route as AppPlanningRouteImport } from './routes/_app.planning'
 import { Route as AppOpportunitesRouteImport } from './routes/_app.opportunites'
+import { Route as AppNotificationsRouteImport } from './routes/_app.notifications'
 import { Route as AppMonEquipeTypeRouteImport } from './routes/_app.mon-equipe-type'
 import { Route as AppMesSwapsRouteImport } from './routes/_app.mes-swaps'
 import { Route as AppMesPropositionsRouteImport } from './routes/_app.mes-propositions'
@@ -162,6 +163,11 @@ const AppPlanningRoute = AppPlanningRouteImport.update({
 const AppOpportunitesRoute = AppOpportunitesRouteImport.update({
   id: '/opportunites',
   path: '/opportunites',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppNotificationsRoute = AppNotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
   getParentRoute: () => AppRoute,
 } as any)
 const AppMonEquipeTypeRoute = AppMonEquipeTypeRouteImport.update({
@@ -533,6 +539,7 @@ export interface FileRoutesByFullPath {
   '/mes-propositions': typeof AppMesPropositionsRoute
   '/mes-swaps': typeof AppMesSwapsRoute
   '/mon-equipe-type': typeof AppMonEquipeTypeRoute
+  '/notifications': typeof AppNotificationsRoute
   '/opportunites': typeof AppOpportunitesRouteWithChildren
   '/planning': typeof AppPlanningRoute
   '/roadmap': typeof AppRoadmapRoute
@@ -612,6 +619,7 @@ export interface FileRoutesByTo {
   '/mes-propositions': typeof AppMesPropositionsRoute
   '/mes-swaps': typeof AppMesSwapsRoute
   '/mon-equipe-type': typeof AppMonEquipeTypeRoute
+  '/notifications': typeof AppNotificationsRoute
   '/opportunites': typeof AppOpportunitesRouteWithChildren
   '/planning': typeof AppPlanningRoute
   '/roadmap': typeof AppRoadmapRoute
@@ -694,6 +702,7 @@ export interface FileRoutesById {
   '/_app/mes-propositions': typeof AppMesPropositionsRoute
   '/_app/mes-swaps': typeof AppMesSwapsRoute
   '/_app/mon-equipe-type': typeof AppMonEquipeTypeRoute
+  '/_app/notifications': typeof AppNotificationsRoute
   '/_app/opportunites': typeof AppOpportunitesRouteWithChildren
   '/_app/planning': typeof AppPlanningRoute
   '/_app/roadmap': typeof AppRoadmapRoute
@@ -778,6 +787,7 @@ export interface FileRouteTypes {
     | '/mes-propositions'
     | '/mes-swaps'
     | '/mon-equipe-type'
+    | '/notifications'
     | '/opportunites'
     | '/planning'
     | '/roadmap'
@@ -857,6 +867,7 @@ export interface FileRouteTypes {
     | '/mes-propositions'
     | '/mes-swaps'
     | '/mon-equipe-type'
+    | '/notifications'
     | '/opportunites'
     | '/planning'
     | '/roadmap'
@@ -938,6 +949,7 @@ export interface FileRouteTypes {
     | '/_app/mes-propositions'
     | '/_app/mes-swaps'
     | '/_app/mon-equipe-type'
+    | '/_app/notifications'
     | '/_app/opportunites'
     | '/_app/planning'
     | '/_app/roadmap'
@@ -1113,6 +1125,13 @@ declare module '@tanstack/react-router' {
       path: '/opportunites'
       fullPath: '/opportunites'
       preLoaderRoute: typeof AppOpportunitesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/notifications': {
+      id: '/_app/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof AppNotificationsRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/mon-equipe-type': {
@@ -1665,6 +1684,7 @@ interface AppRouteChildren {
   AppMesPropositionsRoute: typeof AppMesPropositionsRoute
   AppMesSwapsRoute: typeof AppMesSwapsRoute
   AppMonEquipeTypeRoute: typeof AppMonEquipeTypeRoute
+  AppNotificationsRoute: typeof AppNotificationsRoute
   AppOpportunitesRoute: typeof AppOpportunitesRouteWithChildren
   AppPlanningRoute: typeof AppPlanningRoute
   AppRoadmapRoute: typeof AppRoadmapRoute
@@ -1725,6 +1745,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppMesPropositionsRoute: AppMesPropositionsRoute,
   AppMesSwapsRoute: AppMesSwapsRoute,
   AppMonEquipeTypeRoute: AppMonEquipeTypeRoute,
+  AppNotificationsRoute: AppNotificationsRoute,
   AppOpportunitesRoute: AppOpportunitesRouteWithChildren,
   AppPlanningRoute: AppPlanningRoute,
   AppRoadmapRoute: AppRoadmapRoute,
@@ -1781,12 +1802,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}
