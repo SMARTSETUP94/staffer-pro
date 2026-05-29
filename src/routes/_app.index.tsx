@@ -56,6 +56,7 @@ import {
 } from "@/lib/inbox";
 import { useCapabilitiesSet, useCapability } from "@/hooks/use-capability";
 import { useMesHeures } from "@/hooks/use-mes-heures";
+import { EmployeAujourdhuiView } from "@/components/aujourdhui/EmployeAujourdhuiView";
 
 export const Route = createFileRoute("/_app/")({
   head: () => ({ meta: [{ title: "Accueil — Setup Paris" }] }),
