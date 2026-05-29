@@ -56,6 +56,7 @@ import {
 } from "@/lib/inbox";
 import { useCapabilitiesSet, useCapability } from "@/hooks/use-capability";
 import { useMesHeures } from "@/hooks/use-mes-heures";
+import { EmployeAujourdhuiView } from "@/components/aujourdhui/EmployeAujourdhuiView";
 
 export const Route = createFileRoute("/_app/")({
   head: () => ({ meta: [{ title: "Accueil — Setup Paris" }] }),
@@ -150,6 +151,18 @@ function MesWidgetCard({ spec }: { spec: MesWidgetSpec }) {
 
 
 function HomePage() {
+  const canSeeTeamDashboard = useCapability("dashboard.team.view");
+
+  // Vue employé (terrain) : poseur, peintre, métallier… — pas d'inbox alertes
+  // équipe, mais 3 blocs dédiés (planning semaine + heures + atelier).
+  if (!canSeeTeamDashboard) {
+    return <EmployeAujourdhuiView />;
+  }
+
+  return <AdminChefHomeView />;
+}
+
+function AdminChefHomeView() {
   const [items, setItems] = useState<InboxItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [sourceFilter, setSourceFilter] = useState<"all" | InboxSource>("all");
