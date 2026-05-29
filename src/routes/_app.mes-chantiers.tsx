@@ -32,7 +32,7 @@ export const Route = createFileRoute("/_app/mes-chantiers")({
     const r = s.scope;
     return { scope: r === "team" || r === "all" ? r : "mine" };
   },
-  head: () => ({ meta: [{ title: "Mes équipes chantiers — Setup Paris" }] }),
+  head: () => ({ meta: [{ title: "Équipe chantier — Setup Paris" }] }),
   component: EquipeChantiersPage,
 });
 

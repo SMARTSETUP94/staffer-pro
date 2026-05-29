@@ -114,7 +114,7 @@ interface MesWidgetSpec {
 }
 
 const MES_WIDGETS: MesWidgetSpec[] = [
-  { capKey: "mes_missions.view", to: "/mes-missions", icon: Briefcase, title: "Mes missions pose", subtitle: "Montage & démontage planifiés", scope: "mine" },
+  { capKey: "mes_missions.view", to: "/mes-missions", icon: Briefcase, title: "Montage & Démontage", subtitle: "Montage & démontage planifiés", scope: "mine" },
   { capKey: "mes_chantiers.view", to: "/mes-chantiers", icon: HardHat, title: "Mes chantiers", subtitle: "Équipes où je suis casté", scope: "mine" },
   { capKey: "mes_contrats.view", to: "/mes-contrats", icon: FileSignature, title: "Mes contrats", subtitle: "Lecture & signature", scope: "mine" },
   { capKey: "mes_propositions.view", to: "/mes-propositions", icon: ClipboardCheck, title: "Mes propositions", subtitle: "Créneaux à confirmer", scope: "mine" },
