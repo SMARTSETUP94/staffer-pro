@@ -66,8 +66,11 @@ const MATRIX: Record<string, ObjetEditableField[]> = {
     "finition_detail",
   ],
   commercial: ["commentaire"],
-  // chef_metier_scoped, atelier_metier, logistique, poseur, employe, rh :
-  // lecture seule (aucun champ éditable depuis la fiche)
+  // Lot 3 P2 (mai 2026) : `atelier_metier` (menuisier, métallier, peintre,
+  // numérique, tapissier, manutention, BE atelier) peut commenter la fiche
+  // d'un objet de son métier (RLS Lot 1 restreint déjà la visibilité).
+  atelier_metier: ["commentaire"],
+  // logistique, poseur, employe, rh : lecture seule (aucun champ éditable).
 };
 
 export function getEditableFields(roles: readonly string[]): Set<ObjetEditableField> {
