@@ -51,7 +51,7 @@ const searchSchema = z.object({
 });
 
 export const Route = createFileRoute("/_app/saisie-pour-equipe")({
-  beforeLoad: () => requireCapability("action.validate_hours"),
+  beforeLoad: () => requireCapability("heures.equipe.saisir"),
   head: () => ({ meta: [{ title: "Saisie équipe — Planning chantiers" }] }),
   validateSearch: zodValidator(searchSchema),
   search: { middlewares: [stripSearchParams(SEARCH_DEFAULTS)] },

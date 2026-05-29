@@ -56,6 +56,7 @@ export const CAPABILITY_CATALOG = {
     { key: "affaire.team.manage", label: "Gérer l'équipe d'une affaire" },
     { key: "employes.edit", label: "Éditer les fiches employés" },
     { key: "heures.personnelles.saisir", label: "Saisir ses heures personnelles" },
+    { key: "heures.equipe.saisir", label: "Saisir les heures de son équipe" },
   ],
   admin: [
     { key: "rh.hub.view", label: "Voir le hub RH (alias legacy)" },
