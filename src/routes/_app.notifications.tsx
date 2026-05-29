@@ -24,7 +24,10 @@ import type { Database } from "@/integrations/supabase/types";
 type Notification = Database["public"]["Tables"]["notifications"]["Row"];
 type NotifType = Notification["type"];
 
+import { requireCapability } from "@/lib/capability-guard";
+
 export const Route = createFileRoute("/_app/notifications")({
+  beforeLoad: () => requireCapability("ma_semaine.view"),
   head: () => ({ meta: [{ title: "Notifications — Setup Paris" }] }),
   component: NotificationsHistoriquePage,
 });
