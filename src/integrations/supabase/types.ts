@@ -4979,6 +4979,7 @@ export type Database = {
         Args: { _affaire_id: string }
         Returns: boolean
       }
+      current_user_metier_principal: { Args: never; Returns: number }
       delete_devis_atomique: { Args: { p_devis_id: string }; Returns: Json }
       delete_my_hors_planning_saisie: {
         Args: { _saisie_id: string }
@@ -5172,6 +5173,10 @@ export type Database = {
           p_payload: Json
         }
         Returns: undefined
+      }
+      objet_matches_user_metier: {
+        Args: { _objet_id: string }
+        Returns: boolean
       }
       preflight_delete_devis: { Args: { p_devis_id: string }; Returns: Json }
       preflight_import_devis: {
