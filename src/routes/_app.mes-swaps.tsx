@@ -19,7 +19,10 @@ import {
 
 import { ScopeSelector, ScopeNotImplementedBanner, type UrlScope } from "@/components/scope/ScopeSelector";
 
+import { requireCapability } from "@/lib/capability-guard";
+
 export const Route = createFileRoute("/_app/mes-swaps")({
+  beforeLoad: () => requireCapability("mes_swaps.view"),
   validateSearch: (s: Record<string, unknown>): { scope: UrlScope } => {
     const r = s.scope;
     return { scope: r === "team" || r === "all" ? r : "mine" };

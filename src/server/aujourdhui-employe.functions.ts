@@ -57,6 +57,9 @@ export const getMonPlanningSemaine = createServerFn({ method: "POST" })
       .eq("employe_id", emp.id)
       .gte("date", weekStart)
       .lte("date", weekEnd)
+      // H2 audit : exclure les assignations refusées/annulées (ne plus afficher
+      // dans le planning de la semaine de l'employé).
+      .not("statut_confirmation", "in", "(refusee,annulee)")
       .order("date", { ascending: true })
       .order("demi_journee", { ascending: true });
     if (error) throw new Error(error.message);
@@ -117,14 +120,32 @@ export const getMonEquipeChantier = createServerFn({ method: "POST" })
   }> => {
     const { supabase, userId } = context;
 
-    const [{ data: emp }, { data: aff }] = await Promise.all([
-      supabase.from("employes").select("id").eq("profile_id", userId).maybeSingle(),
-      supabase
-        .from("affaires")
-        .select("numero, nom, client, lieu")
-        .eq("id", data.affaireId)
-        .maybeSingle(),
-    ]);
+    const { data: emp } = await supabase
+      .from("employes")
+      .select("id")
+      .eq("profile_id", userId)
+      .maybeSingle();
+    if (!emp) return { affaire: null, membres: [] };
+
+    // B3 audit (RGPD) — vérifier que l'employé connecté est lui-même assigné
+    // sur ce chantier ce jour-là avant d'exposer noms/téléphones des collègues.
+    // Sans ce garde-fou, un employé peut bruteforcer des UUID d'affaires pour
+    // énumérer les équipes terrain (fuite de données personnelles).
+    const { data: mineRow } = await supabase
+      .from("assignations")
+      .select("id")
+      .eq("employe_id", emp.id)
+      .eq("affaire_id", data.affaireId)
+      .eq("date", data.date)
+      .limit(1)
+      .maybeSingle();
+    if (!mineRow) return { affaire: null, membres: [] };
+
+    const { data: aff } = await supabase
+      .from("affaires")
+      .select("numero, nom, client, lieu")
+      .eq("id", data.affaireId)
+      .maybeSingle();
 
     const { data: rows, error } = await supabase
       .from("assignations")
@@ -132,10 +153,11 @@ export const getMonEquipeChantier = createServerFn({ method: "POST" })
         "employe_id, demi_journee, employes!inner(nom, prenom, telephone, mobile), metiers(libelle, couleur)",
       )
       .eq("affaire_id", data.affaireId)
-      .eq("date", data.date);
+      .eq("date", data.date)
+      .not("statut_confirmation", "in", "(refusee,annulee)");
     if (error) throw new Error(error.message);
 
-    const myId = emp?.id ?? null;
+    const myId = emp.id;
     const membres: EquipeChantierJourMembre[] = (rows ?? []).map((r) => {
       const e = r.employes as unknown as {
         nom: string; prenom: string; telephone: string | null; mobile: string | null;

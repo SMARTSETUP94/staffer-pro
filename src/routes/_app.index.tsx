@@ -151,7 +151,18 @@ function MesWidgetCard({ spec }: { spec: MesWidgetSpec }) {
 
 
 function HomePage() {
-  const canSeeTeamDashboard = useCapability("dashboard.team.view");
+  // H4 audit — guard isLoading : sans ce skeleton, useCapability renvoie false
+  // pendant le chargement initial et un admin voit EmployeAujourdhuiView
+  // monter + fetcher avant de swap → flash + double requête réseau.
+  const { data: capsSet, isLoading: capsLoading } = useCapabilitiesSet();
+  if (capsLoading) {
+    return (
+      <div className="container mx-auto flex justify-center py-12">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+  const canSeeTeamDashboard = capsSet.has("dashboard.team.view");
 
   // Vue employé (terrain) : poseur, peintre, métallier… — pas d'inbox alertes
   // équipe, mais 3 blocs dédiés (planning semaine + heures + atelier).

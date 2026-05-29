@@ -4991,6 +4991,7 @@ export type Database = {
         Args: { metier: string }
         Returns: Database["public"]["Enums"]["fabrication_etape_type"]
       }
+      fab_objet_affaire_id: { Args: { _objet_id: string }; Returns: string }
       get_active_contrat_template_id: { Args: never; Returns: string }
       get_active_phases_for_affaire: {
         Args: { p_affaire_id: string }
@@ -5395,6 +5396,7 @@ export type Database = {
         Args: { _affaire_id: string }
         Returns: boolean
       }
+      user_is_on_fab_objet: { Args: { _objet_id: string }; Returns: boolean }
     }
     Enums: {
       absence_type: "conges" | "formation" | "arret_maladie" | "rtt" | "autre"
