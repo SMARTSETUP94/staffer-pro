@@ -58,7 +58,10 @@ import { MettreAuPlanningExpressButton } from "@/components/staffing/MettreAuPla
 import { useVocab } from "@/hooks/use-vocab";
 
 export const Route = createFileRoute("/_app/affaires/$affaireId/fabrication")({
-  beforeLoad: () => requireCapability("section.affaires"),
+  // Lot 2 P1 : `section.fabrication` (et non `section.affaires`) débloque
+  // `atelier_chef` / `atelier_metier` qui doivent accéder à l'onglet fab
+  // d'une affaire, et ferme `rh` qui n'a rien à y faire.
+  beforeLoad: () => requireCapability("section.fabrication"),
   head: () => ({ meta: [{ title: "Fabrication — Setup Paris" }] }),
   component: FabricationPage,
 });
