@@ -9,7 +9,7 @@
  *   2) Mes heures (compteur + saisir + historique)
  *   3) Mon atelier (objets fab, masqué si vide)
  */
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
@@ -17,7 +17,6 @@ import {
   format,
   startOfWeek,
   addDays,
-  isSameDay,
   parseISO,
   isToday,
 } from "date-fns";
