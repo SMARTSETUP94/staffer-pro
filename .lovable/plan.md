@@ -1,60 +1,68 @@
-# Plan — Corrections P0/P1 matrice rôles × typologies + objets par métier
+# Refonte page /aujourdhui pour les employés
 
-Suite aux deux audits (rôles × typologies, puis routes compétences/objets), voici le plan d'exécution priorisé. Je propose de découper en **3 lots livrables séparément** pour limiter le risque de régression.
+## Objectif
 
-## Lot 1 — P0 Sécurité données fab (critique)
+Rendre la page d'accueil `/aujourdhui` réellement utile et user-friendly pour les **employés** (poseur, peintre, métallier, menuisier, etc.) — desktop ET mobile — au lieu de la vue Inbox/filtres actuelle pensée pour admin/chef.
 
-**Objectif** : stopper la fuite RGPD sur `fabrication_objets` et aligner le scope `metier`.
+Les rôles admin/chef gardent leur vue actuelle (Inbox + widgets pilotage). Seuls les rôles **employés** (sans cap `dashboard.team.view`) basculent sur la nouvelle vue.
 
-1. **RLS `fabrication_objets.SELECT`** — remplacer `USING (true)` par une policy scope-aware :
-   - admin / chef_chantier → tout
-   - bureau_etude / commercial / logistique → tout (lecture seule métier)
-   - atelier_chef → objets de son métier (`heures_prevues_<metier> > 0` sur le métier principal)
-   - atelier_metier → objets de son métier + équipe (`fabrication_objet_equipe`)
-   - employe / poseur / rh → uniquement si membre `fabrication_objet_equipe` OU `user_has_affaire_access(affaire_id)`
-2. **RLS idem** sur `fabrication_etapes.SELECT` et `fabrication_etapes_historique.SELECT` (mêmes `USING (true)`).
-3. **`useFabricationDashboard`** (`src/hooks/use-fabrication-dashboard.ts`) — appliquer le scope `metier` de `section.planning_fab` : filtrer côté serveur selon le métier principal de l'utilisateur.
-4. **RLS `affaire_equipe_modify_chef_admin`** — étendre à `atelier_chef` pour son métier (permet `objet_equipe.manage`(metier) qui est aujourd'hui bloqué côté DB malgré la cap accordée).
+## Nouvelle structure employé (3 blocs principaux)
 
-## Lot 2 — P1 Guards routes + caps manquantes
+### Bloc 1 — Mon planning de la semaine
+- Vue compacte 7 jours (lun→dim) avec mes affectations
+- Chaque ligne = 1 chantier × 1 créneau (AM/PM/Journée)
+- **Clic sur un chantier → ouvre un Sheet "Mon équipe sur ce chantier"** (au lieu d'un onglet séparé `/equipe-chantiers`). Liste les coéquipiers présents le même jour/créneau, leur métier, contact rapide.
+- Bouton "Voir tout mon planning" → `/mes-missions`
 
-**Objectif** : combler les trous de garde route et caps employé/poseur.
+### Bloc 2 — Mes heures
+- Carte "Cette semaine" : compteur circulaire X h / 39h (déjà existant, conservé)
+- **Bouton primaire "Saisir mes heures"** → `/mes-heures`
+- **Lien secondaire "Voir l'historique"** → `/mes-heures?vue=historique` (saisies passées + statuts validation : brouillon / soumis / validé / refusé)
 
-5. **Cap `mobile.mes_missions`** — grant explicite à `employe` + `poseur` (route `/missions/$affaireId/$phase` actuellement ambiguë).
-6. **Cap `section.ma_semaine`** — grant à `employe` + `poseur` (items sidebar "Mes missions pose").
-7. **`requireCapability()` dans `beforeLoad`** sur :
-   - `/mes-missions` → `mes_missions.view`
-   - `/mes-heures` → `mes_heures.view`
-   - `/planning` → `section.planning_pose`
-   - `/affaires/$id/fabrication` → `section.fabrication` (au lieu de `section.affaires`, ce qui débloquera `atelier_chef` et `atelier_metier` et fermera l'accès `rh`)
-8. **`/fabrication/mes-etapes` → fiche objet directe** (`/affaires/$id/fabrication?objet=<id>`) au lieu de `/affaires/$id/fabrication` pleine page → résout la navigation morte de l'`atelier_metier` (peintre).
+### Bloc 3 — Atelier (conditionnel)
+- **Affiché UNIQUEMENT si le métier de l'employé ≠ poseur** (donc pour peinture, métallerie, menuiserie/construction, tapisserie, numérique, machiniste = atelier Setup Paris)
+- Liste mes objets de fabrication en cours (filtrée sur mon métier via `fabrication_objet_equipe`), avec affaire + statut + lien fiche objet
+- Vide si rien : empty state "Aucun objet en fabrication pour vous"
 
-## Lot 3 — P2 Affinements scope
+## Mécanisme de routage
 
-**Objectif** : aligner les comportements RLS sur la sémantique métier.
+Sur `/aujourdhui`, basculer entre 2 vues selon la cap :
+- `dashboard.team.view` (admin/chef) → vue actuelle (Inbox + widgets)
+- sinon (employés) → nouvelle vue `EmployeAujourdhuiView`
 
-9. **RLS `assignations.SELECT`** — ajouter cas `commercial` pour voir le casting fab de ses 5XXX (`charge_affaires_id = auth.uid()` quand `typologie = fabrication`).
-10. **RLS `affaire_equipe`** — restreindre `logistique` aux affaires dont il est `charge_affaires_id` OU `chef_chantier_id` pour les mutations phase `logistique`.
-11. **Matrice fiche objet** (`src/lib/objet-fiche-permissions.ts`) — ajouter `atelier_metier` avec `["commentaire"]` (lecture+commentaire, pas plus).
-12. **Suppression heures par `rh`** — étendre policy `heures_saisies_admin_chef_delete` à `rh` (cohérent avec son rôle de validation).
+## Fichiers à créer/modifier
 
-## Hors-scope (à traiter dans sprints dédiés)
+### Création
+- `src/components/aujourdhui/EmployeAujourdhuiView.tsx` — orchestrateur 3 blocs
+- `src/components/aujourdhui/MonPlanningSemaineCard.tsx` — bloc 1
+- `src/components/aujourdhui/MonEquipeChantierSheet.tsx` — Sheet équipe au clic
+- `src/components/aujourdhui/MesHeuresCard.tsx` — bloc 2 (refonte du widget existant)
+- `src/components/aujourdhui/MesObjetsAtelierCard.tsx` — bloc 3
+- `src/server/aujourdhui-employe.functions.ts` — 3 server fns :
+  - `getMonPlanningSemaine()` → assignations × créneaux semaine en cours
+  - `getMonEquipeChantier({ affaireId, date })` → coéquipiers présents
+  - `getMesObjetsAtelier()` → mes objets fabrication (vide si poseur)
 
-- Route `/mobile/fabrication` (debt L4 connue, mem://debts/mobile-fabrication-a-livrer-en-L4).
-- Refonte UX 5XXX pour machiniste/poseur (pas de parcours fab côté terrain → sprint dédié).
-- Bypass curl+JWT `bureau_etude` sur `fabrication_objets` WRITE → couvert par Lot 1 (la nouvelle RLS empêche l'INSERT/UPDATE hors métier).
+### Modification
+- `src/routes/_app.aujourdhui.tsx` — branchement conditionnel cap `dashboard.team.view` vs `EmployeAujourdhuiView`
 
-## Détails techniques
+## Backend
 
-- **Tous les changements RLS** = migration SQL unique par lot (atomique).
-- **Tests E2E à mettre à jour** : `e2e/capabilities/fiche-objet.*.spec.ts` + `e2e/sidebar/sidebar-capability.atelier-metier.spec.ts` + nouveau spec `e2e/capabilities/fab-rls-scope.spec.ts` pour vérifier qu'un peintre ne voit que ses objets.
-- **Pas de breaking change UI** : les changements RLS sont restrictifs côté `employe/poseur/atelier_metier`, mais ces rôles ne consommaient pas la fuite (donc 0 régression visible). Le scope `useFabricationDashboard` filtrera des objets aujourd'hui visibles à tort → c'est l'effet recherché.
-- **Rollback** : chaque lot a sa migration séparée, rollback ligne par ligne possible.
+Aucune migration DB. Tout est dérivé des tables existantes :
+- `assignations` + `affaires` pour le planning semaine
+- `assignations` (mêmes affaire+date) pour Mon équipe
+- `heures_saisies` pour les heures
+- `fabrication_objet_equipe` + `fabrication_objets` pour l'atelier
+- Détection poseur : `employes.metier_principal = 'poseur'` ou cap `mes_missions.view` sans `section.planning_fab`
 
-## Ordre proposé
+## Responsive
 
-1. **Lot 1 maintenant** (P0 critique — fuite RGPD).
-2. **Lot 2 ensuite** après validation Lot 1 (guards routes).
-3. **Lot 3 en finition** (affinements).
+- **Mobile (<768px)** : 3 blocs empilés, Bloc 1 d'abord (planning = action #1 du matin)
+- **Desktop (≥768px)** : grille 2 colonnes — col gauche : Planning semaine (large), col droite empilée : Mes heures + Atelier
 
-Je te confirme avant chaque lot. On démarre Lot 1 ?
+## Hors scope
+
+- Pas de refonte admin/chef
+- Pas de modification des routes `/mes-heures`, `/mes-missions` (juste des liens vers elles)
+- Pas de bottom nav mobile (déjà OK)
+- Historique heures = lien vers `/mes-heures?vue=historique` (l'onglet est déjà censé exister ou sera affiché en query param — à confirmer en explorant le fichier)
