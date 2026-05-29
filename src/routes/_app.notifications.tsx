@@ -24,10 +24,10 @@ import type { Database } from "@/integrations/supabase/types";
 type Notification = Database["public"]["Tables"]["notifications"]["Row"];
 type NotifType = Notification["type"];
 
-import { requireCapability } from "@/lib/capability-guard";
-
+// /notifications est accessible à tout utilisateur authentifié : la table
+// `notifications` filtre déjà par RLS (user_id = auth.uid()), donc pas de
+// `beforeLoad` cap-check (chacun a ses propres notifications).
 export const Route = createFileRoute("/_app/notifications")({
-  beforeLoad: () => requireCapability("ma_semaine.view"),
   head: () => ({ meta: [{ title: "Notifications — Setup Paris" }] }),
   component: NotificationsHistoriquePage,
 });
