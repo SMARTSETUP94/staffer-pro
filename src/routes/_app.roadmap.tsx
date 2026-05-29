@@ -81,6 +81,69 @@ const RELEASES: RoadmapRelease[] = [
     ],
   },
   {
+    date: "2026-05-29",
+    version: "v0.52.0 (Audit Notifications + Cleanup — LIVRÉ)",
+    title: "🔔 Page notifications historique + cleanup L4c/L5 + cohérence sidebar",
+    entries: [
+      {
+        type: "feature",
+        area: "Lot 3 — Page /notifications",
+        title: "Page historique notifications dédiée",
+        description:
+          "Route `/notifications` : listing complet paginé (50/page), filtres lu/non-lu + par type (18 types), actions batch (sélection multi, marquer lu, supprimer). Click row → mark read + navigate. Lien 'Voir tout l'historique' depuis `NotificationBell.tsx`. Cap `ma_semaine.view`.",
+      },
+      {
+        type: "refactor",
+        area: "L4c — Cleanup routes stubs",
+        title: "Suppression commentaires obsolètes routes stubs",
+        description:
+          "Cleanup des derniers commentaires obsolètes liés aux anciens stubs `/dashboard`, `/ma-semaine`, `/aujourdhui`, `/inbox`, `/dashboard-employe` (déjà supprimés en L6-C). Mise à jour docstring `RoleGuard.tsx` et fixtures tests `auth-redirect-helpers.test.ts` (paths `/dashboard` → `/`). 35/35 tests verts.",
+      },
+      {
+        type: "refactor",
+        area: "L5-A safe — Purge chef_metier_scoped",
+        title: "Suppression rôle obsolète côté code applicatif",
+        description:
+          "DELETE 44 lignes orphelines `role_capabilities`. Cleanup ~10 fichiers TS : `auth-context.tsx` (retrait bridge `isChefMetierScoped` + `isChefAny`), `labels.ts`, `RoleSwitcher`, `admin-actions.ts`, `email-templates/invitation.ts`, `dashboard/types.ts`, tests `labels.test.ts` + `objet-fiche-permissions.test.ts`. Suppression `use-chef-scope.ts` + `ScopedAccessBanner.tsx` + adaptation 2 routes (`validation-heures`, `affaires.index`). Flag `sidebar_capability_v1` confirmé actif globalement.",
+      },
+      {
+        type: "refactor",
+        area: "L5-A-bis Phase 1 — DB cleanup",
+        title: "Retrait applicatif complet chef_metier_scoped côté DB",
+        description:
+          "Migration DB : DROP 14 policies + recréation sans branche `is_chef_metier_scoped()` sur `affaire_equipe`, `assignation_objets`, `assignations` (x3), `employes`, `fabrication_objet_equipe`, `fabrication_objets`, `heures_saisies` (x4), `storage.objects`. DROP helpers `is_chef_metier_scoped()` + `is_chef_metier_scoped_for_employe(uuid)`. Simplifié `is_chef_or_admin()` (admin OR chef_chantier) + `replace_user_roles()`. Phase 2 (DROP valeur enum) reportée — impact runtime nul.",
+      },
+      {
+        type: "feature",
+        area: "L3b2 — Sidebar↔routes coherence",
+        title: "Alignement sidebar/routes + test garde cohérence",
+        description:
+          "Suppression stubs 'Ma semaine' et 'Tableau de bord' de `AppSidebar.tsx`. Test `sidebar-cap-coherence.test.ts` (2 tests) : 4 mismatches résolus (`/rh` → `rh.hub.view`, `/rh/contrats` → `rh.hub.view`, `/admin/permissions` → `admin.permissions.manage`, `/admin/feature-flags` → `admin.feature_flags.manage`). Employé/poseur ne voient plus les items RH orphelins.",
+      },
+      {
+        type: "feature",
+        area: "L3b2 — Migration routes capability-driven",
+        title: "Migration Paramètres + Devis + Affaires/Staffing vers capabilities",
+        description:
+          "L3b2-A : Groupe Paramètres + Admin (sous-traitants, compétences, employés-poste-principal, contrats, postes, métiers). L3b2-B : Groupe Devis + Imports (6 fichiers, caps `section.devis`, `action.create_devis`). L3b2-C : Groupe Affaires + Staffing (5 fichiers, ~21 occ) suppression flags legacy `isAdmin|isChef…` au profit de `requireCapability()`.",
+      },
+      {
+        type: "fix",
+        area: "Audit Notifications — Lot 1",
+        title: "Hotfix P0 sécu : cap-gating `/mes-propositions`",
+        description:
+          "Route `_app.mes-propositions.tsx` protégée par `mes_propositions.view` en `beforeLoad`. Correctif de sécurité empêchant l'accès direct sans la capability.",
+      },
+      {
+        type: "feature",
+        area: "Audit Notifications — Lot 2",
+        title: "Centralisation liens notifs côté DB + remap role-aware",
+        description:
+          "RPC `resolve_notification_link(user_id, raw_link)` SECURITY DEFINER STABLE + trigger BEFORE INSERT `trg_notifications_resolve_lien` sur `public.notifications`. Remap `/mobile/heures*`→`/mes-heures`, `/mobile/contrats*`→`/mes-contrats`, downgrades cap-aware (`/planning`→`/mes-missions`, `/absences`→`/`, `/validation-heures`→`/`, `/admin/feedback`→`/aujourdhui`). Backfill ~460 lignes : 0 lien `/mobile/*` mort restant.",
+      },
+    ],
+  },
+  {
     date: "2026-05-26",
     version: "v0.51.0 (Bloc 9 — LIVRÉ)",
     title: "📱 Carte mission pose mobile — J'arrive/Je pars, heures auto, photos, signalement",
