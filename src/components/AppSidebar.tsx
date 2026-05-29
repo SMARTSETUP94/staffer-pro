@@ -67,10 +67,11 @@ function buildSections(
         // Toujours visible — pas de cap.
         { title: "Aujourd'hui", url: "/", icon: Clock },
         
-        { title: "Montage & Démontage", url: "/mes-missions", icon: PackageCheck, cap: "section.ma_semaine" },
-        { title: "Équipe chantier", url: "/mes-chantiers", icon: UsersRound, cap: "section.ma_semaine" },
-        { title: "Mes heures", url: "/mes-heures", icon: Clock, cap: "heures.personnelles.saisir" },
-        { title: "Mes contrats", url: "/mes-contrats", icon: FileSignature, cap: "contrats.view_own" },
+        { title: "Montage & Démontage", url: "/mes-missions", icon: PackageCheck, cap: "mes_missions.view" },
+        { title: "Équipe chantier", url: "/mes-chantiers", icon: UsersRound, cap: "mes_chantiers.view" },
+        { title: "Mes heures", url: "/mes-heures", icon: Clock, cap: "mes_heures.view" },
+        { title: "Mes contrats", url: "/mes-contrats", icon: FileSignature, cap: "mes_contrats.view" },
+
       ],
     },
     {
