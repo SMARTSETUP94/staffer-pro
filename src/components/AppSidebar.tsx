@@ -71,6 +71,7 @@ function buildSections(
         { title: "Équipe chantier", url: "/mes-chantiers", icon: UsersRound, cap: "mes_chantiers.view" },
         { title: "Mes heures", url: "/mes-heures", icon: Clock, cap: "mes_heures.view" },
         { title: "Mes contrats", url: "/mes-contrats", icon: FileSignature, cap: "mes_contrats.view" },
+        { title: "Saisir heures équipe", url: "/saisie-pour-equipe", icon: ClipboardCheck, cap: "heures.equipe.saisir" },
 
       ],
     },
