@@ -28,15 +28,22 @@ export function clearCapabilityCache(userId?: string) {
   if (userId) cache.delete(userId);
   else cache.clear();
 }
-
-async function loadCaps(userId: string): Promise<Set<string>> {
+async function loadCaps(userId: string): Promise<Set<string> | null> {
   const hit = cache.get(userId);
   if (hit && Date.now() - hit.ts < TTL_MS) return hit.caps;
 
-  const { data: roles } = await supabase
+  const { data: roles, error: rolesErr } = await supabase
     .from("user_roles")
     .select("role")
     .eq("user_id", userId);
+
+  // En cas d'erreur infra (lock gotrue, RLS race au mount), on ne cache pas
+  // et on renvoie null → requireCapability laisse passer (fail-open côté
+  // routing ; la RLS reste la source de vérité côté data).
+  if (rolesErr) {
+    console.warn("[capability-guard] roles error:", rolesErr.message);
+    return null;
+  }
 
   const roleList = (roles ?? []).map((r) => r.role);
   if (roleList.length === 0) {
@@ -45,11 +52,16 @@ async function loadCaps(userId: string): Promise<Set<string>> {
     return empty;
   }
 
-  const { data: caps } = await supabase
+  const { data: caps, error: capsErr } = await supabase
     .from("role_capabilities")
     .select("capability")
     .in("role", roleList)
     .eq("granted", true);
+
+  if (capsErr) {
+    console.warn("[capability-guard] caps error:", capsErr.message);
+    return null;
+  }
 
   const set = new Set((caps ?? []).map((c) => c.capability));
   cache.set(userId, { caps: set, ts: Date.now() });
@@ -60,6 +72,10 @@ async function loadCaps(userId: string): Promise<Set<string>> {
  * À utiliser dans `beforeLoad` d'une route.
  * Lance un redirect vers `/` (avec toast "Accès refusé" sur la destination)
  * si l'utilisateur n'a pas la capability requise.
+ *
+ * Fail-open : si la résolution des caps échoue (erreur réseau, lock gotrue,
+ * race au mount), on laisse passer pour éviter des faux redirects ; RLS
+ * reste la garde finale côté données.
  */
 export async function requireCapability(capKey: string): Promise<void> {
   const { data: { session } } = await supabase.auth.getSession();
@@ -68,6 +84,7 @@ export async function requireCapability(capKey: string): Promise<void> {
     return;
   }
   const caps = await loadCaps(session.user.id);
+  if (caps === null) return; // fail-open
   if (!caps.has(capKey)) {
     if (typeof window !== "undefined") {
       try { sessionStorage.setItem(CAP_DENIED_KEY, capKey); } catch { /* ignore */ }
@@ -80,6 +97,7 @@ export async function requireCapability(capKey: string): Promise<void> {
  * Consommé par `_app.tsx` (AppGuard) au mount/changement de route.
  * Retourne la cap refusée si présente, puis nettoie le flag.
  */
+
 export function consumeCapDenied(): string | null {
   if (typeof window === "undefined") return null;
   try {
