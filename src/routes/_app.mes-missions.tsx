@@ -1,5 +1,5 @@
 /**
- * Bloc 9 Lot 9.2 — Liste des missions pose (mobile).
+ * Bloc 9 Lot 9.2 — Liste Montage & Démontage (mobile).
  *
  * Fenêtre J-7 → J+30, regroupée par bucket :
  *   - Aujourd'hui / Cette semaine
