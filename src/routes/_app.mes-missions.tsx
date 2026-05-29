@@ -29,7 +29,7 @@ export const Route = createFileRoute("/_app/mes-missions")({
     const r = s.scope;
     return { scope: r === "team" || r === "all" ? r : "mine" };
   },
-  head: () => ({ meta: [{ title: "Mes missions pose — Setup Paris" }] }),
+  head: () => ({ meta: [{ title: "Montage & Démontage — Setup Paris" }] }),
   component: MesMissionsPage,
 });
 
@@ -55,7 +55,7 @@ function MesMissionsPage() {
       <header className="border-b border-border bg-card px-4 py-4">
         <div className="mx-auto flex max-w-2xl items-start justify-between gap-2">
           <div className="min-w-0">
-            <p className="overline">— Mes missions pose</p>
+            <p className="overline">— Montage & Démontage</p>
             <h1 className="mt-1 text-xl font-bold tracking-tight text-foreground">
               Montage &amp; démontage
             </h1>
