@@ -1,39 +1,60 @@
-## Plan de travail — Bloc 10 TERMINÉ + Suite roadmap (28 mai 2026)
+# Plan — Corrections P0/P1 matrice rôles × typologies + objets par métier
 
-### ✅ Bloc 10 — Fiche opportunité (LIVRÉ, 28 mai 2026)
+Suite aux deux audits (rôles × typologies, puis routes compétences/objets), voici le plan d'exécution priorisé. Je propose de découper en **3 lots livrables séparément** pour limiter le risque de régression.
 
-| Sous-lot | Statut | Référence |
-|---|---|---|
-| 10.1 Fondations DB | ✅ Livré | `mem://features/bloc-10-1-fondations-db` |
-| 10.2 Inbox extension + Cleanup Risque #1 | ✅ Livré | `mem://features/bloc-10-2-inbox-extension` |
-| 10.3 Fiche UI | ✅ Livré | `mem://features/bloc-10-3-fiche-ui` |
-| 10.4 Listing refactor + import | ✅ Livré | `mem://features/bloc-10-4-listing-refactor` |
-| 10.5 Tests + cleanup final | ✅ Livré | `mem://features/bloc-10-fiche-opportunite` |
+## Lot 1 — P0 Sécurité données fab (critique)
 
-**Total réel : ~17h30** (vs 38h estimé V1 complet). 196 opps legacy archivées. Dette `inbox-opp-action-create-table` RÉSOLUE.
+**Objectif** : stopper la fuite RGPD sur `fabrication_objets` et aligner le scope `metier`.
 
----
+1. **RLS `fabrication_objets.SELECT`** — remplacer `USING (true)` par une policy scope-aware :
+   - admin / chef_chantier → tout
+   - bureau_etude / commercial / logistique → tout (lecture seule métier)
+   - atelier_chef → objets de son métier (`heures_prevues_<metier> > 0` sur le métier principal)
+   - atelier_metier → objets de son métier + équipe (`fabrication_objet_equipe`)
+   - employe / poseur / rh → uniquement si membre `fabrication_objet_equipe` OU `user_has_affaire_access(affaire_id)`
+2. **RLS idem** sur `fabrication_etapes.SELECT` et `fabrication_etapes_historique.SELECT` (mêmes `USING (true)`).
+3. **`useFabricationDashboard`** (`src/hooks/use-fabrication-dashboard.ts`) — appliquer le scope `metier` de `section.planning_fab` : filtrer côté serveur selon le métier principal de l'utilisateur.
+4. **RLS `affaire_equipe_modify_chef_admin`** — étendre à `atelier_chef` pour son métier (permet `objet_equipe.manage`(metier) qui est aujourd'hui bloqué côté DB malgré la cap accordée).
 
-### ✅ Lot L3b2 + L5-A + L4c — Refonte permissions & cleanup (LIVRÉ, 28 mai 2026)
+## Lot 2 — P1 Guards routes + caps manquantes
 
-| Sous-lot | Statut | Détail |
-|---|---|---|
-| L3b2-A | ✅ Livré | Paramètres + Admin → `requireCapability()` |
-| L3b2-B | ✅ Livré | Devis + Imports (6 fichiers) |
-| L3b2-C | ✅ Livré | Affaires + Staffing (5 fichiers) |
-| Sidebar cleanup | ✅ Livré | Stubs retirés + test cohérence sidebar↔routes |
-| L5-A safe | ✅ Livré | Suppression `chef_metier_scoped` code applicatif |
-| L5-A-bis Phase 1 | ✅ Livré | DROP 14 policies + 2 helpers SQL DB |
-| L4c | ✅ Livré | Cleanup stubs routes orphelines + commentaires |
+**Objectif** : combler les trous de garde route et caps employé/poseur.
 
-**Total réel : ~3h55**. `chef_metier_scoped` totalement purgé (code + DB Phase 1). 35/35 tests verts.
+5. **Cap `mobile.mes_missions`** — grant explicite à `employe` + `poseur` (route `/missions/$affaireId/$phase` actuellement ambiguë).
+6. **Cap `section.ma_semaine`** — grant à `employe` + `poseur` (items sidebar "Mes missions pose").
+7. **`requireCapability()` dans `beforeLoad`** sur :
+   - `/mes-missions` → `mes_missions.view`
+   - `/mes-heures` → `mes_heures.view`
+   - `/planning` → `section.planning_pose`
+   - `/affaires/$id/fabrication` → `section.fabrication` (au lieu de `section.affaires`, ce qui débloquera `atelier_chef` et `atelier_metier` et fermera l'accès `rh`)
+8. **`/fabrication/mes-etapes` → fiche objet directe** (`/affaires/$id/fabrication?objet=<id>`) au lieu de `/affaires/$id/fabrication` pleine page → résout la navigation morte de l'`atelier_metier` (peintre).
 
----
+## Lot 3 — P2 Affinements scope
 
-## Roadmap à jour — voir `.lovable/memory/index.md` et `mem://roadmap/consolidee-2mai2026.md`
+**Objectif** : aligner les comportements RLS sur la sémantique métier.
 
-Prochains items prioritaires :
-1. **Bloc 9** — Carte mission pose (9.3 carte détaillée, 9.4 heures auto, 9.5 signaler problème)
-2. **Bloc 8** — Fiche objet suite (8.4 UI Journal/Photos, 8.5 liens croisés, 8.6 polish + E2E)
-3. **Bloc 10 suite** — Visites, échantillons, moodboard (reportés)
-4. **Lots L3→L5** — L3 restant (multi-select users + debug panel + call sites restants), L4, L5-B
+9. **RLS `assignations.SELECT`** — ajouter cas `commercial` pour voir le casting fab de ses 5XXX (`charge_affaires_id = auth.uid()` quand `typologie = fabrication`).
+10. **RLS `affaire_equipe`** — restreindre `logistique` aux affaires dont il est `charge_affaires_id` OU `chef_chantier_id` pour les mutations phase `logistique`.
+11. **Matrice fiche objet** (`src/lib/objet-fiche-permissions.ts`) — ajouter `atelier_metier` avec `["commentaire"]` (lecture+commentaire, pas plus).
+12. **Suppression heures par `rh`** — étendre policy `heures_saisies_admin_chef_delete` à `rh` (cohérent avec son rôle de validation).
+
+## Hors-scope (à traiter dans sprints dédiés)
+
+- Route `/mobile/fabrication` (debt L4 connue, mem://debts/mobile-fabrication-a-livrer-en-L4).
+- Refonte UX 5XXX pour machiniste/poseur (pas de parcours fab côté terrain → sprint dédié).
+- Bypass curl+JWT `bureau_etude` sur `fabrication_objets` WRITE → couvert par Lot 1 (la nouvelle RLS empêche l'INSERT/UPDATE hors métier).
+
+## Détails techniques
+
+- **Tous les changements RLS** = migration SQL unique par lot (atomique).
+- **Tests E2E à mettre à jour** : `e2e/capabilities/fiche-objet.*.spec.ts` + `e2e/sidebar/sidebar-capability.atelier-metier.spec.ts` + nouveau spec `e2e/capabilities/fab-rls-scope.spec.ts` pour vérifier qu'un peintre ne voit que ses objets.
+- **Pas de breaking change UI** : les changements RLS sont restrictifs côté `employe/poseur/atelier_metier`, mais ces rôles ne consommaient pas la fuite (donc 0 régression visible). Le scope `useFabricationDashboard` filtrera des objets aujourd'hui visibles à tort → c'est l'effet recherché.
+- **Rollback** : chaque lot a sa migration séparée, rollback ligne par ligne possible.
+
+## Ordre proposé
+
+1. **Lot 1 maintenant** (P0 critique — fuite RGPD).
+2. **Lot 2 ensuite** après validation Lot 1 (guards routes).
+3. **Lot 3 en finition** (affinements).
+
+Je te confirme avant chaque lot. On démarre Lot 1 ?
