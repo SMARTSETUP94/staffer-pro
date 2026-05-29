@@ -32,7 +32,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { useAuth, type AppRole } from "@/lib/auth-context";
-import { useCapability } from "@/hooks/use-capability";
+import { useCapabilitiesSet } from "@/hooks/use-capability";
 import { supabase } from "@/integrations/supabase/client";
 import {
   inviteUser, resendInvitation, updateUserRoles, setUserActive, deleteUser, linkExistingUsers,
@@ -102,7 +102,8 @@ const STATUS_META: Record<
 function UtilisateursPage() {
   const navigate = useNavigate();
   const { loading, user: currentUser } = useAuth();
-  const canAdmin = useCapability("section.admin");
+  const { data: caps, isLoading: capsLoading } = useCapabilitiesSet();
+  const canAdmin = caps.has("section.admin");
   const [users, setUsers] = useState<UserRow[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
   const [filterStatus, setFilterStatus] = useState<UserStatus | "all">("all");
@@ -121,8 +122,8 @@ function UtilisateursPage() {
   const [capsDebug, setCapsDebug] = useState<UserRow | null>(null);
 
   useEffect(() => {
-    if (!loading && !canAdmin) navigate({ to: "/" });
-  }, [loading, canAdmin, navigate]);
+    if (!loading && !capsLoading && !canAdmin) navigate({ to: "/" });
+  }, [loading, capsLoading, canAdmin, navigate]);
 
   useEffect(() => {
     if (canAdmin) loadUsers();
