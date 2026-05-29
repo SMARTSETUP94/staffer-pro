@@ -20,13 +20,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 
 export function useCapabilitiesSet(): { data: Set<string>; isLoading: boolean } {
-  const { user, loading } = useAuth();
+  const { user, loading, roles } = useAuth();
+  // Inclure les rôles dans la queryKey : si l'admin modifie le rôle d'un
+  // utilisateur en cours de session, le cache React Query s'invalide
+  // automatiquement et le sidebar / les gardes capability se mettent à jour.
+  const rolesKey = [...roles].sort().join(",");
 
   const query = useQuery({
-    queryKey: ["capabilities", user?.id ?? null],
+    queryKey: ["capabilities", user?.id ?? null, rolesKey],
     enabled: !loading && !!user,
-    staleTime: 5 * 60_000,
-    gcTime: 10 * 60_000,
+    staleTime: 60_000,
+    gcTime: 5 * 60_000,
+    refetchOnWindowFocus: true,
     queryFn: async () => {
       if (!user) return new Set<string>();
 
