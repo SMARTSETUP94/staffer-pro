@@ -3186,6 +3186,26 @@ const PLANNED: RoadmapPlanned[] = [
       "Création d'une vue SQL consolidée exposant pour chaque affaire les statuts dérivés (a-t-elle un plan publié ? un brouillon ? un plan archivé ? écart staffing vs devis ?). Permettra de simplifier les listes affaires + dashboard sans recalcul côté client.",
   },
 
+  // ========== Sprints récents à venir ==========
+  {
+    priority: "haute",
+    title: "L5-B — Suppression bridge layer complet auth-context",
+    description:
+      "Retirer les ~12 booléens restants (`isAdmin`, `isChef`, `isRh`, `isCommercial`…) de `auth-context.tsx` au profit exclusif de `useCapability()`. Règle ESLint anti-régression. 11 specs E2E par rôle + seed users test.",
+  },
+  {
+    priority: "haute",
+    title: "L5-A-bis Phase 2 — DROP valeur enum `chef_metier_scoped`",
+    description:
+      "Recréation de l'enum `app_role` sans la valeur obsolète `chef_metier_scoped`. Impact runtime nul (0 user). Sprint dédié si besoin.",
+  },
+  {
+    priority: "haute",
+    title: "L4c — Suppression définitive `<Navigate to='/dashboard' />` orphelins",
+    description:
+      "Nettoyer les anciens bookmarks et `<Navigate to='/dashboard' />` éparpillés dans le code (anciens stubs `/dashboard` et `/ma-semaine` déjà supprimés).",
+  },
+
   // ========== Sprints majeurs planifiés ==========
   {
     priority: "moyenne",
