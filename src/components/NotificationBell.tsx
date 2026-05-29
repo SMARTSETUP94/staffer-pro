@@ -1,4 +1,4 @@
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, Link } from "@tanstack/react-router";
 import { Bell, Check, CheckCheck, Trash2 } from "lucide-react";
 import {
   Popover,
@@ -171,6 +171,14 @@ export function NotificationBell() {
             </ul>
           )}
         </ScrollArea>
+        <div className="border-t px-4 py-2 text-center">
+          <Link
+            to="/notifications"
+            className="text-xs font-medium text-primary hover:underline"
+          >
+            Voir tout l'historique →
+          </Link>
+        </div>
       </PopoverContent>
     </Popover>
   );
