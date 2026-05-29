@@ -151,6 +151,18 @@ function MesWidgetCard({ spec }: { spec: MesWidgetSpec }) {
 
 
 function HomePage() {
+  const canSeeTeamDashboard = useCapability("dashboard.team.view");
+
+  // Vue employé (terrain) : poseur, peintre, métallier… — pas d'inbox alertes
+  // équipe, mais 3 blocs dédiés (planning semaine + heures + atelier).
+  if (!canSeeTeamDashboard) {
+    return <EmployeAujourdhuiView />;
+  }
+
+  return <AdminChefHomeView />;
+}
+
+function AdminChefHomeView() {
   const [items, setItems] = useState<InboxItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [sourceFilter, setSourceFilter] = useState<"all" | InboxSource>("all");
