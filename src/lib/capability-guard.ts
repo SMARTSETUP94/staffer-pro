@@ -93,9 +93,11 @@ export async function requireCapability(capKey: string): Promise<void> {
   }
 }
 
+/**
  * Consommé par `_app.tsx` (AppGuard) au mount/changement de route.
  * Retourne la cap refusée si présente, puis nettoie le flag.
  */
+
 export function consumeCapDenied(): string | null {
   if (typeof window === "undefined") return null;
   try {
