@@ -1816,9 +1816,9 @@ function TabPerformance({ app, ctx, groups, onGoTo }: { app: AppData; ctx: Retur
                     <td className="p-1 text-muted-foreground">{p.chargeAffaire}</td>
                     <td className="p-1 text-right tabular-nums">{fmtEUR(p.caMO)}</td>
                     <td className="p-1 text-right tabular-nums">{fmtEUR(p.coutTotal)}</td>
-                    <td className={cn("p-1 text-right tabular-nums", p.margeReelle >= 0 ? "text-emerald-400" : "text-red-400")}>{fmtEUR(p.margeReelle)}</td>
-                    <td className={cn("p-1 text-right tabular-nums", p.ratio >= 1 ? "text-emerald-400" : "text-red-400")}>{isFinite(p.ratio) ? p.ratio.toFixed(2) : "—"}</td>
-                    <td className={cn("p-1 text-right tabular-nums", p.prodGlobale >= 1 ? "text-emerald-400" : "text-red-400")}>{isFinite(p.prodGlobale) ? p.prodGlobale.toFixed(2) : "—"}</td>
+                    <td className={cn("p-1 text-right tabular-nums", tierColor(p.ratio))}>{fmtEUR(p.margeReelle)}</td>
+                    <td className={cn("p-1 text-right tabular-nums", tierColor(p.ratio))}>{isFinite(p.ratio) ? p.ratio.toFixed(2) : "—"}</td>
+                    <td className={cn("p-1 text-right tabular-nums", tierColor(p.prodGlobale))}>{isFinite(p.prodGlobale) ? p.prodGlobale.toFixed(2) : "—"}</td>
                   </tr>
                 ))}
               </tbody>
