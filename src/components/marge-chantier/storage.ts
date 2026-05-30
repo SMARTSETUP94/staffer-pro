@@ -51,6 +51,29 @@ function hasRealData(data: AppData): boolean {
   );
 }
 
+export class MargeChantierSyncError extends Error {
+  code?: string;
+  details?: string;
+  hint?: string;
+  status?: number;
+  constructor(msg: string, opts: { code?: string; details?: string; hint?: string; status?: number } = {}) {
+    super(msg);
+    this.name = "MargeChantierSyncError";
+    Object.assign(this, opts);
+  }
+}
+
+function toSyncError(e: unknown, fallback: string): MargeChantierSyncError {
+  if (e instanceof MargeChantierSyncError) return e;
+  const anyE = e as { message?: string; code?: string; details?: string; hint?: string; status?: number } | null;
+  return new MargeChantierSyncError(anyE?.message || fallback, {
+    code: anyE?.code,
+    details: anyE?.details,
+    hint: anyE?.hint,
+    status: anyE?.status,
+  });
+}
+
 async function upsertSupabase(userId: string, data: AppData): Promise<void> {
   const { error } = await supabase
     .from("marge_chantier_workspace")
@@ -59,8 +82,12 @@ async function upsertSupabase(userId: string, data: AppData): Promise<void> {
       { onConflict: "user_id" },
     );
   if (error) {
-    console.error("[marge-chantier] save Supabase error:", error.message);
-    throw error;
+    console.error("[marge-chantier] save Supabase error:", error);
+    throw new MargeChantierSyncError(error.message, {
+      code: error.code,
+      details: (error as { details?: string }).details,
+      hint: (error as { hint?: string }).hint,
+    });
   }
 }
 
