@@ -91,6 +91,146 @@ function SyncBadge({ state }: { state: SyncState }) {
   return <Badge variant="outline" className="gap-1 border-emerald-700 text-emerald-500"><CheckCircle2 className="h-3 w-3" />Synchronisé</Badge>;
 }
 
+type SyncErrorInfo = {
+  phase: "load" | "save";
+  message: string;
+  code?: string;
+  details?: string;
+  hint?: string;
+  at: number;
+  retries: number;
+};
+
+function humanizeSyncError(err: SyncErrorInfo): { title: string; explanation: string } {
+  const raw = (err.message || "").toLowerCase();
+  if (raw.includes("failed to fetch") || raw.includes("networkerror") || raw.includes("network")) {
+    return {
+      title: err.phase === "load" ? "Connexion au serveur impossible" : "Envoi au serveur impossible",
+      explanation:
+        "Le serveur est injoignable. Vérifiez votre connexion internet — vos modifications restent enregistrées localement et seront renvoyées au prochain essai.",
+    };
+  }
+  if (raw.includes("unicode") || raw.includes("escape")) {
+    return {
+      title: "Donnée invalide rejetée par le serveur",
+      explanation:
+        "Une valeur contient des caractères non supportés (séquence d'échappement Unicode invalide, souvent depuis un copier-coller Excel). Le cache local est intact, mais le serveur a refusé l'enregistrement.",
+    };
+  }
+  if (err.code === "PGRST301" || raw.includes("jwt") || raw.includes("expired")) {
+    return {
+      title: "Session expirée",
+      explanation: "Votre session a expiré. Rechargez la page pour vous reconnecter — vos données locales sont conservées.",
+    };
+  }
+  if (err.code === "42501" || raw.includes("permission")) {
+    return {
+      title: "Permissions insuffisantes",
+      explanation: "Votre compte n'a pas les droits requis pour écrire ces données. Contactez un administrateur.",
+    };
+  }
+  if (raw.includes("quota") || raw.includes("payload")) {
+    return {
+      title: "Données trop volumineuses",
+      explanation: "Le payload dépasse la limite serveur. Essayez de purger d'anciens chantiers ou de scinder les imports.",
+    };
+  }
+  return {
+    title: err.phase === "load" ? "Chargement depuis le serveur impossible" : "Enregistrement serveur impossible",
+    explanation:
+      "Le serveur a refusé l'opération. Vos modifications restent dans le cache local. Vous pouvez retenter ou télécharger une sauvegarde JSON en attendant.",
+  };
+}
+
+function SyncErrorPanel({
+  error,
+  userEmail,
+  onRetry,
+  onDismiss,
+}: {
+  error: SyncErrorInfo;
+  userEmail: string | null;
+  onRetry: () => void | Promise<void>;
+  onDismiss: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [retrying, setRetrying] = useState(false);
+  const { title, explanation } = humanizeSyncError(error);
+  const occurredAt = new Date(error.at).toLocaleTimeString("fr-FR");
+
+  const handleRetry = async () => {
+    setRetrying(true);
+    try {
+      await onRetry();
+    } finally {
+      setRetrying(false);
+    }
+  };
+
+  const detailsText =
+    `Phase    : ${error.phase === "load" ? "loadAppData (lecture)" : "saveAppData (écriture)"}\n` +
+    `Heure    : ${occurredAt}\n` +
+    `Compte   : ${userEmail ?? "anonyme"}\n` +
+    `Message  : ${error.message}` +
+    (error.code ? `\nCode     : ${error.code}` : "") +
+    (error.hint ? `\nHint     : ${error.hint}` : "") +
+    (error.details ? `\nDétails  : ${error.details}` : "");
+
+  return (
+    <Alert variant="destructive" className="border-destructive/60">
+      <AlertTriangle className="h-4 w-4" />
+      <AlertTitle className="flex items-center gap-2 flex-wrap">
+        {title}
+        <Badge variant="outline" className="text-[10px] font-normal">
+          {error.phase === "load" ? "Lecture" : "Écriture"}
+        </Badge>
+        {error.retries > 0 && (
+          <Badge variant="outline" className="text-[10px] font-normal">
+            {error.retries + 1} tentatives
+          </Badge>
+        )}
+      </AlertTitle>
+      <AlertDescription className="space-y-3">
+        <p className="text-sm">{explanation}</p>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button size="sm" variant="secondary" onClick={handleRetry} disabled={retrying} className="gap-1">
+            {retrying ? <RotateCcw className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+            {retrying ? "Nouvelle tentative…" : "Réessayer maintenant"}
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => {
+              navigator.clipboard?.writeText(detailsText).then(
+                () => toast.success("Détails copiés"),
+                () => toast.error("Copie impossible"),
+              );
+            }}
+          >
+            Copier les détails
+          </Button>
+          <Button size="sm" variant="ghost" onClick={onDismiss}>
+            Masquer
+          </Button>
+        </div>
+        <Collapsible open={open} onOpenChange={setOpen}>
+          <CollapsibleTrigger asChild>
+            <Button variant="ghost" size="sm" className="h-7 px-2 text-xs gap-1">
+              {open ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+              Détails techniques
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="mt-2">
+            <pre className="text-[11px] leading-relaxed bg-background/50 border border-border rounded p-2 overflow-auto whitespace-pre-wrap break-all">{detailsText}</pre>
+          </CollapsibleContent>
+        </Collapsible>
+      </AlertDescription>
+    </Alert>
+  );
+}
+
+
+
 export function MargeChantierApp() {
   const { user } = useAuth();
   const userId = user?.id ?? "anonymous";
