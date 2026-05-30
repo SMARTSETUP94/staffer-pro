@@ -76,6 +76,19 @@ type TabKey = "rh" | "ref" | "registre" | "devis" | "heures" | "synthese" | "mar
 
 type SyncState = "loading" | "idle" | "saving" | "error";
 
+function SyncBadge({ state }: { state: SyncState }) {
+  if (state === "loading") {
+    return <Badge variant="secondary" className="gap-1"><RotateCcw className="h-3 w-3 animate-spin" />Chargement…</Badge>;
+  }
+  if (state === "saving") {
+    return <Badge variant="secondary" className="gap-1"><RotateCcw className="h-3 w-3 animate-spin" />Synchronisation…</Badge>;
+  }
+  if (state === "error") {
+    return <Badge variant="destructive" className="gap-1"><AlertTriangle className="h-3 w-3" />Erreur sync</Badge>;
+  }
+  return <Badge variant="outline" className="gap-1 border-emerald-700 text-emerald-500"><CheckCircle2 className="h-3 w-3" />Synchronisé</Badge>;
+}
+
 export function MargeChantierApp() {
   const { user } = useAuth();
   const userId = user?.id ?? "anonymous";
