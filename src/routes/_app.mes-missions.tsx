@@ -41,8 +41,8 @@ function MesMissionsPage() {
   void navigate;
 
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
-    queryKey: ["mes-missions"],
-    queryFn: () => fetchMissions(),
+    queryKey: ["mes-missions", scope],
+    queryFn: () => fetchMissions({ data: { scope } }),
     staleTime: 60_000,
     refetchOnWindowFocus: true,
   });
