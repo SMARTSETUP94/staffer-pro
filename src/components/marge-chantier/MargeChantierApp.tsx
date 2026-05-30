@@ -197,6 +197,23 @@ export function MargeChantierApp() {
     }
   };
 
+  const handleManualSync = async () => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = null;
+    }
+    setSyncState("saving");
+    try {
+      await saveAppData(userId, app);
+      setSavedAt(Date.now());
+      setSyncState("idle");
+      toast.success("Synchronisé avec succès");
+    } catch {
+      setSyncState("error");
+      toast.error("Échec de la synchronisation");
+    }
+  };
+
   const isEmpty = app.rh.length === 0 && app.devis.length === 0 && app.heures.length === 0;
   const savedLabel = useFormatSaved(savedAt, savedTick);
 
