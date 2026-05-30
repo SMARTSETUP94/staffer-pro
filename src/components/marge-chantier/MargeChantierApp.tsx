@@ -72,6 +72,18 @@ const fmtEUR = (n: number) =>
 const fmtNb = (n: number, d = 1) =>
   isFinite(n) ? new Intl.NumberFormat("fr-FR", { maximumFractionDigits: d }).format(n) : "—";
 
+/**
+ * Couleur tiers (rouge / ambre / emerald / emerald-foncé) pour un ratio CA/coût ou productivité.
+ * Seuils : < 0.8 critique · 0.8–1.0 sous-rentable · 1.0–1.2 rentable · > 1.2 très rentable.
+ */
+const tierColor = (ratio: number): string => {
+  if (!isFinite(ratio)) return "text-muted-foreground";
+  if (ratio < 0.8) return "text-red-400";
+  if (ratio < 1.0) return "text-amber-400";
+  if (ratio < 1.2) return "text-emerald-400";
+  return "text-emerald-300";
+};
+
 const STATUTS: Employe["statut"][] = ["Permanent 35h", "Permanent forfait", "Intermittent", "Auto-entrepreneur"];
 
 type TabKey = "rh" | "ref" | "registre" | "devis" | "heures" | "synthese" | "marge" | "perf";
