@@ -207,7 +207,9 @@ Modèle staffing 3 niveaux (Sprint A) : `affaire_equipe(affaire_id, employe_id, 
 112. ⏸️ **Sprint dette résiduelle v0.36** — Page admin véhicules + audit findings (BACKLOG).
 
 ## Memories
+- [Aujourd'hui employé v0.52](mem://features/aujourdhui-employe-v052) — 30 mai 2026, refonte `/aujourdhui` employés branchée sur `/` via cap-driven routing, 3 blocs + alias redirect
 - [Marge chantier Option A standalone](mem://features/marge-chantier-option-a) — 30 mai 2026, /admin/marge-chantier 8 onglets, engine.ts intouchable, localStorage par admin, 2 E2E. Phases 2→4 (bridges employés/devis/heures) toujours différées.
+
 - [Marge chantier Phase 5 LIVRÉE](mem://features/marge-chantier-phase-5-livree) — 30 mai 2026, table marge_chantier_workspace JSONB + RLS user-scoped + storage.ts async + debounce 2s + SyncBadge + migration auto localStorage → Supabase + 2 E2E sync.
 - [Bloc 10 — Fiche opportunité (récap global 10.1→10.5)](mem://features/bloc-10-fiche-opportunite) — 28 mai 2026, phase 'opportunite' sur affaires, RPC sign_opportunite, 5 caps, 196 opps archivées, 12 Vitest + 2 E2E + 3 pgTAP
 - [Bloc 10.4 Listing refactor opportunités](mem://features/bloc-10-4-listing-refactor) — 28 mai 2026, RPC list_opportunites_active() + badges urgence + filtres URL + EXPLAIN ~48ms
