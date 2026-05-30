@@ -227,7 +227,7 @@ export function MargeChantierApp() {
     }
   };
 
-  const handleManualSync = async () => {
+  const handleManualSync = useCallback(async () => {
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
       debounceTimerRef.current = null;
@@ -237,12 +237,30 @@ export function MargeChantierApp() {
       await saveAppData(userId, app);
       setSavedAt(Date.now());
       setSyncState("idle");
+      setSyncError(null);
       toast.success("Synchronisé avec succès");
-    } catch {
+    } catch (e) {
       setSyncState("error");
+      captureError("save", e);
       toast.error("Échec de la synchronisation");
     }
-  };
+  }, [app, userId, captureError]);
+
+  const handleRetryLoad = useCallback(async () => {
+    setSyncState("loading");
+    try {
+      const loaded = await loadAppData(userId);
+      setApp(loaded);
+      setHydrated(true);
+      setSyncState("idle");
+      setSyncError(null);
+      toast.success("Données rechargées");
+    } catch (e) {
+      setSyncState("error");
+      captureError("load", e);
+      toast.error("Rechargement impossible");
+    }
+  }, [userId, captureError]);
 
   const isEmpty = app.rh.length === 0 && app.devis.length === 0 && app.heures.length === 0;
   const savedLabel = useFormatSaved(savedAt, savedTick);
