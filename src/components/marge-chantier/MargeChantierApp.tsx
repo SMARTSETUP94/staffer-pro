@@ -414,6 +414,18 @@ export function MargeChantierApp() {
     }
   }, [userId, captureError]);
 
+  // Raccourci clavier : Cmd/Ctrl+S → force la synchronisation immédiate
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "s") {
+        e.preventDefault();
+        void handleManualSync();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [handleManualSync]);
+
   const isEmpty = app.rh.length === 0 && app.devis.length === 0 && app.heures.length === 0;
   const savedLabel = useFormatSaved(savedAt, savedTick);
 
