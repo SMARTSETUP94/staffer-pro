@@ -130,6 +130,7 @@ function buildSections(
         { title: "Métiers & postes", url: "/parametres/metiers", icon: Palette, cap: "section.admin" },
         { title: "Lieux entreprise", url: "/parametres/lieux", icon: Warehouse, cap: "section.admin" },
         { title: "Audit Admin", url: "/admin/audit", icon: ClipboardCheck, cap: "section.admin" },
+        { title: "Marges chantiers", url: "/admin/marge-chantier", icon: TrendingUp, cap: "section.admin" },
         { title: "Exports", url: "/export", icon: FileDown, cap: "section.admin" },
         { title: "Roadmap", url: "/roadmap", icon: Map, cap: "section.admin" },
         { title: "Réglages compétences", url: "/parametres/competences-equipe", icon: Settings, cap: "section.admin" },
