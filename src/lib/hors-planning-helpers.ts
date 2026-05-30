@@ -14,6 +14,11 @@ export interface HorsPlanningInput {
   date: string; // YYYY-MM-DD
   heures_reelles: number;
   commentaire: string | null;
+  /** v0.49 — alignement avec les autres modules de saisie d'heures. */
+  heure_debut?: string | null; // "HH:mm"
+  heure_fin?: string | null; // "HH:mm"
+  duree_pause_minutes?: number | null;
+  heures_nuit?: number | null;
 }
 
 export interface HorsPlanningInsertPayload {
@@ -25,6 +30,10 @@ export interface HorsPlanningInsertPayload {
   heures_reelles: number;
   commentaire: string | null;
   statut: "brouillon";
+  heure_debut: string | null;
+  heure_fin: string | null;
+  duree_pause_minutes: number | null;
+  heures_nuit: number | null;
 }
 
 export type HorsPlanningValidationError =
