@@ -42,7 +42,7 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth-context";
-import { loadAppData, saveAppData, downloadAsJson, restoreFromJson } from "./storage";
+import { loadAppData, saveAppData, saveAppDataSync, downloadAsJson, restoreFromJson } from "./storage";
 import { readXlsx, readCsvWin1252, readCsvOrXlsx } from "./file-readers";
 import {
   emptyApp,
