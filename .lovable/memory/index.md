@@ -131,6 +131,10 @@ Modèle staffing 3 niveaux (Sprint A) : `affaire_equipe(affaire_id, employe_id, 
 ### Livré v0.48 (Planning par pôle + Refonte navigation)
 64. ✅ **v0.48** (14-16 mai 2026) — (a) Onglet "Par pôle" : matrice métiers × jours, badge nb personnes, hover popover vignettes, badge `PRÉV` pour 9XXX, RPC `staffing_par_pole_jours`, teinte ambrée 9XXX sur Par chantier existant. (b) Refonte navigation : 3 onglets sortis du planning vers routes natives (`/logistique/vehicules-planning`, `/affaires/budget-planning`, `/export/feuille-de-route`). Planning recentré à 5 onglets staffing. Redirects SPA depuis anciens `?tab=`. Sidebar mise à jour.
 
+### Livré v0.52 — Refonte page d'accueil employés
+64bis. ✅ **v0.52** (30 mai 2026) — Refonte `/aujourdhui` employés : `EmployeAujourdhuiView` (490 l) branché cap-driven sur `_app.index.tsx` (home `/`) si pas `dashboard.team.view`. 3 blocs : Mon planning semaine (7 jours AM/PM + Sheet « Mon équipe sur ce chantier » au clic), Mes heures (compteur 39h + saisir + historique), Mon atelier (masqué auto si 0 objet). 3 server fns `getMonPlanningSemaine` / `getMonEquipeChantier` / `getMesObjetsAtelier`. Alias route `/aujourdhui` → `/` pour bookmarks externes. Test `e2e/aujourdhui-multirole.spec.ts`. Voir mem://features/aujourdhui-employe-v052.
+
+
 ### Livré Bloc 8 — Fiche Objet enrichie (mai 2026)
 65. ✅ **8.1** (23 mai 2026) — Fondations data : vue matérialisée `v_objet_heures_consolidees` (réel uniquement) + 4 capabilities (`objet.view/edit/team.manage/photo.upload`) + flag `fiche_objet_v1` + SF `getObjetTeam` / `assignPersonneToObjetStep`. Helpers testables (15 tests Vitest).
 66. ✅ **8.2** (23 mai 2026) — Route `/affaires/$id/objets/$objetId` + page `FicheObjetPage` + `ObjetIdentiteSection` (read/edit) + `ObjetHeuresTable` (Prévu/Planifié/Réel/Écart). Lien temporaire depuis `/affaires/$id/fabrication` (desktop + mobile) gated par flag+cap.
