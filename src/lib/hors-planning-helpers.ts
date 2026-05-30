@@ -112,10 +112,10 @@ export function buildHorsPlanningInsert(
   const heureFin = input.heure_fin && input.heure_fin.trim() !== "" ? input.heure_fin : null;
   const pauseMin = input.duree_pause_minutes != null && Number.isFinite(Number(input.duree_pause_minutes))
     ? Number(input.duree_pause_minutes)
-    : null;
+    : 0;
   const heuresNuit = input.heures_nuit != null && Number.isFinite(Number(input.heures_nuit))
     ? Number(input.heures_nuit)
-    : null;
+    : 0;
   return {
     employe_id: employeId,
     assignation_id: null,
