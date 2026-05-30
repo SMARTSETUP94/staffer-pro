@@ -1029,7 +1029,7 @@ function TabBaseRH({ app, update }: { app: AppData; update: (fn: (d: AppData) =>
           />
         ) : (
           <div className="overflow-auto max-h-[70vh] rounded border border-border">
-            <table className="text-sm" style={{ tableLayout: "fixed", width: "max-content", minWidth: "100%" }}>
+            <table ref={gridRef} onKeyDown={onTableKeyDown} className="text-sm" style={{ tableLayout: "fixed", width: "max-content", minWidth: "100%" }}>
               <colgroup>
                 <col style={{ width: w.personne }} />
                 {!isHidden("statut") && <col style={{ width: w.statut }} />}
