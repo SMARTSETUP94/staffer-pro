@@ -465,7 +465,7 @@ export function MargeChantierApp() {
                         {syncState === "saving" ? "Synchronisation…" : "Synchroniser maintenant"}
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent>Forcer l&apos;envoi immédiat vers le serveur</TooltipContent>
+                    <TooltipContent>Forcer l&apos;envoi immédiat vers le serveur (raccourci ⌘/Ctrl + S)</TooltipContent>
                   </Tooltip>
                 </div>
               </div>
