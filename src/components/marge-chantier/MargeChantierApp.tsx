@@ -19,7 +19,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   Save, Upload, Download, FileSpreadsheet, FileText, Search, ChevronDown, ChevronRight,
-  Plus, Trash2, MoreVertical, Users2, ListChecks, ClipboardList, FileBarChart, Clock,
+  Plus, Trash2, Copy, MoreVertical, Users2, ListChecks, ClipboardList, FileBarChart, Clock,
   Building2, UserSquare2, Target, Info, CheckCircle2, RotateCcw, ArrowLeft,
   Sparkles, AlertTriangle, Columns3, Rows3, RefreshCw,
 } from "lucide-react";
@@ -744,6 +744,38 @@ function ModeToggle({ mode, onChange }: { mode: Mode; onChange: (m: Mode) => voi
 }
 
 /* ========================================================================== */
+/* Hook navigation clavier dans tables                                         */
+/* ========================================================================== */
+function useTableNav() {
+  const gridRef = useRef<HTMLTableElement | null>(null);
+  const onTableKeyDown = (e: React.KeyboardEvent<HTMLTableElement>) => {
+    const target = e.target as HTMLElement;
+    if (!(target.tagName === "INPUT" || target.tagName === "SELECT" || target.closest("[data-role='select-trigger']"))) return;
+    const cell = target.closest("td") as HTMLTableCellElement | null;
+    const row = target.closest("tr") as HTMLTableRowElement | null;
+    const table = gridRef.current;
+    if (!cell || !row || !table) return;
+    const allRows = Array.from(table.querySelectorAll("tbody tr"));
+    const rowIdx = allRows.indexOf(row);
+    const allCells = Array.from(row.querySelectorAll("td"));
+    const colIdx = allCells.indexOf(cell);
+    if (rowIdx < 0 || colIdx < 0) return;
+    const focusCell = (r: number, c: number) => {
+      const targetRow = allRows[r];
+      if (!targetRow) return;
+      const targetCell = targetRow.querySelectorAll("td")[c];
+      if (!targetCell) return;
+      const input = targetCell.querySelector("input, select, [data-role='select-trigger'] button") as HTMLElement | null;
+      if (input) { input.focus(); input.scrollIntoView({ block: "nearest", inline: "nearest" }); }
+    };
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); focusCell(rowIdx + 1, colIdx); }
+    else if (e.key === "Enter" && e.shiftKey) { e.preventDefault(); focusCell(rowIdx - 1, colIdx); }
+    else if (e.key === "Tab" && e.shiftKey && colIdx <= 0 && rowIdx > 0) { e.preventDefault(); focusCell(rowIdx - 1, allRows[rowIdx - 1].querySelectorAll("td").length - 1); }
+  };
+  return { gridRef, onTableKeyDown };
+}
+
+/* ========================================================================== */
 /* 1. Base RH                                                                  */
 /* ========================================================================== */
 type RhColKey = "statut" | "poste" | "metier" | "taux" | "coef" | "coutMensuel" | "couthEff";
@@ -789,6 +821,7 @@ function TabBaseRH({ app, update }: { app: AppData; update: (fn: (d: AppData) =>
   const [statut, setStatut] = useState<string>("all");
   const [aCompleter, setACompleter] = useState(false);
   const [prefs, setPrefs] = useState<RhPrefs>(() => loadRhPrefs());
+  const { gridRef, onTableKeyDown } = useTableNav();
 
   useEffect(() => {
     try { localStorage.setItem(RH_PREFS_KEY, JSON.stringify(prefs)); } catch { /* noop */ }
@@ -995,8 +1028,30 @@ function TabBaseRH({ app, update }: { app: AppData; update: (fn: (d: AppData) =>
             desc="Importez la fiche RH .xlsx (onglet « BDD Employés clean ») ou ajoutez manuellement vos premiers employés."
           />
         ) : (
-          <div className="overflow-auto max-h-[70vh] rounded border border-border">
-            <table className="text-sm" style={{ tableLayout: "fixed", width: "max-content", minWidth: "100%" }}>
+          <div className="overflow-auto max-h-[70vh] rounded border border-border" onPaste={(e) => {
+            const text = e.clipboardData.getData("text/plain");
+            if (!text || !text.includes("\t")) return;
+            e.preventDefault();
+            const rows = text.split("\n").filter((r) => r.trim());
+            let count = 0;
+            update((d) => {
+              rows.forEach((row) => {
+                const cols = row.split("\t");
+                const personne = cols[0]?.trim();
+                if (!personne) return;
+                const statut = cols[1]?.trim() || "Intermittent";
+                const poste = cols[2]?.trim() || "";
+                const metier = cols[3]?.trim() || "";
+                const taux = parseFloat(cols[4]?.replace(",", ".") || "0") || 0;
+                const coef = parseFloat(cols[5]?.replace(",", ".") || "0") || 0;
+                const coutMensuel = parseFloat(cols[6]?.replace(",", ".") || "0") || 0;
+                d.rh.push({ personne, statut, poste, metier, taux, coef, coutMensuel });
+                count++;
+              });
+            });
+            toast.success(`${count} ligne(s) collée(s) depuis Excel`);
+          }}>
+            <table ref={gridRef} onKeyDown={onTableKeyDown} className="text-sm" style={{ tableLayout: "fixed", width: "max-content", minWidth: "100%" }}>
               <colgroup>
                 <col style={{ width: w.personne }} />
                 {!isHidden("statut") && <col style={{ width: w.statut }} />}
@@ -1050,7 +1105,7 @@ function TabBaseRH({ app, update }: { app: AppData; update: (fn: (d: AppData) =>
                       {!isHidden("statut") && (
                         <td className={rh.cell}>
                           <Select value={r.statut} onValueChange={(v) => update((d) => { d.rh[idx].statut = v; })}>
-                            <SelectTrigger className={cn(rh.input, "bg-transparent")}><SelectValue /></SelectTrigger>
+                            <SelectTrigger data-role="select-trigger" className={cn(rh.input, "bg-transparent")}><SelectValue /></SelectTrigger>
                             <SelectContent>
                               {STATUTS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                             </SelectContent>
@@ -1060,7 +1115,7 @@ function TabBaseRH({ app, update }: { app: AppData; update: (fn: (d: AppData) =>
                       {!isHidden("poste") && (
                         <td className={rh.cell}>
                           <Select value={r.poste || "__none"} onValueChange={(v) => update((d) => { d.rh[idx].poste = v === "__none" ? "" : v; applyPosteMap(d); })}>
-                            <SelectTrigger className={cn(rh.input, "bg-transparent")}><SelectValue /></SelectTrigger>
+                            <SelectTrigger data-role="select-trigger" className={cn(rh.input, "bg-transparent")}><SelectValue /></SelectTrigger>
                             <SelectContent>
                               <SelectItem value="__none">—</SelectItem>
                               {app.postes.map((p) => <SelectItem key={p.nom} value={p.nom}>{p.nom}</SelectItem>)}
@@ -1071,7 +1126,7 @@ function TabBaseRH({ app, update }: { app: AppData; update: (fn: (d: AppData) =>
                       {!isHidden("metier") && (
                         <td className={rh.cell}>
                           <Select value={r.metier || "__none"} onValueChange={(v) => update((d) => { d.rh[idx].metier = v === "__none" ? "" : v; })}>
-                            <SelectTrigger className={cn(rh.input, "bg-transparent")}><SelectValue /></SelectTrigger>
+                            <SelectTrigger data-role="select-trigger" className={cn(rh.input, "bg-transparent")}><SelectValue /></SelectTrigger>
                             <SelectContent>
                               <SelectItem value="__none">—</SelectItem>
                               {app.metiers.map((m) => <SelectItem key={m.nom} value={m.nom}>{m.nom}</SelectItem>)}
@@ -1098,7 +1153,10 @@ function TabBaseRH({ app, update }: { app: AppData; update: (fn: (d: AppData) =>
                         <td className="p-2 text-right tabular-nums">{fmtEUR(ch)}</td>
                       )}
                       <td className={rh.cell}>
-                        <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-destructive" onClick={() => update((d) => { d.rh.splice(idx, 1); })}><Trash2 className="h-3 w-3" /></Button>
+                        <div className="flex items-center gap-0.5">
+                          <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground" title="Dupliquer" onClick={() => update((d) => { d.rh.splice(idx + 1, 0, { ...JSON.parse(JSON.stringify(r)), personne: r.personne + " (copie)" }); })}><Copy className="h-3 w-3" /></Button>
+                          <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-destructive" title="Supprimer" onClick={() => update((d) => { d.rh.splice(idx, 1); })}><Trash2 className="h-3 w-3" /></Button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -1401,7 +1459,7 @@ function TabDevis({ app, update, onGoTo }: { app: AppData; update: (fn: (d: AppD
                                 <td className="p-1"><Input value={l.designation} onChange={(e) => update((d) => { d.devis[dvIdx].lignes[li].designation = e.target.value; })} className="h-6 bg-transparent text-xs" /></td>
                                 <td className="p-1">
                                   <Select value={l.metier || "__none"} onValueChange={(v) => update((d) => { d.devis[dvIdx].lignes[li].metier = v === "__none" ? "" : v; })}>
-                                    <SelectTrigger className="h-6 bg-transparent text-xs"><SelectValue /></SelectTrigger>
+                                    <SelectTrigger data-role="select-trigger" className="h-6 bg-transparent text-xs"><SelectValue /></SelectTrigger>
                                     <SelectContent>
                                       <SelectItem value="__none">—</SelectItem>
                                       {app.metiers.map((m) => <SelectItem key={m.nom} value={m.nom}>{m.nom}</SelectItem>)}
@@ -1411,7 +1469,12 @@ function TabDevis({ app, update, onGoTo }: { app: AppData; update: (fn: (d: AppD
                                 <td className="p-1">{l.categorie}</td>
                                 <td className="p-1 text-right tabular-nums">{fmtNb(l.heuresVendues)}</td>
                                 <td className="p-1 text-right tabular-nums">{fmtEUR(l.caHT)}</td>
-                                <td className="p-1"><Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-destructive" onClick={() => update((d) => { d.devis[dvIdx].lignes[li].designation; d.devis[dvIdx].lignes.splice(li, 1); })}><Trash2 className="h-3 w-3" /></Button></td>
+                                <td className="p-1">
+                                  <div className="flex items-center gap-0.5">
+                                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground" title="Dupliquer" onClick={() => update((d) => { d.devis[dvIdx].lignes.splice(li + 1, 0, { ...JSON.parse(JSON.stringify(l)), num: l.num + "b" }); })}><Copy className="h-3 w-3" /></Button>
+                                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-destructive" title="Supprimer" onClick={() => update((d) => { d.devis[dvIdx].lignes.splice(li, 1); })}><Trash2 className="h-3 w-3" /></Button>
+                                  </div>
+                                </td>
                               </tr>
                             ))}
                           </tbody>
