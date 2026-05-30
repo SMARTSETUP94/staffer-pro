@@ -1437,7 +1437,7 @@ function TabDevis({ app, update, onGoTo }: { app: AppData; update: (fn: (d: AppD
                                 <td className="p-1"><Input value={l.designation} onChange={(e) => update((d) => { d.devis[dvIdx].lignes[li].designation = e.target.value; })} className="h-6 bg-transparent text-xs" /></td>
                                 <td className="p-1">
                                   <Select value={l.metier || "__none"} onValueChange={(v) => update((d) => { d.devis[dvIdx].lignes[li].metier = v === "__none" ? "" : v; })}>
-                                    <SelectTrigger className="h-6 bg-transparent text-xs"><SelectValue /></SelectTrigger>
+                                    <SelectTrigger data-role="select-trigger" className="h-6 bg-transparent text-xs"><SelectValue /></SelectTrigger>
                                     <SelectContent>
                                       <SelectItem value="__none">—</SelectItem>
                                       {app.metiers.map((m) => <SelectItem key={m.nom} value={m.nom}>{m.nom}</SelectItem>)}
@@ -1447,7 +1447,12 @@ function TabDevis({ app, update, onGoTo }: { app: AppData; update: (fn: (d: AppD
                                 <td className="p-1">{l.categorie}</td>
                                 <td className="p-1 text-right tabular-nums">{fmtNb(l.heuresVendues)}</td>
                                 <td className="p-1 text-right tabular-nums">{fmtEUR(l.caHT)}</td>
-                                <td className="p-1"><Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-destructive" onClick={() => update((d) => { d.devis[dvIdx].lignes[li].designation; d.devis[dvIdx].lignes.splice(li, 1); })}><Trash2 className="h-3 w-3" /></Button></td>
+                                <td className="p-1">
+                                  <div className="flex items-center gap-0.5">
+                                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground" title="Dupliquer" onClick={() => update((d) => { d.devis[dvIdx].lignes.splice(li + 1, 0, { ...JSON.parse(JSON.stringify(l)), num: l.num + "b" }); })}><Copy className="h-3 w-3" /></Button>
+                                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-destructive" title="Supprimer" onClick={() => update((d) => { d.devis[dvIdx].lignes.splice(li, 1); })}><Trash2 className="h-3 w-3" /></Button>
+                                  </div>
+                                </td>
                               </tr>
                             ))}
                           </tbody>
