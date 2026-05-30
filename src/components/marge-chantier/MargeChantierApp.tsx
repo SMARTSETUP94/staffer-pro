@@ -1608,11 +1608,41 @@ function TabSynthese({ app, ctx, groups, mode, onGoTo }: { app: AppData; ctx: Re
     return <EmptyState icon={<Building2 className="h-10 w-10" />} title="Aucun chantier" desc="La synthèse est calculée à partir des devis + heures. Commencez par importer ces données." ctaLabel="Aller aux devis →" onCta={() => onGoTo("devis")} />;
   }
 
+  const handleExportXlsx = useCallback(async () => {
+    try {
+      const XLSX = await import("xlsx-js-style");
+      const headers = ["Chantier", "Nom", "Client", "CA MO (€)", "CA Mat. (€)", "Coût (€)", "Marge MO (€)", "Ratio CA/Coût", "H vendues", "H passées", "Écart h"];
+      const rows = groups.map((g) => {
+        const c = calcChantier(app, g, ctx, mode);
+        const r = c.coutTotal > 0 ? c.caMO / c.coutTotal : NaN;
+        return [g.chantier, g.nom, g.client ?? "", c.caMO, c.caMat, c.coutTotal, c.margeMO, isFinite(r) ? Number(r.toFixed(2)) : "", c.heuresVendues, c.heuresPassees, c.ecartH];
+      });
+      const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+      ws["!cols"] = headers.map((_, i) => ({ wch: i < 3 ? 28 : 14 }));
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, `Synthèse ${mode === "reel" ? "Réel" : "Pondéré"}`);
+      const stamp = new Date().toISOString().slice(0, 10);
+      XLSX.writeFile(wb, `marges-chantiers_${stamp}.xlsx`);
+      toast.success(`Export Excel : ${rows.length} chantier(s)`);
+    } catch (e) {
+      console.error("[marge-chantier] export xlsx failed:", e);
+      toast.error("Export Excel impossible");
+    }
+  }, [app, ctx, groups, mode]);
+
   return (
     <div className="space-y-3">
       <div className="flex gap-2 items-center flex-wrap">
         <p className="text-xs text-muted-foreground">Mode <strong className="text-foreground">{mode === "reel" ? "Réel" : "Pondéré"}</strong> (ajustable en haut de page).</p>
-        <div className="relative ml-auto">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant="outline" size="sm" onClick={handleExportXlsx} className="ml-auto">
+              <FileSpreadsheet className="h-4 w-4 mr-1" /> Export Excel
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Télécharge la synthèse des {groups.length} chantier(s) en .xlsx (mode {mode === "reel" ? "Réel" : "Pondéré"})</TooltipContent>
+        </Tooltip>
+        <div className="relative">
           <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Recherche chantier" className="pl-8 w-64" />
         </div>
