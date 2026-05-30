@@ -32,8 +32,8 @@ export interface HorsPlanningInsertPayload {
   statut: "brouillon";
   heure_debut: string | null;
   heure_fin: string | null;
-  duree_pause_minutes: number | null;
-  heures_nuit: number | null;
+  duree_pause_minutes: number;
+  heures_nuit: number;
 }
 
 export type HorsPlanningValidationError =
