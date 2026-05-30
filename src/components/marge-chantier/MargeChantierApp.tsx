@@ -16,12 +16,12 @@
  * - Tri devis par défaut + bouton "Écarts d'abord"
  * - Design tokens (bg-background, bg-card, text-muted-foreground…) au lieu de slate-* hardcoded
  */
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   Save, Upload, Download, FileSpreadsheet, FileText, Search, ChevronDown, ChevronRight,
   Plus, Trash2, MoreVertical, Users2, ListChecks, ClipboardList, FileBarChart, Clock,
   Building2, UserSquare2, Target, Info, CheckCircle2, RotateCcw, ArrowLeft,
-  Sparkles, AlertTriangle, Columns3, Rows3,
+  Sparkles, AlertTriangle, Columns3, Rows3, RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "@tanstack/react-router";
