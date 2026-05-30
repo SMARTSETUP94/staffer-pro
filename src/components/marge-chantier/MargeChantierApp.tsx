@@ -1652,7 +1652,7 @@ function TabSynthese({ app, ctx, groups, mode, onGoTo }: { app: AppData; ctx: Re
                           <td className="p-1 text-right tabular-nums">{fmtNb(p.heuresPond)}</td>
                           <td className="p-1 text-right tabular-nums">{fmtEUR(p.caContrib)}</td>
                           <td className="p-1 text-right tabular-nums">{fmtEUR(p.cout)}</td>
-                          <td className={cn("p-1 text-right tabular-nums", p.marge >= 0 ? "text-emerald-400" : "text-red-400")}>{fmtEUR(p.marge)}</td>
+                          <td className={cn("p-1 text-right tabular-nums", tierColor(p.ratio))}>{fmtEUR(p.marge)}</td>
                           <td className="p-1 text-right tabular-nums">{isFinite(p.ratio) ? p.ratio.toFixed(2) : "—"}</td>
                         </tr>
                       ))}
