@@ -744,6 +744,29 @@ function ModeToggle({ mode, onChange }: { mode: Mode; onChange: (m: Mode) => voi
 }
 
 /* ========================================================================== */
+/* Hook navigation clavier dans tables                                         */
+/* ========================================================================== */
+function useTableNav<T extends HTMLElement>(rows: number, cols: number) {
+  const refs = useRef<(T | null)[][]>([]);
+  const getRef = (r: number, c: number) => {
+    if (!refs.current[r]) refs.current[r] = [];
+    return (el: T | null) => { refs.current[r][c] = el; };
+  };
+  const focusCell = (r: number, c: number) => {
+    const el = refs.current[r]?.[c];
+    if (el) { el.focus(); el.scrollIntoView({ block: "nearest", inline: "nearest" }); }
+  };
+  const onKeyDown = (row: number, col: number) => (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); focusCell(row + 1, col); }
+    else if (e.key === "Enter" && e.shiftKey) { e.preventDefault(); focusCell(row - 1, col); }
+    else if (e.key === "Tab" && e.shiftKey) {
+      if (col <= 0 && row > 0) { e.preventDefault(); focusCell(row - 1, cols - 1); }
+    }
+  };
+  return { getRef, focusCell, onKeyDown };
+}
+
+/* ========================================================================== */
 /* 1. Base RH                                                                  */
 /* ========================================================================== */
 type RhColKey = "statut" | "poste" | "metier" | "taux" | "coef" | "coutMensuel" | "couthEff";
