@@ -72,6 +72,18 @@ const fmtEUR = (n: number) =>
 const fmtNb = (n: number, d = 1) =>
   isFinite(n) ? new Intl.NumberFormat("fr-FR", { maximumFractionDigits: d }).format(n) : "—";
 
+/**
+ * Couleur tiers (rouge / ambre / emerald / emerald-foncé) pour un ratio CA/coût ou productivité.
+ * Seuils : < 0.8 critique · 0.8–1.0 sous-rentable · 1.0–1.2 rentable · > 1.2 très rentable.
+ */
+const tierColor = (ratio: number): string => {
+  if (!isFinite(ratio)) return "text-muted-foreground";
+  if (ratio < 0.8) return "text-red-400";
+  if (ratio < 1.0) return "text-amber-400";
+  if (ratio < 1.2) return "text-emerald-400";
+  return "text-emerald-300";
+};
+
 const STATUTS: Employe["statut"][] = ["Permanent 35h", "Permanent forfait", "Intermittent", "Auto-entrepreneur"];
 
 type TabKey = "rh" | "ref" | "registre" | "devis" | "heures" | "synthese" | "marge" | "perf";
@@ -402,6 +414,18 @@ export function MargeChantierApp() {
     }
   }, [userId, captureError]);
 
+  // Raccourci clavier : Cmd/Ctrl+S → force la synchronisation immédiate
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "s") {
+        e.preventDefault();
+        void handleManualSync();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [handleManualSync]);
+
   const isEmpty = app.rh.length === 0 && app.devis.length === 0 && app.heures.length === 0;
   const savedLabel = useFormatSaved(savedAt, savedTick);
 
@@ -441,7 +465,7 @@ export function MargeChantierApp() {
                         {syncState === "saving" ? "Synchronisation…" : "Synchroniser maintenant"}
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent>Forcer l&apos;envoi immédiat vers le serveur</TooltipContent>
+                    <TooltipContent>Forcer l&apos;envoi immédiat vers le serveur (raccourci ⌘/Ctrl + S)</TooltipContent>
                   </Tooltip>
                 </div>
               </div>
@@ -578,7 +602,7 @@ function useFormatSaved(savedAt: number | null, _tick: number) {
 }
 
 function GlobalKpiBar({ globals, mode }: { globals: ReturnType<typeof Object> & { caMO: number; caMat: number; hVendues: number; hSaisies: number; marge: number; cout: number; ratio: number }; mode: Mode }) {
-  const marginPos = globals.marge >= 0;
+  const margeCls = tierColor(globals.ratio);
   return (
     <div className="sticky top-0 z-10 -mx-4 px-4 py-2 bg-background/95 backdrop-blur border-b border-border">
       <div className="grid grid-cols-2 md:grid-cols-5 gap-2 max-w-[1600px] mx-auto">
@@ -589,8 +613,8 @@ function GlobalKpiBar({ globals, mode }: { globals: ReturnType<typeof Object> & 
         <KpiInline
           label="Marge MO"
           value={fmtEUR(globals.marge)}
-          color={marginPos ? "text-emerald-400" : "text-red-400"}
-          hint={`CA MO − Coût (mode ${mode === "reel" ? "Réel" : "Pondéré"}). Ratio ${isFinite(globals.ratio) ? globals.ratio.toFixed(2) : "—"}`}
+          color={margeCls}
+          hint={`CA MO − Coût (mode ${mode === "reel" ? "Réel" : "Pondéré"}). Ratio CA/Coût ${isFinite(globals.ratio) ? globals.ratio.toFixed(2) : "—"}. Code couleur : <0.8 critique, 0.8–1 sous-rentable, 1–1.2 rentable, >1.2 très rentable.`}
         />
       </div>
     </div>
@@ -1584,11 +1608,41 @@ function TabSynthese({ app, ctx, groups, mode, onGoTo }: { app: AppData; ctx: Re
     return <EmptyState icon={<Building2 className="h-10 w-10" />} title="Aucun chantier" desc="La synthèse est calculée à partir des devis + heures. Commencez par importer ces données." ctaLabel="Aller aux devis →" onCta={() => onGoTo("devis")} />;
   }
 
+  const handleExportXlsx = useCallback(async () => {
+    try {
+      const XLSX = await import("xlsx-js-style");
+      const headers = ["Chantier", "Nom", "Client", "CA MO (€)", "CA Mat. (€)", "Coût (€)", "Marge MO (€)", "Ratio CA/Coût", "H vendues", "H passées", "Écart h"];
+      const rows = groups.map((g) => {
+        const c = calcChantier(app, g, ctx, mode);
+        const r = c.coutTotal > 0 ? c.caMO / c.coutTotal : NaN;
+        return [g.chantier, g.nom, g.client ?? "", c.caMO, c.caMat, c.coutTotal, c.margeMO, isFinite(r) ? Number(r.toFixed(2)) : "", c.heuresVendues, c.heuresPassees, c.ecartH];
+      });
+      const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+      ws["!cols"] = headers.map((_, i) => ({ wch: i < 3 ? 28 : 14 }));
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, `Synthèse ${mode === "reel" ? "Réel" : "Pondéré"}`);
+      const stamp = new Date().toISOString().slice(0, 10);
+      XLSX.writeFile(wb, `marges-chantiers_${stamp}.xlsx`);
+      toast.success(`Export Excel : ${rows.length} chantier(s)`);
+    } catch (e) {
+      console.error("[marge-chantier] export xlsx failed:", e);
+      toast.error("Export Excel impossible");
+    }
+  }, [app, ctx, groups, mode]);
+
   return (
     <div className="space-y-3">
       <div className="flex gap-2 items-center flex-wrap">
         <p className="text-xs text-muted-foreground">Mode <strong className="text-foreground">{mode === "reel" ? "Réel" : "Pondéré"}</strong> (ajustable en haut de page).</p>
-        <div className="relative ml-auto">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant="outline" size="sm" onClick={handleExportXlsx} className="ml-auto">
+              <FileSpreadsheet className="h-4 w-4 mr-1" /> Export Excel
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Télécharge la synthèse des {groups.length} chantier(s) en .xlsx (mode {mode === "reel" ? "Réel" : "Pondéré"})</TooltipContent>
+        </Tooltip>
+        <div className="relative">
           <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Recherche chantier" className="pl-8 w-64" />
         </div>
@@ -1597,7 +1651,8 @@ function TabSynthese({ app, ctx, groups, mode, onGoTo }: { app: AppData; ctx: Re
         {filtered.map((g) => {
           const c = calcChantier(app, g, ctx, mode);
           const marge = c.margeMO;
-          const margeColor = marge >= 0 ? "text-emerald-400" : "text-red-400";
+          const ratio = c.coutTotal > 0 ? c.caMO / c.coutTotal : NaN;
+          const margeColor = tierColor(ratio);
           return (
             <details key={g.chantier} className="border border-border rounded-md bg-card">
               <summary className="p-3 cursor-pointer hover:bg-muted/40 flex flex-wrap items-center gap-3">
@@ -1627,7 +1682,7 @@ function TabSynthese({ app, ctx, groups, mode, onGoTo }: { app: AppData; ctx: Re
                           <td className="p-1 text-right tabular-nums">{fmtNb(p.heuresPond)}</td>
                           <td className="p-1 text-right tabular-nums">{fmtEUR(p.caContrib)}</td>
                           <td className="p-1 text-right tabular-nums">{fmtEUR(p.cout)}</td>
-                          <td className={cn("p-1 text-right tabular-nums", p.marge >= 0 ? "text-emerald-400" : "text-red-400")}>{fmtEUR(p.marge)}</td>
+                          <td className={cn("p-1 text-right tabular-nums", tierColor(p.ratio))}>{fmtEUR(p.marge)}</td>
                           <td className="p-1 text-right tabular-nums">{isFinite(p.ratio) ? p.ratio.toFixed(2) : "—"}</td>
                         </tr>
                       ))}
@@ -1707,7 +1762,7 @@ function TabMargePersonne({ app, mode, onGoTo }: { app: AppData; mode: Mode; onG
                   <td className="p-2 text-right tabular-nums">{fmtEUR(p.caContrib)}</td>
                   <td className="p-2 text-right tabular-nums">{fmtEUR(p.cout)}</td>
                   <td className="p-2 text-right tabular-nums text-muted-foreground">{fmtEUR(p.coutMajo)}</td>
-                  <td className={cn("p-2 text-right tabular-nums", p.marge >= 0 ? "text-emerald-400" : "text-red-400")}>{fmtEUR(p.marge)}</td>
+                  <td className={cn("p-2 text-right tabular-nums", tierColor(p.ratio))}>{fmtEUR(p.marge)}</td>
                   <td className="p-2 text-right tabular-nums">{isFinite(p.ratio) ? p.ratio.toFixed(2) : "—"}</td>
                 </tr>
               ))}
@@ -1791,9 +1846,9 @@ function TabPerformance({ app, ctx, groups, onGoTo }: { app: AppData; ctx: Retur
                     <td className="p-1 text-muted-foreground">{p.chargeAffaire}</td>
                     <td className="p-1 text-right tabular-nums">{fmtEUR(p.caMO)}</td>
                     <td className="p-1 text-right tabular-nums">{fmtEUR(p.coutTotal)}</td>
-                    <td className={cn("p-1 text-right tabular-nums", p.margeReelle >= 0 ? "text-emerald-400" : "text-red-400")}>{fmtEUR(p.margeReelle)}</td>
-                    <td className={cn("p-1 text-right tabular-nums", p.ratio >= 1 ? "text-emerald-400" : "text-red-400")}>{isFinite(p.ratio) ? p.ratio.toFixed(2) : "—"}</td>
-                    <td className={cn("p-1 text-right tabular-nums", p.prodGlobale >= 1 ? "text-emerald-400" : "text-red-400")}>{isFinite(p.prodGlobale) ? p.prodGlobale.toFixed(2) : "—"}</td>
+                    <td className={cn("p-1 text-right tabular-nums", tierColor(p.ratio))}>{fmtEUR(p.margeReelle)}</td>
+                    <td className={cn("p-1 text-right tabular-nums", tierColor(p.ratio))}>{isFinite(p.ratio) ? p.ratio.toFixed(2) : "—"}</td>
+                    <td className={cn("p-1 text-right tabular-nums", tierColor(p.prodGlobale))}>{isFinite(p.prodGlobale) ? p.prodGlobale.toFixed(2) : "—"}</td>
                   </tr>
                 ))}
               </tbody>
@@ -1817,9 +1872,9 @@ function AggCard({ title, rows }: { title: string; rows: Array<{ key: string; ca
               {rows.map((r) => (
                 <tr key={r.key} className="border-b border-border">
                   <td className="p-1 truncate max-w-[180px]">{r.key}</td>
-                  <td className={cn("p-1 text-right tabular-nums", r.marge >= 0 ? "text-emerald-400" : "text-red-400")}>{fmtEUR(r.marge)}</td>
-                  <td className={cn("p-1 text-right tabular-nums", r.ratio >= 1 ? "text-emerald-400" : "text-red-400")}>{isFinite(r.ratio) ? r.ratio.toFixed(2) : "—"}</td>
-                  <td className={cn("p-1 text-right tabular-nums", r.prod >= 1 ? "text-emerald-400" : "text-red-400")}>{isFinite(r.prod) ? r.prod.toFixed(2) : "—"}</td>
+                  <td className={cn("p-1 text-right tabular-nums", tierColor(r.ratio))}>{fmtEUR(r.marge)}</td>
+                  <td className={cn("p-1 text-right tabular-nums", tierColor(r.ratio))}>{isFinite(r.ratio) ? r.ratio.toFixed(2) : "—"}</td>
+                  <td className={cn("p-1 text-right tabular-nums", tierColor(r.prod))}>{isFinite(r.prod) ? r.prod.toFixed(2) : "—"}</td>
                 </tr>
               ))}
             </tbody>
