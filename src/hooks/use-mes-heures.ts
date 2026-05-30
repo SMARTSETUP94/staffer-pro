@@ -426,6 +426,7 @@ export function useMesHeures({ weekStart, employeIdOverride }: UseMesHeuresOptio
         commentaire: patch.commentaire ?? null,
         fabrication_objet_id: patch.fabrication_objet_id ?? null,
         fabrication_etape_type: patch.fabrication_etape_type ?? null,
+        etape_chantier: patch.etape_chantier ?? null,
         statut: "brouillon" as const,
       };
       const { data, error } = await supabase
