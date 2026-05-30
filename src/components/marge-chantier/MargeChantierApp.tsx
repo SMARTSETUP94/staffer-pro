@@ -1083,7 +1083,7 @@ function TabBaseRH({ app, update }: { app: AppData; update: (fn: (d: AppData) =>
                       {!isHidden("statut") && (
                         <td className={rh.cell}>
                           <Select value={r.statut} onValueChange={(v) => update((d) => { d.rh[idx].statut = v; })}>
-                            <SelectTrigger className={cn(rh.input, "bg-transparent")}><SelectValue /></SelectTrigger>
+                            <SelectTrigger data-role="select-trigger" className={cn(rh.input, "bg-transparent")}><SelectValue /></SelectTrigger>
                             <SelectContent>
                               {STATUTS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                             </SelectContent>
@@ -1093,7 +1093,7 @@ function TabBaseRH({ app, update }: { app: AppData; update: (fn: (d: AppData) =>
                       {!isHidden("poste") && (
                         <td className={rh.cell}>
                           <Select value={r.poste || "__none"} onValueChange={(v) => update((d) => { d.rh[idx].poste = v === "__none" ? "" : v; applyPosteMap(d); })}>
-                            <SelectTrigger className={cn(rh.input, "bg-transparent")}><SelectValue /></SelectTrigger>
+                            <SelectTrigger data-role="select-trigger" className={cn(rh.input, "bg-transparent")}><SelectValue /></SelectTrigger>
                             <SelectContent>
                               <SelectItem value="__none">—</SelectItem>
                               {app.postes.map((p) => <SelectItem key={p.nom} value={p.nom}>{p.nom}</SelectItem>)}
@@ -1104,7 +1104,7 @@ function TabBaseRH({ app, update }: { app: AppData; update: (fn: (d: AppData) =>
                       {!isHidden("metier") && (
                         <td className={rh.cell}>
                           <Select value={r.metier || "__none"} onValueChange={(v) => update((d) => { d.rh[idx].metier = v === "__none" ? "" : v; })}>
-                            <SelectTrigger className={cn(rh.input, "bg-transparent")}><SelectValue /></SelectTrigger>
+                            <SelectTrigger data-role="select-trigger" className={cn(rh.input, "bg-transparent")}><SelectValue /></SelectTrigger>
                             <SelectContent>
                               <SelectItem value="__none">—</SelectItem>
                               {app.metiers.map((m) => <SelectItem key={m.nom} value={m.nom}>{m.nom}</SelectItem>)}
@@ -1131,7 +1131,10 @@ function TabBaseRH({ app, update }: { app: AppData; update: (fn: (d: AppData) =>
                         <td className="p-2 text-right tabular-nums">{fmtEUR(ch)}</td>
                       )}
                       <td className={rh.cell}>
-                        <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-destructive" onClick={() => update((d) => { d.rh.splice(idx, 1); })}><Trash2 className="h-3 w-3" /></Button>
+                        <div className="flex items-center gap-0.5">
+                          <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground" title="Dupliquer" onClick={() => update((d) => { d.rh.splice(idx + 1, 0, { ...JSON.parse(JSON.stringify(r)), personne: r.personne + " (copie)" }); })}><Copy className="h-3 w-3" /></Button>
+                          <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-destructive" title="Supprimer" onClick={() => update((d) => { d.rh.splice(idx, 1); })}><Trash2 className="h-3 w-3" /></Button>
+                        </div>
                       </td>
                     </tr>
                   );
