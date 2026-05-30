@@ -79,7 +79,6 @@ function MesMissionsPage() {
         </div>
         <div className="mx-auto mt-3 max-w-2xl space-y-2">
           <ScopeSelector capKey="mes_missions.view" routeId="/_app/mes-missions" />
-          <ScopeNotImplementedBanner scope={scope} />
         </div>
       </header>
 
