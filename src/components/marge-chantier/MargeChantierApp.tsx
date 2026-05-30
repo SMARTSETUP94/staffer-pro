@@ -1028,7 +1028,29 @@ function TabBaseRH({ app, update }: { app: AppData; update: (fn: (d: AppData) =>
             desc="Importez la fiche RH .xlsx (onglet « BDD Employés clean ») ou ajoutez manuellement vos premiers employés."
           />
         ) : (
-          <div className="overflow-auto max-h-[70vh] rounded border border-border">
+          <div className="overflow-auto max-h-[70vh] rounded border border-border" onPaste={(e) => {
+            const text = e.clipboardData.getData("text/plain");
+            if (!text || !text.includes("\t")) return;
+            e.preventDefault();
+            const rows = text.split("\n").filter((r) => r.trim());
+            let count = 0;
+            update((d) => {
+              rows.forEach((row) => {
+                const cols = row.split("\t");
+                const personne = cols[0]?.trim();
+                if (!personne) return;
+                const statut = cols[1]?.trim() || "Intermittent";
+                const poste = cols[2]?.trim() || "";
+                const metier = cols[3]?.trim() || "";
+                const taux = parseFloat(cols[4]?.replace(",", ".") || "0") || 0;
+                const coef = parseFloat(cols[5]?.replace(",", ".") || "0") || 0;
+                const coutMensuel = parseFloat(cols[6]?.replace(",", ".") || "0") || 0;
+                d.rh.push({ personne, statut, poste, metier, taux, coef, coutMensuel });
+                count++;
+              });
+            });
+            toast.success(`${count} ligne(s) collée(s) depuis Excel`);
+          }}>
             <table ref={gridRef} onKeyDown={onTableKeyDown} className="text-sm" style={{ tableLayout: "fixed", width: "max-content", minWidth: "100%" }}>
               <colgroup>
                 <col style={{ width: w.personne }} />
