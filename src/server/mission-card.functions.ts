@@ -26,6 +26,13 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 export type MissionPhase = "montage" | "demontage";
 
+export interface MissionTeamMember {
+  employe_id: string;
+  nom: string;
+  prenom: string;
+  nb_demi_jours: number;
+}
+
 export interface MissionListItem {
   affaire_id: string;
   affaire_numero: string;
@@ -35,9 +42,11 @@ export interface MissionListItem {
   phase: MissionPhase;
   date_debut: string;          // YYYY-MM-DD min assignation
   date_fin: string;            // YYYY-MM-DD max assignation
-  nb_demi_jours: number;       // total demi-journées de l'employé sur la mission
+  nb_demi_jours: number;       // total demi-journées (employé en scope=mine, équipe en scope=team)
   chef_chantier_id: string | null;
   statut: "passee" | "en_cours" | "a_venir";
+  /** Présent en scope=team : équipe assignée avec leurs ½j */
+  equipe?: MissionTeamMember[];
 }
 
 export interface MissionEvent {
