@@ -40,9 +40,11 @@ import {
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth-context";
-import { loadAppData, saveAppData, saveAppDataSync, downloadAsJson, restoreFromJson } from "./storage";
+import { loadAppData, saveAppData, saveAppDataSync, downloadAsJson, restoreFromJson, MargeChantierSyncError } from "./storage";
 import { readXlsx, readCsvWin1252, readCsvOrXlsx } from "./file-readers";
 import {
   emptyApp,
