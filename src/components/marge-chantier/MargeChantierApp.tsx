@@ -431,10 +431,63 @@ function ModeToggle({ mode, onChange }: { mode: Mode; onChange: (m: Mode) => voi
 /* ========================================================================== */
 /* 1. Base RH                                                                  */
 /* ========================================================================== */
+type RhColKey = "statut" | "poste" | "metier" | "taux" | "coef" | "coutMensuel" | "couthEff";
+type RhDensity = "compact" | "normal" | "confortable";
+
+const RH_COLS: { key: RhColKey; label: string }[] = [
+  { key: "statut", label: "Statut" },
+  { key: "poste", label: "Poste" },
+  { key: "metier", label: "Métier" },
+  { key: "taux", label: "Taux €/h" },
+  { key: "coef", label: "Coef." },
+  { key: "coutMensuel", label: "Coût mensuel" },
+  { key: "couthEff", label: "Coût/h effectif" },
+];
+
+const RH_PREFS_KEY = "marge-chantier:rh-prefs";
+
+type RhPrefs = { hidden: RhColKey[]; density: RhDensity };
+
+function loadRhPrefs(): RhPrefs {
+  if (typeof window === "undefined") return { hidden: [], density: "normal" };
+  try {
+    const raw = localStorage.getItem(RH_PREFS_KEY);
+    if (raw) return { hidden: [], density: "normal", ...JSON.parse(raw) };
+  } catch { /* noop */ }
+  return { hidden: [], density: "normal" };
+}
+
+const RH_WIDTHS: Record<RhDensity, Partial<Record<RhColKey | "personne" | "actions", string>>> = {
+  compact: { personne: "160px", statut: "120px", poste: "120px", metier: "110px", taux: "70px", coef: "60px", coutMensuel: "90px", couthEff: "90px", actions: "36px" },
+  normal: { personne: "220px", statut: "160px", poste: "170px", metier: "150px", taux: "90px", coef: "80px", coutMensuel: "120px", couthEff: "120px", actions: "44px" },
+  confortable: { personne: "300px", statut: "200px", poste: "220px", metier: "200px", taux: "110px", coef: "100px", coutMensuel: "150px", couthEff: "150px", actions: "48px" },
+};
+
+const RH_ROW_H: Record<RhDensity, { input: string; cell: string }> = {
+  compact: { input: "h-6 text-xs", cell: "p-0.5" },
+  normal: { input: "h-7 text-sm", cell: "p-1" },
+  confortable: { input: "h-9 text-sm", cell: "p-1.5" },
+};
+
 function TabBaseRH({ app, update }: { app: AppData; update: (fn: (d: AppData) => void) => void }) {
   const [q, setQ] = useState("");
   const [statut, setStatut] = useState<string>("all");
   const [aCompleter, setACompleter] = useState(false);
+  const [prefs, setPrefs] = useState<RhPrefs>(() => loadRhPrefs());
+
+  useEffect(() => {
+    try { localStorage.setItem(RH_PREFS_KEY, JSON.stringify(prefs)); } catch { /* noop */ }
+  }, [prefs]);
+
+  const hiddenSet = useMemo(() => new Set(prefs.hidden), [prefs.hidden]);
+  const isHidden = (k: RhColKey) => hiddenSet.has(k);
+  const toggleCol = (k: RhColKey) => setPrefs((p) => ({
+    ...p,
+    hidden: p.hidden.includes(k) ? p.hidden.filter((x) => x !== k) : [...p.hidden, k],
+  }));
+  const showAll = () => setPrefs((p) => ({ ...p, hidden: [] }));
+  const w = RH_WIDTHS[prefs.density];
+  const rh = RH_ROW_H[prefs.density];
 
   const filtered = app.rh.filter((r) => {
     if (statut !== "all" && r.statut !== statut) return false;
@@ -560,7 +613,64 @@ function TabBaseRH({ app, update }: { app: AppData; update: (fn: (d: AppData) =>
             <input type="checkbox" checked={aCompleter} onChange={(e) => setACompleter(e.target.checked)} />
             À compléter uniquement
           </label>
-          <span className="ml-auto text-xs text-muted-foreground">{filtered.length} / {app.rh.length}</span>
+
+          <div className="ml-auto flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">{filtered.length} / {app.rh.length}</span>
+
+            {/* Densité */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="sm" variant="outline" className="h-8">
+                  <Rows3 className="h-4 w-4 mr-1.5" />
+                  {prefs.density === "compact" ? "Compact" : prefs.density === "confortable" ? "Confort." : "Normal"}
+                  <ChevronDown className="h-3 w-3 ml-1 opacity-60" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Densité d'affichage</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {(["compact", "normal", "confortable"] as RhDensity[]).map((d) => (
+                  <DropdownMenuCheckboxItem
+                    key={d}
+                    checked={prefs.density === d}
+                    onCheckedChange={() => setPrefs((p) => ({ ...p, density: d }))}
+                  >
+                    {d === "compact" ? "Compact" : d === "confortable" ? "Confortable" : "Normal"}
+                  </DropdownMenuCheckboxItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Colonnes */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="sm" variant="outline" className="h-8">
+                  <Columns3 className="h-4 w-4 mr-1.5" />
+                  Colonnes
+                  {hiddenSet.size > 0 && <Badge variant="secondary" className="ml-1.5 h-4 px-1 text-[10px]">{RH_COLS.length - hiddenSet.size}/{RH_COLS.length}</Badge>}
+                  <ChevronDown className="h-3 w-3 ml-1 opacity-60" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>Colonnes affichées</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {RH_COLS.map((c) => (
+                  <DropdownMenuCheckboxItem
+                    key={c.key}
+                    checked={!isHidden(c.key)}
+                    onCheckedChange={() => toggleCol(c.key)}
+                    onSelect={(e) => e.preventDefault()}
+                  >
+                    {c.label}
+                  </DropdownMenuCheckboxItem>
+                ))}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={showAll} disabled={hiddenSet.size === 0}>
+                  Tout afficher
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
 
         {app.rh.length === 0 ? (
@@ -571,29 +681,44 @@ function TabBaseRH({ app, update }: { app: AppData; update: (fn: (d: AppData) =>
           />
         ) : (
           <div className="overflow-auto max-h-[70vh] rounded border border-border">
-            <table className="w-full text-sm">
-              <thead className="bg-muted sticky top-0">
+            <table className="text-sm" style={{ tableLayout: "fixed", width: "max-content", minWidth: "100%" }}>
+              <colgroup>
+                <col style={{ width: w.personne }} />
+                {!isHidden("statut") && <col style={{ width: w.statut }} />}
+                {!isHidden("poste") && <col style={{ width: w.poste }} />}
+                {!isHidden("metier") && <col style={{ width: w.metier }} />}
+                {!isHidden("taux") && <col style={{ width: w.taux }} />}
+                {!isHidden("coef") && <col style={{ width: w.coef }} />}
+                {!isHidden("coutMensuel") && <col style={{ width: w.coutMensuel }} />}
+                {!isHidden("couthEff") && <col style={{ width: w.couthEff }} />}
+                <col style={{ width: w.actions }} />
+              </colgroup>
+              <thead className="bg-muted sticky top-0 z-10">
                 <tr className="text-left">
-                  <th className="p-2">Personne</th>
-                  <th className="p-2">Statut</th>
-                  <th className="p-2">Poste</th>
-                  <th className="p-2">Métier</th>
-                  <th className="p-2 text-right">Taux €/h</th>
-                  <th className="p-2 text-right">
-                    <span className="inline-flex items-center gap-1">Coef.
-                      <Tooltip><TooltipTrigger asChild><Info className="h-3 w-3 text-muted-foreground" /></TooltipTrigger>
-                        <TooltipContent>Coefficient individuel — vide = coef global ({globalCoef(app)}).</TooltipContent>
-                      </Tooltip>
-                    </span>
-                  </th>
-                  <th className="p-2 text-right">Coût mensuel</th>
-                  <th className="p-2 text-right">
-                    <span className="inline-flex items-center gap-1">Coût/h effectif
-                      <Tooltip><TooltipTrigger asChild><Info className="h-3 w-3 text-muted-foreground" /></TooltipTrigger>
-                        <TooltipContent>Forfait : coût mensuel ÷ heures attendues. Sinon : taux × coef.</TooltipContent>
-                      </Tooltip>
-                    </span>
-                  </th>
+                  <th className="p-2 sticky left-0 bg-muted z-20">Personne</th>
+                  {!isHidden("statut") && <th className="p-2">Statut</th>}
+                  {!isHidden("poste") && <th className="p-2">Poste</th>}
+                  {!isHidden("metier") && <th className="p-2">Métier</th>}
+                  {!isHidden("taux") && <th className="p-2 text-right">Taux €/h</th>}
+                  {!isHidden("coef") && (
+                    <th className="p-2 text-right">
+                      <span className="inline-flex items-center gap-1">Coef.
+                        <Tooltip><TooltipTrigger asChild><Info className="h-3 w-3 text-muted-foreground" /></TooltipTrigger>
+                          <TooltipContent>Coefficient individuel — vide = coef global ({globalCoef(app)}).</TooltipContent>
+                        </Tooltip>
+                      </span>
+                    </th>
+                  )}
+                  {!isHidden("coutMensuel") && <th className="p-2 text-right">Coût mensuel</th>}
+                  {!isHidden("couthEff") && (
+                    <th className="p-2 text-right">
+                      <span className="inline-flex items-center gap-1">Coût/h effectif
+                        <Tooltip><TooltipTrigger asChild><Info className="h-3 w-3 text-muted-foreground" /></TooltipTrigger>
+                          <TooltipContent>Forfait : coût mensuel ÷ heures attendues. Sinon : taux × coef.</TooltipContent>
+                        </Tooltip>
+                      </span>
+                    </th>
+                  )}
                   <th className="p-2"></th>
                 </tr>
               </thead>
@@ -604,38 +729,62 @@ function TabBaseRH({ app, update }: { app: AppData; update: (fn: (d: AppData) =>
                   const ch = coutHoraire(app, r.personne);
                   return (
                     <tr key={r.personne + idx} className="border-b border-border hover:bg-muted/40">
-                      <td className="p-1"><Input value={r.personne} onChange={(e) => update((d) => { d.rh[idx].personne = e.target.value; })} className="h-7 bg-transparent" /></td>
-                      <td className="p-1">
-                        <Select value={r.statut} onValueChange={(v) => update((d) => { d.rh[idx].statut = v; })}>
-                          <SelectTrigger className="h-7 bg-transparent"><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            {STATUTS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                          </SelectContent>
-                        </Select>
+                      <td className={cn(rh.cell, "sticky left-0 bg-background hover:bg-muted/40 z-10")}>
+                        <Input value={r.personne} onChange={(e) => update((d) => { d.rh[idx].personne = e.target.value; })} className={cn(rh.input, "bg-transparent")} />
                       </td>
-                      <td className="p-1">
-                        <Select value={r.poste || "__none"} onValueChange={(v) => update((d) => { d.rh[idx].poste = v === "__none" ? "" : v; applyPosteMap(d); })}>
-                          <SelectTrigger className="h-7 bg-transparent"><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="__none">—</SelectItem>
-                            {app.postes.map((p) => <SelectItem key={p.nom} value={p.nom}>{p.nom}</SelectItem>)}
-                          </SelectContent>
-                        </Select>
+                      {!isHidden("statut") && (
+                        <td className={rh.cell}>
+                          <Select value={r.statut} onValueChange={(v) => update((d) => { d.rh[idx].statut = v; })}>
+                            <SelectTrigger className={cn(rh.input, "bg-transparent")}><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              {STATUTS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                        </td>
+                      )}
+                      {!isHidden("poste") && (
+                        <td className={rh.cell}>
+                          <Select value={r.poste || "__none"} onValueChange={(v) => update((d) => { d.rh[idx].poste = v === "__none" ? "" : v; applyPosteMap(d); })}>
+                            <SelectTrigger className={cn(rh.input, "bg-transparent")}><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="__none">—</SelectItem>
+                              {app.postes.map((p) => <SelectItem key={p.nom} value={p.nom}>{p.nom}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                        </td>
+                      )}
+                      {!isHidden("metier") && (
+                        <td className={rh.cell}>
+                          <Select value={r.metier || "__none"} onValueChange={(v) => update((d) => { d.rh[idx].metier = v === "__none" ? "" : v; })}>
+                            <SelectTrigger className={cn(rh.input, "bg-transparent")}><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="__none">—</SelectItem>
+                              {app.metiers.map((m) => <SelectItem key={m.nom} value={m.nom}>{m.nom}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                        </td>
+                      )}
+                      {!isHidden("taux") && (
+                        <td className={rh.cell}>
+                          <Input type="number" step="0.1" value={r.taux || ""} onChange={(e) => update((d) => { d.rh[idx].taux = parseFloat(e.target.value) || 0; })} className={cn(rh.input, "bg-transparent text-right")} />
+                        </td>
+                      )}
+                      {!isHidden("coef") && (
+                        <td className={rh.cell}>
+                          <Input type="number" step="0.05" value={r.coef || ""} placeholder={`(${globalCoef(app)})`} onChange={(e) => update((d) => { d.rh[idx].coef = parseFloat(e.target.value) || 0; })} className={cn(rh.input, "bg-transparent text-right")} />
+                        </td>
+                      )}
+                      {!isHidden("coutMensuel") && (
+                        <td className={rh.cell}>
+                          <Input type="number" step="50" disabled={!isForf} value={r.coutMensuel || ""} onChange={(e) => update((d) => { d.rh[idx].coutMensuel = parseFloat(e.target.value) || 0; })} className={cn(rh.input, "bg-transparent text-right disabled:opacity-30")} />
+                        </td>
+                      )}
+                      {!isHidden("couthEff") && (
+                        <td className="p-2 text-right tabular-nums">{fmtEUR(ch)}</td>
+                      )}
+                      <td className={rh.cell}>
+                        <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-destructive" onClick={() => update((d) => { d.rh.splice(idx, 1); })}><Trash2 className="h-3 w-3" /></Button>
                       </td>
-                      <td className="p-1">
-                        <Select value={r.metier || "__none"} onValueChange={(v) => update((d) => { d.rh[idx].metier = v === "__none" ? "" : v; })}>
-                          <SelectTrigger className="h-7 bg-transparent"><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="__none">—</SelectItem>
-                            {app.metiers.map((m) => <SelectItem key={m.nom} value={m.nom}>{m.nom}</SelectItem>)}
-                          </SelectContent>
-                        </Select>
-                      </td>
-                      <td className="p-1"><Input type="number" step="0.1" value={r.taux || ""} onChange={(e) => update((d) => { d.rh[idx].taux = parseFloat(e.target.value) || 0; })} className="h-7 bg-transparent text-right" /></td>
-                      <td className="p-1"><Input type="number" step="0.05" value={r.coef || ""} placeholder={`(${globalCoef(app)})`} onChange={(e) => update((d) => { d.rh[idx].coef = parseFloat(e.target.value) || 0; })} className="h-7 bg-transparent text-right" /></td>
-                      <td className="p-1"><Input type="number" step="50" disabled={!isForf} value={r.coutMensuel || ""} onChange={(e) => update((d) => { d.rh[idx].coutMensuel = parseFloat(e.target.value) || 0; })} className="h-7 bg-transparent text-right disabled:opacity-30" /></td>
-                      <td className="p-2 text-right tabular-nums">{fmtEUR(ch)}</td>
-                      <td className="p-1"><Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-destructive" onClick={() => update((d) => { d.rh.splice(idx, 1); })}><Trash2 className="h-3 w-3" /></Button></td>
                     </tr>
                   );
                 })}
