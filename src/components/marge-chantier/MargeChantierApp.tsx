@@ -42,7 +42,7 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth-context";
-import { loadAppData, saveAppData, downloadAsJson, restoreFromJson } from "./storage";
+import { loadAppData, saveAppData, saveAppDataSync, downloadAsJson, restoreFromJson } from "./storage";
 import { readXlsx, readCsvWin1252, readCsvOrXlsx } from "./file-readers";
 import {
   emptyApp,
@@ -74,6 +74,21 @@ const STATUTS: Employe["statut"][] = ["Permanent 35h", "Permanent forfait", "Int
 
 type TabKey = "rh" | "ref" | "registre" | "devis" | "heures" | "synthese" | "marge" | "perf";
 
+type SyncState = "loading" | "idle" | "saving" | "error";
+
+function SyncBadge({ state }: { state: SyncState }) {
+  if (state === "loading") {
+    return <Badge variant="secondary" className="gap-1"><RotateCcw className="h-3 w-3 animate-spin" />Chargement…</Badge>;
+  }
+  if (state === "saving") {
+    return <Badge variant="secondary" className="gap-1"><RotateCcw className="h-3 w-3 animate-spin" />Synchronisation…</Badge>;
+  }
+  if (state === "error") {
+    return <Badge variant="destructive" className="gap-1"><AlertTriangle className="h-3 w-3" />Erreur sync</Badge>;
+  }
+  return <Badge variant="outline" className="gap-1 border-emerald-700 text-emerald-500"><CheckCircle2 className="h-3 w-3" />Synchronisé</Badge>;
+}
+
 export function MargeChantierApp() {
   const { user } = useAuth();
   const userId = user?.id ?? "anonymous";
@@ -84,21 +99,51 @@ export function MargeChantierApp() {
   const [savedAt, setSavedAt] = useState<number | null>(null);
   const [savedTick, setSavedTick] = useState(0); // re-render "il y a Xs"
   const [resetOpen, setResetOpen] = useState(false);
+  const [syncState, setSyncState] = useState<SyncState>("loading");
 
-  // Charger depuis localStorage au mount
+  // Charger : Supabase (source de vérité) + fallback localStorage + migration auto
   useEffect(() => {
-    setApp(loadAppData(userId));
-    setHydrated(true);
+    let cancelled = false;
+    setSyncState("loading");
+    loadAppData(userId)
+      .then((loaded) => {
+        if (cancelled) return;
+        setApp(loaded);
+        setHydrated(true);
+        setSyncState("idle");
+      })
+      .catch((e) => {
+        console.error("[marge-chantier] initial load failed:", e);
+        if (cancelled) return;
+        setHydrated(true);
+        setSyncState("error");
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [userId]);
 
-  // Autosave debounced
+  // Autosave debounced 2s → Supabase + cache localStorage
   useEffect(() => {
     if (!hydrated) return;
+    setSyncState((s) => (s === "error" ? s : "saving"));
     const t = setTimeout(() => {
-      saveAppData(userId, app);
-      setSavedAt(Date.now());
-    }, 400);
+      saveAppData(userId, app)
+        .then(() => {
+          setSavedAt(Date.now());
+          setSyncState("idle");
+        })
+        .catch(() => setSyncState("error"));
+    }, 2000);
     return () => clearTimeout(t);
+  }, [app, userId, hydrated]);
+
+  // Save best-effort (cache localStorage) avant unload
+  useEffect(() => {
+    if (!hydrated) return;
+    const handler = () => saveAppDataSync(userId, app);
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
   }, [app, userId, hydrated]);
 
   // Refresh "il y a Xs" toutes les 15s
@@ -164,8 +209,9 @@ export function MargeChantierApp() {
                 <h1 className="text-2xl font-bold text-primary flex items-center gap-2">
                   <FileBarChart className="h-6 w-6" /> Marges chantiers
                 </h1>
-                <p className="text-xs text-muted-foreground">
-                  Outil standalone — données locales ({user?.email ?? "anonyme"}) {savedLabel}
+                <p className="text-xs text-muted-foreground flex items-center gap-2 flex-wrap">
+                  <span>Synchronisé sur votre compte ({user?.email ?? "anonyme"}) {savedLabel}</span>
+                  <SyncBadge state={syncState} />
                 </p>
               </div>
             </div>
