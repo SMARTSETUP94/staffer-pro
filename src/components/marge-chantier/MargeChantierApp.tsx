@@ -602,7 +602,7 @@ function useFormatSaved(savedAt: number | null, _tick: number) {
 }
 
 function GlobalKpiBar({ globals, mode }: { globals: ReturnType<typeof Object> & { caMO: number; caMat: number; hVendues: number; hSaisies: number; marge: number; cout: number; ratio: number }; mode: Mode }) {
-  const marginPos = globals.marge >= 0;
+  const margeCls = tierColor(globals.ratio);
   return (
     <div className="sticky top-0 z-10 -mx-4 px-4 py-2 bg-background/95 backdrop-blur border-b border-border">
       <div className="grid grid-cols-2 md:grid-cols-5 gap-2 max-w-[1600px] mx-auto">
@@ -613,8 +613,8 @@ function GlobalKpiBar({ globals, mode }: { globals: ReturnType<typeof Object> & 
         <KpiInline
           label="Marge MO"
           value={fmtEUR(globals.marge)}
-          color={marginPos ? "text-emerald-400" : "text-red-400"}
-          hint={`CA MO − Coût (mode ${mode === "reel" ? "Réel" : "Pondéré"}). Ratio ${isFinite(globals.ratio) ? globals.ratio.toFixed(2) : "—"}`}
+          color={margeCls}
+          hint={`CA MO − Coût (mode ${mode === "reel" ? "Réel" : "Pondéré"}). Ratio CA/Coût ${isFinite(globals.ratio) ? globals.ratio.toFixed(2) : "—"}. Code couleur : <0.8 critique, 0.8–1 sous-rentable, 1–1.2 rentable, >1.2 très rentable.`}
         />
       </div>
     </div>
