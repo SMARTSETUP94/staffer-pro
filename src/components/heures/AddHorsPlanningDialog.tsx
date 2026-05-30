@@ -1,8 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
-import { Loader2, Plus } from "lucide-react";
+import { ChevronDown, Clock, Loader2, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { computeHeuresFromTimes } from "@/lib/heures-calculator";
+import { cn } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -54,6 +57,12 @@ export function AddHorsPlanningDialog({ defaultDate, variant, defaultMetierId, o
   const [date, setDate] = useState<string>(defaultDate ?? format(new Date(), "yyyy-MM-dd"));
   const [heures, setHeures] = useState<string>("8");
   const [commentaire, setCommentaire] = useState<string>("");
+  const [debut, setDebut] = useState<string>("");
+  const [fin, setFin] = useState<string>("");
+  const [pause, setPause] = useState<string>("0");
+  const [nuit, setNuit] = useState<string>("0");
+  const [showTimes, setShowTimes] = useState(false);
+  const [showNuit, setShowNuit] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   // v0.32.4 — N'afficher les erreurs inline qu'après une 1re tentative de soumission.
   const [showErrors, setShowErrors] = useState(false);
@@ -84,9 +93,30 @@ export function AddHorsPlanningDialog({ defaultDate, variant, defaultMetierId, o
       setDate(defaultDate ?? format(new Date(), "yyyy-MM-dd"));
       setHeures("8");
       setCommentaire("");
+      setDebut("");
+      setFin("");
+      setPause("0");
+      setNuit("0");
+      setShowTimes(false);
+      setShowNuit(false);
       setShowErrors(false);
     }
   }, [open, defaultDate, defaultMetierId]);
+
+  // Auto-calcul heures réalisées + heures de nuit dès que début ET fin sont remplis
+  const computed = useMemo(
+    () => computeHeuresFromTimes(debut, fin, Number(pause) || 0),
+    [debut, fin, pause],
+  );
+  const autoHeures = computed?.heuresReelles ?? null;
+  const autoNuit = computed?.heuresNuit ?? 0;
+
+  useEffect(() => {
+    if (autoHeures === null) return;
+    setHeures(String(autoHeures));
+    setNuit(String(autoNuit));
+    if (autoNuit > 0) setShowNuit(true);
+  }, [autoHeures, autoNuit]);
 
   const input: Partial<HorsPlanningInput> = useMemo(
     () => ({
@@ -95,8 +125,12 @@ export function AddHorsPlanningDialog({ defaultDate, variant, defaultMetierId, o
       date,
       heures_reelles: heures === "" ? undefined : Number(heures),
       commentaire: commentaire.trim() || null,
+      heure_debut: debut || null,
+      heure_fin: fin || null,
+      duree_pause_minutes: pause === "" ? 0 : Number(pause) || 0,
+      heures_nuit: nuit === "" ? 0 : Number(nuit) || 0,
     }),
-    [affaireId, metierId, date, heures, commentaire],
+    [affaireId, metierId, date, heures, commentaire, debut, fin, pause, nuit],
   );
 
   const validation = useMemo(() => validateHorsPlanningInput(input), [input]);
@@ -214,7 +248,7 @@ export function AddHorsPlanningDialog({ defaultDate, variant, defaultMetierId, o
             </div>
             <div>
               <Label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Heures
+                Heures {autoHeures !== null && <span className="text-primary">(auto)</span>}
               </Label>
               <Input
                 type="number"
@@ -222,15 +256,98 @@ export function AddHorsPlanningDialog({ defaultDate, variant, defaultMetierId, o
                 min="0.25"
                 max="24"
                 value={heures}
+                disabled={autoHeures !== null}
                 onChange={(e) => setHeures(e.target.value)}
               />
+              {autoHeures !== null && (
+                <p className="mt-1 text-[10px] text-muted-foreground">
+                  Calculé : fin − début − pause
+                </p>
+              )}
               {errorFor(["HEURES_INVALIDE", "HEURES_HORS_BORNES"]) && (
                 <p className="mt-1 text-xs text-destructive">
                   {errorFor(["HEURES_INVALIDE", "HEURES_HORS_BORNES"])}
                 </p>
               )}
           </div>
+          </div>
 
+          {/* v0.49 — Début / fin / pause (aligné avec les autres modules de saisie) */}
+          <Collapsible open={showTimes} onOpenChange={setShowTimes}>
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-7 gap-1 px-2 text-[11px]">
+                <Clock className="h-3 w-3" />
+                {showTimes ? "Masquer" : "Préciser"} début / fin
+                <ChevronDown className={cn("h-3 w-3 transition-transform", showTimes && "rotate-180")} />
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="mt-2">
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <Label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Début
+                  </Label>
+                  <Input type="time" value={debut} onChange={(e) => setDebut(e.target.value)} className="h-9" />
+                </div>
+                <div>
+                  <Label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Fin
+                  </Label>
+                  <Input type="time" value={fin} onChange={(e) => setFin(e.target.value)} className="h-9" />
+                </div>
+                <div>
+                  <Label
+                    className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground"
+                    title="Durée de la pause déjeuner (ou autres pauses) en minutes — déduite des heures totales"
+                  >
+                    Pause (min)
+                  </Label>
+                  <Input
+                    type="number"
+                    step="5"
+                    min="0"
+                    max="600"
+                    value={pause}
+                    placeholder="0"
+                    onChange={(e) => setPause(e.target.value)}
+                    className="h-9"
+                  />
+                </div>
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
+
+          {/* v0.49 — Heures de nuit (00h–06h, convention spectacle vivant) */}
+          <Collapsible open={showNuit} onOpenChange={setShowNuit}>
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-7 gap-1 px-2 text-[11px]">
+                🌙 {showNuit ? "Masquer" : "Déclarer"} heures de nuit
+                <ChevronDown className={cn("h-3 w-3 transition-transform", showNuit && "rotate-180")} />
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="mt-2">
+              <div>
+                <Label
+                  className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground"
+                  title="Heures effectuées entre 00h et 06h selon convention collective spectacle vivant"
+                >
+                  Dont heures de nuit (00h–06h)
+                </Label>
+                <Input
+                  type="number"
+                  step="0.25"
+                  min="0"
+                  max="24"
+                  value={nuit}
+                  onChange={(e) => setNuit(e.target.value)}
+                  className="h-9 max-w-[140px]"
+                />
+                <p className="mt-1 text-[10px] text-muted-foreground">
+                  Convention spectacle vivant. Doit être ≤ heures totales.
+                </p>
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
           {/* Sprint B / B6 — bandeau héritage saisie (4 états selon le niveau résolu) */}
           {affaireId && date && (
             <SaisieHeritageBandeau
@@ -241,9 +358,6 @@ export function AddHorsPlanningDialog({ defaultDate, variant, defaultMetierId, o
               dismissKey={`hors-planning-${affaireId}-${date}`}
             />
           )}
-
-
-          </div>
 
           <div>
             <Label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">

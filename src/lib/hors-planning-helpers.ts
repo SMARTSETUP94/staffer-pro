@@ -14,6 +14,11 @@ export interface HorsPlanningInput {
   date: string; // YYYY-MM-DD
   heures_reelles: number;
   commentaire: string | null;
+  /** v0.49 — alignement avec les autres modules de saisie d'heures. */
+  heure_debut?: string | null; // "HH:mm"
+  heure_fin?: string | null; // "HH:mm"
+  duree_pause_minutes?: number | null;
+  heures_nuit?: number | null;
 }
 
 export interface HorsPlanningInsertPayload {
@@ -25,6 +30,10 @@ export interface HorsPlanningInsertPayload {
   heures_reelles: number;
   commentaire: string | null;
   statut: "brouillon";
+  heure_debut: string | null;
+  heure_fin: string | null;
+  duree_pause_minutes: number;
+  heures_nuit: number;
 }
 
 export type HorsPlanningValidationError =
@@ -99,6 +108,14 @@ export function buildHorsPlanningInsert(
   const commentaire = input.commentaire && input.commentaire.trim() !== ""
     ? input.commentaire.trim()
     : null;
+  const heureDebut = input.heure_debut && input.heure_debut.trim() !== "" ? input.heure_debut : null;
+  const heureFin = input.heure_fin && input.heure_fin.trim() !== "" ? input.heure_fin : null;
+  const pauseMin = input.duree_pause_minutes != null && Number.isFinite(Number(input.duree_pause_minutes))
+    ? Number(input.duree_pause_minutes)
+    : 0;
+  const heuresNuit = input.heures_nuit != null && Number.isFinite(Number(input.heures_nuit))
+    ? Number(input.heures_nuit)
+    : 0;
   return {
     employe_id: employeId,
     assignation_id: null,
@@ -108,6 +125,10 @@ export function buildHorsPlanningInsert(
     heures_reelles: Number(input.heures_reelles),
     commentaire,
     statut: "brouillon",
+    heure_debut: heureDebut,
+    heure_fin: heureFin,
+    duree_pause_minutes: pauseMin,
+    heures_nuit: heuresNuit,
   };
 }
 
