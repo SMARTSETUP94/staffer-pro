@@ -57,6 +57,12 @@ export function AddHorsPlanningDialog({ defaultDate, variant, defaultMetierId, o
   const [date, setDate] = useState<string>(defaultDate ?? format(new Date(), "yyyy-MM-dd"));
   const [heures, setHeures] = useState<string>("8");
   const [commentaire, setCommentaire] = useState<string>("");
+  const [debut, setDebut] = useState<string>("");
+  const [fin, setFin] = useState<string>("");
+  const [pause, setPause] = useState<string>("0");
+  const [nuit, setNuit] = useState<string>("0");
+  const [showTimes, setShowTimes] = useState(false);
+  const [showNuit, setShowNuit] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   // v0.32.4 — N'afficher les erreurs inline qu'après une 1re tentative de soumission.
   const [showErrors, setShowErrors] = useState(false);
