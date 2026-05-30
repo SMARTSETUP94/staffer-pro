@@ -1693,6 +1693,99 @@ function TabSynthese({ app, ctx, groups, mode, onGoTo }: { app: AppData; ctx: Re
     }
   }, [app, ctx, groups, mode]);
 
+  const handleExportPdf = useCallback(async () => {
+    try {
+      const [{ jsPDF }, autoTableMod] = await Promise.all([
+        import("jspdf"),
+        import("jspdf-autotable"),
+      ]);
+      const autoTable = (autoTableMod as any).default ?? (autoTableMod as any);
+      const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
+      const stamp = new Date().toLocaleDateString("fr-FR");
+      doc.setFontSize(14);
+      doc.text(`Marges chantiers — ${mode === "reel" ? "Réel" : "Pondéré"}`, 40, 36);
+      doc.setFontSize(9);
+      doc.setTextColor(120);
+      doc.text(`Édité le ${stamp} • ${groups.length} chantier(s)`, 40, 52);
+
+      // KPI global
+      const totals = groups.reduce(
+        (acc, g) => {
+          const c = calcChantier(app, g, ctx, mode);
+          acc.caMO += c.caMO; acc.caMat += c.caMat; acc.cout += c.coutTotal; acc.marge += c.margeMO;
+          acc.hV += c.heuresVendues; acc.hP += c.heuresPassees;
+          return acc;
+        },
+        { caMO: 0, caMat: 0, cout: 0, marge: 0, hV: 0, hP: 0 },
+      );
+      const ratioG = totals.cout > 0 ? totals.caMO / totals.cout : NaN;
+      doc.setTextColor(0);
+      doc.setFontSize(10);
+      doc.text(
+        `CA MO : ${fmtEUR(totals.caMO)}   •   Coût : ${fmtEUR(totals.cout)}   •   Marge MO : ${fmtEUR(totals.marge)}   •   Ratio : ${isFinite(ratioG) ? ratioG.toFixed(2) : "—"}`,
+        40,
+        70,
+      );
+
+      const body = groups.map((g) => {
+        const c = calcChantier(app, g, ctx, mode);
+        const r = c.coutTotal > 0 ? c.caMO / c.coutTotal : NaN;
+        return [
+          g.chantier,
+          (g.nom ?? "").slice(0, 40),
+          g.client ?? "",
+          fmtEUR(c.caMO),
+          fmtEUR(c.coutTotal),
+          fmtEUR(c.margeMO),
+          isFinite(r) ? r.toFixed(2) : "—",
+          fmtNb(c.heuresVendues),
+          fmtNb(c.heuresPassees),
+          fmtNb(c.ecartH),
+        ];
+      });
+
+      autoTable(doc, {
+        startY: 84,
+        head: [["Chantier", "Nom", "Client", "CA MO", "Coût", "Marge MO", "Ratio", "H vendues", "H passées", "Écart h"]],
+        body,
+        styles: { fontSize: 8, cellPadding: 3 },
+        headStyles: { fillColor: [30, 41, 59], textColor: 255 },
+        alternateRowStyles: { fillColor: [248, 250, 252] },
+        columnStyles: {
+          0: { cellWidth: 60, fontStyle: "bold" },
+          3: { halign: "right" }, 4: { halign: "right" }, 5: { halign: "right" },
+          6: { halign: "right" }, 7: { halign: "right" }, 8: { halign: "right" }, 9: { halign: "right" },
+        },
+        didParseCell: (data: any) => {
+          if (data.section === "body" && data.column.index === 6) {
+            const v = parseFloat(String(data.cell.raw).replace(",", "."));
+            if (!isNaN(v)) {
+              if (v < 0.8) data.cell.styles.textColor = [220, 38, 38];
+              else if (v < 1) data.cell.styles.textColor = [217, 119, 6];
+              else if (v >= 1.2) data.cell.styles.textColor = [5, 150, 105];
+              else data.cell.styles.textColor = [16, 185, 129];
+            }
+          }
+        },
+      });
+
+      const pageCount = (doc as any).internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setTextColor(150);
+        doc.text(`Page ${i}/${pageCount}`, doc.internal.pageSize.getWidth() - 60, doc.internal.pageSize.getHeight() - 16);
+      }
+
+      const fileStamp = new Date().toISOString().slice(0, 10);
+      doc.save(`marges-chantiers_${fileStamp}.pdf`);
+      toast.success(`Export PDF : ${groups.length} chantier(s)`);
+    } catch (e) {
+      console.error("[marge-chantier] export pdf failed:", e);
+      toast.error("Export PDF impossible");
+    }
+  }, [app, ctx, groups, mode]);
+
   return (
     <div className="space-y-3">
       <div className="flex gap-2 items-center flex-wrap">
@@ -1705,6 +1798,15 @@ function TabSynthese({ app, ctx, groups, mode, onGoTo }: { app: AppData; ctx: Re
           </TooltipTrigger>
           <TooltipContent>Télécharge la synthèse des {groups.length} chantier(s) en .xlsx (mode {mode === "reel" ? "Réel" : "Pondéré"})</TooltipContent>
         </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant="outline" size="sm" onClick={handleExportPdf}>
+              <FileSpreadsheet className="h-4 w-4 mr-1" /> Export PDF
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Télécharge la synthèse en PDF paysage A4 (mode {mode === "reel" ? "Réel" : "Pondéré"})</TooltipContent>
+        </Tooltip>
+
         <div className="relative">
           <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Recherche chantier" className="pl-8 w-64" />
