@@ -102,7 +102,29 @@ export function MargeChantierApp() {
   const [savedTick, setSavedTick] = useState(0); // re-render "il y a Xs"
   const [resetOpen, setResetOpen] = useState(false);
   const [syncState, setSyncState] = useState<SyncState>("loading");
+  const [syncError, setSyncError] = useState<{
+    phase: "load" | "save";
+    message: string;
+    code?: string;
+    details?: string;
+    hint?: string;
+    at: number;
+    retries: number;
+  } | null>(null);
   const debounceTimerRef = useRef<number | null>(null);
+
+  const captureError = useCallback((phase: "load" | "save", e: unknown) => {
+    const err = e as Partial<MargeChantierSyncError> & { message?: string };
+    setSyncError((prev) => ({
+      phase,
+      message: err?.message || (phase === "load" ? "Impossible de charger les données serveur" : "Impossible d'enregistrer sur le serveur"),
+      code: err?.code,
+      details: err?.details,
+      hint: err?.hint,
+      at: Date.now(),
+      retries: prev?.phase === phase ? prev.retries + 1 : 0,
+    }));
+  }, []);
 
   // Charger : Supabase (source de vérité) + fallback localStorage + migration auto
   useEffect(() => {
@@ -114,17 +136,19 @@ export function MargeChantierApp() {
         setApp(loaded);
         setHydrated(true);
         setSyncState("idle");
+        setSyncError(null);
       })
       .catch((e) => {
         console.error("[marge-chantier] initial load failed:", e);
         if (cancelled) return;
         setHydrated(true);
         setSyncState("error");
+        captureError("load", e);
       });
     return () => {
       cancelled = true;
     };
-  }, [userId]);
+  }, [userId, captureError]);
 
   // Autosave debounced 2s → Supabase + cache localStorage
   useEffect(() => {
@@ -136,8 +160,12 @@ export function MargeChantierApp() {
         .then(() => {
           setSavedAt(Date.now());
           setSyncState("idle");
+          setSyncError(null);
         })
-        .catch(() => setSyncState("error"));
+        .catch((e) => {
+          setSyncState("error");
+          captureError("save", e);
+        });
     }, 2000);
     return () => {
       if (debounceTimerRef.current) {
@@ -145,7 +173,7 @@ export function MargeChantierApp() {
         debounceTimerRef.current = null;
       }
     };
-  }, [app, userId, hydrated]);
+  }, [app, userId, hydrated, captureError]);
 
   // Save best-effort (cache localStorage) avant unload
   useEffect(() => {
