@@ -32,7 +32,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { useMesHeures, type SaisieCombined, type FabricationEtapeTypeRow } from "@/hooks/use-mes-heures";
+import { useMesHeures, type SaisieCombined, type FabricationEtapeTypeRow, type EtapeChantierRow, ETAPE_CHANTIER_OPTIONS } from "@/hooks/use-mes-heures";
 import { useObjetsAffaireLight, useMyFabricationRoles, getEligibleEtapesForRoles } from "@/hooks/use-objets-affaire-light";
 import { computeHeuresFromTimes } from "@/lib/heures-calculator";
 
