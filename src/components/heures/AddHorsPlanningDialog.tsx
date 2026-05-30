@@ -248,7 +248,7 @@ export function AddHorsPlanningDialog({ defaultDate, variant, defaultMetierId, o
             </div>
             <div>
               <Label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Heures
+                Heures {autoHeures !== null && <span className="text-primary">(auto)</span>}
               </Label>
               <Input
                 type="number"
@@ -256,14 +256,99 @@ export function AddHorsPlanningDialog({ defaultDate, variant, defaultMetierId, o
                 min="0.25"
                 max="24"
                 value={heures}
+                disabled={autoHeures !== null}
                 onChange={(e) => setHeures(e.target.value)}
               />
+              {autoHeures !== null && (
+                <p className="mt-1 text-[10px] text-muted-foreground">
+                  Calculé : fin − début − pause
+                </p>
+              )}
               {errorFor(["HEURES_INVALIDE", "HEURES_HORS_BORNES"]) && (
                 <p className="mt-1 text-xs text-destructive">
                   {errorFor(["HEURES_INVALIDE", "HEURES_HORS_BORNES"])}
                 </p>
               )}
           </div>
+          </div>
+
+          {/* v0.49 — Début / fin / pause (aligné avec les autres modules de saisie) */}
+          <Collapsible open={showTimes} onOpenChange={setShowTimes}>
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-7 gap-1 px-2 text-[11px]">
+                <Clock className="h-3 w-3" />
+                {showTimes ? "Masquer" : "Préciser"} début / fin
+                <ChevronDown className={cn("h-3 w-3 transition-transform", showTimes && "rotate-180")} />
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="mt-2">
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <Label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Début
+                  </Label>
+                  <Input type="time" value={debut} onChange={(e) => setDebut(e.target.value)} className="h-9" />
+                </div>
+                <div>
+                  <Label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Fin
+                  </Label>
+                  <Input type="time" value={fin} onChange={(e) => setFin(e.target.value)} className="h-9" />
+                </div>
+                <div>
+                  <Label
+                    className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground"
+                    title="Durée de la pause déjeuner (ou autres pauses) en minutes — déduite des heures totales"
+                  >
+                    Pause (min)
+                  </Label>
+                  <Input
+                    type="number"
+                    step="5"
+                    min="0"
+                    max="600"
+                    value={pause}
+                    placeholder="0"
+                    onChange={(e) => setPause(e.target.value)}
+                    className="h-9"
+                  />
+                </div>
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
+
+          {/* v0.49 — Heures de nuit (00h–06h, convention spectacle vivant) */}
+          <Collapsible open={showNuit} onOpenChange={setShowNuit}>
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-7 gap-1 px-2 text-[11px]">
+                🌙 {showNuit ? "Masquer" : "Déclarer"} heures de nuit
+                <ChevronDown className={cn("h-3 w-3 transition-transform", showNuit && "rotate-180")} />
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="mt-2">
+              <div>
+                <Label
+                  className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground"
+                  title="Heures effectuées entre 00h et 06h selon convention collective spectacle vivant"
+                >
+                  Dont heures de nuit (00h–06h)
+                </Label>
+                <Input
+                  type="number"
+                  step="0.25"
+                  min="0"
+                  max="24"
+                  value={nuit}
+                  onChange={(e) => setNuit(e.target.value)}
+                  className="h-9 max-w-[140px]"
+                />
+                <p className="mt-1 text-[10px] text-muted-foreground">
+                  Convention spectacle vivant. Doit être ≤ heures totales.
+                </p>
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
+          <div className="hidden">
 
           {/* Sprint B / B6 — bandeau héritage saisie (4 états selon le niveau résolu) */}
           {affaireId && date && (
