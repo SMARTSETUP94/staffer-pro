@@ -1842,9 +1842,9 @@ function AggCard({ title, rows }: { title: string; rows: Array<{ key: string; ca
               {rows.map((r) => (
                 <tr key={r.key} className="border-b border-border">
                   <td className="p-1 truncate max-w-[180px]">{r.key}</td>
-                  <td className={cn("p-1 text-right tabular-nums", r.marge >= 0 ? "text-emerald-400" : "text-red-400")}>{fmtEUR(r.marge)}</td>
-                  <td className={cn("p-1 text-right tabular-nums", r.ratio >= 1 ? "text-emerald-400" : "text-red-400")}>{isFinite(r.ratio) ? r.ratio.toFixed(2) : "—"}</td>
-                  <td className={cn("p-1 text-right tabular-nums", r.prod >= 1 ? "text-emerald-400" : "text-red-400")}>{isFinite(r.prod) ? r.prod.toFixed(2) : "—"}</td>
+                  <td className={cn("p-1 text-right tabular-nums", tierColor(r.ratio))}>{fmtEUR(r.marge)}</td>
+                  <td className={cn("p-1 text-right tabular-nums", tierColor(r.ratio))}>{isFinite(r.ratio) ? r.ratio.toFixed(2) : "—"}</td>
+                  <td className={cn("p-1 text-right tabular-nums", tierColor(r.prod))}>{isFinite(r.prod) ? r.prod.toFixed(2) : "—"}</td>
                 </tr>
               ))}
             </tbody>
