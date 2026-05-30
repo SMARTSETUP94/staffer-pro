@@ -236,6 +236,25 @@ export function MargeChantierApp() {
                 <p className="text-xs text-muted-foreground flex items-center gap-2 flex-wrap">
                   <span>Synchronisé sur votre compte ({user?.email ?? "anonyme"}) {savedLabel}</span>
                   <SyncBadge state={syncState} />
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 px-2 text-xs gap-1"
+                        onClick={handleManualSync}
+                        disabled={syncState === "saving" || syncState === "loading"}
+                      >
+                        {syncState === "saving" ? (
+                          <RotateCcw className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <RefreshCw className="h-3 w-3" />
+                        )}
+                        {syncState === "saving" ? "Synchronisation…" : "Synchroniser maintenant"}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Forcer l&apos;envoi immédiat vers le serveur</TooltipContent>
+                  </Tooltip>
                 </p>
               </div>
             </div>
