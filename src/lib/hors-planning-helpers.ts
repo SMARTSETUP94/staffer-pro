@@ -108,6 +108,14 @@ export function buildHorsPlanningInsert(
   const commentaire = input.commentaire && input.commentaire.trim() !== ""
     ? input.commentaire.trim()
     : null;
+  const heureDebut = input.heure_debut && input.heure_debut.trim() !== "" ? input.heure_debut : null;
+  const heureFin = input.heure_fin && input.heure_fin.trim() !== "" ? input.heure_fin : null;
+  const pauseMin = input.duree_pause_minutes != null && Number.isFinite(Number(input.duree_pause_minutes))
+    ? Number(input.duree_pause_minutes)
+    : null;
+  const heuresNuit = input.heures_nuit != null && Number.isFinite(Number(input.heures_nuit))
+    ? Number(input.heures_nuit)
+    : null;
   return {
     employe_id: employeId,
     assignation_id: null,
@@ -117,6 +125,10 @@ export function buildHorsPlanningInsert(
     heures_reelles: Number(input.heures_reelles),
     commentaire,
     statut: "brouillon",
+    heure_debut: heureDebut,
+    heure_fin: heureFin,
+    duree_pause_minutes: pauseMin,
+    heures_nuit: heuresNuit,
   };
 }
 
