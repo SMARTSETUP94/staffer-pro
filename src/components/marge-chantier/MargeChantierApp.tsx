@@ -350,6 +350,20 @@ export function MargeChantierApp() {
             </div>
           </header>
 
+          {/* === Panneau d'erreur sync === */}
+          {syncState === "error" && syncError && (
+            <SyncErrorPanel
+              error={syncError}
+              userEmail={user?.email ?? null}
+              onRetry={syncError.phase === "load" ? handleRetryLoad : handleManualSync}
+              onDismiss={() => {
+                setSyncError(null);
+                setSyncState("idle");
+              }}
+            />
+          )}
+
+
           {/* === KPIs globaux === */}
           {!isEmpty && (
             <GlobalKpiBar globals={globals} mode={mode} />
