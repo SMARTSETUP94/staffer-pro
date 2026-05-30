@@ -348,8 +348,6 @@ export function AddHorsPlanningDialog({ defaultDate, variant, defaultMetierId, o
               </div>
             </CollapsibleContent>
           </Collapsible>
-          <div className="hidden">
-
           {/* Sprint B / B6 — bandeau héritage saisie (4 états selon le niveau résolu) */}
           {affaireId && date && (
             <SaisieHeritageBandeau
@@ -360,9 +358,6 @@ export function AddHorsPlanningDialog({ defaultDate, variant, defaultMetierId, o
               dismissKey={`hors-planning-${affaireId}-${date}`}
             />
           )}
-
-
-          </div>
 
           <div>
             <Label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
