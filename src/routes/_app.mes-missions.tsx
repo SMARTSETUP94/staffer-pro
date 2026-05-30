@@ -243,6 +243,20 @@ function MissionCard({ mission, muted }: { mission: MissionListItem; muted?: boo
               </span>
             )}
           </div>
+          {mission.equipe && mission.equipe.length > 0 && (
+            <div className="mt-1 flex flex-wrap gap-1">
+              {mission.equipe.map((m) => (
+                <span
+                  key={m.employe_id}
+                  className="inline-flex items-center gap-1 rounded-full bg-muted px-1.5 py-0.5 text-[10px] text-foreground"
+                  title={`${m.prenom} ${m.nom}`}
+                >
+                  <span className="font-medium">{m.prenom} {m.nom}</span>
+                  <span className="text-muted-foreground">· {m.nb_demi_jours} ½j</span>
+                </span>
+              ))}
+            </div>
+          )}
         </div>
         <ChevronRight className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
       </Link>
