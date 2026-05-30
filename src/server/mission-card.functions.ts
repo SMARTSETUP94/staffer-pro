@@ -121,8 +121,6 @@ function statutFromDates(debut: string, fin: string, today = new Date()): Missio
 // 1) getMesMissions ---------------------------------------------------------
 // ---------------------------------------------------------------------------
 
-export const getMesMissions = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
 const GetMesMissionsSchema = z.object({
   scope: z.enum(["mine", "team", "all"]).optional().default("mine"),
 });
