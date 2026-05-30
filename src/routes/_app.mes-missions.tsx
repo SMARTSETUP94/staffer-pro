@@ -19,7 +19,7 @@ import { getMesMissions, type MissionListItem } from "@/server/mission-card.func
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { ScopeSelector, ScopeNotImplementedBanner, type UrlScope } from "@/components/scope/ScopeSelector";
+import { ScopeSelector, type UrlScope } from "@/components/scope/ScopeSelector";
 
 import { requireCapability } from "@/lib/capability-guard";
 
