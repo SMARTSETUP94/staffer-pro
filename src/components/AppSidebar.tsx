@@ -4,7 +4,7 @@ import {
   Clock, Calendar, Building2, Users, FileDown, ClipboardCheck, LogOut, CalendarOff,
   UserCircle, FileText, Trophy, Map, ClipboardList,
   Truck, Palette, Warehouse, Hammer, Wrench, BadgeCheck, Lightbulb,
-  FileSignature, Inbox, PackageCheck, UsersRound, Briefcase, Settings,
+  FileSignature, Inbox, PackageCheck, UsersRound, Briefcase, Settings, TrendingUp,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
