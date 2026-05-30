@@ -1,8 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
-import { Loader2, Plus } from "lucide-react";
+import { ChevronDown, Clock, Loader2, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { computeHeuresFromTimes } from "@/lib/heures-calculator";
+import { cn } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
