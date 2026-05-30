@@ -136,7 +136,11 @@ export async function loadAppData(userId: string): Promise<AppData> {
 export async function saveAppData(userId: string, data: AppData): Promise<void> {
   saveToLocalStorage(userId, data); // cache d'abord (offline-safe)
   if (!userId || userId === "anonymous") return;
-  await upsertSupabase(userId, data);
+  try {
+    await upsertSupabase(userId, data);
+  } catch (e) {
+    throw toSyncError(e, "Échec de la sauvegarde serveur");
+  }
 }
 
 /**
