@@ -41,7 +41,30 @@ export interface SaisieRow {
   fabrication_etape_type: FabricationEtapeTypeRow | null;
   /** v0.32.3 — métier réellement effectué (renseigné pour saisies hors planning). */
   metier_id: number | null;
+  /** Étape chantier 4XXX (Montage / Démontage / Permanence / Chargement…). */
+  etape_chantier: EtapeChantierRow | null;
 }
+
+export type EtapeChantierRow =
+  | "Montage"
+  | "Démontage"
+  | "Rotation"
+  | "Permanence"
+  | "Finition"
+  | "Chargement"
+  | "Déchargement"
+  | "Traçage";
+
+export const ETAPE_CHANTIER_OPTIONS: readonly EtapeChantierRow[] = [
+  "Montage",
+  "Démontage",
+  "Rotation",
+  "Permanence",
+  "Finition",
+  "Chargement",
+  "Déchargement",
+  "Traçage",
+] as const;
 
 /** Combinaison d'une assignation + sa saisie (s'il y en a une). */
 export interface SaisieCombined {
