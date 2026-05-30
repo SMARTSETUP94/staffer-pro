@@ -1732,7 +1732,7 @@ function TabMargePersonne({ app, mode, onGoTo }: { app: AppData; mode: Mode; onG
                   <td className="p-2 text-right tabular-nums">{fmtEUR(p.caContrib)}</td>
                   <td className="p-2 text-right tabular-nums">{fmtEUR(p.cout)}</td>
                   <td className="p-2 text-right tabular-nums text-muted-foreground">{fmtEUR(p.coutMajo)}</td>
-                  <td className={cn("p-2 text-right tabular-nums", p.marge >= 0 ? "text-emerald-400" : "text-red-400")}>{fmtEUR(p.marge)}</td>
+                  <td className={cn("p-2 text-right tabular-nums", tierColor(p.ratio))}>{fmtEUR(p.marge)}</td>
                   <td className="p-2 text-right tabular-nums">{isFinite(p.ratio) ? p.ratio.toFixed(2) : "—"}</td>
                 </tr>
               ))}
