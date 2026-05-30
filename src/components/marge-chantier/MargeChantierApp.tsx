@@ -281,7 +281,7 @@ export function MargeChantierApp() {
                 <h1 className="text-2xl font-bold text-primary flex items-center gap-2">
                   <FileBarChart className="h-6 w-6" /> Marges chantiers
                 </h1>
-                <p className="text-xs text-muted-foreground flex items-center gap-2 flex-wrap">
+                <div className="text-xs text-muted-foreground flex items-center gap-2 flex-wrap mt-1">
                   <span>Synchronisé sur votre compte ({user?.email ?? "anonyme"}) {savedLabel}</span>
                   <SyncBadge state={syncState} />
                   <Tooltip>
@@ -303,7 +303,7 @@ export function MargeChantierApp() {
                     </TooltipTrigger>
                     <TooltipContent>Forcer l&apos;envoi immédiat vers le serveur</TooltipContent>
                   </Tooltip>
-                </p>
+                </div>
               </div>
             </div>
 
