@@ -26,6 +26,13 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 export type MissionPhase = "montage" | "demontage";
 
+export interface MissionTeamMember {
+  employe_id: string;
+  nom: string;
+  prenom: string;
+  nb_demi_jours: number;
+}
+
 export interface MissionListItem {
   affaire_id: string;
   affaire_numero: string;
@@ -35,9 +42,11 @@ export interface MissionListItem {
   phase: MissionPhase;
   date_debut: string;          // YYYY-MM-DD min assignation
   date_fin: string;            // YYYY-MM-DD max assignation
-  nb_demi_jours: number;       // total demi-journées de l'employé sur la mission
+  nb_demi_jours: number;       // total demi-journées (employé en scope=mine, équipe en scope=team)
   chef_chantier_id: string | null;
   statut: "passee" | "en_cours" | "a_venir";
+  /** Présent en scope=team : équipe assignée avec leurs ½j */
+  equipe?: MissionTeamMember[];
 }
 
 export interface MissionEvent {
@@ -112,18 +121,18 @@ function statutFromDates(debut: string, fin: string, today = new Date()): Missio
 // 1) getMesMissions ---------------------------------------------------------
 // ---------------------------------------------------------------------------
 
+const GetMesMissionsSchema = z.object({
+  scope: z.enum(["mine", "team", "all"]).optional().default("mine"),
+});
+
 export const getMesMissions = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
+  .inputValidator((input?: z.input<typeof GetMesMissionsSchema>) =>
+    GetMesMissionsSchema.parse(input ?? {}),
+  )
+  .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-
-    // Résoudre employe_id depuis profile_id (= auth.uid())
-    const { data: emp } = await supabase
-      .from("employes")
-      .select("id")
-      .eq("profile_id", userId)
-      .maybeSingle();
-    if (!emp) return { missions: [] as MissionListItem[] };
+    const scope = data.scope;
 
     // Fenêtre J-7 → J+30
     const today = new Date();
@@ -131,6 +140,104 @@ export const getMesMissions = createServerFn({ method: "POST" })
     const fin = new Date(today); fin.setDate(fin.getDate() + 30);
     const debutStr = debut.toISOString().slice(0, 10);
     const finStr = fin.toISOString().slice(0, 10);
+
+    // ---------------- scope=team : missions des affaires où je suis chef -----
+    if (scope === "team") {
+      // 1) Affaires dont je suis chef_chantier_id
+      const { data: affs, error: affErr } = await supabase
+        .from("affaires")
+        .select("id, numero, nom, client, lieu, chef_chantier_id")
+        .eq("chef_chantier_id", userId);
+      if (affErr) throw new Error(affErr.message);
+      const affIds = (affs ?? []).map((a) => a.id);
+      if (affIds.length === 0) return { missions: [] as MissionListItem[] };
+
+      // 2) Toutes les assignations montage/démontage de ces affaires sur fenêtre
+      const { data: rows, error } = await supabase
+        .from("assignations")
+        .select("affaire_id, phase, date, demi_journee, employe_id, employe:employes(id, nom, prenom)")
+        .in("affaire_id", affIds)
+        .in("phase", ["montage", "demontage"])
+        .gte("date", debutStr)
+        .lte("date", finStr);
+      if (error) throw new Error(error.message);
+
+      const affMap = new Map(
+        (affs ?? []).map((a) => [a.id, a] as const),
+      );
+
+      type Agg = {
+        affaire_id: string;
+        phase: MissionPhase;
+        dates: Set<string>;
+        total_demi: number;
+        equipe: Map<string, MissionTeamMember>;
+      };
+      const map = new Map<string, Agg>();
+
+      for (const r of rows ?? []) {
+        if (!r.phase || (r.phase !== "montage" && r.phase !== "demontage")) continue;
+        const key = `${r.affaire_id}::${r.phase}`;
+        let agg = map.get(key);
+        if (!agg) {
+          agg = {
+            affaire_id: r.affaire_id,
+            phase: r.phase as MissionPhase,
+            dates: new Set(),
+            total_demi: 0,
+            equipe: new Map(),
+          };
+          map.set(key, agg);
+        }
+        const demi = r.demi_journee === "JOURNEE" ? 2 : 1;
+        agg.dates.add(r.date);
+        agg.total_demi += demi;
+        // @ts-ignore relation typing
+        const e = r.employe as { id: string; nom: string; prenom: string } | null;
+        if (e) {
+          const m = agg.equipe.get(e.id) ?? { employe_id: e.id, nom: e.nom, prenom: e.prenom, nb_demi_jours: 0 };
+          m.nb_demi_jours += demi;
+          agg.equipe.set(e.id, m);
+        }
+      }
+
+      const missions: MissionListItem[] = [];
+      for (const agg of map.values()) {
+        const aff = affMap.get(agg.affaire_id);
+        if (!aff) continue;
+        const sorted = [...agg.dates].sort();
+        const dDebut = sorted[0]!;
+        const dFin = sorted[sorted.length - 1]!;
+        const equipe = [...agg.equipe.values()].sort((a, b) =>
+          (a.nom + a.prenom).localeCompare(b.nom + b.prenom),
+        );
+        missions.push({
+          affaire_id: agg.affaire_id,
+          affaire_numero: aff.numero,
+          affaire_nom: aff.nom,
+          client: aff.client,
+          lieu: aff.lieu,
+          phase: agg.phase,
+          date_debut: dDebut,
+          date_fin: dFin,
+          nb_demi_jours: agg.total_demi,
+          chef_chantier_id: aff.chef_chantier_id,
+          statut: statutFromDates(dDebut, dFin),
+          equipe,
+        });
+      }
+      missions.sort((a, b) => a.date_debut.localeCompare(b.date_debut));
+      return { missions };
+    }
+
+    // ---------------- scope=mine (défaut) : missions perso --------------------
+    // Résoudre employe_id depuis profile_id (= auth.uid())
+    const { data: emp } = await supabase
+      .from("employes")
+      .select("id")
+      .eq("profile_id", userId)
+      .maybeSingle();
+    if (!emp) return { missions: [] as MissionListItem[] };
 
     // Q1 : PAS de filtre métier — toutes les assignations phase montage/demontage
     const { data: rows, error } = await supabase

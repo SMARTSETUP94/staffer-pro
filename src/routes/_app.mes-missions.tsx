@@ -19,7 +19,7 @@ import { getMesMissions, type MissionListItem } from "@/server/mission-card.func
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { ScopeSelector, ScopeNotImplementedBanner, type UrlScope } from "@/components/scope/ScopeSelector";
+import { ScopeSelector, type UrlScope } from "@/components/scope/ScopeSelector";
 
 import { requireCapability } from "@/lib/capability-guard";
 
@@ -41,8 +41,8 @@ function MesMissionsPage() {
   void navigate;
 
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
-    queryKey: ["mes-missions"],
-    queryFn: () => fetchMissions(),
+    queryKey: ["mes-missions", scope],
+    queryFn: () => fetchMissions({ data: { scope } }),
     staleTime: 60_000,
     refetchOnWindowFocus: true,
   });
@@ -79,7 +79,6 @@ function MesMissionsPage() {
         </div>
         <div className="mx-auto mt-3 max-w-2xl space-y-2">
           <ScopeSelector capKey="mes_missions.view" routeId="/_app/mes-missions" />
-          <ScopeNotImplementedBanner scope={scope} />
         </div>
       </header>
 
@@ -244,6 +243,20 @@ function MissionCard({ mission, muted }: { mission: MissionListItem; muted?: boo
               </span>
             )}
           </div>
+          {mission.equipe && mission.equipe.length > 0 && (
+            <div className="mt-1 flex flex-wrap gap-1">
+              {mission.equipe.map((m) => (
+                <span
+                  key={m.employe_id}
+                  className="inline-flex items-center gap-1 rounded-full bg-muted px-1.5 py-0.5 text-[10px] text-foreground"
+                  title={`${m.prenom} ${m.nom}`}
+                >
+                  <span className="font-medium">{m.prenom} {m.nom}</span>
+                  <span className="text-muted-foreground">· {m.nb_demi_jours} ½j</span>
+                </span>
+              ))}
+            </div>
+          )}
         </div>
         <ChevronRight className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
       </Link>
