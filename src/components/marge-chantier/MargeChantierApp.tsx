@@ -821,6 +821,7 @@ function TabBaseRH({ app, update }: { app: AppData; update: (fn: (d: AppData) =>
   const [statut, setStatut] = useState<string>("all");
   const [aCompleter, setACompleter] = useState(false);
   const [prefs, setPrefs] = useState<RhPrefs>(() => loadRhPrefs());
+  const { gridRef, onTableKeyDown } = useTableNav();
 
   useEffect(() => {
     try { localStorage.setItem(RH_PREFS_KEY, JSON.stringify(prefs)); } catch { /* noop */ }
