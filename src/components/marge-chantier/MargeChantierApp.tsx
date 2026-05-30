@@ -196,8 +196,9 @@ export function MargeChantierApp() {
                 <h1 className="text-2xl font-bold text-primary flex items-center gap-2">
                   <FileBarChart className="h-6 w-6" /> Marges chantiers
                 </h1>
-                <p className="text-xs text-muted-foreground">
-                  Outil standalone — données locales ({user?.email ?? "anonyme"}) {savedLabel}
+                <p className="text-xs text-muted-foreground flex items-center gap-2 flex-wrap">
+                  <span>Synchronisé sur votre compte ({user?.email ?? "anonyme"}) {savedLabel}</span>
+                  <SyncBadge state={syncState} />
                 </p>
               </div>
             </div>
