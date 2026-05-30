@@ -94,6 +94,10 @@ describe("v0.32.3 — hors-planning-helpers", () => {
         heures_reelles: 7,
         commentaire: null,
         statut: "brouillon",
+        heure_debut: null,
+        heure_fin: null,
+        duree_pause_minutes: 0,
+        heures_nuit: 0,
       });
     });
 
