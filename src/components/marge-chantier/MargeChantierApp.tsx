@@ -1621,7 +1621,8 @@ function TabSynthese({ app, ctx, groups, mode, onGoTo }: { app: AppData; ctx: Re
         {filtered.map((g) => {
           const c = calcChantier(app, g, ctx, mode);
           const marge = c.margeMO;
-          const margeColor = marge >= 0 ? "text-emerald-400" : "text-red-400";
+          const ratio = c.coutTotal > 0 ? c.caMO / c.coutTotal : NaN;
+          const margeColor = tierColor(ratio);
           return (
             <details key={g.chantier} className="border border-border rounded-md bg-card">
               <summary className="p-3 cursor-pointer hover:bg-muted/40 flex flex-wrap items-center gap-3">
