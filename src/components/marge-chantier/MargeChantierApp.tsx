@@ -746,24 +746,33 @@ function ModeToggle({ mode, onChange }: { mode: Mode; onChange: (m: Mode) => voi
 /* ========================================================================== */
 /* Hook navigation clavier dans tables                                         */
 /* ========================================================================== */
-function useTableNav<T extends HTMLElement>(rows: number, cols: number) {
-  const refs = useRef<(T | null)[][]>([]);
-  const getRef = (r: number, c: number) => {
-    if (!refs.current[r]) refs.current[r] = [];
-    return (el: T | null) => { refs.current[r][c] = el; };
+function useTableNav() {
+  const gridRef = useRef<HTMLTableElement | null>(null);
+  const onTableKeyDown = (e: React.KeyboardEvent<HTMLTableElement>) => {
+    const target = e.target as HTMLElement;
+    if (!(target.tagName === "INPUT" || target.tagName === "SELECT" || target.closest("[data-role='select-trigger']"))) return;
+    const cell = target.closest("td") as HTMLTableCellElement | null;
+    const row = target.closest("tr") as HTMLTableRowElement | null;
+    const table = gridRef.current;
+    if (!cell || !row || !table) return;
+    const allRows = Array.from(table.querySelectorAll("tbody tr"));
+    const rowIdx = allRows.indexOf(row);
+    const allCells = Array.from(row.querySelectorAll("td"));
+    const colIdx = allCells.indexOf(cell);
+    if (rowIdx < 0 || colIdx < 0) return;
+    const focusCell = (r: number, c: number) => {
+      const targetRow = allRows[r];
+      if (!targetRow) return;
+      const targetCell = targetRow.querySelectorAll("td")[c];
+      if (!targetCell) return;
+      const input = targetCell.querySelector("input, select, [data-role='select-trigger'] button") as HTMLElement | null;
+      if (input) { input.focus(); input.scrollIntoView({ block: "nearest", inline: "nearest" }); }
+    };
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); focusCell(rowIdx + 1, colIdx); }
+    else if (e.key === "Enter" && e.shiftKey) { e.preventDefault(); focusCell(rowIdx - 1, colIdx); }
+    else if (e.key === "Tab" && e.shiftKey && colIdx <= 0 && rowIdx > 0) { e.preventDefault(); focusCell(rowIdx - 1, allRows[rowIdx - 1].querySelectorAll("td").length - 1); }
   };
-  const focusCell = (r: number, c: number) => {
-    const el = refs.current[r]?.[c];
-    if (el) { el.focus(); el.scrollIntoView({ block: "nearest", inline: "nearest" }); }
-  };
-  const onKeyDown = (row: number, col: number) => (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); focusCell(row + 1, col); }
-    else if (e.key === "Enter" && e.shiftKey) { e.preventDefault(); focusCell(row - 1, col); }
-    else if (e.key === "Tab" && e.shiftKey) {
-      if (col <= 0 && row > 0) { e.preventDefault(); focusCell(row - 1, cols - 1); }
-    }
-  };
-  return { getRef, focusCell, onKeyDown };
+  return { gridRef, onTableKeyDown };
 }
 
 /* ========================================================================== */
