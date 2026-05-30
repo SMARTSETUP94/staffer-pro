@@ -40,9 +40,11 @@ import {
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth-context";
-import { loadAppData, saveAppData, saveAppDataSync, downloadAsJson, restoreFromJson } from "./storage";
+import { loadAppData, saveAppData, saveAppDataSync, downloadAsJson, restoreFromJson, MargeChantierSyncError } from "./storage";
 import { readXlsx, readCsvWin1252, readCsvOrXlsx } from "./file-readers";
 import {
   emptyApp,
@@ -89,6 +91,146 @@ function SyncBadge({ state }: { state: SyncState }) {
   return <Badge variant="outline" className="gap-1 border-emerald-700 text-emerald-500"><CheckCircle2 className="h-3 w-3" />Synchronisé</Badge>;
 }
 
+type SyncErrorInfo = {
+  phase: "load" | "save";
+  message: string;
+  code?: string;
+  details?: string;
+  hint?: string;
+  at: number;
+  retries: number;
+};
+
+function humanizeSyncError(err: SyncErrorInfo): { title: string; explanation: string } {
+  const raw = (err.message || "").toLowerCase();
+  if (raw.includes("failed to fetch") || raw.includes("networkerror") || raw.includes("network")) {
+    return {
+      title: err.phase === "load" ? "Connexion au serveur impossible" : "Envoi au serveur impossible",
+      explanation:
+        "Le serveur est injoignable. Vérifiez votre connexion internet — vos modifications restent enregistrées localement et seront renvoyées au prochain essai.",
+    };
+  }
+  if (raw.includes("unicode") || raw.includes("escape")) {
+    return {
+      title: "Donnée invalide rejetée par le serveur",
+      explanation:
+        "Une valeur contient des caractères non supportés (séquence d'échappement Unicode invalide, souvent depuis un copier-coller Excel). Le cache local est intact, mais le serveur a refusé l'enregistrement.",
+    };
+  }
+  if (err.code === "PGRST301" || raw.includes("jwt") || raw.includes("expired")) {
+    return {
+      title: "Session expirée",
+      explanation: "Votre session a expiré. Rechargez la page pour vous reconnecter — vos données locales sont conservées.",
+    };
+  }
+  if (err.code === "42501" || raw.includes("permission")) {
+    return {
+      title: "Permissions insuffisantes",
+      explanation: "Votre compte n'a pas les droits requis pour écrire ces données. Contactez un administrateur.",
+    };
+  }
+  if (raw.includes("quota") || raw.includes("payload")) {
+    return {
+      title: "Données trop volumineuses",
+      explanation: "Le payload dépasse la limite serveur. Essayez de purger d'anciens chantiers ou de scinder les imports.",
+    };
+  }
+  return {
+    title: err.phase === "load" ? "Chargement depuis le serveur impossible" : "Enregistrement serveur impossible",
+    explanation:
+      "Le serveur a refusé l'opération. Vos modifications restent dans le cache local. Vous pouvez retenter ou télécharger une sauvegarde JSON en attendant.",
+  };
+}
+
+function SyncErrorPanel({
+  error,
+  userEmail,
+  onRetry,
+  onDismiss,
+}: {
+  error: SyncErrorInfo;
+  userEmail: string | null;
+  onRetry: () => void | Promise<void>;
+  onDismiss: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [retrying, setRetrying] = useState(false);
+  const { title, explanation } = humanizeSyncError(error);
+  const occurredAt = new Date(error.at).toLocaleTimeString("fr-FR");
+
+  const handleRetry = async () => {
+    setRetrying(true);
+    try {
+      await onRetry();
+    } finally {
+      setRetrying(false);
+    }
+  };
+
+  const detailsText =
+    `Phase    : ${error.phase === "load" ? "loadAppData (lecture)" : "saveAppData (écriture)"}\n` +
+    `Heure    : ${occurredAt}\n` +
+    `Compte   : ${userEmail ?? "anonyme"}\n` +
+    `Message  : ${error.message}` +
+    (error.code ? `\nCode     : ${error.code}` : "") +
+    (error.hint ? `\nHint     : ${error.hint}` : "") +
+    (error.details ? `\nDétails  : ${error.details}` : "");
+
+  return (
+    <Alert variant="destructive" className="border-destructive/60">
+      <AlertTriangle className="h-4 w-4" />
+      <AlertTitle className="flex items-center gap-2 flex-wrap">
+        {title}
+        <Badge variant="outline" className="text-[10px] font-normal">
+          {error.phase === "load" ? "Lecture" : "Écriture"}
+        </Badge>
+        {error.retries > 0 && (
+          <Badge variant="outline" className="text-[10px] font-normal">
+            {error.retries + 1} tentatives
+          </Badge>
+        )}
+      </AlertTitle>
+      <AlertDescription className="space-y-3">
+        <p className="text-sm">{explanation}</p>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button size="sm" variant="secondary" onClick={handleRetry} disabled={retrying} className="gap-1">
+            {retrying ? <RotateCcw className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+            {retrying ? "Nouvelle tentative…" : "Réessayer maintenant"}
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => {
+              navigator.clipboard?.writeText(detailsText).then(
+                () => toast.success("Détails copiés"),
+                () => toast.error("Copie impossible"),
+              );
+            }}
+          >
+            Copier les détails
+          </Button>
+          <Button size="sm" variant="ghost" onClick={onDismiss}>
+            Masquer
+          </Button>
+        </div>
+        <Collapsible open={open} onOpenChange={setOpen}>
+          <CollapsibleTrigger asChild>
+            <Button variant="ghost" size="sm" className="h-7 px-2 text-xs gap-1">
+              {open ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+              Détails techniques
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="mt-2">
+            <pre className="text-[11px] leading-relaxed bg-background/50 border border-border rounded p-2 overflow-auto whitespace-pre-wrap break-all">{detailsText}</pre>
+          </CollapsibleContent>
+        </Collapsible>
+      </AlertDescription>
+    </Alert>
+  );
+}
+
+
+
 export function MargeChantierApp() {
   const { user } = useAuth();
   const userId = user?.id ?? "anonymous";
@@ -100,7 +242,29 @@ export function MargeChantierApp() {
   const [savedTick, setSavedTick] = useState(0); // re-render "il y a Xs"
   const [resetOpen, setResetOpen] = useState(false);
   const [syncState, setSyncState] = useState<SyncState>("loading");
+  const [syncError, setSyncError] = useState<{
+    phase: "load" | "save";
+    message: string;
+    code?: string;
+    details?: string;
+    hint?: string;
+    at: number;
+    retries: number;
+  } | null>(null);
   const debounceTimerRef = useRef<number | null>(null);
+
+  const captureError = useCallback((phase: "load" | "save", e: unknown) => {
+    const err = e as Partial<MargeChantierSyncError> & { message?: string };
+    setSyncError((prev) => ({
+      phase,
+      message: err?.message || (phase === "load" ? "Impossible de charger les données serveur" : "Impossible d'enregistrer sur le serveur"),
+      code: err?.code,
+      details: err?.details,
+      hint: err?.hint,
+      at: Date.now(),
+      retries: prev?.phase === phase ? prev.retries + 1 : 0,
+    }));
+  }, []);
 
   // Charger : Supabase (source de vérité) + fallback localStorage + migration auto
   useEffect(() => {
@@ -112,17 +276,19 @@ export function MargeChantierApp() {
         setApp(loaded);
         setHydrated(true);
         setSyncState("idle");
+        setSyncError(null);
       })
       .catch((e) => {
         console.error("[marge-chantier] initial load failed:", e);
         if (cancelled) return;
         setHydrated(true);
         setSyncState("error");
+        captureError("load", e);
       });
     return () => {
       cancelled = true;
     };
-  }, [userId]);
+  }, [userId, captureError]);
 
   // Autosave debounced 2s → Supabase + cache localStorage
   useEffect(() => {
@@ -134,8 +300,12 @@ export function MargeChantierApp() {
         .then(() => {
           setSavedAt(Date.now());
           setSyncState("idle");
+          setSyncError(null);
         })
-        .catch(() => setSyncState("error"));
+        .catch((e) => {
+          setSyncState("error");
+          captureError("save", e);
+        });
     }, 2000);
     return () => {
       if (debounceTimerRef.current) {
@@ -143,7 +313,7 @@ export function MargeChantierApp() {
         debounceTimerRef.current = null;
       }
     };
-  }, [app, userId, hydrated]);
+  }, [app, userId, hydrated, captureError]);
 
   // Save best-effort (cache localStorage) avant unload
   useEffect(() => {
@@ -197,7 +367,7 @@ export function MargeChantierApp() {
     }
   };
 
-  const handleManualSync = async () => {
+  const handleManualSync = useCallback(async () => {
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
       debounceTimerRef.current = null;
@@ -207,12 +377,30 @@ export function MargeChantierApp() {
       await saveAppData(userId, app);
       setSavedAt(Date.now());
       setSyncState("idle");
+      setSyncError(null);
       toast.success("Synchronisé avec succès");
-    } catch {
+    } catch (e) {
       setSyncState("error");
+      captureError("save", e);
       toast.error("Échec de la synchronisation");
     }
-  };
+  }, [app, userId, captureError]);
+
+  const handleRetryLoad = useCallback(async () => {
+    setSyncState("loading");
+    try {
+      const loaded = await loadAppData(userId);
+      setApp(loaded);
+      setHydrated(true);
+      setSyncState("idle");
+      setSyncError(null);
+      toast.success("Données rechargées");
+    } catch (e) {
+      setSyncState("error");
+      captureError("load", e);
+      toast.error("Rechargement impossible");
+    }
+  }, [userId, captureError]);
 
   const isEmpty = app.rh.length === 0 && app.devis.length === 0 && app.heures.length === 0;
   const savedLabel = useFormatSaved(savedAt, savedTick);
@@ -233,7 +421,7 @@ export function MargeChantierApp() {
                 <h1 className="text-2xl font-bold text-primary flex items-center gap-2">
                   <FileBarChart className="h-6 w-6" /> Marges chantiers
                 </h1>
-                <p className="text-xs text-muted-foreground flex items-center gap-2 flex-wrap">
+                <div className="text-xs text-muted-foreground flex items-center gap-2 flex-wrap mt-1">
                   <span>Synchronisé sur votre compte ({user?.email ?? "anonyme"}) {savedLabel}</span>
                   <SyncBadge state={syncState} />
                   <Tooltip>
@@ -255,7 +443,7 @@ export function MargeChantierApp() {
                     </TooltipTrigger>
                     <TooltipContent>Forcer l&apos;envoi immédiat vers le serveur</TooltipContent>
                   </Tooltip>
-                </p>
+                </div>
               </div>
             </div>
 
@@ -301,6 +489,20 @@ export function MargeChantierApp() {
               </DropdownMenu>
             </div>
           </header>
+
+          {/* === Panneau d'erreur sync === */}
+          {syncState === "error" && syncError && (
+            <SyncErrorPanel
+              error={syncError}
+              userEmail={user?.email ?? null}
+              onRetry={syncError.phase === "load" ? handleRetryLoad : handleManualSync}
+              onDismiss={() => {
+                setSyncError(null);
+                setSyncState("idle");
+              }}
+            />
+          )}
+
 
           {/* === KPIs globaux === */}
           {!isEmpty && (
