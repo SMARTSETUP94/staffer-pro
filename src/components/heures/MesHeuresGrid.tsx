@@ -32,7 +32,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { useMesHeures, type SaisieCombined, type FabricationEtapeTypeRow } from "@/hooks/use-mes-heures";
+import { useMesHeures, type SaisieCombined, type FabricationEtapeTypeRow, type EtapeChantierRow, ETAPE_CHANTIER_OPTIONS } from "@/hooks/use-mes-heures";
 import { useObjetsAffaireLight, useMyFabricationRoles, getEligibleEtapesForRoles } from "@/hooks/use-objets-affaire-light";
 import { computeHeuresFromTimes } from "@/lib/heures-calculator";
 
@@ -268,13 +268,16 @@ function SaisieRowCard({
   const [commentaire, setCommentaire] = useState<string>(row.saisie?.commentaire ?? "");
   const [showTimes, setShowTimes] = useState(!!(row.saisie?.heure_debut || row.saisie?.heure_fin));
   const [showNuit, setShowNuit] = useState(initialNuit > 0);
-  // Bloc 5 v0.20 — lien vers objet/étape de fabrication (optionnel)
+  // Bloc 5 v0.20 — lien vers objet/étape de fabrication (optionnel, 5XXX)
   const initialObjetId = row.saisie?.fabrication_objet_id ?? null;
   const initialEtapeType = row.saisie?.fabrication_etape_type ?? null;
+  const initialEtapeChantier = row.saisie?.etape_chantier ?? null;
   const [showFab, setShowFab] = useState(!!(initialObjetId || initialEtapeType));
   const { objets: fabObjets } = useObjetsAffaireLight(row.affaire_id);
   const { flags: fabRoles } = useMyFabricationRoles();
   const eligibleEtapes = getEligibleEtapesForRoles(fabRoles);
+  // 4XXX (montage/démontage) : étape chantier au lieu du lien fabrication
+  const isChantier4XXX = (row.affaire_numero ?? "").trim().startsWith("4");
 
   const badge = STATUT_BADGE[statut];
 
@@ -581,81 +584,109 @@ function SaisieRowCard({
             </CollapsibleContent>
           </Collapsible>
 
-          {/* Bloc 5 v0.20 — Lien optionnel objet/étape de fabrication */}
-          <Collapsible open={showFab} onOpenChange={setShowFab} className="mt-2">
-            <CollapsibleTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-7 gap-1 px-2 text-[11px]" disabled={locked}>
-                <Hammer className="h-3 w-3" />
-                {showFab ? "Masquer" : "Ajouter"} lien fabrication
-                {(initialObjetId || initialEtapeType) && (
-                  <Badge variant="outline" className="ml-1 h-4 px-1 text-[9px]">
-                    {[initialObjetId && "objet", initialEtapeType && "étape"].filter(Boolean).join(" + ")}
-                  </Badge>
-                )}
-                <ChevronDown className={cn("h-3 w-3 transition-transform", showFab && "rotate-180")} />
-              </Button>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="mt-2">
-              <div className="space-y-2 rounded-md border border-border/60 bg-muted/30 p-2">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Sur quoi as-tu travaillé ? (optionnel)
-                </p>
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                  <div>
-                    <label className="text-[10px] text-muted-foreground">Objet</label>
-                    <Select
-                      value={initialObjetId ?? "none"}
-                      disabled={locked}
-                      onValueChange={(v) => commit({ fabrication_objet_id: v === "none" ? null : v })}
-                    >
-                      <SelectTrigger className="h-8 text-xs">
-                        <SelectValue placeholder={fabObjets.length ? "— Aucun —" : "Aucun objet sur l'affaire"} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">— Aucun —</SelectItem>
-                        {fabObjets.map((o) => (
-                          <SelectItem key={o.id} value={o.id}>
-                            {o.reference} — {o.nom}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+          {/* 4XXX : sélecteur d'étape de chantier (Montage / Permanence / Chargement…) */}
+          {isChantier4XXX ? (
+            <div className="mt-2 space-y-1">
+              <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Étape chantier
+              </label>
+              <Select
+                value={initialEtapeChantier ?? "none"}
+                disabled={locked}
+                onValueChange={(v) =>
+                  commit({ etape_chantier: v === "none" ? null : (v as EtapeChantierRow) })
+                }
+              >
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue placeholder="— Choisir une étape —" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">— Aucune —</SelectItem>
+                  {ETAPE_CHANTIER_OPTIONS.map((e) => (
+                    <SelectItem key={e} value={e}>
+                      {e}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          ) : (
+            /* Bloc 5 v0.20 — Lien optionnel objet/étape de fabrication (5XXX) */
+            <Collapsible open={showFab} onOpenChange={setShowFab} className="mt-2">
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-7 gap-1 px-2 text-[11px]" disabled={locked}>
+                  <Hammer className="h-3 w-3" />
+                  {showFab ? "Masquer" : "Ajouter"} lien fabrication
+                  {(initialObjetId || initialEtapeType) && (
+                    <Badge variant="outline" className="ml-1 h-4 px-1 text-[9px]">
+                      {[initialObjetId && "objet", initialEtapeType && "étape"].filter(Boolean).join(" + ")}
+                    </Badge>
+                  )}
+                  <ChevronDown className={cn("h-3 w-3 transition-transform", showFab && "rotate-180")} />
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="mt-2">
+                <div className="space-y-2 rounded-md border border-border/60 bg-muted/30 p-2">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Sur quoi as-tu travaillé ? (optionnel)
+                  </p>
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    <div>
+                      <label className="text-[10px] text-muted-foreground">Objet</label>
+                      <Select
+                        value={initialObjetId ?? "none"}
+                        disabled={locked}
+                        onValueChange={(v) => commit({ fabrication_objet_id: v === "none" ? null : v })}
+                      >
+                        <SelectTrigger className="h-8 text-xs">
+                          <SelectValue placeholder={fabObjets.length ? "— Aucun —" : "Aucun objet sur l'affaire"} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">— Aucun —</SelectItem>
+                          {fabObjets.map((o) => (
+                            <SelectItem key={o.id} value={o.id}>
+                              {o.reference} — {o.nom}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-muted-foreground">Étape</label>
+                      <Select
+                        value={initialEtapeType ?? "none"}
+                        disabled={locked || eligibleEtapes.length === 0}
+                        onValueChange={(v) =>
+                          commit({ fabrication_etape_type: v === "none" ? null : (v as FabricationEtapeTypeRow) })
+                        }
+                      >
+                        <SelectTrigger className="h-8 text-xs">
+                          <SelectValue
+                            placeholder={
+                              eligibleEtapes.length === 0
+                                ? "Aucun rôle fabrication"
+                                : "— Aucune —"
+                            }
+                          />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">— Aucune —</SelectItem>
+                          {eligibleEtapes.map((t) => (
+                            <SelectItem key={t} value={t}>
+                              {ETAPE_LABEL_MAP[t]}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
-                  <div>
-                    <label className="text-[10px] text-muted-foreground">Étape</label>
-                    <Select
-                      value={initialEtapeType ?? "none"}
-                      disabled={locked || eligibleEtapes.length === 0}
-                      onValueChange={(v) =>
-                        commit({ fabrication_etape_type: v === "none" ? null : (v as FabricationEtapeTypeRow) })
-                      }
-                    >
-                      <SelectTrigger className="h-8 text-xs">
-                        <SelectValue
-                          placeholder={
-                            eligibleEtapes.length === 0
-                              ? "Aucun rôle fabrication"
-                              : "— Aucune —"
-                          }
-                        />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">— Aucune —</SelectItem>
-                        {eligibleEtapes.map((t) => (
-                          <SelectItem key={t} value={t}>
-                            {ETAPE_LABEL_MAP[t]}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  <p className="text-[10px] text-muted-foreground">
+                    L'objet sans étape est accepté. L'étape requiert le rôle correspondant sur ton profil.
+                  </p>
                 </div>
-                <p className="text-[10px] text-muted-foreground">
-                  L'objet sans étape est accepté. L'étape requiert le rôle correspondant sur ton profil.
-                </p>
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
+              </CollapsibleContent>
+            </Collapsible>
+          )}
 
           {/* Bloc motif rejet (mobile + desktop) */}
           {statut === "rejete" && row.saisie?.motif_rejet && (

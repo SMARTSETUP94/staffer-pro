@@ -2305,6 +2305,7 @@ export type Database = {
           devis_id: string | null
           duree_pause_minutes: number
           employe_id: string
+          etape_chantier: string | null
           fabrication_etape_type:
             | Database["public"]["Enums"]["fabrication_etape_type"]
             | null
@@ -2335,6 +2336,7 @@ export type Database = {
           devis_id?: string | null
           duree_pause_minutes?: number
           employe_id: string
+          etape_chantier?: string | null
           fabrication_etape_type?:
             | Database["public"]["Enums"]["fabrication_etape_type"]
             | null
@@ -2365,6 +2367,7 @@ export type Database = {
           devis_id?: string | null
           duree_pause_minutes?: number
           employe_id?: string
+          etape_chantier?: string | null
           fabrication_etape_type?:
             | Database["public"]["Enums"]["fabrication_etape_type"]
             | null
@@ -4795,6 +4798,7 @@ export type Database = {
           devis_id: string | null
           duree_pause_minutes: number
           employe_id: string
+          etape_chantier: string | null
           fabrication_etape_type:
             | Database["public"]["Enums"]["fabrication_etape_type"]
             | null

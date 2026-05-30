@@ -41,7 +41,30 @@ export interface SaisieRow {
   fabrication_etape_type: FabricationEtapeTypeRow | null;
   /** v0.32.3 — métier réellement effectué (renseigné pour saisies hors planning). */
   metier_id: number | null;
+  /** Étape chantier 4XXX (Montage / Démontage / Permanence / Chargement…). */
+  etape_chantier: EtapeChantierRow | null;
 }
+
+export type EtapeChantierRow =
+  | "Montage"
+  | "Démontage"
+  | "Rotation"
+  | "Permanence"
+  | "Finition"
+  | "Chargement"
+  | "Déchargement"
+  | "Traçage";
+
+export const ETAPE_CHANTIER_OPTIONS: readonly EtapeChantierRow[] = [
+  "Montage",
+  "Démontage",
+  "Rotation",
+  "Permanence",
+  "Finition",
+  "Chargement",
+  "Déchargement",
+  "Traçage",
+] as const;
 
 /** Combinaison d'une assignation + sa saisie (s'il y en a une). */
 export interface SaisieCombined {
@@ -52,6 +75,7 @@ export interface SaisieCombined {
   demi_journee: DemiJournee;
   affaire_id: string;
   affaire_label: string;
+  affaire_numero: string | null;
   metier_couleur: string;
   /** v0.32.3 — true si saisie hors planning (assignation_id IS NULL). */
   hors_planning: boolean;
@@ -84,7 +108,7 @@ interface UseMesHeuresResult {
 
 /** v0.32.3 — projection commune pour SELECT sur heures_saisies (inclut metier_id). */
 const SAISIE_SELECT =
-  "id, assignation_id, affaire_id, date, heure_debut, heure_fin, heures_reelles, duree_pause_minutes, commentaire, statut, motif_rejet, motif_rejet_lu_le, fabrication_objet_id, fabrication_etape_type, metier_id";
+  "id, assignation_id, affaire_id, date, heure_debut, heure_fin, heures_reelles, duree_pause_minutes, commentaire, statut, motif_rejet, motif_rejet_lu_le, fabrication_objet_id, fabrication_etape_type, metier_id, etape_chantier";
 
 export function useMesHeures({ weekStart, employeIdOverride }: UseMesHeuresOptions): UseMesHeuresResult {
   const [employeId, setEmployeId] = useState<string | null>(null);
@@ -273,6 +297,7 @@ export function useMesHeures({ weekStart, employeIdOverride }: UseMesHeuresOptio
         demi_journee: a.demi_journee,
         affaire_id: a.affaire_id,
         affaire_label: a.affaire ? `${a.affaire.numero} — ${a.affaire.nom}` : "—",
+        affaire_numero: a.affaire?.numero ?? null,
         metier_couleur: a.metier?.couleur ?? "#94a3b8",
         hors_planning: false,
       });
@@ -304,6 +329,7 @@ export function useMesHeures({ weekStart, employeIdOverride }: UseMesHeuresOptio
           : isHorsPlanning
             ? "(chargement…)"
             : "(assignation supprimée)",
+        affaire_numero: aff?.numero ?? null,
         metier_couleur: met?.couleur ?? "#94a3b8",
         hors_planning: isHorsPlanning,
       });
@@ -400,6 +426,7 @@ export function useMesHeures({ weekStart, employeIdOverride }: UseMesHeuresOptio
         commentaire: patch.commentaire ?? null,
         fabrication_objet_id: patch.fabrication_objet_id ?? null,
         fabrication_etape_type: patch.fabrication_etape_type ?? null,
+        etape_chantier: patch.etape_chantier ?? null,
         statut: "brouillon" as const,
       };
       const { data, error } = await supabase
