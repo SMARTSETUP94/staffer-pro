@@ -268,13 +268,16 @@ function SaisieRowCard({
   const [commentaire, setCommentaire] = useState<string>(row.saisie?.commentaire ?? "");
   const [showTimes, setShowTimes] = useState(!!(row.saisie?.heure_debut || row.saisie?.heure_fin));
   const [showNuit, setShowNuit] = useState(initialNuit > 0);
-  // Bloc 5 v0.20 — lien vers objet/étape de fabrication (optionnel)
+  // Bloc 5 v0.20 — lien vers objet/étape de fabrication (optionnel, 5XXX)
   const initialObjetId = row.saisie?.fabrication_objet_id ?? null;
   const initialEtapeType = row.saisie?.fabrication_etape_type ?? null;
+  const initialEtapeChantier = row.saisie?.etape_chantier ?? null;
   const [showFab, setShowFab] = useState(!!(initialObjetId || initialEtapeType));
   const { objets: fabObjets } = useObjetsAffaireLight(row.affaire_id);
   const { flags: fabRoles } = useMyFabricationRoles();
   const eligibleEtapes = getEligibleEtapesForRoles(fabRoles);
+  // 4XXX (montage/démontage) : étape chantier au lieu du lien fabrication
+  const isChantier4XXX = (row.affaire_numero ?? "").trim().startsWith("4");
 
   const badge = STATUT_BADGE[statut];
 
