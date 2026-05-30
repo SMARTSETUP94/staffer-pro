@@ -75,6 +75,7 @@ export interface SaisieCombined {
   demi_journee: DemiJournee;
   affaire_id: string;
   affaire_label: string;
+  affaire_numero: string | null;
   metier_couleur: string;
   /** v0.32.3 — true si saisie hors planning (assignation_id IS NULL). */
   hors_planning: boolean;
