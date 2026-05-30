@@ -74,6 +74,8 @@ const STATUTS: Employe["statut"][] = ["Permanent 35h", "Permanent forfait", "Int
 
 type TabKey = "rh" | "ref" | "registre" | "devis" | "heures" | "synthese" | "marge" | "perf";
 
+type SyncState = "loading" | "idle" | "saving" | "error";
+
 export function MargeChantierApp() {
   const { user } = useAuth();
   const userId = user?.id ?? "anonymous";
@@ -84,21 +86,51 @@ export function MargeChantierApp() {
   const [savedAt, setSavedAt] = useState<number | null>(null);
   const [savedTick, setSavedTick] = useState(0); // re-render "il y a Xs"
   const [resetOpen, setResetOpen] = useState(false);
+  const [syncState, setSyncState] = useState<SyncState>("loading");
 
-  // Charger depuis localStorage au mount
+  // Charger : Supabase (source de vérité) + fallback localStorage + migration auto
   useEffect(() => {
-    setApp(loadAppData(userId));
-    setHydrated(true);
+    let cancelled = false;
+    setSyncState("loading");
+    loadAppData(userId)
+      .then((loaded) => {
+        if (cancelled) return;
+        setApp(loaded);
+        setHydrated(true);
+        setSyncState("idle");
+      })
+      .catch((e) => {
+        console.error("[marge-chantier] initial load failed:", e);
+        if (cancelled) return;
+        setHydrated(true);
+        setSyncState("error");
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [userId]);
 
-  // Autosave debounced
+  // Autosave debounced 2s → Supabase + cache localStorage
   useEffect(() => {
     if (!hydrated) return;
+    setSyncState((s) => (s === "error" ? s : "saving"));
     const t = setTimeout(() => {
-      saveAppData(userId, app);
-      setSavedAt(Date.now());
-    }, 400);
+      saveAppData(userId, app)
+        .then(() => {
+          setSavedAt(Date.now());
+          setSyncState("idle");
+        })
+        .catch(() => setSyncState("error"));
+    }, 2000);
     return () => clearTimeout(t);
+  }, [app, userId, hydrated]);
+
+  // Save best-effort (cache localStorage) avant unload
+  useEffect(() => {
+    if (!hydrated) return;
+    const handler = () => saveAppDataSync(userId, app);
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
   }, [app, userId, hydrated]);
 
   // Refresh "il y a Xs" toutes les 15s
