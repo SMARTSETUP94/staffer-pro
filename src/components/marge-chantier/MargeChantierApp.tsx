@@ -100,6 +100,7 @@ export function MargeChantierApp() {
   const [savedTick, setSavedTick] = useState(0); // re-render "il y a Xs"
   const [resetOpen, setResetOpen] = useState(false);
   const [syncState, setSyncState] = useState<SyncState>("loading");
+  const debounceTimerRef = useRef<number | null>(null);
 
   // Charger : Supabase (source de vérité) + fallback localStorage + migration auto
   useEffect(() => {
