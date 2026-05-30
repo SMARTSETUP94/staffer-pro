@@ -16,12 +16,12 @@
  * - Tri devis par défaut + bouton "Écarts d'abord"
  * - Design tokens (bg-background, bg-card, text-muted-foreground…) au lieu de slate-* hardcoded
  */
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   Save, Upload, Download, FileSpreadsheet, FileText, Search, ChevronDown, ChevronRight,
   Plus, Trash2, MoreVertical, Users2, ListChecks, ClipboardList, FileBarChart, Clock,
   Building2, UserSquare2, Target, Info, CheckCircle2, RotateCcw, ArrowLeft,
-  Sparkles, AlertTriangle, Columns3, Rows3,
+  Sparkles, AlertTriangle, Columns3, Rows3, RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "@tanstack/react-router";
@@ -100,6 +100,7 @@ export function MargeChantierApp() {
   const [savedTick, setSavedTick] = useState(0); // re-render "il y a Xs"
   const [resetOpen, setResetOpen] = useState(false);
   const [syncState, setSyncState] = useState<SyncState>("loading");
+  const debounceTimerRef = useRef<number | null>(null);
 
   // Charger : Supabase (source de vérité) + fallback localStorage + migration auto
   useEffect(() => {
@@ -127,7 +128,8 @@ export function MargeChantierApp() {
   useEffect(() => {
     if (!hydrated) return;
     setSyncState((s) => (s === "error" ? s : "saving"));
-    const t = setTimeout(() => {
+    debounceTimerRef.current = window.setTimeout(() => {
+      debounceTimerRef.current = null;
       saveAppData(userId, app)
         .then(() => {
           setSavedAt(Date.now());
@@ -135,7 +137,12 @@ export function MargeChantierApp() {
         })
         .catch(() => setSyncState("error"));
     }, 2000);
-    return () => clearTimeout(t);
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+        debounceTimerRef.current = null;
+      }
+    };
   }, [app, userId, hydrated]);
 
   // Save best-effort (cache localStorage) avant unload
@@ -190,6 +197,23 @@ export function MargeChantierApp() {
     }
   };
 
+  const handleManualSync = async () => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = null;
+    }
+    setSyncState("saving");
+    try {
+      await saveAppData(userId, app);
+      setSavedAt(Date.now());
+      setSyncState("idle");
+      toast.success("Synchronisé avec succès");
+    } catch {
+      setSyncState("error");
+      toast.error("Échec de la synchronisation");
+    }
+  };
+
   const isEmpty = app.rh.length === 0 && app.devis.length === 0 && app.heures.length === 0;
   const savedLabel = useFormatSaved(savedAt, savedTick);
 
@@ -212,6 +236,25 @@ export function MargeChantierApp() {
                 <p className="text-xs text-muted-foreground flex items-center gap-2 flex-wrap">
                   <span>Synchronisé sur votre compte ({user?.email ?? "anonyme"}) {savedLabel}</span>
                   <SyncBadge state={syncState} />
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 px-2 text-xs gap-1"
+                        onClick={handleManualSync}
+                        disabled={syncState === "saving" || syncState === "loading"}
+                      >
+                        {syncState === "saving" ? (
+                          <RotateCcw className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <RefreshCw className="h-3 w-3" />
+                        )}
+                        {syncState === "saving" ? "Synchronisation…" : "Synchroniser maintenant"}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Forcer l&apos;envoi immédiat vers le serveur</TooltipContent>
+                  </Tooltip>
                 </p>
               </div>
             </div>
