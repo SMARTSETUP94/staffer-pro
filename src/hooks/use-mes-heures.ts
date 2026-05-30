@@ -329,6 +329,7 @@ export function useMesHeures({ weekStart, employeIdOverride }: UseMesHeuresOptio
           : isHorsPlanning
             ? "(chargement…)"
             : "(assignation supprimée)",
+        affaire_numero: aff?.numero ?? null,
         metier_couleur: met?.couleur ?? "#94a3b8",
         hors_planning: isHorsPlanning,
       });
