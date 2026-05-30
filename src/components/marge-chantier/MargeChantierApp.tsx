@@ -128,7 +128,8 @@ export function MargeChantierApp() {
   useEffect(() => {
     if (!hydrated) return;
     setSyncState((s) => (s === "error" ? s : "saving"));
-    const t = setTimeout(() => {
+    debounceTimerRef.current = window.setTimeout(() => {
+      debounceTimerRef.current = null;
       saveAppData(userId, app)
         .then(() => {
           setSavedAt(Date.now());
@@ -136,7 +137,12 @@ export function MargeChantierApp() {
         })
         .catch(() => setSyncState("error"));
     }, 2000);
-    return () => clearTimeout(t);
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+        debounceTimerRef.current = null;
+      }
+    };
   }, [app, userId, hydrated]);
 
   // Save best-effort (cache localStorage) avant unload
