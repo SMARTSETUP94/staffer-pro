@@ -55,7 +55,7 @@ async function upsertSupabase(userId: string, data: AppData): Promise<void> {
   const { error } = await supabase
     .from("marge_chantier_workspace")
     .upsert(
-      { user_id: userId, data: data as unknown as Record<string, unknown>, updated_at: new Date().toISOString() },
+      [{ user_id: userId, data: data as unknown as Record<string, unknown>, updated_at: new Date().toISOString() }],
       { onConflict: "user_id" },
     );
   if (error) {
