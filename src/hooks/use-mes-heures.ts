@@ -297,6 +297,7 @@ export function useMesHeures({ weekStart, employeIdOverride }: UseMesHeuresOptio
         demi_journee: a.demi_journee,
         affaire_id: a.affaire_id,
         affaire_label: a.affaire ? `${a.affaire.numero} — ${a.affaire.nom}` : "—",
+        affaire_numero: a.affaire?.numero ?? null,
         metier_couleur: a.metier?.couleur ?? "#94a3b8",
         hors_planning: false,
       });
