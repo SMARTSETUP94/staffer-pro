@@ -93,9 +93,30 @@ export function AddHorsPlanningDialog({ defaultDate, variant, defaultMetierId, o
       setDate(defaultDate ?? format(new Date(), "yyyy-MM-dd"));
       setHeures("8");
       setCommentaire("");
+      setDebut("");
+      setFin("");
+      setPause("0");
+      setNuit("0");
+      setShowTimes(false);
+      setShowNuit(false);
       setShowErrors(false);
     }
   }, [open, defaultDate, defaultMetierId]);
+
+  // Auto-calcul heures réalisées + heures de nuit dès que début ET fin sont remplis
+  const computed = useMemo(
+    () => computeHeuresFromTimes(debut, fin, Number(pause) || 0),
+    [debut, fin, pause],
+  );
+  const autoHeures = computed?.heuresReelles ?? null;
+  const autoNuit = computed?.heuresNuit ?? 0;
+
+  useEffect(() => {
+    if (autoHeures === null) return;
+    setHeures(String(autoHeures));
+    setNuit(String(autoNuit));
+    if (autoNuit > 0) setShowNuit(true);
+  }, [autoHeures, autoNuit]);
 
   const input: Partial<HorsPlanningInput> = useMemo(
     () => ({
@@ -104,8 +125,12 @@ export function AddHorsPlanningDialog({ defaultDate, variant, defaultMetierId, o
       date,
       heures_reelles: heures === "" ? undefined : Number(heures),
       commentaire: commentaire.trim() || null,
+      heure_debut: debut || null,
+      heure_fin: fin || null,
+      duree_pause_minutes: pause === "" ? 0 : Number(pause) || 0,
+      heures_nuit: nuit === "" ? 0 : Number(nuit) || 0,
     }),
-    [affaireId, metierId, date, heures, commentaire],
+    [affaireId, metierId, date, heures, commentaire, debut, fin, pause, nuit],
   );
 
   const validation = useMemo(() => validateHorsPlanningInput(input), [input]);
