@@ -1,10 +1,13 @@
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { requireCapability } from "@/lib/capability-guard";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Loader2, MapPin, User, Calendar, Lock, Unlock } from "lucide-react";
+import { ArrowLeft, Loader2, MapPin, User, Calendar, Lock, Unlock, Link2Off } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip, TooltipTrigger, TooltipContent, TooltipProvider,
+} from "@/components/ui/tooltip";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -159,11 +162,23 @@ function AffaireDetailLayout() {
           <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
             {affaire.client && (
               affaire.client_id ? (
-              <Link to="/clients/$clientId" params={{ clientId: affaire.client_id }} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-primary hover:underline">
+                <Link to="/clients/$clientId" params={{ clientId: affaire.client_id }} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-primary hover:underline">
                   <User className="h-3 w-3" />{affaire.client}
                 </Link>
               ) : (
-                <span className="inline-flex items-center gap-1"><User className="h-3 w-3" />{affaire.client}</span>
+                <TooltipProvider delayDuration={200}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="inline-flex items-center gap-1 cursor-help text-muted-foreground/70">
+                        <Link2Off className="h-3 w-3" />{affaire.client}
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="max-w-xs text-xs">
+                      <p>Aucune fiche client n'est liée à cette affaire.</p>
+                      <p className="mt-1 text-muted-foreground">Vous pouvez lier un client existant depuis la liste des affaires ou créer une fiche.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               )
             )}
             {affaire.lieu && (
