@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -116,7 +116,10 @@ export interface PlanningData {
   loading: boolean;
   error: string | null;
   refresh: () => void;
+  /** v0.49 — Re-fetch ciblé de `v_devis_consommation` uniquement (sidebar « Heures restantes » en quasi-temps réel après mutation). */
+  refreshConsommation: () => Promise<void>;
 }
+
 
 export function usePlanningData(weekStart: Date, weekEnd: Date): PlanningData {
   const [metiers, setMetiers] = useState<Metier[]>([]);
@@ -217,6 +220,11 @@ export function usePlanningData(weekStart: Date, weekEnd: Date): PlanningData {
     };
   }, [weekStart.getTime(), weekEnd.getTime(), tick]);
 
+  const refreshConsommation = useCallback(async () => {
+    const { data, error } = await supabase.from("v_devis_consommation").select("*");
+    if (!error && data) setConsommation(data as DevisConsommation[]);
+  }, []);
+
   return {
     metiers,
     employes,
@@ -230,5 +238,7 @@ export function usePlanningData(weekStart: Date, weekEnd: Date): PlanningData {
     loading,
     error,
     refresh: () => setTick((t) => t + 1),
+    refreshConsommation,
   };
 }
+

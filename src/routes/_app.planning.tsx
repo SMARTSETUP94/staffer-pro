@@ -98,8 +98,16 @@ function PlanningPage() {
   // typoFilter actif = ne passent que les typologies cochées.
   const includeOpportunites = typoFilter.length === 0 || typoFilter.includes("prototype");
 
-  const { metiers, employes, affaires, assignations, consommation, absences, chefsById, swapAssignationIds, devisLots, loading, error, refresh } =
+  const { metiers, employes, affaires, assignations, consommation, absences, chefsById, swapAssignationIds, devisLots, loading, error, refresh, refreshConsommation } =
     usePlanningData(weekStart, weekEnd);
+
+  // v0.49 — Callback unifié : re-fetch ciblé `v_devis_consommation` (sidebar
+  // « Heures restantes » mise à jour <100ms) PUIS refresh complet en background.
+  const handleChanged = () => {
+    void refreshConsommation();
+    refresh();
+  };
+
 
   // Filtre recherche employé (prénom + nom, insensible casse/accent)
   const employesFiltres = useMemo(() => {
@@ -497,7 +505,7 @@ function PlanningPage() {
                   devisLots={devisLots}
                   showWeekend={showWeekend}
                   emptyMessage="Aucun employé CDI/CDD actif."
-                  onChanged={refresh}
+                  onChanged={handleChanged}
                   swapAssignationIds={swapAssignationIds}
                 />
               </TabsContent>
@@ -527,7 +535,7 @@ function PlanningPage() {
                   devisLots={devisLots}
                   showWeekend={showWeekend}
                   emptyMessage="Aucun employé intermittent / indépendant staffé cette semaine. Clique sur « Ajouter un intermittent »."
-                  onChanged={refresh}
+                  onChanged={handleChanged}
                   swapAssignationIds={swapAssignationIds}
                   openAssignationFor={autoOpen}
                   onAutoOpenConsumed={() => setAutoOpen(null)}
@@ -547,7 +555,7 @@ function PlanningPage() {
                   filterAffaireIds={filterAffaireStr}
                   filterMetierIds={filterMetierNum}
                   onSelectAffaire={handleSelectAffaireFromSynthese}
-                  onChanged={refresh}
+                  onChanged={handleChanged}
                 />
               </TabsContent>
 
@@ -563,7 +571,7 @@ function PlanningPage() {
                   showWeekend={showWeekend}
                   filterAffaireIds={filterAffaireStr}
                   filterMetierIds={filterMetierNum}
-                  onChanged={refresh}
+                  onChanged={handleChanged}
                 />
               </TabsContent>
 
@@ -587,7 +595,15 @@ function PlanningPage() {
           affaires={affaires}
           consommation={consommation}
           filterAffaireIds={filterAffaireStr}
+          employes={employes}
+          metiers={metiers}
+          assignations={assignations}
+          absences={absences}
+          defaultDate={weekStart}
+          onConsommationChanged={refreshConsommation}
+          onChanged={handleChanged}
         />
+
       </aside>
 
       <AddInterimDialog
@@ -615,7 +631,7 @@ function PlanningPage() {
         metiers={metiers}
         devisLots={devisLots}
         assignations={assignations}
-        onSaved={refresh}
+        onSaved={handleChanged}
       />
 
     </div>
