@@ -20,6 +20,7 @@ import {
   HelpCircle,
   CheckCircle2,
   Paperclip,
+  Unlink,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -246,6 +247,29 @@ function InboxSmartPage() {
     setSelected(null);
   }
 
+  async function detachOpportunite(e: EmailRow) {
+    const { error } = await supabase
+      .from("emails_entrants")
+      .update({
+        opportunite_id: null,
+        statut: "pending_review",
+        validated_at: null,
+        validated_by: null,
+      })
+      .eq("id", e.id);
+    if (error) {
+      toast.error("Erreur", { description: error.message });
+      return;
+    }
+    toast.success("Email détaché de l'opportunité");
+    await load();
+    setSelected((cur) =>
+      cur && cur.id === e.id
+        ? { ...cur, opportunite_id: null, statut: "pending_review" }
+        : cur,
+    );
+  }
+
   return (
     <div className="container mx-auto p-4 max-w-6xl space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-2">
@@ -388,6 +412,7 @@ function InboxSmartPage() {
             setAttachOpp(selected);
             setSelected(null);
           }}
+          onDetachOpportunite={() => detachOpportunite(selected)}
         />
       )}
 
@@ -424,6 +449,7 @@ function EmailDetailDialog({
   onDismiss,
   onCreateCandidat,
   onAttachOpportunite,
+  onDetachOpportunite,
 }: {
   email: EmailRow;
   onClose: () => void;
@@ -432,6 +458,7 @@ function EmailDetailDialog({
   onDismiss: () => void;
   onCreateCandidat: () => void;
   onAttachOpportunite: () => void;
+  onDetachOpportunite: () => void;
 }) {
   const fetchBody = useServerFn(getOutlookFullBody);
   const [body, setBody] = useState<{
@@ -573,10 +600,25 @@ function EmailDetailDialog({
                 <UserPlus className="h-4 w-4 mr-1" /> Créer candidat
               </Button>
             )}
-            {email.categorie_ia === "opportunite" && email.statut === "pending_review" && (
+            {email.categorie_ia === "opportunite" && !email.opportunite_id && (
               <Button size="sm" variant="outline" onClick={onAttachOpportunite}>
                 <Building2 className="h-4 w-4 mr-1" /> Rattacher / créer opportunité
               </Button>
+            )}
+            {email.opportunite_id && (
+              <>
+                <Button size="sm" variant="outline" onClick={onAttachOpportunite}>
+                  <Building2 className="h-4 w-4 mr-1" /> Changer d'opportunité
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-destructive hover:text-destructive"
+                  onClick={onDetachOpportunite}
+                >
+                  <Unlink className="h-4 w-4 mr-1" /> Détacher
+                </Button>
+              </>
             )}
             {email.statut === "pending_review" && (
               <Button size="sm" onClick={onValidate}>
