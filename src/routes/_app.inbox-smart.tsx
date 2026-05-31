@@ -2,7 +2,7 @@
  * Inbox SMART — tri humain des emails entrants smart@setup.paris.
  * Cap : inbox_smart.view (admin, rh, chef_chantier).
  */
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { requireCapability } from "@/lib/capability-guard";
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
@@ -89,7 +89,10 @@ interface EmailRow {
   archived_outlook: boolean;
   candidature_id: string | null;
   opportunite_id: string | null;
+  client_id: string | null;
+  contact_id: string | null;
   dismiss_reason: string | null;
+
 }
 
 const CATEGORIE_LABEL: Record<CategorieIA, string> = {
@@ -503,6 +506,26 @@ function EmailDetailDialog({
     };
   }, [email.message_id_outlook, email.body_full, email.body_content_type, fetchBody]);
 
+  // Charge l'info client si l'email est rattaché à un client
+  const [clientInfo, setClientInfo] = useState<{ id: string; nom: string } | null>(null);
+  useEffect(() => {
+    if (!email.client_id) {
+      setClientInfo(null);
+      return;
+    }
+    let cancelled = false;
+    supabase
+      .from("clients")
+      .select("id, nom")
+      .eq("id", email.client_id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!cancelled && data) setClientInfo(data);
+      });
+    return () => { cancelled = true; };
+  }, [email.client_id]);
+
+
   const CAT_OPTIONS: Array<{ key: CategorieIA; label: string; icon: typeof Building2 }> = [
     { key: "candidature", label: "Candidature", icon: UserPlus },
     { key: "opportunite", label: "Opportunité", icon: Building2 },
@@ -530,8 +553,22 @@ function EmailDetailDialog({
                   locale: fr,
                 })}
               </div>
+              {clientInfo && (
+                <div className="flex items-center gap-1.5 pt-1">
+                  <Building2 className="h-3 w-3 text-primary" />
+                  <span className="text-foreground font-medium">Client :</span>
+                  <Link
+                    to="/clients/$clientId"
+                    params={{ clientId: clientInfo.id }}
+                    className="text-primary hover:underline"
+                  >
+                    {clientInfo.nom}
+                  </Link>
+                </div>
+              )}
             </div>
           </DialogDescription>
+
         </DialogHeader>
 
         {/* Reclassement rapide */}
