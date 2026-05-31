@@ -1,74 +1,148 @@
-# Centraliser la saisie d'heures sur une source unique
-
-## État des lieux (audit)
-
-5 surfaces saisissent dans `heures_saisies`, avec **3 implémentations indépendantes** du INSERT/UPDATE et des champs **incohérents** entre elles :
-
-| Surface | Route | Composant | Mutation | Champs manquants |
-|---|---|---|---|---|
-| 1 | `/mes-heures` (desktop + mobile) | `MesHeuresGrid` + `AddHorsPlanningDialog` | `useMesHeures.upsertSaisie` ✅ | — référence |
-| 2a | `/saisie-pour-equipe` | `SaisirPourEmployeDialog` | `supabase` direct inline | OK champs |
-| 2b | `/saisie-pour-equipe` | `BulkSaisieDialog` | `supabase` direct inline | ❌ commentaire, étape 4XXX, fab 5XXX |
-| 3 | `/validation-heures` | `SaisirPourEmployeDialog` (réutilisé) | — | — |
-| 4 | `/missions/$affaireId/$phase` | formulaire **inline** dans la route | `supabase` direct inline | ❌ heures_nuit (forcé 0), étape 4XXX, fab 5XXX |
-
-**Conséquences concrètes** :
-- Sur 4XXX et 5XXX, la saisie depuis `/missions` et `/saisie-pour-equipe` bulk **perd silencieusement** la phase et le lien objet.
-- `heures_nuit` n'existe pas dans le module `/missions` (forcé à 0).
-- Une évolution future (nouveau champ, nouvelle règle métier) doit être répliquée dans 3 endroits — risque de divergence garanti.
-
 ## Objectif
 
-Une seule fonction d'upsert qui couvre **tous** les champs (`heure_debut`, `heure_fin`, `duree_pause_minutes`, `heures_reelles`, `heures_nuit`, `etape_chantier`, `fabrication_objet_id`, `fabrication_etape_type`, `commentaire`, `statut`), utilisée par les 4 composants.
+Connecter `smart@setup.paris` (Microsoft 365) à l'app pour trier automatiquement les emails entrants en 3 catégories : **Candidatures**, **Opportunités**, **Pubs/Spam** — avec un mode review humain avant écriture en base.
 
-## Plan d'exécution
+---
 
-### 1. Extraire un helper pur (`src/lib/heures-upsert.ts`)
-- Fonction `upsertHeuresSaisie(client, input)` qui :
-  - Cherche une ligne existante `(employe_id, date, affaire_id)`.
-  - Construit le payload complet (tous les champs ci-dessus + `valide_par`/`valide_le` si `statut='valide'`).
-  - Fait UPDATE ou INSERT et renvoie la ligne.
-- Type `HeuresUpsertInput` unique exporté.
-- Tests unitaires sur la construction du payload (4XXX vs 5XXX vs neutre, statut, override nuit).
+## Architecture
 
-### 2. Refactor `useMesHeures.upsertSaisie`
-- Remplacer le code SQL inline par un appel à `upsertHeuresSaisie(supabase, …)`. Comportement identique.
+```text
+smart@setup.paris (Microsoft 365)
+        │
+        ▼
+[Cron 5 min] → server route /api/public/hooks/poll-smart-inbox
+        │
+        ▼
+[Microsoft Graph API via connecteur microsoft_outlook]
+   - fetch messages inbox unread
+        │
+        ▼
+[Lovable AI Gateway — Gemini 3 Flash, structured output Zod]
+   - classifier: candidature | opportunite | pub | autre
+   - extraction: poste visé / nom client / sujet / résumé
+        │
+        ▼
+[Table emails_entrants] (statut: pending_review)
+        │
+        ▼
+[Action Outlook] → archive systématique (déplace dossier "Archive")
+        │
+        ▼
+[UI /inbox-smart] → review humain → validation
+        │
+        ├─► Crée candidature (table candidatures)
+        └─► Crée opportunité (table opportunites + numéro auto)
+```
 
-### 3. Refactor `SaisirPourEmployeDialog`
-- Remplacer le bloc `supabase.from("heures_saisies")…` par `upsertHeuresSaisie(supabase, {…, statut:"valide"})`.
+---
 
-### 4. Refactor `BulkSaisieDialog`
-- Boucle d'appels à `upsertHeuresSaisie` (ou variante batch). Ajout des champs manquants : `commentaire` (optionnel global de la modale), `etape_chantier` (si toutes les affaires 4XXX), `fabrication_*` (si 5XXX) — sinon `null`.
-- Conserve la perf : si une seule affaire, l'UI peut proposer ces champs ; sinon laisser `null` mais utiliser le même helper.
+## Périmètre fonctionnel
 
-### 5. Refactor `/missions/$affaireId/$phase` (inline)
-- Extraire le formulaire actuel dans un petit composant `<MissionHeuresForm>` réutilisable, qui appelle `upsertHeuresSaisie`.
-- Ajouter le bloc `heures_nuit` collapsible (cohérence) et, si l'affaire est 4XXX/5XXX, le sélecteur d'étape/objet correspondant (déjà identifié par le contexte de la route — phase est connu pour 4XXX).
+### 1. Connecteur Microsoft Outlook
+- Lien OAuth `microsoft_outlook` (compte builder = boîte partagée `smart@setup.paris`)
+- Scopes : `Mail.Read`, `Mail.ReadWrite` (pour archiver)
 
-### 6. Garde-fou
-- Ajouter une règle ESLint custom **ou** un test `vitest` qui grep le code et **interdit** tout nouvel appel direct `supabase.from("heures_saisies").insert|update` hors de `src/lib/heures-upsert.ts` et `src/hooks/use-mes-heures.ts`.
+### 2. Polling toutes les 5 min
+- `pg_cron` appelle `/api/public/hooks/poll-smart-inbox`
+- Lit `inbox` non lus via Graph (`$filter=isRead eq false`)
+- Pour chaque email → classification IA → insert dans `emails_entrants` → move vers `Archive`
+- Marque comme lu
 
-### 7. Vérifications
-- `bunx tsc --noEmit`
-- Tests existants : `mes-heures-*.test.ts`, `hors-planning-helpers.test.ts`
-- Smoke manuel : créer/éditer une saisie sur les 4 surfaces avec une affaire 4XXX puis 5XXX.
+### 3. Classification IA (Lovable AI Gateway)
+- Modèle : `google/gemini-3-flash-preview` (rapide, peu coûteux)
+- Structured output Zod :
+  ```ts
+  { categorie: 'candidature'|'opportunite'|'pub'|'autre',
+    confiance: number,
+    poste_vise?: string,       // si candidature
+    metier_devine?: string,    // mapping vers les 8 métiers Setup
+    client_devine?: string,    // si opportunité
+    typologie_devine?: '4XXX'|'5XXX'|'2XXXX',
+    sujet_resume: string,
+    contient_pj: boolean }
+  ```
 
-## Détails techniques
+### 4. Table `emails_entrants`
+Champs métier : `message_id_outlook` (unique), `from_email`, `from_name`, `subject`, `received_at`, `body_preview`, `body_html`, `attachments_count`, `categorie_ia`, `confiance_ia`, `metadata_ia` (jsonb), `statut` (`pending_review` / `validated` / `dismissed`), `validated_by`, `validated_at`, `candidature_id?`, `opportunite_id?`, `dismiss_reason?`.
 
-- **Statut par défaut** reste différencié selon l'appelant (`brouillon` pour employé self, `soumis` pour `/missions`, `valide` pour chef) — paramètre `statut` de `HeuresUpsertInput`.
-- Le helper attache automatiquement `valide_par = user.id` et `valide_le = now()` quand `statut === "valide"`.
-- Pas de migration SQL.
-- Pas de changement RLS.
+RLS : admin + rh + chef commercial (cap `inbox_smart.view`).
 
-## Hors scope
+### 5. Table `candidatures` (nouvelle)
+Champs métier : `nom`, `prenom`, `email`, `telephone?`, `poste_vise`, `metier` (enum 8), `cv_url?` (Supabase Storage), `lettre_url?`, `source_email_id`, `statut` (`nouvelle` / `a_rencontrer` / `entretien` / `embauche` / `rejetee`), `notes`, `assignee_rh?`.
 
-- Refonte UI cross-surface (look identique partout) — on garde l'UI propre à chaque surface, on unifie uniquement la **logique** d'écriture.
-- `staffer-mobile` non confirmé comme surface de saisie ; je vérifierai en passant.
+Tri/filtre par poste dans onglet dédié `/candidatures` (groupé par `metier` puis `poste_vise`).
 
-## Livrables
+### 6. Module Opportunités (existant)
+- Réutilise table `opportunites` actuelle
+- Numéro auto déjà géré côté DB (séquence existante)
+- Bouton "Créer opportunité depuis email" pré-remplit : `objet`, `client`, `typologie` (déduite par IA), lien retour `source_email_id`.
 
-- `src/lib/heures-upsert.ts` (+ tests)
-- 4 composants refactorés
-- 1 garde-fou (test ou règle ESLint)
-- Mémoire `mem://constraints/heures-saisie-source-unique.md`
-- Entrée roadmap dans `mem://index.md`
+### 7. UI
+
+**Nouveau route `/inbox-smart`** (cap `inbox_smart.view` → admin + rh + commercial)
+- 3 onglets : **À trier** (pending_review) / **Candidatures validées** / **Opportunités validées** / **Archivées (pub)**
+- Tri par catégorie IA + badge confiance
+- Sur chaque ligne : aperçu, PJ, boutons **Valider en candidature** / **Valider en opportunité** / **Marquer pub** / **Ignorer**
+
+**Page `/candidatures`** (cap `candidatures.view` → admin + rh)
+- Tableau filtré par métier (sidebar) + recherche
+- Sheet détail : CV, lettre, historique emails, statut, notes
+- Bouton "+ Candidature manuelle" pour saisie hors email
+
+**Onglet "Emails" sur fiche opportunité** : liste des emails liés (lecture seule).
+
+### 8. Pièces jointes
+- Téléchargées via Graph (`/messages/{id}/attachments`)
+- Uploadées vers bucket Storage privé `candidatures-pj` ou `opportunites-pj`
+- Signed URLs
+
+### 9. Mode review (toggle par admin)
+- Setting global `inbox_smart_auto_validate` (default `false`)
+- Si `false` : tout va en `pending_review`
+- Si `true` : auto-création si `confiance > 0.85`, sinon pending
+
+---
+
+## Capabilities ajoutées
+- `inbox_smart.view` → admin, rh, chef (commercial)
+- `candidatures.view` → admin, rh
+- `candidatures.manage` → admin, rh
+
+---
+
+## Sprint découpé
+
+| # | Lot | Description |
+|---|-----|-------------|
+| 1 | **Connecteur + secret** | Connect Microsoft Outlook, vérifier scopes Mail.ReadWrite |
+| 2 | **Schéma DB** | Tables `emails_entrants` + `candidatures` + buckets Storage + RLS + caps |
+| 3 | **Server route polling** | `/api/public/hooks/poll-smart-inbox` (Graph fetch + classifier IA + insert + archive) |
+| 4 | **Cron pg_cron** | Job 5 min appelant le hook |
+| 5 | **UI `/inbox-smart`** | 4 onglets, validation, mapping vers candidature/opportunité |
+| 6 | **UI `/candidatures`** | Liste tri par poste, sheet détail, CRUD |
+| 7 | **Onglet Emails fiche opportunité** | Lecture seule + lien retour |
+| 8 | **Sidebar + routing** | Items capability-driven |
+| 9 | **Tests E2E** | role-smoke + happy path candidature + opportunité |
+
+Estimation : 2–3 jours de dev itératif (sprint séquencé lot par lot avec validation visuelle entre chaque).
+
+---
+
+## Points d'attention
+
+- **Boîte partagée Microsoft 365** : le connecteur OAuth se fait avec UN compte. Si `smart@setup.paris` est une vraie boîte (pas un alias), un admin Microsoft doit s'y connecter pour autoriser. Si c'est une boîte partagée, il faut un compte délégué.
+- **RGPD candidatures** : conserver max 2 ans (dette à ajouter), purge auto via cron mensuel.
+- **Quota Graph** : 10 000 req/10 min/app → largement suffisant à 5 min de polling.
+- **Coût IA** : ~0.001 €/email classifié Gemini Flash → négligeable.
+- **Idempotence** : `message_id_outlook` UNIQUE empêche les doublons si le cron rejoue.
+
+---
+
+## Questions résiduelles avant de coder
+
+1. **`smart@setup.paris` = boîte partagée Microsoft 365 ou boîte nominative** ? (impacte la procédure OAuth)
+2. **Postes candidatures** : on réutilise la table `postes_catalogue` existante (8 postes seed) ou on laisse libre texte au début ?
+3. **CV/PJ candidatures** : qui peut voir ? (admin + rh seulement, ou aussi chef d'équipe quand l'embauche est faite ?)
+4. **Pubs détectées** : on les supprime définitivement de la boîte ou on les laisse archivées ?
+
+Une fois les réponses confirmées, je commence par le **Lot 1 (connecteur)** + **Lot 2 (schéma DB)** dans la même passe.
