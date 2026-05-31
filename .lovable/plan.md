@@ -1,148 +1,104 @@
+# Fiche Client centralisée + auto-matching email
+
 ## Objectif
+Centraliser les clients dans une table dédiée pour qu'un même client (ex: EDF) regroupe toutes ses affaires (4XXX/5XXX/9XXX), ses contacts et ses emails entrants — au lieu d'être éparpillé via le texte libre `affaires.client`.
 
-Connecter `smart@setup.paris` (Microsoft 365) à l'app pour trier automatiquement les emails entrants en 3 catégories : **Candidatures**, **Opportunités**, **Pubs/Spam** — avec un mode review humain avant écriture en base.
+## Modèle de données
 
----
+### Table `clients`
+- `id` uuid PK
+- `nom` text (unique, normalisé)
+- `nom_affichage` text (libellé propre)
+- `domaine_email` text[] (ex: `['edf.fr','edf.com']`) — clé d'auto-matching
+- `siret` text nullable
+- `secteur` text nullable
+- `notes` text nullable
+- `actif` boolean default true
 
-## Architecture
+### Table `client_contacts`
+- `id` uuid PK
+- `client_id` uuid FK → clients
+- `nom`, `prenom`, `email` (unique par client), `telephone`, `fonction`
+- `notes`, `actif`
 
-```text
-smart@setup.paris (Microsoft 365)
-        │
-        ▼
-[Cron 5 min] → server route /api/public/hooks/poll-smart-inbox
-        │
-        ▼
-[Microsoft Graph API via connecteur microsoft_outlook]
-   - fetch messages inbox unread
-        │
-        ▼
-[Lovable AI Gateway — Gemini 3 Flash, structured output Zod]
-   - classifier: candidature | opportunite | pub | autre
-   - extraction: poste visé / nom client / sujet / résumé
-        │
-        ▼
-[Table emails_entrants] (statut: pending_review)
-        │
-        ▼
-[Action Outlook] → archive systématique (déplace dossier "Archive")
-        │
-        ▼
-[UI /inbox-smart] → review humain → validation
-        │
-        ├─► Crée candidature (table candidatures)
-        └─► Crée opportunité (table opportunites + numéro auto)
-```
+### FK ajoutée
+- `affaires.client_id` uuid nullable → clients (la colonne `client` text reste pour compat / affichage rapide, synchronisée par trigger)
+- `emails_entrants.client_id` uuid nullable + `emails_entrants.contact_id` uuid nullable
 
----
+### Auto-matching email (DB trigger)
+Fonction `match_email_to_client(from_email)` SECURITY DEFINER :
+1. Extrait le domaine de `from_email`
+2. SELECT client dont `domaine_email` contient ce domaine
+3. Crée/retrouve un `client_contacts` pour cette adresse
+4. Renseigne `client_id` + `contact_id` sur `emails_entrants`
 
-## Périmètre fonctionnel
+Trigger BEFORE INSERT sur `emails_entrants` qui appelle ce helper.
 
-### 1. Connecteur Microsoft Outlook
-- Lien OAuth `microsoft_outlook` (compte builder = boîte partagée `smart@setup.paris`)
-- Scopes : `Mail.Read`, `Mail.ReadWrite` (pour archiver)
+### Backfill
+- Script SQL : DISTINCT `affaires.client` → INSERT dans `clients` (1 client par variante orthographique, à fusionner ensuite via UI admin)
+- UPDATE `affaires.client_id` par join sur nom normalisé
+- Pour chaque email existant : tenter le match par domaine
 
-### 2. Polling toutes les 5 min
-- `pg_cron` appelle `/api/public/hooks/poll-smart-inbox`
-- Lit `inbox` non lus via Graph (`$filter=isRead eq false`)
-- Pour chaque email → classification IA → insert dans `emails_entrants` → move vers `Archive`
-- Marque comme lu
+### RLS
+- `clients` / `client_contacts` : SELECT pour `is_chef_or_admin()` + commercial (charge_affaires sur une affaire du client)
+- WRITE : `is_chef_or_admin()` uniquement
 
-### 3. Classification IA (Lovable AI Gateway)
-- Modèle : `google/gemini-3-flash-preview` (rapide, peu coûteux)
-- Structured output Zod :
-  ```ts
-  { categorie: 'candidature'|'opportunite'|'pub'|'autre',
-    confiance: number,
-    poste_vise?: string,       // si candidature
-    metier_devine?: string,    // mapping vers les 8 métiers Setup
-    client_devine?: string,    // si opportunité
-    typologie_devine?: '4XXX'|'5XXX'|'2XXXX',
-    sujet_resume: string,
-    contient_pj: boolean }
-  ```
+## UI
 
-### 4. Table `emails_entrants`
-Champs métier : `message_id_outlook` (unique), `from_email`, `from_name`, `subject`, `received_at`, `body_preview`, `body_html`, `attachments_count`, `categorie_ia`, `confiance_ia`, `metadata_ia` (jsonb), `statut` (`pending_review` / `validated` / `dismissed`), `validated_by`, `validated_at`, `candidature_id?`, `opportunite_id?`, `dismiss_reason?`.
+### Nouvelle route `/clients` (liste)
+- Tableau : Nom · Domaine(s) · # Affaires · # Opportunités actives · # Contacts · Dernier email reçu
+- Recherche + filtre actif/inactif
+- Bouton « Nouveau client »
 
-RLS : admin + rh + chef commercial (cap `inbox_smart.view`).
+### Nouvelle route `/clients/$clientId` (fiche)
+Header : nom, domaines, secteur, SIRET + bouton Éditer
+4 onglets :
+1. **Affaires** : toutes les `affaires` du client groupées par typologie (5XXX fab, 4XXX montage, 9XXX opportunités, autres). Lien vers chaque fiche.
+2. **Contacts** : liste éditable (CRUD inline) des `client_contacts`. Bouton « + Contact ».
+3. **Emails** : derniers emails entrants rattachés au client (chrono desc), avec statut/catégorie IA, lien vers `/inbox-smart` filtré.
+4. **Notes** : zone libre + log activité (créations affaires, derniers emails).
 
-### 5. Table `candidatures` (nouvelle)
-Champs métier : `nom`, `prenom`, `email`, `telephone?`, `poste_vise`, `metier` (enum 8), `cv_url?` (Supabase Storage), `lettre_url?`, `source_email_id`, `statut` (`nouvelle` / `a_rencontrer` / `entretien` / `embauche` / `rejetee`), `notes`, `assignee_rh?`.
+### Module admin de fusion de doublons
+- Page `/clients/admin/fusion`
+- Liste les clients avec nom similaire (similarité pg_trgm `nom %% nom`)
+- Bouton « Fusionner » : déplace toutes les affaires/emails/contacts du doublon vers le canonique, supprime le doublon
 
-Tri/filtre par poste dans onglet dédié `/candidatures` (groupé par `metier` puis `poste_vise`).
+### Lien depuis l'Inbox Smart
+- Carte email affiche le badge client matché si présent
+- Dialog email : section « Client » avec lien vers /clients/$id
 
-### 6. Module Opportunités (existant)
-- Réutilise table `opportunites` actuelle
-- Numéro auto déjà géré côté DB (séquence existante)
-- Bouton "Créer opportunité depuis email" pré-remplit : `objet`, `client`, `typologie` (déduite par IA), lien retour `source_email_id`.
+### Lien depuis fiche Affaire
+- Champ `client` (texte) remplacé par un sélecteur Client (combobox avec recherche, bouton « Nouveau client »)
+- Lien cliquable vers la fiche client
 
-### 7. UI
+## Lots de livraison
 
-**Nouveau route `/inbox-smart`** (cap `inbox_smart.view` → admin + rh + commercial)
-- 3 onglets : **À trier** (pending_review) / **Candidatures validées** / **Opportunités validées** / **Archivées (pub)**
-- Tri par catégorie IA + badge confiance
-- Sur chaque ligne : aperçu, PJ, boutons **Valider en candidature** / **Valider en opportunité** / **Marquer pub** / **Ignorer**
+**Lot 1 — Socle DB** (1 migration)
+- Tables `clients` + `client_contacts` + FK + RLS + trigger auto-match + backfill depuis `affaires.client` distinct
 
-**Page `/candidatures`** (cap `candidatures.view` → admin + rh)
-- Tableau filtré par métier (sidebar) + recherche
-- Sheet détail : CV, lettre, historique emails, statut, notes
-- Bouton "+ Candidature manuelle" pour saisie hors email
+**Lot 2 — Pages listing + fiche**
+- `/clients` liste
+- `/clients/$id` avec 4 onglets
 
-**Onglet "Emails" sur fiche opportunité** : liste des emails liés (lecture seule).
+**Lot 3 — Wiring Inbox Smart + Affaires**
+- Badge client sur carte email + section dans dialog
+- Combobox client sur création/édition affaire
 
-### 8. Pièces jointes
-- Téléchargées via Graph (`/messages/{id}/attachments`)
-- Uploadées vers bucket Storage privé `candidatures-pj` ou `opportunites-pj`
-- Signed URLs
+**Lot 4 — Admin fusion doublons**
+- Page `/clients/admin/fusion` avec pg_trgm
 
-### 9. Mode review (toggle par admin)
-- Setting global `inbox_smart_auto_validate` (default `false`)
-- Si `false` : tout va en `pending_review`
-- Si `true` : auto-création si `confiance > 0.85`, sinon pending
+## Détails techniques
 
----
+- Capabilities nouvelles : `clients.view` (admin + chef + commercial), `clients.manage` (admin + chef), `clients.merge` (admin)
+- Sidebar : entrée « Clients » sous le hub commercial
+- Server functions : `getClientDetails(clientId)` (agrège affaires/contacts/emails), `mergeClients(sourceId, targetId)` SECURITY DEFINER
+- Index : `clients(nom)`, `client_contacts(email)`, `affaires(client_id)`, `emails_entrants(client_id, received_at DESC)`
+- Trigger `match_email_to_client` non bloquant (si pas de match, `client_id` reste NULL — l'email reste accessible)
 
-## Capabilities ajoutées
-- `inbox_smart.view` → admin, rh, chef (commercial)
-- `candidatures.view` → admin, rh
-- `candidatures.manage` → admin, rh
+## Mémoire à créer
+`mem://features/clients-hub` — Modèle 1 client → N affaires/contacts/emails, auto-match par domaine, fusion via admin.
 
----
-
-## Sprint découpé
-
-| # | Lot | Description |
-|---|-----|-------------|
-| 1 | **Connecteur + secret** | Connect Microsoft Outlook, vérifier scopes Mail.ReadWrite |
-| 2 | **Schéma DB** | Tables `emails_entrants` + `candidatures` + buckets Storage + RLS + caps |
-| 3 | **Server route polling** | `/api/public/hooks/poll-smart-inbox` (Graph fetch + classifier IA + insert + archive) |
-| 4 | **Cron pg_cron** | Job 5 min appelant le hook |
-| 5 | **UI `/inbox-smart`** | 4 onglets, validation, mapping vers candidature/opportunité |
-| 6 | **UI `/candidatures`** | Liste tri par poste, sheet détail, CRUD |
-| 7 | **Onglet Emails fiche opportunité** | Lecture seule + lien retour |
-| 8 | **Sidebar + routing** | Items capability-driven |
-| 9 | **Tests E2E** | role-smoke + happy path candidature + opportunité |
-
-Estimation : 2–3 jours de dev itératif (sprint séquencé lot par lot avec validation visuelle entre chaque).
-
----
-
-## Points d'attention
-
-- **Boîte partagée Microsoft 365** : le connecteur OAuth se fait avec UN compte. Si `smart@setup.paris` est une vraie boîte (pas un alias), un admin Microsoft doit s'y connecter pour autoriser. Si c'est une boîte partagée, il faut un compte délégué.
-- **RGPD candidatures** : conserver max 2 ans (dette à ajouter), purge auto via cron mensuel.
-- **Quota Graph** : 10 000 req/10 min/app → largement suffisant à 5 min de polling.
-- **Coût IA** : ~0.001 €/email classifié Gemini Flash → négligeable.
-- **Idempotence** : `message_id_outlook` UNIQUE empêche les doublons si le cron rejoue.
-
----
-
-## Questions résiduelles avant de coder
-
-1. **`smart@setup.paris` = boîte partagée Microsoft 365 ou boîte nominative** ? (impacte la procédure OAuth)
-2. **Postes candidatures** : on réutilise la table `postes_catalogue` existante (8 postes seed) ou on laisse libre texte au début ?
-3. **CV/PJ candidatures** : qui peut voir ? (admin + rh seulement, ou aussi chef d'équipe quand l'embauche est faite ?)
-4. **Pubs détectées** : on les supprime définitivement de la boîte ou on les laisse archivées ?
-
-Une fois les réponses confirmées, je commence par le **Lot 1 (connecteur)** + **Lot 2 (schéma DB)** dans la même passe.
+## Hors scope V1
+- Synchro CRM externe (HubSpot/Salesforce)
+- Stats financières par client (CA, marge)
+- Notifications « nouveau client détecté »

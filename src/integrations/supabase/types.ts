@@ -465,6 +465,7 @@ export type Database = {
           chef_chantier_id: string | null
           chef_projet_id: string | null
           client: string | null
+          client_id: string | null
           code_acces: string | null
           code_opportunite: string | null
           consignes_tenue: string | null
@@ -506,6 +507,7 @@ export type Database = {
           chef_chantier_id?: string | null
           chef_projet_id?: string | null
           client?: string | null
+          client_id?: string | null
           code_acces?: string | null
           code_opportunite?: string | null
           consignes_tenue?: string | null
@@ -547,6 +549,7 @@ export type Database = {
           chef_chantier_id?: string | null
           chef_projet_id?: string | null
           client?: string | null
+          client_id?: string | null
           code_acces?: string | null
           code_opportunite?: string | null
           consignes_tenue?: string | null
@@ -601,6 +604,13 @@ export type Database = {
             columns: ["chef_projet_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affaires_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
             referencedColumns: ["id"]
           },
           {
@@ -1003,6 +1013,101 @@ export type Database = {
             referencedColumns: ["metier_id"]
           },
         ]
+      }
+      client_contacts: {
+        Row: {
+          actif: boolean
+          client_id: string
+          created_at: string
+          created_by: string | null
+          email: string | null
+          fonction: string | null
+          id: string
+          nom: string | null
+          notes: string | null
+          prenom: string | null
+          telephone: string | null
+          updated_at: string
+        }
+        Insert: {
+          actif?: boolean
+          client_id: string
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          fonction?: string | null
+          id?: string
+          nom?: string | null
+          notes?: string | null
+          prenom?: string | null
+          telephone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          actif?: boolean
+          client_id?: string
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          fonction?: string | null
+          id?: string
+          nom?: string | null
+          notes?: string | null
+          prenom?: string | null
+          telephone?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_contacts_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clients: {
+        Row: {
+          actif: boolean
+          created_at: string
+          created_by: string | null
+          domaines_email: string[]
+          id: string
+          nom: string
+          nom_normalise: string
+          notes: string | null
+          secteur: string | null
+          siret: string | null
+          updated_at: string
+        }
+        Insert: {
+          actif?: boolean
+          created_at?: string
+          created_by?: string | null
+          domaines_email?: string[]
+          id?: string
+          nom: string
+          nom_normalise: string
+          notes?: string | null
+          secteur?: string | null
+          siret?: string | null
+          updated_at?: string
+        }
+        Update: {
+          actif?: boolean
+          created_at?: string
+          created_by?: string | null
+          domaines_email?: string[]
+          id?: string
+          nom?: string
+          nom_normalise?: string
+          notes?: string | null
+          secteur?: string | null
+          siret?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       content_astuces: {
         Row: {
@@ -1534,7 +1639,9 @@ export type Database = {
           body_preview: string | null
           candidature_id: string | null
           categorie_ia: Database["public"]["Enums"]["email_categorie"] | null
+          client_id: string | null
           confiance_ia: number | null
+          contact_id: string | null
           conversation_id: string | null
           created_at: string
           dismiss_reason: string | null
@@ -1562,7 +1669,9 @@ export type Database = {
           body_preview?: string | null
           candidature_id?: string | null
           categorie_ia?: Database["public"]["Enums"]["email_categorie"] | null
+          client_id?: string | null
           confiance_ia?: number | null
+          contact_id?: string | null
           conversation_id?: string | null
           created_at?: string
           dismiss_reason?: string | null
@@ -1590,7 +1699,9 @@ export type Database = {
           body_preview?: string | null
           candidature_id?: string | null
           categorie_ia?: Database["public"]["Enums"]["email_categorie"] | null
+          client_id?: string | null
           confiance_ia?: number | null
+          contact_id?: string | null
           conversation_id?: string | null
           created_at?: string
           dismiss_reason?: string | null
@@ -1615,6 +1726,20 @@ export type Database = {
             columns: ["candidature_id"]
             isOneToOne: false
             referencedRelation: "candidatures"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "emails_entrants_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "emails_entrants_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "client_contacts"
             referencedColumns: ["id"]
           },
         ]
@@ -5202,6 +5327,7 @@ export type Database = {
       }
       detect_equipe_overrides: { Args: { p_plan_id: string }; Returns: Json }
       dismiss_inbox_item: { Args: { p_item_key: string }; Returns: undefined }
+      email_domain: { Args: { p: string }; Returns: string }
       etape_for_metier: {
         Args: { metier: string }
         Returns: Database["public"]["Enums"]["fabrication_etape_type"]
@@ -5379,6 +5505,7 @@ export type Database = {
         }[]
       }
       next_affaire_numero: { Args: { _prefix: number }; Returns: string }
+      normalize_client_name: { Args: { p: string }; Returns: string }
       objet_journal_log: {
         Args: {
           p_actor_id: string
