@@ -13,7 +13,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { CalendarIcon, Loader2, UserCog } from "lucide-react";
+import { CalendarIcon, ChevronDown, Hammer, Loader2, Moon, UserCog } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { formatBusinessError } from "@/lib/business-errors";
@@ -37,11 +37,33 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { computeHeuresFromTimes } from "@/lib/heures-calculator";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth-context";
+import {
+  ETAPE_CHANTIER_OPTIONS,
+  type EtapeChantierRow,
+  type FabricationEtapeTypeRow,
+} from "@/hooks/use-mes-heures";
+import { useObjetsAffaireLight } from "@/hooks/use-objets-affaire-light";
+
+const ETAPE_FAB_LABEL_MAP: Record<FabricationEtapeTypeRow, string> = {
+  be: "BE (dessin)",
+  usinage: "Usinage Numérique",
+  respo_fab: "Respo Fab (construction)",
+  finition: "Finition",
+  manutention: "Manutention",
+};
+const ETAPE_FAB_OPTIONS: FabricationEtapeTypeRow[] = [
+  "be",
+  "usinage",
+  "respo_fab",
+  "finition",
+  "manutention",
+];
 
 interface EmployeOpt {
   id: string;
