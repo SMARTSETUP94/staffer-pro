@@ -337,6 +337,24 @@ export function AssignationDialog({
     [affaires],
   );
 
+  // Typologie de l'affaire sélectionnée (mêmes règles que la saisie d'heures)
+  const selectedAffaire = useMemo(
+    () => affaires.find((a) => a.id === affaireId) ?? null,
+    [affaires, affaireId],
+  );
+  const numero = (selectedAffaire?.numero ?? "").trim();
+  const is4XXX = numero.startsWith("4");
+  const is5XXX = numero.startsWith("5");
+
+  // Staffing au réel : auto-calcul heures + heures de nuit (00h-06h, convention spectacle vivant)
+  const computed = useMemo(() => {
+    if (!showHoraires || !heureDebut || !heureFin) return null;
+    return computeHeuresFromTimes(heureDebut, heureFin, Number(dureePause) || 0);
+  }, [showHoraires, heureDebut, heureFin, dureePause]);
+
+  // Si l'utilisateur a renseigné début/fin, on prend les heures calculées
+  const heuresEffectives = computed ? computed.heuresReelles : heures;
+
   // v0.15.1 — Lots actifs (non terminés/clôturés) pour l'affaire sélectionnée
   const lotsActifs = useMemo(() => {
     if (!affaireId) return [];
