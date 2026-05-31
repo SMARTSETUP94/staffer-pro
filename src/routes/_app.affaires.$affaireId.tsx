@@ -256,6 +256,27 @@ function AffaireDetailLayout() {
         <Outlet />
       </div>
 
+      {createClientOpen && (
+        <NouveauClientDialog
+          onClose={() => setCreateClientOpen(false)}
+          onDone={async (clientId) => {
+            setCreateClientOpen(false);
+            if (clientId && affaire) {
+              const { error } = await supabase
+                .from("affaires")
+                .update({ client_id: clientId })
+                .eq("id", affaire.id);
+              if (error) {
+                toast.error("Erreur lors du rattachement", { description: error.message });
+              } else {
+                toast.success("Fiche client créée et liée à l'affaire");
+                reload();
+              }
+            }
+          }}
+        />
+      )}
+
       <AlertDialog open={!!confirmAction} onOpenChange={(o) => !o && setConfirmAction(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
