@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { AlertTriangle, CalendarIcon } from "lucide-react";
+import { AlertTriangle, CalendarIcon, ChevronDown, Moon, UserCog } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Loader2, Trash2 } from "lucide-react";
@@ -28,6 +28,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { AffaireCombobox } from "./AffaireCombobox";
 import { TYPE_OPERATION_OPTIONS } from "@/lib/feuille-route-helpers";
 import {
@@ -41,6 +46,9 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
+import { computeHeuresFromTimes } from "@/lib/heures-calculator";
+import { useAuth } from "@/lib/auth-context";
+import { ETAPE_CHANTIER_OPTIONS, type EtapeChantierRow } from "@/hooks/use-mes-heures";
 import {
   repartirHeuresProRata,
   metierIdToHeuresKey,
@@ -94,6 +102,7 @@ export function AssignationDialog({
   defaultObjetId,
   onSaved,
 }: Props) {
+  const { user } = useAuth();
   // Édition d'une assignation existante = sélection par id ; sinon création
   const [editingId, setEditingId] = useState<string | null>(null);
   const [affaireId, setAffaireId] = useState<string>("");
@@ -103,12 +112,25 @@ export function AssignationDialog({
   const [heures, setHeures] = useState<number>(8);
   const [notes, setNotes] = useState<string>("");
   const [typeOperation, setTypeOperation] = useState<string>("");
+  const [etapeChantier, setEtapeChantier] = useState<EtapeChantierRow | "none">("none");
   const [estChefJour, setEstChefJour] = useState<boolean>(false);
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [confirmOpportunite, setConfirmOpportunite] = useState(false);
   const [secondairesIds, setSecondairesIds] = useState<number[]>([]);
   const [showAllMetiers, setShowAllMetiers] = useState(false);
+
+  // Staffing au réel : début/fin → recalcul heures + heures de nuit (optionnel)
+  const [showHoraires, setShowHoraires] = useState(false);
+  const [heureDebut, setHeureDebut] = useState<string>("");
+  const [heureFin, setHeureFin] = useState<string>("");
+  const [dureePause, setDureePause] = useState<string>("60");
+
+  // Audit : qui a staffé (affiché en édition)
+  const [staffedBy, setStaffedBy] = useState<{ name: string | null; at: string | null }>({
+    name: null,
+    at: null,
+  });
 
   // v0.21 — Date éditable (par défaut = prop date, modifiable uniquement en création)
   const [dateOverride, setDateOverride] = useState<Date>(date);
@@ -142,10 +164,16 @@ export function AssignationDialog({
     setHeures(8);
     setNotes("");
     setTypeOperation("");
+    setEtapeChantier("none");
     setEstChefJour(false);
     setShowAllMetiers(false);
     setDateOverride(date);
     setSelectedObjetIds(defaultObjetId ? [defaultObjetId] : []);
+    setShowHoraires(false);
+    setHeureDebut("");
+    setHeureFin("");
+    setDureePause("60");
+    setStaffedBy({ name: null, at: null });
   }, [open, employe.metier_principal_id, date, defaultAffaireId, defaultObjetId]);
 
   // v0.25 — Charge les objets de fabrication de l'affaire sélectionnée
@@ -309,6 +337,24 @@ export function AssignationDialog({
     [affaires],
   );
 
+  // Typologie de l'affaire sélectionnée (mêmes règles que la saisie d'heures)
+  const selectedAffaire = useMemo(
+    () => affaires.find((a) => a.id === affaireId) ?? null,
+    [affaires, affaireId],
+  );
+  const numero = (selectedAffaire?.numero ?? "").trim();
+  const is4XXX = numero.startsWith("4");
+  const is5XXX = numero.startsWith("5");
+
+  // Staffing au réel : auto-calcul heures + heures de nuit (00h-06h, convention spectacle vivant)
+  const computed = useMemo(() => {
+    if (!showHoraires || !heureDebut || !heureFin) return null;
+    return computeHeuresFromTimes(heureDebut, heureFin, Number(dureePause) || 0);
+  }, [showHoraires, heureDebut, heureFin, dureePause]);
+
+  // Si l'utilisateur a renseigné début/fin, on prend les heures calculées
+  const heuresEffectives = computed ? computed.heuresReelles : heures;
+
   // v0.15.1 — Lots actifs (non terminés/clôturés) pour l'affaire sélectionnée
   const lotsActifs = useMemo(() => {
     if (!affaireId) return [];
@@ -357,7 +403,7 @@ export function AssignationDialog({
     : null;
   const depassement = restantesApres !== null && restantesApres < 0;
 
-  function loadExisting(a: Assignation) {
+  async function loadExisting(a: Assignation) {
     setEditingId(a.id);
     setAffaireId(a.affaire_id);
     setMetierId(a.metier_id);
@@ -366,8 +412,46 @@ export function AssignationDialog({
     setHeures(Number(a.heures));
     setNotes(a.notes ?? "");
     const ext = a as Assignation & { type_operation?: string | null; est_chef_jour?: boolean };
-    setTypeOperation(ext.type_operation ?? "");
+    const op = ext.type_operation ?? "";
+    setTypeOperation(op);
+    // Si la valeur correspond à une étape chantier, la pré-sélectionner
+    setEtapeChantier(
+      (ETAPE_CHANTIER_OPTIONS as readonly string[]).includes(op)
+        ? (op as EtapeChantierRow)
+        : "none",
+    );
     setEstChefJour(Boolean(ext.est_chef_jour));
+
+    // Charge les colonnes étendues (audit + horaires) pour cette assignation
+    const { data: row } = await supabase
+      .from("assignations")
+      .select("created_by, created_at, heure_debut, heure_fin")
+      .eq("id", a.id)
+      .maybeSingle();
+    if (row) {
+      if (row.heure_debut || row.heure_fin) {
+        setShowHoraires(true);
+        setHeureDebut(row.heure_debut ?? "");
+        setHeureFin(row.heure_fin ?? "");
+      } else {
+        setShowHoraires(false);
+        setHeureDebut("");
+        setHeureFin("");
+      }
+      if (row.created_by) {
+        const { data: prof } = await supabase
+          .from("profiles")
+          .select("full_name, email")
+          .eq("id", row.created_by)
+          .maybeSingle();
+        setStaffedBy({
+          name: prof?.full_name ?? prof?.email ?? "Utilisateur inconnu",
+          at: row.created_at ?? null,
+        });
+      } else {
+        setStaffedBy({ name: null, at: row.created_at ?? null });
+      }
+    }
   }
 
   function startNew() {
@@ -403,22 +487,36 @@ export function AssignationDialog({
     if (!metierId) return; // garde TS — déjà checké dans handleSave
     setSaving(true);
     const dateStr = format(dateOverride, "yyyy-MM-dd");
-    const payload = {
+    // Type d'opération : pour 4XXX on prend la valeur structurée (étape chantier),
+    // sinon on conserve la saisie libre existante.
+    const typeOperationFinal = is4XXX
+      ? (etapeChantier !== "none" ? etapeChantier : null)
+      : (typeOperation.trim() || null);
+    const payload: Record<string, unknown> = {
       employe_id: employe.id,
       affaire_id: affaireId,
       metier_id: metierId,
       devis_id: devisId,
       demi_journee: slot,
-      heures,
+      heures: heuresEffectives,
       date: dateStr,
       notes: notes.trim() || null,
-      type_operation: typeOperation.trim() || null,
+      type_operation: typeOperationFinal,
       est_chef_jour: estChefJour,
+      heure_debut: showHoraires && heureDebut ? heureDebut : null,
+      heure_fin: showHoraires && heureFin ? heureFin : null,
     };
+    // created_by uniquement à la création (audit : qui a staffé)
+    if (!editingId && user?.id) {
+      payload.created_by = user.id;
+    }
 
     let assignationId: string | null = editingId;
     if (editingId) {
-      const { error } = await supabase.from("assignations").update(payload).eq("id", editingId);
+      const { error } = await supabase
+        .from("assignations")
+        .update(payload as never)
+        .eq("id", editingId);
       if (error) {
         setSaving(false);
         toast.error(...formatBusinessError(error));
@@ -427,7 +525,7 @@ export function AssignationDialog({
     } else {
       const { data, error } = await supabase
         .from("assignations")
-        .insert(payload)
+        .insert(payload as never)
         .select("id")
         .single();
       if (error || !data) {
@@ -479,7 +577,7 @@ export function AssignationDialog({
       toast.error("Sélectionne un métier");
       return;
     }
-    if (heures <= 0 || heures > 12) {
+    if (heuresEffectives <= 0 || heuresEffectives > 12) {
       toast.error("Heures invalides (0 < h ≤ 12)");
       return;
     }
@@ -550,6 +648,22 @@ export function AssignationDialog({
                 : `${existing.length} assignation(s) ce jour`}
             </DialogDescription>
           </DialogHeader>
+
+          {editingId && staffedBy.name && (
+            <div className="flex items-center gap-2 rounded-md border bg-muted/30 px-2 py-1.5 text-[11px] text-muted-foreground">
+              <UserCog className="h-3.5 w-3.5 shrink-0" />
+              <span>
+                Staffé par <strong className="text-foreground">{staffedBy.name}</strong>
+                {staffedBy.at && (
+                  <>
+                    {" "}le{" "}
+                    {format(new Date(staffedBy.at), "d MMM yyyy 'à' HH:mm", { locale: fr })}
+                  </>
+                )}
+              </span>
+            </div>
+          )}
+
 
           {existing.length > 0 && (
             <div className="space-y-1.5 rounded-md border bg-muted/30 p-2">
@@ -747,7 +861,7 @@ export function AssignationDialog({
             </div>
 
             {/* v0.25 — Objet(s) de fabrication concerné(s) */}
-            {affaireId && objetsAffaire.length > 0 && (
+            {is5XXX && affaireId && objetsAffaire.length > 0 && (
               <div className="grid gap-1.5">
                 <div className="flex items-center justify-between">
                   <Label>
@@ -808,23 +922,121 @@ export function AssignationDialog({
               />
             </div>
 
-            {/* v0.21 Bloc 5 — Type d'opération (combobox texte libre + suggestions) */}
-            <div className="grid gap-1.5">
-              <Label htmlFor="type-operation">Type d'opération (optionnel)</Label>
-              <Input
-                id="type-operation"
-                list="type-operation-suggest"
-                value={typeOperation}
-                onChange={(e) => setTypeOperation(e.target.value)}
-                placeholder="ex: Montage, Démontage…"
-                maxLength={50}
-              />
-              <datalist id="type-operation-suggest">
-                {TYPE_OPERATION_OPTIONS.map((opt) => (
-                  <option key={opt} value={opt} />
-                ))}
-              </datalist>
-            </div>
+            {/* Étape chantier (4XXX) — Select structuré identique à la saisie d'heures.
+                Pour les autres typologies, on conserve la saisie libre historique. */}
+            {is4XXX ? (
+              <div className="grid gap-1.5">
+                <Label>Étape chantier (4XXX)</Label>
+                <Select
+                  value={etapeChantier}
+                  onValueChange={(v) => setEtapeChantier(v as EtapeChantierRow | "none")}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="— Aucune —" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">— Aucune —</SelectItem>
+                    {ETAPE_CHANTIER_OPTIONS.map((opt) => (
+                      <SelectItem key={opt} value={opt}>
+                        {opt}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-[10px] text-muted-foreground">
+                  Montage / Démontage / Permanence… (mêmes options que la saisie d'heures).
+                </p>
+              </div>
+            ) : (
+              <div className="grid gap-1.5">
+                <Label htmlFor="type-operation">Type d'opération (optionnel)</Label>
+                <Input
+                  id="type-operation"
+                  list="type-operation-suggest"
+                  value={typeOperation}
+                  onChange={(e) => setTypeOperation(e.target.value)}
+                  placeholder="ex: Montage, Démontage…"
+                  maxLength={50}
+                />
+                <datalist id="type-operation-suggest">
+                  {TYPE_OPERATION_OPTIONS.map((opt) => (
+                    <option key={opt} value={opt} />
+                  ))}
+                </datalist>
+              </div>
+            )}
+
+            {/* Staffing au réel : préciser début/fin → recalcul heures + heures de nuit auto */}
+            <Collapsible open={showHoraires} onOpenChange={setShowHoraires}>
+              <CollapsibleTrigger asChild>
+                <button
+                  type="button"
+                  className="flex w-full items-center justify-between rounded-md border bg-muted/30 px-3 py-2 text-left text-xs hover:bg-muted/50"
+                >
+                  <span className="flex items-center gap-2">
+                    <CalendarIcon className="h-3.5 w-3.5" />
+                    <span>
+                      Préciser début / fin{" "}
+                      <span className="text-muted-foreground">(staffing au réel)</span>
+                    </span>
+                  </span>
+                  <ChevronDown
+                    className={cn("h-3.5 w-3.5 transition-transform", showHoraires && "rotate-180")}
+                  />
+                </button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-2 pt-2">
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="grid gap-1">
+                    <Label className="text-[11px]">Début</Label>
+                    <Input
+                      type="time"
+                      value={heureDebut}
+                      onChange={(e) => setHeureDebut(e.target.value)}
+                    />
+                  </div>
+                  <div className="grid gap-1">
+                    <Label className="text-[11px]">Fin</Label>
+                    <Input
+                      type="time"
+                      value={heureFin}
+                      onChange={(e) => setHeureFin(e.target.value)}
+                    />
+                  </div>
+                  <div className="grid gap-1">
+                    <Label className="text-[11px]">Pause (min)</Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      max={240}
+                      value={dureePause}
+                      onChange={(e) => setDureePause(e.target.value)}
+                    />
+                  </div>
+                </div>
+                {computed && (
+                  <div className="space-y-1 rounded-md border border-primary/20 bg-primary/5 p-2 text-[11px]">
+                    <div className="flex items-center justify-between">
+                      <span>Heures réelles calculées</span>
+                      <strong className="tabular-nums">{computed.heuresReelles.toFixed(2)}h</strong>
+                    </div>
+                    {computed.heuresNuit > 0 && (
+                      <div className="flex items-center justify-between text-amber-600">
+                        <span className="flex items-center gap-1">
+                          <Moon className="h-3 w-3" />
+                          Heures de nuit (00h-06h)
+                        </span>
+                        <strong className="tabular-nums">{computed.heuresNuit.toFixed(2)}h</strong>
+                      </div>
+                    )}
+                    <p className="text-[10px] text-muted-foreground">
+                      Ces horaires remplacent la saisie « Heures » ci-dessus. Convention spectacle vivant.
+                    </p>
+                  </div>
+                )}
+              </CollapsibleContent>
+            </Collapsible>
+
 
             {/* v0.21 Bloc 5 — Désigner comme chef du jour */}
             <div className="flex items-center gap-2 rounded-md border bg-muted/30 p-2">
