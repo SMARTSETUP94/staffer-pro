@@ -513,7 +513,10 @@ export function AssignationDialog({
 
     let assignationId: string | null = editingId;
     if (editingId) {
-      const { error } = await supabase.from("assignations").update(payload).eq("id", editingId);
+      const { error } = await supabase
+        .from("assignations")
+        .update(payload as never)
+        .eq("id", editingId);
       if (error) {
         setSaving(false);
         toast.error(...formatBusinessError(error));
@@ -522,7 +525,7 @@ export function AssignationDialog({
     } else {
       const { data, error } = await supabase
         .from("assignations")
-        .insert(payload)
+        .insert(payload as never)
         .select("id")
         .single();
       if (error || !data) {
