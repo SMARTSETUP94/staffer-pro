@@ -69,6 +69,7 @@ function ClientsListPage() {
     ]);
     const affByClient = new Map<string, { aff: number; opp: number }>();
     (affRes.data ?? []).forEach((a) => {
+      if (!a.client_id) return;
       const cur = affByClient.get(a.client_id) ?? { aff: 0, opp: 0 };
       if (a.numero?.startsWith("9")) cur.opp += 1;
       else cur.aff += 1;
@@ -76,10 +77,12 @@ function ClientsListPage() {
     });
     const contactByClient = new Map<string, number>();
     (contactRes.data ?? []).forEach((c) => {
+      if (!c.client_id) return;
       contactByClient.set(c.client_id, (contactByClient.get(c.client_id) ?? 0) + 1);
     });
     const lastEmailByClient = new Map<string, string>();
     (emailRes.data ?? []).forEach((e) => {
+      if (!e.client_id || !e.received_at) return;
       if (!lastEmailByClient.has(e.client_id)) {
         lastEmailByClient.set(e.client_id, e.received_at);
       }

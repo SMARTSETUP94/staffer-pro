@@ -40,6 +40,7 @@ import { Route as AppHeuresAnalyseRouteImport } from './routes/_app.heures-analy
 import { Route as AppFlotteRouteImport } from './routes/_app.flotte'
 import { Route as AppExportRouteImport } from './routes/_app.export'
 import { Route as AppEmployesRouteImport } from './routes/_app.employes'
+import { Route as AppClientsRouteImport } from './routes/_app.clients'
 import { Route as AppChargeAtelierRouteImport } from './routes/_app.charge-atelier'
 import { Route as AppCandidaturesRouteImport } from './routes/_app.candidatures'
 import { Route as AppAujourdhuiRouteImport } from './routes/_app.aujourdhui'
@@ -248,6 +249,11 @@ const AppExportRoute = AppExportRouteImport.update({
 const AppEmployesRoute = AppEmployesRouteImport.update({
   id: '/employes',
   path: '/employes',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppClientsRoute = AppClientsRouteImport.update({
+  id: '/clients',
+  path: '/clients',
   getParentRoute: () => AppRoute,
 } as any)
 const AppChargeAtelierRoute = AppChargeAtelierRouteImport.update({
@@ -558,6 +564,7 @@ export interface FileRoutesByFullPath {
   '/aujourdhui': typeof AppAujourdhuiRoute
   '/candidatures': typeof AppCandidaturesRoute
   '/charge-atelier': typeof AppChargeAtelierRoute
+  '/clients': typeof AppClientsRoute
   '/employes': typeof AppEmployesRouteWithChildren
   '/export': typeof AppExportRouteWithChildren
   '/flotte': typeof AppFlotteRoute
@@ -644,6 +651,7 @@ export interface FileRoutesByTo {
   '/aujourdhui': typeof AppAujourdhuiRoute
   '/candidatures': typeof AppCandidaturesRoute
   '/charge-atelier': typeof AppChargeAtelierRoute
+  '/clients': typeof AppClientsRoute
   '/employes': typeof AppEmployesRouteWithChildren
   '/flotte': typeof AppFlotteRoute
   '/heures-analyse': typeof AppHeuresAnalyseRoute
@@ -731,6 +739,7 @@ export interface FileRoutesById {
   '/_app/aujourdhui': typeof AppAujourdhuiRoute
   '/_app/candidatures': typeof AppCandidaturesRoute
   '/_app/charge-atelier': typeof AppChargeAtelierRoute
+  '/_app/clients': typeof AppClientsRoute
   '/_app/employes': typeof AppEmployesRouteWithChildren
   '/_app/export': typeof AppExportRouteWithChildren
   '/_app/flotte': typeof AppFlotteRoute
@@ -821,6 +830,7 @@ export interface FileRouteTypes {
     | '/aujourdhui'
     | '/candidatures'
     | '/charge-atelier'
+    | '/clients'
     | '/employes'
     | '/export'
     | '/flotte'
@@ -907,6 +917,7 @@ export interface FileRouteTypes {
     | '/aujourdhui'
     | '/candidatures'
     | '/charge-atelier'
+    | '/clients'
     | '/employes'
     | '/flotte'
     | '/heures-analyse'
@@ -993,6 +1004,7 @@ export interface FileRouteTypes {
     | '/_app/aujourdhui'
     | '/_app/candidatures'
     | '/_app/charge-atelier'
+    | '/_app/clients'
     | '/_app/employes'
     | '/_app/export'
     | '/_app/flotte'
@@ -1299,6 +1311,13 @@ declare module '@tanstack/react-router' {
       path: '/employes'
       fullPath: '/employes'
       preLoaderRoute: typeof AppEmployesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/clients': {
+      id: '/_app/clients'
+      path: '/clients'
+      fullPath: '/clients'
+      preLoaderRoute: typeof AppClientsRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/charge-atelier': {
@@ -1769,6 +1788,7 @@ interface AppRouteChildren {
   AppAujourdhuiRoute: typeof AppAujourdhuiRoute
   AppCandidaturesRoute: typeof AppCandidaturesRoute
   AppChargeAtelierRoute: typeof AppChargeAtelierRoute
+  AppClientsRoute: typeof AppClientsRoute
   AppEmployesRoute: typeof AppEmployesRouteWithChildren
   AppExportRoute: typeof AppExportRouteWithChildren
   AppFlotteRoute: typeof AppFlotteRoute
@@ -1834,6 +1854,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAujourdhuiRoute: AppAujourdhuiRoute,
   AppCandidaturesRoute: AppCandidaturesRoute,
   AppChargeAtelierRoute: AppChargeAtelierRoute,
+  AppClientsRoute: AppClientsRoute,
   AppEmployesRoute: AppEmployesRouteWithChildren,
   AppExportRoute: AppExportRouteWithChildren,
   AppFlotteRoute: AppFlotteRoute,
