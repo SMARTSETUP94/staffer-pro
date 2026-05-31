@@ -28,6 +28,7 @@ import { useMesAffairesChefIds } from "@/hooks/use-mes-affaires-chef";
 import { Switch } from "@/components/ui/switch";
 import { type AffaireTypologie, AFFAIRE_TYPOLOGIES, getAffaireTypologie } from "@/lib/affaire-typologie";
 import { toast } from "sonner";
+import { ClientCombobox } from "@/components/clients/ClientCombobox";
 
 type AffaireStatut = "prospect" | "en_cours" | "termine" | "annule";
 
