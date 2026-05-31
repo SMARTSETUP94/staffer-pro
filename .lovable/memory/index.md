@@ -288,3 +288,4 @@ Saisie d'heures = SOURCE UNIQUE `src/lib/heures-upsert.ts` (`upsertHeuresSaisie`
 - [Dette : Scope UI admin permissions](mem://debts/l2-scope-ui-admin-permissions) — Édition du champ `scope` (all/team/metier/own/none) non supportée dans `/admin/permissions` UI. Attend L3.
 - [Dette : Users multi-select /parametres/utilisateurs](mem://debts/users-multi-select-parametres) — UI mono-select 3 rôles vs DB multi 11 rôles. Verrou critique résolu par L3.0.
 - [L4b — Sidebar unique cap-driven](mem://features/l4b-sidebar-unique) — AppSidebar refondu 7 sections (Mon poste/Pilotage/Production/Logistique/Équipes/RH/Admin), "Aujourd'hui" toujours visible, drawer auto sur mobile via shadcn Sidebar
+- [Saisie heures — source unique](mem://constraints/heures-saisie-source-unique) — helper `src/lib/heures-upsert.ts` + garde-fou Vitest. 4 surfaces unifiées (MesHeuresGrid, SaisirPourEmployeDialog, BulkSaisieDialog, /missions inline).
