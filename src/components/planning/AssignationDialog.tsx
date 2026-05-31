@@ -649,6 +649,22 @@ export function AssignationDialog({
             </DialogDescription>
           </DialogHeader>
 
+          {editingId && staffedBy.name && (
+            <div className="flex items-center gap-2 rounded-md border bg-muted/30 px-2 py-1.5 text-[11px] text-muted-foreground">
+              <UserCog className="h-3.5 w-3.5 shrink-0" />
+              <span>
+                Staffé par <strong className="text-foreground">{staffedBy.name}</strong>
+                {staffedBy.at && (
+                  <>
+                    {" "}le{" "}
+                    {format(new Date(staffedBy.at), "d MMM yyyy 'à' HH:mm", { locale: fr })}
+                  </>
+                )}
+              </span>
+            </div>
+          )}
+
+
           {existing.length > 0 && (
             <div className="space-y-1.5 rounded-md border bg-muted/30 p-2">
               <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
