@@ -421,6 +421,16 @@ function EmailDetailDialog({
   const [bodyError, setBodyError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Si on a déjà le corps en BDD (poll récent), on l'utilise direct.
+    if (email.body_full) {
+      setBody({
+        contentType: (email.body_content_type === "HTML" ? "HTML" : "Text") as "HTML" | "Text",
+        content: email.body_full,
+      });
+      setLoadingBody(false);
+      return;
+    }
+    // Sinon, fallback Graph (legacy : email archivé avant la migration body_full).
     let cancelled = false;
     setLoadingBody(true);
     setBodyError(null);
@@ -431,7 +441,11 @@ function EmailDetailDialog({
       })
       .catch((e: Error) => {
         if (cancelled) return;
-        setBodyError(e.message);
+        // Outlook change l'ID au move → ErrorItemNotFound pour les anciens emails archivés.
+        const friendly = /ItemNotFound|404/.test(e.message)
+          ? "Email archivé dans Outlook avant la mise à jour — corps complet indisponible (seul l'aperçu est conservé)."
+          : e.message;
+        setBodyError(friendly);
       })
       .finally(() => {
         if (!cancelled) setLoadingBody(false);
@@ -439,7 +453,7 @@ function EmailDetailDialog({
     return () => {
       cancelled = true;
     };
-  }, [email.message_id_outlook, fetchBody]);
+  }, [email.message_id_outlook, email.body_full, email.body_content_type, fetchBody]);
 
   const CAT_OPTIONS: Array<{ key: CategorieIA; label: string; icon: typeof Building2 }> = [
     { key: "candidature", label: "Candidature", icon: UserPlus },
