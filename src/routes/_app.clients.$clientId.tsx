@@ -165,22 +165,11 @@ function ClientDetailPage() {
     <div className="container mx-auto p-4 max-w-7xl space-y-4">
       <PageHeader
         title={client.nom}
-        description={
-          <div className="flex flex-wrap items-center gap-2 mt-1">
-            {client.domaines_email.map((d) => (
-              <Badge key={d} variant="secondary" className="text-[11px]">
-                @{d}
-              </Badge>
-            ))}
-            {client.secteur && (
-              <span className="text-xs text-muted-foreground">· {client.secteur}</span>
-            )}
-            {client.siret && (
-              <span className="text-xs text-muted-foreground">· SIRET {client.siret}</span>
-            )}
-            {!client.actif && <Badge variant="outline">inactif</Badge>}
-          </div>
-        }
+        description={[
+          client.secteur,
+          client.siret ? `SIRET ${client.siret}` : null,
+          !client.actif ? "Inactif" : null,
+        ].filter(Boolean).join(" · ") || undefined}
         actions={
           <>
             <Button variant="outline" onClick={() => navigate({ to: "/clients" })}>
@@ -192,6 +181,18 @@ function ClientDetailPage() {
           </>
         }
       />
+
+      {client.domaines_email.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs text-muted-foreground">Domaines :</span>
+          {client.domaines_email.map((d) => (
+            <Badge key={d} variant="secondary" className="text-[11px]">
+              @{d}
+            </Badge>
+          ))}
+        </div>
+      )}
+
 
       <Tabs defaultValue="affaires">
         <TabsList>
