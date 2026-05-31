@@ -89,7 +89,10 @@ interface EmailRow {
   archived_outlook: boolean;
   candidature_id: string | null;
   opportunite_id: string | null;
+  client_id: string | null;
+  contact_id: string | null;
   dismiss_reason: string | null;
+
 }
 
 const CATEGORIE_LABEL: Record<CategorieIA, string> = {
