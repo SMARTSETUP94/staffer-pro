@@ -506,6 +506,26 @@ function EmailDetailDialog({
     };
   }, [email.message_id_outlook, email.body_full, email.body_content_type, fetchBody]);
 
+  // Charge l'info client si l'email est rattaché à un client
+  const [clientInfo, setClientInfo] = useState<{ id: string; nom: string } | null>(null);
+  useEffect(() => {
+    if (!email.client_id) {
+      setClientInfo(null);
+      return;
+    }
+    let cancelled = false;
+    supabase
+      .from("clients")
+      .select("id, nom")
+      .eq("id", email.client_id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!cancelled && data) setClientInfo(data);
+      });
+    return () => { cancelled = true; };
+  }, [email.client_id]);
+
+
   const CAT_OPTIONS: Array<{ key: CategorieIA; label: string; icon: typeof Building2 }> = [
     { key: "candidature", label: "Candidature", icon: UserPlus },
     { key: "opportunite", label: "Opportunité", icon: Building2 },
