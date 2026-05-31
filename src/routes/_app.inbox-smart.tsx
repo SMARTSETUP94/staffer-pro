@@ -892,6 +892,11 @@ function AttachOpportuniteDialog({
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-mono text-sm font-semibold">{o.numero}</span>
+                        {isSuggested && (
+                          <Badge className="text-[10px] h-4 px-1 bg-primary/15 text-primary border-primary/30">
+                            Suggestion
+                          </Badge>
+                        )}
                         {o.statut_opportunite && (
                           <Badge variant="outline" className="text-[10px] h-4 px-1">
                             {o.statut_opportunite}
@@ -917,7 +922,9 @@ function AttachOpportuniteDialog({
                       </Button>
                     )}
                   </Card>
-                ))
+                  );
+                })
+              )}
               )}
             </div>
           </ScrollArea>
