@@ -599,10 +599,25 @@ function EmailDetailDialog({
                 <UserPlus className="h-4 w-4 mr-1" /> Créer candidat
               </Button>
             )}
-            {email.categorie_ia === "opportunite" && email.statut === "pending_review" && (
+            {email.categorie_ia === "opportunite" && !email.opportunite_id && (
               <Button size="sm" variant="outline" onClick={onAttachOpportunite}>
                 <Building2 className="h-4 w-4 mr-1" /> Rattacher / créer opportunité
               </Button>
+            )}
+            {email.opportunite_id && (
+              <>
+                <Button size="sm" variant="outline" onClick={onAttachOpportunite}>
+                  <Building2 className="h-4 w-4 mr-1" /> Changer d'opportunité
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-destructive hover:text-destructive"
+                  onClick={onDetachOpportunite}
+                >
+                  <Unlink className="h-4 w-4 mr-1" /> Détacher
+                </Button>
+              </>
             )}
             {email.statut === "pending_review" && (
               <Button size="sm" onClick={onValidate}>
