@@ -22,9 +22,11 @@ import {
   Clock,
   History,
   Info,
+  List,
   Loader2,
   Sparkles,
   UserCheck,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -52,6 +54,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import type {
   Absence,
@@ -148,6 +158,7 @@ export function StafferAffaireDialog({
   const [slot, setSlot] = useState<Slot>("JOURNEE");
   const [heures, setHeures] = useState<number>(8);
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [breakdownOpen, setBreakdownOpen] = useState(false);
   const [historique, setHistorique] = useState<Map<string, HistoRow>>(new Map());
   const [loadingHisto, setLoadingHisto] = useState(false);
 
@@ -504,12 +515,162 @@ export function StafferAffaireDialog({
           )}
         </ScrollArea>
 
-        <DialogFooter>
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>
+        <DialogFooter className="gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setBreakdownOpen(true)}
+            className="gap-1.5"
+          >
+            <List className="h-3.5 w-3.5" />
+            Voir le détail complet
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)}>
             Fermer
           </Button>
         </DialogFooter>
       </DialogContent>
+
+      {/* Breakdown audit modal */}
+      <Dialog open={breakdownOpen} onOpenChange={setBreakdownOpen}>
+        <DialogContent className="max-w-5xl p-0">
+          <DialogHeader className="px-6 pt-6">
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <List className="h-4 w-4 text-primary" />
+              Breakdown du classement — {affaire.numero}
+            </DialogTitle>
+            <DialogDescription>
+              {affaire.nom}
+              {selectedMetier ? ` · ${selectedMetier.libelle}` : ""}
+              {` · ${format(new Date(dateStr), "EEEE d MMM", { locale: fr })} · ${slot === "JOURNEE" ? "Journée" : slot}`}
+            </DialogDescription>
+          </DialogHeader>
+
+          <ScrollArea className="max-h-[60vh] px-6">
+            <Table>
+              <TableHeader>
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="w-10 text-center">#</TableHead>
+                  <TableHead>Employé</TableHead>
+                  <TableHead className="text-right">Métier</TableHead>
+                  <TableHead className="text-right">Dispo</TableHead>
+                  <TableHead className="text-right">Histo</TableHead>
+                  <TableHead className="text-right">Charge</TableHead>
+                  <TableHead className="text-right">Total</TableHead>
+                  <TableHead className="text-right">Semaine</TableHead>
+                  <TableHead>Statut</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {scored.map((s, idx) => {
+                  const empMetier = metiers.find((m) => m.id === s.employe.metier_principal_id);
+                  return (
+                    <TableRow
+                      key={s.employe.id}
+                      className={cn(s.blocked && "opacity-50")}
+                    >
+                      <TableCell className="text-center font-mono text-xs">{idx + 1}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <span
+                            className="h-2 w-2 rounded-full"
+                            style={{ backgroundColor: empMetier?.couleur ?? "#94a3b8" }}
+                          />
+                          <div>
+                            <div className="text-sm font-medium">
+                              {s.employe.prenom} {s.employe.nom}
+                            </div>
+                            <div className="text-[10px] text-muted-foreground">
+                              {s.employe.type_contrat} · {empMetier?.libelle ?? "—"}
+                            </div>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <BreakdownCell
+                          value={s.breakdown.metier}
+                          detail={
+                            s.metierMatch === "principal"
+                              ? "principal"
+                              : s.metierMatch === "renfort"
+                                ? "renfort"
+                                : "—"
+                          }
+                        />
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <BreakdownCell
+                          value={s.breakdown.dispo}
+                          detail={s.blocked ? s.blocked.label : "libre"}
+                          muted={s.breakdown.dispo === 0}
+                        />
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <BreakdownCell
+                          value={s.breakdown.histo}
+                          detail={s.histoNbDemi > 0 ? `${s.histoNbDemi} ½j` : "—"}
+                          muted={s.breakdown.histo === 0}
+                        />
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <BreakdownCell
+                          value={s.breakdown.charge}
+                          detail={`${s.heuresSemaine.toFixed(0)}h`}
+                          muted={s.breakdown.charge === 0}
+                        />
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <span
+                          className={cn(
+                            "font-mono text-sm font-semibold",
+                            s.score > 0
+                              ? "text-emerald-600 dark:text-emerald-400"
+                              : s.score < 0
+                                ? "text-amber-600 dark:text-amber-400"
+                                : "text-muted-foreground",
+                          )}
+                        >
+                          {s.score}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-right text-xs text-muted-foreground">
+                        {s.heuresSemaine.toFixed(0)}h
+                      </TableCell>
+                      <TableCell>
+                        {s.blocked ? (
+                          <span className="inline-flex items-center gap-1 text-[10px] text-destructive">
+                            <CalendarOff className="h-3 w-3" />
+                            {s.blocked.label}
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400">
+                            <UserCheck className="h-3 w-3" />
+                            Disponible
+                          </span>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+                {scored.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={9} className="py-6 text-center text-sm text-muted-foreground">
+                      Aucun employé à évaluer pour ce métier.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </ScrollArea>
+
+          <DialogFooter className="px-6 pb-6">
+            <Button variant="ghost" size="sm" onClick={() => setBreakdownOpen(false)}>
+              <X className="mr-1.5 h-3.5 w-3.5" />
+              Fermer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }
@@ -664,6 +825,35 @@ function ScoreLine({ label, value, detail }: { label: string; value: number; det
       >
         {sign}
       </span>
+    </div>
+  );
+}
+
+function BreakdownCell({
+  value,
+  detail,
+  muted,
+}: {
+  value: number;
+  detail: string;
+  muted?: boolean;
+}) {
+  const sign = value > 0 ? `+${value}` : `${value}`;
+  return (
+    <div className="flex flex-col items-end gap-0.5">
+      <span
+        className={cn(
+          "font-mono text-xs font-semibold",
+          value > 0
+            ? "text-emerald-600 dark:text-emerald-400"
+            : value < 0
+              ? "text-amber-600 dark:text-amber-400"
+              : "text-muted-foreground",
+        )}
+      >
+        {sign}
+      </span>
+      <span className={cn("text-[10px] text-muted-foreground", muted && "opacity-60")}>{detail}</span>
     </div>
   );
 }
