@@ -411,6 +411,7 @@ function InboxSmartPage() {
             setAttachOpp(selected);
             setSelected(null);
           }}
+          onDetachOpportunite={() => detachOpportunite(selected)}
         />
       )}
 
