@@ -403,7 +403,7 @@ export function AssignationDialog({
     : null;
   const depassement = restantesApres !== null && restantesApres < 0;
 
-  function loadExisting(a: Assignation) {
+  async function loadExisting(a: Assignation) {
     setEditingId(a.id);
     setAffaireId(a.affaire_id);
     setMetierId(a.metier_id);
@@ -412,8 +412,46 @@ export function AssignationDialog({
     setHeures(Number(a.heures));
     setNotes(a.notes ?? "");
     const ext = a as Assignation & { type_operation?: string | null; est_chef_jour?: boolean };
-    setTypeOperation(ext.type_operation ?? "");
+    const op = ext.type_operation ?? "";
+    setTypeOperation(op);
+    // Si la valeur correspond à une étape chantier, la pré-sélectionner
+    setEtapeChantier(
+      (ETAPE_CHANTIER_OPTIONS as readonly string[]).includes(op)
+        ? (op as EtapeChantierRow)
+        : "none",
+    );
     setEstChefJour(Boolean(ext.est_chef_jour));
+
+    // Charge les colonnes étendues (audit + horaires) pour cette assignation
+    const { data: row } = await supabase
+      .from("assignations")
+      .select("created_by, created_at, heure_debut, heure_fin")
+      .eq("id", a.id)
+      .maybeSingle();
+    if (row) {
+      if (row.heure_debut || row.heure_fin) {
+        setShowHoraires(true);
+        setHeureDebut(row.heure_debut ?? "");
+        setHeureFin(row.heure_fin ?? "");
+      } else {
+        setShowHoraires(false);
+        setHeureDebut("");
+        setHeureFin("");
+      }
+      if (row.created_by) {
+        const { data: prof } = await supabase
+          .from("profiles")
+          .select("full_name, email")
+          .eq("id", row.created_by)
+          .maybeSingle();
+        setStaffedBy({
+          name: prof?.full_name ?? prof?.email ?? "Utilisateur inconnu",
+          at: row.created_at ?? null,
+        });
+      } else {
+        setStaffedBy({ name: null, at: row.created_at ?? null });
+      }
+    }
   }
 
   function startNew() {
