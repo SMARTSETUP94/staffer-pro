@@ -628,3 +628,42 @@ function SuggestionRow({ rank, scored: s, metier, onStaffer, saving, disabled }:
     </li>
   );
 }
+
+type ChipTone = "good" | "bad" | "warn" | "muted";
+
+function ScoreChip({ label, value, tone }: { label: string; value: number; tone: ChipTone }) {
+  const cls =
+    tone === "good"
+      ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
+      : tone === "bad"
+        ? "bg-destructive/10 text-destructive"
+        : tone === "warn"
+          ? "bg-amber-500/10 text-amber-700 dark:text-amber-400"
+          : "bg-muted text-muted-foreground";
+  const sign = value > 0 ? `+${value}` : `${value}`;
+  return (
+    <span className={cn("inline-flex items-center gap-0.5 rounded px-1 py-0.5 font-mono text-[10px]", cls)}>
+      {label} <span className="font-semibold">{sign}</span>
+    </span>
+  );
+}
+
+function ScoreLine({ label, value, detail }: { label: string; value: number; detail: string }) {
+  const sign = value > 0 ? `+${value}` : `${value}`;
+  return (
+    <div className="flex items-baseline justify-between gap-3 py-0.5">
+      <span>
+        <span className="font-semibold">{label}</span>{" "}
+        <span className="text-muted-foreground">· {detail}</span>
+      </span>
+      <span
+        className={cn(
+          "font-mono text-[11px] font-semibold",
+          value > 0 ? "text-emerald-600 dark:text-emerald-400" : value < 0 ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground",
+        )}
+      >
+        {sign}
+      </span>
+    </div>
+  );
+}
