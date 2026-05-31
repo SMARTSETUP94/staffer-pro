@@ -881,10 +881,12 @@ function AttachOpportuniteDialog({
                   Aucune opportunité trouvée. Créez-en une nouvelle.
                 </div>
               ) : (
-                filtered.map((o) => (
+                sorted.map((o) => {
+                  const isSuggested = suggestedIds.has(o.id);
+                  return (
                   <Card
                     key={o.id}
-                    className="p-2.5 hover:bg-accent/40 cursor-pointer flex items-center gap-2"
+                    className={`p-2.5 hover:bg-accent/40 cursor-pointer flex items-center gap-2 ${isSuggested ? "border-primary/60 bg-primary/5" : ""}`}
                     onClick={() => attach(o.id)}
                   >
                     <div className="flex-1 min-w-0">
