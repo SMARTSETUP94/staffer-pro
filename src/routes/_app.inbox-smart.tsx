@@ -823,11 +823,33 @@ function AttachOpportuniteDialog({
         <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col p-0 gap-0">
           <DialogHeader className="px-4 pt-4 pb-3 border-b">
             <DialogTitle>Rattacher à une opportunité 9XXX</DialogTitle>
-            <DialogDescription>
-              Email de <strong>{email.from_name ?? email.from_email}</strong> —{" "}
-              <em>{email.subject ?? "(sans sujet)"}</em>
+            <DialogDescription asChild>
+              <div className="space-y-2 pt-1">
+                <div className="rounded-md border bg-primary/5 px-3 py-2">
+                  <div className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold">
+                    Expéditeur
+                  </div>
+                  <div className="flex items-center gap-2 flex-wrap mt-0.5">
+                    <span className="font-semibold text-foreground">
+                      {email.from_name ?? email.from_email}
+                    </span>
+                    <span className="font-mono text-sm text-primary select-all">
+                      &lt;{email.from_email}&gt;
+                    </span>
+                    {emailDomain && (
+                      <Badge variant="secondary" className="text-[10px] h-5">
+                        @{emailDomain}
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1 italic truncate">
+                    {email.subject ?? "(sans sujet)"}
+                  </div>
+                </div>
+              </div>
             </DialogDescription>
           </DialogHeader>
+
 
           <div className="px-4 py-3 border-b flex flex-wrap gap-2 items-center">
             <Input
