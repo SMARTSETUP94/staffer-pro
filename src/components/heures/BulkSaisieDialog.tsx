@@ -222,25 +222,11 @@ export function BulkSaisieDialog({
         .in("date", validDays);
       const existing = new Set((existingRows ?? []).map((r) => `${r.employe_id}|${r.date}`));
 
-      const nowIso = new Date().toISOString();
-      type InsertRow = {
-        employe_id: string;
-        date: string;
-        affaire_id: string;
-        heure_debut: string;
-        heure_fin: string;
-        duree_pause_minutes: number;
-        heures_reelles: number;
-        heures_nuit: number;
-        statut: "valide";
-        valide_par: string | null;
-        valide_le: string;
-      };
-      const rows: InsertRow[] = [];
+      const inputs: HeuresUpsertInput[] = [];
       for (const empId of empIds) {
         for (const d of validDays) {
           if (existing.has(`${empId}|${d}`)) continue;
-          rows.push({
+          inputs.push({
             employe_id: empId,
             date: d,
             affaire_id: affaireId,
@@ -251,11 +237,10 @@ export function BulkSaisieDialog({
             heures_nuit: computed.heuresNuit,
             statut: "valide",
             valide_par: user?.id ?? null,
-            valide_le: nowIso,
           });
         }
       }
-      if (rows.length === 0) {
+      if (inputs.length === 0) {
         toast.warning("Rien à créer (toutes les cellules existent déjà).");
         setSubmitting(false);
         return;
@@ -263,9 +248,9 @@ export function BulkSaisieDialog({
       // Insert par batch de 200 pour éviter payloads trop gros
       const BATCH = 200;
       let inserted = 0;
-      for (let i = 0; i < rows.length; i += BATCH) {
-        const slice = rows.slice(i, i + BATCH);
-        const { error } = await supabase.from("heures_saisies").insert(slice);
+      for (let i = 0; i < inputs.length; i += BATCH) {
+        const slice = inputs.slice(i, i + BATCH);
+        const { error } = await insertHeuresSaisieBatch(supabase, slice);
         if (error) throw error;
         inserted += slice.length;
       }
