@@ -87,8 +87,10 @@ function buildSections(
       label: "Production",
       items: [
         { title: "Chantiers", url: "/affaires", icon: Building2, cap: "section.affaires" },
+        { title: "Clients", url: "/clients", icon: UsersRound, cap: "clients.view" },
         { title: "Devis", url: "/devis", icon: FileText, cap: "section.devis" },
         { title: "Fabrication atelier", url: "/fabrication", icon: Hammer, cap: "section.planning_fab" },
+
       ],
     },
     {
