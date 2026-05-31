@@ -366,9 +366,108 @@ export function SaisirPourEmployeDialog({
               <Alert>
                 <AlertDescription className="text-sm">
                   Calcul auto : <strong>{computed.heuresReelles}h</strong> réalisées
-                  {computed.heuresNuit > 0 && ` · ${computed.heuresNuit}h de nuit`}
+                  {heuresNuitFinal > 0 && ` · ${heuresNuitFinal}h de nuit`}
                 </AlertDescription>
               </Alert>
+            )}
+
+            {/* Heures de nuit (override manuel — convention spectacle vivant 00h–06h) */}
+            <Collapsible open={showNuit} onOpenChange={setShowNuit}>
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-7 gap-1 px-2 text-[11px]">
+                  <Moon className="h-3 w-3" />
+                  {showNuit ? "Masquer" : "Préciser"} les heures de nuit
+                  <ChevronDown className={cn("h-3 w-3 transition-transform", showNuit && "rotate-180")} />
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="mt-2">
+                <div className="space-y-1 rounded-md border border-border/60 bg-muted/30 p-2">
+                  <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                    Heures de nuit (00h–06h)
+                  </Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.25"
+                    value={nuitOverride}
+                    onChange={(e) => setNuitOverride(e.target.value)}
+                    placeholder={`Auto: ${computed?.heuresNuit ?? 0}h`}
+                    className="h-8"
+                  />
+                  <p className="text-[10px] text-muted-foreground">
+                    Laisser vide pour utiliser le calcul automatique.
+                  </p>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+
+            {/* 4XXX — Étape chantier */}
+            {is4XXX && (
+              <div className="space-y-1">
+                <Label className="text-xs">Étape chantier (4XXX)</Label>
+                <Select
+                  value={etapeChantier}
+                  onValueChange={(v) => setEtapeChantier(v as EtapeChantierRow | "none")}
+                >
+                  <SelectTrigger className="h-9">
+                    <SelectValue placeholder="— Choisir une étape —" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">— Aucune —</SelectItem>
+                    {ETAPE_CHANTIER_OPTIONS.map((e) => (
+                      <SelectItem key={e} value={e}>
+                        {e}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {/* 5XXX — Lien fabrication objet + étape */}
+            {is5XXX && (
+              <div className="space-y-2 rounded-md border border-border/60 bg-muted/30 p-2">
+                <p className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  <Hammer className="h-3 w-3" /> Lien fabrication (5XXX)
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Label className="text-[10px] text-muted-foreground">Objet</Label>
+                    <Select value={fabObjetId} onValueChange={setFabObjetId}>
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue placeholder={fabObjets.length ? "— Aucun —" : "Aucun objet"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">— Aucun —</SelectItem>
+                        {fabObjets.map((o) => (
+                          <SelectItem key={o.id} value={o.id}>
+                            {o.reference} — {o.nom}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-[10px] text-muted-foreground">Étape</Label>
+                    <Select
+                      value={fabEtape}
+                      onValueChange={(v) => setFabEtape(v as FabricationEtapeTypeRow | "none")}
+                    >
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue placeholder="— Aucune —" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">— Aucune —</SelectItem>
+                        {ETAPE_FAB_OPTIONS.map((t) => (
+                          <SelectItem key={t} value={t}>
+                            {ETAPE_FAB_LABEL_MAP[t]}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
             )}
 
             <div>
