@@ -16,7 +16,16 @@
 import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { CalendarOff, Check, Clock, History, Loader2, Sparkles, UserCheck } from "lucide-react";
+import {
+  CalendarOff,
+  Check,
+  Clock,
+  History,
+  Info,
+  Loader2,
+  Sparkles,
+  UserCheck,
+} from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { insertAssignationsBatch } from "@/lib/assignation-upsert";
@@ -42,6 +51,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import type {
   Absence,
