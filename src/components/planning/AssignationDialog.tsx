@@ -577,7 +577,7 @@ export function AssignationDialog({
       toast.error("Sélectionne un métier");
       return;
     }
-    if (heures <= 0 || heures > 12) {
+    if (heuresEffectives <= 0 || heuresEffectives > 12) {
       toast.error("Heures invalides (0 < h ≤ 12)");
       return;
     }
