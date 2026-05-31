@@ -861,7 +861,7 @@ export function AssignationDialog({
             </div>
 
             {/* v0.25 — Objet(s) de fabrication concerné(s) */}
-            {affaireId && objetsAffaire.length > 0 && (
+            {is5XXX && affaireId && objetsAffaire.length > 0 && (
               <div className="grid gap-1.5">
                 <div className="flex items-center justify-between">
                   <Label>
