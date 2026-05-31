@@ -159,7 +159,7 @@ function AffaireDetailLayout() {
           <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
             {affaire.client && (
               affaire.client_id ? (
-                <Link to="/clients/$clientId" params={{ clientId: affaire.client_id }} className="inline-flex items-center gap-1 text-primary hover:underline">
+              <Link to="/clients/$clientId" params={{ clientId: affaire.client_id }} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-primary hover:underline">
                   <User className="h-3 w-3" />{affaire.client}
                 </Link>
               ) : (
