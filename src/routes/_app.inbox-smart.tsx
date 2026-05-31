@@ -573,6 +573,11 @@ function EmailDetailDialog({
                 <UserPlus className="h-4 w-4 mr-1" /> Créer candidat
               </Button>
             )}
+            {email.categorie_ia === "opportunite" && email.statut === "pending_review" && (
+              <Button size="sm" variant="outline" onClick={onAttachOpportunite}>
+                <Building2 className="h-4 w-4 mr-1" /> Rattacher / créer opportunité
+              </Button>
+            )}
             {email.statut === "pending_review" && (
               <Button size="sm" onClick={onValidate}>
                 <CheckCircle2 className="h-4 w-4 mr-1" /> Valider classement
