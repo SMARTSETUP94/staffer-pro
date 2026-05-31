@@ -434,6 +434,29 @@ export function StafferAffaireDialog({
                 · {blocked.length} non dispo
               </span>
             )}
+            <Popover>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-0.5 rounded px-1 py-0.5 text-[10px] hover:bg-muted"
+                  aria-label="Détail du score"
+                >
+                  <Info className="h-3 w-3" /> score
+                </button>
+              </PopoverTrigger>
+              <PopoverContent align="start" className="w-72 text-xs">
+                <p className="mb-2 font-semibold">Comment on classe les employés</p>
+                <ol className="space-y-1.5 text-muted-foreground">
+                  <li><span className="font-mono text-foreground">1. Métier</span> · principal +100 / renfort +35</li>
+                  <li><span className="font-mono text-foreground">2. Dispo</span> · libre sur le créneau +40 (sinon bloqué)</li>
+                  <li><span className="font-mono text-foreground">3. Histo</span> · jusqu'à +40 si déjà bossé sur l'affaire</li>
+                  <li><span className="font-mono text-foreground">4. Charge</span> · jusqu'à −20 si déjà chargé cette semaine</li>
+                </ol>
+                <p className="mt-2 text-[10px] italic">
+                  Ordre : Métier &gt; Dispo &gt; Histo &gt; Charge faible &gt; score total.
+                </p>
+              </PopoverContent>
+            </Popover>
           </span>
           <span className="text-[10px]">
             {format(new Date(dateStr), "EEEE d MMM", { locale: fr })} · {slot === "JOURNEE" ? "Journée" : slot} · {heures}h
