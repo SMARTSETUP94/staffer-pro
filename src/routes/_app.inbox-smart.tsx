@@ -384,6 +384,10 @@ function InboxSmartPage() {
             setCreateCandidat(selected);
             setSelected(null);
           }}
+          onAttachOpportunite={() => {
+            setAttachOpp(selected);
+            setSelected(null);
+          }}
         />
       )}
 
@@ -393,6 +397,17 @@ function InboxSmartPage() {
           onClose={() => setCreateCandidat(null)}
           onDone={async () => {
             setCreateCandidat(null);
+            await load();
+          }}
+        />
+      )}
+
+      {attachOpp && (
+        <AttachOpportuniteDialog
+          email={attachOpp}
+          onClose={() => setAttachOpp(null)}
+          onDone={async () => {
+            setAttachOpp(null);
             await load();
           }}
         />
