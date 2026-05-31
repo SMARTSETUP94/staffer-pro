@@ -256,7 +256,7 @@ export function BulkStafferDialog({
       heures,
       notes: null,
     }));
-    const { error } = await supabase.from("assignations").insert(payloads);
+    const { error } = await insertAssignationsBatch(payloads);
     setSaving(false);
     if (error) {
       toast.error(...formatBusinessError(error));
