@@ -815,6 +815,71 @@ export type Database = {
           },
         ]
       }
+      candidatures: {
+        Row: {
+          assignee_rh: string | null
+          created_at: string
+          created_by: string | null
+          cv_path: string | null
+          email: string | null
+          id: string
+          lettre_path: string | null
+          metier: string | null
+          nom: string
+          notes: string | null
+          poste_vise: string | null
+          prenom: string | null
+          source_email_id: string | null
+          statut: Database["public"]["Enums"]["candidature_statut"]
+          telephone: string | null
+          updated_at: string
+        }
+        Insert: {
+          assignee_rh?: string | null
+          created_at?: string
+          created_by?: string | null
+          cv_path?: string | null
+          email?: string | null
+          id?: string
+          lettre_path?: string | null
+          metier?: string | null
+          nom: string
+          notes?: string | null
+          poste_vise?: string | null
+          prenom?: string | null
+          source_email_id?: string | null
+          statut?: Database["public"]["Enums"]["candidature_statut"]
+          telephone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          assignee_rh?: string | null
+          created_at?: string
+          created_by?: string | null
+          cv_path?: string | null
+          email?: string | null
+          id?: string
+          lettre_path?: string | null
+          metier?: string | null
+          nom?: string
+          notes?: string | null
+          poste_vise?: string | null
+          prenom?: string | null
+          source_email_id?: string | null
+          statut?: Database["public"]["Enums"]["candidature_statut"]
+          telephone?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "candidatures_source_email_id_fkey"
+            columns: ["source_email_id"]
+            isOneToOne: false
+            referencedRelation: "emails_entrants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       capabilities: {
         Row: {
           category: string
@@ -1456,6 +1521,95 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_objet_heures_consolidees"
             referencedColumns: ["metier_id"]
+          },
+        ]
+      }
+      emails_entrants: {
+        Row: {
+          archived_outlook: boolean
+          attachments_count: number
+          body_html: string | null
+          body_preview: string | null
+          candidature_id: string | null
+          categorie_ia: Database["public"]["Enums"]["email_categorie"] | null
+          confiance_ia: number | null
+          conversation_id: string | null
+          created_at: string
+          dismiss_reason: string | null
+          from_email: string
+          from_name: string | null
+          has_attachments: boolean
+          id: string
+          message_id_outlook: string
+          metadata_ia: Json
+          opportunite_id: string | null
+          raw_payload: Json | null
+          received_at: string
+          statut: Database["public"]["Enums"]["email_statut"]
+          subject: string | null
+          updated_at: string
+          validated_at: string | null
+          validated_by: string | null
+        }
+        Insert: {
+          archived_outlook?: boolean
+          attachments_count?: number
+          body_html?: string | null
+          body_preview?: string | null
+          candidature_id?: string | null
+          categorie_ia?: Database["public"]["Enums"]["email_categorie"] | null
+          confiance_ia?: number | null
+          conversation_id?: string | null
+          created_at?: string
+          dismiss_reason?: string | null
+          from_email: string
+          from_name?: string | null
+          has_attachments?: boolean
+          id?: string
+          message_id_outlook: string
+          metadata_ia?: Json
+          opportunite_id?: string | null
+          raw_payload?: Json | null
+          received_at: string
+          statut?: Database["public"]["Enums"]["email_statut"]
+          subject?: string | null
+          updated_at?: string
+          validated_at?: string | null
+          validated_by?: string | null
+        }
+        Update: {
+          archived_outlook?: boolean
+          attachments_count?: number
+          body_html?: string | null
+          body_preview?: string | null
+          candidature_id?: string | null
+          categorie_ia?: Database["public"]["Enums"]["email_categorie"] | null
+          confiance_ia?: number | null
+          conversation_id?: string | null
+          created_at?: string
+          dismiss_reason?: string | null
+          from_email?: string
+          from_name?: string | null
+          has_attachments?: boolean
+          id?: string
+          message_id_outlook?: string
+          metadata_ia?: Json
+          opportunite_id?: string | null
+          raw_payload?: Json | null
+          received_at?: string
+          statut?: Database["public"]["Enums"]["email_statut"]
+          subject?: string | null
+          updated_at?: string
+          validated_at?: string | null
+          validated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "emails_entrants_candidature_fk"
+            columns: ["candidature_id"]
+            isOneToOne: false
+            referencedRelation: "candidatures"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -2627,6 +2781,36 @@ export type Database = {
           id?: string
           item_key?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      inbox_smart_settings: {
+        Row: {
+          auto_validate_enabled: boolean
+          auto_validate_min_confiance: number
+          id: number
+          last_poll_at: string | null
+          last_poll_count: number | null
+          last_poll_error: string | null
+          updated_at: string
+        }
+        Insert: {
+          auto_validate_enabled?: boolean
+          auto_validate_min_confiance?: number
+          id?: number
+          last_poll_at?: string | null
+          last_poll_count?: number | null
+          last_poll_error?: string | null
+          updated_at?: string
+        }
+        Update: {
+          auto_validate_enabled?: boolean
+          auto_validate_min_confiance?: number
+          id?: number
+          last_poll_at?: string | null
+          last_poll_count?: number | null
+          last_poll_error?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -5449,6 +5633,12 @@ export type Database = {
         | "CACES_R489"
         | "CACES_R486"
         | "CACES_R484"
+      candidature_statut:
+        | "nouvelle"
+        | "a_rencontrer"
+        | "entretien"
+        | "embauche"
+        | "rejetee"
       categorie_permis: "B" | "C" | "CE" | "D"
       competence_niveau: "secondaire" | "depannage" | "bloque"
       confirmation_status:
@@ -5471,6 +5661,8 @@ export type Database = {
         | "en_cours"
         | "termine"
         | "cloture"
+      email_categorie: "candidature" | "opportunite" | "pub" | "autre"
+      email_statut: "pending_review" | "validated" | "dismissed"
       fabrication_etape_statut:
         | "a_faire"
         | "en_cours"
@@ -5736,6 +5928,13 @@ export const Constants = {
         "CACES_R486",
         "CACES_R484",
       ],
+      candidature_statut: [
+        "nouvelle",
+        "a_rencontrer",
+        "entretien",
+        "embauche",
+        "rejetee",
+      ],
       categorie_permis: ["B", "C", "CE", "D"],
       competence_niveau: ["secondaire", "depannage", "bloque"],
       confirmation_status: [
@@ -5761,6 +5960,8 @@ export const Constants = {
         "termine",
         "cloture",
       ],
+      email_categorie: ["candidature", "opportunite", "pub", "autre"],
+      email_statut: ["pending_review", "validated", "dismissed"],
       fabrication_etape_statut: [
         "a_faire",
         "en_cours",
