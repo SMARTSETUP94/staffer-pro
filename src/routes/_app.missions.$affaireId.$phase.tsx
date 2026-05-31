@@ -57,6 +57,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { upsertHeuresSaisie } from "@/lib/heures-upsert";
 import { compressImageIfPossible } from "@/lib/image-compress";
 import {
   autoTagCategoryByMissionState,
