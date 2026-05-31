@@ -37,7 +37,7 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AffaireCombobox } from "./AffaireCombobox";
-import { supabase } from "@/integrations/supabase/client";
+import { insertAssignationsBatch } from "@/lib/assignation-upsert";
 import { cn } from "@/lib/utils";
 import { isAffaireSelectable } from "@/lib/affaire-lock";
 import {
