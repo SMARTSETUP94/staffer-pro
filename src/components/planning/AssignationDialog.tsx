@@ -164,10 +164,16 @@ export function AssignationDialog({
     setHeures(8);
     setNotes("");
     setTypeOperation("");
+    setEtapeChantier("none");
     setEstChefJour(false);
     setShowAllMetiers(false);
     setDateOverride(date);
     setSelectedObjetIds(defaultObjetId ? [defaultObjetId] : []);
+    setShowHoraires(false);
+    setHeureDebut("");
+    setHeureFin("");
+    setDureePause("60");
+    setStaffedBy({ name: null, at: null });
   }, [open, employe.metier_principal_id, date, defaultAffaireId, defaultObjetId]);
 
   // v0.25 — Charge les objets de fabrication de l'affaire sélectionnée
