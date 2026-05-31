@@ -16,7 +16,16 @@
 import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { CalendarOff, Check, Clock, History, Loader2, Sparkles, UserCheck } from "lucide-react";
+import {
+  CalendarOff,
+  Check,
+  Clock,
+  History,
+  Info,
+  Loader2,
+  Sparkles,
+  UserCheck,
+} from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { insertAssignationsBatch } from "@/lib/assignation-upsert";
@@ -42,6 +51,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import type {
   Absence,
@@ -71,10 +81,17 @@ interface Props {
   onSaved: () => void;
 }
 
+interface ScoreBreakdown {
+  metier: number;
+  dispo: number;
+  histo: number;
+  charge: number;
+}
+
 interface Scored {
   employe: Employe;
   score: number;
-  reasons: string[];
+  breakdown: ScoreBreakdown;
   metierMatch: "principal" | "renfort" | "autre";
   histoNbChantiers: number;
   histoNbDemi: number;
@@ -219,30 +236,27 @@ export function StafferAffaireDialog({
     if (metierId == null) return [];
     return employes
       .map((e) => {
-        const reasons: string[] = [];
-        let score = 0;
+        const breakdown: ScoreBreakdown = { metier: 0, dispo: 0, histo: 0, charge: 0 };
         let metierMatch: Scored["metierMatch"] = "autre";
 
+        // 1. Métier
         if (e.metier_principal_id === metierId) {
-          score += 100;
+          breakdown.metier = 100;
           metierMatch = "principal";
-          reasons.push("Métier principal");
         } else {
           const rset = renfortMetiersByEmploye.get(e.id);
           if (rset && rset.has(metierId)) {
-            score += 35;
+            breakdown.metier = 35;
             metierMatch = "renfort";
-            reasons.push("A déjà fait ce métier");
           }
         }
 
-        // Dispo : absence
+        // 2. Disponibilité (absence + conflit slot)
         const abs = findAbsence(absences, e.id, dateStr, slot);
         let blocked: Scored["blocked"] = null;
         if (abs && abs.valide) {
           blocked = { kind: "absence", label: `Absence (${ABSENCE_LABEL[abs.type]})` };
         }
-        // Dispo : conflit slot
         const occupied = conflictByEmploye.get(e.id);
         if (!blocked && occupied) {
           const conflict =
@@ -251,30 +265,27 @@ export function StafferAffaireDialog({
               : occupied.has("JOURNEE") || occupied.has(slot);
           if (conflict) blocked = { kind: "conflict", label: "Déjà assigné sur ce créneau" };
         }
-        if (!blocked) {
-          score += 40;
-          reasons.push("Disponible");
-        }
+        if (!blocked) breakdown.dispo = 40;
 
-        // Historique chantier
+        // 3. Historique chantier (borné, ln pour éviter saturation)
         const histo = historique.get(e.id);
         const histoNbChantiers = histo?.nb_jours_distincts ?? 0;
         const histoNbDemi = histo?.nb_demi_jours ?? 0;
         if (histo && histoNbDemi > 0) {
-          // Score borné : ln pour éviter saturation
-          const bonus = Math.min(40, 5 + Math.log(histoNbDemi + 1) * 8);
-          score += bonus;
-          reasons.push(`${histoNbDemi} ½j sur cette affaire`);
+          breakdown.histo = Math.round(Math.min(40, 5 + Math.log(histoNbDemi + 1) * 8));
         }
 
-        // Charge semaine (moins = mieux ; max -20)
+        // 4. Charge semaine (moins = mieux ; pénalité max -20)
         const heuresSemaine = chargeByEmploye.get(e.id) ?? 0;
-        score -= Math.min(20, heuresSemaine * 0.5);
+        breakdown.charge = -Math.round(Math.min(20, heuresSemaine * 0.5));
+
+        const score =
+          breakdown.metier + breakdown.dispo + breakdown.histo + breakdown.charge;
 
         return {
           employe: e,
           score,
-          reasons,
+          breakdown,
           metierMatch,
           histoNbChantiers,
           histoNbDemi,
@@ -283,8 +294,12 @@ export function StafferAffaireDialog({
         };
       })
       .sort((a, b) => {
-        // Bloqués en bas
+        // Bloqués en bas, puis tri explicable : métier > dispo > histo > -charge
         if (!!a.blocked !== !!b.blocked) return a.blocked ? 1 : -1;
+        if (b.breakdown.metier !== a.breakdown.metier) return b.breakdown.metier - a.breakdown.metier;
+        if (b.breakdown.dispo !== a.breakdown.dispo) return b.breakdown.dispo - a.breakdown.dispo;
+        if (b.breakdown.histo !== a.breakdown.histo) return b.breakdown.histo - a.breakdown.histo;
+        if (b.breakdown.charge !== a.breakdown.charge) return b.breakdown.charge - a.breakdown.charge;
         return b.score - a.score;
       });
   }, [
@@ -419,6 +434,29 @@ export function StafferAffaireDialog({
                 · {blocked.length} non dispo
               </span>
             )}
+            <Popover>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-0.5 rounded px-1 py-0.5 text-[10px] hover:bg-muted"
+                  aria-label="Détail du score"
+                >
+                  <Info className="h-3 w-3" /> score
+                </button>
+              </PopoverTrigger>
+              <PopoverContent align="start" className="w-72 text-xs">
+                <p className="mb-2 font-semibold">Comment on classe les employés</p>
+                <ol className="space-y-1.5 text-muted-foreground">
+                  <li><span className="font-mono text-foreground">1. Métier</span> · principal +100 / renfort +35</li>
+                  <li><span className="font-mono text-foreground">2. Dispo</span> · libre sur le créneau +40 (sinon bloqué)</li>
+                  <li><span className="font-mono text-foreground">3. Histo</span> · jusqu'à +40 si déjà bossé sur l'affaire</li>
+                  <li><span className="font-mono text-foreground">4. Charge</span> · jusqu'à −20 si déjà chargé cette semaine</li>
+                </ol>
+                <p className="mt-2 text-[10px] italic">
+                  Ordre : Métier &gt; Dispo &gt; Histo &gt; Charge faible &gt; score total.
+                </p>
+              </PopoverContent>
+            </Popover>
           </span>
           <span className="text-[10px]">
             {format(new Date(dateStr), "EEEE d MMM", { locale: fr })} · {slot === "JOURNEE" ? "Journée" : slot} · {heures}h
@@ -528,8 +566,40 @@ function SuggestionRow({ rank, scored: s, metier, onStaffer, saving, disabled }:
               </Badge>
             )}
           </div>
-          <div className="mt-0.5 flex items-center gap-2 text-[10px] text-muted-foreground">
-            <span className="inline-flex items-center gap-0.5">
+          <div className="mt-1 flex flex-wrap items-center gap-1 text-[10px] text-muted-foreground">
+            <ScoreChip label="Métier" value={s.breakdown.metier} tone={s.breakdown.metier > 0 ? "good" : "muted"} />
+            <ScoreChip label="Dispo" value={s.breakdown.dispo} tone={s.breakdown.dispo > 0 ? "good" : "bad"} />
+            <ScoreChip label="Histo" value={s.breakdown.histo} tone={s.breakdown.histo > 0 ? "good" : "muted"} />
+            <ScoreChip label="Charge" value={s.breakdown.charge} tone={s.breakdown.charge < 0 ? "warn" : "muted"} />
+            <Popover>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  className="ml-0.5 inline-flex items-center gap-0.5 rounded bg-primary/10 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-primary hover:bg-primary/20"
+                  aria-label="Détail du score"
+                >
+                  = {s.score} <Info className="h-2.5 w-2.5" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent align="end" className="w-64 text-xs">
+                <p className="mb-2 font-semibold">
+                  {s.employe.prenom} {s.employe.nom} · score {s.score}
+                </p>
+                <ScoreLine label="Métier" value={s.breakdown.metier} detail={
+                  s.metierMatch === "principal" ? "principal" : s.metierMatch === "renfort" ? "renfort" : "—"
+                } />
+                <ScoreLine label="Dispo" value={s.breakdown.dispo} detail={
+                  s.blocked ? s.blocked.label : "libre sur le créneau"
+                } />
+                <ScoreLine label="Histo" value={s.breakdown.histo} detail={
+                  s.histoNbDemi > 0 ? `${s.histoNbDemi} ½j sur l'affaire` : "jamais bossé ici"
+                } />
+                <ScoreLine label="Charge" value={s.breakdown.charge} detail={
+                  `${s.heuresSemaine.toFixed(0)}h cette semaine`
+                } />
+              </PopoverContent>
+            </Popover>
+            <span className="ml-auto inline-flex items-center gap-0.5">
               <Clock className="h-2.5 w-2.5" /> {s.heuresSemaine.toFixed(0)}h cette semaine
             </span>
             {s.blocked && (
@@ -556,5 +626,44 @@ function SuggestionRow({ rank, scored: s, metier, onStaffer, saving, disabled }:
         )}
       </Button>
     </li>
+  );
+}
+
+type ChipTone = "good" | "bad" | "warn" | "muted";
+
+function ScoreChip({ label, value, tone }: { label: string; value: number; tone: ChipTone }) {
+  const cls =
+    tone === "good"
+      ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
+      : tone === "bad"
+        ? "bg-destructive/10 text-destructive"
+        : tone === "warn"
+          ? "bg-amber-500/10 text-amber-700 dark:text-amber-400"
+          : "bg-muted text-muted-foreground";
+  const sign = value > 0 ? `+${value}` : `${value}`;
+  return (
+    <span className={cn("inline-flex items-center gap-0.5 rounded px-1 py-0.5 font-mono text-[10px]", cls)}>
+      {label} <span className="font-semibold">{sign}</span>
+    </span>
+  );
+}
+
+function ScoreLine({ label, value, detail }: { label: string; value: number; detail: string }) {
+  const sign = value > 0 ? `+${value}` : `${value}`;
+  return (
+    <div className="flex items-baseline justify-between gap-3 py-0.5">
+      <span>
+        <span className="font-semibold">{label}</span>{" "}
+        <span className="text-muted-foreground">· {detail}</span>
+      </span>
+      <span
+        className={cn(
+          "font-mono text-[11px] font-semibold",
+          value > 0 ? "text-emerald-600 dark:text-emerald-400" : value < 0 ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground",
+        )}
+      >
+        {sign}
+      </span>
+    </div>
   );
 }
