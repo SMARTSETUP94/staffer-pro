@@ -1,7 +1,7 @@
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { requireCapability } from "@/lib/capability-guard";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Loader2, MapPin, User, Calendar, Lock, Unlock, Link2Off } from "lucide-react";
+import { ArrowLeft, Loader2, MapPin, User, Calendar, Lock, Unlock, Link2Off, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,7 @@ import { AffaireKpiBar } from "@/components/affaire/AffaireKpiBar";
 import { CapabilityGuard } from "@/components/auth/CapabilityGuard";
 import { useCapability } from "@/hooks/use-capability";
 import { useFeatureFlag } from "@/hooks/use-feature-flag";
+import { NouveauClientDialog } from "@/components/clients/NouveauClientDialog";
 
 
 interface AffaireDetail {
