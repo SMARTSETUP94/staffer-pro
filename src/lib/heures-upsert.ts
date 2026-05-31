@@ -148,5 +148,19 @@ export async function insertHeuresSaisie(
   return client.from("heures_saisies").insert(payload).select(select).maybeSingle();
 }
 
+/**
+ * INSERT batch — pour BulkSaisieDialog. Garantit la même normalisation par
+ * ligne que le helper single. Retourne le résultat brut Supabase.
+ */
+export async function insertHeuresSaisieBatch(
+  client: AnyClient,
+  inputs: HeuresUpsertInput[],
+  opts: { selectColumns?: string } = {},
+) {
+  const select = opts.selectColumns ?? "id";
+  const payloads = inputs.map(buildHeuresSaisiePayload);
+  return client.from("heures_saisies").insert(payloads).select(select);
+}
+
 /** Export du client par défaut pour les appelants qui veulent l'omettre. */
 export const defaultHeuresClient = defaultClient;
