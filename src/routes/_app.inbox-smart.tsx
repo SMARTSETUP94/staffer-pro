@@ -754,6 +754,11 @@ function AttachOpportuniteDialog({
     loadOpps();
   }, []);
 
+  const emailDomain = useMemo(() => {
+    const m = email.from_email?.match(/@([^>\s]+)/);
+    return m ? m[1].toLowerCase() : null;
+  }, [email.from_email]);
+
   const filtered = useMemo(() => {
     const s = q.trim().toLowerCase();
     if (!s) return opps;
@@ -764,6 +769,31 @@ function AttachOpportuniteDialog({
         (o.client ?? "").toLowerCase().includes(s),
     );
   }, [opps, q]);
+
+  // Suggestions : opportunités dont le client matche le nom de l'expéditeur ou le domaine email
+  const suggestedIds = useMemo(() => {
+    const senderTokens = (email.from_name ?? "")
+      .toLowerCase()
+      .split(/[\s,.\-_]+/)
+      .filter((t) => t.length >= 3);
+    const domainRoot = emailDomain?.split(".")[0] ?? null;
+    const ids = new Set<string>();
+    for (const o of opps) {
+      const client = (o.client ?? "").toLowerCase();
+      if (!client) continue;
+      if (domainRoot && domainRoot.length >= 3 && client.includes(domainRoot)) ids.add(o.id);
+      else if (senderTokens.some((t) => client.includes(t))) ids.add(o.id);
+    }
+    return ids;
+  }, [opps, email.from_name, emailDomain]);
+
+  const sorted = useMemo(() => {
+    return [...filtered].sort((a, b) => {
+      const sa = suggestedIds.has(a.id) ? 0 : 1;
+      const sb = suggestedIds.has(b.id) ? 0 : 1;
+      return sa - sb;
+    });
+  }, [filtered, suggestedIds]);
 
   async function attach(oppId: string) {
     setAttaching(oppId);
@@ -793,11 +823,33 @@ function AttachOpportuniteDialog({
         <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col p-0 gap-0">
           <DialogHeader className="px-4 pt-4 pb-3 border-b">
             <DialogTitle>Rattacher à une opportunité 9XXX</DialogTitle>
-            <DialogDescription>
-              Email de <strong>{email.from_name ?? email.from_email}</strong> —{" "}
-              <em>{email.subject ?? "(sans sujet)"}</em>
+            <DialogDescription asChild>
+              <div className="space-y-2 pt-1">
+                <div className="rounded-md border bg-primary/5 px-3 py-2">
+                  <div className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold">
+                    Expéditeur
+                  </div>
+                  <div className="flex items-center gap-2 flex-wrap mt-0.5">
+                    <span className="font-semibold text-foreground">
+                      {email.from_name ?? email.from_email}
+                    </span>
+                    <span className="font-mono text-sm text-primary select-all">
+                      &lt;{email.from_email}&gt;
+                    </span>
+                    {emailDomain && (
+                      <Badge variant="secondary" className="text-[10px] h-5">
+                        @{emailDomain}
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1 italic truncate">
+                    {email.subject ?? "(sans sujet)"}
+                  </div>
+                </div>
+              </div>
             </DialogDescription>
           </DialogHeader>
+
 
           <div className="px-4 py-3 border-b flex flex-wrap gap-2 items-center">
             <Input
@@ -829,15 +881,22 @@ function AttachOpportuniteDialog({
                   Aucune opportunité trouvée. Créez-en une nouvelle.
                 </div>
               ) : (
-                filtered.map((o) => (
+                sorted.map((o) => {
+                  const isSuggested = suggestedIds.has(o.id);
+                  return (
                   <Card
                     key={o.id}
-                    className="p-2.5 hover:bg-accent/40 cursor-pointer flex items-center gap-2"
+                    className={`p-2.5 hover:bg-accent/40 cursor-pointer flex items-center gap-2 ${isSuggested ? "border-primary/60 bg-primary/5" : ""}`}
                     onClick={() => attach(o.id)}
                   >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-mono text-sm font-semibold">{o.numero}</span>
+                        {isSuggested && (
+                          <Badge className="text-[10px] h-4 px-1 bg-primary/15 text-primary border-primary/30">
+                            Suggestion
+                          </Badge>
+                        )}
                         {o.statut_opportunite && (
                           <Badge variant="outline" className="text-[10px] h-4 px-1">
                             {o.statut_opportunite}
@@ -863,7 +922,8 @@ function AttachOpportuniteDialog({
                       </Button>
                     )}
                   </Card>
-                ))
+                  );
+                })
               )}
             </div>
           </ScrollArea>
