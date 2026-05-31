@@ -62,12 +62,12 @@ interface Candidat {
 }
 
 export const Route = createFileRoute("/_app/candidatures")({
-  beforeLoad: ({ location }) => requireCapability("candidatures.view", location),
+  beforeLoad: () => requireCapability("candidatures.view"),
   component: CandidaturesPage,
 });
 
 function CandidaturesPage() {
-  const canManage = useCapability("candidatures.manage").data ?? false;
+  const canManage = useCapability("candidatures.manage");
   const [rows, setRows] = useState<Candidat[]>([]);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");

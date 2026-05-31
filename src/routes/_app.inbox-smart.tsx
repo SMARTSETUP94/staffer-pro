@@ -85,7 +85,7 @@ const CATEGORIE_COLOR: Record<CategorieIA, string> = {
 };
 
 export const Route = createFileRoute("/_app/inbox-smart")({
-  beforeLoad: ({ location }) => requireCapability("inbox_smart.view", location),
+  beforeLoad: () => requireCapability("inbox_smart.view"),
   component: InboxSmartPage,
 });
 
