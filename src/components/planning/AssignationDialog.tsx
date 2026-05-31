@@ -102,6 +102,7 @@ export function AssignationDialog({
   defaultObjetId,
   onSaved,
 }: Props) {
+  const { user } = useAuth();
   // Édition d'une assignation existante = sélection par id ; sinon création
   const [editingId, setEditingId] = useState<string | null>(null);
   const [affaireId, setAffaireId] = useState<string>("");
@@ -111,12 +112,25 @@ export function AssignationDialog({
   const [heures, setHeures] = useState<number>(8);
   const [notes, setNotes] = useState<string>("");
   const [typeOperation, setTypeOperation] = useState<string>("");
+  const [etapeChantier, setEtapeChantier] = useState<EtapeChantierRow | "none">("none");
   const [estChefJour, setEstChefJour] = useState<boolean>(false);
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [confirmOpportunite, setConfirmOpportunite] = useState(false);
   const [secondairesIds, setSecondairesIds] = useState<number[]>([]);
   const [showAllMetiers, setShowAllMetiers] = useState(false);
+
+  // Staffing au réel : début/fin → recalcul heures + heures de nuit (optionnel)
+  const [showHoraires, setShowHoraires] = useState(false);
+  const [heureDebut, setHeureDebut] = useState<string>("");
+  const [heureFin, setHeureFin] = useState<string>("");
+  const [dureePause, setDureePause] = useState<string>("60");
+
+  // Audit : qui a staffé (affiché en édition)
+  const [staffedBy, setStaffedBy] = useState<{ name: string | null; at: string | null }>({
+    name: null,
+    at: null,
+  });
 
   // v0.21 — Date éditable (par défaut = prop date, modifiable uniquement en création)
   const [dateOverride, setDateOverride] = useState<Date>(date);
