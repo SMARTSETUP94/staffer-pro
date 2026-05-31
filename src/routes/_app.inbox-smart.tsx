@@ -925,7 +925,6 @@ function AttachOpportuniteDialog({
                   );
                 })
               )}
-              )}
             </div>
           </ScrollArea>
 
