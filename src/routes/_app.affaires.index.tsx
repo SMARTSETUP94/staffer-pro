@@ -48,6 +48,7 @@ interface FormState {
   numero: string;
   nom: string;
   client: string;
+  client_id: string | null;
   lieu: string;
   statut: AffaireStatut;
   date_debut: string;
@@ -59,6 +60,7 @@ const emptyForm: FormState = {
   numero: "",
   nom: "",
   client: "",
+  client_id: null,
   lieu: "",
   statut: "en_cours",
   date_debut: "",
