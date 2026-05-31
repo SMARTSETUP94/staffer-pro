@@ -595,7 +595,15 @@ function PlanningPage() {
           affaires={affaires}
           consommation={consommation}
           filterAffaireIds={filterAffaireStr}
+          employes={employes}
+          metiers={metiers}
+          assignations={assignations}
+          absences={absences}
+          defaultDate={weekStart}
+          onConsommationChanged={refreshConsommation}
+          onChanged={handleChanged}
         />
+
       </aside>
 
       <AddInterimDialog
