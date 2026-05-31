@@ -566,8 +566,40 @@ function SuggestionRow({ rank, scored: s, metier, onStaffer, saving, disabled }:
               </Badge>
             )}
           </div>
-          <div className="mt-0.5 flex items-center gap-2 text-[10px] text-muted-foreground">
-            <span className="inline-flex items-center gap-0.5">
+          <div className="mt-1 flex flex-wrap items-center gap-1 text-[10px] text-muted-foreground">
+            <ScoreChip label="Métier" value={s.breakdown.metier} tone={s.breakdown.metier > 0 ? "good" : "muted"} />
+            <ScoreChip label="Dispo" value={s.breakdown.dispo} tone={s.breakdown.dispo > 0 ? "good" : "bad"} />
+            <ScoreChip label="Histo" value={s.breakdown.histo} tone={s.breakdown.histo > 0 ? "good" : "muted"} />
+            <ScoreChip label="Charge" value={s.breakdown.charge} tone={s.breakdown.charge < 0 ? "warn" : "muted"} />
+            <Popover>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  className="ml-0.5 inline-flex items-center gap-0.5 rounded bg-primary/10 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-primary hover:bg-primary/20"
+                  aria-label="Détail du score"
+                >
+                  = {s.score} <Info className="h-2.5 w-2.5" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent align="end" className="w-64 text-xs">
+                <p className="mb-2 font-semibold">
+                  {s.employe.prenom} {s.employe.nom} · score {s.score}
+                </p>
+                <ScoreLine label="Métier" value={s.breakdown.metier} detail={
+                  s.metierMatch === "principal" ? "principal" : s.metierMatch === "renfort" ? "renfort" : "—"
+                } />
+                <ScoreLine label="Dispo" value={s.breakdown.dispo} detail={
+                  s.blocked ? s.blocked.label : "libre sur le créneau"
+                } />
+                <ScoreLine label="Histo" value={s.breakdown.histo} detail={
+                  s.histoNbDemi > 0 ? `${s.histoNbDemi} ½j sur l'affaire` : "jamais bossé ici"
+                } />
+                <ScoreLine label="Charge" value={s.breakdown.charge} detail={
+                  `${s.heuresSemaine.toFixed(0)}h cette semaine`
+                } />
+              </PopoverContent>
+            </Popover>
+            <span className="ml-auto inline-flex items-center gap-0.5">
               <Clock className="h-2.5 w-2.5" /> {s.heuresSemaine.toFixed(0)}h cette semaine
             </span>
             {s.blocked && (
