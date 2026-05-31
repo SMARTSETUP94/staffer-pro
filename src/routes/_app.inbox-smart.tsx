@@ -5,17 +5,32 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { requireCapability } from "@/lib/capability-guard";
 import { useEffect, useMemo, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Mail, RefreshCw, Check, X, UserPlus, Building2, Loader2, Inbox as InboxIcon } from "lucide-react";
+import {
+  Mail,
+  RefreshCw,
+  X,
+  UserPlus,
+  Building2,
+  Loader2,
+  Inbox as InboxIcon,
+  Megaphone,
+  HelpCircle,
+  CheckCircle2,
+  Paperclip,
+} from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { getOutlookFullBody } from "@/server/inbox-smart.functions";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Dialog,
   DialogContent,
@@ -54,6 +69,7 @@ interface EmailRow {
   subject: string | null;
   received_at: string;
   body_preview: string | null;
+  has_attachments?: boolean | null;
   categorie_ia: CategorieIA | null;
   confiance_ia: number | null;
   metadata_ia: {
@@ -78,10 +94,10 @@ const CATEGORIE_LABEL: Record<CategorieIA, string> = {
 };
 
 const CATEGORIE_COLOR: Record<CategorieIA, string> = {
-  candidature: "bg-blue-100 text-blue-800",
-  opportunite: "bg-amber-100 text-amber-800",
-  pub: "bg-slate-100 text-slate-600",
-  autre: "bg-slate-100 text-slate-600",
+  candidature: "bg-blue-100 text-blue-800 border-blue-200",
+  opportunite: "bg-amber-100 text-amber-800 border-amber-200",
+  pub: "bg-slate-100 text-slate-600 border-slate-200",
+  autre: "bg-slate-100 text-slate-600 border-slate-200",
 };
 
 export const Route = createFileRoute("/_app/inbox-smart")({
@@ -93,7 +109,9 @@ function InboxSmartPage() {
   const [emails, setEmails] = useState<EmailRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [polling, setPolling] = useState(false);
-  const [tab, setTab] = useState<"pending" | "candidature" | "opportunite" | "pub" | "all">("pending");
+  const [tab, setTab] = useState<"pending" | "candidature" | "opportunite" | "pub" | "all">(
+    "pending",
+  );
   const [selected, setSelected] = useState<EmailRow | null>(null);
   const [createCandidat, setCreateCandidat] = useState<EmailRow | null>(null);
 
@@ -121,9 +139,13 @@ function InboxSmartPage() {
       case "pending":
         return emails.filter((e) => e.statut === "pending_review");
       case "candidature":
-        return emails.filter((e) => e.categorie_ia === "candidature" && e.statut !== "dismissed");
+        return emails.filter(
+          (e) => e.categorie_ia === "candidature" && e.statut !== "dismissed",
+        );
       case "opportunite":
-        return emails.filter((e) => e.categorie_ia === "opportunite" && e.statut !== "dismissed");
+        return emails.filter(
+          (e) => e.categorie_ia === "opportunite" && e.statut !== "dismissed",
+        );
       case "pub":
         return emails.filter((e) => e.categorie_ia === "pub" || e.statut === "dismissed");
       case "all":
@@ -135,8 +157,12 @@ function InboxSmartPage() {
   const counts = useMemo(
     () => ({
       pending: emails.filter((e) => e.statut === "pending_review").length,
-      candidature: emails.filter((e) => e.categorie_ia === "candidature" && e.statut !== "dismissed").length,
-      opportunite: emails.filter((e) => e.categorie_ia === "opportunite" && e.statut !== "dismissed").length,
+      candidature: emails.filter(
+        (e) => e.categorie_ia === "candidature" && e.statut !== "dismissed",
+      ).length,
+      opportunite: emails.filter(
+        (e) => e.categorie_ia === "opportunite" && e.statut !== "dismissed",
+      ).length,
       pub: emails.filter((e) => e.categorie_ia === "pub" || e.statut === "dismissed").length,
     }),
     [emails],
@@ -181,6 +207,39 @@ function InboxSmartPage() {
     await load();
   }
 
+  async function reclassify(e: EmailRow, newCat: CategorieIA) {
+    const { error } = await supabase
+      .from("emails_entrants")
+      .update({ categorie_ia: newCat })
+      .eq("id", e.id);
+    if (error) {
+      toast.error("Erreur", { description: error.message });
+      return;
+    }
+    toast.success(`Reclassé : ${CATEGORIE_LABEL[newCat]}`);
+    await load();
+    setSelected((cur) => (cur && cur.id === e.id ? { ...cur, categorie_ia: newCat } : cur));
+  }
+
+  async function validateClassification(e: EmailRow) {
+    const userId = (await supabase.auth.getUser()).data.user?.id;
+    const { error } = await supabase
+      .from("emails_entrants")
+      .update({
+        statut: "validated",
+        validated_at: new Date().toISOString(),
+        validated_by: userId ?? null,
+      })
+      .eq("id", e.id);
+    if (error) {
+      toast.error("Erreur", { description: error.message });
+      return;
+    }
+    toast.success("Classement validé");
+    await load();
+    setSelected(null);
+  }
+
   return (
     <div className="container mx-auto p-4 max-w-6xl space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-2">
@@ -190,27 +249,55 @@ function InboxSmartPage() {
             Inbox SMART
           </h1>
           <p className="text-sm text-muted-foreground">
-            Tri des emails entrants <code className="text-xs">smart@setup.paris</code> — relève toutes les 5 min.
+            Tri des emails entrants{" "}
+            <code className="text-xs">smart@setup.paris</code> — relève toutes les 5 min.
           </p>
         </div>
         <Button onClick={pollNow} disabled={polling} variant="outline">
-          {polling ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+          {polling ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <RefreshCw className="h-4 w-4" />
+          )}
           <span className="ml-2">Synchroniser maintenant</span>
         </Button>
       </div>
 
       <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
-        <TabsList className="grid grid-cols-5 w-full">
-          <TabsTrigger value="pending">À trier {counts.pending > 0 && <Badge variant="secondary" className="ml-1">{counts.pending}</Badge>}</TabsTrigger>
-          <TabsTrigger value="candidature">Candidatures <span className="ml-1 text-xs opacity-60">{counts.candidature}</span></TabsTrigger>
-          <TabsTrigger value="opportunite">Opportunités <span className="ml-1 text-xs opacity-60">{counts.opportunite}</span></TabsTrigger>
-          <TabsTrigger value="pub">Pubs / Écartés <span className="ml-1 text-xs opacity-60">{counts.pub}</span></TabsTrigger>
-          <TabsTrigger value="all">Tout</TabsTrigger>
-        </TabsList>
+        {/* Scrollable horizontalement sur mobile pour éviter le chevauchement */}
+        <div className="overflow-x-auto -mx-1 px-1">
+          <TabsList className="inline-flex w-max gap-1">
+            <TabsTrigger value="pending" className="whitespace-nowrap">
+              À trier
+              {counts.pending > 0 && (
+                <Badge variant="secondary" className="ml-1.5 h-5 px-1.5">
+                  {counts.pending}
+                </Badge>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="candidature" className="whitespace-nowrap">
+              Candidatures
+              <span className="ml-1.5 text-xs opacity-60">{counts.candidature}</span>
+            </TabsTrigger>
+            <TabsTrigger value="opportunite" className="whitespace-nowrap">
+              Opportunités
+              <span className="ml-1.5 text-xs opacity-60">{counts.opportunite}</span>
+            </TabsTrigger>
+            <TabsTrigger value="pub" className="whitespace-nowrap">
+              Pubs / Écartés
+              <span className="ml-1.5 text-xs opacity-60">{counts.pub}</span>
+            </TabsTrigger>
+            <TabsTrigger value="all" className="whitespace-nowrap">
+              Tout
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value={tab} className="mt-4">
           {loading ? (
-            <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin" /></div>
+            <div className="flex justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin" />
+            </div>
           ) : filtered.length === 0 ? (
             <Card className="p-8 text-center text-muted-foreground">
               <Mail className="h-8 w-8 mx-auto mb-2 opacity-50" />
@@ -219,55 +306,56 @@ function InboxSmartPage() {
           ) : (
             <div className="space-y-2">
               {filtered.map((e) => (
-                <Card key={e.id} className="p-4 hover:shadow-sm transition">
-                  <div className="flex items-start justify-between gap-3 flex-wrap">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
+                <Card
+                  key={e.id}
+                  className="p-3 hover:shadow-md transition cursor-pointer active:scale-[0.99]"
+                  onClick={() => setSelected(e)}
+                >
+                  <div className="flex items-start gap-2">
+                    <div className="flex-1 min-w-0 space-y-1">
+                      <div className="flex items-center gap-1.5 flex-wrap">
                         {e.categorie_ia && (
-                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${CATEGORIE_COLOR[e.categorie_ia]}`}>
+                          <span
+                            className={`text-[11px] px-1.5 py-0.5 rounded border font-medium ${CATEGORIE_COLOR[e.categorie_ia]}`}
+                          >
                             {CATEGORIE_LABEL[e.categorie_ia]}
                           </span>
                         )}
                         {e.confiance_ia != null && (
-                          <span className="text-xs text-muted-foreground">{Math.round(e.confiance_ia * 100)}%</span>
+                          <span className="text-[11px] text-muted-foreground">
+                            {Math.round(e.confiance_ia * 100)}%
+                          </span>
                         )}
-                        <span className="text-xs text-muted-foreground">
+                        <span className="text-[11px] text-muted-foreground">
                           {format(parseISO(e.received_at), "d MMM HH:mm", { locale: fr })}
                         </span>
-                        {e.statut === "validated" && <Badge variant="default" className="text-xs">validé</Badge>}
-                        {e.statut === "dismissed" && <Badge variant="outline" className="text-xs">écarté</Badge>}
+                        {e.has_attachments && (
+                          <Paperclip className="h-3 w-3 text-muted-foreground" />
+                        )}
+                        {e.statut === "validated" && (
+                          <Badge variant="default" className="text-[10px] h-4 px-1">
+                            validé
+                          </Badge>
+                        )}
+                        {e.statut === "dismissed" && (
+                          <Badge variant="outline" className="text-[10px] h-4 px-1">
+                            écarté
+                          </Badge>
+                        )}
                       </div>
-                      <div className="font-medium mt-1 truncate">{e.subject ?? "(sans sujet)"}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {e.from_name ?? ""} &lt;{e.from_email}&gt;
+                      <div className="font-medium text-sm truncate">
+                        {e.subject ?? "(sans sujet)"}
+                      </div>
+                      <div className="text-xs text-muted-foreground truncate">
+                        {e.from_name ? `${e.from_name} ` : ""}
+                        <span className="opacity-70">&lt;{e.from_email}&gt;</span>
                       </div>
                       {e.body_preview && (
-                        <div className="text-sm mt-1 text-muted-foreground line-clamp-2">{e.body_preview}</div>
-                      )}
-                      {e.metadata_ia?.metier && (
-                        <div className="text-xs mt-1">
-                          <strong>Métier deviné :</strong> {e.metadata_ia.metier}
-                          {e.metadata_ia.poste_devine && ` — ${e.metadata_ia.poste_devine}`}
+                        <div className="text-xs text-muted-foreground line-clamp-2">
+                          {e.body_preview}
                         </div>
                       )}
                     </div>
-                    {e.statut === "pending_review" && (
-                      <div className="flex gap-2 shrink-0">
-                        {e.categorie_ia === "candidature" && (
-                          <Button size="sm" onClick={() => setCreateCandidat(e)}>
-                            <UserPlus className="h-3.5 w-3.5 mr-1" /> Créer candidat
-                          </Button>
-                        )}
-                        {e.categorie_ia === "opportunite" && (
-                          <Button size="sm" variant="outline" disabled title="À venir : créer opportunité depuis email">
-                            <Building2 className="h-3.5 w-3.5 mr-1" /> Opportunité
-                          </Button>
-                        )}
-                        <Button size="sm" variant="ghost" onClick={() => dismissEmail(e, "manuel")}>
-                          <X className="h-3.5 w-3.5 mr-1" /> Écarter
-                        </Button>
-                      </div>
-                    )}
                   </div>
                 </Card>
               ))}
@@ -275,6 +363,23 @@ function InboxSmartPage() {
           )}
         </TabsContent>
       </Tabs>
+
+      {selected && (
+        <EmailDetailDialog
+          email={selected}
+          onClose={() => setSelected(null)}
+          onReclassify={(cat) => reclassify(selected, cat)}
+          onValidate={() => validateClassification(selected)}
+          onDismiss={() => {
+            dismissEmail(selected, "manuel");
+            setSelected(null);
+          }}
+          onCreateCandidat={() => {
+            setCreateCandidat(selected);
+            setSelected(null);
+          }}
+        />
+      )}
 
       {createCandidat && (
         <CreateCandidatDialog
@@ -287,6 +392,159 @@ function InboxSmartPage() {
         />
       )}
     </div>
+  );
+}
+
+function EmailDetailDialog({
+  email,
+  onClose,
+  onReclassify,
+  onValidate,
+  onDismiss,
+  onCreateCandidat,
+}: {
+  email: EmailRow;
+  onClose: () => void;
+  onReclassify: (cat: CategorieIA) => void;
+  onValidate: () => void;
+  onDismiss: () => void;
+  onCreateCandidat: () => void;
+}) {
+  const fetchBody = useServerFn(getOutlookFullBody);
+  const [body, setBody] = useState<{
+    contentType: "HTML" | "Text";
+    content: string;
+  } | null>(null);
+  const [loadingBody, setLoadingBody] = useState(true);
+  const [bodyError, setBodyError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoadingBody(true);
+    setBodyError(null);
+    fetchBody({ data: { messageIdOutlook: email.message_id_outlook } })
+      .then((res) => {
+        if (cancelled) return;
+        setBody({ contentType: res.bodyContentType, content: res.bodyContent });
+      })
+      .catch((e: Error) => {
+        if (cancelled) return;
+        setBodyError(e.message);
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingBody(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [email.message_id_outlook, fetchBody]);
+
+  const CAT_OPTIONS: Array<{ key: CategorieIA; label: string; icon: typeof Building2 }> = [
+    { key: "candidature", label: "Candidature", icon: UserPlus },
+    { key: "opportunite", label: "Opportunité", icon: Building2 },
+    { key: "pub", label: "Pub", icon: Megaphone },
+    { key: "autre", label: "Autre", icon: HelpCircle },
+  ];
+
+  return (
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col p-0 gap-0">
+        <DialogHeader className="px-4 pt-4 pb-2 border-b">
+          <DialogTitle className="text-base pr-6 leading-snug">
+            {email.subject ?? "(sans sujet)"}
+          </DialogTitle>
+          <DialogDescription asChild>
+            <div className="text-xs space-y-0.5 mt-1">
+              <div>
+                <span className="font-medium text-foreground">
+                  {email.from_name ?? email.from_email}
+                </span>{" "}
+                <span className="opacity-70">&lt;{email.from_email}&gt;</span>
+              </div>
+              <div>
+                {format(parseISO(email.received_at), "EEEE d MMMM yyyy 'à' HH:mm", {
+                  locale: fr,
+                })}
+              </div>
+            </div>
+          </DialogDescription>
+        </DialogHeader>
+
+        {/* Reclassement rapide */}
+        <div className="px-4 py-2 border-b bg-muted/30">
+          <div className="text-[11px] text-muted-foreground mb-1.5">
+            Classement IA — corriger si besoin :
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {CAT_OPTIONS.map((opt) => {
+              const Icon = opt.icon;
+              const active = email.categorie_ia === opt.key;
+              return (
+                <Button
+                  key={opt.key}
+                  size="sm"
+                  variant={active ? "default" : "outline"}
+                  className="h-7 px-2 text-xs"
+                  onClick={() => onReclassify(opt.key)}
+                >
+                  <Icon className="h-3 w-3 mr-1" />
+                  {opt.label}
+                </Button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Corps */}
+        <ScrollArea className="flex-1 min-h-0">
+          <div className="px-4 py-3">
+            {loadingBody ? (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground py-8 justify-center">
+                <Loader2 className="h-4 w-4 animate-spin" /> Chargement du contenu…
+              </div>
+            ) : bodyError ? (
+              <div className="text-sm text-destructive py-4">
+                Impossible de charger le corps : {bodyError}
+                {email.body_preview && (
+                  <div className="mt-3 text-muted-foreground whitespace-pre-wrap">
+                    <div className="text-xs uppercase tracking-wide mb-1">Aperçu :</div>
+                    {email.body_preview}
+                  </div>
+                )}
+              </div>
+            ) : body?.contentType === "HTML" ? (
+              <div
+                className="prose prose-sm max-w-none break-words [&_a]:text-primary [&_img]:max-w-full [&_table]:max-w-full"
+                // eslint-disable-next-line react/no-danger
+                dangerouslySetInnerHTML={{ __html: body.content }}
+              />
+            ) : (
+              <pre className="whitespace-pre-wrap text-sm font-sans break-words">
+                {body?.content ?? ""}
+              </pre>
+            )}
+          </div>
+        </ScrollArea>
+
+        <DialogFooter className="px-4 py-3 border-t flex-row flex-wrap gap-2 sm:justify-between">
+          <Button variant="ghost" size="sm" onClick={onDismiss}>
+            <X className="h-4 w-4 mr-1" /> Écarter
+          </Button>
+          <div className="flex gap-2 flex-wrap">
+            {email.categorie_ia === "candidature" && email.statut === "pending_review" && (
+              <Button size="sm" variant="outline" onClick={onCreateCandidat}>
+                <UserPlus className="h-4 w-4 mr-1" /> Créer candidat
+              </Button>
+            )}
+            {email.statut === "pending_review" && (
+              <Button size="sm" onClick={onValidate}>
+                <CheckCircle2 className="h-4 w-4 mr-1" /> Valider classement
+              </Button>
+            )}
+          </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -371,22 +629,32 @@ function CreateCandidatDialog({
           </div>
           <div>
             <Label>Poste visé</Label>
-            <Input value={poste} onChange={(e) => setPoste(e.target.value)} placeholder="ex: Constructeur, Tapissier…" />
+            <Input
+              value={poste}
+              onChange={(e) => setPoste(e.target.value)}
+              placeholder="ex: Constructeur, Tapissier…"
+            />
           </div>
           <div>
             <Label>Métier</Label>
             <Select value={metier} onValueChange={setMetier}>
-              <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+              <SelectTrigger>
+                <SelectValue placeholder="—" />
+              </SelectTrigger>
               <SelectContent>
                 {METIERS_CANDIDATURE.map((m) => (
-                  <SelectItem key={m} value={m}>{m}</SelectItem>
+                  <SelectItem key={m} value={m}>
+                    {m}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Annuler</Button>
+          <Button variant="outline" onClick={onClose}>
+            Annuler
+          </Button>
           <Button onClick={submit} disabled={saving}>
             {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
             Créer
