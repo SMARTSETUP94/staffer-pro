@@ -487,18 +487,29 @@ export function AssignationDialog({
     if (!metierId) return; // garde TS — déjà checké dans handleSave
     setSaving(true);
     const dateStr = format(dateOverride, "yyyy-MM-dd");
-    const payload = {
+    // Type d'opération : pour 4XXX on prend la valeur structurée (étape chantier),
+    // sinon on conserve la saisie libre existante.
+    const typeOperationFinal = is4XXX
+      ? (etapeChantier !== "none" ? etapeChantier : null)
+      : (typeOperation.trim() || null);
+    const payload: Record<string, unknown> = {
       employe_id: employe.id,
       affaire_id: affaireId,
       metier_id: metierId,
       devis_id: devisId,
       demi_journee: slot,
-      heures,
+      heures: heuresEffectives,
       date: dateStr,
       notes: notes.trim() || null,
-      type_operation: typeOperation.trim() || null,
+      type_operation: typeOperationFinal,
       est_chef_jour: estChefJour,
+      heure_debut: showHoraires && heureDebut ? heureDebut : null,
+      heure_fin: showHoraires && heureFin ? heureFin : null,
     };
+    // created_by uniquement à la création (audit : qui a staffé)
+    if (!editingId && user?.id) {
+      payload.created_by = user.id;
+    }
 
     let assignationId: string | null = editingId;
     if (editingId) {
