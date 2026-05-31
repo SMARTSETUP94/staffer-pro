@@ -36,6 +36,7 @@ interface AffaireRow {
   numero: string;
   nom: string;
   client: string | null;
+  client_id: string | null;
   lieu: string | null;
   statut: AffaireStatut;
   date_debut: string | null;
