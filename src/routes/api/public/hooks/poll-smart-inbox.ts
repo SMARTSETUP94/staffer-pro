@@ -190,6 +190,8 @@ export const Route = createFileRoute("/api/public/hooks/poll-smart-inbox")({
                 subject: msg.subject ?? null,
                 received_at: msg.receivedDateTime ?? new Date().toISOString(),
                 body_preview: msg.bodyPreview ?? null,
+                body_full: msg.body?.content ?? null,
+                body_content_type: msg.body?.contentType ?? null,
                 has_attachments: !!msg.hasAttachments,
                 categorie_ia: cls.categorie,
                 confiance_ia: cls.confiance,
