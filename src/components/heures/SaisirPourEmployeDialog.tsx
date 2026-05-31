@@ -110,6 +110,11 @@ export function SaisirPourEmployeDialog({
   const [debut, setDebut] = useState<string>("08:00");
   const [fin, setFin] = useState<string>("17:00");
   const [pause, setPause] = useState<string>("60");
+  const [nuitOverride, setNuitOverride] = useState<string>("");
+  const [showNuit, setShowNuit] = useState(false);
+  const [etapeChantier, setEtapeChantier] = useState<EtapeChantierRow | "none">("none");
+  const [fabObjetId, setFabObjetId] = useState<string>("none");
+  const [fabEtape, setFabEtape] = useState<FabricationEtapeTypeRow | "none">("none");
   const [commentaire, setCommentaire] = useState<string>("");
 
   // Reset à l'ouverture
@@ -121,6 +126,11 @@ export function SaisirPourEmployeDialog({
     setDebut("08:00");
     setFin("17:00");
     setPause("60");
+    setNuitOverride("");
+    setShowNuit(false);
+    setEtapeChantier("none");
+    setFabObjetId("none");
+    setFabEtape("none");
     setCommentaire("");
   }, [open, defaultEmployeId, defaultDate, defaultAffaireId]);
 
