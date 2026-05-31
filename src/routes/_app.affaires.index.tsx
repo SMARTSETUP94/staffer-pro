@@ -108,7 +108,7 @@ function AffairesPage() {
     setLoading(true);
     const { data, error } = await supabase
       .from("affaires")
-      .select("id, numero, nom, client, lieu, statut, date_debut, date_fin_prevue, typologie")
+      .select("id, numero, nom, client, client_id, lieu, statut, date_debut, date_fin_prevue, typologie")
       .order("date_debut", { ascending: false, nullsFirst: false });
     if (error) {
       toast.error("Chargement impossible", { description: error.message });
