@@ -1528,6 +1528,8 @@ export type Database = {
         Row: {
           archived_outlook: boolean
           attachments_count: number
+          body_content_type: string | null
+          body_full: string | null
           body_html: string | null
           body_preview: string | null
           candidature_id: string | null
@@ -1554,6 +1556,8 @@ export type Database = {
         Insert: {
           archived_outlook?: boolean
           attachments_count?: number
+          body_content_type?: string | null
+          body_full?: string | null
           body_html?: string | null
           body_preview?: string | null
           candidature_id?: string | null
@@ -1580,6 +1584,8 @@ export type Database = {
         Update: {
           archived_outlook?: boolean
           attachments_count?: number
+          body_content_type?: string | null
+          body_full?: string | null
           body_html?: string | null
           body_preview?: string | null
           candidature_id?: string | null
