@@ -220,6 +220,11 @@ export function usePlanningData(weekStart: Date, weekEnd: Date): PlanningData {
     };
   }, [weekStart.getTime(), weekEnd.getTime(), tick]);
 
+  const refreshConsommation = useCallback(async () => {
+    const { data, error } = await supabase.from("v_devis_consommation").select("*");
+    if (!error && data) setConsommation(data as DevisConsommation[]);
+  }, []);
+
   return {
     metiers,
     employes,
@@ -233,5 +238,7 @@ export function usePlanningData(weekStart: Date, weekEnd: Date): PlanningData {
     loading,
     error,
     refresh: () => setTick((t) => t + 1),
+    refreshConsommation,
   };
 }
+
