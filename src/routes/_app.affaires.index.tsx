@@ -420,7 +420,11 @@ function AffairesPage() {
             </div>
             <div className="space-y-1.5">
               <Label>Client</Label>
-              <Input value={form.client} onChange={(e) => setForm({ ...form, client: e.target.value })} className="h-10 rounded-xl" />
+              <ClientCombobox
+                value={form.client}
+                clientId={form.client_id}
+                onChange={(id, nom) => setForm({ ...form, client_id: id, client: nom })}
+              />
             </div>
             <div className="space-y-1.5">
               <Label>Lieu</Label>
