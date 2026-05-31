@@ -922,23 +922,121 @@ export function AssignationDialog({
               />
             </div>
 
-            {/* v0.21 Bloc 5 — Type d'opération (combobox texte libre + suggestions) */}
-            <div className="grid gap-1.5">
-              <Label htmlFor="type-operation">Type d'opération (optionnel)</Label>
-              <Input
-                id="type-operation"
-                list="type-operation-suggest"
-                value={typeOperation}
-                onChange={(e) => setTypeOperation(e.target.value)}
-                placeholder="ex: Montage, Démontage…"
-                maxLength={50}
-              />
-              <datalist id="type-operation-suggest">
-                {TYPE_OPERATION_OPTIONS.map((opt) => (
-                  <option key={opt} value={opt} />
-                ))}
-              </datalist>
-            </div>
+            {/* Étape chantier (4XXX) — Select structuré identique à la saisie d'heures.
+                Pour les autres typologies, on conserve la saisie libre historique. */}
+            {is4XXX ? (
+              <div className="grid gap-1.5">
+                <Label>Étape chantier (4XXX)</Label>
+                <Select
+                  value={etapeChantier}
+                  onValueChange={(v) => setEtapeChantier(v as EtapeChantierRow | "none")}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="— Aucune —" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">— Aucune —</SelectItem>
+                    {ETAPE_CHANTIER_OPTIONS.map((opt) => (
+                      <SelectItem key={opt} value={opt}>
+                        {opt}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-[10px] text-muted-foreground">
+                  Montage / Démontage / Permanence… (mêmes options que la saisie d'heures).
+                </p>
+              </div>
+            ) : (
+              <div className="grid gap-1.5">
+                <Label htmlFor="type-operation">Type d'opération (optionnel)</Label>
+                <Input
+                  id="type-operation"
+                  list="type-operation-suggest"
+                  value={typeOperation}
+                  onChange={(e) => setTypeOperation(e.target.value)}
+                  placeholder="ex: Montage, Démontage…"
+                  maxLength={50}
+                />
+                <datalist id="type-operation-suggest">
+                  {TYPE_OPERATION_OPTIONS.map((opt) => (
+                    <option key={opt} value={opt} />
+                  ))}
+                </datalist>
+              </div>
+            )}
+
+            {/* Staffing au réel : préciser début/fin → recalcul heures + heures de nuit auto */}
+            <Collapsible open={showHoraires} onOpenChange={setShowHoraires}>
+              <CollapsibleTrigger asChild>
+                <button
+                  type="button"
+                  className="flex w-full items-center justify-between rounded-md border bg-muted/30 px-3 py-2 text-left text-xs hover:bg-muted/50"
+                >
+                  <span className="flex items-center gap-2">
+                    <CalendarIcon className="h-3.5 w-3.5" />
+                    <span>
+                      Préciser début / fin{" "}
+                      <span className="text-muted-foreground">(staffing au réel)</span>
+                    </span>
+                  </span>
+                  <ChevronDown
+                    className={cn("h-3.5 w-3.5 transition-transform", showHoraires && "rotate-180")}
+                  />
+                </button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-2 pt-2">
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="grid gap-1">
+                    <Label className="text-[11px]">Début</Label>
+                    <Input
+                      type="time"
+                      value={heureDebut}
+                      onChange={(e) => setHeureDebut(e.target.value)}
+                    />
+                  </div>
+                  <div className="grid gap-1">
+                    <Label className="text-[11px]">Fin</Label>
+                    <Input
+                      type="time"
+                      value={heureFin}
+                      onChange={(e) => setHeureFin(e.target.value)}
+                    />
+                  </div>
+                  <div className="grid gap-1">
+                    <Label className="text-[11px]">Pause (min)</Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      max={240}
+                      value={dureePause}
+                      onChange={(e) => setDureePause(e.target.value)}
+                    />
+                  </div>
+                </div>
+                {computed && (
+                  <div className="space-y-1 rounded-md border border-primary/20 bg-primary/5 p-2 text-[11px]">
+                    <div className="flex items-center justify-between">
+                      <span>Heures réelles calculées</span>
+                      <strong className="tabular-nums">{computed.heuresReelles.toFixed(2)}h</strong>
+                    </div>
+                    {computed.heuresNuit > 0 && (
+                      <div className="flex items-center justify-between text-amber-600">
+                        <span className="flex items-center gap-1">
+                          <Moon className="h-3 w-3" />
+                          Heures de nuit (00h-06h)
+                        </span>
+                        <strong className="tabular-nums">{computed.heuresNuit.toFixed(2)}h</strong>
+                      </div>
+                    )}
+                    <p className="text-[10px] text-muted-foreground">
+                      Ces horaires remplacent la saisie « Heures » ci-dessus. Convention spectacle vivant.
+                    </p>
+                  </div>
+                )}
+              </CollapsibleContent>
+            </Collapsible>
+
 
             {/* v0.21 Bloc 5 — Désigner comme chef du jour */}
             <div className="flex items-center gap-2 rounded-md border bg-muted/30 p-2">
