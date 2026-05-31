@@ -81,10 +81,17 @@ interface Props {
   onSaved: () => void;
 }
 
+interface ScoreBreakdown {
+  metier: number;
+  dispo: number;
+  histo: number;
+  charge: number;
+}
+
 interface Scored {
   employe: Employe;
   score: number;
-  reasons: string[];
+  breakdown: ScoreBreakdown;
   metierMatch: "principal" | "renfort" | "autre";
   histoNbChantiers: number;
   histoNbDemi: number;
