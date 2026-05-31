@@ -173,6 +173,7 @@ function AffairesPage() {
       numero: form.numero.trim(),
       nom: form.nom.trim(),
       client: form.client.trim() || null,
+      client_id: form.client_id,
       lieu: form.lieu.trim() || null,
       statut: form.statut,
       date_debut: form.date_debut || null,
