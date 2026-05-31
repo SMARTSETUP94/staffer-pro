@@ -119,6 +119,8 @@ function buildSections(
       items: [
         { title: "Management RH", url: "/rh", icon: FileSignature, cap: "section.contrats_rh" },
         { title: "Contrats CDDU", url: "/rh/contrats", icon: FileSignature, cap: "section.contrats_rh", count: contratsRhCount },
+        { title: "Candidatures", url: "/candidatures", icon: UserCircle, cap: "candidatures.view" },
+        { title: "Inbox SMART", url: "/inbox-smart", icon: Inbox, cap: "inbox_smart.view" },
       ],
     },
     {

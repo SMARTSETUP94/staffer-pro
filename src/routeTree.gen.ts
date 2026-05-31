@@ -34,12 +34,14 @@ import { Route as AppMesContratsRouteImport } from './routes/_app.mes-contrats'
 import { Route as AppMesChantiersRouteImport } from './routes/_app.mes-chantiers'
 import { Route as AppInterimairesRouteImport } from './routes/_app.interimaires'
 import { Route as AppIncidentAuthRouteImport } from './routes/_app.incident-auth'
+import { Route as AppInboxSmartRouteImport } from './routes/_app.inbox-smart'
 import { Route as AppImportsRouteImport } from './routes/_app.imports'
 import { Route as AppHeuresAnalyseRouteImport } from './routes/_app.heures-analyse'
 import { Route as AppFlotteRouteImport } from './routes/_app.flotte'
 import { Route as AppExportRouteImport } from './routes/_app.export'
 import { Route as AppEmployesRouteImport } from './routes/_app.employes'
 import { Route as AppChargeAtelierRouteImport } from './routes/_app.charge-atelier'
+import { Route as AppCandidaturesRouteImport } from './routes/_app.candidatures'
 import { Route as AppAujourdhuiRouteImport } from './routes/_app.aujourdhui'
 import { Route as AppAuditHeuresRouteImport } from './routes/_app.audit-heures'
 import { Route as AppAuditAuthRouteImport } from './routes/_app.audit-auth'
@@ -82,6 +84,7 @@ import { Route as AppAdminEmailPreviewRouteImport } from './routes/_app.admin.em
 import { Route as AppAdminContenuWidgetsRouteImport } from './routes/_app.admin.contenu-widgets'
 import { Route as AppAdminAuditRouteImport } from './routes/_app.admin.audit'
 import { Route as AppAffairesAffaireIdIndexRouteImport } from './routes/_app.affaires.$affaireId.index'
+import { Route as ApiPublicHooksPollSmartInboxRouteImport } from './routes/api/public/hooks/poll-smart-inbox'
 import { Route as AppMissionsAffaireIdPhaseRouteImport } from './routes/_app.missions.$affaireId.$phase'
 import { Route as AppAffairesAffaireIdStaffingRouteImport } from './routes/_app.affaires.$affaireId.staffing'
 import { Route as AppAffairesAffaireIdPlanningChantierRouteImport } from './routes/_app.affaires.$affaireId.planning-chantier'
@@ -217,6 +220,11 @@ const AppIncidentAuthRoute = AppIncidentAuthRouteImport.update({
   path: '/incident-auth',
   getParentRoute: () => AppRoute,
 } as any)
+const AppInboxSmartRoute = AppInboxSmartRouteImport.update({
+  id: '/inbox-smart',
+  path: '/inbox-smart',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppImportsRoute = AppImportsRouteImport.update({
   id: '/imports',
   path: '/imports',
@@ -245,6 +253,11 @@ const AppEmployesRoute = AppEmployesRouteImport.update({
 const AppChargeAtelierRoute = AppChargeAtelierRouteImport.update({
   id: '/charge-atelier',
   path: '/charge-atelier',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCandidaturesRoute = AppCandidaturesRouteImport.update({
+  id: '/candidatures',
+  path: '/candidatures',
   getParentRoute: () => AppRoute,
 } as any)
 const AppAujourdhuiRoute = AppAujourdhuiRouteImport.update({
@@ -467,6 +480,12 @@ const AppAffairesAffaireIdIndexRoute =
     path: '/',
     getParentRoute: () => AppAffairesAffaireIdRoute,
   } as any)
+const ApiPublicHooksPollSmartInboxRoute =
+  ApiPublicHooksPollSmartInboxRouteImport.update({
+    id: '/api/public/hooks/poll-smart-inbox',
+    path: '/api/public/hooks/poll-smart-inbox',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AppMissionsAffaireIdPhaseRoute =
   AppMissionsAffaireIdPhaseRouteImport.update({
     id: '/missions/$affaireId/$phase',
@@ -537,12 +556,14 @@ export interface FileRoutesByFullPath {
   '/audit-auth': typeof AppAuditAuthRoute
   '/audit-heures': typeof AppAuditHeuresRoute
   '/aujourdhui': typeof AppAujourdhuiRoute
+  '/candidatures': typeof AppCandidaturesRoute
   '/charge-atelier': typeof AppChargeAtelierRoute
   '/employes': typeof AppEmployesRouteWithChildren
   '/export': typeof AppExportRouteWithChildren
   '/flotte': typeof AppFlotteRoute
   '/heures-analyse': typeof AppHeuresAnalyseRoute
   '/imports': typeof AppImportsRoute
+  '/inbox-smart': typeof AppInboxSmartRoute
   '/incident-auth': typeof AppIncidentAuthRoute
   '/interimaires': typeof AppInterimairesRoute
   '/mes-chantiers': typeof AppMesChantiersRoute
@@ -609,6 +630,7 @@ export interface FileRoutesByFullPath {
   '/affaires/$affaireId/planning-chantier': typeof AppAffairesAffaireIdPlanningChantierRoute
   '/affaires/$affaireId/staffing': typeof AppAffairesAffaireIdStaffingRoute
   '/missions/$affaireId/$phase': typeof AppMissionsAffaireIdPhaseRoute
+  '/api/public/hooks/poll-smart-inbox': typeof ApiPublicHooksPollSmartInboxRoute
   '/affaires/$affaireId/': typeof AppAffairesAffaireIdIndexRoute
   '/affaires/$affaireId/objets/$objetId': typeof AppAffairesAffaireIdObjetsObjetIdRoute
 }
@@ -620,11 +642,13 @@ export interface FileRoutesByTo {
   '/audit-auth': typeof AppAuditAuthRoute
   '/audit-heures': typeof AppAuditHeuresRoute
   '/aujourdhui': typeof AppAujourdhuiRoute
+  '/candidatures': typeof AppCandidaturesRoute
   '/charge-atelier': typeof AppChargeAtelierRoute
   '/employes': typeof AppEmployesRouteWithChildren
   '/flotte': typeof AppFlotteRoute
   '/heures-analyse': typeof AppHeuresAnalyseRoute
   '/imports': typeof AppImportsRoute
+  '/inbox-smart': typeof AppInboxSmartRoute
   '/incident-auth': typeof AppIncidentAuthRoute
   '/interimaires': typeof AppInterimairesRoute
   '/mes-chantiers': typeof AppMesChantiersRoute
@@ -691,6 +715,7 @@ export interface FileRoutesByTo {
   '/affaires/$affaireId/planning-chantier': typeof AppAffairesAffaireIdPlanningChantierRoute
   '/affaires/$affaireId/staffing': typeof AppAffairesAffaireIdStaffingRoute
   '/missions/$affaireId/$phase': typeof AppMissionsAffaireIdPhaseRoute
+  '/api/public/hooks/poll-smart-inbox': typeof ApiPublicHooksPollSmartInboxRoute
   '/affaires/$affaireId': typeof AppAffairesAffaireIdIndexRoute
   '/affaires/$affaireId/objets/$objetId': typeof AppAffairesAffaireIdObjetsObjetIdRoute
 }
@@ -704,12 +729,14 @@ export interface FileRoutesById {
   '/_app/audit-auth': typeof AppAuditAuthRoute
   '/_app/audit-heures': typeof AppAuditHeuresRoute
   '/_app/aujourdhui': typeof AppAujourdhuiRoute
+  '/_app/candidatures': typeof AppCandidaturesRoute
   '/_app/charge-atelier': typeof AppChargeAtelierRoute
   '/_app/employes': typeof AppEmployesRouteWithChildren
   '/_app/export': typeof AppExportRouteWithChildren
   '/_app/flotte': typeof AppFlotteRoute
   '/_app/heures-analyse': typeof AppHeuresAnalyseRoute
   '/_app/imports': typeof AppImportsRoute
+  '/_app/inbox-smart': typeof AppInboxSmartRoute
   '/_app/incident-auth': typeof AppIncidentAuthRoute
   '/_app/interimaires': typeof AppInterimairesRoute
   '/_app/mes-chantiers': typeof AppMesChantiersRoute
@@ -777,6 +804,7 @@ export interface FileRoutesById {
   '/_app/affaires/$affaireId/planning-chantier': typeof AppAffairesAffaireIdPlanningChantierRoute
   '/_app/affaires/$affaireId/staffing': typeof AppAffairesAffaireIdStaffingRoute
   '/_app/missions/$affaireId/$phase': typeof AppMissionsAffaireIdPhaseRoute
+  '/api/public/hooks/poll-smart-inbox': typeof ApiPublicHooksPollSmartInboxRoute
   '/_app/affaires/$affaireId/': typeof AppAffairesAffaireIdIndexRoute
   '/_app/affaires/$affaireId/objets/$objetId': typeof AppAffairesAffaireIdObjetsObjetIdRoute
 }
@@ -791,12 +819,14 @@ export interface FileRouteTypes {
     | '/audit-auth'
     | '/audit-heures'
     | '/aujourdhui'
+    | '/candidatures'
     | '/charge-atelier'
     | '/employes'
     | '/export'
     | '/flotte'
     | '/heures-analyse'
     | '/imports'
+    | '/inbox-smart'
     | '/incident-auth'
     | '/interimaires'
     | '/mes-chantiers'
@@ -863,6 +893,7 @@ export interface FileRouteTypes {
     | '/affaires/$affaireId/planning-chantier'
     | '/affaires/$affaireId/staffing'
     | '/missions/$affaireId/$phase'
+    | '/api/public/hooks/poll-smart-inbox'
     | '/affaires/$affaireId/'
     | '/affaires/$affaireId/objets/$objetId'
   fileRoutesByTo: FileRoutesByTo
@@ -874,11 +905,13 @@ export interface FileRouteTypes {
     | '/audit-auth'
     | '/audit-heures'
     | '/aujourdhui'
+    | '/candidatures'
     | '/charge-atelier'
     | '/employes'
     | '/flotte'
     | '/heures-analyse'
     | '/imports'
+    | '/inbox-smart'
     | '/incident-auth'
     | '/interimaires'
     | '/mes-chantiers'
@@ -945,6 +978,7 @@ export interface FileRouteTypes {
     | '/affaires/$affaireId/planning-chantier'
     | '/affaires/$affaireId/staffing'
     | '/missions/$affaireId/$phase'
+    | '/api/public/hooks/poll-smart-inbox'
     | '/affaires/$affaireId'
     | '/affaires/$affaireId/objets/$objetId'
   id:
@@ -957,12 +991,14 @@ export interface FileRouteTypes {
     | '/_app/audit-auth'
     | '/_app/audit-heures'
     | '/_app/aujourdhui'
+    | '/_app/candidatures'
     | '/_app/charge-atelier'
     | '/_app/employes'
     | '/_app/export'
     | '/_app/flotte'
     | '/_app/heures-analyse'
     | '/_app/imports'
+    | '/_app/inbox-smart'
     | '/_app/incident-auth'
     | '/_app/interimaires'
     | '/_app/mes-chantiers'
@@ -1030,6 +1066,7 @@ export interface FileRouteTypes {
     | '/_app/affaires/$affaireId/planning-chantier'
     | '/_app/affaires/$affaireId/staffing'
     | '/_app/missions/$affaireId/$phase'
+    | '/api/public/hooks/poll-smart-inbox'
     | '/_app/affaires/$affaireId/'
     | '/_app/affaires/$affaireId/objets/$objetId'
   fileRoutesById: FileRoutesById
@@ -1042,6 +1079,7 @@ export interface RootRouteChildren {
   AuthForgotPasswordRoute: typeof AuthForgotPasswordRoute
   AuthResetPasswordRoute: typeof AuthResetPasswordRoute
   AuthSetPasswordRoute: typeof AuthSetPasswordRoute
+  ApiPublicHooksPollSmartInboxRoute: typeof ApiPublicHooksPollSmartInboxRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1221,6 +1259,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppIncidentAuthRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/inbox-smart': {
+      id: '/_app/inbox-smart'
+      path: '/inbox-smart'
+      fullPath: '/inbox-smart'
+      preLoaderRoute: typeof AppInboxSmartRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/imports': {
       id: '/_app/imports'
       path: '/imports'
@@ -1261,6 +1306,13 @@ declare module '@tanstack/react-router' {
       path: '/charge-atelier'
       fullPath: '/charge-atelier'
       preLoaderRoute: typeof AppChargeAtelierRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/candidatures': {
+      id: '/_app/candidatures'
+      path: '/candidatures'
+      fullPath: '/candidatures'
+      preLoaderRoute: typeof AppCandidaturesRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/aujourdhui': {
@@ -1557,6 +1609,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAffairesAffaireIdIndexRouteImport
       parentRoute: typeof AppAffairesAffaireIdRoute
     }
+    '/api/public/hooks/poll-smart-inbox': {
+      id: '/api/public/hooks/poll-smart-inbox'
+      path: '/api/public/hooks/poll-smart-inbox'
+      fullPath: '/api/public/hooks/poll-smart-inbox'
+      preLoaderRoute: typeof ApiPublicHooksPollSmartInboxRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_app/missions/$affaireId/$phase': {
       id: '/_app/missions/$affaireId/$phase'
       path: '/missions/$affaireId/$phase'
@@ -1708,12 +1767,14 @@ interface AppRouteChildren {
   AppAuditAuthRoute: typeof AppAuditAuthRoute
   AppAuditHeuresRoute: typeof AppAuditHeuresRoute
   AppAujourdhuiRoute: typeof AppAujourdhuiRoute
+  AppCandidaturesRoute: typeof AppCandidaturesRoute
   AppChargeAtelierRoute: typeof AppChargeAtelierRoute
   AppEmployesRoute: typeof AppEmployesRouteWithChildren
   AppExportRoute: typeof AppExportRouteWithChildren
   AppFlotteRoute: typeof AppFlotteRoute
   AppHeuresAnalyseRoute: typeof AppHeuresAnalyseRoute
   AppImportsRoute: typeof AppImportsRoute
+  AppInboxSmartRoute: typeof AppInboxSmartRoute
   AppIncidentAuthRoute: typeof AppIncidentAuthRoute
   AppInterimairesRoute: typeof AppInterimairesRoute
   AppMesChantiersRoute: typeof AppMesChantiersRoute
@@ -1771,12 +1832,14 @@ const AppRouteChildren: AppRouteChildren = {
   AppAuditAuthRoute: AppAuditAuthRoute,
   AppAuditHeuresRoute: AppAuditHeuresRoute,
   AppAujourdhuiRoute: AppAujourdhuiRoute,
+  AppCandidaturesRoute: AppCandidaturesRoute,
   AppChargeAtelierRoute: AppChargeAtelierRoute,
   AppEmployesRoute: AppEmployesRouteWithChildren,
   AppExportRoute: AppExportRouteWithChildren,
   AppFlotteRoute: AppFlotteRoute,
   AppHeuresAnalyseRoute: AppHeuresAnalyseRoute,
   AppImportsRoute: AppImportsRoute,
+  AppInboxSmartRoute: AppInboxSmartRoute,
   AppIncidentAuthRoute: AppIncidentAuthRoute,
   AppInterimairesRoute: AppInterimairesRoute,
   AppMesChantiersRoute: AppMesChantiersRoute,
@@ -1840,6 +1903,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthForgotPasswordRoute: AuthForgotPasswordRoute,
   AuthResetPasswordRoute: AuthResetPasswordRoute,
   AuthSetPasswordRoute: AuthSetPasswordRoute,
+  ApiPublicHooksPollSmartInboxRoute: ApiPublicHooksPollSmartInboxRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
