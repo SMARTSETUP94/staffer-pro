@@ -754,6 +754,11 @@ function AttachOpportuniteDialog({
     loadOpps();
   }, []);
 
+  const emailDomain = useMemo(() => {
+    const m = email.from_email?.match(/@([^>\s]+)/);
+    return m ? m[1].toLowerCase() : null;
+  }, [email.from_email]);
+
   const filtered = useMemo(() => {
     const s = q.trim().toLowerCase();
     if (!s) return opps;
@@ -764,6 +769,31 @@ function AttachOpportuniteDialog({
         (o.client ?? "").toLowerCase().includes(s),
     );
   }, [opps, q]);
+
+  // Suggestions : opportunités dont le client matche le nom de l'expéditeur ou le domaine email
+  const suggestedIds = useMemo(() => {
+    const senderTokens = (email.from_name ?? "")
+      .toLowerCase()
+      .split(/[\s,.\-_]+/)
+      .filter((t) => t.length >= 3);
+    const domainRoot = emailDomain?.split(".")[0] ?? null;
+    const ids = new Set<string>();
+    for (const o of opps) {
+      const client = (o.client ?? "").toLowerCase();
+      if (!client) continue;
+      if (domainRoot && domainRoot.length >= 3 && client.includes(domainRoot)) ids.add(o.id);
+      else if (senderTokens.some((t) => client.includes(t))) ids.add(o.id);
+    }
+    return ids;
+  }, [opps, email.from_name, emailDomain]);
+
+  const sorted = useMemo(() => {
+    return [...filtered].sort((a, b) => {
+      const sa = suggestedIds.has(a.id) ? 0 : 1;
+      const sb = suggestedIds.has(b.id) ? 0 : 1;
+      return sa - sb;
+    });
+  }, [filtered, suggestedIds]);
 
   async function attach(oppId: string) {
     setAttaching(oppId);
