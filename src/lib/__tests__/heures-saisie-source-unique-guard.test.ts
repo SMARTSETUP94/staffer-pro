@@ -14,9 +14,17 @@ import { execSync } from "node:child_process";
 const ALLOWED = new Set<string>([
   "src/lib/heures-upsert.ts",
   // useMesHeures fait des opérations en lot/patch sur la grille saisie de
-  // l'employé (upsert assignation_id, RPC acknowledge_rejet…). Il peut
-  // appeler directement supabase mais doit router INSERT/UPDATE via le helper.
+  // l'employé (upsert assignation_id, RPC acknowledge_rejet…). Il route
+  // déjà INSERT/UPDATE complets via le helper.
   "src/hooks/use-mes-heures.ts",
+  // Transitions de statut (valider/rejeter) — opérations chef/admin sur des
+  // saisies existantes, pas une création/édition de la saisie elle-même.
+  "src/routes/_app.validation-heures.tsx",
+  "src/routes/_app.heures-analyse.tsx",
+  // Rattachement devis_id a posteriori (audit/historique).
+  "src/routes/_app.devis.rattachement-historique.tsx",
+  // Commentaire de doc uniquement (pas d'appel réel).
+  "src/lib/business-errors.ts",
 ]);
 
 describe("heures_saisies — source unique", () => {
