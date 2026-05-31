@@ -153,6 +153,7 @@ function AffairesPage() {
       numero: r.numero,
       nom: r.nom,
       client: r.client ?? "",
+      client_id: r.client_id ?? null,
       lieu: r.lieu ?? "",
       statut: r.statut,
       date_debut: r.date_debut ?? "",
