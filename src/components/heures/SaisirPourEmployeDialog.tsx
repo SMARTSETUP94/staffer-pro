@@ -49,6 +49,7 @@ import {
   type FabricationEtapeTypeRow,
 } from "@/hooks/use-mes-heures";
 import { useObjetsAffaireLight } from "@/hooks/use-objets-affaire-light";
+import { upsertHeuresSaisie } from "@/lib/heures-upsert";
 
 const ETAPE_FAB_LABEL_MAP: Record<FabricationEtapeTypeRow, string> = {
   be: "BE (dessin)",
