@@ -17,6 +17,10 @@ const ALLOWED = new Set<string>([
   // Server-fn (auto-staffing publish) : tourne côté serveur avec son propre
   // `created_by = context.userId` injecté manuellement, hors périmètre client.
   "src/server/staffing-publish.functions.ts",
+  // Server-fn de cleanup (suppression/annulation de plan staffing) : ne créent
+  // pas de nouvelle assignation, juste nettoient celles existantes.
+  "src/server/staffing-plan-delete.functions.ts",
+  "src/server/staffing-express-cancel.functions.ts",
   // Reset/rattachement de `devis_id` en cascade (pas une création/édition de
   // staffing — juste un nettoyage / rattachement FK a posteriori).
   "src/routes/_app.devis.index.tsx",
