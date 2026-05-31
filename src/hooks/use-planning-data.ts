@@ -116,7 +116,10 @@ export interface PlanningData {
   loading: boolean;
   error: string | null;
   refresh: () => void;
+  /** v0.49 — Re-fetch ciblé de `v_devis_consommation` uniquement (sidebar « Heures restantes » en quasi-temps réel après mutation). */
+  refreshConsommation: () => Promise<void>;
 }
+
 
 export function usePlanningData(weekStart: Date, weekEnd: Date): PlanningData {
   const [metiers, setMetiers] = useState<Metier[]>([]);
