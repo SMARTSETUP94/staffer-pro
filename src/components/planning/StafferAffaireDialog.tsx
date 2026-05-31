@@ -828,3 +828,32 @@ function ScoreLine({ label, value, detail }: { label: string; value: number; det
     </div>
   );
 }
+
+function BreakdownCell({
+  value,
+  detail,
+  muted,
+}: {
+  value: number;
+  detail: string;
+  muted?: boolean;
+}) {
+  const sign = value > 0 ? `+${value}` : `${value}`;
+  return (
+    <div className="flex flex-col items-end gap-0.5">
+      <span
+        className={cn(
+          "font-mono text-xs font-semibold",
+          value > 0
+            ? "text-emerald-600 dark:text-emerald-400"
+            : value < 0
+              ? "text-amber-600 dark:text-amber-400"
+              : "text-muted-foreground",
+        )}
+      >
+        {sign}
+      </span>
+      <span className={cn("text-[10px] text-muted-foreground", muted && "opacity-60")}>{detail}</span>
+    </div>
+  );
+}
