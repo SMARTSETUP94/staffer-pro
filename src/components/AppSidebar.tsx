@@ -139,6 +139,7 @@ function buildSections(
         { title: "Roadmap", url: "/roadmap", icon: Map, cap: "section.admin" },
         { title: "Réglages compétences", url: "/parametres/competences-equipe", icon: Settings, cap: "section.admin" },
         { title: "Rôles fabrication", url: "/parametres/roles-fabrication", icon: Wrench, cap: "section.admin" },
+        { title: "Fusion clients", url: "/clients/admin/fusion", icon: UsersRound, cap: "clients.merge" },
       ],
     },
   ];
