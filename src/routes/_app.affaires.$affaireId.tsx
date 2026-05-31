@@ -55,6 +55,7 @@ function AffaireDetailLayout() {
   const canSeeEquipe = useCapability("affaire.equipe.view");
   const castingFlagOn = useFeatureFlag("equipes_3_niveaux_lecture");
   const canCreateClient = useCapability("clients.view");
+  const canUpdateClient = useCapability("clients.update");
   const [createClientOpen, setCreateClientOpen] = useState(false);
 
 
