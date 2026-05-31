@@ -505,7 +505,7 @@ function PlanningPage() {
                   devisLots={devisLots}
                   showWeekend={showWeekend}
                   emptyMessage="Aucun employé CDI/CDD actif."
-                  onChanged={refresh}
+                  onChanged={handleChanged}
                   swapAssignationIds={swapAssignationIds}
                 />
               </TabsContent>
@@ -535,7 +535,7 @@ function PlanningPage() {
                   devisLots={devisLots}
                   showWeekend={showWeekend}
                   emptyMessage="Aucun employé intermittent / indépendant staffé cette semaine. Clique sur « Ajouter un intermittent »."
-                  onChanged={refresh}
+                  onChanged={handleChanged}
                   swapAssignationIds={swapAssignationIds}
                   openAssignationFor={autoOpen}
                   onAutoOpenConsumed={() => setAutoOpen(null)}
@@ -555,7 +555,7 @@ function PlanningPage() {
                   filterAffaireIds={filterAffaireStr}
                   filterMetierIds={filterMetierNum}
                   onSelectAffaire={handleSelectAffaireFromSynthese}
-                  onChanged={refresh}
+                  onChanged={handleChanged}
                 />
               </TabsContent>
 
@@ -571,7 +571,7 @@ function PlanningPage() {
                   showWeekend={showWeekend}
                   filterAffaireIds={filterAffaireStr}
                   filterMetierIds={filterMetierNum}
-                  onChanged={refresh}
+                  onChanged={handleChanged}
                 />
               </TabsContent>
 
@@ -623,7 +623,7 @@ function PlanningPage() {
         metiers={metiers}
         devisLots={devisLots}
         assignations={assignations}
-        onSaved={refresh}
+        onSaved={handleChanged}
       />
 
     </div>
