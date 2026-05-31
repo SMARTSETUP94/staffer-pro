@@ -24,6 +24,9 @@ import {
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { getOutlookFullBody } from "@/server/inbox-smart.functions";
+import { useAuth } from "@/lib/auth-context";
+import { useChargesAffaires } from "@/hooks/use-charges-affaires";
+import { NouvelleOpportuniteDialog } from "@/components/opportunites/NouvelleOpportuniteDialog";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
