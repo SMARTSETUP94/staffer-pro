@@ -2,7 +2,7 @@
  * Inbox SMART — tri humain des emails entrants smart@setup.paris.
  * Cap : inbox_smart.view (admin, rh, chef_chantier).
  */
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { requireCapability } from "@/lib/capability-guard";
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
