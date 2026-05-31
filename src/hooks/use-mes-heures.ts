@@ -7,6 +7,7 @@ import {
   buildHorsPlanningInsert,
   type HorsPlanningInput,
 } from "@/lib/hors-planning-helpers";
+import { insertHeuresSaisie, patchHeuresSaisie } from "@/lib/heures-upsert";
 
 export type DemiJournee = "AM" | "PM" | "JOURNEE";
 export type HeureStatut = "brouillon" | "soumis" | "valide" | "rejete";
@@ -392,17 +393,15 @@ export function useMesHeures({ weekStart, employeIdOverride }: UseMesHeuresOptio
   const upsertSaisie = useCallback(
     async (row: SaisieCombined, patch: Partial<SaisieRow>) => {
       if (!employeId) return;
-      // Si la saisie existe déjà → UPDATE
+      // Si la saisie existe déjà → patch ciblé via helper unifié
       if (row.saisie) {
         const next = { ...row.saisie, ...patch };
-        const { data, error } = await supabase
-          .from("heures_saisies")
-          .update(patch)
-          .eq("id", row.saisie.id)
-          .select(
-            SAISIE_SELECT,
-          )
-          .maybeSingle();
+        const { data, error } = await patchHeuresSaisie(
+          supabase,
+          row.saisie.id,
+          patch as Record<string, unknown>,
+          { selectColumns: SAISIE_SELECT },
+        );
         if (error) {
           toast.error(...formatBusinessError(error));
           return;
@@ -412,30 +411,27 @@ export function useMesHeures({ weekStart, employeIdOverride }: UseMesHeuresOptio
         }
         return;
       }
-      // Sinon → INSERT brouillon
+      // Sinon → INSERT brouillon via helper unifié
       if (!row.assignation) return;
-      const insert = {
-        employe_id: employeId,
-        assignation_id: row.assignation.id,
-        affaire_id: row.affaire_id,
-        date: row.date,
-        heures_reelles: patch.heures_reelles ?? Number(row.assignation.heures),
-        heure_debut: patch.heure_debut ?? null,
-        heure_fin: patch.heure_fin ?? null,
-        duree_pause_minutes: patch.duree_pause_minutes ?? 0,
-        commentaire: patch.commentaire ?? null,
-        fabrication_objet_id: patch.fabrication_objet_id ?? null,
-        fabrication_etape_type: patch.fabrication_etape_type ?? null,
-        etape_chantier: patch.etape_chantier ?? null,
-        statut: "brouillon" as const,
-      };
-      const { data, error } = await supabase
-        .from("heures_saisies")
-        .insert(insert)
-        .select(
-          SAISIE_SELECT,
-        )
-        .maybeSingle();
+      const { data, error } = await insertHeuresSaisie(
+        supabase,
+        {
+          employe_id: employeId,
+          assignation_id: row.assignation.id,
+          affaire_id: row.affaire_id,
+          date: row.date,
+          heures_reelles: patch.heures_reelles ?? Number(row.assignation.heures),
+          heure_debut: patch.heure_debut ?? null,
+          heure_fin: patch.heure_fin ?? null,
+          duree_pause_minutes: patch.duree_pause_minutes ?? 0,
+          commentaire: patch.commentaire ?? null,
+          fabrication_objet_id: patch.fabrication_objet_id ?? null,
+          fabrication_etape_type: patch.fabrication_etape_type ?? null,
+          etape_chantier: patch.etape_chantier ?? null,
+          statut: "brouillon",
+        },
+        { selectColumns: SAISIE_SELECT },
+      );
       if (error) {
         toast.error(...formatBusinessError(error));
         return;

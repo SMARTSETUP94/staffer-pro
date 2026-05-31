@@ -49,6 +49,7 @@ import {
   type FabricationEtapeTypeRow,
 } from "@/hooks/use-mes-heures";
 import { useObjetsAffaireLight } from "@/hooks/use-objets-affaire-light";
+import { upsertHeuresSaisie } from "@/lib/heures-upsert";
 
 const ETAPE_FAB_LABEL_MAP: Record<FabricationEtapeTypeRow, string> = {
   be: "BE (dessin)",
@@ -203,16 +204,7 @@ export function SaisirPourEmployeDialog({
     if (!canSubmit || !computed || !dateStr) return;
     setSubmitting(true);
     try {
-      // Cherche une saisie existante pour upsert
-      const { data: existing } = await supabase
-        .from("heures_saisies")
-        .select("id")
-        .eq("employe_id", employeId)
-        .eq("date", dateStr)
-        .eq("affaire_id", affaireId)
-        .maybeSingle();
-
-      const payload = {
+      const { error, data } = await upsertHeuresSaisie(supabase, {
         employe_id: employeId,
         date: dateStr,
         affaire_id: affaireId,
@@ -225,23 +217,11 @@ export function SaisirPourEmployeDialog({
         fabrication_objet_id: is5XXX && fabObjetId !== "none" ? fabObjetId : null,
         fabrication_etape_type: is5XXX && fabEtape !== "none" ? fabEtape : null,
         commentaire: commentaire.trim() || null,
-        statut: "valide" as const,
+        statut: "valide",
         valide_par: user?.id ?? null,
-        valide_le: new Date().toISOString(),
-      };
-
-      if (existing) {
-        const { error } = await supabase
-          .from("heures_saisies")
-          .update(payload)
-          .eq("id", existing.id);
-        if (error) throw error;
-        toast.success("Saisie mise à jour et validée");
-      } else {
-        const { error } = await supabase.from("heures_saisies").insert(payload);
-        if (error) throw error;
-        toast.success("Heures saisies et validées pour l'employé");
-      }
+      }, { selectColumns: "id" });
+      if (error) throw error;
+      toast.success(data ? "Saisie enregistrée et validée" : "Heures saisies et validées pour l'employé");
       onCreated?.();
       onOpenChange(false);
     } catch (e) {

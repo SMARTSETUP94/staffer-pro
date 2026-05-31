@@ -57,6 +57,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { upsertHeuresSaisie } from "@/lib/heures-upsert";
 import { compressImageIfPossible } from "@/lib/image-compress";
 import {
   autoTagCategoryByMissionState,
@@ -859,16 +860,8 @@ function MesHeuresSection({
         .maybeSingle();
       if (!emp) throw new Error("Profil employé introuvable");
 
-      // Upsert sur (employe, date, affaire)
-      const { data: existing } = await supabase
-        .from("heures_saisies")
-        .select("id")
-        .eq("employe_id", emp.id)
-        .eq("date", activeDate)
-        .eq("affaire_id", detail.affaire_id)
-        .maybeSingle();
-
-      const payload = {
+      // Upsert via la source unique (employé soumet → statut 'soumis')
+      const { error } = await upsertHeuresSaisie(supabase, {
         employe_id: emp.id,
         date: activeDate,
         affaire_id: detail.affaire_id,
@@ -880,21 +873,11 @@ function MesHeuresSection({
         heures_reelles: heuresReelles,
         heures_nuit: 0,
         commentaire: commentaire.trim() || null,
-        statut: "soumis" as const,
+        statut: "soumis",
         saisi_par: userId,
         saisi_par_chef: false,
-      };
-
-      if (existing) {
-        const { error } = await supabase
-          .from("heures_saisies")
-          .update(payload)
-          .eq("id", existing.id);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.from("heures_saisies").insert(payload);
-        if (error) throw error;
-      }
+      }, { selectColumns: "id" });
+      if (error) throw error;
       toast.success("Heures envoyées au chef pour validation");
       onSaved();
     } catch (e) {
