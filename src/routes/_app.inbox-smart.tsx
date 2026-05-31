@@ -553,8 +553,22 @@ function EmailDetailDialog({
                   locale: fr,
                 })}
               </div>
+              {clientInfo && (
+                <div className="flex items-center gap-1.5 pt-1">
+                  <Building2 className="h-3 w-3 text-primary" />
+                  <span className="text-foreground font-medium">Client :</span>
+                  <Link
+                    to="/clients/$clientId"
+                    params={{ clientId: clientInfo.id }}
+                    className="text-primary hover:underline"
+                  >
+                    {clientInfo.nom}
+                  </Link>
+                </div>
+              )}
             </div>
           </DialogDescription>
+
         </DialogHeader>
 
         {/* Reclassement rapide */}
