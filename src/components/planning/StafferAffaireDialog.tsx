@@ -515,8 +515,17 @@ export function StafferAffaireDialog({
           )}
         </ScrollArea>
 
-        <DialogFooter>
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>
+        <DialogFooter className="gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setBreakdownOpen(true)}
+            className="gap-1.5"
+          >
+            <List className="h-3.5 w-3.5" />
+            Voir le détail complet
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)}>
             Fermer
           </Button>
         </DialogFooter>
