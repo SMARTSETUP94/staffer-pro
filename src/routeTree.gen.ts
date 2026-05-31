@@ -74,6 +74,7 @@ import { Route as AppDevisProgbatImportRouteImport } from './routes/_app.devis.p
 import { Route as AppDevisImportRouteImport } from './routes/_app.devis.import'
 import { Route as AppDevisHistoriqueRouteImport } from './routes/_app.devis.historique'
 import { Route as AppDevAtomsRouteImport } from './routes/_app.dev.atoms'
+import { Route as AppClientsClientIdRouteImport } from './routes/_app.clients.$clientId'
 import { Route as AppAffairesAffaireIdRouteImport } from './routes/_app.affaires.$affaireId'
 import { Route as AppAdminUtilisateursRouteImport } from './routes/_app.admin.utilisateurs'
 import { Route as AppAdminPermissionsRouteImport } from './routes/_app.admin.permissions'
@@ -429,6 +430,11 @@ const AppDevAtomsRoute = AppDevAtomsRouteImport.update({
   path: '/dev/atoms',
   getParentRoute: () => AppRoute,
 } as any)
+const AppClientsClientIdRoute = AppClientsClientIdRouteImport.update({
+  id: '/$clientId',
+  path: '/$clientId',
+  getParentRoute: () => AppClientsRoute,
+} as any)
 const AppAffairesAffaireIdRoute = AppAffairesAffaireIdRouteImport.update({
   id: '/affaires/$affaireId',
   path: '/affaires/$affaireId',
@@ -564,7 +570,7 @@ export interface FileRoutesByFullPath {
   '/aujourdhui': typeof AppAujourdhuiRoute
   '/candidatures': typeof AppCandidaturesRoute
   '/charge-atelier': typeof AppChargeAtelierRoute
-  '/clients': typeof AppClientsRoute
+  '/clients': typeof AppClientsRouteWithChildren
   '/employes': typeof AppEmployesRouteWithChildren
   '/export': typeof AppExportRouteWithChildren
   '/flotte': typeof AppFlotteRoute
@@ -601,6 +607,7 @@ export interface FileRoutesByFullPath {
   '/admin/permissions': typeof AppAdminPermissionsRoute
   '/admin/utilisateurs': typeof AppAdminUtilisateursRoute
   '/affaires/$affaireId': typeof AppAffairesAffaireIdRouteWithChildren
+  '/clients/$clientId': typeof AppClientsClientIdRoute
   '/dev/atoms': typeof AppDevAtomsRoute
   '/devis/historique': typeof AppDevisHistoriqueRoute
   '/devis/import': typeof AppDevisImportRoute
@@ -651,7 +658,7 @@ export interface FileRoutesByTo {
   '/aujourdhui': typeof AppAujourdhuiRoute
   '/candidatures': typeof AppCandidaturesRoute
   '/charge-atelier': typeof AppChargeAtelierRoute
-  '/clients': typeof AppClientsRoute
+  '/clients': typeof AppClientsRouteWithChildren
   '/employes': typeof AppEmployesRouteWithChildren
   '/flotte': typeof AppFlotteRoute
   '/heures-analyse': typeof AppHeuresAnalyseRoute
@@ -687,6 +694,7 @@ export interface FileRoutesByTo {
   '/admin/marge-chantier': typeof AppAdminMargeChantierRoute
   '/admin/permissions': typeof AppAdminPermissionsRoute
   '/admin/utilisateurs': typeof AppAdminUtilisateursRoute
+  '/clients/$clientId': typeof AppClientsClientIdRoute
   '/dev/atoms': typeof AppDevAtomsRoute
   '/devis/historique': typeof AppDevisHistoriqueRoute
   '/devis/import': typeof AppDevisImportRoute
@@ -739,7 +747,7 @@ export interface FileRoutesById {
   '/_app/aujourdhui': typeof AppAujourdhuiRoute
   '/_app/candidatures': typeof AppCandidaturesRoute
   '/_app/charge-atelier': typeof AppChargeAtelierRoute
-  '/_app/clients': typeof AppClientsRoute
+  '/_app/clients': typeof AppClientsRouteWithChildren
   '/_app/employes': typeof AppEmployesRouteWithChildren
   '/_app/export': typeof AppExportRouteWithChildren
   '/_app/flotte': typeof AppFlotteRoute
@@ -777,6 +785,7 @@ export interface FileRoutesById {
   '/_app/admin/permissions': typeof AppAdminPermissionsRoute
   '/_app/admin/utilisateurs': typeof AppAdminUtilisateursRoute
   '/_app/affaires/$affaireId': typeof AppAffairesAffaireIdRouteWithChildren
+  '/_app/clients/$clientId': typeof AppClientsClientIdRoute
   '/_app/dev/atoms': typeof AppDevAtomsRoute
   '/_app/devis/historique': typeof AppDevisHistoriqueRoute
   '/_app/devis/import': typeof AppDevisImportRoute
@@ -867,6 +876,7 @@ export interface FileRouteTypes {
     | '/admin/permissions'
     | '/admin/utilisateurs'
     | '/affaires/$affaireId'
+    | '/clients/$clientId'
     | '/dev/atoms'
     | '/devis/historique'
     | '/devis/import'
@@ -953,6 +963,7 @@ export interface FileRouteTypes {
     | '/admin/marge-chantier'
     | '/admin/permissions'
     | '/admin/utilisateurs'
+    | '/clients/$clientId'
     | '/dev/atoms'
     | '/devis/historique'
     | '/devis/import'
@@ -1042,6 +1053,7 @@ export interface FileRouteTypes {
     | '/_app/admin/permissions'
     | '/_app/admin/utilisateurs'
     | '/_app/affaires/$affaireId'
+    | '/_app/clients/$clientId'
     | '/_app/dev/atoms'
     | '/_app/devis/historique'
     | '/_app/devis/import'
@@ -1551,6 +1563,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDevAtomsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/clients/$clientId': {
+      id: '/_app/clients/$clientId'
+      path: '/$clientId'
+      fullPath: '/clients/$clientId'
+      preLoaderRoute: typeof AppClientsClientIdRouteImport
+      parentRoute: typeof AppClientsRoute
+    }
     '/_app/affaires/$affaireId': {
       id: '/_app/affaires/$affaireId'
       path: '/affaires/$affaireId'
@@ -1708,6 +1727,18 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AppClientsRouteChildren {
+  AppClientsClientIdRoute: typeof AppClientsClientIdRoute
+}
+
+const AppClientsRouteChildren: AppClientsRouteChildren = {
+  AppClientsClientIdRoute: AppClientsClientIdRoute,
+}
+
+const AppClientsRouteWithChildren = AppClientsRoute._addFileChildren(
+  AppClientsRouteChildren,
+)
+
 interface AppEmployesRouteChildren {
   AppEmployesImportRoute: typeof AppEmployesImportRoute
 }
@@ -1788,7 +1819,7 @@ interface AppRouteChildren {
   AppAujourdhuiRoute: typeof AppAujourdhuiRoute
   AppCandidaturesRoute: typeof AppCandidaturesRoute
   AppChargeAtelierRoute: typeof AppChargeAtelierRoute
-  AppClientsRoute: typeof AppClientsRoute
+  AppClientsRoute: typeof AppClientsRouteWithChildren
   AppEmployesRoute: typeof AppEmployesRouteWithChildren
   AppExportRoute: typeof AppExportRouteWithChildren
   AppFlotteRoute: typeof AppFlotteRoute
@@ -1854,7 +1885,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAujourdhuiRoute: AppAujourdhuiRoute,
   AppCandidaturesRoute: AppCandidaturesRoute,
   AppChargeAtelierRoute: AppChargeAtelierRoute,
-  AppClientsRoute: AppClientsRoute,
+  AppClientsRoute: AppClientsRouteWithChildren,
   AppEmployesRoute: AppEmployesRouteWithChildren,
   AppExportRoute: AppExportRouteWithChildren,
   AppFlotteRoute: AppFlotteRoute,
