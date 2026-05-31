@@ -236,30 +236,27 @@ export function StafferAffaireDialog({
     if (metierId == null) return [];
     return employes
       .map((e) => {
-        const reasons: string[] = [];
-        let score = 0;
+        const breakdown: ScoreBreakdown = { metier: 0, dispo: 0, histo: 0, charge: 0 };
         let metierMatch: Scored["metierMatch"] = "autre";
 
+        // 1. Métier
         if (e.metier_principal_id === metierId) {
-          score += 100;
+          breakdown.metier = 100;
           metierMatch = "principal";
-          reasons.push("Métier principal");
         } else {
           const rset = renfortMetiersByEmploye.get(e.id);
           if (rset && rset.has(metierId)) {
-            score += 35;
+            breakdown.metier = 35;
             metierMatch = "renfort";
-            reasons.push("A déjà fait ce métier");
           }
         }
 
-        // Dispo : absence
+        // 2. Disponibilité (absence + conflit slot)
         const abs = findAbsence(absences, e.id, dateStr, slot);
         let blocked: Scored["blocked"] = null;
         if (abs && abs.valide) {
           blocked = { kind: "absence", label: `Absence (${ABSENCE_LABEL[abs.type]})` };
         }
-        // Dispo : conflit slot
         const occupied = conflictByEmploye.get(e.id);
         if (!blocked && occupied) {
           const conflict =
@@ -268,30 +265,27 @@ export function StafferAffaireDialog({
               : occupied.has("JOURNEE") || occupied.has(slot);
           if (conflict) blocked = { kind: "conflict", label: "Déjà assigné sur ce créneau" };
         }
-        if (!blocked) {
-          score += 40;
-          reasons.push("Disponible");
-        }
+        if (!blocked) breakdown.dispo = 40;
 
-        // Historique chantier
+        // 3. Historique chantier (borné, ln pour éviter saturation)
         const histo = historique.get(e.id);
         const histoNbChantiers = histo?.nb_jours_distincts ?? 0;
         const histoNbDemi = histo?.nb_demi_jours ?? 0;
         if (histo && histoNbDemi > 0) {
-          // Score borné : ln pour éviter saturation
-          const bonus = Math.min(40, 5 + Math.log(histoNbDemi + 1) * 8);
-          score += bonus;
-          reasons.push(`${histoNbDemi} ½j sur cette affaire`);
+          breakdown.histo = Math.round(Math.min(40, 5 + Math.log(histoNbDemi + 1) * 8));
         }
 
-        // Charge semaine (moins = mieux ; max -20)
+        // 4. Charge semaine (moins = mieux ; pénalité max -20)
         const heuresSemaine = chargeByEmploye.get(e.id) ?? 0;
-        score -= Math.min(20, heuresSemaine * 0.5);
+        breakdown.charge = -Math.round(Math.min(20, heuresSemaine * 0.5));
+
+        const score =
+          breakdown.metier + breakdown.dispo + breakdown.histo + breakdown.charge;
 
         return {
           employe: e,
           score,
-          reasons,
+          breakdown,
           metierMatch,
           histoNbChantiers,
           histoNbDemi,
@@ -300,8 +294,12 @@ export function StafferAffaireDialog({
         };
       })
       .sort((a, b) => {
-        // Bloqués en bas
+        // Bloqués en bas, puis tri explicable : métier > dispo > histo > -charge
         if (!!a.blocked !== !!b.blocked) return a.blocked ? 1 : -1;
+        if (b.breakdown.metier !== a.breakdown.metier) return b.breakdown.metier - a.breakdown.metier;
+        if (b.breakdown.dispo !== a.breakdown.dispo) return b.breakdown.dispo - a.breakdown.dispo;
+        if (b.breakdown.histo !== a.breakdown.histo) return b.breakdown.histo - a.breakdown.histo;
+        if (b.breakdown.charge !== a.breakdown.charge) return b.breakdown.charge - a.breakdown.charge;
         return b.score - a.score;
       });
   }, [
