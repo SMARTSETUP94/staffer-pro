@@ -1,68 +1,74 @@
-# Refonte page /aujourdhui pour les employés
+# Centraliser la saisie d'heures sur une source unique
+
+## État des lieux (audit)
+
+5 surfaces saisissent dans `heures_saisies`, avec **3 implémentations indépendantes** du INSERT/UPDATE et des champs **incohérents** entre elles :
+
+| Surface | Route | Composant | Mutation | Champs manquants |
+|---|---|---|---|---|
+| 1 | `/mes-heures` (desktop + mobile) | `MesHeuresGrid` + `AddHorsPlanningDialog` | `useMesHeures.upsertSaisie` ✅ | — référence |
+| 2a | `/saisie-pour-equipe` | `SaisirPourEmployeDialog` | `supabase` direct inline | OK champs |
+| 2b | `/saisie-pour-equipe` | `BulkSaisieDialog` | `supabase` direct inline | ❌ commentaire, étape 4XXX, fab 5XXX |
+| 3 | `/validation-heures` | `SaisirPourEmployeDialog` (réutilisé) | — | — |
+| 4 | `/missions/$affaireId/$phase` | formulaire **inline** dans la route | `supabase` direct inline | ❌ heures_nuit (forcé 0), étape 4XXX, fab 5XXX |
+
+**Conséquences concrètes** :
+- Sur 4XXX et 5XXX, la saisie depuis `/missions` et `/saisie-pour-equipe` bulk **perd silencieusement** la phase et le lien objet.
+- `heures_nuit` n'existe pas dans le module `/missions` (forcé à 0).
+- Une évolution future (nouveau champ, nouvelle règle métier) doit être répliquée dans 3 endroits — risque de divergence garanti.
 
 ## Objectif
 
-Rendre la page d'accueil `/aujourdhui` réellement utile et user-friendly pour les **employés** (poseur, peintre, métallier, menuisier, etc.) — desktop ET mobile — au lieu de la vue Inbox/filtres actuelle pensée pour admin/chef.
+Une seule fonction d'upsert qui couvre **tous** les champs (`heure_debut`, `heure_fin`, `duree_pause_minutes`, `heures_reelles`, `heures_nuit`, `etape_chantier`, `fabrication_objet_id`, `fabrication_etape_type`, `commentaire`, `statut`), utilisée par les 4 composants.
 
-Les rôles admin/chef gardent leur vue actuelle (Inbox + widgets pilotage). Seuls les rôles **employés** (sans cap `dashboard.team.view`) basculent sur la nouvelle vue.
+## Plan d'exécution
 
-## Nouvelle structure employé (3 blocs principaux)
+### 1. Extraire un helper pur (`src/lib/heures-upsert.ts`)
+- Fonction `upsertHeuresSaisie(client, input)` qui :
+  - Cherche une ligne existante `(employe_id, date, affaire_id)`.
+  - Construit le payload complet (tous les champs ci-dessus + `valide_par`/`valide_le` si `statut='valide'`).
+  - Fait UPDATE ou INSERT et renvoie la ligne.
+- Type `HeuresUpsertInput` unique exporté.
+- Tests unitaires sur la construction du payload (4XXX vs 5XXX vs neutre, statut, override nuit).
 
-### Bloc 1 — Mon planning de la semaine
-- Vue compacte 7 jours (lun→dim) avec mes affectations
-- Chaque ligne = 1 chantier × 1 créneau (AM/PM/Journée)
-- **Clic sur un chantier → ouvre un Sheet "Mon équipe sur ce chantier"** (au lieu d'un onglet séparé `/equipe-chantiers`). Liste les coéquipiers présents le même jour/créneau, leur métier, contact rapide.
-- Bouton "Voir tout mon planning" → `/mes-missions`
+### 2. Refactor `useMesHeures.upsertSaisie`
+- Remplacer le code SQL inline par un appel à `upsertHeuresSaisie(supabase, …)`. Comportement identique.
 
-### Bloc 2 — Mes heures
-- Carte "Cette semaine" : compteur circulaire X h / 39h (déjà existant, conservé)
-- **Bouton primaire "Saisir mes heures"** → `/mes-heures`
-- **Lien secondaire "Voir l'historique"** → `/mes-heures?vue=historique` (saisies passées + statuts validation : brouillon / soumis / validé / refusé)
+### 3. Refactor `SaisirPourEmployeDialog`
+- Remplacer le bloc `supabase.from("heures_saisies")…` par `upsertHeuresSaisie(supabase, {…, statut:"valide"})`.
 
-### Bloc 3 — Atelier (conditionnel)
-- **Affiché UNIQUEMENT si le métier de l'employé ≠ poseur** (donc pour peinture, métallerie, menuiserie/construction, tapisserie, numérique, machiniste = atelier Setup Paris)
-- Liste mes objets de fabrication en cours (filtrée sur mon métier via `fabrication_objet_equipe`), avec affaire + statut + lien fiche objet
-- Vide si rien : empty state "Aucun objet en fabrication pour vous"
+### 4. Refactor `BulkSaisieDialog`
+- Boucle d'appels à `upsertHeuresSaisie` (ou variante batch). Ajout des champs manquants : `commentaire` (optionnel global de la modale), `etape_chantier` (si toutes les affaires 4XXX), `fabrication_*` (si 5XXX) — sinon `null`.
+- Conserve la perf : si une seule affaire, l'UI peut proposer ces champs ; sinon laisser `null` mais utiliser le même helper.
 
-## Mécanisme de routage
+### 5. Refactor `/missions/$affaireId/$phase` (inline)
+- Extraire le formulaire actuel dans un petit composant `<MissionHeuresForm>` réutilisable, qui appelle `upsertHeuresSaisie`.
+- Ajouter le bloc `heures_nuit` collapsible (cohérence) et, si l'affaire est 4XXX/5XXX, le sélecteur d'étape/objet correspondant (déjà identifié par le contexte de la route — phase est connu pour 4XXX).
 
-Sur `/aujourdhui`, basculer entre 2 vues selon la cap :
-- `dashboard.team.view` (admin/chef) → vue actuelle (Inbox + widgets)
-- sinon (employés) → nouvelle vue `EmployeAujourdhuiView`
+### 6. Garde-fou
+- Ajouter une règle ESLint custom **ou** un test `vitest` qui grep le code et **interdit** tout nouvel appel direct `supabase.from("heures_saisies").insert|update` hors de `src/lib/heures-upsert.ts` et `src/hooks/use-mes-heures.ts`.
 
-## Fichiers à créer/modifier
+### 7. Vérifications
+- `bunx tsc --noEmit`
+- Tests existants : `mes-heures-*.test.ts`, `hors-planning-helpers.test.ts`
+- Smoke manuel : créer/éditer une saisie sur les 4 surfaces avec une affaire 4XXX puis 5XXX.
 
-### Création
-- `src/components/aujourdhui/EmployeAujourdhuiView.tsx` — orchestrateur 3 blocs
-- `src/components/aujourdhui/MonPlanningSemaineCard.tsx` — bloc 1
-- `src/components/aujourdhui/MonEquipeChantierSheet.tsx` — Sheet équipe au clic
-- `src/components/aujourdhui/MesHeuresCard.tsx` — bloc 2 (refonte du widget existant)
-- `src/components/aujourdhui/MesObjetsAtelierCard.tsx` — bloc 3
-- `src/server/aujourdhui-employe.functions.ts` — 3 server fns :
-  - `getMonPlanningSemaine()` → assignations × créneaux semaine en cours
-  - `getMonEquipeChantier({ affaireId, date })` → coéquipiers présents
-  - `getMesObjetsAtelier()` → mes objets fabrication (vide si poseur)
+## Détails techniques
 
-### Modification
-- `src/routes/_app.aujourdhui.tsx` — branchement conditionnel cap `dashboard.team.view` vs `EmployeAujourdhuiView`
-
-## Backend
-
-Aucune migration DB. Tout est dérivé des tables existantes :
-- `assignations` + `affaires` pour le planning semaine
-- `assignations` (mêmes affaire+date) pour Mon équipe
-- `heures_saisies` pour les heures
-- `fabrication_objet_equipe` + `fabrication_objets` pour l'atelier
-- Détection poseur : `employes.metier_principal = 'poseur'` ou cap `mes_missions.view` sans `section.planning_fab`
-
-## Responsive
-
-- **Mobile (<768px)** : 3 blocs empilés, Bloc 1 d'abord (planning = action #1 du matin)
-- **Desktop (≥768px)** : grille 2 colonnes — col gauche : Planning semaine (large), col droite empilée : Mes heures + Atelier
+- **Statut par défaut** reste différencié selon l'appelant (`brouillon` pour employé self, `soumis` pour `/missions`, `valide` pour chef) — paramètre `statut` de `HeuresUpsertInput`.
+- Le helper attache automatiquement `valide_par = user.id` et `valide_le = now()` quand `statut === "valide"`.
+- Pas de migration SQL.
+- Pas de changement RLS.
 
 ## Hors scope
 
-- Pas de refonte admin/chef
-- Pas de modification des routes `/mes-heures`, `/mes-missions` (juste des liens vers elles)
-- Pas de bottom nav mobile (déjà OK)
-- Historique heures = lien vers `/mes-heures?vue=historique` (l'onglet est déjà censé exister ou sera affiché en query param — à confirmer en explorant le fichier)
+- Refonte UI cross-surface (look identique partout) — on garde l'UI propre à chaque surface, on unifie uniquement la **logique** d'écriture.
+- `staffer-mobile` non confirmé comme surface de saisie ; je vérifierai en passant.
+
+## Livrables
+
+- `src/lib/heures-upsert.ts` (+ tests)
+- 4 composants refactorés
+- 1 garde-fou (test ou règle ESLint)
+- Mémoire `mem://constraints/heures-saisie-source-unique.md`
+- Entrée roadmap dans `mem://index.md`
