@@ -706,3 +706,199 @@ function CreateCandidatDialog({
     </Dialog>
   );
 }
+
+interface OppRow {
+  id: string;
+  numero: string;
+  nom: string;
+  client: string | null;
+  date_opportunite: string | null;
+  statut_opportunite: string | null;
+}
+
+function AttachOpportuniteDialog({
+  email,
+  onClose,
+  onDone,
+}: {
+  email: EmailRow;
+  onClose: () => void;
+  onDone: () => void;
+}) {
+  const { user } = useAuth();
+  const { data: charges } = useChargesAffaires();
+  const [opps, setOpps] = useState<OppRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [q, setQ] = useState("");
+  const [attaching, setAttaching] = useState<string | null>(null);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [createdSince, setCreatedSince] = useState<string | null>(null);
+
+  async function loadOpps() {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("affaires")
+      .select("id, numero, nom, client, date_opportunite, statut_opportunite")
+      .like("numero", "9%")
+      .order("created_at", { ascending: false })
+      .limit(200);
+    if (error) {
+      toast.error("Erreur chargement opportunités", { description: error.message });
+    } else {
+      setOpps((data ?? []) as OppRow[]);
+    }
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    loadOpps();
+  }, []);
+
+  const filtered = useMemo(() => {
+    const s = q.trim().toLowerCase();
+    if (!s) return opps;
+    return opps.filter(
+      (o) =>
+        o.numero.toLowerCase().includes(s) ||
+        (o.nom ?? "").toLowerCase().includes(s) ||
+        (o.client ?? "").toLowerCase().includes(s),
+    );
+  }, [opps, q]);
+
+  async function attach(oppId: string) {
+    setAttaching(oppId);
+    const userId = (await supabase.auth.getUser()).data.user?.id;
+    const { error } = await supabase
+      .from("emails_entrants")
+      .update({
+        statut: "validated",
+        opportunite_id: oppId,
+        categorie_ia: "opportunite",
+        validated_at: new Date().toISOString(),
+        validated_by: userId ?? null,
+      })
+      .eq("id", email.id);
+    setAttaching(null);
+    if (error) {
+      toast.error("Erreur", { description: error.message });
+      return;
+    }
+    toast.success("Email rattaché à l'opportunité");
+    onDone();
+  }
+
+  return (
+    <>
+      <Dialog open onOpenChange={(o) => !o && onClose()}>
+        <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col p-0 gap-0">
+          <DialogHeader className="px-4 pt-4 pb-3 border-b">
+            <DialogTitle>Rattacher à une opportunité 9XXX</DialogTitle>
+            <DialogDescription>
+              Email de <strong>{email.from_name ?? email.from_email}</strong> —{" "}
+              <em>{email.subject ?? "(sans sujet)"}</em>
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="px-4 py-3 border-b flex flex-wrap gap-2 items-center">
+            <Input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Rechercher (n° 9XXX, client, nom…)"
+              className="flex-1 min-w-[200px]"
+            />
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                setCreatedSince(new Date().toISOString());
+                setCreateOpen(true);
+              }}
+            >
+              <Building2 className="h-4 w-4 mr-1" /> Créer une nouvelle 9XXX
+            </Button>
+          </div>
+
+          <ScrollArea className="flex-1 min-h-0">
+            <div className="p-3 space-y-1.5">
+              {loading ? (
+                <div className="flex justify-center py-8">
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                </div>
+              ) : filtered.length === 0 ? (
+                <div className="text-center text-sm text-muted-foreground py-8">
+                  Aucune opportunité trouvée. Créez-en une nouvelle.
+                </div>
+              ) : (
+                filtered.map((o) => (
+                  <Card
+                    key={o.id}
+                    className="p-2.5 hover:bg-accent/40 cursor-pointer flex items-center gap-2"
+                    onClick={() => attach(o.id)}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-mono text-sm font-semibold">{o.numero}</span>
+                        {o.statut_opportunite && (
+                          <Badge variant="outline" className="text-[10px] h-4 px-1">
+                            {o.statut_opportunite}
+                          </Badge>
+                        )}
+                        {o.date_opportunite && (
+                          <span className="text-[11px] text-muted-foreground">
+                            {format(parseISO(o.date_opportunite), "d MMM yyyy", { locale: fr })}
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-sm truncate">
+                        {o.client ? <strong>{o.client}</strong> : null}
+                        {o.client && o.nom ? " — " : ""}
+                        {o.nom}
+                      </div>
+                    </div>
+                    {attaching === o.id ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Button size="sm" variant="ghost">
+                        Rattacher
+                      </Button>
+                    )}
+                  </Card>
+                ))
+              )}
+            </div>
+          </ScrollArea>
+
+          <DialogFooter className="px-4 py-3 border-t">
+            <Button variant="outline" onClick={onClose}>
+              Annuler
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <NouvelleOpportuniteDialog
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        defaultChargeId={user?.id ?? null}
+        charges={charges ?? []}
+        onCreated={async () => {
+          await loadOpps();
+          // Auto-rattachement de la dernière opp créée depuis l'ouverture du formulaire.
+          if (createdSince) {
+            const { data } = await supabase
+              .from("affaires")
+              .select("id")
+              .like("numero", "9%")
+              .gte("created_at", createdSince)
+              .order("created_at", { ascending: false })
+              .limit(1);
+            const newId = data?.[0]?.id;
+            if (newId) {
+              await attach(newId);
+            }
+          }
+        }}
+      />
+    </>
+  );
+}
