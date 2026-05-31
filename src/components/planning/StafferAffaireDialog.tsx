@@ -158,6 +158,7 @@ export function StafferAffaireDialog({
   const [slot, setSlot] = useState<Slot>("JOURNEE");
   const [heures, setHeures] = useState<number>(8);
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [breakdownOpen, setBreakdownOpen] = useState(false);
   const [historique, setHistorique] = useState<Map<string, HistoRow>>(new Map());
   const [loadingHisto, setLoadingHisto] = useState(false);
 
