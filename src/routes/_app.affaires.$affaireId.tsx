@@ -23,6 +23,7 @@ interface AffaireDetail {
   numero: string;
   nom: string;
   client: string | null;
+  client_id: string | null;
   lieu: string | null;
   statut: "prospect" | "en_cours" | "termine" | "annule";
   phase: "opportunite" | "signe";
