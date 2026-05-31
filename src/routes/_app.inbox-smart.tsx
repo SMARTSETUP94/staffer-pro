@@ -20,6 +20,7 @@ import {
   HelpCircle,
   CheckCircle2,
   Paperclip,
+  Unlink,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
