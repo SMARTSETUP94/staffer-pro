@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { AlertTriangle, CalendarIcon } from "lucide-react";
+import { AlertTriangle, CalendarIcon, ChevronDown, Moon, UserCog } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Loader2, Trash2 } from "lucide-react";
@@ -28,6 +28,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { AffaireCombobox } from "./AffaireCombobox";
 import { TYPE_OPERATION_OPTIONS } from "@/lib/feuille-route-helpers";
 import {
@@ -41,6 +46,9 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
+import { computeHeuresFromTimes } from "@/lib/heures-calculator";
+import { useAuth } from "@/lib/auth-context";
+import { ETAPE_CHANTIER_OPTIONS, type EtapeChantierRow } from "@/hooks/use-mes-heures";
 import {
   repartirHeuresProRata,
   metierIdToHeuresKey,
