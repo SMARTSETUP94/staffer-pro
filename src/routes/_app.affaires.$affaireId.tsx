@@ -169,19 +169,32 @@ function AffaireDetailLayout() {
                   <User className="h-3 w-3" />{affaire.client}
                 </Link>
               ) : (
-                <TooltipProvider delayDuration={200}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <span className="inline-flex items-center gap-1 cursor-help text-muted-foreground/70">
-                        <Link2Off className="h-3 w-3" />{affaire.client}
-                      </span>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom" className="max-w-xs text-xs">
-                      <p>Aucune fiche client n'est liée à cette affaire.</p>
-                      <p className="mt-1 text-muted-foreground">Vous pouvez lier un client existant depuis la liste des affaires ou créer une fiche.</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                <div className="inline-flex items-center gap-2">
+                  <TooltipProvider delayDuration={200}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="inline-flex items-center gap-1 cursor-help text-muted-foreground/70">
+                          <Link2Off className="h-3 w-3" />{affaire.client}
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom" className="max-w-xs text-xs">
+                        <p>Aucune fiche client n'est liée à cette affaire.</p>
+                        <p className="mt-1 text-muted-foreground">Vous pouvez lier un client existant depuis la liste des affaires ou créer une fiche.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  {canCreateClient && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-6 px-2 text-xs text-primary hover:text-primary"
+                      onClick={() => setCreateClientOpen(true)}
+                    >
+                      <Plus className="h-3 w-3 mr-0.5" />
+                      Créer fiche
+                    </Button>
+                  )}
+                </div>
               )
             )}
             {affaire.lieu && (
