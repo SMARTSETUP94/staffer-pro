@@ -448,6 +448,7 @@ function EmailDetailDialog({
   onDismiss,
   onCreateCandidat,
   onAttachOpportunite,
+  onDetachOpportunite,
 }: {
   email: EmailRow;
   onClose: () => void;
@@ -456,6 +457,7 @@ function EmailDetailDialog({
   onDismiss: () => void;
   onCreateCandidat: () => void;
   onAttachOpportunite: () => void;
+  onDetachOpportunite: () => void;
 }) {
   const fetchBody = useServerFn(getOutlookFullBody);
   const [body, setBody] = useState<{
