@@ -165,9 +165,23 @@ function AffaireDetailLayout() {
           <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
             {affaire.client && (
               affaire.client_id ? (
-                <Link to="/clients/$clientId" params={{ clientId: affaire.client_id }} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-primary hover:underline">
-                  <User className="h-3 w-3" />{affaire.client}
-                </Link>
+                <div className="inline-flex items-center gap-1">
+                  <Link to="/clients/$clientId" params={{ clientId: affaire.client_id }} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-primary hover:underline">
+                    <User className="h-3 w-3" />{affaire.client}
+                  </Link>
+                  {canCreateClient && (
+                    <Link to="/clients/$clientId" params={{ clientId: affaire.client_id }} target="_blank" rel="noopener noreferrer">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-6 w-6 p-0 text-muted-foreground hover:text-primary"
+                        title="Modifier client"
+                      >
+                        <Pencil className="h-3 w-3" />
+                      </Button>
+                    </Link>
+                  )}
+                </div>
               ) : (
                 <div className="inline-flex items-center gap-2">
                   <TooltipProvider delayDuration={200}>
