@@ -69,6 +69,8 @@ interface EmailRow {
   subject: string | null;
   received_at: string;
   body_preview: string | null;
+  body_full: string | null;
+  body_content_type: string | null;
   has_attachments?: boolean | null;
   categorie_ia: CategorieIA | null;
   confiance_ia: number | null;
