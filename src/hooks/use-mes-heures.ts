@@ -7,6 +7,7 @@ import {
   buildHorsPlanningInsert,
   type HorsPlanningInput,
 } from "@/lib/hors-planning-helpers";
+import { insertHeuresSaisie, patchHeuresSaisie } from "@/lib/heures-upsert";
 
 export type DemiJournee = "AM" | "PM" | "JOURNEE";
 export type HeureStatut = "brouillon" | "soumis" | "valide" | "rejete";
