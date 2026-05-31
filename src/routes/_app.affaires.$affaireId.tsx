@@ -54,6 +54,8 @@ function AffaireDetailLayout() {
   const [savingStatut, setSavingStatut] = useState(false);
   const canSeeEquipe = useCapability("affaire.equipe.view");
   const castingFlagOn = useFeatureFlag("equipes_3_niveaux_lecture");
+  const canCreateClient = useCapability("clients.view");
+  const [createClientOpen, setCreateClientOpen] = useState(false);
 
 
   const fetchAffaire = async (id: string, signal?: { cancelled: boolean }) => {
