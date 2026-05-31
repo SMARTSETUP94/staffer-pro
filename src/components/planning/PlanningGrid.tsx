@@ -20,6 +20,10 @@ import {
 import { toast } from "sonner";
 import { formatBusinessError } from "@/lib/business-errors";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  insertAssignationsBatch,
+  updateAssignationsByIds,
+} from "@/lib/assignation-upsert";
 import type {
   Absence,
   Affaire,
@@ -397,15 +401,15 @@ export function PlanningGrid({
           heures: a.heures,
           notes: a.notes,
         }));
-        const { error } = await supabase.from("assignations").insert(inserts);
+        const { error } = await insertAssignationsBatch(inserts);
         if (error) throw error;
         toast.success(`Assignation dupliquée (${inserts.length})`);
       } else {
-        // Déplacement : UPDATE date + employe_id
-        const { error } = await supabase
-          .from("assignations")
-          .update({ employe_id: toEmployeId, date: toDate })
-          .in("id", payload.assignationIds);
+        // Déplacement : UPDATE date + employe_id (audit created_by inchangé)
+        const { error } = await updateAssignationsByIds(payload.assignationIds, {
+          employe_id: toEmployeId,
+          date: toDate,
+        });
         if (error) throw error;
         toast.success("Assignation déplacée");
       }

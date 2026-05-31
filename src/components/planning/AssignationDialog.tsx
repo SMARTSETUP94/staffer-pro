@@ -46,6 +46,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
+import { insertAssignation, updateAssignation } from "@/lib/assignation-upsert";
 import { computeHeuresFromTimes } from "@/lib/heures-calculator";
 import { useAuth } from "@/lib/auth-context";
 import { ETAPE_CHANTIER_OPTIONS, type EtapeChantierRow } from "@/hooks/use-mes-heures";
@@ -506,28 +507,19 @@ export function AssignationDialog({
       heure_debut: showHoraires && heureDebut ? heureDebut : null,
       heure_fin: showHoraires && heureFin ? heureFin : null,
     };
-    // created_by uniquement à la création (audit : qui a staffé)
-    if (!editingId && user?.id) {
-      payload.created_by = user.id;
-    }
+    // created_by est posé automatiquement par le helper insertAssignation
+    // (audit : qui a staffé). Update conserve le created_by d'origine.
 
     let assignationId: string | null = editingId;
     if (editingId) {
-      const { error } = await supabase
-        .from("assignations")
-        .update(payload as never)
-        .eq("id", editingId);
+      const { error } = await updateAssignation(editingId, payload as never);
       if (error) {
         setSaving(false);
         toast.error(...formatBusinessError(error));
         return;
       }
     } else {
-      const { data, error } = await supabase
-        .from("assignations")
-        .insert(payload as never)
-        .select("id")
-        .single();
+      const { data, error } = await insertAssignation(payload as never);
       if (error || !data) {
         setSaving(false);
         toast.error(`Erreur : ${error?.message ?? "insert"}`);

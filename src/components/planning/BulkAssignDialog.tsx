@@ -23,7 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { AffaireCombobox } from "./AffaireCombobox";
-import { supabase } from "@/integrations/supabase/client";
+import { insertAssignationsBatch } from "@/lib/assignation-upsert";
 import type { Affaire, Employe, Metier } from "@/hooks/use-planning-data";
 
 type Slot = "AM" | "PM" | "JOURNEE";
@@ -114,7 +114,7 @@ export function BulkAssignDialog({
       heures,
       notes: null,
     }));
-    const { error } = await supabase.from("assignations").insert(payloads);
+    const { error } = await insertAssignationsBatch(payloads);
     setSaving(false);
     if (error) {
       toast.error(...formatBusinessError(error));

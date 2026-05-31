@@ -29,6 +29,7 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { supabase } from "@/integrations/supabase/client";
+import { insertAssignation, updateAssignation } from "@/lib/assignation-upsert";
 import type {
   Affaire,
   Assignation,
@@ -276,27 +277,22 @@ export function CellEditDialog({
         (r) => !r.toDelete && r.heures !== r.initialHeures,
       );
       for (const r of toUpdate) {
-        const { error } = await supabase
-          .from("assignations")
-          .update({ heures: r.heures })
-          .eq("id", r.assignation_id);
+        const { error } = await updateAssignation(r.assignation_id, {
+          heures: r.heures,
+        });
         if (error) throw error;
       }
 
       // 3) Inserts des nouvelles assignations + lien objet
       for (const n of newRows) {
-        const { data, error } = await supabase
-          .from("assignations")
-          .insert({
-            employe_id: n.employe_id,
-            affaire_id: affaire.id,
-            metier_id: n.metier_id,
-            heures: n.heures,
-            date: dateStr,
-            demi_journee: "JOURNEE" as const,
-          })
-          .select("id")
-          .single();
+        const { data, error } = await insertAssignation({
+          employe_id: n.employe_id,
+          affaire_id: affaire.id,
+          metier_id: n.metier_id,
+          heures: n.heures,
+          date: dateStr,
+          demi_journee: "JOURNEE" as const,
+        });
         if (error || !data) throw error ?? new Error("insert assignation");
         const { error: linkErr } = await supabase
           .from("assignation_objets")

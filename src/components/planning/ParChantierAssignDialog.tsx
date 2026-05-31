@@ -37,7 +37,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { supabase } from "@/integrations/supabase/client";
+import { insertAssignationsBatch } from "@/lib/assignation-upsert";
 import { buildParChantierPayloads, autoPickDevisLot } from "@/lib/parchantier-edit";
 import type { Slot } from "@/lib/bulk-staffer";
 import type {
@@ -164,7 +164,7 @@ export function ParChantierAssignDialog({
       return;
     }
     setSaving(true);
-    const { error } = await supabase.from("assignations").insert(payloads);
+    const { error } = await insertAssignationsBatch(payloads);
     setSaving(false);
     if (error) {
       toast.error(...formatBusinessError(error));

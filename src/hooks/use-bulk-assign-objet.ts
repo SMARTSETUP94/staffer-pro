@@ -7,6 +7,7 @@
  */
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { insertAssignationsBatch } from "@/lib/assignation-upsert";
 import type { Slot } from "@/lib/bulk-staffer";
 
 export interface BulkObjetAssignPayload {
@@ -41,10 +42,7 @@ export function useBulkAssignObjet() {
         heures: heuresParJour,
       }));
 
-      const { data: inserted, error: errIns } = await supabase
-        .from("assignations")
-        .insert(rows)
-        .select("id");
+      const { data: inserted, error: errIns } = await insertAssignationsBatch(rows);
       if (errIns) throw new Error(errIns.message);
       const insertedIds = (inserted ?? []).map((r) => r.id);
 
