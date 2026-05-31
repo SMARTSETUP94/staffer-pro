@@ -1,7 +1,7 @@
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { requireCapability } from "@/lib/capability-guard";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Loader2, MapPin, User, Calendar, Lock, Unlock, Link2Off } from "lucide-react";
+import { ArrowLeft, Loader2, MapPin, User, Calendar, Lock, Unlock, Link2Off, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,7 @@ import { AffaireKpiBar } from "@/components/affaire/AffaireKpiBar";
 import { CapabilityGuard } from "@/components/auth/CapabilityGuard";
 import { useCapability } from "@/hooks/use-capability";
 import { useFeatureFlag } from "@/hooks/use-feature-flag";
+import { NouveauClientDialog } from "@/components/clients/NouveauClientDialog";
 
 
 interface AffaireDetail {
@@ -53,6 +54,8 @@ function AffaireDetailLayout() {
   const [savingStatut, setSavingStatut] = useState(false);
   const canSeeEquipe = useCapability("affaire.equipe.view");
   const castingFlagOn = useFeatureFlag("equipes_3_niveaux_lecture");
+  const canCreateClient = useCapability("clients.view");
+  const [createClientOpen, setCreateClientOpen] = useState(false);
 
 
   const fetchAffaire = async (id: string, signal?: { cancelled: boolean }) => {
@@ -166,19 +169,32 @@ function AffaireDetailLayout() {
                   <User className="h-3 w-3" />{affaire.client}
                 </Link>
               ) : (
-                <TooltipProvider delayDuration={200}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <span className="inline-flex items-center gap-1 cursor-help text-muted-foreground/70">
-                        <Link2Off className="h-3 w-3" />{affaire.client}
-                      </span>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom" className="max-w-xs text-xs">
-                      <p>Aucune fiche client n'est liée à cette affaire.</p>
-                      <p className="mt-1 text-muted-foreground">Vous pouvez lier un client existant depuis la liste des affaires ou créer une fiche.</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                <div className="inline-flex items-center gap-2">
+                  <TooltipProvider delayDuration={200}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="inline-flex items-center gap-1 cursor-help text-muted-foreground/70">
+                          <Link2Off className="h-3 w-3" />{affaire.client}
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom" className="max-w-xs text-xs">
+                        <p>Aucune fiche client n'est liée à cette affaire.</p>
+                        <p className="mt-1 text-muted-foreground">Vous pouvez lier un client existant depuis la liste des affaires ou créer une fiche.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  {canCreateClient && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-6 px-2 text-xs text-primary hover:text-primary"
+                      onClick={() => setCreateClientOpen(true)}
+                    >
+                      <Plus className="h-3 w-3 mr-0.5" />
+                      Créer fiche
+                    </Button>
+                  )}
+                </div>
               )
             )}
             {affaire.lieu && (
@@ -239,6 +255,27 @@ function AffaireDetailLayout() {
       <div className="py-6">
         <Outlet />
       </div>
+
+      {createClientOpen && (
+        <NouveauClientDialog
+          onClose={() => setCreateClientOpen(false)}
+          onDone={async (clientId) => {
+            setCreateClientOpen(false);
+            if (clientId && affaire) {
+              const { error } = await supabase
+                .from("affaires")
+                .update({ client_id: clientId })
+                .eq("id", affaire.id);
+              if (error) {
+                toast.error("Erreur lors du rattachement", { description: error.message });
+              } else {
+                toast.success("Fiche client créée et liée à l'affaire");
+                reload();
+              }
+            }
+          }}
+        />
+      )}
 
       <AlertDialog open={!!confirmAction} onOpenChange={(o) => !o && setConfirmAction(null)}>
         <AlertDialogContent>
