@@ -98,8 +98,16 @@ function PlanningPage() {
   // typoFilter actif = ne passent que les typologies cochées.
   const includeOpportunites = typoFilter.length === 0 || typoFilter.includes("prototype");
 
-  const { metiers, employes, affaires, assignations, consommation, absences, chefsById, swapAssignationIds, devisLots, loading, error, refresh } =
+  const { metiers, employes, affaires, assignations, consommation, absences, chefsById, swapAssignationIds, devisLots, loading, error, refresh, refreshConsommation } =
     usePlanningData(weekStart, weekEnd);
+
+  // v0.49 — Callback unifié : re-fetch ciblé `v_devis_consommation` (sidebar
+  // « Heures restantes » mise à jour <100ms) PUIS refresh complet en background.
+  const handleChanged = () => {
+    void refreshConsommation();
+    refresh();
+  };
+
 
   // Filtre recherche employé (prénom + nom, insensible casse/accent)
   const employesFiltres = useMemo(() => {
