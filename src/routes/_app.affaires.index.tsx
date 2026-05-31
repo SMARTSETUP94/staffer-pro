@@ -28,6 +28,7 @@ import { useMesAffairesChefIds } from "@/hooks/use-mes-affaires-chef";
 import { Switch } from "@/components/ui/switch";
 import { type AffaireTypologie, AFFAIRE_TYPOLOGIES, getAffaireTypologie } from "@/lib/affaire-typologie";
 import { toast } from "sonner";
+import { ClientCombobox } from "@/components/clients/ClientCombobox";
 
 type AffaireStatut = "prospect" | "en_cours" | "termine" | "annule";
 
@@ -36,6 +37,7 @@ interface AffaireRow {
   numero: string;
   nom: string;
   client: string | null;
+  client_id: string | null;
   lieu: string | null;
   statut: AffaireStatut;
   date_debut: string | null;
@@ -48,6 +50,7 @@ interface FormState {
   numero: string;
   nom: string;
   client: string;
+  client_id: string | null;
   lieu: string;
   statut: AffaireStatut;
   date_debut: string;
@@ -59,6 +62,7 @@ const emptyForm: FormState = {
   numero: "",
   nom: "",
   client: "",
+  client_id: null,
   lieu: "",
   statut: "en_cours",
   date_debut: "",
@@ -105,7 +109,7 @@ function AffairesPage() {
     setLoading(true);
     const { data, error } = await supabase
       .from("affaires")
-      .select("id, numero, nom, client, lieu, statut, date_debut, date_fin_prevue, typologie")
+      .select("id, numero, nom, client, client_id, lieu, statut, date_debut, date_fin_prevue, typologie")
       .order("date_debut", { ascending: false, nullsFirst: false });
     if (error) {
       toast.error("Chargement impossible", { description: error.message });
@@ -150,6 +154,7 @@ function AffairesPage() {
       numero: r.numero,
       nom: r.nom,
       client: r.client ?? "",
+      client_id: r.client_id ?? null,
       lieu: r.lieu ?? "",
       statut: r.statut,
       date_debut: r.date_debut ?? "",
@@ -169,6 +174,7 @@ function AffairesPage() {
       numero: form.numero.trim(),
       nom: form.nom.trim(),
       client: form.client.trim() || null,
+      client_id: form.client_id,
       lieu: form.lieu.trim() || null,
       statut: form.statut,
       date_debut: form.date_debut || null,
@@ -415,7 +421,11 @@ function AffairesPage() {
             </div>
             <div className="space-y-1.5">
               <Label>Client</Label>
-              <Input value={form.client} onChange={(e) => setForm({ ...form, client: e.target.value })} className="h-10 rounded-xl" />
+              <ClientCombobox
+                value={form.client}
+                clientId={form.client_id}
+                onChange={(id, nom) => setForm({ ...form, client_id: id, client: nom })}
+              />
             </div>
             <div className="space-y-1.5">
               <Label>Lieu</Label>
