@@ -41,6 +41,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { computeHeuresFromTimes } from "@/lib/heures-calculator";
 import { useAuth } from "@/lib/auth-context";
+import { insertHeuresSaisieBatch, type HeuresUpsertInput } from "@/lib/heures-upsert";
 
 interface EmployeOpt {
   id: string;
