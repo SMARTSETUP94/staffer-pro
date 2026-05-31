@@ -246,6 +246,29 @@ function InboxSmartPage() {
     setSelected(null);
   }
 
+  async function detachOpportunite(e: EmailRow) {
+    const { error } = await supabase
+      .from("emails_entrants")
+      .update({
+        opportunite_id: null,
+        statut: "pending_review",
+        validated_at: null,
+        validated_by: null,
+      })
+      .eq("id", e.id);
+    if (error) {
+      toast.error("Erreur", { description: error.message });
+      return;
+    }
+    toast.success("Email détaché de l'opportunité");
+    await load();
+    setSelected((cur) =>
+      cur && cur.id === e.id
+        ? { ...cur, opportunite_id: null, statut: "pending_review" }
+        : cur,
+    );
+  }
+
   return (
     <div className="container mx-auto p-4 max-w-6xl space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-2">
