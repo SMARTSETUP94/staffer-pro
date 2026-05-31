@@ -177,6 +177,25 @@ export function SaisirPourEmployeDialog({
     });
   }, [affaires, dateStr, affaireId]);
 
+  const selectedAffaire = useMemo(
+    () => affaires.find((a) => a.id === affaireId) ?? null,
+    [affaires, affaireId],
+  );
+  const numero = (selectedAffaire?.numero ?? "").trim();
+  const is4XXX = numero.startsWith("4");
+  const is5XXX = numero.startsWith("5");
+  const { objets: fabObjets } = useObjetsAffaireLight(is5XXX ? affaireId : null);
+
+  // Reset des champs contextuels quand l'affaire change
+  useEffect(() => {
+    setEtapeChantier("none");
+    setFabObjetId("none");
+    setFabEtape("none");
+  }, [affaireId]);
+
+  const nuitOverrideNum = nuitOverride === "" ? null : Math.max(0, Number(nuitOverride) || 0);
+  const heuresNuitFinal = showNuit && nuitOverrideNum !== null ? nuitOverrideNum : (computed?.heuresNuit ?? 0);
+
   const canSubmit =
     !!employeId && !!dateStr && !!affaireId && !!computed && computed.heuresReelles > 0 && !submitting;
 
@@ -201,7 +220,10 @@ export function SaisirPourEmployeDialog({
         heure_fin: fin,
         duree_pause_minutes: Number(pause) || 0,
         heures_reelles: computed.heuresReelles,
-        heures_nuit: computed.heuresNuit,
+        heures_nuit: heuresNuitFinal,
+        etape_chantier: is4XXX && etapeChantier !== "none" ? etapeChantier : null,
+        fabrication_objet_id: is5XXX && fabObjetId !== "none" ? fabObjetId : null,
+        fabrication_etape_type: is5XXX && fabEtape !== "none" ? fabEtape : null,
         commentaire: commentaire.trim() || null,
         statut: "valide" as const,
         valide_par: user?.id ?? null,
