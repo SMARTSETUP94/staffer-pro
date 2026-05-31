@@ -5325,6 +5325,22 @@ export type Database = {
         Args: { _saisie_id: string }
         Returns: boolean
       }
+      detect_client_duplicates: {
+        Args: { min_similarity?: number }
+        Returns: {
+          client_a_domaines: string[]
+          client_a_id: string
+          client_a_nb_affaires: number
+          client_a_nb_contacts: number
+          client_a_nom: string
+          client_b_domaines: string[]
+          client_b_id: string
+          client_b_nb_affaires: number
+          client_b_nb_contacts: number
+          client_b_nom: string
+          similarity: number
+        }[]
+      }
       detect_equipe_overrides: { Args: { p_plan_id: string }; Returns: Json }
       dismiss_inbox_item: { Args: { p_item_key: string }; Returns: undefined }
       email_domain: { Args: { p: string }; Returns: string }
@@ -5496,6 +5512,10 @@ export type Database = {
           taille: Database["public"]["Enums"]["opportunite_taille"]
           typologie_future: string
         }[]
+      }
+      merge_clients: {
+        Args: { source_id: string; target_id: string }
+        Returns: Json
       }
       mes_affaires_chef: {
         Args: { _employe_id: string }
