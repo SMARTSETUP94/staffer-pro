@@ -82,6 +82,7 @@ import { Route as AppAdminEmailPreviewRouteImport } from './routes/_app.admin.em
 import { Route as AppAdminContenuWidgetsRouteImport } from './routes/_app.admin.contenu-widgets'
 import { Route as AppAdminAuditRouteImport } from './routes/_app.admin.audit'
 import { Route as AppAffairesAffaireIdIndexRouteImport } from './routes/_app.affaires.$affaireId.index'
+import { Route as ApiPublicHooksPollSmartInboxRouteImport } from './routes/api/public/hooks/poll-smart-inbox'
 import { Route as AppMissionsAffaireIdPhaseRouteImport } from './routes/_app.missions.$affaireId.$phase'
 import { Route as AppAffairesAffaireIdStaffingRouteImport } from './routes/_app.affaires.$affaireId.staffing'
 import { Route as AppAffairesAffaireIdPlanningChantierRouteImport } from './routes/_app.affaires.$affaireId.planning-chantier'
@@ -467,6 +468,12 @@ const AppAffairesAffaireIdIndexRoute =
     path: '/',
     getParentRoute: () => AppAffairesAffaireIdRoute,
   } as any)
+const ApiPublicHooksPollSmartInboxRoute =
+  ApiPublicHooksPollSmartInboxRouteImport.update({
+    id: '/api/public/hooks/poll-smart-inbox',
+    path: '/api/public/hooks/poll-smart-inbox',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AppMissionsAffaireIdPhaseRoute =
   AppMissionsAffaireIdPhaseRouteImport.update({
     id: '/missions/$affaireId/$phase',
@@ -609,6 +616,7 @@ export interface FileRoutesByFullPath {
   '/affaires/$affaireId/planning-chantier': typeof AppAffairesAffaireIdPlanningChantierRoute
   '/affaires/$affaireId/staffing': typeof AppAffairesAffaireIdStaffingRoute
   '/missions/$affaireId/$phase': typeof AppMissionsAffaireIdPhaseRoute
+  '/api/public/hooks/poll-smart-inbox': typeof ApiPublicHooksPollSmartInboxRoute
   '/affaires/$affaireId/': typeof AppAffairesAffaireIdIndexRoute
   '/affaires/$affaireId/objets/$objetId': typeof AppAffairesAffaireIdObjetsObjetIdRoute
 }
@@ -691,6 +699,7 @@ export interface FileRoutesByTo {
   '/affaires/$affaireId/planning-chantier': typeof AppAffairesAffaireIdPlanningChantierRoute
   '/affaires/$affaireId/staffing': typeof AppAffairesAffaireIdStaffingRoute
   '/missions/$affaireId/$phase': typeof AppMissionsAffaireIdPhaseRoute
+  '/api/public/hooks/poll-smart-inbox': typeof ApiPublicHooksPollSmartInboxRoute
   '/affaires/$affaireId': typeof AppAffairesAffaireIdIndexRoute
   '/affaires/$affaireId/objets/$objetId': typeof AppAffairesAffaireIdObjetsObjetIdRoute
 }
@@ -777,6 +786,7 @@ export interface FileRoutesById {
   '/_app/affaires/$affaireId/planning-chantier': typeof AppAffairesAffaireIdPlanningChantierRoute
   '/_app/affaires/$affaireId/staffing': typeof AppAffairesAffaireIdStaffingRoute
   '/_app/missions/$affaireId/$phase': typeof AppMissionsAffaireIdPhaseRoute
+  '/api/public/hooks/poll-smart-inbox': typeof ApiPublicHooksPollSmartInboxRoute
   '/_app/affaires/$affaireId/': typeof AppAffairesAffaireIdIndexRoute
   '/_app/affaires/$affaireId/objets/$objetId': typeof AppAffairesAffaireIdObjetsObjetIdRoute
 }
@@ -863,6 +873,7 @@ export interface FileRouteTypes {
     | '/affaires/$affaireId/planning-chantier'
     | '/affaires/$affaireId/staffing'
     | '/missions/$affaireId/$phase'
+    | '/api/public/hooks/poll-smart-inbox'
     | '/affaires/$affaireId/'
     | '/affaires/$affaireId/objets/$objetId'
   fileRoutesByTo: FileRoutesByTo
@@ -945,6 +956,7 @@ export interface FileRouteTypes {
     | '/affaires/$affaireId/planning-chantier'
     | '/affaires/$affaireId/staffing'
     | '/missions/$affaireId/$phase'
+    | '/api/public/hooks/poll-smart-inbox'
     | '/affaires/$affaireId'
     | '/affaires/$affaireId/objets/$objetId'
   id:
@@ -1030,6 +1042,7 @@ export interface FileRouteTypes {
     | '/_app/affaires/$affaireId/planning-chantier'
     | '/_app/affaires/$affaireId/staffing'
     | '/_app/missions/$affaireId/$phase'
+    | '/api/public/hooks/poll-smart-inbox'
     | '/_app/affaires/$affaireId/'
     | '/_app/affaires/$affaireId/objets/$objetId'
   fileRoutesById: FileRoutesById
@@ -1042,6 +1055,7 @@ export interface RootRouteChildren {
   AuthForgotPasswordRoute: typeof AuthForgotPasswordRoute
   AuthResetPasswordRoute: typeof AuthResetPasswordRoute
   AuthSetPasswordRoute: typeof AuthSetPasswordRoute
+  ApiPublicHooksPollSmartInboxRoute: typeof ApiPublicHooksPollSmartInboxRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1557,6 +1571,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAffairesAffaireIdIndexRouteImport
       parentRoute: typeof AppAffairesAffaireIdRoute
     }
+    '/api/public/hooks/poll-smart-inbox': {
+      id: '/api/public/hooks/poll-smart-inbox'
+      path: '/api/public/hooks/poll-smart-inbox'
+      fullPath: '/api/public/hooks/poll-smart-inbox'
+      preLoaderRoute: typeof ApiPublicHooksPollSmartInboxRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_app/missions/$affaireId/$phase': {
       id: '/_app/missions/$affaireId/$phase'
       path: '/missions/$affaireId/$phase'
@@ -1840,6 +1861,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthForgotPasswordRoute: AuthForgotPasswordRoute,
   AuthResetPasswordRoute: AuthResetPasswordRoute,
   AuthSetPasswordRoute: AuthSetPasswordRoute,
+  ApiPublicHooksPollSmartInboxRoute: ApiPublicHooksPollSmartInboxRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
