@@ -29,7 +29,7 @@ export const getOutlookFullBody = createServerFn({ method: "POST" })
       .from("role_capabilities")
       .select("role,capability,granted")
       .eq("capability", "inbox_smart.view")
-      .in("role", userRoles);
+      .in("role", userRoles as never[]);
     const allowed = (caps ?? []).some((c) => c.granted);
     if (!allowed) throw new Response("Forbidden: inbox_smart.view required", { status: 403 });
 
