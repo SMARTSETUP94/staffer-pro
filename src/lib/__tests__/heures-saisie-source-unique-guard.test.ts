@@ -24,7 +24,7 @@ describe("heures_saisies — source unique", () => {
     let output = "";
     try {
       output = execSync(
-        `rg -l "from\\(\\\"heures_saisies\\\"\\).*\\.(insert|update)" src --type ts --type tsx -g '!**/__tests__/**' -g '!**/*.test.ts' || true`,
+        `rg -l "from\\([\\\"']heures_saisies[\\\"']\\)" src -g '*.ts' -g '*.tsx' -g '!**/__tests__/**' -g '!**/*.test.ts' -g '!**/*.test.tsx' || true`,
         { encoding: "utf8" },
       );
     } catch {
