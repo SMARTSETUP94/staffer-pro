@@ -17,9 +17,13 @@ const ALLOWED = new Set<string>([
   // Server-fn (auto-staffing publish) : tourne côté serveur avec son propre
   // `created_by = context.userId` injecté manuellement, hors périmètre client.
   "src/server/staffing-publish.functions.ts",
-  // Reset du devis_id en cascade lors d'une suppression de devis (pas une
-  // création/édition de staffing, juste un nettoyage de FK).
+  // Reset/rattachement de `devis_id` en cascade (pas une création/édition de
+  // staffing — juste un nettoyage / rattachement FK a posteriori).
   "src/routes/_app.devis.index.tsx",
+  "src/routes/_app.devis.rattachement-historique.tsx",
+  // Action métier employé : confirmer / refuser une proposition de mission
+  // (statut_confirmation + motif_refus). Pas une saisie de staffing.
+  "src/components/propositions/PropositionsList.tsx",
 ]);
 
 describe("assignations — source unique", () => {
