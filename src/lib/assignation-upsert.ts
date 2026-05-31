@@ -42,6 +42,8 @@ export async function insertAssignation(row: AssignationInsertInput) {
 /**
  * Insère un LOT d'assignations.
  * Chaque ligne reçoit `created_by` = auth user courant.
+ * Renvoie les ids créés (utile pour chaîner des inserts dérivés type
+ * `assignation_objets`).
  */
 export async function insertAssignationsBatch(rows: AssignationInsertInput[]) {
   if (rows.length === 0) {
@@ -49,7 +51,7 @@ export async function insertAssignationsBatch(rows: AssignationInsertInput[]) {
   }
   const userId = await getCurrentUserId();
   const stamped = rows.map((r) => ({ ...r, created_by: userId })) as AssignationInsert[];
-  return supabase.from("assignations").insert(stamped);
+  return supabase.from("assignations").insert(stamped).select("id");
 }
 
 /**
