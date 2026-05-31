@@ -170,7 +170,7 @@ function AffaireDetailLayout() {
                   <Link to="/clients/$clientId" params={{ clientId: affaire.client_id }} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-primary hover:underline">
                     <User className="h-3 w-3" />{affaire.client}
                   </Link>
-                  {canCreateClient && (
+                  {canUpdateClient && (
                     <Link to="/clients/$clientId" params={{ clientId: affaire.client_id }} target="_blank" rel="noopener noreferrer">
                       <Button
                         size="sm"
