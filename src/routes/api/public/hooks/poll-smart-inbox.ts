@@ -114,7 +114,7 @@ async function fetchInbox(lovableKey: string, connectorKey: string): Promise<Out
     `${OUTLOOK_GW}/me/mailFolders/inbox/messages` +
     `?$top=${MAX_FETCH}` +
     `&$orderby=receivedDateTime desc` +
-    `&$select=id,conversationId,subject,bodyPreview,from,receivedDateTime,hasAttachments`;
+    `&$select=id,conversationId,subject,bodyPreview,body,from,receivedDateTime,hasAttachments`;
   const res = await fetch(url, {
     headers: {
       Authorization: `Bearer ${lovableKey}`,
