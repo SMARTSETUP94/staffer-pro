@@ -389,6 +389,25 @@ function InboxSmartPage() {
                         </div>
                       )}
                     </div>
+                    {e.statut === "pending_review" && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="shrink-0 h-8 gap-1.5 border-emerald-300 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800"
+                        onClick={(ev) => {
+                          ev.stopPropagation();
+                          validateClassification(e);
+                        }}
+                        title={
+                          e.categorie_ia
+                            ? `Valider comme ${CATEGORIE_LABEL[e.categorie_ia]}`
+                            : "Valider le classement"
+                        }
+                      >
+                        <CheckCircle2 className="h-4 w-4" />
+                        <span className="hidden sm:inline">Valider</span>
+                      </Button>
+                    )}
                   </div>
                 </Card>
               ))}
