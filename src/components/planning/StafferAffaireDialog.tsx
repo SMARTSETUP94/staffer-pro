@@ -160,6 +160,10 @@ export function StafferAffaireDialog({
   const [heures, setHeures] = useState<number>(8);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [breakdownOpen, setBreakdownOpen] = useState(false);
+  const [breakdownSearch, setBreakdownSearch] = useState("");
+  const [breakdownMetierFilter, setBreakdownMetierFilter] = useState<string>("all");
+  const [breakdownContratFilter, setBreakdownContratFilter] = useState<string>("all");
+  const [breakdownDispoFilter, setBreakdownDispoFilter] = useState<"all" | "dispo" | "bloque">("all");
   const [historique, setHistorique] = useState<Map<string, HistoRow>>(new Map());
   const [loadingHisto, setLoadingHisto] = useState(false);
 
