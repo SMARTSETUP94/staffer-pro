@@ -691,6 +691,15 @@ function InboxSmartPage() {
           }}
         />
       )}
+
+      {moveEmail && (
+        <MoveThreadDialog
+          email={moveEmail}
+          groups={oppGroups}
+          onClose={() => setMoveEmail(null)}
+          onMove={(targetKey) => moveToThread(moveEmail, targetKey)}
+        />
+      )}
     </div>
   );
 }
