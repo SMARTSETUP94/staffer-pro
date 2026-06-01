@@ -24,6 +24,7 @@ import {
   Info,
   List,
   Loader2,
+  Search,
   Sparkles,
   UserCheck,
   X,
