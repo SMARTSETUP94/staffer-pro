@@ -24,6 +24,7 @@ import {
   Search,
   ChevronDown,
   ChevronRight,
+  ArrowRightLeft,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -138,6 +139,7 @@ function InboxSmartPage() {
   const [attachOpp, setAttachOpp] = useState<EmailRow | null>(null);
   const [q, setQ] = useState("");
   const [openThreads, setOpenThreads] = useState<Record<string, boolean>>({});
+  const [moveEmail, setMoveEmail] = useState<EmailRow | null>(null);
 
   async function load() {
     setLoading(true);
@@ -207,7 +209,14 @@ function InboxSmartPage() {
     if (tab !== "opportunite") return [] as Array<{ key: string; subject: string; items: EmailRow[]; latest: string }>;
     const map = new Map<string, EmailRow[]>();
     for (const e of filtered) {
-      const key = e.conversation_id?.trim() || `subj:${normalizeSubject(e.subject)}|${e.from_email.toLowerCase()}`;
+      // Override manuel (déplacement utilisateur) : priorité absolue.
+      const norm = normalizeSubject(e.subject);
+      const cid = e.conversation_id?.trim() ?? "";
+      const key = cid.startsWith("manual:")
+        ? cid
+        : norm
+          ? `subj:${norm}`
+          : cid || `id:${e.id}`;
       const arr = map.get(key) ?? [];
       arr.push(e);
       map.set(key, arr);
@@ -371,6 +380,23 @@ function InboxSmartPage() {
     );
   }
 
+  async function moveToThread(e: EmailRow, targetKey: string) {
+    // On stocke l'override de regroupement dans conversation_id (préfixe "manual:").
+    const newCid = `manual:${targetKey}`;
+    const { error } = await supabase
+      .from("emails_entrants")
+      .update({ conversation_id: newCid })
+      .eq("id", e.id);
+    if (error) {
+      toast.error("Erreur déplacement", { description: error.message });
+      return;
+    }
+    toast.success("Message déplacé vers le fil sélectionné");
+    setMoveEmail(null);
+    await load();
+  }
+
+
   return (
     <div className="container mx-auto p-4 max-w-6xl space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-2">
@@ -445,7 +471,7 @@ function InboxSmartPage() {
             )}
           </div>
           {(() => {
-            const renderCard = (e: EmailRow) => (
+            const renderCard = (e: EmailRow, opts?: { showMove?: boolean }) => (
               <Card
                 key={e.id}
                 className="p-3 hover:shadow-md transition cursor-pointer active:scale-[0.99]"
@@ -482,6 +508,11 @@ function InboxSmartPage() {
                           écarté
                         </Badge>
                       )}
+                      {e.conversation_id?.startsWith("manual:") && (
+                        <Badge variant="outline" className="text-[10px] h-4 px-1 border-purple-300 text-purple-700">
+                          fil manuel
+                        </Badge>
+                      )}
                     </div>
                     <div className="font-medium text-sm truncate">
                       {e.subject ?? "(sans sujet)"}
@@ -496,28 +527,46 @@ function InboxSmartPage() {
                       </div>
                     )}
                   </div>
-                  {e.statut === "pending_review" && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="shrink-0 h-8 gap-1.5 border-emerald-300 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800"
-                      onClick={(ev) => {
-                        ev.stopPropagation();
-                        validateClassification(e);
-                      }}
-                      title={
-                        e.categorie_ia
-                          ? `Valider comme ${CATEGORIE_LABEL[e.categorie_ia]}`
-                          : "Valider le classement"
-                      }
-                    >
-                      <CheckCircle2 className="h-4 w-4" />
-                      <span className="hidden sm:inline">Valider</span>
-                    </Button>
-                  )}
+                  <div className="flex flex-col gap-1.5 shrink-0">
+                    {e.statut === "pending_review" && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-8 gap-1.5 border-emerald-300 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800"
+                        onClick={(ev) => {
+                          ev.stopPropagation();
+                          validateClassification(e);
+                        }}
+                        title={
+                          e.categorie_ia
+                            ? `Valider comme ${CATEGORIE_LABEL[e.categorie_ia]}`
+                            : "Valider le classement"
+                        }
+                      >
+                        <CheckCircle2 className="h-4 w-4" />
+                        <span className="hidden sm:inline">Valider</span>
+                      </Button>
+                    )}
+                    {opts?.showMove && oppGroups.length > 1 && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 gap-1.5 text-muted-foreground hover:text-foreground"
+                        onClick={(ev) => {
+                          ev.stopPropagation();
+                          setMoveEmail(e);
+                        }}
+                        title="Déplacer ce message vers un autre fil"
+                      >
+                        <ArrowRightLeft className="h-4 w-4" />
+                        <span className="hidden sm:inline">Déplacer</span>
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </Card>
             );
+
 
             if (loading) {
               return (
@@ -584,7 +633,7 @@ function InboxSmartPage() {
                         </button>
                         {isOpen && (
                           <div className="border-t bg-muted/20 p-2 space-y-2">
-                            {g.items.map((it) => renderCard(it))}
+                            {g.items.map((it) => renderCard(it, { showMove: true }))}
                           </div>
                         )}
                       </Card>
@@ -640,6 +689,15 @@ function InboxSmartPage() {
             setAttachOpp(null);
             await load();
           }}
+        />
+      )}
+
+      {moveEmail && (
+        <MoveThreadDialog
+          email={moveEmail}
+          groups={oppGroups}
+          onClose={() => setMoveEmail(null)}
+          onMove={(targetKey) => moveToThread(moveEmail, targetKey)}
         />
       )}
     </div>
@@ -1242,5 +1300,66 @@ function AttachOpportuniteDialog({
         }}
       />
     </>
+  );
+}
+
+function MoveThreadDialog({
+  email,
+  groups,
+  onClose,
+  onMove,
+}: {
+  email: EmailRow;
+  groups: Array<{ key: string; subject: string; items: EmailRow[]; latest: string }>;
+  onClose: () => void;
+  onMove: (targetKey: string) => void;
+}) {
+  // On exclut le fil courant de l'email (par sujet normalisé ou conversation_id manuel).
+  const currentKey = email.conversation_id?.startsWith("manual:")
+    ? email.conversation_id
+    : `subj:${normalizeSubject(email.subject)}`;
+  const others = groups.filter((g) => g.key !== currentKey);
+  const [target, setTarget] = useState<string>(others[0]?.key ?? "");
+
+  return (
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="text-base">Déplacer vers un autre fil</DialogTitle>
+          <DialogDescription>
+            Message : <span className="font-medium">{email.subject ?? "(sans sujet)"}</span>
+          </DialogDescription>
+        </DialogHeader>
+        {others.length === 0 ? (
+          <p className="text-sm text-muted-foreground py-4">
+            Aucun autre fil disponible dans cet onglet.
+          </p>
+        ) : (
+          <div className="space-y-2 py-2">
+            <Label className="text-xs">Fil de destination</Label>
+            <Select value={target} onValueChange={setTarget}>
+              <SelectTrigger>
+                <SelectValue placeholder="Choisir un fil…" />
+              </SelectTrigger>
+              <SelectContent>
+                {others.map((g) => (
+                  <SelectItem key={g.key} value={g.key}>
+                    {g.subject || "(sans sujet)"} — {g.items.length} msg
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+        <DialogFooter>
+          <Button variant="ghost" onClick={onClose}>
+            Annuler
+          </Button>
+          <Button onClick={() => target && onMove(target)} disabled={!target}>
+            <ArrowRightLeft className="h-4 w-4 mr-1" /> Déplacer
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
