@@ -633,7 +633,7 @@ function InboxSmartPage() {
                         </button>
                         {isOpen && (
                           <div className="border-t bg-muted/20 p-2 space-y-2">
-                            {g.items.map((it) => renderCard(it))}
+                            {g.items.map((it) => renderCard(it, { showMove: true }))}
                           </div>
                         )}
                       </Card>
