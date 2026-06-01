@@ -271,9 +271,20 @@ function InboxSmartPage() {
   }
 
   async function reclassify(e: EmailRow, newCat: CategorieIA) {
+    // Si la catégorie change ET que l'email était écarté/validé,
+    // on le replace en "à trier" pour qu'il bouge bien d'onglet et soit re-validé.
+    const categoryChanged = e.categorie_ia !== newCat;
+    const wasFinalized = e.statut === "dismissed" || e.statut === "validated";
+    const patch: Record<string, unknown> = { categorie_ia: newCat };
+    if (categoryChanged && wasFinalized) {
+      patch.statut = "pending_review";
+      patch.dismiss_reason = null;
+      patch.validated_at = null;
+      patch.validated_by = null;
+    }
     const { error } = await supabase
       .from("emails_entrants")
-      .update({ categorie_ia: newCat })
+      .update(patch)
       .eq("id", e.id);
     if (error) {
       toast.error("Erreur", { description: error.message });
@@ -281,8 +292,19 @@ function InboxSmartPage() {
     }
     toast.success(`Reclassé : ${CATEGORIE_LABEL[newCat]}`);
     await load();
-    setSelected((cur) => (cur && cur.id === e.id ? { ...cur, categorie_ia: newCat } : cur));
+    setSelected((cur) =>
+      cur && cur.id === e.id
+        ? {
+            ...cur,
+            categorie_ia: newCat,
+            ...(categoryChanged && wasFinalized
+              ? { statut: "pending_review" as StatutEmail, dismiss_reason: null }
+              : {}),
+          }
+        : cur,
+    );
   }
+
 
   async function validateClassification(e: EmailRow) {
     const userId = (await supabase.auth.getUser()).data.user?.id;
