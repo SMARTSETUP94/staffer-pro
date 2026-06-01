@@ -1302,3 +1302,64 @@ function AttachOpportuniteDialog({
     </>
   );
 }
+
+function MoveThreadDialog({
+  email,
+  groups,
+  onClose,
+  onMove,
+}: {
+  email: EmailRow;
+  groups: Array<{ key: string; subject: string; items: EmailRow[]; latest: string }>;
+  onClose: () => void;
+  onMove: (targetKey: string) => void;
+}) {
+  // On exclut le fil courant de l'email (par sujet normalisé ou conversation_id manuel).
+  const currentKey = email.conversation_id?.startsWith("manual:")
+    ? email.conversation_id
+    : `subj:${normalizeSubject(email.subject)}`;
+  const others = groups.filter((g) => g.key !== currentKey);
+  const [target, setTarget] = useState<string>(others[0]?.key ?? "");
+
+  return (
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="text-base">Déplacer vers un autre fil</DialogTitle>
+          <DialogDescription>
+            Message : <span className="font-medium">{email.subject ?? "(sans sujet)"}</span>
+          </DialogDescription>
+        </DialogHeader>
+        {others.length === 0 ? (
+          <p className="text-sm text-muted-foreground py-4">
+            Aucun autre fil disponible dans cet onglet.
+          </p>
+        ) : (
+          <div className="space-y-2 py-2">
+            <Label className="text-xs">Fil de destination</Label>
+            <Select value={target} onValueChange={setTarget}>
+              <SelectTrigger>
+                <SelectValue placeholder="Choisir un fil…" />
+              </SelectTrigger>
+              <SelectContent>
+                {others.map((g) => (
+                  <SelectItem key={g.key} value={g.key}>
+                    {g.subject || "(sans sujet)"} — {g.items.length} msg
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+        <DialogFooter>
+          <Button variant="ghost" onClick={onClose}>
+            Annuler
+          </Button>
+          <Button onClick={() => target && onMove(target)} disabled={!target}>
+            <ArrowRightLeft className="h-4 w-4 mr-1" /> Déplacer
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
