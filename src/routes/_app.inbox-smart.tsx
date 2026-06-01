@@ -136,6 +136,8 @@ function InboxSmartPage() {
   const [selected, setSelected] = useState<EmailRow | null>(null);
   const [createCandidat, setCreateCandidat] = useState<EmailRow | null>(null);
   const [attachOpp, setAttachOpp] = useState<EmailRow | null>(null);
+  const [q, setQ] = useState("");
+  const [openThreads, setOpenThreads] = useState<Record<string, boolean>>({});
 
   async function load() {
     setLoading(true);
