@@ -235,7 +235,14 @@ function InboxSmartPage() {
       opportunite: emails.filter(
         (e) => e.categorie_ia === "opportunite" && e.statut !== "dismissed",
       ).length,
-      pub: emails.filter((e) => e.categorie_ia === "pub" || e.statut === "dismissed").length,
+      pub: emails.filter(
+        (e) =>
+          e.categorie_ia === "pub" ||
+          e.categorie_ia === "autre" ||
+          (e.statut === "dismissed" &&
+            e.categorie_ia !== "opportunite" &&
+            e.categorie_ia !== "candidature"),
+      ).length,
     }),
     [emails],
   );
