@@ -23,7 +23,7 @@ export const getOutlookFullBody = createServerFn({ method: "POST" })
       .select("role")
       .eq("user_id", userId);
     const userRoles = (roles ?? []).map((r) => r.role as string);
-    if (userRoles.length === 0) throw new Response("Forbidden", { status: 403 });
+    if (userRoles.length === 0) throw new Error("Forbidden");
 
     const { data: caps } = await supabase
       .from("role_capabilities")
@@ -31,12 +31,12 @@ export const getOutlookFullBody = createServerFn({ method: "POST" })
       .eq("capability", "inbox_smart.view")
       .in("role", userRoles as never[]);
     const allowed = (caps ?? []).some((c) => c.granted);
-    if (!allowed) throw new Response("Forbidden: inbox_smart.view required", { status: 403 });
+    if (!allowed) throw new Error("Forbidden: inbox_smart.view required");
 
     const lovableKey = process.env.LOVABLE_API_KEY;
     const connectorKey = process.env.MICROSOFT_OUTLOOK_API_KEY;
     if (!lovableKey || !connectorKey) {
-      throw new Response("Missing connector env", { status: 500 });
+      throw new Error("Missing connector env");
     }
 
     const url =
@@ -50,9 +50,7 @@ export const getOutlookFullBody = createServerFn({ method: "POST" })
     });
     if (!res.ok) {
       const txt = await res.text();
-      throw new Response(`Outlook gateway ${res.status}: ${txt.slice(0, 200)}`, {
-        status: 502,
-      });
+      throw new Error(`Outlook gateway ${res.status}: ${txt.slice(0, 200)}`);
     }
     const msg = (await res.json()) as {
       id: string;
