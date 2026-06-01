@@ -330,6 +330,18 @@ export function StafferAffaireDialog({
     chargeByEmploye,
   ]);
 
+  const filteredScored = useMemo(() => {
+    const q = breakdownSearch.trim().toLowerCase();
+    return scored.filter((s) => {
+      if (q && !`${s.employe.prenom} ${s.employe.nom}`.toLowerCase().includes(q)) return false;
+      if (breakdownMetierFilter !== "all" && s.employe.metier_principal_id !== Number(breakdownMetierFilter)) return false;
+      if (breakdownContratFilter !== "all" && s.employe.type_contrat !== breakdownContratFilter) return false;
+      if (breakdownDispoFilter === "dispo" && s.blocked) return false;
+      if (breakdownDispoFilter === "bloque" && !s.blocked) return false;
+      return true;
+    });
+  }, [scored, breakdownSearch, breakdownMetierFilter, breakdownContratFilter, breakdownDispoFilter]);
+
   const eligibleTop = scored.filter((s) => !s.blocked).slice(0, 10);
   const blocked = scored.filter((s) => s.blocked);
 
