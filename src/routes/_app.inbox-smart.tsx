@@ -474,8 +474,9 @@ function EmailDetailDialog({
   useEffect(() => {
     // Si on a déjà le corps en BDD (poll récent), on l'utilise direct.
     if (email.body_full) {
+      const ct = (email.body_content_type ?? "").toString().toLowerCase() === "html" ? "HTML" : "Text";
       setBody({
-        contentType: (email.body_content_type === "HTML" ? "HTML" : "Text") as "HTML" | "Text",
+        contentType: ct as "HTML" | "Text",
         content: email.body_full,
       });
       setLoadingBody(false);
