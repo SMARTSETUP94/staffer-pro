@@ -24,6 +24,7 @@ import {
   Info,
   List,
   Loader2,
+  Search,
   Sparkles,
   UserCheck,
   X,
@@ -159,6 +160,10 @@ export function StafferAffaireDialog({
   const [heures, setHeures] = useState<number>(8);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [breakdownOpen, setBreakdownOpen] = useState(false);
+  const [breakdownSearch, setBreakdownSearch] = useState("");
+  const [breakdownMetierFilter, setBreakdownMetierFilter] = useState<string>("all");
+  const [breakdownContratFilter, setBreakdownContratFilter] = useState<string>("all");
+  const [breakdownDispoFilter, setBreakdownDispoFilter] = useState<"all" | "dispo" | "bloque">("all");
   const [historique, setHistorique] = useState<Map<string, HistoRow>>(new Map());
   const [loadingHisto, setLoadingHisto] = useState(false);
 
@@ -324,6 +329,34 @@ export function StafferAffaireDialog({
     historique,
     chargeByEmploye,
   ]);
+
+  const filteredScored = useMemo(() => {
+    const q = breakdownSearch.trim().toLowerCase();
+    return scored
+      .map((s, idx) => ({ scored: s, rank: idx + 1 }))
+      .filter(({ scored: s }) => {
+        if (q && !`${s.employe.prenom} ${s.employe.nom}`.toLowerCase().includes(q)) return false;
+        if (breakdownMetierFilter !== "all" && s.employe.metier_principal_id !== Number(breakdownMetierFilter)) return false;
+        if (breakdownContratFilter !== "all" && s.employe.type_contrat !== breakdownContratFilter) return false;
+        if (breakdownDispoFilter === "dispo" && s.blocked) return false;
+        if (breakdownDispoFilter === "bloque" && !s.blocked) return false;
+        return true;
+      });
+  }, [scored, breakdownSearch, breakdownMetierFilter, breakdownContratFilter, breakdownDispoFilter]);
+
+  // Options dérivées pour les filtres du breakdown
+  const breakdownMetierOptions = useMemo(() => {
+    const ids = new Set(scored.map((s) => s.employe.metier_principal_id).filter(Boolean));
+    return Array.from(ids)
+      .map((id) => metiers.find((m) => m.id === id))
+      .filter(Boolean)
+      .sort((a, b) => (a?.libelle ?? "").localeCompare(b?.libelle ?? ""));
+  }, [scored, metiers]);
+
+  const breakdownContratOptions = useMemo(() => {
+    const vals = new Set(scored.map((s) => s.employe.type_contrat));
+    return Array.from(vals).sort();
+  }, [scored]);
 
   const eligibleTop = scored.filter((s) => !s.blocked).slice(0, 10);
   const blocked = scored.filter((s) => s.blocked);
@@ -546,7 +579,88 @@ export function StafferAffaireDialog({
             </DialogDescription>
           </DialogHeader>
 
-          <ScrollArea className="max-h-[60vh] px-6">
+          {/* Barre de filtres */}
+          <div className="flex flex-wrap items-center gap-2 border-b px-6 py-3">
+            <div className="relative flex-1 basis-[220px]">
+              <Search className="absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Rechercher un employé…"
+                value={breakdownSearch}
+                onChange={(e) => setBreakdownSearch(e.target.value)}
+                className="h-8 pl-8 text-xs"
+              />
+            </div>
+            <Select value={breakdownMetierFilter} onValueChange={setBreakdownMetierFilter}>
+              <SelectTrigger className="h-8 w-[160px] text-xs">
+                <SelectValue placeholder="Métier" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous les métiers</SelectItem>
+                {breakdownMetierOptions.map((m) => (
+                  <SelectItem key={m!.id} value={String(m!.id)}>
+                    <span className="flex items-center gap-1.5">
+                      <span className="h-2 w-2 rounded-full" style={{ backgroundColor: m!.couleur ?? "#94a3b8" }} />
+                      {m!.libelle}
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={breakdownContratFilter} onValueChange={setBreakdownContratFilter}>
+              <SelectTrigger className="h-8 w-[140px] text-xs">
+                <SelectValue placeholder="Contrat" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous contrats</SelectItem>
+                {breakdownContratOptions.map((c) => (
+                  <SelectItem key={c} value={c}>
+                    {c}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <div className="flex items-center gap-1 rounded-md border p-0.5">
+              {(["all", "dispo", "bloque"] as const).map((v) => (
+                <button
+                  key={v}
+                  onClick={() => setBreakdownDispoFilter(v)}
+                  className={cn(
+                    "rounded px-2 py-1 text-[10px] font-medium transition-colors",
+                    breakdownDispoFilter === v
+                      ? v === "bloque"
+                        ? "bg-destructive/10 text-destructive"
+                        : v === "dispo"
+                          ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
+                          : "bg-muted text-foreground"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {v === "all" ? "Tous" : v === "dispo" ? "Dispo" : "Bloqué"}
+                </button>
+              ))}
+            </div>
+            {(breakdownSearch || breakdownMetierFilter !== "all" || breakdownContratFilter !== "all" || breakdownDispoFilter !== "all") && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 px-2 text-[10px] text-muted-foreground"
+                onClick={() => {
+                  setBreakdownSearch("");
+                  setBreakdownMetierFilter("all");
+                  setBreakdownContratFilter("all");
+                  setBreakdownDispoFilter("all");
+                }}
+              >
+                <X className="mr-1 h-3 w-3" />
+                Réinitialiser
+              </Button>
+            )}
+          </div>
+
+          <ScrollArea className="max-h-[55vh] px-6">
+            <div className="py-2 text-[10px] text-muted-foreground">
+              {filteredScored.length} affiché(s) sur {scored.length}
+            </div>
             <Table>
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
@@ -562,14 +676,14 @@ export function StafferAffaireDialog({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {scored.map((s, idx) => {
+                {filteredScored.map(({ scored: s, rank }) => {
                   const empMetier = metiers.find((m) => m.id === s.employe.metier_principal_id);
                   return (
                     <TableRow
                       key={s.employe.id}
                       className={cn(s.blocked && "opacity-50")}
                     >
-                      <TableCell className="text-center font-mono text-xs">{idx + 1}</TableCell>
+                      <TableCell className="text-center font-mono text-xs">{rank}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <span
@@ -652,10 +766,10 @@ export function StafferAffaireDialog({
                     </TableRow>
                   );
                 })}
-                {scored.length === 0 && (
+                {filteredScored.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={9} className="py-6 text-center text-sm text-muted-foreground">
-                      Aucun employé à évaluer pour ce métier.
+                      Aucun employé ne correspond aux filtres.
                     </TableCell>
                   </TableRow>
                 )}
