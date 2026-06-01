@@ -172,7 +172,16 @@ function InboxSmartPage() {
             (e) => e.categorie_ia === "opportunite" && e.statut !== "dismissed",
           );
         case "pub":
-          return emails.filter((e) => e.categorie_ia === "pub" || e.statut === "dismissed");
+          // Pubs / écartés : pub + autre + écartés sans catégorie métier.
+          // Les opportunités/candidatures écartées restent dans leur onglet (badge "écarté").
+          return emails.filter(
+            (e) =>
+              e.categorie_ia === "pub" ||
+              e.categorie_ia === "autre" ||
+              (e.statut === "dismissed" &&
+                e.categorie_ia !== "opportunite" &&
+                e.categorie_ia !== "candidature"),
+          );
         case "all":
         default:
           return emails;
