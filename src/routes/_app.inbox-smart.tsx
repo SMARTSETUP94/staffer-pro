@@ -380,6 +380,23 @@ function InboxSmartPage() {
     );
   }
 
+  async function moveToThread(e: EmailRow, targetKey: string) {
+    // On stocke l'override de regroupement dans conversation_id (préfixe "manual:").
+    const newCid = `manual:${targetKey}`;
+    const { error } = await supabase
+      .from("emails_entrants")
+      .update({ conversation_id: newCid })
+      .eq("id", e.id);
+    if (error) {
+      toast.error("Erreur déplacement", { description: error.message });
+      return;
+    }
+    toast.success("Message déplacé vers le fil sélectionné");
+    setMoveEmail(null);
+    await load();
+  }
+
+
   return (
     <div className="container mx-auto p-4 max-w-6xl space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-2">
