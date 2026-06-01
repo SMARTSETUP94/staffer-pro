@@ -379,95 +379,180 @@ function InboxSmartPage() {
           </TabsList>
         </div>
 
-        <TabsContent value={tab} className="mt-4">
-          {loading ? (
-            <div className="flex justify-center py-12">
-              <Loader2 className="h-6 w-6 animate-spin" />
-            </div>
-          ) : filtered.length === 0 ? (
-            <Card className="p-8 text-center text-muted-foreground">
-              <Mail className="h-8 w-8 mx-auto mb-2 opacity-50" />
-              Aucun email dans cet onglet.
-            </Card>
-          ) : (
-            <div className="space-y-2">
-              {filtered.map((e) => (
-                <Card
-                  key={e.id}
-                  className="p-3 hover:shadow-md transition cursor-pointer active:scale-[0.99]"
-                  onClick={() => setSelected(e)}
-                >
-                  <div className="flex items-start gap-2">
-                    <div className="flex-1 min-w-0 space-y-1">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        {e.categorie_ia && (
-                          <span
-                            className={`text-[11px] px-1.5 py-0.5 rounded border font-medium ${CATEGORIE_COLOR[e.categorie_ia]}`}
-                          >
-                            {CATEGORIE_LABEL[e.categorie_ia]}
-                          </span>
-                        )}
-                        {e.confiance_ia != null && (
-                          <span className="text-[11px] text-muted-foreground">
-                            {Math.round(e.confiance_ia * 100)}%
-                          </span>
-                        )}
-                        <span className="text-[11px] text-muted-foreground">
-                          {format(parseISO(e.received_at), "d MMM HH:mm", { locale: fr })}
+        <TabsContent value={tab} className="mt-4 space-y-3">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Rechercher (sujet, expéditeur, contenu)…"
+              className="pl-8 h-9"
+            />
+            {q && (
+              <button
+                type="button"
+                onClick={() => setQ("")}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                aria-label="Effacer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+          {(() => {
+            const renderCard = (e: EmailRow) => (
+              <Card
+                key={e.id}
+                className="p-3 hover:shadow-md transition cursor-pointer active:scale-[0.99]"
+                onClick={() => setSelected(e)}
+              >
+                <div className="flex items-start gap-2">
+                  <div className="flex-1 min-w-0 space-y-1">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      {e.categorie_ia && (
+                        <span
+                          className={`text-[11px] px-1.5 py-0.5 rounded border font-medium ${CATEGORIE_COLOR[e.categorie_ia]}`}
+                        >
+                          {CATEGORIE_LABEL[e.categorie_ia]}
                         </span>
-                        {e.has_attachments && (
-                          <Paperclip className="h-3 w-3 text-muted-foreground" />
-                        )}
-                        {e.statut === "validated" && (
-                          <Badge variant="default" className="text-[10px] h-4 px-1">
-                            validé
-                          </Badge>
-                        )}
-                        {e.statut === "dismissed" && (
-                          <Badge variant="outline" className="text-[10px] h-4 px-1">
-                            écarté
-                          </Badge>
-                        )}
-                      </div>
-                      <div className="font-medium text-sm truncate">
-                        {e.subject ?? "(sans sujet)"}
-                      </div>
-                      <div className="text-xs text-muted-foreground truncate">
-                        {e.from_name ? `${e.from_name} ` : ""}
-                        <span className="opacity-70">&lt;{e.from_email}&gt;</span>
-                      </div>
-                      {e.body_preview && (
-                        <div className="text-xs text-muted-foreground line-clamp-2">
-                          {e.body_preview}
-                        </div>
+                      )}
+                      {e.confiance_ia != null && (
+                        <span className="text-[11px] text-muted-foreground">
+                          {Math.round(e.confiance_ia * 100)}%
+                        </span>
+                      )}
+                      <span className="text-[11px] text-muted-foreground">
+                        {format(parseISO(e.received_at), "d MMM HH:mm", { locale: fr })}
+                      </span>
+                      {e.has_attachments && (
+                        <Paperclip className="h-3 w-3 text-muted-foreground" />
+                      )}
+                      {e.statut === "validated" && (
+                        <Badge variant="default" className="text-[10px] h-4 px-1">
+                          validé
+                        </Badge>
+                      )}
+                      {e.statut === "dismissed" && (
+                        <Badge variant="outline" className="text-[10px] h-4 px-1">
+                          écarté
+                        </Badge>
                       )}
                     </div>
-                    {e.statut === "pending_review" && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="shrink-0 h-8 gap-1.5 border-emerald-300 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800"
-                        onClick={(ev) => {
-                          ev.stopPropagation();
-                          validateClassification(e);
-                        }}
-                        title={
-                          e.categorie_ia
-                            ? `Valider comme ${CATEGORIE_LABEL[e.categorie_ia]}`
-                            : "Valider le classement"
-                        }
-                      >
-                        <CheckCircle2 className="h-4 w-4" />
-                        <span className="hidden sm:inline">Valider</span>
-                      </Button>
+                    <div className="font-medium text-sm truncate">
+                      {e.subject ?? "(sans sujet)"}
+                    </div>
+                    <div className="text-xs text-muted-foreground truncate">
+                      {e.from_name ? `${e.from_name} ` : ""}
+                      <span className="opacity-70">&lt;{e.from_email}&gt;</span>
+                    </div>
+                    {e.body_preview && (
+                      <div className="text-xs text-muted-foreground line-clamp-2">
+                        {e.body_preview}
+                      </div>
                     )}
                   </div>
+                  {e.statut === "pending_review" && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="shrink-0 h-8 gap-1.5 border-emerald-300 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800"
+                      onClick={(ev) => {
+                        ev.stopPropagation();
+                        validateClassification(e);
+                      }}
+                      title={
+                        e.categorie_ia
+                          ? `Valider comme ${CATEGORIE_LABEL[e.categorie_ia]}`
+                          : "Valider le classement"
+                      }
+                    >
+                      <CheckCircle2 className="h-4 w-4" />
+                      <span className="hidden sm:inline">Valider</span>
+                    </Button>
+                  )}
+                </div>
+              </Card>
+            );
+
+            if (loading) {
+              return (
+                <div className="flex justify-center py-12">
+                  <Loader2 className="h-6 w-6 animate-spin" />
+                </div>
+              );
+            }
+            if (filtered.length === 0) {
+              return (
+                <Card className="p-8 text-center text-muted-foreground">
+                  <Mail className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  {q ? "Aucun résultat pour cette recherche." : "Aucun email dans cet onglet."}
                 </Card>
-              ))}
-            </div>
-          )}
+              );
+            }
+            if (tab === "opportunite") {
+              return (
+                <div className="space-y-2">
+                  {oppGroups.map((g) => {
+                    const isOpen = openThreads[g.key] ?? g.items.length === 1;
+                    const head = g.items[0];
+                    return (
+                      <Card key={g.key} className="overflow-hidden">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setOpenThreads((prev) => ({ ...prev, [g.key]: !isOpen }))
+                          }
+                          className="w-full text-left p-3 flex items-start gap-2 hover:bg-muted/40 transition"
+                        >
+                          <div className="mt-0.5 text-muted-foreground">
+                            {isOpen ? (
+                              <ChevronDown className="h-4 w-4" />
+                            ) : (
+                              <ChevronRight className="h-4 w-4" />
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0 space-y-1">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <Badge variant="secondary" className="text-[10px] h-4 px-1.5">
+                                {g.items.length} message{g.items.length > 1 ? "s" : ""}
+                              </Badge>
+                              <span className="text-[11px] text-muted-foreground">
+                                Dernier : {format(parseISO(g.latest), "d MMM HH:mm", { locale: fr })}
+                              </span>
+                              {g.items.some((i) => i.has_attachments) && (
+                                <Paperclip className="h-3 w-3 text-muted-foreground" />
+                              )}
+                              {g.items.some((i) => i.statut === "pending_review") && (
+                                <Badge variant="outline" className="text-[10px] h-4 px-1 border-amber-300 text-amber-700">
+                                  à trier
+                                </Badge>
+                              )}
+                            </div>
+                            <div className="font-medium text-sm truncate">
+                              {normalizeSubject(g.subject) ? g.subject : "(sans sujet)"}
+                            </div>
+                            <div className="text-xs text-muted-foreground truncate">
+                              {head.from_name ? `${head.from_name} ` : ""}
+                              <span className="opacity-70">&lt;{head.from_email}&gt;</span>
+                            </div>
+                          </div>
+                        </button>
+                        {isOpen && (
+                          <div className="border-t bg-muted/20 p-2 space-y-2">
+                            {g.items.map((it) => renderCard(it))}
+                          </div>
+                        )}
+                      </Card>
+                    );
+                  })}
+                </div>
+              );
+            }
+            return <div className="space-y-2">{filtered.map((e) => renderCard(e))}</div>;
+          })()}
         </TabsContent>
       </Tabs>
+
 
       {selected && (
         <EmailDetailDialog
