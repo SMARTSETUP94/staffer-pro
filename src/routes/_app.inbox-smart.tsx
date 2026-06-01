@@ -71,6 +71,7 @@ type StatutEmail = "pending_review" | "validated" | "dismissed";
 interface EmailRow {
   id: string;
   message_id_outlook: string;
+  conversation_id: string | null;
   from_email: string;
   from_name: string | null;
   subject: string | null;
@@ -95,7 +96,15 @@ interface EmailRow {
   client_id: string | null;
   contact_id: string | null;
   dismiss_reason: string | null;
+}
 
+function normalizeSubject(s: string | null | undefined): string {
+  if (!s) return "";
+  return s
+    .toLowerCase()
+    .replace(/^(\s*(re|ré|fwd?|tr|fw)\s*:\s*)+/i, "")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 const CATEGORIE_LABEL: Record<CategorieIA, string> = {
