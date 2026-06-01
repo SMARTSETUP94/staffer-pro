@@ -471,7 +471,7 @@ function InboxSmartPage() {
             )}
           </div>
           {(() => {
-            const renderCard = (e: EmailRow) => (
+            const renderCard = (e: EmailRow, opts?: { showMove?: boolean }) => (
               <Card
                 key={e.id}
                 className="p-3 hover:shadow-md transition cursor-pointer active:scale-[0.99]"
@@ -508,6 +508,11 @@ function InboxSmartPage() {
                           écarté
                         </Badge>
                       )}
+                      {e.conversation_id?.startsWith("manual:") && (
+                        <Badge variant="outline" className="text-[10px] h-4 px-1 border-purple-300 text-purple-700">
+                          fil manuel
+                        </Badge>
+                      )}
                     </div>
                     <div className="font-medium text-sm truncate">
                       {e.subject ?? "(sans sujet)"}
@@ -522,28 +527,46 @@ function InboxSmartPage() {
                       </div>
                     )}
                   </div>
-                  {e.statut === "pending_review" && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="shrink-0 h-8 gap-1.5 border-emerald-300 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800"
-                      onClick={(ev) => {
-                        ev.stopPropagation();
-                        validateClassification(e);
-                      }}
-                      title={
-                        e.categorie_ia
-                          ? `Valider comme ${CATEGORIE_LABEL[e.categorie_ia]}`
-                          : "Valider le classement"
-                      }
-                    >
-                      <CheckCircle2 className="h-4 w-4" />
-                      <span className="hidden sm:inline">Valider</span>
-                    </Button>
-                  )}
+                  <div className="flex flex-col gap-1.5 shrink-0">
+                    {e.statut === "pending_review" && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-8 gap-1.5 border-emerald-300 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800"
+                        onClick={(ev) => {
+                          ev.stopPropagation();
+                          validateClassification(e);
+                        }}
+                        title={
+                          e.categorie_ia
+                            ? `Valider comme ${CATEGORIE_LABEL[e.categorie_ia]}`
+                            : "Valider le classement"
+                        }
+                      >
+                        <CheckCircle2 className="h-4 w-4" />
+                        <span className="hidden sm:inline">Valider</span>
+                      </Button>
+                    )}
+                    {opts?.showMove && oppGroups.length > 1 && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 gap-1.5 text-muted-foreground hover:text-foreground"
+                        onClick={(ev) => {
+                          ev.stopPropagation();
+                          setMoveEmail(e);
+                        }}
+                        title="Déplacer ce message vers un autre fil"
+                      >
+                        <ArrowRightLeft className="h-4 w-4" />
+                        <span className="hidden sm:inline">Déplacer</span>
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </Card>
             );
+
 
             if (loading) {
               return (
