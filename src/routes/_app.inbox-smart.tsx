@@ -159,24 +159,63 @@ function InboxSmartPage() {
   }, []);
 
   const filtered = useMemo(() => {
-    switch (tab) {
-      case "pending":
-        return emails.filter((e) => e.statut === "pending_review");
-      case "candidature":
-        return emails.filter(
-          (e) => e.categorie_ia === "candidature" && e.statut !== "dismissed",
-        );
-      case "opportunite":
-        return emails.filter(
-          (e) => e.categorie_ia === "opportunite" && e.statut !== "dismissed",
-        );
-      case "pub":
-        return emails.filter((e) => e.categorie_ia === "pub" || e.statut === "dismissed");
-      case "all":
-      default:
-        return emails;
+    const base = (() => {
+      switch (tab) {
+        case "pending":
+          return emails.filter((e) => e.statut === "pending_review");
+        case "candidature":
+          return emails.filter(
+            (e) => e.categorie_ia === "candidature" && e.statut !== "dismissed",
+          );
+        case "opportunite":
+          return emails.filter(
+            (e) => e.categorie_ia === "opportunite" && e.statut !== "dismissed",
+          );
+        case "pub":
+          return emails.filter((e) => e.categorie_ia === "pub" || e.statut === "dismissed");
+        case "all":
+        default:
+          return emails;
+      }
+    })();
+    const needle = q.trim().toLowerCase();
+    if (!needle) return base;
+    return base.filter((e) => {
+      const hay = [
+        e.subject,
+        e.from_email,
+        e.from_name,
+        e.body_preview,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      return hay.includes(needle);
+    });
+  }, [emails, tab, q]);
+
+  const oppGroups = useMemo(() => {
+    if (tab !== "opportunite") return [] as Array<{ key: string; subject: string; items: EmailRow[]; latest: string }>;
+    const map = new Map<string, EmailRow[]>();
+    for (const e of filtered) {
+      const key = e.conversation_id?.trim() || `subj:${normalizeSubject(e.subject)}|${e.from_email.toLowerCase()}`;
+      const arr = map.get(key) ?? [];
+      arr.push(e);
+      map.set(key, arr);
     }
-  }, [emails, tab]);
+    const groups = Array.from(map.entries()).map(([key, items]) => {
+      const sorted = [...items].sort((a, b) => (a.received_at < b.received_at ? 1 : -1));
+      return {
+        key,
+        items: sorted,
+        latest: sorted[0]?.received_at ?? "",
+        subject: sorted[0]?.subject ?? "(sans sujet)",
+      };
+    });
+    groups.sort((a, b) => (a.latest < b.latest ? 1 : -1));
+    return groups;
+  }, [filtered, tab]);
+
 
   const counts = useMemo(
     () => ({
