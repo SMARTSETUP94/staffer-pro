@@ -209,10 +209,14 @@ function InboxSmartPage() {
     if (tab !== "opportunite") return [] as Array<{ key: string; subject: string; items: EmailRow[]; latest: string }>;
     const map = new Map<string, EmailRow[]>();
     for (const e of filtered) {
-      // Priorité au sujet normalisé : un fil = un objet (même si conversation_id Outlook
-      // diffère entre expéditeurs/forwards). Fallback conversation_id si pas de sujet.
+      // Override manuel (déplacement utilisateur) : priorité absolue.
       const norm = normalizeSubject(e.subject);
-      const key = norm ? `subj:${norm}` : e.conversation_id?.trim() || `id:${e.id}`;
+      const cid = e.conversation_id?.trim() ?? "";
+      const key = cid.startsWith("manual:")
+        ? cid
+        : norm
+          ? `subj:${norm}`
+          : cid || `id:${e.id}`;
       const arr = map.get(key) ?? [];
       arr.push(e);
       map.set(key, arr);
