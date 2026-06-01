@@ -275,13 +275,20 @@ function InboxSmartPage() {
     // on le replace en "à trier" pour qu'il bouge bien d'onglet et soit re-validé.
     const categoryChanged = e.categorie_ia !== newCat;
     const wasFinalized = e.statut === "dismissed" || e.statut === "validated";
-    const patch: Record<string, unknown> = { categorie_ia: newCat };
+    const patch: {
+      categorie_ia: CategorieIA;
+      statut?: StatutEmail;
+      dismiss_reason?: string | null;
+      validated_at?: string | null;
+      validated_by?: string | null;
+    } = { categorie_ia: newCat };
     if (categoryChanged && wasFinalized) {
       patch.statut = "pending_review";
       patch.dismiss_reason = null;
       patch.validated_at = null;
       patch.validated_by = null;
     }
+
     const { error } = await supabase
       .from("emails_entrants")
       .update(patch)
