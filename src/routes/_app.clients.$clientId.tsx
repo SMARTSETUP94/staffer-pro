@@ -496,9 +496,11 @@ function ClientDetailPage() {
 function AffairesTable({
   rows,
   emptyLabel,
+  onDetach,
 }: {
   rows: AffaireRow[];
   emptyLabel: string;
+  onDetach?: (a: AffaireRow) => void;
 }) {
   if (rows.length === 0) {
     return (
@@ -517,6 +519,7 @@ function AffairesTable({
             <TableHead>Statut</TableHead>
             <TableHead>Début</TableHead>
             <TableHead>Fin prévue</TableHead>
+            {onDetach && <TableHead className="w-12"></TableHead>}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -547,6 +550,18 @@ function AffairesTable({
                   ? format(parseISO(a.date_fin_prevue), "d MMM yyyy", { locale: fr })
                   : "—"}
               </TableCell>
+              {onDetach && (
+                <TableCell className="text-right">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => onDetach(a)}
+                    title="Détacher du client"
+                  >
+                    <Unlink className="h-3 w-3" />
+                  </Button>
+                </TableCell>
+              )}
             </TableRow>
           ))}
         </TableBody>
