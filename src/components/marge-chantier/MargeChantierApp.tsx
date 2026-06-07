@@ -1714,6 +1714,19 @@ function TabDevis({ app, update, onGoTo }: { app: AppData; update: (fn: (d: AppD
               <SelectItem value="charge">Tri : chargé d'affaire</SelectItem>
             </SelectContent>
           </Select>
+          <Button
+            size="sm"
+            variant={onlyOrphan ? "default" : "outline"}
+            onClick={() => setOnlyOrphan((v) => !v)}
+            className={onlyOrphan ? "bg-amber-600 hover:bg-amber-600/90 text-white" : ""}
+            title="Afficher uniquement les lignes avec heures > 0 mais sans métier mappé"
+          >
+            <AlertTriangle className="h-4 w-4 mr-1" />
+            Heures sans métier
+            {totalOrphan > 0 && (
+              <Badge className="ml-1.5 bg-amber-700/80 hover:bg-amber-700 text-white">{totalOrphan}</Badge>
+            )}
+          </Button>
           {app.devis.length > 0 && (
             <Button
               size="sm"
@@ -1731,6 +1744,12 @@ function TabDevis({ app, update, onGoTo }: { app: AppData; update: (fn: (d: AppD
           )}
           <span className="ml-auto text-xs text-muted-foreground">{filtered.length} / {app.devis.length}</span>
         </div>
+
+        {onlyOrphan && totalOrphan === 0 && app.devis.length > 0 && (
+          <div className="rounded-md border border-emerald-700/40 bg-emerald-900/10 p-3 text-xs text-emerald-300">
+            ✓ Aucune ligne avec heures positives sans métier. Tous les postes MO sont rattachés.
+          </div>
+        )}
 
         {app.devis.length === 0 ? (
           <EmptyState
