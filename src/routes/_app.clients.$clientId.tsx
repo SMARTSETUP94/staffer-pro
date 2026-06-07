@@ -106,6 +106,21 @@ function ClientDetailPage() {
   const [loading, setLoading] = useState(true);
   const [editOpen, setEditOpen] = useState(false);
   const [contactEdit, setContactEdit] = useState<Partial<ContactRow> | null>(null);
+  const [attachOpen, setAttachOpen] = useState(false);
+
+  async function detachAffaire(affaireId: string, label: string) {
+    if (!confirm(`Détacher le chantier ${label} de ce client ?`)) return;
+    const { error } = await supabase
+      .from("affaires")
+      .update({ client_id: null })
+      .eq("id", affaireId);
+    if (error) {
+      toast.error("Erreur", { description: error.message });
+      return;
+    }
+    toast.success("Chantier détaché");
+    void load();
+  }
 
   async function load() {
     setLoading(true);
