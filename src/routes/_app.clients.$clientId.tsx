@@ -218,6 +218,56 @@ function ClientDetailPage() {
         </div>
       )}
 
+      {(client.adresse || client.telephone || client.email || client.site_web) && (
+        <Card className="p-4">
+          <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">
+            Coordonnées société
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {client.adresse && (
+              <div className="flex items-start gap-2 text-sm">
+                <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                <span className="whitespace-pre-wrap">{client.adresse}</span>
+              </div>
+            )}
+            {client.telephone && (
+              <div className="flex items-center gap-2 text-sm">
+                <Phone className="h-4 w-4 text-muted-foreground shrink-0" />
+                <a href={`tel:${client.telephone}`} className="hover:underline">
+                  {client.telephone}
+                </a>
+              </div>
+            )}
+            {client.email && (
+              <div className="flex items-center gap-2 text-sm">
+                <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
+                <a href={`mailto:${client.email}`} className="hover:underline">
+                  {client.email}
+                </a>
+              </div>
+            )}
+            {client.site_web && (
+              <div className="flex items-center gap-2 text-sm">
+                <Globe className="h-4 w-4 text-muted-foreground shrink-0" />
+                <a
+                  href={
+                    client.site_web.startsWith("http")
+                      ? client.site_web
+                      : `https://${client.site_web}`
+                  }
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:underline"
+                >
+                  {client.site_web}
+                </a>
+              </div>
+            )}
+          </div>
+        </Card>
+      )}
+
+
 
       <Tabs defaultValue="affaires">
         <TabsList>
