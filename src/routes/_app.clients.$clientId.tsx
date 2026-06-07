@@ -1003,7 +1003,7 @@ function AttachAffairesDialog({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filtered.slice(0, 200).map((a) => (
+                {filtered.slice(0, 200).map((a: CandidateAffaire) => (
                   <TableRow
                     key={a.id}
                     className="cursor-pointer"
