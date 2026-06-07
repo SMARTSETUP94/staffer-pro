@@ -438,6 +438,59 @@ function ClientsListPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AlertDialog
+        open={openPurge}
+        onOpenChange={(o) => {
+          setOpenPurge(o);
+          if (!o) setPurgeConfirmText("");
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Vider toute la liste clients ?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2">
+                <p>
+                  Les <strong className="text-foreground">{rows.length}</strong>{" "}
+                  client(s) seront supprimés définitivement. Les affaires et
+                  emails entrants seront déliés (conservés sans client), les
+                  contacts liés seront supprimés.
+                </p>
+                <p className="text-destructive font-medium">
+                  Action irréversible. Tapez{" "}
+                  <code className="bg-muted px-1 rounded">VIDER</code> pour
+                  confirmer.
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <Input
+            value={purgeConfirmText}
+            onChange={(e) => setPurgeConfirmText(e.target.value)}
+            placeholder="VIDER"
+            autoFocus
+          />
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={purging}>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                void handlePurgeAll();
+              }}
+              disabled={purging || purgeConfirmText !== "VIDER"}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {purging ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                <Trash2 className="h-4 w-4 mr-2" />
+              )}
+              Tout supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
