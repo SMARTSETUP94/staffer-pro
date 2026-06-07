@@ -256,6 +256,7 @@ function ClientsListPage() {
                   <Mail className="h-3 w-3 inline mr-1" />
                   Dernier email
                 </TableHead>
+                {canManage && <TableHead className="w-24"></TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
