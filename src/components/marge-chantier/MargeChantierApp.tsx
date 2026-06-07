@@ -343,19 +343,54 @@ export function MargeChantierApp() {
     return () => clearInterval(i);
   }, []);
 
-  const ctx = useMemo(() => buildCtx(app), [app]);
-  const groups = useMemo(() => chantierGroups(app), [app]);
+  // Filtre période d'analyse (sur les heures uniquement) — n'affecte pas
+  // les onglets de saisie (RH, Référentiels, Registre, Devis, Heures bruts).
+  const [periodFrom, setPeriodFrom] = useState<string>(""); // "YYYY-MM"
+  const [periodTo, setPeriodTo] = useState<string>("");     // "YYYY-MM"
+
+  const monthOf = useCallback((h: { date?: string; annee?: string }) => {
+    const d = (h.date ?? "").match(/^(\d{4})-(\d{2})/);
+    if (d) return `${d[1]}-${d[2]}`;
+    if (h.annee) return `${h.annee}-01`;
+    return "";
+  }, []);
+
+  const analysisApp = useMemo<AppData>(() => {
+    if (!periodFrom && !periodTo) return app;
+    const from = periodFrom || "0000-00";
+    const to = periodTo || "9999-99";
+    const filteredHeures = app.heures.filter((h) => {
+      const m = monthOf(h);
+      if (!m) return false;
+      return m >= from && m <= to;
+    });
+    return { ...app, heures: filteredHeures };
+  }, [app, periodFrom, periodTo, monthOf]);
+
+  const periodBounds = useMemo(() => {
+    let min = "", max = "";
+    for (const h of app.heures) {
+      const m = monthOf(h);
+      if (!m) continue;
+      if (!min || m < min) min = m;
+      if (!max || m > max) max = m;
+    }
+    return { min, max };
+  }, [app.heures, monthOf]);
+
+  const ctx = useMemo(() => buildCtx(analysisApp), [analysisApp]);
+  const groups = useMemo(() => chantierGroups(analysisApp), [analysisApp]);
 
   const globals = useMemo(() => {
     let caMO = 0, caMat = 0, hVendues = 0, hSaisies = 0, marge = 0, cout = 0;
     groups.forEach((g) => {
-      const c = calcChantier(app, g, ctx, mode);
+      const c = calcChantier(analysisApp, g, ctx, mode);
       caMO += c.caMO; caMat += c.caMat;
       hVendues += c.heuresVendues; hSaisies += c.heuresPassees;
       marge += c.margeMO; cout += c.coutTotal;
     });
     return { caMO, caMat, hVendues, hSaisies, marge, cout, ratio: cout > 0 ? caMO / cout : NaN };
-  }, [app, ctx, groups, mode]);
+  }, [analysisApp, ctx, groups, mode]);
 
   const update = useCallback((fn: (draft: AppData) => void) => {
     setApp((prev) => {
@@ -530,6 +565,65 @@ export function MargeChantierApp() {
           )}
 
 
+          {/* === Filtre période d'analyse === */}
+          {!isEmpty && app.heures.length > 0 && (
+            <Card className="border-border/60">
+              <CardContent className="py-3 px-4 flex flex-wrap items-center gap-3">
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  <Clock className="h-4 w-4 text-primary" />
+                  Période d'analyse
+                </div>
+                <div className="flex items-center gap-2">
+                  <label className="text-xs text-muted-foreground">Du</label>
+                  <Input
+                    type="month"
+                    value={periodFrom}
+                    min={periodBounds.min || undefined}
+                    max={periodBounds.max || undefined}
+                    onChange={(e) => setPeriodFrom(e.target.value)}
+                    className="h-8 w-[150px]"
+                  />
+                  <label className="text-xs text-muted-foreground">Au</label>
+                  <Input
+                    type="month"
+                    value={periodTo}
+                    min={periodBounds.min || undefined}
+                    max={periodBounds.max || undefined}
+                    onChange={(e) => setPeriodTo(e.target.value)}
+                    className="h-8 w-[150px]"
+                  />
+                </div>
+                {(periodFrom || periodTo) && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8"
+                    onClick={() => { setPeriodFrom(""); setPeriodTo(""); }}
+                  >
+                    Réinitialiser
+                  </Button>
+                )}
+                <div className="text-xs text-muted-foreground ml-auto">
+                  {periodFrom || periodTo ? (
+                    <>
+                      {analysisApp.heures.length} / {app.heures.length} lignes d'heures retenues
+                      {periodBounds.min && periodBounds.max && (
+                        <span className="ml-2 opacity-70">(données : {periodBounds.min} → {periodBounds.max})</span>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      Toutes les heures incluses
+                      {periodBounds.min && periodBounds.max && (
+                        <span className="ml-2 opacity-70">({periodBounds.min} → {periodBounds.max})</span>
+                      )}
+                    </>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* === KPIs globaux === */}
           {!isEmpty && (
             <GlobalKpiBar globals={globals} mode={mode} />
@@ -556,9 +650,9 @@ export function MargeChantierApp() {
             <TabsContent value="registre"><TabRegistre app={app} update={update} /></TabsContent>
             <TabsContent value="devis"><TabDevis app={app} update={update} onGoTo={setTab} /></TabsContent>
             <TabsContent value="heures"><TabHeures app={app} update={update} ctx={ctx} onGoTo={setTab} /></TabsContent>
-            <TabsContent value="synthese"><TabSynthese app={app} ctx={ctx} groups={groups} mode={mode} onGoTo={setTab} /></TabsContent>
-            <TabsContent value="marge"><TabMargePersonne app={app} mode={mode} onGoTo={setTab} /></TabsContent>
-            <TabsContent value="perf"><TabPerformance app={app} ctx={ctx} groups={groups} onGoTo={setTab} /></TabsContent>
+            <TabsContent value="synthese"><TabSynthese app={analysisApp} ctx={ctx} groups={groups} mode={mode} onGoTo={setTab} /></TabsContent>
+            <TabsContent value="marge"><TabMargePersonne app={analysisApp} mode={mode} onGoTo={setTab} /></TabsContent>
+            <TabsContent value="perf"><TabPerformance app={analysisApp} ctx={ctx} groups={groups} onGoTo={setTab} /></TabsContent>
           </Tabs>
         </div>
 
