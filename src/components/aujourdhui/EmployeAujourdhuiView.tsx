@@ -49,7 +49,7 @@ import {
   getMonEquipeChantier,
   getMesObjetsAtelier,
   type PlanningSemaineItem,
-} from "@/server/aujourdhui-employe.functions";
+} from "@/lib/aujourdhui-employe.functions";
 
 // ---------------------------------------------------------------------------
 // Helpers
