@@ -1,9 +1,22 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { requireCapability } from "@/lib/capability-guard";
 import { useEffect, useMemo, useState } from "react";
-import { Loader2, Plus, Search, Mail, Briefcase, Trophy, Users } from "lucide-react";
+import {
+  Loader2,
+  Plus,
+  Search,
+  Mail,
+  Briefcase,
+  Trophy,
+  Users,
+  Upload,
+  Pencil,
+  Trash2,
+  GitMerge,
+} from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useCapability } from "@/hooks/use-capability";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,7 +32,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { NouveauClientDialog } from "@/components/clients/NouveauClientDialog";
+import { ImportClientsDialog } from "@/components/clients/ImportClientsDialog";
 
 export const Route = createFileRoute("/_app/clients")({
   beforeLoad: () => requireCapability("clients.view"),
@@ -40,11 +64,35 @@ interface ClientRow {
 }
 
 function ClientsListPage() {
+  const navigate = useNavigate();
+  const canManage = useCapability("clients.manage");
+  const canMerge = useCapability("clients.merge");
   const [rows, setRows] = useState<ClientRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [showInactifs, setShowInactifs] = useState(false);
   const [openCreate, setOpenCreate] = useState(false);
+  const [openImport, setOpenImport] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState<ClientRow | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  async function handleDelete() {
+    if (!confirmDelete) return;
+    setDeleting(true);
+    const { error } = await supabase
+      .from("clients")
+      .delete()
+      .eq("id", confirmDelete.id);
+    setDeleting(false);
+    if (error) {
+      toast.error("Suppression impossible", { description: error.message });
+      return;
+    }
+    toast.success(`« ${confirmDelete.nom} » supprimé`);
+    setConfirmDelete(null);
+    void load();
+  }
+
 
   async function load() {
     setLoading(true);
@@ -126,9 +174,26 @@ function ClientsListPage() {
         title="Clients"
         description="Hub centralisé : chantiers, opportunités, contacts et emails par client"
         actions={
-          <Button onClick={() => setOpenCreate(true)}>
-            <Plus className="h-4 w-4 mr-1" /> Nouveau client
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            {canMerge && (
+              <Button
+                variant="outline"
+                onClick={() => navigate({ to: "/clients/admin/fusion" })}
+              >
+                <GitMerge className="h-4 w-4 mr-1" /> Fusionner doublons
+              </Button>
+            )}
+            {canManage && (
+              <Button variant="outline" onClick={() => setOpenImport(true)}>
+                <Upload className="h-4 w-4 mr-1" /> Importer CSV
+              </Button>
+            )}
+            {canManage && (
+              <Button onClick={() => setOpenCreate(true)}>
+                <Plus className="h-4 w-4 mr-1" /> Nouveau client
+              </Button>
+            )}
+          </div>
         }
       />
 
@@ -191,6 +256,7 @@ function ClientsListPage() {
                   <Mail className="h-3 w-3 inline mr-1" />
                   Dernier email
                 </TableHead>
+                {canManage && <TableHead className="w-24"></TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -240,6 +306,31 @@ function ClientsListPage() {
                       ? new Date(r.dernier_email_at).toLocaleDateString("fr-FR")
                       : "—"}
                   </TableCell>
+                  {canManage && (
+                    <TableCell className="text-right whitespace-nowrap">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        title="Éditer"
+                        onClick={() =>
+                          navigate({
+                            to: "/clients/$clientId",
+                            params: { clientId: r.id },
+                          })
+                        }
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        title="Supprimer"
+                        onClick={() => setConfirmDelete(r)}
+                      >
+                        <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                      </Button>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
             </TableBody>
@@ -256,6 +347,68 @@ function ClientsListPage() {
           }}
         />
       )}
+
+      {openImport && (
+        <ImportClientsDialog
+          onClose={() => setOpenImport(false)}
+          onDone={async () => {
+            setOpenImport(false);
+            await load();
+          }}
+        />
+      )}
+
+      <AlertDialog
+        open={!!confirmDelete}
+        onOpenChange={(o) => !o && !deleting && setConfirmDelete(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer ce client ?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 text-sm">
+                <p>
+                  <strong className="text-foreground">
+                    « {confirmDelete?.nom} »
+                  </strong>{" "}
+                  va être supprimé définitivement.
+                </p>
+                {confirmDelete && (
+                  <ul className="list-disc pl-5 text-muted-foreground">
+                    <li>
+                      {confirmDelete.nb_affaires + confirmDelete.nb_opportunites}{" "}
+                      affaire(s) seront déliées (conservées sans client)
+                    </li>
+                    <li>{confirmDelete.nb_contacts} contact(s) supprimé(s)</li>
+                    <li>Les emails entrants seront déliés</li>
+                  </ul>
+                )}
+                <p className="text-destructive font-medium">
+                  Action irréversible.
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                void handleDelete();
+              }}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                <Trash2 className="h-4 w-4 mr-2" />
+              )}
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

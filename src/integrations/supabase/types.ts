@@ -5411,6 +5411,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      import_clients_bulk: { Args: { payload: Json }; Returns: Json }
       import_devis_atomique:
         | {
             Args: {
