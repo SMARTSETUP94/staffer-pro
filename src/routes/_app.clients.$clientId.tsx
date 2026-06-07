@@ -61,6 +61,10 @@ interface ClientFull {
   siret: string | null;
   notes: string | null;
   actif: boolean;
+  adresse: string | null;
+  telephone: string | null;
+  email: string | null;
+  site_web: string | null;
 }
 
 interface AffaireRow {
