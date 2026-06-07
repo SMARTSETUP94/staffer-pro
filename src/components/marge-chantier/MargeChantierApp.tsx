@@ -959,6 +959,87 @@ function TabBaseRH({ app, update }: { app: AppData; update: (fn: (d: AppData) =>
       if (/\.csv$/i.test(file.name)) {
         const buf = await file.arrayBuffer();
         const text = decodeWindows1252(buf);
+
+        // Format enrichi (13 colonnes) : Nom complet;Contrat;Métier;Taux €/h;Statut;Coût mensuel;Nom;Prénom;Téléphone;Mobile;Email;Date de naissance;Adresse
+        const firstLine = text.split(/\r?\n/)[0]?.toLowerCase() ?? "";
+        const isRichFormat = firstLine.includes("taux") && firstLine.includes("statut") && firstLine.includes("co\u00fbt");
+        if (isRichFormat) {
+          const parseNum = (s: string): number => {
+            const cleaned = (s ?? "").replace(/[^\d,.-]/g, "").replace(/\s/g, "").replace(",", ".");
+            const n = parseFloat(cleaned);
+            return Number.isFinite(n) ? n : 0;
+          };
+          const normStatut = (s: string): Employe["statut"] => {
+            const n = (s ?? "").trim().toLowerCase();
+            if (n.includes("forfait")) return "Permanent forfait";
+            if (n.includes("35h") || n.startsWith("permanent")) return "Permanent 35h";
+            if (n.includes("auto")) return "Auto-entrepreneur";
+            if (n.includes("intermit")) return "Intermittent";
+            return (s ?? "").trim() || "Intermittent";
+          };
+          const lines = text.split(/\r?\n/).slice(1).filter((l) => l.trim());
+          const importedRich: Employe[] = [];
+          let skippedRich = 0;
+          for (const line of lines) {
+            const cols = line.split(";");
+            if (cols.length < 8) { skippedRich++; continue; }
+            const nomComplet = (cols[0] ?? "").trim();
+            const contrat = (cols[1] ?? "").trim();
+            const metier = (cols[2] ?? "").trim();
+            const taux = parseNum(cols[3] ?? "");
+            const statut = normStatut(cols[4] ?? "");
+            const coutMensuel = parseNum(cols[5] ?? "");
+            const nom = (cols[6] ?? "").trim();
+            const prenom = (cols[7] ?? "").trim();
+            const personne = `${nom} ${prenom}`.trim() || nomComplet;
+            if (!personne) { skippedRich++; continue; }
+            importedRich.push({
+              personne,
+              statut,
+              poste: contrat || "",
+              metier: metier || "",
+              taux,
+              coef: 0,
+              coutMensuel,
+            });
+          }
+          if (importedRich.length === 0) {
+            toast.error("Aucune ligne exploitable dans le CSV");
+            return;
+          }
+          update((d) => {
+            const existing = new Map(d.rh.map((e) => [e.personne.toLowerCase(), e]));
+            let added = 0, updated = 0;
+            importedRich.forEach((e) => {
+              const key = e.personne.toLowerCase();
+              const cur = existing.get(key);
+              if (cur) {
+                if (e.metier) cur.metier = e.metier;
+                if (e.poste) cur.poste = e.poste;
+                if (e.statut) cur.statut = e.statut;
+                if (e.taux) cur.taux = e.taux;
+                if (e.coutMensuel) cur.coutMensuel = e.coutMensuel;
+                updated++;
+              } else {
+                d.rh.push(e);
+                existing.set(key, e);
+                added++;
+              }
+            });
+            const metiersSet = new Set(d.metiers.map((m) => m.nom));
+            d.rh.forEach((r) => {
+              if (r.metier && !metiersSet.has(r.metier)) {
+                d.metiers.push({ nom: r.metier });
+                metiersSet.add(r.metier);
+              }
+            });
+            toast.success(
+              `${added} ajout(s), ${updated} mise(s) à jour${skippedRich ? `, ${skippedRich} ignoré(s)` : ""}`,
+            );
+          });
+          return;
+        }
+
         const result = parseEmployesCsv(text);
         const imported: Employe[] = [];
         let skipped = 0;
