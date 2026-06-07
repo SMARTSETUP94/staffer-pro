@@ -58,6 +58,7 @@ import {
   calcChantierPerf,
   coutHoraire,
   parseDevisRows,
+  parseDevisConsolidesRows,
   parseHeuresRows,
   parseRegistreRows,
   applyPosteMap,
