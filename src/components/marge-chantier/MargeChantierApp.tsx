@@ -851,9 +851,76 @@ function TabBaseRH({ app, update }: { app: AppData; update: (fn: (d: AppData) =>
     return [r.personne, r.poste, r.metier].some((v) => (v ?? "").toLowerCase().includes(s));
   });
 
+  const CONTRAT_TO_STATUT: Record<string, Employe["statut"]> = {
+    CDI: "Permanent 35h",
+    CDD: "Intermittent",
+    Interim: "Intermittent",
+    Independant: "Auto-entrepreneur",
+  };
+
   const importRH = async (files: FileList) => {
     const file = files[0];
     try {
+      // ----- CSV (Liste du personnel : Nom complet;Contrat;Poste;…) -----
+      if (/\.csv$/i.test(file.name)) {
+        const buf = await file.arrayBuffer();
+        const text = decodeWindows1252(buf);
+        const result = parseEmployesCsv(text);
+        const imported: Employe[] = [];
+        let skipped = 0;
+        for (const row of result.rows) {
+          if (row.errors.length > 0) { skipped++; continue; }
+          const p = row.parsed;
+          const personne = `${p.nom} ${p.prenom}`.trim();
+          if (!personne) { skipped++; continue; }
+          const statut: Employe["statut"] =
+            CONTRAT_TO_STATUT[p.type_contrat] ?? "Intermittent";
+          imported.push({
+            personne,
+            statut,
+            poste: row.raw.poste.trim(),
+            metier: "",
+            taux: 0,
+            coef: 0,
+            coutMensuel: 0,
+          });
+        }
+        if (imported.length === 0) {
+          toast.error("Aucune ligne exploitable dans le CSV");
+          return;
+        }
+        update((d) => {
+          const existing = new Map(d.rh.map((e) => [e.personne.toLowerCase(), e]));
+          let added = 0, updated = 0;
+          imported.forEach((e) => {
+            const key = e.personne.toLowerCase();
+            const cur = existing.get(key);
+            if (cur) {
+              if (e.poste && !cur.poste) cur.poste = e.poste;
+              if (e.statut) cur.statut = cur.statut || e.statut;
+              updated++;
+            } else {
+              d.rh.push(e);
+              existing.set(key, e);
+              added++;
+            }
+          });
+          const postesSet = new Set(d.postes.map((p) => p.nom));
+          d.rh.forEach((r) => {
+            if (r.poste && !postesSet.has(r.poste)) {
+              d.postes.push({ nom: r.poste });
+              postesSet.add(r.poste);
+            }
+          });
+          applyPosteMap(d);
+          toast.success(
+            `${added} ajout(s), ${updated} mise(s) à jour${skipped ? `, ${skipped} ignoré(s)` : ""}`,
+          );
+        });
+        return;
+      }
+
+      // ----- XLSX (fiche employés Progbat — onglet « BDD Employés clean ») -----
       const rows = await readXlsx(file, "BDD Employés clean");
       if (!rows.length) {
         toast.error("Onglet 'BDD Employés clean' vide ou introuvable");
@@ -915,6 +982,7 @@ function TabBaseRH({ app, update }: { app: AppData; update: (fn: (d: AppData) =>
       toast.error("Erreur de lecture du fichier");
     }
   };
+
 
   return (
     <Card>
