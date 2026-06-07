@@ -347,6 +347,68 @@ function ClientsListPage() {
           }}
         />
       )}
+
+      {openImport && (
+        <ImportClientsDialog
+          onClose={() => setOpenImport(false)}
+          onDone={async () => {
+            setOpenImport(false);
+            await load();
+          }}
+        />
+      )}
+
+      <AlertDialog
+        open={!!confirmDelete}
+        onOpenChange={(o) => !o && !deleting && setConfirmDelete(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer ce client ?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 text-sm">
+                <p>
+                  <strong className="text-foreground">
+                    « {confirmDelete?.nom} »
+                  </strong>{" "}
+                  va être supprimé définitivement.
+                </p>
+                {confirmDelete && (
+                  <ul className="list-disc pl-5 text-muted-foreground">
+                    <li>
+                      {confirmDelete.nb_affaires + confirmDelete.nb_opportunites}{" "}
+                      affaire(s) seront déliées (conservées sans client)
+                    </li>
+                    <li>{confirmDelete.nb_contacts} contact(s) supprimé(s)</li>
+                    <li>Les emails entrants seront déliés</li>
+                  </ul>
+                )}
+                <p className="text-destructive font-medium">
+                  Action irréversible.
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                void handleDelete();
+              }}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                <Trash2 className="h-4 w-4 mr-2" />
+              )}
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
