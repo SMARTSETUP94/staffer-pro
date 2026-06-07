@@ -591,9 +591,9 @@ export function MargeChantierApp() {
             <TabsContent value="registre"><TabRegistre app={app} update={update} /></TabsContent>
             <TabsContent value="devis"><TabDevis app={app} update={update} onGoTo={setTab} /></TabsContent>
             <TabsContent value="heures"><TabHeures app={app} update={update} ctx={ctx} onGoTo={setTab} /></TabsContent>
-            <TabsContent value="synthese"><TabSynthese app={app} ctx={ctx} groups={groups} mode={mode} onGoTo={setTab} /></TabsContent>
-            <TabsContent value="marge"><TabMargePersonne app={app} mode={mode} onGoTo={setTab} /></TabsContent>
-            <TabsContent value="perf"><TabPerformance app={app} ctx={ctx} groups={groups} onGoTo={setTab} /></TabsContent>
+            <TabsContent value="synthese"><TabSynthese app={analysisApp} ctx={ctx} groups={groups} mode={mode} onGoTo={setTab} /></TabsContent>
+            <TabsContent value="marge"><TabMargePersonne app={analysisApp} mode={mode} onGoTo={setTab} /></TabsContent>
+            <TabsContent value="perf"><TabPerformance app={analysisApp} ctx={ctx} groups={groups} onGoTo={setTab} /></TabsContent>
           </Tabs>
         </div>
 
