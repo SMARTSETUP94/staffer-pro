@@ -1677,7 +1677,10 @@ function TabDevis({ app, update, onGoTo }: { app: AppData; update: (fn: (d: AppD
   };
 
   const filtered = useMemo(() => {
-    const list = app.devis.filter((d) => !q || [d.numDevis, d.chantier, d.nom, d.client, d.chargeAffaire, d.chefProjet].some((v) => (v ?? "").toLowerCase().includes(q.toLowerCase())));
+    let list = app.devis.filter((d) => !q || [d.numDevis, d.chantier, d.nom, d.client, d.chargeAffaire, d.chefProjet].some((v) => (v ?? "").toLowerCase().includes(q.toLowerCase())));
+    if (onlyOrphan) {
+      list = list.filter((d) => d.lignes.some(isOrphanHours));
+    }
     if (sort === "ecarts") {
       return [...list].sort((a, b) => {
         const sa = a.lignes.filter(ecartQte).length + a.lignes.filter((l) => !l.section && l.categorie === "mo" && !l.metier).length;
@@ -1689,7 +1692,9 @@ function TabDevis({ app, update, onGoTo }: { app: AppData; update: (fn: (d: AppD
       return [...list].sort((a, b) => (a.chargeAffaire ?? "").localeCompare(b.chargeAffaire ?? ""));
     }
     return list;
-  }, [app.devis, q, sort]);
+  }, [app.devis, q, sort, onlyOrphan]);
+
+  const totalOrphan = useMemo(() => app.devis.reduce((s, d) => s + d.lignes.filter(isOrphanHours).length, 0), [app.devis]);
 
   return (
     <Card>
