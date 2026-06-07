@@ -1700,20 +1700,69 @@ function TabHeures({ app, update, ctx, onGoTo }: { app: AppData; update: (fn: (d
 
   const filtered = app.heures.filter((h) => !q || [h.chantier, h.chantierNom, h.personne, h.date].some((v) => (v ?? "").toLowerCase().includes(q.toLowerCase())));
 
-  const controle = useMemo(() => {
-    const byCh: Record<string, { num: string; nom: string; count: number; inReg: boolean; nomsReg: string[] }> = {};
+  const normStr = (s: string) => (s ?? "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+
+  type CtrlKind = "ok" | "orphelin" | "ecart_nom" | "registre_sans_heures";
+  interface CtrlRow {
+    num: string; nom: string; heuresCount: number; heuresLignes: number;
+    inReg: boolean; nomsReg: string[]; totalHTReg: number;
+    kind: CtrlKind; accepted: boolean;
+  }
+
+  const controle = useMemo<CtrlRow[]>(() => {
+    const byCh: Record<string, CtrlRow> = {};
     app.heures.forEach((h) => {
       const k = h.chantier;
-      if (!byCh[k]) byCh[k] = { num: k, nom: h.chantierNom ?? "", count: 0, inReg: false, nomsReg: [] };
-      byCh[k].count += num(h.heures);
+      if (!byCh[k]) byCh[k] = { num: k, nom: h.chantierNom ?? "", heuresCount: 0, heuresLignes: 0, inReg: false, nomsReg: [], totalHTReg: 0, kind: "ok", accepted: false };
+      byCh[k].heuresCount += num(h.heures);
+      byCh[k].heuresLignes += 1;
+    });
+    app.registre.forEach((r) => {
+      if (!r.chantier) return;
+      if (!byCh[r.chantier]) byCh[r.chantier] = { num: r.chantier, nom: r.chantierFull ?? r.chantierLabel ?? "", heuresCount: 0, heuresLignes: 0, inReg: false, nomsReg: [], totalHTReg: 0, kind: "ok", accepted: false };
     });
     Object.values(byCh).forEach((c) => {
       const regs = app.registre.filter((r) => r.chantier === c.num);
       c.inReg = regs.length > 0;
-      c.nomsReg = regs.map((r) => r.chantierFull ?? r.chantierLabel ?? "").filter(Boolean);
+      c.nomsReg = Array.from(new Set(regs.map((r) => r.chantierFull ?? r.chantierLabel ?? "").filter(Boolean)));
+      c.totalHTReg = regs.reduce((s, r) => s + (r.totalHT ?? 0), 0);
+      c.accepted = !!app.meta.chantiersOK?.[c.num];
+      if (!c.inReg && c.heuresCount > 0) c.kind = "orphelin";
+      else if (c.inReg && c.heuresCount === 0) c.kind = "registre_sans_heures";
+      else if (c.inReg && c.nomsReg.length > 0 && c.nom && !c.nomsReg.some((n) => normStr(n) === normStr(c.nom) || normStr(n).includes(normStr(c.nom)) || normStr(c.nom).includes(normStr(n)))) c.kind = "ecart_nom";
+      else c.kind = "ok";
     });
     return Object.values(byCh).sort((a, b) => a.num.localeCompare(b.num));
-  }, [app.heures, app.registre]);
+  }, [app.heures, app.registre, app.meta.chantiersOK]);
+
+  const counts = useMemo(() => {
+    let orph = 0, ecart = 0, sansH = 0, ok = 0;
+    controle.forEach((c) => {
+      const k = c.accepted && c.kind !== "ok" ? "ok" : c.kind;
+      if (k === "orphelin") orph++;
+      else if (k === "ecart_nom") ecart++;
+      else if (k === "registre_sans_heures") sansH++;
+      else ok++;
+    });
+    return { orph, ecart, sansH, ok, aRegler: orph + ecart + sansH, total: controle.length };
+  }, [controle]);
+
+  const [ctrlFilter, setCtrlFilter] = useState<"tous" | "a_regler" | "orphelin" | "ecart_nom" | "registre_sans_heures" | "ok">("a_regler");
+  const controleFiltered = useMemo(() => {
+    return controle.filter((c) => {
+      const k = c.accepted && c.kind !== "ok" ? "ok" : c.kind;
+      if (ctrlFilter === "tous") return true;
+      if (ctrlFilter === "a_regler") return k !== "ok";
+      return k === ctrlFilter;
+    });
+  }, [controle, ctrlFilter]);
+
+  const renameHeuresChantier = (numCh: string, newNom: string) => {
+    update((d) => { d.heures.forEach((h) => { if (h.chantier === numCh) h.chantierNom = newNom; }); });
+    toast.success(`Nom mis à jour pour ${numCh}`);
+  };
+  const acceptCh = (numCh: string) => update((d) => { d.meta.chantiersOK = d.meta.chantiersOK ?? {}; d.meta.chantiersOK[numCh] = true; });
+  const unacceptCh = (numCh: string) => update((d) => { if (d.meta.chantiersOK) delete d.meta.chantiersOK[numCh]; });
 
   return (
     <Card>
@@ -1759,21 +1808,114 @@ function TabHeures({ app, update, ctx, onGoTo }: { app: AppData; update: (fn: (d
             </div>
 
             <div className="space-y-2">
-              <h3 className="font-semibold text-primary text-sm">Contrôle chantiers ↔ registre</h3>
-              <div className="space-y-1 max-h-[55vh] overflow-auto">
-                {controle.map((c) => {
-                  const ok = app.meta.chantiersOK?.[c.num];
-                  const isOk = c.inReg || ok;
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="font-semibold text-primary text-sm">Contrôle chantiers ↔ registre</h3>
+                <span className="text-[10px] text-muted-foreground">{counts.total} chantier(s)</span>
+              </div>
+
+              {/* Résumé écarts */}
+              <div className="grid grid-cols-2 gap-1.5 text-[11px]">
+                <div className="rounded border border-amber-700/40 bg-amber-950/20 p-1.5">
+                  <div className="flex items-center justify-between"><span>Orphelins</span><span className="font-mono font-semibold">{counts.orph}</span></div>
+                  <div className="text-[10px] text-muted-foreground">heures sans registre</div>
+                </div>
+                <div className="rounded border border-orange-700/40 bg-orange-950/20 p-1.5">
+                  <div className="flex items-center justify-between"><span>Écarts nom</span><span className="font-mono font-semibold">{counts.ecart}</span></div>
+                  <div className="text-[10px] text-muted-foreground">nom heures ≠ registre</div>
+                </div>
+                <div className="rounded border border-sky-700/40 bg-sky-950/20 p-1.5">
+                  <div className="flex items-center justify-between"><span>Sans heures</span><span className="font-mono font-semibold">{counts.sansH}</span></div>
+                  <div className="text-[10px] text-muted-foreground">registre non démarré</div>
+                </div>
+                <div className="rounded border border-emerald-700/40 bg-emerald-950/20 p-1.5">
+                  <div className="flex items-center justify-between"><span>OK</span><span className="font-mono font-semibold">{counts.ok}</span></div>
+                  <div className="text-[10px] text-muted-foreground">tout est aligné</div>
+                </div>
+              </div>
+
+              {/* Filtres */}
+              <div className="flex flex-wrap gap-1">
+                {([
+                  ["a_regler", `À régler (${counts.aRegler})`],
+                  ["orphelin", `Orphelins (${counts.orph})`],
+                  ["ecart_nom", `Écart nom (${counts.ecart})`],
+                  ["registre_sans_heures", `Sans heures (${counts.sansH})`],
+                  ["ok", `OK (${counts.ok})`],
+                  ["tous", `Tous (${counts.total})`],
+                ] as const).map(([k, label]) => (
+                  <button
+                    key={k}
+                    onClick={() => setCtrlFilter(k)}
+                    className={cn(
+                      "text-[10px] px-2 py-0.5 rounded border transition",
+                      ctrlFilter === k ? "bg-primary text-primary-foreground border-primary" : "border-border hover:bg-muted",
+                    )}
+                  >{label}</button>
+                ))}
+              </div>
+
+              <div className="space-y-1 max-h-[50vh] overflow-auto">
+                {controleFiltered.length === 0 && (
+                  <p className="text-[11px] text-muted-foreground italic py-2 text-center">Aucun chantier dans ce filtre.</p>
+                )}
+                {controleFiltered.map((c) => {
+                  const effectiveKind = c.accepted && c.kind !== "ok" ? "ok" : c.kind;
+                  const styles: Record<string, string> = {
+                    ok: "border-emerald-700/50 bg-emerald-950/20",
+                    orphelin: "border-amber-700/50 bg-amber-950/20",
+                    ecart_nom: "border-orange-700/50 bg-orange-950/20",
+                    registre_sans_heures: "border-sky-700/50 bg-sky-950/20",
+                  };
+                  const labelKind: Record<string, string> = {
+                    ok: "OK",
+                    orphelin: "Orphelin",
+                    ecart_nom: "Écart de nom",
+                    registre_sans_heures: "Sans heures",
+                  };
                   return (
-                    <div key={c.num} className={cn("p-2 border rounded text-xs", isOk ? "border-emerald-700/50 bg-emerald-950/20" : "border-amber-700/50 bg-amber-950/20")}>
+                    <div key={c.num} className={cn("p-2 border rounded text-xs space-y-1", styles[effectiveKind])}>
                       <div className="flex items-center gap-2">
                         <span className="font-mono">{c.num}</span>
-                        <span className="truncate flex-1">{c.nom}</span>
-                        {isOk ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" /> : <AlertTriangle className="h-3.5 w-3.5 text-amber-400" />}
+                        <span className="truncate flex-1">{c.nom || c.nomsReg[0] || "—"}</span>
+                        {effectiveKind === "ok"
+                          ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                          : <AlertTriangle className="h-3.5 w-3.5 text-amber-400 shrink-0" />}
                       </div>
-                      {!c.inReg && !ok && (
-                        <Button size="sm" variant="ghost" className="h-6 text-xs mt-1" onClick={() => update((d) => { d.meta.chantiersOK = d.meta.chantiersOK ?? {}; d.meta.chantiersOK[c.num] = true; })}>Accepter</Button>
+                      <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                        <span className="px-1.5 py-0.5 rounded bg-background/40 border border-border/50">{labelKind[effectiveKind]}</span>
+                        <span>{fmtNb(c.heuresCount)} h · {c.heuresLignes} lignes</span>
+                        {c.inReg && <span>· {fmtEUR(c.totalHTReg)} HT</span>}
+                        {c.accepted && c.kind !== "ok" && <span className="italic">(accepté)</span>}
+                      </div>
+
+                      {/* Détail registre quand utile */}
+                      {c.inReg && c.nomsReg.length > 0 && c.kind === "ecart_nom" && (
+                        <div className="rounded bg-background/30 border border-border/40 p-1.5 space-y-0.5">
+                          <div><span className="text-muted-foreground">Heures :</span> <span className="font-medium">{c.nom || "—"}</span></div>
+                          <div><span className="text-muted-foreground">Registre :</span> <span className="font-medium">{c.nomsReg.join(" / ")}</span></div>
+                        </div>
                       )}
+
+                      {/* Actions */}
+                      <div className="flex flex-wrap gap-1 pt-0.5">
+                        {c.kind === "orphelin" && !c.accepted && (
+                          <Button size="sm" variant="ghost" className="h-6 text-[11px]" onClick={() => acceptCh(c.num)}>Accepter (ignorer)</Button>
+                        )}
+                        {c.kind === "ecart_nom" && !c.accepted && c.nomsReg[0] && (
+                          <>
+                            <Button size="sm" variant="default" className="h-6 text-[11px]" onClick={() => renameHeuresChantier(c.num, c.nomsReg[0])}>
+                              Aligner sur registre
+                            </Button>
+                            <Button size="sm" variant="ghost" className="h-6 text-[11px]" onClick={() => acceptCh(c.num)}>Ignorer</Button>
+                          </>
+                        )}
+                        {c.kind === "registre_sans_heures" && !c.accepted && (
+                          <Button size="sm" variant="ghost" className="h-6 text-[11px]" onClick={() => acceptCh(c.num)}>Marquer vu</Button>
+                        )}
+                        {c.accepted && c.kind !== "ok" && (
+                          <Button size="sm" variant="ghost" className="h-6 text-[11px]" onClick={() => unacceptCh(c.num)}>Annuler</Button>
+                        )}
+                      </div>
                     </div>
                   );
                 })}
