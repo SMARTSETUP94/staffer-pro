@@ -1763,7 +1763,8 @@ function TabDevis({ app, update, onGoTo }: { app: AppData; update: (fn: (d: AppD
           <div className="space-y-2 max-h-[75vh] overflow-auto">
             {filtered.map((dv) => {
               const dvIdx = app.devis.indexOf(dv);
-              const isOpen = open[dv.numDevis] ?? false;
+              const orphanCount = dv.lignes.filter(isOrphanHours).length;
+              const isOpen = onlyOrphan ? orphanCount > 0 : (open[dv.numDevis] ?? false);
               const sansMetier = dv.lignes.filter((l) => !l.section && l.categorie === "mo" && !l.metier).length;
               const ecarts = dv.lignes.filter(ecartQte).length;
               return (
