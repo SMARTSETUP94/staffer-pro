@@ -64,11 +64,35 @@ interface ClientRow {
 }
 
 function ClientsListPage() {
+  const navigate = useNavigate();
+  const canManage = useCapability("clients.manage");
+  const canMerge = useCapability("clients.merge");
   const [rows, setRows] = useState<ClientRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [showInactifs, setShowInactifs] = useState(false);
   const [openCreate, setOpenCreate] = useState(false);
+  const [openImport, setOpenImport] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState<ClientRow | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  async function handleDelete() {
+    if (!confirmDelete) return;
+    setDeleting(true);
+    const { error } = await supabase
+      .from("clients")
+      .delete()
+      .eq("id", confirmDelete.id);
+    setDeleting(false);
+    if (error) {
+      toast.error("Suppression impossible", { description: error.message });
+      return;
+    }
+    toast.success(`« ${confirmDelete.nom} » supprimé`);
+    setConfirmDelete(null);
+    void load();
+  }
+
 
   async function load() {
     setLoading(true);
