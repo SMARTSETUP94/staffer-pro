@@ -30,6 +30,13 @@ export interface LigneDevis {
   puht?: number;             // prix unitaire HT (garde-fou)
   mult?: number;             // multiplicateur de section appliqué (info)
   section?: boolean;         // true = titre/sous-total (exclu des calculs)
+  // Hiérarchie source (Base lignes) — affichage enrichi
+  titre?: string;            // colonne "Titre"
+  element?: string;          // colonne "Élément"
+  detail?: string;           // colonne "Désignation ligne" / "Détail"
+  description?: string;      // Description élément, sinon Description titre
+  qteTitre?: number;
+  qteElement?: number;
 }
 
 export interface Devis {
