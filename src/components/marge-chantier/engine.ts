@@ -505,7 +505,7 @@ export function parseDevisConsolidesRows(rows: any[][], app: AppData): Devis[] {
       const heuresVendues = hRaw > 0 ? hRaw : (cTempsPrevu >= 0 ? num(r[cTempsPrevu]) * mult : 0);
       const caHT = totalLigne * mult;
       const puht = cPuht >= 0 ? num(r[cPuht]) : 0;
-      const qteDetail = num((r as any)[head.findIndex(h => /qt[ée]\s*d[ée]tail/.test(h))]);
+      const qteDetail = num((r as any)[head.findIndex(h => /qt[ée]\s*d[ée]tail/.test(h) || /qt[ée]\s*ligne/.test(h))]);
       const num_ = cNumLigne >= 0 ? ('' + r[cNumLigne]).trim() : String(idx + 1);
       const isSection = caHT === 0 && heuresVendues === 0;
       if (isSection) {
