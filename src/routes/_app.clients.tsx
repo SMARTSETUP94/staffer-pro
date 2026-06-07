@@ -75,6 +75,9 @@ function ClientsListPage() {
   const [openImport, setOpenImport] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<ClientRow | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [openPurge, setOpenPurge] = useState(false);
+  const [purgeConfirmText, setPurgeConfirmText] = useState("");
+  const [purging, setPurging] = useState(false);
 
   async function handleDelete() {
     if (!confirmDelete) return;
@@ -90,6 +93,23 @@ function ClientsListPage() {
     }
     toast.success(`« ${confirmDelete.nom} » supprimé`);
     setConfirmDelete(null);
+    void load();
+  }
+
+  async function handlePurgeAll() {
+    setPurging(true);
+    const { error, count } = await supabase
+      .from("clients")
+      .delete({ count: "exact" })
+      .not("id", "is", null);
+    setPurging(false);
+    if (error) {
+      toast.error("Vidage impossible", { description: error.message });
+      return;
+    }
+    toast.success(`${count ?? 0} client(s) supprimé(s)`);
+    setOpenPurge(false);
+    setPurgeConfirmText("");
     void load();
   }
 
