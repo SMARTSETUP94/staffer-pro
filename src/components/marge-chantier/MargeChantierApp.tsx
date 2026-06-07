@@ -565,6 +565,65 @@ export function MargeChantierApp() {
           )}
 
 
+          {/* === Filtre période d'analyse === */}
+          {!isEmpty && app.heures.length > 0 && (
+            <Card className="border-border/60">
+              <CardContent className="py-3 px-4 flex flex-wrap items-center gap-3">
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  <Clock className="h-4 w-4 text-primary" />
+                  Période d'analyse
+                </div>
+                <div className="flex items-center gap-2">
+                  <label className="text-xs text-muted-foreground">Du</label>
+                  <Input
+                    type="month"
+                    value={periodFrom}
+                    min={periodBounds.min || undefined}
+                    max={periodBounds.max || undefined}
+                    onChange={(e) => setPeriodFrom(e.target.value)}
+                    className="h-8 w-[150px]"
+                  />
+                  <label className="text-xs text-muted-foreground">Au</label>
+                  <Input
+                    type="month"
+                    value={periodTo}
+                    min={periodBounds.min || undefined}
+                    max={periodBounds.max || undefined}
+                    onChange={(e) => setPeriodTo(e.target.value)}
+                    className="h-8 w-[150px]"
+                  />
+                </div>
+                {(periodFrom || periodTo) && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8"
+                    onClick={() => { setPeriodFrom(""); setPeriodTo(""); }}
+                  >
+                    Réinitialiser
+                  </Button>
+                )}
+                <div className="text-xs text-muted-foreground ml-auto">
+                  {periodFrom || periodTo ? (
+                    <>
+                      {analysisApp.heures.length} / {app.heures.length} lignes d'heures retenues
+                      {periodBounds.min && periodBounds.max && (
+                        <span className="ml-2 opacity-70">(données : {periodBounds.min} → {periodBounds.max})</span>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      Toutes les heures incluses
+                      {periodBounds.min && periodBounds.max && (
+                        <span className="ml-2 opacity-70">({periodBounds.min} → {periodBounds.max})</span>
+                      )}
+                    </>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* === KPIs globaux === */}
           {!isEmpty && (
             <GlobalKpiBar globals={globals} mode={mode} />
