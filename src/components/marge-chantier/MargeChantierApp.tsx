@@ -1377,6 +1377,40 @@ function TabDevis({ app, update, onGoTo }: { app: AppData; update: (fn: (d: AppD
     toast.success(`${count} devis importés`);
   };
 
+  /**
+   * Import du fichier "Devis consolidés" : 1 seul .xlsx contenant la feuille
+   * "Détail lignes" (toutes les lignes de tous les devis). Utilise la colonne
+   * "Temps × Qté titre" (déjà pré-multipliée) pour les heures vendues.
+   */
+  const importConsolides = async (files: FileList) => {
+    const f = files[0]; if (!f) return;
+    try {
+      const sheets = await readXlsxAllSheets(f);
+      const sheetName =
+        Object.keys(sheets).find((n) => /d[ée]tail.*ligne/i.test(n)) ||
+        Object.keys(sheets).find((n) => sheets[n]?.[0]?.some?.((c: any) => /n[°o]\s*devis/i.test("" + c))) ||
+        Object.keys(sheets)[0];
+      const rows = sheets[sheetName];
+      const list = parseDevisConsolidesRows(rows, app);
+      if (list.length === 0) {
+        toast.error("Aucun devis détecté dans la feuille " + sheetName);
+        return;
+      }
+      let added = 0, replaced = 0;
+      update((d) => {
+        for (const dv of list) {
+          const idx = d.devis.findIndex((x) => x.numDevis === dv.numDevis);
+          if (idx >= 0) { d.devis[idx] = dv; replaced++; }
+          else { d.devis.push(dv); added++; }
+        }
+      });
+      toast.success(`Devis consolidés : ${added} ajouté(s), ${replaced} mis à jour (feuille « ${sheetName} »)`);
+    } catch (e: any) {
+      console.error(e);
+      toast.error("Échec import consolidés : " + (e?.message ?? "erreur inconnue"));
+    }
+  };
+
   const filtered = useMemo(() => {
     const list = app.devis.filter((d) => !q || [d.numDevis, d.chantier, d.nom, d.client, d.chargeAffaire, d.chefProjet].some((v) => (v ?? "").toLowerCase().includes(q.toLowerCase())));
     if (sort === "ecarts") {
