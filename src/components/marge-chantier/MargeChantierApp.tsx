@@ -1570,14 +1570,19 @@ function TabDevis({ app, update, onGoTo }: { app: AppData; update: (fn: (d: AppD
                       </div>
                       <div className="overflow-auto max-h-96 border border-border rounded">
                         <table className="w-full text-xs">
-                          <thead className="bg-muted sticky top-0"><tr><th className="p-1">N°</th><th className="p-1 text-left">Désignation</th><th className="p-1">Métier</th><th className="p-1">Cat.</th><th className="p-1 text-right">H vendues</th><th className="p-1 text-right">CA HT</th><th></th></tr></thead>
+                          <thead className="bg-muted sticky top-0"><tr><th className="p-1">N°</th><th className="p-1 text-left">Titre</th><th className="p-1 text-left">Élément</th><th className="p-1 text-left">Détail</th><th className="p-1 text-left">Description</th><th className="p-1">Métier</th><th className="p-1">Cat.</th><th className="p-1 text-right">Heures</th><th className="p-1 text-right">CA HT</th><th></th></tr></thead>
                           <tbody>
                             {dv.lignes.map((l, li) => l.section ? (
-                              <tr key={li} className="bg-muted/40"><td className="p-1 font-mono text-muted-foreground">{l.num}</td><td className="p-1 italic" colSpan={5}>📑 {l.designation}{l.qte && l.qte > 1 ? ` (× ${l.qte})` : ""}</td><td></td></tr>
+                              <tr key={li} className="bg-muted/40"><td className="p-1 font-mono text-muted-foreground">{l.num}</td><td className="p-1 italic" colSpan={8}>📑 {l.titre || l.designation}{l.qte && l.qte > 1 ? ` (× ${l.qte})` : ""}</td><td></td></tr>
                             ) : (
-                              <tr key={li} className="border-b border-border">
-                                <td className="p-1 font-mono">{l.num}</td>
-                                <td className="p-1"><Input value={l.designation} onChange={(e) => update((d) => { d.devis[dvIdx].lignes[li].designation = e.target.value; })} className="h-6 bg-transparent text-xs" /></td>
+                              <tr key={li} className="border-b border-border align-top">
+                                <td className="p-1 font-mono whitespace-nowrap">{l.num}</td>
+                                <td className="p-1 max-w-[160px] truncate" title={l.titre ?? ""}>{l.titre ?? ""}</td>
+                                <td className="p-1 max-w-[180px] truncate" title={l.element ?? ""}>{l.element ?? ""}</td>
+                                <td className="p-1 max-w-[220px]">
+                                  <Input value={l.detail ?? l.designation} onChange={(e) => update((d) => { const ligne = d.devis[dvIdx].lignes[li]; ligne.detail = e.target.value; ligne.designation = e.target.value || ligne.element || ligne.titre || ""; })} className="h-6 bg-transparent text-xs" />
+                                </td>
+                                <td className="p-1 max-w-[260px] text-muted-foreground text-[11px] whitespace-pre-wrap line-clamp-3" title={l.description ?? ""}>{l.description ?? l.element ?? l.titre ?? ""}</td>
                                 <td className="p-1">
                                   <Select value={l.metier || "__none"} onValueChange={(v) => update((d) => { d.devis[dvIdx].lignes[li].metier = v === "__none" ? "" : v; })}>
                                     <SelectTrigger data-role="select-trigger" className="h-6 bg-transparent text-xs"><SelectValue /></SelectTrigger>
