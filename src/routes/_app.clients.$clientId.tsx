@@ -623,7 +623,7 @@ function EditClientDialog({
 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent>
+      <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Éditer client</DialogTitle>
         </DialogHeader>
