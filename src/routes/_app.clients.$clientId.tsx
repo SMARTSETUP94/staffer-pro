@@ -200,8 +200,8 @@ function ClientDetailPage() {
             <Button variant="outline" onClick={() => navigate({ to: "/clients" })}>
               <ArrowLeft className="h-4 w-4 mr-1" /> Liste
             </Button>
-            <Button variant="outline" onClick={() => setEditOpen(true)}>
-              <Pencil className="h-4 w-4 mr-1" /> Éditer
+            <Button onClick={() => setEditOpen(true)}>
+              <Pencil className="h-4 w-4 mr-1" /> Éditer la fiche
             </Button>
           </>
         }
