@@ -1070,41 +1070,53 @@ export type Database = {
       clients: {
         Row: {
           actif: boolean
+          adresse: string | null
           created_at: string
           created_by: string | null
           domaines_email: string[]
+          email: string | null
           id: string
           nom: string
           nom_normalise: string
           notes: string | null
           secteur: string | null
           siret: string | null
+          site_web: string | null
+          telephone: string | null
           updated_at: string
         }
         Insert: {
           actif?: boolean
+          adresse?: string | null
           created_at?: string
           created_by?: string | null
           domaines_email?: string[]
+          email?: string | null
           id?: string
           nom: string
           nom_normalise: string
           notes?: string | null
           secteur?: string | null
           siret?: string | null
+          site_web?: string | null
+          telephone?: string | null
           updated_at?: string
         }
         Update: {
           actif?: boolean
+          adresse?: string | null
           created_at?: string
           created_by?: string | null
           domaines_email?: string[]
+          email?: string | null
           id?: string
           nom?: string
           nom_normalise?: string
           notes?: string | null
           secteur?: string | null
           siret?: string | null
+          site_web?: string | null
+          telephone?: string | null
           updated_at?: string
         }
         Relationships: []
