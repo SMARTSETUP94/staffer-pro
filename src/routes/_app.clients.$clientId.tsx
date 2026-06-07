@@ -583,6 +583,10 @@ function EditClientDialog({
   const [domaines, setDomaines] = useState(client.domaines_email.join(", "));
   const [secteur, setSecteur] = useState(client.secteur ?? "");
   const [siret, setSiret] = useState(client.siret ?? "");
+  const [adresse, setAdresse] = useState(client.adresse ?? "");
+  const [telephone, setTelephone] = useState(client.telephone ?? "");
+  const [email, setEmail] = useState(client.email ?? "");
+  const [siteWeb, setSiteWeb] = useState(client.site_web ?? "");
   const [notes, setNotes] = useState(client.notes ?? "");
   const [actif, setActif] = useState(client.actif);
   const [saving, setSaving] = useState(false);
@@ -600,6 +604,10 @@ function EditClientDialog({
         domaines_email: domList,
         secteur: secteur.trim() || null,
         siret: siret.trim() || null,
+        adresse: adresse.trim() || null,
+        telephone: telephone.trim() || null,
+        email: email.trim() || null,
+        site_web: siteWeb.trim() || null,
         notes: notes.trim() || null,
         actif,
       })
