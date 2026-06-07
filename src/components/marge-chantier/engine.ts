@@ -455,7 +455,11 @@ export function parseDevisConsolidesRows(rows: any[][], app: AppData): Devis[] {
   const cTitre = col([h => /^titre$/.test(h) || h === 'titre']);
   const cQteTitre = col([h => /qt[ée]\s*titre/.test(h)]);
   const cElement = col([h => /^[ée]l[ée]ment$/.test(h) || /^element$/.test(h)]);
-  const cDetail = col([h => /^d[ée]tail$/.test(h)]);
+  const cDetail = col([
+    h => /^d[ée]tail$/.test(h),
+    h => /d[ée]signation\s*ligne/.test(h),
+    h => /^d[ée]signation$/.test(h),
+  ]);
   const cPuht = col([h => /p\.?u\.?h/.test(h) || /prix\s*unit/.test(h)]);
   const cTotalLigne = col([h => /total\s*h\.?t\.?\s*ligne/.test(h), h => /total\s*h\.?t\.?(?!\s*devis)/.test(h)]);
   const cTotalDevis = col([h => /total\s*h\.?t\.?\s*devis/.test(h)]);
