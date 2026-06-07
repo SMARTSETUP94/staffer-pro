@@ -306,6 +306,31 @@ function ClientsListPage() {
                       ? new Date(r.dernier_email_at).toLocaleDateString("fr-FR")
                       : "—"}
                   </TableCell>
+                  {canManage && (
+                    <TableCell className="text-right whitespace-nowrap">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        title="Éditer"
+                        onClick={() =>
+                          navigate({
+                            to: "/clients/$clientId",
+                            params: { clientId: r.id },
+                          })
+                        }
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        title="Supprimer"
+                        onClick={() => setConfirmDelete(r)}
+                      >
+                        <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                      </Button>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
             </TableBody>
