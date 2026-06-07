@@ -46,6 +46,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth-context";
 import { loadAppData, saveAppData, saveAppDataSync, downloadAsJson, restoreFromJson, MargeChantierSyncError } from "./storage";
 import { readXlsx, readXlsxAllSheets, readCsvWin1252, readCsvOrXlsx } from "./file-readers";
+import { parseCsv as parseEmployesCsv, decodeWindows1252 } from "@/lib/employes-import";
 import {
   emptyApp,
   type AppData,
