@@ -203,6 +203,15 @@ function ClientsListPage() {
                 <GitMerge className="h-4 w-4 mr-1" /> Fusionner doublons
               </Button>
             )}
+            {canManage && rows.length > 0 && (
+              <Button
+                variant="outline"
+                onClick={() => setOpenPurge(true)}
+                className="text-destructive hover:text-destructive"
+              >
+                <Trash2 className="h-4 w-4 mr-1" /> Vider la liste
+              </Button>
+            )}
             {canManage && (
               <Button variant="outline" onClick={() => setOpenImport(true)}>
                 <Upload className="h-4 w-4 mr-1" /> Importer CSV
