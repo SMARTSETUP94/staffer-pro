@@ -174,9 +174,26 @@ function ClientsListPage() {
         title="Clients"
         description="Hub centralisé : chantiers, opportunités, contacts et emails par client"
         actions={
-          <Button onClick={() => setOpenCreate(true)}>
-            <Plus className="h-4 w-4 mr-1" /> Nouveau client
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            {canMerge && (
+              <Button
+                variant="outline"
+                onClick={() => navigate({ to: "/clients/admin/fusion" })}
+              >
+                <GitMerge className="h-4 w-4 mr-1" /> Fusionner doublons
+              </Button>
+            )}
+            {canManage && (
+              <Button variant="outline" onClick={() => setOpenImport(true)}>
+                <Upload className="h-4 w-4 mr-1" /> Importer CSV
+              </Button>
+            )}
+            {canManage && (
+              <Button onClick={() => setOpenCreate(true)}>
+                <Plus className="h-4 w-4 mr-1" /> Nouveau client
+              </Button>
+            )}
+          </div>
         }
       />
 
