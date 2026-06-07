@@ -1700,20 +1700,69 @@ function TabHeures({ app, update, ctx, onGoTo }: { app: AppData; update: (fn: (d
 
   const filtered = app.heures.filter((h) => !q || [h.chantier, h.chantierNom, h.personne, h.date].some((v) => (v ?? "").toLowerCase().includes(q.toLowerCase())));
 
-  const controle = useMemo(() => {
-    const byCh: Record<string, { num: string; nom: string; count: number; inReg: boolean; nomsReg: string[] }> = {};
+  const normStr = (s: string) => (s ?? "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+
+  type CtrlKind = "ok" | "orphelin" | "ecart_nom" | "registre_sans_heures";
+  interface CtrlRow {
+    num: string; nom: string; heuresCount: number; heuresLignes: number;
+    inReg: boolean; nomsReg: string[]; totalHTReg: number;
+    kind: CtrlKind; accepted: boolean;
+  }
+
+  const controle = useMemo<CtrlRow[]>(() => {
+    const byCh: Record<string, CtrlRow> = {};
     app.heures.forEach((h) => {
       const k = h.chantier;
-      if (!byCh[k]) byCh[k] = { num: k, nom: h.chantierNom ?? "", count: 0, inReg: false, nomsReg: [] };
-      byCh[k].count += num(h.heures);
+      if (!byCh[k]) byCh[k] = { num: k, nom: h.chantierNom ?? "", heuresCount: 0, heuresLignes: 0, inReg: false, nomsReg: [], totalHTReg: 0, kind: "ok", accepted: false };
+      byCh[k].heuresCount += num(h.heures);
+      byCh[k].heuresLignes += 1;
+    });
+    app.registre.forEach((r) => {
+      if (!r.chantier) return;
+      if (!byCh[r.chantier]) byCh[r.chantier] = { num: r.chantier, nom: r.chantierFull ?? r.chantierLabel ?? "", heuresCount: 0, heuresLignes: 0, inReg: false, nomsReg: [], totalHTReg: 0, kind: "ok", accepted: false };
     });
     Object.values(byCh).forEach((c) => {
       const regs = app.registre.filter((r) => r.chantier === c.num);
       c.inReg = regs.length > 0;
-      c.nomsReg = regs.map((r) => r.chantierFull ?? r.chantierLabel ?? "").filter(Boolean);
+      c.nomsReg = Array.from(new Set(regs.map((r) => r.chantierFull ?? r.chantierLabel ?? "").filter(Boolean)));
+      c.totalHTReg = regs.reduce((s, r) => s + (r.totalHT ?? 0), 0);
+      c.accepted = !!app.meta.chantiersOK?.[c.num];
+      if (!c.inReg && c.heuresCount > 0) c.kind = "orphelin";
+      else if (c.inReg && c.heuresCount === 0) c.kind = "registre_sans_heures";
+      else if (c.inReg && c.nomsReg.length > 0 && c.nom && !c.nomsReg.some((n) => normStr(n) === normStr(c.nom) || normStr(n).includes(normStr(c.nom)) || normStr(c.nom).includes(normStr(n)))) c.kind = "ecart_nom";
+      else c.kind = "ok";
     });
     return Object.values(byCh).sort((a, b) => a.num.localeCompare(b.num));
-  }, [app.heures, app.registre]);
+  }, [app.heures, app.registre, app.meta.chantiersOK]);
+
+  const counts = useMemo(() => {
+    let orph = 0, ecart = 0, sansH = 0, ok = 0;
+    controle.forEach((c) => {
+      const k = c.accepted && c.kind !== "ok" ? "ok" : c.kind;
+      if (k === "orphelin") orph++;
+      else if (k === "ecart_nom") ecart++;
+      else if (k === "registre_sans_heures") sansH++;
+      else ok++;
+    });
+    return { orph, ecart, sansH, ok, aRegler: orph + ecart + sansH, total: controle.length };
+  }, [controle]);
+
+  const [ctrlFilter, setCtrlFilter] = useState<"tous" | "a_regler" | "orphelin" | "ecart_nom" | "registre_sans_heures" | "ok">("a_regler");
+  const controleFiltered = useMemo(() => {
+    return controle.filter((c) => {
+      const k = c.accepted && c.kind !== "ok" ? "ok" : c.kind;
+      if (ctrlFilter === "tous") return true;
+      if (ctrlFilter === "a_regler") return k !== "ok";
+      return k === ctrlFilter;
+    });
+  }, [controle, ctrlFilter]);
+
+  const renameHeuresChantier = (numCh: string, newNom: string) => {
+    update((d) => { d.heures.forEach((h) => { if (h.chantier === numCh) h.chantierNom = newNom; }); });
+    toast.success(`Nom mis à jour pour ${numCh}`);
+  };
+  const acceptCh = (numCh: string) => update((d) => { d.meta.chantiersOK = d.meta.chantiersOK ?? {}; d.meta.chantiersOK[numCh] = true; });
+  const unacceptCh = (numCh: string) => update((d) => { if (d.meta.chantiersOK) delete d.meta.chantiersOK[numCh]; });
 
   return (
     <Card>
