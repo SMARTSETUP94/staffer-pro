@@ -1444,6 +1444,21 @@ function TabDevis({ app, update, onGoTo }: { app: AppData; update: (fn: (d: AppD
               <SelectItem value="charge">Tri : chargé d'affaire</SelectItem>
             </SelectContent>
           </Select>
+          {app.devis.length > 0 && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="text-destructive hover:text-destructive"
+              onClick={() => {
+                if (confirm(`Supprimer les ${app.devis.length} devis importés ? Cette action est irréversible.`)) {
+                  update((d) => { d.devis = []; });
+                  toast.success("Tous les devis importés ont été supprimés");
+                }
+              }}
+            >
+              <Trash2 className="h-4 w-4 mr-1" /> Vider tous les devis
+            </Button>
+          )}
           <span className="ml-auto text-xs text-muted-foreground">{filtered.length} / {app.devis.length}</span>
         </div>
 
