@@ -1787,6 +1787,20 @@ function TabHeures({ app, update, ctx, onGoTo }: { app: AppData; update: (fn: (d
           <label className="flex items-center gap-1.5 text-sm cursor-pointer">
             <input type="checkbox" checked={erase} onChange={(e) => setErase(e.target.checked)} /> Écraser les heures des années présentes
           </label>
+          <Button
+            size="sm"
+            variant="outline"
+            className="text-destructive hover:text-destructive"
+            disabled={app.heures.length === 0}
+            onClick={() => {
+              if (window.confirm(`Effacer définitivement toutes les heures saisies (${app.heures.length} ligne${app.heures.length > 1 ? "s" : ""}) ?\n\nCette action est irréversible.`)) {
+                update((d) => { d.heures = []; });
+              }
+            }}
+            title="Vider toutes les heures importées"
+          >
+            <Trash2 className="h-4 w-4 mr-1" /> Vider
+          </Button>
           <div className="relative ml-auto">
             <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Recherche" className="pl-8 w-64" />
