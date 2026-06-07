@@ -184,7 +184,8 @@ export function ImportClientsDialog({
       for (let i = 0; i < rows.length; i += CHUNK) {
         const slice = rows.slice(i, i + CHUNK);
         const { data, error } = await supabase.rpc("import_clients_bulk", {
-          payload: slice as unknown as object,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          payload: slice as any,
         });
         if (error) throw error;
         const r = (data ?? {}) as {
