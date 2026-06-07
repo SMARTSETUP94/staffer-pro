@@ -1004,11 +1004,12 @@ function TabBaseRH({ app, update }: { app: AppData; update: (fn: (d: AppData) =>
           </div>
           <div className="ml-auto flex gap-2">
             <FileDropZone
-              accept=".xlsx"
+              accept=".xlsx,.csv"
               onFiles={importRH}
-              label="Importer fiche employés .xlsx"
+              label="Importer fiche employés (.xlsx ou .csv)"
               icon={<FileSpreadsheet className="h-4 w-4" />}
             />
+
             <Button size="sm" variant="outline" onClick={() => update((d) => { d.rh.push({ personne: "Nouvel employé", statut: "Intermittent", poste: "", metier: "", taux: 0, coef: 0, coutMensuel: 0 }); })}>
               <Plus className="h-4 w-4 mr-1" /> Ajouter
             </Button>
