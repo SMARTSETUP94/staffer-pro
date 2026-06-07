@@ -1616,7 +1616,12 @@ function TabDevis({ app, update, onGoTo }: { app: AppData; update: (fn: (d: AppD
   const [q, setQ] = useState("");
   const [open, setOpen] = useState<Record<string, boolean>>({});
   const [sort, setSort] = useState<DevisSort>("default");
+  const [onlyOrphan, setOnlyOrphan] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+
+  // v0.x — une ligne est "heures orphelines" si elle a des heures > 0 mais aucun métier mappé.
+  const isOrphanHours = (l: typeof app.devis[number]["lignes"][number]) =>
+    !l.section && (l.heuresVendues ?? 0) > 0 && !l.metier;
 
   const importXlsx = async (files: FileList) => {
     let count = 0;
