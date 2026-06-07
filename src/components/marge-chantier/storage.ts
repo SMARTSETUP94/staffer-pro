@@ -74,11 +74,40 @@ function toSyncError(e: unknown, fallback: string): MargeChantierSyncError {
   });
 }
 
+/**
+ * Nettoie en profondeur toutes les chaînes pour retirer les caractères que
+ * Postgres JSONB refuse :
+ *  - `\u0000` (NUL) — interdit dans `jsonb`
+ *  - lone surrogates (D800–DFFF non appariés) — fréquents dans les copier-coller Excel
+ *  - autres caractères de contrôle C0 hors tab/newline (souvent du bruit)
+ */
+function sanitizeForJsonb<T>(value: T): T {
+  const cleanStr = (s: string): string =>
+    s
+      .replace(/\u0000/g, "")
+      .replace(/[\ud800-\udbff](?![\udc00-\udfff])/g, "")
+      .replace(/(^|[^\ud800-\udbff])[\udc00-\udfff]/g, "$1")
+      // C0 hors \t \n \r
+      .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, "");
+  const walk = (v: unknown): unknown => {
+    if (typeof v === "string") return cleanStr(v);
+    if (Array.isArray(v)) return v.map(walk);
+    if (v && typeof v === "object") {
+      const out: Record<string, unknown> = {};
+      for (const [k, vv] of Object.entries(v as Record<string, unknown>)) out[k] = walk(vv);
+      return out;
+    }
+    return v;
+  };
+  return walk(value) as T;
+}
+
 async function upsertSupabase(userId: string, data: AppData): Promise<void> {
+  const cleaned = sanitizeForJsonb(JSON.parse(JSON.stringify(data)));
   const { error } = await supabase
     .from("marge_chantier_workspace")
     .upsert(
-      [{ user_id: userId, data: JSON.parse(JSON.stringify(data)), updated_at: new Date().toISOString() }],
+      [{ user_id: userId, data: cleaned, updated_at: new Date().toISOString() }],
       { onConflict: "user_id" },
     );
   if (error) {
