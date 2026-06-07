@@ -1,9 +1,22 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { requireCapability } from "@/lib/capability-guard";
 import { useEffect, useMemo, useState } from "react";
-import { Loader2, Plus, Search, Mail, Briefcase, Trophy, Users } from "lucide-react";
+import {
+  Loader2,
+  Plus,
+  Search,
+  Mail,
+  Briefcase,
+  Trophy,
+  Users,
+  Upload,
+  Pencil,
+  Trash2,
+  GitMerge,
+} from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useCapability } from "@/lib/capability-context";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,7 +32,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { NouveauClientDialog } from "@/components/clients/NouveauClientDialog";
+import { ImportClientsDialog } from "@/components/clients/ImportClientsDialog";
 
 export const Route = createFileRoute("/_app/clients")({
   beforeLoad: () => requireCapability("clients.view"),
