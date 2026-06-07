@@ -475,6 +475,20 @@ function ClientDetailPage() {
           }}
         />
       )}
+
+      {attachOpen && (
+        <AttachAffairesDialog
+          clientId={clientId}
+          clientNom={client.nom}
+          domaines={client.domaines_email}
+          existingIds={new Set(affaires.map((a) => a.id))}
+          onClose={() => setAttachOpen(false)}
+          onDone={async () => {
+            setAttachOpen(false);
+            await load();
+          }}
+        />
+      )}
     </div>
   );
 }
