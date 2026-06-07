@@ -848,3 +848,213 @@ function EditContactDialog({
     </Dialog>
   );
 }
+
+interface CandidateAffaire {
+  id: string;
+  numero: string;
+  nom: string;
+  client: string | null;
+  statut: string;
+  client_id: string | null;
+}
+
+function AttachAffairesDialog({
+  clientId,
+  clientNom,
+  domaines,
+  existingIds,
+  onClose,
+  onDone,
+}: {
+  clientId: string;
+  clientNom: string;
+  domaines: string[];
+  existingIds: Set<string>;
+  onClose: () => void;
+  onDone: () => void;
+}) {
+  const [candidates, setCandidates] = useState<CandidateAffaire[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [saving, setSaving] = useState(false);
+  const [showAll, setShowAll] = useState(false);
+
+  useEffect(() => {
+    async function load() {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("affaires")
+        .select("id, numero, nom, client, statut, client_id")
+        .is("archived_at", null)
+        .order("numero", { ascending: false })
+        .limit(2000);
+      if (error) {
+        toast.error("Erreur", { description: error.message });
+        setLoading(false);
+        return;
+      }
+      setCandidates(
+        ((data ?? []) as CandidateAffaire[]).filter(
+          (a) => a.client_id !== clientId,
+        ),
+      );
+      setLoading(false);
+    }
+    void load();
+  }, [clientId]);
+
+  const norm = (s: string) =>
+    s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const clientTokens = norm(clientNom)
+    .split(/[\s,;\-]+/)
+    .filter((t) => t.length >= 3);
+
+  const filtered = useMemo(() => {
+    const q = norm(search.trim());
+    return candidates.filter((a) => {
+      if (!showAll && a.client_id) return false;
+      // Heuristique : suggéré si le nom du client matche le champ texte "client",
+      // ou si un des domaines correspond.
+      const txt = norm(a.client ?? "");
+      const matchesClient =
+        clientTokens.length > 0 && clientTokens.some((t) => txt.includes(t));
+      if (!q && !showAll && !matchesClient) return false;
+      if (!q) return true;
+      return (
+        a.numero.toLowerCase().includes(q) ||
+        norm(a.nom).includes(q) ||
+        norm(a.client ?? "").includes(q)
+      );
+    });
+  }, [candidates, search, showAll, clientTokens]);
+
+  function toggle(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  async function submit() {
+    if (selected.size === 0) return;
+    setSaving(true);
+    const { error } = await supabase
+      .from("affaires")
+      .update({ client_id: clientId })
+      .in("id", Array.from(selected));
+    setSaving(false);
+    if (error) {
+      toast.error("Erreur", { description: error.message });
+      return;
+    }
+    toast.success(`${selected.size} chantier(s) rattaché(s)`);
+    onDone();
+  }
+
+  return (
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
+        <DialogHeader>
+          <DialogTitle>Rattacher des chantiers à « {clientNom} »</DialogTitle>
+        </DialogHeader>
+        <div className="flex flex-wrap items-center gap-3 py-2">
+          <div className="relative flex-1 min-w-[240px]">
+            <Search className="h-4 w-4 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Recherche numéro, nom, client…"
+              className="pl-8"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              autoFocus
+            />
+          </div>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={showAll}
+              onChange={(e) => setShowAll(e.target.checked)}
+            />
+            Inclure chantiers déjà rattachés à un autre client
+          </label>
+        </div>
+        <div className="flex-1 overflow-y-auto border rounded">
+          {loading ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-5 w-5 animate-spin" />
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground text-sm">
+              {search
+                ? "Aucun résultat."
+                : "Aucune suggestion. Tapez quelques lettres pour rechercher."}
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-10"></TableHead>
+                  <TableHead>Numéro</TableHead>
+                  <TableHead>Nom</TableHead>
+                  <TableHead>Client actuel</TableHead>
+                  <TableHead>Statut</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filtered.slice(0, 200).map((a) => (
+                  <TableRow
+                    key={a.id}
+                    className="cursor-pointer"
+                    onClick={() => toggle(a.id)}
+                  >
+                    <TableCell>
+                      <input
+                        type="checkbox"
+                        checked={selected.has(a.id)}
+                        onChange={() => toggle(a.id)}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </TableCell>
+                    <TableCell className="font-mono text-sm">
+                      {a.numero}
+                    </TableCell>
+                    <TableCell className="text-sm">{a.nom}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {a.client_id ? (
+                        <Badge variant="outline" className="text-[10px]">
+                          {a.client ?? "—"} (déjà rattaché)
+                        </Badge>
+                      ) : (
+                        a.client ?? "—"
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="text-[10px]">
+                        {a.statut}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </div>
+        <DialogFooter>
+          <div className="flex items-center gap-3 mr-auto text-sm text-muted-foreground">
+            {selected.size} sélectionné(s)
+            {filtered.length > 200 && ` · 200 premiers affichés sur ${filtered.length}`}
+          </div>
+          <Button variant="outline" onClick={onClose}>
+            Annuler
+          </Button>
+          <Button onClick={submit} disabled={saving || selected.size === 0}>
+            {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+            Rattacher
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
