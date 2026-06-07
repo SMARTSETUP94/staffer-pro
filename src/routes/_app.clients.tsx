@@ -75,6 +75,9 @@ function ClientsListPage() {
   const [openImport, setOpenImport] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<ClientRow | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [openPurge, setOpenPurge] = useState(false);
+  const [purgeConfirmText, setPurgeConfirmText] = useState("");
+  const [purging, setPurging] = useState(false);
 
   async function handleDelete() {
     if (!confirmDelete) return;
@@ -90,6 +93,23 @@ function ClientsListPage() {
     }
     toast.success(`« ${confirmDelete.nom} » supprimé`);
     setConfirmDelete(null);
+    void load();
+  }
+
+  async function handlePurgeAll() {
+    setPurging(true);
+    const { error, count } = await supabase
+      .from("clients")
+      .delete({ count: "exact" })
+      .not("id", "is", null);
+    setPurging(false);
+    if (error) {
+      toast.error("Vidage impossible", { description: error.message });
+      return;
+    }
+    toast.success(`${count ?? 0} client(s) supprimé(s)`);
+    setOpenPurge(false);
+    setPurgeConfirmText("");
     void load();
   }
 
@@ -181,6 +201,15 @@ function ClientsListPage() {
                 onClick={() => navigate({ to: "/clients/admin/fusion" })}
               >
                 <GitMerge className="h-4 w-4 mr-1" /> Fusionner doublons
+              </Button>
+            )}
+            {canManage && rows.length > 0 && (
+              <Button
+                variant="outline"
+                onClick={() => setOpenPurge(true)}
+                className="text-destructive hover:text-destructive"
+              >
+                <Trash2 className="h-4 w-4 mr-1" /> Vider la liste
               </Button>
             )}
             {canManage && (
@@ -405,6 +434,59 @@ function ClientsListPage() {
                 <Trash2 className="h-4 w-4 mr-2" />
               )}
               Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={openPurge}
+        onOpenChange={(o) => {
+          setOpenPurge(o);
+          if (!o) setPurgeConfirmText("");
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Vider toute la liste clients ?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2">
+                <p>
+                  Les <strong className="text-foreground">{rows.length}</strong>{" "}
+                  client(s) seront supprimés définitivement. Les affaires et
+                  emails entrants seront déliés (conservés sans client), les
+                  contacts liés seront supprimés.
+                </p>
+                <p className="text-destructive font-medium">
+                  Action irréversible. Tapez{" "}
+                  <code className="bg-muted px-1 rounded">VIDER</code> pour
+                  confirmer.
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <Input
+            value={purgeConfirmText}
+            onChange={(e) => setPurgeConfirmText(e.target.value)}
+            placeholder="VIDER"
+            autoFocus
+          />
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={purging}>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                void handlePurgeAll();
+              }}
+              disabled={purging || purgeConfirmText !== "VIDER"}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {purging ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                <Trash2 className="h-4 w-4 mr-2" />
+              )}
+              Tout supprimer
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
