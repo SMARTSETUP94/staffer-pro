@@ -429,6 +429,104 @@ export function apprendreParsing(app: AppData, motif: string, metier: string): v
   if (ex) ex.metier = metier; else app.parsing.push({ motif, metier });
 }
 
+/* -------------------- Import "Devis consolidés" (.xlsx) -------------------- */
+/**
+ * Parse la feuille "Détail lignes" du fichier de devis consolidés et retourne un tableau
+ * de Devis (1 par N° devis). Colonnes attendues (souples, détection par mot-clé) :
+ *   N° devis · N° ligne · Titre · Qté titre · Élément · Qté élément · Détail · Qté détail
+ *   P.U.H.T · Total H.T ligne · TVA · Temps prévu · Temps × Qté titre · Total HT devis
+ *
+ *  - heuresVendues = "Temps × Qté titre" (DÉJÀ multiplié par Qté titre, ne pas re-multiplier).
+ *  - caHT          = "Total H.T ligne" × "Qté titre" (multiplication titre nécessaire).
+ *  - Lignes de titre/section (Total H.T = 0 ET Temps × Qté = 0) -> section: true (exclues des calculs).
+ */
+export function parseDevisConsolidesRows(rows: any[][], app: AppData): Devis[] {
+  // Trouve l'entête : ligne contenant "N° devis"/"no devis" ET "désignation/titre/détail"
+  const isHeader = (r: any[]) => r.some(c => /n[°o]\s*devis/i.test('' + c));
+  let hi = rows.findIndex(isHeader);
+  if (hi < 0) hi = 0;
+  const head = rows[hi].map(c => ('' + c).toLowerCase().trim());
+  const col = (preds: ((h: string) => boolean)[]): number => {
+    for (const p of preds) { const i = head.findIndex(p); if (i >= 0) return i; }
+    return -1;
+  };
+  const cNumDevis = col([h => /n[°o]\s*devis/.test(h)]);
+  const cNumLigne = col([h => /n[°o]\s*ligne/.test(h)]);
+  const cTitre = col([h => /^titre$/.test(h) || h === 'titre']);
+  const cQteTitre = col([h => /qt[ée]\s*titre/.test(h)]);
+  const cElement = col([h => /^[ée]l[ée]ment$/.test(h) || /^element$/.test(h)]);
+  const cDetail = col([h => /^d[ée]tail$/.test(h)]);
+  const cPuht = col([h => /p\.?u\.?h/.test(h) || /prix\s*unit/.test(h)]);
+  const cTotalLigne = col([h => /total\s*h\.?t\.?\s*ligne/.test(h), h => /total\s*h\.?t\.?(?!\s*devis)/.test(h)]);
+  const cTotalDevis = col([h => /total\s*h\.?t\.?\s*devis/.test(h)]);
+  const cTempsQte = col([h => /temps\s*[×x*].*qt[ée]/.test(h) || /temps.*qt[ée]\s*titre/.test(h)]);
+  const cTempsPrevu = col([h => /temps\s*pr[ée]vu/.test(h)]);
+  const cChantier = col([h => /chantier/.test(h)]);
+  const cClient = col([h => /^client/.test(h)]);
+  const cCharge = col([h => /charg[ée]\s*(d[''’]?)?affaire/.test(h)]);
+
+  if (cNumDevis < 0) throw new Error("Colonne 'N° devis' introuvable dans la feuille.");
+
+  // Groupage par N° devis
+  const groups: Record<string, any[][]> = {};
+  const order: string[] = [];
+  const meta: Record<string, { titreFirst: string; chantier: string; client: string; charge: string; totalDevis: number }> = {};
+  for (let i = hi + 1; i < rows.length; i++) {
+    const r = rows[i]; if (!r || !r.length) continue;
+    const nd = ('' + r[cNumDevis]).trim(); if (!nd) continue;
+    if (!groups[nd]) { groups[nd] = []; order.push(nd); meta[nd] = { titreFirst: '', chantier: '', client: '', charge: '', totalDevis: 0 }; }
+    groups[nd].push(r);
+    const m = meta[nd];
+    if (!m.titreFirst && cTitre >= 0) m.titreFirst = ('' + r[cTitre]).trim();
+    if (!m.chantier && cChantier >= 0) m.chantier = ('' + r[cChantier]).trim();
+    if (!m.client && cClient >= 0) m.client = ('' + r[cClient]).trim();
+    if (!m.charge && cCharge >= 0) m.charge = ('' + r[cCharge]).trim();
+    if (cTotalDevis >= 0) { const v = num(r[cTotalDevis]); if (v > m.totalDevis) m.totalDevis = v; }
+  }
+
+  const out: Devis[] = [];
+  for (const nd of order) {
+    const rs = groups[nd]; const m = meta[nd];
+    const lignes: LigneDevis[] = [];
+    rs.forEach((r, idx) => {
+      const titre = cTitre >= 0 ? ('' + r[cTitre]).trim() : '';
+      const element = cElement >= 0 ? ('' + r[cElement]).trim() : '';
+      const detail = cDetail >= 0 ? ('' + r[cDetail]).trim() : '';
+      const designation = detail || element || titre;
+      const qteTitre = cQteTitre >= 0 ? num(r[cQteTitre]) : 1;
+      const mult = qteTitre > 0 ? qteTitre : 1;
+      const totalLigne = cTotalLigne >= 0 ? num(r[cTotalLigne]) : 0;
+      // Heures : "Temps × Qté titre" prioritaire (déjà multiplié), sinon Temps prévu × mult
+      const hRaw = cTempsQte >= 0 ? num(r[cTempsQte]) : 0;
+      const heuresVendues = hRaw > 0 ? hRaw : (cTempsPrevu >= 0 ? num(r[cTempsPrevu]) * mult : 0);
+      const caHT = totalLigne * mult;
+      const puht = cPuht >= 0 ? num(r[cPuht]) : 0;
+      const qteDetail = num((r as any)[head.findIndex(h => /qt[ée]\s*d[ée]tail/.test(h))]);
+      const num_ = cNumLigne >= 0 ? ('' + r[cNumLigne]).trim() : String(idx + 1);
+      const isSection = caHT === 0 && heuresVendues === 0;
+      if (isSection) {
+        if (designation) lignes.push({ num: num_, designation, metier: '', heuresVendues: 0, caHT: 0, categorie: 'mat', section: true, qte: qteTitre > 1 ? qteTitre : 0 });
+        return;
+      }
+      const categorie: 'mo' | 'mat' = heuresVendues > 0 ? 'mo' : 'mat';
+      const metier = categorie === 'mo' ? detecterMetier(app, designation) || detecterMetier(app, titre) : '';
+      lignes.push({ num: num_, designation, metier, heuresVendues, caHT, categorie, qte: qteDetail || qteTitre, puht, mult: mult !== 1 ? mult : undefined });
+    });
+    // n° chantier : préfixe numérique du Titre, sinon du numDevis
+    const numFromTitre = (m.titreFirst.match(/^(\d{3,})/) || [])[1];
+    const numFromDevis = (nd.match(/(\d{3,})/) || [])[1];
+    const chantier = m.chantier || numFromTitre || numFromDevis || nd;
+    const d: Devis = {
+      numDevis: nd, chantier, nom: m.titreFirst || nd,
+      client: m.client, chargeAffaire: m.charge, chefProjet: '', statut: '',
+      dateImport: Date.now(), lignes,
+    };
+    appliquerRegistre(app, d);
+    out.push(d);
+  }
+  return out;
+}
+
 /* ------------------------------- État vide ---------------------------------- */
 export const emptyApp = (): AppData => ({
   rh: [], devis: [], heures: [], registre: [], metiers: [], postes: [], chargesAffaire: [], chefsProjet: [], parsing: [],

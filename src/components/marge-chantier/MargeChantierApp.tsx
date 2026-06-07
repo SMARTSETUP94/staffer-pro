@@ -45,7 +45,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth-context";
 import { loadAppData, saveAppData, saveAppDataSync, downloadAsJson, restoreFromJson, MargeChantierSyncError } from "./storage";
-import { readXlsx, readCsvWin1252, readCsvOrXlsx } from "./file-readers";
+import { readXlsx, readXlsxAllSheets, readCsvWin1252, readCsvOrXlsx } from "./file-readers";
 import {
   emptyApp,
   type AppData,
@@ -58,6 +58,7 @@ import {
   calcChantierPerf,
   coutHoraire,
   parseDevisRows,
+  parseDevisConsolidesRows,
   parseHeuresRows,
   parseRegistreRows,
   applyPosteMap,
@@ -1376,6 +1377,40 @@ function TabDevis({ app, update, onGoTo }: { app: AppData; update: (fn: (d: AppD
     toast.success(`${count} devis importés`);
   };
 
+  /**
+   * Import du fichier "Devis consolidés" : 1 seul .xlsx contenant la feuille
+   * "Détail lignes" (toutes les lignes de tous les devis). Utilise la colonne
+   * "Temps × Qté titre" (déjà pré-multipliée) pour les heures vendues.
+   */
+  const importConsolides = async (files: FileList) => {
+    const f = files[0]; if (!f) return;
+    try {
+      const sheets = await readXlsxAllSheets(f);
+      const sheetName =
+        Object.keys(sheets).find((n) => /d[ée]tail.*ligne/i.test(n)) ||
+        Object.keys(sheets).find((n) => sheets[n]?.[0]?.some?.((c: any) => /n[°o]\s*devis/i.test("" + c))) ||
+        Object.keys(sheets)[0];
+      const rows = sheets[sheetName];
+      const list = parseDevisConsolidesRows(rows, app);
+      if (list.length === 0) {
+        toast.error("Aucun devis détecté dans la feuille " + sheetName);
+        return;
+      }
+      let added = 0, replaced = 0;
+      update((d) => {
+        for (const dv of list) {
+          const idx = d.devis.findIndex((x) => x.numDevis === dv.numDevis);
+          if (idx >= 0) { d.devis[idx] = dv; replaced++; }
+          else { d.devis.push(dv); added++; }
+        }
+      });
+      toast.success(`Devis consolidés : ${added} ajouté(s), ${replaced} mis à jour (feuille « ${sheetName} »)`);
+    } catch (e: any) {
+      console.error(e);
+      toast.error("Échec import consolidés : " + (e?.message ?? "erreur inconnue"));
+    }
+  };
+
   const filtered = useMemo(() => {
     const list = app.devis.filter((d) => !q || [d.numDevis, d.chantier, d.nom, d.client, d.chargeAffaire, d.chefProjet].some((v) => (v ?? "").toLowerCase().includes(q.toLowerCase())));
     if (sort === "ecarts") {
@@ -1396,6 +1431,7 @@ function TabDevis({ app, update, onGoTo }: { app: AppData; update: (fn: (d: AppD
       <CardContent className="p-4 space-y-3">
         <div className="flex gap-2 flex-wrap items-center">
           <FileDropZone accept=".xlsx" multiple onFiles={importXlsx} label="Importer devis .xlsx (multi)" icon={<FileSpreadsheet className="h-4 w-4" />} />
+          <FileDropZone accept=".xlsx" onFiles={importConsolides} label="Importer devis consolidés (.xlsx)" icon={<Sparkles className="h-4 w-4" />} />
           <div className="relative">
             <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Recherche" className="pl-8 w-64" />
