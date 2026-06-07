@@ -455,7 +455,11 @@ export function parseDevisConsolidesRows(rows: any[][], app: AppData): Devis[] {
   const cTitre = col([h => /^titre$/.test(h) || h === 'titre']);
   const cQteTitre = col([h => /qt[ée]\s*titre/.test(h)]);
   const cElement = col([h => /^[ée]l[ée]ment$/.test(h) || /^element$/.test(h)]);
-  const cDetail = col([h => /^d[ée]tail$/.test(h)]);
+  const cDetail = col([
+    h => /^d[ée]tail$/.test(h),
+    h => /d[ée]signation\s*ligne/.test(h),
+    h => /^d[ée]signation$/.test(h),
+  ]);
   const cPuht = col([h => /p\.?u\.?h/.test(h) || /prix\s*unit/.test(h)]);
   const cTotalLigne = col([h => /total\s*h\.?t\.?\s*ligne/.test(h), h => /total\s*h\.?t\.?(?!\s*devis)/.test(h)]);
   const cTotalDevis = col([h => /total\s*h\.?t\.?\s*devis/.test(h)]);
@@ -501,7 +505,7 @@ export function parseDevisConsolidesRows(rows: any[][], app: AppData): Devis[] {
       const heuresVendues = hRaw > 0 ? hRaw : (cTempsPrevu >= 0 ? num(r[cTempsPrevu]) * mult : 0);
       const caHT = totalLigne * mult;
       const puht = cPuht >= 0 ? num(r[cPuht]) : 0;
-      const qteDetail = num((r as any)[head.findIndex(h => /qt[ée]\s*d[ée]tail/.test(h))]);
+      const qteDetail = num((r as any)[head.findIndex(h => /qt[ée]\s*d[ée]tail/.test(h) || /qt[ée]\s*ligne/.test(h))]);
       const num_ = cNumLigne >= 0 ? ('' + r[cNumLigne]).trim() : String(idx + 1);
       const isSection = caHT === 0 && heuresVendues === 0;
       if (isSection) {

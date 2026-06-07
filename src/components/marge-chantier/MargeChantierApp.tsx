@@ -1501,7 +1501,7 @@ function TabDevis({ app, update, onGoTo }: { app: AppData; update: (fn: (d: AppD
       <CardContent className="p-4 space-y-3">
         <div className="flex gap-2 flex-wrap items-center">
           <FileDropZone accept=".xlsx" multiple onFiles={importXlsx} label="Importer devis .xlsx (multi)" icon={<FileSpreadsheet className="h-4 w-4" />} />
-          <FileDropZone accept=".xlsx" onFiles={importConsolides} label="Importer devis consolidés (.xlsx)" icon={<Sparkles className="h-4 w-4" />} />
+          <FileDropZone accept=".xlsx" onFiles={importConsolides} label="Importer base lignes / devis consolidés (.xlsx)" icon={<Sparkles className="h-4 w-4" />} />
           <div className="relative">
             <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Recherche" className="pl-8 w-64" />
