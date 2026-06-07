@@ -12,6 +12,12 @@ import {
   Trophy,
   Users,
   FileText,
+  MapPin,
+  Phone,
+  Globe,
+  Link2,
+  Search,
+  Unlink,
 } from "lucide-react";
 import { toast } from "sonner";
 import { format, parseISO } from "date-fns";
