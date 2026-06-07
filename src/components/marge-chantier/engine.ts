@@ -30,6 +30,13 @@ export interface LigneDevis {
   puht?: number;             // prix unitaire HT (garde-fou)
   mult?: number;             // multiplicateur de section appliqué (info)
   section?: boolean;         // true = titre/sous-total (exclu des calculs)
+  // Hiérarchie source (Base lignes) — affichage enrichi
+  titre?: string;            // colonne "Titre"
+  element?: string;          // colonne "Élément"
+  detail?: string;           // colonne "Désignation ligne" / "Détail"
+  description?: string;      // Description élément, sinon Description titre
+  qteTitre?: number;
+  qteElement?: number;
 }
 
 export interface Devis {
@@ -454,7 +461,10 @@ export function parseDevisConsolidesRows(rows: any[][], app: AppData): Devis[] {
   const cNumLigne = col([h => /n[°o]\s*ligne/.test(h)]);
   const cTitre = col([h => /^titre$/.test(h) || h === 'titre']);
   const cQteTitre = col([h => /qt[ée]\s*titre/.test(h)]);
+  const cDescTitre = col([h => /description\s*titre/.test(h)]);
   const cElement = col([h => /^[ée]l[ée]ment$/.test(h) || /^element$/.test(h)]);
+  const cQteElement = col([h => /qt[ée]\s*[ée]l[ée]ment/.test(h)]);
+  const cDescElement = col([h => /description\s*[ée]l[ée]ment/.test(h)]);
   const cDetail = col([
     h => /^d[ée]tail$/.test(h),
     h => /d[ée]signation\s*ligne/.test(h),
@@ -496,25 +506,36 @@ export function parseDevisConsolidesRows(rows: any[][], app: AppData): Devis[] {
       const titre = cTitre >= 0 ? ('' + r[cTitre]).trim() : '';
       const element = cElement >= 0 ? ('' + r[cElement]).trim() : '';
       const detail = cDetail >= 0 ? ('' + r[cDetail]).trim() : '';
+      const descTitre = cDescTitre >= 0 ? ('' + (r[cDescTitre] ?? '')).trim() : '';
+      const descElement = cDescElement >= 0 ? ('' + (r[cDescElement] ?? '')).trim() : '';
+      const description = descElement || descTitre || element || titre;
       const designation = detail || element || titre;
       const qteTitre = cQteTitre >= 0 ? num(r[cQteTitre]) : 1;
-      const mult = qteTitre > 0 ? qteTitre : 1;
+      const qteElement = cQteElement >= 0 ? num(r[cQteElement]) : 1;
+      const multTitre = qteTitre > 0 ? qteTitre : 1;
+      const multElement = qteElement > 0 ? qteElement : 1;
+      const mult = multTitre * multElement;
       const totalLigne = cTotalLigne >= 0 ? num(r[cTotalLigne]) : 0;
-      // Heures : "Temps × Qté titre" prioritaire (déjà multiplié), sinon Temps prévu × mult
+      // Heures : "Temps × Qté titre" prioritaire (déjà multiplié titre, on multiplie par élément), sinon Temps prévu × mult global
       const hRaw = cTempsQte >= 0 ? num(r[cTempsQte]) : 0;
-      const heuresVendues = hRaw > 0 ? hRaw : (cTempsPrevu >= 0 ? num(r[cTempsPrevu]) * mult : 0);
+      const heuresVendues = hRaw > 0 ? hRaw * multElement : (cTempsPrevu >= 0 ? num(r[cTempsPrevu]) * mult : 0);
       const caHT = totalLigne * mult;
       const puht = cPuht >= 0 ? num(r[cPuht]) : 0;
       const qteDetail = num((r as any)[head.findIndex(h => /qt[ée]\s*d[ée]tail/.test(h) || /qt[ée]\s*ligne/.test(h))]);
       const num_ = cNumLigne >= 0 ? ('' + r[cNumLigne]).trim() : String(idx + 1);
       const isSection = caHT === 0 && heuresVendues === 0;
       if (isSection) {
-        if (designation) lignes.push({ num: num_, designation, metier: '', heuresVendues: 0, caHT: 0, categorie: 'mat', section: true, qte: qteTitre > 1 ? qteTitre : 0 });
+        if (designation) lignes.push({ num: num_, designation, metier: '', heuresVendues: 0, caHT: 0, categorie: 'mat', section: true, qte: qteTitre > 1 ? qteTitre : 0, titre, element, detail, description });
         return;
       }
       const categorie: 'mo' | 'mat' = heuresVendues > 0 ? 'mo' : 'mat';
       const metier = categorie === 'mo' ? detecterMetier(app, designation) || detecterMetier(app, titre) : '';
-      lignes.push({ num: num_, designation, metier, heuresVendues, caHT, categorie, qte: qteDetail || qteTitre, puht, mult: mult !== 1 ? mult : undefined });
+      lignes.push({
+        num: num_, designation, metier, heuresVendues, caHT, categorie,
+        qte: qteDetail || qteTitre, puht, mult: mult !== 1 ? mult : undefined,
+        titre, element, detail, description,
+        qteTitre: qteTitre || undefined, qteElement: qteElement || undefined,
+      });
     });
     // n° chantier : préfixe numérique du Titre, sinon du numDevis
     const numFromTitre = (m.titreFirst.match(/^(\d{3,})/) || [])[1];
