@@ -195,6 +195,14 @@ function ClientsListPage() {
         description="Hub centralisé : chantiers, opportunités, contacts et emails par client"
         actions={
           <div className="flex flex-wrap gap-2">
+            {canManage && (
+              <Button
+                variant="outline"
+                onClick={() => navigate({ to: "/clients/admin/orphelins" })}
+              >
+                <Link2 className="h-4 w-4 mr-1" /> Affaires sans client
+              </Button>
+            )}
             {canMerge && (
               <Button
                 variant="outline"

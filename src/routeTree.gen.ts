@@ -88,6 +88,7 @@ import { Route as AppAdminAuditRouteImport } from './routes/_app.admin.audit'
 import { Route as AppAffairesAffaireIdIndexRouteImport } from './routes/_app.affaires.$affaireId.index'
 import { Route as ApiPublicHooksPollSmartInboxRouteImport } from './routes/api/public/hooks/poll-smart-inbox'
 import { Route as AppMissionsAffaireIdPhaseRouteImport } from './routes/_app.missions.$affaireId.$phase'
+import { Route as AppClientsAdminOrphelinsRouteImport } from './routes/_app.clients.admin.orphelins'
 import { Route as AppClientsAdminFusionRouteImport } from './routes/_app.clients.admin.fusion'
 import { Route as AppAffairesAffaireIdStaffingRouteImport } from './routes/_app.affaires.$affaireId.staffing'
 import { Route as AppAffairesAffaireIdPlanningChantierRouteImport } from './routes/_app.affaires.$affaireId.planning-chantier'
@@ -505,6 +506,12 @@ const AppMissionsAffaireIdPhaseRoute =
     path: '/missions/$affaireId/$phase',
     getParentRoute: () => AppRoute,
   } as any)
+const AppClientsAdminOrphelinsRoute =
+  AppClientsAdminOrphelinsRouteImport.update({
+    id: '/admin/orphelins',
+    path: '/admin/orphelins',
+    getParentRoute: () => AppClientsRoute,
+  } as any)
 const AppClientsAdminFusionRoute = AppClientsAdminFusionRouteImport.update({
   id: '/admin/fusion',
   path: '/admin/fusion',
@@ -650,6 +657,7 @@ export interface FileRoutesByFullPath {
   '/affaires/$affaireId/planning-chantier': typeof AppAffairesAffaireIdPlanningChantierRoute
   '/affaires/$affaireId/staffing': typeof AppAffairesAffaireIdStaffingRoute
   '/clients/admin/fusion': typeof AppClientsAdminFusionRoute
+  '/clients/admin/orphelins': typeof AppClientsAdminOrphelinsRoute
   '/missions/$affaireId/$phase': typeof AppMissionsAffaireIdPhaseRoute
   '/api/public/hooks/poll-smart-inbox': typeof ApiPublicHooksPollSmartInboxRoute
   '/affaires/$affaireId/': typeof AppAffairesAffaireIdIndexRoute
@@ -738,6 +746,7 @@ export interface FileRoutesByTo {
   '/affaires/$affaireId/planning-chantier': typeof AppAffairesAffaireIdPlanningChantierRoute
   '/affaires/$affaireId/staffing': typeof AppAffairesAffaireIdStaffingRoute
   '/clients/admin/fusion': typeof AppClientsAdminFusionRoute
+  '/clients/admin/orphelins': typeof AppClientsAdminOrphelinsRoute
   '/missions/$affaireId/$phase': typeof AppMissionsAffaireIdPhaseRoute
   '/api/public/hooks/poll-smart-inbox': typeof ApiPublicHooksPollSmartInboxRoute
   '/affaires/$affaireId': typeof AppAffairesAffaireIdIndexRoute
@@ -830,6 +839,7 @@ export interface FileRoutesById {
   '/_app/affaires/$affaireId/planning-chantier': typeof AppAffairesAffaireIdPlanningChantierRoute
   '/_app/affaires/$affaireId/staffing': typeof AppAffairesAffaireIdStaffingRoute
   '/_app/clients/admin/fusion': typeof AppClientsAdminFusionRoute
+  '/_app/clients/admin/orphelins': typeof AppClientsAdminOrphelinsRoute
   '/_app/missions/$affaireId/$phase': typeof AppMissionsAffaireIdPhaseRoute
   '/api/public/hooks/poll-smart-inbox': typeof ApiPublicHooksPollSmartInboxRoute
   '/_app/affaires/$affaireId/': typeof AppAffairesAffaireIdIndexRoute
@@ -922,6 +932,7 @@ export interface FileRouteTypes {
     | '/affaires/$affaireId/planning-chantier'
     | '/affaires/$affaireId/staffing'
     | '/clients/admin/fusion'
+    | '/clients/admin/orphelins'
     | '/missions/$affaireId/$phase'
     | '/api/public/hooks/poll-smart-inbox'
     | '/affaires/$affaireId/'
@@ -1010,6 +1021,7 @@ export interface FileRouteTypes {
     | '/affaires/$affaireId/planning-chantier'
     | '/affaires/$affaireId/staffing'
     | '/clients/admin/fusion'
+    | '/clients/admin/orphelins'
     | '/missions/$affaireId/$phase'
     | '/api/public/hooks/poll-smart-inbox'
     | '/affaires/$affaireId'
@@ -1101,6 +1113,7 @@ export interface FileRouteTypes {
     | '/_app/affaires/$affaireId/planning-chantier'
     | '/_app/affaires/$affaireId/staffing'
     | '/_app/clients/admin/fusion'
+    | '/_app/clients/admin/orphelins'
     | '/_app/missions/$affaireId/$phase'
     | '/api/public/hooks/poll-smart-inbox'
     | '/_app/affaires/$affaireId/'
@@ -1673,6 +1686,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppMissionsAffaireIdPhaseRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/clients/admin/orphelins': {
+      id: '/_app/clients/admin/orphelins'
+      path: '/admin/orphelins'
+      fullPath: '/clients/admin/orphelins'
+      preLoaderRoute: typeof AppClientsAdminOrphelinsRouteImport
+      parentRoute: typeof AppClientsRoute
+    }
     '/_app/clients/admin/fusion': {
       id: '/_app/clients/admin/fusion'
       path: '/admin/fusion'
@@ -1749,11 +1769,13 @@ declare module '@tanstack/react-router' {
 interface AppClientsRouteChildren {
   AppClientsClientIdRoute: typeof AppClientsClientIdRoute
   AppClientsAdminFusionRoute: typeof AppClientsAdminFusionRoute
+  AppClientsAdminOrphelinsRoute: typeof AppClientsAdminOrphelinsRoute
 }
 
 const AppClientsRouteChildren: AppClientsRouteChildren = {
   AppClientsClientIdRoute: AppClientsClientIdRoute,
   AppClientsAdminFusionRoute: AppClientsAdminFusionRoute,
+  AppClientsAdminOrphelinsRoute: AppClientsAdminOrphelinsRoute,
 }
 
 const AppClientsRouteWithChildren = AppClientsRoute._addFileChildren(
