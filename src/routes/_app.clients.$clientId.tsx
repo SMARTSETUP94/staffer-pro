@@ -112,7 +112,7 @@ function ClientDetailPage() {
     const [c, a, ct, em] = await Promise.all([
       supabase
         .from("clients")
-        .select("id, nom, domaines_email, secteur, siret, notes, actif")
+        .select("id, nom, domaines_email, secteur, siret, notes, actif, adresse, telephone, email, site_web")
         .eq("id", clientId)
         .maybeSingle(),
       supabase
