@@ -1013,6 +1013,21 @@ function TabBaseRH({ app, update }: { app: AppData; update: (fn: (d: AppData) =>
             <Button size="sm" variant="outline" onClick={() => update((d) => { d.rh.push({ personne: "Nouvel employé", statut: "Intermittent", poste: "", metier: "", taux: 0, coef: 0, coutMensuel: 0 }); })}>
               <Plus className="h-4 w-4 mr-1" /> Ajouter
             </Button>
+
+            <Button
+              size="sm"
+              variant="outline"
+              className="text-destructive hover:text-destructive"
+              disabled={app.rh.length === 0}
+              onClick={() => {
+                if (window.confirm(`Effacer définitivement la Base RH (${app.rh.length} ligne${app.rh.length > 1 ? "s" : ""}) ?\n\nCette action est irréversible.`)) {
+                  update((d) => { d.rh = []; });
+                }
+              }}
+              title="Vider toute la Base RH"
+            >
+              <Trash2 className="h-4 w-4 mr-1" /> Vider
+            </Button>
           </div>
         </div>
 
