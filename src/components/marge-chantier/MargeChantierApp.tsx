@@ -343,19 +343,54 @@ export function MargeChantierApp() {
     return () => clearInterval(i);
   }, []);
 
-  const ctx = useMemo(() => buildCtx(app), [app]);
-  const groups = useMemo(() => chantierGroups(app), [app]);
+  // Filtre période d'analyse (sur les heures uniquement) — n'affecte pas
+  // les onglets de saisie (RH, Référentiels, Registre, Devis, Heures bruts).
+  const [periodFrom, setPeriodFrom] = useState<string>(""); // "YYYY-MM"
+  const [periodTo, setPeriodTo] = useState<string>("");     // "YYYY-MM"
+
+  const monthOf = useCallback((h: { date?: string; annee?: string }) => {
+    const d = (h.date ?? "").match(/^(\d{4})-(\d{2})/);
+    if (d) return `${d[1]}-${d[2]}`;
+    if (h.annee) return `${h.annee}-01`;
+    return "";
+  }, []);
+
+  const analysisApp = useMemo<AppData>(() => {
+    if (!periodFrom && !periodTo) return app;
+    const from = periodFrom || "0000-00";
+    const to = periodTo || "9999-99";
+    const filteredHeures = app.heures.filter((h) => {
+      const m = monthOf(h);
+      if (!m) return false;
+      return m >= from && m <= to;
+    });
+    return { ...app, heures: filteredHeures };
+  }, [app, periodFrom, periodTo, monthOf]);
+
+  const periodBounds = useMemo(() => {
+    let min = "", max = "";
+    for (const h of app.heures) {
+      const m = monthOf(h);
+      if (!m) continue;
+      if (!min || m < min) min = m;
+      if (!max || m > max) max = m;
+    }
+    return { min, max };
+  }, [app.heures, monthOf]);
+
+  const ctx = useMemo(() => buildCtx(analysisApp), [analysisApp]);
+  const groups = useMemo(() => chantierGroups(analysisApp), [analysisApp]);
 
   const globals = useMemo(() => {
     let caMO = 0, caMat = 0, hVendues = 0, hSaisies = 0, marge = 0, cout = 0;
     groups.forEach((g) => {
-      const c = calcChantier(app, g, ctx, mode);
+      const c = calcChantier(analysisApp, g, ctx, mode);
       caMO += c.caMO; caMat += c.caMat;
       hVendues += c.heuresVendues; hSaisies += c.heuresPassees;
       marge += c.margeMO; cout += c.coutTotal;
     });
     return { caMO, caMat, hVendues, hSaisies, marge, cout, ratio: cout > 0 ? caMO / cout : NaN };
-  }, [app, ctx, groups, mode]);
+  }, [analysisApp, ctx, groups, mode]);
 
   const update = useCallback((fn: (draft: AppData) => void) => {
     setApp((prev) => {
