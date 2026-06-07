@@ -650,6 +650,51 @@ function EditClientDialog({
               <Input value={siret} onChange={(e) => setSiret(e.target.value)} />
             </div>
           </div>
+
+          <div className="pt-2 border-t">
+            <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
+              Coordonnées société
+            </div>
+            <div className="space-y-3">
+              <div>
+                <Label>Adresse</Label>
+                <Textarea
+                  rows={2}
+                  value={adresse}
+                  onChange={(e) => setAdresse(e.target.value)}
+                  placeholder="Rue, code postal, ville"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label>Téléphone</Label>
+                  <Input
+                    value={telephone}
+                    onChange={(e) => setTelephone(e.target.value)}
+                    placeholder="+33 1 23 45 67 89"
+                  />
+                </div>
+                <div>
+                  <Label>Email</Label>
+                  <Input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="contact@société.fr"
+                  />
+                </div>
+              </div>
+              <div>
+                <Label>Site web</Label>
+                <Input
+                  value={siteWeb}
+                  onChange={(e) => setSiteWeb(e.target.value)}
+                  placeholder="https://…"
+                />
+              </div>
+            </div>
+          </div>
+
           <div>
             <Label>Notes</Label>
             <Textarea
