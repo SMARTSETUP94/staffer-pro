@@ -294,11 +294,29 @@ function ClientDetailPage() {
         </TabsList>
 
         <TabsContent value="affaires">
-          <AffairesTable rows={chantiers} emptyLabel="Aucun chantier" />
+          <div className="flex justify-end mb-2">
+            <Button size="sm" variant="outline" onClick={() => setAttachOpen(true)}>
+              <Link2 className="h-4 w-4 mr-1" /> Rattacher des chantiers
+            </Button>
+          </div>
+          <AffairesTable
+            rows={chantiers}
+            emptyLabel="Aucun chantier"
+            onDetach={(a) => detachAffaire(a.id, a.numero)}
+          />
         </TabsContent>
 
         <TabsContent value="opportunites">
-          <AffairesTable rows={opportunites} emptyLabel="Aucune opportunité" />
+          <div className="flex justify-end mb-2">
+            <Button size="sm" variant="outline" onClick={() => setAttachOpen(true)}>
+              <Link2 className="h-4 w-4 mr-1" /> Rattacher des affaires
+            </Button>
+          </div>
+          <AffairesTable
+            rows={opportunites}
+            emptyLabel="Aucune opportunité"
+            onDetach={(a) => detachAffaire(a.id, a.numero)}
+          />
         </TabsContent>
 
         <TabsContent value="contacts">
