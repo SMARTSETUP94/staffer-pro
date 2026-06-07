@@ -1616,7 +1616,12 @@ function TabDevis({ app, update, onGoTo }: { app: AppData; update: (fn: (d: AppD
   const [q, setQ] = useState("");
   const [open, setOpen] = useState<Record<string, boolean>>({});
   const [sort, setSort] = useState<DevisSort>("default");
+  const [onlyOrphan, setOnlyOrphan] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+
+  // v0.x — une ligne est "heures orphelines" si elle a des heures > 0 mais aucun métier mappé.
+  const isOrphanHours = (l: typeof app.devis[number]["lignes"][number]) =>
+    !l.section && (l.heuresVendues ?? 0) > 0 && !l.metier;
 
   const importXlsx = async (files: FileList) => {
     let count = 0;
@@ -1672,7 +1677,10 @@ function TabDevis({ app, update, onGoTo }: { app: AppData; update: (fn: (d: AppD
   };
 
   const filtered = useMemo(() => {
-    const list = app.devis.filter((d) => !q || [d.numDevis, d.chantier, d.nom, d.client, d.chargeAffaire, d.chefProjet].some((v) => (v ?? "").toLowerCase().includes(q.toLowerCase())));
+    let list = app.devis.filter((d) => !q || [d.numDevis, d.chantier, d.nom, d.client, d.chargeAffaire, d.chefProjet].some((v) => (v ?? "").toLowerCase().includes(q.toLowerCase())));
+    if (onlyOrphan) {
+      list = list.filter((d) => d.lignes.some(isOrphanHours));
+    }
     if (sort === "ecarts") {
       return [...list].sort((a, b) => {
         const sa = a.lignes.filter(ecartQte).length + a.lignes.filter((l) => !l.section && l.categorie === "mo" && !l.metier).length;
@@ -1684,7 +1692,9 @@ function TabDevis({ app, update, onGoTo }: { app: AppData; update: (fn: (d: AppD
       return [...list].sort((a, b) => (a.chargeAffaire ?? "").localeCompare(b.chargeAffaire ?? ""));
     }
     return list;
-  }, [app.devis, q, sort]);
+  }, [app.devis, q, sort, onlyOrphan]);
+
+  const totalOrphan = useMemo(() => app.devis.reduce((s, d) => s + d.lignes.filter(isOrphanHours).length, 0), [app.devis]);
 
   return (
     <Card>
@@ -1704,6 +1714,19 @@ function TabDevis({ app, update, onGoTo }: { app: AppData; update: (fn: (d: AppD
               <SelectItem value="charge">Tri : chargé d'affaire</SelectItem>
             </SelectContent>
           </Select>
+          <Button
+            size="sm"
+            variant={onlyOrphan ? "default" : "outline"}
+            onClick={() => setOnlyOrphan((v) => !v)}
+            className={onlyOrphan ? "bg-amber-600 hover:bg-amber-600/90 text-white" : ""}
+            title="Afficher uniquement les lignes avec heures > 0 mais sans métier mappé"
+          >
+            <AlertTriangle className="h-4 w-4 mr-1" />
+            Heures sans métier
+            {totalOrphan > 0 && (
+              <Badge className="ml-1.5 bg-amber-700/80 hover:bg-amber-700 text-white">{totalOrphan}</Badge>
+            )}
+          </Button>
           {app.devis.length > 0 && (
             <Button
               size="sm"
@@ -1722,6 +1745,12 @@ function TabDevis({ app, update, onGoTo }: { app: AppData; update: (fn: (d: AppD
           <span className="ml-auto text-xs text-muted-foreground">{filtered.length} / {app.devis.length}</span>
         </div>
 
+        {onlyOrphan && totalOrphan === 0 && app.devis.length > 0 && (
+          <div className="rounded-md border border-emerald-700/40 bg-emerald-900/10 p-3 text-xs text-emerald-300">
+            ✓ Aucune ligne avec heures positives sans métier. Tous les postes MO sont rattachés.
+          </div>
+        )}
+
         {app.devis.length === 0 ? (
           <EmptyState
             icon={<FileText className="h-10 w-10" />}
@@ -1734,7 +1763,8 @@ function TabDevis({ app, update, onGoTo }: { app: AppData; update: (fn: (d: AppD
           <div className="space-y-2 max-h-[75vh] overflow-auto">
             {filtered.map((dv) => {
               const dvIdx = app.devis.indexOf(dv);
-              const isOpen = open[dv.numDevis] ?? false;
+              const orphanCount = dv.lignes.filter(isOrphanHours).length;
+              const isOpen = onlyOrphan ? orphanCount > 0 : (open[dv.numDevis] ?? false);
               const sansMetier = dv.lignes.filter((l) => !l.section && l.categorie === "mo" && !l.metier).length;
               const ecarts = dv.lignes.filter(ecartQte).length;
               return (
@@ -1762,37 +1792,41 @@ function TabDevis({ app, update, onGoTo }: { app: AppData; update: (fn: (d: AppD
                         <table className="w-full text-xs">
                           <thead className="bg-muted sticky top-0"><tr><th className="p-1">N°</th><th className="p-1 text-left">Titre</th><th className="p-1 text-left">Élément</th><th className="p-1 text-left">Détail</th><th className="p-1 text-left">Description</th><th className="p-1">Métier</th><th className="p-1">Cat.</th><th className="p-1 text-right">Heures</th><th className="p-1 text-right">CA HT</th><th></th></tr></thead>
                           <tbody>
-                            {dv.lignes.map((l, li) => l.section ? (
-                              <tr key={li} className="bg-muted/40"><td className="p-1 font-mono text-muted-foreground">{l.num}</td><td className="p-1 italic" colSpan={8}>📑 {l.titre || l.designation}{l.qte && l.qte > 1 ? ` (× ${l.qte})` : ""}</td><td></td></tr>
-                            ) : (
-                              <tr key={li} className="border-b border-border align-top">
-                                <td className="p-1 font-mono whitespace-nowrap">{l.num}</td>
-                                <td className="p-1 max-w-[160px] truncate" title={l.titre ?? ""}>{l.titre ?? ""}</td>
-                                <td className="p-1 max-w-[180px] truncate" title={l.element ?? ""}>{l.element ?? ""}</td>
-                                <td className="p-1 max-w-[220px]">
-                                  <Input value={l.detail ?? l.designation} onChange={(e) => update((d) => { const ligne = d.devis[dvIdx].lignes[li]; ligne.detail = e.target.value; ligne.designation = e.target.value || ligne.element || ligne.titre || ""; })} className="h-6 bg-transparent text-xs" />
-                                </td>
-                                <td className="p-1 max-w-[260px] text-muted-foreground text-[11px] whitespace-pre-wrap line-clamp-3" title={l.description ?? ""}>{l.description ?? l.element ?? l.titre ?? ""}</td>
-                                <td className="p-1">
-                                  <Select value={l.metier || "__none"} onValueChange={(v) => update((d) => { d.devis[dvIdx].lignes[li].metier = v === "__none" ? "" : v; })}>
-                                    <SelectTrigger data-role="select-trigger" className="h-6 bg-transparent text-xs"><SelectValue /></SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="__none">—</SelectItem>
-                                      {app.metiers.map((m) => <SelectItem key={m.nom} value={m.nom}>{m.nom}</SelectItem>)}
-                                    </SelectContent>
-                                  </Select>
-                                </td>
-                                <td className="p-1">{l.categorie}</td>
-                                <td className="p-1 text-right tabular-nums">{fmtNb(l.heuresVendues)}</td>
-                                <td className="p-1 text-right tabular-nums">{fmtEUR(l.caHT)}</td>
-                                <td className="p-1">
-                                  <div className="flex items-center gap-0.5">
-                                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground" title="Dupliquer" onClick={() => update((d) => { d.devis[dvIdx].lignes.splice(li + 1, 0, { ...JSON.parse(JSON.stringify(l)), num: l.num + "b" }); })}><Copy className="h-3 w-3" /></Button>
-                                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-destructive" title="Supprimer" onClick={() => update((d) => { d.devis[dvIdx].lignes.splice(li, 1); })}><Trash2 className="h-3 w-3" /></Button>
-                                  </div>
-                                </td>
-                              </tr>
-                            ))}
+                            {dv.lignes.map((l, li) => {
+                              const orphan = isOrphanHours(l);
+                              if (onlyOrphan && !l.section && !orphan) return null;
+                              return l.section ? (
+                                <tr key={li} className="bg-muted/40"><td className="p-1 font-mono text-muted-foreground">{l.num}</td><td className="p-1 italic" colSpan={8}>📑 {l.titre || l.designation}{l.qte && l.qte > 1 ? ` (× ${l.qte})` : ""}</td><td></td></tr>
+                              ) : (
+                                <tr key={li} className={`border-b border-border align-top ${orphan ? "bg-amber-500/10 ring-1 ring-inset ring-amber-500/40" : ""}`}>
+                                  <td className="p-1 font-mono whitespace-nowrap">{l.num}</td>
+                                  <td className="p-1 max-w-[160px] truncate" title={l.titre ?? ""}>{l.titre ?? ""}</td>
+                                  <td className="p-1 max-w-[180px] truncate" title={l.element ?? ""}>{l.element ?? ""}</td>
+                                  <td className="p-1 max-w-[220px]">
+                                    <Input value={l.detail ?? l.designation} onChange={(e) => update((d) => { const ligne = d.devis[dvIdx].lignes[li]; ligne.detail = e.target.value; ligne.designation = e.target.value || ligne.element || ligne.titre || ""; })} className="h-6 bg-transparent text-xs" />
+                                  </td>
+                                  <td className="p-1 max-w-[260px] text-muted-foreground text-[11px] whitespace-pre-wrap line-clamp-3" title={l.description ?? ""}>{l.description ?? l.element ?? l.titre ?? ""}</td>
+                                  <td className="p-1">
+                                    <Select value={l.metier || "__none"} onValueChange={(v) => update((d) => { d.devis[dvIdx].lignes[li].metier = v === "__none" ? "" : v; })}>
+                                      <SelectTrigger data-role="select-trigger" className={`h-6 bg-transparent text-xs ${orphan ? "border-amber-500 text-amber-300" : ""}`}><SelectValue /></SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="__none">—</SelectItem>
+                                        {app.metiers.map((m) => <SelectItem key={m.nom} value={m.nom}>{m.nom}</SelectItem>)}
+                                      </SelectContent>
+                                    </Select>
+                                  </td>
+                                  <td className="p-1">{l.categorie}</td>
+                                  <td className={`p-1 text-right tabular-nums ${orphan ? "font-semibold text-amber-300" : ""}`}>{fmtNb(l.heuresVendues)}</td>
+                                  <td className="p-1 text-right tabular-nums">{fmtEUR(l.caHT)}</td>
+                                  <td className="p-1">
+                                    <div className="flex items-center gap-0.5">
+                                      <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground" title="Dupliquer" onClick={() => update((d) => { d.devis[dvIdx].lignes.splice(li + 1, 0, { ...JSON.parse(JSON.stringify(l)), num: l.num + "b" }); })}><Copy className="h-3 w-3" /></Button>
+                                      <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-destructive" title="Supprimer" onClick={() => update((d) => { d.devis[dvIdx].lignes.splice(li, 1); })}><Trash2 className="h-3 w-3" /></Button>
+                                    </div>
+                                  </td>
+                                </tr>
+                              );
+                            })}
                           </tbody>
                         </table>
                       </div>
