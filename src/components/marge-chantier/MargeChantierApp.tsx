@@ -45,7 +45,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth-context";
 import { loadAppData, saveAppData, saveAppDataSync, downloadAsJson, restoreFromJson, MargeChantierSyncError } from "./storage";
-import { readXlsx, readCsvWin1252, readCsvOrXlsx } from "./file-readers";
+import { readXlsx, readXlsxAllSheets, readCsvWin1252, readCsvOrXlsx } from "./file-readers";
 import {
   emptyApp,
   type AppData,
