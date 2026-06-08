@@ -151,7 +151,24 @@ export function chantierNomFromLabel(s: string): string {
 
 /* ------------------------------- Moteur de coût ----------------------------- */
 export const globalCoef = (app: AppData) => { const c = app.meta && num(app.meta.coef); return c > 0 ? c : 1.5; };
-export const empOf = (app: AppData, personne: string) => app.rh.find(x => x.personne === personne);
+const _normPersonne = (s: string | null | undefined) => (s ?? '')
+  .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+  .toLowerCase().replace(/\s+/g, ' ').trim();
+export const empOf = (app: AppData, personne: string) => {
+  if (!personne) return undefined;
+  const direct = app.rh.find(x => x.personne === personne);
+  if (direct) return direct;
+  const key = _normPersonne(personne);
+  if (!key) return undefined;
+  // Match normalisé (casse, accents, espaces) + tolérance ordre "Nom Prénom" / "Prénom Nom"
+  return app.rh.find(x => {
+    const k = _normPersonne(x.personne);
+    if (k === key) return true;
+    const a = k.split(' ').filter(Boolean).sort().join(' ');
+    const b = key.split(' ').filter(Boolean).sort().join(' ');
+    return a && a === b;
+  });
+};
 export const isForfait = (e?: Employe) => !!(e && (e.statut === 'Permanent forfait' || (e as any).forfait));
 
 /** Coût horaire chargé = taux × coefficient (individuel sinon global). */
