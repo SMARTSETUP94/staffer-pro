@@ -991,7 +991,9 @@ function TabBaseRH({ app, update }: { app: AppData; update: (fn: (d: AppData) =>
             const coutMensuel = parseNum(cols[5] ?? "");
             const nom = (cols[6] ?? "").trim();
             const prenom = (cols[7] ?? "").trim();
-            const personne = `${nom} ${prenom}`.trim() || nomComplet;
+            // `personne` = identifiant ProGBAT (colonne "Nom complet"), c'est lui
+            // qui apparaît dans les heures importées. Fallback "Nom Prénom" si vide.
+            const personne = nomComplet || `${nom} ${prenom}`.trim();
             if (!personne) { skippedRich++; continue; }
             importedRich.push({
               personne,
