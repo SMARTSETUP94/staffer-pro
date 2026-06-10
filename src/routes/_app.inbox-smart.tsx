@@ -28,7 +28,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { getOutlookFullBody } from "@/server/inbox-smart.functions";
+import { getOutlookFullBody } from "@/lib/inbox-smart.functions";
 import { useAuth } from "@/lib/auth-context";
 import { useChargesAffaires } from "@/hooks/use-charges-affaires";
 import { NouvelleOpportuniteDialog } from "@/components/opportunites/NouvelleOpportuniteDialog";
