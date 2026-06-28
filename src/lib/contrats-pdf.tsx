@@ -7,11 +7,13 @@
  *  v3 = signé employeur (les 2 signatures)
  */
 /* eslint-disable react-refresh/only-export-components */
-// Polyfill Node Buffer in browser — @react-pdf/renderer's fetchImage needs it
-import { Buffer as BufferPolyfill } from "buffer/index.js";
-const __g = globalThis as Record<string, unknown>;
-if (typeof __g !== "undefined" && !__g["Buffer"]) {
-  __g["Buffer"] = BufferPolyfill;
+// Polyfill Node Buffer in browser lazily — @react-pdf/renderer's fetchImage needs it
+async function ensureBufferPolyfill() {
+  const g = globalThis as Record<string, unknown>;
+  if (!g["Buffer"]) {
+    const mod = await import(/* @vite-ignore */ "buffer" + "/");
+    g["Buffer"] = (mod as { Buffer: unknown }).Buffer;
+  }
 }
 import { Document, Page, Text, View, StyleSheet, Image, pdf } from "@react-pdf/renderer";
 import Html from "react-pdf-html";
