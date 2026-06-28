@@ -8,7 +8,7 @@
  */
 /* eslint-disable react-refresh/only-export-components */
 // Polyfill Node Buffer in browser — @react-pdf/renderer's fetchImage needs it
-import { Buffer } from "buffer";
+import { Buffer } from "buffer/";
 if (typeof globalThis !== "undefined" && !(globalThis as { Buffer?: unknown }).Buffer) {
   (globalThis as { Buffer: typeof Buffer }).Buffer = Buffer;
 }
