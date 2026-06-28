@@ -188,6 +188,7 @@ export function ContratIntermittentDocument({ data }: { data: ContratPdfData }):
 }
 
 export async function generateContratPdfBlob(data: ContratPdfData): Promise<Blob> {
+  await ensureBufferPolyfill();
   const doc = <ContratIntermittentDocument data={data} />;
   return await pdf(doc).toBlob();
 }
