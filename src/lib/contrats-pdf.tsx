@@ -7,10 +7,13 @@
  *  v3 = signé employeur (les 2 signatures)
  */
 /* eslint-disable react-refresh/only-export-components */
-// Polyfill Node Buffer in browser — @react-pdf/renderer's fetchImage needs it
-import { Buffer } from "buffer";
-if (typeof globalThis !== "undefined" && !(globalThis as { Buffer?: unknown }).Buffer) {
-  (globalThis as { Buffer: typeof Buffer }).Buffer = Buffer;
+// Polyfill Node Buffer in browser lazily — @react-pdf/renderer's fetchImage needs it
+async function ensureBufferPolyfill() {
+  const g = globalThis as Record<string, unknown>;
+  if (!g["Buffer"]) {
+    const mod = await import(/* @vite-ignore */ "buffer" + "/");
+    g["Buffer"] = (mod as { Buffer: unknown }).Buffer;
+  }
 }
 import { Document, Page, Text, View, StyleSheet, Image, pdf } from "@react-pdf/renderer";
 import Html from "react-pdf-html";
@@ -185,6 +188,7 @@ export function ContratIntermittentDocument({ data }: { data: ContratPdfData }):
 }
 
 export async function generateContratPdfBlob(data: ContratPdfData): Promise<Blob> {
+  await ensureBufferPolyfill();
   const doc = <ContratIntermittentDocument data={data} />;
   return await pdf(doc).toBlob();
 }
