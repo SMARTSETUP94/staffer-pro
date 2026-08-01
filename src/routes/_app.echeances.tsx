@@ -6,7 +6,7 @@ import {
   addDays, differenceInCalendarDays, format, parseISO, startOfWeek,
 } from "date-fns";
 import { fr } from "date-fns/locale";
-import { CalendarClock, Loader2, Moon, MapPin, Search, AlertTriangle } from "lucide-react";
+import { CalendarClock, Loader2, Moon, MapPin, Search } from "lucide-react";
 import { requireCapability } from "@/lib/capability-guard";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
@@ -169,14 +169,14 @@ function EcheancesPage() {
   const nbProspects = operations.filter((o) => isProspect(o.affaire)).length;
 
   const setParam = (patch: Partial<z.infer<typeof searchSchema>>) =>
-    navigate({ search: (prev) => ({ ...prev, ...patch }) });
+    navigate({ search: (prev: z.infer<typeof searchSchema>) => ({ ...prev, ...patch }) });
 
   return (
     <div className="space-y-6">
       <PageHeader
+        eyebrow="Pilotage / Échéances"
         title="Échéances"
         description="Ce qui part sur site dans les prochaines semaines."
-        icon={CalendarClock}
       />
 
       {/* Compteurs */}
@@ -383,5 +383,3 @@ function OperationRow({ op, today, prospect }: { op: Operation; today: Date; pro
     </button>
   );
 }
-
-export { AlertTriangle as _unusedIconGuard };
