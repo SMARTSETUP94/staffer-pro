@@ -86,6 +86,9 @@ export function getAffaireTypologie(numero: string | null | undefined): AffaireT
         return "montage_demontage";
       case "5":
         return "fabrication";
+      case "6":
+        return "fabrication";
+
       case "9":
         return "prototype";
       default:
