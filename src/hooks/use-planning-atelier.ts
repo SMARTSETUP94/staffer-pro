@@ -305,4 +305,3 @@ export function useEmployesDisponibles(metierId: number | null, date: string | n
   });
 }
 
-export { insertAssignationsBatch };
