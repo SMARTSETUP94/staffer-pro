@@ -76,13 +76,14 @@ import {
 } from "@/components/ui/dialog";
 import { MultiSelectCombo } from "@/components/ui/multi-select-combo";
 import type { SilaeValidationReport } from "@/lib/heures-export";
+import { HEURES_STATUTS, type HeuresStatut } from "@/lib/heures-status";
 
 // ============================================================================
 // Constantes + Schema search
 // ============================================================================
 
-export const STATUTS = ["brouillon", "soumis", "valide", "rejete"] as const;
-type Statut = (typeof STATUTS)[number];
+const STATUTS = HEURES_STATUTS;
+type Statut = HeuresStatut;
 
 const PRESETS = ["7j", "30j", "semaine", "mois", "mois_precedent", "custom"] as const;
 type PresetKey = (typeof PRESETS)[number];
