@@ -94,6 +94,7 @@ import { Route as AppClientsAdminFusionRouteImport } from './routes/_app.clients
 import { Route as AppAffairesAffaireIdStaffingRouteImport } from './routes/_app.affaires.$affaireId.staffing'
 import { Route as AppAffairesAffaireIdPlanningChantierRouteImport } from './routes/_app.affaires.$affaireId.planning-chantier'
 import { Route as AppAffairesAffaireIdJournalRouteImport } from './routes/_app.affaires.$affaireId.journal'
+import { Route as AppAffairesAffaireIdGrilleRouteImport } from './routes/_app.affaires.$affaireId.grille'
 import { Route as AppAffairesAffaireIdFabricationRouteImport } from './routes/_app.affaires.$affaireId.fabrication'
 import { Route as AppAffairesAffaireIdEquipeRouteImport } from './routes/_app.affaires.$affaireId.equipe'
 import { Route as AppAffairesAffaireIdDocumentsRouteImport } from './routes/_app.affaires.$affaireId.documents'
@@ -541,6 +542,12 @@ const AppAffairesAffaireIdJournalRoute =
     path: '/journal',
     getParentRoute: () => AppAffairesAffaireIdRoute,
   } as any)
+const AppAffairesAffaireIdGrilleRoute =
+  AppAffairesAffaireIdGrilleRouteImport.update({
+    id: '/grille',
+    path: '/grille',
+    getParentRoute: () => AppAffairesAffaireIdRoute,
+  } as any)
 const AppAffairesAffaireIdFabricationRoute =
   AppAffairesAffaireIdFabricationRouteImport.update({
     id: '/fabrication',
@@ -660,6 +667,7 @@ export interface FileRoutesByFullPath {
   '/affaires/$affaireId/documents': typeof AppAffairesAffaireIdDocumentsRoute
   '/affaires/$affaireId/equipe': typeof AppAffairesAffaireIdEquipeRoute
   '/affaires/$affaireId/fabrication': typeof AppAffairesAffaireIdFabricationRoute
+  '/affaires/$affaireId/grille': typeof AppAffairesAffaireIdGrilleRoute
   '/affaires/$affaireId/journal': typeof AppAffairesAffaireIdJournalRoute
   '/affaires/$affaireId/planning-chantier': typeof AppAffairesAffaireIdPlanningChantierRoute
   '/affaires/$affaireId/staffing': typeof AppAffairesAffaireIdStaffingRoute
@@ -750,6 +758,7 @@ export interface FileRoutesByTo {
   '/affaires/$affaireId/documents': typeof AppAffairesAffaireIdDocumentsRoute
   '/affaires/$affaireId/equipe': typeof AppAffairesAffaireIdEquipeRoute
   '/affaires/$affaireId/fabrication': typeof AppAffairesAffaireIdFabricationRoute
+  '/affaires/$affaireId/grille': typeof AppAffairesAffaireIdGrilleRoute
   '/affaires/$affaireId/journal': typeof AppAffairesAffaireIdJournalRoute
   '/affaires/$affaireId/planning-chantier': typeof AppAffairesAffaireIdPlanningChantierRoute
   '/affaires/$affaireId/staffing': typeof AppAffairesAffaireIdStaffingRoute
@@ -844,6 +853,7 @@ export interface FileRoutesById {
   '/_app/affaires/$affaireId/documents': typeof AppAffairesAffaireIdDocumentsRoute
   '/_app/affaires/$affaireId/equipe': typeof AppAffairesAffaireIdEquipeRoute
   '/_app/affaires/$affaireId/fabrication': typeof AppAffairesAffaireIdFabricationRoute
+  '/_app/affaires/$affaireId/grille': typeof AppAffairesAffaireIdGrilleRoute
   '/_app/affaires/$affaireId/journal': typeof AppAffairesAffaireIdJournalRoute
   '/_app/affaires/$affaireId/planning-chantier': typeof AppAffairesAffaireIdPlanningChantierRoute
   '/_app/affaires/$affaireId/staffing': typeof AppAffairesAffaireIdStaffingRoute
@@ -938,6 +948,7 @@ export interface FileRouteTypes {
     | '/affaires/$affaireId/documents'
     | '/affaires/$affaireId/equipe'
     | '/affaires/$affaireId/fabrication'
+    | '/affaires/$affaireId/grille'
     | '/affaires/$affaireId/journal'
     | '/affaires/$affaireId/planning-chantier'
     | '/affaires/$affaireId/staffing'
@@ -1028,6 +1039,7 @@ export interface FileRouteTypes {
     | '/affaires/$affaireId/documents'
     | '/affaires/$affaireId/equipe'
     | '/affaires/$affaireId/fabrication'
+    | '/affaires/$affaireId/grille'
     | '/affaires/$affaireId/journal'
     | '/affaires/$affaireId/planning-chantier'
     | '/affaires/$affaireId/staffing'
@@ -1121,6 +1133,7 @@ export interface FileRouteTypes {
     | '/_app/affaires/$affaireId/documents'
     | '/_app/affaires/$affaireId/equipe'
     | '/_app/affaires/$affaireId/fabrication'
+    | '/_app/affaires/$affaireId/grille'
     | '/_app/affaires/$affaireId/journal'
     | '/_app/affaires/$affaireId/planning-chantier'
     | '/_app/affaires/$affaireId/staffing'
@@ -1740,6 +1753,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAffairesAffaireIdJournalRouteImport
       parentRoute: typeof AppAffairesAffaireIdRoute
     }
+    '/_app/affaires/$affaireId/grille': {
+      id: '/_app/affaires/$affaireId/grille'
+      path: '/grille'
+      fullPath: '/affaires/$affaireId/grille'
+      preLoaderRoute: typeof AppAffairesAffaireIdGrilleRouteImport
+      parentRoute: typeof AppAffairesAffaireIdRoute
+    }
     '/_app/affaires/$affaireId/fabrication': {
       id: '/_app/affaires/$affaireId/fabrication'
       path: '/fabrication'
@@ -1849,6 +1869,7 @@ interface AppAffairesAffaireIdRouteChildren {
   AppAffairesAffaireIdDocumentsRoute: typeof AppAffairesAffaireIdDocumentsRoute
   AppAffairesAffaireIdEquipeRoute: typeof AppAffairesAffaireIdEquipeRoute
   AppAffairesAffaireIdFabricationRoute: typeof AppAffairesAffaireIdFabricationRoute
+  AppAffairesAffaireIdGrilleRoute: typeof AppAffairesAffaireIdGrilleRoute
   AppAffairesAffaireIdJournalRoute: typeof AppAffairesAffaireIdJournalRoute
   AppAffairesAffaireIdPlanningChantierRoute: typeof AppAffairesAffaireIdPlanningChantierRoute
   AppAffairesAffaireIdStaffingRoute: typeof AppAffairesAffaireIdStaffingRoute
@@ -1862,6 +1883,7 @@ const AppAffairesAffaireIdRouteChildren: AppAffairesAffaireIdRouteChildren = {
   AppAffairesAffaireIdDocumentsRoute: AppAffairesAffaireIdDocumentsRoute,
   AppAffairesAffaireIdEquipeRoute: AppAffairesAffaireIdEquipeRoute,
   AppAffairesAffaireIdFabricationRoute: AppAffairesAffaireIdFabricationRoute,
+  AppAffairesAffaireIdGrilleRoute: AppAffairesAffaireIdGrilleRoute,
   AppAffairesAffaireIdJournalRoute: AppAffairesAffaireIdJournalRoute,
   AppAffairesAffaireIdPlanningChantierRoute:
     AppAffairesAffaireIdPlanningChantierRoute,
@@ -2024,12 +2046,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}
