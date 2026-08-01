@@ -169,6 +169,7 @@ function MetiersPage() {
     setEdit({
       open: true, mode: "edit", id: row.id,
       code: row.code, libelle: row.libelle, couleur: row.couleur, ordre: row.ordre,
+      capaciteJour: row.capacite_jour == null ? "" : String(row.capacite_jour),
     });
   }
 
@@ -180,10 +181,20 @@ function MetiersPage() {
     if (!libelle) return toast.error("Libellé requis");
     if (!isValidOklch(couleur)) return toast.error("Couleur OKLCH invalide. Format : oklch(L% C H) ou oklch(L C H)");
 
+    const capaciteRaw = edit.capaciteJour.trim();
+    let capacite_jour: number | null = null;
+    if (capaciteRaw !== "") {
+      const parsed = Number(capaciteRaw);
+      if (!Number.isInteger(parsed) || parsed < 0 || parsed > 999) {
+        return toast.error("Capacité / jour invalide (entier entre 0 et 999, ou vide)");
+      }
+      capacite_jour = parsed;
+    }
+
     setSaving(true);
     if (edit.mode === "create") {
       const { error } = await supabase.from("metiers").insert({
-        code, libelle, couleur, ordre: edit.ordre,
+        code, libelle, couleur, ordre: edit.ordre, capacite_jour,
       });
       if (error) {
         toast.error("Erreur création : " + error.message);
@@ -193,8 +204,9 @@ function MetiersPage() {
       toast.success(`Métier "${libelle}" créé`);
     } else if (edit.id != null) {
       const { error } = await supabase.from("metiers").update({
-        code, libelle, couleur, ordre: edit.ordre,
+        code, libelle, couleur, ordre: edit.ordre, capacite_jour,
       }).eq("id", edit.id);
+
       if (error) {
         toast.error("Erreur modification : " + error.message);
         setSaving(false);
