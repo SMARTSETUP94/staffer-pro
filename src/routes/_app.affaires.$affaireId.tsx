@@ -20,6 +20,7 @@ import { CapabilityGuard } from "@/components/auth/CapabilityGuard";
 import { useCapability } from "@/hooks/use-capability";
 import { useFeatureFlag } from "@/hooks/use-feature-flag";
 import { NouveauClientDialog } from "@/components/clients/NouveauClientDialog";
+import { EditNumeroAffaireDialog } from "@/components/affaire/EditNumeroAffaireDialog";
 
 
 interface AffaireDetail {
