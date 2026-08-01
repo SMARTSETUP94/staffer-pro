@@ -9,7 +9,7 @@
  *
  *   Couverts par src/lib/__tests__/mission-card-helpers.test.ts.
  */
-import type { MissionPhase } from "@/server/mission-card.functions";
+import type { MissionPhase } from "@/lib/server-fns/mission-card.functions";
 
 export interface MissionEventLite {
   type: "arrivee" | "depart" | "probleme" | "photo" | "message";

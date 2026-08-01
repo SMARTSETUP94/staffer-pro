@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Loader2, Wand2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { autoStaffStep } from "@/server/staffing-autostaff.functions";
+import { autoStaffStep } from "@/lib/server-fns/staffing-autostaff.functions";
 
 export function AutoStaffButton({
   planId,

@@ -1,7 +1,7 @@
 // Lot 8.1 — Helpers purs pour la fiche objet (testables sans Supabase)
 // Extraits depuis objet-fiche.functions.ts pour permettre des tests unitaires.
 
-import type { ObjetTeamPersonne } from "@/server/objet-fiche.functions";
+import type { ObjetTeamPersonne } from "@/lib/server-fns/objet-fiche.functions";
 
 /** Mapping codes métier (DB) → colonnes heures_prevues_* de fabrication_objets */
 export const METIER_CODE_TO_PREVU_COL: Record<string, string | null> = {

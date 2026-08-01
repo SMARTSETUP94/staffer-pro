@@ -7,7 +7,7 @@ import { requireCapability } from "@/lib/capability-guard";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
-import { getPlanningChantierMacro } from "@/server/planning-chantier-macro.functions";
+import { getPlanningChantierMacro } from "@/lib/server-fns/planning-chantier-macro.functions";
 import { PlanningChantierGantt } from "@/components/planning/PlanningChantierGantt";
 
 export const Route = createFileRoute("/_app/affaires/$affaireId/planning-chantier")({

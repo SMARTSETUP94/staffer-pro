@@ -17,7 +17,7 @@ import {
   type EquipeChantierItem,
   type EquipePhase,
   type EquipeChantierMembre,
-} from "@/server/mes-equipes-chantiers.functions";
+} from "@/lib/server-fns/mes-equipes-chantiers.functions";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";

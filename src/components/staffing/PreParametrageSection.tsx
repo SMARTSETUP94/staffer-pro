@@ -7,7 +7,7 @@ import {
   listChantierMetierConfig,
   suggestPreParametrage,
   type ChantierMetierConfigRow,
-} from "@/server/staffing-pre-parametrage.functions";
+} from "@/lib/server-fns/staffing-pre-parametrage.functions";
 import type { Conflict, MetierConfigKey } from "@/lib/staffing/pre-parametrage";
 
 const COLLAPSE_LS_KEY = "staffing.preparam.collapsed.v1";

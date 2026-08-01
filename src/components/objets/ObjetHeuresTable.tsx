@@ -16,7 +16,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
-import type { ObjetHeuresMetier } from "@/server/objet-fiche.functions";
+import type { ObjetHeuresMetier } from "@/lib/server-fns/objet-fiche.functions";
 import { computeEcart, type EcartTone } from "@/lib/objet-heures-helpers";
 
 type Mode = "total" | "unitaire";

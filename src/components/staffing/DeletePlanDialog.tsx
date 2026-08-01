@@ -16,7 +16,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, Trash2, AlertTriangle } from "lucide-react";
-import { deleteStaffingPlan } from "@/server/staffing-plan-delete.functions";
+import { deleteStaffingPlan } from "@/lib/server-fns/staffing-plan-delete.functions";
 
 export function DeletePlanDialog({
   planId,

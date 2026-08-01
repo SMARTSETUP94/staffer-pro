@@ -42,7 +42,7 @@ import {
   type CarteMissionDetail,
   type MissionEvent,
   type MissionPhase,
-} from "@/server/mission-card.functions";
+} from "@/lib/server-fns/mission-card.functions";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,

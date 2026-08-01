@@ -12,7 +12,7 @@ import { useServerFn } from "@tanstack/react-start";
 import {
   getCastingChantier,
   type CastingChantierData,
-} from "@/server/casting-chantier.functions";
+} from "@/lib/server-fns/casting-chantier.functions";
 
 export function useCastingChantier(affaireId: string | null | undefined) {
   const fn = useServerFn(getCastingChantier);

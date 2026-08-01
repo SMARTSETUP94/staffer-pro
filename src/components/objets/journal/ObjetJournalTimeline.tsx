@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getObjetJournal } from "@/server/objet-journal.functions";
+import { getObjetJournal } from "@/lib/server-fns/objet-journal.functions";
 
 interface Props {
   objetId: string;

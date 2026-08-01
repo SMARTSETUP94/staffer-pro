@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { resolveCncConflict, type ResolveResult } from "@/server/staffing-resolve.functions";
+import { resolveCncConflict, type ResolveResult } from "@/lib/server-fns/staffing-resolve.functions";
 import { formatShortDate } from "./gantt-helpers";
 
 interface Props {

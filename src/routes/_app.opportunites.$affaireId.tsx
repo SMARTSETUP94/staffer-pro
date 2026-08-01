@@ -22,7 +22,7 @@ import {
   getOpportuniteFiche,
   updateOpportuniteFields,
   type OpportuniteFicheData,
-} from "@/server/opportunite-fiche.functions";
+} from "@/lib/server-fns/opportunite-fiche.functions";
 import { OpportuniteFicheHeader } from "@/components/opportunites/fiche/OpportuniteFicheHeader";
 import { OpportuniteJalonsBar } from "@/components/opportunites/fiche/OpportuniteJalonsBar";
 import { OpportuniteNextActionCard } from "@/components/opportunites/fiche/OpportuniteNextActionCard";

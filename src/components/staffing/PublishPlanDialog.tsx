@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Loader2, Send } from "lucide-react";
-import { publishStaffingPlan } from "@/server/staffing-publish.functions";
+import { publishStaffingPlan } from "@/lib/server-fns/staffing-publish.functions";
 
 export function PublishPlanDialog({
   planId,

@@ -30,8 +30,8 @@ import { toast } from "sonner";
 import {
   upsertAffaireEquipeMember,
   listAllActiveEmployes,
-} from "@/server/equipe-mutations.functions";
-import type { CastingPhase } from "@/server/casting-chantier.functions";
+} from "@/lib/server-fns/equipe-mutations.functions";
+import type { CastingPhase } from "@/lib/server-fns/casting-chantier.functions";
 
 interface Props {
   open: boolean;

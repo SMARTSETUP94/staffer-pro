@@ -18,7 +18,7 @@ import {
   canEditAnyField,
   type ObjetEditableField,
 } from "@/lib/objet-fiche-permissions";
-import { updateObjetIdentite } from "@/server/objet-fiche.functions";
+import { updateObjetIdentite } from "@/lib/server-fns/objet-fiche.functions";
 import { useAuth } from "@/lib/auth-context";
 
 interface Props {

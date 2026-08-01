@@ -19,9 +19,9 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { removeAffaireEquipeMember } from "@/server/equipe-mutations.functions";
+import { removeAffaireEquipeMember } from "@/lib/server-fns/equipe-mutations.functions";
 import { supabase } from "@/integrations/supabase/client";
-import type { CastingPhase } from "@/server/casting-chantier.functions";
+import type { CastingPhase } from "@/lib/server-fns/casting-chantier.functions";
 
 interface Props {
   open: boolean;

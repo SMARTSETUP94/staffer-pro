@@ -14,7 +14,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { removeMemberFromObjet } from "@/server/objet-equipe-mutations.functions";
+import { removeMemberFromObjet } from "@/lib/server-fns/objet-equipe-mutations.functions";
 
 interface Props {
   open: boolean;

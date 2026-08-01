@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getChargeAtelier } from "@/server/staffing.functions";
+import { getChargeAtelier } from "@/lib/server-fns/staffing.functions";
 import { workingDaysBetween, formatShortDate, formatDayName, METIER_COLOR, METIER_LABEL, METIER_ORDER } from "./gantt-helpers";
 import { isJourFerieFR, labelJourFerieFR } from "@/lib/jours-feries";
 import type { MetierKey } from "@/lib/staffing/types";

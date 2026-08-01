@@ -10,7 +10,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { ImageOff } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getObjetPhotos } from "@/server/objet-photos.functions";
+import { getObjetPhotos } from "@/lib/server-fns/objet-photos.functions";
 
 interface Props {
   objetId: string;

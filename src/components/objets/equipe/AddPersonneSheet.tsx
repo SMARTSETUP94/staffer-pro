@@ -29,7 +29,7 @@ import { toast } from "sonner";
 import {
   addManualMemberToObjet,
   listObjetEquipeCandidats,
-} from "@/server/objet-equipe-mutations.functions";
+} from "@/lib/server-fns/objet-equipe-mutations.functions";
 import { EmployePickerList, type CandidatRow } from "./EmployePickerList";
 
 interface Props {

@@ -21,7 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
-import { getObjetFiche } from "@/server/objet-fiche.functions";
+import { getObjetFiche } from "@/lib/server-fns/objet-fiche.functions";
 import { useFeatureFlag } from "@/hooks/use-feature-flag";
 import { ObjetIdentiteSection } from "@/components/objets/ObjetIdentiteSection";
 import { ObjetHeuresTable } from "@/components/objets/ObjetHeuresTable";

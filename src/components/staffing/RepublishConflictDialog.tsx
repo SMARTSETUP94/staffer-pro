@@ -31,7 +31,7 @@ import {
   detectEquipeOverrides,
   publishStaffingPlanV2,
   type RepublishStrategy,
-} from "@/server/staffing-publish.functions";
+} from "@/lib/server-fns/staffing-publish.functions";
 
 interface Props {
   open: boolean;

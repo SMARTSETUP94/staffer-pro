@@ -15,7 +15,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { addDays, endOfWeek, format, isAfter, isBefore, parseISO, startOfWeek } from "date-fns";
 import { fr } from "date-fns/locale";
 import { ChevronRight, Inbox, MapPin, PackageCheck, RefreshCw, Wrench } from "lucide-react";
-import { getMesMissions, type MissionListItem } from "@/server/mission-card.functions";
+import { getMesMissions, type MissionListItem } from "@/lib/server-fns/mission-card.functions";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";

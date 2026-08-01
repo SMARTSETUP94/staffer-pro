@@ -21,7 +21,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useEditStore } from "@/lib/staffing/edit-store";
-import { flushStepEdits } from "@/server/staffing-flush.functions";
+import { flushStepEdits } from "@/lib/server-fns/staffing-flush.functions";
 
 const AUTOSAVE_IDLE_MS = 5 * 60 * 1000; // 5 min (v0.39.0d — réduit fréquence reload)
 
