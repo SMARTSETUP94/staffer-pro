@@ -43,6 +43,7 @@ import { Route as AppEmployesRouteImport } from './routes/_app.employes'
 import { Route as AppEcheancesRouteImport } from './routes/_app.echeances'
 import { Route as AppClientsRouteImport } from './routes/_app.clients'
 import { Route as AppChargeAtelierRouteImport } from './routes/_app.charge-atelier'
+import { Route as AppChargeRouteImport } from './routes/_app.charge'
 import { Route as AppCandidaturesRouteImport } from './routes/_app.candidatures'
 import { Route as AppAujourdhuiRouteImport } from './routes/_app.aujourdhui'
 import { Route as AppAuditHeuresRouteImport } from './routes/_app.audit-heures'
@@ -270,6 +271,11 @@ const AppClientsRoute = AppClientsRouteImport.update({
 const AppChargeAtelierRoute = AppChargeAtelierRouteImport.update({
   id: '/charge-atelier',
   path: '/charge-atelier',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppChargeRoute = AppChargeRouteImport.update({
+  id: '/charge',
+  path: '/charge',
   getParentRoute: () => AppRoute,
 } as any)
 const AppCandidaturesRoute = AppCandidaturesRouteImport.update({
@@ -602,6 +608,7 @@ export interface FileRoutesByFullPath {
   '/audit-heures': typeof AppAuditHeuresRoute
   '/aujourdhui': typeof AppAujourdhuiRoute
   '/candidatures': typeof AppCandidaturesRoute
+  '/charge': typeof AppChargeRoute
   '/charge-atelier': typeof AppChargeAtelierRoute
   '/clients': typeof AppClientsRouteWithChildren
   '/echeances': typeof AppEcheancesRoute
@@ -695,6 +702,7 @@ export interface FileRoutesByTo {
   '/audit-heures': typeof AppAuditHeuresRoute
   '/aujourdhui': typeof AppAujourdhuiRoute
   '/candidatures': typeof AppCandidaturesRoute
+  '/charge': typeof AppChargeRoute
   '/charge-atelier': typeof AppChargeAtelierRoute
   '/clients': typeof AppClientsRouteWithChildren
   '/echeances': typeof AppEcheancesRoute
@@ -789,6 +797,7 @@ export interface FileRoutesById {
   '/_app/audit-heures': typeof AppAuditHeuresRoute
   '/_app/aujourdhui': typeof AppAujourdhuiRoute
   '/_app/candidatures': typeof AppCandidaturesRoute
+  '/_app/charge': typeof AppChargeRoute
   '/_app/charge-atelier': typeof AppChargeAtelierRoute
   '/_app/clients': typeof AppClientsRouteWithChildren
   '/_app/echeances': typeof AppEcheancesRoute
@@ -886,6 +895,7 @@ export interface FileRouteTypes {
     | '/audit-heures'
     | '/aujourdhui'
     | '/candidatures'
+    | '/charge'
     | '/charge-atelier'
     | '/clients'
     | '/echeances'
@@ -979,6 +989,7 @@ export interface FileRouteTypes {
     | '/audit-heures'
     | '/aujourdhui'
     | '/candidatures'
+    | '/charge'
     | '/charge-atelier'
     | '/clients'
     | '/echeances'
@@ -1072,6 +1083,7 @@ export interface FileRouteTypes {
     | '/_app/audit-heures'
     | '/_app/aujourdhui'
     | '/_app/candidatures'
+    | '/_app/charge'
     | '/_app/charge-atelier'
     | '/_app/clients'
     | '/_app/echeances'
@@ -1407,6 +1419,13 @@ declare module '@tanstack/react-router' {
       path: '/charge-atelier'
       fullPath: '/charge-atelier'
       preLoaderRoute: typeof AppChargeAtelierRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/charge': {
+      id: '/_app/charge'
+      path: '/charge'
+      fullPath: '/charge'
+      preLoaderRoute: typeof AppChargeRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/candidatures': {
@@ -1925,6 +1944,7 @@ interface AppRouteChildren {
   AppAuditHeuresRoute: typeof AppAuditHeuresRoute
   AppAujourdhuiRoute: typeof AppAujourdhuiRoute
   AppCandidaturesRoute: typeof AppCandidaturesRoute
+  AppChargeRoute: typeof AppChargeRoute
   AppChargeAtelierRoute: typeof AppChargeAtelierRoute
   AppClientsRoute: typeof AppClientsRouteWithChildren
   AppEcheancesRoute: typeof AppEcheancesRoute
@@ -1992,6 +2012,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAuditHeuresRoute: AppAuditHeuresRoute,
   AppAujourdhuiRoute: AppAujourdhuiRoute,
   AppCandidaturesRoute: AppCandidaturesRoute,
+  AppChargeRoute: AppChargeRoute,
   AppChargeAtelierRoute: AppChargeAtelierRoute,
   AppClientsRoute: AppClientsRouteWithChildren,
   AppEcheancesRoute: AppEcheancesRoute,
