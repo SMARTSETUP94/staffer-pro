@@ -79,6 +79,7 @@ function buildSections(
       label: "Pilotage",
       items: [
         // L6-A : Inbox fusionnée dans `/` (item « Aujourd'hui »).
+        { title: "Échéances", url: "/echeances", icon: CalendarClock, cap: "section.affaires" },
         { title: "Planning fab", url: "/planning", icon: Calendar, cap: "section.planning_fab" },
         { title: "Pipeline opportunités", url: "/opportunites", icon: Trophy, cap: "section.pipeline_opportunites" },
       ],
