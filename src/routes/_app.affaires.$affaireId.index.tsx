@@ -44,6 +44,13 @@ function AffaireSynthesePage() {
   const [dEvtFin, setDEvtFin] = useState<string>("");
   const [dDemontage, setDDemontage] = useState<string>("");
   const [savingDates, setSavingDates] = useState(false);
+  // LOT 1 — Opération de montage (vue Échéances)
+  const [mNbTech, setMNbTech] = useState<string>("");
+  const [mNuit, setMNuit] = useState<boolean>(false);
+  const [mNbSemi, setMNbSemi] = useState<string>("");
+  const [mNb20m3, setMNb20m3] = useState<string>("");
+  const [mNature, setMNature] = useState<string>("");
+  const [mNotes, setMNotes] = useState<string>("");
   // v0.40.0e — état d'expansion par métier (drilldown devis)
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
@@ -60,7 +67,7 @@ function AffaireSynthesePage() {
           .eq("affaire_id", affaireId),
         supabase
           .from("affaires")
-          .select("notes, heures_prevues_montage, heures_prevues_demontage, created_at, signed_at, date_montage, date_evenement_debut, date_evenement_fin, date_demontage")
+          .select("notes, heures_prevues_montage, heures_prevues_demontage, created_at, signed_at, date_montage, date_evenement_debut, date_evenement_fin, date_demontage, montage_nb_techniciens, montage_travail_nuit, montage_nb_semi, montage_nb_20m3, montage_nature_prestation, montage_notes")
           .eq("id", affaireId)
           .maybeSingle(),
       ]);
@@ -75,6 +82,12 @@ function AffaireSynthesePage() {
       setDEvtDebut((aff?.date_evenement_debut as string | null) ?? "");
       setDEvtFin((aff?.date_evenement_fin as string | null) ?? "");
       setDDemontage((aff?.date_demontage as string | null) ?? "");
+      setMNbTech(aff?.montage_nb_techniciens == null ? "" : String(aff.montage_nb_techniciens));
+      setMNuit(Boolean(aff?.montage_travail_nuit));
+      setMNbSemi(aff?.montage_nb_semi == null ? "" : String(aff.montage_nb_semi));
+      setMNb20m3(aff?.montage_nb_20m3 == null ? "" : String(aff.montage_nb_20m3));
+      setMNature((aff?.montage_nature_prestation as string | null) ?? "");
+      setMNotes((aff?.montage_notes as string | null) ?? "");
       setLoading(false);
     })();
     return () => {
@@ -109,6 +122,12 @@ function AffaireSynthesePage() {
         date_evenement_debut: dEvtDebut || null,
         date_evenement_fin: dEvtFin || null,
         date_demontage: dDemontage || null,
+        montage_nb_techniciens: mNbTech === "" ? null : Number(mNbTech),
+        montage_travail_nuit: mNuit,
+        montage_nb_semi: mNbSemi === "" ? null : Number(mNbSemi),
+        montage_nb_20m3: mNb20m3 === "" ? null : Number(mNb20m3),
+        montage_nature_prestation: mNature.trim() || null,
+        montage_notes: mNotes.trim() || null,
       })
       .eq("id", affaireId);
     setSavingDates(false);
@@ -421,6 +440,42 @@ function AffaireSynthesePage() {
                 <Input id="d-demontage" type="date" value={dDemontage} onChange={(e) => setDDemontage(e.target.value)} />
               </div>
             </div>
+
+            <p className="overline mt-5 mb-2 text-muted-foreground">— Opération de montage</p>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="m-tech" className="text-xs">Nb techniciens</Label>
+                <Input id="m-tech" type="number" min={0} value={mNbTech} onChange={(e) => setMNbTech(e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="m-semi" className="text-xs">Nb semi</Label>
+                <Input id="m-semi" type="number" min={0} value={mNbSemi} onChange={(e) => setMNbSemi(e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="m-20m3" className="text-xs">Nb 20 m³</Label>
+                <Input id="m-20m3" type="number" min={0} value={mNb20m3} onChange={(e) => setMNb20m3(e.target.value)} />
+              </div>
+              <div className="flex items-end pb-1.5">
+                <label className="flex cursor-pointer items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 accent-primary"
+                    checked={mNuit}
+                    onChange={(e) => setMNuit(e.target.checked)}
+                  />
+                  Travail de nuit
+                </label>
+              </div>
+              <div className="space-y-1.5 sm:col-span-2">
+                <Label htmlFor="m-nature" className="text-xs">Nature de la prestation</Label>
+                <Input id="m-nature" value={mNature} onChange={(e) => setMNature(e.target.value)} placeholder="Ex. Montage stand + habillage" />
+              </div>
+              <div className="space-y-1.5 sm:col-span-2">
+                <Label htmlFor="m-notes" className="text-xs">Notes montage</Label>
+                <Input id="m-notes" value={mNotes} onChange={(e) => setMNotes(e.target.value)} placeholder="Contraintes, accès, horaires…" />
+              </div>
+            </div>
+
             {datesWarning && (
               <p className="mt-3 text-xs text-amber-600 dark:text-amber-400">⚠ {datesWarning}</p>
             )}

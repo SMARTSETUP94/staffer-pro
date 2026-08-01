@@ -1,7 +1,7 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import type { LucideIcon } from "lucide-react";
 import {
-  Clock, Calendar, Building2, Users, FileDown, ClipboardCheck, LogOut, CalendarOff,
+  Clock, Calendar, CalendarClock, Building2, Users, FileDown, ClipboardCheck, LogOut, CalendarOff,
   UserCircle, FileText, Trophy, Map, ClipboardList,
   Truck, Palette, Warehouse, Hammer, Wrench, BadgeCheck, Lightbulb,
   FileSignature, Inbox, PackageCheck, UsersRound, Briefcase, Settings, TrendingUp,
@@ -79,6 +79,7 @@ function buildSections(
       label: "Pilotage",
       items: [
         // L6-A : Inbox fusionnée dans `/` (item « Aujourd'hui »).
+        { title: "Échéances", url: "/echeances", icon: CalendarClock, cap: "section.affaires" },
         { title: "Planning fab", url: "/planning", icon: Calendar, cap: "section.planning_fab" },
         { title: "Pipeline opportunités", url: "/opportunites", icon: Trophy, cap: "section.pipeline_opportunites" },
       ],

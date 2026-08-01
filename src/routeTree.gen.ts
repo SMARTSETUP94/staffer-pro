@@ -40,6 +40,7 @@ import { Route as AppHeuresAnalyseRouteImport } from './routes/_app.heures-analy
 import { Route as AppFlotteRouteImport } from './routes/_app.flotte'
 import { Route as AppExportRouteImport } from './routes/_app.export'
 import { Route as AppEmployesRouteImport } from './routes/_app.employes'
+import { Route as AppEcheancesRouteImport } from './routes/_app.echeances'
 import { Route as AppClientsRouteImport } from './routes/_app.clients'
 import { Route as AppChargeAtelierRouteImport } from './routes/_app.charge-atelier'
 import { Route as AppCandidaturesRouteImport } from './routes/_app.candidatures'
@@ -252,6 +253,11 @@ const AppExportRoute = AppExportRouteImport.update({
 const AppEmployesRoute = AppEmployesRouteImport.update({
   id: '/employes',
   path: '/employes',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppEcheancesRoute = AppEcheancesRouteImport.update({
+  id: '/echeances',
+  path: '/echeances',
   getParentRoute: () => AppRoute,
 } as any)
 const AppClientsRoute = AppClientsRouteImport.update({
@@ -584,6 +590,7 @@ export interface FileRoutesByFullPath {
   '/candidatures': typeof AppCandidaturesRoute
   '/charge-atelier': typeof AppChargeAtelierRoute
   '/clients': typeof AppClientsRouteWithChildren
+  '/echeances': typeof AppEcheancesRoute
   '/employes': typeof AppEmployesRouteWithChildren
   '/export': typeof AppExportRouteWithChildren
   '/flotte': typeof AppFlotteRoute
@@ -674,6 +681,7 @@ export interface FileRoutesByTo {
   '/candidatures': typeof AppCandidaturesRoute
   '/charge-atelier': typeof AppChargeAtelierRoute
   '/clients': typeof AppClientsRouteWithChildren
+  '/echeances': typeof AppEcheancesRoute
   '/employes': typeof AppEmployesRouteWithChildren
   '/flotte': typeof AppFlotteRoute
   '/heures-analyse': typeof AppHeuresAnalyseRoute
@@ -765,6 +773,7 @@ export interface FileRoutesById {
   '/_app/candidatures': typeof AppCandidaturesRoute
   '/_app/charge-atelier': typeof AppChargeAtelierRoute
   '/_app/clients': typeof AppClientsRouteWithChildren
+  '/_app/echeances': typeof AppEcheancesRoute
   '/_app/employes': typeof AppEmployesRouteWithChildren
   '/_app/export': typeof AppExportRouteWithChildren
   '/_app/flotte': typeof AppFlotteRoute
@@ -859,6 +868,7 @@ export interface FileRouteTypes {
     | '/candidatures'
     | '/charge-atelier'
     | '/clients'
+    | '/echeances'
     | '/employes'
     | '/export'
     | '/flotte'
@@ -949,6 +959,7 @@ export interface FileRouteTypes {
     | '/candidatures'
     | '/charge-atelier'
     | '/clients'
+    | '/echeances'
     | '/employes'
     | '/flotte'
     | '/heures-analyse'
@@ -1039,6 +1050,7 @@ export interface FileRouteTypes {
     | '/_app/candidatures'
     | '/_app/charge-atelier'
     | '/_app/clients'
+    | '/_app/echeances'
     | '/_app/employes'
     | '/_app/export'
     | '/_app/flotte'
@@ -1348,6 +1360,13 @@ declare module '@tanstack/react-router' {
       path: '/employes'
       fullPath: '/employes'
       preLoaderRoute: typeof AppEmployesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/echeances': {
+      id: '/_app/echeances'
+      path: '/echeances'
+      fullPath: '/echeances'
+      preLoaderRoute: typeof AppEcheancesRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/clients': {
@@ -1863,6 +1882,7 @@ interface AppRouteChildren {
   AppCandidaturesRoute: typeof AppCandidaturesRoute
   AppChargeAtelierRoute: typeof AppChargeAtelierRoute
   AppClientsRoute: typeof AppClientsRouteWithChildren
+  AppEcheancesRoute: typeof AppEcheancesRoute
   AppEmployesRoute: typeof AppEmployesRouteWithChildren
   AppExportRoute: typeof AppExportRouteWithChildren
   AppFlotteRoute: typeof AppFlotteRoute
@@ -1929,6 +1949,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppCandidaturesRoute: AppCandidaturesRoute,
   AppChargeAtelierRoute: AppChargeAtelierRoute,
   AppClientsRoute: AppClientsRouteWithChildren,
+  AppEcheancesRoute: AppEcheancesRoute,
   AppEmployesRoute: AppEmployesRouteWithChildren,
   AppExportRoute: AppExportRouteWithChildren,
   AppFlotteRoute: AppFlotteRoute,

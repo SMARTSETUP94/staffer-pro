@@ -484,6 +484,12 @@ export type Database = {
           heures_prevues_montage: number
           id: string
           lieu: string | null
+          montage_nature_prestation: string | null
+          montage_nb_20m3: number | null
+          montage_nb_semi: number | null
+          montage_nb_techniciens: number | null
+          montage_notes: string | null
+          montage_travail_nuit: boolean
           nom: string
           notes: string | null
           numero: string
@@ -526,6 +532,12 @@ export type Database = {
           heures_prevues_montage?: number
           id?: string
           lieu?: string | null
+          montage_nature_prestation?: string | null
+          montage_nb_20m3?: number | null
+          montage_nb_semi?: number | null
+          montage_nb_techniciens?: number | null
+          montage_notes?: string | null
+          montage_travail_nuit?: boolean
           nom: string
           notes?: string | null
           numero: string
@@ -568,6 +580,12 @@ export type Database = {
           heures_prevues_montage?: number
           id?: string
           lieu?: string | null
+          montage_nature_prestation?: string | null
+          montage_nb_20m3?: number | null
+          montage_nb_semi?: number | null
+          montage_nb_techniciens?: number | null
+          montage_notes?: string | null
+          montage_travail_nuit?: boolean
           nom?: string
           notes?: string | null
           numero?: string
