@@ -21,6 +21,12 @@ describe("getAffaireTypologie", () => {
   it("4 chiffres / 5 → fabrication", () => {
     expect(getAffaireTypologie("5123")).toBe("fabrication");
   });
+  it("4 chiffres / 6 → fabrication (LOT 0, suite des 5XXX)", () => {
+    expect(getAffaireTypologie("6000")).toBe("fabrication");
+    expect(getAffaireTypologie("6042")).toBe("fabrication");
+    expect(getAffaireTypologie("6999")).toBe("fabrication");
+  });
+
   it("4 chiffres / 9 → prototype", () => {
     expect(getAffaireTypologie("9001")).toBe("prototype");
   });
