@@ -54,6 +54,7 @@ function AffaireDetailLayout() {
   const [confirmAction, setConfirmAction] = useState<"close" | "reopen" | null>(null);
   const [savingStatut, setSavingStatut] = useState(false);
   const canSeeEquipe = useCapability("affaire.equipe.view");
+  const canSeeFabrication = useCapability("section.fabrication");
   const castingFlagOn = useFeatureFlag("equipes_3_niveaux_lecture");
   const canCreateClient = useCapability("clients.view");
   const canUpdateClient = useCapability("clients.update");
@@ -129,6 +130,9 @@ function AffaireDetailLayout() {
     { to: `/affaires/${affaire.id}/devis`, label: "Devis", match: path.endsWith("/devis") },
     ...(affaire.phase === "signe"
       ? [{ to: `/affaires/${affaire.id}/fabrication`, label: "Fabrication", match: path.endsWith("/fabrication") }]
+      : []),
+    ...(canSeeFabrication
+      ? [{ to: `/affaires/${affaire.id}/grille`, label: "Grille", match: path.endsWith("/grille") }]
       : []),
     { to: `/affaires/${affaire.id}/staffing`, label: "Planning fab", match: path.endsWith("/staffing") },
     ...(canSeeEquipe
