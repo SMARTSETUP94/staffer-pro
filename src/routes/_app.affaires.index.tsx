@@ -639,10 +639,62 @@ export function StatutPill({ statut }: { statut: AffaireStatut }) {
   );
 }
 
-function formatPeriode(start: string | null, end: string | null) {
-  if (!start && !end) return "—";
-  const fmt = (d: string) => new Date(d).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "2-digit" });
-  if (start && end) return `${fmt(start)} → ${fmt(end)}`;
-  if (start) return `dès ${fmt(start)}`;
-  return `→ ${fmt(end!)}`;
+/** LOT 2 — « 27 août » */
+function formatCourt(iso: string) {
+  return new Date(iso + "T00:00:00").toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
 }
+
+/** LOT 2 — en-tête de colonne triable. */
+function SortableHead({
+  label, col, tri, sens, onSort, className,
+}: {
+  label: string;
+  col: TriKey;
+  tri: TriKey;
+  sens: TriSens;
+  onSort: (c: TriKey) => void;
+  className?: string;
+}) {
+  const active = tri === col;
+  return (
+    <TableHead className={className}>
+      <button
+        type="button"
+        onClick={() => onSort(col)}
+        className={cn(
+          "inline-flex items-center gap-1 text-left hover:text-foreground",
+          active ? "font-semibold text-foreground" : "text-muted-foreground",
+        )}
+      >
+        {label}
+        {active && (sens === "asc"
+          ? <ArrowUp className="h-3 w-3" />
+          : <ArrowDown className="h-3 w-3" />)}
+      </button>
+    </TableHead>
+  );
+}
+
+/** LOT 2 — date de montage + compte à rebours. */
+function DateMontageCell({ date }: { date: string | null }) {
+  if (!date) return <span className="text-xs text-muted-foreground/50">—</span>;
+  const d = daysUntil(date);
+  const label = d === 0 ? "Aujourd'hui" : d > 0 ? `J−${d}` : `J+${Math.abs(d)}`;
+  return (
+    <div className="leading-tight">
+      <div className="text-xs font-semibold text-foreground">{formatCourt(date)}</div>
+      <div
+        className={cn(
+          "text-[10px]",
+          d < 0 ? "text-muted-foreground/60"
+            : d > 60 ? "text-muted-foreground/70"
+            : d <= 7 ? "font-semibold text-amber-600"
+            : "text-muted-foreground",
+        )}
+      >
+        {label}
+      </div>
+    </div>
+  );
+}
+
