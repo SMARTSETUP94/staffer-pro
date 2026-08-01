@@ -44,6 +44,13 @@ function AffaireSynthesePage() {
   const [dEvtFin, setDEvtFin] = useState<string>("");
   const [dDemontage, setDDemontage] = useState<string>("");
   const [savingDates, setSavingDates] = useState(false);
+  // LOT 1 — Opération de montage (vue Échéances)
+  const [mNbTech, setMNbTech] = useState<string>("");
+  const [mNuit, setMNuit] = useState<boolean>(false);
+  const [mNbSemi, setMNbSemi] = useState<string>("");
+  const [mNb20m3, setMNb20m3] = useState<string>("");
+  const [mNature, setMNature] = useState<string>("");
+  const [mNotes, setMNotes] = useState<string>("");
   // v0.40.0e — état d'expansion par métier (drilldown devis)
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
