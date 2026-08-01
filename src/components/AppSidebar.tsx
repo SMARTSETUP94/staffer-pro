@@ -17,6 +17,8 @@ import { useValidationCount } from "@/hooks/use-validation-count";
 import { useContratsRhCount } from "@/hooks/use-contrats-rh-count";
 import { useCapabilitiesSet } from "@/hooks/use-capability";
 import { useVocab } from "@/hooks/use-vocab";
+import { useFeatureFlag } from "@/hooks/use-feature-flag";
+
 
 
 
