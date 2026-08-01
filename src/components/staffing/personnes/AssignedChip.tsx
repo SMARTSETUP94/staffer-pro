@@ -15,7 +15,7 @@ import { Slider } from "@/components/ui/slider";
 import {
   unassignPersonneFromStep,
   updateAssignmentPresence,
-} from "@/server/staffing-personnes.functions";
+} from "@/lib/server-fns/staffing-personnes.functions";
 import { formatShortDate } from "../gantt-helpers";
 import type { Assignment } from "./shared";
 

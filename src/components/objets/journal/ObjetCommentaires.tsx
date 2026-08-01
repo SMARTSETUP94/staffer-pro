@@ -17,7 +17,7 @@ import {
   addObjetCommentaire,
   deleteObjetCommentaire,
   getObjetCommentaires,
-} from "@/server/objet-commentaires.functions";
+} from "@/lib/server-fns/objet-commentaires.functions";
 
 interface Props {
   objetId: string;

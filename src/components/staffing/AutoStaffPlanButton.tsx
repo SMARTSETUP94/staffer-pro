@@ -15,7 +15,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { autoStaffPlan } from "@/server/staffing-autostaff-plan.functions";
+import { autoStaffPlan } from "@/lib/server-fns/staffing-autostaff-plan.functions";
 import { useVocab } from "@/hooks/use-vocab";
 
 export interface AutoStaffPlanButtonHandle {

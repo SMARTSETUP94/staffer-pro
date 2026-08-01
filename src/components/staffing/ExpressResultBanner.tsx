@@ -16,8 +16,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { publishStaffingPlan } from "@/server/staffing-publish.functions";
-import { cancelExpressPlan } from "@/server/staffing-express-cancel.functions";
+import { publishStaffingPlan } from "@/lib/server-fns/staffing-publish.functions";
+import { cancelExpressPlan } from "@/lib/server-fns/staffing-express-cancel.functions";
 
 interface Props {
   planId: string;

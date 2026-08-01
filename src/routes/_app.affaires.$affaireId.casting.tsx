@@ -36,7 +36,7 @@ import { RemoveCastingMemberDialog } from "@/components/casting/RemoveCastingMem
 import { RepublishConflictDialog } from "@/components/staffing/RepublishConflictDialog";
 import { EquipeCapaciteIndicator } from "@/components/atoms/EquipeCapaciteIndicator";
 import { useAffaireCapacite, useAffaireCapaciteMetier } from "@/hooks/use-affaire-capacite";
-import type { CastingMembre, CastingPhase } from "@/server/casting-chantier.functions";
+import type { CastingMembre, CastingPhase } from "@/lib/server-fns/casting-chantier.functions";
 import { FAB_METIERS, isFabMetier } from "@/lib/fab-sous-etapes";
 
 export const Route = createFileRoute("/_app/affaires/$affaireId/casting")({

@@ -8,7 +8,7 @@
  * - Tooltip au survol (title SVG natif) : version longue
  */
 import { useMemo } from "react";
-import type { PlanningChantierMacro, PlanningPhaseKey } from "@/server/planning-chantier-macro.functions";
+import type { PlanningChantierMacro, PlanningPhaseKey } from "@/lib/server-fns/planning-chantier-macro.functions";
 import { phaseColor as basePhaseColor } from "@/components/atoms/PhaseBadge";
 
 const PHASE_COLORS: Record<PlanningPhaseKey, string> = {

@@ -5,7 +5,7 @@ import { useCallback, useRef } from "react";
 import {
   listFabObjetsForWizard,
   getActivePlansForAffaire,
-} from "@/server/staffing-plan-create.functions";
+} from "@/lib/server-fns/staffing-plan-create.functions";
 
 const TTL_MS = 60_000;
 const cache = new Map<string, { ts: number; promise: Promise<unknown> }>();

@@ -20,7 +20,7 @@ import { AbsencesBand } from "./gantt/AbsencesBand";
 import {
   calculateStaffingPlan,
   updatePlanObject,
-} from "@/server/staffing.functions";
+} from "@/lib/server-fns/staffing.functions";
 import { useEditStore, applyEdits } from "@/lib/staffing/edit-store";
 import { addWorkingDays } from "@/lib/staffing/date-utils";
 import {
@@ -33,10 +33,10 @@ import {
   computeCascadeForDurationChange,
   computeCascadeForShift,
 } from "@/lib/staffing/cascade-aval";
-import type { ChantierMetierConfigRow } from "@/server/staffing-pre-parametrage.functions";
+import type { ChantierMetierConfigRow } from "@/lib/server-fns/staffing-pre-parametrage.functions";
 import { AlerteBandeau } from "./AlerteBandeau";
 import { ResolveCncConflictDialog } from "./ResolveCncConflictDialog";
-import { updatePlanDateFinFab } from "@/server/staffing-resolve.functions";
+import { updatePlanDateFinFab } from "@/lib/server-fns/staffing-resolve.functions";
 import type { PlanResult, PlanStep, PlanAlert } from "@/lib/staffing/types";
 import { METIER_KEY_BY_ID, H_HALF, DEMI_PER_DAY } from "@/lib/staffing/types";
 import { simulateStepChange, impactToastMessage, type SliderImpact } from "@/lib/staffing/slider-impact";

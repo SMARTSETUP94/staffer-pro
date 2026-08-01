@@ -36,8 +36,8 @@ import {
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { listFabObjetsForWizard, getActivePlansForAffaire } from "@/server/staffing-plan-create.functions";
-import { createPlanExpress } from "@/server/staffing-express.functions";
+import { listFabObjetsForWizard, getActivePlansForAffaire } from "@/lib/server-fns/staffing-plan-create.functions";
+import { createPlanExpress } from "@/lib/server-fns/staffing-express.functions";
 import { useWizardPrefetch } from "@/hooks/use-wizard-prefetch";
 import { isJourNonOuvreFR } from "@/lib/jours-feries";
 import { useVocab } from "@/hooks/use-vocab";

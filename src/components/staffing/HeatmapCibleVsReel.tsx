@@ -7,7 +7,7 @@ import { Eye, Target } from "lucide-react";
 import { METIER_COLOR, METIER_LABEL, METIER_ORDER, formatShortDate } from "./gantt-helpers";
 import type { PlanStep, MetierKey } from "@/lib/staffing/types";
 import { METIER_ID } from "@/lib/staffing/types";
-import type { ChantierMetierConfigRow } from "@/server/staffing-pre-parametrage.functions";
+import type { ChantierMetierConfigRow } from "@/lib/server-fns/staffing-pre-parametrage.functions";
 
 interface Props {
   steps: PlanStep[];

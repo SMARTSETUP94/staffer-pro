@@ -7,7 +7,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import {
   assignPersonneToStep,
   getPersonnelSuggestions,
-} from "@/server/staffing-personnes.functions";
+} from "@/lib/server-fns/staffing-personnes.functions";
 import { METIER_KEY_BY_ID, type PlanStep } from "@/lib/staffing/types";
 import { METIER_COLOR, METIER_LABEL, formatDayName, formatShortDate } from "../gantt-helpers";
 import { ObjetRefLabel, parseObjetLabel } from "../ObjetRefLabel";

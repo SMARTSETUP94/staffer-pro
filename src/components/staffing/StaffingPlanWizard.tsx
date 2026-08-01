@@ -21,7 +21,7 @@ import {
   listFabObjetsForWizard,
   getActivePlansForAffaire,
   createStaffingPlan,
-} from "@/server/staffing-plan-create.functions";
+} from "@/lib/server-fns/staffing-plan-create.functions";
 import { ObjetRefLabel } from "./ObjetRefLabel";
 import { useVocab } from "@/hooks/use-vocab";
 

@@ -26,7 +26,7 @@ import {
   addOpportuniteAction,
   type OppAction,
   type OppActionType,
-} from "@/server/opportunite-fiche.functions";
+} from "@/lib/server-fns/opportunite-fiche.functions";
 
 const TYPE_LABEL: Record<OppActionType, string> = {
   email_envoye: "Email envoyé",

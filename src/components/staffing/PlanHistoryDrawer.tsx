@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2, RotateCcw, Eye } from "lucide-react";
-import { listPlanSnapshots, restorePlanSnapshot } from "@/server/staffing-publish.functions";
+import { listPlanSnapshots, restorePlanSnapshot } from "@/lib/server-fns/staffing-publish.functions";
 
 type Snap = {
   id: string;

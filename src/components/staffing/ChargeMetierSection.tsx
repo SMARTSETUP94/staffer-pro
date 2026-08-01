@@ -5,7 +5,7 @@ import { ChevronDown, ChevronRight } from "lucide-react";
 import { METIER_COLOR, METIER_LABEL, METIER_ORDER, formatShortDate } from "./gantt-helpers";
 import type { PlanStep, MetierKey } from "@/lib/staffing/types";
 import { METIER_KEY_BY_ID } from "@/lib/staffing/types";
-import type { ChantierMetierConfigRow } from "@/server/staffing-pre-parametrage.functions";
+import type { ChantierMetierConfigRow } from "@/lib/server-fns/staffing-pre-parametrage.functions";
 import { PersStepper } from "./PersStepper";
 import { DateShifter } from "./DateShifter";
 import { ObjetRefLabel } from "./ObjetRefLabel";

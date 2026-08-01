@@ -1,6 +1,6 @@
 import { Check, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { OppJalon, OppJalonEtape } from "@/server/opportunite-fiche.functions";
+import type { OppJalon, OppJalonEtape } from "@/lib/server-fns/opportunite-fiche.functions";
 
 const ETAPE_LABEL: Record<OppJalonEtape, string> = {
   qualification: "Qualification",

@@ -22,8 +22,8 @@ import {
 } from "@/components/ui/tooltip";
 import { Plus, Wand2, AlertTriangle, Check, Info, X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { getObjetEquipe } from "@/server/objet-equipe.functions";
-import { autoStaffObjetEquipe } from "@/server/objet-equipe-mutations.functions";
+import { getObjetEquipe } from "@/lib/server-fns/objet-equipe.functions";
+import { autoStaffObjetEquipe } from "@/lib/server-fns/objet-equipe-mutations.functions";
 import { useCapability } from "@/hooks/use-capability";
 import { useFeatureFlag } from "@/hooks/use-feature-flag";
 import { supabase } from "@/integrations/supabase/client";

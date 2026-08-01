@@ -21,8 +21,8 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { useMetiers } from "@/hooks/use-metiers";
-import { getAffaireHeuresReelles } from "@/server/affaire-heures-reelles.functions";
-import type { HeuresReellesRow } from "@/server/affaire-heures-reelles.functions";
+import { getAffaireHeuresReelles } from "@/lib/server-fns/affaire-heures-reelles.functions";
+import type { HeuresReellesRow } from "@/lib/server-fns/affaire-heures-reelles.functions";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
 interface MobRow {

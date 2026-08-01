@@ -32,7 +32,7 @@ import { StaffingShortcutsHelp } from "@/components/staffing/StaffingShortcutsHe
 import { PreParametrageSection } from "@/components/staffing/PreParametrageSection";
 import { VolumeCard } from "@/components/staffing/VolumeCard";
 import { useShowDevisPrefix } from "@/components/staffing/ObjetRefLabel";
-import { listChantierMetierConfig, type ChantierMetierConfigRow } from "@/server/staffing-pre-parametrage.functions";
+import { listChantierMetierConfig, type ChantierMetierConfigRow } from "@/lib/server-fns/staffing-pre-parametrage.functions";
 import { ExpressResultBanner } from "@/components/staffing/ExpressResultBanner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
