@@ -449,6 +449,21 @@ function MetiersPage() {
                       </TableCell>
                       <TableCell><code className="text-xs">{r.code}</code></TableCell>
                       <TableCell className="font-medium">{r.libelle}</TableCell>
+                      <TableCell className="text-right">
+                        <Input
+                          type="number"
+                          min={0}
+                          aria-label={`Capacité par jour — ${r.libelle}`}
+                          placeholder="—"
+                          className="h-8 w-[90px] ml-auto text-right tabular-nums"
+                          defaultValue={r.capacite_jour ?? ""}
+                          onBlur={(e) => saveCapacite(r, e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+                          }}
+                        />
+                      </TableCell>
+
                       <TableCell className="text-right tabular-nums">{r.nb_employes}</TableCell>
                       <TableCell className="text-right tabular-nums">{r.nb_assignations}</TableCell>
                       <TableCell className="text-right tabular-nums">{r.nb_devis_postes}</TableCell>
