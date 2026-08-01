@@ -122,6 +122,12 @@ function AffaireSynthesePage() {
         date_evenement_debut: dEvtDebut || null,
         date_evenement_fin: dEvtFin || null,
         date_demontage: dDemontage || null,
+        montage_nb_techniciens: mNbTech === "" ? null : Number(mNbTech),
+        montage_travail_nuit: mNuit,
+        montage_nb_semi: mNbSemi === "" ? null : Number(mNbSemi),
+        montage_nb_20m3: mNb20m3 === "" ? null : Number(mNb20m3),
+        montage_nature_prestation: mNature.trim() || null,
+        montage_notes: mNotes.trim() || null,
       })
       .eq("id", affaireId);
     setSavingDates(false);
