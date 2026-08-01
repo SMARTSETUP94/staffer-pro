@@ -1,14 +1,13 @@
 import { useMemo, useState } from "react";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
 import { z } from "zod";
 import {
-  AlertTriangle, ChevronLeft, ChevronRight, Filter, Loader2, Users,
+  ChevronLeft, ChevronRight, Filter, Loader2,
 } from "lucide-react";
 
 import { requireCapability } from "@/lib/capability-guard";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
