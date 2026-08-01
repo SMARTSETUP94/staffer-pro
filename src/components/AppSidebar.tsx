@@ -147,6 +147,27 @@ function buildSections(
   ];
 }
 
+/**
+ * Mode simplifié « managers » (feature flag `mode_simplifie_managers`).
+ * Quand il est actif, seules ces sections restent visibles dans le menu :
+ *  • Pilotage  → cœur planning / échéances
+ *  • Admin     → conservé pour que l'admin puisse désactiver le mode
+ * L'item « Aujourd'hui » (/) reste toujours accessible.
+ * Aucun blocage d'URL : les autres pages restent joignables en direct.
+ */
+const SIMPLE_MODE_SECTIONS = new Set(["Pilotage", "Admin"]);
+const SIMPLE_MODE_ALWAYS_URLS = new Set(["/"]);
+
+function applySimpleMode(sections: NavSection[]): NavSection[] {
+  return sections
+    .map((s) =>
+      SIMPLE_MODE_SECTIONS.has(s.label)
+        ? s
+        : { ...s, items: s.items.filter((it) => SIMPLE_MODE_ALWAYS_URLS.has(it.url)) },
+    )
+    .filter((s) => s.items.length > 0);
+}
+
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
@@ -157,11 +178,12 @@ export function AppSidebar() {
   const contratsRhCount = useContratsRhCount();
   const { data: caps, isLoading: capsLoading } = useCapabilitiesSet();
   const vocab = useVocab();
+  const simpleMode = useFeatureFlag("mode_simplifie_managers");
 
   // Filtrage : un item est visible si pas de cap OU cap satisfaite.
   // "Aujourd'hui" reste TOUJOURS visible (pas de cap déclarée).
   const rawSections = buildSections(validationCount, contratsRhCount, vocab);
-  const sections = capsLoading
+  const capFiltered = capsLoading
     ? // Pendant le load : on n'affiche que les items toujours visibles
       // (évite le flash "toutes les sections puis disparition").
       rawSections
@@ -170,6 +192,9 @@ export function AppSidebar() {
     : rawSections
         .map((s) => ({ ...s, items: s.items.filter((it) => hasAnyCap(caps, it.cap)) }))
         .filter((s) => s.items.length > 0);
+
+  const sections = simpleMode ? applySimpleMode(capFiltered) : capFiltered;
+
 
   const isActive = (url: string) =>
     currentPath === url || currentPath.startsWith(url + "/");
