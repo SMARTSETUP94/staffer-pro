@@ -123,7 +123,7 @@ function MetiersPage() {
   async function loadRows() {
     setLoadingRows(true);
     const [mRes, eRes, aRes, dRes] = await Promise.all([
-      supabase.from("metiers").select("id, code, libelle, couleur, ordre").order("ordre").order("libelle"),
+      supabase.from("metiers").select("id, code, libelle, couleur, ordre, capacite_jour").order("ordre").order("libelle"),
       supabase.from("employes").select("metier_principal_id"),
       supabase.from("assignations").select("metier_id"),
       supabase.from("devis_postes").select("metier_id"),
