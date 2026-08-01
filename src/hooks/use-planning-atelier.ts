@@ -1,8 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  insertAssignation, insertAssignationsBatch,
-} from "@/lib/assignation-upsert";
+import { insertAssignation } from "@/lib/assignation-upsert";
 import type { GrilleCell, GrilleLot, GrilleMetier, GrilleObjet } from "@/lib/grille-fabrication";
 import type { NommageRow, PlanRow } from "@/lib/planning-atelier";
 
