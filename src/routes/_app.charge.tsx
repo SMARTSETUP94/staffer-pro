@@ -1,14 +1,13 @@
 import { useMemo, useState } from "react";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
 import { z } from "zod";
 import {
-  AlertTriangle, ChevronLeft, ChevronRight, Filter, Loader2, Users,
+  ChevronLeft, ChevronRight, Filter, Loader2,
 } from "lucide-react";
 
 import { requireCapability } from "@/lib/capability-guard";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
@@ -19,10 +18,11 @@ import {
 import {
   Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle,
 } from "@/components/ui/sheet";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 
-import { useChargeAtelier } from "@/hooks/use-charge-atelier";
+import { useChargeAtelier, usePrefetchChargeAtelier } from "@/hooks/use-charge-atelier";
+import { AffaireFilterMenu } from "@/components/charge/AffaireFilterMenu";
+import { ChargeDrillList } from "@/components/charge/ChargeDrillList";
 import { isJourFerieFR, isWeekend, labelJourFerieFR } from "@/lib/jours-feries";
 import { addDaysISO, buildJourWindow, labelJourCourt, startOfWeekISO, toISO } from "@/lib/planning-atelier";
 import {
@@ -80,7 +80,15 @@ function ChargePage() {
   const nbJours = semaines * 7;
   const fin = addDaysISO(debut, nbJours - 1);
 
-  const { data, isLoading } = useChargeAtelier(debut, fin);
+  const { data, isLoading, isFetching, isPlaceholderData } = useChargeAtelier(debut, fin);
+
+  // Précharge les fenêtres adjacentes pour une navigation instantanée.
+  const prevDebut = addDaysISO(debut, -7 * semaines);
+  const nextDebut = addDaysISO(debut, 7 * semaines);
+  usePrefetchChargeAtelier([
+    { from: prevDebut, to: addDaysISO(prevDebut, nbJours - 1) },
+    { from: nextDebut, to: addDaysISO(nextDebut, nbJours - 1) },
+  ]);
   const [drill, setDrill] = useState<{ metierId: number; date: string } | null>(null);
 
   const setSearch = (patch: Partial<ChargeSearch>) =>
@@ -224,31 +232,12 @@ function ChargePage() {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button size="sm" variant="outline">
-              <Filter className="mr-1.5 h-4 w-4" />
-              Chantiers{affaireIds.length > 0 ? ` (${affaireIds.length})` : ""}
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="max-h-80 w-72 overflow-y-auto">
-            <DropdownMenuLabel>Filtrer par chantier</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            {(data?.affaires ?? []).map((a) => (
-              <DropdownMenuCheckboxItem
-                key={a.id}
-                checked={affaireIds.includes(a.id)}
-                onSelect={(e) => e.preventDefault()}
-                onCheckedChange={() => toggleCsv("affaires", a.id)}
-              >
-                <span className="truncate">{a.numero} · {a.nom}</span>
-              </DropdownMenuCheckboxItem>
-            ))}
-            {(data?.affaires ?? []).length === 0 && (
-              <p className="px-2 py-1.5 text-xs text-muted-foreground">Aucun chantier planifié.</p>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <AffaireFilterMenu
+          affaires={data?.affaires ?? []}
+          selected={affaireIds}
+          onToggle={(id) => toggleCsv("affaires", id)}
+          onClear={() => setSearch({ affaires: undefined })}
+        />
 
         <label className="flex items-center gap-2 rounded-md border px-2.5 py-1.5 text-sm">
           <Checkbox checked={inclureProspects}
@@ -267,6 +256,13 @@ function ChargePage() {
         </label>
       </div>
 
+      {isFetching && !isLoading && (
+        <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          Actualisation de la période…
+        </p>
+      )}
+
       {isLoading ? (
         <div className="flex justify-center py-16 text-muted-foreground">
           <Loader2 className="h-5 w-5 animate-spin" />
@@ -277,7 +273,7 @@ function ChargePage() {
           Planning d'un chantier.
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-lg border">
+        <div className={cn("overflow-x-auto rounded-lg border transition-opacity", isPlaceholderData && "opacity-60")}>
           <table className="w-max border-collapse text-sm">
             <thead>
               <tr className="border-b bg-muted/40 text-[11px] text-muted-foreground">
@@ -387,47 +383,7 @@ function ChargePage() {
               {drillMetier?.capacite_jour ? ` · capacité ${drillMetier.capacite_jour}/j` : ""}
             </SheetDescription>
           </SheetHeader>
-          <ScrollArea className="-mx-2 mt-3 flex-1 px-2">
-            <ul className="space-y-2">
-              {drillGroupes.map((g) => (
-                <li key={g.affaire_id} className="rounded-md border p-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium">
-                        {g.affaire_numero} · {g.affaire_nom}
-                      </p>
-                      <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                        {g.cibles.join(" · ") || "Sans objet rattaché"}
-                      </p>
-                    </div>
-                    <div className="flex shrink-0 items-center gap-1">
-                      {g.prospect && <Badge variant="outline" className="text-[10px]">Prospect</Badge>}
-                      <Badge variant="secondary">{g.nbPers} pers.</Badge>
-                    </div>
-                  </div>
-                  <p className="mt-2 flex items-center gap-1.5 text-xs">
-                    <Users className="h-3.5 w-3.5 text-muted-foreground" />
-                    {g.nommes.length > 0 ? (
-                      <span>{g.nommes.map((n) => n.nom).join(", ")}</span>
-                    ) : (
-                      <span className="text-muted-foreground">Personne nommée</span>
-                    )}
-                    {g.nbPers > g.nommes.length && (
-                      <span className="flex items-center gap-1 text-amber-600 dark:text-amber-500">
-                        <AlertTriangle className="h-3 w-3" />
-                        {g.nbPers - g.nommes.length} à nommer
-                      </span>
-                    )}
-                  </p>
-                  <Button asChild size="sm" variant="link" className="mt-1 h-auto p-0 text-xs">
-                    <Link to="/affaires/$affaireId/planning-atelier" params={{ affaireId: g.affaire_id }}>
-                      Ouvrir le planning atelier →
-                    </Link>
-                  </Button>
-                </li>
-              ))}
-            </ul>
-          </ScrollArea>
+          <ChargeDrillList groupes={drillGroupes} />
         </SheetContent>
       </Sheet>
     </div>

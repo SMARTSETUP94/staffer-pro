@@ -1,4 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
+import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { ChargeDetailRow, ChargeMetier } from "@/lib/charge-atelier";
 
@@ -10,6 +11,23 @@ export interface ChargeAtelierData {
 
 export const chargeAtelierKey = (from: string, to: string) =>
   ["charge-atelier", from, to] as const;
+
+/** Découpe les listes d'IDs pour éviter les URL trop longues quand il y a beaucoup de chantiers. */
+const CHUNK = 200;
+function chunks<T>(arr: T[], size = CHUNK): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
+  return out;
+}
+
+async function selectIn<T>(
+  run: (ids: string[]) => PromiseLike<{ data: T[] | null }>,
+  ids: string[],
+): Promise<T[]> {
+  if (ids.length === 0) return [];
+  const parts = await Promise.all(chunks(ids).map((c) => run(c)));
+  return parts.flatMap((p) => p.data ?? []);
+}
 
 async function fetchChargeAtelier(from: string, to: string): Promise<ChargeAtelierData> {
   const [metiersRes, plansRes] = await Promise.all([
@@ -31,53 +49,58 @@ async function fetchChargeAtelier(from: string, to: string): Promise<ChargeAteli
   const objetIds = [...new Set(plans.map((p) => p.objet_id).filter(Boolean))] as string[];
   const lotIds = [...new Set(plans.map((p) => p.lot_id).filter(Boolean))] as string[];
 
-  const [affairesRes, objetsRes, lotsRes, stRes, assignRes] = await Promise.all([
-    supabase.from("affaires").select("id, numero, nom, phase, statut").in("id", affaireIds),
-    objetIds.length
-      ? supabase.from("fabrication_objets").select("id, reference, nom").in("id", objetIds)
-      : Promise.resolve({ data: [] }),
-    lotIds.length
-      ? supabase.from("fabrication_lots").select("id, nom").in("id", lotIds)
-      : Promise.resolve({ data: [] }),
-    objetIds.length
-      ? supabase
-          .from("objet_heures_metier")
-          .select("objet_id, metier_id, sous_traitance")
-          .in("objet_id", objetIds)
-          .eq("sous_traitance", true)
-      : Promise.resolve({ data: [] }),
-    supabase
-      .from("assignations")
-      .select("id, atelier_planning_id, employe_id, employes(nom, prenom)")
-      .in("atelier_planning_id", planIds),
-  ]);
-
-  type AffaireRow = { id: string; numero: string | null; nom: string | null; phase: string | null; statut: string | null };
-  const affaireById = new Map(
-    ((affairesRes.data ?? []) as AffaireRow[]).map((a) => [a.id, a]),
-  );
-  const objetById = new Map(
-    ((objetsRes.data ?? []) as { id: string; reference: string | null; nom: string | null }[]).map(
-      (o) => [o.id, o],
-    ),
-  );
-  const lotById = new Map(
-    ((lotsRes.data ?? []) as { id: string; nom: string | null }[]).map((l) => [l.id, l]),
-  );
-  const stSet = new Set(
-    ((stRes.data ?? []) as { objet_id: string; metier_id: number }[]).map(
-      (s) => `${s.objet_id}|${s.metier_id}`,
-    ),
-  );
-
-  const nommesParPlan = new Map<string, { id: string; nom: string }[]>();
+  type AffaireRow = {
+    id: string; numero: string | null; nom: string | null; phase: string | null; statut: string | null;
+  };
+  type ObjetRow = { id: string; reference: string | null; nom: string | null };
+  type LotRow = { id: string; nom: string | null };
+  type StRow = { objet_id: string; metier_id: number };
   type AssignRow = {
     id: string;
     atelier_planning_id: string | null;
     employe_id: string;
     employes: { nom: string | null; prenom: string | null } | null;
   };
-  for (const a of (assignRes.data ?? []) as unknown as AssignRow[]) {
+
+  const [affairesData, objetsData, lotsData, stData, assignData] = await Promise.all([
+    selectIn<AffaireRow>(
+      (ids) => supabase.from("affaires").select("id, numero, nom, phase, statut").in("id", ids),
+      affaireIds,
+    ),
+    selectIn<ObjetRow>(
+      (ids) => supabase.from("fabrication_objets").select("id, reference, nom").in("id", ids),
+      objetIds,
+    ),
+    selectIn<LotRow>(
+      (ids) => supabase.from("fabrication_lots").select("id, nom").in("id", ids),
+      lotIds,
+    ),
+    selectIn<StRow>(
+      (ids) =>
+        supabase
+          .from("objet_heures_metier")
+          .select("objet_id, metier_id, sous_traitance")
+          .in("objet_id", ids)
+          .eq("sous_traitance", true),
+      objetIds,
+    ),
+    selectIn<AssignRow>(
+      (ids) =>
+        supabase
+          .from("assignations")
+          .select("id, atelier_planning_id, employe_id, employes(nom, prenom)")
+          .in("atelier_planning_id", ids) as unknown as PromiseLike<{ data: AssignRow[] | null }>,
+      planIds,
+    ),
+  ]);
+
+  const affaireById = new Map(affairesData.map((a) => [a.id, a]));
+  const objetById = new Map(objetsData.map((o) => [o.id, o]));
+  const lotById = new Map(lotsData.map((l) => [l.id, l]));
+  const stSet = new Set(stData.map((s) => `${s.objet_id}|${s.metier_id}`));
+
+  const nommesParPlan = new Map<string, { id: string; nom: string }[]>();
+  for (const a of assignData) {
     if (!a.atelier_planning_id) continue;
     const list = nommesParPlan.get(a.atelier_planning_id) ?? [];
     list.push({
@@ -126,10 +149,33 @@ async function fetchChargeAtelier(from: string, to: string): Promise<ChargeAteli
   return { metiers, rows, affaires };
 }
 
+export const chargeAtelierQueryOptions = (from: string, to: string) => ({
+  queryKey: chargeAtelierKey(from, to),
+  queryFn: () => fetchChargeAtelier(from, to),
+  staleTime: 60_000,
+  gcTime: 10 * 60_000,
+});
+
 export function useChargeAtelier(from: string, to: string) {
   return useQuery({
-    queryKey: chargeAtelierKey(from, to),
-    queryFn: () => fetchChargeAtelier(from, to),
-    staleTime: 60_000,
+    ...chargeAtelierQueryOptions(from, to),
+    // Garde la matrice précédente à l'écran pendant le chargement de la fenêtre suivante.
+    placeholderData: keepPreviousData,
   });
+}
+
+/**
+ * Précharge en arrière-plan les fenêtres adjacentes (période précédente / suivante)
+ * pour que la navigation soit instantanée.
+ */
+export function usePrefetchChargeAtelier(windows: { from: string; to: string }[]) {
+  const qc = useQueryClient();
+  const signature = windows.map((w) => `${w.from}:${w.to}`).join("|");
+  useEffect(() => {
+    const t = window.setTimeout(() => {
+      for (const w of windows) void qc.prefetchQuery(chargeAtelierQueryOptions(w.from, w.to));
+    }, 400);
+    return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [signature, qc]);
 }
