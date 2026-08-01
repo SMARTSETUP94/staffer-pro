@@ -57,6 +57,8 @@ function AffaireDetailLayout() {
   const canCreateClient = useCapability("clients.view");
   const canUpdateClient = useCapability("clients.update");
   const [createClientOpen, setCreateClientOpen] = useState(false);
+  const [editNumeroOpen, setEditNumeroOpen] = useState(false);
+
 
 
   const fetchAffaire = async (id: string, signal?: { cancelled: boolean }) => {
