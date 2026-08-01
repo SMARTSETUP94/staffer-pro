@@ -693,6 +693,7 @@ export type Database = {
       assignations: {
         Row: {
           affaire_id: string
+          atelier_planning_id: string | null
           confirmee_le: string | null
           created_at: string
           created_by: string | null
@@ -717,6 +718,7 @@ export type Database = {
         }
         Insert: {
           affaire_id: string
+          atelier_planning_id?: string | null
           confirmee_le?: string | null
           created_at?: string
           created_by?: string | null
@@ -741,6 +743,7 @@ export type Database = {
         }
         Update: {
           affaire_id?: string
+          atelier_planning_id?: string | null
           confirmee_le?: string | null
           created_at?: string
           created_by?: string | null
@@ -786,6 +789,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "assignations_atelier_planning_id_fkey"
+            columns: ["atelier_planning_id"]
+            isOneToOne: false
+            referencedRelation: "atelier_planning"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "assignations_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
@@ -824,6 +834,13 @@ export type Database = {
             foreignKeyName: "assignations_metier_id_fkey"
             columns: ["metier_id"]
             isOneToOne: false
+            referencedRelation: "v_atelier_charge_jour"
+            referencedColumns: ["metier_id"]
+          },
+          {
+            foreignKeyName: "assignations_metier_id_fkey"
+            columns: ["metier_id"]
+            isOneToOne: false
             referencedRelation: "v_devis_consommation"
             referencedColumns: ["metier_id"]
           },
@@ -840,6 +857,119 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "staffing_plan"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      atelier_planning: {
+        Row: {
+          affaire_id: string
+          created_at: string
+          created_by: string | null
+          date: string
+          id: string
+          lot_id: string | null
+          metier_id: number
+          nb_pers: number
+          note: string | null
+          objet_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          affaire_id: string
+          created_at?: string
+          created_by?: string | null
+          date: string
+          id?: string
+          lot_id?: string | null
+          metier_id: number
+          nb_pers?: number
+          note?: string | null
+          objet_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          affaire_id?: string
+          created_at?: string
+          created_by?: string | null
+          date?: string
+          id?: string
+          lot_id?: string | null
+          metier_id?: number
+          nb_pers?: number
+          note?: string | null
+          objet_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "atelier_planning_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "affaires"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "atelier_planning_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "v_affaire_consommation"
+            referencedColumns: ["affaire_id"]
+          },
+          {
+            foreignKeyName: "atelier_planning_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "v_affaires_avec_plan_status"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "atelier_planning_lot_id_fkey"
+            columns: ["lot_id"]
+            isOneToOne: false
+            referencedRelation: "fabrication_lots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "atelier_planning_metier_id_fkey"
+            columns: ["metier_id"]
+            isOneToOne: false
+            referencedRelation: "metiers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "atelier_planning_metier_id_fkey"
+            columns: ["metier_id"]
+            isOneToOne: false
+            referencedRelation: "v_atelier_charge_jour"
+            referencedColumns: ["metier_id"]
+          },
+          {
+            foreignKeyName: "atelier_planning_metier_id_fkey"
+            columns: ["metier_id"]
+            isOneToOne: false
+            referencedRelation: "v_devis_consommation"
+            referencedColumns: ["metier_id"]
+          },
+          {
+            foreignKeyName: "atelier_planning_metier_id_fkey"
+            columns: ["metier_id"]
+            isOneToOne: false
+            referencedRelation: "v_objet_heures_consolidees"
+            referencedColumns: ["metier_id"]
+          },
+          {
+            foreignKeyName: "atelier_planning_objet_id_fkey"
+            columns: ["objet_id"]
+            isOneToOne: false
+            referencedRelation: "fabrication_objets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "atelier_planning_objet_id_fkey"
+            columns: ["objet_id"]
+            isOneToOne: false
+            referencedRelation: "v_objet_heures_consolidees"
+            referencedColumns: ["objet_id"]
           },
         ]
       }
@@ -1015,6 +1145,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "metiers"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chantier_metier_config_metier_id_fkey"
+            columns: ["metier_id"]
+            isOneToOne: false
+            referencedRelation: "v_atelier_charge_jour"
+            referencedColumns: ["metier_id"]
           },
           {
             foreignKeyName: "chantier_metier_config_metier_id_fkey"
@@ -1647,6 +1784,13 @@ export type Database = {
             foreignKeyName: "devis_postes_metier_id_fkey"
             columns: ["metier_id"]
             isOneToOne: false
+            referencedRelation: "v_atelier_charge_jour"
+            referencedColumns: ["metier_id"]
+          },
+          {
+            foreignKeyName: "devis_postes_metier_id_fkey"
+            columns: ["metier_id"]
+            isOneToOne: false
             referencedRelation: "v_devis_consommation"
             referencedColumns: ["metier_id"]
           },
@@ -1812,6 +1956,13 @@ export type Database = {
             foreignKeyName: "employe_metiers_metier_id_fkey"
             columns: ["metier_id"]
             isOneToOne: false
+            referencedRelation: "v_atelier_charge_jour"
+            referencedColumns: ["metier_id"]
+          },
+          {
+            foreignKeyName: "employe_metiers_metier_id_fkey"
+            columns: ["metier_id"]
+            isOneToOne: false
             referencedRelation: "v_devis_consommation"
             referencedColumns: ["metier_id"]
           },
@@ -1943,6 +2094,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "metiers"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employes_metier_principal_id_fkey"
+            columns: ["metier_principal_id"]
+            isOneToOne: false
+            referencedRelation: "v_atelier_charge_jour"
+            referencedColumns: ["metier_id"]
           },
           {
             foreignKeyName: "employes_metier_principal_id_fkey"
@@ -2168,6 +2326,61 @@ export type Database = {
           },
         ]
       }
+      fabrication_lots: {
+        Row: {
+          affaire_id: string
+          couleur: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          nom: string
+          ordre: number
+          updated_at: string
+        }
+        Insert: {
+          affaire_id: string
+          couleur?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          nom: string
+          ordre?: number
+          updated_at?: string
+        }
+        Update: {
+          affaire_id?: string
+          couleur?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          nom?: string
+          ordre?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fabrication_lots_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "affaires"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fabrication_lots_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "v_affaire_consommation"
+            referencedColumns: ["affaire_id"]
+          },
+          {
+            foreignKeyName: "fabrication_lots_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "v_affaires_avec_plan_status"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fabrication_objet_equipe: {
         Row: {
           added_at: string
@@ -2256,6 +2469,7 @@ export type Database = {
           id: string
           largeur_mm: number | null
           longueur_mm: number | null
+          lot_id: string | null
           materiaux: string | null
           nom: string
           ordre: number
@@ -2294,6 +2508,7 @@ export type Database = {
           id?: string
           largeur_mm?: number | null
           longueur_mm?: number | null
+          lot_id?: string | null
           materiaux?: string | null
           nom: string
           ordre?: number
@@ -2332,6 +2547,7 @@ export type Database = {
           id?: string
           largeur_mm?: number | null
           longueur_mm?: number | null
+          lot_id?: string | null
           materiaux?: string | null
           nom?: string
           ordre?: number
@@ -2386,6 +2602,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_devis_consommation"
             referencedColumns: ["devis_id"]
+          },
+          {
+            foreignKeyName: "fabrication_objets_lot_id_fkey"
+            columns: ["lot_id"]
+            isOneToOne: false
+            referencedRelation: "fabrication_lots"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "fabrication_objets_respo_fab_id_fkey"
@@ -2774,6 +2997,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "metiers"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "heures_saisies_metier_id_fkey"
+            columns: ["metier_id"]
+            isOneToOne: false
+            referencedRelation: "v_atelier_charge_jour"
+            referencedColumns: ["metier_id"]
           },
           {
             foreignKeyName: "heures_saisies_metier_id_fkey"
@@ -3280,6 +3510,88 @@ export type Database = {
           },
           {
             foreignKeyName: "objet_commentaires_objet_id_fkey"
+            columns: ["objet_id"]
+            isOneToOne: false
+            referencedRelation: "v_objet_heures_consolidees"
+            referencedColumns: ["objet_id"]
+          },
+        ]
+      }
+      objet_heures_metier: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          heures_prevues: number
+          id: string
+          metier_id: number
+          note: string | null
+          objet_id: string
+          origine: string
+          sous_traitance: boolean
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          heures_prevues?: number
+          id?: string
+          metier_id: number
+          note?: string | null
+          objet_id: string
+          origine?: string
+          sous_traitance?: boolean
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          heures_prevues?: number
+          id?: string
+          metier_id?: number
+          note?: string | null
+          objet_id?: string
+          origine?: string
+          sous_traitance?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "objet_heures_metier_metier_id_fkey"
+            columns: ["metier_id"]
+            isOneToOne: false
+            referencedRelation: "metiers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "objet_heures_metier_metier_id_fkey"
+            columns: ["metier_id"]
+            isOneToOne: false
+            referencedRelation: "v_atelier_charge_jour"
+            referencedColumns: ["metier_id"]
+          },
+          {
+            foreignKeyName: "objet_heures_metier_metier_id_fkey"
+            columns: ["metier_id"]
+            isOneToOne: false
+            referencedRelation: "v_devis_consommation"
+            referencedColumns: ["metier_id"]
+          },
+          {
+            foreignKeyName: "objet_heures_metier_metier_id_fkey"
+            columns: ["metier_id"]
+            isOneToOne: false
+            referencedRelation: "v_objet_heures_consolidees"
+            referencedColumns: ["metier_id"]
+          },
+          {
+            foreignKeyName: "objet_heures_metier_objet_id_fkey"
+            columns: ["objet_id"]
+            isOneToOne: false
+            referencedRelation: "fabrication_objets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "objet_heures_metier_objet_id_fkey"
             columns: ["objet_id"]
             isOneToOne: false
             referencedRelation: "v_objet_heures_consolidees"
@@ -4182,6 +4494,13 @@ export type Database = {
             foreignKeyName: "staffing_plan_step_metier_id_fkey"
             columns: ["metier_id"]
             isOneToOne: false
+            referencedRelation: "v_atelier_charge_jour"
+            referencedColumns: ["metier_id"]
+          },
+          {
+            foreignKeyName: "staffing_plan_step_metier_id_fkey"
+            columns: ["metier_id"]
+            isOneToOne: false
             referencedRelation: "v_devis_consommation"
             referencedColumns: ["metier_id"]
           },
@@ -4862,6 +5181,18 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      v_atelier_charge_jour: {
+        Row: {
+          capacite_jour: number | null
+          date: string | null
+          metier_id: number | null
+          metier_libelle: string | null
+          nb_affaires: number | null
+          nb_pers_nommees: number | null
+          nb_pers_total: number | null
+        }
+        Relationships: []
       }
       v_chefs_par_affaire: {
         Row: {
