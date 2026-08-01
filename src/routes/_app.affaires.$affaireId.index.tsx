@@ -440,6 +440,42 @@ function AffaireSynthesePage() {
                 <Input id="d-demontage" type="date" value={dDemontage} onChange={(e) => setDDemontage(e.target.value)} />
               </div>
             </div>
+
+            <p className="overline mt-5 mb-2 text-muted-foreground">— Opération de montage</p>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="m-tech" className="text-xs">Nb techniciens</Label>
+                <Input id="m-tech" type="number" min={0} value={mNbTech} onChange={(e) => setMNbTech(e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="m-semi" className="text-xs">Nb semi</Label>
+                <Input id="m-semi" type="number" min={0} value={mNbSemi} onChange={(e) => setMNbSemi(e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="m-20m3" className="text-xs">Nb 20 m³</Label>
+                <Input id="m-20m3" type="number" min={0} value={mNb20m3} onChange={(e) => setMNb20m3(e.target.value)} />
+              </div>
+              <div className="flex items-end pb-1.5">
+                <label className="flex cursor-pointer items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 accent-primary"
+                    checked={mNuit}
+                    onChange={(e) => setMNuit(e.target.checked)}
+                  />
+                  Travail de nuit
+                </label>
+              </div>
+              <div className="space-y-1.5 sm:col-span-2">
+                <Label htmlFor="m-nature" className="text-xs">Nature de la prestation</Label>
+                <Input id="m-nature" value={mNature} onChange={(e) => setMNature(e.target.value)} placeholder="Ex. Montage stand + habillage" />
+              </div>
+              <div className="space-y-1.5 sm:col-span-2">
+                <Label htmlFor="m-notes" className="text-xs">Notes montage</Label>
+                <Input id="m-notes" value={mNotes} onChange={(e) => setMNotes(e.target.value)} placeholder="Contraintes, accès, horaires…" />
+              </div>
+            </div>
+
             {datesWarning && (
               <p className="mt-3 text-xs text-amber-600 dark:text-amber-400">⚠ {datesWarning}</p>
             )}
