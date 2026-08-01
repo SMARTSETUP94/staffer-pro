@@ -6,7 +6,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { getResourceAvailability } from "@/lib/staffing/resource-availability";
 import { rankCandidats, type EmployeStaffing } from "@/lib/staffing/tier-ranking";
-import { loadNiveauxParEmploye } from "@/server/staffing-competences.server";
+import { loadNiveauxParEmploye } from "./staffing-competences.server";
 import { METIER_ID } from "@/lib/staffing/types";
 
 // Ordre déterministe : amont → aval (cohérent avec algo.ts)

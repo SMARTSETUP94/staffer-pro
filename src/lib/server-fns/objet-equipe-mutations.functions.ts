@@ -28,7 +28,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { getResourceAvailability } from "@/lib/staffing/resource-availability";
 import { rankCandidats, type EmployeStaffing } from "@/lib/staffing/tier-ranking";
-import { loadNiveauxParEmploye } from "@/server/staffing-competences.server";
+import { loadNiveauxParEmploye } from "./staffing-competences.server";
 
 // ────────────────────────────────────────────────────────────
 // Helpers communs
