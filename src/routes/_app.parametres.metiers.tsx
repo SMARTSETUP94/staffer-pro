@@ -94,11 +94,14 @@ interface EditState {
   libelle: string;
   couleur: string;
   ordre: number;
+  /** Capacité journalière (nb de personnes mobilisables/jour). Vide = non plafonné. */
+  capaciteJour: string;
 }
 
 const EMPTY_EDIT: EditState = {
-  open: false, mode: "create", code: "", libelle: "", couleur: "oklch(0.7 0.15 250)", ordre: 0,
+  open: false, mode: "create", code: "", libelle: "", couleur: "oklch(0.7 0.15 250)", ordre: 0, capaciteJour: "",
 };
+
 
 function MetiersPage() {
   const navigate = useNavigate();
