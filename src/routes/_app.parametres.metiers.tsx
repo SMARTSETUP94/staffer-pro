@@ -33,10 +33,12 @@ interface MetierRow {
   libelle: string;
   couleur: string;
   ordre: number;
+  capacite_jour: number | null;
   nb_employes: number;
   nb_assignations: number;
   nb_devis_postes: number;
 }
+
 
 const OKLCH_RE = /^oklch\(\s*[0-9.]+%?\s+[0-9.]+\s+[0-9.]+\s*\)$/i;
 
