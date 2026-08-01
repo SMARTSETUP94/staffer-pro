@@ -1,15 +1,18 @@
 /**
  * v0.24.0 — Typologie de chantiers (dérivée du numero d'affaire).
+ * LOT 0 (2026) — les 5XXX étant épuisés, les 6XXX prennent la suite : même typologie `fabrication`.
  *
  * Logique miroir de la fonction SQL `compute_affaire_typologie(num text)` :
  * - 4 chiffres / 1 -> non_operationnel
  * - 4 chiffres / 3 -> non_operationnel
  * - 4 chiffres / 4 -> montage_demontage
  * - 4 chiffres / 5 -> fabrication
+ * - 4 chiffres / 6 -> fabrication
  * - 4 chiffres / 9 -> prototype
  * - 5 chiffres / 2 -> stockage
  * - sinon -> null
  */
+
 export type AffaireTypologie =
   | "non_operationnel"
   | "montage_demontage"
