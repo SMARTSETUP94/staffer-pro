@@ -31,7 +31,7 @@ export const AFFAIRE_TYPOLOGIES: AffaireTypologie[] = [
 export const AFFAIRE_TYPOLOGIE_LABELS: Record<AffaireTypologie, string> = {
   non_operationnel: "Non opérationnel (1XXX/3XXX)",
   montage_demontage: "Montage / Démontage (4XXX)",
-  fabrication: "Fabrication (5XXX)",
+  fabrication: "Fabrication (5XXX/6XXX)",
   stockage: "Stockage (2XXXX)",
   prototype: "Prototype (9XXX)",
 };
