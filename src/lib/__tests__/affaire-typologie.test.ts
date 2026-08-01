@@ -21,6 +21,12 @@ describe("getAffaireTypologie", () => {
   it("4 chiffres / 5 → fabrication", () => {
     expect(getAffaireTypologie("5123")).toBe("fabrication");
   });
+  it("4 chiffres / 6 → fabrication (LOT 0, suite des 5XXX)", () => {
+    expect(getAffaireTypologie("6000")).toBe("fabrication");
+    expect(getAffaireTypologie("6042")).toBe("fabrication");
+    expect(getAffaireTypologie("6999")).toBe("fabrication");
+  });
+
   it("4 chiffres / 9 → prototype", () => {
     expect(getAffaireTypologie("9001")).toBe("prototype");
   });
@@ -44,7 +50,6 @@ describe("getAffaireTypologie", () => {
 
   it("4 chiffres avec préfixe non mappé → null", () => {
     expect(getAffaireTypologie("2999")).toBeNull(); // 4 chiffres / 2 → not stockage
-    expect(getAffaireTypologie("6000")).toBeNull();
     expect(getAffaireTypologie("7000")).toBeNull();
     expect(getAffaireTypologie("8000")).toBeNull();
     expect(getAffaireTypologie("0123")).toBeNull();
@@ -52,8 +57,10 @@ describe("getAffaireTypologie", () => {
 
   it("5 chiffres préfixe ≠ 2 → null", () => {
     expect(getAffaireTypologie("50000")).toBeNull();
+    expect(getAffaireTypologie("60000")).toBeNull();
     expect(getAffaireTypologie("10000")).toBeNull();
   });
+
 
   it("trim espaces", () => {
     expect(getAffaireTypologie("  4042  ")).toBe("montage_demontage");

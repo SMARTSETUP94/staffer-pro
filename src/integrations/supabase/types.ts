@@ -3072,6 +3072,7 @@ export type Database = {
       }
       metiers: {
         Row: {
+          capacite_jour: number | null
           code: string
           couleur: string
           id: number
@@ -3079,6 +3080,7 @@ export type Database = {
           ordre: number
         }
         Insert: {
+          capacite_jour?: number | null
           code: string
           couleur: string
           id?: number
@@ -3086,6 +3088,7 @@ export type Database = {
           ordre?: number
         }
         Update: {
+          capacite_jour?: number | null
           code?: string
           couleur?: string
           id?: number

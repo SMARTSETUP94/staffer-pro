@@ -16,7 +16,10 @@ import type { AffaireTypologie } from "@/lib/affaire-typologie";
 
 export type TypologieFuture = AffaireTypologie;
 
-/** Préfixe numérique attendu (1er chiffre) pour la typologie cible. */
+/**
+ * Préfixe numérique attendu (1er chiffre) pour la typologie cible.
+ * LOT 0 : fabrication → 6 (les 5XXX sont épuisés, les 6XXX prennent la suite).
+ */
 export function prefixForTypologie(typo: TypologieFuture | null | undefined): number {
   switch (typo) {
     case "non_operationnel":
@@ -24,13 +27,13 @@ export function prefixForTypologie(typo: TypologieFuture | null | undefined): nu
     case "montage_demontage":
       return 4;
     case "fabrication":
-      return 5;
+      return 6;
     case "stockage":
       return 2;
     case "prototype":
       return 9;
     default:
-      return 5; // default fabrication
+      return 6; // default fabrication
   }
 }
 
@@ -41,10 +44,13 @@ export function codeLengthForTypologie(typo: TypologieFuture | null | undefined)
 
 /** Regex de validation du code selon la typologie cible. */
 export function codeRegexForTypologie(typo: TypologieFuture | null | undefined): RegExp {
+  // Fabrication accepte encore les anciens 5XXX en plus des nouveaux 6XXX.
+  if (typo === "fabrication" || typo == null) return /^[56]\d{3}$/;
   const prefix = prefixForTypologie(typo);
   const len = codeLengthForTypologie(typo);
   return new RegExp(`^${prefix}\\d{${len - 1}}$`);
 }
+
 
 /** Format placeholder UI (ex "5XXX" ou "2XXXX"). */
 export function placeholderForTypologie(typo: TypologieFuture | null | undefined): string {

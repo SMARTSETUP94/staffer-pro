@@ -4,8 +4,9 @@
 App planning chantiers Setup Paris. FR language UI.
 Supabase Cloud backend. TanStack Start + Tailwind v4.
 11 rôles métier : admin (full), chef_chantier, employe, commercial, bureau_etude, atelier_chef, atelier_metier, logistique, poseur, chef_pose, chef_chantier (legacy). Capabilities matrice 59 caps × 11 rôles via `user_has_cap()`.
-8 métiers : construction, métallerie, peinture, numérique, tapisserie, machiniste, logistique, suivi_projet.
-5 typologies affaires (dérivées de numero) : non_operationnel(1XXX/3XXX), montage_demontage(4XXX), fabrication(5XXX), stockage(2XXXX), prototype(9XXX).
+8 métiers : construction (libellé « Menuiserie »), métallerie, peinture, numérique, tapisserie, machiniste, logistique, suivi_projet (libellé « Bureau d'étude ») + Impression UV. Colonne `metiers.capacite_jour` (LOT 0) = nb de personnes/jour : Menuiserie 20, Peinture 10, Logistique 10, Métallerie 6, Tapisserie 4, BE 2, Numérique 1 (mono-CNC), Machiniste/Impression UV null. Éditable sur /parametres/metiers.
+5 typologies affaires (dérivées de numero) : non_operationnel(1XXX/3XXX), montage_demontage(4XXX), fabrication(5XXX **et 6XXX**), stockage(2XXXX), prototype(9XXX). LOT 0 : les 5XXX sont épuisés → `sign_opportunite` génère du 6XXX, `next_affaire_numero` accepte le préfixe 6, miroir TS `getAffaireTypologie` ↔ SQL `compute_affaire_typologie` mis à jour (colonne générée `affaires.typologie` recréée). Le numéro d'affaire est éditable depuis la fiche (cap `section.affaires`, dialog `EditNumeroAffaireDialog` avec avertissement si la typologie change).
+
 JAMAIS REVOKE EXECUTE sur les 7 helpers RLS SECURITY DEFINER (is_chef_or_admin, is_admin, has_role, user_has_affaire_access, is_devis_termine, can_saisie_on_affaire, user_is_mentioned_on_affaire) — voir mem://constraints/rls-helpers-execute-grant.
 Dashboard widgets bornés par rôle effectif (whitelist) — admin: tout, chef: pas commerce, employe: que perso. Voir mem://features/dashboard-role-guard.
 Routing post-login : admin/chef → /dashboard, employé desktop → /ma-semaine (PAS /dashboard pour anti-fuite RGPD), preview mobile → /mobile/aujourdhui. Voir mem://features/route-ma-semaine.

@@ -33,10 +33,12 @@ interface MetierRow {
   libelle: string;
   couleur: string;
   ordre: number;
+  capacite_jour: number | null;
   nb_employes: number;
   nb_assignations: number;
   nb_devis_postes: number;
 }
+
 
 const OKLCH_RE = /^oklch\(\s*[0-9.]+%?\s+[0-9.]+\s+[0-9.]+\s*\)$/i;
 
@@ -92,11 +94,14 @@ interface EditState {
   libelle: string;
   couleur: string;
   ordre: number;
+  /** Capacité journalière (nb de personnes mobilisables/jour). Vide = non plafonné. */
+  capaciteJour: string;
 }
 
 const EMPTY_EDIT: EditState = {
-  open: false, mode: "create", code: "", libelle: "", couleur: "oklch(0.7 0.15 250)", ordre: 0,
+  open: false, mode: "create", code: "", libelle: "", couleur: "oklch(0.7 0.15 250)", ordre: 0, capaciteJour: "",
 };
+
 
 function MetiersPage() {
   const navigate = useNavigate();
@@ -121,7 +126,7 @@ function MetiersPage() {
   async function loadRows() {
     setLoadingRows(true);
     const [mRes, eRes, aRes, dRes] = await Promise.all([
-      supabase.from("metiers").select("id, code, libelle, couleur, ordre").order("ordre").order("libelle"),
+      supabase.from("metiers").select("id, code, libelle, couleur, ordre, capacite_jour").order("ordre").order("libelle"),
       supabase.from("employes").select("metier_principal_id"),
       supabase.from("assignations").select("metier_id"),
       supabase.from("devis_postes").select("metier_id"),
@@ -155,15 +160,39 @@ function MetiersPage() {
     setLoadingRows(false);
   }
 
+  /** Édition inline de la capacité journalière depuis le tableau. */
+  async function saveCapacite(row: MetierRow, raw: string) {
+    const trimmed = raw.trim();
+    let value: number | null = null;
+    if (trimmed !== "") {
+      const parsed = Number(trimmed);
+      if (!Number.isInteger(parsed) || parsed < 0 || parsed > 999) {
+        toast.error("Capacité / jour invalide (entier entre 0 et 999, ou vide)");
+        return;
+      }
+      value = parsed;
+    }
+    if (value === row.capacite_jour) return;
+    const { error } = await supabase.from("metiers").update({ capacite_jour: value }).eq("id", row.id);
+    if (error) {
+      toast.error("Erreur enregistrement capacité : " + error.message);
+      return;
+    }
+    setRows((prev) => prev.map((r) => (r.id === row.id ? { ...r, capacite_jour: value } : r)));
+    toast.success(`Capacité de "${row.libelle}" mise à jour`);
+  }
+
   function openCreate() {
     const nextOrdre = rows.length > 0 ? Math.max(...rows.map((r) => r.ordre)) + 10 : 10;
     setEdit({ ...EMPTY_EDIT, open: true, mode: "create", ordre: nextOrdre });
   }
 
+
   function openEdit(row: MetierRow) {
     setEdit({
       open: true, mode: "edit", id: row.id,
       code: row.code, libelle: row.libelle, couleur: row.couleur, ordre: row.ordre,
+      capaciteJour: row.capacite_jour == null ? "" : String(row.capacite_jour),
     });
   }
 
@@ -175,10 +204,20 @@ function MetiersPage() {
     if (!libelle) return toast.error("Libellé requis");
     if (!isValidOklch(couleur)) return toast.error("Couleur OKLCH invalide. Format : oklch(L% C H) ou oklch(L C H)");
 
+    const capaciteRaw = edit.capaciteJour.trim();
+    let capacite_jour: number | null = null;
+    if (capaciteRaw !== "") {
+      const parsed = Number(capaciteRaw);
+      if (!Number.isInteger(parsed) || parsed < 0 || parsed > 999) {
+        return toast.error("Capacité / jour invalide (entier entre 0 et 999, ou vide)");
+      }
+      capacite_jour = parsed;
+    }
+
     setSaving(true);
     if (edit.mode === "create") {
       const { error } = await supabase.from("metiers").insert({
-        code, libelle, couleur, ordre: edit.ordre,
+        code, libelle, couleur, ordre: edit.ordre, capacite_jour,
       });
       if (error) {
         toast.error("Erreur création : " + error.message);
@@ -188,8 +227,9 @@ function MetiersPage() {
       toast.success(`Métier "${libelle}" créé`);
     } else if (edit.id != null) {
       const { error } = await supabase.from("metiers").update({
-        code, libelle, couleur, ordre: edit.ordre,
+        code, libelle, couleur, ordre: edit.ordre, capacite_jour,
       }).eq("id", edit.id);
+
       if (error) {
         toast.error("Erreur modification : " + error.message);
         setSaving(false);
@@ -334,6 +374,20 @@ function MetiersPage() {
                     </div>
                   </div>
                   <div className="space-y-1.5">
+                    <Label htmlFor="m-capacite">Capacité / jour</Label>
+                    <Input
+                      id="m-capacite"
+                      type="number"
+                      min={0}
+                      placeholder="laisser vide = non plafonné"
+                      value={edit.capaciteJour}
+                      onChange={(e) => setEdit({ ...edit, capaciteJour: e.target.value })}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Nombre de personnes mobilisables par jour sur ce métier (contrainte de staffing).
+                    </p>
+                  </div>
+                  <div className="space-y-1.5">
                     <Label htmlFor="m-ordre">Ordre d'affichage</Label>
                     <Input
                       id="m-ordre"
@@ -342,6 +396,7 @@ function MetiersPage() {
                       onChange={(e) => setEdit({ ...edit, ordre: Number(e.target.value) || 0 })}
                     />
                   </div>
+
                 </div>
                 <DialogFooter>
                   <Button variant="outline" onClick={() => setEdit(EMPTY_EDIT)} disabled={saving}>
@@ -372,6 +427,8 @@ function MetiersPage() {
                   <TableHead>Couleur</TableHead>
                   <TableHead>Code</TableHead>
                   <TableHead>Libellé</TableHead>
+                  <TableHead className="w-[130px] text-right">Capacité / jour</TableHead>
+
                   <TableHead className="text-right">Employés</TableHead>
                   <TableHead className="text-right">Assignations</TableHead>
                   <TableHead className="text-right">Postes devis</TableHead>
@@ -415,6 +472,21 @@ function MetiersPage() {
                       </TableCell>
                       <TableCell><code className="text-xs">{r.code}</code></TableCell>
                       <TableCell className="font-medium">{r.libelle}</TableCell>
+                      <TableCell className="text-right">
+                        <Input
+                          type="number"
+                          min={0}
+                          aria-label={`Capacité par jour — ${r.libelle}`}
+                          placeholder="—"
+                          className="h-8 w-[90px] ml-auto text-right tabular-nums"
+                          defaultValue={r.capacite_jour ?? ""}
+                          onBlur={(e) => saveCapacite(r, e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+                          }}
+                        />
+                      </TableCell>
+
                       <TableCell className="text-right tabular-nums">{r.nb_employes}</TableCell>
                       <TableCell className="text-right tabular-nums">{r.nb_assignations}</TableCell>
                       <TableCell className="text-right tabular-nums">{r.nb_devis_postes}</TableCell>
