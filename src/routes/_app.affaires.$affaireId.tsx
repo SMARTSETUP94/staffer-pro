@@ -288,7 +288,17 @@ function AffaireDetailLayout() {
         <Outlet />
       </div>
 
+      <EditNumeroAffaireDialog
+        key={affaire.numero}
+        affaireId={affaire.id}
+        numero={affaire.numero}
+        open={editNumeroOpen}
+        onOpenChange={setEditNumeroOpen}
+        onSaved={reload}
+      />
+
       {createClientOpen && (
+
         <NouveauClientDialog
           onClose={() => setCreateClientOpen(false)}
           onDone={async (clientId) => {
