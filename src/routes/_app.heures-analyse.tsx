@@ -81,7 +81,7 @@ import type { SilaeValidationReport } from "@/lib/heures-export";
 // Constantes + Schema search
 // ============================================================================
 
-const STATUTS = ["brouillon", "soumis", "valide", "rejete"] as const;
+export const STATUTS = ["brouillon", "soumis", "valide", "rejete"] as const;
 type Statut = (typeof STATUTS)[number];
 
 const PRESETS = ["7j", "30j", "semaine", "mois", "mois_precedent", "custom"] as const;
