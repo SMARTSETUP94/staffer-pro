@@ -160,10 +160,33 @@ function MetiersPage() {
     setLoadingRows(false);
   }
 
+  /** Édition inline de la capacité journalière depuis le tableau. */
+  async function saveCapacite(row: MetierRow, raw: string) {
+    const trimmed = raw.trim();
+    let value: number | null = null;
+    if (trimmed !== "") {
+      const parsed = Number(trimmed);
+      if (!Number.isInteger(parsed) || parsed < 0 || parsed > 999) {
+        toast.error("Capacité / jour invalide (entier entre 0 et 999, ou vide)");
+        return;
+      }
+      value = parsed;
+    }
+    if (value === row.capacite_jour) return;
+    const { error } = await supabase.from("metiers").update({ capacite_jour: value }).eq("id", row.id);
+    if (error) {
+      toast.error("Erreur enregistrement capacité : " + error.message);
+      return;
+    }
+    setRows((prev) => prev.map((r) => (r.id === row.id ? { ...r, capacite_jour: value } : r)));
+    toast.success(`Capacité de "${row.libelle}" mise à jour`);
+  }
+
   function openCreate() {
     const nextOrdre = rows.length > 0 ? Math.max(...rows.map((r) => r.ordre)) + 10 : 10;
     setEdit({ ...EMPTY_EDIT, open: true, mode: "create", ordre: nextOrdre });
   }
+
 
   function openEdit(row: MetierRow) {
     setEdit({
