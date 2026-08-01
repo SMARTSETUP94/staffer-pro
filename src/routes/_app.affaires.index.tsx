@@ -3,7 +3,7 @@ import { requireCapability } from "@/lib/capability-guard";
 import { zodValidator, fallback } from "@tanstack/zod-adapter";
 import { z } from "zod";
 import { useEffect, useMemo, useState } from "react";
-import { Plus, Search, Loader2, ArrowRight, Pencil, RotateCcw } from "lucide-react";
+import { Plus, Search, Loader2, ArrowRight, Pencil, RotateCcw, ArrowUp, ArrowDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCapability } from "@/hooks/use-capability";
 import { PageHeader } from "@/components/PageHeader";
@@ -29,6 +29,7 @@ import { Switch } from "@/components/ui/switch";
 import { type AffaireTypologie, AFFAIRE_TYPOLOGIES, getAffaireTypologie } from "@/lib/affaire-typologie";
 import { toast } from "sonner";
 import { ClientCombobox } from "@/components/clients/ClientCombobox";
+import { cn } from "@/lib/utils";
 
 type AffaireStatut = "prospect" | "en_cours" | "termine" | "annule";
 
@@ -42,6 +43,10 @@ interface AffaireRow {
   statut: AffaireStatut;
   date_debut: string | null;
   date_fin_prevue: string | null;
+  date_montage: string | null;
+  date_demontage: string | null;
+  chef_projet_id: string | null;
+  charge_affaires_id: string | null;
   typologie: AffaireTypologie | null;
 }
 
@@ -77,10 +82,36 @@ const STATUTS: { value: AffaireStatut; label: string }[] = [
   { value: "annule", label: "Annulée" },
 ];
 
-const SEARCH_DEFAULTS = { typo: [] as AffaireTypologie[] };
+/** LOT 2 — colonnes triables. */
+type TriKey = "numero" | "nom" | "client" | "montage" | "demontage" | "statut";
+type TriSens = "asc" | "desc";
+/** LOT 2 — filtre échéance montage. */
+type EcheanceKey = "toutes" | "14j" | "1m" | "3m" | "sans";
+
+const ECHEANCES: { value: EcheanceKey; label: string }[] = [
+  { value: "toutes", label: "Toutes" },
+  { value: "14j", label: "2 semaines" },
+  { value: "1m", label: "1 mois" },
+  { value: "3m", label: "3 mois" },
+  { value: "sans", label: "Sans date" },
+];
+
+const STATUT_ORDER: Record<AffaireStatut, number> = {
+  en_cours: 0, prospect: 1, termine: 2, annule: 3,
+};
+
+const SEARCH_DEFAULTS = {
+  typo: [] as AffaireTypologie[],
+  tri: "montage" as TriKey,
+  sens: "asc" as TriSens,
+  echeance: "toutes" as EcheanceKey,
+};
 
 const searchSchema = z.object({
   typo: fallback(z.array(z.enum(AFFAIRE_TYPOLOGIES as [AffaireTypologie, ...AffaireTypologie[]])), []).default([]),
+  tri: fallback(z.string(), "montage").default("montage"),
+  sens: fallback(z.string(), "asc").default("asc"),
+  echeance: fallback(z.string(), "toutes").default("toutes"),
 });
 
 export const Route = createFileRoute("/_app/affaires/")({
@@ -91,13 +122,34 @@ export const Route = createFileRoute("/_app/affaires/")({
   component: AffairesPage,
 });
 
+const TRI_KEYS: TriKey[] = ["numero", "nom", "client", "montage", "demontage", "statut"];
+
+function todayISO() {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+/** Nombre de jours calendaires entre aujourd'hui et une date ISO (positif = futur). */
+function daysUntil(iso: string): number {
+  const d = new Date(iso + "T00:00:00");
+  return Math.round((d.getTime() - todayISO().getTime()) / 86_400_000);
+}
+
 function AffairesPage() {
   const canManageAffaires = useCapability("section.affaires");
   const navigate = useNavigate({ from: "/affaires/" });
-  const { typo: typoFilter } = Route.useSearch();
+  const rawSearch = Route.useSearch();
+  const typoFilter = rawSearch.typo;
+  const tri: TriKey = TRI_KEYS.includes(rawSearch.tri as TriKey) ? (rawSearch.tri as TriKey) : "montage";
+  const sens: TriSens = rawSearch.sens === "desc" ? "desc" : "asc";
+  const echeance: EcheanceKey = ECHEANCES.some((e) => e.value === rawSearch.echeance)
+    ? (rawSearch.echeance as EcheanceKey)
+    : "toutes";
   const { ids: mesAffairesIds, isLoading: mesAffairesLoading } = useMesAffairesChefIds();
   const [onlyMine, setOnlyMine] = useState(false);
   const [rows, setRows] = useState<AffaireRow[]>([]);
+  const [people, setPeople] = useState<Map<string, string>>(new Map());
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | AffaireStatut>("en_cours");
@@ -109,8 +161,8 @@ function AffairesPage() {
     setLoading(true);
     const { data, error } = await supabase
       .from("affaires")
-      .select("id, numero, nom, client, client_id, lieu, statut, date_debut, date_fin_prevue, typologie")
-      .order("date_debut", { ascending: false, nullsFirst: false });
+      .select("id, numero, nom, client, client_id, lieu, statut, date_debut, date_fin_prevue, date_montage, date_demontage, chef_projet_id, charge_affaires_id, typologie")
+      .order("date_montage", { ascending: true, nullsFirst: false });
     if (error) {
       toast.error("Chargement impossible", { description: error.message });
       setLoading(false);
@@ -120,7 +172,19 @@ function AffairesPage() {
     setLoading(false);
   };
 
-  useEffect(() => { fetchAll(); }, []);
+  const fetchPeople = async () => {
+    const { data } = await supabase.from("employes").select("id, prenom, nom");
+    const map = new Map<string, string>();
+    for (const e of data ?? []) {
+      const prenom = (e.prenom ?? "").trim();
+      const nom = (e.nom ?? "").trim();
+      const label = [prenom, nom ? `${nom.charAt(0).toUpperCase()}.` : ""].filter(Boolean).join(" ");
+      map.set(e.id, label || "—");
+    }
+    setPeople(map);
+  };
+
+  useEffect(() => { fetchAll(); fetchPeople(); }, []);
 
   const typoCounts = useMemo(() => {
     const counts: Partial<Record<AffaireTypologie, number>> = {};
@@ -132,7 +196,8 @@ function AffairesPage() {
 
   const typoSet = useMemo(() => new Set(typoFilter), [typoFilter]);
 
-  const filtered = useMemo(() => {
+  /** Filtres hors échéance — sert au compteur « sans date de montage ». */
+  const baseFiltered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return rows.filter((r) => {
       if (onlyMine && !mesAffairesIds.has(r.id)) return false;
@@ -143,9 +208,66 @@ function AffairesPage() {
     });
   }, [rows, search, filter, typoSet, onlyMine, mesAffairesIds]);
 
+  const sansDateCount = useMemo(
+    () => baseFiltered.filter((r) => !r.date_montage).length,
+    [baseFiltered],
+  );
+
+  const filtered = useMemo(() => {
+    const horizonDays: Partial<Record<EcheanceKey, number>> = { "14j": 14, "1m": 31, "3m": 92 };
+    const withEcheance = baseFiltered.filter((r) => {
+      if (echeance === "toutes") return true;
+      if (echeance === "sans") return !r.date_montage;
+      const max = horizonDays[echeance]!;
+      if (!r.date_montage) return false;
+      const d = daysUntil(r.date_montage);
+      return d >= 0 && d <= max;
+    });
+
+    const dir = sens === "asc" ? 1 : -1;
+    const cmpText = (a: string, b: string) => a.localeCompare(b, "fr", { numeric: true, sensitivity: "base" });
+    const cmpDate = (a: string | null, b: string | null) => {
+      // Nulls toujours en dernier, quel que soit le sens.
+      if (!a && !b) return 0;
+      if (!a) return 1;
+      if (!b) return -1;
+      return (a < b ? -1 : a > b ? 1 : 0) * dir;
+    };
+
+    return [...withEcheance].sort((a, b) => {
+      switch (tri) {
+        case "numero": return cmpText(a.numero, b.numero) * dir;
+        case "nom": return cmpText(a.nom, b.nom) * dir;
+        case "client": return cmpText(a.client ?? "", b.client ?? "") * dir;
+        case "demontage": return cmpDate(a.date_demontage, b.date_demontage);
+        case "statut": return (STATUT_ORDER[a.statut] - STATUT_ORDER[b.statut]) * dir;
+        case "montage":
+        default: return cmpDate(a.date_montage, b.date_montage);
+      }
+    });
+  }, [baseFiltered, echeance, tri, sens]);
+
   const setTypoFilter = (next: AffaireTypologie[]) => {
-    navigate({ search: { typo: next }, replace: true });
+    navigate({ search: { typo: next, tri, sens, echeance }, replace: true });
   };
+
+  const setEcheance = (next: EcheanceKey) => {
+    navigate({ search: { typo: typoFilter, tri, sens, echeance: next }, replace: true });
+  };
+
+  const toggleTri = (key: TriKey) => {
+    navigate({
+      search: {
+        typo: typoFilter,
+        echeance,
+        tri: key,
+        sens: tri === key && sens === "asc" ? "desc" : "asc",
+      },
+      replace: true,
+    });
+
+  };
+
 
   const openCreate = () => { setForm(emptyForm); setOpen(true); };
   const openEdit = (r: AffaireRow) => {
@@ -273,15 +395,45 @@ function AffairesPage() {
         </Tabs>
       </div>
 
-      <div className="rounded-2xl border border-border bg-card p-3">
-        <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-          Typologie
+      {/* LOT 2 — indicateur de complétude des dates de montage */}
+      <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+        <span>{baseFiltered.length} affaire{baseFiltered.length > 1 ? "s" : ""}</span>
+        <span>·</span>
+        {sansDateCount > 0 ? (
+          <button
+            type="button"
+            onClick={() => setEcheance("sans")}
+            className="font-semibold text-amber-600 underline-offset-2 hover:underline"
+          >
+            {sansDateCount} sans date de montage
+          </button>
+        ) : (
+          <span>toutes avec une date de montage</span>
+        )}
+      </div>
+
+      <div className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-3 sm:flex-row sm:items-end sm:justify-between">
+        <div className="flex-1">
+          <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Typologie
+          </div>
+          <TypologieMultiFilter
+            value={typoFilter}
+            onChange={setTypoFilter}
+            counts={typoCounts}
+          />
         </div>
-        <TypologieMultiFilter
-          value={typoFilter}
-          onChange={setTypoFilter}
-          counts={typoCounts}
-        />
+        <div className="sm:w-52">
+          <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Montage dans…
+          </div>
+          <Select value={echeance} onValueChange={(v) => setEcheance(v as EcheanceKey)}>
+            <SelectTrigger className="h-10 rounded-xl"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {ECHEANCES.map((e) => <SelectItem key={e.value} value={e.value}>{e.label}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <div className="overflow-x-auto rounded-2xl border border-border bg-card">
@@ -294,16 +446,19 @@ function AffairesPage() {
             Aucune affaire ne correspond aux filtres.
           </div>
         ) : (
-          <Table className="min-w-[820px]">
+          <Table className="min-w-[1100px]">
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[110px]">N°</TableHead>
-                <TableHead className="w-[140px]">Typologie</TableHead>
-                <TableHead className="min-w-[200px]">Nom</TableHead>
-                <TableHead className="min-w-[140px]">Client</TableHead>
-                <TableHead className="min-w-[120px]">Lieu</TableHead>
-                <TableHead className="w-[170px]">Période</TableHead>
-                <TableHead className="w-[110px]">Statut</TableHead>
+                <SortableHead label="N°" col="numero" tri={tri} sens={sens} onSort={toggleTri} className="w-[110px]" />
+                <TableHead className="w-[130px]">Typologie</TableHead>
+                <SortableHead label="Nom" col="nom" tri={tri} sens={sens} onSort={toggleTri} className="min-w-[190px]" />
+                <SortableHead label="Client" col="client" tri={tri} sens={sens} onSort={toggleTri} className="min-w-[130px]" />
+                <TableHead className="hidden min-w-[110px] lg:table-cell">Lieu</TableHead>
+                <SortableHead label="Montage" col="montage" tri={tri} sens={sens} onSort={toggleTri} className="w-[120px]" />
+                <SortableHead label="Démontage" col="demontage" tri={tri} sens={sens} onSort={toggleTri} className="w-[110px]" />
+                <TableHead className="w-[120px]">Chef de projet</TableHead>
+                <TableHead className="hidden w-[130px] xl:table-cell">Chargé d'affaires</TableHead>
+                <SortableHead label="Statut" col="statut" tri={tri} sens={sens} onSort={toggleTri} className="w-[110px]" />
                 <TableHead className="w-[160px] text-right"></TableHead>
               </TableRow>
             </TableHeader>
@@ -328,10 +483,22 @@ function AffairesPage() {
                     </Link>
                   </TableCell>
                   <TableCell className="text-sm">{r.client ?? "—"}</TableCell>
-                  <TableCell className="text-sm">{r.lieu ?? "—"}</TableCell>
-                  <TableCell className="text-xs text-muted-foreground">
-                    {formatPeriode(r.date_debut, r.date_fin_prevue)}
+                  <TableCell className="hidden text-sm lg:table-cell">{r.lieu ?? "—"}</TableCell>
+                  <TableCell><DateMontageCell date={r.date_montage} /></TableCell>
+                  <TableCell>
+                    {r.date_demontage
+                      ? <span className="text-xs font-medium">{formatCourt(r.date_demontage)}</span>
+                      : <span className="text-xs text-muted-foreground/50">—</span>}
                   </TableCell>
+                  <TableCell className="text-xs">
+                    {r.chef_projet_id ? (people.get(r.chef_projet_id) ?? "—")
+                      : <span className="text-muted-foreground/50">—</span>}
+                  </TableCell>
+                  <TableCell className="hidden text-xs xl:table-cell">
+                    {r.charge_affaires_id ? (people.get(r.charge_affaires_id) ?? "—")
+                      : <span className="text-muted-foreground/50">—</span>}
+                  </TableCell>
+
                   <TableCell>
                     {canManageAffaires ? (
                       <DropdownMenu>
@@ -472,10 +639,62 @@ export function StatutPill({ statut }: { statut: AffaireStatut }) {
   );
 }
 
-function formatPeriode(start: string | null, end: string | null) {
-  if (!start && !end) return "—";
-  const fmt = (d: string) => new Date(d).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "2-digit" });
-  if (start && end) return `${fmt(start)} → ${fmt(end)}`;
-  if (start) return `dès ${fmt(start)}`;
-  return `→ ${fmt(end!)}`;
+/** LOT 2 — « 27 août » */
+function formatCourt(iso: string) {
+  return new Date(iso + "T00:00:00").toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
 }
+
+/** LOT 2 — en-tête de colonne triable. */
+function SortableHead({
+  label, col, tri, sens, onSort, className,
+}: {
+  label: string;
+  col: TriKey;
+  tri: TriKey;
+  sens: TriSens;
+  onSort: (c: TriKey) => void;
+  className?: string;
+}) {
+  const active = tri === col;
+  return (
+    <TableHead className={className}>
+      <button
+        type="button"
+        onClick={() => onSort(col)}
+        className={cn(
+          "inline-flex items-center gap-1 text-left hover:text-foreground",
+          active ? "font-semibold text-foreground" : "text-muted-foreground",
+        )}
+      >
+        {label}
+        {active && (sens === "asc"
+          ? <ArrowUp className="h-3 w-3" />
+          : <ArrowDown className="h-3 w-3" />)}
+      </button>
+    </TableHead>
+  );
+}
+
+/** LOT 2 — date de montage + compte à rebours. */
+function DateMontageCell({ date }: { date: string | null }) {
+  if (!date) return <span className="text-xs text-muted-foreground/50">—</span>;
+  const d = daysUntil(date);
+  const label = d === 0 ? "Aujourd'hui" : d > 0 ? `J−${d}` : `J+${Math.abs(d)}`;
+  return (
+    <div className="leading-tight">
+      <div className="text-xs font-semibold text-foreground">{formatCourt(date)}</div>
+      <div
+        className={cn(
+          "text-[10px]",
+          d < 0 ? "text-muted-foreground/60"
+            : d > 60 ? "text-muted-foreground/70"
+            : d <= 7 ? "font-semibold text-amber-600"
+            : "text-muted-foreground",
+        )}
+      >
+        {label}
+      </div>
+    </div>
+  );
+}
+
