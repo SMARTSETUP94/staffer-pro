@@ -248,22 +248,24 @@ function AffairesPage() {
   }, [baseFiltered, echeance, tri, sens]);
 
   const setTypoFilter = (next: AffaireTypologie[]) => {
-    navigate({ search: (prev) => ({ ...prev, typo: next }), replace: true });
+    navigate({ search: { typo: next, tri, sens, echeance }, replace: true });
   };
 
   const setEcheance = (next: EcheanceKey) => {
-    navigate({ search: (prev) => ({ ...prev, echeance: next }), replace: true });
+    navigate({ search: { typo: typoFilter, tri, sens, echeance: next }, replace: true });
   };
 
   const toggleTri = (key: TriKey) => {
     navigate({
-      search: (prev) => ({
-        ...prev,
+      search: {
+        typo: typoFilter,
+        echeance,
         tri: key,
         sens: tri === key && sens === "asc" ? "desc" : "asc",
-      }),
+      },
       replace: true,
     });
+
   };
 
 
