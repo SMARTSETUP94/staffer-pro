@@ -132,7 +132,10 @@ function AffaireDetailLayout() {
       ? [{ to: `/affaires/${affaire.id}/fabrication`, label: "Fabrication", match: path.endsWith("/fabrication") }]
       : []),
     ...(canSeeFabrication
-      ? [{ to: `/affaires/${affaire.id}/grille`, label: "Grille", match: path.endsWith("/grille") }]
+      ? [
+          { to: `/affaires/${affaire.id}/grille`, label: "Grille", match: path.endsWith("/grille") },
+          { to: `/affaires/${affaire.id}/planning-atelier`, label: "Planning", match: path.endsWith("/planning-atelier") },
+        ]
       : []),
     { to: `/affaires/${affaire.id}/staffing`, label: "Planning fab", match: path.endsWith("/staffing") },
     ...(canSeeEquipe
