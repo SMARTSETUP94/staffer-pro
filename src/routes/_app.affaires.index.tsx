@@ -395,15 +395,45 @@ function AffairesPage() {
         </Tabs>
       </div>
 
-      <div className="rounded-2xl border border-border bg-card p-3">
-        <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-          Typologie
+      {/* LOT 2 — indicateur de complétude des dates de montage */}
+      <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+        <span>{baseFiltered.length} affaire{baseFiltered.length > 1 ? "s" : ""}</span>
+        <span>·</span>
+        {sansDateCount > 0 ? (
+          <button
+            type="button"
+            onClick={() => setEcheance("sans")}
+            className="font-semibold text-amber-600 underline-offset-2 hover:underline"
+          >
+            {sansDateCount} sans date de montage
+          </button>
+        ) : (
+          <span>toutes avec une date de montage</span>
+        )}
+      </div>
+
+      <div className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-3 sm:flex-row sm:items-end sm:justify-between">
+        <div className="flex-1">
+          <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Typologie
+          </div>
+          <TypologieMultiFilter
+            value={typoFilter}
+            onChange={setTypoFilter}
+            counts={typoCounts}
+          />
         </div>
-        <TypologieMultiFilter
-          value={typoFilter}
-          onChange={setTypoFilter}
-          counts={typoCounts}
-        />
+        <div className="sm:w-52">
+          <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Montage dans…
+          </div>
+          <Select value={echeance} onValueChange={(v) => setEcheance(v as EcheanceKey)}>
+            <SelectTrigger className="h-10 rounded-xl"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {ECHEANCES.map((e) => <SelectItem key={e.value} value={e.value}>{e.label}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <div className="overflow-x-auto rounded-2xl border border-border bg-card">
@@ -416,16 +446,19 @@ function AffairesPage() {
             Aucune affaire ne correspond aux filtres.
           </div>
         ) : (
-          <Table className="min-w-[820px]">
+          <Table className="min-w-[1100px]">
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[110px]">N°</TableHead>
-                <TableHead className="w-[140px]">Typologie</TableHead>
-                <TableHead className="min-w-[200px]">Nom</TableHead>
-                <TableHead className="min-w-[140px]">Client</TableHead>
-                <TableHead className="min-w-[120px]">Lieu</TableHead>
-                <TableHead className="w-[170px]">Période</TableHead>
-                <TableHead className="w-[110px]">Statut</TableHead>
+                <SortableHead label="N°" col="numero" tri={tri} sens={sens} onSort={toggleTri} className="w-[110px]" />
+                <TableHead className="w-[130px]">Typologie</TableHead>
+                <SortableHead label="Nom" col="nom" tri={tri} sens={sens} onSort={toggleTri} className="min-w-[190px]" />
+                <SortableHead label="Client" col="client" tri={tri} sens={sens} onSort={toggleTri} className="min-w-[130px]" />
+                <TableHead className="hidden min-w-[110px] lg:table-cell">Lieu</TableHead>
+                <SortableHead label="Montage" col="montage" tri={tri} sens={sens} onSort={toggleTri} className="w-[120px]" />
+                <SortableHead label="Démontage" col="demontage" tri={tri} sens={sens} onSort={toggleTri} className="w-[110px]" />
+                <TableHead className="w-[120px]">Chef de projet</TableHead>
+                <TableHead className="hidden w-[130px] xl:table-cell">Chargé d'affaires</TableHead>
+                <SortableHead label="Statut" col="statut" tri={tri} sens={sens} onSort={toggleTri} className="w-[110px]" />
                 <TableHead className="w-[160px] text-right"></TableHead>
               </TableRow>
             </TableHeader>
@@ -450,10 +483,22 @@ function AffairesPage() {
                     </Link>
                   </TableCell>
                   <TableCell className="text-sm">{r.client ?? "—"}</TableCell>
-                  <TableCell className="text-sm">{r.lieu ?? "—"}</TableCell>
-                  <TableCell className="text-xs text-muted-foreground">
-                    {formatPeriode(r.date_debut, r.date_fin_prevue)}
+                  <TableCell className="hidden text-sm lg:table-cell">{r.lieu ?? "—"}</TableCell>
+                  <TableCell><DateMontageCell date={r.date_montage} /></TableCell>
+                  <TableCell>
+                    {r.date_demontage
+                      ? <span className="text-xs font-medium">{formatCourt(r.date_demontage)}</span>
+                      : <span className="text-xs text-muted-foreground/50">—</span>}
                   </TableCell>
+                  <TableCell className="text-xs">
+                    {r.chef_projet_id ? (people.get(r.chef_projet_id) ?? "—")
+                      : <span className="text-muted-foreground/50">—</span>}
+                  </TableCell>
+                  <TableCell className="hidden text-xs xl:table-cell">
+                    {r.charge_affaires_id ? (people.get(r.charge_affaires_id) ?? "—")
+                      : <span className="text-muted-foreground/50">—</span>}
+                  </TableCell>
+
                   <TableCell>
                     {canManageAffaires ? (
                       <DropdownMenu>
