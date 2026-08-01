@@ -3,7 +3,7 @@ import { requireCapability } from "@/lib/capability-guard";
 import { zodValidator, fallback } from "@tanstack/zod-adapter";
 import { z } from "zod";
 import { useEffect, useMemo, useState } from "react";
-import { Plus, Search, Loader2, ArrowRight, Pencil, RotateCcw } from "lucide-react";
+import { Plus, Search, Loader2, ArrowRight, Pencil, RotateCcw, ArrowUp, ArrowDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCapability } from "@/hooks/use-capability";
 import { PageHeader } from "@/components/PageHeader";
@@ -29,6 +29,7 @@ import { Switch } from "@/components/ui/switch";
 import { type AffaireTypologie, AFFAIRE_TYPOLOGIES, getAffaireTypologie } from "@/lib/affaire-typologie";
 import { toast } from "sonner";
 import { ClientCombobox } from "@/components/clients/ClientCombobox";
+import { cn } from "@/lib/utils";
 
 type AffaireStatut = "prospect" | "en_cours" | "termine" | "annule";
 
@@ -42,6 +43,10 @@ interface AffaireRow {
   statut: AffaireStatut;
   date_debut: string | null;
   date_fin_prevue: string | null;
+  date_montage: string | null;
+  date_demontage: string | null;
+  chef_projet_id: string | null;
+  charge_affaires_id: string | null;
   typologie: AffaireTypologie | null;
 }
 
@@ -77,10 +82,36 @@ const STATUTS: { value: AffaireStatut; label: string }[] = [
   { value: "annule", label: "Annulée" },
 ];
 
-const SEARCH_DEFAULTS = { typo: [] as AffaireTypologie[] };
+/** LOT 2 — colonnes triables. */
+type TriKey = "numero" | "nom" | "client" | "montage" | "demontage" | "statut";
+type TriSens = "asc" | "desc";
+/** LOT 2 — filtre échéance montage. */
+type EcheanceKey = "toutes" | "14j" | "1m" | "3m" | "sans";
+
+const ECHEANCES: { value: EcheanceKey; label: string }[] = [
+  { value: "toutes", label: "Toutes" },
+  { value: "14j", label: "2 semaines" },
+  { value: "1m", label: "1 mois" },
+  { value: "3m", label: "3 mois" },
+  { value: "sans", label: "Sans date" },
+];
+
+const STATUT_ORDER: Record<AffaireStatut, number> = {
+  en_cours: 0, prospect: 1, termine: 2, annule: 3,
+};
+
+const SEARCH_DEFAULTS = {
+  typo: [] as AffaireTypologie[],
+  tri: "montage" as TriKey,
+  sens: "asc" as TriSens,
+  echeance: "toutes" as EcheanceKey,
+};
 
 const searchSchema = z.object({
   typo: fallback(z.array(z.enum(AFFAIRE_TYPOLOGIES as [AffaireTypologie, ...AffaireTypologie[]])), []).default([]),
+  tri: fallback(z.string(), "montage").default("montage"),
+  sens: fallback(z.string(), "asc").default("asc"),
+  echeance: fallback(z.string(), "toutes").default("toutes"),
 });
 
 export const Route = createFileRoute("/_app/affaires/")({
@@ -91,13 +122,34 @@ export const Route = createFileRoute("/_app/affaires/")({
   component: AffairesPage,
 });
 
+const TRI_KEYS: TriKey[] = ["numero", "nom", "client", "montage", "demontage", "statut"];
+
+function todayISO() {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+/** Nombre de jours calendaires entre aujourd'hui et une date ISO (positif = futur). */
+function daysUntil(iso: string): number {
+  const d = new Date(iso + "T00:00:00");
+  return Math.round((d.getTime() - todayISO().getTime()) / 86_400_000);
+}
+
 function AffairesPage() {
   const canManageAffaires = useCapability("section.affaires");
   const navigate = useNavigate({ from: "/affaires/" });
-  const { typo: typoFilter } = Route.useSearch();
+  const rawSearch = Route.useSearch();
+  const typoFilter = rawSearch.typo;
+  const tri: TriKey = TRI_KEYS.includes(rawSearch.tri as TriKey) ? (rawSearch.tri as TriKey) : "montage";
+  const sens: TriSens = rawSearch.sens === "desc" ? "desc" : "asc";
+  const echeance: EcheanceKey = ECHEANCES.some((e) => e.value === rawSearch.echeance)
+    ? (rawSearch.echeance as EcheanceKey)
+    : "toutes";
   const { ids: mesAffairesIds, isLoading: mesAffairesLoading } = useMesAffairesChefIds();
   const [onlyMine, setOnlyMine] = useState(false);
   const [rows, setRows] = useState<AffaireRow[]>([]);
+  const [people, setPeople] = useState<Map<string, string>>(new Map());
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | AffaireStatut>("en_cours");
@@ -109,8 +161,8 @@ function AffairesPage() {
     setLoading(true);
     const { data, error } = await supabase
       .from("affaires")
-      .select("id, numero, nom, client, client_id, lieu, statut, date_debut, date_fin_prevue, typologie")
-      .order("date_debut", { ascending: false, nullsFirst: false });
+      .select("id, numero, nom, client, client_id, lieu, statut, date_debut, date_fin_prevue, date_montage, date_demontage, chef_projet_id, charge_affaires_id, typologie")
+      .order("date_montage", { ascending: true, nullsFirst: false });
     if (error) {
       toast.error("Chargement impossible", { description: error.message });
       setLoading(false);
@@ -120,7 +172,19 @@ function AffairesPage() {
     setLoading(false);
   };
 
-  useEffect(() => { fetchAll(); }, []);
+  const fetchPeople = async () => {
+    const { data } = await supabase.from("employes").select("id, prenom, nom");
+    const map = new Map<string, string>();
+    for (const e of data ?? []) {
+      const prenom = (e.prenom ?? "").trim();
+      const nom = (e.nom ?? "").trim();
+      const label = [prenom, nom ? `${nom.charAt(0).toUpperCase()}.` : ""].filter(Boolean).join(" ");
+      map.set(e.id, label || "—");
+    }
+    setPeople(map);
+  };
+
+  useEffect(() => { fetchAll(); fetchPeople(); }, []);
 
   const typoCounts = useMemo(() => {
     const counts: Partial<Record<AffaireTypologie, number>> = {};
@@ -132,7 +196,8 @@ function AffairesPage() {
 
   const typoSet = useMemo(() => new Set(typoFilter), [typoFilter]);
 
-  const filtered = useMemo(() => {
+  /** Filtres hors échéance — sert au compteur « sans date de montage ». */
+  const baseFiltered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return rows.filter((r) => {
       if (onlyMine && !mesAffairesIds.has(r.id)) return false;
@@ -143,9 +208,64 @@ function AffairesPage() {
     });
   }, [rows, search, filter, typoSet, onlyMine, mesAffairesIds]);
 
+  const sansDateCount = useMemo(
+    () => baseFiltered.filter((r) => !r.date_montage).length,
+    [baseFiltered],
+  );
+
+  const filtered = useMemo(() => {
+    const horizonDays: Partial<Record<EcheanceKey, number>> = { "14j": 14, "1m": 31, "3m": 92 };
+    const withEcheance = baseFiltered.filter((r) => {
+      if (echeance === "toutes") return true;
+      if (echeance === "sans") return !r.date_montage;
+      const max = horizonDays[echeance]!;
+      if (!r.date_montage) return false;
+      const d = daysUntil(r.date_montage);
+      return d >= 0 && d <= max;
+    });
+
+    const dir = sens === "asc" ? 1 : -1;
+    const cmpText = (a: string, b: string) => a.localeCompare(b, "fr", { numeric: true, sensitivity: "base" });
+    const cmpDate = (a: string | null, b: string | null) => {
+      // Nulls toujours en dernier, quel que soit le sens.
+      if (!a && !b) return 0;
+      if (!a) return 1;
+      if (!b) return -1;
+      return (a < b ? -1 : a > b ? 1 : 0) * dir;
+    };
+
+    return [...withEcheance].sort((a, b) => {
+      switch (tri) {
+        case "numero": return cmpText(a.numero, b.numero) * dir;
+        case "nom": return cmpText(a.nom, b.nom) * dir;
+        case "client": return cmpText(a.client ?? "", b.client ?? "") * dir;
+        case "demontage": return cmpDate(a.date_demontage, b.date_demontage);
+        case "statut": return (STATUT_ORDER[a.statut] - STATUT_ORDER[b.statut]) * dir;
+        case "montage":
+        default: return cmpDate(a.date_montage, b.date_montage);
+      }
+    });
+  }, [baseFiltered, echeance, tri, sens]);
+
   const setTypoFilter = (next: AffaireTypologie[]) => {
-    navigate({ search: { typo: next }, replace: true });
+    navigate({ search: (prev) => ({ ...prev, typo: next }), replace: true });
   };
+
+  const setEcheance = (next: EcheanceKey) => {
+    navigate({ search: (prev) => ({ ...prev, echeance: next }), replace: true });
+  };
+
+  const toggleTri = (key: TriKey) => {
+    navigate({
+      search: (prev) => ({
+        ...prev,
+        tri: key,
+        sens: tri === key && sens === "asc" ? "desc" : "asc",
+      }),
+      replace: true,
+    });
+  };
+
 
   const openCreate = () => { setForm(emptyForm); setOpen(true); };
   const openEdit = (r: AffaireRow) => {
