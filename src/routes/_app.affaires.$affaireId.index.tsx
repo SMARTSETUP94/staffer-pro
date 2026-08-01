@@ -82,6 +82,12 @@ function AffaireSynthesePage() {
       setDEvtDebut((aff?.date_evenement_debut as string | null) ?? "");
       setDEvtFin((aff?.date_evenement_fin as string | null) ?? "");
       setDDemontage((aff?.date_demontage as string | null) ?? "");
+      setMNbTech(aff?.montage_nb_techniciens == null ? "" : String(aff.montage_nb_techniciens));
+      setMNuit(Boolean(aff?.montage_travail_nuit));
+      setMNbSemi(aff?.montage_nb_semi == null ? "" : String(aff.montage_nb_semi));
+      setMNb20m3(aff?.montage_nb_20m3 == null ? "" : String(aff.montage_nb_20m3));
+      setMNature((aff?.montage_nature_prestation as string | null) ?? "");
+      setMNotes((aff?.montage_notes as string | null) ?? "");
       setLoading(false);
     })();
     return () => {
