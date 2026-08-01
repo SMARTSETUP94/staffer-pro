@@ -404,6 +404,8 @@ function MetiersPage() {
                   <TableHead>Couleur</TableHead>
                   <TableHead>Code</TableHead>
                   <TableHead>Libellé</TableHead>
+                  <TableHead className="w-[130px] text-right">Capacité / jour</TableHead>
+
                   <TableHead className="text-right">Employés</TableHead>
                   <TableHead className="text-right">Assignations</TableHead>
                   <TableHead className="text-right">Postes devis</TableHead>
