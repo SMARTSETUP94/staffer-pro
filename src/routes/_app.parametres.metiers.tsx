@@ -351,6 +351,20 @@ function MetiersPage() {
                     </div>
                   </div>
                   <div className="space-y-1.5">
+                    <Label htmlFor="m-capacite">Capacité / jour</Label>
+                    <Input
+                      id="m-capacite"
+                      type="number"
+                      min={0}
+                      placeholder="laisser vide = non plafonné"
+                      value={edit.capaciteJour}
+                      onChange={(e) => setEdit({ ...edit, capaciteJour: e.target.value })}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Nombre de personnes mobilisables par jour sur ce métier (contrainte de staffing).
+                    </p>
+                  </div>
+                  <div className="space-y-1.5">
                     <Label htmlFor="m-ordre">Ordre d'affichage</Label>
                     <Input
                       id="m-ordre"
@@ -359,6 +373,7 @@ function MetiersPage() {
                       onChange={(e) => setEdit({ ...edit, ordre: Number(e.target.value) || 0 })}
                     />
                   </div>
+
                 </div>
                 <DialogFooter>
                   <Button variant="outline" onClick={() => setEdit(EMPTY_EDIT)} disabled={saving}>
