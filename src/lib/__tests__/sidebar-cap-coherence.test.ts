@@ -119,4 +119,26 @@ describe("Sidebar ↔ route capability coherence", () => {
       );
     }
   });
+
+  /**
+   * LOT B5 — Les routes réduites à un stub de redirection (pas de `component`)
+   * ne doivent plus apparaître dans la sidebar : l'utilisateur cliquerait sur
+   * un item qui l'emmène ailleurs.
+   */
+  it("no sidebar item points to a redirect-only route stub", () => {
+    const offenders: string[] = [];
+    for (const { url } of extractSidebarItems()) {
+      if (url.includes("$")) continue;
+      const file = resolveRouteFile(url);
+      if (!file) continue;
+      const src = fs.readFileSync(file, "utf-8");
+      const isStub = !/\bcomponent:/.test(src) && /throw redirect\(/.test(src);
+      if (isStub) offenders.push(`  • ${url}  →  ${path.basename(file)} (stub redirect)`);
+    }
+    if (offenders.length > 0) {
+      throw new Error(
+        `${offenders.length} item(s) de sidebar pointent vers une route supprimée :\n${offenders.join("\n")}`,
+      );
+    }
+  });
 });
