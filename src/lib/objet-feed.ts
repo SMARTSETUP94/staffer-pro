@@ -8,6 +8,14 @@
  * Helpers purs : testés dans `src/lib/__tests__/objet-feed.test.ts`.
  */
 
+export type JsonValue =
+  | string
+  | number
+  | boolean
+  | null
+  | JsonValue[]
+  | { [key: string]: JsonValue };
+
 export type ObjetFeedKind = "event" | "commentaire" | "photo";
 
 export interface RawJournalEvent {
@@ -18,7 +26,7 @@ export interface RawJournalEvent {
   actor_label: string | null;
   metier_id: number | null;
   etape_id: string | null;
-  payload: Record<string, unknown> | null;
+  payload: Record<string, JsonValue> | null;
 }
 
 export interface RawCommentaire {
@@ -59,7 +67,7 @@ export interface ObjetFeedEntry {
   etapeId: string | null;
   content: string | null;
   photo: RawPhoto | null;
-  payload: Record<string, unknown> | null;
+  payload: Record<string, JsonValue> | null;
 }
 
 /** Catégories de filtre proposées au-dessus du fil. */
@@ -106,7 +114,7 @@ export function mergeObjetFeed(args: {
       etapeId: e.etape_id ?? null,
       content: null,
       photo: null,
-      payload: (e.payload ?? null) as Record<string, unknown> | null,
+      payload: (e.payload ?? null) as Record<string, JsonValue> | null,
     });
   }
 
