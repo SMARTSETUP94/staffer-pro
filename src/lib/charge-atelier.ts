@@ -174,6 +174,8 @@ export interface ChargeDrillAffaire {
   nbPers: number;
   nommes: { id: string; nom: string }[];
   cibles: string[];
+  /** LOT A3 — objets identifiés de la cellule, pour ouvrir la fiche objet. */
+  objets: { id: string; label: string }[];
 }
 
 export function groupCellByAffaire(cell: ChargeCell | undefined): ChargeDrillAffaire[] {
@@ -188,11 +190,15 @@ export function groupCellByAffaire(cell: ChargeCell | undefined): ChargeDrillAff
       nbPers: 0,
       nommes: [],
       cibles: [],
+      objets: [],
     };
     g.nbPers += r.nb_pers;
     g.nommes.push(...r.nommes);
     const cible = r.lot_label ? `Lot ${r.lot_label}` : r.objet_label;
     if (cible && !g.cibles.includes(cible)) g.cibles.push(cible);
+    if (r.objet_id && !g.objets.some((o) => o.id === r.objet_id)) {
+      g.objets.push({ id: r.objet_id, label: r.objet_label ?? "Objet" });
+    }
     map.set(r.affaire_id, g);
   }
   return [...map.values()].sort((a, b) => b.nbPers - a.nbPers);

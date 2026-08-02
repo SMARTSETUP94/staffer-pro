@@ -361,6 +361,10 @@ export interface ObjetFicheIdentite {
   materiaux: string | null;
   finition_detail: string | null;
   archive: boolean;
+  // LOT A2 — Plan technique (lien externe ou PDF déposé)
+  plan_url: string | null;
+  plan_publie_le: string | null;
+  plan_publie_par: string | null;
 }
 
 
@@ -388,7 +392,7 @@ export const getObjetFiche = createServerFn({ method: "POST" })
     const { data: obj, error: oErr } = await supabase
       .from("fabrication_objets")
       .select(
-        "id, affaire_id, reference, nom, quantite, commentaire, respo_fab_id, type_finition, budget_materiaux, a_dessiner, a_construire, est_brut, a_emballer, a_usiner, heures_prevues_be, heures_prevues_numerique, heures_prevues_bois, heures_prevues_metal, heures_prevues_peinture, heures_prevues_tapisserie, heures_prevues_manutention, largeur_mm, longueur_mm, hauteur_mm, materiaux, finition_detail, archive",
+        "id, affaire_id, reference, nom, quantite, commentaire, respo_fab_id, type_finition, budget_materiaux, a_dessiner, a_construire, est_brut, a_emballer, a_usiner, heures_prevues_be, heures_prevues_numerique, heures_prevues_bois, heures_prevues_metal, heures_prevues_peinture, heures_prevues_tapisserie, heures_prevues_manutention, largeur_mm, longueur_mm, hauteur_mm, materiaux, finition_detail, archive, plan_url, plan_publie_le, plan_publie_par",
       )
       .eq("id", data.objetId)
       .maybeSingle();

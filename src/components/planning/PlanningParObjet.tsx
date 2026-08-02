@@ -45,6 +45,8 @@ import {
   type ObjetHeuresPrevues,
 } from "@/lib/objet-heures-helpers";
 import { toast } from "sonner";
+import { Link } from "@tanstack/react-router";
+import { useFeatureFlag } from "@/hooks/use-feature-flag";
 
 interface FabObjet {
   id: string;
@@ -116,6 +118,8 @@ export function PlanningParObjet({
     }
     return list.sort((a, b) => a.numero.localeCompare(b.numero));
   }, [affaires, assignations, consommation, filterAffaireIds]);
+
+  const ficheObjetActive = useFeatureFlag("fiche_objet_v1");
 
   // Charge les objets non archivés des affaires retenues
   const [objets, setObjets] = useState<FabObjet[]>([]);
@@ -406,9 +410,20 @@ export function PlanningParObjet({
                                 <Package className="mt-0.5 h-3 w-3 shrink-0 text-muted-foreground" />
                                 <div className="min-w-0 flex-1">
                                   <div className="flex items-center gap-1.5">
-                                    <span className="font-mono text-[11px] font-bold">
-                                      {obj.reference}
-                                    </span>
+                                    {ficheObjetActive ? (
+                                      <Link
+                                        to="/affaires/$affaireId/objets/$objetId"
+                                        params={{ affaireId: obj.affaire_id, objetId: obj.id }}
+                                        className="font-mono text-[11px] font-bold hover:underline"
+                                        title="Ouvrir la fiche objet"
+                                      >
+                                        {obj.reference}
+                                      </Link>
+                                    ) : (
+                                      <span className="font-mono text-[11px] font-bold">
+                                        {obj.reference}
+                                      </span>
+                                    )}
                                     {isOver && (
                                       <Tooltip>
                                         <TooltipTrigger asChild>
