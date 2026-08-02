@@ -82,6 +82,7 @@ function buildSections(
       items: [
         // L6-A : Inbox fusionnée dans `/` (item « Aujourd'hui »).
         { title: "Échéances", url: "/echeances", icon: CalendarClock, cap: "section.affaires" },
+        { title: "Tableau d'atelier", url: "/atelier", icon: LayoutGrid, cap: "section.planning_fab" },
         { title: "Charge atelier", url: "/charge", icon: BarChart3, cap: "section.planning_fab" },
         { title: "Planning fab", url: "/planning", icon: Calendar, cap: "section.planning_fab" },
         { title: "Pipeline opportunités", url: "/opportunites", icon: Trophy, cap: "section.pipeline_opportunites" },
