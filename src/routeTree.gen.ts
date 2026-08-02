@@ -48,6 +48,7 @@ import { Route as AppCandidaturesRouteImport } from './routes/_app.candidatures'
 import { Route as AppAujourdhuiRouteImport } from './routes/_app.aujourdhui'
 import { Route as AppAuditHeuresRouteImport } from './routes/_app.audit-heures'
 import { Route as AppAuditAuthRouteImport } from './routes/_app.audit-auth'
+import { Route as AppAtelierRouteImport } from './routes/_app.atelier'
 import { Route as AppAbsencesRouteImport } from './routes/_app.absences'
 import { Route as AppRhIndexRouteImport } from './routes/_app.rh.index'
 import { Route as AppFabricationIndexRouteImport } from './routes/_app.fabrication.index'
@@ -296,6 +297,11 @@ const AppAuditHeuresRoute = AppAuditHeuresRouteImport.update({
 const AppAuditAuthRoute = AppAuditAuthRouteImport.update({
   id: '/audit-auth',
   path: '/audit-auth',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAtelierRoute = AppAtelierRouteImport.update({
+  id: '/atelier',
+  path: '/atelier',
   getParentRoute: () => AppRoute,
 } as any)
 const AppAbsencesRoute = AppAbsencesRouteImport.update({
@@ -604,6 +610,7 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof OnboardingRoute
   '/privacy': typeof PrivacyRoute
   '/absences': typeof AppAbsencesRoute
+  '/atelier': typeof AppAtelierRoute
   '/audit-auth': typeof AppAuditAuthRoute
   '/audit-heures': typeof AppAuditHeuresRoute
   '/aujourdhui': typeof AppAujourdhuiRoute
@@ -698,6 +705,7 @@ export interface FileRoutesByTo {
   '/onboarding': typeof OnboardingRoute
   '/privacy': typeof PrivacyRoute
   '/absences': typeof AppAbsencesRoute
+  '/atelier': typeof AppAtelierRoute
   '/audit-auth': typeof AppAuditAuthRoute
   '/audit-heures': typeof AppAuditHeuresRoute
   '/aujourdhui': typeof AppAujourdhuiRoute
@@ -793,6 +801,7 @@ export interface FileRoutesById {
   '/onboarding': typeof OnboardingRoute
   '/privacy': typeof PrivacyRoute
   '/_app/absences': typeof AppAbsencesRoute
+  '/_app/atelier': typeof AppAtelierRoute
   '/_app/audit-auth': typeof AppAuditAuthRoute
   '/_app/audit-heures': typeof AppAuditHeuresRoute
   '/_app/aujourdhui': typeof AppAujourdhuiRoute
@@ -891,6 +900,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/privacy'
     | '/absences'
+    | '/atelier'
     | '/audit-auth'
     | '/audit-heures'
     | '/aujourdhui'
@@ -985,6 +995,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/privacy'
     | '/absences'
+    | '/atelier'
     | '/audit-auth'
     | '/audit-heures'
     | '/aujourdhui'
@@ -1079,6 +1090,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/privacy'
     | '/_app/absences'
+    | '/_app/atelier'
     | '/_app/audit-auth'
     | '/_app/audit-heures'
     | '/_app/aujourdhui'
@@ -1454,6 +1466,13 @@ declare module '@tanstack/react-router' {
       path: '/audit-auth'
       fullPath: '/audit-auth'
       preLoaderRoute: typeof AppAuditAuthRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/atelier': {
+      id: '/_app/atelier'
+      path: '/atelier'
+      fullPath: '/atelier'
+      preLoaderRoute: typeof AppAtelierRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/absences': {
@@ -1940,6 +1959,7 @@ const AppAffairesAffaireIdRouteWithChildren =
 
 interface AppRouteChildren {
   AppAbsencesRoute: typeof AppAbsencesRoute
+  AppAtelierRoute: typeof AppAtelierRoute
   AppAuditAuthRoute: typeof AppAuditAuthRoute
   AppAuditHeuresRoute: typeof AppAuditHeuresRoute
   AppAujourdhuiRoute: typeof AppAujourdhuiRoute
@@ -2008,6 +2028,7 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppAbsencesRoute: AppAbsencesRoute,
+  AppAtelierRoute: AppAtelierRoute,
   AppAuditAuthRoute: AppAuditAuthRoute,
   AppAuditHeuresRoute: AppAuditHeuresRoute,
   AppAujourdhuiRoute: AppAujourdhuiRoute,
