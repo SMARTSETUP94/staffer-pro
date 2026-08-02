@@ -15,7 +15,12 @@ import { AffaireFilterMenu } from "@/components/charge/AffaireFilterMenu";
 import { AtelierCard } from "@/components/atelier/AtelierCard";
 import { useAtelierBoard, useTerminerEtape, useValiderEtape } from "@/hooks/use-atelier-board";
 import { useAuth } from "@/lib/auth-context";
-import { ATELIER_COLONNES, grouperParColonne, totauxColonne } from "@/lib/atelier-board";
+import {
+  ATELIER_COLONNES,
+  formatHeures,
+  grouperParColonne,
+  totauxColonne,
+} from "@/lib/atelier-board";
 
 const searchSchema = z.object({ affaires: z.string().optional() });
 
@@ -80,6 +85,11 @@ function AtelierPage() {
     return grouperParColonne(cartes);
   }, [data, selected.join(",")]);
 
+  const totalCartes = ATELIER_COLONNES.reduce(
+    (n, col) => n + (colonnes[col.type]?.length ?? 0),
+    0,
+  );
+
   const onValider = async (etapeId: string) => {
     setPending(etapeId);
     const res = await valider.mutateAsync(etapeId);
@@ -135,17 +145,33 @@ function AtelierPage() {
         <div className="flex items-center gap-2 p-6 text-sm text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin" /> Chargement du tableau…
         </div>
+      ) : totalCartes === 0 ? (
+        <div className="rounded-xl border bg-muted/30 p-8 text-center">
+          <p className="text-sm font-semibold text-foreground">
+            {selected.length > 0
+              ? "Aucun objet ne correspond au filtre d'affaires."
+              : "Aucun objet en fabrication pour le moment."}
+          </p>
+          {selected.length > 0 && (
+            <Button size="sm" variant="outline" className="mt-3" onClick={() => setAffaires([])}>
+              Lever le filtre
+            </Button>
+          )}
+        </div>
       ) : (
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-3 xl:grid-cols-5">
+        <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2">
           {ATELIER_COLONNES.map((col) => {
             const cartes = colonnes[col.type] ?? [];
             const t = totauxColonne(cartes);
             return (
-              <section key={col.type} className="rounded-xl border bg-muted/30 p-2">
-                <header className="flex items-baseline justify-between px-1 pb-2">
+              <section
+                key={col.type}
+                className="w-[280px] flex-none snap-start rounded-xl border bg-muted/30 p-2"
+              >
+                <header className="sticky top-0 z-10 flex items-baseline justify-between rounded-lg bg-muted/95 px-1 py-2 backdrop-blur">
                   <h2 className="text-sm font-bold text-foreground">{col.label}</h2>
                   <span className="text-[11px] font-semibold text-muted-foreground">
-                    {t.objets} obj · {t.heures} h
+                    {t.objets} obj · {formatHeures(t.heures)}
                   </span>
                 </header>
                 <div className="space-y-2">

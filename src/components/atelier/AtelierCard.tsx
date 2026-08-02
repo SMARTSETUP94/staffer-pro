@@ -11,7 +11,10 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { cn } from "@/lib/utils";
 import {
   ATELIER_COLONNES,
+  TAMPON_LABEL,
   actionCarte,
+  formatDateMontage,
+  formatHeures,
   pastille,
   type ObjetCarte,
   type TamponEtat,
@@ -70,13 +73,15 @@ export function AtelierCard({
             {carte.reference}
           </span>
           <span className="text-[11px] font-semibold text-muted-foreground">
-            {carte.heures > 0 ? `${carte.heures} h` : "— h"}
+            {carte.heures > 0 ? formatHeures(carte.heures) : "— h"}
           </span>
         </div>
         <p className="mt-1 line-clamp-2 text-sm font-semibold text-foreground">{carte.nom}</p>
         <p className="mt-0.5 text-[11px] text-muted-foreground">
           {carte.affaire_numero}
-          {carte.date_montage ? ` · montage ${carte.date_montage}` : " · sans date de montage"}
+          {carte.date_montage
+            ? ` · montage ${formatDateMontage(carte.date_montage) ?? carte.date_montage}`
+            : " · sans date de montage"}
         </p>
 
         <span
@@ -87,31 +92,38 @@ export function AtelierCard({
         >
           {p.ton === "manque" ? (
             <AlertTriangle className="h-3 w-3 shrink-0" />
-          ) : (
+          ) : p.ton === "ok" ? (
             <Check className="h-3 w-3 shrink-0" />
-          )}
+          ) : null}
           <span className="truncate">{p.label}</span>
         </span>
       </Link>
 
       <div className="mt-3 flex items-center justify-between gap-2">
         <div className="flex items-center gap-1">
-          {ATELIER_COLONNES.map((col, i) => (
-            <Tooltip key={col.type}>
-              <TooltipTrigger asChild>
-                <span
-                  className={cn(
-                    "inline-flex h-5 items-center rounded px-1 text-[9px] font-bold uppercase tracking-wide",
-                    "border",
-                    TAMPON_CLASS[carte.tampons[i] ?? "absent"],
-                  )}
-                >
-                  {col.tampon}
-                </span>
-              </TooltipTrigger>
-              <TooltipContent>{col.label}</TooltipContent>
-            </Tooltip>
-          ))}
+          {ATELIER_COLONNES.map((col, i) => {
+            const etat = carte.tampons[i] ?? "absent";
+            return (
+              <Tooltip key={col.type}>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    aria-label={`${col.label} : ${TAMPON_LABEL[etat]}`}
+                    className={cn(
+                      "inline-flex h-5 items-center rounded px-1 text-[9px] font-bold uppercase tracking-wide",
+                      "border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                      TAMPON_CLASS[etat],
+                    )}
+                  >
+                    {col.tampon}
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {col.label} : {TAMPON_LABEL[etat]}
+                </TooltipContent>
+              </Tooltip>
+            );
+          })}
         </div>
         {action.kind === "aucune" ? (
           <span className="text-[11px] font-semibold text-amber-700 dark:text-amber-300">
