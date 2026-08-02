@@ -4,7 +4,7 @@ import {
   BarChart3, Clock, Calendar, CalendarClock, Building2, Users, FileDown, ClipboardCheck, LogOut, CalendarOff,
   UserCircle, FileText, Trophy, Map, ClipboardList,
   Truck, Palette, Warehouse, Hammer, Wrench, BadgeCheck, Lightbulb,
-  FileSignature, Inbox, PackageCheck, UsersRound, Briefcase, Settings, TrendingUp,
+  FileSignature, Inbox, PackageCheck, UsersRound, Briefcase, Settings, TrendingUp, LayoutGrid,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -82,6 +82,7 @@ function buildSections(
       items: [
         // L6-A : Inbox fusionnée dans `/` (item « Aujourd'hui »).
         { title: "Échéances", url: "/echeances", icon: CalendarClock, cap: "section.affaires" },
+        { title: "Tableau d'atelier", url: "/atelier", icon: LayoutGrid, cap: "section.planning_fab" },
         { title: "Charge atelier", url: "/charge", icon: BarChart3, cap: "section.planning_fab" },
         { title: "Planning fab", url: "/planning", icon: Calendar, cap: "section.planning_fab" },
         { title: "Pipeline opportunités", url: "/opportunites", icon: Trophy, cap: "section.pipeline_opportunites" },

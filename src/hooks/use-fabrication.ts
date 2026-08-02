@@ -2,7 +2,12 @@ import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export type FabricationEtapeType = "be" | "usinage" | "respo_fab" | "finition" | "manutention";
-export type FabricationEtapeStatut = "a_faire" | "en_cours" | "termine" | "non_applicable";
+export type FabricationEtapeStatut =
+  | "a_faire"
+  | "en_cours"
+  | "en_attente_validation"
+  | "termine"
+  | "non_applicable";
 export type FabricationFinitionType = "peinture" | "tapisserie" | "autre" | "aucune";
 
 export const ETAPE_LABELS: Record<FabricationEtapeType, string> = {
@@ -16,6 +21,7 @@ export const ETAPE_LABELS: Record<FabricationEtapeType, string> = {
 export const STATUT_LABELS: Record<FabricationEtapeStatut, string> = {
   a_faire: "À faire",
   en_cours: "En cours",
+  en_attente_validation: "En attente de validation",
   termine: "Terminé",
   non_applicable: "Non applicable",
 };
@@ -23,6 +29,7 @@ export const STATUT_LABELS: Record<FabricationEtapeStatut, string> = {
 export const STATUT_ICONS: Record<FabricationEtapeStatut, string> = {
   a_faire: "⬜",
   en_cours: "🔄",
+  en_attente_validation: "⏳",
   termine: "✅",
   non_applicable: "—",
 };

@@ -5721,6 +5721,18 @@ export type Database = {
         Args: { metier: string }
         Returns: Database["public"]["Enums"]["fabrication_etape_type"]
       }
+      etape_prete: { Args: { _etape_id: string }; Returns: Json }
+      etapes_pretes_batch: {
+        Args: { _objet_ids: string[] }
+        Returns: {
+          etape_id: string
+          manques: Json
+          objet_id: string
+          prete: boolean
+          statut: Database["public"]["Enums"]["fabrication_etape_statut"]
+          type_etape: Database["public"]["Enums"]["fabrication_etape_type"]
+        }[]
+      }
       fab_objet_affaire_id: { Args: { _objet_id: string }; Returns: string }
       get_active_contrat_template_id: { Args: never; Returns: string }
       get_active_phases_for_affaire: {
@@ -5847,6 +5859,10 @@ export type Database = {
           p_heures_montage?: number
           p_objets: Json
         }
+        Returns: Json
+      }
+      invalider_etape: {
+        Args: { _etape_id: string; _motif: string }
         Returns: Json
       }
       is_admin: { Args: never; Returns: boolean }
@@ -6133,6 +6149,10 @@ export type Database = {
         Returns: boolean
       }
       user_is_on_fab_objet: { Args: { _objet_id: string }; Returns: boolean }
+      valider_etape: {
+        Args: { _commentaire?: string; _etape_id: string }
+        Returns: Json
+      }
     }
     Enums: {
       absence_type: "conges" | "formation" | "arret_maladie" | "rtt" | "autre"
@@ -6195,6 +6215,7 @@ export type Database = {
         | "en_cours"
         | "termine"
         | "non_applicable"
+        | "en_attente_validation"
       fabrication_etape_type:
         | "be"
         | "usinage"
@@ -6495,6 +6516,7 @@ export const Constants = {
         "en_cours",
         "termine",
         "non_applicable",
+        "en_attente_validation",
       ],
       fabrication_etape_type: [
         "be",
