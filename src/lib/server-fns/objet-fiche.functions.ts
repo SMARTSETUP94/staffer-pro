@@ -361,6 +361,10 @@ export interface ObjetFicheIdentite {
   materiaux: string | null;
   finition_detail: string | null;
   archive: boolean;
+  // LOT A2 — Plan technique (lien externe ou PDF déposé)
+  plan_url: string | null;
+  plan_publie_le: string | null;
+  plan_publie_par: string | null;
 }
 
 
