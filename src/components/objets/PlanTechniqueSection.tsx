@@ -179,7 +179,7 @@ export function PlanTechniqueSection({ objetId, affaireId, plan }: Props) {
               type="button"
               className="min-w-0 flex-1 truncate text-left text-sm text-primary underline"
               onClick={async () => {
-                const url = await docs.getSignedUrl(d);
+                const url = await docs.getSignedUrl(d.storage_path);
                 if (url) window.open(url, "_blank", "noopener,noreferrer");
               }}
             >
