@@ -2473,6 +2473,9 @@ export type Database = {
           materiaux: string | null
           nom: string
           ordre: number
+          plan_publie_le: string | null
+          plan_publie_par: string | null
+          plan_url: string | null
           quantite: number
           reference: string
           respo_fab_id: string | null
@@ -2512,6 +2515,9 @@ export type Database = {
           materiaux?: string | null
           nom: string
           ordre?: number
+          plan_publie_le?: string | null
+          plan_publie_par?: string | null
+          plan_url?: string | null
           quantite?: number
           reference: string
           respo_fab_id?: string | null
@@ -2551,6 +2557,9 @@ export type Database = {
           materiaux?: string | null
           nom?: string
           ordre?: number
+          plan_publie_le?: string | null
+          plan_publie_par?: string | null
+          plan_url?: string | null
           quantite?: number
           reference?: string
           respo_fab_id?: string | null
@@ -6237,6 +6246,7 @@ export type Database = {
         | "commentaire_supprime"
         | "identite_modifiee"
         | "plan_republie"
+        | "plan_publie"
       opp_action_type:
         | "email_envoye"
         | "email_recu"
@@ -6534,6 +6544,7 @@ export const Constants = {
         "commentaire_supprime",
         "identite_modifiee",
         "plan_republie",
+        "plan_publie",
       ],
       opp_action_type: [
         "email_envoye",
