@@ -18,7 +18,7 @@ export interface RawJournalEvent {
   actor_label: string | null;
   metier_id: number | null;
   etape_id: string | null;
-  payload: unknown;
+  payload: Record<string, unknown> | null;
 }
 
 export interface RawCommentaire {
@@ -59,7 +59,7 @@ export interface ObjetFeedEntry {
   etapeId: string | null;
   content: string | null;
   photo: RawPhoto | null;
-  payload: unknown;
+  payload: Record<string, unknown> | null;
 }
 
 /** Catégories de filtre proposées au-dessus du fil. */
@@ -106,7 +106,7 @@ export function mergeObjetFeed(args: {
       etapeId: e.etape_id ?? null,
       content: null,
       photo: null,
-      payload: e.payload ?? null,
+      payload: (e.payload ?? null) as Record<string, unknown> | null,
     });
   }
 
