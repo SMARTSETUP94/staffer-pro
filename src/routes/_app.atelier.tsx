@@ -15,7 +15,12 @@ import { AffaireFilterMenu } from "@/components/charge/AffaireFilterMenu";
 import { AtelierCard } from "@/components/atelier/AtelierCard";
 import { useAtelierBoard, useTerminerEtape, useValiderEtape } from "@/hooks/use-atelier-board";
 import { useAuth } from "@/lib/auth-context";
-import { ATELIER_COLONNES, grouperParColonne, totauxColonne } from "@/lib/atelier-board";
+import {
+  ATELIER_COLONNES,
+  formatHeures,
+  grouperParColonne,
+  totauxColonne,
+} from "@/lib/atelier-board";
 
 const searchSchema = z.object({ affaires: z.string().optional() });
 
