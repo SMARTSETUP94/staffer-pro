@@ -11,7 +11,10 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { cn } from "@/lib/utils";
 import {
   ATELIER_COLONNES,
+  TAMPON_LABEL,
   actionCarte,
+  formatDateMontage,
+  formatHeures,
   pastille,
   type ObjetCarte,
   type TamponEtat,
