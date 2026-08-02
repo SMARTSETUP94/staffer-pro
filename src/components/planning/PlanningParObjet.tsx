@@ -45,6 +45,8 @@ import {
   type ObjetHeuresPrevues,
 } from "@/lib/objet-heures-helpers";
 import { toast } from "sonner";
+import { Link } from "@tanstack/react-router";
+import { useFeatureFlag } from "@/hooks/use-feature-flag";
 
 interface FabObjet {
   id: string;
@@ -116,6 +118,8 @@ export function PlanningParObjet({
     }
     return list.sort((a, b) => a.numero.localeCompare(b.numero));
   }, [affaires, assignations, consommation, filterAffaireIds]);
+
+  const ficheObjetActive = useFeatureFlag("fiche_objet_v1");
 
   // Charge les objets non archivés des affaires retenues
   const [objets, setObjets] = useState<FabObjet[]>([]);
