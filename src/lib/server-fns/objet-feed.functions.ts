@@ -5,6 +5,7 @@ import {
   mergeObjetFeed,
   dedupeObjetFeed,
   type RawPhoto,
+  type RawJournalEvent,
 } from "@/lib/objet-feed";
 
 const PHOTO_BUCKET = "fabrication-photos";
@@ -106,7 +107,11 @@ export const getObjetFeed = createServerFn({ method: "GET" })
     }));
 
     const entries = dedupeObjetFeed(
-      mergeObjetFeed({ events: eventsRes.data ?? [], commentaires, photos }),
+      mergeObjetFeed({
+        events: (eventsRes.data ?? []) as unknown as RawJournalEvent[],
+        commentaires,
+        photos,
+      }),
     );
 
     return { entries, photos };
