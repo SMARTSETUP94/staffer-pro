@@ -9,12 +9,17 @@ import { AlertTriangle, Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { ATELIER_COLONNES, pastille, type ObjetCarte, type TamponEtat } from "@/lib/atelier-board";
+import {
+  ATELIER_COLONNES,
+  actionCarte,
+  pastille,
+  type ObjetCarte,
+  type TamponEtat,
+} from "@/lib/atelier-board";
 
 const TAMPON_CLASS: Record<TamponEtat, string> = {
   valide: "bg-primary text-primary-foreground border-primary",
-  non_applicable:
-    "border-dashed border-muted-foreground/40 text-muted-foreground/60 bg-muted/40",
+  non_applicable: "border-dashed border-muted-foreground/40 text-muted-foreground/60 bg-muted/40",
   courant: "border-2 border-primary text-primary bg-background",
   a_venir: "border-border text-muted-foreground bg-background",
   absent: "border-border/40 text-muted-foreground/30 bg-background",
@@ -28,17 +33,33 @@ const PASTILLE_CLASS = {
 
 export function AtelierCard({
   carte,
+  onTerminer,
   onValider,
-  validating,
+  pending,
+  isAdmin,
+  currentUserId,
 }: {
   carte: ObjetCarte;
+  onTerminer: (etapeId: string) => void;
   onValider: (etapeId: string) => void;
-  validating: boolean;
+  pending: boolean;
+  isAdmin: boolean;
+  currentUserId: string | null;
 }) {
   const p = pastille(carte.etape);
+  const enAttente = carte.etape.statut === "en_attente_validation";
+  const action = actionCarte(carte.etape, {
+    isAdmin,
+    isRespoFab: !!currentUserId && carte.respo_fab_id === currentUserId,
+  });
 
   return (
-    <div className="rounded-xl border bg-card p-3 shadow-sm transition hover:border-primary/50">
+    <div
+      className={cn(
+        "rounded-xl border bg-card p-3 shadow-sm transition hover:border-primary/50",
+        enAttente && "border-amber-500/60 bg-amber-500/5 ring-1 ring-amber-500/30",
+      )}
+    >
       <Link
         to="/affaires/$affaireId/objets/$objetId"
         params={{ affaireId: carte.affaire_id, objetId: carte.objet_id }}
@@ -92,15 +113,23 @@ export function AtelierCard({
             </Tooltip>
           ))}
         </div>
-        <Button
-          size="sm"
-          variant="outline"
-          className="h-7 px-2 text-[11px]"
-          disabled={validating}
-          onClick={() => onValider(carte.etape.id)}
-        >
-          {validating ? <Loader2 className="h-3 w-3 animate-spin" /> : "Valider"}
-        </Button>
+        {action.kind === "aucune" ? (
+          <span className="text-[11px] font-semibold text-amber-700 dark:text-amber-300">
+            {action.label}
+          </span>
+        ) : (
+          <Button
+            size="sm"
+            variant={action.kind === "valider" ? "default" : "outline"}
+            className="h-7 px-2 text-[11px]"
+            disabled={pending}
+            onClick={() =>
+              action.kind === "valider" ? onValider(carte.etape.id) : onTerminer(carte.etape.id)
+            }
+          >
+            {pending ? <Loader2 className="h-3 w-3 animate-spin" /> : action.label}
+          </Button>
+        )}
       </div>
     </div>
   );

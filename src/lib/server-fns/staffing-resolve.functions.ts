@@ -97,7 +97,7 @@ export const resolveCncConflict = createServerFn({ method: "POST" })
     });
 
     const hasConflict = (r: PlanResult) =>
-      r.alerts.some((a) => a.code === "NUM_CONFLIT_INSOLUBLE");
+      r.alerts.some((a) => a.code === "NUM_CHEVAUCHEMENT_CNC");
 
     if (!hasConflict(before)) {
       return {

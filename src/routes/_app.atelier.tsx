@@ -13,7 +13,8 @@ import { requireCapability } from "@/lib/capability-guard";
 import { Button } from "@/components/ui/button";
 import { AffaireFilterMenu } from "@/components/charge/AffaireFilterMenu";
 import { AtelierCard } from "@/components/atelier/AtelierCard";
-import { useAtelierBoard, useValiderEtape } from "@/hooks/use-atelier-board";
+import { useAtelierBoard, useTerminerEtape, useValiderEtape } from "@/hooks/use-atelier-board";
+import { useAuth } from "@/lib/auth-context";
 import { ATELIER_COLONNES, grouperParColonne, totauxColonne } from "@/lib/atelier-board";
 
 const searchSchema = z.object({ affaires: z.string().optional() });
@@ -32,7 +33,8 @@ export const Route = createFileRoute("/_app/atelier")({
       { property: "og:title", content: "Tableau d'atelier — Setup Paris" },
       {
         property: "og:description",
-        content: "État de chaque objet par poste d'atelier, prérequis signalés et validation d'étape.",
+        content:
+          "État de chaque objet par poste d'atelier, prérequis signalés et validation d'étape.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -40,18 +42,26 @@ export const Route = createFileRoute("/_app/atelier")({
   }),
   component: AtelierPage,
   errorComponent: ({ error }) => (
-    <div role="alert" className="p-6 text-sm text-destructive">{error.message}</div>
+    <div role="alert" className="p-6 text-sm text-destructive">
+      {error.message}
+    </div>
   ),
 });
 
 const csvToList = (v: string | undefined) =>
-  (v ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+  (v ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
 
 function AtelierPage() {
   const search = Route.useSearch();
   const navigate = useNavigate();
   const { data, isLoading } = useAtelierBoard();
   const valider = useValiderEtape();
+  const terminer = useTerminerEtape();
+  const { user, roles } = useAuth();
+  const isAdmin = roles.includes("admin");
   const [pending, setPending] = useState<string | null>(null);
 
   const selected = csvToList(search.affaires);
@@ -78,6 +88,19 @@ function AtelierPage() {
     else toast.error(res.error ?? "Validation impossible");
   };
 
+  const onTerminer = async (etapeId: string) => {
+    setPending(etapeId);
+    const res = await terminer.mutateAsync(etapeId);
+    setPending(null);
+    if (res.ok) {
+      toast.success(
+        res.statut === "termine"
+          ? "Étape validée"
+          : "Étape déclarée terminée — en attente de validation",
+      );
+    } else toast.error(res.error ?? "Action impossible");
+  };
+
   return (
     <div className="space-y-4 px-2 py-4 md:px-6">
       <header className="flex flex-wrap items-end justify-between gap-3">
@@ -85,8 +108,8 @@ function AtelierPage() {
           <p className="overline">— Atelier</p>
           <h1 className="mt-1 text-2xl font-bold text-foreground">Tableau d'atelier</h1>
           <p className="mt-1 text-xs text-muted-foreground">
-            Chaque objet est placé sur son poste courant. Les prérequis manquants sont signalés,
-            ils n'empêchent jamais de valider.
+            Chaque objet est placé sur son poste courant. Les prérequis manquants sont signalés, ils
+            n'empêchent jamais de valider.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -135,8 +158,11 @@ function AtelierPage() {
                       <AtelierCard
                         key={c.objet_id}
                         carte={c}
+                        onTerminer={onTerminer}
                         onValider={onValider}
-                        validating={pending === c.etape.id}
+                        pending={pending === c.etape.id}
+                        isAdmin={isAdmin}
+                        currentUserId={user?.id ?? null}
                       />
                     ))
                   )}

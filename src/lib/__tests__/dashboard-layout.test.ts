@@ -15,9 +15,9 @@ import {
   getRegisteredWidgetIds,
 } from "@/lib/dashboard/widget-registry";
 
-describe("dashboard catalogue (v0.47.x — 25 widgets)", () => {
-  it("expose 25 widgets exactement", () => {
-    expect(ALL_WIDGET_IDS).toHaveLength(25);
+describe("dashboard catalogue (v0.47.x — 26 widgets)", () => {
+  it("expose 26 widgets exactement", () => {
+    expect(ALL_WIDGET_IDS).toHaveLength(26);
   });
 
   it("ne contient aucun doublon", () => {
@@ -47,12 +47,12 @@ describe("dashboard catalogue (v0.47.x — 25 widgets)", () => {
 
 describe("ROLE_PRESETS", () => {
   it("admin = tous les widgets", () => {
-    expect(ROLE_PRESETS.admin).toHaveLength(25);
+    expect(ROLE_PRESETS.admin).toHaveLength(26);
     expect(new Set(ROLE_PRESETS.admin)).toEqual(new Set(ALL_WIDGET_IDS));
   });
 
-  it("chef_chantier = 18 widgets validés utilisateur", () => {
-    expect(ROLE_PRESETS.chef_chantier).toHaveLength(18);
+  it("chef_chantier = 19 widgets validés utilisateur", () => {
+    expect(ROLE_PRESETS.chef_chantier).toHaveLength(19);
     expect(ROLE_PRESETS.chef_chantier).toContain("meteo_chantiers");
     expect(ROLE_PRESETS.chef_chantier).toContain("flotte_kpis");
     expect(ROLE_PRESETS.chef_chantier).toContain("sous_effectif_J7");
@@ -169,7 +169,7 @@ describe("WIDGET_META widths cohérents", () => {
   });
 });
 
-describe("Catégorisation des 25 widgets", () => {
+describe("Catégorisation des 26 widgets", () => {
   const byCat = (cat: string) => ALL_WIDGET_IDS.filter((id) => WIDGET_META[id].category === cat);
 
   it("Commerce : 6 widgets", () => {
@@ -181,8 +181,8 @@ describe("Catégorisation des 25 widgets", () => {
   it("Fab : 3 widgets", () => {
     expect(byCat("fab")).toHaveLength(3);
   });
-  it("Perso : 4 widgets", () => {
-    expect(byCat("perso")).toHaveLength(4);
+  it("Perso : 5 widgets", () => {
+    expect(byCat("perso")).toHaveLength(5);
   });
   it("Fun : 7 widgets", () => {
     expect(byCat("fun")).toHaveLength(7);

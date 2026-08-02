@@ -209,11 +209,8 @@ function FicheObjetPage() {
 }
 
 function ObjetJournalSection({ objetId, affaireId }: { objetId: string; affaireId: string }) {
-  const canRead = useCapability("objet.read");
-  // Fallback : si la cap n'est pas explicite mais que la fiche est déjà
-  // ouverte (cap `objet.view` validée en beforeLoad), on autorise la lecture.
   const canView = useCapability("objet.view");
-  if (!canRead && !canView) return null;
+  if (!canView) return null;
   return (
     <Card data-testid="objet-journal-section">
       <CardHeader className="pb-2">

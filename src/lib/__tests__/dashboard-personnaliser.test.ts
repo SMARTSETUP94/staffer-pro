@@ -53,12 +53,12 @@ describe("Personnaliser sheet — buildLayoutFromDraft", () => {
   it("layout vide = visible:[], hidden:[ALL]", () => {
     const l = buildLayoutFromDraft(new Set());
     expect(l.visible).toEqual([]);
-    expect(l.hidden).toHaveLength(25);
+    expect(l.hidden).toHaveLength(26);
   });
 
   it("layout complet = visible:[ALL], hidden:[]", () => {
     const l = buildLayoutFromDraft(new Set(ALL_WIDGET_IDS));
-    expect(l.visible).toHaveLength(25);
+    expect(l.visible).toHaveLength(26);
     expect(l.hidden).toEqual([]);
   });
 
@@ -72,7 +72,7 @@ describe("Personnaliser sheet — buildLayoutFromDraft", () => {
     const draft = new Set<WidgetId>(["kpi_top", "absences_semaine", "mes_etapes_fab"]);
     const l = buildLayoutFromDraft(draft);
     const union = new Set([...l.visible, ...(l.hidden ?? [])]);
-    expect(union.size).toBe(25);
+    expect(union.size).toBe(26);
   });
 });
 
@@ -88,12 +88,12 @@ describe("Group widgets by category (UI Sheet)", () => {
     expect(groups[3].category).toBe("perso");
   });
 
-  it("aucun widget orphelin (somme = 25)", () => {
+  it("aucun widget orphelin (somme = 26)", () => {
     const total = CATEGORY_ORDER.reduce(
       (acc, cat) => acc + ALL_WIDGET_IDS.filter((id) => WIDGET_META[id].category === cat).length,
       0,
     );
-    expect(total).toBe(25);
+    expect(total).toBe(26);
   });
 });
 

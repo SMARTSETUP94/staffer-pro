@@ -478,7 +478,7 @@ export const GanttInteractif = forwardRef<
     }
   }
   const allAlerts = [...data.result.alerts, ...previewAlerts, ...volumeAlerts];
-  const hasCncConflict = allAlerts.some((a) => a.code === "NUM_CONFLIT_INSOLUBLE");
+  const hasCncConflict = allAlerts.some((a) => a.code === "NUM_CHEVAUCHEMENT_CNC");
 
   return (
     <div className="space-y-4">
@@ -495,7 +495,7 @@ export const GanttInteractif = forwardRef<
       {hasCncConflict && (
         <div className="flex justify-end">
           <Button size="sm" variant="outline" onClick={() => setResolveOpen(true)}>
-            <Wand2 className="mr-1.5 h-3.5 w-3.5" /> Résoudre auto (décaler livraison)
+            <Wand2 className="mr-1.5 h-3.5 w-3.5" /> Proposer un décalage de livraison
           </Button>
         </div>
       )}

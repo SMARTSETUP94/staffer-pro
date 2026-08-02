@@ -83,6 +83,7 @@ export const CAPABILITY_CATALOG = {
     { key: "inbox.heures_saisir", label: "Heures à saisir" },
     { key: "inbox.rh_contrats", label: "Contrats RH à traiter" },
     { key: "inbox.alertes_equipe", label: "Alertes équipe" },
+    { key: "inbox.atelier_rappel", label: "Rappels atelier (plan non publié)" },
   ],
   mobile: [
     { key: "mobile.mes_missions", label: "Mobile — Mes missions" },

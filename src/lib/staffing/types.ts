@@ -114,7 +114,7 @@ export interface PlanStep {
 export type AlertCode =
   | "DEBORD_LIVRAISON"
   | "PIC_GLOBAL_DEPASSE"
-  | "NUM_CONFLIT_INSOLUBLE"
+  | "NUM_CHEVAUCHEMENT_CNC"
   | "PLAFOND_OBJET_DEPASSE"
   | "MANUT_POOL_DEBORDE"
   | "PEINT_OVERFLOW_MANUT"     // v0.37
