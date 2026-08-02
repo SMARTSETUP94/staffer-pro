@@ -25,10 +25,12 @@ export interface CompressionResult {
 
 export async function compressImageIfPossible(
   file: File,
-  opts: { maxLongSide?: number; quality?: number } = {},
+  opts: { maxLongSide?: number; quality?: number; format?: "jpeg" | "webp" } = {},
 ): Promise<CompressionResult> {
   const maxLongSide = opts.maxLongSide ?? MAX_LONG_SIDE;
   const quality = opts.quality ?? DEFAULT_QUALITY;
+  const targetMime = opts.format === "webp" ? "image/webp" : "image/jpeg";
+  const targetExt = opts.format === "webp" ? "webp" : "jpg";
 
   // Pas une image compressible → on retourne tel quel
   if (!COMPRESSIBLE.has(file.type)) {
@@ -58,14 +60,14 @@ export async function compressImageIfPossible(
     imageBitmap.close?.();
 
     const blob = await new Promise<Blob | null>((resolve) => {
-      canvas.toBlob(resolve, "image/jpeg", quality);
+      canvas.toBlob(resolve, targetMime, quality);
     });
     if (!blob) throw new Error("Compression a échoué");
 
     return {
       blob,
-      mimeType: "image/jpeg",
-      extension: "jpg",
+      mimeType: blob.type || targetMime,
+      extension: (blob.type || targetMime) === "image/webp" ? "webp" : targetExt,
       originalSize: file.size,
       compressedSize: blob.size,
     };
