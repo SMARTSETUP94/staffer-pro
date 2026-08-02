@@ -1,6 +1,6 @@
+import { describe, it, expect } from "vitest";
 import {
-  actionCarte, describe, it, expect } from "vitest";
-import {
+  actionCarte,
   etapeCourante,
   tamponsPour,
   trierCartes,
@@ -138,28 +138,28 @@ describe("actionCarte (B-bis — validation en deux temps)", () => {
   const base = { isAdmin: false, isRespoFab: false };
 
   it("étape à faire → Terminer pour tout le monde", () => {
-    const a = actionCarte(etape("usinage", "a_faire"), base);
+    const a = actionCarte(e("usinage", "a_faire"), base);
     expect(a.kind).toBe("terminer");
     expect(a.label).toBe("Terminer");
   });
 
   it("étape respo_fab → Terminer vaut validation (libellé Valider)", () => {
-    expect(actionCarte(etape("respo_fab", "en_cours"), base).label).toBe("Valider");
+    expect(actionCarte(e("respo_fab", "en_cours"), base).label).toBe("Valider");
   });
 
   it("en attente : le respo_fab valide", () => {
-    const a = actionCarte(etape("usinage", "en_attente_validation"), { ...base, isRespoFab: true });
+    const a = actionCarte(e("usinage", "en_attente_validation"), { ...base, isRespoFab: true });
     expect(a.kind).toBe("valider");
   });
 
   it("en attente : l'admin valide", () => {
-    expect(actionCarte(etape("finition", "en_attente_validation"), { ...base, isAdmin: true }).kind).toBe(
+    expect(actionCarte(e("finition", "en_attente_validation"), { ...base, isAdmin: true }).kind).toBe(
       "valider",
     );
   });
 
   it("en attente : un autre utilisateur ne voit aucune action", () => {
-    const a = actionCarte(etape("finition", "en_attente_validation"), base);
+    const a = actionCarte(e("finition", "en_attente_validation"), base);
     expect(a.kind).toBe("aucune");
     expect(a.label).toBe("En attente de validation");
   });
