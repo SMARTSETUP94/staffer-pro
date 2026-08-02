@@ -27,9 +27,8 @@ import { ObjetIdentiteSection } from "@/components/objets/ObjetIdentiteSection";
 import { ObjetHeuresTable } from "@/components/objets/ObjetHeuresTable";
 import { ObjetEquipeSection } from "@/components/objets/equipe/ObjetEquipeSection";
 import { ObjetEtapesGrid } from "@/components/objets/etapes/ObjetEtapesGrid";
-import { ObjetJournalTimeline } from "@/components/objets/journal/ObjetJournalTimeline";
-import { ObjetPhotosGrid } from "@/components/objets/journal/ObjetPhotosGrid";
-import { ObjetCommentaires } from "@/components/objets/journal/ObjetCommentaires";
+import { ObjetJournalPhotos } from "@/components/objets/journal/ObjetJournalPhotos";
+import { PlanTechniqueSection } from "@/components/objets/PlanTechniqueSection";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCapability } from "@/hooks/use-capability";
 
@@ -192,7 +191,18 @@ function FicheObjetPage() {
       {/* Lot 8.3 — Étapes Kanban */}
       <ObjetEtapesGrid objetId={objet.id} />
 
-      {/* Lot 8.4 MVP — Journal (timeline / photos / commentaires) */}
+      {/* LOT A2 — Plan technique (lien externe ou PDF) */}
+      <PlanTechniqueSection
+        objetId={objet.id}
+        affaireId={affaireId}
+        plan={{
+          plan_url: objet.plan_url,
+          plan_publie_le: objet.plan_publie_le,
+          plan_publie_par: objet.plan_publie_par,
+        }}
+      />
+
+      {/* LOT A1 — Journal : fil unique (événements + commentaires + photos) */}
       <ObjetJournalSection objetId={objet.id} affaireId={affaireId} />
     </div>
   );
@@ -210,26 +220,14 @@ function ObjetJournalSection({ objetId, affaireId }: { objetId: string; affaireI
         <CardTitle className="text-sm">Journal</CardTitle>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue="timeline" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 md:w-auto md:inline-grid">
-            <TabsTrigger value="timeline" data-testid="journal-tab-timeline">
-              Timeline
-            </TabsTrigger>
-            <TabsTrigger value="photos" data-testid="journal-tab-photos">
-              Photos
-            </TabsTrigger>
-            <TabsTrigger value="commentaires" data-testid="journal-tab-commentaires">
-              Commentaires
+        <Tabs defaultValue="fil" className="w-full">
+          <TabsList>
+            <TabsTrigger value="fil" data-testid="journal-tab-fil">
+              Fil chronologique
             </TabsTrigger>
           </TabsList>
-          <TabsContent value="timeline" className="mt-3">
-            <ObjetJournalTimeline objetId={objetId} />
-          </TabsContent>
-          <TabsContent value="photos" className="mt-3">
-            <ObjetPhotosGrid objetId={objetId} />
-          </TabsContent>
-          <TabsContent value="commentaires" className="mt-3">
-            <ObjetCommentaires objetId={objetId} affaireId={affaireId} />
+          <TabsContent value="fil" className="mt-3">
+            <ObjetJournalPhotos objetId={objetId} affaireId={affaireId} />
           </TabsContent>
         </Tabs>
       </CardContent>
