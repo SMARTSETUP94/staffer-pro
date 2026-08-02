@@ -85,6 +85,11 @@ function AtelierPage() {
     return grouperParColonne(cartes);
   }, [data, selected.join(",")]);
 
+  const totalCartes = ATELIER_COLONNES.reduce(
+    (n, col) => n + (colonnes[col.type]?.length ?? 0),
+    0,
+  );
+
   const onValider = async (etapeId: string) => {
     setPending(etapeId);
     const res = await valider.mutateAsync(etapeId);
