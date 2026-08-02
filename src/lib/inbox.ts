@@ -31,7 +31,8 @@ export type InboxSource =
   | "plan_lacune"
   | "heures_saisir"
   | "rh_contrats"
-  | "alertes_equipe";
+  | "alertes_equipe"
+  | "atelier_rappel";
 
 export interface InboxItem {
   item_key: string;
@@ -83,6 +84,7 @@ export const SOURCE_LABELS: Record<InboxSource, string> = {
   heures_saisir: "Heures à saisir",
   rh_contrats: "Contrat RH",
   alertes_equipe: "Alerte équipe",
+  atelier_rappel: "Rappel atelier",
 };
 
 /**
@@ -101,6 +103,7 @@ export const SOURCE_TO_CAP: Partial<Record<InboxSource, string>> = {
   heures_saisir: "inbox.heures_saisir",
   rh_contrats: "inbox.rh_contrats",
   alertes_equipe: "inbox.alertes_equipe",
+  atelier_rappel: "inbox.atelier_rappel",
 };
 
 export const SEVERITY_STYLES: Record<InboxSeverity, string> = {

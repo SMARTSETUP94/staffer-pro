@@ -13,11 +13,11 @@ describe("typologie-future helpers", () => {
   describe("prefixForTypologie", () => {
     it("non_operationnel → 1", () => expect(prefixForTypologie("non_operationnel")).toBe(1));
     it("montage_demontage → 4", () => expect(prefixForTypologie("montage_demontage")).toBe(4));
-    it("fabrication → 5", () => expect(prefixForTypologie("fabrication")).toBe(5));
+    it("fabrication → 6 (LOT 0 : les 5XXX sont épuisés)", () => expect(prefixForTypologie("fabrication")).toBe(6));
     it("stockage → 2", () => expect(prefixForTypologie("stockage")).toBe(2));
     it("prototype → 9", () => expect(prefixForTypologie("prototype")).toBe(9));
-    it("null → 5 (default fabrication)", () => expect(prefixForTypologie(null)).toBe(5));
-    it("undefined → 5 (default fabrication)", () => expect(prefixForTypologie(undefined)).toBe(5));
+    it("null → 6 (default fabrication)", () => expect(prefixForTypologie(null)).toBe(6));
+    it("undefined → 6 (default fabrication)", () => expect(prefixForTypologie(undefined)).toBe(6));
   });
 
   describe("codeLengthForTypologie", () => {
@@ -50,10 +50,10 @@ describe("typologie-future helpers", () => {
   });
 
   describe("placeholderForTypologie", () => {
-    it("fabrication → 5XXX", () => expect(placeholderForTypologie("fabrication")).toBe("5XXX"));
+    it("fabrication → 6XXX", () => expect(placeholderForTypologie("fabrication")).toBe("6XXX"));
     it("stockage → 2XXXX", () => expect(placeholderForTypologie("stockage")).toBe("2XXXX"));
     it("non_operationnel → 1XXX", () => expect(placeholderForTypologie("non_operationnel")).toBe("1XXX"));
-    it("null → 5XXX (default)", () => expect(placeholderForTypologie(null)).toBe("5XXX"));
+    it("null → 6XXX (default)", () => expect(placeholderForTypologie(null)).toBe("6XXX"));
   });
 
   describe("isValidCodeForTypologie", () => {
@@ -72,7 +72,9 @@ describe("typologie-future helpers", () => {
 
   describe("codePrefixMismatch", () => {
     it("4042 + fabrication = mismatch", () => expect(codePrefixMismatch("4042", "fabrication")).toBe(true));
-    it("5042 + fabrication = OK", () => expect(codePrefixMismatch("5042", "fabrication")).toBe(false));
+    it("6042 + fabrication = OK", () => expect(codePrefixMismatch("6042", "fabrication")).toBe(false));
+    it("5042 + fabrication = mismatch signalé (legacy, non bloquant)", () =>
+      expect(codePrefixMismatch("5042", "fabrication")).toBe(true));
     it("vide = pas de mismatch (rien à comparer)", () => expect(codePrefixMismatch("", "fabrication")).toBe(false));
     it("typo null = pas de mismatch (pas de référence)", () => expect(codePrefixMismatch("4042", null)).toBe(false));
     it("20001 + stockage = OK (préfixe 2)", () => expect(codePrefixMismatch("20001", "stockage")).toBe(false));

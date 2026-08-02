@@ -67,16 +67,16 @@ describe("objet-fiche-permissions (Lot 8.2c)", () => {
     expect(f.has("finition_detail")).toBe(false);
   });
 
-  it("poseur / atelier_metier / employe / rh / logistique = lecture seule", () => {
-    for (const role of [
-      "poseur",
-      "atelier_metier",
-      "employe",
-      "rh",
-      "logistique",
-    ]) {
+  it("poseur / employe / rh / logistique = lecture seule", () => {
+    for (const role of ["poseur", "employe", "rh", "logistique"]) {
       expect(getEditableFields([role]).size).toBe(0);
     }
+  });
+
+  // Lot 3 P2 : atelier_metier peut commenter la fiche d'un objet de son métier.
+  it("atelier_metier = commentaire uniquement", () => {
+    const f = getEditableFields(["atelier_metier"]);
+    expect([...f]).toEqual(["commentaire"]);
   });
 
   it("multi-rôles = union des champs", () => {

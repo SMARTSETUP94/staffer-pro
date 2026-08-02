@@ -2,9 +2,9 @@
  * L2 — Tests d'intégrité du catalogue capabilities.
  *
  * Vérifie que la définition figée (`catalog.ts`) reste cohérente :
- * - bon nombre total (59 caps)
+ * - bon nombre total (79 caps)
  * - clés uniques
- * - chaque clé respecte le préfixe de son groupe
+ * - chaque clé est une clé pointée valide
  * - labels non vides
  */
 import { describe, it, expect } from "vitest";
@@ -14,8 +14,8 @@ import {
 } from "../catalog";
 
 describe("CAPABILITY_CATALOG integrity", () => {
-  it("contient exactement 59 capabilities", () => {
-    expect(ALL_CAPABILITY_KEYS.length).toBe(59);
+  it("contient exactement 79 capabilities", () => {
+    expect(ALL_CAPABILITY_KEYS.length).toBe(79);
   });
 
   it("toutes les clés sont uniques", () => {
@@ -23,10 +23,12 @@ describe("CAPABILITY_CATALOG integrity", () => {
     expect(set.size).toBe(ALL_CAPABILITY_KEYS.length);
   });
 
-  it("chaque clé porte le préfixe de son groupe", () => {
-    for (const [group, caps] of Object.entries(CAPABILITY_CATALOG)) {
+  // Les clés suivent un espace de noms pointé (`section.x`, `objet.view`,
+  // `opportunites.read.all`), pas systématiquement le nom du groupe UI.
+  it("chaque clé est une clé pointée valide", () => {
+    for (const caps of Object.values(CAPABILITY_CATALOG)) {
       for (const cap of caps) {
-        expect(cap.key.startsWith(`${group.replace(/s$/, "")}.`)).toBe(true);
+        expect(cap.key).toMatch(/^[a-z][a-z0-9_]*(\.[a-z0-9_]+)+$/);
       }
     }
   });

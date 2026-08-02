@@ -6088,6 +6088,10 @@ export type Database = {
             Args: { p_plan_id: string; p_strategy?: string; p_user_id?: string }
             Returns: Json
           }
+      terminer_etape: {
+        Args: { _commentaire?: string; _etape_id: string }
+        Returns: Json
+      }
       update_objet_statut_chef: {
         Args: {
           _commentaire?: string

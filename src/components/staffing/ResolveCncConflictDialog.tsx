@@ -64,8 +64,8 @@ export function ResolveCncConflictDialog({
 
   const beforeAlerts = res?.before.alerts ?? [];
   const afterAlerts = res?.after?.alerts ?? [];
-  const conflictsBefore = beforeAlerts.filter((a) => a.code === "NUM_CONFLIT_INSOLUBLE").length;
-  const conflictsAfter = afterAlerts.filter((a) => a.code === "NUM_CONFLIT_INSOLUBLE").length;
+  const conflictsBefore = beforeAlerts.filter((a) => a.code === "NUM_CHEVAUCHEMENT_CNC").length;
+  const conflictsAfter = afterAlerts.filter((a) => a.code === "NUM_CHEVAUCHEMENT_CNC").length;
 
   return (
     <Dialog
@@ -79,11 +79,12 @@ export function ResolveCncConflictDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Wand2 className="h-4 w-4" />
-            Résolution auto conflit CNC
+            Chevauchement CNC — proposition de décalage
           </DialogTitle>
           <DialogDescription>
-            Recherche le plus petit décalage de livraison (jusqu'à 60 j) qui libère un créneau CNC
-            valide. Aucune modification n'est appliquée tant que vous ne validez pas.
+            La CNC ne peut pas être tenue en binôme : les chevauchements sont posés puis signalés.
+            Cette recherche propose le plus petit décalage de livraison (jusqu'à 60 j) qui libère un
+            créneau. Rien n'est appliqué tant que vous ne validez pas.
           </DialogDescription>
         </DialogHeader>
 

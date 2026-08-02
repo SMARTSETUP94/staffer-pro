@@ -36,7 +36,7 @@ async function fetchAtelierBoard(): Promise<AtelierBoardData> {
   const { data: objetsRaw } = await supabase
     .from("fabrication_objets")
     .select(
-      "id, reference, nom, affaire_id, affaires!inner(id, numero, nom, date_montage, statut, phase)",
+      "id, reference, nom, respo_fab_id, affaire_id, affaires!inner(id, numero, nom, date_montage, statut, phase)",
     )
     .eq("archive", false);
 
@@ -44,6 +44,7 @@ async function fetchAtelierBoard(): Promise<AtelierBoardData> {
     id: string;
     reference: string | null;
     nom: string | null;
+    respo_fab_id: string | null;
     affaire_id: string;
     affaires: {
       id: string;
@@ -119,7 +120,10 @@ async function fetchAtelierBoard(): Promise<AtelierBoardData> {
   }
 
   const cartes: ObjetCarte[] = [];
-  const affaires = new Map<string, { id: string; numero: string; nom: string; prospect: boolean }>();
+  const affaires = new Map<
+    string,
+    { id: string; numero: string; nom: string; prospect: boolean }
+  >();
 
   for (const o of objets) {
     const a = o.affaires!;
@@ -141,6 +145,7 @@ async function fetchAtelierBoard(): Promise<AtelierBoardData> {
       affaire_numero: a.numero ?? "—",
       affaire_nom: a.nom ?? "",
       date_montage: a.date_montage,
+      respo_fab_id: o.respo_fab_id ?? null,
       etape: courante,
       heures: heuresPourEtape(heuresByObjet.get(o.id) ?? [], courante.type_etape),
       tampons: tamponsPour(etapes, courante.id),
@@ -158,6 +163,25 @@ export function useAtelierBoard() {
     queryKey: atelierBoardKey,
     queryFn: fetchAtelierBoard,
     staleTime: 60_000,
+  });
+}
+
+/** Déclaration de fin par l'opérateur — la RPC renvoie `{ ok, error }`. */
+export function useTerminerEtape() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (etapeId: string) => {
+      const { data, error } = await supabase.rpc("terminer_etape", { _etape_id: etapeId });
+      if (error) return { ok: false, error: error.message };
+      return (data ?? { ok: false, error: "Réponse vide" }) as {
+        ok: boolean;
+        error?: string;
+        statut?: string;
+      };
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: atelierBoardKey });
+    },
   });
 }
 

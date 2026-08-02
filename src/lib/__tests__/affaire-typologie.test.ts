@@ -79,8 +79,9 @@ describe("constantes typologie", () => {
   it("labels et couleurs définis pour chaque typologie", () => {
     for (const t of AFFAIRE_TYPOLOGIES) {
       expect(AFFAIRE_TYPOLOGIE_LABELS[t]).toBeTruthy();
-      expect(AFFAIRE_TYPOLOGIE_COLORS[t].bg).toMatch(/^var\(--typologie-/);
-      expect(AFFAIRE_TYPOLOGIE_COLORS[t].fg).toMatch(/^var\(--typologie-/);
+      // Couleurs figées en hex (refonte typologie) ou tokens CSS.
+      expect(AFFAIRE_TYPOLOGIE_COLORS[t].bg).toMatch(/^(#[0-9A-Fa-f]{3,8}|var\(--)/);
+      expect(AFFAIRE_TYPOLOGIE_COLORS[t].fg).toMatch(/^(#[0-9A-Fa-f]{3,8}|var\(--)/);
     }
   });
 });

@@ -1,3 +1,4 @@
+/** @vitest-environment happy-dom */
 /**
  * L3b1 — Tests unitaires de useCapabilityScope.
  *

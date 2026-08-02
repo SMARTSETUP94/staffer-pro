@@ -100,7 +100,13 @@ describe("v0.37 fixture HERMES D-202604-2141", () => {
     }
   });
 
-  it("CNC mono : pas 2 steps Num le même jour", () => {
+  it("D1 — un chevauchement CNC est un avertissement, jamais un blocage", () => {
+    for (const a of r.alerts) {
+      if (a.code === "NUM_CHEVAUCHEMENT_CNC") expect(a.severity).toBe("soft");
+    }
+  });
+
+  it("CNC mono : pas 2 steps Num le même jour (créneau libre trouvé sur ce fixture)", () => {
     const numByDay = new Map<string, number>();
     for (const s of r.steps.filter((x) => x.metier === "Num")) {
       const d = s.start_date;

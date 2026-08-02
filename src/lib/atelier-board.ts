@@ -63,6 +63,8 @@ export interface ObjetCarte {
   date_montage: string | null;
   /** Étape courante = première étape applicable non validée. */
   etape: EtapeLite;
+  /** Responsable fabrication de l'objet (validateur légitime). */
+  respo_fab_id: string | null;
   /** Heures prévues du poste courant (source : `objet_heures_metier`). */
   heures: number;
   /** Une entrée par colonne, dans l'ordre de `ATELIER_COLONNES`. */
@@ -159,4 +161,22 @@ export function heuresPourEtape(
     .filter((l) => METIER_CODE_TO_ETAPE[l.metier_code] === type)
     .reduce((s, l) => s + (l.heures || 0), 0);
   return Math.round(total * 10) / 10;
+}
+
+/**
+ * B-bis — Action attendue sur la carte selon le statut de l'étape courante.
+ * `a_faire`/`en_cours` → l'opérateur déclare la fin ; `en_attente_validation`
+ * → le responsable fabrication (ou un admin) valide. Sur l'étape `respo_fab`,
+ * terminer vaut validation : une seule action.
+ */
+export function actionCarte(
+  etape: EtapeLite,
+  opts: { isAdmin: boolean; isRespoFab: boolean },
+): { kind: "terminer" | "valider" | "aucune"; label: string } {
+  if (etape.statut === "en_attente_validation") {
+    return opts.isAdmin || opts.isRespoFab
+      ? { kind: "valider", label: "Valider" }
+      : { kind: "aucune", label: "En attente de validation" };
+  }
+  return { kind: "terminer", label: etape.type_etape === "respo_fab" ? "Valider" : "Terminer" };
 }

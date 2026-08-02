@@ -337,8 +337,8 @@ export function calculatePlanV037(input: PlanInput): PlanResult {
       const numStart = findCNCSlotForward(objStart, span, cncReserved, holidays, includeWeekends);
       if (numStart === null) {
         alerts.push({
-          code: "NUM_CONFLIT_INSOLUBLE", severity: "hard",
-          message: `CNC saturée : impossible de placer ${span}j de Num pour « ${o.reference} » à partir de ${objStart}`,
+          code: "NUM_CHEVAUCHEMENT_CNC", severity: "soft",
+          message: `CNC déjà occupée : ${span}j de Num pour « ${o.reference} » sont posés en chevauchement à partir de ${objStart}`,
           objet_id: o.objet_id,
           detail: { objet_reference: o.reference, objet_nom: o.nom, machine_id: "cnc_principale", span_days: span, window_start: objStart },
         });
@@ -574,7 +574,7 @@ export function findCNCSlotBackward(
 export const ALERT_CODES: AlertCode[] = [
   "DEBORD_LIVRAISON",
   "PIC_GLOBAL_DEPASSE",
-  "NUM_CONFLIT_INSOLUBLE",
+  "NUM_CHEVAUCHEMENT_CNC",
   "PLAFOND_OBJET_DEPASSE",
   "MANUT_POOL_DEBORDE",
   "PEINT_OVERFLOW_MANUT",
