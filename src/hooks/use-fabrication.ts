@@ -2,7 +2,12 @@ import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export type FabricationEtapeType = "be" | "usinage" | "respo_fab" | "finition" | "manutention";
-export type FabricationEtapeStatut = "a_faire" | "en_cours" | "termine" | "non_applicable";
+export type FabricationEtapeStatut =
+  | "a_faire"
+  | "en_cours"
+  | "en_attente_validation"
+  | "termine"
+  | "non_applicable";
 export type FabricationFinitionType = "peinture" | "tapisserie" | "autre" | "aucune";
 
 export const ETAPE_LABELS: Record<FabricationEtapeType, string> = {
