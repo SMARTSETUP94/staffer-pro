@@ -143,6 +143,28 @@ export function totauxColonne(cartes: ObjetCarte[]): { objets: number; heures: n
   };
 }
 
+/** Date de montage en français court : « 15 août ». */
+export function formatDateMontage(iso: string | null): string | null {
+  if (!iso) return null;
+  const d = new Date(`${iso}T00:00:00Z`);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toLocaleDateString("fr-FR", { day: "numeric", month: "long", timeZone: "UTC" });
+}
+
+/** Heures au format français : « 38,4 h » (sans décimale inutile). */
+export function formatHeures(h: number): string {
+  return `${(Math.round(h * 10) / 10).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} h`;
+}
+
+/** Libellé accessible d'un tampon de progression. */
+export const TAMPON_LABEL: Record<TamponEtat, string> = {
+  valide: "validé",
+  non_applicable: "non applicable",
+  courant: "poste courant",
+  a_venir: "à venir",
+  absent: "non renseigné",
+};
+
 /** Pastille d'état d'une carte. */
 export type PastilleEtat = { ton: "ok" | "manque" | "neutre"; label: string };
 
