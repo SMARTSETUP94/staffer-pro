@@ -4,7 +4,6 @@
  *
  * Gardes :
  *   - Capability `objet.view` (sinon → redirect / + toast)
- *   - Feature flag `fiche_objet_v1` (sinon → redirect vers /affaires/$/fabrication)
  */
 import { useState, useEffect } from "react";
 import { requireCapability } from "@/lib/capability-guard";
@@ -22,7 +21,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { getObjetFiche } from "@/lib/server-fns/objet-fiche.functions";
-import { useFeatureFlag } from "@/hooks/use-feature-flag";
 import { ObjetIdentiteSection } from "@/components/objets/ObjetIdentiteSection";
 import { ObjetHeuresTable } from "@/components/objets/ObjetHeuresTable";
 import { ObjetEquipeSection } from "@/components/objets/equipe/ObjetEquipeSection";
@@ -43,31 +41,17 @@ export const Route = createFileRoute("/_app/affaires/$affaireId/objets/$objetId"
 function FicheObjetPage() {
   const { affaireId, objetId } = Route.useParams();
   const navigate = useNavigate();
-  const flagEnabled = useFeatureFlag("fiche_objet_v1");
   const fetchFiche = useServerFn(getObjetFiche);
   
-
-  // Redirect propre si flag OFF (on rend pas le contenu côté client)
-  useEffect(() => {
-    if (flagEnabled === false) {
-      navigate({
-        to: "/affaires/$affaireId/fabrication",
-        params: { affaireId },
-        replace: true,
-      });
-    }
-  }, [flagEnabled, navigate, affaireId]);
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["fiche-objet", objetId],
     queryFn: () => fetchFiche({ data: { objetId } }),
-    enabled: flagEnabled,
   });
 
   // Liste responsables fab (profiles est_respo_fab)
   const { data: respoOptions = [] } = useQuery({
     queryKey: ["respo-fab-options"],
-    enabled: flagEnabled,
     staleTime: 5 * 60_000,
     queryFn: async () => {
       const { data: rows } = await supabase
@@ -81,18 +65,6 @@ function FicheObjetPage() {
       }));
     },
   });
-
-  if (!flagEnabled) {
-    return (
-      <div className="container mx-auto p-6">
-        <Card>
-          <CardContent className="py-10 text-center text-sm text-muted-foreground">
-            La fiche objet n'est pas encore activée pour votre compte.
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   if (isLoading) {
     return (

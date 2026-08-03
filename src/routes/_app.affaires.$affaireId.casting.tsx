@@ -2,9 +2,6 @@
  * Sprint B / B4 — Onglet "Casting du chantier".
  *
  * Lecture : `affaire_equipe` (niveau 2) groupé par 4 phases.
- * Gating  : feature flag `equipes_3_niveaux_lecture` (chargement OK même si
- * flag OFF, la route reste accessible — c'est l'onglet qui est masqué dans
- * le layout parent quand le flag est OFF).
  *
  * Layout :
  *   - 4 sections phase (PhaseBadge solid en en-tête)
@@ -17,10 +14,9 @@
  */
 import { createFileRoute } from "@tanstack/react-router";
 import { requireCapability } from "@/lib/capability-guard";
-import { Loader2, UserCircle2, Info, Plus, X } from "lucide-react";
+import { Loader2, UserCircle2, Plus, X } from "lucide-react";
 import { useCastingChantier } from "@/hooks/use-casting-chantier";
 import { PhaseBadge, type AffairePhase } from "@/components/atoms/PhaseBadge";
-import { useFeatureFlag } from "@/hooks/use-feature-flag";
 import { useCapability } from "@/hooks/use-capability";
 import { Button } from "@/components/ui/button";
 import {
@@ -115,8 +111,6 @@ interface ActiveAdd {
 
 function AffaireCastingPage() {
   const { affaireId } = Route.useParams();
-  const flagOn = useFeatureFlag("equipes_3_niveaux_lecture");
-  const alertsFlagOn = useFeatureFlag("equipes_3_niveaux_alertes");
   const canEdit = useCapability("affaire.team.manage");
   const { data, isLoading } = useCastingChantier(affaireId);
   const { data: capacite } = useAffaireCapacite(affaireId);
@@ -162,21 +156,6 @@ function AffaireCastingPage() {
 
   const typo = deriveTypologie(numero);
   const phases = orderedPhasesFor(typo);
-
-  if (!flagOn) {
-    return (
-      <div className="rounded-2xl border border-dashed border-border bg-muted/20 px-6 py-10 text-center">
-        <Info className="mx-auto h-8 w-8 text-muted-foreground" />
-        <p className="mt-2 text-sm font-semibold text-foreground">
-          Casting indisponible
-        </p>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Le nouveau modèle équipe 3 niveaux est en test interne. Activation
-          progressive via le feature flag <code className="font-mono">equipes_3_niveaux_lecture</code>.
-        </p>
-      </div>
-    );
-  }
 
   if (isLoading) {
     return (
@@ -292,7 +271,7 @@ function AffaireCastingPage() {
                   <span className="text-xs text-muted-foreground">
                     {members.length} pers.
                   </span>
-                  {alertsFlagOn && capacite?.[phase] && (
+                  {capacite?.[phase] && (
                     <EquipeCapaciteIndicator
                       statut={capacite[phase].statut}
                       nbPersonnes={capacite[phase].nb_personnes_castees}
@@ -339,7 +318,7 @@ function AffaireCastingPage() {
                                   ({list.length})
                                 </span>
                               </p>
-                              {alertsFlagOn && cap && (
+                              {cap && (
                                 <EquipeCapaciteIndicator
                                   size="sm"
                                   statut={cap.statut}
