@@ -273,9 +273,9 @@ function PlanningImportPage() {
               <Stat label="Lignes d'heures" value={plan.totals.lignesHeures} hint={`${plan.totals.joursHommes} j·h × ${HEURES_PAR_PERSONNE_JOUR} h`} />
               <Stat label="Lignes de planning" value={plan.totals.lignesPlanning} />
               <Stat label="Affectations" value={plan.totals.affectations} hint={`${plan.prenomsNonResolus.length} prénom(s) non résolu(s)`} />
-              <Stat label="Erreurs" value={counts.error} />
-              <Stat label="Avertissements" value={counts.warning} />
-              <Stat label="Informations" value={counts.info} />
+              <Stat label="Erreurs" value={counts.errors} />
+              <Stat label="Avertissements" value={counts.warnings} />
+              <Stat label="Informations" value={counts.infos} />
             </div>
 
             <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
@@ -322,7 +322,7 @@ function PlanningImportPage() {
             <IssuesTable issues={plan.issues} filename={filename} />
 
             <div className="flex gap-2">
-              <Button onClick={() => void runImport()} disabled={busy || counts.error > 0}>
+              <Button onClick={() => void runImport()} disabled={busy || counts.errors > 0}>
                 {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                 Lancer l'import
               </Button>
@@ -330,9 +330,9 @@ function PlanningImportPage() {
                 <RotateCcw className="mr-2 h-4 w-4" aria-hidden /> Recommencer
               </Button>
             </div>
-            {counts.error > 0 && (
+            {counts.errors > 0 && (
               <p className="text-sm text-destructive">
-                Corrigez les {counts.error} erreur(s) bloquante(s) dans le fichier avant d'importer.
+                Corrigez les {counts.errors} erreur(s) bloquante(s) dans le fichier avant d'importer.
               </p>
             )}
           </CardContent>

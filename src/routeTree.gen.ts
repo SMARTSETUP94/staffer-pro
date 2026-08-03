@@ -69,6 +69,7 @@ import { Route as AppParametresAutorisationsVehiculesRouteImport } from './route
 import { Route as AppOpportunitesImportRouteImport } from './routes/_app.opportunites.import'
 import { Route as AppOpportunitesAffaireIdRouteImport } from './routes/_app.opportunites.$affaireId'
 import { Route as AppLogistiqueVehiculesPlanningRouteImport } from './routes/_app.logistique.vehicules-planning'
+import { Route as AppImportsPlanningRouteImport } from './routes/_app.imports.planning'
 import { Route as AppFabricationMesEtapesRouteImport } from './routes/_app.fabrication.mes-etapes'
 import { Route as AppExportFeuilleDeRouteRouteImport } from './routes/_app.export.feuille-de-route'
 import { Route as AppExportDemandesDevisRouteImport } from './routes/_app.export.demandes-devis'
@@ -412,6 +413,11 @@ const AppLogistiqueVehiculesPlanningRoute =
     path: '/logistique/vehicules-planning',
     getParentRoute: () => AppRoute,
   } as any)
+const AppImportsPlanningRoute = AppImportsPlanningRouteImport.update({
+  id: '/planning',
+  path: '/planning',
+  getParentRoute: () => AppImportsRoute,
+} as any)
 const AppFabricationMesEtapesRoute = AppFabricationMesEtapesRouteImport.update({
   id: '/fabrication/mes-etapes',
   path: '/fabrication/mes-etapes',
@@ -629,7 +635,7 @@ export interface FileRoutesByFullPath {
   '/export': typeof AppExportRouteWithChildren
   '/flotte': typeof AppFlotteRoute
   '/heures-analyse': typeof AppHeuresAnalyseRoute
-  '/imports': typeof AppImportsRoute
+  '/imports': typeof AppImportsRouteWithChildren
   '/inbox-smart': typeof AppInboxSmartRoute
   '/incident-auth': typeof AppIncidentAuthRoute
   '/interimaires': typeof AppInterimairesRoute
@@ -672,6 +678,7 @@ export interface FileRoutesByFullPath {
   '/export/demandes-devis': typeof AppExportDemandesDevisRoute
   '/export/feuille-de-route': typeof AppExportFeuilleDeRouteRoute
   '/fabrication/mes-etapes': typeof AppFabricationMesEtapesRoute
+  '/imports/planning': typeof AppImportsPlanningRoute
   '/logistique/vehicules-planning': typeof AppLogistiqueVehiculesPlanningRoute
   '/opportunites/$affaireId': typeof AppOpportunitesAffaireIdRoute
   '/opportunites/import': typeof AppOpportunitesImportRoute
@@ -724,7 +731,7 @@ export interface FileRoutesByTo {
   '/employes': typeof AppEmployesRouteWithChildren
   '/flotte': typeof AppFlotteRoute
   '/heures-analyse': typeof AppHeuresAnalyseRoute
-  '/imports': typeof AppImportsRoute
+  '/imports': typeof AppImportsRouteWithChildren
   '/inbox-smart': typeof AppInboxSmartRoute
   '/incident-auth': typeof AppIncidentAuthRoute
   '/interimaires': typeof AppInterimairesRoute
@@ -767,6 +774,7 @@ export interface FileRoutesByTo {
   '/export/demandes-devis': typeof AppExportDemandesDevisRoute
   '/export/feuille-de-route': typeof AppExportFeuilleDeRouteRoute
   '/fabrication/mes-etapes': typeof AppFabricationMesEtapesRoute
+  '/imports/planning': typeof AppImportsPlanningRoute
   '/logistique/vehicules-planning': typeof AppLogistiqueVehiculesPlanningRoute
   '/opportunites/$affaireId': typeof AppOpportunitesAffaireIdRoute
   '/opportunites/import': typeof AppOpportunitesImportRoute
@@ -822,7 +830,7 @@ export interface FileRoutesById {
   '/_app/export': typeof AppExportRouteWithChildren
   '/_app/flotte': typeof AppFlotteRoute
   '/_app/heures-analyse': typeof AppHeuresAnalyseRoute
-  '/_app/imports': typeof AppImportsRoute
+  '/_app/imports': typeof AppImportsRouteWithChildren
   '/_app/inbox-smart': typeof AppInboxSmartRoute
   '/_app/incident-auth': typeof AppIncidentAuthRoute
   '/_app/interimaires': typeof AppInterimairesRoute
@@ -866,6 +874,7 @@ export interface FileRoutesById {
   '/_app/export/demandes-devis': typeof AppExportDemandesDevisRoute
   '/_app/export/feuille-de-route': typeof AppExportFeuilleDeRouteRoute
   '/_app/fabrication/mes-etapes': typeof AppFabricationMesEtapesRoute
+  '/_app/imports/planning': typeof AppImportsPlanningRoute
   '/_app/logistique/vehicules-planning': typeof AppLogistiqueVehiculesPlanningRoute
   '/_app/opportunites/$affaireId': typeof AppOpportunitesAffaireIdRoute
   '/_app/opportunites/import': typeof AppOpportunitesImportRoute
@@ -965,6 +974,7 @@ export interface FileRouteTypes {
     | '/export/demandes-devis'
     | '/export/feuille-de-route'
     | '/fabrication/mes-etapes'
+    | '/imports/planning'
     | '/logistique/vehicules-planning'
     | '/opportunites/$affaireId'
     | '/opportunites/import'
@@ -1060,6 +1070,7 @@ export interface FileRouteTypes {
     | '/export/demandes-devis'
     | '/export/feuille-de-route'
     | '/fabrication/mes-etapes'
+    | '/imports/planning'
     | '/logistique/vehicules-planning'
     | '/opportunites/$affaireId'
     | '/opportunites/import'
@@ -1158,6 +1169,7 @@ export interface FileRouteTypes {
     | '/_app/export/demandes-devis'
     | '/_app/export/feuille-de-route'
     | '/_app/fabrication/mes-etapes'
+    | '/_app/imports/planning'
     | '/_app/logistique/vehicules-planning'
     | '/_app/opportunites/$affaireId'
     | '/_app/opportunites/import'
@@ -1627,6 +1639,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppLogistiqueVehiculesPlanningRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/imports/planning': {
+      id: '/_app/imports/planning'
+      path: '/planning'
+      fullPath: '/imports/planning'
+      preLoaderRoute: typeof AppImportsPlanningRouteImport
+      parentRoute: typeof AppImportsRoute
+    }
     '/_app/fabrication/mes-etapes': {
       id: '/_app/fabrication/mes-etapes'
       path: '/fabrication/mes-etapes'
@@ -1926,6 +1945,18 @@ const AppExportRouteWithChildren = AppExportRoute._addFileChildren(
   AppExportRouteChildren,
 )
 
+interface AppImportsRouteChildren {
+  AppImportsPlanningRoute: typeof AppImportsPlanningRoute
+}
+
+const AppImportsRouteChildren: AppImportsRouteChildren = {
+  AppImportsPlanningRoute: AppImportsPlanningRoute,
+}
+
+const AppImportsRouteWithChildren = AppImportsRoute._addFileChildren(
+  AppImportsRouteChildren,
+)
+
 interface AppOpportunitesRouteChildren {
   AppOpportunitesAffaireIdRoute: typeof AppOpportunitesAffaireIdRoute
   AppOpportunitesImportRoute: typeof AppOpportunitesImportRoute
@@ -1991,7 +2022,7 @@ interface AppRouteChildren {
   AppExportRoute: typeof AppExportRouteWithChildren
   AppFlotteRoute: typeof AppFlotteRoute
   AppHeuresAnalyseRoute: typeof AppHeuresAnalyseRoute
-  AppImportsRoute: typeof AppImportsRoute
+  AppImportsRoute: typeof AppImportsRouteWithChildren
   AppInboxSmartRoute: typeof AppInboxSmartRoute
   AppIncidentAuthRoute: typeof AppIncidentAuthRoute
   AppInterimairesRoute: typeof AppInterimairesRoute
@@ -2061,7 +2092,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppExportRoute: AppExportRouteWithChildren,
   AppFlotteRoute: AppFlotteRoute,
   AppHeuresAnalyseRoute: AppHeuresAnalyseRoute,
-  AppImportsRoute: AppImportsRoute,
+  AppImportsRoute: AppImportsRouteWithChildren,
   AppInboxSmartRoute: AppInboxSmartRoute,
   AppIncidentAuthRoute: AppIncidentAuthRoute,
   AppInterimairesRoute: AppInterimairesRoute,
