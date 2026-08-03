@@ -1,13 +1,15 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { FileUp, FileText, History, Trophy } from "lucide-react";
+import { FileUp, FileText, History, Trophy, CalendarRange } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const TABS = [
   { to: "/employes/import", label: "Employés", icon: FileUp },
   { to: "/devis/import", label: "Devis", icon: FileText },
   { to: "/opportunites/import", label: "Opportunités", icon: Trophy },
+  { to: "/imports/planning", label: "Planning Excel", icon: CalendarRange },
   { to: "/devis/historique", label: "Historique", icon: History },
 ] as const;
+
 
 /**
  * Barre d'onglets partagée par les pages d'import (Employés / Devis / Opportunités / Historique).
