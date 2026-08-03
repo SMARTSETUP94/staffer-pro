@@ -174,7 +174,7 @@ function PlanningImportPage() {
 
   return (
     <div className="space-y-6 p-6">
-      <PageBreadcrumbs items={[{ label: "Imports" }, { label: "Planning Excel" }]} />
+      <PageBreadcrumbs steps={[{ label: "Imports" }, { label: "Planning Excel" }]} />
       <PageHeader
         title="Import du planning Excel"
         description="Amorçage des affaires, objets, heures prévues et effectif prévisionnel depuis le classeur mensuel."
