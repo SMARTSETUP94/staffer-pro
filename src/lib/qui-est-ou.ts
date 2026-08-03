@@ -361,10 +361,10 @@ export function groupByMetier(
       groups.set(p.metier_principal_id, list);
     }
   }
-  const out = metiers
+  const out: { metier: QuiMetier | null; personnes: QuiPersonne[] }[] = metiers
     .filter((m) => groups.has(m.id))
     .map((m) => ({
-      metier: m,
+      metier: m as QuiMetier | null,
       personnes: (groups.get(m.id) ?? []).sort((a, b) => a.nom.localeCompare(b.nom)),
     }));
   if (sansMetier.length > 0) out.push({ metier: null, personnes: sansMetier });
