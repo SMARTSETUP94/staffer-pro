@@ -101,11 +101,19 @@ export async function applyPlanningImport(plan: PlanningPlan, opts: ApplyOptions
     for (const a of plan.affaires) {
       const id = affaireIdByCode.get(a.code);
       if (!id || !a.montage) continue;
-      const patch = Object.fromEntries(
-        Object.entries(a.montage).filter(([, v]) => v != null && v !== ""),
-      );
+      const m = a.montage;
+      const patch: AffaireUpdate = {};
+      if (m.date_montage) patch.date_montage = m.date_montage;
+      if (m.date_demontage) patch.date_demontage = m.date_demontage;
+      if (m.montage_nb_techniciens != null) patch.montage_nb_techniciens = m.montage_nb_techniciens;
+      if (m.montage_travail_nuit) patch.montage_travail_nuit = true;
+      if (m.montage_nb_semi != null) patch.montage_nb_semi = m.montage_nb_semi;
+      if (m.montage_nb_20m3 != null) patch.montage_nb_20m3 = m.montage_nb_20m3;
+      if (m.montage_nature_prestation) patch.montage_nature_prestation = m.montage_nature_prestation;
+      if (m.montage_notes) patch.montage_notes = m.montage_notes;
       if (Object.keys(patch).length === 0) continue;
       const { error } = await supabase.from("affaires").update(patch).eq("id", id);
+
       if (error) report.erreurs.push(`Montage ${a.code} : ${error.message}`);
       else report.affairesMisesAJour += 1;
     }
