@@ -70,7 +70,7 @@ interface PublishedStep {
   plan_id: string;
 }
 
-/** Récupère les steps du plan PUBLIÉ lié à un objet, pour un métier optionnel. */
+/** Récupère les steps du plan actif (published, sinon draft) lié à un objet, pour un métier optionnel. */
 async function loadActiveStepsForObjet(
   supabase: SupaCtx,
   objetId: string,
