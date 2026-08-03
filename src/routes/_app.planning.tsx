@@ -332,7 +332,7 @@ function PlanningPage() {
             >
               <Users className="mr-1.5 h-3.5 w-3.5" />
               <span className="hidden sm:inline">Assigner en lot</span>
-              <span className="sm:hidden">{"Assigner"}</span>
+              <span className="sm:hidden">Assigner</span>
             </Button>
             <Button
               size="sm"

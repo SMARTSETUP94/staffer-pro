@@ -59,7 +59,6 @@ function hasAnyCap(caps: Set<string>, cap: Cap): boolean {
 function buildSections(
   validationCount: number,
   contratsRhCount: number,
-  vocab: ReturnType<typeof useVocab>,
 ): NavSection[] {
   return [
     {
@@ -183,7 +182,7 @@ export function AppSidebar() {
 
   // Filtrage : un item est visible si pas de cap OU cap satisfaite.
   // "Aujourd'hui" reste TOUJOURS visible (pas de cap déclarée).
-  const rawSections = buildSections(validationCount, contratsRhCount, vocab);
+  const rawSections = buildSections(validationCount, contratsRhCount);
   const capFiltered = capsLoading
     ? // Pendant le load : on n'affiche que les items toujours visibles
       // (évite le flash "toutes les sections puis disparition").

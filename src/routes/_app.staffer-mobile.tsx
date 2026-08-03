@@ -205,7 +205,7 @@ function StafferMobile() {
 
   return (
     <div className="mx-auto max-w-xl space-y-4 p-4">
-      <PageHeader title=Assigner ponctuel description="Affectation mobile + contrat intermittent auto" />
+      <PageHeader title="Assigner ponctuel" description="Affectation mobile + contrat intermittent auto" />
 
       <Card>
         <CardHeader>
