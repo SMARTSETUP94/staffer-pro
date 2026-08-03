@@ -9,6 +9,10 @@
  *                  écriture EXCLUSIVEMENT via `assignation-upsert.ts`
  */
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
+
+type AffaireUpdate = Database["public"]["Tables"]["affaires"]["Update"];
+
 import { insertAssignationsBatch } from "@/lib/assignation-upsert";
 import { normLabel } from "@/lib/imports/planning-xlsx";
 import type { HeuresConflictMode, PlanningPlan } from "@/lib/imports/planning-plan";
