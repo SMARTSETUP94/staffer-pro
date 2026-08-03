@@ -83,6 +83,7 @@ function buildSections(
         { title: "Tableau d'atelier", url: "/atelier", icon: LayoutGrid, cap: "section.planning_fab" },
         { title: "Charge atelier", url: "/charge", icon: BarChart3, cap: "section.planning_fab" },
         { title: "Planning fab", url: "/planning", icon: Calendar, cap: "section.planning_fab" },
+        { title: "Qui est où", url: "/qui-est-ou", icon: UsersRound, cap: "section.planning_fab" },
         { title: "Pipeline opportunités", url: "/opportunites", icon: Trophy, cap: "section.pipeline_opportunites" },
       ],
     },
