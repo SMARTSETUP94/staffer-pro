@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { Fragment, useMemo } from "react";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
 import { z } from "zod";
@@ -417,8 +417,8 @@ function QuiEstOuPage() {
                     </tr>
                   ))
                 : groupes.map((g) => (
-                    <>
-                      <tr key={`g-${g.metier?.id ?? "sans"}`} className="border-b bg-muted/30">
+                    <Fragment key={`g-${g.metier?.id ?? "sans"}`}>
+                      <tr className="border-b bg-muted/30">
                         <th
                           colSpan={jours.length + 1}
                           className="sticky left-0 p-1.5 text-left text-xs font-semibold uppercase tracking-wide"
@@ -486,7 +486,7 @@ function QuiEstOuPage() {
                           })}
                         </tr>
                       ))}
-                    </>
+                    </Fragment>
                   ))}
             </tbody>
           </table>
