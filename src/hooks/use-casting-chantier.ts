@@ -5,7 +5,6 @@
  * casting (équipe niveau 2) d'une affaire, groupé par phase.
  *
  * Gating : le composant appelant doit lui-même gérer le feature flag
- * `equipes_3_niveaux_lecture` via useFeatureFlag.
  */
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
