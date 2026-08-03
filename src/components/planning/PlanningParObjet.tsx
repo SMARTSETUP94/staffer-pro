@@ -45,7 +45,6 @@ import {
 } from "@/lib/objet-heures-helpers";
 import { toast } from "sonner";
 import { Link } from "@tanstack/react-router";
-import { useFeatureFlag } from "@/hooks/use-feature-flag";
 
 interface FabObjet {
   id: string;
