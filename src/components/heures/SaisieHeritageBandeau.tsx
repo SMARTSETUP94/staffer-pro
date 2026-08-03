@@ -27,7 +27,6 @@ import {
   type HeritageSaisieResult,
   type HeritageSaisieInput,
 } from "@/hooks/use-heritage-saisie-heures";
-import { useFeatureFlag } from "@/hooks/use-feature-flag";
 
 interface Props extends HeritageSaisieInput {
   position?: "inline" | "sticky";
@@ -101,7 +100,6 @@ export function SaisieHeritageBandeau({
   dismissKey,
   className,
 }: Props) {
-  const flagOn = useFeatureFlag("equipes_3_niveaux_lecture");
   const { data: heritage } = useHeritageSaisieHeures({
     employeId,
     affaireId,
@@ -118,7 +116,7 @@ export function SaisieHeritageBandeau({
   }, [sessionKey]);
 
   const visual = visualFor(heritage ?? null);
-  if (!flagOn || !visual || dismissed) return null;
+  if (!visual || dismissed) return null;
 
   const Icon = visual.icon;
   const showCastingLink = heritage && (heritage.niveau === 2 || heritage.niveau === 3) && affaireId;

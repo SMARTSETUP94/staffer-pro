@@ -55,7 +55,6 @@ function AffaireDetailLayout() {
   const [savingStatut, setSavingStatut] = useState(false);
   const canSeeEquipe = useCapability("affaire.equipe.view");
   const canSeeFabrication = useCapability("section.fabrication");
-  const castingFlagOn = useFeatureFlag("equipes_3_niveaux_lecture");
   const canCreateClient = useCapability("clients.view");
   const canUpdateClient = useCapability("clients.update");
   const [createClientOpen, setCreateClientOpen] = useState(false);
@@ -141,7 +140,7 @@ function AffaireDetailLayout() {
     ...(canSeeEquipe
       ? [{ to: `/affaires/${affaire.id}/equipe`, label: "Équipe", match: path.endsWith("/equipe") }]
       : []),
-    ...(castingFlagOn && canSeeEquipe
+    ...(canSeeEquipe
       ? [{ to: `/affaires/${affaire.id}/casting`, label: "Casting", match: path.endsWith("/casting") }]
       : []),
     { to: `/affaires/${affaire.id}/documents`, label: "Documents", match: path.endsWith("/documents") },

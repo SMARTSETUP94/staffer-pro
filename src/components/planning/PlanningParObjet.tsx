@@ -117,7 +117,6 @@ export function PlanningParObjet({
     return list.sort((a, b) => a.numero.localeCompare(b.numero));
   }, [affaires, assignations, consommation, filterAffaireIds]);
 
-  const ficheObjetActive = useFeatureFlag("fiche_objet_v1");
 
   // Charge les objets non archivés des affaires retenues
   const [objets, setObjets] = useState<FabObjet[]>([]);
@@ -408,20 +407,14 @@ export function PlanningParObjet({
                                 <Package className="mt-0.5 h-3 w-3 shrink-0 text-muted-foreground" />
                                 <div className="min-w-0 flex-1">
                                   <div className="flex items-center gap-1.5">
-                                    {ficheObjetActive ? (
-                                      <Link
-                                        to="/affaires/$affaireId/objets/$objetId"
-                                        params={{ affaireId: obj.affaire_id, objetId: obj.id }}
-                                        className="font-mono text-[11px] font-bold hover:underline"
-                                        title="Ouvrir la fiche objet"
-                                      >
-                                        {obj.reference}
-                                      </Link>
-                                    ) : (
-                                      <span className="font-mono text-[11px] font-bold">
-                                        {obj.reference}
-                                      </span>
-                                    )}
+                                    <Link
+                                      to="/affaires/$affaireId/objets/$objetId"
+                                      params={{ affaireId: obj.affaire_id, objetId: obj.id }}
+                                      className="font-mono text-[11px] font-bold hover:underline"
+                                      title="Ouvrir la fiche objet"
+                                    >
+                                      {obj.reference}
+                                    </Link>
                                     {isOver && (
                                       <Tooltip>
                                         <TooltipTrigger asChild>

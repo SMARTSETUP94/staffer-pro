@@ -78,9 +78,8 @@ function FabricationPage() {
   const canEditFab = useCapability("casting.edit_phase_fabrication");
   const canSeeAdminHint = useCapability("section.admin");
   // Lot 8.2b — Lien temporaire vers la Fiche Objet (sera remplacé en 8.5 par un lien intégré natif).
-  const ficheFlagOn = useFeatureFlag("fiche_objet_v1");
   const canViewFiche = useCapability("objet.view");
-  const showFicheLink = ficheFlagOn && canViewFiche;
+  const showFicheLink = canViewFiche;
   const { objets, loading, reload } = useFabricationObjets(affaireId);
   const { profiles } = useProfilesWithRoles();
   const [openAjouter, setOpenAjouter] = useState(false);
