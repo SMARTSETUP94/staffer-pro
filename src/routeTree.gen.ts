@@ -22,6 +22,7 @@ import { Route as AppStafferMobileRouteImport } from './routes/_app.staffer-mobi
 import { Route as AppSignalementsRouteImport } from './routes/_app.signalements'
 import { Route as AppSaisiePourEquipeRouteImport } from './routes/_app.saisie-pour-equipe'
 import { Route as AppRoadmapRouteImport } from './routes/_app.roadmap'
+import { Route as AppQuiEstOuRouteImport } from './routes/_app.qui-est-ou'
 import { Route as AppPlanningRouteImport } from './routes/_app.planning'
 import { Route as AppOpportunitesRouteImport } from './routes/_app.opportunites'
 import { Route as AppNotificationsRouteImport } from './routes/_app.notifications'
@@ -167,6 +168,11 @@ const AppSaisiePourEquipeRoute = AppSaisiePourEquipeRouteImport.update({
 const AppRoadmapRoute = AppRoadmapRouteImport.update({
   id: '/roadmap',
   path: '/roadmap',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppQuiEstOuRoute = AppQuiEstOuRouteImport.update({
+  id: '/qui-est-ou',
+  path: '/qui-est-ou',
   getParentRoute: () => AppRoute,
 } as any)
 const AppPlanningRoute = AppPlanningRouteImport.update({
@@ -637,6 +643,7 @@ export interface FileRoutesByFullPath {
   '/notifications': typeof AppNotificationsRoute
   '/opportunites': typeof AppOpportunitesRouteWithChildren
   '/planning': typeof AppPlanningRoute
+  '/qui-est-ou': typeof AppQuiEstOuRoute
   '/roadmap': typeof AppRoadmapRoute
   '/saisie-pour-equipe': typeof AppSaisiePourEquipeRoute
   '/signalements': typeof AppSignalementsRoute
@@ -731,6 +738,7 @@ export interface FileRoutesByTo {
   '/notifications': typeof AppNotificationsRoute
   '/opportunites': typeof AppOpportunitesRouteWithChildren
   '/planning': typeof AppPlanningRoute
+  '/qui-est-ou': typeof AppQuiEstOuRoute
   '/roadmap': typeof AppRoadmapRoute
   '/saisie-pour-equipe': typeof AppSaisiePourEquipeRoute
   '/signalements': typeof AppSignalementsRoute
@@ -828,6 +836,7 @@ export interface FileRoutesById {
   '/_app/notifications': typeof AppNotificationsRoute
   '/_app/opportunites': typeof AppOpportunitesRouteWithChildren
   '/_app/planning': typeof AppPlanningRoute
+  '/_app/qui-est-ou': typeof AppQuiEstOuRoute
   '/_app/roadmap': typeof AppRoadmapRoute
   '/_app/saisie-pour-equipe': typeof AppSaisiePourEquipeRoute
   '/_app/signalements': typeof AppSignalementsRoute
@@ -927,6 +936,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/opportunites'
     | '/planning'
+    | '/qui-est-ou'
     | '/roadmap'
     | '/saisie-pour-equipe'
     | '/signalements'
@@ -1021,6 +1031,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/opportunites'
     | '/planning'
+    | '/qui-est-ou'
     | '/roadmap'
     | '/saisie-pour-equipe'
     | '/signalements'
@@ -1117,6 +1128,7 @@ export interface FileRouteTypes {
     | '/_app/notifications'
     | '/_app/opportunites'
     | '/_app/planning'
+    | '/_app/qui-est-ou'
     | '/_app/roadmap'
     | '/_app/saisie-pour-equipe'
     | '/_app/signalements'
@@ -1284,6 +1296,13 @@ declare module '@tanstack/react-router' {
       path: '/roadmap'
       fullPath: '/roadmap'
       preLoaderRoute: typeof AppRoadmapRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/qui-est-ou': {
+      id: '/_app/qui-est-ou'
+      path: '/qui-est-ou'
+      fullPath: '/qui-est-ou'
+      preLoaderRoute: typeof AppQuiEstOuRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/planning': {
@@ -1986,6 +2005,7 @@ interface AppRouteChildren {
   AppNotificationsRoute: typeof AppNotificationsRoute
   AppOpportunitesRoute: typeof AppOpportunitesRouteWithChildren
   AppPlanningRoute: typeof AppPlanningRoute
+  AppQuiEstOuRoute: typeof AppQuiEstOuRoute
   AppRoadmapRoute: typeof AppRoadmapRoute
   AppSaisiePourEquipeRoute: typeof AppSaisiePourEquipeRoute
   AppSignalementsRoute: typeof AppSignalementsRoute
@@ -2055,6 +2075,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppNotificationsRoute: AppNotificationsRoute,
   AppOpportunitesRoute: AppOpportunitesRouteWithChildren,
   AppPlanningRoute: AppPlanningRoute,
+  AppQuiEstOuRoute: AppQuiEstOuRoute,
   AppRoadmapRoute: AppRoadmapRoute,
   AppSaisiePourEquipeRoute: AppSaisiePourEquipeRoute,
   AppSignalementsRoute: AppSignalementsRoute,
