@@ -84,7 +84,7 @@ describe("filtres & groupes", () => {
     expect(res.map((p) => p.id)).toEqual(["p1"]);
   });
   it("recherche insensible aux accents", () => {
-    expect(filterPersonnes(personnes, { ...base, recherche: "alicé" }, index, [], new Set())).toHaveLength(0);
+    expect(filterPersonnes(personnes, { ...base, recherche: "alicé" }, index, [], new Set())).toHaveLength(1);
     expect(filterPersonnes(personnes, { ...base, recherche: "ALICE" }, index, [], new Set())).toHaveLength(1);
   });
   it("groupe par métier dans l'ordre", () => {
