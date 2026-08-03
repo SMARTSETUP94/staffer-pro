@@ -55,7 +55,6 @@ import { useLieux } from "@/hooks/use-lieux";
 import { addDays, format as fmt } from "date-fns";
 import { StaffingPlanWizard } from "@/components/staffing/StaffingPlanWizard";
 import { MettreAuPlanningExpressButton } from "@/components/staffing/MettreAuPlanningExpressButton";
-import { useVocab } from "@/hooks/use-vocab";
 
 export const Route = createFileRoute("/_app/affaires/$affaireId/fabrication")({
   // Lot 2 P1 : `section.fabrication` (et non `section.affaires`) débloque
@@ -78,7 +77,6 @@ function FabricationPage() {
   //   section.admin (info contextuelle réservée admin, pas une action).
   const canEditFab = useCapability("casting.edit_phase_fabrication");
   const canSeeAdminHint = useCapability("section.admin");
-  const vocab = useVocab();
   // Lot 8.2b — Lien temporaire vers la Fiche Objet (sera remplacé en 8.5 par un lien intégré natif).
   const ficheFlagOn = useFeatureFlag("fiche_objet_v1");
   const canViewFiche = useCapability("objet.view");
@@ -289,7 +287,7 @@ function FabricationPage() {
             <div className="flex items-center justify-between gap-2 flex-wrap">
               <div>
                 <p className="text-sm font-semibold text-foreground">
-                  {vocab.autoRemplirFabrication}
+                  Auto-remplir fabrication
                 </p>
                 <p className="text-xs text-muted-foreground">
                   Express : 1 clic pour créer + staffer + publier (si aucun conflit). Sinon utilisez le wizard ci-dessous.

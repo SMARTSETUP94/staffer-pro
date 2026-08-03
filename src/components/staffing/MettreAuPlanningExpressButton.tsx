@@ -40,7 +40,6 @@ import { listFabObjetsForWizard, getActivePlansForAffaire } from "@/lib/server-f
 import { createPlanExpress } from "@/lib/server-fns/staffing-express.functions";
 import { useWizardPrefetch } from "@/hooks/use-wizard-prefetch";
 import { isJourNonOuvreFR } from "@/lib/jours-feries";
-import { useVocab } from "@/hooks/use-vocab";
 
 interface Props {
   affaireId: string;
@@ -95,8 +94,7 @@ export function MettreAuPlanningExpressButton({
   onConfigurer,
   disabled,
 }: Props) {
-  const vocab = useVocab();
-  const STEPS = ["Création", "Calcul", vocab.autoRemplirStepLabel, "Publication"] as const;
+  const STEPS = ["Création", "Calcul", "Auto-remplir", "Publication"] as const;
   const navigate = useNavigate();
   const expressFn = useServerFn(createPlanExpress);
   const listFn = useServerFn(listFabObjetsForWizard);

@@ -28,7 +28,6 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { AssignationDialog } from "./AssignationDialog";
 import { CellEditDialog } from "./CellEditDialog";
-import { useVocab } from "@/hooks/use-vocab";
 import { AssignationBulkObjetDialog, type BulkObjetForDialog } from "./AssignationBulkObjetDialog";
 import { Button } from "@/components/ui/button";
 import type {
@@ -97,7 +96,6 @@ export function PlanningParObjet({
   filterMetierIds,
   onChanged,
 }: Props) {
-  const vocab = useVocab();
   const days = useMemo(
     () => Array.from({ length: showWeekend ? 7 : 5 }, (_, i) => addDays(weekStart, i)),
     [weekStart.getTime(), showWeekend],
@@ -486,7 +484,7 @@ export function PlanningParObjet({
                                           raw: obj.raw,
                                         });
                                       }}
-                                      aria-label={`${vocab.assignerEnLot} sur ${obj.reference}`}
+                                      aria-label={`Assigner en lot sur ${obj.reference}`}
                                     >
                                       <Users className="h-3 w-3" />
                                       Bulk
