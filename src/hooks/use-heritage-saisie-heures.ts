@@ -11,8 +11,6 @@
  * Performance : ~3ms / appel (benchmark Sprint A). Cache 60s (la saisie change rarement
  * dans un même slot pendant une session).
  *
- * tant que le flag est off, on peut quand même appeler la RPC (elle existe
- * indépendamment) mais le bandeau UI doit rester invisible.
  */
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";

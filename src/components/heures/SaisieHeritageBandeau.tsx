@@ -15,8 +15,6 @@
  * Le bandeau est dismissible (session-only) — `dismissKey` permet de varier
  * la persistance par contexte (clé stockée en sessionStorage).
  *
- * Gating : se masque automatiquement si le feature flag `equipes_3_niveaux_lecture`
- * est OFF (le hook est appelé quand même côté caller mais le bandeau ne rend rien).
  */
 import { useState, useEffect } from "react";
 import { AlertTriangle, Calendar, CheckCircle2, Sparkles, X } from "lucide-react";

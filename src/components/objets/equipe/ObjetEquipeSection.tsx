@@ -332,9 +332,7 @@ export function ObjetEquipeSection({ objetId }: Props) {
 /**
  * Sprint B / B5 — Sous-section lecture `fabrication_objet_equipe` (N3).
  *
- * Gating : feature flag `equipes_3_niveaux_lecture`. Si OFF → ne rend rien
- * (l'utilisateur ne voit que l'ancienne section dérivée de staffing_plan_assignment).
- * Si ON → affiche la liste des membres N3 persistés (refacto Sprint B).
+ * Affiche la liste des membres N3 persistés (refacto Sprint B).
  *
  * Coexistence : le bloc historique au-dessus reste actif (lecture
  * staffing_plan_assignment via getObjetEquipe). Cette section est additive

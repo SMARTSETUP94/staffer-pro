@@ -4,7 +4,6 @@
  * Hook React Query qui appelle getCastingChantier (serverFn) et expose le
  * casting (équipe niveau 2) d'une affaire, groupé par phase.
  *
- * Gating : le composant appelant doit lui-même gérer le feature flag
  */
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
