@@ -25,7 +25,6 @@ import { toast } from "sonner";
 import { getObjetEquipe } from "@/lib/server-fns/objet-equipe.functions";
 import { autoStaffObjetEquipe } from "@/lib/server-fns/objet-equipe-mutations.functions";
 import { useCapability } from "@/hooks/use-capability";
-import { useFeatureFlag } from "@/hooks/use-feature-flag";
 import { supabase } from "@/integrations/supabase/client";
 import { AddPersonneSheet } from "./AddPersonneSheet";
 import { RemovePersonneDialog } from "./RemovePersonneDialog";
@@ -333,19 +332,15 @@ export function ObjetEquipeSection({ objetId }: Props) {
 /**
  * Sprint B / B5 — Sous-section lecture `fabrication_objet_equipe` (N3).
  *
- * Gating : feature flag `equipes_3_niveaux_lecture`. Si OFF → ne rend rien
- * (l'utilisateur ne voit que l'ancienne section dérivée de staffing_plan_assignment).
- * Si ON → affiche la liste des membres N3 persistés (refacto Sprint B).
+ * Affiche la liste des membres N3 persistés (refacto Sprint B).
  *
  * Coexistence : le bloc historique au-dessus reste actif (lecture
  * staffing_plan_assignment via getObjetEquipe). Cette section est additive
  * pendant la phase de test interne — bascule sèche prévue Sprint C.
  */
 function ObjetEquipeN3Section({ objetId }: { objetId: string }) {
-  const flagOn = useFeatureFlag("equipes_3_niveaux_lecture");
   const { data, isLoading } = useQuery({
     queryKey: ["objet-equipe-n3", objetId],
-    enabled: flagOn,
     staleTime: 30_000,
     queryFn: async () => {
       const { data, error } = await supabase
@@ -359,7 +354,6 @@ function ObjetEquipeN3Section({ objetId }: { objetId: string }) {
     },
   });
 
-  if (!flagOn) return null;
 
   return (
     <CardContent className="border-t border-border pt-3">

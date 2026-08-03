@@ -16,7 +16,6 @@ import { Button } from "@/components/ui/button";
 import { useValidationCount } from "@/hooks/use-validation-count";
 import { useContratsRhCount } from "@/hooks/use-contrats-rh-count";
 import { useCapabilitiesSet } from "@/hooks/use-capability";
-import { useVocab } from "@/hooks/use-vocab";
 import { useFeatureFlag } from "@/hooks/use-feature-flag";
 
 
@@ -60,7 +59,6 @@ function hasAnyCap(caps: Set<string>, cap: Cap): boolean {
 function buildSections(
   validationCount: number,
   contratsRhCount: number,
-  vocab: ReturnType<typeof useVocab>,
 ): NavSection[] {
   return [
     {
@@ -113,7 +111,7 @@ function buildSections(
         { title: "Intermittents", url: "/interimaires", icon: Briefcase, cap: "section.equipes" },
         { title: "Absences", url: "/absences", icon: CalendarOff, cap: "section.equipes" },
         {
-          title: vocab.validerHeures,
+          title: "Valider heures",
           url: "/validation-heures",
           icon: ClipboardCheck,
           cap: "action.validate_hours",
@@ -180,12 +178,11 @@ export function AppSidebar() {
   const validationCount = useValidationCount();
   const contratsRhCount = useContratsRhCount();
   const { data: caps, isLoading: capsLoading } = useCapabilitiesSet();
-  const vocab = useVocab();
   const simpleMode = useFeatureFlag("mode_simplifie_managers");
 
   // Filtrage : un item est visible si pas de cap OU cap satisfaite.
   // "Aujourd'hui" reste TOUJOURS visible (pas de cap déclarée).
-  const rawSections = buildSections(validationCount, contratsRhCount, vocab);
+  const rawSections = buildSections(validationCount, contratsRhCount);
   const capFiltered = capsLoading
     ? // Pendant le load : on n'affiche que les items toujours visibles
       // (évite le flash "toutes les sections puis disparition").

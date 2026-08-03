@@ -15,8 +15,6 @@
  * Le bandeau est dismissible (session-only) — `dismissKey` permet de varier
  * la persistance par contexte (clé stockée en sessionStorage).
  *
- * Gating : se masque automatiquement si le feature flag `equipes_3_niveaux_lecture`
- * est OFF (le hook est appelé quand même côté caller mais le bandeau ne rend rien).
  */
 import { useState, useEffect } from "react";
 import { AlertTriangle, Calendar, CheckCircle2, Sparkles, X } from "lucide-react";
@@ -27,7 +25,6 @@ import {
   type HeritageSaisieResult,
   type HeritageSaisieInput,
 } from "@/hooks/use-heritage-saisie-heures";
-import { useFeatureFlag } from "@/hooks/use-feature-flag";
 
 interface Props extends HeritageSaisieInput {
   position?: "inline" | "sticky";
@@ -101,7 +98,6 @@ export function SaisieHeritageBandeau({
   dismissKey,
   className,
 }: Props) {
-  const flagOn = useFeatureFlag("equipes_3_niveaux_lecture");
   const { data: heritage } = useHeritageSaisieHeures({
     employeId,
     affaireId,
@@ -118,7 +114,7 @@ export function SaisieHeritageBandeau({
   }, [sessionKey]);
 
   const visual = visualFor(heritage ?? null);
-  if (!flagOn || !visual || dismissed) return null;
+  if (!visual || dismissed) return null;
 
   const Icon = visual.icon;
   const showCastingLink = heritage && (heritage.niveau === 2 || heritage.niveau === 3) && affaireId;

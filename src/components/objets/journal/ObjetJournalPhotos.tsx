@@ -122,12 +122,11 @@ export function ObjetJournalPhotos({ objetId, affaireId }: Props) {
   const [comment, setComment] = useState("");
   const [uploading, setUploading] = useState(false);
 
-  // Capabilities existantes du catalogue : la lecture/commentaire suit `objet.view`
-  // (déjà validée en beforeLoad), l'upload et la suppression de photo suivent
-  // `action.upload_photo` / `action.delete_photo`.
-  const canEdit = useCapability("objet.view");
-  const canUpload = useCapability("action.upload_photo");
-  const canDeletePhoto = useCapability("action.delete_photo");
+  // Capabilities dédiées à la fiche objet (bloc 8.1) : commentaire `objet.edit`,
+  // upload `objet.photo.upload`, suppression `objet.photo.delete` (admin only).
+  const canEdit = useCapability("objet.edit");
+  const canUpload = useCapability("objet.photo.upload");
+  const canDeletePhoto = useCapability("objet.photo.delete");
 
   const fetchFeed = useServerFn(getObjetFeed);
   const addComment = useServerFn(addObjetCommentaire);

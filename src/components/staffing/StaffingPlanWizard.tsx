@@ -23,7 +23,6 @@ import {
   createStaffingPlan,
 } from "@/lib/server-fns/staffing-plan-create.functions";
 import { ObjetRefLabel } from "./ObjetRefLabel";
-import { useVocab } from "@/hooks/use-vocab";
 
 interface Props {
   affaireId: string;
@@ -72,7 +71,6 @@ export function StaffingPlanWizard({
   compact = false,
   onCreated,
 }: Props) {
-  const vocab = useVocab();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -283,7 +281,7 @@ export function StaffingPlanWizard({
             <div className="flex items-center gap-2">
               <h2 className="text-lg font-semibold text-foreground">Planning fabrication</h2>
               <Badge variant="secondary" className="gap-1">
-                <Sparkles className="h-3 w-3" /> {vocab.autoRemplir}
+                <Sparkles className="h-3 w-3" /> Auto-remplir
               </Badge>
             </div>
             <p className="mt-1 text-xs text-muted-foreground">

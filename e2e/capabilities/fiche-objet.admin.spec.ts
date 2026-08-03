@@ -2,7 +2,6 @@
  * Lot 8.2 — Fiche Objet : smoke admin (édition tous champs + bascule heures).
  *
  * Pré-requis :
- *   - flag `fiche_objet_v1` activé pour l'admin (ou globalement),
  *   - une affaire 5XXX avec au moins 1 objet de fab (seed standard),
  *   - storageState admin disponible.
  *

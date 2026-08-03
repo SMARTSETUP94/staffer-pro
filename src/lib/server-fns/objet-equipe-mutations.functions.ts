@@ -70,8 +70,8 @@ interface PublishedStep {
   plan_id: string;
 }
 
-/** Récupère les steps du plan PUBLIÉ lié à un objet, pour un métier optionnel. */
-async function loadPublishedStepsForObjet(
+/** Récupère les steps du plan actif (published, sinon draft) lié à un objet, pour un métier optionnel. */
+async function loadActiveStepsForObjet(
   supabase: SupaCtx,
   objetId: string,
   metierId?: number
@@ -136,7 +136,7 @@ export const autoStaffObjetEquipe = createServerFn({ method: "POST" })
     const { supabase } = context;
     await assertCanManageEquipe(supabase);
 
-    const { steps, planId } = await loadPublishedStepsForObjet(supabase, data.objetId);
+    const { steps, planId } = await loadActiveStepsForObjet(supabase, data.objetId);
     if (steps.length === 0 || !planId) {
       return { ok: false, status: "no_plan", filled: 0, skipped: 0, per_step: [] };
     }
@@ -325,7 +325,7 @@ export const addManualMemberToObjet = createServerFn({ method: "POST" })
     await assertCanManageEquipe(supabase);
 
     const presence = data.presencePct ?? 100;
-    const { steps, planId } = await loadPublishedStepsForObjet(
+    const { steps, planId } = await loadActiveStepsForObjet(
       supabase,
       data.objetId,
       data.metierId
@@ -450,7 +450,7 @@ export const removeMemberFromObjet = createServerFn({ method: "POST" })
     const { supabase } = context;
     await assertCanManageEquipe(supabase);
 
-    const { steps } = await loadPublishedStepsForObjet(supabase, data.objetId, data.metierId);
+    const { steps } = await loadActiveStepsForObjet(supabase, data.objetId, data.metierId);
     if (steps.length === 0) return { ok: true, deleted: 0 };
 
     const stepIds = steps.map((s) => s.id);

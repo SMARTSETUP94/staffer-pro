@@ -19,7 +19,6 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
 import { normalizeForMatch as normalize } from "@/lib/string-normalize";
 import { generateContratV1 } from "@/lib/contrats-signature";
-import { useVocab } from "@/hooks/use-vocab";
 
 export const Route = createFileRoute("/_app/staffer-mobile")({
   beforeLoad: () => requireCapability("mobile.staffer_rapide"),
@@ -50,7 +49,6 @@ interface MetierOption {
 }
 
 function StafferMobile() {
-  const vocab = useVocab();
   const [searchEmploye, setSearchEmploye] = useState("");
   const [searchChantier, setSearchChantier] = useState("");
   const [employeId, setEmployeId] = useState<string | null>(null);
@@ -207,7 +205,7 @@ function StafferMobile() {
 
   return (
     <div className="mx-auto max-w-xl space-y-4 p-4">
-      <PageHeader title={vocab.assignerPonctuel} description="Affectation mobile + contrat intermittent auto" />
+      <PageHeader title="Assigner ponctuel" description="Affectation mobile + contrat intermittent auto" />
 
       <Card>
         <CardHeader>

@@ -10,10 +10,8 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { ChargeDrillAffaire } from "@/lib/charge-atelier";
-import { useFeatureFlag } from "@/hooks/use-feature-flag";
 
 export function ChargeDrillList({ groupes }: { groupes: ChargeDrillAffaire[] }) {
-  const ficheObjetActive = useFeatureFlag("fiche_objet_v1");
   const parentRef = useRef<HTMLDivElement>(null);
   const virtualizer = useVirtualizer({
     count: groupes.length,
@@ -74,8 +72,7 @@ export function ChargeDrillList({ groupes }: { groupes: ChargeDrillAffaire[] }) 
                       Ouvrir le planning atelier →
                     </Link>
                   </Button>
-                  {ficheObjetActive &&
-                    g.objets.map((o) => (
+                  {g.objets.map((o) => (
                       <Button
                         key={o.id}
                         asChild
