@@ -211,7 +211,7 @@ const LIV_FIELDS: Record<string, string[]> = {
   nuit: ["nuit", "travail de nuit"],
   nbTech: ["nb tech", "nb techniciens", "techniciens"],
   semi: ["semi", "nb semi"],
-  m3_20: ["20 m3", "20m3", "nb 20 m3"],
+  m3_20: ["20 m3", "20m3", "20 m", "20m", "nb 20 m3", "nb 20m3"],
   nature: ["nature de la prestation", "nature prestation", "nature"],
   notes: ["notes", "commentaire", "remarques"],
 };

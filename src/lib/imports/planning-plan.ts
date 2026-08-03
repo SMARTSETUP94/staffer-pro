@@ -319,11 +319,16 @@ export function buildPlanningPlan(parsed: ParsedPlanning, ctx: PlanBuildContext)
       m.date_montage = liv.debut ?? m.date_montage ?? null;
       if (liv.fin) m.date_demontage = m.date_demontage ?? null;
     }
-    if (liv.nbTech != null) m.montage_nb_techniciens = Math.round(liv.nbTech);
+    // Les caractéristiques logistiques sont portées par la ligne de MONTAGE :
+    // une ligne de démontage ne doit pas écraser l'effectif ni les véhicules.
+    const porteLogistique = kind !== "demontage";
+    if (porteLogistique) {
+      if (liv.nbTech != null) m.montage_nb_techniciens = Math.round(liv.nbTech);
+      if (liv.semi != null) m.montage_nb_semi = Math.round(liv.semi);
+      if (liv.m3_20 != null) m.montage_nb_20m3 = Math.round(liv.m3_20);
+      if (liv.nature) m.montage_nature_prestation = liv.nature;
+    }
     if (liv.nuit) m.montage_travail_nuit = true;
-    if (liv.semi != null) m.montage_nb_semi = Math.round(liv.semi);
-    if (liv.m3_20 != null) m.montage_nb_20m3 = Math.round(liv.m3_20);
-    if (liv.nature) m.montage_nature_prestation = liv.nature;
     if (liv.notes) m.montage_notes = [m.montage_notes, liv.notes].filter(Boolean).join(" · ");
     affaire.montage = m;
   }
