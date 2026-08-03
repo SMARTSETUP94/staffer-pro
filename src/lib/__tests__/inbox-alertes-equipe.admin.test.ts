@@ -3,7 +3,7 @@
  *
  * Vérifie :
  * - 4 sources d'alertes : sous_dim, depassement, cumul_100, hors_equipe
- * - Flag `equipes_3_niveaux_alertes` gère l'affichage
+ * - Les alertes équipe sont affichées d'office (opt-in par affaire)
  * - Opt-in par affaire `affaire_alertes_optin`
  */
 import { describe, it, expect } from "vitest";
@@ -34,12 +34,6 @@ describe("D5 / inbox alertes équipe (admin)", () => {
     const map = toOptinMap(rows);
     expect(map.sous_dim).toBe(true);
     expect(map.depassement).toBe(false);
-  });
-
-  it("flag equipes_3_niveaux_alertes contrôle l'affichage", () => {
-    const flagEnabled = true;
-    const flagDisabled = false;
-    expect(flagEnabled && !flagDisabled).toBe(true);
   });
 
   it("alertes excluent CUMUL_OVER_100 de la CTE divergence", () => {

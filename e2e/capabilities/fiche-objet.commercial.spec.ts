@@ -2,7 +2,7 @@
  * Lot 8.2b — Fiche Objet : matrice commercial.
  *
  * Pré-requis : storageState commercial seedé (cf. e2e/seed.ts) +
- * flag `fiche_objet_v1` ON pour cet user.
+ * fiche objet accessible pour cet user.
  *
  * Attendu :
  *   - Voit la fiche (cap objet.view ON).
@@ -26,7 +26,7 @@ test.describe("fiche-objet :: commercial (commentaire only)", () => {
 
     const ficheLink = page.getByTestId("objet-fiche-link").first();
     if ((await ficheLink.count()) === 0) {
-      test.skip(true, "Lien Fiche absent — flag fiche_objet_v1 probablement OFF pour ce user");
+      test.skip(true, "Lien Fiche absent — aucun objet fab exploitable");
       return;
     }
     await ficheLink.click();
