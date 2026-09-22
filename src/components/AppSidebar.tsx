@@ -225,7 +225,11 @@ export function AppSidebar() {
         .map((s) => ({ ...s, items: s.items.filter((it) => hasAnyCap(caps, it.cap)) }))
         .filter((s) => s.items.length > 0);
 
-  const sections = simpleMode ? applySimpleMode(capFiltered) : capFiltered;
+  const sections = deploiementCA
+    ? applyDeploiementCAMode(capFiltered)
+    : simpleMode
+      ? applySimpleMode(capFiltered)
+      : capFiltered;
 
 
   const isActive = (url: string) =>
