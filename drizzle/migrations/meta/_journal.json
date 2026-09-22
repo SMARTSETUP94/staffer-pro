@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1790051237534,
+      "tag": "0000_affaire_planning_metier_et_flag_deploiement_ca",
+      "breakpoints": true
+    }
+  ]
+}

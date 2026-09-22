@@ -457,6 +457,89 @@ export type Database = {
         }
         Relationships: []
       }
+      affaire_planning_metier: {
+        Row: {
+          affaire_id: string
+          commentaire: string | null
+          created_at: string
+          date_debut: string
+          date_fin: string
+          id: string
+          metier_id: number
+          updated_at: string
+        }
+        Insert: {
+          affaire_id: string
+          commentaire?: string | null
+          created_at?: string
+          date_debut: string
+          date_fin: string
+          id?: string
+          metier_id: number
+          updated_at?: string
+        }
+        Update: {
+          affaire_id?: string
+          commentaire?: string | null
+          created_at?: string
+          date_debut?: string
+          date_fin?: string
+          id?: string
+          metier_id?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affaire_planning_metier_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "affaires"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affaire_planning_metier_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "v_affaire_consommation"
+            referencedColumns: ["affaire_id"]
+          },
+          {
+            foreignKeyName: "affaire_planning_metier_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "v_affaires_avec_plan_status"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affaire_planning_metier_metier_id_fkey"
+            columns: ["metier_id"]
+            isOneToOne: false
+            referencedRelation: "metiers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affaire_planning_metier_metier_id_fkey"
+            columns: ["metier_id"]
+            isOneToOne: false
+            referencedRelation: "v_atelier_charge_jour"
+            referencedColumns: ["metier_id"]
+          },
+          {
+            foreignKeyName: "affaire_planning_metier_metier_id_fkey"
+            columns: ["metier_id"]
+            isOneToOne: false
+            referencedRelation: "v_devis_consommation"
+            referencedColumns: ["metier_id"]
+          },
+          {
+            foreignKeyName: "affaire_planning_metier_metier_id_fkey"
+            columns: ["metier_id"]
+            isOneToOne: false
+            referencedRelation: "v_objet_heures_consolidees"
+            referencedColumns: ["metier_id"]
+          },
+        ]
+      }
       affaires: {
         Row: {
           acces_livraison: string | null
