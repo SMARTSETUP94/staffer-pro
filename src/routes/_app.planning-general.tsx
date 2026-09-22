@@ -36,9 +36,9 @@ import {
 import { cn } from "@/lib/utils";
 
 const searchSchema = z.object({
-  q: fallback(z.string(), "").default(""),
-  horizon: fallback(z.string(), "3m").default("3m"),
-  prospects: fallback(z.string(), "1").default("1"),
+  q: fallback(z.string().optional(), undefined),
+  horizon: fallback(z.string().optional(), undefined),
+  prospects: fallback(z.string().optional(), undefined),
 });
 
 export const Route = createFileRoute("/_app/planning-general")({
@@ -78,7 +78,8 @@ function PlanningGeneralPage() {
   });
 
   const today = useMemo(() => new Date(new Date().toDateString()), []);
-  const horizon = HORIZONS[search.horizon] ? search.horizon : "3m";
+  const horizonParam = search.horizon ?? "3m";
+  const horizon = HORIZONS[horizonParam] ? horizonParam : "3m";
   const from = useMemo(() => addDays(startOfWeek(today, { weekStartsOn: 1 }), -7), [today]);
   const to = useMemo(() => addDays(from, HORIZONS[horizon].days), [from, horizon]);
   const totalDays = differenceInCalendarDays(to, from) + 1;
@@ -108,7 +109,7 @@ function PlanningGeneralPage() {
   const includeProspects = search.prospects === "1";
 
   const affaires = useMemo(() => {
-    const q = search.q.trim().toLowerCase();
+    const q = (search.q ?? "").trim().toLowerCase();
     return (data?.affaires ?? [])
       .filter((a) => includeProspects || !isProspectAffaire(a))
       .filter((a) => {
@@ -189,7 +190,7 @@ function PlanningGeneralPage() {
         <div className="relative min-w-[220px] flex-1">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            value={search.q}
+            value={search.q ?? ""}
             onChange={(e) => setParam({ q: e.target.value })}
             placeholder="Numéro, nom, client…"
             className="pl-9"

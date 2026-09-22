@@ -37,7 +37,7 @@ function MesMissionsPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const fetchMissions = useServerFn(getMesMissions);
-  const { scope } = Route.useSearch();
+  const { scope = "mine" } = Route.useSearch();
   void navigate;
 
   const { data, isLoading, isError, refetch, isFetching } = useQuery({

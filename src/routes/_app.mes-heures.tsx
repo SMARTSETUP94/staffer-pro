@@ -23,7 +23,7 @@ function MesHeuresPage() {
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
   const { isEmployePreview, previewEmployeId } = usePreview();
   const { employeId } = useResolvedEmploye();
-  const { scope } = Route.useSearch();
+  const { scope = "mine" } = Route.useSearch();
   const override = isEmployePreview ? (previewEmployeId ?? employeId) : null;
 
   return (
