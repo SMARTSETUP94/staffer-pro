@@ -53,7 +53,7 @@ export const Route = createFileRoute("/_app/affaires/$affaireId/grille")({
 function GrillePage() {
   const { affaireId } = Route.useParams();
   const search = Route.useSearch();
-  const navigate = useNavigate();
+  const navigate = Route.useNavigate();
   const canEdit = useCapability("casting.edit_phase_fabrication");
 
   const { query, setCell, renameObjet, createObjet, createLot, setObjetLot, prefillFromDevis } =
