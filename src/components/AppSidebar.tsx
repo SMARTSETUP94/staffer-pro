@@ -172,6 +172,34 @@ function applySimpleMode(sections: NavSection[]): NavSection[] {
     .filter((s) => s.items.length > 0);
 }
 
+/**
+ * Vue « déploiement chargés d'affaires » (feature flag `deploiement_charges_affaires`).
+ * Quand elle est active, le menu ne montre que le périmètre de suivi des
+ * affaires déployé aux chargés d'affaires :
+ *  • Aujourd'hui, Chantiers, Planning général, Devis, Pipeline opportunités, Échéances
+ *  • Admin → conservé pour que l'admin puisse désactiver le mode
+ * Prend le pas sur `mode_simplifie_managers`. Aucun blocage d'URL.
+ */
+const CA_MODE_SECTIONS = new Set(["Admin"]);
+const CA_MODE_URLS = new Set([
+  "/",
+  "/affaires",
+  "/planning-general",
+  "/devis",
+  "/opportunites",
+  "/echeances",
+]);
+
+function applyDeploiementCAMode(sections: NavSection[]): NavSection[] {
+  return sections
+    .map((s) =>
+      CA_MODE_SECTIONS.has(s.label)
+        ? s
+        : { ...s, items: s.items.filter((it) => CA_MODE_URLS.has(it.url)) },
+    )
+    .filter((s) => s.items.length > 0);
+}
+
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
