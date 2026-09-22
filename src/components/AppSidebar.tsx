@@ -210,6 +210,7 @@ export function AppSidebar() {
   const contratsRhCount = useContratsRhCount();
   const { data: caps, isLoading: capsLoading } = useCapabilitiesSet();
   const simpleMode = useFeatureFlag("mode_simplifie_managers");
+  const deploiementCA = useFeatureFlag("deploiement_charges_affaires");
 
   // Filtrage : un item est visible si pas de cap OU cap satisfaite.
   // "Aujourd'hui" reste TOUJOURS visible (pas de cap déclarée).
