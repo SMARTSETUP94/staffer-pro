@@ -11,7 +11,7 @@ import { requireCapability } from "@/lib/capability-guard";
 
 export const Route = createFileRoute("/_app/mes-heures")({
   beforeLoad: () => requireCapability("mes_heures.view"),
-  validateSearch: (s: Record<string, unknown>): { scope: UrlScope } => {
+  validateSearch: (s: Record<string, unknown>): { scope?: UrlScope } => {
     const r = s.scope;
     return { scope: r === "team" || r === "all" ? r : "mine" };
   },
