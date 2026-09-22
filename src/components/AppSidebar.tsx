@@ -5,6 +5,7 @@ import {
   UserCircle, FileText, Trophy, Map, ClipboardList,
   Truck, Palette, Warehouse, Hammer, Wrench, BadgeCheck, Lightbulb,
   FileSignature, Inbox, PackageCheck, UsersRound, Briefcase, Settings, TrendingUp, LayoutGrid,
+  GanttChart,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
