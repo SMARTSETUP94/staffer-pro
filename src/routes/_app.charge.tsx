@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
 import { z } from "zod";
 import {
@@ -67,7 +67,7 @@ const csvToList = (v: string | undefined) =>
 
 function ChargePage() {
   const search = Route.useSearch();
-  const navigate = useNavigate();
+  const navigate = Route.useNavigate();
 
   const debut = search.debut ?? startOfWeekISO(toISO(new Date()));
   const semaines = [1, 4, 8].includes(search.semaines ?? 0) ? search.semaines! : 4;

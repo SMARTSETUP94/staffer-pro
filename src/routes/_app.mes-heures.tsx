@@ -11,7 +11,7 @@ import { requireCapability } from "@/lib/capability-guard";
 
 export const Route = createFileRoute("/_app/mes-heures")({
   beforeLoad: () => requireCapability("mes_heures.view"),
-  validateSearch: (s: Record<string, unknown>): { scope: UrlScope } => {
+  validateSearch: (s: Record<string, unknown>): { scope?: UrlScope } => {
     const r = s.scope;
     return { scope: r === "team" || r === "all" ? r : "mine" };
   },
@@ -23,7 +23,7 @@ function MesHeuresPage() {
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
   const { isEmployePreview, previewEmployeId } = usePreview();
   const { employeId } = useResolvedEmploye();
-  const { scope } = Route.useSearch();
+  const { scope = "mine" } = Route.useSearch();
   const override = isEmployePreview ? (previewEmployeId ?? employeId) : null;
 
   return (

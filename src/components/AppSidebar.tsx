@@ -5,6 +5,7 @@ import {
   UserCircle, FileText, Trophy, Map, ClipboardList,
   Truck, Palette, Warehouse, Hammer, Wrench, BadgeCheck, Lightbulb,
   FileSignature, Inbox, PackageCheck, UsersRound, Briefcase, Settings, TrendingUp, LayoutGrid,
+  GanttChart,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -80,6 +81,7 @@ function buildSections(
       items: [
         // L6-A : Inbox fusionnée dans `/` (item « Aujourd'hui »).
         { title: "Échéances", url: "/echeances", icon: CalendarClock, cap: "section.affaires" },
+        { title: "Planning général", url: "/planning-general", icon: GanttChart, cap: "section.affaires" },
         { title: "Tableau d'atelier", url: "/atelier", icon: LayoutGrid, cap: "section.planning_fab" },
         { title: "Charge atelier", url: "/charge", icon: BarChart3, cap: "section.planning_fab" },
         { title: "Planning fab", url: "/planning", icon: Calendar, cap: "section.planning_fab" },
@@ -170,6 +172,34 @@ function applySimpleMode(sections: NavSection[]): NavSection[] {
     .filter((s) => s.items.length > 0);
 }
 
+/**
+ * Vue « déploiement chargés d'affaires » (feature flag `deploiement_charges_affaires`).
+ * Quand elle est active, le menu ne montre que le périmètre de suivi des
+ * affaires déployé aux chargés d'affaires :
+ *  • Aujourd'hui, Chantiers, Planning général, Devis, Pipeline opportunités, Échéances
+ *  • Admin → conservé pour que l'admin puisse désactiver le mode
+ * Prend le pas sur `mode_simplifie_managers`. Aucun blocage d'URL.
+ */
+const CA_MODE_SECTIONS = new Set(["Admin"]);
+const CA_MODE_URLS = new Set([
+  "/",
+  "/affaires",
+  "/planning-general",
+  "/devis",
+  "/opportunites",
+  "/echeances",
+]);
+
+function applyDeploiementCAMode(sections: NavSection[]): NavSection[] {
+  return sections
+    .map((s) =>
+      CA_MODE_SECTIONS.has(s.label)
+        ? s
+        : { ...s, items: s.items.filter((it) => CA_MODE_URLS.has(it.url)) },
+    )
+    .filter((s) => s.items.length > 0);
+}
+
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
@@ -180,6 +210,7 @@ export function AppSidebar() {
   const contratsRhCount = useContratsRhCount();
   const { data: caps, isLoading: capsLoading } = useCapabilitiesSet();
   const simpleMode = useFeatureFlag("mode_simplifie_managers");
+  const deploiementCA = useFeatureFlag("deploiement_charges_affaires");
 
   // Filtrage : un item est visible si pas de cap OU cap satisfaite.
   // "Aujourd'hui" reste TOUJOURS visible (pas de cap déclarée).
@@ -194,7 +225,11 @@ export function AppSidebar() {
         .map((s) => ({ ...s, items: s.items.filter((it) => hasAnyCap(caps, it.cap)) }))
         .filter((s) => s.items.length > 0);
 
-  const sections = simpleMode ? applySimpleMode(capFiltered) : capFiltered;
+  const sections = deploiementCA
+    ? applyDeploiementCAMode(capFiltered)
+    : simpleMode
+      ? applySimpleMode(capFiltered)
+      : capFiltered;
 
 
   const isActive = (url: string) =>

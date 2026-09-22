@@ -23,6 +23,7 @@ import { Route as AppSignalementsRouteImport } from './routes/_app.signalements'
 import { Route as AppSaisiePourEquipeRouteImport } from './routes/_app.saisie-pour-equipe'
 import { Route as AppRoadmapRouteImport } from './routes/_app.roadmap'
 import { Route as AppQuiEstOuRouteImport } from './routes/_app.qui-est-ou'
+import { Route as AppPlanningGeneralRouteImport } from './routes/_app.planning-general'
 import { Route as AppPlanningRouteImport } from './routes/_app.planning'
 import { Route as AppOpportunitesRouteImport } from './routes/_app.opportunites'
 import { Route as AppNotificationsRouteImport } from './routes/_app.notifications'
@@ -174,6 +175,11 @@ const AppRoadmapRoute = AppRoadmapRouteImport.update({
 const AppQuiEstOuRoute = AppQuiEstOuRouteImport.update({
   id: '/qui-est-ou',
   path: '/qui-est-ou',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPlanningGeneralRoute = AppPlanningGeneralRouteImport.update({
+  id: '/planning-general',
+  path: '/planning-general',
   getParentRoute: () => AppRoute,
 } as any)
 const AppPlanningRoute = AppPlanningRouteImport.update({
@@ -649,6 +655,7 @@ export interface FileRoutesByFullPath {
   '/notifications': typeof AppNotificationsRoute
   '/opportunites': typeof AppOpportunitesRouteWithChildren
   '/planning': typeof AppPlanningRoute
+  '/planning-general': typeof AppPlanningGeneralRoute
   '/qui-est-ou': typeof AppQuiEstOuRoute
   '/roadmap': typeof AppRoadmapRoute
   '/saisie-pour-equipe': typeof AppSaisiePourEquipeRoute
@@ -745,6 +752,7 @@ export interface FileRoutesByTo {
   '/notifications': typeof AppNotificationsRoute
   '/opportunites': typeof AppOpportunitesRouteWithChildren
   '/planning': typeof AppPlanningRoute
+  '/planning-general': typeof AppPlanningGeneralRoute
   '/qui-est-ou': typeof AppQuiEstOuRoute
   '/roadmap': typeof AppRoadmapRoute
   '/saisie-pour-equipe': typeof AppSaisiePourEquipeRoute
@@ -844,6 +852,7 @@ export interface FileRoutesById {
   '/_app/notifications': typeof AppNotificationsRoute
   '/_app/opportunites': typeof AppOpportunitesRouteWithChildren
   '/_app/planning': typeof AppPlanningRoute
+  '/_app/planning-general': typeof AppPlanningGeneralRoute
   '/_app/qui-est-ou': typeof AppQuiEstOuRoute
   '/_app/roadmap': typeof AppRoadmapRoute
   '/_app/saisie-pour-equipe': typeof AppSaisiePourEquipeRoute
@@ -945,6 +954,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/opportunites'
     | '/planning'
+    | '/planning-general'
     | '/qui-est-ou'
     | '/roadmap'
     | '/saisie-pour-equipe'
@@ -1041,6 +1051,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/opportunites'
     | '/planning'
+    | '/planning-general'
     | '/qui-est-ou'
     | '/roadmap'
     | '/saisie-pour-equipe'
@@ -1139,6 +1150,7 @@ export interface FileRouteTypes {
     | '/_app/notifications'
     | '/_app/opportunites'
     | '/_app/planning'
+    | '/_app/planning-general'
     | '/_app/qui-est-ou'
     | '/_app/roadmap'
     | '/_app/saisie-pour-equipe'
@@ -1315,6 +1327,13 @@ declare module '@tanstack/react-router' {
       path: '/qui-est-ou'
       fullPath: '/qui-est-ou'
       preLoaderRoute: typeof AppQuiEstOuRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/planning-general': {
+      id: '/_app/planning-general'
+      path: '/planning-general'
+      fullPath: '/planning-general'
+      preLoaderRoute: typeof AppPlanningGeneralRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/planning': {
@@ -2036,6 +2055,7 @@ interface AppRouteChildren {
   AppNotificationsRoute: typeof AppNotificationsRoute
   AppOpportunitesRoute: typeof AppOpportunitesRouteWithChildren
   AppPlanningRoute: typeof AppPlanningRoute
+  AppPlanningGeneralRoute: typeof AppPlanningGeneralRoute
   AppQuiEstOuRoute: typeof AppQuiEstOuRoute
   AppRoadmapRoute: typeof AppRoadmapRoute
   AppSaisiePourEquipeRoute: typeof AppSaisiePourEquipeRoute
@@ -2106,6 +2126,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppNotificationsRoute: AppNotificationsRoute,
   AppOpportunitesRoute: AppOpportunitesRouteWithChildren,
   AppPlanningRoute: AppPlanningRoute,
+  AppPlanningGeneralRoute: AppPlanningGeneralRoute,
   AppQuiEstOuRoute: AppQuiEstOuRoute,
   AppRoadmapRoute: AppRoadmapRoute,
   AppSaisiePourEquipeRoute: AppSaisiePourEquipeRoute,
