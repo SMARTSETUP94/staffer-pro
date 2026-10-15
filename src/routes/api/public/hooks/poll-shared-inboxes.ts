@@ -71,7 +71,7 @@ async function classify(key: string, msg: Msg, source: "logistique" | "devis"): 
     "Tu tries des emails entrants pour une société de scénographie événementielle (SETUP Paris). " +
     hint +
     "Catégories : 'candidature', 'opportunite' (demande de devis, projet client), 'logistique' (transport, livraison, enlèvement, accès site, horaires), 'pub', 'autre'. " +
-    "Si candidature, devine le métier parmi : construction, métallerie, peinture, numérique, tapisserie, machiniste, logistique, suivi_projet. Réponds STRICTEMENT en JSON.";
+    "Si candidature, devine le métier parmi : construction, métallerie, peinture, numérique, tapisserie, machiniste, logistique, suivi_projet. Si opportunité, remplis les champs opp_* (client, projet, taille estimée : tres_petit <5k€, petit 5-20k€, moyen 20-80k€, gros 80-250k€, tres_gros >250k€, date, lieu, besoins), sinon mets-les à null. Réponds STRICTEMENT en JSON.";
   const res = await fetch(AI_GW, {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}`, "X-Lovable-AIG-SDK": "raw-fetch" },
