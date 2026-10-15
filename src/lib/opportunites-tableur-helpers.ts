@@ -118,6 +118,29 @@ export function nextCell(
   return null;
 }
 
+/**
+ * v0.50 — Contrôles d'une ligne tableur qui servent à éditer une valeur.
+ * Un clic dessus ne doit JAMAIS ouvrir la fiche opportunité.
+ */
+export const TABLEUR_EDITABLE_SELECTOR =
+  "input, textarea, select, button, a, [role='combobox'], [role='listbox']";
+
+/**
+ * v0.50 — Vrai si le clic cible un champ éditable actif (on reste sur la saisie),
+ * faux si la cible est une zone morte de la ligne ou un champ désactivé
+ * (lecture seule) → dans ce cas le clic ouvre la fiche opportunité.
+ * Accepte tout objet muni de `closest` (Element réel du DOM ou faux objet en test).
+ */
+export function isTableurEditableTarget(target: unknown): boolean {
+  if (!target || typeof (target as { closest?: unknown }).closest !== "function") {
+    return true;
+  }
+  const el = target as { closest: (selector: string) => unknown };
+  const hit = el.closest(TABLEUR_EDITABLE_SELECTOR) as { disabled?: boolean } | null;
+  if (!hit) return false;
+  return hit.disabled !== true;
+}
+
 /** Recherche fuzzy maison sur client + nom + numéro. */
 export function fuzzySearchRow(row: TableurRow, query: string): boolean {
   if (!query.trim()) return true;
