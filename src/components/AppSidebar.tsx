@@ -1,4 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
+
 import type { LucideIcon } from "lucide-react";
 import {
   BarChart3, Clock, Calendar, CalendarClock, Building2, Users, FileDown, ClipboardCheck, LogOut, CalendarOff,
@@ -202,6 +203,36 @@ function applyDeploiementCAMode(sections: NavSection[]): NavSection[] {
     .filter((s) => s.items.length > 0);
 }
 
+/**
+ * Vue « déploiement logistique + opportunités » (feature flag `deploiement_logistique_opps`).
+ * Quand elle est active, le menu ne montre que :
+ *  • Aujourd'hui, Chantiers (création de chantier), Pipeline opportunités, Demandes clients
+ *  • Logistique : Véhicules, Planning véhicules, Demandes transport
+ *  • Admin → conservé pour que l'admin puisse désactiver le mode
+ * Prend le pas sur `deploiement_charges_affaires` et `mode_simplifie_managers`.
+ * Aucun blocage d'URL.
+ */
+const LO_MODE_SECTIONS = new Set(["Admin"]);
+const LO_MODE_URLS = new Set([
+  "/",
+  "/affaires",
+  "/opportunites",
+  "/demandes-clients",
+  "/flotte",
+  "/logistique/vehicules-planning",
+  "/export/demandes-devis",
+]);
+
+function applyLogistiqueOppsMode(sections: NavSection[]): NavSection[] {
+  return sections
+    .map((s) =>
+      LO_MODE_SECTIONS.has(s.label)
+        ? s
+        : { ...s, items: s.items.filter((it) => LO_MODE_URLS.has(it.url)) },
+    )
+    .filter((s) => s.items.length > 0);
+}
+
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
@@ -213,6 +244,7 @@ export function AppSidebar() {
   const { data: caps, isLoading: capsLoading } = useCapabilitiesSet();
   const simpleMode = useFeatureFlag("mode_simplifie_managers");
   const deploiementCA = useFeatureFlag("deploiement_charges_affaires");
+  const deploiementLO = useFeatureFlag("deploiement_logistique_opps");
 
   // Filtrage : un item est visible si pas de cap OU cap satisfaite.
   // "Aujourd'hui" reste TOUJOURS visible (pas de cap déclarée).
@@ -227,11 +259,13 @@ export function AppSidebar() {
         .map((s) => ({ ...s, items: s.items.filter((it) => hasAnyCap(caps, it.cap)) }))
         .filter((s) => s.items.length > 0);
 
-  const sections = deploiementCA
-    ? applyDeploiementCAMode(capFiltered)
-    : simpleMode
-      ? applySimpleMode(capFiltered)
-      : capFiltered;
+  const sections = deploiementLO
+    ? applyLogistiqueOppsMode(capFiltered)
+    : deploiementCA
+      ? applyDeploiementCAMode(capFiltered)
+      : simpleMode
+        ? applySimpleMode(capFiltered)
+        : capFiltered;
 
 
   const isActive = (url: string) =>
