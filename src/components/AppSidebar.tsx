@@ -161,7 +161,7 @@ function buildSections(
  * L'item « Aujourd'hui » (/) reste toujours accessible.
  * Aucun blocage d'URL : les autres pages restent joignables en direct.
  */
-const SIMPLE_MODE_SECTIONS = new Set(["Pilotage", "Admin"]);
+const SIMPLE_MODE_SECTIONS = new Set(["Suivi des affaires", "Admin"]);
 const SIMPLE_MODE_ALWAYS_URLS = new Set(["/"]);
 
 function applySimpleMode(sections: NavSection[]): NavSection[] {
