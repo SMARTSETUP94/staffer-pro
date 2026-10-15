@@ -17,8 +17,9 @@ import { Button } from "@/components/ui/button";
 import { useVehicules } from "@/hooks/use-vehicules";
 import { useTrajetsRange, useAffairesLite } from "@/hooks/use-trajets-range";
 import {
-  filterTrajets, CATEGORIE_LABEL, STATUT_LABEL, type TrajetFilters,
+  filterTrajets, libelleCategorie, STATUT_LABEL, type TrajetFilters,
 } from "@/lib/trajets-stats";
+import { useTrajetCategories } from "@/hooks/use-trajets";
 
 const TODAY = new Date().toISOString().slice(0, 10);
 const SIX_MONTHS_AGO = (() => {
@@ -33,6 +34,7 @@ export function FlotteHistoriqueTab() {
   const { trajets, isLoading } = useTrajetsRange(dateFrom, dateTo);
   const { vehicules } = useVehicules();
   const affaires = useAffairesLite();
+  const { data: categoriesPerso = [] } = useTrajetCategories();
 
   const [filters, setFilters] = useState<TrajetFilters>({});
 
@@ -97,14 +99,17 @@ export function FlotteHistoriqueTab() {
               <Select
                 value={filters.categorie ?? "all"}
                 onValueChange={(v) =>
-                  setFilters((f) => ({ ...f, categorie: v === "all" ? null : (v as TrajetFilters["categorie"]) }))
+                  setFilters((f) => ({ ...f, categorie: v === "all" ? null : v }))
                 }
               >
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Toutes</SelectItem>
                   {(["pose", "depose", "livraison_fourniture", "recuperation_materiel", "autre"] as const).map((c) => (
-                    <SelectItem key={c} value={c}>{CATEGORIE_LABEL[c]}</SelectItem>
+                    <SelectItem key={c} value={c}>{libelleCategorie({ categorie: c })}</SelectItem>
+                  ))}
+                  {categoriesPerso.map((c) => (
+                    <SelectItem key={c.id} value={`perso:${c.nom}`}>{c.nom}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -175,7 +180,7 @@ export function FlotteHistoriqueTab() {
                         {new Date(t.date + "T00:00:00").toLocaleDateString("fr-FR")}
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline" className="text-xs">{CATEGORIE_LABEL[t.categorie]}</Badge>
+                        <Badge variant="outline" className="text-xs">{libelleCategorie(t)}</Badge>
                       </TableCell>
                       <TableCell className="text-xs">
                         <div className="truncate max-w-[280px]" title={`${t.adresse_depart} → ${t.adresse_arrivee}`}>
