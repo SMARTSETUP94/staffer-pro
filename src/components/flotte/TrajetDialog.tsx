@@ -266,6 +266,7 @@ export function TrajetDialog({
         adresse_arrivee_favorite_id: adresseArriveeFavId,
         categorie: (categorieLibre ? "autre" : categorie) as TrajetCategorie,
         categorie_libre: categorieLibre || null,
+        kilometrage: kilometrage ? parseFloat(kilometrage) : null,
         notes: sousTraitance ? demandeText || notes : notes,
         prestataire: sousTraitance ? (prestataire.trim() || null) : null,
         aller_retour: allerRetour,
@@ -539,14 +540,45 @@ export function TrajetDialog({
             </div>
             <div>
               <Label>Catégorie</Label>
-              <Select value={categorie} onValueChange={(v) => setCategorie(v as TrajetCategorie)}>
+              <Select
+                value={categorieValue}
+                onValueChange={(v) => {
+                  if (v === "__new__") { setCategorieLibre(""); return; }
+                  if (v.startsWith("perso:")) {
+                    setCategorieLibre(v.slice("perso:".length));
+                    setCategorie("autre");
+                    return;
+                  }
+                  setCategorieLibre("");
+                  setCategorie(v as TrajetCategorie);
+                }}
+              >
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {Object.entries(CATEGORIE_LABEL).map(([k, v]) => (
                     <SelectItem key={k} value={k}>{v}</SelectItem>
                   ))}
+                  {categoriesPerso.map((c) => (
+                    <SelectItem key={c.id} value={`perso:${c.nom}`}>{c.nom}</SelectItem>
+                  ))}
+                  <SelectItem value="__new__">+ Nouvelle catégorie…</SelectItem>
                 </SelectContent>
               </Select>
+              {categorieValue === "__new__" && (
+                <div className="mt-2 flex gap-2">
+                  <Input
+                    value={newCatNom}
+                    onChange={(e) => setNewCatNom(e.target.value)}
+                    placeholder="Nom de la catégorie (ex : Découpe)"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") { e.preventDefault(); void handleCreateCategorie(); }
+                    }}
+                  />
+                  <Button type="button" size="sm" variant="outline" onClick={() => void handleCreateCategorie()}>
+                    Créer
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
 
