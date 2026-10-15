@@ -4,6 +4,10 @@ import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Inbox, Loader2, Sparkles, Trophy, X } from "lucide-react";
 import { toast } from "sonner";
+import { useServerFn } from "@tanstack/react-start";
+import { useCapability } from "@/hooks/use-capability";
+import { reanalyseSharedInboxes } from "@/lib/server-fns/shared-inbox-reanalyse.functions";
+import { RefreshCw } from "lucide-react";
 import { requireCapability } from "@/lib/capability-guard";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
@@ -62,6 +66,23 @@ function DemandesClientsPage() {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<"todo" | "done" | "dismissed">("todo");
   const [current, setCurrent] = useState<Row | null>(null);
+  const isAdmin = useCapability("section.admin");
+  const reanalyse = useServerFn(reanalyseSharedInboxes);
+  const [reanalysing, setReanalysing] = useState(false);
+  async function runReanalyse() {
+    setReanalysing(true);
+    try {
+      const r = await reanalyse({ data: { limit: 60 } });
+      toast.success(`Analyse relancée : ${r.updated}/${r.total} emails mis à jour`, {
+        description: r.errors.length ? r.errors.join(" · ") : undefined,
+      });
+      await load();
+    } catch (e) {
+      toast.error("Relance impossible", { description: (e as Error).message });
+    } finally {
+      setReanalysing(false);
+    }
+  }
 
   async function load() {
     setLoading(true);
@@ -94,6 +115,12 @@ function DemandesClientsPage() {
       <PageHeader
         title="Demandes clients"
         description="Emails reçus sur devis@setup.paris — l'IA propose une opportunité pour chaque demande."
+        actions={isAdmin ? (
+          <Button size="sm" variant="outline" onClick={runReanalyse} disabled={reanalysing}>
+            {reanalysing ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-1" />}
+            Relancer l'analyse IA
+          </Button>
+        ) : undefined}
       />
       <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
         <TabsList>
