@@ -22,6 +22,14 @@ export type SharedCls = {
   opp_date_evenement?: string | null;
   opp_lieu?: string | null;
   opp_besoins?: string | null;
+  echeances?: EcheanceDetectee[] | null;
+};
+
+export type EcheanceDetectee = {
+  date: string;
+  libelle: string;
+  type?: string | null;
+  affaire_numero?: string | null;
 };
 
 export type ClassifyInput = {
@@ -71,7 +79,10 @@ export async function classifySharedEmail(key: string, input: ClassifyInput, sou
     "Si opportunité, remplis les champs opp_* (client, projet, taille estimée : tres_petit <5k€, petit 5-20k€, moyen 20-80k€, gros 80-250k€, tres_gros >250k€, date YYYY-MM-DD, lieu, besoins), sinon mets-les à null. " +
     "opp_client = nom de la société cliente (marque, agence, chaîne TV, production), jamais SETUP ni un collègue SETUP, sans forme juridique (SAS, SARL). " +
     "opp_projet = nom de projet court et parlant (3 à 7 mots), au format « <Ouvrage/prestation> <Client ou événement> [<mois année>] », ex. « Stand Salon du Chocolat Nov 2026 », « Décor plateau 20h30 France 2 », « Cabine podcast NRJ ». " +
-    "Ne recopie jamais l'objet de l'email, pas de préfixes TR:/RE:/Fw:, pas de « Demande de devis », pas de majuscules intégrales. Réponds STRICTEMENT en JSON.";
+    "Ne recopie jamais l'objet de l'email, pas de préfixes TR:/RE:/Fw:, pas de « Demande de devis », pas de majuscules intégrales. " +
+    "Si l'email mentionne des échéances de chantier (dates de livraison, montage, démontage, enlèvement, chargement, accès site, permanence...), liste-les dans echeances : " +
+    "date au format YYYY-MM-DD, libelle court (ex. « Livraison plateau »), type parmi appro/emballage/chargement/livraison/montage/finitions/permanence/demontage/dechargement (null si incertain), " +
+    "et affaire_numero si un numéro de chantier (4 à 5 chiffres, ex. 6034) ou d'opportunité (9XXX) est cité, sinon null. Tableau vide si aucune échéance. Réponds STRICTEMENT en JSON.";
   const text = bodyToPlainText(input.body, input.bodyContentType) || input.bodyPreview || "";
   const res = await fetch(AI_GW, {
     method: "POST",
@@ -107,8 +118,22 @@ export async function classifySharedEmail(key: string, input: ClassifyInput, sou
               opp_date_evenement: { type: ["string", "null"] },
               opp_lieu: { type: ["string", "null"] },
               opp_besoins: { type: ["string", "null"] },
+              echeances: {
+                type: ["array", "null"],
+                items: {
+                  type: "object",
+                  additionalProperties: false,
+                  properties: {
+                    date: { type: "string" },
+                    libelle: { type: "string" },
+                    type: { type: ["string", "null"], enum: ["appro", "emballage", "chargement", "livraison", "montage", "finitions", "permanence", "demontage", "dechargement", null] },
+                    affaire_numero: { type: ["string", "null"] },
+                  },
+                  required: ["date", "libelle", "type", "affaire_numero"],
+                },
+              },
             },
-            required: ["categorie", "confiance", "metier", "poste_devine", "nom", "prenom", "resume", "opp_client", "opp_projet", "opp_taille", "opp_date_evenement", "opp_lieu", "opp_besoins"],
+            required: ["categorie", "confiance", "metier", "poste_devine", "nom", "prenom", "resume", "opp_client", "opp_projet", "opp_taille", "opp_date_evenement", "opp_lieu", "opp_besoins", "echeances"],
           },
         },
       },
@@ -132,5 +157,6 @@ export function clsToMetadata(cls: SharedCls) {
     opp_date_evenement: cls.opp_date_evenement ?? null,
     opp_lieu: cls.opp_lieu ?? null,
     opp_besoins: cls.opp_besoins ?? null,
+    echeances: cls.echeances ?? [],
   };
 }
