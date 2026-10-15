@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Loader2, Trash2, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,7 +21,7 @@ import { AddressAutocomplete } from "./AddressAutocomplete";
 import {
   useVehicules, useAdressesFavorites, type Trajet,
 } from "@/hooks/use-vehicules";
-import { getChauffeursAvecStatut } from "@/hooks/use-trajets";
+import { getChauffeursAvecStatut, useTrajetCategories } from "@/hooks/use-trajets";
 import { PrestataireAutocomplete } from "@/components/sous-traitants/PrestataireAutocomplete";
 import { AffaireCombobox } from "@/components/planning/AffaireCombobox";
 import { X } from "lucide-react";
@@ -84,6 +85,8 @@ export function TrajetDialog({
   const isAdmin = useCapability("flotte.trajet.delete");
   const { vehicules } = useVehicules();
   const { adresses } = useAdressesFavorites();
+  const { data: categoriesPerso = [] } = useTrajetCategories();
+  const queryClient = useQueryClient();
 
   const [vehiculeId, setVehiculeId] = useState<string | null>(null);
   const [chauffeurId, setChauffeurId] = useState<string | null>(null);
@@ -96,6 +99,8 @@ export function TrajetDialog({
   const [adresseDepartFavId, setAdresseDepartFavId] = useState<string | null>(null);
   const [adresseArriveeFavId, setAdresseArriveeFavId] = useState<string | null>(null);
   const [categorie, setCategorie] = useState<TrajetCategorie>("autre");
+  const [categorieLibre, setCategorieLibre] = useState<string>("");
+  const [newCatNom, setNewCatNom] = useState<string>("");
   const [kilometrage, setKilometrage] = useState<string>("");
   const [notes, setNotes] = useState("");
   const [allerRetour, setAllerRetour] = useState(false);
@@ -179,6 +184,7 @@ export function TrajetDialog({
       setAdresseDepartFavId(trajet.adresse_depart_favorite_id);
       setAdresseArriveeFavId(trajet.adresse_arrivee_favorite_id);
       setCategorie(trajet.categorie);
+      setCategorieLibre(trajet.categorie_libre ?? "");
       setKilometrage(trajet.kilometrage?.toString() ?? "");
       setNotes(trajet.notes ?? "");
       setAllerRetour(trajet.aller_retour ?? false);
@@ -197,6 +203,8 @@ export function TrajetDialog({
       setAdresseDepartFavId(null);
       setAdresseArriveeFavId(null);
       setCategorie(defaultCategorie ?? "autre");
+      setCategorieLibre("");
+      setNewCatNom("");
       setKilometrage("");
       setNotes("");
       setAllerRetour(false);
@@ -209,6 +217,24 @@ export function TrajetDialog({
 
   const isEdit = !!trajet;
   const vehiculesActifs = vehicules.filter((v) => v.actif);
+
+  const categorieValue = categorieLibre ? `perso:${categorieLibre}` : categorie;
+
+  async function handleCreateCategorie() {
+    const nom = newCatNom.trim();
+    if (!nom) return;
+    const { error } = await supabase
+      .from("trajet_categories")
+      .upsert({ nom }, { onConflict: "nom" });
+    if (error) {
+      toast.error("Création impossible", { description: error.message });
+      return;
+    }
+    await queryClient.invalidateQueries({ queryKey: ["trajet-categories"] });
+    setCategorieLibre(nom);
+    setNewCatNom("");
+    toast.success(`Catégorie « ${nom} » créée`);
+  }
 
   async function handleSave() {
     if (!date || !adresseDepart.trim() || !adresseArrivee.trim()) {
@@ -238,7 +264,8 @@ export function TrajetDialog({
         adresse_arrivee: adresseArrivee,
         adresse_depart_favorite_id: adresseDepartFavId,
         adresse_arrivee_favorite_id: adresseArriveeFavId,
-        categorie,
+        categorie: (categorieLibre ? "autre" : categorie) as TrajetCategorie,
+        categorie_libre: categorieLibre || null,
         kilometrage: kilometrage ? parseFloat(kilometrage) : null,
         notes: sousTraitance ? demandeText || notes : notes,
         prestataire: sousTraitance ? (prestataire.trim() || null) : null,
@@ -513,14 +540,45 @@ export function TrajetDialog({
             </div>
             <div>
               <Label>Catégorie</Label>
-              <Select value={categorie} onValueChange={(v) => setCategorie(v as TrajetCategorie)}>
+              <Select
+                value={categorieValue}
+                onValueChange={(v) => {
+                  if (v === "__new__") { setCategorieLibre(""); return; }
+                  if (v.startsWith("perso:")) {
+                    setCategorieLibre(v.slice("perso:".length));
+                    setCategorie("autre");
+                    return;
+                  }
+                  setCategorieLibre("");
+                  setCategorie(v as TrajetCategorie);
+                }}
+              >
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {Object.entries(CATEGORIE_LABEL).map(([k, v]) => (
                     <SelectItem key={k} value={k}>{v}</SelectItem>
                   ))}
+                  {categoriesPerso.map((c) => (
+                    <SelectItem key={c.id} value={`perso:${c.nom}`}>{c.nom}</SelectItem>
+                  ))}
+                  <SelectItem value="__new__">+ Nouvelle catégorie…</SelectItem>
                 </SelectContent>
               </Select>
+              {categorieValue === "__new__" && (
+                <div className="mt-2 flex gap-2">
+                  <Input
+                    value={newCatNom}
+                    onChange={(e) => setNewCatNom(e.target.value)}
+                    placeholder="Nom de la catégorie (ex : Découpe)"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") { e.preventDefault(); void handleCreateCategorie(); }
+                    }}
+                  />
+                  <Button type="button" size="sm" variant="outline" onClick={() => void handleCreateCategorie()}>
+                    Créer
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
 

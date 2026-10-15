@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { eachDayOfInterval, format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import type { Trajet, Vehicule } from "./use-vehicules";
@@ -123,5 +124,21 @@ export function getChauffeursAvecStatut<
     }
 
     return { employe: l, statut: "ok", raison: null };
+  });
+}
+
+/** Catégories de trajet personnalisées (créées par les chefs/admins dans le dialog). */
+export function useTrajetCategories() {
+  return useQuery({
+    queryKey: ["trajet-categories"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("trajet_categories")
+        .select("id,nom")
+        .eq("actif", true)
+        .order("nom");
+      if (error) throw error;
+      return (data ?? []) as { id: string; nom: string }[];
+    },
   });
 }

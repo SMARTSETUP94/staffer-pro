@@ -18,7 +18,7 @@ export interface TrajetFilters {
   prestataire?: string | null; // partial match (lowercased)
   statut?: Trajet["statut_soustraitance"] | null;
   affaireId?: string | null;
-  categorie?: Trajet["categorie"] | null;
+  categorie?: string | null; // valeur standard (pose, depose…) ou "perso:<nom>" pour une catégorie créée
   query?: string | null; // free text on adresses + reference
 }
 
@@ -31,7 +31,13 @@ export function filterTrajets(trajets: Trajet[], filters: TrajetFilters): Trajet
     if (filters.vehiculeId && t.vehicule_id !== filters.vehiculeId) return false;
     if (filters.statut && t.statut_soustraitance !== filters.statut) return false;
     if (filters.affaireId && t.affaire_id !== filters.affaireId) return false;
-    if (filters.categorie && t.categorie !== filters.categorie) return false;
+    if (filters.categorie) {
+      if (filters.categorie.startsWith("perso:")) {
+        if (t.categorie_libre !== filters.categorie.slice("perso:".length)) return false;
+      } else if (t.categorie !== filters.categorie) {
+        return false;
+      }
+    }
     if (presta) {
       const p = (t.prestataire ?? "").toLowerCase();
       if (!p.includes(presta)) return false;
@@ -147,6 +153,13 @@ export const CATEGORIE_LABEL: Record<Trajet["categorie"], string> = {
   recuperation_materiel: "Récupération",
   autre: "Autre",
 };
+
+/** Libellé affiché : catégorie personnalisée si définie, sinon libellé standard. */
+export function libelleCategorie(
+  t: Pick<Trajet, "categorie"> & { categorie_libre?: string | null },
+): string {
+  return t.categorie_libre ?? CATEGORIE_LABEL[t.categorie];
+}
 
 export const STATUT_LABEL: Record<Trajet["statut_soustraitance"], string> = {
   non: "Interne",

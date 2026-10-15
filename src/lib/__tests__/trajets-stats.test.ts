@@ -12,6 +12,7 @@ function mkT(o: Partial<Trajet>): Trajet {
     affaire_id: o.affaire_id ?? null,
     aller_retour: false,
     categorie: o.categorie ?? "pose",
+    categorie_libre: o.categorie_libre ?? null,
     chauffeur_id: null,
     created_at: "2026-01-01",
     created_by: null,
