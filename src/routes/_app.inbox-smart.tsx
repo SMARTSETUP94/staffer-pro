@@ -109,6 +109,7 @@ interface EmailRow {
   client_id: string | null;
   contact_id: string | null;
   dismiss_reason: string | null;
+  source_boite?: SourceBoite | null;
 }
 
 function normalizeSubject(s: string | null | undefined): string {
@@ -145,9 +146,9 @@ function InboxSmartPage() {
   const [emails, setEmails] = useState<EmailRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [polling, setPolling] = useState(false);
-  const [tab, setTab] = useState<"pending" | "candidature" | "opportunite" | "pub" | "all">(
-    "pending",
-  );
+  const [tab, setTab] = useState<
+    "pending" | "candidature" | "opportunite" | "logistique" | "pub" | "all"
+  >("pending");
   const [selected, setSelected] = useState<EmailRow | null>(null);
   const [createCandidat, setCreateCandidat] = useState<EmailRow | null>(null);
   const [attachOpp, setAttachOpp] = useState<EmailRow | null>(null);
