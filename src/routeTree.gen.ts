@@ -54,6 +54,7 @@ import { Route as AppAuditAuthRouteImport } from './routes/_app.audit-auth'
 import { Route as AppAtelierRouteImport } from './routes/_app.atelier'
 import { Route as AppAbsencesRouteImport } from './routes/_app.absences'
 import { Route as AppRhIndexRouteImport } from './routes/_app.rh.index'
+import { Route as AppOpportunitesIndexRouteImport } from './routes/_app.opportunites.index'
 import { Route as AppFabricationIndexRouteImport } from './routes/_app.fabrication.index'
 import { Route as AppExportIndexRouteImport } from './routes/_app.export.index'
 import { Route as AppDevisIndexRouteImport } from './routes/_app.devis.index'
@@ -333,6 +334,11 @@ const AppRhIndexRoute = AppRhIndexRouteImport.update({
   id: '/rh/',
   path: '/rh/',
   getParentRoute: () => AppRoute,
+} as any)
+const AppOpportunitesIndexRoute = AppOpportunitesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppOpportunitesRoute,
 } as any)
 const AppFabricationIndexRoute = AppFabricationIndexRouteImport.update({
   id: '/fabrication/',
@@ -717,6 +723,7 @@ export interface FileRoutesByFullPath {
   '/devis/': typeof AppDevisIndexRoute
   '/export/': typeof AppExportIndexRoute
   '/fabrication/': typeof AppFabricationIndexRoute
+  '/opportunites/': typeof AppOpportunitesIndexRoute
   '/rh/': typeof AppRhIndexRoute
   '/affaires/$affaireId/casting': typeof AppAffairesAffaireIdCastingRoute
   '/affaires/$affaireId/devis': typeof AppAffairesAffaireIdDevisRoute
@@ -766,7 +773,6 @@ export interface FileRoutesByTo {
   '/mes-swaps': typeof AppMesSwapsRoute
   '/mon-equipe-type': typeof AppMonEquipeTypeRoute
   '/notifications': typeof AppNotificationsRoute
-  '/opportunites': typeof AppOpportunitesRouteWithChildren
   '/planning': typeof AppPlanningRoute
   '/planning-general': typeof AppPlanningGeneralRoute
   '/qui-est-ou': typeof AppQuiEstOuRoute
@@ -816,6 +822,7 @@ export interface FileRoutesByTo {
   '/devis': typeof AppDevisIndexRoute
   '/export': typeof AppExportIndexRoute
   '/fabrication': typeof AppFabricationIndexRoute
+  '/opportunites': typeof AppOpportunitesIndexRoute
   '/rh': typeof AppRhIndexRoute
   '/affaires/$affaireId/casting': typeof AppAffairesAffaireIdCastingRoute
   '/affaires/$affaireId/devis': typeof AppAffairesAffaireIdDevisRoute
@@ -919,6 +926,7 @@ export interface FileRoutesById {
   '/_app/devis/': typeof AppDevisIndexRoute
   '/_app/export/': typeof AppExportIndexRoute
   '/_app/fabrication/': typeof AppFabricationIndexRoute
+  '/_app/opportunites/': typeof AppOpportunitesIndexRoute
   '/_app/rh/': typeof AppRhIndexRoute
   '/_app/affaires/$affaireId/casting': typeof AppAffairesAffaireIdCastingRoute
   '/_app/affaires/$affaireId/devis': typeof AppAffairesAffaireIdDevisRoute
@@ -1022,6 +1030,7 @@ export interface FileRouteTypes {
     | '/devis/'
     | '/export/'
     | '/fabrication/'
+    | '/opportunites/'
     | '/rh/'
     | '/affaires/$affaireId/casting'
     | '/affaires/$affaireId/devis'
@@ -1071,7 +1080,6 @@ export interface FileRouteTypes {
     | '/mes-swaps'
     | '/mon-equipe-type'
     | '/notifications'
-    | '/opportunites'
     | '/planning'
     | '/planning-general'
     | '/qui-est-ou'
@@ -1121,6 +1129,7 @@ export interface FileRouteTypes {
     | '/devis'
     | '/export'
     | '/fabrication'
+    | '/opportunites'
     | '/rh'
     | '/affaires/$affaireId/casting'
     | '/affaires/$affaireId/devis'
@@ -1223,6 +1232,7 @@ export interface FileRouteTypes {
     | '/_app/devis/'
     | '/_app/export/'
     | '/_app/fabrication/'
+    | '/_app/opportunites/'
     | '/_app/rh/'
     | '/_app/affaires/$affaireId/casting'
     | '/_app/affaires/$affaireId/devis'
@@ -1571,6 +1581,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/rh/'
       preLoaderRoute: typeof AppRhIndexRouteImport
       parentRoute: typeof AppRoute
+    }
+    '/_app/opportunites/': {
+      id: '/_app/opportunites/'
+      path: '/'
+      fullPath: '/opportunites/'
+      preLoaderRoute: typeof AppOpportunitesIndexRouteImport
+      parentRoute: typeof AppOpportunitesRoute
     }
     '/_app/fabrication/': {
       id: '/_app/fabrication/'
@@ -2019,11 +2036,13 @@ const AppImportsRouteWithChildren = AppImportsRoute._addFileChildren(
 interface AppOpportunitesRouteChildren {
   AppOpportunitesAffaireIdRoute: typeof AppOpportunitesAffaireIdRoute
   AppOpportunitesImportRoute: typeof AppOpportunitesImportRoute
+  AppOpportunitesIndexRoute: typeof AppOpportunitesIndexRoute
 }
 
 const AppOpportunitesRouteChildren: AppOpportunitesRouteChildren = {
   AppOpportunitesAffaireIdRoute: AppOpportunitesAffaireIdRoute,
   AppOpportunitesImportRoute: AppOpportunitesImportRoute,
+  AppOpportunitesIndexRoute: AppOpportunitesIndexRoute,
 }
 
 const AppOpportunitesRouteWithChildren = AppOpportunitesRoute._addFileChildren(

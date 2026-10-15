@@ -34,6 +34,16 @@ import type { TypologieFuture } from "@/lib/typologie-future";
 
 export const Route = createFileRoute("/_app/opportunites/$affaireId")({
   beforeLoad: () => requireCapability("section.pipeline_opportunites"),
+  head: () => ({
+    meta: [
+      { title: "Fiche opportunité — Suivi des affaires" },
+      {
+        name: "description",
+        content:
+          "Fiche détaillée d'une opportunité commerciale : informations, jalons, prochaine action et emails d'origine.",
+      },
+    ],
+  }),
   component: OpportuniteFichePage,
 });
 
