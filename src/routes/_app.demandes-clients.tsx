@@ -210,7 +210,7 @@ function DemandesClientsPage() {
   );
 }
 
-/** Fenêtre de lecture de l'email complet (corps HTML ou texte). */
+
 function CreateOppDialog({ email, onClose, onDone }: { email: Row; onClose: () => void; onDone: () => void }) {
   const { user } = useAuth();
   const { data: charges } = useChargesAffaires();

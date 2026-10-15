@@ -27,6 +27,7 @@ import { OpportuniteFicheHeader } from "@/components/opportunites/fiche/Opportun
 import { OpportuniteJalonsBar } from "@/components/opportunites/fiche/OpportuniteJalonsBar";
 import { OpportuniteNextActionCard } from "@/components/opportunites/fiche/OpportuniteNextActionCard";
 import { SignerOpportuniteDialog } from "@/components/opportunites/SignerOpportuniteDialog";
+import { OpportuniteEmailsSection } from "@/components/opportunites/fiche/OpportuniteEmailsSection";
 import { AFFAIRE_TYPOLOGIES, type AffaireTypologie } from "@/lib/affaire-typologie";
 import { TAILLE_LABEL, type OpportuniteTaille } from "@/lib/opportunites";
 import type { TypologieFuture } from "@/lib/typologie-future";
@@ -92,6 +93,8 @@ function OpportuniteFichePage() {
         canEdit={canEdit}
         onSaved={() => refetch()}
       />
+
+      <OpportuniteEmailsSection affaireId={affaireId} />
 
       <TimelineSection actions={data.actions} />
 
