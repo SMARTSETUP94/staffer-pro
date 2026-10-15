@@ -60,7 +60,7 @@ export const Route = createFileRoute("/_app/qui-est-ou")({
   }),
   component: QuiEstOuPage,
   errorComponent: ({ error }) => (
-    <div role="alert" className="p-6 text-sm text-destructive">{error.message}</div>
+    <div role="alert" className="p-6 text-sm text-destructive">{(error as Error).message}</div>
   ),
   notFoundComponent: () => <div className="p-6 text-sm">Page introuvable.</div>,
 });
