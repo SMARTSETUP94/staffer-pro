@@ -174,6 +174,9 @@ function DemandesClientsPage() {
                 )}
                 {!m.opp_client && r.body_preview && <p className="text-sm text-muted-foreground line-clamp-2">{r.body_preview}</p>}
                 <div className="flex flex-wrap gap-2 justify-end">
+                  <Button size="sm" variant="outline" onClick={() => setReading(r)}>
+                    <MailOpen className="h-4 w-4 mr-1" /> Lire l'email
+                  </Button>
                   {r.opportunite_id ? (
                     <Button size="sm" variant="outline" asChild>
                       <Link to="/opportunites/$affaireId" params={{ affaireId: r.opportunite_id }}>
