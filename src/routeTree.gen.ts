@@ -93,6 +93,7 @@ import { Route as AppAdminContenuWidgetsRouteImport } from './routes/_app.admin.
 import { Route as AppAdminAuditRouteImport } from './routes/_app.admin.audit'
 import { Route as AppAffairesAffaireIdIndexRouteImport } from './routes/_app.affaires.$affaireId.index'
 import { Route as ApiPublicHooksPollSmartInboxRouteImport } from './routes/api/public/hooks/poll-smart-inbox'
+import { Route as ApiPublicHooksPollSharedInboxesRouteImport } from './routes/api/public/hooks/poll-shared-inboxes'
 import { Route as AppMissionsAffaireIdPhaseRouteImport } from './routes/_app.missions.$affaireId.$phase'
 import { Route as AppClientsAdminOrphelinsRouteImport } from './routes/_app.clients.admin.orphelins'
 import { Route as AppClientsAdminFusionRouteImport } from './routes/_app.clients.admin.fusion'
@@ -538,6 +539,12 @@ const ApiPublicHooksPollSmartInboxRoute =
     path: '/api/public/hooks/poll-smart-inbox',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksPollSharedInboxesRoute =
+  ApiPublicHooksPollSharedInboxesRouteImport.update({
+    id: '/api/public/hooks/poll-shared-inboxes',
+    path: '/api/public/hooks/poll-shared-inboxes',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AppMissionsAffaireIdPhaseRoute =
   AppMissionsAffaireIdPhaseRouteImport.update({
     id: '/missions/$affaireId/$phase',
@@ -717,6 +724,7 @@ export interface FileRoutesByFullPath {
   '/clients/admin/fusion': typeof AppClientsAdminFusionRoute
   '/clients/admin/orphelins': typeof AppClientsAdminOrphelinsRoute
   '/missions/$affaireId/$phase': typeof AppMissionsAffaireIdPhaseRoute
+  '/api/public/hooks/poll-shared-inboxes': typeof ApiPublicHooksPollSharedInboxesRoute
   '/api/public/hooks/poll-smart-inbox': typeof ApiPublicHooksPollSmartInboxRoute
   '/affaires/$affaireId/': typeof AppAffairesAffaireIdIndexRoute
   '/affaires/$affaireId/objets/$objetId': typeof AppAffairesAffaireIdObjetsObjetIdRoute
@@ -814,6 +822,7 @@ export interface FileRoutesByTo {
   '/clients/admin/fusion': typeof AppClientsAdminFusionRoute
   '/clients/admin/orphelins': typeof AppClientsAdminOrphelinsRoute
   '/missions/$affaireId/$phase': typeof AppMissionsAffaireIdPhaseRoute
+  '/api/public/hooks/poll-shared-inboxes': typeof ApiPublicHooksPollSharedInboxesRoute
   '/api/public/hooks/poll-smart-inbox': typeof ApiPublicHooksPollSmartInboxRoute
   '/affaires/$affaireId': typeof AppAffairesAffaireIdIndexRoute
   '/affaires/$affaireId/objets/$objetId': typeof AppAffairesAffaireIdObjetsObjetIdRoute
@@ -915,6 +924,7 @@ export interface FileRoutesById {
   '/_app/clients/admin/fusion': typeof AppClientsAdminFusionRoute
   '/_app/clients/admin/orphelins': typeof AppClientsAdminOrphelinsRoute
   '/_app/missions/$affaireId/$phase': typeof AppMissionsAffaireIdPhaseRoute
+  '/api/public/hooks/poll-shared-inboxes': typeof ApiPublicHooksPollSharedInboxesRoute
   '/api/public/hooks/poll-smart-inbox': typeof ApiPublicHooksPollSmartInboxRoute
   '/_app/affaires/$affaireId/': typeof AppAffairesAffaireIdIndexRoute
   '/_app/affaires/$affaireId/objets/$objetId': typeof AppAffairesAffaireIdObjetsObjetIdRoute
@@ -1016,6 +1026,7 @@ export interface FileRouteTypes {
     | '/clients/admin/fusion'
     | '/clients/admin/orphelins'
     | '/missions/$affaireId/$phase'
+    | '/api/public/hooks/poll-shared-inboxes'
     | '/api/public/hooks/poll-smart-inbox'
     | '/affaires/$affaireId/'
     | '/affaires/$affaireId/objets/$objetId'
@@ -1113,6 +1124,7 @@ export interface FileRouteTypes {
     | '/clients/admin/fusion'
     | '/clients/admin/orphelins'
     | '/missions/$affaireId/$phase'
+    | '/api/public/hooks/poll-shared-inboxes'
     | '/api/public/hooks/poll-smart-inbox'
     | '/affaires/$affaireId'
     | '/affaires/$affaireId/objets/$objetId'
@@ -1213,6 +1225,7 @@ export interface FileRouteTypes {
     | '/_app/clients/admin/fusion'
     | '/_app/clients/admin/orphelins'
     | '/_app/missions/$affaireId/$phase'
+    | '/api/public/hooks/poll-shared-inboxes'
     | '/api/public/hooks/poll-smart-inbox'
     | '/_app/affaires/$affaireId/'
     | '/_app/affaires/$affaireId/objets/$objetId'
@@ -1226,6 +1239,7 @@ export interface RootRouteChildren {
   AuthForgotPasswordRoute: typeof AuthForgotPasswordRoute
   AuthResetPasswordRoute: typeof AuthResetPasswordRoute
   AuthSetPasswordRoute: typeof AuthSetPasswordRoute
+  ApiPublicHooksPollSharedInboxesRoute: typeof ApiPublicHooksPollSharedInboxesRoute
   ApiPublicHooksPollSmartInboxRoute: typeof ApiPublicHooksPollSmartInboxRoute
 }
 
@@ -1819,6 +1833,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksPollSmartInboxRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/poll-shared-inboxes': {
+      id: '/api/public/hooks/poll-shared-inboxes'
+      path: '/api/public/hooks/poll-shared-inboxes'
+      fullPath: '/api/public/hooks/poll-shared-inboxes'
+      preLoaderRoute: typeof ApiPublicHooksPollSharedInboxesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_app/missions/$affaireId/$phase': {
       id: '/_app/missions/$affaireId/$phase'
       path: '/missions/$affaireId/$phase'
@@ -2179,6 +2200,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthForgotPasswordRoute: AuthForgotPasswordRoute,
   AuthResetPasswordRoute: AuthResetPasswordRoute,
   AuthSetPasswordRoute: AuthSetPasswordRoute,
+  ApiPublicHooksPollSharedInboxesRoute: ApiPublicHooksPollSharedInboxesRoute,
   ApiPublicHooksPollSmartInboxRoute: ApiPublicHooksPollSmartInboxRoute,
 }
 export const routeTree = rootRouteImport
