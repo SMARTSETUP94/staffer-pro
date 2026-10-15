@@ -68,6 +68,7 @@ function DemandesClientsPage() {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<"todo" | "done" | "dismissed">("todo");
   const [current, setCurrent] = useState<Row | null>(null);
+  const [reading, setReading] = useState<Row | null>(null);
   const isAdmin = useCapability("section.admin");
   const reanalyse = useServerFn(reanalyseSharedInboxes);
   const [reanalysing, setReanalysing] = useState(false);
@@ -200,7 +201,39 @@ function DemandesClientsPage() {
       {current && (
         <CreateOppDialog email={current} onClose={() => setCurrent(null)} onDone={() => { setCurrent(null); void load(); }} />
       )}
+      {reading && <EmailReaderDialog email={reading} onClose={() => setReading(null)} />}
     </div>
+  );
+}
+
+/** Fenêtre de lecture de l'email complet (corps HTML ou texte). */
+function EmailReaderDialog({ email, onClose }: { email: Row; onClose: () => void }) {
+  const isHtml = email.body_content_type?.toLowerCase() === "html";
+  const body = email.body_full || email.body_preview || "(corps vide)";
+  return (
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-3xl max-h-[85vh] flex flex-col">
+        <DialogHeader>
+          <DialogTitle className="pr-6">{email.subject || "(sans objet)"}</DialogTitle>
+          <DialogDescription>
+            {email.from_name ? `${email.from_name} · ` : ""}{email.from_email} ·{" "}
+            {format(parseISO(email.received_at), "d MMMM yyyy 'à' HH:mm", { locale: fr })}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="flex-1 overflow-auto rounded-md border bg-background">
+          {isHtml ? (
+            <iframe
+              title="Contenu de l'email"
+              sandbox=""
+              srcDoc={body}
+              className="h-[60vh] w-full bg-white"
+            />
+          ) : (
+            <pre className="whitespace-pre-wrap p-4 text-sm font-sans">{body}</pre>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
