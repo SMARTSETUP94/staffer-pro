@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Loader2, Paperclip, Download, Eye } from "lucide-react";
+import { Loader2, Paperclip, Download, Eye, Sparkles } from "lucide-react";
+import { useCapability } from "@/hooks/use-capability";
+import { JalonnementDialog } from "@/components/logistique/JalonnementDialog";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { listEmailAttachments, getEmailAttachment, type EmailAttachment } from "@/lib/server-fns/shared-inbox-attachments.functions";
@@ -61,6 +63,8 @@ function AttachmentsList({ emailId }: { emailId: string }) {
   const [items, setItems] = useState<EmailAttachment[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
+  const canIA = useCapability("logistique.proposition.validate");
+  const [jal, setJal] = useState<{ attachmentId: string | null; label: string } | null>(null);
   useEffect(() => {
     let alive = true;
     list({ data: { emailId } })
@@ -87,7 +91,14 @@ function AttachmentsList({ emailId }: { emailId: string }) {
 
   if (err) return <p className="text-xs text-destructive">Pièces jointes indisponibles : {err}</p>;
   if (!items) return <p className="text-xs text-muted-foreground flex items-center gap-1"><Loader2 className="h-3 w-3 animate-spin" /> Recherche des pièces jointes…</p>;
-  if (items.length === 0) return <p className="text-xs text-muted-foreground">Aucune pièce jointe.</p>;
+  const jalDlg = jal && <JalonnementDialog open onOpenChange={(o) => !o && setJal(null)} email={{ emailId, ...jal }} />;
+  if (items.length === 0) return (
+    <div className="flex items-center gap-2">
+      <p className="text-xs text-muted-foreground">Aucune pièce jointe.</p>
+      {canIA && <Button size="sm" variant="outline" onClick={() => setJal({ attachmentId: null, label: "le corps de l'email" })}><Sparkles className="mr-1 h-4 w-4" />Lire comme jalonnement</Button>}
+      {jalDlg}
+    </div>
+  );
   const viewable = (t: string) => t.startsWith("image/") || t === "application/pdf" || t.startsWith("text/");
   return (
     <div className="space-y-1">
@@ -102,12 +113,14 @@ function AttachmentsList({ emailId }: { emailId: string }) {
                 {viewable(a.contentType) && (
                   <Button size="sm" variant="ghost" onClick={() => open(a, "view")} aria-label={`Voir ${a.name}`}><Eye className="h-4 w-4" /></Button>
                 )}
+                {canIA && <Button size="sm" variant="ghost" onClick={() => setJal({ attachmentId: a.id, label: a.name })} aria-label={`Lire ${a.name} comme jalonnement`} title="Lire comme jalonnement"><Sparkles className="h-4 w-4" /></Button>}
                 <Button size="sm" variant="ghost" onClick={() => open(a, "download")} aria-label={`Télécharger ${a.name}`}><Download className="h-4 w-4" /></Button>
               </>
             )}
           </li>
         ))}
       </ul>
+      {jalDlg}
     </div>
   );
 }
