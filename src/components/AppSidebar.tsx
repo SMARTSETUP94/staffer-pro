@@ -233,6 +233,23 @@ function applyLogistiqueOppsMode(sections: NavSection[]): NavSection[] {
     .filter((s) => s.items.length > 0);
 }
 
+/**
+ * Vue « déploiement suivi des affaires » (feature flag `deploiement_suivi_affaires`).
+ * Menu réduit au strict suivi commercial : Pipeline opportunités, Demandes clients,
+ * Chantiers. Tout le reste est masqué (accueil, planning, logistique, RH, Admin).
+ * Les modules planning existants sont seulement cachés — un futur « planning
+ * logistique » (montages/démontages/livraisons/appro/chargements) les remplacera.
+ * Prend le pas sur tous les autres modes. Aucun blocage d'URL : l'admin peut
+ * toujours ouvrir /admin/feature-flags en direct pour désactiver le mode.
+ */
+const SA_MODE_URLS = new Set(["/opportunites", "/demandes-clients", "/affaires"]);
+
+function applySuiviAffairesMode(sections: NavSection[]): NavSection[] {
+  return sections
+    .map((s) => ({ ...s, items: s.items.filter((it) => SA_MODE_URLS.has(it.url)) }))
+    .filter((s) => s.items.length > 0);
+}
+
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
@@ -245,6 +262,7 @@ export function AppSidebar() {
   const simpleMode = useFeatureFlag("mode_simplifie_managers");
   const deploiementCA = useFeatureFlag("deploiement_charges_affaires");
   const deploiementLO = useFeatureFlag("deploiement_logistique_opps");
+  const deploiementSA = useFeatureFlag("deploiement_suivi_affaires");
 
   // Filtrage : un item est visible si pas de cap OU cap satisfaite.
   // "Aujourd'hui" reste TOUJOURS visible (pas de cap déclarée).
@@ -259,13 +277,15 @@ export function AppSidebar() {
         .map((s) => ({ ...s, items: s.items.filter((it) => hasAnyCap(caps, it.cap)) }))
         .filter((s) => s.items.length > 0);
 
-  const sections = deploiementLO
-    ? applyLogistiqueOppsMode(capFiltered)
-    : deploiementCA
-      ? applyDeploiementCAMode(capFiltered)
-      : simpleMode
-        ? applySimpleMode(capFiltered)
-        : capFiltered;
+  const sections = deploiementSA
+    ? applySuiviAffairesMode(capFiltered)
+    : deploiementLO
+      ? applyLogistiqueOppsMode(capFiltered)
+      : deploiementCA
+        ? applyDeploiementCAMode(capFiltered)
+        : simpleMode
+          ? applySimpleMode(capFiltered)
+          : capFiltered;
 
 
   const isActive = (url: string) =>
