@@ -12,19 +12,37 @@ const OUTLOOK_GW = "https://connector-gateway.lovable.dev/microsoft_outlook";
 const AI_GW = "https://ai.gateway.lovable.dev/v1/chat/completions";
 const MAX_FETCH = 25;
 
+type Recipient = { emailAddress?: { name?: string; address?: string } };
+
 type OutlookMessage = {
   id: string;
   conversationId?: string;
   subject?: string;
   bodyPreview?: string;
   body?: { contentType?: string; content?: string };
-  from?: { emailAddress?: { name?: string; address?: string } };
+  from?: Recipient["emailAddress"];
+  toRecipients?: Recipient[];
+  ccRecipients?: Recipient[];
   receivedDateTime?: string;
   hasAttachments?: boolean;
 };
 
+type SourceBoite = "smart" | "logistique" | "devis";
+
+/**
+ * Boîte d'origine : les règles Exchange redirigent log@ et devis@ vers
+ * smart@setup.paris en conservant le destinataire initial dans To/Cc.
+ */
+function detectSourceBoite(msg: OutlookMessage): SourceBoite {
+  const addrs = [...(msg.toRecipients ?? []), ...(msg.ccRecipients ?? [])]
+    .map((r) => r.emailAddress?.address?.toLowerCase() ?? "");
+  if (addrs.some((a) => a === "log@setup.paris")) return "logistique";
+  if (addrs.some((a) => a === "devis@setup.paris")) return "devis";
+  return "smart";
+}
+
 type Classification = {
-  categorie: "candidature" | "opportunite" | "pub" | "autre";
+  categorie: "candidature" | "opportunite" | "pub" | "logistique" | "autre";
   confiance: number;
   metier?: string | null;
   poste_devine?: string | null;
