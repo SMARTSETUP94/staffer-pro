@@ -117,6 +117,9 @@ function AppGuard() {
   }
 
 
+  // Écran atelier : plein écran, sans menu.
+  if (currentPath.startsWith("/ecran-atelier")) return <Outlet />;
+
   return (
     <AppLayout>
       <Outlet />
