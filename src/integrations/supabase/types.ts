@@ -1911,6 +1911,7 @@ export type Database = {
           opportunite_id: string | null
           raw_payload: Json | null
           received_at: string
+          source_boite: string
           statut: Database["public"]["Enums"]["email_statut"]
           subject: string | null
           updated_at: string
@@ -1941,6 +1942,7 @@ export type Database = {
           opportunite_id?: string | null
           raw_payload?: Json | null
           received_at: string
+          source_boite?: string
           statut?: Database["public"]["Enums"]["email_statut"]
           subject?: string | null
           updated_at?: string
@@ -1971,6 +1973,7 @@ export type Database = {
           opportunite_id?: string | null
           raw_payload?: Json | null
           received_at?: string
+          source_boite?: string
           statut?: Database["public"]["Enums"]["email_statut"]
           subject?: string | null
           updated_at?: string
@@ -6295,7 +6298,12 @@ export type Database = {
         | "en_cours"
         | "termine"
         | "cloture"
-      email_categorie: "candidature" | "opportunite" | "pub" | "autre"
+      email_categorie:
+        | "candidature"
+        | "opportunite"
+        | "pub"
+        | "autre"
+        | "logistique"
       email_statut: "pending_review" | "validated" | "dismissed"
       fabrication_etape_statut:
         | "a_faire"
@@ -6596,7 +6604,13 @@ export const Constants = {
         "termine",
         "cloture",
       ],
-      email_categorie: ["candidature", "opportunite", "pub", "autre"],
+      email_categorie: [
+        "candidature",
+        "opportunite",
+        "pub",
+        "autre",
+        "logistique",
+      ],
       email_statut: ["pending_review", "validated", "dismissed"],
       fabrication_etape_statut: [
         "a_faire",

@@ -31,7 +31,7 @@ export const Route = createFileRoute("/_app/fabrication/")({
   component: FabricationDashboardPage,
   errorComponent: ({ error }) => (
     <div className="rounded-xl border border-destructive bg-destructive/5 p-4">
-      <p className="text-sm text-destructive">Erreur : {error.message}</p>
+      <p className="text-sm text-destructive">Erreur : {(error as Error).message}</p>
     </div>
   ),
 });

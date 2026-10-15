@@ -48,7 +48,7 @@ export const Route = createFileRoute("/_app/atelier")({
   component: AtelierPage,
   errorComponent: ({ error }) => (
     <div role="alert" className="p-6 text-sm text-destructive">
-      {error.message}
+      {(error as Error).message}
     </div>
   ),
 });

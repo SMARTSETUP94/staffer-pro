@@ -38,7 +38,7 @@ export const Route = createFileRoute("/_app/affaires/$affaireId/planning-atelier
   head: () => ({ meta: [{ title: "Planning atelier — Setup Paris" }] }),
   component: PlanningAtelierPage,
   errorComponent: ({ error }) => (
-    <div role="alert" className="p-6 text-sm text-destructive">{error.message}</div>
+    <div role="alert" className="p-6 text-sm text-destructive">{(error as Error).message}</div>
   ),
   notFoundComponent: () => <div className="p-6 text-sm">Affaire introuvable.</div>,
 });

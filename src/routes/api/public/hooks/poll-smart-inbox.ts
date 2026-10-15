@@ -12,19 +12,37 @@ const OUTLOOK_GW = "https://connector-gateway.lovable.dev/microsoft_outlook";
 const AI_GW = "https://ai.gateway.lovable.dev/v1/chat/completions";
 const MAX_FETCH = 25;
 
+type Recipient = { emailAddress?: { name?: string; address?: string } };
+
 type OutlookMessage = {
   id: string;
   conversationId?: string;
   subject?: string;
   bodyPreview?: string;
   body?: { contentType?: string; content?: string };
-  from?: { emailAddress?: { name?: string; address?: string } };
+  from?: Recipient["emailAddress"];
+  toRecipients?: Recipient[];
+  ccRecipients?: Recipient[];
   receivedDateTime?: string;
   hasAttachments?: boolean;
 };
 
+type SourceBoite = "smart" | "logistique" | "devis";
+
+/**
+ * Boîte d'origine : les règles Exchange redirigent log@ et devis@ vers
+ * smart@setup.paris en conservant le destinataire initial dans To/Cc.
+ */
+function detectSourceBoite(msg: OutlookMessage): SourceBoite {
+  const addrs = [...(msg.toRecipients ?? []), ...(msg.ccRecipients ?? [])]
+    .map((r) => r.emailAddress?.address?.toLowerCase() ?? "");
+  if (addrs.some((a) => a === "log@setup.paris")) return "logistique";
+  if (addrs.some((a) => a === "devis@setup.paris")) return "devis";
+  return "smart";
+}
+
 type Classification = {
-  categorie: "candidature" | "opportunite" | "pub" | "autre";
+  categorie: "candidature" | "opportunite" | "pub" | "logistique" | "autre";
   confiance: number;
   metier?: string | null;
   poste_devine?: string | null;
@@ -33,18 +51,30 @@ type Classification = {
   resume?: string | null;
 };
 
-async function classifyEmail(lovableKey: string, msg: OutlookMessage): Promise<Classification> {
+async function classifyEmail(
+  lovableKey: string,
+  msg: OutlookMessage,
+  sourceBoite: SourceBoite,
+): Promise<Classification> {
+  const sourceHint =
+    sourceBoite === "devis"
+      ? "Cet email arrive sur devis@setup.paris, la boîte des demandes clients : privilégie 'opportunite' sauf évidence contraire. "
+      : sourceBoite === "logistique"
+        ? "Cet email arrive sur log@setup.paris, la boîte logistique : privilégie 'logistique' sauf évidence contraire. "
+        : "";
   const sys =
     "Tu tries des emails entrants pour une société de scénographie événementielle (SETUP Paris). " +
-    "Classe chaque email en une des 4 catégories : " +
+    sourceHint +
+    "Classe chaque email en une des 5 catégories : " +
     "'candidature' (CV, lettre de motivation, demande d'emploi), " +
     "'opportunite' (demande de devis, appel d'offres, projet client), " +
+    "'logistique' (information logistique : transport, livraison, enlèvement, accès site, horaires de chargement), " +
     "'pub' (newsletter, publicité, prospection commerciale sortante reçue, spam), " +
     "'autre' (le reste). " +
     "Si candidature, devine le métier parmi : construction, métallerie, peinture, numérique, tapisserie, machiniste, logistique, suivi_projet. " +
     "Réponds STRICTEMENT en JSON.";
 
-  const userMsg = `Expéditeur: ${msg.from?.emailAddress?.name ?? ""} <${msg.from?.emailAddress?.address ?? ""}>
+  const userMsg = `Expéditeur: ${msg.from?.name ?? ""} <${msg.from?.address ?? ""}>
 Sujet: ${msg.subject ?? ""}
 Aperçu: ${msg.bodyPreview ?? ""}`;
 
@@ -63,7 +93,10 @@ Aperçu: ${msg.bodyPreview ?? ""}`;
           type: "object",
           additionalProperties: false,
           properties: {
-            categorie: { type: "string", enum: ["candidature", "opportunite", "pub", "autre"] },
+            categorie: {
+              type: "string",
+              enum: ["candidature", "opportunite", "pub", "logistique", "autre"],
+            },
             confiance: { type: "number", minimum: 0, maximum: 1 },
             metier: { type: ["string", "null"] },
             poste_devine: { type: ["string", "null"] },
@@ -114,7 +147,7 @@ async function fetchInbox(lovableKey: string, connectorKey: string): Promise<Out
     `${OUTLOOK_GW}/me/mailFolders/inbox/messages` +
     `?$top=${MAX_FETCH}` +
     `&$orderby=receivedDateTime desc` +
-    `&$select=id,conversationId,subject,bodyPreview,body,from,receivedDateTime,hasAttachments`;
+    `&$select=id,conversationId,subject,bodyPreview,body,from,toRecipients,ccRecipients,receivedDateTime,hasAttachments`;
   const res = await fetch(url, {
     headers: {
       Authorization: `Bearer ${lovableKey}`,
@@ -175,9 +208,10 @@ export const Route = createFileRoute("/api/public/hooks/poll-smart-inbox")({
           for (const msg of news) {
             processed++;
             try {
+              const sourceBoite = detectSourceBoite(msg);
               let cls: Classification;
               try {
-                cls = await classifyEmail(lovableKey, msg);
+                cls = await classifyEmail(lovableKey, msg, sourceBoite);
               } catch (e) {
                 cls = { categorie: "autre", confiance: 0, resume: `AI failed: ${(e as Error).message}` };
               }
@@ -185,8 +219,9 @@ export const Route = createFileRoute("/api/public/hooks/poll-smart-inbox")({
               const { error: insErr } = await supa.from("emails_entrants").insert({
                 message_id_outlook: msg.id,
                 conversation_id: msg.conversationId ?? null,
-                from_email: msg.from?.emailAddress?.address ?? "unknown@unknown",
-                from_name: msg.from?.emailAddress?.name ?? null,
+                source_boite: sourceBoite,
+                from_email: msg.from?.address ?? "unknown@unknown",
+                from_name: msg.from?.name ?? null,
                 subject: msg.subject ?? null,
                 received_at: msg.receivedDateTime ?? new Date().toISOString(),
                 body_preview: msg.bodyPreview ?? null,

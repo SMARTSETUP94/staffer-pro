@@ -25,6 +25,7 @@ import {
   ChevronDown,
   ChevronRight,
   ArrowRightLeft,
+  Truck,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -66,8 +67,20 @@ const METIERS_CANDIDATURE = [
   "suivi_projet",
 ];
 
-type CategorieIA = "candidature" | "opportunite" | "pub" | "autre";
+type CategorieIA = "candidature" | "opportunite" | "pub" | "logistique" | "autre";
 type StatutEmail = "pending_review" | "validated" | "dismissed";
+type SourceBoite = "smart" | "logistique" | "devis";
+
+const SOURCE_LABEL: Record<SourceBoite, string> = {
+  smart: "smart@",
+  logistique: "log@",
+  devis: "devis@",
+};
+const SOURCE_COLOR: Record<SourceBoite, string> = {
+  smart: "bg-slate-100 text-slate-600 border-slate-200",
+  logistique: "bg-teal-100 text-teal-800 border-teal-200",
+  devis: "bg-violet-100 text-violet-800 border-violet-200",
+};
 
 interface EmailRow {
   id: string;
@@ -97,6 +110,7 @@ interface EmailRow {
   client_id: string | null;
   contact_id: string | null;
   dismiss_reason: string | null;
+  source_boite?: SourceBoite | null;
 }
 
 function normalizeSubject(s: string | null | undefined): string {
@@ -111,6 +125,7 @@ function normalizeSubject(s: string | null | undefined): string {
 const CATEGORIE_LABEL: Record<CategorieIA, string> = {
   candidature: "Candidature",
   opportunite: "Opportunité",
+  logistique: "Logistique",
   pub: "Pub / Spam",
   autre: "Autre",
 };
@@ -118,6 +133,7 @@ const CATEGORIE_LABEL: Record<CategorieIA, string> = {
 const CATEGORIE_COLOR: Record<CategorieIA, string> = {
   candidature: "bg-blue-100 text-blue-800 border-blue-200",
   opportunite: "bg-amber-100 text-amber-800 border-amber-200",
+  logistique: "bg-teal-100 text-teal-800 border-teal-200",
   pub: "bg-slate-100 text-slate-600 border-slate-200",
   autre: "bg-slate-100 text-slate-600 border-slate-200",
 };
@@ -131,9 +147,9 @@ function InboxSmartPage() {
   const [emails, setEmails] = useState<EmailRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [polling, setPolling] = useState(false);
-  const [tab, setTab] = useState<"pending" | "candidature" | "opportunite" | "pub" | "all">(
-    "pending",
-  );
+  const [tab, setTab] = useState<
+    "pending" | "candidature" | "opportunite" | "logistique" | "pub" | "all"
+  >("pending");
   const [selected, setSelected] = useState<EmailRow | null>(null);
   const [createCandidat, setCreateCandidat] = useState<EmailRow | null>(null);
   const [attachOpp, setAttachOpp] = useState<EmailRow | null>(null);
@@ -173,6 +189,10 @@ function InboxSmartPage() {
           return emails.filter(
             (e) => e.categorie_ia === "opportunite" && e.statut !== "dismissed",
           );
+        case "logistique":
+          return emails.filter(
+            (e) => e.categorie_ia === "logistique" && e.statut !== "dismissed",
+          );
         case "pub":
           // Pubs / écartés : pub + autre + écartés sans catégorie métier.
           // Les opportunités/candidatures écartées restent dans leur onglet (badge "écarté").
@@ -182,7 +202,8 @@ function InboxSmartPage() {
               e.categorie_ia === "autre" ||
               (e.statut === "dismissed" &&
                 e.categorie_ia !== "opportunite" &&
-                e.categorie_ia !== "candidature"),
+                e.categorie_ia !== "candidature" &&
+                e.categorie_ia !== "logistique"),
           );
         case "all":
         default:
@@ -244,13 +265,17 @@ function InboxSmartPage() {
       opportunite: emails.filter(
         (e) => e.categorie_ia === "opportunite" && e.statut !== "dismissed",
       ).length,
+      logistique: emails.filter(
+        (e) => e.categorie_ia === "logistique" && e.statut !== "dismissed",
+      ).length,
       pub: emails.filter(
         (e) =>
           e.categorie_ia === "pub" ||
           e.categorie_ia === "autre" ||
           (e.statut === "dismissed" &&
             e.categorie_ia !== "opportunite" &&
-            e.categorie_ia !== "candidature"),
+            e.categorie_ia !== "candidature" &&
+            e.categorie_ia !== "logistique"),
       ).length,
     }),
     [emails],
@@ -406,8 +431,9 @@ function InboxSmartPage() {
             Inbox SMART
           </h1>
           <p className="text-sm text-muted-foreground">
-            Tri des emails entrants{" "}
-            <code className="text-xs">smart@setup.paris</code> — relève toutes les 5 min.
+            Tri des emails entrants <code className="text-xs">smart@setup.paris</code>,{" "}
+            <code className="text-xs">devis@setup.paris</code> et{" "}
+            <code className="text-xs">log@setup.paris</code> — relève toutes les 5 min.
           </p>
         </div>
         <Button onClick={pollNow} disabled={polling} variant="outline">
@@ -439,6 +465,10 @@ function InboxSmartPage() {
             <TabsTrigger value="opportunite" className="whitespace-nowrap">
               Opportunités
               <span className="ml-1.5 text-xs opacity-60">{counts.opportunite}</span>
+            </TabsTrigger>
+            <TabsTrigger value="logistique" className="whitespace-nowrap">
+              Logistique
+              <span className="ml-1.5 text-xs opacity-60">{counts.logistique}</span>
             </TabsTrigger>
             <TabsTrigger value="pub" className="whitespace-nowrap">
               Pubs / Écartés
@@ -485,6 +515,14 @@ function InboxSmartPage() {
                           className={`text-[11px] px-1.5 py-0.5 rounded border font-medium ${CATEGORIE_COLOR[e.categorie_ia]}`}
                         >
                           {CATEGORIE_LABEL[e.categorie_ia]}
+                        </span>
+                      )}
+                      {e.source_boite && e.source_boite !== "smart" && (
+                        <span
+                          className={`text-[11px] px-1.5 py-0.5 rounded border font-medium ${SOURCE_COLOR[e.source_boite]}`}
+                          title={`Reçu sur ${SOURCE_LABEL[e.source_boite]}setup.paris`}
+                        >
+                          {SOURCE_LABEL[e.source_boite]}
                         </span>
                       )}
                       {e.confiance_ia != null && (
@@ -790,6 +828,7 @@ function EmailDetailDialog({
   const CAT_OPTIONS: Array<{ key: CategorieIA; label: string; icon: typeof Building2 }> = [
     { key: "candidature", label: "Candidature", icon: UserPlus },
     { key: "opportunite", label: "Opportunité", icon: Building2 },
+    { key: "logistique", label: "Logistique", icon: Truck },
     { key: "pub", label: "Pub", icon: Megaphone },
     { key: "autre", label: "Autre", icon: HelpCircle },
   ];
