@@ -129,6 +129,7 @@ export const CAPABILITY_CATALOG = {
   ],
   "inbox_smart": [
     { key: "inbox_smart.view", label: "Inbox Smart : voir" },
+    { key: "demandes_clients.view", label: "Demandes clients : voir" },
   ],
   "mes": [
     { key: "mes_missions.view", label: "Voir les missions" },

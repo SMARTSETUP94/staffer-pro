@@ -87,6 +87,7 @@ function buildSections(
         { title: "Planning fab", url: "/planning", icon: Calendar, cap: "section.planning_fab" },
         { title: "Qui est où", url: "/qui-est-ou", icon: UsersRound, cap: "section.planning_fab" },
         { title: "Pipeline opportunités", url: "/opportunites", icon: Trophy, cap: "section.pipeline_opportunites" },
+        { title: "Demandes clients", url: "/demandes-clients", icon: Inbox, cap: "demandes_clients.view" },
       ],
     },
     {
@@ -187,6 +188,7 @@ const CA_MODE_URLS = new Set([
   "/planning-general",
   "/devis",
   "/opportunites",
+  "/demandes-clients",
   "/echeances",
 ]);
 

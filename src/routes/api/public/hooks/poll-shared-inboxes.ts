@@ -35,6 +35,12 @@ type Cls = {
   nom?: string | null;
   prenom?: string | null;
   resume?: string | null;
+  opp_client?: string | null;
+  opp_projet?: string | null;
+  opp_taille?: string | null;
+  opp_date_evenement?: string | null;
+  opp_lieu?: string | null;
+  opp_besoins?: string | null;
 };
 
 async function getToken(): Promise<string> {
@@ -94,8 +100,14 @@ async function classify(key: string, msg: Msg, source: "logistique" | "devis"): 
               nom: { type: ["string", "null"] },
               prenom: { type: ["string", "null"] },
               resume: { type: ["string", "null"] },
+              opp_client: { type: ["string", "null"], description: "Société cliente (opportunité)" },
+              opp_projet: { type: ["string", "null"], description: "Nom court du projet/événement" },
+              opp_taille: { type: ["string", "null"], enum: ["tres_petit", "petit", "moyen", "gros", "tres_gros", null] },
+              opp_date_evenement: { type: ["string", "null"], description: "Date événement YYYY-MM-DD si mentionnée" },
+              opp_lieu: { type: ["string", "null"] },
+              opp_besoins: { type: ["string", "null"], description: "Résumé des besoins (prestations, quantités, délais)" },
             },
-            required: ["categorie", "confiance", "metier", "poste_devine", "nom", "prenom", "resume"],
+            required: ["categorie", "confiance", "metier", "poste_devine", "nom", "prenom", "resume", "opp_client", "opp_projet", "opp_taille", "opp_date_evenement", "opp_lieu", "opp_besoins"],
           },
         },
       },
@@ -173,6 +185,12 @@ export const Route = createFileRoute("/api/public/hooks/poll-shared-inboxes")({
                   nom: cls.nom ?? null,
                   prenom: cls.prenom ?? null,
                   resume: cls.resume ?? null,
+                  opp_client: cls.opp_client ?? null,
+                  opp_projet: cls.opp_projet ?? null,
+                  opp_taille: cls.opp_taille ?? null,
+                  opp_date_evenement: cls.opp_date_evenement ?? null,
+                  opp_lieu: cls.opp_lieu ?? null,
+                  opp_besoins: cls.opp_besoins ?? null,
                 },
                 statut: "pending_review",
               });
