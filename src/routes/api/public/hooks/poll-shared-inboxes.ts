@@ -1,14 +1,14 @@
 /**
  * Relevé direct des boîtes partagées log@ et devis@ (flux séparés, sans smart@).
- * Auth : application Microsoft Entra dédiée (client credentials, permission
- * application Mail.ReadWrite, restreinte via ApplicationAccessPolicy).
+ * Auth : application Microsoft Entra dédiée (client credentials, lecture seule
+ * volontaire — les emails restent dans la boîte de réception, aucun déplacement).
  * Appelé par pg_cron via /api/public/* — header `apikey` = publishable key requis.
  */
 import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
+import { classifySharedEmail, clsToMetadata, type SharedCls } from "@/lib/shared-inbox-classify";
 
 const GRAPH = "https://graph.microsoft.com/v1.0";
-const AI_GW = "https://ai.gateway.lovable.dev/v1/chat/completions";
 const MAX_FETCH = 25;
 
 const MAILBOXES = [
@@ -25,22 +25,6 @@ type Msg = {
   from?: { emailAddress?: { name?: string; address?: string } };
   receivedDateTime?: string;
   hasAttachments?: boolean;
-};
-
-type Cls = {
-  categorie: "candidature" | "opportunite" | "pub" | "logistique" | "autre";
-  confiance: number;
-  metier?: string | null;
-  poste_devine?: string | null;
-  nom?: string | null;
-  prenom?: string | null;
-  resume?: string | null;
-  opp_client?: string | null;
-  opp_projet?: string | null;
-  opp_taille?: string | null;
-  opp_date_evenement?: string | null;
-  opp_lieu?: string | null;
-  opp_besoins?: string | null;
 };
 
 async function getToken(): Promise<string> {
@@ -60,62 +44,6 @@ async function getToken(): Promise<string> {
   });
   if (!res.ok) throw new Error(`Token Microsoft ${res.status}: ${(await res.text()).slice(0, 300)}`);
   return ((await res.json()) as { access_token: string }).access_token;
-}
-
-async function classify(key: string, msg: Msg, source: "logistique" | "devis"): Promise<Cls> {
-  const hint =
-    source === "devis"
-      ? "Cet email arrive sur devis@setup.paris, la boîte des demandes clients : privilégie 'opportunite' sauf évidence contraire. "
-      : "Cet email arrive sur log@setup.paris, la boîte logistique : privilégie 'logistique' sauf évidence contraire. ";
-  const sys =
-    "Tu tries des emails entrants pour une société de scénographie événementielle (SETUP Paris). " +
-    hint +
-    "Catégories : 'candidature', 'opportunite' (demande de devis, projet client), 'logistique' (transport, livraison, enlèvement, accès site, horaires), 'pub', 'autre'. " +
-    "Si candidature, devine le métier parmi : construction, métallerie, peinture, numérique, tapisserie, machiniste, logistique, suivi_projet. Si opportunité, remplis les champs opp_* (client, projet, taille estimée : tres_petit <5k€, petit 5-20k€, moyen 20-80k€, gros 80-250k€, tres_gros >250k€, date, lieu, besoins), sinon mets-les à null. Réponds STRICTEMENT en JSON.";
-  const res = await fetch(AI_GW, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}`, "X-Lovable-AIG-SDK": "raw-fetch" },
-    body: JSON.stringify({
-      model: "google/gemini-3-flash-preview",
-      messages: [
-        { role: "system", content: sys },
-        {
-          role: "user",
-          content: `Expéditeur: ${msg.from?.emailAddress?.name ?? ""} <${msg.from?.emailAddress?.address ?? ""}>\nSujet: ${msg.subject ?? ""}\nAperçu: ${msg.bodyPreview ?? ""}`,
-        },
-      ],
-      response_format: {
-        type: "json_schema",
-        json_schema: {
-          name: "email_classification",
-          strict: true,
-          schema: {
-            type: "object",
-            additionalProperties: false,
-            properties: {
-              categorie: { type: "string", enum: ["candidature", "opportunite", "pub", "logistique", "autre"] },
-              confiance: { type: "number", minimum: 0, maximum: 1 },
-              metier: { type: ["string", "null"] },
-              poste_devine: { type: ["string", "null"] },
-              nom: { type: ["string", "null"] },
-              prenom: { type: ["string", "null"] },
-              resume: { type: ["string", "null"] },
-              opp_client: { type: ["string", "null"], description: "Société cliente (opportunité)" },
-              opp_projet: { type: ["string", "null"], description: "Nom court du projet/événement" },
-              opp_taille: { type: ["string", "null"], enum: ["tres_petit", "petit", "moyen", "gros", "tres_gros", null] },
-              opp_date_evenement: { type: ["string", "null"], description: "Date événement YYYY-MM-DD si mentionnée" },
-              opp_lieu: { type: ["string", "null"] },
-              opp_besoins: { type: ["string", "null"], description: "Résumé des besoins (prestations, quantités, délais)" },
-            },
-            required: ["categorie", "confiance", "metier", "poste_devine", "nom", "prenom", "resume", "opp_client", "opp_projet", "opp_taille", "opp_date_evenement", "opp_lieu", "opp_besoins"],
-          },
-        },
-      },
-    }),
-  });
-  if (!res.ok) throw new Error(`AI ${res.status}`);
-  const j = (await res.json()) as { choices?: Array<{ message?: { content?: string } }> };
-  return JSON.parse(j.choices?.[0]?.message?.content ?? "{}") as Cls;
 }
 
 export const Route = createFileRoute("/api/public/hooks/poll-shared-inboxes")({
@@ -159,9 +87,20 @@ export const Route = createFileRoute("/api/public/hooks/poll-shared-inboxes")({
             const seen = new Set((existing ?? []).map((r) => r.message_id_outlook));
 
             for (const msg of messages.filter((m) => !seen.has(m.id))) {
-              let cls: Cls;
+              let cls: SharedCls;
               try {
-                cls = await classify(lovableKey, msg, box.source);
+                cls = await classifySharedEmail(
+                  lovableKey,
+                  {
+                    fromName: msg.from?.emailAddress?.name,
+                    fromEmail: msg.from?.emailAddress?.address,
+                    subject: msg.subject,
+                    body: msg.body?.content,
+                    bodyContentType: msg.body?.contentType,
+                    bodyPreview: msg.bodyPreview,
+                  },
+                  box.source,
+                );
               } catch (e) {
                 cls = { categorie: box.source === "devis" ? "opportunite" : "logistique", confiance: 0, resume: `AI failed: ${(e as Error).message}` };
               }
@@ -179,19 +118,7 @@ export const Route = createFileRoute("/api/public/hooks/poll-shared-inboxes")({
                 has_attachments: !!msg.hasAttachments,
                 categorie_ia: cls.categorie,
                 confiance_ia: cls.confiance,
-                metadata_ia: {
-                  metier: cls.metier ?? null,
-                  poste_devine: cls.poste_devine ?? null,
-                  nom: cls.nom ?? null,
-                  prenom: cls.prenom ?? null,
-                  resume: cls.resume ?? null,
-                  opp_client: cls.opp_client ?? null,
-                  opp_projet: cls.opp_projet ?? null,
-                  opp_taille: cls.opp_taille ?? null,
-                  opp_date_evenement: cls.opp_date_evenement ?? null,
-                  opp_lieu: cls.opp_lieu ?? null,
-                  opp_besoins: cls.opp_besoins ?? null,
-                },
+                metadata_ia: clsToMetadata(cls),
                 statut: "pending_review",
               });
               if (error) {
@@ -199,16 +126,6 @@ export const Route = createFileRoute("/api/public/hooks/poll-shared-inboxes")({
                 continue;
               }
               inserted++;
-              const mv = await fetch(`${GRAPH}/users/${box.address}/messages/${msg.id}/move`, {
-                method: "POST",
-                headers: { ...auth, "Content-Type": "application/json" },
-                body: JSON.stringify({ destinationId: "archive" }),
-              });
-              if (mv.ok) {
-                const moved = (await mv.json()) as { id?: string };
-                await supa.from("emails_entrants").update({ archived_outlook: true }).eq("message_id_outlook", msg.id);
-                void moved;
-              }
             }
             report[box.address] = { fetched: messages.length, inserted, errors: errors.slice(0, 3) };
           } catch (e) {
