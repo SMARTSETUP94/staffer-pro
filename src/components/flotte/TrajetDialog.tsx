@@ -218,6 +218,24 @@ export function TrajetDialog({
   const isEdit = !!trajet;
   const vehiculesActifs = vehicules.filter((v) => v.actif);
 
+  const categorieValue = categorieLibre ? `perso:${categorieLibre}` : categorie;
+
+  async function handleCreateCategorie() {
+    const nom = newCatNom.trim();
+    if (!nom) return;
+    const { error } = await supabase
+      .from("trajet_categories")
+      .upsert({ nom }, { onConflict: "nom" });
+    if (error) {
+      toast.error("Création impossible", { description: error.message });
+      return;
+    }
+    await queryClient.invalidateQueries({ queryKey: ["trajet-categories"] });
+    setCategorieLibre(nom);
+    setNewCatNom("");
+    toast.success(`Catégorie « ${nom} » créée`);
+  }
+
   async function handleSave() {
     if (!date || !adresseDepart.trim() || !adresseArrivee.trim()) {
       toast.error("Date, adresse de départ et adresse d'arrivée sont obligatoires");
@@ -246,8 +264,8 @@ export function TrajetDialog({
         adresse_arrivee: adresseArrivee,
         adresse_depart_favorite_id: adresseDepartFavId,
         adresse_arrivee_favorite_id: adresseArriveeFavId,
-        categorie,
-        kilometrage: kilometrage ? parseFloat(kilometrage) : null,
+        categorie: (categorieLibre ? "autre" : categorie) as TrajetCategorie,
+        categorie_libre: categorieLibre || null,
         notes: sousTraitance ? demandeText || notes : notes,
         prestataire: sousTraitance ? (prestataire.trim() || null) : null,
         aller_retour: allerRetour,
