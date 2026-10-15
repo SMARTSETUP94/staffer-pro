@@ -201,7 +201,8 @@ function InboxSmartPage() {
               e.categorie_ia === "autre" ||
               (e.statut === "dismissed" &&
                 e.categorie_ia !== "opportunite" &&
-                e.categorie_ia !== "candidature"),
+                e.categorie_ia !== "candidature" &&
+                e.categorie_ia !== "logistique"),
           );
         case "all":
         default:
@@ -269,7 +270,8 @@ function InboxSmartPage() {
           e.categorie_ia === "autre" ||
           (e.statut === "dismissed" &&
             e.categorie_ia !== "opportunite" &&
-            e.categorie_ia !== "candidature"),
+            e.categorie_ia !== "candidature" &&
+            e.categorie_ia !== "logistique"),
       ).length,
     }),
     [emails],
