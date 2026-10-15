@@ -8,7 +8,9 @@
  * d'origine, quand les transferts sont imbriqués).
  */
 
-const FROM_LINE = /(?:^|\n)\s*(?:De\s*|From|Envoy[ée]\s*(?:par|de)?|Sent)\s*:\s*(.+)/gi;
+// NB : « Envoyé : » / « Sent: » sont les lignes de DATE dans Outlook — ne pas
+// les inclure ici, elles écraseraient la ligne « De : » juste au-dessus.
+const FROM_LINE = /(?:^|\n)\s*(?:De\s*|From)\s*:\s*(.+)/gi;
 const EMAIL_IN_LINE = /([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/;
 
 export interface OriginalSender {
