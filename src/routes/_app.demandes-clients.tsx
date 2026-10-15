@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { useChargesAffaires } from "@/hooks/use-charges-affaires";
 import { TAILLE_LABEL, TAILLE_ORDER, type OpportuniteTaille } from "@/lib/opportunites";
+import { extractOriginalSender } from "@/lib/forwarded-email";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -242,7 +243,13 @@ function CreateOppDialog({ email, onClose, onDone }: { email: Row; onClose: () =
   const { data: charges } = useChargesAffaires();
   const m = email.metadata_ia ?? {};
   const domain = email.from_email.split("@")[1]?.split(".")[0] ?? "";
-  const [client, setClient] = useState(m.opp_client ?? email.from_name ?? domain);
+  // Email transféré : le vrai client est l'expéditeur d'origine (bloc « De : »
+  // le plus bas du corps), pas le collègue qui a transféré.
+  const original = extractOriginalSender(email.body_full);
+  const originalDomain = original?.email?.split("@")[1]?.split(".")[0];
+  const [client, setClient] = useState(
+    m.opp_client ?? original?.name ?? originalDomain ?? email.from_name ?? domain,
+  );
   const [nom, setNom] = useState(m.opp_projet ?? email.subject ?? "");
   const [code, setCode] = useState("");
   const [chargeId, setChargeId] = useState(user?.id ?? "");
