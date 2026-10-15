@@ -55,6 +55,8 @@ type Row = {
   subject: string | null;
   received_at: string;
   body_preview: string | null;
+  body_full: string | null;
+  body_content_type: string | null;
   categorie_ia: string | null;
   statut: "pending_review" | "validated" | "dismissed";
   opportunite_id: string | null;
