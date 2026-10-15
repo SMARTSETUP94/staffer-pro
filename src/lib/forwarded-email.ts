@@ -22,10 +22,12 @@ export interface OriginalSender {
 export function extractOriginalSender(body: string | null | undefined): OriginalSender | null {
   if (!body) return null;
   // Retire les balises HTML éventuelles pour retrouver les lignes d'en-tête.
+  // Une balise contenant « @ » est en réalité une adresse <nom@domaine.fr> :
+  // on la conserve.
   const text = body
     .replace(/<br\s*\/?>/gi, "\n")
-    .replace(/<\/(p|div|tr|li)>/gi, "\n")
-    .replace(/<[^>]+>/g, "")
+    .replace(/<\/(p|div|tr|li|h[1-6])>/gi, "\n")
+    .replace(/<(?![^\s>]*@)[^>]+>/g, "")
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">")
     .replace(/&nbsp;/g, " ");
