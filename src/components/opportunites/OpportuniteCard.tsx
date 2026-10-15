@@ -1,6 +1,14 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Sparkles, Trophy, GripVertical, MoreVertical, Trash2, Clock } from "lucide-react";
+import {
+  Sparkles,
+  Trophy,
+  GripVertical,
+  MoreVertical,
+  Trash2,
+  Clock,
+  ArrowUpRight,
+} from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import {
@@ -57,6 +65,8 @@ interface Props {
 /**
  * v0.17 — Carte d'opportunité dans le Kanban.
  * v0.28.1 — Ajout menu kebab avec suppression (gardé par RBAC parent).
+ * v0.50 — Toute la carte est cliquable et ouvre la fiche opportunité ;
+ *         la poignée de drag, le menu et le bouton Signer arrêtent la propagation.
  */
 export function OpportuniteCard({
   opp,
@@ -71,6 +81,15 @@ export function OpportuniteCard({
 
   const goToFiche = () => {
     navigate({ to: "/opportunites/$affaireId", params: { affaireId: opp.id } });
+  };
+
+  /** Entrée/espace sur la carte elle-même (pas sur un contrôle interne) → fiche. */
+  const onCardKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.target !== e.currentTarget) return;
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      goToFiche();
+    }
   };
 
   const style: React.CSSProperties = {
@@ -97,8 +116,13 @@ export function OpportuniteCard({
     <div
       ref={setNodeRef}
       style={style}
+      role="button"
+      tabIndex={0}
+      onClick={goToFiche}
+      onKeyDown={onCardKeyDown}
+      title={`Ouvrir la fiche de l'opportunité ${opp.numero}`}
       className={cn(
-        "group rounded-lg border border-border bg-card p-3 shadow-sm transition-shadow hover:shadow-md focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-1",
+        "group cursor-pointer rounded-lg border border-border bg-card p-3 shadow-sm transition-all hover:border-primary/60 hover:shadow-md focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         isDragging && "opacity-40",
       )}
     >
@@ -108,24 +132,15 @@ export function OpportuniteCard({
             type="button"
             {...attributes}
             {...listeners}
+            onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => e.stopPropagation()}
             className="mt-0.5 cursor-grab rounded text-muted-foreground opacity-0 transition-opacity focus:opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring group-hover:opacity-100 active:cursor-grabbing"
             aria-label={`Déplacer l'opportunité ${opp.numero}`}
           >
             <GripVertical className="h-4 w-4" />
           </button>
         )}
-        <div
-          className="min-w-0 flex-1 cursor-pointer"
-          role="button"
-          tabIndex={0}
-          onClick={goToFiche}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
-              goToFiche();
-            }
-          }}
-        >
+        <div className="min-w-0 flex-1">
           <div className="flex items-baseline justify-between gap-2">
             <span className="font-mono text-xs font-bold text-primary">{opp.numero}</span>
             <div className="flex items-center gap-1">
@@ -157,6 +172,10 @@ export function OpportuniteCard({
                   </DropdownMenuContent>
                 </DropdownMenu>
               )}
+              <ArrowUpRight
+                className="h-3.5 w-3.5 shrink-0 text-muted-foreground/70 transition-colors group-hover:text-primary"
+                aria-hidden="true"
+              />
             </div>
           </div>
           <div className="mt-0.5 truncate text-sm font-semibold text-foreground">
@@ -216,7 +235,7 @@ export function OpportuniteCard({
                 e.stopPropagation();
                 onSign(opp);
               }}
-              className="mt-2 h-7 w-full rounded-md bg-primary text-[11px] font-semibold text-primary-foreground hover:bg-primary/90"
+              className="mt-2 h-7 w-full rounded-md bg-primary text-primary-foreground hover:bg-primary/90"
             >
               <Trophy className="mr-1 h-3 w-3" /> Signer cette opportunité
             </Button>

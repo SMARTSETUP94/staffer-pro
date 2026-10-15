@@ -11,7 +11,7 @@
  *      validation regex /^5\d{3}$/ + appel RPC sign_opportunite (unicité côté BDD).
  */
 import { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import {
   Loader2,
   Plus,
@@ -20,6 +20,7 @@ import {
   ChevronRight,
   ExternalLink,
   Check,
+  ArrowUpRight,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -64,6 +65,7 @@ import {
   isValidCode9XXX,
   mergeRowOverlay,
   nextCell,
+  isTableurEditableTarget,
 } from "@/lib/opportunites-tableur-helpers";
 import { useNextOpportuniteCode } from "@/hooks/use-next-opportunite-code";
 import { useUpsertOpportunite } from "@/hooks/use-upsert-opportunite";
@@ -117,8 +119,34 @@ export function OpportunitesTableurView({
   defaultChargeId,
   onRowsMutated,
 }: Props) {
+  const navigate = useNavigate();
   const { fetchNext } = useNextOpportuniteCode();
   const { create, update } = useUpsertOpportunite();
+
+  /**
+   * v0.50 — Clic n'importe où sur la ligne (hors champ éditable actif) → fiche opportunité.
+   * Les brouillons non encore enregistrés (affaireId null) ne sont pas cliquables.
+   */
+  const handleRowClick = useCallback(
+    (e: React.MouseEvent<HTMLTableRowElement>, row: TableurRow) => {
+      if (!row.affaireId) return;
+      if (isTableurEditableTarget(e.target)) return;
+      const sel = window.getSelection();
+      if (
+        sel &&
+        !sel.isCollapsed &&
+        sel.anchorNode &&
+        e.currentTarget.contains(sel.anchorNode)
+      ) {
+        return;
+      }
+      navigate({
+        to: "/opportunites/$affaireId",
+        params: { affaireId: row.affaireId },
+      });
+    },
+    [navigate],
+  );
 
   // Lignes brouillons en local (pas encore persistées)
   const [drafts, setDrafts] = useState<TableurRow[]>([]);
@@ -534,6 +562,9 @@ export function OpportunitesTableurView({
         <table className="w-full text-sm">
           <thead className="border-b border-border bg-muted/30 text-xs uppercase tracking-wider text-muted-foreground">
             <tr>
+              <th className="w-8 px-1 py-2">
+                <span className="sr-only">Ouvrir la fiche</span>
+              </th>
               <th className="px-2 py-2 text-left font-semibold">Code 9XXX</th>
               <th className="px-2 py-2 text-left font-semibold">Client / chantier</th>
               <th className="px-2 py-2 text-left font-semibold">Deviseur</th>
@@ -555,7 +586,7 @@ export function OpportunitesTableurView({
             {pageRows.length === 0 && (
               <tr>
                 <td
-                  colSpan={canManage ? 15 : 14}
+                  colSpan={canManage ? 16 : 15}
                   className="px-4 py-8 text-center text-xs text-muted-foreground"
                 >
                   Aucune opportunité ne correspond aux filtres.
@@ -577,11 +608,33 @@ export function OpportunitesTableurView({
                 isOwner,
                 alreadySigned: !!row.signed_affaire_id,
               });
+              const openable = !!row.affaireId;
               return (
                 <tr
                   key={row.id}
-                  className={cn("border-b border-border/40 transition-colors", bg)}
+                  onClick={(e) => handleRowClick(e, row)}
+                  title={openable ? `Ouvrir la fiche de ${row.numero}` : undefined}
+                  className={cn(
+                    "border-b border-border/40 transition-colors hover:bg-primary/5",
+                    openable && "cursor-pointer",
+                    bg,
+                  )}
                 >
+                  {/* Ouvrir la fiche */}
+                  <td className="px-1 py-1 text-center align-middle">
+                    {row.affaireId ? (
+                      <Link
+                        to="/opportunites/$affaireId"
+                        params={{ affaireId: row.affaireId }}
+                        aria-label={`Ouvrir la fiche de ${row.numero}`}
+                        className="inline-flex h-6 w-6 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary"
+                      >
+                        <ArrowUpRight className="h-3.5 w-3.5" />
+                      </Link>
+                    ) : (
+                      <span className="inline-block h-6 w-6" aria-hidden="true" />
+                    )}
+                  </td>
                   {/* Code 9XXX */}
                   <td className="px-2 py-1">
                     <Input
@@ -835,17 +888,6 @@ export function OpportunitesTableurView({
                             <Check className="h-3 w-3 text-emerald-500" />
                           ) : null}
                         </span>
-                        <Button
-                          asChild
-                          variant="ghost"
-                          size="sm"
-                          className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
-                          aria-label="Ouvrir la fiche"
-                        >
-                          <Link to="/opportunites/$affaireId" params={{ affaireId: row.id }}>
-                            <ExternalLink className="h-3.5 w-3.5" />
-                          </Link>
-                        </Button>
                         <Button
                           variant="ghost"
                           size="sm"
