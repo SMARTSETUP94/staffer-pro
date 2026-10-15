@@ -6,6 +6,9 @@ import { Truck, Plus, AlertTriangle, ExternalLink, Info } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { Link } from "@tanstack/react-router";
+import { ETAPE_CLASSES, ETAPE_LABELS, etapeCouvreJour, heureCourte } from "@/lib/logistique/etapes";
+import type { EtapeLogistique } from "@/hooks/use-etapes-logistiques";
 import {
   alerteDate,
   alerteCT,
@@ -36,6 +39,8 @@ interface Props {
   /** v0.18.1 — Bouton "+ Trajet sous-traité" en bas de chaque colonne de jour */
   onAddTrajetSousTraite?: (date: Date) => void;
   onEditTrajet: (trajet: Trajet) => void;
+  /** Étapes du planning logistique utilisant un véhicule de la flotte */
+  etapes?: EtapeLogistique[];
 }
 
 export function FlotteGrid({
@@ -48,6 +53,7 @@ export function FlotteGrid({
   onAddTrajet,
   onAddTrajetSousTraite,
   onEditTrajet,
+  etapes = [],
 }: Props) {
   const days = useMemo(() => {
     const all = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
@@ -202,6 +208,7 @@ export function FlotteGrid({
                   {days.map((d) => {
                     const dateStr = format(d, "yyyy-MM-dd");
                     const cellTrajets = trajetsByVehDay.get(`${v.id}::${dateStr}`) ?? [];
+                    const cellEtapes = etapes.filter((e) => e.vehicule_id === v.id && etapeCouvreJour(e, dateStr));
                     return (
                       <td
                         key={d.toISOString()}
@@ -211,6 +218,30 @@ export function FlotteGrid({
                         )}
                       >
                         <div className="space-y-1">
+                          {cellEtapes.length + cellTrajets.length > 1 && (
+                            <div className="flex items-center gap-1 text-[9px] font-semibold text-destructive">
+                              <AlertTriangle className="h-3 w-3" /> Double réservation
+                            </div>
+                          )}
+                          {cellEtapes.map((e) => (
+                            <Link
+                              key={e.id}
+                              to="/affaires/$affaireId/logistique"
+                              params={{ affaireId: e.affaire_id }}
+                              className={cn(
+                                "block w-full rounded px-1.5 py-1 text-left text-[11px] hover:brightness-110",
+                                ETAPE_CLASSES[e.type],
+                                e.statut === "propose" && "opacity-70 outline-dashed outline-1",
+                              )}
+                              title="Étape du planning logistique — ouvrir le chantier"
+                            >
+                              <div className="flex justify-between gap-1 font-semibold">
+                                <span className="truncate">{ETAPE_LABELS[e.type]}</span>
+                                <span>{heureCourte(e.heure_debut) ?? ""}</span>
+                              </div>
+                              {e.affaire && <div className="truncate text-[10px]">{e.affaire.numero} · {e.affaire.nom}</div>}
+                            </Link>
+                          ))}
                           {cellTrajets.map((t) => {
                             const driver = t.chauffeur_id ? employesById.get(t.chauffeur_id) : null;
                             const aff = t.affaire_id ? affairesById.get(t.affaire_id) : null;

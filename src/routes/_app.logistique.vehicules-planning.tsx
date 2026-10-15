@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { usePlanningData } from "@/hooks/use-planning-data";
 import { useVehicules, type Trajet } from "@/hooks/use-vehicules";
 import { useTrajetsWeek } from "@/hooks/use-trajets";
+import { useEtapesLogistiques } from "@/hooks/use-etapes-logistiques";
 import { WeekPicker } from "@/components/planning/WeekPicker";
 import { FlotteGrid } from "@/components/planning/FlotteGrid";
 import { SuggestionsTrajetsBloc } from "@/components/planning/SuggestionsTrajetsBloc";
@@ -35,6 +36,7 @@ function VehiculesPlanningPage() {
   const { vehicules } = useVehicules();
   const { trajets, refresh: refreshTrajets } = useTrajetsWeek(weekStart, weekEnd);
   const { employes, affaires, loading, error } = usePlanningData(weekStart, weekEnd);
+  const { data: etapes = [] } = useEtapesLogistiques(format(weekStart, "yyyy-MM-dd"), format(weekEnd, "yyyy-MM-dd"));
 
   const [trajetDlgOpen, setTrajetDlgOpen] = useState(false);
   const [exportSousTraitanceOpen, setExportSousTraitanceOpen] = useState(false);
@@ -125,6 +127,7 @@ function VehiculesPlanningPage() {
             employesById={new Map(employes.map((e) => [e.id, { id: e.id, prenom: e.prenom, nom: e.nom }]))}
             affairesById={new Map(affaires.map((a) => [a.id, { id: a.id, numero: a.numero }]))}
             showWeekend={showWeekend}
+            etapes={etapes}
             onAddTrajet={(vId, d) => {
               setEditTrajet(null);
               setDefaultTrajetVehId(vId);
