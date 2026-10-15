@@ -431,8 +431,9 @@ function InboxSmartPage() {
             Inbox SMART
           </h1>
           <p className="text-sm text-muted-foreground">
-            Tri des emails entrants{" "}
-            <code className="text-xs">smart@setup.paris</code> — relève toutes les 5 min.
+            Tri des emails entrants <code className="text-xs">smart@setup.paris</code>,{" "}
+            <code className="text-xs">devis@setup.paris</code> et{" "}
+            <code className="text-xs">log@setup.paris</code> — relève toutes les 5 min.
           </p>
         </div>
         <Button onClick={pollNow} disabled={polling} variant="outline">
@@ -514,6 +515,14 @@ function InboxSmartPage() {
                           className={`text-[11px] px-1.5 py-0.5 rounded border font-medium ${CATEGORIE_COLOR[e.categorie_ia]}`}
                         >
                           {CATEGORIE_LABEL[e.categorie_ia]}
+                        </span>
+                      )}
+                      {e.source_boite && e.source_boite !== "smart" && (
+                        <span
+                          className={`text-[11px] px-1.5 py-0.5 rounded border font-medium ${SOURCE_COLOR[e.source_boite]}`}
+                          title={`Reçu sur ${SOURCE_LABEL[e.source_boite]}setup.paris`}
+                        >
+                          {SOURCE_LABEL[e.source_boite]}
                         </span>
                       )}
                       {e.confiance_ia != null && (
