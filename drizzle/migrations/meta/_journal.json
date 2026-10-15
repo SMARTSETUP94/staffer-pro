@@ -15,6 +15,13 @@
       "when": 1792059657707,
       "tag": "0001_affaires_pipeline_opportunites_access",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792060355020,
+      "tag": "0002_planning_logistique_socle",
+      "breakpoints": true
     }
   ]
 }
