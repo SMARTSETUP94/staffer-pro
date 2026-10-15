@@ -156,6 +156,73 @@ export type Database = {
           },
         ]
       }
+      affaire_besoins_logistiques: {
+        Row: {
+          affaire_id: string
+          article: string
+          commande_le: string | null
+          created_at: string
+          date_limite_atelier: string | null
+          fournisseur: string | null
+          id: string
+          note: string | null
+          origine: string
+          proposition_id: string | null
+          quantite: string | null
+          statut: Database["public"]["Enums"]["besoin_statut"]
+        }
+        Insert: {
+          affaire_id: string
+          article: string
+          commande_le?: string | null
+          created_at?: string
+          date_limite_atelier?: string | null
+          fournisseur?: string | null
+          id?: string
+          note?: string | null
+          origine?: string
+          proposition_id?: string | null
+          quantite?: string | null
+          statut?: Database["public"]["Enums"]["besoin_statut"]
+        }
+        Update: {
+          affaire_id?: string
+          article?: string
+          commande_le?: string | null
+          created_at?: string
+          date_limite_atelier?: string | null
+          fournisseur?: string | null
+          id?: string
+          note?: string | null
+          origine?: string
+          proposition_id?: string | null
+          quantite?: string | null
+          statut?: Database["public"]["Enums"]["besoin_statut"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affaire_besoins_logistiques_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "affaires"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affaire_besoins_logistiques_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "v_affaire_consommation"
+            referencedColumns: ["affaire_id"]
+          },
+          {
+            foreignKeyName: "affaire_besoins_logistiques_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "v_affaires_avec_plan_status"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       affaire_commentaires: {
         Row: {
           affaire_id: string
@@ -457,6 +524,162 @@ export type Database = {
         }
         Relationships: []
       }
+      affaire_etapes_logistiques: {
+        Row: {
+          acces: string | null
+          affaire_id: string
+          calcul_regle: string | null
+          contact_id: string | null
+          contenu: string | null
+          created_at: string
+          created_by: string | null
+          date_debut: string
+          date_fin: string | null
+          equipe: string | null
+          heure_debut: string | null
+          heure_fin: string | null
+          horaire_libre: string | null
+          id: string
+          immatriculation_libre: string | null
+          lieu_id: string | null
+          lieu_libre: string | null
+          nb_personnes: number | null
+          nb_vehicules: number | null
+          note: string | null
+          origine: Database["public"]["Enums"]["etape_logistique_origine"]
+          outlook_event_id: string | null
+          photos_optionnelles: boolean
+          proposition_id: string | null
+          sens: string | null
+          statut: Database["public"]["Enums"]["etape_logistique_statut"]
+          trajet_id: string | null
+          type: Database["public"]["Enums"]["etape_logistique_type"]
+          updated_at: string
+          vehicule_id: string | null
+        }
+        Insert: {
+          acces?: string | null
+          affaire_id: string
+          calcul_regle?: string | null
+          contact_id?: string | null
+          contenu?: string | null
+          created_at?: string
+          created_by?: string | null
+          date_debut: string
+          date_fin?: string | null
+          equipe?: string | null
+          heure_debut?: string | null
+          heure_fin?: string | null
+          horaire_libre?: string | null
+          id?: string
+          immatriculation_libre?: string | null
+          lieu_id?: string | null
+          lieu_libre?: string | null
+          nb_personnes?: number | null
+          nb_vehicules?: number | null
+          note?: string | null
+          origine?: Database["public"]["Enums"]["etape_logistique_origine"]
+          outlook_event_id?: string | null
+          photos_optionnelles?: boolean
+          proposition_id?: string | null
+          sens?: string | null
+          statut?: Database["public"]["Enums"]["etape_logistique_statut"]
+          trajet_id?: string | null
+          type: Database["public"]["Enums"]["etape_logistique_type"]
+          updated_at?: string
+          vehicule_id?: string | null
+        }
+        Update: {
+          acces?: string | null
+          affaire_id?: string
+          calcul_regle?: string | null
+          contact_id?: string | null
+          contenu?: string | null
+          created_at?: string
+          created_by?: string | null
+          date_debut?: string
+          date_fin?: string | null
+          equipe?: string | null
+          heure_debut?: string | null
+          heure_fin?: string | null
+          horaire_libre?: string | null
+          id?: string
+          immatriculation_libre?: string | null
+          lieu_id?: string | null
+          lieu_libre?: string | null
+          nb_personnes?: number | null
+          nb_vehicules?: number | null
+          note?: string | null
+          origine?: Database["public"]["Enums"]["etape_logistique_origine"]
+          outlook_event_id?: string | null
+          photos_optionnelles?: boolean
+          proposition_id?: string | null
+          sens?: string | null
+          statut?: Database["public"]["Enums"]["etape_logistique_statut"]
+          trajet_id?: string | null
+          type?: Database["public"]["Enums"]["etape_logistique_type"]
+          updated_at?: string
+          vehicule_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affaire_etapes_logistiques_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "affaires"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affaire_etapes_logistiques_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "v_affaire_consommation"
+            referencedColumns: ["affaire_id"]
+          },
+          {
+            foreignKeyName: "affaire_etapes_logistiques_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "v_affaires_avec_plan_status"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affaire_etapes_logistiques_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts_logistiques"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affaire_etapes_logistiques_lieu_id_fkey"
+            columns: ["lieu_id"]
+            isOneToOne: false
+            referencedRelation: "lieux"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affaire_etapes_logistiques_trajet_id_fkey"
+            columns: ["trajet_id"]
+            isOneToOne: false
+            referencedRelation: "trajets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affaire_etapes_logistiques_vehicule_id_fkey"
+            columns: ["vehicule_id"]
+            isOneToOne: false
+            referencedRelation: "v_vehicules_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affaire_etapes_logistiques_vehicule_id_fkey"
+            columns: ["vehicule_id"]
+            isOneToOne: false
+            referencedRelation: "vehicules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       affaire_planning_metier: {
         Row: {
           affaire_id: string
@@ -556,10 +779,13 @@ export type Database = {
           contact_site_tel: string | null
           created_at: string
           date_debut: string | null
+          date_debut_production: string | null
           date_demontage: string | null
+          date_entree_stock: string | null
           date_evenement_debut: string | null
           date_evenement_fin: string | null
           date_fin_prevue: string | null
+          date_j1_installation: string | null
           date_montage: string | null
           date_opportunite: string | null
           date_pat: string | null
@@ -567,6 +793,10 @@ export type Database = {
           heures_prevues_montage: number
           id: string
           lieu: string | null
+          logistique_observations: string | null
+          logistique_prochaine_action: string | null
+          logistique_prochaine_action_echeance: string | null
+          logistique_statut: string
           montage_nature_prestation: string | null
           montage_nb_20m3: number | null
           montage_nb_semi: number | null
@@ -579,6 +809,7 @@ export type Database = {
           phase: Database["public"]["Enums"]["affaire_phase"]
           responsable_demontage_id: string | null
           responsable_montage_id: string | null
+          responsable_production_id: string | null
           signed_at: string | null
           statut: Database["public"]["Enums"]["affaire_statut"]
           statut_opportunite:
@@ -604,10 +835,13 @@ export type Database = {
           contact_site_tel?: string | null
           created_at?: string
           date_debut?: string | null
+          date_debut_production?: string | null
           date_demontage?: string | null
+          date_entree_stock?: string | null
           date_evenement_debut?: string | null
           date_evenement_fin?: string | null
           date_fin_prevue?: string | null
+          date_j1_installation?: string | null
           date_montage?: string | null
           date_opportunite?: string | null
           date_pat?: string | null
@@ -615,6 +849,10 @@ export type Database = {
           heures_prevues_montage?: number
           id?: string
           lieu?: string | null
+          logistique_observations?: string | null
+          logistique_prochaine_action?: string | null
+          logistique_prochaine_action_echeance?: string | null
+          logistique_statut?: string
           montage_nature_prestation?: string | null
           montage_nb_20m3?: number | null
           montage_nb_semi?: number | null
@@ -627,6 +865,7 @@ export type Database = {
           phase?: Database["public"]["Enums"]["affaire_phase"]
           responsable_demontage_id?: string | null
           responsable_montage_id?: string | null
+          responsable_production_id?: string | null
           signed_at?: string | null
           statut?: Database["public"]["Enums"]["affaire_statut"]
           statut_opportunite?:
@@ -652,10 +891,13 @@ export type Database = {
           contact_site_tel?: string | null
           created_at?: string
           date_debut?: string | null
+          date_debut_production?: string | null
           date_demontage?: string | null
+          date_entree_stock?: string | null
           date_evenement_debut?: string | null
           date_evenement_fin?: string | null
           date_fin_prevue?: string | null
+          date_j1_installation?: string | null
           date_montage?: string | null
           date_opportunite?: string | null
           date_pat?: string | null
@@ -663,6 +905,10 @@ export type Database = {
           heures_prevues_montage?: number
           id?: string
           lieu?: string | null
+          logistique_observations?: string | null
+          logistique_prochaine_action?: string | null
+          logistique_prochaine_action_echeance?: string | null
+          logistique_statut?: string
           montage_nature_prestation?: string | null
           montage_nb_20m3?: number | null
           montage_nb_semi?: number | null
@@ -675,6 +921,7 @@ export type Database = {
           phase?: Database["public"]["Enums"]["affaire_phase"]
           responsable_demontage_id?: string | null
           responsable_montage_id?: string | null
+          responsable_production_id?: string | null
           signed_at?: string | null
           statut?: Database["public"]["Enums"]["affaire_statut"]
           statut_opportunite?:
@@ -1358,6 +1605,63 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      contacts_logistiques: {
+        Row: {
+          actif: boolean
+          client_id: string | null
+          created_at: string
+          email: string | null
+          fonction: string | null
+          id: string
+          lieu_id: string | null
+          nom: string
+          notes: string | null
+          societe: string | null
+          telephone: string | null
+        }
+        Insert: {
+          actif?: boolean
+          client_id?: string | null
+          created_at?: string
+          email?: string | null
+          fonction?: string | null
+          id?: string
+          lieu_id?: string | null
+          nom: string
+          notes?: string | null
+          societe?: string | null
+          telephone?: string | null
+        }
+        Update: {
+          actif?: boolean
+          client_id?: string | null
+          created_at?: string
+          email?: string | null
+          fonction?: string | null
+          id?: string
+          lieu_id?: string | null
+          nom?: string
+          notes?: string | null
+          societe?: string | null
+          telephone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contacts_logistiques_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contacts_logistiques_lieu_id_fkey"
+            columns: ["lieu_id"]
+            isOneToOne: false
+            referencedRelation: "lieux"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       content_astuces: {
         Row: {
@@ -3332,6 +3636,45 @@ export type Database = {
           latitude?: number | null
           longitude?: number | null
           type?: Database["public"]["Enums"]["lieu_type"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      logistique_parametres: {
+        Row: {
+          alias_noms: string[]
+          delai_appro: number
+          delai_chargement: number
+          delai_chargement_retour: number
+          delai_dechargement: number
+          delai_emballage: number
+          duree_montage: number
+          id: boolean
+          modele_ia: string | null
+          updated_at: string
+        }
+        Insert: {
+          alias_noms?: string[]
+          delai_appro?: number
+          delai_chargement?: number
+          delai_chargement_retour?: number
+          delai_dechargement?: number
+          delai_emballage?: number
+          duree_montage?: number
+          id?: boolean
+          modele_ia?: string | null
+          updated_at?: string
+        }
+        Update: {
+          alias_noms?: string[]
+          delai_appro?: number
+          delai_chargement?: number
+          delai_chargement_retour?: number
+          delai_dechargement?: number
+          delai_emballage?: number
+          duree_montage?: number
+          id?: boolean
+          modele_ia?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -6270,6 +6613,7 @@ export type Database = {
         | "CACES_R489"
         | "CACES_R486"
         | "CACES_R484"
+      besoin_statut: "a_commander" | "commande" | "recu" | "annule"
       candidature_statut:
         | "nouvelle"
         | "a_rencontrer"
@@ -6305,6 +6649,18 @@ export type Database = {
         | "autre"
         | "logistique"
       email_statut: "pending_review" | "validated" | "dismissed"
+      etape_logistique_origine: "jalonnement" | "retroplanning" | "manuel"
+      etape_logistique_statut: "propose" | "valide" | "fait" | "annule"
+      etape_logistique_type:
+        | "appro"
+        | "emballage"
+        | "chargement"
+        | "livraison"
+        | "montage"
+        | "finitions"
+        | "permanence"
+        | "demontage"
+        | "dechargement"
       fabrication_etape_statut:
         | "a_faire"
         | "en_cours"
@@ -6572,6 +6928,7 @@ export const Constants = {
         "CACES_R486",
         "CACES_R484",
       ],
+      besoin_statut: ["a_commander", "commande", "recu", "annule"],
       candidature_statut: [
         "nouvelle",
         "a_rencontrer",
@@ -6612,6 +6969,19 @@ export const Constants = {
         "logistique",
       ],
       email_statut: ["pending_review", "validated", "dismissed"],
+      etape_logistique_origine: ["jalonnement", "retroplanning", "manuel"],
+      etape_logistique_statut: ["propose", "valide", "fait", "annule"],
+      etape_logistique_type: [
+        "appro",
+        "emballage",
+        "chargement",
+        "livraison",
+        "montage",
+        "finitions",
+        "permanence",
+        "demontage",
+        "dechargement",
+      ],
       fabrication_etape_statut: [
         "a_faire",
         "en_cours",

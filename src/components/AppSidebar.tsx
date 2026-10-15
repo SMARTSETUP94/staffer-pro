@@ -104,6 +104,7 @@ function buildSections(
     {
       label: "Logistique",
       items: [
+        { title: "Planning logistique", url: "/logistique", icon: Calendar, cap: "logistique.planning.view" },
         { title: "Véhicules", url: "/flotte", icon: Truck, cap: "section.logistique" },
         { title: "Planning véhicules", url: "/logistique/vehicules-planning", icon: Calendar, cap: "section.logistique" },
         { title: "Demandes transport", url: "/export/demandes-devis", icon: ClipboardList, cap: "section.admin" },
@@ -242,7 +243,7 @@ function applyLogistiqueOppsMode(sections: NavSection[]): NavSection[] {
  * Prend le pas sur tous les autres modes. Aucun blocage d'URL : l'admin peut
  * toujours ouvrir /admin/feature-flags en direct pour désactiver le mode.
  */
-const SA_MODE_URLS = new Set(["/opportunites", "/demandes-clients", "/affaires"]);
+const SA_MODE_URLS = new Set(["/opportunites", "/demandes-clients", "/affaires", "/logistique"]);
 
 function applySuiviAffairesMode(sections: NavSection[]): NavSection[] {
   return sections

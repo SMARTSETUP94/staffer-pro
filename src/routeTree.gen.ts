@@ -25,6 +25,7 @@ import { Route as AppChargeAtelierRouteImport } from './routes/_app.charge-ateli
 import { Route as AppClientsRouteImport } from './routes/_app.clients'
 import { Route as AppDemandesClientsRouteImport } from './routes/_app.demandes-clients'
 import { Route as AppEcheancesRouteImport } from './routes/_app.echeances'
+import { Route as AppEcranAtelierRouteImport } from './routes/_app.ecran-atelier'
 import { Route as AppEmployesRouteImport } from './routes/_app.employes'
 import { Route as AppExportRouteImport } from './routes/_app.export'
 import { Route as AppFlotteRouteImport } from './routes/_app.flotte'
@@ -78,6 +79,7 @@ import { Route as AppExportFeuilleDeRouteRouteImport } from './routes/_app.expor
 import { Route as AppFabricationIndexRouteImport } from './routes/_app.fabrication.index'
 import { Route as AppFabricationMesEtapesRouteImport } from './routes/_app.fabrication.mes-etapes'
 import { Route as AppImportsPlanningRouteImport } from './routes/_app.imports.planning'
+import { Route as AppLogistiqueIndexRouteImport } from './routes/_app.logistique.index'
 import { Route as AppLogistiqueVehiculesPlanningRouteImport } from './routes/_app.logistique.vehicules-planning'
 import { Route as AppOpportunitesIndexRouteImport } from './routes/_app.opportunites.index'
 import { Route as AppOpportunitesAffaireIdRouteImport } from './routes/_app.opportunites.$affaireId'
@@ -101,6 +103,7 @@ import { Route as AppAffairesAffaireIdEquipeRouteImport } from './routes/_app.af
 import { Route as AppAffairesAffaireIdFabricationRouteImport } from './routes/_app.affaires.$affaireId.fabrication'
 import { Route as AppAffairesAffaireIdGrilleRouteImport } from './routes/_app.affaires.$affaireId.grille'
 import { Route as AppAffairesAffaireIdJournalRouteImport } from './routes/_app.affaires.$affaireId.journal'
+import { Route as AppAffairesAffaireIdLogistiqueRouteImport } from './routes/_app.affaires.$affaireId.logistique'
 import { Route as AppAffairesAffaireIdPlanningAtelierRouteImport } from './routes/_app.affaires.$affaireId.planning-atelier'
 import { Route as AppAffairesAffaireIdPlanningChantierRouteImport } from './routes/_app.affaires.$affaireId.planning-chantier'
 import { Route as AppAffairesAffaireIdStaffingRouteImport } from './routes/_app.affaires.$affaireId.staffing'
@@ -188,6 +191,11 @@ const AppDemandesClientsRoute = AppDemandesClientsRouteImport.update({
 const AppEcheancesRoute = AppEcheancesRouteImport.update({
   id: '/echeances',
   path: '/echeances',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppEcranAtelierRoute = AppEcranAtelierRouteImport.update({
+  id: '/ecran-atelier',
+  path: '/ecran-atelier',
   getParentRoute: () => AppRoute,
 } as any)
 const AppEmployesRoute = AppEmployesRouteImport.update({
@@ -457,6 +465,11 @@ const AppImportsPlanningRoute = AppImportsPlanningRouteImport.update({
   path: '/planning',
   getParentRoute: () => AppImportsRoute,
 } as any)
+const AppLogistiqueIndexRoute = AppLogistiqueIndexRouteImport.update({
+  id: '/logistique/',
+  path: '/logistique/',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppLogistiqueVehiculesPlanningRoute =
   AppLogistiqueVehiculesPlanningRouteImport.update({
     id: '/logistique/vehicules-planning',
@@ -587,6 +600,12 @@ const AppAffairesAffaireIdJournalRoute =
     path: '/journal',
     getParentRoute: () => AppAffairesAffaireIdRoute,
   } as any)
+const AppAffairesAffaireIdLogistiqueRoute =
+  AppAffairesAffaireIdLogistiqueRouteImport.update({
+    id: '/logistique',
+    path: '/logistique',
+    getParentRoute: () => AppAffairesAffaireIdRoute,
+  } as any)
 const AppAffairesAffaireIdPlanningAtelierRoute =
   AppAffairesAffaireIdPlanningAtelierRouteImport.update({
     id: '/planning-atelier',
@@ -657,6 +676,7 @@ export interface FileRoutesByFullPath {
   '/clients': typeof AppClientsRouteWithChildren
   '/demandes-clients': typeof AppDemandesClientsRoute
   '/echeances': typeof AppEcheancesRoute
+  '/ecran-atelier': typeof AppEcranAtelierRoute
   '/employes': typeof AppEmployesRouteWithChildren
   '/export': typeof AppExportRouteWithChildren
   '/flotte': typeof AppFlotteRoute
@@ -723,6 +743,7 @@ export interface FileRoutesByFullPath {
   '/devis/': typeof AppDevisIndexRoute
   '/export/': typeof AppExportIndexRoute
   '/fabrication/': typeof AppFabricationIndexRoute
+  '/logistique/': typeof AppLogistiqueIndexRoute
   '/opportunites/': typeof AppOpportunitesIndexRoute
   '/rh/': typeof AppRhIndexRoute
   '/affaires/$affaireId/casting': typeof AppAffairesAffaireIdCastingRoute
@@ -732,6 +753,7 @@ export interface FileRoutesByFullPath {
   '/affaires/$affaireId/fabrication': typeof AppAffairesAffaireIdFabricationRoute
   '/affaires/$affaireId/grille': typeof AppAffairesAffaireIdGrilleRoute
   '/affaires/$affaireId/journal': typeof AppAffairesAffaireIdJournalRoute
+  '/affaires/$affaireId/logistique': typeof AppAffairesAffaireIdLogistiqueRoute
   '/affaires/$affaireId/planning-atelier': typeof AppAffairesAffaireIdPlanningAtelierRoute
   '/affaires/$affaireId/planning-chantier': typeof AppAffairesAffaireIdPlanningChantierRoute
   '/affaires/$affaireId/staffing': typeof AppAffairesAffaireIdStaffingRoute
@@ -758,6 +780,7 @@ export interface FileRoutesByTo {
   '/clients': typeof AppClientsRouteWithChildren
   '/demandes-clients': typeof AppDemandesClientsRoute
   '/echeances': typeof AppEcheancesRoute
+  '/ecran-atelier': typeof AppEcranAtelierRoute
   '/employes': typeof AppEmployesRouteWithChildren
   '/flotte': typeof AppFlotteRoute
   '/heures-analyse': typeof AppHeuresAnalyseRoute
@@ -822,6 +845,7 @@ export interface FileRoutesByTo {
   '/devis': typeof AppDevisIndexRoute
   '/export': typeof AppExportIndexRoute
   '/fabrication': typeof AppFabricationIndexRoute
+  '/logistique': typeof AppLogistiqueIndexRoute
   '/opportunites': typeof AppOpportunitesIndexRoute
   '/rh': typeof AppRhIndexRoute
   '/affaires/$affaireId/casting': typeof AppAffairesAffaireIdCastingRoute
@@ -831,6 +855,7 @@ export interface FileRoutesByTo {
   '/affaires/$affaireId/fabrication': typeof AppAffairesAffaireIdFabricationRoute
   '/affaires/$affaireId/grille': typeof AppAffairesAffaireIdGrilleRoute
   '/affaires/$affaireId/journal': typeof AppAffairesAffaireIdJournalRoute
+  '/affaires/$affaireId/logistique': typeof AppAffairesAffaireIdLogistiqueRoute
   '/affaires/$affaireId/planning-atelier': typeof AppAffairesAffaireIdPlanningAtelierRoute
   '/affaires/$affaireId/planning-chantier': typeof AppAffairesAffaireIdPlanningChantierRoute
   '/affaires/$affaireId/staffing': typeof AppAffairesAffaireIdStaffingRoute
@@ -859,6 +884,7 @@ export interface FileRoutesById {
   '/_app/clients': typeof AppClientsRouteWithChildren
   '/_app/demandes-clients': typeof AppDemandesClientsRoute
   '/_app/echeances': typeof AppEcheancesRoute
+  '/_app/ecran-atelier': typeof AppEcranAtelierRoute
   '/_app/employes': typeof AppEmployesRouteWithChildren
   '/_app/export': typeof AppExportRouteWithChildren
   '/_app/flotte': typeof AppFlotteRoute
@@ -926,6 +952,7 @@ export interface FileRoutesById {
   '/_app/devis/': typeof AppDevisIndexRoute
   '/_app/export/': typeof AppExportIndexRoute
   '/_app/fabrication/': typeof AppFabricationIndexRoute
+  '/_app/logistique/': typeof AppLogistiqueIndexRoute
   '/_app/opportunites/': typeof AppOpportunitesIndexRoute
   '/_app/rh/': typeof AppRhIndexRoute
   '/_app/affaires/$affaireId/casting': typeof AppAffairesAffaireIdCastingRoute
@@ -935,6 +962,7 @@ export interface FileRoutesById {
   '/_app/affaires/$affaireId/fabrication': typeof AppAffairesAffaireIdFabricationRoute
   '/_app/affaires/$affaireId/grille': typeof AppAffairesAffaireIdGrilleRoute
   '/_app/affaires/$affaireId/journal': typeof AppAffairesAffaireIdJournalRoute
+  '/_app/affaires/$affaireId/logistique': typeof AppAffairesAffaireIdLogistiqueRoute
   '/_app/affaires/$affaireId/planning-atelier': typeof AppAffairesAffaireIdPlanningAtelierRoute
   '/_app/affaires/$affaireId/planning-chantier': typeof AppAffairesAffaireIdPlanningChantierRoute
   '/_app/affaires/$affaireId/staffing': typeof AppAffairesAffaireIdStaffingRoute
@@ -964,6 +992,7 @@ export interface FileRouteTypes {
     | '/clients'
     | '/demandes-clients'
     | '/echeances'
+    | '/ecran-atelier'
     | '/employes'
     | '/export'
     | '/flotte'
@@ -1030,6 +1059,7 @@ export interface FileRouteTypes {
     | '/devis/'
     | '/export/'
     | '/fabrication/'
+    | '/logistique/'
     | '/opportunites/'
     | '/rh/'
     | '/affaires/$affaireId/casting'
@@ -1039,6 +1069,7 @@ export interface FileRouteTypes {
     | '/affaires/$affaireId/fabrication'
     | '/affaires/$affaireId/grille'
     | '/affaires/$affaireId/journal'
+    | '/affaires/$affaireId/logistique'
     | '/affaires/$affaireId/planning-atelier'
     | '/affaires/$affaireId/planning-chantier'
     | '/affaires/$affaireId/staffing'
@@ -1065,6 +1096,7 @@ export interface FileRouteTypes {
     | '/clients'
     | '/demandes-clients'
     | '/echeances'
+    | '/ecran-atelier'
     | '/employes'
     | '/flotte'
     | '/heures-analyse'
@@ -1129,6 +1161,7 @@ export interface FileRouteTypes {
     | '/devis'
     | '/export'
     | '/fabrication'
+    | '/logistique'
     | '/opportunites'
     | '/rh'
     | '/affaires/$affaireId/casting'
@@ -1138,6 +1171,7 @@ export interface FileRouteTypes {
     | '/affaires/$affaireId/fabrication'
     | '/affaires/$affaireId/grille'
     | '/affaires/$affaireId/journal'
+    | '/affaires/$affaireId/logistique'
     | '/affaires/$affaireId/planning-atelier'
     | '/affaires/$affaireId/planning-chantier'
     | '/affaires/$affaireId/staffing'
@@ -1165,6 +1199,7 @@ export interface FileRouteTypes {
     | '/_app/clients'
     | '/_app/demandes-clients'
     | '/_app/echeances'
+    | '/_app/ecran-atelier'
     | '/_app/employes'
     | '/_app/export'
     | '/_app/flotte'
@@ -1232,6 +1267,7 @@ export interface FileRouteTypes {
     | '/_app/devis/'
     | '/_app/export/'
     | '/_app/fabrication/'
+    | '/_app/logistique/'
     | '/_app/opportunites/'
     | '/_app/rh/'
     | '/_app/affaires/$affaireId/casting'
@@ -1241,6 +1277,7 @@ export interface FileRouteTypes {
     | '/_app/affaires/$affaireId/fabrication'
     | '/_app/affaires/$affaireId/grille'
     | '/_app/affaires/$affaireId/journal'
+    | '/_app/affaires/$affaireId/logistique'
     | '/_app/affaires/$affaireId/planning-atelier'
     | '/_app/affaires/$affaireId/planning-chantier'
     | '/_app/affaires/$affaireId/staffing'
@@ -1377,6 +1414,13 @@ declare module '@tanstack/react-router' {
       path: '/echeances'
       fullPath: '/echeances'
       preLoaderRoute: typeof AppEcheancesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/ecran-atelier': {
+      id: '/_app/ecran-atelier'
+      path: '/ecran-atelier'
+      fullPath: '/ecran-atelier'
+      preLoaderRoute: typeof AppEcranAtelierRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/employes': {
@@ -1750,6 +1794,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppImportsPlanningRouteImport
       parentRoute: typeof AppImportsRoute
     }
+    '/_app/logistique/': {
+      id: '/_app/logistique/'
+      path: '/logistique'
+      fullPath: '/logistique/'
+      preLoaderRoute: typeof AppLogistiqueIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/logistique/vehicules-planning': {
       id: '/_app/logistique/vehicules-planning'
       path: '/logistique/vehicules-planning'
@@ -1911,6 +1962,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAffairesAffaireIdJournalRouteImport
       parentRoute: typeof AppAffairesAffaireIdRoute
     }
+    '/_app/affaires/$affaireId/logistique': {
+      id: '/_app/affaires/$affaireId/logistique'
+      path: '/logistique'
+      fullPath: '/affaires/$affaireId/logistique'
+      preLoaderRoute: typeof AppAffairesAffaireIdLogistiqueRouteImport
+      parentRoute: typeof AppAffairesAffaireIdRoute
+    }
     '/_app/affaires/$affaireId/planning-atelier': {
       id: '/_app/affaires/$affaireId/planning-atelier'
       path: '/planning-atelier'
@@ -2057,6 +2115,7 @@ interface AppAffairesAffaireIdRouteChildren {
   AppAffairesAffaireIdFabricationRoute: typeof AppAffairesAffaireIdFabricationRoute
   AppAffairesAffaireIdGrilleRoute: typeof AppAffairesAffaireIdGrilleRoute
   AppAffairesAffaireIdJournalRoute: typeof AppAffairesAffaireIdJournalRoute
+  AppAffairesAffaireIdLogistiqueRoute: typeof AppAffairesAffaireIdLogistiqueRoute
   AppAffairesAffaireIdPlanningAtelierRoute: typeof AppAffairesAffaireIdPlanningAtelierRoute
   AppAffairesAffaireIdPlanningChantierRoute: typeof AppAffairesAffaireIdPlanningChantierRoute
   AppAffairesAffaireIdStaffingRoute: typeof AppAffairesAffaireIdStaffingRoute
@@ -2072,6 +2131,7 @@ const AppAffairesAffaireIdRouteChildren: AppAffairesAffaireIdRouteChildren = {
   AppAffairesAffaireIdFabricationRoute: AppAffairesAffaireIdFabricationRoute,
   AppAffairesAffaireIdGrilleRoute: AppAffairesAffaireIdGrilleRoute,
   AppAffairesAffaireIdJournalRoute: AppAffairesAffaireIdJournalRoute,
+  AppAffairesAffaireIdLogistiqueRoute: AppAffairesAffaireIdLogistiqueRoute,
   AppAffairesAffaireIdPlanningAtelierRoute:
     AppAffairesAffaireIdPlanningAtelierRoute,
   AppAffairesAffaireIdPlanningChantierRoute:
@@ -2097,6 +2157,7 @@ interface AppRouteChildren {
   AppClientsRoute: typeof AppClientsRouteWithChildren
   AppDemandesClientsRoute: typeof AppDemandesClientsRoute
   AppEcheancesRoute: typeof AppEcheancesRoute
+  AppEcranAtelierRoute: typeof AppEcranAtelierRoute
   AppEmployesRoute: typeof AppEmployesRouteWithChildren
   AppExportRoute: typeof AppExportRouteWithChildren
   AppFlotteRoute: typeof AppFlotteRoute
@@ -2153,6 +2214,7 @@ interface AppRouteChildren {
   AppAffairesIndexRoute: typeof AppAffairesIndexRoute
   AppDevisIndexRoute: typeof AppDevisIndexRoute
   AppFabricationIndexRoute: typeof AppFabricationIndexRoute
+  AppLogistiqueIndexRoute: typeof AppLogistiqueIndexRoute
   AppRhIndexRoute: typeof AppRhIndexRoute
   AppMissionsAffaireIdPhaseRoute: typeof AppMissionsAffaireIdPhaseRoute
 }
@@ -2169,6 +2231,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppClientsRoute: AppClientsRouteWithChildren,
   AppDemandesClientsRoute: AppDemandesClientsRoute,
   AppEcheancesRoute: AppEcheancesRoute,
+  AppEcranAtelierRoute: AppEcranAtelierRoute,
   AppEmployesRoute: AppEmployesRouteWithChildren,
   AppExportRoute: AppExportRouteWithChildren,
   AppFlotteRoute: AppFlotteRoute,
@@ -2226,6 +2289,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAffairesIndexRoute: AppAffairesIndexRoute,
   AppDevisIndexRoute: AppDevisIndexRoute,
   AppFabricationIndexRoute: AppFabricationIndexRoute,
+  AppLogistiqueIndexRoute: AppLogistiqueIndexRoute,
   AppRhIndexRoute: AppRhIndexRoute,
   AppMissionsAffaireIdPhaseRoute: AppMissionsAffaireIdPhaseRoute,
 }
