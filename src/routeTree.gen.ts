@@ -43,6 +43,7 @@ import { Route as AppFlotteRouteImport } from './routes/_app.flotte'
 import { Route as AppExportRouteImport } from './routes/_app.export'
 import { Route as AppEmployesRouteImport } from './routes/_app.employes'
 import { Route as AppEcheancesRouteImport } from './routes/_app.echeances'
+import { Route as AppDemandesClientsRouteImport } from './routes/_app.demandes-clients'
 import { Route as AppClientsRouteImport } from './routes/_app.clients'
 import { Route as AppChargeAtelierRouteImport } from './routes/_app.charge-atelier'
 import { Route as AppChargeRouteImport } from './routes/_app.charge'
@@ -276,6 +277,11 @@ const AppEmployesRoute = AppEmployesRouteImport.update({
 const AppEcheancesRoute = AppEcheancesRouteImport.update({
   id: '/echeances',
   path: '/echeances',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppDemandesClientsRoute = AppDemandesClientsRouteImport.update({
+  id: '/demandes-clients',
+  path: '/demandes-clients',
   getParentRoute: () => AppRoute,
 } as any)
 const AppClientsRoute = AppClientsRouteImport.update({
@@ -643,6 +649,7 @@ export interface FileRoutesByFullPath {
   '/charge': typeof AppChargeRoute
   '/charge-atelier': typeof AppChargeAtelierRoute
   '/clients': typeof AppClientsRouteWithChildren
+  '/demandes-clients': typeof AppDemandesClientsRoute
   '/echeances': typeof AppEcheancesRoute
   '/employes': typeof AppEmployesRouteWithChildren
   '/export': typeof AppExportRouteWithChildren
@@ -742,6 +749,7 @@ export interface FileRoutesByTo {
   '/charge': typeof AppChargeRoute
   '/charge-atelier': typeof AppChargeAtelierRoute
   '/clients': typeof AppClientsRouteWithChildren
+  '/demandes-clients': typeof AppDemandesClientsRoute
   '/echeances': typeof AppEcheancesRoute
   '/employes': typeof AppEmployesRouteWithChildren
   '/flotte': typeof AppFlotteRoute
@@ -842,6 +850,7 @@ export interface FileRoutesById {
   '/_app/charge': typeof AppChargeRoute
   '/_app/charge-atelier': typeof AppChargeAtelierRoute
   '/_app/clients': typeof AppClientsRouteWithChildren
+  '/_app/demandes-clients': typeof AppDemandesClientsRoute
   '/_app/echeances': typeof AppEcheancesRoute
   '/_app/employes': typeof AppEmployesRouteWithChildren
   '/_app/export': typeof AppExportRouteWithChildren
@@ -945,6 +954,7 @@ export interface FileRouteTypes {
     | '/charge'
     | '/charge-atelier'
     | '/clients'
+    | '/demandes-clients'
     | '/echeances'
     | '/employes'
     | '/export'
@@ -1044,6 +1054,7 @@ export interface FileRouteTypes {
     | '/charge'
     | '/charge-atelier'
     | '/clients'
+    | '/demandes-clients'
     | '/echeances'
     | '/employes'
     | '/flotte'
@@ -1143,6 +1154,7 @@ export interface FileRouteTypes {
     | '/_app/charge'
     | '/_app/charge-atelier'
     | '/_app/clients'
+    | '/_app/demandes-clients'
     | '/_app/echeances'
     | '/_app/employes'
     | '/_app/export'
@@ -1481,6 +1493,13 @@ declare module '@tanstack/react-router' {
       path: '/echeances'
       fullPath: '/echeances'
       preLoaderRoute: typeof AppEcheancesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/demandes-clients': {
+      id: '/_app/demandes-clients'
+      path: '/demandes-clients'
+      fullPath: '/demandes-clients'
+      preLoaderRoute: typeof AppDemandesClientsRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/clients': {
@@ -2057,6 +2076,7 @@ interface AppRouteChildren {
   AppChargeRoute: typeof AppChargeRoute
   AppChargeAtelierRoute: typeof AppChargeAtelierRoute
   AppClientsRoute: typeof AppClientsRouteWithChildren
+  AppDemandesClientsRoute: typeof AppDemandesClientsRoute
   AppEcheancesRoute: typeof AppEcheancesRoute
   AppEmployesRoute: typeof AppEmployesRouteWithChildren
   AppExportRoute: typeof AppExportRouteWithChildren
@@ -2128,6 +2148,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppChargeRoute: AppChargeRoute,
   AppChargeAtelierRoute: AppChargeAtelierRoute,
   AppClientsRoute: AppClientsRouteWithChildren,
+  AppDemandesClientsRoute: AppDemandesClientsRoute,
   AppEcheancesRoute: AppEcheancesRoute,
   AppEmployesRoute: AppEmployesRouteWithChildren,
   AppExportRoute: AppExportRouteWithChildren,
