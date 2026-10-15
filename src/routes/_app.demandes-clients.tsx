@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Inbox, Loader2, Sparkles, Trophy, X } from "lucide-react";
+import { Inbox, Loader2, MailOpen, Sparkles, Trophy, X } from "lucide-react";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { useCapability } from "@/hooks/use-capability";
@@ -90,7 +90,7 @@ function DemandesClientsPage() {
     setLoading(true);
     const { data, error } = await supabase
       .from("emails_entrants")
-      .select("id, from_email, from_name, subject, received_at, body_preview, categorie_ia, statut, opportunite_id, metadata_ia")
+      .select("id, from_email, from_name, subject, received_at, body_preview, body_full, body_content_type, categorie_ia, statut, opportunite_id, metadata_ia")
       .eq("source_boite", "devis")
       .order("received_at", { ascending: false })
       .limit(300);
