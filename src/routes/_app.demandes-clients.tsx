@@ -1,3 +1,4 @@
+import { ClientCombobox } from "@/components/clients/ClientCombobox";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { format, parseISO } from "date-fns";
@@ -311,10 +312,15 @@ function CreateOppDialog({ email, onClose, onDone }: { email: Row; onClose: () =
   // le plus bas du corps), pas le collègue qui a transféré.
   const original = extractOriginalSender(email.body_full);
   const originalDomain = original?.email?.split("@")[1]?.split(".")[0];
+  const clientEmail = original?.email ?? email.from_email;
+  const fullDomain = clientEmail.split("@")[1]?.toLowerCase() ?? "";
+  const isGenericDomain = /^(setup\.paris|groupe-smart\.fr|gmail\.com|hotmail\.|outlook\.|yahoo\.|icloud\.com|orange\.fr|free\.fr|wanadoo\.fr|live\.)/.test(fullDomain);
   const [client, setClient] = useState(
     m.opp_client ?? original?.name ?? originalDomain ?? email.from_name ?? domain,
   );
-  const [nom, setNom] = useState(m.opp_projet ?? email.subject ?? "");
+  const [clientId, setClientId] = useState<string | null>(null);
+  const cleanSubject = (email.subject ?? "").replace(/^\s*((tr|re|fw|fwd)\s*:\s*)+/i, "").trim();
+  const [nom, setNom] = useState(m.opp_projet ?? cleanSubject);
   const [code, setCode] = useState("");
   const [chargeId, setChargeId] = useState(user?.id ?? "");
   const [taille, setTaille] = useState<OpportuniteTaille>(
@@ -329,6 +335,21 @@ function CreateOppDialog({ email, onClose, onDone }: { email: Row; onClose: () =
 
   useEffect(() => {
     void supabase.rpc("next_affaire_numero", { _prefix: 9 }).then(({ data }) => data && setCode(String(data)));
+    // Rapprochement CRM : domaine email puis nom normalisé.
+    void (async () => {
+      if (fullDomain && !isGenericDomain) {
+        const { data } = await supabase.from("clients").select("id,nom").contains("domaines_email", [fullDomain]).limit(1);
+        if (data?.[0]) { setClientId(data[0].id); setClient(data[0].nom); return; }
+      }
+      if (client.trim()) {
+        const { data: norm } = await supabase.rpc("normalize_client_name", { p: client });
+        if (norm) {
+          const { data } = await supabase.from("clients").select("id,nom").eq("nom_normalise", norm).limit(1);
+          if (data?.[0]) { setClientId(data[0].id); setClient(data[0].nom); }
+        }
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function save() {
@@ -336,6 +357,24 @@ function CreateOppDialog({ email, onClose, onDone }: { email: Row; onClose: () =
     if (!/^9\d{3}$/.test(code)) return toast.error("Code invalide (9XXX)");
     if (!chargeId) return toast.error("Chargé d'affaires obligatoire");
     setSaving(true);
+    // Alimente le CRM : crée la fiche prospect si elle n'existe pas encore.
+    let cid = clientId;
+    if (!cid) {
+      const { data: norm } = await supabase.rpc("normalize_client_name", { p: client.trim() });
+      const { data: found } = await supabase.from("clients").select("id").eq("nom_normalise", norm ?? "").limit(1);
+      cid = found?.[0]?.id ?? null;
+      if (!cid) {
+        const { data: created, error: cErr } = await supabase.from("clients").insert({
+          nom: client.trim(),
+          nom_normalise: norm ?? client.trim().toLowerCase(),
+          domaines_email: fullDomain && !isGenericDomain ? [fullDomain] : [],
+          email: clientEmail.endsWith("@setup.paris") ? null : clientEmail,
+          notes: "Prospect créé depuis une demande devis@",
+        }).select("id").single();
+        if (cErr) toast.warning("Fiche client non créée", { description: cErr.message });
+        cid = created?.id ?? null;
+      }
+    }
     const { error } = await supabase.rpc("create_opportunite", {
       _client: client.trim(),
       _nom: nom.trim() || client.trim(),
@@ -348,6 +387,7 @@ function CreateOppDialog({ email, onClose, onDone }: { email: Row; onClose: () =
     if (error) { setSaving(false); return toast.error("Création impossible", { description: error.message }); }
     const { data: opp } = await supabase.from("affaires").select("id").eq("numero", code).maybeSingle();
     if (opp?.id) {
+      if (cid) await supabase.from("affaires").update({ client_id: cid }).eq("id", opp.id);
       await supabase.from("emails_entrants")
         .update({ opportunite_id: opp.id, statut: "validated", categorie_ia: "opportunite" })
         .eq("id", email.id);
@@ -369,7 +409,7 @@ function CreateOppDialog({ email, onClose, onDone }: { email: Row; onClose: () =
             <div><Label>Code</Label><Input value={code} onChange={(e) => setCode(e.target.value)} /></div>
             <div><Label>Date</Label><Input type="date" value={dateOpp} onChange={(e) => setDateOpp(e.target.value)} /></div>
           </div>
-          <div><Label>Client</Label><Input value={client} onChange={(e) => setClient(e.target.value)} /></div>
+          <div><Label>Client</Label><ClientCombobox value={client} clientId={clientId} onChange={(id, n) => { setClientId(id); setClient(n); }} />{!clientId && client.trim() && <p className="text-xs text-muted-foreground mt-1">Nouveau prospect « {client} » : sa fiche sera créée dans le carnet clients.</p>}</div>
           <div><Label>Projet</Label><Input value={nom} onChange={(e) => setNom(e.target.value)} /></div>
           <div className="grid grid-cols-2 gap-3">
             <div>
