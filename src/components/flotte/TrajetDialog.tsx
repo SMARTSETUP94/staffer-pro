@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Loader2, Trash2, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,7 +21,7 @@ import { AddressAutocomplete } from "./AddressAutocomplete";
 import {
   useVehicules, useAdressesFavorites, type Trajet,
 } from "@/hooks/use-vehicules";
-import { getChauffeursAvecStatut } from "@/hooks/use-trajets";
+import { getChauffeursAvecStatut, useTrajetCategories } from "@/hooks/use-trajets";
 import { PrestataireAutocomplete } from "@/components/sous-traitants/PrestataireAutocomplete";
 import { AffaireCombobox } from "@/components/planning/AffaireCombobox";
 import { X } from "lucide-react";
@@ -84,6 +85,8 @@ export function TrajetDialog({
   const isAdmin = useCapability("flotte.trajet.delete");
   const { vehicules } = useVehicules();
   const { adresses } = useAdressesFavorites();
+  const { data: categoriesPerso = [] } = useTrajetCategories();
+  const queryClient = useQueryClient();
 
   const [vehiculeId, setVehiculeId] = useState<string | null>(null);
   const [chauffeurId, setChauffeurId] = useState<string | null>(null);
@@ -96,6 +99,8 @@ export function TrajetDialog({
   const [adresseDepartFavId, setAdresseDepartFavId] = useState<string | null>(null);
   const [adresseArriveeFavId, setAdresseArriveeFavId] = useState<string | null>(null);
   const [categorie, setCategorie] = useState<TrajetCategorie>("autre");
+  const [categorieLibre, setCategorieLibre] = useState<string>("");
+  const [newCatNom, setNewCatNom] = useState<string>("");
   const [kilometrage, setKilometrage] = useState<string>("");
   const [notes, setNotes] = useState("");
   const [allerRetour, setAllerRetour] = useState(false);
@@ -179,6 +184,7 @@ export function TrajetDialog({
       setAdresseDepartFavId(trajet.adresse_depart_favorite_id);
       setAdresseArriveeFavId(trajet.adresse_arrivee_favorite_id);
       setCategorie(trajet.categorie);
+      setCategorieLibre(trajet.categorie_libre ?? "");
       setKilometrage(trajet.kilometrage?.toString() ?? "");
       setNotes(trajet.notes ?? "");
       setAllerRetour(trajet.aller_retour ?? false);
@@ -197,6 +203,8 @@ export function TrajetDialog({
       setAdresseDepartFavId(null);
       setAdresseArriveeFavId(null);
       setCategorie(defaultCategorie ?? "autre");
+      setCategorieLibre("");
+      setNewCatNom("");
       setKilometrage("");
       setNotes("");
       setAllerRetour(false);
