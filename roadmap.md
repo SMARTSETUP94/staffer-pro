@@ -11,8 +11,8 @@
 - [x] Lot 1 — Socle (étapes, contacts, besoins, paramètres, droits)
 - [x] Lot 2 — Planning /logistique + écran atelier /ecran-atelier
 - [x] Lot 3 — Onglet Logistique sur le chantier, choix véhicule, conflits
-- [ ] Lot 4 — IA lecture jalonnements (pièces jointes log@ + dépôt manuel)
-- [ ] Lot 5 — Rétroplanning + écran de validation des propositions
+- [x] Lot 4 — IA lecture jalonnements (pièces jointes log@ + dépôt manuel)
+- [x] Lot 5 — Rétroplanning + écran de validation des propositions
 - [ ] Lot 6 — Relances
 - [x] Lot 7 — Calendrier Outlook log@ : ABANDONNÉ (Gabin 15/10) — le planning logistique vit dans l'app (mobile inclus) ; synchro Outlook éventuelle plus tard, certains éléments seulement
 - [ ] Compte « Écran atelier » (attend email de la TV)

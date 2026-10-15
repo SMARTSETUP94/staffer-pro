@@ -2,7 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Plus } from "lucide-react";
+import { Plus, Sparkles } from "lucide-react";
+import { JalonnementDialog } from "@/components/logistique/JalonnementDialog";
 import { requireCapability } from "@/lib/capability-guard";
 import { useCapability } from "@/hooks/use-capability";
 import { Button } from "@/components/ui/button";
@@ -24,13 +25,15 @@ function AffaireLogistiquePage() {
   const canEdit = useCapability("logistique.etape.edit");
   const { data: etapes = [], isLoading } = useEtapesAffaire(affaireId);
   const conflits = useMemo(() => conflitsVehicules(etapes), [etapes]);
+  const [jal, setJal] = useState(false);
+  const canIA = useCapability("logistique.proposition.validate");
   const [dlg, setDlg] = useState<{ open: boolean; etape?: EtapeLogistique | null }>({ open: false });
 
   return (
     <div className="space-y-4 rounded-2xl border border-border bg-card p-4 sm:p-6">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">Planning logistique du chantier</h2>
-        {canEdit && <Button size="sm" onClick={() => setDlg({ open: true })}><Plus className="mr-1 h-4 w-4" />Étape</Button>}
+        <div className="flex gap-2">{canIA && <Button size="sm" variant="outline" onClick={() => setJal(true)}><Sparkles className="mr-1 h-4 w-4" />Déposer un jalonnement</Button>}{canEdit && <Button size="sm" onClick={() => setDlg({ open: true })}><Plus className="mr-1 h-4 w-4" />Étape</Button>}</div>
       </div>
       {isLoading ? <p className="text-sm text-muted-foreground">Chargement…</p> : etapes.length === 0 ? (
         <p className="text-sm text-muted-foreground">Aucune étape logistique pour ce chantier.</p>
@@ -57,6 +60,7 @@ function AffaireLogistiquePage() {
           })}
         </ul>
       )}
+      <JalonnementDialog open={jal} onOpenChange={setJal} affaireId={affaireId} />
       <EtapeDialog open={dlg.open} onOpenChange={(o) => setDlg((p) => ({ ...p, open: o }))} etape={dlg.etape} defaultAffaireId={affaireId} />
     </div>
   );

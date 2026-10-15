@@ -11,7 +11,7 @@ const GRAPH = "https://graph.microsoft.com/v1.0";
 const BOX: Record<string, string> = { logistique: "log@setup.paris", devis: "devis@setup.paris" };
 const MAX_BYTES = 15 * 1024 * 1024;
 
-async function getToken(): Promise<string> {
+export async function getToken(): Promise<string> {
   const tenant = process.env.MS_GRAPH_TENANT_ID;
   const clientId = process.env.MS_GRAPH_CLIENT_ID;
   const secret = process.env.MS_GRAPH_CLIENT_SECRET;
@@ -28,7 +28,7 @@ async function getToken(): Promise<string> {
   return ((await res.json()) as { access_token: string }).access_token;
 }
 
-async function resolveMessage(supabase: any, emailId: string) {
+export async function resolveMessage(supabase: any, emailId: string) {
   const { data, error } = await supabase
     .from("emails_entrants").select("message_id_outlook, source_boite").eq("id", emailId).maybeSingle();
   if (error) throw new Error(error.message);
