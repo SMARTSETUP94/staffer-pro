@@ -5065,6 +5065,30 @@ export type Database = {
           },
         ]
       }
+      trajet_categories: {
+        Row: {
+          actif: boolean
+          created_at: string
+          created_by: string | null
+          id: string
+          nom: string
+        }
+        Insert: {
+          actif?: boolean
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          nom: string
+        }
+        Update: {
+          actif?: boolean
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          nom?: string
+        }
+        Relationships: []
+      }
       trajets: {
         Row: {
           adresse_arrivee: string
@@ -5074,6 +5098,7 @@ export type Database = {
           affaire_id: string | null
           aller_retour: boolean
           categorie: Database["public"]["Enums"]["trajet_categorie"]
+          categorie_libre: string | null
           chauffeur_id: string | null
           created_at: string
           created_by: string | null
@@ -5099,6 +5124,7 @@ export type Database = {
           affaire_id?: string | null
           aller_retour?: boolean
           categorie?: Database["public"]["Enums"]["trajet_categorie"]
+          categorie_libre?: string | null
           chauffeur_id?: string | null
           created_at?: string
           created_by?: string | null
@@ -5124,6 +5150,7 @@ export type Database = {
           affaire_id?: string | null
           aller_retour?: boolean
           categorie?: Database["public"]["Enums"]["trajet_categorie"]
+          categorie_libre?: string | null
           chauffeur_id?: string | null
           created_at?: string
           created_by?: string | null

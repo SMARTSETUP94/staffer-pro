@@ -22,6 +22,13 @@
       "when": 1792060355020,
       "tag": "0002_planning_logistique_socle",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1792063997095,
+      "tag": "0003_trajet_categories_perso",
+      "breakpoints": true
     }
   ]
 }
