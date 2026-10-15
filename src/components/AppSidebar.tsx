@@ -244,6 +244,7 @@ export function AppSidebar() {
   const { data: caps, isLoading: capsLoading } = useCapabilitiesSet();
   const simpleMode = useFeatureFlag("mode_simplifie_managers");
   const deploiementCA = useFeatureFlag("deploiement_charges_affaires");
+  const deploiementLO = useFeatureFlag("deploiement_logistique_opps");
 
   // Filtrage : un item est visible si pas de cap OU cap satisfaite.
   // "Aujourd'hui" reste TOUJOURS visible (pas de cap déclarée).
