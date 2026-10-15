@@ -1,3 +1,4 @@
+import { ClientCombobox } from "@/components/clients/ClientCombobox";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { format, parseISO } from "date-fns";
@@ -408,7 +409,7 @@ function CreateOppDialog({ email, onClose, onDone }: { email: Row; onClose: () =
             <div><Label>Code</Label><Input value={code} onChange={(e) => setCode(e.target.value)} /></div>
             <div><Label>Date</Label><Input type="date" value={dateOpp} onChange={(e) => setDateOpp(e.target.value)} /></div>
           </div>
-          <div><Label>Client</Label><Input value={client} onChange={(e) => setClient(e.target.value)} /></div>
+          <div><Label>Client</Label><ClientCombobox value={client} clientId={clientId} onChange={(id, n) => { setClientId(id); setClient(n); }} />{!clientId && client.trim() && <p className="text-xs text-muted-foreground mt-1">Nouveau prospect « {client} » : sa fiche sera créée dans le carnet clients.</p>}</div>
           <div><Label>Projet</Label><Input value={nom} onChange={(e) => setNom(e.target.value)} /></div>
           <div className="grid grid-cols-2 gap-3">
             <div>
