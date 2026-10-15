@@ -25,6 +25,7 @@ import {
   ChevronDown,
   ChevronRight,
   ArrowRightLeft,
+  Truck,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -264,6 +265,9 @@ function InboxSmartPage() {
       opportunite: emails.filter(
         (e) => e.categorie_ia === "opportunite" && e.statut !== "dismissed",
       ).length,
+      logistique: emails.filter(
+        (e) => e.categorie_ia === "logistique" && e.statut !== "dismissed",
+      ).length,
       pub: emails.filter(
         (e) =>
           e.categorie_ia === "pub" ||
@@ -460,6 +464,10 @@ function InboxSmartPage() {
             <TabsTrigger value="opportunite" className="whitespace-nowrap">
               Opportunités
               <span className="ml-1.5 text-xs opacity-60">{counts.opportunite}</span>
+            </TabsTrigger>
+            <TabsTrigger value="logistique" className="whitespace-nowrap">
+              Logistique
+              <span className="ml-1.5 text-xs opacity-60">{counts.logistique}</span>
             </TabsTrigger>
             <TabsTrigger value="pub" className="whitespace-nowrap">
               Pubs / Écartés
@@ -811,6 +819,7 @@ function EmailDetailDialog({
   const CAT_OPTIONS: Array<{ key: CategorieIA; label: string; icon: typeof Building2 }> = [
     { key: "candidature", label: "Candidature", icon: UserPlus },
     { key: "opportunite", label: "Opportunité", icon: Building2 },
+    { key: "logistique", label: "Logistique", icon: Truck },
     { key: "pub", label: "Pub", icon: Megaphone },
     { key: "autre", label: "Autre", icon: HelpCircle },
   ];
