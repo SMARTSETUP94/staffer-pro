@@ -51,12 +51,24 @@ type Classification = {
   resume?: string | null;
 };
 
-async function classifyEmail(lovableKey: string, msg: OutlookMessage): Promise<Classification> {
+async function classifyEmail(
+  lovableKey: string,
+  msg: OutlookMessage,
+  sourceBoite: SourceBoite,
+): Promise<Classification> {
+  const sourceHint =
+    sourceBoite === "devis"
+      ? "Cet email arrive sur devis@setup.paris, la boîte des demandes clients : privilégie 'opportunite' sauf évidence contraire. "
+      : sourceBoite === "logistique"
+        ? "Cet email arrive sur log@setup.paris, la boîte logistique : privilégie 'logistique' sauf évidence contraire. "
+        : "";
   const sys =
     "Tu tries des emails entrants pour une société de scénographie événementielle (SETUP Paris). " +
-    "Classe chaque email en une des 4 catégories : " +
+    sourceHint +
+    "Classe chaque email en une des 5 catégories : " +
     "'candidature' (CV, lettre de motivation, demande d'emploi), " +
     "'opportunite' (demande de devis, appel d'offres, projet client), " +
+    "'logistique' (information logistique : transport, livraison, enlèvement, accès site, horaires de chargement), " +
     "'pub' (newsletter, publicité, prospection commerciale sortante reçue, spam), " +
     "'autre' (le reste). " +
     "Si candidature, devine le métier parmi : construction, métallerie, peinture, numérique, tapisserie, machiniste, logistique, suivi_projet. " +
@@ -81,7 +93,10 @@ Aperçu: ${msg.bodyPreview ?? ""}`;
           type: "object",
           additionalProperties: false,
           properties: {
-            categorie: { type: "string", enum: ["candidature", "opportunite", "pub", "autre"] },
+            categorie: {
+              type: "string",
+              enum: ["candidature", "opportunite", "pub", "logistique", "autre"],
+            },
             confiance: { type: "number", minimum: 0, maximum: 1 },
             metier: { type: ["string", "null"] },
             poste_devine: { type: ["string", "null"] },
@@ -132,7 +147,7 @@ async function fetchInbox(lovableKey: string, connectorKey: string): Promise<Out
     `${OUTLOOK_GW}/me/mailFolders/inbox/messages` +
     `?$top=${MAX_FETCH}` +
     `&$orderby=receivedDateTime desc` +
-    `&$select=id,conversationId,subject,bodyPreview,body,from,receivedDateTime,hasAttachments`;
+    `&$select=id,conversationId,subject,bodyPreview,body,from,toRecipients,ccRecipients,receivedDateTime,hasAttachments`;
   const res = await fetch(url, {
     headers: {
       Authorization: `Bearer ${lovableKey}`,
