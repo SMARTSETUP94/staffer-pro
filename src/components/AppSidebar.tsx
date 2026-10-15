@@ -78,7 +78,7 @@ function buildSections(
       ],
     },
     {
-      label: "Pilotage",
+      label: "Suivi des affaires",
       items: [
         // L6-A : Inbox fusionnée dans `/` (item « Aujourd'hui »).
         { title: "Échéances", url: "/echeances", icon: CalendarClock, cap: "section.affaires" },
