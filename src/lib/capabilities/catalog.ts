@@ -131,6 +131,13 @@ export const CAPABILITY_CATALOG = {
     { key: "inbox_smart.view", label: "Inbox Smart : voir" },
     { key: "demandes_clients.view", label: "Demandes clients : voir" },
   ],
+  "logistique": [
+    { key: "logistique.planning.view", label: "Voir le planning logistique" },
+    { key: "logistique.etape.edit", label: "Modifier les étapes logistiques" },
+    { key: "logistique.proposition.view", label: "Voir les propositions IA" },
+    { key: "logistique.proposition.validate", label: "Valider les propositions IA" },
+    { key: "logistique.parametres.edit", label: "Paramétrer la logistique" },
+  ],
   "mes": [
     { key: "mes_missions.view", label: "Voir les missions" },
     { key: "mes_chantiers.view", label: "Voir les chantiers" },
@@ -225,6 +232,7 @@ export const CAPABILITY_CATEGORY_LABELS: Record<Group, string> = {
   "heures": "Heures",
   "inbox": "Inbox (sources d'alerte)",
   "inbox_smart": "Inbox SMART",
+  "logistique": "Planning logistique",
   "mes": "Espace personnel",
   "mobile": "Mobile",
   "mon-poste": "Mon poste",
