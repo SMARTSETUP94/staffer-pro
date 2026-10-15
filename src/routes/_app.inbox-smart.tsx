@@ -66,8 +66,20 @@ const METIERS_CANDIDATURE = [
   "suivi_projet",
 ];
 
-type CategorieIA = "candidature" | "opportunite" | "pub" | "autre";
+type CategorieIA = "candidature" | "opportunite" | "pub" | "logistique" | "autre";
 type StatutEmail = "pending_review" | "validated" | "dismissed";
+type SourceBoite = "smart" | "logistique" | "devis";
+
+const SOURCE_LABEL: Record<SourceBoite, string> = {
+  smart: "smart@",
+  logistique: "log@",
+  devis: "devis@",
+};
+const SOURCE_COLOR: Record<SourceBoite, string> = {
+  smart: "bg-slate-100 text-slate-600 border-slate-200",
+  logistique: "bg-teal-100 text-teal-800 border-teal-200",
+  devis: "bg-violet-100 text-violet-800 border-violet-200",
+};
 
 interface EmailRow {
   id: string;
@@ -111,6 +123,7 @@ function normalizeSubject(s: string | null | undefined): string {
 const CATEGORIE_LABEL: Record<CategorieIA, string> = {
   candidature: "Candidature",
   opportunite: "Opportunité",
+  logistique: "Logistique",
   pub: "Pub / Spam",
   autre: "Autre",
 };
@@ -118,6 +131,7 @@ const CATEGORIE_LABEL: Record<CategorieIA, string> = {
 const CATEGORIE_COLOR: Record<CategorieIA, string> = {
   candidature: "bg-blue-100 text-blue-800 border-blue-200",
   opportunite: "bg-amber-100 text-amber-800 border-amber-200",
+  logistique: "bg-teal-100 text-teal-800 border-teal-200",
   pub: "bg-slate-100 text-slate-600 border-slate-200",
   autre: "bg-slate-100 text-slate-600 border-slate-200",
 };
