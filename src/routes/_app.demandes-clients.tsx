@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Inbox, Loader2, Sparkles, Trophy, X } from "lucide-react";
+import { Inbox, Loader2, MailOpen, Sparkles, Trophy, X } from "lucide-react";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { useCapability } from "@/hooks/use-capability";
@@ -55,6 +55,8 @@ type Row = {
   subject: string | null;
   received_at: string;
   body_preview: string | null;
+  body_full: string | null;
+  body_content_type: string | null;
   categorie_ia: string | null;
   statut: "pending_review" | "validated" | "dismissed";
   opportunite_id: string | null;
@@ -66,6 +68,7 @@ function DemandesClientsPage() {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<"todo" | "done" | "dismissed">("todo");
   const [current, setCurrent] = useState<Row | null>(null);
+  const [reading, setReading] = useState<Row | null>(null);
   const isAdmin = useCapability("section.admin");
   const reanalyse = useServerFn(reanalyseSharedInboxes);
   const [reanalysing, setReanalysing] = useState(false);
@@ -88,7 +91,7 @@ function DemandesClientsPage() {
     setLoading(true);
     const { data, error } = await supabase
       .from("emails_entrants")
-      .select("id, from_email, from_name, subject, received_at, body_preview, categorie_ia, statut, opportunite_id, metadata_ia")
+      .select("id, from_email, from_name, subject, received_at, body_preview, body_full, body_content_type, categorie_ia, statut, opportunite_id, metadata_ia")
       .eq("source_boite", "devis")
       .order("received_at", { ascending: false })
       .limit(300);
@@ -172,6 +175,9 @@ function DemandesClientsPage() {
                 )}
                 {!m.opp_client && r.body_preview && <p className="text-sm text-muted-foreground line-clamp-2">{r.body_preview}</p>}
                 <div className="flex flex-wrap gap-2 justify-end">
+                  <Button size="sm" variant="outline" onClick={() => setReading(r)}>
+                    <MailOpen className="h-4 w-4 mr-1" /> Lire l'email
+                  </Button>
                   {r.opportunite_id ? (
                     <Button size="sm" variant="outline" asChild>
                       <Link to="/opportunites/$affaireId" params={{ affaireId: r.opportunite_id }}>
@@ -195,7 +201,39 @@ function DemandesClientsPage() {
       {current && (
         <CreateOppDialog email={current} onClose={() => setCurrent(null)} onDone={() => { setCurrent(null); void load(); }} />
       )}
+      {reading && <EmailReaderDialog email={reading} onClose={() => setReading(null)} />}
     </div>
+  );
+}
+
+/** Fenêtre de lecture de l'email complet (corps HTML ou texte). */
+function EmailReaderDialog({ email, onClose }: { email: Row; onClose: () => void }) {
+  const isHtml = email.body_content_type?.toLowerCase() === "html";
+  const body = email.body_full || email.body_preview || "(corps vide)";
+  return (
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-3xl max-h-[85vh] flex flex-col">
+        <DialogHeader>
+          <DialogTitle className="pr-6">{email.subject || "(sans objet)"}</DialogTitle>
+          <DialogDescription>
+            {email.from_name ? `${email.from_name} · ` : ""}{email.from_email} ·{" "}
+            {format(parseISO(email.received_at), "d MMMM yyyy 'à' HH:mm", { locale: fr })}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="flex-1 overflow-auto rounded-md border bg-background">
+          {isHtml ? (
+            <iframe
+              title="Contenu de l'email"
+              sandbox=""
+              srcDoc={body}
+              className="h-[60vh] w-full bg-white"
+            />
+          ) : (
+            <pre className="whitespace-pre-wrap p-4 text-sm font-sans">{body}</pre>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
