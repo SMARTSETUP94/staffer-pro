@@ -622,7 +622,7 @@ export function OpportunitesTableurView({
                 >
                   {/* Ouvrir la fiche */}
                   <td className="px-1 py-1 text-center align-middle">
-                    {openable ? (
+                    {row.affaireId ? (
                       <Link
                         to="/opportunites/$affaireId"
                         params={{ affaireId: row.affaireId }}
