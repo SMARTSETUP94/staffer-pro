@@ -74,7 +74,7 @@ async function classifyEmail(
     "Si candidature, devine le métier parmi : construction, métallerie, peinture, numérique, tapisserie, machiniste, logistique, suivi_projet. " +
     "Réponds STRICTEMENT en JSON.";
 
-  const userMsg = `Expéditeur: ${msg.from?.emailAddress?.name ?? ""} <${msg.from?.emailAddress?.address ?? ""}>
+  const userMsg = `Expéditeur: ${msg.from?.name ?? ""} <${msg.from?.address ?? ""}>
 Sujet: ${msg.subject ?? ""}
 Aperçu: ${msg.bodyPreview ?? ""}`;
 
@@ -220,8 +220,8 @@ export const Route = createFileRoute("/api/public/hooks/poll-smart-inbox")({
                 message_id_outlook: msg.id,
                 conversation_id: msg.conversationId ?? null,
                 source_boite: sourceBoite,
-                from_email: msg.from?.emailAddress?.address ?? "unknown@unknown",
-                from_name: msg.from?.emailAddress?.name ?? null,
+                from_email: msg.from?.address ?? "unknown@unknown",
+                from_name: msg.from?.name ?? null,
                 subject: msg.subject ?? null,
                 received_at: msg.receivedDateTime ?? new Date().toISOString(),
                 body_preview: msg.bodyPreview ?? null,
