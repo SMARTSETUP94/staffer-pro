@@ -208,9 +208,10 @@ export const Route = createFileRoute("/api/public/hooks/poll-smart-inbox")({
           for (const msg of news) {
             processed++;
             try {
+              const sourceBoite = detectSourceBoite(msg);
               let cls: Classification;
               try {
-                cls = await classifyEmail(lovableKey, msg);
+                cls = await classifyEmail(lovableKey, msg, sourceBoite);
               } catch (e) {
                 cls = { categorie: "autre", confiance: 0, resume: `AI failed: ${(e as Error).message}` };
               }
@@ -218,6 +219,7 @@ export const Route = createFileRoute("/api/public/hooks/poll-smart-inbox")({
               const { error: insErr } = await supa.from("emails_entrants").insert({
                 message_id_outlook: msg.id,
                 conversation_id: msg.conversationId ?? null,
+                source_boite: sourceBoite,
                 from_email: msg.from?.emailAddress?.address ?? "unknown@unknown",
                 from_name: msg.from?.emailAddress?.name ?? null,
                 subject: msg.subject ?? null,
