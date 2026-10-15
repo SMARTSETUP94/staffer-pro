@@ -8,6 +8,13 @@
       "when": 1790051237534,
       "tag": "0000_affaire_planning_metier_et_flag_deploiement_ca",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1792059657707,
+      "tag": "0001_affaires_pipeline_opportunites_access",
+      "breakpoints": true
     }
   ]
 }
