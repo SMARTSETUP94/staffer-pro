@@ -202,6 +202,36 @@ function applyDeploiementCAMode(sections: NavSection[]): NavSection[] {
     .filter((s) => s.items.length > 0);
 }
 
+/**
+ * Vue « déploiement logistique + opportunités » (feature flag `deploiement_logistique_opps`).
+ * Quand elle est active, le menu ne montre que :
+ *  • Aujourd'hui, Chantiers (création de chantier), Pipeline opportunités, Demandes clients
+ *  • Logistique : Véhicules, Planning véhicules, Demandes transport
+ *  • Admin → conservé pour que l'admin puisse désactiver le mode
+ * Prend le pas sur `deploiement_charges_affaires` et `mode_simplifie_managers`.
+ * Aucun blocage d'URL.
+ */
+const LO_MODE_SECTIONS = new Set(["Admin"]);
+const LO_MODE_URLS = new Set([
+  "/",
+  "/affaires",
+  "/opportunites",
+  "/demandes-clients",
+  "/flotte",
+  "/logistique/vehicules-planning",
+  "/export/demandes-devis",
+]);
+
+function applyLogistiqueOppsMode(sections: NavSection[]): NavSection[] {
+  return sections
+    .map((s) =>
+      LO_MODE_SECTIONS.has(s.label)
+        ? s
+        : { ...s, items: s.items.filter((it) => LO_MODE_URLS.has(it.url)) },
+    )
+    .filter((s) => s.items.length > 0);
+}
+
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
