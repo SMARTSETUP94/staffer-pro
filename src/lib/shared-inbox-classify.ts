@@ -68,7 +68,10 @@ export async function classifySharedEmail(key: string, input: ClassifyInput, sou
     "Si candidature, devine le métier parmi : construction, métallerie, peinture, numérique, tapisserie, machiniste, logistique, suivi_projet. " +
     "Si l'email est un transfert, le vrai demandeur est l'expéditeur du message d'origine (bloc De :/From: le plus bas). " +
     "Pour les formulaires \"Setup client form\", lis les champs du formulaire. " +
-    "Si opportunité, remplis les champs opp_* (client, projet, taille estimée : tres_petit <5k€, petit 5-20k€, moyen 20-80k€, gros 80-250k€, tres_gros >250k€, date YYYY-MM-DD, lieu, besoins), sinon mets-les à null. Réponds STRICTEMENT en JSON.";
+    "Si opportunité, remplis les champs opp_* (client, projet, taille estimée : tres_petit <5k€, petit 5-20k€, moyen 20-80k€, gros 80-250k€, tres_gros >250k€, date YYYY-MM-DD, lieu, besoins), sinon mets-les à null. " +
+    "opp_client = nom de la société cliente (marque, agence, chaîne TV, production), jamais SETUP ni un collègue SETUP, sans forme juridique (SAS, SARL). " +
+    "opp_projet = nom de projet court et parlant (3 à 7 mots), au format « <Ouvrage/prestation> <Client ou événement> [<mois année>] », ex. « Stand Salon du Chocolat Nov 2026 », « Décor plateau 20h30 France 2 », « Cabine podcast NRJ ». " +
+    "Ne recopie jamais l'objet de l'email, pas de préfixes TR:/RE:/Fw:, pas de « Demande de devis », pas de majuscules intégrales. Réponds STRICTEMENT en JSON.";
   const text = bodyToPlainText(input.body, input.bodyContentType) || input.bodyPreview || "";
   const res = await fetch(AI_GW, {
     method: "POST",
