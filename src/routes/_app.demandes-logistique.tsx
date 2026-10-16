@@ -233,7 +233,7 @@ function PlanningDialog({ row, affaires, onClose, onDone }: { row: Row; affaires
     if (!consigne.trim()) return;
     setAssisting(true);
     try {
-      const r = await assist({ data: { instruction: consigne, etapes: lines.map((l, index) => ({ index, coche: l.keep, date: l.date, type: l.type, contenu: l.contenu, heure_debut: l.hDebut || null, heure_fin: l.hFin || null, lieu: l.lieu || null, nb_personnes: l.nb ? Number(l.nb) : null, commentaire: l.commentaire || null })) } });
+      const r = await assist({ data: { instruction: consigne, etapes: lines.map((l, index) => ({ index, coche: l.keep, date: l.date, type: l.type, contenu: l.contenu, heure_debut: l.hDebut || null, heure_fin: l.hFin || null, lieu: l.lieu || null, nb_personnes: l.nb ? Number(l.nb) : null, commentaire: l.commentaire || null })), contexte: [`Objet : ${row.subject ?? ""}`, selected ? `Chantier choisi : ${selected.numero} — ${selected.nom}` : "", (row.body_full ?? row.body_preview ?? "").replace(/<style[\s\S]*?<\/style>/gi, " ").replace(/<br\s*\/?>|<\/p>|<\/div>|<\/tr>/gi, "\n").replace(/<[^>]+>/g, " ").replace(/&nbsp;/g, " ").replace(/[ \t]+/g, " ").replace(/\n\s*\n+/g, "\n").slice(0, 25000)].filter(Boolean).join("\n") } });
       setLines((ls) => ls.map((l, i) => {
         let out = l;
         for (const c of r.operations) {
