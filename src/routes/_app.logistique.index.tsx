@@ -79,6 +79,7 @@ function PlanningLogistiquePage() {
             <Button key={n} variant={semaines === n ? "default" : "outline"} size="sm" onClick={() => setSemaines(n)}>{n} sem.</Button>
           ))}
           <Button variant="outline" asChild><Link to="/logistique/imprimer"><Printer className="mr-1 h-4 w-4" />Imprimer la semaine</Link></Button>
+          <Button variant="outline" asChild><Link to="/logistique/ecran">Écran atelier</Link></Button>
           <Button variant="outline" asChild><Link to="/ecran-atelier"><Monitor className="mr-1 h-4 w-4" />Écran atelier</Link></Button>
           {canEdit && <Button variant="outline" disabled={syncing} onClick={resync}><CalendarSync className="mr-1 h-4 w-4" />{syncing ? "Synchro…" : "Synchroniser Outlook"}</Button>}
           {canEdit && <Button onClick={() => setDlg({ open: true })}><Plus className="mr-1 h-4 w-4" />Étape</Button>}
