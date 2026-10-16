@@ -49,7 +49,7 @@ type Row = {
   body_preview: string | null; body_full: string | null; body_content_type: string | null;
   statut: "pending_review" | "validated" | "dismissed"; metadata_ia: Meta | null;
 };
-type Aff = { id: string; numero: string; nom: string };
+type Aff = { id: string; numero: string; nom: string; phase: string };
 
 function DemandesLogistiquePage() {
   const [rows, setRows] = useState<Row[]>([]);
@@ -74,8 +74,8 @@ function DemandesLogistiquePage() {
   }
   useEffect(() => {
     void load();
-    void supabase.from("affaires").select("id, numero, nom").eq("phase", "signe").is("archived_at", null)
-      .order("numero", { ascending: false }).then(({ data }) => setAffaires((data ?? []) as Aff[]));
+    void supabase.from("affaires").select("id, numero, nom, phase").is("archived_at", null)
+      .order("numero", { ascending: false }).limit(2000).then(({ data }) => setAffaires((data ?? []) as Aff[]));
   }, []);
 
   const lists = useMemo(() => ({
@@ -175,6 +175,7 @@ function PlanningDialog({ row, affaires, onClose, onDone }: { row: Row; affaires
   const [commentaire, setCommentaire] = useState("");
   const [initial] = useState(() => lines.map((l) => ({ type: l.type, date: l.date, contenu: l.contenu, lieu: l.lieu || null })));
   const [q, setQ] = useState("");
+  const [withOpps, setWithOpps] = useState(false);
   const [vehicules, setVehicules] = useState<Veh[]>([]);
   useEffect(() => {
     void supabase.from("vehicules").select("id, nom, immatriculation").eq("actif", true).order("nom")
@@ -182,8 +183,8 @@ function PlanningDialog({ row, affaires, onClose, onDone }: { row: Row; affaires
   }, []);
   const filtered = useMemo(() => {
     const words = q.toLowerCase().split(/\s+/).filter(Boolean);
-    return affaires.filter((a) => words.every((w) => `${a.numero} ${a.nom}`.toLowerCase().includes(w))).slice(0, 50);
-  }, [q, affaires]);
+    return affaires.filter((a) => (withOpps || a.phase === "signe" || a.id === affaireId) && words.every((w) => `${a.numero} ${a.nom}`.toLowerCase().includes(w))).slice(0, 50);
+  }, [q, affaires, withOpps, affaireId]);
   const selected = affaires.find((a) => a.id === affaireId);
   const isHtml = (row.body_content_type ?? "").toLowerCase() === "html";
   const body = row.body_full ?? row.body_preview ?? "";
@@ -242,12 +243,16 @@ function PlanningDialog({ row, affaires, onClose, onDone }: { row: Row; affaires
         </div>
         <div className="space-y-1.5">
           <Input placeholder="Rechercher un chantier (numéro, nom, mot clé)…" value={q} onChange={(e) => setQ(e.target.value)} />
+          <label className="flex items-center gap-2 text-xs text-muted-foreground">
+            <Checkbox checked={withOpps} onCheckedChange={(v) => setWithOpps(!!v)} />
+            Inclure les opportunités (9XXX) — le planning reste rattaché après signature
+          </label>
           {selected && <p className="text-xs">Chantier choisi : <span className="font-medium">{selected.numero} — {selected.nom}</span></p>}
           <div className="max-h-40 overflow-auto rounded-md border">
             {filtered.length === 0 ? <p className="p-2 text-xs text-muted-foreground">Aucun chantier trouvé.</p> : filtered.map((a) => (
               <button key={a.id} type="button" onClick={() => setAffaireId(a.id)}
                 className={`block w-full text-left px-2 py-1.5 text-sm hover:bg-accent ${a.id === affaireId ? "bg-accent font-medium" : ""}`}>
-                {a.numero} — {a.nom}
+                {a.numero} — {a.nom}{a.phase !== "signe" && <span className="ml-1 text-[10px] text-muted-foreground">(opportunité)</span>}
               </button>
             ))}
           </div>
