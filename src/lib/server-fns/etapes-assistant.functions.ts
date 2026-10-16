@@ -5,16 +5,18 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const N = (t: string) => ({ type: [t, "null"] });
 const SCHEMA = {
-  type: "object", additionalProperties: false, required: ["message", "changes"],
+  type: "object", additionalProperties: false, required: ["message", "operations"],
   properties: {
     message: { type: "string" },
-    changes: { type: "array", items: { type: "object", additionalProperties: false,
-      required: ["index", "nb_personnes", "lieu", "heure_debut", "heure_fin", "contenu", "commentaire", "keep"],
-      properties: { index: { type: "integer" }, nb_personnes: N("integer"), lieu: N("string"), heure_debut: N("string"),
-        heure_fin: N("string"), contenu: N("string"), commentaire: N("string"), keep: N("boolean") } } },
+    operations: { type: "array", items: { type: "object", additionalProperties: false,
+      required: ["toutes", "types", "indices", "nb_personnes", "lieu", "heure_debut", "heure_fin", "contenu", "commentaire", "keep"],
+      properties: {
+        toutes: { type: "boolean" }, types: { type: "array", items: { type: "string" } }, indices: { type: "array", items: { type: "integer" } },
+        nb_personnes: N("integer"), lieu: N("string"), heure_debut: N("string"), heure_fin: N("string"),
+        contenu: N("string"), commentaire: N("string"), keep: N("boolean") } } },
   },
 };
-export type EtapeChange = { index: number; nb_personnes: number | null; lieu: string | null; heure_debut: string | null; heure_fin: string | null; contenu: string | null; commentaire: string | null; keep: boolean | null };
+export type EtapeOperation = { toutes: boolean; types: string[]; indices: number[]; nb_personnes: number | null; lieu: string | null; heure_debut: string | null; heure_fin: string | null; contenu: string | null; commentaire: string | null; keep: boolean | null };
 
 export const assistantEtapes = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -30,9 +32,9 @@ export const assistantEtapes = createServerFn({ method: "POST" })
       body: JSON.stringify({
         model: "openai/gpt-6-astra", stream: true, store: false, reasoning: { effort: "low" },
         instructions: "Tu aides à remplir une liste d'étapes logistiques (SETUP Paris, décor). L'utilisateur donne une consigne en français. " +
-          "Renvoie dans changes une entrée par étape concernée (index = index fourni) ; pour chaque champ, mets la nouvelle valeur, ou null pour ne pas le modifier. " +
-          "Heures HH:MM. « une personne » = nb_personnes 1. keep=false pour décocher une étape, true pour la cocher. Si la consigne vise « toutes les étapes », modifie-les toutes ; si elle vise un type ou des dates, seulement celles-là. " +
-          "message = une phrase courte résumant ce qui a été changé.",
+          "Traduis la consigne en operations. Chaque opération a une cible : toutes=true pour toutes les étapes (par défaut si la consigne ne précise rien), sinon types (ex. [\"permanence\"]) et/ou indices (index fournis). " +
+          "Puis les valeurs à écrire ; null = ne pas toucher ce champ. « une personne » / « 1p » = nb_personnes 1 ; « 3 pers » = 3. Un lieu cité (même sans guillemets, ex. « au studio Lendit », « lieu Lendit ») va dans lieu, tel quel. Heures HH:MM (8h → 08:00). keep=false = décocher. " +
+          "N'invente jamais de valeur non demandée. Si la consigne est incompréhensible, operations = [] et message = une question courte. Sinon message = une phrase confirmant ce qui a été appliqué.",
         input: [{ role: "user", content: [{ type: "input_text", text: `Consigne : ${data.instruction}\n\nÉtapes :\n${JSON.stringify(data.etapes)}` }] }],
         text: { format: { type: "json_schema", name: "modifs", strict: true, schema: SCHEMA } },
       }),
@@ -62,5 +64,5 @@ export const assistantEtapes = createServerFn({ method: "POST" })
     }
     if (failed) throw new Error(failed);
     if (!out.trim()) throw new Error("L'IA n'a rien renvoyé.");
-    return JSON.parse(out) as { message: string; changes: EtapeChange[] };
+    return JSON.parse(out) as { message: string; operations: EtapeOperation[] };
   });
