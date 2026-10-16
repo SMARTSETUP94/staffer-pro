@@ -8,6 +8,7 @@ import { requireCapability } from "@/lib/capability-guard";
 import { useCapability } from "@/hooks/use-capability";
 import { supabase } from "@/integrations/supabase/client";
 import { completerSuggestionsEmail } from "@/lib/logistique/suggestions-email";
+import { suggestAffaires } from "@/lib/logistique/suggest-affaire";
 import { EmailReaderDialog } from "@/components/emails/EmailReaderDialog";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -49,7 +50,7 @@ type Row = {
   body_preview: string | null; body_full: string | null; body_content_type: string | null;
   statut: "pending_review" | "validated" | "dismissed"; metadata_ia: Meta | null;
 };
-type Aff = { id: string; numero: string; nom: string; phase: string };
+type Aff = { id: string; numero: string; nom: string; phase: string; client?: string | null };
 
 function DemandesLogistiquePage() {
   const [rows, setRows] = useState<Row[]>([]);
@@ -74,7 +75,7 @@ function DemandesLogistiquePage() {
   }
   useEffect(() => {
     void load();
-    void supabase.from("affaires").select("id, numero, nom, phase").is("archived_at", null)
+    void supabase.from("affaires").select("id, numero, nom, phase, client").is("archived_at", null)
       .order("numero", { ascending: false }).limit(2000).then(({ data }) => setAffaires((data ?? []) as Aff[]));
   }, []);
 
@@ -163,7 +164,12 @@ type Veh = { id: string; nom: string; immatriculation: string | null };
 function PlanningDialog({ row, affaires, onClose, onDone }: { row: Row; affaires: Aff[]; onClose: () => void; onDone: () => void }) {
   const ech = row.metadata_ia?.echeances ?? [];
   const numero = ech.find((e) => e.affaire_numero)?.affaire_numero;
-  const [affaireId, setAffaireId] = useState<string>(affaires.find((a) => a.numero === numero)?.id ?? "");
+  const suggestions = useMemo(() => {
+    const m = row.metadata_ia;
+    const txt = [numero, row.subject, m?.opp_projet, m?.opp_client, m?.opp_lieu, m?.resume, (row.body_full ?? row.body_preview ?? "").replace(/<[^>]+>/g, " ").slice(0, 4000)].filter(Boolean).join(" ");
+    return suggestAffaires(txt, affaires);
+  }, [row, affaires, numero]);
+  const [affaireId, setAffaireId] = useState<string>(affaires.find((a) => a.numero === numero)?.id ?? suggestions[0]?.affaire.id ?? "");
   const [lines, setLines] = useState<Line[]>(() => {
     const base = (ech.length ? ech : [{ date: format(new Date(), "yyyy-MM-dd"), libelle: row.subject ?? "", type: "livraison" }]).map((e) => ({
       keep: true, date: e.date, contenu: e.libelle, lieu: row.metadata_ia?.opp_lieu ?? "",
@@ -248,6 +254,16 @@ function PlanningDialog({ row, affaires, onClose, onDone }: { row: Row; affaires
             <Checkbox checked={withOpps} onCheckedChange={(v) => setWithOpps(!!v)} />
             Inclure les opportunités (9XXX) — le planning reste rattaché après signature
           </label>
+          {suggestions.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1.5 text-xs">
+              <span className="text-muted-foreground">Suggéré par l'IA :</span>
+              {suggestions.map(({ affaire: a }) => (
+                <Button key={a.id} type="button" size="sm" variant={a.id === affaireId ? "default" : "outline"} className="h-7 text-xs" onClick={() => setAffaireId(a.id)}>
+                  {a.numero} — {a.nom}{a.phase !== "signe" ? " (opp.)" : ""}
+                </Button>
+              ))}
+            </div>
+          )}
           {selected && <p className="text-xs">Chantier choisi : <span className="font-medium">{selected.numero} — {selected.nom}</span></p>}
           <div className="max-h-40 overflow-auto rounded-md border">
             {filtered.length === 0 ? <p className="p-2 text-xs text-muted-foreground">Aucun chantier trouvé.</p> : filtered.map((a) => (
