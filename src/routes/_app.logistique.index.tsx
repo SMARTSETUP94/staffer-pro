@@ -1,3 +1,4 @@
+import { PlanningJourMobile } from "@/components/logistique/PlanningJourMobile";
 import { useServerFn } from "@tanstack/react-start";
 import { syncOutlookLogistiqueFn } from "@/lib/server-fns/outlook-logistique.functions";
 import { CalendarSync } from "lucide-react";
@@ -83,9 +84,15 @@ function PlanningLogistiquePage() {
           {canEdit && <Button onClick={() => setDlg({ open: true })}><Plus className="mr-1 h-4 w-4" />Étape</Button>}
         </div>
       </div>
-      <LegendeEtapes />
+      <div className="hidden md:block"><LegendeEtapes /></div>
       {isLoading ? <p className="text-sm text-muted-foreground">Chargement…</p> : (
         <>
+          <div className="md:hidden">
+            <PlanningJourMobile jours={jours} etapes={etapes} conflits={conflits}
+              onCardClick={canEdit ? (e) => setDlg({ open: true, etape: e }) : undefined}
+              onAdd={canEdit ? (d) => setDlg({ open: true, date: d }) : undefined} />
+          </div>
+          <div className="hidden md:block">
           <PlanningLogistiqueGrid
             jours={jours}
             etapes={etapes}
@@ -94,10 +101,11 @@ function PlanningLogistiquePage() {
             onDayClick={canEdit ? (d) => setDlg({ open: true, date: d }) : undefined}
             onMove={canEdit ? move : undefined}
           />
-          {etapes.length === 0 && (
+          </div>
+          {etapes.length === 0 && (<div className="hidden md:block">
             <p className="text-center text-sm text-muted-foreground">
               Aucune étape sur cette période.{canEdit && " Cliquez sur un jour pour en ajouter une."}
-            </p>
+            </p></div>
           )}
         </>
       )}
