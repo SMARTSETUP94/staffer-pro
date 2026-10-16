@@ -195,11 +195,11 @@ function PlanningDialog({ row, affaires, onClose, onDone }: { row: Row; affaires
     if (!affaireId || kept.length === 0) return toast.error("Choisissez un chantier et au moins une étape datée");
     setSaving(true);
     const { error } = await supabase.from("affaire_etapes_logistiques").insert(kept.map((l) => ({
-      affaire_id: affaireId, type: l.type, date_debut: l.date, contenu: l.contenu,
+      affaire_id: affaireId, type: l.type, date_debut: l.date,
       heure_debut: l.hDebut || null, heure_fin: l.hFin || null,
       lieu_libre: l.lieu.trim() || null, vehicule_id: l.vehiculeId || null,
       statut: "valide" as const, origine: "jalonnement" as const,
-      note: `Depuis un email log@ : « ${(row.subject ?? "").slice(0, 120)} »`,
+      note: `${l.contenu?.trim() ? `${l.contenu.trim()} — ` : ""}Depuis un email log@ : « ${(row.subject ?? "").slice(0, 120)} »`,
     })));
     if (!error) {
       await supabase.from("emails_entrants").update({ statut: "validated" }).eq("id", row.id);
