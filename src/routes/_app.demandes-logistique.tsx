@@ -234,13 +234,11 @@ function PlanningDialog({ row, affaires, onClose, onDone }: { row: Row; affaires
     setAssisting(true);
     try {
       const r = await assist({ data: { instruction: consigne, etapes: lines.map((l, index) => ({ index, coche: l.keep, date: l.date, type: l.type, contenu: l.contenu, heure_debut: l.hDebut || null, heure_fin: l.hFin || null, lieu: l.lieu || null, nb_personnes: l.nb ? Number(l.nb) : null, commentaire: l.commentaire || null })) } });
-      let n = 0;
       setLines((ls) => ls.map((l, i) => {
         let out = l;
         for (const c of r.operations) {
           const hit = c.toutes || c.indices.includes(i) || c.types.includes(l.type);
           if (!hit) continue;
-          n++;
           out = { ...out,
             ...(c.nb_personnes != null && { nb: String(c.nb_personnes) }), ...(c.lieu != null && { lieu: c.lieu }),
             ...(c.heure_debut != null && { hDebut: c.heure_debut }), ...(c.heure_fin != null && { hFin: c.heure_fin }),
