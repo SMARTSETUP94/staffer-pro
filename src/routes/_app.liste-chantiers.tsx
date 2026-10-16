@@ -33,7 +33,7 @@ function ListeChantiers() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("affaires")
-        .select("id, numero, nom, client, lieu, statut, code_opportunite, date_montage, date_demontage, charge:profiles!affaires_charge_affaires_id_fkey(prenom, nom)")
+        .select("id, numero, nom, client, lieu, statut, code_opportunite, date_montage, date_demontage, charge:profiles!affaires_charge_affaires_id_fkey(full_name)")
         .eq("phase", "signe")
         .is("archived_at", null)
         .order("numero", { ascending: false });
@@ -83,7 +83,7 @@ function ListeChantiers() {
             </thead>
             <tbody>
               {rows.map((a) => {
-                const c = a.charge as { prenom?: string | null; nom?: string | null } | null;
+                const c = a.charge as { full_name?: string | null } | null;
                 return (
                   <tr key={a.id} className="border-t border-border hover:bg-muted/30">
                     <td className="p-2 font-bold">
@@ -92,7 +92,7 @@ function ListeChantiers() {
                     <td className="p-2">{a.nom}</td>
                     <td className="p-2">{a.client ?? "—"}</td>
                     <td className="p-2 text-muted-foreground">{a.lieu ?? "—"}</td>
-                    <td className="p-2">{c ? `${c.prenom ?? ""} ${c.nom ?? ""}`.trim() : "—"}</td>
+                    <td className="p-2">{c?.full_name ?? "—"}</td>
                     <td className="p-2">{a.code_opportunite ?? "—"}</td>
                     <td className="p-2">{a.date_montage ? new Date(a.date_montage).toLocaleDateString("fr-FR") : "—"}</td>
                     <td className="p-2"><Badge variant="outline">{STATUT[a.statut] ?? a.statut}</Badge></td>
