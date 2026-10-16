@@ -50,6 +50,7 @@ export function EtapeDialog({ open, onOpenChange, etape, defaultDate, defaultAff
       immatriculation_libre: etape?.immatriculation_libre ?? "",
       acces: etape?.acces ?? "",
       note: etape?.note ?? "",
+      commentaire_equipe: (etape as { commentaire_equipe?: string | null } | null | undefined)?.commentaire_equipe ?? "",
     };
   }
   useEffect(() => { if (open) setF(init()); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [open, etape?.id]);
@@ -78,6 +79,7 @@ export function EtapeDialog({ open, onOpenChange, etape, defaultDate, defaultAff
       immatriculation_libre: showVehicule && f.immatriculation_libre ? f.immatriculation_libre : null,
       acces: f.acces || null,
       note: f.note || null,
+      commentaire_equipe: f.commentaire_equipe || null,
     };
     const { error } = etape
       ? await supabase.from("affaire_etapes_logistiques").update(payload).eq("id", etape.id)
@@ -91,8 +93,10 @@ export function EtapeDialog({ open, onOpenChange, etape, defaultDate, defaultAff
 
   async function remove() {
     if (!etape || !confirm("Supprimer cette étape du planning ?")) return;
-    const { error } = await supabase.from("affaire_etapes_logistiques").delete().eq("id", etape.id);
+    const { data, error } = await supabase.from("affaire_etapes_logistiques").delete().eq("id", etape.id).select("id");
     if (error) { toast.error("Suppression impossible", { description: error.message }); return; }
+    if (!data?.length) { toast.error("Suppression refusée : vous n'avez pas le droit de modifier cette étape."); return; }
+    toast.success("Étape supprimée");
     invalidate();
     onOpenChange(false);
   }
@@ -176,9 +180,10 @@ export function EtapeDialog({ open, onOpenChange, etape, defaultDate, defaultAff
           <div><Label>Nb personnes</Label><Input type="number" min={0} value={f.nb_personnes} onChange={(e) => set("nb_personnes", e.target.value)} /></div>
           <div><Label>Accès (quai, code…)</Label><Input value={f.acces} onChange={(e) => set("acces", e.target.value)} /></div>
           <div className="sm:col-span-2"><Label>Note</Label><Textarea rows={2} value={f.note} onChange={(e) => set("note", e.target.value)} /></div>
+          <div className="sm:col-span-2"><Label>Commentaire pour l'équipe</Label><Textarea rows={3} placeholder="Indications du chef d'équipe au chef logistique et à tous…" value={f.commentaire_equipe} onChange={(e) => set("commentaire_equipe", e.target.value)} /></div>
         </div>
         <DialogFooter className="gap-2 sm:justify-between">
-          {etape ? <Button variant="ghost" className="text-destructive" onClick={remove}><Trash2 className="mr-1 h-4 w-4" />Supprimer</Button> : <span />}
+          {etape ? <Button variant="outline" className="text-destructive" onClick={remove}><Trash2 className="mr-1 h-4 w-4" />Supprimer l'étape</Button> : <span />}
           <Button onClick={save} disabled={saving}>{saving ? "Enregistrement…" : "Enregistrer"}</Button>
         </DialogFooter>
       </DialogContent>
