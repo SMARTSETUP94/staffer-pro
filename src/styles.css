@@ -338,3 +338,13 @@
 }
 .contrat-template-preview hr.page-break { border: none; border-top: 1px dashed var(--border); margin: 1em 0; }
 
+
+/* Impression du planning logistique : seule la feuille est imprimée. */
+@media print {
+  @page { size: A4 portrait; margin: 10mm; }
+  body:has(.planning-print) * { visibility: hidden; }
+  body:has(.planning-print) .planning-print,
+  body:has(.planning-print) .planning-print * { visibility: visible; }
+  body:has(.planning-print) .planning-print { position: absolute; inset: 0 auto auto 0; width: 100%; }
+  .planning-print { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
