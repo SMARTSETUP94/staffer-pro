@@ -1,0 +1,2 @@
+ALTER TABLE public.affaire_documents ADD COLUMN IF NOT EXISTS nom_fichier text GENERATED ALWAYS AS (filename) STORED;
+COMMENT ON COLUMN public.affaire_documents.nom_fichier IS 'Alias lecture de filename (utilisé par get_inbox_items)';

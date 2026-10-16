@@ -268,6 +268,7 @@ export type Database = {
           id: string
           mime_type: string
           mission_phase: string | null
+          nom_fichier: string | null
           objet_id: string | null
           prise_le: string | null
           storage_path: string
@@ -287,6 +288,7 @@ export type Database = {
           id?: string
           mime_type: string
           mission_phase?: string | null
+          nom_fichier?: string | null
           objet_id?: string | null
           prise_le?: string | null
           storage_path: string
@@ -306,6 +308,7 @@ export type Database = {
           id?: string
           mime_type?: string
           mission_phase?: string | null
+          nom_fichier?: string | null
           objet_id?: string | null
           prise_le?: string | null
           storage_path?: string
