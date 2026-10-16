@@ -44,7 +44,7 @@ const STATUT: Record<string, { label: string; v: "default" | "secondary" | "dest
 
 function JalonnementsPage() {
   const qc = useQueryClient();
-  const { allowed: canEdit } = useCapability("logistique.etape.edit");
+  const canEdit = useCapability("logistique.etape.edit");
   const { data: affaires = [] } = useAffairesPourLogistique();
   const label = useMemo(() => new Map(affaires.map((a) => [a.id, `${a.numero} · ${a.nom}`])), [affaires]);
   const [q, setQ] = useState("");
