@@ -111,16 +111,36 @@ function DemandesLogistiquePage() {
     void load();
   }
 
+  const [releve, setReleve] = useState(false);
+  async function relever() {
+    setReleve(true);
+    try {
+      const r = await fetch("/api/public/hooks/poll-shared-inboxes", {
+        method: "POST", headers: { "Content-Type": "application/json", apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
+      });
+      const j = await r.json().catch(() => null);
+      if (!r.ok || !j?.ok) throw new Error(j?.error ?? `Erreur ${r.status}`);
+      const n = j.report?.["log@setup.paris"]?.inserted ?? 0;
+      toast.success(n ? `${n} nouvel(s) email(s) importé(s)` : "Aucun nouvel email sur log@setup.paris");
+      await load();
+    } catch (e) { toast.error(`Relève impossible : ${(e as Error).message}`); } finally { setReleve(false); }
+  }
+
   const list = lists[tab];
   return (
     <div className="p-4 md:p-6 space-y-4">
       <PageHeader title="Demandes logistique" description="Emails reçus sur log@setup.paris — l'IA repère les échéances et propose des étapes pour le planning."
-        actions={isAdmin ? (
+        actions={<div className="flex gap-2">
+          <Button size="sm" onClick={relever} disabled={releve}>
+            {releve ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <MailOpen className="h-4 w-4 mr-1" />}
+            Relever les emails
+          </Button>
+          {isAdmin && (
           <Button size="sm" variant="outline" onClick={runReanalyse} disabled={reanalysing}>
             {reanalysing ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-1" />}
             Relancer l'analyse IA
-          </Button>
-        ) : undefined} />
+          </Button>)}
+        </div>} />
       <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
         <TabsList>
           <TabsTrigger value="todo">À traiter <span className="ml-1.5 text-xs opacity-60">{lists.todo.length}</span></TabsTrigger>
