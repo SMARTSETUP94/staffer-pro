@@ -106,7 +106,7 @@ export function JalonnementDialog({ open, onOpenChange, affaireId, email, saved,
     const { error } = await supabase.from("affaire_etapes_logistiques").insert(keep.map((r) => ({
       affaire_id: target, type: r.type, date_debut: r.date_debut, date_fin: r.date_fin || null,
       heure_debut: r.heure_debut || null, heure_fin: r.heure_fin || null, lieu_libre: r.lieu || res?.lieu || null,
-      note: r.note, origine: r.origine, statut: "valide" as const, created_by: u.user?.id ?? null,
+      note: r.note, nb_personnes: r.nb_personnes ?? null, origine: r.origine, statut: "valide" as const, created_by: u.user?.id ?? null,
       calcul_regle: r.origine === "retroplanning" ? r.note : null,
     })));
     if (error) return toast.error("Enregistrement impossible", { description: error.message });
@@ -171,6 +171,7 @@ export function JalonnementDialog({ open, onOpenChange, affaireId, email, saved,
                   <Input type="date" className="h-8 w-36" value={r.date_fin ?? ""} onChange={(e) => patch(i, { date_fin: e.target.value || null })} aria-label="Date de fin" />
                   <Input type="time" className="h-8 w-24" value={r.heure_debut ?? ""} onChange={(e) => patch(i, { heure_debut: e.target.value || null })} />
                   <Input type="time" className="h-8 w-24" value={r.heure_fin ?? ""} onChange={(e) => patch(i, { heure_fin: e.target.value || null })} />
+                  <Input type="number" min={1} className="h-8 w-16" placeholder="Pers." aria-label="Nombre de personnes" value={r.nb_personnes ?? ""} onChange={(e) => patch(i, { nb_personnes: e.target.value ? Number(e.target.value) : null })} />
                   <Input className="h-8 min-w-40 flex-1" placeholder="Note" value={r.note ?? ""} onChange={(e) => patch(i, { note: e.target.value || null })} />
                   {r.origine === "retroplanning" && <span className="text-[11px] text-muted-foreground">calculé</span>}
                 </div>

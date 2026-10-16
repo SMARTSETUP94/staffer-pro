@@ -20,6 +20,7 @@ export type JalonnementEtape = {
   heure_fin: string | null;
   lieu: string | null;
   note: string | null;
+  nb_personnes: number | null;
 };
 export type JalonnementResult = {
   numero_affaire: string | null;
@@ -41,7 +42,7 @@ const SCHEMA = {
       type: "array",
       items: {
         type: "object", additionalProperties: false,
-        required: ["type", "date_debut", "date_fin", "heure_debut", "heure_fin", "lieu", "note"],
+        required: ["type", "date_debut", "date_fin", "heure_debut", "heure_fin", "lieu", "note", "nb_personnes"],
         properties: {
           type: { type: "string", enum: [...ETAPE_TYPES] },
           date_debut: { type: "string" },
@@ -50,6 +51,7 @@ const SCHEMA = {
           heure_fin: { type: ["string", "null"] },
           lieu: { type: ["string", "null"] },
           note: { type: ["string", "null"] },
+          nb_personnes: { type: ["integer", "null"] },
         },
       },
     },
@@ -57,15 +59,32 @@ const SCHEMA = {
 };
 
 function instructions(today: string) {
-  return (
-    "Tu lis un jalonnement (planning d'exploitation d'un événement) pour SETUP Paris, société de scénographie. " +
-    `Date du jour : ${today}. Extrais UNIQUEMENT les étapes qui concernent SETUP ou le décor/stand : ` +
-    "livraison (arrivée du matériel sur site), montage, finitions, permanence (présence pendant l'événement), démontage, chargement/déchargement si écrits. " +
-    "Ignore les créneaux des autres prestataires sauf si SETUP est cité. " +
-    "Dates au format YYYY-MM-DD (devine l'année : la prochaine occurrence après aujourd'hui si absente), heures HH:MM ou null. " +
-    "date_fin = dernier jour si l'étape dure plusieurs jours, sinon null. Note = contrainte utile (accès, quai, badge, horaire imposé), courte. " +
-    "numero_affaire = numéro SETUP à 4 chiffres s'il apparaît (ex. 6042), sinon null. Ne devine jamais un numéro. Réponds en JSON strict."
-  );
+  return [
+    "Tu lis un jalonnement (planning d'exploitation d'un événement / plateau TV) pour SETUP Paris, société de scénographie et de décor.",
+    `Date du jour : ${today}.`,
+    "",
+    "1. REPÈRE SETUP. Dans le document, SETUP peut apparaître sous : « SET UP », « SETUP », « SMART - SET UP », « SMART RESTRUCTURING », « Smart », « équipe déco / décor » (si aucun autre décorateur n'est nommé). " +
+      "Deux mises en page existent : (a) une colonne par prestataire → ne lis QUE la colonne SET UP ; (b) une ligne par action avec une colonne Intervenant → ne garde que les lignes où SETUP intervient, plus les livraisons/chargements de DÉCOR. " +
+      "Ignore les autres prestataires (lumière, son, vidéo, LED, structure, informatique…), les tournages, répétitions et pauses repas.",
+    "",
+    "2. TYPE D'ÉTAPE : tracage (traçage décor) ; livraison (arrivée des camions/containers décor sur site) ; montage (montage, boisage, moquette, habillage, tapisserie, soffites, gradins, vomitoires…) ; " +
+      "finitions (finitions, peinture, retouches) ; permanence (« perm », suivi technique SETUP, présence pendant tournages) ; demontage ; chargement (chargement décor en fin de démontage) ; dechargement. " +
+      "Les journées « OFF » ne génèrent rien.",
+    "",
+    "3. UNE ÉTAPE PAR JOUR ET PAR TYPE : fusionne matin + après-midi d'un même jour (ex. 7h-12h puis 13h-20h → heure_debut 07:00, heure_fin 20:00). " +
+      "Plusieurs jours consécutifs de même type peuvent rester séparés (un par jour) pour garder l'effectif de chaque jour.",
+    "",
+    "4. EFFECTIF : nb_personnes = effectif SETUP du jour s'il est écrit (« 19P », « 7P », « PAX (5) », « 3 tech SMART SET UP », « 1 tapissier Set up ») ; sinon null. Prends le maximum du jour si matin et après-midi diffèrent.",
+    "",
+    "5. DATES : format YYYY-MM-DD. Si l'année manque, prends la prochaine occurrence après aujourd'hui. Corrige les incohérences évidentes (ex. « lundi 09-oct » au milieu de novembre → 9 novembre, en suivant le jour de semaine et la séquence). " +
+      "Heures HH:MM ou null. date_fin = null sauf étape réellement continue sur plusieurs jours sans détail jour par jour.",
+    "",
+    "6. TEXTE BARRÉ = annulé : ignore-le. Les consignes sans horaire (ex. « ne pas mettre le dibon derrière l'orchestre ») vont dans la note de l'étape la plus proche, pas dans une étape à part.",
+    "",
+    "7. NOTE : courte, utile au chef d'équipe (tâches clés, nombre de camions, contraintes d'accès, quai, horaire imposé, engins). lieu = adresse du site si indiquée.",
+    "",
+    "numero_affaire = numéro SETUP à 4 chiffres s'il apparaît (ex. 4130, 6042), sinon null — ne devine jamais. nom_evenement = nom de l'émission ou de l'événement. resume = 2 phrases max : période, lieu, ce que fait SETUP. Réponds en JSON strict.",
+  ].join("\n");
 }
 
 async function fileToParts(name: string, mime: string, base64: string): Promise<any[]> {
