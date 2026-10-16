@@ -11,7 +11,7 @@ import { classifySharedEmail, clsToMetadata, type SharedSource } from "@/lib/sha
 
 export const reanalyseSharedInboxes = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input) => z.object({ limit: z.number().int().min(1).max(200).default(60) }).parse(input ?? {}))
+  .inputValidator((input) => z.object({ limit: z.number().int().min(1).max(200).default(60), source: z.enum(["devis", "logistique"]).optional() }).parse(input ?? {}))
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const { data: isAdmin } = await supabase.rpc("is_admin");
@@ -22,7 +22,7 @@ export const reanalyseSharedInboxes = createServerFn({ method: "POST" })
     const { data: rows, error } = await supabase
       .from("emails_entrants")
       .select("id, source_boite, from_email, from_name, subject, body_full, body_content_type, body_preview")
-      .in("source_boite", ["devis", "logistique"])
+      .in("source_boite", data.source ? [data.source] : ["devis", "logistique"])
       .order("received_at", { ascending: false })
       .limit(data.limit);
     if (error) throw new Error(error.message);
