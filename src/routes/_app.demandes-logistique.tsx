@@ -2,7 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
-import { CalendarPlus, Loader2, MailOpen, Trash2, Truck, X } from "lucide-react";
+import { CalendarPlus, Loader2, MailOpen, RefreshCw, Trash2, Truck, X } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { reanalyseSharedInboxes } from "@/lib/server-fns/shared-inbox-reanalyse.functions";
 import { toast } from "sonner";
 import { requireCapability } from "@/lib/capability-guard";
 import { useCapability } from "@/hooks/use-capability";
@@ -60,6 +62,23 @@ function DemandesLogistiquePage() {
   const [planning, setPlanning] = useState<Row | null>(null);
   const [affaires, setAffaires] = useState<Aff[]>([]);
   const canEdit = useCapability("logistique.etape.edit");
+  const isAdmin = useCapability("section.admin");
+  const reanalyse = useServerFn(reanalyseSharedInboxes);
+  const [reanalysing, setReanalysing] = useState(false);
+  async function runReanalyse() {
+    setReanalysing(true);
+    try {
+      const r = await reanalyse({ data: { limit: 60, source: "logistique" } });
+      toast.success(`Analyse relancée : ${r.updated}/${r.total} emails mis à jour`, {
+        description: r.errors.length ? r.errors.join(" · ") : undefined,
+      });
+      await load();
+    } catch (e) {
+      toast.error("Relance impossible", { description: (e as Error).message });
+    } finally {
+      setReanalysing(false);
+    }
+  }
 
   async function load() {
     setLoading(true);
@@ -94,7 +113,13 @@ function DemandesLogistiquePage() {
   const list = lists[tab];
   return (
     <div className="p-4 md:p-6 space-y-4">
-      <PageHeader title="Demandes logistique" description="Emails reçus sur log@setup.paris — l'IA repère les échéances et propose des étapes pour le planning." />
+      <PageHeader title="Demandes logistique" description="Emails reçus sur log@setup.paris — l'IA repère les échéances et propose des étapes pour le planning."
+        actions={isAdmin ? (
+          <Button size="sm" variant="outline" onClick={runReanalyse} disabled={reanalysing}>
+            {reanalysing ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-1" />}
+            Relancer l'analyse IA
+          </Button>
+        ) : undefined} />
       <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
         <TabsList>
           <TabsTrigger value="todo">À traiter <span className="ml-1.5 text-xs opacity-60">{lists.todo.length}</span></TabsTrigger>
