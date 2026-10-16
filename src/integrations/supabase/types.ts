@@ -532,6 +532,7 @@ export type Database = {
           acces: string | null
           affaire_id: string
           calcul_regle: string | null
+          commentaire_equipe: string | null
           contact_id: string | null
           contenu: string | null
           created_at: string
@@ -564,6 +565,7 @@ export type Database = {
           acces?: string | null
           affaire_id: string
           calcul_regle?: string | null
+          commentaire_equipe?: string | null
           contact_id?: string | null
           contenu?: string | null
           created_at?: string
@@ -596,6 +598,7 @@ export type Database = {
           acces?: string | null
           affaire_id?: string
           calcul_regle?: string | null
+          commentaire_equipe?: string | null
           contact_id?: string | null
           contenu?: string | null
           created_at?: string
