@@ -71,6 +71,13 @@
       "when": 1792159026472,
       "tag": "0009_logistique_chef_all_and_log_emails",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1792159898803,
+      "tag": "0010_ia_feedback_logistique",
+      "breakpoints": true
     }
   ]
 }

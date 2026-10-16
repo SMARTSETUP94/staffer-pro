@@ -3556,6 +3556,47 @@ export type Database = {
           },
         ]
       }
+      ia_feedback_logistique: {
+        Row: {
+          commentaire: string | null
+          created_at: string
+          created_by: string | null
+          email_id: string | null
+          email_subject: string | null
+          id: string
+          propose: Json
+          retenu: Json
+        }
+        Insert: {
+          commentaire?: string | null
+          created_at?: string
+          created_by?: string | null
+          email_id?: string | null
+          email_subject?: string | null
+          id?: string
+          propose?: Json
+          retenu?: Json
+        }
+        Update: {
+          commentaire?: string | null
+          created_at?: string
+          created_by?: string | null
+          email_id?: string | null
+          email_subject?: string | null
+          id?: string
+          propose?: Json
+          retenu?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ia_feedback_logistique_email_id_fkey"
+            columns: ["email_id"]
+            isOneToOne: false
+            referencedRelation: "emails_entrants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inbox_dismissed: {
         Row: {
           created_at: string
