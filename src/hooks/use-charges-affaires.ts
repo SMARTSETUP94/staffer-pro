@@ -21,10 +21,12 @@ export function useChargesAffaires() {
     setLoading(true);
 
     (async () => {
+      // v0.50 — inclut les commerciaux : ils sont aussi chargés d'affaires
+      // dans le suivi des opportunités (Alexandre, Laurent, Gabin, Farès…).
       const { data: roles, error: rolesErr } = await supabase
         .from("user_roles")
         .select("user_id, role, status")
-        .in("role", ["admin", "chef_chantier"])
+        .in("role", ["admin", "chef_chantier", "commercial"])
         .eq("status", "actif");
 
       if (rolesErr) {
