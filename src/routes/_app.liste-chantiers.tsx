@@ -96,7 +96,7 @@ function ListeChantiers() {
     return true;
   }
 
-  async function changeStatut(a: ChantierRow, statut: string) {
+  async function changeStatut(a: ChantierRow, statut: ChantierStatut) {
     if (statut === a.statut) return;
     if (await patchChantier(a.id, { statut })) {
       toast.success(`Chantier ${a.numero} : ${STATUT[statut] ?? statut}`);
