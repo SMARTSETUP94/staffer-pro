@@ -72,7 +72,7 @@ export function instructions(today: string) {
       "Les journées « OFF » ne génèrent rien.",
     "",
     "3. UNE ÉTAPE PAR JOUR ET PAR TYPE : fusionne matin + après-midi d'un même jour (ex. 7h-12h puis 13h-20h → heure_debut 07:00, heure_fin 20:00). " +
-      "Plusieurs jours consécutifs de même type peuvent rester séparés (un par jour) pour garder l'effectif de chaque jour.",
+      "En principe UNE SEULE étape SETUP par jour : choisis le type dominant (montage > finitions > permanence) et cite les autres tâches dans la note. Exceptions : une livraison/un traçage/un chargement à heure précise reste une étape à part. Garde un jour = une étape pour conserver l'effectif de chaque jour.",
     "",
     "4. EFFECTIF : nb_personnes = effectif SETUP du jour s'il est écrit (« 19P », « 7P », « PAX (5) », « 3 tech SMART SET UP », « 1 tapissier Set up ») ; sinon null. Prends le maximum du jour si matin et après-midi diffèrent.",
     "",
