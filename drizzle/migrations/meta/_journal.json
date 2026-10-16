@@ -64,6 +64,13 @@
       "when": 1792158686017,
       "tag": "0008_affaires_chantier_update_policy",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1792159026472,
+      "tag": "0009_logistique_chef_all_and_log_emails",
+      "breakpoints": true
     }
   ]
 }
