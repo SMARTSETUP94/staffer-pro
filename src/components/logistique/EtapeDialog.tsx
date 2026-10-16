@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { ETAPE_LABELS, ETAPE_TYPES, type EtapeType } from "@/lib/logistique/etapes";
+import { LieuAutocomplete } from "./LieuAutocomplete";
 import {
   useAffairesPourLogistique, useInvalidateEtapes, useVehiculesActifs, type EtapeLogistique,
 } from "@/hooks/use-etapes-logistiques";
@@ -173,7 +174,7 @@ export function EtapeDialog({ open, onOpenChange, etape, defaultDate, defaultAff
               <div><Label>Location / transporteur</Label><Input placeholder="Immatriculation ou transporteur" value={f.immatriculation_libre} onChange={(e) => set("immatriculation_libre", e.target.value)} /></div>
             </>
           )}
-          <div><Label>Lieu</Label><Input value={f.lieu_libre} onChange={(e) => set("lieu_libre", e.target.value)} /></div>
+          <div><Label>Lieu</Label><LieuAutocomplete value={f.lieu_libre} onChange={(v) => set("lieu_libre", v)} /></div>
           <div><Label>Nb personnes</Label><Input type="number" min={0} value={f.nb_personnes} onChange={(e) => set("nb_personnes", e.target.value)} /></div>
           <div className="sm:col-span-2"><Label>Accès (quai, code…)</Label><Input value={f.acces} onChange={(e) => set("acces", e.target.value)} /></div>
           <div className="sm:col-span-2"><Label>Note</Label><Textarea rows={2} value={f.note} onChange={(e) => set("note", e.target.value)} /></div>
