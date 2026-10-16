@@ -30,6 +30,7 @@ export function EtapeDialog({ open, onOpenChange, etape, defaultDate, defaultAff
   const { data: vehicules = [] } = useVehiculesActifs();
   const invalidate = useInvalidateEtapes();
   const [saving, setSaving] = useState(false);
+  const [affaireOpen, setAffaireOpen] = useState(false);
   const [f, setF] = useState(() => init());
 
   function init() {
