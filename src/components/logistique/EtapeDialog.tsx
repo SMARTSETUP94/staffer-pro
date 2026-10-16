@@ -46,6 +46,7 @@ export function EtapeDialog({ open, onOpenChange, etape, defaultDate, defaultAff
       horaire_libre: etape?.horaire_libre ?? "",
       lieu_libre: etape?.lieu_libre ?? "",
       nb_personnes: etape?.nb_personnes?.toString() ?? "",
+      responsable: etape?.responsable ?? "",
       vehicule_id: etape?.vehicule_id ?? "",
       immatriculation_libre: etape?.immatriculation_libre ?? "",
       acces: etape?.acces ?? "",
@@ -74,6 +75,7 @@ export function EtapeDialog({ open, onOpenChange, etape, defaultDate, defaultAff
       horaire_libre: f.horaire_libre || null,
       lieu_libre: f.lieu_libre || null,
       nb_personnes: f.nb_personnes ? Number(f.nb_personnes) : null,
+      responsable: f.responsable.trim() || null,
       vehicule_id: showVehicule && f.vehicule_id ? f.vehicule_id : null,
       immatriculation_libre: showVehicule && f.immatriculation_libre ? f.immatriculation_libre : null,
       acces: f.acces || null,
@@ -176,6 +178,7 @@ export function EtapeDialog({ open, onOpenChange, etape, defaultDate, defaultAff
           )}
           <div><Label>Lieu</Label><LieuAutocomplete value={f.lieu_libre} onChange={(v) => set("lieu_libre", v)} /></div>
           <div><Label>Nb personnes</Label><Input type="number" min={0} value={f.nb_personnes} onChange={(e) => set("nb_personnes", e.target.value)} /></div>
+          <div className="sm:col-span-2"><Label>Responsable</Label><Input placeholder="Nom du responsable de l'intervention" value={f.responsable} onChange={(e) => set("responsable", e.target.value)} /></div>
           <div className="sm:col-span-2"><Label>Accès (quai, code…)</Label><Input value={f.acces} onChange={(e) => set("acces", e.target.value)} /></div>
           <div className="sm:col-span-2"><Label>Note</Label><Textarea rows={2} value={f.note} onChange={(e) => set("note", e.target.value)} /></div>
           <div className="sm:col-span-2"><Label>Commentaire pour l'équipe</Label><Textarea rows={3} placeholder="Indications du chef d'équipe au chef logistique et à tous…" value={f.commentaire_equipe} onChange={(e) => set("commentaire_equipe", e.target.value)} /></div>

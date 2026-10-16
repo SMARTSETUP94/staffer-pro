@@ -106,7 +106,7 @@ export function JalonnementDialog({ open, onOpenChange, affaireId, email, saved,
     const { error } = await supabase.from("affaire_etapes_logistiques").insert(keep.map((r) => ({
       affaire_id: target, type: r.type, date_debut: r.date_debut, date_fin: r.date_fin || null,
       heure_debut: r.heure_debut || null, heure_fin: r.heure_fin || null, lieu_libre: r.lieu || res?.lieu || null,
-      note: r.note, nb_personnes: r.nb_personnes ?? null, origine: r.origine, statut: "valide" as const, created_by: u.user?.id ?? null,
+      note: r.note, nb_personnes: r.nb_personnes ?? null, responsable: (r as { responsable?: string | null }).responsable ?? null, origine: r.origine, statut: "valide" as const, created_by: u.user?.id ?? null,
       calcul_regle: r.origine === "retroplanning" ? r.note : null,
     })));
     if (error) return toast.error("Enregistrement impossible", { description: error.message });

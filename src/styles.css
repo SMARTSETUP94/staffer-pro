@@ -10,6 +10,7 @@
   --color-log-chargement: var(--log-chargement);
   --color-log-livraison: var(--log-livraison);
   --color-log-tracage: var(--log-tracage);
+  --color-log-rotation: var(--log-rotation);
   --color-log-montage: var(--log-montage);
   --color-log-finitions: var(--log-finitions);
   --color-log-permanence: var(--log-permanence);
@@ -94,6 +95,7 @@
   --log-chargement: oklch(0.6 0.15 30);
   --log-livraison: oklch(0.58 0.15 250);
   --log-tracage: oklch(0.55 0.13 300);
+  --log-rotation: oklch(0.56 0.1 220);
   --log-montage: oklch(0.58 0.14 150);
   --log-finitions: oklch(0.62 0.12 190);
   --log-permanence: oklch(0.7 0.14 95);
