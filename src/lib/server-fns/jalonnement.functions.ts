@@ -58,7 +58,7 @@ const SCHEMA = {
   },
 };
 
-function instructions(today: string) {
+export function instructions(today: string) {
   return [
     "Tu lis un jalonnement (planning d'exploitation d'un événement / plateau TV) pour SETUP Paris, société de scénographie et de décor.",
     `Date du jour : ${today}.`,
