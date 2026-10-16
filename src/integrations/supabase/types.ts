@@ -3651,6 +3651,76 @@ export type Database = {
         }
         Relationships: []
       }
+      jalonnements: {
+        Row: {
+          affaire_id: string | null
+          created_at: string
+          created_by: string | null
+          erreur: string | null
+          id: string
+          mime: string | null
+          nb_etapes_planifiees: number
+          nom_fichier: string
+          resultat_ia: Json | null
+          statut: string
+          storage_path: string
+          taille: number | null
+          updated_at: string
+        }
+        Insert: {
+          affaire_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          erreur?: string | null
+          id?: string
+          mime?: string | null
+          nb_etapes_planifiees?: number
+          nom_fichier: string
+          resultat_ia?: Json | null
+          statut?: string
+          storage_path: string
+          taille?: number | null
+          updated_at?: string
+        }
+        Update: {
+          affaire_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          erreur?: string | null
+          id?: string
+          mime?: string | null
+          nb_etapes_planifiees?: number
+          nom_fichier?: string
+          resultat_ia?: Json | null
+          statut?: string
+          storage_path?: string
+          taille?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "jalonnements_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "affaires"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "jalonnements_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "v_affaire_consommation"
+            referencedColumns: ["affaire_id"]
+          },
+          {
+            foreignKeyName: "jalonnements_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "v_affaires_avec_plan_status"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lieux: {
         Row: {
           actif: boolean
