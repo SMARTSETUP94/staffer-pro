@@ -243,7 +243,8 @@ function applyLogistiqueOppsMode(sections: NavSection[]): NavSection[] {
  * Prend le pas sur tous les autres modes. Aucun blocage d'URL : l'admin peut
  * toujours ouvrir /admin/feature-flags en direct pour désactiver le mode.
  */
-const SA_MODE_URLS = new Set(["/opportunites", "/demandes-clients", "/affaires", "/logistique"]);
+// "/admin/utilisateurs" reste filtré par la cap section.admin (admins seulement).
+const SA_MODE_URLS = new Set(["/opportunites", "/demandes-clients", "/affaires", "/logistique", "/admin/utilisateurs"]);
 
 function applySuiviAffairesMode(sections: NavSection[]): NavSection[] {
   return sections
