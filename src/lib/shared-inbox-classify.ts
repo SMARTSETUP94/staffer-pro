@@ -64,7 +64,7 @@ export function bodyToPlainText(content: string | null | undefined, contentType?
   return t.slice(0, MAX_BODY);
 }
 
-export async function classifySharedEmail(key: string, input: ClassifyInput, source: SharedSource): Promise<SharedCls> {
+export async function classifySharedEmail(key: string, input: ClassifyInput, source: SharedSource, exemples = ""): Promise<SharedCls> {
   const hint =
     source === "devis"
       ? "Cet email arrive sur devis@setup.paris, la boîte des demandes clients : privilégie 'opportunite' sauf évidence contraire. "
@@ -82,7 +82,7 @@ export async function classifySharedEmail(key: string, input: ClassifyInput, sou
     "Ne recopie jamais l'objet de l'email, pas de préfixes TR:/RE:/Fw:, pas de « Demande de devis », pas de majuscules intégrales. " +
     "Si l'email mentionne des échéances de chantier (dates de livraison, montage, démontage, enlèvement, chargement, accès site, permanence...), liste-les dans echeances : " +
     "date au format YYYY-MM-DD, libelle court (ex. « Livraison plateau »), type parmi appro/emballage/chargement/livraison/montage/finitions/permanence/demontage/dechargement (null si incertain), " +
-    "et affaire_numero si un numéro de chantier (4 à 5 chiffres, ex. 6034) ou d'opportunité (9XXX) est cité, sinon null. Tableau vide si aucune échéance. Réponds STRICTEMENT en JSON.";
+    "et affaire_numero si un numéro de chantier (4 à 5 chiffres, ex. 6034) ou d'opportunité (9XXX) est cité, sinon null. Tableau vide si aucune échéance. Réponds STRICTEMENT en JSON." + (source === "logistique" ? exemples : "");
   const text = bodyToPlainText(input.body, input.bodyContentType) || input.bodyPreview || "";
   const res = await fetch(AI_GW, {
     method: "POST",

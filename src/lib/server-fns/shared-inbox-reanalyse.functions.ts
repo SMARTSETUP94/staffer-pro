@@ -6,6 +6,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { loadFeedbackPrompt } from "@/lib/logistique/ia-feedback";
 import { classifySharedEmail, clsToMetadata, type SharedSource } from "@/lib/shared-inbox-classify";
 
 export const reanalyseSharedInboxes = createServerFn({ method: "POST" })
@@ -26,6 +27,7 @@ export const reanalyseSharedInboxes = createServerFn({ method: "POST" })
       .limit(data.limit);
     if (error) throw new Error(error.message);
 
+    const exemples = await loadFeedbackPrompt(supabase);
     let updated = 0;
     const errors: string[] = [];
     const list = rows ?? [];
@@ -44,6 +46,7 @@ export const reanalyseSharedInboxes = createServerFn({ method: "POST" })
                 bodyPreview: r.body_preview,
               },
               r.source_boite as SharedSource,
+              exemples,
             );
             const { error: upErr } = await supabase
               .from("emails_entrants")

@@ -6,6 +6,7 @@
  */
 import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
+import { loadFeedbackPrompt } from "@/lib/logistique/ia-feedback";
 import { classifySharedEmail, clsToMetadata, type SharedCls } from "@/lib/shared-inbox-classify";
 
 const GRAPH = "https://graph.microsoft.com/v1.0";
@@ -69,6 +70,7 @@ export const Route = createFileRoute("/api/public/hooks/poll-shared-inboxes")({
           return Response.json({ ok: false, error: (e as Error).message }, { status: 500 });
         }
         const auth = { Authorization: `Bearer ${token}` };
+        const exemples = await loadFeedbackPrompt(supa);
 
         for (const box of MAILBOXES) {
           const errors: string[] = [];
@@ -100,6 +102,7 @@ export const Route = createFileRoute("/api/public/hooks/poll-shared-inboxes")({
                     bodyPreview: msg.bodyPreview,
                   },
                   box.source,
+                  exemples,
                 );
               } catch (e) {
                 cls = { categorie: box.source === "devis" ? "opportunite" : "logistique", confiance: 0, resume: `AI failed: ${(e as Error).message}` };
