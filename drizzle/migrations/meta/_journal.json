@@ -92,6 +92,13 @@
       "when": 1792165067829,
       "tag": "0012_etape_logistique_tracage",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1792166488299,
+      "tag": "0013_logistique_visibilite_chantiers_vehicules",
+      "breakpoints": true
     }
   ]
 }
