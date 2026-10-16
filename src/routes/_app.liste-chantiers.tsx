@@ -35,13 +35,15 @@ export const Route = createFileRoute("/_app/liste-chantiers")({
 const STATUT: Record<string, string> = { prospect: "Prospect", en_cours: "En cours", termine: "Terminé", annule: "Annulé" };
 const STATUT_OPTIONS = ["prospect", "en_cours", "termine", "annule"] as const;
 
+type ChantierStatut = (typeof STATUT_OPTIONS)[number];
+
 type ChantierRow = {
   id: string;
   numero: string;
   nom: string | null;
   client: string | null;
   lieu: string | null;
-  statut: string;
+  statut: ChantierStatut;
   archived_at: string | null;
   code_opportunite: string | null;
   date_montage: string | null;
