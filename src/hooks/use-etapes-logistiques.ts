@@ -1,5 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { syncOutlookLogistiqueFn } from "@/lib/server-fns/outlook-logistique.functions";
 import type { Database } from "@/integrations/supabase/types";
 
 export type EtapeLogistique = Database["public"]["Tables"]["affaire_etapes_logistiques"]["Row"] & {
@@ -48,9 +49,21 @@ export function useEtapesAffaire(affaireId: string) {
   });
 }
 
+let syncTimer: ReturnType<typeof setTimeout> | null = null;
+/** Lance (avec un délai) l'envoi des changements vers l'agenda Outlook partagé. */
+export function scheduleOutlookSync() {
+  if (syncTimer) clearTimeout(syncTimer);
+  syncTimer = setTimeout(() => {
+    syncOutlookLogistiqueFn().catch((e) => console.warn("Sync Outlook", e));
+  }, 3000);
+}
+
 export function useInvalidateEtapes() {
   const qc = useQueryClient();
-  return () => qc.invalidateQueries({ queryKey: ["etapes-logistiques"] });
+  return () => {
+    scheduleOutlookSync();
+    return qc.invalidateQueries({ queryKey: ["etapes-logistiques"] });
+  };
 }
 
 export function useVehiculesActifs() {

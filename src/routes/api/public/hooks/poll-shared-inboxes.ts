@@ -160,6 +160,12 @@ export const Route = createFileRoute("/api/public/hooks/poll-shared-inboxes")({
             report[box.address] = { error: (e as Error).message };
           }
         }
+        try {
+          const { syncOutlookLogistique } = await import("@/lib/logistique/outlook-sync.server");
+          report.outlook = await syncOutlookLogistique(supa);
+        } catch (e) {
+          report.outlook = { error: (e as Error).message };
+        }
         return Response.json({ ok: true, report });
       },
     },
