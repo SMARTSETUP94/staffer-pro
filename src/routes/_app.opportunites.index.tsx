@@ -452,6 +452,12 @@ function OpportunitesPage() {
           <ToggleGroupItem value="tableur" aria-label="Vue Tableur" className="h-8 gap-1.5 px-3">
             <TableIcon className="h-3.5 w-3.5" /> Tableur
           </ToggleGroupItem>
+          <Link
+            to="/liste-chantiers"
+            className="inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+          >
+            <TableIcon className="h-3.5 w-3.5" /> Liste des chantiers
+          </Link>
         </ToggleGroup>
 
         <Link
