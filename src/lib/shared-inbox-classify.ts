@@ -81,7 +81,7 @@ export async function classifySharedEmail(key: string, input: ClassifyInput, sou
     "opp_projet = nom de projet court et parlant (3 à 7 mots), au format « <Ouvrage/prestation> <Client ou événement> [<mois année>] », ex. « Stand Salon du Chocolat Nov 2026 », « Décor plateau 20h30 France 2 », « Cabine podcast NRJ ». " +
     "Ne recopie jamais l'objet de l'email, pas de préfixes TR:/RE:/Fw:, pas de « Demande de devis », pas de majuscules intégrales. " +
     "Si l'email mentionne des échéances de chantier (dates de livraison, montage, démontage, enlèvement, chargement, accès site, permanence...), liste-les dans echeances : " +
-    "date au format YYYY-MM-DD, libelle court (ex. « Livraison plateau »), type parmi appro/emballage/chargement/livraison/montage/finitions/permanence/demontage/dechargement (null si incertain), " +
+    "date au format YYYY-MM-DD, libelle court (ex. « Livraison plateau »), type parmi appro/emballage/chargement/livraison/tracage/montage/finitions/permanence/demontage/dechargement (null si incertain), " +
     "et affaire_numero si un numéro de chantier (4 à 5 chiffres, ex. 6034) ou d'opportunité (9XXX) est cité, sinon null. Tableau vide si aucune échéance. Réponds STRICTEMENT en JSON." + (source === "logistique" ? exemples : "");
   const text = bodyToPlainText(input.body, input.bodyContentType) || input.bodyPreview || "";
   const res = await fetch(AI_GW, {
@@ -126,7 +126,7 @@ export async function classifySharedEmail(key: string, input: ClassifyInput, sou
                   properties: {
                     date: { type: "string" },
                     libelle: { type: "string" },
-                    type: { type: ["string", "null"], enum: ["appro", "emballage", "chargement", "livraison", "montage", "finitions", "permanence", "demontage", "dechargement", null] },
+                    type: { type: ["string", "null"], enum: ["appro", "emballage", "chargement", "livraison", "tracage", "montage", "finitions", "permanence", "demontage", "dechargement", null] },
                     affaire_numero: { type: ["string", "null"] },
                   },
                   required: ["date", "libelle", "type", "affaire_numero"],

@@ -2,7 +2,7 @@ import { format, parseISO, differenceInCalendarDays } from "date-fns";
 import { fr } from "date-fns/locale";
 import { AlertTriangle, Truck } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { ETAPE_CLASSES, ETAPE_LABELS, etapeCouvreJour, heureCourte } from "@/lib/logistique/etapes";
+import { ETAPE_CLASSES, ETAPE_LABELS, etapeCouvreJour, heureCourte, nbPersonnesCourt } from "@/lib/logistique/etapes";
 import type { EtapeLogistique } from "@/hooks/use-etapes-logistiques";
 
 interface Props {
@@ -37,7 +37,8 @@ export function EtapeCard({ e, conflit, big, onClick, draggable }: {
       <div className="flex items-center gap-1 font-semibold">
         {conflit && <AlertTriangle className="h-3 w-3 shrink-0" />}
         <span className="truncate">{ETAPE_LABELS[e.type]}{e.sens ? ` ${e.sens}` : ""}</span>
-        {h && <span className="ml-auto shrink-0 tabular-nums">{h}</span>}
+        {nbPersonnesCourt(e.nb_personnes) && <span className="ml-auto shrink-0 rounded bg-background/25 px-1 tabular-nums">{nbPersonnesCourt(e.nb_personnes)}</span>}
+        {h && <span className={cn("shrink-0 tabular-nums", !nbPersonnesCourt(e.nb_personnes) && "ml-auto")}>{h}</span>}
       </div>
       <div className={cn("truncate", big ? "text-sm" : "text-[11px]")}>
         {e.affaire?.numero} · {e.affaire?.nom}

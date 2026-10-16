@@ -5,7 +5,7 @@
 import { addDays, format, parseISO } from "date-fns";
 
 export const ETAPE_TYPES = [
-  "appro", "emballage", "chargement", "livraison", "montage",
+  "appro", "emballage", "chargement", "livraison", "tracage", "montage",
   "finitions", "permanence", "demontage", "dechargement",
 ] as const;
 export type EtapeType = (typeof ETAPE_TYPES)[number];
@@ -15,6 +15,7 @@ export const ETAPE_LABELS: Record<EtapeType, string> = {
   emballage: "Emballage",
   chargement: "Chargement",
   livraison: "Livraison",
+  tracage: "Traçage",
   montage: "Montage",
   finitions: "Finitions",
   permanence: "Permanence",
@@ -28,6 +29,7 @@ export const ETAPE_CLASSES: Record<EtapeType, string> = {
   emballage: "bg-log-emballage text-log-foreground",
   chargement: "bg-log-chargement text-log-foreground",
   livraison: "bg-log-livraison text-log-foreground",
+  tracage: "bg-log-tracage text-log-foreground",
   montage: "bg-log-montage text-log-foreground",
   finitions: "bg-log-finitions text-log-foreground",
   permanence: "bg-log-permanence text-log-foreground",
@@ -90,4 +92,9 @@ export function decalerEtape(
 export function heureCourte(h: string | null | undefined): string | null {
   if (!h) return null;
   return h.slice(0, 5).replace(":", "h");
+}
+
+/** Affichage court du nombre de personnes : 4 → "4p". */
+export function nbPersonnesCourt(n: number | null | undefined): string | null {
+  return n && n > 0 ? `${n}p` : null;
 }
