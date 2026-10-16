@@ -22,6 +22,21 @@ interface Props {
   affaireId?: string;
   /** Si fourni, on analyse cet email (+ pièce jointe) au lieu de demander un fichier. */
   email?: { emailId: string; attachmentId: string | null; label: string };
+  /** Jalonnement déjà enregistré : on réaffiche l'analyse sauvegardée. */
+  saved?: { id: string; result: JalonnementResult; affaireId: string | null };
+  onChanged?: () => void;
+}
+
+export async function enregistrerJalonnement(f: File, r: JalonnementResult | null, affaireId: string | null, erreur?: string) {
+  const path = `${crypto.randomUUID()}/${f.name.replace(/[^\w.\-]+/g, "_")}`;
+  const up = await supabase.storage.from("jalonnements").upload(path, f, { contentType: f.type || undefined });
+  if (up.error) throw new Error(`Fichier non sauvegardé : ${up.error.message}`);
+  const { data, error } = await supabase.from("jalonnements").insert({
+    nom_fichier: f.name, mime: f.type || null, taille: f.size, storage_path: path,
+    resultat_ia: r as never, affaire_id: affaireId, statut: erreur ? "erreur" : "a_valider", erreur: erreur ?? null,
+  }).select("id").single();
+  if (error) throw new Error(`Jalonnement non sauvegardé : ${error.message}`);
+  return data.id as string;
 }
 
 const fileToB64 = (f: File) => new Promise<string>((res, rej) => {
@@ -31,7 +46,7 @@ const fileToB64 = (f: File) => new Promise<string>((res, rej) => {
   r.readAsDataURL(f);
 });
 
-export function JalonnementDialog({ open, onOpenChange, affaireId, email }: Props) {
+export function JalonnementDialog({ open, onOpenChange, affaireId, email, saved, onChanged }: Props) {
   const anaFile = useServerFn(analyserJalonnementFichier);
   const anaEmail = useServerFn(analyserJalonnementEmail);
   const invalidate = useInvalidateEtapes();
@@ -45,14 +60,19 @@ export function JalonnementDialog({ open, onOpenChange, affaireId, email }: Prop
   const [rows, setRows] = useState<Row[]>([]);
   const [target, setTarget] = useState<string>(affaireId ?? "");
   const [suggest, setSuggest] = useState<string | null>(null);
+  const [savedId, setSavedId] = useState<string | null>(null);
 
-  useEffect(() => { if (!open) { setRes(null); setRows([]); setSuggest(null); setTarget(affaireId ?? ""); } }, [open, affaireId]);
+  useEffect(() => { if (!open) { setRes(null); setRows([]); setSuggest(null); setSavedId(null); setTarget(affaireId ?? ""); } }, [open, affaireId]);
+  useEffect(() => {
+    if (open && saved) { setSavedId(saved.id); setTarget(saved.affaireId ?? affaireId ?? ""); apply(saved.result, !!saved.affaireId); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, saved?.id, delais]);
 
-  function apply(r: JalonnementResult) {
+  function apply(r: JalonnementResult, hasTarget = false) {
     setRes(r);
     const lues: EtapeProposee[] = r.etapes.map((e) => ({ ...e, origine: "jalonnement" }));
     setRows(completerRetroplanning(lues, delais ?? DELAIS_DEFAUT).map((e) => ({ ...e, keep: true })));
-    if (!affaireId && r.numero_affaire) {
+    if (!affaireId && !hasTarget && r.numero_affaire) {
       const m = affaires.find((a) => a.numero === r.numero_affaire);
       if (m) { setTarget(m.id); setSuggest(`Chantier ${m.numero} trouvé dans le document — vérifiez avant de valider.`); }
       else setSuggest(`Le document cite le numéro ${r.numero_affaire}, introuvable : choisissez le chantier.`);
@@ -66,6 +86,11 @@ export function JalonnementDialog({ open, onOpenChange, affaireId, email }: Prop
         ? await anaEmail({ data: email })
         : await anaFile({ data: { name: f!.name, mime: f!.type, base64: await fileToB64(f!) } });
       apply(r);
+      if (f) {
+        const num = !affaireId && r.numero_affaire ? affaires.find((a) => a.numero === r.numero_affaire)?.id ?? null : affaireId ?? null;
+        try { setSavedId(await enregistrerJalonnement(f, r, num)); onChanged?.(); }
+        catch (e) { toast.warning((e as Error).message); }
+      }
       if (r.etapes.length === 0) toast.warning("Aucune date logistique trouvée dans ce document.");
     } catch (e) {
       toast.error((e as Error).message);
@@ -85,6 +110,10 @@ export function JalonnementDialog({ open, onOpenChange, affaireId, email }: Prop
       calcul_regle: r.origine === "retroplanning" ? r.note : null,
     })));
     if (error) return toast.error("Enregistrement impossible", { description: error.message });
+    if (savedId) {
+      await supabase.from("jalonnements").update({ statut: "planifie", affaire_id: target, nb_etapes_planifiees: keep.length, updated_at: new Date().toISOString() }).eq("id", savedId);
+      onChanged?.();
+    }
     toast.success(`${keep.length} étape(s) ajoutée(s) au planning logistique`);
     invalidate();
     onOpenChange(false);
@@ -95,6 +124,7 @@ export function JalonnementDialog({ open, onOpenChange, affaireId, email }: Prop
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2"><Sparkles className="h-5 w-5" />Lire un jalonnement</DialogTitle>
+          {savedId && <p className="text-xs text-muted-foreground">Fichier et analyse enregistrés dans l'onglet Jalonnements.</p>}
           <DialogDescription>
             L'IA lit les dates, complète les étapes amont (appro, emballage, chargement) en jours ouvrés, puis vous corrigez et validez.
           </DialogDescription>
@@ -151,7 +181,7 @@ export function JalonnementDialog({ open, onOpenChange, affaireId, email }: Prop
 
         {res && (
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setRes(null); setRows([]); }}>Recommencer</Button>
+            {!saved && <Button variant="outline" onClick={() => { setRes(null); setRows([]); setSavedId(null); }}>Recommencer</Button>}
             <Button onClick={valider} disabled={!rows.some((r) => r.keep)}>Valider et ajouter au planning</Button>
           </DialogFooter>
         )}

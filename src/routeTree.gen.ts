@@ -35,6 +35,7 @@ import { Route as AppImportsRouteImport } from './routes/_app.imports'
 import { Route as AppInboxSmartRouteImport } from './routes/_app.inbox-smart'
 import { Route as AppIncidentAuthRouteImport } from './routes/_app.incident-auth'
 import { Route as AppInterimairesRouteImport } from './routes/_app.interimaires'
+import { Route as AppJalonnementsRouteImport } from './routes/_app.jalonnements'
 import { Route as AppListeChantiersRouteImport } from './routes/_app.liste-chantiers'
 import { Route as AppMesChantiersRouteImport } from './routes/_app.mes-chantiers'
 import { Route as AppMesContratsRouteImport } from './routes/_app.mes-contrats'
@@ -243,6 +244,11 @@ const AppIncidentAuthRoute = AppIncidentAuthRouteImport.update({
 const AppInterimairesRoute = AppInterimairesRouteImport.update({
   id: '/interimaires',
   path: '/interimaires',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppJalonnementsRoute = AppJalonnementsRouteImport.update({
+  id: '/jalonnements',
+  path: '/jalonnements',
   getParentRoute: () => AppRoute,
 } as any)
 const AppListeChantiersRoute = AppListeChantiersRouteImport.update({
@@ -698,6 +704,7 @@ export interface FileRoutesByFullPath {
   '/inbox-smart': typeof AppInboxSmartRoute
   '/incident-auth': typeof AppIncidentAuthRoute
   '/interimaires': typeof AppInterimairesRoute
+  '/jalonnements': typeof AppJalonnementsRoute
   '/liste-chantiers': typeof AppListeChantiersRoute
   '/mes-chantiers': typeof AppMesChantiersRoute
   '/mes-contrats': typeof AppMesContratsRoute
@@ -803,6 +810,7 @@ export interface FileRoutesByTo {
   '/inbox-smart': typeof AppInboxSmartRoute
   '/incident-auth': typeof AppIncidentAuthRoute
   '/interimaires': typeof AppInterimairesRoute
+  '/jalonnements': typeof AppJalonnementsRoute
   '/liste-chantiers': typeof AppListeChantiersRoute
   '/mes-chantiers': typeof AppMesChantiersRoute
   '/mes-contrats': typeof AppMesContratsRoute
@@ -910,6 +918,7 @@ export interface FileRoutesById {
   '/_app/inbox-smart': typeof AppInboxSmartRoute
   '/_app/incident-auth': typeof AppIncidentAuthRoute
   '/_app/interimaires': typeof AppInterimairesRoute
+  '/_app/jalonnements': typeof AppJalonnementsRoute
   '/_app/liste-chantiers': typeof AppListeChantiersRoute
   '/_app/mes-chantiers': typeof AppMesChantiersRoute
   '/_app/mes-contrats': typeof AppMesContratsRoute
@@ -1020,6 +1029,7 @@ export interface FileRouteTypes {
     | '/inbox-smart'
     | '/incident-auth'
     | '/interimaires'
+    | '/jalonnements'
     | '/liste-chantiers'
     | '/mes-chantiers'
     | '/mes-contrats'
@@ -1125,6 +1135,7 @@ export interface FileRouteTypes {
     | '/inbox-smart'
     | '/incident-auth'
     | '/interimaires'
+    | '/jalonnements'
     | '/liste-chantiers'
     | '/mes-chantiers'
     | '/mes-contrats'
@@ -1231,6 +1242,7 @@ export interface FileRouteTypes {
     | '/_app/inbox-smart'
     | '/_app/incident-auth'
     | '/_app/interimaires'
+    | '/_app/jalonnements'
     | '/_app/liste-chantiers'
     | '/_app/mes-chantiers'
     | '/_app/mes-contrats'
@@ -1508,6 +1520,13 @@ declare module '@tanstack/react-router' {
       path: '/interimaires'
       fullPath: '/interimaires'
       preLoaderRoute: typeof AppInterimairesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/jalonnements': {
+      id: '/_app/jalonnements'
+      path: '/jalonnements'
+      fullPath: '/jalonnements'
+      preLoaderRoute: typeof AppJalonnementsRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/liste-chantiers': {
@@ -2205,6 +2224,7 @@ interface AppRouteChildren {
   AppInboxSmartRoute: typeof AppInboxSmartRoute
   AppIncidentAuthRoute: typeof AppIncidentAuthRoute
   AppInterimairesRoute: typeof AppInterimairesRoute
+  AppJalonnementsRoute: typeof AppJalonnementsRoute
   AppListeChantiersRoute: typeof AppListeChantiersRoute
   AppMesChantiersRoute: typeof AppMesChantiersRoute
   AppMesContratsRoute: typeof AppMesContratsRoute
@@ -2281,6 +2301,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppInboxSmartRoute: AppInboxSmartRoute,
   AppIncidentAuthRoute: AppIncidentAuthRoute,
   AppInterimairesRoute: AppInterimairesRoute,
+  AppJalonnementsRoute: AppJalonnementsRoute,
   AppListeChantiersRoute: AppListeChantiersRoute,
   AppMesChantiersRoute: AppMesChantiersRoute,
   AppMesContratsRoute: AppMesContratsRoute,
