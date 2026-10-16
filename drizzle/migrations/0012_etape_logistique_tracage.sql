@@ -1,0 +1,1 @@
+ALTER TYPE public.etape_logistique_type ADD VALUE IF NOT EXISTS 'tracage' BEFORE 'montage';
