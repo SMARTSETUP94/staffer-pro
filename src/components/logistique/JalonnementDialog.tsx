@@ -14,7 +14,7 @@ import { completerRetroplanning, DELAIS_DEFAUT, type EtapeProposee } from "@/lib
 import { analyserJalonnementEmail, analyserJalonnementFichier, type JalonnementResult } from "@/lib/server-fns/jalonnement.functions";
 import { useAffairesPourLogistique, useInvalidateEtapes } from "@/hooks/use-etapes-logistiques";
 
-type Row = EtapeProposee & { keep: boolean };
+type Row = EtapeProposee & { keep: boolean; affaire_id: string };
 
 interface Props {
   open: boolean;
@@ -71,7 +71,8 @@ export function JalonnementDialog({ open, onOpenChange, affaireId, email, saved,
   function apply(r: JalonnementResult, hasTarget = false) {
     setRes(r);
     const lues: EtapeProposee[] = r.etapes.map((e) => ({ ...e, origine: "jalonnement" }));
-    setRows(completerRetroplanning(lues, delais ?? DELAIS_DEFAUT).map((e) => ({ ...e, keep: true })));
+    const byNum = (n?: string | null) => (n ? affaires.find((a) => a.numero === n)?.id ?? "" : "");
+    setRows(completerRetroplanning(lues, delais ?? DELAIS_DEFAUT).map((e) => ({ ...e, keep: true, affaire_id: byNum((e as { numero_affaire?: string | null }).numero_affaire) })));
     if (!affaireId && !hasTarget && r.numero_affaire) {
       const m = affaires.find((a) => a.numero === r.numero_affaire);
       if (m) { setTarget(m.id); setSuggest(`Chantier ${m.numero} trouvé dans le document — vérifiez avant de valider.`); }
@@ -100,18 +101,18 @@ export function JalonnementDialog({ open, onOpenChange, affaireId, email, saved,
   const patch = (i: number, p: Partial<Row>) => setRows((rs) => rs.map((r, j) => (j === i ? { ...r, ...p } : r)));
 
   async function valider() {
-    if (!target) return toast.error("Choisissez le chantier");
     const keep = rows.filter((r) => r.keep);
+    if (keep.some((r) => !(r.affaire_id || target))) return toast.error("Choisissez le chantier de chaque ligne (ou un chantier par défaut)");
     const { data: u } = await supabase.auth.getUser();
     const { error } = await supabase.from("affaire_etapes_logistiques").insert(keep.map((r) => ({
-      affaire_id: target, type: r.type, date_debut: r.date_debut, date_fin: r.date_fin || null,
+      affaire_id: r.affaire_id || target, type: r.type, date_debut: r.date_debut, date_fin: r.date_fin || null,
       heure_debut: r.heure_debut || null, heure_fin: r.heure_fin || null, lieu_libre: r.lieu || res?.lieu || null,
       note: r.note, nb_personnes: r.nb_personnes ?? null, responsable: (r as { responsable?: string | null }).responsable ?? null, origine: r.origine, statut: "valide" as const, created_by: u.user?.id ?? null,
       calcul_regle: r.origine === "retroplanning" ? r.note : null,
     })));
     if (error) return toast.error("Enregistrement impossible", { description: error.message });
     if (savedId) {
-      await supabase.from("jalonnements").update({ statut: "planifie", affaire_id: target, nb_etapes_planifiees: keep.length, updated_at: new Date().toISOString() }).eq("id", savedId);
+      await supabase.from("jalonnements").update({ statut: "planifie", affaire_id: target || keep[0]?.affaire_id || null, nb_etapes_planifiees: keep.length, updated_at: new Date().toISOString() }).eq("id", savedId);
       onChanged?.();
     }
     toast.success(`${keep.length} étape(s) ajoutée(s) au planning logistique`);
@@ -151,7 +152,7 @@ export function JalonnementDialog({ open, onOpenChange, affaireId, email, saved,
           <div className="space-y-3">
             {res.resume && <p className="text-sm text-muted-foreground">{res.resume}</p>}
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-sm font-medium">Chantier :</span>
+              <span className="text-sm font-medium">Chantier par défaut :</span>
               <select className="h-9 rounded-md border border-input bg-background px-2 text-sm" value={target}
                 disabled={!!affaireId} onChange={(e) => setTarget(e.target.value)}>
                 <option value="">— choisir —</option>
@@ -166,6 +167,11 @@ export function JalonnementDialog({ open, onOpenChange, affaireId, email, saved,
                   <select className={cn("h-8 rounded px-1 text-xs font-semibold", ETAPE_CLASSES[r.type])} value={r.type}
                     onChange={(e) => patch(i, { type: e.target.value as EtapeType })}>
                     {ETAPE_TYPES.map((t) => <option key={t} value={t}>{ETAPE_LABELS[t]}</option>)}
+                  </select>
+                  <select className="h-8 max-w-48 rounded-md border border-input bg-background px-1 text-xs" value={r.affaire_id}
+                    aria-label="Chantier de la ligne" onChange={(e) => patch(i, { affaire_id: e.target.value })}>
+                    <option value="">{target ? "= chantier par défaut" : "— chantier —"}</option>
+                    {affaires.map((a) => <option key={a.id} value={a.id}>{a.numero} · {a.nom}</option>)}
                   </select>
                   <Input type="date" className="h-8 w-36" value={r.date_debut} onChange={(e) => patch(i, { date_debut: e.target.value })} />
                   <Input type="date" className="h-8 w-36" value={r.date_fin ?? ""} onChange={(e) => patch(i, { date_fin: e.target.value || null })} aria-label="Date de fin" />
