@@ -1,0 +1,1 @@
+ALTER TABLE public.affaire_etapes_logistiques ADD COLUMN IF NOT EXISTS outlook_synced_at timestamptz;

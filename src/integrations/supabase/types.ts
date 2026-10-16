@@ -552,6 +552,7 @@ export type Database = {
           note: string | null
           origine: Database["public"]["Enums"]["etape_logistique_origine"]
           outlook_event_id: string | null
+          outlook_synced_at: string | null
           photos_optionnelles: boolean
           proposition_id: string | null
           responsable: string | null
@@ -586,6 +587,7 @@ export type Database = {
           note?: string | null
           origine?: Database["public"]["Enums"]["etape_logistique_origine"]
           outlook_event_id?: string | null
+          outlook_synced_at?: string | null
           photos_optionnelles?: boolean
           proposition_id?: string | null
           responsable?: string | null
@@ -620,6 +622,7 @@ export type Database = {
           note?: string | null
           origine?: Database["public"]["Enums"]["etape_logistique_origine"]
           outlook_event_id?: string | null
+          outlook_synced_at?: string | null
           photos_optionnelles?: boolean
           proposition_id?: string | null
           responsable?: string | null
