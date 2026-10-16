@@ -104,12 +104,32 @@ export function EtapeDialog({ open, onOpenChange, etape, defaultDate, defaultAff
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="sm:col-span-2">
             <Label>Chantier / opportunité</Label>
-            <Select value={f.affaire_id || NONE} onValueChange={(v) => set("affaire_id", v === NONE ? "" : v)}>
-              <SelectTrigger><SelectValue placeholder="Choisir">{f.affaire_id ? affaireLabel.get(f.affaire_id) : "Choisir"}</SelectValue></SelectTrigger>
-              <SelectContent>
-                {affaires.map((a) => <SelectItem key={a.id} value={a.id}>{a.numero} — {a.nom}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            <Popover open={affaireOpen} onOpenChange={setAffaireOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" role="combobox" aria-expanded={affaireOpen} className="w-full justify-between font-normal">
+                  <span className="truncate">{f.affaire_id ? affaireLabel.get(f.affaire_id) : "Choisir"}</span>
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[22rem] p-0" align="start">
+                <Command>
+                  <CommandInput placeholder="Rechercher par numéro ou mot clé…" />
+                  <CommandList>
+                    <CommandEmpty>Aucun chantier trouvé.</CommandEmpty>
+                    {affaires.map((a) => (
+                      <CommandItem
+                        key={a.id}
+                        value={`${a.numero} ${a.nom}`}
+                        onSelect={() => { set("affaire_id", a.id); setAffaireOpen(false); }}
+                      >
+                        <Check className={`mr-2 h-4 w-4 ${f.affaire_id === a.id ? "opacity-100" : "opacity-0"}`} />
+                        {a.numero} — {a.nom}
+                      </CommandItem>
+                    ))}
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
           <div>
             <Label>Étape</Label>
