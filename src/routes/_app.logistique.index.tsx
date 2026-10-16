@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { addDays, format, startOfWeek } from "date-fns";
 import { fr } from "date-fns/locale";
-import { ChevronLeft, ChevronRight, Monitor, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight, Monitor, Plus, Printer } from "lucide-react";
 import { toast } from "sonner";
 import { requireCapability } from "@/lib/capability-guard";
 import { useCapability } from "@/hooks/use-capability";
@@ -62,6 +62,7 @@ function PlanningLogistiquePage() {
           {([1, 2, 4] as const).map((n) => (
             <Button key={n} variant={semaines === n ? "default" : "outline"} size="sm" onClick={() => setSemaines(n)}>{n} sem.</Button>
           ))}
+          <Button variant="outline" asChild><Link to="/logistique/imprimer"><Printer className="mr-1 h-4 w-4" />Imprimer la semaine</Link></Button>
           <Button variant="outline" asChild><Link to="/ecran-atelier"><Monitor className="mr-1 h-4 w-4" />Écran atelier</Link></Button>
           {canEdit && <Button onClick={() => setDlg({ open: true })}><Plus className="mr-1 h-4 w-4" />Étape</Button>}
         </div>
