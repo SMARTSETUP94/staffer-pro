@@ -14,6 +14,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -170,6 +172,8 @@ function PlanningDialog({ row, affaires, onClose, onDone }: { row: Row; affaires
     return completerSuggestionsEmail(base).map((x) => ({ ...x, hDebut: "", hFin: "", vehiculeId: "" }));
   });
   const [saving, setSaving] = useState(false);
+  const [commentaire, setCommentaire] = useState("");
+  const [initial] = useState(() => lines.map((l) => ({ type: l.type, date: l.date, contenu: l.contenu, lieu: l.lieu || null })));
   const [q, setQ] = useState("");
   const [vehicules, setVehicules] = useState<Veh[]>([]);
   useEffect(() => {
@@ -196,7 +200,14 @@ function PlanningDialog({ row, affaires, onClose, onDone }: { row: Row; affaires
       statut: "valide" as const, origine: "jalonnement" as const,
       note: `Depuis un email log@ : « ${(row.subject ?? "").slice(0, 120)} »`,
     })));
-    if (!error) await supabase.from("emails_entrants").update({ statut: "validated" }).eq("id", row.id);
+    if (!error) {
+      await supabase.from("emails_entrants").update({ statut: "validated" }).eq("id", row.id);
+      await supabase.from("ia_feedback_logistique").insert({
+        email_id: row.id, email_subject: row.subject, propose: initial,
+        retenu: kept.map((l) => ({ type: l.type, date: l.date, contenu: l.contenu, heure_debut: l.hDebut || null, heure_fin: l.hFin || null, lieu: l.lieu || null })),
+        commentaire: commentaire.trim() || null,
+      });
+    }
     setSaving(false);
     if (error) return toast.error("Ajout impossible", { description: error.message });
     toast.success(`${kept.length} étape(s) ajoutée(s) au planning logistique`);
@@ -223,6 +234,12 @@ function PlanningDialog({ row, affaires, onClose, onDone }: { row: Row; affaires
           )}
         </div>
         <div className="space-y-3 min-w-0">
+        <div className="space-y-1">
+          <Label htmlFor="ia-comment" className="text-xs">Commentaire pour l'IA (facultatif)</Label>
+          <Textarea id="ia-comment" rows={2} value={commentaire} onChange={(e) => setCommentaire(e.target.value)}
+            placeholder="Ex. : l'entrée prestataires n'est pas une étape ; la pose commence à 23h." />
+          <p className="text-[11px] text-muted-foreground">Vos corrections et ce commentaire servent d'exemples à l'IA pour les prochains emails.</p>
+        </div>
         <div className="space-y-1.5">
           <Input placeholder="Rechercher un chantier (numéro, nom, mot clé)…" value={q} onChange={(e) => setQ(e.target.value)} />
           {selected && <p className="text-xs">Chantier choisi : <span className="font-medium">{selected.numero} — {selected.nom}</span></p>}
