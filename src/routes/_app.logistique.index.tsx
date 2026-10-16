@@ -1,3 +1,6 @@
+import { useServerFn } from "@tanstack/react-start";
+import { syncOutlookLogistiqueFn } from "@/lib/server-fns/outlook-logistique.functions";
+import { CalendarSync } from "lucide-react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { addDays, format, startOfWeek } from "date-fns";
@@ -38,6 +41,18 @@ function PlanningLogistiquePage() {
   const invalidate = useInvalidateEtapes();
   const [dlg, setDlg] = useState<{ open: boolean; etape?: EtapeLogistique | null; date?: string }>({ open: false });
 
+  const [syncing, setSyncing] = useState(false);
+  const syncFn = useServerFn(syncOutlookLogistiqueFn);
+  async function resync() {
+    setSyncing(true);
+    try {
+      const r = await syncFn();
+      if (!r.ok) toast.error("Synchronisation Outlook impossible", { description: r.error });
+      else if (r.errors.length) toast.warning(`Outlook : ${r.errors.length} erreur(s)`, { description: r.errors[0] });
+      else toast.success("Agenda Outlook à jour", { description: `${r.created} ajoutée(s), ${r.updated} modifiée(s), ${r.deleted} retirée(s)` });
+    } finally { setSyncing(false); }
+  }
+
   async function move(e: EtapeLogistique, delta: number) {
     const { error } = await supabase.from("affaire_etapes_logistiques").update(decalerEtape(e, delta)).eq("id", e.id);
     if (error) toast.error("Déplacement impossible", { description: error.message });
@@ -64,6 +79,7 @@ function PlanningLogistiquePage() {
           ))}
           <Button variant="outline" asChild><Link to="/logistique/imprimer"><Printer className="mr-1 h-4 w-4" />Imprimer la semaine</Link></Button>
           <Button variant="outline" asChild><Link to="/ecran-atelier"><Monitor className="mr-1 h-4 w-4" />Écran atelier</Link></Button>
+          {canEdit && <Button variant="outline" disabled={syncing} onClick={resync}><CalendarSync className="mr-1 h-4 w-4" />{syncing ? "Synchro…" : "Synchroniser Outlook"}</Button>}
           {canEdit && <Button onClick={() => setDlg({ open: true })}><Plus className="mr-1 h-4 w-4" />Étape</Button>}
         </div>
       </div>
