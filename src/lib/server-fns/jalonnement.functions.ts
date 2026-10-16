@@ -21,6 +21,7 @@ export type JalonnementEtape = {
   lieu: string | null;
   note: string | null;
   nb_personnes: number | null;
+  responsable: string | null;
 };
 export type JalonnementResult = {
   numero_affaire: string | null;
@@ -42,7 +43,7 @@ const SCHEMA = {
       type: "array",
       items: {
         type: "object", additionalProperties: false,
-        required: ["type", "date_debut", "date_fin", "heure_debut", "heure_fin", "lieu", "note", "nb_personnes"],
+        required: ["type", "date_debut", "date_fin", "heure_debut", "heure_fin", "lieu", "note", "nb_personnes", "responsable"],
         properties: {
           type: { type: "string", enum: [...ETAPE_TYPES] },
           date_debut: { type: "string" },
@@ -52,6 +53,7 @@ const SCHEMA = {
           lieu: { type: ["string", "null"] },
           note: { type: ["string", "null"] },
           nb_personnes: { type: ["integer", "null"] },
+          responsable: { type: ["string", "null"] },
         },
       },
     },
@@ -68,13 +70,15 @@ export function instructions(today: string) {
       "Ignore les autres prestataires (lumière, son, vidéo, LED, structure, informatique…), les tournages, répétitions et pauses repas.",
     "",
     "2. TYPE D'ÉTAPE : tracage (traçage décor) ; livraison (arrivée des camions/containers décor sur site) ; montage (montage, boisage, moquette, habillage, tapisserie, soffites, gradins, vomitoires…) ; " +
-      "finitions (finitions, peinture, retouches) ; permanence (« perm », suivi technique SETUP, présence pendant tournages) ; demontage ; chargement (chargement décor en fin de démontage) ; dechargement. " +
+      "finitions (finitions, peinture, retouches) ; permanence (« perm », suivi technique SETUP, présence pendant tournages) ; demontage ; rotation (rotation / navette de matériel entre atelier et site) ; chargement (chargement décor en fin de démontage) ; dechargement. " +
       "Les journées « OFF » ne génèrent rien.",
     "",
     "3. UNE ÉTAPE PAR JOUR ET PAR TYPE : fusionne matin + après-midi d'un même jour (ex. 7h-12h puis 13h-20h → heure_debut 07:00, heure_fin 20:00). " +
       "En principe UNE SEULE étape SETUP par jour : choisis le type dominant (montage > finitions > permanence) et cite les autres tâches dans la note. Exceptions : une livraison/un traçage/un chargement à heure précise reste une étape à part. Garde un jour = une étape pour conserver l'effectif de chaque jour.",
     "",
-    "4. EFFECTIF : nb_personnes = effectif SETUP du jour s'il est écrit (« 19P », « 7P », « PAX (5) », « 3 tech SMART SET UP », « 1 tapissier Set up ») ; sinon null. Prends le maximum du jour si matin et après-midi diffèrent.",
+    "4. EFFECTIF : nb_personnes = effectif SETUP du jour s'il est écrit (« 19P », « 7P », « PAX (5) », « 3 tech SMART SET UP », « 1 tapissier Set up ») ; sinon null. Prends le maximum du jour si matin et après-midi diffèrent. Si le document liste des NOMS de personnes, compte-les pour nb_personnes mais ne recopie JAMAIS ces noms (ni dans la note).",
+    "4b. RESPONSABLE : responsable = nom du responsable / chef d'équipe de l'intervention s'il est indiqué (« Resp. », « Responsable », « Chef ») ; sinon null.",
+    "4c. PLANNING INTERNE SETUP (« Planning du … au … ») : tableau déjà décidé, par jour, avec chantier, responsable, opération (Rotation/Montage/Démontage/Chargement/Déchargement), adresse, commentaires (horaires, véhicule). Garde TOUTES les lignes ; heures et véhicule dans heure_debut/heure_fin et la note ; l'adresse dans lieu. Les pages peuvent être dans le désordre : trie par date.",
     "",
     "5. DATES : format YYYY-MM-DD. Si l'année manque, prends la prochaine occurrence après aujourd'hui. Corrige les incohérences évidentes (ex. « lundi 09-oct » au milieu de novembre → 9 novembre, en suivant le jour de semaine et la séquence). " +
       "Heures HH:MM ou null. date_fin = null sauf étape réellement continue sur plusieurs jours sans détail jour par jour.",

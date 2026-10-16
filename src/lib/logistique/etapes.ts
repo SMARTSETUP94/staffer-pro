@@ -6,7 +6,7 @@ import { addDays, format, parseISO } from "date-fns";
 
 export const ETAPE_TYPES = [
   "appro", "emballage", "chargement", "livraison", "tracage", "montage",
-  "finitions", "permanence", "demontage", "dechargement",
+  "finitions", "permanence", "rotation", "demontage", "dechargement",
 ] as const;
 export type EtapeType = (typeof ETAPE_TYPES)[number];
 
@@ -19,6 +19,7 @@ export const ETAPE_LABELS: Record<EtapeType, string> = {
   montage: "Montage",
   finitions: "Finitions",
   permanence: "Permanence",
+  rotation: "Rotation",
   demontage: "Démontage",
   dechargement: "Déchargement",
 };
@@ -33,6 +34,7 @@ export const ETAPE_CLASSES: Record<EtapeType, string> = {
   montage: "bg-log-montage text-log-foreground",
   finitions: "bg-log-finitions text-log-foreground",
   permanence: "bg-log-permanence text-log-foreground",
+  rotation: "bg-log-rotation text-log-foreground",
   demontage: "bg-log-demontage text-log-foreground",
   dechargement: "bg-log-dechargement text-log-foreground",
 };

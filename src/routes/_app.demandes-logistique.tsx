@@ -38,10 +38,10 @@ export const Route = createFileRoute("/_app/demandes-logistique")({
   component: DemandesLogistiquePage,
 });
 
-const TYPES = ["appro", "emballage", "chargement", "livraison", "tracage", "montage", "finitions", "permanence", "demontage", "dechargement"] as const;
+const TYPES = ["appro", "emballage", "chargement", "livraison", "tracage", "montage", "finitions", "permanence", "rotation", "demontage", "dechargement"] as const;
 type EtapeType = (typeof TYPES)[number];
 const TYPE_LABEL: Record<EtapeType, string> = {
-  appro: "Appro", emballage: "Emballage", chargement: "Chargement", livraison: "Livraison", tracage: "Traçage", montage: "Montage",
+  appro: "Appro", emballage: "Emballage", chargement: "Chargement", livraison: "Livraison", tracage: "Traçage", rotation: "Rotation", montage: "Montage",
   finitions: "Finitions", permanence: "Permanence", demontage: "Démontage", dechargement: "Déchargement",
 };
 

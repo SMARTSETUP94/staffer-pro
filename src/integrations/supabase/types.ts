@@ -554,6 +554,7 @@ export type Database = {
           outlook_event_id: string | null
           photos_optionnelles: boolean
           proposition_id: string | null
+          responsable: string | null
           sens: string | null
           statut: Database["public"]["Enums"]["etape_logistique_statut"]
           trajet_id: string | null
@@ -587,6 +588,7 @@ export type Database = {
           outlook_event_id?: string | null
           photos_optionnelles?: boolean
           proposition_id?: string | null
+          responsable?: string | null
           sens?: string | null
           statut?: Database["public"]["Enums"]["etape_logistique_statut"]
           trajet_id?: string | null
@@ -620,6 +622,7 @@ export type Database = {
           outlook_event_id?: string | null
           photos_optionnelles?: boolean
           proposition_id?: string | null
+          responsable?: string | null
           sens?: string | null
           statut?: Database["public"]["Enums"]["etape_logistique_statut"]
           trajet_id?: string | null
@@ -6806,6 +6809,7 @@ export type Database = {
         | "permanence"
         | "demontage"
         | "dechargement"
+        | "rotation"
       fabrication_etape_statut:
         | "a_faire"
         | "en_cours"
@@ -7127,6 +7131,7 @@ export const Constants = {
         "permanence",
         "demontage",
         "dechargement",
+        "rotation",
       ],
       fabrication_etape_statut: [
         "a_faire",

@@ -1,6 +1,6 @@
 import { decalerJoursOuvres, DELAIS_DEFAUT } from "./retroplanning";
 
-export type SuggestionType = "appro" | "emballage" | "chargement" | "livraison" | "tracage" | "montage" | "finitions" | "permanence" | "demontage" | "dechargement";
+export type SuggestionType = "appro" | "emballage" | "chargement" | "livraison" | "tracage" | "montage" | "finitions" | "permanence" | "rotation" | "demontage" | "dechargement";
 export type SuggestionLine = { keep: boolean; date: string; type: SuggestionType; contenu: string; lieu: string; auto?: boolean };
 
 export const LIEU_ATELIER = "Atelier";

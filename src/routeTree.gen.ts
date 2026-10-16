@@ -83,6 +83,7 @@ import { Route as AppFabricationIndexRouteImport } from './routes/_app.fabricati
 import { Route as AppFabricationMesEtapesRouteImport } from './routes/_app.fabrication.mes-etapes'
 import { Route as AppImportsPlanningRouteImport } from './routes/_app.imports.planning'
 import { Route as AppLogistiqueIndexRouteImport } from './routes/_app.logistique.index'
+import { Route as AppLogistiqueImprimerRouteImport } from './routes/_app.logistique.imprimer'
 import { Route as AppLogistiqueVehiculesPlanningRouteImport } from './routes/_app.logistique.vehicules-planning'
 import { Route as AppOpportunitesIndexRouteImport } from './routes/_app.opportunites.index'
 import { Route as AppOpportunitesAffaireIdRouteImport } from './routes/_app.opportunites.$affaireId'
@@ -488,6 +489,11 @@ const AppLogistiqueIndexRoute = AppLogistiqueIndexRouteImport.update({
   path: '/logistique/',
   getParentRoute: () => AppRoute,
 } as any)
+const AppLogistiqueImprimerRoute = AppLogistiqueImprimerRouteImport.update({
+  id: '/logistique/imprimer',
+  path: '/logistique/imprimer',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppLogistiqueVehiculesPlanningRoute =
   AppLogistiqueVehiculesPlanningRouteImport.update({
     id: '/logistique/vehicules-planning',
@@ -747,6 +753,7 @@ export interface FileRoutesByFullPath {
   '/export/feuille-de-route': typeof AppExportFeuilleDeRouteRoute
   '/fabrication/mes-etapes': typeof AppFabricationMesEtapesRoute
   '/imports/planning': typeof AppImportsPlanningRoute
+  '/logistique/imprimer': typeof AppLogistiqueImprimerRoute
   '/logistique/vehicules-planning': typeof AppLogistiqueVehiculesPlanningRoute
   '/opportunites/$affaireId': typeof AppOpportunitesAffaireIdRoute
   '/opportunites/import': typeof AppOpportunitesImportRoute
@@ -852,6 +859,7 @@ export interface FileRoutesByTo {
   '/export/feuille-de-route': typeof AppExportFeuilleDeRouteRoute
   '/fabrication/mes-etapes': typeof AppFabricationMesEtapesRoute
   '/imports/planning': typeof AppImportsPlanningRoute
+  '/logistique/imprimer': typeof AppLogistiqueImprimerRoute
   '/logistique/vehicules-planning': typeof AppLogistiqueVehiculesPlanningRoute
   '/opportunites/$affaireId': typeof AppOpportunitesAffaireIdRoute
   '/opportunites/import': typeof AppOpportunitesImportRoute
@@ -962,6 +970,7 @@ export interface FileRoutesById {
   '/_app/export/feuille-de-route': typeof AppExportFeuilleDeRouteRoute
   '/_app/fabrication/mes-etapes': typeof AppFabricationMesEtapesRoute
   '/_app/imports/planning': typeof AppImportsPlanningRoute
+  '/_app/logistique/imprimer': typeof AppLogistiqueImprimerRoute
   '/_app/logistique/vehicules-planning': typeof AppLogistiqueVehiculesPlanningRoute
   '/_app/opportunites/$affaireId': typeof AppOpportunitesAffaireIdRoute
   '/_app/opportunites/import': typeof AppOpportunitesImportRoute
@@ -1072,6 +1081,7 @@ export interface FileRouteTypes {
     | '/export/feuille-de-route'
     | '/fabrication/mes-etapes'
     | '/imports/planning'
+    | '/logistique/imprimer'
     | '/logistique/vehicules-planning'
     | '/opportunites/$affaireId'
     | '/opportunites/import'
@@ -1177,6 +1187,7 @@ export interface FileRouteTypes {
     | '/export/feuille-de-route'
     | '/fabrication/mes-etapes'
     | '/imports/planning'
+    | '/logistique/imprimer'
     | '/logistique/vehicules-planning'
     | '/opportunites/$affaireId'
     | '/opportunites/import'
@@ -1286,6 +1297,7 @@ export interface FileRouteTypes {
     | '/_app/export/feuille-de-route'
     | '/_app/fabrication/mes-etapes'
     | '/_app/imports/planning'
+    | '/_app/logistique/imprimer'
     | '/_app/logistique/vehicules-planning'
     | '/_app/opportunites/$affaireId'
     | '/_app/opportunites/import'
@@ -1858,6 +1870,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppLogistiqueIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/logistique/imprimer': {
+      id: '/_app/logistique/imprimer'
+      path: '/logistique/imprimer'
+      fullPath: '/logistique/imprimer'
+      preLoaderRoute: typeof AppLogistiqueImprimerRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/logistique/vehicules-planning': {
       id: '/_app/logistique/vehicules-planning'
       path: '/logistique/vehicules-planning'
@@ -2260,6 +2279,7 @@ interface AppRouteChildren {
   AppDevisProgbatImportRoute: typeof AppDevisProgbatImportRoute
   AppDevisRattachementHistoriqueRoute: typeof AppDevisRattachementHistoriqueRoute
   AppFabricationMesEtapesRoute: typeof AppFabricationMesEtapesRoute
+  AppLogistiqueImprimerRoute: typeof AppLogistiqueImprimerRoute
   AppLogistiqueVehiculesPlanningRoute: typeof AppLogistiqueVehiculesPlanningRoute
   AppParametresAutorisationsVehiculesRoute: typeof AppParametresAutorisationsVehiculesRoute
   AppParametresCompetencesEquipeRoute: typeof AppParametresCompetencesEquipeRoute
@@ -2337,6 +2357,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppDevisProgbatImportRoute: AppDevisProgbatImportRoute,
   AppDevisRattachementHistoriqueRoute: AppDevisRattachementHistoriqueRoute,
   AppFabricationMesEtapesRoute: AppFabricationMesEtapesRoute,
+  AppLogistiqueImprimerRoute: AppLogistiqueImprimerRoute,
   AppLogistiqueVehiculesPlanningRoute: AppLogistiqueVehiculesPlanningRoute,
   AppParametresAutorisationsVehiculesRoute:
     AppParametresAutorisationsVehiculesRoute,
