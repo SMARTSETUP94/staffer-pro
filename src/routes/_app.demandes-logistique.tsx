@@ -38,10 +38,10 @@ export const Route = createFileRoute("/_app/demandes-logistique")({
   component: DemandesLogistiquePage,
 });
 
-const TYPES = ["appro", "emballage", "chargement", "livraison", "montage", "finitions", "permanence", "demontage", "dechargement"] as const;
+const TYPES = ["appro", "emballage", "chargement", "livraison", "tracage", "montage", "finitions", "permanence", "demontage", "dechargement"] as const;
 type EtapeType = (typeof TYPES)[number];
 const TYPE_LABEL: Record<EtapeType, string> = {
-  appro: "Appro", emballage: "Emballage", chargement: "Chargement", livraison: "Livraison", montage: "Montage",
+  appro: "Appro", emballage: "Emballage", chargement: "Chargement", livraison: "Livraison", tracage: "Traçage", montage: "Montage",
   finitions: "Finitions", permanence: "Permanence", demontage: "Démontage", dechargement: "Déchargement",
 };
 
@@ -183,7 +183,7 @@ function DemandesLogistiquePage() {
   );
 }
 
-type Line = { auto?: boolean; keep: boolean; date: string; type: EtapeType; contenu: string; hDebut: string; hFin: string; lieu: string; vehiculeId: string; commentaire?: string };
+type Line = { auto?: boolean; keep: boolean; date: string; type: EtapeType; contenu: string; hDebut: string; hFin: string; lieu: string; vehiculeId: string; nb?: string; commentaire?: string };
 type Veh = { id: string; nom: string; immatriculation: string | null };
 
 function PlanningDialog({ row, affaires, onClose, onDone }: { row: Row; affaires: Aff[]; onClose: () => void; onDone: () => void }) {
@@ -229,6 +229,7 @@ function PlanningDialog({ row, affaires, onClose, onDone }: { row: Row; affaires
       affaire_id: affaireId, type: l.type, date_debut: l.date,
       heure_debut: l.hDebut || null, heure_fin: l.hFin || null,
       lieu_libre: l.lieu.trim() || null, vehicule_id: l.vehiculeId || null,
+      nb_personnes: l.nb ? Number(l.nb) : null,
       commentaire_equipe: l.commentaire?.trim() || null,
       statut: "valide" as const, origine: "jalonnement" as const,
       note: `${l.contenu?.trim() ? `${l.contenu.trim()} — ` : ""}Depuis un email log@ : « ${(row.subject ?? "").slice(0, 120)} »`,
@@ -315,6 +316,7 @@ function PlanningDialog({ row, affaires, onClose, onDone }: { row: Row; affaires
                 <Input type="time" className="w-28" aria-label="Heure de début" value={l.hDebut} onChange={(e) => upd(i, { hDebut: e.target.value })} />
                 <span className="text-xs text-muted-foreground">à</span>
                 <Input type="time" className="w-28" aria-label="Heure de fin" value={l.hFin} onChange={(e) => upd(i, { hFin: e.target.value })} />
+                <Input type="number" min={0} className="w-20" aria-label="Nombre de personnes" placeholder="Pers." value={l.nb ?? ""} onChange={(e) => upd(i, { nb: e.target.value })} />
                 <Input className="flex-1 min-w-40" placeholder="Lieu" value={l.lieu} onChange={(e) => upd(i, { lieu: e.target.value })} />
                 <Select value={l.vehiculeId || "none"} onValueChange={(v) => upd(i, { vehiculeId: v === "none" ? "" : v })}>
                   <SelectTrigger className="w-44"><SelectValue placeholder="Véhicule" /></SelectTrigger>

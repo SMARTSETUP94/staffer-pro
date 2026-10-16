@@ -6730,6 +6730,7 @@ export type Database = {
         | "emballage"
         | "chargement"
         | "livraison"
+        | "tracage"
         | "montage"
         | "finitions"
         | "permanence"
@@ -7050,6 +7051,7 @@ export const Constants = {
         "emballage",
         "chargement",
         "livraison",
+        "tracage",
         "montage",
         "finitions",
         "permanence",

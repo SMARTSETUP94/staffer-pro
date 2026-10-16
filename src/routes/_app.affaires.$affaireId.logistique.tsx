@@ -8,7 +8,7 @@ import { requireCapability } from "@/lib/capability-guard";
 import { useCapability } from "@/hooks/use-capability";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { ETAPE_CLASSES, ETAPE_LABELS, conflitsVehicules, heureCourte } from "@/lib/logistique/etapes";
+import { ETAPE_CLASSES, ETAPE_LABELS, conflitsVehicules, heureCourte, nbPersonnesCourt } from "@/lib/logistique/etapes";
 import { useEtapesAffaire, type EtapeLogistique } from "@/hooks/use-etapes-logistiques";
 import { EtapeDialog } from "@/components/logistique/EtapeDialog";
 
@@ -51,6 +51,7 @@ function AffaireLogistiquePage() {
                   </span>
                   <span className="w-48 capitalize">{d(e.date_debut)}{e.date_fin && e.date_fin !== e.date_debut ? ` → ${d(e.date_fin)}` : ""}</span>
                   {h && <span className="tabular-nums text-muted-foreground">{h}</span>}
+                  {nbPersonnesCourt(e.nb_personnes) && <span className="rounded bg-muted px-1.5 text-xs font-semibold tabular-nums">{nbPersonnesCourt(e.nb_personnes)}</span>}
                   {veh && <span className={cn(conflits.has(e.id) && "font-semibold text-destructive")}>🚚 {veh}{conflits.has(e.id) ? " (conflit)" : ""}</span>}
                   {e.lieu_libre && <span className="text-muted-foreground">{e.lieu_libre}</span>}
                   {e.note && <span className="truncate text-muted-foreground">{e.note}</span>}
