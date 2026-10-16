@@ -34,6 +34,7 @@ import { Route as AppImportsRouteImport } from './routes/_app.imports'
 import { Route as AppInboxSmartRouteImport } from './routes/_app.inbox-smart'
 import { Route as AppIncidentAuthRouteImport } from './routes/_app.incident-auth'
 import { Route as AppInterimairesRouteImport } from './routes/_app.interimaires'
+import { Route as AppListeChantiersRouteImport } from './routes/_app.liste-chantiers'
 import { Route as AppMesChantiersRouteImport } from './routes/_app.mes-chantiers'
 import { Route as AppMesContratsRouteImport } from './routes/_app.mes-contrats'
 import { Route as AppMesHeuresRouteImport } from './routes/_app.mes-heures'
@@ -236,6 +237,11 @@ const AppIncidentAuthRoute = AppIncidentAuthRouteImport.update({
 const AppInterimairesRoute = AppInterimairesRouteImport.update({
   id: '/interimaires',
   path: '/interimaires',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppListeChantiersRoute = AppListeChantiersRouteImport.update({
+  id: '/liste-chantiers',
+  path: '/liste-chantiers',
   getParentRoute: () => AppRoute,
 } as any)
 const AppMesChantiersRoute = AppMesChantiersRouteImport.update({
@@ -685,6 +691,7 @@ export interface FileRoutesByFullPath {
   '/inbox-smart': typeof AppInboxSmartRoute
   '/incident-auth': typeof AppIncidentAuthRoute
   '/interimaires': typeof AppInterimairesRoute
+  '/liste-chantiers': typeof AppListeChantiersRoute
   '/mes-chantiers': typeof AppMesChantiersRoute
   '/mes-contrats': typeof AppMesContratsRoute
   '/mes-heures': typeof AppMesHeuresRoute
@@ -788,6 +795,7 @@ export interface FileRoutesByTo {
   '/inbox-smart': typeof AppInboxSmartRoute
   '/incident-auth': typeof AppIncidentAuthRoute
   '/interimaires': typeof AppInterimairesRoute
+  '/liste-chantiers': typeof AppListeChantiersRoute
   '/mes-chantiers': typeof AppMesChantiersRoute
   '/mes-contrats': typeof AppMesContratsRoute
   '/mes-heures': typeof AppMesHeuresRoute
@@ -893,6 +901,7 @@ export interface FileRoutesById {
   '/_app/inbox-smart': typeof AppInboxSmartRoute
   '/_app/incident-auth': typeof AppIncidentAuthRoute
   '/_app/interimaires': typeof AppInterimairesRoute
+  '/_app/liste-chantiers': typeof AppListeChantiersRoute
   '/_app/mes-chantiers': typeof AppMesChantiersRoute
   '/_app/mes-contrats': typeof AppMesContratsRoute
   '/_app/mes-heures': typeof AppMesHeuresRoute
@@ -1001,6 +1010,7 @@ export interface FileRouteTypes {
     | '/inbox-smart'
     | '/incident-auth'
     | '/interimaires'
+    | '/liste-chantiers'
     | '/mes-chantiers'
     | '/mes-contrats'
     | '/mes-heures'
@@ -1104,6 +1114,7 @@ export interface FileRouteTypes {
     | '/inbox-smart'
     | '/incident-auth'
     | '/interimaires'
+    | '/liste-chantiers'
     | '/mes-chantiers'
     | '/mes-contrats'
     | '/mes-heures'
@@ -1208,6 +1219,7 @@ export interface FileRouteTypes {
     | '/_app/inbox-smart'
     | '/_app/incident-auth'
     | '/_app/interimaires'
+    | '/_app/liste-chantiers'
     | '/_app/mes-chantiers'
     | '/_app/mes-contrats'
     | '/_app/mes-heures'
@@ -1477,6 +1489,13 @@ declare module '@tanstack/react-router' {
       path: '/interimaires'
       fullPath: '/interimaires'
       preLoaderRoute: typeof AppInterimairesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/liste-chantiers': {
+      id: '/_app/liste-chantiers'
+      path: '/liste-chantiers'
+      fullPath: '/liste-chantiers'
+      preLoaderRoute: typeof AppListeChantiersRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/mes-chantiers': {
@@ -2166,6 +2185,7 @@ interface AppRouteChildren {
   AppInboxSmartRoute: typeof AppInboxSmartRoute
   AppIncidentAuthRoute: typeof AppIncidentAuthRoute
   AppInterimairesRoute: typeof AppInterimairesRoute
+  AppListeChantiersRoute: typeof AppListeChantiersRoute
   AppMesChantiersRoute: typeof AppMesChantiersRoute
   AppMesContratsRoute: typeof AppMesContratsRoute
   AppMesHeuresRoute: typeof AppMesHeuresRoute
@@ -2240,6 +2260,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppInboxSmartRoute: AppInboxSmartRoute,
   AppIncidentAuthRoute: AppIncidentAuthRoute,
   AppInterimairesRoute: AppInterimairesRoute,
+  AppListeChantiersRoute: AppListeChantiersRoute,
   AppMesChantiersRoute: AppMesChantiersRoute,
   AppMesContratsRoute: AppMesContratsRoute,
   AppMesHeuresRoute: AppMesHeuresRoute,

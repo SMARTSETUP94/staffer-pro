@@ -89,12 +89,14 @@ function buildSections(
         { title: "Qui est où", url: "/qui-est-ou", icon: UsersRound, cap: "section.planning_fab" },
         { title: "Pipeline opportunités", url: "/opportunites", icon: Trophy, cap: "section.pipeline_opportunites" },
         { title: "Demandes clients", url: "/demandes-clients", icon: Inbox, cap: "demandes_clients.view" },
+        { title: "Liste des chantiers", url: "/liste-chantiers", icon: ClipboardList, cap: "section.affaires" },
       ],
     },
     {
       label: "Production",
       items: [
         { title: "Chantiers", url: "/affaires", icon: Building2, cap: "section.affaires" },
+        { title: "Liste des chantiers", url: "/liste-chantiers", icon: ClipboardList, cap: "section.affaires" },
         { title: "Clients", url: "/clients", icon: UsersRound, cap: "clients.view" },
         { title: "Devis", url: "/devis", icon: FileText, cap: "section.devis" },
         { title: "Fabrication atelier", url: "/fabrication", icon: Hammer, cap: "section.planning_fab" },
@@ -244,7 +246,7 @@ function applyLogistiqueOppsMode(sections: NavSection[]): NavSection[] {
  * toujours ouvrir /admin/feature-flags en direct pour désactiver le mode.
  */
 // "/admin/utilisateurs" reste filtré par la cap section.admin (admins seulement).
-const SA_MODE_URLS = new Set(["/opportunites", "/demandes-clients", "/affaires", "/logistique", "/admin/utilisateurs"]);
+const SA_MODE_URLS = new Set(["/opportunites", "/demandes-clients", "/affaires", "/liste-chantiers", "/logistique", "/admin/utilisateurs"]);
 
 function applySuiviAffairesMode(sections: NavSection[]): NavSection[] {
   return sections
