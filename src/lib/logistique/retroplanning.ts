@@ -24,6 +24,7 @@ export interface EtapeProposee {
   heure_fin: string | null;
   lieu: string | null;
   note: string | null;
+  nb_personnes?: number | null;
   origine: "jalonnement" | "retroplanning";
 }
 
