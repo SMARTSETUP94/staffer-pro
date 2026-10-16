@@ -154,18 +154,24 @@ function DemandesLogistiquePage() {
   );
 }
 
-type Line = { keep: boolean; date: string; type: EtapeType; contenu: string };
+type Line = { keep: boolean; date: string; type: EtapeType; contenu: string; hDebut: string; hFin: string; lieu: string; vehiculeId: string };
+type Veh = { id: string; nom: string; immatriculation: string | null };
 
 function PlanningDialog({ row, affaires, onClose, onDone }: { row: Row; affaires: Aff[]; onClose: () => void; onDone: () => void }) {
   const ech = row.metadata_ia?.echeances ?? [];
   const numero = ech.find((e) => e.affaire_numero)?.affaire_numero;
   const [affaireId, setAffaireId] = useState<string>(affaires.find((a) => a.numero === numero)?.id ?? "");
   const [lines, setLines] = useState<Line[]>(() => (ech.length ? ech : [{ date: format(new Date(), "yyyy-MM-dd"), libelle: row.subject ?? "", type: "livraison" }]).map((e) => ({
-    keep: true, date: e.date, contenu: e.libelle,
+    keep: true, date: e.date, contenu: e.libelle, hDebut: "", hFin: "", lieu: row.metadata_ia?.opp_lieu ?? "", vehiculeId: "",
     type: (TYPES as readonly string[]).includes(e.type ?? "") ? (e.type as EtapeType) : "livraison",
   })));
   const [saving, setSaving] = useState(false);
   const [q, setQ] = useState("");
+  const [vehicules, setVehicules] = useState<Veh[]>([]);
+  useEffect(() => {
+    void supabase.from("vehicules").select("id, nom, immatriculation").eq("actif", true).order("nom")
+      .then(({ data }) => setVehicules((data ?? []) as Veh[]));
+  }, []);
   const filtered = useMemo(() => {
     const words = q.toLowerCase().split(/\s+/).filter(Boolean);
     return affaires.filter((a) => words.every((w) => `${a.numero} ${a.nom}`.toLowerCase().includes(w))).slice(0, 50);
@@ -181,6 +187,8 @@ function PlanningDialog({ row, affaires, onClose, onDone }: { row: Row; affaires
     setSaving(true);
     const { error } = await supabase.from("affaire_etapes_logistiques").insert(kept.map((l) => ({
       affaire_id: affaireId, type: l.type, date_debut: l.date, contenu: l.contenu,
+      heure_debut: l.hDebut || null, heure_fin: l.hFin || null,
+      lieu_libre: l.lieu.trim() || null, vehicule_id: l.vehiculeId || null,
       statut: "valide" as const, origine: "jalonnement" as const,
       note: `Depuis un email log@ : « ${(row.subject ?? "").slice(0, 120)} »`,
     })));
@@ -232,10 +240,23 @@ function PlanningDialog({ row, affaires, onClose, onDone }: { row: Row; affaires
                 <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
                 <SelectContent>{TYPES.map((t) => <SelectItem key={t} value={t}>{TYPE_LABEL[t]}</SelectItem>)}</SelectContent>
               </Select>
-              <Input value={l.contenu} onChange={(e) => upd(i, { contenu: e.target.value })} />
+              <Input className="flex-1 min-w-40" value={l.contenu} onChange={(e) => upd(i, { contenu: e.target.value })} />
+              <div className="flex w-full flex-wrap items-center gap-2 pl-6 pb-2 border-b">
+                <Input type="time" className="w-28" aria-label="Heure de début" value={l.hDebut} onChange={(e) => upd(i, { hDebut: e.target.value })} />
+                <span className="text-xs text-muted-foreground">à</span>
+                <Input type="time" className="w-28" aria-label="Heure de fin" value={l.hFin} onChange={(e) => upd(i, { hFin: e.target.value })} />
+                <Input className="flex-1 min-w-40" placeholder="Lieu" value={l.lieu} onChange={(e) => upd(i, { lieu: e.target.value })} />
+                <Select value={l.vehiculeId || "none"} onValueChange={(v) => upd(i, { vehiculeId: v === "none" ? "" : v })}>
+                  <SelectTrigger className="w-44"><SelectValue placeholder="Véhicule" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Sans véhicule</SelectItem>
+                    {vehicules.map((v) => <SelectItem key={v.id} value={v.id}>{v.nom}{v.immatriculation ? ` · ${v.immatriculation}` : ""}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           ))}
-          <Button size="sm" variant="ghost" onClick={() => setLines((ls) => [...ls, { keep: true, date: format(new Date(), "yyyy-MM-dd"), type: "livraison", contenu: "" }])}>+ Ajouter une étape</Button>
+          <Button size="sm" variant="ghost" onClick={() => setLines((ls) => [...ls, { keep: true, date: format(new Date(), "yyyy-MM-dd"), type: "livraison", contenu: "", hDebut: "", hFin: "", lieu: row.metadata_ia?.opp_lieu ?? "", vehiculeId: "" }])}>+ Ajouter une étape</Button>
         </div>
         </div>
         </div>
