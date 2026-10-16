@@ -44,7 +44,6 @@ export function EtapeDialog({ open, onOpenChange, etape, defaultDate, defaultAff
       heure_fin: etape?.heure_fin?.slice(0, 5) ?? "",
       horaire_libre: etape?.horaire_libre ?? "",
       lieu_libre: etape?.lieu_libre ?? "",
-      equipe: etape?.equipe ?? "",
       nb_personnes: etape?.nb_personnes?.toString() ?? "",
       vehicule_id: etape?.vehicule_id ?? "",
       immatriculation_libre: etape?.immatriculation_libre ?? "",
@@ -73,7 +72,6 @@ export function EtapeDialog({ open, onOpenChange, etape, defaultDate, defaultAff
       heure_fin: f.heure_fin || null,
       horaire_libre: f.horaire_libre || null,
       lieu_libre: f.lieu_libre || null,
-      equipe: f.equipe || null,
       nb_personnes: f.nb_personnes ? Number(f.nb_personnes) : null,
       vehicule_id: showVehicule && f.vehicule_id ? f.vehicule_id : null,
       immatriculation_libre: showVehicule && f.immatriculation_libre ? f.immatriculation_libre : null,
@@ -176,9 +174,8 @@ export function EtapeDialog({ open, onOpenChange, etape, defaultDate, defaultAff
             </>
           )}
           <div><Label>Lieu</Label><Input value={f.lieu_libre} onChange={(e) => set("lieu_libre", e.target.value)} /></div>
-          <div><Label>Équipe</Label><Input value={f.equipe} onChange={(e) => set("equipe", e.target.value)} /></div>
           <div><Label>Nb personnes</Label><Input type="number" min={0} value={f.nb_personnes} onChange={(e) => set("nb_personnes", e.target.value)} /></div>
-          <div><Label>Accès (quai, code…)</Label><Input value={f.acces} onChange={(e) => set("acces", e.target.value)} /></div>
+          <div className="sm:col-span-2"><Label>Accès (quai, code…)</Label><Input value={f.acces} onChange={(e) => set("acces", e.target.value)} /></div>
           <div className="sm:col-span-2"><Label>Note</Label><Textarea rows={2} value={f.note} onChange={(e) => set("note", e.target.value)} /></div>
           <div className="sm:col-span-2"><Label>Commentaire pour l'équipe</Label><Textarea rows={3} placeholder="Indications du chef d'équipe au chef logistique et à tous…" value={f.commentaire_equipe} onChange={(e) => set("commentaire_equipe", e.target.value)} /></div>
         </div>

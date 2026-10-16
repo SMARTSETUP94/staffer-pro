@@ -1,0 +1,1 @@
+COMMENT ON COLUMN public.affaire_etapes_logistiques.equipe IS 'DEPRECATED: retiré de la fenêtre d''étape logistique (plus saisi ni affiché par l''application). Conservé pour l''historique ; remplacer par nb_personnes + commentaire_equipe.';
