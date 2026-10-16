@@ -4,6 +4,7 @@ import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
 import { CalendarPlus, Loader2, MailOpen, RefreshCw, Trash2, Truck, X } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
+import { assistantEtapes } from "@/lib/server-fns/etapes-assistant.functions";
 import { reanalyseSharedInboxes } from "@/lib/server-fns/shared-inbox-reanalyse.functions";
 import { toast } from "sonner";
 import { requireCapability } from "@/lib/capability-guard";
@@ -204,6 +205,27 @@ function PlanningDialog({ row, affaires, onClose, onDone }: { row: Row; affaires
   });
   const [saving, setSaving] = useState(false);
   const [commentaire, setCommentaire] = useState("");
+  const assist = useServerFn(assistantEtapes);
+  const [consigne, setConsigne] = useState("");
+  const [assisting, setAssisting] = useState(false);
+  async function runAssist() {
+    if (!consigne.trim()) return;
+    setAssisting(true);
+    try {
+      const r = await assist({ data: { instruction: consigne, etapes: lines.map((l, index) => ({ index, coche: l.keep, date: l.date, type: l.type, contenu: l.contenu, heure_debut: l.hDebut || null, heure_fin: l.hFin || null, lieu: l.lieu || null, nb_personnes: l.nb ? Number(l.nb) : null, commentaire: l.commentaire || null })) } });
+      setLines((ls) => ls.map((l, i) => {
+        const c = r.changes.find((x) => x.index === i);
+        if (!c) return l;
+        return { ...l,
+          ...(c.nb_personnes != null && { nb: String(c.nb_personnes) }), ...(c.lieu != null && { lieu: c.lieu }),
+          ...(c.heure_debut != null && { hDebut: c.heure_debut }), ...(c.heure_fin != null && { hFin: c.heure_fin }),
+          ...(c.contenu != null && { contenu: c.contenu }), ...(c.commentaire != null && { commentaire: c.commentaire }),
+          ...(c.keep != null && { keep: c.keep }) };
+      }));
+      toast.success(r.message || `${r.changes.length} étape(s) modifiée(s)`);
+      setConsigne("");
+    } catch (e) { toast.error((e as Error).message); } finally { setAssisting(false); }
+  }
   const [initial] = useState(() => lines.map((l) => ({ type: l.type, date: l.date, contenu: l.contenu, lieu: l.lieu || null })));
   const [q, setQ] = useState("");
   const [withOpps, setWithOpps] = useState(false);
@@ -273,6 +295,18 @@ function PlanningDialog({ row, affaires, onClose, onDone }: { row: Row; affaires
           <Textarea id="ia-comment" rows={2} value={commentaire} onChange={(e) => setCommentaire(e.target.value)}
             placeholder="Ex. : l'entrée prestataires n'est pas une étape ; la pose commence à 23h." />
           <p className="text-[11px] text-muted-foreground">Vos corrections et ce commentaire servent d'exemples à l'IA pour les prochains emails.</p>
+        </div>
+        <div className="space-y-1 rounded-md border border-primary/30 bg-primary/5 p-2">
+          <Label htmlFor="ia-assist" className="text-xs">Demander à l'IA de remplir les étapes</Label>
+          <div className="flex gap-2">
+            <Input id="ia-assist" value={consigne} onChange={(e) => setConsigne(e.target.value)} disabled={assisting}
+              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); runAssist(); } }}
+              placeholder="Ex. : une personne et lieu « Studio Lendit » sur toutes les étapes ; permanences de 8h à 20h" />
+            <Button type="button" size="sm" onClick={runAssist} disabled={assisting || !consigne.trim()}>
+              {assisting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Appliquer"}
+            </Button>
+          </div>
+          <p className="text-[11px] text-muted-foreground">Les champs sont modifiés ici seulement ; vérifiez puis validez.</p>
         </div>
         <div className="space-y-1.5">
           <Input placeholder="Rechercher un chantier (numéro, nom, mot clé)…" value={q} onChange={(e) => setQ(e.target.value)} />
