@@ -194,6 +194,7 @@ const CA_MODE_URLS = new Set([
   "/devis",
   "/opportunites",
   "/demandes-clients",
+  "/demandes-logistique",
   "/echeances",
 ]);
 
@@ -222,6 +223,7 @@ const LO_MODE_URLS = new Set([
   "/affaires",
   "/opportunites",
   "/demandes-clients",
+  "/demandes-logistique",
   "/flotte",
   "/logistique/vehicules-planning",
   "/export/demandes-devis",
