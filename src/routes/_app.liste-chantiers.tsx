@@ -171,7 +171,7 @@ function ListeChantiers() {
                       {busyId === a.id ? (
                         <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                       ) : (
-                        <Select value={a.statut} onValueChange={(v) => changeStatut(a, v)}>
+                        <Select value={a.statut} onValueChange={(v) => changeStatut(a, v as ChantierStatut)}>
                           <SelectTrigger className="h-8 w-[130px] text-xs">
                             <SelectValue />
                           </SelectTrigger>
