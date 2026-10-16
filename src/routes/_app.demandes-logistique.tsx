@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
-import { CalendarPlus, Loader2, MailOpen, Truck, X } from "lucide-react";
+import { CalendarPlus, Loader2, MailOpen, Trash2, Truck, X } from "lucide-react";
 import { toast } from "sonner";
 import { requireCapability } from "@/lib/capability-guard";
 import { useCapability } from "@/hooks/use-capability";
@@ -157,7 +157,7 @@ function DemandesLogistiquePage() {
   );
 }
 
-type Line = { auto?: boolean; keep: boolean; date: string; type: EtapeType; contenu: string; hDebut: string; hFin: string; lieu: string; vehiculeId: string };
+type Line = { auto?: boolean; keep: boolean; date: string; type: EtapeType; contenu: string; hDebut: string; hFin: string; lieu: string; vehiculeId: string; commentaire?: string };
 type Veh = { id: string; nom: string; immatriculation: string | null };
 
 function PlanningDialog({ row, affaires, onClose, onDone }: { row: Row; affaires: Aff[]; onClose: () => void; onDone: () => void }) {
@@ -198,6 +198,7 @@ function PlanningDialog({ row, affaires, onClose, onDone }: { row: Row; affaires
       affaire_id: affaireId, type: l.type, date_debut: l.date,
       heure_debut: l.hDebut || null, heure_fin: l.hFin || null,
       lieu_libre: l.lieu.trim() || null, vehicule_id: l.vehiculeId || null,
+      commentaire_equipe: l.commentaire?.trim() || null,
       statut: "valide" as const, origine: "jalonnement" as const,
       note: `${l.contenu?.trim() ? `${l.contenu.trim()} — ` : ""}Depuis un email log@ : « ${(row.subject ?? "").slice(0, 120)} »`,
     })));
@@ -268,7 +269,8 @@ function PlanningDialog({ row, affaires, onClose, onDone }: { row: Row; affaires
               </Select>
               {l.auto && <Badge variant="outline" className="text-[10px]">{l.type === "dechargement" ? "Optionnel" : "Suggéré"}</Badge>}
               <Input className="flex-1 min-w-40" value={l.contenu} onChange={(e) => upd(i, { contenu: e.target.value })} />
-              <div className="flex w-full flex-wrap items-center gap-2 pl-6 pb-2 border-b">
+              <Button size="icon" variant="ghost" className="text-destructive" aria-label="Supprimer l'étape" title="Supprimer l'étape" onClick={() => setLines((ls) => ls.filter((_, j) => j !== i))}><Trash2 className="h-4 w-4" /></Button>
+              <div className="flex w-full flex-wrap items-center gap-2 pl-6">
                 <Input type="time" className="w-28" aria-label="Heure de début" value={l.hDebut} onChange={(e) => upd(i, { hDebut: e.target.value })} />
                 <span className="text-xs text-muted-foreground">à</span>
                 <Input type="time" className="w-28" aria-label="Heure de fin" value={l.hFin} onChange={(e) => upd(i, { hFin: e.target.value })} />
@@ -280,6 +282,9 @@ function PlanningDialog({ row, affaires, onClose, onDone }: { row: Row; affaires
                     {vehicules.map((v) => <SelectItem key={v.id} value={v.id}>{v.nom}{v.immatriculation ? ` · ${v.immatriculation}` : ""}</SelectItem>)}
                   </SelectContent>
                 </Select>
+              </div>
+              <div className="w-full pl-6 pb-2 border-b">
+                <Textarea rows={1} placeholder="Commentaire pour l'équipe (indications au chef logistique…)" value={l.commentaire ?? ""} onChange={(e) => upd(i, { commentaire: e.target.value })} />
               </div>
             </div>
           ))}
