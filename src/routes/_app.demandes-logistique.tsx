@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { requireCapability } from "@/lib/capability-guard";
 import { useCapability } from "@/hooks/use-capability";
 import { supabase } from "@/integrations/supabase/client";
+import { completerSuggestionsEmail } from "@/lib/logistique/suggestions-email";
 import { EmailReaderDialog } from "@/components/emails/EmailReaderDialog";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -154,17 +155,20 @@ function DemandesLogistiquePage() {
   );
 }
 
-type Line = { keep: boolean; date: string; type: EtapeType; contenu: string; hDebut: string; hFin: string; lieu: string; vehiculeId: string };
+type Line = { auto?: boolean; keep: boolean; date: string; type: EtapeType; contenu: string; hDebut: string; hFin: string; lieu: string; vehiculeId: string };
 type Veh = { id: string; nom: string; immatriculation: string | null };
 
 function PlanningDialog({ row, affaires, onClose, onDone }: { row: Row; affaires: Aff[]; onClose: () => void; onDone: () => void }) {
   const ech = row.metadata_ia?.echeances ?? [];
   const numero = ech.find((e) => e.affaire_numero)?.affaire_numero;
   const [affaireId, setAffaireId] = useState<string>(affaires.find((a) => a.numero === numero)?.id ?? "");
-  const [lines, setLines] = useState<Line[]>(() => (ech.length ? ech : [{ date: format(new Date(), "yyyy-MM-dd"), libelle: row.subject ?? "", type: "livraison" }]).map((e) => ({
-    keep: true, date: e.date, contenu: e.libelle, hDebut: "", hFin: "", lieu: row.metadata_ia?.opp_lieu ?? "", vehiculeId: "",
-    type: (TYPES as readonly string[]).includes(e.type ?? "") ? (e.type as EtapeType) : "livraison",
-  })));
+  const [lines, setLines] = useState<Line[]>(() => {
+    const base = (ech.length ? ech : [{ date: format(new Date(), "yyyy-MM-dd"), libelle: row.subject ?? "", type: "livraison" }]).map((e) => ({
+      keep: true, date: e.date, contenu: e.libelle, lieu: row.metadata_ia?.opp_lieu ?? "",
+      type: ((TYPES as readonly string[]).includes(e.type ?? "") ? e.type : "livraison") as EtapeType,
+    }));
+    return completerSuggestionsEmail(base).map((x) => ({ ...x, hDebut: "", hFin: "", vehiculeId: "" }));
+  });
   const [saving, setSaving] = useState(false);
   const [q, setQ] = useState("");
   const [vehicules, setVehicules] = useState<Veh[]>([]);
@@ -240,6 +244,7 @@ function PlanningDialog({ row, affaires, onClose, onDone }: { row: Row; affaires
                 <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
                 <SelectContent>{TYPES.map((t) => <SelectItem key={t} value={t}>{TYPE_LABEL[t]}</SelectItem>)}</SelectContent>
               </Select>
+              {l.auto && <Badge variant="outline" className="text-[10px]">{l.type === "dechargement" ? "Optionnel" : "Suggéré"}</Badge>}
               <Input className="flex-1 min-w-40" value={l.contenu} onChange={(e) => upd(i, { contenu: e.target.value })} />
               <div className="flex w-full flex-wrap items-center gap-2 pl-6 pb-2 border-b">
                 <Input type="time" className="w-28" aria-label="Heure de début" value={l.hDebut} onChange={(e) => upd(i, { hDebut: e.target.value })} />
