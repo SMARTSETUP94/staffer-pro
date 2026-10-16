@@ -165,6 +165,14 @@ function PlanningDialog({ row, affaires, onClose, onDone }: { row: Row; affaires
     type: (TYPES as readonly string[]).includes(e.type ?? "") ? (e.type as EtapeType) : "livraison",
   })));
   const [saving, setSaving] = useState(false);
+  const [q, setQ] = useState("");
+  const filtered = useMemo(() => {
+    const words = q.toLowerCase().split(/\s+/).filter(Boolean);
+    return affaires.filter((a) => words.every((w) => `${a.numero} ${a.nom}`.toLowerCase().includes(w))).slice(0, 50);
+  }, [q, affaires]);
+  const selected = affaires.find((a) => a.id === affaireId);
+  const isHtml = (row.body_content_type ?? "").toLowerCase() === "html";
+  const body = row.body_full ?? row.body_preview ?? "";
   const upd = (i: number, p: Partial<Line>) => setLines((ls) => ls.map((l, j) => (j === i ? { ...l, ...p } : l)));
 
   async function save() {
@@ -185,20 +193,39 @@ function PlanningDialog({ row, affaires, onClose, onDone }: { row: Row; affaires
 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-6xl max-h-[92vh] overflow-auto">
         <DialogHeader>
           <DialogTitle>Ajouter au planning logistique</DialogTitle>
           <DialogDescription>Suggestions de l'IA — corrigez, décochez ce qui ne doit pas être ajouté.</DialogDescription>
         </DialogHeader>
-        <Select value={affaireId} onValueChange={setAffaireId}>
-          <SelectTrigger><SelectValue placeholder="Chantier à rattacher…" /></SelectTrigger>
-          <SelectContent>
-            {affaires.map((a) => <SelectItem key={a.id} value={a.id}>{a.numero} — {a.nom}</SelectItem>)}
-          </SelectContent>
-        </Select>
+        <div className="grid gap-4 md:grid-cols-2 min-h-0">
+        <div className="rounded-md border bg-muted/30 flex flex-col min-h-0">
+          <div className="border-b px-3 py-2 text-xs">
+            <p className="font-medium text-sm">{row.subject || "(sans objet)"}</p>
+            <p className="text-muted-foreground">{row.from_name ? `${row.from_name} · ` : ""}{row.from_email} · {format(parseISO(row.received_at), "d MMM yyyy HH:mm", { locale: fr })}</p>
+          </div>
+          {isHtml ? (
+            <iframe title="Email" sandbox="" srcDoc={body} className="w-full flex-1 min-h-[55vh] bg-background" />
+          ) : (
+            <pre className="flex-1 max-h-[60vh] overflow-auto whitespace-pre-wrap p-3 text-xs font-sans">{body}</pre>
+          )}
+        </div>
+        <div className="space-y-3 min-w-0">
+        <div className="space-y-1.5">
+          <Input placeholder="Rechercher un chantier (numéro, nom, mot clé)…" value={q} onChange={(e) => setQ(e.target.value)} />
+          {selected && <p className="text-xs">Chantier choisi : <span className="font-medium">{selected.numero} — {selected.nom}</span></p>}
+          <div className="max-h-40 overflow-auto rounded-md border">
+            {filtered.length === 0 ? <p className="p-2 text-xs text-muted-foreground">Aucun chantier trouvé.</p> : filtered.map((a) => (
+              <button key={a.id} type="button" onClick={() => setAffaireId(a.id)}
+                className={`block w-full text-left px-2 py-1.5 text-sm hover:bg-accent ${a.id === affaireId ? "bg-accent font-medium" : ""}`}>
+                {a.numero} — {a.nom}
+              </button>
+            ))}
+          </div>
+        </div>
         <div className="space-y-2">
           {lines.map((l, i) => (
-            <div key={i} className="flex items-center gap-2">
+            <div key={i} className="flex flex-wrap items-center gap-2">
               <Checkbox checked={l.keep} onCheckedChange={(v) => upd(i, { keep: !!v })} />
               <Input type="date" className="w-40" value={l.date} onChange={(e) => upd(i, { date: e.target.value })} />
               <Select value={l.type} onValueChange={(v) => upd(i, { type: v as EtapeType })}>
@@ -209,6 +236,8 @@ function PlanningDialog({ row, affaires, onClose, onDone }: { row: Row; affaires
             </div>
           ))}
           <Button size="sm" variant="ghost" onClick={() => setLines((ls) => [...ls, { keep: true, date: format(new Date(), "yyyy-MM-dd"), type: "livraison", contenu: "" }])}>+ Ajouter une étape</Button>
+        </div>
+        </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Annuler</Button>
