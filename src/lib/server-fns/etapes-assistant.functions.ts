@@ -20,7 +20,7 @@ export type EtapeOperation = { toutes: boolean; types: string[]; indices: number
 
 export const assistantEtapes = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i) => z.object({ instruction: z.string().min(1).max(2000), etapes: z.array(z.record(z.string(), z.unknown())).max(200) }).parse(i))
+  .inputValidator((i) => z.object({ instruction: z.string().min(1).max(2000), etapes: z.array(z.record(z.string(), z.unknown())).max(200), contexte: z.string().max(30000).optional() }).parse(i))
   .handler(async ({ data, context }) => {
     const { data: ok } = await context.supabase.rpc("user_has_cap", { _cap: "logistique.proposition.view" });
     if (!ok) throw new Error("Accès refusé");
@@ -32,10 +32,11 @@ export const assistantEtapes = createServerFn({ method: "POST" })
       body: JSON.stringify({
         model: "openai/gpt-6-astra", stream: true, store: false, reasoning: { effort: "low" },
         instructions: "Tu aides à remplir une liste d'étapes logistiques (SETUP Paris, décor). L'utilisateur donne une consigne en français. " +
+          "Tu as accès au document source (email ou jalonnement) : utilise-le pour répondre aux consignes qui s'y réfèrent (ex. « mets les pax indiqués dans le mail » → pour chaque étape, retrouve dans le texte la ligne de la même date et son effectif ; une opération par étape avec indices=[index]). " +
           "Traduis la consigne en operations. Chaque opération a une cible : toutes=true pour toutes les étapes (par défaut si la consigne ne précise rien), sinon types (ex. [\"permanence\"]) et/ou indices (index fournis). " +
           "Puis les valeurs à écrire ; null = ne pas toucher ce champ. « une personne » / « 1p » = nb_personnes 1 ; « 3 pers » = 3. Un lieu cité (même sans guillemets, ex. « au studio Lendit », « lieu Lendit ») va dans lieu, tel quel. Heures HH:MM (8h → 08:00). keep=false = décocher. " +
           "N'invente jamais de valeur non demandée. Si la consigne est incompréhensible, operations = [] et message = une question courte. Sinon message = une phrase confirmant ce qui a été appliqué.",
-        input: [{ role: "user", content: [{ type: "input_text", text: `Consigne : ${data.instruction}\n\nÉtapes :\n${JSON.stringify(data.etapes)}` }] }],
+        input: [{ role: "user", content: [{ type: "input_text", text: `${data.contexte ? `Document source :\n${data.contexte}\n\n` : ""}Consigne : ${data.instruction}\n\nÉtapes :\n${JSON.stringify(data.etapes)}` }] }],
         text: { format: { type: "json_schema", name: "modifs", strict: true, schema: SCHEMA } },
       }),
     });
