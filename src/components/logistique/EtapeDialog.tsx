@@ -175,7 +175,7 @@ export function EtapeDialog({ open, onOpenChange, etape, defaultDate, defaultAff
           )}
           <div><Label>Lieu</Label><Input value={f.lieu_libre} onChange={(e) => set("lieu_libre", e.target.value)} /></div>
           <div><Label>Nb personnes</Label><Input type="number" min={0} value={f.nb_personnes} onChange={(e) => set("nb_personnes", e.target.value)} /></div>
-          <div><Label>Accès (quai, code…)</Label><Input value={f.acces} onChange={(e) => set("acces", e.target.value)} /></div>
+          <div className="sm:col-span-2"><Label>Accès (quai, code…)</Label><Input value={f.acces} onChange={(e) => set("acces", e.target.value)} /></div>
           <div className="sm:col-span-2"><Label>Note</Label><Textarea rows={2} value={f.note} onChange={(e) => set("note", e.target.value)} /></div>
           <div className="sm:col-span-2"><Label>Commentaire pour l'équipe</Label><Textarea rows={3} placeholder="Indications du chef d'équipe au chef logistique et à tous…" value={f.commentaire_equipe} onChange={(e) => set("commentaire_equipe", e.target.value)} /></div>
         </div>
