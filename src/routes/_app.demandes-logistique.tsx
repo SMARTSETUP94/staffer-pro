@@ -228,21 +228,29 @@ function PlanningDialog({ row, affaires, onClose, onDone }: { row: Row; affaires
   const assist = useServerFn(assistantEtapes);
   const [consigne, setConsigne] = useState("");
   const [assisting, setAssisting] = useState(false);
+  const [reponse, setReponse] = useState<string | null>(null);
   async function runAssist() {
     if (!consigne.trim()) return;
     setAssisting(true);
     try {
       const r = await assist({ data: { instruction: consigne, etapes: lines.map((l, index) => ({ index, coche: l.keep, date: l.date, type: l.type, contenu: l.contenu, heure_debut: l.hDebut || null, heure_fin: l.hFin || null, lieu: l.lieu || null, nb_personnes: l.nb ? Number(l.nb) : null, commentaire: l.commentaire || null })) } });
+      let n = 0;
       setLines((ls) => ls.map((l, i) => {
-        const c = r.changes.find((x) => x.index === i);
-        if (!c) return l;
-        return { ...l,
-          ...(c.nb_personnes != null && { nb: String(c.nb_personnes) }), ...(c.lieu != null && { lieu: c.lieu }),
-          ...(c.heure_debut != null && { hDebut: c.heure_debut }), ...(c.heure_fin != null && { hFin: c.heure_fin }),
-          ...(c.contenu != null && { contenu: c.contenu }), ...(c.commentaire != null && { commentaire: c.commentaire }),
-          ...(c.keep != null && { keep: c.keep }) };
+        let out = l;
+        for (const c of r.operations) {
+          const hit = c.toutes || c.indices.includes(i) || c.types.includes(l.type);
+          if (!hit) continue;
+          n++;
+          out = { ...out,
+            ...(c.nb_personnes != null && { nb: String(c.nb_personnes) }), ...(c.lieu != null && { lieu: c.lieu }),
+            ...(c.heure_debut != null && { hDebut: c.heure_debut }), ...(c.heure_fin != null && { hFin: c.heure_fin }),
+            ...(c.contenu != null && { contenu: c.contenu }), ...(c.commentaire != null && { commentaire: c.commentaire }),
+            ...(c.keep != null && { keep: c.keep }) };
+        }
+        return out;
       }));
-      toast.success(r.message || `${r.changes.length} étape(s) modifiée(s)`);
+      setReponse(r.message || (r.operations.length ? "Modifications appliquées." : "Je n'ai pas compris la consigne."));
+      if (r.operations.length) toast.success(r.message || "Étapes mises à jour");
       setConsigne("");
     } catch (e) { toast.error((e as Error).message); } finally { setAssisting(false); }
   }
@@ -326,6 +334,7 @@ function PlanningDialog({ row, affaires, onClose, onDone }: { row: Row; affaires
               {assisting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Appliquer"}
             </Button>
           </div>
+          {reponse && <p className="text-xs rounded bg-background px-2 py-1 border">🤖 {reponse}</p>}
           <p className="text-[11px] text-muted-foreground">Les champs sont modifiés ici seulement ; vérifiez puis validez.</p>
         </div>
         <div className="space-y-1.5">
