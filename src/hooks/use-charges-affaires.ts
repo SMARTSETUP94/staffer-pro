@@ -9,7 +9,9 @@ export interface ChargeAffaires {
 
 /**
  * v0.17 — Charge tous les "chargés d'affaires" potentiels (admins + chefs de chantier
- * actifs). Réutilisé dans le Kanban opportunités (sélecteur CA) et le dashboard pipeline.
+ * + commerciaux). Réutilisé dans le Kanban opportunités (sélecteur CA) et le dashboard pipeline.
+ * v0.50 — inclut les comptes encore en statut « invite » (invitation non finalisée),
+ * sinon un chargé d'affaires réel comme alex.f@setup.paris disparaît des sélecteurs.
  */
 export function useChargesAffaires() {
   const [data, setData] = useState<ChargeAffaires[]>([]);
@@ -24,8 +26,8 @@ export function useChargesAffaires() {
       const { data: roles, error: rolesErr } = await supabase
         .from("user_roles")
         .select("user_id, role, status")
-        .in("role", ["admin", "chef_chantier"])
-        .eq("status", "actif");
+        .in("role", ["admin", "chef_chantier", "commercial"])
+        .in("status", ["actif", "invite"]);
 
       if (rolesErr) {
         if (!cancelled) {
