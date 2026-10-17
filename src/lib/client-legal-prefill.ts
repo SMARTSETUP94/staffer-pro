@@ -1,4 +1,4 @@
-export type ClientLegalFields = { siret: string | null; adresse: string | null; site_web: string | null };
+export type ClientLegalFields = { siret: string | null; adresse: string | null; site_web: string | null; dirigeant?: string | null };
 
 export function sirenFromIdentifier(value: string | null): string | null {
   const digits = value?.replace(/\s/g, "") ?? "";
@@ -10,5 +10,6 @@ export function prefillClientLegal(current: ClientLegalFields, suggestion: Clien
     siret: current.siret?.trim() || (sirenFromIdentifier(suggestion.siret) ? suggestion.siret?.replace(/\s/g, "") ?? null : null),
     adresse: current.adresse?.trim() || suggestion.adresse?.trim() || null,
     site_web: current.site_web?.trim() || suggestion.site_web?.trim() || null,
+    dirigeant: current.dirigeant?.trim() || suggestion.dirigeant?.trim() || null,
   };
 }

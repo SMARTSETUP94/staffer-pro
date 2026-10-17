@@ -70,6 +70,7 @@ interface ClientFull {
   domaines_email: string[];
   secteur: string | null;
   siret: string | null;
+  dirigeant: string | null;
   notes: string | null;
   actif: boolean;
   adresse: string | null;
@@ -146,7 +147,7 @@ function ClientDetailPage() {
     const [c, a, ct, em] = await Promise.all([
       supabase
         .from("clients")
-        .select("id, nom, domaines_email, secteur, siret, notes, actif, adresse, telephone, email, site_web")
+        .select("id, nom, domaines_email, secteur, siret, dirigeant, notes, actif, adresse, telephone, email, site_web")
         .eq("id", clientId)
         .maybeSingle(),
       supabase
@@ -251,6 +252,10 @@ function ClientDetailPage() {
             </div>
           )}
           <div className="space-y-1.5 text-sm">
+            <div className="flex items-start gap-2">
+              <Users className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+              <span>Dirigeant : {client.dirigeant || <span className="text-muted-foreground">—</span>}</span>
+            </div>
             <div className="flex items-center gap-2">
               <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
               <span>
@@ -579,6 +584,7 @@ function EditClientDialog({
   const [domaines, setDomaines] = useState(client.domaines_email.join(", "));
   const [secteur, setSecteur] = useState(client.secteur ?? "");
   const [siret, setSiret] = useState(client.siret ?? "");
+  const [dirigeant, setDirigeant] = useState(client.dirigeant ?? "");
   const [adresse, setAdresse] = useState(client.adresse ?? "");
   const [telephone, setTelephone] = useState(client.telephone ?? "");
   const [email, setEmail] = useState(client.email ?? "");
@@ -600,7 +606,7 @@ function EditClientDialog({
     try {
       const firstDomain = domaines.split(/[,\s;]+/).map((d) => d.trim()).filter(Boolean)[0];
       const { suggestion, error } = await enrich({
-        data: { nom: nom.trim(), domaine: firstDomain || undefined, email: email.trim() || undefined },
+        data: { nom: nom.trim(), domaine: firstDomain || undefined, email: email.trim() || undefined, siren: sirenFromIdentifier(siret) ?? undefined },
       });
       if (error || !suggestion) {
         toast.error("Recherche IA impossible", { description: error ?? undefined });
@@ -615,6 +621,7 @@ function EditClientDialog({
       };
       setIfEmpty("secteur", secteur, suggestion.secteur, setSecteur);
       setIfEmpty("SIRET", siret, suggestion.siret, setSiret);
+      setIfEmpty("dirigeant", dirigeant, suggestion.dirigeant, setDirigeant);
       setIfEmpty("adresse", adresse, suggestion.adresse, setAdresse);
       setIfEmpty("téléphone", telephone, suggestion.telephone, setTelephone);
       setIfEmpty("email", email, suggestion.email, setEmail);
@@ -678,6 +685,7 @@ function EditClientDialog({
         domaines_email: domList,
         secteur: secteur.trim() || null,
         siret: siret.trim() || null,
+        dirigeant: dirigeant.trim() || null,
         adresse: adresse.trim() || null,
         telephone: telephone.trim() || null,
         email: email.trim() || null,
@@ -775,6 +783,7 @@ function EditClientDialog({
               <Input value={siret} onChange={(e) => setSiret(e.target.value)} />
             </div>
           </div>
+          <div><Label htmlFor="edit-dirigeant">Dirigeant</Label><Input id="edit-dirigeant" value={dirigeant} onChange={(e) => setDirigeant(e.target.value)} /></div>
 
           <div className="pt-2 border-t">
             <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
