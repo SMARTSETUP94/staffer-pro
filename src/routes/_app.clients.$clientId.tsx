@@ -196,6 +196,12 @@ function ClientDetailPage() {
 
   const opportunites = affaires.filter((a) => a.numero?.startsWith("9"));
   const chantiers = affaires.filter((a) => !a.numero?.startsWith("9"));
+  const chantiersEnCours = chantiers.filter(
+    (a) => a.statut === "en_cours" || a.statut === "prospect",
+  );
+  const chantiersPasses = chantiers.filter(
+    (a) => a.statut !== "en_cours" && a.statut !== "prospect",
+  );
 
   return (
     <div className="container mx-auto p-4 max-w-7xl space-y-4">
