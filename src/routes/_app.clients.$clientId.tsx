@@ -203,7 +203,7 @@ function ClientDetailPage() {
   );
 
   return (
-    <div className="container mx-auto p-4 max-w-7xl space-y-4">
+    <div className="container mx-auto p-4 max-w-7xl space-y-3">
       <PageHeader
         title={client.nom}
         description={[
@@ -213,47 +213,47 @@ function ClientDetailPage() {
         ].filter(Boolean).join(" · ") || undefined}
         actions={
           <>
-            <Button variant="outline" onClick={() => navigate({ to: "/clients" })}>
+            <Button variant="outline" size="sm" onClick={() => navigate({ to: "/clients" })}>
               <ArrowLeft className="h-4 w-4 mr-1" /> Liste
             </Button>
-            <Button onClick={() => setEditOpen(true)}>
+            <Button size="sm" onClick={() => setEditOpen(true)}>
               <Pencil className="h-4 w-4 mr-1" /> Éditer la fiche
             </Button>
           </>
         }
       />
 
-      {client.domaines_email.length > 0 && (
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs text-muted-foreground">Domaines :</span>
-          {client.domaines_email.map((d) => (
-            <Badge key={d} variant="secondary" className="text-[11px]">
-              @{d}
-            </Badge>
-          ))}
-        </div>
-      )}
-
-      <Card className="p-4">
-        <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">
-          Informations juridiques
-        </div>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div className="flex items-center gap-2 text-sm">
-            <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
-            <span>
-              SIREN / SIRET :{" "}
-              {client.siret ?? <span className="text-muted-foreground">—</span>}
-            </span>
+      <div className="grid gap-3 lg:grid-cols-3 items-start">
+        {/* Colonne 1 : Informations juridiques */}
+        <Card className="p-4 space-y-2">
+          <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+            Informations juridiques
           </div>
+          {client.domaines_email.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1">
+              {client.domaines_email.map((d) => (
+                <Badge key={d} variant="secondary" className="text-[11px]">
+                  @{d}
+                </Badge>
+              ))}
+            </div>
+          )}
+          <div className="space-y-1.5 text-sm">
+            <div className="flex items-center gap-2">
+              <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
+              <span>
+                SIREN / SIRET :{" "}
+                {client.siret ?? <span className="text-muted-foreground">—</span>}
+              </span>
+            </div>
             {client.adresse && (
-              <div className="flex items-start gap-2 text-sm">
+              <div className="flex items-start gap-2">
                 <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
                 <span className="whitespace-pre-wrap">{client.adresse}</span>
               </div>
             )}
             {client.telephone && (
-              <div className="flex items-center gap-2 text-sm">
+              <div className="flex items-center gap-2">
                 <Phone className="h-4 w-4 text-muted-foreground shrink-0" />
                 <a href={`tel:${client.telephone}`} className="hover:underline">
                   {client.telephone}
@@ -261,7 +261,7 @@ function ClientDetailPage() {
               </div>
             )}
             {client.email && (
-              <div className="flex items-center gap-2 text-sm">
+              <div className="flex items-center gap-2">
                 <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
                 <a href={`mailto:${client.email}`} className="hover:underline">
                   {client.email}
@@ -269,7 +269,7 @@ function ClientDetailPage() {
               </div>
             )}
             {client.site_web && (
-              <div className="flex items-center gap-2 text-sm">
+              <div className="flex items-center gap-2">
                 <Globe className="h-4 w-4 text-muted-foreground shrink-0" />
                 <a
                   href={
@@ -285,8 +285,110 @@ function ClientDetailPage() {
                 </a>
               </div>
             )}
-        </div>
-      </Card>
+          </div>
+          {client.notes && (
+            <div className="pt-2 border-t text-xs text-muted-foreground whitespace-pre-wrap">
+              {client.notes}
+            </div>
+          )}
+        </Card>
+
+        {/* Colonne 2 : Contacts */}
+        <Card className="p-4 space-y-2">
+          <div className="flex items-center justify-between">
+            <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-1">
+              <Users className="h-3.5 w-3.5" /> Contacts ({contacts.length})
+            </div>
+            <Button size="sm" variant="outline" onClick={() => setContactEdit({})}>
+              <Plus className="h-4 w-4 mr-1" /> Ajouter
+            </Button>
+          </div>
+          {contacts.length === 0 ? (
+            <div className="text-center py-6 text-muted-foreground text-sm">
+              Aucun contact. Les emails entrants en créent automatiquement.
+            </div>
+          ) : (
+            <ul className="divide-y">
+              {contacts.map((c) => {
+                const linkedin = extractLinkedIn(c.notes);
+                return (
+                  <li key={c.id} className="py-2 flex items-start justify-between gap-2">
+                    <div className="min-w-0 text-sm">
+                      <div className="font-medium truncate">
+                        {[c.prenom, c.nom].filter(Boolean).join(" ") || "—"}
+                        {c.fonction && (
+                          <span className="ml-1 text-xs text-muted-foreground font-normal">
+                            {c.fonction}
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-xs text-muted-foreground truncate">
+                        {c.email ? (
+                          <a className="hover:underline" href={`mailto:${c.email}`}>
+                            {c.email}
+                          </a>
+                        ) : (
+                          "—"
+                        )}
+                        {c.telephone && <span> · {c.telephone}</span>}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      {linkedin && (
+                        <a
+                          href={linkedin}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-primary hover:underline"
+                        >
+                          LinkedIn
+                        </a>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setContactEdit(c)}
+                      >
+                        <Pencil className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </Card>
+
+        {/* Colonne 3 : Chantiers & opportunités */}
+        <Card className="p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-1">
+              <Briefcase className="h-3.5 w-3.5" /> Chantiers & opportunités
+            </div>
+            <Button size="sm" variant="outline" onClick={() => setAttachOpen(true)}>
+              <Link2 className="h-4 w-4 mr-1" /> Rattacher
+            </Button>
+          </div>
+          <AffairesCompactList
+            title={`En cours (${chantiersEnCours.length})`}
+            rows={chantiersEnCours}
+            emptyLabel="Aucun chantier en cours"
+            onDetach={(a) => detachAffaire(a.id, a.numero)}
+          />
+          <AffairesCompactList
+            title={`Passés (${chantiersPasses.length})`}
+            rows={chantiersPasses}
+            emptyLabel="Aucun chantier passé"
+            onDetach={(a) => detachAffaire(a.id, a.numero)}
+          />
+          <AffairesCompactList
+            title={`Opportunités (${opportunites.length})`}
+            rows={opportunites}
+            emptyLabel="Aucune opportunité"
+            onDetach={(a) => detachAffaire(a.id, a.numero)}
+          />
+        </Card>
+      </div>
 
       <section className="space-y-2">
         <div className="flex items-center justify-between">
