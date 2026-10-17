@@ -1,11 +1,33 @@
 import { describe, it, expect } from "vitest";
-import { conflitsVehicules, decalerEtape, etapeCouvreJour, type EtapeLite } from "../etapes";
+import { calendrierChantier, conflitsVehicules, decalerEtape, etapeCouvreJour, type EtapeLite } from "../etapes";
 
 const e = (id: string, deb: string, fin: string | null, veh: string | null, statut = "valide"): EtapeLite => ({
   id, affaire_id: "a", type: "livraison", date_debut: deb, date_fin: fin, vehicule_id: veh, statut,
 });
 
 describe("planning logistique", () => {
+  it("le calendrier n'affiche que le chantier sélectionné", () => {
+    const jours = calendrierChantier([e("1", "2026-10-19", null, null), { ...e("2", "2026-10-19", null, null), affaire_id: "b" }], "a");
+    expect(jours[0]?.etapes.map((row) => row.id)).toEqual(["1"]);
+  });
+
+  it("le calendrier masque les dates vides et trie chronologiquement", () => {
+    expect(calendrierChantier([e("2", "2026-10-22", null, null), e("1", "2026-10-19", null, null)], "a").map((jour) => jour.date)).toEqual(["2026-10-19", "2026-10-22"]);
+  });
+
+  it("une étape de plusieurs jours couvre chaque date de sa période", () => {
+    expect(calendrierChantier([e("1", "2026-10-19", "2026-10-21", null)], "a").map((jour) => jour.date)).toEqual(["2026-10-19", "2026-10-20", "2026-10-21"]);
+  });
+
+  it("une étape annulée ne crée aucune date dans le calendrier", () => {
+    expect(calendrierChantier([e("1", "2026-10-19", null, null, "annule")], "a")).toEqual([]);
+  });
+
+  it("les étapes d'une date sont triées par horaire", () => {
+    const rows = [{ ...e("1", "2026-10-19", null, null), heure_debut: "14:00" }, { ...e("2", "2026-10-19", null, null), heure_debut: "08:00" }];
+    expect(calendrierChantier(rows, "a")[0]?.etapes.map((row) => row.id)).toEqual(["2", "1"]);
+  });
+
   it("une étape sans date de fin ne couvre que son jour", () => {
     expect(etapeCouvreJour(e("1", "2026-10-15", null, null), "2026-10-15")).toBe(true);
     expect(etapeCouvreJour(e("1", "2026-10-15", null, null), "2026-10-16")).toBe(false);

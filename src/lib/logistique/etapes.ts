@@ -2,7 +2,7 @@
  * Planning logistique — types, libellés, couleurs et helpers purs.
  * Les couleurs sont des tokens CSS (`--log-*`) définis dans styles.css.
  */
-import { addDays, format, parseISO } from "date-fns";
+import { addDays, eachDayOfInterval, format, parseISO } from "date-fns";
 
 export const ETAPE_TYPES = [
   "appro", "emballage", "chargement", "livraison", "tracage", "montage",
@@ -58,6 +58,25 @@ export function etapeCouvreJour(e: Pick<EtapeLite, "date_debut" | "date_fin">, d
 /** Liste des jours ISO de `start` sur `n` jours. */
 export function joursIso(start: Date, n: number): string[] {
   return Array.from({ length: n }, (_, i) => format(addDays(start, i), "yyyy-MM-dd"));
+}
+
+/** Calendrier d'un chantier : uniquement les dates couvertes, sans étapes annulées. */
+export function calendrierChantier<T extends Pick<EtapeLite, "affaire_id" | "date_debut" | "date_fin" | "statut"> & { heure_debut?: string | null }>(etapes: T[], affaireId: string): { date: string; etapes: T[] }[] {
+  const jours = new Map<string, T[]>();
+  for (const e of etapes) {
+    if (e.affaire_id !== affaireId || e.statut === "annule") continue;
+    const fin = e.date_fin && e.date_fin >= e.date_debut ? e.date_fin : e.date_debut;
+    for (const date of eachDayOfInterval({ start: parseISO(e.date_debut), end: parseISO(fin) })) {
+      const key = format(date, "yyyy-MM-dd");
+      const list = jours.get(key) ?? [];
+      list.push(e);
+      jours.set(key, list);
+    }
+  }
+  return [...jours].sort(([a], [b]) => a.localeCompare(b)).map(([date, rows]) => ({
+    date,
+    etapes: rows.sort((a, b) => (a.heure_debut ?? "").localeCompare(b.heure_debut ?? "")),
+  }));
 }
 
 /**
