@@ -131,7 +131,7 @@ function ClientsListPage() {
     setLoading(true);
     const { data: clients, error } = await supabase
       .from("clients")
-      .select("id, nom, domaines_email, secteur, actif")
+      .select("id, nom, domaines_email, actif")
       .order("nom");
     if (error) {
       toast.error("Erreur", { description: error.message });
@@ -139,46 +139,35 @@ function ClientsListPage() {
       return;
     }
     const ids = (clients ?? []).map((c) => c.id);
-    const [affRes, contactRes, emailRes] = await Promise.all([
+    const [affRes, contactRes] = await Promise.all([
       supabase.from("affaires").select("client_id, numero").in("client_id", ids),
-      supabase.from("client_contacts").select("client_id").in("client_id", ids),
       supabase
-        .from("emails_entrants")
-        .select("client_id, received_at")
-        .in("client_id", ids)
-        .order("received_at", { ascending: false }),
+        .from("client_contacts")
+        .select("client_id, nom, prenom, email")
+        .in("client_id", ids),
     ]);
-    const affByClient = new Map<string, { aff: number; opp: number }>();
+    const numerosByClient = new Map<string, string[]>();
     (affRes.data ?? []).forEach((a) => {
-      if (!a.client_id) return;
-      const cur = affByClient.get(a.client_id) ?? { aff: 0, opp: 0 };
-      if (a.numero?.startsWith("9")) cur.opp += 1;
-      else cur.aff += 1;
-      affByClient.set(a.client_id, cur);
+      if (!a.client_id || !a.numero) return;
+      const cur = numerosByClient.get(a.client_id) ?? [];
+      cur.push(a.numero);
+      numerosByClient.set(a.client_id, cur);
     });
-    const contactByClient = new Map<string, number>();
+    const contactsByClient = new Map<string, ClientContact[]>();
     (contactRes.data ?? []).forEach((c) => {
       if (!c.client_id) return;
-      contactByClient.set(c.client_id, (contactByClient.get(c.client_id) ?? 0) + 1);
-    });
-    const lastEmailByClient = new Map<string, string>();
-    (emailRes.data ?? []).forEach((e) => {
-      if (!e.client_id || !e.received_at) return;
-      if (!lastEmailByClient.has(e.client_id)) {
-        lastEmailByClient.set(e.client_id, e.received_at);
-      }
+      const cur = contactsByClient.get(c.client_id) ?? [];
+      cur.push({ nom: c.nom, prenom: c.prenom, email: c.email });
+      contactsByClient.set(c.client_id, cur);
     });
     setRows(
       (clients ?? []).map((c) => ({
         id: c.id,
         nom: c.nom,
         domaines_email: c.domaines_email ?? [],
-        secteur: c.secteur,
         actif: c.actif,
-        nb_affaires: affByClient.get(c.id)?.aff ?? 0,
-        nb_opportunites: affByClient.get(c.id)?.opp ?? 0,
-        nb_contacts: contactByClient.get(c.id) ?? 0,
-        dernier_email_at: lastEmailByClient.get(c.id) ?? null,
+        numeros_chantiers: (numerosByClient.get(c.id) ?? []).sort(),
+        contacts: contactsByClient.get(c.id) ?? [],
       })),
     );
     setLoading(false);
