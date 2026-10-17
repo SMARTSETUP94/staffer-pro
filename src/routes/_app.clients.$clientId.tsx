@@ -34,7 +34,6 @@ import { enrichClientFiche } from "@/lib/server-fns/client-enrichment.functions"
 import type { ClientContactSuggestion } from "@/lib/client-enrichment";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
@@ -88,6 +87,13 @@ interface ContactRow {
   telephone: string | null;
   fonction: string | null;
   actif: boolean;
+  notes: string | null;
+}
+
+function extractLinkedIn(notes: string | null): string | null {
+  if (!notes) return null;
+  const m = notes.match(/https?:\/\/[^\s)]*linkedin[^\s)]*/i);
+  return m ? m[0] : null;
 }
 
 interface EmailRow {
@@ -141,7 +147,7 @@ function ClientDetailPage() {
         .order("numero", { ascending: false }),
       supabase
         .from("client_contacts")
-        .select("id, nom, prenom, email, telephone, fonction, actif")
+        .select("id, nom, prenom, email, telephone, fonction, actif, notes")
         .eq("client_id", clientId)
         .order("nom"),
       supabase
@@ -189,6 +195,12 @@ function ClientDetailPage() {
 
   const opportunites = affaires.filter((a) => a.numero?.startsWith("9"));
   const chantiers = affaires.filter((a) => !a.numero?.startsWith("9"));
+  const chantiersEnCours = chantiers.filter(
+    (a) => a.statut === "en_cours" || a.statut === "prospect",
+  );
+  const chantiersPasses = chantiers.filter(
+    (a) => a.statut !== "en_cours" && a.statut !== "prospect",
+  );
 
   return (
     <div className="container mx-auto p-4 max-w-7xl space-y-4">
@@ -222,12 +234,18 @@ function ClientDetailPage() {
         </div>
       )}
 
-      {(client.adresse || client.telephone || client.email || client.site_web) && (
-        <Card className="p-4">
-          <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">
-            Coordonnées société
+      <Card className="p-4">
+        <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">
+          Informations juridiques
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="flex items-center gap-2 text-sm">
+            <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
+            <span>
+              SIREN / SIRET :{" "}
+              {client.siret ?? <span className="text-muted-foreground">—</span>}
+            </span>
           </div>
-          <div className="grid gap-3 sm:grid-cols-2">
             {client.adresse && (
               <div className="flex items-start gap-2 text-sm">
                 <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
@@ -267,63 +285,53 @@ function ClientDetailPage() {
                 </a>
               </div>
             )}
-          </div>
-        </Card>
-      )}
+        </div>
+      </Card>
 
+      <section className="space-y-2">
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-semibold flex items-center gap-1">
+            <Briefcase className="h-4 w-4" /> Chantiers en cours (
+            {chantiersEnCours.length})
+          </h2>
+          <Button size="sm" variant="outline" onClick={() => setAttachOpen(true)}>
+            <Link2 className="h-4 w-4 mr-1" /> Rattacher des chantiers
+          </Button>
+        </div>
+        <AffairesTable
+          rows={chantiersEnCours}
+          emptyLabel="Aucun chantier en cours"
+          onDetach={(a) => detachAffaire(a.id, a.numero)}
+        />
+      </section>
 
+      <section className="space-y-2">
+        <h2 className="text-sm font-semibold flex items-center gap-1">
+          <Briefcase className="h-4 w-4" /> Chantiers passés (
+          {chantiersPasses.length})
+        </h2>
+        <AffairesTable
+          rows={chantiersPasses}
+          emptyLabel="Aucun chantier passé"
+          onDetach={(a) => detachAffaire(a.id, a.numero)}
+        />
+      </section>
 
-      <Tabs defaultValue="affaires">
-        <TabsList>
-          <TabsTrigger value="affaires">
-            <Briefcase className="h-3 w-3 mr-1" />
-            Chantiers ({chantiers.length})
-          </TabsTrigger>
-          <TabsTrigger value="opportunites">
-            <Trophy className="h-3 w-3 mr-1" />
-            Opportunités ({opportunites.length})
-          </TabsTrigger>
-          <TabsTrigger value="contacts">
-            <Users className="h-3 w-3 mr-1" />
-            Contacts ({contacts.length})
-          </TabsTrigger>
-          <TabsTrigger value="emails">
-            <Mail className="h-3 w-3 mr-1" />
-            Emails ({emails.length})
-          </TabsTrigger>
-          <TabsTrigger value="notes">
-            <FileText className="h-3 w-3 mr-1" />
-            Notes
-          </TabsTrigger>
-        </TabsList>
+      <section className="space-y-2">
+        <h2 className="text-sm font-semibold flex items-center gap-1">
+          <Trophy className="h-4 w-4" /> Opportunités ({opportunites.length})
+        </h2>
+        <AffairesTable
+          rows={opportunites}
+          emptyLabel="Aucune opportunité"
+          onDetach={(a) => detachAffaire(a.id, a.numero)}
+        />
+      </section>
 
-        <TabsContent value="affaires">
-          <div className="flex justify-end mb-2">
-            <Button size="sm" variant="outline" onClick={() => setAttachOpen(true)}>
-              <Link2 className="h-4 w-4 mr-1" /> Rattacher des chantiers
-            </Button>
-          </div>
-          <AffairesTable
-            rows={chantiers}
-            emptyLabel="Aucun chantier"
-            onDetach={(a) => detachAffaire(a.id, a.numero)}
-          />
-        </TabsContent>
-
-        <TabsContent value="opportunites">
-          <div className="flex justify-end mb-2">
-            <Button size="sm" variant="outline" onClick={() => setAttachOpen(true)}>
-              <Link2 className="h-4 w-4 mr-1" /> Rattacher des affaires
-            </Button>
-          </div>
-          <AffairesTable
-            rows={opportunites}
-            emptyLabel="Aucune opportunité"
-            onDetach={(a) => detachAffaire(a.id, a.numero)}
-          />
-        </TabsContent>
-
-        <TabsContent value="contacts">
+      <section className="space-y-2">
+        <h2 className="text-sm font-semibold flex items-center gap-1">
+          <Users className="h-4 w-4" /> Contacts ({contacts.length})
+        </h2>
           <Card>
             <div className="p-3 border-b flex justify-between items-center">
               <div className="text-sm text-muted-foreground">
@@ -345,11 +353,14 @@ function ClientDetailPage() {
                     <TableHead>Email</TableHead>
                     <TableHead>Téléphone</TableHead>
                     <TableHead>Fonction</TableHead>
+                    <TableHead>LinkedIn</TableHead>
                     <TableHead className="w-20"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {contacts.map((c) => (
+                  {contacts.map((c) => {
+                    const linkedin = extractLinkedIn(c.notes);
+                    return (
                     <TableRow key={c.id}>
                       <TableCell>
                         {[c.prenom, c.nom].filter(Boolean).join(" ") || "—"}
@@ -367,6 +378,20 @@ function ClientDetailPage() {
                       <TableCell className="text-sm text-muted-foreground">
                         {c.fonction ?? "—"}
                       </TableCell>
+                      <TableCell className="text-sm">
+                        {linkedin ? (
+                          <a
+                            href={linkedin}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="hover:underline text-primary"
+                          >
+                            Profil
+                          </a>
+                        ) : (
+                          "—"
+                        )}
+                      </TableCell>
                       <TableCell className="text-right">
                         <Button
                           size="sm"
@@ -377,14 +402,18 @@ function ClientDetailPage() {
                         </Button>
                       </TableCell>
                     </TableRow>
-                  ))}
+                    );
+                  })}
                 </TableBody>
               </Table>
             )}
           </Card>
-        </TabsContent>
+      </section>
 
-        <TabsContent value="emails">
+      <section className="space-y-2">
+        <h2 className="text-sm font-semibold flex items-center gap-1">
+          <Mail className="h-4 w-4" /> Emails ({emails.length})
+        </h2>
           <Card>
             {emails.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground text-sm">
@@ -442,20 +471,22 @@ function ClientDetailPage() {
               </Table>
             )}
           </Card>
-        </TabsContent>
+      </section>
 
-        <TabsContent value="notes">
-          <Card className="p-4">
-            <div className="text-sm whitespace-pre-wrap">
-              {client.notes ?? (
-                <span className="text-muted-foreground">
-                  Aucune note. Cliquez sur Éditer pour ajouter.
-                </span>
-              )}
-            </div>
-          </Card>
-        </TabsContent>
-      </Tabs>
+      <section className="space-y-2">
+        <h2 className="text-sm font-semibold flex items-center gap-1">
+          <FileText className="h-4 w-4" /> Notes
+        </h2>
+        <Card className="p-4">
+          <div className="text-sm whitespace-pre-wrap">
+            {client.notes ?? (
+              <span className="text-muted-foreground">
+                Aucune note. Cliquez sur Éditer pour ajouter.
+              </span>
+            )}
+          </div>
+        </Card>
+      </section>
 
       {editOpen && (
         <EditClientDialog
