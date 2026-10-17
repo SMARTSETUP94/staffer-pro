@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { useCapability } from "@/hooks/use-capability";
 import { reanalyseSharedInboxes } from "@/lib/server-fns/shared-inbox-reanalyse.functions";
+import { enrichClientFiche } from "@/lib/server-fns/client-enrichment.functions";
 import { RefreshCw, Paperclip, Download, Eye } from "lucide-react";
 import { listEmailAttachments, getEmailAttachment, type EmailAttachment } from "@/lib/server-fns/shared-inbox-attachments.functions";
 import { requireCapability } from "@/lib/capability-guard";
