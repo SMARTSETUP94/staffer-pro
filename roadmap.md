@@ -1,5 +1,8 @@
 # Roadmap
 
+## Demandes clients (17 oct. 2026)
+- [x] Après lecture : analyse brève du projet, points à clarifier et réponse IA modifiable et copiable, sans envoi automatique. Vérifié sur une vraie demande : réponse générée et presse-papiers identique ; 5 tests des transferts verts.
+
 ## Calendrier chantier (17 oct. 2026)
 - [x] Fenêtre de calendrier d'un seul chantier depuis le planning logistique, recherche et dates vides masquées.
 - [x] Modification via le formulaire existant selon les droits ; 20 tests verts, vérification sur chantier 4130, enregistrement et retour au calendrier, affichage mobile.

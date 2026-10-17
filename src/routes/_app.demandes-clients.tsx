@@ -37,6 +37,10 @@ export const Route = createFileRoute("/_app/demandes-clients")({
     meta: [
       { title: "Demandes clients — devis@setup.paris" },
       { name: "description", content: "Demandes entrantes devis@ analysées par l'IA pour alimenter le pipeline." },
+      { property: "og:title", content: "Demandes clients — SETUP Paris" },
+      { property: "og:description", content: "Demandes clients, analyse des projets et réponses suggérées pour SETUP Paris." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: DemandesClientsPage,
@@ -205,7 +209,7 @@ function DemandesClientsPage() {
       {current && (
         <CreateOppDialog email={current} onClose={() => setCurrent(null)} onDone={() => { setCurrent(null); void load(); }} />
       )}
-      {reading && <EmailReaderDialog email={reading} onClose={() => setReading(null)} />}
+      {reading && <EmailReaderDialog email={reading} onClose={() => setReading(null)} clientReply />}
     </div>
   );
 }
