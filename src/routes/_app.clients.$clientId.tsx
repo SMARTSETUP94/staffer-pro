@@ -286,63 +286,53 @@ function ClientDetailPage() {
                 </a>
               </div>
             )}
-          </div>
-        </Card>
-      )}
+        </div>
+      </Card>
 
+      <section className="space-y-2">
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-semibold flex items-center gap-1">
+            <Briefcase className="h-4 w-4" /> Chantiers en cours (
+            {chantiersEnCours.length})
+          </h2>
+          <Button size="sm" variant="outline" onClick={() => setAttachOpen(true)}>
+            <Link2 className="h-4 w-4 mr-1" /> Rattacher des chantiers
+          </Button>
+        </div>
+        <AffairesTable
+          rows={chantiersEnCours}
+          emptyLabel="Aucun chantier en cours"
+          onDetach={(a) => detachAffaire(a.id, a.numero)}
+        />
+      </section>
 
+      <section className="space-y-2">
+        <h2 className="text-sm font-semibold flex items-center gap-1">
+          <Briefcase className="h-4 w-4" /> Chantiers passés (
+          {chantiersPasses.length})
+        </h2>
+        <AffairesTable
+          rows={chantiersPasses}
+          emptyLabel="Aucun chantier passé"
+          onDetach={(a) => detachAffaire(a.id, a.numero)}
+        />
+      </section>
 
-      <Tabs defaultValue="affaires">
-        <TabsList>
-          <TabsTrigger value="affaires">
-            <Briefcase className="h-3 w-3 mr-1" />
-            Chantiers ({chantiers.length})
-          </TabsTrigger>
-          <TabsTrigger value="opportunites">
-            <Trophy className="h-3 w-3 mr-1" />
-            Opportunités ({opportunites.length})
-          </TabsTrigger>
-          <TabsTrigger value="contacts">
-            <Users className="h-3 w-3 mr-1" />
-            Contacts ({contacts.length})
-          </TabsTrigger>
-          <TabsTrigger value="emails">
-            <Mail className="h-3 w-3 mr-1" />
-            Emails ({emails.length})
-          </TabsTrigger>
-          <TabsTrigger value="notes">
-            <FileText className="h-3 w-3 mr-1" />
-            Notes
-          </TabsTrigger>
-        </TabsList>
+      <section className="space-y-2">
+        <h2 className="text-sm font-semibold flex items-center gap-1">
+          <Trophy className="h-4 w-4" /> Opportunités ({opportunites.length})
+        </h2>
+        <AffairesTable
+          rows={opportunites}
+          emptyLabel="Aucune opportunité"
+          onDetach={(a) => detachAffaire(a.id, a.numero)}
+        />
+      </section>
 
-        <TabsContent value="affaires">
-          <div className="flex justify-end mb-2">
-            <Button size="sm" variant="outline" onClick={() => setAttachOpen(true)}>
-              <Link2 className="h-4 w-4 mr-1" /> Rattacher des chantiers
-            </Button>
-          </div>
-          <AffairesTable
-            rows={chantiers}
-            emptyLabel="Aucun chantier"
-            onDetach={(a) => detachAffaire(a.id, a.numero)}
-          />
-        </TabsContent>
-
-        <TabsContent value="opportunites">
-          <div className="flex justify-end mb-2">
-            <Button size="sm" variant="outline" onClick={() => setAttachOpen(true)}>
-              <Link2 className="h-4 w-4 mr-1" /> Rattacher des affaires
-            </Button>
-          </div>
-          <AffairesTable
-            rows={opportunites}
-            emptyLabel="Aucune opportunité"
-            onDetach={(a) => detachAffaire(a.id, a.numero)}
-          />
-        </TabsContent>
-
-        <TabsContent value="contacts">
+      <section className="space-y-2">
+        <h2 className="text-sm font-semibold flex items-center gap-1">
+          <Users className="h-4 w-4" /> Contacts ({contacts.length})
+        </h2>
           <Card>
             <div className="p-3 border-b flex justify-between items-center">
               <div className="text-sm text-muted-foreground">
