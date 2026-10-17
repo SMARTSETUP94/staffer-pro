@@ -152,13 +152,14 @@ export async function syncOutlookLogistique(supa: any): Promise<Report> {
   // Suppression des événements orphelins (étapes supprimées dans l'application)
   if (ops < MAX_OPS) {
     const to = new Date(Date.now() + 400 * 86400000).toISOString();
-    let url: string | null = `${GRAPH}/users/${encodeURIComponent(BOX)}/calendars/${encodeURIComponent(calId)}/calendarView?startDateTime=${from}T00:00:00Z&endDateTime=${to}&$select=id&$top=200`;
+    let url: string | null = `${GRAPH}/users/${encodeURIComponent(BOX)}/calendars/${encodeURIComponent(calId)}/calendarView?startDateTime=${from}T00:00:00Z&endDateTime=${to}&$select=id,categories&$top=200`;
     const orphans: string[] = [];
     while (url) {
       const r = await graph(token, url);
       if (!r.ok) { rep.errors.push(`liste [${r.status}]`); break; }
-      const j = (await r.json()) as { value: { id: string }[]; "@odata.nextLink"?: string };
-      for (const ev of j.value) if (!keep.has(ev.id)) orphans.push(ev.id);
+      const j = (await r.json()) as { value: { id: string; categories?: string[] }[]; "@odata.nextLink"?: string };
+      // Calendrier principal partagé : ne toucher qu'aux événements créés par l'application
+      for (const ev of j.value) if ((ev.categories ?? []).includes(CAL_NAME) && !keep.has(ev.id)) orphans.push(ev.id);
       url = j["@odata.nextLink"] ?? null;
     }
     // Ne supprimer que si l'ensemble des étapes a pu être parcouru
