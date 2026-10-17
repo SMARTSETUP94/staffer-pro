@@ -1,6 +1,7 @@
 # Roadmap
 
 ## Informations juridiques clients (17 oct. 2026)
+- [ ] Ajouter le dirigeant modifiable et suggéré par l’IA, avec recherche ciblée Pappers / Société.com.
 - [x] Bouton IA dans le bloc juridique, vérification du SIREN, adresse postale et site web avant enregistrement ; conserver les champs existants. 3 tests verts ; recherche réelle sur agence-pamo, adresse et site enregistrés puis relus. SIREN non trouvé : laissé vide.
 
 ## Demandes clients (17 oct. 2026)

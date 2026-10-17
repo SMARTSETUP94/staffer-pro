@@ -127,6 +127,13 @@
       "when": 1792172125638,
       "tag": "0017_migration",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1792235286404,
+      "tag": "0018_clients_dirigeant",
+      "breakpoints": true
     }
   ]
 }
