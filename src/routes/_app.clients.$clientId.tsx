@@ -590,6 +590,84 @@ function EditClientDialog({
   const [notes, setNotes] = useState(client.notes ?? "");
   const [actif, setActif] = useState(client.actif);
   const [saving, setSaving] = useState(false);
+  const enrich = useServerFn(enrichClientFiche);
+  const [enriching, setEnriching] = useState(false);
+  const [suggestedContacts, setSuggestedContacts] = useState<ClientContactSuggestion[]>([]);
+  const [addedContacts, setAddedContacts] = useState<Set<number>>(new Set());
+
+  async function prefillIA() {
+    if (nom.trim().length < 2) {
+      toast.error("Renseigne d'abord le nom de la société");
+      return;
+    }
+    setEnriching(true);
+    try {
+      const firstDomain = domaines.split(/[,\s;]+/).map((d) => d.trim()).filter(Boolean)[0];
+      const { suggestion, error } = await enrich({
+        data: { nom: nom.trim(), domaine: firstDomain || undefined, email: email.trim() || undefined },
+      });
+      if (error || !suggestion) {
+        toast.error("Recherche IA impossible", { description: error ?? undefined });
+        return;
+      }
+      const filled: string[] = [];
+      const setIfEmpty = (label: string, current: string, value: string | null, setter: (v: string) => void) => {
+        if (!current.trim() && value?.trim()) {
+          setter(value.trim());
+          filled.push(label);
+        }
+      };
+      setIfEmpty("secteur", secteur, suggestion.secteur, setSecteur);
+      setIfEmpty("SIRET", siret, suggestion.siret, setSiret);
+      setIfEmpty("adresse", adresse, suggestion.adresse, setAdresse);
+      setIfEmpty("téléphone", telephone, suggestion.telephone, setTelephone);
+      setIfEmpty("email", email, suggestion.email, setEmail);
+      setIfEmpty("site web", siteWeb, suggestion.site_web, setSiteWeb);
+      if (!domaines.trim() && suggestion.domaines_email?.length) {
+        setDomaines(suggestion.domaines_email.join(", "));
+        filled.push("domaines email");
+      }
+      const extras: string[] = [];
+      if (suggestion.linkedin) extras.push(`LinkedIn : ${suggestion.linkedin}`);
+      if (suggestion.description) extras.push(suggestion.description);
+      if (extras.length && !notes.includes(extras[0])) {
+        setNotes((n) => (n.trim() ? `${n.trim()}\n\n${extras.join("\n")}` : extras.join("\n")));
+      }
+      setSuggestedContacts(suggestion.contacts ?? []);
+      setAddedContacts(new Set());
+      if (filled.length === 0 && !(suggestion.contacts?.length)) {
+        toast.info("Aucune information nouvelle trouvée", {
+          description: "Les champs déjà remplis n'ont pas été écrasés.",
+        });
+      } else {
+        toast.success(`Fiche pré-remplie : ${filled.join(", ") || "contacts suggérés"}`, {
+          description: "Vérifie les informations avant d'enregistrer.",
+        });
+      }
+    } catch (e) {
+      toast.error("Recherche IA impossible", { description: e instanceof Error ? e.message : undefined });
+    } finally {
+      setEnriching(false);
+    }
+  }
+
+  async function addSuggestedContact(c: ClientContactSuggestion, idx: number) {
+    const { error } = await supabase.from("client_contacts").insert({
+      client_id: client.id,
+      nom: c.nom?.trim() || null,
+      prenom: c.prenom?.trim() || null,
+      email: c.email?.trim() || null,
+      telephone: c.telephone?.trim() || null,
+      fonction: c.fonction?.trim() || null,
+      notes: c.linkedin?.trim() ? `LinkedIn : ${c.linkedin.trim()}` : null,
+    });
+    if (error) {
+      toast.error("Erreur", { description: error.message });
+      return;
+    }
+    setAddedContacts((prev) => new Set(prev).add(idx));
+    toast.success("Contact ajouté", { description: [c.prenom, c.nom].filter(Boolean).join(" ") || c.fonction || "" });
+  }
 
   async function submit() {
     const domList = domaines
