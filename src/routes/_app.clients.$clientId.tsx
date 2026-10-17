@@ -10,7 +10,6 @@ import {
   Trash2,
   Mail,
   Briefcase,
-  Trophy,
   Users,
   FileText,
   MapPin,
@@ -203,7 +202,7 @@ function ClientDetailPage() {
   );
 
   return (
-    <div className="container mx-auto p-4 max-w-7xl space-y-4">
+    <div className="container mx-auto p-4 max-w-7xl space-y-3">
       <PageHeader
         title={client.nom}
         description={[
@@ -213,47 +212,47 @@ function ClientDetailPage() {
         ].filter(Boolean).join(" · ") || undefined}
         actions={
           <>
-            <Button variant="outline" onClick={() => navigate({ to: "/clients" })}>
+            <Button variant="outline" size="sm" onClick={() => navigate({ to: "/clients" })}>
               <ArrowLeft className="h-4 w-4 mr-1" /> Liste
             </Button>
-            <Button onClick={() => setEditOpen(true)}>
+            <Button size="sm" onClick={() => setEditOpen(true)}>
               <Pencil className="h-4 w-4 mr-1" /> Éditer la fiche
             </Button>
           </>
         }
       />
 
-      {client.domaines_email.length > 0 && (
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs text-muted-foreground">Domaines :</span>
-          {client.domaines_email.map((d) => (
-            <Badge key={d} variant="secondary" className="text-[11px]">
-              @{d}
-            </Badge>
-          ))}
-        </div>
-      )}
-
-      <Card className="p-4">
-        <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">
-          Informations juridiques
-        </div>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div className="flex items-center gap-2 text-sm">
-            <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
-            <span>
-              SIREN / SIRET :{" "}
-              {client.siret ?? <span className="text-muted-foreground">—</span>}
-            </span>
+      <div className="grid gap-3 lg:grid-cols-3 items-start">
+        {/* Colonne 1 : Informations juridiques */}
+        <Card className="p-4 space-y-2">
+          <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+            Informations juridiques
           </div>
+          {client.domaines_email.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1">
+              {client.domaines_email.map((d) => (
+                <Badge key={d} variant="secondary" className="text-[11px]">
+                  @{d}
+                </Badge>
+              ))}
+            </div>
+          )}
+          <div className="space-y-1.5 text-sm">
+            <div className="flex items-center gap-2">
+              <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
+              <span>
+                SIREN / SIRET :{" "}
+                {client.siret ?? <span className="text-muted-foreground">—</span>}
+              </span>
+            </div>
             {client.adresse && (
-              <div className="flex items-start gap-2 text-sm">
+              <div className="flex items-start gap-2">
                 <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
                 <span className="whitespace-pre-wrap">{client.adresse}</span>
               </div>
             )}
             {client.telephone && (
-              <div className="flex items-center gap-2 text-sm">
+              <div className="flex items-center gap-2">
                 <Phone className="h-4 w-4 text-muted-foreground shrink-0" />
                 <a href={`tel:${client.telephone}`} className="hover:underline">
                   {client.telephone}
@@ -261,7 +260,7 @@ function ClientDetailPage() {
               </div>
             )}
             {client.email && (
-              <div className="flex items-center gap-2 text-sm">
+              <div className="flex items-center gap-2">
                 <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
                 <a href={`mailto:${client.email}`} className="hover:underline">
                   {client.email}
@@ -269,7 +268,7 @@ function ClientDetailPage() {
               </div>
             )}
             {client.site_web && (
-              <div className="flex items-center gap-2 text-sm">
+              <div className="flex items-center gap-2">
                 <Globe className="h-4 w-4 text-muted-foreground shrink-0" />
                 <a
                   href={
@@ -285,87 +284,44 @@ function ClientDetailPage() {
                 </a>
               </div>
             )}
-        </div>
-      </Card>
-
-      <section className="space-y-2">
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold flex items-center gap-1">
-            <Briefcase className="h-4 w-4" /> Chantiers en cours (
-            {chantiersEnCours.length})
-          </h2>
-          <Button size="sm" variant="outline" onClick={() => setAttachOpen(true)}>
-            <Link2 className="h-4 w-4 mr-1" /> Rattacher des chantiers
-          </Button>
-        </div>
-        <AffairesTable
-          rows={chantiersEnCours}
-          emptyLabel="Aucun chantier en cours"
-          onDetach={(a) => detachAffaire(a.id, a.numero)}
-        />
-      </section>
-
-      <section className="space-y-2">
-        <h2 className="text-sm font-semibold flex items-center gap-1">
-          <Briefcase className="h-4 w-4" /> Chantiers passés (
-          {chantiersPasses.length})
-        </h2>
-        <AffairesTable
-          rows={chantiersPasses}
-          emptyLabel="Aucun chantier passé"
-          onDetach={(a) => detachAffaire(a.id, a.numero)}
-        />
-      </section>
-
-      <section className="space-y-2">
-        <h2 className="text-sm font-semibold flex items-center gap-1">
-          <Trophy className="h-4 w-4" /> Opportunités ({opportunites.length})
-        </h2>
-        <AffairesTable
-          rows={opportunites}
-          emptyLabel="Aucune opportunité"
-          onDetach={(a) => detachAffaire(a.id, a.numero)}
-        />
-      </section>
-
-      <section className="space-y-2">
-        <h2 className="text-sm font-semibold flex items-center gap-1">
-          <Users className="h-4 w-4" /> Contacts ({contacts.length})
-        </h2>
-          <Card>
-            <div className="p-3 border-b flex justify-between items-center">
-              <div className="text-sm text-muted-foreground">
-                {contacts.length} contact{contacts.length > 1 ? "s" : ""}
-              </div>
-              <Button size="sm" onClick={() => setContactEdit({})}>
-                <Plus className="h-4 w-4 mr-1" /> Ajouter
-              </Button>
+          </div>
+          {client.notes && (
+            <div className="pt-2 border-t text-xs text-muted-foreground whitespace-pre-wrap">
+              {client.notes}
             </div>
-            {contacts.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground text-sm">
-                Aucun contact. Les emails entrants en créent automatiquement.
-              </div>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nom</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Téléphone</TableHead>
-                    <TableHead>Fonction</TableHead>
-                    <TableHead>LinkedIn</TableHead>
-                    <TableHead className="w-20"></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {contacts.map((c) => {
-                    const linkedin = extractLinkedIn(c.notes);
-                    return (
-                    <TableRow key={c.id}>
-                      <TableCell>
+          )}
+        </Card>
+
+        {/* Colonne 2 : Contacts */}
+        <Card className="p-4 space-y-2">
+          <div className="flex items-center justify-between">
+            <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-1">
+              <Users className="h-3.5 w-3.5" /> Contacts ({contacts.length})
+            </div>
+            <Button size="sm" variant="outline" onClick={() => setContactEdit({})}>
+              <Plus className="h-4 w-4 mr-1" /> Ajouter
+            </Button>
+          </div>
+          {contacts.length === 0 ? (
+            <div className="text-center py-6 text-muted-foreground text-sm">
+              Aucun contact. Les emails entrants en créent automatiquement.
+            </div>
+          ) : (
+            <ul className="divide-y">
+              {contacts.map((c) => {
+                const linkedin = extractLinkedIn(c.notes);
+                return (
+                  <li key={c.id} className="py-2 flex items-start justify-between gap-2">
+                    <div className="min-w-0 text-sm">
+                      <div className="font-medium truncate">
                         {[c.prenom, c.nom].filter(Boolean).join(" ") || "—"}
-                      </TableCell>
-                      <TableCell className="text-sm">
+                        {c.fonction && (
+                          <span className="ml-1 text-xs text-muted-foreground font-normal">
+                            {c.fonction}
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-xs text-muted-foreground truncate">
                         {c.email ? (
                           <a className="hover:underline" href={`mailto:${c.email}`}>
                             {c.email}
@@ -373,120 +329,131 @@ function ClientDetailPage() {
                         ) : (
                           "—"
                         )}
-                      </TableCell>
-                      <TableCell className="text-sm">{c.telephone ?? "—"}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {c.fonction ?? "—"}
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        {linkedin ? (
-                          <a
-                            href={linkedin}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="hover:underline text-primary"
-                          >
-                            Profil
-                          </a>
-                        ) : (
-                          "—"
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => setContactEdit(c)}
+                        {c.telephone && <span> · {c.telephone}</span>}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      {linkedin && (
+                        <a
+                          href={linkedin}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-primary hover:underline"
                         >
-                          <Pencil className="h-3 w-3" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            )}
-          </Card>
-      </section>
-
-      <section className="space-y-2">
-        <h2 className="text-sm font-semibold flex items-center gap-1">
-          <Mail className="h-4 w-4" /> Emails ({emails.length})
-        </h2>
-          <Card>
-            {emails.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground text-sm">
-                Aucun email rattaché.
-              </div>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Reçu le</TableHead>
-                    <TableHead>De</TableHead>
-                    <TableHead>Sujet</TableHead>
-                    <TableHead>Catégorie</TableHead>
-                    <TableHead>Statut</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {emails.map((e) => (
-                    <TableRow key={e.id}>
-                      <TableCell className="text-xs whitespace-nowrap">
-                        {format(parseISO(e.received_at), "d MMM yyyy HH:mm", {
-                          locale: fr,
-                        })}
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        {e.from_name ?? e.from_email}
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        <Link
-                          to="/inbox-smart"
-                          className="hover:underline"
-                          title={e.subject ?? ""}
-                        >
-                          {e.subject ?? "(sans sujet)"}
-                        </Link>
-                      </TableCell>
-                      <TableCell>
-                        {e.categorie_ia && (
-                          <Badge variant="outline" className="text-[10px]">
-                            {e.categorie_ia}
-                          </Badge>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={e.statut === "validated" ? "default" : "secondary"}
-                          className="text-[10px]"
-                        >
-                          {e.statut}
-                        </Badge>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </Card>
-      </section>
-
-      <section className="space-y-2">
-        <h2 className="text-sm font-semibold flex items-center gap-1">
-          <FileText className="h-4 w-4" /> Notes
-        </h2>
-        <Card className="p-4">
-          <div className="text-sm whitespace-pre-wrap">
-            {client.notes ?? (
-              <span className="text-muted-foreground">
-                Aucune note. Cliquez sur Éditer pour ajouter.
-              </span>
-            )}
-          </div>
+                          LinkedIn
+                        </a>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setContactEdit(c)}
+                      >
+                        <Pencil className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
         </Card>
-      </section>
+
+        {/* Colonne 3 : Chantiers & opportunités */}
+        <Card className="p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-1">
+              <Briefcase className="h-3.5 w-3.5" /> Chantiers & opportunités
+            </div>
+            <Button size="sm" variant="outline" onClick={() => setAttachOpen(true)}>
+              <Link2 className="h-4 w-4 mr-1" /> Rattacher
+            </Button>
+          </div>
+          <AffairesCompactList
+            title={`En cours (${chantiersEnCours.length})`}
+            rows={chantiersEnCours}
+            emptyLabel="Aucun chantier en cours"
+            onDetach={(a) => detachAffaire(a.id, a.numero)}
+          />
+          <AffairesCompactList
+            title={`Passés (${chantiersPasses.length})`}
+            rows={chantiersPasses}
+            emptyLabel="Aucun chantier passé"
+            onDetach={(a) => detachAffaire(a.id, a.numero)}
+          />
+          <AffairesCompactList
+            title={`Opportunités (${opportunites.length})`}
+            rows={opportunites}
+            emptyLabel="Aucune opportunité"
+            onDetach={(a) => detachAffaire(a.id, a.numero)}
+          />
+        </Card>
+      </div>
+
+      <details className="group">
+        <summary className="cursor-pointer text-sm font-semibold flex items-center gap-1 select-none">
+          <Mail className="h-4 w-4" /> Emails ({emails.length})
+          <span className="text-xs text-muted-foreground font-normal group-open:hidden">
+            — cliquer pour afficher
+          </span>
+        </summary>
+        <Card className="mt-2">
+          {emails.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground text-sm">
+              Aucun email rattaché.
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Reçu le</TableHead>
+                  <TableHead>De</TableHead>
+                  <TableHead>Sujet</TableHead>
+                  <TableHead>Catégorie</TableHead>
+                  <TableHead>Statut</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {emails.map((e) => (
+                  <TableRow key={e.id}>
+                    <TableCell className="text-xs whitespace-nowrap">
+                      {format(parseISO(e.received_at), "d MMM yyyy HH:mm", {
+                        locale: fr,
+                      })}
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {e.from_name ?? e.from_email}
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      <Link
+                        to="/inbox-smart"
+                        className="hover:underline"
+                        title={e.subject ?? ""}
+                      >
+                        {e.subject ?? "(sans sujet)"}
+                      </Link>
+                    </TableCell>
+                    <TableCell>
+                      {e.categorie_ia && (
+                        <Badge variant="outline" className="text-[10px]">
+                          {e.categorie_ia}
+                        </Badge>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={e.statut === "validated" ? "default" : "secondary"}
+                        className="text-[10px]"
+                      >
+                        {e.statut}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </Card>
+      </details>
 
       {editOpen && (
         <EditClientDialog
@@ -528,80 +495,58 @@ function ClientDetailPage() {
   );
 }
 
-function AffairesTable({
+function AffairesCompactList({
+  title,
   rows,
   emptyLabel,
   onDetach,
 }: {
+  title: string;
   rows: AffaireRow[];
   emptyLabel: string;
-  onDetach?: (a: AffaireRow) => void;
+  onDetach: (a: AffaireRow) => void;
 }) {
-  if (rows.length === 0) {
-    return (
-      <Card className="py-8 text-center text-muted-foreground text-sm">
-        {emptyLabel}
-      </Card>
-    );
-  }
   return (
-    <Card>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Numéro</TableHead>
-            <TableHead>Nom</TableHead>
-            <TableHead>Statut</TableHead>
-            <TableHead>Début</TableHead>
-            <TableHead>Fin prévue</TableHead>
-            {onDetach && <TableHead className="w-12"></TableHead>}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
+    <div>
+      <div className="text-xs font-semibold text-muted-foreground mb-1">{title}</div>
+      {rows.length === 0 ? (
+        <div className="text-xs text-muted-foreground py-1">{emptyLabel}</div>
+      ) : (
+        <ul className="divide-y">
           {rows.map((a) => (
-            <TableRow key={a.id}>
-              <TableCell className="font-mono text-sm">
+            <li key={a.id} className="py-1.5 flex items-center justify-between gap-2">
+              <div className="min-w-0 text-sm">
                 <Link
                   to="/affaires/$affaireId"
                   params={{ affaireId: a.id }}
-                  className="hover:underline"
+                  className="hover:underline font-medium"
                 >
                   {a.numero}
                 </Link>
-              </TableCell>
-              <TableCell>{a.nom}</TableCell>
-              <TableCell>
-                <Badge variant="outline" className="text-[10px]">
-                  {a.statut}
-                </Badge>
-              </TableCell>
-              <TableCell className="text-sm text-muted-foreground">
-                {a.date_debut
-                  ? format(parseISO(a.date_debut), "d MMM yyyy", { locale: fr })
-                  : "—"}
-              </TableCell>
-              <TableCell className="text-sm text-muted-foreground">
-                {a.date_fin_prevue
-                  ? format(parseISO(a.date_fin_prevue), "d MMM yyyy", { locale: fr })
-                  : "—"}
-              </TableCell>
-              {onDetach && (
-                <TableCell className="text-right">
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => onDetach(a)}
-                    title="Détacher du client"
-                  >
-                    <Unlink className="h-3 w-3" />
-                  </Button>
-                </TableCell>
-              )}
-            </TableRow>
+                <span className="ml-1.5 text-xs text-muted-foreground truncate">
+                  {a.nom}
+                </span>
+              </div>
+              <div className="flex items-center gap-1 shrink-0">
+                {a.date_debut && (
+                  <span className="text-[11px] text-muted-foreground whitespace-nowrap">
+                    {format(parseISO(a.date_debut), "d MMM yy", { locale: fr })}
+                  </span>
+                )}
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  title="Détacher de ce client"
+                  onClick={() => onDetach(a)}
+                >
+                  <Unlink className="h-3 w-3" />
+                </Button>
+              </div>
+            </li>
           ))}
-        </TableBody>
-      </Table>
-    </Card>
+        </ul>
+      )}
+    </div>
   );
 }
 
