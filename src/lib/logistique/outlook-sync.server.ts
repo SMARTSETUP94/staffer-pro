@@ -1,6 +1,7 @@
 /**
- * Synchronisation à sens unique : étapes logistiques → agenda Outlook partagé
- * « Planning logistique Setup » de log@setup.paris (Microsoft Graph, app-only).
+ * Synchronisation à sens unique : étapes logistiques → calendrier principal de
+ * log@setup.paris (Microsoft Graph, app-only). Les événements créés portent la
+ * catégorie « Planning logistique Setup » : seuls ceux-là sont modifiés/supprimés.
  * L'application fait foi : toute modification faite dans Outlook est écrasée.
  */
 import { getToken } from "@/lib/server-fns/shared-inbox-attachments.functions";
@@ -23,16 +24,31 @@ async function graph(token: string, path: string, init: RequestInit = {}) {
   return res;
 }
 
-async function ensureCalendar(token: string): Promise<string> {
-  const base = `/users/${encodeURIComponent(BOX)}/calendars`;
-  const r = await graph(token, `${base}?$select=id,name&$top=100`);
-  if (!r.ok) throw new Error(`Agenda Outlook [${r.status}]: ${(await r.text()).slice(0, 300)}`);
-  const list = ((await r.json()) as { value: { id: string; name: string }[] }).value;
-  const found = list.find((c) => c.name === CAL_NAME);
-  if (found) return found.id;
-  const c = await graph(token, base, { method: "POST", body: JSON.stringify({ name: CAL_NAME }) });
-  if (!c.ok) throw new Error(`Création agenda [${c.status}]: ${(await c.text()).slice(0, 300)}`);
-  return ((await c.json()) as { id: string }).id;
+/**
+ * Cible = calendrier principal de log@ (celui qu'Outlook affiche par défaut).
+ * L'ancien agenda secondaire « Planning logistique Setup » est supprimé une fois
+ * (avec ses événements) et les étapes sont ré-envoyées dans le calendrier principal.
+ */
+async function ensureCalendar(token: string, supa: any): Promise<string> {
+  const base = `/users/${encodeURIComponent(BOX)}`;
+  const p = await graph(token, `${base}/calendar?$select=id`);
+  if (!p.ok) throw new Error(`Agenda Outlook [${p.status}]: ${(await p.text()).slice(0, 300)}`);
+  const primaryId = ((await p.json()) as { id: string }).id;
+
+  const r = await graph(token, `${base}/calendars?$select=id,name&$top=100`);
+  if (r.ok) {
+    const list = ((await r.json()) as { value: { id: string; name: string }[] }).value;
+    const legacy = list.find((c) => c.name === CAL_NAME && c.id !== primaryId);
+    if (legacy) {
+      const d = await graph(token, `${base}/calendars/${encodeURIComponent(legacy.id)}`, { method: "DELETE" });
+      if (!d.ok && d.status !== 404) throw new Error(`Suppression ancien agenda [${d.status}]: ${(await d.text()).slice(0, 300)}`);
+      const { error } = await supa.from("affaire_etapes_logistiques")
+        .update({ outlook_event_id: null, outlook_synced_at: null })
+        .not("outlook_event_id", "is", null);
+      if (error) throw new Error(error.message);
+    }
+  }
+  return primaryId;
 }
 
 function addDay(iso: string) {
@@ -71,6 +87,7 @@ export function buildEvent(e: any) {
     + `<br><br><a href="${APP_URL}/logistique">Ouvrir le planning logistique</a><br><i>Synchronisé depuis l'application — ne pas modifier ici.</i>`;
   return {
     subject, start, end, isAllDay, showAs: "free", isReminderOn: false,
+    categories: [CAL_NAME],
     location: e.lieu_libre ? { displayName: e.lieu_libre } : undefined,
     body: { contentType: "HTML", content: html },
   };
@@ -79,7 +96,7 @@ export function buildEvent(e: any) {
 export async function syncOutlookLogistique(supa: any): Promise<Report> {
   const rep: Report = { created: 0, updated: 0, deleted: 0, errors: [] };
   const token = await getToken();
-  const calId = await ensureCalendar(token);
+  const calId = await ensureCalendar(token, supa);
   const evBase = `/users/${encodeURIComponent(BOX)}/calendars/${encodeURIComponent(calId)}/events`;
   const from = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
 
@@ -136,13 +153,14 @@ export async function syncOutlookLogistique(supa: any): Promise<Report> {
   // Suppression des événements orphelins (étapes supprimées dans l'application)
   if (ops < MAX_OPS) {
     const to = new Date(Date.now() + 400 * 86400000).toISOString();
-    let url: string | null = `${GRAPH}/users/${encodeURIComponent(BOX)}/calendars/${encodeURIComponent(calId)}/calendarView?startDateTime=${from}T00:00:00Z&endDateTime=${to}&$select=id&$top=200`;
+    let url: string | null = `${GRAPH}/users/${encodeURIComponent(BOX)}/calendars/${encodeURIComponent(calId)}/calendarView?startDateTime=${from}T00:00:00Z&endDateTime=${to}&$select=id,categories&$top=200`;
     const orphans: string[] = [];
     while (url) {
       const r = await graph(token, url);
       if (!r.ok) { rep.errors.push(`liste [${r.status}]`); break; }
-      const j = (await r.json()) as { value: { id: string }[]; "@odata.nextLink"?: string };
-      for (const ev of j.value) if (!keep.has(ev.id)) orphans.push(ev.id);
+      const j = (await r.json()) as { value: { id: string; categories?: string[] }[]; "@odata.nextLink"?: string };
+      // Calendrier principal partagé : ne toucher qu'aux événements créés par l'application
+      for (const ev of j.value) if ((ev.categories ?? []).includes(CAL_NAME) && !keep.has(ev.id)) orphans.push(ev.id);
       url = j["@odata.nextLink"] ?? null;
     }
     // Ne supprimer que si l'ensemble des étapes a pu être parcouru
