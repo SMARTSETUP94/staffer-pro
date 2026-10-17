@@ -185,7 +185,7 @@ function ClientsListPage() {
       return (
         r.nom.toLowerCase().includes(q) ||
         r.domaines_email.some((d) => d.includes(q)) ||
-        (r.secteur ?? "").toLowerCase().includes(q)
+        r.numeros_chantiers.some((n) => n.includes(q))
       );
     });
   }, [rows, search, showInactifs]);
