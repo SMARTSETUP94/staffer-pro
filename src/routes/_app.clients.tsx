@@ -5,9 +5,7 @@ import {
   Loader2,
   Plus,
   Search,
-  Mail,
   Briefcase,
-  Trophy,
   Users,
   Upload,
   Pencil,
@@ -61,16 +59,19 @@ function ClientsLayout() {
   return <ClientsListPage />;
 }
 
+interface ClientContact {
+  nom: string | null;
+  prenom: string | null;
+  email: string | null;
+}
+
 interface ClientRow {
   id: string;
   nom: string;
   domaines_email: string[];
-  secteur: string | null;
   actif: boolean;
-  nb_affaires: number;
-  nb_opportunites: number;
-  nb_contacts: number;
-  dernier_email_at: string | null;
+  numeros_chantiers: string[];
+  contacts: ClientContact[];
 }
 
 function ClientsListPage() {
@@ -128,7 +129,7 @@ function ClientsListPage() {
     setLoading(true);
     const { data: clients, error } = await supabase
       .from("clients")
-      .select("id, nom, domaines_email, secteur, actif")
+      .select("id, nom, domaines_email, actif")
       .order("nom");
     if (error) {
       toast.error("Erreur", { description: error.message });
@@ -136,46 +137,35 @@ function ClientsListPage() {
       return;
     }
     const ids = (clients ?? []).map((c) => c.id);
-    const [affRes, contactRes, emailRes] = await Promise.all([
+    const [affRes, contactRes] = await Promise.all([
       supabase.from("affaires").select("client_id, numero").in("client_id", ids),
-      supabase.from("client_contacts").select("client_id").in("client_id", ids),
       supabase
-        .from("emails_entrants")
-        .select("client_id, received_at")
-        .in("client_id", ids)
-        .order("received_at", { ascending: false }),
+        .from("client_contacts")
+        .select("client_id, nom, prenom, email")
+        .in("client_id", ids),
     ]);
-    const affByClient = new Map<string, { aff: number; opp: number }>();
+    const numerosByClient = new Map<string, string[]>();
     (affRes.data ?? []).forEach((a) => {
-      if (!a.client_id) return;
-      const cur = affByClient.get(a.client_id) ?? { aff: 0, opp: 0 };
-      if (a.numero?.startsWith("9")) cur.opp += 1;
-      else cur.aff += 1;
-      affByClient.set(a.client_id, cur);
+      if (!a.client_id || !a.numero) return;
+      const cur = numerosByClient.get(a.client_id) ?? [];
+      cur.push(a.numero);
+      numerosByClient.set(a.client_id, cur);
     });
-    const contactByClient = new Map<string, number>();
+    const contactsByClient = new Map<string, ClientContact[]>();
     (contactRes.data ?? []).forEach((c) => {
       if (!c.client_id) return;
-      contactByClient.set(c.client_id, (contactByClient.get(c.client_id) ?? 0) + 1);
-    });
-    const lastEmailByClient = new Map<string, string>();
-    (emailRes.data ?? []).forEach((e) => {
-      if (!e.client_id || !e.received_at) return;
-      if (!lastEmailByClient.has(e.client_id)) {
-        lastEmailByClient.set(e.client_id, e.received_at);
-      }
+      const cur = contactsByClient.get(c.client_id) ?? [];
+      cur.push({ nom: c.nom, prenom: c.prenom, email: c.email });
+      contactsByClient.set(c.client_id, cur);
     });
     setRows(
       (clients ?? []).map((c) => ({
         id: c.id,
         nom: c.nom,
         domaines_email: c.domaines_email ?? [],
-        secteur: c.secteur,
         actif: c.actif,
-        nb_affaires: affByClient.get(c.id)?.aff ?? 0,
-        nb_opportunites: affByClient.get(c.id)?.opp ?? 0,
-        nb_contacts: contactByClient.get(c.id) ?? 0,
-        dernier_email_at: lastEmailByClient.get(c.id) ?? null,
+        numeros_chantiers: (numerosByClient.get(c.id) ?? []).sort(),
+        contacts: contactsByClient.get(c.id) ?? [],
       })),
     );
     setLoading(false);
@@ -193,7 +183,7 @@ function ClientsListPage() {
       return (
         r.nom.toLowerCase().includes(q) ||
         r.domaines_email.some((d) => d.includes(q)) ||
-        (r.secteur ?? "").toLowerCase().includes(q)
+        r.numeros_chantiers.some((n) => n.includes(q))
       );
     });
   }, [rows, search, showInactifs]);
@@ -249,7 +239,7 @@ function ClientsListPage() {
           <div className="relative flex-1 min-w-[240px]">
             <Search className="h-4 w-4 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Recherche nom, domaine, secteur…"
+              placeholder="Recherche nom, domaine, n° de chantier…"
               className="pl-8"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -286,22 +276,13 @@ function ClientsListPage() {
               <TableRow>
                 <TableHead>Nom</TableHead>
                 <TableHead>Domaines</TableHead>
-                <TableHead>Secteur</TableHead>
-                <TableHead className="text-right">
+                <TableHead>
                   <Briefcase className="h-3 w-3 inline mr-1" />
                   Affaires
                 </TableHead>
-                <TableHead className="text-right">
-                  <Trophy className="h-3 w-3 inline mr-1" />
-                  Opp.
-                </TableHead>
-                <TableHead className="text-right">
+                <TableHead>
                   <Users className="h-3 w-3 inline mr-1" />
-                  Contacts
-                </TableHead>
-                <TableHead className="text-right">
-                  <Mail className="h-3 w-3 inline mr-1" />
-                  Dernier email
+                  Contact
                 </TableHead>
                 {canManage && <TableHead className="w-24"></TableHead>}
               </TableRow>
@@ -336,22 +317,38 @@ function ClientsListPage() {
                       )}
                     </div>
                   </TableCell>
-                  <TableCell className="text-xs text-muted-foreground">
-                    {r.secteur ?? "—"}
+                  <TableCell>
+                    <div className="flex flex-wrap gap-1">
+                      {r.numeros_chantiers.length === 0 ? (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      ) : (
+                        r.numeros_chantiers.map((n) => (
+                          <Badge key={n} variant="outline" className="text-[10px]">
+                            {n}
+                          </Badge>
+                        ))
+                      )}
+                    </div>
                   </TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {r.nb_affaires}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {r.nb_opportunites}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {r.nb_contacts}
-                  </TableCell>
-                  <TableCell className="text-right text-xs text-muted-foreground">
-                    {r.dernier_email_at
-                      ? new Date(r.dernier_email_at).toLocaleDateString("fr-FR")
-                      : "—"}
+                  <TableCell>
+                    {r.contacts.length === 0 ? (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    ) : (
+                      <div className="space-y-1">
+                        {r.contacts.map((c, i) => (
+                          <div key={i} className="text-xs">
+                            <span className="font-medium">
+                              {[c.prenom, c.nom].filter(Boolean).join(" ") || "—"}
+                            </span>
+                            {c.email && (
+                              <span className="text-muted-foreground ml-1">
+                                {c.email}
+                              </span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </TableCell>
                   {canManage && (
                     <TableCell className="text-right whitespace-nowrap">
@@ -423,10 +420,10 @@ function ClientsListPage() {
                 {confirmDelete && (
                   <ul className="list-disc pl-5 text-muted-foreground">
                     <li>
-                      {confirmDelete.nb_affaires + confirmDelete.nb_opportunites}{" "}
-                      affaire(s) seront déliées (conservées sans client)
+                      {confirmDelete.numeros_chantiers.length} affaire(s) seront
+                      déliées (conservées sans client)
                     </li>
-                    <li>{confirmDelete.nb_contacts} contact(s) supprimé(s)</li>
+                    <li>{confirmDelete.contacts.length} contact(s) supprimé(s)</li>
                     <li>Les emails entrants seront déliés</li>
                   </ul>
                 )}
