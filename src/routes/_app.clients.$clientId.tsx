@@ -354,11 +354,14 @@ function ClientDetailPage() {
                     <TableHead>Email</TableHead>
                     <TableHead>Téléphone</TableHead>
                     <TableHead>Fonction</TableHead>
+                    <TableHead>LinkedIn</TableHead>
                     <TableHead className="w-20"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {contacts.map((c) => (
+                  {contacts.map((c) => {
+                    const linkedin = extractLinkedIn(c.notes);
+                    return (
                     <TableRow key={c.id}>
                       <TableCell>
                         {[c.prenom, c.nom].filter(Boolean).join(" ") || "—"}
@@ -376,6 +379,20 @@ function ClientDetailPage() {
                       <TableCell className="text-sm text-muted-foreground">
                         {c.fonction ?? "—"}
                       </TableCell>
+                      <TableCell className="text-sm">
+                        {linkedin ? (
+                          <a
+                            href={linkedin}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="hover:underline text-primary"
+                          >
+                            Profil
+                          </a>
+                        ) : (
+                          "—"
+                        )}
+                      </TableCell>
                       <TableCell className="text-right">
                         <Button
                           size="sm"
@@ -386,14 +403,18 @@ function ClientDetailPage() {
                         </Button>
                       </TableCell>
                     </TableRow>
-                  ))}
+                    );
+                  })}
                 </TableBody>
               </Table>
             )}
           </Card>
-        </TabsContent>
+      </section>
 
-        <TabsContent value="emails">
+      <section className="space-y-2">
+        <h2 className="text-sm font-semibold flex items-center gap-1">
+          <Mail className="h-4 w-4" /> Emails ({emails.length})
+        </h2>
           <Card>
             {emails.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground text-sm">
