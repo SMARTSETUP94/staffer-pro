@@ -1,5 +1,9 @@
 # Roadmap
 
+## Calendrier chantier (17 oct. 2026)
+- [ ] Fenêtre de calendrier d'un seul chantier depuis le planning logistique, recherche et dates vides masquées.
+- [ ] Modification via le formulaire existant selon les droits, tests et vérification dans l'application.
+
 ## Fait aujourd'hui (15 oct. 2026)
 - [x] Bug flèche pipeline : la page /opportunites ne rendait jamais la fiche enfant (pas d'Outlet) — corrigé en séparant la liste (route index) du gabarit (Outlet). Vérifié kanban + tableur + retour arrière.
 - [x] Menu simplifié « suivi des affaires » : flag `deploiement_suivi_affaires` actif, menu = Pipeline opportunités + Demandes clients + Chantiers uniquement, tout le reste caché (accueil, planning, logistique, RH, Admin). Aucun blocage d'URL.
