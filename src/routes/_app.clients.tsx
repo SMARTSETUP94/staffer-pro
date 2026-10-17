@@ -241,7 +241,7 @@ function ClientsListPage() {
           <div className="relative flex-1 min-w-[240px]">
             <Search className="h-4 w-4 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Recherche nom, domaine, secteur…"
+              placeholder="Recherche nom, domaine, n° de chantier…"
               className="pl-8"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -278,22 +278,13 @@ function ClientsListPage() {
               <TableRow>
                 <TableHead>Nom</TableHead>
                 <TableHead>Domaines</TableHead>
-                <TableHead>Secteur</TableHead>
-                <TableHead className="text-right">
+                <TableHead>
                   <Briefcase className="h-3 w-3 inline mr-1" />
                   Affaires
                 </TableHead>
-                <TableHead className="text-right">
-                  <Trophy className="h-3 w-3 inline mr-1" />
-                  Opp.
-                </TableHead>
-                <TableHead className="text-right">
+                <TableHead>
                   <Users className="h-3 w-3 inline mr-1" />
-                  Contacts
-                </TableHead>
-                <TableHead className="text-right">
-                  <Mail className="h-3 w-3 inline mr-1" />
-                  Dernier email
+                  Contact
                 </TableHead>
                 {canManage && <TableHead className="w-24"></TableHead>}
               </TableRow>
