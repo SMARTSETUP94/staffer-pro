@@ -472,20 +472,22 @@ function ClientDetailPage() {
               </Table>
             )}
           </Card>
-        </TabsContent>
+      </section>
 
-        <TabsContent value="notes">
-          <Card className="p-4">
-            <div className="text-sm whitespace-pre-wrap">
-              {client.notes ?? (
-                <span className="text-muted-foreground">
-                  Aucune note. Cliquez sur Éditer pour ajouter.
-                </span>
-              )}
-            </div>
-          </Card>
-        </TabsContent>
-      </Tabs>
+      <section className="space-y-2">
+        <h2 className="text-sm font-semibold flex items-center gap-1">
+          <FileText className="h-4 w-4" /> Notes
+        </h2>
+        <Card className="p-4">
+          <div className="text-sm whitespace-pre-wrap">
+            {client.notes ?? (
+              <span className="text-muted-foreground">
+                Aucune note. Cliquez sur Éditer pour ajouter.
+              </span>
+            )}
+          </div>
+        </Card>
+      </section>
 
       {editOpen && (
         <EditClientDialog
