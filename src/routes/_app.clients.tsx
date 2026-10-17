@@ -61,16 +61,19 @@ function ClientsLayout() {
   return <ClientsListPage />;
 }
 
+interface ClientContact {
+  nom: string | null;
+  prenom: string | null;
+  email: string | null;
+}
+
 interface ClientRow {
   id: string;
   nom: string;
   domaines_email: string[];
-  secteur: string | null;
   actif: boolean;
-  nb_affaires: number;
-  nb_opportunites: number;
-  nb_contacts: number;
-  dernier_email_at: string | null;
+  numeros_chantiers: string[];
+  contacts: ClientContact[];
 }
 
 function ClientsListPage() {
