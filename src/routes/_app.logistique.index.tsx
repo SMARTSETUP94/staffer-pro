@@ -5,7 +5,7 @@ import { syncOutlookLogistiqueFn } from "@/lib/server-fns/outlook-logistique.fun
 import { CalendarDays, CalendarSync } from "lucide-react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { addDays, format, startOfWeek } from "date-fns";
+import { addDays, format, startOfDay } from "date-fns";
 import { fr } from "date-fns/locale";
 import { ChevronLeft, ChevronRight, Monitor, Plus, Printer } from "lucide-react";
 import { toast } from "sonner";
@@ -34,8 +34,8 @@ export const Route = createFileRoute("/_app/logistique/")({
 });
 
 function PlanningLogistiquePage() {
-  const [start, setStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
-  const [semaines, setSemaines] = useState<1 | 2 | 4>(2);
+  const [start, setStart] = useState(() => startOfDay(new Date()));
+  const [semaines, setSemaines] = useState<1 | 2 | 4>(1);
   const [calendrierOpen, setCalendrierOpen] = useState(false);
   const canEdit = useCapability("logistique.etape.edit");
   const jours = useMemo(() => joursIso(start, semaines * 7), [start, semaines]);
@@ -69,13 +69,13 @@ function PlanningLogistiquePage() {
         <div>
           <h1 className="text-2xl font-bold">Planning logistique</h1>
           <p className="text-sm text-muted-foreground">
-            Semaine du {format(start, "d MMMM yyyy", { locale: fr })}
+            Du {format(start, "d MMMM yyyy", { locale: fr })} au {format(addDays(start, semaines * 7 - 1), "d MMMM yyyy", { locale: fr })}
             {conflits.size > 0 && <span className="ml-2 font-medium text-destructive">· {conflits.size} étape(s) en conflit de véhicule</span>}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Button variant="outline" size="icon" aria-label="Semaine précédente" onClick={() => setStart(addDays(start, -7))}><ChevronLeft className="h-4 w-4" /></Button>
-          <Button variant="outline" onClick={() => setStart(startOfWeek(new Date(), { weekStartsOn: 1 }))}>Aujourd'hui</Button>
+          <Button variant="outline" onClick={() => setStart(startOfDay(new Date()))}>Aujourd'hui</Button>
           <Button variant="outline" size="icon" aria-label="Semaine suivante" onClick={() => setStart(addDays(start, 7))}><ChevronRight className="h-4 w-4" /></Button>
           {([1, 2, 4] as const).map((n) => (
             <Button key={n} variant={semaines === n ? "default" : "outline"} size="sm" onClick={() => setSemaines(n)}>{n} sem.</Button>
