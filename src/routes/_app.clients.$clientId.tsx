@@ -88,6 +88,13 @@ interface ContactRow {
   telephone: string | null;
   fonction: string | null;
   actif: boolean;
+  notes: string | null;
+}
+
+function extractLinkedIn(notes: string | null): string | null {
+  if (!notes) return null;
+  const m = notes.match(/https?:\/\/[^\s)]*linkedin[^\s)]*/i);
+  return m ? m[0] : null;
 }
 
 interface EmailRow {
@@ -141,7 +148,7 @@ function ClientDetailPage() {
         .order("numero", { ascending: false }),
       supabase
         .from("client_contacts")
-        .select("id, nom, prenom, email, telephone, fonction, actif")
+        .select("id, nom, prenom, email, telephone, fonction, actif, notes")
         .eq("client_id", clientId)
         .order("nom"),
       supabase
