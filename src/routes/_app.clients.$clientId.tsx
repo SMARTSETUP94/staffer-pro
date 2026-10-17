@@ -235,12 +235,18 @@ function ClientDetailPage() {
         </div>
       )}
 
-      {(client.adresse || client.telephone || client.email || client.site_web) && (
-        <Card className="p-4">
-          <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">
-            Coordonnées société
+      <Card className="p-4">
+        <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">
+          Informations juridiques
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="flex items-center gap-2 text-sm">
+            <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
+            <span>
+              SIREN / SIRET :{" "}
+              {client.siret ?? <span className="text-muted-foreground">—</span>}
+            </span>
           </div>
-          <div className="grid gap-3 sm:grid-cols-2">
             {client.adresse && (
               <div className="flex items-start gap-2 text-sm">
                 <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
