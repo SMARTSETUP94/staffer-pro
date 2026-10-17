@@ -35,7 +35,7 @@ export function ClientEmailSuggestion({ emailId }: { emailId: string }) {
   }
 
   return (
-    <section className="space-y-3 border-t pt-4">
+    <section className="space-y-3 border-b pb-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="flex items-center gap-2 text-sm font-semibold"><Sparkles className="h-4 w-4 text-primary" /> Analyse & réponse suggérée</h3>
         <Button size="sm" variant="outline" onClick={generate} disabled={busy}>
