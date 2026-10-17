@@ -10,7 +10,7 @@ import { describe, expect, it } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
 
-const ROUTE = path.resolve(__dirname, "../../routes/_app.logistique.index.tsx");
+const ROUTE = path.resolve(__dirname, "../../../src/routes/_app.logistique.index.tsx");
 
 describe("planning logistique — fenêtre par défaut", () => {
   const src = fs.readFileSync(ROUTE, "utf8");
