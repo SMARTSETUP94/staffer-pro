@@ -31,6 +31,8 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { enrichClientFiche } from "@/lib/server-fns/client-enrichment.functions";
 import type { ClientContactSuggestion } from "@/lib/client-enrichment";
+import { ClientLegalPrefillDialog } from "@/components/clients/ClientLegalPrefillDialog";
+import { sirenFromIdentifier } from "@/lib/client-legal-prefill";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -51,7 +53,14 @@ import {
 
 export const Route = createFileRoute("/_app/clients/$clientId")({
   beforeLoad: () => requireCapability("clients.view"),
-  head: () => ({ meta: [{ title: "Fiche client — Setup Paris" }] }),
+  head: () => ({ meta: [
+    { title: "Fiche client — Setup Paris" },
+    { name: "description", content: "Coordonnées juridiques, contacts et chantiers du client Setup Paris." },
+    { property: "og:title", content: "Fiche client — Setup Paris" },
+    { property: "og:description", content: "Coordonnées juridiques, contacts et chantiers du client Setup Paris." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: ClientDetailPage,
 });
 
@@ -114,6 +123,7 @@ function ClientDetailPage() {
   const [emails, setEmails] = useState<EmailRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [editOpen, setEditOpen] = useState(false);
+  const [legalOpen, setLegalOpen] = useState(false);
   const [contactEdit, setContactEdit] = useState<Partial<ContactRow> | null>(null);
   const [attachOpen, setAttachOpen] = useState(false);
 
@@ -228,6 +238,9 @@ function ClientDetailPage() {
           <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
             Informations juridiques
           </div>
+          <Button variant="outline" size="sm" className="w-full" onClick={() => setLegalOpen(true)}>
+            <Sparkles className="h-4 w-4 mr-1" /> Pré-remplir avec l’IA
+          </Button>
           {client.domaines_email.length > 0 && (
             <div className="flex flex-wrap items-center gap-1">
               {client.domaines_email.map((d) => (
@@ -241,8 +254,9 @@ function ClientDetailPage() {
             <div className="flex items-center gap-2">
               <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
               <span>
-                SIREN / SIRET :{" "}
-                {client.siret ?? <span className="text-muted-foreground">—</span>}
+                SIREN :{" "}
+                {sirenFromIdentifier(client.siret) ?? <span className="text-muted-foreground">—</span>}
+                {client.siret?.length === 14 && <span className="block text-xs text-muted-foreground">SIRET : {client.siret}</span>}
               </span>
             </div>
             {client.adresse && (
@@ -454,6 +468,8 @@ function ClientDetailPage() {
           )}
         </Card>
       </details>
+
+      {legalOpen && <ClientLegalPrefillDialog client={client} onClose={() => setLegalOpen(false)} onDone={() => { setLegalOpen(false); void load(); }} />}
 
       {editOpen && (
         <EditClientDialog

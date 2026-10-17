@@ -1,5 +1,8 @@
 # Roadmap
 
+## Informations juridiques clients (17 oct. 2026)
+- [ ] Bouton IA dans le bloc juridique, vérification du SIREN, adresse postale et site web avant enregistrement ; conserver les champs existants.
+
 ## Demandes clients (17 oct. 2026)
 - [x] Après lecture : analyse brève du projet, points à clarifier et réponse IA modifiable et copiable, sans envoi automatique. Vérifié sur une vraie demande : réponse générée et presse-papiers identique ; 5 tests des transferts verts.
 
