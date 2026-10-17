@@ -10,6 +10,7 @@
 - [x] Menu simplifié « suivi des affaires » : flag `deploiement_suivi_affaires` actif, menu = Pipeline opportunités + Demandes clients + Chantiers uniquement, tout le reste caché (accueil, planning, logistique, RH, Admin). Aucun blocage d'URL.
 
 ## À venir
+- [ ] Réparer l’accès au calendrier Outlook (17 oct.) — diagnostic réel : authentification Microsoft 200, lecture emails log@ 200, lecture calendriers log@ 403 ErrorAccessDenied ; bloqué par l’autorisation Microsoft côté tenant (vérifier Calendars.ReadWrite Application + consentement administrateur, puis les restrictions Exchange si nécessaire). Aucun changement d’identifiants requis à ce stade ; synchronisation complète à vérifier après autorisation.
 - [ ] **Module « planning logistique »** (demande Gabin 15/10) : nouveau planning lié aux montages / démontages / livraisons / approvisionnements / chargements / déchargements. Les modules planning existants (Planning général, Tableau d'atelier, Charge atelier, Qui est où) sont seulement CACHÉS, pas supprimés. Le module Échéances doit être revu et mixé avec ce planning logistique.
 
 ## Planning logistique (CDC Project Shift)
