@@ -13,6 +13,30 @@ const CAL_NAME = "Planning logistique Setup";
 const TZ = "Europe/Paris";
 const APP_URL = "https://staffing.setup.paris";
 const MAX_OPS = 150;
+const CAT_PREFIX = "Logistique · ";
+/** Couleurs Outlook (presets Graph) proches des couleurs de l'application. */
+const CAT_COLORS: Record<string, string> = {
+  appro: "preset8", emballage: "preset2", chargement: "preset0", livraison: "preset7",
+  tracage: "preset23", montage: "preset4", finitions: "preset5", permanence: "preset3",
+  rotation: "preset20", demontage: "preset9", dechargement: "preset10",
+};
+const catName = (type: string) => `${CAT_PREFIX}${(ETAPE_LABELS as Record<string, string>)[type] ?? type}`;
+const isAppEvent = (cats?: string[]) => (cats ?? []).some((c) => c === CAL_NAME || c.startsWith(CAT_PREFIX));
+
+/** Crée/recolore les catégories du calendrier de log@ (silencieux si droit manquant). */
+async function ensureCategories(token: string): Promise<string | null> {
+  const base = `/users/${encodeURIComponent(BOX)}/outlook/masterCategories`;
+  const r = await graph(token, base);
+  if (!r.ok) return `Couleurs Outlook [${r.status}]`;
+  const list = ((await r.json()) as { value: { id: string; displayName: string; color: string }[] }).value;
+  for (const [type, color] of Object.entries(CAT_COLORS)) {
+    const name = catName(type);
+    const ex = list.find((c) => c.displayName === name);
+    if (!ex) await graph(token, base, { method: "POST", body: JSON.stringify({ displayName: name, color }) });
+    else if (ex.color !== color) await graph(token, `${base}/${encodeURIComponent(ex.id)}`, { method: "PATCH", body: JSON.stringify({ color }) });
+  }
+  return null;
+}
 
 type Report = { created: number; updated: number; deleted: number; errors: string[] };
 
@@ -87,7 +111,7 @@ export function buildEvent(e: any) {
     + `<br><br><a href="${APP_URL}/logistique">Ouvrir le planning logistique</a><br><i>Synchronisé depuis l'application — ne pas modifier ici.</i>`;
   return {
     subject, start, end, isAllDay, showAs: "free", isReminderOn: false,
-    categories: [CAL_NAME],
+    categories: [catName(e.type)],
     location: e.lieu_libre ? { displayName: e.lieu_libre } : undefined,
     body: { contentType: "HTML", content: html },
   };
@@ -97,6 +121,8 @@ export async function syncOutlookLogistique(supa: any): Promise<Report> {
   const rep: Report = { created: 0, updated: 0, deleted: 0, errors: [] };
   const token = await getToken();
   const calId = await ensureCalendar(token, supa);
+  const catErr = await ensureCategories(token);
+  if (catErr) console.warn(catErr);
   const evBase = `/users/${encodeURIComponent(BOX)}/calendars/${encodeURIComponent(calId)}/events`;
   const from = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
 
@@ -160,7 +186,7 @@ export async function syncOutlookLogistique(supa: any): Promise<Report> {
       if (!r.ok) { rep.errors.push(`liste [${r.status}]`); break; }
       const j = (await r.json()) as { value: { id: string; categories?: string[] }[]; "@odata.nextLink"?: string };
       // Calendrier principal partagé : ne toucher qu'aux événements créés par l'application
-      for (const ev of j.value) if ((ev.categories ?? []).includes(CAL_NAME) && !keep.has(ev.id)) orphans.push(ev.id);
+      for (const ev of j.value) if (isAppEvent(ev.categories) && !keep.has(ev.id)) orphans.push(ev.id);
       url = j["@odata.nextLink"] ?? null;
     }
     // Ne supprimer que si l'ensemble des étapes a pu être parcouru
