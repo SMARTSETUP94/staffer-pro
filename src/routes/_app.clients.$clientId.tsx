@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { requireCapability } from "@/lib/capability-guard";
 import { useEffect, useMemo, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import {
   Loader2,
   Pencil,
@@ -18,6 +19,7 @@ import {
   Link2,
   Search,
   Unlink,
+  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 import { format, parseISO } from "date-fns";
@@ -28,6 +30,8 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { enrichClientFiche } from "@/lib/server-fns/client-enrichment.functions";
+import type { ClientContactSuggestion } from "@/lib/client-enrichment";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -705,6 +709,57 @@ function EditClientDialog({
         <DialogHeader>
           <DialogTitle>Éditer client</DialogTitle>
         </DialogHeader>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={prefillIA}
+          disabled={enriching}
+          className="w-full"
+        >
+          {enriching ? (
+            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+          ) : (
+            <Sparkles className="h-4 w-4 mr-2" />
+          )}
+          {enriching ? "Recherche sur internet…" : "Pré-remplir avec l'IA (web + LinkedIn)"}
+        </Button>
+        {suggestedContacts.length > 0 && (
+          <div className="rounded-md border p-3 space-y-2">
+            <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              Contacts suggérés par l'IA
+            </div>
+            {suggestedContacts.map((c, idx) => (
+              <div key={idx} className="flex items-center justify-between gap-2 text-sm">
+                <div className="min-w-0">
+                  <span className="font-medium">
+                    {[c.prenom, c.nom].filter(Boolean).join(" ") || "Contact"}
+                  </span>
+                  {c.fonction && <span className="text-muted-foreground"> — {c.fonction}</span>}
+                  {c.linkedin && (
+                    <a
+                      href={c.linkedin}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="block text-xs text-primary underline truncate"
+                    >
+                      {c.linkedin}
+                    </a>
+                  )}
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={addedContacts.has(idx)}
+                  onClick={() => addSuggestedContact(c, idx)}
+                >
+                  {addedContacts.has(idx) ? "Ajouté" : "Ajouter"}
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
         <div className="space-y-3">
           <div>
             <Label>Nom *</Label>
