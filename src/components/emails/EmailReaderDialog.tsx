@@ -36,6 +36,7 @@ export function EmailReaderDialog({ email, onClose, clientReply = false }: { ema
           </DialogDescription>
         </DialogHeader>
         <div className="min-h-0 flex-1 overflow-y-auto space-y-4">
+        {clientReply && <ClientEmailSuggestion key={email.id} emailId={email.id} />}
         <div className="overflow-auto rounded-md border bg-background">
           {isHtml ? (
             <iframe
@@ -49,7 +50,6 @@ export function EmailReaderDialog({ email, onClose, clientReply = false }: { ema
           )}
         </div>
         <AttachmentsList emailId={email.id} />
-        {clientReply && <ClientEmailSuggestion key={email.id} emailId={email.id} />}
         </div>
       </DialogContent>
     </Dialog>
