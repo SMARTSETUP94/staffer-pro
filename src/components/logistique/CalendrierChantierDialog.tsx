@@ -28,7 +28,7 @@ export function CalendrierChantierDialog({ open, onOpenChange, etapes }: {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[90dvh] w-[calc(100%-2rem)] flex-col overflow-hidden sm:max-w-4xl">
+      <DialogContent onInteractOutside={(event) => event.preventDefault()} className="flex max-h-[90dvh] w-[calc(100%-2rem)] flex-col overflow-hidden sm:max-w-4xl">
         <DialogHeader className="pr-6 text-left">
           <DialogTitle>Calendrier du chantier</DialogTitle>
           <DialogDescription>{selected ? `${selected.numero} — ${selected.nom}` : "Chantier / opportunité"}</DialogDescription>
