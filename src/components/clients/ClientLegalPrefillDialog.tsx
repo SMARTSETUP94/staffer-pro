@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, Sparkles } from "lucide-react";
+import { Loader2, Sparkles, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { enrichClientFiche } from "@/lib/server-fns/client-enrichment.functions";
 import { prefillClientLegal, sirenFromIdentifier, type ClientLegalFields } from "@/lib/client-legal-prefill";
@@ -27,7 +27,7 @@ export function ClientLegalPrefillDialog({ client, onClose, onDone }: {
     setSearching(true);
     setError(null);
     try {
-      const result = await enrich({ data: { nom: client.nom, domaine: client.domaines_email[0], email: client.email ?? undefined } });
+      const result = await enrich({ data: { nom: client.nom, domaine: client.domaines_email[0], email: client.email ?? undefined, siren: sirenFromIdentifier(draft.siret) ?? undefined } });
       if (result.error || !result.suggestion) {
         setError(result.error ?? "Aucune information juridique trouvée.");
         return;
@@ -35,7 +35,7 @@ export function ClientLegalPrefillDialog({ client, onClose, onDone }: {
       const suggestion = result.suggestion;
       setDraft((current) => prefillClientLegal(current, suggestion));
       setSources((result.suggestion.sources ?? []).filter((url) => /^https?:\/\//i.test(url)));
-      if (!result.suggestion.siret && !result.suggestion.adresse && !result.suggestion.site_web) {
+      if (!result.suggestion.siret && !result.suggestion.adresse && !result.suggestion.site_web && !result.suggestion.dirigeant) {
         setError("Aucune information juridique confirmée dans les sources consultées.");
       }
     } catch (e) {
@@ -51,6 +51,7 @@ export function ClientLegalPrefillDialog({ client, onClose, onDone }: {
       siret: draft.siret?.trim() || null,
       adresse: draft.adresse?.trim() || null,
       site_web: draft.site_web?.trim() || null,
+      dirigeant: draft.dirigeant?.trim() || null,
     }).eq("id", client.id);
     setSaving(false);
     if (saveError) { setError(saveError.message); return; }
@@ -66,10 +67,15 @@ export function ClientLegalPrefillDialog({ client, onClose, onDone }: {
       </DialogHeader>
       <Button variant="outline" onClick={search} disabled={searching || saving}>
         {searching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-        {searching ? "Recherche sur internet…" : "Rechercher avec l’IA"}
+        {searching ? "Recherche sur internet…" : "Rechercher avec l’IA · Pappers / Société.com"}
       </Button>
+      <div className="flex flex-wrap gap-2">
+        <Button asChild variant="outline" size="sm"><a href={`https://www.pappers.fr/recherche?q=${encodeURIComponent(sirenFromIdentifier(draft.siret) ?? client.nom)}`} target="_blank" rel="noopener noreferrer"><ExternalLink className="h-3.5 w-3.5" />Pappers</a></Button>
+        <Button asChild variant="outline" size="sm"><a href={`https://www.societe.com/cgi-bin/search?champs=${encodeURIComponent(sirenFromIdentifier(draft.siret) ?? client.nom)}`} target="_blank" rel="noopener noreferrer"><ExternalLink className="h-3.5 w-3.5" />Société.com</a></Button>
+      </div>
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
       <div className="space-y-3">
+        <div><Label htmlFor="legal-dirigeant">Dirigeant</Label><Input id="legal-dirigeant" value={draft.dirigeant ?? ""} disabled={searching || saving} onChange={(e) => setDraft((d) => ({ ...d, dirigeant: e.target.value }))} /></div>
         <div><Label htmlFor="legal-siren">SIREN / SIRET</Label><Input id="legal-siren" value={draft.siret ?? ""} disabled={searching || saving} onChange={(e) => setDraft((d) => ({ ...d, siret: e.target.value }))} />
           {sirenFromIdentifier(draft.siret) && <p className="text-xs text-muted-foreground mt-1">SIREN : {sirenFromIdentifier(draft.siret)}</p>}
         </div>

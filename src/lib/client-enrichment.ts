@@ -13,6 +13,7 @@ export const clientEnrichmentSchema = z.object({
   nom_officiel: z.string().nullable(),
   secteur: z.string().nullable(),
   siret: z.string().nullable(),
+  dirigeant: z.string().nullable(),
   adresse: z.string().nullable(),
   telephone: z.string().nullable(),
   email: z.string().nullable(),
