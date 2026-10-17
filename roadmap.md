@@ -1,8 +1,8 @@
 # Roadmap
 
 ## Calendrier chantier (17 oct. 2026)
-- [ ] Fenêtre de calendrier d'un seul chantier depuis le planning logistique, recherche et dates vides masquées.
-- [ ] Modification via le formulaire existant selon les droits, tests et vérification dans l'application.
+- [x] Fenêtre de calendrier d'un seul chantier depuis le planning logistique, recherche et dates vides masquées.
+- [x] Modification via le formulaire existant selon les droits ; 20 tests verts, vérification sur chantier 4130, enregistrement et retour au calendrier, affichage mobile.
 
 ## Fait aujourd'hui (15 oct. 2026)
 - [x] Bug flèche pipeline : la page /opportunites ne rendait jamais la fiche enfant (pas d'Outlet) — corrigé en séparant la liste (route index) du gabarit (Outlet). Vérifié kanban + tableur + retour arrière.

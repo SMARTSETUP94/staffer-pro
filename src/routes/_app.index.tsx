@@ -59,7 +59,14 @@ import { useMesHeures } from "@/hooks/use-mes-heures";
 import { EmployeAujourdhuiView } from "@/components/aujourdhui/EmployeAujourdhuiView";
 
 export const Route = createFileRoute("/_app/")({
-  head: () => ({ meta: [{ title: "Accueil — Setup Paris" }] }),
+  head: () => ({ meta: [
+    { title: "Accueil — Setup Paris" },
+    { name: "description", content: "Suivi des activités, missions et demandes de votre équipe Setup Paris." },
+    { property: "og:title", content: "Accueil — Setup Paris" },
+    { property: "og:description", content: "Vos activités, missions et demandes Setup Paris réunies." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: HomePage,
 });
 
