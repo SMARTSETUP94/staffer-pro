@@ -9,6 +9,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { listEmailAttachments, getEmailAttachment, type EmailAttachment } from "@/lib/server-fns/shared-inbox-attachments.functions";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ClientEmailSuggestion } from "@/components/emails/ClientEmailSuggestion";
 
 export type ReadableEmail = {
   id: string;
@@ -21,12 +22,12 @@ export type ReadableEmail = {
   body_content_type: string | null;
 };
 
-export function EmailReaderDialog({ email, onClose }: { email: ReadableEmail; onClose: () => void }) {
+export function EmailReaderDialog({ email, onClose, clientReply = false }: { email: ReadableEmail; onClose: () => void; clientReply?: boolean }) {
   const isHtml = email.body_content_type?.toLowerCase() === "html";
   const body = email.body_full || email.body_preview || "(corps vide)";
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-3xl max-h-[85vh] flex flex-col">
+      <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="pr-6">{email.subject || "(sans objet)"}</DialogTitle>
           <DialogDescription>
@@ -34,7 +35,8 @@ export function EmailReaderDialog({ email, onClose }: { email: ReadableEmail; on
             {format(parseISO(email.received_at), "d MMMM yyyy 'à' HH:mm", { locale: fr })}
           </DialogDescription>
         </DialogHeader>
-        <div className="flex-1 overflow-auto rounded-md border bg-background">
+        <div className="min-h-0 flex-1 overflow-y-auto space-y-4">
+        <div className="overflow-auto rounded-md border bg-background">
           {isHtml ? (
             <iframe
               title="Contenu de l'email"
@@ -47,6 +49,8 @@ export function EmailReaderDialog({ email, onClose }: { email: ReadableEmail; on
           )}
         </div>
         <AttachmentsList emailId={email.id} />
+        {clientReply && <ClientEmailSuggestion key={email.id} emailId={email.id} />}
+        </div>
       </DialogContent>
     </Dialog>
   );
