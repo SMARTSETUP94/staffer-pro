@@ -285,6 +285,41 @@ function CreateOppDialog({ email, onClose, onDone }: { email: Row; onClose: () =
         }).select("id").single();
         if (cErr) toast.warning("Fiche client non créée", { description: cErr.message });
         cid = created?.id ?? null;
+        // Pré-remplissage IA de la nouvelle fiche prospect (web + LinkedIn),
+        // en arrière-plan : ne bloque pas la création de l'opportunité.
+        if (cid) {
+          const newClientId = cid;
+          void (async () => {
+            try {
+              const { suggestion } = await enrichClientFiche({
+                data: {
+                  nom: client.trim(),
+                  domaine: fullDomain && !isGenericDomain ? fullDomain : undefined,
+                  email: clientEmail.endsWith("@setup.paris") ? undefined : clientEmail,
+                },
+              });
+              if (!suggestion) return;
+              const patch: Record<string, unknown> = {};
+              if (suggestion.secteur) patch.secteur = suggestion.secteur;
+              if (suggestion.siret) patch.siret = suggestion.siret;
+              if (suggestion.adresse) patch.adresse = suggestion.adresse;
+              if (suggestion.telephone) patch.telephone = suggestion.telephone;
+              if (suggestion.site_web) patch.site_web = suggestion.site_web;
+              const extras: string[] = [];
+              if (suggestion.linkedin) extras.push(`LinkedIn : ${suggestion.linkedin}`);
+              if (suggestion.description) extras.push(suggestion.description);
+              if (extras.length) patch.notes = `Prospect créé depuis une demande devis@\n\n${extras.join("\n")}`;
+              if (Object.keys(patch).length) {
+                await supabase.from("clients").update(patch).eq("id", newClientId);
+                toast.success("Fiche client enrichie par l'IA", {
+                  description: "Coordonnées trouvées sur internet — à vérifier sur la fiche client.",
+                });
+              }
+            } catch {
+              // L'enrichissement est un bonus : silence en cas d'échec.
+            }
+          })();
+        }
       }
     }
     const { error } = await supabase.rpc("create_opportunite", {
