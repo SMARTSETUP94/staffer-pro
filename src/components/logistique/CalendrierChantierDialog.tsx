@@ -28,10 +28,10 @@ export function CalendrierChantierDialog({ open, onOpenChange, etapes }: {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent onInteractOutside={(event) => event.preventDefault()} className="flex max-h-[90dvh] w-[calc(100%-2rem)] flex-col overflow-hidden sm:max-w-4xl">
+      <DialogContent onInteractOutside={(event) => event.preventDefault()} className="flex max-h-[94dvh] w-[calc(100%-1rem)] flex-col gap-3 overflow-hidden p-4 sm:w-[calc(100%-3rem)] sm:max-w-6xl sm:p-5">
         <DialogHeader className="pr-6 text-left">
           <DialogTitle>Calendrier du chantier</DialogTitle>
-          <DialogDescription>{selected ? `${selected.numero} — ${selected.nom}` : "Chantier / opportunité"}</DialogDescription>
+          <DialogDescription className="sr-only">Calendrier logistique du chantier sélectionné</DialogDescription>
         </DialogHeader>
         <Popover open={searchOpen} onOpenChange={setSearchOpen}>
           <PopoverTrigger asChild>
@@ -70,32 +70,38 @@ function CalendrierChantier({ affaire }: { affaire: AffaireOption }) {
 
   return (
     <>
-      <div className="min-h-0 space-y-5 overflow-y-auto pr-1">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-sm text-muted-foreground">{jours.length} jour(s) · {etapes.filter((e) => e.statut !== "annule").length} étape(s)</p>
+        <div className="grid shrink-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-2 border-b border-border pb-3">
+          <p className="min-w-0 text-sm text-muted-foreground"><span className="font-semibold text-foreground">{jours.length}</span> jours planifiés · <span className="font-semibold text-foreground">{etapes.filter((e) => e.statut !== "annule").length}</span> étapes</p>
           {canEdit && <Button size="sm" onClick={() => setEdit({ open: true, date: today })}><Plus className="mr-1 h-4 w-4" />Étape</Button>}
         </div>
+      <div className="min-h-0 overflow-y-auto overscroll-contain pr-1">
         {isLoading ? <p className="py-6 text-center text-sm text-muted-foreground">Chargement…</p> : error ? (
           <div className="space-y-2 py-4"><p className="text-sm text-destructive">Impossible de charger le calendrier.</p><Button variant="outline" onClick={() => refetch()}>Réessayer</Button></div>
         ) : jours.length === 0 ? <p className="py-8 text-center text-sm text-muted-foreground">Aucune étape planifiée pour ce chantier.</p> : jours.map(({ date, etapes: rows }) => (
-          <section key={date} aria-label={format(parseISO(date), "EEEE d MMMM yyyy", { locale: fr })} className="space-y-2">
-            <h3 className={cn("border-b border-border pb-2 text-base font-semibold capitalize", date === today && "text-primary")}>{format(parseISO(date), "EEEE d MMMM yyyy", { locale: fr })}</h3>
-            <div className="grid gap-2 sm:grid-cols-2">
+          <section key={date} aria-label={format(parseISO(date), "EEEE d MMMM yyyy", { locale: fr })} className="grid min-w-0 gap-2 border-b border-border py-3 first:pt-0 last:border-0 sm:grid-cols-[108px_minmax(0,1fr)] sm:gap-4">
+            <h3 className={cn("flex items-baseline gap-2 text-sm font-semibold sm:flex-col sm:gap-0.5 sm:pt-3", date === today && "text-primary")}>
+              <span className="capitalize text-muted-foreground">{format(parseISO(date), "EEEE", { locale: fr })}</span>
+              <span className="text-base sm:text-xl">{format(parseISO(date), "d MMM", { locale: fr })}</span>
+              <span className="text-xs font-normal text-muted-foreground">{format(parseISO(date), "yyyy")}</span>
+            </h3>
+            <div className="grid min-w-0 gap-2">
               {rows.map((e) => {
                 const horaires = [heureCourte(e.heure_debut), heureCourte(e.heure_fin)].filter(Boolean).join(" – ");
                 const vehicule = e.vehicule?.immatriculation ?? e.vehicule?.nom ?? e.immatriculation_libre;
                 return (
-                  <article key={e.id} className="min-w-0 space-y-2 rounded-lg border border-border bg-card p-3">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className={cn("rounded px-2 py-1 text-xs font-semibold", ETAPE_CLASSES[e.type])}>{ETAPE_LABELS[e.type]}{e.sens ? ` ${e.sens}` : ""}</span>
+                  <article key={e.id} className="min-w-0 space-y-2 rounded-lg border border-border bg-card px-3 py-2.5">
+                    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
+                      <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1.5">
+                        <span className={cn("rounded px-2 py-1 text-xs font-semibold", ETAPE_CLASSES[e.type])}>{ETAPE_LABELS[e.type]}{e.sens ? ` ${e.sens}` : ""}</span>
+                        {horaires && <p className="flex items-center gap-1.5 text-sm font-semibold tabular-nums"><Clock className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />{horaires}</p>}
+                        {nbPersonnesCourt(e.nb_personnes) && <p className="flex items-center gap-1.5 text-sm font-semibold"><Users className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />{nbPersonnesCourt(e.nb_personnes)}</p>}
+                      </div>
                       {canEdit && <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0" aria-label={`Modifier ${ETAPE_LABELS[e.type]} du ${date}`} title="Modifier l'étape" onClick={() => setEdit({ open: true, etape: e })}><Pencil className="h-4 w-4" /></Button>}
                     </div>
-                    <div className="space-y-1 text-sm">
-                      {horaires && <p className="flex items-center gap-2 font-semibold"><Clock className="h-4 w-4 shrink-0" />{horaires}</p>}
+                    <div className="flex min-w-0 flex-wrap gap-x-5 gap-y-1 text-sm">
                       {e.horaire_libre && <p className="break-words">{e.horaire_libre}</p>}
                       {e.lieu_libre && <p className="flex items-start gap-2"><MapPin className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" /><span className="min-w-0 break-words">{e.lieu_libre}</span></p>}
                       {e.responsable && <p className="flex items-start gap-2"><User className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" /><span className="min-w-0 break-words">{e.responsable}</span></p>}
-                      {nbPersonnesCourt(e.nb_personnes) && <p className="flex items-center gap-2"><Users className="h-4 w-4 shrink-0 text-muted-foreground" />{nbPersonnesCourt(e.nb_personnes)}</p>}
                       {vehicule && <p className="flex items-start gap-2"><Truck className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" /><span className="min-w-0 break-words">{vehicule}</span></p>}
                       {e.acces && <p className="break-words text-muted-foreground">Accès : {e.acces}</p>}
                     </div>
