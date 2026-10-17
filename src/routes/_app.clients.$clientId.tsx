@@ -390,205 +390,71 @@ function ClientDetailPage() {
         </Card>
       </div>
 
-      <section className="space-y-2">
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold flex items-center gap-1">
-            <Briefcase className="h-4 w-4" /> Chantiers en cours (
-            {chantiersEnCours.length})
-          </h2>
-          <Button size="sm" variant="outline" onClick={() => setAttachOpen(true)}>
-            <Link2 className="h-4 w-4 mr-1" /> Rattacher des chantiers
-          </Button>
-        </div>
-        <AffairesTable
-          rows={chantiersEnCours}
-          emptyLabel="Aucun chantier en cours"
-          onDetach={(a) => detachAffaire(a.id, a.numero)}
-        />
-      </section>
-
-      <section className="space-y-2">
-        <h2 className="text-sm font-semibold flex items-center gap-1">
-          <Briefcase className="h-4 w-4" /> Chantiers passés (
-          {chantiersPasses.length})
-        </h2>
-        <AffairesTable
-          rows={chantiersPasses}
-          emptyLabel="Aucun chantier passé"
-          onDetach={(a) => detachAffaire(a.id, a.numero)}
-        />
-      </section>
-
-      <section className="space-y-2">
-        <h2 className="text-sm font-semibold flex items-center gap-1">
-          <Trophy className="h-4 w-4" /> Opportunités ({opportunites.length})
-        </h2>
-        <AffairesTable
-          rows={opportunites}
-          emptyLabel="Aucune opportunité"
-          onDetach={(a) => detachAffaire(a.id, a.numero)}
-        />
-      </section>
-
-      <section className="space-y-2">
-        <h2 className="text-sm font-semibold flex items-center gap-1">
-          <Users className="h-4 w-4" /> Contacts ({contacts.length})
-        </h2>
-          <Card>
-            <div className="p-3 border-b flex justify-between items-center">
-              <div className="text-sm text-muted-foreground">
-                {contacts.length} contact{contacts.length > 1 ? "s" : ""}
-              </div>
-              <Button size="sm" onClick={() => setContactEdit({})}>
-                <Plus className="h-4 w-4 mr-1" /> Ajouter
-              </Button>
-            </div>
-            {contacts.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground text-sm">
-                Aucun contact. Les emails entrants en créent automatiquement.
-              </div>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nom</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Téléphone</TableHead>
-                    <TableHead>Fonction</TableHead>
-                    <TableHead>LinkedIn</TableHead>
-                    <TableHead className="w-20"></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {contacts.map((c) => {
-                    const linkedin = extractLinkedIn(c.notes);
-                    return (
-                    <TableRow key={c.id}>
-                      <TableCell>
-                        {[c.prenom, c.nom].filter(Boolean).join(" ") || "—"}
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        {c.email ? (
-                          <a className="hover:underline" href={`mailto:${c.email}`}>
-                            {c.email}
-                          </a>
-                        ) : (
-                          "—"
-                        )}
-                      </TableCell>
-                      <TableCell className="text-sm">{c.telephone ?? "—"}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {c.fonction ?? "—"}
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        {linkedin ? (
-                          <a
-                            href={linkedin}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="hover:underline text-primary"
-                          >
-                            Profil
-                          </a>
-                        ) : (
-                          "—"
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => setContactEdit(c)}
-                        >
-                          <Pencil className="h-3 w-3" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            )}
-          </Card>
-      </section>
-
-      <section className="space-y-2">
-        <h2 className="text-sm font-semibold flex items-center gap-1">
+      <details className="group">
+        <summary className="cursor-pointer text-sm font-semibold flex items-center gap-1 select-none">
           <Mail className="h-4 w-4" /> Emails ({emails.length})
-        </h2>
-          <Card>
-            {emails.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground text-sm">
-                Aucun email rattaché.
-              </div>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Reçu le</TableHead>
-                    <TableHead>De</TableHead>
-                    <TableHead>Sujet</TableHead>
-                    <TableHead>Catégorie</TableHead>
-                    <TableHead>Statut</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {emails.map((e) => (
-                    <TableRow key={e.id}>
-                      <TableCell className="text-xs whitespace-nowrap">
-                        {format(parseISO(e.received_at), "d MMM yyyy HH:mm", {
-                          locale: fr,
-                        })}
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        {e.from_name ?? e.from_email}
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        <Link
-                          to="/inbox-smart"
-                          className="hover:underline"
-                          title={e.subject ?? ""}
-                        >
-                          {e.subject ?? "(sans sujet)"}
-                        </Link>
-                      </TableCell>
-                      <TableCell>
-                        {e.categorie_ia && (
-                          <Badge variant="outline" className="text-[10px]">
-                            {e.categorie_ia}
-                          </Badge>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={e.statut === "validated" ? "default" : "secondary"}
-                          className="text-[10px]"
-                        >
-                          {e.statut}
+          <span className="text-xs text-muted-foreground font-normal group-open:hidden">
+            — cliquer pour afficher
+          </span>
+        </summary>
+        <Card className="mt-2">
+          {emails.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground text-sm">
+              Aucun email rattaché.
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Reçu le</TableHead>
+                  <TableHead>De</TableHead>
+                  <TableHead>Sujet</TableHead>
+                  <TableHead>Catégorie</TableHead>
+                  <TableHead>Statut</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {emails.map((e) => (
+                  <TableRow key={e.id}>
+                    <TableCell className="text-xs whitespace-nowrap">
+                      {format(parseISO(e.received_at), "d MMM yyyy HH:mm", {
+                        locale: fr,
+                      })}
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {e.from_name ?? e.from_email}
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      <Link
+                        to="/inbox-smart"
+                        className="hover:underline"
+                        title={e.subject ?? ""}
+                      >
+                        {e.subject ?? "(sans sujet)"}
+                      </Link>
+                    </TableCell>
+                    <TableCell>
+                      {e.categorie_ia && (
+                        <Badge variant="outline" className="text-[10px]">
+                          {e.categorie_ia}
                         </Badge>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </Card>
-      </section>
-
-      <section className="space-y-2">
-        <h2 className="text-sm font-semibold flex items-center gap-1">
-          <FileText className="h-4 w-4" /> Notes
-        </h2>
-        <Card className="p-4">
-          <div className="text-sm whitespace-pre-wrap">
-            {client.notes ?? (
-              <span className="text-muted-foreground">
-                Aucune note. Cliquez sur Éditer pour ajouter.
-              </span>
-            )}
-          </div>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={e.statut === "validated" ? "default" : "secondary"}
+                        className="text-[10px]"
+                      >
+                        {e.statut}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </Card>
-      </section>
+      </details>
 
       {editOpen && (
         <EditClientDialog
