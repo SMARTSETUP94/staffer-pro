@@ -300,7 +300,14 @@ function CreateOppDialog({ email, onClose, onDone }: { email: Row; onClose: () =
                 },
               });
               if (!suggestion) return;
-              const patch: Record<string, unknown> = {};
+              const patch: {
+                secteur?: string;
+                siret?: string;
+                adresse?: string;
+                telephone?: string;
+                site_web?: string;
+                notes?: string;
+              } = {};
               if (suggestion.secteur) patch.secteur = suggestion.secteur;
               if (suggestion.siret) patch.siret = suggestion.siret;
               if (suggestion.adresse) patch.adresse = suggestion.adresse;
