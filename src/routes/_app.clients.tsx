@@ -49,8 +49,17 @@ import { ImportClientsDialog } from "@/components/clients/ImportClientsDialog";
 export const Route = createFileRoute("/_app/clients")({
   beforeLoad: () => requireCapability("clients.view"),
   head: () => ({ meta: [{ title: "Clients — Setup Paris" }] }),
-  component: ClientsListPage,
+  component: ClientsLayout,
 });
+
+// Layout : la liste s'affiche sur /clients, les sous-pages (fiche client,
+// admin) se rendent via <Outlet />. Sans cela, /clients/$clientId affichait
+// la liste au lieu de la fiche.
+function ClientsLayout() {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  if (pathname !== "/clients" && pathname !== "/clients/") return <Outlet />;
+  return <ClientsListPage />;
+}
 
 interface ClientRow {
   id: string;
