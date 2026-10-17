@@ -319,22 +319,38 @@ function ClientsListPage() {
                       )}
                     </div>
                   </TableCell>
-                  <TableCell className="text-xs text-muted-foreground">
-                    {r.secteur ?? "—"}
+                  <TableCell>
+                    <div className="flex flex-wrap gap-1">
+                      {r.numeros_chantiers.length === 0 ? (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      ) : (
+                        r.numeros_chantiers.map((n) => (
+                          <Badge key={n} variant="outline" className="text-[10px]">
+                            {n}
+                          </Badge>
+                        ))
+                      )}
+                    </div>
                   </TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {r.nb_affaires}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {r.nb_opportunites}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {r.nb_contacts}
-                  </TableCell>
-                  <TableCell className="text-right text-xs text-muted-foreground">
-                    {r.dernier_email_at
-                      ? new Date(r.dernier_email_at).toLocaleDateString("fr-FR")
-                      : "—"}
+                  <TableCell>
+                    {r.contacts.length === 0 ? (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    ) : (
+                      <div className="space-y-1">
+                        {r.contacts.map((c, i) => (
+                          <div key={i} className="text-xs">
+                            <span className="font-medium">
+                              {[c.prenom, c.nom].filter(Boolean).join(" ") || "—"}
+                            </span>
+                            {c.email && (
+                              <span className="text-muted-foreground ml-1">
+                                {c.email}
+                              </span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </TableCell>
                   {canManage && (
                     <TableCell className="text-right whitespace-nowrap">
