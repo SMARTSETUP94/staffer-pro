@@ -422,10 +422,10 @@ function ClientsListPage() {
                 {confirmDelete && (
                   <ul className="list-disc pl-5 text-muted-foreground">
                     <li>
-                      {confirmDelete.nb_affaires + confirmDelete.nb_opportunites}{" "}
-                      affaire(s) seront déliées (conservées sans client)
+                      {confirmDelete.numeros_chantiers.length} affaire(s) seront
+                      déliées (conservées sans client)
                     </li>
-                    <li>{confirmDelete.nb_contacts} contact(s) supprimé(s)</li>
+                    <li>{confirmDelete.contacts.length} contact(s) supprimé(s)</li>
                     <li>Les emails entrants seront déliés</li>
                   </ul>
                 )}
