@@ -32,7 +32,8 @@ export function ClientLegalPrefillDialog({ client, onClose, onDone }: {
         setError(result.error ?? "Aucune information juridique trouvée.");
         return;
       }
-      setDraft((current) => prefillClientLegal(current, result.suggestion));
+      const suggestion = result.suggestion;
+      setDraft((current) => prefillClientLegal(current, suggestion));
       setSources((result.suggestion.sources ?? []).filter((url) => /^https?:\/\//i.test(url)));
       if (!result.suggestion.siret && !result.suggestion.adresse && !result.suggestion.site_web) {
         setError("Aucune information juridique confirmée dans les sources consultées.");
