@@ -34,7 +34,6 @@ import { enrichClientFiche } from "@/lib/server-fns/client-enrichment.functions"
 import type { ClientContactSuggestion } from "@/lib/client-enrichment";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
