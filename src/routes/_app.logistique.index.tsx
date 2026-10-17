@@ -1,7 +1,8 @@
 import { PlanningJourMobile } from "@/components/logistique/PlanningJourMobile";
+import { CalendrierChantierDialog } from "@/components/logistique/CalendrierChantierDialog";
 import { useServerFn } from "@tanstack/react-start";
 import { syncOutlookLogistiqueFn } from "@/lib/server-fns/outlook-logistique.functions";
-import { CalendarSync } from "lucide-react";
+import { CalendarDays, CalendarSync } from "lucide-react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { addDays, format, startOfWeek } from "date-fns";
@@ -35,6 +36,7 @@ export const Route = createFileRoute("/_app/logistique/")({
 function PlanningLogistiquePage() {
   const [start, setStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
   const [semaines, setSemaines] = useState<1 | 2 | 4>(2);
+  const [calendrierOpen, setCalendrierOpen] = useState(false);
   const canEdit = useCapability("logistique.etape.edit");
   const jours = useMemo(() => joursIso(start, semaines * 7), [start, semaines]);
   const { data: etapes = [], isLoading } = useEtapesLogistiques(jours[0], jours[jours.length - 1]);
@@ -78,6 +80,7 @@ function PlanningLogistiquePage() {
           {([1, 2, 4] as const).map((n) => (
             <Button key={n} variant={semaines === n ? "default" : "outline"} size="sm" onClick={() => setSemaines(n)}>{n} sem.</Button>
           ))}
+          <Button variant="outline" onClick={() => setCalendrierOpen(true)}><CalendarDays className="mr-1 h-4 w-4" />Calendrier chantier</Button>
           <Button variant="outline" asChild><Link to="/logistique/imprimer"><Printer className="mr-1 h-4 w-4" />Imprimer la semaine</Link></Button>
           <Button variant="outline" asChild><Link to="/logistique/ecran">Écran atelier</Link></Button>
           <Button variant="outline" asChild><Link to="/ecran-atelier"><Monitor className="mr-1 h-4 w-4" />Écran atelier</Link></Button>
@@ -111,6 +114,7 @@ function PlanningLogistiquePage() {
         </>
       )}
       <EtapeDialog open={dlg.open} onOpenChange={(o) => setDlg((p) => ({ ...p, open: o }))} etape={dlg.etape} defaultDate={dlg.date} />
+      {calendrierOpen && <CalendrierChantierDialog open={calendrierOpen} onOpenChange={setCalendrierOpen} etapes={etapes} />}
     </div>
   );
 }
