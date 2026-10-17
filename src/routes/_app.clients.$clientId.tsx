@@ -10,7 +10,6 @@ import {
   Trash2,
   Mail,
   Briefcase,
-  Trophy,
   Users,
   FileText,
   MapPin,
