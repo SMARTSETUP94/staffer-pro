@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { requireCapability } from "@/lib/capability-guard";
 import { useEffect, useMemo, useState } from "react";
 import {
