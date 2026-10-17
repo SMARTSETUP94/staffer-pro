@@ -1,6 +1,7 @@
 /**
- * Synchronisation à sens unique : étapes logistiques → agenda Outlook partagé
- * « Planning logistique Setup » de log@setup.paris (Microsoft Graph, app-only).
+ * Synchronisation à sens unique : étapes logistiques → calendrier principal de
+ * log@setup.paris (Microsoft Graph, app-only). Les événements créés portent la
+ * catégorie « Planning logistique Setup » : seuls ceux-là sont modifiés/supprimés.
  * L'application fait foi : toute modification faite dans Outlook est écrasée.
  */
 import { getToken } from "@/lib/server-fns/shared-inbox-attachments.functions";
