@@ -26,6 +26,7 @@ import {
   ClipboardCheck,
   ArrowLeftRight,
   Users,
+  Wallet,
   CalendarDays,
 } from "lucide-react";
 
