@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { useAffairesPourLogistique } from "@/hooks/use-etapes-logistiques";
+import { AffaireCombobox } from "@/components/planning/AffaireCombobox";
 import { analyserJustificatif } from "@/lib/server-fns/notes-frais.functions";
 import { NDF_CATEGORIES, NDF_TAUX_TVA, computeHtTva } from "@/lib/notes-frais";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -165,10 +166,15 @@ export function NoteFraisDialog({ open, onOpenChange, note, onSaved }: {
               </div>
               {f.libre
                 ? <Input value={f.chantier_libre} onChange={(e) => setF({ ...f, chantier_libre: e.target.value })} placeholder="Atelier, frais généraux…" />
-                : <Select value={f.affaire_id} onValueChange={(v) => setF({ ...f, affaire_id: v })}>
-                    <SelectTrigger><SelectValue placeholder="Choisir un chantier" /></SelectTrigger>
-                    <SelectContent>{affaires.map((a) => <SelectItem key={a.id} value={a.id}>{a.numero ?? "—"} · {a.nom}</SelectItem>)}</SelectContent>
-                  </Select>}
+                : <AffaireCombobox
+                    affaires={affaires}
+                    value={f.affaire_id}
+                    onChange={(id) => setF({ ...f, affaire_id: id })}
+                    placeholder="Rechercher un chantier (n°, nom, client, lieu)…"
+                    includeClosed
+                    defaultIncludeNonOp
+                    defaultIncludeStockage
+                  />}
             </div>
             <div className="sm:col-span-2"><Label>Commentaire</Label><Textarea rows={2} value={f.commentaire} onChange={(e) => setF({ ...f, commentaire: e.target.value })} /></div>
           </div>
