@@ -6,7 +6,7 @@ import {
   UserCircle, FileText, Trophy, Map, ClipboardList,
   Truck, Palette, Warehouse, Hammer, Wrench, BadgeCheck, Lightbulb,
   FileSignature, Inbox, PackageCheck, UsersRound, Briefcase, Settings, TrendingUp, LayoutGrid,
-  GanttChart,
+  GanttChart, Wallet,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -72,6 +72,7 @@ function buildSections(
         { title: "Montage & Démontage", url: "/mes-missions", icon: PackageCheck, cap: "mes_missions.view" },
         { title: "Équipe chantier", url: "/mes-chantiers", icon: UsersRound, cap: "mes_chantiers.view" },
         { title: "Mes heures", url: "/mes-heures", icon: Clock, cap: "mes_heures.view" },
+        { title: "Mes notes de frais", url: "/mes-notes-de-frais", icon: Wallet },
         { title: "Mes contrats", url: "/mes-contrats", icon: FileSignature, cap: "mes_contrats.view" },
         { title: "Saisir heures équipe", url: "/saisie-pour-equipe", icon: ClipboardCheck, cap: "heures.equipe.saisir" },
 
@@ -119,6 +120,7 @@ function buildSections(
       items: [
         { title: "Employés", url: "/employes", icon: Users, cap: "section.equipes" },
         { title: "Intermittents", url: "/interimaires", icon: Briefcase, cap: "section.equipes" },
+        { title: "Valider notes de frais", url: "/validation-notes-de-frais", icon: Wallet, cap: "section.admin" },
         { title: "Absences", url: "/absences", icon: CalendarOff, cap: "section.equipes" },
         {
           title: "Valider heures",
@@ -167,7 +169,7 @@ function buildSections(
  * Aucun blocage d'URL : les autres pages restent joignables en direct.
  */
 const SIMPLE_MODE_SECTIONS = new Set(["Suivi des affaires", "Admin"]);
-const SIMPLE_MODE_ALWAYS_URLS = new Set(["/"]);
+const SIMPLE_MODE_ALWAYS_URLS = new Set(["/", "/mes-notes-de-frais"]);
 
 function applySimpleMode(sections: NavSection[]): NavSection[] {
   return sections
@@ -252,7 +254,7 @@ function applyLogistiqueOppsMode(sections: NavSection[]): NavSection[] {
  * toujours ouvrir /admin/feature-flags en direct pour désactiver le mode.
  */
 // "/admin/utilisateurs" reste filtré par la cap section.admin (admins seulement).
-const SA_MODE_URLS = new Set(["/opportunites", "/demandes-clients", "/affaires", "/liste-chantiers", "/clients", "/logistique", "/demandes-logistique", "/jalonnements", "/admin/utilisateurs"]);
+const SA_MODE_URLS = new Set(["/opportunites", "/demandes-clients", "/affaires", "/liste-chantiers", "/clients", "/logistique", "/demandes-logistique", "/jalonnements", "/admin/utilisateurs", "/mes-notes-de-frais", "/validation-notes-de-frais"]);
 
 function applySuiviAffairesMode(sections: NavSection[]): NavSection[] {
   return sections

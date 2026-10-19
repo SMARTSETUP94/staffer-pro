@@ -41,6 +41,7 @@ import { Route as AppMesChantiersRouteImport } from './routes/_app.mes-chantiers
 import { Route as AppMesContratsRouteImport } from './routes/_app.mes-contrats'
 import { Route as AppMesHeuresRouteImport } from './routes/_app.mes-heures'
 import { Route as AppMesMissionsRouteImport } from './routes/_app.mes-missions'
+import { Route as AppMesNotesDeFraisRouteImport } from './routes/_app.mes-notes-de-frais'
 import { Route as AppMesPropositionsRouteImport } from './routes/_app.mes-propositions'
 import { Route as AppMesSwapsRouteImport } from './routes/_app.mes-swaps'
 import { Route as AppMonEquipeTypeRouteImport } from './routes/_app.mon-equipe-type'
@@ -54,6 +55,7 @@ import { Route as AppSaisiePourEquipeRouteImport } from './routes/_app.saisie-po
 import { Route as AppSignalementsRouteImport } from './routes/_app.signalements'
 import { Route as AppStafferMobileRouteImport } from './routes/_app.staffer-mobile'
 import { Route as AppValidationHeuresRouteImport } from './routes/_app.validation-heures'
+import { Route as AppValidationNotesDeFraisRouteImport } from './routes/_app.validation-notes-de-frais'
 import { Route as AuthForgotPasswordRouteImport } from './routes/auth.forgot-password'
 import { Route as AuthResetPasswordRouteImport } from './routes/auth.reset-password'
 import { Route as AuthSetPasswordRouteImport } from './routes/auth.set-password'
@@ -278,6 +280,11 @@ const AppMesMissionsRoute = AppMesMissionsRouteImport.update({
   path: '/mes-missions',
   getParentRoute: () => AppRoute,
 } as any)
+const AppMesNotesDeFraisRoute = AppMesNotesDeFraisRouteImport.update({
+  id: '/mes-notes-de-frais',
+  path: '/mes-notes-de-frais',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppMesPropositionsRoute = AppMesPropositionsRouteImport.update({
   id: '/mes-propositions',
   path: '/mes-propositions',
@@ -343,6 +350,12 @@ const AppValidationHeuresRoute = AppValidationHeuresRouteImport.update({
   path: '/validation-heures',
   getParentRoute: () => AppRoute,
 } as any)
+const AppValidationNotesDeFraisRoute =
+  AppValidationNotesDeFraisRouteImport.update({
+    id: '/validation-notes-de-frais',
+    path: '/validation-notes-de-frais',
+    getParentRoute: () => AppRoute,
+  } as any)
 const AuthForgotPasswordRoute = AuthForgotPasswordRouteImport.update({
   id: '/auth/forgot-password',
   path: '/auth/forgot-password',
@@ -722,6 +735,7 @@ export interface FileRoutesByFullPath {
   '/mes-contrats': typeof AppMesContratsRoute
   '/mes-heures': typeof AppMesHeuresRoute
   '/mes-missions': typeof AppMesMissionsRoute
+  '/mes-notes-de-frais': typeof AppMesNotesDeFraisRoute
   '/mes-propositions': typeof AppMesPropositionsRoute
   '/mes-swaps': typeof AppMesSwapsRoute
   '/mon-equipe-type': typeof AppMonEquipeTypeRoute
@@ -735,6 +749,7 @@ export interface FileRoutesByFullPath {
   '/signalements': typeof AppSignalementsRoute
   '/staffer-mobile': typeof AppStafferMobileRoute
   '/validation-heures': typeof AppValidationHeuresRoute
+  '/validation-notes-de-frais': typeof AppValidationNotesDeFraisRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/auth/set-password': typeof AuthSetPasswordRoute
@@ -830,6 +845,7 @@ export interface FileRoutesByTo {
   '/mes-contrats': typeof AppMesContratsRoute
   '/mes-heures': typeof AppMesHeuresRoute
   '/mes-missions': typeof AppMesMissionsRoute
+  '/mes-notes-de-frais': typeof AppMesNotesDeFraisRoute
   '/mes-propositions': typeof AppMesPropositionsRoute
   '/mes-swaps': typeof AppMesSwapsRoute
   '/mon-equipe-type': typeof AppMonEquipeTypeRoute
@@ -842,6 +858,7 @@ export interface FileRoutesByTo {
   '/signalements': typeof AppSignalementsRoute
   '/staffer-mobile': typeof AppStafferMobileRoute
   '/validation-heures': typeof AppValidationHeuresRoute
+  '/validation-notes-de-frais': typeof AppValidationNotesDeFraisRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/auth/set-password': typeof AuthSetPasswordRoute
@@ -940,6 +957,7 @@ export interface FileRoutesById {
   '/_app/mes-contrats': typeof AppMesContratsRoute
   '/_app/mes-heures': typeof AppMesHeuresRoute
   '/_app/mes-missions': typeof AppMesMissionsRoute
+  '/_app/mes-notes-de-frais': typeof AppMesNotesDeFraisRoute
   '/_app/mes-propositions': typeof AppMesPropositionsRoute
   '/_app/mes-swaps': typeof AppMesSwapsRoute
   '/_app/mon-equipe-type': typeof AppMonEquipeTypeRoute
@@ -953,6 +971,7 @@ export interface FileRoutesById {
   '/_app/signalements': typeof AppSignalementsRoute
   '/_app/staffer-mobile': typeof AppStafferMobileRoute
   '/_app/validation-heures': typeof AppValidationHeuresRoute
+  '/_app/validation-notes-de-frais': typeof AppValidationNotesDeFraisRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/auth/set-password': typeof AuthSetPasswordRoute
@@ -1053,6 +1072,7 @@ export interface FileRouteTypes {
     | '/mes-contrats'
     | '/mes-heures'
     | '/mes-missions'
+    | '/mes-notes-de-frais'
     | '/mes-propositions'
     | '/mes-swaps'
     | '/mon-equipe-type'
@@ -1066,6 +1086,7 @@ export interface FileRouteTypes {
     | '/signalements'
     | '/staffer-mobile'
     | '/validation-heures'
+    | '/validation-notes-de-frais'
     | '/auth/forgot-password'
     | '/auth/reset-password'
     | '/auth/set-password'
@@ -1161,6 +1182,7 @@ export interface FileRouteTypes {
     | '/mes-contrats'
     | '/mes-heures'
     | '/mes-missions'
+    | '/mes-notes-de-frais'
     | '/mes-propositions'
     | '/mes-swaps'
     | '/mon-equipe-type'
@@ -1173,6 +1195,7 @@ export interface FileRouteTypes {
     | '/signalements'
     | '/staffer-mobile'
     | '/validation-heures'
+    | '/validation-notes-de-frais'
     | '/auth/forgot-password'
     | '/auth/reset-password'
     | '/auth/set-password'
@@ -1270,6 +1293,7 @@ export interface FileRouteTypes {
     | '/_app/mes-contrats'
     | '/_app/mes-heures'
     | '/_app/mes-missions'
+    | '/_app/mes-notes-de-frais'
     | '/_app/mes-propositions'
     | '/_app/mes-swaps'
     | '/_app/mon-equipe-type'
@@ -1283,6 +1307,7 @@ export interface FileRouteTypes {
     | '/_app/signalements'
     | '/_app/staffer-mobile'
     | '/_app/validation-heures'
+    | '/_app/validation-notes-de-frais'
     | '/auth/forgot-password'
     | '/auth/reset-password'
     | '/auth/set-password'
@@ -1588,6 +1613,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppMesMissionsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/mes-notes-de-frais': {
+      id: '/_app/mes-notes-de-frais'
+      path: '/mes-notes-de-frais'
+      fullPath: '/mes-notes-de-frais'
+      preLoaderRoute: typeof AppMesNotesDeFraisRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/mes-propositions': {
       id: '/_app/mes-propositions'
       path: '/mes-propositions'
@@ -1677,6 +1709,13 @@ declare module '@tanstack/react-router' {
       path: '/validation-heures'
       fullPath: '/validation-heures'
       preLoaderRoute: typeof AppValidationHeuresRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/validation-notes-de-frais': {
+      id: '/_app/validation-notes-de-frais'
+      path: '/validation-notes-de-frais'
+      fullPath: '/validation-notes-de-frais'
+      preLoaderRoute: typeof AppValidationNotesDeFraisRouteImport
       parentRoute: typeof AppRoute
     }
     '/auth/forgot-password': {
@@ -2268,6 +2307,7 @@ interface AppRouteChildren {
   AppMesContratsRoute: typeof AppMesContratsRoute
   AppMesHeuresRoute: typeof AppMesHeuresRoute
   AppMesMissionsRoute: typeof AppMesMissionsRoute
+  AppMesNotesDeFraisRoute: typeof AppMesNotesDeFraisRoute
   AppMesPropositionsRoute: typeof AppMesPropositionsRoute
   AppMesSwapsRoute: typeof AppMesSwapsRoute
   AppMonEquipeTypeRoute: typeof AppMonEquipeTypeRoute
@@ -2281,6 +2321,7 @@ interface AppRouteChildren {
   AppSignalementsRoute: typeof AppSignalementsRoute
   AppStafferMobileRoute: typeof AppStafferMobileRoute
   AppValidationHeuresRoute: typeof AppValidationHeuresRoute
+  AppValidationNotesDeFraisRoute: typeof AppValidationNotesDeFraisRoute
   AppIndexRoute: typeof AppIndexRoute
   AppAdminAuditRoute: typeof AppAdminAuditRoute
   AppAdminContenuWidgetsRoute: typeof AppAdminContenuWidgetsRoute
@@ -2347,6 +2388,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppMesContratsRoute: AppMesContratsRoute,
   AppMesHeuresRoute: AppMesHeuresRoute,
   AppMesMissionsRoute: AppMesMissionsRoute,
+  AppMesNotesDeFraisRoute: AppMesNotesDeFraisRoute,
   AppMesPropositionsRoute: AppMesPropositionsRoute,
   AppMesSwapsRoute: AppMesSwapsRoute,
   AppMonEquipeTypeRoute: AppMonEquipeTypeRoute,
@@ -2360,6 +2402,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppSignalementsRoute: AppSignalementsRoute,
   AppStafferMobileRoute: AppStafferMobileRoute,
   AppValidationHeuresRoute: AppValidationHeuresRoute,
+  AppValidationNotesDeFraisRoute: AppValidationNotesDeFraisRoute,
   AppIndexRoute: AppIndexRoute,
   AppAdminAuditRoute: AppAdminAuditRoute,
   AppAdminContenuWidgetsRoute: AppAdminContenuWidgetsRoute,

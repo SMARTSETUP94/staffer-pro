@@ -3990,6 +3990,100 @@ export type Database = {
           },
         ]
       }
+      notes_de_frais: {
+        Row: {
+          affaire_id: string | null
+          categorie: string
+          chantier_libre: string | null
+          commentaire: string | null
+          created_at: string
+          date_depense: string
+          fournisseur: string
+          id: string
+          justificatif_path: string | null
+          montant_ht: number
+          montant_ttc: number
+          montant_tva: number
+          motif_rejet: string | null
+          rembourse_le: string | null
+          rembourse_par: string | null
+          statut: Database["public"]["Enums"]["note_frais_statut"]
+          taux_tva: number
+          updated_at: string
+          user_id: string
+          valide_le: string | null
+          valide_par: string | null
+        }
+        Insert: {
+          affaire_id?: string | null
+          categorie?: string
+          chantier_libre?: string | null
+          commentaire?: string | null
+          created_at?: string
+          date_depense?: string
+          fournisseur: string
+          id?: string
+          justificatif_path?: string | null
+          montant_ht?: number
+          montant_ttc: number
+          montant_tva?: number
+          motif_rejet?: string | null
+          rembourse_le?: string | null
+          rembourse_par?: string | null
+          statut?: Database["public"]["Enums"]["note_frais_statut"]
+          taux_tva?: number
+          updated_at?: string
+          user_id?: string
+          valide_le?: string | null
+          valide_par?: string | null
+        }
+        Update: {
+          affaire_id?: string | null
+          categorie?: string
+          chantier_libre?: string | null
+          commentaire?: string | null
+          created_at?: string
+          date_depense?: string
+          fournisseur?: string
+          id?: string
+          justificatif_path?: string | null
+          montant_ht?: number
+          montant_ttc?: number
+          montant_tva?: number
+          motif_rejet?: string | null
+          rembourse_le?: string | null
+          rembourse_par?: string | null
+          statut?: Database["public"]["Enums"]["note_frais_statut"]
+          taux_tva?: number
+          updated_at?: string
+          user_id?: string
+          valide_le?: string | null
+          valide_par?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notes_de_frais_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "affaires"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notes_de_frais_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "v_affaire_consommation"
+            referencedColumns: ["affaire_id"]
+          },
+          {
+            foreignKeyName: "notes_de_frais_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "v_affaires_avec_plan_status"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           created_at: string
@@ -6840,6 +6934,7 @@ export type Database = {
         | "probleme"
         | "photo"
         | "message"
+      note_frais_statut: "en_attente" | "validee" | "rejetee" | "remboursee"
       notification_type:
         | "assignation_creee"
         | "assignation_modifiee"
@@ -7160,6 +7255,7 @@ export const Constants = {
       heures_statut: ["brouillon", "soumis", "valide", "rejete"],
       lieu_type: ["atelier", "stockage"],
       mission_event_type: ["arrivee", "depart", "probleme", "photo", "message"],
+      note_frais_statut: ["en_attente", "validee", "rejetee", "remboursee"],
       notification_type: [
         "assignation_creee",
         "assignation_modifiee",
