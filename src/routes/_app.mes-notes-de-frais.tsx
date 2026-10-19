@@ -11,7 +11,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { NoteFraisDialog, type NoteFraisRow } from "@/components/notes-frais/NoteFraisDialog";
-import { NDF_STATUTS, categorieLabel, formatEur } from "@/lib/notes-frais";
+import { NDF_STATUTS, categorieLabel, formatEur, filterNotesByStatus, type NdfStatusFilter } from "@/lib/notes-frais";
 
 export const Route = createFileRoute("/_app/mes-notes-de-frais")({
   head: () => ({
@@ -35,18 +35,21 @@ function MesNotesDeFrais() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [edit, setEdit] = useState<NoteFraisRow | null>(null);
+  const [statusFilter, setStatusFilter] = useState<NdfStatusFilter>(null);
   const { data: rows = [] } = useQuery({
     queryKey: ["mes-notes-de-frais", user?.id],
     enabled: !!user,
     queryFn: async () => {
+      if (!user) return [];
       const { data, error } = await supabase.from("notes_de_frais").select(NDF_SELECT)
-        .eq("user_id", user!.id).order("date_depense", { ascending: false }).limit(500);
+        .eq("user_id", user.id).order("date_depense", { ascending: false }).limit(500);
       if (error) throw error;
       return (data ?? []) as unknown as NoteAvecChantier[];
     },
   });
   const refresh = () => qc.invalidateQueries({ queryKey: ["mes-notes-de-frais"] });
   const total = (s: string) => rows.filter((r) => r.statut === s).reduce((a, r) => a + Number(r.montant_ttc), 0);
+  const visibleRows = filterNotesByStatus(rows, statusFilter);
 
   async function remove(r: NoteFraisRow) {
     if (!confirm("Supprimer cette note de frais ?")) return;
@@ -62,14 +65,27 @@ function MesNotesDeFrais() {
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
         <Button className="w-full sm:w-auto" onClick={() => { setEdit(null); setOpen(true); }}><Plus className="mr-1 h-4 w-4" />Nouvelle note de frais</Button>
         <div className="grid grid-cols-3 gap-2 sm:ml-auto sm:flex sm:flex-wrap sm:gap-2">
-          <Badge variant="secondary" className="flex-col justify-center gap-0.5 px-1 py-1 sm:flex-row sm:items-center sm:px-2.5 sm:py-0.5"><span className="text-[10px] leading-none sm:text-xs">En attente</span><span className="font-semibold sm:font-normal">{formatEur(total("en_attente"))}</span></Badge>
-          <Badge className="flex-col justify-center gap-0.5 px-1 py-1 sm:flex-row sm:items-center sm:px-2.5 sm:py-0.5"><span className="text-[10px] leading-none sm:text-xs">Validées</span><span className="font-semibold sm:font-normal">{formatEur(total("validee"))}</span></Badge>
-          <Badge variant="outline" className="flex-col justify-center gap-0.5 px-1 py-1 sm:flex-row sm:items-center sm:px-2.5 sm:py-0.5"><span className="text-[10px] leading-none sm:text-xs">Remboursées</span><span className="font-semibold sm:font-normal">{formatEur(total("remboursee"))}</span></Badge>
+          {([
+            { status: "en_attente", label: "En attente" },
+            { status: "validee", label: "Validées" },
+            { status: "remboursee", label: "Remboursées" },
+          ] as const).map(({ status, label }) => (
+            <Button key={status} variant={statusFilter === status ? "default" : "outline"}
+              aria-pressed={statusFilter === status}
+              onClick={() => setStatusFilter((current) => current === status ? null : status)}
+              className="h-auto min-h-11 flex-col gap-0.5 px-1 py-2 sm:flex-row sm:gap-2 sm:px-3">
+              <span className="text-xs">{label}</span><span className="font-semibold">{formatEur(total(status))}</span>
+            </Button>
+          ))}
         </div>
       </div>
-      <div className="divide-y rounded-md border">
-        {rows.length === 0 && <p className="p-6 text-center text-sm text-muted-foreground">Aucune note de frais pour l'instant.</p>}
-        {rows.map((r) => {
+      {statusFilter !== null && <div className="flex items-center justify-between gap-2 text-sm">
+        <span className="text-muted-foreground">{visibleRows.length} note{visibleRows.length > 1 ? "s" : ""} · {NDF_STATUTS[statusFilter]?.label}</span>
+        <Button variant="ghost" size="sm" onClick={() => setStatusFilter(null)}>Tout afficher</Button>
+      </div>}
+      <div className="divide-y rounded-md border" aria-live="polite">
+        {visibleRows.length === 0 && <p className="p-6 text-center text-sm text-muted-foreground">{statusFilter === null ? "Aucune note de frais pour l'instant." : "Aucune note de frais pour ce statut."}</p>}
+        {visibleRows.map((r) => {
           const editable = r.statut === "en_attente" || r.statut === "rejetee";
           return (
             <div key={r.id} className="grid gap-1.5 p-3 text-sm md:grid-cols-[72px_minmax(0,1fr)_max-content_auto_auto] md:items-center md:gap-3 md:py-2.5">
