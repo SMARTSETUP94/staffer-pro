@@ -59,12 +59,12 @@ function MesNotesDeFrais() {
   return (
     <div className="space-y-4 p-4 md:p-6">
       <PageHeader title="Mes notes de frais" description="Prends ton ticket en photo : l'IA remplit les champs, tu vérifies et tu envoies." />
-      <div className="flex flex-wrap items-center gap-3">
-        <Button onClick={() => { setEdit(null); setOpen(true); }}><Plus className="mr-1 h-4 w-4" />Nouvelle note de frais</Button>
-        <div className="ml-auto flex flex-wrap gap-2 text-sm">
-          <Badge variant="secondary">En attente {formatEur(total("en_attente"))}</Badge>
-          <Badge>Validées {formatEur(total("validee"))}</Badge>
-          <Badge variant="outline">Remboursées {formatEur(total("remboursee"))}</Badge>
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+        <Button className="w-full sm:w-auto" onClick={() => { setEdit(null); setOpen(true); }}><Plus className="mr-1 h-4 w-4" />Nouvelle note de frais</Button>
+        <div className="grid grid-cols-3 gap-2 sm:ml-auto sm:flex sm:flex-wrap sm:gap-2">
+          <Badge variant="secondary" className="flex-col justify-center gap-0.5 px-1 py-1 sm:flex-row sm:items-center sm:px-2.5 sm:py-0.5"><span className="text-[10px] leading-none sm:text-xs">En attente</span><span className="font-semibold sm:font-normal">{formatEur(total("en_attente"))}</span></Badge>
+          <Badge className="flex-col justify-center gap-0.5 px-1 py-1 sm:flex-row sm:items-center sm:px-2.5 sm:py-0.5"><span className="text-[10px] leading-none sm:text-xs">Validées</span><span className="font-semibold sm:font-normal">{formatEur(total("validee"))}</span></Badge>
+          <Badge variant="outline" className="flex-col justify-center gap-0.5 px-1 py-1 sm:flex-row sm:items-center sm:px-2.5 sm:py-0.5"><span className="text-[10px] leading-none sm:text-xs">Remboursées</span><span className="font-semibold sm:font-normal">{formatEur(total("remboursee"))}</span></Badge>
         </div>
       </div>
       <div className="divide-y rounded-md border">
@@ -72,16 +72,22 @@ function MesNotesDeFrais() {
         {rows.map((r) => {
           const editable = r.statut === "en_attente" || r.statut === "rejetee";
           return (
-            <div key={r.id} className="flex flex-wrap items-center gap-3 p-3 text-sm">
-              <div className="w-20 text-muted-foreground">{format(parseISO(r.date_depense), "d MMM yy", { locale: fr })}</div>
-              <button className="min-w-0 flex-1 text-left disabled:cursor-default" disabled={!editable} onClick={() => { setEdit(r); setOpen(true); }}>
+            <div key={r.id} className="grid gap-1.5 p-3 text-sm md:grid-cols-[72px_minmax(0,1fr)_max-content_auto_auto] md:items-center md:gap-3 md:py-2.5">
+              <div className="flex items-center justify-between gap-2 md:contents">
+                <span className="text-muted-foreground">{format(parseISO(r.date_depense), "d MMM yy", { locale: fr })}</span>
+                <Badge className="md:hidden" variant={NDF_STATUTS[r.statut]?.variant}>{NDF_STATUTS[r.statut]?.label ?? r.statut}</Badge>
+              </div>
+              <button className="min-w-0 text-left disabled:cursor-default" disabled={!editable} onClick={() => { setEdit(r); setOpen(true); }}>
                 <div className="font-medium">{r.fournisseur}</div>
-                <div className="text-xs text-muted-foreground">{categorieLabel(r.categorie)} · {r.affaires ? `${r.affaires.numero ?? ""} ${r.affaires.nom}` : r.chantier_libre}</div>
+                <div className="truncate text-xs text-muted-foreground">{categorieLabel(r.categorie)} · {r.affaires ? `${r.affaires.numero ?? ""} ${r.affaires.nom}` : r.chantier_libre}</div>
                 {r.statut === "rejetee" && r.motif_rejet && <div className="text-xs text-destructive">Motif : {r.motif_rejet} — clique pour corriger et renvoyer</div>}
               </button>
-              <div className="text-right"><div className="font-semibold">{formatEur(r.montant_ttc)}</div><div className="text-xs text-muted-foreground">HT {formatEur(r.montant_ht)}</div></div>
-              <Badge variant={NDF_STATUTS[r.statut]?.variant}>{NDF_STATUTS[r.statut]?.label ?? r.statut}</Badge>
-              {editable && <Button size="icon" variant="ghost" aria-label="Supprimer" onClick={() => remove(r)}><Trash2 className="h-4 w-4" /></Button>}
+              <div className="text-right">
+                <div className="text-base font-semibold md:text-sm">{formatEur(r.montant_ttc)}</div>
+                <div className="text-xs text-muted-foreground">HT {formatEur(r.montant_ht)}</div>
+              </div>
+              <Badge className="hidden md:inline-flex" variant={NDF_STATUTS[r.statut]?.variant}>{NDF_STATUTS[r.statut]?.label ?? r.statut}</Badge>
+              {editable && <Button size="icon" variant="ghost" aria-label="Supprimer" className="ml-auto md:ml-0" onClick={() => remove(r)}><Trash2 className="h-4 w-4" /></Button>}
             </div>
           );
         })}
