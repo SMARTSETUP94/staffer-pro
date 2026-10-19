@@ -55,6 +55,7 @@ import { Route as AppSaisiePourEquipeRouteImport } from './routes/_app.saisie-po
 import { Route as AppSignalementsRouteImport } from './routes/_app.signalements'
 import { Route as AppStafferMobileRouteImport } from './routes/_app.staffer-mobile'
 import { Route as AppValidationHeuresRouteImport } from './routes/_app.validation-heures'
+import { Route as AppValidationNotesDeFraisRouteImport } from './routes/_app.validation-notes-de-frais'
 import { Route as AuthForgotPasswordRouteImport } from './routes/auth.forgot-password'
 import { Route as AuthResetPasswordRouteImport } from './routes/auth.reset-password'
 import { Route as AuthSetPasswordRouteImport } from './routes/auth.set-password'
@@ -349,6 +350,12 @@ const AppValidationHeuresRoute = AppValidationHeuresRouteImport.update({
   path: '/validation-heures',
   getParentRoute: () => AppRoute,
 } as any)
+const AppValidationNotesDeFraisRoute =
+  AppValidationNotesDeFraisRouteImport.update({
+    id: '/validation-notes-de-frais',
+    path: '/validation-notes-de-frais',
+    getParentRoute: () => AppRoute,
+  } as any)
 const AuthForgotPasswordRoute = AuthForgotPasswordRouteImport.update({
   id: '/auth/forgot-password',
   path: '/auth/forgot-password',
@@ -742,6 +749,7 @@ export interface FileRoutesByFullPath {
   '/signalements': typeof AppSignalementsRoute
   '/staffer-mobile': typeof AppStafferMobileRoute
   '/validation-heures': typeof AppValidationHeuresRoute
+  '/validation-notes-de-frais': typeof AppValidationNotesDeFraisRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/auth/set-password': typeof AuthSetPasswordRoute
@@ -850,6 +858,7 @@ export interface FileRoutesByTo {
   '/signalements': typeof AppSignalementsRoute
   '/staffer-mobile': typeof AppStafferMobileRoute
   '/validation-heures': typeof AppValidationHeuresRoute
+  '/validation-notes-de-frais': typeof AppValidationNotesDeFraisRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/auth/set-password': typeof AuthSetPasswordRoute
@@ -962,6 +971,7 @@ export interface FileRoutesById {
   '/_app/signalements': typeof AppSignalementsRoute
   '/_app/staffer-mobile': typeof AppStafferMobileRoute
   '/_app/validation-heures': typeof AppValidationHeuresRoute
+  '/_app/validation-notes-de-frais': typeof AppValidationNotesDeFraisRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/auth/set-password': typeof AuthSetPasswordRoute
@@ -1076,6 +1086,7 @@ export interface FileRouteTypes {
     | '/signalements'
     | '/staffer-mobile'
     | '/validation-heures'
+    | '/validation-notes-de-frais'
     | '/auth/forgot-password'
     | '/auth/reset-password'
     | '/auth/set-password'
@@ -1184,6 +1195,7 @@ export interface FileRouteTypes {
     | '/signalements'
     | '/staffer-mobile'
     | '/validation-heures'
+    | '/validation-notes-de-frais'
     | '/auth/forgot-password'
     | '/auth/reset-password'
     | '/auth/set-password'
@@ -1295,6 +1307,7 @@ export interface FileRouteTypes {
     | '/_app/signalements'
     | '/_app/staffer-mobile'
     | '/_app/validation-heures'
+    | '/_app/validation-notes-de-frais'
     | '/auth/forgot-password'
     | '/auth/reset-password'
     | '/auth/set-password'
@@ -1696,6 +1709,13 @@ declare module '@tanstack/react-router' {
       path: '/validation-heures'
       fullPath: '/validation-heures'
       preLoaderRoute: typeof AppValidationHeuresRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/validation-notes-de-frais': {
+      id: '/_app/validation-notes-de-frais'
+      path: '/validation-notes-de-frais'
+      fullPath: '/validation-notes-de-frais'
+      preLoaderRoute: typeof AppValidationNotesDeFraisRouteImport
       parentRoute: typeof AppRoute
     }
     '/auth/forgot-password': {
@@ -2301,6 +2321,7 @@ interface AppRouteChildren {
   AppSignalementsRoute: typeof AppSignalementsRoute
   AppStafferMobileRoute: typeof AppStafferMobileRoute
   AppValidationHeuresRoute: typeof AppValidationHeuresRoute
+  AppValidationNotesDeFraisRoute: typeof AppValidationNotesDeFraisRoute
   AppIndexRoute: typeof AppIndexRoute
   AppAdminAuditRoute: typeof AppAdminAuditRoute
   AppAdminContenuWidgetsRoute: typeof AppAdminContenuWidgetsRoute
@@ -2381,6 +2402,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppSignalementsRoute: AppSignalementsRoute,
   AppStafferMobileRoute: AppStafferMobileRoute,
   AppValidationHeuresRoute: AppValidationHeuresRoute,
+  AppValidationNotesDeFraisRoute: AppValidationNotesDeFraisRoute,
   AppIndexRoute: AppIndexRoute,
   AppAdminAuditRoute: AppAdminAuditRoute,
   AppAdminContenuWidgetsRoute: AppAdminContenuWidgetsRoute,
