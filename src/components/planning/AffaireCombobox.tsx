@@ -34,6 +34,9 @@ interface Props {
    * Mettre a true pour le filtrage Planning (lecture historique) ou pour l'admin.
    */
   includeClosed?: boolean;
+  /** v0.51 — Afficher d'emblée les typologies habituellement masquées (non_op / stockage). */
+  defaultIncludeNonOp?: boolean;
+  defaultIncludeStockage?: boolean;
 }
 
 export function AffaireCombobox({
