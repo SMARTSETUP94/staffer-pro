@@ -30,6 +30,7 @@ import {
   ChevronRight,
   History,
   Phone,
+  Wallet,
   Loader2,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
