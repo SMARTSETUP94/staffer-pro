@@ -141,6 +141,13 @@
       "when": 1792389931663,
       "tag": "0019_notes_de_frais",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1792389950471,
+      "tag": "0020_notes_de_frais_storage",
+      "breakpoints": true
     }
   ]
 }
