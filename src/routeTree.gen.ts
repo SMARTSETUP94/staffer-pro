@@ -41,6 +41,7 @@ import { Route as AppMesChantiersRouteImport } from './routes/_app.mes-chantiers
 import { Route as AppMesContratsRouteImport } from './routes/_app.mes-contrats'
 import { Route as AppMesHeuresRouteImport } from './routes/_app.mes-heures'
 import { Route as AppMesMissionsRouteImport } from './routes/_app.mes-missions'
+import { Route as AppMesNotesDeFraisRouteImport } from './routes/_app.mes-notes-de-frais'
 import { Route as AppMesPropositionsRouteImport } from './routes/_app.mes-propositions'
 import { Route as AppMesSwapsRouteImport } from './routes/_app.mes-swaps'
 import { Route as AppMonEquipeTypeRouteImport } from './routes/_app.mon-equipe-type'
@@ -276,6 +277,11 @@ const AppMesHeuresRoute = AppMesHeuresRouteImport.update({
 const AppMesMissionsRoute = AppMesMissionsRouteImport.update({
   id: '/mes-missions',
   path: '/mes-missions',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppMesNotesDeFraisRoute = AppMesNotesDeFraisRouteImport.update({
+  id: '/mes-notes-de-frais',
+  path: '/mes-notes-de-frais',
   getParentRoute: () => AppRoute,
 } as any)
 const AppMesPropositionsRoute = AppMesPropositionsRouteImport.update({
@@ -722,6 +728,7 @@ export interface FileRoutesByFullPath {
   '/mes-contrats': typeof AppMesContratsRoute
   '/mes-heures': typeof AppMesHeuresRoute
   '/mes-missions': typeof AppMesMissionsRoute
+  '/mes-notes-de-frais': typeof AppMesNotesDeFraisRoute
   '/mes-propositions': typeof AppMesPropositionsRoute
   '/mes-swaps': typeof AppMesSwapsRoute
   '/mon-equipe-type': typeof AppMonEquipeTypeRoute
@@ -830,6 +837,7 @@ export interface FileRoutesByTo {
   '/mes-contrats': typeof AppMesContratsRoute
   '/mes-heures': typeof AppMesHeuresRoute
   '/mes-missions': typeof AppMesMissionsRoute
+  '/mes-notes-de-frais': typeof AppMesNotesDeFraisRoute
   '/mes-propositions': typeof AppMesPropositionsRoute
   '/mes-swaps': typeof AppMesSwapsRoute
   '/mon-equipe-type': typeof AppMonEquipeTypeRoute
@@ -940,6 +948,7 @@ export interface FileRoutesById {
   '/_app/mes-contrats': typeof AppMesContratsRoute
   '/_app/mes-heures': typeof AppMesHeuresRoute
   '/_app/mes-missions': typeof AppMesMissionsRoute
+  '/_app/mes-notes-de-frais': typeof AppMesNotesDeFraisRoute
   '/_app/mes-propositions': typeof AppMesPropositionsRoute
   '/_app/mes-swaps': typeof AppMesSwapsRoute
   '/_app/mon-equipe-type': typeof AppMonEquipeTypeRoute
@@ -1053,6 +1062,7 @@ export interface FileRouteTypes {
     | '/mes-contrats'
     | '/mes-heures'
     | '/mes-missions'
+    | '/mes-notes-de-frais'
     | '/mes-propositions'
     | '/mes-swaps'
     | '/mon-equipe-type'
@@ -1161,6 +1171,7 @@ export interface FileRouteTypes {
     | '/mes-contrats'
     | '/mes-heures'
     | '/mes-missions'
+    | '/mes-notes-de-frais'
     | '/mes-propositions'
     | '/mes-swaps'
     | '/mon-equipe-type'
@@ -1270,6 +1281,7 @@ export interface FileRouteTypes {
     | '/_app/mes-contrats'
     | '/_app/mes-heures'
     | '/_app/mes-missions'
+    | '/_app/mes-notes-de-frais'
     | '/_app/mes-propositions'
     | '/_app/mes-swaps'
     | '/_app/mon-equipe-type'
@@ -1586,6 +1598,13 @@ declare module '@tanstack/react-router' {
       path: '/mes-missions'
       fullPath: '/mes-missions'
       preLoaderRoute: typeof AppMesMissionsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/mes-notes-de-frais': {
+      id: '/_app/mes-notes-de-frais'
+      path: '/mes-notes-de-frais'
+      fullPath: '/mes-notes-de-frais'
+      preLoaderRoute: typeof AppMesNotesDeFraisRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/mes-propositions': {
@@ -2268,6 +2287,7 @@ interface AppRouteChildren {
   AppMesContratsRoute: typeof AppMesContratsRoute
   AppMesHeuresRoute: typeof AppMesHeuresRoute
   AppMesMissionsRoute: typeof AppMesMissionsRoute
+  AppMesNotesDeFraisRoute: typeof AppMesNotesDeFraisRoute
   AppMesPropositionsRoute: typeof AppMesPropositionsRoute
   AppMesSwapsRoute: typeof AppMesSwapsRoute
   AppMonEquipeTypeRoute: typeof AppMonEquipeTypeRoute
@@ -2347,6 +2367,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppMesContratsRoute: AppMesContratsRoute,
   AppMesHeuresRoute: AppMesHeuresRoute,
   AppMesMissionsRoute: AppMesMissionsRoute,
+  AppMesNotesDeFraisRoute: AppMesNotesDeFraisRoute,
   AppMesPropositionsRoute: AppMesPropositionsRoute,
   AppMesSwapsRoute: AppMesSwapsRoute,
   AppMonEquipeTypeRoute: AppMonEquipeTypeRoute,
