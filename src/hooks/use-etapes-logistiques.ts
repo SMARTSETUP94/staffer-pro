@@ -2,6 +2,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { syncOutlookLogistiqueFn } from "@/lib/server-fns/outlook-logistique.functions";
 import type { Database } from "@/integrations/supabase/types";
+import type { Affaire } from "@/hooks/use-planning-data";
 
 export type EtapeLogistique = Database["public"]["Tables"]["affaire_etapes_logistiques"]["Row"] & {
   affaire: { id: string; numero: string; nom: string; client: string | null; lieu: string | null } | null;
