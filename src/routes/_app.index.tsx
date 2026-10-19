@@ -287,7 +287,7 @@ function AdminChefHomeView() {
     <div className="space-y-6 p-6">
       <PageHeader
         number="01"
-        eyebrow="Suivi des affaires"
+        eyebrow="Menu principal"
         title="Aujourd'hui"
         description={todayLabel.charAt(0).toUpperCase() + todayLabel.slice(1)}
       />
