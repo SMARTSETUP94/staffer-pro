@@ -20,6 +20,12 @@ export const NDF_STATUTS: Record<string, { label: string; variant: "default" | "
   remboursee: { label: "Remboursée", variant: "outline" },
 };
 
+export type NdfStatusFilter = "en_attente" | "validee" | "remboursee" | null;
+
+export function filterNotesByStatus<T extends { statut: string }>(rows: T[], status: NdfStatusFilter): T[] {
+  return status === null ? rows : rows.filter((row) => row.statut === status);
+}
+
 export function categorieLabel(v: string) {
   return NDF_CATEGORIES.find((c) => c.value === v)?.label ?? v;
 }
