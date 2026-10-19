@@ -8,6 +8,8 @@ import {
 } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { normalizeForMatch } from "@/lib/string-normalize";
+import { matchesOpportunityKeywords } from "@/lib/opportunite-search";
 
 interface ClientOption {
   id: string;
@@ -20,41 +22,41 @@ interface Props {
   clientId: string | null;
   onChange: (clientId: string | null, nom: string) => void;
   disabled?: boolean;
+  allowClear?: boolean;
 }
 
-function normalize(s: string) {
-  return s.trim().toLowerCase().replace(/\s+/g, " ");
-}
-
-export function ClientCombobox({ value, clientId, onChange, disabled }: Props) {
+export function ClientCombobox({ value, clientId, onChange, disabled, allowClear = true }: Props) {
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<ClientOption[]>([]);
   const [query, setQuery] = useState("");
   const [creating, setCreating] = useState(false);
+  const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
     let active = true;
     (async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("clients")
         .select("id,nom,domaines_email")
         .eq("actif", true)
         .order("nom", { ascending: true })
         .limit(500);
       if (active && data) setItems(data as ClientOption[]);
+      if (active) setLoadError(Boolean(error));
     })();
     return () => { active = false; };
   }, []);
 
-  const exists = items.some((c) => normalize(c.nom) === normalize(query));
+  const exists = items.some((c) => normalizeForMatch(c.nom) === normalizeForMatch(query));
+  const filtered = items.filter((c) => matchesOpportunityKeywords([c.nom, ...(c.domaines_email ?? [])], query));
   const trimmed = query.trim();
 
   const handleCreate = async () => {
-    if (!trimmed) return;
+    if (!trimmed || creating || exists || loadError) return;
     setCreating(true);
     const { data, error } = await supabase
       .from("clients")
-      .insert({ nom: trimmed, nom_normalise: normalize(trimmed), domaines_email: [] })
+      .insert({ nom: trimmed, nom_normalise: normalizeForMatch(trimmed), domaines_email: [] })
       .select("id,nom,domaines_email")
       .single();
     setCreating(false);
@@ -78,6 +80,8 @@ export function ClientCombobox({ value, clientId, onChange, disabled }: Props) {
           type="button"
           variant="outline"
           role="combobox"
+          aria-label="Client"
+          aria-expanded={open}
           disabled={disabled}
           className="h-10 w-full justify-between rounded-xl font-normal"
         >
@@ -87,27 +91,14 @@ export function ClientCombobox({ value, clientId, onChange, disabled }: Props) {
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-        <Command shouldFilter>
+      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+        <Command shouldFilter={false}>
           <CommandInput placeholder="Rechercher un client…" value={query} onValueChange={setQuery} />
           <CommandList>
-            <CommandEmpty>
-              {trimmed ? (
-                <button
-                  type="button"
-                  onClick={handleCreate}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-accent"
-                  disabled={creating}
-                >
-                  {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-                  Créer « {trimmed} »
-                </button>
-              ) : (
-                <span className="block px-3 py-2 text-sm text-muted-foreground">Aucun client</span>
-              )}
-            </CommandEmpty>
+            {loadError && <p className="px-3 py-2 text-sm text-destructive">Impossible de charger les clients.</p>}
+            <CommandEmpty>Aucun client trouvé.</CommandEmpty>
             <CommandGroup>
-              {clientId && (
+              {clientId && allowClear && (
                 <CommandItem
                   value="__clear__"
                   onSelect={() => { onChange(null, ""); setOpen(false); }}
@@ -116,10 +107,10 @@ export function ClientCombobox({ value, clientId, onChange, disabled }: Props) {
                   Détacher le client
                 </CommandItem>
               )}
-              {items.map((c) => (
+              {filtered.map((c) => (
                 <CommandItem
                   key={c.id}
-                  value={c.nom}
+                  value={c.id}
                   onSelect={() => { onChange(c.id, c.nom); setOpen(false); }}
                 >
                   <Check className={cn("mr-2 h-4 w-4", clientId === c.id ? "opacity-100" : "opacity-0")} />
@@ -131,8 +122,8 @@ export function ClientCombobox({ value, clientId, onChange, disabled }: Props) {
                   </div>
                 </CommandItem>
               ))}
-              {trimmed && !exists && (
-                <CommandItem value={`__create__${trimmed}`} onSelect={handleCreate} className="text-primary">
+              {trimmed && !exists && !loadError && (
+                <CommandItem value={`__create__${trimmed}`} disabled={creating} onSelect={handleCreate} className="text-primary">
                   {creating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="mr-2 h-4 w-4" />}
                   Créer « {trimmed} »
                 </CommandItem>

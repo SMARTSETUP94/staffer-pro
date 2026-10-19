@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -28,6 +28,8 @@ import {
   type OpportuniteTaille,
 } from "@/lib/opportunites";
 import type { ChargeAffaires } from "@/hooks/use-charges-affaires";
+import { ClientCombobox } from "@/components/clients/ClientCombobox";
+import { ChantierNameCombobox } from "@/components/opportunites/ChantierNameCombobox";
 
 interface Props {
   open: boolean;
@@ -51,6 +53,7 @@ export function NouvelleOpportuniteDialog({
 }: Props) {
   const todayIso = new Date().toISOString().slice(0, 10);
   const [client, setClient] = useState("");
+  const [clientId, setClientId] = useState<string | null>(null);
   const [nom, setNom] = useState("");
   const [code, setCode] = useState("");
   const [chargeId, setChargeId] = useState<string>(defaultChargeId ?? "");
@@ -63,6 +66,7 @@ export function NouvelleOpportuniteDialog({
   // Charge le prochain code à l'ouverture
   function reset() {
     setClient("");
+    setClientId(null);
     setNom("");
     setCode("");
     setChargeId(defaultChargeId ?? "");
@@ -71,20 +75,19 @@ export function NouvelleOpportuniteDialog({
     setCommentaires("");
   }
 
-  async function handleOpenChange(next: boolean) {
-    onOpenChange(next);
-    if (next) {
-      reset();
-      setLoadingCode(true);
-      const { data, error } = await supabase.rpc("next_affaire_numero", { _prefix: 9 });
+  useEffect(() => {
+    if (!open) return;
+    let active = true;
+    reset();
+    setLoadingCode(true);
+    void supabase.rpc("next_affaire_numero", { _prefix: 9 }).then(({ data, error }) => {
+      if (!active) return;
       setLoadingCode(false);
-      if (error) {
-        toast.error("Impossible de suggérer un code 9XXX", { description: error.message });
-        return;
-      }
-      if (data) setCode(String(data));
-    }
-  }
+      if (error) toast.error("Impossible de suggérer un code 9XXX", { description: error.message });
+      else if (data) setCode(String(data));
+    });
+    return () => { active = false; };
+  }, [open]);
 
   async function handleSave() {
     if (!client.trim()) {
@@ -100,7 +103,7 @@ export function NouvelleOpportuniteDialog({
       return;
     }
     setSaving(true);
-    const { error } = await supabase.rpc("create_opportunite", {
+    const { data, error } = await supabase.rpc("create_opportunite", {
       _client: client.trim(),
       _nom: nom.trim() || client.trim(),
       _code: code.trim(),
@@ -109,18 +112,23 @@ export function NouvelleOpportuniteDialog({
       _date_opportunite: dateOpp,
       _commentaires: commentaires.trim() || undefined,
     });
-    setSaving(false);
     if (error) {
+      setSaving(false);
       toast.error("Création impossible", { description: error.message });
       return;
     }
+    if (clientId && typeof data === "string") {
+      const { error: linkError } = await supabase.from("affaires").update({ client_id: clientId }).eq("id", data);
+      if (linkError) toast.error("Opportunité créée, mais rattachement client impossible", { description: linkError.message });
+    }
+    setSaving(false);
     toast.success(`Opportunité ${code} créée`);
     onOpenChange(false);
     onCreated();
   }
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>Nouvelle opportunité</DialogTitle>
@@ -133,11 +141,12 @@ export function NouvelleOpportuniteDialog({
         <div className="grid gap-3">
           <div className="grid gap-1.5">
             <Label>Client</Label>
-            <Input
+            <ClientCombobox
               value={client}
-              onChange={(e) => setClient(e.target.value)}
-              placeholder="Ex. Mercedes-Benz, Hermès…"
-              autoFocus
+              clientId={clientId}
+              onChange={(id, name) => { setClientId(id); setClient(name); }}
+              disabled={saving}
+              allowClear={false}
             />
           </div>
 
@@ -148,10 +157,11 @@ export function NouvelleOpportuniteDialog({
                 (optionnel — défaut = client)
               </span>
             </Label>
-            <Input
+            <ChantierNameCombobox
               value={nom}
-              onChange={(e) => setNom(e.target.value)}
-              placeholder="Ex. Stand IAA 2026"
+              onChange={setNom}
+              clientId={clientId}
+              disabled={saving}
             />
           </div>
 
