@@ -126,6 +126,7 @@ const MES_WIDGETS: MesWidgetSpec[] = [
   { capKey: "mes_contrats.view", to: "/mes-contrats", icon: FileSignature, title: "Mes contrats", subtitle: "Lecture & signature", scope: "mine" },
   { capKey: "mes_propositions.view", to: "/mes-propositions", icon: ClipboardCheck, title: "Mes propositions", subtitle: "Créneaux à confirmer", scope: "mine" },
   { capKey: "mes_swaps.view", to: "/mes-swaps", icon: ArrowLeftRight, title: "Mes échanges", subtitle: "Swaps avec collègues", scope: "mine" },
+  { capKey: "", to: "/mes-notes-de-frais", icon: Wallet, title: "Mes notes de frais", subtitle: "Tickets & remboursements", cta: "Ouvrir" },
   { capKey: "dashboard.team.view", to: "/mon-equipe-type", icon: Users, title: "Mon équipe type", subtitle: "Coéquipiers récurrents", cta: "Voir" },
   { capKey: "planning.view", to: "/planning", icon: CalendarDays, title: "Planning", subtitle: "Vue chantier & affectations", cta: "Ouvrir" },
 ];
