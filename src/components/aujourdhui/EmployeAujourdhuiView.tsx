@@ -383,6 +383,11 @@ function MesHeuresCard() {
                 <History className="mr-1 h-3 w-3" /> Voir l'historique
               </Link>
             </Button>
+            <Button asChild variant="ghost" size="sm" className="w-full">
+              <Link to="/mes-notes-de-frais">
+                <Wallet className="mr-1 h-3 w-3" /> Mes notes de frais
+              </Link>
+            </Button>
           </div>
         </div>
       </CardContent>
