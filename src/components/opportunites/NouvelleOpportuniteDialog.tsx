@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -75,20 +75,19 @@ export function NouvelleOpportuniteDialog({
     setCommentaires("");
   }
 
-  async function handleOpenChange(next: boolean) {
-    onOpenChange(next);
-    if (next) {
-      reset();
-      setLoadingCode(true);
-      const { data, error } = await supabase.rpc("next_affaire_numero", { _prefix: 9 });
+  useEffect(() => {
+    if (!open) return;
+    let active = true;
+    reset();
+    setLoadingCode(true);
+    void supabase.rpc("next_affaire_numero", { _prefix: 9 }).then(({ data, error }) => {
+      if (!active) return;
       setLoadingCode(false);
-      if (error) {
-        toast.error("Impossible de suggérer un code 9XXX", { description: error.message });
-        return;
-      }
-      if (data) setCode(String(data));
-    }
-  }
+      if (error) toast.error("Impossible de suggérer un code 9XXX", { description: error.message });
+      else if (data) setCode(String(data));
+    });
+    return () => { active = false; };
+  }, [open]);
 
   async function handleSave() {
     if (!client.trim()) {
@@ -129,7 +128,7 @@ export function NouvelleOpportuniteDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>Nouvelle opportunité</DialogTitle>

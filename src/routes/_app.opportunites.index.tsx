@@ -120,6 +120,10 @@ export const Route = createFileRoute("/_app/opportunites/")({
         content:
           "Pipeline Kanban + vue tableur des opportunités commerciales (9XXX) — saisie inline ligne par ligne.",
       },
+      { property: "og:title", content: "Opportunités — SETUP Paris" },
+      { property: "og:description", content: "Suivi des opportunités commerciales, des clients et des projets SETUP Paris." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   validateSearch: zodValidator(oppsSearchSchema),
