@@ -1,7 +1,7 @@
 # Roadmap
 
 ## Création opportunité (19 oct. 2026)
-- [ ] Recherche client par mot-clé et création de fiche ; recherche chantier avec intitulé libre ; vérification du parcours.
+- [x] Recherche client par mot-clé et création de fiche ; recherche chantier par numéro/nom/client/lieu avec intitulé libre. 14 tests verts ; création et rattachement client vérifiés dans l’app, données de test supprimées.
 
 ## Informations juridiques clients (17 oct. 2026)
 - [x] Dirigeant modifiable et suggéré par l’IA, recherche ciblée Pappers / Société.com et liens directs ; 5 tests verts, recherche et enregistrement vérifiés sur agence-pamo (dirigeant non confirmé : laissé vide).
