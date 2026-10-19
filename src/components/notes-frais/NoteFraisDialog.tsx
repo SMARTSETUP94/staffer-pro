@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { useAffairesPourLogistique } from "@/hooks/use-etapes-logistiques";
+import { AffaireCombobox } from "@/components/planning/AffaireCombobox";
 import { analyserJustificatif } from "@/lib/server-fns/notes-frais.functions";
 import { NDF_CATEGORIES, NDF_TAUX_TVA, computeHtTva } from "@/lib/notes-frais";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
