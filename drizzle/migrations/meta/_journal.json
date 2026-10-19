@@ -134,6 +134,13 @@
       "when": 1792235286404,
       "tag": "0018_clients_dirigeant",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1792389931663,
+      "tag": "0019_notes_de_frais",
+      "breakpoints": true
     }
   ]
 }
