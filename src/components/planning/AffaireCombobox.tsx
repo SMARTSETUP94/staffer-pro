@@ -48,12 +48,14 @@ export function AffaireCombobox({
   includeOpportunites = false,
   showOpportuniteToggle = false,
   includeClosed = false,
+  defaultIncludeNonOp = false,
+  defaultIncludeStockage = false,
 }: Props) {
   const [open, setOpen] = useState(false);
   const [includeOpps, setIncludeOpps] = useState(includeOpportunites);
-  // v0.27.7 — Fix #3 — Toggles typologies (par défaut OFF)
-  const [includeNonOp, setIncludeNonOp] = useState(false);
-  const [includeStockage, setIncludeStockage] = useState(false);
+  // v0.27.7 — Fix #3 — Toggles typologies (par défaut OFF, sauf demande explicite de l'appelant)
+  const [includeNonOp, setIncludeNonOp] = useState(defaultIncludeNonOp);
+  const [includeStockage, setIncludeStockage] = useState(defaultIncludeStockage);
 
   const sorted = useMemo(() => {
     // v0.17 — Filtrer les opportunités sauf si toggle activé OU si la valeur sélectionnée en est une

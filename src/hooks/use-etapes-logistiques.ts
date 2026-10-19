@@ -82,10 +82,15 @@ export function useAffairesPourLogistique() {
   return useQuery({
     queryKey: ["affaires-logistique-options"],
     queryFn: async () => {
+      // v0.51 — Liste complète (client + lieu + statut) pour alimenter la recherche par mot-clé
       const { data, error } = await supabase
-        .from("affaires").select("id,numero,nom,phase").is("archived_at", null).order("numero", { ascending: false }).limit(500);
+        .from("affaires")
+        .select("id, numero, nom, lieu, client, chef_chantier_id, date_montage, date_demontage, phase, statut")
+        .is("archived_at", null)
+        .order("numero", { ascending: false })
+        .limit(500);
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []) as Affaire[];
     },
   });
 }
