@@ -75,7 +75,7 @@ function MesNotesDeFrais() {
             <div key={r.id} className="grid gap-1.5 p-3 text-sm md:grid-cols-[72px_minmax(0,1fr)_max-content_auto_auto] md:items-center md:gap-3 md:py-2.5">
               <div className="flex items-center justify-between gap-2 md:contents">
                 <span className="text-muted-foreground">{format(parseISO(r.date_depense), "d MMM yy", { locale: fr })}</span>
-                <Badge variant={NDF_STATUTS[r.statut]?.variant}>{NDF_STATUTS[r.statut]?.label ?? r.statut}</Badge>
+                <Badge className="md:hidden" variant={NDF_STATUTS[r.statut]?.variant}>{NDF_STATUTS[r.statut]?.label ?? r.statut}</Badge>
               </div>
               <button className="min-w-0 text-left disabled:cursor-default" disabled={!editable} onClick={() => { setEdit(r); setOpen(true); }}>
                 <div className="font-medium">{r.fournisseur}</div>
