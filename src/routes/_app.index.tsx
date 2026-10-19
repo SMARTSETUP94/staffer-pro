@@ -133,8 +133,8 @@ const MES_WIDGETS: MesWidgetSpec[] = [
 ];
 
 function MesWidgetCard({ spec }: { spec: MesWidgetSpec }) {
-  const canSee = useCapability(spec.capKey);
-  if (!canSee) return null;
+  const canSee = useCapability(spec.capKey || "__aucune_cap__");
+  if (!canSee && spec.capKey) return null;
   const Icon = spec.icon;
 
   return (
