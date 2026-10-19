@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Camera, Loader2, Sparkles } from "lucide-react";
+import { Camera, Loader2, Paperclip, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
@@ -115,13 +115,29 @@ export function NoteFraisDialog({ open, onOpenChange, note, onSaved }: {
         <DialogHeader><DialogTitle>{note ? "Modifier la note de frais" : "Nouvelle note de frais"}</DialogTitle></DialogHeader>
         <div className="grid gap-4 md:grid-cols-[240px_1fr]">
           <div className="space-y-2">
-            <label className="flex aspect-[3/4] cursor-pointer flex-col items-center justify-center gap-2 overflow-hidden rounded-md border border-dashed bg-muted/40 text-center text-sm text-muted-foreground hover:bg-muted">
+            <div className="flex aspect-[3/4] flex-col items-center justify-center gap-2 overflow-hidden rounded-md border border-dashed bg-muted/40 p-3 text-center text-sm text-muted-foreground">
               {preview ? <img src={preview} alt="Justificatif" className="h-full w-full object-contain" />
                 : path ? <span>Justificatif PDF joint</span>
                 : <><Camera className="h-8 w-8" /><span>Photo ou PDF du ticket</span></>}
-              <input type="file" accept="image/*,application/pdf" capture="environment" className="hidden"
-                onChange={(e) => { const file = e.target.files?.[0]; if (file) onFile(file); e.target.value = ""; }} />
-            </label>
+            </div>
+            <div className="grid grid-cols-1 gap-2">
+              {/* Appareil photo : capture force l'ouverture directe de la caméra sur mobile */}
+              <label className="cursor-pointer">
+                <input type="file" accept="image/*" capture="environment" className="hidden"
+                  onChange={(e) => { const file = e.target.files?.[0]; if (file) onFile(file); e.target.value = ""; }} />
+                <span className="flex h-9 w-full items-center justify-center gap-2 rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+                  <Camera className="h-4 w-4" /> Prendre une photo
+                </span>
+              </label>
+              {/* Sans capture : galerie, fichiers ou PDF */}
+              <label className="cursor-pointer">
+                <input type="file" accept="image/*,application/pdf" className="hidden"
+                  onChange={(e) => { const file = e.target.files?.[0]; if (file) onFile(file); e.target.value = ""; }} />
+                <span className="flex h-9 w-full items-center justify-center gap-2 rounded-md border border-input bg-background px-3 text-sm font-medium hover:bg-muted">
+                  <Paperclip className="h-4 w-4" /> Choisir un fichier
+                </span>
+              </label>
+            </div>
             {busy === "upload" && <p className="flex items-center gap-1 text-xs text-muted-foreground"><Loader2 className="h-3 w-3 animate-spin" />Envoi…</p>}
             {busy === "ia" && <p className="flex items-center gap-1 text-xs text-primary"><Sparkles className="h-3 w-3 animate-pulse" />L'IA lit le ticket…</p>}
           </div>
