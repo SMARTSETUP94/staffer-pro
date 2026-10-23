@@ -40,7 +40,7 @@ export function OpportuniteEmailsSection({ affaireId }: { affaireId: string }) {
           </li>
         ))}
       </ul>
-      {reading && <EmailReaderDialog email={reading} onClose={() => setReading(null)} />}
+      {reading && <EmailReaderDialog email={reading} affaireId={affaireId} onClose={() => setReading(null)} />}
     </section>
   );
 }

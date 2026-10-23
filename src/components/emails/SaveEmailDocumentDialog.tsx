@@ -12,9 +12,9 @@ import { saveEmailDocument } from "@/lib/server-fns/save-email-document.function
 import { isDocumentAffaireCode } from "@/lib/affaire-document-rules";
 import type { EmailAttachment } from "@/lib/server-fns/shared-inbox-attachments.functions";
 
-export function SaveEmailDocumentDialog({ emailId, attachment, onClose }: { emailId: string; attachment: EmailAttachment; onClose: () => void }) {
+export function SaveEmailDocumentDialog({ emailId, attachment, onClose, initialAffaireId }: { emailId: string; attachment: EmailAttachment; onClose: () => void; initialAffaireId?: string }) {
   const { data: affaires = [], isLoading, error } = useAffairesPourLogistique();
-  const [affaireId, setAffaireId] = useState("");
+  const [affaireId, setAffaireId] = useState(initialAffaireId ?? "");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);

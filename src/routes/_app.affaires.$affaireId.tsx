@@ -20,6 +20,7 @@ import { CapabilityGuard } from "@/components/auth/CapabilityGuard";
 import { useCapability } from "@/hooks/use-capability";
 import { NouveauClientDialog } from "@/components/clients/NouveauClientDialog";
 import { EditNumeroAffaireDialog } from "@/components/affaire/EditNumeroAffaireDialog";
+import { hasOpportuniteTab } from "@/lib/affaire-opportunite";
 
 
 interface AffaireDetail {
@@ -31,6 +32,7 @@ interface AffaireDetail {
   lieu: string | null;
   statut: "prospect" | "en_cours" | "termine" | "annule";
   phase: "opportunite" | "signe";
+  code_opportunite: string | null;
   date_debut: string | null;
   date_fin_prevue: string | null;
   notes: string | null;
@@ -38,7 +40,14 @@ interface AffaireDetail {
 
 export const Route = createFileRoute("/_app/affaires/$affaireId")({
   beforeLoad: () => requireCapability("section.affaires"),
-  head: () => ({ meta: [{ title: "Affaire — Setup Paris" }] }),
+  head: () => ({ meta: [
+    { title: "Fiche chantier — Setup Paris" },
+    { name: "description", content: "Informations, suivi opportunité et documents de l’affaire Setup Paris." },
+    { property: "og:title", content: "Fiche chantier — Setup Paris" },
+    { property: "og:description", content: "Toutes les informations et pièces jointes réunies par affaire." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: AffaireDetailLayout,
 });
 
@@ -64,7 +73,7 @@ function AffaireDetailLayout() {
   const fetchAffaire = async (id: string, signal?: { cancelled: boolean }) => {
     const { data } = await supabase
       .from("affaires")
-      .select("id, numero, nom, client, client_id, lieu, statut, phase, date_debut, date_fin_prevue, notes")
+      .select("id, numero, nom, client, client_id, lieu, statut, phase, code_opportunite, date_debut, date_fin_prevue, notes")
       .eq("id", id)
       .maybeSingle();
     if (signal?.cancelled) return;
@@ -82,6 +91,13 @@ function AffaireDetailLayout() {
     setLoading(true);
     void fetchAffaire(affaireId, signal);
     return () => { signal.cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [affaireId]);
+
+  useEffect(() => {
+    const refresh = () => { void fetchAffaire(affaireId); };
+    window.addEventListener("affaire-updated", refresh);
+    return () => window.removeEventListener("affaire-updated", refresh);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [affaireId]);
 
@@ -124,6 +140,9 @@ function AffaireDetailLayout() {
 
   const tabs = [
     { to: `/affaires/${affaire.id}`, label: "Synthèse", match: path === `/affaires/${affaire.id}` },
+    ...(hasOpportuniteTab(affaire)
+      ? [{ to: `/affaires/${affaire.id}/opportunite`, label: "Opportunité", match: path.endsWith("/opportunite") }]
+      : []),
     { to: `/affaires/${affaire.id}/planning-chantier`, label: "Planning chantier", match: path.endsWith("/planning-chantier") },
     { to: `/affaires/${affaire.id}/devis`, label: "Devis", match: path.endsWith("/devis") },
     { to: `/affaires/${affaire.id}/logistique`, label: "Logistique", match: path.endsWith("/logistique") },
@@ -356,5 +375,5 @@ function formatPeriode(start: string | null, end: string | null) {
   const fmt = (d: string) => new Date(d).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" });
   if (start && end) return `${fmt(start)} → ${fmt(end)}`;
   if (start) return `dès ${fmt(start)}`;
-  return `→ ${fmt(end!)}`;
+  return end ? `→ ${fmt(end)}` : "Pas de période renseignée";
 }
