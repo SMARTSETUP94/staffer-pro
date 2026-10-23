@@ -23,7 +23,7 @@ export type ReadableEmail = {
   body_content_type: string | null;
 };
 
-export function EmailReaderDialog({ email, onClose, clientReply = false }: { email: ReadableEmail; onClose: () => void; clientReply?: boolean }) {
+export function EmailReaderDialog({ email, onClose, clientReply = false, affaireId }: { email: ReadableEmail; onClose: () => void; clientReply?: boolean; affaireId?: string }) {
   const isHtml = email.body_content_type?.toLowerCase() === "html";
   const body = email.body_full || email.body_preview || "(corps vide)";
   return (
@@ -50,7 +50,7 @@ export function EmailReaderDialog({ email, onClose, clientReply = false }: { ema
             <pre className="whitespace-pre-wrap p-4 text-sm font-sans">{body}</pre>
           )}
         </div>
-        <AttachmentsList emailId={email.id} clientReply={clientReply} />
+        <AttachmentsList emailId={email.id} clientReply={clientReply} affaireId={affaireId} />
         </div>
       </DialogContent>
     </Dialog>
@@ -62,7 +62,7 @@ function fmtSize(n: number) {
 }
 
 /** Pièces jointes, chargées à la demande depuis la boîte Outlook. */
-function AttachmentsList({ emailId, clientReply }: { emailId: string; clientReply: boolean }) {
+function AttachmentsList({ emailId, clientReply, affaireId }: { emailId: string; clientReply: boolean; affaireId?: string }) {
   const list = useServerFn(listEmailAttachments);
   const get = useServerFn(getEmailAttachment);
   const [items, setItems] = useState<EmailAttachment[] | null>(null);
@@ -70,6 +70,7 @@ function AttachmentsList({ emailId, clientReply }: { emailId: string; clientRepl
   const [busy, setBusy] = useState<string | null>(null);
   const canIA = useCapability("logistique.proposition.validate");
   const canFile = useCapability("section.affaires");
+  const canReadClientRequests = useCapability("demandes_clients.view");
   const [filing, setFiling] = useState<EmailAttachment | null>(null);
   const [jal, setJal] = useState<{ attachmentId: string | null; label: string } | null>(null);
   useEffect(() => {
@@ -122,14 +123,14 @@ function AttachmentsList({ emailId, clientReply }: { emailId: string; clientRepl
                 )}
                 {canIA && <Button size="sm" variant="ghost" onClick={() => setJal({ attachmentId: a.id, label: a.name })} aria-label={`Lire ${a.name} comme jalonnement`} title="Lire comme jalonnement"><Sparkles className="h-4 w-4" /></Button>}
                 <Button size="sm" variant="ghost" onClick={() => open(a, "download")} aria-label={`Télécharger ${a.name}`}><Download className="h-4 w-4" /></Button>
-                {clientReply && canFile && <Button size="sm" variant="ghost" title="Enregistrer dans une affaire" aria-label={`Enregistrer ${a.name} dans une affaire`} onClick={() => setFiling(a)}><FolderPlus className="h-4 w-4" /></Button>}
+                {(clientReply || affaireId) && canFile && canReadClientRequests && <Button size="sm" variant="ghost" title="Enregistrer dans une affaire" aria-label={`Enregistrer ${a.name} dans une affaire`} onClick={() => setFiling(a)}><FolderPlus className="h-4 w-4" /></Button>}
               </>
             )}
           </li>
         ))}
       </ul>
       {jalDlg}
-      {filing && <SaveEmailDocumentDialog emailId={emailId} attachment={filing} onClose={() => setFiling(null)} />}
+      {filing && <SaveEmailDocumentDialog emailId={emailId} attachment={filing} initialAffaireId={affaireId} onClose={() => setFiling(null)} />}
     </div>
   );
 }

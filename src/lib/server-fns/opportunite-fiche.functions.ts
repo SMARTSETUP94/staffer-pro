@@ -92,6 +92,7 @@ export interface OpportuniteFicheData {
     code_opportunite: string | null;
     nom: string;
     client: string | null;
+    client_id: string | null;
     lieu: string | null;
     notes: string | null;
     phase: string;
@@ -134,7 +135,7 @@ export const getOpportuniteFiche = createServerFn({ method: "GET" })
       supabase
         .from("affaires")
         .select(
-          "id, numero, code_opportunite, nom, client, lieu, notes, phase, statut_opportunite, taille, typologie_future, date_opportunite, date_pat, date_evenement_debut, date_evenement_fin, charge_affaires_id, archived_at, created_at, updated_at",
+          "id, numero, code_opportunite, nom, client, client_id, lieu, notes, phase, statut_opportunite, taille, typologie_future, date_opportunite, date_pat, date_evenement_debut, date_evenement_fin, charge_affaires_id, archived_at, created_at, updated_at",
         )
         .eq("id", affaireId)
         .maybeSingle(),
@@ -226,6 +227,7 @@ export const getOpportuniteFiche = createServerFn({ method: "GET" })
 export const UPDATE_FIELDS_SCHEMA = z.object({
   nom: z.string().min(1).max(255).optional(),
   client: z.string().max(255).nullable().optional(),
+  client_id: z.string().uuid().nullable().optional(),
   lieu: z.string().max(255).nullable().optional(),
   notes: z.string().max(5000).nullable().optional(),
   typologie_future: z.string().max(50).nullable().optional(),

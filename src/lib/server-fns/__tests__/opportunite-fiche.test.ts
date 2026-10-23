@@ -37,6 +37,11 @@ describe("opportunite-fiche.functions — surface publique", () => {
 });
 
 describe("updateOpportuniteFields — validation input", () => {
+  it("conserve le rattachement à la fiche client dans le brief", () => {
+    const result = UPDATE_FIELDS_INPUT_SCHEMA.parse({ affaireId: UUID, patch: { client: "Forstyle Hotels Collection", client_id: UUID } });
+    expect(result.patch.client_id).toBe(UUID);
+    expect(() => UPDATE_FIELDS_INPUT_SCHEMA.parse({ affaireId: UUID, patch: { client_id: "invalide" } })).toThrow();
+  });
   it("accepte un patch admin minimal valide", () => {
     expect(() =>
       UPDATE_FIELDS_INPUT_SCHEMA.parse({ affaireId: UUID, patch: { nom: "Test" } }),

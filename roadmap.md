@@ -1,5 +1,10 @@
 # Roadmap
 
+## Fiche opportunité intégrée au chantier (23 oct. 2026)
+- [x] Réunir le brief et le suivi commercial dans un onglet de la même affaire, préserver les anciens liens ; historique conservé après signature.
+- [x] Permettre le classement des pièces jointes des emails d’origine dans les documents du chantier courant, préselectionné ; droits existants conservés.
+- [x] Vérifier la cohérence des informations et le parcours réel : 9435, ancien lien redirigé, brief enregistré et relu avec en-tête cohérent, PDF classé et retrouvé dans Documents puis retiré. Lecteur ouvert, rendu PDF non confirmé. 26 tests verts, aucune erreur navigateur.
+
 ## Documents par affaire (23 oct. 2026)
 - [x] Inclure les 9XXX dans la liste des chantiers (26 opportunités visibles dans le filtre).
 - [x] Liste globale des documents par affaire, recherche, accès direct au fichier ; vue liste/galerie et lecteur PDF par chantier.
