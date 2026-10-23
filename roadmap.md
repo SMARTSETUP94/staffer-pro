@@ -55,3 +55,6 @@
 
 ## Notes de frais
 - [x] Recherche par mot-clé dans le choix de chantier (demande Gabin 19/10 08:31) : le sélecteur filtre en direct sur n°, nom, client et lieu. Vérifié : 45 chantiers proposés, « noel » → 2, « 6055 » → 1, sélection remplit bien la fiche. Garde-fou Vitest `notes-frais-choix-chantier-recherche.test.ts`.
+
+## Pipeline opportunités (23 oct. 2026)
+- [x] Filtre « chargé d'affaires » ouvert par défaut sur **Tous les CA** pour tout le monde (demande Gabin 23/10 11:58) : plus de présélection automatique sur l'utilisateur connecté. Vérifié dans l'app : sélecteur = « Tous les CA », 27 opportunités dont 9437 visible dès l'ouverture.
