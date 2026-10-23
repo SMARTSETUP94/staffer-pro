@@ -5,7 +5,7 @@
  * connexions, notamment sur l'écran atelier. /onboarding reste accessible
  * manuellement.
  */
-import { describe, expect, it } from "node:test";
+import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 
 const APP_GUARD = "src/routes/_app.tsx";
