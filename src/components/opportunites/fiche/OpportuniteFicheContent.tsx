@@ -30,6 +30,7 @@ import { OpportuniteEmailsSection } from "@/components/opportunites/fiche/Opport
 import { AFFAIRE_TYPOLOGIES, type AffaireTypologie } from "@/lib/affaire-typologie";
 import { TAILLE_LABEL, type OpportuniteTaille } from "@/lib/opportunites";
 import type { TypologieFuture } from "@/lib/typologie-future";
+import { ClientCombobox } from "@/components/clients/ClientCombobox";
 
 const TAILLES: OpportuniteTaille[] = ["tres_petit", "petit", "moyen", "gros", "tres_gros"];
 
@@ -128,6 +129,7 @@ function BriefSection({
   const update = useServerFn(updateOpportuniteFields);
   const [nom, setNom] = useState(affaire.nom);
   const [client, setClient] = useState(affaire.client ?? "");
+  const [clientId, setClientId] = useState(affaire.client_id);
   const [lieu, setLieu] = useState(affaire.lieu ?? "");
   const [typo, setTypo] = useState<AffaireTypologie | "">((affaire.typologie_future as AffaireTypologie | null) ?? "");
   const [taille, setTaille] = useState<OpportuniteTaille | "">((affaire.taille as OpportuniteTaille | null) ?? "");
@@ -140,6 +142,7 @@ function BriefSection({
   useEffect(() => {
     setNom(affaire.nom);
     setClient(affaire.client ?? "");
+    setClientId(affaire.client_id);
     setLieu(affaire.lieu ?? "");
     setTypo((affaire.typologie_future as AffaireTypologie | null) ?? "");
     setTaille((affaire.taille as OpportuniteTaille | null) ?? "");
@@ -158,6 +161,7 @@ function BriefSection({
           patch: {
             nom: nom.trim() || affaire.nom,
             client: client.trim() || null,
+            client_id: clientId,
             lieu: lieu.trim() || null,
             typologie_future: typo || null,
             taille: (taille || null) as OpportuniteTaille | null,
@@ -188,7 +192,7 @@ function BriefSection({
             <Input value={nom} onChange={(e) => setNom(e.target.value)} disabled={!canEdit} />
           </Field>
           <Field label="Client">
-            <Input value={client} onChange={(e) => setClient(e.target.value)} disabled={!canEdit} />
+            <ClientCombobox value={client} clientId={clientId} onChange={(id, nom) => { setClientId(id); setClient(nom); }} disabled={!canEdit} />
           </Field>
           <Field label="Lieu">
             <Input value={lieu} onChange={(e) => setLieu(e.target.value)} disabled={!canEdit} />
