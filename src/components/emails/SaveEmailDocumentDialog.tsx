@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
+import { useQueryClient } from "@tanstack/react-query";
 import { Loader2, FolderPlus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -16,14 +17,18 @@ export function SaveEmailDocumentDialog({ emailId, attachment, onClose }: { emai
   const [affaireId, setAffaireId] = useState("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
   const save = useServerFn(saveEmailDocument);
   async function submit() {
     setSaving(true);
+    setSaveError(null);
     try {
       const result = await save({ data: { emailId, attachmentId: attachment.id, affaireId } });
       toast.success(result.alreadySaved ? `Déjà enregistré dans l'affaire ${result.numero}` : `Document enregistré dans l'affaire ${result.numero}`);
       setSaved(true);
-    } catch (e) { toast.error(e instanceof Error ? e.message : "Enregistrement impossible"); }
+      await queryClient.invalidateQueries({ queryKey: ["documents-affaires"] });
+    } catch (e) { const message = e instanceof Error ? e.message : "Enregistrement impossible"; setSaveError(message); toast.error(message); }
     finally { setSaving(false); }
   }
   return <Dialog open onOpenChange={(open) => { if (!open && !saving) onClose(); }}>
@@ -36,6 +41,7 @@ export function SaveEmailDocumentDialog({ emailId, attachment, onClose }: { emai
         {saved ? <Button asChild><Link to="/affaires/$affaireId/documents" params={{ affaireId }} onClick={onClose}>Voir les documents</Link></Button> :
           <Button onClick={submit} disabled={!affaireId || saving}>{saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FolderPlus className="mr-2 h-4 w-4" />}Enregistrer</Button>}
       </DialogFooter>
+      {saveError && <p role="alert" className="text-sm text-destructive">{saveError}</p>}
     </DialogContent>
   </Dialog>;
 }

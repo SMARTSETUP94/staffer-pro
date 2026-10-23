@@ -35,7 +35,7 @@ export const saveEmailDocument = createServerFn({ method: "POST" })
     const path = `${affaire.id}/${id}.${ext}`;
     const { error: uploadError } = await supabase.storage.from("affaires-photos").upload(path, bytes, { contentType: mime, upsert: false });
     if (uploadError) throw new Error(uploadError.message);
-    const { error: insertError } = await supabase.from("affaire_documents").insert({ id, affaire_id: affaire.id, storage_path: path, filename, nom_fichier: filename, mime_type: mime, taille_bytes: bytes.byteLength, uploaded_by: userId, description: `Email : ${email.subject ?? "Sans objet"}`, source_email_id: email.id, source_attachment_id: data.attachmentId });
+    const { error: insertError } = await supabase.from("affaire_documents").insert({ id, affaire_id: affaire.id, storage_path: path, filename, mime_type: mime, taille_bytes: bytes.byteLength, uploaded_by: userId, description: `Email : ${email.subject ?? "Sans objet"}`, source_email_id: email.id, source_attachment_id: data.attachmentId });
     if (insertError) {
       // An unreferenced upload remains private; remove it when storage policy allows cleanup.
       await supabase.storage.from("affaires-photos").remove([path]);
