@@ -65,7 +65,10 @@ export function useUpsertOpportunite() {
     if (error) return { kind: "error", message: error.message };
     const affaireId = typeof data === "string" ? data : (data as { id?: string } | null)?.id;
     if (!affaireId) return { kind: "error", message: "ID affaire manquant après création" };
-    return { kind: "created", affaireId, numero: input.code };
+    const { data: created, error: readError } = await supabase.from("affaires")
+      .select("numero").eq("id", affaireId).single();
+    if (readError || !created) return { kind: "error", message: "Opportunité créée, mais son numéro ne peut pas être relu. Actualisez la liste." };
+    return { kind: "created", affaireId, numero: created.numero };
   }, []);
 
   const update = useCallback(

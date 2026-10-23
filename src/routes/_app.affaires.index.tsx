@@ -116,9 +116,16 @@ const searchSchema = z.object({
 
 export const Route = createFileRoute("/_app/affaires/")({
   beforeLoad: () => requireCapability("section.affaires"),
-  head: () => ({ meta: [{ title: "Affaires — Setup Paris" }] }),
+  head: () => ({ meta: [
+    { title: "Affaires — Setup Paris" },
+    { name: "description", content: "Chantiers en cours et passés de SETUP Paris." },
+    { property: "og:title", content: "Affaires — Setup Paris" },
+    { property: "og:description", content: "Chantiers en cours et passés de SETUP Paris." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   validateSearch: zodValidator(searchSchema),
-  search: { middlewares: [stripSearchParams(SEARCH_DEFAULTS)] },
+  search: { middlewares: [stripSearchParams<Record<string, unknown>>(SEARCH_DEFAULTS)] },
   component: AffairesPage,
 });
 

@@ -127,7 +127,7 @@ export const Route = createFileRoute("/_app/opportunites/")({
     ],
   }),
   validateSearch: zodValidator(oppsSearchSchema),
-  search: { middlewares: [stripSearchParams(OPPS_SEARCH_DEFAULTS)] },
+  search: { middlewares: [stripSearchParams<Record<string, unknown>>(OPPS_SEARCH_DEFAULTS)] },
   component: OpportunitesPage,
 });
 

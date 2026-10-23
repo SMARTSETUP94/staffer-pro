@@ -52,9 +52,16 @@ const searchSchema = z.object({
 
 export const Route = createFileRoute("/_app/saisie-pour-equipe")({
   beforeLoad: () => requireCapability("heures.equipe.saisir"),
-  head: () => ({ meta: [{ title: "Saisie équipe — Planning chantiers" }] }),
+  head: () => ({ meta: [
+    { title: "Saisie équipe — SETUP Paris" },
+    { name: "description", content: "Saisie des heures de votre équipe sur les chantiers SETUP Paris." },
+    { property: "og:title", content: "Saisie équipe — SETUP Paris" },
+    { property: "og:description", content: "Saisie des heures de votre équipe sur les chantiers SETUP Paris." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   validateSearch: zodValidator(searchSchema),
-  search: { middlewares: [stripSearchParams(SEARCH_DEFAULTS)] },
+  search: { middlewares: [stripSearchParams<Record<string, unknown>>(SEARCH_DEFAULTS)] },
   component: SaisiePourEquipePage,
 });
 
