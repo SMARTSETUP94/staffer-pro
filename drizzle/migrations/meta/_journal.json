@@ -162,6 +162,13 @@
       "when": 1792744170359,
       "tag": "0022_affaire_documents_email_attachments",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1792753520211,
+      "tag": "0023_emails_entrants_stable_message_id",
+      "breakpoints": true
     }
   ]
 }
