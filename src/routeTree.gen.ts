@@ -25,6 +25,7 @@ import { Route as AppChargeAtelierRouteImport } from './routes/_app.charge-ateli
 import { Route as AppClientsRouteImport } from './routes/_app.clients'
 import { Route as AppDemandesClientsRouteImport } from './routes/_app.demandes-clients'
 import { Route as AppDemandesLogistiqueRouteImport } from './routes/_app.demandes-logistique'
+import { Route as AppDocumentsAffairesRouteImport } from './routes/_app.documents-affaires'
 import { Route as AppEcheancesRouteImport } from './routes/_app.echeances'
 import { Route as AppEcranAtelierRouteImport } from './routes/_app.ecran-atelier'
 import { Route as AppEmployesRouteImport } from './routes/_app.employes'
@@ -198,6 +199,11 @@ const AppDemandesClientsRoute = AppDemandesClientsRouteImport.update({
 const AppDemandesLogistiqueRoute = AppDemandesLogistiqueRouteImport.update({
   id: '/demandes-logistique',
   path: '/demandes-logistique',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppDocumentsAffairesRoute = AppDocumentsAffairesRouteImport.update({
+  id: '/documents-affaires',
+  path: '/documents-affaires',
   getParentRoute: () => AppRoute,
 } as any)
 const AppEcheancesRoute = AppEcheancesRouteImport.update({
@@ -719,6 +725,7 @@ export interface FileRoutesByFullPath {
   '/clients': typeof AppClientsRouteWithChildren
   '/demandes-clients': typeof AppDemandesClientsRoute
   '/demandes-logistique': typeof AppDemandesLogistiqueRoute
+  '/documents-affaires': typeof AppDocumentsAffairesRoute
   '/echeances': typeof AppEcheancesRoute
   '/ecran-atelier': typeof AppEcranAtelierRoute
   '/employes': typeof AppEmployesRouteWithChildren
@@ -830,6 +837,7 @@ export interface FileRoutesByTo {
   '/clients': typeof AppClientsRouteWithChildren
   '/demandes-clients': typeof AppDemandesClientsRoute
   '/demandes-logistique': typeof AppDemandesLogistiqueRoute
+  '/documents-affaires': typeof AppDocumentsAffairesRoute
   '/echeances': typeof AppEcheancesRoute
   '/ecran-atelier': typeof AppEcranAtelierRoute
   '/employes': typeof AppEmployesRouteWithChildren
@@ -941,6 +949,7 @@ export interface FileRoutesById {
   '/_app/clients': typeof AppClientsRouteWithChildren
   '/_app/demandes-clients': typeof AppDemandesClientsRoute
   '/_app/demandes-logistique': typeof AppDemandesLogistiqueRoute
+  '/_app/documents-affaires': typeof AppDocumentsAffairesRoute
   '/_app/echeances': typeof AppEcheancesRoute
   '/_app/ecran-atelier': typeof AppEcranAtelierRoute
   '/_app/employes': typeof AppEmployesRouteWithChildren
@@ -1056,6 +1065,7 @@ export interface FileRouteTypes {
     | '/clients'
     | '/demandes-clients'
     | '/demandes-logistique'
+    | '/documents-affaires'
     | '/echeances'
     | '/ecran-atelier'
     | '/employes'
@@ -1167,6 +1177,7 @@ export interface FileRouteTypes {
     | '/clients'
     | '/demandes-clients'
     | '/demandes-logistique'
+    | '/documents-affaires'
     | '/echeances'
     | '/ecran-atelier'
     | '/employes'
@@ -1277,6 +1288,7 @@ export interface FileRouteTypes {
     | '/_app/clients'
     | '/_app/demandes-clients'
     | '/_app/demandes-logistique'
+    | '/_app/documents-affaires'
     | '/_app/echeances'
     | '/_app/ecran-atelier'
     | '/_app/employes'
@@ -1499,6 +1511,13 @@ declare module '@tanstack/react-router' {
       path: '/demandes-logistique'
       fullPath: '/demandes-logistique'
       preLoaderRoute: typeof AppDemandesLogistiqueRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/documents-affaires': {
+      id: '/_app/documents-affaires'
+      path: '/documents-affaires'
+      fullPath: '/documents-affaires'
+      preLoaderRoute: typeof AppDocumentsAffairesRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/echeances': {
@@ -2291,6 +2310,7 @@ interface AppRouteChildren {
   AppClientsRoute: typeof AppClientsRouteWithChildren
   AppDemandesClientsRoute: typeof AppDemandesClientsRoute
   AppDemandesLogistiqueRoute: typeof AppDemandesLogistiqueRoute
+  AppDocumentsAffairesRoute: typeof AppDocumentsAffairesRoute
   AppEcheancesRoute: typeof AppEcheancesRoute
   AppEcranAtelierRoute: typeof AppEcranAtelierRoute
   AppEmployesRoute: typeof AppEmployesRouteWithChildren
@@ -2372,6 +2392,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppClientsRoute: AppClientsRouteWithChildren,
   AppDemandesClientsRoute: AppDemandesClientsRoute,
   AppDemandesLogistiqueRoute: AppDemandesLogistiqueRoute,
+  AppDocumentsAffairesRoute: AppDocumentsAffairesRoute,
   AppEcheancesRoute: AppEcheancesRoute,
   AppEcranAtelierRoute: AppEcranAtelierRoute,
   AppEmployesRoute: AppEmployesRouteWithChildren,

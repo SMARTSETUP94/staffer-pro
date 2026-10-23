@@ -163,9 +163,11 @@ export function PhotoLightbox({
             alt={doc.description ?? doc.filename}
             className="max-h-full max-w-full rounded-lg object-contain"
           />
+        ) : doc.mime_type === "application/pdf" ? (
+          <iframe title={`Lecture ${doc.filename}`} src={url} className="h-full w-full border-0 bg-card" />
         ) : (
           <div className="flex flex-col items-center gap-3">
-            <p className="text-sm text-muted-foreground">Aperçu PDF indisponible</p>
+            <p className="text-sm text-muted-foreground">Ce format s'ouvre dans son application.</p>
             <Button asChild className="rounded-xl">
               <a href={url} target="_blank" rel="noopener noreferrer">
                 Ouvrir dans un nouvel onglet

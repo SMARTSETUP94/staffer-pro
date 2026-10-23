@@ -1,5 +1,10 @@
 # Roadmap
 
+## Documents par affaire (23 oct. 2026)
+- [x] Inclure les 9XXX dans la liste des chantiers (26 opportunités visibles dans le filtre).
+- [x] Liste globale des documents par affaire, recherche, accès direct au fichier ; vue liste/galerie et lecteur PDF par chantier.
+- [x] Classement depuis Demandes clients, choix d'affaire 4XXX/6XXX/9XXX, stockage privé sous RLS et anti-doublon. Parcours réel enregistré, relu depuis la liste globale et image ouverte ; document de vérification retiré. 10 tests verts, build OK.
+
 ## Numérotation opportunités (23 oct. 2026)
 - [x] Prochain code 9XXX attribué à l’enregistrement sous verrou, historique des codes conservé après signature ; cinq derniers numéros affichés. Création réelle avec code périmé 9000 → 9437, relue après rechargement ; prochaine suggestion 9438. Opportunité de test supprimée, 4 tests verts.
 

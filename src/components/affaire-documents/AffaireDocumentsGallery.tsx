@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { useAffaireDocuments } from "@/hooks/use-affaire-documents";
 import { useAuth } from "@/lib/auth-context";
 import { useCapability } from "@/hooks/use-capability";
@@ -6,15 +7,21 @@ import { DocumentThumbnail } from "./DocumentThumbnail";
 import { PhotoLightbox } from "./PhotoLightbox";
 import { AffaireDocumentUploader } from "./AffaireDocumentUploader";
 import { Image as ImageIcon, Loader2 } from "lucide-react";
+import { FileText, List, Grid2X2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { formatBytes } from "@/hooks/use-affaire-documents";
+import { documentSearchMatches } from "@/lib/affaire-document-rules";
 
 interface Props {
   affaireId: string;
   variant?: "desktop" | "mobile";
   /** Si false, l'utilisateur ne peut que consulter (ex: chef non assigné, employé) */
   canUpload?: boolean;
+  initialDocumentId?: string;
 }
 
-export function AffaireDocumentsGallery({ affaireId, variant = "desktop", canUpload = true }: Props) {
+export function AffaireDocumentsGallery({ affaireId, variant = "desktop", canUpload = true, initialDocumentId }: Props) {
   const { user } = useAuth();
   const isAdmin = useCapability("affaire.documents.delete");
   const {
@@ -29,6 +36,15 @@ export function AffaireDocumentsGallery({ affaireId, variant = "desktop", canUpl
     stats,
   } = useAffaireDocuments(affaireId);
   const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
+  const [view, setView] = useState<"list" | "grid">("list");
+  const [search, setSearch] = useState("");
+  const [openedId, setOpenedId] = useState<string | undefined>();
+  useEffect(() => {
+    if (!initialDocumentId || openedId === initialDocumentId) return;
+    const index = documents.findIndex((d) => d.id === initialDocumentId);
+    if (index >= 0) { setLightboxIdx(index); setOpenedId(initialDocumentId); }
+  }, [initialDocumentId, openedId, documents]);
+  const visibleDocuments = documents.filter((d) => documentSearchMatches([d.filename, d.description], search));
 
   // v0.44.4 — Préfetch en lot des URLs signées des images dès que la liste change.
   // 1 appel HTTP pour N photos au lieu de N appels.
@@ -50,7 +66,7 @@ export function AffaireDocumentsGallery({ affaireId, variant = "desktop", canUpl
       {canUpload && (
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-sm font-semibold">Photos & documents</p>
+            <p className="text-sm font-semibold">Documents de l'affaire</p>
             <p className="text-xs text-muted-foreground">
               {stats.total} fichier{stats.total > 1 ? "s" : ""} · {stats.photos} photo
               {stats.photos > 1 ? "s" : ""} · {stats.pdfs} PDF
@@ -59,6 +75,13 @@ export function AffaireDocumentsGallery({ affaireId, variant = "desktop", canUpl
           <AffaireDocumentUploader onUpload={upload} variant={variant} />
         </div>
       )}
+
+      <div className="flex flex-wrap items-center gap-2">
+        <Input aria-label="Rechercher un fichier" placeholder="Rechercher un fichier…" value={search} onChange={(e) => setSearch(e.target.value)} className="min-w-0 flex-1" />
+        <Button variant={view === "list" ? "secondary" : "ghost"} size="icon" title="Liste" aria-label="Vue liste" onClick={() => setView("list")}><List className="h-4 w-4" /></Button>
+        <Button variant={view === "grid" ? "secondary" : "ghost"} size="icon" title="Galerie" aria-label="Vue galerie" onClick={() => setView("grid")}><Grid2X2 className="h-4 w-4" /></Button>
+        <Button asChild variant="outline" size="sm"><Link to="/documents-affaires">Toutes les affaires</Link></Button>
+      </div>
 
       {error && (
         <p className="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
@@ -80,14 +103,24 @@ export function AffaireDocumentsGallery({ affaireId, variant = "desktop", canUpl
             </p>
           )}
         </div>
+      ) : visibleDocuments.length === 0 ? <p className="py-6 text-sm text-muted-foreground">Aucun fichier trouvé.</p> : view === "list" ? (
+        <ul className="divide-y divide-border">
+          {visibleDocuments.map((d) => <li key={d.id}>
+            <Button variant="ghost" onClick={() => setLightboxIdx(documents.findIndex((doc) => doc.id === d.id))} className="h-auto w-full justify-start gap-3 rounded-none px-2 py-3 text-left">
+              <FileText className="h-5 w-5 shrink-0 text-muted-foreground" />
+              <span className="min-w-0 flex-1"><span className="block whitespace-normal break-words font-medium">{d.filename}</span><span className="block truncate text-xs text-muted-foreground">{d.description ?? "Document"}</span></span>
+              <span className="shrink-0 text-right text-xs text-muted-foreground">{formatBytes(d.taille_bytes)}<br />{new Date(d.uploaded_at).toLocaleDateString("fr-FR")}</span>
+            </Button>
+          </li>)}
+        </ul>
       ) : (
         <div className={gridClasses}>
-          {documents.map((d, i) => (
+          {visibleDocuments.map((d) => (
             <DocumentThumbnail
               key={d.id}
               doc={d}
               getSignedUrl={getSignedUrl}
-              onClick={() => setLightboxIdx(i)}
+              onClick={() => setLightboxIdx(documents.findIndex((doc) => doc.id === d.id))}
             />
           ))}
         </div>
