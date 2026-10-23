@@ -1,5 +1,8 @@
 # Roadmap
 
+## Numérotation opportunités (23 oct. 2026)
+- [ ] Garantir le prochain code 9XXX à l’enregistrement, afficher les cinq derniers numéros et vérifier la création.
+
 ## Création opportunité (19 oct. 2026)
 - [x] Recherche client par mot-clé et création de fiche ; recherche chantier par numéro/nom/client/lieu avec intitulé libre. 14 tests verts ; création et rattachement client vérifiés dans l’app, données de test supprimées.
 
