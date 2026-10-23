@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { isDocumentAffaireCode } from "@/lib/affaire-document-rules";
 import {
   Select,
   SelectContent,
@@ -22,9 +23,9 @@ export const Route = createFileRoute("/_app/liste-chantiers")({
   head: () => ({
     meta: [
       { title: "Liste des chantiers — Staffing Setup Paris" },
-      { name: "description", content: "Liste des chantiers montage/démontage (4XXX) et fabrication (6XXX)." },
+      { name: "description", content: "Liste des chantiers 4XXX, 6XXX et opportunités 9XXX." },
       { property: "og:title", content: "Liste des chantiers — Staffing Setup Paris" },
-      { property: "og:description", content: "Liste des chantiers 4XXX et 6XXX." },
+      { property: "og:description", content: "Liste des chantiers 4XXX, 6XXX et opportunités 9XXX." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -53,7 +54,7 @@ type ChantierRow = {
 function ListeChantiers() {
   const queryClient = useQueryClient();
   const [q, setQ] = useState("");
-  const [filtre, setFiltre] = useState<"tous" | "4" | "6">("tous");
+  const [filtre, setFiltre] = useState<"tous" | "4" | "6" | "9">("tous");
   const [voirArchives, setVoirArchives] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
 
@@ -63,7 +64,6 @@ function ListeChantiers() {
       const { data, error } = await supabase
         .from("affaires")
         .select("id, numero, nom, client, lieu, statut, archived_at, code_opportunite, date_montage, charge:profiles!affaires_charge_affaires_id_fkey(full_name)")
-        .eq("phase", "signe")
         .order("numero", { ascending: false });
       if (error) throw error;
       return (data ?? []) as ChantierRow[];
@@ -76,7 +76,7 @@ function ListeChantiers() {
       .filter((a) => (voirArchives ? true : !a.archived_at))
       .filter(
         (a) =>
-          /^[46]\d{3}$/.test(a.numero) &&
+          isDocumentAffaireCode(a.numero) &&
           (filtre === "tous" || a.numero.startsWith(filtre)) &&
           (!s || [a.numero, a.nom, a.client, a.lieu].some((v) => (v ?? "").toLowerCase().includes(s))),
       );
@@ -115,20 +115,20 @@ function ListeChantiers() {
       <div>
         <h1 className="text-3xl font-bold">Liste des chantiers</h1>
         <p className="text-sm text-muted-foreground">
-          {rows.length} chantiers montage/démontage (4XXX) et fabrication (6XXX)
+          {rows.length} chantiers et opportunités · 4XXX / 6XXX / 9XXX
           {nbArchives > 0 ? ` · ${nbArchives} archivé${nbArchives > 1 ? "s" : ""}` : ""}
         </p>
       </div>
       <div className="flex flex-wrap items-center gap-2">
         <Input placeholder="N°, nom, client, lieu…" value={q} onChange={(e) => setQ(e.target.value)} className="max-w-sm" />
-        {(["tous", "4", "6"] as const).map((f) => (
-          <button
+        {(["tous", "4", "6", "9"] as const).map((f) => (
+          <Button
             key={f}
             onClick={() => setFiltre(f)}
             className={`rounded-md border px-3 text-sm ${filtre === f ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card"}`}
           >
-            {f === "tous" ? "Tous" : f === "4" ? "Montage/Démontage 4XXX" : "Fabrication 6XXX"}
-          </button>
+            {f === "tous" ? "Tous" : f === "4" ? "Montage/Démontage 4XXX" : f === "6" ? "Fabrication 6XXX" : "Opportunités 9XXX"}
+          </Button>
         ))}
         <Button
           variant={voirArchives ? "secondary" : "ghost"}

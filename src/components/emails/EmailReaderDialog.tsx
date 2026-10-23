@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Loader2, Paperclip, Download, Eye, Sparkles } from "lucide-react";
+import { Loader2, Paperclip, Download, Eye, Sparkles, FolderPlus } from "lucide-react";
 import { useCapability } from "@/hooks/use-capability";
 import { JalonnementDialog } from "@/components/logistique/JalonnementDialog";
 import { toast } from "sonner";
@@ -10,6 +10,7 @@ import { listEmailAttachments, getEmailAttachment, type EmailAttachment } from "
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ClientEmailSuggestion } from "@/components/emails/ClientEmailSuggestion";
+import { SaveEmailDocumentDialog } from "@/components/emails/SaveEmailDocumentDialog";
 
 export type ReadableEmail = {
   id: string;
@@ -49,7 +50,7 @@ export function EmailReaderDialog({ email, onClose, clientReply = false }: { ema
             <pre className="whitespace-pre-wrap p-4 text-sm font-sans">{body}</pre>
           )}
         </div>
-        <AttachmentsList emailId={email.id} />
+        <AttachmentsList emailId={email.id} clientReply={clientReply} />
         </div>
       </DialogContent>
     </Dialog>
@@ -61,13 +62,15 @@ function fmtSize(n: number) {
 }
 
 /** Pièces jointes, chargées à la demande depuis la boîte Outlook. */
-function AttachmentsList({ emailId }: { emailId: string }) {
+function AttachmentsList({ emailId, clientReply }: { emailId: string; clientReply: boolean }) {
   const list = useServerFn(listEmailAttachments);
   const get = useServerFn(getEmailAttachment);
   const [items, setItems] = useState<EmailAttachment[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const canIA = useCapability("logistique.proposition.validate");
+  const canFile = useCapability("section.affaires");
+  const [filing, setFiling] = useState<EmailAttachment | null>(null);
   const [jal, setJal] = useState<{ attachmentId: string | null; label: string } | null>(null);
   useEffect(() => {
     let alive = true;
@@ -119,12 +122,14 @@ function AttachmentsList({ emailId }: { emailId: string }) {
                 )}
                 {canIA && <Button size="sm" variant="ghost" onClick={() => setJal({ attachmentId: a.id, label: a.name })} aria-label={`Lire ${a.name} comme jalonnement`} title="Lire comme jalonnement"><Sparkles className="h-4 w-4" /></Button>}
                 <Button size="sm" variant="ghost" onClick={() => open(a, "download")} aria-label={`Télécharger ${a.name}`}><Download className="h-4 w-4" /></Button>
+                {clientReply && canFile && <Button size="sm" variant="ghost" title="Enregistrer dans une affaire" aria-label={`Enregistrer ${a.name} dans une affaire`} onClick={() => setFiling(a)}><FolderPlus className="h-4 w-4" /></Button>}
               </>
             )}
           </li>
         ))}
       </ul>
       {jalDlg}
+      {filing && <SaveEmailDocumentDialog emailId={emailId} attachment={filing} onClose={() => setFiling(null)} />}
     </div>
   );
 }
