@@ -1,5 +1,10 @@
 # Roadmap
 
+## Documents par affaire (23 oct. 2026)
+- [ ] Inclure les 9XXX dans la liste des chantiers.
+- [ ] Ajouter une liste globale des documents par affaire et améliorer la lecture des documents par chantier.
+- [ ] Enregistrer une pièce jointe depuis Demandes clients, avec choix de l'affaire et contrôle des accès ; vérifier le parcours complet.
+
 ## Numérotation opportunités (23 oct. 2026)
 - [x] Prochain code 9XXX attribué à l’enregistrement sous verrou, historique des codes conservé après signature ; cinq derniers numéros affichés. Création réelle avec code périmé 9000 → 9437, relue après rechargement ; prochaine suggestion 9438. Opportunité de test supprimée, 4 tests verts.
 
