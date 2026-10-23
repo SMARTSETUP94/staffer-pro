@@ -31,7 +31,7 @@ export function findImportedEmail(msg: InboxMessageIdentity, rows: ImportedEmail
   const matches = rows.filter((row) => !row.internet_message_id &&
     row.conversation_id === msg.conversationId &&
     Date.parse(row.received_at) === Date.parse(msg.receivedDateTime ?? "") &&
-    row.from_email.toLowerCase() === msg.from?.address?.toLowerCase() &&
+    (row.from_email === "unknown@unknown" || row.from_email.toLowerCase() === msg.from?.address?.toLowerCase()) &&
     row.subject === (msg.subject ?? null));
   return { row: matches.length === 1 ? matches[0] : undefined, ambiguous: matches.length > 1 };
 }

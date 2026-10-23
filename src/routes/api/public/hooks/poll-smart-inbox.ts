@@ -149,8 +149,8 @@ async function fetchInbox(lovableKey: string, connectorKey: string): Promise<Out
     const txt = await res.text();
     throw new Error(`Outlook gateway ${res.status}: ${txt.slice(0, 200)}`);
   }
-  const j = (await res.json()) as { value?: OutlookMessage[]; "@odata.nextLink"?: string };
-  messages.push(...(j.value ?? []));
+  const j = (await res.json()) as { value?: Array<OutlookMessage & { from?: Recipient & Recipient["emailAddress"] }>; "@odata.nextLink"?: string };
+  messages.push(...(j.value ?? []).map((msg) => ({ ...msg, from: msg.from?.emailAddress ?? msg.from })));
   const next = j["@odata.nextLink"];
   // Graph nextLink points to Graph, but credentials must stay on the gateway.
   if (next) {

@@ -22,6 +22,9 @@ describe("stable inbox deduplication", () => {
   it("recognizes a restored historical import lacking internetMessageId", () => {
     expect(findImportedEmail(restored, [historical]).row?.id).toBe("record-1");
   });
+  it("recognizes legacy imports whose sender was not extracted from Graph", () => {
+    expect(findImportedEmail(restored, [{ ...historical, from_email: "unknown@unknown" }]).row?.id).toBe("record-1");
+  });
   it("does not mistake a different reply in the same conversation for the old email", () => {
     expect(findImportedEmail({ ...restored, receivedDateTime: "2026-10-23T11:00:00Z" }, [historical]).row).toBeUndefined();
   });
