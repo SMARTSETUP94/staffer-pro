@@ -1,12 +1,13 @@
 /**
  * Polling smart@setup.paris : Outlook (via gateway) → Lovable AI (classifier)
- *   → emails_entrants (pending_review) → archive Outlook.
+ *   → emails_entrants (pending_review). Outlook is strictly read-only.
  *
  * Appelé par pg_cron toutes les 5 min via /api/public/* (auth bypass).
  * Sécurité : header `apikey` = SUPABASE_PUBLISHABLE_KEY requis.
  */
 import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
+import { findImportedEmail, type ImportedEmailIdentity } from "@/lib/inbox-smart-dedupe";
 
 const OUTLOOK_GW = "https://connector-gateway.lovable.dev/microsoft_outlook";
 const AI_GW = "https://ai.gateway.lovable.dev/v1/chat/completions";
@@ -16,6 +17,7 @@ type Recipient = { emailAddress?: { name?: string; address?: string } };
 
 type OutlookMessage = {
   id: string;
+  internetMessageId?: string;
   conversationId?: string;
   subject?: string;
   bodyPreview?: string;
@@ -128,26 +130,15 @@ Aperçu: ${msg.bodyPreview ?? ""}`;
   return JSON.parse(content) as Classification;
 }
 
-async function archiveOutlookMessage(lovableKey: string, connectorKey: string, messageId: string) {
-  // Resolve archive folder id (well-known name "archive")
-  const res = await fetch(`${OUTLOOK_GW}/me/messages/${messageId}/move`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${lovableKey}`,
-      "X-Connection-Api-Key": connectorKey,
-    },
-    body: JSON.stringify({ destinationId: "archive" }),
-  });
-  return res.ok;
-}
-
 async function fetchInbox(lovableKey: string, connectorKey: string): Promise<OutlookMessage[]> {
-  const url =
+  let url: string | undefined =
     `${OUTLOOK_GW}/me/mailFolders/inbox/messages` +
     `?$top=${MAX_FETCH}` +
     `&$orderby=receivedDateTime desc` +
-    `&$select=id,conversationId,subject,bodyPreview,body,from,toRecipients,ccRecipients,receivedDateTime,hasAttachments`;
+    `&$select=id,internetMessageId,conversationId,subject,bodyPreview,body,from,toRecipients,ccRecipients,receivedDateTime,hasAttachments`;
+  const messages: OutlookMessage[] = [];
+  // Without moving emails, all pages must be read, not just the newest 25.
+  while (url) {
   const res = await fetch(url, {
     headers: {
       Authorization: `Bearer ${lovableKey}`,
@@ -158,8 +149,23 @@ async function fetchInbox(lovableKey: string, connectorKey: string): Promise<Out
     const txt = await res.text();
     throw new Error(`Outlook gateway ${res.status}: ${txt.slice(0, 200)}`);
   }
-  const j = (await res.json()) as { value?: OutlookMessage[] };
-  return j.value ?? [];
+  const j = (await res.json()) as { value?: Array<OutlookMessage & { from?: Recipient & Recipient["emailAddress"] }>; "@odata.nextLink"?: string };
+  messages.push(...(j.value ?? []).map((msg) => ({ ...msg, from: msg.from?.emailAddress ?? msg.from })));
+  const next = j["@odata.nextLink"];
+  // Graph nextLink points to Graph, but credentials must stay on the gateway.
+  if (next) {
+    const parsed = new URL(next);
+    if (parsed.origin !== "https://graph.microsoft.com" && parsed.origin !== new URL(OUTLOOK_GW).origin) {
+      throw new Error("Unexpected Outlook pagination origin");
+    }
+    url = parsed.origin === "https://graph.microsoft.com"
+      ? `${OUTLOOK_GW}${parsed.pathname.replace(/^\/v1\.0/, "")}${parsed.search}`
+      : next;
+  } else {
+    url = undefined;
+  }
+  }
+  return messages;
 }
 
 export const Route = createFileRoute("/api/public/hooks/poll-smart-inbox")({
@@ -189,23 +195,45 @@ export const Route = createFileRoute("/api/public/hooks/poll-smart-inbox")({
         const startedAt = new Date().toISOString();
         let processed = 0;
         let inserted = 0;
-        let archived = 0;
         let errors: string[] = [];
 
         try {
           const messages = await fetchInbox(lovableKey, connectorKey);
 
-          // Dedupe via UNIQUE(message_id_outlook)
-          const ids = messages.map((m) => m.id);
-          const { data: existing } = await supa
-            .from("emails_entrants")
-            .select("message_id_outlook")
-            .in("message_id_outlook", ids);
-          const existingSet = new Set((existing ?? []).map((r) => r.message_id_outlook));
+          // Chunked lookups avoid URL-size and Data API row-limit truncation.
+          const existing: ImportedEmailIdentity[] = [];
+          const identitySelect = "id,message_id_outlook,internet_message_id,conversation_id,received_at,from_email,subject";
+          for (let start = 0; start < messages.length; start += 25) {
+            const batch = messages.slice(start, start + 25);
+            const lookups = [
+              supa.from("emails_entrants").select(identitySelect).in("message_id_outlook", batch.map((m) => m.id)),
+              supa.from("emails_entrants").select(identitySelect).in("internet_message_id", batch.map((m) => m.internetMessageId?.trim()).filter((id): id is string => !!id)),
+              supa.from("emails_entrants").select(identitySelect).is("internet_message_id", null).in("received_at", batch.map((m) => m.receivedDateTime).filter((date): date is string => !!date)),
+            ];
+            for (const result of await Promise.all(lookups)) {
+              if (result.error) throw new Error(`Email dedupe lookup failed: ${result.error.message}`);
+              existing.push(...(result.data ?? []) as ImportedEmailIdentity[]);
+            }
+          }
+          const known = [...new Map(existing.map((row) => [row.id, row])).values()];
 
-          const news = messages.filter((m) => !existingSet.has(m.id));
-
-          for (const msg of news) {
+          for (const msg of messages) {
+            const match = findImportedEmail(msg, known);
+            if (match.ambiguous) {
+              errors.push(`Ambiguous historical email ${msg.id}: import skipped`);
+              continue;
+            }
+            if (match.row) {
+              if (!match.row.internet_message_id && msg.internetMessageId?.trim()) {
+                const stableId = msg.internetMessageId.trim();
+                const { error } = await supa.from("emails_entrants")
+                  .update({ internet_message_id: stableId })
+                  .eq("id", match.row.id).is("internet_message_id", null);
+                if (error) errors.push(`Email identity backfill ${msg.id}: ${error.message}`);
+                else match.row.internet_message_id = stableId;
+              }
+              continue;
+            }
             processed++;
             try {
               const sourceBoite = detectSourceBoite(msg);
@@ -218,6 +246,7 @@ export const Route = createFileRoute("/api/public/hooks/poll-smart-inbox")({
 
               const { error: insErr } = await supa.from("emails_entrants").insert({
                 message_id_outlook: msg.id,
+                internet_message_id: msg.internetMessageId?.trim() || null,
                 conversation_id: msg.conversationId ?? null,
                 source_boite: sourceBoite,
                 from_email: msg.from?.address ?? "unknown@unknown",
@@ -240,21 +269,21 @@ export const Route = createFileRoute("/api/public/hooks/poll-smart-inbox")({
                 statut: "pending_review",
               });
               if (insErr) {
+                // A concurrent poll may already have inserted either identity.
+                if (insErr.code === "23505") continue;
                 errors.push(`insert ${msg.id}: ${insErr.message}`);
                 continue;
               }
               inserted++;
-
-              // Auto-archive Outlook quel que soit le tri (pubs / autre / etc.)
-              // — le tri reste fait côté app via pending_review.
-              const ok = await archiveOutlookMessage(lovableKey, connectorKey, msg.id);
-              if (ok) {
-                archived++;
-                await supa
-                  .from("emails_entrants")
-                  .update({ archived_outlook: true })
-                  .eq("message_id_outlook", msg.id);
-              }
+              known.push({
+                id: msg.id,
+                message_id_outlook: msg.id,
+                internet_message_id: msg.internetMessageId?.trim() || null,
+                conversation_id: msg.conversationId ?? null,
+                received_at: msg.receivedDateTime ?? startedAt,
+                from_email: msg.from?.address ?? "unknown@unknown",
+                subject: msg.subject ?? null,
+              });
             } catch (e) {
               errors.push(`msg ${msg.id}: ${(e as Error).message}`);
             }
@@ -275,7 +304,6 @@ export const Route = createFileRoute("/api/public/hooks/poll-smart-inbox")({
             fetched: messages.length,
             processed,
             inserted,
-            archived,
             errorsCount: errors.length,
             errors: errors.slice(0, 5),
           });

@@ -2238,6 +2238,7 @@ export type Database = {
           from_name: string | null
           has_attachments: boolean
           id: string
+          internet_message_id: string | null
           message_id_outlook: string
           metadata_ia: Json
           opportunite_id: string | null
@@ -2269,6 +2270,7 @@ export type Database = {
           from_name?: string | null
           has_attachments?: boolean
           id?: string
+          internet_message_id?: string | null
           message_id_outlook: string
           metadata_ia?: Json
           opportunite_id?: string | null
@@ -2300,6 +2302,7 @@ export type Database = {
           from_name?: string | null
           has_attachments?: boolean
           id?: string
+          internet_message_id?: string | null
           message_id_outlook?: string
           metadata_ia?: Json
           opportunite_id?: string | null

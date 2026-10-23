@@ -1,5 +1,9 @@
 # Roadmap
 
+## Emails en lecture seule (23 oct. 2026)
+- [x] Retirer tout archivage et toute écriture archived_outlook ; audit src + supabase/functions : aucun autre déplacement/suppression de mail (les suppressions calendrier restent indépendantes).
+- [x] Ajouter internet_message_id avec index unique et dédoublonnage stable ; correspondance historique exacte (conversation/date/objet/expéditeur quand connu), erreurs de lecture bloquantes et pagination Inbox complète. 7 tests verts, build OK ; migration vérifiée en base. Le parcours du poll a été testé avec réponses Outlook simulées, pas relancé sur toute la vraie boîte. Publication nécessaire pour arrêter le poll de la version publiée.
+
 ## Onglets chantier non déployés (23 oct. 2026)
 - [x] Masquer Planning chantier, Devis, Grille, Planning (atelier), Planning fab, Équipe et Casting dans la fiche chantier ; URL directe renvoie à la synthèse. Liste centralisée dans `src/lib/affaire-tabs-visibility.ts`, code des pages conservé. 5 tests verts (`affaire-tabs-cachees.test.ts`), onglets relus dans l’app et redirections vérifiées.
 
