@@ -155,6 +155,13 @@
       "when": 1792740477649,
       "tag": "0021_opportunite_numbering_atomic",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1792744170359,
+      "tag": "0022_affaire_documents_email_attachments",
+      "breakpoints": true
     }
   ]
 }

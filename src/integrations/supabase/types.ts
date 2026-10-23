@@ -271,6 +271,8 @@ export type Database = {
           nom_fichier: string | null
           objet_id: string | null
           prise_le: string | null
+          source_attachment_id: string | null
+          source_email_id: string | null
           storage_path: string
           taille_bytes: number
           updated_at: string
@@ -291,6 +293,8 @@ export type Database = {
           nom_fichier?: string | null
           objet_id?: string | null
           prise_le?: string | null
+          source_attachment_id?: string | null
+          source_email_id?: string | null
           storage_path: string
           taille_bytes: number
           updated_at?: string
@@ -311,6 +315,8 @@ export type Database = {
           nom_fichier?: string | null
           objet_id?: string | null
           prise_le?: string | null
+          source_attachment_id?: string | null
+          source_email_id?: string | null
           storage_path?: string
           taille_bytes?: number
           updated_at?: string
@@ -366,6 +372,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_objet_heures_consolidees"
             referencedColumns: ["objet_id"]
+          },
+          {
+            foreignKeyName: "affaire_documents_source_email_id_fkey"
+            columns: ["source_email_id"]
+            isOneToOne: false
+            referencedRelation: "emails_entrants"
+            referencedColumns: ["id"]
           },
         ]
       }
