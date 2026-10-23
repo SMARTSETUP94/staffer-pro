@@ -71,7 +71,7 @@ function AttachmentsList({ emailId, clientReply, affaireId }: { emailId: string;
   const canIA = useCapability("logistique.proposition.validate");
   const canFile = useCapability("section.affaires");
   const canReadClientRequests = useCapability("demandes_clients.view");
-  const [filing, setFiling] = useState<EmailAttachment | null>(null);
+  const [filing, setFiling] = useState<EmailAttachment[] | null>(null);
   const [jal, setJal] = useState<{ attachmentId: string | null; label: string } | null>(null);
   useEffect(() => {
     let alive = true;
@@ -110,7 +110,14 @@ function AttachmentsList({ emailId, clientReply, affaireId }: { emailId: string;
   const viewable = (t: string) => t.startsWith("image/") || t === "application/pdf" || t.startsWith("text/");
   return (
     <div className="space-y-1">
-      <p className="text-sm font-medium flex items-center gap-1"><Paperclip className="h-4 w-4" /> Pièces jointes ({items.length})</p>
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-sm font-medium flex items-center gap-1"><Paperclip className="h-4 w-4" /> Pièces jointes ({items.length})</p>
+        {canFile && canReadClientRequests && (
+          <Button size="sm" variant="outline" disabled={busy !== null} title="Enregistrer toutes les pièces jointes dans une affaire" aria-label="Enregistrer toutes les pièces jointes dans une affaire" onClick={() => setFiling(items)}>
+            <FolderPlus className="mr-1 h-4 w-4" /> Tout classer
+          </Button>
+        )}
+      </div>
       <ul className="divide-y rounded-md border">
         {items.map((a) => (
           <li key={a.id} className="flex items-center gap-2 px-3 py-2 text-sm">
