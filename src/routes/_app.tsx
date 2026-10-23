@@ -1,13 +1,10 @@
 import { createFileRoute, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { AppLayout } from "@/components/AppLayout";
 import {
   shouldForceSetPassword,
-  shouldRedirectToOnboarding,
-  isOnboardingSkipped,
-  markOnboardingSkipped,
   isAuthHashPresent,
 } from "@/lib/auth-redirect-helpers";
 import { consumeCapDenied } from "@/lib/capability-guard";
