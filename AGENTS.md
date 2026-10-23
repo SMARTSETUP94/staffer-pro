@@ -1,5 +1,7 @@
 # Architecture rules
 
+- Inbox imports deduplicate with a unique nullable internet_message_id and fail closed on lookup errors; exact historical identity matching fills missing stable IDs, while full read-only Inbox pagination prevents restored mail from starving later imports.
+
 - Opportunity details live in the shared affair layout through one reusable fiche component; legacy opportunity URLs redirect to that tab and email filing defaults to the same affair ID, preventing separate records or divergent copies.
 
 - Global and per-affair document views share affaire_documents and private affaires-photos storage; email attachment filing uses an authenticated server function under user RLS and a unique source reference to prevent duplicates.
