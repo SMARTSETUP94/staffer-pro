@@ -1,4 +1,4 @@
-import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { requireCapability } from "@/lib/capability-guard";
 import { useEffect, useState } from "react";
 import { ArrowLeft, Loader2, MapPin, User, Calendar, Lock, Unlock, Link2Off, Plus, Pencil } from "lucide-react";
@@ -21,6 +21,7 @@ import { useCapability } from "@/hooks/use-capability";
 import { NouveauClientDialog } from "@/components/clients/NouveauClientDialog";
 import { EditNumeroAffaireDialog } from "@/components/affaire/EditNumeroAffaireDialog";
 import { hasOpportuniteTab } from "@/lib/affaire-opportunite";
+import { isAffaireTabHidden } from "@/lib/affaire-tabs-visibility";
 
 
 interface AffaireDetail {
@@ -54,6 +55,7 @@ export const Route = createFileRoute("/_app/affaires/$affaireId")({
 function AffaireDetailLayout() {
   const { affaireId } = Route.useParams();
   const routerState = useRouterState();
+  const navigate = useNavigate();
   const path = routerState.location.pathname;
   const canManageAffaires = useCapability("section.affaires");
   const canAdminReopen = useCapability("section.admin");
@@ -101,6 +103,13 @@ function AffaireDetailLayout() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [affaireId]);
 
+  // Les onglets non déployés ne doivent pas rester atteignables par URL directe.
+  useEffect(() => {
+    if (isAffaireTabHidden(path)) {
+      void navigate({ to: "/affaires/$affaireId", params: { affaireId }, replace: true });
+    }
+  }, [path, affaireId, navigate]);
+
   const handleStatut = async () => {
     if (!affaire || !confirmAction) return;
     setSavingStatut(true);
@@ -138,7 +147,16 @@ function AffaireDetailLayout() {
 
 
 
-  const tabs = [
+  // Onglet non déployé : rien n'est affiché, l'effet de redirection renvoie à la synthèse.
+  if (isAffaireTabHidden(path)) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  const allTabs = [
     { to: `/affaires/${affaire.id}`, label: "Synthèse", match: path === `/affaires/${affaire.id}` },
     ...(hasOpportuniteTab(affaire)
       ? [{ to: `/affaires/${affaire.id}/opportunite`, label: "Opportunité", match: path.endsWith("/opportunite") }]
@@ -165,6 +183,9 @@ function AffaireDetailLayout() {
     { to: `/affaires/${affaire.id}/documents`, label: "Documents", match: path.endsWith("/documents") },
     { to: `/affaires/${affaire.id}/journal`, label: "Discussion", match: path.endsWith("/journal") },
   ];
+
+  // Onglets volontairement masqués à ce stade : src/lib/affaire-tabs-visibility.ts
+  const tabs = allTabs.filter((t) => !isAffaireTabHidden(t.to));
 
 
   // Fil d'ariane dynamique selon l'onglet courant
