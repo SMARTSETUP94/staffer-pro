@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { ArrowLeft, Trophy, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useCapability } from "@/hooks/use-capability";
 import { TypologieBadge } from "@/components/typologie/TypologieBadge";
 import { getAffaireTypologie, type AffaireTypologie } from "@/lib/affaire-typologie";
 import {
@@ -29,6 +30,7 @@ interface Props {
 }
 
 export function OpportuniteFicheHeader({ affaire, canSign, onSign }: Props) {
+  const canSeePipeline = useCapability("section.pipeline_opportunites");
   const statut = (affaire.statut_opportunite ?? "a_faire") as OpportuniteStatut;
   const taille = (affaire.taille ?? null) as OpportuniteTaille | null;
   const typo = (affaire.typologie_future as AffaireTypologie | null) ?? getAffaireTypologie(affaire.numero);
@@ -36,14 +38,14 @@ export function OpportuniteFicheHeader({ affaire, canSign, onSign }: Props) {
 
   return (
     <div className="space-y-3" data-testid="opportunite-fiche-header">
-      <div className="flex items-center gap-2">
+      {canSeePipeline && <div className="flex items-center gap-2">
         <Button asChild variant="ghost" size="sm" className="h-7 px-2">
           <Link to="/opportunites">
             <ArrowLeft className="mr-1 h-3.5 w-3.5" />
             Pipeline
           </Link>
         </Button>
-      </div>
+      </div>}
 
       <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border pb-4">
         <div className="min-w-0 flex-1">
