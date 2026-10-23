@@ -148,7 +148,8 @@ function OpportunitesPage() {
   //   pragmatique sur action.sign_opportunite (cap accordée à admin+chef_chantier),
   //   à reconsidérer si une cap "opportunite.manage" dédiée émerge.
   // - canForceCode5xxx : admin override pour signer même quand non-owner.
-  // - oppScope : 'all' pour admin → défaut "Tous CA", sinon défaut "moi".
+  // - oppScope : ne pré-sélectionne plus le chargé d'affaires (défaut = Tous),
+  //   il active seulement le filtre « Sans CA ».
   const canManageOpps = useCapability("action.sign_opportunite");
   const canForceCode5xxx = useCapability("section.admin");
   const oppScope = useCapabilityScope("section.pipeline_opportunites");
@@ -204,16 +205,11 @@ function OpportunitesPage() {
   const [statutsFilter, setStatutsFilter] = useState<OpportuniteStatut[]>([]);
   const [taillesFilter, setTaillesFilter] = useState<OpportuniteTaille[]>([]);
 
-  // Filtre CA — admin par défaut "Tous", chef par défaut "moi"
-  const [filterCa, setFilterCa] = useState<string>("");
-  useEffect(() => {
-    if (filterCa) return;
-    if (oppScope === "all") {
-      setFilterCa("__all__");
-    } else if (user?.id) {
-      setFilterCa(user.id);
-    }
-  }, [oppScope, user?.id, filterCa]);
+  // Filtre CA — le pipeline s'ouvre toujours sur « Tous les chargés
+  // d'affaires » (demande GabIn, 23 oct. 2026). Le périmètre réellement
+  // visible reste décidé par les politiques de la base ; le scope de la
+  // capability ne pilote plus qu'un filtre supplémentaire (« Sans CA »).
+  const [filterCa, setFilterCa] = useState<string>("__all__");
 
   const chargesById = useMemo(() => {
     const m = new Map();
