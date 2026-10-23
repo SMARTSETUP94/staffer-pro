@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate, stripSearchParams } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, stripSearchParams, type SearchSchemaInput } from "@tanstack/react-router";
 import { requireCapability } from "@/lib/capability-guard";
 import { fallback } from "@tanstack/zod-adapter";
 import { z } from "zod";
@@ -126,8 +126,8 @@ export const Route = createFileRoute("/_app/opportunites/")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  validateSearch: (search: Record<string, unknown>): OppsSearch => oppsSearchSchema.parse(search),
-  search: { middlewares: [stripSearchParams<Record<string, unknown>>(OPPS_SEARCH_DEFAULTS)] },
+  validateSearch: (search: Record<string, unknown> & SearchSchemaInput): OppsSearch => oppsSearchSchema.parse(search),
+  search: { middlewares: [stripSearchParams(OPPS_SEARCH_DEFAULTS)] },
   component: OpportunitesPage,
 });
 

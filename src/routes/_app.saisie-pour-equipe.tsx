@@ -8,7 +8,7 @@
  * - Cellule remplie → affiche heures + badge si saisi_par_chef
  * - Bouton "Saisir en bulk" en haut à droite
  */
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, type SearchSchemaInput } from "@tanstack/react-router";
 import { requireCapability } from "@/lib/capability-guard";
 import { useAuth } from "@/lib/auth-context";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -60,8 +60,8 @@ export const Route = createFileRoute("/_app/saisie-pour-equipe")({
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary" },
   ] }),
-  validateSearch: (search: Record<string, unknown>): z.infer<typeof searchSchema> => searchSchema.parse(search),
-  search: { middlewares: [stripSearchParams<Record<string, unknown>>(SEARCH_DEFAULTS)] },
+  validateSearch: (search: Record<string, unknown> & SearchSchemaInput): z.infer<typeof searchSchema> => searchSchema.parse(search),
+  search: { middlewares: [stripSearchParams(SEARCH_DEFAULTS)] },
   component: SaisiePourEquipePage,
 });
 
