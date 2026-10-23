@@ -112,6 +112,7 @@ import { Route as AppAffairesAffaireIdFabricationRouteImport } from './routes/_a
 import { Route as AppAffairesAffaireIdGrilleRouteImport } from './routes/_app.affaires.$affaireId.grille'
 import { Route as AppAffairesAffaireIdJournalRouteImport } from './routes/_app.affaires.$affaireId.journal'
 import { Route as AppAffairesAffaireIdLogistiqueRouteImport } from './routes/_app.affaires.$affaireId.logistique'
+import { Route as AppAffairesAffaireIdOpportuniteRouteImport } from './routes/_app.affaires.$affaireId.opportunite'
 import { Route as AppAffairesAffaireIdPlanningAtelierRouteImport } from './routes/_app.affaires.$affaireId.planning-atelier'
 import { Route as AppAffairesAffaireIdPlanningChantierRouteImport } from './routes/_app.affaires.$affaireId.planning-chantier'
 import { Route as AppAffairesAffaireIdStaffingRouteImport } from './routes/_app.affaires.$affaireId.staffing'
@@ -655,6 +656,12 @@ const AppAffairesAffaireIdLogistiqueRoute =
     path: '/logistique',
     getParentRoute: () => AppAffairesAffaireIdRoute,
   } as any)
+const AppAffairesAffaireIdOpportuniteRoute =
+  AppAffairesAffaireIdOpportuniteRouteImport.update({
+    id: '/opportunite',
+    path: '/opportunite',
+    getParentRoute: () => AppAffairesAffaireIdRoute,
+  } as any)
 const AppAffairesAffaireIdPlanningAtelierRoute =
   AppAffairesAffaireIdPlanningAtelierRouteImport.update({
     id: '/planning-atelier',
@@ -811,6 +818,7 @@ export interface FileRoutesByFullPath {
   '/affaires/$affaireId/grille': typeof AppAffairesAffaireIdGrilleRoute
   '/affaires/$affaireId/journal': typeof AppAffairesAffaireIdJournalRoute
   '/affaires/$affaireId/logistique': typeof AppAffairesAffaireIdLogistiqueRoute
+  '/affaires/$affaireId/opportunite': typeof AppAffairesAffaireIdOpportuniteRoute
   '/affaires/$affaireId/planning-atelier': typeof AppAffairesAffaireIdPlanningAtelierRoute
   '/affaires/$affaireId/planning-chantier': typeof AppAffairesAffaireIdPlanningChantierRoute
   '/affaires/$affaireId/staffing': typeof AppAffairesAffaireIdStaffingRoute
@@ -921,6 +929,7 @@ export interface FileRoutesByTo {
   '/affaires/$affaireId/grille': typeof AppAffairesAffaireIdGrilleRoute
   '/affaires/$affaireId/journal': typeof AppAffairesAffaireIdJournalRoute
   '/affaires/$affaireId/logistique': typeof AppAffairesAffaireIdLogistiqueRoute
+  '/affaires/$affaireId/opportunite': typeof AppAffairesAffaireIdOpportuniteRoute
   '/affaires/$affaireId/planning-atelier': typeof AppAffairesAffaireIdPlanningAtelierRoute
   '/affaires/$affaireId/planning-chantier': typeof AppAffairesAffaireIdPlanningChantierRoute
   '/affaires/$affaireId/staffing': typeof AppAffairesAffaireIdStaffingRoute
@@ -1036,6 +1045,7 @@ export interface FileRoutesById {
   '/_app/affaires/$affaireId/grille': typeof AppAffairesAffaireIdGrilleRoute
   '/_app/affaires/$affaireId/journal': typeof AppAffairesAffaireIdJournalRoute
   '/_app/affaires/$affaireId/logistique': typeof AppAffairesAffaireIdLogistiqueRoute
+  '/_app/affaires/$affaireId/opportunite': typeof AppAffairesAffaireIdOpportuniteRoute
   '/_app/affaires/$affaireId/planning-atelier': typeof AppAffairesAffaireIdPlanningAtelierRoute
   '/_app/affaires/$affaireId/planning-chantier': typeof AppAffairesAffaireIdPlanningChantierRoute
   '/_app/affaires/$affaireId/staffing': typeof AppAffairesAffaireIdStaffingRoute
@@ -1151,6 +1161,7 @@ export interface FileRouteTypes {
     | '/affaires/$affaireId/grille'
     | '/affaires/$affaireId/journal'
     | '/affaires/$affaireId/logistique'
+    | '/affaires/$affaireId/opportunite'
     | '/affaires/$affaireId/planning-atelier'
     | '/affaires/$affaireId/planning-chantier'
     | '/affaires/$affaireId/staffing'
@@ -1261,6 +1272,7 @@ export interface FileRouteTypes {
     | '/affaires/$affaireId/grille'
     | '/affaires/$affaireId/journal'
     | '/affaires/$affaireId/logistique'
+    | '/affaires/$affaireId/opportunite'
     | '/affaires/$affaireId/planning-atelier'
     | '/affaires/$affaireId/planning-chantier'
     | '/affaires/$affaireId/staffing'
@@ -1375,6 +1387,7 @@ export interface FileRouteTypes {
     | '/_app/affaires/$affaireId/grille'
     | '/_app/affaires/$affaireId/journal'
     | '/_app/affaires/$affaireId/logistique'
+    | '/_app/affaires/$affaireId/opportunite'
     | '/_app/affaires/$affaireId/planning-atelier'
     | '/_app/affaires/$affaireId/planning-chantier'
     | '/_app/affaires/$affaireId/staffing'
@@ -2122,6 +2135,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAffairesAffaireIdLogistiqueRouteImport
       parentRoute: typeof AppAffairesAffaireIdRoute
     }
+    '/_app/affaires/$affaireId/opportunite': {
+      id: '/_app/affaires/$affaireId/opportunite'
+      path: '/opportunite'
+      fullPath: '/affaires/$affaireId/opportunite'
+      preLoaderRoute: typeof AppAffairesAffaireIdOpportuniteRouteImport
+      parentRoute: typeof AppAffairesAffaireIdRoute
+    }
     '/_app/affaires/$affaireId/planning-atelier': {
       id: '/_app/affaires/$affaireId/planning-atelier'
       path: '/planning-atelier'
@@ -2269,6 +2289,7 @@ interface AppAffairesAffaireIdRouteChildren {
   AppAffairesAffaireIdGrilleRoute: typeof AppAffairesAffaireIdGrilleRoute
   AppAffairesAffaireIdJournalRoute: typeof AppAffairesAffaireIdJournalRoute
   AppAffairesAffaireIdLogistiqueRoute: typeof AppAffairesAffaireIdLogistiqueRoute
+  AppAffairesAffaireIdOpportuniteRoute: typeof AppAffairesAffaireIdOpportuniteRoute
   AppAffairesAffaireIdPlanningAtelierRoute: typeof AppAffairesAffaireIdPlanningAtelierRoute
   AppAffairesAffaireIdPlanningChantierRoute: typeof AppAffairesAffaireIdPlanningChantierRoute
   AppAffairesAffaireIdStaffingRoute: typeof AppAffairesAffaireIdStaffingRoute
@@ -2285,6 +2306,7 @@ const AppAffairesAffaireIdRouteChildren: AppAffairesAffaireIdRouteChildren = {
   AppAffairesAffaireIdGrilleRoute: AppAffairesAffaireIdGrilleRoute,
   AppAffairesAffaireIdJournalRoute: AppAffairesAffaireIdJournalRoute,
   AppAffairesAffaireIdLogistiqueRoute: AppAffairesAffaireIdLogistiqueRoute,
+  AppAffairesAffaireIdOpportuniteRoute: AppAffairesAffaireIdOpportuniteRoute,
   AppAffairesAffaireIdPlanningAtelierRoute:
     AppAffairesAffaireIdPlanningAtelierRoute,
   AppAffairesAffaireIdPlanningChantierRoute:
