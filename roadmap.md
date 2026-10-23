@@ -1,5 +1,8 @@
 # Roadmap
 
+## Onglets chantier non déployés (23 oct. 2026)
+- [x] Masquer Planning chantier, Devis, Grille, Planning (atelier), Planning fab, Équipe et Casting dans la fiche chantier ; URL directe renvoie à la synthèse. Liste centralisée dans `src/lib/affaire-tabs-visibility.ts`, code des pages conservé. 5 tests verts (`affaire-tabs-cachees.test.ts`), onglets relus dans l’app et redirections vérifiées.
+
 ## Fiche opportunité intégrée au chantier (23 oct. 2026)
 - [x] Réunir le brief et le suivi commercial dans un onglet de la même affaire, préserver les anciens liens ; historique conservé après signature.
 - [x] Permettre le classement des pièces jointes des emails d’origine dans les documents du chantier courant, préselectionné ; droits existants conservés.
