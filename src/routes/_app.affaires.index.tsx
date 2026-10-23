@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate, stripSearchParams } from "@tanstack/react-router";
 import { requireCapability } from "@/lib/capability-guard";
-import { zodValidator, fallback } from "@tanstack/zod-adapter";
+import { fallback } from "@tanstack/zod-adapter";
 import { z } from "zod";
 import { useEffect, useMemo, useState } from "react";
 import { Plus, Search, Loader2, ArrowRight, Pencil, RotateCcw, ArrowUp, ArrowDown } from "lucide-react";
@@ -124,7 +124,7 @@ export const Route = createFileRoute("/_app/affaires/")({
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary" },
   ] }),
-  validateSearch: zodValidator(searchSchema),
+  validateSearch: (search: Record<string, unknown>): z.infer<typeof searchSchema> => searchSchema.parse(search),
   search: { middlewares: [stripSearchParams<Record<string, unknown>>(SEARCH_DEFAULTS)] },
   component: AffairesPage,
 });

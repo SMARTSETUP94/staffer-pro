@@ -18,7 +18,7 @@ import { ClipboardList, Filter, Loader2, Plus, Search, Users } from "lucide-reac
 import { toast } from "sonner";
 import { formatBusinessError } from "@/lib/business-errors";
 import { z } from "zod";
-import { zodValidator, fallback } from "@tanstack/zod-adapter";
+import { fallback } from "@tanstack/zod-adapter";
 import { stripSearchParams } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -60,7 +60,7 @@ export const Route = createFileRoute("/_app/saisie-pour-equipe")({
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary" },
   ] }),
-  validateSearch: zodValidator(searchSchema),
+  validateSearch: (search: Record<string, unknown>): z.infer<typeof searchSchema> => searchSchema.parse(search),
   search: { middlewares: [stripSearchParams<Record<string, unknown>>(SEARCH_DEFAULTS)] },
   component: SaisiePourEquipePage,
 });
