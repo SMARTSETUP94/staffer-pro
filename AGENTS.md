@@ -1,5 +1,7 @@
 # Architecture rules
 
+- Global and per-affair document views share affaire_documents and private affaires-photos storage; email attachment filing uses an authenticated server function under user RLS and a unique source reference to prevent duplicates.
+
 - Opportunity numbering is allocated atomically by create_opportunite; UI codes are previews, historical code_opportunite values count as used, and creation surfaces read back the allocated numero to avoid stale numbers.
 
 - Opportunity creation reuses ClientCombobox for client selection/creation and a dedicated free-name chantier picker; an existing chantier supplies its title only, never changes its record, and the selected client ID is explicitly attached to the new opportunity.

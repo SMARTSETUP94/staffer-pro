@@ -86,7 +86,7 @@ export function DocumentThumbnail({ doc, getSignedUrl, onClick, className }: Pro
       ) : (
         <div className="flex flex-col items-center gap-1 text-muted-foreground">
           <FileText className="h-10 w-10" />
-          <span className="px-2 text-center text-[10px] uppercase tracking-wider">PDF</span>
+          <span className="px-2 text-center text-[10px] uppercase tracking-wider">{doc.filename.split(".").pop() ?? "Fichier"}</span>
         </div>
       )}
       {doc.description && (
