@@ -6456,6 +6456,13 @@ export type Database = {
           type_contrat: string
         }[]
       }
+      get_recent_opportunite_codes: {
+        Args: never
+        Returns: {
+          code: string
+          nom: string
+        }[]
+      }
       get_user_effective_caps: {
         Args: { _user_id: string }
         Returns: {

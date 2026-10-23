@@ -1,6 +1,6 @@
-import { createFileRoute, Link, useNavigate, stripSearchParams } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, stripSearchParams, type SearchSchemaInput } from "@tanstack/react-router";
 import { requireCapability } from "@/lib/capability-guard";
-import { zodValidator, fallback } from "@tanstack/zod-adapter";
+import { fallback } from "@tanstack/zod-adapter";
 import { z } from "zod";
 import { useEffect, useMemo, useState } from "react";
 import { Plus, Search, Loader2, ArrowRight, Pencil, RotateCcw, ArrowUp, ArrowDown } from "lucide-react";
@@ -116,8 +116,15 @@ const searchSchema = z.object({
 
 export const Route = createFileRoute("/_app/affaires/")({
   beforeLoad: () => requireCapability("section.affaires"),
-  head: () => ({ meta: [{ title: "Affaires — Setup Paris" }] }),
-  validateSearch: zodValidator(searchSchema),
+  head: () => ({ meta: [
+    { title: "Affaires — Setup Paris" },
+    { name: "description", content: "Chantiers en cours et passés de SETUP Paris." },
+    { property: "og:title", content: "Affaires — Setup Paris" },
+    { property: "og:description", content: "Chantiers en cours et passés de SETUP Paris." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
+  validateSearch: (search: Record<string, unknown> & SearchSchemaInput): z.infer<typeof searchSchema> => searchSchema.parse(search),
   search: { middlewares: [stripSearchParams(SEARCH_DEFAULTS)] },
   component: AffairesPage,
 });

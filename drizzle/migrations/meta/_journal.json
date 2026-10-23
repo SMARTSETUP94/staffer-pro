@@ -148,6 +148,13 @@
       "when": 1792389950471,
       "tag": "0020_notes_de_frais_storage",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1792740477649,
+      "tag": "0021_opportunite_numbering_atomic",
+      "breakpoints": true
     }
   ]
 }

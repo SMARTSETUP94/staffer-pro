@@ -8,7 +8,7 @@
  * - Cellule remplie → affiche heures + badge si saisi_par_chef
  * - Bouton "Saisir en bulk" en haut à droite
  */
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, type SearchSchemaInput } from "@tanstack/react-router";
 import { requireCapability } from "@/lib/capability-guard";
 import { useAuth } from "@/lib/auth-context";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -18,7 +18,7 @@ import { ClipboardList, Filter, Loader2, Plus, Search, Users } from "lucide-reac
 import { toast } from "sonner";
 import { formatBusinessError } from "@/lib/business-errors";
 import { z } from "zod";
-import { zodValidator, fallback } from "@tanstack/zod-adapter";
+import { fallback } from "@tanstack/zod-adapter";
 import { stripSearchParams } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -52,8 +52,15 @@ const searchSchema = z.object({
 
 export const Route = createFileRoute("/_app/saisie-pour-equipe")({
   beforeLoad: () => requireCapability("heures.equipe.saisir"),
-  head: () => ({ meta: [{ title: "Saisie équipe — Planning chantiers" }] }),
-  validateSearch: zodValidator(searchSchema),
+  head: () => ({ meta: [
+    { title: "Saisie équipe — SETUP Paris" },
+    { name: "description", content: "Saisie des heures de votre équipe sur les chantiers SETUP Paris." },
+    { property: "og:title", content: "Saisie équipe — SETUP Paris" },
+    { property: "og:description", content: "Saisie des heures de votre équipe sur les chantiers SETUP Paris." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
+  validateSearch: (search: Record<string, unknown> & SearchSchemaInput): z.infer<typeof searchSchema> => searchSchema.parse(search),
   search: { middlewares: [stripSearchParams(SEARCH_DEFAULTS)] },
   component: SaisiePourEquipePage,
 });

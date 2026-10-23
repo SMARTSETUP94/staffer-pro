@@ -42,7 +42,7 @@ interface Props {
 
 /**
  * v0.17 — Modale de création d'une opportunité (9XXX).
- * Pré-remplit le code via RPC `next_affaire_numero(9)`, l'utilisateur peut éditer.
+ * Prévisualise le prochain code ; la base l'attribue à l'enregistrement.
  */
 export function NouvelleOpportuniteDialog({
   open,
@@ -56,6 +56,8 @@ export function NouvelleOpportuniteDialog({
   const [clientId, setClientId] = useState<string | null>(null);
   const [nom, setNom] = useState("");
   const [code, setCode] = useState("");
+  const [recentCodes, setRecentCodes] = useState<{ code: string; nom: string }[]>([]);
+  const [recentCodesError, setRecentCodesError] = useState(false);
   const [chargeId, setChargeId] = useState<string>(defaultChargeId ?? "");
   const [taille, setTaille] = useState<OpportuniteTaille>("petit");
   const [dateOpp, setDateOpp] = useState(todayIso);
@@ -69,6 +71,8 @@ export function NouvelleOpportuniteDialog({
     setClientId(null);
     setNom("");
     setCode("");
+    setRecentCodes([]);
+    setRecentCodesError(false);
     setChargeId(defaultChargeId ?? "");
     setTaille("petit");
     setDateOpp(todayIso);
@@ -85,6 +89,11 @@ export function NouvelleOpportuniteDialog({
       setLoadingCode(false);
       if (error) toast.error("Impossible de suggérer un code 9XXX", { description: error.message });
       else if (data) setCode(String(data));
+    });
+    void supabase.rpc("get_recent_opportunite_codes").then(({ data, error }) => {
+      if (!active) return;
+      setRecentCodesError(Boolean(error));
+      setRecentCodes(data ?? []);
     });
     return () => { active = false; };
   }, [open]);
@@ -117,12 +126,18 @@ export function NouvelleOpportuniteDialog({
       toast.error("Création impossible", { description: error.message });
       return;
     }
-    if (clientId && typeof data === "string") {
+    if (typeof data !== "string") {
+      setSaving(false);
+      toast.error("Identifiant manquant après création");
+      return;
+    }
+    const { data: created } = await supabase.from("affaires").select("numero").eq("id", data).single();
+    if (clientId) {
       const { error: linkError } = await supabase.from("affaires").update({ client_id: clientId }).eq("id", data);
       if (linkError) toast.error("Opportunité créée, mais rattachement client impossible", { description: linkError.message });
     }
     setSaving(false);
-    toast.success(`Opportunité ${code} créée`);
+    toast.success(created ? `Opportunité ${created.numero} créée` : "Opportunité créée");
     onOpenChange(false);
     onCreated();
   }
@@ -167,11 +182,12 @@ export function NouvelleOpportuniteDialog({
 
           <div className="grid grid-cols-2 gap-3">
             <div className="grid gap-1.5">
-              <Label>Code 9XXX</Label>
+              <Label htmlFor="opportunite-code">Code 9XXX</Label>
               <div className="relative">
                 <Input
                   value={code}
-                  onChange={(e) => setCode(e.target.value)}
+                  id="opportunite-code"
+                  readOnly
                   placeholder="9000"
                   className="font-mono"
                   maxLength={4}
@@ -188,6 +204,15 @@ export function NouvelleOpportuniteDialog({
                 value={dateOpp}
                 onChange={(e) => setDateOpp(e.target.value)}
               />
+            </div>
+          </div>
+
+          <div className="grid gap-1.5">
+            <p className="text-xs text-muted-foreground">5 derniers numéros 9XXX</p>
+            <div className="flex flex-wrap gap-3" aria-label="Derniers numéros 9XXX">
+              {recentCodes.map((row) => <span key={row.code} title={row.nom} className="font-mono text-sm">{row.code}</span>)}
+              {recentCodesError && <span className="text-xs text-destructive">Historique indisponible</span>}
+              {!recentCodesError && !loadingCode && recentCodes.length === 0 && <span className="text-xs text-muted-foreground">Aucun numéro enregistré</span>}
             </div>
           </div>
 
@@ -248,7 +273,7 @@ export function NouvelleOpportuniteDialog({
           </Button>
           <Button
             onClick={handleSave}
-            disabled={saving}
+            disabled={saving || loadingCode || !code}
             className="rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
           >
             {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
