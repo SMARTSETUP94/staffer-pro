@@ -130,14 +130,14 @@ function AttachmentsList({ emailId, clientReply, affaireId }: { emailId: string;
                 )}
                 {canIA && <Button size="sm" variant="ghost" onClick={() => setJal({ attachmentId: a.id, label: a.name })} aria-label={`Lire ${a.name} comme jalonnement`} title="Lire comme jalonnement"><Sparkles className="h-4 w-4" /></Button>}
                 <Button size="sm" variant="ghost" onClick={() => open(a, "download")} aria-label={`Télécharger ${a.name}`}><Download className="h-4 w-4" /></Button>
-                {(clientReply || affaireId) && canFile && canReadClientRequests && <Button size="sm" variant="ghost" title="Enregistrer dans une affaire" aria-label={`Enregistrer ${a.name} dans une affaire`} onClick={() => setFiling(a)}><FolderPlus className="h-4 w-4" /></Button>}
+                {(clientReply || affaireId) && canFile && canReadClientRequests && <Button size="sm" variant="ghost" title="Enregistrer dans une affaire" aria-label={`Enregistrer ${a.name} dans une affaire`} onClick={() => setFiling([a])}><FolderPlus className="h-4 w-4" /></Button>}
               </>
             )}
           </li>
         ))}
       </ul>
       {jalDlg}
-      {filing && <SaveEmailDocumentDialog emailId={emailId} attachment={filing} initialAffaireId={affaireId} onClose={() => setFiling(null)} />}
+      {filing && filing.length > 0 && <SaveEmailDocumentDialog emailId={emailId} attachments={filing} initialAffaireId={affaireId} onClose={() => setFiling(null)} />}
     </div>
   );
 }
