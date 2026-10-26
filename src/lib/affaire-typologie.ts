@@ -33,7 +33,7 @@ export const AFFAIRE_TYPOLOGIE_LABELS: Record<AffaireTypologie, string> = {
   montage_demontage: "Montage / Démontage (4XXX)",
   fabrication: "Fabrication (5XXX/6XXX)",
   stockage: "Stockage (2XXXX)",
-  prototype: "Prototype (9XXX)",
+  prototype: "Opportunité (9XXX)",
 };
 
 export const AFFAIRE_TYPOLOGIE_SHORT_LABELS: Record<AffaireTypologie, string> = {
@@ -41,7 +41,7 @@ export const AFFAIRE_TYPOLOGIE_SHORT_LABELS: Record<AffaireTypologie, string> = 
   montage_demontage: "M/D",
   fabrication: "Fab.",
   stockage: "Stock.",
-  prototype: "Proto.",
+  prototype: "Opp.",
 };
 
 /**
