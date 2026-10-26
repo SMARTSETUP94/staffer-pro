@@ -1,10 +1,11 @@
 # Roadmap
 
 ## MCP v2 — écriture contrôlée (26 oct. 2026)
-- [ ] Confirmation atomique 10 min, idempotence, droits api.mcp.write / mcp_v2_write, audit sécurisé et filtre écritures.
-- [ ] Outils opportunités, chantiers, logistique via chemins applicatifs existants ; préserver les lectures v1.
-- [ ] Tests Vitest et OAuth réel : opportunité + étape de test, déplacement, annulation, archivage affaire.
-- [ ] Documentation, ADR 005, mémoire et manifeste ; signaler les limites et la republication nécessaire.
+- [x] Confirmation atomique 10 min, idempotence, droits api.mcp.write / mcp_v2_write, audit sécurisé et filtre écritures ; cible/snapshot verrouillés, clés externes isolées compte/client et contenu identique requis.
+- [x] 9 outils écriture et 4 lectures supplémentaires ; préserver les 9 lecteurs v1. Scopes écriture globaux seulement.
+- [x] 53 tests Vitest verts et premier OAuth réel : opportunité 9440 + étape, déplacement, annulation, archivage affaire confirmé et audit visible.
+- [ ] Rejouer OAuth après dernier durcissement : service DCR de l’environnement final renvoie 404 ; vérifier les chemins directs préexistants avec un vrai JWT OAuth avant publication.
+- [x] Documentation, ADR 005, mémoire ; signaler les limites et la republication nécessaire.
 
 ## MCP v1 — Claude lecture seule (26 oct. 2026)
 - [x] OAuth géré et DCR activés ; clé ES256 déjà active, connexion existante et allow-list conservées.
