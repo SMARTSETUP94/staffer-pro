@@ -1,5 +1,9 @@
 # Roadmap
 
+## Affectations chantier (26 oct. 2026)
+- [ ] Chef de projet dans Liste des chantiers, Chantiers, fiche chantier et signature ; dessinateur pour les 6XXX, recherche par nom et sauvegarde partagée.
+- [ ] Vérifier la persistance, les conditions 6XXX et les affectations à la signature.
+
 ## Traçabilité des codes dans la liste (26 oct. 2026)
 - [x] Ancien code → code signé visible ; tri sur le code d'opportunité d'origine ; recherche ancien code et filtre 9XXX incluent les signatures.
 - [x] 3 tests verts, build OK ; liste réelle vérifiée : 9439 → 4132 puis 9438 → 6067 puis 9437. Recherche 9439 sous filtre Opportunités retrouve 4132. Aucune signature modifiée.
