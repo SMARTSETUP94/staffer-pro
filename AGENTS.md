@@ -1,5 +1,7 @@
 # Architecture rules
 
+- Opportunity signing validates the manually entered code independently of declared typology and always calls the explicit-code RPC overload; optional suggestions never overwrite typed input.
+
 - Tableur autosave queues are keyed by persisted row and edited field, flushing the pending value rather than a rendered row; this prevents adjacent edits from discarding typology changes. Final typology selections are saved immediately.
 
 - Inbox imports deduplicate with a unique nullable internet_message_id and fail closed on lookup errors; exact historical identity matching fills missing stable IDs, while full read-only Inbox pagination prevents restored mail from starving later imports.

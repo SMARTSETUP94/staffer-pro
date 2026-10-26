@@ -91,7 +91,7 @@ export function OpportuniteFicheHeader({ affaire, canSign, onSign }: Props) {
         {canSign && !isSigne && statut === "gagne" && (
           <Button onClick={onSign} className="rounded-xl" data-testid="btn-sign-opp">
             <Trophy className="mr-2 h-4 w-4" />
-            Signer en 5XXX
+            Signer l&apos;opportunité
           </Button>
         )}
       </div>

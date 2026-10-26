@@ -16,6 +16,11 @@ import type { AffaireTypologie } from "@/lib/affaire-typologie";
 
 export type TypologieFuture = AffaireTypologie;
 
+/** Signing uses the entered affair code, not the previously declared typology. */
+export function isValidManualAffaireCode(code: string): boolean {
+  return /^([1-6]\d{3}|2\d{4})$/.test(code.trim());
+}
+
 /**
  * Préfixe numérique attendu (1er chiffre) pour la typologie cible.
  * LOT 0 : fabrication → 6 (les 5XXX sont épuisés, les 6XXX prennent la suite).
