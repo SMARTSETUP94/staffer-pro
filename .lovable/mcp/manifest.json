@@ -13,7 +13,7 @@
   "mcp": {
     "server": {
       "name": "project-shift",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "title": "Project Shift"
     },
     "tools": [
@@ -386,6 +386,1064 @@
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "outputSchema": null
+      },
+      {
+        "name": "rechercher_clients",
+        "title": "Rechercher les clients",
+        "description": "Rechercher les clients. Lecture seule sous les permissions du compte, pagination limit/cursor.",
+        "annotations": {
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "q": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 255
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 25
+            },
+            "cursor": {
+              "type": "string",
+              "pattern": "^\\d{1,8}$",
+              "default": "0"
+            }
+          },
+          "required": [
+            "q"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "planning_logistique",
+        "title": "Lire le planning logistique et les conflits véhicule",
+        "description": "Lire le planning logistique et les conflits véhicule. Lecture seule sous les permissions du compte, pagination limit/cursor.",
+        "annotations": {
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "du": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+            },
+            "au": {
+              "$ref": "#/properties/du"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "appro",
+                "emballage",
+                "chargement",
+                "livraison",
+                "tracage",
+                "montage",
+                "finitions",
+                "permanence",
+                "rotation",
+                "demontage",
+                "dechargement"
+              ]
+            },
+            "affaire": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "vehicule": {
+              "$ref": "#/properties/affaire"
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 25
+            },
+            "cursor": {
+              "type": "string",
+              "pattern": "^\\d{1,8}$",
+              "default": "0"
+            }
+          },
+          "required": [
+            "du",
+            "au"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "vehicules_disponibles",
+        "title": "Lire les véhicules disponibles sur une période",
+        "description": "Lire les véhicules disponibles sur une période. Lecture seule sous les permissions du compte, pagination limit/cursor.",
+        "annotations": {
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "du": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+            },
+            "au": {
+              "$ref": "#/properties/du"
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 25
+            },
+            "cursor": {
+              "type": "string",
+              "pattern": "^\\d{1,8}$",
+              "default": "0"
+            }
+          },
+          "required": [
+            "du",
+            "au"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "lister_propositions_logistiques",
+        "title": "Lister les propositions logistiques IA sans les valider",
+        "description": "Lister les propositions logistiques IA sans les valider. Lecture seule sous les permissions du compte, pagination limit/cursor.",
+        "annotations": {
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "affaire_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 25
+            },
+            "cursor": {
+              "type": "string",
+              "pattern": "^\\d{1,8}$",
+              "default": "0"
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "creer_opportunite",
+        "title": "Créer une opportunité",
+        "description": "Créer une opportunité avec les droits du compte. Premier appel : aperçu sans écriture métier. Après accord humain explicite, renvoyer les mêmes arguments avec confirmation_id sous 10 minutes. Aucune suppression ni signature.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "client_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "client_nom": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 255
+            },
+            "creer_client": {
+              "type": "boolean",
+              "default": false,
+              "description": "Autoriser explicitement la création du client inconnu dans l’aperçu avant confirmation."
+            },
+            "intitule": {
+              "$ref": "#/properties/client_nom"
+            },
+            "description": {
+              "type": "string",
+              "maxLength": 5000
+            },
+            "lieu": {
+              "$ref": "#/properties/client_nom"
+            },
+            "date_evenement": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+            },
+            "date_montage": {
+              "$ref": "#/properties/date_evenement"
+            },
+            "date_demontage": {
+              "$ref": "#/properties/date_evenement"
+            },
+            "typologie_future": {
+              "type": "string",
+              "enum": [
+                "fabrication",
+                "montage_demontage",
+                "stockage",
+                "prototype",
+                "non_operationnel"
+              ]
+            },
+            "ca_estime_ht": {
+              "type": "number",
+              "minimum": 0
+            },
+            "charge_affaires_id": {
+              "$ref": "#/properties/client_id"
+            },
+            "contact": {
+              "type": "object",
+              "properties": {
+                "nom": {
+                  "$ref": "#/properties/client_nom"
+                },
+                "email": {
+                  "type": "string",
+                  "format": "email"
+                },
+                "telephone": {
+                  "type": "string",
+                  "maxLength": 80
+                }
+              },
+              "required": [
+                "nom"
+              ],
+              "additionalProperties": false
+            },
+            "source": {
+              "type": "object",
+              "properties": {
+                "boite": {
+                  "$ref": "#/properties/client_nom"
+                },
+                "message_id": {
+                  "$ref": "#/properties/client_nom"
+                },
+                "sujet": {
+                  "$ref": "#/properties/client_nom"
+                }
+              },
+              "required": [
+                "boite",
+                "message_id"
+              ],
+              "additionalProperties": false
+            },
+            "cle_externe": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 255
+            },
+            "confirmation_id": {
+              "$ref": "#/properties/client_id",
+              "description": "Omettre pour obtenir l’aperçu ; renvoyer les mêmes arguments avec cet identifiant après accord humain, sous 10 minutes."
+            }
+          },
+          "required": [
+            "intitule"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null,
+        "conditional": true
+      },
+      {
+        "name": "ajouter_action_opportunite",
+        "title": "Ajouter une action opportunité",
+        "description": "Ajouter une action opportunité avec les droits du compte. Premier appel : aperçu sans écriture métier. Après accord humain explicite, renvoyer les mêmes arguments avec confirmation_id sous 10 minutes. Aucune suppression ni signature.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "affaire_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "code": {
+              "type": "string",
+              "pattern": "^\\d{4,5}$"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "email_envoye",
+                "email_recu",
+                "rdv_planifie",
+                "rdv_realise",
+                "relance_tel",
+                "relance_email",
+                "note_interne",
+                "devis_envoye",
+                "echantillon_presente",
+                "autre"
+              ]
+            },
+            "note": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2000
+            },
+            "echeance": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+            },
+            "confirmation_id": {
+              "$ref": "#/properties/affaire_id",
+              "description": "Omettre pour obtenir l’aperçu ; renvoyer les mêmes arguments avec cet identifiant après accord humain, sous 10 minutes."
+            }
+          },
+          "required": [
+            "type",
+            "note"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null,
+        "conditional": true
+      },
+      {
+        "name": "mettre_a_jour_opportunite",
+        "title": "Mettre à jour une opportunité",
+        "description": "Mettre à jour une opportunité avec les droits du compte. Premier appel : aperçu sans écriture métier. Après accord humain explicite, renvoyer les mêmes arguments avec confirmation_id sous 10 minutes. Aucune suppression ni signature.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "affaire_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "code": {
+              "type": "string",
+              "pattern": "^\\d{4,5}$"
+            },
+            "champs": {
+              "type": "object",
+              "properties": {
+                "intitule": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 255
+                },
+                "description": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "maxLength": 5000
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "lieu": {
+                  "$ref": "#/properties/champs/properties/description"
+                },
+                "date_montage": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "date_demontage": {
+                  "$ref": "#/properties/champs/properties/date_montage"
+                },
+                "date_evenement": {
+                  "$ref": "#/properties/champs/properties/date_montage"
+                },
+                "date_evenement_fin": {
+                  "$ref": "#/properties/champs/properties/date_montage"
+                },
+                "date_pat": {
+                  "$ref": "#/properties/champs/properties/date_montage"
+                },
+                "typologie_future": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "enum": [
+                        "fabrication",
+                        "montage_demontage",
+                        "stockage",
+                        "prototype",
+                        "non_operationnel"
+                      ]
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "ca_estime_ht": {
+                  "anyOf": [
+                    {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "charge_affaires_id": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/properties/affaire_id"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "statut": {
+                  "type": "string",
+                  "enum": [
+                    "perdu",
+                    "en_attente"
+                  ]
+                },
+                "motif": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000
+                },
+                "prochaine_action": {
+                  "$ref": "#/properties/champs/properties/motif"
+                },
+                "echeance": {
+                  "$ref": "#/properties/champs/properties/date_montage"
+                },
+                "jalon": {
+                  "type": "string",
+                  "enum": [
+                    "qualification",
+                    "devis_envoye",
+                    "negociation"
+                  ]
+                }
+              },
+              "additionalProperties": false
+            },
+            "confirmation_id": {
+              "$ref": "#/properties/affaire_id",
+              "description": "Omettre pour obtenir l’aperçu ; renvoyer les mêmes arguments avec cet identifiant après accord humain, sous 10 minutes."
+            }
+          },
+          "required": [
+            "champs"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null,
+        "conditional": true
+      },
+      {
+        "name": "modifier_chantier",
+        "title": "Modifier un chantier",
+        "description": "Modifier un chantier avec les droits du compte. Premier appel : aperçu sans écriture métier. Après accord humain explicite, renvoyer les mêmes arguments avec confirmation_id sous 10 minutes. Aucune suppression ni signature.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "affaire_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "numero": {
+              "type": "string",
+              "pattern": "^\\d{4,5}$"
+            },
+            "champs": {
+              "type": "object",
+              "properties": {
+                "date_montage": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "date_demontage": {
+                  "$ref": "#/properties/champs/properties/date_montage"
+                },
+                "lieu": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "maxLength": 5000
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "contact_site_nom": {
+                  "$ref": "#/properties/champs/properties/lieu"
+                },
+                "contact_site_tel": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "maxLength": 80
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "chef_projet_id": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/properties/affaire_id"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "charge_affaires_id": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/properties/affaire_id"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "dessinateur_id": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/properties/affaire_id"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "statut": {
+                  "type": "string",
+                  "enum": [
+                    "prospect",
+                    "en_cours",
+                    "termine",
+                    "annule"
+                  ]
+                },
+                "montage_nb_techniciens": {
+                  "anyOf": [
+                    {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 32767
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "montage_travail_nuit": {
+                  "type": "boolean"
+                },
+                "montage_nb_semi": {
+                  "anyOf": [
+                    {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 32767
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "montage_nb_20m3": {
+                  "anyOf": [
+                    {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 32767
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "montage_nature_prestation": {
+                  "$ref": "#/properties/champs/properties/lieu"
+                },
+                "montage_notes": {
+                  "$ref": "#/properties/champs/properties/lieu"
+                },
+                "notes": {
+                  "$ref": "#/properties/champs/properties/lieu"
+                }
+              },
+              "additionalProperties": false
+            },
+            "confirmation_id": {
+              "$ref": "#/properties/affaire_id",
+              "description": "Omettre pour obtenir l’aperçu ; renvoyer les mêmes arguments avec cet identifiant après accord humain, sous 10 minutes."
+            }
+          },
+          "required": [
+            "champs"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null,
+        "conditional": true
+      },
+      {
+        "name": "ajouter_note_chantier",
+        "title": "Ajouter une note chantier",
+        "description": "Ajouter une note chantier avec les droits du compte. Premier appel : aperçu sans écriture métier. Après accord humain explicite, renvoyer les mêmes arguments avec confirmation_id sous 10 minutes. Aucune suppression ni signature.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "affaire_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "texte": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 5000
+            },
+            "confirmation_id": {
+              "$ref": "#/properties/affaire_id",
+              "description": "Omettre pour obtenir l’aperçu ; renvoyer les mêmes arguments avec cet identifiant après accord humain, sous 10 minutes."
+            }
+          },
+          "required": [
+            "affaire_id",
+            "texte"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null,
+        "conditional": true
+      },
+      {
+        "name": "creer_etape_logistique",
+        "title": "Créer une étape logistique",
+        "description": "Créer une étape logistique avec les droits du compte. Premier appel : aperçu sans écriture métier. Après accord humain explicite, renvoyer les mêmes arguments avec confirmation_id sous 10 minutes. Aucune suppression ni signature.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "affaire_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "appro",
+                "emballage",
+                "chargement",
+                "livraison",
+                "tracage",
+                "montage",
+                "finitions",
+                "permanence",
+                "rotation",
+                "demontage",
+                "dechargement"
+              ]
+            },
+            "debut": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+            },
+            "fin": {
+              "$ref": "#/properties/debut"
+            },
+            "horaires": {
+              "type": "object",
+              "properties": {
+                "debut": {
+                  "type": "string",
+                  "pattern": "^\\d{2}:\\d{2}$"
+                },
+                "fin": {
+                  "type": "string",
+                  "pattern": "^\\d{2}:\\d{2}$"
+                },
+                "details": {
+                  "type": "string",
+                  "maxLength": 1000
+                }
+              },
+              "additionalProperties": false
+            },
+            "vehicule_id": {
+              "$ref": "#/properties/affaire_id"
+            },
+            "location_transporteur": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 255
+            },
+            "responsable_id": {
+              "$ref": "#/properties/affaire_id"
+            },
+            "responsable": {
+              "$ref": "#/properties/location_transporteur"
+            },
+            "commentaire": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2000
+            },
+            "lieu": {
+              "$ref": "#/properties/location_transporteur"
+            },
+            "cle_externe": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 255
+            },
+            "confirmation_id": {
+              "$ref": "#/properties/affaire_id",
+              "description": "Omettre pour obtenir l’aperçu ; renvoyer les mêmes arguments avec cet identifiant après accord humain, sous 10 minutes."
+            }
+          },
+          "required": [
+            "affaire_id",
+            "type",
+            "debut"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null,
+        "conditional": true
+      },
+      {
+        "name": "modifier_etape_logistique",
+        "title": "Modifier une étape logistique",
+        "description": "Modifier une étape logistique avec les droits du compte. Premier appel : aperçu sans écriture métier. Après accord humain explicite, renvoyer les mêmes arguments avec confirmation_id sous 10 minutes. Aucune suppression ni signature.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "etape_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "champs": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "appro",
+                    "emballage",
+                    "chargement",
+                    "livraison",
+                    "tracage",
+                    "montage",
+                    "finitions",
+                    "permanence",
+                    "rotation",
+                    "demontage",
+                    "dechargement"
+                  ]
+                },
+                "sens": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "enum": [
+                        "aller",
+                        "retour"
+                      ]
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "date_debut": {
+                  "type": "string",
+                  "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                },
+                "date_fin": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/properties/champs/properties/date_debut"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "heure_debut": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "pattern": "^\\d{2}:\\d{2}$"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "heure_fin": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "pattern": "^\\d{2}:\\d{2}$"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "horaire_libre": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "maxLength": 5000
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "lieu_libre": {
+                  "$ref": "#/properties/champs/properties/horaire_libre"
+                },
+                "nb_personnes": {
+                  "anyOf": [
+                    {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 32767
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "responsable": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "maxLength": 255
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "vehicule_id": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/properties/etape_id"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "immatriculation_libre": {
+                  "$ref": "#/properties/champs/properties/horaire_libre"
+                },
+                "acces": {
+                  "$ref": "#/properties/champs/properties/horaire_libre"
+                },
+                "note": {
+                  "$ref": "#/properties/champs/properties/horaire_libre"
+                },
+                "commentaire_equipe": {
+                  "$ref": "#/properties/champs/properties/horaire_libre"
+                },
+                "statut": {
+                  "type": "string",
+                  "enum": [
+                    "propose",
+                    "valide",
+                    "fait"
+                  ]
+                }
+              },
+              "additionalProperties": false
+            },
+            "confirmation_id": {
+              "$ref": "#/properties/etape_id",
+              "description": "Omettre pour obtenir l’aperçu ; renvoyer les mêmes arguments avec cet identifiant après accord humain, sous 10 minutes."
+            }
+          },
+          "required": [
+            "etape_id",
+            "champs"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null,
+        "conditional": true
+      },
+      {
+        "name": "deplacer_etape_logistique",
+        "title": "Déplacer une étape logistique",
+        "description": "Déplacer une étape logistique avec les droits du compte. Premier appel : aperçu sans écriture métier. Après accord humain explicite, renvoyer les mêmes arguments avec confirmation_id sous 10 minutes. Aucune suppression ni signature.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "etape_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "nouveau_debut": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+            },
+            "nouvelle_fin": {
+              "$ref": "#/properties/nouveau_debut"
+            },
+            "confirmation_id": {
+              "$ref": "#/properties/etape_id",
+              "description": "Omettre pour obtenir l’aperçu ; renvoyer les mêmes arguments avec cet identifiant après accord humain, sous 10 minutes."
+            }
+          },
+          "required": [
+            "etape_id",
+            "nouveau_debut"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null,
+        "conditional": true
+      },
+      {
+        "name": "annuler_etape_logistique",
+        "title": "Annuler une étape logistique",
+        "description": "Annuler une étape logistique avec les droits du compte. Premier appel : aperçu sans écriture métier. Après accord humain explicite, renvoyer les mêmes arguments avec confirmation_id sous 10 minutes. Aucune suppression ni signature.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "etape_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "motif": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2000
+            },
+            "confirmation_id": {
+              "$ref": "#/properties/etape_id",
+              "description": "Omettre pour obtenir l’aperçu ; renvoyer les mêmes arguments avec cet identifiant après accord humain, sous 10 minutes."
+            }
+          },
+          "required": [
+            "etape_id",
+            "motif"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null,
+        "conditional": true
       }
     ]
   }

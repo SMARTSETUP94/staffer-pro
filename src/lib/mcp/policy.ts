@@ -2,7 +2,7 @@ import { ToolError, type CreateAppContextInput } from "@lovable.dev/mcp-js";
 import { supabaseForUser } from "./supabase";
 import { MAX_RESPONSE_BYTES, TOOL_CAPS, type ToolName } from "./config";
 
-export type McpAppContext = { db: ReturnType<typeof supabaseForUser>; userId: string; clientId: string; caps: Set<string> };
+export type McpAppContext = { db: ReturnType<typeof supabaseForUser>; userId: string; clientId: string; caps: Set<string>; canWrite?: boolean };
 export async function createAppContext({ auth }: CreateAppContextInput): Promise<McpAppContext> {
   const userId = auth.getUserId(), clientId = auth.getClientId();
   if (!userId || !clientId || !auth.getToken()) throw new ToolError("Connexion OAuth requise");
@@ -18,7 +18,9 @@ export async function createAppContext({ auth }: CreateAppContextInput): Promise
   if (roles.error) throw new ToolError("Droits indisponibles");
   const caps = await db.from("role_capabilities").select("capability").in("role", (roles.data ?? []).map(r => r.role)).eq("granted", true);
   if (caps.error) throw new ToolError("Droits indisponibles");
-  return { db, userId, clientId, caps: new Set((caps.data ?? []).map(r => r.capability)) };
+  const writeFlag = await db.rpc("is_feature_flag_enabled", { _flag_key: "mcp_v2_write" });
+  const effectiveCaps = new Set((caps.data ?? []).map(r => r.capability));
+  return { db, userId, clientId, caps: effectiveCaps, canWrite: !writeFlag.error && writeFlag.data === true && effectiveCaps.has("api.mcp.write") };
 }
 export function safeAuditArguments(args: Record<string, unknown>) {
   const result: Record<string, string | number> = {};

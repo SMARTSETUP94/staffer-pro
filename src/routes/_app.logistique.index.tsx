@@ -57,7 +57,8 @@ function PlanningLogistiquePage() {
   }
 
   async function move(e: EtapeLogistique, delta: number) {
-    const { error } = await supabase.from("affaire_etapes_logistiques").update(decalerEtape(e, delta)).eq("id", e.id);
+    const dates = decalerEtape(e, delta);
+    const { error } = await supabase.rpc("deplacer_etape_logistique", { _etape_id: e.id, _nouveau_debut: dates.date_debut, _nouvelle_fin: dates.date_fin ?? undefined });
     if (error) toast.error("Déplacement impossible", { description: error.message });
     else toast.success("Étape déplacée");
     invalidate();

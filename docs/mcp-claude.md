@@ -38,6 +38,36 @@ Marge et CA estimé absent de la source ne sont pas inventés. Les scopes métie
 ## Révocation
 Ouvrir `/admin/connecteur-claude`, trouver la connexion puis Révoquer et confirmer. Le prochain appel est bloqué même avec un JWT non expiré. Pour son propre compte, les sessions et renouvellements fournisseur sont également révoqués ; pour un autre compte, le blocage porte sur Staffing. La page présente les autorisations, pas des sessions supposées actives.
 
+## MCP v2 — écritures contrôlées
+Les neuf outils v1 et leur limite de débit sont conservés. Les outils d’écriture apparaissent uniquement avec `api.mcp.write`, le flag `mcp_v2_write` et le droit métier correspondant ; activation initiale réservée aux administrateurs.
+
+| Outil | Portée |
+|---|---|
+| creer_opportunite | Client existant ou création explicitement autorisée avec `creer_client=true`, code 9XXX atomique, contact/source facultatifs |
+| ajouter_action_opportunite | Action du journal commercial et échéance |
+| mettre_a_jour_opportunite | Champs commerciaux autorisés, prochaine action, jalon existant, perdu/en attente avec motif ; jamais signature |
+| modifier_chantier | Dates, lieu, contact site, responsables, statut, informations montage et notes |
+| ajouter_note_chantier | Discussion existante du chantier |
+| creer_etape_logistique | Étape manuelle et véhicule facultatif |
+| modifier_etape_logistique | Champs logistiques autorisés |
+| deplacer_etape_logistique | Nouvelle date ; durée préservée sans nouvelle fin |
+| annuler_etape_logistique | Statut annulé avec motif, sans suppression |
+
+Quatre lectures supplémentaires : `rechercher_clients`, `planning_logistique` (avec conflits véhicules), `vehicules_disponibles`, `lister_propositions_logistiques` (registre des jalonnements uniquement, sans validation IA).
+
+### Confirmation obligatoire
+1. Appeler l’outil sans `confirmation_id` : aucune écriture métier ; résultat avant/après, avertissements, doublons et identifiant valable **10 minutes**.
+2. Présenter cet aperçu à l’utilisateur et obtenir son accord.
+3. Renvoyer exactement les mêmes arguments avec `confirmation_id` : exécution atomique, audit et résultat. Identifiant lié au compte, au client OAuth, à l’outil, aux arguments, à la cible et à son état initial.
+4. Arguments modifiés, expiration, droits retirés ou cible modifiée : refus et nouvel aperçu nécessaire. Une confirmation déjà exécutée renvoie le résultat existant. `cle_externe` évite une deuxième création d’opportunité ou d’étape.
+
+Les conflits véhicules avertissent sans bloquer. Modifier les dates d’un chantier ne déplace pas ses étapes ou affectations. `notes` désigne le commentaire général du chantier ; `ajouter_note_chantier` ajoute un message de discussion. Le responsable logistique reste un texte, conformément au planning existant (`responsable_id` n’est pas pris en charge). « En attente » correspond à « À faire » et le motif est conservé dans le journal. Un jalon doit déjà exister dans la fiche.
+
+Audit → Connecteur Claude → **Écritures uniquement** : aperçu, exécution/refus, cible, confirmation et différences expurgées des textes et coordonnées. Aucune écriture heures, affectations, RH, contrats, paie ; aucun effacement physique ni signature. Aucun secret supplémentaire, aucun nouveau service à activer.
+
+### Vérification et mise en service v2
+Parcours OAuth réel local : opportunité 9440 créée, confirmée/rejouée sans doublon, clé externe réutilisée sans nouvelle création ; étape créée, déplacée puis annulée ; résultat relu dans la fiche et audit visible. Opportunité de test archivée par le chemin applicatif. Ces contrôles ne prouvent pas une republication ni le parcours externe Claude de cette révision. Republier, reconnecter/actualiser le catalogue Claude, puis tester d’abord un aperçu sans confirmer.
+
 ## Vérifications restantes / écarts explicites
 - Publier puis effectuer une vraie connexion depuis Claude, tester mobile/desktop et déconnexion/reconnexion.
 - Limite sur mesure confirmée : 60 requêtes POST /mcp par utilisateur sur 60 secondes glissantes, partagées entre clients OAuth et instances. Compteur atomique en base ; au-delà, HTTP 429, `Retry-After` en secondes et erreur JSON-RPC « limite atteinte, réessayez dans X s ». Refus journalisé `rate_limited` sans lecture métier ; aucune prolongation de la fenêtre par les refus. Une panne du compteur ou de son audit bloque la requête (503).
