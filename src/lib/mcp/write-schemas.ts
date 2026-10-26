@@ -1,3 +1,4 @@
+import { MCP_TYPOLOGIES } from "./typologie";
 import { z } from "zod";
 import { dateSchema, pageSchema } from "./schemas";
 import { ETAPE_TYPES } from "@/lib/logistique/etapes";
@@ -7,7 +8,7 @@ const note = z.string().trim().min(1).max(2000);
 const uuid = z.string().uuid();
 const nullableDate = dateSchema.nullable().optional();
 const nullableText = z.string().max(5000).nullable().optional();
-const typologie = z.enum(["fabrication", "montage_demontage", "stockage", "prototype", "non_operationnel"]);
+const typologie = z.enum(MCP_TYPOLOGIES);
 export const confirmationSchema = { confirmation_id: uuid.optional().describe("Omettre pour obtenir l’aperçu ; renvoyer les mêmes arguments avec cet identifiant après accord humain, sous 10 minutes.") };
 export const affaireReference = { affaire_id: uuid.optional(), code: z.string().regex(/^\d{4,5}$/).optional() };
 export const chantierPatch = z.object({

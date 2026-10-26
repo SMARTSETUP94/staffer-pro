@@ -3,10 +3,12 @@ import type { McpAppContext } from "./policy";
 import type { WriteName } from "./write-schemas";
 import { WRITE_CAPS, type WritePreview } from "./write-policy";
 import { logisticsRows } from "./v2-read-data";
+import { normalizeTypologieArgs, mapTypologieRow } from "./typologie";
+import { conflitsVehicules } from "@/lib/logistique/etapes";
 
 const AFFAIRE_FIELDS = "id,numero,nom,client,client_id,phase,charge_affaires_id,date_montage,date_demontage,date_evenement_debut,date_evenement_fin,date_pat,lieu,notes,typologie_future,ca_estime_ht,chef_projet_id,dessinateur_id,statut,statut_opportunite,contact_site_nom,contact_site_tel,montage_nb_techniciens,montage_travail_nuit,montage_nb_semi,montage_nb_20m3,montage_nature_prestation,montage_notes,updated_at";
 export async function prepareWrite(context: McpAppContext, tool: WriteName, args: Record<string, unknown>): Promise<WritePreview> {
-  const { confirmation_id: _, ...content } = args;
+  const { confirmation_id: _, ...content } = normalizeTypologieArgs(args);
   let payload: Record<string, unknown> = content;
   let before: Record<string, unknown> = {}, after: Record<string, unknown> = content;
   let affaireId: string | undefined, etapeId: string | undefined, snapshot: string | undefined;
@@ -88,7 +90,10 @@ export async function prepareWrite(context: McpAppContext, tool: WriteName, args
   if (["creer_etape_logistique", "modifier_etape_logistique", "deplacer_etape_logistique"].includes(tool) && after.vehicule_id) {
     if (!context.caps.has("logistique.planning.view")) throw new ToolError("Droit de lecture planning requis pour vérifier le véhicule");
     const stages = await logisticsRows(context, String(after.date_debut), String(after.date_fin ?? after.date_debut));
-    const conflicts = stages.filter(e => e.id !== etapeId && e.vehicule_id === after.vehicule_id);
+    const candidate = { ...after, id: etapeId ?? "__candidate__", affaire_id: after.affaire_id ?? affaireId, statut: after.statut ?? "prevu" } as any;
+    const others = stages.filter(e => e.id !== etapeId && e.vehicule_id === after.vehicule_id);
+    const flagged = conflitsVehicules([candidate, ...others]);
+    const conflicts = flagged.has(candidate.id) ? others.filter(e => flagged.has(e.id)) : [];
     if (conflicts.length) warnings.push(`Conflit véhicule non bloquant avec ${conflicts.length} étape(s) : ${conflicts.map(e => e.id).join(", ")}`);
   }
   if (args.cle_externe) {

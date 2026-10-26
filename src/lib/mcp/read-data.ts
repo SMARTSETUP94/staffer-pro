@@ -2,6 +2,7 @@ import { ToolError } from "@lovable.dev/mcp-js";
 import type { McpAppContext } from "./policy";
 import type { ToolName } from "./config";
 import { chargeNiveau } from "@/lib/charge-atelier";
+import { mapTypologieRow, matchPipelineFiltre, typologieFromMcp } from "./typologie";
 import { hasDoubleAffectation, hasAffecteAbsent, type QuiAffectation, type QuiAbsence } from "@/lib/qui-est-ou";
 
 type Row = Record<string, any>;
@@ -35,7 +36,7 @@ async function bounded(query: any): Promise<Row[]> {
   if (rows.length >= 1000) throw new ToolError("Plus de 999 lignes sources : réduisez la période.");
   return rows;
 }
-const AFFAIRE_FIELDS = "id,numero,nom,client,lieu,typologie,statut,phase,date_montage,date_demontage,date_debut,date_fin_prevue,date_pat,date_evenement_debut,date_evenement_fin,chef_projet_id,charge_affaires_id";
+const AFFAIRE_FIELDS = "id,numero,nom,client,lieu,typologie,typologie_future,statut,phase,date_montage,date_demontage,date_debut,date_fin_prevue,date_pat,date_evenement_debut,date_evenement_fin,chef_projet_id,charge_affaires_id";
 
 // Non-global métier scopes fail closed until the corresponding scoped reader is implemented.
 // This intentionally never widens the existing RLS, notably its historically broad planning policies.
@@ -62,8 +63,9 @@ export async function readData(ctx: McpAppContext, name: ToolName, args: Args): 
       if (!ctx.caps.has("opportunites.read.mine")) throw new ToolError("Droit commercial insuffisant");
       query = query.eq("charge_affaires_id", ctx.userId);
     }
-    if (args.filtre) query = query.eq("statut_opportunite", args.filtre);
-    const result = await paged(query.order("date_opportunite", { ascending: false }).order("id"), args);
+    const ordered = query.order("date_opportunite", { ascending: false }).order("id");
+    // Filtre texte (code, intitulé, client) appliqué en mémoire : la source RPC n'accepte pas de recherche partielle.
+    const result = args.filtre ? pageRows((await bounded(ordered)).filter(r => matchPipelineFiltre(r, String(args.filtre))), args) as { rows: Row[]; [k: string]: unknown } : await paged(ordered, args);
     return { ...result, rows: result.rows.map(r => ({ ...r, ca_estime_ht: null, urgence: r.next_action_due_le ? r.next_action_due_le < new Date().toISOString().slice(0,10) : false })), unavailable: ["CA estimé non enregistré dans la source pipeline"] };
   }
   if (name === "demandes_clients") {
@@ -80,7 +82,7 @@ export async function readData(ctx: McpAppContext, name: ToolName, args: Args): 
       query = args.affaire_id ? query.eq("id", args.affaire_id) : query.eq("numero", args.numero);
       const affaires = await enrichAffaires(ctx, await rowsOf(query.limit(1)));
       const affaire = affaires[0]; if (!affaire) throw new ToolError("Affaire inaccessible ou introuvable");
-      const detail: Row = { ...affaire };
+      const detail: Row = mapTypologieRow({ ...affaire });
       if (ctx.caps.has("affaire.equipe.view")) detail.equipe = await rowsOf(pageQuery(db.from("affaire_equipe").select("id,employe_id,phase,role_terrain,employes(nom,prenom)").eq("affaire_id", affaire.id).is("removed_at", null).order("id"), args));
       if (ctx.caps.has("objet.view")) {
         const objets = await rowsOf(pageQuery(db.from("fabrication_objets").select("id,reference,nom,quantite").eq("affaire_id", affaire.id).eq("archive", false).order("id"), args));
@@ -106,11 +108,12 @@ export async function readData(ctx: McpAppContext, name: ToolName, args: Args): 
       return pageRows(operations,args);
     }
     if (args.q) { const q = args.q.replace(/[^\p{L}\p{N} _-]/gu, " "); query = query.or(`numero.ilike.%${q}%,nom.ilike.%${q}%,client.ilike.%${q}%`); }
-    for (const key of ["typologie","statut"]) if (args[key]) query = query.eq(key,args[key]);
+    if (args.typologie) query = query.eq("typologie", typologieFromMcp(args.typologie));
+    if (args.statut) query = query.eq("statut", args.statut);
     if (args.montage_du) query = query.gte("date_montage",args.montage_du);
     if (args.montage_au) query = query.lte("date_montage",args.montage_au);
     const result = await paged(query.order("numero").order("id"),args);
-    return { ...result, rows: await enrichAffaires(ctx,result.rows) };
+    return { ...result, rows: (await enrichAffaires(ctx,result.rows)).map(mapTypologieRow) };
   }
   if (name === "heures_affaire") {
     await requireAllScope(ctx, "heures.audit");
