@@ -204,6 +204,13 @@
       "when": 1793039414791,
       "tag": "0028_mcp_v2_shared_app_paths",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1793039474978,
+      "tag": "0029_mcp_v2_confirmations",
+      "breakpoints": true
     }
   ]
 }

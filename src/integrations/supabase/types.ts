@@ -3926,10 +3926,14 @@ export type Database = {
       }
       mcp_audit_log: {
         Row: {
+          affaire_id: string | null
           arguments: Json
           client_id: string
+          confirmation_id: string | null
           created_at: string
+          diff: Json
           duree_ms: number
+          etape_id: string | null
           id: string
           nb_lignes: number
           statut: string
@@ -3937,10 +3941,14 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          affaire_id?: string | null
           arguments?: Json
           client_id: string
+          confirmation_id?: string | null
           created_at?: string
+          diff?: Json
           duree_ms?: number
+          etape_id?: string | null
           id?: string
           nb_lignes?: number
           statut: string
@@ -3948,10 +3956,14 @@ export type Database = {
           user_id: string
         }
         Update: {
+          affaire_id?: string | null
           arguments?: Json
           client_id?: string
+          confirmation_id?: string | null
           created_at?: string
+          diff?: Json
           duree_ms?: number
+          etape_id?: string | null
           id?: string
           nb_lignes?: number
           statut?: string
@@ -4028,6 +4040,75 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      mcp_write_confirmations: {
+        Row: {
+          affaire_id: string | null
+          arguments_hash: string
+          client_id: string
+          etape_id: string | null
+          executed_at: string | null
+          expires_at: string
+          id: string
+          payload_hash: string
+          result: Json | null
+          snapshot: string | null
+          tool: string
+          user_id: string
+        }
+        Insert: {
+          affaire_id?: string | null
+          arguments_hash: string
+          client_id: string
+          etape_id?: string | null
+          executed_at?: string | null
+          expires_at?: string
+          id?: string
+          payload_hash: string
+          result?: Json | null
+          snapshot?: string | null
+          tool: string
+          user_id: string
+        }
+        Update: {
+          affaire_id?: string | null
+          arguments_hash?: string
+          client_id?: string
+          etape_id?: string | null
+          executed_at?: string | null
+          expires_at?: string
+          id?: string
+          payload_hash?: string
+          result?: Json | null
+          snapshot?: string | null
+          tool?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      mcp_write_external_keys: {
+        Row: {
+          affaire_id: string
+          etape_id: string | null
+          key_hash: string
+          result: Json
+          tool: string
+        }
+        Insert: {
+          affaire_id: string
+          etape_id?: string | null
+          key_hash: string
+          result: Json
+          tool: string
+        }
+        Update: {
+          affaire_id?: string
+          etape_id?: string | null
+          key_hash?: string
+          result?: Json
+          tool?: string
+        }
+        Relationships: []
       }
       metiers: {
         Row: {
@@ -6771,6 +6852,39 @@ export type Database = {
           taille: Database["public"]["Enums"]["opportunite_taille"]
           typologie_future: string
         }[]
+      }
+      mcp_assert_write: { Args: { _tool: string }; Returns: string }
+      mcp_dispatch_write: {
+        Args: {
+          _affaire_id: string
+          _etape_id: string
+          _p: Json
+          _tool: string
+        }
+        Returns: Json
+      }
+      mcp_execute_write_locked: {
+        Args: {
+          _arguments_hash: string
+          _confirmation_id: string
+          _diff?: Json
+          _payload: Json
+          _tool: string
+        }
+        Returns: Json
+      }
+      mcp_safe_diff: { Args: { _diff: Json }; Returns: Json }
+      mcp_write_preview: {
+        Args: {
+          _affaire_id?: string
+          _arguments_hash: string
+          _diff?: Json
+          _etape_id?: string
+          _payload: Json
+          _snapshot?: string
+          _tool: string
+        }
+        Returns: Json
       }
       merge_clients: {
         Args: { source_id: string; target_id: string }
