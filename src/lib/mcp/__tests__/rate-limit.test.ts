@@ -29,7 +29,7 @@ describe("MCP per-user sliding-window quota", () => {
   it("allows 60 requests, refuses the 61st with HTTP 429, JSON-RPC id, Retry-After and rate_limited audit before dispatch", async () => {
     const quota = quotaFixture();
     const read = vi.fn(() => ({ content: [{ type: "text" as const, text: "{}" }] }));
-    const server = defineMcp({ name: "quota-test", title: "Quota", version: "1", tools: [defineTool({ name: "mon_profil", description: "Lire", inputSchema: {}, handler: read })] });
+    const server = defineMcp({ name: "quota-test", title: "Quota", version: "1", instructions: "Test de quota", tools: [defineTool({ name: "mon_profil", title: "Profil", description: "Lire", inputSchema: {}, handler: read })] });
     const dispatch = vi.fn(createTanStackMcpHandler(server));
     for (let i = 1; i <= 60; i++) expect(await checkMcpRateLimit(request(i), quota.consume)).toBeUndefined();
     const req = request(61);
