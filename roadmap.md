@@ -1,8 +1,8 @@
 # Roadmap
 
 ## Filtres chantiers et typologie tableur (26 oct. 2026)
-- [ ] Corriger le contraste des filtres dans Liste des chantiers.
-- [ ] Corriger et vérifier la persistance de la typologie dans le tableur des opportunités.
+- [x] Corriger le contraste des filtres dans Liste des chantiers : fond secondaire et texte contrasté, sélection vérifiée à l’écran.
+- [x] Typologie tableur enregistrée immédiatement ; sauvegardes par cellule indépendantes et valeur en attente utilisée au blur. 58 tests verts, build OK. Sur 9437 : Stockage enregistré puis relu après rechargement, valeur initiale vide restaurée et relue.
 
 ## Emails en lecture seule (23 oct. 2026)
 - [x] Retirer tout archivage et toute écriture archived_outlook ; audit src + supabase/functions : aucun autre déplacement/suppression de mail (les suppressions calendrier restent indépendantes).
