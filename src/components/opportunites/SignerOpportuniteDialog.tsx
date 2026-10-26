@@ -63,6 +63,7 @@ export function SignerOpportuniteDialog({
   const [saving, setSaving] = useState(false);
   const [lastCodes, setLastCodes] = useState<LastUsedCode[]>([]);
   const [suggestedCode, setSuggestedCode] = useState("");
+  const [suggestedMontageCode, setSuggestedMontageCode] = useState("");
 
   const typo: TypologieFuture | null = typologieFuture ?? null;
   const declaredPrefix = prefixForTypologie(typo);
@@ -72,6 +73,21 @@ export function SignerOpportuniteDialog({
   useEffect(() => {
     if (open) setCode("");
   }, [open, affaireId]);
+
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    setSuggestedMontageCode("");
+    supabase.rpc("next_affaire_numero", { _prefix: 4 }).then(({ data, error }) => {
+      if (cancelled) return;
+      if (error) {
+        toast.error("Impossible de suggérer un code 4XXX", { description: error.message });
+      } else if (data) {
+        setSuggestedMontageCode(String(data));
+      }
+    });
+    return () => { cancelled = true; };
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -163,6 +179,11 @@ export function SignerOpportuniteDialog({
               {suggestedCode && (
                 <Button variant="outline" size="sm" className="justify-self-start" onClick={() => setCode(suggestedCode)}>
                   Utiliser le prochain code libre : {suggestedCode}
+                </Button>
+              )}
+              {prefix !== 4 && suggestedMontageCode && (
+                <Button variant="outline" size="sm" className="justify-self-start" onClick={() => setCode(suggestedMontageCode)}>
+                  Utiliser le prochain code libre : {suggestedMontageCode}
                 </Button>
               )}
               {!formatOk && code.length > 0 && (
