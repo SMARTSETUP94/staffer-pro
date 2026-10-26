@@ -3,12 +3,13 @@ import type { McpAppContext } from "./policy";
 import type { WriteName } from "./write-schemas";
 import { WRITE_CAPS, type WritePreview } from "./write-policy";
 import { logisticsRows } from "./v2-read-data";
-import { normalizeTypologieArgs, mapTypologieRow } from "./typologie";
+import { normalizeTypologieArgs } from "./typologie";
 import { conflitsVehicules } from "@/lib/logistique/etapes";
 
 const AFFAIRE_FIELDS = "id,numero,nom,client,client_id,phase,charge_affaires_id,date_montage,date_demontage,date_evenement_debut,date_evenement_fin,date_pat,lieu,notes,typologie_future,ca_estime_ht,chef_projet_id,dessinateur_id,statut,statut_opportunite,contact_site_nom,contact_site_tel,montage_nb_techniciens,montage_travail_nuit,montage_nb_semi,montage_nb_20m3,montage_nature_prestation,montage_notes,updated_at";
 export async function prepareWrite(context: McpAppContext, tool: WriteName, args: Record<string, unknown>): Promise<WritePreview> {
-  const { confirmation_id: _, ...content } = normalizeTypologieArgs(args);
+  args = normalizeTypologieArgs(args);
+  const { confirmation_id: _, ...content } = args;
   let payload: Record<string, unknown> = content;
   let before: Record<string, unknown> = {}, after: Record<string, unknown> = content;
   let affaireId: string | undefined, etapeId: string | undefined, snapshot: string | undefined;
