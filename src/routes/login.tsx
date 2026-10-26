@@ -11,7 +11,7 @@ import { BrandLogo } from "@/components/BrandLogo";
 import { oauthReturnPath } from "@/lib/oauth-return-path";
 
 export const Route = createFileRoute("/login")({
-  validateSearch: (s: Record<string, unknown>) => ({ next: oauthReturnPath(s.next) }),
+  validateSearch: (s: Record<string, unknown>): { next?: string } => ({ next: oauthReturnPath(s.next) }),
   head: () => ({
     meta: [
       { title: "Connexion — Setup Paris" },
@@ -26,7 +26,7 @@ export const Route = createFileRoute("/login")({
 });
 
 function LoginPage() {
-  const { next } = Route.useSearch();
+  const { next = "/" } = Route.useSearch();
   const navigate = useNavigate();
   const { user, loading, signIn, signInWithMagicLink } = useAuth();
   const [tab, setTab] = useState<"signin" | "magic">("signin");
