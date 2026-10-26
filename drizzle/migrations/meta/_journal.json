@@ -211,6 +211,13 @@
       "when": 1793039474978,
       "tag": "0029_mcp_v2_confirmations",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1793040003984,
+      "tag": "0030_mcp_v2_confirmation_result_fix",
+      "breakpoints": true
     }
   ]
 }
