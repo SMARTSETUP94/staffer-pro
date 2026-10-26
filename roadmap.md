@@ -5,6 +5,8 @@
 - [x] 9 outils écriture et 4 lectures supplémentaires ; préserver les 9 lecteurs v1. Scopes écriture globaux seulement.
 - [x] 53 tests Vitest verts et premier OAuth réel : opportunité 9440 + étape, déplacement, annulation, archivage affaire confirmé et audit visible.
 - [ ] Finition demandée : revue des RPC directs, parcours OAuth complet renforcé, audit et nettoyage, puis activation admin seulement si vérifié.
+- [ ] Migration de fermeture refusée : remplacer la réécriture dynamique par définitions explicites des 12 familles de fonctions (15 signatures avec surcharges), garde/contexte privé et policies restrictives sur 7 tables ; tester chaque signature OAuth refusé/UI accepté. Rôle NOLOGIN/NOBYPASSRLS vérifié et JWT UI sans client_id confirmé. Migration refusée non appliquée.
+- [ ] Vérifier les parcours UI signature, import Progbat, archivage, feuille de route sur données de test ; rejouer OAuth complet après cette migration. Consentement local actuellement refusé « Demande expirée ou indisponible », session/temporaire de test à reconstituer.
 - [x] 404 DCR identifié : script utilisait /oauth/register au lieu du registration_endpoint découvert /oauth/clients/register ; endpoint production 201, discovery 200 et MCP anonyme 401, aucune configuration OAuth changée.
 - [x] Documentation, ADR 005, mémoire ; signaler les limites et la republication nécessaire.
 
