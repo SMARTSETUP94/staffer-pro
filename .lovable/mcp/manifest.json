@@ -1,0 +1,392 @@
+{
+  "version": 1,
+  "sdk_version": "3.3.0",
+  "path": "/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://znwffztmdgsshuvvzsvq.supabase.co/auth/v1",
+    "require_oauth_client_claim": true,
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "project-shift",
+      "version": "1.0.0",
+      "title": "Project Shift"
+    },
+    "tools": [
+      {
+        "name": "rechercher_affaires",
+        "title": "Rechercher les affaires",
+        "description": "Rechercher les chantiers autorisés par numéro, nom, typologie, statut et dates de montage.",
+        "annotations": {
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "q": {
+              "type": "string",
+              "maxLength": 120
+            },
+            "typologie": {
+              "type": "string",
+              "enum": [
+                "fabrication",
+                "montage_demontage",
+                "stockage",
+                "prototype",
+                "non_operationnel"
+              ]
+            },
+            "statut": {
+              "type": "string",
+              "maxLength": 40
+            },
+            "montage_du": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+            },
+            "montage_au": {
+              "$ref": "#/properties/montage_du"
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 25
+            },
+            "cursor": {
+              "type": "string",
+              "pattern": "^\\d{1,8}$",
+              "default": "0"
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "fiche_affaire",
+        "title": "Consulter une affaire",
+        "description": "Identité, dates, équipe, objets et devis autorisés ; aucun salaire individuel.",
+        "annotations": {
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "affaire_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "numero": {
+              "type": "string",
+              "pattern": "^\\d{4,5}$"
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 25
+            },
+            "cursor": {
+              "type": "string",
+              "pattern": "^\\d{1,8}$",
+              "default": "0"
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "pipeline_opportunites",
+        "title": "Consulter le pipeline",
+        "description": "Opportunités actives avec jalon et prochaine action selon vos droits commerciaux.",
+        "annotations": {
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "filtre": {
+              "type": "string",
+              "maxLength": 40
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 25
+            },
+            "cursor": {
+              "type": "string",
+              "pattern": "^\\d{1,8}$",
+              "default": "0"
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "qui_est_ou",
+        "title": "Qui est où",
+        "description": "Affectations par demi-journée, indisponibilités validées et anomalies ; période maximale de 93 jours.",
+        "annotations": {
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "du": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+            },
+            "au": {
+              "$ref": "#/properties/du"
+            },
+            "employe": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "affaire": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 25
+            },
+            "cursor": {
+              "type": "string",
+              "pattern": "^\\d{1,8}$",
+              "default": "0"
+            }
+          },
+          "required": [
+            "du",
+            "au"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "charge_atelier",
+        "title": "Charge atelier",
+        "description": "Charge prévisionnelle par jour et métier comparée à la capacité en personnes par jour.",
+        "annotations": {
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "du": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+            },
+            "au": {
+              "$ref": "#/properties/du"
+            },
+            "metier": {
+              "type": "integer",
+              "exclusiveMinimum": 0
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 25
+            },
+            "cursor": {
+              "type": "string",
+              "pattern": "^\\d{1,8}$",
+              "default": "0"
+            }
+          },
+          "required": [
+            "du",
+            "au"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "heures_affaire",
+        "title": "Heures d’une affaire",
+        "description": "Heures saisies et validées par personne et métier, sans taux de salaire ni commentaires.",
+        "annotations": {
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "affaire_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "du": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+            },
+            "au": {
+              "$ref": "#/properties/du"
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 25
+            },
+            "cursor": {
+              "type": "string",
+              "pattern": "^\\d{1,8}$",
+              "default": "0"
+            }
+          },
+          "required": [
+            "affaire_id"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "echeances",
+        "title": "Échéances chantier",
+        "description": "Montages et démontages à venir dans les 14, 31 ou 92 prochains jours.",
+        "annotations": {
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "fenetre": {
+              "type": "string",
+              "enum": [
+                "14j",
+                "1m",
+                "3m"
+              ]
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 25
+            },
+            "cursor": {
+              "type": "string",
+              "pattern": "^\\d{1,8}$",
+              "default": "0"
+            }
+          },
+          "required": [
+            "fenetre"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "demandes_clients",
+        "title": "Demandes clients",
+        "description": "Métadonnées des demandes clients ; ni corps des emails ni candidatures ou données RH.",
+        "annotations": {
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "statut": {
+              "type": "string",
+              "maxLength": 40
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 25
+            },
+            "cursor": {
+              "type": "string",
+              "pattern": "^\\d{1,8}$",
+              "default": "0"
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "mon_profil",
+        "title": "Mon profil et mes droits",
+        "description": "Identité de votre compte, rôles et capabilities effectives ; aucune information RH.",
+        "annotations": {
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 25
+            },
+            "cursor": {
+              "type": "string",
+              "pattern": "^\\d{1,8}$",
+              "default": "0"
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
