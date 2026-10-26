@@ -1,5 +1,11 @@
 # Roadmap
 
+## MCP v1 — Claude lecture seule (26 oct. 2026)
+- [ ] Activer OAuth géré ; si refus fournisseur, arrêter sans contournement.
+- [ ] Connecteur protégé, 9 outils bornés par capabilities et RLS, consentement et révocation, audit, tests et documentation.
+- [ ] Limite 60 appels/min : confirmation requise pour une limite ad hoc (aucun mécanisme standard disponible).
+- [ ] Test externe Claude après republication et connexion par l'utilisateur.
+
 ## Affectations chantier (26 oct. 2026)
 - [x] Chef de projet dans Liste des chantiers, Chantiers, fiche chantier et signature ; dessinateur pour les 6XXX, recherche par nom et sauvegarde partagée. Colonne dessinateur additive et signature atomique via surcharge RPC, droits existants conservés.
 - [x] 10 tests verts, build OK. Sur 6067 : chef et dessinateur enregistrés, relus après rechargement et retrouvés en fiche, puis valeurs initiales null restaurées et confirmées en base. Colonnes Chantiers visibles. Fenêtre 9405 : chef disponible, dessinateur visible pour 6123 et masqué pour 4123. Aucune opportunité réelle signée pendant la vérification.
