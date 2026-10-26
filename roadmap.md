@@ -1,5 +1,9 @@
 # Roadmap
 
+## Code affaire à la signature (26 oct. 2026)
+- [ ] Permettre le choix manuel du code indépendamment de la typologie ; suggestions facultatives, unicité conservée.
+- [ ] Tester les formats 6XXX, 4XXX et 2XXXX et vérifier la fenêtre de signature.
+
 ## Filtres chantiers et typologie tableur (26 oct. 2026)
 - [x] Corriger le contraste des filtres dans Liste des chantiers : fond secondaire et texte contrasté, sélection vérifiée à l’écran.
 - [x] Typologie tableur enregistrée immédiatement ; sauvegardes par cellule indépendantes et valeur en attente utilisée au blur. 58 tests verts, build OK. Sur 9437 : Stockage enregistré puis relu après rechargement, valeur initiale vide restaurée et relue.
