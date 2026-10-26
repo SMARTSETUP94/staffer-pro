@@ -76,6 +76,7 @@ import {
   deleteBlockedMessage,
 } from "@/lib/opportunite-delete";
 import { TypologieFutureSelect } from "@/components/typologie/TypologieFutureSelect";
+import { createTableurSaveQueue } from "@/lib/tableur-save-queue";
 import type { AffaireTypologie } from "@/lib/affaire-typologie";
 import {
   actionUrgency,
@@ -161,10 +162,7 @@ export function OpportunitesTableurView({
    * Clé = row.id, valeur = patches partiels.
    */
   const [overlay, setOverlay] = useState<Map<string, Partial<TableurRow>>>(new Map());
-  const debounceRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   const cellRefs = useRef<Map<string, HTMLElement | null>>(new Map());
-  /** Ref vers le dernier champ modifié pour chaque ligne (utilisé par debounce). */
-  const lastFieldRef = useRef<Map<string, TableurColumnKey>>(new Map());
 
   // Lignes finales affichées : merge serveur + overlay + drafts
   const mergedRows = useMemo(() => {
@@ -271,6 +269,7 @@ export function OpportunitesTableurView({
               extraPatch.statut_opportunite = row.statut_opportunite;
             if (row.date_montage) extraPatch.date_montage = row.date_montage;
             if (row.date_demontage) extraPatch.date_demontage = row.date_demontage;
+            if (row.typologie_future) extraPatch.typologie_future = row.typologie_future;
             if (Object.keys(extraPatch).length > 0) {
               await update(result.affaireId, extraPatch);
             }
@@ -356,45 +355,32 @@ export function OpportunitesTableurView({
     [create, update, onRowsMutated, markSaving, flashSaved],
   );
 
-  /** Programme une sauvegarde debounced (800ms). */
+  const saveRowRef = useRef(saveRow);
+  saveRowRef.current = saveRow;
+  const saveQueue = useMemo(() => createTableurSaveQueue<TableurRow, TableurColumnKey>(
+    (row, field) => { void saveRowRef.current(row, field); }, SAVE_DEBOUNCE_MS,
+  ), []);
+
+  /** Each cell keeps its own pending value; drafts still use one creation timer. */
   const scheduleSave = useCallback(
     (row: TableurRow, field: TableurColumnKey | null) => {
-      const map = debounceRef.current;
-      const existing = map.get(row.id);
-      if (existing) clearTimeout(existing);
-      if (field) lastFieldRef.current.set(row.id, field);
-      const t = setTimeout(() => {
-        map.delete(row.id);
-        const lastField = lastFieldRef.current.get(row.id) ?? field;
-        void saveRow(row, lastField);
-      }, SAVE_DEBOUNCE_MS);
-      map.set(row.id, t);
+      saveQueue.schedule(row.id, row, row.affaireId ? field : null);
     },
-    [saveRow],
+    [saveQueue],
   );
 
   /** Flush immédiat sur blur (sortie cellule) — pas d'attente debounce. */
   const flushSaveNow = useCallback(
     (row: TableurRow, field: TableurColumnKey | null) => {
-      const map = debounceRef.current;
-      const existing = map.get(row.id);
-      if (existing) {
-        clearTimeout(existing);
-        map.delete(row.id);
-        void saveRow(row, field ?? lastFieldRef.current.get(row.id) ?? null);
-      }
+      saveQueue.flush(row.id, row.affaireId ? field : null);
     },
-    [saveRow],
+    [saveQueue],
   );
 
   /** Cleanup debounce au démontage. */
   useEffect(() => {
-    const map = debounceRef.current;
-    return () => {
-      map.forEach((t) => clearTimeout(t));
-      map.clear();
-    };
-  }, []);
+    return () => saveQueue.clear();
+  }, [saveQueue]);
 
   /** Patch local + schedule save. */
   const updateField = useCallback(
@@ -404,12 +390,14 @@ export function OpportunitesTableurView({
         // Lignes persistées : overlay local immédiat (pas écrasé par refetch).
         patchOverlay(row.id, patch);
         scheduleSave(newRow, field);
+        // A selection is final: persist it before the user leaves this view.
+        if (field === "typologie_future") saveQueue.flush(row.id, field);
       } else {
         patchDraftLocal(row.id, patch);
         scheduleSave(newRow, field);
       }
     },
-    [scheduleSave, patchOverlay, patchDraftLocal],
+    [scheduleSave, saveQueue, patchOverlay, patchDraftLocal],
   );
 
   /** Ajoute une nouvelle ligne brouillon avec code suggéré. */
