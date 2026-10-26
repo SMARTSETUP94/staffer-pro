@@ -136,7 +136,7 @@ export async function readData(ctx: McpAppContext, name: ToolName, args: Args): 
   let query = db.from("assignations").select("id,employe_id,affaire_id,date,demi_journee,employes(nom,prenom),affaires(numero,nom)").gte("date",args.du).lte("date",args.au).order("date").order("id");
   if (args.employe) query=query.eq("employe_id",args.employe);
   const affectations = await bounded(query);
-  let absQuery=db.from("absences").select("id,employe_id,date_debut,date_fin,demi_journee").eq("statut","valide").lte("date_debut",args.au).gte("date_fin",args.du).order("id");
+  let absQuery=db.from("absences").select("id,employe_id,date_debut,date_fin,demi_journee").eq("valide",true).lte("date_debut",args.au).gte("date_fin",args.du).order("id");
   if (args.employe) absQuery=absQuery.eq("employe_id",args.employe);
   const absences=await bounded(absQuery);
   const selected = args.affaire ? affectations.filter(a=>a.affaire_id===args.affaire) : affectations;
