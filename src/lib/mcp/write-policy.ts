@@ -8,7 +8,7 @@ export const WRITE_CAPS: Record<WriteName, string> = {
   modifier_etape_logistique: "logistique.etape.edit", deplacer_etape_logistique: "logistique.etape.edit", annuler_etape_logistique: "logistique.etape.edit",
 };
 export function writeEnabled(context: McpAppContext, tool: WriteName) {
-  return context.canWrite === true && context.caps.has("api.mcp.write") && context.caps.has(WRITE_CAPS[tool]);
+  return context.canWrite === true && context.caps.has("api.mcp.write") && context.caps.has(WRITE_CAPS[tool]) && context.writeScopes?.has(WRITE_CAPS[tool]) === true;
 }
 function canonical(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(canonical);
