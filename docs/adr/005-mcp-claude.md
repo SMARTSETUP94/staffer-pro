@@ -1,4 +1,4 @@
-# ADR 005 — MCP Claude en lecture seule
+# ADR 005 — MCP Claude : lecture et écriture contrôlée
 
 ## Décision
 Utiliser le SDK officiel `@lovable.dev/mcp-js` (Streamable HTTP) et le serveur OAuth géré de Lovable Cloud existant. OAuth/DCR ont été activés le 26 octobre 2026 ; la configuration fournisseur confirme un issuer direct et une clé ES256 active. Aucun serveur de tokens local, token opaque, clé métier admin, ni token de session copié.
@@ -23,3 +23,14 @@ La limite ad hoc a été confirmée : un middleware de requête protège POST /m
 Les tests locaux et l'extraction du manifeste ne prouvent pas une publication ; republication et essai réel Claude restent nécessaires.
 
 Le transport officiel SDK émet les résultats legacy sous forme SSE Streamable HTTP, non JSON seul. Les deux versions demandées ont été vérifiées. Un refus dans createAppContext (ex. connexion révoquée) produit actuellement une réponse générique HTTP 500 du SDK, sans donnée ; ne pas confondre ce statut avec une fuite ou une lecture réussie. Aucun transport custom ni route générée retouchée pour contourner le SDK.
+
+## Extension v2
+Conserver SDK, OAuth, lecteurs v1, révocation, quota et droits existants. Ne pas activer de nouveau service. Ajouter un catalogue d’écritures conditionnel à `api.mcp.write` + `mcp_v2_write` et aux caps métier, administrateurs uniquement au départ.
+
+La préparation lit sous la RLS du caller. Les confirmations techniques sont persistées pour 10 minutes, liées au compte/client OAuth/outil/hash canonique des arguments/hash du payload/cible/snapshot. L’exécution verrouille confirmation et cible, revérifie les droits, refuse toute modification concurrente, puis sérialise la clé externe avant création. Résultat, confirmation consommée, clé externe et audit sont atomiques ; une exception rollbacke les écritures métier et produit un audit de refus.
+
+Le coordinateur technique SECURITY DEFINER ne réalise pas les écritures métier : il appelle un dispatch détenu par un rôle NOLOGIN NOBYPASSRLS non-superuser héritant des grants `authenticated`. Celui-ci appelle les RPC invoker partagés avec l’UI, sous le JWT du caller et ses policies ; aucune clé admin ni élargissement RLS. La numérotation continue d’utiliser `create_opportunite`. Le déplacement logistique n’avait pas de RPC : le chemin UI a été partagé dans `deplacer_etape_logistique`, préservant la durée. Annulation = statut soft avec motif. Discussion existante utilisée pour les notes.
+
+Diff technique : dates, statuts, volumes et montant estimé ; les textes, noms et coordonnées sont seulement signalés comme modifiés. L’audit ne conserve pas les arguments libres. Nouvelles colonnes additives pour montant estimé/source/contact ; le lecteur pipeline v1 reste inchangé. Les propositions IA ne sont pas validables par MCP.
+
+Limites explicites : attente mappée à À faire, jalons déjà initialisés, responsable logistique textuel, commentaire général via `notes`. Aucun outil de signature, suppression, heures, affectations ou RH. Tests OAuth locaux et manifeste ne prouvent pas la publication ; republish puis vérification externe Claude nécessaires.
