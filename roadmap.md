@@ -1,8 +1,8 @@
 # Roadmap
 
 ## Code affaire à la signature (26 oct. 2026)
-- [ ] Permettre le choix manuel du code indépendamment de la typologie ; suggestions facultatives, unicité conservée.
-- [ ] Tester les formats 6XXX, 4XXX et 2XXXX et vérifier la fenêtre de signature.
+- [x] Code saisi manuellement indépendamment de la typologie ; suggestions facultatives sans écraser la saisie, unicité conservée par la RPC existante à code explicite (vérifiée en base).
+- [x] 36 tests verts ; dans la fenêtre réelle de 9405 (fabrication), 6123, 4123 et 20123 restent saisis et permettent de signer ; 9437 refusé. Build OK. Aucune opportunité réelle convertie pour ce contrôle.
 
 ## Filtres chantiers et typologie tableur (26 oct. 2026)
 - [x] Corriger le contraste des filtres dans Liste des chantiers : fond secondaire et texte contrasté, sélection vérifiée à l’écran.
