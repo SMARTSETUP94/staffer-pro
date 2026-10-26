@@ -4,7 +4,8 @@
 - [x] Confirmation atomique 10 min, idempotence, droits api.mcp.write / mcp_v2_write, audit sécurisé et filtre écritures ; cible/snapshot verrouillés, clés externes isolées compte/client et contenu identique requis.
 - [x] 9 outils écriture et 4 lectures supplémentaires ; préserver les 9 lecteurs v1. Scopes écriture globaux seulement.
 - [x] 53 tests Vitest verts et premier OAuth réel : opportunité 9440 + étape, déplacement, annulation, archivage affaire confirmé et audit visible.
-- [ ] Rejouer OAuth après dernier durcissement : service DCR de l’environnement final renvoie 404 ; vérifier les chemins directs préexistants avec un vrai JWT OAuth avant publication.
+- [ ] Finition demandée : revue des RPC directs, parcours OAuth complet renforcé, audit et nettoyage, puis activation admin seulement si vérifié.
+- [x] 404 DCR identifié : script utilisait /oauth/register au lieu du registration_endpoint découvert /oauth/clients/register ; endpoint production 201, discovery 200 et MCP anonyme 401, aucune configuration OAuth changée.
 - [x] Documentation, ADR 005, mémoire ; signaler les limites et la republication nécessaire.
 
 ## MCP v1 — Claude lecture seule (26 oct. 2026)
