@@ -218,6 +218,13 @@
       "when": 1793040003984,
       "tag": "0030_mcp_v2_confirmation_result_fix",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1793040965226,
+      "tag": "0031_mcp_v2_locked_execution_hardened",
+      "breakpoints": true
     }
   ]
 }
