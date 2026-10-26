@@ -84,8 +84,8 @@ export function EtapeDialog({ open, onOpenChange, etape, defaultDate, defaultAff
       commentaire_equipe: f.commentaire_equipe || null,
     };
     const { error } = etape
-      ? await supabase.from("affaire_etapes_logistiques").update(payload).eq("id", etape.id)
-      : await supabase.from("affaire_etapes_logistiques").insert({ ...payload, origine: "manuel", statut: "valide" });
+      ? await supabase.rpc("app_modifier_etape_logistique", { _id: etape.id, _patch: payloadWithoutAffaire(payload) })
+      : await supabase.rpc("app_creer_etape_logistique", { _payload: payload });
     setSaving(false);
     if (error) { toast.error("Enregistrement impossible", { description: error.message }); return; }
     toast.success(etape ? "Étape mise à jour" : "Étape ajoutée au planning");

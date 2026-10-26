@@ -250,10 +250,7 @@ export const updateOpportuniteFields = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabase } = context;
-    const { error } = await supabase
-      .from("affaires")
-      .update(data.patch)
-      .eq("id", data.affaireId);
+    const { error } = await supabase.rpc("app_modifier_affaire", { _id: data.affaireId, _patch: data.patch });
     if (error) throw new Error(error.message);
     return { ok: true };
   });
@@ -272,21 +269,12 @@ export const addOpportuniteAction = createServerFn({ method: "POST" })
   .inputValidator((input: z.infer<typeof ADD_ACTION>) => ADD_ACTION.parse(input))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const payload = {
-      affaire_id: data.affaireId,
-      type: data.type,
-      texte: data.texte,
-      auteur_id: userId,
-      date: data.date ?? new Date().toISOString(),
-      prochaine_action_due_le: data.prochaine_action_due_le ?? null,
-    };
-    const { data: row, error } = await supabase
-      .from("opportunite_actions")
-      .insert(payload)
-      .select("id")
-      .single();
+    const { data: row, error } = await supabase.rpc("app_ajouter_action_opportunite", {
+      _affaire_id: data.affaireId, _type: data.type, _note: data.texte, _echeance: data.prochaine_action_due_le ?? undefined,
+    });
     if (error) throw new Error(error.message);
-    return { id: row.id as string };
+    if (!row || typeof row !== "object" || Array.isArray(row) || typeof row.id !== "string") throw new Error("Action non enregistrée");
+    return { id: row.id };
   });
 
 export const UPDATE_JALON_SCHEMA = z.object({
