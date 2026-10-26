@@ -64,6 +64,7 @@ import { Route as AuthResetPasswordRouteImport } from './routes/auth.reset-passw
 import { Route as AuthSetPasswordRouteImport } from './routes/auth.set-password'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as AppAdminAuditRouteImport } from './routes/_app.admin.audit'
+import { Route as AppAdminConnecteurClaudeRouteImport } from './routes/_app.admin.connecteur-claude'
 import { Route as AppAdminContenuWidgetsRouteImport } from './routes/_app.admin.contenu-widgets'
 import { Route as AppAdminEmailPreviewRouteImport } from './routes/_app.admin.email-preview'
 import { Route as AppAdminEmployesPostePrincipalRouteImport } from './routes/_app.admin.employes-poste-principal'
@@ -402,6 +403,12 @@ const AppAdminAuditRoute = AppAdminAuditRouteImport.update({
   path: '/admin/audit',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAdminConnecteurClaudeRoute =
+  AppAdminConnecteurClaudeRouteImport.update({
+    id: '/admin/connecteur-claude',
+    path: '/admin/connecteur-claude',
+    getParentRoute: () => AppRoute,
+  } as any)
 const AppAdminContenuWidgetsRoute = AppAdminContenuWidgetsRouteImport.update({
   id: '/admin/contenu-widgets',
   path: '/admin/contenu-widgets',
@@ -790,6 +797,7 @@ export interface FileRoutesByFullPath {
   '/auth/set-password': typeof AuthSetPasswordRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/admin/audit': typeof AppAdminAuditRoute
+  '/admin/connecteur-claude': typeof AppAdminConnecteurClaudeRoute
   '/admin/contenu-widgets': typeof AppAdminContenuWidgetsRoute
   '/admin/email-preview': typeof AppAdminEmailPreviewRoute
   '/admin/employes-poste-principal': typeof AppAdminEmployesPostePrincipalRoute
@@ -905,6 +913,7 @@ export interface FileRoutesByTo {
   '/': typeof AppIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/admin/audit': typeof AppAdminAuditRoute
+  '/admin/connecteur-claude': typeof AppAdminConnecteurClaudeRoute
   '/admin/contenu-widgets': typeof AppAdminContenuWidgetsRoute
   '/admin/email-preview': typeof AppAdminEmailPreviewRoute
   '/admin/employes-poste-principal': typeof AppAdminEmployesPostePrincipalRoute
@@ -1023,6 +1032,7 @@ export interface FileRoutesById {
   '/_app/': typeof AppIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/_app/admin/audit': typeof AppAdminAuditRoute
+  '/_app/admin/connecteur-claude': typeof AppAdminConnecteurClaudeRoute
   '/_app/admin/contenu-widgets': typeof AppAdminContenuWidgetsRoute
   '/_app/admin/email-preview': typeof AppAdminEmailPreviewRoute
   '/_app/admin/employes-poste-principal': typeof AppAdminEmployesPostePrincipalRoute
@@ -1142,6 +1152,7 @@ export interface FileRouteTypes {
     | '/auth/set-password'
     | '/.lovable/oauth/consent'
     | '/admin/audit'
+    | '/admin/connecteur-claude'
     | '/admin/contenu-widgets'
     | '/admin/email-preview'
     | '/admin/employes-poste-principal'
@@ -1257,6 +1268,7 @@ export interface FileRouteTypes {
     | '/'
     | '/.lovable/oauth/consent'
     | '/admin/audit'
+    | '/admin/connecteur-claude'
     | '/admin/contenu-widgets'
     | '/admin/email-preview'
     | '/admin/employes-poste-principal'
@@ -1374,6 +1386,7 @@ export interface FileRouteTypes {
     | '/_app/'
     | '/.lovable/oauth/consent'
     | '/_app/admin/audit'
+    | '/_app/admin/connecteur-claude'
     | '/_app/admin/contenu-widgets'
     | '/_app/admin/email-preview'
     | '/_app/admin/employes-poste-principal'
@@ -1837,6 +1850,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/audit'
       fullPath: '/admin/audit'
       preLoaderRoute: typeof AppAdminAuditRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/admin/connecteur-claude': {
+      id: '/_app/admin/connecteur-claude'
+      path: '/admin/connecteur-claude'
+      fullPath: '/admin/connecteur-claude'
+      preLoaderRoute: typeof AppAdminConnecteurClaudeRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/admin/contenu-widgets': {
@@ -2427,6 +2447,7 @@ interface AppRouteChildren {
   AppValidationNotesDeFraisRoute: typeof AppValidationNotesDeFraisRoute
   AppIndexRoute: typeof AppIndexRoute
   AppAdminAuditRoute: typeof AppAdminAuditRoute
+  AppAdminConnecteurClaudeRoute: typeof AppAdminConnecteurClaudeRoute
   AppAdminContenuWidgetsRoute: typeof AppAdminContenuWidgetsRoute
   AppAdminEmailPreviewRoute: typeof AppAdminEmailPreviewRoute
   AppAdminEmployesPostePrincipalRoute: typeof AppAdminEmployesPostePrincipalRoute
@@ -2509,6 +2530,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppValidationNotesDeFraisRoute: AppValidationNotesDeFraisRoute,
   AppIndexRoute: AppIndexRoute,
   AppAdminAuditRoute: AppAdminAuditRoute,
+  AppAdminConnecteurClaudeRoute: AppAdminConnecteurClaudeRoute,
   AppAdminContenuWidgetsRoute: AppAdminContenuWidgetsRoute,
   AppAdminEmailPreviewRoute: AppAdminEmailPreviewRoute,
   AppAdminEmployesPostePrincipalRoute: AppAdminEmployesPostePrincipalRoute,
