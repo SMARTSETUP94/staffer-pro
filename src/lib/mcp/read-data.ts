@@ -43,7 +43,7 @@ async function requireAllScope(ctx: McpAppContext, cap: string) {
   const { data, error } = await ctx.db.rpc("user_cap_scope", { _cap: cap });
   if (error || data !== "all") throw new ToolError("Cet outil nécessite un accès global à cette section ; accès limité non exposé dans MCP v1.");
 }
-async function enrichAffaires(ctx: McpAppContext, rows: Row[]) {
+async function enrichAffaires(ctx: McpAppContext, rows: Row[]): Promise<Row[]> {
   const ids = [...new Set(rows.flatMap(r => [r.chef_projet_id, r.charge_affaires_id]).filter(Boolean))];
   const profiles = ids.length ? await rowsOf(ctx.db.from("profiles").select("id,full_name").in("id", ids)) : [];
   return rows.map(r => ({ ...r, chef_projet: profiles.find(p => p.id === r.chef_projet_id)?.full_name ?? null, charge_affaires: profiles.find(p => p.id === r.charge_affaires_id)?.full_name ?? null }));
@@ -68,7 +68,7 @@ export async function readData(ctx: McpAppContext, name: ToolName, args: Args): 
   }
   if (name === "demandes_clients") {
     await requireAllScope(ctx, "demandes_clients.view");
-    let query = db.from("emails_entrants").select("id,source_boite,categorie_ia,received_at,from_name,from_email,opportunite_id,statut").eq("categorie_ia", "demande_client");
+    let query = db.from("emails_entrants").select("id,source_boite,categorie_ia,received_at,from_name,from_email,opportunite_id,statut").eq("categorie_ia", "opportunite");
     if (args.statut) query = query.eq("statut", args.statut);
     return paged(query.order("received_at", { ascending: false }).order("id"), args);
   }
@@ -129,7 +129,7 @@ export async function readData(ctx: McpAppContext, name: ToolName, args: Args): 
     const planning = await bounded(query), metiers = await rowsOf(db.from("metiers").select("id,libelle,capacite_jour").order("id").limit(100));
     const cells = new Map<string, Row>();
     for (const p of planning) { const key=`${p.date}|${p.metier_id}`; const cell=cells.get(key) ?? {date:p.date,metier_id:p.metier_id,charge:0}; cell.charge+=Number(p.nb_pers); cells.set(key,cell); }
-    const rows=[...cells.values()].map(c => { const m=metiers.find(m=>m.id===c.metier_id); const niveau=chargeNiveau(c.charge,m?.capacite_jour ?? null); return {...c,metier:m?.libelle,capacite_jour:m?.capacite_jour ?? null,unite:"personnes/jour",statut:({sous:"vert",plein:"ambre",surcharge:"rouge",neutre:"neutre",vide:"vert"}[niveau])}; }).sort((a,b)=>a.date.localeCompare(b.date)||a.metier_id-b.metier_id);
+    const rows=[...cells.values()].map((c): Row => { const m=metiers.find(m=>m.id===c.metier_id); const niveau=chargeNiveau(c.charge,m?.capacite_jour ?? null); return {...c,metier:m?.libelle,capacite_jour:m?.capacite_jour ?? null,unite:"personnes/jour",statut:({sous:"vert",plein:"ambre",surcharge:"rouge",neutre:"neutre",vide:"vert"}[niveau])}; }).sort((a,b)=>a.date.localeCompare(b.date)||a.metier_id-b.metier_id);
     return pageRows(rows,args);
   }
   await requireAllScope(ctx, "planning.view");
