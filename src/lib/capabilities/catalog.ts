@@ -30,6 +30,7 @@ export const CAPABILITY_CATALOG = {
   ],
   "admin": [
     { key: "api.mcp", label: "Connecteur Claude en lecture seule" },
+    { key: "api.mcp.write", label: "Connecteur Claude — écritures confirmées" },
     { key: "admin.feature_flags", label: "Gérer les feature flags" },
     { key: "admin.feature_flags.manage", label: "Modifier les feature flags" },
     { key: "admin.audit", label: "Voir audit + incidents auth" },
