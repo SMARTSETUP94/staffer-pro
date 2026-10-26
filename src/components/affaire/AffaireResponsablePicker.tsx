@@ -18,7 +18,8 @@ export function AffaireResponsablePicker({ affaireId, field, value, onSaved }: {
     if (id === value || saving) return;
     setSaving(true);
     try {
-      const { data, error } = await supabase.from("affaires").update({ [field]: id }).eq("id", affaireId).select("id").single();
+      const patch = field === "chef_projet_id" ? { chef_projet_id: id } : { dessinateur_id: id };
+      const { data, error } = await supabase.from("affaires").update(patch).eq("id", affaireId).select("id").single();
       if (error || !data) throw error ?? new Error("Enregistrement non autorisé.");
       onSaved(id);
       await queryClient.invalidateQueries({ queryKey: ["liste-chantiers"] });
