@@ -6,6 +6,7 @@
 - MCP throttling runs in request middleware before SDK dispatch; a caller-verified database RPC serializes each user's rolling quota and refusal audit together, so multiple Worker instances and OAuth clients cannot bypass it. Keep generated SDK routes unchanged.
 - MCP writes use database-locked, target/snapshot-bound confirmations and caller/client-namespaced idempotency keys with request hashes; global-scope business dispatch runs as a validated NOLOGIN NOBYPASSRLS role inheriting authenticated grants, calling shared invoker RPCs, never an admin business client. Historical atomic opportunity creation retains its explicit SECURITY DEFINER authorization.
 - Shared affair, opportunity action and logistics RPCs enforce explicit field allow-lists and caller affair access; logistics moves preserve duration, while cancellation remains a soft status change.
+- Security migrations must explicitly redefine each affected RPC from its freshly read current definition; never rewrite function bodies dynamically with regexp_replace or replace on pg_get_functiondef, because critical business RPCs must remain reviewable.
 - All protected server functions retain bearer attachment in src/start.ts so ordinary signed-in requests preserve the caller's RLS.
 
 - Affaire-level project manager and designer reference profiles and use shared searchable controls across lists, detail and signing; signing saves assignments atomically through an explicit-code RPC overload, independently from object-level BE assignments.
