@@ -44,7 +44,8 @@ export async function prepareWrite(context: McpAppContext, tool: WriteName, args
       before = data; affaireId = data.id; snapshot = data.updated_at;
       if (["ajouter_action_opportunite", "mettre_a_jour_opportunite"].includes(tool) && data.phase !== "opportunite") throw new ToolError("Opportunité déjà signée : modification commerciale refusée");
     }
-    const rights = await context.db.rpc("app_assert_affaire_write", { _id: affaireId, _cap: WRITE_CAPS[tool] });
+    // Read-only rights check: app_assert_affaire_write refuses OAuth callers outside confirmed dispatch.
+    const rights = await context.db.rpc("mcp_preview_assert_affaire", { _id: affaireId, _cap: WRITE_CAPS[tool] });
     if (rights.error) throw new ToolError("Accès affaire refusé");
     if (tool === "modifier_chantier" || tool === "mettre_a_jour_opportunite") {
       const patch = { ...(args.champs as Record<string, unknown>) };

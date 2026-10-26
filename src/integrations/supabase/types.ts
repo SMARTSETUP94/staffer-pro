@@ -6904,6 +6904,10 @@ export type Database = {
         }
         Returns: Json
       }
+      mcp_preview_assert_affaire: {
+        Args: { _cap: string; _id: string }
+        Returns: undefined
+      }
       mcp_safe_diff: { Args: { _diff: Json }; Returns: Json }
       mcp_write_preview: {
         Args: {
