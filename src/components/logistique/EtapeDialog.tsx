@@ -18,6 +18,10 @@ import {
 } from "@/hooks/use-etapes-logistiques";
 
 const NONE = "__none__";
+function payloadWithoutAffaire<T extends { affaire_id: string }>(payload: T) {
+  const { affaire_id: _, ...patch } = payload;
+  return patch;
+}
 
 interface Props {
   open: boolean;

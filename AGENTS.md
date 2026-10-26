@@ -4,6 +4,8 @@
 - MCP readers select explicit safe fields and paginate deterministically; non-global scopes fail closed until a scoped reader exists, and materialized aggregate views are never exposed to scoped users.
 - MCP technical audit fails closed, excludes free-text arguments and keeps business reads separate from connection administration; admin-only server functions may use provider admin APIs after verifying roles.
 - MCP throttling runs in request middleware before SDK dispatch; a caller-verified database RPC serializes each user's rolling quota and refusal audit together, so multiple Worker instances and OAuth clients cannot bypass it. Keep generated SDK routes unchanged.
+- MCP writes use database-locked confirmations and atomic audit/idempotency records; business dispatch runs as a NOLOGIN NOBYPASSRLS role inheriting authenticated grants, calling the same invoker RPCs as the UI, never an admin business client.
+- Shared affair, opportunity action and logistics RPCs enforce explicit field allow-lists and caller affair access; logistics moves preserve duration, while cancellation remains a soft status change.
 - All protected server functions retain bearer attachment in src/start.ts so ordinary signed-in requests preserve the caller's RLS.
 
 - Affaire-level project manager and designer reference profiles and use shared searchable controls across lists, detail and signing; signing saves assignments atomically through an explicit-code RPC overload, independently from object-level BE assignments.
