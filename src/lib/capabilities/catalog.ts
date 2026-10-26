@@ -29,6 +29,7 @@ export const CAPABILITY_CATALOG = {
     { key: "action.delete_opportunite", label: "Supprimer une opportunité" },
   ],
   "admin": [
+    { key: "api.mcp", label: "Connecteur Claude en lecture seule" },
     { key: "admin.feature_flags", label: "Gérer les feature flags" },
     { key: "admin.feature_flags.manage", label: "Modifier les feature flags" },
     { key: "admin.audit", label: "Voir audit + incidents auth" },

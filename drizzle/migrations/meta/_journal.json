@@ -176,6 +176,13 @@
       "when": 1793000688521,
       "tag": "0024_affaire_dessinateur_signature_affectations",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1793031023451,
+      "tag": "0025_mcp_claude_audit_connections",
+      "breakpoints": true
     }
   ]
 }

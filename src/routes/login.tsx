@@ -8,18 +8,25 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/lib/auth-context";
 import { toast } from "sonner";
 import { BrandLogo } from "@/components/BrandLogo";
+import { oauthReturnPath } from "@/lib/oauth-return-path";
 
 export const Route = createFileRoute("/login")({
+  validateSearch: (s: Record<string, unknown>) => ({ next: oauthReturnPath(s.next) }),
   head: () => ({
     meta: [
       { title: "Connexion — Setup Paris" },
       { name: "description", content: "Accès à l'outil interne de planning chantiers Setup Paris." },
+      { property: "og:title", content: "Connexion — Setup Paris" },
+      { property: "og:description", content: "Connexion à Staffing Setup Paris et autorisation des connecteurs." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: LoginPage,
 });
 
 function LoginPage() {
+  const { next } = Route.useSearch();
   const navigate = useNavigate();
   const { user, loading, signIn, signInWithMagicLink } = useAuth();
   const [tab, setTab] = useState<"signin" | "magic">("signin");
@@ -29,8 +36,8 @@ function LoginPage() {
   const [magicSent, setMagicSent] = useState(false);
 
   useEffect(() => {
-    if (!loading && user) navigate({ to: "/" });
-  }, [loading, user, navigate]);
+    if (!loading && user) window.location.assign(next);
+  }, [loading, user, next]);
 
   // Nettoyage automatique des tokens Supabase expirés au mount de la page login.
   // Évite que des refresh tokens corrompus/périmés bloquent silencieusement le signIn.
@@ -69,7 +76,7 @@ function LoginPage() {
         toast.error("Connexion impossible", { description: error });
       } else {
         toast.success("Connecté");
-        navigate({ to: "/" });
+        window.location.assign(next);
       }
     } catch (err) {
       console.error("[login] signIn threw", err);
@@ -85,7 +92,7 @@ function LoginPage() {
     if (busy) return;
     setBusy(true);
     try {
-      const { error } = await signInWithMagicLink(email);
+      const { error } = await signInWithMagicLink(email, new URL(next, window.location.origin).href);
       if (error) toast.error("Envoi impossible", { description: error });
       else setMagicSent(true);
     } catch (err) {
