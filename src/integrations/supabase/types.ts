@@ -792,10 +792,12 @@ export type Database = {
         Row: {
           acces_livraison: string | null
           archived_at: string | null
+          ca_estime_ht: number | null
           charge_affaires_id: string | null
           chef_chantier_id: string | null
           chef_projet_id: string | null
           client: string | null
+          client_contact_id: string | null
           client_id: string | null
           code_acces: string | null
           code_opportunite: string | null
@@ -832,6 +834,7 @@ export type Database = {
           nom: string
           notes: string | null
           numero: string
+          opportunite_source: Json | null
           phase: Database["public"]["Enums"]["affaire_phase"]
           responsable_demontage_id: string | null
           responsable_montage_id: string | null
@@ -849,10 +852,12 @@ export type Database = {
         Insert: {
           acces_livraison?: string | null
           archived_at?: string | null
+          ca_estime_ht?: number | null
           charge_affaires_id?: string | null
           chef_chantier_id?: string | null
           chef_projet_id?: string | null
           client?: string | null
+          client_contact_id?: string | null
           client_id?: string | null
           code_acces?: string | null
           code_opportunite?: string | null
@@ -889,6 +894,7 @@ export type Database = {
           nom: string
           notes?: string | null
           numero: string
+          opportunite_source?: Json | null
           phase?: Database["public"]["Enums"]["affaire_phase"]
           responsable_demontage_id?: string | null
           responsable_montage_id?: string | null
@@ -906,10 +912,12 @@ export type Database = {
         Update: {
           acces_livraison?: string | null
           archived_at?: string | null
+          ca_estime_ht?: number | null
           charge_affaires_id?: string | null
           chef_chantier_id?: string | null
           chef_projet_id?: string | null
           client?: string | null
+          client_contact_id?: string | null
           client_id?: string | null
           code_acces?: string | null
           code_opportunite?: string | null
@@ -946,6 +954,7 @@ export type Database = {
           nom?: string
           notes?: string | null
           numero?: string
+          opportunite_source?: Json | null
           phase?: Database["public"]["Enums"]["affaire_phase"]
           responsable_demontage_id?: string | null
           responsable_montage_id?: string | null
@@ -980,6 +989,13 @@ export type Database = {
             columns: ["chef_projet_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affaires_client_contact_id_fkey"
+            columns: ["client_contact_id"]
+            isOneToOne: false
+            referencedRelation: "client_contacts"
             referencedColumns: ["id"]
           },
           {
@@ -6401,6 +6417,33 @@ export type Database = {
         Args: { p_contrat_id: string; p_motif?: string }
         Returns: undefined
       }
+      app_ajouter_action_opportunite: {
+        Args: {
+          _affaire_id: string
+          _echeance?: string
+          _note: string
+          _type: Database["public"]["Enums"]["opp_action_type"]
+        }
+        Returns: Json
+      }
+      app_ajouter_note_chantier: {
+        Args: { _affaire_id: string; _texte: string }
+        Returns: Json
+      }
+      app_assert_affaire_write: {
+        Args: { _cap: string; _id: string }
+        Returns: undefined
+      }
+      app_creer_etape_logistique: { Args: { _payload: Json }; Returns: Json }
+      app_creer_opportunite_client: { Args: { _p: Json }; Returns: Json }
+      app_modifier_affaire: {
+        Args: { _id: string; _patch: Json }
+        Returns: Json
+      }
+      app_modifier_etape_logistique: {
+        Args: { _id: string; _patch: Json }
+        Returns: Json
+      }
       archive_affaire: { Args: { _affaire_id: string }; Returns: undefined }
       audit_staffing_divergence: {
         Args: never
@@ -6508,6 +6551,14 @@ export type Database = {
       delete_my_hors_planning_saisie: {
         Args: { _saisie_id: string }
         Returns: boolean
+      }
+      deplacer_etape_logistique: {
+        Args: {
+          _etape_id: string
+          _nouveau_debut: string
+          _nouvelle_fin?: string
+        }
+        Returns: Json
       }
       detect_client_duplicates: {
         Args: { min_similarity?: number }
