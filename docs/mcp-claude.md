@@ -39,7 +39,7 @@ Marge et CA estimé absent de la source ne sont pas inventés. Les scopes métie
 Ouvrir `/admin/connecteur-claude`, trouver la connexion puis Révoquer et confirmer. Le prochain appel est bloqué même avec un JWT non expiré. Pour son propre compte, les sessions et renouvellements fournisseur sont également révoqués ; pour un autre compte, le blocage porte sur Staffing. La page présente les autorisations, pas des sessions supposées actives.
 
 ## MCP v2 — écritures contrôlées
-Les neuf outils v1 et leur limite de débit sont conservés. Les outils d’écriture apparaissent uniquement avec `api.mcp.write`, le flag `mcp_v2_write` et le droit métier correspondant ; activation initiale réservée aux administrateurs.
+Les neuf outils v1 et leur limite de débit sont conservés. Les outils d’écriture apparaissent uniquement avec `api.mcp.write`, le flag `mcp_v2_write` et le droit métier correspondant en périmètre global ; activation initiale réservée aux administrateurs. Les périmètres restreints sont refusés dans cette révision.
 
 | Outil | Portée |
 |---|---|
@@ -66,7 +66,9 @@ Les conflits véhicules avertissent sans bloquer. Modifier les dates d’un chan
 Audit → Connecteur Claude → **Écritures uniquement** : aperçu, exécution/refus, cible, confirmation et différences expurgées des textes et coordonnées. Aucune écriture heures, affectations, RH, contrats, paie ; aucun effacement physique ni signature. Aucun secret supplémentaire, aucun nouveau service à activer.
 
 ### Vérification et mise en service v2
-Parcours OAuth réel local : opportunité 9440 créée, confirmée/rejouée sans doublon, clé externe réutilisée sans nouvelle création ; étape créée, déplacée puis annulée ; résultat relu dans la fiche et audit visible. Opportunité de test archivée par le chemin applicatif. Ces contrôles ne prouvent pas une republication ni le parcours externe Claude de cette révision. Republier, reconnecter/actualiser le catalogue Claude, puis tester d’abord un aperçu sans confirmer.
+Parcours OAuth réel local avant le dernier renforcement : opportunité 9440 créée, confirmée/rejouée sans doublon, clé externe réutilisée sans nouvelle création ; étape créée, déplacée puis annulée ; résultat relu dans la fiche et audit visible. Opportunité de test archivée par le chemin applicatif. Les clés externes sont désormais isolées par compte et client OAuth ; un même identifiant avec un contenu différent est refusé. Les reprises après retrait d’accès ou archivage sont refusées, sans nouvelle écriture.
+
+Le dernier renforcement (cible/snapshot obligatoires, rattachement étape verrouillé, accès direct aux RPC partagés refusé pour OAuth) est appliqué et relu en base, mais son parcours OAuth n’a pas pu être rejoué : le service d’enregistrement du client de vérification a renvoyé 404 dans l’environnement final. Ne pas considérer le lot prêt à publier avant ce dernier contrôle et la vérification complète des chemins directs préexistants. Aucun nouveau service n’a été activé ; Lovable Cloud et OAuth étaient déjà présents.
 
 ## Vérifications restantes / écarts explicites
 - Publier puis effectuer une vraie connexion depuis Claude, tester mobile/desktop et déconnexion/reconnexion.

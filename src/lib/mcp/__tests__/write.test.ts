@@ -22,7 +22,7 @@ function context() {
     if (!r.done) { r.done = true; businessWrites++; }
     return { data: { id: "created", statut: "executed" }, error: null };
   });
-  return { ctx: { userId: "u", clientId: "c", canWrite: true, caps: new Set(["api.mcp.write", ...Object.values(WRITE_CAPS)]), db: { rpc, from: vi.fn(() => ({ insert })) } } as any, rpc, insert, writes: () => businessWrites, expire: () => { now = 600000; } };
+  return { ctx: { userId: "u", clientId: "c", canWrite: true, caps: new Set(["api.mcp.write", ...Object.values(WRITE_CAPS)]), writeScopes: new Set(Object.values(WRITE_CAPS)), db: { rpc, from: vi.fn(() => ({ insert })) } } as any, rpc, insert, writes: () => businessWrites, expire: () => { now = 600000; } };
 }
 describe("MCP controlled writes", () => {
   it("tools/list hides writes without api.mcp.write", async () => {

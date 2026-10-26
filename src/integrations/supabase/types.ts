@@ -4091,6 +4091,7 @@ export type Database = {
           affaire_id: string
           etape_id: string | null
           key_hash: string
+          request_hash: string | null
           result: Json
           tool: string
         }
@@ -4098,6 +4099,7 @@ export type Database = {
           affaire_id: string
           etape_id?: string | null
           key_hash: string
+          request_hash?: string | null
           result: Json
           tool: string
         }
@@ -4105,6 +4107,7 @@ export type Database = {
           affaire_id?: string
           etape_id?: string | null
           key_hash?: string
+          request_hash?: string | null
           result?: Json
           tool?: string
         }

@@ -2,7 +2,7 @@ import { ToolError, type CreateAppContextInput } from "@lovable.dev/mcp-js";
 import { supabaseForUser } from "./supabase";
 import { MAX_RESPONSE_BYTES, TOOL_CAPS, type ToolName } from "./config";
 
-export type McpAppContext = { db: ReturnType<typeof supabaseForUser>; userId: string; clientId: string; caps: Set<string>; canWrite?: boolean };
+export type McpAppContext = { db: ReturnType<typeof supabaseForUser>; userId: string; clientId: string; caps: Set<string>; canWrite?: boolean; writeScopes?: Set<string> };
 export async function createAppContext({ auth }: CreateAppContextInput): Promise<McpAppContext> {
   const userId = auth.getUserId(), clientId = auth.getClientId();
   if (!userId || !clientId || !auth.getToken()) throw new ToolError("Connexion OAuth requise");
@@ -16,11 +16,13 @@ export async function createAppContext({ auth }: CreateAppContextInput): Promise
   if (cap.error || flag.error || connection.error || user.error || user.data.user?.id !== userId || cap.data !== true || flag.data !== true || !connection.data || connection.data.revoked_at) throw new ToolError("Accès MCP refusé ou connexion révoquée");
   const roles = await db.from("user_roles").select("role").eq("user_id", userId);
   if (roles.error) throw new ToolError("Droits indisponibles");
-  const caps = await db.from("role_capabilities").select("capability").in("role", (roles.data ?? []).map(r => r.role)).eq("granted", true);
+  const caps = await db.from("role_capabilities").select("capability,scope").in("role", (roles.data ?? []).map(r => r.role)).eq("granted", true);
   if (caps.error) throw new ToolError("Droits indisponibles");
   const writeFlag = await db.rpc("is_feature_flag_enabled", { _flag_key: "mcp_v2_write" });
   const effectiveCaps = new Set((caps.data ?? []).map(r => r.capability));
-  return { db, userId, clientId, caps: effectiveCaps, canWrite: !writeFlag.error && writeFlag.data === true && effectiveCaps.has("api.mcp.write") };
+  const writeCaps = ["action.create_opportunite", "action.edit_opportunite", "section.affaires", "logistique.etape.edit"];
+  const writeScopes = new Set((caps.data ?? []).filter(r => r.scope === "all").map(r => r.capability));
+  return { db, userId, clientId, caps: effectiveCaps, writeScopes, canWrite: !writeFlag.error && writeFlag.data === true && effectiveCaps.has("api.mcp.write") && writeCaps.some(c => writeScopes.has(c)) };
 }
 export function safeAuditArguments(args: Record<string, unknown>) {
   const result: Record<string, string | number> = {};

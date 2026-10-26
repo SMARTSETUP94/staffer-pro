@@ -91,7 +91,7 @@ export async function prepareWrite(context: McpAppContext, tool: WriteName, args
     if (conflicts.length) warnings.push(`Conflit véhicule non bloquant avec ${conflicts.length} étape(s) : ${conflicts.map(e => e.id).join(", ")}`);
   }
   if (args.cle_externe) {
-    const hash = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(String(args.cle_externe)));
+    const hash = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`${context.userId}:${context.clientId}:${String(args.cle_externe)}`));
     const key = Array.from(new Uint8Array(hash), b => b.toString(16).padStart(2, "0")).join("");
     const { data, error } = await context.db.from("mcp_write_external_keys").select("result").eq("tool", tool).eq("key_hash", key).maybeSingle();
     if (error) throw new ToolError("Vérification clé externe indisponible");
