@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { isDocumentAffaireCode } from "@/lib/affaire-document-rules";
+import { chantierCodeLabel, compareChantierChronology, matchesChantierCodeFilter } from "@/lib/chantier-code-history";
 import {
   Select,
   SelectContent,
@@ -77,9 +78,10 @@ function ListeChantiers() {
       .filter(
         (a) =>
           isDocumentAffaireCode(a.numero) &&
-          (filtre === "tous" || a.numero.startsWith(filtre)) &&
-          (!s || [a.numero, a.nom, a.client, a.lieu].some((v) => (v ?? "").toLowerCase().includes(s))),
-      );
+          matchesChantierCodeFilter(a, filtre) &&
+          (!s || [a.numero, a.code_opportunite, a.nom, a.client, a.lieu].some((v) => (v ?? "").toLowerCase().includes(s))),
+      )
+      .sort(compareChantierChronology);
   }, [data, q, filtre, voirArchives]);
 
   const nbArchives = (data ?? []).filter((a) => a.archived_at).length;
@@ -160,8 +162,8 @@ function ListeChantiers() {
                 const c = a.charge as { full_name?: string | null } | null;
                 return (
                   <tr key={a.id} className={`border-t border-border hover:bg-muted/30 ${a.archived_at ? "opacity-60" : ""}`}>
-                    <td className="p-2 font-bold">
-                      <Link to="/affaires/$affaireId" params={{ affaireId: a.id }} className="text-primary hover:underline">{a.numero}</Link>
+                    <td className="whitespace-nowrap p-2 font-mono font-bold">
+                      <Link to="/affaires/$affaireId" params={{ affaireId: a.id }} className="text-primary hover:underline">{chantierCodeLabel(a)}</Link>
                     </td>
                     <td className="p-2">{a.nom}</td>
                     <td className="p-2">{a.client ?? "—"}</td>

@@ -1,5 +1,9 @@
 # Roadmap
 
+## Traçabilité des codes dans la liste (26 oct. 2026)
+- [ ] Afficher ancien code → code signé, préserver l'ordre d'origine, retrouver les signatures avec le filtre et la recherche 9XXX.
+- [ ] Vérifier les règles et la liste réelle sans modifier les signatures.
+
 ## Code affaire à la signature (26 oct. 2026)
 - [x] Code saisi manuellement indépendamment de la typologie ; suggestions facultatives sans écraser la saisie, unicité conservée par la RPC existante à code explicite (vérifiée en base).
 - [x] 36 tests verts ; dans la fenêtre réelle de 9405 (fabrication), 6123, 4123 et 20123 restent saisis et permettent de signer ; 9437 refusé. Build OK. Aucune opportunité réelle convertie pour ce contrôle.
