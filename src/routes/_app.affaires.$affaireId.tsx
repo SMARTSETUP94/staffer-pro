@@ -24,6 +24,7 @@ import { hasOpportuniteTab } from "@/lib/affaire-opportunite";
 import { isAffaireTabHidden } from "@/lib/affaire-tabs-visibility";
 import { AffaireResponsablePicker } from "@/components/affaire/AffaireResponsablePicker";
 import { canAssignDessinateur } from "@/lib/affaire-affectations";
+import { ChangerClientDialog } from "@/components/affaire/ChangerClientDialog";
 
 
 interface AffaireDetail {
@@ -72,6 +73,7 @@ function AffaireDetailLayout() {
   const canCreateClient = useCapability("clients.view");
   const canUpdateClient = useCapability("clients.update");
   const [createClientOpen, setCreateClientOpen] = useState(false);
+  const [changeClientOpen, setChangeClientOpen] = useState(false);
   const [editNumeroOpen, setEditNumeroOpen] = useState(false);
 
 
@@ -279,6 +281,12 @@ function AffaireDetailLayout() {
                 </div>
               )
             )}
+            {canManageAffaires && (
+              <Button size="sm" variant="ghost" className="h-6 px-2 text-xs text-primary hover:text-primary" onClick={() => setChangeClientOpen(true)}>
+                <Pencil className="h-3 w-3 mr-0.5" />
+                {affaire.client ? "Changer / renommer le client" : "Ajouter un client"}
+              </Button>
+            )}
             {affaire.lieu && (
               <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3" />{affaire.lieu}</span>
             )}
@@ -352,6 +360,16 @@ function AffaireDetailLayout() {
         numero={affaire.numero}
         open={editNumeroOpen}
         onOpenChange={setEditNumeroOpen}
+        onSaved={reload}
+      />
+
+      <ChangerClientDialog
+        open={changeClientOpen}
+        onOpenChange={setChangeClientOpen}
+        affaireId={affaire.id}
+        client={affaire.client}
+        clientId={affaire.client_id}
+        canRenameFiche={canUpdateClient}
         onSaved={reload}
       />
 
