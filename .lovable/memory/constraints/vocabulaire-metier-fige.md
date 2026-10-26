@@ -19,3 +19,9 @@ Technique INCHANGÉ : routes (`/staffing/$planId`, `/staffer-mobile`,
 `/validation-heures`), queryKeys, noms de RPC/serverFn, noms de composants TS.
 
 Les libellés de rôles restent centralisés dans `src/lib/labels.ts` (`roleLabel`).
+
+Typologie 9XXX : toujours « Opportunité » pour l'utilisateur, jamais « Prototype »
+(UI, filtres, compteurs, exports, connecteur Claude). La valeur interne `prototype`
+reste en base (colonne générée, compute_affaire_typologie, getAffaireTypologie) ;
+libellés via AFFAIRE_TYPOLOGIE_LABELS. Côté Claude : `opportunite` en sortie et en
+entrée, et `typologie_future` exposée pour les opportunités.

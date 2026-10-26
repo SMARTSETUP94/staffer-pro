@@ -1,3 +1,4 @@
+import { mapTypologieRow } from "./typologie";
 import { ToolError } from "@lovable.dev/mcp-js";
 import { compactResult, type McpAppContext } from "./policy";
 import type { WriteName } from "./write-schemas";
@@ -50,7 +51,7 @@ export async function runWrite(context: McpAppContext, name: WriteName, args: Re
       _etape_id: preview.etapeId ?? null, _snapshot: preview.snapshot ?? null, _diff: safeDiff(preview.before, preview.after),
     });
     if (error) throw new ToolError("Aperçu refusé par les droits ou journal indisponible");
-    return compactResult({ statut: "preview", avant: preview.before, apres: preview.after, avertissements: preview.warnings, doublons_potentiels: preview.duplicates, ...data });
+    return compactResult({ statut: "preview", avant: mapTypologieRow(preview.before), apres: mapTypologieRow(preview.after), avertissements: preview.warnings, doublons_potentiels: preview.duplicates, ...data });
   } catch (error) {
     const audit = await context.db.from("mcp_audit_log").insert({ user_id: context.userId, client_id: context.clientId, tool: name, statut: "refused", arguments: {} });
     if (audit.error) throw new ToolError("Journal indisponible : écriture interrompue");

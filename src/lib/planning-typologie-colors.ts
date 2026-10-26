@@ -59,5 +59,5 @@ export const TYPO_LEGEND: Array<{ t: TypologieColor; label: string }> = [
   { t: "gris", label: "1XXX / 3XXX · Non opérationnel" },
   { t: "bleu", label: "2XXX · Stockage" },
   { t: "vert", label: "4XXX / 5XXX · Montage-Démontage / Fabrication" },
-  { t: "orange", label: "9XXX · Prototype" },
+  { t: "orange", label: "9XXX · Opportunité" },
 ];

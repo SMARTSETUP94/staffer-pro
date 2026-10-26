@@ -47,6 +47,8 @@ export interface EtapeLite {
   date_fin: string | null;
   vehicule_id: string | null;
   statut: string;
+  heure_debut?: string | null;
+  heure_fin?: string | null;
 }
 
 /** Vrai si l'étape couvre le jour ISO `day` (AAAA-MM-JJ). */
@@ -80,19 +82,29 @@ export function calendrierChantier<T extends Pick<EtapeLite, "affaire_id" | "dat
 }
 
 /**
- * Conflits véhicule : deux étapes non annulées utilisant le même véhicule
- * sur des périodes qui se chevauchent. Retourne l'ensemble des ids en conflit.
+ * Conflits véhicule : deux étapes non annulées de chantiers DIFFÉRENTS utilisant
+ * le même véhicule sur des créneaux qui se chevauchent réellement.
+ * - Deux étapes d'un même chantier ne sont jamais en conflit entre elles.
+ * - Sans heure de début : début de journée ; sans heure de fin : fin de journée.
+ * - Des créneaux qui se touchent (fin = début) ne se chevauchent pas.
+ * Règle unique partagée par le planning logistique et le connecteur Claude.
  */
+export function creneauEtape(e: Pick<EtapeLite, "date_debut" | "date_fin" | "heure_debut" | "heure_fin">): [string, string] {
+  const hm = (h: string | null | undefined, fallback: string) => (h ? h.slice(0, 5) : fallback);
+  const fin = e.date_fin && e.date_fin >= e.date_debut ? e.date_fin : e.date_debut;
+  return [`${e.date_debut}T${hm(e.heure_debut, "00:00")}`, `${fin}T${hm(e.heure_fin, "24:00")}`];
+}
+
 export function conflitsVehicules(etapes: EtapeLite[]): Set<string> {
   const out = new Set<string>();
   const actives = etapes.filter((e) => e.vehicule_id && e.statut !== "annule");
   for (let i = 0; i < actives.length; i++) {
     for (let j = i + 1; j < actives.length; j++) {
       const a = actives[i], b = actives[j];
-      if (a.vehicule_id !== b.vehicule_id) continue;
-      const aFin = a.date_fin ?? a.date_debut;
-      const bFin = b.date_fin ?? b.date_debut;
-      if (a.date_debut <= bFin && b.date_debut <= aFin) {
+      if (a.vehicule_id !== b.vehicule_id || a.affaire_id === b.affaire_id) continue;
+      const [aDeb, aFin] = creneauEtape(a);
+      const [bDeb, bFin] = creneauEtape(b);
+      if (aDeb < bFin && bDeb < aFin) {
         out.add(a.id);
         out.add(b.id);
       }

@@ -67,7 +67,7 @@ const TYPOLOGIE_OPTS: { value: string; label: string }[] = [
   { value: "montage_demontage", label: "Montage / démontage" },
   { value: "fabrication", label: "Fabrication" },
   { value: "stockage", label: "Stockage" },
-  { value: "prototype", label: "Prototype" },
+  { value: "prototype", label: "Opportunité" },
   { value: "non_operationnel", label: "Non opérationnel" },
 ];
 
@@ -83,7 +83,7 @@ const TYPO_LABEL: Record<string, string> = {
   montage_demontage: "Montage/démontage",
   fabrication: "Fabrication",
   stockage: "Stockage",
-  prototype: "Prototype",
+  prototype: "Opportunité",
   non_operationnel: "Non opérationnel",
 };
 

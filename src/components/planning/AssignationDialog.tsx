@@ -1247,7 +1247,7 @@ export function AssignationDialog({
             </AlertDialogTitle>
             <AlertDialogDescription>
               Cette affaire est en phase étude (code 9XXX). L'assignation sera créée mais
-              marquée comme staffing prototype, à reconfirmer après signature.
+              marquée comme staffing provisoire, à reconfirmer après signature.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
