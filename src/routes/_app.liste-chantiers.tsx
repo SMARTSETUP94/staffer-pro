@@ -125,7 +125,9 @@ function ListeChantiers() {
           <Button
             key={f}
             onClick={() => setFiltre(f)}
-            className={`rounded-md border px-3 text-sm ${filtre === f ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card"}`}
+             variant={filtre === f ? "default" : "secondary"}
+             aria-pressed={filtre === f}
+             className="border border-border px-3 text-sm"
           >
             {f === "tous" ? "Tous" : f === "4" ? "Montage/Démontage 4XXX" : f === "6" ? "Fabrication 6XXX" : "Opportunités 9XXX"}
           </Button>
