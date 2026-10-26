@@ -4086,6 +4086,30 @@ export type Database = {
         }
         Relationships: []
       }
+      mcp_write_dispatch_context: {
+        Row: {
+          client_id: string
+          created_at: string
+          tool: string
+          txid: number
+          user_id: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          tool: string
+          txid: number
+          user_id: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          tool?: string
+          txid?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       mcp_write_external_keys: {
         Row: {
           affaire_id: string
@@ -6855,6 +6879,10 @@ export type Database = {
           taille: Database["public"]["Enums"]["opportunite_taille"]
           typologie_future: string
         }[]
+      }
+      mcp_assert_legacy_oauth_write: {
+        Args: { _fn: string }
+        Returns: undefined
       }
       mcp_assert_write: { Args: { _tool: string }; Returns: string }
       mcp_dispatch_write: {
