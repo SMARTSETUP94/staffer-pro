@@ -1,5 +1,9 @@
 # Roadmap
 
+## Traçabilité des codes dans la liste (26 oct. 2026)
+- [x] Ancien code → code signé visible ; tri sur le code d'opportunité d'origine ; recherche ancien code et filtre 9XXX incluent les signatures.
+- [x] 3 tests verts, build OK ; liste réelle vérifiée : 9439 → 4132 puis 9438 → 6067 puis 9437. Recherche 9439 sous filtre Opportunités retrouve 4132. Aucune signature modifiée.
+
 ## Code affaire à la signature (26 oct. 2026)
 - [x] Code saisi manuellement indépendamment de la typologie ; suggestions facultatives sans écraser la saisie, unicité conservée par la RPC existante à code explicite (vérifiée en base).
 - [x] 36 tests verts ; dans la fenêtre réelle de 9405 (fabrication), 6123, 4123 et 20123 restent saisis et permettent de signer ; 9437 refusé. Build OK. Aucune opportunité réelle convertie pour ce contrôle.
