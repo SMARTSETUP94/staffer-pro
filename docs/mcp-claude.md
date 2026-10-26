@@ -40,7 +40,7 @@ Ouvrir `/admin/connecteur-claude`, trouver la connexion puis Révoquer et confir
 
 ## Vérifications restantes / écarts explicites
 - Publier puis effectuer une vraie connexion depuis Claude, tester mobile/desktop et déconnexion/reconnexion.
-- Limite 60 appels/min : en attente de confirmation d'un mécanisme ad hoc, faute de primitive standard.
+- Limite sur mesure confirmée : 60 requêtes POST /mcp par utilisateur sur 60 secondes glissantes, partagées entre clients OAuth et instances. Compteur atomique en base ; au-delà, HTTP 429, `Retry-After` en secondes et erreur JSON-RPC « limite atteinte, réessayez dans X s ». Refus journalisé `rate_limited` sans lecture métier ; aucune prolongation de la fenêtre par les refus. Une panne du compteur ou de son audit bloque la requête (503).
 - OAuth authorize/register/token et RFC 8414 sont hébergés par le fournisseur et annoncés par la découverte, pas dupliqués sur le domaine Staffing (ADR 005).
 - S256 supporté ; le fournisseur annonce aussi plain. Le lot n'impose pas S256 exclusif côté fournisseur.
 - Durées access/refresh héritées du fournisseur ; pas de promesse de 1 h/30 j sans lecture de sa configuration.

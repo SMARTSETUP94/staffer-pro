@@ -18,7 +18,7 @@ L'API admin fournisseur n'est utilisée que par une fonction serveur de gestion 
 25 lignes par défaut, maximum 100, pagination déterministe et plafond 200 000 octets. Agrégations : maximum 999 lignes sources sinon erreur explicite, pas de total silencieusement incomplet. Pas de salaires, IBAN, contrats, numéros SS ou motifs de maladie. Audit technique seulement, arguments whitelistés sans texte libre. Un échec d'audit empêche le retour des données.
 
 ## Limites de cette révision
-La plateforme n'a pas de limiteur standard : aucun limiteur ad hoc n'est ajouté avant confirmation de ce compromis. La fiche ne calcule pas la marge provenant du tableur séparé et le pipeline ne fabrique pas un CA estimé absent de sa source. Ces champs indiquent leur indisponibilité. Aucun WebMCP : ce lot demande expressément un serveur distant Claude.
+La limite ad hoc a été confirmée : un middleware de requête protège POST /mcp avant dispatch du SDK, sans modifier ses routes générées. Un RPC technique vérifie le JWT, api.mcp, mcp_v1 et le consentement, verrouille une ligne par utilisateur et conserve au plus 60 horodatages acceptés sur 60 secondes glissantes. Compteur partagé entre instances et clients, horloge de la base ; refus non comptabilisés et audit rate_limited dans la même transaction. HTTP 429 JSON-RPC avec Retry-After ; défaillance du compteur/audit : 503 sans donnée. La fiche ne calcule pas la marge provenant du tableur séparé et le pipeline ne fabrique pas un CA estimé absent de sa source. Ces champs indiquent leur indisponibilité. Aucun WebMCP : ce lot demande expressément un serveur distant Claude.
 
 Les tests locaux et l'extraction du manifeste ne prouvent pas une publication ; republication et essai réel Claude restent nécessaires.
 
