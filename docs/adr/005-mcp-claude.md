@@ -21,3 +21,5 @@ L'API admin fournisseur n'est utilisée que par une fonction serveur de gestion 
 La plateforme n'a pas de limiteur standard : aucun limiteur ad hoc n'est ajouté avant confirmation de ce compromis. La fiche ne calcule pas la marge provenant du tableur séparé et le pipeline ne fabrique pas un CA estimé absent de sa source. Ces champs indiquent leur indisponibilité. Aucun WebMCP : ce lot demande expressément un serveur distant Claude.
 
 Les tests locaux et l'extraction du manifeste ne prouvent pas une publication ; republication et essai réel Claude restent nécessaires.
+
+Le transport officiel SDK émet les résultats legacy sous forme SSE Streamable HTTP, non JSON seul. Les deux versions demandées ont été vérifiées. Un refus dans createAppContext (ex. connexion révoquée) produit actuellement une réponse générique HTTP 500 du SDK, sans donnée ; ne pas confondre ce statut avec une fuite ou une lecture réussie. Aucun transport custom ni route générée retouchée pour contourner le SDK.

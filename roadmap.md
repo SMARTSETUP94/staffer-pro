@@ -1,8 +1,11 @@
 # Roadmap
 
 ## MCP v1 — Claude lecture seule (26 oct. 2026)
-- [ ] Activer OAuth géré ; si refus fournisseur, arrêter sans contournement.
-- [ ] Connecteur protégé, 9 outils bornés par capabilities et RLS, consentement et révocation, audit, tests et documentation.
+- [x] OAuth géré et DCR activés ; clé ES256 déjà active, connexion existante et allow-list conservées.
+- [x] SDK officiel, manifeste 9 outils, api.mcp/mcp_v1 administrateurs uniquement, lectures RLS, consentement, révocation et audit. 52 tests verts ; build OK.
+- [x] Parcours OAuth réel (origine canonique adaptée uniquement dans le test localhost) : DCR → consentement → PKCE → JWT ES256 → profil + 6067 + pipeline + échéances + demandes clients → audit relu à l'écran → révocation bloque le prochain appel. Qui est où / charge / heures retournent vide, sources réellement vides en base ; calculs vérifiés sur fixtures uniquement. Erreur consentement lisible sur mobile.
+- [ ] Données hors v1 : marge du tableur, CA estimé absent de la source, scopes métier non globaux sauf pipeline personnel ; demandent des readers complémentaires dédiés, pas d'extension de RLS.
+- [ ] Écarts fournisseur/SDK documentés ADR 005 : OAuth hébergé chez le fournisseur et non dupliqué sur /oauth/* ; SDK émet du SSE Streamable HTTP pour les réponses legacy, pas JSON seul ; révocation globale renvoie un refus SDK HTTP 500 sans donnée, pas 403 ; sessions présentées comme consentements, pas inventaire tokens ; S256 non exclusif annoncé par le fournisseur.
 - [ ] Limite 60 appels/min : confirmation requise pour une limite ad hoc (aucun mécanisme standard disponible).
 - [ ] Test externe Claude après republication et connexion par l'utilisateur.
 

@@ -45,3 +45,7 @@ Ouvrir `/admin/connecteur-claude`, trouver la connexion puis Révoquer et confir
 - S256 supporté ; le fournisseur annonce aussi plain. Le lot n'impose pas S256 exclusif côté fournisseur.
 - Durées access/refresh héritées du fournisseur ; pas de promesse de 1 h/30 j sans lecture de sa configuration.
 - Essais simulés ne prouvent pas les erreurs du fournisseur ni le parcours réel Claude ; consulter les résultats de vérification du lot.
+- SDK officiel : réponses legacy Streamable HTTP en SSE (`data:`), et non JSON seul. Les versions 2025-06-18 et 2025-03-26 passent les tests initialize. La révocation locale bloque avant tout lecteur mais remonte actuellement un HTTP 500 générique du SDK, pas un 403.
+
+## Vérifications réalisées
+52 tests Vitest : protocole, pagination, 9 lecteurs avec données simulées, refus métier, audit, taille et helpers existants. OAuth réel via client de vérification : inscription dynamique, consentement, PKCE S256 et échange JWT ES256, lecture profil et chantier 6067, pipeline, échéances et demandes clients, audit visible, blocage après révocation. Sur localhost seulement, l'origine OAuth a été adaptée par le script de test à l'origine canonique autorisée ; aucun réglage fournisseur n'a été élargi. Cela ne vérifie pas Claude ni la révision publiée. Les sources assignations/atelier_planning/heures_saisies sont vides en base : les calculs et anomalies n'ont été testés qu'avec fixtures, pas avec de vraies données de planning.
