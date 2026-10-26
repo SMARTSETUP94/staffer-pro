@@ -3908,6 +3908,88 @@ export type Database = {
         }
         Relationships: []
       }
+      mcp_audit_log: {
+        Row: {
+          arguments: Json
+          client_id: string
+          created_at: string
+          duree_ms: number
+          id: string
+          nb_lignes: number
+          statut: string
+          tool: string
+          user_id: string
+        }
+        Insert: {
+          arguments?: Json
+          client_id: string
+          created_at?: string
+          duree_ms?: number
+          id?: string
+          nb_lignes?: number
+          statut: string
+          tool: string
+          user_id: string
+        }
+        Update: {
+          arguments?: Json
+          client_id?: string
+          created_at?: string
+          duree_ms?: number
+          id?: string
+          nb_lignes?: number
+          statut?: string
+          tool?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mcp_audit_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mcp_connections: {
+        Row: {
+          authorized_at: string
+          client_id: string
+          client_name: string
+          last_seen_at: string | null
+          redirect_uri: string
+          revoked_at: string | null
+          user_id: string
+        }
+        Insert: {
+          authorized_at?: string
+          client_id: string
+          client_name: string
+          last_seen_at?: string | null
+          redirect_uri: string
+          revoked_at?: string | null
+          user_id: string
+        }
+        Update: {
+          authorized_at?: string
+          client_id?: string
+          client_name?: string
+          last_seen_at?: string | null
+          redirect_uri?: string
+          revoked_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mcp_connections_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       metiers: {
         Row: {
           capacite_jour: number | null

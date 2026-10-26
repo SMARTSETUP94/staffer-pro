@@ -1,0 +1,17 @@
+CREATE TABLE public.mcp_connections (user_id uuid NOT NULL REFERENCES public.profiles(id), client_id text NOT NULL, client_name text NOT NULL, redirect_uri text NOT NULL CHECK (redirect_uri IN ('https://claude.ai/api/mcp/auth_callback','https://claude.com/api/mcp/auth_callback')), authorized_at timestamptz NOT NULL DEFAULT now(), last_seen_at timestamptz, revoked_at timestamptz, PRIMARY KEY(user_id,client_id));
+GRANT SELECT, INSERT, UPDATE ON public.mcp_connections TO authenticated;
+GRANT ALL ON public.mcp_connections TO service_role;
+ALTER TABLE public.mcp_connections ENABLE ROW LEVEL SECURITY;
+CREATE POLICY mcp_connections_read ON public.mcp_connections FOR SELECT TO authenticated USING (user_id=auth.uid() OR public.is_admin());
+CREATE POLICY mcp_connections_insert ON public.mcp_connections FOR INSERT TO authenticated WITH CHECK (user_id=auth.uid() AND public.user_has_cap('api.mcp') AND public.is_feature_flag_enabled('mcp_v1'));
+CREATE POLICY mcp_connections_update ON public.mcp_connections FOR UPDATE TO authenticated USING (public.is_admin()) WITH CHECK (public.is_admin());
+CREATE TABLE public.mcp_audit_log (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), user_id uuid NOT NULL REFERENCES public.profiles(id), client_id text NOT NULL, tool text NOT NULL, arguments jsonb NOT NULL DEFAULT '{}'::jsonb CHECK (pg_column_size(arguments)<=2048), nb_lignes integer NOT NULL DEFAULT 0 CHECK(nb_lignes>=0), duree_ms integer NOT NULL DEFAULT 0 CHECK(duree_ms>=0), statut text NOT NULL CHECK(statut IN ('ok','refuse','erreur')), created_at timestamptz NOT NULL DEFAULT now());
+GRANT SELECT, INSERT ON public.mcp_audit_log TO authenticated;
+GRANT ALL ON public.mcp_audit_log TO service_role;
+ALTER TABLE public.mcp_audit_log ENABLE ROW LEVEL SECURITY;
+CREATE POLICY mcp_audit_read ON public.mcp_audit_log FOR SELECT TO authenticated USING (public.is_admin() AND public.user_has_cap('admin.audit'));
+CREATE POLICY mcp_audit_insert ON public.mcp_audit_log FOR INSERT TO authenticated WITH CHECK(user_id=auth.uid() AND client_id=auth.jwt()->>'client_id');
+CREATE INDEX mcp_audit_created_idx ON public.mcp_audit_log(created_at DESC);
+CREATE INDEX mcp_audit_user_created_idx ON public.mcp_audit_log(user_id,created_at DESC);
+COMMENT ON TABLE public.mcp_connections IS 'App consent grants; revocation is checked on every MCP request, including already issued JWTs. Provider owns OAuth tokens and refresh grants.';
+COMMENT ON TABLE public.mcp_audit_log IS 'MCP technical audit only; no free text search, email body, secrets or business mutations.';

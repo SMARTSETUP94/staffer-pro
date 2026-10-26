@@ -5,6 +5,7 @@ import { format, parseISO, subDays } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Loader2, FileText, Image as ImageIcon, ShieldCheck, Download, AlertTriangle } from "lucide-react";
 import { StaffingDivergenceTab } from "@/components/admin/StaffingDivergenceTab";
+import { McpAuditTab } from "@/components/admin/McpAuditTab";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
@@ -26,6 +27,7 @@ import {
 } from "@/components/ui/table";
 
 export const Route = createFileRoute("/_app/admin/audit")({
+  head: () => ({ meta: [{ title: "Audit — Staffing Setup Paris" }, { name: "description", content: "Historique des validations, documents et consultations Claude." }, { property: "og:title", content: "Audit — Staffing Setup Paris" }, { property: "og:description", content: "Traçabilité des actions Staffing et accès Claude." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   beforeLoad: () => requireCapability("section.admin"),
   component: AdminAuditPage,
 });
@@ -105,6 +107,7 @@ function AdminAuditPage() {
         />
         <Tabs defaultValue="validations">
           <TabsList>
+            <TabsTrigger value="mcp">Connecteur Claude</TabsTrigger>
             <TabsTrigger value="validations">
               <ShieldCheck className="mr-1.5 h-4 w-4" /> Validations heures
             </TabsTrigger>
@@ -118,6 +121,7 @@ function AdminAuditPage() {
               <AlertTriangle className="mr-1.5 h-4 w-4" /> Divergence Plan/Planning
             </TabsTrigger>
           </TabsList>
+          <TabsContent value="mcp" className="mt-4"><McpAuditTab enabled={canAudit} /></TabsContent>
           <TabsContent value="validations" className="mt-4">
             <ValidationsTab enabled={canAudit} />
           </TabsContent>

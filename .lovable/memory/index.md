@@ -1,6 +1,7 @@
 # Project Memory
 
 ## Core
+Connecteur Claude : OAuth obligatoire, lecture seule métier, droits/RLS conservés, aucune donnée RH sensible ; voir mem://features/mcp-claude-v1.md.
 App planning chantiers Setup Paris. FR language UI.
 Supabase Cloud backend. TanStack Start + Tailwind v4.
 11 rôles métier : admin (full), chef_chantier, employe, commercial, bureau_etude, atelier_chef, atelier_metier, logistique, poseur, chef_pose, chef_chantier (legacy). Capabilities matrice 59 caps × 11 rôles via `user_has_cap()`.

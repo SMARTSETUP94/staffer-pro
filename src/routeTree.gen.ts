@@ -11,8 +11,10 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as McpRouteImport } from './routes/mcp'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as AppIndexRouteImport } from './routes/_app.index'
 import { Route as AppAbsencesRouteImport } from './routes/_app.absences'
 import { Route as AppAtelierRouteImport } from './routes/_app.atelier'
@@ -60,7 +62,9 @@ import { Route as AppValidationNotesDeFraisRouteImport } from './routes/_app.val
 import { Route as AuthForgotPasswordRouteImport } from './routes/auth.forgot-password'
 import { Route as AuthResetPasswordRouteImport } from './routes/auth.reset-password'
 import { Route as AuthSetPasswordRouteImport } from './routes/auth.set-password'
+import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as AppAdminAuditRouteImport } from './routes/_app.admin.audit'
+import { Route as AppAdminConnecteurClaudeRouteImport } from './routes/_app.admin.connecteur-claude'
 import { Route as AppAdminContenuWidgetsRouteImport } from './routes/_app.admin.contenu-widgets'
 import { Route as AppAdminEmailPreviewRouteImport } from './routes/_app.admin.email-preview'
 import { Route as AppAdminEmployesPostePrincipalRouteImport } from './routes/_app.admin.employes-poste-principal'
@@ -132,6 +136,11 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const McpRoute = McpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OnboardingRoute = OnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
@@ -142,6 +151,12 @@ const PrivacyRoute = PrivacyRouteImport.update({
   path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
+const Char91DotwellKnownChar93OauthProtectedResourceRoute =
+  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
+    id: '/.well-known/oauth-protected-resource',
+    path: '/.well-known/oauth-protected-resource',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -378,11 +393,22 @@ const AuthSetPasswordRoute = AuthSetPasswordRouteImport.update({
   path: '/auth/set-password',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
+  id: '/.lovable/oauth/consent',
+  path: '/.lovable/oauth/consent',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppAdminAuditRoute = AppAdminAuditRouteImport.update({
   id: '/admin/audit',
   path: '/admin/audit',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAdminConnecteurClaudeRoute =
+  AppAdminConnecteurClaudeRouteImport.update({
+    id: '/admin/connecteur-claude',
+    path: '/admin/connecteur-claude',
+    getParentRoute: () => AppRoute,
+  } as any)
 const AppAdminContenuWidgetsRoute = AppAdminContenuWidgetsRouteImport.update({
   id: '/admin/contenu-widgets',
   path: '/admin/contenu-widgets',
@@ -719,8 +745,10 @@ const AppAffairesAffaireIdObjetsObjetIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
   '/login': typeof LoginRoute
+  '/mcp': typeof McpRoute
   '/onboarding': typeof OnboardingRoute
   '/privacy': typeof PrivacyRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/absences': typeof AppAbsencesRoute
   '/atelier': typeof AppAtelierRoute
   '/audit-auth': typeof AppAuditAuthRoute
@@ -767,7 +795,9 @@ export interface FileRoutesByFullPath {
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/auth/set-password': typeof AuthSetPasswordRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/admin/audit': typeof AppAdminAuditRoute
+  '/admin/connecteur-claude': typeof AppAdminConnecteurClaudeRoute
   '/admin/contenu-widgets': typeof AppAdminContenuWidgetsRoute
   '/admin/email-preview': typeof AppAdminEmailPreviewRoute
   '/admin/employes-poste-principal': typeof AppAdminEmployesPostePrincipalRoute
@@ -832,8 +862,10 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
+  '/mcp': typeof McpRoute
   '/onboarding': typeof OnboardingRoute
   '/privacy': typeof PrivacyRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/absences': typeof AppAbsencesRoute
   '/atelier': typeof AppAtelierRoute
   '/audit-auth': typeof AppAuditAuthRoute
@@ -879,7 +911,9 @@ export interface FileRoutesByTo {
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/auth/set-password': typeof AuthSetPasswordRoute
   '/': typeof AppIndexRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/admin/audit': typeof AppAdminAuditRoute
+  '/admin/connecteur-claude': typeof AppAdminConnecteurClaudeRoute
   '/admin/contenu-widgets': typeof AppAdminContenuWidgetsRoute
   '/admin/email-preview': typeof AppAdminEmailPreviewRoute
   '/admin/employes-poste-principal': typeof AppAdminEmployesPostePrincipalRoute
@@ -945,8 +979,10 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
+  '/mcp': typeof McpRoute
   '/onboarding': typeof OnboardingRoute
   '/privacy': typeof PrivacyRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/_app/absences': typeof AppAbsencesRoute
   '/_app/atelier': typeof AppAtelierRoute
   '/_app/audit-auth': typeof AppAuditAuthRoute
@@ -994,7 +1030,9 @@ export interface FileRoutesById {
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/auth/set-password': typeof AuthSetPasswordRoute
   '/_app/': typeof AppIndexRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/_app/admin/audit': typeof AppAdminAuditRoute
+  '/_app/admin/connecteur-claude': typeof AppAdminConnecteurClaudeRoute
   '/_app/admin/contenu-widgets': typeof AppAdminContenuWidgetsRoute
   '/_app/admin/email-preview': typeof AppAdminEmailPreviewRoute
   '/_app/admin/employes-poste-principal': typeof AppAdminEmployesPostePrincipalRoute
@@ -1062,8 +1100,10 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/login'
+    | '/mcp'
     | '/onboarding'
     | '/privacy'
+    | '/.well-known/oauth-protected-resource'
     | '/absences'
     | '/atelier'
     | '/audit-auth'
@@ -1110,7 +1150,9 @@ export interface FileRouteTypes {
     | '/auth/forgot-password'
     | '/auth/reset-password'
     | '/auth/set-password'
+    | '/.lovable/oauth/consent'
     | '/admin/audit'
+    | '/admin/connecteur-claude'
     | '/admin/contenu-widgets'
     | '/admin/email-preview'
     | '/admin/employes-poste-principal'
@@ -1175,8 +1217,10 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
+    | '/mcp'
     | '/onboarding'
     | '/privacy'
+    | '/.well-known/oauth-protected-resource'
     | '/absences'
     | '/atelier'
     | '/audit-auth'
@@ -1222,7 +1266,9 @@ export interface FileRouteTypes {
     | '/auth/reset-password'
     | '/auth/set-password'
     | '/'
+    | '/.lovable/oauth/consent'
     | '/admin/audit'
+    | '/admin/connecteur-claude'
     | '/admin/contenu-widgets'
     | '/admin/email-preview'
     | '/admin/employes-poste-principal'
@@ -1287,8 +1333,10 @@ export interface FileRouteTypes {
     | '__root__'
     | '/_app'
     | '/login'
+    | '/mcp'
     | '/onboarding'
     | '/privacy'
+    | '/.well-known/oauth-protected-resource'
     | '/_app/absences'
     | '/_app/atelier'
     | '/_app/audit-auth'
@@ -1336,7 +1384,9 @@ export interface FileRouteTypes {
     | '/auth/reset-password'
     | '/auth/set-password'
     | '/_app/'
+    | '/.lovable/oauth/consent'
     | '/_app/admin/audit'
+    | '/_app/admin/connecteur-claude'
     | '/_app/admin/contenu-widgets'
     | '/_app/admin/email-preview'
     | '/_app/admin/employes-poste-principal'
@@ -1403,11 +1453,14 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   LoginRoute: typeof LoginRoute
+  McpRoute: typeof McpRoute
   OnboardingRoute: typeof OnboardingRoute
   PrivacyRoute: typeof PrivacyRoute
+  Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   AuthForgotPasswordRoute: typeof AuthForgotPasswordRoute
   AuthResetPasswordRoute: typeof AuthResetPasswordRoute
   AuthSetPasswordRoute: typeof AuthSetPasswordRoute
+  DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   ApiPublicHooksPollSharedInboxesRoute: typeof ApiPublicHooksPollSharedInboxesRoute
   ApiPublicHooksPollSmartInboxRoute: typeof ApiPublicHooksPollSmartInboxRoute
 }
@@ -1428,6 +1481,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/mcp': {
+      id: '/mcp'
+      path: '/mcp'
+      fullPath: '/mcp'
+      preLoaderRoute: typeof McpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/onboarding': {
       id: '/onboarding'
       path: '/onboarding'
@@ -1440,6 +1500,13 @@ declare module '@tanstack/react-router' {
       path: '/privacy'
       fullPath: '/privacy'
       preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.well-known/oauth-protected-resource': {
+      id: '/.well-known/oauth-protected-resource'
+      path: '/.well-known/oauth-protected-resource'
+      fullPath: '/.well-known/oauth-protected-resource'
+      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app/': {
@@ -1771,11 +1838,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthSetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/.lovable/oauth/consent': {
+      id: '/.lovable/oauth/consent'
+      path: '/.lovable/oauth/consent'
+      fullPath: '/.lovable/oauth/consent'
+      preLoaderRoute: typeof DotlovableOauthConsentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_app/admin/audit': {
       id: '/_app/admin/audit'
       path: '/admin/audit'
       fullPath: '/admin/audit'
       preLoaderRoute: typeof AppAdminAuditRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/admin/connecteur-claude': {
+      id: '/_app/admin/connecteur-claude'
+      path: '/admin/connecteur-claude'
+      fullPath: '/admin/connecteur-claude'
+      preLoaderRoute: typeof AppAdminConnecteurClaudeRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/admin/contenu-widgets': {
@@ -2366,6 +2447,7 @@ interface AppRouteChildren {
   AppValidationNotesDeFraisRoute: typeof AppValidationNotesDeFraisRoute
   AppIndexRoute: typeof AppIndexRoute
   AppAdminAuditRoute: typeof AppAdminAuditRoute
+  AppAdminConnecteurClaudeRoute: typeof AppAdminConnecteurClaudeRoute
   AppAdminContenuWidgetsRoute: typeof AppAdminContenuWidgetsRoute
   AppAdminEmailPreviewRoute: typeof AppAdminEmailPreviewRoute
   AppAdminEmployesPostePrincipalRoute: typeof AppAdminEmployesPostePrincipalRoute
@@ -2448,6 +2530,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppValidationNotesDeFraisRoute: AppValidationNotesDeFraisRoute,
   AppIndexRoute: AppIndexRoute,
   AppAdminAuditRoute: AppAdminAuditRoute,
+  AppAdminConnecteurClaudeRoute: AppAdminConnecteurClaudeRoute,
   AppAdminContenuWidgetsRoute: AppAdminContenuWidgetsRoute,
   AppAdminEmailPreviewRoute: AppAdminEmailPreviewRoute,
   AppAdminEmployesPostePrincipalRoute: AppAdminEmployesPostePrincipalRoute,
@@ -2490,11 +2573,15 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   LoginRoute: LoginRoute,
+  McpRoute: McpRoute,
   OnboardingRoute: OnboardingRoute,
   PrivacyRoute: PrivacyRoute,
+  Char91DotwellKnownChar93OauthProtectedResourceRoute:
+    Char91DotwellKnownChar93OauthProtectedResourceRoute,
   AuthForgotPasswordRoute: AuthForgotPasswordRoute,
   AuthResetPasswordRoute: AuthResetPasswordRoute,
   AuthSetPasswordRoute: AuthSetPasswordRoute,
+  DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   ApiPublicHooksPollSharedInboxesRoute: ApiPublicHooksPollSharedInboxesRoute,
   ApiPublicHooksPollSmartInboxRoute: ApiPublicHooksPollSmartInboxRoute,
 }
@@ -2503,10 +2590,11 @@ export const routeTree = rootRouteImport
   ._addFileTypes<FileRouteTypes>()
 
 import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
+import type { startInstance } from './start.ts'
 declare module '@tanstack/react-start' {
   interface Register {
     ssr: true
     router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
   }
 }
