@@ -1,11 +1,12 @@
 import { describe, it, expect, vi } from "vitest";
-import { defineMcp } from "@lovable.dev/mcp-js";
+import { auth, defineMcp } from "@lovable.dev/mcp-js";
 import { createTanStackMcpHandler } from "@lovable.dev/mcp-js/stacks/tanstack";
 import creer from "../tools/creer_opportunite";
 import { argumentsHash, runWrite, safeDiff, WRITE_CAPS, type WritePreview } from "../write-policy";
 import { writeSchemas } from "../write-schemas";
 import { z } from "zod";
 import { readFileSync } from "node:fs";
+import { generateKeyPair, exportJWK, SignJWT } from "jose";
 
 const preview: WritePreview = { payload: { intitule: "Test" }, before: {}, after: { intitule: "Test" }, warnings: [], duplicates: [] };
 function context() {
@@ -26,9 +27,15 @@ function context() {
 describe("MCP controlled writes", () => {
   it("tools/list hides writes without api.mcp.write", async () => {
     const c = context(); c.ctx.caps.delete("api.mcp.write");
-    const handler = createTanStackMcpHandler(defineMcp({ name: "test", title: "Test", version: "2", instructions: "test", tools: [creer], createAppContext: async () => c.ctx }));
-    const r = await handler({ request: new Request("http://localhost:8080/mcp", { method: "POST", headers: { "Content-Type": "application/json", Accept: "application/json, text/event-stream" }, body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/list" }) }) });
-    expect(await r.text()).not.toContain('"name":"creer_opportunite"');
+    const { privateKey, publicKey } = await generateKeyPair("ES256");
+    const key = { ...await exportJWK(publicKey), kid: "test", alg: "ES256" };
+    const token = await new SignJWT({ client_id: "test" }).setProtectedHeader({ alg: "ES256", kid: "test", typ: "JWT" }).setIssuer("https://auth.test").setAudience("authenticated").setSubject("test-user").setExpirationTime("5m").sign(privateKey);
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(Response.json({ keys: [key] }));
+    try {
+      const handler = createTanStackMcpHandler(defineMcp({ name: "test", title: "Test", version: "2", instructions: "test", auth: auth.oauth.issuer({ issuer: "https://auth.test", jwksUri: "https://auth.test/jwks", acceptedAudiences: "authenticated" }), tools: [creer], createAppContext: async () => c.ctx }));
+      const r = await handler({ request: new Request("http://localhost:8080/mcp", { method: "POST", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json", Accept: "application/json, text/event-stream" }, body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/list" }) }) });
+      const body = await r.text(); expect(r.status).toBe(200); expect(body).toContain('"tools":[]');
+    } finally { fetchMock.mockRestore(); }
   });
   it("preview makes zero business writes", async () => { const c = context(); await runWrite(c.ctx, "creer_opportunite", { intitule: "Test" }, async () => preview); expect(c.writes()).toBe(0); expect(c.rpc).toHaveBeenCalledWith("mcp_write_preview", expect.anything()); expect(c.rpc).not.toHaveBeenCalledWith("mcp_execute_write_locked", expect.anything()); });
   it("confirmation executes once even when retried", async () => { const c = context(); const args = { intitule: "Test" }; await runWrite(c.ctx, "creer_opportunite", args, async () => preview); await runWrite(c.ctx, "creer_opportunite", { ...args, confirmation_id: "confirm" }, async () => preview); await runWrite(c.ctx, "creer_opportunite", { ...args, confirmation_id: "confirm" }, async () => preview); expect(c.writes()).toBe(1); });

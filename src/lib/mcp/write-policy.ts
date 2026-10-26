@@ -34,8 +34,7 @@ export async function runWrite(context: McpAppContext, name: WriteName, args: Re
     const fresh = await context.db.rpc("mcp_assert_write", { _tool: name });
     if (fresh.error) throw new ToolError("Écriture MCP refusée : droits ou connexion modifiés");
     const hash = await argumentsHash(args);
-    // Confirmation payload must be stable: use the initially bound target and persisted mapping,
-    // not a regenerated preview that may resolve a newly-created client or renamed person differently.
+    // Mappings use only supplied arguments; mutable record snapshots are checked by the locked RPC.
     if (typeof args.confirmation_id === "string") {
       const prepared = await prepare();
       const { data, error } = await context.db.rpc("mcp_execute_write_locked", {

@@ -268,7 +268,7 @@ export const addOpportuniteAction = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: z.infer<typeof ADD_ACTION>) => ADD_ACTION.parse(input))
   .handler(async ({ data, context }) => {
-    const { supabase, userId } = context;
+    const { supabase } = context;
     const { data: row, error } = await supabase.rpc("app_ajouter_action_opportunite", {
       _affaire_id: data.affaireId, _type: data.type, _note: data.texte, _echeance: data.prochaine_action_due_le ?? undefined,
     });
