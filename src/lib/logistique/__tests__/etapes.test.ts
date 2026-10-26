@@ -34,8 +34,31 @@ describe("planning logistique", () => {
   });
 
   it("même véhicule sur des dates qui se chevauchent = conflit", () => {
-    const c = conflitsVehicules([e("1", "2026-10-15", "2026-10-17", "v1"), e("2", "2026-10-17", null, "v1")]);
+    const c = conflitsVehicules([e("1", "2026-10-15", "2026-10-17", "v1"), { ...e("2", "2026-10-17", null, "v1"), affaire_id: "b" }]);
     expect([...c].sort()).toEqual(["1", "2"]);
+  });
+
+  it("deux étapes successives du même chantier avec le même véhicule ne sont jamais en conflit", () => {
+    const chargement = { ...e("1", "2026-10-26", null, "v1"), heure_debut: "06:45", heure_fin: "07:15" };
+    const montage = { ...e("2", "2026-10-26", null, "v1"), heure_debut: "08:00" };
+    expect(conflitsVehicules([chargement, montage]).size).toBe(0);
+    expect(conflitsVehicules([e("3", "2026-10-26", null, "v1"), e("4", "2026-10-26", null, "v1")]).size).toBe(0);
+  });
+
+  it("chantiers différents : conflit seulement si les créneaux se chevauchent", () => {
+    const a = { ...e("1", "2026-10-26", null, "v1"), heure_debut: "06:45", heure_fin: "07:15" };
+    const b = { ...e("2", "2026-10-26", null, "v1"), affaire_id: "b", heure_debut: "08:00", heure_fin: "10:00" };
+    expect(conflitsVehicules([a, b]).size).toBe(0);
+    const c = { ...b, heure_debut: "07:00" };
+    expect([...conflitsVehicules([a, c])].sort()).toEqual(["1", "2"]);
+  });
+
+  it("sans heure de fin, l'étape court jusqu'à la fin de journée face aux autres chantiers", () => {
+    const sansFin = { ...e("1", "2026-10-26", null, "v1"), heure_debut: "08:00" };
+    const autre = { ...e("2", "2026-10-26", null, "v1"), affaire_id: "b", heure_debut: "18:00", heure_fin: "19:00" };
+    expect([...conflitsVehicules([sansFin, autre])].sort()).toEqual(["1", "2"]);
+    const avant = { ...autre, heure_debut: "06:00", heure_fin: "08:00" };
+    expect(conflitsVehicules([sansFin, avant]).size).toBe(0);
   });
 
   it("pas de conflit si véhicules différents, dates disjointes ou étape annulée", () => {
