@@ -62,6 +62,7 @@ import { Route as AppValidationNotesDeFraisRouteImport } from './routes/_app.val
 import { Route as AuthForgotPasswordRouteImport } from './routes/auth.forgot-password'
 import { Route as AuthResetPasswordRouteImport } from './routes/auth.reset-password'
 import { Route as AuthSetPasswordRouteImport } from './routes/auth.set-password'
+import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as AppAdminAuditRouteImport } from './routes/_app.admin.audit'
 import { Route as AppAdminContenuWidgetsRouteImport } from './routes/_app.admin.contenu-widgets'
 import { Route as AppAdminEmailPreviewRouteImport } from './routes/_app.admin.email-preview'
@@ -389,6 +390,11 @@ const AuthResetPasswordRoute = AuthResetPasswordRouteImport.update({
 const AuthSetPasswordRoute = AuthSetPasswordRouteImport.update({
   id: '/auth/set-password',
   path: '/auth/set-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
+  id: '/.lovable/oauth/consent',
+  path: '/.lovable/oauth/consent',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppAdminAuditRoute = AppAdminAuditRouteImport.update({
@@ -782,6 +788,7 @@ export interface FileRoutesByFullPath {
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/auth/set-password': typeof AuthSetPasswordRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/admin/audit': typeof AppAdminAuditRoute
   '/admin/contenu-widgets': typeof AppAdminContenuWidgetsRoute
   '/admin/email-preview': typeof AppAdminEmailPreviewRoute
@@ -896,6 +903,7 @@ export interface FileRoutesByTo {
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/auth/set-password': typeof AuthSetPasswordRoute
   '/': typeof AppIndexRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/admin/audit': typeof AppAdminAuditRoute
   '/admin/contenu-widgets': typeof AppAdminContenuWidgetsRoute
   '/admin/email-preview': typeof AppAdminEmailPreviewRoute
@@ -1013,6 +1021,7 @@ export interface FileRoutesById {
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/auth/set-password': typeof AuthSetPasswordRoute
   '/_app/': typeof AppIndexRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/_app/admin/audit': typeof AppAdminAuditRoute
   '/_app/admin/contenu-widgets': typeof AppAdminContenuWidgetsRoute
   '/_app/admin/email-preview': typeof AppAdminEmailPreviewRoute
@@ -1131,6 +1140,7 @@ export interface FileRouteTypes {
     | '/auth/forgot-password'
     | '/auth/reset-password'
     | '/auth/set-password'
+    | '/.lovable/oauth/consent'
     | '/admin/audit'
     | '/admin/contenu-widgets'
     | '/admin/email-preview'
@@ -1245,6 +1255,7 @@ export interface FileRouteTypes {
     | '/auth/reset-password'
     | '/auth/set-password'
     | '/'
+    | '/.lovable/oauth/consent'
     | '/admin/audit'
     | '/admin/contenu-widgets'
     | '/admin/email-preview'
@@ -1361,6 +1372,7 @@ export interface FileRouteTypes {
     | '/auth/reset-password'
     | '/auth/set-password'
     | '/_app/'
+    | '/.lovable/oauth/consent'
     | '/_app/admin/audit'
     | '/_app/admin/contenu-widgets'
     | '/_app/admin/email-preview'
@@ -1435,6 +1447,7 @@ export interface RootRouteChildren {
   AuthForgotPasswordRoute: typeof AuthForgotPasswordRoute
   AuthResetPasswordRoute: typeof AuthResetPasswordRoute
   AuthSetPasswordRoute: typeof AuthSetPasswordRoute
+  DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   ApiPublicHooksPollSharedInboxesRoute: typeof ApiPublicHooksPollSharedInboxesRoute
   ApiPublicHooksPollSmartInboxRoute: typeof ApiPublicHooksPollSmartInboxRoute
 }
@@ -1810,6 +1823,13 @@ declare module '@tanstack/react-router' {
       path: '/auth/set-password'
       fullPath: '/auth/set-password'
       preLoaderRoute: typeof AuthSetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.lovable/oauth/consent': {
+      id: '/.lovable/oauth/consent'
+      path: '/.lovable/oauth/consent'
+      fullPath: '/.lovable/oauth/consent'
+      preLoaderRoute: typeof DotlovableOauthConsentRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app/admin/audit': {
@@ -2539,6 +2559,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthForgotPasswordRoute: AuthForgotPasswordRoute,
   AuthResetPasswordRoute: AuthResetPasswordRoute,
   AuthSetPasswordRoute: AuthSetPasswordRoute,
+  DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   ApiPublicHooksPollSharedInboxesRoute: ApiPublicHooksPollSharedInboxesRoute,
   ApiPublicHooksPollSmartInboxRoute: ApiPublicHooksPollSmartInboxRoute,
 }

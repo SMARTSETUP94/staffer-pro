@@ -1,5 +1,10 @@
 # Architecture rules
 
+- MCP uses the official Lovable SDK and managed OAuth, with per-request local consent/revocation, capabilities and caller-scoped database clients; no business tool may use an admin client. Provider-owned OAuth endpoints are advertised through discovery rather than reimplemented.
+- MCP readers select explicit safe fields and paginate deterministically; non-global scopes fail closed until a scoped reader exists, and materialized aggregate views are never exposed to scoped users.
+- MCP technical audit fails closed, excludes free-text arguments and keeps business reads separate from connection administration; admin-only server functions may use provider admin APIs after verifying roles.
+- All protected server functions retain bearer attachment in src/start.ts so ordinary signed-in requests preserve the caller's RLS.
+
 - Affaire-level project manager and designer reference profiles and use shared searchable controls across lists, detail and signing; signing saves assignments atomically through an explicit-code RPC overload, independently from object-level BE assignments.
 
 - The chantier list derives code conversion labels, chronology and opportunity filtering from persisted code_opportunite through a shared pure helper; signing never changes the original list position.
