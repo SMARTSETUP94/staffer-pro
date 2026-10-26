@@ -23,6 +23,14 @@ type ConsoLine = RawConsoLine & {
 
 export const Route = createFileRoute("/_app/affaires/$affaireId/")({
   beforeLoad: () => requireCapability("section.affaires"),
+  head: () => ({ meta: [
+    { title: "Synthèse chantier — Setup Paris" },
+    { name: "description", content: "Synthèse des dates, heures et informations du chantier Setup Paris." },
+    { property: "og:title", content: "Synthèse chantier — Setup Paris" },
+    { property: "og:description", content: "Suivi des dates, heures et informations du chantier." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: AffaireSynthesePage,
 });
 
