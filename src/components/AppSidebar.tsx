@@ -144,6 +144,7 @@ function buildSections(
     {
       label: "Admin",
       items: [
+        { title: "Connecteur Claude", url: "/admin/connecteur-claude", icon: Settings, cap: "api.mcp" },
         { title: "Utilisateurs", url: "/admin/utilisateurs", icon: UserCircle, cap: "section.admin" },
         { title: "Permissions", url: "/admin/permissions", icon: BadgeCheck, cap: "admin.permissions.manage" },
         { title: "Feature flags", url: "/admin/feature-flags", icon: Lightbulb, cap: "admin.feature_flags.manage" },

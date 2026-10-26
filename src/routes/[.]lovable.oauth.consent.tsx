@@ -42,7 +42,7 @@ export const Route = createFileRoute("/.lovable/oauth/consent")({
     return { details: data, user: { id:user.user.id,email:user.user.email } };
   },
   pendingComponent: () => <main className="p-8 text-center text-muted-foreground">Vérification de la connexion…</main>,
-  errorComponent: ({ error }) => <main className="mx-auto max-w-lg p-8"><h1 className="text-xl font-semibold">Connexion Claude impossible</h1><p role="alert" className="mt-4 text-destructive">{error.message}</p><a href="/" className="mt-6 inline-block underline">Retour à Staffing</a></main>,
+  errorComponent: ({ error }) => <main className="mx-auto max-w-lg p-8"><h1 className="text-xl font-semibold">Connexion Claude impossible</h1><p role="alert" className="mt-4 text-destructive">{error instanceof Error ? error.message : "Connexion indisponible"}</p><a href="/" className="mt-6 inline-block underline">Retour à Staffing</a></main>,
   component: Consent,
 });
 function Consent() {
