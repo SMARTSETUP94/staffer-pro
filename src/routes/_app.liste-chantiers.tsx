@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { AffaireResponsablePicker } from "@/components/affaire/AffaireResponsablePicker";
+import { canAssignDessinateur } from "@/lib/affaire-affectations";
 import { isDocumentAffaireCode } from "@/lib/affaire-document-rules";
 import { chantierCodeLabel, compareChantierChronology, matchesChantierCodeFilter } from "@/lib/chantier-code-history";
 import {
@@ -48,6 +50,8 @@ type ChantierRow = {
   statut: ChantierStatut;
   archived_at: string | null;
   code_opportunite: string | null;
+  chef_projet_id: string | null;
+  dessinateur_id: string | null;
   date_montage: string | null;
   charge: { full_name?: string | null } | null;
 };
@@ -64,7 +68,7 @@ function ListeChantiers() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("affaires")
-        .select("id, numero, nom, client, lieu, statut, archived_at, code_opportunite, date_montage, charge:profiles!affaires_charge_affaires_id_fkey(full_name)")
+        .select("id, numero, nom, client, lieu, statut, archived_at, code_opportunite, date_montage, chef_projet_id, dessinateur_id, charge:profiles!affaires_charge_affaires_id_fkey(full_name)")
         .order("numero", { ascending: false });
       if (error) throw error;
       return (data ?? []) as ChantierRow[];
@@ -154,6 +158,7 @@ function ListeChantiers() {
               <tr>
                 <th className="p-2">N°</th><th className="p-2">Nom</th><th className="p-2">Client</th><th className="p-2">Lieu</th>
                 <th className="p-2">Chargé d'affaires</th><th className="p-2">Opp.</th><th className="p-2">Montage</th>
+                <th className="p-2">Chef de projet</th><th className="p-2">Dessinateur</th>
                 <th className="p-2">Statut</th><th className="p-2">Archiver</th>
               </tr>
             </thead>
@@ -171,6 +176,8 @@ function ListeChantiers() {
                     <td className="p-2">{c?.full_name ?? "—"}</td>
                     <td className="p-2">{a.code_opportunite ?? "—"}</td>
                     <td className="p-2">{a.date_montage ? new Date(a.date_montage).toLocaleDateString("fr-FR") : "—"}</td>
+                    <td className="p-2"><AffaireResponsablePicker affaireId={a.id} field="chef_projet_id" value={a.chef_projet_id} onSaved={() => {}} /></td>
+                    <td className="p-2">{canAssignDessinateur(a.numero) ? <AffaireResponsablePicker affaireId={a.id} field="dessinateur_id" value={a.dessinateur_id} onSaved={() => {}} /> : "—"}</td>
                     <td className="p-2">
                       {busyId === a.id ? (
                         <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />

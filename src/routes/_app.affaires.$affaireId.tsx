@@ -22,6 +22,8 @@ import { NouveauClientDialog } from "@/components/clients/NouveauClientDialog";
 import { EditNumeroAffaireDialog } from "@/components/affaire/EditNumeroAffaireDialog";
 import { hasOpportuniteTab } from "@/lib/affaire-opportunite";
 import { isAffaireTabHidden } from "@/lib/affaire-tabs-visibility";
+import { AffaireResponsablePicker } from "@/components/affaire/AffaireResponsablePicker";
+import { canAssignDessinateur } from "@/lib/affaire-affectations";
 
 
 interface AffaireDetail {
@@ -37,6 +39,8 @@ interface AffaireDetail {
   date_debut: string | null;
   date_fin_prevue: string | null;
   notes: string | null;
+  chef_projet_id: string | null;
+  dessinateur_id: string | null;
 }
 
 export const Route = createFileRoute("/_app/affaires/$affaireId")({
@@ -75,7 +79,7 @@ function AffaireDetailLayout() {
   const fetchAffaire = async (id: string, signal?: { cancelled: boolean }) => {
     const { data } = await supabase
       .from("affaires")
-      .select("id, numero, nom, client, client_id, lieu, statut, phase, code_opportunite, date_debut, date_fin_prevue, notes")
+      .select("id, numero, nom, client, client_id, lieu, statut, phase, code_opportunite, date_debut, date_fin_prevue, notes, chef_projet_id, dessinateur_id")
       .eq("id", id)
       .maybeSingle();
     if (signal?.cancelled) return;
@@ -305,6 +309,14 @@ function AffaireDetailLayout() {
       </div>
 
       {/* KPI Bar Bloc 5 — gated par capability affaire.kpi.view */}
+      {canManageAffaires && <section className="mt-4 flex flex-wrap gap-4">
+        <div className="w-64 space-y-1"><p className="text-xs text-muted-foreground">Chef de projet</p>
+          <AffaireResponsablePicker affaireId={affaire.id} field="chef_projet_id" value={affaire.chef_projet_id} onSaved={(id) => setAffaire((current) => current ? { ...current, chef_projet_id: id } : current)} />
+        </div>
+        {canAssignDessinateur(affaire.numero) && <div className="w-64 space-y-1"><p className="text-xs text-muted-foreground">Dessinateur</p>
+          <AffaireResponsablePicker affaireId={affaire.id} field="dessinateur_id" value={affaire.dessinateur_id} onSaved={(id) => setAffaire((current) => current ? { ...current, dessinateur_id: id } : current)} />
+        </div>}
+      </section>}
       <CapabilityGuard cap="affaire.kpi.view">
         <div className="mt-4">
           <AffaireKpiBar affaireId={affaire.id} />
