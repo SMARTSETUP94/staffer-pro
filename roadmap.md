@@ -6,7 +6,7 @@
 - [x] Parcours OAuth réel (origine canonique adaptée uniquement dans le test localhost) : DCR → consentement → PKCE → JWT ES256 → profil + 6067 + pipeline + échéances + demandes clients → audit relu à l'écran → révocation bloque le prochain appel. Qui est où / charge / heures retournent vide, sources réellement vides en base ; calculs vérifiés sur fixtures uniquement. Erreur consentement lisible sur mobile.
 - [ ] Données hors v1 : marge du tableur, CA estimé absent de la source, scopes métier non globaux sauf pipeline personnel ; demandent des readers complémentaires dédiés, pas d'extension de RLS.
 - [ ] Écarts fournisseur/SDK documentés ADR 005 : OAuth hébergé chez le fournisseur et non dupliqué sur /oauth/* ; SDK émet du SSE Streamable HTTP pour les réponses legacy, pas JSON seul ; révocation globale renvoie un refus SDK HTTP 500 sans donnée, pas 403 ; sessions présentées comme consentements, pas inventaire tokens ; S256 non exclusif annoncé par le fournisseur.
-- [ ] Limite 60 appels/min : confirmation requise pour une limite ad hoc (aucun mécanisme standard disponible).
+- [ ] Limite sur mesure confirmée : 60 appels/min/utilisateur en fenêtre glissante sur /mcp, compteur atomique en base, HTTP 429 JSON-RPC + Retry-After, audit rate_limited et test Vitest ; ne pas modifier le reste du lot.
 - [ ] Test externe Claude après republication et connexion par l'utilisateur.
 
 ## Affectations chantier (26 oct. 2026)
