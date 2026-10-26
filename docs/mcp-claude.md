@@ -40,7 +40,7 @@ Ouvrir `/admin/connecteur-claude`, trouver la connexion puis Révoquer et confir
 
 ## Vérifications restantes / écarts explicites
 - Publier puis effectuer une vraie connexion depuis Claude, tester mobile/desktop et déconnexion/reconnexion.
-- Limite 60 appels/min : en attente de confirmation d'un mécanisme ad hoc, faute de primitive standard.
+- Limite sur mesure confirmée : 60 requêtes POST /mcp par utilisateur sur 60 secondes glissantes, partagées entre clients OAuth et instances. Compteur atomique en base ; au-delà, HTTP 429, `Retry-After` en secondes et erreur JSON-RPC « limite atteinte, réessayez dans X s ». Refus journalisé `rate_limited` sans lecture métier ; aucune prolongation de la fenêtre par les refus. Une panne du compteur ou de son audit bloque la requête (503).
 - OAuth authorize/register/token et RFC 8414 sont hébergés par le fournisseur et annoncés par la découverte, pas dupliqués sur le domaine Staffing (ADR 005).
 - S256 supporté ; le fournisseur annonce aussi plain. Le lot n'impose pas S256 exclusif côté fournisseur.
 - Durées access/refresh héritées du fournisseur ; pas de promesse de 1 h/30 j sans lecture de sa configuration.
@@ -48,4 +48,6 @@ Ouvrir `/admin/connecteur-claude`, trouver la connexion puis Révoquer et confir
 - SDK officiel : réponses legacy Streamable HTTP en SSE (`data:`), et non JSON seul. Les versions 2025-06-18 et 2025-03-26 passent les tests initialize. La révocation locale bloque avant tout lecteur mais remonte actuellement un HTTP 500 générique du SDK, pas un 403.
 
 ## Vérifications réalisées
+Ajout de la limite : 6 tests Vitest supplémentaires (27 tests dans les deux fichiers MCP exécutés), migration et fonction vérifiées en base. Parcours OAuth réel localhost puis 60 requêtes ping acceptées et 61e refusée HTTP 429 JSON-RPC avec Retry-After 52 s ; statut rate_limited relu dans le journal à l'écran. Consentements temporaires révoqués. L'adaptation de l'origine OAuth concerne uniquement le script localhost, pas la configuration fournisseur. Manifeste toujours à 9 outils ; révision non publiée.
+
 52 tests Vitest : protocole, pagination, 9 lecteurs avec données simulées, refus métier, audit, taille et helpers existants. OAuth réel via client de vérification : inscription dynamique, consentement, PKCE S256 et échange JWT ES256, lecture profil et chantier 6067, pipeline, échéances et demandes clients, audit visible, blocage après révocation. Sur localhost seulement, l'origine OAuth a été adaptée par le script de test à l'origine canonique autorisée ; aucun réglage fournisseur n'a été élargi. Cela ne vérifie pas Claude ni la révision publiée. Les sources assignations/atelier_planning/heures_saisies sont vides en base : les calculs et anomalies n'ont été testés qu'avec fixtures, pas avec de vraies données de planning.

@@ -1,3 +1,4 @@
 import { createStart } from "@tanstack/react-start";
 import { attachSupabaseAuth } from "@/integrations/supabase/auth-attacher";
-export const startInstance = createStart(() => ({ functionMiddleware: [attachSupabaseAuth] }));
+import { mcpRateLimitMiddleware } from "@/lib/mcp/rate-limit";
+export const startInstance = createStart(() => ({ requestMiddleware: [mcpRateLimitMiddleware], functionMiddleware: [attachSupabaseAuth] }));

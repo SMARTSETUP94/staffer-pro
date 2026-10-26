@@ -3990,6 +3990,29 @@ export type Database = {
           },
         ]
       }
+      mcp_rate_limit_windows: {
+        Row: {
+          accepted_at: string[]
+          user_id: string
+        }
+        Insert: {
+          accepted_at?: string[]
+          user_id: string
+        }
+        Update: {
+          accepted_at?: string[]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mcp_rate_limit_windows_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       metiers: {
         Row: {
           capacite_jour: number | null
@@ -6407,6 +6430,10 @@ export type Database = {
         Returns: Json
       }
       compute_affaire_typologie: { Args: { num: string }; Returns: string }
+      consume_mcp_rate_limit: {
+        Args: { _arguments?: Json; _tool?: string }
+        Returns: Json
+      }
       create_contrat_intermittent:
         | {
             Args: {
