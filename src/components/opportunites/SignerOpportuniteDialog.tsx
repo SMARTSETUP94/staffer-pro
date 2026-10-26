@@ -14,6 +14,8 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
+import { ResponsableCombobox } from "@/components/affaire/ResponsableCombobox";
+import { canAssignDessinateur, signatureAffectations } from "@/lib/affaire-affectations";
 import {
   prefixForTypologie,
   isValidManualAffaireCode,
@@ -64,6 +66,25 @@ export function SignerOpportuniteDialog({
   const [lastCodes, setLastCodes] = useState<LastUsedCode[]>([]);
   const [suggestedCode, setSuggestedCode] = useState("");
   const [suggestedMontageCode, setSuggestedMontageCode] = useState("");
+  const [chefProjetId, setChefProjetId] = useState<string | null>(null);
+  const [dessinateurId, setDessinateurId] = useState<string | null>(null);
+  const [loadingAffectations, setLoadingAffectations] = useState(true);
+
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    setChefProjetId(null);
+    setDessinateurId(null);
+    setLoadingAffectations(true);
+    supabase.from("affaires").select("chef_projet_id, dessinateur_id").eq("id", affaireId).single().then(({ data, error }) => {
+      if (cancelled) return;
+      if (error) { toast.error("Impossible de lire les affectations", { description: error.message }); return; }
+      setChefProjetId(data.chef_projet_id);
+      setDessinateurId(data.dessinateur_id);
+      setLoadingAffectations(false);
+    });
+    return () => { cancelled = true; };
+  }, [open, affaireId]);
 
   const typo: TypologieFuture | null = typologieFuture ?? null;
   const declaredPrefix = prefixForTypologie(typo);
@@ -127,6 +148,7 @@ export function SignerOpportuniteDialog({
     const { error } = await supabase.rpc("sign_opportunite", {
       _affaire_id: affaireId,
       _new_code: trimmed,
+      ...signatureAffectations(chefProjetId, dessinateurId, trimmed),
     });
     setSaving(false);
     if (error) {
@@ -218,6 +240,15 @@ export function SignerOpportuniteDialog({
               </div>
             )}
 
+            <div className="space-y-1.5">
+              <Label>Chef de projet</Label>
+              <ResponsableCombobox label="Chef de projet" value={chefProjetId} onChange={setChefProjetId} disabled={saving || loadingAffectations} />
+            </div>
+            {canAssignDessinateur(code) && <div className="space-y-1.5">
+              <Label>Dessinateur</Label>
+              <ResponsableCombobox label="Dessinateur" value={dessinateurId} onChange={setDessinateurId} disabled={saving || loadingAffectations} />
+            </div>}
+
             <div className="rounded-md border bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
               <span className="font-mono font-semibold">{oldCode}</span>
               <ArrowRight className="mx-1.5 inline h-3 w-3 align-middle" />
@@ -235,7 +266,7 @@ export function SignerOpportuniteDialog({
           </Button>
           <Button
             onClick={handleSign}
-            disabled={saving || !formatOk}
+            disabled={saving || loadingAffectations || !formatOk}
             className="rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
           >
             {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

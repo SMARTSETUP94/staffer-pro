@@ -30,6 +30,9 @@ import { type AffaireTypologie, AFFAIRE_TYPOLOGIES, getAffaireTypologie } from "
 import { toast } from "sonner";
 import { ClientCombobox } from "@/components/clients/ClientCombobox";
 import { cn } from "@/lib/utils";
+import { AffaireResponsablePicker } from "@/components/affaire/AffaireResponsablePicker";
+import { ResponsableCombobox } from "@/components/affaire/ResponsableCombobox";
+import { canAssignDessinateur } from "@/lib/affaire-affectations";
 
 type AffaireStatut = "prospect" | "en_cours" | "termine" | "annule";
 
@@ -46,11 +49,14 @@ interface AffaireRow {
   date_montage: string | null;
   date_demontage: string | null;
   chef_projet_id: string | null;
+  dessinateur_id: string | null;
   charge_affaires_id: string | null;
   typologie: AffaireTypologie | null;
 }
 
 interface FormState {
+  chef_projet_id: string | null;
+  dessinateur_id: string | null;
   id?: string;
   numero: string;
   nom: string;
@@ -64,6 +70,8 @@ interface FormState {
 }
 
 const emptyForm: FormState = {
+  chef_projet_id: null,
+  dessinateur_id: null,
   numero: "",
   nom: "",
   client: "",
@@ -168,7 +176,7 @@ function AffairesPage() {
     setLoading(true);
     const { data, error } = await supabase
       .from("affaires")
-      .select("id, numero, nom, client, client_id, lieu, statut, date_debut, date_fin_prevue, date_montage, date_demontage, chef_projet_id, charge_affaires_id, typologie")
+      .select("id, numero, nom, client, client_id, lieu, statut, date_debut, date_fin_prevue, date_montage, date_demontage, chef_projet_id, dessinateur_id, charge_affaires_id, typologie")
       .order("date_montage", { ascending: true, nullsFirst: false });
     if (error) {
       toast.error("Chargement impossible", { description: error.message });
@@ -180,12 +188,10 @@ function AffairesPage() {
   };
 
   const fetchPeople = async () => {
-    const { data } = await supabase.from("employes").select("id, prenom, nom");
+    const { data } = await supabase.from("profiles").select("id, full_name, email");
     const map = new Map<string, string>();
     for (const e of data ?? []) {
-      const prenom = (e.prenom ?? "").trim();
-      const nom = (e.nom ?? "").trim();
-      const label = [prenom, nom ? `${nom.charAt(0).toUpperCase()}.` : ""].filter(Boolean).join(" ");
+      const label = e.full_name || e.email;
       map.set(e.id, label || "—");
     }
     setPeople(map);
@@ -279,6 +285,8 @@ function AffairesPage() {
   const openCreate = () => { setForm(emptyForm); setOpen(true); };
   const openEdit = (r: AffaireRow) => {
     setForm({
+      chef_projet_id: r.chef_projet_id,
+      dessinateur_id: r.dessinateur_id,
       id: r.id,
       numero: r.numero,
       nom: r.nom,
@@ -300,6 +308,8 @@ function AffairesPage() {
     }
     setSaving(true);
     const payload = {
+      chef_projet_id: form.chef_projet_id,
+      dessinateur_id: canAssignDessinateur(form.numero) ? form.dessinateur_id : null,
       numero: form.numero.trim(),
       nom: form.nom.trim(),
       client: form.client.trim() || null,
@@ -464,6 +474,7 @@ function AffairesPage() {
                 <SortableHead label="Montage" col="montage" tri={tri} sens={sens} onSort={toggleTri} className="w-[120px]" />
                 <SortableHead label="Démontage" col="demontage" tri={tri} sens={sens} onSort={toggleTri} className="w-[110px]" />
                 <TableHead className="w-[120px]">Chef de projet</TableHead>
+                <TableHead className="w-[160px]">Dessinateur</TableHead>
                 <TableHead className="hidden w-[130px] xl:table-cell">Chargé d'affaires</TableHead>
                 <SortableHead label="Statut" col="statut" tri={tri} sens={sens} onSort={toggleTri} className="w-[110px]" />
                 <TableHead className="w-[160px] text-right"></TableHead>
@@ -498,8 +509,10 @@ function AffairesPage() {
                       : <span className="text-xs text-muted-foreground/50">—</span>}
                   </TableCell>
                   <TableCell className="text-xs">
-                    {r.chef_projet_id ? (people.get(r.chef_projet_id) ?? "—")
-                      : <span className="text-muted-foreground/50">—</span>}
+                    <AffaireResponsablePicker affaireId={r.id} field="chef_projet_id" value={r.chef_projet_id} onSaved={(id) => setRows((current) => current.map((row) => row.id === r.id ? { ...row, chef_projet_id: id } : row))} />
+                  </TableCell>
+                  <TableCell className="text-xs">
+                    {canAssignDessinateur(r.numero) ? <AffaireResponsablePicker affaireId={r.id} field="dessinateur_id" value={r.dessinateur_id} onSaved={(id) => setRows((current) => current.map((row) => row.id === r.id ? { ...row, dessinateur_id: id } : row))} /> : "—"}
                   </TableCell>
                   <TableCell className="hidden text-xs xl:table-cell">
                     {r.charge_affaires_id ? (people.get(r.charge_affaires_id) ?? "—")
@@ -617,6 +630,14 @@ function AffairesPage() {
               <Label>Notes</Label>
               <Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={2} className="rounded-xl" />
             </div>
+            <div className="space-y-1.5">
+              <Label>Chef de projet</Label>
+              <ResponsableCombobox label="Chef de projet" value={form.chef_projet_id} onChange={(id) => setForm({ ...form, chef_projet_id: id })} disabled={saving} />
+            </div>
+            {canAssignDessinateur(form.numero) && <div className="space-y-1.5">
+              <Label>Dessinateur</Label>
+              <ResponsableCombobox label="Dessinateur" value={form.dessinateur_id} onChange={(id) => setForm({ ...form, dessinateur_id: id })} disabled={saving} />
+            </div>}
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setOpen(false)} className="rounded-xl">Annuler</Button>

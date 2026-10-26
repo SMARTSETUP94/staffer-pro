@@ -814,6 +814,7 @@ export type Database = {
           date_montage: string | null
           date_opportunite: string | null
           date_pat: string | null
+          dessinateur_id: string | null
           heures_prevues_demontage: number
           heures_prevues_montage: number
           id: string
@@ -870,6 +871,7 @@ export type Database = {
           date_montage?: string | null
           date_opportunite?: string | null
           date_pat?: string | null
+          dessinateur_id?: string | null
           heures_prevues_demontage?: number
           heures_prevues_montage?: number
           id?: string
@@ -926,6 +928,7 @@ export type Database = {
           date_montage?: string | null
           date_opportunite?: string | null
           date_pat?: string | null
+          dessinateur_id?: string | null
           heures_prevues_demontage?: number
           heures_prevues_montage?: number
           id?: string
@@ -984,6 +987,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affaires_dessinateur_id_fkey"
+            columns: ["dessinateur_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
@@ -6697,6 +6707,15 @@ export type Database = {
             }[]
           }
         | { Args: { _affaire_id: string; _new_code: string }; Returns: string }
+        | {
+            Args: {
+              _affaire_id: string
+              _chef_projet_id: string
+              _dessinateur_id: string
+              _new_code: string
+            }
+            Returns: string
+          }
       signer_contrat_employe: {
         Args: {
           p_client_ip?: string

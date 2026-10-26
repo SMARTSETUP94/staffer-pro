@@ -169,6 +169,13 @@
       "when": 1792753520211,
       "tag": "0023_emails_entrants_stable_message_id",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1793000688521,
+      "tag": "0024_affaire_dessinateur_signature_affectations",
+      "breakpoints": true
     }
   ]
 }
