@@ -237,6 +237,19 @@ function OpportunitesPage() {
         })) as OppRowFull[];
         setOpps(rows);
         setLoading(false);
+        // Lot 1 — date d'entrée dans le statut + rôles projet saisis (badges non bloquants).
+        const ids = rows.map((r) => r.id);
+        if (ids.length === 0) return;
+        void Promise.all([
+          supabase.from("affaires").select("id,statut_opportunite_depuis").in("id", ids),
+          supabase.from("affaire_roles").select("affaire_id,role").in("affaire_id", ids),
+        ]).then(([aff, roles]) => {
+          if (cancelled) return;
+          const depuis = new Map((aff.data ?? []).map((a) => [a.id, a.statut_opportunite_depuis]));
+          const rolesBy = new Map<string, string[]>();
+          (roles.data ?? []).forEach((r) => rolesBy.set(r.affaire_id, [...(rolesBy.get(r.affaire_id) ?? []), r.role]));
+          setOpps((cur) => cur.map((o) => ({ ...o, statut_opportunite_depuis: depuis.get(o.id) ?? null, roles_affectes: rolesBy.get(o.id) ?? [] })));
+        });
       });
     return () => {
       cancelled = true;
