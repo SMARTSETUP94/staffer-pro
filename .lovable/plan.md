@@ -7,6 +7,11 @@ Principe : rien de bloquant, aucune suppression physique, migrations explicites 
 - Colonnes historiques `charge_affaires_id`, `chef_projet_id`, `dessinateur_id` → `profiles`.
 - `app_modifier_affaire` contient la restriction « Dessinateur réservé aux 6XXX » ; `sign_opportunite(uuid,text,uuid,uuid)` aussi, et écrase chef de projet / dessinateur même quand ils sont vides.
 - Kevin Lebon : 68f44ab5 (compte 26d1c2ac) et d65ba705 (sans compte), tous deux actifs.
+- Archivage des affaires : colonne `archived_at`.
+- Compte smart@setup.paris (53 affaires en chargé d'affaires, connecté aujourd'hui) relié à la fiche « SMART RESTR » (87f35983). La fiche Gabin C (7b9de5c4) est reliée au compte gabinchaussegros@gmail.com (0 affaire, dernière connexion le 3 août). Aucun compte n'est relié à plusieurs fiches.
+- `sign_opportunite(uuid,text)` renvoie le même identifiant d'affaire.
+
+**Point d'attention** : une fiche employé ne porte qu'un seul compte. Relier smart@setup.paris à Gabin C détache le compte gmail, qui garde son accès et son rôle mais n'a plus de fiche employé. À signaler avant application si ce compte doit rester relié.
 
 ## Comptage fusion Kevin (avant application)
 17 clés étrangères réelles vers `employes` recensées (pg_constraint) + scan de toutes les colonnes uuid des tables publiques :
@@ -16,6 +21,8 @@ Principe : rien de bloquant, aucune suppression physique, migrations explicites 
 | employe_metiers.employe_id | 1 | 0 |
 | absences, affaire_equipe, assignations, heures_saisies, mission_events, staffing_plan_assignment, fabrication_objet_equipe, employes_autorisations_vehicules, vehicule_chauffeurs_autorises, swap_requests (from/to), trajets.chauffeur_id, affaires.chef_chantier_id, contrats_intermittents.employee_id, heures_validations.valide_par_chef_id, heures_saisies_historique.pour_compte_de | 0 | 0 |
 | toutes autres colonnes uuid (sans FK) | 0 | 0 |
+
+Toutes les requêtes du lot filtrent l'archivage par `archived_at IS NULL`.
 
 Après : 0 référence vers d65ba705, fiche désactivée. La migration recompte et s'arrête si le résultat diffère.
 
@@ -150,6 +157,38 @@ CREATE TRIGGER trg_affaires_stamp_statut_opp BEFORE INSERT OR UPDATE OF statut_o
 ```
 
 ## SQL — 0038_affaire_roles_sync
+Commence par corriger la liaison smart@setup.paris et par un contrôle bloquant, AVANT les triggers et la reprise.
+```sql
+-- 0) Liaison du compte smart@setup.paris : Gabin C au lieu de SMART RESTR
+DO $$
+DECLARE v_smart uuid;
+BEGIN
+  SELECT id INTO v_smart FROM public.profiles WHERE lower(email) = 'smart@setup.paris';
+  IF v_smart IS NULL THEN RAISE EXCEPTION 'Compte smart@setup.paris introuvable'; END IF;
+  UPDATE public.employes SET profile_id = NULL
+   WHERE id = '87f35983-c9e2-45eb-aa5a-678aed9e59f6' AND profile_id = v_smart;   -- SMART RESTR
+  UPDATE public.employes SET profile_id = v_smart
+   WHERE id = '7b9de5c4-3f3d-4f3d-8608-a533dd0c543d';                            -- Gabin C
+END $$;
+
+-- 0bis) Contrôle : aucun compte relié à plusieurs fiches, aucun compte relié à une fiche non nominative
+DO $$
+DECLARE v_multi text; v_nonnom text;
+BEGIN
+  SELECT string_agg(profile_id::text || ' (' || n || ' fiches)', ', ') INTO v_multi
+    FROM (SELECT profile_id, count(*) n FROM public.employes
+          WHERE profile_id IS NOT NULL GROUP BY profile_id HAVING count(*) > 1) s;
+  SELECT string_agg(e.id::text || ' ' || coalesce(e.prenom,'') || ' ' || e.nom, ', ') INTO v_nonnom
+    FROM public.employes e
+   WHERE e.profile_id IS NOT NULL
+     AND (coalesce(trim(e.prenom),'') = ''
+          OR e.nom ~* '(smart|restr|setup|log@|devis@|admin|test)');
+  IF v_multi IS NOT NULL OR v_nonnom IS NOT NULL THEN
+    RAISE EXCEPTION 'Liaison compte/fiche ambiguë. Multiples : % ; non nominatives : %',
+      coalesce(v_multi,'aucune'), coalesce(v_nonnom,'aucune');
+  END IF;
+END $$;
+```
 Correspondance : chargé d'affaires ↔ `charge_affaires_id`, responsable projet ↔ `chef_projet_id`, concepteur ↔ `dessinateur_id`. Anti-boucle par `pg_trigger_depth()`.
 ```sql
 -- affaire_roles → colonnes historiques (NULL si l'employé n'a pas de compte ou si le rôle est retiré)
@@ -192,6 +231,7 @@ BEGIN
   LOOP
     CONTINUE WHEN TG_OP = 'UPDATE' AND pair.new_p IS NOT DISTINCT FROM pair.old_p;
     IF pair.new_p IS NULL THEN
+      -- Choix validé : vider une colonne historique retire le rôle correspondant de l'équipe projet.
       DELETE FROM public.affaire_roles WHERE affaire_id = NEW.id AND role = pair.role;
     ELSE
       SELECT id INTO v_emp FROM public.employes WHERE profile_id = pair.new_p
@@ -232,7 +272,6 @@ Note : la reprise passe par le trigger de dates ; les 16 responsables projet rep
 DO $$
 DECLARE v_old uuid := 'd65ba705-bdd3-4aa3-94bf-9be9d86c3e0d';
         v_new uuid := '68f44ab5-c3a0-4514-9c7b-5ae0fd54290f';
-        v_left int;
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM public.employes WHERE id = v_old) THEN RETURN; END IF;
   IF (SELECT profile_id FROM public.employes WHERE id = v_old) IS NOT NULL THEN
@@ -265,9 +304,24 @@ BEGIN
   UPDATE public.employes SET actif = false,
          notes = concat_ws(E'\n', notes, 'Fiche fusionnée dans 68f44ab5 (Kevin Lebon) le ' || now()::date)
    WHERE id = v_old;
-  -- Contrôle : il ne doit plus rester que les éventuels doublons employe_metiers
-  SELECT count(*) INTO v_left FROM public.assignations WHERE employe_id = v_old;
-  IF v_left > 0 THEN RAISE EXCEPTION 'Fusion incomplète (assignations)'; END IF;
+END $$;
+
+-- Contrôle final : aucune clé étrangère vers employes(id) ne doit encore pointer vers d65ba705.
+-- Liste dérivée de pg_constraint (lecture seule) ; échoue si une référence subsiste, doublon compris.
+DO $$
+DECLARE fk record; v_n bigint; v_reste text := '';
+BEGIN
+  FOR fk IN
+    SELECT c.conrelid::regclass AS tbl, a.attname AS col
+      FROM pg_constraint c
+      JOIN pg_attribute a ON a.attrelid = c.conrelid AND a.attnum = ANY (c.conkey)
+     WHERE c.contype = 'f' AND c.confrelid = 'public.employes'::regclass
+  LOOP
+    EXECUTE format('SELECT count(*) FROM %s WHERE %I = $1', fk.tbl, fk.col)
+      INTO v_n USING 'd65ba705-bdd3-4aa3-94bf-9be9d86c3e0d'::uuid;
+    IF v_n > 0 THEN v_reste := v_reste || format('%s.%s=%s ', fk.tbl, fk.col, v_n); END IF;
+  END LOOP;
+  IF v_reste <> '' THEN RAISE EXCEPTION 'Fusion Kevin incomplète : %', v_reste; END IF;
 END $$;
 
 -- 2) Seed des référents (ids fournis ; échoue si un id n'existe pas, grâce à la FK)
@@ -339,27 +393,36 @@ Note : le seed est une donnée initiale exigée par le lot ; il est placé dans 
 
 ## SQL — 0040_pilotage
 ```sql
--- Charge par personne et par rôle : réelle et potentielle séparées
-CREATE OR REPLACE VIEW public.v_charge_role_projet WITH (security_invoker = true) AS
-SELECT ar.employe_id, ar.role,
-  count(*) FILTER (WHERE
-       (a.phase = 'signe' AND a.statut NOT IN ('termine','annule'))
-    OR (a.phase = 'opportunite' AND a.statut_opportunite IN ('presque_gagne','gagne'))
-  )::int AS nb_en_cours,
-  count(*) FILTER (WHERE
-       a.phase = 'opportunite' AND a.statut_opportunite IN ('a_faire','envoye')
-  )::int AS nb_potentielles
-FROM public.affaire_roles ar
-JOIN public.affaires a ON a.id = ar.affaire_id
-WHERE COALESCE(a.archive, false) = false
-GROUP BY ar.employe_id, ar.role;
-GRANT SELECT ON public.v_charge_role_projet TO authenticated;
-GRANT SELECT ON public.v_charge_role_projet TO service_role;
+-- Charge par personne et par rôle, calculée sur TOUTES les affaires (indépendante de la portée RLS
+-- de l'appelant), sans exposer les affaires : uniquement employe_id, role et deux compteurs.
+CREATE OR REPLACE FUNCTION public.charge_roles_projet()
+RETURNS TABLE(employe_id uuid, role public.projet_role, nb_en_cours int, nb_potentielles int)
+LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = public AS $$
+BEGIN
+  IF auth.uid() IS NULL
+     OR NOT (public.user_has_cap('planning.pilotage') OR public.user_has_cap('affaires.edit')) THEN
+    RAISE EXCEPTION 'Accès réservé au planning de pilotage' USING ERRCODE = 'insufficient_privilege';
+  END IF;
+  RETURN QUERY
+  SELECT ar.employe_id, ar.role,
+    (count(*) FILTER (WHERE
+         (a.phase = 'signe' AND a.statut NOT IN ('termine','annule'))
+      OR (a.phase = 'opportunite' AND a.statut_opportunite IN ('presque_gagne','gagne'))))::int,
+    (count(*) FILTER (WHERE
+         a.phase = 'opportunite' AND a.statut_opportunite IN ('a_faire','envoye')))::int
+  FROM public.affaire_roles ar
+  JOIN public.affaires a ON a.id = ar.affaire_id
+  WHERE a.archived_at IS NULL
+  GROUP BY ar.employe_id, ar.role;
+END $$;
+REVOKE EXECUTE ON FUNCTION public.charge_roles_projet() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.charge_roles_projet() TO authenticated;
 
 -- Écriture partagée UI + Claude (droits de l'appelant, RLS appliquée)
 CREATE OR REPLACE FUNCTION public.app_affecter_role_projet(
   _affaire_id uuid, _role public.projet_role, _employe_id uuid,
-  _date_debut date DEFAULT NULL, _date_fin date DEFAULT NULL, _note text DEFAULT NULL)
+  _date_debut date DEFAULT NULL, _date_fin date DEFAULT NULL, _note text DEFAULT NULL,
+  _remplacer_dates boolean DEFAULT false)  -- true : les dates fournies remplacent, NULL compris (effacement)
 RETURNS jsonb LANGUAGE plpgsql SET search_path = public AS $$
 DECLARE v_id uuid;
 BEGIN
@@ -376,14 +439,16 @@ BEGIN
   VALUES (_affaire_id, _role, _employe_id, _date_debut, _date_fin, _note)
   ON CONFLICT (affaire_id, role) DO UPDATE SET
     employe_id = EXCLUDED.employe_id,
-    date_debut = COALESCE(EXCLUDED.date_debut, affaire_roles.date_debut),
-    date_fin   = COALESCE(EXCLUDED.date_fin, affaire_roles.date_fin),
+    date_debut = CASE WHEN _remplacer_dates THEN EXCLUDED.date_debut
+                      ELSE COALESCE(EXCLUDED.date_debut, affaire_roles.date_debut) END,
+    date_fin   = CASE WHEN _remplacer_dates THEN EXCLUDED.date_fin
+                      ELSE COALESCE(EXCLUDED.date_fin, affaire_roles.date_fin) END,
     note       = COALESCE(EXCLUDED.note, affaire_roles.note)
   RETURNING id INTO v_id;
   RETURN jsonb_build_object('id', v_id, 'affaire_id', _affaire_id, 'role', _role, 'employe_id', _employe_id);
 END $$;
-REVOKE EXECUTE ON FUNCTION public.app_affecter_role_projet(uuid, public.projet_role, uuid, date, date, text) FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.app_affecter_role_projet(uuid, public.projet_role, uuid, date, date, text) TO authenticated, mcp_business_rls;
+REVOKE EXECUTE ON FUNCTION public.app_affecter_role_projet(uuid, public.projet_role, uuid, date, date, text, boolean) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.app_affecter_role_projet(uuid, public.projet_role, uuid, date, date, text, boolean) TO authenticated, mcp_business_rls;
 
 -- app_modifier_affaire : définition actuelle relue ; seuls changements = suppression de la
 -- restriction 6XXX et ajout de 'presque_gagne' et 'gagne' aux statuts autorisés
@@ -436,12 +501,12 @@ SELECT r::public.app_role, 'planning.pilotage', true
 FROM unnest(ARRAY['admin','chef_chantier','bureau_etude','commercial']) r
 ON CONFLICT DO NOTHING;
 ```
-Avant d'écrire cette migration en définitive, je relirai `sign_opportunite(uuid,text)` pour confirmer qu'elle garde le même identifiant d'affaire (les rôles sont attachés par identifiant), et le nom exact de la colonne d'archivage.
+Vérifié : `sign_opportunite(uuid,text)` renvoie le même identifiant d'affaire (rôles conservés) ; l'archivage est `archived_at`.
 
 ## Interface (après validation du SQL)
 - `labels.ts` : libellés des 7 rôles, des niveaux, « Presque gagné » et son info-bulle.
 - Paramètres > Référents par rôle (admin) : matrice employés × rôles ; les sélecteurs n'utilisent plus `profiles.est_*`.
-- Bloc « Équipe projet » partagé (fiche affaire + fiche opportunité) : sélecteur cherchable par rôle (Principaux / Secondaires / Autres actifs), « Nadège – 4 en cours (+3 potentielles) », dates pour concepteur et responsable projet, bouton « Planifier » ; rôles filtrés par typologie.
+- Bloc « Équipe projet » partagé (fiche affaire + fiche opportunité) : sélecteur cherchable par rôle (Principaux / Secondaires / Autres actifs), « Nadège – 4 en cours (+3 potentielles) » (lu via `charge_roles_projet()`, mêmes chiffres pour tous), dates pour concepteur et responsable projet, bouton « Planifier » ; rôles filtrés par typologie.
 - Badges « rôle à affecter » (fiche + Kanban), colonne Kanban « Presque gagné » avec alerte > 15 jours, filtres / compteurs / exports.
 - Planning > « Planning BE / projets » comme décrit précédemment (plein / atténué / hachuré hors totaux, 1/3/6 mois, chevauchements signalés).
 
@@ -449,5 +514,5 @@ Avant d'écrire cette migration en définitive, je relirai `sign_opportunite(uui
 `equipe_projet` dans `fiche_affaire` et `rechercher_affaires`, écriture `affecter_role_projet` (aperçu → confirmation, audit, clé externe) via `app_affecter_role_projet`, lecture `planning_pilotage`, statut `presque_gagne` en lecture et écriture.
 
 ## Tests
-- SQL (transaction annulée) : reprise 88/16/1, synchronisation dans les deux sens sans boucle, employé sans compte → colonne vide, dates par défaut du responsable projet, signature conserve les rôles, refus OAuth direct, fusion Kevin (0 référence restante).
+- SQL (transaction annulée) : liaison smart@setup.paris → Gabin C et contrôle d'ambiguïté, reprise 88/16/1 (dont 53 sur Gabin C), synchronisation dans les deux sens sans boucle, employé sans compte → colonne vide, dates par défaut du responsable projet, effacement des dates via `_remplacer_dates`, signature conserve les rôles, refus OAuth direct, compteur de charge identique pour un commercial et un admin, fusion Kevin (0 référence restante sur toutes les FK).
 - Vitest : rôles manquants par statut/typologie, alerte 15 jours, charge réelle vs potentielle, période proposée par « Planifier », chevauchements, ordre des sélecteurs, schémas MCP.
