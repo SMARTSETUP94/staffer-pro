@@ -253,6 +253,13 @@
       "when": 1793043189486,
       "tag": "0035_mcp_v2_preview_affaire_rights_check",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1793136040821,
+      "tag": "0036_enum_presque_gagne",
+      "breakpoints": true
     }
   ]
 }

@@ -7336,7 +7336,13 @@ export type Database = {
         | "devis_envoye"
         | "negociation"
         | "signature"
-      opportunite_statut: "a_faire" | "envoye" | "gagne" | "perdu" | "termine"
+      opportunite_statut:
+        | "a_faire"
+        | "envoye"
+        | "presque_gagne"
+        | "gagne"
+        | "perdu"
+        | "termine"
       opportunite_taille:
         | "tres_petit"
         | "petit"
@@ -7661,7 +7667,14 @@ export const Constants = {
         "negociation",
         "signature",
       ],
-      opportunite_statut: ["a_faire", "envoye", "gagne", "perdu", "termine"],
+      opportunite_statut: [
+        "a_faire",
+        "envoye",
+        "presque_gagne",
+        "gagne",
+        "perdu",
+        "termine",
+      ],
       opportunite_taille: ["tres_petit", "petit", "moyen", "gros", "tres_gros"],
       permis_type: ["B", "C", "CE"],
       signataire_role: ["employe", "employeur"],

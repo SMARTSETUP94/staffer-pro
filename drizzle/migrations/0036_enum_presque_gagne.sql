@@ -1,0 +1,1 @@
+ALTER TYPE public.opportunite_statut ADD VALUE IF NOT EXISTS 'presque_gagne' BEFORE 'gagne';
