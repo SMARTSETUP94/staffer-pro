@@ -28,6 +28,7 @@ import type { ChargeAffaires } from "@/hooks/use-charges-affaires";
 import { TypologieBadge } from "@/components/typologie/TypologieBadge";
 import { getAffaireTypologie, type AffaireTypologie } from "@/lib/affaire-typologie";
 import { checkCanDeleteOpportunite } from "@/lib/opportunite-delete";
+import { RolesManquantsBadges, PresqueGagneAlerte } from "@/components/affaire/RolesManquantsBadges";
 import {
   actionUrgency,
   URGENCY_CLASS,
@@ -45,6 +46,8 @@ export interface OpportuniteCardData {
   notes: string | null;
   statut_opportunite: "a_faire" | "envoye" | "presque_gagne" | "gagne" | "perdu" | "termine";
   statut_opportunite_depuis?: string | null;
+  /** Lot 1 — rôles projet déjà affectés (pour les badges « rôle à affecter »). */
+  roles_affectes?: string[];
   /** v0.29.2 — typologie cible déclarée (override le getAffaireTypologie 9XXX par défaut). */
   typologie_future?: AffaireTypologie | null;
   /** Bloc 10.4 — enrichissement listing. */
@@ -210,6 +213,15 @@ export function OpportuniteCard({
               </span>
             )}
           </div>
+
+          <PresqueGagneAlerte statut={opp.statut_opportunite} depuis={opp.statut_opportunite_depuis} />
+          {opp.roles_affectes && (
+            <RolesManquantsBadges
+              etat={{ phase: "opportunite", statut_opportunite: opp.statut_opportunite }}
+              typologie={opp.typologie_future ?? null}
+              affectes={opp.roles_affectes}
+            />
+          )}
 
           {opp.next_action_due_le && (() => {
             const urg = actionUrgency(opp.next_action_due_le);

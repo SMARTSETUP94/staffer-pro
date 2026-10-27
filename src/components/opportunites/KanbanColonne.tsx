@@ -2,6 +2,7 @@ import { useDroppable } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { cn } from "@/lib/utils";
 import {
+  PRESQUE_GAGNE_DEFINITION,
   STATUT_LABEL,
   STATUT_TONE,
   type OpportuniteStatut,
@@ -38,7 +39,10 @@ export function KanbanColonne({ statut, items, chargesById, onSign, onDelete, dr
       <div className="flex items-center justify-between border-b border-border/50 px-3 py-2">
         <div className="flex items-center gap-2">
           <span className={cn("h-2 w-2 rounded-full", tone.dot)} />
-          <span className="text-sm font-semibold text-foreground">
+          <span
+            className="text-sm font-semibold text-foreground"
+            title={statut === "presque_gagne" ? PRESQUE_GAGNE_DEFINITION : undefined}
+          >
             {STATUT_LABEL[statut]}
           </span>
         </div>

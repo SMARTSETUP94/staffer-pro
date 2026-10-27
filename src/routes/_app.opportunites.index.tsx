@@ -664,7 +664,7 @@ function OpportunitesPage() {
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
         >
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-5">
             {KANBAN_STATUT_ORDER.map((s) => (
               <KanbanColonne
                 key={s}
