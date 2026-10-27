@@ -258,7 +258,7 @@ function applyLogistiqueOppsMode(sections: NavSection[]): NavSection[] {
  * toujours ouvrir /admin/feature-flags en direct pour désactiver le mode.
  */
 // "/admin/utilisateurs" reste filtré par la cap section.admin (admins seulement).
-const SA_MODE_URLS = new Set(["/opportunites", "/demandes-clients", "/affaires", "/liste-chantiers", "/documents-affaires", "/clients", "/logistique", "/demandes-logistique", "/jalonnements", "/admin/utilisateurs", "/admin/connecteur-claude", "/mes-notes-de-frais", "/validation-notes-de-frais"]);
+const SA_MODE_URLS = new Set(["/opportunites", "/demandes-clients", "/affaires", "/liste-chantiers", "/documents-affaires", "/clients", "/logistique", "/demandes-logistique", "/jalonnements", "/admin/utilisateurs", "/admin/connecteur-claude", "/mes-notes-de-frais", "/validation-notes-de-frais", "/planning-pilotage", "/parametres/referents-roles"]);
 
 function applySuiviAffairesMode(sections: NavSection[]): NavSection[] {
   return sections
