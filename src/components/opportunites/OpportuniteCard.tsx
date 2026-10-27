@@ -43,7 +43,8 @@ export interface OpportuniteCardData {
   taille: OpportuniteTaille | null;
   date_opportunite: string | null;
   notes: string | null;
-  statut_opportunite: "a_faire" | "envoye" | "gagne" | "perdu" | "termine";
+  statut_opportunite: "a_faire" | "envoye" | "presque_gagne" | "gagne" | "perdu" | "termine";
+  statut_opportunite_depuis?: string | null;
   /** v0.29.2 — typologie cible déclarée (override le getAffaireTypologie 9XXX par défaut). */
   typologie_future?: AffaireTypologie | null;
   /** Bloc 10.4 — enrichissement listing. */

@@ -40,7 +40,7 @@ const TAILLE_VALUES: OpportuniteTaille[] = [
   "tres_gros",
 ];
 
-const STATUT_VALUES: OpportuniteStatut[] = ["a_faire", "envoye", "gagne", "perdu", "termine"];
+const STATUT_VALUES: OpportuniteStatut[] = ["a_faire", "envoye", "presque_gagne", "gagne", "perdu", "termine"];
 
 import { normalizeName } from "./string-normalize";
 
@@ -101,6 +101,7 @@ function parseStatut(v: unknown): OpportuniteStatut {
   if (STATUT_VALUES.includes(k as OpportuniteStatut)) return k as OpportuniteStatut;
   if (k === "afaire" || k === "todo" || k === "nouveau") return "a_faire";
   if (k === "envoye" || k === "envoyee" || k === "sent") return "envoye";
+  if (k === "presque_gagne" || k === "presque gagne" || k === "presquegagne") return "presque_gagne";
   if (k === "gagne" || k === "gagnee" || k === "won" || k === "signe") return "gagne";
   if (k === "perdu" || k === "perdue" || k === "lost") return "perdu";
   if (k === "termine" || k === "terminee" || k === "done") return "termine";
