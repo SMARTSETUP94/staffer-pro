@@ -288,6 +288,13 @@
       "when": 1793136188886,
       "tag": "0040_pilotage",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1793136279030,
+      "tag": "0041_mcp_affecter_role_projet",
+      "breakpoints": true
     }
   ]
 }
