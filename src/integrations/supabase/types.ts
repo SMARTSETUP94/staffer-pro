@@ -6637,6 +6637,18 @@ export type Database = {
         Args: { p_contrat_id: string; p_motif?: string }
         Returns: undefined
       }
+      app_affecter_role_projet: {
+        Args: {
+          _affaire_id: string
+          _date_debut?: string
+          _date_fin?: string
+          _employe_id: string
+          _note?: string
+          _remplacer_dates?: boolean
+          _role: Database["public"]["Enums"]["projet_role"]
+        }
+        Returns: Json
+      }
       app_ajouter_action_opportunite: {
         Args: {
           _affaire_id: string
@@ -6686,6 +6698,15 @@ export type Database = {
           metier_id: number
           metier_libelle: string
           metier_ordre: number
+        }[]
+      }
+      charge_roles_projet: {
+        Args: never
+        Returns: {
+          employe_id: string
+          nb_en_cours: number
+          nb_potentielles: number
+          role: Database["public"]["Enums"]["projet_role"]
         }[]
       }
       cleanup_fabrication_orphelins: {
