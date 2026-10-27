@@ -63,6 +63,7 @@ function AffaireDetailLayout() {
   const path = routerState.location.pathname;
   const canManageAffaires = useCapability("section.affaires");
   const canAdminReopen = useCapability("section.admin");
+  const canEditRoles = useCapability("affaires.edit");
   const [affaire, setAffaire] = useState<AffaireDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [confirmAction, setConfirmAction] = useState<"close" | "reopen" | null>(null);
