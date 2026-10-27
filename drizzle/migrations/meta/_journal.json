@@ -267,6 +267,13 @@
       "when": 1793136087360,
       "tag": "0037_roles_projet",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1793136125157,
+      "tag": "0038_affaire_roles_sync",
+      "breakpoints": true
     }
   ]
 }
