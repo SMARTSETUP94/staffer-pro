@@ -13,14 +13,14 @@
   "mcp": {
     "server": {
       "name": "project-shift",
-      "version": "2.0.0",
+      "version": "2.1.0",
       "title": "Project Shift"
     },
     "tools": [
       {
         "name": "rechercher_affaires",
         "title": "Rechercher les affaires",
-        "description": "Rechercher les chantiers autorisés par numéro, nom, typologie (« opportunite » pour les 9XXX), statut et dates de montage. Les opportunités indiquent aussi typologie_future.",
+        "description": "Rechercher les chantiers autorisés par numéro, nom, typologie (« opportunite » pour les 9XXX), statut et dates de montage. Les opportunités indiquent aussi typologie_future. equipe_projet donne les 7 rôles (nom + période).",
         "annotations": {
           "readOnlyHint": true,
           "destructiveHint": false,
@@ -75,7 +75,7 @@
       {
         "name": "fiche_affaire",
         "title": "Consulter une affaire",
-        "description": "Identité, dates, équipe, objets et devis autorisés ; aucun salaire individuel.",
+        "description": "Identité, dates, équipe projet (7 rôles avec nom et période), équipe terrain, objets et devis autorisés ; aucun salaire individuel.",
         "annotations": {
           "readOnlyHint": true,
           "destructiveHint": false,
@@ -113,7 +113,7 @@
       {
         "name": "pipeline_opportunites",
         "title": "Consulter le pipeline",
-        "description": "Opportunités actives avec jalon et prochaine action selon vos droits commerciaux. « filtre » recherche dans le code, l'intitulé et le client.",
+        "description": "Opportunités actives avec jalon et prochaine action selon vos droits commerciaux. « filtre » recherche dans le code, l'intitulé et le client. Statuts : a_faire, envoye, presque_gagne (accord de principe, en attente du bon de commande), gagne, perdu.",
         "annotations": {
           "readOnlyHint": true,
           "destructiveHint": false,
@@ -565,6 +565,58 @@
         "outputSchema": null
       },
       {
+        "name": "planning_pilotage",
+        "title": "Lire le planning BE / projets",
+        "description": "Périodes des concepteurs et responsables projet par affaire (6 mois maximum). charge=potentielle pour les opportunités à faire / envoyées (jamais comptées) ; chevauchement=true si la personne a plusieurs affaires sur la même période. Lecture seule, pagination limit/cursor.",
+        "annotations": {
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "du": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+            },
+            "au": {
+              "$ref": "#/properties/du"
+            },
+            "role": {
+              "type": "string",
+              "enum": [
+                "concepteur",
+                "responsable_projet"
+              ]
+            },
+            "employe": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 25
+            },
+            "cursor": {
+              "type": "string",
+              "pattern": "^\\d{1,8}$",
+              "default": "0"
+            }
+          },
+          "required": [
+            "du",
+            "au"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
         "name": "creer_opportunite",
         "title": "Créer une opportunité",
         "description": "Créer une opportunité avec les droits du compte. Premier appel : aperçu sans écriture métier. Après accord humain explicite, renvoyer les mêmes arguments avec confirmation_id sous 10 minutes. Aucune suppression ni signature.",
@@ -853,9 +905,11 @@
                 "statut": {
                   "type": "string",
                   "enum": [
+                    "presque_gagne",
                     "perdu",
                     "en_attente"
-                  ]
+                  ],
+                  "description": "presque_gagne = accord de principe du client, budget validé oralement, en attente du bon de commande ou de la signature."
                 },
                 "motif": {
                   "type": "string",
@@ -1438,6 +1492,81 @@
           "required": [
             "etape_id",
             "motif"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null,
+        "conditional": true
+      },
+      {
+        "name": "affecter_role_projet",
+        "title": "Affecter un rôle de l'équipe projet",
+        "description": "Affecter (ou retirer avec employe_id=null) une personne à l'un des 7 rôles de l'équipe projet d'une affaire, avec période facultative. Premier appel : aperçu sans écriture. Après accord humain explicite, renvoyer les mêmes arguments avec confirmation_id sous 10 minutes.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "affaire_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "role": {
+              "type": "string",
+              "enum": [
+                "charge_affaires",
+                "concepteur",
+                "responsable_projet",
+                "chef_constructeur",
+                "chef_finition",
+                "chef_montage",
+                "chef_demontage"
+              ]
+            },
+            "employe_id": {
+              "anyOf": [
+                {
+                  "$ref": "#/properties/affaire_id"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Employé (fiche employes). null retire le rôle."
+            },
+            "date_debut": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "date_fin": {
+              "$ref": "#/properties/date_debut"
+            },
+            "cle_externe": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 255
+            },
+            "confirmation_id": {
+              "$ref": "#/properties/affaire_id",
+              "description": "Omettre pour obtenir l’aperçu ; renvoyer les mêmes arguments avec cet identifiant après accord humain, sous 10 minutes."
+            }
+          },
+          "required": [
+            "affaire_id",
+            "role",
+            "employe_id"
           ],
           "additionalProperties": false,
           "$schema": "http://json-schema.org/draft-07/schema#"
