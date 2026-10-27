@@ -1,4 +1,5 @@
-import { createFileRoute, useNavigate, stripSearchParams, redirect } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, stripSearchParams, redirect, Link } from "@tanstack/react-router";
+import { useCapability } from "@/hooks/use-capability";
 import { requireCapability } from "@/lib/capability-guard";
 import { zodValidator, fallback } from "@tanstack/zod-adapter";
 import { z } from "zod";
@@ -75,6 +76,7 @@ export const Route = createFileRoute("/_app/planning")({
 });
 
 function PlanningPage() {
+  const canPilotage = useCapability("planning.pilotage");
   const [weekStart, setWeekStart] = useState<Date>(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
   const weekEnd = addDays(weekStart, 6);
   const [tab, setTab] = useState<"cdi" | "interim" | "parchantier" | "parobjet" | "parpole">("cdi");
@@ -485,6 +487,11 @@ function PlanningPage() {
                     <span className="hidden sm:inline">Par pôle</span>
                     <span className="sm:hidden">Pôle</span>
                   </TabsTrigger>
+                  {canPilotage && (
+                    <Link to="/planning-pilotage" className="inline-flex items-center rounded-sm px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground">
+                      Planning BE / projets
+                    </Link>
+                  )}
                 </TabsList>
               </div>
 

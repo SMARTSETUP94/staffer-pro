@@ -148,7 +148,7 @@ function PlanningPilotagePage() {
                               className={cn("absolute flex h-[22px] items-center gap-1 overflow-hidden rounded px-1.5 text-left text-[10px] font-medium",
                                 r === "plein" && "bg-primary text-primary-foreground",
                                 r === "attenue" && "bg-primary/30 text-foreground",
-                                r === "potentiel" && "border border-dashed border-primary/50 bg-[repeating-linear-gradient(45deg,transparent,transparent_4px,hsl(var(--primary)/0.15)_4px,hsl(var(--primary)/0.15)_8px)] text-muted-foreground",
+                                r === "potentiel" && "border border-dashed border-primary/50 bg-primary/5 [background-image:repeating-linear-gradient(45deg,transparent_0_4px,color-mix(in_oklab,var(--primary)_18%,transparent)_4px_8px)] text-muted-foreground",
                                 over && "ring-2 ring-destructive", !canEdit && "cursor-default")}
                               style={{ left: pos.left * COL + 1, width: pos.span * COL - 2, top: 4 + li * 26 }}>
                               {over && <AlertTriangle className="h-3 w-3 shrink-0" />}
