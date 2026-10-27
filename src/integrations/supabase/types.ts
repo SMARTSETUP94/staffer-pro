@@ -788,6 +788,77 @@ export type Database = {
           },
         ]
       }
+      affaire_roles: {
+        Row: {
+          affaire_id: string
+          created_at: string
+          created_by: string | null
+          date_debut: string | null
+          date_fin: string | null
+          employe_id: string
+          id: string
+          note: string | null
+          role: Database["public"]["Enums"]["projet_role"]
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          affaire_id: string
+          created_at?: string
+          created_by?: string | null
+          date_debut?: string | null
+          date_fin?: string | null
+          employe_id: string
+          id?: string
+          note?: string | null
+          role: Database["public"]["Enums"]["projet_role"]
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          affaire_id?: string
+          created_at?: string
+          created_by?: string | null
+          date_debut?: string | null
+          date_fin?: string | null
+          employe_id?: string
+          id?: string
+          note?: string | null
+          role?: Database["public"]["Enums"]["projet_role"]
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affaire_roles_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "affaires"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affaire_roles_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "v_affaire_consommation"
+            referencedColumns: ["affaire_id"]
+          },
+          {
+            foreignKeyName: "affaire_roles_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "v_affaires_avec_plan_status"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affaire_roles_employe_id_fkey"
+            columns: ["employe_id"]
+            isOneToOne: false
+            referencedRelation: "employes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       affaires: {
         Row: {
           acces_livraison: string | null
@@ -844,6 +915,7 @@ export type Database = {
           statut_opportunite:
             | Database["public"]["Enums"]["opportunite_statut"]
             | null
+          statut_opportunite_depuis: string | null
           taille: Database["public"]["Enums"]["opportunite_taille"] | null
           typologie: string | null
           typologie_future: string | null
@@ -904,6 +976,7 @@ export type Database = {
           statut_opportunite?:
             | Database["public"]["Enums"]["opportunite_statut"]
             | null
+          statut_opportunite_depuis?: string | null
           taille?: Database["public"]["Enums"]["opportunite_taille"] | null
           typologie?: string | null
           typologie_future?: string | null
@@ -964,6 +1037,7 @@ export type Database = {
           statut_opportunite?:
             | Database["public"]["Enums"]["opportunite_statut"]
             | null
+          statut_opportunite_depuis?: string | null
           taille?: Database["public"]["Enums"]["opportunite_taille"] | null
           typologie?: string | null
           typologie_future?: string | null
@@ -5014,6 +5088,44 @@ export type Database = {
           },
         ]
       }
+      role_referents: {
+        Row: {
+          created_at: string
+          employe_id: string
+          id: string
+          niveau: Database["public"]["Enums"]["referent_niveau"]
+          role: Database["public"]["Enums"]["projet_role"]
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          employe_id: string
+          id?: string
+          niveau?: Database["public"]["Enums"]["referent_niveau"]
+          role: Database["public"]["Enums"]["projet_role"]
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          employe_id?: string
+          id?: string
+          niveau?: Database["public"]["Enums"]["referent_niveau"]
+          role?: Database["public"]["Enums"]["projet_role"]
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "role_referents_employe_id_fkey"
+            columns: ["employe_id"]
+            isOneToOne: false
+            referencedRelation: "employes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sous_traitants: {
         Row: {
           actif: boolean
@@ -7350,6 +7462,15 @@ export type Database = {
         | "gros"
         | "tres_gros"
       permis_type: "B" | "C" | "CE"
+      projet_role:
+        | "charge_affaires"
+        | "concepteur"
+        | "responsable_projet"
+        | "chef_constructeur"
+        | "chef_finition"
+        | "chef_montage"
+        | "chef_demontage"
+      referent_niveau: "principal" | "secondaire"
       signataire_role: "employe" | "employeur"
       sous_traitant_type: "transport" | "manutention" | "fabrication" | "autre"
       statut_contrat_type:
@@ -7677,6 +7798,16 @@ export const Constants = {
       ],
       opportunite_taille: ["tres_petit", "petit", "moyen", "gros", "tres_gros"],
       permis_type: ["B", "C", "CE"],
+      projet_role: [
+        "charge_affaires",
+        "concepteur",
+        "responsable_projet",
+        "chef_constructeur",
+        "chef_finition",
+        "chef_montage",
+        "chef_demontage",
+      ],
+      referent_niveau: ["principal", "secondaire"],
       signataire_role: ["employe", "employeur"],
       sous_traitant_type: ["transport", "manutention", "fabrication", "autre"],
       statut_contrat_type: [
