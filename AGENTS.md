@@ -9,7 +9,7 @@
 - Security migrations must explicitly redefine each affected RPC from its freshly read current definition; never rewrite function bodies dynamically with regexp_replace or replace on pg_get_functiondef, because critical business RPCs must remain reviewable.
 - All protected server functions retain bearer attachment in src/start.ts so ordinary signed-in requests preserve the caller's RLS.
 
-- Affaire-level project manager and designer reference profiles and use shared searchable controls across lists, detail and signing; signing saves assignments atomically through an explicit-code RPC overload, independently from object-level BE assignments.
+- affaire_roles (employee-based, one holder per role) is the single source of project-team roles; legacy charge_affaires_id/chef_projet_id/dessinateur_id stay synchronized both ways by depth-guarded triggers so older readers and Claude keep working. Writes go through app_affecter_role_projet; workload counts come from the SECURITY DEFINER charge_roles_projet so every user sees identical totals.
 
 - The chantier list derives code conversion labels, chronology and opportunity filtering from persisted code_opportunite through a shared pure helper; signing never changes the original list position.
 
