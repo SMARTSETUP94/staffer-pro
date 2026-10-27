@@ -22,6 +22,7 @@ import {
   updateOpportuniteFields,
   type OpportuniteFicheData,
 } from "@/lib/server-fns/opportunite-fiche.functions";
+import { EquipeProjetBloc } from "@/components/affaire/EquipeProjetBloc";
 import { OpportuniteFicheHeader } from "@/components/opportunites/fiche/OpportuniteFicheHeader";
 import { OpportuniteJalonsBar } from "@/components/opportunites/fiche/OpportuniteJalonsBar";
 import { OpportuniteNextActionCard } from "@/components/opportunites/fiche/OpportuniteNextActionCard";
@@ -38,6 +39,7 @@ export function OpportuniteFicheContent({ affaireId }: { affaireId: string }) {
   const navigate = useNavigate();
   const canEdit = useCapability("action.edit_opportunite");
   const canSign = useCapability("action.sign_opportunite");
+  const canEditRoles = useCapability("affaires.edit");
 
   const fetchFiche = useServerFn(getOpportuniteFiche);
   const { data, isLoading, refetch, error } = useQuery({
@@ -91,6 +93,8 @@ export function OpportuniteFicheContent({ affaireId }: { affaireId: string }) {
       <OpportuniteEmailsSection affaireId={affaireId} />
 
       <TimelineSection actions={data.actions} />
+
+      <EquipeProjetBloc affaireId={affaireId} canEdit={canEditRoles} />
 
       <EquipeSection equipe={data.equipe} />
 

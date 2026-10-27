@@ -22,8 +22,7 @@ import { NouveauClientDialog } from "@/components/clients/NouveauClientDialog";
 import { EditNumeroAffaireDialog } from "@/components/affaire/EditNumeroAffaireDialog";
 import { hasOpportuniteTab } from "@/lib/affaire-opportunite";
 import { isAffaireTabHidden } from "@/lib/affaire-tabs-visibility";
-import { AffaireResponsablePicker } from "@/components/affaire/AffaireResponsablePicker";
-import { canAssignDessinateur } from "@/lib/affaire-affectations";
+import { EquipeProjetBloc } from "@/components/affaire/EquipeProjetBloc";
 import { ChangerClientDialog } from "@/components/affaire/ChangerClientDialog";
 
 
@@ -317,14 +316,7 @@ function AffaireDetailLayout() {
       </div>
 
       {/* KPI Bar Bloc 5 — gated par capability affaire.kpi.view */}
-      {canManageAffaires && <section className="mt-4 flex flex-wrap gap-4">
-        <div className="w-64 space-y-1"><p className="text-xs text-muted-foreground">Chef de projet</p>
-          <AffaireResponsablePicker affaireId={affaire.id} field="chef_projet_id" value={affaire.chef_projet_id} onSaved={(id) => setAffaire((current) => current ? { ...current, chef_projet_id: id } : current)} />
-        </div>
-        {canAssignDessinateur(affaire.numero) && <div className="w-64 space-y-1"><p className="text-xs text-muted-foreground">Dessinateur</p>
-          <AffaireResponsablePicker affaireId={affaire.id} field="dessinateur_id" value={affaire.dessinateur_id} onSaved={(id) => setAffaire((current) => current ? { ...current, dessinateur_id: id } : current)} />
-        </div>}
-      </section>}
+      <div className="mt-4"><EquipeProjetBloc affaireId={affaire.id} canEdit={canEditRoles} /></div>
       <CapabilityGuard cap="affaire.kpi.view">
         <div className="mt-4">
           <AffaireKpiBar affaireId={affaire.id} />
