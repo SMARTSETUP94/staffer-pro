@@ -1,5 +1,12 @@
 # Roadmap
 
+## Lot 1 — Équipe projet, Presque gagné, planning BE / projets (27 oct. 2026)
+- [x] Base : statut presque_gagne, tables role_referents + affaire_roles (RLS, blocage OAuth), synchro bidirectionnelle des colonnes historiques, liaison smart@ → Gabin C, reprise 88/16/1, fusion Kevin (fiche désactivée, 0 référence restante), seed 59 référents, compteur de charge, RPC affecter_role_projet, retrait restriction 6XXX, capability planning.pilotage, dispatch MCP.
+- [x] Écran : bloc Équipe projet (fiche affaire / opportunité), badges rôle à affecter, colonne Presque gagné + alerte 15 j, Paramètres > Référents par rôle, Planning BE / projets.
+- [x] Claude : equipe_projet dans fiche_affaire / rechercher_affaires, affecter_role_projet, planning_pilotage, presque_gagne. Manifeste 24 outils.
+- [x] Tests Vitest + contrôles SQL annulés (dates par défaut, synchro, refus OAuth).
+- [ ] Publication : en attente de l'accord de Gabin.
+
 ## MCP v2 — écriture contrôlée (26 oct. 2026)
 - [x] Confirmation atomique 10 min, idempotence, droits api.mcp.write / mcp_v2_write, audit sécurisé et filtre écritures ; cible/snapshot verrouillés, clés externes isolées compte/client et contenu identique requis.
 - [x] 9 outils écriture et 4 lectures supplémentaires ; préserver les 9 lecteurs v1. Scopes écriture globaux seulement.
