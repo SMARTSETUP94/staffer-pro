@@ -16,12 +16,18 @@ export const PRESQUE_GAGNE_ALERTE_JOURS = 15;
 
 export type Phases = { fabrication: boolean; montage_demontage: boolean };
 
-/** Phases déduites de la typologie (ou de la typologie future pour une opportunité). */
-export function phasesFromTypologie(typologie: string | null | undefined): Phases {
-  return {
-    fabrication: typologie === "fabrication",
-    montage_demontage: typologie === "montage_demontage" || typologie === "fabrication",
-  };
+/** Phases lues dans typologie_phases (ex. ["commercial_etude","fabrication","logistique"]). */
+export function phasesFromList(list: readonly string[] | null | undefined): Phases {
+  const s = new Set(list ?? []);
+  return { fabrication: s.has("fabrication"), montage_demontage: s.has("montage") || s.has("demontage") };
+}
+
+/**
+ * Typologie effective pour l'équipe projet : pour une opportunité (9XXX), la typologie future.
+ */
+export function typologieEffective(a: { typologie?: string | null; typologie_future?: string | null; phase?: string | null }): string | null {
+  if (a.phase === "opportunite" || a.typologie === "prototype") return a.typologie_future ?? null;
+  return a.typologie ?? null;
 }
 
 /** Rôles affichés pour une affaire selon ses phases. */
