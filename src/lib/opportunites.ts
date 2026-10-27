@@ -3,13 +3,17 @@
  * Centralise les enums, libellés FR et constantes UI partagées entre Kanban,
  * Dashboard pipeline et Import.
  */
+import { PRESQUE_GAGNE_LABEL, PRESQUE_GAGNE_DEFINITION } from "@/lib/labels";
 
-export type OpportuniteStatut = "a_faire" | "envoye" | "gagne" | "perdu" | "termine";
+export { PRESQUE_GAGNE_DEFINITION };
+
+export type OpportuniteStatut = "a_faire" | "envoye" | "presque_gagne" | "gagne" | "perdu" | "termine";
 export type OpportuniteTaille = "tres_petit" | "petit" | "moyen" | "gros" | "tres_gros";
 
 export const STATUT_ORDER: OpportuniteStatut[] = [
   "a_faire",
   "envoye",
+  "presque_gagne",
   "gagne",
   "perdu",
   "termine",
@@ -19,6 +23,7 @@ export const STATUT_ORDER: OpportuniteStatut[] = [
 export const KANBAN_STATUT_ORDER: OpportuniteStatut[] = [
   "a_faire",
   "envoye",
+  "presque_gagne",
   "gagne",
   "perdu",
 ];
@@ -26,6 +31,7 @@ export const KANBAN_STATUT_ORDER: OpportuniteStatut[] = [
 export const STATUT_LABEL: Record<OpportuniteStatut, string> = {
   a_faire: "À faire",
   envoye: "Envoyé",
+  presque_gagne: PRESQUE_GAGNE_LABEL,
   gagne: "Gagné",
   perdu: "Perdu",
   termine: "Archivé",
@@ -45,6 +51,11 @@ export const STATUT_TONE: Record<
     col: "bg-[var(--indigo-soft)]/40 border-primary/20",
     chip: "bg-[var(--indigo-soft)] text-primary",
     dot: "bg-primary",
+  },
+  presque_gagne: {
+    col: "bg-amber-50 border-amber-200",
+    chip: "bg-amber-100 text-amber-800",
+    dot: "bg-amber-500",
   },
   gagne: {
     col: "bg-emerald-50 border-emerald-200",
