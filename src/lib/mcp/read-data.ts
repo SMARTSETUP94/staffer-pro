@@ -3,6 +3,7 @@ import type { McpAppContext } from "./policy";
 import type { ToolName } from "./config";
 import { chargeNiveau } from "@/lib/charge-atelier";
 import { mapTypologieRow, matchPipelineFiltre, typologieFromMcp } from "./typologie";
+import { PROJET_ROLES_MCP } from "./write-schemas";
 import { hasDoubleAffectation, hasAffecteAbsent, type QuiAffectation, type QuiAbsence } from "@/lib/qui-est-ou";
 
 type Row = Record<string, any>;
@@ -47,7 +48,21 @@ async function requireAllScope(ctx: McpAppContext, cap: string) {
 async function enrichAffaires(ctx: McpAppContext, rows: Row[]): Promise<Row[]> {
   const ids = [...new Set(rows.flatMap(r => [r.chef_projet_id, r.charge_affaires_id]).filter(Boolean))];
   const profiles = ids.length ? await rowsOf(ctx.db.from("profiles").select("id,full_name").in("id", ids)) : [];
-  return rows.map(r => ({ ...r, chef_projet: profiles.find(p => p.id === r.chef_projet_id)?.full_name ?? null, charge_affaires: profiles.find(p => p.id === r.charge_affaires_id)?.full_name ?? null }));
+  const affaireIds = rows.map(r => r.id).filter(Boolean);
+  const roles = affaireIds.length ? await rowsOf(ctx.db.from("affaire_roles").select("affaire_id,role,employe_id,date_debut,date_fin,employes(nom,prenom)").in("affaire_id", affaireIds).order("role")) : [];
+  return rows.map(r => ({
+    ...r,
+    chef_projet: profiles.find(p => p.id === r.chef_projet_id)?.full_name ?? null,
+    charge_affaires: profiles.find(p => p.id === r.charge_affaires_id)?.full_name ?? null,
+    equipe_projet: equipeProjet(roles.filter(x => x.affaire_id === r.id)),
+  }));
+}
+/** Les 7 rôles de l'équipe projet : nom + période (null si non affecté). */
+export function equipeProjet(roles: Row[]) {
+  return Object.fromEntries(PROJET_ROLES_MCP.map(role => {
+    const x = roles.find(v => v.role === role);
+    return [role, x ? { employe_id: x.employe_id, nom: [x.employes?.prenom, x.employes?.nom].filter(Boolean).join(" ") || null, date_debut: x.date_debut ?? null, date_fin: x.date_fin ?? null } : null];
+  }));
 }
 export async function readData(ctx: McpAppContext, name: ToolName, args: Args): Promise<{ rows: unknown[]; [key: string]: unknown }> {
   const db = ctx.db;

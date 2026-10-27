@@ -228,7 +228,7 @@ export function PipelineCommercialBloc() {
   // Bar chart par CA empilé par TAILLE (uniquement opps actives)
   const chartData = useMemo(() => {
     const active = filtered.filter(
-      (o) => o.statut_opportunite === "a_faire" || o.statut_opportunite === "envoye" || o.statut_opportunite === "gagne",
+      (o) => o.statut_opportunite === "a_faire" || o.statut_opportunite === "envoye" || o.statut_opportunite === "presque_gagne" || o.statut_opportunite === "gagne",
     );
     const byCa = new Map<
       string,

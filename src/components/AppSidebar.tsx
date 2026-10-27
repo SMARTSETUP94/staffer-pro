@@ -87,6 +87,7 @@ function buildSections(
         { title: "Tableau d'atelier", url: "/atelier", icon: LayoutGrid, cap: "section.planning_fab" },
         { title: "Charge atelier", url: "/charge", icon: BarChart3, cap: "section.planning_fab" },
         { title: "Planning fab", url: "/planning", icon: Calendar, cap: "section.planning_fab" },
+        { title: "Planning BE / projets", url: "/planning-pilotage", icon: GanttChart, cap: "planning.pilotage" },
         { title: "Qui est où", url: "/qui-est-ou", icon: UsersRound, cap: "section.planning_fab" },
         { title: "Pipeline opportunités", url: "/opportunites", icon: Trophy, cap: "section.pipeline_opportunites" },
         { title: "Demandes clients", url: "/demandes-clients", icon: Inbox, cap: "demandes_clients.view" },
@@ -156,6 +157,7 @@ function buildSections(
         { title: "Roadmap", url: "/roadmap", icon: Map, cap: "section.admin" },
         { title: "Réglages compétences", url: "/parametres/competences-equipe", icon: Settings, cap: "section.admin" },
         { title: "Rôles fabrication", url: "/parametres/roles-fabrication", icon: Wrench, cap: "section.admin" },
+        { title: "Référents par rôle", url: "/parametres/referents-roles", icon: UsersRound, cap: "section.admin" },
         { title: "Fusion clients", url: "/clients/admin/fusion", icon: UsersRound, cap: "clients.merge" },
       ],
     },
@@ -256,7 +258,7 @@ function applyLogistiqueOppsMode(sections: NavSection[]): NavSection[] {
  * toujours ouvrir /admin/feature-flags en direct pour désactiver le mode.
  */
 // "/admin/utilisateurs" reste filtré par la cap section.admin (admins seulement).
-const SA_MODE_URLS = new Set(["/opportunites", "/demandes-clients", "/affaires", "/liste-chantiers", "/documents-affaires", "/clients", "/logistique", "/demandes-logistique", "/jalonnements", "/admin/utilisateurs", "/admin/connecteur-claude", "/mes-notes-de-frais", "/validation-notes-de-frais"]);
+const SA_MODE_URLS = new Set(["/opportunites", "/demandes-clients", "/affaires", "/liste-chantiers", "/documents-affaires", "/clients", "/logistique", "/demandes-logistique", "/jalonnements", "/admin/utilisateurs", "/admin/connecteur-claude", "/mes-notes-de-frais", "/validation-notes-de-frais", "/planning-pilotage", "/parametres/referents-roles"]);
 
 function applySuiviAffairesMode(sections: NavSection[]): NavSection[] {
   return sections

@@ -111,3 +111,47 @@ export function affaireRoleLabel(role: string | null | undefined): string {
   if (!role) return "—";
   return AFFAIRE_ROLE_LABELS[role] ?? role;
 }
+
+// ---------------------------------------------------------------------------
+// Lot 1 « mode projet » — 7 rôles de l'équipe projet (enum DB projet_role)
+// ---------------------------------------------------------------------------
+
+export type ProjetRole =
+  | "charge_affaires" | "concepteur" | "responsable_projet"
+  | "chef_constructeur" | "chef_finition" | "chef_montage" | "chef_demontage";
+
+export const PROJET_ROLE_LABELS: Record<ProjetRole, string> = {
+  charge_affaires: "Chargé d'affaires",
+  concepteur: "Concepteur / dessinateur",
+  responsable_projet: "Responsable projet",
+  chef_constructeur: "Chef constructeur",
+  chef_finition: "Chef finition",
+  chef_montage: "Chef montage",
+  chef_demontage: "Chef démontage",
+};
+
+/** Libellé court utilisé sur les barres du planning de pilotage. */
+export const PROJET_ROLE_ACTIVITE: Record<ProjetRole, string> = {
+  charge_affaires: "Commercial",
+  concepteur: "Dessin",
+  responsable_projet: "Gestion de projet",
+  chef_constructeur: "Construction",
+  chef_finition: "Finition",
+  chef_montage: "Montage",
+  chef_demontage: "Démontage",
+};
+
+export function projetRoleLabel(role: string | null | undefined): string {
+  if (!role) return "—";
+  return PROJET_ROLE_LABELS[role as ProjetRole] ?? role;
+}
+
+export type ReferentNiveau = "principal" | "secondaire";
+export const REFERENT_NIVEAU_LABELS: Record<ReferentNiveau, string> = {
+  principal: "Principal",
+  secondaire: "Secondaire",
+};
+
+export const PRESQUE_GAGNE_LABEL = "Presque gagné";
+export const PRESQUE_GAGNE_DEFINITION =
+  "Accord de principe du client, budget validé oralement, en attente du bon de commande ou de la signature.";

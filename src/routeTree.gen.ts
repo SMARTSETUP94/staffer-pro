@@ -52,6 +52,7 @@ import { Route as AppNotificationsRouteImport } from './routes/_app.notification
 import { Route as AppOpportunitesRouteImport } from './routes/_app.opportunites'
 import { Route as AppPlanningRouteImport } from './routes/_app.planning'
 import { Route as AppPlanningGeneralRouteImport } from './routes/_app.planning-general'
+import { Route as AppPlanningPilotageRouteImport } from './routes/_app.planning-pilotage'
 import { Route as AppQuiEstOuRouteImport } from './routes/_app.qui-est-ou'
 import { Route as AppRoadmapRouteImport } from './routes/_app.roadmap'
 import { Route as AppSaisiePourEquipeRouteImport } from './routes/_app.saisie-pour-equipe'
@@ -101,6 +102,7 @@ import { Route as AppParametresCompetencesEquipeRouteImport } from './routes/_ap
 import { Route as AppParametresLieuxRouteImport } from './routes/_app.parametres.lieux'
 import { Route as AppParametresMetiersRouteImport } from './routes/_app.parametres.metiers'
 import { Route as AppParametresPostesRouteImport } from './routes/_app.parametres.postes'
+import { Route as AppParametresReferentsRolesRouteImport } from './routes/_app.parametres.referents-roles'
 import { Route as AppParametresRolesFabricationRouteImport } from './routes/_app.parametres.roles-fabrication'
 import { Route as AppParametresSousTraitantsRouteImport } from './routes/_app.parametres.sous-traitants'
 import { Route as AppParametresUtilisateursRouteImport } from './routes/_app.parametres.utilisateurs'
@@ -340,6 +342,11 @@ const AppPlanningRoute = AppPlanningRouteImport.update({
 const AppPlanningGeneralRoute = AppPlanningGeneralRouteImport.update({
   id: '/planning-general',
   path: '/planning-general',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPlanningPilotageRoute = AppPlanningPilotageRouteImport.update({
+  id: '/planning-pilotage',
+  path: '/planning-pilotage',
   getParentRoute: () => AppRoute,
 } as any)
 const AppQuiEstOuRoute = AppQuiEstOuRouteImport.update({
@@ -595,6 +602,12 @@ const AppParametresPostesRoute = AppParametresPostesRouteImport.update({
   path: '/parametres/postes',
   getParentRoute: () => AppRoute,
 } as any)
+const AppParametresReferentsRolesRoute =
+  AppParametresReferentsRolesRouteImport.update({
+    id: '/parametres/referents-roles',
+    path: '/parametres/referents-roles',
+    getParentRoute: () => AppRoute,
+  } as any)
 const AppParametresRolesFabricationRoute =
   AppParametresRolesFabricationRouteImport.update({
     id: '/parametres/roles-fabrication',
@@ -785,6 +798,7 @@ export interface FileRoutesByFullPath {
   '/opportunites': typeof AppOpportunitesRouteWithChildren
   '/planning': typeof AppPlanningRoute
   '/planning-general': typeof AppPlanningGeneralRoute
+  '/planning-pilotage': typeof AppPlanningPilotageRoute
   '/qui-est-ou': typeof AppQuiEstOuRoute
   '/roadmap': typeof AppRoadmapRoute
   '/saisie-pour-equipe': typeof AppSaisiePourEquipeRoute
@@ -828,6 +842,7 @@ export interface FileRoutesByFullPath {
   '/parametres/lieux': typeof AppParametresLieuxRoute
   '/parametres/metiers': typeof AppParametresMetiersRoute
   '/parametres/postes': typeof AppParametresPostesRoute
+  '/parametres/referents-roles': typeof AppParametresReferentsRolesRoute
   '/parametres/roles-fabrication': typeof AppParametresRolesFabricationRoute
   '/parametres/sous-traitants': typeof AppParametresSousTraitantsRoute
   '/parametres/utilisateurs': typeof AppParametresUtilisateursRoute
@@ -900,6 +915,7 @@ export interface FileRoutesByTo {
   '/notifications': typeof AppNotificationsRoute
   '/planning': typeof AppPlanningRoute
   '/planning-general': typeof AppPlanningGeneralRoute
+  '/planning-pilotage': typeof AppPlanningPilotageRoute
   '/qui-est-ou': typeof AppQuiEstOuRoute
   '/roadmap': typeof AppRoadmapRoute
   '/saisie-pour-equipe': typeof AppSaisiePourEquipeRoute
@@ -943,6 +959,7 @@ export interface FileRoutesByTo {
   '/parametres/lieux': typeof AppParametresLieuxRoute
   '/parametres/metiers': typeof AppParametresMetiersRoute
   '/parametres/postes': typeof AppParametresPostesRoute
+  '/parametres/referents-roles': typeof AppParametresReferentsRolesRoute
   '/parametres/roles-fabrication': typeof AppParametresRolesFabricationRoute
   '/parametres/sous-traitants': typeof AppParametresSousTraitantsRoute
   '/parametres/utilisateurs': typeof AppParametresUtilisateursRoute
@@ -1019,6 +1036,7 @@ export interface FileRoutesById {
   '/_app/opportunites': typeof AppOpportunitesRouteWithChildren
   '/_app/planning': typeof AppPlanningRoute
   '/_app/planning-general': typeof AppPlanningGeneralRoute
+  '/_app/planning-pilotage': typeof AppPlanningPilotageRoute
   '/_app/qui-est-ou': typeof AppQuiEstOuRoute
   '/_app/roadmap': typeof AppRoadmapRoute
   '/_app/saisie-pour-equipe': typeof AppSaisiePourEquipeRoute
@@ -1063,6 +1081,7 @@ export interface FileRoutesById {
   '/_app/parametres/lieux': typeof AppParametresLieuxRoute
   '/_app/parametres/metiers': typeof AppParametresMetiersRoute
   '/_app/parametres/postes': typeof AppParametresPostesRoute
+  '/_app/parametres/referents-roles': typeof AppParametresReferentsRolesRoute
   '/_app/parametres/roles-fabrication': typeof AppParametresRolesFabricationRoute
   '/_app/parametres/sous-traitants': typeof AppParametresSousTraitantsRoute
   '/_app/parametres/utilisateurs': typeof AppParametresUtilisateursRoute
@@ -1140,6 +1159,7 @@ export interface FileRouteTypes {
     | '/opportunites'
     | '/planning'
     | '/planning-general'
+    | '/planning-pilotage'
     | '/qui-est-ou'
     | '/roadmap'
     | '/saisie-pour-equipe'
@@ -1183,6 +1203,7 @@ export interface FileRouteTypes {
     | '/parametres/lieux'
     | '/parametres/metiers'
     | '/parametres/postes'
+    | '/parametres/referents-roles'
     | '/parametres/roles-fabrication'
     | '/parametres/sous-traitants'
     | '/parametres/utilisateurs'
@@ -1255,6 +1276,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/planning'
     | '/planning-general'
+    | '/planning-pilotage'
     | '/qui-est-ou'
     | '/roadmap'
     | '/saisie-pour-equipe'
@@ -1298,6 +1320,7 @@ export interface FileRouteTypes {
     | '/parametres/lieux'
     | '/parametres/metiers'
     | '/parametres/postes'
+    | '/parametres/referents-roles'
     | '/parametres/roles-fabrication'
     | '/parametres/sous-traitants'
     | '/parametres/utilisateurs'
@@ -1373,6 +1396,7 @@ export interface FileRouteTypes {
     | '/_app/opportunites'
     | '/_app/planning'
     | '/_app/planning-general'
+    | '/_app/planning-pilotage'
     | '/_app/qui-est-ou'
     | '/_app/roadmap'
     | '/_app/saisie-pour-equipe'
@@ -1417,6 +1441,7 @@ export interface FileRouteTypes {
     | '/_app/parametres/lieux'
     | '/_app/parametres/metiers'
     | '/_app/parametres/postes'
+    | '/_app/parametres/referents-roles'
     | '/_app/parametres/roles-fabrication'
     | '/_app/parametres/sous-traitants'
     | '/_app/parametres/utilisateurs'
@@ -1768,6 +1793,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPlanningGeneralRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/planning-pilotage': {
+      id: '/_app/planning-pilotage'
+      path: '/planning-pilotage'
+      fullPath: '/planning-pilotage'
+      preLoaderRoute: typeof AppPlanningPilotageRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/qui-est-ou': {
       id: '/_app/qui-est-ou'
       path: '/qui-est-ou'
@@ -2111,6 +2143,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppParametresPostesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/parametres/referents-roles': {
+      id: '/_app/parametres/referents-roles'
+      path: '/parametres/referents-roles'
+      fullPath: '/parametres/referents-roles'
+      preLoaderRoute: typeof AppParametresReferentsRolesRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/parametres/roles-fabrication': {
       id: '/_app/parametres/roles-fabrication'
       path: '/parametres/roles-fabrication'
@@ -2438,6 +2477,7 @@ interface AppRouteChildren {
   AppOpportunitesRoute: typeof AppOpportunitesRouteWithChildren
   AppPlanningRoute: typeof AppPlanningRoute
   AppPlanningGeneralRoute: typeof AppPlanningGeneralRoute
+  AppPlanningPilotageRoute: typeof AppPlanningPilotageRoute
   AppQuiEstOuRoute: typeof AppQuiEstOuRoute
   AppRoadmapRoute: typeof AppRoadmapRoute
   AppSaisiePourEquipeRoute: typeof AppSaisiePourEquipeRoute
@@ -2471,6 +2511,7 @@ interface AppRouteChildren {
   AppParametresLieuxRoute: typeof AppParametresLieuxRoute
   AppParametresMetiersRoute: typeof AppParametresMetiersRoute
   AppParametresPostesRoute: typeof AppParametresPostesRoute
+  AppParametresReferentsRolesRoute: typeof AppParametresReferentsRolesRoute
   AppParametresRolesFabricationRoute: typeof AppParametresRolesFabricationRoute
   AppParametresSousTraitantsRoute: typeof AppParametresSousTraitantsRoute
   AppParametresUtilisateursRoute: typeof AppParametresUtilisateursRoute
@@ -2521,6 +2562,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppOpportunitesRoute: AppOpportunitesRouteWithChildren,
   AppPlanningRoute: AppPlanningRoute,
   AppPlanningGeneralRoute: AppPlanningGeneralRoute,
+  AppPlanningPilotageRoute: AppPlanningPilotageRoute,
   AppQuiEstOuRoute: AppQuiEstOuRoute,
   AppRoadmapRoute: AppRoadmapRoute,
   AppSaisiePourEquipeRoute: AppSaisiePourEquipeRoute,
@@ -2555,6 +2597,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppParametresLieuxRoute: AppParametresLieuxRoute,
   AppParametresMetiersRoute: AppParametresMetiersRoute,
   AppParametresPostesRoute: AppParametresPostesRoute,
+  AppParametresReferentsRolesRoute: AppParametresReferentsRolesRoute,
   AppParametresRolesFabricationRoute: AppParametresRolesFabricationRoute,
   AppParametresSousTraitantsRoute: AppParametresSousTraitantsRoute,
   AppParametresUtilisateursRoute: AppParametresUtilisateursRoute,

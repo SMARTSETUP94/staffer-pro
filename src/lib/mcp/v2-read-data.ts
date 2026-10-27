@@ -3,8 +3,9 @@ import { compactResult, safeAuditArguments, type McpAppContext } from "./policy"
 import { pageRows } from "./read-data";
 import { conflitsVehicules } from "@/lib/logistique/etapes";
 import type { V2ReadName } from "./write-schemas";
+import { affichagePilotage, periodesEnChevauchement } from "@/lib/equipe-projet";
 
-export const V2_READ_CAPS: Record<V2ReadName, string> = { rechercher_clients: "clients.view", planning_logistique: "logistique.planning.view", vehicules_disponibles: "logistique.planning.view", lister_propositions_logistiques: "logistique.proposition.view" };
+export const V2_READ_CAPS: Record<V2ReadName, string> = { rechercher_clients: "clients.view", planning_logistique: "logistique.planning.view", vehicules_disponibles: "logistique.planning.view", lister_propositions_logistiques: "logistique.proposition.view", planning_pilotage: "planning.pilotage" };
 export const ETAPE_SELECT = "id,affaire_id,type,date_debut,date_fin,heure_debut,heure_fin,horaire_libre,lieu_libre,vehicule_id,responsable,statut,note,commentaire_equipe,updated_at,affaire:affaires(id,numero,nom,lieu),vehicule:vehicules(id,nom,immatriculation)";
 export async function logisticsRows(context: McpAppContext, du: string, au: string) {
   if (au < du || (Date.parse(au) - Date.parse(du)) / 86400000 > 92) throw new ToolError("Période invalide ou supérieure à 93 jours");
@@ -21,6 +22,27 @@ export async function readV2(context: McpAppContext, name: V2ReadName, args: Rec
       const q = String(args.q).replace(/[,%()]/g, " ");
       const { data, error } = await context.db.from("clients").select("id,nom,actif").eq("actif", true).ilike("nom", `%${q}%`).order("nom").order("id").limit(1000);
       if (error || (data?.length ?? 0) >= 1000) throw new ToolError("Recherche indisponible ou trop large"); rows = data ?? [];
+    } else if (name === "planning_pilotage") {
+      const du = String(args.du), au = String(args.au);
+      if (au < du || (Date.parse(au) - Date.parse(du)) / 86400000 > 185) throw new ToolError("Période invalide ou supérieure à 6 mois");
+      let query = context.db.from("affaire_roles").select("id,affaire_id,role,employe_id,date_debut,date_fin,employes(nom,prenom),affaires(numero,nom,phase,statut_opportunite,archived_at)")
+        .in("role", args.role ? [String(args.role)] : ["concepteur", "responsable_projet"]).not("date_debut", "is", null)
+        .lte("date_debut", au).or(`date_fin.gte.${du},date_fin.is.null`).order("date_debut").order("id").limit(1000);
+      if (args.employe) query = query.eq("employe_id", String(args.employe));
+      const { data, error } = await query;
+      if (error || (data?.length ?? 0) >= 1000) throw new ToolError("Planning de pilotage indisponible ou trop volumineux");
+      const actives = (data ?? []).filter((l: any) => l.affaires && !l.affaires.archived_at);
+      const byEmp = new Map<string, any[]>();
+      actives.filter((l: any) => affichagePilotage(l.affaires) !== "potentiel").forEach((l: any) => byEmp.set(l.employe_id, [...(byEmp.get(l.employe_id) ?? []), l]));
+      const over = new Set<string>();
+      byEmp.forEach((ls, emp) => periodesEnChevauchement(ls).forEach(a => over.add(`${emp}|${a}`)));
+      rows = actives.map((l: any) => ({
+        affaire_id: l.affaire_id, numero: l.affaires.numero, nom: l.affaires.nom, role: l.role,
+        employe_id: l.employe_id, personne: [l.employes?.prenom, l.employes?.nom].filter(Boolean).join(" "),
+        date_debut: l.date_debut, date_fin: l.date_fin,
+        charge: affichagePilotage(l.affaires) === "potentiel" ? "potentielle" : "reelle",
+        chevauchement: over.has(`${l.employe_id}|${l.affaire_id}`),
+      }));
     } else if (name === "lister_propositions_logistiques") {
       let query = context.db.from("jalonnements").select("id,affaire_id,nom_fichier,statut,nb_etapes_planifiees,created_at").order("created_at").order("id").limit(1000);
       if (args.affaire_id) query = query.eq("affaire_id", args.affaire_id);

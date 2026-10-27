@@ -253,6 +253,48 @@
       "when": 1793043189486,
       "tag": "0035_mcp_v2_preview_affaire_rights_check",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1793136040821,
+      "tag": "0036_enum_presque_gagne",
+      "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1793136087360,
+      "tag": "0037_roles_projet",
+      "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1793136125157,
+      "tag": "0038_affaire_roles_sync",
+      "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1793136162241,
+      "tag": "0039_referents_seed_et_fusion_kevin",
+      "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1793136188886,
+      "tag": "0040_pilotage",
+      "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1793136279030,
+      "tag": "0041_mcp_affecter_role_projet",
+      "breakpoints": true
     }
   ]
 }
