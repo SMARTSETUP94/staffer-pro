@@ -55,8 +55,7 @@ export async function prepareWrite(context: McpAppContext, tool: WriteName, args
       const extra: Record<string, unknown> = {};
       for (const key of ["prochaine_action", "echeance", "jalon", "motif"]) if (key in patch) { extra[key] = patch[key]; delete patch[key]; }
       for (const [source, target] of [["intitule", "nom"], ["description", "notes"], ["date_evenement", "date_evenement_debut"]]) if (source in patch) { patch[target] = patch[source]; delete patch[source]; }
-      if (tool === "mettre_a_jour_opportunite" && "statut" in patch) { patch.statut_opportunite = patch.statut === "en_attente" ? "a_faire" : "perdu"; delete patch.statut; if (args.champs && (args.champs as Record<string, unknown>).statut === "en_attente") warnings.push("En attente correspond au statut À faire existant ; le motif est ajouté au journal."); }
-      if (patch.dessinateur_id && !/^6\d{3}$/.test(String(before.numero))) throw new ToolError("Dessinateur réservé aux fabrications 6XXX");
+      if (tool === "mettre_a_jour_opportunite" && "statut" in patch) { patch.statut_opportunite = patch.statut === "en_attente" ? "a_faire" : patch.statut === "presque_gagne" ? "presque_gagne" : "perdu"; delete patch.statut; if (args.champs && (args.champs as Record<string, unknown>).statut === "en_attente") warnings.push("En attente correspond au statut À faire existant ; le motif est ajouté au journal."); }
       payload = { patch, ...extra }; after = { ...before, ...patch, ...extra };
       if ("date_montage" in patch || "date_demontage" in patch) {
         const [stages, assignments] = await Promise.all([
@@ -85,6 +84,23 @@ export async function prepareWrite(context: McpAppContext, tool: WriteName, args
     } else if (tool === "annuler_etape_logistique") { payload = { motif: args.motif }; after = { ...before, statut: "annule", commentaire_equipe: args.motif }; }
     else if (tool === "ajouter_action_opportunite") { payload = { type: args.type, note: args.note, ...(args.echeance ? { echeance: args.echeance } : {}) }; after = payload; }
     else if (tool === "ajouter_note_chantier") { payload = { texte: args.texte }; after = payload; }
+    else if (tool === "affecter_role_projet") {
+      const role = String(args.role);
+      const current = await context.db.from("affaire_roles").select("employe_id,date_debut,date_fin,employes(nom,prenom)").eq("affaire_id", affaireId!).eq("role", role).maybeSingle();
+      if (current.error) throw new ToolError("Équipe projet indisponible");
+      let nouveau: Record<string, unknown> | null = null;
+      if (args.employe_id) {
+        const emp = await context.db.from("employes").select("id,nom,prenom,actif").eq("id", String(args.employe_id)).maybeSingle();
+        if (emp.error || !emp.data || !emp.data.actif) throw new ToolError("Employé introuvable ou inactif");
+        nouveau = emp.data;
+      }
+      const hasDates = "date_debut" in args || "date_fin" in args;
+      payload = { role, employe_id: args.employe_id ?? null, date_debut: args.date_debut ?? null, date_fin: args.date_fin ?? null, remplacer_dates: hasDates, ...(args.cle_externe ? { cle_externe: args.cle_externe } : {}) };
+      const nom = (e: any) => e ? [e.prenom, e.nom].filter(Boolean).join(" ") : null;
+      before = { role, personne: nom(current.data?.employes), date_debut: current.data?.date_debut ?? null, date_fin: current.data?.date_fin ?? null };
+      after = { role, personne: nom(nouveau), date_debut: hasDates ? payload.date_debut : before.date_debut, date_fin: hasDates ? payload.date_fin : before.date_fin };
+      if (!args.employe_id) warnings.push("Le rôle sera retiré de l'équipe projet.");
+    }
   }
   if (after.date_debut && after.date_fin && String(after.date_fin) < String(after.date_debut)) throw new ToolError("La fin précède le début");
   if (after.date_montage && after.date_demontage && String(after.date_demontage) < String(after.date_montage)) throw new ToolError("Le démontage précède le montage");
