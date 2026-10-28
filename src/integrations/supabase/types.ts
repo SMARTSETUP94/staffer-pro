@@ -4186,7 +4186,7 @@ export type Database = {
       }
       mcp_write_external_keys: {
         Row: {
-          affaire_id: string
+          affaire_id: string | null
           etape_id: string | null
           key_hash: string
           request_hash: string | null
@@ -4194,7 +4194,7 @@ export type Database = {
           tool: string
         }
         Insert: {
-          affaire_id: string
+          affaire_id?: string | null
           etape_id?: string | null
           key_hash: string
           request_hash?: string | null
@@ -4202,7 +4202,7 @@ export type Database = {
           tool: string
         }
         Update: {
-          affaire_id?: string
+          affaire_id?: string | null
           etape_id?: string | null
           key_hash?: string
           request_hash?: string | null
