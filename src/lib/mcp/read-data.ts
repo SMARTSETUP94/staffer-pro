@@ -85,9 +85,18 @@ export async function readData(ctx: McpAppContext, name: ToolName, args: Args): 
   }
   if (name === "demandes_clients") {
     await requireAllScope(ctx, "demandes_clients.view");
-    let query = db.from("emails_entrants").select("id,source_boite,categorie_ia,received_at,from_name,from_email,opportunite_id,statut").eq("categorie_ia", "opportunite");
+    let query = db.from("emails_entrants").select("id,source_boite,categorie_ia,received_at,from_name,from_email,subject,conversation_id,opportunite_id,statut").eq("categorie_ia", "opportunite");
     if (args.statut) query = query.eq("statut", args.statut);
-    return paged(query.order("received_at", { ascending: false }).order("id"), args);
+    if (args.source_boite) query = query.eq("source_boite", args.source_boite);
+    const result = await paged(query.order("received_at", { ascending: false }).order("id"), args);
+    const oppIds = [...new Set(result.rows.map((r: any) => r.opportunite_id).filter(Boolean))] as string[];
+    const opps = new Map<string, { numero: string | null; nom: string | null }>();
+    if (oppIds.length) {
+      const { data, error } = await db.from("affaires").select("id,numero,nom").in("id", oppIds);
+      if (error) throw new ToolError("Lecture des opportunités rattachées indisponible");
+      for (const o of data ?? []) opps.set(o.id, { numero: o.numero, nom: o.nom });
+    }
+    return { ...result, rows: result.rows.map((r: any) => ({ ...r, opportunite: r.opportunite_id ? opps.get(r.opportunite_id) ?? null : null })) };
   }
   if (name === "rechercher_affaires" || name === "echeances" || name === "fiche_affaire") {
     await requireAllScope(ctx, "section.affaires");
