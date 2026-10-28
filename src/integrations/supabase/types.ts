@@ -6668,12 +6668,26 @@ export type Database = {
       }
       app_creer_etape_logistique: { Args: { _payload: Json }; Returns: Json }
       app_creer_opportunite_client: { Args: { _p: Json }; Returns: Json }
+      app_demandes_resoudre: {
+        Args: { _email_ids: string[]; _inclure_fil?: boolean }
+        Returns: string[]
+      }
       app_modifier_affaire: {
         Args: { _id: string; _patch: Json }
         Returns: Json
       }
       app_modifier_etape_logistique: {
         Args: { _id: string; _patch: Json }
+        Returns: Json
+      }
+      app_traiter_demande: {
+        Args: {
+          _action: string
+          _email_ids: string[]
+          _inclure_fil?: boolean
+          _motif?: string
+          _opportunite_id?: string
+        }
         Returns: Json
       }
       archive_affaire: { Args: { _affaire_id: string }; Returns: undefined }
@@ -7018,6 +7032,10 @@ export type Database = {
         Returns: undefined
       }
       mcp_assert_write: { Args: { _tool: string }; Returns: string }
+      mcp_demandes_empreinte: {
+        Args: { _ids: string[]; _verrou?: boolean }
+        Returns: string
+      }
       mcp_dispatch_write: {
         Args: {
           _affaire_id: string
