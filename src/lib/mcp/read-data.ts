@@ -85,9 +85,11 @@ export async function readData(ctx: McpAppContext, name: ToolName, args: Args): 
   }
   if (name === "demandes_clients") {
     await requireAllScope(ctx, "demandes_clients.view");
-    let query = db.from("emails_entrants").select("id,source_boite,categorie_ia,received_at,from_name,from_email,opportunite_id,statut").eq("categorie_ia", "opportunite");
+    let query = db.from("emails_entrants").select("id,source_boite,categorie_ia,received_at,from_name,from_email,subject,conversation_id,opportunite_id,statut,opportunite:affaires!emails_entrants_opportunite_id_fkey(numero,nom)").eq("categorie_ia", "opportunite");
     if (args.statut) query = query.eq("statut", args.statut);
-    return paged(query.order("received_at", { ascending: false }).order("id"), args);
+    if (args.source_boite) query = query.eq("source_boite", args.source_boite);
+    const result = await paged(query.order("received_at", { ascending: false }).order("id"), args);
+    return { ...result, rows: result.rows.map((r: any) => { const o = Array.isArray(r.opportunite) ? r.opportunite[0] : r.opportunite; return { ...r, opportunite: o ? { numero: o.numero, nom: o.nom } : null }; }) };
   }
   if (name === "rechercher_affaires" || name === "echeances" || name === "fiche_affaire") {
     await requireAllScope(ctx, "section.affaires");

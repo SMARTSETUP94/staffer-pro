@@ -7,7 +7,7 @@ export const WRITE_CAPS: Record<WriteName, string> = {
   creer_opportunite: "action.create_opportunite", ajouter_action_opportunite: "action.edit_opportunite", mettre_a_jour_opportunite: "action.edit_opportunite",
   modifier_chantier: "section.affaires", ajouter_note_chantier: "section.affaires", creer_etape_logistique: "logistique.etape.edit",
   modifier_etape_logistique: "logistique.etape.edit", deplacer_etape_logistique: "logistique.etape.edit", annuler_etape_logistique: "logistique.etape.edit",
-  affecter_role_projet: "affaires.edit",
+  affecter_role_projet: "affaires.edit", traiter_demande: "action.edit_opportunite",
 };
 export function writeEnabled(context: McpAppContext, tool: WriteName) {
   return context.canWrite === true && context.caps.has("api.mcp.write") && context.caps.has(WRITE_CAPS[tool]) && context.writeScopes?.has(WRITE_CAPS[tool]) === true;

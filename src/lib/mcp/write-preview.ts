@@ -14,6 +14,13 @@ export async function prepareWrite(context: McpAppContext, tool: WriteName, args
   let before: Record<string, unknown> = {}, after: Record<string, unknown> = content;
   let affaireId: string | undefined, etapeId: string | undefined, snapshot: string | undefined;
   const warnings: string[] = [], duplicates: unknown[] = [];
+  const confirming = typeof args.confirmation_id === "string";
+  if (tool === "traiter_demande") return prepareTraiterDemande(context, content, confirming);
+  if (tool === "creer_opportunite" && Array.isArray(args.email_ids) && !confirming) {
+    const mails = await lireDemandes(context, args.email_ids as string[]);
+    verifierDemandes(mails, args.email_ids as string[]);
+    warnings.push(`${mails.length} demande(s) devis seront rattachées à l’opportunité créée, avec une action « mail reçu » chacune.`);
+  }
   if (tool === "creer_opportunite") {
     if (Boolean(args.client_id) === Boolean(args.client_nom)) throw new ToolError("Indiquer soit client_id, soit client_nom");
     const client = args.client_id ? await context.db.from("clients").select("id,nom").eq("id", args.client_id).eq("actif", true).maybeSingle() : await context.db.from("clients").select("id,nom").ilike("nom", String(args.client_nom).replace(/[%_]/g, " ")).eq("actif", true).limit(2);
@@ -121,4 +128,58 @@ export async function prepareWrite(context: McpAppContext, tool: WriteName, args
     if (data) { duplicates.push(data.result); warnings.push("Clé externe déjà utilisée : la confirmation renverra l’enregistrement existant sans création."); }
   }
   return { payload, before, after, affaireId, etapeId, snapshot, warnings, duplicates };
+}
+
+type Demande = { id: string; source_boite: string | null; statut: string; subject: string | null; from_name: string | null; from_email: string | null; received_at: string | null; conversation_id: string | null };
+async function lireDemandes(context: McpAppContext, ids: string[]): Promise<Demande[]> {
+  const { data, error } = await context.db.from("emails_entrants").select("id,source_boite,statut,subject,from_name,from_email,received_at,conversation_id").in("id", ids);
+  if (error) throw new ToolError("Lecture des demandes indisponible");
+  return (data ?? []) as Demande[];
+}
+function verifierDemandes(mails: Demande[], demandes: string[]) {
+  const ids = new Set(mails.map(m => m.id));
+  const manquantes = [...new Set(demandes)].filter(id => !ids.has(id));
+  if (manquantes.length) throw new ToolError(`Demande introuvable ou non accessible : ${manquantes.join(", ")}`);
+  const horsDevis = mails.filter(m => m.source_boite !== "devis");
+  if (horsDevis.length) throw new ToolError(`Refus : demande hors boîte devis (${horsDevis.map(m => m.id).join(", ")}). Rien n’a été écrit.`);
+  const traitees = mails.filter(m => m.statut !== "pending_review");
+  if (traitees.length) throw new ToolError(`Refus : demande déjà traitée, décision humaine conservée (${traitees.map(m => m.id).join(", ")}). Rien n’a été écrit.`);
+}
+async function prepareTraiterDemande(context: McpAppContext, content: Record<string, unknown>, confirming: boolean): Promise<WritePreview> {
+  const action = content.action as "rattacher" | "ecarter";
+  const demandes = content.email_ids as string[];
+  if (action === "rattacher" && !content.opportunite_id) throw new ToolError("opportunite_id obligatoire pour rattacher");
+  if (action === "rattacher" && content.motif) throw new ToolError("motif réservé à l’écart");
+  if (action === "ecarter" && !content.motif) throw new ToolError("motif obligatoire pour écarter (1 à 500 caractères)");
+  if (action === "ecarter" && content.opportunite_id) throw new ToolError("Pas d’opportunité pour un écart");
+  const resolu = await context.db.rpc("app_demandes_resoudre", { _email_ids: demandes, _inclure_fil: content.inclure_fil === true });
+  if (resolu.error || !Array.isArray(resolu.data)) throw new ToolError(resolu.error?.message?.includes("Fil trop long") ? "Fil trop long (plus de 50 demandes)" : "Résolution des demandes indisponible");
+  const resolus = [...(resolu.data as string[])].sort();
+  const payload = { ...content, email_ids_resolus: resolus };
+  // At confirmation, state checks are done under lock by the database (snapshot comparison).
+  if (confirming) return { payload, before: {}, after: {}, affaireId: action === "rattacher" ? String(content.opportunite_id) : undefined, warnings: [], duplicates: [] };
+  const mails = await lireDemandes(context, resolus);
+  verifierDemandes(mails.filter(m => demandes.includes(m.id)), demandes);
+  let opportunite: Record<string, unknown> | null = null;
+  if (action === "rattacher") {
+    const { data, error } = await context.db.from("affaires").select("id,numero,nom,phase,archived_at").eq("id", content.opportunite_id).maybeSingle();
+    if (error || !data) throw new ToolError("Opportunité introuvable ou inaccessible");
+    if (data.archived_at) throw new ToolError("Opportunité archivée : rattachement refusé");
+    if (data.phase !== "opportunite") throw new ToolError("Opportunité déjà signée : rattachement refusé");
+    const rights = await context.db.rpc("mcp_preview_assert_affaire", { _id: data.id, _cap: "action.edit_opportunite" });
+    if (rights.error) throw new ToolError("Accès affaire refusé");
+    opportunite = { id: data.id, numero: data.numero, nom: data.nom };
+  }
+  const empreinte = await context.db.rpc("mcp_demandes_empreinte", { _ids: resolus, _verrou: false });
+  if (empreinte.error || typeof empreinte.data !== "string") throw new ToolError("État des demandes indisponible");
+  const liste = mails.sort((a, b) => String(a.received_at).localeCompare(String(b.received_at))).map(m => ({
+    id: m.id, sujet: m.subject, expediteur: m.from_name ? `${m.from_name} <${m.from_email ?? ""}>` : m.from_email, recu_le: m.received_at,
+    conversation_id: m.conversation_id, ajoute_par_le_fil: !demandes.includes(m.id),
+  }));
+  const ajoutes = liste.filter(m => m.ajoute_par_le_fil).length;
+  const warnings = ajoutes ? [`${ajoutes} demande(s) en attente du même fil ajoutée(s).`] : [];
+  const after = action === "rattacher"
+    ? { action, opportunite, demandes: liste, actions_mail_recu_prevues: liste.length }
+    : { action, motif: content.motif, demandes: liste };
+  return { payload, before: {}, after, affaireId: action === "rattacher" ? String(opportunite!.id) : undefined, snapshot: empreinte.data, warnings, duplicates: [] };
 }
