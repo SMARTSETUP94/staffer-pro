@@ -25,9 +25,9 @@ export const opportunitePatch = z.object({
   intitule: text.optional(), description: nullableText, lieu: nullableText, date_montage: nullableDate, date_demontage: nullableDate,
   date_evenement: nullableDate, date_evenement_fin: nullableDate, date_pat: nullableDate, typologie_future: typologie.nullable().optional(),
   ca_estime_ht: z.number().nonnegative().nullable().optional(), charge_affaires_id: uuid.nullable().optional(),
-  statut: z.enum(["presque_gagne", "perdu", "en_attente"]).optional().describe("presque_gagne = accord de principe du client, budget validé oralement, en attente du bon de commande ou de la signature."), motif: note.optional(),
+  statut: z.enum(["presque_gagne", "en_attente"]).optional().describe("presque_gagne = accord de principe du client, budget validé oralement, en attente du bon de commande ou de la signature."), motif: note.optional(),
   prochaine_action: note.optional(), echeance: nullableDate, jalon: z.enum(["qualification", "devis_envoye", "negociation"]).optional(),
-}).strict().refine(p => Object.keys(p).length > 0, "Modification vide").refine(p => !p.statut || p.statut === "presque_gagne" || Boolean(p.motif), "Motif obligatoire pour perdu/en attente");
+}).strict().refine(p => Object.keys(p).length > 0, "Modification vide").refine(p => !p.statut || p.statut === "presque_gagne" || Boolean(p.motif), "Motif obligatoire pour en attente");
 export const etapePatchShape = {
   type: z.enum(ETAPE_TYPES).optional(), sens: z.enum(["aller", "retour"]).nullable().optional(),
   date_debut: dateSchema.optional(), date_fin: nullableDate, heure_debut: z.string().regex(/^\d{2}:\d{2}$/).nullable().optional(), heure_fin: z.string().regex(/^\d{2}:\d{2}$/).nullable().optional(),

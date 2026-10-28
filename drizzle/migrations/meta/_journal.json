@@ -295,6 +295,13 @@
       "when": 1793136279030,
       "tag": "0041_mcp_affecter_role_projet",
       "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1793156356010,
+      "tag": "0042_mcp_verrou_statut_gagne_perdu",
+      "breakpoints": true
     }
   ]
 }
