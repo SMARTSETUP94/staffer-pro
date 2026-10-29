@@ -86,8 +86,12 @@ export function PlanningLogistiqueGrid({ jours, etapes, conflits, big, onCardCli
             <div className={cn("px-1 font-semibold capitalize", big ? "text-lg" : "text-xs", d === today ? "text-primary" : "text-muted-foreground")}>
               {format(date, big ? "EEEE d MMM" : "EEE d MMM", { locale: fr })}
             </div>
-            {dayEtapes.map((e) => (
-              <EtapeCard key={e.id} e={e} conflit={conflits.has(e.id)} big={big} draggable={!!onMove} onClick={onCardClick ? () => onCardClick(e) : undefined} />
+            {regrouperEtapesJour(dayEtapes, d, conflits, regrouper).map((b) => b.kind === "seule" ? (
+              <EtapeCard key={b.etape.id} e={b.etape} conflit={conflits.has(b.etape.id)} big={big} draggable={!!onMove} onClick={onCardClick ? () => onCardClick(b.etape) : undefined} />
+            ) : (
+              <EtapeGroupeCard key={b.key} groupKey={b.key} etapes={b.etapes} plage={b.plage} responsables={b.responsables}
+                conflit={b.conflit} propose={b.propose} annule={b.annule} conflits={conflits} big={big}
+                draggable={!!onMove} onEtapeClick={onCardClick} />
             ))}
           </div>
         );
