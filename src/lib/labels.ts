@@ -155,3 +155,15 @@ export const REFERENT_NIVEAU_LABELS: Record<ReferentNiveau, string> = {
 export const PRESQUE_GAGNE_LABEL = "Presque gagné";
 export const PRESQUE_GAGNE_DEFINITION =
   "Accord de principe du client, budget validé oralement, en attente du bon de commande ou de la signature.";
+
+// Colonne « À faire » du Kanban opportunités — repères visuels non bloquants.
+export const A_FAIRE_BADGE_NOUVELLE = "Nouvelle";
+export function aFaireRetardLabel(jours: number): string {
+  return `En retard · ${jours} j`;
+}
+export function aFaireColonneRetardCount(n: number): string {
+  return `dont ${n} en retard`;
+}
+export function aFaireDepuisTitle(date: Date): string {
+  return `Dans « À faire » depuis le ${date.toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" })}`;
+}

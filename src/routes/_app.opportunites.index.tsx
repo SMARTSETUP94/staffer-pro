@@ -61,6 +61,7 @@ import {
   type TableurFilters,
   type TableurRow,
 } from "@/lib/opportunites-tableur-helpers";
+import { sortAFaire } from "@/lib/opportunite-a-faire";
 import {
   checkCanDeleteOpportunite,
   deleteBlockedMessage,
@@ -241,14 +242,15 @@ function OpportunitesPage() {
         const ids = rows.map((r) => r.id);
         if (ids.length === 0) return;
         void Promise.all([
-          supabase.from("affaires").select("id,statut_opportunite_depuis").in("id", ids),
+          supabase.from("affaires").select("id,statut_opportunite_depuis,created_at").in("id", ids),
           supabase.from("affaire_roles").select("affaire_id,role").in("affaire_id", ids),
         ]).then(([aff, roles]) => {
           if (cancelled) return;
           const depuis = new Map((aff.data ?? []).map((a) => [a.id, a.statut_opportunite_depuis]));
+          const created = new Map((aff.data ?? []).map((a) => [a.id, a.created_at]));
           const rolesBy = new Map<string, string[]>();
           (roles.data ?? []).forEach((r) => rolesBy.set(r.affaire_id, [...(rolesBy.get(r.affaire_id) ?? []), r.role]));
-          setOpps((cur) => cur.map((o) => ({ ...o, statut_opportunite_depuis: depuis.get(o.id) ?? null, roles_affectes: rolesBy.get(o.id) ?? [] })));
+          setOpps((cur) => cur.map((o) => ({ ...o, statut_opportunite_depuis: depuis.get(o.id) ?? null, created_at: created.get(o.id) ?? null, roles_affectes: rolesBy.get(o.id) ?? [] })));
         });
       });
     return () => {
@@ -312,10 +314,14 @@ function OpportunitesPage() {
     return m;
   }, [oppsFiltrees]);
 
-  // Conversion en TableurRow pour la vue Tableur (filtre "Archivé" si masqué)
+  // Conversion en TableurRow pour la vue Tableur (filtre "Archivé" si masqué).
+  // Filtre « À faire » actif → tri chronologique (plus ancienne en premier),
+  // comme la colonne Kanban correspondante.
+  const aFaireOnly =
+    statutsFilter.length === 1 && statutsFilter[0] === "a_faire";
   const tableurRows: TableurRow[] = useMemo(
-    () =>
-      oppsFiltrees
+    () => {
+      const rows = oppsFiltrees
         .filter((o) => showArchived || o.statut_opportunite !== "termine")
         .map((o) => ({
           id: o.id,
@@ -335,8 +341,12 @@ function OpportunitesPage() {
           date_demontage: o.date_demontage,
           notes: o.notes,
           typologie_future: o.typologie_future,
-        })),
-    [oppsFiltrees, showArchived],
+          statut_opportunite_depuis: o.statut_opportunite_depuis ?? null,
+          created_at: o.created_at ?? null,
+        }));
+      return aFaireOnly ? sortAFaire(rows) : rows;
+    },
+    [oppsFiltrees, showArchived, aFaireOnly],
   );
 
   const archivedCount = useMemo(

@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useDroppable } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { cn } from "@/lib/utils";
@@ -7,6 +8,8 @@ import {
   STATUT_TONE,
   type OpportuniteStatut,
 } from "@/lib/opportunites";
+import { countEnRetard, sortAFaire } from "@/lib/opportunite-a-faire";
+import { aFaireColonneRetardCount } from "@/lib/labels";
 import { OpportuniteCard, type OpportuniteCardData } from "./OpportuniteCard";
 import type { ChargeAffaires } from "@/hooks/use-charges-affaires";
 
@@ -27,6 +30,17 @@ export function KanbanColonne({ statut, items, chargesById, onSign, onDelete, dr
   const tone = STATUT_TONE[statut];
   const { setNodeRef, isOver } = useDroppable({ id: `col::${statut}` });
 
+  // Colonne « À faire » : tri chronologique (plus ancienne en haut) + compteur de retards.
+  const isAFaire = statut === "a_faire";
+  const displayItems = useMemo(
+    () => (isAFaire ? sortAFaire(items) : items),
+    [isAFaire, items],
+  );
+  const enRetard = useMemo(
+    () => (isAFaire ? countEnRetard(items) : 0),
+    [isAFaire, items],
+  );
+
   return (
     <div
       ref={setNodeRef}
@@ -46,27 +60,37 @@ export function KanbanColonne({ statut, items, chargesById, onSign, onDelete, dr
             {STATUT_LABEL[statut]}
           </span>
         </div>
-        <span
-          className={cn(
-            "inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[10px] font-bold",
-            tone.chip,
+        <div className="flex items-center gap-1.5">
+          {enRetard > 0 && (
+            <span
+              className="text-[10px] font-semibold text-destructive"
+              title={aFaireColonneRetardCount(enRetard)}
+            >
+              {aFaireColonneRetardCount(enRetard)}
+            </span>
           )}
-        >
-          {items.length}
-        </span>
+          <span
+            className={cn(
+              "inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[10px] font-bold",
+              tone.chip,
+            )}
+          >
+            {displayItems.length}
+          </span>
+        </div>
       </div>
 
       <SortableContext
-        items={items.map((i) => i.id)}
+        items={displayItems.map((i) => i.id)}
         strategy={verticalListSortingStrategy}
       >
         <div className="flex flex-1 flex-col gap-2 overflow-y-auto p-2">
-          {items.length === 0 ? (
+          {displayItems.length === 0 ? (
             <div className="flex flex-1 items-center justify-center px-2 py-8 text-center text-[11px] italic text-muted-foreground">
               Glissez une carte ici
             </div>
           ) : (
-            items.map((opp) => (
+            displayItems.map((opp) => (
               <OpportuniteCard
                 key={opp.id}
                 opp={opp}

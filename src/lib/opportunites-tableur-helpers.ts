@@ -88,6 +88,9 @@ export interface TableurRow {
   next_action_due_le?: string | null;
   last_jalon_etape?: string | null;
   actions_count?: number | null;
+  /** Tri chronologique de la vue liste quand le filtre « À faire » est actif. */
+  statut_opportunite_depuis?: string | null;
+  created_at?: string | null;
 }
 
 /** Calcule la cellule cible pour Tab (right-then-down) ou Enter (down). */
