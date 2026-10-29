@@ -243,6 +243,7 @@ export function isDraftRowEmpty(row: TableurRow): boolean {
 export const STATUT_ROW_BG: Record<OpportuniteStatut, string> = {
   a_faire: "bg-muted/30",
   envoye: "bg-blue-50/60 dark:bg-blue-950/20",
+  a_l_etude: "bg-sky-50/60 dark:bg-sky-950/20",
   presque_gagne: "bg-amber-50/60 dark:bg-amber-950/20",
   gagne: "bg-emerald-50/60 dark:bg-emerald-950/20",
   perdu: "bg-rose-50/60 dark:bg-rose-950/20",
