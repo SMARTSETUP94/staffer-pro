@@ -4,6 +4,8 @@ import { AlertTriangle, Truck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ETAPE_CLASSES, ETAPE_LABELS, etapeCouvreJour, heureCourte, nbPersonnesCourt } from "@/lib/logistique/etapes";
 import type { EtapeLogistique } from "@/hooks/use-etapes-logistiques";
+import { regrouperEtapesJour } from "@/lib/logistique/regroupement";
+import { EtapeGroupeCard } from "./EtapeGroupeCard";
 
 interface Props {
   jours: string[];
@@ -13,6 +15,7 @@ interface Props {
   onCardClick?: (e: EtapeLogistique) => void;
   onDayClick?: (day: string) => void;
   onMove?: (e: EtapeLogistique, deltaJours: number) => void;
+  regrouper?: boolean;
 }
 
 export function EtapeCard({ e, conflit, big, onClick, draggable }: {
@@ -53,7 +56,7 @@ export function EtapeCard({ e, conflit, big, onClick, draggable }: {
   );
 }
 
-export function PlanningLogistiqueGrid({ jours, etapes, conflits, big, onCardClick, onDayClick, onMove }: Props) {
+export function PlanningLogistiqueGrid({ jours, etapes, conflits, big, onCardClick, onDayClick, onMove, regrouper = true }: Props) {
   const today = format(new Date(), "yyyy-MM-dd");
   const cols = jours.length <= 7 ? jours.length : 7;
   return (

@@ -17,6 +17,7 @@ import { conflitsVehicules, decalerEtape, joursIso } from "@/lib/logistique/etap
 import { useEtapesLogistiques, useInvalidateEtapes, type EtapeLogistique } from "@/hooks/use-etapes-logistiques";
 import { LegendeEtapes, PlanningLogistiqueGrid } from "@/components/logistique/PlanningLogistiqueGrid";
 import { EtapeDialog } from "@/components/logistique/EtapeDialog";
+import { RegrouperToggle, useRegrouperParChantier } from "@/components/logistique/EtapeGroupeCard";
 
 export const Route = createFileRoute("/_app/logistique/")({
   beforeLoad: () => requireCapability("logistique.planning.view"),
@@ -38,6 +39,7 @@ function PlanningLogistiquePage() {
   const [semaines, setSemaines] = useState<1 | 2 | 4>(1);
   const [calendrierOpen, setCalendrierOpen] = useState(false);
   const canEdit = useCapability("logistique.etape.edit");
+  const [regrouper, setRegrouper] = useRegrouperParChantier();
   const jours = useMemo(() => joursIso(start, semaines * 7), [start, semaines]);
   const { data: etapes = [], isLoading } = useEtapesLogistiques(jours[0], jours[jours.length - 1]);
   const conflits = useMemo(() => conflitsVehicules(etapes), [etapes]);
@@ -89,11 +91,11 @@ function PlanningLogistiquePage() {
           {canEdit && <Button onClick={() => setDlg({ open: true })}><Plus className="mr-1 h-4 w-4" />Étape</Button>}
         </div>
       </div>
-      <div className="hidden md:block"><LegendeEtapes /></div>
+      <div className="flex flex-wrap items-center justify-between gap-2"><div className="hidden md:block"><LegendeEtapes /></div><RegrouperToggle value={regrouper} onChange={setRegrouper} /></div>
       {isLoading ? <p className="text-sm text-muted-foreground">Chargement…</p> : (
         <>
           <div className="md:hidden">
-            <PlanningJourMobile jours={jours} etapes={etapes} conflits={conflits}
+            <PlanningJourMobile jours={jours} etapes={etapes} conflits={conflits} regrouper={regrouper}
               onCardClick={canEdit ? (e) => setDlg({ open: true, etape: e }) : undefined}
               onAdd={canEdit ? (d) => setDlg({ open: true, date: d }) : undefined} />
           </div>
@@ -102,6 +104,7 @@ function PlanningLogistiquePage() {
             jours={jours}
             etapes={etapes}
             conflits={conflits}
+            regrouper={regrouper}
             onCardClick={canEdit ? (e) => setDlg({ open: true, etape: e }) : undefined}
             onDayClick={canEdit ? (d) => setDlg({ open: true, date: d }) : undefined}
             onMove={canEdit ? move : undefined}
