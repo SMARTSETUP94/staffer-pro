@@ -7316,6 +7316,10 @@ export type Database = {
         }
         Returns: string
       }
+      user_can_write_affaire: {
+        Args: { _affaire_id: string; _cap: string }
+        Returns: boolean
+      }
       user_cap_scope: { Args: { _cap: string }; Returns: string }
       user_has_affaire_access: {
         Args: { _affaire_id: string }
