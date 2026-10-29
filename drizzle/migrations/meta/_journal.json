@@ -323,6 +323,13 @@
       "when": 1793259257022,
       "tag": "0045_affaire_roles_write_scope",
       "breakpoints": true
+    },
+    {
+      "idx": 46,
+      "version": "7",
+      "when": 1793299338809,
+      "tag": "0046_a_l_etude_visite_technique",
+      "breakpoints": true
     }
   ]
 }

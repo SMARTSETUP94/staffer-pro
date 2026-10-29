@@ -49,8 +49,9 @@ export function rolesAttendus(etat: AffaireEtat, phases: Phases): ProjetRole[] {
   const out: ProjetRole[] = [];
   const s = etat.statut_opportunite;
   const signe = etat.phase === "signe";
-  if (signe || s === "presque_gagne" || s === "gagne") out.push("concepteur");
-  if (signe || s === "gagne") out.push("responsable_projet");
+  // « À l'étude » nécessite un concepteur/dessinateur (visite technique, repérage).
+  if (signe || s === "a_l_etude" || s === "presque_gagne" || s === "gagne") out.push("concepteur");
+  if (signe || s === "presque_gagne" || s === "gagne") out.push("responsable_projet");
   if (signe) {
     if (phases.fabrication) out.push("chef_constructeur", "chef_finition");
     if (phases.montage_demontage) out.push("chef_montage", "chef_demontage");
@@ -151,6 +152,6 @@ export type AffichagePilotage = "plein" | "attenue" | "potentiel";
 export function affichagePilotage(etat: AffaireEtat): AffichagePilotage | null {
   if (etat.phase === "signe") return "plein";
   if (etat.statut_opportunite === "gagne" || etat.statut_opportunite === "presque_gagne") return "attenue";
-  if (etat.statut_opportunite === "a_faire" || etat.statut_opportunite === "envoye") return "potentiel";
+  if (etat.statut_opportunite === "a_faire" || etat.statut_opportunite === "envoye" || etat.statut_opportunite === "a_l_etude") return "potentiel";
   return null;
 }

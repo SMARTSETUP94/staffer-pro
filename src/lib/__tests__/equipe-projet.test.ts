@@ -8,8 +8,12 @@ const fab = phasesFromList(["commercial_etude", "fabrication", "logistique"]);
 const md = phasesFromList(["commercial_etude", "logistique", "montage", "demontage"]);
 
 describe("badges rôle à affecter", () => {
-  it("presque gagné → concepteur", () => {
-    expect(rolesManquants({ phase: "opportunite", statut_opportunite: "presque_gagne" }, fab, [])).toEqual(["concepteur"]);
+  it("presque gagné → concepteur + responsable projet", () => {
+    expect(rolesManquants({ phase: "opportunite", statut_opportunite: "presque_gagne" }, fab, [])).toEqual(["concepteur", "responsable_projet"]);
+  });
+  it("à l'étude → concepteur seul", () => {
+    expect(rolesManquants({ phase: "opportunite", statut_opportunite: "a_l_etude" }, fab, [])).toEqual(["concepteur"]);
+    expect(rolesManquants({ phase: "opportunite", statut_opportunite: "a_l_etude" }, fab, ["concepteur"])).toEqual([]);
   });
   it("gagné → concepteur + responsable projet", () => {
     expect(rolesManquants({ phase: "opportunite", statut_opportunite: "gagne" }, fab, ["concepteur"])).toEqual(["responsable_projet"]);

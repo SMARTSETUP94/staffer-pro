@@ -20,6 +20,7 @@ import {
 import {
   getOpportuniteFiche,
   updateOpportuniteFields,
+  addOpportuniteAction,
   type OpportuniteFicheData,
 } from "@/lib/server-fns/opportunite-fiche.functions";
 import { OpportuniteFicheHeader } from "@/components/opportunites/fiche/OpportuniteFicheHeader";
@@ -134,6 +135,8 @@ function BriefSection({
   const [typo, setTypo] = useState<AffaireTypologie | "">((affaire.typologie_future as AffaireTypologie | null) ?? "");
   const [taille, setTaille] = useState<OpportuniteTaille | "">((affaire.taille as OpportuniteTaille | null) ?? "");
   const [datePat, setDatePat] = useState(affaire.date_pat ?? "");
+  const [dateVisite, setDateVisite] = useState(affaire.date_visite_technique ?? "");
+  const [visiteCommentaire, setVisiteCommentaire] = useState("");
   const [evtDebut, setEvtDebut] = useState(affaire.date_evenement_debut ?? "");
   const [evtFin, setEvtFin] = useState(affaire.date_evenement_fin ?? "");
   const [notes, setNotes] = useState(affaire.notes ?? "");
@@ -147,10 +150,14 @@ function BriefSection({
     setTypo((affaire.typologie_future as AffaireTypologie | null) ?? "");
     setTaille((affaire.taille as OpportuniteTaille | null) ?? "");
     setDatePat(affaire.date_pat ?? "");
+    setDateVisite(affaire.date_visite_technique ?? "");
+    setVisiteCommentaire("");
     setEvtDebut(affaire.date_evenement_debut ?? "");
     setEvtFin(affaire.date_evenement_fin ?? "");
     setNotes(affaire.notes ?? "");
   }, [affaire]);
+
+  const addAction = useServerFn(addOpportuniteAction);
 
   async function save() {
     setSaving(true);
@@ -166,12 +173,25 @@ function BriefSection({
             typologie_future: typo || null,
             taille: (taille || null) as OpportuniteTaille | null,
             date_pat: datePat || null,
+            date_visite_technique: dateVisite || null,
             date_evenement_debut: evtDebut || null,
             date_evenement_fin: evtFin || null,
             notes: notes.trim() || null,
           },
         },
       });
+      // Le commentaire de visite technique est tracé comme un rendez-vous planifié.
+      const commentaire = visiteCommentaire.trim();
+      if (commentaire) {
+        await addAction({
+          data: {
+            affaireId: affaire.id,
+            type: "rdv_planifie",
+            texte: `Visite technique / repérage — ${commentaire}`,
+            prochaine_action_due_le: dateVisite || null,
+          },
+        });
+      }
       toast.success("Brief enregistré.");
       onSaved();
     } catch (err) {
@@ -238,6 +258,9 @@ function BriefSection({
           <Field label="Date PAT (présentation au client)">
             <Input type="date" value={datePat} onChange={(e) => setDatePat(e.target.value)} disabled={!canEdit} />
           </Field>
+          <Field label="Visite technique / repérage">
+            <Input type="date" value={dateVisite} onChange={(e) => setDateVisite(e.target.value)} disabled={!canEdit} />
+          </Field>
           <Field label="Événement — début">
             <Input type="date" value={evtDebut} onChange={(e) => setEvtDebut(e.target.value)} disabled={!canEdit} />
           </Field>
@@ -252,6 +275,15 @@ function BriefSection({
             rows={4}
             disabled={!canEdit}
             placeholder="Contexte, attentes, contraintes…"
+          />
+        </Field>
+        <Field label="Commentaire visite technique (optionnel — ajouté à l'historique comme rendez-vous planifié)">
+          <Textarea
+            value={visiteCommentaire}
+            onChange={(e) => setVisiteCommentaire(e.target.value)}
+            rows={2}
+            disabled={!canEdit}
+            placeholder="Compte rendu ou consignes pour la visite / le repérage…"
           />
         </Field>
         {canEdit && (

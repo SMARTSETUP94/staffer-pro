@@ -37,7 +37,7 @@ async function bounded(query: any): Promise<Row[]> {
   if (rows.length >= 1000) throw new ToolError("Plus de 999 lignes sources : réduisez la période.");
   return rows;
 }
-const AFFAIRE_FIELDS = "id,numero,nom,client,lieu,typologie,typologie_future,statut,phase,date_montage,date_demontage,date_debut,date_fin_prevue,date_pat,date_evenement_debut,date_evenement_fin,chef_projet_id,charge_affaires_id";
+const AFFAIRE_FIELDS = "id,numero,nom,client,lieu,typologie,typologie_future,statut,phase,date_montage,date_demontage,date_debut,date_fin_prevue,date_pat,date_visite_technique,date_evenement_debut,date_evenement_fin,chef_projet_id,charge_affaires_id";
 
 // Non-global métier scopes fail closed until the corresponding scoped reader is implemented.
 // This intentionally never widens the existing RLS, notably its historically broad planning policies.

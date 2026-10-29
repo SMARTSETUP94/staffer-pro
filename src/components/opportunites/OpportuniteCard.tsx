@@ -50,12 +50,14 @@ export interface OpportuniteCardData {
   taille: OpportuniteTaille | null;
   date_opportunite: string | null;
   notes: string | null;
-  statut_opportunite: "a_faire" | "envoye" | "presque_gagne" | "gagne" | "perdu" | "termine";
+  statut_opportunite: "a_faire" | "envoye" | "a_l_etude" | "presque_gagne" | "gagne" | "perdu" | "termine";
   statut_opportunite_depuis?: string | null;
   /** Date de création — repère « Nouvelle » de la colonne À faire. */
   created_at?: string | null;
   /** Lot 1 — rôles projet déjà affectés (pour les badges « rôle à affecter »). */
   roles_affectes?: string[];
+  /** Date de visite technique / repérage (statut « À l'étude »). */
+  date_visite_technique?: string | null;
   /** v0.29.2 — typologie cible déclarée (override le getAffaireTypologie 9XXX par défaut). */
   typologie_future?: AffaireTypologie | null;
   /** Bloc 10.4 — enrichissement listing. */
@@ -242,6 +244,18 @@ export function OpportuniteCard({
                 {aFaire.kind === "retard"
                   ? aFaireRetardLabel(aFaire.jours)
                   : A_FAIRE_BADGE_NOUVELLE}
+              </span>
+            </div>
+          )}
+
+          {opp.statut_opportunite === "a_l_etude" && opp.date_visite_technique && (
+            <div className="mt-2">
+              <span
+                className="inline-flex items-center gap-1 rounded-full bg-sky-100 px-2 py-0.5 text-[10px] font-semibold text-sky-800"
+                title="Visite technique / repérage planifiée"
+              >
+                <Clock className="h-2.5 w-2.5" />
+                Visite le {new Date(opp.date_visite_technique + "T00:00:00").toLocaleDateString("fr-FR", { day: "2-digit", month: "short" })}
               </span>
             </div>
           )}

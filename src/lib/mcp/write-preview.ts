@@ -62,7 +62,7 @@ export async function prepareWrite(context: McpAppContext, tool: WriteName, args
       const extra: Record<string, unknown> = {};
       for (const key of ["prochaine_action", "echeance", "jalon", "motif"]) if (key in patch) { extra[key] = patch[key]; delete patch[key]; }
       for (const [source, target] of [["intitule", "nom"], ["description", "notes"], ["date_evenement", "date_evenement_debut"]]) if (source in patch) { patch[target] = patch[source]; delete patch[source]; }
-      if (tool === "mettre_a_jour_opportunite" && "statut" in patch) { patch.statut_opportunite = patch.statut === "en_attente" ? "a_faire" : "presque_gagne"; delete patch.statut; if (args.champs && (args.champs as Record<string, unknown>).statut === "en_attente") warnings.push("En attente correspond au statut À faire existant ; le motif est ajouté au journal."); }
+      if (tool === "mettre_a_jour_opportunite" && "statut" in patch) { const statutMap = { en_attente: "a_faire", a_l_etude: "a_l_etude", presque_gagne: "presque_gagne" } as const; patch.statut_opportunite = statutMap[patch.statut as keyof typeof statutMap]; delete patch.statut; if (args.champs && (args.champs as Record<string, unknown>).statut === "en_attente") warnings.push("En attente correspond au statut À faire existant ; le motif est ajouté au journal."); }
       payload = { patch, ...extra }; after = { ...before, ...patch, ...extra };
       if ("date_montage" in patch || "date_demontage" in patch) {
         const [stages, assignments] = await Promise.all([

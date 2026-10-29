@@ -15,6 +15,13 @@ describe("MCP équipe projet", () => {
     expect(opportunitePatch.safeParse({ statut: "presque_gagne" }).success).toBe(true);
     expect(opportunitePatch.safeParse({ statut: "perdu" }).success).toBe(false);
   });
+  it("accepte a_l_etude et la date de visite technique, refuse gagné/perdu", () => {
+    expect(opportunitePatch.safeParse({ statut: "a_l_etude" }).success).toBe(true);
+    expect(opportunitePatch.safeParse({ statut: "a_l_etude", date_visite_technique: "2026-11-12" }).success).toBe(true);
+    expect(opportunitePatch.safeParse({ date_visite_technique: "12/11/2026" }).success).toBe(false);
+    expect(opportunitePatch.safeParse({ statut: "gagne" }).success).toBe(false);
+    expect(opportunitePatch.safeParse({ statut: "perdu" }).success).toBe(false);
+  });
   it("affecter_role_projet exige affaires.edit et un rôle connu", () => {
     expect(WRITE_CAPS.affecter_role_projet).toBe("affaires.edit");
     const s = z.object(writeSchemas.affecter_role_projet);
