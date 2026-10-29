@@ -282,26 +282,29 @@ function OpportunitesPage() {
         const due = new Date(o.next_action_due_le + "T00:00:00");
         if (due > sevenDaysAhead) return false;
       }
-      if (typoSet.size > 0) {
-        if (!o.typologie_future || !typoSet.has(o.typologie_future)) return false;
-      }
       if (normalizedQuery) {
         const haystack = `${o.numero ?? ""} ${o.client ?? ""} ${o.nom ?? ""}`.toLowerCase();
         if (!haystack.includes(normalizedQuery)) return false;
       }
       return true;
     });
-  }, [opps, filterCa, noCa, actionsDues, sevenDaysAhead, typoSet, normalizedQuery]);
+  }, [opps, filterCa, noCa, actionsDues, sevenDaysAhead, normalizedQuery]);
 
-  const typoCounts = useMemo(() => {
-    const counts: Partial<Record<AffaireTypologie, number>> = {};
-    opps.forEach((o) => {
-      if (o.typologie_future) {
-        counts[o.typologie_future] = (counts[o.typologie_future] ?? 0) + 1;
-      }
+  // Compteurs par statut (avant filtre statut) pour les pastilles.
+  const statutCounts = useMemo(() => {
+    const counts: Partial<Record<OpportuniteStatut, number>> = {};
+    oppsFiltrees.forEach((o) => {
+      counts[o.statut_opportunite] = (counts[o.statut_opportunite] ?? 0) + 1;
     });
     return counts;
-  }, [opps]);
+  }, [oppsFiltrees]);
+  const kanbanStatuts = useMemo(
+    () =>
+      statutsFilter.length === 0
+        ? KANBAN_STATUT_ORDER
+        : KANBAN_STATUT_ORDER.filter((s) => statutsFilter.includes(s)),
+    [statutsFilter],
+  );
 
   // Groupage par statut (Kanban) — exclut "Archivé" pour rester lisible
   const byStatut = useMemo(() => {
@@ -514,25 +517,6 @@ function OpportunitesPage() {
         {vue === "tableur" && (
           <>
             <Select
-              value={statutsFilter[0] ?? "__all__"}
-              onValueChange={(v) =>
-                setStatutsFilter(v === "__all__" ? [] : [v as OpportuniteStatut])
-              }
-            >
-              <SelectTrigger className="h-9 w-[150px] rounded-xl">
-                <SelectValue placeholder="Statut" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__all__">Tous statuts</SelectItem>
-                {STATUT_ORDER.map((s) => (
-                  <SelectItem key={s} value={s}>
-                    {STATUT_LABEL[s]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select
               value={taillesFilter[0] ?? "__all__"}
               onValueChange={(v) =>
                 setTaillesFilter(v === "__all__" ? [] : [v as OpportuniteTaille])
@@ -623,13 +607,44 @@ function OpportunitesPage() {
 
       <div className="rounded-2xl border border-border bg-card p-3">
         <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-          Typologie future (cible à la signature)
+          Statut
         </div>
-        <TypologieMultiFilter
-          value={typoFilter}
-          onChange={setTypoFilter}
-          counts={typoCounts}
-        />
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => setStatutsFilter([])}
+            className={`rounded-full border px-3 py-1 text-xs font-medium ${
+              statutsFilter.length === 0
+                ? "border-primary bg-primary text-primary-foreground"
+                : "border-border bg-background text-muted-foreground"
+            }`}
+          >
+            Tous
+          </button>
+          {(vue === "tableur" ? STATUT_ORDER : KANBAN_STATUT_ORDER).map((s) => {
+            const active = statutsFilter.includes(s);
+            return (
+              <button
+                key={s}
+                type="button"
+                aria-pressed={active}
+                onClick={() =>
+                  setStatutsFilter((prev) =>
+                    prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s],
+                  )
+                }
+                className={`rounded-full border px-3 py-1 text-xs font-medium ${
+                  active
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-border bg-background text-muted-foreground"
+                }`}
+              >
+                {STATUT_LABEL[s]}
+                <span className="ml-1.5 opacity-70">{statutCounts[s] ?? 0}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {loading ? (
