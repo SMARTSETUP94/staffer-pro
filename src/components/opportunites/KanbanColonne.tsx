@@ -81,16 +81,16 @@ export function KanbanColonne({ statut, items, chargesById, onSign, onDelete, dr
       </div>
 
       <SortableContext
-        items={items.map((i) => i.id)}
+        items={displayItems.map((i) => i.id)}
         strategy={verticalListSortingStrategy}
       >
         <div className="flex flex-1 flex-col gap-2 overflow-y-auto p-2">
-          {items.length === 0 ? (
+          {displayItems.length === 0 ? (
             <div className="flex flex-1 items-center justify-center px-2 py-8 text-center text-[11px] italic text-muted-foreground">
               Glissez une carte ici
             </div>
           ) : (
-            items.map((opp) => (
+            displayItems.map((opp) => (
               <OpportuniteCard
                 key={opp.id}
                 opp={opp}
