@@ -887,6 +887,7 @@ export type Database = {
           date_montage: string | null
           date_opportunite: string | null
           date_pat: string | null
+          date_visite_technique: string | null
           dessinateur_id: string | null
           heures_prevues_demontage: number
           heures_prevues_montage: number
@@ -948,6 +949,7 @@ export type Database = {
           date_montage?: string | null
           date_opportunite?: string | null
           date_pat?: string | null
+          date_visite_technique?: string | null
           dessinateur_id?: string | null
           heures_prevues_demontage?: number
           heures_prevues_montage?: number
@@ -1009,6 +1011,7 @@ export type Database = {
           date_montage?: string | null
           date_opportunite?: string | null
           date_pat?: string | null
+          date_visite_technique?: string | null
           dessinateur_id?: string | null
           heures_prevues_demontage?: number
           heures_prevues_montage?: number
@@ -7014,6 +7017,7 @@ export type Database = {
           date_montage: string
           date_opportunite: string
           date_pat: string
+          date_visite_technique: string
           id: string
           last_jalon_date_atteinte: string
           last_jalon_etape: string
@@ -7494,6 +7498,7 @@ export type Database = {
       opportunite_statut:
         | "a_faire"
         | "envoye"
+        | "a_l_etude"
         | "presque_gagne"
         | "gagne"
         | "perdu"
@@ -7834,6 +7839,7 @@ export const Constants = {
       opportunite_statut: [
         "a_faire",
         "envoye",
+        "a_l_etude",
         "presque_gagne",
         "gagne",
         "perdu",
