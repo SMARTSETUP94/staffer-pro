@@ -167,3 +167,20 @@ export function aFaireColonneRetardCount(n: number): string {
 export function aFaireDepuisTitle(date: Date): string {
   return `Dans « À faire » depuis le ${date.toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" })}`;
 }
+
+// Planning logistique — regroupement des étapes d'un même chantier sur un jour.
+export const LOGISTIQUE_REGROUPER_LABEL = "Regrouper par chantier";
+export function logistiqueNbEtapesLabel(n: number): string {
+  return `${n} étape${n > 1 ? "s" : ""}`;
+}
+export const LOGISTIQUE_GROUPE_CONFLIT = "Conflit de véhicule dans ce chantier";
+export const LOGISTIQUE_GROUPE_PROPOSE = "Contient une étape proposée";
+export const LOGISTIQUE_GROUPE_ANNULE = "Contient une étape annulée";
+export const LOGISTIQUE_GROUPE_DEPLIER = "Afficher les étapes";
+export const LOGISTIQUE_GROUPE_REPLIER = "Masquer les étapes";
+export const ETAPE_LOGISTIQUE_STATUT_LABELS: Record<string, string> = {
+  propose: "Proposé",
+  valide: "Validé",
+  fait: "Fait",
+  annule: "Annulé",
+};

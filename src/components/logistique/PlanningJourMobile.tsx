@@ -6,9 +6,12 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ETAPE_CLASSES, ETAPE_LABELS, etapeCouvreJour } from "@/lib/logistique/etapes";
 import type { EtapeLogistique } from "@/hooks/use-etapes-logistiques";
+import { regrouperEtapesJour } from "@/lib/logistique/regroupement";
+import { EtapeGroupeCard } from "./EtapeGroupeCard";
 
 /** Vue téléphone : sélecteur de jour + liste aérée des étapes du jour. */
-export function PlanningJourMobile({ jours, etapes, conflits, onCardClick, onAdd }: {
+export function PlanningJourMobile({ jours, etapes, conflits, onCardClick, onAdd, regrouper = true }: {
+  regrouper?: boolean;
   jours: string[];
   etapes: EtapeLogistique[];
   conflits: Set<string>;
@@ -19,8 +22,7 @@ export function PlanningJourMobile({ jours, etapes, conflits, onCardClick, onAdd
   const [day, setDay] = useState(jours.includes(today) ? today : jours[0]);
   useEffect(() => { if (!jours.includes(day)) setDay(jours.includes(today) ? today : jours[0]); }, [jours]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const duJour = etapes.filter((e) => etapeCouvreJour(e, day))
-    .sort((a, b) => (a.heure_debut ?? "").localeCompare(b.heure_debut ?? ""));
+  const blocs = regrouperEtapesJour(etapes, day, conflits, regrouper);
 
   return (
     <div className="space-y-3">
@@ -46,9 +48,14 @@ export function PlanningJourMobile({ jours, etapes, conflits, onCardClick, onAdd
         {onAdd && <Button size="sm" variant="outline" onClick={() => onAdd(day)}><Plus className="mr-1 h-4 w-4" />Ajouter</Button>}
       </div>
 
-      {duJour.length === 0 ? (
+      {blocs.length === 0 ? (
         <p className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">Aucune étape ce jour.</p>
-      ) : duJour.map((e) => {
+      ) : blocs.map((b) => {
+        if (b.kind === "groupe") return (
+          <EtapeGroupeCard key={b.key} groupKey={b.key} etapes={b.etapes} plage={b.plage} responsables={b.responsables}
+            conflit={b.conflit} propose={b.propose} annule={b.annule} conflits={conflits} big onEtapeClick={onCardClick} />
+        );
+        const e = b.etape;
         const t = e.type as keyof typeof ETAPE_LABELS;
         const h = [e.heure_debut?.slice(0, 5), e.heure_fin?.slice(0, 5)].filter(Boolean).join(" – ") || e.horaire_libre;
         return (
