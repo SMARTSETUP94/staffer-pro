@@ -48,7 +48,6 @@ import {
 } from "@/components/opportunites/OpportuniteCard";
 import { NouvelleOpportuniteDialog } from "@/components/opportunites/NouvelleOpportuniteDialog";
 import { SignerOpportuniteDialog } from "@/components/opportunites/SignerOpportuniteDialog";
-import { TypologieMultiFilter } from "@/components/typologie/TypologieMultiFilter";
 import {
   type AffaireTypologie,
   AFFAIRE_TYPOLOGIES,
@@ -260,7 +259,6 @@ function OpportunitesPage() {
 
   // v0.29.2 — Filtrage CA + typologie FUTURE (la typologie dérivée du numero
   // est inutile ici car toutes les opps sont 9XXX = prototype par construction).
-  const typoSet = useMemo(() => new Set(typoFilter), [typoFilter]);
   const normalizedQuery = searchQuery.trim().toLowerCase();
   const today = useMemo(() => {
     const d = new Date();
@@ -690,7 +688,7 @@ function OpportunitesPage() {
           onDragEnd={handleDragEnd}
         >
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-5">
-            {KANBAN_STATUT_ORDER.map((s) => (
+            {kanbanStatuts.map((s) => (
               <KanbanColonne
                 key={s}
                 statut={s}
