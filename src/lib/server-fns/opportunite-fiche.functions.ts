@@ -101,6 +101,7 @@ export interface OpportuniteFicheData {
     typologie_future: string | null;
     date_opportunite: string | null;
     date_pat: string | null;
+    date_visite_technique: string | null;
     date_evenement_debut: string | null;
     date_evenement_fin: string | null;
     charge_affaires_id: string | null;
@@ -135,7 +136,7 @@ export const getOpportuniteFiche = createServerFn({ method: "GET" })
       supabase
         .from("affaires")
         .select(
-          "id, numero, code_opportunite, nom, client, client_id, lieu, notes, phase, statut_opportunite, taille, typologie_future, date_opportunite, date_pat, date_evenement_debut, date_evenement_fin, charge_affaires_id, archived_at, created_at, updated_at",
+          "id, numero, code_opportunite, nom, client, client_id, lieu, notes, phase, statut_opportunite, taille, typologie_future, date_opportunite, date_pat, date_visite_technique, date_evenement_debut, date_evenement_fin, charge_affaires_id, archived_at, created_at, updated_at",
         )
         .eq("id", affaireId)
         .maybeSingle(),
@@ -233,6 +234,7 @@ export const UPDATE_FIELDS_SCHEMA = z.object({
   typologie_future: z.string().max(50).nullable().optional(),
   taille: z.enum(["tres_petit", "petit", "moyen", "gros", "tres_gros"]).nullable().optional(),
   date_pat: z.string().nullable().optional(),
+  date_visite_technique: z.string().nullable().optional(),
   date_evenement_debut: z.string().nullable().optional(),
   date_evenement_fin: z.string().nullable().optional(),
   charge_affaires_id: z.string().uuid().nullable().optional(),
