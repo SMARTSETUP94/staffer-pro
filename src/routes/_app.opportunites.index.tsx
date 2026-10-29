@@ -62,6 +62,10 @@ import {
 } from "@/lib/opportunites-tableur-helpers";
 import { sortAFaire } from "@/lib/opportunite-a-faire";
 import {
+  matchSansDessinateur,
+  matchSansResponsableProjet,
+} from "@/lib/opportunite-filtres-roles";
+import {
   checkCanDeleteOpportunite,
   deleteBlockedMessage,
 } from "@/lib/opportunite-delete";
@@ -90,6 +94,8 @@ const OPPS_SEARCH_DEFAULTS = {
   archived: false,
   actionsDues: false,
   noCa: false,
+  noD: false,
+  noRp: false,
 };
 
 const oppsSearchSchema = z.object({
@@ -106,6 +112,8 @@ const oppsSearchSchema = z.object({
   archived: fallback(z.boolean(), false).default(false),
   actionsDues: fallback(z.boolean(), false).default(false),
   noCa: fallback(z.boolean(), false).default(false),
+  noD: fallback(z.boolean(), false).default(false),
+  noRp: fallback(z.boolean(), false).default(false),
 });
 
 type OppsSearch = z.infer<typeof oppsSearchSchema>;
@@ -133,6 +141,7 @@ export const Route = createFileRoute("/_app/opportunites/")({
 
 interface OppRowFull extends OpportuniteCardData {
   date_pat: string | null;
+  date_visite_technique: string | null;
   date_montage: string | null;
   date_demontage: string | null;
   typologie_future: AffaireTypologie | null;
@@ -155,7 +164,7 @@ function OpportunitesPage() {
   const oppScope = useCapabilityScope("section.pipeline_opportunites");
   const navigate = useNavigate({ from: "/opportunites" });
   const search = Route.useSearch();
-  const { typo: typoFilter, vue, q: searchQuery, preset, archived: showArchived, actionsDues, noCa } = search;
+  const { typo: typoFilter, vue, q: searchQuery, preset, archived: showArchived, actionsDues, noCa, noD, noRp } = search;
 
   const setTypoFilter = (next: AffaireTypologie[]) => {
     navigate({ search: (prev: OppsSearch) => ({ ...prev, typo: next }), replace: true });
@@ -187,6 +196,18 @@ function OpportunitesPage() {
   const setNoCa = (next: boolean) => {
     navigate({
       search: (prev: OppsSearch) => ({ ...prev, noCa: next }),
+      replace: true,
+    });
+  };
+  const setNoD = (next: boolean) => {
+    navigate({
+      search: (prev: OppsSearch) => ({ ...prev, noD: next }),
+      replace: true,
+    });
+  };
+  const setNoRp = (next: boolean) => {
+    navigate({
+      search: (prev: OppsSearch) => ({ ...prev, noRp: next }),
       replace: true,
     });
   };
@@ -275,6 +296,8 @@ function OpportunitesPage() {
       if (filterCa && filterCa !== "__all__" && o.charge_affaires_id !== filterCa)
         return false;
       if (noCa && o.charge_affaires_id !== null) return false;
+      if (noD && !matchSansDessinateur(o)) return false;
+      if (noRp && !matchSansResponsableProjet(o)) return false;
       if (actionsDues) {
         if (!o.next_action_due_le) return false;
         const due = new Date(o.next_action_due_le + "T00:00:00");
@@ -286,7 +309,7 @@ function OpportunitesPage() {
       }
       return true;
     });
-  }, [opps, filterCa, noCa, actionsDues, sevenDaysAhead, normalizedQuery]);
+  }, [opps, filterCa, noCa, noD, noRp, actionsDues, sevenDaysAhead, normalizedQuery]);
 
   // Compteurs par statut (avant filtre statut) pour les pastilles.
   const statutCounts = useMemo(() => {
@@ -586,6 +609,34 @@ function OpportunitesPage() {
           </label>
         )}
 
+        {oppScope === "all" && (
+          <label
+            className="flex h-9 cursor-pointer items-center gap-2 rounded-xl border border-border bg-card px-3 text-xs font-medium"
+            title="Sans dessinateur/concepteur — statuts À l'étude, Presque gagné et Gagné uniquement"
+          >
+            <Switch
+              checked={noD}
+              onCheckedChange={setNoD}
+              aria-label="Sans dessinateur"
+            />
+            <span className="text-muted-foreground">Sans D</span>
+          </label>
+        )}
+
+        {oppScope === "all" && (
+          <label
+            className="flex h-9 cursor-pointer items-center gap-2 rounded-xl border border-border bg-card px-3 text-xs font-medium"
+            title="Sans responsable projet — statuts Presque gagné et Gagné uniquement"
+          >
+            <Switch
+              checked={noRp}
+              onCheckedChange={setNoRp}
+              aria-label="Sans responsable projet"
+            />
+            <span className="text-muted-foreground">Sans RP</span>
+          </label>
+        )}
+
         {vue === "tableur" && (
           <>
 
@@ -687,7 +738,7 @@ function OpportunitesPage() {
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
         >
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-5">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
             {kanbanStatuts.map((s) => (
               <KanbanColonne
                 key={s}
