@@ -27,7 +27,7 @@ export const opportunitePatch = z.object({
   ca_estime_ht: z.number().nonnegative().nullable().optional(), charge_affaires_id: uuid.nullable().optional(),
   statut: z.enum(["presque_gagne", "a_l_etude", "en_attente"]).optional().describe("presque_gagne = accord de principe du client, budget validé oralement, en attente du bon de commande ou de la signature. a_l_etude = étude/repérage en cours, un concepteur-dessinateur doit être affecté (penser à date_visite_technique)."), motif: note.optional(),
   prochaine_action: note.optional(), echeance: nullableDate, jalon: z.enum(["qualification", "devis_envoye", "negociation"]).optional(),
-}).strict().refine(p => Object.keys(p).length > 0, "Modification vide").refine(p => !p.statut || p.statut === "presque_gagne" || Boolean(p.motif), "Motif obligatoire pour en attente");
+}).strict().refine(p => Object.keys(p).length > 0, "Modification vide").refine(p => p.statut !== "en_attente" || Boolean(p.motif), "Motif obligatoire pour en attente");
 export const etapePatchShape = {
   type: z.enum(ETAPE_TYPES).optional(), sens: z.enum(["aller", "retour"]).nullable().optional(),
   date_debut: dateSchema.optional(), date_fin: nullableDate, heure_debut: z.string().regex(/^\d{2}:\d{2}$/).nullable().optional(), heure_fin: z.string().regex(/^\d{2}:\d{2}$/).nullable().optional(),
