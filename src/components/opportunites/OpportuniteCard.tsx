@@ -34,6 +34,12 @@ import {
   URGENCY_CLASS,
   fmtActionDate,
 } from "@/lib/opportunite-action-urgency";
+import { aFaireBadge, aFaireReferenceDate } from "@/lib/opportunite-a-faire";
+import {
+  A_FAIRE_BADGE_NOUVELLE,
+  aFaireDepuisTitle,
+  aFaireRetardLabel,
+} from "@/lib/labels";
 
 export interface OpportuniteCardData {
   id: string;
@@ -46,6 +52,8 @@ export interface OpportuniteCardData {
   notes: string | null;
   statut_opportunite: "a_faire" | "envoye" | "presque_gagne" | "gagne" | "perdu" | "termine";
   statut_opportunite_depuis?: string | null;
+  /** Date de création — repère « Nouvelle » de la colonne À faire. */
+  created_at?: string | null;
   /** Lot 1 — rôles projet déjà affectés (pour les badges « rôle à affecter »). */
   roles_affectes?: string[];
   /** v0.29.2 — typologie cible déclarée (override le getAffaireTypologie 9XXX par défaut). */
@@ -116,6 +124,11 @@ export function OpportuniteCard({
       phase: "opportunite",
     }).ok;
 
+  // Repères visuels de la colonne « À faire » (non bloquants).
+  const aFaire =
+    opp.statut_opportunite === "a_faire" ? aFaireBadge(opp) : null;
+  const aFaireRef = aFaireReferenceDate(opp);
+
   return (
     <div
       ref={setNodeRef}
@@ -128,6 +141,7 @@ export function OpportuniteCard({
       className={cn(
         "group cursor-pointer rounded-lg border border-border bg-card p-3 shadow-sm transition-all hover:border-primary/60 hover:shadow-md focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         isDragging && "opacity-40",
+        aFaire?.kind === "retard" && "border-l-4 border-l-destructive",
       )}
     >
       <div className="flex items-start gap-2">
@@ -213,6 +227,24 @@ export function OpportuniteCard({
               </span>
             )}
           </div>
+
+          {aFaire && (
+            <div className="mt-2">
+              <span
+                className={cn(
+                  "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold",
+                  aFaire.kind === "retard"
+                    ? "bg-destructive/10 text-destructive"
+                    : "bg-primary/10 text-primary",
+                )}
+                title={aFaireRef ? aFaireDepuisTitle(aFaireRef) : undefined}
+              >
+                {aFaire.kind === "retard"
+                  ? aFaireRetardLabel(aFaire.jours)
+                  : A_FAIRE_BADGE_NOUVELLE}
+              </span>
+            </div>
+          )}
 
           <PresqueGagneAlerte statut={opp.statut_opportunite} depuis={opp.statut_opportunite_depuis} />
           {opp.roles_affectes && (
