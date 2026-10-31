@@ -393,6 +393,41 @@
       "when": 1793464163827,
       "tag": "0055_devis_06b_fix_signature",
       "breakpoints": true
+    },
+    {
+      "idx": 56,
+      "version": "7",
+      "when": 1793464895441,
+      "tag": "0056_devis_lecture_chef_ses_affaires",
+      "breakpoints": true
+    },
+    {
+      "idx": 57,
+      "version": "7",
+      "when": 1793464938789,
+      "tag": "0057_devis_lecture_chef_roles_projet",
+      "breakpoints": true
+    },
+    {
+      "idx": 58,
+      "version": "7",
+      "when": 1793464960736,
+      "tag": "0058_devis_lecture_chef_fix_employe",
+      "breakpoints": true
+    },
+    {
+      "idx": 59,
+      "version": "7",
+      "when": 1793465058437,
+      "tag": "0059_devis_staffing_lecture_directe_restreinte",
+      "breakpoints": true
+    },
+    {
+      "idx": 60,
+      "version": "7",
+      "when": 1793465130818,
+      "tag": "0060_devis_snapshot_couts_separes",
+      "breakpoints": true
     }
   ]
 }

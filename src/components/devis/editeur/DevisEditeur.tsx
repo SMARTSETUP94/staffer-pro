@@ -266,7 +266,7 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
               {st === "brouillon" && d.droits.ecrire && !d.devis.est_modele && <Button variant="outline" onClick={() => void changerStatut("a_valider")}>Soumettre à validation</Button>}
               {st === "a_valider" && d.droits.ecrire && <Button variant="ghost" onClick={() => void changerStatut("brouillon")}>Repasser en brouillon</Button>}
               {(st === "brouillon" || st === "a_valider") && d.droits.valider && !d.devis.est_modele && <Button onClick={() => void changerStatut("valide")}>Valider</Button>}
-              {!d.devis.est_modele && st !== "brouillon" && <Button variant="outline" onClick={() => void nouvelleVersion()}>Nouvelle version</Button>}
+              {!d.devis.est_modele && st !== "brouillon" && d.droits.ecrire && <Button variant="outline" onClick={() => void nouvelleVersion()}>Nouvelle version</Button>}
               {["valide", "transfere"].includes(st) && d.droits.valider && !d.devis.est_modele && (
                 <Button onClick={() => void signer()}>Devis signé → créer la fabrication</Button>
               )}

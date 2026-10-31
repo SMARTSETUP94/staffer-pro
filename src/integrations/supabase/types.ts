@@ -2919,6 +2919,42 @@ export type Database = {
           },
         ]
       }
+      devis_snapshot_couts: {
+        Row: {
+          cout_total: number | null
+          devis_id: string
+          fige_le: string
+          marge: Json | null
+        }
+        Insert: {
+          cout_total?: number | null
+          devis_id: string
+          fige_le?: string
+          marge?: Json | null
+        }
+        Update: {
+          cout_total?: number | null
+          devis_id?: string
+          fige_le?: string
+          marge?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "devis_snapshot_couts_devis_id_fkey"
+            columns: ["devis_id"]
+            isOneToOne: true
+            referencedRelation: "devis"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "devis_snapshot_couts_devis_id_fkey"
+            columns: ["devis_id"]
+            isOneToOne: true
+            referencedRelation: "v_devis_consommation"
+            referencedColumns: ["devis_id"]
+          },
+        ]
+      }
       devis_taux: {
         Row: {
           cout_revient: number | null
