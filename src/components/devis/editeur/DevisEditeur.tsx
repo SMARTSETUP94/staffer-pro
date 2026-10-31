@@ -370,6 +370,21 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
         </DialogContent>
       </Dialog>
 
+      <Dialog open={envoiDlg} onOpenChange={setEnvoiDlg}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Marquer envoyé au client</DialogTitle>
+            <DialogDescription>L'opportunité passe en « Envoyé » si elle n'est pas plus avancée. Le CA estimé reprend le total HT, et l'action est ajoutée à l'historique.</DialogDescription>
+          </DialogHeader>
+          <Input type="date" value={envoiDate} max={new Date().toISOString().slice(0, 10)} onChange={(e) => setEnvoiDate(e.target.value)} />
+          <DialogFooter><Button disabled={!envoiDate} onClick={async () => {
+            const r = await call("devis_marquer_envoye", { _devis_id: devisId, _date: envoiDate });
+            setEnvoiDlg(false);
+            if (r !== null) { toast.success("Devis marqué envoyé"); window.dispatchEvent(new Event("affaire-updated")); }
+          }}>Confirmer l'envoi</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <DevisVueClient open={vueClient} onOpenChange={setVueClient} devisId={devisId} />
       <BibliothequeDialog open={biblio} onOpenChange={setBiblio} devisId={devisId}
         onInsert={async (srcId) => {
