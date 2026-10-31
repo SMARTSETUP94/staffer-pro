@@ -2242,6 +2242,36 @@ export type Database = {
         }
         Relationships: []
       }
+      devis_parametres: {
+        Row: {
+          cle: string
+          created_at: string
+          created_by: string | null
+          date_effet: string
+          id: string
+          unite: string | null
+          valeur: number | null
+        }
+        Insert: {
+          cle: string
+          created_at?: string
+          created_by?: string | null
+          date_effet?: string
+          id?: string
+          unite?: string | null
+          valeur?: number | null
+        }
+        Update: {
+          cle?: string
+          created_at?: string
+          created_by?: string | null
+          date_effet?: string
+          id?: string
+          unite?: string | null
+          valeur?: number | null
+        }
+        Relationships: []
+      }
       devis_postes: {
         Row: {
           created_at: string
@@ -2320,6 +2350,142 @@ export type Database = {
             referencedColumns: ["metier_id"]
           },
         ]
+      }
+      devis_postes_ref: {
+        Row: {
+          actif: boolean
+          code: string
+          created_at: string
+          id: string
+          libelle: string
+          metier_id: number | null
+          ordre: number
+          updated_at: string
+        }
+        Insert: {
+          actif?: boolean
+          code: string
+          created_at?: string
+          id?: string
+          libelle: string
+          metier_id?: number | null
+          ordre?: number
+          updated_at?: string
+        }
+        Update: {
+          actif?: boolean
+          code?: string
+          created_at?: string
+          id?: string
+          libelle?: string
+          metier_id?: number | null
+          ordre?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "devis_postes_ref_metier_id_fkey"
+            columns: ["metier_id"]
+            isOneToOne: false
+            referencedRelation: "metiers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "devis_postes_ref_metier_id_fkey"
+            columns: ["metier_id"]
+            isOneToOne: false
+            referencedRelation: "v_atelier_charge_jour"
+            referencedColumns: ["metier_id"]
+          },
+          {
+            foreignKeyName: "devis_postes_ref_metier_id_fkey"
+            columns: ["metier_id"]
+            isOneToOne: false
+            referencedRelation: "v_devis_consommation"
+            referencedColumns: ["metier_id"]
+          },
+          {
+            foreignKeyName: "devis_postes_ref_metier_id_fkey"
+            columns: ["metier_id"]
+            isOneToOne: false
+            referencedRelation: "v_objet_heures_consolidees"
+            referencedColumns: ["metier_id"]
+          },
+        ]
+      }
+      devis_taux: {
+        Row: {
+          cout_revient: number | null
+          created_at: string
+          created_by: string | null
+          date_effet: string
+          id: string
+          niveau: string
+          par_defaut: boolean
+          poste_id: string
+          taux_vente: number | null
+        }
+        Insert: {
+          cout_revient?: number | null
+          created_at?: string
+          created_by?: string | null
+          date_effet?: string
+          id?: string
+          niveau: string
+          par_defaut?: boolean
+          poste_id: string
+          taux_vente?: number | null
+        }
+        Update: {
+          cout_revient?: number | null
+          created_at?: string
+          created_by?: string | null
+          date_effet?: string
+          id?: string
+          niveau?: string
+          par_defaut?: boolean
+          poste_id?: string
+          taux_vente?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "devis_taux_poste_id_fkey"
+            columns: ["poste_id"]
+            isOneToOne: false
+            referencedRelation: "devis_postes_ref"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      devis_taux_historique: {
+        Row: {
+          ancien: Json | null
+          auteur: string | null
+          cree_le: string
+          id: string
+          nouveau: Json | null
+          objet: string
+          ref_id: string
+        }
+        Insert: {
+          ancien?: Json | null
+          auteur?: string | null
+          cree_le?: string
+          id?: string
+          nouveau?: Json | null
+          objet: string
+          ref_id: string
+        }
+        Update: {
+          ancien?: Json | null
+          auteur?: string | null
+          cree_le?: string
+          id?: string
+          nouveau?: Json | null
+          objet?: string
+          ref_id?: string
+        }
+        Relationships: []
       }
       emails_entrants: {
         Row: {
@@ -6299,6 +6465,40 @@ export type Database = {
           },
         ]
       }
+      v_devis_parametres_courants: {
+        Row: {
+          cle: string | null
+          created_at: string | null
+          created_by: string | null
+          date_effet: string | null
+          id: string | null
+          unite: string | null
+          valeur: number | null
+        }
+        Relationships: []
+      }
+      v_devis_taux_courants: {
+        Row: {
+          cout_revient: number | null
+          created_at: string | null
+          created_by: string | null
+          date_effet: string | null
+          id: string | null
+          niveau: string | null
+          par_defaut: boolean | null
+          poste_id: string | null
+          taux_vente: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "devis_taux_poste_id_fkey"
+            columns: ["poste_id"]
+            isOneToOne: false
+            referencedRelation: "devis_postes_ref"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       v_documents_supprimes_30j: {
         Row: {
           affaire_id: string | null
@@ -6835,6 +7035,53 @@ export type Database = {
         }[]
       }
       detect_equipe_overrides: { Args: { p_plan_id: string }; Returns: Json }
+      devis_parametre_ajouter: {
+        Args: {
+          _cle: string
+          _date_effet: string
+          _unite: string
+          _valeur: number
+        }
+        Returns: string
+      }
+      devis_poste_enregistrer: {
+        Args: {
+          _actif: boolean
+          _code: string
+          _id: string
+          _libelle: string
+          _metier_id: number
+          _ordre: number
+        }
+        Returns: string
+      }
+      devis_taux_ajouter: {
+        Args: {
+          _cout_revient: number
+          _date_effet: string
+          _niveau: string
+          _par_defaut: boolean
+          _poste_id: string
+          _taux_vente: number
+        }
+        Returns: string
+      }
+      devis_taux_lister: {
+        Args: never
+        Returns: {
+          actif: boolean
+          code: string
+          cout_revient: number
+          date_effet: string
+          libelle: string
+          metier_id: number
+          niveau: string
+          ordre: number
+          par_defaut: boolean
+          poste_id: string
+          taux_vente: number
+        }[]
+      }
       dismiss_inbox_item: { Args: { p_item_key: string }; Returns: undefined }
       email_domain: { Args: { p: string }; Returns: string }
       etape_for_metier: {
