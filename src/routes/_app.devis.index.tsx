@@ -72,6 +72,7 @@ function DevisPage() {
     const { data: dv } = await supabase
       .from("devis")
       .select("id, numero, libelle, montant_ht, date_signature, statut, created_at, affaire:affaires(id, numero, nom)")
+      .eq("redige_dans_staffing", false)
       .order("created_at", { ascending: false });
     const ids = (dv ?? []).map((d) => d.id);
     let postesByDevis = new Map<string, { count: number; heures: number }>();
