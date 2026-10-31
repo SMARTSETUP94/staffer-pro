@@ -407,6 +407,13 @@
       "when": 1793464938789,
       "tag": "0057_devis_lecture_chef_roles_projet",
       "breakpoints": true
+    },
+    {
+      "idx": 58,
+      "version": "7",
+      "when": 1793464960736,
+      "tag": "0058_devis_lecture_chef_fix_employe",
+      "breakpoints": true
     }
   ]
 }
