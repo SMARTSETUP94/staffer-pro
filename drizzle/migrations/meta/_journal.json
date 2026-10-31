@@ -414,6 +414,13 @@
       "when": 1793464960736,
       "tag": "0058_devis_lecture_chef_fix_employe",
       "breakpoints": true
+    },
+    {
+      "idx": 59,
+      "version": "7",
+      "when": 1793465058437,
+      "tag": "0059_devis_staffing_lecture_directe_restreinte",
+      "breakpoints": true
     }
   ]
 }
