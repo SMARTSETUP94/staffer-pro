@@ -100,6 +100,26 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
     if (ok !== null) toast.success(`Statut : ${STATUT_LABEL[statut as keyof typeof STATUT_LABEL]}`);
   };
 
+  const signer = async () => {
+    if (!window.confirm("Le client a signé ce devis ? Les objets de fabrication et leurs heures par métier vont être créés.")) return;
+    const res = await call<{ deja_fait: boolean; objets: number; prefixe: string | null; photos?: { objet_id: string; affaire_id: string; storage_path: string; legende: string | null; mime: string | null }[] }>(
+      "devis_signer_vers_fabrication", { _devis_id: devisId });
+    if (!res) return;
+    if (res.deja_fait) return toast.info("La fabrication a déjà été créée depuis ce devis.");
+    let copiees = 0;
+    const { data: u } = await supabase.auth.getUser();
+    for (const p of res.photos ?? []) {
+      const { data: blob } = await supabase.storage.from("devis-photos").download(p.storage_path);
+      if (!blob) continue;
+      const dest = `${p.affaire_id}/${p.objet_id}/${p.storage_path.split("/").pop()}`;
+      const up = await supabase.storage.from("fabrication-photos").upload(dest, blob, { contentType: p.mime ?? undefined });
+      if (up.error) continue;
+      const ins = await supabase.from("fabrication_objets_photos").insert({ objet_id: p.objet_id, affaire_id: p.affaire_id, storage_path: dest, commentaire: p.legende, uploaded_by: u.user?.id });
+      if (!ins.error) copiees++;
+    }
+    toast.success(`${res.objets} objet(s) de fabrication créé(s)${res.prefixe ? ` (références préfixées ${res.prefixe})` : ""}${copiees ? `, ${copiees} photo(s) copiée(s)` : ""}.`);
+  };
+
   const nouvelleVersion = async () => {
     const id = await call<string>("devis_nouvelle_version", { _devis_id: devisId }, { refresh: false });
     if (id && affaireId) navigate({ to: "/affaires/$affaireId/devis-staffing/$devisId", params: { affaireId, devisId: id } });
@@ -247,6 +267,9 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
               {st === "a_valider" && d.droits.ecrire && <Button variant="ghost" onClick={() => void changerStatut("brouillon")}>Repasser en brouillon</Button>}
               {(st === "brouillon" || st === "a_valider") && d.droits.valider && !d.devis.est_modele && <Button onClick={() => void changerStatut("valide")}>Valider</Button>}
               {!d.devis.est_modele && st !== "brouillon" && <Button variant="outline" onClick={() => void nouvelleVersion()}>Nouvelle version</Button>}
+              {["valide", "transfere"].includes(st) && d.droits.valider && !d.devis.est_modele && (
+                <Button onClick={() => void signer()}>Devis signé → créer la fabrication</Button>
+              )}
               {["a_valider", "valide", "transfere"].includes(st) && d.droits.valider && <Button variant="ghost" className="text-destructive" onClick={() => void changerStatut("refuse")}>Marquer refusé</Button>}
               <Button variant="outline" onClick={() => setVueClient(true)}><Eye className="mr-1 h-4 w-4" />Vue client</Button>
               {!d.devis.est_modele && d.droits.parametres && <Button variant="ghost" onClick={() => { setModele({ nom: d.devis.libelle ?? "", categorie: "", description: "" }); setModeleDlg(true); }}>Enregistrer comme modèle</Button>}

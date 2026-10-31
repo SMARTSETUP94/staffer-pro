@@ -178,8 +178,8 @@ export function ObjetPanel({ data, ligne, readOnly, call, patch, save, onSelect 
           {photos.map((p) => (
             <div key={p.id} className="w-36 space-y-1 rounded-md border p-1 text-xs">
               {p.mime === "application/pdf"
-                ? <a href={photoUrls.data?.[p.id]} target="_blank" rel="noreferrer" className="flex h-20 items-center justify-center bg-muted">PDF</a>
-                : <img src={photoUrls.data?.[p.id]} alt={p.legende ?? ""} className="h-20 w-full rounded object-cover" />}
+                ? <a href={photoUrls.data?.[p.id] ?? undefined} target="_blank" rel="noreferrer" className="flex h-20 items-center justify-center bg-muted">PDF</a>
+                : <img src={photoUrls.data?.[p.id] ?? undefined} alt={p.legende ?? ""} className="h-20 w-full rounded object-cover" />}
               <Field value={p.legende} disabled={readOnly} placeholder="Légende" onValue={(v) => save(`p:${p.id}`, () => call("devis_photo_modifier", { _photo_id: p.id, _p: { legende: v } }, { refresh: false }))} />
               <div className="flex items-center justify-between">
                 <label className="flex items-center gap-1"><input type="checkbox" checked={p.visible_client} disabled={readOnly}

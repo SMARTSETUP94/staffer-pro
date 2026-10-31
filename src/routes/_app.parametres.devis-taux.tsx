@@ -81,7 +81,7 @@ function DevisTauxPage() {
         <h1 className="text-2xl font-semibold">Devis — taux et forfaits</h1>
         <p className="text-sm text-muted-foreground">
           Une hausse crée une nouvelle ligne datée : les devis existants gardent leurs taux. Rien n'est jamais supprimé.{" "}
-          <Link to="/parametres/devis-materiaux" className="underline">Catalogue matériaux →</Link>
+          <Link to="/parametres/devis-materiaux" className="underline">Catalogue matériaux →</Link>{" "}<Link to="/parametres/devis-modeles" className="underline">Modèles →</Link>
         </p>
       </div>
 

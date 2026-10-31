@@ -29,8 +29,8 @@ function dbCapabilityKeys(): string[] | null {
 }
 
 describe("CAPABILITY_CATALOG integrity", () => {
-  it("contient exactement 149 capabilities", () => {
-    expect(ALL_CAPABILITY_KEYS.length).toBe(149);
+  it("contient exactement 154 capabilities", () => {
+    expect(ALL_CAPABILITY_KEYS.length).toBe(154);
   });
 
   it("toutes les clés sont uniques", () => {

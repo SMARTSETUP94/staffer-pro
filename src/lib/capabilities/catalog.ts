@@ -177,6 +177,7 @@ export const CAPABILITY_CATALOG = {
     { key: "inbox.view", label: "Voir son inbox" },
     { key: "planning.view", label: "Voir le planning" },
     { key: "planning.edit", label: "Modifier le planning" },
+    { key: "planning.pilotage", label: "Planning de pilotage BE / projets" },
   ],
   "rh": [
     { key: "rh.hub.view", label: "Accéder au hub RH" },
