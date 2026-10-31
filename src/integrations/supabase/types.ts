@@ -2441,6 +2441,7 @@ export type Database = {
       devis_lignes: {
         Row: {
           created_at: string
+          deplace_groupe: string | null
           descriptif_client: string | null
           devis_id: string
           finition: string | null
@@ -2451,6 +2452,7 @@ export type Database = {
           libelle: string | null
           longueur_mm: number | null
           ordre: number
+          parent_avant: string | null
           parent_id: string | null
           quantite: number
           source_ligne_id: string | null
@@ -2463,6 +2465,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          deplace_groupe?: string | null
           descriptif_client?: string | null
           devis_id: string
           finition?: string | null
@@ -2473,6 +2476,7 @@ export type Database = {
           libelle?: string | null
           longueur_mm?: number | null
           ordre?: number
+          parent_avant?: string | null
           parent_id?: string | null
           quantite?: number
           source_ligne_id?: string | null
@@ -2485,6 +2489,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          deplace_groupe?: string | null
           descriptif_client?: string | null
           devis_id?: string
           finition?: string | null
@@ -2495,6 +2500,7 @@ export type Database = {
           libelle?: string | null
           longueur_mm?: number | null
           ordre?: number
+          parent_avant?: string | null
           parent_id?: string | null
           quantite?: number
           source_ligne_id?: string | null
@@ -2593,6 +2599,7 @@ export type Database = {
           aide_conversion: Json | null
           coefficient: number
           created_at: string
+          created_by: string | null
           date_tarif: string | null
           designation: string
           fournisseur: string | null
@@ -2611,6 +2618,7 @@ export type Database = {
           aide_conversion?: Json | null
           coefficient?: number
           created_at?: string
+          created_by?: string | null
           date_tarif?: string | null
           designation: string
           fournisseur?: string | null
@@ -2629,6 +2637,7 @@ export type Database = {
           aide_conversion?: Json | null
           coefficient?: number
           created_at?: string
+          created_by?: string | null
           date_tarif?: string | null
           designation?: string
           fournisseur?: string | null
@@ -7760,9 +7769,101 @@ export type Database = {
         Args: { _devis_id: string }
         Returns: undefined
       }
+      devis_assert_ecriture: {
+        Args: { _brouillon?: boolean; _devis_id: string }
+        Returns: undefined
+      }
       devis_calculer: { Args: { _devis_id: string }; Returns: Json }
       devis_calculer_interne: { Args: { _devis_id: string }; Returns: Json }
+      devis_copier_sous_arbre: {
+        Args: {
+          _dst_devis: string
+          _ordre?: number
+          _parent_dst: string
+          _racine: string
+          _reevaluer: boolean
+          _src_devis: string
+        }
+        Returns: string
+      }
+      devis_corbeille_restaurer: {
+        Args: { _devis_id: string; _groupe: string }
+        Returns: undefined
+      }
+      devis_creer: {
+        Args: { _affaire_id: string; _modele_id?: string }
+        Returns: string
+      }
+      devis_dates_modifier: {
+        Args: { _devis_id: string; _patch: Json }
+        Returns: undefined
+      }
+      devis_de_ligne: { Args: { _ligne_id: string }; Returns: string }
+      devis_element_supprimer: {
+        Args: { _id: string; _kind: string; _restaurer?: boolean }
+        Returns: undefined
+      }
+      devis_entete_modifier: {
+        Args: { _devis_id: string; _maj_affaire_client?: boolean; _patch: Json }
+        Returns: undefined
+      }
+      devis_heure_enregistrer: {
+        Args: { _h: Json; _ligne_id: string }
+        Returns: string
+      }
+      devis_libre_enregistrer: {
+        Args: { _f: Json; _ligne_id: string }
+        Returns: string
+      }
+      devis_ligne_deplacer: {
+        Args: { _ligne_id: string; _ordre: number; _parent_id: string }
+        Returns: undefined
+      }
+      devis_ligne_dupliquer: { Args: { _ligne_id: string }; Returns: string }
+      devis_ligne_enregistrer: {
+        Args: { _devis_id: string; _l: Json }
+        Returns: string
+      }
+      devis_ligne_supprimer: {
+        Args: { _cible?: string; _ligne_id: string; _mode?: string }
+        Returns: string
+      }
+      devis_lire: { Args: { _devis_id: string }; Returns: Json }
+      devis_lire_client: { Args: { _devis_id: string }; Returns: Json }
+      devis_lister: {
+        Args: { _affaire_id: string }
+        Returns: {
+          auteur: string
+          created_at: string
+          date_devis: string
+          id: string
+          modele_origine: string
+          numero: string
+          statut_redaction: Database["public"]["Enums"]["devis_redaction_statut"]
+          total_ht: number
+          version: number
+        }[]
+      }
+      devis_materiau_enregistrer: {
+        Args: { _ligne_id: string; _m: Json }
+        Returns: string
+      }
+      devis_materiau_maj_prix: {
+        Args: { _devis_materiau_id: string }
+        Returns: undefined
+      }
+      devis_materiaux_ecarts: {
+        Args: { _devis_id: string }
+        Returns: {
+          ancien_prix: number
+          devis_materiau_id: string
+          nouveau_materiau_id: string
+          nouveau_prix: number
+          nouvelle_date: string
+        }[]
+      }
       devis_normalize: { Args: { t: string }; Returns: string }
+      devis_nouvelle_version: { Args: { _devis_id: string }; Returns: string }
       devis_parametre_ajouter: {
         Args: {
           _cle: string
@@ -7772,7 +7873,17 @@ export type Database = {
         }
         Returns: string
       }
+      devis_peut_ecrire: { Args: { _devis_id: string }; Returns: boolean }
       devis_peut_lire: { Args: { _devis_id: string }; Returns: boolean }
+      devis_peut_valider: { Args: { _devis_id: string }; Returns: boolean }
+      devis_photo_ajouter: {
+        Args: { _ligne_id: string; _p: Json }
+        Returns: string
+      }
+      devis_photo_modifier: {
+        Args: { _p: Json; _photo_id: string }
+        Returns: undefined
+      }
       devis_poste_enregistrer: {
         Args: {
           _actif: boolean
@@ -7783,6 +7894,13 @@ export type Database = {
           _ordre: number
         }
         Returns: string
+      }
+      devis_statut_changer: {
+        Args: {
+          _devis_id: string
+          _statut: Database["public"]["Enums"]["devis_redaction_statut"]
+        }
+        Returns: undefined
       }
       devis_taux_ajouter: {
         Args: {
@@ -8008,6 +8126,7 @@ export type Database = {
           typologie_future: string
         }[]
       }
+      materiaux_acces_rapides: { Args: { _devis_id: string }; Returns: Json }
       materiaux_fournisseurs_stats: {
         Args: never
         Returns: {
