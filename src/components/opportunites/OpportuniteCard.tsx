@@ -1,3 +1,4 @@
+import { DevisPipelineBouton } from "./DevisPipeline";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import {
@@ -285,6 +286,8 @@ export function OpportuniteCard({
               </div>
             );
           })()}
+
+          <DevisPipelineBouton affaireId={opp.id} statut={opp.statut_opportunite} />
 
           {isGagne && onSign && (
             <Button

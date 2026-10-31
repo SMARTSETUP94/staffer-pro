@@ -1,3 +1,4 @@
+import { DevisPipelineProvider, DevisSigneChoixDialog } from "@/components/opportunites/DevisPipeline";
 import { createFileRoute, Link, useNavigate, stripSearchParams, type SearchSchemaInput } from "@tanstack/react-router";
 import { requireCapability } from "@/lib/capability-guard";
 import { fallback } from "@tanstack/zod-adapter";
@@ -433,9 +434,12 @@ function OpportunitesPage() {
       return;
     }
     toast.success(`${moved.numero} → ${targetStatut.replace("_", " ")}`);
+    if (targetStatut === "gagne") setSigneChoix(moved.id);
   }
 
   const activeOpp = activeId ? opps.find((o) => o.id === activeId) ?? null : null;
+
+  const [signeChoix, setSigneChoix] = useState<string | null>(null);
 
   function handleSign(opp: OpportuniteCardData) {
     setSignTarget(opp);
@@ -468,6 +472,7 @@ function OpportunitesPage() {
 
   return (
     <div className="mx-auto max-w-[1600px] space-y-4 p-4 sm:p-6">
+      <DevisSigneChoixDialog affaireId={signeChoix} open={!!signeChoix} onOpenChange={(o) => !o && setSigneChoix(null)} />
       <PageHeader
         number="03"
         eyebrow="Chantiers / Pipeline commercial"
@@ -733,6 +738,7 @@ function OpportunitesPage() {
           )}
         </div>
       ) : (
+        <DevisPipelineProvider affaireIds={opps.map((o) => o.id)}>
         <DndContext
           sensors={sensors}
           onDragStart={handleDragStart}
@@ -763,6 +769,7 @@ function OpportunitesPage() {
             )}
           </DragOverlay>
         </DndContext>
+        </DevisPipelineProvider>
       )}
 
       <NouvelleOpportuniteDialog
