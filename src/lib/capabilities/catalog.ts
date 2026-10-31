@@ -89,6 +89,9 @@ export const CAPABILITY_CATALOG = {
     { key: "devis.view", label: "Voir les devis" },
     { key: "devis.import", label: "Importer un devis" },
     { key: "devis.delete", label: "Supprimer un devis" },
+    { key: "devis.rediger", label: "Rédiger des devis" },
+    { key: "devis.couts", label: "Voir coûts et marges des devis" },
+    { key: "devis.parametres", label: "Paramétrer les devis" },
   ],
   "fabrication": [
     { key: "objet.view", label: "Voir une fiche objet" },
