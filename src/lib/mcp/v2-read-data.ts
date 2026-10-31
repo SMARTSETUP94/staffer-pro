@@ -36,12 +36,20 @@ export async function readV2(context: McpAppContext, name: V2ReadName, args: Rec
       actives.filter((l: any) => affichagePilotage(l.affaires) !== "potentiel").forEach((l: any) => byEmp.set(l.employe_id, [...(byEmp.get(l.employe_id) ?? []), l]));
       const over = new Set<string>();
       byEmp.forEach((ls, emp) => periodesEnChevauchement(ls).forEach(a => over.add(`${emp}|${a}`)));
+      const affIds = [...new Set(actives.map((l: any) => String(l.affaire_id)))];
+      const chargeBe = new Map<string, Record<string, unknown>>();
+      if (affIds.length) {
+        const { data: ch, error: ce } = await context.db.rpc("devis_charge_be", { _affaire_ids: affIds });
+        if (ce) throw new ToolError("Charge bureau d'étude indisponible");
+        for (const c of (ch ?? []) as any[]) chargeBe.set(c.affaire_id, { jours: Number(c.jours_be), heures: Number(c.heures_be), devis: `R${c.version}`, etat: c.etat });
+      }
       rows = actives.map((l: any) => ({
         affaire_id: l.affaire_id, numero: l.affaires.numero, nom: l.affaires.nom, role: l.role,
         employe_id: l.employe_id, personne: [l.employes?.prenom, l.employes?.nom].filter(Boolean).join(" "),
         date_debut: l.date_debut, date_fin: l.date_fin,
         charge: affichagePilotage(l.affaires) === "potentiel" ? "potentielle" : "reelle",
         chevauchement: over.has(`${l.employe_id}|${l.affaire_id}`),
+        charge_be: l.role === "concepteur" ? chargeBe.get(l.affaire_id) ?? null : null,
       }));
     } else if (name === "lister_propositions_logistiques") {
       let query = context.db.from("jalonnements").select("id,affaire_id,nom_fichier,statut,nb_etapes_planifiees,created_at").order("created_at").order("id").limit(1000);
