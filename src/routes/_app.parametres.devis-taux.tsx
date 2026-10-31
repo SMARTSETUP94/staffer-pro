@@ -27,7 +27,7 @@ type TauxRow = {
 const PARAM_LABELS: Record<string, string> = {
   repas: "Repas", frais_horaire: "Frais horaires", coursier_22m3: "Coursier 22 m³",
   semi_remorque: "Semi-remorque", coef_materiaux: "Coefficient matériaux",
-  seuil_alerte_taux_pct: "Seuil d'alerte taux modifié", validite_jours: "Validité du devis", tva_pct: "TVA",
+  seuil_alerte_taux_pct: "Seuil d'alerte taux modifié", validite_jours: "Validité du devis", tva_pct: "TVA", heures_par_jour_be: "Heures par jour bureau d'étude",
 };
 
 const today = () => new Date().toISOString().slice(0, 10);
@@ -56,8 +56,12 @@ function DevisTauxPage() {
     queryFn: async () =>
       (await supabase.from("devis_taux_historique").select("*").order("cree_le", { ascending: false }).limit(30)).data ?? [],
   });
+  const compteBe = useQuery({
+    queryKey: ["devis-postes-be"],
+    queryFn: async () => new Map(((await supabase.from("devis_postes_ref").select("id,compte_be")).data ?? []).map((p) => [p.id, p.compte_be] as const)),
+  });
   const refresh = () => {
-    for (const k of ["devis-taux", "devis-parametres", "devis-taux-hist"]) qc.invalidateQueries({ queryKey: [k] });
+    for (const k of ["devis-taux", "devis-parametres", "devis-taux-hist", "devis-postes-be"]) qc.invalidateQueries({ queryKey: [k] });
   };
 
   const postes = new Map<string, { row: TauxRow; niveaux: TauxRow[] }>();
@@ -90,11 +94,11 @@ function DevisTauxPage() {
         <CardContent className="space-y-4">
           <Table>
             <TableHeader><TableRow>
-              <TableHead>Poste</TableHead><TableHead>Métier planning</TableHead><TableHead>Niveaux en vigueur</TableHead><TableHead>Actif</TableHead>
+              <TableHead>Poste</TableHead><TableHead>Métier planning</TableHead><TableHead>Compte en BE</TableHead><TableHead>Niveaux en vigueur</TableHead><TableHead>Actif</TableHead>
             </TableRow></TableHeader>
             <TableBody>
               {[...postes.values()].map(({ row, niveaux }) => (
-                <PosteRow key={row.poste_id} row={row} niveaux={niveaux} metiers={metiers.data ?? []} run={run} />
+                <PosteRow key={row.poste_id} row={row} niveaux={niveaux} metiers={metiers.data ?? []} run={run} compteBe={compteBe.data?.get(row.poste_id) ?? false} />
               ))}
             </TableBody>
           </Table>
@@ -153,7 +157,7 @@ function resume(j: unknown): string {
 
 type Run = (p: PromiseLike<{ error: { message: string } | null }>, ok: string) => Promise<void>;
 
-function PosteRow({ row, niveaux, metiers, run }: { row: TauxRow; niveaux: TauxRow[]; metiers: { id: number; libelle: string }[]; run: Run }) {
+function PosteRow({ row, niveaux, metiers, run, compteBe }: { row: TauxRow; niveaux: TauxRow[]; metiers: { id: number; libelle: string }[]; run: Run; compteBe: boolean }) {
   const [libelle, setLibelle] = useState(row.libelle);
   const [nv, setNv] = useState({ niveau: "", taux: "", cout: "", date: today(), defaut: false });
   const save = (patch: Partial<{ libelle: string; metier_id: number | null; actif: boolean }>) =>
@@ -176,6 +180,10 @@ function PosteRow({ row, niveaux, metiers, run }: { row: TauxRow; niveaux: TauxR
           <option value="">—</option>
           {metiers.map((m) => <option key={m.id} value={m.id}>{m.libelle}</option>)}
         </select>
+      </TableCell>
+      <TableCell>
+        <Switch checked={compteBe} aria-label="Compte en bureau d'étude"
+          onCheckedChange={(v) => run(supabase.rpc("devis_poste_compte_be", { _id: row.poste_id, _compte: v }), "Poste mis à jour")} />
       </TableCell>
       <TableCell className="space-y-2">
         <div className="flex flex-wrap gap-1">
