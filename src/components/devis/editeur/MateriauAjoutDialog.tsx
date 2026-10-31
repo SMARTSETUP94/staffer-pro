@@ -40,12 +40,9 @@ export function MateriauAjoutDialog({ open, onOpenChange, devisId, onAdd }: {
     const p = Number(perte.replace(",", ".")) || 0;
     if (mode === "m2") return convertirEnUnitesVente("m2", { m2: Number(m2.replace(",", ".")) }, fmt, p);
     if (mode === "ml") return convertirEnUnitesVente("ml", { ml: Number(ml.replace(",", ".")) }, fmt, p);
-    const list = pieces.split(/[\n;]+/).map((s) => s.trim()).filter(Boolean).map((s) => {
-      const [dims, n] = s.split(/\s*[×x*]\s*(?=\d+\s*$)|\s+/).length ? s.split("=") : [s];
-      const m = s.match(/(\d+)\s*[x×*]\s*(\d+)(?:\s*[x×*]\s*(\d+))?/i);
-      void dims; void n;
-      return m ? { l: Number(m[1]), w: Number(m[2]), n: Number(m[3] ?? 1) } : null;
-    }).filter(Boolean) as { l: number; w: number; n: number }[];
+    const list = pieces.split(/[\n;]+/).map((x) => x.trim().match(/(\d+)\s*[x×*]\s*(\d+)(?:\s*[x×*]\s*(\d+))?/i))
+      .filter((m): m is RegExpMatchArray => !!m)
+      .map((m) => ({ l: Number(m[1]), w: Number(m[2]), n: Number(m[3] ?? 1) }));
     return convertirEnUnitesVente("pieces", { pieces: list }, fmt, p);
   })();
 
