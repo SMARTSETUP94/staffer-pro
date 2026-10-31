@@ -400,6 +400,13 @@
       "when": 1793464895441,
       "tag": "0056_devis_lecture_chef_ses_affaires",
       "breakpoints": true
+    },
+    {
+      "idx": 57,
+      "version": "7",
+      "when": 1793464938789,
+      "tag": "0057_devis_lecture_chef_roles_projet",
+      "breakpoints": true
     }
   ]
 }
