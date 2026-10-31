@@ -1684,6 +1684,7 @@ export type Database = {
         Row: {
           actif: boolean
           adresse: string | null
+          code_postal: string | null
           created_at: string
           created_by: string | null
           dirigeant: string | null
@@ -1697,11 +1698,14 @@ export type Database = {
           siret: string | null
           site_web: string | null
           telephone: string | null
+          tva_intracom: string | null
           updated_at: string
+          ville: string | null
         }
         Insert: {
           actif?: boolean
           adresse?: string | null
+          code_postal?: string | null
           created_at?: string
           created_by?: string | null
           dirigeant?: string | null
@@ -1715,11 +1719,14 @@ export type Database = {
           siret?: string | null
           site_web?: string | null
           telephone?: string | null
+          tva_intracom?: string | null
           updated_at?: string
+          ville?: string | null
         }
         Update: {
           actif?: boolean
           adresse?: string | null
+          code_postal?: string | null
           created_at?: string
           created_by?: string | null
           dirigeant?: string | null
@@ -1733,7 +1740,9 @@ export type Database = {
           siret?: string | null
           site_web?: string | null
           telephone?: string | null
+          tva_intracom?: string | null
           updated_at?: string
+          ville?: string | null
         }
         Relationships: []
       }
@@ -2056,55 +2065,133 @@ export type Database = {
       }
       devis: {
         Row: {
-          affaire_id: string
+          affaire_id: string | null
           archive: boolean
+          auteur_id: string | null
+          client_final_id: string | null
+          client_id: string | null
+          coef_materiaux_defaut: number | null
+          contact_id: string | null
           created_at: string
           date_debut_phase: string | null
+          date_devis: string | null
           date_fin_phase: string | null
           date_signature: string | null
+          dates_snapshot: Json | null
+          est_modele: boolean
           fichier_source: string | null
           id: string
           libelle: string | null
           livre_le: string | null
           livre_par: string | null
+          modele_actif: boolean
+          modele_categorie: string | null
+          modele_description: string | null
+          modele_nom: string | null
+          modele_origine_id: string | null
           montant_ht: number | null
           numero: string
+          numero_progbat: string | null
+          redige_dans_staffing: boolean
+          signe_vers_fabrication_le: string | null
           statut: Database["public"]["Enums"]["devis_statut"]
+          statut_redaction:
+            | Database["public"]["Enums"]["devis_redaction_statut"]
+            | null
+          totaux_snapshot: Json | null
+          tva_pct: number | null
           updated_at: string
+          valide_le: string | null
+          valide_par: string | null
+          validite_jours: number | null
+          version: number
+          version_precedente_id: string | null
         }
         Insert: {
-          affaire_id: string
+          affaire_id?: string | null
           archive?: boolean
+          auteur_id?: string | null
+          client_final_id?: string | null
+          client_id?: string | null
+          coef_materiaux_defaut?: number | null
+          contact_id?: string | null
           created_at?: string
           date_debut_phase?: string | null
+          date_devis?: string | null
           date_fin_phase?: string | null
           date_signature?: string | null
+          dates_snapshot?: Json | null
+          est_modele?: boolean
           fichier_source?: string | null
           id?: string
           libelle?: string | null
           livre_le?: string | null
           livre_par?: string | null
+          modele_actif?: boolean
+          modele_categorie?: string | null
+          modele_description?: string | null
+          modele_nom?: string | null
+          modele_origine_id?: string | null
           montant_ht?: number | null
           numero: string
+          numero_progbat?: string | null
+          redige_dans_staffing?: boolean
+          signe_vers_fabrication_le?: string | null
           statut?: Database["public"]["Enums"]["devis_statut"]
+          statut_redaction?:
+            | Database["public"]["Enums"]["devis_redaction_statut"]
+            | null
+          totaux_snapshot?: Json | null
+          tva_pct?: number | null
           updated_at?: string
+          valide_le?: string | null
+          valide_par?: string | null
+          validite_jours?: number | null
+          version?: number
+          version_precedente_id?: string | null
         }
         Update: {
-          affaire_id?: string
+          affaire_id?: string | null
           archive?: boolean
+          auteur_id?: string | null
+          client_final_id?: string | null
+          client_id?: string | null
+          coef_materiaux_defaut?: number | null
+          contact_id?: string | null
           created_at?: string
           date_debut_phase?: string | null
+          date_devis?: string | null
           date_fin_phase?: string | null
           date_signature?: string | null
+          dates_snapshot?: Json | null
+          est_modele?: boolean
           fichier_source?: string | null
           id?: string
           libelle?: string | null
           livre_le?: string | null
           livre_par?: string | null
+          modele_actif?: boolean
+          modele_categorie?: string | null
+          modele_description?: string | null
+          modele_nom?: string | null
+          modele_origine_id?: string | null
           montant_ht?: number | null
           numero?: string
+          numero_progbat?: string | null
+          redige_dans_staffing?: boolean
+          signe_vers_fabrication_le?: string | null
           statut?: Database["public"]["Enums"]["devis_statut"]
+          statut_redaction?:
+            | Database["public"]["Enums"]["devis_redaction_statut"]
+            | null
+          totaux_snapshot?: Json | null
+          tva_pct?: number | null
           updated_at?: string
+          valide_le?: string | null
+          valide_par?: string | null
+          validite_jours?: number | null
+          version?: number
+          version_precedente_id?: string | null
         }
         Relationships: [
           {
@@ -2129,11 +2216,60 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "devis_client_final_id_fkey"
+            columns: ["client_final_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "devis_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "devis_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "client_contacts"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "devis_livre_par_fkey"
             columns: ["livre_par"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "devis_modele_origine_id_fkey"
+            columns: ["modele_origine_id"]
+            isOneToOne: false
+            referencedRelation: "devis"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "devis_modele_origine_id_fkey"
+            columns: ["modele_origine_id"]
+            isOneToOne: false
+            referencedRelation: "v_devis_consommation"
+            referencedColumns: ["devis_id"]
+          },
+          {
+            foreignKeyName: "devis_version_precedente_id_fkey"
+            columns: ["version_precedente_id"]
+            isOneToOne: false
+            referencedRelation: "devis"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "devis_version_precedente_id_fkey"
+            columns: ["version_precedente_id"]
+            isOneToOne: false
+            referencedRelation: "v_devis_consommation"
+            referencedColumns: ["devis_id"]
           },
         ]
       }
@@ -2194,6 +2330,66 @@ export type Database = {
         }
         Relationships: []
       }
+      devis_heures: {
+        Row: {
+          cout_revient: number | null
+          created_at: string
+          heures: number
+          id: string
+          ligne_id: string
+          niveau: string
+          ordre: number
+          par_unite: boolean
+          poste_id: string
+          supprime_le: string | null
+          taux_grille: number | null
+          taux_vente: number
+        }
+        Insert: {
+          cout_revient?: number | null
+          created_at?: string
+          heures?: number
+          id?: string
+          ligne_id: string
+          niveau: string
+          ordre?: number
+          par_unite?: boolean
+          poste_id: string
+          supprime_le?: string | null
+          taux_grille?: number | null
+          taux_vente?: number
+        }
+        Update: {
+          cout_revient?: number | null
+          created_at?: string
+          heures?: number
+          id?: string
+          ligne_id?: string
+          niveau?: string
+          ordre?: number
+          par_unite?: boolean
+          poste_id?: string
+          supprime_le?: string | null
+          taux_grille?: number | null
+          taux_vente?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "devis_heures_ligne_id_fkey"
+            columns: ["ligne_id"]
+            isOneToOne: false
+            referencedRelation: "devis_lignes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "devis_heures_poste_id_fkey"
+            columns: ["poste_id"]
+            isOneToOne: false
+            referencedRelation: "devis_postes_ref"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       devis_imports: {
         Row: {
           affaire_id: string | null
@@ -2242,6 +2438,237 @@ export type Database = {
         }
         Relationships: []
       }
+      devis_lignes: {
+        Row: {
+          created_at: string
+          deplace_groupe: string | null
+          descriptif_client: string | null
+          devis_id: string
+          finition: string | null
+          hauteur_mm: number | null
+          id: string
+          interne: boolean
+          largeur_mm: number | null
+          libelle: string | null
+          longueur_mm: number | null
+          ordre: number
+          parent_avant: string | null
+          parent_id: string | null
+          quantite: number
+          source_ligne_id: string | null
+          suppression_groupe: string | null
+          supprime_le: string | null
+          supprime_par: string | null
+          texte: string | null
+          type: Database["public"]["Enums"]["devis_ligne_type"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          deplace_groupe?: string | null
+          descriptif_client?: string | null
+          devis_id: string
+          finition?: string | null
+          hauteur_mm?: number | null
+          id?: string
+          interne?: boolean
+          largeur_mm?: number | null
+          libelle?: string | null
+          longueur_mm?: number | null
+          ordre?: number
+          parent_avant?: string | null
+          parent_id?: string | null
+          quantite?: number
+          source_ligne_id?: string | null
+          suppression_groupe?: string | null
+          supprime_le?: string | null
+          supprime_par?: string | null
+          texte?: string | null
+          type: Database["public"]["Enums"]["devis_ligne_type"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          deplace_groupe?: string | null
+          descriptif_client?: string | null
+          devis_id?: string
+          finition?: string | null
+          hauteur_mm?: number | null
+          id?: string
+          interne?: boolean
+          largeur_mm?: number | null
+          libelle?: string | null
+          longueur_mm?: number | null
+          ordre?: number
+          parent_avant?: string | null
+          parent_id?: string | null
+          quantite?: number
+          source_ligne_id?: string | null
+          suppression_groupe?: string | null
+          supprime_le?: string | null
+          supprime_par?: string | null
+          texte?: string | null
+          type?: Database["public"]["Enums"]["devis_ligne_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "devis_lignes_devis_id_fkey"
+            columns: ["devis_id"]
+            isOneToOne: false
+            referencedRelation: "devis"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "devis_lignes_devis_id_fkey"
+            columns: ["devis_id"]
+            isOneToOne: false
+            referencedRelation: "v_devis_consommation"
+            referencedColumns: ["devis_id"]
+          },
+          {
+            foreignKeyName: "devis_lignes_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "devis_lignes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      devis_lignes_libres: {
+        Row: {
+          categorie: string
+          coefficient: number
+          created_at: string
+          designation: string
+          forfait_cle: string | null
+          id: string
+          ligne_id: string
+          ordre: number
+          par_unite: boolean
+          prix_achat: number | null
+          prix_forfait: number | null
+          quantite: number
+          supprime_le: string | null
+          unite: string | null
+        }
+        Insert: {
+          categorie?: string
+          coefficient?: number
+          created_at?: string
+          designation: string
+          forfait_cle?: string | null
+          id?: string
+          ligne_id: string
+          ordre?: number
+          par_unite?: boolean
+          prix_achat?: number | null
+          prix_forfait?: number | null
+          quantite?: number
+          supprime_le?: string | null
+          unite?: string | null
+        }
+        Update: {
+          categorie?: string
+          coefficient?: number
+          created_at?: string
+          designation?: string
+          forfait_cle?: string | null
+          id?: string
+          ligne_id?: string
+          ordre?: number
+          par_unite?: boolean
+          prix_achat?: number | null
+          prix_forfait?: number | null
+          quantite?: number
+          supprime_le?: string | null
+          unite?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "devis_lignes_libres_ligne_id_fkey"
+            columns: ["ligne_id"]
+            isOneToOne: false
+            referencedRelation: "devis_lignes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      devis_materiaux: {
+        Row: {
+          aide_conversion: Json | null
+          coefficient: number
+          created_at: string
+          created_by: string | null
+          date_tarif: string | null
+          designation: string
+          fournisseur: string | null
+          id: string
+          ligne_id: string
+          materiau_id: string | null
+          ordre: number
+          prix_achat: number
+          propose_catalogue: boolean
+          quantite: number
+          ref: string | null
+          supprime_le: string | null
+          unite: string | null
+        }
+        Insert: {
+          aide_conversion?: Json | null
+          coefficient?: number
+          created_at?: string
+          created_by?: string | null
+          date_tarif?: string | null
+          designation: string
+          fournisseur?: string | null
+          id?: string
+          ligne_id: string
+          materiau_id?: string | null
+          ordre?: number
+          prix_achat?: number
+          propose_catalogue?: boolean
+          quantite?: number
+          ref?: string | null
+          supprime_le?: string | null
+          unite?: string | null
+        }
+        Update: {
+          aide_conversion?: Json | null
+          coefficient?: number
+          created_at?: string
+          created_by?: string | null
+          date_tarif?: string | null
+          designation?: string
+          fournisseur?: string | null
+          id?: string
+          ligne_id?: string
+          materiau_id?: string | null
+          ordre?: number
+          prix_achat?: number
+          propose_catalogue?: boolean
+          quantite?: number
+          ref?: string | null
+          supprime_le?: string | null
+          unite?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "devis_materiaux_ligne_id_fkey"
+            columns: ["ligne_id"]
+            isOneToOne: false
+            referencedRelation: "devis_lignes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "devis_materiaux_materiau_id_fkey"
+            columns: ["materiau_id"]
+            isOneToOne: false
+            referencedRelation: "materiaux_catalogue"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       devis_parametres: {
         Row: {
           cle: string
@@ -2271,6 +2698,85 @@ export type Database = {
           valeur?: number | null
         }
         Relationships: []
+      }
+      devis_photos: {
+        Row: {
+          deleted_at: string | null
+          deleted_by: string | null
+          devis_id: string
+          height: number | null
+          id: string
+          legende: string | null
+          ligne_id: string
+          mime: string | null
+          ordre: number
+          size_bytes: number | null
+          storage_path: string
+          thumb_path: string | null
+          uploaded_at: string
+          uploaded_by: string | null
+          visible_client: boolean
+          width: number | null
+        }
+        Insert: {
+          deleted_at?: string | null
+          deleted_by?: string | null
+          devis_id: string
+          height?: number | null
+          id?: string
+          legende?: string | null
+          ligne_id: string
+          mime?: string | null
+          ordre?: number
+          size_bytes?: number | null
+          storage_path: string
+          thumb_path?: string | null
+          uploaded_at?: string
+          uploaded_by?: string | null
+          visible_client?: boolean
+          width?: number | null
+        }
+        Update: {
+          deleted_at?: string | null
+          deleted_by?: string | null
+          devis_id?: string
+          height?: number | null
+          id?: string
+          legende?: string | null
+          ligne_id?: string
+          mime?: string | null
+          ordre?: number
+          size_bytes?: number | null
+          storage_path?: string
+          thumb_path?: string | null
+          uploaded_at?: string
+          uploaded_by?: string | null
+          visible_client?: boolean
+          width?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "devis_photos_devis_id_fkey"
+            columns: ["devis_id"]
+            isOneToOne: false
+            referencedRelation: "devis"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "devis_photos_devis_id_fkey"
+            columns: ["devis_id"]
+            isOneToOne: false
+            referencedRelation: "v_devis_consommation"
+            referencedColumns: ["devis_id"]
+          },
+          {
+            foreignKeyName: "devis_photos_ligne_id_fkey"
+            columns: ["ligne_id"]
+            isOneToOne: false
+            referencedRelation: "devis_lignes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       devis_postes: {
         Row: {
@@ -7259,7 +7765,154 @@ export type Database = {
         }[]
       }
       detect_equipe_overrides: { Args: { p_plan_id: string }; Returns: Json }
+      devis_assert_brouillon: {
+        Args: { _devis_id: string }
+        Returns: undefined
+      }
+      devis_assert_ecriture: {
+        Args: { _brouillon?: boolean; _devis_id: string }
+        Returns: undefined
+      }
+      devis_bibliotheque_rechercher: {
+        Args: { _limit?: number; _q: string }
+        Returns: {
+          descriptif_client: string
+          libelle: string
+          ligne_id: string
+          montant: number
+          quantite: number
+          source: string
+          source_est_modele: boolean
+        }[]
+      }
+      devis_calculer: { Args: { _devis_id: string }; Returns: Json }
+      devis_calculer_interne: { Args: { _devis_id: string }; Returns: Json }
+      devis_copier_sous_arbre: {
+        Args: {
+          _dst_devis: string
+          _ordre?: number
+          _parent_dst: string
+          _racine: string
+          _reevaluer: boolean
+          _src_devis: string
+        }
+        Returns: string
+      }
+      devis_corbeille_restaurer: {
+        Args: { _devis_id: string; _groupe: string }
+        Returns: undefined
+      }
+      devis_creer: {
+        Args: { _affaire_id: string; _modele_id?: string }
+        Returns: string
+      }
+      devis_dates_modifier: {
+        Args: { _devis_id: string; _patch: Json }
+        Returns: undefined
+      }
+      devis_de_ligne: { Args: { _ligne_id: string }; Returns: string }
+      devis_element_supprimer: {
+        Args: { _id: string; _kind: string; _restaurer?: boolean }
+        Returns: undefined
+      }
+      devis_entete_modifier: {
+        Args: { _devis_id: string; _maj_affaire_client?: boolean; _patch: Json }
+        Returns: undefined
+      }
+      devis_heure_enregistrer: {
+        Args: { _h: Json; _ligne_id: string }
+        Returns: string
+      }
+      devis_libre_enregistrer: {
+        Args: { _f: Json; _ligne_id: string }
+        Returns: string
+      }
+      devis_ligne_deplacer: {
+        Args: { _ligne_id: string; _ordre: number; _parent_id: string }
+        Returns: undefined
+      }
+      devis_ligne_dupliquer: { Args: { _ligne_id: string }; Returns: string }
+      devis_ligne_enregistrer: {
+        Args: { _devis_id: string; _l: Json }
+        Returns: string
+      }
+      devis_ligne_supprimer: {
+        Args: { _cible?: string; _ligne_id: string; _mode?: string }
+        Returns: string
+      }
+      devis_lire: { Args: { _devis_id: string }; Returns: Json }
+      devis_lire_client: { Args: { _devis_id: string }; Returns: Json }
+      devis_lister: {
+        Args: { _affaire_id: string }
+        Returns: {
+          auteur: string
+          created_at: string
+          date_devis: string
+          id: string
+          modele_origine: string
+          numero: string
+          statut_redaction: Database["public"]["Enums"]["devis_redaction_statut"]
+          total_ht: number
+          version: number
+        }[]
+      }
+      devis_materiau_enregistrer: {
+        Args: { _ligne_id: string; _m: Json }
+        Returns: string
+      }
+      devis_materiau_maj_prix: {
+        Args: { _devis_materiau_id: string }
+        Returns: undefined
+      }
+      devis_materiaux_ecarts: {
+        Args: { _devis_id: string }
+        Returns: {
+          ancien_prix: number
+          devis_materiau_id: string
+          nouveau_materiau_id: string
+          nouveau_prix: number
+          nouvelle_date: string
+        }[]
+      }
+      devis_modele_activer: {
+        Args: { _actif: boolean; _devis_id: string }
+        Returns: undefined
+      }
+      devis_modele_creer_vierge: {
+        Args: { _categorie: string; _description: string; _nom: string }
+        Returns: string
+      }
+      devis_modele_enregistrer: {
+        Args: {
+          _categorie: string
+          _description: string
+          _devis_id: string
+          _nom: string
+        }
+        Returns: string
+      }
+      devis_modeles_lister: {
+        Args: { _actifs_seulement?: boolean }
+        Returns: {
+          id: string
+          modele_actif: boolean
+          modele_categorie: string
+          modele_description: string
+          modele_nom: string
+          nb_lignes: number
+          updated_at: string
+        }[]
+      }
       devis_normalize: { Args: { t: string }; Returns: string }
+      devis_nouvelle_version: { Args: { _devis_id: string }; Returns: string }
+      devis_objet_inserer: {
+        Args: {
+          _devis_id: string
+          _parent_id: string
+          _source_ligne_id: string
+        }
+        Returns: string
+      }
       devis_parametre_ajouter: {
         Args: {
           _cle: string
@@ -7268,6 +7921,17 @@ export type Database = {
           _valeur: number
         }
         Returns: string
+      }
+      devis_peut_ecrire: { Args: { _devis_id: string }; Returns: boolean }
+      devis_peut_lire: { Args: { _devis_id: string }; Returns: boolean }
+      devis_peut_valider: { Args: { _devis_id: string }; Returns: boolean }
+      devis_photo_ajouter: {
+        Args: { _ligne_id: string; _p: Json }
+        Returns: string
+      }
+      devis_photo_modifier: {
+        Args: { _p: Json; _photo_id: string }
+        Returns: undefined
       }
       devis_poste_enregistrer: {
         Args: {
@@ -7279,6 +7943,17 @@ export type Database = {
           _ordre: number
         }
         Returns: string
+      }
+      devis_signer_vers_fabrication: {
+        Args: { _devis_id: string }
+        Returns: Json
+      }
+      devis_statut_changer: {
+        Args: {
+          _devis_id: string
+          _statut: Database["public"]["Enums"]["devis_redaction_statut"]
+        }
+        Returns: undefined
       }
       devis_taux_ajouter: {
         Args: {
@@ -7504,6 +8179,7 @@ export type Database = {
           typologie_future: string
         }[]
       }
+      materiaux_acces_rapides: { Args: { _devis_id: string }; Returns: Json }
       materiaux_fournisseurs_stats: {
         Args: never
         Returns: {
@@ -7923,6 +8599,21 @@ export type Database = {
         | "annule"
       contrat_type: "CDI" | "Interim" | "CDD" | "Independant"
       demi_journee_type: "AM" | "PM" | "JOURNEE"
+      devis_ligne_type:
+        | "zone"
+        | "objet"
+        | "commentaire"
+        | "chapitre_suivi"
+        | "chapitre_pose"
+        | "chapitre_depose"
+        | "option"
+      devis_redaction_statut:
+        | "brouillon"
+        | "a_valider"
+        | "valide"
+        | "transfere"
+        | "signe"
+        | "refuse"
       devis_statut:
         | "brouillon"
         | "signe"
@@ -8260,6 +8951,23 @@ export const Constants = {
       ],
       contrat_type: ["CDI", "Interim", "CDD", "Independant"],
       demi_journee_type: ["AM", "PM", "JOURNEE"],
+      devis_ligne_type: [
+        "zone",
+        "objet",
+        "commentaire",
+        "chapitre_suivi",
+        "chapitre_pose",
+        "chapitre_depose",
+        "option",
+      ],
+      devis_redaction_statut: [
+        "brouillon",
+        "a_valider",
+        "valide",
+        "transfere",
+        "signe",
+        "refuse",
+      ],
       devis_statut: [
         "brouillon",
         "signe",

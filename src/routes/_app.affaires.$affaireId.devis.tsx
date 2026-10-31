@@ -133,6 +133,7 @@ function AffaireDevisPage() {
       .from("devis")
       .select("id, numero, libelle, montant_ht, date_signature, statut, date_debut_phase, date_fin_phase, livre_le, livre_par")
       .eq("affaire_id", affaireId)
+      .eq("redige_dans_staffing", false)
       .order("created_at", { ascending: true });
     const ids = (dv ?? []).map((d) => d.id);
     let pst: Poste[] = [];
