@@ -22,6 +22,7 @@ import { NouveauClientDialog } from "@/components/clients/NouveauClientDialog";
 import { EditNumeroAffaireDialog } from "@/components/affaire/EditNumeroAffaireDialog";
 import { hasOpportuniteTab } from "@/lib/affaire-opportunite";
 import { isAffaireTabHidden } from "@/lib/affaire-tabs-visibility";
+import { useFeatureFlag } from "@/hooks/use-feature-flag";
 import { EquipeProjetBloc } from "@/components/affaire/EquipeProjetBloc";
 import { ChangerClientDialog } from "@/components/affaire/ChangerClientDialog";
 
@@ -109,6 +110,8 @@ function AffaireDetailLayout() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [affaireId]);
 
+  const devisStaffingOn = useFeatureFlag("devis_staffing_v1");
+
   // Les onglets non déployés ne doivent pas rester atteignables par URL directe.
   useEffect(() => {
     if (isAffaireTabHidden(path)) {
@@ -169,6 +172,9 @@ function AffaireDetailLayout() {
       : []),
     { to: `/affaires/${affaire.id}/planning-chantier`, label: "Planning chantier", match: path.endsWith("/planning-chantier") },
     { to: `/affaires/${affaire.id}/devis`, label: "Devis", match: path.endsWith("/devis") },
+    ...(devisStaffingOn
+      ? [{ to: `/affaires/${affaire.id}/devis-staffing`, label: "Devis", match: path.includes("/devis-staffing") }]
+      : []),
     { to: `/affaires/${affaire.id}/logistique`, label: "Logistique", match: path.endsWith("/logistique") },
     ...(affaire.phase === "signe"
       ? [{ to: `/affaires/${affaire.id}/fabrication`, label: "Fabrication", match: path.endsWith("/fabrication") }]
