@@ -45,6 +45,8 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
   const [askMajClient, setAskMajClient] = useState<{ id: string | null } | null>(null);
   const [modeleDlg, setModeleDlg] = useState(false);
   const [modele, setModele] = useState({ nom: "", categorie: "", description: "" });
+  const [envoiDlg, setEnvoiDlg] = useState(false);
+  const [envoiDate, setEnvoiDate] = useState("");
 
   const d = q.data;
   const contacts = useQuery({
@@ -186,6 +188,13 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
         <div className="grid grid-cols-2 gap-2 md:grid-cols-7">
           <DateCase label="Opportunité" value={d.affaire?.created_at?.slice(0, 10) ?? null} disabled />
           <DateCase label="Date du devis" value={d.devis.date_devis} disabled={readOnly} onChange={(v) => void setEntete({ date_devis: v })} />
+          <div>
+            <DateCase label="Valable jusqu'au" value={(d.devis.dates_snapshot as Record<string, string | null> | null)?.date_validite ?? d.devis.date_validite ?? null}
+              disabled={readOnly} onChange={(v) => void setEntete({ date_validite: v ?? "" })} />
+            {!readOnly && (d.devis.date_validite_manuelle
+              ? <button type="button" className="mt-0.5 text-[11px] text-primary underline" onClick={() => void setEntete({ date_validite: "" })}>Revenir au calcul auto</button>
+              : <p className="mt-0.5 text-[11px] text-muted-foreground">Auto : date du devis + {d.devis.validite_jours ?? 30} j</p>)}
+          </div>
           {DATES.map((x) => (
             <DateCase key={x.key} label={x.label} value={(dates as Record<string, string | null>)[x.key] ?? null} disabled={readOnly}
               onChange={(v) => void call("devis_dates_modifier", { _devis_id: devisId, _patch: { [x.key]: v ?? "" } }).then(() => window.dispatchEvent(new Event("affaire-updated")))} />
@@ -267,8 +276,12 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
               {st === "a_valider" && d.droits.ecrire && <Button variant="ghost" onClick={() => void changerStatut("brouillon")}>Repasser en brouillon</Button>}
               {(st === "brouillon" || st === "a_valider") && d.droits.valider && !d.devis.est_modele && <Button onClick={() => void changerStatut("valide")}>Valider</Button>}
               {!d.devis.est_modele && st !== "brouillon" && d.droits.ecrire && <Button variant="outline" onClick={() => void nouvelleVersion()}>Nouvelle version</Button>}
-              {["valide", "transfere"].includes(st) && d.droits.valider && !d.devis.est_modele && (
-                <Button onClick={() => void signer()}>Devis signé → créer la fabrication</Button>
+              {st === "valide" && d.droits.valider && !d.devis.est_modele && d.devis.affaire_id && (
+                <Button onClick={() => { setEnvoiDate(new Date().toISOString().slice(0, 10)); setEnvoiDlg(true); }}>Marquer envoyé au client</Button>
+              )}
+              {st === "transfere" && d.devis.date_envoi && <p className="text-xs text-muted-foreground">Envoyé le {new Date(d.devis.date_envoi).toLocaleDateString("fr-FR")}</p>}
+              {["valide", "transfere", "signe"].includes(st) && d.droits.valider && !d.devis.est_modele && !d.devis.signe_vers_fabrication_le && (
+                <Button variant={st === "signe" ? "default" : "outline"} onClick={() => void signer()}>Devis signé → créer la fabrication</Button>
               )}
               {["a_valider", "valide", "transfere"].includes(st) && d.droits.valider && <Button variant="ghost" className="text-destructive" onClick={() => void changerStatut("refuse")}>Marquer refusé</Button>}
               <Button variant="outline" onClick={() => setVueClient(true)}><Eye className="mr-1 h-4 w-4" />Vue client</Button>
