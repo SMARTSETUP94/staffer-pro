@@ -18,6 +18,13 @@ Rien n'est appliqué ni publié tant que vous n'avez pas donné votre accord éc
    - Le bouton **« Planifier »** propose une période de N jours ouvrés qui se termine la veille du début de fabrication, ou à défaut la veille du montage. Vous choisissez le dessinateur et validez. L'enregistrement passe par l'affectation de rôle projet existante, et rien n'est enregistré sans votre validation.
    - Claude lit cette charge dans l'outil « planning de pilotage », sans pouvoir la modifier.
 
+4. **Créer ou ouvrir un devis depuis le pipeline**
+   - Les vignettes « À faire » ont un bouton « Créer le devis ». Il ouvre une petite fenêtre qui propose « Vierge » ou « Depuis un modèle », avec la liste des modèles actifs. Le brouillon reprend le client, le contact et les dates de l'opportunité, puis l'éditeur s'ouvre et l'opportunité passe en « À l'étude ».
+   - Dans les colonnes ouvertes (À faire, À l'étude, Envoyé, Presque gagné), une vignette qui a déjà un devis affiche « Ouvrir le devis », qui ouvre la dernière version. Un badge discret indique la version et le statut, par exemple « R1 · brouillon » ou « R2 · envoyé ».
+   - « Créer le devis » n'apparaît qu'aux personnes qui rédigent des devis (admin, commercial, bureau d'étude) et seulement si l'onglet Devis est activé. « Ouvrir le devis » suit les règles de lecture actuelles : un chef d'équipe ne voit que les devis de ses affaires.
+   - Un clic sur la vignette ouvre toujours la fiche, et le glisser-déposer reste inchangé.
+   - Un double clic ne crée pas deux devis. Le bouton se désactive pendant la création, et le serveur rouvre le brouillon existant s'il y en a déjà un.
+
 ## Points d'approche à valider
 
 - **Devis de référence pour la charge BE** : le devis signé s'il existe, sinon le dernier envoyé, sinon le dernier validé. Un devis validé n'est plus modifiable, donc la charge ne change que si le devis de référence change. Elle est figée sur le devis signé au moment où il est désigné comme signé.
@@ -301,6 +308,31 @@ END $$;
 -- Fonction redéfinie intégralement depuis sa définition courante relue avant application ; heures_be_fige
 -- est aussi posée dans l'UPDATE final : heures_be_fige = coalesce(heures_be_fige, devis_heures_be(_devis_id)).
 
+-- 15. Pipeline : création idempotente (anti double clic) et badges
+CREATE OR REPLACE FUNCTION public.devis_creer_depuis_pipeline(_affaire_id uuid, _modele_id uuid DEFAULT NULL)
+ RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+DECLARE v_id uuid;
+BEGIN
+  IF NOT user_can_write_affaire(_affaire_id,'devis.rediger') THEN RAISE EXCEPTION 'Droits insuffisants' USING ERRCODE='42501'; END IF;
+  PERFORM pg_advisory_xact_lock(hashtext('devis_version:'||_affaire_id::text));
+  SELECT id INTO v_id FROM devis WHERE affaire_id=_affaire_id AND redige_dans_staffing AND NOT est_modele ORDER BY version DESC LIMIT 1;
+  IF v_id IS NOT NULL THEN RETURN jsonb_build_object('devis_id',v_id,'existant',true); END IF;
+  RETURN jsonb_build_object('devis_id',devis_creer(_affaire_id,_modele_id),'existant',false);
+END $$;
+-- Le verrou est réentrant dans la transaction : devis_creer le reprend sans blocage.
+
+CREATE OR REPLACE FUNCTION public.devis_derniers_par_affaire(_affaire_ids uuid[])
+ RETURNS TABLE(affaire_id uuid, devis_id uuid, version int, statut_redaction devis_redaction_statut)
+ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
+  SELECT DISTINCT ON (d.affaire_id) d.affaire_id, d.id, d.version, d.statut_redaction
+  FROM devis d WHERE d.affaire_id = ANY(_affaire_ids) AND array_length(_affaire_ids,1) <= 1000
+    AND d.redige_dans_staffing AND NOT d.est_modele
+    AND current_user_has_capability('devis.view') AND devis_peut_lire(d.id)
+  ORDER BY d.affaire_id, d.version DESC $$;
+
+REVOKE ALL ON FUNCTION public.devis_creer_depuis_pipeline(uuid,uuid), public.devis_derniers_par_affaire(uuid[]) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.devis_creer_depuis_pipeline(uuid,uuid), public.devis_derniers_par_affaire(uuid[]) TO authenticated;
+
 REVOKE ALL ON FUNCTION public.devis_marquer_envoye(uuid,date), public.devis_marquer_signe(uuid),
   public.devis_poste_compte_be(uuid,boolean) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.devis_marquer_envoye(uuid,date), public.devis_marquer_signe(uuid),
@@ -313,6 +345,7 @@ NOTIFY pgrst, 'reload schema';
 - Liste Devis et fiche opportunité : bandeau « Choisir la version signée » ; fenêtre de choix au passage en « Gagné » depuis la fiche, le Kanban ou le tableur.
 - `_app.parametres.devis-taux` : colonne « Compte en BE » et paramètre heures/jour.
 - `_app.planning-pilotage` : badge « X j BE (Rn) » hachuré ou plein, alerte, bouton « Planifier ». La période est calculée par un module pur (jours ouvrés français) et l'écriture passe par `app_affecter_role_projet`.
+- Pipeline (`OpportuniteCard`, `KanbanColonne`, `_app.opportunites.index`) : badges chargés en un seul appel pour toutes les vignettes. Le bouton bloque la propagation du clic, du pointer-down et du drag-start. Fenêtre « vierge » ou « modèle » via `devis_modeles_lister`, puis ouverture de l'éditeur. Bouton visible seulement avec `devis.rediger` et le drapeau `devis_staffing_v1`.
 - MCP `planning_pilotage` : nouveau champ `charge_be { jours, heures, devis, etat }`, en lecture seule, avec la liste des champs mise à jour.
 - `AGENTS.md` : la règle sur les effets devis → pipeline (helper interne, aucune rétrogradation, Gagné et Perdu réservés à l'humain).
 
@@ -321,4 +354,5 @@ NOTIFY pgrst, 'reload schema';
 - Envoi : « À l'étude » passe en « Envoyé », avec l'action, le jalon et le CA ; « Presque gagné » reste « Presque gagné » ; R2 envoyée met à jour le CA et ajoute une action.
 - Gagné : la version choisie passe en « Signé », les autres en « Refusé », et la création de la fabrication fonctionne depuis « Signé ». Perdu : les devis ouverts passent en « Refusé ».
 - Charge BE : 16 h de plans BEM plus 10 h de suivi de projet donnent 2 j ; un objet ×3 triple les heures par unité ; l'état est « prévisionnel » en Presque gagné et « confirmé » en Gagné ; l'alerte apparaît avec une période de 1 j ; « Planifier » n'écrit rien sans validation.
+- Pipeline : un commercial crée le devis depuis une vignette « À faire » ; le devis est lié à la bonne opportunité, qui passe en « À l'étude » avec le badge R1. Deux appels successifs renvoient le même devis. Un chef d'équipe n'a pas le bouton « Créer » et la création lui est refusée ; il ne voit le badge que pour ses affaires.
 - Droits : un chef d'équipe voit la charge BE, sans aucun montant ; un appel Claude est refusé sur l'envoi et la signature.
