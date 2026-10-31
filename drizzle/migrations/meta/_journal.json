@@ -421,6 +421,13 @@
       "when": 1793465058437,
       "tag": "0059_devis_staffing_lecture_directe_restreinte",
       "breakpoints": true
+    },
+    {
+      "idx": 60,
+      "version": "7",
+      "when": 1793465130818,
+      "tag": "0060_devis_snapshot_couts_separes",
+      "breakpoints": true
     }
   ]
 }
