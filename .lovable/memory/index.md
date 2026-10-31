@@ -306,3 +306,4 @@ Saisie d'heures = SOURCE UNIQUE `src/lib/heures-upsert.ts` (`upsertHeuresSaisie`
 - [Vue logistique + opportunités](mem://features/deploiement-logistique-opps) — flag deploiement_logistique_opps DÉSACTIVÉ (15 oct. 2026), remplacé par deploiement_suivi_affaires
 - [Déploiement suivi des affaires](mem://features/deploiement-suivi-affaires) — flag actif : menu = Pipeline + Demandes clients + Chantiers seulement, tout le reste caché (Admin inclus) ; planning logistique (montage/démontage/livraisons/appro/chargements) à créer, Échéances à y fusionner
 - [Sources email multi-boîtes](mem://features/sources-boites-email) — log@/devis@ redirigés vers smart@, colonne source_boite + catégorie logistique, règles de redirection Exchange requises côté M365
+- [Devis Staffing](mem://features/devis-staffing) — taux/forfaits seed, droits coûts admin+commercial, drapeau admin only, montage=machiniste, laser/CNC=numérique
