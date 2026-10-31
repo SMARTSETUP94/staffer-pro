@@ -130,6 +130,7 @@ import { Route as AppMissionsAffaireIdPhaseRouteImport } from './routes/_app.mis
 import { Route as ApiPublicHooksPollSharedInboxesRouteImport } from './routes/api/public/hooks/poll-shared-inboxes'
 import { Route as ApiPublicHooksPollSmartInboxRouteImport } from './routes/api/public/hooks/poll-smart-inbox'
 import { Route as AppAffairesAffaireIdDevisStaffingIndexRouteImport } from './routes/_app.affaires.$affaireId.devis-staffing.index'
+import { Route as AppAffairesAffaireIdDevisStaffingDevisIdRouteImport } from './routes/_app.affaires.$affaireId.devis-staffing.$devisId'
 import { Route as AppAffairesAffaireIdObjetsObjetIdRouteImport } from './routes/_app.affaires.$affaireId.objets.$objetId'
 
 const AppRoute = AppRouteImport.update({
@@ -768,6 +769,12 @@ const AppAffairesAffaireIdDevisStaffingIndexRoute =
     path: '/devis-staffing/',
     getParentRoute: () => AppAffairesAffaireIdRoute,
   } as any)
+const AppAffairesAffaireIdDevisStaffingDevisIdRoute =
+  AppAffairesAffaireIdDevisStaffingDevisIdRouteImport.update({
+    id: '/devis-staffing/$devisId',
+    path: '/devis-staffing/$devisId',
+    getParentRoute: () => AppAffairesAffaireIdRoute,
+  } as any)
 const AppAffairesAffaireIdObjetsObjetIdRoute =
   AppAffairesAffaireIdObjetsObjetIdRouteImport.update({
     id: '/objets/$objetId',
@@ -895,6 +902,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/poll-shared-inboxes': typeof ApiPublicHooksPollSharedInboxesRoute
   '/api/public/hooks/poll-smart-inbox': typeof ApiPublicHooksPollSmartInboxRoute
   '/affaires/$affaireId/': typeof AppAffairesAffaireIdIndexRoute
+  '/affaires/$affaireId/devis-staffing/$devisId': typeof AppAffairesAffaireIdDevisStaffingDevisIdRoute
   '/affaires/$affaireId/objets/$objetId': typeof AppAffairesAffaireIdObjetsObjetIdRoute
   '/affaires/$affaireId/devis-staffing/': typeof AppAffairesAffaireIdDevisStaffingIndexRoute
 }
@@ -1015,6 +1023,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/poll-shared-inboxes': typeof ApiPublicHooksPollSharedInboxesRoute
   '/api/public/hooks/poll-smart-inbox': typeof ApiPublicHooksPollSmartInboxRoute
   '/affaires/$affaireId': typeof AppAffairesAffaireIdIndexRoute
+  '/affaires/$affaireId/devis-staffing/$devisId': typeof AppAffairesAffaireIdDevisStaffingDevisIdRoute
   '/affaires/$affaireId/objets/$objetId': typeof AppAffairesAffaireIdObjetsObjetIdRoute
   '/affaires/$affaireId/devis-staffing': typeof AppAffairesAffaireIdDevisStaffingIndexRoute
 }
@@ -1140,6 +1149,7 @@ export interface FileRoutesById {
   '/api/public/hooks/poll-shared-inboxes': typeof ApiPublicHooksPollSharedInboxesRoute
   '/api/public/hooks/poll-smart-inbox': typeof ApiPublicHooksPollSmartInboxRoute
   '/_app/affaires/$affaireId/': typeof AppAffairesAffaireIdIndexRoute
+  '/_app/affaires/$affaireId/devis-staffing/$devisId': typeof AppAffairesAffaireIdDevisStaffingDevisIdRoute
   '/_app/affaires/$affaireId/objets/$objetId': typeof AppAffairesAffaireIdObjetsObjetIdRoute
   '/_app/affaires/$affaireId/devis-staffing/': typeof AppAffairesAffaireIdDevisStaffingIndexRoute
 }
@@ -1265,6 +1275,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/poll-shared-inboxes'
     | '/api/public/hooks/poll-smart-inbox'
     | '/affaires/$affaireId/'
+    | '/affaires/$affaireId/devis-staffing/$devisId'
     | '/affaires/$affaireId/objets/$objetId'
     | '/affaires/$affaireId/devis-staffing/'
   fileRoutesByTo: FileRoutesByTo
@@ -1385,6 +1396,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/poll-shared-inboxes'
     | '/api/public/hooks/poll-smart-inbox'
     | '/affaires/$affaireId'
+    | '/affaires/$affaireId/devis-staffing/$devisId'
     | '/affaires/$affaireId/objets/$objetId'
     | '/affaires/$affaireId/devis-staffing'
   id:
@@ -1509,6 +1521,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/poll-shared-inboxes'
     | '/api/public/hooks/poll-smart-inbox'
     | '/_app/affaires/$affaireId/'
+    | '/_app/affaires/$affaireId/devis-staffing/$devisId'
     | '/_app/affaires/$affaireId/objets/$objetId'
     | '/_app/affaires/$affaireId/devis-staffing/'
   fileRoutesById: FileRoutesById
@@ -2377,6 +2390,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAffairesAffaireIdDevisStaffingIndexRouteImport
       parentRoute: typeof AppAffairesAffaireIdRoute
     }
+    '/_app/affaires/$affaireId/devis-staffing/$devisId': {
+      id: '/_app/affaires/$affaireId/devis-staffing/$devisId'
+      path: '/devis-staffing/$devisId'
+      fullPath: '/affaires/$affaireId/devis-staffing/$devisId'
+      preLoaderRoute: typeof AppAffairesAffaireIdDevisStaffingDevisIdRouteImport
+      parentRoute: typeof AppAffairesAffaireIdRoute
+    }
     '/_app/affaires/$affaireId/objets/$objetId': {
       id: '/_app/affaires/$affaireId/objets/$objetId'
       path: '/objets/$objetId'
@@ -2473,6 +2493,7 @@ interface AppAffairesAffaireIdRouteChildren {
   AppAffairesAffaireIdPlanningChantierRoute: typeof AppAffairesAffaireIdPlanningChantierRoute
   AppAffairesAffaireIdStaffingRoute: typeof AppAffairesAffaireIdStaffingRoute
   AppAffairesAffaireIdIndexRoute: typeof AppAffairesAffaireIdIndexRoute
+  AppAffairesAffaireIdDevisStaffingDevisIdRoute: typeof AppAffairesAffaireIdDevisStaffingDevisIdRoute
   AppAffairesAffaireIdObjetsObjetIdRoute: typeof AppAffairesAffaireIdObjetsObjetIdRoute
   AppAffairesAffaireIdDevisStaffingIndexRoute: typeof AppAffairesAffaireIdDevisStaffingIndexRoute
 }
@@ -2493,6 +2514,8 @@ const AppAffairesAffaireIdRouteChildren: AppAffairesAffaireIdRouteChildren = {
     AppAffairesAffaireIdPlanningChantierRoute,
   AppAffairesAffaireIdStaffingRoute: AppAffairesAffaireIdStaffingRoute,
   AppAffairesAffaireIdIndexRoute: AppAffairesAffaireIdIndexRoute,
+  AppAffairesAffaireIdDevisStaffingDevisIdRoute:
+    AppAffairesAffaireIdDevisStaffingDevisIdRoute,
   AppAffairesAffaireIdObjetsObjetIdRoute:
     AppAffairesAffaireIdObjetsObjetIdRoute,
   AppAffairesAffaireIdDevisStaffingIndexRoute:

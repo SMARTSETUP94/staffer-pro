@@ -372,6 +372,13 @@
       "when": 1793456523997,
       "tag": "0052_devis_04b_fix_heure",
       "breakpoints": true
+    },
+    {
+      "idx": 53,
+      "version": "7",
+      "when": 1793457015022,
+      "tag": "0053_devis_05_modeles",
+      "breakpoints": true
     }
   ]
 }

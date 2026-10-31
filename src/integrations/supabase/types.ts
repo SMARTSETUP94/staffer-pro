@@ -7773,6 +7773,18 @@ export type Database = {
         Args: { _brouillon?: boolean; _devis_id: string }
         Returns: undefined
       }
+      devis_bibliotheque_rechercher: {
+        Args: { _limit?: number; _q: string }
+        Returns: {
+          descriptif_client: string
+          libelle: string
+          ligne_id: string
+          montant: number
+          quantite: number
+          source: string
+          source_est_modele: boolean
+        }[]
+      }
       devis_calculer: { Args: { _devis_id: string }; Returns: Json }
       devis_calculer_interne: { Args: { _devis_id: string }; Returns: Json }
       devis_copier_sous_arbre: {
@@ -7862,8 +7874,45 @@ export type Database = {
           nouvelle_date: string
         }[]
       }
+      devis_modele_activer: {
+        Args: { _actif: boolean; _devis_id: string }
+        Returns: undefined
+      }
+      devis_modele_creer_vierge: {
+        Args: { _categorie: string; _description: string; _nom: string }
+        Returns: string
+      }
+      devis_modele_enregistrer: {
+        Args: {
+          _categorie: string
+          _description: string
+          _devis_id: string
+          _nom: string
+        }
+        Returns: string
+      }
+      devis_modeles_lister: {
+        Args: { _actifs_seulement?: boolean }
+        Returns: {
+          id: string
+          modele_actif: boolean
+          modele_categorie: string
+          modele_description: string
+          modele_nom: string
+          nb_lignes: number
+          updated_at: string
+        }[]
+      }
       devis_normalize: { Args: { t: string }; Returns: string }
       devis_nouvelle_version: { Args: { _devis_id: string }; Returns: string }
+      devis_objet_inserer: {
+        Args: {
+          _devis_id: string
+          _parent_id: string
+          _source_ligne_id: string
+        }
+        Returns: string
+      }
       devis_parametre_ajouter: {
         Args: {
           _cle: string
