@@ -14,6 +14,7 @@ type VC = { numero: string; libelle: string | null; date_devis: string | null; v
   total_ht: number; tva: number; tva_pct: number; ttc: number; options_ht: number };
 
 const DATE_LABELS: [string, string][] = [
+  ["date_validite", "Valable jusqu'au"],
   ["date_visite_technique", "Visite technique"], ["date_montage", "Montage"], ["date_evenement_debut", "Événement du"],
   ["date_evenement_fin", "au"], ["date_demontage", "Démontage"],
 ];
@@ -80,7 +81,7 @@ export function DevisVueClient({ open, onOpenChange, devisId }: { open: boolean;
               </div>
             </div>
             <div className="grid grid-cols-2 gap-2 rounded-md border p-2 text-sm md:grid-cols-5">
-              {DATE_LABELS.map(([k, lbl]) => <div key={k}><p className="text-xs text-muted-foreground">{lbl}</p><p>{fmtDate(vc.dates?.[k])}</p></div>)}
+              {DATE_LABELS.map(([k, lbl]) => <div key={k}><p className="text-xs text-muted-foreground">{lbl}</p><p>{fmtDate(vc.dates?.[k] ?? (vc as unknown as Record<string, string | null>)[k])}</p></div>)}
             </div>
             {kids(null).map((l) => render(l, 0))}
             <div className="ml-auto w-64 space-y-1 border-t pt-2 text-sm">

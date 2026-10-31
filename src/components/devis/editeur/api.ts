@@ -22,7 +22,7 @@ export interface Photo { id: string; ligne_id: string; storage_path: string; thu
 export interface DevisData {
   devis: {
     id: string; numero: string; version: number; statut_redaction: DevisStatut; affaire_id: string | null; libelle: string | null;
-    client_id: string | null; contact_id: string | null; client_final_id: string | null; date_devis: string | null; numero_progbat: string | null;
+    client_id: string | null; contact_id: string | null; client_final_id: string | null; date_devis: string | null; date_validite?: string | null; date_validite_manuelle?: boolean; date_envoi?: string | null; validite_jours?: number | null; signe_vers_fabrication_le?: string | null; numero_progbat: string | null;
     tva_pct: number | null; coef_materiaux_defaut: number | null; est_modele: boolean; modele_nom: string | null; modele_categorie: string | null;
     modele_description: string | null; modele_actif: boolean; dates_snapshot: Record<string, string | null> | null; version_precedente_id: string | null;
   };
@@ -75,7 +75,7 @@ export function usePatchCache(id: string) {
 }
 
 export const STATUT_LABEL: Record<DevisStatut, string> = {
-  brouillon: "Brouillon", a_valider: "À valider", valide: "Validé", transfere: "Transféré", signe: "Signé", refuse: "Refusé",
+  brouillon: "Brouillon", a_valider: "À valider", valide: "Validé", transfere: "Envoyé", signe: "Signé", refuse: "Refusé",
 };
 export const TYPE_LABEL: Record<LigneType, string> = {
   zone: "Zone", objet: "Objet", commentaire: "Commentaire", chapitre_suivi: "Suivi et plans",

@@ -428,6 +428,13 @@
       "when": 1793465130818,
       "tag": "0060_devis_snapshot_couts_separes",
       "breakpoints": true
+    },
+    {
+      "idx": 61,
+      "version": "7",
+      "when": 1793471569481,
+      "tag": "0061_devis_07_validite_pipeline_be",
+      "breakpoints": true
     }
   ]
 }

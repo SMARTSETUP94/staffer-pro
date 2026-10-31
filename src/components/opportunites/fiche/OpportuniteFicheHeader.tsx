@@ -1,3 +1,4 @@
+import { DevisSigneBandeau } from "@/components/opportunites/DevisPipeline";
 import { Link } from "@tanstack/react-router";
 import { ArrowLeft, Trophy, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -95,6 +96,7 @@ export function OpportuniteFicheHeader({ affaire, canSign, onSign }: Props) {
           </Button>
         )}
       </div>
+      <div className="mt-3"><DevisSigneBandeau affaireId={affaire.id} /></div>
     </div>
   );
 }

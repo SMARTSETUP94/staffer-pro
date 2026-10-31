@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { PROJET_ROLE_ACTIVITE, PROJET_ROLE_LABELS, type ProjetRole } from "@/lib/labels";
 import { ROLES_AVEC_PERIODE, affichagePilotage, nomComplet, periodesEnChevauchement, type AffichagePilotage } from "@/lib/equipe-projet";
 import { useAffecterRole } from "@/hooks/use-equipe-projet";
+import { ChargeBeSection } from "@/components/pilotage/ChargeBeSection";
 import { EmployeRoleCombobox } from "@/components/affaire/EquipeProjetBloc";
 
 export const Route = createFileRoute("/_app/planning-pilotage")({
@@ -105,6 +106,8 @@ function PlanningPilotagePage() {
         <div className="flex items-center gap-2"><Switch id="pot" checked={potentiel} onCheckedChange={setPotentiel} /><Label htmlFor="pot">Afficher la charge potentielle</Label></div>
         <Link to="/planning" className="text-sm text-muted-foreground underline-offset-2 hover:underline">← Planning fab</Link>
       </div>
+
+      <ChargeBeSection canEdit={canEdit} />
 
       {isLoading ? <div className="flex h-40 items-center justify-center"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div> : (
         <div className="overflow-x-auto rounded-xl border border-border">
