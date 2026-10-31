@@ -54,6 +54,8 @@ function RattachementPage() {
     const { data: devisRows, error: devisErr } = await supabase
       .from("devis")
       .select("id, affaire_id, numero, libelle, statut")
+      .eq("redige_dans_staffing", false)
+      .not("affaire_id", "is", null)
       .neq("statut", "cloture");
     if (devisErr) {
       toast.error(devisErr.message);
@@ -63,6 +65,7 @@ function RattachementPage() {
     // 2. Affaires avec ≥2 devis
     const byAffaire = new Map<string, typeof devisRows>();
     (devisRows ?? []).forEach((d) => {
+      if (!d.affaire_id) return;
       if (!byAffaire.has(d.affaire_id)) byAffaire.set(d.affaire_id, []);
       byAffaire.get(d.affaire_id)!.push(d);
     });
