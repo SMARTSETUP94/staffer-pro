@@ -33,24 +33,24 @@ export function MateriauxRecherche({ onPick, autoFocus }: { onPick?: (m: Materia
   const dq = useDebounced(q);
   const listRef = useRef<HTMLDivElement>(null);
 
-  const { data = [], isFetching } = useQuery({
-    queryKey: ["materiaux-recherche", dq, tri, recent, famille, fournisseur],
+  const { data: raw = [], isFetching } = useQuery({
+    queryKey: ["materiaux-recherche", dq, tri, recent, famille],
     enabled: dq.trim().length >= 2,
     staleTime: 30_000,
     queryFn: async () => {
       const { data, error } = await supabase.rpc("materiaux_rechercher", {
         _q: dq, _tri: tri, _recent_seulement: recent,
         _familles: famille ? [famille] : (null as unknown as string[]),
-        _fournisseurs: fournisseur ? [fournisseur] : (null as unknown as string[]),
       });
       if (error) throw error;
       return (data ?? []) as MateriauResult[];
     },
   });
-  useEffect(() => setSel(0), [data]);
+  const data = fournisseur ? raw.filter((d) => d.fournisseur === fournisseur) : raw;
+  useEffect(() => setSel(0), [raw, fournisseur]);
 
   const familles = [...new Set(data.map((d) => d.famille).filter(Boolean))] as string[];
-  const fournisseurs = [...new Map(data.map((d) => [d.fournisseur, d])).values()];
+  const fournisseurs = [...new Set(raw.map((d) => d.fournisseur))];
 
   const onKey = (e: React.KeyboardEvent) => {
     if (e.key === "ArrowDown") { e.preventDefault(); setSel((s) => Math.min(s + 1, data.length - 1)); }
@@ -78,7 +78,7 @@ export function MateriauxRecherche({ onPick, autoFocus }: { onPick?: (m: Materia
         <span className="mx-1 text-muted-foreground">·</span>
         {chip(recent, "Tarif récent seulement", () => setRecent(!recent))}
         {familles.slice(0, 6).map((f) => chip(famille === f, f, () => setFamille(famille === f ? null : f)))}
-        {fournisseurs.slice(0, 6).map((f) => chip(fournisseur === f.id, f.fournisseur, () => setFournisseur(null)))}
+        {fournisseurs.slice(0, 6).map((f) => chip(fournisseur === f, f, () => setFournisseur(fournisseur === f ? null : f)))}
         {isFetching && <span className="text-xs text-muted-foreground">…</span>}
       </div>
       <div ref={listRef} className="max-h-96 divide-y overflow-auto rounded-md border">
