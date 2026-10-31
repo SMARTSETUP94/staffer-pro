@@ -185,7 +185,7 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
 
       {/* Dates clés */}
       {!d.devis.est_modele && (
-        <div className="grid grid-cols-2 gap-2 md:grid-cols-7">
+        <div className="grid grid-cols-2 gap-2 md:grid-cols-8">
           <DateCase label="Opportunité" value={d.affaire?.created_at?.slice(0, 10) ?? null} disabled />
           <DateCase label="Date du devis" value={d.devis.date_devis} disabled={readOnly} onChange={(v) => void setEntete({ date_devis: v })} />
           <div>
