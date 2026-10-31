@@ -2075,11 +2075,15 @@ export type Database = {
           created_at: string
           date_debut_phase: string | null
           date_devis: string | null
+          date_envoi: string | null
           date_fin_phase: string | null
           date_signature: string | null
+          date_validite: string | null
+          date_validite_manuelle: boolean
           dates_snapshot: Json | null
           est_modele: boolean
           fichier_source: string | null
+          heures_be_fige: number | null
           id: string
           libelle: string | null
           livre_le: string | null
@@ -2118,11 +2122,15 @@ export type Database = {
           created_at?: string
           date_debut_phase?: string | null
           date_devis?: string | null
+          date_envoi?: string | null
           date_fin_phase?: string | null
           date_signature?: string | null
+          date_validite?: string | null
+          date_validite_manuelle?: boolean
           dates_snapshot?: Json | null
           est_modele?: boolean
           fichier_source?: string | null
+          heures_be_fige?: number | null
           id?: string
           libelle?: string | null
           livre_le?: string | null
@@ -2161,11 +2169,15 @@ export type Database = {
           created_at?: string
           date_debut_phase?: string | null
           date_devis?: string | null
+          date_envoi?: string | null
           date_fin_phase?: string | null
           date_signature?: string | null
+          date_validite?: string | null
+          date_validite_manuelle?: boolean
           dates_snapshot?: Json | null
           est_modele?: boolean
           fichier_source?: string | null
+          heures_be_fige?: number | null
           id?: string
           libelle?: string | null
           livre_le?: string | null
@@ -2861,6 +2873,7 @@ export type Database = {
         Row: {
           actif: boolean
           code: string
+          compte_be: boolean
           created_at: string
           id: string
           libelle: string
@@ -2871,6 +2884,7 @@ export type Database = {
         Insert: {
           actif?: boolean
           code: string
+          compte_be?: boolean
           created_at?: string
           id?: string
           libelle: string
@@ -2881,6 +2895,7 @@ export type Database = {
         Update: {
           actif?: boolean
           code?: string
+          compte_be?: boolean
           created_at?: string
           id?: string
           libelle?: string
@@ -7823,6 +7838,19 @@ export type Database = {
       }
       devis_calculer: { Args: { _devis_id: string }; Returns: Json }
       devis_calculer_interne: { Args: { _devis_id: string }; Returns: Json }
+      devis_charge_be: {
+        Args: { _affaire_ids: string[] }
+        Returns: {
+          affaire_id: string
+          devis_id: string
+          etat: string
+          figee: boolean
+          heures_be: number
+          jours_be: number
+          numero: string
+          version: number
+        }[]
+      }
       devis_copier_sous_arbre: {
         Args: {
           _dst_devis: string
@@ -7842,11 +7870,24 @@ export type Database = {
         Args: { _affaire_id: string; _modele_id?: string }
         Returns: string
       }
+      devis_creer_depuis_pipeline: {
+        Args: { _affaire_id: string; _modele_id?: string }
+        Returns: Json
+      }
       devis_dates_modifier: {
         Args: { _devis_id: string; _patch: Json }
         Returns: undefined
       }
       devis_de_ligne: { Args: { _ligne_id: string }; Returns: string }
+      devis_derniers_par_affaire: {
+        Args: { _affaire_ids: string[] }
+        Returns: {
+          affaire_id: string
+          devis_id: string
+          statut_redaction: Database["public"]["Enums"]["devis_redaction_statut"]
+          version: number
+        }[]
+      }
       devis_element_supprimer: {
         Args: { _id: string; _kind: string; _restaurer?: boolean }
         Returns: undefined
@@ -7859,6 +7900,7 @@ export type Database = {
         Args: { _h: Json; _ligne_id: string }
         Returns: string
       }
+      devis_heures_be: { Args: { _devis_id: string }; Returns: number }
       devis_libre_enregistrer: {
         Args: { _f: Json; _ligne_id: string }
         Returns: string
@@ -7892,6 +7934,11 @@ export type Database = {
           version: number
         }[]
       }
+      devis_marquer_envoye: {
+        Args: { _date?: string; _devis_id: string }
+        Returns: Json
+      }
+      devis_marquer_signe: { Args: { _devis_id: string }; Returns: Json }
       devis_materiau_enregistrer: {
         Args: { _ligne_id: string; _m: Json }
         Returns: string
@@ -7949,6 +7996,14 @@ export type Database = {
         }
         Returns: string
       }
+      devis_opp_avancer: {
+        Args: {
+          _affaire_id: string
+          _cible: Database["public"]["Enums"]["opportunite_statut"]
+          _texte: string
+        }
+        Returns: boolean
+      }
       devis_parametre_ajouter: {
         Args: {
           _cle: string
@@ -7967,6 +8022,10 @@ export type Database = {
       }
       devis_photo_modifier: {
         Args: { _p: Json; _photo_id: string }
+        Returns: undefined
+      }
+      devis_poste_compte_be: {
+        Args: { _compte: boolean; _id: string }
         Returns: undefined
       }
       devis_poste_enregistrer: {
