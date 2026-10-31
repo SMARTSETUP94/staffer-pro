@@ -127,6 +127,8 @@ import { Route as AppAffairesAffaireIdStaffingRouteImport } from './routes/_app.
 import { Route as AppClientsAdminFusionRouteImport } from './routes/_app.clients.admin.fusion'
 import { Route as AppClientsAdminOrphelinsRouteImport } from './routes/_app.clients.admin.orphelins'
 import { Route as AppMissionsAffaireIdPhaseRouteImport } from './routes/_app.missions.$affaireId.$phase'
+import { Route as AppParametresDevisModelesIndexRouteImport } from './routes/_app.parametres.devis-modeles.index'
+import { Route as AppParametresDevisModelesDevisIdRouteImport } from './routes/_app.parametres.devis-modeles.$devisId'
 import { Route as ApiPublicHooksPollSharedInboxesRouteImport } from './routes/api/public/hooks/poll-shared-inboxes'
 import { Route as ApiPublicHooksPollSmartInboxRouteImport } from './routes/api/public/hooks/poll-smart-inbox'
 import { Route as AppAffairesAffaireIdDevisStaffingIndexRouteImport } from './routes/_app.affaires.$affaireId.devis-staffing.index'
@@ -751,6 +753,18 @@ const AppMissionsAffaireIdPhaseRoute =
     path: '/missions/$affaireId/$phase',
     getParentRoute: () => AppRoute,
   } as any)
+const AppParametresDevisModelesIndexRoute =
+  AppParametresDevisModelesIndexRouteImport.update({
+    id: '/parametres/devis-modeles/',
+    path: '/parametres/devis-modeles/',
+    getParentRoute: () => AppRoute,
+  } as any)
+const AppParametresDevisModelesDevisIdRoute =
+  AppParametresDevisModelesDevisIdRouteImport.update({
+    id: '/parametres/devis-modeles/$devisId',
+    path: '/parametres/devis-modeles/$devisId',
+    getParentRoute: () => AppRoute,
+  } as any)
 const ApiPublicHooksPollSharedInboxesRoute =
   ApiPublicHooksPollSharedInboxesRouteImport.update({
     id: '/api/public/hooks/poll-shared-inboxes',
@@ -899,9 +913,11 @@ export interface FileRoutesByFullPath {
   '/clients/admin/fusion': typeof AppClientsAdminFusionRoute
   '/clients/admin/orphelins': typeof AppClientsAdminOrphelinsRoute
   '/missions/$affaireId/$phase': typeof AppMissionsAffaireIdPhaseRoute
+  '/parametres/devis-modeles/$devisId': typeof AppParametresDevisModelesDevisIdRoute
   '/api/public/hooks/poll-shared-inboxes': typeof ApiPublicHooksPollSharedInboxesRoute
   '/api/public/hooks/poll-smart-inbox': typeof ApiPublicHooksPollSmartInboxRoute
   '/affaires/$affaireId/': typeof AppAffairesAffaireIdIndexRoute
+  '/parametres/devis-modeles/': typeof AppParametresDevisModelesIndexRoute
   '/affaires/$affaireId/devis-staffing/$devisId': typeof AppAffairesAffaireIdDevisStaffingDevisIdRoute
   '/affaires/$affaireId/objets/$objetId': typeof AppAffairesAffaireIdObjetsObjetIdRoute
   '/affaires/$affaireId/devis-staffing/': typeof AppAffairesAffaireIdDevisStaffingIndexRoute
@@ -1020,9 +1036,11 @@ export interface FileRoutesByTo {
   '/clients/admin/fusion': typeof AppClientsAdminFusionRoute
   '/clients/admin/orphelins': typeof AppClientsAdminOrphelinsRoute
   '/missions/$affaireId/$phase': typeof AppMissionsAffaireIdPhaseRoute
+  '/parametres/devis-modeles/$devisId': typeof AppParametresDevisModelesDevisIdRoute
   '/api/public/hooks/poll-shared-inboxes': typeof ApiPublicHooksPollSharedInboxesRoute
   '/api/public/hooks/poll-smart-inbox': typeof ApiPublicHooksPollSmartInboxRoute
   '/affaires/$affaireId': typeof AppAffairesAffaireIdIndexRoute
+  '/parametres/devis-modeles': typeof AppParametresDevisModelesIndexRoute
   '/affaires/$affaireId/devis-staffing/$devisId': typeof AppAffairesAffaireIdDevisStaffingDevisIdRoute
   '/affaires/$affaireId/objets/$objetId': typeof AppAffairesAffaireIdObjetsObjetIdRoute
   '/affaires/$affaireId/devis-staffing': typeof AppAffairesAffaireIdDevisStaffingIndexRoute
@@ -1146,9 +1164,11 @@ export interface FileRoutesById {
   '/_app/clients/admin/fusion': typeof AppClientsAdminFusionRoute
   '/_app/clients/admin/orphelins': typeof AppClientsAdminOrphelinsRoute
   '/_app/missions/$affaireId/$phase': typeof AppMissionsAffaireIdPhaseRoute
+  '/_app/parametres/devis-modeles/$devisId': typeof AppParametresDevisModelesDevisIdRoute
   '/api/public/hooks/poll-shared-inboxes': typeof ApiPublicHooksPollSharedInboxesRoute
   '/api/public/hooks/poll-smart-inbox': typeof ApiPublicHooksPollSmartInboxRoute
   '/_app/affaires/$affaireId/': typeof AppAffairesAffaireIdIndexRoute
+  '/_app/parametres/devis-modeles/': typeof AppParametresDevisModelesIndexRoute
   '/_app/affaires/$affaireId/devis-staffing/$devisId': typeof AppAffairesAffaireIdDevisStaffingDevisIdRoute
   '/_app/affaires/$affaireId/objets/$objetId': typeof AppAffairesAffaireIdObjetsObjetIdRoute
   '/_app/affaires/$affaireId/devis-staffing/': typeof AppAffairesAffaireIdDevisStaffingIndexRoute
@@ -1272,9 +1292,11 @@ export interface FileRouteTypes {
     | '/clients/admin/fusion'
     | '/clients/admin/orphelins'
     | '/missions/$affaireId/$phase'
+    | '/parametres/devis-modeles/$devisId'
     | '/api/public/hooks/poll-shared-inboxes'
     | '/api/public/hooks/poll-smart-inbox'
     | '/affaires/$affaireId/'
+    | '/parametres/devis-modeles/'
     | '/affaires/$affaireId/devis-staffing/$devisId'
     | '/affaires/$affaireId/objets/$objetId'
     | '/affaires/$affaireId/devis-staffing/'
@@ -1393,9 +1415,11 @@ export interface FileRouteTypes {
     | '/clients/admin/fusion'
     | '/clients/admin/orphelins'
     | '/missions/$affaireId/$phase'
+    | '/parametres/devis-modeles/$devisId'
     | '/api/public/hooks/poll-shared-inboxes'
     | '/api/public/hooks/poll-smart-inbox'
     | '/affaires/$affaireId'
+    | '/parametres/devis-modeles'
     | '/affaires/$affaireId/devis-staffing/$devisId'
     | '/affaires/$affaireId/objets/$objetId'
     | '/affaires/$affaireId/devis-staffing'
@@ -1518,9 +1542,11 @@ export interface FileRouteTypes {
     | '/_app/clients/admin/fusion'
     | '/_app/clients/admin/orphelins'
     | '/_app/missions/$affaireId/$phase'
+    | '/_app/parametres/devis-modeles/$devisId'
     | '/api/public/hooks/poll-shared-inboxes'
     | '/api/public/hooks/poll-smart-inbox'
     | '/_app/affaires/$affaireId/'
+    | '/_app/parametres/devis-modeles/'
     | '/_app/affaires/$affaireId/devis-staffing/$devisId'
     | '/_app/affaires/$affaireId/objets/$objetId'
     | '/_app/affaires/$affaireId/devis-staffing/'
@@ -2369,6 +2395,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppMissionsAffaireIdPhaseRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/parametres/devis-modeles/': {
+      id: '/_app/parametres/devis-modeles/'
+      path: '/parametres/devis-modeles'
+      fullPath: '/parametres/devis-modeles/'
+      preLoaderRoute: typeof AppParametresDevisModelesIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/parametres/devis-modeles/$devisId': {
+      id: '/_app/parametres/devis-modeles/$devisId'
+      path: '/parametres/devis-modeles/$devisId'
+      fullPath: '/parametres/devis-modeles/$devisId'
+      preLoaderRoute: typeof AppParametresDevisModelesDevisIdRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/api/public/hooks/poll-shared-inboxes': {
       id: '/api/public/hooks/poll-shared-inboxes'
       path: '/api/public/hooks/poll-shared-inboxes'
@@ -2610,6 +2650,8 @@ interface AppRouteChildren {
   AppLogistiqueIndexRoute: typeof AppLogistiqueIndexRoute
   AppRhIndexRoute: typeof AppRhIndexRoute
   AppMissionsAffaireIdPhaseRoute: typeof AppMissionsAffaireIdPhaseRoute
+  AppParametresDevisModelesDevisIdRoute: typeof AppParametresDevisModelesDevisIdRoute
+  AppParametresDevisModelesIndexRoute: typeof AppParametresDevisModelesIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -2698,6 +2740,8 @@ const AppRouteChildren: AppRouteChildren = {
   AppLogistiqueIndexRoute: AppLogistiqueIndexRoute,
   AppRhIndexRoute: AppRhIndexRoute,
   AppMissionsAffaireIdPhaseRoute: AppMissionsAffaireIdPhaseRoute,
+  AppParametresDevisModelesDevisIdRoute: AppParametresDevisModelesDevisIdRoute,
+  AppParametresDevisModelesIndexRoute: AppParametresDevisModelesIndexRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
