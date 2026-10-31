@@ -132,7 +132,7 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
                 <p className="text-xs text-muted-foreground">Client facturé</p>
                 <ClientCombobox value={d.client?.nom ?? null} clientId={d.devis.client_id} disabled={readOnly} allowClear={false}
                   onChange={async (id) => { await setEntete({ client_id: id }); if (d.affaire) setAskMajClient({ id }); }} />
-                {clientManque && <p className="flex items-center gap-1 text-xs text-warning-foreground"><AlertTriangle className="h-3 w-3 text-orange-500" />
+                {clientManque && <p className="flex items-center gap-1 text-xs text-warning"><AlertTriangle className="h-3 w-3" />
                   Fiche client incomplète ({[!d.client!.adresse && "adresse", !d.client!.siret && "SIRET"].filter(Boolean).join(", ")}) —{" "}
                   <Link to="/clients/$clientId" params={{ clientId: d.client!.id }} className="underline">compléter</Link></p>}
               </div>
