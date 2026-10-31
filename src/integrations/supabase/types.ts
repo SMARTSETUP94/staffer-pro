@@ -7944,6 +7944,10 @@ export type Database = {
         }
         Returns: string
       }
+      devis_signer_vers_fabrication: {
+        Args: { _devis_id: string }
+        Returns: Json
+      }
       devis_statut_changer: {
         Args: {
           _devis_id: string

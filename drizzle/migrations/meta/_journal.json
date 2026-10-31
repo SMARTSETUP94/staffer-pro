@@ -379,6 +379,13 @@
       "when": 1793457015022,
       "tag": "0053_devis_05_modeles",
       "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "7",
+      "when": 1793457229843,
+      "tag": "0054_devis_06_signature",
+      "breakpoints": true
     }
   ]
 }
