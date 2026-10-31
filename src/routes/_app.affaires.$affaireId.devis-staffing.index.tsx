@@ -1,3 +1,4 @@
+import { DevisSigneBandeau } from "@/components/opportunites/DevisPipeline";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
@@ -55,6 +56,7 @@ function DevisListe() {
 
   return (
     <div className="space-y-4">
+      <DevisSigneBandeau affaireId={affaireId} />
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">Devis</h2>
         {canWrite && <Button onClick={() => setOpen(true)}><Plus className="mr-1 h-4 w-4" />Nouveau devis</Button>}

@@ -146,9 +146,14 @@ export function DevisSigneChoixDialog({ affaireId, open, onOpenChange }: { affai
 }
 
 /** Bandeau tant qu'une opportunité gagnée n'a pas de version signée désignée. */
-export function DevisSigneBandeau({ affaireId, statut }: { affaireId: string; statut: string | null }) {
+export function DevisSigneBandeau({ affaireId }: { affaireId: string }) {
   const flag = useFeatureFlag("devis_staffing_v1");
   const [open, setOpen] = useState(false);
+  const aff = useQuery({
+    queryKey: ["affaire-statut-opp", affaireId], enabled: flag,
+    queryFn: async () => (await supabase.from("affaires").select("statut_opportunite").eq("id", affaireId).maybeSingle()).data,
+  });
+  const statut = aff.data?.statut_opportunite ?? null;
   const list = useQuery({
     queryKey: ["devis-staffing-list", affaireId], enabled: flag && statut === "gagne",
     queryFn: async () => ((await supabase.rpc("devis_lister", { _affaire_id: affaireId })).data ?? []) as { id: string; version: number; statut_redaction: string }[],
