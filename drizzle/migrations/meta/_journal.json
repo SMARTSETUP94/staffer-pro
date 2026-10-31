@@ -351,6 +351,13 @@
       "when": 1793455539436,
       "tag": "0049_devis_02_materiaux",
       "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1793456156101,
+      "tag": "0050_devis_03_modele",
+      "breakpoints": true
     }
   ]
 }
