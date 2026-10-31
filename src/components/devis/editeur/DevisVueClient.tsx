@@ -14,6 +14,7 @@ type VC = { numero: string; libelle: string | null; date_devis: string | null; v
   total_ht: number; tva: number; tva_pct: number; ttc: number; options_ht: number };
 
 const DATE_LABELS: [string, string][] = [
+  ["date_devis", "Date du devis"], ["date_validite", "Valable jusqu'au"],
   ["date_visite_technique", "Visite technique"], ["date_montage", "Montage"], ["date_evenement_debut", "Événement du"],
   ["date_evenement_fin", "au"], ["date_demontage", "Démontage"],
 ];
