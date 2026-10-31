@@ -99,6 +99,8 @@ import { Route as AppOpportunitesAffaireIdRouteImport } from './routes/_app.oppo
 import { Route as AppOpportunitesImportRouteImport } from './routes/_app.opportunites.import'
 import { Route as AppParametresAutorisationsVehiculesRouteImport } from './routes/_app.parametres.autorisations-vehicules'
 import { Route as AppParametresCompetencesEquipeRouteImport } from './routes/_app.parametres.competences-equipe'
+import { Route as AppParametresDevisMateriauxRouteImport } from './routes/_app.parametres.devis-materiaux'
+import { Route as AppParametresDevisTauxRouteImport } from './routes/_app.parametres.devis-taux'
 import { Route as AppParametresLieuxRouteImport } from './routes/_app.parametres.lieux'
 import { Route as AppParametresMetiersRouteImport } from './routes/_app.parametres.metiers'
 import { Route as AppParametresPostesRouteImport } from './routes/_app.parametres.postes'
@@ -587,6 +589,17 @@ const AppParametresCompetencesEquipeRoute =
     path: '/parametres/competences-equipe',
     getParentRoute: () => AppRoute,
   } as any)
+const AppParametresDevisMateriauxRoute =
+  AppParametresDevisMateriauxRouteImport.update({
+    id: '/parametres/devis-materiaux',
+    path: '/parametres/devis-materiaux',
+    getParentRoute: () => AppRoute,
+  } as any)
+const AppParametresDevisTauxRoute = AppParametresDevisTauxRouteImport.update({
+  id: '/parametres/devis-taux',
+  path: '/parametres/devis-taux',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppParametresLieuxRoute = AppParametresLieuxRouteImport.update({
   id: '/parametres/lieux',
   path: '/parametres/lieux',
@@ -839,6 +852,8 @@ export interface FileRoutesByFullPath {
   '/opportunites/import': typeof AppOpportunitesImportRoute
   '/parametres/autorisations-vehicules': typeof AppParametresAutorisationsVehiculesRoute
   '/parametres/competences-equipe': typeof AppParametresCompetencesEquipeRoute
+  '/parametres/devis-materiaux': typeof AppParametresDevisMateriauxRoute
+  '/parametres/devis-taux': typeof AppParametresDevisTauxRoute
   '/parametres/lieux': typeof AppParametresLieuxRoute
   '/parametres/metiers': typeof AppParametresMetiersRoute
   '/parametres/postes': typeof AppParametresPostesRoute
@@ -956,6 +971,8 @@ export interface FileRoutesByTo {
   '/opportunites/import': typeof AppOpportunitesImportRoute
   '/parametres/autorisations-vehicules': typeof AppParametresAutorisationsVehiculesRoute
   '/parametres/competences-equipe': typeof AppParametresCompetencesEquipeRoute
+  '/parametres/devis-materiaux': typeof AppParametresDevisMateriauxRoute
+  '/parametres/devis-taux': typeof AppParametresDevisTauxRoute
   '/parametres/lieux': typeof AppParametresLieuxRoute
   '/parametres/metiers': typeof AppParametresMetiersRoute
   '/parametres/postes': typeof AppParametresPostesRoute
@@ -1078,6 +1095,8 @@ export interface FileRoutesById {
   '/_app/opportunites/import': typeof AppOpportunitesImportRoute
   '/_app/parametres/autorisations-vehicules': typeof AppParametresAutorisationsVehiculesRoute
   '/_app/parametres/competences-equipe': typeof AppParametresCompetencesEquipeRoute
+  '/_app/parametres/devis-materiaux': typeof AppParametresDevisMateriauxRoute
+  '/_app/parametres/devis-taux': typeof AppParametresDevisTauxRoute
   '/_app/parametres/lieux': typeof AppParametresLieuxRoute
   '/_app/parametres/metiers': typeof AppParametresMetiersRoute
   '/_app/parametres/postes': typeof AppParametresPostesRoute
@@ -1200,6 +1219,8 @@ export interface FileRouteTypes {
     | '/opportunites/import'
     | '/parametres/autorisations-vehicules'
     | '/parametres/competences-equipe'
+    | '/parametres/devis-materiaux'
+    | '/parametres/devis-taux'
     | '/parametres/lieux'
     | '/parametres/metiers'
     | '/parametres/postes'
@@ -1317,6 +1338,8 @@ export interface FileRouteTypes {
     | '/opportunites/import'
     | '/parametres/autorisations-vehicules'
     | '/parametres/competences-equipe'
+    | '/parametres/devis-materiaux'
+    | '/parametres/devis-taux'
     | '/parametres/lieux'
     | '/parametres/metiers'
     | '/parametres/postes'
@@ -1438,6 +1461,8 @@ export interface FileRouteTypes {
     | '/_app/opportunites/import'
     | '/_app/parametres/autorisations-vehicules'
     | '/_app/parametres/competences-equipe'
+    | '/_app/parametres/devis-materiaux'
+    | '/_app/parametres/devis-taux'
     | '/_app/parametres/lieux'
     | '/_app/parametres/metiers'
     | '/_app/parametres/postes'
@@ -2122,6 +2147,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppParametresCompetencesEquipeRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/parametres/devis-materiaux': {
+      id: '/_app/parametres/devis-materiaux'
+      path: '/parametres/devis-materiaux'
+      fullPath: '/parametres/devis-materiaux'
+      preLoaderRoute: typeof AppParametresDevisMateriauxRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/parametres/devis-taux': {
+      id: '/_app/parametres/devis-taux'
+      path: '/parametres/devis-taux'
+      fullPath: '/parametres/devis-taux'
+      preLoaderRoute: typeof AppParametresDevisTauxRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/parametres/lieux': {
       id: '/_app/parametres/lieux'
       path: '/parametres/lieux'
@@ -2508,6 +2547,8 @@ interface AppRouteChildren {
   AppLogistiqueVehiculesPlanningRoute: typeof AppLogistiqueVehiculesPlanningRoute
   AppParametresAutorisationsVehiculesRoute: typeof AppParametresAutorisationsVehiculesRoute
   AppParametresCompetencesEquipeRoute: typeof AppParametresCompetencesEquipeRoute
+  AppParametresDevisMateriauxRoute: typeof AppParametresDevisMateriauxRoute
+  AppParametresDevisTauxRoute: typeof AppParametresDevisTauxRoute
   AppParametresLieuxRoute: typeof AppParametresLieuxRoute
   AppParametresMetiersRoute: typeof AppParametresMetiersRoute
   AppParametresPostesRoute: typeof AppParametresPostesRoute
@@ -2594,6 +2635,8 @@ const AppRouteChildren: AppRouteChildren = {
   AppParametresAutorisationsVehiculesRoute:
     AppParametresAutorisationsVehiculesRoute,
   AppParametresCompetencesEquipeRoute: AppParametresCompetencesEquipeRoute,
+  AppParametresDevisMateriauxRoute: AppParametresDevisMateriauxRoute,
+  AppParametresDevisTauxRoute: AppParametresDevisTauxRoute,
   AppParametresLieuxRoute: AppParametresLieuxRoute,
   AppParametresMetiersRoute: AppParametresMetiersRoute,
   AppParametresPostesRoute: AppParametresPostesRoute,

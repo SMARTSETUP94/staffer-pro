@@ -2242,6 +2242,36 @@ export type Database = {
         }
         Relationships: []
       }
+      devis_parametres: {
+        Row: {
+          cle: string
+          created_at: string
+          created_by: string | null
+          date_effet: string
+          id: string
+          unite: string | null
+          valeur: number | null
+        }
+        Insert: {
+          cle: string
+          created_at?: string
+          created_by?: string | null
+          date_effet?: string
+          id?: string
+          unite?: string | null
+          valeur?: number | null
+        }
+        Update: {
+          cle?: string
+          created_at?: string
+          created_by?: string | null
+          date_effet?: string
+          id?: string
+          unite?: string | null
+          valeur?: number | null
+        }
+        Relationships: []
+      }
       devis_postes: {
         Row: {
           created_at: string
@@ -2320,6 +2350,142 @@ export type Database = {
             referencedColumns: ["metier_id"]
           },
         ]
+      }
+      devis_postes_ref: {
+        Row: {
+          actif: boolean
+          code: string
+          created_at: string
+          id: string
+          libelle: string
+          metier_id: number | null
+          ordre: number
+          updated_at: string
+        }
+        Insert: {
+          actif?: boolean
+          code: string
+          created_at?: string
+          id?: string
+          libelle: string
+          metier_id?: number | null
+          ordre?: number
+          updated_at?: string
+        }
+        Update: {
+          actif?: boolean
+          code?: string
+          created_at?: string
+          id?: string
+          libelle?: string
+          metier_id?: number | null
+          ordre?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "devis_postes_ref_metier_id_fkey"
+            columns: ["metier_id"]
+            isOneToOne: false
+            referencedRelation: "metiers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "devis_postes_ref_metier_id_fkey"
+            columns: ["metier_id"]
+            isOneToOne: false
+            referencedRelation: "v_atelier_charge_jour"
+            referencedColumns: ["metier_id"]
+          },
+          {
+            foreignKeyName: "devis_postes_ref_metier_id_fkey"
+            columns: ["metier_id"]
+            isOneToOne: false
+            referencedRelation: "v_devis_consommation"
+            referencedColumns: ["metier_id"]
+          },
+          {
+            foreignKeyName: "devis_postes_ref_metier_id_fkey"
+            columns: ["metier_id"]
+            isOneToOne: false
+            referencedRelation: "v_objet_heures_consolidees"
+            referencedColumns: ["metier_id"]
+          },
+        ]
+      }
+      devis_taux: {
+        Row: {
+          cout_revient: number | null
+          created_at: string
+          created_by: string | null
+          date_effet: string
+          id: string
+          niveau: string
+          par_defaut: boolean
+          poste_id: string
+          taux_vente: number | null
+        }
+        Insert: {
+          cout_revient?: number | null
+          created_at?: string
+          created_by?: string | null
+          date_effet?: string
+          id?: string
+          niveau: string
+          par_defaut?: boolean
+          poste_id: string
+          taux_vente?: number | null
+        }
+        Update: {
+          cout_revient?: number | null
+          created_at?: string
+          created_by?: string | null
+          date_effet?: string
+          id?: string
+          niveau?: string
+          par_defaut?: boolean
+          poste_id?: string
+          taux_vente?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "devis_taux_poste_id_fkey"
+            columns: ["poste_id"]
+            isOneToOne: false
+            referencedRelation: "devis_postes_ref"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      devis_taux_historique: {
+        Row: {
+          ancien: Json | null
+          auteur: string | null
+          cree_le: string
+          id: string
+          nouveau: Json | null
+          objet: string
+          ref_id: string
+        }
+        Insert: {
+          ancien?: Json | null
+          auteur?: string | null
+          cree_le?: string
+          id?: string
+          nouveau?: Json | null
+          objet: string
+          ref_id: string
+        }
+        Update: {
+          ancien?: Json | null
+          auteur?: string | null
+          cree_le?: string
+          id?: string
+          nouveau?: Json | null
+          objet?: string
+          ref_id?: string
+        }
+        Relationships: []
       }
       emails_entrants: {
         Row: {
@@ -3366,6 +3532,45 @@ export type Database = {
         }
         Relationships: []
       }
+      fournisseurs_tarifs: {
+        Row: {
+          conditions: string | null
+          date_tarif: string | null
+          etat: string
+          id: string
+          mode_lecture_prix: string | null
+          nom: string
+          prix_public: boolean
+          slug: string
+          updated_at: string
+          validite: string | null
+        }
+        Insert: {
+          conditions?: string | null
+          date_tarif?: string | null
+          etat?: string
+          id?: string
+          mode_lecture_prix?: string | null
+          nom: string
+          prix_public?: boolean
+          slug: string
+          updated_at?: string
+          validite?: string | null
+        }
+        Update: {
+          conditions?: string | null
+          date_tarif?: string | null
+          etat?: string
+          id?: string
+          mode_lecture_prix?: string | null
+          nom?: string
+          prix_public?: boolean
+          slug?: string
+          updated_at?: string
+          validite?: string | null
+        }
+        Relationships: []
+      }
       heures_saisies: {
         Row: {
           affaire_id: string
@@ -4000,6 +4205,191 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      materiaux_catalogue: {
+        Row: {
+          actif: boolean
+          caracteristiques: string | null
+          cle_comparaison: string | null
+          conditionnement: string | null
+          created_at: string
+          date_tarif: string | null
+          desactive_le: string | null
+          epaisseur_mm: number | null
+          famille: string | null
+          format_texte: string | null
+          fournisseur_id: string
+          id: string
+          import_id: string | null
+          largeur_mm: number | null
+          longueur_mm: number | null
+          prix_achat_net: number | null
+          prix_catalogue: number | null
+          prix_m2: number | null
+          prix_ml: number | null
+          produit: string
+          ref: string | null
+          remarque: string | null
+          search_text: string
+          source: string | null
+          unite: string
+        }
+        Insert: {
+          actif?: boolean
+          caracteristiques?: string | null
+          cle_comparaison?: string | null
+          conditionnement?: string | null
+          created_at?: string
+          date_tarif?: string | null
+          desactive_le?: string | null
+          epaisseur_mm?: number | null
+          famille?: string | null
+          format_texte?: string | null
+          fournisseur_id: string
+          id?: string
+          import_id?: string | null
+          largeur_mm?: number | null
+          longueur_mm?: number | null
+          prix_achat_net?: number | null
+          prix_catalogue?: number | null
+          prix_m2?: number | null
+          prix_ml?: number | null
+          produit: string
+          ref?: string | null
+          remarque?: string | null
+          search_text?: string
+          source?: string | null
+          unite: string
+        }
+        Update: {
+          actif?: boolean
+          caracteristiques?: string | null
+          cle_comparaison?: string | null
+          conditionnement?: string | null
+          created_at?: string
+          date_tarif?: string | null
+          desactive_le?: string | null
+          epaisseur_mm?: number | null
+          famille?: string | null
+          format_texte?: string | null
+          fournisseur_id?: string
+          id?: string
+          import_id?: string | null
+          largeur_mm?: number | null
+          longueur_mm?: number | null
+          prix_achat_net?: number | null
+          prix_catalogue?: number | null
+          prix_m2?: number | null
+          prix_ml?: number | null
+          produit?: string
+          ref?: string | null
+          remarque?: string | null
+          search_text?: string
+          source?: string | null
+          unite?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "materiaux_catalogue_fournisseur_id_fkey"
+            columns: ["fournisseur_id"]
+            isOneToOne: false
+            referencedRelation: "fournisseurs_tarifs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      materiaux_favoris: {
+        Row: {
+          cree_le: string
+          materiau_id: string
+          user_id: string
+        }
+        Insert: {
+          cree_le?: string
+          materiau_id: string
+          user_id?: string
+        }
+        Update: {
+          cree_le?: string
+          materiau_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "materiaux_favoris_materiau_id_fkey"
+            columns: ["materiau_id"]
+            isOneToOne: false
+            referencedRelation: "materiaux_catalogue"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      materiaux_imports: {
+        Row: {
+          bilan: Json | null
+          cree_le: string
+          cree_par: string | null
+          fichier_hash: string | null
+          fichier_nom: string | null
+          fournisseur_id: string
+          id: string
+          statut: string
+          valide_le: string | null
+        }
+        Insert: {
+          bilan?: Json | null
+          cree_le?: string
+          cree_par?: string | null
+          fichier_hash?: string | null
+          fichier_nom?: string | null
+          fournisseur_id: string
+          id?: string
+          statut?: string
+          valide_le?: string | null
+        }
+        Update: {
+          bilan?: Json | null
+          cree_le?: string
+          cree_par?: string | null
+          fichier_hash?: string | null
+          fichier_nom?: string | null
+          fournisseur_id?: string
+          id?: string
+          statut?: string
+          valide_le?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "materiaux_imports_fournisseur_id_fkey"
+            columns: ["fournisseur_id"]
+            isOneToOne: false
+            referencedRelation: "fournisseurs_tarifs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      materiaux_imports_lignes: {
+        Row: {
+          data: Json
+          import_id: string
+        }
+        Insert: {
+          data: Json
+          import_id: string
+        }
+        Update: {
+          data?: Json
+          import_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "materiaux_imports_lignes_import_id_fkey"
+            columns: ["import_id"]
+            isOneToOne: false
+            referencedRelation: "materiaux_imports"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       mcp_audit_log: {
         Row: {
@@ -6299,6 +6689,40 @@ export type Database = {
           },
         ]
       }
+      v_devis_parametres_courants: {
+        Row: {
+          cle: string | null
+          created_at: string | null
+          created_by: string | null
+          date_effet: string | null
+          id: string | null
+          unite: string | null
+          valeur: number | null
+        }
+        Relationships: []
+      }
+      v_devis_taux_courants: {
+        Row: {
+          cout_revient: number | null
+          created_at: string | null
+          created_by: string | null
+          date_effet: string | null
+          id: string | null
+          niveau: string | null
+          par_defaut: boolean | null
+          poste_id: string | null
+          taux_vente: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "devis_taux_poste_id_fkey"
+            columns: ["poste_id"]
+            isOneToOne: false
+            referencedRelation: "devis_postes_ref"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       v_documents_supprimes_30j: {
         Row: {
           affaire_id: string | null
@@ -6835,6 +7259,54 @@ export type Database = {
         }[]
       }
       detect_equipe_overrides: { Args: { p_plan_id: string }; Returns: Json }
+      devis_normalize: { Args: { t: string }; Returns: string }
+      devis_parametre_ajouter: {
+        Args: {
+          _cle: string
+          _date_effet: string
+          _unite: string
+          _valeur: number
+        }
+        Returns: string
+      }
+      devis_poste_enregistrer: {
+        Args: {
+          _actif: boolean
+          _code: string
+          _id: string
+          _libelle: string
+          _metier_id: number
+          _ordre: number
+        }
+        Returns: string
+      }
+      devis_taux_ajouter: {
+        Args: {
+          _cout_revient: number
+          _date_effet: string
+          _niveau: string
+          _par_defaut: boolean
+          _poste_id: string
+          _taux_vente: number
+        }
+        Returns: string
+      }
+      devis_taux_lister: {
+        Args: never
+        Returns: {
+          actif: boolean
+          code: string
+          cout_revient: number
+          date_effet: string
+          libelle: string
+          metier_id: number
+          niveau: string
+          ordre: number
+          par_defaut: boolean
+          poste_id: string
+          taux_vente: number
+        }[]
+      }
       dismiss_inbox_item: { Args: { p_item_key: string }; Returns: undefined }
       email_domain: { Args: { p: string }; Returns: string }
       etape_for_metier: {
@@ -6854,6 +7326,7 @@ export type Database = {
         }[]
       }
       fab_objet_affaire_id: { Args: { _objet_id: string }; Returns: string }
+      fournisseur_tarif_enregistrer: { Args: { _f: Json }; Returns: string }
       get_active_contrat_template_id: { Args: never; Returns: string }
       get_active_phases_for_affaire: {
         Args: { p_affaire_id: string }
@@ -7029,6 +7502,64 @@ export type Database = {
           statut_opportunite: Database["public"]["Enums"]["opportunite_statut"]
           taille: Database["public"]["Enums"]["opportunite_taille"]
           typologie_future: string
+        }[]
+      }
+      materiaux_fournisseurs_stats: {
+        Args: never
+        Returns: {
+          date_tarif: string
+          etat: string
+          id: string
+          lignes_actives: number
+          nom: string
+          prix_public: boolean
+          slug: string
+        }[]
+      }
+      materiaux_import_ajouter: {
+        Args: { _import_id: string; _lignes: Json }
+        Returns: number
+      }
+      materiaux_import_bilan: { Args: { _import_id: string }; Returns: Json }
+      materiaux_import_preparer: {
+        Args: { _fichier_nom: string; _fournisseur_slug: string; _hash: string }
+        Returns: string
+      }
+      materiaux_import_valider: {
+        Args: { _import_id: string }
+        Returns: number
+      }
+      materiaux_rechercher: {
+        Args: {
+          _epaisseur?: number
+          _familles?: string[]
+          _fournisseurs?: string[]
+          _limit?: number
+          _q: string
+          _recent_seulement?: boolean
+          _tri?: string
+        }
+        Returns: {
+          cle_comparaison: string
+          date_tarif: string
+          epaisseur_mm: number
+          famille: string
+          format_texte: string
+          fournisseur: string
+          fournisseur_etat: string
+          id: string
+          largeur_mm: number
+          longueur_mm: number
+          moins_cher_du_groupe: boolean
+          prix_achat_net: number
+          prix_m2: number
+          prix_ml: number
+          prix_public: boolean
+          produit: string
+          ref: string
+          remarque: string
+          score: number
+          unite: string
         }[]
       }
       mcp_assert_legacy_oauth_write: {
