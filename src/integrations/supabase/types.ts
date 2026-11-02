@@ -2090,6 +2090,7 @@ export type Database = {
           livre_par: string | null
           modele_actif: boolean
           modele_categorie: string | null
+          modele_defaut: boolean
           modele_description: string | null
           modele_nom: string | null
           modele_origine_id: string | null
@@ -2104,6 +2105,8 @@ export type Database = {
           statut_redaction:
             | Database["public"]["Enums"]["devis_redaction_statut"]
             | null
+          supprime_le: string | null
+          supprime_par: string | null
           totaux_snapshot: Json | null
           tva_pct: number | null
           updated_at: string
@@ -2139,6 +2142,7 @@ export type Database = {
           livre_par?: string | null
           modele_actif?: boolean
           modele_categorie?: string | null
+          modele_defaut?: boolean
           modele_description?: string | null
           modele_nom?: string | null
           modele_origine_id?: string | null
@@ -2153,6 +2157,8 @@ export type Database = {
           statut_redaction?:
             | Database["public"]["Enums"]["devis_redaction_statut"]
             | null
+          supprime_le?: string | null
+          supprime_par?: string | null
           totaux_snapshot?: Json | null
           tva_pct?: number | null
           updated_at?: string
@@ -2188,6 +2194,7 @@ export type Database = {
           livre_par?: string | null
           modele_actif?: boolean
           modele_categorie?: string | null
+          modele_defaut?: boolean
           modele_description?: string | null
           modele_nom?: string | null
           modele_origine_id?: string | null
@@ -2202,6 +2209,8 @@ export type Database = {
           statut_redaction?:
             | Database["public"]["Enums"]["devis_redaction_statut"]
             | null
+          supprime_le?: string | null
+          supprime_par?: string | null
           totaux_snapshot?: Json | null
           tva_pct?: number | null
           updated_at?: string
@@ -8041,6 +8050,11 @@ export type Database = {
         Args: { _categorie: string; _description: string; _nom: string }
         Returns: string
       }
+      devis_modele_defaut_id: { Args: never; Returns: string }
+      devis_modele_definir_defaut: {
+        Args: { _defaut: boolean; _devis_id: string }
+        Returns: undefined
+      }
       devis_modele_enregistrer: {
         Args: {
           _categorie: string
@@ -8095,6 +8109,7 @@ export type Database = {
       }
       devis_peut_ecrire: { Args: { _devis_id: string }; Returns: boolean }
       devis_peut_lire: { Args: { _devis_id: string }; Returns: boolean }
+      devis_peut_supprimer: { Args: { _devis_id: string }; Returns: boolean }
       devis_peut_valider: { Args: { _devis_id: string }; Returns: boolean }
       devis_photo_ajouter: {
         Args: { _ligne_id: string; _p: Json }
@@ -8123,6 +8138,7 @@ export type Database = {
         Args: { _devis_id: string; _mode: string; _valeur: number }
         Returns: Json
       }
+      devis_restaurer: { Args: { _devis_id: string }; Returns: undefined }
       devis_signer_vers_fabrication: {
         Args: { _devis_id: string }
         Returns: Json
@@ -8133,6 +8149,20 @@ export type Database = {
           _statut: Database["public"]["Enums"]["devis_redaction_statut"]
         }
         Returns: undefined
+      }
+      devis_supprimer: { Args: { _devis_id: string }; Returns: undefined }
+      devis_supprimes_lister: {
+        Args: never
+        Returns: {
+          affaire_id: string
+          affaire_nom: string
+          id: string
+          numero: string
+          statut_redaction: Database["public"]["Enums"]["devis_redaction_statut"]
+          supprime_le: string
+          supprime_par_nom: string
+          version: number
+        }[]
       }
       devis_taux_ajouter: {
         Args: {

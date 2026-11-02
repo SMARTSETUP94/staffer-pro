@@ -477,6 +477,13 @@
       "when": 1793622024056,
       "tag": "0067_devis_13_prix_vente_sans_couts",
       "breakpoints": true
+    },
+    {
+      "idx": 68,
+      "version": "7",
+      "when": 1793623254593,
+      "tag": "0068_devis_14_suppression_modele_defaut",
+      "breakpoints": true
     }
   ]
 }
