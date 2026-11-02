@@ -70,8 +70,8 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
     return calculerDevis(
       d.lignes.map((l) => ({ ...l, quantite: Number(l.quantite) })),
       d.heures.map((h) => ({ ...h, heures: Number(h.heures), taux_vente: Number(h.taux_vente), montant_force: h.montant_force == null ? null : Number(h.montant_force), cout_revient: h.cout_revient == null ? null : Number(h.cout_revient) })),
-      d.materiaux.map((m) => ({ ...m, quantite: Number(m.quantite), prix_achat: Number(m.prix_achat ?? 0), coefficient: Number(m.coefficient) })),
-      d.libres.map((f) => ({ ...f, quantite: Number(f.quantite), prix_achat: f.prix_achat == null ? null : Number(f.prix_achat), prix_forfait: f.prix_forfait == null ? null : Number(f.prix_forfait), coefficient: Number(f.coefficient),
+      d.materiaux.map((m) => ({ ...m, quantite: Number(m.quantite), prix_achat: m.prix_achat === undefined ? null : Number(m.prix_achat ?? 0), coefficient: Number(m.coefficient ?? 1), prix_vente_unitaire: m.prix_vente_unitaire == null ? null : Number(m.prix_vente_unitaire) })),
+      d.libres.map((f) => ({ ...f, quantite: Number(f.quantite), prix_achat: f.prix_achat == null ? null : Number(f.prix_achat), prix_forfait: f.prix_forfait == null ? null : Number(f.prix_forfait), coefficient: Number(f.coefficient ?? 1), prix_vente_unitaire: f.prix_vente_unitaire == null ? null : Number(f.prix_vente_unitaire),
         heures_info: f.heures_info == null ? null : Number(f.heures_info), metier_info_id: f.poste_info_id ? posteMetier.get(f.poste_info_id) ?? null : null })),
       Number(d.calcul.tva_pct ?? 20),
       { mode: d.devis.remise_mode ?? "aucune", valeur: d.devis.remise_valeur == null ? null : Number(d.devis.remise_valeur) },
@@ -251,7 +251,7 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
         {/* Fiche */}
         <Card>
           <CardContent className="p-4">
-            {ligneSel ? <ObjetPanel key={ligneSel.id} data={d} ligne={ligneSel} readOnly={readOnly} call={call} patch={patch} save={save} onSelect={setSelected} />
+            {ligneSel ? <ObjetPanel key={ligneSel.id} data={d} ligne={ligneSel} montants={calc.lignes} readOnly={readOnly} call={call} patch={patch} save={save} onSelect={setSelected} />
               : <p className="text-sm text-muted-foreground">Sélectionnez un élément dans l'arbre.</p>}
           </CardContent>
         </Card>

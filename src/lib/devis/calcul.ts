@@ -6,8 +6,9 @@ export type LigneType = "zone" | "objet" | "commentaire" | "chapitre_suivi" | "c
 
 export interface CalcLigne { id: string; parent_id: string | null; type: LigneType; quantite: number; ordre?: number; option_incluse?: boolean }
 export interface CalcHeure { ligne_id: string; heures: number; taux_vente: number; cout_revient?: number | null; par_unite: boolean; metier_id?: number | null; montant_force?: number | null }
-export interface CalcMateriau { ligne_id: string; quantite: number; prix_achat?: number | null; coefficient: number }
-export interface CalcLibre { ligne_id: string; quantite: number; prix_achat?: number | null; prix_forfait?: number | null; coefficient: number; par_unite: boolean; heures_info?: number | null; metier_info_id?: number | null }
+/** prix_vente_unitaire : renvoyé par le serveur quand l'achat et le coefficient sont masqués (sans droit coûts). */
+export interface CalcMateriau { ligne_id: string; quantite: number; prix_achat?: number | null; coefficient: number; prix_vente_unitaire?: number | null }
+export interface CalcLibre { ligne_id: string; quantite: number; prix_achat?: number | null; prix_forfait?: number | null; coefficient: number; prix_vente_unitaire?: number | null; par_unite: boolean; heures_info?: number | null; metier_info_id?: number | null }
 
 export interface CalcResult {
   total_ht: number; remise: number; net_ht: number; tva: number; ttc: number; options_ht: number;
@@ -32,6 +33,13 @@ export function calculerRemise(totalHt: number, remise?: Remise | null): number 
 /** Montant d'une ligne d'heures : le montant saisi fait foi, sinon heures × taux. */
 export const montantHeure = (h: Pick<CalcHeure, "heures" | "taux_vente" | "montant_force">) =>
   h.montant_force != null ? Number(h.montant_force) : h.heures * h.taux_vente;
+
+/** Prix de vente unitaire d'un matériau : achat × coefficient, ou prix de vente fourni par le serveur. */
+export const venteUnitaireMateriau = (x: Pick<CalcMateriau, "prix_achat" | "coefficient" | "prix_vente_unitaire">) =>
+  x.prix_achat != null ? x.prix_achat * x.coefficient : Number(x.prix_vente_unitaire ?? 0);
+/** Prix de vente unitaire d'une ligne libre : prix de vente direct (forfait), sinon achat × coefficient. */
+export const venteUnitaireLibre = (f: Pick<CalcLibre, "prix_forfait" | "prix_achat" | "coefficient" | "prix_vente_unitaire">) =>
+  f.prix_forfait != null ? f.prix_forfait : f.prix_achat != null ? f.prix_achat * f.coefficient : Number(f.prix_vente_unitaire ?? 0);
 
 export function calculerDevis(
   lignes: CalcLigne[], heures: CalcHeure[], materiaux: CalcMateriau[], libres: CalcLibre[], tvaPct = 20, remise?: Remise | null,
@@ -69,11 +77,11 @@ export function calculerDevis(
       }
     }
     for (const x of materiaux) if (x.ligne_id === id) {
-      vu += x.quantite * (x.prix_achat ?? 0) * x.coefficient;
+      vu += x.quantite * venteUnitaireMateriau(x);
       cu += x.quantite * (x.prix_achat ?? 0);
     }
     for (const f of libres) if (f.ligne_id === id) {
-      const v = f.quantite * (f.prix_forfait ?? (f.prix_achat ?? 0) * f.coefficient);
+      const v = f.quantite * venteUnitaireLibre(f);
       const c = f.quantite * (f.prix_achat ?? 0);
       if (f.par_unite) { vu += v; cu += c; } else { vl += v; cl += c; }
       if (!inf.option && f.heures_info) {
