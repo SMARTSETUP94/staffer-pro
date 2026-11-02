@@ -13,10 +13,10 @@ export interface Ligne {
 export interface Heure { id: string; ligne_id: string; poste_id: string; niveau: string; heures: number; par_unite: boolean;
   taux_vente: number; taux_grille: number | null; cout_revient?: number | null; ordre: number; poste_libelle: string; metier_id: number | null; montant_force?: number | null }
 export interface Materiau { id: string; ligne_id: string; materiau_id: string | null; designation: string; fournisseur: string | null; ref: string | null;
-  unite: string | null; quantite: number; aide_conversion: unknown; prix_achat?: number; date_tarif: string | null; coefficient: number;
+  unite: string | null; quantite: number; aide_conversion: unknown; prix_achat?: number; date_tarif: string | null; coefficient?: number; prix_vente_unitaire?: number | null; prix_vente?: number | null;
   propose_catalogue: boolean; ordre: number }
 export interface Libre { id: string; ligne_id: string; categorie: string; forfait_cle: string | null; designation: string; unite: string | null;
-  quantite: number; prix_achat?: number | null; prix_forfait: number | null; coefficient: number; par_unite: boolean; ordre: number; heures_info?: number | null; poste_info_id?: string | null }
+  quantite: number; prix_achat?: number | null; prix_forfait: number | null; coefficient?: number; prix_vente_unitaire?: number | null; prix_vente?: number | null; par_unite: boolean; ordre: number; heures_info?: number | null; poste_info_id?: string | null }
 export interface Photo { id: string; ligne_id: string; storage_path: string; thumb_path: string | null; mime: string | null; legende: string | null; visible_client: boolean; ordre: number }
 
 export interface DevisData {

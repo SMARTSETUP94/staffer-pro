@@ -70,8 +70,8 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
     return calculerDevis(
       d.lignes.map((l) => ({ ...l, quantite: Number(l.quantite) })),
       d.heures.map((h) => ({ ...h, heures: Number(h.heures), taux_vente: Number(h.taux_vente), montant_force: h.montant_force == null ? null : Number(h.montant_force), cout_revient: h.cout_revient == null ? null : Number(h.cout_revient) })),
-      d.materiaux.map((m) => ({ ...m, quantite: Number(m.quantite), prix_achat: Number(m.prix_achat ?? 0), coefficient: Number(m.coefficient) })),
-      d.libres.map((f) => ({ ...f, quantite: Number(f.quantite), prix_achat: f.prix_achat == null ? null : Number(f.prix_achat), prix_forfait: f.prix_forfait == null ? null : Number(f.prix_forfait), coefficient: Number(f.coefficient),
+      d.materiaux.map((m) => ({ ...m, quantite: Number(m.quantite), prix_achat: m.prix_achat === undefined ? null : Number(m.prix_achat ?? 0), coefficient: Number(m.coefficient ?? 1), prix_vente_unitaire: m.prix_vente_unitaire == null ? null : Number(m.prix_vente_unitaire) })),
+      d.libres.map((f) => ({ ...f, quantite: Number(f.quantite), prix_achat: f.prix_achat == null ? null : Number(f.prix_achat), prix_forfait: f.prix_forfait == null ? null : Number(f.prix_forfait), coefficient: Number(f.coefficient ?? 1), prix_vente_unitaire: f.prix_vente_unitaire == null ? null : Number(f.prix_vente_unitaire),
         heures_info: f.heures_info == null ? null : Number(f.heures_info), metier_info_id: f.poste_info_id ? posteMetier.get(f.poste_info_id) ?? null : null })),
       Number(d.calcul.tva_pct ?? 20),
       { mode: d.devis.remise_mode ?? "aucune", valeur: d.devis.remise_valeur == null ? null : Number(d.devis.remise_valeur) },
@@ -251,7 +251,7 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
         {/* Fiche */}
         <Card>
           <CardContent className="p-4">
-            {ligneSel ? <ObjetPanel key={ligneSel.id} data={d} ligne={ligneSel} readOnly={readOnly} call={call} patch={patch} save={save} onSelect={setSelected} />
+            {ligneSel ? <ObjetPanel key={ligneSel.id} data={d} ligne={ligneSel} montants={calc.lignes} readOnly={readOnly} call={call} patch={patch} save={save} onSelect={setSelected} />
               : <p className="text-sm text-muted-foreground">Sélectionnez un élément dans l'arbre.</p>}
           </CardContent>
         </Card>
@@ -261,7 +261,7 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
           <CardContent className="space-y-3 p-4 text-sm">
             <div className="space-y-1">
               <Row label="Total HT" value={eur(calc.total_ht)} strong={calc.remise === 0} />
-              <RemiseBloc mode={d.devis.remise_mode ?? "aucune"} valeur={d.devis.remise_valeur ?? null} readOnly={readOnly}
+              <RemiseBloc mode={d.devis.remise_mode ?? "aucune"} valeur={d.devis.remise_valeur ?? null} readOnly={readOnly} totalHt={calc.total_ht}
                 onChange={(mode, valeur) => {
                   patch((x) => ({ ...x, devis: { ...x.devis, remise_mode: mode, remise_valeur: valeur } }));
                   save("remise", () => call("devis_remise_modifier", { _devis_id: devisId, _mode: mode, _valeur: valeur }, { refresh: false }));
@@ -389,7 +389,7 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Marquer envoyé au client</DialogTitle>
-            <DialogDescription>L'opportunité passe en « Envoyé » si elle n'est pas plus avancée. Le CA estimé reprend le total HT, et l'action est ajoutée à l'historique.</DialogDescription>
+            <DialogDescription>L'opportunité passe en « Envoyé » si elle n'est pas plus avancée. Le CA estimé reprend le total net HT, et l'action est ajoutée à l'historique.</DialogDescription>
           </DialogHeader>
           <Input type="date" value={envoiDate} max={new Date().toISOString().slice(0, 10)} onChange={(e) => setEnvoiDate(e.target.value)} />
           <DialogFooter><Button disabled={!envoiDate} onClick={async () => {
@@ -432,30 +432,40 @@ function DateCase({ label, value, onChange, disabled }: { label: string; value: 
   );
 }
 
-function RemiseBloc({ mode, valeur, readOnly, onChange }: {
-  mode: "aucune" | "montant" | "pct" | "net_cible"; valeur: number | null; readOnly: boolean;
+function RemiseBloc({ mode, valeur, readOnly, totalHt, onChange }: {
+  mode: "aucune" | "montant" | "pct" | "net_cible"; valeur: number | null; readOnly: boolean; totalHt: number;
   onChange: (mode: "aucune" | "montant" | "pct" | "net_cible", valeur: number | null) => void;
 }) {
+  // Mode affiché localement : changer de mode n'enregistre rien tant que la valeur n'est pas validée.
+  const [m, setM] = useState(mode);
   const [v, setV] = useState(valeur == null ? "" : String(valeur));
-  useEffect(() => { setV(valeur == null ? "" : String(valeur)); }, [valeur]);
+  useEffect(() => { setM(mode); setV(valeur == null ? "" : String(valeur)); }, [mode, valeur]);
   if (readOnly && mode === "aucune") return null;
-  const commit = (m: typeof mode, raw: string) => {
+  const commit = (mm: typeof mode, raw: string) => {
+    if (mm === "aucune") { if (mode !== "aucune") onChange("aucune", null); return; }
     const n = raw.trim() === "" ? null : Number(raw.replace(",", "."));
-    if (m !== "aucune" && (n == null || Number.isNaN(n))) return;
-    onChange(m, m === "aucune" ? null : n);
+    if (n == null || Number.isNaN(n)) return;
+    if (mm === mode && n === (valeur == null ? null : Number(valeur))) return;
+    onChange(mm, n);
   };
   return (
     <div className="flex items-center gap-1 text-xs">
-      <select aria-label="Type de remise" disabled={readOnly} className="h-7 rounded border bg-background px-1" value={mode}
-        onChange={(e) => commit(e.target.value as typeof mode, e.target.value === "aucune" ? "" : v || "0")}>
+      <select aria-label="Type de remise" disabled={readOnly} className="h-7 rounded border bg-background px-1" value={m}
+        onChange={(e) => {
+          const nm = e.target.value as typeof mode;
+          setM(nm);
+          if (nm === "aucune") { setV(""); commit("aucune", ""); return; }
+          // Total net souhaité : prérempli avec le total HT actuel (remise 0) ; autres modes : 0.
+          setV(nm === "net_cible" ? String(totalHt) : "0");
+        }}>
         <option value="aucune">Sans remise</option>
         <option value="montant">Remise en €</option>
         <option value="pct">Remise en %</option>
         <option value="net_cible">Total net souhaité</option>
       </select>
-      {mode !== "aucune" && (
+      {m !== "aucune" && (
         <input aria-label="Valeur de la remise" disabled={readOnly} inputMode="decimal" className="h-7 w-24 rounded border bg-background px-1 text-right"
-          value={v} onChange={(e) => setV(e.target.value)} onBlur={() => commit(mode, v)} onKeyDown={(e) => { if (e.key === "Enter") commit(mode, v); }} />
+          value={v} onChange={(e) => setV(e.target.value)} onBlur={() => commit(m, v)} onKeyDown={(e) => { if (e.key === "Enter") commit(m, v); }} />
       )}
     </div>
   );

@@ -442,6 +442,41 @@
       "when": 1793619912891,
       "tag": "0062_devis_08_remise_montant_options",
       "breakpoints": true
+    },
+    {
+      "idx": 63,
+      "version": "7",
+      "when": 1793621516990,
+      "tag": "0063_devis_09_recherche_materiaux",
+      "breakpoints": true
+    },
+    {
+      "idx": 64,
+      "version": "7",
+      "when": 1793621724196,
+      "tag": "0064_devis_10_recherche_nom_produit",
+      "breakpoints": true
+    },
+    {
+      "idx": 65,
+      "version": "7",
+      "when": 1793621856744,
+      "tag": "0065_devis_11_recherche_prefiltre",
+      "breakpoints": true
+    },
+    {
+      "idx": 66,
+      "version": "7",
+      "when": 1793621916399,
+      "tag": "0066_devis_12_recherche_prefiltre_termes_courts",
+      "breakpoints": true
+    },
+    {
+      "idx": 67,
+      "version": "7",
+      "when": 1793622024056,
+      "tag": "0067_devis_13_prix_vente_sans_couts",
+      "breakpoints": true
     }
   ]
 }
