@@ -484,6 +484,13 @@
       "when": 1793623254593,
       "tag": "0068_devis_14_suppression_modele_defaut",
       "breakpoints": true
+    },
+    {
+      "idx": 69,
+      "version": "7",
+      "when": 1793629822713,
+      "tag": "0069_devis_15_couts_revient_marge_partielle",
+      "breakpoints": true
     }
   ]
 }

@@ -2971,18 +2971,21 @@ export type Database = {
       devis_snapshot_couts: {
         Row: {
           cout_total: number | null
+          detail: Json | null
           devis_id: string
           fige_le: string
           marge: Json | null
         }
         Insert: {
           cout_total?: number | null
+          detail?: Json | null
           devis_id: string
           fige_le?: string
           marge?: Json | null
         }
         Update: {
           cout_total?: number | null
+          detail?: Json | null
           devis_id?: string
           fige_le?: string
           marge?: Json | null
