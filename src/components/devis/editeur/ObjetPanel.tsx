@@ -78,8 +78,8 @@ export function ObjetPanel({ data, ligne, readOnly, call, patch, save, onSelect 
 
   // ---- heures ----
   const heures = data.heures.filter((h) => h.ligne_id === ligne.id);
-  const setHeure = (h: Heure, k: "heures" | "taux_vente" | "par_unite", raw: string | boolean) => {
-    const v = typeof raw === "boolean" ? raw : num(raw);
+  const setHeure = (h: Heure, k: "heures" | "taux_vente" | "par_unite" | "montant_force", raw: string | boolean | null) => {
+    const v = typeof raw === "boolean" || raw === null ? raw : num(raw);
     patch((d) => ({ ...d, heures: d.heures.map((x) => (x.id === h.id ? { ...x, [k]: v } : x)) }));
     save(`h:${h.id}:${k}`, () => call("devis_heure_enregistrer", { _ligne_id: ligne.id, _h: { id: h.id, [k]: v } }, { refresh: false }));
   };
@@ -98,7 +98,7 @@ export function ObjetPanel({ data, ligne, readOnly, call, patch, save, onSelect 
   };
   const libres = data.libres.filter((f) => f.ligne_id === ligne.id);
   const setLibre = (f: Libre, k: keyof Libre, raw: string | boolean) => {
-    const v = typeof raw === "boolean" ? raw : ["designation", "unite", "categorie"].includes(k) ? raw : raw === "" ? null : num(raw);
+    const v = typeof raw === "boolean" ? raw : ["designation", "unite", "categorie"].includes(k) ? raw : k === "poste_info_id" ? (raw || null) : raw === "" ? null : num(raw);
     patch((d) => ({ ...d, libres: d.libres.map((x) => (x.id === f.id ? { ...x, [k]: v } : x)) }));
     save(`f:${f.id}:${k}`, () => call("devis_libre_enregistrer", { _ligne_id: ligne.id, _f: { id: f.id, [k]: v } }, { refresh: false }));
   };
@@ -200,12 +200,15 @@ export function ObjetPanel({ data, ligne, readOnly, call, patch, save, onSelect 
             <table className="w-full text-sm">
               <thead className="text-xs text-muted-foreground"><tr>
                 <th className="text-left">Poste</th><th className="text-left">Niveau</th><th>Heures</th><th title="Décoché : heures communes, non multipliées par la quantité">Par unité</th>
-                <th>Taux €/h</th><th className="text-right">Montant</th><th />
+                <th>Taux €/h</th><th className="text-right" title="Cliquez « montant » pour saisir le montant de la ligne">Montant</th><th />
               </tr></thead>
               <tbody>
                 {heures.map((h, i) => {
                   const ec = ecartTauxPct(h.taux_vente, h.taux_grille);
-                  const montant = h.heures * h.taux_vente * (h.par_unite ? Number(ligne.quantite) : 1);
+                  const auMontant = h.montant_force != null;
+                  const montantUnit = auMontant ? Number(h.montant_force) : h.heures * h.taux_vente;
+                  const montant = montantUnit * (h.par_unite ? Number(ligne.quantite) : 1);
+                  const tauxAffiche = auMontant ? (Number(h.heures) > 0 ? Number(h.montant_force) / Number(h.heures) : null) : null;
                   return (
                     <tr key={h.id}>
                       <td><select disabled={readOnly} className="h-8 w-full rounded border bg-background px-1" value={h.poste_id}
@@ -221,12 +224,24 @@ export function ObjetPanel({ data, ligne, readOnly, call, patch, save, onSelect 
                       <td className="text-center"><input type="checkbox" checked={h.par_unite} disabled={readOnly} onChange={(e) => setHeure(h, "par_unite", e.target.checked)} /></td>
                       <td>
                         <div className="flex items-center gap-1">
-                          <Field numeric value={h.taux_vente} disabled={readOnly} className="w-20 text-right" onValue={(v) => setHeure(h, "taux_vente", v)}
-                            onEnter={() => (i === heures.length - 1 ? void addHeure(h.poste_id) : undefined)} />
-                          {ec != null && Math.abs(ec) > seuil && <span title={`Grille : ${h.taux_grille} €/h`}><Badge variant="destructive" className="px-1 text-[10px]">{ec > 0 ? "+" : ""}{ec} %</Badge></span>}
+                          {auMontant
+                            ? <span className="w-20 text-right tabular-nums text-muted-foreground" title="Taux déduit du montant saisi">{tauxAffiche == null ? "—" : tauxAffiche.toFixed(2)}</span>
+                            : <Field numeric value={h.taux_vente} disabled={readOnly} className="w-20 text-right" onValue={(v) => setHeure(h, "taux_vente", v)}
+                                onEnter={() => (i === heures.length - 1 ? void addHeure(h.poste_id) : undefined)} />}
+                          {(() => { const e2 = auMontant ? (tauxAffiche != null && h.taux_grille ? ecartTauxPct(tauxAffiche, h.taux_grille) : null) : ec;
+                            return e2 != null && Math.abs(e2) > seuil && <span title={`Information : grille ${h.taux_grille} €/h`}><Badge variant="outline" className="px-1 text-[10px]">{e2 > 0 ? "+" : ""}{Math.round(e2 * 10) / 10} %</Badge></span>; })()}
                         </div>
                       </td>
-                      <td className="text-right tabular-nums">{eur(montant)}</td>
+                      <td className="text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          {auMontant
+                            ? <Field numeric value={h.montant_force ?? 0} disabled={readOnly} className="w-24 text-right" onValue={(v) => setHeure(h, "montant_force", v)} />
+                            : <span className="tabular-nums">{eur(montant)}</span>}
+                          {!readOnly && <button type="button" className="text-[10px] text-primary underline" title={auMontant ? "Revenir à la saisie au taux" : "Saisir le montant de la ligne"}
+                            onClick={() => setHeure(h, "montant_force", auMontant ? null : String(Math.round(h.heures * h.taux_vente * 100) / 100))}>{auMontant ? "taux" : "montant"}</button>}
+                        </div>
+                        {auMontant && Number(ligne.quantite) !== 1 && h.par_unite && <div className="text-[10px] text-muted-foreground">× {Number(ligne.quantite)} = {eur(montant)}</div>}
+                      </td>
                       <td>{!readOnly && <button type="button" aria-label="Supprimer" onClick={() => void remove("heure", h.id)}><Trash2 className="h-3.5 w-3.5" /></button>}</td>
                     </tr>
                   );
@@ -287,7 +302,7 @@ export function ObjetPanel({ data, ligne, readOnly, call, patch, save, onSelect 
             <h3 className="text-sm font-semibold">Achats spécifiques, sous-traitance, location, forfaits</h3>
             <table className="w-full text-sm">
               <thead className="text-xs text-muted-foreground"><tr>
-                <th className="text-left">Désignation</th><th>Type</th><th>Qté</th>{couts && <th>Achat €</th>}<th>Coef</th><th>Forfait €</th><th>Par unité</th><th />
+                <th className="text-left">Désignation</th><th>Type</th><th>Qté</th>{couts && <th>Achat €</th>}<th>Coef</th><th title="Prix de vente unitaire ; négatif accepté pour une régularisation">Prix €</th><th title="Heures facultatives, comptées dans les heures par métier">Heures</th><th>Poste</th><th>Par unité</th><th />
               </tr></thead>
               <tbody>
                 {libres.map((f) => (
@@ -299,7 +314,11 @@ export function ObjetPanel({ data, ligne, readOnly, call, patch, save, onSelect 
                     <td><Field numeric value={f.quantite} disabled={readOnly} className="w-16 text-right" onValue={(v) => setLibre(f, "quantite", v)} /></td>
                     {couts && <td><Field numeric value={f.prix_achat} disabled={readOnly} className="w-20 text-right" onValue={(v) => setLibre(f, "prix_achat", v)} /></td>}
                     <td><Field numeric value={f.coefficient} disabled={readOnly} className="w-16 text-right" onValue={(v) => setLibre(f, "coefficient", v)} /></td>
-                    <td><Field numeric value={f.prix_forfait} disabled={readOnly} className="w-20 text-right" onValue={(v) => setLibre(f, "prix_forfait", v)} /></td>
+                    <td><Field numeric value={f.prix_forfait} disabled={readOnly} className={`w-20 text-right ${Number(f.prix_forfait) < 0 ? "text-destructive" : ""}`} onValue={(v) => setLibre(f, "prix_forfait", v)} /></td>
+                    <td><Field numeric value={f.heures_info ?? ""} disabled={readOnly} className="w-14 text-right" onValue={(v) => setLibre(f, "heures_info", v)} /></td>
+                    <td><select disabled={readOnly} className="h-8 w-28 rounded border bg-background px-1" value={f.poste_info_id ?? ""} onChange={(e) => setLibre(f, "poste_info_id", e.target.value)}>
+                      <option value="">—</option>{posteList.map((p) => <option key={p.poste_id} value={p.poste_id}>{p.libelle}</option>)}
+                    </select></td>
                     <td className="text-center"><input type="checkbox" checked={f.par_unite} disabled={readOnly} onChange={(e) => setLibre(f, "par_unite", e.target.checked)} /></td>
                     <td>{!readOnly && <button type="button" aria-label="Supprimer" onClick={() => void remove("libre", f.id)}><Trash2 className="h-3.5 w-3.5" /></button>}</td>
                   </tr>
