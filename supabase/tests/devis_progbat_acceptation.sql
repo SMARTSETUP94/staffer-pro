@@ -19,7 +19,7 @@ BEGIN
     END IF;
   END LOOP;
 END $h$;
-CREATE TEMP TABLE _res(numero text, ok boolean, calcule jsonb, attendu jsonb);
+DROP TABLE IF EXISTS pg_temp._res; CREATE TEMP TABLE _res(numero text, ok boolean, calcule jsonb, attendu jsonb);
 DO $t$
 DECLARE dj jsonb; ch jsonb; ob jsonb; li jsonb; v_aff uuid; v_d uuid; v_ch uuid; v_obj uuid; v_cible uuid; v_type devis_ligne_type;
         c jsonb; a jsonb; o int; k int := 0;
