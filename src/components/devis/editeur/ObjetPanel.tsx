@@ -388,8 +388,7 @@ export function ObjetPanel({ data, ligne, montants, calc, readOnly, call, patch,
           <div className="flex justify-end border-t pt-2 text-sm font-semibold">Total {TYPE_LABEL[ligne.type].toLowerCase()} : {eur(totalLigne)}</div>
           {couts && calc && (
             <div className="ml-auto max-w-md rounded border p-2">
-              <CoutsBloc dec={sousArbre(data.lignes, calc.detail, ligne.id)}
-                manquants={calc.couts_manquants.length ? undefined : undefined} compact />
+              <CoutsBloc dec={sousArbre(data.lignes, calc.detail, ligne.id)} compact />
             </div>
           )}
         </>
