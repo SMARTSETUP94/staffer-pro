@@ -13,13 +13,11 @@ DECLARE
   p_met uuid := (SELECT id FROM devis_postes_ref WHERE code='metallerie');
 BEGIN
   -- un chef d'équipe (sans droit coûts) et une affaire à laquelle il a accès
-  FOR r IN SELECT u.user_id, a.id aff FROM user_roles u CROSS JOIN LATERAL (SELECT id FROM affaires ORDER BY created_at DESC LIMIT 300) a
-           WHERE u.role='chef_chantier' AND NOT EXISTS (SELECT 1 FROM user_roles x WHERE x.user_id=u.user_id AND x.role IN ('admin','commercial','bureau_etude','rh'))
-  LOOP
-    PERFORM set_config('request.jwt.claims', json_build_object('sub',r.user_id,'role','authenticated')::text, true);
-    IF user_has_affaire_access(r.aff) AND current_user_has_capability('devis.view') AND NOT current_user_has_capability('devis.couts') THEN
-      v_chef := r.user_id; v_aff := r.aff; EXIT; END IF;
-  END LOOP;
+  SELECT e.profile_id, a.id INTO v_chef, v_aff
+    FROM affaires a JOIN employes e ON e.id=a.chef_chantier_id
+    JOIN user_roles u ON u.user_id=e.profile_id AND u.role='chef_chantier'
+   WHERE NOT EXISTS (SELECT 1 FROM user_roles x WHERE x.user_id=e.profile_id AND x.role IN ('admin','commercial','bureau_etude','rh'))
+   LIMIT 1;
   IF v_chef IS NULL THEN RAISE EXCEPTION 'Préparation KO : aucun chef affecté trouvé'; END IF;
 
   PERFORM set_config('request.jwt.claims', json_build_object('sub',v_admin,'role','authenticated')::text, true);
