@@ -116,6 +116,77 @@ export function convertirEnUnitesVente(
   return Math.ceil((m2 * k) / surfPanneau - 1e-9);
 }
 
+export type UniteFamille = "m2" | "ml" | "piece" | "rouleau" | "autre";
+
+/** Classe l'unité de vente d'un produit du catalogue. */
+export function familleUnite(unite: string | null | undefined): UniteFamille {
+  const u = (unite ?? "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+  if (/^m(²|2)$/.test(u) || u === "m 2") return "m2";
+  if (u === "ml" || u === "m" || u === "metre lineaire") return "ml";
+  if (/^(rouleau|bobine)/.test(u)) return "rouleau";
+  if (/^(panneau|plaque|barre|tole|feuille|piece)s?$/.test(u)) return "piece";
+  return "autre";
+}
+
+const fr = (n: number, d = 2) => n.toLocaleString("fr-FR", { maximumFractionDigits: d });
+
+/**
+ * Quantité à facturer dans l'unité du produit, avec le détail du calcul.
+ * - m² : panneaux arrondis × surface du panneau si le format est connu, sinon m² × (1 + perte).
+ * - ml : barres arrondies × longueur de barre si connue, sinon ml × (1 + perte).
+ * - panneau/plaque/barre/tôle/feuille/pièce : nombre de pièces ; rouleau : nombre de rouleaux.
+ */
+export function quantiteDepuisAide(
+  unite: string | null | undefined,
+  mode: "m2" | "pieces" | "ml",
+  saisie: { m2?: number; pieces?: { l: number; w: number; n: number }[]; ml?: number },
+  format: { longueur_mm?: number | null; largeur_mm?: number | null },
+  pertePct = 0,
+): { quantite: number; detail: string } | null {
+  const fam = familleUnite(unite);
+  const k = 1 + (pertePct || 0) / 100;
+  const L = Number(format.longueur_mm) || 0, W = Number(format.largeur_mm) || 0;
+  const surfFmt = L && W ? (L * W) / 1e6 : 0;
+  const perteTxt = pertePct ? ` (perte ${fr(pertePct)} % incluse)` : "";
+  const m2Saisis = mode === "m2" ? Number(saisie.m2) || 0
+    : mode === "pieces" ? (saisie.pieces ?? []).reduce((s, p) => s + (p.l * p.w * p.n) / 1e6, 0) : 0;
+  const mlSaisis = mode === "ml" ? Number(saisie.ml) || 0
+    : mode === "pieces" ? (saisie.pieces ?? []).reduce((s, p) => s + (p.l * p.n) / 1000, 0) : 0;
+
+  if (fam === "m2") {
+    let m2 = m2Saisis;
+    if (mode === "ml") { if (!W || !mlSaisis) return null; m2 = (mlSaisis * W) / 1000; }
+    if (!m2) return null;
+    if (surfFmt && L && W && mode !== "ml") {
+      const n = Math.ceil((m2 * k) / surfFmt - 1e-9);
+      const q = r2(n * surfFmt);
+      return { quantite: q, detail: `${n} panneau${n > 1 ? "x" : ""} de ${fr(L / 1000)} × ${fr(W / 1000)} = ${fr(q)} m²${perteTxt}` };
+    }
+    const q = r2(m2 * k);
+    return { quantite: q, detail: `${fr(m2)} m² × ${fr(k, 4)} = ${fr(q)} m²${perteTxt}` };
+  }
+  if (fam === "ml") {
+    if (mode === "m2" || !mlSaisis) return null;
+    if (L) {
+      const n = Math.ceil((mlSaisis * k) / (L / 1000) - 1e-9);
+      const q = r2((n * L) / 1000);
+      return { quantite: q, detail: `${n} barre${n > 1 ? "s" : ""} de ${fr(L / 1000)} m = ${fr(q)} ml${perteTxt}` };
+    }
+    const q = r2(mlSaisis * k);
+    return { quantite: q, detail: `${fr(mlSaisis)} ml × ${fr(k, 4)} = ${fr(q)} ml${perteTxt}` };
+  }
+  // pièces, rouleaux, autres unités comptées à la pièce
+  const nom = fam === "rouleau" ? "rouleau" : (unite || "pièce");
+  if (mode === "ml") {
+    if (!L || !mlSaisis) return null;
+    const n = Math.ceil((mlSaisis * k) / (L / 1000) - 1e-9);
+    return { quantite: n, detail: `${fr(mlSaisis)} ml ÷ ${fr(L / 1000)} m = ${n} ${nom}${n > 1 ? "s" : ""}${perteTxt}` };
+  }
+  if (!surfFmt || !m2Saisis) return null;
+  const n = Math.ceil((m2Saisis * k) / surfFmt - 1e-9);
+  return { quantite: n, detail: `${fr(m2Saisis)} m² ÷ ${fr(L / 1000)} × ${fr(W / 1000)} (${fr(surfFmt)} m²) = ${n} ${nom}${n > 1 ? "s" : ""}${perteTxt}` };
+}
+
 /** Écart en % entre le taux saisi et le taux de la grille. */
 export function ecartTauxPct(taux: number, grille: number | null | undefined): number | null {
   if (grille == null || grille === 0) return null;
