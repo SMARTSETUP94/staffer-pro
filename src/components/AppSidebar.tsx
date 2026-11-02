@@ -93,7 +93,7 @@ function buildSections(
         { title: "Qui est où", url: "/qui-est-ou", icon: UsersRound, cap: "section.planning_fab" },
         { title: "Pipeline opportunités", url: "/opportunites", icon: Trophy, cap: "section.pipeline_opportunites" },
         { title: "Devis", url: "/devis-staffing", icon: FileText, cap: "devis.view", flag: "devis_staffing_v1" },
-        { title: "Paramètres devis", url: "/parametres/devis-taux", icon: Settings, cap: "devis.parametres", flag: "devis_staffing_v1" },
+
         { title: "Demandes clients", url: "/demandes-clients", icon: Inbox, cap: "demandes_clients.view" },
         { title: "Liste des chantiers", url: "/liste-chantiers", icon: ClipboardList, cap: "section.affaires" },
       ],
