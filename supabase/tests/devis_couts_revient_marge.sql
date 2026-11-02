@@ -5,7 +5,7 @@
 -- semi-remorque sans prix, chef d'équipe sans aucune donnée de coût.
 DO $t$
 DECLARE
-  v_admin uuid := 'afcb9389-edb4-4ce0-b82c-e302a0aff71a'; v_chef uuid; v_aff uuid; v_d uuid; v_o uuid; v_l uuid; v_d2 uuid; v_o2 uuid;
+  v_admin uuid := 'afcb9389-edb4-4ce0-b82c-e302a0aff71a'; v_chef uuid; v_emp uuid; v_aff uuid; v_d uuid; v_o uuid; v_l uuid; v_d2 uuid; v_o2 uuid;
   c jsonb; v jsonb; v_ok boolean := false; v_msg text; r record; n int;
   p_cons uuid := (SELECT id FROM devis_postes_ref WHERE code='construction');
   p_peint uuid := (SELECT id FROM devis_postes_ref WHERE code='peinture');
@@ -13,11 +13,14 @@ DECLARE
   p_met uuid := (SELECT id FROM devis_postes_ref WHERE code='metallerie');
 BEGIN
   -- un chef d'équipe (sans droit coûts) et une affaire à laquelle il a accès
-  SELECT e.profile_id, a.id INTO v_chef, v_aff
-    FROM affaires a JOIN employes e ON e.id=a.chef_chantier_id
-    JOIN user_roles u ON u.user_id=e.profile_id AND u.role='chef_chantier'
-   WHERE NOT EXISTS (SELECT 1 FROM user_roles x WHERE x.user_id=e.profile_id AND x.role IN ('admin','commercial','bureau_etude','rh'))
+  -- chef d'équipe temporaire (rôle et affectation annulés avec la transaction)
+  SELECT e.profile_id, e.id INTO v_chef, v_emp FROM employes e
+   WHERE e.profile_id IS NOT NULL
+     AND NOT EXISTS (SELECT 1 FROM user_roles x WHERE x.user_id=e.profile_id AND x.role IN ('admin','commercial','bureau_etude','rh'))
    LIMIT 1;
+  INSERT INTO user_roles(user_id, role) VALUES (v_chef, 'chef_chantier') ON CONFLICT DO NOTHING;
+  SELECT id INTO v_aff FROM affaires ORDER BY created_at DESC LIMIT 1;
+  UPDATE affaires SET chef_chantier_id = v_emp WHERE id = v_aff;
   IF v_chef IS NULL THEN RAISE EXCEPTION 'Préparation KO : aucun chef affecté trouvé'; END IF;
 
   PERFORM set_config('request.jwt.claims', json_build_object('sub',v_admin,'role','authenticated')::text, true);
