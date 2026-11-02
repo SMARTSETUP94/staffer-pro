@@ -2097,6 +2097,8 @@ export type Database = {
           numero: string
           numero_progbat: string | null
           redige_dans_staffing: boolean
+          remise_mode: string
+          remise_valeur: number | null
           signe_vers_fabrication_le: string | null
           statut: Database["public"]["Enums"]["devis_statut"]
           statut_redaction:
@@ -2144,6 +2146,8 @@ export type Database = {
           numero: string
           numero_progbat?: string | null
           redige_dans_staffing?: boolean
+          remise_mode?: string
+          remise_valeur?: number | null
           signe_vers_fabrication_le?: string | null
           statut?: Database["public"]["Enums"]["devis_statut"]
           statut_redaction?:
@@ -2191,6 +2195,8 @@ export type Database = {
           numero?: string
           numero_progbat?: string | null
           redige_dans_staffing?: boolean
+          remise_mode?: string
+          remise_valeur?: number | null
           signe_vers_fabrication_le?: string | null
           statut?: Database["public"]["Enums"]["devis_statut"]
           statut_redaction?:
@@ -2349,6 +2355,7 @@ export type Database = {
           heures: number
           id: string
           ligne_id: string
+          montant_force: number | null
           niveau: string
           ordre: number
           par_unite: boolean
@@ -2363,6 +2370,7 @@ export type Database = {
           heures?: number
           id?: string
           ligne_id: string
+          montant_force?: number | null
           niveau: string
           ordre?: number
           par_unite?: boolean
@@ -2377,6 +2385,7 @@ export type Database = {
           heures?: number
           id?: string
           ligne_id?: string
+          montant_force?: number | null
           niveau?: string
           ordre?: number
           par_unite?: boolean
@@ -2463,6 +2472,7 @@ export type Database = {
           largeur_mm: number | null
           libelle: string | null
           longueur_mm: number | null
+          option_incluse: boolean
           ordre: number
           parent_avant: string | null
           parent_id: string | null
@@ -2487,6 +2497,7 @@ export type Database = {
           largeur_mm?: number | null
           libelle?: string | null
           longueur_mm?: number | null
+          option_incluse?: boolean
           ordre?: number
           parent_avant?: string | null
           parent_id?: string | null
@@ -2511,6 +2522,7 @@ export type Database = {
           largeur_mm?: number | null
           libelle?: string | null
           longueur_mm?: number | null
+          option_incluse?: boolean
           ordre?: number
           parent_avant?: string | null
           parent_id?: string | null
@@ -2554,10 +2566,12 @@ export type Database = {
           created_at: string
           designation: string
           forfait_cle: string | null
+          heures_info: number | null
           id: string
           ligne_id: string
           ordre: number
           par_unite: boolean
+          poste_info_id: string | null
           prix_achat: number | null
           prix_forfait: number | null
           quantite: number
@@ -2570,10 +2584,12 @@ export type Database = {
           created_at?: string
           designation: string
           forfait_cle?: string | null
+          heures_info?: number | null
           id?: string
           ligne_id: string
           ordre?: number
           par_unite?: boolean
+          poste_info_id?: string | null
           prix_achat?: number | null
           prix_forfait?: number | null
           quantite?: number
@@ -2586,10 +2602,12 @@ export type Database = {
           created_at?: string
           designation?: string
           forfait_cle?: string | null
+          heures_info?: number | null
           id?: string
           ligne_id?: string
           ordre?: number
           par_unite?: boolean
+          poste_info_id?: string | null
           prix_achat?: number | null
           prix_forfait?: number | null
           quantite?: number
@@ -2602,6 +2620,13 @@ export type Database = {
             columns: ["ligne_id"]
             isOneToOne: false
             referencedRelation: "devis_lignes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "devis_lignes_libres_poste_info_id_fkey"
+            columns: ["poste_info_id"]
+            isOneToOne: false
+            referencedRelation: "devis_postes_ref"
             referencedColumns: ["id"]
           },
         ]
@@ -7934,6 +7959,30 @@ export type Database = {
           version: number
         }[]
       }
+      devis_lister_global: {
+        Args: {
+          _charge_affaires_id?: string
+          _limit?: number
+          _offset?: number
+          _recherche?: string
+          _statuts?: string[]
+        }
+        Returns: {
+          affaire_id: string
+          affaire_nom: string
+          affaire_numero: string
+          charge_affaires_id: string
+          charge_affaires_nom: string
+          client_nom: string
+          date_devis: string
+          id: string
+          net_ht: number
+          numero: string
+          statut_redaction: Database["public"]["Enums"]["devis_redaction_statut"]
+          updated_at: string
+          version: number
+        }[]
+      }
       devis_marquer_envoye: {
         Args: { _date?: string; _devis_id: string }
         Returns: Json
@@ -8004,6 +8053,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      devis_option_inclure: {
+        Args: { _incluse: boolean; _ligne_id: string }
+        Returns: undefined
+      }
       devis_parametre_ajouter: {
         Args: {
           _cle: string
@@ -8038,6 +8091,10 @@ export type Database = {
           _ordre: number
         }
         Returns: string
+      }
+      devis_remise_modifier: {
+        Args: { _devis_id: string; _mode: string; _valeur: number }
+        Returns: Json
       }
       devis_signer_vers_fabrication: {
         Args: { _devis_id: string }

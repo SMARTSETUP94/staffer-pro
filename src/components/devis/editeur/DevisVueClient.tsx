@@ -11,7 +11,7 @@ type VC = { numero: string; libelle: string | null; date_devis: string | null; v
   client: { nom: string; adresse: string | null; code_postal: string | null; ville: string | null } | null; client_final: string | null;
   contact: { nom: string; email: string | null } | null; dates: Record<string, string | null>; lignes: CL[];
   photos: { ligne_id: string; storage_path: string; thumb_path: string | null; legende: string | null; mime: string | null }[];
-  total_ht: number; tva: number; tva_pct: number; ttc: number; options_ht: number };
+  total_ht: number; remise?: number; net_ht?: number; tva: number; tva_pct: number; ttc: number; options_ht: number };
 
 const DATE_LABELS: [string, string][] = [
   ["date_validite", "Valable jusqu'au"],
@@ -86,6 +86,8 @@ export function DevisVueClient({ open, onOpenChange, devisId }: { open: boolean;
             {kids(null).map((l) => render(l, 0))}
             <div className="ml-auto w-64 space-y-1 border-t pt-2 text-sm">
               <div className="flex justify-between font-semibold"><span>Total HT</span><span>{eur(vc.total_ht)}</span></div>
+              {Number(vc.remise ?? 0) !== 0 && <div className="flex justify-between"><span>Remise</span><span>{eur(Number(vc.remise))}</span></div>}
+              {Number(vc.remise ?? 0) !== 0 && <div className="flex justify-between font-semibold"><span>Total net HT</span><span>{eur(Number(vc.net_ht))}</span></div>}
               <div className="flex justify-between"><span>TVA {Number(vc.tva_pct)} %</span><span>{eur(vc.tva)}</span></div>
               <div className="flex justify-between"><span>Total TTC</span><span>{eur(vc.ttc)}</span></div>
               {Number(vc.options_ht) > 0 && <div className="flex justify-between text-muted-foreground"><span>Options (non incluses)</span><span>{eur(vc.options_ht)}</span></div>}

@@ -8,15 +8,15 @@ export type DevisStatut = "brouillon" | "a_valider" | "valide" | "transfere" | "
 export interface Ligne {
   id: string; devis_id: string; parent_id: string | null; type: LigneType; ordre: number; libelle: string | null;
   quantite: number; descriptif_client: string | null; longueur_mm: number | null; largeur_mm: number | null; hauteur_mm: number | null;
-  finition: string | null; texte: string | null; interne: boolean;
+  finition: string | null; texte: string | null; interne: boolean; option_incluse?: boolean;
 }
 export interface Heure { id: string; ligne_id: string; poste_id: string; niveau: string; heures: number; par_unite: boolean;
-  taux_vente: number; taux_grille: number | null; cout_revient?: number | null; ordre: number; poste_libelle: string; metier_id: number | null }
+  taux_vente: number; taux_grille: number | null; cout_revient?: number | null; ordre: number; poste_libelle: string; metier_id: number | null; montant_force?: number | null }
 export interface Materiau { id: string; ligne_id: string; materiau_id: string | null; designation: string; fournisseur: string | null; ref: string | null;
   unite: string | null; quantite: number; aide_conversion: unknown; prix_achat?: number; date_tarif: string | null; coefficient: number;
   propose_catalogue: boolean; ordre: number }
 export interface Libre { id: string; ligne_id: string; categorie: string; forfait_cle: string | null; designation: string; unite: string | null;
-  quantite: number; prix_achat?: number | null; prix_forfait: number | null; coefficient: number; par_unite: boolean; ordre: number }
+  quantite: number; prix_achat?: number | null; prix_forfait: number | null; coefficient: number; par_unite: boolean; ordre: number; heures_info?: number | null; poste_info_id?: string | null }
 export interface Photo { id: string; ligne_id: string; storage_path: string; thumb_path: string | null; mime: string | null; legende: string | null; visible_client: boolean; ordre: number }
 
 export interface DevisData {
@@ -25,6 +25,7 @@ export interface DevisData {
     client_id: string | null; contact_id: string | null; client_final_id: string | null; date_devis: string | null; date_validite?: string | null; date_validite_manuelle?: boolean; date_envoi?: string | null; validite_jours?: number | null; signe_vers_fabrication_le?: string | null; numero_progbat: string | null;
     tva_pct: number | null; coef_materiaux_defaut: number | null; est_modele: boolean; modele_nom: string | null; modele_categorie: string | null;
     modele_description: string | null; modele_actif: boolean; dates_snapshot: Record<string, string | null> | null; version_precedente_id: string | null;
+    remise_mode?: "aucune" | "montant" | "pct" | "net_cible"; remise_valeur?: number | null;
   };
   affaire: null | { id: string; numero: string | null; code_opportunite: string | null; nom: string | null; created_at: string;
     date_visite_technique: string | null; date_montage: string | null; date_evenement_debut: string | null; date_evenement_fin: string | null; date_demontage: string | null };

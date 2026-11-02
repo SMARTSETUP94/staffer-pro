@@ -43,6 +43,8 @@ interface NavItem {
   icon: LucideIcon;
   /** Cap requise. Si omise, item toujours visible. Si tableau, OR logique. */
   cap?: Cap;
+  /** Drapeau de fonctionnalité requis en plus de la cap. */
+  flag?: string;
   /** Badge compteur (indigo si > 0). */
   count?: number;
 }
@@ -90,6 +92,8 @@ function buildSections(
         { title: "Planning BE / projets", url: "/planning-pilotage", icon: GanttChart, cap: "planning.pilotage" },
         { title: "Qui est où", url: "/qui-est-ou", icon: UsersRound, cap: "section.planning_fab" },
         { title: "Pipeline opportunités", url: "/opportunites", icon: Trophy, cap: "section.pipeline_opportunites" },
+        { title: "Devis", url: "/devis-staffing", icon: FileText, cap: "devis.view", flag: "devis_staffing_v1" },
+        { title: "Paramètres devis", url: "/parametres/devis-taux", icon: Settings, cap: "devis.parametres", flag: "devis_staffing_v1" },
         { title: "Demandes clients", url: "/demandes-clients", icon: Inbox, cap: "demandes_clients.view" },
         { title: "Liste des chantiers", url: "/liste-chantiers", icon: ClipboardList, cap: "section.affaires" },
       ],
@@ -196,6 +200,7 @@ function applySimpleMode(sections: NavSection[]): NavSection[] {
  */
 const CA_MODE_SECTIONS = new Set(["Admin"]);
 const CA_MODE_URLS = new Set([
+  "/devis-staffing",
   "/",
   "/affaires",
   "/planning-general",
@@ -228,6 +233,7 @@ function applyDeploiementCAMode(sections: NavSection[]): NavSection[] {
  */
 const LO_MODE_SECTIONS = new Set(["Admin"]);
 const LO_MODE_URLS = new Set([
+  "/devis-staffing",
   "/",
   "/affaires",
   "/opportunites",
@@ -259,7 +265,7 @@ function applyLogistiqueOppsMode(sections: NavSection[]): NavSection[] {
  * toujours ouvrir /admin/feature-flags en direct pour désactiver le mode.
  */
 // "/admin/utilisateurs" reste filtré par la cap section.admin (admins seulement).
-const SA_MODE_URLS = new Set(["/opportunites", "/demandes-clients", "/affaires", "/liste-chantiers", "/documents-affaires", "/clients", "/logistique", "/demandes-logistique", "/jalonnements", "/admin/utilisateurs", "/admin/connecteur-claude", "/mes-notes-de-frais", "/validation-notes-de-frais", "/planning-pilotage", "/parametres/referents-roles", "/parametres/devis-taux"]);
+const SA_MODE_URLS = new Set(["/opportunites", "/demandes-clients", "/affaires", "/liste-chantiers", "/documents-affaires", "/clients", "/logistique", "/demandes-logistique", "/jalonnements", "/admin/utilisateurs", "/admin/connecteur-claude", "/mes-notes-de-frais", "/validation-notes-de-frais", "/planning-pilotage", "/parametres/referents-roles", "/parametres/devis-taux", "/devis-staffing"]);
 
 function applySuiviAffairesMode(sections: NavSection[]): NavSection[] {
   return sections
@@ -280,6 +286,8 @@ export function AppSidebar() {
   const deploiementCA = useFeatureFlag("deploiement_charges_affaires");
   const deploiementLO = useFeatureFlag("deploiement_logistique_opps");
   const deploiementSA = useFeatureFlag("deploiement_suivi_affaires");
+  const devisStaffing = useFeatureFlag("devis_staffing_v1");
+  const flagOk = (it: NavItem) => !it.flag || (it.flag === "devis_staffing_v1" && devisStaffing);
 
   // Filtrage : un item est visible si pas de cap OU cap satisfaite.
   // "Aujourd'hui" reste TOUJOURS visible (pas de cap déclarée).
@@ -291,7 +299,7 @@ export function AppSidebar() {
         .map((s) => ({ ...s, items: s.items.filter((it) => !it.cap) }))
         .filter((s) => s.items.length > 0)
     : rawSections
-        .map((s) => ({ ...s, items: s.items.filter((it) => hasAnyCap(caps, it.cap)) }))
+        .map((s) => ({ ...s, items: s.items.filter((it) => hasAnyCap(caps, it.cap) && flagOk(it)) }))
         .filter((s) => s.items.length > 0);
 
   const sections = deploiementSA

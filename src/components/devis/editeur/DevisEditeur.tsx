@@ -59,16 +59,24 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
     if (d && !selected) setSelected(d.lignes.find((l) => l.type === "objet")?.id ?? d.lignes[0]?.id ?? null);
   }, [d, selected]);
 
+  const taux = useQuery({
+    queryKey: ["devis-taux"],
+    queryFn: async () => { const { data, error } = await supabase.rpc("devis_taux_lister"); if (error) throw error; return data ?? []; },
+  });
+  const posteMetier = useMemo(() => new Map((taux.data ?? []).map((p) => [p.poste_id, p.metier_id] as [string, number])), [taux.data]);
+
   const calc = useMemo(() => {
     if (!d) return null;
     return calculerDevis(
       d.lignes.map((l) => ({ ...l, quantite: Number(l.quantite) })),
-      d.heures.map((h) => ({ ...h, heures: Number(h.heures), taux_vente: Number(h.taux_vente), cout_revient: h.cout_revient == null ? null : Number(h.cout_revient) })),
+      d.heures.map((h) => ({ ...h, heures: Number(h.heures), taux_vente: Number(h.taux_vente), montant_force: h.montant_force == null ? null : Number(h.montant_force), cout_revient: h.cout_revient == null ? null : Number(h.cout_revient) })),
       d.materiaux.map((m) => ({ ...m, quantite: Number(m.quantite), prix_achat: Number(m.prix_achat ?? 0), coefficient: Number(m.coefficient) })),
-      d.libres.map((f) => ({ ...f, quantite: Number(f.quantite), prix_achat: f.prix_achat == null ? null : Number(f.prix_achat), prix_forfait: f.prix_forfait == null ? null : Number(f.prix_forfait), coefficient: Number(f.coefficient) })),
+      d.libres.map((f) => ({ ...f, quantite: Number(f.quantite), prix_achat: f.prix_achat == null ? null : Number(f.prix_achat), prix_forfait: f.prix_forfait == null ? null : Number(f.prix_forfait), coefficient: Number(f.coefficient),
+        heures_info: f.heures_info == null ? null : Number(f.heures_info), metier_info_id: f.poste_info_id ? posteMetier.get(f.poste_info_id) ?? null : null })),
       Number(d.calcul.tva_pct ?? 20),
+      { mode: d.devis.remise_mode ?? "aucune", valeur: d.devis.remise_valeur == null ? null : Number(d.devis.remise_valeur) },
     );
-  }, [d]);
+  }, [d, posteMetier]);
 
   if (q.isLoading) return <p className="p-6 text-sm text-muted-foreground">Chargement…</p>;
   if (q.error || !d || !calc) return <p className="p-6 text-sm text-destructive">{(q.error as Error)?.message ?? "Devis introuvable"}</p>;
@@ -252,7 +260,14 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
         <Card>
           <CardContent className="space-y-3 p-4 text-sm">
             <div className="space-y-1">
-              <Row label="Total HT" value={eur(calc.total_ht)} strong />
+              <Row label="Total HT" value={eur(calc.total_ht)} strong={calc.remise === 0} />
+              <RemiseBloc mode={d.devis.remise_mode ?? "aucune"} valeur={d.devis.remise_valeur ?? null} readOnly={readOnly}
+                onChange={(mode, valeur) => {
+                  patch((x) => ({ ...x, devis: { ...x.devis, remise_mode: mode, remise_valeur: valeur } }));
+                  save("remise", () => call("devis_remise_modifier", { _devis_id: devisId, _mode: mode, _valeur: valeur }, { refresh: false }));
+                }} />
+              {calc.remise !== 0 && <Row label="Remise" value={eur(calc.remise)} />}
+              {calc.remise !== 0 && <Row label="Total net HT" value={eur(calc.net_ht)} strong />}
               <Row label={`TVA ${Number(d.calcul.tva_pct)} %`} value={eur(calc.tva)} />
               <Row label="TTC" value={eur(calc.ttc)} />
               {calc.options_ht > 0 && <Row label="Options (hors total)" value={eur(calc.options_ht)} />}
@@ -413,6 +428,35 @@ function DateCase({ label, value, onChange, disabled }: { label: string; value: 
       <p className="text-[11px] uppercase text-muted-foreground">{label}</p>
       {disabled ? <p className="text-sm">{value ? new Date(value).toLocaleDateString("fr-FR") : "À déterminer"}</p>
         : <Input type="date" className="h-8" value={value ?? ""} onChange={(e) => onChange?.(e.target.value || null)} />}
+    </div>
+  );
+}
+
+function RemiseBloc({ mode, valeur, readOnly, onChange }: {
+  mode: "aucune" | "montant" | "pct" | "net_cible"; valeur: number | null; readOnly: boolean;
+  onChange: (mode: "aucune" | "montant" | "pct" | "net_cible", valeur: number | null) => void;
+}) {
+  const [v, setV] = useState(valeur == null ? "" : String(valeur));
+  useEffect(() => { setV(valeur == null ? "" : String(valeur)); }, [valeur]);
+  if (readOnly && mode === "aucune") return null;
+  const commit = (m: typeof mode, raw: string) => {
+    const n = raw.trim() === "" ? null : Number(raw.replace(",", "."));
+    if (m !== "aucune" && (n == null || Number.isNaN(n))) return;
+    onChange(m, m === "aucune" ? null : n);
+  };
+  return (
+    <div className="flex items-center gap-1 text-xs">
+      <select aria-label="Type de remise" disabled={readOnly} className="h-7 rounded border bg-background px-1" value={mode}
+        onChange={(e) => commit(e.target.value as typeof mode, e.target.value === "aucune" ? "" : v || "0")}>
+        <option value="aucune">Sans remise</option>
+        <option value="montant">Remise en €</option>
+        <option value="pct">Remise en %</option>
+        <option value="net_cible">Total net souhaité</option>
+      </select>
+      {mode !== "aucune" && (
+        <input aria-label="Valeur de la remise" disabled={readOnly} inputMode="decimal" className="h-7 w-24 rounded border bg-background px-1 text-right"
+          value={v} onChange={(e) => setV(e.target.value)} onBlur={() => commit(mode, v)} onKeyDown={(e) => { if (e.key === "Enter") commit(mode, v); }} />
+      )}
     </div>
   );
 }
