@@ -435,6 +435,13 @@
       "when": 1793471569481,
       "tag": "0061_devis_07_validite_pipeline_be",
       "breakpoints": true
+    },
+    {
+      "idx": 62,
+      "version": "7",
+      "when": 1793619912891,
+      "tag": "0062_devis_08_remise_montant_options",
+      "breakpoints": true
     }
   ]
 }
