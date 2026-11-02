@@ -1,13 +1,13 @@
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle, ImagePlus, Lock, Plus, RefreshCw, Trash2 } from "lucide-react";
+import { AlertTriangle, ChevronDown, ChevronRight, ImagePlus, Lock, Plus, RefreshCw, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { ecartTauxPct } from "@/lib/devis/calcul";
+import { ecartTauxPct, venteUnitaireLibre, venteUnitaireMateriau } from "@/lib/devis/calcul";
 import { TYPE_LABEL, eur, type DevisData, type Ligne, type Heure, type Materiau, type Libre } from "./api";
 import { MateriauAjoutDialog } from "./MateriauAjoutDialog";
 
@@ -35,13 +35,14 @@ function Field({ value, onValue, numeric, className, placeholder, disabled, onEn
     onKeyDown={(e) => { if (e.key === "Enter" && onEnter) { e.preventDefault(); onEnter(); } }} />;
 }
 
-export function ObjetPanel({ data, ligne, readOnly, call, patch, save, onSelect }: {
-  data: DevisData; ligne: Ligne; readOnly: boolean; call: Call; patch: Patch; save: Save; onSelect: (id: string) => void;
+export function ObjetPanel({ data, ligne, montants, readOnly, call, patch, save, onSelect }: {
+  data: DevisData; ligne: Ligne; montants: Record<string, number>; readOnly: boolean; call: Call; patch: Patch; save: Save; onSelect: (id: string) => void;
 }) {
   const devisId = data.devis.id;
   const couts = data.droits.couts;
   const seuil = Number(data.parametres.seuil_alerte_taux_pct ?? 10);
   const [matOpen, setMatOpen] = useState(false);
+  const [detailsLibre, setDetailsLibre] = useState<Record<string, boolean>>({});
 
   const postes = useQuery({
     queryKey: ["devis-taux"],
@@ -126,7 +127,8 @@ export function ObjetPanel({ data, ligne, readOnly, call, patch, save, onSelect 
 
   const enfantsCommentaires = data.lignes.filter((l) => l.parent_id === ligne.id && l.type === "commentaire").sort((a, b) => a.ordre - b.ordre);
   const parent = data.lignes.find((l) => l.id === ligne.parent_id);
-  const totalLigne = data.calcul.lignes[ligne.id] ?? 0;
+  // Calcul local (recalculé à chaque frappe), comme l'arbre et la synthèse.
+  const totalLigne = montants[ligne.id] ?? 0;
 
   if (ligne.type === "commentaire") {
     return (
@@ -277,7 +279,7 @@ export function ObjetPanel({ data, ligne, readOnly, call, patch, save, onSelect 
             <h3 className="text-sm font-semibold">Matériaux</h3>
             <table className="w-full text-sm">
               <thead className="text-xs text-muted-foreground"><tr>
-                <th className="text-left">Désignation</th><th>Quantité</th>{couts && <th>Achat €</th>}<th>Coef</th>{couts && <th className="text-right">Vente</th>}<th />
+                <th className="text-left">Désignation</th><th>Quantité</th>{couts && <th>Achat €</th>}{couts && <th>Coef</th>}<th className="text-right">Vente</th><th />
               </tr></thead>
               <tbody>
                 {mats.map((m) => {
@@ -296,8 +298,8 @@ export function ObjetPanel({ data, ligne, readOnly, call, patch, save, onSelect 
                       </td>
                       <td><Field numeric value={m.quantite} disabled={readOnly} className="w-20 text-right" onValue={(v) => setMat(m, "quantite", v)} onEnter={() => setMatOpen(true)} /></td>
                       {couts && <td><Field numeric value={m.prix_achat} disabled={readOnly} className="w-24 text-right" onValue={(v) => setMat(m, "prix_achat", v)} /></td>}
-                      <td><Field numeric value={m.coefficient} disabled={readOnly} className="w-16 text-right" onValue={(v) => setMat(m, "coefficient", v)} /></td>
-                      {couts && <td className="text-right tabular-nums">{eur(m.quantite * (m.prix_achat ?? 0) * m.coefficient)}</td>}
+                      {couts && <td><Field numeric value={m.coefficient} disabled={readOnly} className="w-16 text-right" onValue={(v) => setMat(m, "coefficient", v)} /></td>}
+                      <td className="text-right tabular-nums">{eur(Number(m.quantite) * venteUnitaireMateriau({ prix_achat: m.prix_achat === undefined ? null : Number(m.prix_achat ?? 0), coefficient: Number(m.coefficient ?? 1), prix_vente_unitaire: m.prix_vente_unitaire }))}</td>
                       <td>{!readOnly && <button type="button" aria-label="Supprimer" onClick={() => void remove("materiau", m.id)}><Trash2 className="h-3.5 w-3.5" /></button>}</td>
                     </tr>
                   );
@@ -310,29 +312,58 @@ export function ObjetPanel({ data, ligne, readOnly, call, patch, save, onSelect 
           {/* Lignes libres */}
           <section className="space-y-2">
             <h3 className="text-sm font-semibold">Achats spécifiques, sous-traitance, location, forfaits</h3>
+            <p className="text-xs text-muted-foreground">Prix de vente direct (forfait, négatif pour une régularisation) <em>ou</em> prix d'achat × coefficient dans « détails ».</p>
             <table className="w-full text-sm">
               <thead className="text-xs text-muted-foreground"><tr>
-                <th className="text-left">Désignation</th><th>Type</th><th>Qté</th>{couts && <th>Achat €</th>}<th>Coef</th><th title="Prix de vente unitaire ; négatif accepté pour une régularisation">Prix €</th><th title="Heures facultatives, comptées dans les heures par métier">Heures</th><th>Poste</th><th>Par unité</th><th />
+                <th className="text-left">Désignation</th><th>Type</th><th>Qté</th>
+                <th title="Prix de vente unitaire saisi directement ; vide = achat × coefficient">Prix vente €</th><th className="text-right">Vente</th><th /><th />
               </tr></thead>
               <tbody>
-                {libres.map((f) => (
-                  <tr key={f.id}>
-                    <td><Field value={f.designation} disabled={readOnly} onValue={(v) => setLibre(f, "designation", v)} /></td>
-                    <td><select disabled={readOnly} className="h-8 rounded border bg-background px-1" value={f.categorie} onChange={(e) => setLibre(f, "categorie", e.target.value)}>
-                      <option value="achat">Achat</option><option value="sous_traitance">Sous-traitance</option><option value="location">Location</option><option value="forfait">Forfait</option>
-                    </select></td>
-                    <td><Field numeric value={f.quantite} disabled={readOnly} className="w-16 text-right" onValue={(v) => setLibre(f, "quantite", v)} /></td>
-                    {couts && <td><Field numeric value={f.prix_achat} disabled={readOnly} className="w-20 text-right" onValue={(v) => setLibre(f, "prix_achat", v)} /></td>}
-                    <td><Field numeric value={f.coefficient} disabled={readOnly} className="w-16 text-right" onValue={(v) => setLibre(f, "coefficient", v)} /></td>
-                    <td><Field numeric value={f.prix_forfait} disabled={readOnly} className={`w-20 text-right ${Number(f.prix_forfait) < 0 ? "text-destructive" : ""}`} onValue={(v) => setLibre(f, "prix_forfait", v)} /></td>
-                    <td><Field numeric value={f.heures_info ?? ""} disabled={readOnly} className="w-14 text-right" onValue={(v) => setLibre(f, "heures_info", v)} /></td>
-                    <td><select disabled={readOnly} className="h-8 w-28 rounded border bg-background px-1" value={f.poste_info_id ?? ""} onChange={(e) => setLibre(f, "poste_info_id", e.target.value)}>
-                      <option value="">—</option>{posteList.map((p) => <option key={p.poste_id} value={p.poste_id}>{p.libelle}</option>)}
-                    </select></td>
-                    <td className="text-center"><input type="checkbox" checked={f.par_unite} disabled={readOnly} onChange={(e) => setLibre(f, "par_unite", e.target.checked)} /></td>
-                    <td>{!readOnly && <button type="button" aria-label="Supprimer" onClick={() => void remove("libre", f.id)}><Trash2 className="h-3.5 w-3.5" /></button>}</td>
-                  </tr>
-                ))}
+                {libres.map((f) => {
+                  const pu = venteUnitaireLibre({ prix_forfait: f.prix_forfait == null ? null : Number(f.prix_forfait), prix_achat: f.prix_achat == null ? null : Number(f.prix_achat), coefficient: Number(f.coefficient ?? 1), prix_vente_unitaire: f.prix_vente_unitaire });
+                  const vente = Number(f.quantite) * pu * (f.par_unite ? Number(ligne.quantite) : 1);
+                  const open = !!detailsLibre[f.id];
+                  const viaAchat = f.prix_forfait == null;
+                  return (
+                    <Fragment key={f.id}>
+                      <tr>
+                        <td><Field value={f.designation} disabled={readOnly} onValue={(v) => setLibre(f, "designation", v)} /></td>
+                        <td><select disabled={readOnly} className="h-8 rounded border bg-background px-1" value={f.categorie} onChange={(e) => setLibre(f, "categorie", e.target.value)}>
+                          <option value="achat">Achat</option><option value="sous_traitance">Sous-traitance</option><option value="location">Location</option><option value="forfait">Forfait</option>
+                        </select></td>
+                        <td><Field numeric value={f.quantite} disabled={readOnly} className="w-16 text-right" onValue={(v) => setLibre(f, "quantite", v)} /></td>
+                        <td><Field numeric value={f.prix_forfait} disabled={readOnly} placeholder={viaAchat ? "achat × coef" : undefined}
+                          className={`w-24 text-right ${Number(f.prix_forfait) < 0 ? "text-destructive" : ""}`} onValue={(v) => setLibre(f, "prix_forfait", v)} /></td>
+                        <td className={`text-right tabular-nums ${vente < 0 ? "text-destructive" : ""}`}>{eur(vente)}</td>
+                        <td><button type="button" className="flex items-center text-xs text-primary" aria-expanded={open}
+                          onClick={() => setDetailsLibre((x) => ({ ...x, [f.id]: !open }))}>
+                          {open ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}détails</button></td>
+                        <td>{!readOnly && <button type="button" aria-label="Supprimer" onClick={() => void remove("libre", f.id)}><Trash2 className="h-3.5 w-3.5" /></button>}</td>
+                      </tr>
+                      {open && (
+                        <tr className="bg-muted/40">
+                          <td colSpan={7} className="px-2 py-2">
+                            <div className="flex flex-wrap items-end gap-3 text-xs">
+                              {couts && <label className="space-y-0.5"><span className="block text-muted-foreground">Achat €</span>
+                                <Field numeric value={f.prix_achat} disabled={readOnly} className="w-24 text-right" onValue={(v) => setLibre(f, "prix_achat", v)} /></label>}
+                              {couts && <label className="space-y-0.5"><span className="block text-muted-foreground">Coef</span>
+                                <Field numeric value={f.coefficient} disabled={readOnly} className="w-16 text-right" onValue={(v) => setLibre(f, "coefficient", v)} /></label>}
+                              {!couts && viaAchat && <span className="text-muted-foreground">Prix de vente calculé : {eur(pu)} / unité</span>}
+                              <label className="space-y-0.5" title="Heures facultatives, comptées dans les heures par métier"><span className="block text-muted-foreground">Heures</span>
+                                <Field numeric value={f.heures_info ?? ""} disabled={readOnly} className="w-16 text-right" onValue={(v) => setLibre(f, "heures_info", v)} /></label>
+                              <label className="space-y-0.5"><span className="block text-muted-foreground">Poste</span>
+                                <select disabled={readOnly} className="h-8 w-32 rounded border bg-background px-1" value={f.poste_info_id ?? ""} onChange={(e) => setLibre(f, "poste_info_id", e.target.value)}>
+                                  <option value="">—</option>{posteList.map((p) => <option key={p.poste_id} value={p.poste_id}>{p.libelle}</option>)}
+                                </select></label>
+                              <label className="flex h-8 items-center gap-1" title="Décoché : montant commun, non multiplié par la quantité de l'objet">
+                                <input type="checkbox" checked={f.par_unite} disabled={readOnly} onChange={(e) => setLibre(f, "par_unite", e.target.checked)} />Par unité</label>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </Fragment>
+                  );
+                })}
               </tbody>
             </table>
             {!readOnly && (
