@@ -34,8 +34,11 @@ describe("calcul devis (miroir du calcul serveur)", () => {
     expect(r.racines.z2).toBe(3064);
     expect(r.total_ht).toBe(3354);
   });
-  it("marge non calculable si un coût manque, sinon HT − coûts", () => {
-    expect(calculerDevis(base(), heures, mats, libres).marge).toBe("non_calculable");
+  it("marge partielle si un coût manque (coûts connus), sinon HT − coûts", () => {
+    const p = calculerDevis(base(), heures, mats, libres);
+    expect(p.cout_complet).toBe(false);
+    expect(p.couts_manquants.length).toBeGreaterThan(0);
+    expect(typeof p.marge).toBe("number");
     const h2 = heures.map((h) => ({ ...h, cout_revient: h.cout_revient ?? 0 }));
     expect(calculerDevis(base(), h2, mats, libres).marge).toBe(1514);
   });

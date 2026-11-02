@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { ecartTauxPct, venteUnitaireLibre, venteUnitaireMateriau } from "@/lib/devis/calcul";
+import { ecartTauxPct, sousArbre, venteUnitaireLibre, venteUnitaireMateriau, type CalcResult } from "@/lib/devis/calcul";
+import { CoutsBloc } from "./CoutsBloc";
 import { TYPE_LABEL, eur, type DevisData, type Ligne, type Heure, type Materiau, type Libre } from "./api";
 import { MateriauAjoutDialog } from "./MateriauAjoutDialog";
 
@@ -35,8 +36,8 @@ function Field({ value, onValue, numeric, className, placeholder, disabled, onEn
     onKeyDown={(e) => { if (e.key === "Enter" && onEnter) { e.preventDefault(); onEnter(); } }} />;
 }
 
-export function ObjetPanel({ data, ligne, montants, readOnly, call, patch, save, onSelect }: {
-  data: DevisData; ligne: Ligne; montants: Record<string, number>; readOnly: boolean; call: Call; patch: Patch; save: Save; onSelect: (id: string) => void;
+export function ObjetPanel({ data, ligne, montants, calc, readOnly, call, patch, save, onSelect }: {
+  data: DevisData; ligne: Ligne; montants: Record<string, number>; calc?: CalcResult; readOnly: boolean; call: Call; patch: Patch; save: Save; onSelect: (id: string) => void;
 }) {
   const devisId = data.devis.id;
   const couts = data.droits.couts;
@@ -299,7 +300,12 @@ export function ObjetPanel({ data, ligne, montants, readOnly, call, patch, save,
                       <td><Field numeric value={m.quantite} disabled={readOnly} className="w-20 text-right" onValue={(v) => setMat(m, "quantite", v)} onEnter={() => setMatOpen(true)} /></td>
                       {couts && <td><Field numeric value={m.prix_achat} disabled={readOnly} className="w-24 text-right" onValue={(v) => setMat(m, "prix_achat", v)} /></td>}
                       {couts && <td><Field numeric value={m.coefficient} disabled={readOnly} className="w-16 text-right" onValue={(v) => setMat(m, "coefficient", v)} /></td>}
-                      <td className="text-right tabular-nums">{eur(Number(m.quantite) * venteUnitaireMateriau({ prix_achat: m.prix_achat === undefined ? null : Number(m.prix_achat ?? 0), coefficient: Number(m.coefficient ?? 1), prix_vente_unitaire: m.prix_vente_unitaire }))}</td>
+                      {(() => {
+                        const vte = Number(m.quantite) * venteUnitaireMateriau({ prix_achat: m.prix_achat === undefined ? null : Number(m.prix_achat ?? 0), coefficient: Number(m.coefficient ?? 1), prix_vente_unitaire: m.prix_vente_unitaire });
+                        const cout = Number(m.quantite) * Number(m.prix_achat ?? 0);
+                        return <td className="text-right tabular-nums">{eur(vte)}
+                          {couts && <div className="text-[11px] text-muted-foreground">coût {eur(cout)} · marge {eur(vte - cout)}</div>}</td>;
+                      })()}
                       <td>{!readOnly && <button type="button" aria-label="Supprimer" onClick={() => void remove("materiau", m.id)}><Trash2 className="h-3.5 w-3.5" /></button>}</td>
                     </tr>
                   );
@@ -332,9 +338,12 @@ export function ObjetPanel({ data, ligne, montants, readOnly, call, patch, save,
                           <option value="achat">Achat</option><option value="sous_traitance">Sous-traitance</option><option value="location">Location</option><option value="forfait">Forfait</option>
                         </select></td>
                         <td><Field numeric value={f.quantite} disabled={readOnly} className="w-16 text-right" onValue={(v) => setLibre(f, "quantite", v)} /></td>
-                        <td><Field numeric value={f.prix_forfait} disabled={readOnly} placeholder={viaAchat ? "achat × coef" : undefined}
-                          className={`w-24 text-right ${Number(f.prix_forfait) < 0 ? "text-destructive" : ""}`} onValue={(v) => setLibre(f, "prix_forfait", v)} /></td>
-                        <td className={`text-right tabular-nums ${vente < 0 ? "text-destructive" : ""}`}>{eur(vente)}</td>
+                        <td><Field numeric value={f.prix_forfait} disabled={readOnly} placeholder={f.forfait_cle && viaAchat ? "prix à saisir" : viaAchat ? "achat × coef" : undefined}
+                          className={`w-24 text-right ${Number(f.prix_forfait) < 0 ? "text-destructive" : ""} ${f.forfait_cle && viaAchat ? "border-warning placeholder:text-warning" : ""}`} onValue={(v) => setLibre(f, "prix_forfait", v)} />
+                          {f.forfait_cle && viaAchat && <div className="text-[11px] text-warning">prix à saisir</div>}</td>
+                        <td className={`text-right tabular-nums ${vente < 0 ? "text-destructive" : ""}`}>{eur(vente)}
+                          {couts && f.prix_achat == null && vente > 0 && <div className="text-[11px] text-warning">coût non renseigné</div>}
+                          {couts && f.prix_achat != null && <div className="text-[11px] text-muted-foreground">coût {eur(Number(f.quantite) * Number(f.prix_achat) * (f.par_unite ? Number(ligne.quantite) : 1))}</div>}</td>
                         <td><button type="button" className="flex items-center text-xs text-primary" aria-expanded={open}
                           onClick={() => setDetailsLibre((x) => ({ ...x, [f.id]: !open }))}>
                           {open ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}détails</button></td>
@@ -377,6 +386,11 @@ export function ObjetPanel({ data, ligne, montants, readOnly, call, patch, save,
           </section>
 
           <div className="flex justify-end border-t pt-2 text-sm font-semibold">Total {TYPE_LABEL[ligne.type].toLowerCase()} : {eur(totalLigne)}</div>
+          {couts && calc && (
+            <div className="ml-auto max-w-md rounded border p-2">
+              <CoutsBloc dec={sousArbre(data.lignes, calc.detail, ligne.id)} compact />
+            </div>
+          )}
         </>
       )}
 

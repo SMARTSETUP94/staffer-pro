@@ -5,16 +5,55 @@
 export type LigneType = "zone" | "objet" | "commentaire" | "chapitre_suivi" | "chapitre_pose" | "chapitre_depose" | "option";
 
 export interface CalcLigne { id: string; parent_id: string | null; type: LigneType; quantite: number; ordre?: number; option_incluse?: boolean }
-export interface CalcHeure { ligne_id: string; heures: number; taux_vente: number; cout_revient?: number | null; par_unite: boolean; metier_id?: number | null; montant_force?: number | null }
+export interface CalcHeure { ligne_id: string; heures: number; taux_vente: number; cout_revient?: number | null; par_unite: boolean; metier_id?: number | null; montant_force?: number | null; poste_libelle?: string | null }
 /** prix_vente_unitaire : renvoyé par le serveur quand l'achat et le coefficient sont masqués (sans droit coûts). */
 export interface CalcMateriau { ligne_id: string; quantite: number; prix_achat?: number | null; coefficient: number; prix_vente_unitaire?: number | null }
-export interface CalcLibre { ligne_id: string; quantite: number; prix_achat?: number | null; prix_forfait?: number | null; coefficient: number; prix_vente_unitaire?: number | null; par_unite: boolean; heures_info?: number | null; metier_info_id?: number | null }
+export interface CalcLibre { ligne_id: string; quantite: number; prix_achat?: number | null; prix_forfait?: number | null; coefficient: number; prix_vente_unitaire?: number | null; par_unite: boolean; heures_info?: number | null; metier_info_id?: number | null; designation?: string | null }
+
+export interface CoutVente { cout: number; vente: number }
+export interface Decomposition { main_oeuvre: CoutVente; materiaux: CoutVente; autres: CoutVente }
+export interface CoutManquant { type: "heures" | "libre"; libelle: string; heures: number | null }
 
 export interface CalcResult {
   total_ht: number; remise: number; net_ht: number; tva: number; ttc: number; options_ht: number;
   lignes: Record<string, number>; racines: Record<string, number>;
   heures_metier: Record<string, number>;
-  cout_total: number | null; marge: number | "non_calculable";
+  /** Coûts connus (marge partielle si cout_complet = false). */
+  cout_total: number; cout_complet: boolean; marge: number; marge_pct: number | null;
+  decomposition: Decomposition; couts_manquants: CoutManquant[];
+  /** Décomposition propre à chaque ligne (hors enfants), options comprises — voir sousArbre(). */
+  detail: Record<string, Decomposition>;
+}
+
+const vide = (): Decomposition => ({ main_oeuvre: { cout: 0, vente: 0 }, materiaux: { cout: 0, vente: 0 }, autres: { cout: 0, vente: 0 } });
+const ajouter = (a: Decomposition, b: Decomposition) => {
+  for (const k of ["main_oeuvre", "materiaux", "autres"] as const) { a[k].cout += b[k].cout; a[k].vente += b[k].vente; }
+  return a;
+};
+const arrondirDec = (d: Decomposition): Decomposition => ({
+  main_oeuvre: { cout: r2(d.main_oeuvre.cout), vente: r2(d.main_oeuvre.vente) },
+  materiaux: { cout: r2(d.materiaux.cout), vente: r2(d.materiaux.vente) },
+  autres: { cout: r2(d.autres.cout), vente: r2(d.autres.vente) },
+});
+export const coutDec = (d: Decomposition) => r2(d.main_oeuvre.cout + d.materiaux.cout + d.autres.cout);
+export const venteDec = (d: Decomposition) => r2(d.main_oeuvre.vente + d.materiaux.vente + d.autres.vente);
+
+/** Décomposition coût / vente d'une ligne et de tous ses descendants (objet ou zone). */
+export function sousArbre(lignes: Pick<CalcLigne, "id" | "parent_id">[], detail: Record<string, Decomposition>, id: string): Decomposition {
+  const acc = vide();
+  const pile = [id];
+  while (pile.length) {
+    const cur = pile.pop()!;
+    if (detail[cur]) ajouter(acc, detail[cur]);
+    for (const l of lignes) if (l.parent_id === cur) pile.push(l.id);
+  }
+  return arrondirDec(acc);
+}
+
+/** Libellé de l'alerte « coût manquant : métallerie (4 h), semi-remorque… ». */
+export function texteCoutsManquants(m: CoutManquant[]): string | null {
+  if (!m.length) return null;
+  return "coût manquant : " + m.map((x) => x.type === "heures" ? `${x.libelle.toLowerCase()} (${fr(x.heures ?? 0)} h)` : x.libelle.toLowerCase()).join(", ");
 }
 
 const r2 = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
@@ -63,43 +102,63 @@ export function calculerDevis(
   const montants: Record<string, number> = {};
   const racines: Record<string, number> = {};
   const metiers: Record<string, number> = {};
-  let ht = 0, opt = 0, cout = 0, manq = false;
+  let ht = 0, opt = 0;
+  const detail: Record<string, Decomposition> = {};
+  const totalDec = vide();
+  const manqH = new Map<string, number>();
+  const manqL = new Set<string>();
 
   for (const [id, inf] of info) {
-    let vu = 0, vl = 0, cu = 0, cl = 0, m = false;
+    const d = vide();
+    const q = inf.q;
     for (const h of heures) if (h.ligne_id === id) {
-      const v = montantHeure(h), c = h.heures * (h.cout_revient ?? 0);
-      if (h.par_unite) { vu += v; cu += c; } else { vl += v; cl += c; }
-      if (h.cout_revient == null && h.heures > 0) m = true;
+      const k = h.par_unite ? q : 1;
+      d.main_oeuvre.vente += montantHeure(h) * k;
+      d.main_oeuvre.cout += h.heures * (h.cout_revient ?? 0) * k;
       if (!inf.option) {
-        const k = h.metier_id == null ? "aucun" : String(h.metier_id);
-        metiers[k] = r2((metiers[k] ?? 0) + h.heures * (h.par_unite ? inf.q : 1));
+        if (h.cout_revient == null && h.heures > 0) {
+          const lib = h.poste_libelle ?? "Poste";
+          manqH.set(lib, (manqH.get(lib) ?? 0) + h.heures * k);
+        }
+        const km = h.metier_id == null ? "aucun" : String(h.metier_id);
+        metiers[km] = r2((metiers[km] ?? 0) + h.heures * k);
       }
     }
     for (const x of materiaux) if (x.ligne_id === id) {
-      vu += x.quantite * venteUnitaireMateriau(x);
-      cu += x.quantite * (x.prix_achat ?? 0);
+      d.materiaux.vente += x.quantite * venteUnitaireMateriau(x) * q;
+      d.materiaux.cout += x.quantite * (x.prix_achat ?? 0) * q;
     }
     for (const f of libres) if (f.ligne_id === id) {
-      const v = f.quantite * venteUnitaireLibre(f);
-      const c = f.quantite * (f.prix_achat ?? 0);
-      if (f.par_unite) { vu += v; cu += c; } else { vl += v; cl += c; }
+      const k = f.par_unite ? q : 1;
+      const pu = venteUnitaireLibre(f);
+      d.autres.vente += f.quantite * pu * k;
+      d.autres.cout += f.quantite * (f.prix_achat ?? 0) * k;
+      if (!inf.option && f.prix_achat == null && f.quantite * (f.prix_forfait ?? 0) > 0) manqL.add(f.designation ?? "Ligne libre");
       if (!inf.option && f.heures_info) {
-        const k = f.metier_info_id == null ? "aucun" : String(f.metier_info_id);
-        metiers[k] = r2((metiers[k] ?? 0) + f.heures_info * (f.par_unite ? inf.q : 1));
+        const km = f.metier_info_id == null ? "aucun" : String(f.metier_info_id);
+        metiers[km] = r2((metiers[km] ?? 0) + f.heures_info * k);
       }
     }
-    const vente = r2(vu * inf.q + vl);
-    if (vente !== 0) montants[id] = vente;
-    racines[inf.racine] = r2((racines[inf.racine] ?? 0) + vente);
-    if (inf.option) opt += vente;
-    else { ht += vente; cout += cu * inf.q + cl; if (m) manq = true; }
+    detail[id] = d;
+    const venteExacte = r2(d.main_oeuvre.vente + d.materiaux.vente + d.autres.vente);
+    if (venteExacte !== 0) montants[id] = venteExacte;
+    racines[inf.racine] = r2((racines[inf.racine] ?? 0) + venteExacte);
+    if (inf.option) opt += venteExacte;
+    else { ht += venteExacte; ajouter(totalDec, d); }
   }
   const total = r2(ht), rem = calculerRemise(total, remise), net = r2(total - rem), tva = r2(net * tvaPct / 100);
+  const dec = arrondirDec(totalDec);
+  const cout = r2(totalDec.main_oeuvre.cout + totalDec.materiaux.cout + totalDec.autres.cout);
+  const couts_manquants: CoutManquant[] = [
+    ...[...manqH].sort(([a], [b]) => a.localeCompare(b)).map(([libelle, h]) => ({ type: "heures" as const, libelle, heures: r2(h) })),
+    ...[...manqL].sort().map((libelle) => ({ type: "libre" as const, libelle, heures: null })),
+  ];
   return {
     total_ht: total, remise: rem === 0 ? 0 : -rem, net_ht: net, tva, ttc: r2(net + tva), options_ht: r2(opt),
     lignes: montants, racines, heures_metier: metiers,
-    cout_total: manq ? null : r2(cout), marge: manq ? "non_calculable" : r2(net - cout),
+    cout_total: cout, cout_complet: couts_manquants.length === 0, marge: r2(net - cout),
+    marge_pct: net !== 0 ? Math.round(((net - cout) / net) * 1000) / 10 : null,
+    decomposition: dec, couts_manquants, detail,
   };
 }
 

@@ -35,7 +35,7 @@ export interface DevisData {
   modele_origine: string | null;
   lignes: Ligne[]; heures: Heure[]; materiaux: Materiau[]; libres: Libre[]; photos: Photo[];
   corbeille: { groupe: string; supprime_le: string; libelles: string[] | null }[];
-  calcul: { total_ht: number; tva: number; ttc: number; tva_pct: number; options_ht: number; marge: number | "non_calculable" | null;
+  calcul: { total_ht: number; tva: number; ttc: number; tva_pct: number; options_ht: number; marge: number | null;
     cout_total?: number | null; lignes: Record<string, number>; racines: Record<string, number>; heures_metier: Record<string, number> };
   droits: { couts: boolean; ecrire: boolean; valider: boolean; parametres: boolean };
   parametres: Record<string, number | null>;

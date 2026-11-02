@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle, ArrowLeft, Eye, Library, MessageSquarePlus, Plus, Trash2 } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Eye, Library, MessageSquarePlus, PenLine, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,9 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogD
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { ClientCombobox } from "@/components/clients/ClientCombobox";
 import { calculerDevis } from "@/lib/devis/calcul";
+import { CoutsBloc } from "./CoutsBloc";
+import { SignerOpportuniteDialog } from "@/components/opportunites/SignerOpportuniteDialog";
+import type { TypologieFuture } from "@/lib/typologie-future";
 import { DevisArbre } from "./DevisArbre";
 import { ObjetPanel } from "./ObjetPanel";
 import { DevisVueClient } from "./DevisVueClient";
@@ -49,6 +52,7 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
   const [envoiDlg, setEnvoiDlg] = useState(false);
   const [envoiDate, setEnvoiDate] = useState("");
   const [supprDlg, setSupprDlg] = useState(false);
+  const [signOpp, setSignOpp] = useState<{ id: string; code: string; client: string | null; typologie: TypologieFuture | null } | null>(null);
 
   const d = q.data;
   const peutSupprimer = useQuery({
@@ -91,8 +95,6 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
   const st = d.devis.statut_redaction;
   const readOnly = st !== "brouillon" || !d.droits.ecrire;
   const ligneSel = d.lignes.find((l) => l.id === selected) ?? null;
-  // Le calcul serveur est exact pour les droits ; la marge reste masquée sans le droit coûts.
-  const marge = d.droits.couts ? calc.marge : null;
 
   const ajouter = async (type: Ligne["type"], extra: Record<string, unknown> = {}) => {
     let parent: string | null = null;
@@ -117,8 +119,8 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
     if (ok !== null) toast.success(`Statut : ${STATUT_LABEL[statut as keyof typeof STATUT_LABEL]}`);
   };
 
-  const signer = async () => {
-    if (!window.confirm("Le client a signé ce devis ? Les objets de fabrication et leurs heures par métier vont être créés.")) return;
+  const signer = async (demander = true) => {
+    if (demander && !window.confirm("Le client a signé ce devis ? Les objets de fabrication et leurs heures par métier vont être créés.")) return;
     const res = await call<{ deja_fait: boolean; objets: number; prefixe: string | null; photos?: { objet_id: string; affaire_id: string; storage_path: string; legende: string | null; mime: string | null }[] }>(
       "devis_signer_vers_fabrication", { _devis_id: devisId });
     if (!res) return;
@@ -135,6 +137,27 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
       if (!ins.error) copiees++;
     }
     toast.success(`${res.objets} objet(s) de fabrication créé(s)${res.prefixe ? ` (références préfixées ${res.prefixe})` : ""}${copiees ? `, ${copiees} photo(s) copiée(s)` : ""}.`);
+  };
+
+  /** « Client signé » : version signée → signature de l'opportunité (parcours existant) → fabrication. */
+  const clientSigne = async () => {
+    if (!d.devis.affaire_id) return;
+    if (!window.confirm(`Le client a signé le devis ${d.devis.numero} ?\n\n1. Cette version devient la version signée (les autres versions ouvertes sont refusées).\n2. L'opportunité est signée (code affaire à saisir si besoin).\n3. La fabrication est créée.`)) return;
+    const { data: a, error } = await supabase.from("affaires").select("id, phase, statut_opportunite, numero, code_opportunite, typologie_future, clients(nom)").eq("id", d.devis.affaire_id).single();
+    if (error || !a) return toast.error("Opportunité introuvable", { description: error?.message });
+    if (a.phase === "opportunite" && a.statut_opportunite !== "gagne") {
+      const up = await supabase.from("affaires").update({ statut_opportunite: "gagne" }).eq("id", a.id);
+      if (up.error) return toast.error("Passage en « Gagné » impossible", { description: up.error.message });
+    }
+    if (st !== "signe") {
+      const ok = await call("devis_marquer_signe", { _devis_id: devisId });
+      if (ok === null) return;
+    }
+    if (a.phase === "opportunite") {
+      setSignOpp({ id: a.id, code: a.code_opportunite ?? a.numero ?? "", client: (a.clients as { nom: string } | null)?.nom ?? null, typologie: (a.typologie_future ?? null) as TypologieFuture | null });
+      return;
+    }
+    await signer(false);
   };
 
   const nouvelleVersion = async () => {
@@ -258,7 +281,7 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
         {/* Fiche */}
         <Card>
           <CardContent className="p-4">
-            {ligneSel ? <ObjetPanel key={ligneSel.id} data={d} ligne={ligneSel} montants={calc.lignes} readOnly={readOnly} call={call} patch={patch} save={save} onSelect={setSelected} />
+            {ligneSel ? <ObjetPanel key={ligneSel.id} data={d} ligne={ligneSel} montants={calc.lignes} calc={calc} readOnly={readOnly} call={call} patch={patch} save={save} onSelect={setSelected} />
               : <p className="text-sm text-muted-foreground">Sélectionnez un élément dans l'arbre.</p>}
           </CardContent>
         </Card>
@@ -290,7 +313,8 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
             </div>
             {d.droits.couts && (
               <div className="border-t pt-2">
-                <Row label="Marge interne" value={marge === "non_calculable" ? "non calculable" : eur(marge as number)} />
+                <p className="mb-1 text-xs font-semibold uppercase text-muted-foreground">Coûts et marge</p>
+                <CoutsBloc dec={calc.decomposition} net={calc.net_ht} manquants={calc.couts_manquants} compact />
               </div>
             )}
             <div className="flex flex-col gap-2 border-t pt-3">
@@ -302,6 +326,9 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
                 <Button onClick={() => { setEnvoiDate(new Date().toISOString().slice(0, 10)); setEnvoiDlg(true); }}>Marquer envoyé au client</Button>
               )}
               {st === "transfere" && d.devis.date_envoi && <p className="text-xs text-muted-foreground">Envoyé le {new Date(d.devis.date_envoi).toLocaleDateString("fr-FR")}</p>}
+              {["valide", "transfere"].includes(st) && d.droits.valider && !d.devis.est_modele && d.devis.affaire_id && !d.devis.signe_vers_fabrication_le && (
+                <Button onClick={() => void clientSigne()}><PenLine className="mr-1 h-4 w-4" />Client signé</Button>
+              )}
               {["valide", "transfere", "signe"].includes(st) && d.droits.valider && !d.devis.est_modele && !d.devis.signe_vers_fabrication_le && (
                 <Button variant={st === "signe" ? "default" : "outline"} onClick={() => void signer()}>Devis signé → créer la fabrication</Button>
               )}
@@ -424,6 +451,11 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
           const id = await call<string>("devis_objet_inserer", { _devis_id: devisId, _parent_id: parent, _source_ligne_id: srcId });
           if (id) { setSelected(id); setBiblio(false); }
         }} />
+      {signOpp && (
+        <SignerOpportuniteDialog open={!!signOpp} onOpenChange={(o) => { if (!o) setSignOpp(null); }}
+          affaireId={signOpp.id} oldCode={signOpp.code} clientLabel={signOpp.client} typologieFuture={signOpp.typologie}
+          onSigned={() => { void signer(false); }} />
+      )}
     </div>
   );
 }
