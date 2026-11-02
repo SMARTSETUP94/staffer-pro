@@ -140,9 +140,7 @@ export function calculerDevis(
       }
     }
     detail[id] = d;
-    const vente = r2(venteDec(d) + 0);
     const venteExacte = r2(d.main_oeuvre.vente + d.materiaux.vente + d.autres.vente);
-    void vente;
     if (venteExacte !== 0) montants[id] = venteExacte;
     racines[inf.racine] = r2((racines[inf.racine] ?? 0) + venteExacte);
     if (inf.option) opt += venteExacte;
