@@ -4810,6 +4810,7 @@ export type Database = {
           prix_m2: number | null
           prix_ml: number | null
           produit: string
+          produit_norm: string | null
           ref: string | null
           remarque: string | null
           search_norm: string | null
@@ -4838,6 +4839,7 @@ export type Database = {
           prix_m2?: number | null
           prix_ml?: number | null
           produit: string
+          produit_norm?: string | null
           ref?: string | null
           remarque?: string | null
           search_norm?: string | null
@@ -4866,6 +4868,7 @@ export type Database = {
           prix_m2?: number | null
           prix_ml?: number | null
           produit?: string
+          produit_norm?: string | null
           ref?: string | null
           remarque?: string | null
           search_norm?: string | null
