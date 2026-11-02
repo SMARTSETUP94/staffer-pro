@@ -44,7 +44,7 @@ BEGIN
         RETURNING id INTO v_ch;
       FOR ob IN SELECT * FROM jsonb_array_elements(ch->'objets') LOOP
         INSERT INTO devis_lignes(devis_id,parent_id,type,ordre,libelle,quantite)
-          VALUES(v_d,v_ch,'objet',(ob->>'n')::text::numeric*0+o*100+coalesce((SELECT count(*) FROM devis_lignes WHERE parent_id=v_ch),0),ob->>'titre',(ob->>'quantite')::numeric)
+          VALUES(v_d,v_ch,'objet',o*100+(SELECT count(*) FROM devis_lignes WHERE parent_id=v_ch),ob->>'titre',(ob->>'quantite')::numeric)
           RETURNING id INTO v_obj;
         PERFORM pg_temp._acc_lignes(v_obj, ob->'lignes');
       END LOOP;
@@ -57,7 +57,7 @@ BEGIN
       AND (c->>'net_ht')::numeric=(a->>'net_ht')::numeric AND (c->>'tva')::numeric=(a->>'tva')::numeric
       AND (c->>'ttc')::numeric=(a->>'ttc')::numeric,
       jsonb_build_object('total_ht',c->'total_ht','remise',c->'remise','net_ht',c->'net_ht','tva',c->'tva','ttc',c->'ttc',
-        'heures_metier',(SELECT jsonb_object_agg(coalesce(m.nom,e.key),e.value) FROM jsonb_each(c->'heures_metier') e LEFT JOIN metiers m ON m.id::text=e.key)), a);
+        'heures_metier',(SELECT jsonb_object_agg(coalesce(m.libelle,e.key),e.value) FROM jsonb_each(c->'heures_metier') e LEFT JOIN metiers m ON m.id::text=e.key)), a);
   END LOOP;
 END $t$;
 SELECT * FROM _res;
