@@ -7960,6 +7960,7 @@ export type Database = {
         Args: { _devis_id: string; _maj_affaire_client?: boolean; _patch: Json }
         Returns: undefined
       }
+      devis_eur_fr: { Args: { _v: number }; Returns: string }
       devis_heure_enregistrer: {
         Args: { _h: Json; _ligne_id: string }
         Returns: string

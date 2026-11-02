@@ -491,6 +491,13 @@
       "when": 1793629822713,
       "tag": "0069_devis_15_couts_revient_marge_partielle",
       "breakpoints": true
+    },
+    {
+      "idx": 70,
+      "version": "7",
+      "when": 1793630464997,
+      "tag": "0070_devis_16_montant_historique_fr",
+      "breakpoints": true
     }
   ]
 }
