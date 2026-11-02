@@ -153,6 +153,16 @@ export function ObjetPanel({ data, ligne, readOnly, call, patch, save, onSelect 
         <Field value={ligne.libelle} disabled={readOnly} placeholder="Intitulé" onValue={(v) => setLigne("libelle", v)} className="text-base font-medium" />
         {ligne.type !== "zone" && <Field numeric value={ligne.quantite} disabled={readOnly} placeholder="Qté" onValue={(v) => setLigne("quantite", v, true)} />}
       </div>
+      {ligne.type === "option" && (
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" checked={!!ligne.option_incluse} disabled={readOnly} onChange={(e) => {
+            const v = e.target.checked;
+            patch((d) => ({ ...d, lignes: d.lignes.map((l) => (l.id === ligne.id ? { ...l, option_incluse: v } : l)) }));
+            void call("devis_option_inclure", { _ligne_id: ligne.id, _incluse: v }, { refresh: false });
+          }} />
+          Incluse dans le total
+        </label>
+      )}
       <Field multiline value={ligne.descriptif_client} disabled={readOnly} placeholder="Descriptif client" onValue={(v) => setLigne("descriptif_client", v)} />
       {ligne.type === "objet" && (
         <div className="grid grid-cols-4 gap-2">
