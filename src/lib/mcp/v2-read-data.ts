@@ -41,7 +41,7 @@ export async function readV2(context: McpAppContext, name: V2ReadName, args: Rec
       if (affIds.length) {
         const { data: ch, error: ce } = await context.db.rpc("devis_charge_be", { _affaire_ids: affIds });
         if (ce) throw new ToolError("Charge bureau d'étude indisponible");
-        for (const c of (ch ?? []) as any[]) chargeBe.set(c.affaire_id, { jours: Number(c.jours_be), heures: Number(c.heures_be), devis: `R${c.version}`, etat: c.etat });
+        for (const c of (ch ?? []) as any[]) chargeBe.set(c.affaire_id, { jours: Math.round(Number(c.jours_be) * 10) / 10, heures: Number(c.heures_be), devis: `R${c.version}`, etat: c.etat });
       }
       rows = actives.map((l: any) => ({
         affaire_id: l.affaire_id, numero: l.affaires.numero, nom: l.affaires.nom, role: l.role,
