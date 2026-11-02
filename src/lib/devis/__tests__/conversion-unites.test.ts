@@ -47,3 +47,17 @@ describe("aide à la conversion selon l'unité du produit", () => {
     expect(quantiteDepuisAide("panneau", "m2", { m2: 10 }, {}, 0)).toBeNull();
   });
 });
+
+import { calculerDevis } from "../calcul";
+describe("rédacteur sans droit coûts : prix de vente fourni par le serveur", () => {
+  it("matériau et ligne libre comptés au prix de vente, sans achat ni coefficient", () => {
+    const r = calculerDevis(
+      [{ id: "o", parent_id: null, type: "objet", quantite: 2 }], [],
+      [{ ligne_id: "o", quantite: 11.59, prix_achat: null, coefficient: 1, prix_vente_unitaire: 13.2 }],
+      [{ ligne_id: "o", quantite: 3, prix_achat: null, prix_forfait: null, coefficient: 1, prix_vente_unitaire: 14, par_unite: true },
+       { ligne_id: "o", quantite: 1, prix_forfait: 330, coefficient: 1, par_unite: false }],
+    );
+    // (11,59 × 13,2 + 3 × 14) × 2 + 330 = 719,98
+    expect(r.lignes.o).toBe(719.98);
+  });
+});
