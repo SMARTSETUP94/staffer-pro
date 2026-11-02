@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogD
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { ClientCombobox } from "@/components/clients/ClientCombobox";
 import { calculerDevis } from "@/lib/devis/calcul";
+import { CoutsBloc } from "./CoutsBloc";
 import { DevisArbre } from "./DevisArbre";
 import { ObjetPanel } from "./ObjetPanel";
 import { DevisVueClient } from "./DevisVueClient";
@@ -91,8 +92,6 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
   const st = d.devis.statut_redaction;
   const readOnly = st !== "brouillon" || !d.droits.ecrire;
   const ligneSel = d.lignes.find((l) => l.id === selected) ?? null;
-  // Le calcul serveur est exact pour les droits ; la marge reste masquée sans le droit coûts.
-  const marge = d.droits.couts ? calc.marge : null;
 
   const ajouter = async (type: Ligne["type"], extra: Record<string, unknown> = {}) => {
     let parent: string | null = null;
@@ -258,7 +257,7 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
         {/* Fiche */}
         <Card>
           <CardContent className="p-4">
-            {ligneSel ? <ObjetPanel key={ligneSel.id} data={d} ligne={ligneSel} montants={calc.lignes} readOnly={readOnly} call={call} patch={patch} save={save} onSelect={setSelected} />
+            {ligneSel ? <ObjetPanel key={ligneSel.id} data={d} ligne={ligneSel} montants={calc.lignes} calc={calc} readOnly={readOnly} call={call} patch={patch} save={save} onSelect={setSelected} />
               : <p className="text-sm text-muted-foreground">Sélectionnez un élément dans l'arbre.</p>}
           </CardContent>
         </Card>
@@ -290,7 +289,8 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
             </div>
             {d.droits.couts && (
               <div className="border-t pt-2">
-                <Row label="Marge interne" value={marge === "non_calculable" ? "non calculable" : eur(marge as number)} />
+                <p className="mb-1 text-xs font-semibold uppercase text-muted-foreground">Coûts et marge</p>
+                <CoutsBloc dec={calc.decomposition} net={calc.net_ht} manquants={calc.couts_manquants} compact />
               </div>
             )}
             <div className="flex flex-col gap-2 border-t pt-3">
