@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { SynonymesMateriaux } from "@/components/devis/SynonymesMateriaux";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -177,6 +178,14 @@ function MateriauxPage() {
             </TableBody>
           </Table>
         </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Synonymes de recherche</CardTitle>
+          <CardDescription>Les termes d'un même groupe sont équivalents dans la recherche (ex. opale = diffusant = dif).</CardDescription>
+        </CardHeader>
+        <CardContent><SynonymesMateriaux /></CardContent>
       </Card>
 
       <Card>

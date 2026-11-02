@@ -94,8 +94,11 @@ export function MateriauxRecherche({ onPick, autoFocus }: { onPick?: (m: Materia
               </div>
               <div className="truncate text-xs text-muted-foreground">
                 {[m.format_texte ?? (m.longueur_mm ? `${m.longueur_mm}×${m.largeur_mm ?? ""}` : null), m.epaisseur_mm != null ? `ép. ${m.epaisseur_mm} mm` : null, m.fournisseur, m.unite].filter(Boolean).join(" · ")}
-                {(m.fournisseur_etat !== "ok" || m.prix_public) && (
-                  <span className="ml-1 text-destructive">{m.prix_public ? "prix public" : "tarif ancien"}{m.date_tarif ? ` (${new Date(m.date_tarif).toLocaleDateString("fr-FR", { month: "2-digit", year: "numeric" })})` : ""}</span>
+                {m.fournisseur_etat === "ancien" && (
+                  <Badge variant="outline" className="ml-1 h-4 border-destructive px-1 text-[10px] text-destructive">tarif {m.date_tarif ? new Date(m.date_tarif).getFullYear() : "ancien"}</Badge>
+                )}
+                {(m.fournisseur_etat === "a_surveiller" || m.prix_public) && (
+                  <span className="ml-1 text-destructive">{m.prix_public ? "prix public" : "tarif à surveiller"}{m.date_tarif ? ` (${new Date(m.date_tarif).toLocaleDateString("fr-FR", { month: "2-digit", year: "numeric" })})` : ""}</span>
                 )}
               </div>
             </div>
