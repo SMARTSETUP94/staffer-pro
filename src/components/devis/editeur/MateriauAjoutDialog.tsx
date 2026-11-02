@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MateriauxRecherche, type MateriauResult } from "@/components/devis/MateriauxRecherche";
-import { convertirEnUnitesVente } from "@/lib/devis/calcul";
+import { quantiteDepuisAide } from "@/lib/devis/calcul";
 import { eur } from "./api";
 
 type Rapide = { id: string; produit: string; format_texte: string | null; epaisseur_mm: number | null; unite: string; fournisseur: string; prix_achat_net: number | null; prix_m2: number | null };
@@ -38,12 +38,12 @@ export function MateriauAjoutDialog({ open, onOpenChange, devisId, onAdd }: {
     if (!pick || mode === "direct") return null;
     const fmt = { longueur_mm: pick.longueur_mm, largeur_mm: pick.largeur_mm };
     const p = Number(perte.replace(",", ".")) || 0;
-    if (mode === "m2") return convertirEnUnitesVente("m2", { m2: Number(m2.replace(",", ".")) }, fmt, p);
-    if (mode === "ml") return convertirEnUnitesVente("ml", { ml: Number(ml.replace(",", ".")) }, fmt, p);
+    if (mode === "m2") return quantiteDepuisAide(pick.unite, "m2", { m2: Number(m2.replace(",", ".")) }, fmt, p);
+    if (mode === "ml") return quantiteDepuisAide(pick.unite, "ml", { ml: Number(ml.replace(",", ".")) }, fmt, p);
     const list = pieces.split(/[\n;]+/).map((x) => x.trim().match(/(\d+)\s*[x×*]\s*(\d+)(?:\s*[x×*]\s*(\d+))?/i))
       .filter((m): m is RegExpMatchArray => !!m)
       .map((m) => ({ l: Number(m[1]), w: Number(m[2]), n: Number(m[3] ?? 1) }));
-    return convertirEnUnitesVente("pieces", { pieces: list }, fmt, p);
+    return quantiteDepuisAide(pick.unite, "pieces", { pieces: list }, fmt, p);
   })();
 
   const favori = async (id: string) => {
@@ -53,8 +53,8 @@ export function MateriauAjoutDialog({ open, onOpenChange, devisId, onAdd }: {
 
   const valider = async () => {
     if (!pick?.id) return;
-    const q = conv ?? Number(qte.replace(",", "."));
-    await onAdd({ materiau_id: pick.id, quantite: q || 1, aide_conversion: mode === "direct" ? null : { mode, m2, ml, pieces, perte_pct: Number(perte) } });
+    const q = conv?.quantite ?? Number(qte.replace(",", "."));
+    await onAdd({ materiau_id: pick.id, quantite: q || 1, aide_conversion: mode === "direct" ? null : { mode, m2, ml, pieces, perte_pct: Number(perte), detail: conv?.detail ?? null } });
     reset(); onOpenChange(false);
   };
 
@@ -128,7 +128,7 @@ export function MateriauAjoutDialog({ open, onOpenChange, devisId, onAdd }: {
             {mode !== "direct" && (
               <div className="flex items-center gap-2 text-sm">
                 Perte <Input className="h-8 w-16" value={perte} onChange={(e) => setPerte(e.target.value)} /> %
-                <span className="ml-auto font-medium">{conv == null ? "Format du produit inconnu ou saisie vide" : `${conv} ${pick.unite}`}</span>
+                <span className="ml-auto text-right font-medium">{conv == null ? "Format du produit inconnu ou saisie vide" : <>{conv.quantite.toLocaleString("fr-FR")} {pick.unite}<span className="block text-xs font-normal text-muted-foreground">{conv.detail}</span></>}</span>
               </div>
             )}
             <DialogFooter>
