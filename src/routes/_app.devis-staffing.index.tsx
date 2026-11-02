@@ -149,7 +149,12 @@ function NouveauDevisDialog({ open, onOpenChange }: { open: boolean; onOpenChang
     const { data, error } = await supabase.rpc("devis_creer_depuis_pipeline", { _affaire_id: aff.id, _modele_id: (modele || null) as string });
     setBusy(false);
     if (error) return toast.error(error.message);
-    const id = typeof data === "string" ? data : (data as { devis_id?: string } | null)?.devis_id;
+    const res = (typeof data === "string" ? { devis_id: data, existant: false } : data) as { devis_id?: string; existant?: boolean } | null;
+    const id = res?.devis_id;
+    if (id && res?.existant) {
+      const { data: ex } = await supabase.from("devis").select("numero,version").eq("id", id).maybeSingle();
+      toast.info(`Cette opportunité a déjà le devis ${ex?.numero ?? ""} (R${ex?.version ?? 1}) : ouvert. Pour une nouvelle version, utilisez « Nouvelle version ».`, { duration: 10000 });
+    }
     onOpenChange(false);
     if (id) navigate({ to: "/affaires/$affaireId/devis-staffing/$devisId", params: { affaireId: aff.id, devisId: id } });
   };
