@@ -4812,6 +4812,7 @@ export type Database = {
           produit: string
           ref: string | null
           remarque: string | null
+          search_norm: string | null
           search_text: string
           source: string | null
           unite: string
@@ -4839,6 +4840,7 @@ export type Database = {
           produit: string
           ref?: string | null
           remarque?: string | null
+          search_norm?: string | null
           search_text?: string
           source?: string | null
           unite: string
@@ -4866,6 +4868,7 @@ export type Database = {
           produit?: string
           ref?: string | null
           remarque?: string | null
+          search_norm?: string | null
           search_text?: string
           source?: string | null
           unite?: string
@@ -4972,6 +4975,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      materiaux_synonymes: {
+        Row: {
+          created_at: string
+          groupe: string
+          id: string
+          terme: string
+        }
+        Insert: {
+          created_at?: string
+          groupe: string
+          id?: string
+          terme: string
+        }
+        Update: {
+          created_at?: string
+          groupe?: string
+          id?: string
+          terme?: string
+        }
+        Relationships: []
       }
       mcp_audit_log: {
         Row: {
@@ -8357,6 +8381,7 @@ export type Database = {
         Args: { _import_id: string }
         Returns: number
       }
+      materiaux_norm: { Args: { t: string }; Returns: string }
       materiaux_rechercher: {
         Args: {
           _epaisseur?: number
