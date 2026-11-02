@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export const Route = createFileRoute("/_app/parametres/devis-modeles/")({
   beforeLoad: () => requireCapability("devis.parametres"),
@@ -28,6 +29,10 @@ function ModelesPage() {
       return data ?? [];
     },
   });
+  const defaut = useQuery({
+    queryKey: ["devis-modele-defaut"],
+    queryFn: async () => ((await supabase.rpc("devis_modele_defaut_id")).data as string | null) ?? null,
+  });
   const creer = async () => {
     const { data, error } = await supabase.rpc("devis_modele_creer_vierge", { _nom: f.nom.trim(), _categorie: f.categorie, _description: f.description });
     if (error) return toast.error(error.message);
@@ -37,14 +42,14 @@ function ModelesPage() {
     <div className="space-y-6 p-4 md:p-6">
       <div>
         <h1 className="text-2xl font-semibold">Modèles de devis</h1>
-        <p className="text-sm text-muted-foreground">Un devis créé depuis un modèle reprend toute sa structure avec les taux en vigueur ; le modèle n'est jamais modifié.{" "}
+        <p className="text-sm text-muted-foreground">Le modèle par défaut est présélectionné dans « Nouveau devis » (un seul à la fois). Un devis créé depuis un modèle reprend toute sa structure avec les taux en vigueur ; le modèle n'est jamais modifié.{" "}
           <Link to="/parametres/devis-taux" className="underline">Taux</Link> · <Link to="/parametres/devis-materiaux" className="underline">Matériaux</Link></p>
       </div>
       <Card>
         <CardHeader><CardTitle>Modèles</CardTitle><CardDescription>Aussi créables depuis un devis : « Enregistrer comme modèle ».</CardDescription></CardHeader>
         <CardContent className="space-y-4">
           <Table>
-            <TableHeader><TableRow><TableHead>Nom</TableHead><TableHead>Catégorie</TableHead><TableHead>Usage</TableHead><TableHead>Lignes</TableHead><TableHead>Actif</TableHead></TableRow></TableHeader>
+            <TableHeader><TableRow><TableHead>Nom</TableHead><TableHead>Catégorie</TableHead><TableHead>Usage</TableHead><TableHead>Lignes</TableHead><TableHead>Actif</TableHead><TableHead>Modèle par défaut</TableHead></TableRow></TableHeader>
             <TableBody>
               {(q.data ?? []).map((m) => (
                 <TableRow key={m.id}>
@@ -56,9 +61,14 @@ function ModelesPage() {
                     const { error } = await supabase.rpc("devis_modele_activer", { _devis_id: m.id, _actif: v });
                     if (error) toast.error(error.message); else q.refetch();
                   }} /></TableCell>
+                  <TableCell><Checkbox aria-label={`Modèle par défaut : ${m.modele_nom}`} checked={defaut.data === m.id} disabled={!m.modele_actif}
+                    onCheckedChange={async (v) => {
+                      const { error } = await supabase.rpc("devis_modele_definir_defaut", { _devis_id: m.id, _defaut: v === true });
+                      if (error) toast.error(error.message); else { void defaut.refetch(); toast.success(v === true ? `« ${m.modele_nom} » est le modèle par défaut` : "Plus de modèle par défaut"); }
+                    }} /></TableCell>
                 </TableRow>
               ))}
-              {(q.data ?? []).length === 0 && <TableRow><TableCell colSpan={5} className="text-center text-sm text-muted-foreground">Aucun modèle.</TableCell></TableRow>}
+              {(q.data ?? []).length === 0 && <TableRow><TableCell colSpan={6} className="text-center text-sm text-muted-foreground">Aucun modèle.</TableCell></TableRow>}
             </TableBody>
           </Table>
           <div className="flex flex-wrap gap-2 border-t pt-4">

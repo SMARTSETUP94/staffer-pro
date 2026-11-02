@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { useCapability } from "@/hooks/use-capability";
 import { useFeatureFlag } from "@/hooks/use-feature-flag";
 import { STATUT_LABEL } from "@/components/devis/editeur/api";
+import { useModelesDevis } from "@/components/devis/useModelesDevis";
 import { devisPipelineAction, versionSignaturePropose, type DevisBadge } from "@/lib/devis/pipeline";
 
 type Ctx = { badges: Map<string, DevisBadge>; peutRediger: boolean; flag: boolean; refresh: () => void };
@@ -43,10 +44,9 @@ export function DevisPipelineBouton({ affaireId, statut, onStatutChange }: { aff
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
-  const modeles = useQuery({
-    queryKey: ["devis-modeles-actifs"], enabled: open,
-    queryFn: async () => ((await supabase.rpc("devis_modeles_lister", { _actifs_seulement: true })).data ?? []) as { id: string; modele_nom: string | null; modele_categorie: string | null }[],
-  });
+  const modeles = useModelesDevis(open);
+  const [modeleChoisi, setModeleChoisi] = useState<string | null>(null);
+  const modele = modeleChoisi ?? modeles.data?.defautId ?? "";
   if (!ctx) return null;
   const badge = ctx.badges.get(affaireId);
   const action = devisPipelineAction({ statut, badge, peutRediger: ctx.peutRediger, flag: ctx.flag });
@@ -83,16 +83,14 @@ export function DevisPipelineBouton({ affaireId, statut, onStatutChange }: { aff
             <DialogTitle>Créer le devis</DialogTitle>
             <DialogDescription>Le brouillon reprend le client, le contact et les dates de l'opportunité.</DialogDescription>
           </DialogHeader>
-          <div className="space-y-2">
-            <Button className="w-full" disabled={busy} onClick={() => void creer(null)}>Devis vierge</Button>
-            <p className="pt-2 text-xs font-semibold uppercase text-muted-foreground">Depuis un modèle</p>
-            {(modeles.data ?? []).length === 0 && <p className="text-sm text-muted-foreground">{modeles.isLoading ? "Chargement…" : "Aucun modèle actif."}</p>}
-            {(modeles.data ?? []).map((m) => (
-              <Button key={m.id} variant="outline" className="w-full justify-start" disabled={busy} onClick={() => void creer(m.id)}>
-                {m.modele_nom ?? "Modèle"}{m.modele_categorie ? ` · ${m.modele_categorie}` : ""}
-              </Button>
+          <select aria-label="Modèle" className="h-9 w-full rounded-md border bg-background px-2 text-sm" value={modele} disabled={modeles.isLoading}
+            onChange={(e) => setModeleChoisi(e.target.value)}>
+            <option value="">Devis vierge</option>
+            {(modeles.data?.modeles ?? []).map((m) => (
+              <option key={m.id} value={m.id}>Modèle : {m.modele_nom ?? "Modèle"}{m.modele_categorie ? ` · ${m.modele_categorie}` : ""}{m.id === modeles.data?.defautId ? " (par défaut)" : ""}</option>
             ))}
-          </div>
+          </select>
+          <DialogFooter><Button disabled={busy || modeles.isLoading} onClick={() => void creer(modele || null)}>Créer le devis</Button></DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

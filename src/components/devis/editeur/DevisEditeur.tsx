@@ -16,6 +16,7 @@ import { DevisArbre } from "./DevisArbre";
 import { ObjetPanel } from "./ObjetPanel";
 import { DevisVueClient } from "./DevisVueClient";
 import { BibliothequeDialog } from "./BibliothequeDialog";
+import { SupprimerDevisDialog, SUPPRESSION_REFUSEE, devisSupprimable } from "@/components/devis/SupprimerDevis";
 import { useAutosave } from "./useAutosave";
 import {
   STATUT_LABEL, TYPE_LABEL, eur, useDevis, useDevisRpc, usePatchCache, type Ligne,
@@ -47,8 +48,14 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
   const [modele, setModele] = useState({ nom: "", categorie: "", description: "" });
   const [envoiDlg, setEnvoiDlg] = useState(false);
   const [envoiDate, setEnvoiDate] = useState("");
+  const [supprDlg, setSupprDlg] = useState(false);
 
   const d = q.data;
+  const peutSupprimer = useQuery({
+    queryKey: ["devis-peut-supprimer", devisId, d?.devis.statut_redaction],
+    enabled: !!d && !d.devis.est_modele && d.droits.ecrire,
+    queryFn: async () => !!(await supabase.rpc("devis_peut_supprimer", { _devis_id: devisId })).data,
+  });
   const contacts = useQuery({
     queryKey: ["client-contacts", d?.devis.client_id],
     enabled: !!d?.devis.client_id,
@@ -302,11 +309,21 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
               <Button variant="outline" onClick={() => setVueClient(true)}><Eye className="mr-1 h-4 w-4" />Vue client</Button>
               {!d.devis.est_modele && d.droits.parametres && <Button variant="ghost" onClick={() => { setModele({ nom: d.devis.libelle ?? "", categorie: "", description: "" }); setModeleDlg(true); }}>Enregistrer comme modèle</Button>}
               <Button variant="outline" disabled title="Lot 3">Vers ProGBat (lot 3)</Button>
+              {!d.devis.est_modele && d.droits.ecrire && (
+                <>
+                  <Button variant="ghost" className="text-destructive" disabled={!devisSupprimable(st) || !peutSupprimer.data}
+                    onClick={() => setSupprDlg(true)}><Trash2 className="mr-1 h-4 w-4" />Supprimer le devis</Button>
+                  {!devisSupprimable(st) ? <p className="text-xs text-muted-foreground">{SUPPRESSION_REFUSEE}</p>
+                    : peutSupprimer.data === false && <p className="text-xs text-muted-foreground">Suppression réservée à l'auteur du devis, au chargé d'affaires ou à un admin.</p>}
+                </>
+              )}
             </div>
           </CardContent>
         </Card>
       </div>
 
+      <SupprimerDevisDialog devis={{ id: devisId, numero: d.devis.numero }} open={supprDlg} onOpenChange={setSupprDlg}
+        onDone={() => navigate(affaireId ? { to: "/affaires/$affaireId/devis-staffing", params: { affaireId } } : { to: "/devis-staffing" })} />
       {/* Renommer */}
       <Dialog open={!!rename} onOpenChange={(o) => !o && setRename(null)}>
         <DialogContent>

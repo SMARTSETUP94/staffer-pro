@@ -46,3 +46,4 @@
 - Quote totals expose total_ht, remise and net_ht from devis_calculer_interne; net HT is the single billed amount used for frozen montant_ht, pipeline CA and margin, so remises never drift between screens.
 - Material search ranks on derived search_norm/produit_norm columns built by materiaux_norm (× * x unified, letters split from digits) plus the admin-editable materiaux_synonymes table; short terms match whole words only and a trigram prefilter keeps queries under one second.
 - Without devis.couts, devis_lire strips purchase price and coefficient from materials and free lines but returns server-computed prix_vente_unitaire/prix_vente; the local calculator falls back to that sale price so totals stay identical.
+- Staffing quotes are deleted only logically (devis.supprime_le) through devis_supprimer, and every reader excludes them via devis_peut_lire; versions keep counting deleted rows so numbers are never reused, and only admins restore within 30 days.
