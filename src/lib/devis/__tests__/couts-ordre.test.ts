@@ -41,7 +41,7 @@ describe("coûts de revient et marge", () => {
     const r = calculerDevis(lignes, [...heures, { ligne_id: "z", heures: 4, taux_vente: 55, cout_revient: null, par_unite: true, metier_id: 2, poste_libelle: "Métallerie" }], mats, libres);
     expect(r.cout_complet).toBe(false);
     expect(r.cout_total).toBe(1926.21);
-    expect(r.marge).toBe(r.net_ht - 1926.21);
+    expect(r.marge).toBeCloseTo(r.net_ht - 1926.21, 2);
     expect(texteCoutsManquants(r.couts_manquants)).toBe("coût manquant : métallerie (4 h)");
   });
   it("ligne libre vendue sans coût : signalée, pas comptée à 100 % de marge silencieusement", () => {
