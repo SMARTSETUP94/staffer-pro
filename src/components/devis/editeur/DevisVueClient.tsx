@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { enfants } from "@/lib/devis/arbre";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { TYPE_LABEL, eur, fmtDate } from "./api";
@@ -33,7 +34,7 @@ export function DevisVueClient({ open, onOpenChange, devisId }: { open: boolean;
     },
   });
   const vc = q.data?.vc;
-  const kids = (p: string | null) => (vc?.lignes ?? []).filter((l) => l.parent_id === p).sort((a, b) => a.ordre - b.ordre);
+  const kids = (p: string | null) => enfants(vc?.lignes ?? [], p);
   const render = (l: CL, depth: number): React.ReactNode => {
     const photos = (vc?.photos ?? []).filter((p) => p.ligne_id === l.id);
     if (l.type === "commentaire") return <p key={l.id} className="text-sm italic text-muted-foreground" style={{ marginLeft: depth * 16 }}>{l.texte}</p>;
