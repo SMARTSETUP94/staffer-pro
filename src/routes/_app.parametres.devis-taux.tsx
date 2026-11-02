@@ -29,6 +29,7 @@ const PARAM_LABELS: Record<string, string> = {
   repas: "Repas", frais_horaire: "Frais horaires", coursier_22m3: "Coursier 22 m³",
   semi_remorque: "Semi-remorque", coef_materiaux: "Coefficient matériaux",
   seuil_alerte_taux_pct: "Seuil d'alerte taux modifié", validite_jours: "Validité du devis", tva_pct: "TVA", heures_par_jour_be: "Heures par jour bureau d'étude",
+  cout_repas: "Coût — repas", cout_frais_horaire: "Coût — frais horaires", cout_coursier_22m3: "Coût — coursier 22 m³", cout_semi_remorque: "Coût — semi-remorque",
 };
 
 const today = () => new Date().toISOString().slice(0, 10);
