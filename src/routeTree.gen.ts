@@ -78,6 +78,7 @@ import { Route as AppAffairesIndexRouteImport } from './routes/_app.affaires.ind
 import { Route as AppAffairesAffaireIdRouteImport } from './routes/_app.affaires.$affaireId'
 import { Route as AppClientsClientIdRouteImport } from './routes/_app.clients.$clientId'
 import { Route as AppDevAtomsRouteImport } from './routes/_app.dev.atoms'
+import { Route as AppDevisStaffingIndexRouteImport } from './routes/_app.devis-staffing.index'
 import { Route as AppDevisIndexRouteImport } from './routes/_app.devis.index'
 import { Route as AppDevisHistoriqueRouteImport } from './routes/_app.devis.historique'
 import { Route as AppDevisImportRouteImport } from './routes/_app.devis.import'
@@ -481,6 +482,11 @@ const AppClientsClientIdRoute = AppClientsClientIdRouteImport.update({
 const AppDevAtomsRoute = AppDevAtomsRouteImport.update({
   id: '/dev/atoms',
   path: '/dev/atoms',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppDevisStaffingIndexRoute = AppDevisStaffingIndexRouteImport.update({
+  id: '/devis-staffing/',
+  path: '/devis-staffing/',
   getParentRoute: () => AppRoute,
 } as any)
 const AppDevisIndexRoute = AppDevisIndexRouteImport.update({
@@ -892,6 +898,7 @@ export interface FileRoutesByFullPath {
   '/rh/contrats': typeof AppRhContratsRoute
   '/staffing/$planId': typeof AppStaffingPlanIdRoute
   '/affaires/': typeof AppAffairesIndexRoute
+  '/devis-staffing/': typeof AppDevisStaffingIndexRoute
   '/devis/': typeof AppDevisIndexRoute
   '/export/': typeof AppExportIndexRoute
   '/fabrication/': typeof AppFabricationIndexRoute
@@ -1015,6 +1022,7 @@ export interface FileRoutesByTo {
   '/rh/contrats': typeof AppRhContratsRoute
   '/staffing/$planId': typeof AppStaffingPlanIdRoute
   '/affaires': typeof AppAffairesIndexRoute
+  '/devis-staffing': typeof AppDevisStaffingIndexRoute
   '/devis': typeof AppDevisIndexRoute
   '/export': typeof AppExportIndexRoute
   '/fabrication': typeof AppFabricationIndexRoute
@@ -1143,6 +1151,7 @@ export interface FileRoutesById {
   '/_app/rh/contrats': typeof AppRhContratsRoute
   '/_app/staffing/$planId': typeof AppStaffingPlanIdRoute
   '/_app/affaires/': typeof AppAffairesIndexRoute
+  '/_app/devis-staffing/': typeof AppDevisStaffingIndexRoute
   '/_app/devis/': typeof AppDevisIndexRoute
   '/_app/export/': typeof AppExportIndexRoute
   '/_app/fabrication/': typeof AppFabricationIndexRoute
@@ -1271,6 +1280,7 @@ export interface FileRouteTypes {
     | '/rh/contrats'
     | '/staffing/$planId'
     | '/affaires/'
+    | '/devis-staffing/'
     | '/devis/'
     | '/export/'
     | '/fabrication/'
@@ -1394,6 +1404,7 @@ export interface FileRouteTypes {
     | '/rh/contrats'
     | '/staffing/$planId'
     | '/affaires'
+    | '/devis-staffing'
     | '/devis'
     | '/export'
     | '/fabrication'
@@ -1521,6 +1532,7 @@ export interface FileRouteTypes {
     | '/_app/rh/contrats'
     | '/_app/staffing/$planId'
     | '/_app/affaires/'
+    | '/_app/devis-staffing/'
     | '/_app/devis/'
     | '/_app/export/'
     | '/_app/fabrication/'
@@ -2050,6 +2062,13 @@ declare module '@tanstack/react-router' {
       path: '/dev/atoms'
       fullPath: '/dev/atoms'
       preLoaderRoute: typeof AppDevAtomsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/devis-staffing/': {
+      id: '/_app/devis-staffing/'
+      path: '/devis-staffing'
+      fullPath: '/devis-staffing/'
+      preLoaderRoute: typeof AppDevisStaffingIndexRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/devis/': {
@@ -2645,6 +2664,7 @@ interface AppRouteChildren {
   AppRhContratsRoute: typeof AppRhContratsRoute
   AppStaffingPlanIdRoute: typeof AppStaffingPlanIdRoute
   AppAffairesIndexRoute: typeof AppAffairesIndexRoute
+  AppDevisStaffingIndexRoute: typeof AppDevisStaffingIndexRoute
   AppDevisIndexRoute: typeof AppDevisIndexRoute
   AppFabricationIndexRoute: typeof AppFabricationIndexRoute
   AppLogistiqueIndexRoute: typeof AppLogistiqueIndexRoute
@@ -2735,6 +2755,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppRhContratsRoute: AppRhContratsRoute,
   AppStaffingPlanIdRoute: AppStaffingPlanIdRoute,
   AppAffairesIndexRoute: AppAffairesIndexRoute,
+  AppDevisStaffingIndexRoute: AppDevisStaffingIndexRoute,
   AppDevisIndexRoute: AppDevisIndexRoute,
   AppFabricationIndexRoute: AppFabricationIndexRoute,
   AppLogistiqueIndexRoute: AppLogistiqueIndexRoute,
