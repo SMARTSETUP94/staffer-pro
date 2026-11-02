@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle, ArrowLeft, Eye, Library, MessageSquarePlus, Plus, Trash2 } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Eye, Library, MessageSquarePlus, PenLine, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,8 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { ClientCombobox } from "@/components/clients/ClientCombobox";
 import { calculerDevis } from "@/lib/devis/calcul";
 import { CoutsBloc } from "./CoutsBloc";
+import { SignerOpportuniteDialog } from "@/components/opportunites/SignerOpportuniteDialog";
+import type { TypologieFuture } from "@/lib/typologie-future";
 import { DevisArbre } from "./DevisArbre";
 import { ObjetPanel } from "./ObjetPanel";
 import { DevisVueClient } from "./DevisVueClient";
@@ -50,6 +52,7 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
   const [envoiDlg, setEnvoiDlg] = useState(false);
   const [envoiDate, setEnvoiDate] = useState("");
   const [supprDlg, setSupprDlg] = useState(false);
+  const [signOpp, setSignOpp] = useState<{ id: string; code: string; client: string | null; typologie: TypologieFuture | null } | null>(null);
 
   const d = q.data;
   const peutSupprimer = useQuery({
@@ -448,6 +451,11 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
           const id = await call<string>("devis_objet_inserer", { _devis_id: devisId, _parent_id: parent, _source_ligne_id: srcId });
           if (id) { setSelected(id); setBiblio(false); }
         }} />
+      {signOpp && (
+        <SignerOpportuniteDialog open={!!signOpp} onOpenChange={(o) => { if (!o) setSignOpp(null); }}
+          affaireId={signOpp.id} oldCode={signOpp.code} clientLabel={signOpp.client} typologieFuture={signOpp.typologie}
+          onSigned={() => { void signer(false); }} />
+      )}
     </div>
   );
 }
