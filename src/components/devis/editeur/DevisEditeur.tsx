@@ -116,8 +116,8 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
     if (ok !== null) toast.success(`Statut : ${STATUT_LABEL[statut as keyof typeof STATUT_LABEL]}`);
   };
 
-  const signer = async () => {
-    if (!window.confirm("Le client a signé ce devis ? Les objets de fabrication et leurs heures par métier vont être créés.")) return;
+  const signer = async (demander = true) => {
+    if (demander && !window.confirm("Le client a signé ce devis ? Les objets de fabrication et leurs heures par métier vont être créés.")) return;
     const res = await call<{ deja_fait: boolean; objets: number; prefixe: string | null; photos?: { objet_id: string; affaire_id: string; storage_path: string; legende: string | null; mime: string | null }[] }>(
       "devis_signer_vers_fabrication", { _devis_id: devisId });
     if (!res) return;
@@ -134,6 +134,27 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
       if (!ins.error) copiees++;
     }
     toast.success(`${res.objets} objet(s) de fabrication créé(s)${res.prefixe ? ` (références préfixées ${res.prefixe})` : ""}${copiees ? `, ${copiees} photo(s) copiée(s)` : ""}.`);
+  };
+
+  /** « Client signé » : version signée → signature de l'opportunité (parcours existant) → fabrication. */
+  const clientSigne = async () => {
+    if (!d.devis.affaire_id) return;
+    if (!window.confirm(`Le client a signé le devis ${d.devis.numero} ?\n\n1. Cette version devient la version signée (les autres versions ouvertes sont refusées).\n2. L'opportunité est signée (code affaire à saisir si besoin).\n3. La fabrication est créée.`)) return;
+    const { data: a, error } = await supabase.from("affaires").select("id, phase, statut_opportunite, numero, code_opportunite, typologie_future, clients(nom)").eq("id", d.devis.affaire_id).single();
+    if (error || !a) return toast.error("Opportunité introuvable", { description: error?.message });
+    if (a.phase === "opportunite" && a.statut_opportunite !== "gagne") {
+      const up = await supabase.from("affaires").update({ statut_opportunite: "gagne" }).eq("id", a.id);
+      if (up.error) return toast.error("Passage en « Gagné » impossible", { description: up.error.message });
+    }
+    if (st !== "signe") {
+      const ok = await call("devis_marquer_signe", { _devis_id: devisId });
+      if (ok === null) return;
+    }
+    if (a.phase === "opportunite") {
+      setSignOpp({ id: a.id, code: a.code_opportunite ?? a.numero ?? "", client: (a.clients as { nom: string } | null)?.nom ?? null, typologie: (a.typologie_future ?? null) as TypologieFuture | null });
+      return;
+    }
+    await signer(false);
   };
 
   const nouvelleVersion = async () => {
@@ -302,6 +323,9 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
                 <Button onClick={() => { setEnvoiDate(new Date().toISOString().slice(0, 10)); setEnvoiDlg(true); }}>Marquer envoyé au client</Button>
               )}
               {st === "transfere" && d.devis.date_envoi && <p className="text-xs text-muted-foreground">Envoyé le {new Date(d.devis.date_envoi).toLocaleDateString("fr-FR")}</p>}
+              {["valide", "transfere"].includes(st) && d.droits.valider && !d.devis.est_modele && d.devis.affaire_id && !d.devis.signe_vers_fabrication_le && (
+                <Button onClick={() => void clientSigne()}><PenLine className="mr-1 h-4 w-4" />Client signé</Button>
+              )}
               {["valide", "transfere", "signe"].includes(st) && d.droits.valider && !d.devis.est_modele && !d.devis.signe_vers_fabrication_le && (
                 <Button variant={st === "signe" ? "default" : "outline"} onClick={() => void signer()}>Devis signé → créer la fabrication</Button>
               )}
