@@ -463,6 +463,13 @@
       "when": 1793621856744,
       "tag": "0065_devis_11_recherche_prefiltre",
       "breakpoints": true
+    },
+    {
+      "idx": 66,
+      "version": "7",
+      "when": 1793621916399,
+      "tag": "0066_devis_12_recherche_prefiltre_termes_courts",
+      "breakpoints": true
     }
   ]
 }
