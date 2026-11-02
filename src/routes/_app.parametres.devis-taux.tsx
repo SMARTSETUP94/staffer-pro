@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { DevisSupprimesCard } from "@/components/devis/DevisSupprimesCard";
 
 export const Route = createFileRoute("/_app/parametres/devis-taux")({
   beforeLoad: () => requireCapability("devis.parametres"),
@@ -144,6 +145,7 @@ function DevisTauxPage() {
           </Table>
         </CardContent>
       </Card>
+      <DevisSupprimesCard />
     </div>
   );
 }
