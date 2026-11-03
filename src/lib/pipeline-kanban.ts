@@ -62,6 +62,6 @@ export function colonneRepliee(statut: string, nb: number, choix: Record<string,
 }
 
 /** Brouillon Claude à relire : dernier devis créé par Claude, brouillon ou à valider, jamais repris par un humain. */
-export function estBrouillonClaude(d: { cree_par_mcp: boolean; statut_redaction: string; modifie_par_humain_le: string | null } | null | undefined) {
+export function estBrouillonClaude(d: { cree_par_mcp: boolean; statut_redaction: string | null; modifie_par_humain_le: string | null } | null | undefined) {
   return !!d && d.cree_par_mcp && (d.statut_redaction === "brouillon" || d.statut_redaction === "a_valider") && !d.modifie_par_humain_le;
 }
