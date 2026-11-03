@@ -153,6 +153,12 @@ export function ObjetPanel({ data, ligne, montants, calc, readOnly, call, patch,
   }
 
   const avecChiffrage = ligne.type !== "zone";
+  // Chapitres Suivi / Pose / Dépose (et leurs lignes) : pas de dimensions, finition ni photos.
+  const dansChapitre = (() => {
+    let cur: Ligne | undefined = ligne;
+    while (cur) { if (cur.type.startsWith("chapitre")) return true; cur = data.lignes.find((l) => l.id === cur!.parent_id); }
+    return false;
+  })();
 
   return (
     <div className="space-y-5">
@@ -175,7 +181,7 @@ export function ObjetPanel({ data, ligne, montants, calc, readOnly, call, patch,
         </label>
       )}
       <Field multiline value={ligne.descriptif_client} disabled={readOnly} label="Descriptif client" placeholder="Texte visible par le client" onValue={(v) => setLigne("descriptif_client", v)} />
-      {ligne.type === "objet" && (
+      {ligne.type === "objet" && !dansChapitre && (
         <div className="grid grid-cols-4 gap-2">
           <Field numeric value={ligne.longueur_mm} disabled={readOnly} label="Longueur (mm)" important placeholder="—" onValue={(v) => setLigne("longueur_mm", v, true)} />
           <Field numeric value={ligne.largeur_mm} disabled={readOnly} label="Largeur (mm)" important placeholder="—" onValue={(v) => setLigne("largeur_mm", v, true)} />
@@ -185,7 +191,7 @@ export function ObjetPanel({ data, ligne, montants, calc, readOnly, call, patch,
       )}
 
       {/* Photos */}
-      <section className="space-y-2">
+      {!dansChapitre && <section className="space-y-2">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-semibold">Photos</h3>
           {!readOnly && (
@@ -211,7 +217,7 @@ export function ObjetPanel({ data, ligne, montants, calc, readOnly, call, patch,
           ))}
           {photos.length === 0 && <p className="text-xs text-muted-foreground">Aucune photo.</p>}
         </div>
-      </section>
+      </section>}
 
       {avecChiffrage && (
         <>
@@ -232,7 +238,7 @@ export function ObjetPanel({ data, ligne, montants, calc, readOnly, call, patch,
                   const tauxAffiche = auMontant ? (Number(h.heures) > 0 ? Number(h.montant_force) / Number(h.heures) : null) : null;
                   return (
                     <tr key={h.id}>
-                      <td><select disabled={readOnly} className="h-8 w-full rounded border bg-background px-1" value={h.poste_id}
+                      <td className="min-w-[11rem]"><select disabled={readOnly} className="h-8 w-full min-w-[11rem] rounded border bg-background px-1" title={posteList.find((p) => p.poste_id === h.poste_id)?.libelle} value={h.poste_id}
                         onChange={(e) => void call("devis_heure_enregistrer", { _ligne_id: ligne.id, _h: { id: h.id, poste_id: e.target.value, niveau: "" } })}>
                         {posteList.map((p) => <option key={p.poste_id} value={p.poste_id}>{p.libelle}</option>)}
                       </select></td>

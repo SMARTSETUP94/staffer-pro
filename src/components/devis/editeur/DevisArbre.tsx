@@ -77,7 +77,7 @@ export function DevisArbre({ lignes, montants, racines, selected, readOnly, acti
           onDrop={(e) => { e.preventDefault(); if (over) drop(l, over.pos); setOver(null); setDrag(null); }}
           onClick={() => actions.select(l.id)}
           className={cn(
-            "group flex cursor-pointer items-center gap-1 rounded px-1 py-1 text-sm",
+            "group flex cursor-pointer items-start gap-1 rounded px-1 py-1 text-sm [&>svg]:mt-0.5 [&>button]:mt-0.5",
             selected === l.id ? "bg-primary/15 font-semibold text-foreground ring-1 ring-inset ring-primary/50" : "hover:bg-muted",
             over?.id === l.id && over.pos === "before" && "border-t-2 border-primary",
             over?.id === l.id && over.pos === "inside" && "ring-1 ring-primary",
@@ -93,10 +93,10 @@ export function DevisArbre({ lignes, montants, racines, selected, readOnly, acti
           {l.type === "commentaire" ? (
             <span className="flex min-w-0 flex-1 items-center gap-1 italic text-muted-foreground">
               <MessageSquare className="h-3.5 w-3.5 shrink-0" />{l.interne && <Lock className="h-3 w-3 shrink-0" />}
-              <span className="truncate">{l.texte || "Commentaire"}</span>
+              <span className="line-clamp-2 break-words" title={l.texte || "Commentaire"}>{l.texte || "Commentaire"}</span>
             </span>
           ) : (
-            <span className="min-w-0 flex-1 truncate">
+            <span className="line-clamp-2 min-w-0 flex-1 break-words leading-snug" title={`${depth === 0 ? TYPE_LABEL[l.type] + " · " : ""}${l.libelle || "(sans titre)"}${l.type === "objet" && Number(l.quantite) !== 1 ? ` ×${Number(l.quantite)}` : ""}`}>
               {depth === 0 && <span className="mr-1 text-xs uppercase text-muted-foreground">{TYPE_LABEL[l.type]}</span>}
               {l.libelle || "(sans titre)"}{l.type === "objet" && Number(l.quantite) !== 1 && <span className="text-muted-foreground"> ×{Number(l.quantite)}</span>}
             </span>

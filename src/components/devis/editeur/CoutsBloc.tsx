@@ -35,8 +35,8 @@ export function CoutsBloc({ dec, net, manquants, compact, lienLibre }: { dec: De
         <span className={`text-right tabular-nums ${marge < 0 ? "text-destructive" : ""}`}>{eur(marge)}{pct != null ? ` · ${pct.toLocaleString("fr-FR")} %` : ""}</span>
       </div>
       {alerte && (
-        <p className="flex items-start gap-1 text-xs text-warning">
-          <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0" />
+        <p className="flex items-start gap-1 text-xs text-foreground">
+          <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0 text-warning" />
           <span>Marge incomplète : coûts manquants sur{" "}
             {(manquants ?? []).map((m, i) => (
               <Fragment key={`${m.type}-${m.libelle}`}>
