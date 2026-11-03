@@ -85,24 +85,16 @@ export function KanbanColonne({ statut, items, chargesById, onSign, onDelete, dr
           <button
             type="button"
             onClick={onToggle}
-            className="min-w-0 truncate whitespace-nowrap text-left text-sm font-semibold text-foreground hover:underline"
-            title={statut === "presque_gagne" ? `${PRESQUE_GAGNE_DEFINITION} — cliquer pour replier` : "Cliquer pour replier la colonne"}
+            className="min-w-0 truncate whitespace-nowrap text-left text-sm font-semibold tabular-nums text-foreground hover:underline"
+            title={[statut === "presque_gagne" ? PRESQUE_GAGNE_DEFINITION : "", tot.estime > 0 ? `${kEur(tot.chiffre)} chiffrés · ${kEur(tot.estime)} estimés` : "", "Cliquer pour replier la colonne"].filter(Boolean).join(" — ")}
           >
-            {label} <span className="tabular-nums">· {items.length}</span>
+            {label} · {items.length}{parAffaire.size > 0 && tot.chiffre + tot.estime > 0 && <span className="font-normal"> · {kEur(tot.chiffre + tot.estime)}</span>}
           </button>
           {enRetard > 0 && (
-            <span className="ml-auto shrink-0 whitespace-nowrap rounded-full bg-destructive/10 px-2 py-0.5 text-[10px] font-semibold text-destructive">
-              {enRetard} en retard
+            <span className="ml-auto shrink-0 whitespace-nowrap rounded-full bg-destructive/10 px-1.5 text-[10px] font-semibold leading-4 text-destructive" title={`${enRetard} en retard`} aria-label={`${enRetard} en retard`}>
+              {enRetard}
             </span>
           )}
-        </div>
-        <div className="mt-0.5 h-4 truncate whitespace-nowrap text-xs tabular-nums text-foreground">
-          {parAffaire.size > 0 && (tot.chiffre > 0 || tot.estime > 0) ? (
-            <>
-              {kEur(tot.chiffre + tot.estime)}
-              {tot.estime > 0 && <span className="text-muted-foreground"> · dont {kEur(tot.estime)} est.</span>}
-            </>
-          ) : null}
         </div>
       </div>
 
