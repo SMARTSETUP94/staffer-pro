@@ -276,8 +276,8 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
                 },
               }} />
             {d.lignes.length === 0 && <p className="text-sm text-muted-foreground">Commencez par ajouter une zone.</p>}
-            {!readOnly && d.corbeille.length > 0 && (
-              <Button size="sm" variant="ghost" onClick={() => setCorbeille(true)}><Trash2 className="mr-1 h-3.5 w-3.5" />Corbeille ({d.corbeille.length})</Button>
+            {!readOnly && d.corbeille.length + (d.corbeille_elements?.length ?? 0) > 0 && (
+              <Button size="sm" variant="ghost" onClick={() => setCorbeille(true)}><Trash2 className="mr-1 h-3.5 w-3.5" />Corbeille ({d.corbeille.length + (d.corbeille_elements?.length ?? 0)})</Button>
             )}
           </CardContent>
         </Card>
@@ -413,7 +413,13 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
                 <Button size="sm" variant="outline" onClick={() => void call("devis_corbeille_restaurer", { _devis_id: devisId, _groupe: c.groupe })}>Restaurer</Button>
               </div>
             ))}
-            {d.corbeille.length === 0 && <p className="text-sm text-muted-foreground">Vide.</p>}
+            {(d.corbeille_elements ?? []).map((c) => (
+              <div key={c.id} className="flex items-center justify-between rounded border p-2 text-sm">
+                <div><p>{c.libelle}</p><p className="text-xs text-muted-foreground">{{ heure: "Heures", materiau: "Matériau", libre: "Ligne libre" }[c.kind]} · {new Date(c.supprime_le).toLocaleString("fr-FR")}</p></div>
+                <Button size="sm" variant="outline" onClick={() => void call("devis_element_supprimer", { _kind: c.kind, _id: c.id, _restaurer: true })}>Restaurer</Button>
+              </div>
+            ))}
+            {d.corbeille.length + (d.corbeille_elements?.length ?? 0) === 0 && <p className="text-sm text-muted-foreground">Vide.</p>}
           </div>
         </SheetContent>
       </Sheet>
