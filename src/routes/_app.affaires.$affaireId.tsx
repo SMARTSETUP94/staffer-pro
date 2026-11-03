@@ -76,6 +76,9 @@ function AffaireDetailLayout() {
   const [createClientOpen, setCreateClientOpen] = useState(false);
   const [changeClientOpen, setChangeClientOpen] = useState(false);
   const [editNumeroOpen, setEditNumeroOpen] = useState(false);
+  // Éditeur de devis ouvert : l'en-tête d'affaire (équipe, compteurs, onglets) est replié par défaut.
+  const modeEditeur = /\/devis-staffing\/[^/]+\/?$/.test(path);
+  const [enteteOuvert, setEnteteOuvert] = useState(false);
 
 
 
@@ -213,8 +216,19 @@ function AffaireDetailLayout() {
     breadcrumbSteps.push({ label: currentTab.label });
   }
 
+  const enteteVisible = !modeEditeur || enteteOuvert;
   return (
-    <div className="mx-auto max-w-7xl p-6">
+    <div className={modeEditeur ? "mx-auto max-w-[1800px] px-4 py-3" : "mx-auto max-w-7xl p-6"}>
+      {modeEditeur && (
+        <div className="mb-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+          <Link to="/affaires/$affaireId" params={{ affaireId: affaire.id }} className="font-semibold text-foreground hover:underline">{affaire.numero} — {affaire.nom}</Link>
+          {affaire.client && <span>· {affaire.client}</span>}
+          <button type="button" className="ml-auto font-medium text-primary hover:underline" aria-expanded={enteteOuvert} onClick={() => setEnteteOuvert((o) => !o)}>
+            {enteteOuvert ? "Replier l'en-tête de l'affaire" : "Afficher l'en-tête de l'affaire (équipe, compteurs, onglets)"}
+          </button>
+        </div>
+      )}
+      {enteteVisible && <>
       <PageBreadcrumbs steps={breadcrumbSteps} className="mb-3" />
       <Link to="/affaires" className="inline-flex items-center text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground sm:hidden">
         <ArrowLeft className="mr-1 h-3 w-3" /> Affaires
@@ -348,8 +362,9 @@ function AffaireDetailLayout() {
           </Link>
         ))}
       </nav>
+      </>}
 
-      <div className="py-6">
+      <div className={modeEditeur ? "py-2" : "py-6"}>
         <Outlet />
       </div>
 
