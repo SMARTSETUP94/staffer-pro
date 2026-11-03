@@ -65,6 +65,13 @@ function DevisTauxPage() {
     queryKey: ["devis-postes-be"],
     queryFn: async () => new Map(((await supabase.from("devis_postes_ref").select("id,compte_be")).data ?? []).map((p) => [p.id, p.compte_be] as const)),
   });
+  // Lien direct depuis l'alerte « marge incomplète » d'un devis : aller à la ligne du poste une fois la grille chargée.
+  const tauxCharges = !!taux.data && !!params.data;
+  useEffect(() => {
+    if (!tauxCharges || !window.location.hash) return;
+    const el = document.getElementById(decodeURIComponent(window.location.hash.slice(1)));
+    if (el) { el.scrollIntoView({ block: "center" }); const h = window.location.hash; history.replaceState(null, "", " "); window.location.hash = h; }
+  }, [tauxCharges]);
   const refresh = () => {
     for (const k of ["devis-taux", "devis-parametres", "devis-taux-hist", "devis-postes-be"]) qc.invalidateQueries({ queryKey: [k] });
   };
