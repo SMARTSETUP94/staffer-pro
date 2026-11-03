@@ -1910,7 +1910,7 @@
       {
         "name": "devis_remplir",
         "title": "Remplir un brouillon de devis",
-        "description": "Ajouter en une fois, tout ou rien, zones, objets, commentaires, chapitres, options, heures (poste + niveau), matériaux (catalogue ou libellé + prix) et lignes libres ; 300 lignes maximum par appel. Renvoie les totaux recalculés. Brouillon uniquement. Premier appel : aperçu avant / après sans écriture ; après accord, renvoyer les mêmes arguments avec confirmation_id sous 10 minutes.",
+        "description": "Remplir ou corriger un brouillon en une fois, tout ou rien (300 éléments maximum par appel) : lignes ajoute zones, objets, commentaires, chapitres, options, heures (poste + niveau), matériaux et lignes libres ; avec ligne_id, complète une ligne existante (libellé, quantité, dimensions, descriptif appliqués ; une heure de même poste + niveau met à jour la ligne existante au lieu d'en créer une seconde) ; modifications corrige des lignes, heures, matériaux ou lignes libres existants ; suppressions les met à la corbeille (restaurable par un humain). En autonomie, modifier ou supprimer n'est permis que sur un brouillon créé par Claude et non repris. Renvoie les totaux recalculés et marge_fiable. Premier appel : aperçu avant / après sans écriture ; après accord, renvoyer les mêmes arguments avec confirmation_id sous 10 minutes.",
         "annotations": {
           "readOnlyHint": false,
           "destructiveHint": false,
@@ -2000,6 +2000,10 @@
                     "items": {
                       "type": "object",
                       "properties": {
+                        "id": {
+                          "$ref": "#/properties/devis_id",
+                          "description": "Ligne d'heures existante de cette ligne à mettre à jour (sinon : même poste + niveau déjà présent = mise à jour, pas de doublon)."
+                        },
                         "poste": {
                           "type": "string",
                           "minLength": 1,
@@ -2030,7 +2034,6 @@
                         }
                       },
                       "required": [
-                        "poste",
                         "heures"
                       ],
                       "additionalProperties": false
@@ -2142,8 +2145,303 @@
                 },
                 "additionalProperties": false
               },
-              "minItems": 1,
-              "maxItems": 300
+              "maxItems": 300,
+              "description": "Ajouts ; avec ligne_id, complète la ligne existante (libellé, quantité, dimensions, descriptif appliqués)."
+            },
+            "modifications": {
+              "type": "array",
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "cible": {
+                        "type": "string",
+                        "const": "ligne"
+                      },
+                      "id": {
+                        "$ref": "#/properties/devis_id"
+                      },
+                      "champs": {
+                        "type": "object",
+                        "properties": {
+                          "libelle": {
+                            "type": "string",
+                            "maxLength": 500
+                          },
+                          "quantite": {
+                            "type": "number",
+                            "minimum": 0
+                          },
+                          "descriptif_client": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "maxLength": 5000
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "longueur_mm": {
+                            "anyOf": [
+                              {
+                                "$ref": "#/properties/lignes/items/properties/longueur_mm"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "largeur_mm": {
+                            "anyOf": [
+                              {
+                                "$ref": "#/properties/lignes/items/properties/longueur_mm"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "hauteur_mm": {
+                            "anyOf": [
+                              {
+                                "$ref": "#/properties/lignes/items/properties/longueur_mm"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "finition": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "maxLength": 255
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "texte": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "maxLength": 5000
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "interne": {
+                            "type": "boolean"
+                          },
+                          "incluse": {
+                            "type": "boolean",
+                            "description": "Option incluse dans le total."
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": [
+                      "cible",
+                      "id",
+                      "champs"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "cible": {
+                        "type": "string",
+                        "const": "heure"
+                      },
+                      "id": {
+                        "$ref": "#/properties/devis_id"
+                      },
+                      "champs": {
+                        "type": "object",
+                        "properties": {
+                          "heures": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 100000
+                          },
+                          "niveau": {
+                            "type": "string",
+                            "maxLength": 40
+                          },
+                          "taux_vente": {
+                            "type": "number",
+                            "minimum": 0
+                          },
+                          "montant_force": {
+                            "anyOf": [
+                              {
+                                "$ref": "#/properties/lignes/items/properties/longueur_mm"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "par_unite": {
+                            "type": "boolean"
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": [
+                      "cible",
+                      "id",
+                      "champs"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "cible": {
+                        "type": "string",
+                        "const": "materiau"
+                      },
+                      "id": {
+                        "$ref": "#/properties/devis_id"
+                      },
+                      "champs": {
+                        "type": "object",
+                        "properties": {
+                          "quantite": {
+                            "type": "number",
+                            "minimum": 0
+                          },
+                          "coefficient": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 20
+                          },
+                          "materiau_id": {
+                            "$ref": "#/properties/devis_id",
+                            "description": "Autre référence catalogue : l'ancienne ligne part à la corbeille."
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": [
+                      "cible",
+                      "id",
+                      "champs"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "cible": {
+                        "type": "string",
+                        "const": "libre"
+                      },
+                      "id": {
+                        "$ref": "#/properties/devis_id"
+                      },
+                      "champs": {
+                        "type": "object",
+                        "properties": {
+                          "quantite": {
+                            "$ref": "#/properties/lignes/items/properties/longueur_mm"
+                          },
+                          "prix_forfait": {
+                            "anyOf": [
+                              {
+                                "$ref": "#/properties/lignes/items/properties/longueur_mm"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "prix_achat": {
+                            "anyOf": [
+                              {
+                                "$ref": "#/properties/lignes/items/properties/longueur_mm"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "designation": {
+                            "type": "string",
+                            "maxLength": 255
+                          },
+                          "coefficient": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 20
+                          },
+                          "unite": {
+                            "type": "string",
+                            "maxLength": 40
+                          },
+                          "heures_info": {
+                            "anyOf": [
+                              {
+                                "$ref": "#/properties/lignes/items/properties/longueur_mm"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": [
+                      "cible",
+                      "id",
+                      "champs"
+                    ],
+                    "additionalProperties": false
+                  }
+                ]
+              },
+              "maxItems": 300,
+              "description": "Modifier des éléments existants du brouillon (id lus avec devis_lire)."
+            },
+            "suppressions": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "cible": {
+                    "type": "string",
+                    "enum": [
+                      "ligne",
+                      "heure",
+                      "materiau",
+                      "libre"
+                    ]
+                  },
+                  "id": {
+                    "$ref": "#/properties/devis_id"
+                  }
+                },
+                "required": [
+                  "cible",
+                  "id"
+                ],
+                "additionalProperties": false
+              },
+              "maxItems": 300,
+              "description": "Suppression logique (corbeille restaurable par un humain). Le devis entier ne se supprime pas."
             },
             "cle_externe": {
               "type": "string",
@@ -2166,7 +2464,6 @@
           },
           "required": [
             "devis_id",
-            "lignes",
             "mode"
           ],
           "additionalProperties": false,
@@ -2351,7 +2648,7 @@
       {
         "name": "devis_ajouter_photo",
         "title": "Ajouter une image à un objet",
-        "description": "Joindre une image ou un plan (JPG, PNG ou PDF, 10 Mo maximum, en base64) à un objet du brouillon ; la source est notée dans la légende. Brouillon uniquement. Premier appel : aperçu avant / après sans écriture ; après accord, renvoyer les mêmes arguments avec confirmation_id sous 10 minutes.",
+        "description": "Joindre une image ou un plan (JPG, PNG ou PDF, 10 Mo maximum) à un objet du brouillon. Préférer url : lien https de partage OneDrive / SharePoint, staffing.setup.paris ou stockage de l'application, récupéré par le serveur (type réel contrôlé, redirections hors liste refusées). fichier_base64 reste possible pour les petits fichiers. La source est notée dans la légende. Brouillon uniquement. Premier appel : aperçu sans écriture ; après accord, renvoyer les mêmes arguments avec confirmation_id sous 10 minutes.",
         "annotations": {
           "readOnlyHint": false,
           "destructiveHint": false,
@@ -2373,7 +2670,13 @@
             "fichier_base64": {
               "type": "string",
               "minLength": 8,
-              "description": "Contenu JPG, PNG ou PDF en base64, 10 Mo maximum."
+              "description": "Petit fichier uniquement : contenu JPG, PNG ou PDF en base64. Pour une vraie photo, préférer url."
+            },
+            "url": {
+              "type": "string",
+              "format": "uri",
+              "maxLength": 2000,
+              "description": "Lien https récupéré par le serveur : partage OneDrive / SharePoint, staffing.setup.paris ou stockage de l'application. 10 Mo maximum."
             },
             "mime": {
               "type": "string",
@@ -2381,7 +2684,8 @@
                 "image/jpeg",
                 "image/png",
                 "application/pdf"
-              ]
+              ],
+              "description": "Facultatif : détecté d'après le contenu."
             },
             "legende": {
               "type": "string",
@@ -2413,8 +2717,6 @@
           "required": [
             "devis_id",
             "ligne_id",
-            "fichier_base64",
-            "mime",
             "mode"
           ],
           "additionalProperties": false,
