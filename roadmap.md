@@ -117,5 +117,5 @@
 
 ## Pipeline + éditeur devis (3 nov. 2026)
 - [x] Lisibilité Kanban (8 points)
-- [ ] A. Suppléments 6XXX dans le pipeline (règle, tuile, colonne, badge, cas 6064)
-- [ ] B. Éditeur de devis : bandeau compact + plein écran, note Claude repliable/cases, arbre redimensionnable, chapitres simplifiés, heures au devis, liens coûts manquants, liste de contrôle, champs secondaires repliés
+- [x] A. Suppléments 6XXX dans le pipeline (règle, tuile, colonne, badge, cas 6064)
+- [x] B. Éditeur de devis : bandeau compact + plein écran, note Claude repliable/cases, arbre redimensionnable, chapitres simplifiés, heures au devis, liens coûts manquants, liste de contrôle, champs secondaires repliés
