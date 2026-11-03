@@ -21,11 +21,12 @@ const uuid = z.string().uuid();
 const num = z.number().finite();
 const mode = z.enum(["autonomie", "conversation"]).describe("autonomie = tâche planifiée ou initiative de Claude : refusé si un humain a repris le brouillon. conversation = l'utilisateur demande explicitement dans la conversation de compléter ce devis.");
 const heure = z.object({
-  poste: z.string().min(1).max(40).describe("Code poste : suivi_projet, plans_bem, construction, metallerie, peinture, cnc, laser, impression_uv, impressions_souples, tapisserie, montage, logistique."),
+  id: uuid.optional().describe("Ligne d'heures existante de cette ligne à mettre à jour (sinon : même poste + niveau déjà présent = mise à jour, pas de doublon)."),
+  poste: z.string().min(1).max(40).optional().describe("Code poste : suivi_projet, plans_bem, construction, metallerie, peinture, cnc, laser, impression_uv, impressions_souples, tapisserie, montage, logistique."),
   niveau: z.string().max(40).optional().describe("standard ; pour montage : chef ou monteur."),
   heures: num.min(0).max(100000), taux_vente: num.min(0).optional().describe("Omettre pour le taux de la grille."),
   montant_force: num.optional().describe("Montant exact de la ligne (taux affiché dérivé)."), par_unite: z.boolean().optional(),
-}).strict();
+}).strict().refine(h => h.id || h.poste, "poste obligatoire (ou id d'une ligne d'heures existante)");
 const materiau = z.object({
   materiau_id: uuid.optional().describe("Id catalogue (materiaux_rechercher). Sinon designation + prix_achat."),
   designation: z.string().max(255).optional(), fournisseur: z.string().max(255).optional(), ref: z.string().max(120).optional(), unite: z.string().max(40).optional(),
@@ -47,7 +48,24 @@ const element = z.object({
   texte: z.string().max(5000).optional(), interne: z.boolean().optional(), incluse: z.boolean().optional().describe("Option : incluse dans le total (défaut non)."),
   heures: z.array(heure).max(LOT_MAX).optional(), materiaux: z.array(materiau).max(LOT_MAX).optional(), libres: z.array(libre).max(LOT_MAX).optional(),
 }).strict().refine(e => e.type || e.ligne_id, "type ou ligne_id obligatoire");
-export const tailleLot = (lignes: z.infer<typeof element>[]) => lignes.reduce((n, e) => n + 1 + (e.heures?.length ?? 0) + (e.materiaux?.length ?? 0) + (e.libres?.length ?? 0), 0);
+export const tailleLot = (lignes: z.infer<typeof element>[], ops = 0) => ops + lignes.reduce((n, e) => n + 1 + (e.heures?.length ?? 0) + (e.materiaux?.length ?? 0) + (e.libres?.length ?? 0), 0);
+
+const champsLigne = z.object({
+  libelle: z.string().max(500).optional(), quantite: num.min(0).optional(), descriptif_client: z.string().max(5000).nullable().optional(),
+  longueur_mm: num.nullable().optional(), largeur_mm: num.nullable().optional(), hauteur_mm: num.nullable().optional(), finition: z.string().max(255).nullable().optional(),
+  texte: z.string().max(5000).nullable().optional(), interne: z.boolean().optional(), incluse: z.boolean().optional().describe("Option incluse dans le total."),
+}).strict();
+const champsHeure = z.object({ heures: num.min(0).max(100000).optional(), niveau: z.string().max(40).optional(), taux_vente: num.min(0).optional(), montant_force: num.nullable().optional(), par_unite: z.boolean().optional() }).strict();
+const champsMateriau = z.object({ quantite: num.min(0).optional(), coefficient: num.min(0).max(20).optional(), materiau_id: uuid.optional().describe("Autre référence catalogue : l'ancienne ligne part à la corbeille.") }).strict();
+const champsLibre = z.object({ quantite: num.optional(), prix_forfait: num.nullable().optional(), prix_achat: num.nullable().optional(), designation: z.string().max(255).optional(), coefficient: num.min(0).max(20).optional(), unite: z.string().max(40).optional(), heures_info: num.nullable().optional() }).strict();
+const nonVide = (c: object) => Object.keys(c).length > 0;
+const modification = z.discriminatedUnion("cible", [
+  z.object({ cible: z.literal("ligne"), id: uuid, champs: champsLigne.refine(nonVide, "Modification vide") }).strict(),
+  z.object({ cible: z.literal("heure"), id: uuid, champs: champsHeure.refine(nonVide, "Modification vide") }).strict(),
+  z.object({ cible: z.literal("materiau"), id: uuid, champs: champsMateriau.refine(nonVide, "Modification vide") }).strict(),
+  z.object({ cible: z.literal("libre"), id: uuid, champs: champsLibre.refine(nonVide, "Modification vide") }).strict(),
+]);
+const suppression = z.object({ cible: z.enum(["ligne", "heure", "materiau", "libre"]), id: uuid }).strict();
 
 export const devisSchemas = {
   devis_lister: { affaire_id: uuid.optional(), recherche: z.string().max(120).optional(), statuts: z.array(z.enum(["brouillon", "a_valider", "valide", "transfere", "signe", "refuse"])).max(6).optional(), limit: z.number().int().min(1).max(100).default(25), offset: z.number().int().min(0).default(0) },
@@ -56,14 +74,20 @@ export const devisSchemas = {
   materiaux_rechercher: { q: z.string().min(1).max(200), familles: z.array(z.string().max(80)).max(20).optional(), fournisseurs: z.array(uuid).max(20).optional(), epaisseur: num.min(0).optional(), recent_seulement: z.boolean().default(false), limit: z.number().int().min(1).max(50).default(20) },
   devis_charge_be: { affaire_ids: z.array(uuid).min(1).max(50) },
   devis_creer_brouillon: { affaire_id: uuid, modele_id: z.union([uuid, z.literal("vierge")]).optional().describe("Omettre = modèle par défaut ; « vierge » = sans modèle."), cle_externe: z.string().min(1).max(255).optional(), note: z.string().max(4000).optional().describe("Hypothèses à confirmer, affichées en tête de l'éditeur."), mode, ...confirmationSchema },
-  devis_remplir: { devis_id: uuid, lignes: z.array(element).min(1).max(LOT_MAX).refine(l => tailleLot(l) <= LOT_MAX, `${LOT_MAX} lignes maximum par appel (heures, matériaux et lignes libres comprises) : découper en plusieurs appels`), cle_externe: z.string().min(1).max(255).optional(), mode, ...confirmationSchema },
+  devis_remplir: { devis_id: uuid,
+    lignes: z.array(element).max(LOT_MAX).refine(l => tailleLot(l) <= LOT_MAX, `${LOT_MAX} lignes maximum par appel (heures, matériaux et lignes libres comprises) : découper en plusieurs appels`).optional().describe("Ajouts ; avec ligne_id, complète la ligne existante (libellé, quantité, dimensions, descriptif appliqués)."),
+    modifications: z.array(modification).max(LOT_MAX).optional().describe("Modifier des éléments existants du brouillon (id lus avec devis_lire)."),
+    suppressions: z.array(suppression).max(LOT_MAX).optional().describe("Suppression logique (corbeille restaurable par un humain). Le devis entier ne se supprime pas."),
+    cle_externe: z.string().min(1).max(255).optional(), mode, ...confirmationSchema },
   devis_modifier_entete: { devis_id: uuid, champs: z.object({
     client_id: uuid.nullable().optional(), contact_id: uuid.nullable().optional(), client_final_id: uuid.nullable().optional(), libelle: z.string().max(500).optional(),
     date_devis: dateSchema.optional(), date_validite: dateSchema.nullable().optional(), validite_jours: z.number().int().min(1).max(365).optional(),
     date_visite_technique: dateSchema.nullable().optional(), date_montage: dateSchema.nullable().optional(), date_evenement_debut: dateSchema.nullable().optional(), date_evenement_fin: dateSchema.nullable().optional(), date_demontage: dateSchema.nullable().optional(),
     remise: z.object({ mode: z.enum(["aucune", "montant", "pct", "net_cible"]), valeur: num.min(0).optional() }).strict().optional(),
   }).strict().refine(p => Object.keys(p).length > 0, "Modification vide"), mode, ...confirmationSchema },
-  devis_ajouter_photo: { devis_id: uuid, ligne_id: uuid.describe("Objet du devis."), fichier_base64: z.string().min(8).describe("Contenu JPG, PNG ou PDF en base64, 10 Mo maximum."), mime: z.enum(["image/jpeg", "image/png", "application/pdf"]), legende: z.string().max(300).optional(), source: z.string().max(200).optional().describe("Origine : pièce jointe du mail de…, plan, référence…"), visible_client: z.boolean().default(false), mode, ...confirmationSchema },
+  devis_ajouter_photo: { devis_id: uuid, ligne_id: uuid.describe("Objet du devis."), fichier_base64: z.string().min(8).optional().describe("Petit fichier uniquement : contenu JPG, PNG ou PDF en base64. Pour une vraie photo, préférer url."),
+    url: z.string().url().max(2000).optional().describe("Lien https récupéré par le serveur : partage OneDrive / SharePoint, staffing.setup.paris ou stockage de l'application. 10 Mo maximum."),
+    mime: z.enum(["image/jpeg", "image/png", "application/pdf"]).optional().describe("Facultatif : détecté d'après le contenu."), legende: z.string().max(300).optional(), source: z.string().max(200).optional().describe("Origine : pièce jointe du mail de…, plan, référence…"), visible_client: z.boolean().default(false), mode, ...confirmationSchema },
   devis_nouvelle_version: { devis_id: uuid.describe("Devis envoyé / validé à reprendre ; l'original n'est jamais modifié."), note: z.string().max(4000).optional(), mode, ...confirmationSchema },
   devis_soumettre: { devis_id: uuid, note: z.string().max(4000).describe("Ce qui reste à confirmer par le chargé d'affaires."), mode, ...confirmationSchema },
 } as const;
@@ -89,7 +113,16 @@ const TOTAUX = ["total_ht", "options_ht", "remise", "net_ht", "tva_pct", "tva", 
 export function resumeTotaux(calcul: unknown) {
   if (!calcul || typeof calcul !== "object") return null;
   const c = calcul as Record<string, unknown>;
-  return Object.fromEntries(TOTAUX.filter(k => k in c).map(k => [k, c[k] as never]));
+  return { ...Object.fromEntries(TOTAUX.filter(k => k in c).map(k => [k, c[k] as never])), ...margeFiable(c) };
+}
+/** Marge fiable seulement si aucun coût de revient ne manque (aucun coût n'est inventé). */
+export function margeFiable(c: Record<string, unknown>) {
+  if (!Array.isArray(c.couts_manquants)) return {};
+  const m = c.couts_manquants as { libelle?: string; heures?: number | null }[];
+  return m.length === 0 ? { marge_fiable: true } : {
+    marge_fiable: false,
+    alerte_marge: "marge incomplète : coûts manquants sur " + m.map(x => x.heures != null ? `${String(x.libelle ?? "?").toLowerCase()} (${x.heures} h)` : String(x.libelle ?? "?").toLowerCase()).join(", "),
+  };
 }
 
 export async function readDevis(context: McpAppContext, name: DevisReadName, args: Record<string, any>) {
@@ -121,7 +154,9 @@ export async function readDevis(context: McpAppContext, name: DevisReadName, arg
       const r = await context.db.rpc("devis_lire", { _devis_id: args.devis_id });
       if (r.error || !r.data) throw new ToolError("Devis introuvable ou accès refusé");
       const meta = await context.db.from("devis").select("cree_par_mcp,modifie_par_humain_le,note_mcp,cle_externe").eq("id", args.devis_id).maybeSingle();
-      data = { rows: [1], devis: r.data as never, redaction_claude: (meta.data ?? null) as never };
+      const lu = r.data as Record<string, any>;
+      if (lu.calcul && typeof lu.calcul === "object") lu.calcul = { ...lu.calcul, ...margeFiable(lu.calcul) };
+      data = { rows: [1], devis: lu as never, redaction_claude: (meta.data ?? null) as never };
     } else if (name === "devis_referentiel") {
       const [taux, params, modeles, defaut] = await Promise.all([
         context.db.rpc("devis_taux_lister"),
@@ -154,18 +189,70 @@ export async function readDevis(context: McpAppContext, name: DevisReadName, arg
   return result;
 }
 
+type Mime = keyof typeof PHOTO_MIMES;
+const trop = (max: number) => new ToolError(`Fichier trop volumineux (${max / 1024 / 1024} Mo maximum)`);
+/** Type réel d'après la signature du contenu (JPG, PNG, PDF), sinon null. */
+export function detecterType(bytes: Uint8Array): Mime | null {
+  const sig = (s: number[]) => s.every((b, i) => bytes[i] === b);
+  if (sig([0xff, 0xd8, 0xff])) return "image/jpeg";
+  if (sig([0x89, 0x50, 0x4e, 0x47])) return "image/png";
+  if (sig([0x25, 0x50, 0x44, 0x46])) return "application/pdf";
+  return null;
+}
+function controlerOctets(bytes: Uint8Array<ArrayBuffer>, mime: Mime | undefined, max: number) {
+  if (bytes.length > max) throw trop(max);
+  const reel = detecterType(bytes);
+  if (!reel) throw new ToolError("Type de fichier refusé (JPG, PNG ou PDF uniquement, d'après le contenu)");
+  if (mime && mime !== reel) throw new ToolError("Le contenu ne correspond pas au type annoncé (JPG, PNG ou PDF uniquement)");
+  return { bytes, mime: reel };
+}
 /** Décode et contrôle un fichier : type réel (signature) et taille. */
-export function controlerFichier(base64: string, mime: keyof typeof PHOTO_MIMES, max = PHOTO_MAX_OCTETS) {
+export function controlerFichier(base64: string, mime?: Mime, max = PHOTO_MAX_OCTETS) {
   const clean = base64.replace(/^data:[^;]+;base64,/, "").replace(/\s/g, "");
   if (!/^[A-Za-z0-9+/]+={0,2}$/.test(clean)) throw new ToolError("Contenu base64 invalide");
-  if (Math.floor(clean.length * 3 / 4) > max + 4) throw new ToolError(`Fichier trop volumineux (${max / 1024 / 1024} Mo maximum)`);
+  if (Math.floor(clean.length * 3 / 4) > max + 4) throw trop(max);
   const bin = atob(clean); const bytes = new Uint8Array(new ArrayBuffer(bin.length));
   for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-  if (bytes.length > max) throw new ToolError(`Fichier trop volumineux (${max / 1024 / 1024} Mo maximum)`);
-  const sig = (s: number[]) => s.every((b, i) => bytes[i] === b);
-  const ok = mime === "image/jpeg" ? sig([0xff, 0xd8, 0xff]) : mime === "image/png" ? sig([0x89, 0x50, 0x4e, 0x47]) : sig([0x25, 0x50, 0x44, 0x46]);
-  if (!ok) throw new ToolError("Le contenu ne correspond pas au type annoncé (JPG, PNG ou PDF uniquement)");
-  return bytes;
+  return controlerOctets(bytes, mime, max).bytes;
+}
+
+/** Hôtes d'où le serveur accepte de récupérer une image (redirections comprises). */
+const HOTES_PHOTO = [/\.sharepoint\.com$/, /(^|\.)onedrive\.live\.com$/, /^1drv\.ms$/, /^staffing\.setup\.paris$/, /^znwffztmdgsshuvvzsvq\.supabase\.co$/];
+export function hoteAutorise(u: URL) {
+  if (u.protocol !== "https:" || u.username || u.password || (u.port && u.port !== "443")) return false;
+  const h = u.hostname.toLowerCase();
+  // aucune adresse IP littérale (v4 ou v6) : seules les noms de la liste passent, ce qui exclut les réseaux privés
+  if (/^[\d.]+$/.test(h) || h.includes(":") || h.startsWith("[")) return false;
+  return HOTES_PHOTO.some(r => r.test(h));
+}
+/** Récupère un fichier par URL https côté serveur : hôtes autorisés à chaque redirection, 10 Mo maximum, type réel contrôlé. */
+export async function telechargerFichier(url: string, mime?: Mime, max = PHOTO_MAX_OCTETS, fetcher: typeof fetch = fetch) {
+  let u: URL;
+  try { u = new URL(url); } catch { throw new ToolError("URL invalide"); }
+  if (/\.sharepoint\.com$/i.test(u.hostname) && !u.searchParams.has("download")) u.searchParams.set("download", "1");
+  for (let saut = 0; saut <= 5; saut++) {
+    if (!hoteAutorise(u)) throw new ToolError(`Hôte non autorisé : ${u.hostname} (OneDrive, SharePoint, staffing.setup.paris ou stockage de l'application, en https)`);
+    const r = await fetcher(u.toString(), { redirect: "manual", headers: { accept: "image/jpeg,image/png,application/pdf,*/*;q=0.1" } });
+    if (r.status >= 300 && r.status < 400) {
+      const loc = r.headers.get("location");
+      if (!loc) throw new ToolError("Redirection invalide");
+      u = new URL(loc, u); continue;
+    }
+    if (!r.ok || !r.body) throw new ToolError(`Téléchargement refusé (HTTP ${r.status}) : vérifier que le lien est partagé en lecture`);
+    if (Number(r.headers.get("content-length") ?? 0) > max) throw trop(max);
+    const reader = r.body.getReader(); const parts: Uint8Array[] = []; let n = 0;
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      n += value.length;
+      if (n > max) { await reader.cancel(); throw trop(max); }
+      parts.push(value);
+    }
+    const bytes = new Uint8Array(new ArrayBuffer(n)); let o = 0;
+    for (const p of parts) { bytes.set(p, o); o += p.length; }
+    return { ...controlerOctets(bytes, mime, max), hote: u.hostname };
+  }
+  throw new ToolError("Trop de redirections");
 }
 async function sha256(bytes: Uint8Array<ArrayBuffer>) {
   const h = await crypto.subtle.digest("SHA-256", bytes);
@@ -176,9 +263,17 @@ async function sha256(bytes: Uint8Array<ArrayBuffer>) {
 export async function devisPayload(name: DevisWriteName, args: Record<string, any>): Promise<{ payload: Record<string, unknown>; fichier?: { path: string; bytes: Uint8Array<ArrayBuffer>; mime: string } }> {
   const { confirmation_id: _c, ...a } = args;
   if (name === "devis_ajouter_photo") {
-    const bytes = controlerFichier(String(a.fichier_base64), a.mime);
-    const path = `${a.devis_id}/mcp/${await sha256(bytes)}.${PHOTO_MIMES[a.mime as keyof typeof PHOTO_MIMES]}`;
-    return { payload: { mode: a.mode, devis_id: a.devis_id, ligne_id: a.ligne_id, storage_path: path, mime: a.mime, size_bytes: bytes.length, legende: a.legende ?? null, source: a.source ?? null, visible_client: a.visible_client ?? false }, fichier: { path, bytes, mime: a.mime } };
+    if (!!a.fichier_base64 === !!a.url) throw new ToolError("Fournir soit url (recommandé), soit fichier_base64 (petits fichiers)");
+    let bytes: Uint8Array<ArrayBuffer>, mime: Mime, source = a.source ?? null;
+    if (a.url) { const t = await telechargerFichier(String(a.url), a.mime); bytes = t.bytes; mime = t.mime; source = source ?? `lien ${t.hote}`; }
+    else { bytes = controlerFichier(String(a.fichier_base64), a.mime); mime = detecterType(bytes) as Mime; }
+    const path = `${a.devis_id}/mcp/${await sha256(bytes)}.${PHOTO_MIMES[mime]}`;
+    return { payload: { mode: a.mode, devis_id: a.devis_id, ligne_id: a.ligne_id, storage_path: path, mime, size_bytes: bytes.length, legende: a.legende ?? null, source, visible_client: a.visible_client ?? false }, fichier: { path, bytes, mime } };
+  }
+  if (name === "devis_remplir") {
+    const n = tailleLot(a.lignes ?? [], (a.modifications?.length ?? 0) + (a.suppressions?.length ?? 0));
+    if (n === 0) throw new ToolError("Lot vide : fournir lignes, modifications ou suppressions");
+    if (n > LOT_MAX) throw new ToolError(`${LOT_MAX} lignes maximum par appel (ajouts, modifications et suppressions comprises) : découper en plusieurs appels`);
   }
   return { payload: a };
 }
@@ -186,7 +281,30 @@ export async function devisPayload(name: DevisWriteName, args: Record<string, an
 function apercu(sim: Record<string, any>) {
   const av = sim.compte_avant ?? {}, ap = sim.compte_apres ?? {};
   const ajouts = Object.fromEntries(Object.keys(ap).map(k => [k, Number(ap[k] ?? 0) - Number(av[k] ?? 0)]));
-  return { totaux_avant: resumeTotaux(sim.avant), totaux_apres: resumeTotaux(sim.apres), lignes_ajoutees: ajouts, ecarts_taux: sim.ecarts_taux ?? [], resultat: sim.resultat ?? null };
+  return { totaux_avant: resumeTotaux(sim.avant), totaux_apres: resumeTotaux(sim.apres), variation_nombre: ajouts, ecarts_taux: sim.ecarts_taux ?? [], resultat: sim.resultat ?? null };
+}
+
+const CHAMPS_AVANT: Record<string, string[]> = {
+  ligne: ["type", "libelle", "quantite", "descriptif_client", "longueur_mm", "largeur_mm", "hauteur_mm", "finition", "texte", "interne", "option_incluse"],
+  heure: ["ligne_id", "poste_libelle", "niveau", "heures", "taux_vente", "montant_force", "par_unite"],
+  materiau: ["ligne_id", "designation", "quantite", "coefficient", "prix_vente"],
+  libre: ["ligne_id", "designation", "quantite", "prix_forfait", "prix_achat", "prix_vente"],
+};
+const COLLECTION: Record<string, string> = { ligne: "lignes", heure: "heures", materiau: "materiaux", libre: "libres" };
+/** Avant / après des éléments visés (valeurs lues avec les droits de l'appelant : coûts masqués sans devis.couts). */
+export function elementsVises(lu: Record<string, any> | null, args: Record<string, any>) {
+  const trouve = (cible: string, id: string) => {
+    const row = ((lu?.[COLLECTION[cible]] ?? []) as any[]).find(r => r.id === id);
+    return row ? Object.fromEntries(CHAMPS_AVANT[cible].filter(k => k in row).map(k => [k, row[k]])) : null;
+  };
+  return [
+    ...((args.modifications ?? []) as any[]).map(m => ({ action: "modifier", cible: m.cible, id: m.id, avant: trouve(m.cible, m.id), apres: m.champs })),
+    ...((args.suppressions ?? []) as any[]).map(s => ({ action: "supprimer", cible: s.cible, id: s.id, avant: trouve(s.cible, s.id), apres: null })),
+    ...((args.lignes ?? []) as any[]).filter(e => e.ligne_id).map(e => {
+      const { ligne_id, heures, materiaux, libres, ref: _r, parent_ref: _p, parent_id: _q, type: _t, ...champs } = e;
+      return { action: "completer", cible: "ligne", id: ligne_id, avant: trouve("ligne", ligne_id), apres: champs, ajouts: { heures: heures?.length ?? 0, materiaux: materiaux?.length ?? 0, libres: libres?.length ?? 0 } };
+    }),
+  ];
 }
 
 export async function runDevisWrite(context: McpAppContext, name: DevisWriteName, args: Record<string, any>) {
@@ -207,7 +325,11 @@ export async function runDevisWrite(context: McpAppContext, name: DevisWriteName
     if (sim.error) throw new ToolError("Aperçu indisponible");
     const s = sim.data as Record<string, any>;
     if (s?.error) throw new ToolError(String(s.error));
-    const vue = apercu(s);
+    let vue: Record<string, unknown> = apercu(s);
+    if (name === "devis_remplir" && (args.modifications?.length || args.suppressions?.length || (args.lignes ?? []).some((e: any) => e.ligne_id))) {
+      const lu = await context.db.rpc("devis_lire", { _devis_id: args.devis_id });
+      vue = { ...vue, elements_vises: elementsVises((lu.data ?? null) as Record<string, any> | null, args) };
+    }
     if (typeof args.confirmation_id === "string") {
       if (fichier) {
         const up = await context.db.storage.from("devis-photos").upload(fichier.path, fichier.bytes, { contentType: fichier.mime, upsert: false });
