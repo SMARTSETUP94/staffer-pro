@@ -1,0 +1,2 @@
+-- La recherche ralentissait (~1 s) dès la 6e exécution dans une même session : plan générique choisi par PL/pgSQL.
+ALTER FUNCTION public.materiaux_rechercher(text, text[], uuid[], numeric, boolean, text, integer) SET plan_cache_mode TO 'force_custom_plan';
