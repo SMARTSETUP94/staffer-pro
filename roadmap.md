@@ -100,3 +100,10 @@
 
 ## Pipeline opportunités (23 oct. 2026)
 - [x] Filtre « chargé d'affaires » ouvert par défaut sur **Tous les CA** pour tout le monde (demande Gabin 23/10 11:58) : plus de présélection automatique sur l'utilisateur connecté. Vérifié dans l'app : sélecteur = « Tous les CA », 27 opportunités dont 9437 visible dès l'ouverture.
+
+## Lot 4 — Outils Claude pour les devis (3 nov. 2026)
+- [ ] Passe 0 : fermer l'accès anonyme aux fonctions mcp_*.
+- [ ] Passe 1 : colonnes devis, journal, verrou humain, devis_soumettre, devis_remplir_lot, dispatch/aperçu (sans seuil de remise).
+- [ ] Passe 2 : 11 outils MCP + instructions + photos (10 Mo visé, repli 5 Mo).
+- [ ] Passe 3 : badge « Rédigé par Claude », note de Claude.
+- [ ] Recette (10 points). Publication : non, en attente de Gabin.
