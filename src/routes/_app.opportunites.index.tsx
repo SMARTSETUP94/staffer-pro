@@ -43,7 +43,7 @@ import {
   type OpportuniteStatut,
   type OpportuniteTaille,
 } from "@/lib/opportunites";
-import { KanbanColonne } from "@/components/opportunites/KanbanColonne";
+import { KanbanColonne, SupplementsColonne } from "@/components/opportunites/KanbanColonne";
 import { IndicateursCtx, PipelineIndicateursBandeau, usePipelineIndicateurs } from "@/components/opportunites/PipelineIndicateursBandeau";
 import {
   OpportuniteCard,
@@ -344,7 +344,11 @@ function OpportunitesPage() {
   }, [opps, filterCa, noCa, noD, noRp, claude, claudeIds, actionsDues, sevenDaysAhead, normalizedQuery]);
 
   // Indicateurs (tuiles + montants) : respectent les filtres actifs ; « À relancer » filtre ensuite le Kanban.
-  const indicateurs = usePipelineIndicateurs(useMemo(() => oppsFiltrees.map((o) => o.id), [oppsFiltrees]), { chargeAffairesId: filterCa !== "__all__" ? filterCa : null, q: searchQuery });
+  const indicateurs = usePipelineIndicateurs(useMemo(() => oppsFiltrees.map((o) => o.id), [oppsFiltrees]), {
+    // Filtres propres aux opportunités (sans CA, rôles, actions, Claude) : aucun supplément 6XXX ne correspond.
+    chargeAffairesId: noCa || noD || noRp || actionsDues || claude ? "00000000-0000-0000-0000-000000000000" : filterCa !== "__all__" ? filterCa : null,
+    q: searchQuery,
+  });
   const parAffaire = useMemo(() => new Map((indicateurs.data?.affaires ?? []).map((a) => [a.affaire_id, a])), [indicateurs.data]);
   const [relance, setRelance] = useState(false);
   const oppsKanban = useMemo(() => relance ? oppsFiltrees.filter((o) => parAffaire.get(o.id)?.a_relancer) : oppsFiltrees, [relance, oppsFiltrees, parAffaire]);
@@ -824,6 +828,13 @@ function OpportunitesPage() {
                 }}
               />
             ))}
+            {!relance && (indicateurs.data?.supplements.length ?? 0) > 0 && (
+              <SupplementsColonne
+                items={indicateurs.data!.supplements}
+                repliee={replis.supplements ?? true}
+                onToggle={() => { const next = { ...replis, supplements: !(replis.supplements ?? true) }; setReplis(next); savePrefs({ replis: next }); }}
+              />
+            )}
           </div>
           <DragOverlay>
             {activeOpp && (
