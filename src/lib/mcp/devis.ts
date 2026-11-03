@@ -6,12 +6,12 @@ import { confirmationSchema } from "./write-schemas";
 import { dateSchema } from "./schemas";
 
 /** Écritures devis autorisées pour Claude. Toute autre action devis reste dans l'application. */
-export const DEVIS_WRITE_TOOLS = ["devis_creer_brouillon", "devis_remplir", "devis_modifier_entete", "devis_ajouter_photo", "devis_nouvelle_version", "devis_soumettre"] as const;
+export const DEVIS_WRITE_TOOLS = ["devis_creer_brouillon", "devis_remplir", "devis_modifier_entete", "devis_ajouter_photo", "devis_nouvelle_version", "devis_soumettre", "devis_enregistrer_transfert"] as const;
 export type DevisWriteName = typeof DEVIS_WRITE_TOOLS[number];
-export const DEVIS_READ_TOOLS = ["devis_lister", "devis_lire", "devis_referentiel", "materiaux_rechercher", "devis_charge_be", "devis_exporter_pdf"] as const;
+export const DEVIS_READ_TOOLS = ["devis_lister", "devis_lire", "devis_referentiel", "materiaux_rechercher", "devis_charge_be", "devis_exporter_pdf", "devis_exporter_progbat"] as const;
 export type DevisReadName = typeof DEVIS_READ_TOOLS[number];
 export const DEVIS_READ_CAPS: Record<DevisReadName, string> = {
-  devis_lister: "devis.view", devis_lire: "devis.view", devis_referentiel: "devis.rediger", materiaux_rechercher: "devis.rediger", devis_charge_be: "devis.view", devis_exporter_pdf: "devis.view",
+  devis_lister: "devis.view", devis_lire: "devis.view", devis_referentiel: "devis.rediger", materiaux_rechercher: "devis.rediger", devis_charge_be: "devis.view", devis_exporter_pdf: "devis.view", devis_exporter_progbat: "devis.view",
 };
 export const LOT_MAX = 300;
 export const PHOTO_MAX_OCTETS = 10 * 1024 * 1024;
@@ -75,6 +75,8 @@ export const devisSchemas = {
   devis_charge_be: { affaire_ids: z.array(uuid).min(1).max(50) },
   devis_exporter_pdf: { devis_id: uuid, niveau: z.enum(["detaille", "synthetique"]).default("detaille").describe("detaille : prix par objet ; synthetique : total par zone et chapitre."),
     regenerer: z.boolean().default(false).describe("true : générer un nouveau PDF même si un export de la version en cours existe.") },
+  devis_exporter_progbat: { devis_id: uuid.describe("Devis validé par un humain dans Staffing, pas encore transféré."),
+    mode: z.enum(["autonomie", "conversation"]).describe("conversation obligatoire : transfert ProGBat uniquement en session avec l'utilisateur ; autonomie refusée.") },
   devis_creer_brouillon: { affaire_id: uuid, modele_id: z.union([uuid, z.literal("vierge")]).optional().describe("Omettre = modèle par défaut ; « vierge » = sans modèle."), cle_externe: z.string().min(1).max(255).optional(), note: z.string().max(4000).optional().describe("Hypothèses à confirmer, affichées en tête de l'éditeur."), mode, ...confirmationSchema },
   devis_remplir: { devis_id: uuid,
     lignes: z.array(element).max(LOT_MAX).refine(l => tailleLot(l) <= LOT_MAX, `${LOT_MAX} lignes maximum par appel (heures, matériaux et lignes libres comprises) : découper en plusieurs appels`).optional().describe("Ajouts ; avec ligne_id, complète la ligne existante (libellé, quantité, dimensions, descriptif appliqués)."),
@@ -91,6 +93,11 @@ export const devisSchemas = {
     url: z.string().url().max(2000).optional().describe("Lien https récupéré par le serveur : partage OneDrive / SharePoint, staffing.setup.paris ou stockage de l'application. 10 Mo maximum."),
     mime: z.enum(["image/jpeg", "image/png", "application/pdf"]).optional().describe("Facultatif : détecté d'après le contenu."), legende: z.string().max(300).optional(), source: z.string().max(200).optional().describe("Origine : pièce jointe du mail de…, plan, référence…"), visible_client: z.boolean().default(false), mode, ...confirmationSchema },
   devis_nouvelle_version: { devis_id: uuid.describe("Devis envoyé / validé à reprendre ; l'original n'est jamais modifié."), note: z.string().max(4000).optional(), mode, ...confirmationSchema },
+  devis_enregistrer_transfert: { devis_id: uuid,
+    numero_progbat: z.string().trim().toUpperCase().regex(/^(S\d{6}|D-\d{6}-\d{4})$/, "Numéro ProGBat : S + 6 chiffres (brouillon) ou D-AAAAMM-NNNN (finalisé)").describe("S003800 juste après l'import (brouillon ProGBat) ; D-AAAAMM-NNNN une fois le devis finalisé par un humain."),
+    total_progbat: num.min(0).describe("Total net HT relu dans ProGBat, en euros."),
+    motif: z.string().trim().min(1).max(1000).optional().describe("Obligatoire si le total ProGBat diffère du net HT Staffing au centime."),
+    mode: z.enum(["autonomie", "conversation"]).describe("conversation obligatoire, avec l'accord explicite de l'utilisateur ; autonomie refusée."), ...confirmationSchema },
   devis_soumettre: { devis_id: uuid, note: z.string().max(4000).describe("Ce qui reste à confirmer par le chargé d'affaires."), mode, ...confirmationSchema },
 } as const;
 
@@ -174,6 +181,9 @@ export async function readDevis(context: McpAppContext, name: DevisReadName, arg
       const r = await context.db.rpc("materiaux_rechercher", { _q: args.q, _familles: args.familles ?? null, _fournisseurs: args.fournisseurs ?? null, _epaisseur: args.epaisseur ?? null, _recent_seulement: args.recent_seulement ?? false, _tri: "pertinence", _limit: args.limit ?? 20 });
       if (r.error) throw new ToolError("Recherche matériaux indisponible");
       data = { rows: ((r.data ?? []) as any[]).map(m => sansCouts(m, couts)) };
+    } else if (name === "devis_exporter_progbat") {
+      if (args.mode !== "conversation") { status = "refuse"; throw new ToolError("Export ProGBat refusé en autonomie : uniquement en conversation avec l'utilisateur"); }
+      data = { rows: [1], ...(await exporterProgbatMcp(context, args.devis_id)) };
     } else if (name === "devis_exporter_pdf") {
       data = { rows: [1], ...(await exporterPdfMcp(context, args.devis_id, args.niveau ?? "detaille", args.regenerer === true)) };
     } else {
@@ -182,7 +192,7 @@ export async function readDevis(context: McpAppContext, name: DevisReadName, arg
       data = { rows: ((r.data ?? []) as any[]).map(c => ({ ...c, jours_be: arrondi1(c.jours_be), heures_be: arrondi1(c.heures_be) })) };
     }
     count = (data.rows as unknown[]).length;
-    if (name === "devis_lire" || name === "devis_exporter_pdf") { const { rows: _r, ...rest } = data; result = compactResult(rest); }
+    if (name === "devis_lire" || name === "devis_exporter_pdf" || name === "devis_exporter_progbat") { const { rows: _r, ...rest } = data; result = compactResult(rest); }
     else result = compactResult(data);
   } catch (error) {
     if (status !== "refuse") status = "erreur";
@@ -314,6 +324,7 @@ export function elementsVises(lu: Record<string, any> | null, args: Record<strin
 export async function runDevisWrite(context: McpAppContext, name: DevisWriteName, args: Record<string, any>) {
   try {
     if (!devisWriteEnabled(context)) throw new ToolError("Écriture devis refusée : droit de rédaction requis");
+    if (name === "devis_enregistrer_transfert" && args.mode !== "conversation") throw new ToolError("Transfert ProGBat refusé en autonomie : uniquement en conversation, avec l'accord explicite de l'utilisateur");
     const fresh = await context.db.rpc("mcp_assert_write", { _tool: name });
     if (fresh.error) throw new ToolError(fresh.error.message?.includes("devis non activé") ? "Module devis non activé pour ce compte" : "Écriture MCP refusée : droits ou connexion modifiés");
     let affaireId: string;
@@ -376,4 +387,26 @@ async function exporterPdfMcp(context: McpAppContext, devisId: string, niveau: "
   return { numero: lu.data.numero, version: dernier.version, niveau, filigrane_projet: dernier.filigrane === true, genere, cree_le: String(dernier.cree_le),
     nom_fichier: `Devis ${/-R\d+$/.test(lu.data.numero) ? lu.data.numero : `${lu.data.numero}-R${dernier.version}`}.pdf`, url_telechargement: url.data.signedUrl, expire_dans_secondes: 3600,
     rappel: "Lien temporaire. L'envoi au client reste fait par un humain (brouillon Outlook possible)." };
+}
+
+/** Excel ProGBat + fiche de contrôle d'un devis validé non transféré ; liens temporaires 1 h. Aucun envoi ni finalisation. */
+async function exporterProgbatMcp(context: McpAppContext, devisId: string) {
+  const lu = await context.db.from("devis").select("numero,version,statut_redaction,numero_progbat").eq("id", devisId).maybeSingle();
+  if (lu.error || !lu.data) throw new ToolError("Devis introuvable ou accès refusé");
+  if (lu.data.statut_redaction !== "valide" || lu.data.numero_progbat) {
+    throw new ToolError(lu.data.numero_progbat ? `Devis déjà transféré dans ProGBat (${lu.data.numero_progbat})` : "Seul un devis validé par un humain dans Staffing peut être exporté vers ProGBat");
+  }
+  const { exporterDevisProgbat } = await import("@/lib/devis/progbat-io");
+  let r: Awaited<ReturnType<typeof exporterDevisProgbat>>;
+  try { r = await exporterDevisProgbat(context.db as never, devisId); }
+  catch (e) { throw new ToolError(e instanceof Error ? e.message : "Export ProGBat impossible"); }
+  const url = await context.db.storage.from("devis-exports").createSignedUrl(r.path, 3600);
+  if (url.error || !url.data) throw new ToolError("Lien de téléchargement indisponible");
+  const photos = await Promise.all(r.fiche.photos.map(async (p) => {
+    const u = await context.db.storage.from("devis-photos").createSignedUrl(p.storage_path, 3600);
+    return { objet: p.objet, legende: p.legende, url: u.data?.signedUrl ?? null };
+  }));
+  const { photos: _p, devis_id: _d, ...fiche } = r.fiche;
+  return { numero: lu.data.numero, version: lu.data.version, nom_fichier: r.nom, url_telechargement: url.data.signedUrl, expire_dans_secondes: 3600,
+    fiche_controle: { ...fiche, photos }, rappel: "Importer dans un devis ProGBat neuf et vide, cocher « La première ligne contient les titres », faire les réglages, relire le total, laisser le devis ProGBat en brouillon, puis proposer devis_enregistrer_transfert." };
 }
