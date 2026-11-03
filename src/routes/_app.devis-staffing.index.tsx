@@ -1,3 +1,4 @@
+import { IconeSupplement, estChantierSigne6xxx } from "@/components/devis/IconeSupplement";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
@@ -111,7 +112,7 @@ function DevisGlobal() {
             <TableBody>
               {rows.map((r) => (
                 <TableRow key={r.id} className="cursor-pointer" onClick={() => navigate({ to: "/affaires/$affaireId/devis-staffing/$devisId", params: { affaireId: r.affaire_id, devisId: r.id } })}>
-                  <TableCell className="font-medium">{r.numero} <span className="text-xs text-muted-foreground">R{r.version}</span>{claude.data?.has(r.id) && <BadgeClaude />}{r.numero_progbat && <span className="block text-xs text-muted-foreground">{libelleNumeroProgbat(r.numero_progbat)}</span>}</TableCell>
+                  <TableCell className="font-medium">{r.numero} <span className="text-xs text-muted-foreground">R{r.version}</span>{claude.data?.has(r.id) && <BadgeClaude />}{estChantierSigne6xxx(r.affaire_numero) && !["signe", "refuse"].includes(r.statut_redaction) && <span className="ml-1 align-middle"><IconeSupplement /></span>}{r.numero_progbat && <span className="block text-xs text-muted-foreground">{libelleNumeroProgbat(r.numero_progbat)}</span>}</TableCell>
                   <TableCell>{[r.affaire_numero, r.affaire_nom].filter(Boolean).join(" · ")}</TableCell>
                   <TableCell>{r.client_nom ?? "—"}</TableCell>
                   <TableCell><Badge variant="outline">{libelleStatutDevis(r.statut_redaction, r.numero_progbat, r.date_envoi, STATUT_LABEL)}</Badge></TableCell>
