@@ -179,7 +179,7 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
   const zonesCibles = del ? d.lignes.filter((l) => l.id !== del.id && ["zone", "option"].includes(l.type) && !l.parent_id) : [];
 
   return (
-    <div className="space-y-4">
+    <div className="devis-editeur space-y-4">
       {infoClaude && <NoteClaude info={infoClaude} />}
       {/* En-tête */}
       <Card>
@@ -306,7 +306,7 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
               {calc.remise !== 0 && <Row label="Remise" value={eur(calc.remise)} />}
               {calc.remise !== 0 && <Row label="Total net HT" value={eur(calc.net_ht)} strong />}
               <Row label={`TVA ${Number(d.calcul.tva_pct)} %`} value={eur(calc.tva)} />
-              <Row label="TTC" value={eur(calc.ttc)} />
+              <Row label="Total TTC" value={eur(calc.ttc)} strong />
               {calc.options_ht > 0 && <Row label="Options (hors total)" value={eur(calc.options_ht)} />}
             </div>
             <div className="space-y-1 border-t pt-2">
@@ -481,7 +481,7 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
 }
 
 function Row({ label, value, strong }: { label: string; value: string; strong?: boolean }) {
-  return <div className={`flex justify-between gap-2 ${strong ? "text-base font-semibold" : ""}`}><span className="truncate">{label}</span><span className="tabular-nums">{value}</span></div>;
+  return <div className={`flex justify-between gap-2 border-b border-border/80 py-1 last:border-b-0 ${strong ? "text-base font-bold text-foreground" : ""}`}><span className="truncate">{label}</span><span className="tabular-nums">{value}</span></div>;
 }
 
 function HeuresMetier({ hm }: { hm: Record<string, number> }) {
@@ -494,9 +494,10 @@ function HeuresMetier({ hm }: { hm: Record<string, number> }) {
 function DateCase({ label, value, onChange, disabled }: { label: string; value: string | null; onChange?: (v: string | null) => void; disabled?: boolean }) {
   return (
     <div className="rounded-md border p-2">
-      <p className="text-[11px] uppercase text-muted-foreground">{label}</p>
-      {disabled ? <p className="text-sm">{value ? new Date(value).toLocaleDateString("fr-FR") : "À déterminer"}</p>
-        : <Input type="date" className="h-8" value={value ?? ""} onChange={(e) => onChange?.(e.target.value || null)} />}
+      <label className="block text-xs font-medium text-foreground/80">{label}
+      {disabled ? <span className="block text-sm font-normal text-foreground">{value ? new Date(value).toLocaleDateString("fr-FR") : "À déterminer"}</span>
+        : <Input type="date" className={`mt-0.5 h-8${value ? "" : " devis-champ-vide"}`} value={value ?? ""} onChange={(e) => onChange?.(e.target.value || null)} />}
+      </label>
     </div>
   );
 }
