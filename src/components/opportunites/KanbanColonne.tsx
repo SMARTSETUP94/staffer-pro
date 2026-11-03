@@ -91,8 +91,8 @@ export function KanbanColonne({ statut, items, chargesById, onSign, onDelete, dr
             {label} · {items.length}{parAffaire.size > 0 && tot.chiffre + tot.estime > 0 && <span className="font-normal"> · {kEur(tot.chiffre + tot.estime)}</span>}
           </button>
           {enRetard > 0 && (
-            <span className="ml-auto shrink-0 whitespace-nowrap rounded-full bg-destructive/10 px-1.5 text-[10px] font-semibold leading-4 text-destructive" title={`${enRetard} en retard`}>
-              {enRetard} retard
+            <span className="ml-auto shrink-0 whitespace-nowrap rounded-full bg-destructive/10 px-1.5 text-[10px] font-semibold leading-4 text-destructive" title={`${enRetard} en retard`} aria-label={`${enRetard} en retard`}>
+              {enRetard}
             </span>
           )}
         </div>
