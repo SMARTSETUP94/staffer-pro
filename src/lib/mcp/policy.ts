@@ -20,7 +20,7 @@ export async function createAppContext({ auth }: CreateAppContextInput): Promise
   if (caps.error) throw new ToolError("Droits indisponibles");
   const writeFlag = await db.rpc("is_feature_flag_enabled", { _flag_key: "mcp_v2_write" });
   const effectiveCaps = new Set((caps.data ?? []).map(r => r.capability));
-  const writeCaps = ["action.create_opportunite", "action.edit_opportunite", "section.affaires", "logistique.etape.edit"];
+  const writeCaps = ["action.create_opportunite", "action.edit_opportunite", "section.affaires", "logistique.etape.edit", "devis.rediger"];
   const writeScopes = new Set((caps.data ?? []).filter(r => r.scope === "all").map(r => r.capability));
   return { db, userId, clientId, caps: effectiveCaps, writeScopes, canWrite: !writeFlag.error && writeFlag.data === true && effectiveCaps.has("api.mcp.write") && writeCaps.some(c => writeScopes.has(c)) };
 }

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { compactResult, safeAuditArguments, type McpAppContext } from "./policy";
 import { argumentsHash } from "./write-policy";
 import { confirmationSchema } from "./write-schemas";
+import { dateSchema } from "./schemas";
 
 /** Écritures devis autorisées pour Claude. Toute autre action devis reste dans l'application. */
 export const DEVIS_WRITE_TOOLS = ["devis_creer_brouillon", "devis_remplir", "devis_modifier_entete", "devis_ajouter_photo", "devis_nouvelle_version", "devis_soumettre"] as const;
@@ -58,8 +59,8 @@ export const devisSchemas = {
   devis_remplir: { devis_id: uuid, lignes: z.array(element).min(1).max(LOT_MAX).refine(l => tailleLot(l) <= LOT_MAX, `${LOT_MAX} lignes maximum par appel (heures, matériaux et lignes libres comprises) : découper en plusieurs appels`), cle_externe: z.string().min(1).max(255).optional(), mode, ...confirmationSchema },
   devis_modifier_entete: { devis_id: uuid, champs: z.object({
     client_id: uuid.nullable().optional(), contact_id: uuid.nullable().optional(), client_final_id: uuid.nullable().optional(), libelle: z.string().max(500).optional(),
-    date_devis: z.string().date().optional(), date_validite: z.string().date().nullable().optional(), validite_jours: z.number().int().min(1).max(365).optional(),
-    date_visite_technique: z.string().date().nullable().optional(), date_montage: z.string().date().nullable().optional(), date_evenement_debut: z.string().date().nullable().optional(), date_evenement_fin: z.string().date().nullable().optional(), date_demontage: z.string().date().nullable().optional(),
+    date_devis: dateSchema.optional(), date_validite: dateSchema.nullable().optional(), validite_jours: z.number().int().min(1).max(365).optional(),
+    date_visite_technique: dateSchema.nullable().optional(), date_montage: dateSchema.nullable().optional(), date_evenement_debut: dateSchema.nullable().optional(), date_evenement_fin: dateSchema.nullable().optional(), date_demontage: dateSchema.nullable().optional(),
     remise: z.object({ mode: z.enum(["aucune", "montant", "pct", "net_cible"]), valeur: num.min(0).optional() }).strict().optional(),
   }).strict().refine(p => Object.keys(p).length > 0, "Modification vide"), mode, ...confirmationSchema },
   devis_ajouter_photo: { devis_id: uuid, ligne_id: uuid.describe("Objet du devis."), fichier_base64: z.string().min(8).describe("Contenu JPG, PNG ou PDF en base64, 10 Mo maximum."), mime: z.enum(["image/jpeg", "image/png", "application/pdf"]), legende: z.string().max(300).optional(), source: z.string().max(200).optional().describe("Origine : pièce jointe du mail de…, plan, référence…"), visible_client: z.boolean().default(false), mode, ...confirmationSchema },
