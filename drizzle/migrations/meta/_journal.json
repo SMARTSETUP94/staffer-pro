@@ -498,6 +498,13 @@
       "when": 1793630464997,
       "tag": "0070_devis_16_montant_historique_fr",
       "breakpoints": true
+    },
+    {
+      "idx": 71,
+      "version": "7",
+      "when": 1793704868845,
+      "tag": "0071_mcp_revoke_anon",
+      "breakpoints": true
     }
   ]
 }
