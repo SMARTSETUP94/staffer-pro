@@ -575,6 +575,20 @@
       "when": 1793729289101,
       "tag": "0081_pipeline_indicateurs_devis_zero_estime",
       "breakpoints": true
+    },
+    {
+      "idx": 82,
+      "version": "7",
+      "when": 1793731095567,
+      "tag": "0082_pipeline_indicateurs_supplements_6xxx",
+      "breakpoints": true
+    },
+    {
+      "idx": 83,
+      "version": "7",
+      "when": 1793731260389,
+      "tag": "0083_devis_note_mcp_points_coches",
+      "breakpoints": true
     }
   ]
 }

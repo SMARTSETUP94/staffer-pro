@@ -1,7 +1,9 @@
 import { useContext, useMemo } from "react";
 import { ChevronsLeftRight } from "lucide-react";
 import { IndicateursCtx } from "./PipelineIndicateursBandeau";
-import { kEur, totauxColonne } from "@/lib/pipeline-indicateurs";
+import { eurEntier, kEur, totauxColonne, type SupplementChantier } from "@/lib/pipeline-indicateurs";
+import { Link } from "@tanstack/react-router";
+import { STATUT_LABEL as STATUT_DEVIS_LABEL } from "@/components/devis/editeur/api";
 import { useDroppable } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { cn } from "@/lib/utils";
@@ -127,6 +129,56 @@ export function KanbanColonne({ statut, items, chargesById, onSign, onDelete, dr
           )}
         </div>
       </SortableContext>
+    </div>
+  );
+}
+
+/** Badge commun « Supplément 6XXX ». */
+export function BadgeSupplement() {
+  return <span className="inline-flex items-center rounded-full border border-warning/50 bg-warning/15 px-2 py-0.5 text-[10px] font-semibold text-foreground">Supplément 6XXX</span>;
+}
+
+/**
+ * Colonne à part, en fin de Kanban : devis de suppléments des chantiers 6XXX encore ouverts.
+ * Non droppable (ce ne sont pas des opportunités) ; repliée par défaut.
+ */
+export function SupplementsColonne({ items, repliee, onToggle }: { items: SupplementChantier[]; repliee: boolean; onToggle: () => void }) {
+  const total = items.reduce((s, i) => s + Number(i.net_ht ?? 0), 0);
+  const label = "Suppléments 6XXX";
+  if (repliee) {
+    return (
+      <button type="button" onClick={onToggle} title={`Déplier « ${label} » (${items.length})`} aria-label={`Déplier la colonne ${label}, ${items.length} devis`}
+        className="flex shrink-0 items-center gap-2 rounded-xl border-2 border-dashed border-warning/50 bg-warning/5 px-3 py-2 text-left hover:border-primary/60 md:w-11 md:flex-col md:px-0 md:py-3">
+        <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-warning/20 px-1.5 text-[10px] font-bold tabular-nums text-foreground">{items.length}</span>
+        <span className="whitespace-nowrap text-sm font-semibold text-foreground md:[writing-mode:vertical-rl] md:rotate-180">{label}</span>
+        <ChevronsLeftRight className="ml-auto h-3.5 w-3.5 text-muted-foreground md:ml-0 md:mt-auto" aria-hidden="true" />
+      </button>
+    );
+  }
+  return (
+    <div className="flex min-h-[60vh] min-w-0 flex-col rounded-xl border-2 border-dashed border-warning/50 bg-warning/5 md:min-w-[230px] md:flex-1">
+      <div className="border-b border-border/50 px-3 py-2">
+        <button type="button" onClick={onToggle} className="flex h-5 w-full items-center truncate whitespace-nowrap text-left text-sm font-semibold text-foreground hover:underline" title="Cliquer pour replier la colonne">
+          {label} <span className="ml-1 tabular-nums">· {items.length}</span>
+        </button>
+        <div className="mt-0.5 h-4 text-xs tabular-nums text-foreground">{kEur(total)}</div>
+      </div>
+      <div className="flex flex-1 flex-col gap-2 overflow-y-auto p-2">
+        {items.map((d) => (
+          <Link key={d.devis_id} to="/affaires/$affaireId/devis-staffing/$devisId" params={{ affaireId: d.affaire_id, devisId: d.devis_id! }}
+            className="rounded-lg border border-border bg-card p-3 shadow-sm hover:border-primary/60">
+            <div className="flex items-center justify-between gap-2">
+              <span className="font-mono text-xs font-bold text-primary">{d.numero}</span>
+              <BadgeSupplement />
+            </div>
+            <div className="mt-0.5 truncate text-sm font-semibold text-foreground">{d.client ?? d.libelle}</div>
+            {d.libelle && d.client && d.libelle !== d.client && <div className="truncate text-xs text-muted-foreground">{d.libelle}</div>}
+            <div className="mt-1 text-base font-bold tabular-nums text-foreground">
+              {eurEntier(d.net_ht)}<span className="text-xs font-semibold text-muted-foreground"> · {d.devis_numero} · {(STATUT_DEVIS_LABEL[d.statut_redaction as keyof typeof STATUT_DEVIS_LABEL] ?? d.statut_redaction).toLowerCase()}</span>
+            </div>
+          </Link>
+        ))}
+      </div>
     </div>
   );
 }

@@ -114,3 +114,8 @@
 - [x] Passe 3 : bouton « Vers ProGBat », fenêtre « Enregistrer le transfert », numéro dans listes/éditeur/pipeline/PDF.
 - [x] Fichier d'exemple 9484-R2 (hors historique).
 - [ ] Lot 3b (outils Claude) : en attente d'un vrai import ProGBat avec Gabin.
+
+## Pipeline + éditeur devis (3 nov. 2026)
+- [x] Lisibilité Kanban (8 points)
+- [x] A. Suppléments 6XXX dans le pipeline (règle, tuile, colonne, badge, cas 6064)
+- [x] B. Éditeur de devis : bandeau compact + plein écran, note Claude repliable/cases, arbre redimensionnable, chapitres simplifiés, heures au devis, liens coûts manquants, liste de contrôle, champs secondaires repliés

@@ -2101,6 +2101,7 @@ export type Database = {
           modifie_par_humain_le: string | null
           montant_ht: number | null
           note_mcp: string | null
+          note_mcp_coches: Json
           numero: string
           numero_progbat: string | null
           numero_progbat_provisoire: string | null
@@ -2165,6 +2166,7 @@ export type Database = {
           modifie_par_humain_le?: string | null
           montant_ht?: number | null
           note_mcp?: string | null
+          note_mcp_coches?: Json
           numero: string
           numero_progbat?: string | null
           numero_progbat_provisoire?: string | null
@@ -2229,6 +2231,7 @@ export type Database = {
           modifie_par_humain_le?: string | null
           montant_ht?: number | null
           note_mcp?: string | null
+          note_mcp_coches?: Json
           numero?: string
           numero_progbat?: string | null
           numero_progbat_provisoire?: string | null
@@ -8280,6 +8283,10 @@ export type Database = {
         }[]
       }
       devis_normalize: { Args: { t: string }; Returns: string }
+      devis_note_mcp_cocher: {
+        Args: { _coches: Json; _devis_id: string }
+        Returns: undefined
+      }
       devis_nouvelle_version: { Args: { _devis_id: string }; Returns: string }
       devis_objet_inserer: {
         Args: {
@@ -8736,7 +8743,14 @@ export type Database = {
         Args: { _objet_id: string }
         Returns: boolean
       }
-      pipeline_indicateurs: { Args: { _affaire_ids?: string[] }; Returns: Json }
+      pipeline_indicateurs: {
+        Args: {
+          _affaire_ids?: string[]
+          _charge_affaires_id?: string
+          _q?: string
+        }
+        Returns: Json
+      }
       preflight_delete_devis: { Args: { p_devis_id: string }; Returns: Json }
       preflight_import_devis: {
         Args: { _affaire_id?: string; _fichier_hash: string }

@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { ancrePoste } from "@/lib/devis/editeur-lisibilite";
+import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Plus, Save } from "lucide-react";
@@ -64,6 +65,13 @@ function DevisTauxPage() {
     queryKey: ["devis-postes-be"],
     queryFn: async () => new Map(((await supabase.from("devis_postes_ref").select("id,compte_be")).data ?? []).map((p) => [p.id, p.compte_be] as const)),
   });
+  // Lien direct depuis l'alerte « marge incomplète » d'un devis : aller à la ligne du poste une fois la grille chargée.
+  const tauxCharges = !!taux.data && !!params.data;
+  useEffect(() => {
+    if (!tauxCharges || !window.location.hash) return;
+    const el = document.getElementById(decodeURIComponent(window.location.hash.slice(1)));
+    if (el) { el.scrollIntoView({ block: "center" }); const h = window.location.hash; history.replaceState(null, "", " "); window.location.hash = h; }
+  }, [tauxCharges]);
   const refresh = () => {
     for (const k of ["devis-taux", "devis-parametres", "devis-taux-hist", "devis-postes-be"]) qc.invalidateQueries({ queryKey: [k] });
   };
@@ -124,7 +132,7 @@ function DevisTauxPage() {
       </Card>
 
       <Card>
-        <CardHeader><CardTitle>Forfaits et paramètres</CardTitle><CardDescription>Chaque modification crée une valeur datée.</CardDescription></CardHeader>
+        <CardHeader id="forfaits" className="scroll-mt-24"><CardTitle>Forfaits et paramètres</CardTitle><CardDescription>Chaque modification crée une valeur datée.</CardDescription></CardHeader>
         <CardContent className="grid gap-3 md:grid-cols-2">
           {(params.data ?? []).map((p) => <ParamRow key={p.cle as string} p={p as never} run={run} />)}
         </CardContent>
@@ -171,7 +179,7 @@ function PosteRow({ row, niveaux, metiers, run, compteBe }: { row: TauxRow; nive
       _ordre: row.ordre, _actif: patch.actif ?? row.actif,
     }), "Poste enregistré");
   return (
-    <TableRow className={row.actif ? "" : "opacity-50"}>
+    <TableRow id={ancrePoste(row.libelle)} className={`scroll-mt-24 target:bg-warning/15 target:ring-2 target:ring-warning ${row.actif ? "" : "opacity-50"}`}>
       <TableCell>
         <div className="flex gap-1">
           <Input className="h-8 w-44" value={libelle} onChange={(e) => setLibelle(e.target.value)} />

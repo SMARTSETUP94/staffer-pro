@@ -153,6 +153,12 @@ export function ObjetPanel({ data, ligne, montants, calc, readOnly, call, patch,
   }
 
   const avecChiffrage = ligne.type !== "zone";
+  // Chapitres Suivi / Pose / Dépose (et leurs lignes) : pas de dimensions, finition ni photos.
+  const dansChapitre = (() => {
+    let cur: Ligne | undefined = ligne;
+    while (cur) { if (cur.type.startsWith("chapitre")) return true; cur = data.lignes.find((l) => l.id === cur!.parent_id); }
+    return false;
+  })();
 
   return (
     <div className="space-y-5">
@@ -175,7 +181,7 @@ export function ObjetPanel({ data, ligne, montants, calc, readOnly, call, patch,
         </label>
       )}
       <Field multiline value={ligne.descriptif_client} disabled={readOnly} label="Descriptif client" placeholder="Texte visible par le client" onValue={(v) => setLigne("descriptif_client", v)} />
-      {ligne.type === "objet" && (
+      {ligne.type === "objet" && !dansChapitre && (
         <div className="grid grid-cols-4 gap-2">
           <Field numeric value={ligne.longueur_mm} disabled={readOnly} label="Longueur (mm)" important placeholder="—" onValue={(v) => setLigne("longueur_mm", v, true)} />
           <Field numeric value={ligne.largeur_mm} disabled={readOnly} label="Largeur (mm)" important placeholder="—" onValue={(v) => setLigne("largeur_mm", v, true)} />
@@ -185,7 +191,7 @@ export function ObjetPanel({ data, ligne, montants, calc, readOnly, call, patch,
       )}
 
       {/* Photos */}
-      <section className="space-y-2">
+      {!dansChapitre && <section className="space-y-2">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-semibold">Photos</h3>
           {!readOnly && (
@@ -211,13 +217,14 @@ export function ObjetPanel({ data, ligne, montants, calc, readOnly, call, patch,
           ))}
           {photos.length === 0 && <p className="text-xs text-muted-foreground">Aucune photo.</p>}
         </div>
-      </section>
+      </section>}
 
       {avecChiffrage && (
         <>
           {/* Heures */}
           <section className="space-y-2">
             <h3 className="text-sm font-semibold">Heures</h3>
+            <div className="overflow-x-auto">
             <table className="devis-table w-full text-sm">
               <thead className="text-xs"><tr>
                 <th className="text-left">Poste</th><th className="text-left">Niveau</th><th>Heures</th><th title="Décoché : heures communes, non multipliées par la quantité">Par unité</th>
@@ -232,7 +239,7 @@ export function ObjetPanel({ data, ligne, montants, calc, readOnly, call, patch,
                   const tauxAffiche = auMontant ? (Number(h.heures) > 0 ? Number(h.montant_force) / Number(h.heures) : null) : null;
                   return (
                     <tr key={h.id}>
-                      <td><select disabled={readOnly} className="h-8 w-full rounded border bg-background px-1" value={h.poste_id}
+                      <td className="min-w-[11rem]"><select disabled={readOnly} className="h-8 w-full min-w-[11rem] rounded border bg-background px-1" title={posteList.find((p) => p.poste_id === h.poste_id)?.libelle} value={h.poste_id}
                         onChange={(e) => void call("devis_heure_enregistrer", { _ligne_id: ligne.id, _h: { id: h.id, poste_id: e.target.value, niveau: "" } })}>
                         {posteList.map((p) => <option key={p.poste_id} value={p.poste_id}>{p.libelle}</option>)}
                       </select></td>
@@ -269,6 +276,7 @@ export function ObjetPanel({ data, ligne, montants, calc, readOnly, call, patch,
                 })}
               </tbody>
             </table>
+            </div>
             {!readOnly && <Button size="sm" variant="outline" onClick={() => void addHeure()}><Plus className="mr-1 h-3.5 w-3.5" />Ligne d'heures</Button>}
           </section>
 
@@ -286,7 +294,7 @@ export function ObjetPanel({ data, ligne, montants, calc, readOnly, call, patch,
           {/* Matériaux */}
           <section className="space-y-2">
             <h3 className="text-sm font-semibold">Matériaux</h3>
-            <table className="devis-table w-full text-sm">
+            <div className="overflow-x-auto"><table className="devis-table w-full text-sm">
               <thead className="text-xs"><tr>
                 <th className="text-left">Désignation</th><th>Quantité</th>{couts && <th>Achat €</th>}{couts && <th>Coef</th>}<th className="text-right">Vente</th><th />
               </tr></thead>
@@ -319,7 +327,7 @@ export function ObjetPanel({ data, ligne, montants, calc, readOnly, call, patch,
                   );
                 })}
               </tbody>
-            </table>
+            </table></div>
             {!readOnly && <Button size="sm" variant="outline" onClick={() => setMatOpen(true)}><Plus className="mr-1 h-3.5 w-3.5" />Matériau</Button>}
           </section>
 
@@ -327,7 +335,7 @@ export function ObjetPanel({ data, ligne, montants, calc, readOnly, call, patch,
           <section className="space-y-2">
             <h3 className="text-sm font-semibold">Achats spécifiques, sous-traitance, location, forfaits</h3>
             <p className="text-xs text-muted-foreground">Prix de vente direct (forfait, négatif pour une régularisation) <em>ou</em> prix d'achat × coefficient dans « détails ».</p>
-            <table className="devis-table w-full text-sm">
+            <div className="overflow-x-auto"><table className="devis-table w-full text-sm">
               <thead className="text-xs"><tr>
                 <th className="text-left">Désignation</th><th>Type</th><th>Qté</th>
                 <th title="Prix de vente unitaire saisi directement ; vide = achat × coefficient">Prix vente €</th><th className="text-right">Vente</th><th /><th />
@@ -382,7 +390,7 @@ export function ObjetPanel({ data, ligne, montants, calc, readOnly, call, patch,
                   );
                 })}
               </tbody>
-            </table>
+            </table></div>
             {!readOnly && (
               <div className="flex flex-wrap gap-1">
                 <Button size="sm" variant="outline" onClick={() => void call("devis_libre_enregistrer", { _ligne_id: ligne.id, _f: { categorie: "achat" } })}><Plus className="mr-1 h-3.5 w-3.5" />Ligne libre</Button>
