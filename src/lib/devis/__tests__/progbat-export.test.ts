@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import data from "./fixtures/progbat-3-devis.json";
 import { calculerDevis, type CalcHeure, type CalcLibre, type CalcLigne } from "../calcul";
-import { cellulesProgbat, construireProgbat, ecartTransfert, libelleStatutDevis, NUMERO_PROGBAT_RE, type DonneesProgbat } from "../progbat-export";
+import { cellulesProgbat, CONSIGNES_PROGBAT, construireProgbat, ecartTransfert, estNumeroProgbatValide, libelleNumeroProgbat, libelleStatutDevis, NUMERO_PROGBAT_RE, type DonneesProgbat } from "../progbat-export";
 import type { LigneClient } from "../pdf-client";
 
 const L = (p: Partial<LigneClient> & { id: string; type: string }): LigneClient => ({
@@ -121,5 +121,24 @@ describe("Transfert ProGBat", () => {
     expect(libelleStatutDevis("transfere", "D-202611-0012", null)).toBe("Transféré ProGBat");
     expect(libelleStatutDevis("transfere", "D-202611-0012", "2026-11-03")).toBe("Transféré ProGBat · envoyé");
     expect(libelleStatutDevis("valide", null, null, { valide: "Validé" })).toBe("Validé");
+  });
+});
+
+describe("transfert ProGBat en deux temps", () => {
+  it("accepte S + 6 chiffres (brouillon) et D-AAAAMM-NNNN (finalisé)", () => {
+    expect(estNumeroProgbatValide("S003800")).toBe(true);
+    expect(estNumeroProgbatValide("D-202611-0012")).toBe(true);
+    for (const x of ["S03800", "s003800", "S0038000", "D-202611-12"]) expect(estNumeroProgbatValide(x)).toBe(false);
+  });
+  it("affiche ProGBat S003800 (brouillon) puis ProGBat D-202611-0012", () => {
+    expect(libelleNumeroProgbat("S003800")).toBe("ProGBat S003800 (brouillon)");
+    expect(libelleNumeroProgbat("D-202611-0012")).toBe("ProGBat D-202611-0012");
+    expect(libelleStatutDevis("transfere", "S003800", null)).toBe("Importé ProGBat (brouillon)");
+  });
+  it("consignes : case des titres cochée, devis ProGBat neuf et vide", () => {
+    const t = CONSIGNES_PROGBAT.join(" ");
+    expect(t).toContain("La première ligne contient les titres");
+    expect(t).toContain("neuf et vide");
+    expect(t).not.toMatch(/supprimer la ligne d'en-tête/i);
   });
 });
