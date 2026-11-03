@@ -21,7 +21,7 @@ Rien n'est appliqué ni publié tant que ce plan n'est pas approuvé. Découpage
 6. Extension de `mcp_dispatch_write` (redéfinie à partir de sa définition actuelle relue, pas de réécriture dynamique) : liste blanche de 6 actions devis — `devis_creer_brouillon`, `devis_remplir`, `devis_modifier_entete`, `devis_ajouter_photo`, `devis_nouvelle_version`, `devis_soumettre`. Toute autre action devis → refus explicite. Pour chacune : `devis_assert_brouillon` (sauf création / nouvelle version), contrôle du mode (`autonomie` refusé si `modifie_par_humain_le` rempli, message « brouillon repris par <nom> »), journalisation dans `devis_mcp_journal`.
 7. `mcp_write_preview` : aperçu avant/après pour ces actions (lignes ajoutées par type, total HT/net avant → après calculé en simulation dans une transaction annulée via savepoint, écarts entre taux saisis et taux de la grille).
 8. Création brouillon : réutilise `devis_creer_depuis_pipeline` avec modèle (défaut `devis_modele_defaut_id`), pose `cree_par_mcp`, `cle_externe` ; même clé → renvoie le devis existant ; brouillon actif déjà présent sur l'affaire → refus avec son id.
-9. Remise : seuil lu dans un paramètre daté `remise_max_mcp_pct` (à créer, valeur à me fournir — proposition 10 %) ; au-delà → refus « à arbitrer ».
+9. Remise : aucun seuil (décision Gabin) ; toute remise acceptée sur un brouillon, visible dans l’aperçu et le journal.
 
 ## Passe 2 — Serveur MCP (code)
 Fichiers neufs dans `src/lib/mcp/tools/` : `devis_lister.ts`, `devis_lire.ts`, `devis_referentiel.ts`, `materiaux_rechercher.ts`, `devis_charge_be.ts` (lecture, appel direct des RPC sous le client de l'appelant ; coûts déjà filtrés côté serveur par `devis.couts`), et 6 outils d'écriture branchés sur le flux aperçu → `confirmation_id` → exécution.

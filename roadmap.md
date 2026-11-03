@@ -12,8 +12,8 @@
 - [x] 9 outils écriture et 4 lectures supplémentaires ; préserver les 9 lecteurs v1. Scopes écriture globaux seulement.
 - [x] 53 tests Vitest verts et premier OAuth réel : opportunité 9440 + étape, déplacement, annulation, archivage affaire confirmé et audit visible.
 - [ ] Finition demandée : revue des RPC directs, parcours OAuth complet renforcé, audit et nettoyage, puis activation admin seulement si vérifié.
-- [ ] Migration de fermeture refusée : remplacer la réécriture dynamique par définitions explicites des 12 familles de fonctions (15 signatures avec surcharges), garde/contexte privé et policies restrictives sur 7 tables ; tester chaque signature OAuth refusé/UI accepté. Rôle NOLOGIN/NOBYPASSRLS vérifié et JWT UI sans client_id confirmé. Migration refusée non appliquée.
-- [ ] Vérifier les parcours UI signature, import Progbat, archivage, feuille de route sur données de test ; rejouer OAuth complet après cette migration. Consentement local actuellement refusé « Demande expirée ou indisponible », session/temporaire de test à reconstituer.
+- [x] Migration de fermeture refusée : remplacer la réécriture dynamique par définitions explicites des 12 familles de fonctions (15 signatures avec surcharges), garde/contexte privé et policies restrictives sur 7 tables ; tester chaque signature OAuth refusé/UI accepté. Rôle NOLOGIN/NOBYPASSRLS vérifié et JWT UI sans client_id confirmé. Migration refusée non appliquée.
+- [x] Vérifier les parcours UI signature, import Progbat, archivage, feuille de route sur données de test ; rejouer OAuth complet après cette migration. Consentement local actuellement refusé « Demande expirée ou indisponible », session/temporaire de test à reconstituer.
 - [x] 404 DCR identifié : script utilisait /oauth/register au lieu du registration_endpoint découvert /oauth/clients/register ; endpoint production 201, discovery 200 et MCP anonyme 401, aucune configuration OAuth changée.
 - [x] Documentation, ADR 005, mémoire ; signaler les limites et la republication nécessaire.
 
@@ -100,3 +100,10 @@
 
 ## Pipeline opportunités (23 oct. 2026)
 - [x] Filtre « chargé d'affaires » ouvert par défaut sur **Tous les CA** pour tout le monde (demande Gabin 23/10 11:58) : plus de présélection automatique sur l'utilisateur connecté. Vérifié dans l'app : sélecteur = « Tous les CA », 27 opportunités dont 9437 visible dès l'ouverture.
+
+## Lot 4 — Outils Claude pour les devis (3 nov. 2026)
+- [x] Passe 0 : fermer l'accès anonyme aux fonctions mcp_*.
+- [x] Passe 1 : colonnes devis, journal, verrou humain, devis_soumettre, devis_remplir_lot, dispatch/aperçu (sans seuil de remise).
+- [x] Passe 2 : 11 outils MCP + instructions + photos (10 Mo visé, repli 5 Mo).
+- [x] Passe 3 : badge « Rédigé par Claude », note de Claude.
+- [x] Recette (10 points). Publication : non, en attente de Gabin.

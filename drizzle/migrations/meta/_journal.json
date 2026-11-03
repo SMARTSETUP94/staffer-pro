@@ -498,6 +498,27 @@
       "when": 1793630464997,
       "tag": "0070_devis_16_montant_historique_fr",
       "breakpoints": true
+    },
+    {
+      "idx": 71,
+      "version": "7",
+      "when": 1793704868845,
+      "tag": "0071_mcp_revoke_anon",
+      "breakpoints": true
+    },
+    {
+      "idx": 72,
+      "version": "7",
+      "when": 1793705392974,
+      "tag": "0072_devis_17_mcp_redaction",
+      "breakpoints": true
+    },
+    {
+      "idx": 73,
+      "version": "7",
+      "when": 1793705607353,
+      "tag": "0073_devis_18_mcp_brouillon_check",
+      "breakpoints": true
     }
   ]
 }
