@@ -32,10 +32,23 @@ export type FicheProgbat = {
   ajustement_arrondi: { montant: number; n: string; designation: string; mode: "absorbe" | "ligne" } | null;
   photos: { storage_path: string; legende: string | null; objet: string | null }[];
   mentions: string[];
+  consignes: string[];
 };
 
 export const ENTETE_PROGBAT = ["N°", "Désignation", "Quantité", "Unité", "Prix unitaire", "Temps prévu"] as const;
+/** Numéro définitif, attribué par ProGBat à la finalisation (faite par un humain). */
 export const NUMERO_PROGBAT_RE = /^D-\d{6}-\d{4}$/;
+/** Numéro provisoire d'un brouillon ProGBat (avant finalisation). */
+export const NUMERO_PROGBAT_PROVISOIRE_RE = /^S\d{6}$/;
+export const estNumeroProgbatValide = (n: string) => NUMERO_PROGBAT_RE.test(n) || NUMERO_PROGBAT_PROVISOIRE_RE.test(n);
+/** Mode opératoire ProGBat (retour du vrai import du 3 novembre 2026). */
+export const CONSIGNES_PROGBAT = [
+  "Importer uniquement dans un devis ProGBat neuf et vide, rattaché au client et au chantier 9XXX : l'import remplace tout le contenu du devis ProGBat.",
+  "Import/Export > Importer un Excel : cocher « La première ligne contient les titres » (la ligne d'en-tête n'est alors pas importée).",
+  "Faire ensuite les réglages : options en Option / Variante, remise, texte d'objet.",
+  "Relire le total HT dans ProGBat, laisser le devis en brouillon (jamais de finalisation ni d'envoi par Claude), puis enregistrer le transfert avec le numéro S….",
+  "Après finalisation par un humain, enregistrer le numéro définitif D-AAAAMM-NNNN.",
+];
 const CHAPITRES = ["chapitre_suivi", "chapitre_pose", "chapitre_depose"] as const;
 const cents = (v: number | null | undefined) => Math.round(Number(v ?? 0) * 100);
 const r2 = (h: number) => Math.round(h * 100) / 100;
@@ -146,6 +159,7 @@ export function construireProgbat(v: DonneesProgbat): { lignes: LigneProgbat[]; 
       options: ficheOptions, ajustement_arrondi: ajustement,
       photos: v.photos.map((p) => ({ storage_path: p.storage_path, legende: p.legende, objet: all.find((l) => l.id === p.ligne_id)?.libelle ?? null })),
       mentions: racines.filter((r) => r.type === "commentaire" && r.texte?.trim()).map((r) => r.texte!.trim()),
+      consignes: CONSIGNES_PROGBAT,
     },
   };
 }
@@ -171,6 +185,13 @@ export function ecartTransfert(netStaffing: number, totalProgbat: number) {
 /** Libellé de statut fondé sur les faits : transfert ProGBat (numéro) et envoi client (date) sont distincts. */
 export function libelleStatutDevis(st: string, numeroProgbat?: string | null, dateEnvoi?: string | null, base: Record<string, string> = {}) {
   if (st !== "transfere") return base[st] ?? st;
+  if (numeroProgbat && NUMERO_PROGBAT_PROVISOIRE_RE.test(numeroProgbat)) return dateEnvoi ? "Importé ProGBat (brouillon) · envoyé" : "Importé ProGBat (brouillon)";
   if (numeroProgbat) return dateEnvoi ? `Transféré ProGBat · envoyé` : "Transféré ProGBat";
   return "Envoyé";
+}
+
+/** Référence affichée : « ProGBat S003800 (brouillon) » puis « ProGBat D-202611-0012 ». */
+export function libelleNumeroProgbat(n?: string | null) {
+  if (!n) return "";
+  return NUMERO_PROGBAT_PROVISOIRE_RE.test(n) ? `ProGBat ${n} (brouillon)` : `ProGBat ${n}`;
 }
