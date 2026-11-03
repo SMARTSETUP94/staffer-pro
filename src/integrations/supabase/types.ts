@@ -8225,10 +8225,12 @@ export type Database = {
         Args: { _devis_id: string; _mode: string; _valeur: number }
         Returns: Json
       }
-      devis_remplir_lot: {
-        Args: { _devis_id: string; _lignes: Json }
-        Returns: Json
-      }
+      devis_remplir_lot:
+        | { Args: { _devis_id: string; _lignes: Json }; Returns: Json }
+        | {
+            Args: { _devis_id: string; _lignes: Json; _ops: Json }
+            Returns: Json
+          }
       devis_restaurer: { Args: { _devis_id: string }; Returns: undefined }
       devis_signer_vers_fabrication: {
         Args: { _devis_id: string }

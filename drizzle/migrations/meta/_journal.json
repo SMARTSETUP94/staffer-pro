@@ -519,6 +519,13 @@
       "when": 1793705607353,
       "tag": "0073_devis_18_mcp_brouillon_check",
       "breakpoints": true
+    },
+    {
+      "idx": 74,
+      "version": "7",
+      "when": 1793714865751,
+      "tag": "0074_devis_19_mcp_modifier_recherche",
+      "breakpoints": true
     }
   ]
 }
