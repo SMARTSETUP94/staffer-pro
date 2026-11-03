@@ -3,8 +3,8 @@ import { createFileRoute, Link, useNavigate, stripSearchParams, type SearchSchem
 import { requireCapability } from "@/lib/capability-guard";
 import { fallback } from "@tanstack/zod-adapter";
 import { z } from "zod";
-import { useEffect, useMemo, useState } from "react";
-import { Plus, Loader2, Filter, Trophy, LayoutGrid, Table as TableIcon, X } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Plus, Loader2, Filter, Trophy, LayoutGrid, Table as TableIcon, X, List } from "lucide-react";
 import {
   DndContext,
   type DragEndEvent,
@@ -44,6 +44,8 @@ import {
   type OpportuniteTaille,
 } from "@/lib/opportunites";
 import { KanbanColonne, SupplementsColonne } from "@/components/opportunites/KanbanColonne";
+import { PipelineFiltresSheet } from "@/components/opportunites/PipelineFiltresSheet";
+import { FILTRES_VIDES, lireFiltres, nbFiltresAvances, passeFiltres, PERIODE_LABEL, STATUT_DEVIS_FILTRE_LABEL, type FiltresAvances } from "@/lib/pipeline-filtres";
 import { IndicateursCtx, PipelineIndicateursBandeau, usePipelineIndicateurs } from "@/components/opportunites/PipelineIndicateursBandeau";
 import {
   OpportuniteCard,
@@ -54,6 +56,7 @@ import { SignerOpportuniteDialog } from "@/components/opportunites/SignerOpportu
 import {
   type AffaireTypologie,
   AFFAIRE_TYPOLOGIES,
+  AFFAIRE_TYPOLOGIE_LABELS,
   getAffaireTypologie,
 } from "@/lib/affaire-typologie";
 import { OpportunitesTableurView } from "@/components/opportunites/OpportunitesTableurView";
@@ -230,22 +233,42 @@ function OpportunitesPage() {
   const { remove: removeOpportunite, pending: deletePending } = useDeleteOpportunite();
   const [activeId, setActiveId] = useState<string | null>(null);
   const [claudeIds, setClaudeIds] = useState<Set<string>>(new Set());
+  const [devisStatut, setDevisStatut] = useState<Map<string, string | null>>(new Map());
+  const [filtres, setFiltresState] = useState<FiltresAvances>(FILTRES_VIDES);
+  const [filtresOpen, setFiltresOpen] = useState(false);
 
-  // Tri des cartes et colonnes repliées : mémorisés par utilisateur (navigateur).
+  // Tri, colonnes repliées et filtres : mémorisés par utilisateur (navigateur).
   const prefKey = `opps-kanban-prefs:${user?.id ?? "anon"}`;
   const [tri, setTri] = useState<TriCartes>("urgence");
   const [replis, setReplis] = useState<Record<string, boolean>>({});
+  const [filterCa, setFilterCaState] = useState<string>("__all__");
+  const prefsRef = useRef<Record<string, unknown>>({});
   useEffect(() => {
     try {
       const p = JSON.parse(localStorage.getItem(prefKey) ?? "{}");
+      prefsRef.current = p;
       setTri(p.tri in TRI_LABEL ? p.tri : "urgence");
       setReplis(p.replis && typeof p.replis === "object" ? p.replis : {});
+      setFiltresState(lireFiltres(p.filtres));
+      setFilterCaState(typeof p.ca === "string" ? p.ca : "__all__");
+      // Interrupteurs + recherche : restaurés seulement si l'adresse n'en impose pas.
+      const t = p.inter;
+      if (t && typeof t === "object" && !search.q && !search.actionsDues && !search.noCa && !search.noD && !search.noRp && !search.claude) {
+        navigate({ search: (prev: OppsSearch) => ({ ...prev, q: typeof t.q === "string" ? t.q : "", actionsDues: !!t.actionsDues, noCa: !!t.noCa, noD: !!t.noD, noRp: !!t.noRp, claude: !!t.claude }), replace: true });
+      }
     } catch { /* préférences illisibles : valeurs par défaut */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [prefKey]);
-  const savePrefs = (next: { tri?: TriCartes; replis?: Record<string, boolean> }) => {
-    const v = { tri: next.tri ?? tri, replis: next.replis ?? replis };
-    try { localStorage.setItem(prefKey, JSON.stringify(v)); } catch { /* stockage indisponible */ }
+  const savePrefs = (next: Record<string, unknown>) => {
+    prefsRef.current = { tri, replis, filtres, ca: filterCa, ...prefsRef.current, ...next };
+    try { localStorage.setItem(prefKey, JSON.stringify(prefsRef.current)); } catch { /* stockage indisponible */ }
   };
+  const setFiltres = (f: FiltresAvances) => { setFiltresState(f); savePrefs({ filtres: f }); };
+  const setFilterCa = (v: string) => { setFilterCaState(v); savePrefs({ ca: v }); };
+  useEffect(() => {
+    savePrefs({ inter: { q: searchQuery, actionsDues, noCa, noD, noRp, claude } });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery, actionsDues, noCa, noD, noRp, claude]);
 
   // Filtres tableur additionnels (statut/taille/deviseur multi-select)
   const [statutsFilter, setStatutsFilter] = useState<OpportuniteStatut[]>([]);
@@ -255,7 +278,6 @@ function OpportunitesPage() {
   // d'affaires » (demande GabIn, 23 oct. 2026). Le périmètre réellement
   // visible reste décidé par les politiques de la base ; le scope de la
   // capability ne pilote plus qu'un filtre supplémentaire (« Sans CA »).
-  const [filterCa, setFilterCa] = useState<string>("__all__");
 
   const chargesById = useMemo(() => {
     const m = new Map();
@@ -299,6 +321,7 @@ function OpportunitesPage() {
           const dernier = new Map<string, NonNullable<typeof dv.data>[number]>();
           (dv.data ?? []).forEach((d) => { if (d.affaire_id && (dernier.get(d.affaire_id)?.version ?? -1) < d.version) dernier.set(d.affaire_id, d); });
           setClaudeIds(new Set([...dernier.entries()].filter(([, d]) => estBrouillonClaude(d)).map(([id]) => id)));
+          setDevisStatut(new Map([...dernier.entries()].map(([id, d]) => [id, d.statut_redaction ?? null])));
           const rolesBy = new Map<string, string[]>();
           (roles.data ?? []).forEach((r) => rolesBy.set(r.affaire_id, [...(rolesBy.get(r.affaire_id) ?? []), r.role]));
           setOpps((cur) => cur.map((o) => ({ ...o, statut_opportunite_depuis: depuis.get(o.id) ?? null, created_at: created.get(o.id) ?? null, date_evenement_debut: evt.get(o.id) ?? null, roles_affectes: rolesBy.get(o.id) ?? [] })));
@@ -322,6 +345,16 @@ function OpportunitesPage() {
     d.setDate(d.getDate() + 7);
     return d;
   }, [today]);
+  // Montants de toutes les opportunités (indépendants des filtres) pour les filtres montant / statut devis.
+  const tousIndicateurs = usePipelineIndicateurs(useMemo(() => opps.map((o) => o.id), [opps]), { chargeAffairesId: null, q: "" });
+  const infoDevis = useMemo(() => {
+    const m = new Map<string, { statut_redaction: string | null; montant: number | null }>();
+    (tousIndicateurs.data?.affaires ?? []).forEach((a) => m.set(a.affaire_id, {
+      statut_redaction: a.devis_id ? (a.numero_progbat ? "transfere" : devisStatut.get(a.affaire_id) ?? "brouillon") : null,
+      montant: a.net_ht != null ? Number(a.net_ht) : a.estime != null ? Number(a.estime) : null,
+    }));
+    return m;
+  }, [tousIndicateurs.data, devisStatut]);
   const oppsFiltrees = useMemo(() => {
     return opps.filter((o) => {
       if (filterCa && filterCa !== "__all__" && o.charge_affaires_id !== filterCa)
@@ -339,19 +372,51 @@ function OpportunitesPage() {
         const haystack = `${o.numero ?? ""} ${o.client ?? ""} ${o.nom ?? ""}`.toLowerCase();
         if (!haystack.includes(normalizedQuery)) return false;
       }
+      if (!passeFiltres(o, infoDevis.get(o.id), filtres)) return false;
       return true;
     });
-  }, [opps, filterCa, noCa, noD, noRp, claude, claudeIds, actionsDues, sevenDaysAhead, normalizedQuery]);
+  }, [opps, filterCa, noCa, noD, noRp, claude, claudeIds, actionsDues, sevenDaysAhead, normalizedQuery, filtres, infoDevis]);
 
+  // Filtres propres aux opportunités : aucun supplément 6XXX ne correspond.
+  const filtreOppSeul = noCa || noD || noRp || actionsDues || claude || (nbFiltresAvances(filtres) - (filtres.supplements ? 1 : 0) - (filtres.client.trim() ? 1 : 0)) > 0;
   // Indicateurs (tuiles + montants) : respectent les filtres actifs ; « À relancer » filtre ensuite le Kanban.
   const indicateurs = usePipelineIndicateurs(useMemo(() => oppsFiltrees.map((o) => o.id), [oppsFiltrees]), {
-    // Filtres propres aux opportunités (sans CA, rôles, actions, Claude) : aucun supplément 6XXX ne correspond.
-    chargeAffairesId: noCa || noD || noRp || actionsDues || claude ? "00000000-0000-0000-0000-000000000000" : filterCa !== "__all__" ? filterCa : null,
-    q: searchQuery,
+    chargeAffairesId: filtreOppSeul ? "00000000-0000-0000-0000-000000000000" : filterCa !== "__all__" ? filterCa : null,
+    q: filtres.client.trim() ? filtres.client.trim() : searchQuery,
   });
   const parAffaire = useMemo(() => new Map((indicateurs.data?.affaires ?? []).map((a) => [a.affaire_id, a])), [indicateurs.data]);
   const [relance, setRelance] = useState(false);
   const oppsKanban = useMemo(() => relance ? oppsFiltrees.filter((o) => parAffaire.get(o.id)?.a_relancer) : oppsFiltrees, [relance, oppsFiltrees, parAffaire]);
+
+  // Pastilles supprimables des filtres actifs.
+  const pastilles = useMemo(() => {
+    const out: { cle: string; label: string; retirer: () => void }[] = [];
+    const f = filtres;
+    if (searchQuery.trim()) out.push({ cle: "q", label: `Recherche : ${searchQuery.trim()}`, retirer: () => setSearchQuery("") });
+    if (filterCa !== "__all__") out.push({ cle: "ca", label: filterCa === user?.id ? "Moi" : (chargesById.get(filterCa)?.full_name || chargesById.get(filterCa)?.email || "Chargé d'affaires"), retirer: () => setFilterCa("__all__") });
+    if (actionsDues) out.push({ cle: "ad", label: "Actions dues ≤ 7 j", retirer: () => setActionsDues(false) });
+    if (noCa) out.push({ cle: "noCa", label: "Sans chargé d'affaires", retirer: () => setNoCa(false) });
+    if (noD) out.push({ cle: "noD", label: "Sans dessinateur", retirer: () => setNoD(false) });
+    if (noRp) out.push({ cle: "noRp", label: "Sans responsable projet", retirer: () => setNoRp(false) });
+    if (claude) out.push({ cle: "claude", label: "Brouillon Claude", retirer: () => setClaude(false) });
+    f.statutsDevis.forEach((s) => out.push({ cle: `sd-${s}`, label: `Devis : ${STATUT_DEVIS_FILTRE_LABEL[s]}`, retirer: () => setFiltres({ ...f, statutsDevis: f.statutsDevis.filter((x) => x !== s) }) }));
+    f.typologies.forEach((t) => out.push({ cle: `ty-${t}`, label: AFFAIRE_TYPOLOGIE_LABELS[t as AffaireTypologie] ?? t, retirer: () => setFiltres({ ...f, typologies: f.typologies.filter((x) => x !== t) }) }));
+    f.tailles.forEach((t) => out.push({ cle: `ta-${t}`, label: `Taille ${TAILLE_LABEL[t as OpportuniteTaille] ?? t}`, retirer: () => setFiltres({ ...f, tailles: f.tailles.filter((x) => x !== t) }) }));
+    if (f.periode) out.push({ cle: "per", label: f.periode === "libre" ? `Du ${f.du || "…"} au ${f.au || "…"}` : PERIODE_LABEL[f.periode], retirer: () => setFiltres({ ...f, periode: "", du: "", au: "" }) });
+    if (f.sansDateMontage) out.push({ cle: "sdm", label: "Sans date de montage", retirer: () => setFiltres({ ...f, sansDateMontage: false }) });
+    if (f.enRetard) out.push({ cle: "ret", label: "En retard", retirer: () => setFiltres({ ...f, enRetard: false }) });
+    if (f.montantMin != null) out.push({ cle: "min", label: `≥ ${f.montantMin.toLocaleString("fr-FR")} €`, retirer: () => setFiltres({ ...f, montantMin: null }) });
+    if (f.montantMax != null) out.push({ cle: "max", label: `≤ ${f.montantMax.toLocaleString("fr-FR")} €`, retirer: () => setFiltres({ ...f, montantMax: null }) });
+    if (f.supplements) out.push({ cle: "sup", label: "Suppléments 6XXX", retirer: () => setFiltres({ ...f, supplements: false }) });
+    if (f.client.trim()) out.push({ cle: "cli", label: `Client : ${f.client.trim()}`, retirer: () => setFiltres({ ...f, client: "" }) });
+    return out;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filtres, searchQuery, filterCa, actionsDues, noCa, noD, noRp, claude, chargesById, user?.id]);
+  const resetFiltres = () => {
+    setFiltres(FILTRES_VIDES);
+    setFilterCa("__all__");
+    navigate({ search: (prev: OppsSearch) => ({ ...prev, q: "", actionsDues: false, noCa: false, noD: false, noRp: false, claude: false }), replace: true });
+  };
 
   // Compteurs par statut (avant filtre statut) pour les pastilles.
   const statutCounts = useMemo(() => {
@@ -520,206 +585,76 @@ function OpportunitesPage() {
         title="Opportunités"
         description={`${opps.length} opportunité${opps.length > 1 ? "s" : ""} 9XXX en pipeline. ${vue === "kanban" ? "Glissez les cartes entre colonnes pour changer leur statut." : "Saisie ligne par ligne (auto-save)."}`}
         actions={
-          canManageOpps && vue === "kanban" && (
+          <div className="flex items-center gap-3">
+          <Link to="/affaires" className="whitespace-nowrap text-xs font-semibold text-muted-foreground hover:text-primary hover:underline">Affaires signées (5XXX) →</Link>
+          {canManageOpps && vue === "kanban" && (
             <Button
               onClick={() => setCreateOpen(true)}
               className="rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
             >
               <Plus className="mr-2 h-4 w-4" /> Nouvelle opportunité
             </Button>
-          )
+          )}
+          </div>
         }
       />
 
-      {/* Toggle Vue Kanban / Tableur */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <ToggleGroup
-          type="single"
-          value={vue}
-          onValueChange={(v) => v && setVue(v as VueOpportunites)}
-          className="rounded-xl border border-border bg-card p-1"
-        >
-          <ToggleGroupItem value="kanban" aria-label="Vue Kanban" className="h-8 gap-1.5 px-3">
-            <LayoutGrid className="h-3.5 w-3.5" /> Kanban
-          </ToggleGroupItem>
-          <ToggleGroupItem value="tableur" aria-label="Vue Tableur" className="h-8 gap-1.5 px-3">
-            <TableIcon className="h-3.5 w-3.5" /> Tableur
-          </ToggleGroupItem>
-          <Link
-            to="/liste-chantiers"
-            className="inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
-          >
-            <TableIcon className="h-3.5 w-3.5" /> Liste des chantiers
-          </Link>
+      {/* Une seule ligne : bouton Filtres + choix de vue */}
+      <div className="flex items-center justify-between gap-2">
+        <Button variant="outline" className="h-9 gap-2 rounded-xl" onClick={() => setFiltresOpen(true)} aria-label="Filtres">
+          <Filter className="h-4 w-4" /> Filtres
+          {pastilles.length > 0 && <span className="rounded-full bg-primary px-1.5 text-[11px] font-semibold tabular-nums text-primary-foreground">{pastilles.length}</span>}
+        </Button>
+        <ToggleGroup type="single" value={vue} onValueChange={(v) => v && setVue(v as VueOpportunites)} className="rounded-xl border border-border bg-card p-0.5">
+          <ToggleGroupItem value="kanban" aria-label="Vue Kanban" title="Kanban" className="h-8 w-9 px-0"><LayoutGrid className="h-4 w-4" /></ToggleGroupItem>
+          <ToggleGroupItem value="tableur" aria-label="Vue Tableur" title="Tableur" className="h-8 w-9 px-0"><TableIcon className="h-4 w-4" /></ToggleGroupItem>
+          <Link to="/liste-chantiers" aria-label="Liste des chantiers" title="Liste des chantiers" className="inline-flex h-8 w-9 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"><List className="h-4 w-4" /></Link>
         </ToggleGroup>
-
-        <Link
-          to="/affaires"
-          className="text-xs font-semibold text-muted-foreground hover:text-primary hover:underline"
-        >
-          Voir les affaires signées (5XXX) →
-        </Link>
       </div>
 
-      {/* Filtres communs */}
-      <div className="flex flex-wrap items-center gap-2">
-        <Filter className="h-4 w-4 text-muted-foreground" />
-        <Select value={filterCa} onValueChange={setFilterCa} disabled={chargesLoading}>
-          <SelectTrigger className="h-9 w-[200px] rounded-xl">
-            <SelectValue placeholder="Chargé d'affaires…" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="__all__">Tous les CA</SelectItem>
-            {user?.id && charges.some((c) => c.id === user.id) && (
-              <SelectItem value={user.id}>Moi</SelectItem>
-            )}
-            {charges.map((c) => (
-              <SelectItem key={c.id} value={c.id}>
-                {c.full_name || c.email}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        {vue === "tableur" && (
-          <>
-            <Select
-              value={taillesFilter[0] ?? "__all__"}
-              onValueChange={(v) =>
-                setTaillesFilter(v === "__all__" ? [] : [v as OpportuniteTaille])
-              }
-            >
-              <SelectTrigger className="h-9 w-[150px] rounded-xl">
-                <SelectValue placeholder="Taille" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__all__">Toutes tailles</SelectItem>
-                {TAILLE_ORDER.map((t) => (
-                  <SelectItem key={t} value={t}>
-                    {TAILLE_LABEL[t]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select value={preset} onValueChange={(v) => setPreset(v as StoredPreset)}>
-              <SelectTrigger className="h-9 w-[160px] rounded-xl">
-                <SelectValue placeholder="Période" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Toute période</SelectItem>
-                <SelectItem value="7d">7 derniers jours</SelectItem>
-                <SelectItem value="30d">30 derniers jours</SelectItem>
-                <SelectItem value="current_month">Mois en cours</SelectItem>
-              </SelectContent>
-            </Select>
-
-          </>
-        )}
-
-        <div className="relative">
-          <Input
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="N° chantier, client ou nom…"
-            className="h-9 w-[260px] rounded-xl pr-8"
-          />
-          {searchQuery && (
-            <button
-              onClick={() => setSearchQuery("")}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              aria-label="Effacer recherche"
-            >
-              <X className="h-3.5 w-3.5" />
+      {pastilles.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {pastilles.map((p) => (
+            <button key={p.cle} type="button" onClick={p.retirer} aria-label={`Retirer le filtre ${p.label}`}
+              className="inline-flex items-center gap-1 rounded-full border border-border bg-card px-2.5 py-1 text-xs font-medium hover:bg-muted">
+              {p.label} <X className="h-3 w-3" />
             </button>
-          )}
+          ))}
         </div>
+      )}
 
-        <label className="flex h-9 cursor-pointer items-center gap-2 rounded-xl border border-border bg-card px-3 text-xs font-medium">
-          <Switch
-            checked={actionsDues}
-            onCheckedChange={setActionsDues}
-            aria-label="Actions dues sous 7 jours"
-          />
-          <span className="text-muted-foreground">Actions dues ≤ 7j</span>
-        </label>
-
-        {oppScope === "all" && (
-          <label className="flex h-9 cursor-pointer items-center gap-2 rounded-xl border border-border bg-card px-3 text-xs font-medium">
-            <Switch
-              checked={noCa}
-              onCheckedChange={setNoCa}
-              aria-label="Sans chargé d'affaires"
-            />
-            <span className="text-muted-foreground">Sans chargé d'affaires</span>
-          </label>
-        )}
-
-        {oppScope === "all" && (
-          <label
-            className="flex h-9 cursor-pointer items-center gap-2 rounded-xl border border-border bg-card px-3 text-xs font-medium"
-            title="Sans dessinateur/concepteur — statuts À l'étude, Presque gagné et Gagné uniquement"
-          >
-            <Switch
-              checked={noD}
-              onCheckedChange={setNoD}
-              aria-label="Sans dessinateur"
-            />
-            <span className="text-muted-foreground">Sans dessinateur</span>
-          </label>
-        )}
-
-        {oppScope === "all" && (
-          <label
-            className="flex h-9 cursor-pointer items-center gap-2 rounded-xl border border-border bg-card px-3 text-xs font-medium"
-            title="Sans responsable projet — statuts Presque gagné et Gagné uniquement"
-          >
-            <Switch
-              checked={noRp}
-              onCheckedChange={setNoRp}
-              aria-label="Sans responsable projet"
-            />
-            <span className="text-muted-foreground">Sans responsable projet</span>
-          </label>
-        )}
-
-        <label
-          className="flex h-9 cursor-pointer items-center gap-2 rounded-xl border border-border bg-card px-3 text-xs font-medium"
-          title="Dernier devis créé par Claude, en brouillon ou à valider, pas encore repris par un humain"
-        >
-          <Switch checked={claude} onCheckedChange={setClaude} aria-label="Brouillon Claude à relire" />
-          <span className="text-muted-foreground">Brouillon Claude à relire{claudeIds.size > 0 && ` (${claudeIds.size})`}</span>
-        </label>
-
-        {vue !== "tableur" && (
-          <Select value={tri} onValueChange={(v) => { setTri(v as TriCartes); savePrefs({ tri: v as TriCartes }); }}>
-            <SelectTrigger className="h-9 w-[200px] rounded-xl" aria-label="Tri des cartes">
-              <SelectValue />
-            </SelectTrigger>
+      {vue === "tableur" && (
+        <div className="flex flex-wrap items-center gap-2">
+          <Select value={preset} onValueChange={(v) => setPreset(v as StoredPreset)}>
+            <SelectTrigger className="h-9 w-[180px] rounded-xl"><SelectValue placeholder="Période de création" /></SelectTrigger>
             <SelectContent>
-              {(Object.keys(TRI_LABEL) as TriCartes[]).map((t) => (
-                <SelectItem key={t} value={t}>Tri : {TRI_LABEL[t]}</SelectItem>
-              ))}
+              <SelectItem value="all">Toute période</SelectItem>
+              <SelectItem value="7d">Créées ces 7 jours</SelectItem>
+              <SelectItem value="30d">Créées ces 30 jours</SelectItem>
+              <SelectItem value="current_month">Créées ce mois-ci</SelectItem>
             </SelectContent>
           </Select>
-        )}
+          <label className="flex h-9 cursor-pointer items-center gap-2 rounded-xl border border-border bg-card px-3 text-xs font-medium">
+            <Switch checked={showArchived} onCheckedChange={setShowArchived} aria-label="Afficher les archivées" />
+            <span>Archivées{archivedCount > 0 && ` (${archivedCount})`}</span>
+          </label>
+        </div>
+      )}
 
-        {vue === "tableur" && (
-          <>
-
-            <label className="flex h-9 cursor-pointer items-center gap-2 rounded-xl border border-border bg-card px-3 text-xs font-medium">
-              <Switch
-                checked={showArchived}
-                onCheckedChange={setShowArchived}
-                aria-label="Afficher les archivées"
-              />
-              <span className="text-muted-foreground">
-                Archivées{archivedCount > 0 && ` (${archivedCount})`}
-              </span>
-            </label>
-          </>
-        )}
-      </div>
+      <PipelineFiltresSheet
+        open={filtresOpen} onOpenChange={setFiltresOpen}
+        q={searchQuery} setQ={setSearchQuery}
+        tri={tri} setTri={(t) => { setTri(t); savePrefs({ tri: t }); }} showTri={vue !== "tableur"}
+        ca={filterCa} setCa={setFilterCa} charges={charges} moiId={user?.id && charges.some((c) => c.id === user.id) ? user.id : undefined}
+        inter={{ actionsDues, noCa, noD, noRp, claude }}
+        setInter={(k, v) => ({ actionsDues: setActionsDues, noCa: setNoCa, noD: setNoD, noRp: setNoRp, claude: setClaude })[k](v)}
+        showScopeAll={oppScope === "all"} claudeNb={claudeIds.size}
+        f={filtres} setF={setFiltres}
+        typologies={AFFAIRE_TYPOLOGIES.map((t) => ({ value: t, label: AFFAIRE_TYPOLOGIE_LABELS[t] }))}
+        tailles={TAILLE_ORDER.map((t) => ({ value: t, label: TAILLE_LABEL[t] }))}
+        nbResultats={filtres.supplements ? (indicateurs.data?.supplements.length ?? 0) : oppsKanban.filter((o) => vue === "tableur" ? showArchived || o.statut_opportunite !== "termine" : o.statut_opportunite !== "termine").length}
+        onReset={resetFiltres}
+      />
 
       {vue !== "tableur" && <PipelineIndicateursBandeau data={indicateurs.data} relanceActive={relance} onRelance={() => setRelance((r) => !r)} />}
 
@@ -828,10 +763,10 @@ function OpportunitesPage() {
                 }}
               />
             ))}
-            {!relance && (indicateurs.data?.supplements.length ?? 0) > 0 && (
+            {!relance && !filtreOppSeul && (indicateurs.data?.supplements.length ?? 0) > 0 && (
               <SupplementsColonne
                 items={indicateurs.data!.supplements}
-                repliee={replis.supplements ?? true}
+                repliee={filtres.supplements ? false : replis.supplements ?? true}
                 onToggle={() => { const next = { ...replis, supplements: !(replis.supplements ?? true) }; setReplis(next); savePrefs({ replis: next }); }}
               />
             )}
