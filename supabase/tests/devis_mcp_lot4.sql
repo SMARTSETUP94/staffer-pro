@@ -30,6 +30,7 @@ BEGIN
   IF NOT (SELECT cree_par_mcp AND modifie_par_humain_le IS NULL AND cle_externe='T-LOT4-1' FROM devis WHERE id=v_d) THEN RAISE EXCEPTION 'KO marquage MCP'; END IF;
 
   -- 3. même cle_externe (même contenu, nouvelle confirmation) → même brouillon
+  SELECT updated_at::text INTO snap FROM affaires WHERE id=v_aff;
   cid := (mcp_write_preview('devis_creer_brouillon','h1',p,v_aff,NULL,snap,'{}')->>'confirmation_id')::uuid;
   r := mcp_execute_write_locked(cid,'devis_creer_brouillon','h1',p,'{}');
   IF (r->>'devis_id')::uuid IS DISTINCT FROM v_d THEN RAISE EXCEPTION 'KO idempotence : %', r; END IF;
