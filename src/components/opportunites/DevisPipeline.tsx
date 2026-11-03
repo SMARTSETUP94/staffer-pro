@@ -93,10 +93,12 @@ export function DevisPipelineBouton({ affaireId, statut, onStatutChange }: { aff
   };
 
   return (
-    <div className="mt-2 flex flex-wrap items-center gap-1.5" {...stop}>
-      <Button type="button" size="sm" variant="outline" className="h-6 px-2 text-[11px]" disabled={busy}
+    <div className="flex shrink-0 items-center" {...stop}>
+      <Button type="button" size="sm" variant="outline" className="h-7 gap-1 px-2 text-[11px]" disabled={busy}
+        title={action === "ouvrir" ? "Ouvrir le devis" : "Créer le devis"}
+        aria-label={action === "ouvrir" ? "Ouvrir le devis" : "Créer le devis"}
         onClick={() => (action === "ouvrir" && badge ? ouvrir(badge.devis_id) : setOpen(true))}>
-        <FileText className="mr-1 h-3 w-3" />{action === "ouvrir" ? "Ouvrir le devis" : "Créer le devis"}
+        <FileText className="h-3.5 w-3.5" /><span className="hidden min-[360px]:inline">{action === "ouvrir" ? "Ouvrir le devis" : "Créer le devis"}</span>
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent {...stop}>
