@@ -586,7 +586,7 @@ function OpportunitesPage() {
         description={`${opps.length} opportunité${opps.length > 1 ? "s" : ""} 9XXX en pipeline. ${vue === "kanban" ? "Glissez les cartes entre colonnes pour changer leur statut." : "Saisie ligne par ligne (auto-save)."}`}
         actions={
           <div className="flex items-center gap-3">
-          <Link to="/affaires" className="text-xs font-semibold text-muted-foreground hover:text-primary hover:underline">Affaires signées (5XXX) →</Link>
+          <Link to="/affaires" className="whitespace-nowrap text-xs font-semibold text-muted-foreground hover:text-primary hover:underline">Affaires signées (5XXX) →</Link>
           {canManageOpps && vue === "kanban" && (
             <Button
               onClick={() => setCreateOpen(true)}
