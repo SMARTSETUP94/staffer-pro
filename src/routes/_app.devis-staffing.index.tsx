@@ -15,7 +15,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { STATUT_LABEL, eur, type DevisStatut } from "@/components/devis/editeur/api";
-import { libelleStatutDevis } from "@/lib/devis/progbat-export";
+import { libelleNumeroProgbat, libelleStatutDevis } from "@/lib/devis/progbat-export";
 import { SupprimerDevisDialog, SUPPRESSION_REFUSEE, devisSupprimable } from "@/components/devis/SupprimerDevis";
 import { useModelesDevis } from "@/components/devis/useModelesDevis";
 import { ExportPdfDialog } from "@/components/devis/DevisPdfEnvoi";
@@ -111,7 +111,7 @@ function DevisGlobal() {
             <TableBody>
               {rows.map((r) => (
                 <TableRow key={r.id} className="cursor-pointer" onClick={() => navigate({ to: "/affaires/$affaireId/devis-staffing/$devisId", params: { affaireId: r.affaire_id, devisId: r.id } })}>
-                  <TableCell className="font-medium">{r.numero} <span className="text-xs text-muted-foreground">R{r.version}</span>{claude.data?.has(r.id) && <BadgeClaude />}{r.numero_progbat && <span className="block text-xs text-muted-foreground">ProGBat {r.numero_progbat}</span>}</TableCell>
+                  <TableCell className="font-medium">{r.numero} <span className="text-xs text-muted-foreground">R{r.version}</span>{claude.data?.has(r.id) && <BadgeClaude />}{r.numero_progbat && <span className="block text-xs text-muted-foreground">{libelleNumeroProgbat(r.numero_progbat)}</span>}</TableCell>
                   <TableCell>{[r.affaire_numero, r.affaire_nom].filter(Boolean).join(" · ")}</TableCell>
                   <TableCell>{r.client_nom ?? "—"}</TableCell>
                   <TableCell><Badge variant="outline">{libelleStatutDevis(r.statut_redaction, r.numero_progbat, r.date_envoi, STATUT_LABEL)}</Badge></TableCell>

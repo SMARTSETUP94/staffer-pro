@@ -21,7 +21,7 @@ import { ObjetPanel } from "./ObjetPanel";
 import { DevisVueClient } from "./DevisVueClient";
 import { ExportPdfDialog, EnvoiEmailDialog } from "@/components/devis/DevisPdfEnvoi";
 import { ProgbatExportDialog, EnregistrerTransfertDialog } from "@/components/devis/ProgbatTransfert";
-import { libelleStatutDevis } from "@/lib/devis/progbat-export";
+import { libelleNumeroProgbat, libelleStatutDevis, NUMERO_PROGBAT_PROVISOIRE_RE } from "@/lib/devis/progbat-export";
 import { BibliothequeDialog } from "./BibliothequeDialog";
 import { SupprimerDevisDialog, SUPPRESSION_REFUSEE, devisSupprimable } from "@/components/devis/SupprimerDevis";
 import { useAutosave } from "./useAutosave";
@@ -196,7 +196,7 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
               {d.modele_origine && ` · modèle : ${d.modele_origine}`}
             </p>
             <Badge className="mt-1">{libelleStatutDevis(st, d.devis.numero_progbat, d.devis.date_envoi, STATUT_LABEL)}</Badge>{infoClaude && <BadgeClaude />}
-            {d.devis.numero_progbat && <p className="mt-1 text-xs">Réf. ProGBat <strong>{d.devis.numero_progbat}</strong>{d.devis.transfere_progbat_le ? ` · transféré le ${new Date(d.devis.transfere_progbat_le).toLocaleDateString("fr-FR")}` : ""}</p>}
+            {d.devis.numero_progbat && <p className="mt-1 text-xs">Réf. <strong>{libelleNumeroProgbat(d.devis.numero_progbat)}</strong>{d.devis.transfere_progbat_le ? ` · transféré le ${new Date(d.devis.transfere_progbat_le).toLocaleDateString("fr-FR")}` : ""}</p>}
           </div>
           {!d.devis.est_modele && (
             <>
@@ -337,6 +337,9 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
               {(st === "valide" || (st === "transfere" && !!d.devis.numero_progbat && !d.devis.date_envoi)) && d.droits.valider && !d.devis.est_modele && d.devis.affaire_id && (
                 <Button onClick={() => { setEnvoiDate(new Date().toISOString().slice(0, 10)); setEnvoiDlg(true); }}>Marquer envoyé au client</Button>
               )}
+              {st === "transfere" && NUMERO_PROGBAT_PROVISOIRE_RE.test(d.devis.numero_progbat ?? "") && d.droits.valider && !d.devis.est_modele && (
+                <Button variant="outline" onClick={() => setTrDlg(true)}>Numéro définitif ProGBat…</Button>
+              )}
               {st === "transfere" && d.devis.date_envoi && <p className="text-xs text-muted-foreground">Envoyé le {new Date(d.devis.date_envoi).toLocaleDateString("fr-FR")}</p>}
               {["valide", "transfere"].includes(st) && d.droits.valider && !d.devis.est_modele && d.devis.affaire_id && !d.devis.signe_vers_fabrication_le && (
                 <Button onClick={() => void clientSigne()}><PenLine className="mr-1 h-4 w-4" />Client signé</Button>
@@ -473,7 +476,7 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
       <DevisVueClient open={vueClient} onOpenChange={setVueClient} devisId={devisId} />
       <ExportPdfDialog open={pdfDlg} onOpenChange={setPdfDlg} devisId={devisId} />
       <ProgbatExportDialog open={pgDlg} onOpenChange={setPgDlg} devisId={devisId} peutTransferer={st === "valide" && d.droits.valider} onTransfert={() => setTrDlg(true)} />
-      <EnregistrerTransfertDialog open={trDlg} onOpenChange={setTrDlg} devisId={devisId} netHt={calc?.net_ht ?? 0}
+      <EnregistrerTransfertDialog open={trDlg} onOpenChange={setTrDlg} devisId={devisId} netHt={calc?.net_ht ?? 0} numeroActuel={d.devis.numero_progbat ?? null}
         onDone={() => { void q.refetch(); window.dispatchEvent(new Event("affaire-updated")); }} />
       <EnvoiEmailDialog open={mailDlg} onOpenChange={setMailDlg} devisId={devisId} onSent={() => void q.refetch()} />
       <BibliothequeDialog open={biblio} onOpenChange={setBiblio} devisId={devisId}
