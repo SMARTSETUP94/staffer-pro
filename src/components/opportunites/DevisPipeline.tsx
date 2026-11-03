@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { useCapability } from "@/hooks/use-capability";
 import { useFeatureFlag } from "@/hooks/use-feature-flag";
 import { STATUT_LABEL } from "@/components/devis/editeur/api";
+import { libelleStatutDevis } from "@/lib/devis/progbat-export";
 import { useModelesDevis } from "@/components/devis/useModelesDevis";
 import { devisPipelineAction, versionSignaturePropose, type DevisBadge } from "@/lib/devis/pipeline";
 
@@ -26,7 +27,7 @@ export function DevisPipelineProvider({ affaireIds, children }: { affaireIds: st
     queryFn: async () => {
       const { data, error } = await supabase.rpc("devis_derniers_par_affaire", { _affaire_ids: affaireIds.slice(0, 1000) });
       if (error) throw error;
-      return new Map((data ?? []).map((r) => [r.affaire_id, { devis_id: r.devis_id, version: r.version, statut_redaction: r.statut_redaction } as DevisBadge]));
+      return new Map((data ?? []).map((r) => [r.affaire_id, { devis_id: r.devis_id, version: r.version, statut_redaction: r.statut_redaction, numero_progbat: r.numero_progbat, date_envoi: r.date_envoi } as DevisBadge]));
     },
   });
   return (
@@ -70,7 +71,7 @@ export function DevisPipelineBouton({ affaireId, statut, onStatutChange }: { aff
     <div className="mt-2 flex items-center gap-1.5" {...stop}>
       {badge && (
         <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
-          R{badge.version} · {STATUT_LABEL[badge.statut_redaction].toLowerCase()}
+          R{badge.version} · {libelleStatutDevis(badge.statut_redaction, badge.numero_progbat, badge.date_envoi, STATUT_LABEL).toLowerCase()}{badge.numero_progbat ? ` · ${badge.numero_progbat}` : ""}
         </span>
       )}
       <Button type="button" size="sm" variant="outline" className="h-6 px-2 text-[11px]" disabled={busy}

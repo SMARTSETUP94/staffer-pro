@@ -107,3 +107,10 @@
 - [x] Passe 2 : 11 outils MCP + instructions + photos (10 Mo visé, repli 5 Mo).
 - [x] Passe 3 : badge « Rédigé par Claude », note de Claude.
 - [x] Recette (10 points). Publication : non, en attente de Gabin.
+
+## Lot 3a — Transfert ProGBat (3 nov. 2026)
+- [x] Passe 1 : colonnes transfert, données d'export, enregistrement du transfert, envoi après transfert, listes avec numéro ProGBat.
+- [x] Passe 2 : générateur Excel + fiche de contrôle (arrondi absorbé dans Suivi/Pose/Dépose).
+- [x] Passe 3 : bouton « Vers ProGBat », fenêtre « Enregistrer le transfert », numéro dans listes/éditeur/pipeline/PDF.
+- [x] Fichier d'exemple 9484-R2 (hors historique).
+- [ ] Lot 3b (outils Claude) : en attente d'un vrai import ProGBat avec Gabin.

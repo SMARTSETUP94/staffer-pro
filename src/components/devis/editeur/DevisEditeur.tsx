@@ -20,6 +20,8 @@ import { DevisArbre } from "./DevisArbre";
 import { ObjetPanel } from "./ObjetPanel";
 import { DevisVueClient } from "./DevisVueClient";
 import { ExportPdfDialog, EnvoiEmailDialog } from "@/components/devis/DevisPdfEnvoi";
+import { ProgbatExportDialog, EnregistrerTransfertDialog } from "@/components/devis/ProgbatTransfert";
+import { libelleStatutDevis } from "@/lib/devis/progbat-export";
 import { BibliothequeDialog } from "./BibliothequeDialog";
 import { SupprimerDevisDialog, SUPPRESSION_REFUSEE, devisSupprimable } from "@/components/devis/SupprimerDevis";
 import { useAutosave } from "./useAutosave";
@@ -53,6 +55,8 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
   const [modele, setModele] = useState({ nom: "", categorie: "", description: "" });
   const [envoiDlg, setEnvoiDlg] = useState(false);
   const [pdfDlg, setPdfDlg] = useState(false);
+  const [pgDlg, setPgDlg] = useState(false);
+  const [trDlg, setTrDlg] = useState(false);
   const [mailDlg, setMailDlg] = useState(false);
   const [envoiDate, setEnvoiDate] = useState("");
   const [supprDlg, setSupprDlg] = useState(false);
@@ -191,7 +195,8 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
               {d.affaire ? `${d.affaire.numero ?? d.affaire.code_opportunite ?? ""} ${d.affaire.nom ?? ""}` : ""}
               {d.modele_origine && ` · modèle : ${d.modele_origine}`}
             </p>
-            <Badge className="mt-1">{STATUT_LABEL[st]}</Badge>{infoClaude && <BadgeClaude />}
+            <Badge className="mt-1">{libelleStatutDevis(st, d.devis.numero_progbat, d.devis.date_envoi, STATUT_LABEL)}</Badge>{infoClaude && <BadgeClaude />}
+            {d.devis.numero_progbat && <p className="mt-1 text-xs">Réf. ProGBat <strong>{d.devis.numero_progbat}</strong>{d.devis.transfere_progbat_le ? ` · transféré le ${new Date(d.devis.transfere_progbat_le).toLocaleDateString("fr-FR")}` : ""}</p>}
           </div>
           {!d.devis.est_modele && (
             <>
@@ -329,7 +334,7 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
               {st === "a_valider" && d.droits.ecrire && <Button variant="ghost" onClick={() => void changerStatut("brouillon")}>Repasser en brouillon</Button>}
               {(st === "brouillon" || st === "a_valider") && d.droits.valider && !d.devis.est_modele && <Button onClick={() => void changerStatut("valide")}>Valider</Button>}
               {!d.devis.est_modele && st !== "brouillon" && d.droits.ecrire && <Button variant="outline" onClick={() => void nouvelleVersion()}>Nouvelle version</Button>}
-              {st === "valide" && d.droits.valider && !d.devis.est_modele && d.devis.affaire_id && (
+              {(st === "valide" || (st === "transfere" && !!d.devis.numero_progbat && !d.devis.date_envoi)) && d.droits.valider && !d.devis.est_modele && d.devis.affaire_id && (
                 <Button onClick={() => { setEnvoiDate(new Date().toISOString().slice(0, 10)); setEnvoiDlg(true); }}>Marquer envoyé au client</Button>
               )}
               {st === "transfere" && d.devis.date_envoi && <p className="text-xs text-muted-foreground">Envoyé le {new Date(d.devis.date_envoi).toLocaleDateString("fr-FR")}</p>}
@@ -347,7 +352,10 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
                   onClick={() => setMailDlg(true)}><Mail className="mr-1 h-4 w-4" />Envoyer par email</Button>
               )}
               {!d.devis.est_modele && d.droits.parametres && <Button variant="ghost" onClick={() => { setModele({ nom: d.devis.libelle ?? "", categorie: "", description: "" }); setModeleDlg(true); }}>Enregistrer comme modèle</Button>}
-              <Button variant="outline" disabled title="Lot 3">Vers ProGBat (lot 3)</Button>
+              {!d.devis.est_modele && d.devis.affaire_id && (
+                <Button variant="outline" disabled={!["valide", "transfere"].includes(st)} title={!["valide", "transfere"].includes(st) ? "Réservé aux devis validés" : undefined}
+                  onClick={() => setPgDlg(true)}><FileDown className="mr-1 h-4 w-4" />Vers ProGBat</Button>
+              )}
               {!d.devis.est_modele && d.droits.ecrire && (
                 <>
                   <Button variant="ghost" className="text-destructive" disabled={!devisSupprimable(st) || !peutSupprimer.data}
@@ -464,6 +472,9 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
 
       <DevisVueClient open={vueClient} onOpenChange={setVueClient} devisId={devisId} />
       <ExportPdfDialog open={pdfDlg} onOpenChange={setPdfDlg} devisId={devisId} />
+      <ProgbatExportDialog open={pgDlg} onOpenChange={setPgDlg} devisId={devisId} peutTransferer={st === "valide" && d.droits.valider} onTransfert={() => setTrDlg(true)} />
+      <EnregistrerTransfertDialog open={trDlg} onOpenChange={setTrDlg} devisId={devisId} netHt={calc?.net_ht ?? 0}
+        onDone={() => { void q.refetch(); window.dispatchEvent(new Event("affaire-updated")); }} />
       <EnvoiEmailDialog open={mailDlg} onOpenChange={setMailDlg} devisId={devisId} onSent={() => void q.refetch()} />
       <BibliothequeDialog open={biblio} onOpenChange={setBiblio} devisId={devisId}
         onInsert={async (srcId) => {

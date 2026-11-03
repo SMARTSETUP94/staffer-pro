@@ -1,7 +1,7 @@
 /** Règles pures du lien devis ↔ pipeline opportunités (bouton des vignettes, badge, version à signer). */
 import type { DevisStatut } from "@/components/devis/editeur/api";
 
-export interface DevisBadge { devis_id: string; version: number; statut_redaction: DevisStatut }
+export interface DevisBadge { devis_id: string; version: number; statut_redaction: DevisStatut; numero_progbat?: string | null; date_envoi?: string | null }
 
 export const STATUTS_PIPELINE_OUVERTS = ["a_faire", "a_l_etude", "envoye", "presque_gagne"] as const;
 

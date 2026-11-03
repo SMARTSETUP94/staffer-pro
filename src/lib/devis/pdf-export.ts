@@ -8,7 +8,9 @@ export const BUCKET_EXPORTS = "devis-exports";
 export async function lireDevisClient(sb: SupabaseClient<Database>, devisId: string) {
   const { data, error } = await sb.rpc("devis_lire_client", { _devis_id: devisId });
   if (error || !data) throw new Error("Devis introuvable ou accès refusé");
-  return data as unknown as DevisClient;
+  const vc = data as unknown as DevisClient;
+  const pg = await sb.from("devis").select("numero_progbat").eq("id", devisId).maybeSingle();
+  return { ...vc, numero_progbat: pg.data?.numero_progbat ?? null };
 }
 
 /** Vignettes visibles client (images seulement) ; une image illisible est simplement omise. */
