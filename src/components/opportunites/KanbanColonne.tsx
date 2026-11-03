@@ -133,10 +133,7 @@ export function KanbanColonne({ statut, items, chargesById, onSign, onDelete, dr
   );
 }
 
-/** Badge commun « Supplément 6XXX ». */
-export function BadgeSupplement() {
-  return <span className="inline-flex items-center rounded-full border border-warning/50 bg-warning/15 px-2 py-0.5 text-[10px] font-semibold text-foreground">Supplément 6XXX</span>;
-}
+export { IconeSupplement as BadgeSupplement } from "@/components/devis/IconeSupplement";
 
 /**
  * Colonne à part, en fin de Kanban : devis de suppléments des chantiers 6XXX encore ouverts.
