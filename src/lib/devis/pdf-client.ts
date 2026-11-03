@@ -43,9 +43,11 @@ export const datePdf = (s: string | null | undefined) => {
   const [y, m, d] = s.slice(0, 10).split("-");
   return d && m && y ? `${d}/${m}/${y}` : s;
 };
+/** Référence affichée : le numéro porte déjà la version (9484-R2) ou on l'ajoute. */
+export const refDevis = (vc: Pick<DevisClient, "numero" | "version">) => /-R\d+$/.test(vc.numero) || !vc.version ? vc.numero : `${vc.numero}-R${vc.version}`;
 export const avecFiligrane = (statut?: string) => statut === "brouillon" || statut === "a_valider";
 export const nomFichierPdf = (vc: Pick<DevisClient, "numero" | "version">, niveau: NiveauPdf) =>
-  `Devis ${vc.numero}${vc.version ? `-R${vc.version}` : ""}${niveau === "synthetique" ? " (synthèse)" : ""}.pdf`.replace(/[\\/:*?"<>|]/g, "-");
+  `Devis ${refDevis(vc)}${niveau === "synthetique" ? " (synthèse)" : ""}.pdf`.replace(/[\\/:*?"<>|]/g, "-");
 
 const dims = (l: LigneClient) => {
   const d = [l.longueur_mm, l.largeur_mm, l.hauteur_mm].filter((x) => x != null && Number(x) > 0).map((x) => String(Number(x)));
@@ -89,7 +91,7 @@ export function construireDevisPdf(vc: DevisClient, niveau: NiveauPdf, images: R
   doc.text(soc, M, 28);
 
   doc.setTextColor(...ink); doc.setFont("helvetica", "bold"); doc.setFontSize(15);
-  doc.text(`DEVIS ${vc.numero}${vc.version ? ` — R${vc.version}` : ""}`, W - M, 22, { align: "right" });
+  doc.text(`DEVIS ${refDevis(vc)}`, W - M, 22, { align: "right" });
   doc.setFont("helvetica", "normal"); doc.setFontSize(9.5);
   const validite = vc.date_validite ?? vc.dates?.date_validite ?? null;
   doc.text([`Date du devis : ${datePdf(vc.date_devis) || "—"}`, `Valable jusqu'au : ${datePdf(validite) || (vc.validite_jours ? `${vc.validite_jours} jours` : "—")}`], W - M, 28, { align: "right" });
@@ -204,7 +206,7 @@ export function construireDevisPdf(vc: DevisClient, niveau: NiveauPdf, images: R
   for (let i = 1; i <= n; i++) {
     doc.setPage(i);
     doc.setFont("helvetica", "normal"); doc.setFontSize(7.5); doc.setTextColor(...muted);
-    doc.text(`Devis ${vc.numero}${vc.version ? ` R${vc.version}` : ""} — page ${i}/${n}`, W - M, 290, { align: "right" });
+    doc.text(`Devis ${refDevis(vc)} — page ${i}/${n}`, W - M, 290, { align: "right" });
     if (avecFiligrane(vc.statut_redaction)) {
       doc.saveGraphicsState();
       doc.setGState(new (doc as any).GState({ opacity: 0.13 }));

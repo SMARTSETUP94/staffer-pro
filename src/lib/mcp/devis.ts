@@ -374,6 +374,6 @@ async function exporterPdfMcp(context: McpAppContext, devisId: string, niveau: "
   const url = await context.db.storage.from("devis-exports").createSignedUrl(dernier.storage_path, 3600);
   if (url.error || !url.data) throw new ToolError("Lien de téléchargement indisponible");
   return { numero: lu.data.numero, version: dernier.version, niveau, filigrane_projet: dernier.filigrane === true, genere, cree_le: String(dernier.cree_le),
-    nom_fichier: `Devis ${lu.data.numero}-R${dernier.version}.pdf`, url_telechargement: url.data.signedUrl, expire_dans_secondes: 3600,
+    nom_fichier: `Devis ${/-R\d+$/.test(lu.data.numero) ? lu.data.numero : `${lu.data.numero}-R${dernier.version}`}.pdf`, url_telechargement: url.data.signedUrl, expire_dans_secondes: 3600,
     rappel: "Lien temporaire. L'envoi au client reste fait par un humain (brouillon Outlook possible)." };
 }
