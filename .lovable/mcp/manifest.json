@@ -13,7 +13,7 @@
   "mcp": {
     "server": {
       "name": "project-shift",
-      "version": "2.2.0",
+      "version": "2.3.0",
       "title": "Project Shift"
     },
     "tools": [
@@ -2850,6 +2850,101 @@
           "required": [
             "devis_id",
             "note",
+            "mode"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null,
+        "conditional": true
+      },
+      {
+        "name": "devis_exporter_progbat",
+        "title": "Exporter un devis vers ProGBat",
+        "description": "Excel d'import ProGBat (une ligne par objet et par chapitre, sans heures par poste, taux, coûts ni marge) et fiche de contrôle (totaux, remise, options, photos), liens valables 1 h. Devis validé par un humain et non transféré ; mode conversation uniquement.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "devis_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Devis validé par un humain dans Staffing, pas encore transféré."
+            },
+            "mode": {
+              "type": "string",
+              "enum": [
+                "autonomie",
+                "conversation"
+              ],
+              "description": "conversation obligatoire : transfert ProGBat uniquement en session avec l'utilisateur ; autonomie refusée."
+            }
+          },
+          "required": [
+            "devis_id",
+            "mode"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null,
+        "conditional": true
+      },
+      {
+        "name": "devis_enregistrer_transfert",
+        "title": "Enregistrer le transfert ProGBat",
+        "description": "Après l'import dans ProGBat : enregistrer le numéro provisoire S… (devis Staffing figé), puis plus tard le numéro définitif D-AAAAMM-NNNN, avec le total HT relu comparé au centime (motif obligatoire si écart). Mode conversation et accord explicite obligatoires. Premier appel : aperçu sans écriture ; après accord, renvoyer les mêmes arguments avec confirmation_id sous 10 minutes.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "devis_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "numero_progbat": {
+              "type": "string",
+              "pattern": "^(S\\d{6}|D-\\d{6}-\\d{4})$",
+              "description": "S003800 juste après l'import (brouillon ProGBat) ; D-AAAAMM-NNNN une fois le devis finalisé par un humain."
+            },
+            "total_progbat": {
+              "type": "number",
+              "minimum": 0,
+              "description": "Total net HT relu dans ProGBat, en euros."
+            },
+            "motif": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1000,
+              "description": "Obligatoire si le total ProGBat diffère du net HT Staffing au centime."
+            },
+            "mode": {
+              "type": "string",
+              "enum": [
+                "autonomie",
+                "conversation"
+              ],
+              "description": "conversation obligatoire, avec l'accord explicite de l'utilisateur ; autonomie refusée."
+            },
+            "confirmation_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Omettre pour obtenir l’aperçu ; renvoyer les mêmes arguments avec cet identifiant après accord humain, sous 10 minutes."
+            }
+          },
+          "required": [
+            "devis_id",
+            "numero_progbat",
+            "total_progbat",
             "mode"
           ],
           "additionalProperties": false,

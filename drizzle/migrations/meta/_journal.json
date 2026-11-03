@@ -554,6 +554,13 @@
       "when": 1793723823120,
       "tag": "0078_devis_22_transfert_progbat",
       "breakpoints": true
+    },
+    {
+      "idx": 79,
+      "version": "7",
+      "when": 1793726648710,
+      "tag": "0079_devis_23_transfert_progbat_deux_temps_mcp",
+      "breakpoints": true
     }
   ]
 }

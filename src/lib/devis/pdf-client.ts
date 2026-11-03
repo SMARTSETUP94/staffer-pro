@@ -94,7 +94,7 @@ export function construireDevisPdf(vc: DevisClient, niveau: NiveauPdf, images: R
   doc.text(`DEVIS ${refDevis(vc)}`, W - M, 22, { align: "right" });
   doc.setFont("helvetica", "normal"); doc.setFontSize(9.5);
   const validite = vc.date_validite ?? vc.dates?.date_validite ?? null;
-  doc.text([`Date du devis : ${datePdf(vc.date_devis) || "—"}`, `Valable jusqu'au : ${datePdf(validite) || (vc.validite_jours ? `${vc.validite_jours} jours` : "—")}`, ...(vc.numero_progbat ? [`Réf. ProGBat : ${vc.numero_progbat}`] : [])], W - M, 28, { align: "right" });
+  doc.text([`Date du devis : ${datePdf(vc.date_devis) || "—"}`, `Valable jusqu'au : ${datePdf(validite) || (vc.validite_jours ? `${vc.validite_jours} jours` : "—")}`, ...(vc.numero_progbat && /^D-\d{6}-\d{4}$/.test(vc.numero_progbat) ? [`Réf. ProGBat : ${vc.numero_progbat}`] : [])], W - M, 28, { align: "right" });
 
   // Client
   let y = 50;

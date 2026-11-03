@@ -6,8 +6,17 @@ const png = btoa(String.fromCharCode(0x89, 0x50, 0x4e, 0x47, 1, 2, 3, 4));
 const uuid = "11111111-1111-4111-8111-111111111111";
 
 describe("outils devis MCP", () => {
-  it("n'expose que les six écritures de brouillon", () => {
-    expect([...DEVIS_WRITE_TOOLS].sort()).toEqual(["devis_ajouter_photo", "devis_creer_brouillon", "devis_modifier_entete", "devis_nouvelle_version", "devis_remplir", "devis_soumettre"]);
+  it("n'expose que les six écritures de brouillon et l'enregistrement du transfert ProGBat", () => {
+    expect([...DEVIS_WRITE_TOOLS].sort()).toEqual(["devis_ajouter_photo", "devis_creer_brouillon", "devis_enregistrer_transfert", "devis_modifier_entete", "devis_nouvelle_version", "devis_remplir", "devis_soumettre"]);
+  });
+  it("transfert ProGBat : numéro S provisoire ou D définitif, mode obligatoire", () => {
+    const t = z.object(devisSchemas.devis_enregistrer_transfert);
+    const base = { devis_id: uuid, total_progbat: 9510.99, mode: "conversation" };
+    expect(t.safeParse({ ...base, numero_progbat: "S003800" }).success).toBe(true);
+    expect(t.safeParse({ ...base, numero_progbat: "D-202611-0012" }).success).toBe(true);
+    for (const n of ["S03800", "D-20261-0012", "X003800", "D-202611-12"]) expect(t.safeParse({ ...base, numero_progbat: n }).success).toBe(false);
+    expect(t.safeParse({ devis_id: uuid, total_progbat: 1, numero_progbat: "S003800" }).success).toBe(false);
+    expect(t.safeParse({ ...base, numero_progbat: "S003800", total_progbat: -1 }).success).toBe(false);
   });
   it("exige le mode sur chaque écriture", () => {
     expect(z.object(devisSchemas.devis_soumettre).safeParse({ devis_id: uuid, note: "x" }).success).toBe(false);
