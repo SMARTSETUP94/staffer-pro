@@ -51,6 +51,7 @@ export function DevisPipelineBouton({ affaireId, statut, onStatutChange }: { aff
   const [modeleChoisi, setModeleChoisi] = useState<string | null>(null);
   const ind = useIndicateurAffaire(affaireId);
   const modele = modeleChoisi ?? modeles.data?.defautId ?? "";
+  const ouvrir = (devisId: string) => navigate({ to: "/affaires/$affaireId/devis-staffing/$devisId", params: { affaireId, devisId } });
   if (!ctx) return null;
   const badge = ctx.badges.get(affaireId);
   const action = devisPipelineAction({ statut, badge, peutRediger: ctx.peutRediger, flag: ctx.flag });
@@ -61,7 +62,6 @@ export function DevisPipelineBouton({ affaireId, statut, onStatutChange }: { aff
   const progbat = ind?.numero_progbat ? <span className="rounded border border-primary/40 bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary">ProGBat</span> : null;
   if (!action) return montant ? <div className="mt-2 flex items-center gap-1.5" {...stop}>{montant}{progbat}</div> : null;
 
-  const ouvrir = (devisId: string) => navigate({ to: "/affaires/$affaireId/devis-staffing/$devisId", params: { affaireId, devisId } });
   const creer = async (modeleId: string | null) => {
     if (busy) return;
     setBusy(true);
