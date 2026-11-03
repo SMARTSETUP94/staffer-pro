@@ -142,7 +142,7 @@ export function OpportuniteCard({
       onKeyDown={onCardKeyDown}
       title={`Ouvrir la fiche de l'opportunité ${opp.numero}${creeLabel ? ` — créée le ${creeLabel}` : ""}`}
       className={cn(
-        "group cursor-pointer rounded-lg border border-border bg-card p-3 shadow-sm transition-all hover:border-primary/60 hover:shadow-md focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        "@container group cursor-pointer rounded-lg border border-border bg-card p-3 shadow-sm transition-all hover:border-primary/60 hover:shadow-md focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         isDragging && "opacity-40",
         aFaire?.kind === "retard" && "border-l-4 border-l-destructive",
       )}
@@ -163,10 +163,14 @@ export function OpportuniteCard({
         )}
         <div className="min-w-0 flex-1">
           <div className="flex items-baseline justify-between gap-2">
-            <span className="font-mono text-xs font-bold text-primary">{opp.numero}</span>
-            <div className="flex items-center gap-1">
+            <div className="flex min-w-0 items-baseline gap-1" title={`${opp.numero} · ${opp.client ?? opp.nom}`}>
+              <span className="shrink-0 font-mono text-xs font-semibold text-primary">{opp.numero}</span>
+              <span className="shrink-0 text-xs text-muted-foreground">·</span>
+              <span className="truncate text-sm font-semibold text-foreground">{opp.client ?? opp.nom}</span>
+            </div>
+            <div className="flex min-w-0 max-w-[40%] shrink items-center gap-1">
               {du && (
-                <span className={cn("whitespace-nowrap text-[11px] font-semibold tabular-nums", du.proche ? "text-destructive" : "text-muted-foreground")}
+                <span className={cn("truncate text-[11px] font-semibold tabular-nums", du.proche ? "text-destructive" : "text-muted-foreground")}
                   title={`${du.libelle} le ${fmtDateCourte(du.date)}${creeLabel ? ` · opportunité créée le ${creeLabel}` : ""}`}>
                   {du.libelle} {fmtDateCourte(du.date)}
                 </span>
@@ -204,9 +208,6 @@ export function OpportuniteCard({
               />
             </div>
           </div>
-          <div className="mt-0.5 truncate text-sm font-semibold text-foreground">
-            {opp.client ?? opp.nom}
-          </div>
           {opp.nom && opp.client && opp.nom !== opp.client && (
             <div className="truncate text-xs text-muted-foreground">{opp.nom}</div>
           )}
@@ -217,7 +218,7 @@ export function OpportuniteCard({
             {opp.taille ? (
               <span
                 className={cn(
-                  "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+                  "inline-flex items-center whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
                   TAILLE_TONE[opp.taille],
                 )}
                 title={`${TAILLE_LABEL[opp.taille]} — ${TAILLE_RANGE[opp.taille]}`}
@@ -225,7 +226,7 @@ export function OpportuniteCard({
                 {TAILLE_LABEL[opp.taille]}
               </span>
             ) : (
-              <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+              <span className="inline-flex items-center whitespace-nowrap rounded-full bg-muted px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                 Taille ?
               </span>
             )}
@@ -236,24 +237,6 @@ export function OpportuniteCard({
               </span>
             )}
           </div>
-
-          {aFaire && (
-            <div className="mt-2">
-              <span
-                className={cn(
-                  "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold",
-                  aFaire.kind === "retard"
-                    ? "bg-destructive/10 text-destructive"
-                    : "bg-primary/10 text-primary",
-                )}
-                title={aFaireRef ? aFaireDepuisTitle(aFaireRef) : undefined}
-              >
-                {aFaire.kind === "retard"
-                  ? aFaireRetardLabel(aFaire.jours)
-                  : A_FAIRE_BADGE_NOUVELLE}
-              </span>
-            </div>
-          )}
 
           <PresqueGagneAlerte statut={opp.statut_opportunite} depuis={opp.statut_opportunite_depuis} />
           <div className="flex flex-wrap items-center gap-1.5 [&>*]:mt-2">
@@ -266,13 +249,35 @@ export function OpportuniteCard({
               />
             )}
 
+          </div>
+
+          <div className="mt-2 flex items-center justify-between gap-1.5">
+            <div className="flex min-w-0 flex-wrap items-center gap-1.5 overflow-hidden">
+          {aFaire && (
+            <>
+              <span
+                className={cn(
+                  "inline-flex items-center whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-semibold",
+                  aFaire.kind === "retard"
+                    ? "bg-destructive/10 text-destructive"
+                    : "bg-primary/10 text-primary",
+                )}
+                title={aFaireRef ? aFaireDepuisTitle(aFaireRef) : undefined}
+              >
+                {aFaire.kind === "retard"
+                  ? aFaireRetardLabel(aFaire.jours)
+                  : A_FAIRE_BADGE_NOUVELLE}
+              </span>
+            </>
+          )}
+
           {opp.next_action_due_le && (() => {
             const urg = actionUrgency(opp.next_action_due_le);
             if (!urg) return null;
             return (
               <div
                 className={cn(
-                  "mt-2 inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold",
+                  "inline-flex max-w-full items-center gap-1 truncate whitespace-nowrap rounded-full border px-2 py-0.5 text-[10px] font-semibold",
                   URGENCY_CLASS[urg],
                 )}
                 title={urg === "overdue" ? "Action en retard" : urg === "soon" ? "Action due bientôt" : "Action planifiée"}
@@ -282,9 +287,9 @@ export function OpportuniteCard({
               </div>
             );
           })()}
+            </div>
+            <div className="ml-auto"><DevisPipelineBouton affaireId={opp.id} statut={opp.statut_opportunite} /></div>
           </div>
-
-          <DevisPipelineBouton affaireId={opp.id} statut={opp.statut_opportunite} />
 
           {isGagne && onSign && (
             <Button
