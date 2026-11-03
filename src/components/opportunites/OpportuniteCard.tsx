@@ -1,4 +1,5 @@
-import { DevisPipelineBouton } from "./DevisPipeline";
+import { DevisPipelineBouton, DevisMontantLigne } from "./DevisPipeline";
+import { dateUtile, fmtDateCourte } from "@/lib/pipeline-kanban";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import {
@@ -59,6 +60,8 @@ export interface OpportuniteCardData {
   roles_affectes?: string[];
   /** Date de visite technique / repérage (statut « À l'étude »). */
   date_visite_technique?: string | null;
+  date_montage?: string | null;
+  date_evenement_debut?: string | null;
   /** v0.29.2 — typologie cible déclarée (override le getAffaireTypologie 9XXX par défaut). */
   typologie_future?: AffaireTypologie | null;
   /** Bloc 10.4 — enrichissement listing. */
@@ -113,12 +116,9 @@ export function OpportuniteCard({
   };
 
   const ca = opp.charge_affaires_id ? chargesById.get(opp.charge_affaires_id) : null;
-  const dateLabel = opp.date_opportunite
-    ? new Date(opp.date_opportunite).toLocaleDateString("fr-FR", {
-        day: "2-digit",
-        month: "short",
-      })
-    : "—";
+  const creeLe = opp.date_opportunite ?? opp.created_at ?? null;
+  const creeLabel = creeLe ? new Date(creeLe).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" }) : null;
+  const du = dateUtile(opp);
   const isGagne = opp.statut_opportunite === "gagne";
   const canDelete =
     onDelete &&
@@ -140,7 +140,7 @@ export function OpportuniteCard({
       tabIndex={0}
       onClick={goToFiche}
       onKeyDown={onCardKeyDown}
-      title={`Ouvrir la fiche de l'opportunité ${opp.numero}`}
+      title={`Ouvrir la fiche de l'opportunité ${opp.numero}${creeLabel ? ` — créée le ${creeLabel}` : ""}`}
       className={cn(
         "group cursor-pointer rounded-lg border border-border bg-card p-3 shadow-sm transition-all hover:border-primary/60 hover:shadow-md focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         isDragging && "opacity-40",
@@ -165,7 +165,12 @@ export function OpportuniteCard({
           <div className="flex items-baseline justify-between gap-2">
             <span className="font-mono text-xs font-bold text-primary">{opp.numero}</span>
             <div className="flex items-center gap-1">
-              <span className="text-[10px] text-muted-foreground">{dateLabel}</span>
+              {du && (
+                <span className={cn("whitespace-nowrap text-[11px] font-semibold tabular-nums", du.proche ? "text-destructive" : "text-muted-foreground")}
+                  title={`${du.libelle} le ${fmtDateCourte(du.date)}${creeLabel ? ` · opportunité créée le ${creeLabel}` : ""}`}>
+                  {du.libelle} {fmtDateCourte(du.date)}
+                </span>
+              )}
               {canDelete && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -205,8 +210,9 @@ export function OpportuniteCard({
           {opp.nom && opp.client && opp.nom !== opp.client && (
             <div className="truncate text-xs text-muted-foreground">{opp.nom}</div>
           )}
+          <DevisMontantLigne affaireId={opp.id} />
 
-          <div className="mt-2 flex flex-wrap items-center gap-1.5">
+          <div className="mt-2 flex flex-nowrap items-center gap-1.5 overflow-hidden">
             <TypologieBadge typologie={opp.typologie_future ?? getAffaireTypologie(opp.numero)} short />
             {opp.taille ? (
               <span
@@ -224,7 +230,7 @@ export function OpportuniteCard({
               </span>
             )}
             {ca && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-muted/60 px-2 py-0.5 text-[10px] font-medium text-foreground">
+              <span className="inline-flex min-w-0 items-center gap-1 truncate rounded-full bg-muted/60 px-2 py-0.5 text-[10px] font-medium text-foreground" title={`Chargé d'affaires : ${ca.full_name ?? ca.email}`}>
                 <Sparkles className="h-2.5 w-2.5" />
                 {ca.full_name?.split(" ")[0] ?? ca.email.split("@")[0]}
               </span>
@@ -249,26 +255,16 @@ export function OpportuniteCard({
             </div>
           )}
 
-          {opp.statut_opportunite === "a_l_etude" && opp.date_visite_technique && (
-            <div className="mt-2">
-              <span
-                className="inline-flex items-center gap-1 rounded-full bg-sky-100 px-2 py-0.5 text-[10px] font-semibold text-sky-800"
-                title="Visite technique / repérage planifiée"
-              >
-                <Clock className="h-2.5 w-2.5" />
-                Visite le {new Date(opp.date_visite_technique + "T00:00:00").toLocaleDateString("fr-FR", { day: "2-digit", month: "short" })}
-              </span>
-            </div>
-          )}
-
           <PresqueGagneAlerte statut={opp.statut_opportunite} depuis={opp.statut_opportunite_depuis} />
-          {opp.roles_affectes && (
-            <RolesManquantsBadges
-              etat={{ phase: "opportunite", statut_opportunite: opp.statut_opportunite }}
-              typologie={opp.typologie_future ?? null}
-              affectes={opp.roles_affectes}
-            />
-          )}
+          <div className="flex flex-wrap items-center gap-1.5 [&>*]:mt-2">
+            {opp.roles_affectes && (
+              <RolesManquantsBadges
+                etat={{ phase: "opportunite", statut_opportunite: opp.statut_opportunite }}
+                typologie={opp.typologie_future ?? null}
+                affectes={opp.roles_affectes}
+                compact
+              />
+            )}
 
           {opp.next_action_due_le && (() => {
             const urg = actionUrgency(opp.next_action_due_le);
@@ -286,6 +282,7 @@ export function OpportuniteCard({
               </div>
             );
           })()}
+          </div>
 
           <DevisPipelineBouton affaireId={opp.id} statut={opp.statut_opportunite} />
 

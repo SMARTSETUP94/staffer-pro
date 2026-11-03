@@ -18,6 +18,7 @@ import {
 import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { colonneRepliee, estBrouillonClaude, TRI_LABEL, type TriCartes } from "@/lib/pipeline-kanban";
 import { useAuth } from "@/lib/auth-context";
 import { useCapability, useCapabilityScope } from "@/hooks/use-capability";
 import { PageHeader } from "@/components/PageHeader";
@@ -98,6 +99,7 @@ const OPPS_SEARCH_DEFAULTS = {
   noCa: false,
   noD: false,
   noRp: false,
+  claude: false,
 };
 
 const oppsSearchSchema = z.object({
@@ -116,6 +118,7 @@ const oppsSearchSchema = z.object({
   noCa: fallback(z.boolean(), false).default(false),
   noD: fallback(z.boolean(), false).default(false),
   noRp: fallback(z.boolean(), false).default(false),
+  claude: fallback(z.boolean(), false).default(false),
 });
 
 type OppsSearch = z.infer<typeof oppsSearchSchema>;
@@ -166,7 +169,7 @@ function OpportunitesPage() {
   const oppScope = useCapabilityScope("section.pipeline_opportunites");
   const navigate = useNavigate({ from: "/opportunites" });
   const search = Route.useSearch();
-  const { typo: typoFilter, vue, q: searchQuery, preset, archived: showArchived, actionsDues, noCa, noD, noRp } = search;
+  const { typo: typoFilter, vue, q: searchQuery, preset, archived: showArchived, actionsDues, noCa, noD, noRp, claude } = search;
 
   const setTypoFilter = (next: AffaireTypologie[]) => {
     navigate({ search: (prev: OppsSearch) => ({ ...prev, typo: next }), replace: true });
@@ -207,6 +210,9 @@ function OpportunitesPage() {
       replace: true,
     });
   };
+  const setClaude = (next: boolean) => {
+    navigate({ search: (prev: OppsSearch) => ({ ...prev, claude: next }), replace: true });
+  };
   const setNoRp = (next: boolean) => {
     navigate({
       search: (prev: OppsSearch) => ({ ...prev, noRp: next }),
@@ -223,6 +229,23 @@ function OpportunitesPage() {
   const [deleteTarget, setDeleteTarget] = useState<OpportuniteCardData | null>(null);
   const { remove: removeOpportunite, pending: deletePending } = useDeleteOpportunite();
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [claudeIds, setClaudeIds] = useState<Set<string>>(new Set());
+
+  // Tri des cartes et colonnes repliées : mémorisés par utilisateur (navigateur).
+  const prefKey = `opps-kanban-prefs:${user?.id ?? "anon"}`;
+  const [tri, setTri] = useState<TriCartes>("urgence");
+  const [replis, setReplis] = useState<Record<string, boolean>>({});
+  useEffect(() => {
+    try {
+      const p = JSON.parse(localStorage.getItem(prefKey) ?? "{}");
+      setTri(p.tri in TRI_LABEL ? p.tri : "urgence");
+      setReplis(p.replis && typeof p.replis === "object" ? p.replis : {});
+    } catch { /* préférences illisibles : valeurs par défaut */ }
+  }, [prefKey]);
+  const savePrefs = (next: { tri?: TriCartes; replis?: Record<string, boolean> }) => {
+    const v = { tri: next.tri ?? tri, replis: next.replis ?? replis };
+    try { localStorage.setItem(prefKey, JSON.stringify(v)); } catch { /* stockage indisponible */ }
+  };
 
   // Filtres tableur additionnels (statut/taille/deviseur multi-select)
   const [statutsFilter, setStatutsFilter] = useState<OpportuniteStatut[]>([]);
@@ -264,15 +287,21 @@ function OpportunitesPage() {
         const ids = rows.map((r) => r.id);
         if (ids.length === 0) return;
         void Promise.all([
-          supabase.from("affaires").select("id,statut_opportunite_depuis,created_at").in("id", ids),
+          supabase.from("affaires").select("id,statut_opportunite_depuis,created_at,date_evenement_debut").in("id", ids),
           supabase.from("affaire_roles").select("affaire_id,role").in("affaire_id", ids),
-        ]).then(([aff, roles]) => {
+          supabase.from("devis").select("affaire_id,version,cree_par_mcp,statut_redaction,modifie_par_humain_le").in("affaire_id", ids).is("supprime_le", null).eq("est_modele", false),
+        ]).then(([aff, roles, dv]) => {
           if (cancelled) return;
           const depuis = new Map((aff.data ?? []).map((a) => [a.id, a.statut_opportunite_depuis]));
           const created = new Map((aff.data ?? []).map((a) => [a.id, a.created_at]));
+          const evt = new Map((aff.data ?? []).map((a) => [a.id, a.date_evenement_debut]));
+          // Dernier devis (version la plus haute) par affaire → « Brouillon Claude à relire ».
+          const dernier = new Map<string, NonNullable<typeof dv.data>[number]>();
+          (dv.data ?? []).forEach((d) => { if (d.affaire_id && (dernier.get(d.affaire_id)?.version ?? -1) < d.version) dernier.set(d.affaire_id, d); });
+          setClaudeIds(new Set([...dernier.entries()].filter(([, d]) => estBrouillonClaude(d)).map(([id]) => id)));
           const rolesBy = new Map<string, string[]>();
           (roles.data ?? []).forEach((r) => rolesBy.set(r.affaire_id, [...(rolesBy.get(r.affaire_id) ?? []), r.role]));
-          setOpps((cur) => cur.map((o) => ({ ...o, statut_opportunite_depuis: depuis.get(o.id) ?? null, created_at: created.get(o.id) ?? null, roles_affectes: rolesBy.get(o.id) ?? [] })));
+          setOpps((cur) => cur.map((o) => ({ ...o, statut_opportunite_depuis: depuis.get(o.id) ?? null, created_at: created.get(o.id) ?? null, date_evenement_debut: evt.get(o.id) ?? null, roles_affectes: rolesBy.get(o.id) ?? [] })));
         });
       });
     return () => {
@@ -300,6 +329,7 @@ function OpportunitesPage() {
       if (noCa && o.charge_affaires_id !== null) return false;
       if (noD && !matchSansDessinateur(o)) return false;
       if (noRp && !matchSansResponsableProjet(o)) return false;
+      if (claude && !claudeIds.has(o.id)) return false;
       if (actionsDues) {
         if (!o.next_action_due_le) return false;
         const due = new Date(o.next_action_due_le + "T00:00:00");
@@ -311,7 +341,7 @@ function OpportunitesPage() {
       }
       return true;
     });
-  }, [opps, filterCa, noCa, noD, noRp, actionsDues, sevenDaysAhead, normalizedQuery]);
+  }, [opps, filterCa, noCa, noD, noRp, claude, claudeIds, actionsDues, sevenDaysAhead, normalizedQuery]);
 
   // Indicateurs (tuiles + montants) : respectent les filtres actifs ; « À relancer » filtre ensuite le Kanban.
   const indicateurs = usePipelineIndicateurs(useMemo(() => oppsFiltrees.map((o) => o.id), [oppsFiltrees]));
@@ -617,7 +647,7 @@ function OpportunitesPage() {
               onCheckedChange={setNoCa}
               aria-label="Sans chargé d'affaires"
             />
-            <span className="text-muted-foreground">Sans CA</span>
+            <span className="text-muted-foreground">Sans chargé d'affaires</span>
           </label>
         )}
 
@@ -631,7 +661,7 @@ function OpportunitesPage() {
               onCheckedChange={setNoD}
               aria-label="Sans dessinateur"
             />
-            <span className="text-muted-foreground">Sans D</span>
+            <span className="text-muted-foreground">Sans dessinateur</span>
           </label>
         )}
 
@@ -645,8 +675,29 @@ function OpportunitesPage() {
               onCheckedChange={setNoRp}
               aria-label="Sans responsable projet"
             />
-            <span className="text-muted-foreground">Sans RP</span>
+            <span className="text-muted-foreground">Sans responsable projet</span>
           </label>
+        )}
+
+        <label
+          className="flex h-9 cursor-pointer items-center gap-2 rounded-xl border border-border bg-card px-3 text-xs font-medium"
+          title="Dernier devis créé par Claude, en brouillon ou à valider, pas encore repris par un humain"
+        >
+          <Switch checked={claude} onCheckedChange={setClaude} aria-label="Brouillon Claude à relire" />
+          <span className="text-muted-foreground">Brouillon Claude à relire{claudeIds.size > 0 && ` (${claudeIds.size})`}</span>
+        </label>
+
+        {vue !== "tableur" && (
+          <Select value={tri} onValueChange={(v) => { setTri(v as TriCartes); savePrefs({ tri: v as TriCartes }); }}>
+            <SelectTrigger className="h-9 w-[200px] rounded-xl" aria-label="Tri des cartes">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {(Object.keys(TRI_LABEL) as TriCartes[]).map((t) => (
+                <SelectItem key={t} value={t}>Tri : {TRI_LABEL[t]}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         )}
 
         {vue === "tableur" && (
@@ -668,7 +719,7 @@ function OpportunitesPage() {
 
       {vue !== "tableur" && <PipelineIndicateursBandeau data={indicateurs.data} relanceActive={relance} onRelance={() => setRelance((r) => !r)} />}
 
-      <div className="rounded-2xl border border-border bg-card p-3">
+      {vue === "tableur" && <div className="rounded-2xl border border-border bg-card p-3">
         <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
           Statut
         </div>
@@ -708,7 +759,7 @@ function OpportunitesPage() {
             );
           })}
         </div>
-      </div>
+      </div>}
 
       {loading ? (
         <div className="flex items-center justify-center p-16">
@@ -754,7 +805,7 @@ function OpportunitesPage() {
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
         >
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
+          <div className="flex flex-col gap-3 md:flex-row md:items-stretch md:overflow-x-auto md:pb-2">
             {kanbanStatuts.map((s) => (
               <KanbanColonne
                 key={s}
@@ -764,6 +815,13 @@ function OpportunitesPage() {
                 onSign={handleSign}
                 onDelete={canManageOpps ? handleDeleteRequest : undefined}
                 draggable={canManageOpps}
+                tri={tri}
+                repliee={colonneRepliee(s, (byStatut.get(s) ?? []).length, replis)}
+                onToggle={() => {
+                  const next = { ...replis, [s]: !colonneRepliee(s, (byStatut.get(s) ?? []).length, replis) };
+                  setReplis(next);
+                  savePrefs({ replis: next });
+                }}
               />
             ))}
           </div>
