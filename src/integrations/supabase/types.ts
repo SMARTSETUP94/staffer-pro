@@ -2103,6 +2103,9 @@ export type Database = {
           note_mcp: string | null
           numero: string
           numero_progbat: string | null
+          numero_progbat_provisoire: string | null
+          progbat_finalise_le: string | null
+          progbat_finalise_par: string | null
           redige_dans_staffing: boolean
           remise_mode: string
           remise_valeur: number | null
@@ -2164,6 +2167,9 @@ export type Database = {
           note_mcp?: string | null
           numero: string
           numero_progbat?: string | null
+          numero_progbat_provisoire?: string | null
+          progbat_finalise_le?: string | null
+          progbat_finalise_par?: string | null
           redige_dans_staffing?: boolean
           remise_mode?: string
           remise_valeur?: number | null
@@ -2225,6 +2231,9 @@ export type Database = {
           note_mcp?: string | null
           numero?: string
           numero_progbat?: string | null
+          numero_progbat_provisoire?: string | null
+          progbat_finalise_le?: string | null
+          progbat_finalise_par?: string | null
           redige_dans_staffing?: boolean
           remise_mode?: string
           remise_valeur?: number | null
