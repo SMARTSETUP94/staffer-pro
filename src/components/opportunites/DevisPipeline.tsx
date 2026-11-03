@@ -98,7 +98,7 @@ export function DevisPipelineBouton({ affaireId, statut, onStatutChange }: { aff
         title={action === "ouvrir" ? "Ouvrir le devis" : "Créer le devis"}
         aria-label={action === "ouvrir" ? "Ouvrir le devis" : "Créer le devis"}
         onClick={() => (action === "ouvrir" && badge ? ouvrir(badge.devis_id) : setOpen(true))}>
-        <FileText className="h-3.5 w-3.5" /><span className="hidden min-[360px]:inline">{action === "ouvrir" ? "Ouvrir le devis" : "Créer le devis"}</span>
+        <FileText className="h-3.5 w-3.5" /><span className="hidden @[16rem]:inline">{action === "ouvrir" ? "Ouvrir le devis" : "Créer le devis"}</span>
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent {...stop}>
