@@ -661,7 +661,7 @@ function OpportunitesPage() {
               onCheckedChange={setNoD}
               aria-label="Sans dessinateur"
             />
-            <span className="text-muted-foreground">Sans devis</span>
+            <span className="text-muted-foreground">Sans dessinateur</span>
           </label>
         )}
 
