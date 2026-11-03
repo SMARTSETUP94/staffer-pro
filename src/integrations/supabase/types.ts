@@ -2068,11 +2068,13 @@ export type Database = {
           affaire_id: string | null
           archive: boolean
           auteur_id: string | null
+          cle_externe: string | null
           client_final_id: string | null
           client_id: string | null
           coef_materiaux_defaut: number | null
           contact_id: string | null
           created_at: string
+          cree_par_mcp: boolean
           date_debut_phase: string | null
           date_devis: string | null
           date_envoi: string | null
@@ -2094,7 +2096,10 @@ export type Database = {
           modele_description: string | null
           modele_nom: string | null
           modele_origine_id: string | null
+          modifie_par_humain_id: string | null
+          modifie_par_humain_le: string | null
           montant_ht: number | null
+          note_mcp: string | null
           numero: string
           numero_progbat: string | null
           redige_dans_staffing: boolean
@@ -2120,11 +2125,13 @@ export type Database = {
           affaire_id?: string | null
           archive?: boolean
           auteur_id?: string | null
+          cle_externe?: string | null
           client_final_id?: string | null
           client_id?: string | null
           coef_materiaux_defaut?: number | null
           contact_id?: string | null
           created_at?: string
+          cree_par_mcp?: boolean
           date_debut_phase?: string | null
           date_devis?: string | null
           date_envoi?: string | null
@@ -2146,7 +2153,10 @@ export type Database = {
           modele_description?: string | null
           modele_nom?: string | null
           modele_origine_id?: string | null
+          modifie_par_humain_id?: string | null
+          modifie_par_humain_le?: string | null
           montant_ht?: number | null
+          note_mcp?: string | null
           numero: string
           numero_progbat?: string | null
           redige_dans_staffing?: boolean
@@ -2172,11 +2182,13 @@ export type Database = {
           affaire_id?: string | null
           archive?: boolean
           auteur_id?: string | null
+          cle_externe?: string | null
           client_final_id?: string | null
           client_id?: string | null
           coef_materiaux_defaut?: number | null
           contact_id?: string | null
           created_at?: string
+          cree_par_mcp?: boolean
           date_debut_phase?: string | null
           date_devis?: string | null
           date_envoi?: string | null
@@ -2198,7 +2210,10 @@ export type Database = {
           modele_description?: string | null
           modele_nom?: string | null
           modele_origine_id?: string | null
+          modifie_par_humain_id?: string | null
+          modifie_par_humain_le?: string | null
           montant_ht?: number | null
+          note_mcp?: string | null
           numero?: string
           numero_progbat?: string | null
           redige_dans_staffing?: boolean
@@ -2714,6 +2729,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      devis_mcp_journal: {
+        Row: {
+          affaire_id: string | null
+          apercu: Json
+          arguments: Json
+          auteur: string | null
+          client_id: string | null
+          cree_le: string
+          devis_id: string | null
+          id: string
+          mode: string | null
+          outil: string
+          resultat: Json
+          statut: string
+        }
+        Insert: {
+          affaire_id?: string | null
+          apercu?: Json
+          arguments?: Json
+          auteur?: string | null
+          client_id?: string | null
+          cree_le?: string
+          devis_id?: string | null
+          id?: string
+          mode?: string | null
+          outil: string
+          resultat?: Json
+          statut: string
+        }
+        Update: {
+          affaire_id?: string | null
+          apercu?: Json
+          arguments?: Json
+          auteur?: string | null
+          client_id?: string | null
+          cree_le?: string
+          devis_id?: string | null
+          id?: string
+          mode?: string | null
+          outil?: string
+          resultat?: Json
+          statut?: string
+        }
+        Relationships: []
       }
       devis_parametres: {
         Row: {
@@ -8046,6 +8106,29 @@ export type Database = {
           nouvelle_date: string
         }[]
       }
+      devis_mcp_appliquer: {
+        Args: { _affaire_id: string; _p: Json; _tool: string }
+        Returns: Json
+      }
+      devis_mcp_etat: { Args: { _devis_id: string }; Returns: Json }
+      devis_mcp_existants: {
+        Args: { _affaire_id: string; _cle: string }
+        Returns: Json
+      }
+      devis_mcp_ligne_objet: {
+        Args: { _devis_id: string; _ligne_id: string }
+        Returns: {
+          id: string
+        }[]
+      }
+      devis_mcp_marquer: {
+        Args: { _cle: string; _devis_id: string; _note: string }
+        Returns: undefined
+      }
+      devis_mcp_simuler: {
+        Args: { _affaire_id: string; _payload: Json; _tool: string }
+        Returns: Json
+      }
       devis_modele_activer: {
         Args: { _actif: boolean; _devis_id: string }
         Returns: undefined
@@ -8142,9 +8225,17 @@ export type Database = {
         Args: { _devis_id: string; _mode: string; _valeur: number }
         Returns: Json
       }
+      devis_remplir_lot: {
+        Args: { _devis_id: string; _lignes: Json }
+        Returns: Json
+      }
       devis_restaurer: { Args: { _devis_id: string }; Returns: undefined }
       devis_signer_vers_fabrication: {
         Args: { _devis_id: string }
+        Returns: Json
+      }
+      devis_soumettre: {
+        Args: { _devis_id: string; _note: string }
         Returns: Json
       }
       devis_statut_changer: {
@@ -8461,6 +8552,7 @@ export type Database = {
         Args: { _ids: string[]; _verrou?: boolean }
         Returns: string
       }
+      mcp_dispatch_actif: { Args: never; Returns: boolean }
       mcp_dispatch_write: {
         Args: {
           _affaire_id: string

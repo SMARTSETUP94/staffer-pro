@@ -505,6 +505,13 @@
       "when": 1793704868845,
       "tag": "0071_mcp_revoke_anon",
       "breakpoints": true
+    },
+    {
+      "idx": 72,
+      "version": "7",
+      "when": 1793705392974,
+      "tag": "0072_devis_17_mcp_redaction",
+      "breakpoints": true
     }
   ]
 }
