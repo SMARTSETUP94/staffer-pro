@@ -1,60 +1,86 @@
-# Lot 4 — Outils Claude (MCP) pour les devis Staffing
+# Lot 3 — Transfert des devis Staffing vers ProGBat
 
-Rien n'est appliqué ni publié tant que ce plan n'est pas approuvé. Découpage proposé en 4 passes, avec arrêt et compte rendu après chacune.
+Plan seulement : rien n'est appliqué ni publié avant ton accord écrit.
 
-## Constats vérifiés avant le plan
-- Le serveur MCP existe (`src/lib/mcp/`, 25 outils, écritures via `write-policy.ts` / `write-preview.ts` / `write-schemas.ts`).
-- Droit d'exécution anonyme encore ouvert sur 5 fonctions : `mcp_dispatch_write`, `mcp_execute_write_locked`, `mcp_write_preview`, `mcp_assert_write`, `mcp_safe_diff`. Les autres `mcp_*` et les RPC devis citées sont déjà fermées à l'anonyme.
-- Dernière migration : 0070.
+## Constat vérifié dans l'existant
+- `devis.numero_progbat` existe déjà ; l'éditeur l'a en lecture, le bouton « Vers ProGBat (lot 3) » est désactivé en dur.
+- « Marquer envoyé » (`devis_marquer_envoye`, dernière version en migration 0070) passe le devis en `statut_redaction='transfere'` et pose `date_envoi`. Donc aujourd'hui « transfere » veut dire « envoyé », d'où le statut de 9484-R2.
+- Signature, refus et pipeline acceptent déjà `transfere` comme état figé (migration 0061). Aucun nouveau statut n'est donc nécessaire.
 
-## Passe 0 — Sécurité préalable (migration 0071)
-- `REVOKE EXECUTE ... FROM anon, public` sur les 5 fonctions ci-dessus ; `GRANT EXECUTE TO authenticated` (+ le rôle de dispatch NOLOGIN existant pour celles qu'il appelle).
-- `mcp_safe_diff` (non SECURITY DEFINER) : fermée aussi par principe.
-- Test : appel avec rôle `anon` → `permission denied` sur chacune ; tests `write.test.ts` existants toujours verts.
+## Décision proposée : un statut, deux faits distincts
+- `transfere` reste le statut « figé, sorti de Staffing ». Pas de nouvelle valeur d'enum, aucun devis existant cassé.
+- Deux faits séparés et visibles :
+  - **Transféré dans ProGBat** = `numero_progbat` + `transfere_progbat_le` / `transfere_progbat_par` renseignés.
+  - **Envoyé au client** = `date_envoi` renseignée.
+- Les libellés affichés viennent de ces faits (« Transféré ProGBat D-202611-0012 », « Envoyé le … », ou les deux), pas du seul statut.
+- « Marquer envoyé » : accepté sur un devis validé **ou** déjà transféré. Sur un devis transféré, il ne pose que `date_envoi` et l'action d'opportunité. Les devis existants comme 9484-R2 gardent leur statut et s'affichent « Envoyé », sans numéro ProGBat.
 
-## Passe 1 — Base de données (migration 0072)
-1. Colonnes `devis` : `cree_par_mcp bool default false`, `cle_externe text`, `modifie_par_humain_le timestamptz`, `note_mcp text`. Index unique partiel `(affaire_id, cle_externe) where cle_externe is not null`. Ajout uniquement, aucune donnée modifiée.
-2. Table `devis_mcp_journal` (id, devis_id, affaire_id, outil, mode, arguments jsonb sans texte libre sensible, apercu jsonb, resultat jsonb, auteur uuid, client_oauth, cree_le). GRANT select authenticated + service_role ; RLS lecture = `devis_peut_lire(devis_id)` ; écriture uniquement par le dispatch.
-3. Verrou humain : trigger AFTER INSERT/UPDATE/DELETE sur `devis` et ses lignes (`devis_lignes`, `devis_heures`, `devis_materiaux`, `devis_lignes_libres`, `devis_photos`) : si le contexte de dispatch MCP (`mcp_write_dispatch_context` de la transaction) est absent, poser `modifie_par_humain_le = now()` sur le devis. Garde de profondeur pour éviter la récursion avec le trigger existant `app.devis_rpc`.
-4. Nouvelle RPC interne `devis_soumettre(devis_id, note)` : uniquement brouillon → `a_valider`, réutilise `devis_statut_changer` (mêmes contrôles : forfait sans prix, etc.), stocke la note dans `note_mcp`.
-5. RPC interne `devis_remplir_lot(devis_id, lignes jsonb)` : boucle sur ≤ 300 éléments, appelle les RPC existantes (`devis_objet_inserer`, `devis_ligne_enregistrer`, `devis_heure_enregistrer`, `devis_materiau_enregistrer`, `devis_libre_enregistrer`, `devis_option_inclure`) avec références locales (`ref` → id créé) pour rattacher enfants aux parents ; une exception annule tout. Renvoie `devis_calculer`.
-6. Extension de `mcp_dispatch_write` (redéfinie à partir de sa définition actuelle relue, pas de réécriture dynamique) : liste blanche de 6 actions devis — `devis_creer_brouillon`, `devis_remplir`, `devis_modifier_entete`, `devis_ajouter_photo`, `devis_nouvelle_version`, `devis_soumettre`. Toute autre action devis → refus explicite. Pour chacune : `devis_assert_brouillon` (sauf création / nouvelle version), contrôle du mode (`autonomie` refusé si `modifie_par_humain_le` rempli, message « brouillon repris par <nom> »), journalisation dans `devis_mcp_journal`.
-7. `mcp_write_preview` : aperçu avant/après pour ces actions (lignes ajoutées par type, total HT/net avant → après calculé en simulation dans une transaction annulée via savepoint, écarts entre taux saisis et taux de la grille).
-8. Création brouillon : réutilise `devis_creer_depuis_pipeline` avec modèle (défaut `devis_modele_defaut_id`), pose `cree_par_mcp`, `cle_externe` ; même clé → renvoie le devis existant ; brouillon actif déjà présent sur l'affaire → refus avec son id.
-9. Remise : aucun seuil (décision Gabin) ; toute remise acceptée sur un brouillon, visible dans l’aperçu et le journal.
+## Passe 1 — Base de données (migration 0078)
+- Nouvelles colonnes sur `devis` : `transfere_progbat_le`, `transfere_progbat_par`, `total_progbat`, `ecart_progbat_motif`. Contrainte de format `^D-\d{6}-\d{4}$` sur `numero_progbat` en `NOT VALID`, après contrôle des valeurs déjà en base.
+- Index unique partiel sur `numero_progbat` non nul (un numéro officiel par devis), sauf si les imports historiques en ont des doublons. Je vérifie avant d'appliquer.
+- `devis_exports` : nouvelle colonne `format` ('pdf' | 'progbat_xlsx'), défaut 'pdf', et `fiche` jsonb pour la fiche de contrôle.
+- RPC `devis_progbat_donnees(devis_id)`, en lecture : construit les lignes de l'export à partir de `devis_calculer_interne`, en ne gardant que les champs client (même filtre que `devis_lire_client`). Refus si le statut n'est ni `valide` ni `transfere`.
+- RPC `devis_enregistrer_transfert(devis_id, numero, total_lu, motif)`. Contrôles :
+  - droit d'écriture ;
+  - statut `valide` ;
+  - format du numéro ;
+  - total lu comparé à `net_ht` au centime : un motif est obligatoire s'il y a un écart.
 
-## Passe 2 — Serveur MCP (code)
-Fichiers neufs dans `src/lib/mcp/tools/` : `devis_lister.ts`, `devis_lire.ts`, `devis_referentiel.ts`, `materiaux_rechercher.ts`, `devis_charge_be.ts` (lecture, appel direct des RPC sous le client de l'appelant ; coûts déjà filtrés côté serveur par `devis.couts`), et 6 outils d'écriture branchés sur le flux aperçu → `confirmation_id` → exécution.
-- `write-schemas.ts` : schémas Zod (lot ≤ 300, `mode` obligatoire, `cle_externe`).
-- `write-policy.ts` / `write-preview.ts` : ajout des 6 actions.
-- `devis_ajouter_photo` : fonction serveur authentifiée ; vérifie type réel (JPG/PNG/PDF par signature), 10 Mo max après décodage base64, dépôt dans le stockage privé des devis sous le client de l'appelant, puis `devis_photo_ajouter` ; légende « Source : … ». Limite : taille de requête MCP — un PDF de 10 Mo fait ~13,5 Mo en base64, à tester.
-- `index.ts` : enregistrement + instructions mises à jour (outils, interdits, verrou humain, mode).
-- Tests Vitest : schémas, liste blanche, refus des actions interdites.
+  Effet : statut `transfere`, champs ProGBat remplis, devis figé par le verrou existant (`devis_assert_ecriture`), journal.
+- Ajout de cette RPC aux deux listes blanches : `mcp_dispatch_write`, et le préfixe `mcp_assert_legacy_oauth_write`.
+- `devis_nouvelle_version` : vérifier qu'elle repart en brouillon sans recopier les champs ProGBat ni `date_envoi`.
+
+## Passe 2 — Générateur Excel (code partagé appli + Claude)
+- Fichier pur `src/lib/devis/progbat-export.ts` : lignes de l'export → lignes Excel + fiche de contrôle. Testable sans base de données.
+- Correspondance des lignes :
+  - zone → titre N ;
+  - objet → ligne N.n (u, prix unitaire = total / quantité arrondi, temps prévu = heures de l'objet) ;
+  - commentaires en dessous : dimensions « L × l × H mm », descriptif client, commentaires visibles client ;
+  - « Ajustement d'arrondi » (1 u) si l'arrondi crée un écart ;
+  - Suivi et plans / Pose / Dépose → titre + une ligne « 1 ens » ;
+  - « Options » en fin de fichier ;
+  - ligne d'en-tête en tête de feuille.
+- Écriture avec `xlsx-js-style` (règle du projet), chargé seulement au clic.
+- Fiche de contrôle :
+  - totaux HT attendus avant et après remise, nombre de lignes ;
+  - options (incluse ou non) et remise (montant + mode) ;
+  - dates clés, client / contact / client final ;
+  - photos visibles client avec liens d'une heure.
+- Fonction serveur authentifiée : génère le fichier, le range dans le stockage privé `devis-exports`, ajoute l'export à l'historique (version, auteur, format) et renvoie les liens d'une heure.
+- Garde-fou de test : aucune clé interne (heures par poste, taux, coût, achat, coef, marge, note Claude, ligne interne) dans les cellules.
 
 ## Passe 3 — Interface
-- Badge « Rédigé par Claude » dans la liste Devis et l'onglet Devis de l'affaire, et dans l'éditeur.
-- Encadré « Note de Claude » en tête de l'éditeur si `note_mcp`.
-- Mention « repris par <nom> le … » quand `modifie_par_humain_le` est rempli.
+- Bouton « Vers ProGBat » actif sur un devis validé. Il télécharge l'Excel et ouvre une fenêtre avec la fiche de contrôle, les liens photos et le bouton « Enregistrer le transfert ».
+- Fenêtre « Enregistrer le transfert » :
+  - champs numéro ProGBat + total HT lu, avec libellés au-dessus ;
+  - contrôle de format en direct ;
+  - comparaison au centime : badge vert si égal, alerte ambre sinon, avec motif obligatoire.
+- Numéro ProGBat visible dans la liste des devis, l'en-tête de l'éditeur, la vignette pipeline et le PDF Staffing (« Réf. ProGBat »).
+- Historique des exports : les deux formats (PDF / Excel ProGBat) sont distingués.
 
-## Recette (transactions annulées + manifeste)
-1. 3 devis ProGBat recréés via `devis_remplir` : D-202609-2432 net 19 600,00 ; D-202610-2462 net 47 000,00 ; D-202610-2460 HT 15 988,00 option incluse — au centime.
-2. Même `cle_externe` deux fois → un seul brouillon.
-3. Lot avec une ligne invalide → aucune ligne écrite.
-4. Modification humaine → autonomie refusée, conversation acceptée.
-5. Actions interdites (valider, envoyer, signer, fabrication, supprimer, restaurer, taux, paramètres, modèles) refusées.
-6. Rôle sans `devis.couts` → ni achat ni marge dans `devis_lire` / `materiaux_rechercher` / `devis_referentiel`.
-7. Appel anonyme refusé.
-8. Une ligne de journal par écriture.
-9. Photo visible sur l'objet dans l'éditeur (aperçu navigateur).
-10. Extraction du manifeste MCP réussie.
+## Passe 4 — Claude (MCP)
+- `devis_exporter_progbat`, en lecture : renvoie l'Excel en cours ou en génère un, plus la fiche et les liens d'une heure. Refus si le devis n'est pas validé ou transféré.
+- `devis_enregistrer_transfert`, en écriture :
+  - aperçu (écart affiché) + confirmation ;
+  - refus en mode autonomie ;
+  - l'aperçu demande explicitement l'accord humain ;
+  - journal dans `devis_mcp_journal`.
+- Instructions serveur : Claude importe dans ProGBat via Chrome avec Gabin, supprime la ligne d'en-tête, passe les options en Option/Variante, applique la remise de la fiche, ne finalise ni n'envoie jamais le devis ProGBat, puis propose l'enregistrement du transfert.
+- Extraction du manifeste, mise à jour des tests connecteur.
 
-## Risques et découpage
-- **Le plus risqué : redéfinir `mcp_dispatch_write` et `mcp_write_preview`** (fonctions critiques partagées avec opportunités/logistique). Je les relis telles quelles et n'ajoute que des branches ; tests de non-régression v2 obligatoires.
-- **Trigger verrou humain** : risque de faux positifs (recalculs, triggers internes, versions) qui bloqueraient Claude en autonomie. À tester sur chaque RPC devis.
-- **Aperçu avec totaux simulés** : exécuter le lot dans un savepoint annulé pour calculer l'« après » ; coûteux pour 300 lignes, à mesurer.
-- **Photos base64** : taille de message MCP et temps d'appel ; possiblement plafonner à 5 Mo si 10 Mo échoue.
-- **Seuil de remise** : paramètre inexistant à ce jour — valeur à fixer par toi.
-- **Refus « un brouillon actif existe »** vs `devis_nouvelle_version` : la nouvelle version crée un brouillon, à exclure de la règle quand l'original est envoyé.
-- Publication nécessaire à la fin pour que Claude voie les nouveaux outils (non faite sans ton accord).
+## Recette (en transactions annulées, sauf le fichier d'exemple)
+- Les 3 devis de référence reconstruits et validés : somme des lignes de l'Excel = total HT au centime ; remise et options dans la fiche (2460 avec option incluse).
+- 9484-R2 : 9 510,99 € HT, lame 18 × 319,88 + ajustement 0,02 €. Fichier d'exemple remis dans tes Fichiers ; il n'est pas ajouté à l'historique de 9484-R2 sauf si tu le veux.
+- Aucune ligne interne ni coût dans le fichier ; numéro mal formé refusé ; écart signalé et motif exigé ; devis transféré non modifiable ; nouvelle version en brouillon sans numéro ProGBat.
+- Claude : export refusé sur un brouillon, transfert refusé en autonomie, appel anonyme refusé.
+- Compte rendu après chaque passe, arrêt immédiat si un test échoue.
 
-Ordre : Passe 0 → 1 → 2 → 3 → recette, arrêt et compte rendu après chaque passe, arrêt immédiat si un test échoue.
+## Risques et découpage proposé
+1. **Statut `transfere` déjà utilisé pour « envoyé »** : la séparation par les faits évite une migration de données. En contrepartie, les anciens devis « transfere » sans numéro ProGBat s'affichent « Envoyé » seulement. À valider.
+2. **Format d'import ProGBat non vérifié** : je n'ai pas accès à ProGBat. Faire un vrai import du fichier 9484-R2 avant la passe 4 permet d'ajuster les colonnes (Temps prévu en heures décimales ? unité « ens » reconnue ?).
+3. **Ajustement d'arrondi visible du client** dans ProGBat : une ligne de quelques centimes peut surprendre. Alternative : ajuster le prix unitaire de la dernière unité, impossible avec une seule ligne. À confirmer.
+4. **Remise et options appliquées à la main par Claude** dans ProGBat : c'est la principale source d'erreur, d'où la comparaison obligatoire du total lu.
+5. **Total lu par Claude** : c'est une saisie déclarative. Le contrôle n'est fiable que si Claude lit bien le total net HT de ProGBat ; les instructions le précisent.
+6. **Doublons possibles de `numero_progbat`** dans les imports historiques : à vérifier avant la contrainte unique.
+
+Découpage conseillé : **3a** (passes 1-3 + fichier d'exemple), puis un vrai import ProGBat avec Gabin, puis **3b** (passe 4 Claude + recette finale).
