@@ -37,7 +37,7 @@ export function PipelineIndicateursBandeau({ data, relanceActive, onRelance }: {
       <div className={TUILE}>
         <span className={TITRE}>CA pipeline</span>
         <span className={VAL}>{kEur(t.chiffre + t.estime)}</span>
-        <span className="text-xs text-muted-foreground tabular-nums">{t.estime > 0 ? `dont ${kEur(t.estime)} estimés · ${kEur(t.chiffre)} chiffrés` : "tout est chiffré"}</span>
+        <span className="text-xs font-medium text-foreground tabular-nums">{kEur(t.chiffre)} chiffrés · {kEur(t.estime)} estimés</span>
       </div>
       <div className={TUILE} title={`Probabilités : à faire ${Math.round(data.probabilites.a_faire * 100)} %, envoyé ${Math.round(data.probabilites.envoye * 100)} %, à l'étude ${Math.round(data.probabilites.a_l_etude * 100)} %, presque gagné ${Math.round(data.probabilites.presque_gagne * 100)} %`}>
         <span className={TITRE}>CA pondéré</span>
