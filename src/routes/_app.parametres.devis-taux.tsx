@@ -204,18 +204,113 @@ function PosteRow({ row, niveaux, metiers, run, compteBe }: { row: TauxRow; nive
   );
 }
 
-function ParamRow({ p, run }: { p: { cle: string; valeur: number | null; unite: string | null; date_effet: string }; run: Run }) {
-  const [v, setV] = useState(p.valeur == null ? "" : String(p.valeur));
-  const [d, setD] = useState(today());
+const FIELD = "h-8 border-foreground/40 bg-background placeholder:italic placeholder:text-muted-foreground/70 focus-visible:ring-2 focus-visible:ring-ring";
+const LBL = "mb-0.5 block text-xs font-medium text-foreground";
+
+function WhyButton({ raison, children }: { raison: string | null; children: React.ReactNode }) {
+  if (!raison) return <>{children}</>;
   return (
-    <div className="flex items-center gap-2">
-      <span className="w-52 text-sm">{PARAM_LABELS[p.cle] ?? p.cle}</span>
-      <Input className="h-8 w-24" inputMode="decimal" placeholder="à saisir" value={v} onChange={(e) => setV(e.target.value)} />
-      <span className="w-16 text-xs text-muted-foreground">{p.unite}</span>
-      <Input className="h-8 w-36" type="date" value={d} onChange={(e) => setD(e.target.value)} />
-      <Button size="sm" variant="outline" onClick={() => run(supabase.rpc("devis_parametre_ajouter", {
-        _cle: p.cle, _valeur: num(v) as number, _unite: p.unite as string, _date_effet: d,
-      }), "Paramètre enregistré")}>OK</Button>
+    <Tooltip>
+      <TooltipTrigger asChild><span tabIndex={0} className="inline-flex">{children}</span></TooltipTrigger>
+      <TooltipContent>{raison}</TooltipContent>
+    </Tooltip>
+  );
+}
+
+function TauxForm({ row, niveaux, run }: { row: TauxRow; niveaux: TauxRow[]; run: Run }) {
+  const courants = niveaux.map((n) => ({ niveau: n.niveau!, taux_vente: n.taux_vente, cout_revient: n.cout_revient, par_defaut: n.par_defaut }));
+  const prefill = (choix: string) => {
+    const c = courants.find((n) => n.niveau === choix);
+    return {
+      choix, nouveauNiveau: choix === NOUVEAU_NIVEAU && courants.length === 0 ? "standard" : "",
+      taux: c?.taux_vente != null ? String(c.taux_vente).replace(".", ",") : "",
+      cout: c?.cout_revient != null ? String(c.cout_revient).replace(".", ",") : "",
+      date: today(), defaut: c ? !!c.par_defaut : courants.length === 0,
+    };
+  };
+  const [nv, setNv] = useState(() => prefill(niveauInitial(courants)));
+  const [busy, setBusy] = useState(false);
+  const ev = evaluerTaux(nv, courants);
+  const erreur = !ev.ok && ev.erreur ? ev.raison : null;
+  const id = row.poste_id;
+  const enregistrer = async () => {
+    if (!ev.ok) return;
+    setBusy(true);
+    const ok = await run(supabase.rpc("devis_taux_ajouter", {
+      _poste_id: id, _niveau: ev.niveau, _date_effet: nv.date,
+      _taux_vente: ev.taux_vente as number, _cout_revient: ev.cout_revient as number, _par_defaut: nv.defaut,
+    }), "Taux enregistré");
+    setBusy(false);
+    if (ok) setNv({ ...prefill(ev.niveau), choix: ev.niveau, taux: ev.taux_vente != null ? String(ev.taux_vente).replace(".", ",") : "", cout: ev.cout_revient != null ? String(ev.cout_revient).replace(".", ",") : "" });
+  };
+  return (
+    <div className="space-y-1 rounded-md border border-foreground/20 bg-muted/40 p-2">
+      <div className="flex flex-wrap items-end gap-2">
+        <div>
+          <label className={LBL} htmlFor={`niv-${id}`}>Niveau</label>
+          <select id={`niv-${id}`} className={`${FIELD} rounded-md border px-2 text-sm`} value={nv.choix} onChange={(e) => setNv(prefill(e.target.value))}>
+            {courants.map((n) => <option key={n.niveau} value={n.niveau}>{n.niveau}{n.par_defaut ? " (défaut)" : ""}</option>)}
+            <option value={NOUVEAU_NIVEAU}>Nouveau niveau…</option>
+          </select>
+        </div>
+        {nv.choix === NOUVEAU_NIVEAU && (
+          <div>
+            <label className={LBL} htmlFor={`nn-${id}`}>Nom du niveau</label>
+            <Input id={`nn-${id}`} className={`${FIELD} w-28`} placeholder="ex. senior" value={nv.nouveauNiveau} onChange={(e) => setNv({ ...nv, nouveauNiveau: e.target.value })} />
+          </div>
+        )}
+        <div>
+          <label className={LBL} htmlFor={`tv-${id}`}>Vente €/h</label>
+          <Input id={`tv-${id}`} className={`${FIELD} w-24 text-right tabular-nums`} placeholder="inchangé" inputMode="decimal" value={nv.taux} onChange={(e) => setNv({ ...nv, taux: e.target.value })} />
+        </div>
+        <div>
+          <label className={LBL} htmlFor={`cr-${id}`}>Coût €/h</label>
+          <Input id={`cr-${id}`} className={`${FIELD} w-24 text-right tabular-nums`} placeholder="inchangé" inputMode="decimal" value={nv.cout} onChange={(e) => setNv({ ...nv, cout: e.target.value })} />
+        </div>
+        <div>
+          <label className={LBL} htmlFor={`de-${id}`}>Date d'effet</label>
+          <Input id={`de-${id}`} className={`${FIELD} w-36`} type="date" required value={nv.date} onChange={(e) => setNv({ ...nv, date: e.target.value })} />
+        </div>
+        <label className="flex h-8 items-center gap-1 text-xs"><input type="checkbox" checked={nv.defaut} onChange={(e) => setNv({ ...nv, defaut: e.target.checked })} />Niveau par défaut</label>
+        <WhyButton raison={ev.ok ? null : ev.raison}>
+          <Button size="sm" disabled={!ev.ok || busy} onClick={enregistrer}><Save className="mr-1 h-4 w-4" />Enregistrer le taux</Button>
+        </WhyButton>
+      </div>
+      {erreur && <p role="alert" className="text-xs font-medium text-destructive">{erreur}</p>}
+    </div>
+  );
+}
+
+function ParamRow({ p, run }: { p: { cle: string; valeur: number | null; unite: string | null; date_effet: string }; run: Run }) {
+  const actuel = p.valeur == null ? "" : String(p.valeur).replace(".", ",");
+  const [v, setV] = useState(actuel);
+  const [d, setD] = useState(today());
+  const val = parseMontant(v);
+  const raison = v.trim() === "" ? "Saisissez une valeur." : Number.isNaN(val) ? "Nombre positif attendu (virgule acceptée)."
+    : val === p.valeur ? "Valeur identique à la valeur en vigueur." : !d ? "La date d'effet est obligatoire." : null;
+  const erreur = Number.isNaN(val) || !d ? raison : null;
+  return (
+    <div className="space-y-1">
+      <div className="flex flex-wrap items-end gap-2">
+        <div className="w-52">
+          <span className="block text-sm font-medium">{PARAM_LABELS[p.cle] ?? p.cle}</span>
+          <span className="text-xs text-muted-foreground">Actuel : {p.valeur == null ? "non renseigné" : `${actuel} ${p.unite ?? ""}`}{p.date_effet && ` · depuis le ${new Date(p.date_effet).toLocaleDateString("fr-FR")}`}</span>
+        </div>
+        <div>
+          <label className={LBL} htmlFor={`pv-${p.cle}`}>Valeur {p.unite ? `(${p.unite})` : ""}</label>
+          <Input id={`pv-${p.cle}`} className={`${FIELD} w-24 text-right tabular-nums`} inputMode="decimal" placeholder="à saisir" value={v} onChange={(e) => setV(e.target.value)} />
+        </div>
+        <div>
+          <label className={LBL} htmlFor={`pd-${p.cle}`}>Date d'effet</label>
+          <Input id={`pd-${p.cle}`} className={`${FIELD} w-36`} type="date" value={d} onChange={(e) => setD(e.target.value)} />
+        </div>
+        <WhyButton raison={raison}>
+          <Button size="sm" variant="outline" disabled={!!raison} onClick={() => run(supabase.rpc("devis_parametre_ajouter", {
+            _cle: p.cle, _valeur: val as number, _unite: p.unite as string, _date_effet: d,
+          }), "Paramètre enregistré")}>OK</Button>
+        </WhyButton>
+      </div>
+      {erreur && <p role="alert" className="text-xs font-medium text-destructive">{erreur}</p>}
     </div>
   );
 }
