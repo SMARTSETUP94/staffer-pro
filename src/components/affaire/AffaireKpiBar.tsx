@@ -15,6 +15,8 @@ interface Kpis {
   nbEmployes: number;
   pctConso: number; // réelles / prévues
   pctStaff: number; // assignées / prévues
+  /** Heures du dernier devis Staffing tant qu'il n'est ni signé ni refusé (potentielles). */
+  heuresDevis: number | null;
 }
 
 export function AffaireKpiBar({ affaireId }: Props) {
@@ -36,6 +38,15 @@ export function AffaireKpiBar({ affaireId }: Props) {
           .eq("affaire_id", affaireId),
       ]);
       if (cancelled) return;
+      let heuresDevis: number | null = null;
+      const { data: der } = await supabase.rpc("devis_derniers_par_affaire", { _affaire_ids: [affaireId] });
+      const dernier = (der ?? [])[0];
+      if (dernier && !["signe", "refuse"].includes(dernier.statut_redaction)) {
+        const { data: calc } = await supabase.rpc("devis_calculer", { _devis_id: dernier.devis_id });
+        const hm = ((calc as { heures_metier?: Record<string, number> } | null)?.heures_metier) ?? {};
+        heuresDevis = Object.values(hm).reduce((s, h) => s + Number(h ?? 0), 0);
+      }
+      if (cancelled) return;
 
       const heuresPrevues = (cons ?? []).reduce((s, r: any) => s + Number(r.heures_prevues ?? 0), 0);
       const heuresAssignees = (cons ?? []).reduce((s, r: any) => s + Number(r.heures_assignees ?? 0), 0);
@@ -47,6 +58,7 @@ export function AffaireKpiBar({ affaireId }: Props) {
         heuresAssignees,
         heuresReelles,
         nbEmployes,
+        heuresDevis,
         pctConso: heuresPrevues > 0 ? Math.round((heuresReelles / heuresPrevues) * 100) : 0,
         pctStaff: heuresPrevues > 0 ? Math.round((heuresAssignees / heuresPrevues) * 100) : 0,
       });
@@ -77,6 +89,8 @@ export function AffaireKpiBar({ affaireId }: Props) {
         icon={<Clock className="h-3.5 w-3.5" />}
         label="Heures prévues"
         value={fmt(kpis.heuresPrevues) + " h"}
+        sub={kpis.heuresDevis != null ? `${fmt(kpis.heuresDevis)} h au devis (potentielles)` : undefined}
+        subTone="neutral"
       />
       <Kpi
         icon={<TrendingUp className="h-3.5 w-3.5" />}
@@ -108,7 +122,9 @@ function Kpi({
   value,
   sub,
   tone = "neutral",
+  subTone,
 }: {
+  subTone?: "neutral";
   icon: React.ReactNode;
   label: string;
   value: string;
@@ -131,7 +147,7 @@ function Kpi({
       </div>
       <div className="mt-0.5 flex items-baseline gap-1.5">
         <span className={cn("text-base font-bold tabular-nums", toneCls)}>{value}</span>
-        {sub && <span className={cn("text-xs font-semibold tabular-nums", toneCls)}>{sub}</span>}
+        {sub && <span className={cn("text-xs font-semibold tabular-nums", subTone ? "text-foreground/80" : toneCls)}>{sub}</span>}
       </div>
     </div>
   );
