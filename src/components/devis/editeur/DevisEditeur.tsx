@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle, ArrowLeft, Eye, Library, MessageSquarePlus, PenLine, Plus, Trash2 } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Eye, FileDown, Mail, Library, MessageSquarePlus, PenLine, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useDevisClaude, BadgeClaude, NoteClaude } from "@/components/devis/RedactionClaude";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,6 +19,7 @@ import type { TypologieFuture } from "@/lib/typologie-future";
 import { DevisArbre } from "./DevisArbre";
 import { ObjetPanel } from "./ObjetPanel";
 import { DevisVueClient } from "./DevisVueClient";
+import { ExportPdfDialog, EnvoiEmailDialog } from "@/components/devis/DevisPdfEnvoi";
 import { BibliothequeDialog } from "./BibliothequeDialog";
 import { SupprimerDevisDialog, SUPPRESSION_REFUSEE, devisSupprimable } from "@/components/devis/SupprimerDevis";
 import { useAutosave } from "./useAutosave";
@@ -51,6 +52,8 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
   const [modeleDlg, setModeleDlg] = useState(false);
   const [modele, setModele] = useState({ nom: "", categorie: "", description: "" });
   const [envoiDlg, setEnvoiDlg] = useState(false);
+  const [pdfDlg, setPdfDlg] = useState(false);
+  const [mailDlg, setMailDlg] = useState(false);
   const [envoiDate, setEnvoiDate] = useState("");
   const [supprDlg, setSupprDlg] = useState(false);
   const [signOpp, setSignOpp] = useState<{ id: string; code: string; client: string | null; typologie: TypologieFuture | null } | null>(null);
@@ -176,7 +179,7 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
   const zonesCibles = del ? d.lignes.filter((l) => l.id !== del.id && ["zone", "option"].includes(l.type) && !l.parent_id) : [];
 
   return (
-    <div className="space-y-4">
+    <div className="devis-editeur space-y-4">
       {infoClaude && <NoteClaude info={infoClaude} />}
       {/* En-tête */}
       <Card>
@@ -303,7 +306,7 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
               {calc.remise !== 0 && <Row label="Remise" value={eur(calc.remise)} />}
               {calc.remise !== 0 && <Row label="Total net HT" value={eur(calc.net_ht)} strong />}
               <Row label={`TVA ${Number(d.calcul.tva_pct)} %`} value={eur(calc.tva)} />
-              <Row label="TTC" value={eur(calc.ttc)} />
+              <Row label="Total TTC" value={eur(calc.ttc)} strong />
               {calc.options_ht > 0 && <Row label="Options (hors total)" value={eur(calc.options_ht)} />}
             </div>
             <div className="space-y-1 border-t pt-2">
@@ -338,6 +341,11 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
               )}
               {["a_valider", "valide", "transfere"].includes(st) && d.droits.valider && <Button variant="ghost" className="text-destructive" onClick={() => void changerStatut("refuse")}>Marquer refusé</Button>}
               <Button variant="outline" onClick={() => setVueClient(true)}><Eye className="mr-1 h-4 w-4" />Vue client</Button>
+              {!d.devis.est_modele && <Button variant="outline" onClick={() => setPdfDlg(true)}><FileDown className="mr-1 h-4 w-4" />Exporter en PDF</Button>}
+              {!d.devis.est_modele && d.droits.valider && d.devis.affaire_id && (
+                <Button variant="outline" disabled={!["valide", "transfere"].includes(st)} title={!["valide", "transfere"].includes(st) ? "Réservé aux devis validés ; sur un brouillon, seul le PDF « PROJET » est disponible" : undefined}
+                  onClick={() => setMailDlg(true)}><Mail className="mr-1 h-4 w-4" />Envoyer par email</Button>
+              )}
               {!d.devis.est_modele && d.droits.parametres && <Button variant="ghost" onClick={() => { setModele({ nom: d.devis.libelle ?? "", categorie: "", description: "" }); setModeleDlg(true); }}>Enregistrer comme modèle</Button>}
               <Button variant="outline" disabled title="Lot 3">Vers ProGBat (lot 3)</Button>
               {!d.devis.est_modele && d.droits.ecrire && (
@@ -455,6 +463,8 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
       </Dialog>
 
       <DevisVueClient open={vueClient} onOpenChange={setVueClient} devisId={devisId} />
+      <ExportPdfDialog open={pdfDlg} onOpenChange={setPdfDlg} devisId={devisId} />
+      <EnvoiEmailDialog open={mailDlg} onOpenChange={setMailDlg} devisId={devisId} onSent={() => void q.refetch()} />
       <BibliothequeDialog open={biblio} onOpenChange={setBiblio} devisId={devisId}
         onInsert={async (srcId) => {
           const parent = ligneSel ? (ligneSel.type === "zone" || ligneSel.type === "option" || ligneSel.type.startsWith("chapitre") ? ligneSel.id : ligneSel.parent_id) : null;
@@ -471,7 +481,7 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
 }
 
 function Row({ label, value, strong }: { label: string; value: string; strong?: boolean }) {
-  return <div className={`flex justify-between gap-2 ${strong ? "text-base font-semibold" : ""}`}><span className="truncate">{label}</span><span className="tabular-nums">{value}</span></div>;
+  return <div className={`flex justify-between gap-2 border-b border-border/80 py-1 last:border-b-0 ${strong ? "text-base font-bold text-foreground" : ""}`}><span className="truncate">{label}</span><span className="tabular-nums">{value}</span></div>;
 }
 
 function HeuresMetier({ hm }: { hm: Record<string, number> }) {
@@ -484,9 +494,10 @@ function HeuresMetier({ hm }: { hm: Record<string, number> }) {
 function DateCase({ label, value, onChange, disabled }: { label: string; value: string | null; onChange?: (v: string | null) => void; disabled?: boolean }) {
   return (
     <div className="rounded-md border p-2">
-      <p className="text-[11px] uppercase text-muted-foreground">{label}</p>
-      {disabled ? <p className="text-sm">{value ? new Date(value).toLocaleDateString("fr-FR") : "À déterminer"}</p>
-        : <Input type="date" className="h-8" value={value ?? ""} onChange={(e) => onChange?.(e.target.value || null)} />}
+      <label className="block text-xs font-medium text-foreground/80">{label}
+      {disabled ? <span className="block text-sm font-normal text-foreground">{value ? new Date(value).toLocaleDateString("fr-FR") : "À déterminer"}</span>
+        : <Input type="date" className={`mt-0.5 h-8${value ? "" : " devis-champ-vide"}`} value={value ?? ""} onChange={(e) => onChange?.(e.target.value || null)} />}
+      </label>
     </div>
   );
 }

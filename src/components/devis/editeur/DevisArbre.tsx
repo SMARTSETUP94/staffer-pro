@@ -78,7 +78,7 @@ export function DevisArbre({ lignes, montants, racines, selected, readOnly, acti
           onClick={() => actions.select(l.id)}
           className={cn(
             "group flex cursor-pointer items-center gap-1 rounded px-1 py-1 text-sm",
-            selected === l.id ? "bg-primary/10 font-medium" : "hover:bg-muted",
+            selected === l.id ? "bg-primary/15 font-semibold text-foreground ring-1 ring-inset ring-primary/50" : "hover:bg-muted",
             over?.id === l.id && over.pos === "before" && "border-t-2 border-primary",
             over?.id === l.id && over.pos === "inside" && "ring-1 ring-primary",
           )}
@@ -101,7 +101,7 @@ export function DevisArbre({ lignes, montants, racines, selected, readOnly, acti
               {l.libelle || "(sans titre)"}{l.type === "objet" && Number(l.quantite) !== 1 && <span className="text-muted-foreground"> ×{Number(l.quantite)}</span>}
             </span>
           )}
-          {montant ? <span className="shrink-0 text-xs tabular-nums text-muted-foreground">{eur(montant)}</span> : null}
+          {montant ? <span className="w-24 shrink-0 text-right text-xs tabular-nums text-foreground/75">{eur(montant)}</span> : null}
           {!readOnly && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>

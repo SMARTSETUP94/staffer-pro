@@ -348,3 +348,37 @@
   body:has(.planning-print) .planning-print { position: absolute; inset: 0 auto auto 0; width: 100%; }
   .planning-print { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
+
+/* Éditeur de devis : champs et tableaux contrastés (clair et sombre) */
+.devis-editeur {
+  --champ-bg: var(--muted);
+  --champ-bordure: color-mix(in oklch, var(--foreground) 52%, var(--card));
+}
+.dark .devis-editeur { --champ-bg: var(--background); --champ-bordure: color-mix(in oklch, var(--foreground) 48%, var(--card)); }
+.devis-editeur :is(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), textarea, select) {
+  background-color: var(--champ-bg);
+  border: 1px solid var(--champ-bordure);
+  color: var(--foreground);
+}
+.devis-editeur :is(input, textarea)::placeholder { color: var(--muted-foreground); opacity: 0.85; font-style: italic; }
+.devis-editeur :is(input, textarea, select):focus-visible {
+  outline: 2px solid var(--ring); outline-offset: 1px; border-color: var(--ring);
+  background-color: var(--card);
+}
+.devis-editeur :is(input, textarea, select):disabled { opacity: 1; background-color: transparent; border-style: dotted; }
+.devis-editeur .devis-champ-vide {
+  border-style: dashed;
+  background-color: color-mix(in oklch, var(--primary) 7%, var(--champ-bg));
+}
+.devis-editeur .devis-table { border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.devis-editeur .devis-table thead th {
+  background-color: color-mix(in oklch, var(--primary) 10%, var(--card));
+  color: var(--foreground); font-weight: 600; padding: 0.35rem 0.4rem;
+  border-bottom: 1px solid var(--champ-bordure);
+}
+.devis-editeur .devis-table :is(th, td) { border-right: 1px solid var(--border); padding: 0.25rem 0.4rem; }
+.devis-editeur .devis-table :is(th, td):last-child { border-right: 0; }
+.devis-editeur .devis-table tbody tr:nth-child(even) { background-color: color-mix(in oklch, var(--foreground) 4%, transparent); }
+.devis-editeur .devis-table tbody tr { border-bottom: 1px solid var(--border); }
+.devis-editeur .devis-table td.text-right { font-weight: 700; }
+.devis-editeur .devis-table input[inputmode="decimal"] { text-align: right; }

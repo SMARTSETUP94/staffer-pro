@@ -19,10 +19,17 @@ type Save = (key: string, run: () => Promise<unknown>) => void;
 const num = (v: string) => { const n = Number(v.replace(",", ".")); return Number.isFinite(n) ? n : 0; };
 
 /** Champ texte/nombre : mise à jour immédiate en cache + enregistrement automatique. */
-function Field({ value, onValue, numeric, className, placeholder, disabled, onEnter, multiline }: {
+function Field({ value, onValue, numeric, className, placeholder, disabled, onEnter, multiline, label, important }: {
   value: string | number | null | undefined; onValue: (v: string) => void; numeric?: boolean; className?: string;
   placeholder?: string; disabled?: boolean; onEnter?: () => void; multiline?: boolean;
+  /** Libellé toujours visible au-dessus du champ. */ label?: string; /** Champ vide repéré (bordure pointillée). */ important?: boolean;
 }) {
+  if (label) return (
+    <label className="block space-y-0.5">
+      <span className="block text-xs font-medium text-foreground/80">{label}</span>
+      <Field value={value} onValue={onValue} numeric={numeric} className={className} placeholder={placeholder} disabled={disabled} onEnter={onEnter} multiline={multiline} important={important} />
+    </label>
+  );
   const [v, setV] = useState(value == null ? "" : String(value));
   const [focus, setFocus] = useState(false);
   useEffect(() => { if (!focus) setV(value == null ? "" : String(value)); }, [value, focus]);
@@ -31,8 +38,9 @@ function Field({ value, onValue, numeric, className, placeholder, disabled, onEn
     onFocus: () => setFocus(true), onBlur: () => setFocus(false),
     onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => { setV(e.target.value); onValue(e.target.value); },
   };
-  if (multiline) return <Textarea {...props} className={className} />;
-  return <Input {...props} inputMode={numeric ? "decimal" : undefined} className={`h-8 ${className ?? ""}`}
+  const vide = important && v.trim() === "" ? " devis-champ-vide" : "";
+  if (multiline) return <Textarea {...props} className={`${className ?? ""}${vide}`} />;
+  return <Input {...props} inputMode={numeric ? "decimal" : undefined} className={`h-8 ${className ?? ""}${vide}`}
     onKeyDown={(e) => { if (e.key === "Enter" && onEnter) { e.preventDefault(); onEnter(); } }} />;
 }
 
@@ -153,8 +161,8 @@ export function ObjetPanel({ data, ligne, montants, calc, readOnly, call, patch,
         {parent && " › "}<span>{TYPE_LABEL[ligne.type]}</span>
       </div>
       <div className="grid gap-2 md:grid-cols-[1fr_90px]">
-        <Field value={ligne.libelle} disabled={readOnly} placeholder="Intitulé" onValue={(v) => setLigne("libelle", v)} className="text-base font-medium" />
-        {ligne.type !== "zone" && <Field numeric value={ligne.quantite} disabled={readOnly} placeholder="Qté" onValue={(v) => setLigne("quantite", v, true)} />}
+        <Field value={ligne.libelle} disabled={readOnly} label="Intitulé" placeholder="Intitulé de la ligne" onValue={(v) => setLigne("libelle", v)} className="text-base font-medium" />
+        {ligne.type !== "zone" && <Field numeric value={ligne.quantite} disabled={readOnly} label="Quantité" placeholder="1" onValue={(v) => setLigne("quantite", v, true)} />}
       </div>
       {ligne.type === "option" && (
         <label className="flex items-center gap-2 text-sm">
@@ -166,13 +174,13 @@ export function ObjetPanel({ data, ligne, montants, calc, readOnly, call, patch,
           Incluse dans le total
         </label>
       )}
-      <Field multiline value={ligne.descriptif_client} disabled={readOnly} placeholder="Descriptif client" onValue={(v) => setLigne("descriptif_client", v)} />
+      <Field multiline value={ligne.descriptif_client} disabled={readOnly} label="Descriptif client" placeholder="Texte visible par le client" onValue={(v) => setLigne("descriptif_client", v)} />
       {ligne.type === "objet" && (
         <div className="grid grid-cols-4 gap-2">
-          <Field numeric value={ligne.longueur_mm} disabled={readOnly} placeholder="Longueur mm" onValue={(v) => setLigne("longueur_mm", v, true)} />
-          <Field numeric value={ligne.largeur_mm} disabled={readOnly} placeholder="Largeur mm" onValue={(v) => setLigne("largeur_mm", v, true)} />
-          <Field numeric value={ligne.hauteur_mm} disabled={readOnly} placeholder="Hauteur mm" onValue={(v) => setLigne("hauteur_mm", v, true)} />
-          <Field value={ligne.finition} disabled={readOnly} placeholder="Finition" onValue={(v) => setLigne("finition", v)} />
+          <Field numeric value={ligne.longueur_mm} disabled={readOnly} label="Longueur (mm)" important placeholder="—" onValue={(v) => setLigne("longueur_mm", v, true)} />
+          <Field numeric value={ligne.largeur_mm} disabled={readOnly} label="Largeur (mm)" important placeholder="—" onValue={(v) => setLigne("largeur_mm", v, true)} />
+          <Field numeric value={ligne.hauteur_mm} disabled={readOnly} label="Hauteur (mm)" important placeholder="—" onValue={(v) => setLigne("hauteur_mm", v, true)} />
+          <Field value={ligne.finition} disabled={readOnly} label="Finition" placeholder="ex. laqué blanc" onValue={(v) => setLigne("finition", v)} />
         </div>
       )}
 
@@ -193,7 +201,7 @@ export function ObjetPanel({ data, ligne, montants, calc, readOnly, call, patch,
               {p.mime === "application/pdf"
                 ? <a href={photoUrls.data?.[p.id] ?? undefined} target="_blank" rel="noreferrer" className="flex h-20 items-center justify-center bg-muted">PDF</a>
                 : <img src={photoUrls.data?.[p.id] ?? undefined} alt={p.legende ?? ""} className="h-20 w-full rounded object-cover" />}
-              <Field value={p.legende} disabled={readOnly} placeholder="Légende" onValue={(v) => save(`p:${p.id}`, () => call("devis_photo_modifier", { _photo_id: p.id, _p: { legende: v } }, { refresh: false }))} />
+              <Field value={p.legende} disabled={readOnly} label="Légende" placeholder="Légende" onValue={(v) => save(`p:${p.id}`, () => call("devis_photo_modifier", { _photo_id: p.id, _p: { legende: v } }, { refresh: false }))} />
               <div className="flex items-center justify-between">
                 <label className="flex items-center gap-1"><input type="checkbox" checked={p.visible_client} disabled={readOnly}
                   onChange={(e) => void call("devis_photo_modifier", { _photo_id: p.id, _p: { visible_client: e.target.checked } })} />Visible client</label>
@@ -210,8 +218,8 @@ export function ObjetPanel({ data, ligne, montants, calc, readOnly, call, patch,
           {/* Heures */}
           <section className="space-y-2">
             <h3 className="text-sm font-semibold">Heures</h3>
-            <table className="w-full text-sm">
-              <thead className="text-xs text-muted-foreground"><tr>
+            <table className="devis-table w-full text-sm">
+              <thead className="text-xs"><tr>
                 <th className="text-left">Poste</th><th className="text-left">Niveau</th><th>Heures</th><th title="Décoché : heures communes, non multipliées par la quantité">Par unité</th>
                 <th>Taux €/h</th><th className="text-right" title="Cliquez « montant » pour saisir le montant de la ligne">Montant</th><th />
               </tr></thead>
@@ -278,8 +286,8 @@ export function ObjetPanel({ data, ligne, montants, calc, readOnly, call, patch,
           {/* Matériaux */}
           <section className="space-y-2">
             <h3 className="text-sm font-semibold">Matériaux</h3>
-            <table className="w-full text-sm">
-              <thead className="text-xs text-muted-foreground"><tr>
+            <table className="devis-table w-full text-sm">
+              <thead className="text-xs"><tr>
                 <th className="text-left">Désignation</th><th>Quantité</th>{couts && <th>Achat €</th>}{couts && <th>Coef</th>}<th className="text-right">Vente</th><th />
               </tr></thead>
               <tbody>
@@ -319,8 +327,8 @@ export function ObjetPanel({ data, ligne, montants, calc, readOnly, call, patch,
           <section className="space-y-2">
             <h3 className="text-sm font-semibold">Achats spécifiques, sous-traitance, location, forfaits</h3>
             <p className="text-xs text-muted-foreground">Prix de vente direct (forfait, négatif pour une régularisation) <em>ou</em> prix d'achat × coefficient dans « détails ».</p>
-            <table className="w-full text-sm">
-              <thead className="text-xs text-muted-foreground"><tr>
+            <table className="devis-table w-full text-sm">
+              <thead className="text-xs"><tr>
                 <th className="text-left">Désignation</th><th>Type</th><th>Qté</th>
                 <th title="Prix de vente unitaire saisi directement ; vide = achat × coefficient">Prix vente €</th><th className="text-right">Vente</th><th /><th />
               </tr></thead>

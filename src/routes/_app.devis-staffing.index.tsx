@@ -17,6 +17,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { STATUT_LABEL, eur, type DevisStatut } from "@/components/devis/editeur/api";
 import { SupprimerDevisDialog, SUPPRESSION_REFUSEE, devisSupprimable } from "@/components/devis/SupprimerDevis";
 import { useModelesDevis } from "@/components/devis/useModelesDevis";
+import { ExportPdfDialog } from "@/components/devis/DevisPdfEnvoi";
 
 export const Route = createFileRoute("/_app/devis-staffing/")({
   beforeLoad: () => requireCapability("devis.view"),
@@ -50,6 +51,7 @@ function DevisGlobal() {
   const [ca, setCa] = useState("");
   const [open, setOpen] = useState(false);
   const [aSupprimer, setASupprimer] = useState<{ id: string; numero: string } | null>(null);
+  const [pdfId, setPdfId] = useState<string | null>(null);
 
   const liste = useQuery({
     queryKey: ["devis-staffing-global"],
@@ -103,7 +105,7 @@ function DevisGlobal() {
           <Table>
             <TableHeader><TableRow>
               <TableHead>Numéro</TableHead><TableHead>Affaire</TableHead><TableHead>Client</TableHead><TableHead>Statut</TableHead>
-              <TableHead className="text-right">Total net HT</TableHead><TableHead>Date</TableHead><TableHead>Chargé d'affaires</TableHead>{canWrite && <TableHead className="w-10" />}
+              <TableHead className="text-right">Total net HT</TableHead><TableHead>Date</TableHead><TableHead>Chargé d'affaires</TableHead><TableHead className="w-10" />
             </TableRow></TableHeader>
             <TableBody>
               {rows.map((r) => (
@@ -115,26 +117,30 @@ function DevisGlobal() {
                   <TableCell className="text-right tabular-nums">{r.net_ht == null ? "—" : eur(Number(r.net_ht))}</TableCell>
                   <TableCell>{r.date_devis ? new Date(r.date_devis).toLocaleDateString("fr-FR") : "—"}</TableCell>
                   <TableCell>{r.charge_affaires_nom || "—"}</TableCell>
-                  {canWrite && (
+                  {(
                     <TableCell onClick={(e) => e.stopPropagation()}>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild><Button size="icon" variant="ghost" className="h-7 w-7" aria-label={`Actions ${r.numero}`}><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
+                          <DropdownMenuItem onSelect={() => setPdfId(r.id)}>Exporter en PDF</DropdownMenuItem>
+                          {canWrite && <>
                           <DropdownMenuItem disabled={!devisSupprimable(r.statut_redaction)} className="text-destructive"
                             onSelect={() => setASupprimer({ id: r.id, numero: r.numero })}>Supprimer le devis</DropdownMenuItem>
                           {!devisSupprimable(r.statut_redaction) && <p className="max-w-64 px-2 pb-1.5 text-xs text-muted-foreground">{SUPPRESSION_REFUSEE}</p>}
+                          </>}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
                   )}
                 </TableRow>
               ))}
-              {rows.length === 0 && <TableRow><TableCell colSpan={canWrite ? 8 : 7} className="text-center text-sm text-muted-foreground">Aucun devis.</TableCell></TableRow>}
+              {rows.length === 0 && <TableRow><TableCell colSpan={8} className="text-center text-sm text-muted-foreground">Aucun devis.</TableCell></TableRow>}
             </TableBody>
           </Table>
         )}
       <p className="text-xs text-muted-foreground">Anciens devis importés de ProGBat : <Link to="/devis" className="underline">historique des imports</Link>.</p>
       <NouveauDevisDialog open={open} onOpenChange={setOpen} />
+      {pdfId && <ExportPdfDialog devisId={pdfId} open onOpenChange={(o) => { if (!o) setPdfId(null); }} />}
       <SupprimerDevisDialog devis={aSupprimer} open={!!aSupprimer} onOpenChange={(o) => { if (!o) setASupprimer(null); }} onDone={() => void liste.refetch()} />
     </div>
   );

@@ -8,10 +8,10 @@ import { dateSchema } from "./schemas";
 /** Écritures devis autorisées pour Claude. Toute autre action devis reste dans l'application. */
 export const DEVIS_WRITE_TOOLS = ["devis_creer_brouillon", "devis_remplir", "devis_modifier_entete", "devis_ajouter_photo", "devis_nouvelle_version", "devis_soumettre"] as const;
 export type DevisWriteName = typeof DEVIS_WRITE_TOOLS[number];
-export const DEVIS_READ_TOOLS = ["devis_lister", "devis_lire", "devis_referentiel", "materiaux_rechercher", "devis_charge_be"] as const;
+export const DEVIS_READ_TOOLS = ["devis_lister", "devis_lire", "devis_referentiel", "materiaux_rechercher", "devis_charge_be", "devis_exporter_pdf"] as const;
 export type DevisReadName = typeof DEVIS_READ_TOOLS[number];
 export const DEVIS_READ_CAPS: Record<DevisReadName, string> = {
-  devis_lister: "devis.view", devis_lire: "devis.view", devis_referentiel: "devis.rediger", materiaux_rechercher: "devis.rediger", devis_charge_be: "devis.view",
+  devis_lister: "devis.view", devis_lire: "devis.view", devis_referentiel: "devis.rediger", materiaux_rechercher: "devis.rediger", devis_charge_be: "devis.view", devis_exporter_pdf: "devis.view",
 };
 export const LOT_MAX = 300;
 export const PHOTO_MAX_OCTETS = 10 * 1024 * 1024;
@@ -73,6 +73,8 @@ export const devisSchemas = {
   devis_referentiel: {},
   materiaux_rechercher: { q: z.string().min(1).max(200), familles: z.array(z.string().max(80)).max(20).optional(), fournisseurs: z.array(uuid).max(20).optional(), epaisseur: num.min(0).optional(), recent_seulement: z.boolean().default(false), limit: z.number().int().min(1).max(50).default(20) },
   devis_charge_be: { affaire_ids: z.array(uuid).min(1).max(50) },
+  devis_exporter_pdf: { devis_id: uuid, niveau: z.enum(["detaille", "synthetique"]).default("detaille").describe("detaille : prix par objet ; synthetique : total par zone et chapitre."),
+    regenerer: z.boolean().default(false).describe("true : générer un nouveau PDF même si un export de la version en cours existe.") },
   devis_creer_brouillon: { affaire_id: uuid, modele_id: z.union([uuid, z.literal("vierge")]).optional().describe("Omettre = modèle par défaut ; « vierge » = sans modèle."), cle_externe: z.string().min(1).max(255).optional(), note: z.string().max(4000).optional().describe("Hypothèses à confirmer, affichées en tête de l'éditeur."), mode, ...confirmationSchema },
   devis_remplir: { devis_id: uuid,
     lignes: z.array(element).max(LOT_MAX).refine(l => tailleLot(l) <= LOT_MAX, `${LOT_MAX} lignes maximum par appel (heures, matériaux et lignes libres comprises) : découper en plusieurs appels`).optional().describe("Ajouts ; avec ligne_id, complète la ligne existante (libellé, quantité, dimensions, descriptif appliqués)."),
@@ -172,13 +174,15 @@ export async function readDevis(context: McpAppContext, name: DevisReadName, arg
       const r = await context.db.rpc("materiaux_rechercher", { _q: args.q, _familles: args.familles ?? null, _fournisseurs: args.fournisseurs ?? null, _epaisseur: args.epaisseur ?? null, _recent_seulement: args.recent_seulement ?? false, _tri: "pertinence", _limit: args.limit ?? 20 });
       if (r.error) throw new ToolError("Recherche matériaux indisponible");
       data = { rows: ((r.data ?? []) as any[]).map(m => sansCouts(m, couts)) };
+    } else if (name === "devis_exporter_pdf") {
+      data = { rows: [1], ...(await exporterPdfMcp(context, args.devis_id, args.niveau ?? "detaille", args.regenerer === true)) };
     } else {
       const r = await context.db.rpc("devis_charge_be", { _affaire_ids: args.affaire_ids });
       if (r.error) throw new ToolError("Charge BE indisponible");
       data = { rows: ((r.data ?? []) as any[]).map(c => ({ ...c, jours_be: arrondi1(c.jours_be), heures_be: arrondi1(c.heures_be) })) };
     }
     count = (data.rows as unknown[]).length;
-    if (name === "devis_lire") { const { rows: _r, ...rest } = data; result = compactResult(rest); }
+    if (name === "devis_lire" || name === "devis_exporter_pdf") { const { rows: _r, ...rest } = data; result = compactResult(rest); }
     else result = compactResult(data);
   } catch (error) {
     if (status !== "refuse") status = "erreur";
@@ -348,4 +352,28 @@ export async function runDevisWrite(context: McpAppContext, name: DevisWriteName
     if (audit.error) throw new ToolError("Journal indisponible : écriture interrompue");
     return { ...compactResult({ error: error instanceof ToolError ? error.message : "Écriture indisponible", statut: "refused" }), isError: true };
   }
+}
+
+/** Dernier PDF client de la version en cours (ou nouvel export) + lien de téléchargement temporaire. Aucun envoi d'email. */
+async function exporterPdfMcp(context: McpAppContext, devisId: string, niveau: "detaille" | "synthetique", regenerer: boolean) {
+  const lu = await context.db.from("devis").select("numero,version,statut_redaction,updated_at").eq("id", devisId).maybeSingle();
+  if (lu.error || !lu.data) throw new ToolError("Devis introuvable ou accès refusé");
+  const h = await context.db.rpc("devis_exports_lister", { _devis_id: devisId });
+  if (h.error) throw new ToolError("Historique des exports indisponible");
+  let dernier = ((h.data ?? []) as any[]).find(e => e.niveau === niveau && e.version === lu.data!.version && e.statut_redaction === lu.data!.statut_redaction
+    && new Date(e.cree_le) >= new Date(lu.data!.updated_at));
+  let genere = false;
+  if (!dernier || regenerer) {
+    const { exporterDevisPdf } = await import("@/lib/devis/pdf-export");
+    try {
+      const r = await exporterDevisPdf(context.db as never, devisId, niveau);
+      dernier = { storage_path: r.path, version: r.export.version, filigrane: r.export.filigrane, cree_le: new Date().toISOString() };
+      genere = true;
+    } catch (e) { throw new ToolError(e instanceof Error ? e.message : "Export PDF impossible"); }
+  }
+  const url = await context.db.storage.from("devis-exports").createSignedUrl(dernier.storage_path, 3600);
+  if (url.error || !url.data) throw new ToolError("Lien de téléchargement indisponible");
+  return { numero: lu.data.numero, version: dernier.version, niveau, filigrane_projet: dernier.filigrane === true, genere, cree_le: String(dernier.cree_le),
+    nom_fichier: `Devis ${/-R\d+$/.test(lu.data.numero) ? lu.data.numero : `${lu.data.numero}-R${dernier.version}`}.pdf`, url_telechargement: url.data.signedUrl, expire_dans_secondes: 3600,
+    rappel: "Lien temporaire. L'envoi au client reste fait par un humain (brouillon Outlook possible)." };
 }
