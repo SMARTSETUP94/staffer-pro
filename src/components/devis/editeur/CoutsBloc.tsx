@@ -1,11 +1,17 @@
 import { Link } from "@tanstack/react-router";
 import { AlertTriangle } from "lucide-react";
+import { Fragment, type ReactNode } from "react";
 import { coutDec, texteCoutsManquants, venteDec, type CoutManquant, type Decomposition } from "@/lib/devis/calcul";
+import { ancrePoste } from "@/lib/devis/editeur-lisibilite";
 
 const eur = (n: number) => n.toLocaleString("fr-FR", { style: "currency", currency: "EUR" });
 
 /** Décomposition coût / vente + marge (réservée au droit devis.couts). `net` = net HT après remise pour le devis. */
-export function CoutsBloc({ dec, net, manquants, compact }: { dec: Decomposition; net?: number; manquants?: CoutManquant[]; compact?: boolean }) {
+const fr = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 });
+
+/** Chaque coût manquant pointe vers l'endroit où le compléter : la ligne du poste dans la grille des taux, ou la ligne du devis. */
+export function CoutsBloc({ dec, net, manquants, compact, lienLibre }: { dec: Decomposition; net?: number; manquants?: CoutManquant[]; compact?: boolean;
+  /** Lien vers une ligne libre sans coût (sélection dans l'éditeur). */ lienLibre?: (designation: string) => ReactNode }) {
   const vente = net ?? venteDec(dec);
   const cout = coutDec(dec);
   const marge = Math.round((vente - cout) * 100) / 100;
@@ -31,7 +37,16 @@ export function CoutsBloc({ dec, net, manquants, compact }: { dec: Decomposition
       {alerte && (
         <p className="flex items-start gap-1 text-xs text-warning">
           <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0" />
-          <span>{alerte} — <Link to="/parametres/devis-taux" className="underline">compléter la grille</Link></span>
+          <span>Marge incomplète : coûts manquants sur{" "}
+            {(manquants ?? []).map((m, i) => (
+              <Fragment key={`${m.type}-${m.libelle}`}>
+                {i > 0 && ", "}
+                {m.type === "heures"
+                  ? <Link to="/parametres/devis-taux" hash={ancrePoste(m.libelle)} className="font-medium underline" title={`Saisir le coût de revient du poste ${m.libelle}`}>{m.libelle.toLowerCase()} ({fr(m.heures ?? 0)} h)</Link>
+                  : lienLibre ? lienLibre(m.libelle) : <span>{m.libelle.toLowerCase()}</span>}
+              </Fragment>
+            ))}
+          </span>
         </p>
       )}
     </div>
