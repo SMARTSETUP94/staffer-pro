@@ -133,7 +133,8 @@ export function KanbanColonne({ statut, items, chargesById, onSign, onDelete, dr
   );
 }
 
-export { IconeSupplement as BadgeSupplement } from "@/components/devis/IconeSupplement";
+import { IconeSupplement as BadgeSupplement } from "@/components/devis/IconeSupplement";
+export { BadgeSupplement };
 
 /**
  * Colonne à part, en fin de Kanban : devis de suppléments des chantiers 6XXX encore ouverts.
