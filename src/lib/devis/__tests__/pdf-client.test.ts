@@ -22,7 +22,7 @@ describe("PDF client devis", () => {
   it("détaillé : prix unitaire = total / quantité, dimensions et descriptif", () => {
     const r = lignesTableau(base, base.lignes[0], "detaille");
     expect(r[0]).toMatchObject({ qte: "2", pu: "600,00 €", total: "1 200,00 €" });
-    expect(r[0].designation).toContain("1200 × 400 × 2000 mm");
+    expect(r[0].detail).toContain("1200 × 400 × 2000 mm");
   });
   it("synthétique : aucun prix par objet", () => {
     const r = lignesTableau(base, base.lignes[0], "synthetique");

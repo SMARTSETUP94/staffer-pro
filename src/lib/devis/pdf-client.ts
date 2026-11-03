@@ -57,16 +57,16 @@ const dims = (l: LigneClient) => {
 /** Lignes du tableau pour une racine (zone ou chapitre), récursivement. */
 export function lignesTableau(vc: DevisClient, racine: LigneClient, niveau: NiveauPdf) {
   const kids = (p: string) => vc.lignes.filter((l) => l.parent_id === p).sort((a, b) => a.ordre - b.ordre);
-  const rows: { designation: string; qte: string; pu: string; total: string; style: "objet" | "commentaire" | "sous" }[] = [];
+  const rows: { designation: string; detail?: string; qte: string; pu: string; total: string; style: "objet" | "commentaire" | "sous" }[] = [];
   const walk = (p: string, depth: number) => {
     for (const l of kids(p)) {
       const indent = "   ".repeat(depth);
       if (l.type === "commentaire") { if (l.texte?.trim()) rows.push({ designation: indent + l.texte.trim(), qte: "", pu: "", total: "", style: "commentaire" }); continue; }
       const q = Number(l.quantite ?? 1) || 1;
-      const desc = [l.libelle ?? "", niveau === "detaille" ? dims(l) : "", niveau === "detaille" ? (l.descriptif_client ?? "").trim() : ""].filter(Boolean).join("\n" + indent);
+      const detail = niveau === "detaille" ? [dims(l), (l.descriptif_client ?? "").trim()].filter(Boolean).join("\n") : "";
       const m = l.montant == null ? null : Number(l.montant);
       rows.push({
-        designation: indent + desc, qte: l.type === "objet" ? String(q) : "",
+        designation: indent + (l.libelle ?? ""), detail, qte: l.type === "objet" ? String(q) : "",
         pu: niveau === "detaille" && m != null && l.type === "objet" ? eurPdf(m / q) : "",
         total: niveau === "detaille" && m != null ? eurPdf(m) : "", style: l.type === "objet" ? "objet" : "sous",
       });
@@ -98,16 +98,16 @@ export function construireDevisPdf(vc: DevisClient, niveau: NiveauPdf, images: R
 
   // Client
   let y = 50;
-  doc.setDrawColor(200); doc.setFillColor(246, 244, 240); doc.roundedRect(W / 2, y - 5, W / 2 - M, 30, 1.5, 1.5, "FD");
-  doc.setFont("helvetica", "bold"); doc.setFontSize(10.5); doc.text(vc.client?.nom ?? "Client à préciser", W / 2 + 4, y + 1);
-  doc.setFont("helvetica", "normal"); doc.setFontSize(9);
   const cl = [vc.client?.adresse, [vc.client?.code_postal, vc.client?.ville].filter(Boolean).join(" "),
     vc.contact ? `À l'attention de ${vc.contact.nom}` : "", vc.client_final ? `Client final : ${vc.client_final}` : ""].filter(Boolean) as string[];
+  doc.setDrawColor(200); doc.setFillColor(246, 244, 240); doc.roundedRect(W / 2, y - 5, W / 2 - M, 12 + cl.length * 4.2, 1.5, 1.5, "FD");
+  doc.setFont("helvetica", "bold"); doc.setFontSize(10.5); doc.text(vc.client?.nom ?? "Client à préciser", W / 2 + 4, y + 1);
+  doc.setFont("helvetica", "normal"); doc.setFontSize(9);
   doc.text(cl, W / 2 + 4, y + 6);
   if (vc.libelle) { doc.setFont("helvetica", "bold"); doc.setFontSize(11); doc.text(doc.splitTextToSize(vc.libelle, W / 2 - M - 6), M, y + 1); }
 
   // Dates clés renseignées
-  y = 84;
+  y = 50 + 12 + Math.max(cl.length * 4.2, 8) + 4;
   const dates = DATES.map(([k, lbl]) => [lbl, datePdf(vc.dates?.[k] ?? null)] as const).filter(([, v]) => v);
   if (dates.length) {
     doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); doc.setTextColor(...muted);
@@ -126,6 +126,7 @@ export function construireDevisPdf(vc: DevisClient, niveau: NiveauPdf, images: R
       corps.push(row.style === "commentaire"
         ? [{ content: row.designation, colSpan: 4, styles: { fontStyle: "italic", textColor: muted } }]
         : [{ content: row.designation, styles: row.style === "objet" ? { fontStyle: "bold" } : {} }, row.qte, row.pu, { content: row.total, styles: { fontStyle: "bold" } }]);
+      if (row.detail) corps.push([{ content: row.detail, colSpan: 4, styles: { textColor: ink, cellPadding: { top: 0, bottom: 2, left: 4, right: 2 } } }]);
     }
   }
   autoTable(doc, {
