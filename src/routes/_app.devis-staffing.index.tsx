@@ -51,6 +51,7 @@ function DevisGlobal() {
   const [ca, setCa] = useState("");
   const [open, setOpen] = useState(false);
   const [aSupprimer, setASupprimer] = useState<{ id: string; numero: string } | null>(null);
+  const [pdfId, setPdfId] = useState<string | null>(null);
 
   const liste = useQuery({
     queryKey: ["devis-staffing-global"],
