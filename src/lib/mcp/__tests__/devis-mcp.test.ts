@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
-import { controlerFichier, DEVIS_WRITE_TOOLS, devisPayload, devisSchemas, sansCouts, tailleLot } from "../devis";
+import { controlerFichier, DEVIS_WRITE_TOOLS, devisPayload, devisSchemas, elementsVises, hoteAutorise, margeFiable, resumeTotaux, sansCouts, tailleLot, telechargerFichier } from "../devis";
 
 const png = btoa(String.fromCharCode(0x89, 0x50, 0x4e, 0x47, 1, 2, 3, 4));
 const uuid = "11111111-1111-4111-8111-111111111111";
@@ -42,5 +42,60 @@ describe("outils devis MCP", () => {
     const m = { id: "1", designation: "MDF", prix_vente: 10, prix_achat_net: 5, prix_m2: 8, prix_ml: null };
     expect(sansCouts(m, false)).toEqual({ id: "1", designation: "MDF", prix_vente: 10 });
     expect(sansCouts(m, true)).toEqual(m);
+  });
+});
+
+describe("lot 4 — corrections après recette", () => {
+  const pngBytes = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 1, 2, 3, 4]);
+  const rep = (status: number, body: Uint8Array | null, headers: Record<string, string> = {}) =>
+    new Response(body as BodyInit | null, { status, headers });
+  it("modifier / supprimer : schéma strict par cible", () => {
+    const s = z.object(devisSchemas.devis_remplir);
+    expect(s.safeParse({ devis_id: uuid, mode: "conversation", modifications: [{ cible: "heure", id: uuid, champs: { heures: 6 } }], suppressions: [{ cible: "materiau", id: uuid }] }).success).toBe(true);
+    expect(s.safeParse({ devis_id: uuid, mode: "conversation", modifications: [{ cible: "heure", id: uuid, champs: { prix_achat: 3 } }] }).success).toBe(false);
+    expect(s.safeParse({ devis_id: uuid, mode: "conversation", modifications: [{ cible: "ligne", id: uuid, champs: {} }] }).success).toBe(false);
+    expect(s.safeParse({ devis_id: uuid, mode: "conversation", suppressions: [{ cible: "devis", id: uuid }] }).success).toBe(false);
+  });
+  it("compte modifications et suppressions dans la limite de 300", async () => {
+    expect(tailleLot([{ type: "objet" }], 299)).toBe(300);
+    await expect(devisPayload("devis_remplir", { devis_id: uuid, mode: "conversation" })).rejects.toThrow(/Lot vide/);
+    await expect(devisPayload("devis_remplir", { devis_id: uuid, mode: "conversation", suppressions: Array.from({ length: 301 }, () => ({ cible: "heure", id: uuid })) })).rejects.toThrow(/300/);
+  });
+  it("avant / après des éléments visés", () => {
+    const lu = { lignes: [{ id: "L", type: "objet", libelle: "Objet 1", quantite: 1 }], heures: [{ id: "H", ligne_id: "L", poste_libelle: "Construction", niveau: "standard", heures: 0, taux_vente: 45 }], materiaux: [], libres: [] };
+    const v = elementsVises(lu, { modifications: [{ cible: "heure", id: "H", champs: { heures: 8 } }], lignes: [{ ligne_id: "L", libelle: "Totem", heures: [{ poste: "peinture", heures: 6 }] }] });
+    expect(v[0]).toMatchObject({ action: "modifier", avant: { heures: 0 }, apres: { heures: 8 } });
+    expect(v[1]).toMatchObject({ action: "completer", avant: { libelle: "Objet 1" }, apres: { libelle: "Totem" }, ajouts: { heures: 1 } });
+  });
+  it("marge_fiable = false dès qu'un coût manque", () => {
+    expect(margeFiable({ couts_manquants: [] })).toEqual({ marge_fiable: true });
+    expect(margeFiable({ couts_manquants: [{ type: "heures", libelle: "Métallerie", heures: 4 }, { type: "libre", libelle: "Semi-remorque", heures: null }] }))
+      .toEqual({ marge_fiable: false, alerte_marge: "marge incomplète : coûts manquants sur métallerie (4 h), semi-remorque" });
+    expect(resumeTotaux({ marge: 100, couts_manquants: [{ libelle: "Impression UV", heures: 2 }] })).toMatchObject({ marge: 100, marge_fiable: false });
+  });
+  it("photo par URL : hôtes autorisés seulement, IP refusées", () => {
+    for (const ok of ["https://setup.sharepoint.com/x.jpg", "https://1drv.ms/i/abc", "https://onedrive.live.com/x", "https://staffing.setup.paris/a.png", "https://znwffztmdgsshuvvzsvq.supabase.co/storage/v1/object/x"])
+      expect(hoteAutorise(new URL(ok))).toBe(true);
+    for (const ko of ["http://setup.sharepoint.com/x", "https://evil.com/x.jpg", "https://sharepoint.com.evil.com/x", "https://10.0.0.1/x", "https://[::1]/x", "https://169.254.169.254/x", "https://u:p@staffing.setup.paris/x", "https://staffing.setup.paris:8443/x"])
+      expect(hoteAutorise(new URL(ko))).toBe(false);
+  });
+  it("photo par URL : suit les redirections de la liste, refuse les autres, détecte le type", async () => {
+    const f1 = (async (u: string) => u.startsWith("https://1drv.ms") ? rep(302, null, { location: "https://onedrive.live.com/download?id=1" }) : rep(200, pngBytes)) as typeof fetch;
+    const t = await telechargerFichier("https://1drv.ms/i/abc", undefined, 100, f1);
+    expect(t.mime).toBe("image/png"); expect(t.hote).toBe("onedrive.live.com");
+    const f2 = (async () => rep(302, null, { location: "https://192.168.1.10/p.png" })) as typeof fetch;
+    await expect(telechargerFichier("https://1drv.ms/i/abc", undefined, 100, f2)).rejects.toThrow(/non autorisé/);
+    const f3 = (async () => rep(200, new Uint8Array(200).fill(0x89))) as typeof fetch;
+    await expect(telechargerFichier("https://staffing.setup.paris/x", undefined, 100, f3)).rejects.toThrow(/volumineux/);
+    const f4 = (async () => rep(200, new TextEncoder().encode("<html>login</html>"))) as typeof fetch;
+    await expect(telechargerFichier("https://staffing.setup.paris/x", undefined, 100, f4)).rejects.toThrow(/Type de fichier refusé/);
+    let vu = ""; const f5 = (async (u: string) => { vu = u; return rep(200, pngBytes); }) as typeof fetch;
+    await telechargerFichier("https://setup.sharepoint.com/:i:/s/x", undefined, 100, f5);
+    expect(vu).toContain("download=1");
+  });
+  it("photo : une seule source, jamais le contenu dans les arguments transmis", async () => {
+    await expect(devisPayload("devis_ajouter_photo", { devis_id: uuid, ligne_id: uuid, mode: "conversation" })).rejects.toThrow(/soit url/);
+    const { payload } = await devisPayload("devis_ajouter_photo", { devis_id: uuid, ligne_id: uuid, fichier_base64: png, mode: "conversation" });
+    expect(payload.mime).toBe("image/png");
   });
 });
