@@ -31,6 +31,7 @@ const PARAM_LABELS: Record<string, string> = {
   repas: "Repas", frais_horaire: "Frais horaires", coursier_22m3: "Coursier 22 m³",
   semi_remorque: "Semi-remorque", coef_materiaux: "Coefficient matériaux",
   seuil_alerte_taux_pct: "Seuil d'alerte taux modifié", validite_jours: "Validité du devis", tva_pct: "TVA", heures_par_jour_be: "Heures par jour bureau d'étude",
+  proba_a_faire: "Probabilité pipeline — à faire", proba_envoye: "Probabilité pipeline — envoyé", proba_a_l_etude: "Probabilité pipeline — à l'étude", proba_presque_gagne: "Probabilité pipeline — presque gagné",
   cout_repas: "Coût — repas", cout_frais_horaire: "Coût — frais horaires", cout_coursier_22m3: "Coût — coursier 22 m³", cout_semi_remorque: "Coût — semi-remorque",
 };
 

@@ -1,4 +1,6 @@
-import { useMemo } from "react";
+import { useContext, useMemo } from "react";
+import { IndicateursCtx } from "./PipelineIndicateursBandeau";
+import { kEur, totauxColonne } from "@/lib/pipeline-indicateurs";
 import { useDroppable } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { cn } from "@/lib/utils";
@@ -36,6 +38,8 @@ export function KanbanColonne({ statut, items, chargesById, onSign, onDelete, dr
     () => (isAFaire ? sortAFaire(items) : items),
     [isAFaire, items],
   );
+  const parAffaire = useContext(IndicateursCtx);
+  const tot = useMemo(() => totauxColonne(items.map((i) => i.id), parAffaire), [items, parAffaire]);
   const enRetard = useMemo(
     () => (isAFaire ? countEnRetard(items) : 0),
     [isAFaire, items],
@@ -59,6 +63,11 @@ export function KanbanColonne({ statut, items, chargesById, onSign, onDelete, dr
           >
             {STATUT_LABEL[statut]}
           </span>
+          {parAffaire.size > 0 && (
+            <span className="text-xs tabular-nums text-foreground">
+              · {kEur(tot.chiffre)}{tot.estime > 0 && <span className="text-muted-foreground"> + {kEur(tot.estime)} est.</span>}
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-1.5">
           {enRetard > 0 && (
