@@ -256,14 +256,15 @@ export function OpportuniteCard({
           )}
 
           <PresqueGagneAlerte statut={opp.statut_opportunite} depuis={opp.statut_opportunite_depuis} />
-          {opp.roles_affectes && (
-            <RolesManquantsBadges
-              etat={{ phase: "opportunite", statut_opportunite: opp.statut_opportunite }}
-              typologie={opp.typologie_future ?? null}
-              affectes={opp.roles_affectes}
-              compact
-            />
-          )}
+          <div className="flex flex-wrap items-center gap-1.5 [&>*]:mt-2">
+            {opp.roles_affectes && (
+              <RolesManquantsBadges
+                etat={{ phase: "opportunite", statut_opportunite: opp.statut_opportunite }}
+                typologie={opp.typologie_future ?? null}
+                affectes={opp.roles_affectes}
+                compact
+              />
+            )}
 
           {opp.next_action_due_le && (() => {
             const urg = actionUrgency(opp.next_action_due_le);
