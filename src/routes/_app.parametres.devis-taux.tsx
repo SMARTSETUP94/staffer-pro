@@ -35,7 +35,6 @@ const PARAM_LABELS: Record<string, string> = {
 };
 
 const today = () => new Date().toISOString().slice(0, 10);
-const num = (v: string) => (v.trim() === "" ? null : Number(v.replace(",", ".")));
 
 function DevisTauxPage() {
   const qc = useQueryClient();
