@@ -299,6 +299,7 @@ function OpportunitesPage() {
           const dernier = new Map<string, NonNullable<typeof dv.data>[number]>();
           (dv.data ?? []).forEach((d) => { if (d.affaire_id && (dernier.get(d.affaire_id)?.version ?? -1) < d.version) dernier.set(d.affaire_id, d); });
           setClaudeIds(new Set([...dernier.entries()].filter(([, d]) => estBrouillonClaude(d)).map(([id]) => id)));
+          setDevisStatut(new Map([...dernier.entries()].map(([id, d]) => [id, d.statut_redaction ?? null])));
           const rolesBy = new Map<string, string[]>();
           (roles.data ?? []).forEach((r) => rolesBy.set(r.affaire_id, [...(rolesBy.get(r.affaire_id) ?? []), r.role]));
           setOpps((cur) => cur.map((o) => ({ ...o, statut_opportunite_depuis: depuis.get(o.id) ?? null, created_at: created.get(o.id) ?? null, date_evenement_debut: evt.get(o.id) ?? null, roles_affectes: rolesBy.get(o.id) ?? [] })));
