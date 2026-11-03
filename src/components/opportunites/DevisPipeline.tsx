@@ -41,6 +41,29 @@ export function DevisPipelineProvider({ affaireIds, children }: { affaireIds: st
 
 const stop = { onClick: (e: React.SyntheticEvent) => e.stopPropagation(), onPointerDown: (e: React.SyntheticEvent) => e.stopPropagation(), onKeyDown: (e: React.SyntheticEvent) => e.stopPropagation() };
 
+/** Montant en haut de vignette : « 9 511 € · R2 · envoyé » (+ ProGBat), sinon CA estimé en gris. */
+export function DevisMontantLigne({ affaireId }: { affaireId: string }) {
+  const ctx = useContext(DevisPipelineCtx);
+  const navigate = useNavigate();
+  const ind = useIndicateurAffaire(affaireId);
+  const badge = ctx?.badges.get(affaireId);
+  if (!ind) return null;
+  if (ind.net_ht != null && ind.devis_id) {
+    const statut = badge ? libelleStatutDevis(badge.statut_redaction, badge.numero_progbat, badge.date_envoi, STATUT_LABEL).toLowerCase() : null;
+    return (
+      <div className="mt-1 flex flex-wrap items-center gap-1.5" {...stop}>
+        <button type="button" className="text-left text-base font-bold tabular-nums text-foreground underline-offset-2 hover:underline" title="Ouvrir le devis"
+          onClick={() => navigate({ to: "/affaires/$affaireId/devis-staffing/$devisId", params: { affaireId, devisId: ind.devis_id! } })}>
+          {eurEntier(ind.net_ht)}<span className="text-xs font-semibold text-muted-foreground"> · R{ind.version}{statut ? ` · ${statut}` : ""}</span>
+        </button>
+        {ind.numero_progbat && <span className="rounded border border-primary/40 bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary" title={libelleNumeroProgbat(ind.numero_progbat)}>ProGBat</span>}
+      </div>
+    );
+  }
+  if (ind.estime != null) return <div className="mt-1 text-base tabular-nums text-muted-foreground">{eurEntier(ind.estime)} <span className="text-xs">est.</span></div>;
+  return null;
+}
+
 /** Bouton « Créer le devis » / « Ouvrir le devis » + badge version·statut sur une vignette. */
 export function DevisPipelineBouton({ affaireId, statut, onStatutChange }: { affaireId: string; statut: string; onStatutChange?: (s: string) => void }) {
   const ctx = useContext(DevisPipelineCtx);
@@ -55,12 +78,7 @@ export function DevisPipelineBouton({ affaireId, statut, onStatutChange }: { aff
   if (!ctx) return null;
   const badge = ctx.badges.get(affaireId);
   const action = devisPipelineAction({ statut, badge, peutRediger: ctx.peutRediger, flag: ctx.flag });
-  const montant = ind?.net_ht != null && ind.devis_id ? (
-    <button type="button" className="text-sm font-bold tabular-nums text-foreground underline-offset-2 hover:underline" title="Ouvrir le devis"
-      onClick={() => ouvrir(ind.devis_id!)}>{eurEntier(ind.net_ht)} <span className="text-[11px] font-semibold text-muted-foreground">R{ind.version}</span></button>
-  ) : ind?.estime != null ? <span className="text-sm tabular-nums text-muted-foreground">{eurEntier(ind.estime)} est.</span> : null;
-  const progbat = ind?.numero_progbat ? <span className="rounded border border-primary/40 bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary">ProGBat</span> : null;
-  if (!action) return montant ? <div className="mt-2 flex items-center gap-1.5" {...stop}>{montant}{progbat}</div> : null;
+  if (!action) return null;
 
   const creer = async (modeleId: string | null) => {
     if (busy) return;
@@ -77,12 +95,6 @@ export function DevisPipelineBouton({ affaireId, statut, onStatutChange }: { aff
 
   return (
     <div className="mt-2 flex flex-wrap items-center gap-1.5" {...stop}>
-      {montant}{progbat}
-      {badge && (
-        <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
-          R{badge.version} · {libelleStatutDevis(badge.statut_redaction, badge.numero_progbat, badge.date_envoi, STATUT_LABEL).toLowerCase()}{badge.numero_progbat ? ` · ${libelleNumeroProgbat(badge.numero_progbat)}` : ""}
-        </span>
-      )}
       <Button type="button" size="sm" variant="outline" className="h-6 px-2 text-[11px]" disabled={busy}
         onClick={() => (action === "ouvrir" && badge ? ouvrir(badge.devis_id) : setOpen(true))}>
         <FileText className="mr-1 h-3 w-3" />{action === "ouvrir" ? "Ouvrir le devis" : "Créer le devis"}
