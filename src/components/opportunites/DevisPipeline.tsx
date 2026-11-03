@@ -72,7 +72,6 @@ export function DevisPipelineBouton({ affaireId, statut, onStatutChange }: { aff
   const [busy, setBusy] = useState(false);
   const modeles = useModelesDevis(open);
   const [modeleChoisi, setModeleChoisi] = useState<string | null>(null);
-  const ind = useIndicateurAffaire(affaireId);
   const modele = modeleChoisi ?? modeles.data?.defautId ?? "";
   const ouvrir = (devisId: string) => navigate({ to: "/affaires/$affaireId/devis-staffing/$devisId", params: { affaireId, devisId } });
   if (!ctx) return null;
