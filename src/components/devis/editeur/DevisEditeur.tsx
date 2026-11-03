@@ -332,9 +332,9 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
         </div>
       )}
 
-      <div className="grid gap-4 lg:grid-cols-[var(--arbre-w)_1fr_260px]" style={{ ["--arbre-w" as string]: `${arbreW}px` }}>
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[var(--arbre-w)_1fr_260px]" style={{ ["--arbre-w" as string]: `${arbreW}px` }}>
         {/* Arbre */}
-        <Card className="relative">
+        <Card className="relative min-w-0">
           <div role="separator" aria-orientation="vertical" aria-label="Régler la largeur de l'arbre" title="Glisser pour régler la largeur"
             onPointerDown={redimArbre} onDoubleClick={() => { setArbreW(300); try { localStorage.setItem("devis-arbre-largeur", "300"); } catch { /* */ } }}
             className="absolute -right-2.5 top-0 z-10 hidden h-full w-2 cursor-col-resize rounded hover:bg-primary/30 lg:block" />
