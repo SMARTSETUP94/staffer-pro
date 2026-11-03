@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { MoreHorizontal, Plus, Search } from "lucide-react";
 import { toast } from "sonner";
+import { useDevisClaude, BadgeClaude } from "@/components/devis/RedactionClaude";
 import { supabase } from "@/integrations/supabase/client";
 import { requireCapability } from "@/lib/capability-guard";
 import { useFeatureFlag } from "@/hooks/use-feature-flag";
@@ -67,6 +68,7 @@ function DevisGlobal() {
       (!ca || r.charge_affaires_id === ca) &&
       (!t || [r.numero, r.affaire_numero, r.affaire_nom, r.client_nom].some((x) => x?.toLowerCase().includes(t))));
   }, [liste.data, q, statuts, ca]);
+  const claude = useDevisClaude((liste.data ?? []).map((r) => r.id));
   const cas = useMemo(() => [...new Map((liste.data ?? []).filter((r) => r.charge_affaires_id).map((r) => [r.charge_affaires_id!, r.charge_affaires_nom ?? "—"])).entries()], [liste.data]);
 
   if (!on) return <p className="p-6 text-sm text-muted-foreground">Le module Devis n'est pas activé pour votre compte.</p>;
@@ -106,7 +108,7 @@ function DevisGlobal() {
             <TableBody>
               {rows.map((r) => (
                 <TableRow key={r.id} className="cursor-pointer" onClick={() => navigate({ to: "/affaires/$affaireId/devis-staffing/$devisId", params: { affaireId: r.affaire_id, devisId: r.id } })}>
-                  <TableCell className="font-medium">{r.numero} <span className="text-xs text-muted-foreground">R{r.version}</span></TableCell>
+                  <TableCell className="font-medium">{r.numero} <span className="text-xs text-muted-foreground">R{r.version}</span>{claude.data?.has(r.id) && <BadgeClaude />}</TableCell>
                   <TableCell>{[r.affaire_numero, r.affaire_nom].filter(Boolean).join(" · ")}</TableCell>
                   <TableCell>{r.client_nom ?? "—"}</TableCell>
                   <TableCell><Badge variant="outline">{STATUT_LABEL[r.statut_redaction]}</Badge></TableCell>

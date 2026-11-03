@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle, ArrowLeft, Eye, Library, MessageSquarePlus, PenLine, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { useDevisClaude, BadgeClaude, NoteClaude } from "@/components/devis/RedactionClaude";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -55,6 +56,8 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
   const [signOpp, setSignOpp] = useState<{ id: string; code: string; client: string | null; typologie: TypologieFuture | null } | null>(null);
 
   const d = q.data;
+  const claude = useDevisClaude([devisId]);
+  const infoClaude = claude.data?.get(devisId);
   const peutSupprimer = useQuery({
     queryKey: ["devis-peut-supprimer", devisId, d?.devis.statut_redaction],
     enabled: !!d && !d.devis.est_modele && d.droits.ecrire,
@@ -174,6 +177,7 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
 
   return (
     <div className="space-y-4">
+      {infoClaude && <NoteClaude info={infoClaude} />}
       {/* En-tête */}
       <Card>
         <CardContent className="flex flex-wrap items-start gap-4 p-4">
@@ -184,7 +188,7 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
               {d.affaire ? `${d.affaire.numero ?? d.affaire.code_opportunite ?? ""} ${d.affaire.nom ?? ""}` : ""}
               {d.modele_origine && ` · modèle : ${d.modele_origine}`}
             </p>
-            <Badge className="mt-1">{STATUT_LABEL[st]}</Badge>
+            <Badge className="mt-1">{STATUT_LABEL[st]}</Badge>{infoClaude && <BadgeClaude />}
           </div>
           {!d.devis.est_modele && (
             <>

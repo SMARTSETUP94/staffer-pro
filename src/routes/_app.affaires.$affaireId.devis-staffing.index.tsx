@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Plus, FileText } from "lucide-react";
 import { toast } from "sonner";
+import { useDevisClaude, BadgeClaude } from "@/components/devis/RedactionClaude";
 import { supabase } from "@/integrations/supabase/client";
 import { useFeatureFlag } from "@/hooks/use-feature-flag";
 import { useCapability } from "@/hooks/use-capability";
@@ -72,7 +73,7 @@ function DevisListe() {
           )}
           {(liste.data ?? []).map((d) => (
             <TableRow key={d.id} className="cursor-pointer" onClick={() => navigate({ to: "/affaires/$affaireId/devis-staffing/$devisId", params: { affaireId, devisId: d.id } })}>
-              <TableCell className="font-medium"><FileText className="mr-1 inline h-4 w-4" />{d.numero}</TableCell>
+              <TableCell className="font-medium"><FileText className="mr-1 inline h-4 w-4" />{d.numero}{claude.data?.has(d.id) && <BadgeClaude />}</TableCell>
               <TableCell>R{d.version}</TableCell>
               <TableCell><Badge variant="secondary">{STATUT_LABEL[d.statut_redaction as DevisStatut]}</Badge></TableCell>
               <TableCell className="text-right">{eur(d.total_ht)}</TableCell>
