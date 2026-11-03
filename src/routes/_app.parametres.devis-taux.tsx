@@ -11,6 +11,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { evaluerTaux, niveauInitial, NOUVEAU_NIVEAU, parseMontant } from "@/lib/devis/taux-form";
 import { DevisSupprimesCard } from "@/components/devis/DevisSupprimesCard";
 
 export const Route = createFileRoute("/_app/parametres/devis-taux")({
@@ -77,8 +79,8 @@ function DevisTauxPage() {
 
   const run = async (p: PromiseLike<{ error: { message: string } | null }>, ok: string) => {
     const { error } = await p;
-    if (error) toast.error(error.message);
-    else { toast.success(ok); refresh(); }
+    if (error) { toast.error(error.message); return false; }
+    toast.success(ok); refresh(); return true;
   };
 
   return (
@@ -154,15 +156,14 @@ function DevisTauxPage() {
 function resume(j: unknown): string {
   if (!j || typeof j !== "object") return "—";
   const o = j as Record<string, unknown>;
-  return [o.libelle, o.niveau, o.cle, o.taux_vente != null ? `${o.taux_vente} €/h` : null, o.valeur, o.date_effet]
+  return [o.libelle, o.niveau, o.cle, o.taux_vente != null ? `vente ${o.taux_vente} €/h` : null, o.cout_revient != null ? `coût ${o.cout_revient} €/h` : null, o.valeur, o.date_effet]
     .filter((x) => x != null && x !== "").join(" · ");
 }
 
-type Run = (p: PromiseLike<{ error: { message: string } | null }>, ok: string) => Promise<void>;
+type Run = (p: PromiseLike<{ error: { message: string } | null }>, ok: string) => Promise<boolean>;
 
 function PosteRow({ row, niveaux, metiers, run, compteBe }: { row: TauxRow; niveaux: TauxRow[]; metiers: { id: number; libelle: string }[]; run: Run; compteBe: boolean }) {
   const [libelle, setLibelle] = useState(row.libelle);
-  const [nv, setNv] = useState({ niveau: "", taux: "", cout: "", date: today(), defaut: false });
   const save = (patch: Partial<{ libelle: string; metier_id: number | null; actif: boolean }>) =>
     run(supabase.rpc("devis_poste_enregistrer", {
       _id: row.poste_id, _code: row.code, _libelle: patch.libelle ?? row.libelle,
@@ -210,10 +211,10 @@ const LBL = "mb-0.5 block text-xs font-medium text-foreground";
 function WhyButton({ raison, children }: { raison: string | null; children: React.ReactNode }) {
   if (!raison) return <>{children}</>;
   return (
-    <Tooltip>
+    <TooltipProvider><Tooltip>
       <TooltipTrigger asChild><span tabIndex={0} className="inline-flex">{children}</span></TooltipTrigger>
       <TooltipContent>{raison}</TooltipContent>
-    </Tooltip>
+    </Tooltip></TooltipProvider>
   );
 }
 
