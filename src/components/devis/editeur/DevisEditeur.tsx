@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle, ArrowLeft, Eye, Library, MessageSquarePlus, PenLine, Plus, Trash2 } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Eye, FileDown, Mail, Library, MessageSquarePlus, PenLine, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useDevisClaude, BadgeClaude, NoteClaude } from "@/components/devis/RedactionClaude";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,6 +19,7 @@ import type { TypologieFuture } from "@/lib/typologie-future";
 import { DevisArbre } from "./DevisArbre";
 import { ObjetPanel } from "./ObjetPanel";
 import { DevisVueClient } from "./DevisVueClient";
+import { ExportPdfDialog, EnvoiEmailDialog } from "@/components/devis/DevisPdfEnvoi";
 import { BibliothequeDialog } from "./BibliothequeDialog";
 import { SupprimerDevisDialog, SUPPRESSION_REFUSEE, devisSupprimable } from "@/components/devis/SupprimerDevis";
 import { useAutosave } from "./useAutosave";
@@ -51,6 +52,8 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
   const [modeleDlg, setModeleDlg] = useState(false);
   const [modele, setModele] = useState({ nom: "", categorie: "", description: "" });
   const [envoiDlg, setEnvoiDlg] = useState(false);
+  const [pdfDlg, setPdfDlg] = useState(false);
+  const [mailDlg, setMailDlg] = useState(false);
   const [envoiDate, setEnvoiDate] = useState("");
   const [supprDlg, setSupprDlg] = useState(false);
   const [signOpp, setSignOpp] = useState<{ id: string; code: string; client: string | null; typologie: TypologieFuture | null } | null>(null);
@@ -338,6 +341,11 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
               )}
               {["a_valider", "valide", "transfere"].includes(st) && d.droits.valider && <Button variant="ghost" className="text-destructive" onClick={() => void changerStatut("refuse")}>Marquer refusé</Button>}
               <Button variant="outline" onClick={() => setVueClient(true)}><Eye className="mr-1 h-4 w-4" />Vue client</Button>
+              {!d.devis.est_modele && <Button variant="outline" onClick={() => setPdfDlg(true)}><FileDown className="mr-1 h-4 w-4" />Exporter en PDF</Button>}
+              {!d.devis.est_modele && d.droits.valider && d.devis.affaire_id && (
+                <Button variant="outline" disabled={st !== "valide"} title={st !== "valide" ? "Réservé aux devis validés ; sur un brouillon, seul le PDF « PROJET » est disponible" : undefined}
+                  onClick={() => setMailDlg(true)}><Mail className="mr-1 h-4 w-4" />Envoyer par email</Button>
+              )}
               {!d.devis.est_modele && d.droits.parametres && <Button variant="ghost" onClick={() => { setModele({ nom: d.devis.libelle ?? "", categorie: "", description: "" }); setModeleDlg(true); }}>Enregistrer comme modèle</Button>}
               <Button variant="outline" disabled title="Lot 3">Vers ProGBat (lot 3)</Button>
               {!d.devis.est_modele && d.droits.ecrire && (
@@ -455,6 +463,8 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
       </Dialog>
 
       <DevisVueClient open={vueClient} onOpenChange={setVueClient} devisId={devisId} />
+      <ExportPdfDialog open={pdfDlg} onOpenChange={setPdfDlg} devisId={devisId} />
+      <EnvoiEmailDialog open={mailDlg} onOpenChange={setMailDlg} devisId={devisId} onSent={() => void q.refetch()} />
       <BibliothequeDialog open={biblio} onOpenChange={setBiblio} devisId={devisId}
         onInsert={async (srcId) => {
           const parent = ligneSel ? (ligneSel.type === "zone" || ligneSel.type === "option" || ligneSel.type.startsWith("chapitre") ? ligneSel.id : ligneSel.parent_id) : null;
