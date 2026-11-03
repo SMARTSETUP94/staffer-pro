@@ -13,7 +13,7 @@
   "mcp": {
     "server": {
       "name": "project-shift",
-      "version": "2.1.0",
+      "version": "2.2.0",
       "title": "Project Shift"
     },
     "tools": [
@@ -1652,6 +1652,863 @@
           "required": [
             "email_ids",
             "action"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null,
+        "conditional": true
+      },
+      {
+        "name": "devis_lister",
+        "title": "Lister les devis",
+        "description": "Devis Staffing d'une affaire (affaire_id) ou de toutes les affaires (recherche, statuts) : numéro, version, statut de rédaction, net HT, date d'envoi, rédigé par Claude.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "affaire_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "recherche": {
+              "type": "string",
+              "maxLength": 120
+            },
+            "statuts": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "brouillon",
+                  "a_valider",
+                  "valide",
+                  "transfere",
+                  "signe",
+                  "refuse"
+                ]
+              },
+              "maxItems": 6
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 25
+            },
+            "offset": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null,
+        "conditional": true
+      },
+      {
+        "name": "devis_lire",
+        "title": "Lire un devis",
+        "description": "Devis complet : zones, objets, commentaires, heures, matériaux, lignes libres, options, remise et totaux. Coûts, prix d'achat et marge seulement si le compte a le droit coûts.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "devis_id": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "required": [
+            "devis_id"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null,
+        "conditional": true
+      },
+      {
+        "name": "devis_referentiel",
+        "title": "Référentiel devis",
+        "description": "Taux de vente en vigueur par poste et niveau, paramètres (forfaits), modèles actifs et modèle par défaut. Coûts de revient seulement avec le droit coûts.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {},
+          "additionalProperties": false
+        },
+        "outputSchema": null,
+        "conditional": true
+      },
+      {
+        "name": "materiaux_rechercher",
+        "title": "Rechercher des matériaux",
+        "description": "Recherche tolérante dans le catalogue matériaux (mots-clés, famille, épaisseur, fournisseur). Prix d'achat seulement avec le droit coûts.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "q": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "familles": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "maxLength": 80
+              },
+              "maxItems": 20
+            },
+            "fournisseurs": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "maxItems": 20
+            },
+            "epaisseur": {
+              "type": "number",
+              "minimum": 0
+            },
+            "recent_seulement": {
+              "type": "boolean",
+              "default": false
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "default": 20
+            }
+          },
+          "required": [
+            "q"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null,
+        "conditional": true
+      },
+      {
+        "name": "devis_charge_be",
+        "title": "Charge bureau d'études des devis",
+        "description": "Heures BE prévues par les devis des affaires indiquées, en jours de 8 h arrondis à 0,1.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "affaire_ids": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "minItems": 1,
+              "maxItems": 50
+            }
+          },
+          "required": [
+            "affaire_ids"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null,
+        "conditional": true
+      },
+      {
+        "name": "devis_creer_brouillon",
+        "title": "Créer un brouillon de devis",
+        "description": "Créer le brouillon de devis d'une opportunité depuis un modèle (défaut : modèle par défaut). Refusé si l'affaire a déjà un devis (renvoie son id). Idempotent par cle_externe. Brouillon uniquement. Premier appel : aperçu avant / après sans écriture ; après accord, renvoyer les mêmes arguments avec confirmation_id sous 10 minutes.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "affaire_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "modele_id": {
+              "anyOf": [
+                {
+                  "$ref": "#/properties/affaire_id"
+                },
+                {
+                  "type": "string",
+                  "const": "vierge"
+                }
+              ],
+              "description": "Omettre = modèle par défaut ; « vierge » = sans modèle."
+            },
+            "cle_externe": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 255
+            },
+            "note": {
+              "type": "string",
+              "maxLength": 4000,
+              "description": "Hypothèses à confirmer, affichées en tête de l'éditeur."
+            },
+            "mode": {
+              "type": "string",
+              "enum": [
+                "autonomie",
+                "conversation"
+              ],
+              "description": "autonomie = tâche planifiée ou initiative de Claude : refusé si un humain a repris le brouillon. conversation = l'utilisateur demande explicitement dans la conversation de compléter ce devis."
+            },
+            "confirmation_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Omettre pour obtenir l’aperçu ; renvoyer les mêmes arguments avec cet identifiant après accord humain, sous 10 minutes."
+            }
+          },
+          "required": [
+            "affaire_id",
+            "mode"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null,
+        "conditional": true
+      },
+      {
+        "name": "devis_remplir",
+        "title": "Remplir un brouillon de devis",
+        "description": "Ajouter en une fois, tout ou rien, zones, objets, commentaires, chapitres, options, heures (poste + niveau), matériaux (catalogue ou libellé + prix) et lignes libres ; 300 lignes maximum par appel. Renvoie les totaux recalculés. Brouillon uniquement. Premier appel : aperçu avant / après sans écriture ; après accord, renvoyer les mêmes arguments avec confirmation_id sous 10 minutes.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "devis_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "lignes": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "ref": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 40,
+                    "description": "Référence locale pour rattacher des enfants via parent_ref."
+                  },
+                  "parent_ref": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 40
+                  },
+                  "parent_id": {
+                    "$ref": "#/properties/devis_id"
+                  },
+                  "ligne_id": {
+                    "$ref": "#/properties/devis_id",
+                    "description": "Ligne existante (ex. objet du modèle) à compléter, sans la recréer."
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "zone",
+                      "objet",
+                      "commentaire",
+                      "chapitre_suivi",
+                      "chapitre_pose",
+                      "chapitre_depose",
+                      "option"
+                    ]
+                  },
+                  "libelle": {
+                    "type": "string",
+                    "maxLength": 500
+                  },
+                  "quantite": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "descriptif_client": {
+                    "type": "string",
+                    "maxLength": 5000
+                  },
+                  "longueur_mm": {
+                    "type": "number"
+                  },
+                  "largeur_mm": {
+                    "$ref": "#/properties/lignes/items/properties/longueur_mm"
+                  },
+                  "hauteur_mm": {
+                    "$ref": "#/properties/lignes/items/properties/longueur_mm"
+                  },
+                  "finition": {
+                    "type": "string",
+                    "maxLength": 255
+                  },
+                  "texte": {
+                    "type": "string",
+                    "maxLength": 5000
+                  },
+                  "interne": {
+                    "type": "boolean"
+                  },
+                  "incluse": {
+                    "type": "boolean",
+                    "description": "Option : incluse dans le total (défaut non)."
+                  },
+                  "heures": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "poste": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 40,
+                          "description": "Code poste : suivi_projet, plans_bem, construction, metallerie, peinture, cnc, laser, impression_uv, impressions_souples, tapisserie, montage, logistique."
+                        },
+                        "niveau": {
+                          "type": "string",
+                          "maxLength": 40,
+                          "description": "standard ; pour montage : chef ou monteur."
+                        },
+                        "heures": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 100000
+                        },
+                        "taux_vente": {
+                          "type": "number",
+                          "minimum": 0,
+                          "description": "Omettre pour le taux de la grille."
+                        },
+                        "montant_force": {
+                          "$ref": "#/properties/lignes/items/properties/longueur_mm",
+                          "description": "Montant exact de la ligne (taux affiché dérivé)."
+                        },
+                        "par_unite": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "poste",
+                        "heures"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "maxItems": 300
+                  },
+                  "materiaux": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "materiau_id": {
+                          "$ref": "#/properties/devis_id",
+                          "description": "Id catalogue (materiaux_rechercher). Sinon designation + prix_achat."
+                        },
+                        "designation": {
+                          "type": "string",
+                          "maxLength": 255
+                        },
+                        "fournisseur": {
+                          "type": "string",
+                          "maxLength": 255
+                        },
+                        "ref": {
+                          "type": "string",
+                          "maxLength": 120
+                        },
+                        "unite": {
+                          "type": "string",
+                          "maxLength": 40
+                        },
+                        "quantite": {
+                          "type": "number",
+                          "minimum": 0
+                        },
+                        "prix_achat": {
+                          "type": "number",
+                          "minimum": 0
+                        },
+                        "coefficient": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 20
+                        }
+                      },
+                      "required": [
+                        "quantite"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "maxItems": 300
+                  },
+                  "libres": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "categorie": {
+                          "type": "string",
+                          "enum": [
+                            "achat",
+                            "sous_traitance",
+                            "location",
+                            "forfait"
+                          ]
+                        },
+                        "forfait_cle": {
+                          "type": "string",
+                          "maxLength": 60
+                        },
+                        "designation": {
+                          "type": "string",
+                          "maxLength": 255
+                        },
+                        "unite": {
+                          "type": "string",
+                          "maxLength": 40
+                        },
+                        "quantite": {
+                          "$ref": "#/properties/lignes/items/properties/longueur_mm"
+                        },
+                        "prix_achat": {
+                          "$ref": "#/properties/lignes/items/properties/longueur_mm"
+                        },
+                        "prix_forfait": {
+                          "$ref": "#/properties/lignes/items/properties/longueur_mm",
+                          "description": "Prix de vente direct (négatif pour une régularisation)."
+                        },
+                        "coefficient": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 20
+                        },
+                        "par_unite": {
+                          "type": "boolean"
+                        },
+                        "heures_info": {
+                          "$ref": "#/properties/lignes/items/properties/longueur_mm"
+                        },
+                        "poste_info": {
+                          "type": "string",
+                          "maxLength": 40
+                        }
+                      },
+                      "additionalProperties": false
+                    },
+                    "maxItems": 300
+                  }
+                },
+                "additionalProperties": false
+              },
+              "minItems": 1,
+              "maxItems": 300
+            },
+            "cle_externe": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 255
+            },
+            "mode": {
+              "type": "string",
+              "enum": [
+                "autonomie",
+                "conversation"
+              ],
+              "description": "autonomie = tâche planifiée ou initiative de Claude : refusé si un humain a repris le brouillon. conversation = l'utilisateur demande explicitement dans la conversation de compléter ce devis."
+            },
+            "confirmation_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Omettre pour obtenir l’aperçu ; renvoyer les mêmes arguments avec cet identifiant après accord humain, sous 10 minutes."
+            }
+          },
+          "required": [
+            "devis_id",
+            "lignes",
+            "mode"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null,
+        "conditional": true
+      },
+      {
+        "name": "devis_modifier_entete",
+        "title": "Modifier l'en-tête d'un brouillon",
+        "description": "Client, contact, client final, intitulé, date et validité, dates clés de l'affaire, remise (montant, pourcentage ou net souhaité). Brouillon uniquement. Premier appel : aperçu avant / après sans écriture ; après accord, renvoyer les mêmes arguments avec confirmation_id sous 10 minutes.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "devis_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "champs": {
+              "type": "object",
+              "properties": {
+                "client_id": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/properties/devis_id"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "contact_id": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/properties/devis_id"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "client_final_id": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/properties/devis_id"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "libelle": {
+                  "type": "string",
+                  "maxLength": 500
+                },
+                "date_devis": {
+                  "type": "string",
+                  "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                },
+                "date_validite": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/properties/champs/properties/date_devis"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "validite_jours": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 365
+                },
+                "date_visite_technique": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/properties/champs/properties/date_devis"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "date_montage": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/properties/champs/properties/date_devis"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "date_evenement_debut": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/properties/champs/properties/date_devis"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "date_evenement_fin": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/properties/champs/properties/date_devis"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "date_demontage": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/properties/champs/properties/date_devis"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "remise": {
+                  "type": "object",
+                  "properties": {
+                    "mode": {
+                      "type": "string",
+                      "enum": [
+                        "aucune",
+                        "montant",
+                        "pct",
+                        "net_cible"
+                      ]
+                    },
+                    "valeur": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  },
+                  "required": [
+                    "mode"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            },
+            "mode": {
+              "type": "string",
+              "enum": [
+                "autonomie",
+                "conversation"
+              ],
+              "description": "autonomie = tâche planifiée ou initiative de Claude : refusé si un humain a repris le brouillon. conversation = l'utilisateur demande explicitement dans la conversation de compléter ce devis."
+            },
+            "confirmation_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Omettre pour obtenir l’aperçu ; renvoyer les mêmes arguments avec cet identifiant après accord humain, sous 10 minutes."
+            }
+          },
+          "required": [
+            "devis_id",
+            "champs",
+            "mode"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null,
+        "conditional": true
+      },
+      {
+        "name": "devis_ajouter_photo",
+        "title": "Ajouter une image à un objet",
+        "description": "Joindre une image ou un plan (JPG, PNG ou PDF, 10 Mo maximum, en base64) à un objet du brouillon ; la source est notée dans la légende. Brouillon uniquement. Premier appel : aperçu avant / après sans écriture ; après accord, renvoyer les mêmes arguments avec confirmation_id sous 10 minutes.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "devis_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "ligne_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Objet du devis."
+            },
+            "fichier_base64": {
+              "type": "string",
+              "minLength": 8,
+              "description": "Contenu JPG, PNG ou PDF en base64, 10 Mo maximum."
+            },
+            "mime": {
+              "type": "string",
+              "enum": [
+                "image/jpeg",
+                "image/png",
+                "application/pdf"
+              ]
+            },
+            "legende": {
+              "type": "string",
+              "maxLength": 300
+            },
+            "source": {
+              "type": "string",
+              "maxLength": 200,
+              "description": "Origine : pièce jointe du mail de…, plan, référence…"
+            },
+            "visible_client": {
+              "type": "boolean",
+              "default": false
+            },
+            "mode": {
+              "type": "string",
+              "enum": [
+                "autonomie",
+                "conversation"
+              ],
+              "description": "autonomie = tâche planifiée ou initiative de Claude : refusé si un humain a repris le brouillon. conversation = l'utilisateur demande explicitement dans la conversation de compléter ce devis."
+            },
+            "confirmation_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Omettre pour obtenir l’aperçu ; renvoyer les mêmes arguments avec cet identifiant après accord humain, sous 10 minutes."
+            }
+          },
+          "required": [
+            "devis_id",
+            "ligne_id",
+            "fichier_base64",
+            "mime",
+            "mode"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null,
+        "conditional": true
+      },
+      {
+        "name": "devis_nouvelle_version",
+        "title": "Nouvelle version de devis",
+        "description": "Créer la version suivante en brouillon d'un devis validé ou envoyé ; l'original n'est jamais modifié. Brouillon uniquement. Premier appel : aperçu avant / après sans écriture ; après accord, renvoyer les mêmes arguments avec confirmation_id sous 10 minutes.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "devis_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Devis envoyé / validé à reprendre ; l'original n'est jamais modifié."
+            },
+            "note": {
+              "type": "string",
+              "maxLength": 4000
+            },
+            "mode": {
+              "type": "string",
+              "enum": [
+                "autonomie",
+                "conversation"
+              ],
+              "description": "autonomie = tâche planifiée ou initiative de Claude : refusé si un humain a repris le brouillon. conversation = l'utilisateur demande explicitement dans la conversation de compléter ce devis."
+            },
+            "confirmation_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Omettre pour obtenir l’aperçu ; renvoyer les mêmes arguments avec cet identifiant après accord humain, sous 10 minutes."
+            }
+          },
+          "required": [
+            "devis_id",
+            "mode"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null,
+        "conditional": true
+      },
+      {
+        "name": "devis_soumettre",
+        "title": "Soumettre un brouillon",
+        "description": "Passer un brouillon à « à valider » avec une note des points à confirmer. Seule transition permise à Claude. Brouillon uniquement. Premier appel : aperçu avant / après sans écriture ; après accord, renvoyer les mêmes arguments avec confirmation_id sous 10 minutes.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "devis_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "note": {
+              "type": "string",
+              "maxLength": 4000,
+              "description": "Ce qui reste à confirmer par le chargé d'affaires."
+            },
+            "mode": {
+              "type": "string",
+              "enum": [
+                "autonomie",
+                "conversation"
+              ],
+              "description": "autonomie = tâche planifiée ou initiative de Claude : refusé si un humain a repris le brouillon. conversation = l'utilisateur demande explicitement dans la conversation de compléter ce devis."
+            },
+            "confirmation_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Omettre pour obtenir l’aperçu ; renvoyer les mêmes arguments avec cet identifiant après accord humain, sous 10 minutes."
+            }
+          },
+          "required": [
+            "devis_id",
+            "note",
+            "mode"
           ],
           "additionalProperties": false,
           "$schema": "http://json-schema.org/draft-07/schema#"
