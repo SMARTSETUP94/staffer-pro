@@ -230,22 +230,42 @@ function OpportunitesPage() {
   const { remove: removeOpportunite, pending: deletePending } = useDeleteOpportunite();
   const [activeId, setActiveId] = useState<string | null>(null);
   const [claudeIds, setClaudeIds] = useState<Set<string>>(new Set());
+  const [devisStatut, setDevisStatut] = useState<Map<string, string | null>>(new Map());
+  const [filtres, setFiltresState] = useState<FiltresAvances>(FILTRES_VIDES);
+  const [filtresOpen, setFiltresOpen] = useState(false);
 
-  // Tri des cartes et colonnes repliées : mémorisés par utilisateur (navigateur).
+  // Tri, colonnes repliées et filtres : mémorisés par utilisateur (navigateur).
   const prefKey = `opps-kanban-prefs:${user?.id ?? "anon"}`;
   const [tri, setTri] = useState<TriCartes>("urgence");
   const [replis, setReplis] = useState<Record<string, boolean>>({});
+  const [filterCa, setFilterCaState] = useState<string>("__all__");
+  const prefsRef = useRef<Record<string, unknown>>({});
   useEffect(() => {
     try {
       const p = JSON.parse(localStorage.getItem(prefKey) ?? "{}");
+      prefsRef.current = p;
       setTri(p.tri in TRI_LABEL ? p.tri : "urgence");
       setReplis(p.replis && typeof p.replis === "object" ? p.replis : {});
+      setFiltresState(lireFiltres(p.filtres));
+      setFilterCaState(typeof p.ca === "string" ? p.ca : "__all__");
+      // Interrupteurs + recherche : restaurés seulement si l'adresse n'en impose pas.
+      const t = p.inter;
+      if (t && typeof t === "object" && !search.q && !search.actionsDues && !search.noCa && !search.noD && !search.noRp && !search.claude) {
+        navigate({ search: (prev: OppsSearch) => ({ ...prev, q: typeof t.q === "string" ? t.q : "", actionsDues: !!t.actionsDues, noCa: !!t.noCa, noD: !!t.noD, noRp: !!t.noRp, claude: !!t.claude }), replace: true });
+      }
     } catch { /* préférences illisibles : valeurs par défaut */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [prefKey]);
-  const savePrefs = (next: { tri?: TriCartes; replis?: Record<string, boolean> }) => {
-    const v = { tri: next.tri ?? tri, replis: next.replis ?? replis };
-    try { localStorage.setItem(prefKey, JSON.stringify(v)); } catch { /* stockage indisponible */ }
+  const savePrefs = (next: Record<string, unknown>) => {
+    prefsRef.current = { tri, replis, filtres, ca: filterCa, ...prefsRef.current, ...next };
+    try { localStorage.setItem(prefKey, JSON.stringify(prefsRef.current)); } catch { /* stockage indisponible */ }
   };
+  const setFiltres = (f: FiltresAvances) => { setFiltresState(f); savePrefs({ filtres: f }); };
+  const setFilterCa = (v: string) => { setFilterCaState(v); savePrefs({ ca: v }); };
+  useEffect(() => {
+    savePrefs({ inter: { q: searchQuery, actionsDues, noCa, noD, noRp, claude } });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery, actionsDues, noCa, noD, noRp, claude]);
 
   // Filtres tableur additionnels (statut/taille/deviseur multi-select)
   const [statutsFilter, setStatutsFilter] = useState<OpportuniteStatut[]>([]);
@@ -323,6 +343,16 @@ function OpportunitesPage() {
     d.setDate(d.getDate() + 7);
     return d;
   }, [today]);
+  // Montants de toutes les opportunités (indépendants des filtres) pour les filtres montant / statut devis.
+  const tousIndicateurs = usePipelineIndicateurs(useMemo(() => opps.map((o) => o.id), [opps]), { chargeAffairesId: null, q: "" });
+  const infoDevis = useMemo(() => {
+    const m = new Map<string, { statut_redaction: string | null; montant: number | null }>();
+    (tousIndicateurs.data?.affaires ?? []).forEach((a) => m.set(a.affaire_id, {
+      statut_redaction: a.devis_id ? (a.numero_progbat ? "transfere" : devisStatut.get(a.affaire_id) ?? "brouillon") : null,
+      montant: a.net_ht != null ? Number(a.net_ht) : a.estime != null ? Number(a.estime) : null,
+    }));
+    return m;
+  }, [tousIndicateurs.data, devisStatut]);
   const oppsFiltrees = useMemo(() => {
     return opps.filter((o) => {
       if (filterCa && filterCa !== "__all__" && o.charge_affaires_id !== filterCa)
@@ -340,15 +370,17 @@ function OpportunitesPage() {
         const haystack = `${o.numero ?? ""} ${o.client ?? ""} ${o.nom ?? ""}`.toLowerCase();
         if (!haystack.includes(normalizedQuery)) return false;
       }
+      if (!passeFiltres(o, infoDevis.get(o.id), filtres)) return false;
       return true;
     });
-  }, [opps, filterCa, noCa, noD, noRp, claude, claudeIds, actionsDues, sevenDaysAhead, normalizedQuery]);
+  }, [opps, filterCa, noCa, noD, noRp, claude, claudeIds, actionsDues, sevenDaysAhead, normalizedQuery, filtres, infoDevis]);
 
+  // Filtres propres aux opportunités : aucun supplément 6XXX ne correspond.
+  const filtreOppSeul = noCa || noD || noRp || actionsDues || claude || (nbFiltresAvances(filtres) - (filtres.supplements ? 1 : 0) - (filtres.client.trim() ? 1 : 0)) > 0;
   // Indicateurs (tuiles + montants) : respectent les filtres actifs ; « À relancer » filtre ensuite le Kanban.
   const indicateurs = usePipelineIndicateurs(useMemo(() => oppsFiltrees.map((o) => o.id), [oppsFiltrees]), {
-    // Filtres propres aux opportunités (sans CA, rôles, actions, Claude) : aucun supplément 6XXX ne correspond.
-    chargeAffairesId: noCa || noD || noRp || actionsDues || claude ? "00000000-0000-0000-0000-000000000000" : filterCa !== "__all__" ? filterCa : null,
-    q: searchQuery,
+    chargeAffairesId: filtreOppSeul ? "00000000-0000-0000-0000-000000000000" : filterCa !== "__all__" ? filterCa : null,
+    q: filtres.client.trim() ? filtres.client.trim() : searchQuery,
   });
   const parAffaire = useMemo(() => new Map((indicateurs.data?.affaires ?? []).map((a) => [a.affaire_id, a])), [indicateurs.data]);
   const [relance, setRelance] = useState(false);
