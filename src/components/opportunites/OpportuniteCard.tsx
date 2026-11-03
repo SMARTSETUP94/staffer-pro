@@ -252,7 +252,7 @@ export function OpportuniteCard({
           </div>
 
           <div className="mt-2 flex items-center justify-between gap-1.5">
-            <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+            <div className="flex min-w-0 flex-wrap items-center gap-1.5 overflow-hidden">
           {aFaire && (
             <>
               <span
@@ -277,7 +277,7 @@ export function OpportuniteCard({
             return (
               <div
                 className={cn(
-                  "inline-flex items-center gap-1 whitespace-nowrap rounded-full border px-2 py-0.5 text-[10px] font-semibold",
+                  "inline-flex max-w-full items-center gap-1 truncate whitespace-nowrap rounded-full border px-2 py-0.5 text-[10px] font-semibold",
                   URGENCY_CLASS[urg],
                 )}
                 title={urg === "overdue" ? "Action en retard" : urg === "soon" ? "Action due bientôt" : "Action planifiée"}
