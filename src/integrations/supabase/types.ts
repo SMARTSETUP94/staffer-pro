@@ -2083,6 +2083,7 @@ export type Database = {
           date_validite: string | null
           date_validite_manuelle: boolean
           dates_snapshot: Json | null
+          ecart_progbat_motif: string | null
           est_modele: boolean
           fichier_source: string | null
           heures_be_fige: number | null
@@ -2112,7 +2113,10 @@ export type Database = {
             | null
           supprime_le: string | null
           supprime_par: string | null
+          total_progbat: number | null
           totaux_snapshot: Json | null
+          transfere_progbat_le: string | null
+          transfere_progbat_par: string | null
           tva_pct: number | null
           updated_at: string
           valide_le: string | null
@@ -2140,6 +2144,7 @@ export type Database = {
           date_validite?: string | null
           date_validite_manuelle?: boolean
           dates_snapshot?: Json | null
+          ecart_progbat_motif?: string | null
           est_modele?: boolean
           fichier_source?: string | null
           heures_be_fige?: number | null
@@ -2169,7 +2174,10 @@ export type Database = {
             | null
           supprime_le?: string | null
           supprime_par?: string | null
+          total_progbat?: number | null
           totaux_snapshot?: Json | null
+          transfere_progbat_le?: string | null
+          transfere_progbat_par?: string | null
           tva_pct?: number | null
           updated_at?: string
           valide_le?: string | null
@@ -2197,6 +2205,7 @@ export type Database = {
           date_validite?: string | null
           date_validite_manuelle?: boolean
           dates_snapshot?: Json | null
+          ecart_progbat_motif?: string | null
           est_modele?: boolean
           fichier_source?: string | null
           heures_be_fige?: number | null
@@ -2226,7 +2235,10 @@ export type Database = {
             | null
           supprime_le?: string | null
           supprime_par?: string | null
+          total_progbat?: number | null
           totaux_snapshot?: Json | null
+          transfere_progbat_le?: string | null
+          transfere_progbat_par?: string | null
           tva_pct?: number | null
           updated_at?: string
           valide_le?: string | null
@@ -2377,7 +2389,9 @@ export type Database = {
           cree_le: string
           cree_par: string
           devis_id: string
+          fiche: Json | null
           filigrane: boolean
+          format: string
           id: string
           niveau: string
           statut_redaction: string
@@ -2389,7 +2403,9 @@ export type Database = {
           cree_le?: string
           cree_par: string
           devis_id: string
+          fiche?: Json | null
           filigrane?: boolean
+          format?: string
           id?: string
           niveau: string
           statut_redaction: string
@@ -2401,7 +2417,9 @@ export type Database = {
           cree_le?: string
           cree_par?: string
           devis_id?: string
+          fiche?: Json | null
           filigrane?: boolean
+          format?: string
           id?: string
           niveau?: string
           statut_redaction?: string
@@ -8061,7 +8079,9 @@ export type Database = {
         Args: { _affaire_ids: string[] }
         Returns: {
           affaire_id: string
+          date_envoi: string
           devis_id: string
+          numero_progbat: string
           statut_redaction: Database["public"]["Enums"]["devis_redaction_statut"]
           version: number
         }[]
@@ -8069,6 +8089,15 @@ export type Database = {
       devis_element_supprimer: {
         Args: { _id: string; _kind: string; _restaurer?: boolean }
         Returns: undefined
+      }
+      devis_enregistrer_transfert: {
+        Args: {
+          _devis_id: string
+          _motif?: string
+          _numero: string
+          _total_progbat: number
+        }
+        Returns: Json
       }
       devis_entete_modifier: {
         Args: { _devis_id: string; _maj_affaire_client?: boolean; _patch: Json }
@@ -8079,6 +8108,15 @@ export type Database = {
         Args: {
           _devis_id: string
           _niveau: string
+          _storage_path: string
+          _taille: number
+        }
+        Returns: Json
+      }
+      devis_export_progbat_enregistrer: {
+        Args: {
+          _devis_id: string
+          _fiche: Json
           _storage_path: string
           _taille: number
         }
@@ -8115,9 +8153,11 @@ export type Database = {
           auteur: string
           created_at: string
           date_devis: string
+          date_envoi: string
           id: string
           modele_origine: string
           numero: string
+          numero_progbat: string
           statut_redaction: Database["public"]["Enums"]["devis_redaction_statut"]
           total_ht: number
           version: number
@@ -8139,9 +8179,11 @@ export type Database = {
           charge_affaires_nom: string
           client_nom: string
           date_devis: string
+          date_envoi: string
           id: string
           net_ht: number
           numero: string
+          numero_progbat: string
           statut_redaction: Database["public"]["Enums"]["devis_redaction_statut"]
           updated_at: string
           version: number
@@ -8285,6 +8327,7 @@ export type Database = {
         }
         Returns: string
       }
+      devis_progbat_donnees: { Args: { _devis_id: string }; Returns: Json }
       devis_remise_modifier: {
         Args: { _devis_id: string; _mode: string; _valeur: number }
         Returns: Json

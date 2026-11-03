@@ -547,6 +547,13 @@
       "when": 1793715742572,
       "tag": "0077_devis_21_exports_pdf",
       "breakpoints": true
+    },
+    {
+      "idx": 78,
+      "version": "7",
+      "when": 1793723823120,
+      "tag": "0078_devis_22_transfert_progbat",
+      "breakpoints": true
     }
   ]
 }
