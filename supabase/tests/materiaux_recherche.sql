@@ -15,7 +15,15 @@ BEGIN
     ('dibond 3 blanc',    'dibond.*blanc',              3,  NULL),
     ('moquette rouge',    '^moquette.*rouge',           NULL, NULL),
     ('vis 4x40',          '^vis ',                      NULL, '4x40'),
-    ('velours noir',      '^velours.*noir',             NULL, NULL)
+    ('velours noir',      '^velours.*noir',             NULL, NULL),
+    -- sections et épaisseurs (lot 4 corrections) ; aucun 27x40 au catalogue : la section la plus proche doit sortir
+    ('tasseau sapin 27x40', '^tasseau.*sapin',          NULL, '(2[5-9]|30)x40|40x(2[5-9]|30)'),
+    ('tasseau 27 x 40',   '^tasseau',                   NULL, '(2[5-9]|30)x40|40x(2[5-9]|30)'),
+    ('tasseau 40*27',     '^tasseau',                   NULL, '(2[5-9]|30)x40|40x(2[5-9]|30)'),
+    ('MDF 19',            '^mdf',                       19, NULL),
+    ('MDF 19 mm',         '^mdf',                       19, NULL),
+    ('tube 60x2',         '^tube',                      NULL, '60x2'),
+    ('PMMA 15',           '(pmma|plexi)',               15, NULL)
   ) v(q, motif, ep, dim) LOOP
     t0 := clock_timestamp();
     SELECT x.* INTO tete FROM materiaux_rechercher(r.q, _limit => 1) x;
@@ -39,6 +47,6 @@ BEGIN
   IF (SELECT fournisseur_etat FROM materiaux_rechercher('tasseau 22x48', _limit => 1)) = 'ancien' THEN
     ko := ko || E'\n  tasseau 22x48 → tarif ancien en tête'; END IF;
   IF ko <> '' THEN RAISE EXCEPTION 'Recherche matériaux KO :%', ko; END IF;
-  RAISE NOTICE 'Recherche matériaux : 10 requêtes OK + Viscom / tube rond / tarif ancien OK';
+  RAISE NOTICE 'Recherche matériaux : 17 requêtes OK + Viscom / tube rond / tarif ancien OK';
 END $t$;
 ROLLBACK;

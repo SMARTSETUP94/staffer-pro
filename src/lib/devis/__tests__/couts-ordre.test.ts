@@ -42,7 +42,7 @@ describe("coûts de revient et marge", () => {
     expect(r.cout_complet).toBe(false);
     expect(r.cout_total).toBe(1926.21);
     expect(r.marge).toBeCloseTo(r.net_ht - 1926.21, 2);
-    expect(texteCoutsManquants(r.couts_manquants)).toBe("coût manquant : métallerie (4 h)");
+    expect(texteCoutsManquants(r.couts_manquants)).toBe("marge incomplète : coûts manquants sur métallerie (4 h)");
   });
   it("ligne libre vendue sans coût : signalée, pas comptée à 100 % de marge silencieusement", () => {
     const r = calculerDevis(lignes, heures, mats, [{ ligne_id: "z", quantite: 1, prix_forfait: 750, prix_achat: null, coefficient: 1, par_unite: false, designation: "Semi-remorque" }]);

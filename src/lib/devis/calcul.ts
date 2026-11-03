@@ -53,7 +53,7 @@ export function sousArbre(lignes: Pick<CalcLigne, "id" | "parent_id">[], detail:
 /** Libellé de l'alerte « coût manquant : métallerie (4 h), semi-remorque… ». */
 export function texteCoutsManquants(m: CoutManquant[]): string | null {
   if (!m.length) return null;
-  return "coût manquant : " + m.map((x) => x.type === "heures" ? `${x.libelle.toLowerCase()} (${fr(x.heures ?? 0)} h)` : x.libelle.toLowerCase()).join(", ");
+  return "marge incomplète : coûts manquants sur " + m.map((x) => x.type === "heures" ? `${x.libelle.toLowerCase()} (${fr(x.heures ?? 0)} h)` : x.libelle.toLowerCase()).join(", ");
 }
 
 const r2 = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;

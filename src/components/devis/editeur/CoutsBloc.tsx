@@ -25,7 +25,7 @@ export function CoutsBloc({ dec, net, manquants, compact }: { dec: Decomposition
         </div>
       ))}
       <div className="grid grid-cols-[1fr_auto] gap-x-3 border-t pt-1 font-semibold">
-        <span>Marge{alerte ? " (partielle)" : ""}{net != null ? " sur net HT" : ""}</span>
+        <span>Marge{alerte ? " incomplète" : ""}{net != null ? " sur net HT" : ""}</span>
         <span className={`text-right tabular-nums ${marge < 0 ? "text-destructive" : ""}`}>{eur(marge)}{pct != null ? ` · ${pct.toLocaleString("fr-FR")} %` : ""}</span>
       </div>
       {alerte && (
