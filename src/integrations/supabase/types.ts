@@ -8736,7 +8736,14 @@ export type Database = {
         Args: { _objet_id: string }
         Returns: boolean
       }
-      pipeline_indicateurs: { Args: { _affaire_ids?: string[] }; Returns: Json }
+      pipeline_indicateurs: {
+        Args: {
+          _affaire_ids?: string[]
+          _charge_affaires_id?: string
+          _q?: string
+        }
+        Returns: Json
+      }
       preflight_delete_devis: { Args: { p_devis_id: string }; Returns: Json }
       preflight_import_devis: {
         Args: { _affaire_id?: string; _fichier_hash: string }
