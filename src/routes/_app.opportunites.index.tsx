@@ -3,8 +3,8 @@ import { createFileRoute, Link, useNavigate, stripSearchParams, type SearchSchem
 import { requireCapability } from "@/lib/capability-guard";
 import { fallback } from "@tanstack/zod-adapter";
 import { z } from "zod";
-import { useEffect, useMemo, useState } from "react";
-import { Plus, Loader2, Filter, Trophy, LayoutGrid, Table as TableIcon, X } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Plus, Loader2, Filter, Trophy, LayoutGrid, Table as TableIcon, X, List } from "lucide-react";
 import {
   DndContext,
   type DragEndEvent,
@@ -44,6 +44,9 @@ import {
   type OpportuniteTaille,
 } from "@/lib/opportunites";
 import { KanbanColonne, SupplementsColonne } from "@/components/opportunites/KanbanColonne";
+import { PipelineFiltresSheet } from "@/components/opportunites/PipelineFiltresSheet";
+import { FILTRES_VIDES, lireFiltres, nbFiltresAvances, passeFiltres, PERIODE_LABEL, STATUT_DEVIS_FILTRE_LABEL, type FiltresAvances } from "@/lib/pipeline-filtres";
+import { AFFAIRE_TYPOLOGIES as TYPOS_FILTRE, AFFAIRE_TYPOLOGIE_LABELS } from "@/lib/affaire-typologie";
 import { IndicateursCtx, PipelineIndicateursBandeau, usePipelineIndicateurs } from "@/components/opportunites/PipelineIndicateursBandeau";
 import {
   OpportuniteCard,
@@ -275,7 +278,6 @@ function OpportunitesPage() {
   // d'affaires » (demande GabIn, 23 oct. 2026). Le périmètre réellement
   // visible reste décidé par les politiques de la base ; le scope de la
   // capability ne pilote plus qu'un filtre supplémentaire (« Sans CA »).
-  const [filterCa, setFilterCa] = useState<string>("__all__");
 
   const chargesById = useMemo(() => {
     const m = new Map();
@@ -385,6 +387,36 @@ function OpportunitesPage() {
   const parAffaire = useMemo(() => new Map((indicateurs.data?.affaires ?? []).map((a) => [a.affaire_id, a])), [indicateurs.data]);
   const [relance, setRelance] = useState(false);
   const oppsKanban = useMemo(() => relance ? oppsFiltrees.filter((o) => parAffaire.get(o.id)?.a_relancer) : oppsFiltrees, [relance, oppsFiltrees, parAffaire]);
+
+  // Pastilles supprimables des filtres actifs.
+  const pastilles = useMemo(() => {
+    const out: { cle: string; label: string; retirer: () => void }[] = [];
+    const f = filtres;
+    if (searchQuery.trim()) out.push({ cle: "q", label: `Recherche : ${searchQuery.trim()}`, retirer: () => setSearchQuery("") });
+    if (filterCa !== "__all__") out.push({ cle: "ca", label: filterCa === user?.id ? "Moi" : (chargesById.get(filterCa)?.full_name || chargesById.get(filterCa)?.email || "Chargé d'affaires"), retirer: () => setFilterCa("__all__") });
+    if (actionsDues) out.push({ cle: "ad", label: "Actions dues ≤ 7 j", retirer: () => setActionsDues(false) });
+    if (noCa) out.push({ cle: "noCa", label: "Sans chargé d'affaires", retirer: () => setNoCa(false) });
+    if (noD) out.push({ cle: "noD", label: "Sans dessinateur", retirer: () => setNoD(false) });
+    if (noRp) out.push({ cle: "noRp", label: "Sans responsable projet", retirer: () => setNoRp(false) });
+    if (claude) out.push({ cle: "claude", label: "Brouillon Claude", retirer: () => setClaude(false) });
+    f.statutsDevis.forEach((s) => out.push({ cle: `sd-${s}`, label: `Devis : ${STATUT_DEVIS_FILTRE_LABEL[s]}`, retirer: () => setFiltres({ ...f, statutsDevis: f.statutsDevis.filter((x) => x !== s) }) }));
+    f.typologies.forEach((t) => out.push({ cle: `ty-${t}`, label: AFFAIRE_TYPOLOGIE_LABELS[t as AffaireTypologie] ?? t, retirer: () => setFiltres({ ...f, typologies: f.typologies.filter((x) => x !== t) }) }));
+    f.tailles.forEach((t) => out.push({ cle: `ta-${t}`, label: `Taille ${TAILLE_LABEL[t as OpportuniteTaille] ?? t}`, retirer: () => setFiltres({ ...f, tailles: f.tailles.filter((x) => x !== t) }) }));
+    if (f.periode) out.push({ cle: "per", label: f.periode === "libre" ? `Du ${f.du || "…"} au ${f.au || "…"}` : PERIODE_LABEL[f.periode], retirer: () => setFiltres({ ...f, periode: "", du: "", au: "" }) });
+    if (f.sansDateMontage) out.push({ cle: "sdm", label: "Sans date de montage", retirer: () => setFiltres({ ...f, sansDateMontage: false }) });
+    if (f.enRetard) out.push({ cle: "ret", label: "En retard", retirer: () => setFiltres({ ...f, enRetard: false }) });
+    if (f.montantMin != null) out.push({ cle: "min", label: `≥ ${f.montantMin.toLocaleString("fr-FR")} €`, retirer: () => setFiltres({ ...f, montantMin: null }) });
+    if (f.montantMax != null) out.push({ cle: "max", label: `≤ ${f.montantMax.toLocaleString("fr-FR")} €`, retirer: () => setFiltres({ ...f, montantMax: null }) });
+    if (f.supplements) out.push({ cle: "sup", label: "Suppléments 6XXX", retirer: () => setFiltres({ ...f, supplements: false }) });
+    if (f.client.trim()) out.push({ cle: "cli", label: `Client : ${f.client.trim()}`, retirer: () => setFiltres({ ...f, client: "" }) });
+    return out;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filtres, searchQuery, filterCa, actionsDues, noCa, noD, noRp, claude, chargesById, user?.id]);
+  const resetFiltres = () => {
+    setFiltres(FILTRES_VIDES);
+    setFilterCa("__all__");
+    navigate({ search: (prev: OppsSearch) => ({ ...prev, q: "", actionsDues: false, noCa: false, noD: false, noRp: false, claude: false }), replace: true });
+  };
 
   // Compteurs par statut (avant filtre statut) pour les pastilles.
   const statutCounts = useMemo(() => {
@@ -553,7 +585,9 @@ function OpportunitesPage() {
         title="Opportunités"
         description={`${opps.length} opportunité${opps.length > 1 ? "s" : ""} 9XXX en pipeline. ${vue === "kanban" ? "Glissez les cartes entre colonnes pour changer leur statut." : "Saisie ligne par ligne (auto-save)."}`}
         actions={
-          canManageOpps && vue === "kanban" && (
+          <div className="flex items-center gap-3">
+          <Link to="/affaires" className="text-xs font-semibold text-muted-foreground hover:text-primary hover:underline">Affaires signées (5XXX) →</Link>
+          {canManageOpps && vue === "kanban" && (
             <Button
               onClick={() => setCreateOpen(true)}
               className="rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
@@ -728,10 +762,10 @@ function OpportunitesPage() {
                 }}
               />
             ))}
-            {!relance && (indicateurs.data?.supplements.length ?? 0) > 0 && (
+            {!relance && !filtreOppSeul && (indicateurs.data?.supplements.length ?? 0) > 0 && (
               <SupplementsColonne
                 items={indicateurs.data!.supplements}
-                repliee={replis.supplements ?? true}
+                repliee={filtres.supplements ? false : replis.supplements ?? true}
                 onToggle={() => { const next = { ...replis, supplements: !(replis.supplements ?? true) }; setReplis(next); savePrefs({ replis: next }); }}
               />
             )}
