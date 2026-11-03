@@ -65,7 +65,7 @@ export function KanbanColonne({ statut, items, chargesById, onSign, onDelete, dr
           </span>
           {parAffaire.size > 0 && (
             <span className="text-xs tabular-nums text-foreground">
-              · {kEur(tot.chiffre)}{tot.estime > 0 && <span className="text-muted-foreground"> + {kEur(tot.estime)} est.</span>}
+              · {kEur(tot.chiffre)} chiffrés{tot.estime > 0 && <> · {kEur(tot.estime)} estimés</>}
             </span>
           )}
         </div>
