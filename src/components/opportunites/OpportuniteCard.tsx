@@ -282,6 +282,7 @@ export function OpportuniteCard({
               </div>
             );
           })()}
+          </div>
 
           <DevisPipelineBouton affaireId={opp.id} statut={opp.statut_opportunite} />
 
