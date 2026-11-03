@@ -46,7 +46,6 @@ import {
 import { KanbanColonne, SupplementsColonne } from "@/components/opportunites/KanbanColonne";
 import { PipelineFiltresSheet } from "@/components/opportunites/PipelineFiltresSheet";
 import { FILTRES_VIDES, lireFiltres, nbFiltresAvances, passeFiltres, PERIODE_LABEL, STATUT_DEVIS_FILTRE_LABEL, type FiltresAvances } from "@/lib/pipeline-filtres";
-import { AFFAIRE_TYPOLOGIES as TYPOS_FILTRE, AFFAIRE_TYPOLOGIE_LABELS } from "@/lib/affaire-typologie";
 import { IndicateursCtx, PipelineIndicateursBandeau, usePipelineIndicateurs } from "@/components/opportunites/PipelineIndicateursBandeau";
 import {
   OpportuniteCard,
@@ -57,6 +56,7 @@ import { SignerOpportuniteDialog } from "@/components/opportunites/SignerOpportu
 import {
   type AffaireTypologie,
   AFFAIRE_TYPOLOGIES,
+  AFFAIRE_TYPOLOGIE_LABELS,
   getAffaireTypologie,
 } from "@/lib/affaire-typologie";
 import { OpportunitesTableurView } from "@/components/opportunites/OpportunitesTableurView";
@@ -594,7 +594,8 @@ function OpportunitesPage() {
             >
               <Plus className="mr-2 h-4 w-4" /> Nouvelle opportunité
             </Button>
-          )
+          )}
+          </div>
         }
       />
 
