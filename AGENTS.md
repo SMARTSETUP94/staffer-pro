@@ -50,4 +50,4 @@
 - MCP quote corrections reuse devis_remplir (modifications / suppressions with per-target field allow-lists, soft deletes restorable from the editor trash); in autonomie they require a Claude-created, untouched draft, so Claude never silently rewrites human work.
 - Client quote PDFs are built only from devis_lire_client (pure pdf-client.ts, shared by app and MCP) and stored in private devis-exports with devis_exports history, so internal costs never reach clients.
 
-- Subdirectories may have their own AGENTS.md (e.g. src/lib/devis); read it before changing files there.
+- Subdirectories may have their own AGENTS.md (e.g. src/lib/devis); read it before changing files there.- Pipeline indicators come from the single invoker RPC pipeline_indicateurs (affaires RLS + devis_derniers_par_affaire/devis_calculer): one latest quote per active opportunity, CA estimé only without a quote and always kept separate, probabilities as dated devis_parametres proba_*; the UI only sums its per-opportunity rows.
