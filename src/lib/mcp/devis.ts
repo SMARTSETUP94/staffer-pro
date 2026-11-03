@@ -70,7 +70,7 @@ export const devisSchemas = {
 
 export function devisReadEnabled(context: McpAppContext, name: DevisReadName) { return context.caps.has(DEVIS_READ_CAPS[name]); }
 export function devisWriteEnabled(context: McpAppContext) {
-  return context.caps.has("api.mcp.write") && context.caps.has("devis.rediger") && context.writeScopes?.has("devis.rediger") === true;
+  return context.canWrite === true && context.caps.has("api.mcp.write") && context.caps.has("devis.rediger") && context.writeScopes?.has("devis.rediger") === true;
 }
 
 async function flagDevis(context: McpAppContext) {
@@ -159,7 +159,7 @@ export function controlerFichier(base64: string, mime: keyof typeof PHOTO_MIMES,
   const clean = base64.replace(/^data:[^;]+;base64,/, "").replace(/\s/g, "");
   if (!/^[A-Za-z0-9+/]+={0,2}$/.test(clean)) throw new ToolError("Contenu base64 invalide");
   if (Math.floor(clean.length * 3 / 4) > max + 4) throw new ToolError(`Fichier trop volumineux (${max / 1024 / 1024} Mo maximum)`);
-  const bin = atob(clean); const bytes = new Uint8Array(bin.length);
+  const bin = atob(clean); const bytes = new Uint8Array(new ArrayBuffer(bin.length));
   for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
   if (bytes.length > max) throw new ToolError(`Fichier trop volumineux (${max / 1024 / 1024} Mo maximum)`);
   const sig = (s: number[]) => s.every((b, i) => bytes[i] === b);
@@ -167,13 +167,13 @@ export function controlerFichier(base64: string, mime: keyof typeof PHOTO_MIMES,
   if (!ok) throw new ToolError("Le contenu ne correspond pas au type annoncé (JPG, PNG ou PDF uniquement)");
   return bytes;
 }
-async function sha256(bytes: Uint8Array) {
+async function sha256(bytes: Uint8Array<ArrayBuffer>) {
   const h = await crypto.subtle.digest("SHA-256", bytes);
   return Array.from(new Uint8Array(h), b => b.toString(16).padStart(2, "0")).join("");
 }
 
 /** Construit les arguments métier transmis à la base (jamais le fichier lui-même). */
-export async function devisPayload(name: DevisWriteName, args: Record<string, any>): Promise<{ payload: Record<string, unknown>; fichier?: { path: string; bytes: Uint8Array; mime: string } }> {
+export async function devisPayload(name: DevisWriteName, args: Record<string, any>): Promise<{ payload: Record<string, unknown>; fichier?: { path: string; bytes: Uint8Array<ArrayBuffer>; mime: string } }> {
   const { confirmation_id: _c, ...a } = args;
   if (name === "devis_ajouter_photo") {
     const bytes = controlerFichier(String(a.fichier_base64), a.mime);
