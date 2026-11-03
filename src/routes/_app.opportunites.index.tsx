@@ -43,6 +43,7 @@ import {
   type OpportuniteTaille,
 } from "@/lib/opportunites";
 import { KanbanColonne } from "@/components/opportunites/KanbanColonne";
+import { IndicateursCtx, PipelineIndicateursBandeau, usePipelineIndicateurs } from "@/components/opportunites/PipelineIndicateursBandeau";
 import {
   OpportuniteCard,
   type OpportuniteCardData,
@@ -312,6 +313,12 @@ function OpportunitesPage() {
     });
   }, [opps, filterCa, noCa, noD, noRp, actionsDues, sevenDaysAhead, normalizedQuery]);
 
+  // Indicateurs (tuiles + montants) : respectent les filtres actifs ; « À relancer » filtre ensuite le Kanban.
+  const indicateurs = usePipelineIndicateurs(useMemo(() => oppsFiltrees.map((o) => o.id), [oppsFiltrees]));
+  const parAffaire = useMemo(() => new Map((indicateurs.data?.affaires ?? []).map((a) => [a.affaire_id, a])), [indicateurs.data]);
+  const [relance, setRelance] = useState(false);
+  const oppsKanban = useMemo(() => relance ? oppsFiltrees.filter((o) => parAffaire.get(o.id)?.a_relancer) : oppsFiltrees, [relance, oppsFiltrees, parAffaire]);
+
   // Compteurs par statut (avant filtre statut) pour les pastilles.
   const statutCounts = useMemo(() => {
     const counts: Partial<Record<OpportuniteStatut, number>> = {};
@@ -332,12 +339,12 @@ function OpportunitesPage() {
   const byStatut = useMemo(() => {
     const m = new Map<OpportuniteStatut, OpportuniteCardData[]>();
     KANBAN_STATUT_ORDER.forEach((s) => m.set(s, []));
-    oppsFiltrees.forEach((o) => {
+    oppsKanban.forEach((o) => {
       if (o.statut_opportunite === "termine") return;
       m.get(o.statut_opportunite)?.push(o);
     });
     return m;
-  }, [oppsFiltrees]);
+  }, [oppsKanban]);
 
   // Conversion en TableurRow pour la vue Tableur (filtre "Archivé" si masqué).
   // Filtre « À faire » actif → tri chronologique (plus ancienne en premier),
@@ -659,6 +666,8 @@ function OpportunitesPage() {
         )}
       </div>
 
+      {vue !== "tableur" && <PipelineIndicateursBandeau data={indicateurs.data} relanceActive={relance} onRelance={() => setRelance((r) => !r)} />}
+
       <div className="rounded-2xl border border-border bg-card p-3">
         <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
           Statut
@@ -738,6 +747,7 @@ function OpportunitesPage() {
           )}
         </div>
       ) : (
+        <IndicateursCtx.Provider value={parAffaire}>
         <DevisPipelineProvider affaireIds={opps.map((o) => o.id)}>
         <DndContext
           sensors={sensors}
@@ -770,6 +780,7 @@ function OpportunitesPage() {
           </DragOverlay>
         </DndContext>
         </DevisPipelineProvider>
+        </IndicateursCtx.Provider>
       )}
 
       <NouvelleOpportuniteDialog

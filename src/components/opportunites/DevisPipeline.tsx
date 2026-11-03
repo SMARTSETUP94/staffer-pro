@@ -11,6 +11,8 @@ import { useFeatureFlag } from "@/hooks/use-feature-flag";
 import { STATUT_LABEL } from "@/components/devis/editeur/api";
 import { libelleNumeroProgbat, libelleStatutDevis } from "@/lib/devis/progbat-export";
 import { useModelesDevis } from "@/components/devis/useModelesDevis";
+import { useIndicateurAffaire } from "./PipelineIndicateursBandeau";
+import { eurEntier } from "@/lib/pipeline-indicateurs";
 import { devisPipelineAction, versionSignaturePropose, type DevisBadge } from "@/lib/devis/pipeline";
 
 type Ctx = { badges: Map<string, DevisBadge>; peutRediger: boolean; flag: boolean; refresh: () => void };
@@ -47,13 +49,19 @@ export function DevisPipelineBouton({ affaireId, statut, onStatutChange }: { aff
   const [busy, setBusy] = useState(false);
   const modeles = useModelesDevis(open);
   const [modeleChoisi, setModeleChoisi] = useState<string | null>(null);
+  const ind = useIndicateurAffaire(affaireId);
   const modele = modeleChoisi ?? modeles.data?.defautId ?? "";
+  const ouvrir = (devisId: string) => navigate({ to: "/affaires/$affaireId/devis-staffing/$devisId", params: { affaireId, devisId } });
   if (!ctx) return null;
   const badge = ctx.badges.get(affaireId);
   const action = devisPipelineAction({ statut, badge, peutRediger: ctx.peutRediger, flag: ctx.flag });
-  if (!action) return null;
+  const montant = ind?.net_ht != null && ind.devis_id ? (
+    <button type="button" className="text-sm font-bold tabular-nums text-foreground underline-offset-2 hover:underline" title="Ouvrir le devis"
+      onClick={() => ouvrir(ind.devis_id!)}>{eurEntier(ind.net_ht)} <span className="text-[11px] font-semibold text-muted-foreground">R{ind.version}</span></button>
+  ) : ind?.estime != null ? <span className="text-sm tabular-nums text-muted-foreground">{eurEntier(ind.estime)} est.</span> : null;
+  const progbat = ind?.numero_progbat ? <span className="rounded border border-primary/40 bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary">ProGBat</span> : null;
+  if (!action) return montant ? <div className="mt-2 flex items-center gap-1.5" {...stop}>{montant}{progbat}</div> : null;
 
-  const ouvrir = (devisId: string) => navigate({ to: "/affaires/$affaireId/devis-staffing/$devisId", params: { affaireId, devisId } });
   const creer = async (modeleId: string | null) => {
     if (busy) return;
     setBusy(true);
@@ -68,7 +76,8 @@ export function DevisPipelineBouton({ affaireId, statut, onStatutChange }: { aff
   };
 
   return (
-    <div className="mt-2 flex items-center gap-1.5" {...stop}>
+    <div className="mt-2 flex flex-wrap items-center gap-1.5" {...stop}>
+      {montant}{progbat}
       {badge && (
         <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
           R{badge.version} · {libelleStatutDevis(badge.statut_redaction, badge.numero_progbat, badge.date_envoi, STATUT_LABEL).toLowerCase()}{badge.numero_progbat ? ` · ${libelleNumeroProgbat(badge.numero_progbat)}` : ""}

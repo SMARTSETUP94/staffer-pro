@@ -561,6 +561,13 @@
       "when": 1793726648710,
       "tag": "0079_devis_23_transfert_progbat_deux_temps_mcp",
       "breakpoints": true
+    },
+    {
+      "idx": 80,
+      "version": "7",
+      "when": 1793727226193,
+      "tag": "0080_pipeline_indicateurs",
+      "breakpoints": true
     }
   ]
 }

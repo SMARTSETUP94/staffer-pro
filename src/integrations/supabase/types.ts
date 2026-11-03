@@ -8137,6 +8137,7 @@ export type Database = {
         Returns: string
       }
       devis_heures_be: { Args: { _devis_id: string }; Returns: number }
+      devis_heures_be_net: { Args: { _devis_id: string }; Returns: number }
       devis_libre_enregistrer: {
         Args: { _f: Json; _ligne_id: string }
         Returns: string
@@ -8735,6 +8736,7 @@ export type Database = {
         Args: { _objet_id: string }
         Returns: boolean
       }
+      pipeline_indicateurs: { Args: { _affaire_ids?: string[] }; Returns: Json }
       preflight_delete_devis: { Args: { p_devis_id: string }; Returns: Json }
       preflight_import_devis: {
         Args: { _affaire_id?: string; _fichier_hash: string }
