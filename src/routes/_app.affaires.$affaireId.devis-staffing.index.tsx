@@ -36,6 +36,7 @@ function DevisListe() {
       return data ?? [];
     },
   });
+  const claude = useDevisClaude(((liste.data ?? []) as { id: string }[]).map((r) => r.id));
   const modeles = useQuery({
     queryKey: ["devis-modeles-actifs"],
     enabled: open,
