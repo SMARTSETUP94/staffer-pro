@@ -344,7 +344,7 @@ function OpportunitesPage() {
   }, [opps, filterCa, noCa, noD, noRp, claude, claudeIds, actionsDues, sevenDaysAhead, normalizedQuery]);
 
   // Indicateurs (tuiles + montants) : respectent les filtres actifs ; « À relancer » filtre ensuite le Kanban.
-  const indicateurs = usePipelineIndicateurs(useMemo(() => oppsFiltrees.map((o) => o.id), [oppsFiltrees]));
+  const indicateurs = usePipelineIndicateurs(useMemo(() => oppsFiltrees.map((o) => o.id), [oppsFiltrees]), { chargeAffairesId: filterCa !== "__all__" ? filterCa : null, q: searchQuery });
   const parAffaire = useMemo(() => new Map((indicateurs.data?.affaires ?? []).map((a) => [a.affaire_id, a])), [indicateurs.data]);
   const [relance, setRelance] = useState(false);
   const oppsKanban = useMemo(() => relance ? oppsFiltrees.filter((o) => parAffaire.get(o.id)?.a_relancer) : oppsFiltrees, [relance, oppsFiltrees, parAffaire]);

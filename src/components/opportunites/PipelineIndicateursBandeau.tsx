@@ -5,13 +5,15 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 import { kEur, type IndicateurAffaire, type PipelineIndicateurs } from "@/lib/pipeline-indicateurs";
 
-export function usePipelineIndicateurs(affaireIds: string[], enabled = true) {
+/** Les suppléments 6XXX suivent le filtre chargé d'affaires et la recherche du pipeline. */
+export function usePipelineIndicateurs(affaireIds: string[], filtres: { chargeAffairesId?: string | null; q?: string } = {}, enabled = true) {
   const ids = useMemo(() => [...affaireIds].sort(), [affaireIds]);
+  const ca = filtres.chargeAffairesId ?? null, q = filtres.q?.trim() || null;
   return useQuery({
-    queryKey: ["pipeline-indicateurs", ids.join(",")],
-    enabled: enabled && ids.length > 0,
+    queryKey: ["pipeline-indicateurs", ids.join(","), ca, q],
+    enabled,
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("pipeline_indicateurs", { _affaire_ids: ids.slice(0, 2000) });
+      const { data, error } = await supabase.rpc("pipeline_indicateurs", { _affaire_ids: ids.slice(0, 2000), _charge_affaires_id: ca as string, _q: q as string });
       if (error) throw error;
       return data as unknown as PipelineIndicateurs;
     },
@@ -38,6 +40,7 @@ export function PipelineIndicateursBandeau({ data, relanceActive, onRelance }: {
         <span className={TITRE}>CA pipeline</span>
         <span className={VAL}>{kEur(t.chiffre + t.estime)}</span>
         <span className="text-xs font-medium text-foreground tabular-nums">{kEur(t.chiffre)} chiffrés · {kEur(t.estime)} estimés</span>
+        {t.supplements_nb > 0 && <span className="text-xs font-medium text-foreground tabular-nums">dont {kEur(t.supplements)} suppléments chantiers ({t.supplements_nb})</span>}
       </div>
       <div className={TUILE} title={`Probabilités : à faire ${Math.round(data.probabilites.a_faire * 100)} %, envoyé ${Math.round(data.probabilites.envoye * 100)} %, à l'étude ${Math.round(data.probabilites.a_l_etude * 100)} %, presque gagné ${Math.round(data.probabilites.presque_gagne * 100)} %`}>
         <span className={TITRE}>CA pondéré</span>
