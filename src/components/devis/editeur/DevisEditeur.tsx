@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle, ArrowLeft, Eye, FileDown, Mail, Library, MessageSquarePlus, PenLine, Plus, Trash2 } from "lucide-react";
+import { AlertTriangle, ArrowLeft, CheckCircle2, Circle, Maximize2, Minimize2, Eye, FileDown, Mail, Library, MessageSquarePlus, PenLine, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useDevisClaude, BadgeClaude, NoteClaude } from "@/components/devis/RedactionClaude";
 import { supabase } from "@/integrations/supabase/client";
@@ -25,6 +25,9 @@ import { libelleNumeroProgbat, libelleStatutDevis, NUMERO_PROGBAT_PROVISOIRE_RE 
 import { BibliothequeDialog } from "./BibliothequeDialog";
 import { SupprimerDevisDialog, SUPPRESSION_REFUSEE, devisSupprimable } from "@/components/devis/SupprimerDevis";
 import { useAutosave } from "./useAutosave";
+import { ancrePoste as ancreDe } from "@/lib/devis/editeur-lisibilite";
+import { listeControle, type CibleControle } from "@/lib/devis/editeur-lisibilite";
+import { venteUnitaireLibre, venteUnitaireMateriau } from "@/lib/devis/calcul";
 import {
   STATUT_LABEL, TYPE_LABEL, eur, useDevis, useDevisRpc, usePatchCache, type Ligne,
 } from "./api";
@@ -60,6 +63,26 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
   const [mailDlg, setMailDlg] = useState(false);
   const [envoiDate, setEnvoiDate] = useState("");
   const [supprDlg, setSupprDlg] = useState(false);
+  const [pleinEcran, setPleinEcran] = useState(false);
+  const [clientFinalOuvert, setClientFinalOuvert] = useState(false);
+  const [datesOuvertes, setDatesOuvertes] = useState<Set<string>>(new Set());
+  // Largeur de l'arbre réglable à la souris, mémorisée dans le navigateur.
+  const [arbreW, setArbreW] = useState(300);
+  useEffect(() => { const v = Number(localStorage.getItem("devis-arbre-largeur")); if (v >= 220 && v <= 640) setArbreW(v); }, []);
+  const redimArbre = (e: React.PointerEvent) => {
+    e.preventDefault();
+    const x0 = e.clientX, w0 = arbreW;
+    let w = w0;
+    const move = (ev: PointerEvent) => { w = Math.min(640, Math.max(220, w0 + ev.clientX - x0)); setArbreW(w); };
+    const up = () => { window.removeEventListener("pointermove", move); window.removeEventListener("pointerup", up); try { localStorage.setItem("devis-arbre-largeur", String(w)); } catch { /* stockage indisponible */ } };
+    window.addEventListener("pointermove", move); window.addEventListener("pointerup", up);
+  };
+  useEffect(() => {
+    if (!pleinEcran) return;
+    const k = (e: KeyboardEvent) => { if (e.key === "Escape") setPleinEcran(false); };
+    window.addEventListener("keydown", k);
+    return () => window.removeEventListener("keydown", k);
+  }, [pleinEcran]);
   const [signOpp, setSignOpp] = useState<{ id: string; code: string; client: string | null; typologie: TypologieFuture | null } | null>(null);
 
   const d = q.data;
@@ -180,27 +203,69 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
 
   const dates = d.devis.dates_snapshot ?? (d.affaire as unknown as Record<string, string | null> | null) ?? {};
   const clientManque = d.client && (!d.client.adresse || !d.client.siret);
+  // Liste de contrôle avant validation (non bloquante).
+  const chapitreIds = new Set<string>();
+  const estDansChapitre = (id: string | null): boolean => {
+    let cur = d.lignes.find((l) => l.id === id);
+    while (cur) { if (cur.type.startsWith("chapitre")) return true; cur = d.lignes.find((l) => l.id === cur!.parent_id); }
+    return false;
+  };
+  d.lignes.forEach((l) => { if (estDansChapitre(l.id)) chapitreIds.add(l.id); });
+  const objets = d.lignes.filter((l) => l.type === "objet" && !chapitreIds.has(l.id));
+  const lignesZero = [
+    ...d.materiaux.filter((m) => Number(m.quantite) * venteUnitaireMateriau({ prix_achat: m.prix_achat === undefined ? null : Number(m.prix_achat ?? 0), coefficient: Number(m.coefficient ?? 1), prix_vente_unitaire: m.prix_vente_unitaire }) === 0)
+      .map((m) => ({ ligneId: m.ligne_id, designation: m.designation ?? "Matériau" })),
+    ...d.libres.filter((f) => venteUnitaireLibre({ prix_forfait: f.prix_forfait == null ? null : Number(f.prix_forfait), prix_achat: f.prix_achat == null ? null : Number(f.prix_achat), coefficient: Number(f.coefficient ?? 1), prix_vente_unitaire: f.prix_vente_unitaire }) === 0)
+      .map((f) => ({ ligneId: f.ligne_id, designation: f.designation ?? "Ligne libre" })),
+  ];
+  const controle = listeControle({
+    contactId: d.devis.contact_id, client: d.client, dates: dates as Record<string, string | null>, lignesZero,
+    objetsSansPhoto: objets.filter((o) => !d.photos.some((p) => p.ligne_id === o.id)).map((o) => ({ ligneId: o.id, libelle: o.libelle ?? "" })),
+    nbObjets: objets.length, coutsManquants: d.droits.couts ? calc.couts_manquants.length : null,
+  });
+  const allerA = (c: CibleControle) => {
+    if (c.kind === "ligne") { setSelected(c.ligneId); document.getElementById("devis-fiche")?.scrollIntoView({ block: "start", behavior: "smooth" }); return; }
+    if (c.kind === "taux") { const m = calc.couts_manquants.find((x) => x.type === "heures"); if (!m) { const lib = calc.couts_manquants[0]; const f = lib && d.libres.find((x) => x.designation === lib.libelle); if (f) allerA({ kind: "ligne", ligneId: f.ligne_id }); return; }
+      void navigate({ to: "/parametres/devis-taux", hash: ancreDe(m.libelle) }); return; }
+    if (c.kind === "dates") setDatesOuvertes(new Set(DATES.map((x) => x.key)));
+    if (c.kind === "client" && d.client && (!d.client.adresse || !d.client.siret)) { window.open(`/clients/${d.client.id}`, "_blank", "noopener"); return; }
+    document.getElementById(`devis-${c.kind}`)?.scrollIntoView({ block: "center", behavior: "smooth" });
+    (document.getElementById(`devis-${c.kind}`)?.querySelector("select,input,button") as HTMLElement | null)?.focus();
+  };
+  const lienLibre = (designation: string) => {
+    const f = d.libres.find((x) => x.designation === designation);
+    return f ? <button type="button" className="font-medium underline" onClick={() => allerA({ kind: "ligne", ligneId: f.ligne_id })} title="Aller à la ligne pour saisir son coût">{designation.toLowerCase()}</button> : <span>{designation.toLowerCase()}</span>;
+  };
   const zonesCibles = del ? d.lignes.filter((l) => l.id !== del.id && ["zone", "option"].includes(l.type) && !l.parent_id) : [];
 
   return (
-    <div className="devis-editeur space-y-4">
-      {infoClaude && <NoteClaude info={infoClaude} />}
+    <div className={pleinEcran ? "devis-editeur fixed inset-0 z-50 space-y-4 overflow-auto bg-background p-4" : "devis-editeur space-y-4"}>
+      {/* Bandeau compact : l'essentiel du devis, toujours visible */}
+      <div className="sticky top-0 z-20 -mx-1 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-md border bg-card px-3 py-2 shadow-sm">
+        {affaireId && !pleinEcran && <Link to="/affaires/$affaireId/devis-staffing" params={{ affaireId }} className="flex items-center text-xs text-muted-foreground hover:underline"><ArrowLeft className="mr-1 h-3 w-3" />Devis</Link>}
+        <span className="font-mono text-base font-bold text-foreground">{d.devis.est_modele ? `Modèle — ${d.devis.modele_nom ?? ""}` : d.devis.numero}</span>
+        {d.client && <span className="max-w-64 truncate text-sm text-foreground" title={d.client.nom}>{d.client.nom}</span>}
+        <Badge>{libelleStatutDevis(st, d.devis.numero_progbat, d.devis.date_envoi, STATUT_LABEL)}</Badge>{infoClaude && <BadgeClaude />}
+        <span className="ml-auto text-sm text-muted-foreground">Total HT <strong className="text-base tabular-nums text-foreground">{eur(calc.remise !== 0 ? calc.net_ht : calc.total_ht)}</strong>{calc.remise !== 0 && <span className="text-xs"> (net)</span>}</span>
+        <Button size="sm" variant="outline" onClick={() => setPleinEcran((p) => !p)} title={pleinEcran ? "Quitter le plein écran (Échap)" : "Plein écran"}>
+          {pleinEcran ? <Minimize2 className="mr-1 h-3.5 w-3.5" /> : <Maximize2 className="mr-1 h-3.5 w-3.5" />}{pleinEcran ? "Quitter" : "Plein écran"}
+        </Button>
+      </div>
+      {infoClaude && <NoteClaude key={infoClaude.id} info={infoClaude} peutCocher={d.droits.ecrire} />}
       {/* En-tête */}
       <Card>
         <CardContent className="flex flex-wrap items-start gap-4 p-4">
           <div className="min-w-48">
-            {affaireId && <Link to="/affaires/$affaireId/devis-staffing" params={{ affaireId }} className="flex items-center text-xs text-muted-foreground hover:underline"><ArrowLeft className="mr-1 h-3 w-3" />Devis</Link>}
-            <h1 className="text-xl font-semibold">{d.devis.est_modele ? `Modèle — ${d.devis.modele_nom ?? ""}` : d.devis.numero}</h1>
+            <h1 className="sr-only">{d.devis.est_modele ? `Modèle — ${d.devis.modele_nom ?? ""}` : d.devis.numero}</h1>
             <p className="text-xs text-muted-foreground">
               {d.affaire ? `${d.affaire.numero ?? d.affaire.code_opportunite ?? ""} ${d.affaire.nom ?? ""}` : ""}
               {d.modele_origine && ` · modèle : ${d.modele_origine}`}
             </p>
-            <Badge className="mt-1">{libelleStatutDevis(st, d.devis.numero_progbat, d.devis.date_envoi, STATUT_LABEL)}</Badge>{infoClaude && <BadgeClaude />}
             {d.devis.numero_progbat && <p className="mt-1 text-xs">Réf. <strong>{libelleNumeroProgbat(d.devis.numero_progbat)}</strong>{d.devis.transfere_progbat_le ? ` · transféré le ${new Date(d.devis.transfere_progbat_le).toLocaleDateString("fr-FR")}` : ""}</p>}
           </div>
           {!d.devis.est_modele && (
             <>
-              <div className="w-64 space-y-1">
+              <div className="w-64 space-y-1" id="devis-client">
                 <p className="text-xs text-muted-foreground">Client facturé</p>
                 <ClientCombobox value={d.client?.nom ?? null} clientId={d.devis.client_id} disabled={readOnly} allowClear={false}
                   onChange={async (id) => { await setEntete({ client_id: id }); if (d.affaire) setAskMajClient({ id }); }} />
@@ -208,7 +273,7 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
                   Fiche client incomplète ({[!d.client!.adresse && "adresse", !d.client!.siret && "SIRET"].filter(Boolean).join(", ")}) —{" "}
                   <Link to="/clients/$clientId" params={{ clientId: d.client!.id }} className="underline">compléter</Link></p>}
               </div>
-              <div className="w-56 space-y-1">
+              <div className="w-56 space-y-1" id="devis-contact">
                 <p className="text-xs text-muted-foreground">Contact</p>
                 <select disabled={readOnly || !d.devis.client_id} className="h-9 w-full rounded-md border bg-background px-2 text-sm" value={d.devis.contact_id ?? ""}
                   onChange={(e) => void setEntete({ contact_id: e.target.value || null })}>
@@ -216,11 +281,15 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
                   {(contacts.data ?? []).map((c) => <option key={c.id} value={c.id}>{[c.prenom, c.nom].filter(Boolean).join(" ") || c.email}</option>)}
                 </select>
               </div>
-              <div className="w-56 space-y-1">
-                <p className="text-xs text-muted-foreground">Client final (facultatif)</p>
-                <ClientCombobox value={d.client_final?.nom ?? null} clientId={d.devis.client_final_id} disabled={readOnly}
-                  onChange={(id) => void setEntete({ client_final_id: id })} />
-              </div>
+              {d.devis.client_final_id || clientFinalOuvert ? (
+                <div className="w-56 space-y-1">
+                  <p className="text-xs text-muted-foreground">Client final (facultatif)</p>
+                  <ClientCombobox value={d.client_final?.nom ?? null} clientId={d.devis.client_final_id} disabled={readOnly}
+                    onChange={(id) => void setEntete({ client_final_id: id })} />
+                </div>
+              ) : !readOnly && (
+                <button type="button" className="self-end pb-2 text-xs font-medium text-primary hover:underline" onClick={() => setClientFinalOuvert(true)}>+ ajouter un client final</button>
+              )}
             </>
           )}
           {d.devis.est_modele && (
@@ -235,6 +304,7 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
 
       {/* Dates clés */}
       {!d.devis.est_modele && (
+        <div id="devis-dates" className="space-y-2">
         <div className="grid grid-cols-2 gap-2 md:grid-cols-8">
           <DateCase label="Opportunité" value={d.affaire?.created_at?.slice(0, 10) ?? null} disabled />
           <DateCase label="Date du devis" value={d.devis.date_devis} disabled={readOnly} onChange={(v) => void setEntete({ date_devis: v })} />
@@ -245,16 +315,29 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
               ? <button type="button" className="mt-0.5 text-[11px] text-primary underline" onClick={() => void setEntete({ date_validite: "" })}>Revenir au calcul auto</button>
               : <p className="mt-0.5 text-[11px] text-muted-foreground">Auto : date du devis + {d.devis.validite_jours ?? 30} j</p>)}
           </div>
-          {DATES.map((x) => (
+          {DATES.filter((x) => (dates as Record<string, string | null>)[x.key] || datesOuvertes.has(x.key)).map((x) => (
             <DateCase key={x.key} label={x.label} value={(dates as Record<string, string | null>)[x.key] ?? null} disabled={readOnly}
               onChange={(v) => void call("devis_dates_modifier", { _devis_id: devisId, _patch: { [x.key]: v ?? "" } }).then(() => window.dispatchEvent(new Event("affaire-updated")))} />
           ))}
         </div>
+        {(() => {
+          const vides = DATES.filter((x) => !(dates as Record<string, string | null>)[x.key] && !datesOuvertes.has(x.key));
+          if (!vides.length) return null;
+          return readOnly
+            ? <p className="text-xs text-muted-foreground">À déterminer : {vides.map((x) => x.label.toLowerCase()).join(", ")}</p>
+            : <div className="flex flex-wrap gap-x-3 gap-y-1">{vides.map((x) => (
+                <button key={x.key} type="button" className="text-xs font-medium text-primary hover:underline" onClick={() => setDatesOuvertes((s) => new Set(s).add(x.key))}>+ ajouter {x.label.toLowerCase()}</button>
+              ))}</div>;
+        })()}
+        </div>
       )}
 
-      <div className="grid gap-4 lg:grid-cols-[300px_1fr_260px]">
+      <div className="grid gap-4 lg:grid-cols-[var(--arbre-w)_1fr_260px]" style={{ ["--arbre-w" as string]: `${arbreW}px` }}>
         {/* Arbre */}
-        <Card>
+        <Card className="relative">
+          <div role="separator" aria-orientation="vertical" aria-label="Régler la largeur de l'arbre" title="Glisser pour régler la largeur"
+            onPointerDown={redimArbre} onDoubleClick={() => { setArbreW(300); try { localStorage.setItem("devis-arbre-largeur", "300"); } catch { /* */ } }}
+            className="absolute -right-2.5 top-0 z-10 hidden h-full w-2 cursor-col-resize rounded hover:bg-primary/30 lg:block" />
           <CardContent className="space-y-3 p-3">
             {!readOnly && (
               <div className="flex flex-wrap gap-1">
@@ -291,7 +374,7 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
         </Card>
 
         {/* Fiche */}
-        <Card>
+        <Card id="devis-fiche" className="scroll-mt-16 min-w-0">
           <CardContent className="p-4">
             {ligneSel ? <ObjetPanel key={ligneSel.id} data={d} ligne={ligneSel} montants={calc.lignes} calc={calc} readOnly={readOnly} call={call} patch={patch} save={save} onSelect={setSelected} />
               : <p className="text-sm text-muted-foreground">Sélectionnez un élément dans l'arbre.</p>}
@@ -326,7 +409,23 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
             {d.droits.couts && (
               <div className="border-t pt-2">
                 <p className="mb-1 text-xs font-semibold uppercase text-muted-foreground">Coûts et marge</p>
-                <CoutsBloc dec={calc.decomposition} net={calc.net_ht} manquants={calc.couts_manquants} compact />
+                <CoutsBloc dec={calc.decomposition} net={calc.net_ht} manquants={calc.couts_manquants} compact lienLibre={lienLibre} />
+              </div>
+            )}
+            {!d.devis.est_modele && (st === "brouillon" || st === "a_valider") && (
+              <div className="border-t pt-2">
+                <p className="mb-1 text-xs font-semibold uppercase text-muted-foreground">Avant de valider</p>
+                <ul className="space-y-0.5">
+                  {controle.map((c) => (
+                    <li key={c.cle}>
+                      <button type="button" onClick={() => allerA(c.cible)} disabled={c.ok} title={c.ok ? undefined : "Aller corriger"}
+                        className="flex w-full items-start gap-1.5 rounded px-1 py-0.5 text-left text-xs enabled:hover:bg-muted">
+                        {c.ok ? <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-success" /> : <Circle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-warning" />}
+                        <span className={c.ok ? "text-muted-foreground" : "text-foreground"}>{c.libelle}{c.detail && <span className="block text-[11px] text-foreground/75">{c.detail}</span>}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
               </div>
             )}
             <div className="flex flex-col gap-2 border-t pt-3">
