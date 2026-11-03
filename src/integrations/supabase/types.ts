@@ -2372,6 +2372,60 @@ export type Database = {
         }
         Relationships: []
       }
+      devis_exports: {
+        Row: {
+          cree_le: string
+          cree_par: string
+          devis_id: string
+          filigrane: boolean
+          id: string
+          niveau: string
+          statut_redaction: string
+          storage_path: string
+          taille_octets: number | null
+          version: number
+        }
+        Insert: {
+          cree_le?: string
+          cree_par: string
+          devis_id: string
+          filigrane?: boolean
+          id?: string
+          niveau: string
+          statut_redaction: string
+          storage_path: string
+          taille_octets?: number | null
+          version: number
+        }
+        Update: {
+          cree_le?: string
+          cree_par?: string
+          devis_id?: string
+          filigrane?: boolean
+          id?: string
+          niveau?: string
+          statut_redaction?: string
+          storage_path?: string
+          taille_octets?: number | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "devis_exports_devis_id_fkey"
+            columns: ["devis_id"]
+            isOneToOne: false
+            referencedRelation: "devis"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "devis_exports_devis_id_fkey"
+            columns: ["devis_id"]
+            isOneToOne: false
+            referencedRelation: "v_devis_consommation"
+            referencedColumns: ["devis_id"]
+          },
+        ]
+      }
       devis_heures: {
         Row: {
           cout_revient: number | null
@@ -8021,6 +8075,16 @@ export type Database = {
         Returns: undefined
       }
       devis_eur_fr: { Args: { _v: number }; Returns: string }
+      devis_export_enregistrer: {
+        Args: {
+          _devis_id: string
+          _niveau: string
+          _storage_path: string
+          _taille: number
+        }
+        Returns: Json
+      }
+      devis_exports_lister: { Args: { _devis_id: string }; Returns: Json }
       devis_heure_enregistrer: {
         Args: { _h: Json; _ligne_id: string }
         Returns: string
