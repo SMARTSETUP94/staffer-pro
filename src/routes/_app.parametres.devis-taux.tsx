@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { ancrePoste } from "@/lib/devis/editeur-lisibilite";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -124,7 +125,7 @@ function DevisTauxPage() {
       </Card>
 
       <Card>
-        <CardHeader><CardTitle>Forfaits et paramètres</CardTitle><CardDescription>Chaque modification crée une valeur datée.</CardDescription></CardHeader>
+        <CardHeader id="forfaits" className="scroll-mt-24"><CardTitle>Forfaits et paramètres</CardTitle><CardDescription>Chaque modification crée une valeur datée.</CardDescription></CardHeader>
         <CardContent className="grid gap-3 md:grid-cols-2">
           {(params.data ?? []).map((p) => <ParamRow key={p.cle as string} p={p as never} run={run} />)}
         </CardContent>
@@ -171,7 +172,7 @@ function PosteRow({ row, niveaux, metiers, run, compteBe }: { row: TauxRow; nive
       _ordre: row.ordre, _actif: patch.actif ?? row.actif,
     }), "Poste enregistré");
   return (
-    <TableRow className={row.actif ? "" : "opacity-50"}>
+    <TableRow id={ancrePoste(row.libelle)} className={`scroll-mt-24 target:bg-warning/15 target:ring-2 target:ring-warning ${row.actif ? "" : "opacity-50"}`}>
       <TableCell>
         <div className="flex gap-1">
           <Input className="h-8 w-44" value={libelle} onChange={(e) => setLibelle(e.target.value)} />
