@@ -294,7 +294,7 @@ export function ObjetPanel({ data, ligne, montants, calc, readOnly, call, patch,
           {/* Matériaux */}
           <section className="space-y-2">
             <h3 className="text-sm font-semibold">Matériaux</h3>
-            <table className="devis-table w-full text-sm">
+            <div className="overflow-x-auto"><table className="devis-table w-full text-sm">
               <thead className="text-xs"><tr>
                 <th className="text-left">Désignation</th><th>Quantité</th>{couts && <th>Achat €</th>}{couts && <th>Coef</th>}<th className="text-right">Vente</th><th />
               </tr></thead>
@@ -327,7 +327,7 @@ export function ObjetPanel({ data, ligne, montants, calc, readOnly, call, patch,
                   );
                 })}
               </tbody>
-            </table>
+            </table></div>
             {!readOnly && <Button size="sm" variant="outline" onClick={() => setMatOpen(true)}><Plus className="mr-1 h-3.5 w-3.5" />Matériau</Button>}
           </section>
 
@@ -335,7 +335,7 @@ export function ObjetPanel({ data, ligne, montants, calc, readOnly, call, patch,
           <section className="space-y-2">
             <h3 className="text-sm font-semibold">Achats spécifiques, sous-traitance, location, forfaits</h3>
             <p className="text-xs text-muted-foreground">Prix de vente direct (forfait, négatif pour une régularisation) <em>ou</em> prix d'achat × coefficient dans « détails ».</p>
-            <table className="devis-table w-full text-sm">
+            <div className="overflow-x-auto"><table className="devis-table w-full text-sm">
               <thead className="text-xs"><tr>
                 <th className="text-left">Désignation</th><th>Type</th><th>Qté</th>
                 <th title="Prix de vente unitaire saisi directement ; vide = achat × coefficient">Prix vente €</th><th className="text-right">Vente</th><th /><th />
@@ -390,7 +390,7 @@ export function ObjetPanel({ data, ligne, montants, calc, readOnly, call, patch,
                   );
                 })}
               </tbody>
-            </table>
+            </table></div>
             {!readOnly && (
               <div className="flex flex-wrap gap-1">
                 <Button size="sm" variant="outline" onClick={() => void call("devis_libre_enregistrer", { _ligne_id: ligne.id, _f: { categorie: "achat" } })}><Plus className="mr-1 h-3.5 w-3.5" />Ligne libre</Button>
