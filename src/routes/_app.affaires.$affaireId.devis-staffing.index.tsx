@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { STATUT_LABEL, eur, type DevisStatut } from "@/components/devis/editeur/api";
+import { libelleStatutDevis } from "@/lib/devis/progbat-export";
 
 export const Route = createFileRoute("/_app/affaires/$affaireId/devis-staffing/")({
   head: () => ({ meta: [{ title: "Devis de l'affaire" }] }),
@@ -74,9 +75,9 @@ function DevisListe() {
           )}
           {(liste.data ?? []).map((d) => (
             <TableRow key={d.id} className="cursor-pointer" onClick={() => navigate({ to: "/affaires/$affaireId/devis-staffing/$devisId", params: { affaireId, devisId: d.id } })}>
-              <TableCell className="font-medium"><FileText className="mr-1 inline h-4 w-4" />{d.numero}{claude.data?.has(d.id) && <BadgeClaude />}</TableCell>
+              <TableCell className="font-medium"><FileText className="mr-1 inline h-4 w-4" />{d.numero}{claude.data?.has(d.id) && <BadgeClaude />}{d.numero_progbat && <span className="block text-xs text-muted-foreground">ProGBat {d.numero_progbat}</span>}</TableCell>
               <TableCell>R{d.version}</TableCell>
-              <TableCell><Badge variant="secondary">{STATUT_LABEL[d.statut_redaction as DevisStatut]}</Badge></TableCell>
+              <TableCell><Badge variant="secondary">{libelleStatutDevis(d.statut_redaction, d.numero_progbat, d.date_envoi, STATUT_LABEL)}</Badge></TableCell>
               <TableCell className="text-right">{eur(d.total_ht)}</TableCell>
               <TableCell>{d.date_devis ? new Date(d.date_devis).toLocaleDateString("fr-FR") : "—"}</TableCell>
               <TableCell>{d.auteur ?? "—"}</TableCell>

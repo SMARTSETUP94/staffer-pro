@@ -13,7 +13,7 @@ export type LigneClient = {
   finition: string | null; texte: string | null; option_incluse?: boolean | null; montant: number | null; sous_total: number | null;
 };
 export type DevisClient = {
-  id?: string; numero: string; version?: number; statut_redaction?: string; libelle: string | null; date_devis: string | null;
+  id?: string; numero: string; numero_progbat?: string | null; version?: number; statut_redaction?: string; libelle: string | null; date_devis: string | null;
   validite_jours: number | null; date_validite?: string | null;
   societe?: { raison_sociale?: string | null; marque?: string | null; adresse?: string | null; code_postal?: string | null; ville?: string | null; siret?: string | null; email?: string | null } | null;
   client: { nom: string; adresse: string | null; code_postal: string | null; ville: string | null; siret?: string | null; tva_intracom?: string | null } | null;
@@ -94,7 +94,7 @@ export function construireDevisPdf(vc: DevisClient, niveau: NiveauPdf, images: R
   doc.text(`DEVIS ${refDevis(vc)}`, W - M, 22, { align: "right" });
   doc.setFont("helvetica", "normal"); doc.setFontSize(9.5);
   const validite = vc.date_validite ?? vc.dates?.date_validite ?? null;
-  doc.text([`Date du devis : ${datePdf(vc.date_devis) || "—"}`, `Valable jusqu'au : ${datePdf(validite) || (vc.validite_jours ? `${vc.validite_jours} jours` : "—")}`], W - M, 28, { align: "right" });
+  doc.text([`Date du devis : ${datePdf(vc.date_devis) || "—"}`, `Valable jusqu'au : ${datePdf(validite) || (vc.validite_jours ? `${vc.validite_jours} jours` : "—")}`, ...(vc.numero_progbat ? [`Réf. ProGBat : ${vc.numero_progbat}`] : [])], W - M, 28, { align: "right" });
 
   // Client
   let y = 50;

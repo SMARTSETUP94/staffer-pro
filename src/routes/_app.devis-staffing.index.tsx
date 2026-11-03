@@ -15,6 +15,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { STATUT_LABEL, eur, type DevisStatut } from "@/components/devis/editeur/api";
+import { libelleStatutDevis } from "@/lib/devis/progbat-export";
 import { SupprimerDevisDialog, SUPPRESSION_REFUSEE, devisSupprimable } from "@/components/devis/SupprimerDevis";
 import { useModelesDevis } from "@/components/devis/useModelesDevis";
 import { ExportPdfDialog } from "@/components/devis/DevisPdfEnvoi";
@@ -37,7 +38,7 @@ export const Route = createFileRoute("/_app/devis-staffing/")({
 type Row = {
   id: string; numero: string; version: number; statut_redaction: DevisStatut; affaire_id: string; affaire_numero: string | null;
   affaire_nom: string | null; client_nom: string | null; net_ht: number | null; date_devis: string | null;
-  charge_affaires_id: string | null; charge_affaires_nom: string | null;
+  charge_affaires_id: string | null; charge_affaires_nom: string | null; numero_progbat: string | null; date_envoi: string | null;
 };
 
 const STATUTS: DevisStatut[] = ["brouillon", "a_valider", "valide", "transfere", "signe", "refuse"];
@@ -110,10 +111,10 @@ function DevisGlobal() {
             <TableBody>
               {rows.map((r) => (
                 <TableRow key={r.id} className="cursor-pointer" onClick={() => navigate({ to: "/affaires/$affaireId/devis-staffing/$devisId", params: { affaireId: r.affaire_id, devisId: r.id } })}>
-                  <TableCell className="font-medium">{r.numero} <span className="text-xs text-muted-foreground">R{r.version}</span>{claude.data?.has(r.id) && <BadgeClaude />}</TableCell>
+                  <TableCell className="font-medium">{r.numero} <span className="text-xs text-muted-foreground">R{r.version}</span>{claude.data?.has(r.id) && <BadgeClaude />}{r.numero_progbat && <span className="block text-xs text-muted-foreground">ProGBat {r.numero_progbat}</span>}</TableCell>
                   <TableCell>{[r.affaire_numero, r.affaire_nom].filter(Boolean).join(" · ")}</TableCell>
                   <TableCell>{r.client_nom ?? "—"}</TableCell>
-                  <TableCell><Badge variant="outline">{STATUT_LABEL[r.statut_redaction]}</Badge></TableCell>
+                  <TableCell><Badge variant="outline">{libelleStatutDevis(r.statut_redaction, r.numero_progbat, r.date_envoi, STATUT_LABEL)}</Badge></TableCell>
                   <TableCell className="text-right tabular-nums">{r.net_ht == null ? "—" : eur(Number(r.net_ht))}</TableCell>
                   <TableCell>{r.date_devis ? new Date(r.date_devis).toLocaleDateString("fr-FR") : "—"}</TableCell>
                   <TableCell>{r.charge_affaires_nom || "—"}</TableCell>

@@ -473,7 +473,7 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
       <DevisVueClient open={vueClient} onOpenChange={setVueClient} devisId={devisId} />
       <ExportPdfDialog open={pdfDlg} onOpenChange={setPdfDlg} devisId={devisId} />
       <ProgbatExportDialog open={pgDlg} onOpenChange={setPgDlg} devisId={devisId} peutTransferer={st === "valide" && d.droits.valider} onTransfert={() => setTrDlg(true)} />
-      <EnregistrerTransfertDialog open={trDlg} onOpenChange={setTrDlg} devisId={devisId} netHt={calc.net_ht}
+      <EnregistrerTransfertDialog open={trDlg} onOpenChange={setTrDlg} devisId={devisId} netHt={calc?.net_ht ?? 0}
         onDone={() => { void q.refetch(); window.dispatchEvent(new Event("affaire-updated")); }} />
       <EnvoiEmailDialog open={mailDlg} onOpenChange={setMailDlg} devisId={devisId} onSent={() => void q.refetch()} />
       <BibliothequeDialog open={biblio} onOpenChange={setBiblio} devisId={devisId}
