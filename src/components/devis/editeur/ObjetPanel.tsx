@@ -224,6 +224,7 @@ export function ObjetPanel({ data, ligne, montants, calc, readOnly, call, patch,
           {/* Heures */}
           <section className="space-y-2">
             <h3 className="text-sm font-semibold">Heures</h3>
+            <div className="overflow-x-auto">
             <table className="devis-table w-full text-sm">
               <thead className="text-xs"><tr>
                 <th className="text-left">Poste</th><th className="text-left">Niveau</th><th>Heures</th><th title="Décoché : heures communes, non multipliées par la quantité">Par unité</th>
@@ -275,6 +276,7 @@ export function ObjetPanel({ data, ligne, montants, calc, readOnly, call, patch,
                 })}
               </tbody>
             </table>
+            </div>
             {!readOnly && <Button size="sm" variant="outline" onClick={() => void addHeure()}><Plus className="mr-1 h-3.5 w-3.5" />Ligne d'heures</Button>}
           </section>
 
