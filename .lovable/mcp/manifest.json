@@ -1845,6 +1845,46 @@
         "conditional": true
       },
       {
+        "name": "devis_exporter_pdf",
+        "title": "Exporter un devis en PDF",
+        "description": "PDF client du devis (détaillé ou synthétique, sans heures, coûts ni marge ; filigrane PROJET si non validé) et lien de téléchargement valable 1 h, pour préparer un brouillon d'email. N'envoie rien.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "devis_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "niveau": {
+              "type": "string",
+              "enum": [
+                "detaille",
+                "synthetique"
+              ],
+              "default": "detaille",
+              "description": "detaille : prix par objet ; synthetique : total par zone et chapitre."
+            },
+            "regenerer": {
+              "type": "boolean",
+              "default": false,
+              "description": "true : générer un nouveau PDF même si un export de la version en cours existe."
+            }
+          },
+          "required": [
+            "devis_id"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null,
+        "conditional": true
+      },
+      {
         "name": "devis_creer_brouillon",
         "title": "Créer un brouillon de devis",
         "description": "Créer le brouillon de devis d'une opportunité depuis un modèle (défaut : modèle par défaut). Refusé si l'affaire a déjà un devis (renvoie son id). Idempotent par cle_externe. Brouillon uniquement. Premier appel : aperçu avant / après sans écriture ; après accord, renvoyer les mêmes arguments avec confirmation_id sous 10 minutes.",
