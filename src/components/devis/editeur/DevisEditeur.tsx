@@ -343,7 +343,7 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
               <Button variant="outline" onClick={() => setVueClient(true)}><Eye className="mr-1 h-4 w-4" />Vue client</Button>
               {!d.devis.est_modele && <Button variant="outline" onClick={() => setPdfDlg(true)}><FileDown className="mr-1 h-4 w-4" />Exporter en PDF</Button>}
               {!d.devis.est_modele && d.droits.valider && d.devis.affaire_id && (
-                <Button variant="outline" disabled={st !== "valide"} title={st !== "valide" ? "Réservé aux devis validés ; sur un brouillon, seul le PDF « PROJET » est disponible" : undefined}
+                <Button variant="outline" disabled={!["valide", "transfere"].includes(st)} title={!["valide", "transfere"].includes(st) ? "Réservé aux devis validés ; sur un brouillon, seul le PDF « PROJET » est disponible" : undefined}
                   onClick={() => setMailDlg(true)}><Mail className="mr-1 h-4 w-4" />Envoyer par email</Button>
               )}
               {!d.devis.est_modele && d.droits.parametres && <Button variant="ghost" onClick={() => { setModele({ nom: d.devis.libelle ?? "", categorie: "", description: "" }); setModeleDlg(true); }}>Enregistrer comme modèle</Button>}
