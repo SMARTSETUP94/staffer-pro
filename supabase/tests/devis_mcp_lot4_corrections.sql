@@ -127,14 +127,14 @@ BEGIN
   PERFORM set_config('request.jwt.claims', claims_mcp, true);
   r := devis_mcp_simuler('devis_remplir', jsonb_build_object('mode','autonomie','devis_id',v_d,'modifications',jsonb_build_array(jsonb_build_object('cible','heure','id',v_h,'champs',jsonb_build_object('heures',1)))), v_aff);
   IF position('qu''il a créé' IN coalesce(r->>'error',''))=0 THEN RAISE EXCEPTION 'KO autonomie sur brouillon non Claude : %', r; END IF;
-  r := devis_mcp_simuler('devis_remplir', jsonb_build_object('mode','autonomie','devis_id',v_d,'lignes',jsonb_build_array(jsonb_build_object('type','commentaire','texte','ajout')))), v_aff);
+  r := devis_mcp_simuler('devis_remplir', jsonb_build_object('mode','autonomie','devis_id',v_d,'lignes',jsonb_build_array(jsonb_build_object('type','commentaire','texte','ajout'))), v_aff);
   IF r ? 'error' THEN RAISE EXCEPTION 'KO ajout autonome refusé : %', r->>'error'; END IF;
   out := out || E'\nPoint 1 verrou : repris par un humain → autonomie refusée, conversation acceptée ; brouillon non créé par Claude → modification autonome refusée';
 
   -- POINT 4. coûts manquants signalés (impression UV sans coût de revient), aucun coût inventé
   PERFORM set_config('request.jwt.claims', claims_mcp, true);
   r := devis_mcp_simuler('devis_remplir', jsonb_build_object('mode','conversation','devis_id',v_d,'lignes',jsonb_build_array(jsonb_build_object('ligne_id',v_obj,
-         'heures',jsonb_build_array(jsonb_build_object('poste','impression_uv','heures',2),jsonb_build_object('poste','metallerie','heures',4)))))), v_aff);
+         'heures',jsonb_build_array(jsonb_build_object('poste','impression_uv','heures',2),jsonb_build_object('poste','metallerie','heures',4))))), v_aff);
   IF r ? 'error' OR jsonb_array_length(coalesce(r->'apres'->'couts_manquants','[]'))=0 THEN RAISE EXCEPTION 'KO coûts manquants non signalés : %', r->'apres'->'couts_manquants'; END IF;
   out := out || format(E'\nPoint 4 : coûts manquants signalés dans l''aperçu → %s', r->'apres'->'couts_manquants');
 
