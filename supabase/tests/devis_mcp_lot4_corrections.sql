@@ -36,7 +36,7 @@ BEGIN
   cid := (mcp_write_preview('devis_remplir','c1',p,v_aff,NULL,snap,'{}')->>'confirmation_id')::uuid;
   r := mcp_execute_write_locked(cid,'devis_remplir','c1',p,'{}');
   IF r ? 'error' THEN RAISE EXCEPTION 'KO ligne_id : %', r->>'error'; END IF;
-  IF (SELECT libelle||'|'||quantite::numeric::text||'|'||longueur_mm::numeric::text||'|'||descriptif_client FROM devis_lignes WHERE id=v_obj) <> 'Totem FIJI|2|1200|Totem bois peint' THEN
+  IF (SELECT libelle||'|'||trim_scale(quantite)||'|'||trim_scale(longueur_mm)||'|'||descriptif_client FROM devis_lignes WHERE id=v_obj) <> 'Totem FIJI|2|1200|Totem bois peint' THEN
     RAISE EXCEPTION 'KO champs de la ligne du modèle non appliqués : %', (SELECT to_jsonb(l) FROM devis_lignes l WHERE id=v_obj); END IF;
   SELECT count(*) INTO n FROM devis_heures WHERE ligne_id=v_obj AND supprime_le IS NULL;
   IF n <> nh THEN RAISE EXCEPTION 'KO heures doublées : % → %', nh, n; END IF;
@@ -65,8 +65,8 @@ BEGIN
   cid := (mcp_write_preview('devis_remplir','c2',p,v_aff,NULL,snap,'{}')->>'confirmation_id')::uuid;
   r := mcp_execute_write_locked(cid,'devis_remplir','c2',p,'{}');
   IF r ? 'error' THEN RAISE EXCEPTION 'KO modifications : %', r->>'error'; END IF;
-  IF (SELECT quantite FROM devis_lignes WHERE id=v_obj) <> 3 OR (SELECT heures||'|'||taux_vente FROM devis_heures WHERE id=v_h) <> '10|50'
-     OR (SELECT quantite||'|'||coefficient FROM devis_materiaux WHERE id=v_mat) <> '5|1.5' OR (SELECT quantite||'|'||prix_forfait FROM devis_lignes_libres WHERE id=v_lib) <> '2|120' THEN
+  IF (SELECT quantite FROM devis_lignes WHERE id=v_obj) <> 3 OR (SELECT trim_scale(heures)||'|'||trim_scale(taux_vente) FROM devis_heures WHERE id=v_h) <> '10|50'
+     OR (SELECT trim_scale(quantite)||'|'||trim_scale(coefficient) FROM devis_materiaux WHERE id=v_mat) <> '5|1.5' OR (SELECT trim_scale(quantite)||'|'||trim_scale(prix_forfait) FROM devis_lignes_libres WHERE id=v_lib) <> '2|120' THEN
     RAISE EXCEPTION 'KO valeurs modifiées'; END IF;
   out := out || format(E'\nPoint 1 modifier : objet ×3, construction 10 h à 50 €, matériau 5 × coef 1,5, ligne libre 2 × 120 € — total HT %s €', r->'calcul'->>'total_ht');
 
