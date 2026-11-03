@@ -197,18 +197,7 @@ function PosteRow({ row, niveaux, metiers, run, compteBe }: { row: TauxRow; nive
             </Badge>
           ))}
         </div>
-        <div className="flex flex-wrap items-center gap-1">
-          <Input className="h-8 w-24" placeholder="niveau" value={nv.niveau} onChange={(e) => setNv({ ...nv, niveau: e.target.value })} list={`niv-${row.poste_id}`} />
-          <datalist id={`niv-${row.poste_id}`}>{niveaux.map((n) => <option key={n.niveau!} value={n.niveau!} />)}</datalist>
-          <Input className="h-8 w-20" placeholder="vente" inputMode="decimal" value={nv.taux} onChange={(e) => setNv({ ...nv, taux: e.target.value })} />
-          <Input className="h-8 w-20" placeholder="coût" inputMode="decimal" value={nv.cout} onChange={(e) => setNv({ ...nv, cout: e.target.value })} />
-          <Input className="h-8 w-36" type="date" value={nv.date} onChange={(e) => setNv({ ...nv, date: e.target.value })} />
-          <label className="flex items-center gap-1 text-xs"><input type="checkbox" checked={nv.defaut} onChange={(e) => setNv({ ...nv, defaut: e.target.checked })} />défaut</label>
-          <Button size="sm" variant="outline" disabled={!nv.niveau.trim()} onClick={() => run(supabase.rpc("devis_taux_ajouter", {
-            _poste_id: row.poste_id, _niveau: nv.niveau.trim(), _date_effet: nv.date,
-            _taux_vente: num(nv.taux) as number, _cout_revient: num(nv.cout) as number, _par_defaut: nv.defaut,
-          }), "Taux enregistré").then(() => setNv({ niveau: "", taux: "", cout: "", date: today(), defaut: false }))}>Nouveau taux</Button>
-        </div>
+        <TauxForm row={row} niveaux={niveaux} run={run} />
       </TableCell>
       <TableCell><Switch checked={row.actif} onCheckedChange={(v) => save({ actif: v })} /></TableCell>
     </TableRow>
