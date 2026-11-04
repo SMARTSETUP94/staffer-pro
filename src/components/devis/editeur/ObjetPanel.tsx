@@ -292,7 +292,7 @@ export function ObjetPanel({ data, ligne, montants, calc, readOnly, call, patch,
                       </td>
                       {couts && <td className="whitespace-nowrap text-right tabular-nums">
                         {cr == null ? <span className="font-semibold text-warning" title="Coût à renseigner dans la grille">—</span>
-                          : <><div>{cr.toFixed(2)} €/h</div><div className="text-[11px] text-foreground/75">{eur(Number(h.heures) * cr * mult)}</div></>}
+                          : <><div>{cr.toFixed(2).replace(".", ",")} €/h</div><div className="text-[11px] text-foreground/75">{eur(Number(h.heures) * cr * mult)}</div></>}
                       </td>}
                       <td className="text-right">
                         <div className="flex items-center justify-end gap-1">
