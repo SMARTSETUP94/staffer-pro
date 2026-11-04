@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle, ArrowLeft, CheckCircle2, Circle, Maximize2, Minimize2, Eye, FileDown, Mail, Library, MessageSquarePlus, PenLine, Plus, Trash2 } from "lucide-react";
+import { AlertTriangle, ArrowLeft, PanelLeft, CheckCircle2, Circle, Maximize2, Minimize2, Eye, FileDown, Mail, Library, MessageSquarePlus, PenLine, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useDevisClaude, BadgeClaude, NoteClaude } from "@/components/devis/RedactionClaude";
 import { supabase } from "@/integrations/supabase/client";
@@ -67,7 +67,9 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
   const [clientFinalOuvert, setClientFinalOuvert] = useState(false);
   const [datesOuvertes, setDatesOuvertes] = useState<Set<string>>(new Set());
   // Largeur de l'arbre réglable à la souris, mémorisée dans le navigateur.
-  const [arbreW, setArbreW] = useState(300);
+  const [arbreW, setArbreW] = useState(320);
+  const [onglet, setOnglet] = useState<"structure" | "totaux" | "heures" | "couts">("structure");
+  const [panneauMobile, setPanneauMobile] = useState(false);
   useEffect(() => { const v = Number(localStorage.getItem("devis-arbre-largeur")); if (v >= 220 && v <= 640) setArbreW(v); }, []);
   const redimArbre = (e: React.PointerEvent) => {
     e.preventDefault();
@@ -332,13 +334,24 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[var(--arbre-w)_1fr_260px]" style={{ ["--arbre-w" as string]: `${arbreW}px` }}>
-        {/* Arbre */}
-        <Card className="relative min-w-0">
-          <div role="separator" aria-orientation="vertical" aria-label="Régler la largeur de l'arbre" title="Glisser pour régler la largeur"
-            onPointerDown={redimArbre} onDoubleClick={() => { setArbreW(300); try { localStorage.setItem("devis-arbre-largeur", "300"); } catch { /* */ } }}
-            className="absolute -right-2.5 top-0 z-10 hidden h-full w-2 cursor-col-resize rounded hover:bg-primary/30 lg:block" />
-          <CardContent className="space-y-3 p-3">
+      {(() => {
+        const ONGLETS = [["structure", "Structure"], ["totaux", "Totaux"], ["heures", "Heures"], ...(d.droits.couts ? [["couts", "Coûts"]] : [])] as [typeof onglet, string][];
+        const ong = onglet === "couts" && !d.droits.couts ? "structure" : onglet;
+        const panneau = (
+          <div className="space-y-3 text-sm">
+            <div role="tablist" className="grid gap-0.5 rounded-md bg-muted p-0.5" style={{ gridTemplateColumns: `repeat(${ONGLETS.length}, minmax(0, 1fr))` }}>
+              {ONGLETS.map(([k, lbl]) => (
+                <button key={k} type="button" role="tab" aria-selected={ong === k} onClick={() => setOnglet(k)}
+                  className={`rounded px-1 py-1 text-xs font-medium ${ong === k ? "bg-background text-foreground shadow-sm" : "text-foreground/75 hover:text-foreground"}`}>{lbl}</button>
+              ))}
+            </div>
+            {/* Bande fixe : le total reste toujours visible */}
+            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 rounded-md border bg-card px-2 py-1.5 tabular-nums">
+              <span className="text-xs text-foreground/75">HT <strong className="text-sm text-foreground">{eur(calc.remise !== 0 ? calc.net_ht : calc.total_ht)}</strong></span>
+              <span className="text-xs text-foreground/75">TTC <strong className="text-sm text-foreground">{eur(calc.ttc)}</strong></span>
+              {d.droits.couts && <span className="text-xs text-foreground/75" title={calc.cout_complet ? undefined : "Marge incomplète : des coûts manquent"}>Marge <strong className="text-sm text-foreground">{calc.marge_pct == null ? "—" : `${String(calc.marge_pct).replace(".", ",")} %`}</strong>{!calc.cout_complet && <AlertTriangle className="ml-0.5 inline h-3 w-3 text-warning" />}</span>}
+            </div>
+            {ong === "structure" && <div className="space-y-3">
             {!readOnly && (
               <div className="flex flex-wrap gap-1">
                 <Button size="sm" variant="outline" onClick={() => void ajouter("zone")}><Plus className="mr-1 h-3.5 w-3.5" />Zone</Button>
@@ -354,7 +367,7 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
             )}
             <DevisArbre lignes={d.lignes} montants={calc.lignes} racines={calc.racines} selected={selected} readOnly={readOnly}
               actions={{
-                select: setSelected,
+                select: (id) => { setSelected(id); setPanneauMobile(false); },
                 move: (id, parentId, ordre) => {
                   patch((x) => ({ ...x, lignes: x.lignes.map((l) => (l.id === id ? { ...l, parent_id: parentId, ordre } : l)) }));
                   void call("devis_ligne_deplacer", { _ligne_id: id, _parent_id: parentId, _ordre: ordre });
@@ -370,20 +383,8 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
             {!readOnly && d.corbeille.length + (d.corbeille_elements?.length ?? 0) > 0 && (
               <Button size="sm" variant="ghost" onClick={() => setCorbeille(true)}><Trash2 className="mr-1 h-3.5 w-3.5" />Corbeille ({d.corbeille.length + (d.corbeille_elements?.length ?? 0)})</Button>
             )}
-          </CardContent>
-        </Card>
-
-        {/* Fiche */}
-        <Card id="devis-fiche" className="scroll-mt-16 min-w-0">
-          <CardContent className="p-4">
-            {ligneSel ? <ObjetPanel key={ligneSel.id} data={d} ligne={ligneSel} montants={calc.lignes} calc={calc} readOnly={readOnly} call={call} patch={patch} save={save} onSelect={setSelected} />
-              : <p className="text-sm text-muted-foreground">Sélectionnez un élément dans l'arbre.</p>}
-          </CardContent>
-        </Card>
-
-        {/* Synthèse */}
-        <Card>
-          <CardContent className="space-y-3 p-4 text-sm">
+            </div>}
+            {ong === "totaux" && <div className="space-y-3">
             <div className="space-y-1">
               <Row label="Total HT" value={eur(calc.total_ht)} strong={calc.remise === 0} />
               <RemiseBloc mode={d.devis.remise_mode ?? "aucune"} valeur={d.devis.remise_valeur ?? null} readOnly={readOnly} totalHt={calc.total_ht}
@@ -402,16 +403,6 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
                 <Row key={z.id} label={`${z.libelle || TYPE_LABEL[z.type]}`} value={eur(calc.racines[z.id] ?? 0)} />
               ))}
             </div>
-            <div className="space-y-1 border-t pt-2">
-              <p className="text-xs font-semibold uppercase text-muted-foreground">Heures par métier</p>
-              <HeuresMetier hm={calc.heures_metier} />
-            </div>
-            {d.droits.couts && (
-              <div className="border-t pt-2">
-                <p className="mb-1 text-xs font-semibold uppercase text-muted-foreground">Coûts et marge</p>
-                <CoutsBloc dec={calc.decomposition} net={calc.net_ht} manquants={calc.couts_manquants} compact lienLibre={lienLibre} />
-              </div>
-            )}
             {!d.devis.est_modele && (st === "brouillon" || st === "a_valider") && (
               <div className="border-t pt-2">
                 <p className="mb-1 text-xs font-semibold uppercase text-muted-foreground">Avant de valider</p>
@@ -467,9 +458,37 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
                 </>
               )}
             </div>
-          </CardContent>
-        </Card>
-      </div>
+            </div>}
+            {ong === "heures" && <HeuresMetier hm={calc.heures_metier} />}
+            {ong === "couts" && d.droits.couts && <CoutsBloc dec={calc.decomposition} net={calc.net_ht} manquants={calc.couts_manquants} compact lienLibre={lienLibre} />}
+          </div>
+        );
+        return (
+          <>
+            <Button variant="outline" size="sm" className="lg:hidden" onClick={() => setPanneauMobile(true)}><PanelLeft className="mr-1 h-4 w-4" />Structure / Totaux</Button>
+            <Sheet open={panneauMobile} onOpenChange={setPanneauMobile}>
+              <SheetContent side="left" className="w-[92vw] max-w-md overflow-y-auto p-3 lg:hidden">
+                <SheetHeader><SheetTitle>Devis {d.devis.numero}</SheetTitle></SheetHeader>
+                <div className="mt-2">{panneauMobile && panneau}</div>
+              </SheetContent>
+            </Sheet>
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-[var(--arbre-w)_minmax(0,1fr)]" style={{ ["--arbre-w" as string]: `${arbreW}px` }}>
+              <Card className="relative hidden min-w-0 self-start lg:block">
+                <div role="separator" aria-orientation="vertical" aria-label="Régler la largeur de la colonne" title="Glisser pour régler la largeur"
+                  onPointerDown={redimArbre} onDoubleClick={() => { setArbreW(320); try { localStorage.setItem("devis-arbre-largeur", "320"); } catch { /* */ } }}
+                  className="absolute -right-2.5 top-0 z-10 h-full w-2 cursor-col-resize rounded hover:bg-primary/30" />
+                <CardContent className="p-3">{!panneauMobile && panneau}</CardContent>
+              </Card>
+              <Card id="devis-fiche" className="scroll-mt-16 min-w-0">
+                <CardContent className="p-4">
+            {ligneSel ? <ObjetPanel key={ligneSel.id} data={d} ligne={ligneSel} montants={calc.lignes} calc={calc} readOnly={readOnly} call={call} patch={patch} save={save} onSelect={setSelected} />
+              : <p className="text-sm text-muted-foreground">Sélectionnez un élément dans l'arbre.</p>}
+                </CardContent>
+              </Card>
+            </div>
+          </>
+        );
+      })()}
 
       <SupprimerDevisDialog devis={{ id: devisId, numero: d.devis.numero }} open={supprDlg} onOpenChange={setSupprDlg}
         onDone={() => navigate(affaireId ? { to: "/affaires/$affaireId/devis-staffing", params: { affaireId } } : { to: "/devis-staffing" })} />
@@ -599,9 +618,16 @@ function Row({ label, value, strong }: { label: string; value: string; strong?: 
 
 function HeuresMetier({ hm }: { hm: Record<string, number> }) {
   const metiers = useQuery({ queryKey: ["metiers-min"], queryFn: async () => (await supabase.from("metiers").select("id,libelle").order("ordre")).data ?? [] });
-  const entries = Object.entries(hm);
-  if (entries.length === 0) return <p className="text-xs text-muted-foreground">Aucune heure.</p>;
-  return <>{entries.map(([k, h]) => <Row key={k} label={metiers.data?.find((m) => String(m.id) === k)?.libelle ?? "Sans métier"} value={`${h} h`} />)}</>;
+  const [tout, setTout] = useState(false);
+  const pos = Object.entries(hm).filter(([, h]) => Number(h) > 0);
+  const lignes: [string, number][] = tout ? (metiers.data ?? []).map((m) => [String(m.id), Number(hm[String(m.id)] ?? 0)] as [string, number]) : pos;
+  return (
+    <div className="space-y-1">
+      {pos.length === 0 && !tout && <p className="text-xs text-muted-foreground">Aucune heure.</p>}
+      {lignes.map(([k, h]) => <Row key={k} label={metiers.data?.find((m) => String(m.id) === k)?.libelle ?? "Sans métier"} value={`${String(h).replace(".", ",")} h`} />)}
+      <button type="button" className="text-xs font-medium text-primary underline" onClick={() => setTout((t) => !t)}>{tout ? "Masquer les métiers à 0 h" : "tout afficher"}</button>
+    </div>
+  );
 }
 
 function DateCase({ label, value, onChange, disabled }: { label: string; value: string | null; onChange?: (v: string | null) => void; disabled?: boolean }) {

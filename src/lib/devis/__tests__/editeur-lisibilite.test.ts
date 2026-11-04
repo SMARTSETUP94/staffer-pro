@@ -30,3 +30,15 @@ describe("ancre poste", () => {
     expect(ancrePoste("Métallerie")).toBe("poste-metallerie");
   });
 });
+
+import { niveauPropose, estMasqueeZero } from "../editeur-lisibilite";
+describe("ajout rapide et masquage à 0", () => {
+  it("premier ajout d'un poste : niveau par défaut", () => expect(niveauPropose(["Confirmé", "Expert"], [])).toBeNull());
+  it("poste déjà présent : propose le niveau non utilisé", () => expect(niveauPropose(["Confirmé", "Expert"], ["Confirmé"])).toBe("Expert"));
+  it("ligne à 0 h masquée par défaut, visible si ajoutée pendant la session", () => {
+    expect(estMasqueeZero(0, true, false)).toBe(true);
+    expect(estMasqueeZero(0, true, true)).toBe(false);
+    expect(estMasqueeZero(2, true, false)).toBe(false);
+    expect(estMasqueeZero(0, false, false)).toBe(false);
+  });
+});

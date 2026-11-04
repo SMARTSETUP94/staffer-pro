@@ -1,6 +1,9 @@
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle, ChevronDown, ChevronRight, ImagePlus, Lock, Plus, RefreshCw, Trash2 } from "lucide-react";
+import { AlertTriangle, ChevronDown, ChevronRight, ImagePlus, Lock, MoreHorizontal, Pin, Plus, RefreshCw, Trash2 } from "lucide-react";
+import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Switch } from "@/components/ui/switch";
+import { estMasqueeZero, niveauPropose } from "@/lib/devis/editeur-lisibilite";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -39,7 +42,7 @@ function Field({ value, onValue, numeric, className, placeholder, disabled, onEn
     onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => { setV(e.target.value); onValue(e.target.value); },
   };
   const vide = important && v.trim() === "" ? " devis-champ-vide" : "";
-  if (multiline) return <Textarea {...props} className={`${className ?? ""}${vide}`} />;
+  if (multiline) return <Textarea {...props} style={{ fieldSizing: "content" } as React.CSSProperties} className={`min-h-[9.5rem] max-h-[22rem] resize-y overflow-y-auto ${className ?? ""}${vide}`} />;
   return <Input {...props} inputMode={numeric ? "decimal" : undefined} className={`h-8 ${className ?? ""}${vide}`}
     onKeyDown={(e) => { if (e.key === "Enter" && onEnter) { e.preventDefault(); onEnter(); } }} />;
 }
@@ -52,6 +55,15 @@ export function ObjetPanel({ data, ligne, montants, calc, readOnly, call, patch,
   const seuil = Number(data.parametres.seuil_alerte_taux_pct ?? 10);
   const [matOpen, setMatOpen] = useState(false);
   const [detailsLibre, setDetailsLibre] = useState<Record<string, boolean>>({});
+  // « Masquer les lignes à 0 » : activé par défaut, mémorisé dans le navigateur.
+  const [masquer, setMasquerState] = useState(true);
+  useEffect(() => { if (localStorage.getItem("devis-masquer-zero") === "0") setMasquerState(false); }, []);
+  const setMasquer = (v: boolean) => { setMasquerState(v); try { localStorage.setItem("devis-masquer-zero", v ? "1" : "0"); } catch { /* */ } };
+  // Lignes présentes à l'ouverture de l'objet ; celles ajoutées ensuite restent visibles même à 0.
+  const connus = useRef<Set<string> | null>(null);
+  if (connus.current === null) connus.current = new Set([...data.heures, ...data.materiaux, ...data.libres].map((x) => x.id));
+  const forcee = (id: string) => !connus.current!.has(id);
+  const focusNouvelle = useRef(false);
 
   const postes = useQuery({
     queryKey: ["devis-taux"],
@@ -96,8 +108,18 @@ export function ObjetPanel({ data, ligne, montants, calc, readOnly, call, patch,
   const addHeure = async (posteId?: string) => {
     const p = posteId ?? posteList[0]?.poste_id;
     if (!p) return toast.error("Aucun poste dans la grille des taux");
-    await call("devis_heure_enregistrer", { _ligne_id: ligne.id, _h: { poste_id: p } });
+    const niv = niveauPropose(niveaux(p), heures.filter((h) => h.poste_id === p).map((h) => h.niveau));
+    focusNouvelle.current = true;
+    await call("devis_heure_enregistrer", { _ligne_id: ligne.id, _h: { poste_id: p, ...(niv ? { niveau: niv } : {}) } });
   };
+  // Curseur dans la case Heures de la ligne qui vient d'être ajoutée.
+  useEffect(() => {
+    if (!focusNouvelle.current) return;
+    const neuve = heures.filter((h) => forcee(h.id)).at(-1);
+    if (!neuve) return;
+    focusNouvelle.current = false;
+    requestAnimationFrame(() => (document.querySelector(`[data-heure-id="${neuve.id}"] input`) as HTMLInputElement | null)?.focus());
+  });
 
   // ---- matériaux / libres ----
   const mats = data.materiaux.filter((m) => m.ligne_id === ligne.id);
@@ -223,43 +245,55 @@ export function ObjetPanel({ data, ligne, montants, calc, readOnly, call, patch,
         <>
           {/* Heures */}
           <section className="space-y-2">
-            <h3 className="text-sm font-semibold">Heures</h3>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h3 className="text-sm font-semibold">Heures</h3>
+              <MasquerZero checked={masquer} onChange={setMasquer} label="Masquer les lignes à 0 h" />
+            </div>
             <div className="overflow-x-auto">
             <table className="devis-table w-full text-sm">
               <thead className="text-xs"><tr>
-                <th className="text-left">Poste</th><th className="text-left">Niveau</th><th>Heures</th><th title="Décoché : heures communes, non multipliées par la quantité">Par unité</th>
-                <th>Taux €/h</th><th className="text-right" title="Cliquez « montant » pour saisir le montant de la ligne">Montant</th><th />
+                <th className="text-left">Poste</th><th className="text-left">Niveau</th><th>Heures</th>
+                <th>Taux €/h</th>{couts && <th className="text-right" title="Coût de revient horaire (grille au moment de l'ajout) et coût total de la ligne">Coût</th>}
+                <th className="text-right" title="Cliquez « montant » pour saisir le montant de la ligne">Montant</th><th />
               </tr></thead>
               <tbody>
-                {heures.map((h, i) => {
+                {heures.filter((h) => !estMasqueeZero(h.heures, masquer, forcee(h.id))).map((h, i, vis) => {
                   const ec = ecartTauxPct(h.taux_vente, h.taux_grille);
                   const auMontant = h.montant_force != null;
                   const montantUnit = auMontant ? Number(h.montant_force) : h.heures * h.taux_vente;
-                  const montant = montantUnit * (h.par_unite ? Number(ligne.quantite) : 1);
+                  const mult = h.par_unite ? Number(ligne.quantite) : 1;
+                  const montant = montantUnit * mult;
                   const tauxAffiche = auMontant ? (Number(h.heures) > 0 ? Number(h.montant_force) / Number(h.heures) : null) : null;
+                  const cr = h.cout_revient == null ? null : Number(h.cout_revient);
                   return (
-                    <tr key={h.id}>
-                      <td className="min-w-[11rem]"><select disabled={readOnly} className="h-8 w-full min-w-[11rem] rounded border bg-background px-1" title={posteList.find((p) => p.poste_id === h.poste_id)?.libelle} value={h.poste_id}
-                        onChange={(e) => void call("devis_heure_enregistrer", { _ligne_id: ligne.id, _h: { id: h.id, poste_id: e.target.value, niveau: "" } })}>
-                        {posteList.map((p) => <option key={p.poste_id} value={p.poste_id}>{p.libelle}</option>)}
-                      </select></td>
+                    <tr key={h.id} data-heure-id={h.id}>
+                      <td className="min-w-[11rem]"><div className="flex items-center gap-1">
+                        <select disabled={readOnly} className="h-8 w-full min-w-[11rem] rounded border bg-background px-1" title={posteList.find((p) => p.poste_id === h.poste_id)?.libelle} value={h.poste_id}
+                          onChange={(e) => void call("devis_heure_enregistrer", { _ligne_id: ligne.id, _h: { id: h.id, poste_id: e.target.value, niveau: "" } })}>
+                          {posteList.map((p) => <option key={p.poste_id} value={p.poste_id}>{p.libelle}</option>)}
+                        </select>
+                        {!h.par_unite && <span title="Heures fixes, non multipliées par la quantité de l'objet" className="inline-flex shrink-0 items-center rounded border px-1 text-[10px] font-medium text-foreground/80"><Pin className="mr-0.5 h-2.5 w-2.5" />fixe</span>}
+                      </div></td>
                       <td><select disabled={readOnly} className="h-8 w-28 rounded border bg-background px-1" value={h.niveau}
                         onChange={(e) => void call("devis_heure_enregistrer", { _ligne_id: ligne.id, _h: { id: h.id, niveau: e.target.value } })}>
                         {[...new Set([h.niveau, ...niveaux(h.poste_id)])].map((n) => <option key={n}>{n}</option>)}
                       </select></td>
                       <td><Field numeric value={h.heures} disabled={readOnly} className="w-20 text-right" onValue={(v) => setHeure(h, "heures", v)}
-                        onEnter={() => (i === heures.length - 1 ? void addHeure(h.poste_id) : undefined)} /></td>
-                      <td className="text-center"><input type="checkbox" checked={h.par_unite} disabled={readOnly} onChange={(e) => setHeure(h, "par_unite", e.target.checked)} /></td>
+                        onEnter={() => (i === vis.length - 1 ? void addHeure(h.poste_id) : undefined)} /></td>
                       <td>
                         <div className="flex items-center gap-1">
                           {auMontant
                             ? <span className="w-20 text-right tabular-nums text-muted-foreground" title="Taux déduit du montant saisi">{tauxAffiche == null ? "—" : tauxAffiche.toFixed(2)}</span>
                             : <Field numeric value={h.taux_vente} disabled={readOnly} className="w-20 text-right" onValue={(v) => setHeure(h, "taux_vente", v)}
-                                onEnter={() => (i === heures.length - 1 ? void addHeure(h.poste_id) : undefined)} />}
+                                onEnter={() => (i === vis.length - 1 ? void addHeure(h.poste_id) : undefined)} />}
                           {(() => { const e2 = auMontant ? (tauxAffiche != null && h.taux_grille ? ecartTauxPct(tauxAffiche, h.taux_grille) : null) : ec;
                             return e2 != null && Math.abs(e2) > seuil && <span title={`Information : grille ${h.taux_grille} €/h`}><Badge variant="outline" className="px-1 text-[10px]">{e2 > 0 ? "+" : ""}{Math.round(e2 * 10) / 10} %</Badge></span>; })()}
                         </div>
                       </td>
+                      {couts && <td className="whitespace-nowrap text-right tabular-nums">
+                        {cr == null ? <span className="font-semibold text-warning" title="Coût à renseigner dans la grille">—</span>
+                          : <><div>{cr.toFixed(2).replace(".", ",")} €/h</div><div className="text-[11px] text-foreground/75">{eur(Number(h.heures) * cr * mult)}</div></>}
+                      </td>}
                       <td className="text-right">
                         <div className="flex items-center justify-end gap-1">
                           {auMontant
@@ -270,14 +304,30 @@ export function ObjetPanel({ data, ligne, montants, calc, readOnly, call, patch,
                         </div>
                         {auMontant && Number(ligne.quantite) !== 1 && h.par_unite && <div className="text-[10px] text-muted-foreground">× {Number(ligne.quantite)} = {eur(montant)}</div>}
                       </td>
-                      <td>{!readOnly && <button type="button" aria-label="Supprimer" onClick={() => void remove("heure", h.id)}><Trash2 className="h-3.5 w-3.5" /></button>}</td>
+                      <td><div className="flex items-center gap-1">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild><button type="button" aria-label="Options de la ligne" className="rounded p-0.5 hover:bg-muted"><MoreHorizontal className="h-4 w-4" /></button></DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuCheckboxItem disabled={readOnly} checked={!h.par_unite} onCheckedChange={(c) => setHeure(h, "par_unite", !c)}>Heures fixes, non multipliées par la quantité</DropdownMenuCheckboxItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                        {!readOnly && <button type="button" aria-label="Supprimer" onClick={() => void remove("heure", h.id)}><Trash2 className="h-3.5 w-3.5" /></button>}
+                      </div></td>
                     </tr>
                   );
                 })}
               </tbody>
             </table>
             </div>
-            {!readOnly && <Button size="sm" variant="outline" onClick={() => void addHeure()}><Plus className="mr-1 h-3.5 w-3.5" />Ligne d'heures</Button>}
+            <MasquesInfo n={heures.filter((h) => estMasqueeZero(h.heures, masquer, forcee(h.id))).length} unite="à 0 h" onShow={() => setMasquer(false)} />
+            {!readOnly && (
+              <div className="flex flex-wrap items-center gap-1">
+                <Button size="sm" variant="outline" onClick={() => void addHeure()}><Plus className="mr-1 h-3.5 w-3.5" />Ligne d'heures</Button>
+                {posteList.map((p) => (
+                  <Button key={p.poste_id} size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => void addHeure(p.poste_id)}>+ {p.libelle}</Button>
+                ))}
+              </div>
+            )}
           </section>
 
           {/* Commentaires dans l'objet */}
@@ -293,13 +343,16 @@ export function ObjetPanel({ data, ligne, montants, calc, readOnly, call, patch,
 
           {/* Matériaux */}
           <section className="space-y-2">
-            <h3 className="text-sm font-semibold">Matériaux</h3>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h3 className="text-sm font-semibold">Matériaux</h3>
+              <MasquerZero checked={masquer} onChange={setMasquer} label="Masquer les quantités à 0" />
+            </div>
             <div className="overflow-x-auto"><table className="devis-table w-full text-sm">
               <thead className="text-xs"><tr>
-                <th className="text-left">Désignation</th><th>Quantité</th>{couts && <th>Achat €</th>}{couts && <th>Coef</th>}<th className="text-right">Vente</th><th />
+                <th className="text-left">Désignation</th><th>Quantité</th>{couts && <th>Achat unitaire</th>}{couts && <th className="text-right">Coût total</th>}{couts && <th>Coef</th>}<th className="text-right">Vente</th><th />
               </tr></thead>
               <tbody>
-                {mats.map((m) => {
+                {mats.filter((m) => !estMasqueeZero(m.quantite, masquer, forcee(m.id))).map((m) => {
                   const ec = (ecarts.data ?? []).find((e) => e.devis_materiau_id === m.id);
                   return (
                     <tr key={m.id}>
@@ -315,12 +368,13 @@ export function ObjetPanel({ data, ligne, montants, calc, readOnly, call, patch,
                       </td>
                       <td><Field numeric value={m.quantite} disabled={readOnly} className="w-20 text-right" onValue={(v) => setMat(m, "quantite", v)} onEnter={() => setMatOpen(true)} /></td>
                       {couts && <td><Field numeric value={m.prix_achat} disabled={readOnly} className="w-24 text-right" onValue={(v) => setMat(m, "prix_achat", v)} /></td>}
+                      {couts && <td className="text-right tabular-nums">{eur(Number(m.quantite) * Number(m.prix_achat ?? 0))}</td>}
                       {couts && <td><Field numeric value={m.coefficient} disabled={readOnly} className="w-16 text-right" onValue={(v) => setMat(m, "coefficient", v)} /></td>}
                       {(() => {
                         const vte = Number(m.quantite) * venteUnitaireMateriau({ prix_achat: m.prix_achat === undefined ? null : Number(m.prix_achat ?? 0), coefficient: Number(m.coefficient ?? 1), prix_vente_unitaire: m.prix_vente_unitaire });
                         const cout = Number(m.quantite) * Number(m.prix_achat ?? 0);
                         return <td className="text-right tabular-nums">{eur(vte)}
-                          {couts && <div className="text-[11px] text-muted-foreground">coût {eur(cout)} · marge {eur(vte - cout)}</div>}</td>;
+                          {couts && <div className="text-[11px] text-foreground/75">marge {eur(vte - cout)}</div>}</td>;
                       })()}
                       <td>{!readOnly && <button type="button" aria-label="Supprimer" onClick={() => void remove("materiau", m.id)}><Trash2 className="h-3.5 w-3.5" /></button>}</td>
                     </tr>
@@ -328,12 +382,16 @@ export function ObjetPanel({ data, ligne, montants, calc, readOnly, call, patch,
                 })}
               </tbody>
             </table></div>
+            <MasquesInfo n={mats.filter((m) => estMasqueeZero(m.quantite, masquer, forcee(m.id))).length} unite="à quantité 0" onShow={() => setMasquer(false)} />
             {!readOnly && <Button size="sm" variant="outline" onClick={() => setMatOpen(true)}><Plus className="mr-1 h-3.5 w-3.5" />Matériau</Button>}
           </section>
 
           {/* Lignes libres */}
           <section className="space-y-2">
-            <h3 className="text-sm font-semibold">Achats spécifiques, sous-traitance, location, forfaits</h3>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h3 className="text-sm font-semibold">Achats spécifiques, sous-traitance, location, forfaits</h3>
+              <MasquerZero checked={masquer} onChange={setMasquer} label="Masquer les quantités à 0" />
+            </div>
             <p className="text-xs text-muted-foreground">Prix de vente direct (forfait, négatif pour une régularisation) <em>ou</em> prix d'achat × coefficient dans « détails ».</p>
             <div className="overflow-x-auto"><table className="devis-table w-full text-sm">
               <thead className="text-xs"><tr>
@@ -341,7 +399,7 @@ export function ObjetPanel({ data, ligne, montants, calc, readOnly, call, patch,
                 <th title="Prix de vente unitaire saisi directement ; vide = achat × coefficient">Prix vente €</th><th className="text-right">Vente</th><th /><th />
               </tr></thead>
               <tbody>
-                {libres.map((f) => {
+                {libres.filter((f) => !estMasqueeZero(f.quantite, masquer, forcee(f.id))).map((f) => {
                   const pu = venteUnitaireLibre({ prix_forfait: f.prix_forfait == null ? null : Number(f.prix_forfait), prix_achat: f.prix_achat == null ? null : Number(f.prix_achat), coefficient: Number(f.coefficient ?? 1), prix_vente_unitaire: f.prix_vente_unitaire });
                   const vente = Number(f.quantite) * pu * (f.par_unite ? Number(ligne.quantite) : 1);
                   const open = !!detailsLibre[f.id];
@@ -391,6 +449,7 @@ export function ObjetPanel({ data, ligne, montants, calc, readOnly, call, patch,
                 })}
               </tbody>
             </table></div>
+            <MasquesInfo n={libres.filter((f) => estMasqueeZero(f.quantite, masquer, forcee(f.id))).length} unite="à quantité 0" onShow={() => setMasquer(false)} />
             {!readOnly && (
               <div className="flex flex-wrap gap-1">
                 <Button size="sm" variant="outline" onClick={() => void call("devis_libre_enregistrer", { _ligne_id: ligne.id, _f: { categorie: "achat" } })}><Plus className="mr-1 h-3.5 w-3.5" />Ligne libre</Button>
@@ -414,4 +473,14 @@ export function ObjetPanel({ data, ligne, montants, calc, readOnly, call, patch,
         onAdd={async (p) => { await call("devis_materiau_enregistrer", { _ligne_id: ligne.id, _m: p }); void ecarts.refetch(); }} />
     </div>
   );
+}
+
+
+function MasquerZero({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
+  return <label className="flex items-center gap-1.5 text-xs text-foreground/80"><Switch checked={checked} onCheckedChange={onChange} aria-label={label} />{label}</label>;
+}
+
+function MasquesInfo({ n, unite, onShow }: { n: number; unite: string; onShow: () => void }) {
+  if (n === 0) return null;
+  return <p className="text-xs text-foreground/75">{n} ligne{n > 1 ? "s" : ""} {unite} masquée{n > 1 ? "s" : ""} · <button type="button" className="font-medium text-primary underline" onClick={onShow}>afficher</button></p>;
 }

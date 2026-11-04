@@ -59,3 +59,14 @@ export function listeControle(e: EntreeControle): PointControle[] {
   if (e.coutsManquants != null) pts.push({ cle: "couts", libelle: "Coûts complets", ok: e.coutsManquants === 0, detail: e.coutsManquants ? `${e.coutsManquants} coût(s) manquant(s)` : undefined, cible: { kind: "taux" } });
   return pts;
 }
+
+/** Niveau proposé pour une nouvelle ligne d'un poste : le premier niveau de la grille pas encore utilisé sur l'objet ; null = niveau par défaut. */
+export function niveauPropose(niveauxGrille: string[], utilises: string[]): string | null {
+  if (utilises.length === 0) return null;
+  return niveauxGrille.find((n) => !utilises.includes(n)) ?? null;
+}
+
+/** Ligne masquée par « Masquer les lignes à 0 » : quantité/heures nulles, sauf lignes ajoutées pendant la session. */
+export function estMasqueeZero(valeur: number | null | undefined, masquer: boolean, forcee: boolean) {
+  return masquer && !forcee && Number(valeur ?? 0) === 0;
+}
