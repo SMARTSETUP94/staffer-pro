@@ -316,8 +316,12 @@ export function AppSidebar() {
           : capFiltered;
 
 
+  // Un item n'est actif que s'il est la correspondance la plus précise
+  // (ex. /logistique/dispos ne surligne pas aussi /logistique).
+  const allUrls = sections.flatMap((s) => s.items.map((it) => it.url));
+  const matches = (url: string) => currentPath === url || currentPath.startsWith(url + "/");
   const isActive = (url: string) =>
-    currentPath === url || currentPath.startsWith(url + "/");
+    matches(url) && !allUrls.some((u) => u.length > url.length && u.startsWith(url + "/") && matches(u));
 
   // Rôles affichés (multi-rôles séparés par virgule)
   const displayedRoles = roles.length > 0 ? roles.join(" + ") : "—";
