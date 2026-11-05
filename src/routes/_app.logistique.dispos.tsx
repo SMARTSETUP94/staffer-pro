@@ -17,7 +17,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   ajouterJours, basculerQualif, CACES_OPTIONS, etatJour, joursSemaine, libelleJour, libelleLimite, messageWhatsApp,
-  normaliserTelephone, numeroSemaine, passeFiltreDispos, PERMIS_OPTIONS, plageSemaine, type JourDispo,
+  normaliserTelephone, numeroSemaine, DISPOS_URL_PUBLIQUE, passeFiltreDispos, PERMIS_OPTIONS, plageSemaine, type JourDispo,
 } from "@/lib/dispos";
 
 export const Route = createFileRoute("/_app/logistique/dispos")({
@@ -122,7 +122,7 @@ function DisposStaffingPage() {
 
   const copier = async () => {
     if (!semaineDebut || !limite) return;
-    await navigator.clipboard.writeText(messageWhatsApp(semaineDebut, limite, `${window.location.origin}/dispos`));
+    await navigator.clipboard.writeText(messageWhatsApp(semaineDebut, limite, DISPOS_URL_PUBLIQUE));
     toast.success("Message WhatsApp copié");
   };
 

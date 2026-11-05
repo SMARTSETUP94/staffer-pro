@@ -167,3 +167,7 @@ export function passeFiltreDispos(
   }
   return true;
 }
+
+/** Adresse publique de Staffing (domaine personnalisé) : seule adresse partagée aux intervenants. */
+export const STAFFING_URL_PUBLIQUE = "https://staffing.setup.paris";
+export const DISPOS_URL_PUBLIQUE = `${STAFFING_URL_PUBLIQUE}/dispos`;
