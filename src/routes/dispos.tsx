@@ -226,6 +226,9 @@ function Identite({ semaine, onOk, onErreur }: { semaine: Semaine | null; onOk: 
           />
           {tel.length >= 10 && !telOk && <span className="mt-1 block text-xs font-normal text-su-orange">Portable 06 ou 07, 10 chiffres.</span>}
         </label>
+        <p className="text-xs text-su-second">
+          Ce téléphone gardera en mémoire votre nom, vos permis et CACES : la prochaine fois, vous reprendrez directement vos dispos.
+        </p>
         <ChampsQualifs permis={permis} setPermis={setPermis} caces={caces} setCaces={setCaces} autre={autre} setAutre={setAutre} />
       </Carte>
       <BoutonPrincipal type="submit" disabled={envoi}>{envoi && <Loader2 className="h-4 w-4 animate-spin" />}Continuer</BoutonPrincipal>
