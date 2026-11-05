@@ -46,6 +46,11 @@ function ecrireJeton(j: string | null) {
     document.cookie = `${CLE}=; path=/dispos; max-age=0`;
   }
 }
+/** Les fonctions publiques renvoient { erreur } pour un refus (le compteur anti-abus reste compté). */
+function erreurMetier(data: unknown): string | null {
+  const e = (data as { erreur?: string } | null)?.erreur;
+  return typeof e === "string" ? e : null;
+}
 function messageErreur(e: unknown): string {
   const m = (e as { message?: string })?.message ?? "";
   return m && !/fetch|network/i.test(m) ? m : "Connexion impossible, réessayez.";
@@ -196,6 +201,7 @@ function Identite({ semaine, onOk, onErreur }: { semaine: Semaine | null; onOk: 
     });
     setEnvoi(false);
     if (error) { onErreur(messageErreur(error)); return; }
+    if (erreurMetier(data)) { onErreur(erreurMetier(data)); return; }
     onOk((data as { jeton: string }).jeton);
   };
 
@@ -244,6 +250,7 @@ function MesDispos({ moi, jeton, onEnvoye, onErreur, onQualifs, onPasMoi }: {
     const { data, error } = await supabase.rpc("dispos_public_enregistrer", { _jeton: jeton, _jours: jours, _note: note });
     setEnvoi(false);
     if (error) { onErreur(messageErreur(error)); return; }
+    if (erreurMetier(data)) { onErreur(erreurMetier(data)); return; }
     onEnvoye(data as unknown as Moi);
   };
   const btn = (on: boolean, noir = false) =>
@@ -348,6 +355,7 @@ function Qualifs({ moi, jeton, onRetour, onErreur }: {
     });
     setEnvoi(false);
     if (error) { onErreur(messageErreur(error)); return; }
+    if (erreurMetier(data)) { onErreur(erreurMetier(data)); return; }
     onRetour(data as unknown as Moi);
   };
   return (
