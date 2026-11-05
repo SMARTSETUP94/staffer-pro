@@ -230,7 +230,8 @@ function DisposStaffingPage() {
         <Legende classe="bg-su-bleu text-su-carte" texte="Journée" />
         <Legende classe="bg-su-profond text-su-carte" texte="Soirée" />
         <Legende classe="bg-su-profond text-su-carte" texte="J + S" />
-        <Legende classe="bg-su-vide text-su-second" texte="—" libelle="Pas dispo ou sans réponse" />
+        <Legende classe="bg-su-texte text-su-carte" texte="Non" libelle="Pas dispo" />
+        <Legende classe="bg-su-vide text-su-second" texte="—" libelle="Sans réponse" />
         <span>Le point • signale une correction de la logistique.</span>
       </div>
       {canEdit && <AjoutDialog open={ajout} onOpenChange={setAjout} onOk={rafraichir} />}
@@ -270,8 +271,8 @@ function Cellule({ jour, canEdit, onChoix }: {
   jour?: Partial<JourDispo> & { source?: string }; canEdit: boolean; onChoix: (v: "J" | "S" | "J+S" | "pas" | "vide") => void;
 }) {
   const e = etatJour(jour);
-  const classe = e === "J" ? "bg-su-bleu text-su-carte" : e === "S" || e === "J+S" ? "bg-su-profond text-su-carte" : "bg-su-vide text-su-second";
-  const texte = e === "J" ? "Journée" : e === "S" ? "Soirée" : e === "J+S" ? "J + S" : "—";
+  const classe = e === "J" ? "bg-su-bleu text-su-carte" : e === "S" || e === "J+S" ? "bg-su-profond text-su-carte" : e === "pas" ? "bg-su-texte text-su-carte" : "bg-su-vide text-su-second";
+  const texte = e === "J" ? "Journée" : e === "S" ? "Soirée" : e === "J+S" ? "J + S" : e === "pas" ? "Non" : "—";
   const titre = e === "pas" ? "Pas dispo" : e === "vide" ? "Sans réponse" : texte;
   const corps = (
     <span className={`flex h-9 w-full items-center justify-center rounded text-xs font-semibold ${classe}`} title={titre}>
