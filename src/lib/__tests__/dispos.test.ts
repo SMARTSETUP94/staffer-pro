@@ -47,3 +47,10 @@ describe("dispos", () => {
     expect(passeFiltreDispos({ ...l, permis: ["B"] }, { permis: "C" })).toBe(false);
   });
 });
+
+import { DISPOS_URL_PUBLIQUE } from "../dispos";
+describe("lien public Dispos", () => {
+  it("pointe toujours sur le domaine publié", () => {
+    expect(DISPOS_URL_PUBLIQUE).toBe("https://staffing.setup.paris/dispos");
+  });
+});
