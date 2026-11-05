@@ -10,7 +10,7 @@ CREATE TABLE public.dispos_intervenants (
     CHECK (permis <@ ARRAY['B','C','CE','aucun']::text[]
            AND NOT ('aucun' = ANY(permis) AND cardinality(permis) > 1)),
   caces text[] NOT NULL DEFAULT '{}'
-    CHECK (caces <@ ARRAY['R489','R486','R482','R490','aucun']::text[]
+    CHECK (caces <@ ARRAY['R489','R486','aucun']::text[]
            AND NOT ('aucun' = ANY(caces) AND cardinality(caces) > 1)),
   caces_autre text CHECK (char_length(caces_autre) <= 60),
   actif boolean NOT NULL DEFAULT true,
