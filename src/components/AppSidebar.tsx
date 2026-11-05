@@ -118,6 +118,7 @@ function buildSections(
         { title: "Jalonnements", url: "/jalonnements", icon: ClipboardList, cap: "logistique.planning.view" },
         { title: "Véhicules", url: "/flotte", icon: Truck, cap: "section.logistique" },
         { title: "Planning véhicules", url: "/logistique/vehicules-planning", icon: Calendar, cap: "section.logistique" },
+        { title: "Dispos", url: "/logistique/dispos", icon: CalendarCheck, cap: "dispos.view" },
         { title: "Demandes transport", url: "/export/demandes-devis", icon: ClipboardList, cap: "section.admin" },
       ],
     },
@@ -210,6 +211,7 @@ const CA_MODE_URLS = new Set([
   "/demandes-logistique",
   "/jalonnements",
   "/echeances",
+  "/logistique/dispos",
 ]);
 
 function applyDeploiementCAMode(sections: NavSection[]): NavSection[] {
@@ -243,6 +245,7 @@ const LO_MODE_URLS = new Set([
   "/flotte",
   "/logistique/vehicules-planning",
   "/export/demandes-devis",
+  "/logistique/dispos",
 ]);
 
 function applyLogistiqueOppsMode(sections: NavSection[]): NavSection[] {
@@ -265,7 +268,7 @@ function applyLogistiqueOppsMode(sections: NavSection[]): NavSection[] {
  * toujours ouvrir /admin/feature-flags en direct pour désactiver le mode.
  */
 // "/admin/utilisateurs" reste filtré par la cap section.admin (admins seulement).
-const SA_MODE_URLS = new Set(["/opportunites", "/demandes-clients", "/affaires", "/liste-chantiers", "/documents-affaires", "/clients", "/logistique", "/demandes-logistique", "/jalonnements", "/admin/utilisateurs", "/admin/connecteur-claude", "/mes-notes-de-frais", "/validation-notes-de-frais", "/planning-pilotage", "/parametres/referents-roles", "/parametres/devis-taux", "/devis-staffing"]);
+const SA_MODE_URLS = new Set(["/opportunites", "/demandes-clients", "/affaires", "/liste-chantiers", "/documents-affaires", "/clients", "/logistique", "/demandes-logistique", "/jalonnements", "/admin/utilisateurs", "/admin/connecteur-claude", "/mes-notes-de-frais", "/validation-notes-de-frais", "/planning-pilotage", "/parametres/referents-roles", "/parametres/devis-taux", "/devis-staffing", "/logistique/dispos"]);
 
 function applySuiviAffairesMode(sections: NavSection[]): NavSection[] {
   return sections
