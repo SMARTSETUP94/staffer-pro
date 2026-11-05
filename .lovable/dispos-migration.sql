@@ -47,7 +47,7 @@ CREATE TABLE public.dispos_jours (
   CHECK (NOT (pas_dispo AND (journee OR soiree)))
 );
 
--- Note hebdomadaire (« Un mot pour Alberto »)
+-- Note hebdomadaire (« Un mot pour les équipes »)
 CREATE TABLE public.dispos_notes (
   intervenant_id uuid NOT NULL REFERENCES public.dispos_intervenants(id) ON DELETE CASCADE,
   semaine date NOT NULL REFERENCES public.dispos_semaines(debut) ON DELETE CASCADE,
