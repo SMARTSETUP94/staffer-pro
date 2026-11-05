@@ -3225,6 +3225,178 @@ export type Database = {
         }
         Relationships: []
       }
+      dispos_intervenants: {
+        Row: {
+          a_valider: boolean
+          actif: boolean
+          caces: string[]
+          caces_autre: string | null
+          cree_le: string
+          employe_id: string | null
+          id: string
+          jeton_hash: string | null
+          nom: string
+          nom_normalise: string
+          permis: string[]
+          prenom: string
+          telephone: string
+        }
+        Insert: {
+          a_valider?: boolean
+          actif?: boolean
+          caces?: string[]
+          caces_autre?: string | null
+          cree_le?: string
+          employe_id?: string | null
+          id?: string
+          jeton_hash?: string | null
+          nom: string
+          nom_normalise?: string
+          permis?: string[]
+          prenom: string
+          telephone: string
+        }
+        Update: {
+          a_valider?: boolean
+          actif?: boolean
+          caces?: string[]
+          caces_autre?: string | null
+          cree_le?: string
+          employe_id?: string | null
+          id?: string
+          jeton_hash?: string | null
+          nom?: string
+          nom_normalise?: string
+          permis?: string[]
+          prenom?: string
+          telephone?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dispos_intervenants_employe_id_fkey"
+            columns: ["employe_id"]
+            isOneToOne: false
+            referencedRelation: "employes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dispos_jours: {
+        Row: {
+          id: string
+          intervenant_id: string
+          jour: string
+          journee: boolean
+          maj_le: string
+          maj_par: string | null
+          pas_dispo: boolean
+          soiree: boolean
+          source: string
+        }
+        Insert: {
+          id?: string
+          intervenant_id: string
+          jour: string
+          journee?: boolean
+          maj_le?: string
+          maj_par?: string | null
+          pas_dispo?: boolean
+          soiree?: boolean
+          source?: string
+        }
+        Update: {
+          id?: string
+          intervenant_id?: string
+          jour?: string
+          journee?: boolean
+          maj_le?: string
+          maj_par?: string | null
+          pas_dispo?: boolean
+          soiree?: boolean
+          source?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dispos_jours_intervenant_id_fkey"
+            columns: ["intervenant_id"]
+            isOneToOne: false
+            referencedRelation: "dispos_intervenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dispos_notes: {
+        Row: {
+          envoye_le: string
+          intervenant_id: string
+          note: string | null
+          semaine: string
+        }
+        Insert: {
+          envoye_le?: string
+          intervenant_id: string
+          note?: string | null
+          semaine: string
+        }
+        Update: {
+          envoye_le?: string
+          intervenant_id?: string
+          note?: string | null
+          semaine?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dispos_notes_intervenant_id_fkey"
+            columns: ["intervenant_id"]
+            isOneToOne: false
+            referencedRelation: "dispos_intervenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dispos_notes_semaine_fkey"
+            columns: ["semaine"]
+            isOneToOne: false
+            referencedRelation: "dispos_semaines"
+            referencedColumns: ["debut"]
+          },
+        ]
+      }
+      dispos_rate_limit: {
+        Row: {
+          cle: string
+          fenetre: string
+          nb: number
+        }
+        Insert: {
+          cle: string
+          fenetre: string
+          nb?: number
+        }
+        Update: {
+          cle?: string
+          fenetre?: string
+          nb?: number
+        }
+        Relationships: []
+      }
+      dispos_semaines: {
+        Row: {
+          cree_le: string
+          debut: string
+          heure_limite: string
+        }
+        Insert: {
+          cree_le?: string
+          debut: string
+          heure_limite: string
+        }
+        Update: {
+          cree_le?: string
+          debut?: string
+          heure_limite?: string
+        }
+        Relationships: []
+      }
       emails_entrants: {
         Row: {
           archived_outlook: boolean
@@ -8413,6 +8585,79 @@ export type Database = {
         }[]
       }
       dismiss_inbox_item: { Args: { p_item_key: string }; Returns: undefined }
+      dispos_debit: {
+        Args: { _cle: string; _max?: number }
+        Returns: undefined
+      }
+      dispos_intervenant_par_jeton: {
+        Args: { _jeton: string }
+        Returns: {
+          a_valider: boolean
+          actif: boolean
+          caces: string[]
+          caces_autre: string | null
+          cree_le: string
+          employe_id: string | null
+          id: string
+          jeton_hash: string | null
+          nom: string
+          nom_normalise: string
+          permis: string[]
+          prenom: string
+          telephone: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "dispos_intervenants"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      dispos_ip: { Args: never; Returns: string }
+      dispos_public_enregistrer: {
+        Args: { _jeton: string; _jours: Json; _note?: string }
+        Returns: Json
+      }
+      dispos_public_identifier: {
+        Args: {
+          _caces?: string[]
+          _caces_autre?: string
+          _nom: string
+          _permis?: string[]
+          _prenom: string
+          _telephone: string
+        }
+        Returns: Json
+      }
+      dispos_public_maj_qualifs: {
+        Args: {
+          _caces: string[]
+          _caces_autre?: string
+          _jeton: string
+          _permis: string[]
+        }
+        Returns: Json
+      }
+      dispos_public_moi: { Args: { _jeton: string }; Returns: Json }
+      dispos_public_semaine: { Args: never; Returns: Json }
+      dispos_semaine_ouverte: {
+        Args: never
+        Returns: {
+          cree_le: string
+          debut: string
+          heure_limite: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "dispos_semaines"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      dispos_valider_qualifs: {
+        Args: { _autre: string; _caces: string[]; _permis: string[] }
+        Returns: undefined
+      }
       email_domain: { Args: { p: string }; Returns: string }
       etape_for_metier: {
         Args: { metier: string }

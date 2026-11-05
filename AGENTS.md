@@ -52,3 +52,4 @@
 
 - Subdirectories may have their own AGENTS.md (e.g. src/lib/devis); read it before changing files there.- Pipeline indicators come from the single invoker RPC pipeline_indicateurs (affaires RLS + devis_peut_lire/devis_calculer): one latest quote per active 9XXX opportunity (estimate only without a quote or at 0 €, kept separate) plus every open (not signed/refused) last-version quote of 6XXX sites returned separately as supplements; probabilities are dated devis_parametres proba_*; the UI only sums its rows.
 - Pipeline opportunity filters are applied through the pure passeFiltres helper (src/lib/pipeline-filtres.ts) and edited in a single Filtres sheet; preferences persist per user in localStorage so tiles, column totals and cards stay filtered consistently.
+- /dispos calls only dispos_public_* definer RPCs; tables stay RLS-only.
