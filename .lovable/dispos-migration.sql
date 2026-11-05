@@ -3,7 +3,11 @@
 -- 1. Intervenants externes
 CREATE TABLE public.dispos_intervenants (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  nom text NOT NULL CHECK (char_length(nom) BETWEEN 2 AND 80),
+  prenom text NOT NULL CHECK (char_length(btrim(prenom)) BETWEEN 1 AND 50),
+  nom text NOT NULL CHECK (char_length(btrim(nom)) BETWEEN 1 AND 50),
+  -- clé de détection « nom déjà connu » : minuscules, sans accents, espaces réduits
+  -- (calculée par trigger avec unaccent ; index non unique pour ne jamais bloquer une saisie)
+  nom_normalise text NOT NULL DEFAULT '',
   telephone text NOT NULL CHECK (telephone ~ '^0[67][0-9]{8}$'),
   -- Permis et CACES : simples cases déclarées, aucun document ni numéro stocké
   permis text[] NOT NULL DEFAULT '{}'
@@ -89,7 +93,9 @@ CREATE POLICY "dispos_logistique" ON public.dispos_notes FOR ALL TO authenticate
 -- Fonctions publiques (SECURITY DEFINER, seules accessibles à anon), validant tout :
 --  dispos_public_semaine()                      -> semaine suivante + heure limite (défaut vendredi 12 h Paris)
 --  dispos_public_maj_qualifs(jeton, permis[], caces[], caces_autre) -> « Mes permis et CACES », mêmes contrôles
---  dispos_public_identifier(nom, tel, permis[], caces[], caces_autre) -> jeton aléatoire (32 octets) ; téléphone connu = même personne ;
+--  dispos_public_identifier(prenom, nom, tel, permis[], caces[], caces_autre) -> jeton
+--        (prénom enregistré avec majuscule initiale ; NOM mis en majuscules à l'affichage Staffing ;
+--         détection sur prenom + nom normalisés) aléatoire (32 octets) ; téléphone connu = même personne ;
 --                                                  nom connu + nouveau téléphone = fiche « à valider », sans écraser
 --  dispos_public_moi(jeton)                     -> prénom + dispos semaine ouverte + semaine précédente (« comme la semaine dernière »)
 --  dispos_public_enregistrer(jeton, jours jsonb, note)
