@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AppRouteImport } from './routes/_app'
+import { Route as DisposRouteImport } from './routes/dispos'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
@@ -138,6 +139,11 @@ import { Route as AppAffairesAffaireIdObjetsObjetIdRouteImport } from './routes/
 
 const AppRoute = AppRouteImport.update({
   id: '/_app',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DisposRoute = DisposRouteImport.update({
+  id: '/dispos',
+  path: '/dispos',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -804,6 +810,7 @@ const AppAffairesAffaireIdObjetsObjetIdRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
+  '/dispos': typeof DisposRoute
   '/login': typeof LoginRoute
   '/mcp': typeof McpRoute
   '/onboarding': typeof OnboardingRoute
@@ -930,6 +937,7 @@ export interface FileRoutesByFullPath {
   '/affaires/$affaireId/devis-staffing/': typeof AppAffairesAffaireIdDevisStaffingIndexRoute
 }
 export interface FileRoutesByTo {
+  '/dispos': typeof DisposRoute
   '/login': typeof LoginRoute
   '/mcp': typeof McpRoute
   '/onboarding': typeof OnboardingRoute
@@ -1056,6 +1064,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_app': typeof AppRouteWithChildren
+  '/dispos': typeof DisposRoute
   '/login': typeof LoginRoute
   '/mcp': typeof McpRoute
   '/onboarding': typeof OnboardingRoute
@@ -1186,6 +1195,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/dispos'
     | '/login'
     | '/mcp'
     | '/onboarding'
@@ -1312,6 +1322,7 @@ export interface FileRouteTypes {
     | '/affaires/$affaireId/devis-staffing/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/dispos'
     | '/login'
     | '/mcp'
     | '/onboarding'
@@ -1437,6 +1448,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/_app'
+    | '/dispos'
     | '/login'
     | '/mcp'
     | '/onboarding'
@@ -1566,6 +1578,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
+  DisposRoute: typeof DisposRoute
   LoginRoute: typeof LoginRoute
   McpRoute: typeof McpRoute
   OnboardingRoute: typeof OnboardingRoute
@@ -1586,6 +1599,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dispos': {
+      id: '/dispos'
+      path: '/dispos'
+      fullPath: '/dispos'
+      preLoaderRoute: typeof DisposRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -2769,6 +2789,7 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
+  DisposRoute: DisposRoute,
   LoginRoute: LoginRoute,
   McpRoute: McpRoute,
   OnboardingRoute: OnboardingRoute,
