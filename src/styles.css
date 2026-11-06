@@ -101,6 +101,20 @@
   --color-typologie-stockage-foreground: var(--typologie-stockage-foreground);
   --color-typologie-proto: var(--typologie-proto);
   --color-typologie-proto-foreground: var(--typologie-proto-foreground);
+
+  /* Statuts devis Staffing */
+  --color-statut-brouillon: var(--statut-brouillon);
+  --color-statut-brouillon-foreground: var(--statut-brouillon-foreground);
+  --color-statut-a-valider: var(--statut-a-valider);
+  --color-statut-a-valider-foreground: var(--statut-a-valider-foreground);
+  --color-statut-valide: var(--statut-valide);
+  --color-statut-valide-foreground: var(--statut-valide-foreground);
+  --color-statut-envoye: var(--statut-envoye);
+  --color-statut-envoye-foreground: var(--statut-envoye-foreground);
+  --color-statut-signe: var(--statut-signe);
+  --color-statut-signe-foreground: var(--statut-signe-foreground);
+  --color-statut-refuse: var(--statut-refuse);
+  --color-statut-refuse-foreground: var(--statut-refuse-foreground);
 }
 
 :root {
@@ -157,6 +171,20 @@
 
   --success: oklch(0.62 0.15 150);
   --success-foreground: oklch(0.99 0.005 80);
+
+  /* Statuts devis Staffing — pastille douce + texte soutenu */
+  --statut-brouillon: oklch(0.93 0.008 280);
+  --statut-brouillon-foreground: oklch(0.42 0.02 280);
+  --statut-a-valider: oklch(0.92 0.09 85);
+  --statut-a-valider-foreground: oklch(0.47 0.12 60);
+  --statut-valide: oklch(0.9 0.06 275);
+  --statut-valide-foreground: oklch(0.36 0.15 280);
+  --statut-envoye: oklch(0.9 0.07 310);
+  --statut-envoye-foreground: oklch(0.4 0.16 310);
+  --statut-signe: oklch(0.91 0.08 150);
+  --statut-signe-foreground: oklch(0.4 0.12 150);
+  --statut-refuse: oklch(0.91 0.07 27);
+  --statut-refuse-foreground: oklch(0.5 0.19 27);
 
   --warning: oklch(0.72 0.16 65);
   --warning-foreground: oklch(0.2 0.05 60);
@@ -241,6 +269,20 @@
   --typologie-stockage-foreground: oklch(0.8 0.01 280);
   --typologie-proto: oklch(0.34 0.1 75);
   --typologie-proto-foreground: oklch(0.88 0.13 75);
+
+  /* Statuts devis Staffing — variantes sombres */
+  --statut-brouillon: oklch(0.28 0.01 280);
+  --statut-brouillon-foreground: oklch(0.82 0.02 280);
+  --statut-a-valider: oklch(0.34 0.07 70);
+  --statut-a-valider-foreground: oklch(0.88 0.12 85);
+  --statut-valide: oklch(0.32 0.09 280);
+  --statut-valide-foreground: oklch(0.85 0.1 275);
+  --statut-envoye: oklch(0.32 0.09 310);
+  --statut-envoye-foreground: oklch(0.85 0.1 310);
+  --statut-signe: oklch(0.32 0.08 150);
+  --statut-signe-foreground: oklch(0.86 0.11 150);
+  --statut-refuse: oklch(0.34 0.1 27);
+  --statut-refuse-foreground: oklch(0.86 0.1 27);
 }
 
 @layer base {
