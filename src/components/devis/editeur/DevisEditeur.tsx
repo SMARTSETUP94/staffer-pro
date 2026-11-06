@@ -247,7 +247,7 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
         {affaireId && !pleinEcran && <Link to="/affaires/$affaireId/devis-staffing" params={{ affaireId }} className="flex items-center text-xs text-muted-foreground hover:underline"><ArrowLeft className="mr-1 h-3 w-3" />Devis</Link>}
         <span className="font-mono text-base font-bold text-foreground">{d.devis.est_modele ? `Modèle — ${d.devis.modele_nom ?? ""}` : d.devis.numero}</span>
         {d.client && <span className="max-w-64 truncate text-sm text-foreground" title={d.client.nom}>{d.client.nom}</span>}
-        <Badge>{libelleStatutDevis(st, d.devis.numero_progbat, d.devis.date_envoi, STATUT_LABEL)}</Badge>{infoClaude && <BadgeClaude />}
+        <DevisStatutBadge statut={st} label={libelleStatutDevis(st, d.devis.numero_progbat, d.devis.date_envoi, STATUT_LABEL)} />{infoClaude && <BadgeClaude />}
         <span className="ml-auto text-sm text-muted-foreground">Total HT <strong className="text-base tabular-nums text-foreground">{eur(calc.remise !== 0 ? calc.net_ht : calc.total_ht)}</strong>{calc.remise !== 0 && <span className="text-xs"> (net)</span>}</span>
         <Button size="sm" variant="outline" onClick={() => setPleinEcran((p) => !p)} title={pleinEcran ? "Quitter le plein écran (Échap)" : "Plein écran"}>
           {pleinEcran ? <Minimize2 className="mr-1 h-3.5 w-3.5" /> : <Maximize2 className="mr-1 h-3.5 w-3.5" />}{pleinEcran ? "Quitter" : "Plein écran"}

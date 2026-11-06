@@ -115,7 +115,7 @@ function DevisGlobal() {
                   <TableCell className="font-medium">{r.numero} <span className="text-xs text-muted-foreground">R{r.version}</span>{claude.data?.has(r.id) && <BadgeClaude />}{estChantierSigne6xxx(r.affaire_numero) && !["signe", "refuse"].includes(r.statut_redaction) && <span className="ml-1 align-middle"><IconeSupplement /></span>}{r.numero_progbat && <span className="block text-xs text-muted-foreground">{libelleNumeroProgbat(r.numero_progbat)}</span>}</TableCell>
                   <TableCell>{[r.affaire_numero, r.affaire_nom].filter(Boolean).join(" · ")}</TableCell>
                   <TableCell>{r.client_nom ?? "—"}</TableCell>
-                  <TableCell><Badge variant="outline">{libelleStatutDevis(r.statut_redaction, r.numero_progbat, r.date_envoi, STATUT_LABEL)}</Badge></TableCell>
+                  <TableCell><DevisStatutBadge statut={r.statut_redaction} label={libelleStatutDevis(r.statut_redaction, r.numero_progbat, r.date_envoi, STATUT_LABEL)} /></TableCell>
                   <TableCell className="text-right tabular-nums">{r.net_ht == null ? "—" : eur(Number(r.net_ht))}</TableCell>
                   <TableCell>{r.date_devis ? new Date(r.date_devis).toLocaleDateString("fr-FR") : "—"}</TableCell>
                   <TableCell>{r.charge_affaires_nom || "—"}</TableCell>

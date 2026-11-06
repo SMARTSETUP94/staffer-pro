@@ -77,7 +77,7 @@ function DevisListe() {
             <TableRow key={d.id} className="cursor-pointer" onClick={() => navigate({ to: "/affaires/$affaireId/devis-staffing/$devisId", params: { affaireId, devisId: d.id } })}>
               <TableCell className="font-medium"><FileText className="mr-1 inline h-4 w-4" />{d.numero}{claude.data?.has(d.id) && <BadgeClaude />}{d.numero_progbat && <span className="block text-xs text-muted-foreground">{libelleNumeroProgbat(d.numero_progbat)}</span>}</TableCell>
               <TableCell>R{d.version}</TableCell>
-              <TableCell><Badge variant="secondary">{libelleStatutDevis(d.statut_redaction, d.numero_progbat, d.date_envoi, STATUT_LABEL)}</Badge></TableCell>
+              <TableCell><DevisStatutBadge statut={d.statut_redaction} label={libelleStatutDevis(d.statut_redaction, d.numero_progbat, d.date_envoi, STATUT_LABEL)} /></TableCell>
               <TableCell className="text-right">{eur(d.total_ht)}</TableCell>
               <TableCell>{d.date_devis ? new Date(d.date_devis).toLocaleDateString("fr-FR") : "—"}</TableCell>
               <TableCell>{d.auteur ?? "—"}</TableCell>
