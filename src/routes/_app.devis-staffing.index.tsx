@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { MoreHorizontal, Plus, Search } from "lucide-react";
 import { toast } from "sonner";
 import { useDevisClaude, BadgeClaude } from "@/components/devis/RedactionClaude";
+import { DevisStatutBadge } from "@/components/devis/DevisStatutBadge";
 import { supabase } from "@/integrations/supabase/client";
 import { requireCapability } from "@/lib/capability-guard";
 import { useFeatureFlag } from "@/hooks/use-feature-flag";

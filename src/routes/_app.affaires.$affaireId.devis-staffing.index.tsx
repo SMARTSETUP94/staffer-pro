@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Plus, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { useDevisClaude, BadgeClaude } from "@/components/devis/RedactionClaude";
+import { DevisStatutBadge } from "@/components/devis/DevisStatutBadge";
 import { supabase } from "@/integrations/supabase/client";
 import { useFeatureFlag } from "@/hooks/use-feature-flag";
 import { useCapability } from "@/hooks/use-capability";

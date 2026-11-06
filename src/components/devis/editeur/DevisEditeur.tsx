@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle, ArrowLeft, PanelLeft, CheckCircle2, Circle, Maximize2, Minimize2, Eye, FileDown, Mail, Library, MessageSquarePlus, PenLine, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useDevisClaude, BadgeClaude, NoteClaude } from "@/components/devis/RedactionClaude";
+import { DevisStatutBadge } from "@/components/devis/DevisStatutBadge";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
