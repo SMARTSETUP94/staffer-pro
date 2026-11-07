@@ -92,7 +92,7 @@ export function descriptifClientChapitre(vc: Pick<DevisClient, "dates" | "chanti
   const moyens = /\(([^)]+)\)\s*$/.exec(lib)?.[1]?.trim();
   const date = r.type === "chapitre_pose" ? vc.dates?.date_montage : r.type === "chapitre_depose" ? vc.dates?.date_demontage : null;
   const dateLib = /(veille|matin|soir|nuit)[^,()]*\d{2}\/\d{2}\/\d{4}/i.exec(lib)?.[0];
-  const lieu = vc.chantier?.adresse || /[–-]\s*([^,()–-]+)/.exec(lib)?.[1]?.trim();
+  const lieu = vc.chantier?.adresse || (r.type === "chapitre_pose" ? /\s–\s([^,()]+)/.exec(lib)?.[1]?.trim() : undefined);
   const parts = [
     dateLib ? dateLib.charAt(0).toUpperCase() + dateLib.slice(1) : date ? `Le ${datePdf(date)}` : "",
     lieu && r.type !== "chapitre_suivi" ? `Lieu : ${lieu}` : "",
@@ -364,8 +364,10 @@ export function construireDevisPdf(vc: DevisClient, niveau: NiveauPdf, images: R
   font("tb", 9); doc.text(`Acompte 50 % à la signature, soit ${eurPdf(acompte)} TTC`, M, y); y += 4.6;
   font("t", 8.5); doc.text(["Mode de règlement : virement", "Délai de règlement : 30 jours"], M, y); y += 8.6;
   font("t", 7.6, C.gris); const lr = doc.splitTextToSize(CONDITIONS_REGLEMENT.join("\n"), W - 2 * M); doc.text(lr, M, y); y += lr.length * 3.3 + 3;
-  if (comRacine.length) {
-    font("t", 8.2); const lc = doc.splitTextToSize(comRacine.map((x) => x.texte!.trim()).join("\n"), W - 2 * M);
+  // Remarques du devis, sans redire l'acompte ni la mention « modification » déjà présents
+  const remarques = comRacine.flatMap((x) => x.texte!.split(/\r?\n/)).map((t) => t.trim()).filter((t) => t && !/acompte|modification ou (demande|ajout)/i.test(t));
+  if (remarques.length) {
+    font("t", 8.2); const lc = doc.splitTextToSize(remarques.join("\n"), W - 2 * M);
     place(lc.length * 3.7 + 3); doc.text(lc, M, y); y += lc.length * 3.7 + 3;
   }
 
