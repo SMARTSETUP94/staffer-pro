@@ -65,12 +65,19 @@ export function detailObjet(l: LigneClient) {
   return [!aDims(desc) && d.length ? `${d.join(" × ")} mm` : "", !aFinition(desc) ? (l.finition ?? "").trim() : "", desc].filter(Boolean).join("\n");
 }
 const enfants = (vc: DevisClient, p: string) => vc.lignes.filter((l) => l.parent_id === p).sort((a, b) => a.ordre - b.ordre);
+/** Montant d'une ligne : sous-total serveur, sinon montant propre + enfants (sous-zones sans sous-total). */
+function montantDeIn(vc: DevisClient | null, l: LigneClient): number {
+  if (l.sous_total != null) return Number(l.sous_total);
+  const kids = vc ? enfants(vc, l.id).filter((k) => k.type !== "commentaire" && !(k.type === "option" && !k.option_incluse)) : [];
+  return Number(l.montant ?? 0) + kids.reduce((s, k) => s + montantDeIn(vc, k), 0);
+}
 const montantDe = (l: LigneClient) => Number(l.sous_total ?? l.montant ?? 0);
 /** Options non incluses sous une ligne : leur montant est exclu des sous-totaux affichés. */
 export function optionsNonIncluses(vc: DevisClient, l: LigneClient): number {
   return enfants(vc, l.id).reduce((s, k) => s + (k.type === "option" ? (k.option_incluse ? 0 : montantDe(k)) : optionsNonIncluses(vc, k)), 0);
 }
-export const totalAffiche = (vc: DevisClient, l: LigneClient) => Math.round((montantDe(l) - optionsNonIncluses(vc, l)) * 100) / 100;
+export const totalAffiche = (vc: DevisClient, l: LigneClient) =>
+  Math.round((l.sous_total != null ? Number(l.sous_total) - optionsNonIncluses(vc, l) : montantDeIn(vc, l)) * 100) / 100;
 /** Titre client d'un chapitre : jamais le libellé interne. */
 export function titreCourt(r: Pick<LigneClient, "type" | "libelle">) {
   const lib = (r.libelle ?? "").trim();
