@@ -74,7 +74,7 @@ export function ImportPlanningHebdomadaire() {
       const payload = blocs.map((b, index) => ({ affaire_id: affaireDe(b.code), date: b.date, type: b.type, heure: b.heure, heure_fin: b.heure_fin, lieu: b.lieu, responsable: b.responsable, note: b.note, etape_id: choixEtapes[index] || null,
         personnes: b.personnes.map(nom => { const p = personneDe(nom); if (!p) throw new Error(`Personne non rapprochée : ${nom}`); return { id: p.id, origine: p.origine, nom_original: nom }; }) }));
       const result = await supabase.rpc('planning_terrain_import_semaine', { _blocs: payload, _fichier: fichier });
-      if (result.error) throw result.error;
+      if (result.error) throw new Error(/Date future/.test(result.error.message) ? 'Ce planning contient des dates déjà passées : seules les dates à partir d’aujourd’hui peuvent être importées.' : result.error.message);
       const r = result.data as unknown as { ajoutes: number; existants: number; etapes_creees: number };
       setBilan(`${r.ajoutes} affectations ajoutées · ${r.existants} déjà présentes · ${r.etapes_creees} étapes créées`);
       await queryClient.invalidateQueries({ queryKey: ['planning-terrain'] });
