@@ -2,7 +2,7 @@ import { NavigationSemaine } from "@/components/logistique/NavigationSemaine";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight, Copy, Loader2, Plus, CalendarCheck } from "lucide-react";
+import { Copy, Loader2, Plus, CalendarCheck } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { requireCapability } from "@/lib/capability-guard";
