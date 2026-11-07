@@ -6,7 +6,7 @@
 - [ ] 23 demandes smart candidates : réception devis non confirmée par identifiant Microsoft ; restent inchangées, validation de provenance nécessaire. Nouvelle ingestion cron et lecture des pièces jointes non vérifiées en situation réelle.
 
 ## Import réel PDF 9–15 novembre — Gabin
-- [ ] Rapprochement commencé : 4 liens employés et 13 fiches Dispos ajoutées avec portables réels ; attend décision sur FRANCAIS Kévin/RAVI Dylan/TOURE Amadou inactifs, portable CARVALHO Alberto et identité ROUX/MATINGOU.
+- [ ] Terminer le rapprochement : portable Alberto et identités ROUX/MATINGOU confirmés ; conserver les employés inactifs sans réactivation et les rattacher à Dispos.
 - [ ] Importer les interventions après ces confirmations et vérifier leur lecture dans Planning équipes ; ne pas publier.
 
 ## Planning équipes — affichage et export (7 nov. 2026)
