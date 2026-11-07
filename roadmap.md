@@ -160,3 +160,7 @@
 
 ## Qualité des données — piste 7 (à planifier après le lot précédent)
 - [ ] Plan à présenter : onglets Personnes / Commercial / Devis, widget Santé des données
+
+## Audit exports devis Staffing (prioritaire, plan approuvé 7 nov. 2026)
+- [ ] Générer PDF détaillé/synthétique + Excel ProGBat (9500-R1), PDF 9477-R1 et 6064-R1, captures et lecture Excel
+- [ ] Tableaux d'écarts PDF / Excel vs modèle D-202611-2509, puis plan de corrections à valider
