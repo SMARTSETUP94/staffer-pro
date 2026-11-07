@@ -9,7 +9,7 @@
  * Suivi et plans, sinon Pose, sinon Dépose ; à défaut seulement, une ligne « Ajustement d'arrondi ».
  */
 import type { DevisClient, LigneClient } from "./pdf-client";
-import { TYPE_RACINE } from "./pdf-client";
+import { TYPE_RACINE, detailObjet, titreCourt, descriptifChapitre } from "./pdf-client";
 
 export type DonneesProgbat = DevisClient & {
   numero_progbat?: string | null; remise_mode?: string | null; remise_valeur?: number | null;
@@ -81,9 +81,7 @@ export function construireProgbat(v: DonneesProgbat): { lignes: LigneProgbat[]; 
     const puC = Math.round(totalC / q);
     ecartC += totalC - Math.round(q * puC);
     out.push({ kind: "ligne", n, designation: o.libelle?.trim() || "Objet", quantite: q, unite: "u", pu: puC / 100, temps: r2(subH(o)) });
-    const dims = dimensionsTexte(o);
-    const textes = [dims ? [dims, o.finition?.trim()].filter(Boolean).join(" · ") : o.finition?.trim() ?? "",
-      ...(o.descriptif_client ?? "").split(/\r?\n/).map((s) => s.trim()), ...comVisibles(o)].filter(Boolean);
+    const textes = [...detailObjet(o).split(/\r?\n/).map((s) => s.trim()), ...comVisibles(o)].filter(Boolean);
     for (const t of textes) out.push({ kind: "commentaire", designation: t });
   };
   const blocZone = (titre: string, enfants: LigneClient[], zone?: LigneClient) => {
@@ -108,11 +106,12 @@ export function construireProgbat(v: DonneesProgbat): { lignes: LigneProgbat[]; 
     const totalC = subC(c), h = subH(c);
     if (totalC === 0 && h === 0) continue;
     N += 1;
-    const titre = c.libelle?.trim() || TYPE_RACINE[c.type] || "Chapitre";
+    const titre = titreCourt(c) || TYPE_RACINE[c.type] || "Chapitre";
     out.push({ kind: "titre", n: String(N), designation: titre });
-    for (const t of comVisibles(c)) out.push({ kind: "commentaire", designation: t });
     lignesChap.push({ type: c.type, index: out.length });
     out.push({ kind: "ligne", n: `${N}.1`, designation: titre, quantite: 1, unite: "ens", pu: totalC / 100, temps: r2(h) });
+    const long = descriptifChapitre(c);
+    for (const t of [...(long ? [long] : []), ...comVisibles(c)]) out.push({ kind: "commentaire", designation: t });
   }
 
   let ajustement: FicheProgbat["ajustement_arrondi"] = null;
@@ -135,7 +134,7 @@ export function construireProgbat(v: DonneesProgbat): { lignes: LigneProgbat[]; 
     N += 1; out.push({ kind: "titre", n: String(N), designation: "Options" });
     options.forEach((o, i) => {
       const n = `${N}.${i + 1}`, montant = subC(o) / 100, libelle = o.libelle?.trim() || "Option";
-      out.push({ kind: "ligne", n, designation: libelle, quantite: 1, unite: "ens", pu: montant, temps: r2(subH(o)), option: true });
+      out.push({ kind: "ligne", n, designation: /^option/i.test(libelle) ? libelle : `Option : ${libelle}`, quantite: 1, unite: "ens", pu: montant, temps: r2(subH(o)), option: true });
       for (const t of [...(o.descriptif_client ?? "").split(/\r?\n/).map((s) => s.trim()).filter(Boolean), ...comVisibles(o)]) out.push({ kind: "commentaire", designation: t });
       ficheOptions.push({ n, libelle, incluse: !!o.option_incluse, montant });
     });

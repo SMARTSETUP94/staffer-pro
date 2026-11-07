@@ -146,10 +146,11 @@ export function construireDevisPdf(vc: DevisClient, niveau: NiveauPdf, images: R
   doc.text(emetteur, M, 32);
 
   // En-tête droit : devis, chantier, travaux, validité, début, signataire
+  doc.setFontSize(9);
   const debut = vc.chantier?.debut ?? vc.dates?.date_montage ?? null;
   const droite = [
     `Devis n° ${ref} du ${datePdf(vc.date_devis) || "—"}`,
-    ...(vc.libelle ? doc.setFontSize(9) && doc.splitTextToSize(`Chantier : ${vc.libelle}`, 88) : []),
+    ...(vc.libelle ? doc.splitTextToSize(`Chantier : ${vc.libelle}`, 88) : []),
     ...(vc.chantier?.adresse ? doc.splitTextToSize(vc.chantier.adresse, 88) : []),
     `Travaux : ${vc.chantier?.travaux || "Fabrication décor"}`,
     `Validité du devis : ${datePdf(validite) || (vc.validite_jours ? `${vc.validite_jours} jours` : "—")}`,
