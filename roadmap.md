@@ -151,3 +151,12 @@
 - [x] Lisibilité Kanban (8 points)
 - [x] A. Suppléments 6XXX dans le pipeline (règle, tuile, colonne, badge, cas 6064)
 - [x] B. Éditeur de devis : bandeau compact + plein écran, note Claude repliable/cases, arbre redimensionnable, chapitres simplifiés, heures au devis, liens coûts manquants, liste de contrôle, champs secondaires repliés
+
+## Planning logistique — page unique (plan approuvé 7 nov. 2026)
+- [ ] Étape 1 : page /logistique à 3 onglets, filtres partagés, carte d'étape commune, besoins qualifiés
+- [ ] Étape 2 : « Compléter », glisser-déposer, copie d'équipe / semaine dernière
+- [ ] Étape 3 : panneau « À traiter », messages WhatsApp, statut de confirmation
+- [ ] Étape 4 : vue chef mobile, écran atelier, profil « Écran atelier » (migration à montrer)
+
+## Qualité des données — piste 7 (à planifier après le lot précédent)
+- [ ] Plan à présenter : onglets Personnes / Commercial / Devis, widget Santé des données
