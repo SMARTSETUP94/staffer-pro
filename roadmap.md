@@ -160,3 +160,8 @@
 
 ## Qualité des données — piste 7 (à planifier après le lot précédent)
 - [ ] Plan à présenter : onglets Personnes / Commercial / Devis, widget Santé des données
+
+## Audit exports devis Staffing (prioritaire, plan approuvé 7 nov. 2026)
+- [x] Exports générés en temporaire sans enregistrement (9500 PDF détaillé/synthétique + Excel, 9477, 6064), 5 pages capturées, Excel lu ligne à ligne ; totaux identiques.
+- [x] Tableaux d'écarts remis.
+- [ ] Plan de corrections présenté, en attente de validation de Gabin.
