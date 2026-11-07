@@ -92,13 +92,17 @@ export function descriptifClientChapitre(vc: Pick<DevisClient, "dates" | "chanti
   const moyens = /\(([^)]+)\)\s*$/.exec(lib)?.[1]?.trim();
   const date = r.type === "chapitre_pose" ? vc.dates?.date_montage : r.type === "chapitre_depose" ? vc.dates?.date_demontage : null;
   const dateLib = /(veille|matin|soir|nuit)[^,()]*\d{2}\/\d{2}\/\d{4}/i.exec(lib)?.[0];
-  const lieu = vc.chantier?.adresse || (r.type === "chapitre_pose" ? /\s–\s([^,()]+)/.exec(lib)?.[1]?.trim() : undefined);
+  const dateBrute = /\b\d{2}\/\d{2}\/\d{4}\b/.exec(lib)?.[0];
+  const lieu = vc.chantier?.adresse || (r.type === "chapitre_pose"
+    ? (/\s–\s([^,()]+)/.exec(lib)?.[1] ?? /\ben ((?:Île|Ile|[A-ZÉÈ])[^,()]*?)(?=\s+le\s+\d|\s*[,(]|$)/.exec(lib)?.[1])?.trim() : undefined);
   const parts = [
-    dateLib ? dateLib.charAt(0).toUpperCase() + dateLib.slice(1) : date ? `Le ${datePdf(date)}` : "",
+    dateLib ? dateLib.charAt(0).toUpperCase() + dateLib.slice(1) : date ? `Le ${datePdf(date)}` : dateBrute ? `Le ${dateBrute}` : "",
     lieu && r.type !== "chapitre_suivi" ? `Lieu : ${lieu}` : "",
     moyens ? `Moyens : ${moyens}` : "",
     (r.descriptif_client ?? "").trim(),
   ].filter(Boolean);
+  // À défaut d'éléments repérés, un libellé court et lisible sert de descriptif (casse d'origine).
+  if (!parts.length && lib && lib.length <= 90 && !/\(/.test(lib) && lib.toLocaleLowerCase("fr") !== titreCourt(r).toLocaleLowerCase("fr") && lib !== TYPE_RACINE[r.type]) parts.push(lib);
   return parts.join("\n");
 }
 /** Nom propre du chantier : sans préfixe interne « 9500_ », soulignés remplacés. */
@@ -218,6 +222,7 @@ export function construireDevisPdf(vc: DevisClient, niveau: NiveauPdf, images: R
     ...(vc.chantier?.adresse ? [["Lieu", vc.chantier.adresse] as [string, string]] : []),
     ["Travaux", vc.chantier?.travaux || "Fabrication décor"],
     ["Validité", datePdf(validite) || (vc.validite_jours ? `${vc.validite_jours} jours` : "—")],
+    ...(vc.dates?.date_evenement_debut ? [["Événement", `${datePdf(vc.dates.date_evenement_debut)}${vc.dates?.date_evenement_fin && vc.dates.date_evenement_fin !== vc.dates.date_evenement_debut ? ` au ${datePdf(vc.dates.date_evenement_fin)}` : ""}`] as [string, string]] : []),
     ...(debut ? [["Début des travaux", `${datePdf(debut)}${vc.chantier?.duree_jours ? ` · ${vc.chantier.duree_jours} jours` : ""}`] as [string, string]] : []),
   ];
   let yR = 31;
