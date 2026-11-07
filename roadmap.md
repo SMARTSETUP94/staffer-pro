@@ -162,5 +162,6 @@
 - [ ] Plan à présenter : onglets Personnes / Commercial / Devis, widget Santé des données
 
 ## Audit exports devis Staffing (prioritaire, plan approuvé 7 nov. 2026)
-- [ ] Générer PDF détaillé/synthétique + Excel ProGBat (9500-R1), PDF 9477-R1 et 6064-R1, captures et lecture Excel
-- [ ] Tableaux d'écarts PDF / Excel vs modèle D-202611-2509, puis plan de corrections à valider
+- [x] Exports générés en temporaire sans enregistrement (9500 PDF détaillé/synthétique + Excel, 9477, 6064), 5 pages capturées, Excel lu ligne à ligne ; totaux identiques.
+- [x] Tableaux d'écarts remis.
+- [ ] Plan de corrections présenté, en attente de validation de Gabin.
