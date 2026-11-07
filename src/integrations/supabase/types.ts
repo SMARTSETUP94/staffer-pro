@@ -9135,6 +9135,10 @@ export type Database = {
         Args: { _apres?: Json; _limite?: number }
         Returns: Json
       }
+      planning_terrain_import_semaine: {
+        Args: { _blocs: Json; _fichier: string }
+        Returns: Json
+      }
       planning_terrain_importer: {
         Args: { _empreinte: string; _lignes: Json }
         Returns: Json
