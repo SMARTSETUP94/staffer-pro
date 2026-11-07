@@ -88,7 +88,9 @@ function DemandesClientsPage() {
   const corriger=useServerFn(corrigerDemandesTransferees);
   const [correctionBusy,setCorrectionBusy]=useState(false);
   const [correctionBilan,setCorrectionBilan]=useState('');
-  async function runCorrection(){setCorrectionBusy(true);try{const r=await corriger();setCorrectionBilan(`${r.corrigees} demandes recalculées · ${r.nonIdentifiees} clients à identifier · ${r.aConfirmer.length} provenances à confirmer${r.errors.length ? ' · '+r.errors.join(' · ') : ''}`);await load();}catch(e){toast.error(e instanceof Error ? e.message:'Correction impossible');}finally{setCorrectionBusy(false);}}
+  const [ecartes,setEcartes]=useState<{id:string;date:string|null;expediteur:string;objet:string|null}[]>([]);
+  function telechargerEcartes(){const esc=(v:string|null)=>`"${(v ?? '').replace(/"/g,'""')}"`;const csv=['Date;Expéditeur;Objet',...ecartes.map(e=>[esc(e.date),esc(e.expediteur),esc(e.objet)].join(';'))].join('\n');const url=URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download='mails-smart-ecartes.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+  async function runCorrection(){setCorrectionBusy(true);try{const r=await corriger();setEcartes(r.ecartes);setCorrectionBilan(`${r.corrigees} demandes recalculées · ${r.nonIdentifiees} clients à identifier · ${r.aConfirmer.length} provenances à confirmer · ${r.ecartes.length} mails smart@ écartés${r.errors.length ? ' · '+r.errors.join(' · ') : ''}`);await load();}catch(e){toast.error(e instanceof Error ? e.message:'Correction impossible');}finally{setCorrectionBusy(false);}}
   async function runReanalyse() {
     setReanalysing(true);
     try {
@@ -143,6 +145,7 @@ function DemandesClientsPage() {
         ) : undefined}
       />
       {correctionBilan && <p role="status" className="text-sm text-muted-foreground">{correctionBilan}</p>}
+      {ecartes.length>0 && <div className="space-y-1"><Button size="sm" variant="outline" onClick={telechargerEcartes}>Télécharger la liste des mails écartés</Button><ul className="max-h-48 overflow-auto text-xs text-muted-foreground">{ecartes.map(e=><li key={e.id}>{e.date?.slice(0,10)} · {e.expediteur} · {e.objet ?? '(sans objet)'}</li>)}</ul></div>}
       <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
         <TabsList>
           <TabsTrigger value="todo">À traiter <span className="ml-1.5 text-xs opacity-60">{lists.todo.length}</span></TabsTrigger>
