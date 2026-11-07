@@ -59,7 +59,7 @@ describe('export au format logistique', () => {
     const blob = await creerExportPlanning(['2026-11-09', '2026-11-10'], [etape, vide], affectations, [kevin, rayan]);
     const feuilles = await lireClasseur(await blob.arrayBuffer());
     const lu = lirePlanningExcel(feuilles, ETAPE_LABELS, cleNomTerrain)!;
-    expect(lu.interventions).toEqual([{ date: '2026-11-09', code: '4120', chantier: 'Rotation Murat', type: 'demontage', heure: '07:00', heure_fin: '12:30', lieu: 'MURAT', responsable: 'Raoul', note: '1 porteur', personnes: ['Etrillard Kevin', 'Kitoune Rayan'].map(n => n.split(' ').map((m, i) => i === 0 ? m.toLocaleUpperCase('fr') : m).join(' ')) }]);
+    expect(lu.interventions).toEqual([{ date: '2026-11-09', code: '4120', chantier: 'Rotation Murat', type: 'demontage', heure: '07:00', heure_fin: '12:30', lieu: 'MURAT', responsable: 'Raoul', note: '1 porteur', personnes: ['ETRILLARD Kevin', 'KITOUNE Rayan'] }]);
     expect(lu.etapes).toEqual({ 0: 's1' });
     expect(Object.values(lu.personnes).sort()).toEqual(['dispos:d2', 'employe:e1']);
     expect(feuilles['Planning']?.[0]?.[0]).toBe(serialExcel('2026-11-09'));
