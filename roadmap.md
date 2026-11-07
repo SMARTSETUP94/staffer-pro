@@ -1,6 +1,7 @@
 # Roadmap
 
 ## Lot 1 — Planning nominatif logistique (7 nov. 2026)
+- [ ] Ajout Gabin : historique vivant dérivé des assignations + import, dédoublonné ; export Excel 10 colonnes et synthèses Personnes/Chantiers ; compteurs lot 2. Inventaire puis migration à présenter avant application, sans publication.
 - [x] Plan réduit approuvé et socle additif appliqué : personnes et affectations existantes réutilisées.
 - [x] Inventaire demandé après rejet : employés, postes, statuts, assignations, absences et écrans relus ; 63 tests existants passent.
 - [ ] Réunir l’équipe terrain sans doublons, besoins qualifiés et affectations nominatives ; droits admin/logistique en écriture, chef d’équipe en lecture.
