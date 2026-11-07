@@ -5,7 +5,7 @@ import { Upload, Check, ChevronsUpDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { analyserPlanningHebdomadaire } from '@/lib/server-fns/planning-import.functions';
-import { candidatsPersonne, passagesMultiples, verifierPlanning, type InterventionLue, type ReferencesPlanning } from '@/lib/imports/planning-hebdomadaire';
+import { candidatsPersonne, passagesMultiples, rattachementBloc, verifierPlanning, type InterventionLue, type ReferencesPlanning } from '@/lib/imports/planning-hebdomadaire';
 import { ETAPE_LABELS, ETAPE_TYPES, type EtapeType } from '@/lib/logistique/etapes';
 import { cleNomTerrain } from '@/lib/imports/affectations-consolide';
 import { lirePlanningExcel, statutDispo, alerteDispo, type DispoPlanning, type LectureDeterministe } from '@/lib/imports/planning-equipes';
@@ -38,10 +38,11 @@ export function ImportPlanningHebdomadaire() {
   const [valide, setValide] = useState(false);
   const [etapes, setEtapes] = useState<{ id: string; affaire_id: string; type: string; date: string; fin: string; heure: string | null }[]>([]);
   const [choixEtapes, setChoixEtapes] = useState<Record<number, string>>({});
+  const [creations, setCreations] = useState<Record<number, boolean>>({});
   const [dispos, setDispos] = useState<DispoPlanning[]>([]);
   const [lecture, setLecture] = useState('');
   async function lire(file: File) {
-    setBusy(true); setErreur(''); setBlocs([]); setBilan(''); setValide(false); setChoixEtapes({});
+    setBusy(true); setErreur(''); setBlocs([]); setBilan(''); setValide(false); setChoixEtapes({}); setCreations({});
     try {
       if (file.size > 15 * 1024 * 1024) throw new Error('Fichier trop volumineux (15 Mo maximum).');
       const base64 = await new Promise<string>((resolve, reject) => { const r = new FileReader(); r.onload = () => resolve(String(r.result).split(',')[1] ?? ''); r.onerror = () => reject(new Error('Lecture impossible')); r.readAsDataURL(file); });
@@ -75,15 +76,19 @@ export function ImportPlanningHebdomadaire() {
   const affaireDe = (code: string) => affaires[code] ?? refs.affaires.find(a => a.numero === code)?.id;
   const total = blocs.reduce((n, b) => n + b.personnes.length, 0);
   const manquants = blocs.reduce((n, b) => n + b.personnes.filter(p => !personneDe(p)).length + (affaireDe(b.code) ? 0 : 1), 0);
-  const compatibles = (b: InterventionLue) => etapes.filter(e => e.affaire_id === affaireDe(b.code) && e.type === b.type && e.date <= b.date && e.fin >= b.date);
-  const ambigus = blocs.some((b, i) => compatibles(b).length > 1 && !choixEtapes[i]);
+  const rattachement = (b: InterventionLue, i: number) => rattachementBloc(b, affaireDe(b.code), etapes, choixEtapes[i]);
+  // Aucune création silencieuse : choix obligatoire si ambigu, confirmation explicite si nouvelle étape ou même intervention proposée.
+  const ambigus = blocs.some((b, i) => { const r = rattachement(b, i); return r.etat === 'choix' || ((r.etat === 'nouvelle' || r.etat === 'meme_intervention') && !creations[i]); });
+  const libelleEtape = (e: { type: string; date: string; heure: string | null }) => `${ETAPE_LABELS[e.type as EtapeType] ?? e.type} · ${e.date.split('-').reverse().join('/')} · ${e.heure ? e.heure.slice(0, 5) : 'heure inconnue'}`;
+  const lienCreation = (b: InterventionLue) => `/affaires?${new URLSearchParams({ creer_numero: b.code, creer_nom: b.chantier, creer_lieu: b.lieu }).toString()}`;
+  async function actualiserReferences() { const r = await supabase.rpc('planning_terrain_references'); if (!r.error) setRefs(r.data as unknown as ReferencesPlanning); }
   const modifier = (index: number, patch: Partial<InterventionLue>) => { setBlocs(v => v.map((b, i) => i === index ? { ...b, ...patch } : b)); setValide(false); };
   async function enregistrer() {
     setBusy(true); setErreur('');
     try {
       const check = verifierPlanning(blocs);
-      if (check.erreurs.length || manquants || ambigus || !valide) throw new Error(check.erreurs.join('\n') || 'Terminez les rattachements et validez l’aperçu.');
-      const payload = blocs.map((b, index) => ({ affaire_id: affaireDe(b.code), date: b.date, type: b.type, heure: b.heure, heure_fin: b.heure_fin, lieu: b.lieu, responsable: b.responsable, note: b.note, etape_id: choixEtapes[index] || null,
+      if (check.erreurs.length || manquants || ambigus || !valide) throw new Error(check.erreurs.join('\n') || 'Terminez les rattachements (étape à choisir ou création à confirmer) et validez l’aperçu.');
+      const payload = blocs.map((b, index) => ({ affaire_id: affaireDe(b.code), date: b.date, type: b.type, heure: b.heure, heure_fin: b.heure_fin, lieu: b.lieu, responsable: b.responsable, note: b.note, etape_id: (() => { const r = rattachement(b, index); return r.etat === 'rattache' ? r.etape.id : null; })(), creer: !!creations[index] && rattachement(b, index).etat !== 'rattache',
         personnes: b.personnes.map(nom => { const p = personneDe(nom); if (!p) throw new Error(`Personne non rapprochée : ${nom}`); return { id: p.id, origine: p.origine, nom_original: nom }; }) }));
       const result = await supabase.rpc('planning_terrain_import_semaine', { _blocs: payload, _fichier: fichier });
       if (result.error) throw new Error(/Date et personnes/.test(result.error.message) ? 'Date manquante, aucune personne, texte trop long ou opération invalide.' : result.error.message);
@@ -103,7 +108,11 @@ export function ImportPlanningHebdomadaire() {
       {blocs.map((b, i) => <section key={i} className="space-y-3 border-t border-border pt-4"><div className="grid gap-2 sm:grid-cols-3"><div><Label>Date</Label><Input type="date" aria-label={`Date intervention ${i + 1}`} value={b.date} disabled={busy} onChange={e => modifier(i, { date: e.target.value })} /></div><div><Label>Opération</Label><Select value={b.type} disabled={busy} onValueChange={v => modifier(i, { type: v as EtapeType })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{ETAPE_TYPES.map(t => <SelectItem key={t} value={t}>{ETAPE_LABELS[t]}</SelectItem>)}</SelectContent></Select></div><div><Label>Heure de début</Label><Input type="time" aria-label={`Heure intervention ${i + 1}`} disabled={busy} value={b.heure ?? ''} onChange={e => modifier(i, { heure: e.target.value || null })} /></div></div>
       <ChoixCherchable label={`${b.code} · ${b.chantier} — rattacher le chantier`} value={affaireDe(b.code) ?? ''} options={refs.affaires.map(a => ({ id: a.id, label: `${a.numero} · ${a.nom}` }))} onChange={id => { setAffaires(v => ({ ...v, [b.code]: id })); setValide(false); }} />
       <div className="grid gap-2 sm:grid-cols-2"><div><Label>Lieu</Label><Input value={b.lieu} disabled={busy} onChange={e => modifier(i, { lieu: e.target.value })} /></div><div><Label>Responsable</Label><Input value={b.responsable} disabled={busy} onChange={e => modifier(i, { responsable: e.target.value })} /></div></div><Label>Commentaires / horaires à confirmer</Label><Input value={b.note} disabled={busy} onChange={e => modifier(i, { note: e.target.value })} />
-      {compatibles(b).length > 0 && <Select value={choixEtapes[i] ?? ''} disabled={busy} onValueChange={v => setChoixEtapes(c => ({ ...c, [i]: v }))}><SelectTrigger aria-label={`Étape existante intervention ${i + 1}`}><SelectValue placeholder="Rattacher à une étape existante (facultatif sauf ambiguïté)" /></SelectTrigger><SelectContent>{compatibles(b).map(e => <SelectItem key={e.id} value={e.id}>{ETAPE_LABELS[b.type]} · {e.date} · {e.heure ?? 'heure inconnue'}</SelectItem>)}</SelectContent></Select>}
+      {(() => { const r = rattachement(b, i); const choisir = (v: string) => { setChoixEtapes(c => ({ ...c, [i]: v })); setValide(false); };
+        if (r.etat === 'chantier_inconnu') return <div className="flex flex-wrap items-center gap-2 rounded-md border border-warning p-2 text-sm"><span className="text-warning">Chantier {b.code} introuvable : rien ne sera créé automatiquement.</span><Button size="sm" variant="outline" asChild><a href={lienCreation(b)} target="_blank" rel="noreferrer">Créer le chantier</a></Button><Button size="sm" variant="ghost" onClick={() => void actualiserReferences()}>Actualiser la liste</Button></div>;
+        if (r.etat === 'rattache') return <div className="flex flex-wrap items-center gap-2 rounded-md border border-success p-2 text-sm"><span className="font-medium text-success">Rattaché à : {libelleEtape(r.etape)}</span>{r.choisi && <Button size="sm" variant="ghost" onClick={() => choisir('')}>Changer</Button>}</div>;
+        if (r.etat === 'choix') return <div className="space-y-1 rounded-md border border-warning p-2"><p className="text-sm text-warning">Plusieurs étapes possibles : choix obligatoire.</p><Select value="" disabled={busy} onValueChange={choisir}><SelectTrigger aria-label={`Étape existante intervention ${i + 1}`}><SelectValue placeholder="Choisir l’étape" /></SelectTrigger><SelectContent>{r.candidats.map(e => <SelectItem key={e.id} value={e.id}>{libelleEtape(e)}</SelectItem>)}</SelectContent></Select></div>;
+        return <div className="space-y-2 rounded-md border border-warning p-2 text-sm">{r.etat === 'meme_intervention' && <><p className="text-warning">Même intervention ? Une étape de ce chantier existe ce jour avec une autre opération.</p><div className="flex flex-wrap gap-2">{r.candidats.map(e => <Button key={e.id} size="sm" variant="outline" disabled={busy} onClick={() => choisir(e.id)}>Rattacher à : {libelleEtape(e)}</Button>)}</div></>}<label className="flex items-center gap-2"><input type="checkbox" checked={!!creations[i]} disabled={busy} onChange={e => { setCreations(c => ({ ...c, [i]: e.target.checked })); setValide(false); }} /><span className="font-medium">Nouvelle étape à créer</span> ({ETAPE_LABELS[b.type]} · {b.date.split('-').reverse().join('/')})</label></div>; })()}
       <Label>Noms du fichier (une personne par ligne)</Label><textarea aria-label={`Noms intervention ${i + 1}`} className="min-h-24 w-full rounded-md border border-input bg-background p-2 text-sm" disabled={busy} value={b.personnes.join('\n')} onChange={e => modifier(i, { personnes: e.target.value.split('\n') })} />
       <div className="grid gap-2 sm:grid-cols-2">{b.personnes.map((nom, j) => { const p = personneDe(nom); return <div key={j} className="min-w-0"><Label className={`flex items-center gap-1 ${p ? '' : 'text-warning'}`}>{p && <PastilleDispo statut={statutDispo({ ...p, origine: p.origine as 'employe' | 'dispos' }, b.date, dispos)} />}{nom}{p && alerteDispo(statutDispo({ ...p, origine: p.origine as 'employe' | 'dispos' }, b.date, dispos)) === 'rouge' && <span className="text-xs text-destructive">pas dispo</span>}</Label><ChoixCherchable label={`Rattacher ${nom}`} value={p ? `${p.origine}:${p.id}` : ''} options={refs.personnes.filter(p => p.actif !== false).map(p => ({ id: `${p.origine}:${p.id}`, label: `${p.nom} ${p.prenom} · ${p.origine === 'dispos' ? 'Dispos' : 'Employé'}` }))} onChange={id => { setPersonnes(v => ({ ...v, [cleNomTerrain(nom)]: id })); setValide(false); }} /></div>; })}</div></section>)}
       <label className="flex items-start gap-2 text-sm"><input type="checkbox" checked={valide} disabled={busy} onChange={e => setValide(e.target.checked)} />Je valide les dates, les interventions et les rattachements de cet aperçu.</label><Button disabled={busy || manquants > 0 || ambigus || !valide} onClick={() => void enregistrer()}>Enregistrer le planning</Button>
