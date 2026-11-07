@@ -8,6 +8,8 @@ import { analyserPlanningHebdomadaire } from '@/lib/server-fns/planning-import.f
 import { candidatsPersonne, passagesMultiples, verifierPlanning, type InterventionLue, type ReferencesPlanning } from '@/lib/imports/planning-hebdomadaire';
 import { ETAPE_LABELS, ETAPE_TYPES, type EtapeType } from '@/lib/logistique/etapes';
 import { cleNomTerrain } from '@/lib/imports/affectations-consolide';
+import { lirePlanningExcel, statutDispo, alerteDispo, type DispoPlanning, type LectureDeterministe } from '@/lib/imports/planning-equipes';
+import { PastilleDispo } from '@/components/logistique/PastilleDispo';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -55,7 +57,7 @@ export function ImportPlanningHebdomadaire() {
       if (reference.error) throw reference.error;
       const r = reference.data as unknown as ReferencesPlanning;
       setRefs(r); setPersonnes(lu?.personnes ?? {}); setAffaires(lu?.affaires ?? {}); setFichier(file.name);
-      if (lu) { const ordre = new Map(lu.interventions.map((b, i) => [b, i])); setChoixEtapes(Object.fromEntries(result.interventions.map((b, i) => [i, lu!.etapes[ordre.get(b) ?? -1]]).filter(([, v]) => v))); }
+      if (lu) { const cle = (b: InterventionLue) => [b.date, b.code, b.type, b.heure ?? '', b.lieu.trim().toLocaleLowerCase('fr')].join('|'); const ordre = new Map(lu.interventions.map((b, i) => [cle(b), lu!.etapes[i]])); setChoixEtapes(Object.fromEntries(result.interventions.map((b, i) => [i, ordre.get(cle(b))]).filter(([, v]) => v))); }
       const debut = result.interventions[0]?.date;
       const fin = result.interventions.at(-1)?.date;
       if (debut && fin) {
