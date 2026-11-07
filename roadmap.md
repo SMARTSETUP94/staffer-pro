@@ -6,8 +6,9 @@
 - [ ] 23 demandes smart candidates : réception devis non confirmée par identifiant Microsoft ; restent inchangées, validation de provenance nécessaire. Nouvelle ingestion cron et lecture des pièces jointes non vérifiées en situation réelle.
 
 ## Import réel PDF 9–15 novembre — Gabin
-- [ ] Rapprochement commencé : 4 liens employés et 13 fiches Dispos ajoutées avec portables réels ; attend décision sur FRANCAIS Kévin/RAVI Dylan/TOURE Amadou inactifs, portable CARVALHO Alberto et identité ROUX/MATINGOU.
-- [ ] Importer les interventions après ces confirmations et vérifier leur lecture dans Planning équipes ; ne pas publier.
+- [x] Alberto ajouté avec portable fourni, Roux et Matingou rattachés aux employés confirmés ; Dylan ajouté à Dispos sans réactivation. Amadou conservé dans Dispos, aucune activation employé.
+- [x] 65 affectations sur 13 interventions importées via appel authentifié existant ; lecture semaine 46 vérifiée (24 personnes), export téléchargé, mobile sans débordement ni erreur. Rien publié.
+- [ ] 4 affectations restent bloquées : trois pour FRANCAIS Kévin (son portable employé correspond à Kevin Etrillard dans Dispos, identité à confirmer), et KITOUNE Rayan sur 4123 (chantier terminé, réouverture ou chantier alternatif à confirmer). Aucun changement de statut ni fusion arbitraire.
 
 ## Planning équipes — affichage et export (7 nov. 2026)
 - [x] Vue personne limitée aux personnes staffées de la semaine ; dates françaises, numéro/plage de semaine et flèches comme Dispos. Lecture admin et téléphone vérifiées, aucun débordement de page.
