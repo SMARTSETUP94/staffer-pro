@@ -36,12 +36,12 @@ function extractSidebarCap(url: string): string | null {
 }
 
 describe("Mode menu « suivi des affaires » — planning terrain", () => {
-  it("garde « Planning équipes » (/logistique/equipes) visible dans le menu", () => {
-    const urls = extractSaModeUrls();
-    expect(urls).toContain("/logistique/equipes");
+  it("le Planning équipes est un onglet de « Planning logistique » (/logistique), visible dans le menu", () => {
+    expect(extractSaModeUrls()).toContain("/logistique");
+    expect(extractSaModeUrls()).not.toContain("/logistique/equipes");
   });
 
-  it("« Planning équipes » reste gated par la cap dispos.view (admin, logistique, chef d'équipe)", () => {
-    expect(extractSidebarCap("/logistique/equipes")).toBe("dispos.view");
+  it("« Planning logistique » reste gated par logistique.planning.view", () => {
+    expect(extractSidebarCap("/logistique")).toBe("logistique.planning.view");
   });
 });
