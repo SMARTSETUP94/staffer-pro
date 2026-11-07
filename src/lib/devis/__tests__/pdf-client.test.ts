@@ -76,7 +76,7 @@ describe("PDF client devis", () => {
   });
   it("option affichée à part avec sa mention, bon pour accord présent", () => {
     const t = texte(construireDevisPdf(base, "detaille"));
-    expect(t).toContain("non comprise dans le total");
+    expect(t).toContain("non comprises dans le total");
     expect(t).toContain("Signature du Client");
     expect(t).toContain("Signature de l'Entreprise");
     expect(t).toContain("page 1 / 1");
