@@ -120,6 +120,9 @@ const searchSchema = z.object({
   tri: fallback(z.string(), "montage").default("montage"),
   sens: fallback(z.string(), "asc").default("asc"),
   echeance: fallback(z.string(), "toutes").default("toutes"),
+  creer_numero: z.string().max(20).optional(),
+  creer_nom: z.string().max(300).optional(),
+  creer_lieu: z.string().max(500).optional(),
 });
 
 export const Route = createFileRoute("/_app/affaires/")({
@@ -283,6 +286,13 @@ function AffairesPage() {
 
 
   const openCreate = () => { setForm(emptyForm); setOpen(true); };
+  // Pré-remplissage depuis l'import planning (chantier inconnu) : l'utilisateur valide lui-même.
+  useEffect(() => {
+    if (!rawSearch.creer_numero) return;
+    setForm({ ...emptyForm, numero: rawSearch.creer_numero, nom: rawSearch.creer_nom ?? "", lieu: rawSearch.creer_lieu ?? "" });
+    setOpen(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rawSearch.creer_numero]);
   const openEdit = (r: AffaireRow) => {
     setForm({
       chef_projet_id: r.chef_projet_id,
