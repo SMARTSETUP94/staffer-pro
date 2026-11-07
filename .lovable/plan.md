@@ -4,43 +4,14 @@
 
 ## Inventaire : couverture des points 1 à 6
 
-### 1. Équipe terrain et personnel — socle déjà présent
-- **employes** : nom/prénom, email, téléphone/mobile, poste_principal, type_contrat, statut_contrat, sous_type_contrat, actif, métier principal.
-- **metiers / employe_metiers** : métiers et compétences secondaires. **postes_catalogue** : postes contractuels ; poste_principal reste un texte existant, pas une seconde fiche.
-- **/employes** : liste/tableur, fiche, recherche ; saisie en masse de postes et import Excel avec aperçu des différences.
-- **Permis/CACES salariés** : categories_permis et employes_autorisations_vehicules. **Dispos** : qualifications déclarées, coordonnées, réponses et lien employe_id déjà prévu.
-- **Manque** : rattachement manuel Dispos/employé, présentation unifiée des externes non rattachés, case permanente chef terrain, import Base_employés limité aux fiches existantes.
-
-### 2. Besoins par étape — effectif et horaires déjà présents
-- **affaire_etapes_logistiques** : nb_personnes, type, date_debut/fin, heure_debut/fin, responsable, lieu, notes/commentaires, statut proposé/validé/fait/annulé.
-- **/logistique**, Logistique du chantier, **EtapeDialog**, grilles et vue mobile existent.
-- **Manque** : nombre de chefs, quantités par poste, permis/CACES requis ; compteur nominatif affectés/besoin.
-- Le champ texte equipe est déprécié : il ne sera pas réutilisé comme liste de noms.
-
-### 3. Affectations nominatives — réutiliser assignations
-- **assignations** : employe_id, affaire_id, date, demi_journee AM/PM/JOURNEE, heures, heure_debut/fin, metier_id, type_operation, phase, notes, auteur/dates ; liens vers devis, atelier et plan.
-- **Confirmation déjà présente** : non_requise/en_attente/confirmee/refusee, dates et motif de refus. **est_chef_jour** existe.
-- Formulaires et affectations en masse existent ; **assignation-upsert.ts** centralise les écritures.
-- **Manque** : lien précis à l’étape, identité d’un externe Dispos non rattaché, validation logistique et provenance/import. Aucune seconde table d’affectations.
-
-### 4. Planning équipes — réutiliser les vues
-- **/planning** : personnes × jours AM/PM ; vues CDI/Intérim/chantier/objet/pôle, semaine et filtres.
-- **/qui-est-ou** : personnes × jours et vue inversée par chantier, occupation et anomalies ; **/logistique** : étapes hebdomadaires.
-- **absences** : indisponibilités salariés validées par date/créneau. **Dispos** : Journée/Soirée/Pas dispo/Sans réponse, notes.
-- **Manque** : pastilles nominatives sur étapes ; mode terrain dans Qui est où avec Dispos, qualifications, confirmations, horaires, filtres demandés et totaux hebdomadaires.
-- Qui est où charge aujourd’hui les employés actifs non_staffing=false, sans horaires ni confirmation : les refus ne sont pas distingués et les anciens inactifs manquent en consultation historique.
-
-### 5. Imports — structure existante, format différent
-- **/imports/planning**, **src/lib/imports/planning-xlsx.ts / planning-plan.ts / planning-apply.ts** : lecture Excel au clic, normalisation dates/métiers, aperçu/bilan, écritures dans assignations.
-- **employes-excel.ts / EmployesImportPostesDialog** : import de postes par nom/prénom, aperçu avant mise à jour.
-- **Non couvert** : blocs de la feuille Planning d’Alberto et Base_employés ; multi-fichiers ; rapprochement noms complets/ordre inversé ; dédoublonnage date/chantier/opération/personne ; import atomique historique.
-- L’import actuel rapproche surtout par prénom, affecte en JOURNEE/8 h et dédoublonne employé/date/chantier **sans opération**. L’onglet personne×dates est analysé mais ses cases ne génèrent pas d’affectations. Un fichier à la fois ; pas de transaction globale.
-
-### 6. Historique et lots suivants — données présentes, portée limitée
-- assignations porte personne/chantier/date ; affaires et étapes portent le lieu.
-- **affaire_equipe_historique** : premier/dernier jour, nombre de jours, chef, métier, contrat, refus. Il est recalculé depuis les assignations : **pas un journal immuable ni une preuve de présence réelle**, et dépend des responsables de chantier.
-- **affaire_equipe** : appartenance par chantier/phase + role_terrain ; **fabrication_objet_equipe** : équipe d’objet. Sans dates de travail : ne pas les transformer en affectations.
-- **Manque** : granularité opération/étape, obtenue par le lien ajouté à assignations. Pas besoin d’un nouvel agrégat de passages au lot 1.
+| Point | Déjà présent, à réutiliser | Manquant |
+|---|---|---|
+| **1. Personnel** | **employes** : identité, email, téléphone/mobile, poste_principal, type_contrat/statut_contrat/sous_type_contrat, actif, métier. **metiers/employe_metiers**, **postes_catalogue**. **/employes** : fiches, recherche, liste/tableur ; import de postes avec aperçu. Permis salariés dans categories_permis, CACES dans employes_autorisations_vehicules. Dispos possède qualifications déclarées et lien employe_id. | Rapprochement manuel et présentation des externes non rattachés dans la même vue ; chef terrain permanent ; Base_employés en mise à jour seule. |
+| **2. Besoins d’étape** | **affaire_etapes_logistiques** : nb_personnes, type, dates, horaires, responsable, lieu, notes et statut proposé/validé/fait/annulé. **/logistique**, formulaire EtapeDialog et lecture mobile. | Chefs requis, quantités par poste, permis/CACES requis ; compteur nominatif. Le texte equipe est déprécié, pas une source de noms. |
+| **3. Affectations** | **assignations** : employé, affaire, date, AM/PM/JOURNEE, heures, horaires, métier, type_operation, phase, notes, auteur. **Confirmation déjà présente** non_requise/en_attente/confirmee/refusee, dates/motif ; est_chef_jour. Formulaires/bulk et source unique assignation-upsert.ts. | Lien à l’étape, externe Dispos non rattaché, validation logistique et provenance ; aucune seconde table d’affectations. |
+| **4. Planning équipes** | **/planning** : grilles et vues CDI/Intérim/chantier/objet/pôle. **/qui-est-ou** : personne×jours et vue chantier ; **/logistique** : étapes. **absences** validées et **Dispos** jour/soirée/pas dispo/notes. | Relier ces vues aux mêmes assignations, afficher Dispos/horaires/confirmation, filtres qualifiés et totaux. Qui est où ignore aujourd’hui horaires/refus et salariés inactifs en historique. |
+| **5. Import** | **/imports/planning**, planning-xlsx/plan/apply : lecture, dates/métiers normalisés, aperçu/bilan, assignations. **employes-excel.ts** : import postes par nom/prénom avec diff. | Format blocs Planning et Base_employés, multi-fichiers, noms complets/inversés, transaction et dédoublonnage par opération. Actuellement : prénom, JOURNEE/8 h, dédoublonnage employé/date/chantier sans opération ; cases personne×dates analysées mais non enregistrées. |
+| **6. Historique futur** | assignations : personne/chantier/date ; affaires/étapes : lieu. **affaire_equipe_historique** : jours, premières/dernières dates, chef/refus. **affaire_equipe/fabrication_objet_equipe** : appartenance chantier/objet, pas créneaux. | Lien opération/étape. L’historique actuel est recalculé par chef, pas un journal immuable ni une preuve de présence ; il n’est pas exhaustif sans responsable. Pas de nouvel agrégat au lot 1. |
 
 ## État réel vérifié dans la base
 **372 employés, 13 intervenants Dispos (0 rattaché), 255 étapes, 15 absences ; assignations et affaire_equipe : 0 ligne actuellement.** Le socle existe, mais l’historique nominatif n’est pas rempli dans ces tables.
