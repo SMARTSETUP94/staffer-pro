@@ -1,5 +1,9 @@
 # Roadmap
 
+## Import réel PDF 9–15 novembre — Gabin
+- [ ] Rapprocher les employés et Dispos ; créer dans Dispos uniquement les noms réellement absents, sans coordonnées inventées.
+- [ ] Importer les interventions et vérifier leur lecture dans Planning équipes ; ne pas publier.
+
 ## Planning équipes — affichage et export (7 nov. 2026)
 - [x] Vue personne limitée aux personnes staffées de la semaine ; dates françaises, numéro/plage de semaine et flèches comme Dispos. Lecture admin et téléphone vérifiées, aucun débordement de page.
 - [x] Export Excel hebdomadaire au format de blocs Planning (six colonnes et noms par six) ; téléchargement admin vérifié et contenu non vide testé avec fixture. Les semaines consultées en base étaient vides ; réimport réel de cet export non vérifié. Aucune migration ni publication.
