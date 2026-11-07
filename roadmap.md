@@ -159,7 +159,9 @@
 - [ ] Étape 4 : vue « Mes chantiers » du chef et nouvel écran atelier écrits ; en attente de l'accord de Gabin sur la modification de base (profil Écran atelier, lecteur sans téléphones, besoins qualifiés).
 
 ## Qualité des données — piste 7 (à planifier après le lot précédent)
-- [ ] Plan à présenter : onglets Personnes / Commercial / Devis, widget Santé des données
+- [x] Plan approuvé (7 nov.) ; règles de rapprochement des noms, diff Dispos → employé et CA depuis devis écrites et testées.
+- [ ] Modification de base montrée, en attente d'accord ; puis page admin 3 onglets, actions et widget.
+- Ordre Gabin : Qualité des données avant la suite du planning (étape 4).
 
 ## Audit exports devis Staffing (prioritaire, plan approuvé 7 nov. 2026)
 - [x] Exports générés en temporaire sans enregistrement (9500 PDF détaillé/synthétique + Excel, 9477, 6064), 5 pages capturées, Excel lu ligne à ligne ; totaux identiques.
