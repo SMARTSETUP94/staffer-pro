@@ -566,6 +566,7 @@ const ALL_APP_ROLES = [
   "logistique",
   "poseur",
   "chef_pose",
+  "ecran_atelier",
 ] as const;
 type AnyAppRole = (typeof ALL_APP_ROLES)[number];
 

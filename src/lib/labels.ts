@@ -28,7 +28,8 @@ export type AppRole =
   | "logistique"
   | "poseur"
   // Lot L2 — Chef pose
-  | "chef_pose";
+  | "chef_pose"
+  | "ecran_atelier";
 
 const USER_ROLE_LABELS: Record<AppRole, string> = {
   admin: "Admin",
@@ -42,6 +43,7 @@ const USER_ROLE_LABELS: Record<AppRole, string> = {
   logistique: "Logistique",
   poseur: "Poseur",
   chef_pose: "Chef pose",
+  ecran_atelier: "Écran atelier",
 };
 
 
@@ -60,6 +62,7 @@ export const USER_ROLE_OPTIONS: { value: AppRole; label: string; hint?: string }
   { value: "atelier_chef", label: USER_ROLE_LABELS.atelier_chef, hint: "métier" },
   { value: "atelier_metier", label: USER_ROLE_LABELS.atelier_metier },
   { value: "chef_pose", label: "Chef pose" },
+  { value: "ecran_atelier", label: "Écran atelier" },
   { value: "poseur", label: USER_ROLE_LABELS.poseur },
   { value: "logistique", label: USER_ROLE_LABELS.logistique },
   { value: "rh", label: USER_ROLE_LABELS.rh },
