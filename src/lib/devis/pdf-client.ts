@@ -259,13 +259,14 @@ export function construireDevisPdf(vc: DevisClient, niveau: NiveauPdf, images: R
     styles: { fontSize: 9, cellPadding: 1.6, lineColor: [200, 200, 200], lineWidth: 0.1 }, headStyles: { fillColor: ink },
     columnStyles: { 1: { halign: "right" } },
   });
+  const finDevis = (doc as any).lastAutoTable.finalY;
   autoTable(doc, {
     startY: y, margin: { left: M, right: W - xT + 6 },
     head: [["% TVA", "Base", "Total TVA"]], body: [[`${Number(vc.tva_pct).toFixed(2)} %`, nf2(net), nf2(vc.tva)]],
     styles: { fontSize: 9, cellPadding: 1.6, lineColor: [200, 200, 200], lineWidth: 0.1 }, headStyles: { fillColor: ink },
     columnStyles: { 1: { halign: "right" }, 2: { halign: "right" } },
   });
-  y = Math.max(y + 40, (doc as any).lastAutoTable.finalY + 6);
+  y = Math.max(finDevis, (doc as any).lastAutoTable.finalY) + 6;
 
   // Règlement
   const acompte = Math.round(Number(vc.ttc) * 50) / 100;
