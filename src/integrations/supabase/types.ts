@@ -9413,6 +9413,7 @@ export type Database = {
         | "logistique"
         | "poseur"
         | "chef_pose"
+        | "ecran_atelier"
       autorisation_vehicule_type:
         | "PERMIS_B"
         | "PERMIS_C"
@@ -9593,6 +9594,8 @@ export type Database = {
         | "CDD chantier"
         | "Intérim"
         | "Apprenti"
+        | "Intermittent"
+        | "Auto-entrepreneur"
       swap_status:
         | "proposee"
         | "acceptee_collegue"
@@ -9760,6 +9763,7 @@ export const Constants = {
         "logistique",
         "poseur",
         "chef_pose",
+        "ecran_atelier",
       ],
       autorisation_vehicule_type: [
         "PERMIS_B",
@@ -9948,6 +9952,8 @@ export const Constants = {
         "CDD chantier",
         "Intérim",
         "Apprenti",
+        "Intermittent",
+        "Auto-entrepreneur",
       ],
       swap_status: [
         "proposee",

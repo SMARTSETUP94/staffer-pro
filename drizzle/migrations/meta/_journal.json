@@ -673,6 +673,13 @@
       "when": 1794080170608,
       "tag": "0095_import_planning_rattachement",
       "breakpoints": true
+    },
+    {
+      "idx": 96,
+      "version": "7",
+      "when": 1794087364817,
+      "tag": "0096_qualite_planning_enums",
+      "breakpoints": true
     }
   ]
 }
