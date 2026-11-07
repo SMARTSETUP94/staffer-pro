@@ -1,7 +1,7 @@
 /** Génère le PDF client d'un devis, l'enregistre dans le stockage privé des exports et l'historique. */
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
-import { construireDevisPdf, nomFichierPdf, type DevisClient, type ImagePdf, type NiveauPdf, champsClientManquants } from "./pdf-client";
+import { champsClientManquants, construireDevisPdf, nomFichierPdf, type DevisClient, type ImagePdf, type NiveauPdf } from "./pdf-client";
 
 export const BUCKET_EXPORTS = "devis-exports";
 
@@ -29,15 +29,14 @@ export async function chargerImages(sb: SupabaseClient<Database>, vc: DevisClien
 
 export async function exporterDevisPdf(sb: SupabaseClient<Database>, devisId: string, niveau: NiveauPdf) {
   const vc = await lireDevisClient(sb, devisId);
-  const manque = champsClientManquants(vc.client);
-  if (manque.length) throw new Error(`Fiche client incomplète (${manque.join(", ")}) : complétez la fiche client avant l'export.`);
   const images = niveau === "detaille" ? await chargerImages(sb, vc) : {};
-  const buf = construireDevisPdf(vc, niveau, images);
+  const polices = await import("./polices-pdf");
+  const buf = construireDevisPdf(vc, niveau, images, { polices });
   const bytes = new Uint8Array(buf);
   const path = `${devisId}/${new Date().toISOString().replace(/[:.]/g, "-")}-R${vc.version ?? 1}-${niveau}.pdf`;
   const up = await sb.storage.from(BUCKET_EXPORTS).upload(path, bytes, { contentType: "application/pdf", upsert: false });
   if (up.error) throw new Error("Enregistrement du PDF impossible");
   const reg = await sb.rpc("devis_export_enregistrer", { _devis_id: devisId, _niveau: niveau, _storage_path: path, _taille: bytes.byteLength });
   if (reg.error) throw new Error("Historique d'export indisponible");
-  return { vc, bytes, path, nom: nomFichierPdf(vc, niveau), export: reg.data as { id: string; version: number; filigrane: boolean } };
+  return { vc, bytes, avertissements: champsClientManquants(vc.client), path, nom: nomFichierPdf(vc, niveau), export: reg.data as { id: string; version: number; filigrane: boolean } };
 }
