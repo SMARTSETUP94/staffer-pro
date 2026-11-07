@@ -44,6 +44,7 @@ async function fetchPlanningAtelier(
     supabase
       .from("assignations")
       .select("id, atelier_planning_id, employe_id, affaire_id, date")
+      .eq("historique_terrain", false)
       .eq("affaire_id", affaireId)
       .gte("date", from)
       .lte("date", to),

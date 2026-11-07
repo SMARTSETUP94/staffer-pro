@@ -1,12 +1,12 @@
 # Roadmap
 
 ## Lot 1 — Planning nominatif logistique (7 nov. 2026)
-- [ ] Préparer et présenter la migration additive ; application bloquée jusqu’à l’accord explicite de Gabin.
+- [x] Plan réduit approuvé et socle additif appliqué : personnes et affectations existantes réutilisées.
 - [x] Inventaire demandé après rejet : employés, postes, statuts, assignations, absences et écrans relus ; 63 tests existants passent.
 - [ ] Réunir l’équipe terrain sans doublons, besoins qualifiés et affectations nominatives ; droits admin/logistique en écriture, chef d’équipe en lecture.
 - [ ] Planning équipes semaine par étape / personne, recherche et disponibilités, filtres ; lecture mobile.
 - [ ] Import unique consolidé onglet Affectations (10 colonnes exactes, ~2 130 lignes) : aperçu, rattachement manuel, historique dans assignations sans étapes passées ; réimport sans doublons. Aucun import Planning/Base_employés ; semaines futures saisies dans Staffing.
-- [ ] Recette 390/1366 px, 4/6 puis 6/6, vue personne, import consolidé rejoué et noms accentués ; nettoyer les données de test.
+- [ ] Recette partielle : compteurs 4/6→6/6 et réimport 1 ajouté puis 0 ajouté/1 existant vérifiés ; essais nettoyés. Restent filtres qualifiés, disponibilités visibles, rapprochement externes, rendu 1366 et lecture chef à contrôler.
 - [ ] Lots 2/3 : modèle compatible seulement, aucun écran ni automatisation ; publication réservée à Gabin.
 
 ## Lot 1 — Équipe projet, Presque gagné, planning BE / projets (27 oct. 2026)

@@ -1174,7 +1174,7 @@ export type Database = {
           demi_journee: Database["public"]["Enums"]["demi_journee_type"]
           devis_id: string | null
           dispos_intervenant_id: string | null
-          employe_id: string
+          employe_id: string | null
           est_chef_jour: boolean
           etape_logistique_id: string | null
           fin_jour_suivant: boolean
@@ -1208,7 +1208,7 @@ export type Database = {
           demi_journee: Database["public"]["Enums"]["demi_journee_type"]
           devis_id?: string | null
           dispos_intervenant_id?: string | null
-          employe_id: string
+          employe_id?: string | null
           est_chef_jour?: boolean
           etape_logistique_id?: string | null
           fin_jour_suivant?: boolean
@@ -1242,7 +1242,7 @@ export type Database = {
           demi_journee?: Database["public"]["Enums"]["demi_journee_type"]
           devis_id?: string | null
           dispos_intervenant_id?: string | null
-          employe_id?: string
+          employe_id?: string | null
           est_chef_jour?: boolean
           etape_logistique_id?: string | null
           fin_jour_suivant?: boolean
@@ -9071,6 +9071,16 @@ export type Database = {
         }
         Returns: Json
       }
+      planning_terrain_affecter: {
+        Args: {
+          _etape: string
+          _jour: string
+          _origine: string
+          _personne: string
+          _role: string
+        }
+        Returns: string
+      }
       planning_terrain_ecrire_autorise: { Args: never; Returns: boolean }
       planning_terrain_importer: {
         Args: { _empreinte: string; _lignes: Json }
@@ -9078,6 +9088,10 @@ export type Database = {
       }
       planning_terrain_lire_autorise: { Args: never; Returns: boolean }
       planning_terrain_references: { Args: never; Returns: Json }
+      planning_terrain_semaine: {
+        Args: { _debut: string; _fin: string }
+        Returns: Json
+      }
       preflight_delete_devis: { Args: { p_devis_id: string }; Returns: Json }
       preflight_import_devis: {
         Args: { _affaire_id?: string; _fichier_hash: string }

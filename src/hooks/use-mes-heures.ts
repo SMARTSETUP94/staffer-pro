@@ -187,6 +187,7 @@ export function useMesHeures({ weekStart, employeIdOverride }: UseMesHeuresOptio
           "id, date, demi_journee, heures, notes, affaire_id, affaire:affaires(numero, nom, lieu), metier:metiers(libelle, couleur)",
         )
         .eq("employe_id", employeId)
+        .eq("historique_terrain", false)
         .gte("date", startStr)
         .lte("date", endStr)
         .order("date"),
