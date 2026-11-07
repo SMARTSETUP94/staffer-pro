@@ -9,6 +9,6 @@ export function PastilleDispo({ statut }: { statut: StatutDispo }) {
 }
 
 export function BadgesQualifs({ p }: { p: { chef?: boolean | null; permis?: string[] | null; caces?: string[] | null; caces_autre?: string | null } }) {
-  const caces = [...(p.caces ?? []), ...(p.caces_autre ? [p.caces_autre] : [])];
-  return <>{p.chef && <span className="rounded bg-primary/15 px-1.5 text-[11px] font-semibold text-primary">Chef</span>}{(p.permis ?? []).map(x => <span key={x} className="rounded bg-muted px-1.5 text-[11px] text-muted-foreground">{x}</span>)}{caces.map(x => <span key={x} className="rounded bg-muted px-1.5 text-[11px] text-muted-foreground">{x}</span>)}</>;
+  const ok = (x: string) => x && x.toLowerCase() !== 'aucun'; const caces = [...(p.caces ?? []), ...(p.caces_autre ? [p.caces_autre] : [])].filter(ok);
+  return <>{p.chef && <span className="rounded bg-primary/15 px-1.5 text-[11px] font-semibold text-primary">Chef</span>}{(p.permis ?? []).filter(ok).map(x => <span key={x} className="rounded bg-muted px-1.5 text-[11px] text-muted-foreground">{x}</span>)}{caces.map(x => <span key={x} className="rounded bg-muted px-1.5 text-[11px] text-muted-foreground">{x}</span>)}</>;
 }
