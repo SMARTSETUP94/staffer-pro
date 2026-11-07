@@ -1,8 +1,8 @@
 # Roadmap
 
 ## Planning équipes — affichage et export (7 nov. 2026)
-- [ ] Limiter la vue personne aux personnes staffées de la semaine ; navigation de semaine comme Dispos.
-- [ ] Export Excel hebdomadaire au format Planning réimportable ; vérifier téléchargement et contenu.
+- [x] Vue personne limitée aux personnes staffées de la semaine ; dates françaises, numéro/plage de semaine et flèches comme Dispos. Lecture admin et téléphone vérifiées, aucun débordement de page.
+- [x] Export Excel hebdomadaire au format de blocs Planning (six colonnes et noms par six) ; téléchargement admin vérifié et contenu non vide testé avec fixture. Les semaines consultées en base étaient vides ; réimport réel de cet export non vérifié. Aucune migration ni publication.
 
 ## Import hebdomadaire Excel/PDF — Gabin (7 nov. 2026)
 - [x] Import réutilisable Excel/PDF ajouté dans Planning équipes, aperçu éditable et rattachement cherchable aux personnes/chantiers existants ; historique séparé. Migration approuvée puis appliquée, aucun doublon de table.

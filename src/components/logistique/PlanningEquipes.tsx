@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -31,6 +31,7 @@ export function PlanningEquipes() {
   const dates = Array.from({ length: 7 }, (_, i) => ajouterJours(debut, i));
   const personnes = q.data?.references.personnes ?? [];
   const affectations = q.data?.affectations ?? [];
+  useEffect(() => { setExportPret(null); }, [q.data]);
   const staffees = personnesStaffees(personnes,affectations,debut,ajouterJours(debut,6));
   async function exporter() {
     if (exportPret) {
@@ -49,7 +50,7 @@ export function PlanningEquipes() {
   async function affecter(p: Personne) {
     if (!ajout) return;
     const { error } = await supabase.rpc('planning_terrain_affecter', { _etape: ajout.etape, _jour: ajout.jour, _personne: p.id, _origine: p.origine, _role: 'equipier' });
-    if (error) toast.error(error.message); else { toast.success('Personne affectée'); setAjout(null); await q.refetch(); }
+    if (error) toast.error(error.message); else { toast.success('Personne affectée'); setAjout(null); setExportPret(null); await q.refetch(); }
   }
   return <section className="space-y-4">
     <div className="space-y-3"><h2 className="text-xl font-semibold">Planning équipes · semaine {numeroSemaine(debut)}</h2><p className="text-sm text-muted-foreground">{plageSemaine(debut)}</p><div className="flex flex-wrap items-center gap-2"><Button variant="outline" size="icon" aria-label="Semaine précédente" title="Semaine précédente" onClick={() => changerSemaine(ajouterJours(debut, -7))}><ChevronLeft className="size-4" /></Button><Popover><PopoverTrigger asChild><Button variant="outline"><CalendarDays className="mr-2 size-4" />Choisir la semaine</Button></PopoverTrigger><PopoverContent className="w-64"><Input type="date" aria-label="Début de semaine terrain" value={debut} onChange={e => changerSemaine(e.target.value)} /></PopoverContent></Popover><Button variant="outline" size="icon" aria-label="Semaine suivante" title="Semaine suivante" onClick={() => changerSemaine(ajouterJours(debut, 7))}><ChevronRight className="size-4" /></Button><Button variant="ghost" onClick={() => changerSemaine(new Intl.DateTimeFormat('sv-SE',{timeZone:'Europe/Paris'}).format(new Date()))}>Cette semaine</Button>{droits.data && <Button variant="outline" disabled={exportBusy || q.isFetching} onClick={() => void exporter()}><Download className="mr-2 size-4" />{exportBusy ? 'Préparation…' : exportPret ? 'Télécharger le planning Excel' : 'Exporter le planning Excel'}</Button>}</div></div>

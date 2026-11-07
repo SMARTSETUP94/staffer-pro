@@ -55,3 +55,4 @@
 - /dispos calls only dispos_public_* definer RPCs; tables stay RLS-only.
 - Logistics date changes move linked non-imported assignments transactionally through a table trigger; invalid shortened periods fail atomically, covering UI and RPC paths without copying historical rows.
 - Weekly planning imports use reviewed document extraction and a transactional, chantier-locked RPC over existing logistics stages and assignments; provenance stays on assignments so renamed files cannot create duplicate interventions or overwrite human corrections.
+- Weekly planning filters and Excel block rows use pure client helpers over the authorized weekly reader; exports load spreadsheet code lazily and prepare a Blob before the download click to preserve mobile user activation.
