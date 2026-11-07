@@ -1746,6 +1746,9 @@ export type Database = {
           dirigeant: string | null
           domaines_email: string[]
           email: string | null
+          fusionne_dans: string | null
+          fusionne_le: string | null
+          historique_qualite: Json
           id: string
           nom: string
           nom_normalise: string
@@ -1767,6 +1770,9 @@ export type Database = {
           dirigeant?: string | null
           domaines_email?: string[]
           email?: string | null
+          fusionne_dans?: string | null
+          fusionne_le?: string | null
+          historique_qualite?: Json
           id?: string
           nom: string
           nom_normalise: string
@@ -1788,6 +1794,9 @@ export type Database = {
           dirigeant?: string | null
           domaines_email?: string[]
           email?: string | null
+          fusionne_dans?: string | null
+          fusionne_le?: string | null
+          historique_qualite?: Json
           id?: string
           nom?: string
           nom_normalise?: string
@@ -1800,7 +1809,15 @@ export type Database = {
           updated_at?: string
           ville?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "clients_fusionne_dans_fkey"
+            columns: ["fusionne_dans"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       contacts_logistiques: {
         Row: {
@@ -2124,6 +2141,8 @@ export type Database = {
           affaire_id: string | null
           archive: boolean
           auteur_id: string | null
+          classe_sans_suite_le: string | null
+          classe_sans_suite_par: string | null
           cle_externe: string | null
           client_final_id: string | null
           client_id: string | null
@@ -2189,6 +2208,8 @@ export type Database = {
           affaire_id?: string | null
           archive?: boolean
           auteur_id?: string | null
+          classe_sans_suite_le?: string | null
+          classe_sans_suite_par?: string | null
           cle_externe?: string | null
           client_final_id?: string | null
           client_id?: string | null
@@ -2254,6 +2275,8 @@ export type Database = {
           affaire_id?: string | null
           archive?: boolean
           auteur_id?: string | null
+          classe_sans_suite_le?: string | null
+          classe_sans_suite_par?: string | null
           cle_externe?: string | null
           client_final_id?: string | null
           client_id?: string | null
@@ -3290,6 +3313,7 @@ export type Database = {
           cree_le: string
           email_terrain: string | null
           employe_id: string | null
+          employes_refuses: string[]
           est_chef_equipe_terrain: boolean
           id: string
           jeton_hash: string | null
@@ -3309,6 +3333,7 @@ export type Database = {
           cree_le?: string
           email_terrain?: string | null
           employe_id?: string | null
+          employes_refuses?: string[]
           est_chef_equipe_terrain?: boolean
           id?: string
           jeton_hash?: string | null
@@ -3328,6 +3353,7 @@ export type Database = {
           cree_le?: string
           email_terrain?: string | null
           employe_id?: string | null
+          employes_refuses?: string[]
           est_chef_equipe_terrain?: boolean
           id?: string
           jeton_hash?: string | null
@@ -3654,6 +3680,7 @@ export type Database = {
           actif: boolean
           adresse: string | null
           agence_interim: string | null
+          caces: string[]
           categories_permis: Database["public"]["Enums"]["categorie_permis"][]
           competences_polyvalentes: Json
           created_at: string
@@ -3665,6 +3692,9 @@ export type Database = {
           est_chef_equipe_terrain: boolean
           est_livreur: boolean
           forfait: boolean
+          fusionne_dans: string | null
+          fusionne_le: string | null
+          historique_qualite: Json
           id: string
           is_apprenti: boolean
           matricule_silae: string | null
@@ -3692,6 +3722,7 @@ export type Database = {
           actif?: boolean
           adresse?: string | null
           agence_interim?: string | null
+          caces?: string[]
           categories_permis?: Database["public"]["Enums"]["categorie_permis"][]
           competences_polyvalentes?: Json
           created_at?: string
@@ -3703,6 +3734,9 @@ export type Database = {
           est_chef_equipe_terrain?: boolean
           est_livreur?: boolean
           forfait?: boolean
+          fusionne_dans?: string | null
+          fusionne_le?: string | null
+          historique_qualite?: Json
           id?: string
           is_apprenti?: boolean
           matricule_silae?: string | null
@@ -3730,6 +3764,7 @@ export type Database = {
           actif?: boolean
           adresse?: string | null
           agence_interim?: string | null
+          caces?: string[]
           categories_permis?: Database["public"]["Enums"]["categorie_permis"][]
           competences_polyvalentes?: Json
           created_at?: string
@@ -3741,6 +3776,9 @@ export type Database = {
           est_chef_equipe_terrain?: boolean
           est_livreur?: boolean
           forfait?: boolean
+          fusionne_dans?: string | null
+          fusionne_le?: string | null
+          historique_qualite?: Json
           id?: string
           is_apprenti?: boolean
           matricule_silae?: string | null
@@ -3765,6 +3803,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "employes_fusionne_dans_fkey"
+            columns: ["fusionne_dans"]
+            isOneToOne: false
+            referencedRelation: "employes"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "employes_metier_principal_id_fkey"
             columns: ["metier_principal_id"]
@@ -8721,6 +8766,7 @@ export type Database = {
           cree_le: string
           email_terrain: string | null
           employe_id: string | null
+          employes_refuses: string[]
           est_chef_equipe_terrain: boolean
           id: string
           jeton_hash: string | null
@@ -9132,6 +9178,10 @@ export type Database = {
         }
         Returns: string
       }
+      planning_terrain_ecran: {
+        Args: { _debut: string; _fin: string }
+        Returns: Json
+      }
       planning_terrain_ecrire_autorise: { Args: never; Returns: boolean }
       planning_terrain_historique_compteurs:
         | { Args: never; Returns: Json }
@@ -9413,6 +9463,7 @@ export type Database = {
         | "logistique"
         | "poseur"
         | "chef_pose"
+        | "ecran_atelier"
       autorisation_vehicule_type:
         | "PERMIS_B"
         | "PERMIS_C"
@@ -9593,6 +9644,8 @@ export type Database = {
         | "CDD chantier"
         | "Intérim"
         | "Apprenti"
+        | "Intermittent"
+        | "Auto-entrepreneur"
       swap_status:
         | "proposee"
         | "acceptee_collegue"
@@ -9760,6 +9813,7 @@ export const Constants = {
         "logistique",
         "poseur",
         "chef_pose",
+        "ecran_atelier",
       ],
       autorisation_vehicule_type: [
         "PERMIS_B",
@@ -9948,6 +10002,8 @@ export const Constants = {
         "CDD chantier",
         "Intérim",
         "Apprenti",
+        "Intermittent",
+        "Auto-entrepreneur",
       ],
       swap_status: [
         "proposee",
