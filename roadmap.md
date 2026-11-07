@@ -156,11 +156,12 @@
 - [x] Étape 1 : page /logistique à onglets (Étapes · Équipes · Personnes), filtres partagés mémorisés, carte d'étape commune, puces de besoins ; ancienne page redirigée. Saisie permis/CACES/chefs dans la fenêtre d'étape en attente de la modification de base.
 - [x] Étape 2 : « Compléter » (panneau, filtres, ajouts à la suite), glisser-déposer, copie d'équipe et semaine dernière. Glisser-déposer et copie non exercés sur données réelles.
 - [x] Étape 3 : panneau « À traiter » cliquable, message WhatsApp du jour et missions par personne, statut de confirmation et rôle chef modifiables.
-- [ ] Étape 4 : vue « Mes chantiers » du chef et nouvel écran atelier écrits ; en attente de l'accord de Gabin sur la modification de base (profil Écran atelier, lecteur sans téléphones, besoins qualifiés).
+- [x] Étape 4 : migration appliquée (besoins qualifiés lus/écrits, profil Écran atelier en lecture, lecteur écran sans téléphone ni montant). Non vérifié en connexion réelle avec ce profil.
 
 ## Qualité des données — piste 7 (à planifier après le lot précédent)
 - [x] Plan approuvé (7 nov.) ; règles de rapprochement des noms, diff Dispos → employé et CA depuis devis écrites et testées.
-- [ ] Modification de base montrée, en attente d'accord ; puis page admin 3 onglets, actions et widget.
+- [x] Migration colonnes + statuts appliquée (7 nov.).
+- [ ] Fonctions admin montrées, en attente d'accord ; puis page admin 3 onglets et widget.
 - Ordre Gabin : Qualité des données avant la suite du planning (étape 4).
 
 ## Audit exports devis Staffing (prioritaire, plan approuvé 7 nov. 2026)
