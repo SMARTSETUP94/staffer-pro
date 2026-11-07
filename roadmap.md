@@ -168,3 +168,6 @@
 - [x] Tableaux d'écarts remis.
 - [x] Plan validé ; mise en page PDF, titres courts Excel, options hors sous-totaux, blocage fiche client incomplète livrés.
 - [ ] Exports devis — reste : champs chantier/signataire, pied de page complet, CGV, alerte matières à 0 € (en attente : migration à valider + réponses de Gabin aux 3 questions).
+
+## Planning atelier simple + Planning BE (après Qualité des données et exports devis)
+- [ ] Plan rédigé, à présenter ; composant barres commun, charge par métier, BE par concepteur.
