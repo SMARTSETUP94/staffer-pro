@@ -68,3 +68,21 @@ describe('export au format logistique', () => {
     expect(lignesStaffing(blocsExport(['2026-11-09'], [etape], affectations, [kevin, rayan]))).toHaveLength(3);
   });
 });
+
+import { rattachementBloc } from '../planning-hebdomadaire';
+describe('rattachement import planning', () => {
+  const e = (id: string, type: string, heure: string | null, statut = 'valide') => ({ id, affaire_id: 'A', type, date: '2026-11-11', fin: '2026-11-11', heure, statut });
+  it('rattache une étape existante sans lieu ni heure', () => {
+    expect(rattachementBloc({ date: '2026-11-11', type: 'rotation', heure: '06:00' }, 'A', [e('x', 'rotation', null)])).toMatchObject({ etat: 'rattache', etape: { id: 'x' } });
+  });
+  it('propose une étape de type différent comme même intervention', () => {
+    expect(rattachementBloc({ date: '2026-11-11', type: 'montage', heure: '10:00' }, 'A', [e('l', 'livraison', '10:00:00')])).toMatchObject({ etat: 'meme_intervention', candidats: [{ id: 'l' }] });
+  });
+  it('exige un choix si plusieurs étapes compatibles', () => {
+    expect(rattachementBloc({ date: '2026-11-11', type: 'rotation', heure: null }, 'A', [e('a', 'rotation', '06:00'), e('b', 'rotation', '20:00')]).etat).toBe('choix');
+  });
+  it('ignore les étapes annulées et signale un chantier inconnu', () => {
+    expect(rattachementBloc({ date: '2026-11-11', type: 'rotation', heure: null }, 'A', [e('a', 'rotation', null, 'annule')]).etat).toBe('nouvelle');
+    expect(rattachementBloc({ date: '2026-11-11', type: 'rotation', heure: null }, undefined, []).etat).toBe('chantier_inconnu');
+  });
+});
