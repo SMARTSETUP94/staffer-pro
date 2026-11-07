@@ -1,5 +1,6 @@
 import { parse, isValid } from 'date-fns';
 import { fr, enUS } from 'date-fns/locale';
+import type { Json } from '@/integrations/supabase/types';
 
 export interface OriginalSender { name: string | null; email: string | null }
 export const isInternalSender = (email: string) => /@(setup\.paris|groupe-smart\.fr)$/i.test(email.trim());
@@ -52,7 +53,7 @@ export function extractOriginalSender(body: string | null | undefined): Original
 }
 type EmailTransfert = {from_email:string;from_name:string|null;subject:string|null;body_full:string|null;source_boite:string|null;transmis_par?:string|null;metadata_ia?:unknown};
 export function resoudreTransfert(email: EmailTransfert) {
- const metadata=email.metadata_ia && typeof email.metadata_ia==='object' && !Array.isArray(email.metadata_ia) ? email.metadata_ia as Record<string,unknown> : {};
+ const metadata=email.metadata_ia && typeof email.metadata_ia==='object' && !Array.isArray(email.metadata_ia) ? email.metadata_ia as Record<string,Json | undefined> : {};
  if(email.source_boite!=='devis' || (!email.transmis_par && !isInternalSender(email.from_email) && !/^\s*(fw|fwd|tr)\s*:/i.test(email.subject ?? ''))) return null;
  const original=extractOriginalMessage(email.body_full);
  const archive=metadata['transfert_original'] ?? {from_email:email.from_email,from_name:email.from_name,subject:email.subject};

@@ -52,7 +52,7 @@ export const reanalyseSharedInboxes = createServerFn({ method: "POST" })
             );
             const { error: upErr } = await supabase
               .from("emails_entrants")
-              .update({ ...(correction ?? {}), metadata_ia: {...(r.metadata_ia as Record<string,unknown> ?? {}),...clsToMetadata(cls),...(correction?.metadata_ia ?? {})}, confiance_ia: cls.confiance })
+              .update({ ...(correction ?? {}), metadata_ia: {...(r.metadata_ia && typeof r.metadata_ia==='object' && !Array.isArray(r.metadata_ia) ? r.metadata_ia : {}),...clsToMetadata(cls),...(correction?.metadata_ia ?? {})}, confiance_ia: cls.confiance })
               .eq("id", r.id);
             if (upErr) errors.push(upErr.message);
             else updated++;

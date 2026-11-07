@@ -23,12 +23,14 @@ export type ReadableEmail = {
   body_content_type: string | null;
   transmis_par?: string | null;
   client_a_identifier?: boolean;
-  metadata_ia?: {date_demande_originale?: string | null} | null;
+  metadata_ia?: unknown;
 };
 
 export function EmailReaderDialog({ email, onClose, clientReply = false, affaireId }: { email: ReadableEmail; onClose: () => void; clientReply?: boolean; affaireId?: string }) {
   const isHtml = email.body_content_type?.toLowerCase() === "html";
   const body = email.body_full || email.body_preview || "(corps vide)";
+  const meta=email.metadata_ia && typeof email.metadata_ia==='object' ? email.metadata_ia as Record<string,unknown> : {};
+  const dateDemande=typeof meta['date_demande_originale']==='string' ? meta['date_demande_originale'] : email.received_at;
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col">
@@ -36,7 +38,7 @@ export function EmailReaderDialog({ email, onClose, clientReply = false, affaire
           <DialogTitle className="pr-6">{email.subject || "(sans objet)"}</DialogTitle>
           <DialogDescription>
             {email.from_name ? `${email.from_name} · ` : ""}{email.from_email} ·{" "}
-            {format(parseISO(email.metadata_ia?.date_demande_originale ?? email.received_at), "d MMMM yyyy 'à' HH:mm", { locale: fr })}
+            {format(parseISO(dateDemande), "d MMMM yyyy 'à' HH:mm", { locale: fr })}
             {email.transmis_par && <span className="block">transféré par {email.transmis_par}</span>}
             {email.client_a_identifier && <span className="block">Client à identifier</span>}
           </DialogDescription>
