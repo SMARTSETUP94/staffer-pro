@@ -2,6 +2,7 @@
 
 ## Lot 1 — Planning nominatif logistique (7 nov. 2026)
 - [ ] Préparer et présenter la migration additive ; application bloquée jusqu’à l’accord explicite de Gabin.
+- [ ] Inventaire demandé après rejet : réutiliser employés, postes, statuts, assignations, absences et écrans ; Base_employés complète/rapproche seulement, aucune personne créée.
 - [ ] Réunir l’équipe terrain sans doublons, besoins qualifiés et affectations nominatives ; droits admin/logistique en écriture, chef d’équipe en lecture.
 - [ ] Planning équipes semaine par étape / personne, recherche et disponibilités, filtres ; lecture mobile.
 - [ ] Imports Base_employés / Planning en masse avec aperçu, rapprochements manuels, dédoublonnage et bilan ; aucun taux/coût importé.
