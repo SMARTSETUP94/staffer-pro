@@ -13,7 +13,7 @@ export const analyserPlanningHebdomadaire = createServerFn({ method: 'POST' })
     const key = process.env.LOVABLE_API_KEY;
     if (!key) throw new Error('Analyse de documents indisponible');
     const { extrairePlanning } = await import('@/lib/ai/planning-import.server');
-    let content: import('ai').ModelMessage['content'];
+    let content: Extract<import('ai').ModelMessage, { role: 'user' }>['content'];
     if (/\.pdf$/i.test(data.name)) content = [{ type: 'file', filename: data.name, data: data.base64, mediaType: 'application/pdf' }];
     else if (/\.xlsx$/i.test(data.name)) {
       const XLSX = await import('xlsx-js-style');
