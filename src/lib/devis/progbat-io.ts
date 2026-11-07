@@ -1,3 +1,4 @@
+import { champsClientManquants } from "./pdf-client";
 /** Génère l'Excel ProGBat d'un devis validé, le range dans les exports du devis et renvoie la fiche de contrôle. */
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
@@ -25,6 +26,8 @@ export async function classeurProgbat(lignes: LigneProgbat[]): Promise<Uint8Arra
 
 export async function exporterDevisProgbat(sb: SupabaseClient<Database>, devisId: string) {
   const v = await lireDonneesProgbat(sb, devisId);
+  const manque = champsClientManquants(v.client);
+  if (manque.length) throw new Error(`Fiche client incomplète (${manque.join(", ")}) : complétez la fiche client avant l'export.`);
   const { lignes, fiche } = construireProgbat(v);
   if (!fiche.controle_ok) throw new Error(`Contrôle interne échoué : fichier ${fiche.total_fichier} € ≠ total HT ${fiche.total_ht_attendu} €`);
   const bytes = await classeurProgbat(lignes);
