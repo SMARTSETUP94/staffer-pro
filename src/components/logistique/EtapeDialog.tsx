@@ -57,6 +57,10 @@ export function EtapeDialog({ open, onOpenChange, etape, defaultDate, defaultAff
       acces: etape?.acces ?? "",
       note: etape?.note ?? "",
       commentaire_equipe: (etape as { commentaire_equipe?: string | null } | null | undefined)?.commentaire_equipe ?? "",
+      nb_chefs_equipe: etape?.nb_chefs_equipe?.toString() ?? "",
+      nb_vehicules: etape?.nb_vehicules?.toString() ?? "",
+      permis_requis: (etape?.permis_requis ?? []).join(","),
+      caces_requis: (etape?.caces_requis ?? []).join(","),
     };
   }
   useEffect(() => { if (open) setF(init()); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [open, etape?.id]);
@@ -86,6 +90,13 @@ export function EtapeDialog({ open, onOpenChange, etape, defaultDate, defaultAff
       acces: f.acces || null,
       note: f.note || null,
       commentaire_equipe: f.commentaire_equipe || null,
+      // Besoins qualifiés : envoyés seulement s'ils sont renseignés ou déjà présents sur l'étape.
+      ...(f.nb_chefs_equipe || f.nb_vehicules || f.permis_requis || f.caces_requis || etape?.nb_chefs_equipe || etape?.nb_vehicules || etape?.permis_requis?.length || etape?.caces_requis?.length ? {
+        nb_chefs_equipe: f.nb_chefs_equipe ? Number(f.nb_chefs_equipe) : null,
+        nb_vehicules: f.nb_vehicules ? Number(f.nb_vehicules) : null,
+        permis_requis: f.permis_requis ? f.permis_requis.split(",") : null,
+        caces_requis: f.caces_requis ? f.caces_requis.split(",") : null,
+      } : {}),
     };
     const { error } = etape
       ? await supabase.rpc("app_modifier_etape_logistique", { _id: etape.id, _patch: payloadWithoutAffaire(payload) })
@@ -183,6 +194,10 @@ export function EtapeDialog({ open, onOpenChange, etape, defaultDate, defaultAff
           )}
           <div><Label>Lieu</Label><LieuAutocomplete value={f.lieu_libre} onChange={(v) => set("lieu_libre", v)} /></div>
           <div><Label>Nb personnes</Label><Input type="number" min={0} value={f.nb_personnes} onChange={(e) => set("nb_personnes", e.target.value)} /></div>
+          <div><Label>Chefs d'équipe requis</Label><Input type="number" min={0} value={f.nb_chefs_equipe} onChange={(e) => set("nb_chefs_equipe", e.target.value)} /></div>
+          <div><Label>Nb véhicules</Label><Input type="number" min={0} value={f.nb_vehicules} onChange={(e) => set("nb_vehicules", e.target.value)} /></div>
+          <div className="sm:col-span-2"><Label>Permis requis (1 personne par permis)</Label><ChoixMultiple options={["B", "C", "CE"]} value={f.permis_requis} onChange={(v) => set("permis_requis", v)} /></div>
+          <div className="sm:col-span-2"><Label>CACES requis</Label><ChoixMultiple options={["R489", "R486"]} value={f.caces_requis} onChange={(v) => set("caces_requis", v)} /></div>
           <div className="sm:col-span-2"><Label>Responsable</Label><ResponsableAutocomplete value={f.responsable} onChange={(v) => set("responsable", v)} /></div>
           <div className="sm:col-span-2"><Label>Accès (quai, code…)</Label><Input value={f.acces} onChange={(e) => set("acces", e.target.value)} /></div>
           <div className="sm:col-span-2"><Label>Note</Label><Textarea rows={2} value={f.note} onChange={(e) => set("note", e.target.value)} /></div>
@@ -195,4 +210,10 @@ export function EtapeDialog({ open, onOpenChange, etape, defaultDate, defaultAff
       </DialogContent>
     </Dialog>
   );
+}
+
+/** Cases à cocher pour une liste de codes (permis, CACES), stockée « B,C ». */
+function ChoixMultiple({ options, value, onChange }: { options: string[]; value: string; onChange: (v: string) => void }) {
+  const sel = new Set(value ? value.split(",") : []);
+  return <div className="flex flex-wrap gap-3 pt-1">{options.map((o) => <label key={o} className="flex items-center gap-1.5 text-sm"><input type="checkbox" checked={sel.has(o)} onChange={(e) => { const n = new Set(sel); if (e.target.checked) n.add(o); else n.delete(o); onChange(options.filter((x) => n.has(x)).join(",")); }} />{o}</label>)}</div>;
 }
