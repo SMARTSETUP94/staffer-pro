@@ -58,10 +58,10 @@ Ajouter sur **affaire_etapes_logistiques** : nombre de chefs requis, besoins qua
 - **/qui-est-ou** : mode terrain par personne, même source assignations, Dispos/qualifications ; menu Logistique vers ce mode, pas de deuxième grille indépendante.
 - **/employes + gestion Dispos** : fiches et recherche existantes, rapprochement ; aucun troisième annuaire.
 - **/imports/planning** : format logistique/Base_employés et multi-fichiers ; modes atelier et droits actuels préservés.
-- Pas de réouverture des onglets chantier volontairement masqués, pas d’extension générale des droits fabrication.
+- Onglets chantier masqués et droits fabrication préservés.
 
 ## Vérifié / non vérifié
-**Vérifié :** colonnes, contraintes, policies et déclencheurs relus dans la base ; code des écrans/parseurs relu ; **63 tests existants passent** (Qui est où, imports planning/employés, source unique d’affectations).
+**Vérifié :** schéma/protections relus en base, écrans/parseurs relus ; **63 tests existants passent**.
 
 **Non vérifié :** nouveau lot non construit, format réel des fichiers d’Alberto, externes dans les anciennes vues, dédoublonnage concurrent, nouveaux droits et rendu. Après accord : recette 4/6→6/6 avec relecture, cohérence vue personne, deux fichiers chevauchants, noms accentués/inversés, refus d’écriture, 390/1366 px, nettoyage des données de test.
 
