@@ -129,8 +129,8 @@ export function lignesTableau(vc: DevisClient, racine: LigneClient, niveau: Nive
       rows.push({
         n, designation: l.libelle ?? "", ligneId: l.id,
         detail: prix ? (objet ? detailObjet(l) : (l.descriptif_client ?? "").trim()) : "",
-        unite: objet ? "u" : "ens", qte: String(objet ? q : 1),
-        pu: prix ? eurPdf(objet ? total / q : total) : "", total: prix ? eurPdf(total) : "",
+        unite: objet ? "u" : l.type === "zone" ? "" : "ens", qte: l.type === "zone" ? "" : String(objet ? q : 1),
+        pu: prix && l.type !== "zone" ? eurPdf(objet ? total / q : total) : "", total: prix || l.type === "zone" ? eurPdf(total) : "",
         style: objet ? "objet" : "sous",
       });
       walk(l.id, n);
@@ -272,6 +272,12 @@ export function construireDevisPdf(vc: DevisClient, niveau: NiveauPdf, images: R
   };
   const ligne = (r: LigneTableau) => {
     if (r.style === "commentaire") { descr(r.designation); return; }
+    if (r.style === "sous") {
+      const st = { font: H, fontStyle: "bold", textColor: C.encre, fontSize: 8.8, cellPadding: { top: 2.6, bottom: 1.2, left: 2, right: 2 } };
+      corps.push([{ content: r.n, styles: { ...st, textColor: C.gris } }, { content: r.designation, colSpan: 4, styles: st }, { content: r.total, styles: { ...st, halign: "right" } }]);
+      if (r.detail) descr(r.detail);
+      return;
+    }
     const fond = r.style === "objet" || r.style === "forfait" ? { fillColor: C.bleuClair } : {};
     corps.push([{ content: r.n, styles: { ...fond, textColor: C.gris } }, { content: r.designation, styles: { ...fond, fontStyle: "bold" } }, { content: r.unite, styles: fond }, { content: r.qte, styles: fond },
       { content: r.pu, styles: fond }, { content: r.total, styles: { ...fond, fontStyle: "bold" } }]);
@@ -299,7 +305,7 @@ export function construireDevisPdf(vc: DevisClient, niveau: NiveauPdf, images: R
     // Intertitre sobre de zone ou de chapitre détaillé
     corps.push([{ content: n, styles: { font: H, fontStyle: "bold", textColor: C.bleu, fontSize: 9.5, cellPadding: { top: 3.5, bottom: 1.5, left: 2, right: 2 }, lineWidth: { bottom: 0.4 }, lineColor: C.bleu } },
       { content: titre, colSpan: 4, styles: { font: H, fontStyle: "bold", textColor: C.bleu, fontSize: 9.5, cellPadding: { top: 3.5, bottom: 1.5, left: 2, right: 2 }, lineWidth: { bottom: 0.4 }, lineColor: C.bleu } },
-      { content: eurPdf(total), styles: { font: H, fontStyle: "bold", textColor: C.bleu, fontSize: 9.5, cellPadding: { top: 3.5, bottom: 1.5, left: 2, right: 2 }, lineWidth: { bottom: 0.4 }, lineColor: C.bleu } }]);
+      { content: eurPdf(total), styles: { font: H, fontStyle: "bold", textColor: C.bleu, fontSize: 8.6, halign: "right", cellPadding: { top: 3.5, bottom: 1.5, left: 2, right: 2 }, lineWidth: { bottom: 0.4 }, lineColor: C.bleu } }]);
     if (dchap) descr(dchap);
     const forfait = chap ? Number(r.montant ?? 0) : 0;
     let decal = 0;
