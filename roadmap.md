@@ -1,5 +1,9 @@
 # Roadmap
 
+## Demandes clients — transferts (plan approuvé)
+- [ ] Migration deux colonnes, lecteur Outlook FR/EN partagé, ingestion et réanalyse, identité/date d’origine et badges.
+- [ ] Recalcul sécurisé des demandes confirmées devis, bilan des provenances non confirmées, tests et recette ; aucune publication.
+
 ## Import réel PDF 9–15 novembre — Gabin
 - [ ] Rapprocher les employés et Dispos ; créer dans Dispos uniquement les noms réellement absents, sans coordonnées inventées.
 - [ ] Importer les interventions et vérifier leur lecture dans Planning équipes ; ne pas publier.
