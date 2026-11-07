@@ -39,6 +39,7 @@ export function ExportPdfDialog({ devisId, open, onOpenChange }: { devisId: stri
       const r = await exporterDevisPdf(supabase, devisId, niveau);
       telecharger(r.bytes, r.nom);
       toast.success(r.export.filigrane ? "PDF généré avec le filigrane « PROJET »" : "PDF généré");
+      if (r.avertissements.length) toast.warning(`Fiche client incomplète : ${r.avertissements.join(", ")}. Complétez-la avant l'envoi au client.`);
       void hist.refetch();
     } catch (e) { toast.error(e instanceof Error ? e.message : "Export impossible"); } finally { setBusy(false); }
   };
