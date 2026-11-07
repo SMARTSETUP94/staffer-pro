@@ -30,8 +30,8 @@ describe("extractOriginalSender", () => {
       "De : Premier Client <premier@vrai-client.com>",
       "From: Second Client <second@autre-client.com>",
     ].join("\n");
-    // Le bloc le plus bas = message d'origine.
-    expect(extractOriginalSender(body)?.email).toBe("second@autre-client.com");
+    // Premier expéditeur externe, sans mélanger les blocs.
+    expect(extractOriginalSender(body)?.email).toBe("premier@vrai-client.com");
   });
 
   it("gère le HTML (bloc De dans du markup)", () => {
