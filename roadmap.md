@@ -164,4 +164,5 @@
 ## Audit exports devis Staffing (prioritaire, plan approuvé 7 nov. 2026)
 - [x] Exports générés en temporaire sans enregistrement (9500 PDF détaillé/synthétique + Excel, 9477, 6064), 5 pages capturées, Excel lu ligne à ligne ; totaux identiques.
 - [x] Tableaux d'écarts remis.
-- [ ] Plan de corrections présenté, en attente de validation de Gabin.
+- [x] Plan validé ; mise en page PDF, titres courts Excel, options hors sous-totaux, blocage fiche client incomplète livrés.
+- [ ] Exports devis — reste : champs chantier/signataire, pied de page complet, CGV, alerte matières à 0 € (en attente : migration à valider + réponses de Gabin aux 3 questions).
