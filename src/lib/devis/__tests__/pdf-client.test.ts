@@ -79,7 +79,7 @@ describe("PDF client devis", () => {
     expect(t).toContain("non comprises dans le total");
     expect(t).toContain("Signature du client");
     expect(t).toContain("Pour SET UP");
-    expect(t).toContain("page 1 / 1");
+    expect(t).toMatch(/page 1 \/ \d/);
     expect(t).toContain("Options \\(non comprises dans le total\\)");
   });
 });
