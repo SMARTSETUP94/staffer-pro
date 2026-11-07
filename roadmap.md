@@ -8,7 +8,7 @@
 ## Import réel PDF 9–15 novembre — Gabin
 - [x] Alberto ajouté avec portable fourni, Roux et Matingou rattachés aux employés confirmés ; Dylan ajouté à Dispos sans réactivation. Amadou conservé dans Dispos, aucune activation employé.
 - [x] 65 affectations sur 13 interventions importées via appel authentifié existant ; lecture semaine 46 vérifiée (24 personnes), export téléchargé, mobile sans débordement ni erreur. Rien publié.
-- [ ] 4 affectations restent bloquées : trois pour FRANCAIS Kévin (son portable employé correspond à Kevin Etrillard dans Dispos, identité à confirmer), et KITOUNE Rayan sur 4123 (chantier terminé, réouverture ou chantier alternatif à confirmer). Aucun changement de statut ni fusion arbitraire.
+- [x] Confirmations finales reçues : Kévin Français = Kevin Etrillard (fiche Dispos réutilisée), chantier 4123 rouvert avec accord de Gabin. Quatre affectations ajoutées : total 69 sur 14 interventions, 25 personnes visibles semaine 46. Réimport des quatre : 0 ajout / 4 existantes ; aucune réactivation employé, aucune publication.
 
 ## Planning équipes — affichage et export (7 nov. 2026)
 - [x] Vue personne limitée aux personnes staffées de la semaine ; dates françaises, numéro/plage de semaine et flèches comme Dispos. Lecture admin et téléphone vérifiées, aucun débordement de page.
@@ -18,7 +18,7 @@
 - [x] Import réutilisable Excel/PDF ajouté dans Planning équipes, aperçu éditable et rattachement cherchable aux personnes/chantiers existants ; historique séparé. Migration approuvée puis appliquée, aucun doublon de table.
 - [x] PDF réel lu à l’écran : 14 interventions / 69 affectations (correction du total initial de 71 après recomptage), noms multilignes et les deux opérations du vendredi conservés ; 15 rattachements d’affectations restent manquants. Aucun planning réel enregistré.
 - [x] Excel testé, enregistrement et réimport sans doublon, externe Dispos, fichier renommé, correction préservée et erreur atomique vérifiés avec session admin. Vue semaine relue, 19 tests verts, essais supprimés (0 étape fictive restante), mobile 390 et bureau 1366 contrôlés. Erreur XLSX.read et débordement mobile corrigés. Rien publié.
-- [ ] Import réel : attend validation humaine des noms non rapprochés et des étapes existantes ambiguës ; pas de création automatique. Parcours chef et logistique en navigateur non vérifiés.
+- [x] Import réel complet : 69 affectations / 14 interventions enregistrées et relues en admin ; correspondances confirmées par Gabin. Parcours chef et logistique en navigateur non vérifiés.
 
 ## Lot 1 — Planning nominatif logistique (7 nov. 2026)
 - [x] « Planning équipes » rendue visible dans le menu (groupe Logistique) malgré le mode « suivi des affaires » actif globalement : ajout à la liste blanche des URL + test de garde. Vérifié à l'écran en admin (item présent, clic ouvre la page avec export et ajout). Droits en base : ouverture dispos.view (admin, logistique, chef d'équipe), import/export dispos.edit (admin, logistique). Rien publié.
