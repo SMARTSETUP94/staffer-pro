@@ -63,6 +63,7 @@ export function useInvalidateEtapes() {
   const qc = useQueryClient();
   return () => {
     scheduleOutlookSync();
+    void qc.invalidateQueries({ queryKey: ["planning-terrain"] });
     return qc.invalidateQueries({ queryKey: ["etapes-logistiques"] });
   };
 }
