@@ -40,3 +40,26 @@ export function passagesMultiples(interventions: InterventionLue[]) {
   }
   return [...comptes.values()].filter(v => v.nombre > 1);
 }
+/** Étape de la semaine telle que lue par planning_terrain_semaine. */
+export interface EtapeSemaine { id: string; affaire_id: string; type: string; date: string; fin: string; heure: string | null; statut?: string }
+export type Rattachement =
+  | { etat: 'rattache'; etape: EtapeSemaine; choisi: boolean }
+  | { etat: 'choix'; candidats: EtapeSemaine[] }
+  | { etat: 'meme_intervention'; candidats: EtapeSemaine[] }
+  | { etat: 'nouvelle' }
+  | { etat: 'chantier_inconnu' };
+
+const hm = (h: string | null | undefined) => (h ? h.slice(0, 5) : null);
+
+/** Même règle que planning_terrain_import_semaine : chantier + jour + type ; heure départage seulement si connue des deux côtés ; lieu jamais bloquant. */
+export function rattachementBloc(b: { date: string; type: string; heure: string | null }, affaireId: string | undefined, etapes: EtapeSemaine[], choixId?: string): Rattachement {
+  if (!affaireId) return { etat: 'chantier_inconnu' };
+  const duJour = etapes.filter(e => e.affaire_id === affaireId && e.statut !== 'annule' && e.date <= b.date && (e.fin || e.date) >= b.date);
+  const choisi = choixId ? duJour.find(e => e.id === choixId) : undefined;
+  if (choisi) return { etat: 'rattache', etape: choisi, choisi: true };
+  const memeType = duJour.filter(e => e.type === b.type && (!hm(e.heure) || !hm(b.heure) || hm(e.heure) === hm(b.heure)));
+  if (memeType.length === 1) return { etat: 'rattache', etape: memeType[0], choisi: false };
+  if (memeType.length > 1) return { etat: 'choix', candidats: memeType };
+  const autres = duJour.filter(e => e.type !== b.type).sort((x, y) => Number(hm(y.heure) === hm(b.heure)) - Number(hm(x.heure) === hm(b.heure)));
+  return autres.length ? { etat: 'meme_intervention', candidats: autres } : { etat: 'nouvelle' };
+}
