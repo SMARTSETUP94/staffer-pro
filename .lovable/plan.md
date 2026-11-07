@@ -76,6 +76,9 @@ La fusion des doublons est terminée (11 doublons fusionnés, réimport S46 : 0 
 ## Hors lot
 Import consolidé historique, suggestions automatiques, lettres de mission / Mes missions intervenants.
 
+## Lot suivant, en attente
+Le lot « Qualité des données » (Personnes / Commercial / Devis, widget Santé des données) sera noté dans la feuille de route au début de la réalisation. Il fera l'objet d'un plan séparé, présenté une fois ce lot terminé.
+
 ## Détails techniques
 - Nouveaux composants partagés dans `src/components/logistique/` : `EtapeCarte`, `PanneauCompleter`, `FiltresPlanning`, `PanneauATraiter`.
 - Logique pure dans `src/lib/logistique/` : `alertes-planning.ts`, `besoins-etape.ts`, `message-whatsapp.ts`, `copie-equipe.ts`, chacun avec ses tests.
