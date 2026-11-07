@@ -1,6 +1,6 @@
 # Planning nominatif — inventaire et migration réduite
 
-**Aucune migration appliquée, aucun écran modifié, aucune publication.** La première proposition est retirée : aucune table parallèle de personnes ou d’affectations.
+**Rien appliqué ni publié.** Proposition précédente retirée : aucune table parallèle.
 
 ## Inventaire : couverture des points 1 à 6
 1. **Personnel** : employes (identité, coordonnées, poste_principal, contrats/statuts, actif/métier), metiers/employe_metiers, postes_catalogue ; fiches/liste/tableur/recherche **/employes**. Permis salariés : categories_permis, CACES : employes_autorisations_vehicules. Dispos : déclarations et lien employe_id. **Manque** : rapprochement manuel, externes dans la même vue, chef terrain permanent ; aucun import Base_employés.
