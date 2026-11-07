@@ -136,9 +136,7 @@ function DisposStaffingPage() {
         description={limite ? `Réponses jusqu'au ${libelleLimite(limite)}` : undefined}
         actions={
           <div className="flex flex-wrap items-center gap-2">
-            <Button variant="outline" size="icon" aria-label="Semaine précédente" onClick={() => setDebut(ajouterJours(semaineDebut, -7))}><ChevronLeft className="h-4 w-4" /></Button>
-            <Button variant="outline" size="sm" onClick={() => setDebut(null)}>Semaine ouverte</Button>
-            <Button variant="outline" size="icon" aria-label="Semaine suivante" onClick={() => setDebut(ajouterJours(semaineDebut, 7))}><ChevronRight className="h-4 w-4" /></Button>
+            <NavigationSemaine debut={semaineDebut} onChange={setDebut}><Button variant="outline" size="sm" onClick={() => setDebut(null)}>Semaine ouverte</Button></NavigationSemaine>
             <Button onClick={copier} disabled={!limite}><Copy className="mr-1 h-4 w-4" />Copier le message WhatsApp</Button>
             <Button variant="outline" disabled title="Bientôt"><CalendarCheck className="mr-1 h-4 w-4" />Pré-remplir le planning (bientôt)</Button>
           </div>
