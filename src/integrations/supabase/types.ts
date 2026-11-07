@@ -544,6 +544,9 @@ export type Database = {
         Row: {
           acces: string | null
           affaire_id: string
+          besoins_postes: Json
+          caces_autre_requis: string | null
+          caces_requis: string[]
           calcul_regle: string | null
           commentaire_equipe: string | null
           contact_id: string | null
@@ -560,12 +563,14 @@ export type Database = {
           immatriculation_libre: string | null
           lieu_id: string | null
           lieu_libre: string | null
+          nb_chefs_equipe: number
           nb_personnes: number | null
           nb_vehicules: number | null
           note: string | null
           origine: Database["public"]["Enums"]["etape_logistique_origine"]
           outlook_event_id: string | null
           outlook_synced_at: string | null
+          permis_requis: string[]
           photos_optionnelles: boolean
           proposition_id: string | null
           responsable: string | null
@@ -579,6 +584,9 @@ export type Database = {
         Insert: {
           acces?: string | null
           affaire_id: string
+          besoins_postes?: Json
+          caces_autre_requis?: string | null
+          caces_requis?: string[]
           calcul_regle?: string | null
           commentaire_equipe?: string | null
           contact_id?: string | null
@@ -595,12 +603,14 @@ export type Database = {
           immatriculation_libre?: string | null
           lieu_id?: string | null
           lieu_libre?: string | null
+          nb_chefs_equipe?: number
           nb_personnes?: number | null
           nb_vehicules?: number | null
           note?: string | null
           origine?: Database["public"]["Enums"]["etape_logistique_origine"]
           outlook_event_id?: string | null
           outlook_synced_at?: string | null
+          permis_requis?: string[]
           photos_optionnelles?: boolean
           proposition_id?: string | null
           responsable?: string | null
@@ -614,6 +624,9 @@ export type Database = {
         Update: {
           acces?: string | null
           affaire_id?: string
+          besoins_postes?: Json
+          caces_autre_requis?: string | null
+          caces_requis?: string[]
           calcul_regle?: string | null
           commentaire_equipe?: string | null
           contact_id?: string | null
@@ -630,12 +643,14 @@ export type Database = {
           immatriculation_libre?: string | null
           lieu_id?: string | null
           lieu_libre?: string | null
+          nb_chefs_equipe?: number
           nb_personnes?: number | null
           nb_vehicules?: number | null
           note?: string | null
           origine?: Database["public"]["Enums"]["etape_logistique_origine"]
           outlook_event_id?: string | null
           outlook_synced_at?: string | null
+          permis_requis?: string[]
           photos_optionnelles?: boolean
           proposition_id?: string | null
           responsable?: string | null
@@ -1158,21 +1173,30 @@ export type Database = {
           date: string
           demi_journee: Database["public"]["Enums"]["demi_journee_type"]
           devis_id: string | null
+          dispos_intervenant_id: string | null
           employe_id: string
           est_chef_jour: boolean
+          etape_logistique_id: string | null
+          fin_jour_suivant: boolean
           heure_debut: string | null
           heure_fin: string | null
           heures: number
+          historique_terrain: boolean
           id: string
           metier_id: number | null
           motif_refus: string | null
           notes: string | null
           phase: string | null
+          provenance_terrain: Json
           refusee_le: string | null
+          role_terrain: string
+          source_terrain: string | null
           staffing_plan_id: string | null
           statut_confirmation: Database["public"]["Enums"]["confirmation_status"]
+          terrain: boolean
           type_operation: string | null
           updated_at: string
+          validation_logistique: string
         }
         Insert: {
           affaire_id: string
@@ -1183,21 +1207,30 @@ export type Database = {
           date: string
           demi_journee: Database["public"]["Enums"]["demi_journee_type"]
           devis_id?: string | null
+          dispos_intervenant_id?: string | null
           employe_id: string
           est_chef_jour?: boolean
+          etape_logistique_id?: string | null
+          fin_jour_suivant?: boolean
           heure_debut?: string | null
           heure_fin?: string | null
           heures?: number
+          historique_terrain?: boolean
           id?: string
           metier_id?: number | null
           motif_refus?: string | null
           notes?: string | null
           phase?: string | null
+          provenance_terrain?: Json
           refusee_le?: string | null
+          role_terrain?: string
+          source_terrain?: string | null
           staffing_plan_id?: string | null
           statut_confirmation?: Database["public"]["Enums"]["confirmation_status"]
+          terrain?: boolean
           type_operation?: string | null
           updated_at?: string
+          validation_logistique?: string
         }
         Update: {
           affaire_id?: string
@@ -1208,21 +1241,30 @@ export type Database = {
           date?: string
           demi_journee?: Database["public"]["Enums"]["demi_journee_type"]
           devis_id?: string | null
+          dispos_intervenant_id?: string | null
           employe_id?: string
           est_chef_jour?: boolean
+          etape_logistique_id?: string | null
+          fin_jour_suivant?: boolean
           heure_debut?: string | null
           heure_fin?: string | null
           heures?: number
+          historique_terrain?: boolean
           id?: string
           metier_id?: number | null
           motif_refus?: string | null
           notes?: string | null
           phase?: string | null
+          provenance_terrain?: Json
           refusee_le?: string | null
+          role_terrain?: string
+          source_terrain?: string | null
           staffing_plan_id?: string | null
           statut_confirmation?: Database["public"]["Enums"]["confirmation_status"]
+          terrain?: boolean
           type_operation?: string | null
           updated_at?: string
+          validation_logistique?: string
         }
         Relationships: [
           {
@@ -1275,10 +1317,24 @@ export type Database = {
             referencedColumns: ["devis_id"]
           },
           {
+            foreignKeyName: "assignations_dispos_intervenant_id_fkey"
+            columns: ["dispos_intervenant_id"]
+            isOneToOne: false
+            referencedRelation: "dispos_intervenants"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "assignations_employe_id_fkey"
             columns: ["employe_id"]
             isOneToOne: false
             referencedRelation: "employes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assignations_etape_logistique_id_fkey"
+            columns: ["etape_logistique_id"]
+            isOneToOne: false
+            referencedRelation: "affaire_etapes_logistiques"
             referencedColumns: ["id"]
           },
           {
@@ -3232,13 +3288,17 @@ export type Database = {
           caces: string[]
           caces_autre: string | null
           cree_le: string
+          email_terrain: string | null
           employe_id: string | null
+          est_chef_equipe_terrain: boolean
           id: string
           jeton_hash: string | null
           nom: string
           nom_normalise: string
           permis: string[]
+          poste_terrain: string | null
           prenom: string
+          statut_terrain: string | null
           telephone: string
         }
         Insert: {
@@ -3247,13 +3307,17 @@ export type Database = {
           caces?: string[]
           caces_autre?: string | null
           cree_le?: string
+          email_terrain?: string | null
           employe_id?: string | null
+          est_chef_equipe_terrain?: boolean
           id?: string
           jeton_hash?: string | null
           nom: string
           nom_normalise?: string
           permis?: string[]
+          poste_terrain?: string | null
           prenom: string
+          statut_terrain?: string | null
           telephone: string
         }
         Update: {
@@ -3262,13 +3326,17 @@ export type Database = {
           caces?: string[]
           caces_autre?: string | null
           cree_le?: string
+          email_terrain?: string | null
           employe_id?: string | null
+          est_chef_equipe_terrain?: boolean
           id?: string
           jeton_hash?: string | null
           nom?: string
           nom_normalise?: string
           permis?: string[]
+          poste_terrain?: string | null
           prenom?: string
+          statut_terrain?: string | null
           telephone?: string
         }
         Relationships: [
@@ -3588,6 +3656,7 @@ export type Database = {
           date_sortie: string | null
           email: string | null
           est_cadre: boolean
+          est_chef_equipe_terrain: boolean
           est_livreur: boolean
           forfait: boolean
           id: string
@@ -3625,6 +3694,7 @@ export type Database = {
           date_sortie?: string | null
           email?: string | null
           est_cadre?: boolean
+          est_chef_equipe_terrain?: boolean
           est_livreur?: boolean
           forfait?: boolean
           id?: string
@@ -3662,6 +3732,7 @@ export type Database = {
           date_sortie?: string | null
           email?: string | null
           est_cadre?: boolean
+          est_chef_equipe_terrain?: boolean
           est_livreur?: boolean
           forfait?: boolean
           id?: string
@@ -8597,13 +8668,17 @@ export type Database = {
           caces: string[]
           caces_autre: string | null
           cree_le: string
+          email_terrain: string | null
           employe_id: string | null
+          est_chef_equipe_terrain: boolean
           id: string
           jeton_hash: string | null
           nom: string
           nom_normalise: string
           permis: string[]
+          poste_terrain: string | null
           prenom: string
+          statut_terrain: string | null
           telephone: string
         }
         SetofOptions: {
@@ -8996,6 +9071,13 @@ export type Database = {
         }
         Returns: Json
       }
+      planning_terrain_ecrire_autorise: { Args: never; Returns: boolean }
+      planning_terrain_importer: {
+        Args: { _empreinte: string; _lignes: Json }
+        Returns: Json
+      }
+      planning_terrain_lire_autorise: { Args: never; Returns: boolean }
+      planning_terrain_references: { Args: never; Returns: Json }
       preflight_delete_devis: { Args: { p_devis_id: string }; Returns: Json }
       preflight_import_devis: {
         Args: { _affaire_id?: string; _fichier_hash: string }

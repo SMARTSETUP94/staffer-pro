@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/PageHeader";
 import { PageBreadcrumbs } from "@/components/PageBreadcrumbs";
 import { ImportsTabsNav } from "@/components/ImportsTabsNav";
+import { ImportHistoriqueConsolide } from "@/components/logistique/ImportHistoriqueConsolide";
 import { ImportErrorBoundary } from "@/components/imports/ImportErrorBoundary";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -41,6 +42,7 @@ export const Route = createFileRoute("/_app/imports/planning")({
   }),
   component: () => (
     <ImportErrorBoundary label="Import planning">
+      <div className="p-4 md:p-6"><ImportHistoriqueConsolide /></div>
       <PlanningImportPage />
     </ImportErrorBoundary>
   ),

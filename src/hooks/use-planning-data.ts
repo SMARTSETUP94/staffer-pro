@@ -155,6 +155,7 @@ export function usePlanningData(weekStart: Date, weekEnd: Date): PlanningData {
       supabase
         .from("assignations")
         .select("id, date, demi_journee, heures, affaire_id, employe_id, metier_id, devis_id, notes, statut_confirmation, staffing_plan_id, type_operation")
+        .eq("historique_terrain", false)
         .gte("date", startStr)
         .lte("date", endStr),
       supabase.from("v_devis_consommation").select("*"),
