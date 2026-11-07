@@ -1,12 +1,13 @@
 import { createServerFn } from '@tanstack/react-start';
 import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware';
 import { resoudreTransfert } from '@/lib/forwarded-email';
+import { doitEcarterSmart, MOTIF_SMART_NON_RELEVEE } from '@/lib/smart-ecartement';
 type Message = {id:string;internetMessageId?:string;conversationId?:string;subject?:string;receivedDateTime?:string;from?:{emailAddress?:{address?:string}}};
 export const corrigerDemandesTransferees=createServerFn({method:'POST'}).middleware([requireSupabaseAuth]).handler(async({context})=>{
  const {data:admin,error:roleError}=await context.supabase.rpc('is_admin');if(roleError || !admin) throw new Error('Réservé aux administrateurs');
  const {supabase}=context;
  const rows=[];
- for(let offset=0;;offset+=200){const r=await supabase.from('emails_entrants').select('id,source_boite,from_email,from_name,subject,body_full,metadata_ia,transmis_par,conversation_id,internet_message_id,message_id_outlook,received_at,categorie_ia,statut,client_id,contact_id,opportunite_id').in('source_boite',['devis','smart']).order('id').range(offset,offset+199);if(r.error) throw r.error;rows.push(...(r.data ?? []));if((r.data?.length ?? 0)<200)break;}
+ for(let offset=0;;offset+=200){const r=await supabase.from('emails_entrants').select('id,source_boite,from_email,from_name,subject,body_full,metadata_ia,transmis_par,conversation_id,internet_message_id,message_id_outlook,received_at,categorie_ia,statut,client_id,contact_id,opportunite_id,candidature_id').in('source_boite',['devis','smart']).order('id').range(offset,offset+199);if(r.error) throw r.error;rows.push(...(r.data ?? []));if((r.data?.length ?? 0)<200)break;}
  const candidates=rows.filter(r=>r.source_boite==='smart' && r.categorie_ia==='opportunite' && (/@(setup\.paris|groupe-smart\.fr)$/i.test(r.from_email) || /^\s*(fw|fwd|tr)\s*:/i.test(r.subject ?? '')));
  const messages:Message[]=[];const errors:string[]=[];
  // Provenance historique uniquement par lecture de la boîte devis, jamais par l'objet seul.
@@ -32,5 +33,16 @@ export const corrigerDemandesTransferees=createServerFn({method:'POST'}).middlew
   if(error){errors.push(`Correction refusée pour ${r.id}`);continue;}
   corrigees++;if(patch.client_a_identifier)nonIdentifiees++;
  }
- return {corrigees,nonIdentifiees,provenanceConfirmee,aConfirmer,errors};
+ // Smart@ n'est plus relevée : les vrais mails smart@ en attente, jamais traités, sont écartés (rien supprimé).
+ const ecartes:{id:string;date:string|null;expediteur:string;objet:string|null}[]=[];
+ if(errors.length===0){
+  for(const r of rows){
+   const confirme=r.source_boite==='smart' && messages.some(m=>m.id===r.message_id_outlook || (!!r.internet_message_id && m.internetMessageId===r.internet_message_id));
+   if(!doitEcarterSmart(r,confirme))continue;
+   const {data,error}=await supabase.from('emails_entrants').update({statut:'dismissed',dismiss_reason:MOTIF_SMART_NON_RELEVEE}).eq('id',r.id).eq('source_boite','smart').eq('statut','pending_review').is('opportunite_id',null).is('client_id',null).is('contact_id',null).is('candidature_id',null).select('id');
+   if(error){errors.push(`Écartement refusé pour ${r.id}`);continue;}
+   if(data?.length)ecartes.push({id:r.id,date:r.received_at,expediteur:r.from_name ? `${r.from_name} <${r.from_email}>`:r.from_email,objet:r.subject});
+  }
+ }
+ return {corrigees,nonIdentifiees,provenanceConfirmee,aConfirmer,ecartes,errors};
 });

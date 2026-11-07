@@ -344,8 +344,7 @@
               "type": "string",
               "enum": [
                 "devis",
-                "logistique",
-                "smart"
+                "logistique"
               ]
             },
             "limit": {

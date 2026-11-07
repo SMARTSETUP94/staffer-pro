@@ -169,10 +169,16 @@ async function fetchInbox(lovableKey: string, connectorKey: string): Promise<Out
   return messages;
 }
 
+const SMART_RELEVE_DESACTIVE: boolean = true;
+
 export const Route = createFileRoute("/api/public/hooks/poll-smart-inbox")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        // Gabin, 7 nov. 2026 : smart@ n'est plus relevée ; seule devis@ alimente Demandes clients.
+        if (SMART_RELEVE_DESACTIVE) {
+          return new Response(JSON.stringify({ ok: false, error: "Relevé smart@ désactivé" }), { status: 410, headers: { "Content-Type": "application/json" } });
+        }
         const apikey = request.headers.get("apikey");
         const publishable = process.env.SUPABASE_PUBLISHABLE_KEY;
         if (!publishable || apikey !== publishable) {
