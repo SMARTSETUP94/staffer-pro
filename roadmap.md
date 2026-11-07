@@ -153,10 +153,10 @@
 - [x] B. Éditeur de devis : bandeau compact + plein écran, note Claude repliable/cases, arbre redimensionnable, chapitres simplifiés, heures au devis, liens coûts manquants, liste de contrôle, champs secondaires repliés
 
 ## Planning logistique — page unique (plan approuvé 7 nov. 2026)
-- [ ] Étape 1 : page /logistique à 3 onglets, filtres partagés, carte d'étape commune, besoins qualifiés
-- [ ] Étape 2 : « Compléter », glisser-déposer, copie d'équipe / semaine dernière
-- [ ] Étape 3 : panneau « À traiter », messages WhatsApp, statut de confirmation
-- [ ] Étape 4 : vue chef mobile, écran atelier, profil « Écran atelier » (migration à montrer)
+- [x] Étape 1 : page /logistique à onglets (Étapes · Équipes · Personnes), filtres partagés mémorisés, carte d'étape commune, puces de besoins ; ancienne page redirigée. Saisie permis/CACES/chefs dans la fenêtre d'étape en attente de la modification de base.
+- [x] Étape 2 : « Compléter » (panneau, filtres, ajouts à la suite), glisser-déposer, copie d'équipe et semaine dernière. Glisser-déposer et copie non exercés sur données réelles.
+- [x] Étape 3 : panneau « À traiter » cliquable, message WhatsApp du jour et missions par personne, statut de confirmation et rôle chef modifiables.
+- [ ] Étape 4 : vue « Mes chantiers » du chef et nouvel écran atelier écrits ; en attente de l'accord de Gabin sur la modification de base (profil Écran atelier, lecteur sans téléphones, besoins qualifiés).
 
 ## Qualité des données — piste 7 (à planifier après le lot précédent)
 - [ ] Plan à présenter : onglets Personnes / Commercial / Devis, widget Santé des données
