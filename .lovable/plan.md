@@ -46,19 +46,11 @@ Ajouter sur **affaire_etapes_logistiques** : nombre de chefs requis, besoins qua
 - Le fichier ne donne **ni horaires ni durée** : historique au jour, heures=0 comme valeur technique et marque « durée inconnue », jamais 8 h inventées. Les lecteurs et agrégats excluent ces lignes des volumes horaires/occupations et les montrent comme passages historiques, pas comme réservations futures ou heures travaillées.
 - Confirmation personnelle non inventée, aucun envoi de notification. Aperçu/bilan : période, lignes nouvelles/déjà présentes, personnes/chantiers rapprochés et non rapprochés ; aucune donnée de rémunération.
 
-### E. Droits, déclencheurs et intégrité
-- Mode terrain : **admin/logistique écrivent, chef_chantier lit** ; autres rôles/anonyme refusés. Droits de menu dédiés, contrôles en base et lectures terrain à champs explicites, sans ouvrir tous les champs RH à la logistique.
-- Préserver les droits actuels du planning ordinaire. Borner les policies qui permettent aux chefs d’écrire pour protéger les lignes logistiques **aussi depuis les anciens écrans/appels directs**. Conserver les accès personnels déjà existants sans nouvel écran Mes missions ni exposition collective.
-- Adapter explicitement : contrôle chantier clôturé (exception historique autorisée seulement), confirmation, chef du jour, notifications et agrégats (heures inconnues, passages historiques, externes). Dates futures d'un fichier « historique » signalées dans l'aperçu et exclues de l'enregistrement : saisie dans Staffing. Ne pas modifier le comportement ordinaire.
-- Déplacement/annulation d’étape : traitement cohérent des assignations liées, pas de personnes laissées sur l’ancienne date. Publication/restauration d’un plan atelier ne doit pas supprimer les engagements logistiques.
-- Migration finale : fonctions explicites, validations et protections ; aucune réécriture dynamique.
-
-## Écrans réutilisés
-- **/logistique** : mode Planning équipes par étape, formulaire et lecture mobile existants.
-- **/qui-est-ou** : mode terrain par personne, même source assignations, Dispos/qualifications ; menu Logistique vers ce mode, pas de deuxième grille indépendante.
-- **/employes + gestion Dispos** : fiches et recherche existantes, rapprochement ; aucun troisième annuaire.
-- **/imports/planning** : format « Historique consolidé — Affectations », fichier unique et revue manuelle ; modes atelier existants et leurs droits préservés, aucun import Excel hebdomadaire terrain.
-- Onglets chantier masqués et droits fabrication préservés.
+### E. Protections et écrans réutilisés
+- Admin/logistique écrivent, chef_chantier lit ; autres rôles/anonyme refusés dans le mode terrain. Lectures à champs explicites, sans accès RH complet. Droits ordinaires et accès personnels actuels préservés ; protéger les lignes terrain aussi depuis les anciens écrans/appels directs.
+- Adapter explicitement les déclencheurs : chantier clôturé (exception historique autorisée seulement), confirmation, chef du jour, notifications, agrégats/externes/heures inconnues. Dates futures dans le consolidé signalées et exclues : saisie dans Staffing.
+- Déplacement/annulation d’étape cohérent avec ses assignations ; publication/restauration atelier ne supprime pas les lignes terrain. Fonctions/protections lisibles dans la migration finale.
+- **/logistique** : mode Planning équipes, étape/formulaire/mobile existants. **/qui-est-ou** : mode terrain, mêmes assignations + Dispos ; pas de seconde grille. **/employes + Dispos** : fiches/rapprochement, pas de troisième annuaire. **/imports/planning** : format Affectations unique ; modes atelier et droits actuels préservés. Onglets chantier masqués inchangés.
 
 ## Vérifié / non vérifié
 **Vérifié :** schéma/protections relus en base, écrans/parseurs relus ; **63 tests existants passent**.
