@@ -7424,8 +7424,12 @@ export type Database = {
           fichiers_source: string | null
           format: string | null
           lieux: string[] | null
+          lieux_terrain: string[] | null
           nom_original: string | null
           operations: string[] | null
+          operations_terrain: string[] | null
+          passage_atelier: boolean | null
+          passage_terrain: boolean | null
           personne: string | null
           personne_cle: string | null
           responsable: string | null
@@ -9123,7 +9127,9 @@ export type Database = {
         Returns: string
       }
       planning_terrain_ecrire_autorise: { Args: never; Returns: boolean }
-      planning_terrain_historique_compteurs: { Args: never; Returns: Json }
+      planning_terrain_historique_compteurs:
+        | { Args: never; Returns: Json }
+        | { Args: { _inclure_atelier: boolean }; Returns: Json }
       planning_terrain_historique_exporter: { Args: never; Returns: Json }
       planning_terrain_historique_lire: {
         Args: { _apres?: Json; _limite?: number }
