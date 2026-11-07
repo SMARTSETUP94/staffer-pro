@@ -68,4 +68,4 @@ Ajouter sur **affaire_etapes_logistiques** : nombre de chefs requis, besoins qua
 **Lots 2/3 non codés :** aucune suggestion, alerte automatique, lettre de mission, nouveau Mes missions ou coût jour/homme ; modèle compatible seulement.
 
 ## Accord attendu
-Validation de cette migration réduite, puis rédaction finale/application et implémentation du seul lot 1. **Aucune publication : Gabin publie.**
+Accord requis avant application et lot 1 ; **Gabin publie**.
