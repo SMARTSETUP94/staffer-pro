@@ -183,6 +183,7 @@ export function useMesHeures({ weekStart, employeIdOverride }: UseMesHeuresOptio
     Promise.all([
       supabase
         .from("assignations")
+        .eq("historique_terrain", false)
         .select(
           "id, date, demi_journee, heures, notes, affaire_id, affaire:affaires(numero, nom, lieu), metier:metiers(libelle, couleur)",
         )

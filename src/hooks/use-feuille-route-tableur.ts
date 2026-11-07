@@ -94,6 +94,7 @@ export function useFeuilleRouteTableur({
         supabase
           .from("assignations")
           .select("affaire_id, date, employe_id, est_chef_jour")
+          .eq("historique_terrain", false)
           .gte("date", startISO)
           .lte("date", endISO),
         supabase

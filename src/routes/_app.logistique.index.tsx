@@ -18,7 +18,6 @@ import { useEtapesLogistiques, useInvalidateEtapes, type EtapeLogistique } from 
 import { LegendeEtapes, PlanningLogistiqueGrid } from "@/components/logistique/PlanningLogistiqueGrid";
 import { EtapeDialog } from "@/components/logistique/EtapeDialog";
 import { RegrouperToggle, useRegrouperParChantier } from "@/components/logistique/EtapeGroupeCard";
-import { PlanningEquipes } from "@/components/logistique/PlanningEquipes";
 
 export const Route = createFileRoute("/_app/logistique/")({
   beforeLoad: () => requireCapability("logistique.planning.view"),
@@ -69,7 +68,6 @@ function PlanningLogistiquePage() {
 
   return (
     <div className="space-y-4 p-4 sm:p-6">
-      <PlanningEquipes />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">Planning logistique</h1>

@@ -119,6 +119,7 @@ function buildSections(
         { title: "Véhicules", url: "/flotte", icon: Truck, cap: "section.logistique" },
         { title: "Planning véhicules", url: "/logistique/vehicules-planning", icon: Calendar, cap: "section.logistique" },
         { title: "Dispos", url: "/logistique/dispos", icon: CalendarCheck, cap: "dispos.view" },
+        { title: "Planning équipes", url: "/logistique/equipes", icon: UsersRound, cap: "dispos.view" },
         { title: "Demandes transport", url: "/export/demandes-devis", icon: ClipboardList, cap: "section.admin" },
       ],
     },
