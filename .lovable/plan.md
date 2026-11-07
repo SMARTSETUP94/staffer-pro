@@ -1,71 +1,76 @@
-# Lot 1 — Planning nominatif logistique
+# Planning nominatif — inventaire et migration réduite
 
-## Accord demandé avant application
-Cette proposition présente la migration et le lot 1. **Aucune modification de la base et aucune publication n’ont été effectuées.** L’accord sur ce plan autorise la finalisation et l’application de cette migration, puis la construction et la recette du lot 1. Gabin publie lui-même.
+**Aucune migration appliquée, aucun écran modifié, aucune publication.** La première proposition est retirée : aucune table `logistique_personnes` ou `logistique_affectations` ne sera créée.
 
-## Migration proposée
-### 1. Une équipe terrain sans recopier les personnes
-- Une fiche technique `logistique_personnes` référence l’employé Staffing, l’intervenant Dispos, ou les deux lorsqu’ils sont explicitement rattachés. Elle ne recopie ni nom, ni téléphone, ni permis/CACES.
-- Le lien existant `dispos_intervenants.employe_id` devient unique : un employé ne peut pas être rattaché à plusieurs fiches Dispos. Aucun rapprochement par nom n’est appliqué automatiquement.
-- Champs terrain : poste, statut, chef d’équipe, actif ; email externe uniquement si aucune fiche employé ne le porte. Les informations RH existantes ne sont pas modifiées.
-- Un lecteur réservé aux trois rôles expose uniquement les coordonnées et qualifications utiles ; aucun taux, coût, forfait, document ou jeton Dispos.
-- Reprise initiale des identifiants existants sans fusion ; les nouvelles fiches Dispos/employés rejoignent la même liste. Les rapprochements validés réaffectent les liens et l’historique sous verrou.
+## Inventaire vérifié : couverture des points 1 à 6
 
-### 2. Besoins qualifiés par étape
-- `logistique_etape_besoins` complète les étapes existantes : nombre de chefs, quantités par poste, permis/CACES requis, éventuel CACES autre.
-- `nb_personnes`, heures de début/fin, responsable, lieu et commentaire restent dans l’étape existante : pas de seconde copie.
-- Contrôles des quantités, postes et qualifications en base. Les horaires traversant minuit sont pris en charge.
+| Point demandé | Déjà présent et à réutiliser | Ce qui manque réellement |
+|---|---|---|
+| **1. Équipe terrain unique** | `employes` : prénom/nom, email, téléphone/mobile, poste_principal, type_contrat, statut_contrat, sous_type_contrat, actif, métier principal. `metiers` et `employe_metiers` : métiers et compétences secondaires. `postes_catalogue` : postes contractuels. `/employes` : liste/tableur et fiche ; import Excel de postes avec aperçu des différences. `dispos_intervenants.employe_id` relie déjà Dispos à un employé. Permis salariés dans categories_permis ; autorisations/CACES dans employes_autorisations_vehicules ; permis/CACES déclarés externes dans Dispos. | Présenter employés + externes non rattachés dans **la même vue dérivée**, sans table/liste parallèle ; rapprochement manuel ; filtre chef terrain permanent. Adapter Base_employés pour compléter seulement les fiches existantes. |
+| **2. Besoin par étape** | `affaire_etapes_logistiques` possède nb_personnes, type d’opération, date_debut/date_fin, heure_debut/heure_fin, responsable, lieu, notes/commentaires. `/logistique`, onglet Logistique du chantier, EtapeDialog et vues jour/mobile existent. | Besoin de chefs, quantités par poste, permis/CACES requis ; lien nominatif permettant le compteur affectés/besoin. |
+| **3. Affectations nominatives** | **`assignations` est la source à conserver** : employe_id, affaire_id, date, demi_journee AM/PM/JOURNEE, heures, heure_debut/fin, type_operation, phase, notes, auteur/dates. Confirmation existe déjà : non_requise/en_attente/confirmee/refusee, dates de confirmation/refus, motif. est_chef_jour existe. Helpers communs d’écriture, formulaires et affectations en masse existent. | Lien précis avec l’étape logistique ; traitement des externes Dispos non rattachés ; validation logistique distincte de la confirmation personnelle ; provenance/import. |
+| **4. Planning équipes** | `/planning` : grilles personne × jours AM/PM, vues CDI/Intérim/par chantier/par objet/par pôle, sélecteur semaine et filtres. **`/qui-est-ou` : personnes × jours et vue inversée par chantier**, occupation et anomalies. `/logistique` : étapes dans la semaine. `absences` : indisponibilités salariés validées par date/créneau. Dispos : disponibilités déclarées jour/soirée/pas dispo et notes. | Relier ces vues existantes au même jeu d’affectations : pastilles sur les étapes logistiques, filtres poste/statut/permis/CACES/chef/dispo non affecté, superposition Dispos et totaux hebdomadaires terrain. Commandes d’écriture uniquement admin/logistique dans ce mode. |
+| **5. Imports historiques et futurs** | `/imports/planning` et `src/lib/imports/planning-*` : lecture Excel au clic, dates/métiers normalisés, aperçu/bilan, affectations écrites dans assignations. `/employes` dispose d’un import de postes par nom/prénom avec diff. | Le parseur actuel ne lit **pas** les blocs de la feuille Planning d’Alberto, ni Base_employés. L’onglet personne×dates est analysé mais ses cases ne sont pas enregistrées comme affectations. Import actuel : un fichier, rapprochement surtout par prénom et dédoublonnage employé/date/chantier **sans opération**, non atomique. À étendre pour multi-fichiers, noms complets/ordre inversé, revue des ambiguïtés, opérations et historique clôturé. |
+| **6. Modèle lots suivants** | assignations fournit déjà personne/chantier/date ; affaires et étapes fournissent le lieu. `affaire_equipe_historique` contient nb_jours_distincts, premier/dernier jour, chef, métier, contrat et refus. `affaire_equipe` : équipe par chantier/phase et role_terrain ; `fabrication_objet_equipe` : équipe d’un objet. | L’historique actuel est **un agrégat recalculé par chef**, pas un journal des passages par opération ; il ne couvre pas correctement une personne sans chef ni un externe non rattaché. Le lien étape/affectation suffira à produire plus tard passages/dernière date/lieu sans nouvel agrégat ni moteur de suggestions. |
 
-### 3. Affectations nominatives et historique
-- `logistique_affectations` : étape, personne, **date d’intervention** (une étape peut durer plusieurs jours), rôle chef/équipier, statut proposé/validé/confirmé/refusé, source manuelle/Excel/suggestion, horaires et heures prévues facultatifs, auteur et dates.
-- Unicité étape × personne × jour. Une personne peut intervenir sur plusieurs étapes le même jour.
-- Suppression logique et journal `logistique_affectations_historique` alimenté automatiquement ; conservation des passages, dates et chantier/lieu pour le futur lot 2.
-- Les états confirmé et source suggestion sont prévus dans le modèle, sans parcours de confirmation ni moteur de suggestion au lot 1.
+### État réel de la base au contrôle
+- **372 fiches employés**, **13 intervenants Dispos**, **aucun encore rattaché** à un employé.
+- **255 étapes logistiques**, **15 absences**.
+- `assignations` et `affaire_equipe` contiennent actuellement **0 ligne** : les tables et écrans existent, mais je ne peux pas affirmer qu’un historique nominatif est déjà rempli.
+- 9 métiers en base, dont Impression UV ; 8 postes contractuels actifs. Les libellés Machiniste/Menuisier/Peintre/CN du fichier ne correspondent pas tous aux postes contractuels : ils seront proposés en correspondance avec **poste_principal + métier**, pas ajoutés dans un second catalogue.
+- Les statuts RH ne correspondent pas parfaitement aux trois libellés Excel. Des incohérences existent entre type_contrat, statut_contrat et sous_type_contrat : **aucun remplacement automatique ni défaut CDI** lors de cet import.
 
-### 4. Import en masse et dédoublonnage
-- `logistique_imports` conserve empreinte du fichier, période, auteur et bilan ; `logistique_import_etapes` retrouve une même étape entre fichiers qui se recouvrent.
-- Enregistrement atomique et contrôle transversal **date × chantier × opération × personne**, y compris lors de deux imports simultanés. Un fichier réimporté ne recrée rien et n’écrase pas une correction manuelle.
-- Noms/chantiers non reconnus restent dans l’aperçu jusqu’au rattachement manuel ; aucun chantier fictif ni fusion automatique.
-- Les étapes importées passées deviennent « réalisées / fait » en date de Paris ; les futures restent planifiées.
-- Seuls nom, téléphone, email, poste et statut sont retenus depuis Base_employés. Aucun taux ni forfait n’est lu, conservé dans le bilan ou envoyé à l’enregistrement.
+## Migration réduite proposée
 
-### 5. Droits
-- **Admin et logistique : lecture et écriture.**
-- **Chef d’équipe (`chef_chantier`, rôle déjà utilisé par Dispos) : lecture seulement.**
-- Aucun accès pour les autres rôles ni pour les visiteurs anonymes. Pas de nouveau rôle.
-- Deux droits de menu : `planning_equipes.view` et `planning_equipes.edit` ; les contrôles en base imposent également les rôles autorisés.
-- Les lecteurs sélectionnent des champs explicites ; pas d’élargissement des droits RH et pas de nouvel outil Claude/MCP.
-- Toutes les nouvelles tables ont leurs autorisations et protections dans la même migration. Les fonctions et déclencheurs de validation/audit/import seront inclus dans le texte final avant son application.
+### A. Personnel : réutiliser les fiches
+1. **Aucune table de personnes et aucun doublon poste/statut/coordonnées.** Réutiliser les champs employés existants et le lien Dispos existant.
+2. Ajouter seulement une case métier **`employes.est_chef_equipe_terrain`** (et la même propriété sur Dispos pour un externe non rattaché). Ce n’est pas un rôle d’accès : ne jamais donner le rôle chef_chantier en cochant cette case.
+3. Rendre unique le lien Dispos → employé lorsqu’il est renseigné. Un rapprochement manuel conserve les réponses Dispos, le jeton et les affectations existantes ; aucun rapprochement automatique par similitude.
+4. Pour un externe non rattaché, les champs poste/statut/email absents de Dispos peuvent être ajoutés **sur sa fiche Dispos existante**, jamais dans une autre liste ; lorsqu’il est rattaché, ces informations viennent exclusivement de la fiche employé. Ils ne recopient aucun champ RH d’une personne déjà salariée.
+5. Une lecture dérivée assemble employés et externes non rattachés, en n’exposant que les champs terrain. Autorisations salariés et déclarations Dispos restent distinguées ; aucun document/numéro de permis ni coût n’est retourné.
 
-## Écrans du lot 1
-1. **Logistique → Planning équipes**, onglets « Par étape », « Par personne » et « Équipe terrain ».
-2. Par étape : semaine navigable, blocs jour/chantier/opération, lieu/heure/responsable, personnes affectées, compteur orange incomplet et vert complet, recherche nominative avec dispos Journée/Soirée/Pas dispo/Sans réponse.
-3. Par personne : personnes × jours, dispo claire et affectation pleine avec code chantier, total de **jours distincts affectés**, filtres poste/statut/permis/CACES/chef/dispo non affecté.
-4. Équipe terrain : édition des informations logistiques et rapprochements explicites, sans toucher aux taux RH.
-5. Import : plusieurs .xlsx, lecture des feuilles Planning et Base_employés, aperçu, corrections/rattachements puis confirmation ; progression et bilan cumulé pour environ 50 fichiers.
-6. Lecture adaptée à 390 px ; saisie principalement à 1366 px. Les chefs d’équipe ne voient aucune commande d’écriture.
+### B. Affectations : étendre `assignations`, ne pas les doubler
+1. Ajouter **`etape_logistique_id`**, référence vers l’étape existante. Conserver date, demi-journée, heures, horaires, opération, notes et auteur existants.
+2. Ajouter **`dispos_intervenant_id`** pour un externe qui n’a pas de fiche employé ; rendre employe_id facultatif **uniquement pour cette branche logistique**. Une validation en base impose exactement une identité : employé OU intervenant Dispos non rattaché. Les affectations ordinaires gardent obligatoirement leur employé.
+3. Ajouter seulement **`validation_logistique`** (proposé/validé), la source (manuel/Excel/suggestion) et une référence d’import. Réutiliser statut_confirmation pour confirmé/refusé et ses horodatages : pas de deuxième confirmation.
+4. Conserver est_chef_jour pour le planning historique. Pour les étapes, utiliser un rôle chef/équipier attaché à la même assignation : le déclencheur actuel impose **un seul chef par chantier/jour**, incompatible avec plusieurs chefs demandés ou plusieurs opérations ; il doit garder son comportement hors mode logistique.
+5. Dédoublonner sous verrou date × chantier × opération × identité, avec réutilisation/rattachement d’une assignation existante compatible, sans recréer une ligne déjà couverte. Deux créneaux réellement distincts restent possibles après revue ; les AM/PM d’une même intervention comptent comme **une personne**, pas deux.
+6. Les horaires traversant minuit auront un indicateur de fin au lendemain ; chevauchement seulement signalé. Une heure manquante reste inconnue, jamais présentée comme un horaire confirmé.
 
-## Hypothèses retenues
-- « Affectés / besoin » compte les personnes non refusées et non supprimées pour le jour affiché ; les pastilles distinguent proposé/validé/confirmé.
-- Un chevauchement horaire produit une indication simple, jamais un blocage ; aucune alerte automatique du lot 2.
-- Plusieurs blocs d’une même opération à des horaires différents restent distincts ; les doublons ou ambiguïtés d’import sont proposés à la revue humaine.
-- Une similitude normalisée de nom suggère un rattachement, sans le valider ; accents, casse, espaces et ordre NOM Prénom sont tolérés.
-- La feuille réelle d’Alberto n’a pas été fournie en .xlsx : un exemple conforme sera créé pour la recette ; la compatibilité avec ses 50 fichiers restera à confirmer après dépôt.
+**Point de vigilance explicitement inclus :** rendre l’identité employé facultative exige d’adapter ensemble les lecteurs, formulaires, confirmations et déclencheurs qui supposent aujourd’hui un employé. Une fiche Dispos ne doit jamais être transformée automatiquement en employé. Les externes doivent également apparaître dans les vues existantes, sans perdre les salariés actuels.
 
-## Recette après application
-- Étape test : affecter 4 puis 6 personnes pour un besoin de 6 ; relire après rechargement et retrouver les mêmes affectations dans la vue personne.
-- Deux fichiers .xlsx chevauchants : une seule affectation par date/chantier/opération/personne, noms avec et sans accent ; aperçu des inconnus et revue manuelle.
-- Vérifier absence de taux/coûts dans les données importées et les réponses des lecteurs.
-- Tester admin/logistique en écriture, chef d’équipe en lecture et refus d’écriture directe ; autres rôles/anonyme refusés.
-- Contrôler 390 et 1366 px et nettoyer toutes les données de recette.
-- Compte rendu final **vérifié / non vérifié** ; aucune publication.
+### C. Besoins : compléter les étapes existantes
+Ajouter directement sur `affaire_etapes_logistiques` : nombre de chefs requis, besoins par poste (liste qualifiée), permis requis, CACES requis et précision autre facultative. Réutiliser nb_personnes, responsable, lieu, début/fin et horaires. **Aucune table parallèle de besoins.**
 
-## État vérifié maintenant
-- Les étapes existantes possèdent déjà nb_personnes, début/fin, horaires, responsable et lieu.
-- Dispos possède déjà le lien employé, les qualifications et les droits lecture chef / écriture admin-logistique.
-- Aucun lien employé multiple dans Dispos au contrôle actuel : l’index unique proposé ne rencontre pas de conflit connu.
-- Le schéma actuel et les protections ont été lus ; la proposition SQL additive est enregistrée séparément, non appliquée.
+### D. Import : une seule nouvelle table technique
+- **`planning_imports` uniquement** : empreinte de fichier, période, auteur, bilan et état de traitement/reprise pour l’import d’environ 50 fichiers. Ce n’est ni une liste de personnes, ni une table d’affectations.
+- Le parseur et l’aperçu existants sont étendus ; enregistrement atomique dans les **étapes et assignations existantes**. Réimport identique/chevauchant : pas de doublons, pas d’écrasement des corrections humaines.
+- Base_employés propose seulement des mises à jour/rattachements à des fiches déjà présentes, avec ancien/nouveau : poste, statut, téléphone et email. Nom non reconnu → à rapprocher/ignoré, **jamais créé**. Un nom sert à la recherche, pas à une fusion.
+- Les blocs Planning inconnus attendent un chantier et une personne existants. Pas de création de chantier par cet import.
+- Passé : étape statut fait en date de Paris ; confirmation personnelle non inventée. Futur : planifié. Aucun import historique ne doit envoyer de notifications ou de propositions de mission.
+- Les taux/forfaits sont exclus à la lecture, des demandes d’enregistrement et des bilans.
 
-## Non vérifié à ce stade
-- Écrans, enregistrement nominatif, import, dédoublonnage réel, contrôles des nouveaux droits et rendu mobile : ils seront construits et testés après ton accord.
-- Lots 2/3 non codés : pas de suggestions, lettres de mission, Mes missions ou coût jour/homme.
+### E. Protections et compatibilité
+- Mode Planning équipes : admin/logistique écrivent, chef_chantier lit ; autres rôles et anonymes refusés. Deux droits dédiés de menu/commandes.
+- **Les droits actuels des chefs sur le planning ordinaire restent inchangés** ; les lignes logistiques sont protégées aussi contre une modification depuis les anciens écrans ou les appels directs. Les policies existantes qui permettent aujourd’hui aux chefs d’écrire doivent être bornées pour cette branche.
+- Les salariés qui disposent déjà de leurs affectations ordinaires gardent cet accès ; aucune nouvelle exposition du planning collectif logistique ni nouvelle fonction Mes missions au lot 1.
+- La logistique ne reçoit pas l’accès à tous les champs RH : lectures/propositions de mise à jour limitées explicitement aux champs terrain autorisés.
+- Déclencheurs actuels à adapter explicitement : contrôle chantier clôturé (exception historique sous import autorisé seulement), initialisation confirmation (n’écrase pas l’état importé), unicité du chef et notifications (silencieuses pour historiques/propositions du lot 1). Préserver le fonctionnement ordinaire.
+- La migration finale contiendra les définitions lisibles des fonctions adaptées, validations, autorisations et protections ; aucun remplacement dynamique des fonctions.
+
+## Réutilisation des écrans
+- **/logistique** reçoit le mode « Planning équipes » par étape, en réutilisant les étapes, formulaire et vues mobiles.
+- **/qui-est-ou** reçoit le mode terrain par personne, même source assignations, plus Dispos/qualifications ; le menu Logistique ouvre ce mode. Pas de deuxième grille indépendante.
+- **/employes** et la gestion Dispos existante restent les lieux des fiches ; partage de leur liste/recherche et ajout du rapprochement, sans troisième annuaire.
+- **/imports/planning** reçoit le format « Planning logistique / Base_employés », multi-fichiers et revue manuelle ; les modes d’import atelier existants restent disponibles avec leurs droits actuels.
+- Pas de réouverture des onglets chantier volontairement masqués et pas de modification générale des droits du planning fabrication.
+
+## Vérifié / non vérifié
+**Vérifié :** colonnes, contraintes, droits et déclencheurs relus dans la base ; écrans et parseurs relus dans le code ; **63 tests existants passent** (Qui est où, import planning, import employés, source unique d’affectations).
+
+**Non vérifié :** comportement du nouveau lot (non construit), import réel des fichiers d’Alberto, externes dans les anciennes vues, dédoublonnage concurrent, nouveaux droits, 4/6→6/6 et affichage 390/1366 px. Après accord : recette sur fichiers chevauchants et noms accentués, contrôle des refus d’écriture, relecture après enregistrement, puis nettoyage des données de test.
+
+**Lots 2/3 :** aucune suggestion, alerte automatique, lettre de mission, nouveau Mes missions ou coût jour/homme. Le modèle est seulement prêt à exploiter personne/étape/chantier/date/lieu et besoins qualifiés.
+
+## Accord attendu
+Valider cette migration réduite autorise sa rédaction finale, son application et l’implémentation du seul lot 1 selon ce périmètre. **Aucune publication : Gabin publie.**
