@@ -1,6 +1,7 @@
 # Roadmap
 
 ## Lot 1 — Planning nominatif logistique (7 nov. 2026)
+- [x] « Planning équipes » rendue visible dans le menu (groupe Logistique) malgré le mode « suivi des affaires » actif globalement : ajout à la liste blanche des URL + test de garde. Vérifié à l'écran en admin (item présent, clic ouvre la page avec export et ajout). Droits en base : ouverture dispos.view (admin, logistique, chef d'équipe), import/export dispos.edit (admin, logistique). Rien publié.
 - [x] Précisions Gabin : migration présentée, approuvée et appliquée ; formats terrain/atelier, synthèses séparées et compteurs terrain par défaut avec option atelier. Déplacement transactionnel et refus de réduction incompatibles vérifiés ; import externe manuel, réimport et export réel vérifiés ; 31 tests verts. Essais nettoyés. Lecture chef/refus écriture vérifiés en base, pas en navigateur ; fichier réel de Gabin et passage mixte en base non vérifiés. Rien publié.
 - [x] Ajout Gabin approuvé : vue historique vivant et lecteurs protégés appliqués ; export Excel 10 colonnes et synthèses Personnes/Chantiers ; compteurs chantier/lieu/opération. Validation, aujourd’hui exclu, AM/PM, refus, annulation, correction, suppression et refus anonyme testés ; export téléchargé 1366/390, essais nettoyés. Pas de publication.
 - [x] Plan réduit approuvé et socle additif appliqué : personnes et affectations existantes réutilisées.
