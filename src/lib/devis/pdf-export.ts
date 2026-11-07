@@ -1,7 +1,7 @@
 /** Génère le PDF client d'un devis, l'enregistre dans le stockage privé des exports et l'historique. */
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
-import { construireDevisPdf, nomFichierPdf, type DevisClient, type ImagePdf, type NiveauPdf } from "./pdf-client";
+import { construireDevisPdf, nomFichierPdf, type DevisClient, type ImagePdf, type NiveauPdf, champsClientManquants } from "./pdf-client";
 
 export const BUCKET_EXPORTS = "devis-exports";
 
@@ -29,6 +29,8 @@ export async function chargerImages(sb: SupabaseClient<Database>, vc: DevisClien
 
 export async function exporterDevisPdf(sb: SupabaseClient<Database>, devisId: string, niveau: NiveauPdf) {
   const vc = await lireDevisClient(sb, devisId);
+  const manque = champsClientManquants(vc.client);
+  if (manque.length) throw new Error(`Fiche client incomplète (${manque.join(", ")}) : complétez la fiche client avant l'export.`);
   const images = niveau === "detaille" ? await chargerImages(sb, vc) : {};
   const buf = construireDevisPdf(vc, niveau, images);
   const bytes = new Uint8Array(buf);
