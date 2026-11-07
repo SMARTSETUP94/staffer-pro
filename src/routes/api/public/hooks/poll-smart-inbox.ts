@@ -8,6 +8,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
 import { findImportedEmail, type ImportedEmailIdentity } from "@/lib/inbox-smart-dedupe";
+import { resoudreTransfert } from '@/lib/forwarded-email';
 
 const OUTLOOK_GW = "https://connector-gateway.lovable.dev/microsoft_outlook";
 const AI_GW = "https://ai.gateway.lovable.dev/v1/chat/completions";
@@ -237,9 +238,10 @@ export const Route = createFileRoute("/api/public/hooks/poll-smart-inbox")({
             processed++;
             try {
               const sourceBoite = detectSourceBoite(msg);
+              const correction=resoudreTransfert({source_boite:sourceBoite,from_email:msg.from?.address ?? 'unknown@unknown',from_name:msg.from?.name ?? null,subject:msg.subject ?? null,body_full:msg.body?.content ?? null});
               let cls: Classification;
               try {
-                cls = await classifyEmail(lovableKey, msg, sourceBoite);
+                cls = await classifyEmail(lovableKey, correction ? {...msg,from:{name:correction.from_name ?? undefined,address:correction.from_email},subject:correction.subject} : msg, sourceBoite);
               } catch (e) {
                 cls = { categorie: "autre", confiance: 0, resume: `AI failed: ${(e as Error).message}` };
               }
@@ -259,7 +261,9 @@ export const Route = createFileRoute("/api/public/hooks/poll-smart-inbox")({
                 has_attachments: !!msg.hasAttachments,
                 categorie_ia: cls.categorie,
                 confiance_ia: cls.confiance,
+                ...(correction ?? {}),
                 metadata_ia: {
+                  ...(correction?.metadata_ia ?? {}),
                   metier: cls.metier ?? null,
                   poste_devine: cls.poste_devine ?? null,
                   nom: cls.nom ?? null,

@@ -21,6 +21,9 @@ export type ReadableEmail = {
   body_preview: string | null;
   body_full: string | null;
   body_content_type: string | null;
+  transmis_par?: string | null;
+  client_a_identifier?: boolean;
+  metadata_ia?: {date_demande_originale?: string | null} | null;
 };
 
 export function EmailReaderDialog({ email, onClose, clientReply = false, affaireId }: { email: ReadableEmail; onClose: () => void; clientReply?: boolean; affaireId?: string }) {
@@ -33,7 +36,9 @@ export function EmailReaderDialog({ email, onClose, clientReply = false, affaire
           <DialogTitle className="pr-6">{email.subject || "(sans objet)"}</DialogTitle>
           <DialogDescription>
             {email.from_name ? `${email.from_name} · ` : ""}{email.from_email} ·{" "}
-            {format(parseISO(email.received_at), "d MMMM yyyy 'à' HH:mm", { locale: fr })}
+            {format(parseISO(email.metadata_ia?.date_demande_originale ?? email.received_at), "d MMMM yyyy 'à' HH:mm", { locale: fr })}
+            {email.transmis_par && <span className="block">transféré par {email.transmis_par}</span>}
+            {email.client_a_identifier && <span className="block">Client à identifier</span>}
           </DialogDescription>
         </DialogHeader>
         <div className="min-h-0 flex-1 overflow-y-auto space-y-4">

@@ -8,6 +8,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
 import { loadFeedbackPrompt } from "@/lib/logistique/ia-feedback";
 import { classifySharedEmail, clsToMetadata, type SharedCls } from "@/lib/shared-inbox-classify";
+import { resoudreTransfert } from '@/lib/forwarded-email';
+import { findImportedEmail, type ImportedEmailIdentity } from '@/lib/inbox-smart-dedupe';
 
 const GRAPH = "https://graph.microsoft.com/v1.0";
 const MAX_FETCH = 25;
@@ -19,6 +21,7 @@ const MAILBOXES = [
 
 type Msg = {
   id: string;
+  internetMessageId?: string;
   conversationId?: string;
   subject?: string;
   bodyPreview?: string;
@@ -78,25 +81,43 @@ export const Route = createFileRoute("/api/public/hooks/poll-shared-inboxes")({
           try {
             const url =
               `${GRAPH}/users/${box.address}/mailFolders/inbox/messages?$top=${MAX_FETCH}` +
-              `&$orderby=receivedDateTime desc&$select=id,conversationId,subject,bodyPreview,body,from,receivedDateTime,hasAttachments`;
+              `&$orderby=receivedDateTime desc&$select=id,internetMessageId,conversationId,subject,bodyPreview,body,from,receivedDateTime,hasAttachments`;
             const res = await fetch(url, { headers: auth });
             if (!res.ok) throw new Error(`Graph ${res.status}: ${(await res.text()).slice(0, 300)}`);
             const messages = ((await res.json()) as { value?: Msg[] }).value ?? [];
-            const { data: existing } = await supa
+            const { data: existing, error: lookupError } = await supa
               .from("emails_entrants")
-              .select("message_id_outlook")
+              .select("id,message_id_outlook,internet_message_id,conversation_id,received_at,from_email,subject")
               .in("message_id_outlook", messages.map((m) => m.id));
-            const seen = new Set((existing ?? []).map((r) => r.message_id_outlook));
+            if (lookupError) throw lookupError;
+            const ids=messages.map(m=>m.internetMessageId).filter((s):s is string=>!!s);
+            const stable=ids.length ? await supa.from('emails_entrants').select('id,message_id_outlook,internet_message_id,conversation_id,received_at,from_email,subject').in('internet_message_id',ids) : {data:[],error:null};
+            if(stable.error) throw stable.error;
+            const known=[...(existing ?? []),...(stable.data ?? [])] as ImportedEmailIdentity[];
 
-            for (const msg of messages.filter((m) => !seen.has(m.id))) {
+            for (const msg of messages) {
+              const match=findImportedEmail({...msg,from:msg.from?.emailAddress},known);
+              if(match.ambiguous) {errors.push('Identité email ambiguë');continue;}
+              const identity={source_boite:box.source,from_email:msg.from?.emailAddress?.address ?? 'unknown@unknown',from_name:msg.from?.emailAddress?.name ?? null,subject:msg.subject ?? null,body_full:msg.body?.content ?? null};
+              const correction=resoudreTransfert(identity);
+              if(match.row){
+                if(box.source==='devis') {
+                  const {data:row,error:readErr}=await supa.from('emails_entrants').select('from_email,from_name,subject,body_full,source_boite,transmis_par,metadata_ia').eq('id',match.row.id).single();
+                  if(readErr) throw readErr;
+                  const patch=resoudreTransfert({...row,source_boite:'devis'});
+                  const {error:upErr}=await supa.from('emails_entrants').update({source_boite:'devis',...(patch ?? {}),...(msg.internetMessageId ? {internet_message_id:msg.internetMessageId}: {})}).eq('id',match.row.id);
+                  if(upErr) errors.push(upErr.message);
+                }
+                continue;
+              }
               let cls: SharedCls;
               try {
                 cls = await classifySharedEmail(
                   lovableKey,
                   {
-                    fromName: msg.from?.emailAddress?.name,
-                    fromEmail: msg.from?.emailAddress?.address,
-                    subject: msg.subject,
+                    fromName: correction?.from_name ?? identity.from_name,
+                    fromEmail: correction?.from_email ?? identity.from_email,
+                    subject: correction?.subject ?? identity.subject,
                     body: msg.body?.content,
                     bodyContentType: msg.body?.contentType,
                     bodyPreview: msg.bodyPreview,
@@ -109,6 +130,7 @@ export const Route = createFileRoute("/api/public/hooks/poll-shared-inboxes")({
               }
               const { error } = await supa.from("emails_entrants").insert({
                 message_id_outlook: msg.id,
+                internet_message_id:msg.internetMessageId ?? null,
                 conversation_id: msg.conversationId ?? null,
                 source_boite: box.source,
                 from_email: msg.from?.emailAddress?.address ?? "unknown@unknown",
@@ -121,7 +143,8 @@ export const Route = createFileRoute("/api/public/hooks/poll-shared-inboxes")({
                 has_attachments: !!msg.hasAttachments,
                 categorie_ia: cls.categorie,
                 confiance_ia: cls.confiance,
-                metadata_ia: clsToMetadata(cls),
+                ...(correction ?? {}),
+                metadata_ia: {...clsToMetadata(cls),...(correction?.metadata_ia ?? {})},
                 statut: "pending_review",
               });
               if (error) {

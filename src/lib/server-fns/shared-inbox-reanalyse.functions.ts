@@ -8,6 +8,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { loadFeedbackPrompt } from "@/lib/logistique/ia-feedback";
 import { classifySharedEmail, clsToMetadata, type SharedSource } from "@/lib/shared-inbox-classify";
+import { resoudreTransfert } from '@/lib/forwarded-email';
 
 export const reanalyseSharedInboxes = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -21,7 +22,7 @@ export const reanalyseSharedInboxes = createServerFn({ method: "POST" })
 
     const { data: rows, error } = await supabase
       .from("emails_entrants")
-      .select("id, source_boite, from_email, from_name, subject, body_full, body_content_type, body_preview")
+      .select("id, source_boite, from_email, from_name, subject, body_full, body_content_type, body_preview, transmis_par, metadata_ia")
       .in("source_boite", data.source ? [data.source] : ["devis", "logistique"])
       .order("received_at", { ascending: false })
       .limit(data.limit);
@@ -35,12 +36,13 @@ export const reanalyseSharedInboxes = createServerFn({ method: "POST" })
       await Promise.all(
         list.slice(i, i + 4).map(async (r) => {
           try {
+            const correction=resoudreTransfert(r);
             const cls = await classifySharedEmail(
               key,
               {
-                fromName: r.from_name,
-                fromEmail: r.from_email,
-                subject: r.subject,
+                fromName: correction?.from_name ?? r.from_name,
+                fromEmail: correction?.from_email ?? r.from_email,
+                subject: correction?.subject ?? r.subject,
                 body: r.body_full,
                 bodyContentType: r.body_content_type,
                 bodyPreview: r.body_preview,
@@ -50,7 +52,7 @@ export const reanalyseSharedInboxes = createServerFn({ method: "POST" })
             );
             const { error: upErr } = await supabase
               .from("emails_entrants")
-              .update({ metadata_ia: clsToMetadata(cls), confiance_ia: cls.confiance })
+              .update({ ...(correction ?? {}), metadata_ia: {...(r.metadata_ia as Record<string,unknown> ?? {}),...clsToMetadata(cls),...(correction?.metadata_ia ?? {})}, confiance_ia: cls.confiance })
               .eq("id", r.id);
             if (upErr) errors.push(upErr.message);
             else updated++;
