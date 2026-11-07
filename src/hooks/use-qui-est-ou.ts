@@ -28,6 +28,7 @@ async function fetchQuiEstOu(from: string, to: string): Promise<QuiEstOuData> {
     supabase
       .from("assignations")
       .select("id, employe_id, affaire_id, date, demi_journee")
+      .eq("historique_terrain", false)
       .gte("date", from)
       .lte("date", to),
     supabase
