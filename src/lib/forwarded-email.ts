@@ -6,7 +6,7 @@ export interface OriginalSender { name: string | null; email: string | null }
 export const isInternalSender = (email: string) => /@(setup\.paris|groupe-smart\.fr)$/i.test(email.trim());
 export const cleanForwardSubject = (subject: string) => subject.replace(/^\s*((?:fw|fwd|tr)\s*:\s*)+/i,'').trim();
 function texte(body: string) {
- return body.replace(/<br\s*\/?>/gi,'\n').replace(/<\/(p|div|tr|li|h[1-6])>/gi,'\n')
+ return body.replace(/<(script|style|head)[\s\S]*?<\/\1>/gi,'').replace(/<br\s*\/?>/gi,'\n').replace(/<\/(p|div|tr|li|h[1-6])>/gi,'\n')
  .replace(/<(?![^\s>]*@)[^>]+>/g,'').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&amp;/g,'&').replace(/&nbsp;|&#160;/g,' ').replace(/&#(\d+);/g,(_,n)=>String.fromCharCode(Number(n)));
 }
 function adresse(line: string): OriginalSender | null {
@@ -32,13 +32,15 @@ export function extractOriginalMessage(body: string | null | undefined) {
  const text=texte(body);const lines=text.split(/\r?\n/);const headers: {sender: OriginalSender;date:string|null;subject:string|null;start:number;end:number}[]=[];
  for(let i=0;i<lines.length;i++) {
   const from=lines[i]?.match(/^\s*(?:>\s*)*(?:De|From)\s*:\s*(.*)/i);if(!from) continue;
-  const sender=adresse(from[1] ?? '');if(!sender?.email) continue;
+  let fromValue=from[1] ?? '';
+  for(let k=i+1;k<Math.min(lines.length,i+4);k++){const l=lines[k] ?? '';if(/^\s*(?:Envoyé|Sent|To|À|Cc|Subject|Objet|From|De)\s*:/i.test(l) || !l.trim())break;if(!adresse(fromValue))fromValue+=' '+l.trim();else break;}
+  const sender=adresse(fromValue);if(!sender?.email) continue;
   const h={sender,date:null as string|null,subject:null as string|null,start:i,end:lines.length};
   if(headers.length){const prev=headers.at(-1);if(prev)prev.end=i;}
   for(let j=i+1;j<Math.min(lines.length,i+15);j++){
    const line=lines[j] ?? '';if(/^\s*(?:De|From)\s*:/i.test(line)) break;
    const sent=line.match(/^\s*(?:>\s*)*(?:Envoyé|Sent)\s*:\s*(.*)/i);if(sent)h.date=dateOrigine(sent[1] ?? '');
-   const subject=line.match(/^\s*(?:>\s*)*(?:Objet|Subject)\s*:\s*(.*)/i);if(subject){h.subject=cleanForwardSubject(subject[1] ?? '');break;}
+   const subject=line.match(/^\s*(?:>\s*)*(?:Objet|Subject)\s*:\s*(.*)/i);if(subject){let value=subject[1] ?? '';for(let k=j+1;k<Math.min(lines.length,j+4);k++){const l=lines[k] ?? '';if(!/^\s+\S/.test(l) || /^\s*(?:De|From|To|À|Cc|Sent|Envoyé)\s*:/i.test(l))break;value+=' '+l.trim();}h.subject=cleanForwardSubject(value);break;}
   }
   headers.push(h);
  }

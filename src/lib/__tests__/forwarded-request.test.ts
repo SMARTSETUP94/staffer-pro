@@ -2,6 +2,7 @@ import {describe,it,expect} from 'vitest';
 import {extractOriginalMessage,resoudreTransfert} from '../forwarded-email';
 const body='From: Collègue <c@groupe-smart.fr>\nSubject: Fw: Devis\nDe : Marie Curie <marie@proman.fr>\nEnvoyé : vendredi 6 novembre 2026 09:12\nÀ : smart@setup.paris\nCc : x@setup.paris\nObjet : TR: Mur interactif\nBonjour\nSociété : PROMAN';
 describe('demandes transférées',()=>{
+it('lit les en-têtes repliés sans perdre adresse et objet',()=>expect(extractOriginalMessage('De : Marie Curie\n <marie@proman.fr>\nEnvoyé : 06/11/2026 09:12\nObjet : Fw: Mur\n interactif\n\nBonjour')).toMatchObject({email:'marie@proman.fr',subject:'Mur interactif',date:'2026-11-06T08:12:00.000Z'}));
 it('associe premier externe, date Paris, objet et société',()=>expect(extractOriginalMessage(body)).toMatchObject({email:'marie@proman.fr',name:'Marie Curie',date:'2026-11-06T08:12:00.000Z',subject:'Mur interactif',company:'PROMAN'}));
 it('lit Outlook anglais HTML',()=>expect(extractOriginalMessage('<div>From: Jane &lt;jane@client.fr&gt;</div><div>Sent: November 6, 2026 9:12 AM</div><div>Subject: Fwd: Project</div>')).toMatchObject({email:'jane@client.fr',date:'2026-11-06T08:12:00.000Z',subject:'Project'}));
 it('garde la source smart inchangée',()=>expect(resoudreTransfert({from_email:'smart@setup.paris',from_name:'Smart',subject:'TR: Devis',body_full:body,source_boite:'smart'})).toBeNull());
