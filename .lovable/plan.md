@@ -13,7 +13,7 @@
 ## État réel vérifié
 **372 employés, 13 intervenants Dispos (0 rattaché), 255 étapes, 15 absences ; assignations et affaire_equipe : 0 ligne.** Le socle existe, mais ces tables ne contiennent pas encore d’historique nominatif.
 
-9 métiers et 8 postes contractuels actifs. Correspondances Excel proposées vers **poste_principal/métiers existants**. Les statuts RH présentent des incohérences : validation ancien/nouveau, **aucun défaut CDI automatique**.
+9 métiers et 8 postes contractuels actifs ; statuts RH incohérents par endroits : revue manuelle, aucun défaut CDI.
 
 ## Migration réduite proposée
 
@@ -21,7 +21,7 @@
 - **Aucune table de personnes, aucun nouveau champ salarié poste/statut/téléphone.** Réutiliser employes et le lien Dispos employe_id ; rendre ce lien unique lorsqu’il est renseigné, après contrôle.
 - Ajouter seulement **est_chef_equipe_terrain** aux employés et aux externes Dispos non rattachés. C’est une qualification terrain, **pas un rôle d’accès**.
 - Pour les externes sans fiche employé, ajouter les informations absentes poste/statut/email **sur leur fiche Dispos existante**. Une fois rattachés, ces informations viennent exclusivement de l’employé : pas de copie RH concurrente.
-- Une lecture dérivée réunit employés et externes non rattachés ; après rattachement, une seule ligne. Rapprochement explicite conservant réponses/jeton et affectations, sans création d’employé.
+- Vue dérivée unique après rattachement ; conserver réponses/jeton et affectations.
 - Permis autorisés salariés et déclarations Dispos restent distingués. Aucun document, numéro, jeton, taux ou forfait exposé.
 
 ### B. Compléter assignations, pas les doubler
@@ -31,7 +31,7 @@
 - Conserver est_chef_jour historique ; ajouter le rôle chef/équipier au même enregistrement logistique. Le déclencheur actuel remet les autres chefs du chantier/jour à faux : il doit garder son comportement ordinaire, sans empêcher plusieurs chefs par étape.
 - Ajouter l’indicateur de fin d’horaire au lendemain si nécessaire ; heure manquante = inconnue. Chevauchements signalés seulement.
 - Historique : dédoublonnage sous verrou **date × chantier × personne**, indépendamment d'une opération vide ou renseignée ; réutiliser une assignation compatible existante. Si plusieurs AM/PM couvrent déjà ce passage, conserver ces lignes sans ajouter une JOURNEE. Futur : plusieurs étapes/créneaux distincts restent possibles ; compteur par personne distincte.
-- **Compatibilité obligatoire** : lecteurs/formulaires/déclencheurs actuels supposent employe_id renseigné. Les adapter ensemble pour afficher les externes et préserver les salariés ; ne jamais créer automatiquement une fiche employé pour contourner cette difficulté.
+- Adapter les lecteurs/formulaires/déclencheurs qui supposent un employé ; afficher les externes sans créer de fiche employé.
 
 ### C. Besoins sur les étapes existantes
 Ajouter sur **affaire_etapes_logistiques** : nombre de chefs requis, besoins qualifiés par poste, permis/CACES requis, autre facultatif. Réutiliser nb_personnes comme **seul total de référence**, responsable, lieu et horaires. Aucune seconde table de besoins ni taxonomie métiers.
