@@ -7414,6 +7414,47 @@ export type Database = {
       }
     }
     Views: {
+      planning_terrain_historique: {
+        Row: {
+          affaire_id: string | null
+          affectation_ids: string[] | null
+          chantier: string | null
+          code_chantier: string | null
+          date: string | null
+          fichiers_source: string | null
+          format: string | null
+          lieux: string[] | null
+          nom_original: string | null
+          operations: string[] | null
+          personne: string | null
+          personne_cle: string | null
+          responsable: string | null
+          source: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assignations_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "affaires"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assignations_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "v_affaire_consommation"
+            referencedColumns: ["affaire_id"]
+          },
+          {
+            foreignKeyName: "assignations_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "v_affaires_avec_plan_status"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_quiz_stats: {
         Row: {
           accuracy_pct: number | null
@@ -9082,6 +9123,12 @@ export type Database = {
         Returns: string
       }
       planning_terrain_ecrire_autorise: { Args: never; Returns: boolean }
+      planning_terrain_historique_compteurs: { Args: never; Returns: Json }
+      planning_terrain_historique_exporter: { Args: never; Returns: Json }
+      planning_terrain_historique_lire: {
+        Args: { _apres?: Json; _limite?: number }
+        Returns: Json
+      }
       planning_terrain_importer: {
         Args: { _empreinte: string; _lignes: Json }
         Returns: Json
