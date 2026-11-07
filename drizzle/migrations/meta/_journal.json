@@ -610,6 +610,13 @@
       "when": 1794048324119,
       "tag": "0086_planning_terrain_socle",
       "breakpoints": true
+    },
+    {
+      "idx": 87,
+      "version": "7",
+      "when": 1794048356803,
+      "tag": "0087_planning_terrain_import_rpc",
+      "breakpoints": true
     }
   ]
 }

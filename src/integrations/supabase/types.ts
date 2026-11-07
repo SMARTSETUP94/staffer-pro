@@ -9072,7 +9072,12 @@ export type Database = {
         Returns: Json
       }
       planning_terrain_ecrire_autorise: { Args: never; Returns: boolean }
+      planning_terrain_importer: {
+        Args: { _empreinte: string; _lignes: Json }
+        Returns: Json
+      }
       planning_terrain_lire_autorise: { Args: never; Returns: boolean }
+      planning_terrain_references: { Args: never; Returns: Json }
       preflight_delete_devis: { Args: { p_devis_id: string }; Returns: Json }
       preflight_import_devis: {
         Args: { _affaire_id?: string; _fichier_hash: string }
