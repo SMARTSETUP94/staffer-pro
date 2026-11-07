@@ -8,6 +8,8 @@ import { analyserPlanningHebdomadaire } from '@/lib/server-fns/planning-import.f
 import { candidatsPersonne, passagesMultiples, verifierPlanning, type InterventionLue, type ReferencesPlanning } from '@/lib/imports/planning-hebdomadaire';
 import { ETAPE_LABELS, ETAPE_TYPES, type EtapeType } from '@/lib/logistique/etapes';
 import { cleNomTerrain } from '@/lib/imports/affectations-consolide';
+import { lirePlanningExcel, statutDispo, alerteDispo, type DispoPlanning, type LectureDeterministe } from '@/lib/imports/planning-equipes';
+import { PastilleDispo } from '@/components/logistique/PastilleDispo';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -36,24 +38,34 @@ export function ImportPlanningHebdomadaire() {
   const [valide, setValide] = useState(false);
   const [etapes, setEtapes] = useState<{ id: string; affaire_id: string; type: string; date: string; fin: string; heure: string | null }[]>([]);
   const [choixEtapes, setChoixEtapes] = useState<Record<number, string>>({});
+  const [dispos, setDispos] = useState<DispoPlanning[]>([]);
+  const [lecture, setLecture] = useState('');
   async function lire(file: File) {
     setBusy(true); setErreur(''); setBlocs([]); setBilan(''); setValide(false); setChoixEtapes({});
     try {
       if (file.size > 15 * 1024 * 1024) throw new Error('Fichier trop volumineux (15 Mo maximum).');
       const base64 = await new Promise<string>((resolve, reject) => { const r = new FileReader(); r.onload = () => resolve(String(r.result).split(',')[1] ?? ''); r.onerror = () => reject(new Error('Lecture impossible')); r.readAsDataURL(file); });
-      const result = await analyser({ data: { name: file.name, base64 } });
+      let lu: LectureDeterministe | null = null;
+      if (/\.xlsx$/i.test(file.name)) {
+        const { lireClasseur } = await import('@/lib/imports/planning-equipes-export');
+        lu = lirePlanningExcel(await lireClasseur(await file.arrayBuffer()), ETAPE_LABELS, cleNomTerrain);
+      }
+      const result = lu ? verifierPlanning(lu.interventions) : await analyser({ data: { name: file.name, base64 } });
       if (result.erreurs.length) throw new Error(result.erreurs.join('\n'));
+      setLecture(lu ? 'Lecture directe du format planning (sans IA)' : 'Lecture assistée');
       const reference = await supabase.rpc('planning_terrain_references');
       if (reference.error) throw reference.error;
       const r = reference.data as unknown as ReferencesPlanning;
-      setRefs(r); setPersonnes({}); setAffaires({}); setFichier(file.name);
+      setRefs(r); setPersonnes(lu?.personnes ?? {}); setAffaires(lu?.affaires ?? {}); setFichier(file.name);
+      if (lu) { const cle = (b: InterventionLue) => [b.date, b.code, b.type, b.heure ?? '', b.lieu.trim().toLocaleLowerCase('fr')].join('|'); const ordre = new Map(lu.interventions.map((b, i) => [cle(b), lu!.etapes[i]])); setChoixEtapes(Object.fromEntries(result.interventions.map((b, i) => [i, ordre.get(cle(b))]).filter(([, v]) => v))); }
       const debut = result.interventions[0]?.date;
       const fin = result.interventions.at(-1)?.date;
       if (debut && fin) {
         if (Math.round((Date.parse(fin) - Date.parse(debut)) / 86400000) > 31) throw new Error('Importez au maximum un mois à la fois.');
         const week = await supabase.rpc('planning_terrain_semaine', { _debut: debut, _fin: fin });
         if (week.error) throw week.error;
-        setEtapes((week.data as unknown as { etapes: typeof etapes }).etapes);
+        const w = week.data as unknown as { etapes: typeof etapes; dispos: DispoPlanning[] };
+        setEtapes(w.etapes); setDispos(w.dispos ?? []);
       }
       setBlocs(result.interventions);
     } catch (e) { setErreur(e instanceof Error ? e.message : 'Lecture impossible'); }
@@ -86,14 +98,14 @@ export function ImportPlanningHebdomadaire() {
   return <><Button variant="outline" onClick={() => setOpen(true)}><Upload className="mr-2 size-4" />Importer un planning Excel/PDF</Button><Dialog open={open} onOpenChange={o => { if (!busy) setOpen(o); }}><DialogContent className="max-h-[92vh] max-w-[calc(100vw-1rem)] grid-cols-[minmax(0,1fr)] overflow-x-hidden overflow-y-auto p-4 sm:max-w-4xl sm:p-6"><DialogHeader><DialogTitle>Importer un planning</DialogTitle></DialogHeader>
     <Label htmlFor="planning-fichier">Planning Excel (.xlsx) ou PDF</Label><Input id="planning-fichier" type="file" accept=".xlsx,.pdf" disabled={busy} onChange={e => { const f = e.target.files?.[0]; if (f) void lire(f); }} />
     {busy && <p role="status">{blocs.length ? 'Enregistrement…' : 'Lecture du planning…'}</p>}{erreur && <p role="alert" className="whitespace-pre-line text-sm text-destructive">{erreur}</p>}
-    {blocs.length > 0 && <><p className="font-medium">{blocs.length} interventions · {total} affectations · {manquants} rattachements manquants</p>
+    {blocs.length > 0 && <>{lecture && <p className="text-xs text-muted-foreground">{lecture}</p>}<p className="font-medium">{blocs.length} interventions · {total} affectations · {manquants} rattachements manquants</p>
       {passagesMultiples(blocs).length > 0 && <details className="text-sm text-warning"><summary>Plusieurs interventions le même jour : {passagesMultiples(blocs).length} personnes à vérifier</summary>{passagesMultiples(blocs).map(v => <p key={`${v.date}-${v.nom}`}>{v.date} · {v.nom} · {v.nombre} interventions</p>)}</details>}
       {blocs.map((b, i) => <section key={i} className="space-y-3 border-t border-border pt-4"><div className="grid gap-2 sm:grid-cols-3"><div><Label>Date</Label><Input type="date" aria-label={`Date intervention ${i + 1}`} value={b.date} disabled={busy} onChange={e => modifier(i, { date: e.target.value })} /></div><div><Label>Opération</Label><Select value={b.type} disabled={busy} onValueChange={v => modifier(i, { type: v as EtapeType })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{ETAPE_TYPES.map(t => <SelectItem key={t} value={t}>{ETAPE_LABELS[t]}</SelectItem>)}</SelectContent></Select></div><div><Label>Heure de début</Label><Input type="time" aria-label={`Heure intervention ${i + 1}`} disabled={busy} value={b.heure ?? ''} onChange={e => modifier(i, { heure: e.target.value || null })} /></div></div>
       <ChoixCherchable label={`${b.code} · ${b.chantier} — rattacher le chantier`} value={affaireDe(b.code) ?? ''} options={refs.affaires.map(a => ({ id: a.id, label: `${a.numero} · ${a.nom}` }))} onChange={id => { setAffaires(v => ({ ...v, [b.code]: id })); setValide(false); }} />
       <div className="grid gap-2 sm:grid-cols-2"><div><Label>Lieu</Label><Input value={b.lieu} disabled={busy} onChange={e => modifier(i, { lieu: e.target.value })} /></div><div><Label>Responsable</Label><Input value={b.responsable} disabled={busy} onChange={e => modifier(i, { responsable: e.target.value })} /></div></div><Label>Commentaires / horaires à confirmer</Label><Input value={b.note} disabled={busy} onChange={e => modifier(i, { note: e.target.value })} />
       {compatibles(b).length > 0 && <Select value={choixEtapes[i] ?? ''} disabled={busy} onValueChange={v => setChoixEtapes(c => ({ ...c, [i]: v }))}><SelectTrigger aria-label={`Étape existante intervention ${i + 1}`}><SelectValue placeholder="Rattacher à une étape existante (facultatif sauf ambiguïté)" /></SelectTrigger><SelectContent>{compatibles(b).map(e => <SelectItem key={e.id} value={e.id}>{ETAPE_LABELS[b.type]} · {e.date} · {e.heure ?? 'heure inconnue'}</SelectItem>)}</SelectContent></Select>}
       <Label>Noms du fichier (une personne par ligne)</Label><textarea aria-label={`Noms intervention ${i + 1}`} className="min-h-24 w-full rounded-md border border-input bg-background p-2 text-sm" disabled={busy} value={b.personnes.join('\n')} onChange={e => modifier(i, { personnes: e.target.value.split('\n') })} />
-      <div className="grid gap-2 sm:grid-cols-2">{b.personnes.map((nom, j) => { const p = personneDe(nom); return <div key={j} className="min-w-0"><Label className={p ? '' : 'text-warning'}>{nom}</Label><ChoixCherchable label={`Rattacher ${nom}`} value={p ? `${p.origine}:${p.id}` : ''} options={refs.personnes.filter(p => p.actif !== false).map(p => ({ id: `${p.origine}:${p.id}`, label: `${p.nom} ${p.prenom} · ${p.origine === 'dispos' ? 'Dispos' : 'Employé'}` }))} onChange={id => { setPersonnes(v => ({ ...v, [cleNomTerrain(nom)]: id })); setValide(false); }} /></div>; })}</div></section>)}
+      <div className="grid gap-2 sm:grid-cols-2">{b.personnes.map((nom, j) => { const p = personneDe(nom); return <div key={j} className="min-w-0"><Label className={`flex items-center gap-1 ${p ? '' : 'text-warning'}`}>{p && <PastilleDispo statut={statutDispo({ ...p, origine: p.origine as 'employe' | 'dispos' }, b.date, dispos)} />}{nom}{p && alerteDispo(statutDispo({ ...p, origine: p.origine as 'employe' | 'dispos' }, b.date, dispos)) === 'rouge' && <span className="text-xs text-destructive">pas dispo</span>}</Label><ChoixCherchable label={`Rattacher ${nom}`} value={p ? `${p.origine}:${p.id}` : ''} options={refs.personnes.filter(p => p.actif !== false).map(p => ({ id: `${p.origine}:${p.id}`, label: `${p.nom} ${p.prenom} · ${p.origine === 'dispos' ? 'Dispos' : 'Employé'}` }))} onChange={id => { setPersonnes(v => ({ ...v, [cleNomTerrain(nom)]: id })); setValide(false); }} /></div>; })}</div></section>)}
       <label className="flex items-start gap-2 text-sm"><input type="checkbox" checked={valide} disabled={busy} onChange={e => setValide(e.target.checked)} />Je valide les dates, les interventions et les rattachements de cet aperçu.</label><Button disabled={busy || manquants > 0 || ambigus || !valide} onClick={() => void enregistrer()}>Enregistrer le planning</Button>
     </>}{bilan && <p role="status" className="font-medium text-success">{bilan}</p>}
   </DialogContent></Dialog></>;
