@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { useCapability } from "@/hooks/use-capability";
 import { reanalyseSharedInboxes } from "@/lib/server-fns/shared-inbox-reanalyse.functions";
+import { corrigerDemandesTransferees } from '@/lib/server-fns/forwarded-requests.functions';
 import { enrichClientFiche } from "@/lib/server-fns/client-enrichment.functions";
 import { RefreshCw, Paperclip, Download, Eye } from "lucide-react";
 import { listEmailAttachments, getEmailAttachment, type EmailAttachment } from "@/lib/server-fns/shared-inbox-attachments.functions";
@@ -84,6 +85,10 @@ function DemandesClientsPage() {
   const isAdmin = useCapability("section.admin");
   const reanalyse = useServerFn(reanalyseSharedInboxes);
   const [reanalysing, setReanalysing] = useState(false);
+  const corriger=useServerFn(corrigerDemandesTransferees);
+  const [correctionBusy,setCorrectionBusy]=useState(false);
+  const [correctionBilan,setCorrectionBilan]=useState('');
+  async function runCorrection(){setCorrectionBusy(true);try{const r=await corriger();setCorrectionBilan(`${r.corrigees} demandes recalculées · ${r.nonIdentifiees} clients à identifier · ${r.aConfirmer.length} provenances à confirmer${r.errors.length ? ' · '+r.errors.join(' · ') : ''}`);await load();}catch(e){toast.error(e instanceof Error ? e.message:'Correction impossible');}finally{setCorrectionBusy(false);}}
   async function runReanalyse() {
     setReanalysing(true);
     try {
@@ -131,12 +136,13 @@ function DemandesClientsPage() {
         title="Demandes clients"
         description="Emails reçus sur devis@setup.paris — l'IA propose une opportunité pour chaque demande."
         actions={isAdmin ? (
-          <Button size="sm" variant="outline" onClick={runReanalyse} disabled={reanalysing}>
+          <div className="flex flex-wrap gap-2"><Button size="sm" variant="outline" disabled={correctionBusy} onClick={()=>void runCorrection()}><RefreshCw className="mr-1 size-4" />{correctionBusy ? 'Correction…' : 'Corriger les transferts'}</Button><Button size="sm" variant="outline" onClick={runReanalyse} disabled={reanalysing}>
             {reanalysing ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-1" />}
             Relancer l'analyse IA
-          </Button>
+          </Button></div>
         ) : undefined}
       />
+      {correctionBilan && <p role="status" className="text-sm text-muted-foreground">{correctionBilan}</p>}
       <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
         <TabsList>
           <TabsTrigger value="todo">À traiter <span className="ml-1.5 text-xs opacity-60">{lists.todo.length}</span></TabsTrigger>
