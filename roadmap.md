@@ -1,8 +1,10 @@
 # Roadmap
 
 ## Import hebdomadaire Excel/PDF — Gabin (7 nov. 2026)
-- [ ] Ajouter un import réutilisable dans Planning équipes, aperçu et rattachement manuel aux personnes/chantiers existants ; conserver l’import historique séparé.
-- [ ] Vérifier le PDF du 9 au 15 novembre, horaires, opérations distinctes le même jour et réimport sans doublon ; aucune publication, toute migration soumise avant application.
+- [x] Import réutilisable Excel/PDF ajouté dans Planning équipes, aperçu éditable et rattachement cherchable aux personnes/chantiers existants ; historique séparé. Migration approuvée puis appliquée, aucun doublon de table.
+- [x] PDF réel lu à l’écran : 14 interventions / 69 affectations (correction du total initial de 71 après recomptage), noms multilignes et les deux opérations du vendredi conservés ; 15 rattachements d’affectations restent manquants. Aucun planning réel enregistré.
+- [x] Excel testé, enregistrement et réimport sans doublon, externe Dispos, fichier renommé, correction préservée et erreur atomique vérifiés avec session admin. Vue semaine relue, 19 tests verts, essais supprimés (0 étape fictive restante), mobile 390 et bureau 1366 contrôlés. Erreur XLSX.read et débordement mobile corrigés. Rien publié.
+- [ ] Import réel : attend validation humaine des noms non rapprochés et des étapes existantes ambiguës ; pas de création automatique. Parcours chef et logistique en navigateur non vérifiés.
 
 ## Lot 1 — Planning nominatif logistique (7 nov. 2026)
 - [x] « Planning équipes » rendue visible dans le menu (groupe Logistique) malgré le mode « suivi des affaires » actif globalement : ajout à la liste blanche des URL + test de garde. Vérifié à l'écran en admin (item présent, clic ouvre la page avec export et ajout). Droits en base : ouverture dispos.view (admin, logistique, chef d'équipe), import/export dispos.edit (admin, logistique). Rien publié.
@@ -12,7 +14,7 @@
 - [x] Inventaire demandé après rejet : employés, postes, statuts, assignations, absences et écrans relus ; 63 tests existants passent.
 - [ ] Réunir l’équipe terrain sans doublons, besoins qualifiés et affectations nominatives ; droits admin/logistique en écriture, chef d’équipe en lecture.
 - [ ] Planning équipes semaine par étape / personne, recherche et disponibilités, filtres ; lecture mobile.
-- [ ] Import unique consolidé onglet Affectations (10 colonnes exactes, ~2 130 lignes) : aperçu, rattachement manuel, historique dans assignations sans étapes passées ; réimport sans doublons. Aucun import Planning/Base_employés ; semaines futures saisies dans Staffing.
+- [ ] Import unique consolidé onglet Affectations (10 colonnes exactes, ~2 130 lignes) : aperçu, rattachement manuel, historique dans assignations sans étapes passées ; réimport sans doublons. Import hebdomadaire Excel/PDF séparé autorisé par Gabin le 7 novembre pour la transition.
 - [ ] Recette partielle : compteurs 4/6→6/6 et réimport 1 ajouté puis 0 ajouté/1 existant vérifiés ; essais nettoyés. Restent filtres qualifiés, disponibilités visibles, rapprochement externes, rendu 1366 et lecture chef à contrôler.
 - [ ] Lots 2/3 : modèle compatible seulement, aucun écran ni automatisation ; publication réservée à Gabin.
 
