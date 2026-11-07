@@ -13,12 +13,10 @@
 | **5. Import** | **/imports/planning**, planning-xlsx/plan/apply : lecture, dates/métiers normalisés, aperçu/bilan, assignations. **employes-excel.ts** : import postes par nom/prénom avec diff. | Format blocs Planning et Base_employés, multi-fichiers, noms complets/inversés, transaction et dédoublonnage par opération. Actuellement : prénom, JOURNEE/8 h, dédoublonnage employé/date/chantier sans opération ; cases personne×dates analysées mais non enregistrées. |
 | **6. Historique futur** | assignations : personne/chantier/date ; affaires/étapes : lieu. **affaire_equipe_historique** : jours, premières/dernières dates, chef/refus. **affaire_equipe/fabrication_objet_equipe** : appartenance chantier/objet, pas créneaux. | Lien opération/étape. L’historique actuel est recalculé par chef, pas un journal immuable ni une preuve de présence ; il n’est pas exhaustif sans responsable. Pas de nouvel agrégat au lot 1. |
 
-## État réel vérifié dans la base
-**372 employés, 13 intervenants Dispos (0 rattaché), 255 étapes, 15 absences ; assignations et affaire_equipe : 0 ligne actuellement.** Le socle existe, mais l’historique nominatif n’est pas rempli dans ces tables.
+## État réel vérifié
+**372 employés, 13 intervenants Dispos (0 rattaché), 255 étapes, 15 absences ; assignations et affaire_equipe : 0 ligne.** Le socle existe, mais ces tables ne contiennent pas encore d’historique nominatif.
 
-9 métiers, dont Impression UV ; 8 postes contractuels actifs. Les libellés Excel ne correspondent pas tous aux postes contractuels : correspondance proposée avec **poste_principal et métiers existants**, pas de second catalogue.
-
-Les statuts type_contrat/statut_contrat/sous_type_contrat ne coïncident pas toujours. Les trois libellés Excel ne permettent pas de les remplacer aveuglément : ancien/nouveau et validation, **aucun défaut CDI automatique**.
+9 métiers et 8 postes contractuels actifs. Correspondances Excel proposées vers **poste_principal/métiers existants**. Les statuts RH présentent des incohérences : validation ancien/nouveau, **aucun défaut CDI automatique**.
 
 ## Migration réduite proposée
 
@@ -53,7 +51,7 @@ Ajouter sur **affaire_etapes_logistiques** : nombre de chefs requis, besoins qua
 - Préserver les droits actuels du planning ordinaire. Borner les policies qui permettent aux chefs d’écrire pour protéger les lignes logistiques **aussi depuis les anciens écrans/appels directs**. Conserver les accès personnels déjà existants sans nouvel écran Mes missions ni exposition collective.
 - Adapter explicitement : contrôle chantier clôturé (exception historique autorisée seulement), initialisation/validation de confirmation, chef du jour, notifications et agrégats. Ne pas modifier le comportement ordinaire.
 - Déplacement/annulation d’étape : traitement cohérent des assignations liées, pas de personnes laissées sur l’ancienne date. Publication/restauration d’un plan atelier ne doit pas supprimer les engagements logistiques.
-- Les fonctions adaptées seront écrites lisiblement dans la migration finale, avec validations, autorisations et protections ; aucune réécriture dynamique.
+- Migration finale : fonctions explicites, validations et protections ; aucune réécriture dynamique.
 
 ## Écrans réutilisés
 - **/logistique** : mode Planning équipes par étape, formulaire et lecture mobile existants.
@@ -67,7 +65,7 @@ Ajouter sur **affaire_etapes_logistiques** : nombre de chefs requis, besoins qua
 
 **Non vérifié :** nouveau lot non construit, format réel des fichiers d’Alberto, externes dans les anciennes vues, dédoublonnage concurrent, nouveaux droits et rendu. Après accord : recette 4/6→6/6 avec relecture, cohérence vue personne, deux fichiers chevauchants, noms accentués/inversés, refus d’écriture, 390/1366 px, nettoyage des données de test.
 
-**Lots 2/3 non codés :** aucune suggestion, alerte automatique, lettre de mission, nouveau Mes missions ou coût jour/homme. Le lien personne/étape/chantier/date/lieu et les besoins qualifiés préparent seulement leur modèle.
+**Lots 2/3 non codés :** aucune suggestion, alerte automatique, lettre de mission, nouveau Mes missions ou coût jour/homme ; modèle compatible seulement.
 
 ## Accord attendu
 Validation de cette migration réduite, puis rédaction finale/application et implémentation du seul lot 1. **Aucune publication : Gabin publie.**
