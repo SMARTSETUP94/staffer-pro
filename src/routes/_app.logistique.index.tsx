@@ -67,7 +67,9 @@ function PlanningLogistiquePage() {
 
   const [calendrierOpen, setCalendrierOpen] = useState(false);
   const [regrouper, setRegrouper] = useRegrouperParChantier();
-  const jours = useMemo(() => joursIso(new Date(`${debut}T12:00:00`), semaines * 7), [debut, semaines]);
+  // Vue Étapes : semaine glissante à partir d'aujourd'hui sur la semaine courante (J → J+6), sinon à partir du lundi affiché.
+  const debutEtapes = debut === lundiCourant() ? new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Paris" }).format(new Date()) : debut;
+  const jours = useMemo(() => joursIso(new Date(`${debutEtapes}T12:00:00`), semaines * 7), [debutEtapes, semaines]);
   const { data: etapesBrutes = [], isLoading } = useEtapesLogistiques(jours[0], jours[jours.length - 1]);
   const invalidate = useInvalidateEtapes();
   const [dlg, setDlg] = useState<{ open: boolean; etape?: EtapeLogistique | null; date?: string }>({ open: false });
