@@ -1,5 +1,13 @@
 # Roadmap
 
+## Lot 1 — Planning nominatif logistique (7 nov. 2026)
+- [ ] Préparer et présenter la migration additive ; application bloquée jusqu’à l’accord explicite de Gabin.
+- [ ] Réunir l’équipe terrain sans doublons, besoins qualifiés et affectations nominatives ; droits admin/logistique en écriture, chef d’équipe en lecture.
+- [ ] Planning équipes semaine par étape / personne, recherche et disponibilités, filtres ; lecture mobile.
+- [ ] Imports Base_employés / Planning en masse avec aperçu, rapprochements manuels, dédoublonnage et bilan ; aucun taux/coût importé.
+- [ ] Recette 390/1366 px, 4/6 puis 6/6, vue personne, Excel chevauchants et accents ; nettoyer les données de test.
+- [ ] Lots 2/3 : modèle compatible seulement, aucun écran ni automatisation ; publication réservée à Gabin.
+
 ## Lot 1 — Équipe projet, Presque gagné, planning BE / projets (27 oct. 2026)
 - [x] Base : statut presque_gagne, tables role_referents + affaire_roles (RLS, blocage OAuth), synchro bidirectionnelle des colonnes historiques, liaison smart@ → Gabin C, reprise 88/16/1, fusion Kevin (fiche désactivée, 0 référence restante), seed 59 référents, compteur de charge, RPC affecter_role_projet, retrait restriction 6XXX, capability planning.pilotage, dispatch MCP.
 - [x] Écran : bloc Équipe projet (fiche affaire / opportunité), badges rôle à affecter, colonne Presque gagné + alerte 15 j, Paramètres > Référents par rôle, Planning BE / projets.
