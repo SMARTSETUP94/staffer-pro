@@ -6,7 +6,7 @@ BEGIN
  PERFORM set_config('request.jwt.claim.sub',u::text,true);
  PERFORM set_config('request.jwt.claims',jsonb_build_object('sub',u,'role','authenticated')::text,true);
  SELECT id INTO a FROM affaires WHERE numero='4132';
- INSERT INTO dispos_intervenants(nom,prenom,telephone) VALUES('TEST IMPORT HEBDO','Recette','+33600000991') RETURNING id INTO p;
+ INSERT INTO dispos_intervenants(nom,prenom,telephone) VALUES('TEST IMPORT HEBDO','Recette','0600000991') RETURNING id INTO p;
  b:=jsonb_build_array(jsonb_build_object('affaire_id',a,'date','2026-11-15','type','tracage','heure',null,'heure_fin',null,'lieu','TEST IMPORT HEBDO','responsable','Test','note','heure à confirmer','personnes',jsonb_build_array(jsonb_build_object('id',p,'origine','dispos','nom_original','TEST IMPORT HEBDO Recette'))));
  r:=planning_terrain_import_semaine(b,'test.pdf');
  IF (r->>'ajoutes')::int<>1 OR (r->>'etapes_creees')::int<>1 THEN RAISE EXCEPTION 'premier import incorrect %',r; END IF;
