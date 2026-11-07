@@ -74,7 +74,7 @@ export async function classifySharedEmail(key: string, input: ClassifyInput, sou
     hint +
     "Catégories : 'candidature', 'opportunite' (demande de devis, projet client), 'logistique' (transport, livraison, enlèvement, accès site, horaires), 'pub', 'autre'. " +
     "Si candidature, devine le métier parmi : construction, métallerie, peinture, numérique, tapisserie, machiniste, logistique, suivi_projet. " +
-    "Si l'email est un transfert, le vrai demandeur est l'expéditeur du message d'origine (bloc De :/From: le plus bas). " +
+    "Si l'email est un transfert, le vrai demandeur est le premier expéditeur externe après les transferts internes. Les en-têtes Expéditeur et Sujet fournis ont priorité. Ignore les signatures des transmetteurs SETUP. " +
     "Pour les formulaires \"Setup client form\", lis les champs du formulaire. " +
     "Si opportunité, remplis les champs opp_* (client, projet, taille estimée : tres_petit <5k€, petit 5-20k€, moyen 20-80k€, gros 80-250k€, tres_gros >250k€, date YYYY-MM-DD, lieu, besoins), sinon mets-les à null. " +
     "opp_client = nom de la société cliente (marque, agence, chaîne TV, production), jamais SETUP ni un collègue SETUP, sans forme juridique (SAS, SARL). " +

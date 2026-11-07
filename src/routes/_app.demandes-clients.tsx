@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { useCapability } from "@/hooks/use-capability";
 import { reanalyseSharedInboxes } from "@/lib/server-fns/shared-inbox-reanalyse.functions";
+import { corrigerDemandesTransferees } from '@/lib/server-fns/forwarded-requests.functions';
 import { enrichClientFiche } from "@/lib/server-fns/client-enrichment.functions";
 import { RefreshCw, Paperclip, Download, Eye } from "lucide-react";
 import { listEmailAttachments, getEmailAttachment, type EmailAttachment } from "@/lib/server-fns/shared-inbox-attachments.functions";
@@ -55,6 +56,7 @@ type Meta = {
   opp_date_evenement?: string | null;
   opp_lieu?: string | null;
   opp_besoins?: string | null;
+  date_demande_originale?: string | null;
 };
 
 type Row = {
@@ -70,6 +72,8 @@ type Row = {
   statut: "pending_review" | "validated" | "dismissed";
   opportunite_id: string | null;
   metadata_ia: Meta | null;
+  transmis_par: string | null;
+  client_a_identifier: boolean;
 };
 
 function DemandesClientsPage() {
@@ -81,6 +85,10 @@ function DemandesClientsPage() {
   const isAdmin = useCapability("section.admin");
   const reanalyse = useServerFn(reanalyseSharedInboxes);
   const [reanalysing, setReanalysing] = useState(false);
+  const corriger=useServerFn(corrigerDemandesTransferees);
+  const [correctionBusy,setCorrectionBusy]=useState(false);
+  const [correctionBilan,setCorrectionBilan]=useState('');
+  async function runCorrection(){setCorrectionBusy(true);try{const r=await corriger();setCorrectionBilan(`${r.corrigees} demandes recalculées · ${r.nonIdentifiees} clients à identifier · ${r.aConfirmer.length} provenances à confirmer${r.errors.length ? ' · '+r.errors.join(' · ') : ''}`);await load();}catch(e){toast.error(e instanceof Error ? e.message:'Correction impossible');}finally{setCorrectionBusy(false);}}
   async function runReanalyse() {
     setReanalysing(true);
     try {
@@ -100,7 +108,7 @@ function DemandesClientsPage() {
     setLoading(true);
     const { data, error } = await supabase
       .from("emails_entrants")
-      .select("id, from_email, from_name, subject, received_at, body_preview, body_full, body_content_type, categorie_ia, statut, opportunite_id, metadata_ia")
+      .select("id, from_email, from_name, subject, received_at, body_preview, body_full, body_content_type, categorie_ia, statut, opportunite_id, metadata_ia, transmis_par, client_a_identifier")
       .eq("source_boite", "devis")
       .order("received_at", { ascending: false })
       .limit(300);
@@ -128,12 +136,13 @@ function DemandesClientsPage() {
         title="Demandes clients"
         description="Emails reçus sur devis@setup.paris — l'IA propose une opportunité pour chaque demande."
         actions={isAdmin ? (
-          <Button size="sm" variant="outline" onClick={runReanalyse} disabled={reanalysing}>
+          <div className="flex flex-wrap gap-2"><Button size="sm" variant="outline" disabled={correctionBusy} onClick={()=>void runCorrection()}><RefreshCw className="mr-1 size-4" />{correctionBusy ? 'Correction…' : 'Corriger les transferts'}</Button><Button size="sm" variant="outline" onClick={runReanalyse} disabled={reanalysing}>
             {reanalysing ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-1" />}
             Relancer l'analyse IA
-          </Button>
+          </Button></div>
         ) : undefined}
       />
+      {correctionBilan && <p role="status" className="text-sm text-muted-foreground">{correctionBilan}</p>}
       <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
         <TabsList>
           <TabsTrigger value="todo">À traiter <span className="ml-1.5 text-xs opacity-60">{lists.todo.length}</span></TabsTrigger>
@@ -159,8 +168,9 @@ function DemandesClientsPage() {
                   <div className="min-w-0">
                     <div className="font-medium truncate">{r.subject || "(sans objet)"}</div>
                     <div className="text-xs text-muted-foreground">
-                      {r.from_name ? `${r.from_name} · ` : ""}{r.from_email} · {format(parseISO(r.received_at), "d MMM yyyy HH:mm", { locale: fr })}
+                      {r.from_name ? `${r.from_name} · ` : ""}{r.from_email} · {format(parseISO(m.date_demande_originale ?? r.received_at), "d MMM yyyy HH:mm", { locale: fr })}
                     </div>
+                    <div className="mt-1 flex flex-wrap gap-1">{r.transmis_par && <Badge variant="outline">transféré par {r.transmis_par}</Badge>}{r.client_a_identifier && <Badge variant="secondary">Client à identifier</Badge>}</div>
                   </div>
                   {r.categorie_ia && r.categorie_ia !== "opportunite" && (
                     <Badge variant="outline">IA : {r.categorie_ia}</Badge>
@@ -223,7 +233,7 @@ function CreateOppDialog({ email, onClose, onDone }: { email: Row; onClose: () =
   const domain = email.from_email.split("@")[1]?.split(".")[0] ?? "";
   // Email transféré : le vrai client est l'expéditeur d'origine (bloc « De : »
   // le plus bas du corps), pas le collègue qui a transféré.
-  const original = extractOriginalSender(email.body_full);
+  const original = email.transmis_par ? null : extractOriginalSender(email.body_full);
   const originalDomain = original?.email?.split("@")[1]?.split(".")[0];
   const clientEmail = original?.email ?? email.from_email;
   const fullDomain = clientEmail.split("@")[1]?.toLowerCase() ?? "";
@@ -239,7 +249,7 @@ function CreateOppDialog({ email, onClose, onDone }: { email: Row; onClose: () =
   const [taille, setTaille] = useState<OpportuniteTaille>(
     m.opp_taille && m.opp_taille in TAILLE_LABEL ? (m.opp_taille as OpportuniteTaille) : "petit",
   );
-  const [dateOpp, setDateOpp] = useState(new Date().toISOString().slice(0, 10));
+  const [dateOpp, setDateOpp] = useState((m.date_demande_originale ?? email.received_at).slice(0, 10));
   const [commentaires, setCommentaires] = useState(
     [m.opp_besoins, m.opp_lieu && `Lieu : ${m.opp_lieu}`, m.opp_date_evenement && `Date événement : ${m.opp_date_evenement}`, `Source : ${email.from_email}`]
       .filter(Boolean).join("\n"),

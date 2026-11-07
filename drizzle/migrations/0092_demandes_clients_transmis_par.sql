@@ -1,0 +1,3 @@
+ALTER TABLE public.emails_entrants ADD COLUMN IF NOT EXISTS transmis_par text, ADD COLUMN IF NOT EXISTS client_a_identifier boolean NOT NULL DEFAULT false;
+COMMENT ON COLUMN public.emails_entrants.transmis_par IS 'Adresse du transmetteur conservée lors de la résolution du message externe d origine.';
+COMMENT ON COLUMN public.emails_entrants.client_a_identifier IS 'Origine client non identifiée de façon fiable dans une demande transferee.';

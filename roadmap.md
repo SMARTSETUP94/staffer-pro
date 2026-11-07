@@ -1,8 +1,13 @@
 # Roadmap
 
+## Demandes clients — transferts (plan approuvé)
+- [x] Migration deux colonnes appliquée, lecteur Outlook FR/EN partagé, ingestion et réanalyse, identité/date d’origine et badges ; 20 tests verts, écran admin vérifié.
+- [x] Recalcul sécurisé exécuté deux fois : 117 demandes devis recalculées, 19 clients à identifier ; statuts/catégories et volumes avant/après identiques, aucune suppression/publication. Premier externe et badge smart relus à l’écran.
+- [ ] 23 demandes smart candidates : réception devis non confirmée par identifiant Microsoft ; restent inchangées, validation de provenance nécessaire. Nouvelle ingestion cron et lecture des pièces jointes non vérifiées en situation réelle.
+
 ## Import réel PDF 9–15 novembre — Gabin
-- [ ] Rapprocher les employés et Dispos ; créer dans Dispos uniquement les noms réellement absents, sans coordonnées inventées.
-- [ ] Importer les interventions et vérifier leur lecture dans Planning équipes ; ne pas publier.
+- [ ] Rapprochement commencé : 4 liens employés et 13 fiches Dispos ajoutées avec portables réels ; attend décision sur FRANCAIS Kévin/RAVI Dylan/TOURE Amadou inactifs, portable CARVALHO Alberto et identité ROUX/MATINGOU.
+- [ ] Importer les interventions après ces confirmations et vérifier leur lecture dans Planning équipes ; ne pas publier.
 
 ## Planning équipes — affichage et export (7 nov. 2026)
 - [x] Vue personne limitée aux personnes staffées de la semaine ; dates françaises, numéro/plage de semaine et flèches comme Dispos. Lecture admin et téléphone vérifiées, aucun débordement de page.

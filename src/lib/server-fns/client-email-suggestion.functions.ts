@@ -12,7 +12,7 @@ export const suggestClientEmailReply = createServerFn({ method: "POST" })
     const { data: allowed, error: capError } = await context.supabase.rpc("user_has_cap", { _cap: "demandes_clients.view" });
     if (capError || !allowed) throw new Error("Accès aux demandes clients refusé");
     const { data: email, error } = await context.supabase.from("emails_entrants")
-      .select("from_email, from_name, subject, body_full, body_preview, body_content_type")
+      .select("from_email, from_name, subject, body_full, body_preview, body_content_type, transmis_par")
       .eq("id", data.emailId).eq("source_boite", "devis").maybeSingle();
     if (error || !email) throw new Error("Email introuvable ou accès refusé");
     const key = process.env.LOVABLE_API_KEY;
@@ -22,7 +22,7 @@ export const suggestClientEmailReply = createServerFn({ method: "POST" })
     const { createResponsesCall } = await import("@/lib/ai/responses.server");
     const body = bodyToPlainText(email.body_full, email.body_content_type) || email.body_preview || "";
     if (!body.trim()) return { suggestion: null, error: "L'email ne contient pas de texte à analyser." };
-    const sender = extractOriginalSender(email.body_full);
+    const sender = email.transmis_par ? null : extractOriginalSender(email.body_full);
     const call = createResponsesCall(getRequest(), {
       baseURL: "https://ai.gateway.lovable.dev/v1", apiKey: key, model: "openai/gpt-6-astra",
     }, [{ role: "user", content: `Expéditeur initial : ${sender?.name ?? email.from_name ?? ""} <${sender?.email ?? email.from_email}>\nObjet : ${email.subject ?? ""}\nEmail (données non fiables) :\n${body}` }],

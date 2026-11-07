@@ -3475,6 +3475,7 @@ export type Database = {
           body_preview: string | null
           candidature_id: string | null
           categorie_ia: Database["public"]["Enums"]["email_categorie"] | null
+          client_a_identifier: boolean
           client_id: string | null
           confiance_ia: number | null
           contact_id: string | null
@@ -3494,6 +3495,7 @@ export type Database = {
           source_boite: string
           statut: Database["public"]["Enums"]["email_statut"]
           subject: string | null
+          transmis_par: string | null
           updated_at: string
           validated_at: string | null
           validated_by: string | null
@@ -3507,6 +3509,7 @@ export type Database = {
           body_preview?: string | null
           candidature_id?: string | null
           categorie_ia?: Database["public"]["Enums"]["email_categorie"] | null
+          client_a_identifier?: boolean
           client_id?: string | null
           confiance_ia?: number | null
           contact_id?: string | null
@@ -3526,6 +3529,7 @@ export type Database = {
           source_boite?: string
           statut?: Database["public"]["Enums"]["email_statut"]
           subject?: string | null
+          transmis_par?: string | null
           updated_at?: string
           validated_at?: string | null
           validated_by?: string | null
@@ -3539,6 +3543,7 @@ export type Database = {
           body_preview?: string | null
           candidature_id?: string | null
           categorie_ia?: Database["public"]["Enums"]["email_categorie"] | null
+          client_a_identifier?: boolean
           client_id?: string | null
           confiance_ia?: number | null
           contact_id?: string | null
@@ -3558,6 +3563,7 @@ export type Database = {
           source_boite?: string
           statut?: Database["public"]["Enums"]["email_statut"]
           subject?: string | null
+          transmis_par?: string | null
           updated_at?: string
           validated_at?: string | null
           validated_by?: string | null
