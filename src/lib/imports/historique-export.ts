@@ -4,7 +4,7 @@ export type PassageExport = {
   date: string; affaire_id: string; personne_cle: string; personne: string;
   code_chantier: string; chantier: string; operations: string[]; responsable: string;
   lieux: string[]; source: 'Staffing' | 'Import historique'; nom_original: string;
-  fichiers_source: string; format: string;
+  fichiers_source: string; format: string; passage_terrain?: boolean; passage_atelier?: boolean;
 };
 
 export function cellulesHistorique(lignes: PassageExport[]) {
@@ -16,16 +16,17 @@ export function cellulesHistorique(lignes: PassageExport[]) {
   }
   const date = (s: string) => new Date(`${s}T00:00:00Z`);
   const periode = (ls: PassageExport[]) => ls.map(l => l.date).sort();
+  const passages = (ls: PassageExport[]) => [ls.filter(l => l.passage_terrain ?? l.format !== 'Staffing atelier').length, ls.filter(l => l.passage_atelier ?? l.format === 'Staffing atelier').length];
   return {
     Affectations: [ [...COLONNES_AFFECTATIONS], ...lignes.map(l => [date(l.date), new Intl.DateTimeFormat('fr-FR', { weekday: 'long', timeZone: 'UTC' }).format(date(l.date)), l.code_chantier, l.chantier, l.operations.join(' / '), l.responsable, l.personne, l.nom_original, l.fichiers_source, l.format]) ],
-    Personnes: [ ['Personne', 'Nb affectations', 'Première date', 'Dernière date', 'Chantier 1', 'Nb 1', 'Chantier 2', 'Nb 2', 'Chantier 3', 'Nb 3'], ...[...personnes.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([, ls]) => {
+    Personnes: [ ['Personne', 'Nb affectations', 'Première date', 'Dernière date', 'Chantier 1', 'Nb 1', 'Chantier 2', 'Nb 2', 'Chantier 3', 'Nb 3', 'Passages terrain', 'Passages atelier'], ...[...personnes.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([, ls]) => {
       const frequences = new Map<string, { code: string; nom: string; nb: number }>();
       for (const l of ls) { const old = frequences.get(l.affaire_id); frequences.set(l.affaire_id, { code: l.code_chantier, nom: l.chantier, nb: (old?.nb ?? 0) + 1 }); }
       const top = [...frequences.entries()].sort(([ia, a], [ib, b]) => b.nb - a.nb || a.code.localeCompare(b.code) || ia.localeCompare(ib)).slice(0, 3);
       const dates = periode(ls);
-      return [ls[0]?.personne ?? '', ls.length, date(dates[0] ?? ''), date(dates.at(-1) ?? ''), ...Array.from({ length: 3 }, (_, i) => { const t = top[i]?.[1]; return t ? [`${t.code} · ${t.nom}`, t.nb] : ['', 0]; }).flat()];
+      return [ls[0]?.personne ?? '', ls.length, date(dates[0] ?? ''), date(dates.at(-1) ?? ''), ...Array.from({ length: 3 }, (_, i) => { const t = top[i]?.[1]; return t ? [`${t.code} · ${t.nom}`, t.nb] : ['', 0]; }).flat(), ...passages(ls)];
     }) ],
-    Chantiers: [ ['Code chantier', 'Chantier', 'Nb affectations', 'Première date', 'Dernière date', 'Opérations'], ...[...chantiers.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([, ls]) => { const dates = periode(ls); return [ls[0]?.code_chantier ?? '', ls[0]?.chantier ?? '', ls.length, date(dates[0] ?? ''), date(dates.at(-1) ?? ''), [...new Set(ls.flatMap(l => l.operations))].sort().join(' / ')]; }) ],
+    Chantiers: [ ['Code chantier', 'Chantier', 'Nb affectations', 'Première date', 'Dernière date', 'Opérations', 'Passages terrain', 'Passages atelier'], ...[...chantiers.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([, ls]) => { const dates = periode(ls); return [ls[0]?.code_chantier ?? '', ls[0]?.chantier ?? '', ls.length, date(dates[0] ?? ''), date(dates.at(-1) ?? ''), [...new Set(ls.flatMap(l => l.operations))].sort().join(' / '), ...passages(ls)]; }) ],
   };
 }
 
