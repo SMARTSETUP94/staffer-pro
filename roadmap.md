@@ -1,7 +1,7 @@
 # Roadmap
 
 ## Lot 1 — Planning nominatif logistique (7 nov. 2026)
-- [ ] Précisions Gabin : distinguer Staffing terrain / Staffing atelier (10 colonnes inchangées, synthèses séparées), compteurs terrain par défaut avec option atelier ; déplacement des affectations non importées avec les étapes ; rattachement manuel des imports aux externes Dispos sans créer d’employé. Migration à présenter avant application, recette et nettoyage requis.
+- [x] Précisions Gabin : migration présentée, approuvée et appliquée ; formats terrain/atelier, synthèses séparées et compteurs terrain par défaut avec option atelier. Déplacement transactionnel et refus de réduction incompatibles vérifiés ; import externe manuel, réimport et export réel vérifiés ; 31 tests verts. Essais nettoyés. Lecture chef/refus écriture vérifiés en base, pas en navigateur ; fichier réel de Gabin et passage mixte en base non vérifiés. Rien publié.
 - [x] Ajout Gabin approuvé : vue historique vivant et lecteurs protégés appliqués ; export Excel 10 colonnes et synthèses Personnes/Chantiers ; compteurs chantier/lieu/opération. Validation, aujourd’hui exclu, AM/PM, refus, annulation, correction, suppression et refus anonyme testés ; export téléchargé 1366/390, essais nettoyés. Pas de publication.
 - [x] Plan réduit approuvé et socle additif appliqué : personnes et affectations existantes réutilisées.
 - [x] Inventaire demandé après rejet : employés, postes, statuts, assignations, absences et écrans relus ; 63 tests existants passent.
