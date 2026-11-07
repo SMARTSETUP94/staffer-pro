@@ -54,3 +54,4 @@
 - Pipeline opportunity filters are applied through the pure passeFiltres helper (src/lib/pipeline-filtres.ts) and edited in a single Filtres sheet; preferences persist per user in localStorage so tiles, column totals and cards stay filtered consistently.
 - /dispos calls only dispos_public_* definer RPCs; tables stay RLS-only.
 - Logistics date changes move linked non-imported assignments transactionally through a table trigger; invalid shortened periods fail atomically, covering UI and RPC paths without copying historical rows.
+- Weekly planning imports use reviewed document extraction and a transactional, chantier-locked RPC over existing logistics stages and assignments; provenance stays on assignments so renamed files cannot create duplicate interventions or overwrite human corrections.
