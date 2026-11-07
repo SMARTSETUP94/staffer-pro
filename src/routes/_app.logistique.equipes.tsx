@@ -3,6 +3,7 @@ import { requireCapability } from '@/lib/capability-guard';
 import { useCapability } from '@/hooks/use-capability';
 import { PlanningEquipes } from '@/components/logistique/PlanningEquipes';
 import { ImportHistoriqueConsolide } from '@/components/logistique/ImportHistoriqueConsolide';
+import { HistoriqueAffectationsExport } from '@/components/logistique/HistoriqueAffectationsExport';
 
 export const Route = createFileRoute('/_app/logistique/equipes')({
   beforeLoad: () => requireCapability('dispos.view'),
@@ -18,5 +19,5 @@ export const Route = createFileRoute('/_app/logistique/equipes')({
 });
 function EquipesPage() {
   const edit = useCapability('dispos.edit');
-  return <div className="space-y-8 p-4 sm:p-6"><PlanningEquipes />{edit && <ImportHistoriqueConsolide />}</div>;
+  return <div className="space-y-8 p-4 sm:p-6">{edit && <div className="flex justify-end"><HistoriqueAffectationsExport /></div>}<PlanningEquipes />{edit && <ImportHistoriqueConsolide />}</div>;
 }
