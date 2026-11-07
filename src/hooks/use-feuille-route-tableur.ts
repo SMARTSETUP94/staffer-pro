@@ -128,13 +128,13 @@ export function useFeuilleRouteTableur({
           (a.typologie_future as FRTableurAffaire["typologie_future"]) ?? null,
       }));
 
-      const assignations: AssignationForResponsable[] = (asgsData ?? []).map(
-        (a) => ({
+      const assignations: AssignationForResponsable[] = (asgsData ?? []).flatMap(
+        (a) => a.employe_id ? [{
           affaire_id: a.affaire_id,
           date: a.date,
           employe_id: a.employe_id,
           est_chef_jour: a.est_chef_jour ?? false,
-        }),
+        }] : [],
       );
 
       const overrides: FRLigneOverride[] = (overridesData ?? []).map((o) => ({

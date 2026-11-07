@@ -367,6 +367,7 @@ export const getCarteMission = createServerFn({ method: "POST" })
     const seen = new Set<string>();
     const equipe: CarteMissionDetail["equipe"] = [];
     for (const r of teamRows ?? []) {
+      if (!r.employe_id) continue;
       if (seen.has(r.employe_id)) continue;
       seen.add(r.employe_id);
       // @ts-ignore supabase relation typing
