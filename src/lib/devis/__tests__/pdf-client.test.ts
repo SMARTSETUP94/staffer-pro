@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { construireDevisPdf, eurPdf, lignesTableau, avecFiligrane, type DevisClient } from "../pdf-client";
+import { construireDevisPdf, eurPdf, lignesTableau, avecFiligrane, totalAffiche, titreCourt, descriptifChapitre, detailObjet, champsClientManquants, type DevisClient } from "../pdf-client";
 
 const base: DevisClient = {
   numero: "D-TEST", version: 2, statut_redaction: "brouillon", libelle: "Totem FIJI", date_devis: "2026-11-03", validite_jours: 30, date_validite: "2026-12-03",
@@ -24,9 +24,37 @@ describe("PDF client devis", () => {
     expect(r[0]).toMatchObject({ qte: "2", pu: "600,00 €", total: "1 200,00 €" });
     expect(r[0].detail).toContain("1200 × 400 × 2000 mm");
   });
-  it("synthétique : aucun prix par objet", () => {
+  it("synthétique : prix unitaire et total renseignés sur la ligne objet", () => {
     const r = lignesTableau(base, base.lignes[0], "synthetique");
-    expect(r[0]).toMatchObject({ pu: "", total: "" });
+    expect(r[0]).toMatchObject({ pu: "600,00 €", total: "1 200,00 €", detail: "" });
+  });
+  it("numérotation N.k et unité u sur les objets", () => {
+    expect(lignesTableau(base, base.lignes[0], "detaille", "1")[0]).toMatchObject({ n: "1.1", unite: "u" });
+  });
+  it("option non incluse exclue du sous-total de la zone (cas 9477)", () => {
+    const vc: DevisClient = { ...base, lignes: [
+      { ...base.lignes[0], sous_total: 5601.47 },
+      { ...base.lignes[1], montant: 3319.47 },
+      { ...base.lignes[2], id: "o2", parent_id: "z", ordre: 2, option_incluse: false, sous_total: 2282 },
+    ] };
+    expect(totalAffiche(vc, vc.lignes[0])).toBe(3319.47);
+    expect(totalAffiche(vc, { ...vc.lignes[0] })).not.toBe(5601.47);
+  });
+  it("chapitre : titre court, libellé complet en descriptif", () => {
+    const c = { type: "chapitre_pose", libelle: "Livraison et mise en place – hôpital, veille ou matin du 02/12/2026 (1 chef + 1 monteur, camion 20 m³)" };
+    expect(titreCourt(c)).toBe("Livraison");
+    expect(descriptifChapitre(c)).toBe(c.libelle);
+    expect(titreCourt({ type: "chapitre_depose", libelle: "Dépose" })).toBe("Dépose");
+    expect(descriptifChapitre({ type: "chapitre_depose", libelle: "Dépose" })).toBe("");
+  });
+  it("dimensions une seule fois quand le descriptif les contient", () => {
+    const o = { ...base.lignes[1], descriptif_client: "Dimensions : Longueur 1200\nFinition : laqué" };
+    expect(detailObjet(o)).not.toContain("×");
+    expect(detailObjet(o).match(/laqué/g)).toHaveLength(1);
+  });
+  it("fiche client incomplète : adresse, CP, SIRET et TVA manquants", () => {
+    expect(champsClientManquants(base.client)).toEqual(["adresse", "code postal", "SIRET", "TVA intracommunautaire"]);
+    expect(champsClientManquants({ nom: "X", adresse: "1 rue", code_postal: "75001", ville: "Paris", siret: "1", tva_intracom: "FR1" })).toEqual([]);
   });
   it("filigrane PROJET seulement avant validation", () => {
     expect(avecFiligrane("brouillon")).toBe(true);
@@ -37,7 +65,9 @@ describe("PDF client devis", () => {
   });
   it("option affichée à part avec sa mention, bon pour accord présent", () => {
     const t = texte(construireDevisPdf(base, "detaille"));
-    expect(t).toContain("Non incluse");
-    expect(t).toContain("Bon pour accord");
+    expect(t).toContain("non comprise dans le total");
+    expect(t).toContain("Signature du Client");
+    expect(t).toContain("Signature de l'Entreprise");
+    expect(t).toContain("1 / 1");
   });
 });
