@@ -16,7 +16,8 @@ export const analyserPlanningHebdomadaire = createServerFn({ method: 'POST' })
     let content: Extract<import('ai').ModelMessage, { role: 'user' }>['content'];
     if (/\.pdf$/i.test(data.name)) content = [{ type: 'file', filename: data.name, data: data.base64, mediaType: 'application/pdf' }];
     else if (/\.xlsx$/i.test(data.name)) {
-      const XLSX = await import('xlsx-js-style');
+      const module = await import('xlsx-js-style');
+      const XLSX = module.default ?? module;
       const wb = XLSX.read(data.base64, { type: 'base64', cellDates: true });
       const sheets = wb.SheetNames.filter(n => /planning/i.test(n));
       if (!sheets.length) throw new Error('Onglet Planning introuvable.');
