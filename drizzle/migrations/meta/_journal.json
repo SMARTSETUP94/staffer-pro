@@ -701,6 +701,13 @@
       "when": 1794139930689,
       "tag": "0099_devis_exports_lecteur_modele_entreprise",
       "breakpoints": true
+    },
+    {
+      "idx": 100,
+      "version": "7",
+      "when": 1794140609670,
+      "tag": "0100_devis_exports_entete_chantier_signataire",
+      "breakpoints": true
     }
   ]
 }
