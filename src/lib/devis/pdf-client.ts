@@ -28,6 +28,8 @@ export type DevisClient = {
   /** Encadré de mentions (paramètres entreprise), une ligne par mention ; défaut MENTIONS_MODELE. */
   mentions_devis?: string | null;
   cgv?: string | null;
+  logo_storage_path?: string | null;
+  reglement?: { mode?: string | null; acompte_pct?: number | null; delai_jours?: number | null } | null;
 };
 export type ImagePdf = { bytes: Uint8Array; format: "JPEG" | "PNG" };
 
@@ -172,6 +174,11 @@ export const CONDITIONS_REGLEMENT = [
   "En cas de retard de paiement, des pénalités sont exigibles au taux de trois fois le taux d'intérêt légal, ainsi qu'une indemnité forfaitaire de 40 € pour frais de recouvrement (art. L441-10 du Code de commerce).",
 ];
 const nf2 = (v: number) => eurPdf(v).replace(" €", "");
+
+export function reglementDevis(vc: Pick<DevisClient, "ttc" | "reglement">) {
+  const pct = Number(vc.reglement?.acompte_pct ?? 50);
+  return { pct, acompte: Math.round(Number(vc.ttc) * pct) / 100, mode: vc.reglement?.mode ?? "virement", delai: vc.reglement?.delai_jours ?? 30 };
+}
 
 /** Charte SET UP. */
 type RGB = [number, number, number];
@@ -377,10 +384,10 @@ export function construireDevisPdf(vc: DevisClient, niveau: NiveauPdf, images: R
   y = Math.max(finTot, (doc as any).lastAutoTable.finalY) + 7;
 
   // ── Règlement
-  const acompte = Math.round(Number(vc.ttc) * 50) / 100;
+  const reglement = reglementDevis(vc);
   place(26);
-  font("tb", 9); doc.text(`Acompte 50 % à la signature, soit ${eurPdf(acompte)} TTC`, M, y); y += 4.6;
-  font("t", 8.5); doc.text(["Mode de règlement : virement", "Délai de règlement : 30 jours"], M, y); y += 8.6;
+  font("tb", 9); doc.text(`Acompte ${reglement.pct} % à la signature, soit ${eurPdf(reglement.acompte)} TTC`, M, y); y += 4.6;
+  font("t", 8.5); doc.text([`Mode de règlement : ${reglement.mode}`, `Délai de règlement : ${reglement.delai} jours`], M, y); y += 8.6;
   font("t", 7.6, C.gris); const lr = doc.splitTextToSize(CONDITIONS_REGLEMENT.join("\n"), W - 2 * M); doc.text(lr, M, y); y += lr.length * 3.3 + 3;
   // Remarques du devis, sans redire l'acompte ni la mention « modification » déjà présents
   const remarques = comRacine.flatMap((x) => x.texte!.split(/\r?\n/)).map((t) => t.trim()).filter((t) => t && !/acompte|modification ou (demande|ajout)/i.test(t));
