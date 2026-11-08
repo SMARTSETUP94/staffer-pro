@@ -32,7 +32,8 @@ function Formulaire({ entreprise, refresh }: { entreprise: Entreprise; refresh: 
     setBusy(true);
     const converted: Record<string, string | number | null> = {};
     for (const [k, v] of Object.entries(patch)) converted[k] = !v.trim() ? null : ["capital_social_euros", "acompte_pct", "delai_reglement_jours"].includes(k) ? Number(v) : v.trim();
-    const { error } = await supabase.from("parametres_entreprise").update(converted).eq("id", entreprise.id);
+    const update = converted as Database["public"]["Tables"]["parametres_entreprise"]["Update"];
+    const { error } = await supabase.from("parametres_entreprise").update(update).eq("id", entreprise.id);
     setBusy(false); if (error) { toast.error("Enregistrement impossible : " + error.message); return; }
     toast.success("Paramètres entreprise enregistrés"); await refresh();
   };
