@@ -729,6 +729,13 @@
       "when": 1794141823269,
       "tag": "0103_devis_logo_insert_admin",
       "breakpoints": true
+    },
+    {
+      "idx": 104,
+      "version": "7",
+      "when": 1794144492142,
+      "tag": "0104_atelier_be_socle_capacites_gabin",
+      "breakpoints": true
     }
   ]
 }

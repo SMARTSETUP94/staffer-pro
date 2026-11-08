@@ -1,0 +1,10 @@
+ALTER TABLE public.affaire_planning_metier ADD COLUMN IF NOT EXISTS heures_prevues numeric CHECK (heures_prevues IS NULL OR heures_prevues >= 0);
+ALTER TABLE public.affaires ADD COLUMN IF NOT EXISTS atelier_date_debut date, ADD COLUMN IF NOT EXISTS atelier_date_fin date, ADD COLUMN IF NOT EXISTS atelier_heures_prevues numeric CHECK (atelier_heures_prevues IS NULL OR atelier_heures_prevues >= 0);
+ALTER TABLE public.role_referents ADD COLUMN IF NOT EXISTS capacite_be_pct numeric NOT NULL DEFAULT 100 CHECK (capacite_be_pct >= 0 AND capacite_be_pct <= 100), ADD COLUMN IF NOT EXISTS visible_planning_be boolean NOT NULL DEFAULT false;
+UPDATE public.role_referents SET visible_planning_be = true, capacite_be_pct = CASE WHEN employe_id IN ('68f44ab5-c3a0-4514-9c7b-5ae0fd54290f'::uuid, '23844cc6-b506-4ce0-8872-072230aaa913'::uuid) THEN 50 ELSE 100 END WHERE role = 'concepteur' AND employe_id IN ('68f44ab5-c3a0-4514-9c7b-5ae0fd54290f'::uuid,'23844cc6-b506-4ce0-8872-072230aaa913'::uuid,'c77dfa4d-53df-4f9a-beee-5c0d61d18e58'::uuid,'d84b7bdf-9260-4022-bb45-ba1a8d2c57c2'::uuid);
+COMMENT ON COLUMN public.affaire_planning_metier.heures_prevues IS 'Planning atelier simple : heures prévues par métier, sans staffing nominatif';
+COMMENT ON COLUMN public.affaires.atelier_date_debut IS 'Planning atelier simple : début global validé manuellement';
+COMMENT ON COLUMN public.affaires.atelier_date_fin IS 'Planning atelier simple : fin globale validée manuellement';
+COMMENT ON COLUMN public.affaires.atelier_heures_prevues IS 'Planning atelier simple : estimation globale facultative en heures';
+COMMENT ON COLUMN public.role_referents.capacite_be_pct IS 'Capacité de planification BE en pourcentage, sans lien avec le contrat ni la rémunération';
+COMMENT ON COLUMN public.role_referents.visible_planning_be IS 'Concepteur visible dans le planning BE ; référents historiques conservés hors planning';
