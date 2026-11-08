@@ -1,5 +1,10 @@
 # Roadmap
 
+## Suite déléguée Gabin — 8 novembre 13:03 UTC
+- [ ] Livrer Qualité des données (Personnes / Commercial / Devis À revoir par Gabin) avec les actions admin existantes et le widget Santé des données ; aucune migration, suppression ni publication.
+- [ ] Vérifier les listes, exports, accès admin et écrans mobile/bureau sans fusionner de fiches réelles.
+- [ ] Présenter ensuite le plan atelier + bureau d'étude conservé en attente ; aucune migration appliquée.
+
 ## Demandes clients — transferts (plan approuvé)
 - [x] Migration deux colonnes appliquée, lecteur Outlook FR/EN partagé, ingestion et réanalyse, identité/date d’origine et badges ; 20 tests verts, écran admin vérifié.
 - [x] Recalcul sécurisé exécuté deux fois : 117 demandes devis recalculées, 19 clients à identifier ; statuts/catégories et volumes avant/après identiques, aucune suppression/publication. Premier externe et badge smart relus à l’écran.
