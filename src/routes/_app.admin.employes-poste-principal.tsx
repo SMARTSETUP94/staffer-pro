@@ -26,6 +26,7 @@ import { useMetiers } from "@/hooks/use-metiers";
 import { fuzzyMatch } from "@/lib/string-normalize";
 import { fetchEmployesForExport, exportEmployesXlsx } from "@/lib/employes-excel";
 import { EmployesImportPostesDialog } from "@/components/employes/EmployesImportPostesDialog";
+import { STATUT_CONTRAT_OPTIONS } from "@/lib/statut-contrat-options";
 
 export const Route = createFileRoute("/_app/admin/employes-poste-principal")({
   beforeLoad: () => requireCapability("section.admin"),
@@ -45,7 +46,7 @@ interface EmpRow {
   recent_chantiers: { numero: string; nom: string }[];
 }
 
-const STATUTS = ["CDI", "CDDU intermittent", "CDD chantier", "Intérim", "Apprenti"] as const;
+const STATUTS = STATUT_CONTRAT_OPTIONS;
 
 /** Heuristique métier → poste suggéré. */
 function suggestPosteFromMetierLibelle(libelle: string | null): string | null {
