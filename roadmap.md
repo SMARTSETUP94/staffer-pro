@@ -168,7 +168,7 @@
 - Ordre Gabin : Qualité des données avant la suite du planning (étape 4).
 
 ## Audit exports devis Staffing (prioritaire, plan approuvé 7 nov. 2026)
-- [ ] Lot logo approuvé 8 nov. : téléversement privé admin PNG/JPG/SVG avec aperçu/remplacement/retrait, avertissements PDF non bloquants ; puis suite Qualité des données.
+- [x] Lot logo 8 nov. : insertion privée admin protégée, PNG/JPG/SVG convertis en PNG, aperçu/remplacement/retrait testés à 1366/390 ; PDF avec logo généré sans historique, bandeau 5 champs et bouton export actif vérifiés. Logo de test retiré, aucun devis modifié.
 - [x] Accord et réponses Gabin du 8 nov. enregistrés : Temps prévu conservé, options normales à convertir manuellement, mentions officielles confirmées ; IBAN/BIC/téléphone/logo/CGV à saisir par Gabin dans les paramètres.
 - [x] Migration additive approuvée puis appliquée le 8 nov. : 12 champs paramètres + 8 champs facultatifs devis vérifiés en base ; adresse officielle et mentions entreprise enregistrées, banque/téléphone/logo/CGV vides. Aucun devis mis à jour ; 27 tests verts, aperçu OK.
 - [x] Lecteur client approuvé puis appliqué et vérifié ; mentions, règlement, CGV, logo et champs devis exposés sans coûts. Règlement PDF paramétré, 31 tests verts.
