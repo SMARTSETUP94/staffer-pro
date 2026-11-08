@@ -156,7 +156,7 @@ const PERMIS_OPTIONS: { value: Permis; label: string }[] = [
 
 export const Route = createFileRoute("/_app/employes")({
   beforeLoad: () => requireCapability("section.equipes"),
-  head: () => ({ meta: [{ title: "Employés — Setup Paris" }] }),
+  head: () => ({ meta: [{ title: "Employés — Setup Paris" }, { name: "description", content: "Fiches employés et statuts de contrat de l’équipe Setup Paris." }, { property: "og:title", content: "Employés — Setup Paris" }, { property: "og:description", content: "Équipe, fiches employés et statuts de contrat Setup Paris." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: EmployesPage,
 });
 
