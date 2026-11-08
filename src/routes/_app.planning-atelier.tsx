@@ -1,0 +1,4 @@
+import {createFileRoute} from "@tanstack/react-router";
+import {requireCapability} from "@/lib/capability-guard";
+import {PlanningSimplePage} from "@/components/planning-simple/PlanningSimplePage";
+export const Route=createFileRoute("/_app/planning-atelier")({beforeLoad:()=>requireCapability("section.affaires"),head:()=>({meta:[{title:"Planning atelier — Setup Paris"},{name:"description",content:"Périodes atelier par chantier et métier, charge hebdomadaire et départs logistiques."},{property:"og:title",content:"Planning atelier — Setup Paris"},{property:"og:description",content:"Charge atelier et périodes chantier."},{property:"og:type",content:"website"},{name:"twitter:card",content:"summary"}]}),component:()=> <PlanningSimplePage mode="atelier"/>});

@@ -6,9 +6,11 @@
 - [x] Session admin réelle, confirmation CA annulée, export 41 devis relu, 390/1366 sans débordement, refus hors connexion, 21 tests verts et build OK. Action admin à liste vide : 0 changement ; fusions/liaisons/corrections réelles volontairement non exécutées, droits non-admin connecté non exercés en navigateur.
 - [x] Plan atelier + bureau d'étude remis à présentation ; aucune migration appliquée, inventaire historique à actualiser avant réalisation.
 - [x] Atelier/BE : socle additif approuvé et appliqué ; inventaire relu.
-- [ ] Protections/RPC atelier préparées, à valider séparément avant application ; droits BE existants conservés via app_affecter_role_projet, écrans non remplacés avant validation.
+- [x] Protections/RPC atelier approuvées puis appliquées (0105), fonctions/policies relues ; écriture admin/logistique/atelier_chef, aucune suppression. Droits BE existants conservés via app_affecter_role_projet.
 - [x] Règles pures atelier/BE commencées sans changement de données : charge 8h/j ouvré, fériés FR, seuils 80/100 %, capacité BE, propositions de dates et déplacement ; UV/Machiniste inclus, 7 tests verts, build OK.
-- [ ] Après accord SQL : réaliser les deux vues liées, règles de charge, dates, alertes, déplacements et recette droits/mobile/bureau.
+- [x] Deux vues atelier/BE livrées, barres communes 8/10/12 semaines, métiers dépliables, charge/alertes, choix chantier cherchable, lien entre vues, sauvegarde RPC, déplacement/rallongement avec revue avant sauvegarde ; ancien planning-pilotage redirige. Mobile lecture seule, quatre concepteurs et capacités confirmés.
+- [x] Session admin : sauvegarde BE à dates identiques et relecture, glissement +7j annulé, ancien lien redirigé, 390 sans débordement ni bouton Planifier, bureau 1366 ; RPC atelier refuse chantier inexistant, aucun devis modifié, aucune période atelier créée, rien publié.
+- [ ] Recette atelier : sauvegarde réelle/métier et rallongement persisté non exécutés pour ne créer ni modifier de période réelle ; droits des comptes logistique/atelier_chef/commercial non exercés en navigateur (gardes SQL testées). Ces vérifications attendent un chantier de recette et des comptes identifiés autorisés.
 
 ## Demandes clients — transferts (plan approuvé)
 - [x] Migration deux colonnes appliquée, lecteur Outlook FR/EN partagé, ingestion et réanalyse, identité/date d’origine et badges ; 20 tests verts, écran admin vérifié.

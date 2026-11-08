@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -20,11 +20,15 @@ import { ChargeBeSection } from "@/components/pilotage/ChargeBeSection";
 import { EmployeRoleCombobox } from "@/components/affaire/EquipeProjetBloc";
 
 export const Route = createFileRoute("/_app/planning-pilotage")({
-  beforeLoad: () => requireCapability("planning.pilotage"),
+  beforeLoad: async () => { await requireCapability("planning.pilotage"); throw redirect({to:"/planning-be"}); },
   head: () => ({
     meta: [
       { title: "Planning BE / projets — Setup Paris" },
       { name: "description", content: "Périodes des concepteurs et responsables projet par affaire, avec signal de chevauchement." },
+      { property: "og:title", content: "Planning BE / projets — Setup Paris" },
+      { property: "og:description", content: "Planning bureau d’étude Setup Paris." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: PlanningPilotagePage,

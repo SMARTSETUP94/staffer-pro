@@ -52,6 +52,8 @@ import { Route as AppMonEquipeTypeRouteImport } from './routes/_app.mon-equipe-t
 import { Route as AppNotificationsRouteImport } from './routes/_app.notifications'
 import { Route as AppOpportunitesRouteImport } from './routes/_app.opportunites'
 import { Route as AppPlanningRouteImport } from './routes/_app.planning'
+import { Route as AppPlanningAtelierRouteImport } from './routes/_app.planning-atelier'
+import { Route as AppPlanningBeRouteImport } from './routes/_app.planning-be'
 import { Route as AppPlanningGeneralRouteImport } from './routes/_app.planning-general'
 import { Route as AppPlanningPilotageRouteImport } from './routes/_app.planning-pilotage'
 import { Route as AppQuiEstOuRouteImport } from './routes/_app.qui-est-ou'
@@ -353,6 +355,16 @@ const AppOpportunitesRoute = AppOpportunitesRouteImport.update({
 const AppPlanningRoute = AppPlanningRouteImport.update({
   id: '/planning',
   path: '/planning',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPlanningAtelierRoute = AppPlanningAtelierRouteImport.update({
+  id: '/planning-atelier',
+  path: '/planning-atelier',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPlanningBeRoute = AppPlanningBeRouteImport.update({
+  id: '/planning-be',
+  path: '/planning-be',
   getParentRoute: () => AppRoute,
 } as any)
 const AppPlanningGeneralRoute = AppPlanningGeneralRouteImport.update({
@@ -869,6 +881,8 @@ export interface FileRoutesByFullPath {
   '/notifications': typeof AppNotificationsRoute
   '/opportunites': typeof AppOpportunitesRouteWithChildren
   '/planning': typeof AppPlanningRoute
+  '/planning-atelier': typeof AppPlanningAtelierRoute
+  '/planning-be': typeof AppPlanningBeRoute
   '/planning-general': typeof AppPlanningGeneralRoute
   '/planning-pilotage': typeof AppPlanningPilotageRoute
   '/qui-est-ou': typeof AppQuiEstOuRoute
@@ -997,6 +1011,8 @@ export interface FileRoutesByTo {
   '/mon-equipe-type': typeof AppMonEquipeTypeRoute
   '/notifications': typeof AppNotificationsRoute
   '/planning': typeof AppPlanningRoute
+  '/planning-atelier': typeof AppPlanningAtelierRoute
+  '/planning-be': typeof AppPlanningBeRoute
   '/planning-general': typeof AppPlanningGeneralRoute
   '/planning-pilotage': typeof AppPlanningPilotageRoute
   '/qui-est-ou': typeof AppQuiEstOuRoute
@@ -1129,6 +1145,8 @@ export interface FileRoutesById {
   '/_app/notifications': typeof AppNotificationsRoute
   '/_app/opportunites': typeof AppOpportunitesRouteWithChildren
   '/_app/planning': typeof AppPlanningRoute
+  '/_app/planning-atelier': typeof AppPlanningAtelierRoute
+  '/_app/planning-be': typeof AppPlanningBeRoute
   '/_app/planning-general': typeof AppPlanningGeneralRoute
   '/_app/planning-pilotage': typeof AppPlanningPilotageRoute
   '/_app/qui-est-ou': typeof AppQuiEstOuRoute
@@ -1263,6 +1281,8 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/opportunites'
     | '/planning'
+    | '/planning-atelier'
+    | '/planning-be'
     | '/planning-general'
     | '/planning-pilotage'
     | '/qui-est-ou'
@@ -1391,6 +1411,8 @@ export interface FileRouteTypes {
     | '/mon-equipe-type'
     | '/notifications'
     | '/planning'
+    | '/planning-atelier'
+    | '/planning-be'
     | '/planning-general'
     | '/planning-pilotage'
     | '/qui-est-ou'
@@ -1522,6 +1544,8 @@ export interface FileRouteTypes {
     | '/_app/notifications'
     | '/_app/opportunites'
     | '/_app/planning'
+    | '/_app/planning-atelier'
+    | '/_app/planning-be'
     | '/_app/planning-general'
     | '/_app/planning-pilotage'
     | '/_app/qui-est-ou'
@@ -1929,6 +1953,20 @@ declare module '@tanstack/react-router' {
       path: '/planning'
       fullPath: '/planning'
       preLoaderRoute: typeof AppPlanningRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/planning-atelier': {
+      id: '/_app/planning-atelier'
+      path: '/planning-atelier'
+      fullPath: '/planning-atelier'
+      preLoaderRoute: typeof AppPlanningAtelierRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/planning-be': {
+      id: '/_app/planning-be'
+      path: '/planning-be'
+      fullPath: '/planning-be'
+      preLoaderRoute: typeof AppPlanningBeRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/planning-general': {
@@ -2697,6 +2735,8 @@ interface AppRouteChildren {
   AppNotificationsRoute: typeof AppNotificationsRoute
   AppOpportunitesRoute: typeof AppOpportunitesRouteWithChildren
   AppPlanningRoute: typeof AppPlanningRoute
+  AppPlanningAtelierRoute: typeof AppPlanningAtelierRoute
+  AppPlanningBeRoute: typeof AppPlanningBeRoute
   AppPlanningGeneralRoute: typeof AppPlanningGeneralRoute
   AppPlanningPilotageRoute: typeof AppPlanningPilotageRoute
   AppQuiEstOuRoute: typeof AppQuiEstOuRoute
@@ -2790,6 +2830,8 @@ const AppRouteChildren: AppRouteChildren = {
   AppNotificationsRoute: AppNotificationsRoute,
   AppOpportunitesRoute: AppOpportunitesRouteWithChildren,
   AppPlanningRoute: AppPlanningRoute,
+  AppPlanningAtelierRoute: AppPlanningAtelierRoute,
+  AppPlanningBeRoute: AppPlanningBeRoute,
   AppPlanningGeneralRoute: AppPlanningGeneralRoute,
   AppPlanningPilotageRoute: AppPlanningPilotageRoute,
   AppQuiEstOuRoute: AppQuiEstOuRoute,

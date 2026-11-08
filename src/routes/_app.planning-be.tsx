@@ -1,0 +1,4 @@
+import {createFileRoute} from "@tanstack/react-router";
+import {requireCapability} from "@/lib/capability-guard";
+import {PlanningSimplePage} from "@/components/planning-simple/PlanningSimplePage";
+export const Route=createFileRoute("/_app/planning-be")({beforeLoad:()=>requireCapability("planning.pilotage"),head:()=>({meta:[{title:"Planning bureau d’étude — Setup Paris"},{name:"description",content:"Planning des quatre concepteurs, capacités et charge bureau d’étude."},{property:"og:title",content:"Planning bureau d’étude — Setup Paris"},{property:"og:description",content:"Périodes concepteurs et charge BE hebdomadaire."},{property:"og:type",content:"website"},{name:"twitter:card",content:"summary"}]}),component:()=> <PlanningSimplePage mode="be"/>});
