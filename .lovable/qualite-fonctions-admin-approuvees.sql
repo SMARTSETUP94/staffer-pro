@@ -51,7 +51,7 @@ DECLARE n int; r jsonb:='{}'; g employes; f employes;
 BEGIN PERFORM qualite_assert_admin();
   IF _garder=_fusionner THEN RAISE EXCEPTION 'Même fiche'; END IF;
   SELECT * INTO g FROM employes WHERE id=_garder FOR UPDATE; SELECT * INTO f FROM employes WHERE id=_fusionner FOR UPDATE;
-  IF g.id IS NULL OR f.id IS NULL OR f.fusionne_dans IS NOT NULL THEN RAISE EXCEPTION 'Fiches invalides'; END IF;
+  IF g.id IS NULL OR f.id IS NULL OR f.fusionne_dans IS NOT NULL OR g.fusionne_dans IS NOT NULL THEN RAISE EXCEPTION 'Fiches invalides'; END IF;
   IF EXISTS (SELECT 1 FROM contrats_intermittents WHERE employee_id=_fusionner) THEN RAISE EXCEPTION 'Fusion refusée : contrats liés, aucune écriture contrat autorisée'; END IF;
   UPDATE absences SET employe_id=_garder WHERE employe_id=_fusionner; GET DIAGNOSTICS n=ROW_COUNT; r:=r||jsonb_build_object('absences',n);
   UPDATE affaires SET chef_chantier_id=_garder WHERE chef_chantier_id=_fusionner; GET DIAGNOSTICS n=ROW_COUNT; r:=r||jsonb_build_object('affaires',n);
@@ -78,7 +78,18 @@ BEGIN PERFORM qualite_assert_admin();
   UPDATE dispos_intervenants SET employe_id=_garder WHERE employe_id=_fusionner AND NOT EXISTS (SELECT 1 FROM dispos_intervenants WHERE employe_id=_garder);
   -- Compte de connexion repris s'il manque sur la fiche gardée
   IF g.profile_id IS NULL AND f.profile_id IS NOT NULL THEN UPDATE employes SET profile_id=NULL WHERE id=_fusionner; UPDATE employes SET profile_id=f.profile_id WHERE id=_garder; END IF;
-  r:=r||jsonb_build_object('restant_sur_fiche_fusionnee',(SELECT count(*) FROM assignations WHERE employe_id=_fusionner)+(SELECT count(*) FROM heures_saisies WHERE employe_id=_fusionner));
+  r:=r||jsonb_build_object('references_restantes',jsonb_build_object(
+    'assignations',(SELECT coalesce(jsonb_agg(id),'[]') FROM assignations WHERE employe_id=_fusionner),
+    'heures_saisies',(SELECT coalesce(jsonb_agg(id),'[]') FROM heures_saisies WHERE employe_id=_fusionner),
+    'affaire_equipe',(SELECT coalesce(jsonb_agg(id),'[]') FROM affaire_equipe WHERE employe_id=_fusionner),
+    'employe_metiers',(SELECT coalesce(jsonb_agg(id),'[]') FROM employe_metiers WHERE employe_id=_fusionner),
+    'role_referents',(SELECT coalesce(jsonb_agg(id),'[]') FROM role_referents WHERE employe_id=_fusionner),
+    'autorisations',(SELECT coalesce(jsonb_agg(id),'[]') FROM employes_autorisations_vehicules WHERE employe_id=_fusionner),
+    'vehicules',(SELECT coalesce(jsonb_agg(id),'[]') FROM vehicule_chauffeurs_autorises WHERE employe_id=_fusionner),
+    'fabrication',(SELECT coalesce(jsonb_agg(id),'[]') FROM fabrication_objet_equipe WHERE employe_id=_fusionner),
+    'staffing',(SELECT coalesce(jsonb_agg(id),'[]') FROM staffing_plan_assignment WHERE employe_id=_fusionner),
+    'dispos',(SELECT coalesce(jsonb_agg(id),'[]') FROM dispos_intervenants WHERE employe_id=_fusionner),
+    'profile_id',(SELECT profile_id FROM employes WHERE id=_fusionner)));
   UPDATE employes SET actif=false, fusionne_dans=_garder, fusionne_le=now(),
     notes=concat_ws(E'\n',notes,'Fusionnée dans '||g.prenom||' '||g.nom||' ('||_garder||') le '||to_char(now(),'DD/MM/YYYY')),
     historique_qualite=qualite_journal(historique_qualite,'fusion',to_jsonb(_fusionner),to_jsonb(_garder)) WHERE id=_fusionner;
@@ -86,10 +97,11 @@ BEGIN PERFORM qualite_assert_admin();
   RETURN r;
 END $$;
 
--- 4. Désactivation / réactivation en lot, statut de contrat en lot (jamais les fiches fusionnées)
+-- 4. Désactivation / réactivation en lot, sans changement de contrat
 CREATE OR REPLACE FUNCTION public.qualite_activer_employes(_ids uuid[], _actif boolean) RETURNS int
 LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public' AS $$
 DECLARE n int; BEGIN PERFORM qualite_assert_admin();
+  IF _actif AND _ids && ARRAY['28370e42-020d-4168-b9ad-fdb89124d6b2','a4f657ea-49b8-430b-a3b1-fb000f8afc28','9aad1e59-df05-4da8-9c70-cc4e630cc101']::uuid[] THEN RAISE EXCEPTION 'Ces trois fiches doivent rester inactives'; END IF;
   UPDATE employes SET actif=_actif, historique_qualite=qualite_journal(historique_qualite,'actif',to_jsonb(actif),to_jsonb(_actif))
   WHERE id=ANY(_ids) AND fusionne_dans IS NULL AND actif<>_actif; GET DIAGNOSTICS n=ROW_COUNT; RETURN n; END $$;
 
@@ -125,7 +137,7 @@ CREATE OR REPLACE FUNCTION public.qualite_definir_ca(_affaire uuid, _ca numeric)
 LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public' AS $$
 BEGIN PERFORM qualite_assert_admin();
   IF _ca IS NULL OR _ca<0 THEN RAISE EXCEPTION 'CA invalide'; END IF;
-  UPDATE affaires SET ca_estime_ht=_ca WHERE id=_affaire; IF NOT FOUND THEN RAISE EXCEPTION 'Opportunité introuvable'; END IF;
+  UPDATE affaires SET ca_estime_ht=_ca WHERE id=_affaire AND phase='opportunite' AND archived_at IS NULL; IF NOT FOUND THEN RAISE EXCEPTION 'Opportunité introuvable'; END IF;
 END $$;
 
 CREATE OR REPLACE FUNCTION public.qualite_rattacher_demande(_email uuid, _client uuid) RETURNS void

@@ -163,7 +163,7 @@
 - [x] Migration colonnes + statuts appliquée (7 nov.).
 - [x] Correction Gabin 8 nov. : enum Intermittent déjà appliquée, conservée sans aucune écriture DB ; choix juridiques partagés = CDDU intermittent et Auto-entrepreneur, jamais Intermittent seul.
 - Onglet Devis = liste « À revoir par Gabin » (urgence : date d'événement puis ancienneté), lien éditeur + état opportunité ; aucune action de classement proposée, rien modifié automatiquement.
-- [ ] Fonctions admin montrées, en attente d'accord ; puis page admin 3 onglets et widget.
+- [ ] Accord actions admin reçu 8 nov. : appliquer sans classement ni écriture contrat/rémunération ; puis page admin 3 onglets et widget.
 - Ordre Gabin : Qualité des données avant la suite du planning (étape 4).
 
 ## Audit exports devis Staffing (prioritaire, plan approuvé 7 nov. 2026)
