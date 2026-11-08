@@ -15,10 +15,11 @@ import { Switch } from "@/components/ui/switch";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { evaluerTaux, niveauInitial, NOUVEAU_NIVEAU, parseMontant } from "@/lib/devis/taux-form";
 import { DevisSupprimesCard } from "@/components/devis/DevisSupprimesCard";
+import { EntrepriseDevisParametres } from "@/components/devis/EntrepriseDevisParametres";
 
 export const Route = createFileRoute("/_app/parametres/devis-taux")({
   beforeLoad: () => requireCapability("devis.parametres"),
-  head: () => ({ meta: [{ title: "Taux et forfaits des devis — Paramètres" }] }),
+  head: () => ({ meta: [{ title: "Entreprise, taux et forfaits — Devis SET UP" }, { name: "description", content: "Paramètres entreprise et devis SET UP : identité, conditions de paiement, mentions et tarifs." }, { property: "og:title", content: "Paramètres des devis SET UP" }, { property: "og:description", content: "Identité entreprise, documents client et tarifs des devis SET UP." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: DevisTauxPage,
 });
 
@@ -156,6 +157,7 @@ function DevisTauxPage() {
           </Table>
         </CardContent>
       </Card>
+      <EntrepriseDevisParametres />
       <DevisSupprimesCard />
     </div>
   );

@@ -20,6 +20,7 @@ import type { TypologieFuture } from "@/lib/typologie-future";
 import { DevisArbre } from "./DevisArbre";
 import { ObjetPanel } from "./ObjetPanel";
 import { DevisVueClient } from "./DevisVueClient";
+import { DevisChantierSignataire } from "@/components/devis/DevisChantierSignataire";
 import { ExportPdfDialog, EnvoiEmailDialog } from "@/components/devis/DevisPdfEnvoi";
 import { ProgbatExportDialog, EnregistrerTransfertDialog } from "@/components/devis/ProgbatTransfert";
 import { libelleNumeroProgbat, libelleStatutDevis, NUMERO_PROGBAT_PROVISOIRE_RE } from "@/lib/devis/progbat-export";
@@ -305,6 +306,7 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
         </CardContent>
       </Card>
 
+      {!d.devis.est_modele && <DevisChantierSignataire devisId={devisId} disabled={readOnly} enregistrer={setEntete} />}
       {/* Dates clés */}
       {!d.devis.est_modele && (
         <div id="devis-dates" className="space-y-2">

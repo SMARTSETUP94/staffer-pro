@@ -15,6 +15,7 @@ const champs = [
   ["adresse_ligne1", "Adresse"], ["code_postal", "Code postal"], ["ville", "Ville"], ["naf", "APE"], ["siret", "SIRET"],
   ["tva_intracom", "TVA intracommunautaire"], ["telephone", "Téléphone"], ["employeur_email_contact", "Email"], ["iban", "IBAN"], ["bic", "BIC"],
   ["mode_reglement", "Mode de règlement"], ["acompte_pct", "Acompte (%)"], ["delai_reglement_jours", "Délai (jours)"],
+  ["logo_storage_path", "Logo — chemin du fichier dans le stockage"],
 ] as const;
 export function EntrepriseDevisParametres() {
   const q = useQuery({ queryKey: ["entreprise-devis"], queryFn: async () => {
