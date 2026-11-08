@@ -2141,6 +2141,7 @@ export type Database = {
           affaire_id: string | null
           archive: boolean
           auteur_id: string | null
+          chantier_adresse: string | null
           classe_sans_suite_le: string | null
           classe_sans_suite_par: string | null
           cle_externe: string | null
@@ -2185,6 +2186,10 @@ export type Database = {
           redige_dans_staffing: boolean
           remise_mode: string
           remise_valeur: number | null
+          signataire_email: string | null
+          signataire_nom: string | null
+          signataire_prenom: string | null
+          signataire_telephone: string | null
           signe_vers_fabrication_le: string | null
           statut: Database["public"]["Enums"]["devis_statut"]
           statut_redaction:
@@ -2196,6 +2201,9 @@ export type Database = {
           totaux_snapshot: Json | null
           transfere_progbat_le: string | null
           transfere_progbat_par: string | null
+          travaux_debut: string | null
+          travaux_duree_jours: number | null
+          travaux_libelle: string | null
           tva_pct: number | null
           updated_at: string
           valide_le: string | null
@@ -2208,6 +2216,7 @@ export type Database = {
           affaire_id?: string | null
           archive?: boolean
           auteur_id?: string | null
+          chantier_adresse?: string | null
           classe_sans_suite_le?: string | null
           classe_sans_suite_par?: string | null
           cle_externe?: string | null
@@ -2252,6 +2261,10 @@ export type Database = {
           redige_dans_staffing?: boolean
           remise_mode?: string
           remise_valeur?: number | null
+          signataire_email?: string | null
+          signataire_nom?: string | null
+          signataire_prenom?: string | null
+          signataire_telephone?: string | null
           signe_vers_fabrication_le?: string | null
           statut?: Database["public"]["Enums"]["devis_statut"]
           statut_redaction?:
@@ -2263,6 +2276,9 @@ export type Database = {
           totaux_snapshot?: Json | null
           transfere_progbat_le?: string | null
           transfere_progbat_par?: string | null
+          travaux_debut?: string | null
+          travaux_duree_jours?: number | null
+          travaux_libelle?: string | null
           tva_pct?: number | null
           updated_at?: string
           valide_le?: string | null
@@ -2275,6 +2291,7 @@ export type Database = {
           affaire_id?: string | null
           archive?: boolean
           auteur_id?: string | null
+          chantier_adresse?: string | null
           classe_sans_suite_le?: string | null
           classe_sans_suite_par?: string | null
           cle_externe?: string | null
@@ -2319,6 +2336,10 @@ export type Database = {
           redige_dans_staffing?: boolean
           remise_mode?: string
           remise_valeur?: number | null
+          signataire_email?: string | null
+          signataire_nom?: string | null
+          signataire_prenom?: string | null
+          signataire_telephone?: string | null
           signe_vers_fabrication_le?: string | null
           statut?: Database["public"]["Enums"]["devis_statut"]
           statut_redaction?:
@@ -2330,6 +2351,9 @@ export type Database = {
           totaux_snapshot?: Json | null
           transfere_progbat_le?: string | null
           transfere_progbat_par?: string | null
+          travaux_debut?: string | null
+          travaux_duree_jours?: number | null
+          travaux_libelle?: string | null
           tva_pct?: number | null
           updated_at?: string
           valide_le?: string | null
@@ -6259,73 +6283,109 @@ export type Database = {
       }
       parametres_entreprise: {
         Row: {
+          acompte_pct: number | null
           adresse_ligne1: string
+          bic: string | null
           caisse_conges_spectacles: string
           caisse_retraite: string
+          capital_social_euros: number | null
+          cgv_devis: string | null
           code_postal: string
           convention_collective_brochure: string
           convention_collective_nom: string
           created_at: string
+          delai_reglement_jours: number | null
           employeur_email_contact: string
+          forme_sociale: string | null
+          iban: string | null
           id: string
           label: string
           lieu_signature_defaut: string
+          logo_storage_path: string | null
           marque_commerciale: string
           medecine_travail: string
+          mentions_devis: string | null
+          mode_reglement: string | null
           naf: string
           raison_sociale: string
           representant_legal_nom: string
           representant_legal_titre: string
           singleton: boolean
           siret: string
+          telephone: string | null
+          tva_intracom: string | null
           updated_at: string
           urssaf: string
           ville: string
         }
         Insert: {
+          acompte_pct?: number | null
           adresse_ligne1: string
+          bic?: string | null
           caisse_conges_spectacles: string
           caisse_retraite: string
+          capital_social_euros?: number | null
+          cgv_devis?: string | null
           code_postal: string
           convention_collective_brochure: string
           convention_collective_nom: string
           created_at?: string
+          delai_reglement_jours?: number | null
           employeur_email_contact?: string
+          forme_sociale?: string | null
+          iban?: string | null
           id?: string
           label: string
           lieu_signature_defaut: string
+          logo_storage_path?: string | null
           marque_commerciale: string
           medecine_travail: string
+          mentions_devis?: string | null
+          mode_reglement?: string | null
           naf: string
           raison_sociale: string
           representant_legal_nom: string
           representant_legal_titre: string
           singleton?: boolean
           siret: string
+          telephone?: string | null
+          tva_intracom?: string | null
           updated_at?: string
           urssaf: string
           ville: string
         }
         Update: {
+          acompte_pct?: number | null
           adresse_ligne1?: string
+          bic?: string | null
           caisse_conges_spectacles?: string
           caisse_retraite?: string
+          capital_social_euros?: number | null
+          cgv_devis?: string | null
           code_postal?: string
           convention_collective_brochure?: string
           convention_collective_nom?: string
           created_at?: string
+          delai_reglement_jours?: number | null
           employeur_email_contact?: string
+          forme_sociale?: string | null
+          iban?: string | null
           id?: string
           label?: string
           lieu_signature_defaut?: string
+          logo_storage_path?: string | null
           marque_commerciale?: string
           medecine_travail?: string
+          mentions_devis?: string | null
+          mode_reglement?: string | null
           naf?: string
           raison_sociale?: string
           representant_legal_nom?: string
           representant_legal_titre?: string
           singleton?: boolean
           siret?: string
+          telephone?: string | null
+          tva_intracom?: string | null
           updated_at?: string
           urssaf?: string
           ville?: string

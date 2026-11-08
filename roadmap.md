@@ -167,8 +167,8 @@
 
 ## Audit exports devis Staffing (prioritaire, plan approuvé 7 nov. 2026)
 - [x] Accord et réponses Gabin du 8 nov. enregistrés : Temps prévu conservé, options normales à convertir manuellement, mentions officielles confirmées ; IBAN/BIC/téléphone/logo/CGV à saisir par Gabin dans les paramètres.
-- [ ] Migration additive paramètres entreprise et champs facultatifs devis : préparer et présenter avant application ; compléter ensuite les lecteurs/formulaires et les captures avant/après 9500/9477/6064. Attend accord distinct sur la migration.
-- [ ] Adresse officielle confirmée le 8 nov. : remplacer « 8, avenue du Président Salvador Allende / 94405 / Vitry sur Seine Cedex » par « 8 avenue du Président Salvador Allende / 94400 / Vitry-sur-Seine » dans les paramètres entreprise et les affichages courants ; attendre accord après présentation, préserver les documents historiques.
+- [x] Migration additive approuvée puis appliquée le 8 nov. : 12 champs paramètres + 8 champs facultatifs devis vérifiés en base ; adresse officielle et mentions entreprise enregistrées, banque/téléphone/logo/CGV vides. Aucun devis mis à jour ; 27 tests verts, aperçu OK.
+- [ ] Raccordement lecteur client présenté, en attente d’accord ; fonction d’édition à présenter, puis formulaires, contrôles et captures avant/après 9500/9477/6064. Anciennes captures temporaires indisponibles dans ce sandbox.
 - [x] Exports générés en temporaire sans enregistrement (9500 PDF détaillé/synthétique + Excel, 9477, 6064), 5 pages capturées, Excel lu ligne à ligne ; totaux identiques.
 - [x] Tableaux d'écarts remis.
 - [x] Plan validé ; mise en page PDF, titres courts Excel, options hors sous-totaux, blocage fiche client incomplète livrés.
