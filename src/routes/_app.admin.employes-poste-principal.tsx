@@ -26,9 +26,11 @@ import { useMetiers } from "@/hooks/use-metiers";
 import { fuzzyMatch } from "@/lib/string-normalize";
 import { fetchEmployesForExport, exportEmployesXlsx } from "@/lib/employes-excel";
 import { EmployesImportPostesDialog } from "@/components/employes/EmployesImportPostesDialog";
+import { STATUT_CONTRAT_OPTIONS } from "@/lib/statut-contrat-options";
 
 export const Route = createFileRoute("/_app/admin/employes-poste-principal")({
   beforeLoad: () => requireCapability("section.admin"),
+  head: () => ({ meta: [{ title: "Postes principaux des employés — Setup Paris" }, { name: "description", content: "Administration des postes principaux et filtres de statut de contrat Setup Paris." }, { property: "og:title", content: "Postes principaux — Setup Paris" }, { property: "og:description", content: "Gestion administrative des postes principaux des employés Setup Paris." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: () => (
       <EmployesPostePrincipalPage />
   ),
@@ -45,7 +47,7 @@ interface EmpRow {
   recent_chantiers: { numero: string; nom: string }[];
 }
 
-const STATUTS = ["CDI", "CDDU intermittent", "CDD chantier", "Intérim", "Apprenti"] as const;
+const STATUTS = STATUT_CONTRAT_OPTIONS;
 
 /** Heuristique métier → poste suggéré. */
 function suggestPosteFromMetierLibelle(libelle: string | null): string | null {

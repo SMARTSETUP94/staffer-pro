@@ -29,18 +29,11 @@ import {
 } from "@/components/ui/table";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
+import { STATUT_CONTRAT_OPTIONS, type StatutContratChoix } from "@/lib/statut-contrat-options";
 
 type ContratType = "CDI" | "CDD" | "Interim" | "Independant";
 
-type StatutContrat = "CDI" | "CDDU intermittent" | "CDD chantier" | "Intérim" | "Apprenti";
-
-const STATUT_CONTRAT_OPTIONS: StatutContrat[] = [
-  "CDI",
-  "CDDU intermittent",
-  "CDD chantier",
-  "Intérim",
-  "Apprenti",
-];
+type StatutContrat = StatutContratChoix;
 
 type Permis = "B" | "C" | "CE" | "D";
 
@@ -163,7 +156,7 @@ const PERMIS_OPTIONS: { value: Permis; label: string }[] = [
 
 export const Route = createFileRoute("/_app/employes")({
   beforeLoad: () => requireCapability("section.equipes"),
-  head: () => ({ meta: [{ title: "Employés — Setup Paris" }] }),
+  head: () => ({ meta: [{ title: "Employés — Setup Paris" }, { name: "description", content: "Fiches employés et statuts de contrat de l’équipe Setup Paris." }, { property: "og:title", content: "Employés — Setup Paris" }, { property: "og:description", content: "Équipe, fiches employés et statuts de contrat Setup Paris." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: EmployesPage,
 });
 
@@ -885,7 +878,7 @@ function EmployesPage() {
                       <SelectContent>
                         <SelectItem value="__none__">—</SelectItem>
                         {STATUT_CONTRAT_OPTIONS.map((s) => (
-                          <SelectItem key={s} value={s}>{s === "Intérim" ? "Intermittent" : s}</SelectItem>
+                          <SelectItem key={s} value={s}>{s}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>

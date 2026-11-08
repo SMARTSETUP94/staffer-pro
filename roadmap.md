@@ -161,6 +161,7 @@
 ## Qualité des données — piste 7 (à planifier après le lot précédent)
 - [x] Plan approuvé (7 nov.) ; règles de rapprochement des noms, diff Dispos → employé et CA depuis devis écrites et testées.
 - [x] Migration colonnes + statuts appliquée (7 nov.).
+- [x] Correction Gabin 8 nov. : enum Intermittent déjà appliquée, conservée sans aucune écriture DB ; choix juridiques partagés = CDDU intermittent et Auto-entrepreneur, jamais Intermittent seul.
 - Onglet Devis = liste « À revoir par Gabin » (urgence : date d'événement puis ancienneté), lien éditeur + état opportunité ; aucune action de classement proposée, rien modifié automatiquement.
 - [ ] Fonctions admin montrées, en attente d'accord ; puis page admin 3 onglets et widget.
 - Ordre Gabin : Qualité des données avant la suite du planning (étape 4).
