@@ -687,6 +687,13 @@
       "when": 1794087404792,
       "tag": "0097_qualite_colonnes_et_planning_etape4",
       "breakpoints": true
+    },
+    {
+      "idx": 98,
+      "version": "7",
+      "when": 1794138676397,
+      "tag": "0098_devis_exports_parametres_et_champs_facultatifs",
+      "breakpoints": true
     }
   ]
 }
