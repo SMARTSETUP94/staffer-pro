@@ -722,6 +722,13 @@
       "when": 1794141255490,
       "tag": "0102_qualite_actions_admin_sans_contrat_ni_classement",
       "breakpoints": true
+    },
+    {
+      "idx": 103,
+      "version": "7",
+      "when": 1794141823269,
+      "tag": "0103_devis_logo_insert_admin",
+      "breakpoints": true
     }
   ]
 }

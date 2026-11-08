@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { BUCKET_EXPORTS, exporterDevisPdf, lireDevisClient } from "@/lib/devis/pdf-export";
 import type { NiveauPdf } from "@/lib/devis/pdf-client";
+import { PdfAvertissements } from "./PdfAvertissements";
 
 type ExportRow = { id: string; version: number; niveau: NiveauPdf; filigrane: boolean; storage_path: string; cree_le: string; auteur: string | null };
 
@@ -50,6 +51,7 @@ export function ExportPdfDialog({ devisId, open, onOpenChange }: { devisId: stri
           <DialogTitle>Exporter en PDF</DialogTitle>
           <DialogDescription>Document client : ni heures, ni taux, ni coûts, ni marge. Un devis non validé porte le filigrane « PROJET ».</DialogDescription>
         </DialogHeader>
+        <PdfAvertissements devisId={devisId} open={open} />
         <RadioGroup value={niveau} onValueChange={(v) => setNiveau(v as NiveauPdf)} className="gap-2">
           <Label className="flex items-center gap-2 font-normal"><RadioGroupItem value="detaille" />Détaillé — prix par objet, descriptifs et visuels</Label>
           <Label className="flex items-center gap-2 font-normal"><RadioGroupItem value="synthetique" />Synthétique — total par zone et chapitre</Label>
@@ -109,6 +111,7 @@ export function EnvoiEmailDialog({ devisId, open, onOpenChange, onSent }: { devi
           <DialogTitle>Envoyer par email</DialogTitle>
           <DialogDescription>L'envoi automatique depuis l'application n'est pas encore configuré : téléchargez le PDF, ouvrez votre messagerie avec ce message, joignez le PDF puis confirmez l'envoi.</DialogDescription>
         </DialogHeader>
+        <PdfAvertissements devisId={devisId} open={open} />
         <div className="space-y-3">
           <div className="space-y-1"><Label htmlFor="env-to">Destinataire</Label><Input id="env-to" type="email" value={to} onChange={(e) => setTo(e.target.value)} placeholder="contact@client.fr" /></div>
           <div className="space-y-1"><Label htmlFor="env-sujet">Objet</Label><Input id="env-sujet" value={sujet} onChange={(e) => setSujet(e.target.value)} /></div>

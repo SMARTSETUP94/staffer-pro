@@ -1,0 +1,1 @@
+CREATE POLICY devis_logo_insert_admin ON storage.objects AS RESTRICTIVE FOR INSERT TO authenticated WITH CHECK (bucket_id <> 'devis-photos' OR name NOT LIKE 'entreprise-logo/%' OR public.has_role(auth.uid(), 'admin'));
