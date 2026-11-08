@@ -16,6 +16,7 @@ export function chargeHebdomadaire(barre:PeriodeBarre,lundi:string,capacitePerso
   return {heures,capacite,ratio:capacite && capacite>0?heures/capacite:null};
 }
 export function niveauCharge(ratio:number|null){return ratio==null?"inconnu":ratio<0.8?"normal":ratio<=1?"vigilance":"surcharge";}
+export function alerteSurcharge(ratio:number|null){return ratio!==null && ratio>1;}
 export function proposerPeriodeAtelier({depart,montage,heures,capacite}:{depart:string|null;montage:string|null;heures:number|null;capacite:number|null}){
   const repere=depart??montage;
   if(!repere)return null;
