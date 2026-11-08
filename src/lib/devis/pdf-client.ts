@@ -4,7 +4,7 @@
  * Module pur (navigateur et serveur) : les images sont passées en octets.
  */
 import { jsPDF } from "jspdf";
-import autoTable from "jspdf-autotable";
+import autoTable, { type RowInput } from "jspdf-autotable";
 
 export type NiveauPdf = "detaille" | "synthetique";
 export type LigneClient = {
@@ -360,7 +360,7 @@ export function construireDevisPdf(vc: DevisClient, niveau: NiveauPdf, images: R
   const remise = Math.abs(Number(vc.remise ?? 0)), net = Number(vc.net_ht ?? vc.total_ht);
   place(52);
   const xT = W - M - 72;
-  const ligneTot = (l: string, v: string, fort = false) => [{ content: l, styles: fort ? { fontStyle: "bold" } : {} }, { content: v, styles: { halign: "right", ...(fort ? { fontStyle: "bold" } : {}) } }];
+  const ligneTot = (l: string, v: string, fort = false): RowInput => [{ content: l, styles: fort ? { fontStyle: "bold" } : {} }, { content: v, styles: { halign: "right", ...(fort ? { fontStyle: "bold" } : {}) } }];
   autoTable(doc, {
     startY: y, margin: { left: xT, right: M }, tableWidth: 72,
     body: [ligneTot("Total HT", eurPdf(vc.total_ht)), ligneTot("Remise", eurPdf(-remise)), ligneTot("Total net HT", eurPdf(net), true), ligneTot(`TVA ${Number(vc.tva_pct)} %`, eurPdf(vc.tva)),
