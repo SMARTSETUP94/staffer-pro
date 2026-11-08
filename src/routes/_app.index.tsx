@@ -58,6 +58,7 @@ import {
 import { useCapabilitiesSet, useCapability } from "@/hooks/use-capability";
 import { useMesHeures } from "@/hooks/use-mes-heures";
 import { EmployeAujourdhuiView } from "@/components/aujourdhui/EmployeAujourdhuiView";
+import { SanteDonneesWidget } from "@/components/admin/SanteDonneesWidget";
 
 export const Route = createFileRoute("/_app/")({
   head: () => ({ meta: [
@@ -293,6 +294,7 @@ function AdminChefHomeView() {
       />
 
       {canSeeHeuresWidget && <HeuresSemaineWidget />}
+      <SanteDonneesWidget />
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {MES_WIDGETS.map((spec) => (
