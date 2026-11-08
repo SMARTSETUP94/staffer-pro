@@ -32,7 +32,7 @@ export const lireQualite = createServerFn({ method: "GET" })
     const derniers = new Map<string, typeof devis[number]>();
     for (const d of devis) if (d.affaire_id && (!derniers.has(d.affaire_id) || d.created_at > (derniers.get(d.affaire_id)?.created_at ?? ""))) derniers.set(d.affaire_id,d);
     const montants: Record<string,number | null> = {};
-    const demandesDeTotal = [...derniers.values()].filter(d => d.redige_dans_staffing || d.cree_par_mcp);
+    const demandesDeTotal = devis.filter(d => (d.redige_dans_staffing || d.cree_par_mcp) && (derniers.get(d.affaire_id ?? "")?.id === d.id || (d.cree_par_mcp && ["brouillon","a_valider"].includes(d.statut_redaction ?? ""))));
     // Bounded concurrency; return only the sale amount, never costs or quote content.
     for (let i=0;i<demandesDeTotal.length;i+=6) await Promise.all(demandesDeTotal.slice(i,i+6).map(async d => {
       const result = await db.rpc("devis_lire_client",{_devis_id:d.id});
