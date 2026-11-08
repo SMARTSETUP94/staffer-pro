@@ -1,72 +1,87 @@
-# Atelier et bureau d’étude — socle additif à valider
+# Planning atelier — protections d’écriture à valider
 
-Le plan général est approuvé. L’inventaire vient d’être relu : 14 chantiers 6XXX actifs, 1 opportunité presque gagnée, aucune période métier.
+Les capacités approuvées sont enregistrées et relues : Nadège/Guillaume 100 %, Kevin/Laurent 50 %, UV 1 personne/jour, Machiniste sans limite. Les trois autres concepteurs restent hors planning BE. Aucun devis ni planning existant n’a été modifié, rien publié.
 
-## Réglages Gabin intégrés
-- BE : uniquement Nadège MEVEL et Guillaume MAQUARIE à 100 %, Kevin LEBON et Laurent DEBRANCHE à 50 %.
-- Alexandre FERANT, Claude ARECCHIA et Patrick SZMIDT restent dans les référents historiques, mais hors planning BE. Aucun ajout de ces personnes dans la nouvelle vue.
-- Impression UV : 1 personne/jour, soit 8 h/jour.
-- Machiniste : capacité vide, charge en heures uniquement ; aucun pourcentage ni alerte de surcharge.
+## Modification suivante proposée, non appliquée
+- Écriture atelier réservée à admin, logistique et chefs atelier.
+- Lecture existante préservée ; les commerciaux perdent uniquement la modification des périodes atelier par métier.
+- Aucune suppression de période autorisée dans ce lot.
+- Période globale protégée même en écriture directe ; dates et heures vérifiées.
+- Fonction d’enregistrement limitée aux champs dates/heures, sans contrat, rémunération, personnes ou objets.
+- BE : réutilisation de la fonction d’affectation projet existante et de ses droits ; aucun changement de son corps ou de ses utilisateurs actuels. Capacités BE réglables par admin via les protections existantes des référents.
 
-## Première modification de base proposée
-Ce socle ajoute uniquement les champs nécessaires aux structures existantes. Aucune nouvelle table, aucune suppression, aucun changement de contrat ou rémunération, aucune publication. Il n’est pas encore appliqué.
-
+## SQL complet proposé
 ```sql
-ALTER TABLE public.affaire_planning_metier
-  ADD COLUMN IF NOT EXISTS heures_prevues numeric
-  CHECK (heures_prevues IS NULL OR heures_prevues >= 0);
+-- PROPOSITION NON APPLIQUÉE : protections du planning atelier.
+CREATE FUNCTION public.planning_atelier_ecriture_autorisee()
+RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
+  SELECT auth.uid() IS NOT NULL AND auth.jwt()->>'client_id' IS NULL
+    AND (public.has_role(auth.uid(),'admin') OR public.has_role(auth.uid(),'logistique')
+      OR public.has_role(auth.uid(),'atelier_chef'));
+$$;
+REVOKE ALL ON FUNCTION public.planning_atelier_ecriture_autorisee() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.planning_atelier_ecriture_autorisee() TO authenticated;
 
-ALTER TABLE public.affaires
-  ADD COLUMN IF NOT EXISTS atelier_date_debut date,
-  ADD COLUMN IF NOT EXISTS atelier_date_fin date,
-  ADD COLUMN IF NOT EXISTS atelier_heures_prevues numeric
-  CHECK (atelier_heures_prevues IS NULL OR atelier_heures_prevues >= 0);
+-- Les anciens droits de lecture sont préservés. La restriction couvre aussi
+-- les écritures directes sur les périodes métiers, pas seulement les boutons.
+CREATE POLICY planning_atelier_restriction_insert ON public.affaire_planning_metier
+AS RESTRICTIVE FOR INSERT TO authenticated
+WITH CHECK (public.planning_atelier_ecriture_autorisee());
+CREATE POLICY planning_atelier_restriction_update ON public.affaire_planning_metier
+AS RESTRICTIVE FOR UPDATE TO authenticated
+USING (public.planning_atelier_ecriture_autorisee())
+WITH CHECK (public.planning_atelier_ecriture_autorisee());
+CREATE POLICY planning_atelier_pas_de_suppression ON public.affaire_planning_metier
+AS RESTRICTIVE FOR DELETE TO authenticated USING (false);
 
-ALTER TABLE public.role_referents
-  ADD COLUMN IF NOT EXISTS capacite_be_pct numeric NOT NULL DEFAULT 100
-  CHECK (capacite_be_pct >= 0 AND capacite_be_pct <= 100),
-  ADD COLUMN IF NOT EXISTS visible_planning_be boolean NOT NULL DEFAULT false;
+CREATE FUNCTION public.planning_atelier_guard_global()
+RETURNS trigger LANGUAGE plpgsql SET search_path = public AS $$
+BEGIN
+  IF ROW(NEW.atelier_date_debut,NEW.atelier_date_fin,NEW.atelier_heures_prevues)
+      IS DISTINCT FROM ROW(OLD.atelier_date_debut,OLD.atelier_date_fin,OLD.atelier_heures_prevues) THEN
+    IF NOT public.planning_atelier_ecriture_autorisee() THEN
+      RAISE EXCEPTION 'Planning atelier réservé aux administrateurs, logistique et chefs atelier';
+    END IF;
+    IF (NEW.atelier_date_debut IS NULL) <> (NEW.atelier_date_fin IS NULL)
+      OR NEW.atelier_date_fin < NEW.atelier_date_debut THEN
+      RAISE EXCEPTION 'Période atelier invalide';
+    END IF;
+  END IF;
+  RETURN NEW;
+END;
+$$;
+CREATE TRIGGER planning_atelier_guard_global BEFORE UPDATE ON public.affaires
+FOR EACH ROW EXECUTE FUNCTION public.planning_atelier_guard_global();
 
--- Initialisation des nouveaux champs uniquement pour les quatre concepteurs.
-UPDATE public.role_referents SET
-  visible_planning_be = true,
-  capacite_be_pct = CASE
-    WHEN employe_id IN ('68f44ab5-c3a0-4514-9c7b-5ae0fd54290f'::uuid,
-                       '23844cc6-b506-4ce0-8872-072230aaa913'::uuid) THEN 50
-    ELSE 100 END
-WHERE role = 'concepteur' AND employe_id IN (
-  '68f44ab5-c3a0-4514-9c7b-5ae0fd54290f'::uuid,
-  '23844cc6-b506-4ce0-8872-072230aaa913'::uuid,
-  'c77dfa4d-53df-4f9a-beee-5c0d61d18e58'::uuid,
-  'd84b7bdf-9260-4022-bb45-ba1a8d2c57c2'::uuid
-);
+CREATE FUNCTION public.planning_atelier_enregistrer(
+  _affaire uuid, _metier integer, _debut date, _fin date, _heures numeric DEFAULT NULL
+) RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+DECLARE v_id uuid;
+BEGIN
+  IF NOT public.planning_atelier_ecriture_autorisee() THEN RAISE EXCEPTION 'Écriture atelier refusée'; END IF;
+  PERFORM 1 FROM public.affaires WHERE id=_affaire AND archived_at IS NULL
+    AND statut NOT IN ('termine','annule') FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'Chantier indisponible'; END IF;
+  IF _debut IS NULL OR _fin IS NULL OR _fin < _debut OR _heures < 0 THEN
+    RAISE EXCEPTION 'Dates ou heures invalides';
+  END IF;
+  IF _metier IS NULL THEN
+    UPDATE public.affaires SET atelier_date_debut=_debut,atelier_date_fin=_fin,
+      atelier_heures_prevues=_heures WHERE id=_affaire;
+    RETURN jsonb_build_object('affaire_id',_affaire);
+  END IF;
+  IF _metier NOT IN (1,2,3,4,5,6,8,9) THEN RAISE EXCEPTION 'Métier atelier invalide'; END IF;
+  INSERT INTO public.affaire_planning_metier(affaire_id,metier_id,date_debut,date_fin,heures_prevues)
+    VALUES(_affaire,_metier,_debut,_fin,_heures)
+  ON CONFLICT(affaire_id,metier_id) DO UPDATE SET
+    date_debut=EXCLUDED.date_debut,date_fin=EXCLUDED.date_fin,
+    heures_prevues=EXCLUDED.heures_prevues,updated_at=now()
+  RETURNING id INTO v_id;
+  RETURN jsonb_build_object('id',v_id,'affaire_id',_affaire);
+END;
+$$;
+REVOKE ALL ON FUNCTION public.planning_atelier_enregistrer(uuid,integer,date,date,numeric) FROM PUBLIC,anon;
+GRANT EXECUTE ON FUNCTION public.planning_atelier_enregistrer(uuid,integer,date,date,numeric) TO authenticated;```
 
-COMMENT ON COLUMN public.affaire_planning_metier.heures_prevues IS
-  'Planning atelier simple : heures prévues par métier, sans staffing nominatif';
-COMMENT ON COLUMN public.affaires.atelier_date_debut IS
-  'Planning atelier simple : début global validé manuellement';
-COMMENT ON COLUMN public.affaires.atelier_date_fin IS
-  'Planning atelier simple : fin globale validée manuellement';
-COMMENT ON COLUMN public.affaires.atelier_heures_prevues IS
-  'Planning atelier simple : estimation globale facultative en heures';
-COMMENT ON COLUMN public.role_referents.capacite_be_pct IS
-  'Capacité de planification BE en pourcentage, sans lien avec le contrat ni la rémunération';
-COMMENT ON COLUMN public.role_referents.visible_planning_be IS
-  'Concepteur visible dans le planning BE ; référents historiques conservés hors planning';
-```
-
-## Réglage des capacités existantes — présenté séparément
-Ces deux mises à jour de valeurs existantes seront exécutées séparément de la migration, uniquement après votre accord. Aucun autre métier n’est modifié.
-
-```sql
-UPDATE public.metiers SET capacite_jour = 1
-WHERE id = 9 AND code = 'impression_uv';
-
-UPDATE public.metiers SET capacite_jour = NULL
-WHERE id = 6 AND code = 'machiniste';
-```
-
-## Étape suivante
-Après accord sur ce SQL exact : appliquer le socle, puis présenter séparément les fonctions et protections d’écriture avant leur application. Les droits actuels de planning métier permettent encore des modifications aux commerciaux ; la nouvelle vue devra les limiter aux administrateurs, à la logistique et aux chefs atelier, sans casser les lecteurs existants. Aucun écran incomplet ne remplacera le planning BE actuel avant cette validation.
-
-Les règles communes de charge, jours ouvrés/fériés, propositions de dates et déplacement ont été commencées sans écriture de données.
+## Après accord
+Appliquer uniquement ce SQL, vérifier droits et refus d’écriture, puis livrer les deux vues liées et leurs tests/captures. Aucun changement d’URL ni remplacement du planning BE avant la livraison complète. Aucune publication.

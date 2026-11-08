@@ -727,6 +727,7 @@ export type Database = {
           created_at: string
           date_debut: string
           date_fin: string
+          heures_prevues: number | null
           id: string
           metier_id: number
           updated_at: string
@@ -737,6 +738,7 @@ export type Database = {
           created_at?: string
           date_debut: string
           date_fin: string
+          heures_prevues?: number | null
           id?: string
           metier_id: number
           updated_at?: string
@@ -747,6 +749,7 @@ export type Database = {
           created_at?: string
           date_debut?: string
           date_fin?: string
+          heures_prevues?: number | null
           id?: string
           metier_id?: number
           updated_at?: string
@@ -878,6 +881,9 @@ export type Database = {
         Row: {
           acces_livraison: string | null
           archived_at: string | null
+          atelier_date_debut: string | null
+          atelier_date_fin: string | null
+          atelier_heures_prevues: number | null
           ca_estime_ht: number | null
           charge_affaires_id: string | null
           chef_chantier_id: string | null
@@ -940,6 +946,9 @@ export type Database = {
         Insert: {
           acces_livraison?: string | null
           archived_at?: string | null
+          atelier_date_debut?: string | null
+          atelier_date_fin?: string | null
+          atelier_heures_prevues?: number | null
           ca_estime_ht?: number | null
           charge_affaires_id?: string | null
           chef_chantier_id?: string | null
@@ -1002,6 +1011,9 @@ export type Database = {
         Update: {
           acces_livraison?: string | null
           archived_at?: string | null
+          atelier_date_debut?: string | null
+          atelier_date_fin?: string | null
+          atelier_heures_prevues?: number | null
           ca_estime_ht?: number | null
           charge_affaires_id?: string | null
           chef_chantier_id?: string | null
@@ -6602,6 +6614,7 @@ export type Database = {
       }
       role_referents: {
         Row: {
+          capacite_be_pct: number
           created_at: string
           employe_id: string
           id: string
@@ -6609,8 +6622,10 @@ export type Database = {
           role: Database["public"]["Enums"]["projet_role"]
           updated_at: string
           updated_by: string | null
+          visible_planning_be: boolean
         }
         Insert: {
+          capacite_be_pct?: number
           created_at?: string
           employe_id: string
           id?: string
@@ -6618,8 +6633,10 @@ export type Database = {
           role: Database["public"]["Enums"]["projet_role"]
           updated_at?: string
           updated_by?: string | null
+          visible_planning_be?: boolean
         }
         Update: {
+          capacite_be_pct?: number
           created_at?: string
           employe_id?: string
           id?: string
@@ -6627,6 +6644,7 @@ export type Database = {
           role?: Database["public"]["Enums"]["projet_role"]
           updated_at?: string
           updated_by?: string | null
+          visible_planning_be?: boolean
         }
         Relationships: [
           {
