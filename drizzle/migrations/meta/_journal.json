@@ -715,6 +715,13 @@
       "when": 1794141165436,
       "tag": "0101_devis_exports_champs_facultatifs_confirmation",
       "breakpoints": true
+    },
+    {
+      "idx": 102,
+      "version": "7",
+      "when": 1794141255490,
+      "tag": "0102_qualite_actions_admin_sans_contrat_ni_classement",
+      "breakpoints": true
     }
   ]
 }
