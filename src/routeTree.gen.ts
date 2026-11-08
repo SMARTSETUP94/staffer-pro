@@ -74,6 +74,7 @@ import { Route as AppAdminFeatureFlagsRouteImport } from './routes/_app.admin.fe
 import { Route as AppAdminFeedbackRouteImport } from './routes/_app.admin.feedback'
 import { Route as AppAdminMargeChantierRouteImport } from './routes/_app.admin.marge-chantier'
 import { Route as AppAdminPermissionsRouteImport } from './routes/_app.admin.permissions'
+import { Route as AppAdminQualiteDonneesRouteImport } from './routes/_app.admin.qualite-donnees'
 import { Route as AppAdminUtilisateursRouteImport } from './routes/_app.admin.utilisateurs'
 import { Route as AppAffairesIndexRouteImport } from './routes/_app.affaires.index'
 import { Route as AppAffairesAffaireIdRouteImport } from './routes/_app.affaires.$affaireId'
@@ -465,6 +466,11 @@ const AppAdminMargeChantierRoute = AppAdminMargeChantierRouteImport.update({
 const AppAdminPermissionsRoute = AppAdminPermissionsRouteImport.update({
   id: '/admin/permissions',
   path: '/admin/permissions',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAdminQualiteDonneesRoute = AppAdminQualiteDonneesRouteImport.update({
+  id: '/admin/qualite-donnees',
+  path: '/admin/qualite-donnees',
   getParentRoute: () => AppRoute,
 } as any)
 const AppAdminUtilisateursRoute = AppAdminUtilisateursRouteImport.update({
@@ -885,6 +891,7 @@ export interface FileRoutesByFullPath {
   '/admin/feedback': typeof AppAdminFeedbackRoute
   '/admin/marge-chantier': typeof AppAdminMargeChantierRoute
   '/admin/permissions': typeof AppAdminPermissionsRoute
+  '/admin/qualite-donnees': typeof AppAdminQualiteDonneesRoute
   '/admin/utilisateurs': typeof AppAdminUtilisateursRoute
   '/affaires/$affaireId': typeof AppAffairesAffaireIdRouteWithChildren
   '/clients/$clientId': typeof AppClientsClientIdRoute
@@ -1013,6 +1020,7 @@ export interface FileRoutesByTo {
   '/admin/feedback': typeof AppAdminFeedbackRoute
   '/admin/marge-chantier': typeof AppAdminMargeChantierRoute
   '/admin/permissions': typeof AppAdminPermissionsRoute
+  '/admin/qualite-donnees': typeof AppAdminQualiteDonneesRoute
   '/admin/utilisateurs': typeof AppAdminUtilisateursRoute
   '/clients/$clientId': typeof AppClientsClientIdRoute
   '/dev/atoms': typeof AppDevAtomsRoute
@@ -1144,6 +1152,7 @@ export interface FileRoutesById {
   '/_app/admin/feedback': typeof AppAdminFeedbackRoute
   '/_app/admin/marge-chantier': typeof AppAdminMargeChantierRoute
   '/_app/admin/permissions': typeof AppAdminPermissionsRoute
+  '/_app/admin/qualite-donnees': typeof AppAdminQualiteDonneesRoute
   '/_app/admin/utilisateurs': typeof AppAdminUtilisateursRoute
   '/_app/affaires/$affaireId': typeof AppAffairesAffaireIdRouteWithChildren
   '/_app/clients/$clientId': typeof AppClientsClientIdRoute
@@ -1276,6 +1285,7 @@ export interface FileRouteTypes {
     | '/admin/feedback'
     | '/admin/marge-chantier'
     | '/admin/permissions'
+    | '/admin/qualite-donnees'
     | '/admin/utilisateurs'
     | '/affaires/$affaireId'
     | '/clients/$clientId'
@@ -1404,6 +1414,7 @@ export interface FileRouteTypes {
     | '/admin/feedback'
     | '/admin/marge-chantier'
     | '/admin/permissions'
+    | '/admin/qualite-donnees'
     | '/admin/utilisateurs'
     | '/clients/$clientId'
     | '/dev/atoms'
@@ -1534,6 +1545,7 @@ export interface FileRouteTypes {
     | '/_app/admin/feedback'
     | '/_app/admin/marge-chantier'
     | '/_app/admin/permissions'
+    | '/_app/admin/qualite-donnees'
     | '/_app/admin/utilisateurs'
     | '/_app/affaires/$affaireId'
     | '/_app/clients/$clientId'
@@ -2071,6 +2083,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/permissions'
       fullPath: '/admin/permissions'
       preLoaderRoute: typeof AppAdminPermissionsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/admin/qualite-donnees': {
+      id: '/_app/admin/qualite-donnees'
+      path: '/admin/qualite-donnees'
+      fullPath: '/admin/qualite-donnees'
+      preLoaderRoute: typeof AppAdminQualiteDonneesRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/admin/utilisateurs': {
@@ -2697,6 +2716,7 @@ interface AppRouteChildren {
   AppAdminFeedbackRoute: typeof AppAdminFeedbackRoute
   AppAdminMargeChantierRoute: typeof AppAdminMargeChantierRoute
   AppAdminPermissionsRoute: typeof AppAdminPermissionsRoute
+  AppAdminQualiteDonneesRoute: typeof AppAdminQualiteDonneesRoute
   AppAdminUtilisateursRoute: typeof AppAdminUtilisateursRoute
   AppAffairesAffaireIdRoute: typeof AppAffairesAffaireIdRouteWithChildren
   AppDevAtomsRoute: typeof AppDevAtomsRoute
@@ -2789,6 +2809,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAdminFeedbackRoute: AppAdminFeedbackRoute,
   AppAdminMargeChantierRoute: AppAdminMargeChantierRoute,
   AppAdminPermissionsRoute: AppAdminPermissionsRoute,
+  AppAdminQualiteDonneesRoute: AppAdminQualiteDonneesRoute,
   AppAdminUtilisateursRoute: AppAdminUtilisateursRoute,
   AppAffairesAffaireIdRoute: AppAffairesAffaireIdRouteWithChildren,
   AppDevAtomsRoute: AppDevAtomsRoute,
