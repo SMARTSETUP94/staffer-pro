@@ -9270,6 +9270,43 @@ export type Database = {
         Args: { _affaire_id?: string; _fichier_hash: string }
         Returns: Json
       }
+      qualite_activer_employes: {
+        Args: { _actif: boolean; _ids: string[] }
+        Returns: number
+      }
+      qualite_appliquer_dispos: {
+        Args: { _champs: string[]; _dispos: string }
+        Returns: undefined
+      }
+      qualite_assert_admin: { Args: never; Returns: undefined }
+      qualite_definir_ca: {
+        Args: { _affaire: string; _ca: number }
+        Returns: undefined
+      }
+      qualite_fusionner_clients: {
+        Args: { _fusionner: string; _garder: string }
+        Returns: Json
+      }
+      qualite_fusionner_employes: {
+        Args: { _fusionner: string; _garder: string }
+        Returns: Json
+      }
+      qualite_journal: {
+        Args: { _a: Json; _avant: Json; _champ: string; _de: Json }
+        Returns: Json
+      }
+      qualite_rattacher_demande: {
+        Args: { _client: string; _email: string }
+        Returns: undefined
+      }
+      qualite_refuser_homonyme: {
+        Args: { _dispos: string; _employe: string }
+        Returns: undefined
+      }
+      qualite_relier_dispos: {
+        Args: { _dispos: string; _employe: string }
+        Returns: undefined
+      }
       refresh_affaire_equipe_historique: {
         Args: { _affaire_id: string }
         Returns: undefined

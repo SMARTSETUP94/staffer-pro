@@ -163,7 +163,8 @@
 - [x] Migration colonnes + statuts appliquée (7 nov.).
 - [x] Correction Gabin 8 nov. : enum Intermittent déjà appliquée, conservée sans aucune écriture DB ; choix juridiques partagés = CDDU intermittent et Auto-entrepreneur, jamais Intermittent seul.
 - Onglet Devis = liste « À revoir par Gabin » (urgence : date d'événement puis ancienneté), lien éditeur + état opportunité ; aucune action de classement proposée, rien modifié automatiquement.
-- [ ] Fonctions admin montrées, en attente d'accord ; puis page admin 3 onglets et widget.
+- [x] Actions admin appliquées 8 nov. sans classement ni écriture contrat/rémunération ; fusion liée à un contrat refusée, références conflictuelles retournées, jamais de suppression.
+- [ ] Page admin 3 onglets et widget à livrer ; actions de fusion non exercées sur fiches réelles pour ne modifier aucune donnée.
 - Ordre Gabin : Qualité des données avant la suite du planning (étape 4).
 
 ## Audit exports devis Staffing (prioritaire, plan approuvé 7 nov. 2026)
@@ -174,6 +175,7 @@
 - [ ] Reste : upload logo ergonomique et accès stockage adaptés (chemin disponible seulement), contrôles validation/signataire, vérification enregistrement des formulaires sans toucher aux devis existants, captures « avant » originales indisponibles. Paramètres mobile à recapturer après chargement complet.
 - [x] Exports générés en temporaire sans enregistrement (9500 PDF détaillé/synthétique + Excel, 9477, 6064), 5 pages capturées, Excel lu ligne à ligne ; totaux identiques.
 - [x] Tableaux d'écarts remis.
+- [x] Accord 8 nov. revérifié : champs facultatifs confirmés, adresse/SA/capital/APE/TVA déjà exacts ; PDF réels générés et 10 pages inspectées. Captures après déposées ; avant bloquées par absence des originaux.
 - [x] Plan validé ; mise en page PDF, titres courts Excel, options hors sous-totaux, blocage fiche client incomplète livrés.
 - [ ] Exports devis — reste : champs chantier/signataire, pied de page complet, CGV, alerte matières à 0 € (en attente : migration à valider + réponses de Gabin aux 3 questions).
 
