@@ -1,12 +1,12 @@
 # Roadmap
 
 ## Suite déléguée Gabin — 8 novembre 13:03 UTC
-- [ ] Réglages Gabin 13:17 : BE limité à Nadège/Guillaume 100 %, Kevin/Laurent 50 % ; UV 1 personne/jour (8 h), Machiniste sans limite ni pourcentage/alerte. Intégrer au SQL proposé avant accord, rien publier.
+- [x] Réglages Gabin 13:17 intégrés à la proposition : BE limité à Nadège/Guillaume 100 %, Kevin/Laurent 50 % ; UV 1 personne/jour (8 h), Machiniste sans limite ni pourcentage/alerte. Aucun réglage appliqué ; attend accord SQL.
 - [x] Page Qualité 3 onglets, actions existantes confirmées et widget Santé livrés sans migration/suppression/publication ; 699 points de contrôle (442 Personnes, 216 Commercial, 41 devis), compteurs de catégories cumulés, pas un nombre de fiches distinctes.
 - [x] Session admin réelle, confirmation CA annulée, export 41 devis relu, 390/1366 sans débordement, refus hors connexion, 21 tests verts et build OK. Action admin à liste vide : 0 changement ; fusions/liaisons/corrections réelles volontairement non exécutées, droits non-admin connecté non exercés en navigateur.
 - [x] Plan atelier + bureau d'étude remis à présentation ; aucune migration appliquée, inventaire historique à actualiser avant réalisation.
 - [ ] Atelier/BE : plan approuvé ; inventaire actuel relu, socle additif préparé et présenté séparément. Application bloquée jusqu’à accord sur le SQL exact ; protections/fonctions ensuite à montrer séparément.
-- [x] Règles pures atelier/BE commencées sans changement de données : charge 8h/j ouvré, fériés FR, seuils 80/100 %, capacité BE, propositions de dates et déplacement ; 5 tests verts, build OK.
+- [x] Règles pures atelier/BE commencées sans changement de données : charge 8h/j ouvré, fériés FR, seuils 80/100 %, capacité BE, propositions de dates et déplacement ; UV/Machiniste inclus, 7 tests verts, build OK.
 - [ ] Après accord SQL : réaliser les deux vues liées, règles de charge, dates, alertes, déplacements et recette droits/mobile/bureau.
 
 ## Demandes clients — transferts (plan approuvé)
