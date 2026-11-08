@@ -1,6 +1,7 @@
 # Roadmap
 
 ## Suite déléguée Gabin — 8 novembre 13:03 UTC
+- [ ] Réglages Gabin 13:17 : BE limité à Nadège/Guillaume 100 %, Kevin/Laurent 50 % ; UV 1 personne/jour (8 h), Machiniste sans limite ni pourcentage/alerte. Intégrer au SQL proposé avant accord, rien publier.
 - [x] Page Qualité 3 onglets, actions existantes confirmées et widget Santé livrés sans migration/suppression/publication ; 699 points de contrôle (442 Personnes, 216 Commercial, 41 devis), compteurs de catégories cumulés, pas un nombre de fiches distinctes.
 - [x] Session admin réelle, confirmation CA annulée, export 41 devis relu, 390/1366 sans débordement, refus hors connexion, 21 tests verts et build OK. Action admin à liste vide : 0 changement ; fusions/liaisons/corrections réelles volontairement non exécutées, droits non-admin connecté non exercés en navigateur.
 - [x] Plan atelier + bureau d'étude remis à présentation ; aucune migration appliquée, inventaire historique à actualiser avant réalisation.
