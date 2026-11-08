@@ -1,5 +1,10 @@
 # Roadmap
 
+## Suite déléguée Gabin — 8 novembre 13:03 UTC
+- [x] Page Qualité 3 onglets, actions existantes confirmées et widget Santé livrés sans migration/suppression/publication ; 699 points de contrôle (442 Personnes, 216 Commercial, 41 devis), compteurs de catégories cumulés, pas un nombre de fiches distinctes.
+- [x] Session admin réelle, confirmation CA annulée, export 41 devis relu, 390/1366 sans débordement, refus hors connexion, 21 tests verts et build OK. Action admin à liste vide : 0 changement ; fusions/liaisons/corrections réelles volontairement non exécutées, droits non-admin connecté non exercés en navigateur.
+- [x] Plan atelier + bureau d'étude remis à présentation ; aucune migration appliquée, inventaire historique à actualiser avant réalisation.
+
 ## Demandes clients — transferts (plan approuvé)
 - [x] Migration deux colonnes appliquée, lecteur Outlook FR/EN partagé, ingestion et réanalyse, identité/date d’origine et badges ; 20 tests verts, écran admin vérifié.
 - [x] Recalcul sécurisé exécuté deux fois : 117 demandes devis recalculées, 19 clients à identifier ; statuts/catégories et volumes avant/après identiques, aucune suppression/publication. Premier externe et badge smart relus à l’écran.
@@ -164,7 +169,7 @@
 - [x] Correction Gabin 8 nov. : enum Intermittent déjà appliquée, conservée sans aucune écriture DB ; choix juridiques partagés = CDDU intermittent et Auto-entrepreneur, jamais Intermittent seul.
 - Onglet Devis = liste « À revoir par Gabin » (urgence : date d'événement puis ancienneté), lien éditeur + état opportunité ; aucune action de classement proposée, rien modifié automatiquement.
 - [x] Actions admin appliquées 8 nov. sans classement ni écriture contrat/rémunération ; fusion liée à un contrat refusée, références conflictuelles retournées, jamais de suppression.
-- [ ] Page admin 3 onglets et widget à livrer ; actions de fusion non exercées sur fiches réelles pour ne modifier aucune donnée.
+- [x] Page admin 3 onglets et widget livrés le 8 nov. ; actions de fusion non exercées sur fiches réelles pour ne modifier aucune donnée. Contrats modifiables uniquement dans leurs écrans habituels, jamais par ce lot ; suivi commercial via la fiche existante.
 - Ordre Gabin : Qualité des données avant la suite du planning (étape 4).
 
 ## Audit exports devis Staffing (prioritaire, plan approuvé 7 nov. 2026)
@@ -181,4 +186,4 @@
 - [ ] Exports devis — reste : champs chantier/signataire, pied de page complet, CGV, alerte matières à 0 € (en attente : migration à valider + réponses de Gabin aux 3 questions).
 
 ## Planning atelier simple + Planning BE (après Qualité des données et exports devis)
-- [ ] Plan rédigé, à présenter ; composant barres commun, charge par métier, BE par concepteur.
+- [x] Plan remis à présentation après livraison Qualité ; composant barres commun, charge par métier, BE par concepteur. Réalisation et toute migration attendent validation.

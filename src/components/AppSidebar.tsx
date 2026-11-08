@@ -150,6 +150,7 @@ function buildSections(
     {
       label: "Admin",
       items: [
+        { title: "Qualité des données", url: "/admin/qualite-donnees", icon: BadgeCheck, cap: "section.admin" },
         { title: "Connecteur Claude", url: "/admin/connecteur-claude", icon: Settings, cap: "api.mcp" },
         { title: "Utilisateurs", url: "/admin/utilisateurs", icon: UserCircle, cap: "section.admin" },
         { title: "Permissions", url: "/admin/permissions", icon: BadgeCheck, cap: "admin.permissions.manage" },
@@ -268,7 +269,7 @@ function applyLogistiqueOppsMode(sections: NavSection[]): NavSection[] {
  * toujours ouvrir /admin/feature-flags en direct pour désactiver le mode.
  */
 // "/admin/utilisateurs" reste filtré par la cap section.admin (admins seulement).
-const SA_MODE_URLS = new Set(["/opportunites", "/demandes-clients", "/affaires", "/liste-chantiers", "/documents-affaires", "/clients", "/logistique", "/demandes-logistique", "/jalonnements", "/admin/utilisateurs", "/admin/connecteur-claude", "/mes-notes-de-frais", "/validation-notes-de-frais", "/planning-pilotage", "/parametres/referents-roles", "/parametres/devis-taux", "/devis-staffing", "/logistique/dispos"]);
+const SA_MODE_URLS = new Set(["/", "/admin/qualite-donnees", "/opportunites", "/demandes-clients", "/affaires", "/liste-chantiers", "/documents-affaires", "/clients", "/logistique", "/demandes-logistique", "/jalonnements", "/admin/utilisateurs", "/admin/connecteur-claude", "/mes-notes-de-frais", "/validation-notes-de-frais", "/planning-pilotage", "/parametres/referents-roles", "/parametres/devis-taux", "/devis-staffing", "/logistique/dispos"]);
 
 function applySuiviAffairesMode(sections: NavSection[]): NavSection[] {
   return sections

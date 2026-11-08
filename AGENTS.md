@@ -1,5 +1,7 @@
 # Architecture rules
 
+- Data quality uses an authenticated admin-only paginated reader with explicit safe fields and existing quality RPCs for confirmed writes; the admin home shares its query and pure anomaly helpers so counters match without exposing remuneration.
+
 - MCP uses the official Lovable SDK and managed OAuth, with per-request local consent/revocation, capabilities and caller-scoped database clients; no business tool may use an admin client. Provider-owned OAuth endpoints are advertised through discovery rather than reimplemented.
 - MCP readers select explicit safe fields and paginate deterministically; non-global scopes fail closed until a scoped reader exists, and materialized aggregate views are never exposed to scoped users.
 - MCP technical audit fails closed, excludes free-text arguments and keeps business reads separate from connection administration; admin-only server functions may use provider admin APIs after verifying roles.
