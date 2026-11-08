@@ -1,0 +1,3 @@
+# Planning atelier and BE
+- Share the lightweight bar renderer and pure working-day charge helpers; persist atelier through its guarded RPC and BE through existing project-role assignment, never duplicate staffing or business records.
+- Read quote hours in authenticated server functions and return only safe planning fields; mobile is read-only and unknown capacity has no percentage or overload alert.
