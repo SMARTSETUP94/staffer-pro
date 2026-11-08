@@ -9246,6 +9246,17 @@ export type Database = {
         }
         Returns: Json
       }
+      planning_atelier_ecriture_autorisee: { Args: never; Returns: boolean }
+      planning_atelier_enregistrer: {
+        Args: {
+          _affaire: string
+          _debut: string
+          _fin: string
+          _heures?: number
+          _metier: number
+        }
+        Returns: Json
+      }
       planning_terrain_affecter: {
         Args: {
           _etape: string
