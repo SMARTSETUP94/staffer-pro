@@ -8,6 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import type { Database } from "@/integrations/supabase/types";
+import { useAuth } from "@/lib/auth-context";
+import { LogoEntrepriseUpload } from "./LogoEntrepriseUpload";
 
 type Entreprise = Database["public"]["Tables"]["parametres_entreprise"]["Row"];
 const champs = [
@@ -15,13 +17,14 @@ const champs = [
   ["adresse_ligne1", "Adresse"], ["code_postal", "Code postal"], ["ville", "Ville"], ["naf", "APE"], ["siret", "SIRET"],
   ["tva_intracom", "TVA intracommunautaire"], ["telephone", "Téléphone"], ["employeur_email_contact", "Email"], ["iban", "IBAN"], ["bic", "BIC"],
   ["mode_reglement", "Mode de règlement"], ["acompte_pct", "Acompte (%)"], ["delai_reglement_jours", "Délai (jours)"],
-  ["logo_storage_path", "Logo — chemin du fichier dans le stockage"],
 ] as const;
 export function EntrepriseDevisParametres() {
-  const q = useQuery({ queryKey: ["entreprise-devis"], queryFn: async () => {
+  const { roles } = useAuth(); const admin = roles.includes("admin");
+  const q = useQuery({ queryKey: ["entreprise-devis"], enabled: admin, queryFn: async () => {
     const { data, error } = await supabase.from("parametres_entreprise").select("*").eq("singleton", true).single();
     if (error) throw error; return data;
   } });
+  if (!admin) return null;
   if (q.error) return <p className="text-sm text-destructive">Paramètres entreprise réservés à l’administrateur.</p>;
   return <section className="space-y-3 border-t pt-5"><h2 className="text-lg font-semibold">Entreprise — documents client</h2>{q.data && <Formulaire key={q.data.updated_at} entreprise={q.data} refresh={() => q.refetch()} />}</section>;
 }
@@ -38,6 +41,7 @@ function Formulaire({ entreprise, refresh }: { entreprise: Entreprise; refresh: 
     toast.success("Paramètres entreprise enregistrés"); await refresh();
   };
   return <div className="space-y-4"><div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{champs.map(([key, label]) => <div key={key} className="space-y-1"><Label htmlFor={`entreprise-${key}`}>{label}</Label><Input id={`entreprise-${key}`} value={value(key)} autoComplete="off" onChange={(e) => setPatch((p) => ({ ...p, [key]: e.target.value }))} /></div>)}</div>
+    <LogoEntrepriseUpload entrepriseId={entreprise.id} path={entreprise.logo_storage_path} refresh={refresh} />
     {([["mentions_devis", "Mentions du devis"], ["cgv_devis", "Conditions générales de vente"]] as const).map(([key, label]) => <div key={key} className="space-y-1"><Label htmlFor={`entreprise-${key}`}>{label}</Label><Textarea id={`entreprise-${key}`} rows={key === "cgv_devis" ? 8 : 4} value={value(key)} onChange={(e) => setPatch((p) => ({ ...p, [key]: e.target.value }))} /></div>)}
     <Button disabled={busy || !Object.keys(patch).length} onClick={() => void save()}><Save className="mr-2 h-4 w-4" />Enregistrer l’entreprise</Button>
   </div>;
