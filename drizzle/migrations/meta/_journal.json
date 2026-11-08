@@ -694,6 +694,13 @@
       "when": 1794138676397,
       "tag": "0098_devis_exports_parametres_et_champs_facultatifs",
       "breakpoints": true
+    },
+    {
+      "idx": 99,
+      "version": "7",
+      "when": 1794139930689,
+      "tag": "0099_devis_exports_lecteur_modele_entreprise",
+      "breakpoints": true
     }
   ]
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { construireDevisPdf, eurPdf, lignesTableau, avecFiligrane, totalAffiche, titreCourt, nomPropreChantier, descriptifClientChapitre, descriptifChapitre, detailObjet, champsClientManquants, type DevisClient } from "../pdf-client";
+import { construireDevisPdf, reglementDevis, eurPdf, lignesTableau, avecFiligrane, totalAffiche, titreCourt, nomPropreChantier, descriptifClientChapitre, descriptifChapitre, detailObjet, champsClientManquants, type DevisClient } from "../pdf-client";
 
 const base: DevisClient = {
   numero: "D-TEST", version: 2, statut_redaction: "brouillon", libelle: "Totem FIJI", date_devis: "2026-11-03", validite_jours: 30, date_validite: "2026-12-03",
@@ -15,6 +15,18 @@ const base: DevisClient = {
 const texte = (buf: ArrayBuffer) => new TextDecoder("latin1").decode(new Uint8Array(buf));
 
 describe("PDF client devis", () => {
+  it("acompte officiel de 50 % sur les 4 084,01 € TTC de 9500", () => {
+    expect(reglementDevis({ ttc: 4084.01, reglement: { acompte_pct: 50 } }).acompte).toBe(2042.01);
+  });
+  it("délai officiel de 30 jours", () => {
+    expect(reglementDevis({ ttc: 4084.01, reglement: { delai_jours: 30 } }).delai).toBe(30);
+  });
+  it("mode de règlement officiel virement", () => {
+    expect(reglementDevis({ ttc: 4084.01, reglement: { mode: "virement" } }).mode).toBe("virement");
+  });
+  it("reprend les paramètres fournis, sans les écraser par les défauts", () => {
+    expect(reglementDevis({ ttc: 1000, reglement: { acompte_pct: 25, mode: "chèque", delai_jours: 15 } })).toEqual({ pct: 25, acompte: 250, mode: "chèque", delai: 15 });
+  });
   it("montants au format français", () => {
     expect(eurPdf(19600)).toBe("19 600,00 €");
     expect(eurPdf(-50.5)).toBe("-50,50 €");

@@ -1,68 +1,52 @@
-# Exports devis — raccordement du lecteur client
+# Exports devis — champs chantier et signataire dans l’éditeur
 
-## Déjà appliqué et vérifié
-- Huit champs facultatifs sur les devis et douze champs sur les paramètres entreprise.
-- Adresse officielle enregistrée : **8 avenue du Président Salvador Allende, 94400 Vitry-sur-Seine**.
-- SA, capital 40 000 €, APE, SIRET, TVA et règlement confirmés enregistrés.
-- Téléphone, IBAN, BIC, logo et CGV restent vides pour Gabin.
-- Tests PDF/Excel : 27 passent ; aperçu sans erreur de compilation.
+Le lecteur PDF approuvé est appliqué et vérifié. Le PDF reprend désormais les paramètres de règlement ; 31 tests PDF/Excel passent. Aucun devis existant modifié, rien publié.
 
-## Redéfinition proposée — accord avant application
-Le lecteur client reprendra les mentions, CGV, chemin du logo et conditions de paiement de la fiche entreprise ainsi que les champs facultatifs chantier/signataire. Aucun devis mis à jour. Le signataire vient exclusivement des champs explicitement renseignés : aucune substitution par un auteur technique ou compte générique.
+## Modification proposée avant application
+La fonction d’édition existante conserve sa vérification des droits et son comportement, avec huit champs facultatifs supplémentaires explicitement autorisés. Aucune exécution sur les devis existants. Les dates, adresse et signataire resteront vides tant qu’un humain ne les saisit pas.
 
-Le lecteur ProGBat appelle déjà ce lecteur client : les mêmes informations y seront disponibles sans changer sa colonne Temps prévu ni ses options.
-
-### SQL complet
 ```sql
-CREATE OR REPLACE FUNCTION public.devis_lire_client(_devis_id uuid)
- RETURNS jsonb
- LANGUAGE plpgsql
- STABLE SECURITY DEFINER
- SET search_path TO 'public'
-AS $function$
-DECLARE d record; v_calc jsonb; v_dates jsonb;
+CREATE OR REPLACE FUNCTION public.devis_entete_modifier(_devis_id uuid, _patch jsonb, _maj_affaire_client boolean DEFAULT false)
+ RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public' AS $function$
+DECLARE d record;
 BEGIN
-  IF NOT devis_peut_lire(_devis_id) THEN RAISE EXCEPTION 'forbidden' USING ERRCODE='42501'; END IF;
-  SELECT * INTO d FROM devis WHERE id=_devis_id;
-  v_calc := coalesce(d.totaux_snapshot, devis_calculer_interne(_devis_id));
-  v_dates := coalesce(d.dates_snapshot, (SELECT jsonb_build_object('date_opportunite',a.created_at::date,'date_devis',d.date_devis,'date_validite',d.date_validite,
-      'date_visite_technique',a.date_visite_technique,'date_montage',a.date_montage,'date_evenement_debut',a.date_evenement_debut,
-      'date_evenement_fin',a.date_evenement_fin,'date_demontage',a.date_demontage) FROM affaires a WHERE a.id=d.affaire_id));
-  RETURN jsonb_build_object(
-    'id',d.id,'version',d.version,'statut_redaction',d.statut_redaction,
-    'numero',d.numero,'libelle',d.libelle,'date_devis',d.date_devis,'validite_jours',d.validite_jours,
-    'date_validite',coalesce(v_dates->>'date_validite',d.date_validite::text),
-    'societe',(SELECT jsonb_build_object('raison_sociale',raison_sociale,'marque',marque_commerciale,'adresse',adresse_ligne1,'code_postal',code_postal,'ville',ville,'siret',siret,'email',employeur_email_contact) FROM parametres_entreprise ORDER BY created_at LIMIT 1),
-    'chantier',jsonb_build_object('adresse',d.chantier_adresse,'travaux',d.travaux_libelle,'debut',d.travaux_debut,'duree_jours',d.travaux_duree_jours),
-    'signataire',CASE WHEN nullif(trim(d.signataire_prenom),'') IS NOT NULL AND nullif(trim(d.signataire_nom),'') IS NOT NULL AND nullif(trim(d.signataire_email),'') IS NOT NULL
-      THEN jsonb_build_object('nom',trim(d.signataire_prenom)||' '||trim(d.signataire_nom),'email',d.signataire_email,'telephone',d.signataire_telephone) ELSE NULL END,
-    'mentions_legales',(SELECT jsonb_build_object('forme',forme_sociale,'capital',capital_social_euros::text||' €','telephone',telephone,'email',employeur_email_contact,'ape',naf,'tva',tva_intracom,'iban',iban,'bic',bic) FROM parametres_entreprise ORDER BY created_at LIMIT 1),
-    'mentions_devis',(SELECT mentions_devis FROM parametres_entreprise ORDER BY created_at LIMIT 1),
-    'cgv',(SELECT cgv_devis FROM parametres_entreprise ORDER BY created_at LIMIT 1),
-    'logo_storage_path',(SELECT logo_storage_path FROM parametres_entreprise ORDER BY created_at LIMIT 1),
-    'reglement',(SELECT jsonb_build_object('mode',mode_reglement,'acompte_pct',acompte_pct,'delai_jours',delai_reglement_jours) FROM parametres_entreprise ORDER BY created_at LIMIT 1),
-    'client',(SELECT jsonb_build_object('nom',nom,'adresse',adresse,'code_postal',code_postal,'ville',ville,'siret',siret,'tva_intracom',tva_intracom) FROM clients WHERE id=d.client_id),
-    'client_final',(SELECT nom FROM clients WHERE id=d.client_final_id),
-    'contact',(SELECT jsonb_build_object('nom',coalesce(c.prenom||' ','')||coalesce(c.nom,''),'email',c.email) FROM client_contacts c WHERE c.id=d.contact_id),
-    'dates', v_dates,
-    'lignes',(WITH RECURSIVE anc AS (
-        SELECT l.id, l.id AS a FROM devis_lignes l WHERE l.devis_id=_devis_id AND l.supprime_le IS NULL
-        UNION ALL
-        SELECT anc.id, p.parent_id FROM anc JOIN devis_lignes p ON p.id=anc.a WHERE p.parent_id IS NOT NULL),
-      vis AS (SELECT DISTINCT anc.a FROM anc WHERE v_calc->'lignes' ? anc.id::text)
-      SELECT coalesce(jsonb_agg(jsonb_build_object('id',l.id,'parent_id',l.parent_id,'type',l.type,'ordre',l.ordre,'libelle',l.libelle,
-        'quantite',l.quantite,'descriptif_client',l.descriptif_client,'longueur_mm',l.longueur_mm,'largeur_mm',l.largeur_mm,'hauteur_mm',l.hauteur_mm,
-        'finition',l.finition,'texte',l.texte,'option_incluse',l.option_incluse,'montant',(v_calc->'lignes'->>l.id::text)::numeric,'sous_total',(v_calc->'racines'->>l.id::text)::numeric) ORDER BY l.ordre),'[]')
-      FROM devis_lignes l WHERE l.devis_id=_devis_id AND l.supprime_le IS NULL AND NOT (l.type='commentaire' AND l.interne)
-        AND (l.type='commentaire' OR l.id IN (SELECT vis.a FROM vis))),
-    'photos',(SELECT coalesce(jsonb_agg(jsonb_build_object('ligne_id',p.ligne_id,'storage_path',p.storage_path,'thumb_path',p.thumb_path,'legende',p.legende,'mime',p.mime) ORDER BY p.ordre),'[]')
-      FROM devis_photos p WHERE p.devis_id=_devis_id AND p.deleted_at IS NULL AND p.visible_client),
-    'total_ht',v_calc->'total_ht','remise',coalesce(v_calc->'remise','0'::jsonb),'net_ht',coalesce(v_calc->'net_ht',v_calc->'total_ht'),'tva',v_calc->'tva','tva_pct',v_calc->'tva_pct','ttc',v_calc->'ttc','options_ht',v_calc->'options_ht');
+  PERFORM devis_assert_ecriture(_devis_id);
+  IF _patch ? 'contact_id' AND NULLIF(_patch->>'contact_id','') IS NOT NULL AND NOT EXISTS (
+     SELECT 1 FROM client_contacts WHERE id=(_patch->>'contact_id')::uuid AND client_id=coalesce(NULLIF(_patch->>'client_id','')::uuid,(SELECT client_id FROM devis WHERE id=_devis_id))) THEN
+    RAISE EXCEPTION 'Ce contact n''appartient pas au client facturé'; END IF;
+  UPDATE devis SET
+    client_id = CASE WHEN _patch ? 'client_id' THEN NULLIF(_patch->>'client_id','')::uuid ELSE client_id END,
+    contact_id = CASE WHEN _patch ? 'contact_id' THEN NULLIF(_patch->>'contact_id','')::uuid
+                      WHEN _patch ? 'client_id' AND NULLIF(_patch->>'client_id','')::uuid IS DISTINCT FROM client_id THEN NULL ELSE contact_id END,
+    client_final_id = CASE WHEN _patch ? 'client_final_id' THEN NULLIF(_patch->>'client_final_id','')::uuid ELSE client_final_id END,
+    date_devis = CASE WHEN _patch ? 'date_devis' THEN coalesce(NULLIF(_patch->>'date_devis','')::date,current_date) ELSE date_devis END,
+    date_validite = CASE WHEN _patch ? 'date_validite' THEN NULLIF(_patch->>'date_validite','')::date ELSE date_validite END,
+    date_validite_manuelle = CASE WHEN _patch ? 'date_validite' THEN NULLIF(_patch->>'date_validite','') IS NOT NULL ELSE date_validite_manuelle END,
+    numero_progbat = CASE WHEN _patch ? 'numero_progbat' THEN NULLIF(_patch->>'numero_progbat','') ELSE numero_progbat END,
+    libelle = CASE WHEN _patch ? 'libelle' THEN _patch->>'libelle' ELSE libelle END,
+    coef_materiaux_defaut = CASE WHEN _patch ? 'coef_materiaux_defaut' THEN (_patch->>'coef_materiaux_defaut')::numeric ELSE coef_materiaux_defaut END,
+    validite_jours = CASE WHEN _patch ? 'validite_jours' THEN (_patch->>'validite_jours')::int ELSE validite_jours END,
+    modele_nom = CASE WHEN est_modele AND _patch ? 'modele_nom' THEN _patch->>'modele_nom' ELSE modele_nom END,
+    modele_categorie = CASE WHEN est_modele AND _patch ? 'modele_categorie' THEN _patch->>'modele_categorie' ELSE modele_categorie END,
+    modele_description = CASE WHEN est_modele AND _patch ? 'modele_description' THEN _patch->>'modele_description' ELSE modele_description END,
+    chantier_adresse = CASE WHEN _patch ? 'chantier_adresse' THEN NULLIF(_patch->>'chantier_adresse','')::text ELSE chantier_adresse END,
+    travaux_libelle = CASE WHEN _patch ? 'travaux_libelle' THEN NULLIF(_patch->>'travaux_libelle','')::text ELSE travaux_libelle END,
+    travaux_debut = CASE WHEN _patch ? 'travaux_debut' THEN NULLIF(_patch->>'travaux_debut','')::date ELSE travaux_debut END,
+    travaux_duree_jours = CASE WHEN _patch ? 'travaux_duree_jours' THEN NULLIF(_patch->>'travaux_duree_jours','')::integer ELSE travaux_duree_jours END,
+    signataire_prenom = CASE WHEN _patch ? 'signataire_prenom' THEN NULLIF(_patch->>'signataire_prenom','')::text ELSE signataire_prenom END,
+    signataire_nom = CASE WHEN _patch ? 'signataire_nom' THEN NULLIF(_patch->>'signataire_nom','')::text ELSE signataire_nom END,
+    signataire_email = CASE WHEN _patch ? 'signataire_email' THEN NULLIF(_patch->>'signataire_email','')::text ELSE signataire_email END,
+    signataire_telephone = CASE WHEN _patch ? 'signataire_telephone' THEN NULLIF(_patch->>'signataire_telephone','')::text ELSE signataire_telephone END,
+    updated_at = now()
+  WHERE id=_devis_id RETURNING * INTO d;
+  IF _maj_affaire_client AND d.affaire_id IS NOT NULL THEN
+    UPDATE affaires SET client_id=d.client_id, client_contact_id=d.contact_id, updated_at=now() WHERE id=d.affaire_id;
+  END IF;
 END $function$;
+
 ```
 
-## Restant à terminer
-- Formulaire paramètres et saisie des champs facultatifs devis (fonction d’édition à présenter séparément avant application).
-- Chargement du logo et rendu des conditions de règlement paramétrées.
-- Contrôles de validation, captures réelles 9500/9477/6064 et bilan final ; aucune capture finale produite à cette étape.
-- Pas de publication, aucune modification automatique d’un devis existant.
+## Après accord
+- Ajouter la saisie des champs chantier/signataire à l’éditeur, sans remplissage automatique ni compte générique.
+- Ajouter le formulaire paramètres pour le téléphone, IBAN, BIC, logo et CGV : valeurs saisies par Gabin, jamais demandées dans le chat.
+- Poursuivre les contrôles et captures avant/après réelles de 9500/9477/6064 ; le bilan final n’est pas encore produit.
