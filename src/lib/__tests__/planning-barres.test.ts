@@ -1,5 +1,5 @@
 import {describe,it,expect} from "vitest";
-import {chargeHebdomadaire,niveauCharge,proposerPeriodeAtelier,deplacerPeriode} from "../planning-barres";
+import {chargeHebdomadaire,niveauCharge,alerteSurcharge,proposerPeriodeAtelier,deplacerPeriode} from "../planning-barres";
 describe("Planning atelier/BE — règles approuvées",()=>{
   it("exclut le 11 novembre 2026 et répartit 32 heures sur 4 jours",()=>{
     expect(chargeHebdomadaire({debut:"2026-11-09",fin:"2026-11-13",heures:32},"2026-11-09",1)).toEqual({heures:32,capacite:32,ratio:1});
@@ -18,5 +18,13 @@ describe("Planning atelier/BE — règles approuvées",()=>{
   });
   it("déplacement calé au jour conservant la durée",()=>{
     expect(deplacerPeriode({debut:"2026-11-09",fin:"2026-11-13",heures:32},7)).toEqual({debut:"2026-11-16",fin:"2026-11-20",heures:32});
+  });
+  it("UV une personne représente huit heures par jour ouvré",()=>{
+    expect(chargeHebdomadaire({debut:"2026-11-09",fin:"2026-11-09",heures:8},"2026-11-09",1).capacite).toBe(32);
+  });
+  it("Machiniste sans limite : heures sans pourcentage ni alerte",()=>{
+    const charge=chargeHebdomadaire({debut:"2026-11-09",fin:"2026-11-13",heures:1000},"2026-11-09",null);
+    expect(charge.heures).toBe(1000);expect(charge.ratio).toBeNull();expect(alerteSurcharge(charge.ratio)).toBe(false);
+    expect(alerteSurcharge(1.01)).toBe(true);
   });
 });
