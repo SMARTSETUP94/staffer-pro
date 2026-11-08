@@ -301,6 +301,10 @@ export function construireDevisPdf(vc: DevisClient, niveau: NiveauPdf, images: R
   let N = 0;
   for (const r of racines) {
     N += 1; const n = String(N);
+    if (!detaille) {
+      corps.push([{ content: n }, { content: titreCourt(r), styles: { fontStyle: "bold", fillColor: C.bleuClair } }, "ens", "1", "", { content: eurPdf(totalAffiche(vc, r)), styles: { halign: "right", fontStyle: "bold" } }]);
+      continue;
+    }
     const kids = enfants(vc, r.id).filter((k) => k.type !== "commentaire" && k.type !== "option");
     const titre = titreCourt(r), total = totalAffiche(vc, r);
     const chap = r.type.startsWith("chapitre_");

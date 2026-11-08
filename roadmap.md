@@ -169,7 +169,8 @@
 - [x] Accord et réponses Gabin du 8 nov. enregistrés : Temps prévu conservé, options normales à convertir manuellement, mentions officielles confirmées ; IBAN/BIC/téléphone/logo/CGV à saisir par Gabin dans les paramètres.
 - [x] Migration additive approuvée puis appliquée le 8 nov. : 12 champs paramètres + 8 champs facultatifs devis vérifiés en base ; adresse officielle et mentions entreprise enregistrées, banque/téléphone/logo/CGV vides. Aucun devis mis à jour ; 27 tests verts, aperçu OK.
 - [x] Lecteur client approuvé puis appliqué et vérifié ; mentions, règlement, CGV, logo et champs devis exposés sans coûts. Règlement PDF paramétré, 31 tests verts.
-- [ ] Fonction d’édition présentée avant application ; ensuite formulaires, logo, contrôles et captures avant/après 9500/9477/6064. Anciennes captures temporaires indisponibles dans ce sandbox.
+- [x] Fonction d’édition approuvée puis appliquée ; formulaire chantier/signataire et formulaire entreprise ajoutés. Paramètres relus en session admin à 1366 px, trois lecteurs réels vérifiés (9500/9477/6064) sans écriture devis.
+- [ ] Reste : upload logo ergonomique et accès stockage adaptés (chemin disponible seulement), contrôles validation/signataire, vérification enregistrement des formulaires sans toucher aux devis existants, captures « avant » originales indisponibles. Paramètres mobile à recapturer après chargement complet.
 - [x] Exports générés en temporaire sans enregistrement (9500 PDF détaillé/synthétique + Excel, 9477, 6064), 5 pages capturées, Excel lu ligne à ligne ; totaux identiques.
 - [x] Tableaux d'écarts remis.
 - [x] Plan validé ; mise en page PDF, titres courts Excel, options hors sous-totaux, blocage fiche client incomplète livrés.
