@@ -166,6 +166,8 @@
 - Ordre Gabin : Qualité des données avant la suite du planning (étape 4).
 
 ## Audit exports devis Staffing (prioritaire, plan approuvé 7 nov. 2026)
+- [x] Accord et réponses Gabin du 8 nov. enregistrés : Temps prévu conservé, options normales à convertir manuellement, mentions officielles confirmées ; IBAN/BIC/téléphone/logo/CGV à saisir par Gabin dans les paramètres.
+- [ ] Migration additive paramètres entreprise et champs facultatifs devis : préparer et présenter avant application ; compléter ensuite les lecteurs/formulaires et les captures avant/après 9500/9477/6064. Attend accord distinct sur la migration.
 - [ ] Adresse officielle confirmée le 8 nov. : remplacer « 8, avenue du Président Salvador Allende / 94405 / Vitry sur Seine Cedex » par « 8 avenue du Président Salvador Allende / 94400 / Vitry-sur-Seine » dans les paramètres entreprise et les affichages courants ; attendre accord après présentation, préserver les documents historiques.
 - [x] Exports générés en temporaire sans enregistrement (9500 PDF détaillé/synthétique + Excel, 9477, 6064), 5 pages capturées, Excel lu ligne à ligne ; totaux identiques.
 - [x] Tableaux d'écarts remis.
