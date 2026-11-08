@@ -1,80 +1,76 @@
-# Planning atelier simple + Planning bureau d'étude
+# Exports devis — migration additive à valider
 
-Ce lot vient après « Qualité des données ». Il n'utilise aucune nouvelle table, ne supprime rien et rien n'est publié. Le plan de fabrication, l'auto-staffing, le tableau d'atelier et les objets restent en place mais ne sont pas branchés.
+Le plan de corrections est approuvé. Cette étape soumet uniquement les colonnes et les valeurs entreprise ci-dessous ; aucune écriture de base n’a été exécutée.
 
-## État constaté
-- 14 chantiers 6XXX en cours et 1 opportunité 9XXX « presque gagnée ».
-- Aucune ligne dans le planning métier par chantier (`affaire_planning_metier`).
-- Capacités par jour des métiers :
+## Valeurs confirmées
+- Adresse actuelle : **8, avenue du Président Salvador Allende, 94405 Vitry sur Seine Cedex**.
+- Adresse proposée : **8 avenue du Président Salvador Allende, 94400 Vitry-sur-Seine**.
+- Forme : SA ; capital : 40 000 € ; APE : 9002Z ; SIRET : 95311689400015 ; TVA : FR20953116894.
+- Virement ; acompte 50 % ; délai 30 jours.
+- La raison sociale et l’adresse sont reprises des paramètres entreprise, pas copiées dans les devis historiques.
 
-| Métier | Capacité/jour |
-|---|---|
-| Menuiserie | 20 |
-| Métallerie | 6 |
-| Peinture | 10 |
-| Numérique (CNC) | 1 |
-| Tapisserie | 4 |
-| Bureau d'étude | 2 |
-| Impression UV | non renseignée |
-| Machiniste | non renseignée |
+## Champs actuellement absents, à remplir par Gabin
+**Téléphone, IBAN, BIC, logo SET UP et CGV** n’existent pas dans la fiche entreprise actuelle. Les champs seront créés vides ; aucune coordonnée bancaire à transmettre dans le chat. L’écran des paramètres permettra leur saisie après application et raccordement.
 
-- Concepteurs référents :
-  - principaux : Nadège MEVEL, Guillaume MAQUARIE, Kevin Lebon ;
-  - secondaires : Laurent DEBRANCHE, ainsi que trois autres (Alexandre FERANT, Claude ARECCHIA, Patrick SZMIDT).
-  - Seuls les quatre que vous avez nommés auront une ligne ; les autres pourront être ajoutés.
-- Les fonctions d'affectation d'un rôle projet avec dates et de charge BE des devis existent déjà.
+## Périmètre de cette migration
+- Aucune nouvelle table ; droits et accès existants conservés.
+- Huit colonnes facultatives sur les devis, sans défaut : adresse chantier, travaux, début, durée, prénom/nom/email/téléphone du signataire. Aucun devis existant rempli, modifié, validé ou envoyé automatiquement.
+- Douze champs dans les paramètres entreprise pour les informations du modèle.
+- Mise à jour uniquement de la fiche entreprise avec les valeurs explicitement confirmées ci-dessus.
+- Les lecteurs et les fonctions d’édition seront raccordés ensuite ; leurs redéfinitions seront également montrées avant toute application.
 
-## Composant commun « planning en barres »
-- 8 à 12 semaines visibles, aujourd'hui marqué, navigation par semaine (même en-tête que Dispos et Logistique).
-- Glisser une barre pour la déplacer, tirer un bord pour la rallonger (calé sur le jour), clic pour ouvrir une petite fiche.
-- Une couleur par chantier, la même dans les deux plannings ; barres en pointillé ou hachurées pour le prévisionnel.
-- Mobile (390 px) : liste par semaine, en lecture seule.
+## SQL exact proposé — non appliqué
+```sql
+-- PROPOSITION NON APPLIQUÉE — accord distinct requis.
+-- Aucun devis existant mis à jour ; colonnes devis toutes facultatives sans défaut.
+BEGIN;
 
-## 1. Planning atelier (nouvelle page, groupe Production)
-- **Lignes :** une par chantier 6XXX en cours, plus les 9XXX presque gagnés en pointillé « prévisionnel », triées par date de départ.
-- **Trait « départ » :** première étape logistique de chargement ou livraison du chantier.
-- **Barre chantier :** dates proposées puis ajustables.
-  - Fin = veille du départ, sinon date de montage moins un jour ouvré.
-  - Début = fin moins la durée estimée (heures du devis réparties sur la capacité, 2 semaines par défaut).
-- **Sous-lignes dépliables par métier :** BE, CNC, Menuiserie, Métallerie, Peinture, Tapisserie, Impression. Chaque barre porte un total d'heures saisi rapidement, pré-rempli depuis le devis Staffing validé s'il existe.
-- **Ligne « Charge » :**
-  - Par semaine et par métier : heures réparties sur les jours ouvrés de chaque barre ÷ (capacité × 8 h × jours ouvrés, fériés français exclus).
-  - Vert sous 80 %, ambre de 80 à 100 %, rouge au-delà.
-  - Clic : liste des chantiers qui chargent.
-- **Alertes :** fin atelier après le départ logistique ; chantier signé sans période atelier ; métier en surcharge.
-- **Pas dans ce lot :** noms de personnes, objets, demi-journées.
-- **Droits :** admin, logistique et chefs atelier modifient ; chargés d'affaires en lecture.
+ALTER TABLE public.parametres_entreprise
+  ADD COLUMN IF NOT EXISTS forme_sociale text,
+  ADD COLUMN IF NOT EXISTS capital_social_euros numeric(14,2),
+  ADD COLUMN IF NOT EXISTS tva_intracom text,
+  ADD COLUMN IF NOT EXISTS telephone text,
+  ADD COLUMN IF NOT EXISTS iban text,
+  ADD COLUMN IF NOT EXISTS bic text,
+  ADD COLUMN IF NOT EXISTS logo_storage_path text,
+  ADD COLUMN IF NOT EXISTS cgv_devis text,
+  ADD COLUMN IF NOT EXISTS mentions_devis text,
+  ADD COLUMN IF NOT EXISTS mode_reglement text,
+  ADD COLUMN IF NOT EXISTS acompte_pct numeric(5,2),
+  ADD COLUMN IF NOT EXISTS delai_reglement_jours integer;
 
-## 2. Planning bureau d'étude (remplace la vue « Planning BE / projets »)
-- **Lignes :** une par concepteur, avec une capacité réglable en % (100 % par défaut ; à baisser pour Kevin et Laurent, aussi chargés d'affaires).
-- **Barres :** affaires où la personne est concepteur, avec les dates du rôle. On crée une barre sur la ligne en choisissant l'affaire, on la déplace ou on la rallonge ; chaque changement passe par la fonction d'affectation existante.
-- **Charge par semaine :**
-  - jours BE des devis validés ;
-  - à défaut, heures « Plans BEM » du dernier brouillon, marquées « estimation » ;
-  - répartis sur la barre ÷ capacité.
-  - Les opportunités non signées sont hachurées.
-- **Alertes :** BE finissant après le début de l'atelier du même chantier ; chantier signé sans concepteur ; concepteur au-delà de 100 %.
-- L'ancienne URL redirige vers la nouvelle vue.
+ALTER TABLE public.devis
+  ADD COLUMN IF NOT EXISTS chantier_adresse text,
+  ADD COLUMN IF NOT EXISTS travaux_libelle text,
+  ADD COLUMN IF NOT EXISTS travaux_debut date,
+  ADD COLUMN IF NOT EXISTS travaux_duree_jours integer,
+  ADD COLUMN IF NOT EXISTS signataire_prenom text,
+  ADD COLUMN IF NOT EXISTS signataire_nom text,
+  ADD COLUMN IF NOT EXISTS signataire_email text,
+  ADD COLUMN IF NOT EXISTS signataire_telephone text;
 
-## 3. Lien entre les deux plannings
-Depuis une barre atelier, un lien ouvre la barre BE du même chantier, et inversement. Les couleurs sont identiques.
+-- Paramètres uniquement : valeurs confirmées par Gabin. Les nouveaux champs
+-- IBAN/BIC/téléphone/logo/CGV restent NULL, à saisir dans l'écran paramètres.
+UPDATE public.parametres_entreprise
+SET adresse_ligne1 = '8 avenue du Président Salvador Allende',
+    code_postal = '94400',
+    ville = 'Vitry-sur-Seine',
+    forme_sociale = 'SA',
+    capital_social_euros = 40000,
+    naf = '9002Z',
+    siret = '95311689400015',
+    tva_intracom = 'FR20953116894',
+    mode_reglement = 'virement',
+    acompte_pct = 50,
+    delai_reglement_jours = 30
+WHERE singleton = true;
 
-## Modification de base (montrée avant application)
-- **Planning métier par chantier :**
-  - ajouter une colonne d'heures prévues ;
-  - permettre une ligne sans métier, qui représente la période atelier globale du chantier, avec une seule ligne de ce type par chantier.
-- **Fiches concepteurs :** ajouter une colonne de capacité en % (défaut 100).
-- **Capacités Impression UV et Machiniste :** valeurs à me donner, ou laissées vides (la charge s'affiche alors sans pourcentage).
-- **Droits d'écriture :** passent par des fonctions qui vérifient le rôle (admin, logistique, chefs atelier).
+-- Tables existantes : droits et RLS inchangés. Aucune nouvelle table.
+COMMIT;```
 
-## Tests
-- Charge : jours ouvrés et fériés français, répartition uniforme, seuils de couleur.
-- Proposition des dates depuis la logistique, sinon depuis le montage.
-- Glisser et rallonger : nouvelles dates calées sur le jour.
-- Droits : le chargé d'affaires ne fait que lire.
-- Écrans à 390 et 1366 px, avec une capture de chaque écran en fin de lot.
-
-## Détails techniques
-- Composant unique `PlanningBarres` ; règles pures (charge, proposition de dates, alertes) dans `src/lib/planning-barres.ts`, réutilisant les jours ouvrés et fériés existants (`staffing/date-utils`).
-- L'atelier lit `affaire_planning_metier`, `affaires`, `affaire_etapes_logistiques` et les heures des devis validés.
-- Le BE lit `affaire_roles` et `role_referents`, et écrit via `app_affecter_role_projet` ; la charge vient de `devis_charge_be`.
+## Suite du lot après accord
+- Garder Temps prévu dans l’Excel interne ; options « Option : … » converties manuellement dans ProGBat, sans marqueur supposé.
+- Raccorder le modèle PDF détaillé et synthétique aux paramètres et aux champs signataire/chantier.
+- Compléter les contrôles et produire le bilan vérifié/non vérifié avec captures avant/après de 9500-R1, 9477-R1 et 6064-R1.
+- Les anciennes captures temporaires ne sont plus disponibles dans le sandbox : retrouver les anciens PDF d’audit s’ils sont conservés, sinon signaler explicitement la limite des captures « avant », sans les présenter comme des originaux.
+- Rien publié ; aucun devis existant modifié.
