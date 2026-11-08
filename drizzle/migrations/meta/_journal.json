@@ -708,6 +708,13 @@
       "when": 1794140609670,
       "tag": "0100_devis_exports_entete_chantier_signataire",
       "breakpoints": true
+    },
+    {
+      "idx": 101,
+      "version": "7",
+      "when": 1794141165436,
+      "tag": "0101_devis_exports_champs_facultatifs_confirmation",
+      "breakpoints": true
     }
   ]
 }
