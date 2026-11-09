@@ -9257,6 +9257,10 @@ export type Database = {
         }
         Returns: Json
       }
+      planning_atelier_retirer: {
+        Args: { _affaire: string; _metier?: number }
+        Returns: Json
+      }
       planning_terrain_affecter: {
         Args: {
           _etape: string
