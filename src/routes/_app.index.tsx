@@ -1,3 +1,5 @@
+import { estPageAncienneMasquee } from "@/lib/pages-anciennes-masquees";
+import { useFeatureFlag } from "@/hooks/use-feature-flag";
 /**
  * v0.51 (L6-A) — Page d'accueil unique `/` capability-driven.
  *
@@ -135,7 +137,9 @@ const MES_WIDGETS: MesWidgetSpec[] = [
 
 function MesWidgetCard({ spec }: { spec: MesWidgetSpec }) {
   const canSee = useCapability(spec.capKey || "__aucune_cap__");
+  const modeSuivi = useFeatureFlag("deploiement_suivi_affaires");
   if (!canSee && spec.capKey) return null;
+  if (modeSuivi && estPageAncienneMasquee(spec.to)) return null;
   const Icon = spec.icon;
 
   return (
