@@ -46,6 +46,94 @@ interface RoadmapPlanned {
 
 const RELEASES: RoadmapRelease[] = [
   {
+    date: "2026-11-09",
+    version: "v0.60 (LIVRÉ)",
+    title: "🧹 Anciennes pages retirées + finitions planning atelier",
+    entries: [
+      { type: "refactor", area: "Accès", title: "Anciennes pages planning bloquées", description: "Planning fab, Planning général, Tableau d'atelier, Charge atelier, Qui est où et Fabrication renvoient vers l'accueil (ordinateur et mobile) quand le mode suivi des affaires est actif." },
+      { type: "refactor", area: "Accueil", title: "Anciennes tuiles mobiles retirées", description: "Planning, Mes heures, Montage & Démontage, Mes chantiers, Mes contrats, Mes propositions, Mes échanges et Mon équipe type ne s'affichent plus sur l'accueil." },
+      { type: "feature", area: "Planning atelier", title: "Heures reprises du devis par objet et par métier", description: "Fenêtre Planifier : devis du chantier, cases métier (Logistique/BE décochées par défaut), choix des objets, total et jours/homme (8 h), configurateur nombre de personnes → durée, choix gardé par chantier." },
+      { type: "improvement", area: "Planning atelier", title: "Lignes plus lisibles", description: "Métiers à 0 h masqués (bouton pour les afficher), résumé heures/objets sous le chantier, retrait d'une période, ligne Bureau d'étude retirée, début proposé après la fin du BE." },
+      { type: "feature", area: "Écran atelier", title: "Écran production plein écran", description: "Chantiers en fabrication et à venir sous 2 semaines, lecture seule sans montants ni noms, actualisé toutes les 2 min." },
+      { type: "fix", area: "Planning logistique", title: "Suppression d'étape et champs facultatifs", description: "Supprimer une étape l'annule sans perdre l'historique des affectations ; permis et CACES ne bloquent plus l'enregistrement ; points « À traiter » repliés dans un bouton." },
+      { type: "improvement", area: "Dispos", title: "Seules les réponses affichées", description: "Les personnes sans réponse sont masquées par défaut, avec un interrupteur pour les revoir." },
+    ],
+  },
+  {
+    date: "2026-11-08",
+    version: "v0.59 (LIVRÉ)",
+    title: "📄 Exports devis, Qualité des données, Planning atelier + BE",
+    entries: [
+      { type: "fix", area: "Exports devis", title: "PDF client et Excel ProGBat corrigés", description: "Charte SET UP, colonnes complètes, options hors totaux, TVA, conditions de règlement, signatures, pagination ; Temps prévu conservé dans l'Excel interne." },
+      { type: "feature", area: "Exports devis", title: "Fiche entreprise et logo", description: "Mentions légales, adresse officielle de Vitry-sur-Seine, téléversement du logo (admin), bandeau d'avertissement si signataire/logo/IBAN/BIC/CGV manquent." },
+      { type: "feature", area: "Qualité des données", title: "Page admin + widget Santé des données", description: "Onglets Personnes / Commercial / Devis « À revoir par Gabin », comparaison Dispos→employé, liaisons et fusions assistées sans suppression, CA manquants, exports Excel." },
+      { type: "feature", area: "Planning atelier + BE", title: "Deux plannings à barres 8–12 semaines", description: "Atelier par chantier et métier avec charge hebdo et alertes ; BE par concepteur (Nadège, Guillaume 100 %, Kevin, Laurent 50 %) ; UV 8 h/j, Machiniste sans limite ; mobile en lecture seule." },
+      { type: "improvement", area: "Contrats", title: "Statut Auto-entrepreneur", description: "Ajouté aux choix ; « Intermittent » historique masqué sans retrait." },
+    ],
+  },
+  {
+    date: "2026-11-07",
+    version: "v0.58 (LIVRÉ)",
+    title: "🚚 Planning logistique une page, planning équipes, demandes clients",
+    entries: [
+      { type: "feature", area: "Planning logistique", title: "Une seule page Étapes / Équipes / Personnes", description: "Cartes d'étape, panneau Compléter trié par dispo, glisser-déposer, copie d'équipe, alertes, texte WhatsApp, statuts de confirmation, vue chef en lecture seule, écran atelier dédié." },
+      { type: "feature", area: "Planning équipes", title: "Import / export hebdomadaire", description: "Export Excel au modèle logistique, import Excel déterministe et PDF assisté, aperçu « Rattaché à / Nouvelle étape », doublons fusionnés sans suppression ; semaines 45 et 46 importées." },
+      { type: "feature", area: "Planning nominatif", title: "Historique vivant et disponibilités", description: "Pastilles de dispo, bandeau des dispos non staffés, ajout rapide, vue mobile en cartes." },
+      { type: "feature", area: "Demandes clients", title: "Mails transférés", description: "Premier expéditeur externe retrouvé dans les transferts Outlook, badge transmetteur, « client à identifier » ; 117 demandes recalculées." },
+      { type: "refactor", area: "Demandes clients", title: "Arrêt du relevé smart@", description: "Seule devis@ est relevée ; 707 mails smart écartés sans suppression, 30 traités conservés." },
+    ],
+  },
+  {
+    date: "2026-11-02",
+    version: "v0.57 (LIVRÉ)",
+    title: "🧾 Devis : ajustements ProGBat",
+    entries: [
+      { type: "improvement", area: "Devis Staffing", title: "Remise saisie au montant et régularisations", description: "Ajustements pour coller au modèle ProGBat ; total net HT unique pour pipeline et marge." },
+    ],
+  },
+  {
+    date: "2026-10-31",
+    version: "v0.56 (LIVRÉ)",
+    title: "🧾 Devis : validité, pipeline et charge BE",
+    entries: [
+      { type: "feature", area: "Devis Staffing", title: "Lien devis → pipeline", description: "Validité des devis, avancement automatique de l'opportunité (jamais gagné/perdu), charge bureau d'étude depuis les devis validés." },
+      { type: "fix", area: "Connecteur Claude", title: "Confirmation des demandes traitées", description: "Correctif de la confirmation avant écriture." },
+    ],
+  },
+  {
+    date: "2026-10-29",
+    version: "v0.55 (LIVRÉ)",
+    title: "👥 Équipe projet et outils Claude",
+    entries: [
+      { type: "feature", area: "Chantiers", title: "Équipe projet 7 rôles + « Presque gagné »", description: "Un titulaire par rôle, alerte 15 jours, charge réelle vs potentielle, planning de pilotage." },
+      { type: "feature", area: "Connecteur Claude", title: "Traiter une demande entrante", description: "Outil Claude avec aperçu et confirmation ; tâche planifiée autorisée." },
+      { type: "fix", area: "Droits", title: "Écriture sur l'équipe projet", description: "Même règle de droits côté écran et base." },
+    ],
+  },
+  {
+    date: "2026-10-16",
+    version: "v0.54 (LIVRÉ)",
+    title: "🗓️ Planning logistique et agenda",
+    entries: [
+      { type: "feature", area: "Planning logistique", title: "Proposition de planning logistique", description: "Étapes montage/démontage/livraison par chantier, calendrier par chantier, déplacement transactionnel des affectations." },
+      { type: "feature", area: "Agenda", title: "Synchronisation vers Outlook", description: "Étude et mise en place de la synchronisation du planning logistique vers un agenda." },
+    ],
+  },
+  {
+    date: "2026-09-30",
+    version: "v0.53 (LIVRÉ — juin à septembre)",
+    title: "🤝 Commercial, Devis Staffing et connecteur Claude",
+    entries: [
+      { type: "feature", area: "Opportunités", title: "Pipeline et fiche opportunité", description: "Numérotation 9XXX atomique, création avec client cherchable, fiche dans la page chantier, vue tableur, indicateurs pipeline et filtres persistés, « Tous les chargés d'affaires » par défaut." },
+      { type: "feature", area: "Devis Staffing", title: "Éditeur de devis", description: "Calcul unique écran/base, marges protégées, versions, corbeille 30 jours, PDF client sans coûts, brouillons Claude revus par Gabin." },
+      { type: "feature", area: "Connecteur Claude", title: "MCP v1 lecture puis v2 écriture", description: "Connexion sécurisée, droits métier, confidentialité, aperçu + confirmation 10 min, audit, quotas." },
+      { type: "feature", area: "Demandes clients", title: "Boîte devis@", description: "Import sans doublon, analyse et réponse IA copiable, classement des pièces jointes dans les documents du chantier." },
+      { type: "feature", area: "Clients", title: "Fiche client enrichie", description: "Préremplissage légal (SIREN/dirigeant) et enrichissement web relu avant enregistrement." },
+      { type: "feature", area: "Notes de frais", title: "Notes de frais et validation", description: "Saisie, filtres par statut et circuit de validation tracé." },
+      { type: "feature", area: "Dispos", title: "Page publique de disponibilités", description: "Réponses des équipes sans compte, textes validés, clôture après l'heure limite." },
+    ],
+  },
+  {
     date: "2026-05-28",
     version: "L5 + Bloc 10.1 (LIVRÉ)",
     title: "🔐 Refonte permissions capability-driven 100% + Fondations DB Opportunités",
@@ -3172,38 +3260,36 @@ const RELEASES: RoadmapRelease[] = [
 ];
 
 const PLANNED: RoadmapPlanned[] = [
-  // ========== En cours ==========
+  // ========== En cours (9 nov. 2026) ==========
   {
     priority: "haute",
-    title: "Bloc 10 — Fiche opportunité enrichie (10.2 → 10.5)",
-    description:
-      "10.1 DB livré (actions + jalons + RPC sign_opportunite). 10.2 : extension RPC get_inbox_items avec opp_action + cap gating. 10.3 : UI fiche opportunité complète (timeline, pipeline 4 jalons, actions commerciales, signalement). 10.4 : refactor listing opportunités. 10.5 : tests E2E + cleanup. ~20h restant.",
+    title: "Recette planning atelier + BE",
+    description: "Sauvegarde réelle d'une période métier, rallongement et parcours logistique / chef d'atelier / commercial à vérifier sur un chantier de recette.",
   },
   {
     priority: "haute",
-    title: "Lot 7.3 — Vue `v_affaires_avec_plan_status` (statuts dérivés)",
-    description:
-      "Création d'une vue SQL consolidée exposant pour chaque affaire les statuts dérivés (a-t-elle un plan publié ? un brouillon ? un plan archivé ? écart staffing vs devis ?). Permettra de simplifier les listes affaires + dashboard sans recalcul côté client.",
-  },
-
-  // ========== Sprints récents à venir ==========
-  {
-    priority: "haute",
-    title: "L5-B — Suppression bridge layer complet auth-context",
-    description:
-      "Retirer les ~12 booléens restants (`isAdmin`, `isChef`, `isRh`, `isCommercial`…) de `auth-context.tsx` au profit exclusif de `useCapability()`. Règle ESLint anti-régression. 11 specs E2E par rôle + seed users test.",
+    title: "Anciennes pages restantes à bloquer",
+    description: "Anciennes pages mobiles, ancien staffing/RH et anciens imports encore ouvrables par lien : à bloquer puis supprimer après quelques semaines sans réclamation.",
   },
   {
-    priority: "haute",
-    title: "L5-A-bis Phase 2 — DROP valeur enum `chef_metier_scoped`",
-    description:
-      "Recréation de l'enum `app_role` sans la valeur obsolète `chef_metier_scoped`. Impact runtime nul (0 user). Sprint dédié si besoin.",
+    priority: "moyenne",
+    title: "Demandes smart@ non confirmées",
+    description: "23 demandes dont la réception sur devis@ n'est pas prouvée restent inchangées.",
   },
   {
-    priority: "haute",
-    title: "L4c — Suppression définitive `<Navigate to='/dashboard' />` orphelins",
-    description:
-      "Nettoyer les anciens bookmarks et `<Navigate to='/dashboard' />` éparpillés dans le code (anciens stubs `/dashboard` et `/ma-semaine` déjà supprimés).",
+    priority: "moyenne",
+    title: "Import consolidé des affectations",
+    description: "Import unique de l'historique (onglet Affectations) avec aperçu et réimport sans doublon.",
+  },
+  {
+    priority: "moyenne",
+    title: "Contrats et heures dans Staffing (plus tard)",
+    description: "Signature des contrats et saisie des heures pas encore faites dans Staffing ; pages conservées en attendant.",
+  },
+  {
+    priority: "basse",
+    title: "Compte écran atelier",
+    description: "Tester l'écran atelier avec le compte dédié une fois créé.",
   },
 
   // ========== Sprints majeurs planifiés ==========
