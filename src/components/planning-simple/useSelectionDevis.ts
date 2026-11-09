@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQueries, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { lireHeuresDevisAffaire, type DevisHeures } from "@/lib/planning-devis-heures.functions";
 
 export const r1 = (n: number) => Math.round(n * 10) / 10;
-type Sel = { m: string[]; o: Record<string, string[]> };
+export type Sel = { m: string[]; o: Record<string, string[]> };
 const EVT = "atelier-selection-change";
 const cle = (a: string) => `atelier-selection:${a}`;
 const lire = (a: string): Sel => {
