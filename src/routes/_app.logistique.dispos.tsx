@@ -46,7 +46,7 @@ function DisposStaffingPage() {
   const { user } = useAuth();
   const qc = useQueryClient();
   const [debut, setDebut] = useState<string | null>(null);
-  const [sansReponse, setSansReponse] = useState(false);
+  const [voirSansReponse, setVoirSansReponse] = useState(false);
   const [fPermis, setFPermis] = useState<string>("tous");
   const [fCaces, setFCaces] = useState<string>("tous");
   const [fJour, setFJour] = useState<string>("tous");
@@ -96,7 +96,7 @@ function DisposStaffingPage() {
 
   const filtrees = lignes.filter(
     (l) =>
-      (!sansReponse || !l.repondu) &&
+      (voirSansReponse || l.repondu) &&
       passeFiltreDispos(l, {
         permis: fPermis === "tous" ? null : fPermis,
         caces: fCaces === "tous" ? null : fCaces,
@@ -158,7 +158,7 @@ function DisposStaffingPage() {
       </div>
 
       <div className="flex flex-wrap items-end gap-3">
-        <label className="flex items-center gap-2 text-sm"><Switch checked={sansReponse} onCheckedChange={setSansReponse} />Sans réponse</label>
+        <label className="flex items-center gap-2 text-sm"><Switch checked={voirSansReponse} onCheckedChange={setVoirSansReponse} />Afficher les sans réponse ({lignes.length - nbRep})</label>
         <Filtre label="Permis" valeur={fPermis} onChange={setFPermis} options={PERMIS_OPTIONS.filter((o) => o.value !== "aucun")} />
         <Filtre label="CACES" valeur={fCaces} onChange={setFCaces} options={CACES_OPTIONS.filter((o) => o.value !== "aucun")} />
         <Filtre label="Dispo le" valeur={fJour} onChange={setFJour} options={dates.map((d) => ({ value: d, label: libelleJour(d) }))} />
