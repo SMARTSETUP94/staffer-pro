@@ -740,8 +740,13 @@ export function OpportunitesTableurView({
                       ariaLabel="Typologie future"
                     />
                   </td>
-                  {/* Statut */}
+                  {/* Statut — une ligne signée n'a plus de statut d'opportunité */}
                   <td className="px-2 py-1">
+                    {row.signed_affaire_id ? (
+                      <span className="inline-flex h-8 items-center rounded-full border border-border bg-muted/40 px-2 text-[10px] font-medium text-foreground whitespace-nowrap">
+                        Signée
+                      </span>
+                    ) : (
                     <Select
                       value={row.statut_opportunite ?? "a_faire"}
                       onValueChange={(v) =>
