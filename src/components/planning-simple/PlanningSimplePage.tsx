@@ -68,7 +68,7 @@ export function PlanningSimplePage({mode}:{mode:"atelier"|"be"}){
       }
       return rows;
     });
-    return {lignes,zero};
+    return {lignes:lignesOut,zero};
   },[d,mode,recherche,expanded,showZero,devisSig]);
   const open=(b:Barre)=>{const p=d?.periodes.find(p=>p.id===b.id);const m=p?.metier_id??(b.id.startsWith("metier:")?Number(b.id.split(":").at(-1)):null);const role=d?.roles.find(r=>r.id===b.id);const a=affaires.find(a=>a.id===b.affaireId);setEdit({barre:b,metier:m,employe:role?.employe_id??null,heures:String(p?.heures_prevues??(m?d?.charges[b.affaireId]?.heures[String(m)]:a?.atelier_heures_prevues)??"")});};
   const retirer=async(e:Edition)=>{if(!window.confirm(e.metier==null?"Retirer ce chantier du planning atelier (toutes ses périodes métier) ?":"Retirer cette période métier du planning ?"))return;setSaving(true);try{const r=await supabase.rpc("planning_atelier_retirer",{_affaire:e.barre.affaireId,_metier:e.metier??undefined});if(r.error)throw r.error;await q.refetch();setEdit(null);toast.success("Retiré du planning");}catch(err){toast.error((err as {message?:string})?.message??"Suppression impossible");}finally{setSaving(false);}};
