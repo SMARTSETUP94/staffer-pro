@@ -31,6 +31,7 @@ import { Route as AppDemandesLogistiqueRouteImport } from './routes/_app.demande
 import { Route as AppDocumentsAffairesRouteImport } from './routes/_app.documents-affaires'
 import { Route as AppEcheancesRouteImport } from './routes/_app.echeances'
 import { Route as AppEcranAtelierRouteImport } from './routes/_app.ecran-atelier'
+import { Route as AppEcranAtelierProductionRouteImport } from './routes/_app.ecran-atelier-production'
 import { Route as AppEmployesRouteImport } from './routes/_app.employes'
 import { Route as AppExportRouteImport } from './routes/_app.export'
 import { Route as AppFlotteRouteImport } from './routes/_app.flotte'
@@ -252,6 +253,12 @@ const AppEcranAtelierRoute = AppEcranAtelierRouteImport.update({
   path: '/ecran-atelier',
   getParentRoute: () => AppRoute,
 } as any)
+const AppEcranAtelierProductionRoute =
+  AppEcranAtelierProductionRouteImport.update({
+    id: '/ecran-atelier-production',
+    path: '/ecran-atelier-production',
+    getParentRoute: () => AppRoute,
+  } as any)
 const AppEmployesRoute = AppEmployesRouteImport.update({
   id: '/employes',
   path: '/employes',
@@ -860,6 +867,7 @@ export interface FileRoutesByFullPath {
   '/documents-affaires': typeof AppDocumentsAffairesRoute
   '/echeances': typeof AppEcheancesRoute
   '/ecran-atelier': typeof AppEcranAtelierRoute
+  '/ecran-atelier-production': typeof AppEcranAtelierProductionRoute
   '/employes': typeof AppEmployesRouteWithChildren
   '/export': typeof AppExportRouteWithChildren
   '/flotte': typeof AppFlotteRoute
@@ -992,6 +1000,7 @@ export interface FileRoutesByTo {
   '/documents-affaires': typeof AppDocumentsAffairesRoute
   '/echeances': typeof AppEcheancesRoute
   '/ecran-atelier': typeof AppEcranAtelierRoute
+  '/ecran-atelier-production': typeof AppEcranAtelierProductionRoute
   '/employes': typeof AppEmployesRouteWithChildren
   '/flotte': typeof AppFlotteRoute
   '/heures-analyse': typeof AppHeuresAnalyseRoute
@@ -1124,6 +1133,7 @@ export interface FileRoutesById {
   '/_app/documents-affaires': typeof AppDocumentsAffairesRoute
   '/_app/echeances': typeof AppEcheancesRoute
   '/_app/ecran-atelier': typeof AppEcranAtelierRoute
+  '/_app/ecran-atelier-production': typeof AppEcranAtelierProductionRoute
   '/_app/employes': typeof AppEmployesRouteWithChildren
   '/_app/export': typeof AppExportRouteWithChildren
   '/_app/flotte': typeof AppFlotteRoute
@@ -1260,6 +1270,7 @@ export interface FileRouteTypes {
     | '/documents-affaires'
     | '/echeances'
     | '/ecran-atelier'
+    | '/ecran-atelier-production'
     | '/employes'
     | '/export'
     | '/flotte'
@@ -1392,6 +1403,7 @@ export interface FileRouteTypes {
     | '/documents-affaires'
     | '/echeances'
     | '/ecran-atelier'
+    | '/ecran-atelier-production'
     | '/employes'
     | '/flotte'
     | '/heures-analyse'
@@ -1523,6 +1535,7 @@ export interface FileRouteTypes {
     | '/_app/documents-affaires'
     | '/_app/echeances'
     | '/_app/ecran-atelier'
+    | '/_app/ecran-atelier-production'
     | '/_app/employes'
     | '/_app/export'
     | '/_app/flotte'
@@ -1806,6 +1819,13 @@ declare module '@tanstack/react-router' {
       path: '/ecran-atelier'
       fullPath: '/ecran-atelier'
       preLoaderRoute: typeof AppEcranAtelierRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/ecran-atelier-production': {
+      id: '/_app/ecran-atelier-production'
+      path: '/ecran-atelier-production'
+      fullPath: '/ecran-atelier-production'
+      preLoaderRoute: typeof AppEcranAtelierProductionRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/employes': {
@@ -2714,6 +2734,7 @@ interface AppRouteChildren {
   AppDocumentsAffairesRoute: typeof AppDocumentsAffairesRoute
   AppEcheancesRoute: typeof AppEcheancesRoute
   AppEcranAtelierRoute: typeof AppEcranAtelierRoute
+  AppEcranAtelierProductionRoute: typeof AppEcranAtelierProductionRoute
   AppEmployesRoute: typeof AppEmployesRouteWithChildren
   AppExportRoute: typeof AppExportRouteWithChildren
   AppFlotteRoute: typeof AppFlotteRoute
@@ -2809,6 +2830,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppDocumentsAffairesRoute: AppDocumentsAffairesRoute,
   AppEcheancesRoute: AppEcheancesRoute,
   AppEcranAtelierRoute: AppEcranAtelierRoute,
+  AppEcranAtelierProductionRoute: AppEcranAtelierProductionRoute,
   AppEmployesRoute: AppEmployesRouteWithChildren,
   AppExportRoute: AppExportRouteWithChildren,
   AppFlotteRoute: AppFlotteRoute,
