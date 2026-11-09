@@ -499,9 +499,41 @@ function OpportunitesPage() {
           statut_opportunite_depuis: o.statut_opportunite_depuis ?? null,
           created_at: o.created_at ?? null,
         }));
-      return aFaireOnly ? sortAFaire(rows) : rows;
+      const sorted = aFaireOnly ? sortAFaire(rows) : rows;
+      // Lignes signées (lecture seule) : mêmes filtres rapides (CA + recherche).
+      const signeesRows: TableurRow[] = signees
+        .filter((s) => {
+          if (filterCa && filterCa !== "__all__" && s.charge_affaires_id !== filterCa) return false;
+          if (normalizedQuery) {
+            const haystack = `${s.numero ?? ""} ${s.code_opportunite ?? ""} ${s.client ?? ""} ${s.nom ?? ""}`.toLowerCase();
+            if (!haystack.includes(normalizedQuery)) return false;
+          }
+          return true;
+        })
+        .map((s) => ({
+          id: s.id,
+          affaireId: s.id,
+          numero: s.numero,
+          client: s.client ?? "",
+          nom: s.nom ?? "",
+          charge_affaires_id: s.charge_affaires_id,
+          date_opportunite: null,
+          taille: null,
+          statut_opportunite: null,
+          code_opportunite: s.code_opportunite,
+          signed_affaire_numero: s.numero,
+          signed_affaire_id: s.id,
+          date_pat: null,
+          date_montage: s.date_montage,
+          date_demontage: s.date_demontage,
+          notes: null,
+          typologie_future: null,
+          statut_opportunite_depuis: null,
+          created_at: s.signed_at,
+        }));
+      return [...sorted, ...signeesRows];
     },
-    [oppsFiltrees, showArchived, aFaireOnly],
+    [oppsFiltrees, showArchived, aFaireOnly, signees, filterCa, normalizedQuery],
   );
 
   const archivedCount = useMemo(
