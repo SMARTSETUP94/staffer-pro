@@ -10,6 +10,7 @@ import {addDays,dayOfWeek} from "@/lib/staffing/date-utils";
 import {chargeHebdomadaire,niveauCharge,proposerPeriodeAtelier} from "@/lib/planning-barres";
 import {PlanningBarres,type Barre,type LigneBarres} from "./PlanningBarres";
 import {DevisHeuresChantier} from "./DevisHeuresChantier";
+import {useSelectionDevis,r1} from "./useSelectionDevis";
 import {NavigationSemaine} from "@/components/logistique/NavigationSemaine";
 import {PageHeader} from "@/components/PageHeader";
 import {Button} from "@/components/ui/button";
@@ -47,8 +48,8 @@ export function PlanningSimplePage({mode}:{mode:"atelier"|"be"}){
     if(!d)return [];
     if(mode==="be")return d.referents.map(r=>({id:r.employe_id,libelle:`${r.employes?.prenom??""} ${r.employes?.nom??""}`.trim(),detail:`Capacité ${r.capacite_be_pct} %`,barres:d.roles.filter(x=>x.employe_id===r.employe_id).flatMap(x=>{const a=affaires.find(a=>a.id===x.affaire_id);if(!a||!x.date_debut||!x.date_fin||!`${a.numero} ${a.nom}`.toLowerCase().includes(recherche.toLowerCase()))return [];return [{id:x.id,affaireId:a.id,libelle:`${a.numero} · ${a.nom}`,debut:x.date_debut,fin:x.date_fin,previsionnel:a.phase!=="signe"}];})}));
     return [...atelierAff].sort((a,b)=>(depart(a.id)??"9999").localeCompare(depart(b.id)??"9999")).flatMap(a=>{
-      const g=globale(a);const rows:LigneBarres[]=[{id:a.id,libelle:`${a.numero} · ${a.nom}`,detail:a.atelier_date_debut?"Période validée":"Période à confirmer",barres:g?[g]:[]}];
-      if(expanded.includes(a.id))for(const m of d.metiers.filter(m=>[1,2,3,4,5,6,8,9].includes(m.id))){const p=d.periodes.find(p=>p.affaire_id===a.id&&p.metier_id===m.id);const h=p?.heures_prevues??d.charges[a.id]?.heures[String(m.id)]??null;const b=p?{id:p.id,affaireId:a.id,libelle:`${a.numero} · ${m.libelle}`,debut:p.date_debut,fin:p.date_fin,previsionnel:a.phase!=="signe"}:g?{...g,id:`metier:${a.id}:${m.id}`,libelle:`${a.numero} · ${m.libelle}`,proposee:true}:null;if(!(Number(h)>0))continue;rows.push({id:`${a.id}:${m.id}`,libelle:`↳ ${m.libelle}`,detail:<ConfigPersonnes cle={`${a.id}:${m.id}`} heures={Number(h)} sansLimite={m.capacite_jour==null}/>,barres:b?[b]:[]});}return rows;
+      const g=globale(a);const rows:LigneBarres[]=[{id:a.id,libelle:`${a.numero} · ${a.nom}`,detail:<ResumeChantier affaireId={a.id} statut={a.atelier_date_debut?"Période validée":"Période à confirmer"}/>,barres:g?[g]:[]}];
+      if(expanded.includes(a.id))for(const m of d.metiers.filter(m=>[1,2,3,4,5,6,8,9].includes(m.id))){const p=d.periodes.find(p=>p.affaire_id===a.id&&p.metier_id===m.id);const h=p?.heures_prevues??d.charges[a.id]?.heures[String(m.id)]??null;const b=p?{id:p.id,affaireId:a.id,libelle:`${a.numero} · ${m.libelle}`,debut:p.date_debut,fin:p.date_fin,previsionnel:a.phase!=="signe"}:g?{...g,id:`metier:${a.id}:${m.id}`,libelle:`${a.numero} · ${m.libelle}`,proposee:true}:null;if(!(Number(h)>0))continue;rows.push({id:`${a.id}:${m.id}`,libelle:`↳ ${m.libelle}`,detail:<ConfigPersonnes cle={`${a.id}:${m.id}`} affaireId={a.id} metierId={m.id} heures={Number(h)} fixe={p?.heures_prevues!=null} sansLimite={m.capacite_jour==null}/>,barres:b?[b]:[]});}return rows;
     });
   },[d,mode,recherche,expanded]);
   const open=(b:Barre)=>{const p=d?.periodes.find(p=>p.id===b.id);const m=p?.metier_id??(b.id.startsWith("metier:")?Number(b.id.split(":").at(-1)):null);const role=d?.roles.find(r=>r.id===b.id);const a=affaires.find(a=>a.id===b.affaireId);setEdit({barre:b,metier:m,employe:role?.employe_id??null,heures:String(p?.heures_prevues??(m?d?.charges[b.affaireId]?.heures[String(m)]:a?.atelier_heures_prevues)??"")});};
@@ -79,7 +80,16 @@ export function PlanningSimplePage({mode}:{mode:"atelier"|"be"}){
   </div>;
 }
 /** Configurateur local : j/h ÷ nombre de personnes = durée en jours ouvrés (base 8 h). */
-function ConfigPersonnes({cle,heures,sansLimite}:{cle:string;heures:number;sansLimite:boolean}){
+function ResumeChantier({affaireId,statut}:{affaireId:string;statut:string}){
+  const {principal,effectif,somme,objExclus}=useSelectionDevis(affaireId);
+  if(!principal)return <p>{statut}</p>;
+  const n=principal.objets.filter(o=>o.id!=="_autres").length;const ex=(objExclus[principal.id]??[]).filter(id=>id!=="_autres").length;const h=somme(effectif(principal));
+  return <div><p>{statut}</p><p className="text-foreground"><strong>{h} h</strong> · {r1(h/8)} j/h · {n-ex}/{n} objets ({principal.numero})</p></div>;
+}
+function ConfigPersonnes({cle,affaireId,metierId,heures:hBase,fixe,sansLimite}:{cle:string;affaireId:string;metierId:number;heures:number;fixe:boolean;sansLimite:boolean}){
+  const {principal,effectif}=useSelectionDevis(affaireId);
+  // Sans période saisie, les heures suivent la sélection d'objets du devis principal.
+  const heures=!fixe&&principal?r1(effectif(principal)[String(metierId)]??0):hBase;
   const [n,setN]=useState(()=>{try{return Number(localStorage.getItem(`atelier-pers:${cle}`))||1;}catch{return 1;}});
   const jh=Math.round(heures/8*10)/10;const duree=Math.ceil(heures/8/Math.max(1,n)*2)/2;
   return <div className="space-y-1"><p>{heures} h · {jh} j/h{sansLimite?" · sans limite":""}</p>
