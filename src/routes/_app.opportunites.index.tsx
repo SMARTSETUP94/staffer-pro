@@ -530,7 +530,8 @@ function OpportunitesPage() {
           statut_opportunite_depuis: null,
           created_at: s.signed_at,
         }));
-      return [...sorted, ...signeesRows];
+      // Signées en tête : les plus récentes d'abord, visibles sans paginer.
+      return [...signeesRows, ...sorted];
     },
     [oppsFiltrees, showArchived, aFaireOnly, signees, filterCa, normalizedQuery],
   );
