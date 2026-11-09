@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQueries, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { lireHeuresDevisAffaire, type DevisHeures } from "@/lib/planning-devis-heures.functions";
 
 export const r1 = (n: number) => Math.round(n * 10) / 10;
-type Sel = { m: string[]; o: Record<string, string[]> };
+export type Sel = { m: string[]; o: Record<string, string[]> };
 const EVT = "atelier-selection-change";
 const cle = (a: string) => `atelier-selection:${a}`;
 const lire = (a: string): Sel => {
@@ -39,4 +39,29 @@ export function useSelectionDevis(affaireId: string) {
   const effectif = (d: DevisHeures) => heuresEffectives(d, sel.o[d.id] ?? []);
   const somme = (h: Record<string, number>) => r1(Object.entries(h).filter(([k]) => !sel.m.includes(k)).reduce((s, [, v]) => s + v, 0));
   return { q, exclus: sel.m, objExclus: sel.o, setExclus, setObjExclus, effectif, somme, principal: q.data?.[0] ?? null };
+}
+
+/** Sélection métiers/objets mémorisée sur l'appareil pour un chantier (lecture synchrone). */
+export const lireSelection = (affaireId: string): Sel => lire(affaireId);
+
+/** Heures par métier du devis principal, hors objets exclus ; null si les devis ne sont pas encore chargés. */
+export function heuresPrincipales(devis: DevisHeures[] | undefined, sel: Sel): Record<string, number> | null {
+  const d = devis?.[0];
+  if (!d) return null;
+  return heuresEffectives(d, sel.o[d.id] ?? []);
+}
+
+/** Heures des devis de plusieurs chantiers, dans le même cache que useSelectionDevis. */
+export function useDevisParAffaire(affaireIds: string[]) {
+  const lireFn = useServerFn(lireHeuresDevisAffaire);
+  const res = useQueries({
+    queries: affaireIds.map((id) => ({
+      queryKey: ["planning-devis-heures", id],
+      queryFn: () => lireFn({ data: { affaireId: id } }),
+      staleTime: 60_000,
+    })),
+  });
+  const map = new Map<string, DevisHeures[]>();
+  res.forEach((r, i) => { if (r.data) map.set(affaireIds[i], r.data); });
+  return map;
 }

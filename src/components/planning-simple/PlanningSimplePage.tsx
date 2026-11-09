@@ -10,7 +10,7 @@ import {addDays,dayOfWeek} from "@/lib/staffing/date-utils";
 import {chargeHebdomadaire,niveauCharge,proposerPeriodeAtelier} from "@/lib/planning-barres";
 import {PlanningBarres,type Barre,type LigneBarres} from "./PlanningBarres";
 import {DevisHeuresChantier} from "./DevisHeuresChantier";
-import {useSelectionDevis,r1} from "./useSelectionDevis";
+import {useSelectionDevis,r1,lireSelection,heuresPrincipales,useDevisParAffaire} from "./useSelectionDevis";
 import {NavigationSemaine} from "@/components/logistique/NavigationSemaine";
 import {PageHeader} from "@/components/PageHeader";
 import {Button} from "@/components/ui/button";
@@ -32,6 +32,8 @@ export function PlanningSimplePage({mode}:{mode:"atelier"|"be"}){
   const [debut,setDebut]=useState(lundi),[semaines,setSemaines]=useState(8),[recherche,setRecherche]=useState("");
   const [expanded,setExpanded]=useState<string[]>([]),[edit,setEdit]=useState<Edition|null>(null),[saving,setSaving]=useState(false),[picker,setPicker]=useState(false),[chargeDetail,setChargeDetail]=useState<{titre:string;lignes:string[]}|null>(null);
   const [mobile,setMobile]=useState(false);
+  const [showZero,setShowZero]=useState(()=>{try{return localStorage.getItem("atelier-show-zero")==="1";}catch{return false;}});
+  const toggleZero=()=>setShowZero(v=>{const n=!v;try{localStorage.setItem("atelier-show-zero",n?"1":"0");}catch{/* ignore */}return n;});
   useEffect(()=>{const m=window.matchMedia("(max-width: 767px)");const update=()=>setMobile(m.matches);update();m.addEventListener("change",update);return()=>m.removeEventListener("change",update);},[]);
   const d=q.data,editable=!mobile && (mode==="atelier"?!!d?.atelierEdit:canBe);
   const affaires=d?.affaires??[];
@@ -44,14 +46,30 @@ export function PlanningSimplePage({mode}:{mode:"atelier"|"be"}){
     const s=a.atelier_date_debut??prop?.debut,f=a.atelier_date_fin??prop?.fin;if(!s||!f)return null;
     return {id:`global:${a.id}`,affaireId:a.id,libelle:`${a.numero} · ${a.nom}`,debut:s,fin:f,previsionnel:a.phase!=="signe",proposee:!a.atelier_date_debut,depart:depart(a.id)};
   };
-  const lignes=useMemo<LigneBarres[]>(()=>{
-    if(!d)return [];
-    if(mode==="be")return d.referents.map(r=>({id:r.employe_id,libelle:`${r.employes?.prenom??""} ${r.employes?.nom??""}`.trim(),detail:`Capacité ${r.capacite_be_pct} %`,barres:d.roles.filter(x=>x.employe_id===r.employe_id).flatMap(x=>{const a=affaires.find(a=>a.id===x.affaire_id);if(!a||!x.date_debut||!x.date_fin||!`${a.numero} ${a.nom}`.toLowerCase().includes(recherche.toLowerCase()))return [];return [{id:x.id,affaireId:a.id,libelle:`${a.numero} · ${a.nom}`,debut:x.date_debut,fin:x.date_fin,previsionnel:a.phase!=="signe"}];})}));
-    return [...atelierAff].sort((a,b)=>(depart(a.id)??"9999").localeCompare(depart(b.id)??"9999")).flatMap(a=>{
+  const devisMap=useDevisParAffaire(mode==="atelier"?atelierAff.map(a=>a.id):[]);
+  const devisSig=useMemo(()=>[...devisMap.keys()].sort().map(id=>`${id}:${devisMap.get(id)?.[0]?.total??0}`).join("|"),[devisMap]);
+  const {lignes,zero:zeroCount}=useMemo<{lignes:LigneBarres[];zero:number}>(()=>{
+    if(!d)return {lignes:[],zero:0};
+    if(mode==="be")return {lignes:d.referents.map(r=>({id:r.employe_id,libelle:`${r.employes?.prenom??""} ${r.employes?.nom??""}`.trim(),detail:`Capacité ${r.capacite_be_pct} %`,barres:d.roles.filter(x=>x.employe_id===r.employe_id).flatMap(x=>{const a=affaires.find(a=>a.id===x.affaire_id);if(!a||!x.date_debut||!x.date_fin||!`${a.numero} ${a.nom}`.toLowerCase().includes(recherche.toLowerCase()))return [];return [{id:x.id,affaireId:a.id,libelle:`${a.numero} · ${a.nom}`,debut:x.date_debut,fin:x.date_fin,previsionnel:a.phase!=="signe"}];})})),zero:0};
+    let zero=0;
+    const lignesOut=[...atelierAff].sort((a,b)=>(depart(a.id)??"9999").localeCompare(depart(b.id)??"9999")).flatMap(a=>{
       const g=globale(a);const rows:LigneBarres[]=[{id:a.id,libelle:`${a.numero} · ${a.nom}`,detail:<ResumeChantier affaireId={a.id} statut={a.atelier_date_debut?"Période validée":"Période à confirmer"}/>,barres:g?[g]:[]}];
-      if(expanded.includes(a.id))for(const m of d.metiers.filter(m=>[1,2,3,4,5,6,8,9].includes(m.id))){const p=d.periodes.find(p=>p.affaire_id===a.id&&p.metier_id===m.id);const h=p?.heures_prevues??d.charges[a.id]?.heures[String(m.id)]??null;const b=p?{id:p.id,affaireId:a.id,libelle:`${a.numero} · ${m.libelle}`,debut:p.date_debut,fin:p.date_fin,previsionnel:a.phase!=="signe"}:g?{...g,id:`metier:${a.id}:${m.id}`,libelle:`${a.numero} · ${m.libelle}`,proposee:true}:null;if(!(Number(h)>0))continue;rows.push({id:`${a.id}:${m.id}`,libelle:`↳ ${m.libelle}`,detail:<ConfigPersonnes cle={`${a.id}:${m.id}`} affaireId={a.id} metierId={m.id} heures={Number(h)} fixe={p?.heures_prevues!=null} sansLimite={m.capacite_jour==null}/>,barres:b?[b]:[]});}return rows;
+      if(expanded.includes(a.id)){
+        const eff=heuresPrincipales(devisMap.get(a.id),lireSelection(a.id));
+        for(const m of d.metiers.filter(m=>[1,2,3,4,5,6,8,9].includes(m.id))){
+          const p=d.periodes.find(p=>p.affaire_id===a.id&&p.metier_id===m.id);
+          const fixe=p?.heures_prevues!=null;
+          // Même valeur que sous la ligne : heures enregistrées, sinon devis hors objets exclus.
+          const h=fixe?Number(p?.heures_prevues??0):eff?r1(eff[String(m.id)]??0):(Number(d.charges[a.id]?.heures[String(m.id)])||0);
+          if(!(h>0)){zero++;if(!showZero)continue;}
+          const b=p?{id:p.id,affaireId:a.id,libelle:`${a.numero} · ${m.libelle}`,debut:p.date_debut,fin:p.date_fin,previsionnel:a.phase!=="signe"}:g?{...g,id:`metier:${a.id}:${m.id}`,libelle:`${a.numero} · ${m.libelle}`,proposee:true}:null;
+          rows.push({id:`${a.id}:${m.id}`,libelle:`↳ ${m.libelle}`,detail:<ConfigPersonnes cle={`${a.id}:${m.id}`} affaireId={a.id} metierId={m.id} heures={h} fixe={fixe} sansLimite={m.capacite_jour==null}/>,barres:b?[b]:[]});
+        }
+      }
+      return rows;
     });
-  },[d,mode,recherche,expanded]);
+    return {lignes:lignesOut,zero};
+  },[d,mode,recherche,expanded,showZero,devisSig]);
   const open=(b:Barre)=>{const p=d?.periodes.find(p=>p.id===b.id);const m=p?.metier_id??(b.id.startsWith("metier:")?Number(b.id.split(":").at(-1)):null);const role=d?.roles.find(r=>r.id===b.id);const a=affaires.find(a=>a.id===b.affaireId);setEdit({barre:b,metier:m,employe:role?.employe_id??null,heures:String(p?.heures_prevues??(m?d?.charges[b.affaireId]?.heures[String(m)]:a?.atelier_heures_prevues)??"")});};
   const retirer=async(e:Edition)=>{if(!window.confirm(e.metier==null?"Retirer ce chantier du planning atelier (toutes ses périodes métier) ?":"Retirer cette période métier du planning ?"))return;setSaving(true);try{const r=await supabase.rpc("planning_atelier_retirer",{_affaire:e.barre.affaireId,_metier:e.metier??undefined});if(r.error)throw r.error;await q.refetch();setEdit(null);toast.success("Retiré du planning");}catch(err){toast.error((err as {message?:string})?.message??"Suppression impossible");}finally{setSaving(false);}};
   const save=async(e:Edition)=>{
@@ -68,7 +86,7 @@ export function PlanningSimplePage({mode}:{mode:"atelier"|"be"}){
   return <div className="space-y-5 p-4 sm:p-6"><PageHeader title={mode==="atelier"?"Planning atelier":"Planning bureau d’étude"} eyebrow="Production"/><div className="flex flex-wrap items-center gap-2"><Button asChild variant={mode==="atelier"?"default":"outline"}><Link to="/planning-atelier">Atelier</Link></Button><Button asChild variant={mode==="be"?"default":"outline"}><Link to="/planning-be">Bureau d’étude</Link></Button>{mode==="atelier"&&<Button asChild variant="outline"><Link to="/ecran-atelier-production"><Monitor className="mr-1 h-4 w-4"/>Écran atelier</Link></Button>}<NavigationSemaine debut={debut} onChange={setDebut} choisir><span className="text-sm">Du {new Date(`${debut}T12:00:00`).toLocaleDateString("fr-FR")}</span></NavigationSemaine><Select value={String(semaines)} onValueChange={v=>setSemaines(Number(v))}><SelectTrigger className="w-32"><SelectValue/></SelectTrigger><SelectContent>{[8,10,12].map(n=><SelectItem key={n} value={String(n)}>{n} semaines</SelectItem>)}</SelectContent></Select></div>
     {q.isPending?<Loader2 className="h-6 w-6 animate-spin"/>:q.isError?<p role="alert" className="text-destructive">{q.error.message}</p>:<>
       <div className="flex flex-wrap items-center gap-2"><Input placeholder="Rechercher un chantier…" aria-label="Rechercher un chantier" className="max-w-sm" value={recherche} onChange={e=>setRecherche(e.target.value)}/>{editable&&<Popover open={picker} onOpenChange={setPicker}><PopoverTrigger asChild><Button variant="outline"><Plus className="mr-2 h-4 w-4"/>Planifier</Button></PopoverTrigger><PopoverContent className="w-80 p-0"><Command><CommandInput placeholder="Numéro ou nom du chantier…"/><CommandList><CommandEmpty>Aucun chantier.</CommandEmpty>{(mode==="atelier"?eligibles:affaires).map(a=><CommandItem key={a.id} value={`${a.numero} ${a.nom}`} onSelect={()=>{const b=globale(a)??{id:`global:${a.id}`,affaireId:a.id,libelle:`${a.numero} · ${a.nom}`,debut,fin:addDays(debut,4),previsionnel:a.phase!=="signe"};setEdit({barre:b,metier:null,employe:d?.roles.find(r=>r.affaire_id===a.id)?.employe_id??d?.referents[0]?.employe_id??null,heures:""});setPicker(false);}}>{a.numero} · {a.nom}</CommandItem>)}</CommandList></Command></PopoverContent></Popover>}</div>
-      {mode==="atelier"&&<div className="flex flex-wrap gap-2">{atelierAff.map(a=><Button key={a.id} size="sm" variant="outline" onClick={()=>setExpanded(old=>old.includes(a.id)?old.filter(id=>id!==a.id):[...old,a.id])}>{expanded.includes(a.id)?"−":"+"} {a.numero} métiers</Button>)}</div>}
+      {mode==="atelier"&&<div className="flex flex-wrap items-center gap-2">{!!atelierAff.length&&<Button size="sm" variant={showZero?"default":"outline"} onClick={toggleZero}>{showZero?"Masquer":"Afficher"} les métiers à 0 h{!showZero&&zeroCount?` (${zeroCount})`:""}</Button>}{atelierAff.map(a=><Button key={a.id} size="sm" variant="outline" onClick={()=>setExpanded(old=>old.includes(a.id)?old.filter(id=>id!==a.id):[...old,a.id])}>{expanded.includes(a.id)?"−":"+"} {a.numero} métiers</Button>)}</div>}
       {mode==="be"&&d&&<div className="flex flex-wrap gap-4 border-y py-3">{d.referents.map(r=><div key={r.id} className="flex items-center gap-2 text-sm"><span>{r.employes?.prenom} {r.employes?.nom}</span><Input type="number" aria-label={`Capacité ${r.employes?.prenom}`} min="0" max="100" className="w-20" defaultValue={r.capacite_be_pct} disabled={!canAdmin||mobile} onBlur={async e=>{const n=Number(e.target.value);if(n===r.capacite_be_pct)return;if(!Number.isFinite(n)||n<0||n>100){toast.error("Capacité entre 0 et 100 %");return;}const v=await supabase.from("role_referents").update({capacite_be_pct:n}).eq("id",r.id);if(v.error)toast.error(v.error.message);else await q.refetch();}}/><span>%</span></div>)}</div>}
       {mode==="atelier"&&!atelierAff.length&&<p className="rounded-md border border-dashed p-4 text-sm text-muted-foreground">Aucun chantier planifié pour le moment. Utilisez « Planifier » pour définir la période atelier d’un chantier ; il apparaîtra ensuite ici.</p>}
       <PlanningBarres lignes={lignes} debut={debut} semaines={semaines} editable={editable} onOpen={open} onMove={(b,s,f)=>{open(b);setEdit(old=>old?{...old,barre:{...old.barre,debut:s,fin:f}}:null);}}/>
