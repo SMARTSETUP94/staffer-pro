@@ -643,7 +643,7 @@ export function OpportunitesTableurView({
                         onKeyDown={(e) => onCellKeyDown(e, rowIdx, "code")}
                         onFocus={() => setEditing({ row: rowIdx, col: "code" })}
                         onBlur={() => flushSaveNow(row, "code")}
-                        disabled={!canEdit}
+                        disabled={!canEditRow}
                         maxLength={4}
                         className="h-8 w-20 font-mono"
                       />
@@ -658,7 +658,7 @@ export function OpportunitesTableurView({
                       onKeyDown={(e) => onCellKeyDown(e, rowIdx, "client")}
                       onFocus={() => setEditing({ row: rowIdx, col: "client" })}
                       onBlur={() => flushSaveNow(row, "client")}
-                      disabled={!canEdit}
+                      disabled={!canEditRow}
                       placeholder="Client / chantier…"
                       className="h-8 min-w-[180px]"
                     />
@@ -670,7 +670,7 @@ export function OpportunitesTableurView({
                       onValueChange={(v) =>
                         updateField(row, "deviseur", { charge_affaires_id: v })
                       }
-                      disabled={!canEdit}
+                      disabled={!canEditRow}
                     >
                       <SelectTrigger
                         ref={setRef("deviseur") as React.Ref<HTMLButtonElement>}
@@ -701,7 +701,7 @@ export function OpportunitesTableurView({
                       }
                       onKeyDown={(e) => onCellKeyDown(e, rowIdx, "date_opportunite")}
                       onBlur={() => flushSaveNow(row, "date_opportunite")}
-                      disabled={!canEdit}
+                      disabled={!canEditRow}
                       className="h-8 w-[140px]"
                     />
                   </td>
@@ -712,7 +712,7 @@ export function OpportunitesTableurView({
                       onValueChange={(v) =>
                         updateField(row, "taille", { taille: v as OpportuniteTaille })
                       }
-                      disabled={!canEdit}
+                      disabled={!canEditRow}
                     >
                       <SelectTrigger
                         ref={setRef("taille") as React.Ref<HTMLButtonElement>}
@@ -737,7 +737,7 @@ export function OpportunitesTableurView({
                       onChange={(v) =>
                         updateField(row, "typologie_future", { typologie_future: v })
                       }
-                      disabled={!canEdit}
+                      disabled={!canEditRow}
                       className="h-8 w-[140px]"
                       ariaLabel="Typologie future"
                     />
@@ -756,7 +756,7 @@ export function OpportunitesTableurView({
                           statut_opportunite: v as OpportuniteStatut,
                         })
                       }
-                      disabled={!canEdit}
+                      disabled={!canEditRow}
                     >
                       <SelectTrigger
                         ref={setRef("statut") as React.Ref<HTMLButtonElement>}
@@ -842,7 +842,7 @@ export function OpportunitesTableurView({
                       }
                       onKeyDown={(e) => onCellKeyDown(e, rowIdx, "date_montage")}
                       onBlur={() => flushSaveNow(row, "date_montage")}
-                      disabled={!canEdit}
+                      disabled={!canEditRow}
                       className="h-8 w-[140px]"
                     />
                   </td>
@@ -859,7 +859,7 @@ export function OpportunitesTableurView({
                       }
                       onKeyDown={(e) => onCellKeyDown(e, rowIdx, "date_demontage")}
                       onBlur={() => flushSaveNow(row, "date_demontage")}
-                      disabled={!canEdit}
+                      disabled={!canEditRow}
                       className="h-8 w-[140px]"
                     />
                   </td>
@@ -876,7 +876,7 @@ export function OpportunitesTableurView({
                         onCellKeyDown(e, rowIdx, "commentaires");
                       }}
                       onBlur={() => flushSaveNow(row, "commentaires")}
-                      disabled={!canEdit}
+                      disabled={!canEditRow}
                       maxLength={500}
                       rows={1}
                       placeholder="…"
