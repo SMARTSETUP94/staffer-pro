@@ -332,6 +332,28 @@ function OpportunitesPage() {
     };
   }, [refreshTick]);
 
+  // Opportunités signées : affichées en lecture seule dans la vue tableur avec
+  // leur numéro d'affaire, sans entrer dans le Kanban ni les indicateurs.
+  const [signees, setSignees] = useState<
+    { id: string; numero: string; code_opportunite: string | null; client: string | null; nom: string | null; charge_affaires_id: string | null; date_montage: string | null; date_demontage: string | null; signed_at: string | null }[]
+  >([]);
+  useEffect(() => {
+    let cancelled = false;
+    supabase
+      .from("affaires")
+      .select("id, numero, code_opportunite, client, nom, charge_affaires_id, date_montage, date_demontage, signed_at")
+      .eq("phase", "signe")
+      .not("code_opportunite", "is", null)
+      .is("archived_at", null)
+      .order("signed_at", { ascending: false })
+      .then(({ data }) => {
+        if (!cancelled) setSignees((data ?? []) as typeof signees);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [refreshTick]);
+
   // v0.29.2 — Filtrage CA + typologie FUTURE (la typologie dérivée du numero
   // est inutile ici car toutes les opps sont 9XXX = prototype par construction).
   const normalizedQuery = searchQuery.trim().toLowerCase();
