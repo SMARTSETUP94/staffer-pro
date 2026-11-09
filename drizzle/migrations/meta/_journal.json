@@ -750,6 +750,13 @@
       "when": 1794223211584,
       "tag": "0106_planning_atelier_retirer",
       "breakpoints": true
+    },
+    {
+      "idx": 107,
+      "version": "7",
+      "when": 1794232470650,
+      "tag": "0107_planning_atelier_chef_chantier",
+      "breakpoints": true
     }
   ]
 }
