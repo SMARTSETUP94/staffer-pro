@@ -26,10 +26,14 @@ export function DevisHeuresChantier({ affaireId, metierId, metiers, disabled, cu
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q.data, metierId, disabled]);
   // Métiers exclus du total global (par défaut : logistique/montage-démontage et BE).
-  const [exclus, setExclus] = useState<string[]>(["7", "8"]);
+  const cle = `atelier-selection:${affaireId}`;
+  const lu = (): { m?: string[]; o?: Record<string, string[]> } => { try { return JSON.parse(localStorage.getItem(cle) ?? "{}"); } catch { return {}; } };
+  const [exclus, setExclus] = useState<string[]>(() => lu().m ?? ["7", "8"]);
   const somme = (h: Record<string, number>) => r1(Object.entries(h).filter(([k]) => !exclus.includes(k)).reduce((s, [, v]) => s + v, 0));
   // Objets exclus par devis (fabrication en deux temps) : leurs heures sont retirées.
-  const [objExclus, setObjExclus] = useState<Record<string, string[]>>({});
+  const [objExclus, setObjExclus] = useState<Record<string, string[]>>(() => lu().o ?? {});
+  // Mémorise le choix métiers/objets par chantier sur cet appareil.
+  useEffect(() => { try { localStorage.setItem(cle, JSON.stringify({ m: exclus, o: objExclus })); } catch { /* ignore */ } }, [cle, exclus, objExclus]);
   const [choix, setChoix] = useState<DevisHeures | null>(null);
   const effectif = (d: DevisHeures): Record<string, number> => {
     const ex = objExclus[d.id] ?? []; if (!ex.length) return d.heures;
