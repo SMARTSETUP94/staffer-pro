@@ -312,6 +312,9 @@ export function OpportunitesTableurView({
               patch.typologie_future = row.typologie_future;
               break;
             case "code":
+              // Une opportunité signée ne change plus de code ici : numero
+              // est devenu le code affaire.
+              if (row.signed_affaire_id) return;
               if (!isValidCode9XXX(row.numero)) {
                 toast.error("Code 9XXX invalide");
                 return;
@@ -590,6 +593,8 @@ export function OpportunitesTableurView({
               };
               const isOwner =
                 !!currentUserId && row.charge_affaires_id === currentUserId;
+              // Une ligne signée est en lecture seule : elle est devenue un chantier.
+              const canEditRow = canEdit && !row.signed_affaire_id;
               const code5xxxEditable = canEditCode5XXX({
                 statut: row.statut_opportunite,
                 isAdmin: canForceCode5xxx,
@@ -623,19 +628,26 @@ export function OpportunitesTableurView({
                       <span className="inline-block h-6 w-6" aria-hidden="true" />
                     )}
                   </td>
-                  {/* Code 9XXX */}
+                  {/* Code 9XXX — après signature : code d'origine en lecture seule
+                      (numero porte désormais le code affaire, non éditable ici) */}
                   <td className="px-2 py-1">
-                    <Input
-                      ref={setRef("code") as React.Ref<HTMLInputElement>}
-                      value={row.numero}
-                      onChange={(e) => updateField(row, "code", { numero: e.target.value })}
-                      onKeyDown={(e) => onCellKeyDown(e, rowIdx, "code")}
-                      onFocus={() => setEditing({ row: rowIdx, col: "code" })}
-                      onBlur={() => flushSaveNow(row, "code")}
-                      disabled={!canEdit}
-                      maxLength={4}
-                      className="h-8 w-20 font-mono"
-                    />
+                    {row.signed_affaire_id ? (
+                      <span className="inline-flex h-8 w-20 items-center font-mono text-xs text-muted-foreground">
+                        {row.code_opportunite ?? "—"}
+                      </span>
+                    ) : (
+                      <Input
+                        ref={setRef("code") as React.Ref<HTMLInputElement>}
+                        value={row.numero}
+                        onChange={(e) => updateField(row, "code", { numero: e.target.value })}
+                        onKeyDown={(e) => onCellKeyDown(e, rowIdx, "code")}
+                        onFocus={() => setEditing({ row: rowIdx, col: "code" })}
+                        onBlur={() => flushSaveNow(row, "code")}
+                        disabled={!canEditRow}
+                        maxLength={4}
+                        className="h-8 w-20 font-mono"
+                      />
+                    )}
                   </td>
                   {/* Client */}
                   <td className="px-2 py-1">
@@ -646,7 +658,7 @@ export function OpportunitesTableurView({
                       onKeyDown={(e) => onCellKeyDown(e, rowIdx, "client")}
                       onFocus={() => setEditing({ row: rowIdx, col: "client" })}
                       onBlur={() => flushSaveNow(row, "client")}
-                      disabled={!canEdit}
+                      disabled={!canEditRow}
                       placeholder="Client / chantier…"
                       className="h-8 min-w-[180px]"
                     />
@@ -658,7 +670,7 @@ export function OpportunitesTableurView({
                       onValueChange={(v) =>
                         updateField(row, "deviseur", { charge_affaires_id: v })
                       }
-                      disabled={!canEdit}
+                      disabled={!canEditRow}
                     >
                       <SelectTrigger
                         ref={setRef("deviseur") as React.Ref<HTMLButtonElement>}
@@ -689,7 +701,7 @@ export function OpportunitesTableurView({
                       }
                       onKeyDown={(e) => onCellKeyDown(e, rowIdx, "date_opportunite")}
                       onBlur={() => flushSaveNow(row, "date_opportunite")}
-                      disabled={!canEdit}
+                      disabled={!canEditRow}
                       className="h-8 w-[140px]"
                     />
                   </td>
@@ -700,7 +712,7 @@ export function OpportunitesTableurView({
                       onValueChange={(v) =>
                         updateField(row, "taille", { taille: v as OpportuniteTaille })
                       }
-                      disabled={!canEdit}
+                      disabled={!canEditRow}
                     >
                       <SelectTrigger
                         ref={setRef("taille") as React.Ref<HTMLButtonElement>}
@@ -725,13 +737,18 @@ export function OpportunitesTableurView({
                       onChange={(v) =>
                         updateField(row, "typologie_future", { typologie_future: v })
                       }
-                      disabled={!canEdit}
+                      disabled={!canEditRow}
                       className="h-8 w-[140px]"
                       ariaLabel="Typologie future"
                     />
                   </td>
-                  {/* Statut */}
+                  {/* Statut — une ligne signée n'a plus de statut d'opportunité */}
                   <td className="px-2 py-1">
+                    {row.signed_affaire_id ? (
+                      <span className="inline-flex h-8 items-center rounded-full border border-border bg-muted/40 px-2 text-[10px] font-medium text-foreground whitespace-nowrap">
+                        Signée
+                      </span>
+                    ) : (
                     <Select
                       value={row.statut_opportunite ?? "a_faire"}
                       onValueChange={(v) =>
@@ -739,7 +756,7 @@ export function OpportunitesTableurView({
                           statut_opportunite: v as OpportuniteStatut,
                         })
                       }
-                      disabled={!canEdit}
+                      disabled={!canEditRow}
                     >
                       <SelectTrigger
                         ref={setRef("statut") as React.Ref<HTMLButtonElement>}
@@ -756,6 +773,7 @@ export function OpportunitesTableurView({
                         ))}
                       </SelectContent>
                     </Select>
+                    )}
                   </td>
                   {/* Bloc 10.4 — Prochaine action (read-only) */}
                   <td className="px-2 py-1">
@@ -824,7 +842,7 @@ export function OpportunitesTableurView({
                       }
                       onKeyDown={(e) => onCellKeyDown(e, rowIdx, "date_montage")}
                       onBlur={() => flushSaveNow(row, "date_montage")}
-                      disabled={!canEdit}
+                      disabled={!canEditRow}
                       className="h-8 w-[140px]"
                     />
                   </td>
@@ -841,7 +859,7 @@ export function OpportunitesTableurView({
                       }
                       onKeyDown={(e) => onCellKeyDown(e, rowIdx, "date_demontage")}
                       onBlur={() => flushSaveNow(row, "date_demontage")}
-                      disabled={!canEdit}
+                      disabled={!canEditRow}
                       className="h-8 w-[140px]"
                     />
                   </td>
@@ -858,7 +876,7 @@ export function OpportunitesTableurView({
                         onCellKeyDown(e, rowIdx, "commentaires");
                       }}
                       onBlur={() => flushSaveNow(row, "commentaires")}
-                      disabled={!canEdit}
+                      disabled={!canEditRow}
                       maxLength={500}
                       rows={1}
                       placeholder="…"
@@ -876,15 +894,18 @@ export function OpportunitesTableurView({
                             <Check className="h-3 w-3 text-emerald-500" />
                           ) : null}
                         </span>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setDeleteTarget(row)}
-                          className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
-                          aria-label="Supprimer"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
+                        {/* Pas de suppression depuis le tableur pour une ligne signée */}
+                        {!row.signed_affaire_id && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setDeleteTarget(row)}
+                            className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
+                            aria-label="Supprimer"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
                       </div>
                     </td>
                   )}
