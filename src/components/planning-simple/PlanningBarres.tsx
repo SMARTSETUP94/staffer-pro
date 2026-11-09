@@ -1,9 +1,10 @@
+import type React from "react";
 import {useRef,useState,type PointerEvent} from "react";
 import {Button} from "@/components/ui/button";
 import {addDays,diffDays} from "@/lib/staffing/date-utils";
 import {cn} from "@/lib/utils";
 export type Barre={id:string;affaireId:string;libelle:string;debut:string;fin:string;previsionnel:boolean;proposee?:boolean;depart?:string|null};
-export type LigneBarres={id:string;libelle:string;detail?:string;barres:Barre[]};
+export type LigneBarres={id:string;libelle:string;detail?:React.ReactNode;barres:Barre[]};
 const palettes=["bg-info/20 text-foreground border-info","bg-success/20 text-foreground border-success","bg-warning/20 text-foreground border-warning","bg-primary/15 text-foreground border-primary","bg-destructive/15 text-foreground border-destructive"];
 function couleur(id:string){return palettes[[...id].reduce((n,c)=>n+c.charCodeAt(0),0)%palettes.length];}
 export function PlanningBarres({lignes,debut,semaines,editable,onOpen,onMove}:{lignes:LigneBarres[];debut:string;semaines:number;editable:boolean;onOpen:(b:Barre)=>void;onMove:(b:Barre,debut:string,fin:string)=>void}){
@@ -18,7 +19,7 @@ export function PlanningBarres({lignes,debut,semaines,editable,onOpen,onMove}:{l
       <div className="flex border-b bg-muted/40"><div className="sticky left-0 z-20 w-60 shrink-0 bg-background p-3 text-sm font-medium">Chantier / concepteur</div>{Array.from({length:semaines},(_,i)=><div key={i} style={{width:COL*7}} className="shrink-0 border-l py-3 text-center text-xs">{new Date(`${addDays(debut,i*7)}T12:00:00`).toLocaleDateString("fr-FR",{day:"numeric",month:"short"})}</div>)}</div>
       {lignes.map(l=>{
         const lanes:Barre[][]=[];for(const b of [...l.barres].sort((a,b)=>a.debut.localeCompare(b.debut))){const lane=lanes.find(x=>(x.at(-1)?.fin??"")<b.debut);if(lane)lane.push(b);else lanes.push([b]);}
-        return <div key={l.id} className="flex border-b"><div className="sticky left-0 z-20 w-60 shrink-0 bg-background px-3 py-3"><p className="truncate text-sm font-medium" title={l.libelle}>{l.libelle}</p><p className="text-xs text-muted-foreground">{l.detail}</p></div><div className="relative" style={{width:jours*COL,height:Math.max(1,lanes.length)*38+12}}>
+        return <div key={l.id} className="flex border-b"><div className="sticky left-0 z-20 w-60 shrink-0 bg-background px-3 py-3"><p className="truncate text-sm font-medium" title={l.libelle}>{l.libelle}</p><div className="text-xs text-muted-foreground">{l.detail}</div></div><div className="relative" style={{width:jours*COL,height:Math.max(1,lanes.length)*38+12}}>
           {Array.from({length:jours},(_,i)=><div key={i} className={cn("absolute inset-y-0 border-l border-border/50",[5,6].includes(i%7)&&"bg-muted/50",addDays(debut,i)===new Date().toISOString().slice(0,10)&&"border-l-2 border-primary")} style={{left:i*COL,width:COL}}/>)}
           {!l.barres.length&&<p className="px-3 py-4 text-xs text-muted-foreground">Non planifié</p>}
           {lanes.flatMap((lane,n)=>lane.map(b=>{const active=drag?.barre.id===b.id;const s=active?drag.debut:b.debut,f=active?drag.fin:b.fin;const left=Math.max(0,diffDays(debut,s)),right=Math.min(jours-1,diffDays(debut,f));if(right<0||left>=jours||right<left)return null;return <div key={b.id}>
