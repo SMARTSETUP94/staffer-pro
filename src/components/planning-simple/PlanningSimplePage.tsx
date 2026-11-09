@@ -33,7 +33,8 @@ export function PlanningSimplePage({mode}:{mode:"atelier"|"be"}){
   useEffect(()=>{const m=window.matchMedia("(max-width: 767px)");const update=()=>setMobile(m.matches);update();m.addEventListener("change",update);return()=>m.removeEventListener("change",update);},[]);
   const d=q.data,editable=!mobile && (mode==="atelier"?!!d?.atelierEdit:canBe);
   const affaires=d?.affaires??[];
-  const atelierAff=affaires.filter(a=>(a.numero.startsWith("6") || (a.numero.startsWith("9")&&a.statut_opportunite==="presque_gagne"))&&`${a.numero} ${a.nom}`.toLowerCase().includes(recherche.toLowerCase()));
+  const eligibles=affaires.filter(a=>(a.numero.startsWith("6") || (a.numero.startsWith("9")&&a.statut_opportunite==="presque_gagne"))&&`${a.numero} ${a.nom}`.toLowerCase().includes(recherche.toLowerCase()));
+  const atelierAff=eligibles.filter(a=>a.atelier_date_debut||d?.periodes.some(p=>p.affaire_id===a.id));
   const depart=(id:string)=>d?.etapes.find(e=>e.affaire_id===id)?.date_debut??null;
   const globale=(a:typeof affaires[number]):Barre|null=>{
     const charge=d?.charges[a.id];const total=charge?Object.values(charge.heures).reduce((s,n)=>s+n,0):null;
