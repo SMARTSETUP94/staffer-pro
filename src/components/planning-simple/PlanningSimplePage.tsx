@@ -52,7 +52,7 @@ export function PlanningSimplePage({mode}:{mode:"atelier"|"be"}){
     if(!d)return {lignes:[],zero:0};
     if(mode==="be")return {lignes:d.referents.map(r=>({id:r.employe_id,libelle:`${r.employes?.prenom??""} ${r.employes?.nom??""}`.trim(),detail:`Capacité ${r.capacite_be_pct} %`,barres:d.roles.filter(x=>x.employe_id===r.employe_id).flatMap(x=>{const a=affaires.find(a=>a.id===x.affaire_id);if(!a||!x.date_debut||!x.date_fin||!`${a.numero} ${a.nom}`.toLowerCase().includes(recherche.toLowerCase()))return [];return [{id:x.id,affaireId:a.id,libelle:`${a.numero} · ${a.nom}`,debut:x.date_debut,fin:x.date_fin,previsionnel:a.phase!=="signe"}];})})),zero:0};
     let zero=0;
-    const lignes=[...atelierAff].sort((a,b)=>(depart(a.id)??"9999").localeCompare(depart(b.id)??"9999")).flatMap(a=>{
+    const lignesOut=[...atelierAff].sort((a,b)=>(depart(a.id)??"9999").localeCompare(depart(b.id)??"9999")).flatMap(a=>{
       const g=globale(a);const rows:LigneBarres[]=[{id:a.id,libelle:`${a.numero} · ${a.nom}`,detail:<ResumeChantier affaireId={a.id} statut={a.atelier_date_debut?"Période validée":"Période à confirmer"}/>,barres:g?[g]:[]}];
       if(expanded.includes(a.id)){
         const eff=heuresPrincipales(devisMap.get(a.id),lireSelection(a.id));
