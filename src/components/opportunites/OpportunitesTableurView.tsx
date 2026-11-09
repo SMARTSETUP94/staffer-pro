@@ -593,6 +593,8 @@ export function OpportunitesTableurView({
               };
               const isOwner =
                 !!currentUserId && row.charge_affaires_id === currentUserId;
+              // Une ligne signée est en lecture seule : elle est devenue un chantier.
+              const canEditRow = canEdit && !row.signed_affaire_id;
               const code5xxxEditable = canEditCode5XXX({
                 statut: row.statut_opportunite,
                 isAdmin: canForceCode5xxx,
