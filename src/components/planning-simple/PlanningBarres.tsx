@@ -3,7 +3,7 @@ import {useRef,useState,type PointerEvent} from "react";
 import {Button} from "@/components/ui/button";
 import {addDays,diffDays} from "@/lib/staffing/date-utils";
 import {cn} from "@/lib/utils";
-export type Barre={id:string;affaireId:string;libelle:string;debut:string;fin:string;previsionnel:boolean;proposee?:boolean;depart?:string|null};
+export type Barre={id:string;affaireId:string;libelle:string;debut:string;fin:string;previsionnel:boolean;proposee?:boolean;depart?:string|null;beFin?:string};
 export type LigneBarres={id:string;libelle:string;detail?:React.ReactNode;barres:Barre[]};
 const palettes=["bg-info/20 text-foreground border-info","bg-success/20 text-foreground border-success","bg-warning/20 text-foreground border-warning","bg-primary/15 text-foreground border-primary","bg-destructive/15 text-foreground border-destructive"];
 function couleur(id:string){return palettes[[...id].reduce((n,c)=>n+c.charCodeAt(0),0)%palettes.length];}
