@@ -46,14 +46,30 @@ export function PlanningSimplePage({mode}:{mode:"atelier"|"be"}){
     const s=a.atelier_date_debut??prop?.debut,f=a.atelier_date_fin??prop?.fin;if(!s||!f)return null;
     return {id:`global:${a.id}`,affaireId:a.id,libelle:`${a.numero} · ${a.nom}`,debut:s,fin:f,previsionnel:a.phase!=="signe",proposee:!a.atelier_date_debut,depart:depart(a.id)};
   };
-  const lignes=useMemo<LigneBarres[]>(()=>{
-    if(!d)return [];
-    if(mode==="be")return d.referents.map(r=>({id:r.employe_id,libelle:`${r.employes?.prenom??""} ${r.employes?.nom??""}`.trim(),detail:`Capacité ${r.capacite_be_pct} %`,barres:d.roles.filter(x=>x.employe_id===r.employe_id).flatMap(x=>{const a=affaires.find(a=>a.id===x.affaire_id);if(!a||!x.date_debut||!x.date_fin||!`${a.numero} ${a.nom}`.toLowerCase().includes(recherche.toLowerCase()))return [];return [{id:x.id,affaireId:a.id,libelle:`${a.numero} · ${a.nom}`,debut:x.date_debut,fin:x.date_fin,previsionnel:a.phase!=="signe"}];})}));
-    return [...atelierAff].sort((a,b)=>(depart(a.id)??"9999").localeCompare(depart(b.id)??"9999")).flatMap(a=>{
+  const devisMap=useDevisParAffaire(mode==="atelier"?atelierAff.map(a=>a.id):[]);
+  const devisSig=useMemo(()=>[...devisMap.keys()].sort().map(id=>`${id}:${devisMap.get(id)?.[0]?.total??0}`).join("|"),[devisMap]);
+  const {lignes,zeroCount}=useMemo<{lignes:LigneBarres[];zero:number}>(()=>{
+    if(!d)return {lignes:[],zero:0};
+    if(mode==="be")return {lignes:d.referents.map(r=>({id:r.employe_id,libelle:`${r.employes?.prenom??""} ${r.employes?.nom??""}`.trim(),detail:`Capacité ${r.capacite_be_pct} %`,barres:d.roles.filter(x=>x.employe_id===r.employe_id).flatMap(x=>{const a=affaires.find(a=>a.id===x.affaire_id);if(!a||!x.date_debut||!x.date_fin||!`${a.numero} ${a.nom}`.toLowerCase().includes(recherche.toLowerCase()))return [];return [{id:x.id,affaireId:a.id,libelle:`${a.numero} · ${a.nom}`,debut:x.date_debut,fin:x.date_fin,previsionnel:a.phase!=="signe"}];})})),zero:0};
+    let zero=0;
+    const lignes=[...atelierAff].sort((a,b)=>(depart(a.id)??"9999").localeCompare(depart(b.id)??"9999")).flatMap(a=>{
       const g=globale(a);const rows:LigneBarres[]=[{id:a.id,libelle:`${a.numero} · ${a.nom}`,detail:<ResumeChantier affaireId={a.id} statut={a.atelier_date_debut?"Période validée":"Période à confirmer"}/>,barres:g?[g]:[]}];
-      if(expanded.includes(a.id))for(const m of d.metiers.filter(m=>[1,2,3,4,5,6,8,9].includes(m.id))){const p=d.periodes.find(p=>p.affaire_id===a.id&&p.metier_id===m.id);const h=p?.heures_prevues??d.charges[a.id]?.heures[String(m.id)]??null;const b=p?{id:p.id,affaireId:a.id,libelle:`${a.numero} · ${m.libelle}`,debut:p.date_debut,fin:p.date_fin,previsionnel:a.phase!=="signe"}:g?{...g,id:`metier:${a.id}:${m.id}`,libelle:`${a.numero} · ${m.libelle}`,proposee:true}:null;if(!(Number(h)>0))continue;rows.push({id:`${a.id}:${m.id}`,libelle:`↳ ${m.libelle}`,detail:<ConfigPersonnes cle={`${a.id}:${m.id}`} affaireId={a.id} metierId={m.id} heures={Number(h)} fixe={p?.heures_prevues!=null} sansLimite={m.capacite_jour==null}/>,barres:b?[b]:[]});}return rows;
+      if(expanded.includes(a.id)){
+        const eff=heuresPrincipales(devisMap.get(a.id),lireSelection(a.id));
+        for(const m of d.metiers.filter(m=>[1,2,3,4,5,6,8,9].includes(m.id))){
+          const p=d.periodes.find(p=>p.affaire_id===a.id&&p.metier_id===m.id);
+          const fixe=p?.heures_prevues!=null;
+          // Même valeur que sous la ligne : heures enregistrées, sinon devis hors objets exclus.
+          const h=fixe?Number(p?.heures_prevues??0):eff?r1(eff[String(m.id)]??0):(Number(d.charges[a.id]?.heures[String(m.id)])||0);
+          if(!(h>0)){zero++;if(!showZero)continue;}
+          const b=p?{id:p.id,affaireId:a.id,libelle:`${a.numero} · ${m.libelle}`,debut:p.date_debut,fin:p.date_fin,previsionnel:a.phase!=="signe"}:g?{...g,id:`metier:${a.id}:${m.id}`,libelle:`${a.numero} · ${m.libelle}`,proposee:true}:null;
+          rows.push({id:`${a.id}:${m.id}`,libelle:`↳ ${m.libelle}`,detail:<ConfigPersonnes cle={`${a.id}:${m.id}`} affaireId={a.id} metierId={m.id} heures={h} fixe={fixe} sansLimite={m.capacite_jour==null}/>,barres:b?[b]:[]});
+        }
+      }
+      return rows;
     });
-  },[d,mode,recherche,expanded]);
+    return {lignes,zero};
+  },[d,mode,recherche,expanded,showZero,devisSig]);
   const open=(b:Barre)=>{const p=d?.periodes.find(p=>p.id===b.id);const m=p?.metier_id??(b.id.startsWith("metier:")?Number(b.id.split(":").at(-1)):null);const role=d?.roles.find(r=>r.id===b.id);const a=affaires.find(a=>a.id===b.affaireId);setEdit({barre:b,metier:m,employe:role?.employe_id??null,heures:String(p?.heures_prevues??(m?d?.charges[b.affaireId]?.heures[String(m)]:a?.atelier_heures_prevues)??"")});};
   const retirer=async(e:Edition)=>{if(!window.confirm(e.metier==null?"Retirer ce chantier du planning atelier (toutes ses périodes métier) ?":"Retirer cette période métier du planning ?"))return;setSaving(true);try{const r=await supabase.rpc("planning_atelier_retirer",{_affaire:e.barre.affaireId,_metier:e.metier??undefined});if(r.error)throw r.error;await q.refetch();setEdit(null);toast.success("Retiré du planning");}catch(err){toast.error((err as {message?:string})?.message??"Suppression impossible");}finally{setSaving(false);}};
   const save=async(e:Edition)=>{
