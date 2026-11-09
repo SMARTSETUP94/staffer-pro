@@ -1,3 +1,4 @@
+import { originalOpportunityCode } from "@/lib/chantier-code-history";
 import { DevisPipelineProvider, DevisSigneChoixDialog } from "@/components/opportunites/DevisPipeline";
 import { createFileRoute, Link, useNavigate, stripSearchParams, type SearchSchemaInput } from "@tanstack/react-router";
 import { requireCapability } from "@/lib/capability-guard";
@@ -343,11 +344,11 @@ function OpportunitesPage() {
       .from("affaires")
       .select("id, numero, code_opportunite, client, nom, charge_affaires_id, date_montage, date_demontage, signed_at")
       .eq("phase", "signe")
-      .not("code_opportunite", "is", null)
       .is("archived_at", null)
       .order("signed_at", { ascending: false })
       .then(({ data }) => {
-        if (!cancelled) setSignees((data ?? []) as typeof signees);
+        // Même règle que la liste des chantiers : code 9XXX d'origine (code_opportunite, sinon numéro).
+        if (!cancelled) setSignees(((data ?? []) as typeof signees).filter((s) => originalOpportunityCode(s) !== null));
       });
     return () => {
       cancelled = true;
@@ -470,6 +471,7 @@ function OpportunitesPage() {
   // Conversion en TableurRow pour la vue Tableur (filtre "Archivé" si masqué).
   // Filtre « À faire » actif → tri chronologique (plus ancienne en premier),
   // comme la colonne Kanban correspondante.
+  const [signeFiltre, setSigneFiltre] = useState<"tous" | "opps" | "signes">("tous");
   const aFaireOnly =
     statutsFilter.length === 1 && statutsFilter[0] === "a_faire";
   const tableurRows: TableurRow[] = useMemo(
@@ -519,7 +521,7 @@ function OpportunitesPage() {
           date_opportunite: null,
           taille: null,
           statut_opportunite: null,
-          code_opportunite: s.code_opportunite,
+          code_opportunite: originalOpportunityCode(s),
           signed_affaire_numero: s.numero,
           signed_affaire_id: s.id,
           date_pat: null,
@@ -531,9 +533,11 @@ function OpportunitesPage() {
           created_at: s.signed_at,
         }));
       // Signées en tête : les plus récentes d'abord, visibles sans paginer.
+      if (signeFiltre === "signes") return signeesRows;
+      if (signeFiltre === "opps") return sorted;
       return [...signeesRows, ...sorted];
     },
-    [oppsFiltrees, showArchived, aFaireOnly, signees, filterCa, normalizedQuery],
+    [oppsFiltrees, showArchived, aFaireOnly, signees, filterCa, normalizedQuery, signeFiltre],
   );
 
   const archivedCount = useMemo(
@@ -688,6 +692,14 @@ function OpportunitesPage() {
               <SelectItem value="7d">Créées ces 7 jours</SelectItem>
               <SelectItem value="30d">Créées ces 30 jours</SelectItem>
               <SelectItem value="current_month">Créées ce mois-ci</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={signeFiltre} onValueChange={(v) => setSigneFiltre(v as typeof signeFiltre)}>
+            <SelectTrigger className="h-9 w-[200px] rounded-xl" aria-label="Filtre signature"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="tous">Opportunités + signées</SelectItem>
+              <SelectItem value="opps">Opportunités en cours</SelectItem>
+              <SelectItem value="signes">Chantiers signés ({signees.length})</SelectItem>
             </SelectContent>
           </Select>
           <label className="flex h-9 cursor-pointer items-center gap-2 rounded-xl border border-border bg-card px-3 text-xs font-medium">
