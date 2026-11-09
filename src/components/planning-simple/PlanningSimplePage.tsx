@@ -10,7 +10,7 @@ import {addDays,dayOfWeek} from "@/lib/staffing/date-utils";
 import {chargeHebdomadaire,niveauCharge,proposerPeriodeAtelier} from "@/lib/planning-barres";
 import {PlanningBarres,type Barre,type LigneBarres} from "./PlanningBarres";
 import {DevisHeuresChantier} from "./DevisHeuresChantier";
-import {useSelectionDevis,r1} from "./useSelectionDevis";
+import {useSelectionDevis,r1,lireSelection,heuresPrincipales,useDevisParAffaire} from "./useSelectionDevis";
 import {NavigationSemaine} from "@/components/logistique/NavigationSemaine";
 import {PageHeader} from "@/components/PageHeader";
 import {Button} from "@/components/ui/button";
@@ -32,6 +32,8 @@ export function PlanningSimplePage({mode}:{mode:"atelier"|"be"}){
   const [debut,setDebut]=useState(lundi),[semaines,setSemaines]=useState(8),[recherche,setRecherche]=useState("");
   const [expanded,setExpanded]=useState<string[]>([]),[edit,setEdit]=useState<Edition|null>(null),[saving,setSaving]=useState(false),[picker,setPicker]=useState(false),[chargeDetail,setChargeDetail]=useState<{titre:string;lignes:string[]}|null>(null);
   const [mobile,setMobile]=useState(false);
+  const [showZero,setShowZero]=useState(()=>{try{return localStorage.getItem("atelier-show-zero")==="1";}catch{return false;}});
+  const toggleZero=()=>setShowZero(v=>{const n=!v;try{localStorage.setItem("atelier-show-zero",n?"1":"0");}catch{/* ignore */}return n;});
   useEffect(()=>{const m=window.matchMedia("(max-width: 767px)");const update=()=>setMobile(m.matches);update();m.addEventListener("change",update);return()=>m.removeEventListener("change",update);},[]);
   const d=q.data,editable=!mobile && (mode==="atelier"?!!d?.atelierEdit:canBe);
   const affaires=d?.affaires??[];
