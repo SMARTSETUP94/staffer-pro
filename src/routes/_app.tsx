@@ -9,6 +9,8 @@ import {
 } from "@/lib/auth-redirect-helpers";
 import { consumeCapDenied } from "@/lib/capability-guard";
 import { toast } from "sonner";
+import { useFeatureFlag } from "@/hooks/use-feature-flag";
+import { estPageAncienneMasquee } from "@/lib/pages-anciennes-masquees";
 
 // v0.51 (L6-A) — Garde-fou hash auth Supabase (invite/recovery/magiclink) :
 // si l'utilisateur atterrit sur n'importe quelle route `_app` avec un hash
@@ -51,6 +53,15 @@ function AppGuard() {
     profileCompleted,
   });
 
+  const modeSuivi = useFeatureFlag("deploiement_suivi_affaires");
+  const bloquee = modeSuivi && estPageAncienneMasquee(currentPath);
+  useEffect(() => {
+    if (bloquee) {
+      toast.info("Cette ancienne page n'est plus disponible.");
+      navigate({ to: "/", replace: true });
+    }
+  }, [bloquee, navigate]);
+
   useEffect(() => {
     if (loading || !rolesLoaded) return;
     if (!user) {
@@ -79,7 +90,7 @@ function AppGuard() {
     }
   }, [currentPath]);
 
-  if (loading || !rolesLoaded || !user) {
+  if (loading || !rolesLoaded || !user || bloquee) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
