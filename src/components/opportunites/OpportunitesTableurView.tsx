@@ -771,6 +771,7 @@ export function OpportunitesTableurView({
                         ))}
                       </SelectContent>
                     </Select>
+                    )}
                   </td>
                   {/* Bloc 10.4 — Prochaine action (read-only) */}
                   <td className="px-2 py-1">
