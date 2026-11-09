@@ -486,11 +486,10 @@ function OpportunitesPage() {
           date_opportunite: o.date_opportunite,
           taille: o.taille,
           statut_opportunite: o.statut_opportunite,
-          code_opportunite: o.code_opportunite,
-          // Après signature, numero porte le code affaire (5XXX/6XXX…) et
-          // code_opportunite garde le code 9XXX d'origine.
-          signed_affaire_numero: o.phase === "signe" ? o.numero : null,
-          signed_affaire_id: o.phase === "signe" ? o.id : null,
+          // Les lignes signées sont ajoutées séparément (voir plus bas).
+          code_opportunite: null,
+          signed_affaire_numero: null,
+          signed_affaire_id: null,
           date_pat: o.date_pat,
           date_montage: o.date_montage,
           date_demontage: o.date_demontage,
