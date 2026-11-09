@@ -894,15 +894,18 @@ export function OpportunitesTableurView({
                             <Check className="h-3 w-3 text-emerald-500" />
                           ) : null}
                         </span>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setDeleteTarget(row)}
-                          className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
-                          aria-label="Supprimer"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
+                        {/* Pas de suppression depuis le tableur pour une ligne signée */}
+                        {!row.signed_affaire_id && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setDeleteTarget(row)}
+                            className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
+                            aria-label="Supprimer"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
                       </div>
                     </td>
                   )}
