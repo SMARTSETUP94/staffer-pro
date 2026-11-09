@@ -48,7 +48,7 @@ export function PlanningSimplePage({mode}:{mode:"atelier"|"be"}){
   };
   const devisMap=useDevisParAffaire(mode==="atelier"?atelierAff.map(a=>a.id):[]);
   const devisSig=useMemo(()=>[...devisMap.keys()].sort().map(id=>`${id}:${devisMap.get(id)?.[0]?.total??0}`).join("|"),[devisMap]);
-  const {lignes,zeroCount}=useMemo<{lignes:LigneBarres[];zero:number}>(()=>{
+  const {lignes,zero:zeroCount}=useMemo<{lignes:LigneBarres[];zero:number}>(()=>{
     if(!d)return {lignes:[],zero:0};
     if(mode==="be")return {lignes:d.referents.map(r=>({id:r.employe_id,libelle:`${r.employes?.prenom??""} ${r.employes?.nom??""}`.trim(),detail:`Capacité ${r.capacite_be_pct} %`,barres:d.roles.filter(x=>x.employe_id===r.employe_id).flatMap(x=>{const a=affaires.find(a=>a.id===x.affaire_id);if(!a||!x.date_debut||!x.date_fin||!`${a.numero} ${a.nom}`.toLowerCase().includes(recherche.toLowerCase()))return [];return [{id:x.id,affaireId:a.id,libelle:`${a.numero} · ${a.nom}`,debut:x.date_debut,fin:x.date_fin,previsionnel:a.phase!=="signe"}];})})),zero:0};
     let zero=0;
