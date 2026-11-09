@@ -26,7 +26,7 @@ export const lireHeuresDevisAffaire = createServerFn({ method: "GET" })
         type Lu = { calcul?: { heures_metier?: Record<string, number> }; lignes?: { id: string; parent_id: string | null; type: string; quantite: number; libelle: string | null; option_incluse?: boolean }[]; heures?: { ligne_id: string; heures: number; par_unite: boolean; metier_id: number | null }[] };
         const lu = r.data as unknown as Lu;
         const h = lu?.calcul?.heures_metier ?? {};
-        heures = Object.fromEntries(Object.entries(h).filter(([k]) => k !== "aucun").map(([k, v]) => [k, Number(v) || 0]));
+        heures = Object.fromEntries(Object.entries(h).map(([k, v]) => [k, Number(v) || 0]));
         objets = heuresParObjet((lu?.lignes ?? []).map((l) => ({ ...l, option: l.type === "option" && !l.option_incluse })), lu?.heures ?? [], heures);
       } else {
         const p = await db.from("devis_postes").select("metier_id,heures_prevues").eq("devis_id", d.id);
