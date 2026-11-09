@@ -16,7 +16,6 @@ export interface OppRow {
   date_opportunite: string | null;
   signed_at: string | null;
   code_opportunite: string | null;
-  phase: string;
   updated_at: string;
 }
 
@@ -50,7 +49,7 @@ export function useOpportunitesPipeline(): PipelineData {
       const { data, error } = await supabase
         .from("affaires")
         .select(
-          "id, numero, nom, client, charge_affaires_id, taille, statut_opportunite, date_opportunite, signed_at, code_opportunite, phase, updated_at",
+          "id, numero, nom, client, charge_affaires_id, taille, statut_opportunite, date_opportunite, signed_at, code_opportunite, updated_at",
         )
         .or("phase.eq.opportunite,code_opportunite.not.is.null")
         .is("archived_at", null);
