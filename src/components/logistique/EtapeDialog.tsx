@@ -109,11 +109,16 @@ export function EtapeDialog({ open, onOpenChange, etape, defaultDate, defaultAff
   }
 
   async function remove() {
-    if (!etape || !confirm("Supprimer cette étape du planning ?")) return;
-    const { data, error } = await supabase.from("affaire_etapes_logistiques").delete().eq("id", etape.id).select("id");
+    if (!etape) return;
+    // Annulation douce : les affectations liées restent dans l'historique (pas de suppression physique).
+    const motif = window.prompt("Retirer cette étape du planning ? Indiquez un motif :", "Étape supprimée du planning");
+    if (motif === null) return;
+    const raison = motif.trim() || "Étape supprimée du planning";
+    const precedent = (etape as { commentaire_equipe?: string | null }).commentaire_equipe?.trim();
+    const commentaire = (precedent ? `Annulée : ${raison} — ${precedent}` : `Annulée : ${raison}`).slice(0, 2000);
+    const { error } = await supabase.rpc("app_modifier_etape_logistique", { _id: etape.id, _patch: { statut: "annule", commentaire_equipe: commentaire } });
     if (error) { toast.error("Suppression impossible", { description: error.message }); return; }
-    if (!data?.length) { toast.error("Suppression refusée : vous n'avez pas le droit de modifier cette étape."); return; }
-    toast.success("Étape supprimée");
+    toast.success("Étape retirée du planning");
     invalidate();
     onOpenChange(false);
   }
