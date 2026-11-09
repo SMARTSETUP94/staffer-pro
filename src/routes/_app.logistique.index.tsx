@@ -63,7 +63,7 @@ function PlanningLogistiquePage() {
   useEffect(() => { try { const r = localStorage.getItem(CLE_FILTRES); if (r) setFiltresState({ ...FILTRES_VIDES, ...JSON.parse(r) }); } catch { /* préférence illisible ignorée */ } }, []);
   const setFiltres = (p: Partial<FiltresPlanning>) => setFiltresState((f) => { const n = { ...f, ...p }; try { localStorage.setItem(CLE_FILTRES, JSON.stringify(n)); } catch { /* stockage indisponible */ } return n; });
   const [focus, setFocus] = useState<{ etape_id?: string; jour?: string } | null>(null);
-  const [aTraiterOuvert, setATraiterOuvert] = useState(true);
+  const [aTraiterOuvert, setATraiterOuvert] = useState(false);
 
   const [calendrierOpen, setCalendrierOpen] = useState(false);
   const [regrouper, setRegrouper] = useRegrouperParChantier();
@@ -159,17 +159,19 @@ function PlanningLogistiquePage() {
         </div>
       </div>
 
-      {canTerrain && alertes.length > 0 && <section aria-label="À traiter" className="rounded-lg border border-border bg-card">
-        <button type="button" className="flex w-full items-center gap-2 px-3 py-2 text-left font-semibold" onClick={() => setATraiterOuvert((o) => !o)} aria-expanded={aTraiterOuvert}>
-          <AlertTriangle className="size-4 text-destructive" />À traiter · {alertes.length}{rouges > 0 && <span className="rounded bg-destructive px-1.5 text-xs text-destructive-foreground">{rouges} urgentes</span>}<span className="ml-auto text-xs font-normal text-muted-foreground">{aTraiterOuvert ? "Masquer" : "Afficher"}</span>
+      {canTerrain && alertes.length > 0 && (aTraiterOuvert ? <section aria-label="À traiter" className="rounded-lg border border-border bg-card">
+        <button type="button" className="flex w-full items-center gap-2 px-3 py-2 text-left font-semibold" onClick={() => setATraiterOuvert(false)} aria-expanded="true">
+          <AlertTriangle className="size-4 text-destructive" />À traiter · {alertes.length}{rouges > 0 && <span className="rounded bg-destructive px-1.5 text-xs text-destructive-foreground">{rouges} urgentes</span>}<span className="ml-auto text-xs font-normal text-muted-foreground">Masquer</span>
         </button>
-        {aTraiterOuvert && <ul className="max-h-64 divide-y divide-border overflow-auto border-t border-border">{alertes.map((a, i) => <li key={i}>
+        <ul className="max-h-64 divide-y divide-border overflow-auto border-t border-border">{alertes.map((a, i) => <li key={i}>
           <button type="button" disabled={!a.etape_id} onClick={() => ouvrirAlerte(a)} className="flex w-full items-start gap-2 px-3 py-1.5 text-left text-sm enabled:hover:bg-muted">
             <span className={`mt-1.5 size-2 shrink-0 rounded-full ${a.gravite === "rouge" ? "bg-destructive" : "bg-warning"}`} />
             {a.jour && <span className="shrink-0 text-muted-foreground">{new Intl.DateTimeFormat("fr-FR", { weekday: "short", day: "numeric" }).format(new Date(`${a.jour}T12:00:00`))}</span>}
             <span>{a.texte}</span>
-          </button></li>)}</ul>}
-      </section>}
+          </button></li>)}</ul>
+      </section> : <Button type="button" variant="outline" size="sm" onClick={() => setATraiterOuvert(true)} aria-expanded="false" className="border-destructive/40 text-destructive">
+        <AlertTriangle className="mr-1 h-4 w-4" />À traiter · {alertes.length}{rouges > 0 && <span className="ml-1 rounded bg-destructive px-1.5 text-xs text-destructive-foreground">{rouges} urgentes</span>}
+      </Button>)}
 
       <Tabs value={vue} onValueChange={(v) => setVue(v as Vue)}>
         <TabsList className="flex-wrap">
