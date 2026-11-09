@@ -291,7 +291,7 @@ function AdminChefHomeView() {
         description={todayLabel.charAt(0).toUpperCase() + todayLabel.slice(1)}
       />
 
-      {canSeeHeuresWidget && <HeuresSemaineWidget />}
+      {/* Tuile « Mes heures » retirée de l’accueil (ancienne page mobile). */}
       <SanteDonneesWidget />
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
