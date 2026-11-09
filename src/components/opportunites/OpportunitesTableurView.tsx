@@ -312,6 +312,9 @@ export function OpportunitesTableurView({
               patch.typologie_future = row.typologie_future;
               break;
             case "code":
+              // Une opportunité signée ne change plus de code ici : numero
+              // est devenu le code affaire.
+              if (row.signed_affaire_id) return;
               if (!isValidCode9XXX(row.numero)) {
                 toast.error("Code 9XXX invalide");
                 return;
@@ -623,19 +626,26 @@ export function OpportunitesTableurView({
                       <span className="inline-block h-6 w-6" aria-hidden="true" />
                     )}
                   </td>
-                  {/* Code 9XXX */}
+                  {/* Code 9XXX — après signature : code d'origine en lecture seule
+                      (numero porte désormais le code affaire, non éditable ici) */}
                   <td className="px-2 py-1">
-                    <Input
-                      ref={setRef("code") as React.Ref<HTMLInputElement>}
-                      value={row.numero}
-                      onChange={(e) => updateField(row, "code", { numero: e.target.value })}
-                      onKeyDown={(e) => onCellKeyDown(e, rowIdx, "code")}
-                      onFocus={() => setEditing({ row: rowIdx, col: "code" })}
-                      onBlur={() => flushSaveNow(row, "code")}
-                      disabled={!canEdit}
-                      maxLength={4}
-                      className="h-8 w-20 font-mono"
-                    />
+                    {row.signed_affaire_id ? (
+                      <span className="inline-flex h-8 w-20 items-center font-mono text-xs text-muted-foreground">
+                        {row.code_opportunite ?? "—"}
+                      </span>
+                    ) : (
+                      <Input
+                        ref={setRef("code") as React.Ref<HTMLInputElement>}
+                        value={row.numero}
+                        onChange={(e) => updateField(row, "code", { numero: e.target.value })}
+                        onKeyDown={(e) => onCellKeyDown(e, rowIdx, "code")}
+                        onFocus={() => setEditing({ row: rowIdx, col: "code" })}
+                        onBlur={() => flushSaveNow(row, "code")}
+                        disabled={!canEdit}
+                        maxLength={4}
+                        className="h-8 w-20 font-mono"
+                      />
+                    )}
                   </td>
                   {/* Client */}
                   <td className="px-2 py-1">
