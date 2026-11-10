@@ -166,6 +166,7 @@ function buildSections(
         { title: "Rôles fabrication", url: "/parametres/roles-fabrication", icon: Wrench, cap: "section.admin" },
         { title: "Référents par rôle", url: "/parametres/referents-roles", icon: UsersRound, cap: "section.admin" },
         { title: "Devis : taux, matériaux, modèles", url: "/parametres/devis-taux", icon: Settings, cap: "devis.parametres" },
+        { title: "Lien formulaire logistique", url: "/parametres/formulaire-logistique", icon: Settings, cap: "section.admin" },
         { title: "Fusion clients", url: "/clients/admin/fusion", icon: UsersRound, cap: "clients.merge" },
       ],
     },
@@ -270,7 +271,7 @@ function applyLogistiqueOppsMode(sections: NavSection[]): NavSection[] {
  * toujours ouvrir /admin/feature-flags en direct pour désactiver le mode.
  */
 // "/admin/utilisateurs" reste filtré par la cap section.admin (admins seulement).
-const SA_MODE_URLS = new Set(["/", "/planning-atelier", "/planning-be", "/admin/qualite-donnees", "/opportunites", "/demandes-clients", "/affaires", "/liste-chantiers", "/documents-affaires", "/clients", "/logistique", "/demandes-logistique", "/jalonnements", "/admin/utilisateurs", "/admin/connecteur-claude", "/mes-notes-de-frais", "/validation-notes-de-frais", "/planning-pilotage", "/parametres/referents-roles", "/parametres/devis-taux", "/devis-staffing", "/logistique/dispos"]);
+const SA_MODE_URLS = new Set(["/", "/planning-atelier", "/planning-be", "/admin/qualite-donnees", "/opportunites", "/demandes-clients", "/affaires", "/liste-chantiers", "/documents-affaires", "/clients", "/logistique", "/demandes-logistique", "/jalonnements", "/admin/utilisateurs", "/admin/connecteur-claude", "/mes-notes-de-frais", "/validation-notes-de-frais", "/planning-pilotage", "/parametres/referents-roles", "/parametres/devis-taux", "/parametres/formulaire-logistique", "/devis-staffing", "/logistique/dispos"]);
 
 function applySuiviAffairesMode(sections: NavSection[]): NavSection[] {
   return sections

@@ -29,7 +29,7 @@
 
 - Opportunity creation reuses ClientCombobox for client selection/creation and a dedicated free-name chantier picker; an existing chantier supplies its title only, never changes its record, and the selected client ID is explicitly attached to the new opportunity.
 
-- Expense report status filtering uses the shared pure filterNotesByStatus helper; totals stay based on all owned reports while only the displayed list is filtered.
+- Expense report status filtering uses pure filterNotesByStatus; totals use all owned reports.
 
 - Keep the per-job logistics calendar in a dedicated dialog component using the existing logistics hooks and EtapeDialog; shared reads and edits stay consistent with the main planning.
 - Derive occupied calendar dates with the pure calendrierChantier helper; this keeps multi-day coverage and empty-day filtering testable without UI snapshots.
@@ -62,3 +62,4 @@
 - Forwarded client requests use one pure Outlook header resolver across ingestion, reanalysis and backfill; receipt mailbox defines source, original receipt time and transfer headers are preserved, and historical smart rows require mailbox identity proof before reclassification.
 - smart@ is no longer polled (cron removed, route returns 410); Demandes clients reads devis@ only, and unproven pending smart@ requests are soft-dismissed by the pure doitEcarterSmart rule so nothing is deleted.
 - The logistics planning is one page (/logistique) with Étapes, Équipes, Personnes and a read-only chef tab; /logistique/equipes only redirects there. Alerts, qualified needs, WhatsApp texts, team copy and filters are pure helpers in src/lib/logistique/planning-semaine.ts so every view and the tests share one rule set.
+- Logistics form requests: emails_entrants rows via token-gated service-role RPCs; poller never creates steps.

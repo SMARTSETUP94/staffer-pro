@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { completerSuggestionsEmail } from "@/lib/logistique/suggestions-email";
 import { suggestAffaires } from "@/lib/logistique/suggest-affaire";
 import { commentaireEquipe, trouverVehicule, type EcheanceEnrichie } from "@/lib/logistique/gabarit-demande";
+import { DemandeLogistiqueForm } from "@/components/logistique/DemandeLogistiqueForm";
 import { EmailReaderDialog } from "@/components/emails/EmailReaderDialog";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -48,7 +49,7 @@ const TYPE_LABEL: Record<EtapeType, string> = {
 };
 
 type Echeance = Omit<EcheanceEnrichie, "type" | "affaire_numero"> & { type?: string | null; affaire_numero?: string | null };
-type Meta = { resume?: string | null; opp_client?: string | null; opp_projet?: string | null; opp_lieu?: string | null; echeances?: Echeance[] | null };
+type Meta = { origine?: string | null; affaire_id?: string | null; fichiers?: string[] | null; resume?: string | null; opp_client?: string | null; opp_projet?: string | null; opp_lieu?: string | null; echeances?: Echeance[] | null };
 type Row = {
   id: string; from_email: string; from_name: string | null; subject: string | null; received_at: string;
   body_preview: string | null; body_full: string | null; body_content_type: string | null;
@@ -67,6 +68,7 @@ function DemandesLogistiquePage() {
   const isAdmin = useCapability("section.admin");
   const reanalyse = useServerFn(reanalyseSharedInboxes);
   const [reanalysing, setReanalysing] = useState(false);
+  const [nouvelle, setNouvelle] = useState(false);
   async function runReanalyse() {
     setReanalysing(true);
     try {
@@ -131,7 +133,8 @@ function DemandesLogistiquePage() {
   return (
     <div className="p-4 md:p-6 space-y-4">
       <PageHeader title="Demandes logistique" description="Emails reçus sur log@setup.paris — l'IA repère les échéances et propose des étapes pour le planning."
-        actions={<div className="flex gap-2">
+        actions={<div className="flex flex-wrap gap-2">
+          <Button size="sm" variant="secondary" onClick={() => setNouvelle(true)}>+ Nouvelle demande</Button>
           <Button size="sm" onClick={relever} disabled={releve}>
             {releve ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <MailOpen className="h-4 w-4 mr-1" />}
             Relever les emails
@@ -160,7 +163,10 @@ function DemandesLogistiquePage() {
               <div key={r.id} className="rounded-lg border bg-card p-4 space-y-2">
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <p className="font-medium truncate">{m.opp_projet || r.subject || "(sans objet)"}</p>
+                    <p className="font-medium truncate">
+                      {m.origine === "formulaire" && <Badge className="mr-2 align-middle">Formulaire</Badge>}
+                      {m.opp_projet || r.subject || "(sans objet)"}
+                    </p>
                     <p className="text-xs text-muted-foreground">
                       {r.from_name ? `${r.from_name} · ` : ""}{r.from_email} · {format(parseISO(r.received_at), "d MMM yyyy HH:mm", { locale: fr })}
                       {m.opp_client ? ` · ${m.opp_client}` : ""}{m.opp_lieu ? ` · ${m.opp_lieu}` : ""}
@@ -197,6 +203,17 @@ function DemandesLogistiquePage() {
           })}
         </div>
       )}
+      {nouvelle && (
+        <Dialog open onOpenChange={(o) => !o && setNouvelle(false)}>
+          <DialogContent className="max-w-3xl max-h-[92vh] overflow-auto">
+            <DialogHeader>
+              <DialogTitle>Nouvelle demande logistique</DialogTitle>
+              <DialogDescription>La demande arrive dans « À traiter » ; elle n'est pas ajoutée directement au planning.</DialogDescription>
+            </DialogHeader>
+            <DemandeLogistiqueForm onDone={() => void load()} />
+          </DialogContent>
+        </Dialog>
+      )}
       {reading && <EmailReaderDialog email={reading} onClose={() => setReading(null)} />}
       {planning && (
         <PlanningDialog row={planning} affaires={affaires} onClose={() => setPlanning(null)}
@@ -217,7 +234,7 @@ function PlanningDialog({ row, affaires, onClose, onDone }: { row: Row; affaires
     const txt = [numero, row.subject, m?.opp_projet, m?.opp_client, m?.opp_lieu, m?.resume, (row.body_full ?? row.body_preview ?? "").replace(/<[^>]+>/g, " ").slice(0, 4000)].filter(Boolean).join(" ");
     return suggestAffaires(txt, affaires);
   }, [row, affaires, numero]);
-  const [affaireId, setAffaireId] = useState<string>(affaires.find((a) => a.numero === numero)?.id ?? suggestions[0]?.affaire.id ?? "");
+  const [affaireId, setAffaireId] = useState<string>(row.metadata_ia?.affaire_id ?? affaires.find((a) => a.numero === numero)?.id ?? suggestions[0]?.affaire.id ?? "");
   const [lines, setLines] = useState<Line[]>(() => {
     const base = (ech.length ? ech : [{ date: format(new Date(), "yyyy-MM-dd"), libelle: row.subject ?? "", type: "livraison" }]).map((e) => ({
       keep: true, date: e.date, contenu: e.libelle, lieu: ("lieu" in e && e.lieu) || row.metadata_ia?.opp_lieu || "",
@@ -272,7 +289,7 @@ function PlanningDialog({ row, affaires, onClose, onDone }: { row: Row; affaires
         setVehicules(flotte);
         // Véhicule écrit dans le mail → véhicule de la flotte ; sinon il reste dans le commentaire.
         setLines((ls) => ls.map((l) => {
-          const v = trouverVehicule(l.vehiculeTexte, flotte);
+          const v = (l.src && "vehicule_id" in l.src && flotte.find((f) => f.id === (l.src as { vehicule_id?: string }).vehicule_id)) || trouverVehicule(l.vehiculeTexte, flotte);
           if (!v || l.vehiculeId) return l;
           const sans = l.src ? commentaireEquipe({ ...l.src, acces: null, vehicule: null }, true) : l.commentaire;
           return { ...l, vehiculeId: v.id, commentaire: sans || undefined };
@@ -332,7 +349,12 @@ function PlanningDialog({ row, affaires, onClose, onDone }: { row: Row; affaires
             <p className="font-medium text-sm">{row.subject || "(sans objet)"}</p>
             <p className="text-muted-foreground">{row.from_name ? `${row.from_name} · ` : ""}{row.from_email} · {format(parseISO(row.received_at), "d MMM yyyy HH:mm", { locale: fr })}</p>
           </div>
-          {isHtml ? (
+          {row.metadata_ia?.origine === "formulaire" ? (
+            <div className="space-y-2 p-3 text-sm">
+              <p>Demande envoyée depuis le formulaire par <span className="font-medium">{row.from_name}</span>.</p>
+              <FichiersDemande chemins={row.metadata_ia?.fichiers ?? []} />
+            </div>
+          ) : isHtml ? (
             <iframe title="Email" sandbox="" srcDoc={body} className="w-full flex-1 min-h-[55vh] bg-background" />
           ) : (
             <pre className="flex-1 max-h-[60vh] overflow-auto whitespace-pre-wrap p-3 text-xs font-sans">{body}</pre>
@@ -429,5 +451,21 @@ function PlanningDialog({ row, affaires, onClose, onDone }: { row: Row; affaires
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function FichiersDemande({ chemins }: { chemins: string[] }) {
+  const [urls, setUrls] = useState<Array<{ path: string; url: string }>>([]);
+  useEffect(() => {
+    if (!chemins.length) return;
+    void supabase.storage.from("demandes-logistique").createSignedUrls(chemins, 3600)
+      .then(({ data }) => setUrls((data ?? []).filter((d) => d.signedUrl).map((d) => ({ path: d.path ?? "", url: d.signedUrl as string }))));
+  }, [chemins.join("|")]); // eslint-disable-line react-hooks/exhaustive-deps
+  if (!chemins.length) return <p className="text-xs text-muted-foreground">Aucune pièce jointe.</p>;
+  return (
+    <div className="space-y-1">
+      <p className="text-xs font-medium">Pièces jointes</p>
+      {urls.map((u, i) => <a key={u.path} href={u.url} target="_blank" rel="noreferrer" className="block text-xs text-primary underline">Pièce jointe {i + 1} ({u.path.split(".").pop()?.toUpperCase()})</a>)}
+    </div>
   );
 }
