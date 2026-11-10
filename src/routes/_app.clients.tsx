@@ -1,6 +1,7 @@
 import { createFileRoute, Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { requireCapability } from "@/lib/capability-guard";
 import { useEffect, useMemo, useState } from "react";
+import { champsManquantsPennylane } from "@/lib/clients/pennylane";
 import {
   Loader2,
   Plus,
@@ -72,6 +73,7 @@ interface ClientRow {
   actif: boolean;
   numeros_chantiers: string[];
   contacts: ClientContact[];
+  manquantsPennylane: string[];
 }
 
 function ClientsListPage() {
@@ -82,6 +84,7 @@ function ClientsListPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [showInactifs, setShowInactifs] = useState(false);
+  const [incompletPennylane, setIncompletPennylane] = useState(false);
   const [openCreate, setOpenCreate] = useState(false);
   const [openImport, setOpenImport] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<ClientRow | null>(null);
@@ -129,7 +132,7 @@ function ClientsListPage() {
     setLoading(true);
     const { data: clients, error } = await supabase
       .from("clients")
-      .select("id, nom, domaines_email, actif")
+      .select("id, nom, domaines_email, actif, type_client, siren, siret, adresse, code_postal, ville, pays, emails_facturation, conditions_paiement, nom_facturation")
       .order("nom");
     if (error) {
       toast.error("Erreur", { description: error.message });
@@ -166,6 +169,7 @@ function ClientsListPage() {
         actif: c.actif,
         numeros_chantiers: (numerosByClient.get(c.id) ?? []).sort(),
         contacts: contactsByClient.get(c.id) ?? [],
+        manquantsPennylane: champsManquantsPennylane(c),
       })),
     );
     setLoading(false);
@@ -179,6 +183,7 @@ function ClientsListPage() {
     const q = search.trim().toLowerCase();
     return rows.filter((r) => {
       if (!showInactifs && !r.actif) return false;
+      if (incompletPennylane && r.manquantsPennylane.length === 0) return false;
       if (!q) return true;
       return (
         r.nom.toLowerCase().includes(q) ||
@@ -186,7 +191,7 @@ function ClientsListPage() {
         r.numeros_chantiers.some((n) => n.includes(q))
       );
     });
-  }, [rows, search, showInactifs]);
+  }, [rows, search, showInactifs, incompletPennylane]);
 
   return (
     <div className="container mx-auto p-4 max-w-7xl space-y-4">
@@ -255,6 +260,10 @@ function ClientsListPage() {
               Inclure inactifs
             </Label>
           </div>
+          <div className="flex items-center gap-2">
+            <Switch id="incomplet-pennylane" checked={incompletPennylane} onCheckedChange={setIncompletPennylane} />
+            <Label htmlFor="incomplet-pennylane" className="text-sm">Incomplet pour Pennylane</Label>
+          </div>
           <div className="text-xs text-muted-foreground ml-auto">
             {filtered.length} client{filtered.length > 1 ? "s" : ""}
           </div>
@@ -301,6 +310,11 @@ function ClientsListPage() {
                     {!r.actif && (
                       <Badge variant="outline" className="ml-2 text-[10px]">
                         inactif
+                      </Badge>
+                    )}
+                    {r.manquantsPennylane.length > 0 && (
+                      <Badge variant="outline" className="ml-2 text-[10px]" title={`Manque : ${r.manquantsPennylane.join(", ")}`}>
+                        Pennylane incomplet
                       </Badge>
                     )}
                   </TableCell>
