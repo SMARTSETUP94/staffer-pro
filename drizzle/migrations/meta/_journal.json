@@ -799,6 +799,20 @@
       "when": 1794302579484,
       "tag": "0113_planning_atelier_personnes",
       "breakpoints": true
+    },
+    {
+      "idx": 114,
+      "version": "7",
+      "when": 1794304487066,
+      "tag": "0114_planning_atelier_isolation",
+      "breakpoints": true
+    },
+    {
+      "idx": 115,
+      "version": "7",
+      "when": 1794304528873,
+      "tag": "0115_planning_atelier_isolation_texte_exact",
+      "breakpoints": true
     }
   ]
 }

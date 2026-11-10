@@ -1,5 +1,11 @@
 # Roadmap
 
+## Personnes atelier — 10 novembre
+- [x] Migration B : six fonctions, ajouts exacts contrôlés, ACL inchangées ; notifications AFTER, retour ignoré.
+- [x] Noms par chantier/métier, ajout/retrait par période ou jours, badges et onglet Personnes ; mobile lecture seule.
+- [x] Tests 390/1366 : ajout interne sur six jours et Dispos sur un jour précis, retrait ; aucune ligne dans le lecteur logistique, notifications 830 et heures saisies 0 inchangées ; essais retirés (178 assignations, 0 atelier), six tests verts ; rien publié.
+- [ ] Lecteur minimal atelier pour les chefs d’atelier : SQL supplémentaire à approuver avant application ; le lecteur terrain actuel reste limité à admin/logistique/chef d’équipe.
+
 ## Réglages formulaire logistique — 10 novembre
 - [x] Ajout approuvé appliqué : réglages admin chefs, catégories, champs obligatoires et accueil ; contrôles partagés public/connecté et validation en base, sans publication.
 - [x] Sauvegarde/relecture et formulaire connecté à 390 px vérifiés, sans débordement ni erreur navigateur ; réglages d'essai restaurés. 21 tests verts, aucune demande créée.
