@@ -11,6 +11,8 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ClientEmailSuggestion } from "@/components/emails/ClientEmailSuggestion";
 import { SaveEmailDocumentDialog } from "@/components/emails/SaveEmailDocumentDialog";
+import { estFormulaire, resumeFormulaire } from "@/lib/logistique/formulaire-resume";
+import { supabase } from "@/integrations/supabase/client";
 
 export type ReadableEmail = {
   id: string;
@@ -27,9 +29,10 @@ export type ReadableEmail = {
 };
 
 export function EmailReaderDialog({ email, onClose, clientReply = false, affaireId }: { email: ReadableEmail; onClose: () => void; clientReply?: boolean; affaireId?: string }) {
-  const isHtml = email.body_content_type?.toLowerCase() === "html";
-  const body = email.body_full || email.body_preview || "(corps vide)";
   const meta=email.metadata_ia && typeof email.metadata_ia==='object' ? email.metadata_ia as Record<string,unknown> : {};
+  const formulaire = estFormulaire(meta);
+  const isHtml = !formulaire && email.body_content_type?.toLowerCase() === "html";
+  const body = formulaire ? resumeFormulaire(meta, email.from_name) : email.body_full || email.body_preview || "(corps vide)";
   const dateDemande=typeof meta['date_demande_originale']==='string' ? meta['date_demande_originale'] : email.received_at;
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
@@ -57,7 +60,9 @@ export function EmailReaderDialog({ email, onClose, clientReply = false, affaire
             <pre className="whitespace-pre-wrap p-4 text-sm font-sans">{body}</pre>
           )}
         </div>
-        <AttachmentsList emailId={email.id} clientReply={clientReply} affaireId={affaireId} />
+        {formulaire
+          ? <FichiersFormulaire chemins={Array.isArray(meta["fichiers"]) ? (meta["fichiers"] as string[]) : []} />
+          : <AttachmentsList emailId={email.id} clientReply={clientReply} affaireId={affaireId} />}
         </div>
       </DialogContent>
     </Dialog>
@@ -145,6 +150,32 @@ function AttachmentsList({ emailId, clientReply, affaireId }: { emailId: string;
       </ul>
       {jalDlg}
       {filing && filing.length > 0 && <SaveEmailDocumentDialog emailId={emailId} attachments={filing} initialAffaireId={affaireId} onClose={() => setFiling(null)} />}
+    </div>
+  );
+}
+
+/** Pièces jointes du formulaire : stockage privé de l'app, jamais la boîte Outlook. */
+function FichiersFormulaire({ chemins }: { chemins: string[] }) {
+  const [busy, setBusy] = useState<string | null>(null);
+  if (chemins.length === 0) return <p className="text-xs text-muted-foreground">Aucune pièce jointe.</p>;
+  const ouvrir = async (c: string) => {
+    setBusy(c);
+    const { data, error } = await supabase.storage.from("demandes-logistique").createSignedUrl(c, 300);
+    setBusy(null);
+    if (error || !data) return toast.error("Pièce jointe inaccessible");
+    window.open(data.signedUrl, "_blank", "noopener");
+  };
+  return (
+    <div className="space-y-1">
+      <p className="text-sm font-medium flex items-center gap-1"><Paperclip className="h-4 w-4" /> Pièces jointes ({chemins.length})</p>
+      <ul className="divide-y rounded-md border">
+        {chemins.map((c, i) => (
+          <li key={c} className="flex items-center gap-2 px-3 py-2 text-sm">
+            <span className="flex-1 truncate">Pièce jointe {i + 1} ({c.split(".").pop()?.toUpperCase()})</span>
+            {busy === c ? <Loader2 className="h-4 w-4 animate-spin" /> : <Button size="sm" variant="ghost" onClick={() => ouvrir(c)} aria-label={`Voir la pièce jointe ${i + 1}`}><Eye className="h-4 w-4" /></Button>}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
