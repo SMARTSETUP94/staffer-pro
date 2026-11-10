@@ -66,7 +66,8 @@ export function EtapeDialog({ open, onOpenChange, etape, defaultDate, defaultAff
   useEffect(() => { if (open) setF(init()); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [open, etape?.id]);
 
   const set = (k: keyof ReturnType<typeof init>, v: string) => setF((p) => ({ ...p, [k]: v }));
-  const showVehicule = f.type === "chargement" || f.type === "livraison" || f.type === "dechargement";
+  // Véhicule proposé sur toutes les étapes ; facultatif, jamais bloquant.
+  const showVehicule = true;
   const affaireLabel = useMemo(() => new Map(affaires.map((a) => [a.id, `${a.numero} — ${a.nom}`])), [affaires]);
 
   async function save() {
@@ -190,12 +191,12 @@ export function EtapeDialog({ open, onOpenChange, etape, defaultDate, defaultAff
                 <Select value={f.vehicule_id || NONE} onValueChange={(v) => set("vehicule_id", v === NONE ? "" : v)}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value={NONE}>Aucun / location</SelectItem>
+                    <SelectItem value={NONE}>Non choisi / location</SelectItem>
                     {vehicules.map((v) => <SelectItem key={v.id} value={v.id}>{v.nom}{v.immatriculation ? ` · ${v.immatriculation}` : ""}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
-              <div><Label>Location / transporteur</Label><Input placeholder="Immatriculation ou transporteur" value={f.immatriculation_libre} onChange={(e) => set("immatriculation_libre", e.target.value)} /></div>
+              <div><Label>Autres véhicules / location (facultatif)</Label><Input placeholder="Autres véhicules, location, transporteur…" value={f.immatriculation_libre} onChange={(e) => set("immatriculation_libre", e.target.value)} /></div>
             </>
           )}
           <div><Label>Lieu</Label><LieuAutocomplete value={f.lieu_libre} onChange={(v) => set("lieu_libre", v)} /></div>
