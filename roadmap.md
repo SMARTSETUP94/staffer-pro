@@ -2,8 +2,9 @@
 
 ## Personnes atelier — 10 novembre
 - [x] Migration B : six fonctions, ajouts exacts contrôlés, ACL inchangées ; notifications AFTER, retour ignoré.
-- [ ] Noms par chantier/métier, ajout/retrait par période ou jours, badges et onglet Personnes ; mobile lecture seule.
-- [ ] Tests 390/1366, isolation logistique/notifications, nettoyage des essais ; rien publié.
+- [x] Noms par chantier/métier, ajout/retrait par période ou jours, badges et onglet Personnes ; mobile lecture seule.
+- [x] Tests 390/1366 : ajout interne sur six jours et Dispos sur un jour précis, retrait ; aucune ligne dans le lecteur logistique, notifications 830 et heures saisies 0 inchangées ; essais retirés (178 assignations, 0 atelier), six tests verts ; rien publié.
+- [ ] Lecteur minimal atelier pour les chefs d’atelier : SQL supplémentaire à approuver avant application ; le lecteur terrain actuel reste limité à admin/logistique/chef d’équipe.
 
 ## Réglages formulaire logistique — 10 novembre
 - [x] Ajout approuvé appliqué : réglages admin chefs, catégories, champs obligatoires et accueil ; contrôles partagés public/connecté et validation en base, sans publication.
