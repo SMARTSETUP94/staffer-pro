@@ -813,6 +813,13 @@
       "when": 1794304528873,
       "tag": "0115_planning_atelier_isolation_texte_exact",
       "breakpoints": true
+    },
+    {
+      "idx": 116,
+      "version": "7",
+      "when": 1794306832265,
+      "tag": "0116_planning_atelier_personnes_lecture",
+      "breakpoints": true
     }
   ]
 }
