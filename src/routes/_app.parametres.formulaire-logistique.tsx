@@ -10,16 +10,17 @@ import { requireCapability } from "@/lib/capability-guard";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ReglagesFormulaireLogistique } from "@/components/logistique/ReglagesFormulaireLogistique";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute("/_app/parametres/formulaire-logistique")({
   beforeLoad: () => requireCapability("section.admin"),
   head: () => ({
     meta: [
-      { title: "Lien formulaire logistique — Paramètres" },
-      { name: "description", content: "Lien partageable du formulaire de demande logistique, QR code et régénération du jeton." },
-      { property: "og:title", content: "Lien formulaire logistique" },
-      { property: "og:description", content: "Partager le formulaire de demande logistique aux équipes." },
+      { title: "Formulaire logistique — Paramètres SET UP" },
+      { name: "description", content: "Réglages des chefs d'équipe, catégories, champs obligatoires et lien privé du formulaire logistique SET UP." },
+      { property: "og:title", content: "Formulaire logistique — Paramètres SET UP" },
+      { property: "og:description", content: "Configurer et partager le formulaire de demande logistique aux équipes SET UP." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -44,7 +45,7 @@ function Page() {
   return (
     <div className="space-y-4 p-4 md:p-6">
       <PageHeader title="Lien formulaire logistique" description="Le lien permet aux équipes d'envoyer une demande sans compte. Il ne donne accès à aucune autre donnée." />
-      <section className="max-w-2xl space-y-4 rounded-lg border bg-card p-5">
+      <section className="max-w-2xl space-y-4">
         <p className="text-sm">{creeLe ? `Lien actif depuis le ${format(parseISO(creeLe), "d MMM yyyy à HH:mm", { locale: fr })}.` : "Aucun lien actif."}</p>
         {lien ? (
           <div className="space-y-3">
@@ -67,6 +68,7 @@ function Page() {
           </AlertDialogContent>
         </AlertDialog>
       </section>
+      <ReglagesFormulaireLogistique />
     </div>
   );
 }

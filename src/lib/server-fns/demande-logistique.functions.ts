@@ -8,6 +8,7 @@ import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { TYPES_ETAPE } from "@/lib/logistique/gabarit-demande";
+import { configFormulaireSchema, erreurIntervention } from "@/lib/logistique/formulaire-config";
 
 const BUCKET = "demandes-logistique";
 const MIME: Record<string, string> = { "application/pdf": "pdf", "image/jpeg": "jpg", "image/png": "png" };
@@ -50,12 +51,14 @@ function propre(msg: string) {
 
 async function listes(jeton: string | null) {
   const a = await admin();
-  const [p, v] = await Promise.all([
+  const [p, v, c] = await Promise.all([
     a.rpc("demande_log_public_personnes", { _jeton: jeton as string }),
     a.rpc("demande_log_public_vehicules", { _jeton: jeton as string }),
+    a.rpc("demande_log_config_lire", { _jeton: jeton as string }),
   ]);
-  if (p.error || v.error) throw new Error(propre((p.error ?? v.error)!.message));
-  return { personnes: p.data ?? [], vehicules: v.data ?? [] };
+  const error = p.error ?? v.error ?? c.error;
+  if (error) throw new Error(propre(error.message));
+  return { personnes: p.data ?? [], vehicules: v.data ?? [], config: configFormulaireSchema.parse(c.data ?? {}) };
 }
 async function projet(jeton: string | null, numero: string) {
   const { data, error } = await (await admin()).rpc("demande_log_public_projet", { _jeton: jeton as string, _numero: numero });
@@ -68,6 +71,13 @@ async function creer(jeton: string | null, cle: string, d: z.infer<typeof creerS
     if (f.taille > MAX_OCTETS) throw new Error("Pièces jointes : 10 Mo maximum par fichier");
   }
   const a = await admin();
+  const { data: rawConfig, error: configError } = await a.rpc("demande_log_config_lire", { _jeton: jeton as string });
+  if (configError) throw new Error(propre(configError.message));
+  const config = configFormulaireSchema.parse(rawConfig ?? {});
+  for (const i of d.interventions) {
+    const message = erreurIntervention(config, i);
+    if (message) throw new Error(message);
+  }
   const { data: id, error } = await a.rpc("demande_log_public_creer", {
     _jeton: jeton as string, _cle: cle, _demandeur: d.demandeur, _projet: d.projet,
     _interventions: d.interventions.map((i) => ({ ...i, libelle: i.type, source: "formulaire" })), _nb_fichiers: d.fichiers.length,
@@ -117,7 +127,7 @@ export const demLogListes = createServerFn({ method: "POST" })
     const l = await listes(null);
     const { data: emp } = await context.supabase.from("employes").select("id").eq("profile_id", context.userId).maybeSingle();
     const moi = emp ? l.personnes.find((p) => p.employe_id === emp.id)?.id ?? null : null;
-    return { personnes: l.personnes.map(({ employe_id: _e, ...p }) => p), vehicules: l.vehicules, moi };
+    return { personnes: l.personnes.map(({ employe_id: _e, ...p }) => p), vehicules: l.vehicules, config: l.config, moi };
   });
 export const demLogProjet = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -131,3 +141,20 @@ export const demLogFichier = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i: unknown) => z.object({ demande: z.string().uuid(), path: z.string().max(200) }).parse(i))
   .handler(async ({ data }) => fichierOk(null, data.demande, data.path));
+
+export const demLogConfigAdmin = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data, error } = await context.supabase.rpc("demande_log_config_admin_lire");
+    if (error) throw new Error(propre(error.message));
+    const l = await listes(null);
+    return { config: configFormulaireSchema.parse(data ?? {}), personnes: l.personnes.map(({ employe_id: _e, ...p }) => p) };
+  });
+export const demLogConfigEnregistrer = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => configFormulaireSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase.rpc("demande_log_config_admin_enregistrer", { _config: data });
+    if (error) throw new Error(propre(error.message));
+    return { ok: true };
+  });
