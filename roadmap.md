@@ -1,5 +1,10 @@
 # Roadmap
 
+## Personnes atelier — 10 novembre
+- [x] Migration B : six fonctions, ajouts exacts contrôlés, ACL inchangées ; notifications AFTER, retour ignoré.
+- [ ] Noms par chantier/métier, ajout/retrait par période ou jours, badges et onglet Personnes ; mobile lecture seule.
+- [ ] Tests 390/1366, isolation logistique/notifications, nettoyage des essais ; rien publié.
+
 ## Réglages formulaire logistique — 10 novembre
 - [x] Ajout approuvé appliqué : réglages admin chefs, catégories, champs obligatoires et accueil ; contrôles partagés public/connecté et validation en base, sans publication.
 - [x] Sauvegarde/relecture et formulaire connecté à 390 px vérifiés, sans débordement ni erreur navigateur ; réglages d'essai restaurés. 21 tests verts, aucune demande créée.
