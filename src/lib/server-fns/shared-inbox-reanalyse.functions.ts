@@ -22,7 +22,7 @@ export const reanalyseSharedInboxes = createServerFn({ method: "POST" })
 
     const { data: rows, error } = await supabase
       .from("emails_entrants")
-      .select("id, source_boite, from_email, from_name, subject, body_full, body_content_type, body_preview, transmis_par, metadata_ia")
+      .select("id, source_boite, from_email, from_name, subject, body_full, body_content_type, body_preview, received_at, transmis_par, metadata_ia")
       .in("source_boite", data.source ? [data.source] : ["devis", "logistique"])
       .order("received_at", { ascending: false })
       .limit(data.limit);
@@ -46,6 +46,7 @@ export const reanalyseSharedInboxes = createServerFn({ method: "POST" })
                 body: r.body_full,
                 bodyContentType: r.body_content_type,
                 bodyPreview: r.body_preview,
+                receivedAt: r.received_at,
               },
               r.source_boite as SharedSource,
               exemples,
