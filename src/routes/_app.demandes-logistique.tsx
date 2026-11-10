@@ -326,6 +326,15 @@ function PlanningDialog({ row, affaires, onClose, onDone }: { row: Row; affaires
         retenu: kept.map((l) => ({ type: l.type, date: l.date, contenu: l.contenu, heure_debut: l.hDebut || null, heure_fin: l.hFin || null, lieu: l.lieu || null })),
         commentaire: commentaire.trim() || null,
       });
+      if ((row.metadata_ia?.fichiers ?? []).length > 0) {
+        try {
+          const { rattacherFichiersDemande } = await import("@/lib/server-fns/demande-logistique-documents.functions");
+          const r = await rattacherFichiersDemande({ data: { emailId: row.id, affaireId, etapes: kept.map((l) => `${l.type} ${l.date}`).join(", ").slice(0, 290) } });
+          if (r.ajoutes) toast.success(`${r.ajoutes} pièce(s) jointe(s) rattachée(s) aux documents du chantier`);
+        } catch (e) {
+          toast.error("Pièces jointes non rattachées", { description: (e as Error).message });
+        }
+      }
     }
     setSaving(false);
     if (error) return toast.error("Ajout impossible", { description: error.message });

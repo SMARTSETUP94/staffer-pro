@@ -4,6 +4,7 @@
  * volontaire — les emails restent dans la boîte de réception, aucun déplacement).
  * Appelé par pg_cron via /api/public/* — header `apikey` = publishable key requis.
  */
+import { demandeDeCopie } from "@/lib/logistique/copie-formulaire";
 import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
 import { loadFeedbackPrompt } from "@/lib/logistique/ia-feedback";
@@ -109,6 +110,11 @@ export const Route = createFileRoute("/api/public/hooks/poll-shared-inboxes")({
                   if(upErr) errors.push(upErr.message);
                 }
                 continue;
+              }
+              const copieDe = box.source === "logistique" ? demandeDeCopie(msg.subject, msg.body?.content) : null;
+              if (copieDe) {
+                const { data: dem } = await supa.from("emails_entrants").select("id").eq("id", copieDe).maybeSingle();
+                if (dem) continue; // copie mail d'une demande « Formulaire » déjà enregistrée
               }
               let cls: SharedCls;
               try {
