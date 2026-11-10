@@ -12,6 +12,7 @@ import { useCapability } from "@/hooks/use-capability";
 import { supabase } from "@/integrations/supabase/client";
 import { completerSuggestionsEmail } from "@/lib/logistique/suggestions-email";
 import { suggestAffaires } from "@/lib/logistique/suggest-affaire";
+import { commentaireEquipe, trouverVehicule, type EcheanceEnrichie } from "@/lib/logistique/gabarit-demande";
 import { EmailReaderDialog } from "@/components/emails/EmailReaderDialog";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -46,12 +47,12 @@ const TYPE_LABEL: Record<EtapeType, string> = {
   finitions: "Finitions", permanence: "Permanence", demontage: "Démontage", dechargement: "Déchargement",
 };
 
-type Echeance = { date: string; libelle: string; type?: string | null; affaire_numero?: string | null };
+type Echeance = Omit<EcheanceEnrichie, "type" | "affaire_numero"> & { type?: string | null; affaire_numero?: string | null };
 type Meta = { resume?: string | null; opp_client?: string | null; opp_projet?: string | null; opp_lieu?: string | null; echeances?: Echeance[] | null };
 type Row = {
   id: string; from_email: string; from_name: string | null; subject: string | null; received_at: string;
   body_preview: string | null; body_full: string | null; body_content_type: string | null;
-  statut: "pending_review" | "validated" | "dismissed"; metadata_ia: Meta | null;
+  statut: "pending_review" | "validated" | "dismissed"; metadata_ia: Meta | null; has_attachments?: boolean | null;
 };
 type Aff = { id: string; numero: string; nom: string; phase: string; client?: string | null };
 
@@ -85,7 +86,7 @@ function DemandesLogistiquePage() {
     setLoading(true);
     const { data, error } = await supabase
       .from("emails_entrants")
-      .select("id, from_email, from_name, subject, received_at, body_preview, body_full, body_content_type, statut, metadata_ia")
+      .select("id, from_email, from_name, subject, received_at, body_preview, body_full, body_content_type, statut, metadata_ia, has_attachments")
       .eq("source_boite", "logistique")
       .order("received_at", { ascending: false })
       .limit(300);
@@ -186,6 +187,7 @@ function DemandesLogistiquePage() {
                         <Truck className="h-3 w-3" />
                         {format(parseISO(e.date), "d MMM", { locale: fr })} · {e.libelle}
                         {e.affaire_numero ? ` · ${e.affaire_numero}` : ""}
+                        {e.source === "gabarit" ? " · gabarit" : ""}
                       </Badge>
                     ))}
                   </div>
@@ -204,7 +206,7 @@ function DemandesLogistiquePage() {
   );
 }
 
-type Line = { auto?: boolean; keep: boolean; date: string; type: EtapeType; contenu: string; hDebut: string; hFin: string; lieu: string; vehiculeId: string; nb?: string; commentaire?: string };
+type Line = { auto?: boolean; keep: boolean; date: string; type: EtapeType; contenu: string; hDebut: string; hFin: string; lieu: string; vehiculeId: string; nb?: string; commentaire?: string; responsable?: string; acces?: string; vehiculeTexte?: string; src?: Echeance };
 type Veh = { id: string; nom: string; immatriculation: string | null };
 
 function PlanningDialog({ row, affaires, onClose, onDone }: { row: Row; affaires: Aff[]; onClose: () => void; onDone: () => void }) {
@@ -218,10 +220,17 @@ function PlanningDialog({ row, affaires, onClose, onDone }: { row: Row; affaires
   const [affaireId, setAffaireId] = useState<string>(affaires.find((a) => a.numero === numero)?.id ?? suggestions[0]?.affaire.id ?? "");
   const [lines, setLines] = useState<Line[]>(() => {
     const base = (ech.length ? ech : [{ date: format(new Date(), "yyyy-MM-dd"), libelle: row.subject ?? "", type: "livraison" }]).map((e) => ({
-      keep: true, date: e.date, contenu: e.libelle, lieu: row.metadata_ia?.opp_lieu ?? "",
+      keep: true, date: e.date, contenu: e.libelle, lieu: ("lieu" in e && e.lieu) || row.metadata_ia?.opp_lieu || "",
       type: ((TYPES as readonly string[]).includes(e.type ?? "") ? e.type : "livraison") as EtapeType,
+      src: e as Echeance,
     }));
-    return completerSuggestionsEmail(base).map((x) => ({ ...x, hDebut: "", hFin: "", vehiculeId: "" }));
+    return completerSuggestionsEmail(base).map((x) => {
+      const e = (x as typeof x & { src?: Echeance }).src;
+      return { ...x, src: e, hDebut: e?.heure_debut ?? "", hFin: e?.heure_fin ?? "", vehiculeId: "",
+        nb: e?.nb_personnes != null ? String(e.nb_personnes) : undefined, responsable: e?.responsable ?? "",
+        acces: e?.acces ?? "", vehiculeTexte: e?.vehicule ?? "",
+        commentaire: e ? commentaireEquipe({ ...e, acces: null, vehicule: e.vehicule ?? null }, false) || undefined : undefined };
+    });
   });
   const [saving, setSaving] = useState(false);
   const [commentaire, setCommentaire] = useState("");
@@ -258,7 +267,17 @@ function PlanningDialog({ row, affaires, onClose, onDone }: { row: Row; affaires
   const [vehicules, setVehicules] = useState<Veh[]>([]);
   useEffect(() => {
     void supabase.from("vehicules").select("id, nom, immatriculation").eq("actif", true).order("nom")
-      .then(({ data }) => setVehicules((data ?? []) as Veh[]));
+      .then(({ data }) => {
+        const flotte = (data ?? []) as Veh[];
+        setVehicules(flotte);
+        // Véhicule écrit dans le mail → véhicule de la flotte ; sinon il reste dans le commentaire.
+        setLines((ls) => ls.map((l) => {
+          const v = trouverVehicule(l.vehiculeTexte, flotte);
+          if (!v || l.vehiculeId) return l;
+          const sans = l.src ? commentaireEquipe({ ...l.src, acces: null, vehicule: null }, true) : l.commentaire;
+          return { ...l, vehiculeId: v.id, commentaire: sans || undefined };
+        }));
+      });
   }, []);
   const filtered = useMemo(() => {
     const words = q.toLowerCase().split(/\s+/).filter(Boolean);
@@ -279,6 +298,7 @@ function PlanningDialog({ row, affaires, onClose, onDone }: { row: Row; affaires
       lieu_libre: l.lieu.trim() || null, vehicule_id: l.vehiculeId || null,
       nb_personnes: l.nb ? Number(l.nb) : null,
       commentaire_equipe: l.commentaire?.trim() || null,
+      responsable: l.responsable?.trim() || null, acces: l.acces?.trim() || null,
       statut: "valide" as const, origine: "jalonnement" as const,
       note: `${l.contenu?.trim() ? `${l.contenu.trim()} — ` : ""}Depuis un email log@ : « ${(row.subject ?? "").slice(0, 120)} »`,
     })));
@@ -301,7 +321,10 @@ function PlanningDialog({ row, affaires, onClose, onDone }: { row: Row; affaires
       <DialogContent className="max-w-6xl max-h-[92vh] overflow-auto">
         <DialogHeader>
           <DialogTitle>Ajouter au planning logistique</DialogTitle>
-          <DialogDescription>Suggestions de l'IA — corrigez, décochez ce qui ne doit pas être ajouté.</DialogDescription>
+          <DialogDescription>
+            {ech.some((e) => e.source === "gabarit") ? "Lu depuis le gabarit du mail (sans IA)" : "Suggestions de l'IA"} — corrigez, décochez ce qui ne doit pas être ajouté.
+            {row.has_attachments ? " · Ce mail contient une pièce jointe (à consulter dans l'email)." : ""}
+          </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 md:grid-cols-2 min-h-0">
         <div className="rounded-md border bg-muted/30 flex flex-col min-h-0">
@@ -386,6 +409,10 @@ function PlanningDialog({ row, affaires, onClose, onDone }: { row: Row; affaires
                     {vehicules.map((v) => <SelectItem key={v.id} value={v.id}>{v.nom}{v.immatriculation ? ` · ${v.immatriculation}` : ""}</SelectItem>)}
                   </SelectContent>
                 </Select>
+              </div>
+              <div className="flex w-full flex-wrap items-center gap-2 pl-6">
+                <Input className="w-48" placeholder="Responsable (chef d'équipe)" aria-label="Responsable" value={l.responsable ?? ""} onChange={(e) => upd(i, { responsable: e.target.value })} />
+                <Input className="flex-1 min-w-40" placeholder="Accès / contraintes" aria-label="Accès" value={l.acces ?? ""} onChange={(e) => upd(i, { acces: e.target.value })} />
               </div>
               <div className="w-full pl-6 pb-2 border-b">
                 <Textarea rows={1} placeholder="Commentaire pour l'équipe (indications au chef logistique…)" value={l.commentaire ?? ""} onChange={(e) => upd(i, { commentaire: e.target.value })} />
