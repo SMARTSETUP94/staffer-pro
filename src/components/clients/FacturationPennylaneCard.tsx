@@ -14,7 +14,7 @@ import {
 } from "@/lib/clients/pennylane";
 
 const CHAMPS =
-  "id, nom, siret, siren, adresse, code_postal, ville, tva_intracom, type_client, civilite_facturation, prenom_facturation, nom_facturation, pays, emails_facturation, destinataire_facturation, livraison_identique, adresse_livraison, code_postal_livraison, ville_livraison, pays_livraison, conditions_paiement, langue_facturation, reference_client, numero_compte_client, pennylane_id";
+  "id, nom, siret, siren, adresse, code_postal, ville, tva_intracom, type_client, civilite_facturation, prenom_facturation, nom_facturation, pays, emails_facturation, destinataire_facturation, livraison_identique, adresse_livraison, code_postal_livraison, ville_livraison, pays_livraison, conditions_paiement, langue_facturation, reference_client, numero_compte_client, pennylane_id, raison_sociale, comptes_auxiliaires, plateforme_facturation, import_compta_remarques";
 
 type F = {
   nom: string; siret: string; siren: string; adresse: string; code_postal: string; ville: string;
@@ -23,6 +23,7 @@ type F = {
   livraison_identique: boolean; adresse_livraison: string; code_postal_livraison: string;
   ville_livraison: string; pays_livraison: string; conditions_paiement: string; langue_facturation: string;
   reference_client: string; numero_compte_client: string; pennylane_id: string;
+  raison_sociale: string; comptes_auxiliaires: string[]; plateforme_facturation: string; import_compta_remarques: string;
 };
 
 const sel = "h-9 w-full rounded-md border border-input bg-background px-2 text-sm";
@@ -41,6 +42,7 @@ export function FacturationPennylaneCard({ clientId, onSaved }: { clientId: stri
       Object.entries(d).map(([k, x]) => [k, x ?? ""]),
     ) as unknown as F;
     v.emails_facturation = (d.emails_facturation as string[]) ?? [];
+    v.comptes_auxiliaires = (d.comptes_auxiliaires as string[]) ?? [];
     v.livraison_identique = (d.livraison_identique as boolean) ?? true;
     setF(v); setInitial(v);
   }
@@ -87,6 +89,8 @@ export function FacturationPennylaneCard({ clientId, onSaved }: { clientId: stri
       tva_intracom: n(f.tva_intracom.replace(/\s/g, "").toUpperCase()),
       emails_facturation: f.emails_facturation,
       destinataire_facturation: n(f.destinataire_facturation),
+      raison_sociale: n(f.raison_sociale),
+      plateforme_facturation: n(f.plateforme_facturation),
       livraison_identique: f.livraison_identique,
       adresse_livraison: n(f.adresse_livraison), code_postal_livraison: n(f.code_postal_livraison),
       ville_livraison: n(f.ville_livraison), pays_livraison: n(f.pays_livraison),
@@ -127,7 +131,18 @@ export function FacturationPennylaneCard({ clientId, onSaved }: { clientId: stri
         )}
       </div>
 
+      {f.import_compta_remarques && (
+        <div className="rounded-md border border-dashed p-3 text-sm">
+          <div className="font-medium mb-1">Remarques de la comptable</div>
+          <ul className="list-disc pl-4 space-y-0.5 text-muted-foreground">
+            {f.import_compta_remarques.split(" | ").map((r, i) => <li key={i}>{r}</li>)}
+          </ul>
+        </div>
+      )}
+
       <div className="grid gap-3 sm:grid-cols-2">
+        <div className="sm:col-span-2"><Label>Raison sociale</Label>
+          <Input value={f.raison_sociale} placeholder="Dénomination légale" onChange={(e) => set("raison_sociale", e.target.value)} /></div>
         <div><Label>Type de client</Label>
           <select className={sel} value={f.type_client} onChange={(e) => set("type_client", e.target.value)}>
             <option value="entreprise">Entreprise</option><option value="particulier">Particulier</option>
@@ -181,6 +196,8 @@ export function FacturationPennylaneCard({ clientId, onSaved }: { clientId: stri
               onKeyDown={(e) => { if (e.key === "Enter" || e.key === ",") { e.preventDefault(); ajouterMail(); } }} />
             <Button type="button" variant="outline" size="sm" onClick={ajouterMail}>Ajouter</Button>
           </div></div>
+        <div><Label>Plateforme de facturation</Label>
+          <Input value={f.plateforme_facturation} placeholder="Ex. Portail Chorus" onChange={(e) => set("plateforme_facturation", e.target.value)} /></div>
         <div><Label>Destinataire</Label><Input value={f.destinataire_facturation} onChange={(e) => set("destinataire_facturation", e.target.value)} /></div>
         <div><Label>Conditions de paiement</Label>
           <select className={sel} value={f.conditions_paiement} onChange={(e) => set("conditions_paiement", e.target.value)}>
@@ -193,6 +210,11 @@ export function FacturationPennylaneCard({ clientId, onSaved }: { clientId: stri
           </select></div>
         <div><Label>Référence client</Label><Input value={f.reference_client} onChange={(e) => set("reference_client", e.target.value)} /></div>
         <div><Label>Numéro de compte client</Label><Input value={f.numero_compte_client} placeholder="411…" onChange={(e) => set("numero_compte_client", e.target.value)} /></div>
+        <div><Label>Comptes Quadra</Label>
+          <div className="flex flex-wrap gap-1 min-h-9 items-center">
+            {f.comptes_auxiliaires.length ? f.comptes_auxiliaires.map((c) => <Badge key={c} variant="secondary">{c}</Badge>)
+              : <span className="text-sm text-muted-foreground">—</span>}
+          </div></div>
         <div><Label>Identifiant Pennylane</Label><Input value={f.pennylane_id} disabled placeholder="Rempli lors d'une future synchro" /></div>
       </div>
 
