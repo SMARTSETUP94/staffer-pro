@@ -459,7 +459,7 @@ function FichiersDemande({ chemins }: { chemins: string[] }) {
   useEffect(() => {
     if (!chemins.length) return;
     void supabase.storage.from("demandes-logistique").createSignedUrls(chemins, 3600)
-      .then(({ data }) => setUrls((data ?? []).filter((d) => d.signedUrl).map((d) => ({ path: d.path ?? "", url: d.signedUrl }))));
+      .then(({ data }) => setUrls((data ?? []).filter((d) => d.signedUrl).map((d) => ({ path: d.path ?? "", url: d.signedUrl as string }))));
   }, [chemins.join("|")]); // eslint-disable-line react-hooks/exhaustive-deps
   if (!chemins.length) return <p className="text-xs text-muted-foreground">Aucune pièce jointe.</p>;
   return (
