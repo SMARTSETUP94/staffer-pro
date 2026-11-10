@@ -1,67 +1,104 @@
-# Renforts sur le planning atelier (réutilise le mécanisme logistique)
+# Planning atelier avec des noms (Gantt Personnes)
 
-## 1. Aujourd'hui : planning logistique
-- **Où c'est stocké** : table `assignations` (pas de table dédiée). Une ligne = une personne, un jour, une étape (`etape_logistique_id`), avec `terrain = true`, `source_terrain = 'manuelle'`, `role_terrain` (chef_equipe / equipier), `heures = 0`, `demi_journee = 'JOURNEE'`, heures de l'étape recopiées.
-- **Qui** : fonction `planning_terrain_affecter`, autorisée par `planning_terrain_ecrire_autorise` = admin ou logistique (refusé à Claude).
-- **Internes vs externes** : soit un salarié actif (`employe_id`), soit un intervenant Dispos actif non relié à un salarié (`dispos_intervenant_id`) — c'est là que vivent intérimaires/extras. Une contrainte impose l'un OU l'autre. Les salariés inactifs sont refusés. Il n'y a pas de « type » Intérim/Sous-traitant stocké (le statut Dispos est vide pour les 28 fiches) ; les sous-traitants (table `sous_traitants`) ne sont pas affectables nominativement.
-- **Effet** : la personne apparaît dans Équipes/Personnes, compte dans « staffé vs besoin » de l'étape. Aucun jour-homme en heures (heures = 0), aucune écriture dans les heures saisies.
+## Ce que Gabin verra
+- **Sur chaque barre chantier × métier** du planning atelier : les noms des personnes affectées (prénom + initiale, « +N » au-delà de 3). Clic sur la barre → fenêtre avec la liste des personnes, bouton « + Personne » et « Retirer ».
+- **Ajouter une personne** : recherche par nom parmi les salariés actifs et les intervenants Dispos actifs (comme en logistique), puis « toute la barre » ou « du … au … » (jours ouvrés seulement, fériés exclus) ou des jours précis. Badge facultatif **Intérim / Renfort** pour les intervenants Dispos.
+- **Retirer** : toute la présence sur la barre, ou une période / un jour.
+- **Nouvel onglet « Personnes »** dans le planning atelier : une ligne par personne, ses barres chantier/métier dans le temps, comme la vue Personnes logistique. Mêmes semaines et même navigation que le Gantt atelier.
+- **Téléphone (390 px)** : lecture seule, liste par personne et par semaine.
+- **Inchangé** : capacité, heures, jours-hommes, alertes de charge.
 
-## 2. Aujourd'hui : planning atelier
-- **Charge** : heures par chantier × métier (`affaire_planning_metier.heures_prevues`, sinon heures du devis), réparties sur les jours ouvrés de la barre (fériés FR exclus).
-- **Capacité** : uniquement un chiffre fixe par métier, `metiers.capacite_jour` (personnes/jour : Construction 20, Métallerie 6, Peinture 10, Numérique 1, Tapisserie 4, UV 1, Machiniste vide = sans limite). Capacité semaine = personnes × 8 h × jours ouvrés. % et alertes en découlent.
-- **Personnes affichées** : aucune. Le planning atelier ne montre pas de noms (choix initial) ; le petit « configurateur nb de personnes » est local à l'appareil et ne compte pas dans la capacité.
+## Règles
+- Droits d'écriture : ceux du planning atelier (admin, logistique, chef d'atelier, chef d'équipe), refusé à Claude. Lecture : ceux qui voient déjà le planning atelier.
+- Affiché : prénom, nom/initiale, métier, chantier, dates, badge. Jamais téléphone, salaire, taux ou contrat.
+- Heures = 0, aucune écriture dans les heures saisies, aucune notification, salariés inactifs refusés, aucune donnée existante modifiée.
 
-## 3. Proposition (la plus simple)
-Réutiliser `assignations` comme en logistique, avec un marqueur de pôle :
-- **Ajouter un renfort** (bouton « + Renfort » dans le planning atelier) : personne (recherche salarié actif ou intervenant Dispos actif), métier, chantier, du / au (ou un seul jour), type affiché **Renfort** ou **Intérim**. Crée une ligne par jour ouvré.
-- **Retirer** : sur un jour ou toute la période.
-- **Capacité** : capacité du métier ce jour = `capacite_jour` + nombre de renforts ce jour-là (métier sans limite : affiché, pas de %).
-- **Affichage** : section « Renforts » sous la charge hebdo, une ligne par personne avec barre et badge Intérim / Renfort ; dans la cellule de charge, « dont +N renfort(s) ». Lecture seule sur mobile.
-- **Droits** : exactement `planning_atelier_ecriture_autorisee` (admin, logistique, chef d'atelier, chef d'équipe), refusé à Claude.
-- **N'apparaît pas** dans le planning logistique ni l'ancien planning (filtre sur le pôle).
+## Migration (texte complet montré avant application)
+Ajouts seulement, sur la table des affectations existante :
 
-Hors périmètre : salaires, taux, contrats, heures saisies, réactivation de salariés, modification des données existantes.
-
-## Migration SQL proposée (à valider avant application)
 ```sql
--- Ajouts seulement ; lignes existantes intactes (colonnes nulles)
 ALTER TABLE public.assignations
-  ADD COLUMN pole_planning text CHECK (pole_planning IS NULL OR pole_planning = 'atelier'),
-  ADD COLUMN type_renfort text CHECK (type_renfort IS NULL OR type_renfort IN ('renfort','interim')),
+  ADD COLUMN pole_planning text
+    CHECK (pole_planning IS NULL OR pole_planning = 'atelier'),
+  ADD COLUMN badge_atelier text
+    CHECK (badge_atelier IS NULL OR badge_atelier IN ('interim','renfort')),
   ADD CONSTRAINT assignations_atelier_coherent CHECK (
-    pole_planning IS NULL OR (metier_id IS NOT NULL AND etape_logistique_id IS NULL
-      AND type_renfort IS NOT NULL AND heures = 0));
+    pole_planning IS NULL OR (
+      metier_id IS NOT NULL AND etape_logistique_id IS NULL
+      AND heures = 0 AND terrain AND NOT historique_terrain));
 CREATE UNIQUE INDEX assignations_atelier_unique ON public.assignations
-  (affaire_id, metier_id, date, coalesce(employe_id, dispos_intervenant_id))
+  (affaire_id, metier_id, date, (coalesce(employe_id, dispos_intervenant_id)))
   WHERE pole_planning = 'atelier';
 
--- Ajout : une ligne par jour ouvré (fériés exclus), personne active uniquement
-CREATE FUNCTION public.planning_atelier_renfort_ajouter(
-  _affaire uuid, _metier int, _debut date, _fin date,
-  _personne uuid, _origine text, _type text) RETURNS int
-  LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$ ...
-  -- IF NOT planning_atelier_ecriture_autorisee() THEN RAISE 42501
-  -- contrôle employé actif / intervenant Dispos actif non relié (comme logistique)
-  -- INSERT ... terrain=true, pole_planning='atelier', heures=0, role_terrain='equipier',
-  --        source_terrain='manuelle', phase='fabrication' ON CONFLICT DO NOTHING
-$$;
+-- Ajout : une ligne par jour ouvré (week-ends et fériés FR exclus), sans doublon
+CREATE FUNCTION public.planning_atelier_personne_ajouter(
+  _affaire uuid, _metier int, _jours date[],
+  _personne uuid, _origine text, _badge text DEFAULT NULL)
+RETURNS int LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+DECLARE n int;
+BEGIN
+  IF NOT public.planning_atelier_ecriture_autorisee() THEN
+    RAISE EXCEPTION 'Accès refusé' USING ERRCODE = '42501'; END IF;
+  IF _metier NOT IN (1,2,3,4,5,6,9) OR coalesce(array_length(_jours,1),0) = 0
+     OR array_length(_jours,1) > 130 THEN RAISE EXCEPTION 'Métier ou jours invalides'; END IF;
+  IF _origine = 'employe' THEN
+    IF NOT EXISTS (SELECT 1 FROM employes WHERE id=_personne AND actif) THEN
+      RAISE EXCEPTION 'Personne inexistante ou inactive'; END IF;
+    _badge := NULL;
+  ELSIF _origine = 'dispos' THEN
+    IF NOT EXISTS (SELECT 1 FROM dispos_intervenants
+                   WHERE id=_personne AND actif AND employe_id IS NULL) THEN
+      RAISE EXCEPTION 'Intervenant invalide'; END IF;
+    IF _badge IS NOT NULL AND _badge NOT IN ('interim','renfort') THEN
+      RAISE EXCEPTION 'Badge invalide'; END IF;
+  ELSE RAISE EXCEPTION 'Origine invalide'; END IF;
+  INSERT INTO assignations (affaire_id, metier_id, employe_id, dispos_intervenant_id,
+    date, demi_journee, heures, terrain, source_terrain, role_terrain,
+    pole_planning, badge_atelier, phase, created_by)
+  SELECT _affaire, _metier,
+    CASE WHEN _origine='employe' THEN _personne END,
+    CASE WHEN _origine='dispos' THEN _personne END,
+    j, 'JOURNEE', 0, true, 'manuelle', 'equipier',
+    'atelier', _badge, 'fabrication', auth.uid()
+  FROM unnest(_jours) j
+  WHERE extract(isodow FROM j) < 6
+  ON CONFLICT DO NOTHING;
+  GET DIAGNOSTICS n = ROW_COUNT; RETURN n;
+END $$;
 
--- Retrait : uniquement des lignes pole_planning='atelier'
-CREATE FUNCTION public.planning_atelier_renfort_retirer(
-  _affaire uuid, _metier int, _personne uuid, _debut date, _fin date) RETURNS int ...;
+-- Retrait : uniquement des lignes atelier
+CREATE FUNCTION public.planning_atelier_personne_retirer(
+  _affaire uuid, _metier int, _personne uuid, _debut date, _fin date)
+RETURNS int LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+DECLARE n int;
+BEGIN
+  IF NOT public.planning_atelier_ecriture_autorisee() THEN
+    RAISE EXCEPTION 'Accès refusé' USING ERRCODE = '42501'; END IF;
+  DELETE FROM assignations
+   WHERE pole_planning = 'atelier' AND affaire_id = _affaire AND metier_id = _metier
+     AND (employe_id = _personne OR dispos_intervenant_id = _personne)
+     AND date BETWEEN _debut AND _fin;
+  GET DIAGNOSTICS n = ROW_COUNT; RETURN n;
+END $$;
 
-REVOKE ALL ON FUNCTION ... FROM public, anon;
-GRANT EXECUTE ON FUNCTION ... TO authenticated;
+REVOKE ALL ON FUNCTION public.planning_atelier_personne_ajouter(uuid,int,date[],uuid,text,text),
+  public.planning_atelier_personne_retirer(uuid,int,uuid,date,date) FROM public, anon;
+GRANT EXECUTE ON FUNCTION public.planning_atelier_personne_ajouter(uuid,int,date[],uuid,text,text),
+  public.planning_atelier_personne_retirer(uuid,int,uuid,date,date) TO authenticated;
 ```
-Le texte complet des deux fonctions vous sera montré avant application.
+Les fériés FR sont retirés côté app (même helper que le Gantt) avant l'appel ; la base exclut en plus les week-ends.
+
+### Filtres sur les fonctions existantes (redéfinies explicitement à partir de leur texte actuel, montré en entier avant application)
+Constat : ces fonctions lisent toutes les affectations et verraient les lignes atelier.
+- `planning_terrain_semaine` (Étapes/Équipes/Personnes logistique) lit toutes les affectations de la semaine → ajout `AND pole_planning IS NULL`.
+- `notify_assignation_change` (notification à la personne) → sortie immédiate si `pole_planning = 'atelier'`.
+- `audit_staffing_divergence` (anomalies « affectation orpheline ») → exclusion des lignes atelier.
+- `staffing_par_pole_jours` / `staffing_par_pole_consolide` (ancien planning par pôle) → exclusion.
+- `resolve_saisie_heures` (suggestion lors de la saisie d'heures, lecture seule) → exclusion, pour ne rien proposer à partir de ces lignes.
+- Sans effet bloquant, conservés tels quels : `planning_terrain_ecran` (filtre déjà par étape), historique équipe (recalcul du chantier, léger, compte la personne dans l'équipe du chantier), refus si chantier terminé/annulé (voulu), bornes d'heures (0 OK), garde historique terrain (non concerné).
 
 ## Technique
-- Lecture : la fonction serveur du planning atelier renvoie les renforts (prénom + nom, type, métier, chantier, dates), sans téléphone.
-- `chargeHebdomadaire` reçoit la capacité ajustée par jour (helper pur testé : renfort un jour férié = 0, métier sans limite = pas de %).
-- Vérifier que `planning_terrain_semaine` et les lecteurs logistique filtrent sur `etape_logistique_id` / `pole_planning IS NULL` ; sinon ajouter ce filtre dans la même migration (redéfinition explicite).
-- Triggers existants sur `assignations` (historique équipe, notification, chantier ouvert) à contrôler : les notifications d'affectation seraient émises — à neutraliser pour `pole_planning='atelier'` si non voulu.
-- Tests : ajout/retrait, capacité +1, droits (chef d'équipe oui, employé non), 390 px ; essais effacés.
-
-## Questions
-- Un renfort est-il rattaché à un chantier (proposé, car la base l'exige) ou seulement à un métier ?
-- Les personnes ajoutées doivent-elles recevoir une notification ? (proposé : non)
+- Lecture : la fonction serveur du planning atelier renvoie les affectations atelier (id, chantier, métier, date, prénom, nom, badge), via le client de l'utilisateur.
+- Helper pur `regrouperPersonnesAtelier` (jours consécutifs → barres, prénom + initiale, « +N ») avec tests ; aucun changement à `chargeHebdomadaire`.
+- Mobile en lecture seule ; test à 390 et 1366 px, essais effacés, rien publié.
+- Règle ajoutée dans `src/components/planning-simple/AGENTS.md`.
