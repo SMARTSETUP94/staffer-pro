@@ -62,5 +62,4 @@
 - Forwarded client requests use one pure Outlook header resolver across ingestion, reanalysis and backfill; receipt mailbox defines source, original receipt time and transfer headers are preserved, and historical smart rows require mailbox identity proof before reclassification.
 - smart@ is no longer polled (cron removed, route returns 410); Demandes clients reads devis@ only, and unproven pending smart@ requests are soft-dismissed by the pure doitEcarterSmart rule so nothing is deleted.
 - The logistics planning is one page (/logistique) with Étapes, Équipes, Personnes and a read-only chef tab; /logistique/equipes only redirects there. Alerts, qualified needs, WhatsApp texts, team copy and filters are pure helpers in src/lib/logistique/planning-semaine.ts so every view and the tests share one rule set.
-- Logistics form requests are emails_entrants rows (origine formulaire) created via service-role RPCs gated by a hashed link token; uploads use signed URLs to a private bucket.
-- log@ template lines are parsed deterministically (gabarit-demande.ts) over AI; the poller never creates steps.
+- Logistics form requests: emails_entrants rows via token-gated service-role RPCs; poller never creates steps.
