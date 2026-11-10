@@ -6,7 +6,7 @@ import {
   UserCircle, FileText, Trophy, Map, ClipboardList,
   Truck, Palette, Warehouse, Hammer, Wrench, BadgeCheck, Lightbulb,
   FileSignature, Inbox, PackageCheck, UsersRound, Briefcase, Settings, TrendingUp, LayoutGrid,
-  GanttChart, Wallet, CalendarCheck,
+  GanttChart, Wallet, CalendarCheck, Send,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -116,6 +116,7 @@ function buildSections(
       items: [
         { title: "Planning logistique", url: "/logistique", icon: Calendar, cap: "logistique.planning.view" },
         { title: "Demandes logistique", url: "/demandes-logistique", icon: Inbox, cap: "logistique.planning.view" },
+        { title: "Demande logistique", url: "/demande-logistique", icon: Send, cap: "logistique.planning.view" },
         { title: "Jalonnements", url: "/jalonnements", icon: ClipboardList, cap: "logistique.planning.view" },
         { title: "Véhicules", url: "/flotte", icon: Truck, cap: "section.logistique" },
         { title: "Planning véhicules", url: "/logistique/vehicules-planning", icon: Calendar, cap: "section.logistique" },
