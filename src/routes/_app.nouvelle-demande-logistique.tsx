@@ -3,7 +3,7 @@ import { requireCapability } from "@/lib/capability-guard";
 import { DemandeLogistiqueForm } from "@/components/logistique/DemandeLogistiqueForm";
 import { PageHeader } from "@/components/PageHeader";
 
-export const Route = createFileRoute("/_app/demande-logistique")({
+export const Route = createFileRoute("/_app/nouvelle-demande-logistique")({
   beforeLoad: () => requireCapability("logistique.planning.view"),
   head: () => ({
     meta: [
