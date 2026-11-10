@@ -5166,6 +5166,7 @@ export type Database = {
           delai_chargement_retour: number
           delai_dechargement: number
           delai_emballage: number
+          demande_log_config: Json
           demande_log_jeton_cree_le: string | null
           demande_log_jeton_hash: string | null
           duree_montage: number
@@ -5180,6 +5181,7 @@ export type Database = {
           delai_chargement_retour?: number
           delai_dechargement?: number
           delai_emballage?: number
+          demande_log_config?: Json
           demande_log_jeton_cree_le?: string | null
           demande_log_jeton_hash?: string | null
           duree_montage?: number
@@ -5194,6 +5196,7 @@ export type Database = {
           delai_chargement_retour?: number
           delai_dechargement?: number
           delai_emballage?: number
+          demande_log_config?: Json
           demande_log_jeton_cree_le?: string | null
           demande_log_jeton_hash?: string | null
           duree_montage?: number
@@ -8423,6 +8426,12 @@ export type Database = {
         Returns: boolean
       }
       demande_log_acces: { Args: { _jeton: string }; Returns: boolean }
+      demande_log_config_admin_enregistrer: {
+        Args: { _config: Json }
+        Returns: undefined
+      }
+      demande_log_config_admin_lire: { Args: never; Returns: Json }
+      demande_log_config_lire: { Args: { _jeton: string }; Returns: Json }
       demande_log_jeton_etat: { Args: never; Returns: string }
       demande_log_jeton_regenerer: { Args: never; Returns: string }
       demande_log_public_creer: {

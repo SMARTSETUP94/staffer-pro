@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { CONFIG_FORMULAIRE_DEFAUT, erreurIntervention, type ConfigFormulaire } from "@/lib/logistique/formulaire-config";
 
 const LIB: Record<TypeEtape, string> = { appro: "Appro", emballage: "Emballage", chargement: "Chargement", livraison: "Livraison", tracage: "Traçage", montage: "Montage", finitions: "Finitions", permanence: "Permanence", rotation: "Rotation", demontage: "Démontage", dechargement: "Déchargement" };
 type Personne = { id: string; libelle: string; chef: boolean };
@@ -29,6 +30,8 @@ export function DemandeLogistiqueForm({ jeton, onDone }: { jeton?: string; onDon
   const fCreer = useServerFn(pub ? demLogPublicCreer : demLogCreer);
   const fFichier = useServerFn(pub ? demLogPublicFichier : demLogFichier);
   const [personnes, setPersonnes] = useState<Personne[]>([]);
+  const [config, setConfig] = useState<ConfigFormulaire>(CONFIG_FORMULAIRE_DEFAUT);
+  const [qChef, setQChef] = useState("");
   const [vehicules, setVehicules] = useState<Veh[]>([]);
   const [erreur, setErreur] = useState<string | null>(null);
   const [demandeur, setDemandeur] = useState("");
@@ -43,8 +46,8 @@ export function DemandeLogistiqueForm({ jeton, onDone }: { jeton?: string; onDon
   const [fini, setFini] = useState(false);
 
   useEffect(() => {
-    (fListes as (a: unknown) => Promise<{ personnes: Personne[]; vehicules: Veh[]; moi?: string | null }>)(pub ? { data: { jeton } } : {})
-      .then((r) => { setPersonnes(r.personnes); setVehicules(r.vehicules); if (r.moi) setDemandeur(r.moi); })
+    (fListes as (a: unknown) => Promise<{ personnes: Personne[]; vehicules: Veh[]; config: ConfigFormulaire; moi?: string | null }>)(pub ? { data: { jeton } } : {})
+      .then((r) => { setPersonnes(r.personnes); setVehicules(r.vehicules); setConfig(r.config); if (r.moi) setDemandeur(r.moi); })
       .catch((e) => setErreur((e as Error).message));
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -61,7 +64,8 @@ export function DemandeLogistiqueForm({ jeton, onDone }: { jeton?: string; onDon
 
   const upd = (i: number, p: Partial<Inter>) => setInters((l) => l.map((x, j) => (j === i ? { ...x, ...p } : x)));
   const chefs = personnes.filter((p) => p.chef);
-  const listeChefs = chefs.length ? chefs : personnes;
+  const listeChefs = config.chefs === null ? (chefs.length ? chefs : personnes) : personnes.filter(p => config.chefs?.includes(p.id));
+  const requis = (k: ConfigFormulaire["obligatoires"][number]) => config.obligatoires.includes(k) ? " *" : "";
   const filtres = personnes.filter((p) => p.libelle.toLowerCase().includes(qDemandeur.toLowerCase())).slice(0, 30);
 
   async function envoyer() {
@@ -81,6 +85,10 @@ export function DemandeLogistiqueForm({ jeton, onDone }: { jeton?: string; onDon
           nb_personnes: x.nb ? Number(x.nb) : null, responsable: chef?.libelle ?? null, responsable_id: chef?.id ?? null, commentaire: x.commentaire || null,
         };
       });
+      for (const i of interventions) {
+        const message = erreurIntervention(config, i);
+        if (message) throw new Error(message);
+      }
       const payload = { demandeur, projet: projet.id, interventions, fichiers: fichiers.map((f) => ({ type: f.type, taille: f.size })), piege: piege || undefined };
       const r = await (fCreer as (a: unknown) => Promise<{ id: string; uploads: Array<{ path: string; token: string }> }>)({ data: pub ? { ...payload, jeton } : payload });
       let ko = 0;
@@ -107,10 +115,11 @@ export function DemandeLogistiqueForm({ jeton, onDone }: { jeton?: string; onDon
 
   return (
     <div className="space-y-5">
+      {config.accueil && <p className="whitespace-pre-wrap break-words text-sm">{config.accueil}</p>}
       <input type="text" tabIndex={-1} autoComplete="off" aria-hidden="true" className="hidden" value={piege} onChange={(e) => setPiege(e.target.value)} name="site_web" />
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1.5">
-          <Label>Demandeur</Label>
+          <Label>Demandeur *</Label>
           <Input placeholder="Rechercher votre nom…" value={qDemandeur} onChange={(e) => setQDemandeur(e.target.value)} />
           <Select value={demandeur} onValueChange={setDemandeur}>
             <SelectTrigger aria-label="Demandeur"><SelectValue placeholder="Choisir votre nom" /></SelectTrigger>
@@ -118,7 +127,7 @@ export function DemandeLogistiqueForm({ jeton, onDone }: { jeton?: string; onDon
           </Select>
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="dl-projet">Numéro de projet</Label>
+          <Label htmlFor="dl-projet">Numéro de projet *</Label>
           <Input id="dl-projet" inputMode="numeric" placeholder="Ex. 6053 ou 9486" value={numero} onChange={(e) => setNumero(e.target.value.replace(/\D/g, "").slice(0, 5))} />
           {projet ? <p className="text-sm font-medium">{projet.numero} — {projet.nom}</p> : projetMsg && <p className="text-xs text-muted-foreground">{projetMsg}</p>}
         </div>
@@ -131,28 +140,28 @@ export function DemandeLogistiqueForm({ jeton, onDone }: { jeton?: string; onDon
             {inters.length > 1 && <Button size="icon" variant="ghost" aria-label="Retirer l'intervention" onClick={() => setInters((l) => l.filter((_, j) => j !== i))}><Trash2 className="h-4 w-4" /></Button>}
           </div>
           <div className="grid gap-3 sm:grid-cols-3">
-            <div className="space-y-1"><Label>Catégorie</Label>
+            <div className="space-y-1"><Label>Catégorie *</Label>
               <Select value={x.type} onValueChange={(v) => upd(i, { type: v as TypeEtape })}>
                 <SelectTrigger aria-label="Catégorie"><SelectValue placeholder="Choisir" /></SelectTrigger>
-                <SelectContent>{TYPES_ETAPE.map((t) => <SelectItem key={t} value={t}>{LIB[t]}</SelectItem>)}</SelectContent>
+                <SelectContent>{config.categories.map((t) => <SelectItem key={t} value={t}>{LIB[t]}</SelectItem>)}</SelectContent>
               </Select></div>
-            <div className="space-y-1"><Label>Date</Label><Input type="date" aria-label="Date" value={x.date} onChange={(e) => upd(i, { date: e.target.value })} /></div>
-            <div className="space-y-1"><Label>Heures</Label>
+            <div className="space-y-1"><Label>Date *</Label><Input type="date" aria-label="Date" value={x.date} onChange={(e) => upd(i, { date: e.target.value })} /></div>
+            <div className="space-y-1"><Label>Heures{requis("heure_debut")}</Label>
               <div className="flex items-center gap-1.5">
-                <Input type="time" aria-label="Heure de début" value={x.hDebut} onChange={(e) => upd(i, { hDebut: e.target.value })} />
-                {!x.aPartir && <><span className="text-xs">à</span><Input type="time" aria-label="Heure de fin" value={x.hFin} onChange={(e) => upd(i, { hFin: e.target.value })} /></>}
+                <Input className="min-w-0" type="time" aria-label="Heure de début" value={x.hDebut} onChange={(e) => upd(i, { hDebut: e.target.value })} />
+                {!x.aPartir && <><span className="text-xs">à</span><Input className="min-w-0" type="time" aria-label="Heure de fin" value={x.hFin} onChange={(e) => upd(i, { hFin: e.target.value })} /></>}
               </div>
               <label className="flex items-center gap-2 text-xs"><Checkbox checked={x.aPartir} onCheckedChange={(v) => upd(i, { aPartir: !!v })} />À partir de (sans heure de fin)</label>
             </div>
           </div>
-          <div className="space-y-1"><Label>Adresse</Label><Input value={x.lieu} onChange={(e) => upd(i, { lieu: e.target.value })} /></div>
+          <div className="space-y-1"><Label>Adresse{requis("lieu")}</Label><Input aria-label="Adresse" value={x.lieu} onChange={(e) => upd(i, { lieu: e.target.value })} /></div>
           <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-1"><Label>Contact sur place (nom)</Label><Input value={x.contactNom} onChange={(e) => upd(i, { contactNom: e.target.value })} /></div>
+            <div className="space-y-1"><Label>Contact sur place (nom){requis("contact_sur_place")}</Label><Input value={x.contactNom} onChange={(e) => upd(i, { contactNom: e.target.value })} /></div>
             <div className="space-y-1"><Label>Téléphone du contact</Label><Input type="tel" value={x.contactTel} onChange={(e) => upd(i, { contactTel: e.target.value })} /></div>
           </div>
           <div className="space-y-1"><Label>Accès / contraintes</Label><Input value={x.acces} onChange={(e) => upd(i, { acces: e.target.value })} /></div>
           <div className="grid gap-3 sm:grid-cols-3">
-            <div className="space-y-1"><Label>Véhicule</Label>
+            <div className="space-y-1"><Label>Véhicule{requis("vehicule")}</Label>
               <Select value={x.vehicule} onValueChange={(v) => upd(i, { vehicule: v })}>
                 <SelectTrigger aria-label="Véhicule"><SelectValue placeholder="Choisir" /></SelectTrigger>
                 <SelectContent>
@@ -161,14 +170,15 @@ export function DemandeLogistiqueForm({ jeton, onDone }: { jeton?: string; onDon
                   {vehicules.map((v) => <SelectItem key={v.id} value={v.id}>{v.nom}</SelectItem>)}
                 </SelectContent>
               </Select></div>
-            <div className="space-y-1"><Label>Nombre de personnes</Label><Input type="number" min={0} max={50} value={x.nb} onChange={(e) => upd(i, { nb: e.target.value })} /></div>
-            <div className="space-y-1"><Label>Chef d'équipe</Label>
+            <div className="space-y-1"><Label>Nombre de personnes{requis("nb_personnes")}</Label><Input type="number" min={0} max={50} value={x.nb} onChange={(e) => upd(i, { nb: e.target.value })} /></div>
+            <div className="space-y-1"><Label>Chef d'équipe{requis("responsable")}</Label>
+              <Input aria-label="Rechercher un chef d'équipe" placeholder="Rechercher un nom…" value={qChef} onChange={e => setQChef(e.target.value)} />
               <Select value={x.chef} onValueChange={(v) => upd(i, { chef: v })}>
                 <SelectTrigger aria-label="Chef d'équipe"><SelectValue placeholder="Choisir" /></SelectTrigger>
-                <SelectContent>{listeChefs.map((p) => <SelectItem key={p.id} value={p.id}>{p.libelle}</SelectItem>)}</SelectContent>
+                <SelectContent>{listeChefs.filter(p => p.libelle.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase().includes(qChef.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase())).map((p) => <SelectItem key={p.id} value={p.id}>{p.libelle}</SelectItem>)}</SelectContent>
               </Select></div>
           </div>
-          <div className="space-y-1"><Label>Commentaire</Label><Textarea rows={2} value={x.commentaire} onChange={(e) => upd(i, { commentaire: e.target.value })} /></div>
+          <div className="space-y-1"><Label>Commentaire{requis("commentaire")}</Label><Textarea rows={2} value={x.commentaire} onChange={(e) => upd(i, { commentaire: e.target.value })} /></div>
         </fieldset>
       ))}
       {inters.length < 10 && <Button variant="outline" onClick={() => setInters((l) => [...l, { ...vide(), lieu: l.at(-1)?.lieu ?? "" }])}><Plus className="mr-1 h-4 w-4" />Ajouter une intervention</Button>}

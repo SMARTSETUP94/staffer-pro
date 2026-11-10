@@ -1,5 +1,9 @@
 # Roadmap
 
+## Réglages formulaire logistique — 10 novembre
+- [x] Ajout approuvé appliqué : réglages admin chefs, catégories, champs obligatoires et accueil ; contrôles partagés public/connecté et validation en base, sans publication.
+- [x] Sauvegarde/relecture et formulaire connecté à 390 px vérifiés, sans débordement ni erreur navigateur ; réglages d'essai restaurés. 21 tests verts, aucune demande créée.
+
 ## Suite déléguée Gabin — 8 novembre 13:03 UTC
 - [x] Réglages Gabin 13:17 approuvés puis appliqués : BE quatre personnes avec 100/50 %, autres référents invisibles ; UV 1 personne/jour, Machiniste vide. Valeurs et six nouveaux champs relus en base après migration 0104, aucune publication.
 - [x] Page Qualité 3 onglets, actions existantes confirmées et widget Santé livrés sans migration/suppression/publication ; 699 points de contrôle (442 Personnes, 216 Commercial, 41 devis), compteurs de catégories cumulés, pas un nombre de fiches distinctes.
