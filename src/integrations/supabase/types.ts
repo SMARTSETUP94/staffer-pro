@@ -1762,6 +1762,7 @@ export type Database = {
           civilite_facturation: string | null
           code_postal: string | null
           code_postal_livraison: string | null
+          comptes_auxiliaires: string[] | null
           conditions_paiement: string | null
           created_at: string
           created_by: string | null
@@ -1774,6 +1775,8 @@ export type Database = {
           fusionne_le: string | null
           historique_qualite: Json
           id: string
+          import_compta_remarques: string | null
+          import_lot: string | null
           langue_facturation: string
           livraison_identique: boolean
           nom: string
@@ -1784,7 +1787,9 @@ export type Database = {
           pays: string
           pays_livraison: string | null
           pennylane_id: string | null
+          plateforme_facturation: string | null
           prenom_facturation: string | null
+          raison_sociale: string | null
           reference_client: string | null
           secteur: string | null
           siren: string | null
@@ -1804,6 +1809,7 @@ export type Database = {
           civilite_facturation?: string | null
           code_postal?: string | null
           code_postal_livraison?: string | null
+          comptes_auxiliaires?: string[] | null
           conditions_paiement?: string | null
           created_at?: string
           created_by?: string | null
@@ -1816,6 +1822,8 @@ export type Database = {
           fusionne_le?: string | null
           historique_qualite?: Json
           id?: string
+          import_compta_remarques?: string | null
+          import_lot?: string | null
           langue_facturation?: string
           livraison_identique?: boolean
           nom: string
@@ -1826,7 +1834,9 @@ export type Database = {
           pays?: string
           pays_livraison?: string | null
           pennylane_id?: string | null
+          plateforme_facturation?: string | null
           prenom_facturation?: string | null
+          raison_sociale?: string | null
           reference_client?: string | null
           secteur?: string | null
           siren?: string | null
@@ -1846,6 +1856,7 @@ export type Database = {
           civilite_facturation?: string | null
           code_postal?: string | null
           code_postal_livraison?: string | null
+          comptes_auxiliaires?: string[] | null
           conditions_paiement?: string | null
           created_at?: string
           created_by?: string | null
@@ -1858,6 +1869,8 @@ export type Database = {
           fusionne_le?: string | null
           historique_qualite?: Json
           id?: string
+          import_compta_remarques?: string | null
+          import_lot?: string | null
           langue_facturation?: string
           livraison_identique?: boolean
           nom?: string
@@ -1868,7 +1881,9 @@ export type Database = {
           pays?: string
           pays_livraison?: string | null
           pennylane_id?: string | null
+          plateforme_facturation?: string | null
           prenom_facturation?: string | null
+          raison_sociale?: string | null
           reference_client?: string | null
           secteur?: string | null
           siren?: string | null

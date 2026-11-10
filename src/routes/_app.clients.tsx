@@ -69,6 +69,7 @@ interface ClientContact {
 interface ClientRow {
   id: string;
   nom: string;
+  raison_sociale: string | null;
   domaines_email: string[];
   actif: boolean;
   numeros_chantiers: string[];
@@ -132,7 +133,7 @@ function ClientsListPage() {
     setLoading(true);
     const { data: clients, error } = await supabase
       .from("clients")
-      .select("id, nom, domaines_email, actif, type_client, siren, siret, adresse, code_postal, ville, pays, emails_facturation, conditions_paiement, nom_facturation")
+      .select("id, nom, domaines_email, actif, type_client, siren, siret, adresse, code_postal, ville, pays, emails_facturation, conditions_paiement, nom_facturation, plateforme_facturation, raison_sociale")
       .order("nom");
     if (error) {
       toast.error("Erreur", { description: error.message });
@@ -165,6 +166,7 @@ function ClientsListPage() {
       (clients ?? []).map((c) => ({
         id: c.id,
         nom: c.nom,
+        raison_sociale: c.raison_sociale,
         domaines_email: c.domaines_email ?? [],
         actif: c.actif,
         numeros_chantiers: (numerosByClient.get(c.id) ?? []).sort(),
@@ -187,6 +189,7 @@ function ClientsListPage() {
       if (!q) return true;
       return (
         r.nom.toLowerCase().includes(q) ||
+        (r.raison_sociale ?? "").toLowerCase().includes(q) ||
         r.domaines_email.some((d) => d.includes(q)) ||
         r.numeros_chantiers.some((n) => n.includes(q))
       );

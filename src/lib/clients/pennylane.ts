@@ -89,6 +89,7 @@ export interface ClientPennylane {
   conditions_paiement: string | null;
   prenom_facturation?: string | null;
   nom_facturation?: string | null;
+  plateforme_facturation?: string | null;
 }
 
 /** Liste des champs manquants pour Pennylane (vide = fiche complète). */
@@ -102,7 +103,9 @@ export function champsManquantsPennylane(c: ClientPennylane): string[] {
   if (!c.code_postal?.trim()) m.push("Code postal");
   if (!c.ville?.trim()) m.push("Ville");
   if (!c.pays?.trim()) m.push("Pays");
-  if (!(c.emails_facturation ?? []).some(emailValide)) m.push("E-mail de facturation");
+  // Une plateforme de facturation (Chorus, Sy by Cegedim…) remplace l'e-mail.
+  if (!(c.emails_facturation ?? []).some(emailValide) && !c.plateforme_facturation?.trim())
+    m.push("E-mail ou plateforme de facturation");
   if (!c.conditions_paiement) m.push("Conditions de paiement");
   return m;
 }

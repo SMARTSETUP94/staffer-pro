@@ -27,7 +27,7 @@ describe("pennylane", () => {
   });
   it("entreprise FR sans SIREN ni e-mail ni conditions", () => {
     expect(champsManquantsPennylane({ ...complet, siret: null, emails_facturation: [], conditions_paiement: null }))
-      .toEqual(["SIREN", "E-mail de facturation", "Conditions de paiement"]);
+      .toEqual(["SIREN", "E-mail ou plateforme de facturation", "Conditions de paiement"]);
   });
   it("particulier : pas de SIREN exigé, nom exigé", () => {
     expect(champsManquantsPennylane({ ...complet, type_client: "particulier", siret: null, nom_facturation: "Durand" })).toEqual([]);
@@ -36,5 +36,10 @@ describe("pennylane", () => {
   it("code postal contrôlé seulement en France", () => {
     expect(codePostalValide("980", "FR")).toBe(false);
     expect(codePostalValide("SW1A 1AA", "GB")).toBe(true);
+  });
+  it("plateforme de facturation acceptée à la place de l'e-mail", () => {
+    expect(champsManquantsPennylane({ ...complet, emails_facturation: [], plateforme_facturation: "Portail Chorus" })).toEqual([]);
+    expect(champsManquantsPennylane({ ...complet, emails_facturation: [], plateforme_facturation: "  " }))
+      .toEqual(["E-mail ou plateforme de facturation"]);
   });
 });
