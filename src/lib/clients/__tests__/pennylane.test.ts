@@ -13,7 +13,8 @@ describe("pennylane", () => {
     expect(luhnOk("95311689400016")).toBe(false);
   });
   it("La Poste : somme multiple de 5 acceptée", () => {
-    expect(luhnOk("35600000000048")).toBe(true);
+    expect(luhnOk("35600000000010")).toBe(true);
+    expect(luhnOk("35600000000011")).toBe(false);
   });
   it("TVA calculée depuis le SIREN de Setup", () => {
     expect(tvaDepuisSiren("953116894")).toBe("FR20953116894");
