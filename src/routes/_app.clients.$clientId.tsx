@@ -34,6 +34,7 @@ import type { ClientContactSuggestion } from "@/lib/client-enrichment";
 import { ClientLegalPrefillDialog } from "@/components/clients/ClientLegalPrefillDialog";
 import { sirenFromIdentifier } from "@/lib/client-legal-prefill";
 import { Label } from "@/components/ui/label";
+import { FacturationPennylaneCard } from "@/components/clients/FacturationPennylaneCard";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
@@ -407,6 +408,8 @@ function ClientDetailPage() {
           />
         </Card>
       </div>
+
+      <FacturationPennylaneCard clientId={clientId} onSaved={() => void load()} />
 
       <details className="group">
         <summary className="cursor-pointer text-sm font-semibold flex items-center gap-1 select-none">
