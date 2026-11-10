@@ -1752,74 +1752,128 @@ export type Database = {
         Row: {
           actif: boolean
           adresse: string | null
+          adresse_livraison: string | null
+          civilite_facturation: string | null
           code_postal: string | null
+          code_postal_livraison: string | null
+          conditions_paiement: string | null
           created_at: string
           created_by: string | null
+          destinataire_facturation: string | null
           dirigeant: string | null
           domaines_email: string[]
           email: string | null
+          emails_facturation: string[]
           fusionne_dans: string | null
           fusionne_le: string | null
           historique_qualite: Json
           id: string
+          langue_facturation: string
+          livraison_identique: boolean
           nom: string
+          nom_facturation: string | null
           nom_normalise: string
           notes: string | null
+          numero_compte_client: string | null
+          pays: string
+          pays_livraison: string | null
+          pennylane_id: string | null
+          prenom_facturation: string | null
+          reference_client: string | null
           secteur: string | null
+          siren: string | null
           siret: string | null
           site_web: string | null
           telephone: string | null
           tva_intracom: string | null
+          type_client: string
           updated_at: string
           ville: string | null
+          ville_livraison: string | null
         }
         Insert: {
           actif?: boolean
           adresse?: string | null
+          adresse_livraison?: string | null
+          civilite_facturation?: string | null
           code_postal?: string | null
+          code_postal_livraison?: string | null
+          conditions_paiement?: string | null
           created_at?: string
           created_by?: string | null
+          destinataire_facturation?: string | null
           dirigeant?: string | null
           domaines_email?: string[]
           email?: string | null
+          emails_facturation?: string[]
           fusionne_dans?: string | null
           fusionne_le?: string | null
           historique_qualite?: Json
           id?: string
+          langue_facturation?: string
+          livraison_identique?: boolean
           nom: string
+          nom_facturation?: string | null
           nom_normalise: string
           notes?: string | null
+          numero_compte_client?: string | null
+          pays?: string
+          pays_livraison?: string | null
+          pennylane_id?: string | null
+          prenom_facturation?: string | null
+          reference_client?: string | null
           secteur?: string | null
+          siren?: string | null
           siret?: string | null
           site_web?: string | null
           telephone?: string | null
           tva_intracom?: string | null
+          type_client?: string
           updated_at?: string
           ville?: string | null
+          ville_livraison?: string | null
         }
         Update: {
           actif?: boolean
           adresse?: string | null
+          adresse_livraison?: string | null
+          civilite_facturation?: string | null
           code_postal?: string | null
+          code_postal_livraison?: string | null
+          conditions_paiement?: string | null
           created_at?: string
           created_by?: string | null
+          destinataire_facturation?: string | null
           dirigeant?: string | null
           domaines_email?: string[]
           email?: string | null
+          emails_facturation?: string[]
           fusionne_dans?: string | null
           fusionne_le?: string | null
           historique_qualite?: Json
           id?: string
+          langue_facturation?: string
+          livraison_identique?: boolean
           nom?: string
+          nom_facturation?: string | null
           nom_normalise?: string
           notes?: string | null
+          numero_compte_client?: string | null
+          pays?: string
+          pays_livraison?: string | null
+          pennylane_id?: string | null
+          prenom_facturation?: string | null
+          reference_client?: string | null
           secteur?: string | null
+          siren?: string | null
           siret?: string | null
           site_web?: string | null
           telephone?: string | null
           tva_intracom?: string | null
+          type_client?: string
           updated_at?: string
           ville?: string | null
+          ville_livraison?: string | null
         }
         Relationships: [
           {
@@ -9490,6 +9544,7 @@ export type Database = {
         }
         Returns: string
       }
+      siret_luhn_ok: { Args: { _num: string }; Returns: boolean }
       soft_delete_affaire_document: {
         Args: { _id: string }
         Returns: undefined
