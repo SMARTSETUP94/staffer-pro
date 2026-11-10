@@ -1179,6 +1179,7 @@ export type Database = {
         Row: {
           affaire_id: string
           atelier_planning_id: string | null
+          badge_atelier: string | null
           confirmee_le: string | null
           created_at: string
           created_by: string | null
@@ -1199,6 +1200,7 @@ export type Database = {
           motif_refus: string | null
           notes: string | null
           phase: string | null
+          pole_planning: string | null
           provenance_terrain: Json
           refusee_le: string | null
           role_terrain: string
@@ -1213,6 +1215,7 @@ export type Database = {
         Insert: {
           affaire_id: string
           atelier_planning_id?: string | null
+          badge_atelier?: string | null
           confirmee_le?: string | null
           created_at?: string
           created_by?: string | null
@@ -1233,6 +1236,7 @@ export type Database = {
           motif_refus?: string | null
           notes?: string | null
           phase?: string | null
+          pole_planning?: string | null
           provenance_terrain?: Json
           refusee_le?: string | null
           role_terrain?: string
@@ -1247,6 +1251,7 @@ export type Database = {
         Update: {
           affaire_id?: string
           atelier_planning_id?: string | null
+          badge_atelier?: string | null
           confirmee_le?: string | null
           created_at?: string
           created_by?: string | null
@@ -1267,6 +1272,7 @@ export type Database = {
           motif_refus?: string | null
           notes?: string | null
           phase?: string | null
+          pole_planning?: string | null
           provenance_terrain?: Json
           refusee_le?: string | null
           role_terrain?: string
@@ -9367,6 +9373,27 @@ export type Database = {
           _metier: number
         }
         Returns: Json
+      }
+      planning_atelier_personne_ajouter: {
+        Args: {
+          _affaire: string
+          _badge?: string
+          _jours: string[]
+          _metier: number
+          _origine: string
+          _personne: string
+        }
+        Returns: number
+      }
+      planning_atelier_personne_retirer: {
+        Args: {
+          _affaire: string
+          _debut: string
+          _fin: string
+          _metier: number
+          _personne: string
+        }
+        Returns: number
       }
       planning_atelier_retirer: {
         Args: { _affaire: string; _metier?: number }
