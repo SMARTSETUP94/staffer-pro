@@ -785,6 +785,13 @@
       "when": 1794298186414,
       "tag": "0111_clients_pennylane",
       "breakpoints": true
+    },
+    {
+      "idx": 112,
+      "version": "7",
+      "when": 1794298446734,
+      "tag": "0112_clients_pennylane_non_bloquant",
+      "breakpoints": true
     }
   ]
 }
