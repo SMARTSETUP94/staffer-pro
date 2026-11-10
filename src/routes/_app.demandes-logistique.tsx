@@ -370,83 +370,84 @@ function PlanningDialog({ row, affaires, onClose, onDone }: { row: Row; affaires
           )}
         </div>
         <div className="space-y-3 min-w-0">
-        <div className="space-y-1">
-          <Label htmlFor="ia-comment" className="text-xs">Commentaire pour l'IA (facultatif)</Label>
-          <Textarea id="ia-comment" rows={2} value={commentaire} onChange={(e) => setCommentaire(e.target.value)}
-            placeholder="Ex. : l'entrée prestataires n'est pas une étape ; la pose commence à 23h." />
-          <p className="text-[11px] text-muted-foreground">Vos corrections et ce commentaire servent d'exemples à l'IA pour les prochains emails.</p>
-        </div>
-        <div className="space-y-1 rounded-md border border-primary/30 bg-primary/5 p-2">
-          <Label htmlFor="ia-assist" className="text-xs">Demander à l'IA de remplir les étapes</Label>
-          <div className="flex gap-2">
-            <Input id="ia-assist" value={consigne} onChange={(e) => setConsigne(e.target.value)} disabled={assisting}
-              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); runAssist(); } }}
-              placeholder="Ex. : une personne et lieu « Studio Lendit » sur toutes les étapes ; permanences de 8h à 20h" />
-            <Button type="button" size="sm" onClick={runAssist} disabled={assisting || !consigne.trim()}>
-              {assisting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Appliquer"}
-            </Button>
+        <details className="rounded-md border bg-muted/30 px-2 py-1 text-xs" open={!!reponse || undefined}>
+          <summary className="cursor-pointer select-none py-1 text-muted-foreground">Aide IA (facultatif) — consigne de remplissage, commentaire d'apprentissage</summary>
+          <div className="space-y-2 pb-2 pt-1">
+            <div className="flex gap-2">
+              <Input id="ia-assist" aria-label="Demander à l'IA de remplir les étapes" className="h-8" value={consigne} onChange={(e) => setConsigne(e.target.value)} disabled={assisting}
+                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); runAssist(); } }}
+                placeholder="Remplir les étapes, ex. : 1 personne et lieu « Studio Lendit » partout" />
+              <Button type="button" size="sm" className="h-8" onClick={runAssist} disabled={assisting || !consigne.trim()}>
+                {assisting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Appliquer"}
+              </Button>
+            </div>
+            {reponse && <p className="rounded border bg-background px-2 py-1">🤖 {reponse}</p>}
+            <Textarea id="ia-comment" aria-label="Commentaire pour l'IA" rows={1} className="min-h-8 text-xs" value={commentaire} onChange={(e) => setCommentaire(e.target.value)}
+              placeholder="Commentaire d'apprentissage, ex. : l'entrée prestataires n'est pas une étape" />
           </div>
-          {reponse && <p className="text-xs rounded bg-background px-2 py-1 border">🤖 {reponse}</p>}
-          <p className="text-[11px] text-muted-foreground">Les champs sont modifiés ici seulement ; vérifiez puis validez.</p>
-        </div>
-        <div className="space-y-1.5">
-          <Input placeholder="Rechercher un chantier (numéro, nom, mot clé)…" value={q} onChange={(e) => setQ(e.target.value)} />
-          <label className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Checkbox checked={withOpps} onCheckedChange={(v) => setWithOpps(!!v)} />
-            Inclure les opportunités (9XXX) — le planning reste rattaché après signature
-          </label>
+        </details>
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <Input className="h-8" placeholder="Rechercher un chantier…" value={q} onChange={(e) => setQ(e.target.value)} />
+            <label className="flex shrink-0 items-center gap-1 text-xs text-muted-foreground" title="Le planning reste rattaché après signature">
+              <Checkbox checked={withOpps} onCheckedChange={(v) => setWithOpps(!!v)} /> Opp. 9XXX
+            </label>
+          </div>
           {suggestions.length > 0 && (
-            <div className="flex flex-wrap items-center gap-1.5 text-xs">
-              <span className="text-muted-foreground">Suggéré par l'IA :</span>
+            <div className="flex flex-wrap items-center gap-1 text-xs">
+              <span className="text-muted-foreground">IA :</span>
               {suggestions.map(({ affaire: a }) => (
-                <Button key={a.id} type="button" size="sm" variant={a.id === affaireId ? "default" : "outline"} className="h-7 text-xs" onClick={() => setAffaireId(a.id)}>
+                <Button key={a.id} type="button" size="sm" variant={a.id === affaireId ? "default" : "outline"} className="h-6 px-2 text-xs" onClick={() => setAffaireId(a.id)}>
                   {a.numero} — {a.nom}{a.phase !== "signe" ? " (opp.)" : ""}
                 </Button>
               ))}
             </div>
           )}
-          {selected && <p className="text-xs">Chantier choisi : <span className="font-medium">{selected.numero} — {selected.nom}</span></p>}
-          <div className="max-h-40 overflow-auto rounded-md border">
-            {filtered.length === 0 ? <p className="p-2 text-xs text-muted-foreground">Aucun chantier trouvé.</p> : filtered.map((a) => (
-              <button key={a.id} type="button" onClick={() => setAffaireId(a.id)}
-                className={`block w-full text-left px-2 py-1.5 text-sm hover:bg-accent ${a.id === affaireId ? "bg-accent font-medium" : ""}`}>
-                {a.numero} — {a.nom}{a.phase !== "signe" && <span className="ml-1 text-[10px] text-muted-foreground">(opportunité)</span>}
-              </button>
-            ))}
-          </div>
+          {q.trim() && (
+            <div className="max-h-28 overflow-auto rounded-md border">
+              {filtered.length === 0 ? <p className="p-2 text-xs text-muted-foreground">Aucun chantier trouvé.</p> : filtered.map((a) => (
+                <button key={a.id} type="button" onClick={() => { setAffaireId(a.id); setQ(""); }}
+                  className={`block w-full px-2 py-1 text-left text-xs hover:bg-accent ${a.id === affaireId ? "bg-accent font-medium" : ""}`}>
+                  {a.numero} — {a.nom}{a.phase !== "signe" && <span className="ml-1 text-[10px] text-muted-foreground">(opportunité)</span>}
+                </button>
+              ))}
+            </div>
+          )}
+          {selected && <p className="text-xs">Chantier : <span className="font-medium">{selected.numero} — {selected.nom}</span></p>}
         </div>
         <div className="space-y-2">
           {lines.map((l, i) => (
-            <div key={i} className="flex flex-wrap items-center gap-2">
-              <Checkbox checked={l.keep} onCheckedChange={(v) => upd(i, { keep: !!v })} />
-              <Input type="date" className="w-40" value={l.date} onChange={(e) => upd(i, { date: e.target.value })} />
-              <Select value={l.type} onValueChange={(v) => upd(i, { type: v as EtapeType })}>
-                <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
-                <SelectContent>{TYPES.map((t) => <SelectItem key={t} value={t}>{TYPE_LABEL[t]}</SelectItem>)}</SelectContent>
-              </Select>
-              {l.auto && <Badge variant="outline" className="text-[10px]">{l.type === "dechargement" ? "Optionnel" : "Suggéré"}</Badge>}
-              <Input className="flex-1 min-w-40" value={l.contenu} onChange={(e) => upd(i, { contenu: e.target.value })} />
-              <Button size="icon" variant="ghost" className="text-destructive" aria-label="Supprimer l'étape" title="Supprimer l'étape" onClick={() => setLines((ls) => ls.filter((_, j) => j !== i))}><Trash2 className="h-4 w-4" /></Button>
-              <div className="flex w-full flex-wrap items-center gap-2 pl-6">
-                <Input type="time" className="w-28" aria-label="Heure de début" value={l.hDebut} onChange={(e) => upd(i, { hDebut: e.target.value })} />
-                <span className="text-xs text-muted-foreground">à</span>
-                <Input type="time" className="w-28" aria-label="Heure de fin" value={l.hFin} onChange={(e) => upd(i, { hFin: e.target.value })} />
-                <Input type="number" min={0} className="w-20" aria-label="Nombre de personnes" placeholder="Pers." value={l.nb ?? ""} onChange={(e) => upd(i, { nb: e.target.value })} />
-                <Input className="flex-1 min-w-40" placeholder="Lieu" value={l.lieu} onChange={(e) => upd(i, { lieu: e.target.value })} />
+            <div key={i} className={`space-y-1.5 rounded-md border p-2 ${l.keep ? "" : "opacity-50"}`}>
+              <div className="flex items-center gap-1.5">
+                <Checkbox checked={l.keep} onCheckedChange={(v) => upd(i, { keep: !!v })} aria-label="Garder l'étape" />
+                <Input type="date" className="h-8 w-36 text-xs" value={l.date} onChange={(e) => upd(i, { date: e.target.value })} />
+                <Select value={l.type} onValueChange={(v) => upd(i, { type: v as EtapeType })}>
+                  <SelectTrigger className="h-8 w-32 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectContent>{TYPES.map((t) => <SelectItem key={t} value={t}>{TYPE_LABEL[t]}</SelectItem>)}</SelectContent>
+                </Select>
+                {l.auto && <Badge variant="outline" className="shrink-0 text-[10px]">{l.type === "dechargement" ? "Optionnel" : "Suggéré"}</Badge>}
+                <Input className="h-8 min-w-0 flex-1 text-xs" aria-label="Libellé" value={l.contenu} onChange={(e) => upd(i, { contenu: e.target.value })} />
+                <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0 text-destructive" aria-label="Supprimer l'étape" title="Supprimer l'étape" onClick={() => setLines((ls) => ls.filter((_, j) => j !== i))}><Trash2 className="h-4 w-4" /></Button>
+              </div>
+              <div className="grid grid-cols-[6rem_6rem_4rem_minmax(0,1fr)] gap-1.5 pl-6">
+                <Input type="time" className="h-8 text-xs" aria-label="Heure de début" value={l.hDebut} onChange={(e) => upd(i, { hDebut: e.target.value })} />
+                <Input type="time" className="h-8 text-xs" aria-label="Heure de fin" value={l.hFin} onChange={(e) => upd(i, { hFin: e.target.value })} />
+                <Input type="number" min={0} className="h-8 text-xs" aria-label="Nombre de personnes" placeholder="Pers." value={l.nb ?? ""} onChange={(e) => upd(i, { nb: e.target.value })} />
+                <Input className="h-8 text-xs" placeholder="Lieu" value={l.lieu} onChange={(e) => upd(i, { lieu: e.target.value })} />
+              </div>
+              <div className="grid grid-cols-[10rem_minmax(0,1fr)_minmax(0,1fr)] gap-1.5 pl-6">
                 <Select value={l.vehiculeId || "none"} onValueChange={(v) => upd(i, { vehiculeId: v === "none" ? "" : v })}>
-                  <SelectTrigger className="w-44"><SelectValue placeholder="Véhicule" /></SelectTrigger>
+                  <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Véhicule" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">Sans véhicule</SelectItem>
                     {vehicules.map((v) => <SelectItem key={v.id} value={v.id}>{v.nom}{v.immatriculation ? ` · ${v.immatriculation}` : ""}</SelectItem>)}
                   </SelectContent>
                 </Select>
+                <Input className="h-8 text-xs" placeholder="Chef d'équipe" aria-label="Responsable" value={l.responsable ?? ""} onChange={(e) => upd(i, { responsable: e.target.value })} />
+                <Input className="h-8 text-xs" placeholder="Accès / contraintes" aria-label="Accès" value={l.acces ?? ""} onChange={(e) => upd(i, { acces: e.target.value })} />
               </div>
-              <div className="flex w-full flex-wrap items-center gap-2 pl-6">
-                <Input className="w-48" placeholder="Responsable (chef d'équipe)" aria-label="Responsable" value={l.responsable ?? ""} onChange={(e) => upd(i, { responsable: e.target.value })} />
-                <Input className="flex-1 min-w-40" placeholder="Accès / contraintes" aria-label="Accès" value={l.acces ?? ""} onChange={(e) => upd(i, { acces: e.target.value })} />
-              </div>
-              <div className="w-full pl-6 pb-2 border-b">
-                <Textarea rows={1} placeholder="Commentaire pour l'équipe (indications au chef logistique…)" value={l.commentaire ?? ""} onChange={(e) => upd(i, { commentaire: e.target.value })} />
+              <div className="pl-6">
+                <Input className="h-8 text-xs" placeholder="Commentaire pour l'équipe" aria-label="Commentaire pour l'équipe" value={l.commentaire ?? ""} onChange={(e) => upd(i, { commentaire: e.target.value })} />
               </div>
             </div>
           ))}
