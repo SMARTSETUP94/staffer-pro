@@ -4,6 +4,7 @@
  * volontaire — les emails restent dans la boîte de réception, aucun déplacement).
  * Appelé par pg_cron via /api/public/* — header `apikey` = publishable key requis.
  */
+import { demandeDeCopie } from "@/lib/logistique/copie-formulaire";
 import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
 import { loadFeedbackPrompt } from "@/lib/logistique/ia-feedback";
