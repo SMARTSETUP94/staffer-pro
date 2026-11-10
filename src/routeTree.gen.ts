@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AppRouteImport } from './routes/_app'
+import { Route as DemandeLogistiqueRouteImport } from './routes/demande-logistique'
 import { Route as DisposRouteImport } from './routes/dispos'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as McpRouteImport } from './routes/mcp'
@@ -109,6 +110,7 @@ import { Route as AppParametresAutorisationsVehiculesRouteImport } from './route
 import { Route as AppParametresCompetencesEquipeRouteImport } from './routes/_app.parametres.competences-equipe'
 import { Route as AppParametresDevisMateriauxRouteImport } from './routes/_app.parametres.devis-materiaux'
 import { Route as AppParametresDevisTauxRouteImport } from './routes/_app.parametres.devis-taux'
+import { Route as AppParametresFormulaireLogistiqueRouteImport } from './routes/_app.parametres.formulaire-logistique'
 import { Route as AppParametresLieuxRouteImport } from './routes/_app.parametres.lieux'
 import { Route as AppParametresMetiersRouteImport } from './routes/_app.parametres.metiers'
 import { Route as AppParametresPostesRouteImport } from './routes/_app.parametres.postes'
@@ -145,6 +147,11 @@ import { Route as AppAffairesAffaireIdObjetsObjetIdRouteImport } from './routes/
 
 const AppRoute = AppRouteImport.update({
   id: '/_app',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DemandeLogistiqueRoute = DemandeLogistiqueRouteImport.update({
+  id: '/demande-logistique',
+  path: '/demande-logistique',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DisposRoute = DisposRouteImport.update({
@@ -653,6 +660,12 @@ const AppParametresDevisTauxRoute = AppParametresDevisTauxRouteImport.update({
   path: '/parametres/devis-taux',
   getParentRoute: () => AppRoute,
 } as any)
+const AppParametresFormulaireLogistiqueRoute =
+  AppParametresFormulaireLogistiqueRouteImport.update({
+    id: '/parametres/formulaire-logistique',
+    path: '/parametres/formulaire-logistique',
+    getParentRoute: () => AppRoute,
+  } as any)
 const AppParametresLieuxRoute = AppParametresLieuxRouteImport.update({
   id: '/parametres/lieux',
   path: '/parametres/lieux',
@@ -847,6 +860,7 @@ const AppAffairesAffaireIdObjetsObjetIdRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
+  '/demande-logistique': typeof DemandeLogistiqueRoute
   '/dispos': typeof DisposRoute
   '/login': typeof LoginRoute
   '/mcp': typeof McpRoute
@@ -938,6 +952,7 @@ export interface FileRoutesByFullPath {
   '/parametres/competences-equipe': typeof AppParametresCompetencesEquipeRoute
   '/parametres/devis-materiaux': typeof AppParametresDevisMateriauxRoute
   '/parametres/devis-taux': typeof AppParametresDevisTauxRoute
+  '/parametres/formulaire-logistique': typeof AppParametresFormulaireLogistiqueRoute
   '/parametres/lieux': typeof AppParametresLieuxRoute
   '/parametres/metiers': typeof AppParametresMetiersRoute
   '/parametres/postes': typeof AppParametresPostesRoute
@@ -980,6 +995,7 @@ export interface FileRoutesByFullPath {
   '/affaires/$affaireId/devis-staffing/': typeof AppAffairesAffaireIdDevisStaffingIndexRoute
 }
 export interface FileRoutesByTo {
+  '/demande-logistique': typeof DemandeLogistiqueRoute
   '/dispos': typeof DisposRoute
   '/login': typeof LoginRoute
   '/mcp': typeof McpRoute
@@ -1069,6 +1085,7 @@ export interface FileRoutesByTo {
   '/parametres/competences-equipe': typeof AppParametresCompetencesEquipeRoute
   '/parametres/devis-materiaux': typeof AppParametresDevisMateriauxRoute
   '/parametres/devis-taux': typeof AppParametresDevisTauxRoute
+  '/parametres/formulaire-logistique': typeof AppParametresFormulaireLogistiqueRoute
   '/parametres/lieux': typeof AppParametresLieuxRoute
   '/parametres/metiers': typeof AppParametresMetiersRoute
   '/parametres/postes': typeof AppParametresPostesRoute
@@ -1113,6 +1130,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_app': typeof AppRouteWithChildren
+  '/demande-logistique': typeof DemandeLogistiqueRoute
   '/dispos': typeof DisposRoute
   '/login': typeof LoginRoute
   '/mcp': typeof McpRoute
@@ -1205,6 +1223,7 @@ export interface FileRoutesById {
   '/_app/parametres/competences-equipe': typeof AppParametresCompetencesEquipeRoute
   '/_app/parametres/devis-materiaux': typeof AppParametresDevisMateriauxRoute
   '/_app/parametres/devis-taux': typeof AppParametresDevisTauxRoute
+  '/_app/parametres/formulaire-logistique': typeof AppParametresFormulaireLogistiqueRoute
   '/_app/parametres/lieux': typeof AppParametresLieuxRoute
   '/_app/parametres/metiers': typeof AppParametresMetiersRoute
   '/_app/parametres/postes': typeof AppParametresPostesRoute
@@ -1250,6 +1269,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/demande-logistique'
     | '/dispos'
     | '/login'
     | '/mcp'
@@ -1341,6 +1361,7 @@ export interface FileRouteTypes {
     | '/parametres/competences-equipe'
     | '/parametres/devis-materiaux'
     | '/parametres/devis-taux'
+    | '/parametres/formulaire-logistique'
     | '/parametres/lieux'
     | '/parametres/metiers'
     | '/parametres/postes'
@@ -1383,6 +1404,7 @@ export interface FileRouteTypes {
     | '/affaires/$affaireId/devis-staffing/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/demande-logistique'
     | '/dispos'
     | '/login'
     | '/mcp'
@@ -1472,6 +1494,7 @@ export interface FileRouteTypes {
     | '/parametres/competences-equipe'
     | '/parametres/devis-materiaux'
     | '/parametres/devis-taux'
+    | '/parametres/formulaire-logistique'
     | '/parametres/lieux'
     | '/parametres/metiers'
     | '/parametres/postes'
@@ -1515,6 +1538,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/_app'
+    | '/demande-logistique'
     | '/dispos'
     | '/login'
     | '/mcp'
@@ -1607,6 +1631,7 @@ export interface FileRouteTypes {
     | '/_app/parametres/competences-equipe'
     | '/_app/parametres/devis-materiaux'
     | '/_app/parametres/devis-taux'
+    | '/_app/parametres/formulaire-logistique'
     | '/_app/parametres/lieux'
     | '/_app/parametres/metiers'
     | '/_app/parametres/postes'
@@ -1651,6 +1676,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
+  DemandeLogistiqueRoute: typeof DemandeLogistiqueRoute
   DisposRoute: typeof DisposRoute
   LoginRoute: typeof LoginRoute
   McpRoute: typeof McpRoute
@@ -1672,6 +1698,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/demande-logistique': {
+      id: '/demande-logistique'
+      path: '/demande-logistique'
+      fullPath: '/demande-logistique'
+      preLoaderRoute: typeof DemandeLogistiqueRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dispos': {
@@ -2367,6 +2400,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppParametresDevisTauxRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/parametres/formulaire-logistique': {
+      id: '/_app/parametres/formulaire-logistique'
+      path: '/parametres/formulaire-logistique'
+      fullPath: '/parametres/formulaire-logistique'
+      preLoaderRoute: typeof AppParametresFormulaireLogistiqueRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/parametres/lieux': {
       id: '/_app/parametres/lieux'
       path: '/parametres/lieux'
@@ -2795,6 +2835,7 @@ interface AppRouteChildren {
   AppParametresCompetencesEquipeRoute: typeof AppParametresCompetencesEquipeRoute
   AppParametresDevisMateriauxRoute: typeof AppParametresDevisMateriauxRoute
   AppParametresDevisTauxRoute: typeof AppParametresDevisTauxRoute
+  AppParametresFormulaireLogistiqueRoute: typeof AppParametresFormulaireLogistiqueRoute
   AppParametresLieuxRoute: typeof AppParametresLieuxRoute
   AppParametresMetiersRoute: typeof AppParametresMetiersRoute
   AppParametresPostesRoute: typeof AppParametresPostesRoute
@@ -2892,6 +2933,8 @@ const AppRouteChildren: AppRouteChildren = {
   AppParametresCompetencesEquipeRoute: AppParametresCompetencesEquipeRoute,
   AppParametresDevisMateriauxRoute: AppParametresDevisMateriauxRoute,
   AppParametresDevisTauxRoute: AppParametresDevisTauxRoute,
+  AppParametresFormulaireLogistiqueRoute:
+    AppParametresFormulaireLogistiqueRoute,
   AppParametresLieuxRoute: AppParametresLieuxRoute,
   AppParametresMetiersRoute: AppParametresMetiersRoute,
   AppParametresPostesRoute: AppParametresPostesRoute,
@@ -2916,6 +2959,7 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
+  DemandeLogistiqueRoute: DemandeLogistiqueRoute,
   DisposRoute: DisposRoute,
   LoginRoute: LoginRoute,
   McpRoute: McpRoute,
