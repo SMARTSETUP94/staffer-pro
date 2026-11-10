@@ -23,7 +23,7 @@ function DemandeLogistiquePage() {
     <div className="mx-auto w-full max-w-3xl space-y-4 p-3 sm:p-6">
       <PageHeader
         title="Nouvelle demande logistique"
-        description="La demande arrive dans « Demandes logistique » (onglet À traiter) ; elle n'est pas ajoutée directement au planning."
+        description="La demande arrive dans « Mail logistique » (onglet À traiter) ; elle n'est pas ajoutée directement au planning."
       />
       <DemandeLogistiqueForm />
     </div>
