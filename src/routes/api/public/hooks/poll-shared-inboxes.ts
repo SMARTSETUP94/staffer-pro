@@ -110,6 +110,11 @@ export const Route = createFileRoute("/api/public/hooks/poll-shared-inboxes")({
                 }
                 continue;
               }
+              const copieDe = box.source === "logistique" ? demandeDeCopie(msg.subject, msg.body?.content) : null;
+              if (copieDe) {
+                const { data: dem } = await supa.from("emails_entrants").select("id").eq("id", copieDe).maybeSingle();
+                if (dem) continue; // copie mail d'une demande « Formulaire » déjà enregistrée
+              }
               let cls: SharedCls;
               try {
                 cls = await classifySharedEmail(
