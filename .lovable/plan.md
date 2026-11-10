@@ -13,7 +13,16 @@
 - Affiché : prénom, nom/initiale, métier, chantier, dates, badge. Jamais téléphone, salaire, taux ou contrat.
 - Heures = 0, aucune écriture dans les heures saisies, aucune notification, salariés inactifs refusés, aucune donnée existante modifiée.
 
-## Migration (texte complet montré avant application)
+## Ordre d'exécution
+1. **Migration A (additive)** ci-dessous, appliquée directement : colonnes, contrainte, index, deux fonctions, droits.
+2. **Migration B (filtres sur fonctions existantes)** : NON appliquée. Pour chaque fonction, le diff exact (lignes ajoutées) par rapport au texte actuel est présenté, avec confirmation que signature, SECURITY, search_path et droits sont inchangés. Arrêt en attente d'accord.
+3. Interface construite seulement après l'accord sur B.
+
+Corrections intégrées dans A :
+- Ajouter : métier vérifié dans la table des métiers (pas de liste en dur) ; chantier vérifié existant et non terminé/annulé (message « Chantier introuvable » / « Chantier terminé ou annulé ») ; 130 jours max.
+- Retirer : début ≤ fin et période de 130 jours max.
+
+## Migration A
 Ajouts seulement, sur la table des affectations existante :
 
 ```sql
@@ -35,12 +44,17 @@ CREATE FUNCTION public.planning_atelier_personne_ajouter(
   _affaire uuid, _metier int, _jours date[],
   _personne uuid, _origine text, _badge text DEFAULT NULL)
 RETURNS int LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
-DECLARE n int;
+DECLARE n int; st affaire_statut;
 BEGIN
   IF NOT public.planning_atelier_ecriture_autorisee() THEN
     RAISE EXCEPTION 'Accès refusé' USING ERRCODE = '42501'; END IF;
-  IF _metier NOT IN (1,2,3,4,5,6,9) OR coalesce(array_length(_jours,1),0) = 0
-     OR array_length(_jours,1) > 130 THEN RAISE EXCEPTION 'Métier ou jours invalides'; END IF;
+  IF NOT EXISTS (SELECT 1 FROM metiers WHERE id=_metier) THEN
+    RAISE EXCEPTION 'Métier inexistant'; END IF;
+  SELECT statut INTO st FROM affaires WHERE id=_affaire;
+  IF NOT FOUND THEN RAISE EXCEPTION 'Chantier introuvable'; END IF;
+  IF st IN ('termine','annule') THEN RAISE EXCEPTION 'Chantier terminé ou annulé'; END IF;
+  IF coalesce(array_length(_jours,1),0) = 0 OR array_length(_jours,1) > 130 THEN
+    RAISE EXCEPTION 'Entre 1 et 130 jours'; END IF;
   IF _origine = 'employe' THEN
     IF NOT EXISTS (SELECT 1 FROM employes WHERE id=_personne AND actif) THEN
       RAISE EXCEPTION 'Personne inexistante ou inactive'; END IF;
@@ -74,6 +88,8 @@ DECLARE n int;
 BEGIN
   IF NOT public.planning_atelier_ecriture_autorisee() THEN
     RAISE EXCEPTION 'Accès refusé' USING ERRCODE = '42501'; END IF;
+  IF _debut IS NULL OR _fin IS NULL OR _debut > _fin OR _fin - _debut > 130 THEN
+    RAISE EXCEPTION 'Période invalide (début ≤ fin, 130 jours max)'; END IF;
   DELETE FROM assignations
    WHERE pole_planning = 'atelier' AND affaire_id = _affaire AND metier_id = _metier
      AND (employe_id = _personne OR dispos_intervenant_id = _personne)
@@ -88,7 +104,7 @@ GRANT EXECUTE ON FUNCTION public.planning_atelier_personne_ajouter(uuid,int,date
 ```
 Les fériés FR sont retirés côté app (même helper que le Gantt) avant l'appel ; la base exclut en plus les week-ends.
 
-### Filtres sur les fonctions existantes (redéfinies explicitement à partir de leur texte actuel, montré en entier avant application)
+### Migration B — filtres sur les fonctions existantes (diff présenté, non appliqué avant accord)
 Constat : ces fonctions lisent toutes les affectations et verraient les lignes atelier.
 - `planning_terrain_semaine` (Étapes/Équipes/Personnes logistique) lit toutes les affectations de la semaine → ajout `AND pole_planning IS NULL`.
 - `notify_assignation_change` (notification à la personne) → sortie immédiate si `pole_planning = 'atelier'`.
