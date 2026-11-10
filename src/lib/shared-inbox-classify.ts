@@ -3,6 +3,8 @@
  * Partagé entre le releveur (poll-shared-inboxes) et la relance admin.
  * Server-only : utilise LOVABLE_API_KEY passé en paramètre.
  */
+import { lireGabaritLogistique } from "@/lib/logistique/gabarit-demande";
+
 const AI_GW = "https://ai.gateway.lovable.dev/v1/chat/completions";
 const MAX_BODY = 8000;
 
@@ -30,6 +32,17 @@ export type EcheanceDetectee = {
   libelle: string;
   type?: string | null;
   affaire_numero?: string | null;
+  heure_debut?: string | null;
+  heure_fin?: string | null;
+  a_partir_de?: boolean | null;
+  lieu?: string | null;
+  contact_sur_place?: string | null;
+  acces?: string | null;
+  nb_personnes?: number | null;
+  vehicule?: string | null;
+  responsable?: string | null;
+  commentaire?: string | null;
+  source?: "gabarit" | "ia" | "formulaire";
 };
 
 export type ClassifyInput = {
@@ -39,6 +52,7 @@ export type ClassifyInput = {
   body?: string | null;
   bodyContentType?: string | null;
   bodyPreview?: string | null;
+  receivedAt?: string | null;
 };
 
 /** HTML → texte brut, espaces compactés, tronqué à 8000 caractères. */
@@ -83,7 +97,10 @@ export async function classifySharedEmail(key: string, input: ClassifyInput, sou
     "Si l'email mentionne des échéances de chantier (dates de livraison, montage, démontage, enlèvement, chargement, accès site, permanence...), liste-les dans echeances. " + "RÈGLES PLATEAU TV (planning de production d'émission) : SETUP assure une PERMANENCE (type permanence) chaque jour de TOURNAGE et chaque jour de « répétitions toutes équipes » ; une étape par date. Les encodages et les répétitions simples (sans « toutes équipes ») ne génèrent rien. Une liste « 4, 5 janvier 2027 » ou « 24, 25 et 30 novembre » = une date par jour cité, ne jamais en sauter. Une installation de nuit (ex. double fauteuil dans la nuit du jeudi au vendredi) = une étape montage à la date du jeudi, avec la précision en note. « Montage / démontage selon jalonnement » sans date = aucune étape (le jalonnement viendra à part). Un traçage daté = étape tracage. Mets dans le libellé/la note la séquence (ex. « Perm. tournage Blinds J2 », « Perm. répét. toutes équipes Battles »). Dates « en option » : garde-les avec « (option) » dans le libellé. " +
     "Format : " +
     "date au format YYYY-MM-DD, libelle court (ex. « Livraison plateau »), type parmi appro/emballage/chargement/livraison/tracage/montage/finitions/permanence/rotation/demontage/dechargement (null si incertain), " +
-    "et affaire_numero si un numéro de chantier (4 à 5 chiffres, ex. 6034) ou d'opportunité (9XXX) est cité, sinon null. Tableau vide si aucune échéance. Réponds STRICTEMENT en JSON." + (source === "logistique" ? exemples : "");
+    "et affaire_numero si un numéro de chantier (4 à 5 chiffres, ex. 6034) ou d'opportunité (9XXX) est cité, sinon null. " +
+    "Pour chaque échéance, remplis aussi heure_debut et heure_fin (HH:MM), a_partir_de (true si « à partir de »), lieu (adresse), contact_sur_place (nom + téléphone), acces, nb_personnes, vehicule (tel qu'écrit), responsable (chef d'équipe), commentaire : null si absent, n'invente rien. " +
+    "IMPORTANT : seule la demande la plus récente (haut du mail, avant « De : / From: / Le … a écrit ») crée des échéances ; l'historique cité sert uniquement de contexte et ne génère aucune échéance. " +
+    "Tableau vide si aucune échéance. Réponds STRICTEMENT en JSON." + (source === "logistique" ? exemples : "");
   const text = bodyToPlainText(input.body, input.bodyContentType) || input.bodyPreview || "";
   const res = await fetch(AI_GW, {
     method: "POST",
@@ -129,8 +146,18 @@ export async function classifySharedEmail(key: string, input: ClassifyInput, sou
                     libelle: { type: "string" },
                     type: { type: ["string", "null"], enum: ["appro", "emballage", "chargement", "livraison", "tracage", "montage", "finitions", "permanence", "rotation", "demontage", "dechargement", null] },
                     affaire_numero: { type: ["string", "null"] },
+                    heure_debut: { type: ["string", "null"] },
+                    heure_fin: { type: ["string", "null"] },
+                    a_partir_de: { type: ["boolean", "null"] },
+                    lieu: { type: ["string", "null"] },
+                    contact_sur_place: { type: ["string", "null"] },
+                    acces: { type: ["string", "null"] },
+                    nb_personnes: { type: ["integer", "null"] },
+                    vehicule: { type: ["string", "null"] },
+                    responsable: { type: ["string", "null"] },
+                    commentaire: { type: ["string", "null"] },
                   },
-                  required: ["date", "libelle", "type", "affaire_numero"],
+                  required: ["date", "libelle", "type", "affaire_numero", "heure_debut", "heure_fin", "a_partir_de", "lieu", "contact_sur_place", "acces", "nb_personnes", "vehicule", "responsable", "commentaire"],
                 },
               },
             },
@@ -142,7 +169,17 @@ export async function classifySharedEmail(key: string, input: ClassifyInput, sou
   });
   if (!res.ok) throw new Error(`AI ${res.status}: ${(await res.text()).slice(0, 200)}`);
   const j = (await res.json()) as { choices?: Array<{ message?: { content?: string } }> };
-  return JSON.parse(j.choices?.[0]?.message?.content ?? "{}") as SharedCls;
+  const cls = JSON.parse(j.choices?.[0]?.message?.content ?? "{}") as SharedCls;
+  return appliquerGabarit(cls, input, source);
+}
+
+/** Le gabarit lu sans IA est prioritaire sur les échéances de l'IA (log@ uniquement). */
+export function appliquerGabarit(cls: SharedCls, input: ClassifyInput, source: SharedSource): SharedCls {
+  if (source !== "logistique") return cls;
+  const text = bodyToPlainText(input.body, input.bodyContentType) || input.bodyPreview || "";
+  const g = lireGabaritLogistique(text, input.receivedAt ? new Date(input.receivedAt) : new Date());
+  if (g) return { ...cls, categorie: "logistique", echeances: g };
+  return { ...cls, echeances: (cls.echeances ?? []).map((e) => ({ ...e, source: "ia" as const })) };
 }
 
 export function clsToMetadata(cls: SharedCls) {
