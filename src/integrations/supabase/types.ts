@@ -5166,6 +5166,8 @@ export type Database = {
           delai_chargement_retour: number
           delai_dechargement: number
           delai_emballage: number
+          demande_log_jeton_cree_le: string | null
+          demande_log_jeton_hash: string | null
           duree_montage: number
           id: boolean
           modele_ia: string | null
@@ -5178,6 +5180,8 @@ export type Database = {
           delai_chargement_retour?: number
           delai_dechargement?: number
           delai_emballage?: number
+          demande_log_jeton_cree_le?: string | null
+          demande_log_jeton_hash?: string | null
           duree_montage?: number
           id?: boolean
           modele_ia?: string | null
@@ -5190,6 +5194,8 @@ export type Database = {
           delai_chargement_retour?: number
           delai_dechargement?: number
           delai_emballage?: number
+          demande_log_jeton_cree_le?: string | null
+          demande_log_jeton_hash?: string | null
           duree_montage?: number
           id?: boolean
           modele_ia?: string | null
@@ -8415,6 +8421,48 @@ export type Database = {
       delete_my_hors_planning_saisie: {
         Args: { _saisie_id: string }
         Returns: boolean
+      }
+      demande_log_acces: { Args: { _jeton: string }; Returns: boolean }
+      demande_log_jeton_etat: { Args: never; Returns: string }
+      demande_log_jeton_regenerer: { Args: never; Returns: string }
+      demande_log_public_creer: {
+        Args: {
+          _cle: string
+          _demandeur: string
+          _interventions: Json
+          _jeton: string
+          _nb_fichiers?: number
+          _projet: string
+        }
+        Returns: string
+      }
+      demande_log_public_fichier: {
+        Args: { _chemin: string; _demande: string; _jeton: string }
+        Returns: undefined
+      }
+      demande_log_public_personnes: {
+        Args: { _jeton: string }
+        Returns: {
+          chef: boolean
+          employe_id: string
+          id: string
+          libelle: string
+        }[]
+      }
+      demande_log_public_projet: {
+        Args: { _jeton: string; _numero: string }
+        Returns: {
+          id: string
+          nom: string
+          numero: string
+        }[]
+      }
+      demande_log_public_vehicules: {
+        Args: { _jeton: string }
+        Returns: {
+          id: string
+          nom: string
+        }[]
       }
       deplacer_etape_logistique: {
         Args: {
