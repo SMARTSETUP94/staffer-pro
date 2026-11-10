@@ -15,6 +15,7 @@ import { suggestAffaires } from "@/lib/logistique/suggest-affaire";
 import { commentaireEquipe, trouverVehicule, type EcheanceEnrichie } from "@/lib/logistique/gabarit-demande";
 import { DemandeLogistiqueForm } from "@/components/logistique/DemandeLogistiqueForm";
 import { EmailReaderDialog } from "@/components/emails/EmailReaderDialog";
+import { PiecesJointesMailSelection } from "@/components/logistique/PiecesJointesMailSelection";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -250,6 +251,7 @@ function PlanningDialog({ row, affaires, onClose, onDone }: { row: Row; affaires
     });
   });
   const [saving, setSaving] = useState(false);
+  const [pjMail, setPjMail] = useState<string[]>([]);
   const [commentaire, setCommentaire] = useState("");
   const assist = useServerFn(assistantEtapes);
   const [consigne, setConsigne] = useState("");
@@ -326,6 +328,15 @@ function PlanningDialog({ row, affaires, onClose, onDone }: { row: Row; affaires
         retenu: kept.map((l) => ({ type: l.type, date: l.date, contenu: l.contenu, heure_debut: l.hDebut || null, heure_fin: l.hFin || null, lieu: l.lieu || null })),
         commentaire: commentaire.trim() || null,
       });
+      if (pjMail.length > 0) {
+        const { saveEmailDocument } = await import("@/lib/server-fns/save-email-document.functions");
+        let ok = 0; let ko = 0;
+        for (const attachmentId of pjMail) {
+          try { await saveEmailDocument({ data: { emailId: row.id, attachmentId, affaireId } }); ok++; } catch { ko++; }
+        }
+        if (ok) toast.success(`${ok} pièce(s) jointe(s) rattachée(s) aux documents du chantier`);
+        if (ko) toast.error(`${ko} pièce(s) jointe(s) non rattachée(s)`);
+      }
       if ((row.metadata_ia?.fichiers ?? []).length > 0) {
         try {
           const { rattacherFichiersDemande } = await import("@/lib/server-fns/demande-logistique-documents.functions");
@@ -349,7 +360,7 @@ function PlanningDialog({ row, affaires, onClose, onDone }: { row: Row; affaires
           <DialogTitle>Ajouter au planning logistique</DialogTitle>
           <DialogDescription>
             {ech.some((e) => e.source === "gabarit") ? "Lu depuis le gabarit du mail (sans IA)" : "Suggestions de l'IA"} — corrigez, décochez ce qui ne doit pas être ajouté.
-            {row.has_attachments ? " · Ce mail contient une pièce jointe (à consulter dans l'email)." : ""}
+
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 md:grid-cols-2 min-h-0">
@@ -362,6 +373,7 @@ function PlanningDialog({ row, affaires, onClose, onDone }: { row: Row; affaires
             <div className="space-y-2 p-3 text-sm">
               <p>Demande envoyée depuis le formulaire par <span className="font-medium">{row.from_name}</span>.</p>
               <FichiersDemande chemins={row.metadata_ia?.fichiers ?? []} />
+              {(row.metadata_ia?.fichiers ?? []).length > 0 && <p className="text-xs text-muted-foreground">Ces pièces seront rattachées aux documents du chantier choisi.</p>}
             </div>
           ) : isHtml ? (
             <iframe title="Email" sandbox="" srcDoc={body} className="w-full flex-1 min-h-[55vh] bg-background" />
@@ -370,6 +382,7 @@ function PlanningDialog({ row, affaires, onClose, onDone }: { row: Row; affaires
           )}
         </div>
         <div className="space-y-3 min-w-0">
+        {row.has_attachments && row.metadata_ia?.origine !== "formulaire" && <PiecesJointesMailSelection emailId={row.id} selection={pjMail} onChange={setPjMail} />}
         <details className="rounded-md border bg-muted/30 px-2 py-1 text-xs" open={!!reponse || undefined}>
           <summary className="cursor-pointer select-none py-1 text-muted-foreground">Aide IA (facultatif) — consigne de remplissage, commentaire d'apprentissage</summary>
           <div className="space-y-2 pb-2 pt-1">
