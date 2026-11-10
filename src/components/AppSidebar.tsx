@@ -6,7 +6,7 @@ import {
   UserCircle, FileText, Trophy, Map, ClipboardList,
   Truck, Palette, Warehouse, Hammer, Wrench, BadgeCheck, Lightbulb,
   FileSignature, Inbox, PackageCheck, UsersRound, Briefcase, Settings, TrendingUp, LayoutGrid,
-  GanttChart, Wallet, CalendarCheck,
+  GanttChart, Wallet, CalendarCheck, Send,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -116,6 +116,7 @@ function buildSections(
       items: [
         { title: "Planning logistique", url: "/logistique", icon: Calendar, cap: "logistique.planning.view" },
         { title: "Demandes logistique", url: "/demandes-logistique", icon: Inbox, cap: "logistique.planning.view" },
+        { title: "Demande logistique", url: "/nouvelle-demande-logistique", icon: Send, cap: "logistique.planning.view" },
         { title: "Jalonnements", url: "/jalonnements", icon: ClipboardList, cap: "logistique.planning.view" },
         { title: "Véhicules", url: "/flotte", icon: Truck, cap: "section.logistique" },
         { title: "Planning véhicules", url: "/logistique/vehicules-planning", icon: Calendar, cap: "section.logistique" },
@@ -212,6 +213,7 @@ const CA_MODE_URLS = new Set([
   "/opportunites",
   "/demandes-clients",
   "/demandes-logistique",
+  "/nouvelle-demande-logistique",
   "/jalonnements",
   "/echeances",
   "/logistique/dispos",
@@ -244,6 +246,7 @@ const LO_MODE_URLS = new Set([
   "/opportunites",
   "/demandes-clients",
   "/demandes-logistique",
+  "/nouvelle-demande-logistique",
   "/jalonnements",
   "/flotte",
   "/logistique/vehicules-planning",
@@ -271,7 +274,7 @@ function applyLogistiqueOppsMode(sections: NavSection[]): NavSection[] {
  * toujours ouvrir /admin/feature-flags en direct pour désactiver le mode.
  */
 // "/admin/utilisateurs" reste filtré par la cap section.admin (admins seulement).
-const SA_MODE_URLS = new Set(["/", "/planning-atelier", "/planning-be", "/admin/qualite-donnees", "/opportunites", "/demandes-clients", "/affaires", "/liste-chantiers", "/documents-affaires", "/clients", "/logistique", "/demandes-logistique", "/jalonnements", "/admin/utilisateurs", "/admin/connecteur-claude", "/mes-notes-de-frais", "/validation-notes-de-frais", "/planning-pilotage", "/parametres/referents-roles", "/parametres/devis-taux", "/parametres/formulaire-logistique", "/devis-staffing", "/logistique/dispos"]);
+const SA_MODE_URLS = new Set(["/", "/planning-atelier", "/planning-be", "/admin/qualite-donnees", "/opportunites", "/demandes-clients", "/affaires", "/liste-chantiers", "/documents-affaires", "/clients", "/logistique", "/demandes-logistique", "/nouvelle-demande-logistique", "/jalonnements", "/admin/utilisateurs", "/admin/connecteur-claude", "/mes-notes-de-frais", "/validation-notes-de-frais", "/planning-pilotage", "/parametres/referents-roles", "/parametres/devis-taux", "/parametres/formulaire-logistique", "/devis-staffing", "/logistique/dispos"]);
 
 function applySuiviAffairesMode(sections: NavSection[]): NavSection[] {
   return sections

@@ -52,6 +52,7 @@ import { Route as AppMesPropositionsRouteImport } from './routes/_app.mes-propos
 import { Route as AppMesSwapsRouteImport } from './routes/_app.mes-swaps'
 import { Route as AppMonEquipeTypeRouteImport } from './routes/_app.mon-equipe-type'
 import { Route as AppNotificationsRouteImport } from './routes/_app.notifications'
+import { Route as AppNouvelleDemandeLogistiqueRouteImport } from './routes/_app.nouvelle-demande-logistique'
 import { Route as AppOpportunitesRouteImport } from './routes/_app.opportunites'
 import { Route as AppPlanningRouteImport } from './routes/_app.planning'
 import { Route as AppPlanningAtelierRouteImport } from './routes/_app.planning-atelier'
@@ -361,6 +362,12 @@ const AppNotificationsRoute = AppNotificationsRouteImport.update({
   path: '/notifications',
   getParentRoute: () => AppRoute,
 } as any)
+const AppNouvelleDemandeLogistiqueRoute =
+  AppNouvelleDemandeLogistiqueRouteImport.update({
+    id: '/nouvelle-demande-logistique',
+    path: '/nouvelle-demande-logistique',
+    getParentRoute: () => AppRoute,
+  } as any)
 const AppOpportunitesRoute = AppOpportunitesRouteImport.update({
   id: '/opportunites',
   path: '/opportunites',
@@ -901,6 +908,7 @@ export interface FileRoutesByFullPath {
   '/mes-swaps': typeof AppMesSwapsRoute
   '/mon-equipe-type': typeof AppMonEquipeTypeRoute
   '/notifications': typeof AppNotificationsRoute
+  '/nouvelle-demande-logistique': typeof AppNouvelleDemandeLogistiqueRoute
   '/opportunites': typeof AppOpportunitesRouteWithChildren
   '/planning': typeof AppPlanningRoute
   '/planning-atelier': typeof AppPlanningAtelierRoute
@@ -1035,6 +1043,7 @@ export interface FileRoutesByTo {
   '/mes-swaps': typeof AppMesSwapsRoute
   '/mon-equipe-type': typeof AppMonEquipeTypeRoute
   '/notifications': typeof AppNotificationsRoute
+  '/nouvelle-demande-logistique': typeof AppNouvelleDemandeLogistiqueRoute
   '/planning': typeof AppPlanningRoute
   '/planning-atelier': typeof AppPlanningAtelierRoute
   '/planning-be': typeof AppPlanningBeRoute
@@ -1171,6 +1180,7 @@ export interface FileRoutesById {
   '/_app/mes-swaps': typeof AppMesSwapsRoute
   '/_app/mon-equipe-type': typeof AppMonEquipeTypeRoute
   '/_app/notifications': typeof AppNotificationsRoute
+  '/_app/nouvelle-demande-logistique': typeof AppNouvelleDemandeLogistiqueRoute
   '/_app/opportunites': typeof AppOpportunitesRouteWithChildren
   '/_app/planning': typeof AppPlanningRoute
   '/_app/planning-atelier': typeof AppPlanningAtelierRoute
@@ -1310,6 +1320,7 @@ export interface FileRouteTypes {
     | '/mes-swaps'
     | '/mon-equipe-type'
     | '/notifications'
+    | '/nouvelle-demande-logistique'
     | '/opportunites'
     | '/planning'
     | '/planning-atelier'
@@ -1444,6 +1455,7 @@ export interface FileRouteTypes {
     | '/mes-swaps'
     | '/mon-equipe-type'
     | '/notifications'
+    | '/nouvelle-demande-logistique'
     | '/planning'
     | '/planning-atelier'
     | '/planning-be'
@@ -1579,6 +1591,7 @@ export interface FileRouteTypes {
     | '/_app/mes-swaps'
     | '/_app/mon-equipe-type'
     | '/_app/notifications'
+    | '/_app/nouvelle-demande-logistique'
     | '/_app/opportunites'
     | '/_app/planning'
     | '/_app/planning-atelier'
@@ -1992,6 +2005,13 @@ declare module '@tanstack/react-router' {
       path: '/notifications'
       fullPath: '/notifications'
       preLoaderRoute: typeof AppNotificationsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/nouvelle-demande-logistique': {
+      id: '/_app/nouvelle-demande-logistique'
+      path: '/nouvelle-demande-logistique'
+      fullPath: '/nouvelle-demande-logistique'
+      preLoaderRoute: typeof AppNouvelleDemandeLogistiqueRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/opportunites': {
@@ -2794,6 +2814,7 @@ interface AppRouteChildren {
   AppMesSwapsRoute: typeof AppMesSwapsRoute
   AppMonEquipeTypeRoute: typeof AppMonEquipeTypeRoute
   AppNotificationsRoute: typeof AppNotificationsRoute
+  AppNouvelleDemandeLogistiqueRoute: typeof AppNouvelleDemandeLogistiqueRoute
   AppOpportunitesRoute: typeof AppOpportunitesRouteWithChildren
   AppPlanningRoute: typeof AppPlanningRoute
   AppPlanningAtelierRoute: typeof AppPlanningAtelierRoute
@@ -2891,6 +2912,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppMesSwapsRoute: AppMesSwapsRoute,
   AppMonEquipeTypeRoute: AppMonEquipeTypeRoute,
   AppNotificationsRoute: AppNotificationsRoute,
+  AppNouvelleDemandeLogistiqueRoute: AppNouvelleDemandeLogistiqueRoute,
   AppOpportunitesRoute: AppOpportunitesRouteWithChildren,
   AppPlanningRoute: AppPlanningRoute,
   AppPlanningAtelierRoute: AppPlanningAtelierRoute,
