@@ -115,7 +115,7 @@ function buildSections(
       label: "Logistique",
       items: [
         { title: "Planning logistique", url: "/logistique", icon: Calendar, cap: "logistique.planning.view" },
-        { title: "Demandes logistique", url: "/demandes-logistique", icon: Inbox, cap: "logistique.planning.view" },
+        { title: "Mail logistique", url: "/demandes-logistique", icon: Inbox, cap: "logistique.planning.view" },
         { title: "Demande logistique", url: "/nouvelle-demande-logistique", icon: Send, cap: "logistique.planning.view" },
         { title: "Jalonnements", url: "/jalonnements", icon: ClipboardList, cap: "logistique.planning.view" },
         { title: "Véhicules", url: "/flotte", icon: Truck, cap: "section.logistique" },

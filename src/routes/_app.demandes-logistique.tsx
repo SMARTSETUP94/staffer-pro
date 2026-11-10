@@ -30,9 +30,9 @@ export const Route = createFileRoute("/_app/demandes-logistique")({
   beforeLoad: () => requireCapability("logistique.planning.view"),
   head: () => ({
     meta: [
-      { title: "Demandes logistique — log@setup.paris" },
+      { title: "Mail logistique — log@setup.paris" },
       { name: "description", content: "Emails log@ analysés par l'IA : échéances détectées et suggestions d'étapes logistiques." },
-      { property: "og:title", content: "Demandes logistique — log@setup.paris" },
+      { property: "og:title", content: "Mail logistique — log@setup.paris" },
       { property: "og:description", content: "Emails log@ analysés par l'IA avec suggestions de planning." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -132,7 +132,7 @@ function DemandesLogistiquePage() {
   const list = lists[tab];
   return (
     <div className="p-4 md:p-6 space-y-4">
-      <PageHeader title="Demandes logistique" description="Emails reçus sur log@setup.paris — l'IA repère les échéances et propose des étapes pour le planning."
+      <PageHeader title="Mail logistique" description="Emails reçus sur log@setup.paris — l'IA repère les échéances et propose des étapes pour le planning."
         actions={<div className="flex flex-wrap gap-2">
           <Button size="sm" variant="secondary" onClick={() => setNouvelle(true)}>+ Nouvelle demande</Button>
           <Button size="sm" onClick={relever} disabled={releve}>
