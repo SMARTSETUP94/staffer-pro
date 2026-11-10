@@ -63,4 +63,3 @@
 - smart@ is no longer polled (cron removed, route returns 410); Demandes clients reads devis@ only, and unproven pending smart@ requests are soft-dismissed by the pure doitEcarterSmart rule so nothing is deleted.
 - The logistics planning is one page (/logistique) with Étapes, Équipes, Personnes and a read-only chef tab; /logistique/equipes only redirects there. Alerts, qualified needs, WhatsApp texts, team copy and filters are pure helpers in src/lib/logistique/planning-semaine.ts so every view and the tests share one rule set.
 - Logistics form requests: emails_entrants rows via token-gated service-role RPCs; poller never creates steps.
-- Pennylane readiness rules live only in src/lib/clients/pennylane.ts (mirrored by trigger clients_controle_pennylane); billing edits send changed fields only.
