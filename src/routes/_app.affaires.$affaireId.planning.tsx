@@ -401,9 +401,34 @@ function AffairePlanningPage() {
                     </div>
                   )}
                   <div className="grid grid-cols-2 gap-2">
-                    <div className="grid gap-1"><Label>Début</Label><Input type="date" disabled={ro} value={edit.debut} onChange={(e) => set({ debut: e.target.value })} /></div>
-                    <div className="grid gap-1"><Label>Fin</Label><Input type="date" disabled={ro} value={edit.fin} onChange={(e) => set({ fin: e.target.value })} /></div>
+                    <div className="grid gap-1">
+                      <Label>Début</Label>
+                      <Input type="date" disabled={ro} value={edit.debut} onChange={(e) => set({ debut: e.target.value })} />
+                      {!ro && (
+                        <div className="flex gap-1">
+                          <Button type="button" size="sm" variant="outline" className="h-6 flex-1 px-1 text-[11px]" onClick={() => set({ debut: addDays(edit.debut, -1) })}>−1 j</Button>
+                          <Button type="button" size="sm" variant="outline" className="h-6 flex-1 px-1 text-[11px]" onClick={() => set({ debut: addDays(edit.debut, 1) })}>+1 j</Button>
+                        </div>
+                      )}
+                    </div>
+                    <div className="grid gap-1">
+                      <Label>Fin</Label>
+                      <Input type="date" disabled={ro} value={edit.fin} onChange={(e) => set({ fin: e.target.value })} />
+                      {!ro && (
+                        <div className="flex gap-1">
+                          <Button type="button" size="sm" variant="outline" className="h-6 flex-1 px-1 text-[11px]" onClick={() => set({ fin: addDays(edit.fin, -1) })}>−1 j</Button>
+                          <Button type="button" size="sm" variant="outline" className="h-6 flex-1 px-1 text-[11px]" onClick={() => set({ fin: addDays(edit.fin, 1) })}>+1 j</Button>
+                        </div>
+                      )}
+                    </div>
                   </div>
+                  {!ro && (
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[11px] text-muted-foreground">Décaler toute la période :</span>
+                      <Button type="button" size="sm" variant="outline" className="h-6 px-2 text-[11px]" onClick={() => set({ debut: addDays(edit.debut, -1), fin: addDays(edit.fin, -1) })}>−1 j</Button>
+                      <Button type="button" size="sm" variant="outline" className="h-6 px-2 text-[11px]" onClick={() => set({ debut: addDays(edit.debut, 1), fin: addDays(edit.fin, 1) })}>+1 j</Button>
+                    </div>
+                  )}
                   {edit.kind === "atelier" && edit.metier != null && (
                     <div className="grid gap-1">
                       <Label>Heures prévues (vide = heures du devis)</Label>
