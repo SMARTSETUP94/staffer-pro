@@ -56,45 +56,47 @@ function AffairePlanningPage() {
       return e ? `${e.prenom ?? ""} ${e.nom ?? ""}`.trim() : "Concepteur";
     };
 
-    const be: Barre[] = roles
-      .filter((r) => r.role === "concepteur" && r.date_debut && r.date_fin)
-      .map((r) => ({
-        id: `be:${r.id}`, affaireId: "be",
-        libelle: `BE · ${nomEmploye(r.employe_id)}`,
-        debut: r.date_debut as string, fin: r.date_fin as string, previsionnel: true,
-      }));
+    const court = (iso: string) => new Date(`${iso}T12:00:00`).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" });
+    const periode = (x: string, y: string) => `${court(x)} → ${court(y)}`;
+    const out: LigneBarres[] = [];
 
-    const atelier: Barre[] = [];
+    for (const r of roles.filter((r) => r.role === "concepteur" && r.date_debut && r.date_fin)) {
+      const debut = r.date_debut as string, fin = r.date_fin as string;
+      out.push({
+        id: `be:${r.id}`, libelle: `Bureau d'étude · ${nomEmploye(r.employe_id)}`,
+        detail: periode(debut, fin),
+        barres: [{ id: `be:${r.id}`, affaireId: "be", libelle: "Conception", debut, fin, previsionnel: true }],
+      });
+    }
     if (d.affaire.atelier_date_debut && d.affaire.atelier_date_fin) {
-      atelier.push({
-        id: `atelier:${affaireId}`, affaireId: "atelier",
-        libelle: "Période atelier (globale)",
-        debut: d.affaire.atelier_date_debut, fin: d.affaire.atelier_date_fin, previsionnel,
+      const debut = d.affaire.atelier_date_debut, fin = d.affaire.atelier_date_fin;
+      out.push({
+        id: "atelier", libelle: "Atelier · période globale", detail: periode(debut, fin),
+        barres: [{ id: `atelier:${affaireId}`, affaireId: "atelier", libelle: "Atelier", debut, fin, previsionnel }],
       });
     }
     for (const p of d.periodes) {
       const m = d.metiers.find((x) => x.id === p.metier_id);
-      atelier.push({
-        id: `metier:${p.id}`, affaireId: "atelier",
-        libelle: `${m?.libelle ?? "Métier"}${p.heures_prevues != null ? ` · ${Number(p.heures_prevues)} h` : ""}`,
-        debut: p.date_debut, fin: p.date_fin, previsionnel,
+      const h = p.heures_prevues != null ? Number(p.heures_prevues) : null;
+      out.push({
+        id: `metier:${p.id}`, libelle: `↳ ${m?.libelle ?? "Métier"}`,
+        detail: `${periode(p.date_debut, p.date_fin)}${h ? ` · ${h} h · ${Math.round((h / 8) * 10) / 10} j/h` : ""}`,
+        barres: [{
+          id: `metier:${p.id}`, affaireId: "atelier", libelle: h ? `${h} h` : (m?.libelle ?? "Métier"),
+          debut: p.date_debut, fin: p.date_fin, previsionnel, metier: Number(p.metier_id),
+        }],
       });
     }
-
-    const logistique: Barre[] = etapes
-      .filter((e) => e.statut !== "annule")
-      .map((e) => ({
-        id: `log:${e.id}`, affaireId: "log",
-        libelle: `${ETAPE_LABELS[e.type]}${e.sens ? ` ${e.sens}` : ""}`,
-        debut: e.date_debut, fin: e.date_fin && e.date_fin >= e.date_debut ? e.date_fin : e.date_debut,
-        previsionnel: false,
-      }));
-
-    return [
-      { id: "be", libelle: "Bureau d'étude", barres: be },
-      { id: "atelier", libelle: "Atelier", barres: atelier },
-      { id: "logistique", libelle: "Logistique", barres: logistique },
-    ].filter((l) => l.barres.length > 0);
+    for (const e of etapes.filter((e) => e.statut !== "annule")) {
+      const fin = e.date_fin && e.date_fin >= e.date_debut ? e.date_fin : e.date_debut;
+      const nom = `${ETAPE_LABELS[e.type]}${e.sens ? ` ${e.sens}` : ""}`;
+      out.push({
+        id: `log:${e.id}`, libelle: `Logistique · ${nom}`,
+        detail: fin === e.date_debut ? court(e.date_debut) : periode(e.date_debut, fin),
+        barres: [{ id: `log:${e.id}`, affaireId: "log", libelle: nom, debut: e.date_debut, fin, previsionnel: false }],
+      });
+    }
+    return out;
   }, [atelierQ.data, roles, employes, etapes, affaireId]);
 
   const fenetre = useMemo(() => {
@@ -103,7 +105,7 @@ function AffairePlanningPage() {
     const min = dates.reduce((a, b) => (b < a ? b : a));
     const max = dates.reduce((a, b) => (b > a ? b : a));
     const debut = addDays(min, -((dayOfWeek(min) + 6) % 7));
-    const semaines = Math.min(12, Math.max(2, Math.ceil((diffDays(debut, max) + 1) / 7)));
+    const semaines = Math.min(16, Math.max(6, Math.ceil((diffDays(debut, max) + 1) / 7)));
     return { debut, semaines };
   }, [lignes]);
 
@@ -120,7 +122,7 @@ function AffairePlanningPage() {
         <div>
           <h2 className="text-sm font-semibold">Rétroplanning du chantier</h2>
           <p className="text-[11px] text-muted-foreground">
-            Bureau d'étude, atelier et logistique — lecture seule. Modifications dans les plannings dédiés.
+            Une ligne par période, dans l'ordre : bureau d'étude, atelier (par métier), logistique. Pointillés = prévisionnel. Lecture seule.
           </p>
         </div>
         <div className="flex flex-wrap gap-1.5">

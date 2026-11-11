@@ -343,7 +343,7 @@ function AffaireDetailLayout() {
         </div>
       </div>
 
-      <div className="mt-1.5"><EquipeProjetBloc affaireId={affaire.id} canEdit={canEditRoles} /></div>
+      {(path.endsWith("/opportunite") || path.endsWith(affaireId) || path.endsWith(affaireId + "/")) && <div className="mt-1.5"><EquipeProjetBloc affaireId={affaire.id} canEdit={canEditRoles} /></div>}
 
       {/* Onglets */}
       <nav className="mt-1 flex gap-1 border-b border-border overflow-x-auto">
