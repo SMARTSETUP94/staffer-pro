@@ -83,7 +83,7 @@ function RoleLigne({ affaireId, role, row, affaire, canEdit }: {
 
   return (
     <div className="flex flex-wrap items-center gap-1.5">
-      <p className="w-full shrink-0 truncate text-[11px] font-medium text-muted-foreground sm:w-28 lg:w-32" title={PROJET_ROLE_LABELS[role]}>
+      <p className="w-full shrink-0 truncate text-[11px] font-medium text-muted-foreground sm:w-32 lg:w-40" title={PROJET_ROLE_LABELS[role]}>
         {PROJET_ROLE_LABELS[role]}
       </p>
       <div className="min-w-[150px] flex-1">
