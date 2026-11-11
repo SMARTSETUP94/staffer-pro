@@ -24,6 +24,7 @@ import {useCapability} from "@/hooks/use-capability";
 import {cn} from "@/lib/utils";
 import {lirePersonnesAtelier} from "@/lib/atelier-personnes.functions";
 import {nomsBarre,nomAtelier,identiteAtelier,plagesAtelier} from "@/lib/atelier-personnes";
+import {metierTexte} from "@/lib/metier-colors";
 import {PersonnesAtelier} from "./PersonnesAtelier";
 const today=()=>new Date().toISOString().slice(0,10);
 const lundi=()=>addDays(today(),-((dayOfWeek(today())+6)%7));
@@ -74,14 +75,14 @@ export function PlanningSimplePage({mode}:{mode:"atelier"|"be"}){
           // Même valeur que sous la ligne : heures enregistrées, sinon devis hors objets exclus.
           const h=fixe?Number(p?.heures_prevues??0):eff?r1(eff[String(m.id)]??0):(Number(d.charges[a.id]?.heures[String(m.id)])||0);
           if(!(h>0)){zero++;if(!showZero&&!pq.data?.presences.some(p=>p.affaire_id===a.id&&p.metier_id===m.id))continue;}
-          const b=p?{id:p.id,affaireId:a.id,libelle:`${a.numero} · ${m.libelle}`,debut:p.date_debut,fin:p.date_fin,previsionnel:a.phase!=="signe"}:g?{...g,id:`metier:${a.id}:${m.id}`,libelle:`${a.numero} · ${m.libelle}`,proposee:true}:null;
+          const b=p?{id:p.id,affaireId:a.id,libelle:`${a.numero} · ${m.libelle}`,debut:p.date_debut,fin:p.date_fin,previsionnel:a.phase!=="signe",metier:m.id}:g?{...g,id:`metier:${a.id}:${m.id}`,libelle:`${a.numero} · ${m.libelle}`,proposee:true,metier:m.id}:null;
           let staffe=0;
           if(b){const ps=(pq.data?.presences??[]).filter(p=>p.affaire_id===a.id&&p.metier_id===m.id&&p.date>=b.debut&&p.date<=b.fin);const names=nomsBarre(ps,pq.data?.personnes??[]);b.libelle+=names?` · ${names}`:"";staffe=ps.length;}
-          rows.push({id:`${a.id}:${m.id}`,libelle:`↳ ${m.libelle} · ${h} h · ${r1(h/8)} j/h`,detail:<ConfigPersonnes cle={`${a.id}:${m.id}`} affaireId={a.id} metierId={m.id} heures={h} fixe={fixe} sansLimite={m.capacite_jour==null} staffeJh={staffe}/>,barres:b?[b]:[]});
+           rows.push({id:`${a.id}:${m.id}`,titre:`${m.libelle} · ${h} h · ${r1(h/8)} j/h`,libelle:<LigneMetier metierId={m.id} nom={m.libelle} heures={h}/>,detail:<ConfigPersonnes cle={`${a.id}:${m.id}`} affaireId={a.id} metierId={m.id} heures={h} fixe={fixe} sansLimite={m.capacite_jour==null} staffeJh={staffe}/>,barres:b?[b]:[]});
         }
         if(showBe){const hb=beH(a.id);const rs=d.roles.filter(r=>r.affaire_id===a.id&&r.date_debut&&r.date_fin);
           const noms=rs.map(r=>{const ref=d.referents.find(f=>f.employe_id===r.employe_id);return ref?`${ref.employes?.prenom??""} ${ref.employes?.nom??""}`.trim():"";}).filter(Boolean).join(", ");
-          rows.push({id:`${a.id}:be`,libelle:"↳ Bureau d’étude",detail:<div><p className="text-foreground">{hb} h · {r1(hb/8)} j/h{d.charges[a.id]?.estimation?" · estimation":""}</p><p>{noms||"Aucun concepteur daté"} · lecture seule (planning BE)</p></div>,barres:rs.map(r=>({id:`be:${r.id}`,affaireId:a.id,libelle:`${a.numero} · BE`,debut:r.date_debut as string,fin:r.date_fin as string,previsionnel:true}))});}
+          rows.push({id:`${a.id}:be`,titre:`Bureau d’étude · ${hb} h · ${r1(hb/8)} j/h`,libelle:<LigneMetier metierId={8} nom="Bureau d’étude" heures={hb}/>,detail:<p>{noms||"Aucun concepteur daté"} · lecture seule (planning BE){d.charges[a.id]?.estimation?" · estimation":""}</p>,barres:rs.map(r=>({id:`be:${r.id}`,affaireId:a.id,libelle:`${a.numero} · BE`,debut:r.date_debut as string,fin:r.date_fin as string,previsionnel:true,metier:8}))});}
       }
       return rows;
     });
