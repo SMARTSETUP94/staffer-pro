@@ -15,8 +15,6 @@ import {
 import { toast } from "sonner";
 import { StatutPill } from "./_app.affaires.index";
 import { PageBreadcrumbs } from "@/components/PageBreadcrumbs";
-import { AffaireKpiBar } from "@/components/affaire/AffaireKpiBar";
-import { CapabilityGuard } from "@/components/auth/CapabilityGuard";
 import { useCapability } from "@/hooks/use-capability";
 import { NouveauClientDialog } from "@/components/clients/NouveauClientDialog";
 import { EditNumeroAffaireDialog } from "@/components/affaire/EditNumeroAffaireDialog";
@@ -336,23 +334,17 @@ function AffaireDetailLayout() {
         </div>
       </div>
 
-      {/* KPI Bar Bloc 5 — gated par capability affaire.kpi.view */}
-      <div className="mt-3"><EquipeProjetBloc affaireId={affaire.id} canEdit={canEditRoles} /></div>
-      <CapabilityGuard cap="affaire.kpi.view">
-        <div className="mt-2">
-          <AffaireKpiBar affaireId={affaire.id} />
-        </div>
-      </CapabilityGuard>
+      <div className="mt-2"><EquipeProjetBloc affaireId={affaire.id} canEdit={canEditRoles} /></div>
 
       {/* Onglets */}
-      <nav className="mt-3 flex gap-1 border-b border-border overflow-x-auto">
+      <nav className="mt-2 flex gap-1 border-b border-border overflow-x-auto">
 
         {tabs.map((t) => (
           <Link
             key={t.to}
             to={t.to}
             className={[
-              "rounded-t-lg px-4 py-2 text-sm font-semibold transition-colors",
+              "rounded-t-lg px-3 py-1.5 text-[13px] font-semibold transition-colors",
               t.match
                 ? "border-b-2 border-primary text-primary"
                 : "text-muted-foreground hover:text-foreground",
