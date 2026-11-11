@@ -19,7 +19,7 @@ import { useCapability } from "@/hooks/use-capability";
 import { NouveauClientDialog } from "@/components/clients/NouveauClientDialog";
 import { EditNumeroAffaireDialog } from "@/components/affaire/EditNumeroAffaireDialog";
 import { hasOpportuniteTab } from "@/lib/affaire-opportunite";
-import { isAffaireTabHidden } from "@/lib/affaire-tabs-visibility";
+import { isAffaireSyntheseHidden, isAffaireTabHidden } from "@/lib/affaire-tabs-visibility";
 import { useFeatureFlag } from "@/hooks/use-feature-flag";
 import { EquipeProjetBloc } from "@/components/affaire/EquipeProjetBloc";
 import { ChangerClientDialog } from "@/components/affaire/ChangerClientDialog";
@@ -167,7 +167,9 @@ function AffaireDetailLayout() {
   }
 
   const allTabs = [
-    { to: `/affaires/${affaire.id}`, label: "Synthèse", match: path === `/affaires/${affaire.id}` },
+    ...(isAffaireSyntheseHidden()
+      ? []
+      : [{ to: `/affaires/${affaire.id}`, label: "Synthèse", match: path === `/affaires/${affaire.id}` }]),
     ...(hasOpportuniteTab(affaire)
       ? [{ to: `/affaires/${affaire.id}/opportunite`, label: "Opportunité", match: path.endsWith("/opportunite") }]
       : []),
