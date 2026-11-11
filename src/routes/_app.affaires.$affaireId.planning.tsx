@@ -1,17 +1,26 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Loader2 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Loader2, Plus } from "lucide-react";
+import { toast } from "sonner";
+import { useCapability } from "@/hooks/use-capability";
+import { EtapeDialog } from "@/components/logistique/EtapeDialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import type { EtapeLogistique } from "@/hooks/use-etapes-logistiques";
 
 import { requireCapability } from "@/lib/capability-guard";
 import { supabase } from "@/integrations/supabase/client";
 import { PlanningBarres, type Barre, type LigneBarres } from "@/components/planning-simple/PlanningBarres";
 import { useEtapesAffaire } from "@/hooks/use-etapes-logistiques";
-import { useAffaireRoles, useEmployesActifs } from "@/hooks/use-equipe-projet";
+import { useAffaireRoles, useAffecterRole, useEmployesActifs, useRoleReferents } from "@/hooks/use-equipe-projet";
 import { ETAPE_LABELS } from "@/lib/logistique/etapes";
 import { addDays, dayOfWeek, diffDays } from "@/lib/staffing/date-utils";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+
+type Edition = { kind: "atelier" | "be"; titre: string; metier: number | null; roleId?: string; employe: string; debut: string; fin: string; heures: string; nouveau: boolean };
 
 export const Route = createFileRoute("/_app/affaires/$affaireId/planning")({
   beforeLoad: () => requireCapability("section.affaires"),
@@ -28,7 +37,24 @@ const fmt = (iso: string) => new Date(`${iso}T12:00:00`).toLocaleDateString("fr-
  */
 function AffairePlanningPage() {
   const { affaireId } = Route.useParams();
-  const [ouvert, setOuvert] = useState<Barre | null>(null);
+  const [edit, setEdit] = useState<Edition | null>(null);
+  const [etapeEdit, setEtapeEdit] = useState<{ etape: EtapeLogistique | null; cle: number } | null>(null);
+  const [saving, setSaving] = useState(false);
+  const qc = useQueryClient();
+  const affecter = useAffecterRole();
+  const canBe = useCapability("affaires.edit");
+  const canLog = useCapability("section.affaires");
+  const { data: referents = [] } = useRoleReferents();
+  const [mobile, setMobile] = useState(false);
+  useEffect(() => { const m = window.matchMedia("(max-width: 767px)"); const u = () => setMobile(m.matches); u(); m.addEventListener("change", u); return () => m.removeEventListener("change", u); }, []);
+  const droitAtelier = useQuery({
+    queryKey: ["planning-atelier-ecriture"],
+    staleTime: 5 * 60_000,
+    queryFn: async () => { const r = await supabase.rpc("planning_atelier_ecriture_autorisee"); return r.data === true; },
+  });
+  const editAtelier = !mobile && droitAtelier.data === true;
+  const editBe = !mobile && canBe;
+  const editLog = !mobile && canLog;
   const [vue, setVue] = useState<"jour" | "semaine" | "mois">("semaine");
 
   const atelierQ = useQuery({
@@ -66,7 +92,7 @@ function AffairePlanningPage() {
       out.push({
         id: `be:${r.id}`, libelle: `Bureau d'étude · ${nomEmploye(r.employe_id)}`,
         detail: periode(debut, fin),
-        barres: [{ id: `be:${r.id}`, affaireId: "be", libelle: "Conception", debut, fin, previsionnel: true }],
+        barres: [{ id: `be:${r.id}`, affaireId: "be", libelle: "Conception", debut, fin, previsionnel: true, metier: 8 }],
       });
     }
     if (d.affaire.atelier_date_debut && d.affaire.atelier_date_fin) {
@@ -99,6 +125,78 @@ function AffairePlanningPage() {
     }
     return out;
   }, [atelierQ.data, roles, employes, etapes, affaireId]);
+
+  const refetchAll = async () => {
+    await Promise.all([
+      atelierQ.refetch(),
+      qc.invalidateQueries({ queryKey: ["planning-simple"] }),
+      qc.invalidateQueries({ queryKey: ["affaire-roles", affaireId] }),
+    ]);
+  };
+  const ouvrir = (b: Barre, debut = b.debut, fin = b.fin) => {
+    const d = atelierQ.data;
+    if (b.id.startsWith("log:")) {
+      const e = etapes.find((x) => `log:${x.id}` === b.id);
+      if (!e) return;
+      if (!editLog) { toast.info("Lecture seule : modifiable depuis l'onglet Logistique."); return; }
+      setEtapeEdit({ etape: { ...e, date_debut: debut, date_fin: fin }, cle: Date.now() });
+      return;
+    }
+    if (b.id.startsWith("be:")) {
+      const r = roles.find((x) => `be:${x.id}` === b.id);
+      if (!r) return;
+      setEdit({ kind: "be", titre: "Bureau d'étude", metier: null, roleId: r.id, employe: r.employe_id, debut, fin, heures: "", nouveau: false });
+      return;
+    }
+    if (b.id.startsWith("metier:")) {
+      const p = d?.periodes.find((x) => `metier:${x.id}` === b.id);
+      if (!p) return;
+      const m = d?.metiers.find((x) => x.id === p.metier_id);
+      setEdit({ kind: "atelier", titre: m?.libelle ?? "Métier", metier: p.metier_id, employe: "", debut, fin, heures: p.heures_prevues != null ? String(p.heures_prevues) : "", nouveau: false });
+      return;
+    }
+    setEdit({ kind: "atelier", titre: "Période atelier globale", metier: null, employe: "", debut, fin, heures: "", nouveau: false });
+  };
+  const peutModifier = (e: Edition) => (e.kind === "be" ? editBe : editAtelier);
+  const enregistrer = async (e: Edition) => {
+    if (!e.debut || !e.fin || e.fin < e.debut) { toast.error("Dates invalides"); return; }
+    if (e.heures && (!Number.isFinite(Number(e.heures)) || Number(e.heures) < 0)) { toast.error("Heures invalides"); return; }
+    setSaving(true);
+    try {
+      if (e.kind === "atelier") {
+        const r = await supabase.rpc("planning_atelier_enregistrer", {
+          _affaire: affaireId, _metier: e.metier as number, _debut: e.debut, _fin: e.fin,
+          _heures: e.heures ? Number(e.heures) : undefined,
+        });
+        if (r.error) throw r.error;
+      } else {
+        if (!e.employe) throw new Error("Choisir un concepteur");
+        await affecter({ affaireId, role: "concepteur", employeId: e.employe, dateDebut: e.debut, dateFin: e.fin, remplacerDates: true });
+      }
+      await refetchAll();
+      setEdit(null);
+      toast.success("Période enregistrée");
+    } catch (err) {
+      toast.error((err as { message?: string })?.message ?? "Enregistrement impossible");
+    } finally { setSaving(false); }
+  };
+  const retirer = async (e: Edition) => {
+    if (!window.confirm(e.metier == null ? "Retirer ce chantier du planning atelier (toutes ses périodes métier) ?" : "Retirer cette période métier du planning atelier ?")) return;
+    setSaving(true);
+    try {
+      const r = await supabase.rpc("planning_atelier_retirer", { _affaire: affaireId, _metier: e.metier ?? undefined });
+      if (r.error) throw r.error;
+      await refetchAll();
+      setEdit(null);
+      toast.success("Retiré du planning");
+    } catch (err) {
+      toast.error((err as { message?: string })?.message ?? "Suppression impossible");
+    } finally { setSaving(false); }
+  };
+  const aujourdHui = new Date().toISOString().slice(0, 10);
+  const concepteurs = referents.filter((r) => r.role === "concepteur");
+  const nomEmp = (id: string) => { const e = employes.find((x) => x.id === id); return e ? `${e.prenom ?? ""} ${e.nom ?? ""}`.trim() : "—"; };
+  const metiersAtelier = (atelierQ.data?.metiers ?? []).filter((m) => [1, 2, 3, 4, 5, 6, 9].includes(m.id));
 
   const [decalage, setDecalage] = useState(0);
   const fenetre = useMemo(() => {
@@ -133,7 +231,7 @@ function AffairePlanningPage() {
         <div>
           <h2 className="text-sm font-semibold">Rétroplanning du chantier</h2>
           <p className="text-[11px] text-muted-foreground">
-            Une ligne par période, dans l'ordre : bureau d'étude, atelier (par métier), logistique. Pointillés = prévisionnel. Lecture seule.
+            Une ligne par période, dans l'ordre : bureau d'étude, atelier (par métier), logistique. Pointillés = prévisionnel. Les modifications sont partagées avec les plannings atelier, bureau d'étude et logistique.
           </p>
         </div>
         <div className="flex flex-wrap gap-1.5">
@@ -162,6 +260,27 @@ function AffairePlanningPage() {
         </div>
       </div>
 
+      {(editAtelier || editBe || editLog) && (
+        <div className="flex flex-wrap gap-1.5">
+          {editAtelier && (
+            <Button size="sm" className="h-7 text-xs" onClick={() => setEdit({ kind: "atelier", titre: "Nouvelle période atelier", metier: null, employe: "", debut: atelierQ.data?.affaire.atelier_date_debut ?? aujourdHui, fin: atelierQ.data?.affaire.atelier_date_fin ?? addDays(aujourdHui, 4), heures: "", nouveau: true })}>
+              <Plus className="mr-1 h-3.5 w-3.5" />Période atelier
+            </Button>
+          )}
+          {editBe && (
+            <Button size="sm" className="h-7 text-xs" onClick={() => setEdit({ kind: "be", titre: "Nouvelle période bureau d'étude", metier: null, employe: "", debut: aujourdHui, fin: addDays(aujourdHui, 4), heures: "", nouveau: true })}>
+              <Plus className="mr-1 h-3.5 w-3.5" />Bureau d'étude
+            </Button>
+          )}
+          {editLog && (
+            <Button size="sm" className="h-7 text-xs" onClick={() => setEtapeEdit({ etape: null, cle: Date.now() })}>
+              <Plus className="mr-1 h-3.5 w-3.5" />Étape logistique
+            </Button>
+          )}
+          <span className="self-center text-[11px] text-muted-foreground">Glissez une barre pour la déplacer, ses bords pour l'allonger ; cliquez pour modifier.</span>
+        </div>
+      )}
+
       {!lignesVisibles.length ? (
         <p className="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
           Rien de planifié sur cette période pour ce chantier.
@@ -175,25 +294,86 @@ function AffairePlanningPage() {
           parJour
           col={fenetre.col}
           entete="Période"
-          editable={false}
-          onOpen={setOuvert}
-          onMove={() => undefined}
+          editable={!mobile && vue !== "jour" && (editAtelier || editBe || editLog)}
+          onOpen={(b) => ouvrir(b)}
+          onMove={(b, debut, fin) => ouvrir(b, debut, fin)}
         />
       )}
 
-      <Dialog open={!!ouvert} onOpenChange={(o) => !o && setOuvert(null)}>
+      <Dialog open={!!edit} onOpenChange={(o) => !o && setEdit(null)}>
         <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{ouvert?.libelle}</DialogTitle>
-            <DialogDescription>
-              {ouvert ? `Du ${fmt(ouvert.debut)} au ${fmt(ouvert.fin)}${ouvert.previsionnel ? " · prévisionnel" : ""}` : ""}
-            </DialogDescription>
-          </DialogHeader>
-          <p className="text-sm text-muted-foreground">
-            Cette frise est en lecture seule : ajustez les dates dans le planning correspondant.
-          </p>
+          {edit && (() => {
+            const ro = !peutModifier(edit);
+            const set = (patch: Partial<Edition>) => setEdit({ ...edit, ...patch });
+            return (
+              <>
+                <DialogHeader>
+                  <DialogTitle>{edit.titre}</DialogTitle>
+                  <DialogDescription>
+                    {ro ? "Lecture seule : vous n'avez pas le droit de modifier cette période." : "Enregistré dans le planning " + (edit.kind === "be" ? "bureau d'étude" : "atelier") + " : les deux vues restent identiques."}
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-3">
+                  {edit.kind === "atelier" && edit.nouveau && (
+                    <div className="grid gap-1">
+                      <Label>Période</Label>
+                      <Select value={edit.metier == null ? "global" : String(edit.metier)} onValueChange={(v) => set({ metier: v === "global" ? null : Number(v) })}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="global">Période atelier globale</SelectItem>
+                          {metiersAtelier.map((m) => <SelectItem key={m.id} value={String(m.id)}>{m.libelle}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                  {edit.kind === "be" && (
+                    <div className="grid gap-1">
+                      <Label>Concepteur</Label>
+                      <Select value={edit.employe} disabled={ro || !edit.nouveau} onValueChange={(v) => set({ employe: v })}>
+                        <SelectTrigger><SelectValue placeholder="Choisir" /></SelectTrigger>
+                        <SelectContent>
+                          {concepteurs.map((c) => <SelectItem key={c.employe_id} value={c.employe_id}>{nomEmp(c.employe_id)}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="grid gap-1"><Label>Début</Label><Input type="date" disabled={ro} value={edit.debut} onChange={(e) => set({ debut: e.target.value })} /></div>
+                    <div className="grid gap-1"><Label>Fin</Label><Input type="date" disabled={ro} value={edit.fin} onChange={(e) => set({ fin: e.target.value })} /></div>
+                  </div>
+                  {edit.kind === "atelier" && edit.metier != null && (
+                    <div className="grid gap-1">
+                      <Label>Heures prévues (vide = heures du devis)</Label>
+                      <Input inputMode="decimal" disabled={ro} value={edit.heures} onChange={(e) => set({ heures: e.target.value })} />
+                      {edit.heures && Number(edit.heures) > 0 && <p className="text-[11px] text-muted-foreground">{Math.round((Number(edit.heures) / 8) * 10) / 10} jours/homme</p>}
+                    </div>
+                  )}
+                </div>
+                <DialogFooter className="gap-2 sm:justify-between">
+                  {edit.kind === "atelier" && !edit.nouveau && !ro ? (
+                    <Button variant="outline" disabled={saving} onClick={() => retirer(edit)}>Retirer du planning</Button>
+                  ) : <span />}
+                  <div className="flex gap-2">
+                    <Button variant="ghost" onClick={() => setEdit(null)}>Fermer</Button>
+                    {!ro && <Button disabled={saving} onClick={() => enregistrer(edit)}>{saving && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}Enregistrer</Button>}
+                  </div>
+                </DialogFooter>
+              </>
+            );
+          })()}
         </DialogContent>
       </Dialog>
+
+      {etapeEdit && (
+        <EtapeDialog
+          key={etapeEdit.cle}
+          open
+          onOpenChange={(o) => { if (!o) setEtapeEdit(null); }}
+          etape={etapeEdit.etape}
+          defaultAffaireId={affaireId}
+          defaultDate={aujourdHui}
+        />
+      )}
     </div>
   );
 }
