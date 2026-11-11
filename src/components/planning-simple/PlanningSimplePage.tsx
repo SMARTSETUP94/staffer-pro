@@ -63,7 +63,7 @@ export function PlanningSimplePage({mode}:{mode:"atelier"|"be"}){
   const devisSig=useMemo(()=>[...devisMap.keys()].sort().map(id=>`${id}:${devisMap.get(id)?.[0]?.total??0}`).join("|"),[devisMap]);
   const {lignes,zero:zeroCount}=useMemo<{lignes:LigneBarres[];zero:number}>(()=>{
     if(!d)return {lignes:[],zero:0};
-    if(mode==="be")return {lignes:d.referents.map(r=>({id:r.employe_id,libelle:`${r.employes?.prenom??""} ${r.employes?.nom??""}`.trim(),detail:(()=>{const hs=d.roles.filter(x=>x.employe_id===r.employe_id).map(x=>beH(x.affaire_id));const h=r1(hs.reduce((a,b)=>a+b,0));return <div><p>Capacité {r.capacite_be_pct} %</p><p className="text-foreground"><strong>{h} h</strong> · {r1(h/8)} j/h BE</p></div>;})(),barres:d.roles.filter(x=>x.employe_id===r.employe_id).flatMap(x=>{const a=affaires.find(a=>a.id===x.affaire_id);if(!a||!x.date_debut||!x.date_fin)return [];return [{id:x.id,affaireId:a.id,libelle:`${a.numero} · ${a.nom} · ${beH(a.id)} h · ${r1(beH(a.id)/8)} j/h`,debut:x.date_debut,fin:x.date_fin,previsionnel:a.phase!=="signe"}];})})),zero:0};
+    if(mode==="be")return {lignes:d.referents.map(r=>({id:r.employe_id,libelle:`${r.employes?.prenom??""} ${r.employes?.nom??""}`.trim(),detail:(()=>{const hs=d.roles.filter(x=>x.employe_id===r.employe_id).map(x=>beH(x.affaire_id));const h=r1(hs.reduce((a,b)=>a+b,0));return <div><p>Capacité {r.capacite_be_pct} %</p><p className="flex items-baseline gap-x-1.5"><strong className="tabular-nums text-foreground">{h} h</strong><span className="tabular-nums">{r1(h/8)} j/h BE</span></p></div>;})(),barres:d.roles.filter(x=>x.employe_id===r.employe_id).flatMap(x=>{const a=affaires.find(a=>a.id===x.affaire_id);if(!a||!x.date_debut||!x.date_fin)return [];return [{id:x.id,affaireId:a.id,libelle:`${a.numero} · ${a.nom} · ${beH(a.id)} h · ${r1(beH(a.id)/8)} j/h`,debut:x.date_debut,fin:x.date_fin,previsionnel:a.phase!=="signe"}];})})),zero:0};
     let zero=0;
     const lignesOut=[...atelierAff].sort((a,b)=>(depart(a.id)??"9999").localeCompare(depart(b.id)??"9999")).flatMap(a=>{
       const g=globale(a);const rows:LigneBarres[]=[{id:a.id,libelle:`${a.numero} · ${a.nom}`,detail:<ResumeChantier affaireId={a.id} statut={a.atelier_date_debut?"Période validée":"Période à confirmer"}/>,barres:g?[g]:[]}];
@@ -88,7 +88,7 @@ export function PlanningSimplePage({mode}:{mode:"atelier"|"be"}){
     });
     return {lignes:lignesOut,zero};
   },[d,mode,expanded,showZero,showBe,devisSig,selTick,pq.data]);
-  const personnesLignes:LigneBarres[]=mode==="atelier"?[...new Set((pq.data?.presences??[]).map(identiteAtelier))].map(id=>{const p=pq.data?.personnes.find(p=>p.id===id),ps=(pq.data?.presences??[]).filter(p=>identiteAtelier(p)===id);return {id,libelle:p?nomAtelier(p):"Personne",detail:`${ps.length} j/h de présence`,barres:plagesAtelier(ps).map(x=>{const a=affaires.find(a=>a.id===x.presence.affaire_id),m=d?.metiers.find(m=>m.id===x.presence.metier_id);return {id:`personne:${x.presence.id}`,affaireId:x.presence.affaire_id,libelle:`${a?.numero??""} · ${m?.libelle??""} · ${x.jours} j/h${x.presence.badge_atelier?` · ${x.presence.badge_atelier==="interim"?"Intérim":"Renfort"}`:""}`,debut:x.debut,fin:x.fin,previsionnel:a?.phase!=="signe"};})};}):[];
+  const personnesLignes:LigneBarres[]=mode==="atelier"?[...new Set((pq.data?.presences??[]).map(identiteAtelier))].map(id=>{const p=pq.data?.personnes.find(p=>p.id===id),ps=(pq.data?.presences??[]).filter(p=>identiteAtelier(p)===id);return {id,libelle:p?nomAtelier(p):"Personne",detail:`${ps.length} j/h de présence`,barres:plagesAtelier(ps).map(x=>{const a=affaires.find(a=>a.id===x.presence.affaire_id),m=d?.metiers.find(m=>m.id===x.presence.metier_id);return {id:`personne:${x.presence.id}`,affaireId:x.presence.affaire_id,libelle:`${a?.numero??""} · ${m?.libelle??""} · ${x.jours} j/h${x.presence.badge_atelier?` · ${x.presence.badge_atelier==="interim"?"Intérim":"Renfort"}`:""}`,debut:x.debut,fin:x.fin,previsionnel:a?.phase!=="signe",metier:x.presence.metier_id};})};}):[];
   const open=(b:Barre)=>{if(b.id.startsWith("be:")){toast.info("Période BE : à modifier dans le planning bureau d’étude");return;}if(b.id.startsWith("personne:")){const pr=pq.data?.presences.find(p=>`personne:${p.id}`===b.id);if(!pr)return;setEdit({barre:b,metier:pr.metier_id,employe:null,heures:""});return;}const p=d?.periodes.find(p=>p.id===b.id);const m=p?.metier_id??(b.id.startsWith("metier:")?Number(b.id.split(":").at(-1)):null);const role=d?.roles.find(r=>r.id===b.id);const a=affaires.find(a=>a.id===b.affaireId);setEdit({barre:b,metier:m,employe:role?.employe_id??null,heures:String(p?.heures_prevues??(m?d?.charges[b.affaireId]?.heures[String(m)]:a?.atelier_heures_prevues)??"")});};
   const retirer=async(e:Edition)=>{if(!window.confirm(e.metier==null?"Retirer ce chantier du planning atelier (toutes ses périodes métier) ?":"Retirer cette période métier du planning ?"))return;setSaving(true);try{const r=await supabase.rpc("planning_atelier_retirer",{_affaire:e.barre.affaireId,_metier:e.metier??undefined});if(r.error)throw r.error;await q.refetch();setEdit(null);toast.success("Retiré du planning");}catch(err){toast.error((err as {message?:string})?.message??"Suppression impossible");}finally{setSaving(false);}};
   const save=async(e:Edition)=>{
@@ -122,7 +122,15 @@ function ResumeChantier({affaireId,statut}:{affaireId:string;statut:string}){
   const {principal,effectif,somme,objExclus}=useSelectionDevis(affaireId);
   if(!principal)return <p>{statut}</p>;
   const n=principal.objets.filter(o=>o.id!=="_autres").length;const ex=(objExclus[principal.id]??[]).filter(id=>id!=="_autres").length;const h=somme(effectif(principal));
-  return <div><p>{statut}</p><p className="text-foreground"><strong>{h} h</strong> · {r1(h/8)} j/h · {n-ex}/{n} objets ({principal.numero})</p></div>;
+  return <div><p>{statut}</p><p className="flex flex-wrap items-baseline gap-x-1.5"><strong className="tabular-nums text-foreground">{h} h</strong><span className="tabular-nums">{r1(h/8)} j/h</span><span>{n-ex}/{n} objets ({principal.numero})</span></p></div>;
+}
+/** Ligne métier : nom dans la teinte du métier (celle de sa barre), heures en encre, jours/homme en gris. */
+function LigneMetier({metierId,nom,heures}:{metierId:number;nom:string;heures:number}){
+  return <span className="flex items-baseline gap-x-1.5">
+    <span className={cn("min-w-0 truncate font-medium",metierTexte(metierId))}>↳ {nom}</span>
+    <strong className="shrink-0 tabular-nums text-foreground">{r1(heures)} h</strong>
+    <span className="shrink-0 text-xs font-normal tabular-nums text-muted-foreground">{r1(heures/8)} j/h</span>
+  </span>;
 }
 function ConfigPersonnes({cle,affaireId,metierId,heures:hBase,fixe,sansLimite,staffeJh}:{cle:string;affaireId:string;metierId:number;heures:number;fixe:boolean;sansLimite:boolean;staffeJh:number}){
   const {principal,effectif}=useSelectionDevis(affaireId);
