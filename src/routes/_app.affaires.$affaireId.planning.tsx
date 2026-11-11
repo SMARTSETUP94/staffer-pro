@@ -39,6 +39,7 @@ function AffairePlanningPage() {
         supabase.from("metiers").select("id,libelle").order("ordre"),
       ]);
       for (const r of [aff, periodes, metiers]) if (r.error) throw new Error(r.error.message);
+      if (!aff.data) throw new Error("Affaire introuvable.");
       return { affaire: aff.data, periodes: periodes.data ?? [], metiers: metiers.data ?? [] };
     },
   });
