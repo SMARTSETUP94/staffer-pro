@@ -321,10 +321,6 @@ function AffaireDetailLayout() {
             {affaire.lieu && (
               <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3" />{affaire.lieu}</span>
             )}
-            <span className="inline-flex items-center gap-1">
-              <Calendar className="h-3 w-3" />
-              {formatPeriode(affaire.date_debut, affaire.date_fin_prevue)}
-            </span>
           </div>
         </div>
         <div className="flex flex-col items-end gap-2">
