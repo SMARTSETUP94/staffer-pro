@@ -67,9 +67,9 @@ export function OpportuniteFicheHeader({ affaire, canSign, onSign }: Props) {
               <Badge variant="secondary">{STATUT_LABEL[statut]}</Badge>
             )}
           </div>
-          <h1 className="mt-1 text-xl font-semibold leading-tight">
+          <h2 className="text-base font-semibold leading-tight">
             {affaire.client ?? affaire.nom}
-          </h1>
+          </h2>
           {affaire.client && affaire.nom && affaire.nom !== affaire.client && (
             <p className="text-sm text-muted-foreground">{affaire.nom}</p>
           )}
@@ -79,7 +79,7 @@ export function OpportuniteFicheHeader({ affaire, canSign, onSign }: Props) {
               {affaire.lieu}
             </p>
           )}
-          <div className="mt-2 flex flex-wrap items-center gap-1.5">
+          <div className="mt-1 flex flex-wrap items-center gap-1.5">
             <TypologieBadge typologie={typo} short />
             {taille && (
               <Badge variant="outline" className="text-[10px] uppercase">
