@@ -2,7 +2,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { Loader2, Save, MessageSquare, Users, FileText } from "lucide-react";
+import { Loader2, Save, MessageSquare, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { useCapability } from "@/hooks/use-capability";
 import { Button } from "@/components/ui/button";
@@ -90,8 +90,6 @@ export function OpportuniteFicheContent({ affaireId }: { affaireId: string }) {
       />
 
       <TimelineSection actions={data.actions} />
-
-      <EquipeSection equipe={data.equipe} />
 
       <DevisSection devis={data.devis} />
 
