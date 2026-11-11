@@ -100,17 +100,25 @@ function AffairePlanningPage() {
     return out;
   }, [atelierQ.data, roles, employes, etapes, affaireId]);
 
+  const [decalage, setDecalage] = useState(0);
   const fenetre = useMemo(() => {
-    const dates = lignes.flatMap((l) => l.barres.flatMap((b) => [b.debut, b.fin]));
-    if (!dates.length) return null;
-    const min = dates.reduce((a, b) => (b < a ? b : a));
-    const max = dates.reduce((a, b) => (b > a ? b : a));
-    const debut = addDays(min, -((dayOfWeek(min) + 6) % 7));
-    const besoin = Math.ceil((diffDays(debut, max) + 1) / 7);
-    const [mini, maxi] = vue === "jour" ? [2, 8] : vue === "semaine" ? [6, 16] : [17, 52];
-    const semaines = Math.min(maxi, Math.max(mini, besoin));
-    return { debut, semaines };
-  }, [lignes, vue]);
+    const auj = new Date().toISOString().slice(0, 10);
+    if (vue === "jour") return { debut: addDays(auj, decalage), jours: 1, col: 640 };
+    if (vue === "semaine") return { debut: addDays(auj, decalage * 7), jours: 7, col: 96 };
+    const t = new Date(`${auj}T12:00:00`);
+    const m = new Date(t.getFullYear(), t.getMonth() + decalage, 1, 12);
+    const debut = `${m.getFullYear()}-${String(m.getMonth() + 1).padStart(2, "0")}-01`;
+    const jours = new Date(m.getFullYear(), m.getMonth() + 1, 0).getDate();
+    return { debut, jours, col: 24 };
+  }, [vue, decalage]);
+  const finFenetre = addDays(fenetre.debut, fenetre.jours - 1);
+  const lignesVisibles = lignes.filter((l) => l.barres.some((x) => x.debut <= finFenetre && x.fin >= fenetre.debut));
+  const libelleFenetre = (() => {
+    const f = (iso: string, o: Intl.DateTimeFormatOptions) => new Date(`${iso}T12:00:00`).toLocaleDateString("fr-FR", o);
+    if (vue === "jour") return f(fenetre.debut, { weekday: "long", day: "numeric", month: "long" });
+    if (vue === "semaine") return `${f(fenetre.debut, { day: "numeric", month: "short" })} → ${f(finFenetre, { day: "numeric", month: "short" })}`;
+    return f(fenetre.debut, { month: "long", year: "numeric" });
+  })();
 
   if (atelierQ.isLoading) {
     return <div className="flex justify-center py-16"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>;
@@ -131,10 +139,16 @@ function AffairePlanningPage() {
         <div className="flex flex-wrap gap-1.5">
           <div className="flex rounded-md border border-border p-0.5" role="group" aria-label="Échelle">
             {(["jour", "semaine", "mois"] as const).map((v) => (
-              <Button key={v} size="sm" variant={vue === v ? "default" : "ghost"} className="h-6 px-2 text-xs capitalize" onClick={() => setVue(v)}>
+              <Button key={v} size="sm" variant={vue === v ? "default" : "ghost"} className="h-6 px-2 text-xs capitalize" onClick={() => { setVue(v); setDecalage(0); }}>
                 {v}
               </Button>
             ))}
+          </div>
+          <div className="flex items-center gap-1">
+            <Button size="sm" variant="outline" className="h-7 px-2 text-xs" aria-label="Précédent" onClick={() => setDecalage((d) => d - 1)}>‹</Button>
+            <Button size="sm" variant="outline" className="h-7 px-2 text-xs" onClick={() => setDecalage(0)}>Aujourd'hui</Button>
+            <Button size="sm" variant="outline" className="h-7 px-2 text-xs" aria-label="Suivant" onClick={() => setDecalage((d) => d + 1)}>›</Button>
+            <span className="ml-1 text-xs font-medium first-letter:uppercase">{libelleFenetre}</span>
           </div>
           <Button asChild size="sm" variant="outline" className="h-7 text-xs">
             <Link to="/planning-be">Planning BE</Link>
@@ -148,18 +162,20 @@ function AffairePlanningPage() {
         </div>
       </div>
 
-      {!fenetre ? (
+      {!lignesVisibles.length ? (
         <p className="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
-          Aucune période planifiée pour ce chantier (ni BE, ni atelier, ni logistique).
+          Rien de planifié sur cette période pour ce chantier.
         </p>
       ) : (
         <PlanningBarres
-          lignes={lignes}
+          lignes={lignesVisibles}
           debut={fenetre.debut}
-          semaines={fenetre.semaines}
-          editable={false}
-          col={vue === "jour" ? 44 : vue === "semaine" ? 20 : 6}
+          semaines={Math.ceil(fenetre.jours / 7)}
+          nbJours={fenetre.jours}
+          parJour
+          col={fenetre.col}
           entete="Période"
+          editable={false}
           onOpen={setOuvert}
           onMove={() => undefined}
         />
