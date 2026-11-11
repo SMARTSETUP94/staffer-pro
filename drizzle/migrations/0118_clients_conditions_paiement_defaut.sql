@@ -1,0 +1,1 @@
+ALTER TABLE public.clients ALTER COLUMN conditions_paiement SET DEFAULT 'Paiement sous 30 jours';
