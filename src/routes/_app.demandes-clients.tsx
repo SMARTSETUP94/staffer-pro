@@ -1,4 +1,7 @@
 import { ClientCombobox } from "@/components/clients/ClientCombobox";
+import { AffaireCombobox } from "@/components/planning/AffaireCombobox";
+import { useAffairesPourLogistique } from "@/hooks/use-etapes-logistiques";
+import { FolderInput } from "lucide-react";
 import { EmailReaderDialog } from "@/components/emails/EmailReaderDialog";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
@@ -203,7 +206,7 @@ function DemandesClientsPage() {
                   {r.opportunite_id ? (
                     <Button size="sm" variant="outline" asChild>
                       <Link to="/opportunites/$affaireId" params={{ affaireId: r.opportunite_id }}>
-                        <Trophy className="h-4 w-4 mr-1" /> Voir l'opportunité
+                        <Trophy className="h-4 w-4 mr-1" /> Voir l'affaire
                       </Link>
                     </Button>
                   ) : (
@@ -211,6 +214,7 @@ function DemandesClientsPage() {
                       {r.statut !== "dismissed" && (
                         <Button size="sm" variant="ghost" onClick={() => dismiss(r)}><X className="h-4 w-4 mr-1" /> Écarter</Button>
                       )}
+                      <Button size="sm" variant="outline" onClick={() => setClassing(r)}><FolderInput className="h-4 w-4 mr-1" /> Classer dans une affaire</Button>
                       <Button size="sm" onClick={() => setCurrent(r)}><Trophy className="h-4 w-4 mr-1" /> Créer l'opportunité</Button>
                     </>
                   )}
@@ -223,11 +227,44 @@ function DemandesClientsPage() {
       {current && (
         <CreateOppDialog email={current} onClose={() => setCurrent(null)} onDone={() => { setCurrent(null); void load(); }} />
       )}
+      {classing && <ClasserDialog email={classing} onClose={() => setClassing(null)} onDone={() => { setClassing(null); void load(); }} />}
       {reading && <EmailReaderDialog email={reading} onClose={() => setReading(null)} clientReply />}
     </div>
   );
 }
 
+
+function ClasserDialog({ email, onClose, onDone }: { email: Row; onClose: () => void; onDone: () => void }) {
+  const { data: affaires = [], isLoading } = useAffairesPourLogistique();
+  const [affaireId, setAffaireId] = useState("");
+  const [saving, setSaving] = useState(false);
+  async function save() {
+    if (!affaireId) return;
+    setSaving(true);
+    const { error } = await supabase.from("emails_entrants")
+      .update({ opportunite_id: affaireId, statut: "validated" }).eq("id", email.id);
+    setSaving(false);
+    if (error) return toast.error("Classement impossible", { description: error.message });
+    toast.success("Mail classé dans l'affaire");
+    onDone();
+  }
+  return (
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Classer dans une affaire existante</DialogTitle>
+          <DialogDescription>{email.subject || "(sans objet)"} — aucune opportunité ne sera créée.</DialogDescription>
+        </DialogHeader>
+        {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> :
+          <AffaireCombobox affaires={affaires} value={affaireId} onChange={setAffaireId} includeOpportunites includeClosed placeholder="N°, chantier, client ou lieu…" />}
+        <DialogFooter>
+          <Button variant="ghost" onClick={onClose}>Annuler</Button>
+          <Button disabled={!affaireId || saving} onClick={() => void save()}>{saving && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}Classer</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 function CreateOppDialog({ email, onClose, onDone }: { email: Row; onClose: () => void; onDone: () => void }) {
   const { user } = useAuth();
