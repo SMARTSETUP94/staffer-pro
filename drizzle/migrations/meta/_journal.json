@@ -827,6 +827,13 @@
       "when": 1794353453865,
       "tag": "0117_clients_import_quadra_champs",
       "breakpoints": true
+    },
+    {
+      "idx": 118,
+      "version": "7",
+      "when": 1794383784878,
+      "tag": "0118_clients_conditions_paiement_defaut",
+      "breakpoints": true
     }
   ]
 }

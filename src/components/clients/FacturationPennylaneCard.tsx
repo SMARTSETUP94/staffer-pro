@@ -201,7 +201,7 @@ export function FacturationPennylaneCard({ clientId, onSaved }: { clientId: stri
         <div><Label>Destinataire</Label><Input value={f.destinataire_facturation} onChange={(e) => set("destinataire_facturation", e.target.value)} /></div>
         <div><Label>Conditions de paiement</Label>
           <select className={sel} value={f.conditions_paiement} onChange={(e) => set("conditions_paiement", e.target.value)}>
-            <option value="">Conditions de l'entreprise</option>
+            {!f.conditions_paiement && <option value="" disabled>Non renseignées</option>}
             {CONDITIONS_PAIEMENT.map((c) => <option key={c} value={c}>{c}</option>)}
           </select></div>
         <div><Label>Langue de facturation</Label>

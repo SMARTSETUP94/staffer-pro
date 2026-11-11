@@ -14,6 +14,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { CONDITIONS_PAIEMENT, CONDITIONS_PAIEMENT_DEFAUT } from "@/lib/clients/pennylane";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export function NouveauClientDialog({
   onClose,
@@ -27,6 +29,7 @@ export function NouveauClientDialog({
   const [secteur, setSecteur] = useState("");
   const [siret, setSiret] = useState("");
   const [notes, setNotes] = useState("");
+  const [conditionsPaiement, setConditionsPaiement] = useState<string>(CONDITIONS_PAIEMENT_DEFAUT);
   const [saving, setSaving] = useState(false);
 
   async function submit() {
@@ -52,6 +55,7 @@ export function NouveauClientDialog({
         secteur: secteur.trim() || null,
         siret: siret.trim() || null,
         notes: notes.trim() || null,
+        conditions_paiement: conditionsPaiement,
         created_by: userId ?? null,
       })
       .select("id")
@@ -116,6 +120,15 @@ export function NouveauClientDialog({
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
             />
+          </div>
+          <div>
+            <Label htmlFor="nouveau-client-paiement">Conditions de paiement</Label>
+            <Select value={conditionsPaiement} onValueChange={setConditionsPaiement}>
+              <SelectTrigger id="nouveau-client-paiement"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {CONDITIONS_PAIEMENT.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+              </SelectContent>
+            </Select>
           </div>
         </div>
         <DialogFooter>
