@@ -82,12 +82,15 @@
 
   /* Couleurs métiers */
   --color-metier-construction: var(--metier-construction);
+  --color-metier-menuiserie: var(--metier-menuiserie);
   --color-metier-metallerie: var(--metier-metallerie);
   --color-metier-peinture: var(--metier-peinture);
   --color-metier-numerique: var(--metier-numerique);
   --color-metier-tapisserie: var(--metier-tapisserie);
   --color-metier-machiniste: var(--metier-machiniste);
+  --color-metier-impression-uv: var(--metier-impression-uv);
   --color-metier-logistique: var(--metier-logistique);
+  --color-metier-be: var(--metier-be);
   --color-metier-suivi-projet: var(--metier-suivi-projet);
 
   /* Couleurs typologie chantiers (v0.24.0) */
@@ -206,15 +209,20 @@
   --sidebar-border: oklch(0.25 0.008 280);
   --sidebar-ring: oklch(0.65 0.2 277);
 
-  /* Couleurs métiers (correspondent aux hex en DB) */
-  --metier-construction: #0EA5E9;
-  --metier-metallerie: #64748B;
-  --metier-peinture: #F59E0B;
-  --metier-numerique: #8B5CF6;
-  --metier-tapisserie: #EC4899;
-  --metier-machiniste: #10B981;
-  --metier-logistique: #6366F1;
-  --metier-suivi-projet: #14B8A6;
+  /* Couleurs métiers — une teinte par métier (id DB en commentaire),
+     assez sombre pour le texte sur crème et assez claire en aplat /20. */
+  --metier-menuiserie: oklch(0.5 0.1 75);        /* 1 Bois */
+  --metier-metallerie: oklch(0.48 0.045 250);    /* 2 Acier */
+  --metier-peinture: oklch(0.55 0.17 30);        /* 3 */
+  --metier-numerique: oklch(0.52 0.1 200);       /* 4 */
+  --metier-tapisserie: oklch(0.52 0.16 350);     /* 5 */
+  --metier-machiniste: oklch(0.5 0.12 150);      /* 6 */
+  --metier-logistique: oklch(0.48 0.1 230);      /* 7 */
+  --metier-be: oklch(0.45 0.13 275);             /* 8 Bureau d'étude */
+  --metier-impression-uv: oklch(0.5 0.16 300);   /* 9 */
+  /* Alias conservés */
+  --metier-construction: var(--metier-menuiserie);
+  --metier-suivi-projet: oklch(0.48 0.1 190);
 
   /* Typologie chantiers v0.24.0 — pâles pour fond badge, teinte saturée pour foreground */
   --typologie-non-op: oklch(0.94 0.045 25);          /* rouge pâle */
@@ -230,6 +238,18 @@
 }
 
 .dark {
+  /* Teintes métiers éclaircies pour rester lisibles sur fond sombre */
+  --metier-menuiserie: oklch(0.75 0.1 75);
+  --metier-metallerie: oklch(0.75 0.045 250);
+  --metier-peinture: oklch(0.77 0.15 30);
+  --metier-numerique: oklch(0.76 0.1 200);
+  --metier-tapisserie: oklch(0.76 0.14 350);
+  --metier-machiniste: oklch(0.75 0.12 150);
+  --metier-logistique: oklch(0.75 0.1 230);
+  --metier-be: oklch(0.74 0.13 275);
+  --metier-impression-uv: oklch(0.75 0.15 300);
+  --metier-suivi-projet: oklch(0.75 0.1 190);
+
   --background: oklch(0.145 0.005 280);
   --foreground: oklch(0.965 0.012 80);
   --card: oklch(0.2 0.008 280);
