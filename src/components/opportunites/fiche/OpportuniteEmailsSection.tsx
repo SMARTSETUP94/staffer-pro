@@ -23,18 +23,18 @@ export function OpportuniteEmailsSection({ affaireId }: { affaireId: string }) {
 
   if (!rows || rows.length === 0) return null;
   return (
-    <section className="rounded-2xl border bg-card p-4 space-y-3">
+    <section className="rounded-xl border bg-card px-3 py-2 space-y-1">
       <h2 className="flex items-center gap-2 text-sm font-semibold"><Mail className="h-4 w-4" /> Emails d'origine ({rows.length})</h2>
       <ul className="divide-y">
         {rows.map((r) => (
-          <li key={r.id} className="flex items-center gap-3 py-2 text-sm">
+          <li key={r.id} className="flex items-center gap-3 py-1 text-sm">
             <div className="flex-1 min-w-0">
               <p className="truncate font-medium">{r.subject || "(sans objet)"}</p>
               <p className="truncate text-xs text-muted-foreground">
                 {r.from_name ?? r.from_email} · {format(parseISO(r.received_at), "d MMM yyyy", { locale: fr })}
               </p>
             </div>
-            <Button size="sm" variant="outline" onClick={() => setReading(r)}>
+            <Button size="sm" variant="outline" className="h-7" onClick={() => setReading(r)}>
               <MailOpen className="h-4 w-4 mr-1" /> Lire
             </Button>
           </li>

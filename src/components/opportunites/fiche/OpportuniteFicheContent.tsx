@@ -67,12 +67,14 @@ export function OpportuniteFicheContent({ affaireId }: { affaireId: string }) {
   const lastAction = data.actions[0] ?? null;
 
   return (
-    <div className="space-y-6" data-testid="opportunite-fiche-page">
+    <div className="space-y-4" data-testid="opportunite-fiche-page">
       <OpportuniteFicheHeader
         affaire={data.affaire}
         canSign={canSign}
         onSign={() => setSignOpen(true)}
       />
+
+      <OpportuniteEmailsSection affaireId={affaireId} />
 
       <OpportuniteJalonsBar jalons={data.jalons} />
 
@@ -88,8 +90,6 @@ export function OpportuniteFicheContent({ affaireId }: { affaireId: string }) {
         canEdit={canEdit}
         onSaved={() => { void refetch(); window.dispatchEvent(new Event("affaire-updated")); }}
       />
-
-      <OpportuniteEmailsSection affaireId={affaireId} />
 
       <TimelineSection actions={data.actions} />
 

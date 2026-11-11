@@ -38,7 +38,7 @@ export function OpportuniteFicheHeader({ affaire, canSign, onSign }: Props) {
   const isSigne = affaire.phase === "signe";
 
   return (
-    <div className="space-y-3" data-testid="opportunite-fiche-header">
+    <div className="space-y-2" data-testid="opportunite-fiche-header">
       {canSeePipeline && <div className="flex items-center gap-2">
         <Button asChild variant="ghost" size="sm" className="h-7 px-2">
           <Link to="/opportunites">
@@ -48,7 +48,7 @@ export function OpportuniteFicheHeader({ affaire, canSign, onSign }: Props) {
         </Button>
       </div>}
 
-      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border pb-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-baseline gap-2">
             <span className="font-mono text-base font-bold text-primary">
@@ -67,9 +67,9 @@ export function OpportuniteFicheHeader({ affaire, canSign, onSign }: Props) {
               <Badge variant="secondary">{STATUT_LABEL[statut]}</Badge>
             )}
           </div>
-          <h1 className="mt-1 text-xl font-semibold leading-tight">
+          <h2 className="text-base font-semibold leading-tight">
             {affaire.client ?? affaire.nom}
-          </h1>
+          </h2>
           {affaire.client && affaire.nom && affaire.nom !== affaire.client && (
             <p className="text-sm text-muted-foreground">{affaire.nom}</p>
           )}
@@ -79,7 +79,7 @@ export function OpportuniteFicheHeader({ affaire, canSign, onSign }: Props) {
               {affaire.lieu}
             </p>
           )}
-          <div className="mt-2 flex flex-wrap items-center gap-1.5">
+          <div className="mt-1 flex flex-wrap items-center gap-1.5">
             <TypologieBadge typologie={typo} short />
             {taille && (
               <Badge variant="outline" className="text-[10px] uppercase">
@@ -96,7 +96,7 @@ export function OpportuniteFicheHeader({ affaire, canSign, onSign }: Props) {
           </Button>
         )}
       </div>
-      <div className="mt-3"><DevisSigneBandeau affaireId={affaire.id} /></div>
+      <div><DevisSigneBandeau affaireId={affaire.id} /></div>
     </div>
   );
 }
