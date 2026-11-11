@@ -38,7 +38,7 @@ export function OpportuniteFicheHeader({ affaire, canSign, onSign }: Props) {
   const isSigne = affaire.phase === "signe";
 
   return (
-    <div className="space-y-2" data-testid="opportunite-fiche-header">
+    <div className="space-y-1.5" data-testid="opportunite-fiche-header">
       {canSeePipeline && <div className="flex items-center gap-2">
         <Button asChild variant="ghost" size="sm" className="h-7 px-2">
           <Link to="/opportunites">

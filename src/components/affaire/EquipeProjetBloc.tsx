@@ -46,13 +46,15 @@ export function EquipeProjetBloc({ affaireId, canEdit }: { affaireId: string; ca
   const etat: AffaireEtat = { phase: affaire?.phase ?? null, statut_opportunite: affaire?.statut_opportunite ?? null };
 
   return (
-    <section className="rounded-xl border border-border bg-card px-3 py-2">
-      <div className="mb-1 flex items-center gap-2">
-        <Users className="h-4 w-4 text-primary" />
-        <h2 className="text-sm font-semibold">Équipe projet</h2>
+    <section className="rounded-lg border border-border bg-card px-2.5 py-1.5">
+      <div className="mb-1 flex flex-wrap items-center justify-between gap-1.5">
+        <div className="flex items-center gap-1.5">
+          <Users className="h-3.5 w-3.5 text-primary" />
+          <h2 className="text-xs font-semibold">Équipe projet</h2>
+        </div>
+        <RolesManquantsBadges etat={etat} typologie={typologie} affectes={roles.map((r) => r.role)} compact />
       </div>
-      <RolesManquantsBadges etat={etat} typologie={typologie} affectes={roles.map((r) => r.role)} />
-      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="space-y-1">
         {visibles.map((role) => (
           <RoleLigne key={role} affaireId={affaireId} role={role} row={roles.find((r) => r.role === role)} affaire={affaire ?? null} canEdit={canEdit} />
         ))}
@@ -80,21 +82,25 @@ function RoleLigne({ affaireId, role, row, affaire, canEdit }: {
   }
 
   return (
-    <div className="space-y-1 rounded-lg border border-border/60 px-2 py-1.5">
-      <p className="text-xs font-medium text-muted-foreground">{PROJET_ROLE_LABELS[role]}</p>
-      <EmployeRoleCombobox role={role} value={row?.employe_id ?? null} disabled={!canEdit || saving}
-        onChange={(id) => { if (id !== (row?.employe_id ?? null)) void save({ employeId: id }); }} />
+    <div className="flex flex-wrap items-center gap-1.5">
+      <p className="w-full shrink-0 truncate text-[11px] font-medium text-muted-foreground sm:w-32 lg:w-40" title={PROJET_ROLE_LABELS[role]}>
+        {PROJET_ROLE_LABELS[role]}
+      </p>
+      <div className="min-w-[150px] flex-1">
+        <EmployeRoleCombobox role={role} value={row?.employe_id ?? null} disabled={!canEdit || saving}
+          onChange={(id) => { if (id !== (row?.employe_id ?? null)) void save({ employeId: id }); }} />
+      </div>
       {avecPeriode && row && (
-        <div className="flex flex-wrap items-center gap-1.5">
-          <Input type="date" aria-label={`Début ${PROJET_ROLE_LABELS[role]}`} className="h-8 w-36 text-xs" disabled={!canEdit || saving}
+        <div className="flex w-full flex-wrap items-center gap-1 sm:w-auto">
+          <Input type="date" aria-label={`Début ${PROJET_ROLE_LABELS[role]}`} className="h-7 w-[110px] shrink-0 text-[11px]" disabled={!canEdit || saving}
             value={row.date_debut ?? ""} onChange={(e) => void save({ employeId: row.employe_id, dateDebut: e.target.value || null, dateFin: row.date_fin, remplacerDates: true })} />
-          <span className="text-xs text-muted-foreground">→</span>
-          <Input type="date" aria-label={`Fin ${PROJET_ROLE_LABELS[role]}`} className="h-8 w-36 text-xs" disabled={!canEdit || saving}
+          <span className="text-[11px] text-muted-foreground">→</span>
+          <Input type="date" aria-label={`Fin ${PROJET_ROLE_LABELS[role]}`} className="h-7 w-[110px] shrink-0 text-[11px]" disabled={!canEdit || saving}
             value={row.date_fin ?? ""} onChange={(e) => void save({ employeId: row.employe_id, dateDebut: row.date_debut, dateFin: e.target.value || null, remplacerDates: true })} />
           {canEdit && affaire && (
-            <Button type="button" size="sm" variant="ghost" className="h-8 px-2 text-xs" disabled={saving}
+            <Button type="button" size="sm" variant="ghost" className="h-7 shrink-0 px-1.5 text-[11px]" disabled={saving}
               onClick={() => { const p = periodeProposee(role, affaire); void save({ employeId: row.employe_id, dateDebut: p.date_debut, dateFin: p.date_fin, remplacerDates: true }); }}>
-              <CalendarRange className="mr-1 h-3.5 w-3.5" /> Planifier
+              <CalendarRange className="mr-0.5 h-3 w-3" /> Planifier
             </Button>
           )}
         </div>
@@ -120,7 +126,7 @@ export function EmployeRoleCombobox({ role, value, onChange, disabled }: {
     <Popover open={open} onOpenChange={(n) => { setOpen(n); if (n) setSearch(""); }}>
       <PopoverTrigger asChild>
         <Button type="button" variant="outline" role="combobox" aria-label={PROJET_ROLE_LABELS[role]} aria-expanded={open}
-          disabled={disabled || isLoading} className="h-9 w-full justify-between gap-2 font-normal">
+          disabled={disabled || isLoading} className="h-8 w-full justify-between gap-2 text-xs font-normal">
           <span className={cn("truncate", !value && "text-muted-foreground")}>
             {selected ? label(selected.id, nomComplet(selected)) : value ? "Employé inactif" : "À affecter"}
           </span>

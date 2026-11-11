@@ -56,7 +56,7 @@ export function OpportuniteNextActionCard({ affaireId, lastAction, canEdit, onSa
 
   return (
     <section data-testid="opportunite-next-action">
-      <div className="mb-3 flex items-center justify-between">
+      <div className="mb-1.5 flex items-center justify-between">
         <p className="overline">— Prochaine action</p>
         {canEdit && (
           <Button size="sm" variant="outline" className="h-7 rounded-lg text-xs" onClick={() => setOpen(true)}>
@@ -66,7 +66,7 @@ export function OpportuniteNextActionCard({ affaireId, lastAction, canEdit, onSa
         )}
       </div>
 
-      <div className="rounded-2xl border border-border bg-card p-4">
+      <div className="rounded-xl border border-border bg-card p-3">
         {!lastAction ? (
           <p className="text-sm italic text-muted-foreground">
             Aucune action enregistrée pour le moment.
