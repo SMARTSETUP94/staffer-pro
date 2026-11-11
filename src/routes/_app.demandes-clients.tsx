@@ -2,6 +2,7 @@ import { ClientCombobox } from "@/components/clients/ClientCombobox";
 import { AffaireCombobox } from "@/components/planning/AffaireCombobox";
 import { useAffairesPourLogistique } from "@/hooks/use-etapes-logistiques";
 import { FolderInput } from "lucide-react";
+import { suggererParMotsCles, codesRecents } from "@/lib/emails/suggestion-affaires";
 import { EmailReaderDialog } from "@/components/emails/EmailReaderDialog";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
@@ -239,6 +240,15 @@ function ClasserDialog({ email, onClose, onDone }: { email: Row; onClose: () => 
   const { data: affaires = [], isLoading } = useAffairesPourLogistique();
   const [affaireId, setAffaireId] = useState("");
   const [saving, setSaving] = useState(false);
+  const m = email.metadata_ia ?? {};
+  const texte = [email.subject, m.opp_client, m.opp_projet, m.opp_lieu, email.from_name, email.from_email?.split("@")[1]?.split(".")[0], email.body_preview].filter(Boolean).join(" ");
+  const parMots = useMemo(() => suggererParMotsCles(texte, affaires), [texte, affaires]);
+  const recents = useMemo(() => codesRecents(affaires), [affaires]);
+  const chip = (a: { id: string; numero: string; nom: string }) => (
+    <Button key={a.id} type="button" size="sm" variant={affaireId === a.id ? "default" : "outline"} className="h-auto py-1 text-left" onClick={() => setAffaireId(a.id)}>
+      <b className="mr-1">{a.numero}</b>{a.nom}
+    </Button>
+  );
   async function save() {
     if (!affaireId) return;
     setSaving(true);
@@ -258,6 +268,14 @@ function ClasserDialog({ email, onClose, onDone }: { email: Row; onClose: () => 
         </DialogHeader>
         {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> :
           <AffaireCombobox affaires={affaires} value={affaireId} onChange={setAffaireId} includeOpportunites includeClosed placeholder="N°, chantier, client ou lieu…" />}
+        {!isLoading && (
+          <div className="space-y-2 text-sm">
+            <div><div className="mb-1 text-xs font-medium text-muted-foreground">Suggestions selon les mots clés</div>
+              <div className="flex flex-wrap gap-1.5">{parMots.length ? parMots.map((s) => chip(s.affaire)) : <span className="text-xs text-muted-foreground">Aucune correspondance</span>}</div></div>
+            <div><div className="mb-1 text-xs font-medium text-muted-foreground">Codes récents</div>
+              <div className="flex flex-wrap gap-1.5">{recents.map(chip)}</div></div>
+          </div>
+        )}
         <DialogFooter>
           <Button variant="ghost" onClick={onClose}>Annuler</Button>
           <Button disabled={!affaireId || saving} onClick={() => void save()}>{saving && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}Classer</Button>

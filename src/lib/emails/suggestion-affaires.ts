@@ -26,9 +26,8 @@ export function suggererParMotsCles(texte: string, affaires: AffaireLite[], limi
     .slice(0, limite);
 }
 
-export function codesRecents(affaires: AffaireLite[], limite = 6): AffaireLite[] {
-  return affaires
-    .filter((a) => a.statut !== "annule" && /^\d+$/.test(a.numero))
-    .sort((x, y) => Number(y.numero.slice(0, 4)) * 10 - Number(x.numero.slice(0, 4)) * 10 || y.numero.localeCompare(x.numero))
-    .slice(0, limite);
+/** 3 dernières opportunités (9XXX) + 3 derniers chantiers à 4 chiffres. */
+export function codesRecents(affaires: AffaireLite[], parSerie = 3): AffaireLite[] {
+  const ok = affaires.filter((a) => a.statut !== "annule" && /^\d{4}$/.test(a.numero)).sort((x, y) => Number(y.numero) - Number(x.numero));
+  return [...ok.filter((a) => a.numero.startsWith("9")).slice(0, parSerie), ...ok.filter((a) => !a.numero.startsWith("9")).slice(0, parSerie)];
 }
