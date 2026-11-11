@@ -310,7 +310,8 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
       {/* Dates clés */}
       {!d.devis.est_modele && (
         <div id="devis-dates" className="space-y-2">
-        <div className="grid grid-cols-2 gap-2 md:grid-cols-8">
+        <div className="flex flex-col gap-2 md:flex-row md:items-start">
+        <div className="grid flex-1 grid-cols-2 gap-2 md:grid-cols-6">
           <DateCase label="Opportunité" value={d.affaire?.created_at?.slice(0, 10) ?? null} disabled />
           <DateCase label="Date du devis" value={d.devis.date_devis} disabled={readOnly} onChange={(v) => void setEntete({ date_devis: v })} />
           <div>
@@ -324,6 +325,14 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
             <DateCase key={x.key} label={x.label} value={(dates as Record<string, string | null>)[x.key] ?? null} disabled={readOnly}
               onChange={(v) => void call("devis_dates_modifier", { _devis_id: devisId, _patch: { [x.key]: v ?? "" } }).then(() => window.dispatchEvent(new Event("affaire-updated")))} />
           ))}
+        </div>
+        <div className="flex shrink-0 items-center gap-3 rounded-md border bg-card px-3 py-2 tabular-nums md:ml-auto">
+          <div className="text-right leading-tight">
+            <p className="text-xs text-foreground/75">Total HT <strong className="text-base text-foreground">{eur(calc.remise !== 0 ? calc.net_ht : calc.total_ht)}</strong></p>
+            <p className="text-xs text-foreground/75">Total TTC <strong className="text-base text-foreground">{eur(calc.ttc)}</strong></p>
+          </div>
+          <Button size="sm" variant="outline" onClick={() => setPdfDlg(true)}><FileDown className="mr-1 h-4 w-4" />PDF client</Button>
+        </div>
         </div>
         {(() => {
           const vides = DATES.filter((x) => !(dates as Record<string, string | null>)[x.key] && !datesOuvertes.has(x.key));
