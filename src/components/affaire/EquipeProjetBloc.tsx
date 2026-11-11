@@ -83,10 +83,10 @@ function RoleLigne({ affaireId, role, row, affaire, canEdit }: {
 
   return (
     <div className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5">
-      <p className="w-full shrink-0 truncate text-[11px] font-medium leading-tight text-muted-foreground" title={PROJET_ROLE_LABELS[role]}>
+      <p className="w-[92px] shrink-0 truncate text-[11px] font-medium leading-tight text-muted-foreground" title={PROJET_ROLE_LABELS[role]}>
         {PROJET_ROLE_LABELS[role]}
       </p>
-      <div className="min-w-[120px] flex-1">
+      <div className="min-w-0 flex-1">
         <EmployeRoleCombobox role={role} value={row?.employe_id ?? null} disabled={!canEdit || saving}
           onChange={(id) => { if (id !== (row?.employe_id ?? null)) void save({ employeId: id }); }} />
       </div>
@@ -126,7 +126,7 @@ export function EmployeRoleCombobox({ role, value, onChange, disabled }: {
     <Popover open={open} onOpenChange={(n) => { setOpen(n); if (n) setSearch(""); }}>
       <PopoverTrigger asChild>
         <Button type="button" variant="outline" role="combobox" aria-label={PROJET_ROLE_LABELS[role]} aria-expanded={open}
-          disabled={disabled || isLoading} className="h-8 w-full justify-between gap-2 text-xs font-normal">
+          disabled={disabled || isLoading} className="h-7 w-full justify-between gap-1.5 text-[11px] font-normal">
           <span className={cn("truncate", !value && "text-muted-foreground")}>
             {selected ? label(selected.id, nomComplet(selected)) : value ? "Employé inactif" : "À affecter"}
           </span>
