@@ -113,7 +113,9 @@ function AffairePlanningPage() {
         barres: [{ id: `atelier:${affaireId}`, affaireId: "atelier", libelle: "Atelier", debut, fin, previsionnel }],
       });
     }
-    for (const p of d.periodes) {
+    const ordreMetier = (id: number) => d.metiers.find((x) => x.id === id)?.ordre ?? 99;
+    const periodesTriees = [...d.periodes].sort((a, b) => ordreMetier(Number(a.metier_id)) - ordreMetier(Number(b.metier_id)) || a.date_debut.localeCompare(b.date_debut));
+    for (const p of periodesTriees) {
       const m = d.metiers.find((x) => x.id === p.metier_id);
       const h = p.heures_prevues != null ? Number(p.heures_prevues) : null;
       out.push({
