@@ -232,7 +232,7 @@ function AffaireDetailLayout() {
         <ArrowLeft className="mr-1 h-3 w-3" /> Affaires
       </Link>
 
-      <div className="mt-0.5 flex flex-col gap-1.5 border-b border-border pb-2 sm:flex-row sm:items-end sm:justify-between">
+      <div className="mt-0.5 flex flex-col gap-1 border-b border-border pb-1.5 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <div className="flex items-center gap-1">
             <p className="overline">— {affaire.numero}</p>
@@ -249,7 +249,7 @@ function AffaireDetailLayout() {
             )}
           </div>
 
-          <h1 className="text-xl font-bold tracking-tight text-foreground">{affaire.nom}</h1>
+          <h1 className="text-lg font-bold tracking-tight text-foreground">{affaire.nom}</h1>
           <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
             {affaire.client && (
               affaire.client_id ? (
@@ -334,17 +334,17 @@ function AffaireDetailLayout() {
         </div>
       </div>
 
-      <div className="mt-2"><EquipeProjetBloc affaireId={affaire.id} canEdit={canEditRoles} /></div>
+      <div className="mt-1.5"><EquipeProjetBloc affaireId={affaire.id} canEdit={canEditRoles} /></div>
 
       {/* Onglets */}
-      <nav className="mt-2 flex gap-1 border-b border-border overflow-x-auto">
+      <nav className="mt-1 flex gap-1 border-b border-border overflow-x-auto">
 
         {tabs.map((t) => (
           <Link
             key={t.to}
             to={t.to}
             className={[
-              "rounded-t-lg px-3 py-1.5 text-[13px] font-semibold transition-colors",
+              "rounded-t-lg px-2.5 py-1 text-xs font-semibold transition-colors",
               t.match
                 ? "border-b-2 border-primary text-primary"
                 : "text-muted-foreground hover:text-foreground",
@@ -356,7 +356,7 @@ function AffaireDetailLayout() {
       </nav>
       </>}
 
-      <div className={modeEditeur ? "py-2" : "py-3"}>
+      <div className="py-2">
         <Outlet />
       </div>
 

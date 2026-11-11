@@ -183,16 +183,16 @@ function AffaireSynthesePage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       {/* Légende rapide des 3 niveaux */}
-      <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+      <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
         <span className="font-semibold uppercase tracking-wider">Lecture :</span>
         <LevelChip tone="staff" icon={<ClipboardCheck className="h-3 w-3" />} label="Staffé = planning" />
         <LevelChip tone="real" icon={<Send className="h-3 w-3" />} label="Réalisé = soumis par employé" />
         <LevelChip tone="valide" icon={<CheckCircle2 className="h-3 w-3" />} label="Validé = officiel marge" />
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
         <Stat label="Prévues" value={`${totals.prevues.toFixed(0)} h`} icon={<Clock className="h-4 w-4" />} />
         <Stat
           label="Staffé"
@@ -224,13 +224,13 @@ function AffaireSynthesePage() {
       </div>
 
       <section>
-        <p className="overline mb-3">— Suivi marge par métier (Staffé / Réalisé / Validé)</p>
+        <p className="overline mb-1.5">— Suivi marge par métier (Staffé / Réalisé / Validé)</p>
         {groups.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
+          <div className="rounded-xl border border-dashed border-border bg-card p-6 text-center text-sm text-muted-foreground">
             Aucun poste de devis renseigné. Ajoutez un devis dans l'onglet Devis pour suivre la consommation.
           </div>
         ) : (
-          <div className="overflow-x-auto rounded-2xl border border-border bg-card">
+          <div className="overflow-x-auto rounded-xl border border-border bg-card">
             <table className="w-full text-sm">
               <thead className="bg-muted/40 text-xs uppercase tracking-wider text-muted-foreground">
                 <tr>
@@ -587,13 +587,13 @@ function Stat({
           ? "text-success"
           : "text-foreground";
   return (
-    <div className="rounded-2xl border border-border bg-card p-4">
+    <div className="rounded-xl border border-border bg-card px-3 py-2">
       <div className="flex items-center justify-between gap-2">
-        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
         {icon && <div className={cn("opacity-60", toneCls)}>{icon}</div>}
       </div>
-      <p className={cn("mt-1 text-2xl font-bold tracking-tight", toneCls)}>{value}</p>
-      {sub && <p className={cn("text-xs font-semibold", toneCls)}>{sub}</p>}
+      <p className={cn("mt-0.5 text-lg font-bold tracking-tight", toneCls)}>{value}</p>
+      {sub && <p className={cn("text-[11px] font-semibold", toneCls)}>{sub}</p>}
     </div>
   );
 }
