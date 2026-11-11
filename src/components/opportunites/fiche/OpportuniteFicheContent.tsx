@@ -333,34 +333,6 @@ function TimelineSection({ actions }: { actions: OpportuniteFicheData["actions"]
   );
 }
 
-function EquipeSection({ equipe }: { equipe: OpportuniteFicheData["equipe"] }) {
-  return (
-    <section data-testid="opportunite-equipe">
-      <p className="overline mb-1.5 flex items-center gap-2">
-        <Users className="h-3 w-3" />— Équipe commerciale &amp; étude
-      </p>
-      <div className="rounded-xl border border-border bg-card p-3">
-        {equipe.length === 0 ? (
-          <p className="text-sm italic text-muted-foreground">Aucun membre assigné.</p>
-        ) : (
-          <ul className="flex flex-wrap gap-2">
-            {equipe.map((m) => (
-              <li key={m.id} className="rounded-full border border-border bg-muted/40 px-3 py-1 text-xs">
-                <span className="font-medium">
-                  {m.prenom} {m.nom}
-                </span>
-                {m.role_terrain && (
-                  <span className="ml-1 text-muted-foreground">· {m.role_terrain}</span>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-    </section>
-  );
-}
-
 function DevisSection({ devis }: { devis: OpportuniteFicheData["devis"] }) {
   return (
     <section data-testid="opportunite-devis">
