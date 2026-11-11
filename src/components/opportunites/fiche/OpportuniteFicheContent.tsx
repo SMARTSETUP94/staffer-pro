@@ -24,7 +24,6 @@ import {
   type OpportuniteFicheData,
 } from "@/lib/server-fns/opportunite-fiche.functions";
 import { OpportuniteFicheHeader } from "@/components/opportunites/fiche/OpportuniteFicheHeader";
-import { OpportuniteJalonsBar } from "@/components/opportunites/fiche/OpportuniteJalonsBar";
 import { OpportuniteNextActionCard } from "@/components/opportunites/fiche/OpportuniteNextActionCard";
 import { SignerOpportuniteDialog } from "@/components/opportunites/SignerOpportuniteDialog";
 import { OpportuniteEmailsSection } from "@/components/opportunites/fiche/OpportuniteEmailsSection";
@@ -76,7 +75,6 @@ export function OpportuniteFicheContent({ affaireId }: { affaireId: string }) {
 
       <OpportuniteEmailsSection affaireId={affaireId} />
 
-      <OpportuniteJalonsBar jalons={data.jalons} />
 
       <OpportuniteNextActionCard
         affaireId={affaireId}
