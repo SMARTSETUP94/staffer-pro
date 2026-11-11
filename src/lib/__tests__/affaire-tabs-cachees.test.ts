@@ -8,7 +8,9 @@ import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import {
   AFFAIRE_HIDDEN_TAB_SUFFIXES,
+  AFFAIRE_SYNTHESE_HIDDEN,
   affaireTabSuffix,
+  isAffaireSyntheseHidden,
   isAffaireTabHidden,
 } from "@/lib/affaire-tabs-visibility";
 
@@ -43,6 +45,11 @@ describe("onglets chantier masqués", () => {
     }
   });
 
+  it("masque l'onglet Synthèse (anciennes données) tant que le drapeau est actif", () => {
+    expect(AFFAIRE_SYNTHESE_HIDDEN).toBe(true);
+    expect(isAffaireSyntheseHidden()).toBe(true);
+  });
+
   it("ignore les sous-pages d'objet", () => {
     expect(isAffaireTabHidden("/affaires/abc-123/objets/def-456")).toBe(false);
     expect(affaireTabSuffix("/affaires/abc-123/objets/def-456")).toBe("objets");
@@ -52,6 +59,7 @@ describe("onglets chantier masqués", () => {
     const src = readFileSync("src/routes/_app.affaires.$affaireId.tsx", "utf8");
     expect(src).toContain("affaire-tabs-visibility");
     expect(src).toContain("allTabs.filter((t) => !isAffaireTabHidden(t.to))");
-    expect(src).toContain("if (isAffaireTabHidden(path))");
+    expect(src).toContain("if (isAffaireTabHidden(path)");
+    expect(src).toContain("isAffaireSyntheseHidden()");
   });
 });
