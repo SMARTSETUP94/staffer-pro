@@ -17,12 +17,13 @@ import {
 const HIDDEN = AFFAIRE_HIDDEN_TAB_SUFFIXES as readonly string[];
 
 describe("onglets chantier masqués", () => {
-  it("masque exactement les sept onglets non déployés", () => {
+  it("masque exactement les huit onglets non déployés", () => {
     expect([...HIDDEN].sort()).toEqual(
       [
         "casting",
         "devis",
         "equipe",
+        "fabrication",
         "grille",
         "planning-atelier",
         "planning-chantier",
