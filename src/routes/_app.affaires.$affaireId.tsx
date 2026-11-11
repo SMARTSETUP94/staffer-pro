@@ -216,7 +216,7 @@ function AffaireDetailLayout() {
 
   const enteteVisible = !modeEditeur || enteteOuvert;
   return (
-    <div className={modeEditeur ? "mx-auto max-w-[1800px] px-4 py-3" : "mx-auto max-w-7xl p-6"}>
+    <div className={modeEditeur ? "mx-auto max-w-[1800px] px-4 py-3" : "mx-auto max-w-7xl p-4"}>
       {modeEditeur && (
         <div className="mb-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
           <Link to="/affaires/$affaireId" params={{ affaireId: affaire.id }} className="font-semibold text-foreground hover:underline">{affaire.numero} — {affaire.nom}</Link>
@@ -232,7 +232,7 @@ function AffaireDetailLayout() {
         <ArrowLeft className="mr-1 h-3 w-3" /> Affaires
       </Link>
 
-      <div className="mt-1 flex flex-col gap-2 border-b border-border pb-3 sm:flex-row sm:items-end sm:justify-between">
+      <div className="mt-0.5 flex flex-col gap-1.5 border-b border-border pb-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <div className="flex items-center gap-1">
             <p className="overline">— {affaire.numero}</p>
@@ -249,8 +249,8 @@ function AffaireDetailLayout() {
             )}
           </div>
 
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">{affaire.nom}</h1>
-          <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+          <h1 className="text-xl font-bold tracking-tight text-foreground">{affaire.nom}</h1>
+          <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
             {affaire.client && (
               affaire.client_id ? (
                 <div className="inline-flex items-center gap-1">
@@ -356,7 +356,7 @@ function AffaireDetailLayout() {
       </nav>
       </>}
 
-      <div className={modeEditeur ? "py-2" : "py-6"}>
+      <div className={modeEditeur ? "py-2" : "py-3"}>
         <Outlet />
       </div>
 
