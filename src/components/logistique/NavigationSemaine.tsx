@@ -11,7 +11,7 @@ export function NavigationSemaine({ debut, onChange, choisir = false, children }
   return <div className="flex flex-wrap items-center gap-2">
     <Button variant="outline" size="icon" aria-label="Semaine précédente" title="Semaine précédente" onClick={() => onChange(ajouterJours(debut, -7))}><ChevronLeft className="size-4" /></Button>
     {children}
-    {choisir && <Popover><PopoverTrigger asChild><Button variant="outline" size="sm"><CalendarDays className="mr-2 size-4" />Choisir</Button></PopoverTrigger><PopoverContent className="w-64"><Input type="date" aria-label="Début de semaine" value={debut} onChange={e => e.target.value && onChange(lundi(e.target.value))} /></PopoverContent></Popover>}
+    {choisir && <Popover><PopoverTrigger asChild><Button variant="outline" size="sm"><CalendarDays className="size-4" />Choisir</Button></PopoverTrigger><PopoverContent className="w-64"><Input type="date" aria-label="Début de semaine" value={debut} onChange={e => e.target.value && onChange(lundi(e.target.value))} /></PopoverContent></Popover>}
     <Button variant="outline" size="icon" aria-label="Semaine suivante" title="Semaine suivante" onClick={() => onChange(ajouterJours(debut, 7))}><ChevronRight className="size-4" /></Button>
   </div>;
 }
