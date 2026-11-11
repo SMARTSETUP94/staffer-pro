@@ -74,7 +74,7 @@ function AffairePlanningPage() {
       const [aff, periodes, metiers] = await Promise.all([
         supabase.from("affaires").select("id,numero,nom,phase,atelier_date_debut,atelier_date_fin").eq("id", affaireId).single(),
         supabase.from("affaire_planning_metier").select("id,metier_id,date_debut,date_fin,heures_prevues").eq("affaire_id", affaireId).order("date_debut"),
-        supabase.from("metiers").select("id,libelle").order("ordre"),
+        supabase.from("metiers").select("id,libelle,ordre").order("ordre"),
       ]);
       for (const r of [aff, periodes, metiers]) if (r.error) throw new Error(r.error.message);
       if (!aff.data) throw new Error("Affaire introuvable.");
