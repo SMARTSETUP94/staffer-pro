@@ -18,6 +18,18 @@ export const AFFAIRE_HIDDEN_TAB_SUFFIXES = [
   "casting",
 ] as const;
 
+/**
+ * L'onglet « Synthèse » (route index de la fiche) est masqué pour l'instant :
+ * il agrège d'anciennes données. La fiche s'ouvre alors sur le premier onglet
+ * visible (Opportunité si présente, sinon Logistique, etc.).
+ */
+export const AFFAIRE_SYNTHESE_HIDDEN = true;
+
+/** L'onglet Synthèse (route index) est-il volontairement masqué ? */
+export function isAffaireSyntheseHidden(): boolean {
+  return AFFAIRE_SYNTHESE_HIDDEN;
+}
+
 /** Segment d'onglet porté par une URL de fiche chantier (`null` pour la synthèse). */
 export function affaireTabSuffix(pathname: string): string | null {
   const match = pathname.match(/\/affaires\/[^/]+\/([^/]+)/);
