@@ -74,7 +74,7 @@ function AffairePlanningPage() {
       const [aff, periodes, metiers] = await Promise.all([
         supabase.from("affaires").select("id,numero,nom,phase,atelier_date_debut,atelier_date_fin").eq("id", affaireId).single(),
         supabase.from("affaire_planning_metier").select("id,metier_id,date_debut,date_fin,heures_prevues").eq("affaire_id", affaireId).order("date_debut"),
-        supabase.from("metiers").select("id,libelle").order("ordre"),
+        supabase.from("metiers").select("id,libelle,ordre").order("ordre"),
       ]);
       for (const r of [aff, periodes, metiers]) if (r.error) throw new Error(r.error.message);
       if (!aff.data) throw new Error("Affaire introuvable.");
@@ -113,7 +113,9 @@ function AffairePlanningPage() {
         barres: [{ id: `atelier:${affaireId}`, affaireId: "atelier", libelle: "Atelier", debut, fin, previsionnel }],
       });
     }
-    for (const p of d.periodes) {
+    const ordreMetier = (id: number) => d.metiers.find((x) => x.id === id)?.ordre ?? 99;
+    const periodesTriees = [...d.periodes].sort((a, b) => ordreMetier(Number(a.metier_id)) - ordreMetier(Number(b.metier_id)) || a.date_debut.localeCompare(b.date_debut));
+    for (const p of periodesTriees) {
       const m = d.metiers.find((x) => x.id === p.metier_id);
       const h = p.heures_prevues != null ? Number(p.heures_prevues) : null;
       out.push({
@@ -399,9 +401,34 @@ function AffairePlanningPage() {
                     </div>
                   )}
                   <div className="grid grid-cols-2 gap-2">
-                    <div className="grid gap-1"><Label>Début</Label><Input type="date" disabled={ro} value={edit.debut} onChange={(e) => set({ debut: e.target.value })} /></div>
-                    <div className="grid gap-1"><Label>Fin</Label><Input type="date" disabled={ro} value={edit.fin} onChange={(e) => set({ fin: e.target.value })} /></div>
+                    <div className="grid gap-1">
+                      <Label>Début</Label>
+                      <Input type="date" disabled={ro} value={edit.debut} onChange={(e) => set({ debut: e.target.value })} />
+                      {!ro && (
+                        <div className="flex gap-1">
+                          <Button type="button" size="sm" variant="outline" className="h-6 flex-1 px-1 text-[11px]" onClick={() => set({ debut: addDays(edit.debut, -1) })}>−1 j</Button>
+                          <Button type="button" size="sm" variant="outline" className="h-6 flex-1 px-1 text-[11px]" onClick={() => set({ debut: addDays(edit.debut, 1) })}>+1 j</Button>
+                        </div>
+                      )}
+                    </div>
+                    <div className="grid gap-1">
+                      <Label>Fin</Label>
+                      <Input type="date" disabled={ro} value={edit.fin} onChange={(e) => set({ fin: e.target.value })} />
+                      {!ro && (
+                        <div className="flex gap-1">
+                          <Button type="button" size="sm" variant="outline" className="h-6 flex-1 px-1 text-[11px]" onClick={() => set({ fin: addDays(edit.fin, -1) })}>−1 j</Button>
+                          <Button type="button" size="sm" variant="outline" className="h-6 flex-1 px-1 text-[11px]" onClick={() => set({ fin: addDays(edit.fin, 1) })}>+1 j</Button>
+                        </div>
+                      )}
+                    </div>
                   </div>
+                  {!ro && (
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[11px] text-muted-foreground">Décaler toute la période :</span>
+                      <Button type="button" size="sm" variant="outline" className="h-6 px-2 text-[11px]" onClick={() => set({ debut: addDays(edit.debut, -1), fin: addDays(edit.fin, -1) })}>−1 j</Button>
+                      <Button type="button" size="sm" variant="outline" className="h-6 px-2 text-[11px]" onClick={() => set({ debut: addDays(edit.debut, 1), fin: addDays(edit.fin, 1) })}>+1 j</Button>
+                    </div>
+                  )}
                   {edit.kind === "atelier" && edit.metier != null && (
                     <div className="grid gap-1">
                       <Label>Heures prévues (vide = heures du devis)</Label>
