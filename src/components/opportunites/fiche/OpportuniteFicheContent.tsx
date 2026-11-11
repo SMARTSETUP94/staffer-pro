@@ -2,7 +2,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { Loader2, Save, MessageSquare, Users, FileText } from "lucide-react";
+import { Loader2, Save, MessageSquare, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { useCapability } from "@/hooks/use-capability";
 import { Button } from "@/components/ui/button";
@@ -90,8 +90,6 @@ export function OpportuniteFicheContent({ affaireId }: { affaireId: string }) {
       />
 
       <TimelineSection actions={data.actions} />
-
-      <EquipeSection equipe={data.equipe} />
 
       <DevisSection devis={data.devis} />
 
@@ -331,34 +329,6 @@ function TimelineSection({ actions }: { actions: OpportuniteFicheData["actions"]
           </li>
         ))}
       </ol>
-    </section>
-  );
-}
-
-function EquipeSection({ equipe }: { equipe: OpportuniteFicheData["equipe"] }) {
-  return (
-    <section data-testid="opportunite-equipe">
-      <p className="overline mb-1.5 flex items-center gap-2">
-        <Users className="h-3 w-3" />— Équipe commerciale &amp; étude
-      </p>
-      <div className="rounded-xl border border-border bg-card p-3">
-        {equipe.length === 0 ? (
-          <p className="text-sm italic text-muted-foreground">Aucun membre assigné.</p>
-        ) : (
-          <ul className="flex flex-wrap gap-2">
-            {equipe.map((m) => (
-              <li key={m.id} className="rounded-full border border-border bg-muted/40 px-3 py-1 text-xs">
-                <span className="font-medium">
-                  {m.prenom} {m.nom}
-                </span>
-                {m.role_terrain && (
-                  <span className="ml-1 text-muted-foreground">· {m.role_terrain}</span>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
     </section>
   );
 }
