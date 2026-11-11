@@ -272,7 +272,7 @@ function BriefSection({
           <Textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            rows={4}
+            rows={3}
             disabled={!canEdit}
             placeholder="Contexte, attentes, contraintes…"
           />

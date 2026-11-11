@@ -25,8 +25,8 @@ export function OpportuniteJalonsBar({ jalons }: Props) {
 
   return (
     <section data-testid="opportunite-jalons-bar">
-      <p className="overline mb-3">— Pipeline commercial</p>
-      <div className="grid grid-cols-1 gap-2 rounded-2xl border border-border bg-card p-4 sm:grid-cols-4">
+      <p className="overline mb-1.5">— Pipeline commercial</p>
+      <div className="grid grid-cols-1 gap-1.5 rounded-xl border border-border bg-card p-2.5 sm:grid-cols-4">
         {ETAPES_ORDER.map((etape, idx) => {
           const j = byEtape.get(etape);
           const reached = !!j?.date_atteinte;
@@ -35,7 +35,7 @@ export function OpportuniteJalonsBar({ jalons }: Props) {
             <div
               key={etape}
               className={cn(
-                "flex flex-col gap-1 rounded-lg border p-3 text-xs transition-colors",
+                "flex flex-col gap-0.5 rounded-lg border p-2 text-xs transition-colors",
                 reached
                   ? "border-emerald-200 bg-emerald-50 dark:border-emerald-900/50 dark:bg-emerald-950/20"
                   : "border-border bg-muted/30",
