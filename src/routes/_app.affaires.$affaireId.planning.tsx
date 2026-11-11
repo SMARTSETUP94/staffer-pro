@@ -55,6 +55,18 @@ function AffairePlanningPage() {
   const editBe = !mobile && canBe;
   const editLog = !mobile && canLog;
   const [vue, setVue] = useState<"jour" | "semaine" | "mois">("semaine");
+  const [mode, setMode] = useState<"periodes" | "personnes">("periodes");
+  const persQ = useQuery({
+    queryKey: ["affaire-planning-personnes", affaireId],
+    enabled: mode === "personnes",
+    queryFn: async () => {
+      const { data, error } = await supabase.from("assignations")
+        .select("employe_id,date,metier_id,atelier_planning_id,etape_logistique_id,employes(prenom,nom)")
+        .eq("affaire_id", affaireId).eq("historique_terrain", false).not("employe_id", "is", null);
+      if (error) throw new Error(error.message);
+      return (data ?? []) as unknown as { employe_id: string; date: string; metier_id: number | null; atelier_planning_id: string | null; etape_logistique_id: string | null; employes: { prenom: string | null; nom: string | null } | null }[];
+    },
+  });
 
   const atelierQ = useQuery({
     queryKey: ["affaire-planning-retro", affaireId],
@@ -124,6 +136,44 @@ function AffairePlanningPage() {
     }
     return out;
   }, [atelierQ.data, roles, employes, etapes, affaireId]);
+
+  const lignesPersonnes = useMemo<LigneBarres[]>(() => {
+    const periodes = atelierQ.data?.periodes ?? [];
+    const libMetier = (id: number | null) => atelierQ.data?.metiers.find((m) => m.id === id)?.libelle ?? "Atelier";
+    const par = new Map<string, { nom: string; jours: Map<string, { cat: string; metier: number | null; lib: string }> }>();
+    const ajout = (id: string, nom: string, date: string, cat: string, metier: number | null, lib: string) => {
+      const p = par.get(id) ?? { nom, jours: new Map() };
+      if (!p.jours.has(`${date}|${cat}`)) p.jours.set(`${date}|${cat}`, { cat, metier, lib });
+      par.set(id, p);
+    };
+    for (const a of persQ.data ?? []) {
+      const nom = `${a.employes?.prenom ?? ""} ${a.employes?.nom ? a.employes.nom[0] + "." : ""}`.trim() || "—";
+      if (a.etape_logistique_id) ajout(a.employe_id, nom, a.date, "log", 7, "Logistique");
+      else {
+        const m = a.metier_id ?? (periodes.find((p) => p.id === a.atelier_planning_id)?.metier_id ?? null);
+        ajout(a.employe_id, nom, a.date, `at${m ?? ""}`, m != null ? Number(m) : null, libMetier(m != null ? Number(m) : null));
+      }
+    }
+    for (const r of roles.filter((r) => r.role === "concepteur" && r.date_debut && r.date_fin)) {
+      const e = employes.find((x) => x.id === r.employe_id);
+      const nom = e ? `${e.prenom ?? ""} ${e.nom ? e.nom[0] + "." : ""}`.trim() : "Concepteur";
+      for (let d = r.date_debut as string; d <= (r.date_fin as string); d = addDays(d, 1)) ajout(r.employe_id, nom, d, "be", 8, "Bureau d'étude");
+    }
+    const out: LigneBarres[] = [];
+    for (const [id, p] of par) {
+      const tri = [...p.jours.entries()].map(([k, v]) => ({ date: k.split("|")[0], ...v })).sort((a, b) => a.cat.localeCompare(b.cat) || a.date.localeCompare(b.date));
+      const barres: Barre[] = [];
+      for (const j of tri) {
+        const der = barres.at(-1);
+        if (der && der.id.startsWith(`${id}:${j.cat}:`) && addDays(der.fin, 1) === j.date) { der.fin = j.date; continue; }
+        barres.push({ id: `${id}:${j.cat}:${j.date}`, affaireId: "pers", libelle: j.lib, debut: j.date, fin: j.date, previsionnel: j.cat === "be", metier: j.metier });
+      }
+      const nbJ = new Set(tri.map((t) => t.date)).size;
+      const acts = [...new Set(tri.map((t) => t.lib))].join(", ");
+      out.push({ id: `p:${id}`, libelle: p.nom, detail: `${nbJ} j · ${acts}`, barres });
+    }
+    return out.sort((a, b) => String(a.libelle).localeCompare(String(b.libelle)));
+  }, [persQ.data, atelierQ.data, roles, employes]);
 
   const refetchAll = async () => {
     await Promise.all([
@@ -209,7 +259,7 @@ function AffairePlanningPage() {
     return { debut, jours, col: 24 };
   }, [vue, decalage]);
   const finFenetre = addDays(fenetre.debut, fenetre.jours - 1);
-  const lignesVisibles = lignes.filter((l) => l.barres.some((x) => x.debut <= finFenetre && x.fin >= fenetre.debut));
+  const lignesVisibles = (mode === "personnes" ? lignesPersonnes : lignes).filter((l) => l.barres.some((x) => x.debut <= finFenetre && x.fin >= fenetre.debut));
   const libelleFenetre = (() => {
     const f = (iso: string, o: Intl.DateTimeFormatOptions) => new Date(`${iso}T12:00:00`).toLocaleDateString("fr-FR", o);
     if (vue === "jour") return f(fenetre.debut, { weekday: "long", day: "numeric", month: "long" });
@@ -234,6 +284,13 @@ function AffairePlanningPage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-1.5">
+          <div className="flex rounded-md border border-border p-0.5" role="group" aria-label="Affichage">
+            {(["periodes", "personnes"] as const).map((v) => (
+              <Button key={v} size="sm" variant={mode === v ? "default" : "ghost"} className="h-6 px-2 text-xs" onClick={() => setMode(v)}>
+                {v === "periodes" ? "Périodes" : "Personnes"}
+              </Button>
+            ))}
+          </div>
           <div className="flex rounded-md border border-border p-0.5" role="group" aria-label="Échelle">
             {(["jour", "semaine", "mois"] as const).map((v) => (
               <Button key={v} size="sm" variant={vue === v ? "default" : "ghost"} className="h-6 px-2 text-xs capitalize" onClick={() => { setVue(v); setDecalage(0); }}>
@@ -259,7 +316,12 @@ function AffairePlanningPage() {
         </div>
       </div>
 
-      {(editAtelier || editBe || editLog) && (
+      {mode === "personnes" && (
+        <p className="text-[11px] text-muted-foreground">
+          Une ligne par personne staffée sur ce chantier, couleur du métier (atelier), logistique ou bureau d'étude (pointillés). Pour ajouter ou retirer quelqu'un, passez par le planning atelier ou logistique.
+        </p>
+      )}
+      {mode === "periodes" && (editAtelier || editBe || editLog) && (
         <div className="flex flex-wrap gap-1.5">
           {editAtelier && (
             <Button size="sm" className="h-7 text-xs" onClick={() => setEdit({ kind: "atelier", titre: "Nouvelle période atelier", metier: null, employe: "", debut: atelierQ.data?.affaire.atelier_date_debut ?? aujourdHui, fin: atelierQ.data?.affaire.atelier_date_fin ?? addDays(aujourdHui, 4), heures: "", nouveau: true })}>
@@ -282,7 +344,7 @@ function AffairePlanningPage() {
 
       {!lignesVisibles.length ? (
         <p className="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
-          Rien de planifié sur cette période pour ce chantier.
+          {mode === "personnes" ? (persQ.isLoading ? "Chargement…" : "Personne n'est staffé sur cette période.") : "Rien de planifié sur cette période pour ce chantier."}
         </p>
       ) : (
         <PlanningBarres
@@ -292,9 +354,9 @@ function AffairePlanningPage() {
           nbJours={fenetre.jours}
           parJour
           col={fenetre.col}
-          entete="Période"
-          editable={!mobile && vue !== "jour" && (editAtelier || editBe || editLog)}
-          onOpen={(b) => ouvrir(b)}
+          entete={mode === "personnes" ? "Personne" : "Période"}
+          editable={mode === "periodes" && !mobile && vue !== "jour" && (editAtelier || editBe || editLog)}
+          onOpen={(b) => { if (mode === "periodes") ouvrir(b); }}
           onMove={(b, debut, fin) => ouvrir(b, debut, fin)}
         />
       )}
