@@ -54,7 +54,7 @@ export function EquipeProjetBloc({ affaireId, canEdit }: { affaireId: string; ca
         </div>
         <RolesManquantsBadges etat={etat} typologie={typologie} affectes={roles.map((r) => r.role)} compact />
       </div>
-      <div className="space-y-1">
+      <div className="grid grid-cols-1 gap-x-2 gap-y-1 sm:grid-cols-2 lg:grid-cols-3">
         {visibles.map((role) => (
           <RoleLigne key={role} affaireId={affaireId} role={role} row={roles.find((r) => r.role === role)} affaire={affaire ?? null} canEdit={canEdit} />
         ))}
@@ -82,16 +82,16 @@ function RoleLigne({ affaireId, role, row, affaire, canEdit }: {
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-1.5">
-      <p className="w-full shrink-0 truncate text-[11px] font-medium text-muted-foreground sm:w-32 lg:w-40" title={PROJET_ROLE_LABELS[role]}>
+    <div className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5">
+      <p className="w-full shrink-0 truncate text-[11px] font-medium leading-tight text-muted-foreground" title={PROJET_ROLE_LABELS[role]}>
         {PROJET_ROLE_LABELS[role]}
       </p>
-      <div className="min-w-[150px] flex-1">
+      <div className="min-w-[120px] flex-1">
         <EmployeRoleCombobox role={role} value={row?.employe_id ?? null} disabled={!canEdit || saving}
           onChange={(id) => { if (id !== (row?.employe_id ?? null)) void save({ employeId: id }); }} />
       </div>
       {avecPeriode && row && (
-        <div className="flex w-full flex-wrap items-center gap-1 sm:w-auto">
+        <div className="flex w-full flex-wrap items-center gap-1">
           <Input type="date" aria-label={`Début ${PROJET_ROLE_LABELS[role]}`} className="h-7 w-[110px] shrink-0 text-[11px]" disabled={!canEdit || saving}
             value={row.date_debut ?? ""} onChange={(e) => void save({ employeId: row.employe_id, dateDebut: e.target.value || null, dateFin: row.date_fin, remplacerDates: true })} />
           <span className="text-[11px] text-muted-foreground">→</span>
