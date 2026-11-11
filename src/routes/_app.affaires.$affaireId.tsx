@@ -117,8 +117,19 @@ function AffaireDetailLayout() {
   useEffect(() => {
     if (isAffaireTabHidden(path)) {
       void navigate({ to: "/affaires/$affaireId", params: { affaireId }, replace: true });
+      return;
     }
-  }, [path, affaireId, navigate]);
+    // Synthèse masquée : la route index renvoie vers le premier onglet visible.
+    if (affaire && isAffaireSyntheseHidden() && path === `/affaires/${affaire.id}`) {
+      if (hasOpportuniteTab(affaire)) {
+        void navigate({ to: "/affaires/$affaireId/opportunite", params: { affaireId }, replace: true });
+      } else if (devisStaffingOn) {
+        void navigate({ to: "/affaires/$affaireId/devis-staffing", params: { affaireId }, replace: true });
+      } else {
+        void navigate({ to: "/affaires/$affaireId/logistique", params: { affaireId }, replace: true });
+      }
+    }
+  }, [path, affaireId, affaire, devisStaffingOn, navigate]);
 
   const handleStatut = async () => {
     if (!affaire || !confirmAction) return;
@@ -157,8 +168,8 @@ function AffaireDetailLayout() {
 
 
 
-  // Onglet non déployé : rien n'est affiché, l'effet de redirection renvoie à la synthèse.
-  if (isAffaireTabHidden(path)) {
+  // Onglet non déployé (ou synthèse masquée) : rien n'est affiché pendant la redirection.
+  if (isAffaireTabHidden(path) || (isAffaireSyntheseHidden() && path === `/affaires/${affaire.id}`)) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <Loader2 className="h-6 w-6 animate-spin text-primary" />
