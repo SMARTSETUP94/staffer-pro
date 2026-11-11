@@ -1,5 +1,9 @@
 # Roadmap
 
+## Conditions de paiement clients — 11 novembre
+- [ ] Compléter uniquement les 144 conditions NULL non fusionnées, tracer la décision et comparer les 90 conditions existantes et tous les autres champs.
+- [ ] Appliquer le défaut de colonne seul ; préremplir la création et conserver les six choix modifiables, vérifier à l’écran et tester ; rien publier.
+
 ## Personnes atelier — 10 novembre
 - [x] Migration B : six fonctions, ajouts exacts contrôlés, ACL inchangées ; notifications AFTER, retour ignoré.
 - [x] Noms par chantier/métier, ajout/retrait par période ou jours, badges et onglet Personnes ; mobile lecture seule.

@@ -1,5 +1,7 @@
 /** Règles pures partagées : fiche client prête pour Pennylane. */
 
+export const CONDITIONS_PAIEMENT_DEFAUT = "Paiement sous 30 jours";
+
 export const CONDITIONS_PAIEMENT = [
   "Payable dès réception",
   "Paiement sous 30 jours",

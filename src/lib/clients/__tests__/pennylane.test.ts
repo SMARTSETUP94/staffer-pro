@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { luhnOk, tvaDepuisSiren, champsManquantsPennylane, codePostalValide, sirenEffectif } from "../pennylane";
+import { CONDITIONS_PAIEMENT, CONDITIONS_PAIEMENT_DEFAUT, luhnOk, tvaDepuisSiren, champsManquantsPennylane, codePostalValide, sirenEffectif } from "../pennylane";
 
 const complet = {
   nom: "ACME", type_client: "entreprise", siren: null, siret: "95311689400015",
@@ -8,6 +8,16 @@ const complet = {
 };
 
 describe("pennylane", () => {
+  it("nouveau client : paiement sous 30 jours par défaut", () => {
+    expect(CONDITIONS_PAIEMENT_DEFAUT).toBe("Paiement sous 30 jours");
+    expect(CONDITIONS_PAIEMENT).toContain(CONDITIONS_PAIEMENT_DEFAUT);
+  });
+  it("conserve les six conditions de paiement Pennylane", () => {
+    expect(CONDITIONS_PAIEMENT).toEqual([
+      "Payable dès réception", "Paiement sous 30 jours", "Paiement 30 jours fin de mois",
+      "Paiement sous 45 jours", "Paiement 45 jours fin de mois", "Paiement sous 60 jours",
+    ]);
+  });
   it("SIRET Setup valide, SIRET faux refusé", () => {
     expect(luhnOk("95311689400015")).toBe(true);
     expect(luhnOk("95311689400016")).toBe(false);
