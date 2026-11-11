@@ -17,12 +17,13 @@ import {
 const HIDDEN = AFFAIRE_HIDDEN_TAB_SUFFIXES as readonly string[];
 
 describe("onglets chantier masqués", () => {
-  it("masque exactement les sept onglets non déployés", () => {
+  it("masque exactement les huit onglets non déployés", () => {
     expect([...HIDDEN].sort()).toEqual(
       [
         "casting",
         "devis",
         "equipe",
+        "fabrication",
         "grille",
         "planning-atelier",
         "planning-chantier",
@@ -40,7 +41,7 @@ describe("onglets chantier masqués", () => {
   it("laisse passer la synthèse et les onglets déployés", () => {
     expect(isAffaireTabHidden("/affaires/abc-123")).toBe(false);
     expect(affaireTabSuffix("/affaires/abc-123")).toBeNull();
-    for (const suffix of ["documents", "journal", "logistique", "opportunite", "fabrication"]) {
+    for (const suffix of ["documents", "journal", "logistique", "opportunite", "planning"]) {
       expect(isAffaireTabHidden(`/affaires/abc-123/${suffix}`)).toBe(false);
     }
   });

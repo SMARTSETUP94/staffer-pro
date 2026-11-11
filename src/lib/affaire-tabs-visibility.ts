@@ -16,6 +16,7 @@ export const AFFAIRE_HIDDEN_TAB_SUFFIXES = [
   "staffing",
   "equipe",
   "casting",
+  "fabrication",
 ] as const;
 
 /**

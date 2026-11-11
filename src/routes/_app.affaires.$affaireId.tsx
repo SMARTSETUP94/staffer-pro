@@ -189,6 +189,7 @@ function AffaireDetailLayout() {
     ...(devisStaffingOn
       ? [{ to: `/affaires/${affaire.id}/devis-staffing`, label: "Devis", match: path.includes("/devis-staffing") }]
       : []),
+    { to: `/affaires/${affaire.id}/planning`, label: "Planning", match: path.endsWith("/planning") },
     { to: `/affaires/${affaire.id}/logistique`, label: "Logistique", match: path.endsWith("/logistique") },
     ...(affaire.phase === "signe"
       ? [{ to: `/affaires/${affaire.id}/fabrication`, label: "Fabrication", match: path.endsWith("/fabrication") }]
