@@ -85,6 +85,7 @@ function DemandesClientsPage() {
   const [tab, setTab] = useState<"todo" | "done" | "dismissed">("todo");
   const [current, setCurrent] = useState<Row | null>(null);
   const [reading, setReading] = useState<Row | null>(null);
+  const [classing, setClassing] = useState<Row | null>(null);
   const isAdmin = useCapability("section.admin");
   const reanalyse = useServerFn(reanalyseSharedInboxes);
   const [reanalysing, setReanalysing] = useState(false);
