@@ -67,7 +67,7 @@ export function OpportuniteFicheContent({ affaireId }: { affaireId: string }) {
   const lastAction = data.actions[0] ?? null;
 
   return (
-    <div className="space-y-4" data-testid="opportunite-fiche-page">
+    <div className="space-y-3" data-testid="opportunite-fiche-page">
       <OpportuniteFicheHeader
         affaire={data.affaire}
         canSign={canSign}
@@ -205,9 +205,9 @@ function BriefSection({
 
   return (
     <section data-testid="opportunite-brief">
-      <p className="overline mb-3">— Brief client</p>
-      <div className="space-y-3 rounded-2xl border border-border bg-card p-4">
-        <div className="grid gap-3 sm:grid-cols-2">
+      <p className="overline mb-1.5">— Brief client</p>
+      <div className="space-y-2.5 rounded-xl border border-border bg-card p-3">
+        <div className="grid gap-2.5 sm:grid-cols-2">
           <Field label="Nom de l'opportunité">
             <Input value={nom} onChange={(e) => setNom(e.target.value)} disabled={!canEdit} />
           </Field>
@@ -301,8 +301,8 @@ function BriefSection({
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="space-y-1.5">
-      <Label className="text-xs">{label}</Label>
+    <div className="space-y-1">
+      <Label className="text-[11px]">{label}</Label>
       {children}
     </div>
   );
@@ -312,8 +312,8 @@ function TimelineSection({ actions }: { actions: OpportuniteFicheData["actions"]
   if (actions.length === 0) return null;
   return (
     <section data-testid="opportunite-timeline">
-      <p className="overline mb-3">— Historique des actions ({actions.length})</p>
-      <ol className="space-y-2 rounded-2xl border border-border bg-card p-4">
+      <p className="overline mb-1.5">— Historique des actions ({actions.length})</p>
+      <ol className="space-y-1.5 rounded-xl border border-border bg-card p-3">
         {actions.map((a) => (
           <li key={a.id} className="border-l-2 border-primary/30 pl-3">
             <div className="flex flex-wrap items-baseline gap-2 text-xs">
@@ -340,10 +340,10 @@ function TimelineSection({ actions }: { actions: OpportuniteFicheData["actions"]
 function EquipeSection({ equipe }: { equipe: OpportuniteFicheData["equipe"] }) {
   return (
     <section data-testid="opportunite-equipe">
-      <p className="overline mb-3 flex items-center gap-2">
+      <p className="overline mb-1.5 flex items-center gap-2">
         <Users className="h-3 w-3" />— Équipe commerciale &amp; étude
       </p>
-      <div className="rounded-2xl border border-border bg-card p-4">
+      <div className="rounded-xl border border-border bg-card p-3">
         {equipe.length === 0 ? (
           <p className="text-sm italic text-muted-foreground">Aucun membre assigné.</p>
         ) : (
@@ -368,10 +368,10 @@ function EquipeSection({ equipe }: { equipe: OpportuniteFicheData["equipe"] }) {
 function DevisSection({ devis }: { devis: OpportuniteFicheData["devis"] }) {
   return (
     <section data-testid="opportunite-devis">
-      <p className="overline mb-3 flex items-center gap-2">
+      <p className="overline mb-1.5 flex items-center gap-2">
         <FileText className="h-3 w-3" />— Devis ({devis.length})
       </p>
-      <div className="rounded-2xl border border-border bg-card p-4">
+      <div className="rounded-xl border border-border bg-card p-3">
         {devis.length === 0 ? (
           <p className="text-sm italic text-muted-foreground">Aucun devis rattaché.</p>
         ) : (
@@ -407,10 +407,10 @@ function JournalSection({ commentaires }: { commentaires: OpportuniteFicheData["
   if (commentaires.length === 0) return null;
   return (
     <section data-testid="opportunite-journal">
-      <p className="overline mb-3 flex items-center gap-2">
+      <p className="overline mb-1.5 flex items-center gap-2">
         <MessageSquare className="h-3 w-3" />— Journal commercial ({commentaires.length})
       </p>
-      <ul className="space-y-2 rounded-2xl border border-border bg-card p-4">
+      <ul className="space-y-1.5 rounded-xl border border-border bg-card p-3">
         {commentaires.map((c) => (
           <li key={c.id} className="text-sm">
             <div className="text-xs text-muted-foreground">
