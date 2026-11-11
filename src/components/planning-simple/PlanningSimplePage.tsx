@@ -77,7 +77,7 @@ export function PlanningSimplePage({mode}:{mode:"atelier"|"be"}){
           const b=p?{id:p.id,affaireId:a.id,libelle:`${a.numero} · ${m.libelle}`,debut:p.date_debut,fin:p.date_fin,previsionnel:a.phase!=="signe"}:g?{...g,id:`metier:${a.id}:${m.id}`,libelle:`${a.numero} · ${m.libelle}`,proposee:true}:null;
           let staffe=0;
           if(b){const ps=(pq.data?.presences??[]).filter(p=>p.affaire_id===a.id&&p.metier_id===m.id&&p.date>=b.debut&&p.date<=b.fin);const names=nomsBarre(ps,pq.data?.personnes??[]);b.libelle+=names?` · ${names}`:"";staffe=ps.length;}
-          rows.push({id:`${a.id}:${m.id}`,libelle:`↳ ${m.libelle}`,detail:<ConfigPersonnes cle={`${a.id}:${m.id}`} affaireId={a.id} metierId={m.id} heures={h} fixe={fixe} sansLimite={m.capacite_jour==null} staffeJh={staffe}/>,barres:b?[b]:[]});
+          rows.push({id:`${a.id}:${m.id}`,libelle:`↳ ${m.libelle} · ${h} h · ${r1(h/8)} j/h`,detail:<ConfigPersonnes cle={`${a.id}:${m.id}`} affaireId={a.id} metierId={m.id} heures={h} fixe={fixe} sansLimite={m.capacite_jour==null} staffeJh={staffe}/>,barres:b?[b]:[]});
         }
         if(showBe){const hb=beH(a.id);const rs=d.roles.filter(r=>r.affaire_id===a.id&&r.date_debut&&r.date_fin);
           const noms=rs.map(r=>{const ref=d.referents.find(f=>f.employe_id===r.employe_id);return ref?`${ref.employes?.prenom??""} ${ref.employes?.nom??""}`.trim():"";}).filter(Boolean).join(", ");
@@ -129,9 +129,9 @@ function ConfigPersonnes({cle,affaireId,metierId,heures:hBase,fixe,sansLimite,st
   const heures=!fixe&&principal?r1(effectif(principal)[String(metierId)]??0):hBase;
   const [n,setN]=useState(()=>{try{return Number(localStorage.getItem(`atelier-pers:${cle}`))||1;}catch{return 1;}});
   const jh=Math.round(heures/8*10)/10;const duree=Math.ceil(heures/8/Math.max(1,n)*2)/2;
-  return <div className="space-y-1"><p>{heures} h · {jh} j/h{sansLimite?" · sans limite":""}</p>
-    <label className="flex items-center gap-1" onPointerDown={e=>e.stopPropagation()}>
-      <input type="number" min={1} max={50} aria-label="Nombre de personnes" value={n} onChange={e=>{const v=Math.max(1,Math.min(50,Number(e.target.value)||1));setN(v);try{localStorage.setItem(`atelier-pers:${cle}`,String(v));}catch{/* ignore */}}} className="h-6 w-12 rounded border border-input bg-background px-1 text-foreground"/>
-      pers. → <strong className="text-foreground">{duree} j</strong></label>
-    {jh>0&&(()=>{const pct=Math.round(staffeJh/jh*100);return <p title="Jours de présence des personnes sélectionnées sur la période ÷ jours/homme nécessaires (8 h)">Staffé : <strong className={pct>=100?"text-primary":pct>=50?"text-foreground":"text-destructive"}>{pct} %</strong> · {staffeJh}/{jh} j/h</p>;})()}</div>;
+  const pct=jh>0?Math.round(staffeJh/jh*100):null;
+  return <label className="flex flex-wrap items-center gap-1" onPointerDown={e=>e.stopPropagation()}>
+      <input type="number" min={1} max={50} aria-label="Nombre de personnes" value={n} onChange={e=>{const v=Math.max(1,Math.min(50,Number(e.target.value)||1));setN(v);try{localStorage.setItem(`atelier-pers:${cle}`,String(v));}catch{/* ignore */}}} className="h-5 w-9 rounded border border-input bg-background px-0.5 text-center text-foreground"/>
+      pers. → <strong className="text-foreground">{duree} j</strong>{sansLimite?" · sans limite":""}
+      {pct!=null&&<span title={`Staffé : ${staffeJh}/${jh} j/h sur la période (8 h/jour)`}> · <strong className={pct>=100?"text-primary":pct>=50?"text-foreground":"text-destructive"}>{pct} %</strong> ({staffeJh} j)</span>}</label>;
 }
