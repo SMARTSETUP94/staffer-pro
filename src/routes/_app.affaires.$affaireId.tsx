@@ -1,7 +1,7 @@
 import { createFileRoute, Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { requireCapability } from "@/lib/capability-guard";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Loader2, MapPin, User, Calendar, Lock, Unlock, Link2Off, Plus, Pencil } from "lucide-react";
+import { ArrowLeft, Loader2, MapPin, User, Lock, Unlock, Link2Off, Plus, Pencil } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 import { Button } from "@/components/ui/button";
@@ -321,10 +321,6 @@ function AffaireDetailLayout() {
             {affaire.lieu && (
               <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3" />{affaire.lieu}</span>
             )}
-            <span className="inline-flex items-center gap-1">
-              <Calendar className="h-3 w-3" />
-              {formatPeriode(affaire.date_debut, affaire.date_fin_prevue)}
-            </span>
           </div>
         </div>
         <div className="flex flex-col items-end gap-2">
@@ -438,12 +434,4 @@ function AffaireDetailLayout() {
       </AlertDialog>
     </div>
   );
-}
-
-function formatPeriode(start: string | null, end: string | null) {
-  if (!start && !end) return "Pas de période renseignée";
-  const fmt = (d: string) => new Date(d).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" });
-  if (start && end) return `${fmt(start)} → ${fmt(end)}`;
-  if (start) return `dès ${fmt(start)}`;
-  return end ? `→ ${fmt(end)}` : "Pas de période renseignée";
 }
