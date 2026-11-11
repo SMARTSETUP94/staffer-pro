@@ -315,7 +315,6 @@ function AffaireDetailLayout() {
             )}
             {canManageAffaires && (
               <Button size="sm" variant="ghost" className="h-6 px-2 text-xs text-primary hover:text-primary" onClick={() => setChangeClientOpen(true)}>
-                <Pencil className="h-3 w-3 mr-0.5" />
                 {affaire.client ? "Changer / renommer le client" : "Ajouter un client"}
               </Button>
             )}
