@@ -132,6 +132,6 @@ function ConfigPersonnes({cle,affaireId,metierId,heures:hBase,fixe,sansLimite,st
   const pct=jh>0?Math.round(staffeJh/jh*100):null;
   return <label className="flex flex-wrap items-center gap-1" onPointerDown={e=>e.stopPropagation()}>
       <input type="number" min={1} max={50} aria-label="Nombre de personnes" value={n} onChange={e=>{const v=Math.max(1,Math.min(50,Number(e.target.value)||1));setN(v);try{localStorage.setItem(`atelier-pers:${cle}`,String(v));}catch{/* ignore */}}} className="h-5 w-9 rounded border border-input bg-background px-0.5 text-center text-foreground"/>
-      pers. → <strong className="text-foreground">{duree} j</strong>{sansLimite?" · sans limite":""}
-      {pct!=null&&<span title={`Staffé : ${staffeJh}/${jh} j/h sur la période (8 h/jour)`}> · <strong className={pct>=100?"text-primary":pct>=50?"text-foreground":"text-destructive"}>{pct} %</strong> ({staffeJh} j)</span>}</label>;
+      <span className="text-muted-foreground">pers. →</span> <strong className="text-foreground">{duree} j</strong>{sansLimite?" · sans limite":""}
+      {pct!=null&&<span title={`Staffé : ${staffeJh}/${jh} j/h sur la période (8 h/jour)`}><span className={`rounded px-1 font-semibold ${pct>=100?"bg-success/15 text-success":pct>=50?"bg-warning/20 text-warning-foreground":pct>0?"bg-destructive/10 text-destructive":"bg-muted text-muted-foreground"}`}>{pct} %</span> <span className="text-muted-foreground">({staffeJh} j)</span></span>}</label>;
 }
