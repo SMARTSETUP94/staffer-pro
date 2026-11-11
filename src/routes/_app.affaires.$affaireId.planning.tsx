@@ -356,7 +356,7 @@ function AffairePlanningPage() {
           col={fenetre.col}
           entete={mode === "personnes" ? "Personne" : "Période"}
           editable={mode === "periodes" && !mobile && vue !== "jour" && (editAtelier || editBe || editLog)}
-          onOpen={(b) => ouvrir(b)}
+          onOpen={(b) => { if (mode === "periodes") ouvrir(b); }}
           onMove={(b, debut, fin) => ouvrir(b, debut, fin)}
         />
       )}
