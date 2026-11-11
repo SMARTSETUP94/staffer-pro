@@ -28,7 +28,6 @@ export const Route = createFileRoute("/_app/affaires/$affaireId/planning")({
   component: AffairePlanningPage,
 });
 
-const fmt = (iso: string) => new Date(`${iso}T12:00:00`).toLocaleDateString("fr-FR");
 
 /**
  * Rétroplanning de l'affaire : bureau d'étude, atelier et logistique sur une
