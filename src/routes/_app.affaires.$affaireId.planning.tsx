@@ -29,6 +29,7 @@ const fmt = (iso: string) => new Date(`${iso}T12:00:00`).toLocaleDateString("fr-
 function AffairePlanningPage() {
   const { affaireId } = Route.useParams();
   const [ouvert, setOuvert] = useState<Barre | null>(null);
+  const [vue, setVue] = useState<"jour" | "semaine" | "mois">("semaine");
 
   const atelierQ = useQuery({
     queryKey: ["affaire-planning-retro", affaireId],
@@ -105,9 +106,11 @@ function AffairePlanningPage() {
     const min = dates.reduce((a, b) => (b < a ? b : a));
     const max = dates.reduce((a, b) => (b > a ? b : a));
     const debut = addDays(min, -((dayOfWeek(min) + 6) % 7));
-    const semaines = Math.min(16, Math.max(6, Math.ceil((diffDays(debut, max) + 1) / 7)));
+    const besoin = Math.ceil((diffDays(debut, max) + 1) / 7);
+    const [mini, maxi] = vue === "jour" ? [2, 8] : vue === "semaine" ? [6, 16] : [17, 52];
+    const semaines = Math.min(maxi, Math.max(mini, besoin));
     return { debut, semaines };
-  }, [lignes]);
+  }, [lignes, vue]);
 
   if (atelierQ.isLoading) {
     return <div className="flex justify-center py-16"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>;
@@ -126,6 +129,13 @@ function AffairePlanningPage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-1.5">
+          <div className="flex rounded-md border border-border p-0.5" role="group" aria-label="Échelle">
+            {(["jour", "semaine", "mois"] as const).map((v) => (
+              <Button key={v} size="sm" variant={vue === v ? "default" : "ghost"} className="h-6 px-2 text-xs capitalize" onClick={() => setVue(v)}>
+                {v}
+              </Button>
+            ))}
+          </div>
           <Button asChild size="sm" variant="outline" className="h-7 text-xs">
             <Link to="/planning-be">Planning BE</Link>
           </Button>
@@ -148,6 +158,8 @@ function AffairePlanningPage() {
           debut={fenetre.debut}
           semaines={fenetre.semaines}
           editable={false}
+          col={vue === "jour" ? 44 : vue === "semaine" ? 20 : 6}
+          entete="Période"
           onOpen={setOuvert}
           onMove={() => undefined}
         />
