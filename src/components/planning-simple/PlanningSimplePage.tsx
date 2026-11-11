@@ -24,6 +24,7 @@ import {useCapability} from "@/hooks/use-capability";
 import {cn} from "@/lib/utils";
 import {lirePersonnesAtelier} from "@/lib/atelier-personnes.functions";
 import {nomsBarre,nomAtelier,identiteAtelier,plagesAtelier} from "@/lib/atelier-personnes";
+import {metierTexte} from "@/lib/metier-colors";
 import {PersonnesAtelier} from "./PersonnesAtelier";
 const today=()=>new Date().toISOString().slice(0,10);
 const lundi=()=>addDays(today(),-((dayOfWeek(today())+6)%7));
@@ -62,7 +63,7 @@ export function PlanningSimplePage({mode}:{mode:"atelier"|"be"}){
   const devisSig=useMemo(()=>[...devisMap.keys()].sort().map(id=>`${id}:${devisMap.get(id)?.[0]?.total??0}`).join("|"),[devisMap]);
   const {lignes,zero:zeroCount}=useMemo<{lignes:LigneBarres[];zero:number}>(()=>{
     if(!d)return {lignes:[],zero:0};
-    if(mode==="be")return {lignes:d.referents.map(r=>({id:r.employe_id,libelle:`${r.employes?.prenom??""} ${r.employes?.nom??""}`.trim(),detail:(()=>{const hs=d.roles.filter(x=>x.employe_id===r.employe_id).map(x=>beH(x.affaire_id));const h=r1(hs.reduce((a,b)=>a+b,0));return <div><p>Capacité {r.capacite_be_pct} %</p><p className="text-foreground"><strong>{h} h</strong> · {r1(h/8)} j/h BE</p></div>;})(),barres:d.roles.filter(x=>x.employe_id===r.employe_id).flatMap(x=>{const a=affaires.find(a=>a.id===x.affaire_id);if(!a||!x.date_debut||!x.date_fin)return [];return [{id:x.id,affaireId:a.id,libelle:`${a.numero} · ${a.nom} · ${beH(a.id)} h · ${r1(beH(a.id)/8)} j/h`,debut:x.date_debut,fin:x.date_fin,previsionnel:a.phase!=="signe"}];})})),zero:0};
+    if(mode==="be")return {lignes:d.referents.map(r=>({id:r.employe_id,libelle:`${r.employes?.prenom??""} ${r.employes?.nom??""}`.trim(),detail:(()=>{const hs=d.roles.filter(x=>x.employe_id===r.employe_id).map(x=>beH(x.affaire_id));const h=r1(hs.reduce((a,b)=>a+b,0));return <div><p>Capacité {r.capacite_be_pct} %</p><p className="flex items-baseline gap-x-1.5"><strong className="tabular-nums text-foreground">{h} h</strong><span className="tabular-nums">{r1(h/8)} j/h BE</span></p></div>;})(),barres:d.roles.filter(x=>x.employe_id===r.employe_id).flatMap(x=>{const a=affaires.find(a=>a.id===x.affaire_id);if(!a||!x.date_debut||!x.date_fin)return [];return [{id:x.id,affaireId:a.id,libelle:`${a.numero} · ${a.nom} · ${beH(a.id)} h · ${r1(beH(a.id)/8)} j/h`,debut:x.date_debut,fin:x.date_fin,previsionnel:a.phase!=="signe"}];})})),zero:0};
     let zero=0;
     const lignesOut=[...atelierAff].sort((a,b)=>(depart(a.id)??"9999").localeCompare(depart(b.id)??"9999")).flatMap(a=>{
       const g=globale(a);const rows:LigneBarres[]=[{id:a.id,libelle:`${a.numero} · ${a.nom}`,detail:<ResumeChantier affaireId={a.id} statut={a.atelier_date_debut?"Période validée":"Période à confirmer"}/>,barres:g?[g]:[]}];
@@ -74,20 +75,20 @@ export function PlanningSimplePage({mode}:{mode:"atelier"|"be"}){
           // Même valeur que sous la ligne : heures enregistrées, sinon devis hors objets exclus.
           const h=fixe?Number(p?.heures_prevues??0):eff?r1(eff[String(m.id)]??0):(Number(d.charges[a.id]?.heures[String(m.id)])||0);
           if(!(h>0)){zero++;if(!showZero&&!pq.data?.presences.some(p=>p.affaire_id===a.id&&p.metier_id===m.id))continue;}
-          const b=p?{id:p.id,affaireId:a.id,libelle:`${a.numero} · ${m.libelle}`,debut:p.date_debut,fin:p.date_fin,previsionnel:a.phase!=="signe"}:g?{...g,id:`metier:${a.id}:${m.id}`,libelle:`${a.numero} · ${m.libelle}`,proposee:true}:null;
+          const b=p?{id:p.id,affaireId:a.id,libelle:`${a.numero} · ${m.libelle}`,debut:p.date_debut,fin:p.date_fin,previsionnel:a.phase!=="signe",metier:m.id}:g?{...g,id:`metier:${a.id}:${m.id}`,libelle:`${a.numero} · ${m.libelle}`,proposee:true,metier:m.id}:null;
           let staffe=0;
           if(b){const ps=(pq.data?.presences??[]).filter(p=>p.affaire_id===a.id&&p.metier_id===m.id&&p.date>=b.debut&&p.date<=b.fin);const names=nomsBarre(ps,pq.data?.personnes??[]);b.libelle+=names?` · ${names}`:"";staffe=ps.length;}
-          rows.push({id:`${a.id}:${m.id}`,libelle:`↳ ${m.libelle} · ${h} h · ${r1(h/8)} j/h`,detail:<ConfigPersonnes cle={`${a.id}:${m.id}`} affaireId={a.id} metierId={m.id} heures={h} fixe={fixe} sansLimite={m.capacite_jour==null} staffeJh={staffe}/>,barres:b?[b]:[]});
+           rows.push({id:`${a.id}:${m.id}`,titre:`${m.libelle} · ${h} h · ${r1(h/8)} j/h`,libelle:<LigneMetier metierId={m.id} nom={m.libelle} heures={h}/>,detail:<ConfigPersonnes cle={`${a.id}:${m.id}`} affaireId={a.id} metierId={m.id} heures={h} fixe={fixe} sansLimite={m.capacite_jour==null} staffeJh={staffe}/>,barres:b?[b]:[]});
         }
         if(showBe){const hb=beH(a.id);const rs=d.roles.filter(r=>r.affaire_id===a.id&&r.date_debut&&r.date_fin);
           const noms=rs.map(r=>{const ref=d.referents.find(f=>f.employe_id===r.employe_id);return ref?`${ref.employes?.prenom??""} ${ref.employes?.nom??""}`.trim():"";}).filter(Boolean).join(", ");
-          rows.push({id:`${a.id}:be`,libelle:"↳ Bureau d’étude",detail:<div><p className="text-foreground">{hb} h · {r1(hb/8)} j/h{d.charges[a.id]?.estimation?" · estimation":""}</p><p>{noms||"Aucun concepteur daté"} · lecture seule (planning BE)</p></div>,barres:rs.map(r=>({id:`be:${r.id}`,affaireId:a.id,libelle:`${a.numero} · BE`,debut:r.date_debut as string,fin:r.date_fin as string,previsionnel:true}))});}
+          rows.push({id:`${a.id}:be`,titre:`Bureau d’étude · ${hb} h · ${r1(hb/8)} j/h`,libelle:<LigneMetier metierId={8} nom="Bureau d’étude" heures={hb}/>,detail:<p>{noms||"Aucun concepteur daté"} · lecture seule (planning BE){d.charges[a.id]?.estimation?" · estimation":""}</p>,barres:rs.map(r=>({id:`be:${r.id}`,affaireId:a.id,libelle:`${a.numero} · BE`,debut:r.date_debut as string,fin:r.date_fin as string,previsionnel:true,metier:8}))});}
       }
       return rows;
     });
     return {lignes:lignesOut,zero};
   },[d,mode,expanded,showZero,showBe,devisSig,selTick,pq.data]);
-  const personnesLignes:LigneBarres[]=mode==="atelier"?[...new Set((pq.data?.presences??[]).map(identiteAtelier))].map(id=>{const p=pq.data?.personnes.find(p=>p.id===id),ps=(pq.data?.presences??[]).filter(p=>identiteAtelier(p)===id);return {id,libelle:p?nomAtelier(p):"Personne",detail:`${ps.length} j/h de présence`,barres:plagesAtelier(ps).map(x=>{const a=affaires.find(a=>a.id===x.presence.affaire_id),m=d?.metiers.find(m=>m.id===x.presence.metier_id);return {id:`personne:${x.presence.id}`,affaireId:x.presence.affaire_id,libelle:`${a?.numero??""} · ${m?.libelle??""} · ${x.jours} j/h${x.presence.badge_atelier?` · ${x.presence.badge_atelier==="interim"?"Intérim":"Renfort"}`:""}`,debut:x.debut,fin:x.fin,previsionnel:a?.phase!=="signe"};})};}):[];
+  const personnesLignes:LigneBarres[]=mode==="atelier"?[...new Set((pq.data?.presences??[]).map(identiteAtelier))].map(id=>{const p=pq.data?.personnes.find(p=>p.id===id),ps=(pq.data?.presences??[]).filter(p=>identiteAtelier(p)===id);return {id,libelle:p?nomAtelier(p):"Personne",detail:`${ps.length} j/h de présence`,barres:plagesAtelier(ps).map(x=>{const a=affaires.find(a=>a.id===x.presence.affaire_id),m=d?.metiers.find(m=>m.id===x.presence.metier_id);return {id:`personne:${x.presence.id}`,affaireId:x.presence.affaire_id,libelle:`${a?.numero??""} · ${m?.libelle??""} · ${x.jours} j/h${x.presence.badge_atelier?` · ${x.presence.badge_atelier==="interim"?"Intérim":"Renfort"}`:""}`,debut:x.debut,fin:x.fin,previsionnel:a?.phase!=="signe",metier:x.presence.metier_id};})};}):[];
   const open=(b:Barre)=>{if(b.id.startsWith("be:")){toast.info("Période BE : à modifier dans le planning bureau d’étude");return;}if(b.id.startsWith("personne:")){const pr=pq.data?.presences.find(p=>`personne:${p.id}`===b.id);if(!pr)return;setEdit({barre:b,metier:pr.metier_id,employe:null,heures:""});return;}const p=d?.periodes.find(p=>p.id===b.id);const m=p?.metier_id??(b.id.startsWith("metier:")?Number(b.id.split(":").at(-1)):null);const role=d?.roles.find(r=>r.id===b.id);const a=affaires.find(a=>a.id===b.affaireId);setEdit({barre:b,metier:m,employe:role?.employe_id??null,heures:String(p?.heures_prevues??(m?d?.charges[b.affaireId]?.heures[String(m)]:a?.atelier_heures_prevues)??"")});};
   const retirer=async(e:Edition)=>{if(!window.confirm(e.metier==null?"Retirer ce chantier du planning atelier (toutes ses périodes métier) ?":"Retirer cette période métier du planning ?"))return;setSaving(true);try{const r=await supabase.rpc("planning_atelier_retirer",{_affaire:e.barre.affaireId,_metier:e.metier??undefined});if(r.error)throw r.error;await q.refetch();setEdit(null);toast.success("Retiré du planning");}catch(err){toast.error((err as {message?:string})?.message??"Suppression impossible");}finally{setSaving(false);}};
   const save=async(e:Edition)=>{
@@ -121,7 +122,15 @@ function ResumeChantier({affaireId,statut}:{affaireId:string;statut:string}){
   const {principal,effectif,somme,objExclus}=useSelectionDevis(affaireId);
   if(!principal)return <p>{statut}</p>;
   const n=principal.objets.filter(o=>o.id!=="_autres").length;const ex=(objExclus[principal.id]??[]).filter(id=>id!=="_autres").length;const h=somme(effectif(principal));
-  return <div><p>{statut}</p><p className="text-foreground"><strong>{h} h</strong> · {r1(h/8)} j/h · {n-ex}/{n} objets ({principal.numero})</p></div>;
+  return <div><p>{statut}</p><p className="flex flex-wrap items-baseline gap-x-1.5"><strong className="tabular-nums text-foreground">{h} h</strong><span className="tabular-nums">{r1(h/8)} j/h</span><span>{n-ex}/{n} objets ({principal.numero})</span></p></div>;
+}
+/** Ligne métier : nom dans la teinte du métier (celle de sa barre), heures en encre, jours/homme en gris. */
+function LigneMetier({metierId,nom,heures}:{metierId:number;nom:string;heures:number}){
+  return <span className="flex items-baseline gap-x-1.5">
+    <span className={cn("min-w-0 truncate font-medium",metierTexte(metierId))}>↳ {nom}</span>
+    <strong className="shrink-0 tabular-nums text-foreground">{r1(heures)} h</strong>
+    <span className="shrink-0 text-xs font-normal tabular-nums text-muted-foreground">{r1(heures/8)} j/h</span>
+  </span>;
 }
 function ConfigPersonnes({cle,affaireId,metierId,heures:hBase,fixe,sansLimite,staffeJh}:{cle:string;affaireId:string;metierId:number;heures:number;fixe:boolean;sansLimite:boolean;staffeJh:number}){
   const {principal,effectif}=useSelectionDevis(affaireId);
