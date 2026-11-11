@@ -46,13 +46,13 @@ export function EquipeProjetBloc({ affaireId, canEdit }: { affaireId: string; ca
   const etat: AffaireEtat = { phase: affaire?.phase ?? null, statut_opportunite: affaire?.statut_opportunite ?? null };
 
   return (
-    <section className="rounded-xl border border-border bg-card p-4">
-      <div className="mb-3 flex items-center gap-2">
+    <section className="rounded-xl border border-border bg-card px-3 py-2">
+      <div className="mb-1 flex items-center gap-2">
         <Users className="h-4 w-4 text-primary" />
         <h2 className="text-sm font-semibold">Équipe projet</h2>
       </div>
       <RolesManquantsBadges etat={etat} typologie={typologie} affectes={roles.map((r) => r.role)} />
-      <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
         {visibles.map((role) => (
           <RoleLigne key={role} affaireId={affaireId} role={role} row={roles.find((r) => r.role === role)} affaire={affaire ?? null} canEdit={canEdit} />
         ))}
@@ -80,7 +80,7 @@ function RoleLigne({ affaireId, role, row, affaire, canEdit }: {
   }
 
   return (
-    <div className="space-y-1.5 rounded-lg border border-border/60 p-2.5">
+    <div className="space-y-1 rounded-lg border border-border/60 px-2 py-1.5">
       <p className="text-xs font-medium text-muted-foreground">{PROJET_ROLE_LABELS[role]}</p>
       <EmployeRoleCombobox role={role} value={row?.employe_id ?? null} disabled={!canEdit || saving}
         onChange={(id) => { if (id !== (row?.employe_id ?? null)) void save({ employeId: id }); }} />

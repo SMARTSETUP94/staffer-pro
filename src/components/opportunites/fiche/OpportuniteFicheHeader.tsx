@@ -38,7 +38,7 @@ export function OpportuniteFicheHeader({ affaire, canSign, onSign }: Props) {
   const isSigne = affaire.phase === "signe";
 
   return (
-    <div className="space-y-3" data-testid="opportunite-fiche-header">
+    <div className="space-y-2" data-testid="opportunite-fiche-header">
       {canSeePipeline && <div className="flex items-center gap-2">
         <Button asChild variant="ghost" size="sm" className="h-7 px-2">
           <Link to="/opportunites">
@@ -48,7 +48,7 @@ export function OpportuniteFicheHeader({ affaire, canSign, onSign }: Props) {
         </Button>
       </div>}
 
-      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border pb-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-baseline gap-2">
             <span className="font-mono text-base font-bold text-primary">
@@ -96,7 +96,7 @@ export function OpportuniteFicheHeader({ affaire, canSign, onSign }: Props) {
           </Button>
         )}
       </div>
-      <div className="mt-3"><DevisSigneBandeau affaireId={affaire.id} /></div>
+      <div><DevisSigneBandeau affaireId={affaire.id} /></div>
     </div>
   );
 }

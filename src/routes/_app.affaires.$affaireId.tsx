@@ -229,12 +229,12 @@ function AffaireDetailLayout() {
         </div>
       )}
       {enteteVisible && <>
-      <PageBreadcrumbs steps={breadcrumbSteps} className="mb-3" />
+      <PageBreadcrumbs steps={breadcrumbSteps} className="mb-1" />
       <Link to="/affaires" className="inline-flex items-center text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground sm:hidden">
         <ArrowLeft className="mr-1 h-3 w-3" /> Affaires
       </Link>
 
-      <div className="mt-3 flex flex-col gap-3 border-b border-border pb-6 sm:flex-row sm:items-end sm:justify-between">
+      <div className="mt-1 flex flex-col gap-2 border-b border-border pb-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <div className="flex items-center gap-1">
             <p className="overline">— {affaire.numero}</p>
@@ -251,8 +251,8 @@ function AffaireDetailLayout() {
             )}
           </div>
 
-          <h1 className="mt-1 text-3xl font-bold tracking-tight text-foreground">{affaire.nom}</h1>
-          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">{affaire.nom}</h1>
+          <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
             {affaire.client && (
               affaire.client_id ? (
                 <div className="inline-flex items-center gap-1">
@@ -337,15 +337,15 @@ function AffaireDetailLayout() {
       </div>
 
       {/* KPI Bar Bloc 5 — gated par capability affaire.kpi.view */}
-      <div className="mt-4"><EquipeProjetBloc affaireId={affaire.id} canEdit={canEditRoles} /></div>
+      <div className="mt-3"><EquipeProjetBloc affaireId={affaire.id} canEdit={canEditRoles} /></div>
       <CapabilityGuard cap="affaire.kpi.view">
-        <div className="mt-4">
+        <div className="mt-2">
           <AffaireKpiBar affaireId={affaire.id} />
         </div>
       </CapabilityGuard>
 
       {/* Onglets */}
-      <nav className="mt-4 flex gap-1 border-b border-border overflow-x-auto">
+      <nav className="mt-3 flex gap-1 border-b border-border overflow-x-auto">
 
         {tabs.map((t) => (
           <Link
