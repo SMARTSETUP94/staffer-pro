@@ -75,8 +75,9 @@ export function PlanningSimplePage({mode}:{mode:"atelier"|"be"}){
           const h=fixe?Number(p?.heures_prevues??0):eff?r1(eff[String(m.id)]??0):(Number(d.charges[a.id]?.heures[String(m.id)])||0);
           if(!(h>0)){zero++;if(!showZero&&!pq.data?.presences.some(p=>p.affaire_id===a.id&&p.metier_id===m.id))continue;}
           const b=p?{id:p.id,affaireId:a.id,libelle:`${a.numero} · ${m.libelle}`,debut:p.date_debut,fin:p.date_fin,previsionnel:a.phase!=="signe"}:g?{...g,id:`metier:${a.id}:${m.id}`,libelle:`${a.numero} · ${m.libelle}`,proposee:true}:null;
-          if(b){const ps=(pq.data?.presences??[]).filter(p=>p.affaire_id===a.id&&p.metier_id===m.id&&p.date>=b.debut&&p.date<=b.fin);const names=nomsBarre(ps,pq.data?.personnes??[]);b.libelle+=names?` · ${names}`:"";}
-          rows.push({id:`${a.id}:${m.id}`,libelle:`↳ ${m.libelle}`,detail:<ConfigPersonnes cle={`${a.id}:${m.id}`} affaireId={a.id} metierId={m.id} heures={h} fixe={fixe} sansLimite={m.capacite_jour==null}/>,barres:b?[b]:[]});
+          let staffe=0;
+          if(b){const ps=(pq.data?.presences??[]).filter(p=>p.affaire_id===a.id&&p.metier_id===m.id&&p.date>=b.debut&&p.date<=b.fin);const names=nomsBarre(ps,pq.data?.personnes??[]);b.libelle+=names?` · ${names}`:"";staffe=ps.length;}
+          rows.push({id:`${a.id}:${m.id}`,libelle:`↳ ${m.libelle}`,detail:<ConfigPersonnes cle={`${a.id}:${m.id}`} affaireId={a.id} metierId={m.id} heures={h} fixe={fixe} sansLimite={m.capacite_jour==null} staffeJh={staffe}/>,barres:b?[b]:[]});
         }
         if(showBe){const hb=beH(a.id);const rs=d.roles.filter(r=>r.affaire_id===a.id&&r.date_debut&&r.date_fin);
           const noms=rs.map(r=>{const ref=d.referents.find(f=>f.employe_id===r.employe_id);return ref?`${ref.employes?.prenom??""} ${ref.employes?.nom??""}`.trim():"";}).filter(Boolean).join(", ");
@@ -122,7 +123,7 @@ function ResumeChantier({affaireId,statut}:{affaireId:string;statut:string}){
   const n=principal.objets.filter(o=>o.id!=="_autres").length;const ex=(objExclus[principal.id]??[]).filter(id=>id!=="_autres").length;const h=somme(effectif(principal));
   return <div><p>{statut}</p><p className="text-foreground"><strong>{h} h</strong> · {r1(h/8)} j/h · {n-ex}/{n} objets ({principal.numero})</p></div>;
 }
-function ConfigPersonnes({cle,affaireId,metierId,heures:hBase,fixe,sansLimite}:{cle:string;affaireId:string;metierId:number;heures:number;fixe:boolean;sansLimite:boolean}){
+function ConfigPersonnes({cle,affaireId,metierId,heures:hBase,fixe,sansLimite,staffeJh}:{cle:string;affaireId:string;metierId:number;heures:number;fixe:boolean;sansLimite:boolean;staffeJh:number}){
   const {principal,effectif}=useSelectionDevis(affaireId);
   // Sans période saisie, les heures suivent la sélection d'objets du devis principal.
   const heures=!fixe&&principal?r1(effectif(principal)[String(metierId)]??0):hBase;
@@ -131,5 +132,6 @@ function ConfigPersonnes({cle,affaireId,metierId,heures:hBase,fixe,sansLimite}:{
   return <div className="space-y-1"><p>{heures} h · {jh} j/h{sansLimite?" · sans limite":""}</p>
     <label className="flex items-center gap-1" onPointerDown={e=>e.stopPropagation()}>
       <input type="number" min={1} max={50} aria-label="Nombre de personnes" value={n} onChange={e=>{const v=Math.max(1,Math.min(50,Number(e.target.value)||1));setN(v);try{localStorage.setItem(`atelier-pers:${cle}`,String(v));}catch{/* ignore */}}} className="h-6 w-12 rounded border border-input bg-background px-1 text-foreground"/>
-      pers. → <strong className="text-foreground">{duree} j</strong></label></div>;
+      pers. → <strong className="text-foreground">{duree} j</strong></label>
+    {jh>0&&(()=>{const pct=Math.round(staffeJh/jh*100);return <p title="Jours de présence des personnes sélectionnées sur la période ÷ jours/homme nécessaires (8 h)">Staffé : <strong className={pct>=100?"text-primary":pct>=50?"text-foreground":"text-destructive"}>{pct} %</strong> · {staffeJh}/{jh} j/h</p>;})()}</div>;
 }
