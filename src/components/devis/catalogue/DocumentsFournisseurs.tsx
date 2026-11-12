@@ -188,7 +188,8 @@ function DocumentApercu({ r, fichier, onClose, onDone }: { r: ResultatLecture; f
         {r.doublon && <p className="rounded-md border border-destructive p-2 text-sm text-destructive">
           Ce document a déjà été déposé le {dt(r.doublon.depose_le)}{r.doublon.numero && ` (n° ${r.doublon.numero})`} : il ne sera pas recréé.</p>}
         <div className="grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
-          <div className="min-h-[300px] overflow-hidden rounded-md border bg-muted">
+          <div className="min-h-[300px] space-y-1 overflow-hidden rounded-md border bg-muted">
+            <a href={url} target="_blank" rel="noopener" className="block px-2 pt-1 text-xs underline">Ouvrir le document dans un onglet</a>
             {fichier.type === "application/pdf" || /\.pdf$/i.test(fichier.name)
               ? <iframe title="Document déposé" src={url} className="h-[60vh] w-full" />
               : <img src={url} alt="Document déposé" className="w-full object-contain" />}
