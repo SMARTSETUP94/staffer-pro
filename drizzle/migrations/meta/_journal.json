@@ -855,6 +855,13 @@
       "when": 1794484456006,
       "tag": "0121_fermeture_acces_fonctions",
       "breakpoints": true
+    },
+    {
+      "idx": 122,
+      "version": "7",
+      "when": 1794487433048,
+      "tag": "0122_documents_fournisseurs",
+      "breakpoints": true
     }
   ]
 }

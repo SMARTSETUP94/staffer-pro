@@ -1,4 +1,7 @@
 import { useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { lienDocument } from "@/lib/server-fns/documents-fournisseurs.functions";
+import { ecartPct, TYPE_DOCUMENT_LABEL, type TypeDocument } from "@/lib/devis/documents-fournisseurs";
 import { Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -17,6 +20,8 @@ type Prop = {
   produit: string; ref: string | null; unite: string; format_texte: string | null; prix_achat: number | null; date_tarif: string | null;
   propose_par: string | null; propose_le: string; devis_id: string | null; devis_numero: string | null; affaire_id: string | null;
   decision_par: string | null; decision_le: string | null; motif_refus: string | null; remplace_materiau_id: string | null; meme_ref: string | null;
+  document_id?: string | null; document_numero?: string | null; document_type?: string | null; document_date?: string | null;
+  document_valide_jusquau?: string | null; type_prix?: "reference" | "ponctuel"; valide_jusquau?: string | null; prix_actuel?: number | null;
 };
 type Proche = { id: string; fournisseur: string | null; produit: string; ref: string | null; unite: string; prix_achat: number | null; date_tarif: string | null; meme_ref: boolean };
 
@@ -73,7 +78,13 @@ export function PrixProposes({ couts }: { couts: boolean }) {
                   Proposé par {p.propose_par ?? "—"} le {dt(p.propose_le)}
                   {p.devis_id && p.affaire_id && <> · devis <Link to="/affaires/$affaireId/devis-staffing/$devisId" params={{ affaireId: p.affaire_id, devisId: p.devis_id }} className="underline">{p.devis_numero ?? "ouvrir"}</Link></>}
                   {p.devis_id && !p.affaire_id && <> · devis {p.devis_numero ?? ""}</>}
+                  {p.document_id && <> · {TYPE_DOCUMENT_LABEL[(p.document_type ?? "facture") as TypeDocument]} {p.document_numero ?? ""} <VoirDocument id={p.document_id} /></>}
                 </p>
+                {couts && p.statut === "propose" && p.prix_actuel != null && (
+                  <div className="text-xs">Prix actuel au catalogue {eur(p.prix_actuel)} → {eur(p.prix_achat)}
+                    {ecartPct(p.prix_actuel, p.prix_achat) != null && <Badge variant="outline" className="ml-1">{(ecartPct(p.prix_actuel, p.prix_achat)! > 0 ? "+" : "") + ecartPct(p.prix_actuel, p.prix_achat)!.toLocaleString("fr-FR")} %</Badge>}</div>
+                )}
+                {p.statut === "valide" && p.type_prix === "ponctuel" && <p className="text-xs">Prix ponctuel jusqu'au {dt(p.valide_jusquau ?? null)}</p>}
                 {p.statut !== "propose" && <p className="text-xs">{p.statut === "valide" ? "Validé" : "Refusé"} par {p.decision_par ?? "—"} le {dt(p.decision_le)}{p.motif_refus && <> — motif : {p.motif_refus}</>}{p.remplace_materiau_id && " · a remplacé une ligne existante"}</p>}
               </div>
               <div className="flex shrink-0 flex-wrap items-center gap-2">
@@ -104,11 +115,12 @@ function ValiderDialog({ p, couts, onClose, onDone }: { p: Prop; couts: boolean;
   });
   const proches = useQuery({
     queryKey: ["materiau-proches", p.id],
-    queryFn: async () => { const { data, error } = await supabase.rpc("materiau_proposition_proches", { _id: p.id }); if (error) throw error; return (data ?? []) as unknown as Proche[]; },
+    queryFn: async () => { const { data, error } = await supabase.rpc("materiau_proposition_proches", { _id: p.id }); if (error) throw error; const l = (data ?? []) as unknown as Proche[]; return l.filter((x, i) => l.findIndex((y) => y.id === x.id) === i); },
   });
   const [f, setF] = useState<ValidationForm>({
     fournisseur_id: p.fournisseur_id ?? "", nouveau_fournisseur: "", produit: p.produit, ref: p.ref ?? "", unite: p.unite,
     prix_achat: p.prix_achat == null ? "" : String(p.prix_achat), date_tarif: p.date_tarif ?? "", mode: "",
+    type_prix: "reference", valide_jusquau: p.document_valide_jusquau ?? "",
   });
   const [creer, setCreer] = useState(false);
   const [choixRequis, setChoixRequis] = useState(!!p.meme_ref);
@@ -118,7 +130,7 @@ function ValiderDialog({ p, couts, onClose, onDone }: { p: Prop; couts: boolean;
   const valider = async () => {
     const err = erreurValidation(creer ? f : { ...f, nouveau_fournisseur: "" }, couts, p.prix_achat);
     if (err) return toast.error(err);
-    if (choixRequis && !f.mode) return toast.error("Choisissez « Remplacer » ou « Ajouter ».");
+    if (choixRequis && f.type_prix !== "ponctuel" && !f.mode) return toast.error("Choisissez « Remplacer » ou « Ajouter ».");
     setBusy(true);
     const { error } = await supabase.rpc("materiau_proposition_valider", { _id: p.id, _p: payloadValidation(creer ? f : { ...f, nouveau_fournisseur: "" }, couts) as never });
     setBusy(false);
@@ -156,7 +168,13 @@ function ValiderDialog({ p, couts, onClose, onDone }: { p: Prop; couts: boolean;
             {couts && <Input aria-label="Prix d'achat" placeholder="Prix d'achat €" inputMode="decimal" value={f.prix_achat} onChange={set("prix_achat")} />}
             <Input aria-label="Date du tarif" type="date" value={f.date_tarif} onChange={set("date_tarif")} />
           </div>
-          {choixRequis && (
+          <div className="space-y-1 rounded-md border p-2">
+            <p className="font-medium">Type de prix</p>
+            <label className="flex items-center gap-2"><input type="radio" name="type_prix" checked={f.type_prix !== "ponctuel"} onChange={() => setF({ ...f, type_prix: "reference" })} />Prix de référence (sert à tous les devis suivants)</label>
+            <label className="flex items-center gap-2"><input type="radio" name="type_prix" checked={f.type_prix === "ponctuel"} onChange={() => setF({ ...f, type_prix: "ponctuel", mode: "" })} />Prix ponctuel (offre limitée dans le temps, ne remplace jamais le prix de référence)</label>
+            {f.type_prix === "ponctuel" && <Input aria-label="Valable jusqu'au" type="date" value={f.valide_jusquau ?? ""} onChange={(e) => setF({ ...f, valide_jusquau: e.target.value })} />}
+          </div>
+          {choixRequis && f.type_prix !== "ponctuel" && (
             <div className="space-y-1 rounded-md border p-2">
               <p className="font-medium">Une ligne active existe déjà avec ce fournisseur et cette référence</p>
               <label className="flex items-center gap-2"><input type="radio" name="mode" checked={f.mode === "remplacer"} onChange={() => setF({ ...f, mode: "remplacer" })} />Remplacer le prix de la ligne existante (l'ancienne est désactivée, jamais supprimée)</label>
@@ -179,6 +197,13 @@ function ValiderDialog({ p, couts, onClose, onDone }: { p: Prop; couts: boolean;
       </DialogContent>
     </Dialog>
   );
+}
+
+function VoirDocument({ id }: { id: string }) {
+  const lien = useServerFn(lienDocument);
+  return <button type="button" className="underline" onClick={async () => {
+    try { const { url } = await lien({ data: { id } }); window.open(url, "_blank", "noopener"); } catch (e) { toast.error((e as Error).message); }
+  }}>voir</button>;
 }
 
 function RefuserDialog({ p, onClose, onDone }: { p: Prop; onClose: () => void; onDone: () => void }) {
