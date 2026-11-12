@@ -14,6 +14,8 @@ import { ecartTauxPct, sousArbre, venteUnitaireLibre, venteUnitaireMateriau, typ
 import { CoutsBloc } from "./CoutsBloc";
 import { TYPE_LABEL, eur, type DevisData, type Ligne, type Heure, type Materiau, type Libre } from "./api";
 import { MateriauAjoutDialog } from "./MateriauAjoutDialog";
+import { PropositionCatalogueDialog } from "./PropositionCatalogueDialog";
+import { STATUT_LABEL, peutProposer, type PropositionStatut } from "@/lib/devis/materiaux-propositions";
 
 type Call = <T = unknown>(fn: string, args: Record<string, unknown>, opts?: { silent?: boolean; refresh?: boolean }) => Promise<T | null>;
 type Patch = (mut: (d: DevisData) => DevisData) => void;
@@ -78,6 +80,22 @@ export function ObjetPanel({ data, ligne, montants, calc, readOnly, call, patch,
     enabled: !readOnly,
     queryFn: async () => (await supabase.rpc("devis_materiaux_ecarts", { _devis_id: devisId })).data ?? [],
   });
+  const propositions = useQuery({
+    queryKey: ["devis-propositions", devisId],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("devis_materiaux_propositions_etat", { _devis_id: devisId });
+      if (error) throw error;
+      return new Map((data ?? []).map((x) => [x.devis_materiau_id, x.statut as PropositionStatut]));
+    },
+  });
+  const [aProposer, setAProposer] = useState<Materiau | null>(null);
+  const proposer = async (id: string, p: Record<string, string>) => {
+    const { error } = await supabase.rpc("materiau_proposer", { _devis_materiau_id: id, _p: p as never });
+    if (error) { toast.error(error.message); return false; }
+    toast.success("Prix proposé au catalogue : un administrateur le validera.");
+    void propositions.refetch();
+    return true;
+  };
   const photoUrls = useQuery({
     queryKey: ["devis-photos-urls", devisId, data.photos.map((p) => p.id).join(",")],
     enabled: data.photos.length > 0,
@@ -359,7 +377,9 @@ export function ObjetPanel({ data, ligne, montants, calc, readOnly, call, patch,
                       <td className="max-w-64">
                         <div className="truncate">{m.designation}</div>
                         <div className="text-xs text-muted-foreground">{[m.fournisseur, m.ref, m.unite, m.date_tarif && `tarif ${new Date(m.date_tarif).toLocaleDateString("fr-FR")}`].filter(Boolean).join(" · ")}
-                          {m.propose_catalogue && <Badge variant="outline" className="ml-1 text-[10px]">proposé au catalogue</Badge>}</div>
+                          {(() => { const st = propositions.data?.get(m.id); return st
+                            ? <Badge variant={st === "refuse" ? "destructive" : st === "valide" ? "secondary" : "outline"} className="ml-1 text-[10px]">{STATUT_LABEL[st]}</Badge>
+                            : peutProposer(m, st, readOnly) && propositions.isSuccess && <button type="button" className="ml-1 text-[11px] text-primary underline" onClick={() => setAProposer(m)}>Proposer au catalogue</button>; })()}</div>
                         {ec && !readOnly && (
                           <button type="button" className="flex items-center gap-1 text-xs text-destructive" onClick={async () => { await call("devis_materiau_maj_prix", { _devis_materiau_id: m.id }); void ecarts.refetch(); }}>
                             <AlertTriangle className="h-3 w-3" />Prix catalogue modifié depuis{couts && ec.nouveau_prix != null ? ` (${eur(ec.nouveau_prix)})` : ""} — <RefreshCw className="h-3 w-3" />mettre à jour
@@ -470,7 +490,14 @@ export function ObjetPanel({ data, ligne, montants, calc, readOnly, call, patch,
       )}
 
       <MateriauAjoutDialog open={matOpen} onOpenChange={setMatOpen} devisId={devisId}
-        onAdd={async (p) => { await call("devis_materiau_enregistrer", { _ligne_id: ligne.id, _m: p }); void ecarts.refetch(); }} />
+        onAdd={async ({ proposition, ...p }) => {
+          const id = await call<string>("devis_materiau_enregistrer", { _ligne_id: ligne.id, _m: p });
+          if (id && proposition) await proposer(id, { fournisseur: p.fournisseur ?? "", ...proposition });
+          void ecarts.refetch();
+        }} />
+      {aProposer && <PropositionCatalogueDialog open onOpenChange={(o) => { if (!o) setAProposer(null); }} designation={aProposer.designation}
+        fournisseur={aProposer.fournisseur} ref={aProposer.ref} couts={couts} prix={aProposer.prix_achat}
+        onSubmit={(p) => proposer(aProposer.id, p)} />}
     </div>
   );
 }
