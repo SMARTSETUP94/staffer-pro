@@ -1,53 +1,86 @@
-# Prix proposés au catalogue : corrections du texte de migration (v2 à relire)
+# Lot « Fermeture des accès aux fonctions de la base »
 
-Rien n'est appliqué ni publié. Une fois ce plan accepté, j'écris `prix-proposes-catalogue-migration_v2.sql` avec les corrections ci-dessous, puis je m'arrête jusqu'à l'accord de Gabin. Aucun autre changement n'est apporté au texte v1.
+Restrictions uniquement. Aucune donnée, aucun devis, aucun taux, aucune politique de `employes` touchés. Rien publié.
 
-## 1. Règles en base : les valeurs vides
-- **Règle « fournisseur requis » : défaut confirmé.** Avec un statut vide et un fournisseur vide, la règle vaut `NULL`, et une règle de ce type accepte `NULL`. Correction :
-  `CHECK (coalesce(proposition_statut,'') IN ('propose','refuse') OR fournisseur_id IS NOT NULL)`.
-- J'ai relu les trois autres règles :
-  - **Statut** : `proposition_statut IS NULL OR proposition_statut IN (...)`. Le vide est voulu (ligne importée) ; une autre valeur est refusée. Aucun changement.
-  - **Proposition inactive** : `coalesce(...) NOT IN (...) OR NOT actif`. `actif` est obligatoire et le `coalesce` ne renvoie jamais vide, donc la règle ne peut pas valoir `NULL`. Aucun changement.
-  - **Motif de refus** : `IS DISTINCT FROM` et `coalesce(trim(...),'')` ne renvoient jamais `NULL`. Aucun changement.
-- **Nouvelle règle (point 2)** : `CHECK (proposition_statut IS DISTINCT FROM 'valide' OR coalesce(prix_achat_net,0) > 0)`. Avec le `coalesce`, un prix vide est bien refusé.
-- **Avant d'appliquer**, je vérifie que les 31 962 lignes actuelles respectent toutes les règles : aucune ligne sans fournisseur, aucune ligne avec un statut.
-- **Essai après application**, dans un bloc annulé à la fin, sans rien laisser en base :
-  - une ligne sans statut ni fournisseur doit être refusée ;
-  - une ligne validée avec un prix vide, puis avec un prix nul, doit être refusée ;
-  - une proposition active doit être refusée ;
-  - un refus sans motif doit être refusé.
+## État relu le 12/11/2026 (avant ce plan)
 
-## 2. Validation sans prix
-`materiau_proposition_valider` refuse la validation tant que le prix n'est pas strictement positif, avec le message : « Prix d'achat manquant ou nul : saisissez un prix supérieur à 0 avant de valider ». La règle en base du point 1 empêche le même cas par tout autre chemin.
+- 292 fonctions SECURITY DEFINER dans `public` ; **101 exécutables par `anon`**, dont 71 parce que PUBLIC a le droit (ACL vide ou PUBLIC explicite). 25 d'entre elles sont des fonctions de trigger.
+- `pg_cron` : schéma non lisible depuis mon accès ; la tâche quotidienne 3h UTC sur `audit_staffing_divergence` est connue par le code et la documentation interne, à confirmer par lecture admin à l'étape 1.
+- Aucune politique applicable à `anon` ou `public` n'appelle une fonction d'aide (requête sur `pg_policies` : 0 ligne). Retirer `anon` ne casse donc aucune politique.
+- Le rôle `mcp_business_rls` est bien membre de `authenticated` : tout ce qui reste à `authenticated` lui reste.
+- Le formulaire /demande-logistique passe par une fonction serveur ; les fonctions `demande_log_public_*` ne sont déjà **pas** exécutables par `anon`.
 
-## 3. Effet sur le devis quand on propose un prix (vérifié)
-Écrire `propose_catalogue` déclenche `devis_marquer_humain_enfant` :
-- **Repris par un humain : oui.** La date et l'auteur de la dernière modification humaine du devis sont mis à jour, ce qui retire à Claude le droit de compléter ce devis en autonomie.
-- **Date de modification du devis : oui**, par le déclencheur `updated_at` du devis.
-- **Recalcul : non.** Les totaux sont calculés à la lecture, et le montant figé ne change qu'à la validation. Aucun total ne change.
+## Tableau des fonctions des points 1 et 2
 
-**Correction proposée : ne plus écrire `propose_catalogue` du tout.** Le badge lit déjà l'état réel dans les propositions (`devis_materiaux_propositions_etat`), et l'unicité de la ligne d'origine empêche une double proposition. Proposer un prix ne touche donc plus aucune ligne de devis : ni marquage « repris », ni date modifiée. C'est plus simple et plus sûr qu'une exception dans le déclencheur. La colonne existante reste en place, seulement écrite par la case actuelle de création, comme aujourd'hui.
+| Fonction | Appelants trouvés | Contrôle retenu |
+|---|---|---|
+| `detect_client_duplicates(real)` | page `/clients/admin/fusion` (garde `clients.merge`) | `anon` retiré ; erreur si `current_user_has_capability('clients.merge')` est faux. Passage de SQL à plpgsql (`RETURN QUERY`), même requête. |
+| `mes_affaires_chef(uuid)` | `use-mes-affaires-chef.ts` (toujours l'employé du connecté), formulaire Staffer mobile | `anon` retiré ; résultat seulement si l'employé passé est celui de l'utilisateur connecté, ou si admin. Sinon liste vide. |
+| `sync_equipes_from_plan` (2 versions) | `staffing-publish.functions.ts` (fonction serveur connectée, client de l'utilisateur) | `anon` retiré ; si `auth.uid()` présent : erreur sauf `user_can_write_affaire(affaire du plan)` et capacité `section.planning_fab` (celle de la page plan). Sans `auth.uid()` (service, trigger) : inchangé. |
+| `detect_equipe_overrides(uuid)` | même fonction serveur | même contrôle que ci-dessus (lecture du plan). |
+| `objet_journal_log(...)` | uniquement 6 fonctions de trigger SECURITY DEFINER (`trg_*_journal`) | EXECUTE retiré à `anon`, `authenticated`, PUBLIC ; gardé à `service_role`. Les triggers l'appellent en propriétaire : non affectés. |
+| `refresh_affaire_equipe_historique(uuid)` | `trg_aeh_on_affaire`, `trg_aeh_on_assignation` (triggers) ; aucun écran | EXECUTE retiré à `anon`, `authenticated`, PUBLIC ; `service_role` gardé. Corps inchangé. |
+| `audit_staffing_divergence()` | pg_cron ; `run_staffing_divergence_audit()` (déjà réservé admin, appelé par l'onglet Cohérence) | EXECUTE retiré à `anon`, `authenticated`, PUBLIC ; cron (propriétaire) et la fonction admin continuent. |
+| `get_user_effective_caps(uuid)` | fenêtre admin `UserCapsDebugModal`, `admin-actions.ts` (clé service) | `anon` retiré ; erreur sauf soi-même ou admin ; sans `auth.uid()` (service) inchangé. |
+| `etape_prete(uuid)`, `etapes_pretes_batch(uuid[])` | tableau `/atelier` (`use-atelier-board.ts`), `etapes_pretes_batch` appelle `etape_prete` | `anon` retiré ; erreur sauf accès à la page atelier (capacité de la garde de `/atelier`, relue à l'étape 1) ou admin. Ne renvoie que des vrais/faux. |
 
-**Conséquence pour la case « Proposer au catalogue » à la création :** elle enregistre la ligne comme aujourd'hui, ce qui marque déjà le devis comme modifié par un humain, puis appelle `materiau_proposer`, qui n'ajoute aucune écriture sur le devis.
+Règle commune : `auth.uid()` vide n'est accepté que parce que `anon` et PUBLIC perdent le droit ; seuls le propriétaire (triggers, cron) et `service_role` peuvent alors appeler.
 
-## 4. Temps de réponse de la liste (mesuré en lecture, avec les 64 désignations réelles)
-| Méthode | Temps |
-|---|---|
-| Comparaison sur toutes les lignes actives, comme dans la v1 | **54 s** |
-| Opérateur d'index sur `search_norm`, pour les 64 propositions à la fois | 9 s |
-| Opérateur d'index, pour une seule proposition | **54 ms** |
+## Point 3 — liste explicite gardée pour `anon`
 
-**Correction :**
-- `materiaux_propositions_lister` ne garde que la correspondance exacte « même fournisseur + même référence », qui utilise l'index existant (rapide).
-- Une nouvelle fonction, `materiau_proposition_proches(_id)`, réservée à l'admin et qui masque les prix sans `devis.couts`, cherche les 3 lignes proches. Elle utilise l'index sur `search_norm` (`%`, puis tri par ressemblance) et n'est appelée que lorsque l'admin ouvre une proposition.
-- Le temps réel de la liste avec les 64 propositions sera mesuré après application et donné dans le compte rendu.
+Établie par le code (pages `/dispos`, `/demande-logistique`, connexion, mot de passe, consentement OAuth) :
 
-## 5. Remplissage de la recherche (vérifié)
-`trg_materiaux_search_text` s'exécute avant chaque insertion, quelles que soient les colonnes : `search_text`, `search_norm` et `produit_norm` sont donc remplis dès l'insertion d'une proposition. Ils sont recalculés lorsque la validation corrige la désignation, la référence, le format ou les dimensions.
+- `dispos_public_semaine()`
+- `dispos_public_identifier(text,text,text,text[],text[],text)`
+- `dispos_public_moi(text)`
+- `dispos_public_enregistrer(text,jsonb,text)`
+- `dispos_public_maj_qualifs(text,text[],text[],text)`
 
-Les index de recherche ne couvrent que les lignes actives : une proposition n'y entre qu'au moment de sa validation. Après application, je confirmerai ce point en base sur une proposition d'essai.
+Rien d'autre : connexion et mot de passe passent par l'authentification, pas par des fonctions ; `is_feature_flag_enabled` n'est appelé qu'une fois connecté.
 
-## Suite
-1. Écrire la v2 du texte avec ces corrections, sans rien appliquer.
-2. Attendre l'accord de Gabin, puisque le texte retire l'obligation sur `fournisseur_id`.
-3. Après son accord : appliquer, lancer les essais du point 1, puis construire les écrans, les tests et le parcours prévus dans le plan approuvé.
+Pour les 96 autres : `REVOKE EXECUTE FROM PUBLIC, anon` puis `GRANT EXECUTE TO authenticated, service_role` (sauf les 3 réservées ci-dessus), pour ne rien retirer à l'application connectée ni au connecteur Claude.
+
+## Fonctions citées dans les politiques (restent à `authenticated`)
+
+`can_saisie_on_affaire`, `current_user_has_capability`, `current_user_is_chef_on_affaire`, `devis_peut_lire`, `fab_objet_affaire_id`, `has_role`, `is_admin`, `is_chef_global`, `is_chef_or_admin`, `is_devis_termine`, `is_feature_flag_enabled`, `objet_matches_user_metier`, `planning_atelier_ecriture_autorisee`, `planning_terrain_ecrire_autorise`, `planning_terrain_lire_autorise`, `user_can_write_affaire`, `user_cap_scope`, `user_has_affaire_access`, `user_has_cap`, `user_has_capability`, `user_is_mentioned_on_affaire`, `user_is_on_fab_objet` (plus `auth.uid`, `auth.jwt`, `storage.foldername`, hors périmètre). La migration leur redonne explicitement EXECUTE à `authenticated` et une requête de contrôle le confirme.
+
+## Étapes
+
+1. Relire, juste avant, la définition complète des 11 fonctions redéfinies, les capacités `clients.merge` et celle de `/atelier`, la signature de `user_can_write_affaire`, et la tâche cron (lecture admin). Écrire le fichier `/mnt/documents/fermeture-acces-fonctions-migration.sql` avec, pour chaque fonction, le texte **avant** (commentaire) et **après**, plus le retour arrière. **Arrêt pour relecture** — rien n'est appliqué avant votre accord.
+2. Après accord : appliquer la migration.
+3. Contrôles en base : liste des SECURITY DEFINER encore à `anon` (attendu : les 5) ; fonctions des politiques exécutables par `authenticated` et `mcp_business_rls` ; `detect_client_duplicates` appelé avec la clé publique sans connexion (refus), compte non admin (refus), admin (résultat).
+4. Parcours à l'écran en session admin : fusion des clients, publication d'un plan d'essai, fiche objet et journal, onglet Cohérence ; sans connexion : `/dispos` et `/demande-logistique` ; connexion et déconnexion ; si un compte chef existe, ses chantiers via `mes_affaires_chef`.
+5. Lancer les tests existants. Compte rendu séparant écran / base / tests. Données d'essai effacées.
+
+## Détails techniques
+
+Forme de la migration (texte complet produit à l'étape 1) :
+
+```sql
+-- Point 3 : toutes les SECURITY DEFINER de public sauf la liste explicite
+REVOKE EXECUTE ON FUNCTION public.<f>(<args>) FROM PUBLIC, anon;   -- une ligne par fonction, listée en clair
+GRANT  EXECUTE ON FUNCTION public.<f>(<args>) TO authenticated, service_role;
+
+-- Fonctions internes
+REVOKE EXECUTE ON FUNCTION public.objet_journal_log(uuid,objet_journal_event_type,uuid,integer,uuid,jsonb) FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.refresh_affaire_equipe_historique(uuid) FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.audit_staffing_divergence() FROM PUBLIC, anon, authenticated;
+GRANT  EXECUTE ON FUNCTION ... TO service_role;
+
+-- Exemple de garde (detect_client_duplicates)
+CREATE OR REPLACE FUNCTION public.detect_client_duplicates(min_similarity real DEFAULT 0.5)
+ RETURNS TABLE(... colonnes inchangées ...) LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path TO 'public'
+AS $function$
+BEGIN
+  IF NOT public.current_user_has_capability('clients.merge') THEN
+    RAISE EXCEPTION 'Accès refusé' USING ERRCODE = '42501';
+  END IF;
+  RETURN QUERY <requête actuelle inchangée>;
+END $function$;
+```
+
+Les gardes de `sync_equipes_from_plan`, `detect_equipe_overrides`, `get_user_effective_caps`, `etape_prete(s)` sont ajoutées en tête de corps, le reste du texte recopié tel que relu. `mes_affaires_chef` garde le langage SQL avec une condition ajoutée au `WHERE`. Aucune réécriture par remplacement de texte.
+
+Retour arrière : rétablir `GRANT EXECUTE ... TO PUBLIC` (ou `anon`) sur les fonctions concernées et recréer les 11 fonctions depuis leur texte « avant ».
+
+Règle d'architecture ajoutée à `AGENTS.md` : toute nouvelle fonction SECURITY DEFINER est créée avec `REVOKE ... FROM PUBLIC, anon` ; seule la liste publique explicite garde `anon`.
