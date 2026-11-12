@@ -862,6 +862,13 @@
       "when": 1794487433048,
       "tag": "0122_documents_fournisseurs",
       "breakpoints": true
+    },
+    {
+      "idx": 123,
+      "version": "7",
+      "when": 1794505023084,
+      "tag": "0123_documents_affaire_lecture_section_affaires",
+      "breakpoints": true
     }
   ]
 }
