@@ -20,6 +20,7 @@ export function estChoixRequis(message: string | undefined | null): boolean {
 export type ValidationForm = {
   fournisseur_id: string; nouveau_fournisseur: string; produit: string; ref: string; unite: string;
   prix_achat: string; date_tarif: string; mode: "" | "remplacer" | "ajouter";
+  type_prix?: "reference" | "ponctuel"; valide_jusquau?: string;
 };
 
 /** Contrôle côté écran avant validation ; la base refait les mêmes contrôles. Renvoie l'erreur ou null. */
@@ -28,6 +29,10 @@ export function erreurValidation(f: ValidationForm, prixVisible: boolean, prixAc
   if (!f.produit.trim()) return "La désignation est obligatoire.";
   const prix = prixVisible ? Number(f.prix_achat.replace(",", ".")) : Number(prixActuel ?? 0);
   if (!(prix > 0)) return "Le prix d'achat doit être supérieur à 0.";
+  if (f.type_prix === "ponctuel") {
+    if (!f.valide_jusquau) return "Indiquez jusqu'à quand le prix ponctuel est valable.";
+    if (f.valide_jusquau < new Date().toISOString().slice(0, 10)) return "La date de fin de validité est déjà passée.";
+  }
   return null;
 }
 
@@ -38,7 +43,8 @@ export function payloadValidation(f: ValidationForm, prixVisible: boolean): Reco
   else p.fournisseur_id = f.fournisseur_id;
   if (prixVisible) p.prix_achat = f.prix_achat.replace(",", ".").trim();
   if (f.date_tarif) p.date_tarif = f.date_tarif;
-  if (f.mode) p.mode = f.mode;
+  if (f.type_prix === "ponctuel") { p.type_prix = "ponctuel"; p.valide_jusquau = f.valide_jusquau ?? ""; }
+  else if (f.mode) p.mode = f.mode;
   return p;
 }
 

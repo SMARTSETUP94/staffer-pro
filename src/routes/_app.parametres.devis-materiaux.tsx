@@ -14,6 +14,7 @@ import { Progress } from "@/components/ui/progress";
 import { chunk, extractRows, slugFromFilename } from "@/lib/devis/materiaux-import";
 import { MateriauxRecherche } from "@/components/devis/MateriauxRecherche";
 import { PrixProposes } from "@/components/devis/catalogue/PrixProposes";
+import { DocumentsFournisseurs } from "@/components/devis/catalogue/DocumentsFournisseurs";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/lib/auth-context";
 import { useCapability } from "@/hooks/use-capability";
@@ -43,11 +44,20 @@ function MateriauxPage() {
   const { roles } = useAuth();
   const isAdmin = roles.includes("admin");
   const couts = useCapability("devis.couts");
+  const rediger = useCapability("devis.rediger");
+  const deposer = isAdmin ? couts : rediger && couts;
   const catalogue = <CatalogueContenu />;
-  if (!isAdmin) return catalogue;
+  if (!isAdmin && !deposer) return catalogue;
   return (
     <Tabs defaultValue="catalogue" className="p-4 md:p-6">
-      <TabsList><TabsTrigger value="catalogue">Catalogue</TabsTrigger><TabsTrigger value="proposes">Prix proposés</TabsTrigger></TabsList>
+      <TabsList className="flex h-auto flex-wrap"><TabsTrigger value="catalogue">Catalogue</TabsTrigger>
+        {deposer && <TabsTrigger value="documents">Documents fournisseurs</TabsTrigger>}
+        {isAdmin && <TabsTrigger value="proposes">Prix proposés</TabsTrigger>}</TabsList>
+      {deposer && <TabsContent value="documents" className="space-y-2 pt-2">
+        <h1 className="text-2xl font-semibold">Documents fournisseurs</h1>
+        <p className="text-sm text-muted-foreground">Les prix lus dans une facture, une proposition ou une confirmation de commande passent par la validation d'un administrateur.</p>
+        <DocumentsFournisseurs />
+      </TabsContent>}
       <TabsContent value="catalogue" className="-mx-4 md:-mx-6">{catalogue}</TabsContent>
       <TabsContent value="proposes" className="space-y-2 pt-2">
         <h1 className="text-2xl font-semibold">Prix proposés depuis les devis</h1>
