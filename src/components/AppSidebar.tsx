@@ -274,7 +274,7 @@ function applyLogistiqueOppsMode(sections: NavSection[]): NavSection[] {
  * toujours ouvrir /admin/feature-flags en direct pour désactiver le mode.
  */
 // "/admin/utilisateurs" reste filtré par la cap section.admin (admins seulement).
-const SA_MODE_URLS = new Set(["/", "/planning-atelier", "/planning-be", "/admin/qualite-donnees", "/opportunites", "/demandes-clients", "/affaires", "/liste-chantiers", "/documents-affaires", "/clients", "/logistique", "/demandes-logistique", "/nouvelle-demande-logistique", "/jalonnements", "/admin/utilisateurs", "/admin/connecteur-claude", "/mes-notes-de-frais", "/validation-notes-de-frais", "/planning-pilotage", "/parametres/referents-roles", "/parametres/devis-taux", "/parametres/formulaire-logistique", "/devis-staffing", "/logistique/dispos"]);
+const SA_MODE_URLS = new Set(["/", "/planning-atelier", "/planning-be", "/admin/qualite-donnees", "/opportunites", "/demandes-clients", "/affaires", "/liste-chantiers", "/documents-affaires", "/clients", "/logistique", "/demandes-logistique", "/nouvelle-demande-logistique", "/jalonnements", "/admin/utilisateurs", "/employes", "/admin/connecteur-claude", "/mes-notes-de-frais", "/validation-notes-de-frais", "/planning-pilotage", "/parametres/referents-roles", "/parametres/devis-taux", "/parametres/formulaire-logistique", "/devis-staffing", "/logistique/dispos"]);
 
 function applySuiviAffairesMode(sections: NavSection[]): NavSection[] {
   return sections
