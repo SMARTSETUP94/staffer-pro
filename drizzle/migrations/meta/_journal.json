@@ -834,6 +834,13 @@
       "when": 1794383784878,
       "tag": "0118_clients_conditions_paiement_defaut",
       "breakpoints": true
+    },
+    {
+      "idx": 119,
+      "version": "7",
+      "when": 1794479155718,
+      "tag": "0119_restreindre_lectures_referentiels_au_personnel",
+      "breakpoints": true
     }
   ]
 }
