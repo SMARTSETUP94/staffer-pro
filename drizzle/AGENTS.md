@@ -1,0 +1,1 @@
+- New public SECURITY DEFINER functions: REVOKE EXECUTE FROM PUBLIC, anon; only dispos_public_* keep anon, so the public key cannot reach internal data.

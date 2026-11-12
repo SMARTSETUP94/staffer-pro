@@ -848,6 +848,13 @@
       "when": 1794482752982,
       "tag": "0120_prix_proposes_catalogue",
       "breakpoints": true
+    },
+    {
+      "idx": 121,
+      "version": "7",
+      "when": 1794484456006,
+      "tag": "0121_fermeture_acces_fonctions",
+      "breakpoints": true
     }
   ]
 }
