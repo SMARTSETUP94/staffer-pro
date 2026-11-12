@@ -71,7 +71,8 @@ export function PrixProposes({ couts }: { couts: boolean }) {
                 </p>
                 <p className="text-xs text-muted-foreground">
                   Proposé par {p.propose_par ?? "—"} le {dt(p.propose_le)}
-                  {p.devis_id && <> · devis <Link to="/devis/$devisId" params={{ devisId: p.devis_id }} className="underline">{p.devis_numero ?? "ouvrir"}</Link></>}
+                  {p.devis_id && p.affaire_id && <> · devis <Link to="/affaires/$affaireId/devis-staffing/$devisId" params={{ affaireId: p.affaire_id, devisId: p.devis_id }} className="underline">{p.devis_numero ?? "ouvrir"}</Link></>}
+                  {p.devis_id && !p.affaire_id && <> · devis {p.devis_numero ?? ""}</>}
                 </p>
                 {p.statut !== "propose" && <p className="text-xs">{p.statut === "valide" ? "Validé" : "Refusé"} par {p.decision_par ?? "—"} le {dt(p.decision_le)}{p.motif_refus && <> — motif : {p.motif_refus}</>}{p.remplace_materiau_id && " · a remplacé une ligne existante"}</p>}
               </div>
