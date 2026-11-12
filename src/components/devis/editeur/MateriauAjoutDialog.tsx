@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { PropositionChamps, champsVides, propositionPayload, type PropositionChampsValeur } from "./PropositionCatalogueDialog";
 import { Input } from "@/components/ui/input";
 import { MateriauxRecherche, type MateriauResult } from "@/components/devis/MateriauxRecherche";
 import { quantiteDepuisAide } from "@/lib/devis/calcul";
@@ -15,7 +16,7 @@ type Rapide = { id: string; produit: string; format_texte: string | null; epaiss
 
 export function MateriauAjoutDialog({ open, onOpenChange, devisId, onAdd }: {
   open: boolean; onOpenChange: (o: boolean) => void; devisId: string;
-  onAdd: (p: { materiau_id?: string; designation?: string; fournisseur?: string; unite?: string; prix_achat?: number; quantite: number; aide_conversion?: unknown; propose_catalogue?: boolean }) => Promise<void>;
+  onAdd: (p: { materiau_id?: string; designation?: string; fournisseur?: string; unite?: string; prix_achat?: number; quantite: number; aide_conversion?: unknown; propose_catalogue?: boolean; proposition?: Record<string, string> }) => Promise<void>;
 }) {
   const [pick, setPick] = useState<Partial<MateriauResult> | null>(null);
   const [qte, setQte] = useState("1");
@@ -23,6 +24,7 @@ export function MateriauAjoutDialog({ open, onOpenChange, devisId, onAdd }: {
   const [m2, setM2] = useState(""); const [ml, setMl] = useState(""); const [perte, setPerte] = useState("10");
   const [pieces, setPieces] = useState("");
   const [libre, setLibre] = useState({ designation: "", fournisseur: "", unite: "", prix: "", proposer: false });
+  const [champs, setChamps] = useState<PropositionChampsValeur>(champsVides);
 
   const rapides = useQuery({
     queryKey: ["materiaux-rapides", devisId], enabled: open,
@@ -97,10 +99,11 @@ export function MateriauAjoutDialog({ open, onOpenChange, devisId, onAdd }: {
               </div>
               <Input placeholder="Quantité" inputMode="decimal" value={qte} onChange={(e) => setQte(e.target.value)} />
               <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={libre.proposer} onChange={(e) => setLibre({ ...libre, proposer: e.target.checked })} />Proposer au catalogue</label>
+              {libre.proposer && <><p className="text-xs text-muted-foreground">Un administrateur validera ce prix avant qu'il serve aux devis suivants.</p><PropositionChamps v={champs} onChange={setChamps} /></>}
               <Button disabled={!libre.designation.trim()} onClick={async () => {
                 await onAdd({ designation: libre.designation.trim(), fournisseur: libre.fournisseur, unite: libre.unite,
-                  prix_achat: Number(libre.prix.replace(",", ".")) || 0, quantite: Number(qte.replace(",", ".")) || 1, propose_catalogue: libre.proposer });
-                setLibre({ designation: "", fournisseur: "", unite: "", prix: "", proposer: false }); onOpenChange(false);
+                  prix_achat: Number(libre.prix.replace(",", ".")) || 0, quantite: Number(qte.replace(",", ".")) || 1, proposition: libre.proposer ? propositionPayload(champs) : undefined });
+                setLibre({ designation: "", fournisseur: "", unite: "", prix: "", proposer: false }); setChamps(champsVides()); onOpenChange(false);
               }}>Ajouter la ligne libre</Button>
             </TabsContent>
           </Tabs>
