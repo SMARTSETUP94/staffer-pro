@@ -5371,6 +5371,8 @@ export type Database = {
           desactive_le: string | null
           devis_materiau_origine_id: string | null
           devis_origine_id: string | null
+          document_ligne: number | null
+          document_origine_id: string | null
           epaisseur_mm: number | null
           famille: string | null
           format_texte: string | null
@@ -5396,7 +5398,9 @@ export type Database = {
           search_norm: string | null
           search_text: string
           source: string | null
+          type_prix: string
           unite: string
+          valide_jusquau: string | null
         }
         Insert: {
           actif?: boolean
@@ -5410,6 +5414,8 @@ export type Database = {
           desactive_le?: string | null
           devis_materiau_origine_id?: string | null
           devis_origine_id?: string | null
+          document_ligne?: number | null
+          document_origine_id?: string | null
           epaisseur_mm?: number | null
           famille?: string | null
           format_texte?: string | null
@@ -5435,7 +5441,9 @@ export type Database = {
           search_norm?: string | null
           search_text?: string
           source?: string | null
+          type_prix?: string
           unite: string
+          valide_jusquau?: string | null
         }
         Update: {
           actif?: boolean
@@ -5449,6 +5457,8 @@ export type Database = {
           desactive_le?: string | null
           devis_materiau_origine_id?: string | null
           devis_origine_id?: string | null
+          document_ligne?: number | null
+          document_origine_id?: string | null
           epaisseur_mm?: number | null
           famille?: string | null
           format_texte?: string | null
@@ -5474,9 +5484,18 @@ export type Database = {
           search_norm?: string | null
           search_text?: string
           source?: string | null
+          type_prix?: string
           unite?: string
+          valide_jusquau?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "materiaux_catalogue_document_origine_id_fkey"
+            columns: ["document_origine_id"]
+            isOneToOne: false
+            referencedRelation: "materiaux_documents"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "materiaux_catalogue_fournisseur_id_fkey"
             columns: ["fournisseur_id"]
@@ -5489,6 +5508,71 @@ export type Database = {
             columns: ["remplace_materiau_id"]
             isOneToOne: false
             referencedRelation: "materiaux_catalogue"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      materiaux_documents: {
+        Row: {
+          chemin: string
+          date_document: string | null
+          depose_le: string
+          depose_par: string
+          empreinte: string
+          fournisseur_id: string | null
+          fournisseur_libre: string | null
+          id: string
+          lignes_ecartees: Json
+          nb_lignes: number
+          nom_fichier: string
+          numero: string | null
+          reference_projet: string | null
+          type_document: string
+          type_mime: string
+          valide_jusquau: string | null
+        }
+        Insert: {
+          chemin: string
+          date_document?: string | null
+          depose_le?: string
+          depose_par: string
+          empreinte: string
+          fournisseur_id?: string | null
+          fournisseur_libre?: string | null
+          id?: string
+          lignes_ecartees?: Json
+          nb_lignes?: number
+          nom_fichier: string
+          numero?: string | null
+          reference_projet?: string | null
+          type_document: string
+          type_mime: string
+          valide_jusquau?: string | null
+        }
+        Update: {
+          chemin?: string
+          date_document?: string | null
+          depose_le?: string
+          depose_par?: string
+          empreinte?: string
+          fournisseur_id?: string | null
+          fournisseur_libre?: string | null
+          id?: string
+          lignes_ecartees?: Json
+          nb_lignes?: number
+          nom_fichier?: string
+          numero?: string | null
+          reference_projet?: string | null
+          type_document?: string
+          type_mime?: string
+          valide_jusquau?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "materiaux_documents_fournisseur_id_fkey"
+            columns: ["fournisseur_id"]
+            isOneToOne: false
+            referencedRelation: "fournisseurs_tarifs"
             referencedColumns: ["id"]
           },
         ]
@@ -9295,6 +9379,29 @@ export type Database = {
       }
       materiau_saisie_desactiver: { Args: { _id: string }; Returns: undefined }
       materiaux_acces_rapides: { Args: { _devis_id: string }; Returns: Json }
+      materiaux_document_chemin: { Args: { _id: string }; Returns: string }
+      materiaux_document_doublon: {
+        Args: {
+          _empreinte: string
+          _fournisseur_id?: string
+          _fournisseur_libre?: string
+          _numero?: string
+        }
+        Returns: Json
+      }
+      materiaux_document_peut_deposer: { Args: never; Returns: boolean }
+      materiaux_document_rapprocher: {
+        Args: { _fournisseur_id: string; _lignes: Json }
+        Returns: Json
+      }
+      materiaux_document_soumettre: {
+        Args: { _doc: Json; _lignes: Json }
+        Returns: Json
+      }
+      materiaux_documents_lister: {
+        Args: { _limit?: number; _offset?: number }
+        Returns: Json
+      }
       materiaux_fournisseurs_stats: {
         Args: never
         Returns: {
