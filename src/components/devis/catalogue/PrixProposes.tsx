@@ -81,8 +81,8 @@ export function PrixProposes({ couts }: { couts: boolean }) {
                   {p.document_id && <> · {TYPE_DOCUMENT_LABEL[(p.document_type ?? "facture") as TypeDocument]} {p.document_numero ?? ""} <VoirDocument id={p.document_id} /></>}
                 </p>
                 {couts && p.statut === "propose" && p.prix_actuel != null && (
-                  <p className="text-xs">Prix actuel au catalogue {eur(p.prix_actuel)} → {eur(p.prix_achat)}
-                    {ecartPct(p.prix_actuel, p.prix_achat) != null && <Badge variant="outline" className="ml-1">{(ecartPct(p.prix_actuel, p.prix_achat)! > 0 ? "+" : "") + ecartPct(p.prix_actuel, p.prix_achat)!.toLocaleString("fr-FR")} %</Badge>}</p>
+                  <div className="text-xs">Prix actuel au catalogue {eur(p.prix_actuel)} → {eur(p.prix_achat)}
+                    {ecartPct(p.prix_actuel, p.prix_achat) != null && <Badge variant="outline" className="ml-1">{(ecartPct(p.prix_actuel, p.prix_achat)! > 0 ? "+" : "") + ecartPct(p.prix_actuel, p.prix_achat)!.toLocaleString("fr-FR")} %</Badge>}</div>
                 )}
                 {p.statut === "valide" && p.type_prix === "ponctuel" && <p className="text-xs">Prix ponctuel jusqu'au {dt(p.valide_jusquau ?? null)}</p>}
                 {p.statut !== "propose" && <p className="text-xs">{p.statut === "valide" ? "Validé" : "Refusé"} par {p.decision_par ?? "—"} le {dt(p.decision_le)}{p.motif_refus && <> — motif : {p.motif_refus}</>}{p.remplace_materiau_id && " · a remplacé une ligne existante"}</p>}
@@ -115,7 +115,7 @@ function ValiderDialog({ p, couts, onClose, onDone }: { p: Prop; couts: boolean;
   });
   const proches = useQuery({
     queryKey: ["materiau-proches", p.id],
-    queryFn: async () => { const { data, error } = await supabase.rpc("materiau_proposition_proches", { _id: p.id }); if (error) throw error; return (data ?? []) as unknown as Proche[]; },
+    queryFn: async () => { const { data, error } = await supabase.rpc("materiau_proposition_proches", { _id: p.id }); if (error) throw error; const l = (data ?? []) as unknown as Proche[]; return l.filter((x, i) => l.findIndex((y) => y.id === x.id) === i); },
   });
   const [f, setF] = useState<ValidationForm>({
     fournisseur_id: p.fournisseur_id ?? "", nouveau_fournisseur: "", produit: p.produit, ref: p.ref ?? "", unite: p.unite,
