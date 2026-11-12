@@ -65,4 +65,3 @@
 - Logistics form requests: emails_entrants rows via token-gated service-role RPCs; poller never creates steps.
 
 
-- New public SECURITY DEFINER functions: REVOKE EXECUTE FROM PUBLIC, anon; only dispos_public_* keep anon.
