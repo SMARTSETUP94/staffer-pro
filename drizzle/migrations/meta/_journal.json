@@ -841,6 +841,13 @@
       "when": 1794479155718,
       "tag": "0119_restreindre_lectures_referentiels_au_personnel",
       "breakpoints": true
+    },
+    {
+      "idx": 120,
+      "version": "7",
+      "when": 1794482752982,
+      "tag": "0120_prix_proposes_catalogue",
+      "breakpoints": true
     }
   ]
 }

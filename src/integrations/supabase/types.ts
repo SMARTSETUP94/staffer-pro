@@ -5366,23 +5366,33 @@ export type Database = {
           conditionnement: string | null
           created_at: string
           date_tarif: string | null
+          decision_le: string | null
+          decision_par: string | null
           desactive_le: string | null
+          devis_materiau_origine_id: string | null
+          devis_origine_id: string | null
           epaisseur_mm: number | null
           famille: string | null
           format_texte: string | null
-          fournisseur_id: string
+          fournisseur_id: string | null
+          fournisseur_libre: string | null
           id: string
           import_id: string | null
           largeur_mm: number | null
           longueur_mm: number | null
+          motif_refus: string | null
           prix_achat_net: number | null
           prix_catalogue: number | null
           prix_m2: number | null
           prix_ml: number | null
           produit: string
           produit_norm: string | null
+          propose_le: string | null
+          propose_par: string | null
+          proposition_statut: string | null
           ref: string | null
           remarque: string | null
+          remplace_materiau_id: string | null
           search_norm: string | null
           search_text: string
           source: string | null
@@ -5395,23 +5405,33 @@ export type Database = {
           conditionnement?: string | null
           created_at?: string
           date_tarif?: string | null
+          decision_le?: string | null
+          decision_par?: string | null
           desactive_le?: string | null
+          devis_materiau_origine_id?: string | null
+          devis_origine_id?: string | null
           epaisseur_mm?: number | null
           famille?: string | null
           format_texte?: string | null
-          fournisseur_id: string
+          fournisseur_id?: string | null
+          fournisseur_libre?: string | null
           id?: string
           import_id?: string | null
           largeur_mm?: number | null
           longueur_mm?: number | null
+          motif_refus?: string | null
           prix_achat_net?: number | null
           prix_catalogue?: number | null
           prix_m2?: number | null
           prix_ml?: number | null
           produit: string
           produit_norm?: string | null
+          propose_le?: string | null
+          propose_par?: string | null
+          proposition_statut?: string | null
           ref?: string | null
           remarque?: string | null
+          remplace_materiau_id?: string | null
           search_norm?: string | null
           search_text?: string
           source?: string | null
@@ -5424,23 +5444,33 @@ export type Database = {
           conditionnement?: string | null
           created_at?: string
           date_tarif?: string | null
+          decision_le?: string | null
+          decision_par?: string | null
           desactive_le?: string | null
+          devis_materiau_origine_id?: string | null
+          devis_origine_id?: string | null
           epaisseur_mm?: number | null
           famille?: string | null
           format_texte?: string | null
-          fournisseur_id?: string
+          fournisseur_id?: string | null
+          fournisseur_libre?: string | null
           id?: string
           import_id?: string | null
           largeur_mm?: number | null
           longueur_mm?: number | null
+          motif_refus?: string | null
           prix_achat_net?: number | null
           prix_catalogue?: number | null
           prix_m2?: number | null
           prix_ml?: number | null
           produit?: string
           produit_norm?: string | null
+          propose_le?: string | null
+          propose_par?: string | null
+          proposition_statut?: string | null
           ref?: string | null
           remarque?: string | null
+          remplace_materiau_id?: string | null
           search_norm?: string | null
           search_text?: string
           source?: string | null
@@ -5452,6 +5482,13 @@ export type Database = {
             columns: ["fournisseur_id"]
             isOneToOne: false
             referencedRelation: "fournisseurs_tarifs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "materiaux_catalogue_remplace_materiau_id_fkey"
+            columns: ["remplace_materiau_id"]
+            isOneToOne: false
+            referencedRelation: "materiaux_catalogue"
             referencedColumns: ["id"]
           },
         ]
@@ -8774,6 +8811,13 @@ export type Database = {
           nouvelle_date: string
         }[]
       }
+      devis_materiaux_propositions_etat: {
+        Args: { _devis_id: string }
+        Returns: {
+          devis_materiau_id: string
+          statut: string
+        }[]
+      }
       devis_mcp_appliquer: {
         Args: { _affaire_id: string; _p: Json; _tool: string }
         Returns: Json
@@ -9236,6 +9280,20 @@ export type Database = {
           typologie_future: string
         }[]
       }
+      materiau_proposer: {
+        Args: { _devis_materiau_id: string; _p?: Json }
+        Returns: string
+      }
+      materiau_proposition_proches: { Args: { _id: string }; Returns: Json }
+      materiau_proposition_refuser: {
+        Args: { _id: string; _motif: string }
+        Returns: undefined
+      }
+      materiau_proposition_valider: {
+        Args: { _id: string; _p?: Json }
+        Returns: string
+      }
+      materiau_saisie_desactiver: { Args: { _id: string }; Returns: undefined }
       materiaux_acces_rapides: { Args: { _devis_id: string }; Returns: Json }
       materiaux_fournisseurs_stats: {
         Args: never
@@ -9263,6 +9321,10 @@ export type Database = {
         Returns: number
       }
       materiaux_norm: { Args: { t: string }; Returns: string }
+      materiaux_propositions_lister: {
+        Args: { _limit?: number; _offset?: number; _statut?: string }
+        Returns: Json
+      }
       materiaux_rechercher: {
         Args: {
           _epaisseur?: number
@@ -9296,6 +9358,7 @@ export type Database = {
           unite: string
         }[]
       }
+      materiaux_reprendre_hors_catalogue: { Args: never; Returns: Json }
       mcp_assert_legacy_oauth_write: {
         Args: { _fn: string }
         Returns: undefined
