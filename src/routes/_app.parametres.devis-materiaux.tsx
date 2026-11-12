@@ -13,6 +13,10 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { chunk, extractRows, slugFromFilename } from "@/lib/devis/materiaux-import";
 import { MateriauxRecherche } from "@/components/devis/MateriauxRecherche";
+import { PrixProposes } from "@/components/devis/catalogue/PrixProposes";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAuth } from "@/lib/auth-context";
+import { useCapability } from "@/hooks/use-capability";
 
 export const Route = createFileRoute("/_app/parametres/devis-materiaux")({
   beforeLoad: () => requireCapability("devis.parametres"),
@@ -25,6 +29,7 @@ type Bilan = {
   variation_mediane_pct: number | null;
   hausses: { produit: string; ancien: number; nouveau: number; var: number }[];
   baisses: { produit: string; ancien: number; nouveau: number; var: number }[];
+  saisies_manuelles_conservees?: number; saisies_manuelles_meme_ref?: number;
 };
 
 const ETAT_LABEL: Record<string, string> = { ok: "OK", a_surveiller: "À surveiller", ancien: "Ancien" };
@@ -35,6 +40,25 @@ async function sha(text: string) {
 }
 
 function MateriauxPage() {
+  const { roles } = useAuth();
+  const isAdmin = roles.includes("admin");
+  const couts = useCapability("devis.couts");
+  const catalogue = <CatalogueContenu />;
+  if (!isAdmin) return catalogue;
+  return (
+    <Tabs defaultValue="catalogue" className="p-4 md:p-6">
+      <TabsList><TabsTrigger value="catalogue">Catalogue</TabsTrigger><TabsTrigger value="proposes">Prix proposés</TabsTrigger></TabsList>
+      <TabsContent value="catalogue" className="-mx-4 md:-mx-6">{catalogue}</TabsContent>
+      <TabsContent value="proposes" className="space-y-2 pt-2">
+        <h1 className="text-2xl font-semibold">Prix proposés depuis les devis</h1>
+        <p className="text-sm text-muted-foreground">Un prix proposé ne sert aux devis suivants qu'après validation par un administrateur.</p>
+        <PrixProposes couts={couts} />
+      </TabsContent>
+    </Tabs>
+  );
+}
+
+function CatalogueContenu() {
   const qc = useQueryClient();
   const fourn = useQuery({
     queryKey: ["materiaux-fournisseurs"],
@@ -113,7 +137,7 @@ function MateriauxPage() {
       <div>
         <h1 className="text-2xl font-semibold">Devis — catalogue matériaux</h1>
         <p className="text-sm text-muted-foreground">
-          Un nouveau tarif remplace celui du fournisseur : les anciennes lignes sont désactivées, jamais supprimées.{" "}
+          Un nouveau tarif remplace celui du fournisseur : les anciennes lignes importées sont désactivées, jamais supprimées ; les prix saisis manuellement et validés sont conservés.{" "}
           <Link to="/parametres/devis-taux" className="underline">← Taux et forfaits</Link>
         </p>
       </div>
@@ -138,6 +162,7 @@ function MateriauxPage() {
                 <Badge variant="secondary">{pending.bilan.ajoutees} ajoutées</Badge>
                 <Badge variant="secondary">{pending.bilan.retirees} retirées (sur {pending.bilan.actives_avant})</Badge>
                 <Badge variant="secondary">{pending.bilan.sans_prix} sans prix</Badge>
+                <Badge variant="outline">{pending.bilan.saisies_manuelles_conservees ?? 0} prix saisis manuellement conservés, dont {pending.bilan.saisies_manuelles_meme_ref ?? 0} avec la même référence qu'une ligne importée</Badge>
                 <Badge>Variation médiane : {pending.bilan.variation_mediane_pct == null ? "—" : `${pending.bilan.variation_mediane_pct} %`}</Badge>
               </div>
               <div className="grid gap-4 md:grid-cols-2">
