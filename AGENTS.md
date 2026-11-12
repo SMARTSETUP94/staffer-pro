@@ -65,4 +65,4 @@
 - Logistics form requests: emails_entrants rows via token-gated service-role RPCs; poller never creates steps.
 
 
-- Every new SECURITY DEFINER function in public starts with REVOKE EXECUTE FROM PUBLIC, anon; only the explicit public dispos_public_* list keeps anon, so the public key cannot reach internal data.
+- New public SECURITY DEFINER functions: REVOKE EXECUTE FROM PUBLIC, anon; only dispos_public_* keep anon.
