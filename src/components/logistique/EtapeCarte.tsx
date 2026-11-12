@@ -22,11 +22,12 @@ const ALERTE = { rouge: 'ring-2 ring-destructive', orange: 'ring-2 ring-warning'
 
 export type CibleCopie = { etape: EtapeSemaine; jour: string };
 
-export function EtapeCarte({ e, jour, equipe, dispos, droits, focus, cibles, onCompleter, onModifier, onRenommer, onDrop, onCopier, onSemaineDerniere, onConfirmation, onRole }: {
+export function EtapeCarte({ e, jour, equipe, dispos, droits, focus, cibles, onCompleter, onModifier, onRenommer, onDrop, onCopier, onSemaineDerniere, onConfirmation, onRole, onRetirer }: {
   e: EtapeSemaine; jour: string; equipe: MembreEquipe[]; dispos: DispoPlanning[]; droits: boolean; focus?: boolean; cibles: CibleCopie[];
   onCompleter: () => void; onModifier: () => void; onRenommer: () => void; onDrop: (d: DragPayload) => void;
   onCopier: (cibles: CibleCopie[]) => void; onSemaineDerniere: () => void;
   onConfirmation: (a: AffectationSemaine, statut: string) => void; onRole: (a: AffectationSemaine, role: 'chef_equipe' | 'equipier') => void;
+  onRetirer?: (a: AffectationSemaine, nom: string) => void;
 }) {
   const [survol, setSurvol] = useState(false);
   const [choix, setChoix] = useState<Set<string>>(new Set());
@@ -70,6 +71,7 @@ export function EtapeCarte({ e, jour, equipe, dispos, droits, focus, cibles, onC
             {Object.entries(CONFIRMATION).map(([k, v]) => <DropdownMenuItem key={k} onClick={() => onConfirmation(a, k)}>{v.label}</DropdownMenuItem>)}
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => onRole(a, a.role === 'chef_equipe' ? 'equipier' : 'chef_equipe')}>{a.role === 'chef_equipe' ? 'Retirer le rôle chef' : 'Marquer chef d’équipe'}</DropdownMenuItem>
+            {onRetirer && <><DropdownMenuSeparator /><DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => onRetirer(a, p ? `${p.prenom ?? ''} ${p.nom ?? ''}`.trim() : 'cette personne')}>Retirer de l’équipe</DropdownMenuItem></>}
           </DropdownMenuContent></DropdownMenu> : chip}
         </li>;
       })}{equipe.length === 0 && <li className="text-sm text-destructive">Personne affectée</li>}</ul>

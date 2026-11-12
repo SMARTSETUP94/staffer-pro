@@ -112,7 +112,17 @@ export function PlanningEquipes({ debut, vue, filtres, alertes, focus }: { debut
     if (!eq.length) { toast.info('Aucune équipe trouvée sur la même opération 7 jours avant'); return; }
     await copierEquipe(e, jour, [{ etape: e, jour }], eq);
   }
-  async function majAffectation(a: AffectationSemaine, patch: { statut_confirmation?: 'en_attente' | 'confirmee' | 'refusee'; role_terrain?: string }) {
+  async function retirer(a: AffectationSemaine, nom: string) {
+    if (!window.confirm(`Retirer ${nom} de cette équipe ?`)) return;
+    const { error } = await supabase.from('assignations').delete().eq('id', a.id);
+    if (error) toast.error('Retrait impossible', { description: error.message }); else { toast.success(`${nom} retiré(e) de l’équipe`); await rafraichir(); }
+  }
+  async function majAffectation(a: AffectationSemaine, patch: { statut_confirmation?: 'en_attente' | 'confirmee' | 'refusee'; role_terrain?: string; motif_refus?: string }) {
+    if (patch.statut_confirmation === 'refusee' && !patch.motif_refus) {
+      const motif = window.prompt('Motif du refus ?')?.trim();
+      if (!motif) return;
+      patch = { ...patch, motif_refus: motif };
+    }
     const { error } = await supabase.from('assignations').update({ ...patch, ...(patch.statut_confirmation === 'confirmee' ? { confirmee_le: new Date().toISOString() } : {}) }).eq('id', a.id);
     if (error) toast.error('Modification impossible', { description: error.message }); else await rafraichir();
   }
@@ -146,7 +156,7 @@ export function PlanningEquipes({ debut, vue, filtres, alertes, focus }: { debut
           focus={focus?.etape_id === e.id && (!focus.jour || focus.jour === jour)} cibles={ciblesCopie(e, jour)}
           onCompleter={() => setCompleter({ etape: e, jour })} onModifier={() => void ouvrirEtape(e.id)} onRenommer={() => ouvrirRenommer(e)}
           onDrop={d => void surDrop(d, e, jour)} onCopier={c => void copierEquipe(e, jour, c)} onSemaineDerniere={() => void semaineDerniere(e, jour)}
-          onConfirmation={(a, s) => void majAffectation(a, { statut_confirmation: s as 'en_attente' | 'confirmee' | 'refusee' })} onRole={(a, r) => void majAffectation(a, { role_terrain: r })} />)}</div>
+          onConfirmation={(a, s) => void majAffectation(a, { statut_confirmation: s as 'en_attente' | 'confirmee' | 'refusee' })} onRole={(a, r) => void majAffectation(a, { role_terrain: r })} onRetirer={(a, n) => void retirer(a, n)} />)}</div>
       </div>;
     })}
     <PanneauCompleter cible={completer} onClose={() => setCompleter(null)} personnes={personnes} dispos={dispos} affectations={affectations} etapes={toutes} onAjouter={async p => { if (completer) await affecter(p, completer.etape.id, completer.jour); }} />
