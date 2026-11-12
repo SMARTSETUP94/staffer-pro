@@ -64,3 +64,5 @@
 - The logistics planning is one page (/logistique) with Étapes, Équipes, Personnes and a read-only chef tab; /logistique/equipes only redirects there. Alerts, qualified needs, WhatsApp texts, team copy and filters are pure helpers in src/lib/logistique/planning-semaine.ts so every view and the tests share one rule set.
 - Logistics form requests: emails_entrants rows via token-gated service-role RPCs; poller never creates steps.
 
+
+- Every new SECURITY DEFINER function in public starts with REVOKE EXECUTE FROM PUBLIC, anon; only the explicit public dispos_public_* list keeps anon, so the public key cannot reach internal data.
