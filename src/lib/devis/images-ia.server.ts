@@ -234,14 +234,14 @@ export async function proposerPhotos(db: any, userId: string, devisId: string, c
         if (signes[k]?.signedUrl) content.push({ type: "image_url", image_url: { url: signes[k].signedUrl } });
       });
       const { args, usage: u } = await appelIA([{ role: "system", content: SYSTEME_DONNEE }, { role: "user", content }], {
-        name: "propositions", parameters: { type: "object", additionalProperties: false, required: ["propositions"], properties: { propositions: { type: "array", maxItems: 300, items: { type: "object", additionalProperties: false,
+        name: "propositions", parameters: { type: "object", additionalProperties: false, required: ["propositions"], properties: { propositions: { type: "array", items: { type: "object", additionalProperties: false,
           required: ["ligne_id", "document_id", "confiance", "justification", "legende"], properties: { ligne_id: { type: "string" }, document_id: { type: "string" }, confiance: { type: "integer", minimum: 0, maximum: 100 }, justification: { type: "string", maxLength: 160 }, legende: { type: "string", maxLength: 80 } } } } } },
       });
       appels++; usage.entree += u.entree; usage.sortie += u.sortie;
       propositions.push(...(Array.isArray(args.propositions) ? args.propositions : []));
     }
     const docMap = new Map(candidats.map((x) => [x.id, { categorie: x.categorie ?? parents.get(x.document_parent_id)?.categorie ?? null }]));
-    propositions = filtrerPropositions(propositions, { lignes: new Set(cibles.map((l) => l.id)), documents: docMap, dejaAuDevis: deja });
+    propositions = filtrerPropositions(propositions.slice(0, 600), { lignes: new Set(cibles.map((l) => l.id)), documents: docMap, dejaAuDevis: deja });
   }
   const cout = coutEur(usage.entree, usage.sortie);
   const duree = Date.now() - t0;
