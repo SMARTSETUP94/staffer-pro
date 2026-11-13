@@ -11,7 +11,6 @@ import {
   type LigneEcartee, type LigneLue, type TypeDocument,
 } from "@/lib/devis/documents-fournisseurs";
 
-const MODEL = "openai/gpt-6-astra";
 const BUCKET = "documents-fournisseurs";
 
 export type LectureDocument = {
@@ -92,49 +91,14 @@ async function controlerFichier(chemin: string, userId: string) {
 async function lireIA(bytes: Uint8Array, mime: string, nom: string): Promise<LectureDocument> {
   const key = process.env.LOVABLE_API_KEY;
   if (!key) throw new Error("Clé IA manquante");
+  const { appelerIAJson, messageErreurIA } = await import("@/lib/ai/fournisseur.server");
   const part = mime === "application/pdf"
-    ? { type: "input_file", filename: nom.endsWith(".pdf") ? nom : "document.pdf", file_data: `data:application/pdf;base64,${b64(bytes)}` }
-    : { type: "input_image", image_url: `data:${mime};base64,${b64(bytes)}` };
-  const res = await fetch("https://ai.gateway.lovable.dev/v1/responses", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "Lovable-API-Key": key, Authorization: `Bearer ${key}`, "X-Lovable-AIG-SDK": "fetch" },
-    body: JSON.stringify({
-      model: MODEL, stream: true, store: false, reasoning: { effort: "low" }, instructions: INSTRUCTIONS,
-      input: [{ role: "user", content: [part] }],
-      text: { format: { type: "json_schema", name: "document_fournisseur", strict: true, schema: SCHEMA } },
-    }),
-  });
-  if (!res.ok || !res.body) {
-    const t = await res.text().catch(() => "");
-    let msg = t.slice(0, 300);
-    try { const j = JSON.parse(t); msg = j?.error?.message ?? j?.message ?? msg; } catch { /* brut */ }
-    if (res.status === 402) throw new Error("Crédits IA épuisés : rechargez dans Paramètres → Plans & crédits.");
-    if (res.status === 429) throw new Error("IA momentanément saturée : réessayez dans une minute.");
-    throw new Error(`Lecture IA impossible (${res.status}) : ${msg}`);
-  }
-  const reader = res.body.getReader(); const dec = new TextDecoder();
-  let buf = "", out = "", failed: string | null = null;
-  for (;;) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    buf += dec.decode(value, { stream: true });
-    let i;
-    while ((i = buf.indexOf("\n")) >= 0) {
-      const line = buf.slice(0, i).trim(); buf = buf.slice(i + 1);
-      if (!line.startsWith("data:")) continue;
-      const p = line.slice(5).trim();
-      if (!p || p === "[DONE]") continue;
-      try {
-        const ev = JSON.parse(p);
-        if (ev.type === "response.output_text.delta") out += ev.delta ?? "";
-        else if (ev.type === "response.failed" || ev.type === "error") failed = ev.response?.error?.message ?? ev.message ?? "échec";
-        else if (ev.type === "response.refusal.delta") failed = "L'IA a refusé de lire ce document.";
-      } catch { /* ligne partielle */ }
-    }
-  }
-  if (failed) throw new Error(`Lecture IA impossible : ${failed}`);
-  if (!out.trim()) throw new Error("L'IA n'a rien renvoyé pour ce document.");
-  return JSON.parse(out) as LectureDocument;
+    ? { type: "pdf" as const, nom: nom.endsWith(".pdf") ? nom : "document.pdf", base64: b64(bytes) }
+    : { type: "image" as const, mime, base64: b64(bytes) };
+  try {
+    const r = await appelerIAJson<LectureDocument>(key, { usage: "documents_fournisseurs", systeme: INSTRUCTIONS, contenu: [part], schema: SCHEMA as Record<string, unknown>, nomSchema: "document_fournisseur", maxSortie: 16000 });
+    return r.data;
+  } catch (e) { throw new Error(`Lecture IA impossible : ${messageErreurIA(e)}`); }
 }
 
 /** Dépose le fichier (chemin calculé par le serveur) puis le lit. Rien n'est créé au catalogue. */

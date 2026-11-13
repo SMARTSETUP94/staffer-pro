@@ -9,7 +9,6 @@ import { getToken, resolveMessage } from "./shared-inbox-attachments.functions";
 import { bodyToPlainText } from "@/lib/shared-inbox-classify";
 import { ETAPE_TYPES } from "@/lib/logistique/etapes";
 
-const MODEL = "openai/gpt-6-astra";
 const MAX_B64 = 20 * 1024 * 1024;
 
 export type JalonnementEtape = {
@@ -117,50 +116,14 @@ async function fileToParts(name: string, mime: string, base64: string): Promise<
 async function callAI(parts: any[]): Promise<JalonnementResult> {
   const key = process.env.LOVABLE_API_KEY;
   if (!key) throw new Error("Clé IA manquante");
-  const res = await fetch("https://ai.gateway.lovable.dev/v1/responses", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "Lovable-API-Key": key, Authorization: `Bearer ${key}`, "X-Lovable-AIG-SDK": "fetch" },
-    body: JSON.stringify({
-      model: MODEL, stream: true, store: false,
-      reasoning: { effort: "low" },
-      instructions: instructions(new Date().toISOString().slice(0, 10)),
-      input: [{ role: "user", content: parts }],
-      text: { format: { type: "json_schema", name: "jalonnement", strict: true, schema: SCHEMA } },
-    }),
-  });
-  if (!res.ok || !res.body) {
-    const t = await res.text().catch(() => "");
-    let msg = t.slice(0, 300);
-    try { msg = JSON.parse(t)?.error?.message ?? JSON.parse(t)?.message ?? msg; } catch { /* brut */ }
-    if (res.status === 402) throw new Error("Crédits IA épuisés : rechargez dans Paramètres → Plans & crédits.");
-    if (res.status === 429) throw new Error("IA momentanément saturée, réessayez dans une minute.");
-    throw new Error(`Analyse IA impossible (${res.status}) : ${msg}`);
-  }
-  const reader = res.body.getReader();
-  const dec = new TextDecoder();
-  let buf = "", out = "", failed: string | null = null;
-  for (;;) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    buf += dec.decode(value, { stream: true });
-    let i;
-    while ((i = buf.indexOf("\n")) >= 0) {
-      const line = buf.slice(0, i).trim();
-      buf = buf.slice(i + 1);
-      if (!line.startsWith("data:")) continue;
-      const p = line.slice(5).trim();
-      if (!p || p === "[DONE]") continue;
-      try {
-        const ev = JSON.parse(p);
-        if (ev.type === "response.output_text.delta") out += ev.delta ?? "";
-        else if (ev.type === "response.failed" || ev.type === "error") failed = ev.response?.error?.message ?? ev.message ?? "échec";
-        else if (ev.type === "response.refusal.delta") failed = "L'IA a refusé d'analyser ce document.";
-      } catch { /* ligne partielle */ }
-    }
-  }
-  if (failed) throw new Error(`Analyse IA impossible : ${failed}`);
-  if (!out.trim()) throw new Error("L'IA n'a rien renvoyé pour ce document.");
-  return JSON.parse(out) as JalonnementResult;
+  const { appelerIAJson, messageErreurIA } = await import("@/lib/ai/fournisseur.server");
+  const contenu = parts.map((p: any) => p.type === "input_text" ? { type: "text" as const, text: p.text }
+    : p.type === "input_file" ? { type: "pdf" as const, nom: p.filename, base64: String(p.file_data).split(",")[1] ?? "" }
+    : { type: "image" as const, mime: String(p.image_url).slice(5, String(p.image_url).indexOf(";")), base64: String(p.image_url).split(",")[1] ?? "" });
+  try {
+    const r = await appelerIAJson<JalonnementResult>(key, { usage: "jalonnement", systeme: instructions(new Date().toISOString().slice(0, 10)), contenu, schema: SCHEMA as Record<string, unknown>, nomSchema: "jalonnement", maxSortie: 16000 });
+    return r.data;
+  } catch (e) { throw new Error(`Analyse IA impossible : ${messageErreurIA(e)}`); }
 }
 
 async function checkCap(supabase: any) {
