@@ -126,9 +126,9 @@ export function NoteDevis({ devisId, statut, peutEcrire }: { devisId: string; st
   if (!note && !editable) return null;
 
   const boutonModifier = editable
-    ? <Button size="sm" variant="ghost" className="h-7" onClick={() => { setEdit(note ?? ""); setOpen(true); }}><Pencil className="mr-1 h-3.5 w-3.5" />Modifier</Button>
+    ? <Button size="sm" variant="ghost" className="h-7" onClick={() => { setEdit(note ?? ""); setOpen(true); }}><Pencil className="h-3.5 w-3.5 sm:mr-1" /><span className="sr-only sm:not-sr-only">Modifier</span></Button>
     : (
-      <Tooltip><TooltipTrigger asChild><span><Button size="sm" variant="ghost" className="h-7" disabled><Pencil className="mr-1 h-3.5 w-3.5" />Modifier</Button></span></TooltipTrigger>
+      <Tooltip><TooltipTrigger asChild><span><Button size="sm" variant="ghost" className="h-7" disabled><Pencil className="h-3.5 w-3.5 sm:mr-1" /><span className="sr-only sm:not-sr-only">Modifier</span></Button></span></TooltipTrigger>
         <TooltipContent>{peutEcrire ? "Devis validé ou au-delà : note en lecture seule" : "Droit de rédaction requis"}</TooltipContent></Tooltip>
     );
 
@@ -140,7 +140,7 @@ export function NoteDevis({ devisId, statut, peutEcrire }: { devisId: string; st
           <span className="truncate">Note / hypothèses{note ? ` · ${restants === 0 ? "tous les points sont vus" : `${restants} point${restants > 1 ? "s" : ""} à confirmer`}` : " · vide"}</span>
         </button>
         {boutonModifier}
-        <Button size="sm" variant="ghost" className="h-7" onClick={() => setHist(true)}><History className="mr-1 h-3.5 w-3.5" />Historique</Button>
+        <Button size="sm" variant="ghost" className="h-7" onClick={() => setHist(true)}><History className="h-3.5 w-3.5 sm:mr-1" /><span className="sr-only sm:not-sr-only">Historique</span></Button>
       </div>
       {open && edit == null && note && (
         <div className="space-y-3 border-t border-primary/20 px-3 py-2">
