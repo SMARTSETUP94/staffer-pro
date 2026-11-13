@@ -3509,6 +3509,74 @@ export type Database = {
         }
         Relationships: []
       }
+      devis_textes_historique: {
+        Row: {
+          apres: string | null
+          auteur_id: string | null
+          avant: string | null
+          cible: string
+          cree_le: string
+          devis_id: string
+          id: string
+          ligne_id: string | null
+          restaure_depuis: string | null
+          source: string
+        }
+        Insert: {
+          apres?: string | null
+          auteur_id?: string | null
+          avant?: string | null
+          cible: string
+          cree_le?: string
+          devis_id: string
+          id?: string
+          ligne_id?: string | null
+          restaure_depuis?: string | null
+          source: string
+        }
+        Update: {
+          apres?: string | null
+          auteur_id?: string | null
+          avant?: string | null
+          cible?: string
+          cree_le?: string
+          devis_id?: string
+          id?: string
+          ligne_id?: string | null
+          restaure_depuis?: string | null
+          source?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "devis_textes_historique_devis_id_fkey"
+            columns: ["devis_id"]
+            isOneToOne: false
+            referencedRelation: "devis"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "devis_textes_historique_devis_id_fkey"
+            columns: ["devis_id"]
+            isOneToOne: false
+            referencedRelation: "v_devis_consommation"
+            referencedColumns: ["devis_id"]
+          },
+          {
+            foreignKeyName: "devis_textes_historique_ligne_id_fkey"
+            columns: ["ligne_id"]
+            isOneToOne: false
+            referencedRelation: "devis_lignes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "devis_textes_historique_restaure_depuis_fkey"
+            columns: ["restaure_depuis"]
+            isOneToOne: false
+            referencedRelation: "devis_textes_historique"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dispos_intervenants: {
         Row: {
           a_valider: boolean
@@ -9070,10 +9138,15 @@ export type Database = {
         }[]
       }
       devis_normalize: { Args: { t: string }; Returns: string }
+      devis_note_fusionner: {
+        Args: { _devis_id: string; _texte: string }
+        Returns: undefined
+      }
       devis_note_mcp_cocher: {
         Args: { _coches: Json; _devis_id: string }
         Returns: undefined
       }
+      devis_note_separateur: { Args: { _auteur: string }; Returns: string }
       devis_nouvelle_version: { Args: { _devis_id: string }; Returns: string }
       devis_objet_inserer: {
         Args: {
@@ -9198,6 +9271,17 @@ export type Database = {
           poste_id: string
           taux_vente: number
         }[]
+      }
+      devis_texte_modifier: {
+        Args: {
+          _cible: string
+          _devis_id: string
+          _ligne_id: string
+          _mode?: string
+          _restaure_depuis?: string
+          _texte: string
+        }
+        Returns: Json
       }
       dismiss_inbox_item: { Args: { p_item_key: string }; Returns: undefined }
       dispos_debit: {
