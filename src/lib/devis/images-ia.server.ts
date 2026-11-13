@@ -124,8 +124,18 @@ async function appelIA(messages: unknown[], outil: { name: string; parameters: u
   const { appelerIAJson, messageErreurIA } = await import("@/lib/ai/fournisseur.server");
   const msgs = messages as Array<{ role: string; content: any }>;
   const systeme = msgs.filter((m) => m.role === "system").map((m) => String(m.content)).join("\n");
-  const contenu = msgs.filter((m) => m.role === "user").flatMap((m) => (m.content as any[]).map((p) =>
-    p.type === "image_url" ? { type: "image_url" as const, url: String(p.image_url?.url ?? "") } : { type: "text" as const, text: String(p.text ?? "") }));
+  const { versBase64 } = await import("@/lib/ai/fournisseur.server");
+  // Les vignettes signées sont téléchargées ici puis transmises en base64 : le modèle ne va jamais chercher une URL.
+  const parties = msgs.filter((m) => m.role === "user").flatMap((m) => m.content as any[]);
+  const contenu = await Promise.all(parties.map(async (p) => {
+    if (p.type !== "image_url") return { type: "text" as const, text: String(p.text ?? "") };
+    try {
+      const r = await fetch(String(p.image_url?.url ?? ""), { signal: AbortSignal.timeout(30_000) });
+      const mime = (r.headers.get("content-type") ?? "").split(";")[0];
+      if (!r.ok || !/^image\/(png|jpeg|webp|gif)$/.test(mime)) return { type: "text" as const, text: "(vignette indisponible)" };
+      return { type: "image" as const, mime, base64: versBase64(new Uint8Array(await r.arrayBuffer())) };
+    } catch { return { type: "text" as const, text: "(vignette indisponible)" }; }
+  }));
   try {
     const r = await appelerIAJson<any>(key, { usage: "images_devis", modele: MODELE_IA, systeme, contenu, schema: outil.parameters as Record<string, unknown>, nomSchema: outil.name, maxSortie: 8000 });
     dernierModele = r.modele;
