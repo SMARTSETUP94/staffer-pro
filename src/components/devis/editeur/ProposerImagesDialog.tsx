@@ -91,7 +91,7 @@ export function ProposerImagesDialog({ devisId, affaireId, lignes }: { devisId: 
             </div>
           )}
           {!etape && info && (
-            <div className="grid min-h-0 flex-1 gap-3 overflow-y-auto md:grid-cols-[minmax(0,14rem)_1fr]">
+            <div className="grid min-h-0 flex-1 gap-3 overflow-y-auto overflow-x-hidden md:grid-cols-[minmax(0,14rem)_1fr]">
               <ul className="space-y-1 text-sm">
                 {cibles.map((l) => (
                   <li key={l.id} className="rounded border border-dashed px-2 py-1.5" onDragOver={(e) => e.preventDefault()}
@@ -101,15 +101,15 @@ export function ProposerImagesDialog({ devisId, affaireId, lignes }: { devisId: 
                   </li>
                 ))}
               </ul>
-              <div className="space-y-3">
+              <div className="min-w-0 space-y-3">
                 {choix.length === 0 && <p className="text-sm text-muted-foreground">Aucune image ne correspond aux zones et objets de ce devis.</p>}
                 {cibles.filter((l) => choix.some((c) => c.ligne_id === l.id)).map((l) => (
                   <section key={l.id} className="space-y-2">
                     <h4 className="text-sm font-semibold">{zoneDe(l) ? `${zoneDe(l)} › ` : ""}{l.libelle || "Sans titre"}</h4>
-                    <div className="grid gap-2 sm:grid-cols-2">
+                    <div className="grid min-w-0 gap-2 sm:grid-cols-2">
                       {choix.filter((c) => c.ligne_id === l.id).map((c) => (
-                        <div key={c.cle} draggable onDragStart={(e) => e.dataTransfer.setData("text/plain", c.cle)} className="flex gap-2 rounded-md border p-2 text-xs">
-                          <img src={urls[c.document_id] || undefined} alt={c.document_nom} className="h-20 w-20 shrink-0 rounded object-cover" />
+                        <div key={c.cle} draggable onDragStart={(e) => e.dataTransfer.setData("text/plain", c.cle)} className="flex min-w-0 gap-2 rounded-md border p-2 text-xs">
+                          <img src={urls[c.document_id] || undefined} alt={c.document_nom} className="h-16 w-16 shrink-0 rounded object-cover sm:h-20 sm:w-20" />
                           <div className="min-w-0 flex-1 space-y-1">
                             <label className="flex items-center gap-1 font-medium">
                               <input type="checkbox" checked={c.coche} onChange={(e) => maj(c.cle, (x) => ({ ...x, coche: e.target.checked }))} />
@@ -121,9 +121,9 @@ export function ProposerImagesDialog({ devisId, affaireId, lignes }: { devisId: 
                             </div>
                             <p className="text-muted-foreground">{c.justification}</p>
                             <Input value={c.legende} maxLength={80} aria-label="Légende" placeholder="Légende" className="h-7 text-xs" onChange={(e) => maj(c.cle, (x) => ({ ...x, legende: e.target.value }))} />
-                            <div className="flex items-center justify-between gap-2">
+                            <div className="flex flex-wrap items-center justify-between gap-2">
                               <label className="flex items-center gap-1"><input type="checkbox" checked={c.visible_client} onChange={(e) => maj(c.cle, (x) => ({ ...x, visible_client: e.target.checked }))} />Visible client</label>
-                              <select aria-label="Déplacer vers" className="h-7 max-w-[9rem] rounded border bg-background text-xs" value={c.ligne_id} onChange={(e) => deplacer(c.cle, e.target.value)}>
+                              <select aria-label="Déplacer vers" className="h-7 min-w-0 max-w-full rounded border bg-background text-xs sm:max-w-[9rem]" value={c.ligne_id} onChange={(e) => deplacer(c.cle, e.target.value)}>
                                 {cibles.map((t) => <option key={t.id} value={t.id}>{t.libelle || "Sans titre"}</option>)}
                               </select>
                             </div>
