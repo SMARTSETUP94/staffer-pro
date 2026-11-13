@@ -127,7 +127,11 @@ async function appelIA(messages: unknown[], outil: { name: string; parameters: u
   });
   if (r.status === 429) throw new Error("Service IA saturé : réessayez dans une minute.");
   if (r.status === 402) throw new Error("Crédits IA épuisés.");
-  if (!r.ok) throw new Error(`Service IA indisponible (${r.status})`);
+  if (!r.ok) {
+    const corps = (await r.text().catch(() => "")).slice(0, 400);
+    console.error(`[images-ia] passerelle IA ${r.status} : ${corps}`);
+    throw new Error(`Service IA indisponible (${r.status})`);
+  }
   const j: any = await r.json();
   const call = j.choices?.[0]?.message?.tool_calls?.[0];
   let args: any = {};
