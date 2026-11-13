@@ -6,6 +6,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { TYPE_LABEL, eur, type Ligne } from "./api";
+import { CommentaireEnPlace } from "./NoteDevis";
 
 export interface ArbreActions {
   select: (id: string) => void;
@@ -17,9 +18,10 @@ export interface ArbreActions {
 
 const CONTENEURS = new Set(["zone", "option", "chapitre_suivi", "chapitre_pose", "chapitre_depose", "objet"]);
 
-export function DevisArbre({ lignes, montants, racines, selected, readOnly, actions }: {
+export function DevisArbre({ lignes, montants, racines, selected, readOnly, actions, commentaires }: {
   lignes: Ligne[]; montants: Record<string, number>; racines: Record<string, number>;
   selected: string | null; readOnly: boolean; actions: ArbreActions;
+  commentaires?: { peut: boolean; enregistrer: (id: string, texte: string) => Promise<void>; historique: (id: string) => void };
 }) {
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [drag, setDrag] = useState<string | null>(null);
@@ -93,7 +95,9 @@ export function DevisArbre({ lignes, montants, racines, selected, readOnly, acti
           {l.type === "commentaire" ? (
             <span className="flex min-w-0 flex-1 items-center gap-1 italic text-muted-foreground">
               <MessageSquare className="h-3.5 w-3.5 shrink-0" />{l.interne && <Lock className="h-3 w-3 shrink-0" />}
-              <span className="line-clamp-2 break-words" title={l.texte || "Commentaire"}>{l.texte || "Commentaire"}</span>
+              {commentaires
+                ? <CommentaireEnPlace texte={l.texte} peut={commentaires.peut} enregistrer={(t) => commentaires.enregistrer(l.id, t)} historique={() => commentaires.historique(l.id)} />
+                : <span className="line-clamp-2 break-words" title={l.texte || "Commentaire"}>{l.texte || "Commentaire"}</span>}
             </span>
           ) : (
             <span className="line-clamp-2 min-w-0 flex-1 break-words leading-snug" title={`${depth === 0 ? TYPE_LABEL[l.type] + " · " : ""}${l.libelle || "(sans titre)"}${l.type === "objet" && Number(l.quantite) !== 1 ? ` ×${Number(l.quantite)}` : ""}`}>

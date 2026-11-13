@@ -5,7 +5,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle, ArrowLeft, PanelLeft, CheckCircle2, Circle, Maximize2, Minimize2, Eye, FileDown, Mail, Library, MessageSquarePlus, PenLine, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { useDevisClaude, BadgeClaude, NoteClaude } from "@/components/devis/RedactionClaude";
+import { useDevisClaude, BadgeClaude } from "@/components/devis/RedactionClaude";
+import { NoteDevis, HistoriqueTextes, STATUTS_TEXTE_EDITABLES } from "./NoteDevis";
 import { DevisStatutBadge } from "@/components/devis/DevisStatutBadge";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -91,6 +92,7 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
   }, [pleinEcran]);
   const [signOpp, setSignOpp] = useState<{ id: string; code: string; client: string | null; typologie: TypologieFuture | null } | null>(null);
 
+  const [histComm, setHistComm] = useState<string | null>(null);
   const d = q.data;
   const claude = useDevisClaude([devisId]);
   const infoClaude = claude.data?.get(devisId);
@@ -133,6 +135,7 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
 
   const st = d.devis.statut_redaction;
   const readOnly = st !== "brouillon" || !d.droits.ecrire;
+  const texteEditable = d.droits.ecrire && STATUTS_TEXTE_EDITABLES.includes(st);
   const ligneSel = d.lignes.find((l) => l.id === selected) ?? null;
 
   const ajouter = async (type: Ligne["type"], extra: Record<string, unknown> = {}) => {
@@ -257,7 +260,8 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
           {pleinEcran ? <Minimize2 className="mr-1 h-3.5 w-3.5" /> : <Maximize2 className="mr-1 h-3.5 w-3.5" />}{pleinEcran ? "Quitter" : "Plein écran"}
         </Button>
       </div>
-      {infoClaude && <NoteClaude key={infoClaude.id} info={infoClaude} peutCocher={d.droits.ecrire} />}
+      <NoteDevis devisId={devisId} statut={st} peutEcrire={d.droits.ecrire} />
+      <HistoriqueTextes devisId={devisId} cible="commentaire" ligneId={histComm} open={!!histComm} onOpenChange={(o) => { if (!o) setHistComm(null); }} peutRestaurer={texteEditable} onRestaure={() => void q.refetch()} />
       {/* En-tête */}
       <Card>
         <CardContent className="flex flex-wrap items-start gap-4 p-4">
@@ -381,6 +385,11 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
               </div>
             )}
             <DevisArbre lignes={d.lignes} montants={calc.lignes} racines={calc.racines} selected={selected} readOnly={readOnly}
+              commentaires={{ peut: texteEditable, historique: setHistComm, enregistrer: async (id, texte) => {
+                patch((x) => ({ ...x, lignes: x.lignes.map((l) => (l.id === id ? { ...l, texte } : l)) }));
+                const { error } = await supabase.rpc("devis_texte_modifier", { _devis_id: devisId, _cible: "commentaire", _ligne_id: id, _texte: texte, _mode: "remplacer" });
+                if (error) { toast.error("Commentaire non enregistré", { description: error.message }); void q.refetch(); }
+              } }}
               actions={{
                 select: (id) => { setSelected(id); setPanneauMobile(false); },
                 move: (id, parentId, ordre) => {
