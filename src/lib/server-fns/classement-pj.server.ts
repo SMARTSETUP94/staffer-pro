@@ -8,7 +8,7 @@
 import { isDocumentAffaireCode, validateEmailDocument } from "@/lib/affaire-document-rules";
 import { estLogoSignature, cleImage, dimensionsImage, etatBilan, MOTIF_LOGO, PIECES_MAX, type BilanClassement, type PieceBilan } from "@/lib/pieces-jointes-classement";
 
-import { categorieParRegle } from "@/lib/devis/images-ia";
+import { categorieParRegle, nomLisibleParRegle } from "@/lib/devis/images-ia";
 import { empreinte } from "@/lib/devis/empreinte";
 
 type Graph = { base: string; token: string };
@@ -105,7 +105,7 @@ export async function classerPiecesJointes(db: any, emailId: string, auteurId: s
     if (up.error) { pieces.push({ attachment_id: att, nom, resultat: "refusee", motif: "Dépôt du fichier refusé" }); continue; }
     const regle = categorieParRegle(nom);
     const ins = await db.from("affaire_documents").insert({ id, affaire_id: affaireId, storage_path: path, filename: nom, mime_type: mime, taille_bytes: bytes.byteLength, uploaded_by: auteurId, description: `Email : ${email.subject ?? "Sans objet"}`, source_email_id: emailId, source_attachment_id: att,
-      empreinte_sha256: await empreinte(bytes), ...(regle ? { categorie: regle, categorie_source: "regle" } : {}) });
+      empreinte_sha256: await empreinte(bytes), ...(regle ? { categorie: regle, categorie_source: "regle", nom_lisible: nomLisibleParRegle(nom) } : {}) });
     if (ins.error) {
       await db.storage.from("affaires-photos").remove([path]);
       if (ins.error.code === "23505") {

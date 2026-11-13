@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { categorieParRegle, controlerAvantAppel, estimerCout, filtrerPropositions, lireImage, nettoyerLegende, validerRendu, visibleClientParDefaut } from "../images-ia";
+import { nomLisibleParRegle, categorieParRegle, controlerAvantAppel, estimerCout, filtrerPropositions, lireImage, nettoyerLegende, validerRendu, visibleClientParDefaut } from "../images-ia";
 import { encoderPng } from "../images-ia.server";
 
 const L1 = "11111111-1111-1111-1111-111111111111", L2 = "22222222-2222-2222-2222-222222222222";
@@ -10,6 +10,7 @@ describe("images des devis par l'IA", () => {
   it("reconnaît notre propre devis renvoyé dans un fil", () => {
     expect(categorieParRegle("Devis 9516-R1.pdf")).toBe("devis_setup");
     expect(categorieParRegle("CHIFFRAGE_MIROIR_09_11_2026.pdf")).toBeNull();
+    expect(nomLisibleParRegle("Devis 9516-R1.pdf")).toBe("Devis Set Up 9516-R1 — renvoyé dans le fil");
   });
   it("visible client : oui pour visuels/moodboards, non pour plans et repérage", () => {
     expect(visibleClientParDefaut("visuel")).toBe(true);

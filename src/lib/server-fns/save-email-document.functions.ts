@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { categorieParRegle } from "@/lib/devis/images-ia";
+import { categorieParRegle, nomLisibleParRegle } from "@/lib/devis/images-ia";
 import { empreinte } from "@/lib/devis/empreinte";
 import { isDocumentAffaireCode, validateEmailDocument } from "@/lib/affaire-document-rules";
 
@@ -38,7 +38,7 @@ export const saveEmailDocument = createServerFn({ method: "POST" })
     const { error: uploadError } = await supabase.storage.from("affaires-photos").upload(path, bytes, { contentType: mime, upsert: false });
     if (uploadError) throw new Error(uploadError.message);
     const { error: insertError } = await supabase.from("affaire_documents").insert({ id, affaire_id: affaire.id, storage_path: path, filename, mime_type: mime, taille_bytes: bytes.byteLength, uploaded_by: userId, description: `Email : ${email.subject ?? "Sans objet"}`, source_email_id: email.id, source_attachment_id: data.attachmentId,
-      empreinte_sha256: await empreinte(bytes), ...(categorieParRegle(filename) ? { categorie: categorieParRegle(filename), categorie_source: "regle" } : {}) });
+      empreinte_sha256: await empreinte(bytes), ...(categorieParRegle(filename) ? { categorie: categorieParRegle(filename), categorie_source: "regle", nom_lisible: nomLisibleParRegle(filename) } : {}) });
     if (insertError) {
       // An unreferenced upload remains private; remove it when storage policy allows cleanup.
       await supabase.storage.from("affaires-photos").remove([path]);

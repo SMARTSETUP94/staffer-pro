@@ -7,7 +7,7 @@ import { zlibSync } from "fflate";
 import { empreinte } from "./empreinte";
 import {
   CATEGORIES_BOITE, CATEGORIES_EXCLUES, MAX_IMAGES_PAR_APPEL, MODELE_IA, categorieParRegle, controlerAvantAppel, coutEur,
-  estimerCout, filtrerPropositions, validerRendu, type Proposition,
+  estimerCout, filtrerPropositions, nomLisibleParRegle, validerRendu, type Proposition,
 } from "./images-ia";
 
 const PDF_MAX = 20 * 1024 * 1024, PAGES_MAX = 30, IMAGES_MAX = 40, PDF_IMAGES_SERVEUR_MAX = 3 * 1024 * 1024;
@@ -151,7 +151,7 @@ export async function categoriserBoite(db: any, affaireId: string): Promise<{ ap
   const restants: any[] = [];
   for (const d of docs) {
     const r = categorieParRegle(d.filename);
-    if (r) await db.rpc("affaire_document_categoriser", { _id: d.id, _categorie: r, _nom_lisible: null, _source: "regle" });
+    if (r) await db.rpc("affaire_document_categoriser", { _id: d.id, _categorie: r, _nom_lisible: nomLisibleParRegle(d.filename), _source: "regle" });
     else restants.push(d);
   }
   if (!restants.length) return { appels: 0, usage, traites: docs.length };

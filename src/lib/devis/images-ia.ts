@@ -14,6 +14,12 @@ export const CATEGORIE_LABEL: Record<string, string> = {
 export function estDevisSetUp(nom: string): boolean {
   return /^\s*devis[\s_-]*\d{4,5}(-r\d+)?\b/i.test(nom) || /set\s*up.*devis|devis.*set\s*up/i.test(nom);
 }
+/** Nom lisible explicite de notre propre devis (« Devis Set Up 9516-R1 — renvoyé dans le fil »). */
+export function nomLisibleParRegle(nom: string): string | null {
+  if (!estDevisSetUp(nom)) return null;
+  const n = nom.match(/\d{4,5}(-r\d+)?/i)?.[0]?.toUpperCase() ?? "";
+  return `Devis Set Up ${n} — renvoyé dans le fil`.replace(/\s+/g, " ").trim();
+}
 export function categorieParRegle(nom: string): CategorieBoite | null {
   return estDevisSetUp(nom) ? "devis_setup" : null;
 }
