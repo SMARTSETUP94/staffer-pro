@@ -65,4 +65,4 @@
 - Logistics form requests: emails_entrants rows via token-gated service-role RPCs; poller never creates steps.
 
 
-- All AI calls use src/lib/ai/fournisseur.server.ts (per-usage model constant, Claude Messages, Gemini fallback on 429/5xx/invalid only, ia_appels log without content) to keep model choice and costs in one place.
+- AI calls go only through src/lib/ai/fournisseur.server.ts (model per usage, logged); one place for models and costs.

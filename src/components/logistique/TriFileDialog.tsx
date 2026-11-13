@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -33,10 +33,11 @@ export function TriFileDialog({ open, onOpenChange, onDone }: { open: boolean; o
       onDone(); await charger();
     } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
   }
+  useEffect(() => { if (open && !bilan && !busy) void charger(); }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
   const nbChoisis = bilan?.groupes.filter((g) => choix.has(g.groupe)).reduce((a, g) => a + g.nombre, 0) ?? 0;
 
   return (
-    <Dialog open={open} onOpenChange={(o) => { onOpenChange(o); if (o && !bilan) void charger(); }}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Reclasser la file</DialogTitle>
