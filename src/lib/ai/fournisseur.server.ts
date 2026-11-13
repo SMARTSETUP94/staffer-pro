@@ -13,10 +13,15 @@ export const MODELE_SONNET = "anthropic/claude-sonnet-5";
 export const MODELE_HAIKU = "anthropic/claude-haiku-4-5";
 export const MODELE_SECOURS = "google/gemini-3-flash-preview";
 
-/** Modèle choisi par usage (bascule décidée par le banc d'essai). */
+/**
+ * Modèle choisi par usage. Bascule vers Claude seulement si le banc d'essai la justifie
+ * (banc du 13/11/2026 : tri → Haiku validé ; extraction logistique : Sonnet en dessous
+ * de Gemini sur type et lieu, bascule suspendue). Les usages non encore branchés ici
+ * gardent leur modèle dans leur propre fichier.
+ */
 export const MODELES_PAR_USAGE: Record<UsageIA, string> = {
   tri_mails: MODELE_HAIKU,
-  extraction_logistique: MODELE_SONNET,
+  extraction_logistique: MODELE_SECOURS,
   jalonnement: MODELE_SONNET,
   documents_fournisseurs: MODELE_SONNET,
   images_devis: MODELE_SONNET,
