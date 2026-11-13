@@ -38,6 +38,20 @@ export function EtapeDialog({ open, onOpenChange, etape, defaultDate, defaultAff
   const [saving, setSaving] = useState(false);
   const [affaireOpen, setAffaireOpen] = useState(false);
   const [f, setF] = useState(() => init());
+  const [chefProjet, setChefProjet] = useState<string | null>(null);
+  // Chef de projet du chantier choisi (lecture seule, vient de l'équipe projet).
+  useEffect(() => {
+    setChefProjet(null);
+    if (!f.affaire_id) return;
+    let vivant = true;
+    (async () => {
+      const { data: a } = await supabase.from("affaires").select("chef_projet_id").eq("id", f.affaire_id).maybeSingle();
+      if (!a?.chef_projet_id) return;
+      const { data: p } = await supabase.from("profiles").select("full_name, email").eq("id", a.chef_projet_id).maybeSingle();
+      if (vivant) setChefProjet(p?.full_name || p?.email || null);
+    })();
+    return () => { vivant = false; };
+  }, [f.affaire_id]);
 
   function init() {
     return {
@@ -202,7 +216,7 @@ export function EtapeDialog({ open, onOpenChange, etape, defaultDate, defaultAff
           )}
           <div><Label>Lieu</Label><LieuAutocomplete value={f.lieu_libre} onChange={(v) => set("lieu_libre", v)} /></div>
           <div><Label>Nb personnes</Label><Input type="number" min={0} value={f.nb_personnes} onChange={(e) => set("nb_personnes", e.target.value)} /></div>
-          <div><Label>Chefs d'équipe requis</Label><Input type="number" min={0} value={f.nb_chefs_equipe} onChange={(e) => set("nb_chefs_equipe", e.target.value)} /></div>
+          <div><Label>Chef de projet</Label><Input readOnly disabled value={chefProjet ?? (f.affaire_id ? "Non renseigné" : "Choisir un chantier")} /></div>
           <div><Label>Nb véhicules</Label><Input type="number" min={0} value={f.nb_vehicules} onChange={(e) => set("nb_vehicules", e.target.value)} /></div>
           <div className="sm:col-span-2"><Label>Permis requis (1 personne par permis)</Label><ChoixMultiple options={["B", "C", "CE"]} value={f.permis_requis} onChange={(v) => set("permis_requis", v)} /></div>
           <div className="sm:col-span-2"><Label>CACES requis</Label><ChoixMultiple options={["R489", "R486"]} value={f.caces_requis} onChange={(v) => set("caces_requis", v)} /></div>
