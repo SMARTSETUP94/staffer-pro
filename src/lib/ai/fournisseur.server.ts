@@ -7,29 +7,31 @@
  */
 export type UsageIA =
   | "tri_mails" | "extraction_logistique" | "jalonnement" | "documents_fournisseurs" | "images_devis"
-  | "notes_frais" | "enrichissement_client" | "mail_client" | "planning_import" | "banc_essai";
+  | "notes_frais" | "enrichissement_client" | "mail_client" | "planning_import" | "assistant_etapes" | "banc_essai";
 
 export const MODELE_SONNET = "anthropic/claude-sonnet-5";
 export const MODELE_HAIKU = "anthropic/claude-haiku-4-5";
 export const MODELE_SECOURS = "google/gemini-3-flash-preview";
 
 /**
- * Modèle choisi par usage. Bascule vers Claude seulement si le banc d'essai la justifie
- * (banc du 13/11/2026 : tri → Haiku validé ; extraction logistique : Sonnet en dessous
- * de Gemini sur type et lieu, bascule suspendue). Les usages non encore branchés ici
- * gardent leur modèle dans leur propre fichier.
+ * Modèle choisi par usage (décision du 13/11/2026, banc d'essai) :
+ * Haiku 4.5 pour le tri, l'extraction logistique et les tâches voisines (jalonnements,
+ * import de planning, assistant d'étapes), l'enrichissement et le mail client ;
+ * Sonnet 5 pour documents fournisseurs, images des devis et notes de frais.
+ * Gemini uniquement en secours.
  */
 export const MODELES_PAR_USAGE: Record<UsageIA, string> = {
   tri_mails: MODELE_HAIKU,
-  extraction_logistique: MODELE_SECOURS,
-  jalonnement: MODELE_SONNET,
+  extraction_logistique: MODELE_HAIKU,
+  jalonnement: MODELE_HAIKU,
+  planning_import: MODELE_HAIKU,
+  assistant_etapes: MODELE_HAIKU,
   documents_fournisseurs: MODELE_SONNET,
   images_devis: MODELE_SONNET,
   notes_frais: MODELE_SONNET,
-  enrichissement_client: MODELE_SONNET,
-  mail_client: MODELE_SONNET,
-  planning_import: MODELE_SONNET,
-  banc_essai: MODELE_SONNET,
+  enrichissement_client: MODELE_HAIKU,
+  mail_client: MODELE_HAIKU,
+  banc_essai: MODELE_HAIKU,
 };
 
 /** Coût en crédits par jeton (liste authentifiée de la passerelle, 13/11/2026). */
@@ -46,7 +48,10 @@ export function coutEstime(modele: string, entree: number, sortie: number): numb
 
 const GW = "https://ai.gateway.lovable.dev/v1";
 export type PartieImage = { type: "image"; mime: string; base64: string };
-export type Contenu = string | Array<{ type: "text"; text: string } | PartieImage>;
+export type PartiePdf = { type: "pdf"; base64: string; nom?: string };
+export type PartieImageUrl = { type: "image_url"; url: string };
+export type Partie = { type: "text"; text: string } | PartieImage | PartiePdf | PartieImageUrl;
+export type Contenu = string | Partie[];
 export type AppelIA = {
   usage: UsageIA; systeme: string; contenu: Contenu;
   schema: Record<string, unknown>; nomSchema?: string;
@@ -90,7 +95,10 @@ async function lireSSE(res: Response, surEvt: (e: Record<string, unknown>) => vo
 async function appelClaude(key: string, modele: string, a: AppelIA) {
   const nom = a.nomSchema ?? "resultat";
   const contenu = enveloppe(a.contenu);
-  const content = typeof contenu === "string" ? contenu : contenu.map((p) => p.type === "text" ? p : { type: "image", source: { type: "base64", media_type: p.mime, data: p.base64 } });
+  const content = typeof contenu === "string" ? contenu : contenu.map((p) => p.type === "text" ? p
+    : p.type === "pdf" ? { type: "document", source: { type: "base64", media_type: "application/pdf", data: p.base64 } }
+    : p.type === "image_url" ? { type: "image", source: { type: "url", url: p.url } }
+    : { type: "image", source: { type: "base64", media_type: p.mime, data: p.base64 } });
   const res = await fetch(`${GW}/messages`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}`, "X-Lovable-AIG-SDK": "fetch" },
@@ -117,7 +125,10 @@ async function appelClaude(key: string, modele: string, a: AppelIA) {
 
 async function appelChat(key: string, modele: string, a: AppelIA) {
   const contenu = enveloppe(a.contenu);
-  const content = typeof contenu === "string" ? contenu : contenu.map((p) => p.type === "text" ? p : { type: "image_url", image_url: { url: `data:${p.mime};base64,${p.base64}` } });
+  const content = typeof contenu === "string" ? contenu : contenu.map((p) => p.type === "text" ? p
+    : p.type === "pdf" ? { type: "file", file: { filename: p.nom ?? "document.pdf", file_data: `data:application/pdf;base64,${p.base64}` } }
+    : p.type === "image_url" ? { type: "image_url", image_url: { url: p.url } }
+    : { type: "image_url", image_url: { url: `data:${p.mime};base64,${p.base64}` } });
   const res = await fetch(`${GW}/chat/completions`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}`, "X-Lovable-AIG-SDK": "fetch" },
@@ -132,7 +143,10 @@ async function appelChat(key: string, modele: string, a: AppelIA) {
 
 async function appelResponses(key: string, modele: string, a: AppelIA) {
   const contenu = enveloppe(a.contenu);
-  const input = typeof contenu === "string" ? contenu : [{ role: "user", content: contenu.map((p) => p.type === "text" ? { type: "input_text", text: p.text } : { type: "input_image", image_url: `data:${p.mime};base64,${p.base64}` }) }];
+  const input = typeof contenu === "string" ? contenu : [{ role: "user", content: contenu.map((p) => p.type === "text" ? { type: "input_text", text: p.text }
+    : p.type === "pdf" ? { type: "input_file", filename: p.nom ?? "document.pdf", file_data: `data:application/pdf;base64,${p.base64}` }
+    : p.type === "image_url" ? { type: "input_image", image_url: p.url }
+    : { type: "input_image", image_url: `data:${p.mime};base64,${p.base64}` }) }];
   const res = await fetch(`${GW}/responses`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}`, "X-Lovable-AIG-SDK": "fetch" },
@@ -187,4 +201,33 @@ export async function appelerIAJson<T = unknown>(key: string, a: AppelIA): Promi
       throw e2;
     }
   }
+}
+
+/** Variante avec un schéma zod : conversion en schéma JSON puis validation stricte de la sortie. */
+export async function appelerIAZod<T>(key: string, a: Omit<AppelIA, "schema"> & { zod: import("zod").ZodType<T> }): Promise<ResultatIA<T>> {
+  const { zodSchema } = await import("ai");
+  const js = { ...((await zodSchema(a.zod as never).jsonSchema) as Record<string, unknown>) };
+  delete js.$schema;
+  const { zod, ...reste } = a;
+  const r = await appelerIAJson<unknown>(key, { ...reste, schema: js });
+  const ok = zod.safeParse(r.data);
+  if (!ok.success) throw new ErreurIA("Réponse IA hors du format attendu", 0, false);
+  return { ...r, data: ok.data };
+}
+
+/** Message lisible pour l'écran (crédits, saturation, refus). */
+export function messageErreurIA(e: unknown): string {
+  if (e instanceof ErreurIA) {
+    if (e.status === 402) return "Crédits IA épuisés : rechargez dans Paramètres → Plans & crédits.";
+    if (e.status === 429) return "IA momentanément saturée : réessayez dans une minute.";
+    if (e.terminal && e.status === 200) return "L'IA a refusé d'analyser ce contenu.";
+  }
+  return e instanceof Error ? e.message : "Analyse IA impossible.";
+}
+
+/** Base64 d'un tableau d'octets, par blocs (évite le dépassement de pile). */
+export function versBase64(bytes: Uint8Array): string {
+  let bin = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return btoa(bin);
 }

@@ -11,12 +11,14 @@ import { requireCapability } from "@/lib/capability-guard";
 import { useCapability } from "@/hooks/use-capability";
 import { supabase } from "@/integrations/supabase/client";
 import { completerSuggestionsEmail } from "@/lib/logistique/suggestions-email";
+import { appliquerReglesEcheances, rapprocherLieu, type EcheanceRegle, type LieuConnu, type AliasLieu } from "@/lib/logistique/extraction-regles";
 import { suggestAffaires } from "@/lib/logistique/suggest-affaire";
 import { commentaireEquipe, trouverVehicule, type EcheanceEnrichie } from "@/lib/logistique/gabarit-demande";
 import { DemandeLogistiqueForm } from "@/components/logistique/DemandeLogistiqueForm";
 import { EmailReaderDialog } from "@/components/emails/EmailReaderDialog";
 import { PiecesJointesMailSelection } from "@/components/logistique/PiecesJointesMailSelection";
 import { PageHeader } from "@/components/PageHeader";
+import { TriFileDialog } from "@/components/logistique/TriFileDialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -67,6 +69,7 @@ function DemandesLogistiquePage() {
   const [affaires, setAffaires] = useState<Aff[]>([]);
   const canEdit = useCapability("logistique.etape.edit");
   const isAdmin = useCapability("section.admin");
+  const [triOuvert, setTriOuvert] = useState(false);
   const reanalyse = useServerFn(reanalyseSharedInboxes);
   const [reanalysing, setReanalysing] = useState(false);
   const [nouvelle, setNouvelle] = useState(false);
@@ -145,7 +148,9 @@ function DemandesLogistiquePage() {
             {reanalysing ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-1" />}
             Relancer l'analyse IA
           </Button>)}
+          {isAdmin && <Button size="sm" variant="outline" onClick={() => setTriOuvert(true)}>Reclasser la file</Button>}
         </div>} />
+      {isAdmin && <TriFileDialog open={triOuvert} onOpenChange={setTriOuvert} onDone={() => void load()} />}
       <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
         <TabsList>
           <TabsTrigger value="todo">À traiter <span className="ml-1.5 text-xs opacity-60">{lists.todo.length}</span></TabsTrigger>
@@ -228,7 +233,8 @@ type Line = { auto?: boolean; keep: boolean; date: string; type: EtapeType; cont
 type Veh = { id: string; nom: string; immatriculation: string | null };
 
 function PlanningDialog({ row, affaires, onClose, onDone }: { row: Row; affaires: Aff[]; onClose: () => void; onDone: () => void }) {
-  const ech = row.metadata_ia?.echeances ?? [];
+  // Règles L1 appliquées aussi à l'affichage : heures normalisées, année déduite de la réception, dates trop anciennes écartées.
+  const ech = useMemo(() => appliquerReglesEcheances((row.metadata_ia?.echeances ?? []) as EcheanceRegle[], row.received_at).echeances as Echeance[], [row]);
   const numero = ech.find((e) => e.affaire_numero)?.affaire_numero;
   const suggestions = useMemo(() => {
     const m = row.metadata_ia;
@@ -242,7 +248,8 @@ function PlanningDialog({ row, affaires, onClose, onDone }: { row: Row; affaires
       type: ((TYPES as readonly string[]).includes(e.type ?? "") ? e.type : "livraison") as EtapeType,
       src: e as Echeance,
     }));
-    return completerSuggestionsEmail(base).map((x) => {
+    const texteMail = `${row.subject ?? ""} ${(row.body_full ?? row.body_preview ?? "").replace(/<[^>]+>/g, " ")}`;
+    return completerSuggestionsEmail(base, undefined, texteMail).map((x) => {
       const e = (x as typeof x & { src?: Echeance }).src;
       return { ...x, src: e, hDebut: e?.heure_debut ?? "", hFin: e?.heure_fin ?? "", vehiculeId: "",
         nb: e?.nb_personnes != null ? String(e.nb_personnes) : undefined, responsable: e?.responsable ?? "",
@@ -311,16 +318,25 @@ function PlanningDialog({ row, affaires, onClose, onDone }: { row: Row; affaires
     const kept = lines.filter((l) => l.keep && /^\d{4}-\d{2}-\d{2}$/.test(l.date));
     if (!affaireId || kept.length === 0) return toast.error("Choisissez un chantier et au moins une étape datée");
     setSaving(true);
-    const { error } = await supabase.from("affaire_etapes_logistiques").insert(kept.map((l) => ({
+    const [{ data: lieux }, { data: alias }] = await Promise.all([
+      supabase.from("lieux").select("id,label,adresse_complete").eq("actif", true),
+      supabase.from("lieux_alias").select("alias,lieu_id"),
+    ]);
+    const { error } = await supabase.from("affaire_etapes_logistiques").insert(kept.map((l) => {
+      const src = l.src as (Echeance & { duree_minutes?: number | null; a_partir_de?: boolean | null }) | undefined;
+      const lieu = rapprocherLieu(l.lieu, (lieux ?? []) as LieuConnu[], (alias ?? []) as AliasLieu[]);
+      return {
       affaire_id: affaireId, type: l.type, date_debut: l.date,
       heure_debut: l.hDebut || null, heure_fin: l.hFin || null,
+      a_partir_de: src?.a_partir_de ?? null, duree_minutes: src?.duree_minutes ?? null,
+      lieu_id: lieu.lieu_id, lieu_douteux: lieu.lieu_douteux,
       lieu_libre: l.lieu.trim() || null, vehicule_id: l.vehiculeId || null,
       nb_personnes: l.nb ? Number(l.nb) : null,
       commentaire_equipe: l.commentaire?.trim() || null,
       responsable: l.responsable?.trim() || null, acces: l.acces?.trim() || null,
       statut: "valide" as const, origine: "jalonnement" as const,
       note: `${l.contenu?.trim() ? `${l.contenu.trim()} — ` : ""}Depuis un email log@ : « ${(row.subject ?? "").slice(0, 120)} »`,
-    })));
+    }; }));
     if (!error) {
       await supabase.from("emails_entrants").update({ statut: "validated" }).eq("id", row.id);
       await supabase.from("ia_feedback_logistique").insert({

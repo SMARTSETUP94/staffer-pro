@@ -64,14 +64,21 @@ export function filtrerPropositions(brut: unknown, ctx: { lignes: Set<string>; d
   return out.sort((a, b) => b.confiance - a.confiance);
 }
 
-/** Coût (€) d'un appel Gemini 3 Flash : 0,50 $/M en entrée, 3 $/M en sortie, 1 $ ≈ 0,87 €. */
-export const MODELE_IA = "google/gemini-3-flash-preview";
+/** Modèle des images de devis : Claude Sonnet 5 (décision du 13/11/2026), Gemini 3 Flash en secours. */
+export const MODELE_IA = "anthropic/claude-sonnet-5";
+/** Prix publics ($ par million de jetons, entrée/sortie), 1 $ ≈ 0,87 €. */
+const PRIX_USD: Record<string, [number, number]> = {
+  "anthropic/claude-sonnet-5": [3, 15],
+  "anthropic/claude-haiku-4-5": [1, 5],
+  "google/gemini-3-flash-preview": [0.5, 3],
+};
 export const PLAFOND_EUR = 0.10;
 export const MAX_PAR_HEURE = 5;
 export const MAX_IMAGES_PAR_APPEL = 30; // la passerelle accepte 32 images par requête
-export const TOKENS_PAR_IMAGE = 1120;
-export function coutEur(entree: number, sortie: number): number {
-  return Math.round(((entree * 0.5 + sortie * 3) / 1e6) * 0.87 * 10000) / 10000;
+export const TOKENS_PAR_IMAGE = 1600; // Claude : ≈ largeur × hauteur / 750 pour une vignette ~1 Mpx
+export function coutEur(entree: number, sortie: number, modele: string = MODELE_IA): number {
+  const [pe, ps] = PRIX_USD[modele] ?? PRIX_USD[MODELE_IA];
+  return Math.round(((entree * pe + sortie * ps) / 1e6) * 0.87 * 10000) / 10000;
 }
 export function estimerCout(nbImages: number, caracteresTexte: number): { appels: number; cout: number } {
   const appels = Math.max(1, Math.ceil(nbImages / MAX_IMAGES_PAR_APPEL));

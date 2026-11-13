@@ -1,5 +1,4 @@
 import { createServerFn } from '@tanstack/react-start';
-import { getRequest } from '@tanstack/react-start/server';
 import { z } from 'zod';
 import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware';
 import { verifierPlanning } from '@/lib/imports/planning-hebdomadaire';
@@ -13,8 +12,8 @@ export const analyserPlanningHebdomadaire = createServerFn({ method: 'POST' })
     const key = process.env.LOVABLE_API_KEY;
     if (!key) throw new Error('Analyse de documents indisponible');
     const { extrairePlanning } = await import('@/lib/ai/planning-import.server');
-    let content: Extract<import('ai').ModelMessage, { role: 'user' }>['content'];
-    if (/\.pdf$/i.test(data.name)) content = [{ type: 'file', filename: data.name, data: data.base64, mediaType: 'application/pdf' }];
+    let content: import('@/lib/ai/fournisseur.server').Partie[];
+    if (/\.pdf$/i.test(data.name)) content = [{ type: 'pdf', nom: data.name, base64: data.base64 }];
     else if (/\.xlsx$/i.test(data.name)) {
       const module = await import('xlsx-js-style');
       const XLSX = module.default ?? module;
@@ -25,6 +24,6 @@ export const analyserPlanningHebdomadaire = createServerFn({ method: 'POST' })
       if (!text.trim() || text.length > 120000) throw new Error('Planning vide ou trop volumineux.');
       content = [{ type: 'text', text }];
     } else throw new Error('Formats acceptés : PDF et Excel .xlsx.');
-    const output = await extrairePlanning(getRequest(), key, [{ role: 'user', content }]);
+    const output = await extrairePlanning(key, content, context.userId);
     return verifierPlanning(output.interventions);
   });

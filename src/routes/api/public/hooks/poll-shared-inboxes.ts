@@ -7,7 +7,7 @@
 import { demandeDeCopie } from "@/lib/logistique/copie-formulaire";
 import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
-import { loadFeedbackPrompt } from "@/lib/logistique/ia-feedback";
+import { loadFeedbackRows, exemplesPourMail } from "@/lib/logistique/ia-feedback";
 import { classifySharedEmail, clsToMetadata, type SharedCls } from "@/lib/shared-inbox-classify";
 import { resoudreTransfert } from '@/lib/forwarded-email';
 import { findImportedEmail, type ImportedEmailIdentity } from '@/lib/inbox-smart-dedupe';
@@ -74,7 +74,7 @@ export const Route = createFileRoute("/api/public/hooks/poll-shared-inboxes")({
           return Response.json({ ok: false, error: (e as Error).message }, { status: 500 });
         }
         const auth = { Authorization: `Bearer ${token}` };
-        const exemples = await loadFeedbackPrompt(supa);
+        const corrections = await loadFeedbackRows(supa);
 
         for (const box of MAILBOXES) {
           const errors: string[] = [];
@@ -117,6 +117,14 @@ export const Route = createFileRoute("/api/public/hooks/poll-shared-inboxes")({
                 if (dem) continue; // copie mail d'une demande « Formulaire » déjà enregistrée
               }
               let cls: SharedCls;
+              let pj: { pieces: import("@/lib/ai/fournisseur.server").Partie[]; noms: string[]; erreurs: string[] } = { pieces: [], noms: [], erreurs: [] };
+              if (box.source === "logistique" && msg.hasAttachments) {
+                try {
+                  const { lirePiecesJointesLogistique } = await import("@/lib/logistique/pieces-jointes-lecture.server");
+                  pj = await lirePiecesJointesLogistique(token, box.address, msg.id);
+                } catch (e) { pj.erreurs.push((e as Error).message.slice(0, 160)); }
+                if (pj.erreurs.length) console.error(`[log@] pièces jointes ${msg.id} : ${pj.erreurs.join(" ; ")}`);
+              }
               try {
                 cls = await classifySharedEmail(
                   lovableKey,
@@ -128,9 +136,10 @@ export const Route = createFileRoute("/api/public/hooks/poll-shared-inboxes")({
                     bodyContentType: msg.body?.contentType,
                     bodyPreview: msg.bodyPreview,
                     receivedAt: msg.receivedDateTime,
+                    pieces: pj.pieces,
                   },
                   box.source,
-                  exemples,
+                  box.source === "logistique" ? exemplesPourMail(corrections, correction?.subject ?? identity.subject) : "",
                 );
               } catch (e) {
                 cls = { categorie: box.source === "devis" ? "opportunite" : "logistique", confiance: 0, resume: `AI failed: ${(e as Error).message}` };
@@ -151,7 +160,7 @@ export const Route = createFileRoute("/api/public/hooks/poll-shared-inboxes")({
                 categorie_ia: cls.categorie,
                 confiance_ia: cls.confiance,
                 ...(correction ?? {}),
-                metadata_ia: {...clsToMetadata(cls),...(correction?.metadata_ia ?? {})},
+                metadata_ia: {...clsToMetadata(cls),...(correction?.metadata_ia ?? {}),...(pj.noms.length ? { pj_lues: pj.noms } : {}),...(pj.erreurs.length ? { pj_erreurs: pj.erreurs.slice(0, 3) } : {})},
                 statut: "pending_review",
               });
               if (error) {

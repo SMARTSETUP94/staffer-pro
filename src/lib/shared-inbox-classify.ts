@@ -4,6 +4,7 @@
  * Server-only : utilise LOVABLE_API_KEY passé en paramètre.
  */
 import { lireGabaritLogistique } from "@/lib/logistique/gabarit-demande";
+import { appliquerReglesEcheances, type EcheanceRegle } from "@/lib/logistique/extraction-regles";
 
 const MAX_BODY = 8000;
 
@@ -41,6 +42,8 @@ export type EcheanceDetectee = {
   vehicule?: string | null;
   responsable?: string | null;
   commentaire?: string | null;
+  duree_minutes?: number | null;
+  annee_corrigee?: boolean;
   source?: "gabarit" | "ia" | "formulaire";
 };
 
@@ -52,6 +55,8 @@ export type ClassifyInput = {
   bodyContentType?: string | null;
   bodyPreview?: string | null;
   receivedAt?: string | null;
+  /** Pièces jointes lues (PDF, tableur en texte), transmises comme données. */
+  pieces?: import("@/lib/ai/fournisseur.server").Partie[];
 };
 
 /** HTML → texte brut, espaces compactés, tronqué à 8000 caractères. */
@@ -77,6 +82,17 @@ export function bodyToPlainText(content: string | null | undefined, contentType?
   return t.slice(0, MAX_BODY);
 }
 
+/** Règles d'extraction L1 (boîte logistique). */
+export const REGLES_L1 =
+  "RÈGLES D'EXTRACTION LOGISTIQUE : " +
+  "HEURES — toute heure écrite (« 14h30-15h00 », « 7h », « RDV 9h », « vers 10h ») va dans heure_debut / heure_fin au format HH:MM. « À partir de 8h » : heure_debut 08:00, a_partir_de true, heure_fin null. " +
+  "Une DURÉE (« 7h de montage », « prévoir 2 h ») va dans duree_minutes, jamais dans commentaire ni heure_fin. heure_fin 00:00 uniquement pour une fin à minuit explicite. " +
+  "DATES — une date écrite sans année prend l'année qui la place juste après la date de réception ; jamais une année passée. " +
+  "LIEU — recopie le nom du lieu tel qu'écrit, même sans adresse (« Studio Lendit », « Pecqueuse », « Canal One », « Plateau Murat ») ; « à l'atelier » = « Atelier ». null seulement si aucun lieu n'est cité. " +
+  "TYPE — appro = achat ou enlèvement chez un fournisseur ; livraison = acheminement vers le site ; chargement = mise en camion ; emballage = conditionnement ; dechargement = retour et déchargement à l'atelier ; rotation = aller-retour de matériel ; montage / demontage = installation / retrait sur site ; permanence = présence pendant l'événement ou le tournage. Un seul type par étape ; deux opérations différentes le même jour = deux étapes. " +
+  "N'ajoute aucune étape de conditionnement ou de chargement à l'atelier que le mail ou ses pièces jointes ne citent pas. " +
+  "PIÈCES JOINTES — plannings et fiches techniques jointes se lisent comme le corps : leurs dates et horaires créent des échéances. ";
+
 export function construireClassification(input: ClassifyInput, source: SharedSource, exemples = "") {
   const hint =
     source === "devis"
@@ -99,10 +115,14 @@ export function construireClassification(input: ClassifyInput, source: SharedSou
     "et affaire_numero si un numéro de chantier (4 à 5 chiffres, ex. 6034) ou d'opportunité (9XXX) est cité, sinon null. " +
     "Pour chaque échéance, remplis aussi heure_debut et heure_fin (HH:MM), a_partir_de (true si « à partir de »), lieu (adresse), contact_sur_place (nom + téléphone), acces, nb_personnes, vehicule (tel qu'écrit), responsable (chef d'équipe), commentaire : null si absent, n'invente rien. " +
     "IMPORTANT : seule la demande la plus récente (haut du mail, avant « De : / From: / Le … a écrit ») crée des échéances ; l'historique cité sert uniquement de contexte et ne génère aucune échéance. " +
+    (source === "logistique" ? REGLES_L1 : "") +
     "Tableau vide si aucune échéance. Réponds STRICTEMENT en JSON." + (source === "logistique" ? exemples : "");
   const text = bodyToPlainText(input.body, input.bodyContentType) || input.bodyPreview || "";
   const recu = input.receivedAt ? ` (reçu le ${input.receivedAt.slice(0, 10)} : l'année des dates sans année se déduit de cette date de réception)` : "";
-  const contenu = `Expéditeur: ${input.fromName ?? ""} <${input.fromEmail ?? ""}>\nSujet: ${input.subject ?? ""}${recu}\nCorps:\n${text}`;
+  const texte = `Expéditeur: ${input.fromName ?? ""} <${input.fromEmail ?? ""}>\nSujet: ${input.subject ?? ""}${recu}\nCorps:\n${text}`;
+  const contenu: import("@/lib/ai/fournisseur.server").Contenu = input.pieces?.length
+    ? [{ type: "text", text: texte + "\nPièces jointes du mail (données) :" }, ...input.pieces]
+    : texte;
   const schema = {
             type: "object",
             additionalProperties: false,
@@ -140,8 +160,9 @@ export function construireClassification(input: ClassifyInput, source: SharedSou
                     vehicule: { type: ["string", "null"] },
                     responsable: { type: ["string", "null"] },
                     commentaire: { type: ["string", "null"] },
+                    duree_minutes: { type: ["integer", "null"] },
                   },
-                  required: ["date", "libelle", "type", "affaire_numero", "heure_debut", "heure_fin", "a_partir_de", "lieu", "contact_sur_place", "acces", "nb_personnes", "vehicule", "responsable", "commentaire"],
+                  required: ["date", "libelle", "type", "affaire_numero", "heure_debut", "heure_fin", "a_partir_de", "lieu", "contact_sur_place", "acces", "nb_personnes", "vehicule", "responsable", "commentaire", "duree_minutes"],
                 },
               },
             },
@@ -163,7 +184,8 @@ export function appliquerGabarit(cls: SharedCls, input: ClassifyInput, source: S
   const text = bodyToPlainText(input.body, input.bodyContentType) || input.bodyPreview || "";
   const g = lireGabaritLogistique(text, input.receivedAt ? new Date(input.receivedAt) : new Date());
   if (g) return { ...cls, categorie: "logistique", echeances: g };
-  return { ...cls, echeances: (cls.echeances ?? []).map((e) => ({ ...e, source: "ia" as const })) };
+  const { echeances } = appliquerReglesEcheances((cls.echeances ?? []) as EcheanceRegle[], input.receivedAt);
+  return { ...cls, echeances: echeances.map((e) => ({ ...e, source: "ia" as const })) };
 }
 
 export function clsToMetadata(cls: SharedCls) {
