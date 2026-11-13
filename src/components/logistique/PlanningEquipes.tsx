@@ -1,3 +1,4 @@
+import { updateAssignation } from '@/lib/assignation-upsert';
 import { useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -87,7 +88,7 @@ export function PlanningEquipes({ debut, vue, filtres, alertes, focus }: { debut
     if (a.date !== jour) { toast.error('Déplacement possible seulement le même jour'); return; }
     if (a.etape_id === cible.id) return;
     if (affectations.some(x => x.etape_id === cible.id && x.date === jour && (a.employe_id ? x.employe_id === a.employe_id : x.dispos_intervenant_id === a.dispos_intervenant_id))) { toast.error('Déjà sur cette étape'); return; }
-    const { error } = await supabase.from('assignations').update({ etape_logistique_id: cible.id, affaire_id: cible.affaire_id, heure_debut: cible.heure, heure_fin: cible.heure_fin ?? null }).eq('id', id);
+    const { error } = await updateAssignation(id, { etape_logistique_id: cible.id, affaire_id: cible.affaire_id, heure_debut: cible.heure, heure_fin: cible.heure_fin ?? null });
     if (error) toast.error('Déplacement impossible', { description: error.message }); else { toast.success('Personne déplacée'); await rafraichir(); }
   }
   async function surDrop(d: DragPayload, e: EtapeSemaine, jour: string) {
@@ -123,7 +124,7 @@ export function PlanningEquipes({ debut, vue, filtres, alertes, focus }: { debut
       if (!motif) return;
       patch = { ...patch, motif_refus: motif };
     }
-    const { error } = await supabase.from('assignations').update({ ...patch, ...(patch.statut_confirmation === 'confirmee' ? { confirmee_le: new Date().toISOString() } : {}) }).eq('id', a.id);
+    const { error } = await updateAssignation(a.id, { ...patch, ...(patch.statut_confirmation === 'confirmee' ? { confirmee_le: new Date().toISOString() } : {}) } as never);
     if (error) toast.error('Modification impossible', { description: error.message }); else await rafraichir();
   }
   const ciblesCopie = (e: EtapeSemaine, jour: string): CibleCopie[] => dates.filter(d => d > jour).flatMap(d => toutes.filter(x => x.date <= d && x.fin >= d && (x.id === e.id || (x.affaire_id === e.affaire_id && x.type === e.type))).map(x => ({ etape: x, jour: d })));
