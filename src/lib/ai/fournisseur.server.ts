@@ -27,7 +27,7 @@ export const MODELES_PAR_USAGE: Record<UsageIA, string> = {
   planning_import: MODELE_HAIKU,
   assistant_etapes: MODELE_HAIKU,
   documents_fournisseurs: MODELE_SONNET,
-  images_devis: MODELE_SONNET,
+  images_devis: MODELE_HAIKU,
   notes_frais: MODELE_SONNET,
   enrichissement_client: MODELE_HAIKU,
   mail_client: MODELE_HAIKU,
