@@ -1,108 +1,65 @@
-# Lot « Note et commentaires des devis modifiables »
+# Lot « Demandes logistiques et planning » + passage à Claude
 
-## Analyse revérifiée en base (13/11)
-- 66 devis ont une note (max 2 016 car.), 113 commentaires sur 27 devis. Aucune contrainte de taille sur `devis.note_mcp`.
-- Écrivent la note aujourd'hui : `devis_mcp_marquer` (tronque à 4 000, **remet à zéro** `modifie_par_humain_le/_id`) et `devis_soumettre` (remplace, tronque à 4 000). Schémas MCP : `note` max 4 000.
-- Marque humaine sur `devis` : déclencheur `trg_devis_marquer_humain` (BEFORE UPDATE, humain hors MCP) — une modification de la note à la main pose donc déjà `modifie_par_humain_*` (point 10 confirmé pour la note) ; `trg_devis_lignes_humain` fait de même pour les commentaires.
-- Cases : `note_mcp_coches` (jsonb) contient **le texte des points**, pas leur position (1 devis concerné, vérifié). Le repérage est déjà par texte.
-- Aucun historique de note/commentaire n'existe.
+Plan seulement. Aucune migration, aucun code, aucune donnée touchés. Chaque migration passera par l'outil de migration **et attendra l'approbation** avant application (rappel 0128 pris en compte).
 
-## Décisions sur les 10 points
-1. État : relu ci-dessus, aucun devis réel modifié.
-2. Note écrasée par Claude : `devis_soumettre` et `devis_mcp_marquer` **ajoutent** désormais en fin de note (séparateur « — Mise à jour du JJ/MM/AAAA (Claude) — ») au lieu de remplacer, sauf note vide ; tout changement passe aussi par l'historique (déclencheur), donc rien n'est perdu.
-3. Taille : 8 000 partout — contrainte `CHECK (char_length(note_mcp) <= 8000) NOT VALID` puis validée (max actuel 2 016), fonctions alignées, schémas MCP `max(8000)`, compteur dans l'éditeur. Un ajout qui dépasserait 8 000 est refusé (pas de troncature silencieuse).
-4. Cases : on garde le repérage **par texte de ligne** (déjà en place, robuste aux ajouts). Au remplacement, un déclencheur retire des coches les textes qui n'existent plus dans la note ; à l'ajout, les coches restent valides.
-5. `devis_mcp_marquer` ne remet plus à zéro la marque humaine quand le devis existe déjà repris (remise à zéro seulement à la création du brouillon, quand `cree_par_mcp` était faux). Le verrou d'autonomie tient.
-6. Nouvelle table `devis_textes_historique`, alimentée uniquement par déclencheurs sur `devis.note_mcp` et `devis_lignes.texte` (type commentaire). Auteur : `auth.uid()` + source `mcp` si `mcp_dispatch_actif()`, sinon `humain`.
-7. Nouvelle fonction `devis_texte_modifier` (note ou commentaire), autorisée en `brouillon` et `a_valider`, sans ouvrir le reste de l'en-tête ; `devis_entete_modifier` inchangée.
-8. `note` ajoutée à `devis_mcp_appliquer` (branche `devis_modifier_entete`, redéfinie depuis sa version relue) ; restauration = appel de `devis_texte_modifier` avec le texte d'une version → nouvelle entrée.
-9. `devis_lire` (MCP) renvoie `note_historique` : 5 dernières versions avec auteur, source, date et extrait de 200 caractères ; texte complet via un nouvel outil lecture seule `devis_note_version(version_id)`.
-10. Confirmé (voir analyse).
+## Ce qui a été vérifié aujourd'hui (code)
+- **La passerelle Lovable AI propose Claude** : `anthropic/claude-sonnet-5` (extraction), `anthropic/claude-haiku-4-5` (tri), `anthropic/claude-opus-5` disponible. La politique de l'espace autorise ces modèles sur l'API Messages. **Aucune clé `ANTHROPIC_API_KEY` n'est nécessaire** ; facturation sur les crédits de l'espace, journal dans l'onglet IA. Si Gabin préfère quand même sa propre clé, je la demanderai par le formulaire de secret.
+- Appels IA actuels (11 fichiers), modèles mélangés :
+  - Gemini 3 Flash : tri des boîtes (`shared-inbox-classify.ts`, `poll-smart-inbox.ts`), images des devis (`images-ia`).
+  - GPT-6 Astra : assistant étapes logistiques, jalonnements, documents fournisseurs, import planning, notes de frais, enrichissement client, suggestion de mail client.
+  - Le constat « Gemini partout » est donc partiel : l'extraction logistique tourne aujourd'hui sur GPT-6 Astra.
+- `ia_feedback_logistique` est lue dans `src/lib/logistique/ia-feedback.ts` ; son usage réel dans la consigne est **à confirmer en étape 0** (non affirmé).
+- Les chiffres du constat (27 cas, ~150 mails, 293 étapes, jalonnement 16-22 nov, 15 étapes du 12/11) seront relus en base en étape 0 ; aucun n'est repris ici comme vérifié.
 
-## Lot 1 — Éditeur
-- Bandeau « Note / hypothèses » (`RedactionClaude.tsx`, affiché aussi pour les devis non rédigés par Claude) : bouton « Modifier » → zone multiligne, aperçu markdown simple (listes, gras, rendu sans HTML brut), compteur /8 000, Enregistrer / Annuler.
-- Commentaires : édition en place (double-clic ou crayon), Maj+Entrée saut de ligne, Échap annule, enregistrement à la perte du focus, via `devis_texte_modifier`.
-- Tiroir « Historique de la note » (et historique par commentaire) : auteur, date, avant/après, « Restaurer cette version ».
-- Lecture seule au-delà de « à valider » avec info-bulle « Devis validé : note figée ».
+## Découpage livrable
 
-## Lot 2 — MCP
-- `devis_modifier_entete.champs.note` : `{ mode: "remplacer" | "ajouter", texte ≤ 8000 }` ; aperçu avant/après sans écriture, confirmation 10 min, mêmes règles brouillon / autonomie (refus si repris par un humain) / conversation.
-- `note_mcp_coches` optionnel (liste de textes de points présents dans la note), même circuit.
-- `devis_lire` : `note_historique` (extraits) ; nouvel outil lecture seule `devis_note_version`.
-- `devis_remplir` inchangé ; ses modifications de commentaires sont tracées par le déclencheur.
-- Le contenu de la note reste une donnée : aucun traitement ne s'en sert comme instruction.
+### Étape 0 — Relevé (lecture seule)
+Relire en base les 27 cas, la file `pending_review` par expéditeur/boîte, les étapes de la semaine 16-20/11, le jalonnement et la lecture de `ia_feedback_logistique`. Livrable : tableau de constat corrigé.
 
-## Migration N1 (montrée avant application)
-```sql
-CREATE TABLE public.devis_textes_historique (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  devis_id uuid NOT NULL REFERENCES public.devis(id) ON DELETE CASCADE,
-  ligne_id uuid REFERENCES public.devis_lignes(id) ON DELETE SET NULL,
-  cible text NOT NULL CHECK (cible IN ('note','commentaire')),
-  avant text, apres text,
-  auteur_id uuid, source text NOT NULL CHECK (source IN ('humain','mcp','systeme')),
-  restaure_depuis uuid REFERENCES public.devis_textes_historique(id),
-  cree_le timestamptz NOT NULL DEFAULT now(),
-  CHECK ((cible='note') = (ligne_id IS NULL))
-);
-CREATE INDEX ON public.devis_textes_historique (devis_id, cree_le DESC);
-GRANT SELECT ON public.devis_textes_historique TO authenticated;
-GRANT ALL ON public.devis_textes_historique TO service_role;
-ALTER TABLE public.devis_textes_historique ENABLE ROW LEVEL SECURITY;
-CREATE POLICY hist_lecture ON public.devis_textes_historique FOR SELECT TO authenticated
-  USING (public.devis_peut_lire(devis_id));
--- pas de politique d'écriture : seules les fonctions déclencheurs écrivent
+### Étape 1 — L0 : module IA unique + banc d'essai (livrée en premier)
+- Module serveur unique `src/lib/ai/fournisseur.server.ts` : `appelerIA({ usage, systeme, contenu, schema })`.
+  - Constante `MODELES_PAR_USAGE` : `extraction_logistique`, `jalonnement`, `documents_fournisseurs`, `images_devis` → Sonnet 5 ; `tri_mails` → Haiku 4.5 ; secours → `google/gemini-3-flash-preview`.
+  - Appels Claude en flux (API Messages), sortie JSON stricte via outil unique, schéma validé côté serveur ; contenu des mails/PJ toujours dans un bloc « données », jamais dans la consigne.
+  - Secours Gemini uniquement sur 5xx / 429 épuisé / réponse invalide ; jamais sur refus ou 403. Trace du basculement.
+  - Journal par appel (nouvelle table `ia_appels`, M-L0) : usage, modèle, secours oui/non, durée, jetons, coût estimé, statut, run id. Aucun contenu stocké.
+- **Banc d'essai** (script serveur admin, non exposé) : rejoue les 27 cas + ~15 mails de tri déjà validés avec Gemini, GPT-6 Astra (référence actuelle) et Claude. Score par champ (date, type, lieu, heures, nb étapes, affaire), coût, durée. Rapport en Markdown dans Files.
+- **Bascule seulement après lecture du rapport par Gabin.** Les autres usages (notes de frais, enrichissement client, mail client) passent par le module mais gardent leur modèle tant que Gabin ne demande pas leur changement.
 
-ALTER TABLE public.devis ADD CONSTRAINT devis_note_mcp_len CHECK (char_length(note_mcp) <= 8000) NOT VALID;
-ALTER TABLE public.devis VALIDATE CONSTRAINT devis_note_mcp_len;
+### Étape 2 — L1 : extraction
+- Champs `heure_debut`, `heure_fin`, `a_partir_de` (booléen), `duree_minutes` ; la durée calcule l'heure de fin, jamais dans la note ; `heure_fin 00:00` refusée sauf nuit explicite.
+- Dates : année déduite de la date de réception (fonction pure testée) ; date < réception − 30 j → signalée, non proposée.
+- Lieu : rapprochement pur sur `lieux`, adresses favorites, lieu de l'affaire et table d'alias (M-L1 : `lieux_alias`, admin seulement) → `lieu_id` si sûr, sinon `lieu_libre` + drapeau.
+- Affaire par numéro (4/6/9XXX) puis client/projet (helper existant `suggest-affaire.ts`).
+- Lecture des PJ déjà classées (texte de pages du lot images, `classement_pj`).
+- Conditionnement / chargement atelier proposés **décochés** sauf mention.
+- 5 à 8 corrections passées les plus proches (`ia_feedback_logistique`) injectées comme exemples.
 
-CREATE FUNCTION public.devis_textes_tracer() RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$
-DECLARE v_src text := CASE WHEN public.mcp_dispatch_actif() THEN 'mcp' WHEN auth.uid() IS NULL THEN 'systeme' ELSE 'humain' END;
-BEGIN
-  IF TG_TABLE_NAME='devis' THEN
-    IF NEW.note_mcp IS DISTINCT FROM OLD.note_mcp THEN
-      INSERT INTO devis_textes_historique(devis_id,cible,avant,apres,auteur_id,source,restaure_depuis)
-      VALUES (NEW.id,'note',OLD.note_mcp,NEW.note_mcp,auth.uid(),v_src,NULLIF(current_setting('app.devis_restaure',true),'')::uuid);
-    END IF;
-  ELSIF NEW.type='commentaire' AND (TG_OP='INSERT' OR NEW.texte IS DISTINCT FROM OLD.texte) THEN
-    INSERT INTO devis_textes_historique(devis_id,ligne_id,cible,avant,apres,auteur_id,source,restaure_depuis)
-    VALUES (NEW.devis_id,NEW.id,'commentaire',CASE WHEN TG_OP='UPDATE' THEN OLD.texte END,NEW.texte,auth.uid(),v_src,NULLIF(current_setting('app.devis_restaure',true),'')::uuid);
-  END IF;
-  RETURN NULL;
-END $$;
-REVOKE EXECUTE ON FUNCTION public.devis_textes_tracer() FROM PUBLIC, anon;
-CREATE TRIGGER trg_devis_note_hist AFTER UPDATE OF note_mcp ON public.devis FOR EACH ROW EXECUTE FUNCTION public.devis_textes_tracer();
-CREATE TRIGGER trg_devis_comm_hist AFTER INSERT OR UPDATE OF texte ON public.devis_lignes FOR EACH ROW EXECUTE FUNCTION public.devis_textes_tracer();
+### Étape 3 — L2 : tri
+- Nouvelle valeur `fournisseur_suivi` ajoutée à `email_categorie` (M-L2, additif) ; règles d'expéditeurs connus + Haiku.
+- Écran admin « Reclasser la file » : bilan par catégorie proposée avec exemples, case par lot, confirmation admin → statut `dismissed` + motif « classé sans suite : … ». Aucun lancement sur données réelles sans accord.
 
--- coches : retirer les points disparus quand la note change
-CREATE FUNCTION public.devis_coches_elaguer() RETURNS trigger ... -- BEFORE UPDATE OF note_mcp : garde les coches dont le texte figure encore dans pointsNote(NEW.note_mcp)
-REVOKE EXECUTE ... FROM PUBLIC, anon;
+### Étape 4 — L3 : planning
+- Validation → étapes avec `proposition_id` / `source_email_id` / `jalonnement_id` ; jalonnement → `planifie` + nombre d'étapes (RPC existante étendue, corps relu avant redéfinition).
+- Doublons avant création (même affaire, date, type, horaires ±2 h) : Fusionner / Ignorer / Créer quand même.
+- Suggestion de véhicule (volume mentionné × capacité × conflits), jamais affectée automatiquement.
+- Responsable rapproché d'un employé actif, texte libre conservé si doute ; effectif et postes.
+- **Jalonnement 16-22 nov** : proposer un rapprochement ligne à ligne avec les 15 étapes existantes (affaire + date + type), affiché en bilan ; **aucune écriture avant accord de Gabin**.
 
-CREATE FUNCTION public.devis_texte_modifier(_devis_id uuid, _cible text, _ligne_id uuid, _texte text, _mode text DEFAULT 'remplacer', _restaure_depuis uuid DEFAULT NULL)
- RETURNS jsonb SECURITY DEFINER ...
- -- devis_peut_ecrire ; statut_redaction IN ('brouillon','a_valider') sinon refus « devis figé » ;
- -- sous MCP : brouillon seulement ; _mode ajouter = concat + séparateur daté ; longueur ≤ 8000 ;
- -- commentaire : la ligne doit appartenir au devis et être de type commentaire ;
- -- restauration : version du même devis/cible, pose app.devis_restaure ; set app.devis_rpc.
-REVOKE EXECUTE ON FUNCTION public.devis_texte_modifier(...) FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.devis_texte_modifier(...) TO authenticated, service_role;
+### Étape 5 — L4 : mesure
+Carte « Qualité IA logistique » dans l'écran Demandes logistiques : part des champs corrigés par semaine et par champ, lue depuis `ia_feedback_logistique` via une fonction de lecture admin/logistique.
 
--- redéfinitions explicites depuis leur texte relu (règle : pas de réécriture dynamique)
-CREATE OR REPLACE FUNCTION public.devis_mcp_marquer(...)  -- ajout au lieu de remplacer, 8000, marque humaine effacée seulement si cree_par_mcp était faux
-CREATE OR REPLACE FUNCTION public.devis_soumettre(...)    -- ajout au lieu de remplacer, 8000
-CREATE OR REPLACE FUNCTION public.devis_mcp_appliquer(...) -- branche devis_modifier_entete : champs note / note_mcp_coches → devis_texte_modifier / devis_note_mcp_cocher
--- devis_note_mcp_cocher : ajout contrôle « chaque coche figure dans la note », ≤ 200
-```
-Le texte complet des corps redéfinis sera joint en différence avant application.
+## Migrations prévues (texte complet montré dans l'outil avant chaque application)
+- **M-L0** `ia_appels` : table + GRANT (service_role ALL, authenticated SELECT admin via RLS) + RLS.
+- **M-L1** `lieux_alias` (alias, lieu_id) + colonnes nullables `a_partir_de`, `duree_minutes`, `lieu_douteux` sur `affaire_etapes_logistiques`.
+- **M-L2** valeur d'enum `fournisseur_suivi` ; colonne `motif_classement` nullable sur `emails_entrants`.
+- **M-L3** colonnes nullables d'origine sur les étapes si absentes (vérifié en étape 0), redéfinition explicite des RPC de validation depuis leur corps actuel ; nouvelles SECURITY DEFINER avec `REVOKE EXECUTE FROM PUBLIC, anon`.
 
-## Fichiers
-- `src/components/devis/RedactionClaude.tsx`, nouveaux `NoteEditeur.tsx`, `HistoriqueTextesSheet.tsx`, édition en place dans le composant de ligne commentaire de l'éditeur ; `DevisEditeur.tsx` (montage, droits par statut).
-- `src/lib/devis/note.ts` (pur : ajout daté, élagage des coches, limite) + tests.
-- `src/lib/mcp/devis.ts` (schémas 8 000, `note`, `note_historique`), `tools/devis_modifier_entete.ts` (description), nouvel outil `tools/devis_note_version.ts`, `index.ts` ; extraction du manifeste.
-- `src/lib/devis/AGENTS.md` : une règle sur l'historique par déclencheurs.
+## Coûts estimés (à confirmer par le banc)
+Banc : ~45 cas × 3 modèles, moins de 2 € au total. Production : Sonnet ~0,01–0,03 € par demande, Haiku < 0,002 € par mail trié.
 
-## Lot 3 — Essais
-Sur un devis d'essai (retiré logiquement ensuite, historique d'essai effacé) : note modifiée à la main puis restaurée ; commentaire édité en place ; MCP note « ajouter » puis « remplacer » (aperçu, confirmation, contenu, historique source mcp) ; refus note sur devis validé et autonomie sur brouillon repris ; non-régression remise/dates/client ; tests purs (ajout daté, élagage, 8 000) ; écrans 390 et 1366 px. Rien publié.
+## Tests
+Fonctions pures testées : année de date, détection > 30 j, heures/durée, alias de lieu, doublons, choix véhicule, secours IA (statuts). Essais sur données d'essai retirées ensuite ; écrans 390 et 1366 px.
 
-## Point à trancher
-Le séparateur d'ajout de `devis_soumettre`/`devis_mcp_marquer` : je propose le même que `devis_modifier_entete` (« — Mise à jour du JJ/MM/AAAA (Claude) — »).
+## Questions pour Gabin
+1. Passerelle Lovable (sans clé) plutôt que clé Anthropic propre : d'accord ?
+2. Notes de frais, enrichissement client et mail client : rester sur GPT-6 Astra ou passer aussi à Claude ?
