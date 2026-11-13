@@ -3336,6 +3336,66 @@ export type Database = {
           },
         ]
       }
+      devis_propositions_photos: {
+        Row: {
+          appels: number
+          canal: string
+          cout_estime_eur: number
+          cout_reel_eur: number | null
+          cree_le: string
+          demande_par: string
+          devis_id: string
+          duree_ms: number | null
+          expire_le: string
+          id: string
+          modele: string
+          propositions: Json
+        }
+        Insert: {
+          appels: number
+          canal: string
+          cout_estime_eur: number
+          cout_reel_eur?: number | null
+          cree_le?: string
+          demande_par?: string
+          devis_id: string
+          duree_ms?: number | null
+          expire_le?: string
+          id?: string
+          modele: string
+          propositions: Json
+        }
+        Update: {
+          appels?: number
+          canal?: string
+          cout_estime_eur?: number
+          cout_reel_eur?: number | null
+          cree_le?: string
+          demande_par?: string
+          devis_id?: string
+          duree_ms?: number | null
+          expire_le?: string
+          id?: string
+          modele?: string
+          propositions?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "devis_propositions_photos_devis_id_fkey"
+            columns: ["devis_id"]
+            isOneToOne: false
+            referencedRelation: "devis"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "devis_propositions_photos_devis_id_fkey"
+            columns: ["devis_id"]
+            isOneToOne: false
+            referencedRelation: "v_devis_consommation"
+            referencedColumns: ["devis_id"]
+          },
+        ]
+      }
       devis_snapshot_couts: {
         Row: {
           cout_total: number | null
