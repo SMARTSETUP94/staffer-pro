@@ -5200,6 +5200,57 @@ export type Database = {
           },
         ]
       }
+      ia_appels: {
+        Row: {
+          code_http: number | null
+          cout_estime: number | null
+          created_at: string
+          duree_ms: number | null
+          id: string
+          jetons_entree: number | null
+          jetons_sortie: number | null
+          modele: string
+          motif_secours: string | null
+          run_id: string | null
+          secours: boolean
+          statut: string
+          usage: string
+          user_id: string | null
+        }
+        Insert: {
+          code_http?: number | null
+          cout_estime?: number | null
+          created_at?: string
+          duree_ms?: number | null
+          id?: string
+          jetons_entree?: number | null
+          jetons_sortie?: number | null
+          modele: string
+          motif_secours?: string | null
+          run_id?: string | null
+          secours?: boolean
+          statut: string
+          usage: string
+          user_id?: string | null
+        }
+        Update: {
+          code_http?: number | null
+          cout_estime?: number | null
+          created_at?: string
+          duree_ms?: number | null
+          id?: string
+          jetons_entree?: number | null
+          jetons_sortie?: number | null
+          modele?: string
+          motif_secours?: string | null
+          run_id?: string | null
+          secours?: boolean
+          statut?: string
+          usage?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       ia_feedback_logistique: {
         Row: {
           commentaire: string | null
@@ -9454,6 +9505,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      ia_appels_purger: { Args: never; Returns: number }
       import_clients_bulk: { Args: { payload: Json }; Returns: Json }
       import_devis_atomique:
         | {
