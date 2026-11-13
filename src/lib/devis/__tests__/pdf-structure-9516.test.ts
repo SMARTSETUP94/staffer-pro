@@ -26,9 +26,9 @@ describe("structure PDF 9516-R1", () => {
     expect(titreCourt(lignes[4])).toBe("CORRIDOR");
   });
   it("option incluse = ligne normale de sa zone ; sous-total = somme des lignes", () => {
-    const rows = lignesTableau(vc, lignes[7], "detaille", "4");
+    const rows = lignesTableau(vc, lignes[6], "detaille", "4");
     expect(rows.map((r) => [r.n, r.designation])).toEqual([["4.1", "Totem"], ["4.2", "6 stèles"]]);
-    expect(totalAffiche(vc, lignes[7])).toBe(1600);
+    expect(totalAffiche(vc, lignes[6])).toBe(1600);
   });
   it("options non incluses triées par zone, incluses absentes", () => {
     expect(optionsDevis(vc).map((o) => o.ligne.id)).toEqual(["on1", "on2", "on4"]);
