@@ -4,9 +4,14 @@ import { completerSuggestionsEmail, type SuggestionLine } from "../suggestions-e
 const l = (type: SuggestionLine["type"], date: string): SuggestionLine => ({ keep: true, type, date, contenu: type, lieu: "Site" });
 
 describe("completerSuggestionsEmail", () => {
-  it("montage → chargement J-1 ouvré et conditionnement 2 jours ouvrés avant, cochés, à l'atelier", () => {
-    // mercredi 28/10/2026
+  it("montage → chargement J-1 ouvré et conditionnement 2 jours ouvrés avant, décochés sans mention", () => {
     const out = completerSuggestionsEmail([l("montage", "2026-10-28")]);
+    expect(out.find((x) => x.type === "chargement")!.keep).toBe(false);
+    expect(out.find((x) => x.type === "emballage")!.keep).toBe(false);
+  });
+  it("montage → étapes atelier cochées quand le mail parle de conditionnement et chargement", () => {
+    // mercredi 28/10/2026
+    const out = completerSuggestionsEmail([l("montage", "2026-10-28")], undefined, "Merci de prévoir conditionnement et chargement la veille");
     const ch = out.find((x) => x.type === "chargement")!;
     const em = out.find((x) => x.type === "emballage")!;
     expect(ch.date).toBe("2026-10-27");

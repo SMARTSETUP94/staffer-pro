@@ -9,6 +9,20 @@ export type FeedbackRow = { email_subject: string | null; propose: FbLine[]; ret
 const fmt = (l: FbLine) =>
   `${l.type} ${l.date}${l.heure_debut ? ` ${l.heure_debut.slice(0, 5)}` : ""}${l.heure_fin ? `-${l.heure_fin.slice(0, 5)}` : ""} « ${l.contenu} »${l.lieu ? ` @ ${l.lieu}` : ""}`;
 
+const motsSujet = (s?: string | null) => new Set((s ?? "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/^(re|tr|fw|fwd)\s*:\s*/g, "").split(/[^a-z0-9]+/).filter((m) => m.length >= 3));
+/** 5 à 8 corrections les plus proches du sujet (mots communs), jamais le mail lui-même. */
+export function selectionnerExemples(rows: FeedbackRow[], sujet: string | null | undefined, max = 8, min = 5): FeedbackRow[] {
+  const cible = motsSujet(sujet);
+  const sc = rows.filter((r) => (r.email_subject ?? "") !== (sujet ?? "\u0000")).map((r, i) => {
+    let n = 0; for (const m of motsSujet(r.email_subject)) if (cible.has(m)) n++;
+    return { r, n, i };
+  });
+  sc.sort((a, b) => b.n - a.n || a.i - b.i);
+  const proches = sc.filter((x) => x.n > 0).slice(0, max);
+  const complement = sc.filter((x) => x.n === 0).slice(0, Math.max(0, min - proches.length));
+  return [...proches, ...complement].map((x) => x.r);
+}
+
 export function feedbackToPrompt(rows: FeedbackRow[], max = 12): string {
   const useful = rows.filter((r) => (r.commentaire && r.commentaire.trim()) || JSON.stringify(r.propose) !== JSON.stringify(r.retenu)).slice(0, max);
   if (useful.length === 0) return "";
@@ -27,6 +41,19 @@ export function feedbackToPrompt(rows: FeedbackRow[], max = 12): string {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function loadFeedbackRows(supa: any): Promise<FeedbackRow[]> {
+  try {
+    const { data } = await supa.from("ia_feedback_logistique")
+      .select("email_subject, propose, retenu, commentaire").order("created_at", { ascending: false }).limit(60);
+    return (data ?? []) as FeedbackRow[];
+  } catch { return []; }
+}
+/** Consigne d'exemples propre à un mail : corrections utiles les plus proches de son sujet. */
+export function exemplesPourMail(rows: FeedbackRow[], sujet: string | null | undefined): string {
+  const utiles = rows.filter((r) => (r.commentaire && r.commentaire.trim()) || JSON.stringify(r.propose) !== JSON.stringify(r.retenu));
+  return feedbackToPrompt(selectionnerExemples(utiles, sujet), 8);
+}
+
 export async function loadFeedbackPrompt(supa: any): Promise<string> {
   try {
     const { data } = await supa.from("ia_feedback_logistique")
