@@ -208,3 +208,7 @@
 
 ## Planning atelier simple + Planning BE (après Qualité des données et exports devis)
 - [x] Plan remis à présentation après livraison Qualité ; composant barres commun, charge par métier, BE par concepteur. Réalisation et toute migration attendent validation.
+
+## Images des devis par l'IA (plan accepté 13 nov. 2026)
+- [x] M1/M2 appliquées (dérivés + catégories + propositions), essai 9518 réussi, copies orphelines retirées côté serveur.
+- [ ] Extraction automatique au relevé périodique non branchée (extraction au clic « Trier et extraire » ou « Proposer les images »).
