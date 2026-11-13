@@ -8553,6 +8553,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      affaire_document_extraction_noter: {
+        Args: { _etat: Json; _id: string }
+        Returns: undefined
+      }
       annuler_contrat_intermittent: {
         Args: { p_contrat_id: string; p_motif?: string }
         Returns: undefined
