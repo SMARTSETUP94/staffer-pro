@@ -1,3 +1,4 @@
+import { ProposerImagesDialog } from "./ProposerImagesDialog";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { trierRacines } from "@/lib/devis/arbre";
 import { useEffect, useMemo, useState } from "react";
@@ -371,6 +372,7 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
                 <Button size="sm" variant="outline" onClick={() => void ajouter("objet")}><Plus className="mr-1 h-3.5 w-3.5" />Objet</Button>
                 <Button size="sm" variant="outline" onClick={() => void ajouter("commentaire", { texte: "" })}><MessageSquarePlus className="mr-1 h-3.5 w-3.5" />Commentaire</Button>
                 <Button size="sm" variant="outline" onClick={() => setBiblio(true)}><Library className="mr-1 h-3.5 w-3.5" />Bibliothèque</Button>
+                {d.devis.affaire_id && !d.devis.est_modele && <ProposerImagesDialog devisId={devisId} affaireId={d.devis.affaire_id} lignes={d.lignes} />}
                 <select className="h-8 rounded-md border bg-background px-1 text-xs" value="" onChange={(e) => e.target.value && void ajouter(e.target.value as Ligne["type"])}>
                   <option value="">+ Chapitre…</option>
                   <option value="chapitre_suivi">Suivi et plans</option><option value="chapitre_pose">Pose</option>

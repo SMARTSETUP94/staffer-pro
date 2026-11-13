@@ -8,6 +8,9 @@
 import { isDocumentAffaireCode, validateEmailDocument } from "@/lib/affaire-document-rules";
 import { estLogoSignature, cleImage, dimensionsImage, etatBilan, MOTIF_LOGO, PIECES_MAX, type BilanClassement, type PieceBilan } from "@/lib/pieces-jointes-classement";
 
+import { categorieParRegle, nomLisibleParRegle } from "@/lib/devis/images-ia";
+import { empreinte } from "@/lib/devis/empreinte";
+
 type Graph = { base: string; token: string };
 const pause = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -33,7 +36,7 @@ async function graphFetch(g: Graph, path: string, essais: number, delaiMs: numbe
 }
 const graphGet = async (g: Graph, path: string, essais = 3) => (await graphFetch(g, path, essais, 20_000)).json();
 /** Contenu brut d'une pièce (/$value) : pas de base64, délai adapté à 15 Mo. */
-const graphBrut = async (g: Graph, att: string, essais = 3) =>
+export const graphBrut = async (g: Graph, att: string, essais = 3) =>
   new Uint8Array(await (await graphFetch(g, `/attachments/${encodeURIComponent(att)}/$value`, essais, 120_000)).arrayBuffer());
 
 /** Clés « nom|taille » des images collées dans les 5 autres mails du même expéditeur (lecture seule). */
@@ -100,7 +103,9 @@ export async function classerPiecesJointes(db: any, emailId: string, auteurId: s
     const path = `${affaireId}/${id}.${ext}`;
     const up = await db.storage.from("affaires-photos").upload(path, bytes, { contentType: mime, upsert: false });
     if (up.error) { pieces.push({ attachment_id: att, nom, resultat: "refusee", motif: "Dépôt du fichier refusé" }); continue; }
-    const ins = await db.from("affaire_documents").insert({ id, affaire_id: affaireId, storage_path: path, filename: nom, mime_type: mime, taille_bytes: bytes.byteLength, uploaded_by: auteurId, description: `Email : ${email.subject ?? "Sans objet"}`, source_email_id: emailId, source_attachment_id: att });
+    const regle = categorieParRegle(nom);
+    const ins = await db.from("affaire_documents").insert({ id, affaire_id: affaireId, storage_path: path, filename: nom, mime_type: mime, taille_bytes: bytes.byteLength, uploaded_by: auteurId, description: `Email : ${email.subject ?? "Sans objet"}`, source_email_id: emailId, source_attachment_id: att,
+      empreinte_sha256: await empreinte(bytes), ...(regle ? { categorie: regle, categorie_source: "regle", nom_lisible: nomLisibleParRegle(nom) } : {}) });
     if (ins.error) {
       await db.storage.from("affaires-photos").remove([path]);
       if (ins.error.code === "23505") {

@@ -14,6 +14,15 @@ export interface AffaireDocument {
   prise_le: string | null;
   uploaded_by: string;
   uploaded_at: string;
+  categorie?: string | null;
+  categorie_source?: string | null;
+  nom_lisible?: string | null;
+  document_parent_id?: string | null;
+  derive_type?: string | null;
+  page?: number | null;
+  empreinte_sha256?: string | null;
+  source_email_id?: string | null;
+  extraction?: { etat?: string; motif?: string } | null;
 }
 
 interface SignedUrlEntry {
