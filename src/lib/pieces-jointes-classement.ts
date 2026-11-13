@@ -30,10 +30,12 @@ export function dimensionsImage(b: Uint8Array): { w: number; h: number } | null 
 /**
  * Logo de signature probable :
  * - image collée dans le mail de moins de 15 Ko, ou de moins de 200 px de large ou de haut ;
- * - ou image dont le nom ressemble à « logo », « signature », « image00x », de moins de 60 Ko.
+ * - ou image dont le nom ressemble à « logo », « signature », « image00x », de moins de 60 Ko ;
+ * - ou image collée de moins de 100 Ko identique (même nom, même taille) à une image collée d'un autre mail du même expéditeur.
  */
-export function estLogoSignature(p: { nom: string; mime: string; taille: number; inline: boolean; dims?: { w: number; h: number } | null }): boolean {
+export function estLogoSignature(p: { nom: string; mime: string; taille: number; inline: boolean; dims?: { w: number; h: number } | null; repetee?: boolean }): boolean {
   if (!/^image\//i.test(p.mime)) return false;
+  if (p.inline && p.repetee && p.taille < 100 * 1024) return true;
   if (p.inline && (p.taille < 15 * 1024 || (p.dims && (p.dims.w < 200 || p.dims.h < 200)))) return true;
   return /(logo|signature|^image\d{3})/i.test(p.nom) && p.taille < 60 * 1024;
 }
@@ -54,3 +56,6 @@ export function doitRelancer(row: { opportunite_id: string | null; classement_pj
 
 export const libelleResultat = (p: PieceBilan) =>
   p.resultat === "classee" ? "classée" : p.resultat === "doublon" ? "déjà classée" : p.resultat === "ecartee_logo" ? MOTIF_LOGO : `refusée : ${p.motif ?? "motif inconnu"}`;
+
+/** Clé de comparaison d'une image collée entre deux mails. */
+export const cleImage = (nom: unknown, taille: unknown) => `${String(nom ?? "").toLowerCase()}|${Number(taille ?? 0)}`;

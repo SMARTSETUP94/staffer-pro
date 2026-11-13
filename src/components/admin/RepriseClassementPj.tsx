@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { repriseClassementPj } from "@/lib/server-fns/classement-pj.functions";
 
-type Bilan = { rattachees: number; deja_classees: number; a_traiter: number; traitees: number; resultats: { id: string; etat: string; erreur?: string }[] };
+type Bilan = { pieces?: { total: number; deja_classees: number; logos_probables: number; a_classer: number; mails_inaccessibles: number; mails_examines: number }; rattachees: number; deja_classees: number; a_traiter: number; traitees: number; resultats: { id: string; etat: string; erreur?: string }[] };
 
 /** Reprise admin des demandes déjà rattachées : bilan affiché d'abord, traitement par lots de 10 seulement après confirmation. */
 export function RepriseClassementPj() {
@@ -24,6 +24,9 @@ export function RepriseClassementPj() {
       {bilan && (
         <p>{bilan.rattachees} demandes rattachées · {bilan.deja_classees} déjà classées · <b>{bilan.a_traiter} à traiter</b>
           {bilan.traitees > 0 && <> · lot traité : {bilan.resultats.filter((r) => r.etat === "classe").length} classées, {bilan.resultats.filter((r) => r.etat !== "classe").length} à revoir</>}</p>
+      )}
+      {bilan?.pieces && (
+        <p className="text-muted-foreground">Pièces jointes ({bilan.pieces.mails_examines} demandes lues dans Outlook) : {bilan.pieces.total} au total · {bilan.pieces.deja_classees} déjà classées · {bilan.pieces.logos_probables} logos probables · <b>{bilan.pieces.a_classer} à classer</b> · {bilan.pieces.mails_inaccessibles} demandes inaccessibles</p>
       )}
       <div className="flex flex-wrap gap-2">
         <Button size="sm" variant="outline" disabled={busy} onClick={() => run(false)}>{busy && !bilan ? "Calcul…" : "Voir le bilan"}</Button>

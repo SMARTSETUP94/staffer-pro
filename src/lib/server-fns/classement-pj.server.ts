@@ -6,29 +6,55 @@
  * toujours la personne inscrite dans la trace (rattache_par), jamais un compte choisi au hasard.
  */
 import { isDocumentAffaireCode, validateEmailDocument } from "@/lib/affaire-document-rules";
-import { estLogoSignature, dimensionsImage, etatBilan, MOTIF_LOGO, PIECES_MAX, type BilanClassement, type PieceBilan } from "@/lib/pieces-jointes-classement";
+import { estLogoSignature, cleImage, dimensionsImage, etatBilan, MOTIF_LOGO, PIECES_MAX, type BilanClassement, type PieceBilan } from "@/lib/pieces-jointes-classement";
 
 type Graph = { base: string; token: string };
 const pause = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-async function graphGet(g: Graph, path: string, essais = 3): Promise<any> {
+/** GET Microsoft avec délai, journal du code HTTP et du corps d'erreur, nouvel essai sur 429/5xx/réseau. */
+async function graphFetch(g: Graph, path: string, essais: number, delaiMs: number): Promise<Response> {
   let last: unknown;
   for (let i = 0; i < essais; i++) {
     try {
-      const r = await fetch(`${g.base}${path}`, { headers: { Authorization: `Bearer ${g.token}` } });
-      if (r.ok) return await r.json();
-      if (r.status < 500 && r.status !== 429) throw Object.assign(new Error(`Microsoft ${r.status}`), { definitif: true });
+      const r = await fetch(`${g.base}${path}`, { headers: { Authorization: `Bearer ${g.token}` }, signal: AbortSignal.timeout(delaiMs) });
+      if (r.ok) return r;
+      const corps = (await r.text().catch(() => "")).slice(0, 300);
+      console.error(`[classement-pj] Microsoft ${r.status} sur ${path.split("?")[0]} : ${corps}`);
+      if (r.status < 500 && r.status !== 429) throw Object.assign(new Error(`Microsoft ${r.status} : ${corps.slice(0, 120)}`), { definitif: true });
       last = new Error(`Microsoft ${r.status}`);
-    } catch (e: any) { if (e?.definitif) throw e; last = e; }
+    } catch (e: any) {
+      if (e?.definitif) throw e;
+      console.error(`[classement-pj] lecture Microsoft échouée (${path.split("?")[0]}) : ${e?.name ?? ""} ${e?.message ?? e}`);
+      last = e;
+    }
     if (i < essais - 1) await pause(800 * (i + 1));
   }
   throw Object.assign(last instanceof Error ? last : new Error("Microsoft indisponible"), { reseau: true });
+}
+const graphGet = async (g: Graph, path: string, essais = 3) => (await graphFetch(g, path, essais, 20_000)).json();
+/** Contenu brut d'une pièce (/$value) : pas de base64, délai adapté à 15 Mo. */
+const graphBrut = async (g: Graph, att: string, essais = 3) =>
+  new Uint8Array(await (await graphFetch(g, `/attachments/${encodeURIComponent(att)}/$value`, essais, 120_000)).arrayBuffer());
+
+/** Clés « nom|taille » des images collées dans les 5 autres mails du même expéditeur (lecture seule). */
+async function imagesRepetees(db: any, g: Graph, emailId: string, fromEmail: string | null): Promise<Set<string>> {
+  const vues = new Set<string>();
+  if (!fromEmail) return vues;
+  const { data } = await db.from("emails_entrants").select("id").eq("source_boite", "devis").eq("from_email", fromEmail).neq("id", emailId).order("received_at", { ascending: false }).limit(5);
+  const { resolveMessage } = await import("@/lib/server-fns/shared-inbox-attachments.functions");
+  for (const r of (data ?? []) as { id: string }[]) {
+    try {
+      const v = await (await graphFetch({ base: await resolveMessage(db, r.id), token: g.token }, "/attachments?$select=id,name,size,isInline,contentType", 1, 15_000)).json();
+      for (const a of (v.value ?? []) as any[]) if (a.isInline && /^image\//i.test(a.contentType ?? "")) vues.add(cleImage(a.name, a.size));
+    } catch { /* un mail illisible ne bloque pas la règle */ }
+  }
+  return vues;
 }
 
 export type ResultatClassement = { bilan: BilanClassement; numero: string | null };
 
 export async function classerPiecesJointes(db: any, emailId: string, auteurId: string, opts: { essais?: number } = {}): Promise<ResultatClassement> {
-  const { data: email, error } = await db.from("emails_entrants").select("id,subject,source_boite,opportunite_id,classement_pj").eq("id", emailId).eq("source_boite", "devis").maybeSingle();
+  const { data: email, error } = await db.from("emails_entrants").select("id,subject,source_boite,opportunite_id,classement_pj,from_email").eq("id", emailId).eq("source_boite", "devis").maybeSingle();
   if (error || !email) throw new Error("Demande client introuvable ou accès refusé");
   if (!email.opportunite_id) throw new Error("La demande n'est rattachée à aucune affaire");
   const affaireId: string = email.opportunite_id;
@@ -48,11 +74,13 @@ export async function classerPiecesJointes(db: any, emailId: string, auteurId: s
     g = { base: await resolveMessage(db, emailId), token: await getToken() };
     liste = ((await graphGet(g, "/attachments?$select=id,name,contentType,size,isInline", opts.essais ?? 3)).value ?? []) as any[];
   } catch (e: any) {
+    console.error(`[classement-pj] liste des pièces de ${emailId} illisible : ${e?.message ?? e}`);
     return { bilan: await enregistrer({ ...base, etat: etatBilan([], true, tentatives), pieces: email.classement_pj?.pieces ?? [] }), numero: affaire.numero };
   }
   const fichiers = liste.filter((a) => a["@odata.type"] !== "#microsoft.graph.itemAttachment" && a["@odata.type"] !== "#microsoft.graph.referenceAttachment").slice(0, PIECES_MAX);
   const pieces: PieceBilan[] = [];
   let reseau = false;
+  const repetees = fichiers.some((a) => a.isInline) ? await imagesRepetees(db, g, emailId, email.from_email ?? null) : new Set<string>();
   for (const a of fichiers) {
     const att = String(a.id), nom = String(a.name ?? "piece-jointe").slice(0, 300), mime = String(a.contentType ?? "application/octet-stream");
     const { data: deja } = await db.from("affaire_documents").select("id").eq("affaire_id", affaireId).eq("source_email_id", emailId).eq("source_attachment_id", att).is("deleted_at", null).maybeSingle();
@@ -60,12 +88,11 @@ export async function classerPiecesJointes(db: any, emailId: string, auteurId: s
     try {
       validateEmailDocument(mime, Number(a.size ?? 0));
     } catch (e: any) { pieces.push({ attachment_id: att, nom, resultat: "refusee", motif: String(e.message).slice(0, 300) }); continue; }
-    if (estLogoSignature({ nom, mime, taille: Number(a.size ?? 0), inline: !!a.isInline })) { pieces.push({ attachment_id: att, nom, resultat: "ecartee_logo", motif: MOTIF_LOGO }); continue; }
-    let full: any;
-    try { full = await graphGet(g, `/attachments/${encodeURIComponent(att)}`, opts.essais ?? 3); }
-    catch (e: any) { if (e?.reseau) reseau = true; pieces.push({ attachment_id: att, nom, resultat: "refusee", motif: "Lecture Microsoft impossible" }); continue; }
-    if (!full.contentBytes) { pieces.push({ attachment_id: att, nom, resultat: "refusee", motif: "Email joint ou lien, pas un fichier" }); continue; }
-    const bytes = Uint8Array.from(atob(full.contentBytes), (c) => c.charCodeAt(0));
+    if (estLogoSignature({ nom, mime, taille: Number(a.size ?? 0), inline: !!a.isInline, repetee: repetees.has(cleImage(nom, a.size)) })) { pieces.push({ attachment_id: att, nom, resultat: "ecartee_logo", motif: MOTIF_LOGO }); continue; }
+    // Une pièce à la fois, contenu brut : une erreur sur une pièce n'arrête pas les suivantes.
+    let bytes: Uint8Array;
+    try { bytes = await graphBrut(g, att, opts.essais ?? 3); }
+    catch (e: any) { if (e?.reseau) reseau = true; pieces.push({ attachment_id: att, nom, resultat: "refusee", motif: `Lecture Microsoft impossible : ${String(e?.message ?? e).slice(0, 150)}` }); continue; }
     if (estLogoSignature({ nom, mime, taille: bytes.byteLength, inline: !!a.isInline, dims: dimensionsImage(bytes) })) { pieces.push({ attachment_id: att, nom, resultat: "ecartee_logo", motif: MOTIF_LOGO }); continue; }
     try { validateEmailDocument(mime, bytes.byteLength); } catch (e: any) { pieces.push({ attachment_id: att, nom, resultat: "refusee", motif: String(e.message).slice(0, 300) }); continue; }
     const id = crypto.randomUUID();
@@ -88,7 +115,7 @@ export async function classerPiecesJointes(db: any, emailId: string, auteurId: s
 }
 
 /** Bilan prévisionnel pour la reprise admin : lecture seule (base + Outlook), rien n'est écrit. */
-export async function bilanReprise(db: any) {
+export async function bilanReprise(db: any, detailMax = 150) {
   const rows: any[] = [];
   for (let off = 0; ; off += 500) {
     const r = await db.from("emails_entrants").select("id,opportunite_id,classement_pj,has_attachments").eq("source_boite", "devis").not("opportunite_id", "is", null).order("id").range(off, off + 499);
@@ -97,5 +124,25 @@ export async function bilanReprise(db: any) {
     if ((r.data?.length ?? 0) < 500) break;
   }
   const aTraiter = rows.filter((r) => !r.classement_pj || ["a_reprendre", "echec", "partiel"].includes(r.classement_pj.etat));
-  return { rattachees: rows.length, deja_classees: rows.length - aTraiter.length, a_traiter: aTraiter.length, ids: aTraiter.map((r) => r.id as string) };
+  const { resolveMessage, getToken } = await import("@/lib/server-fns/shared-inbox-attachments.functions");
+  const token = await getToken().catch(() => null);
+  const p = { total: 0, deja_classees: 0, logos_probables: 0, a_classer: 0, mails_inaccessibles: 0, mails_examines: 0 };
+  for (const r of aTraiter.slice(0, detailMax)) {
+    if (!r.has_attachments) { p.mails_examines++; continue; }
+    try {
+      if (!token) throw new Error("token");
+      const v = await (await graphFetch({ base: await resolveMessage(db, r.id), token }, "/attachments?$select=id,name,size,isInline,contentType", 1, 15_000)).json();
+      const fichiers = ((v.value ?? []) as any[]).filter((a) => a["@odata.type"] === "#microsoft.graph.fileAttachment");
+      const { data: docs } = await db.from("affaire_documents").select("source_attachment_id").eq("source_email_id", r.id).eq("affaire_id", r.opportunite_id).is("deleted_at", null);
+      const deja = new Set(((docs ?? []) as any[]).map((d) => d.source_attachment_id));
+      for (const a of fichiers) {
+        p.total++;
+        if (deja.has(a.id)) p.deja_classees++;
+        else if (estLogoSignature({ nom: a.name ?? "", mime: a.contentType ?? "", taille: Number(a.size ?? 0), inline: !!a.isInline })) p.logos_probables++;
+        else p.a_classer++;
+      }
+      p.mails_examines++;
+    } catch { p.mails_inaccessibles++; p.mails_examines++; }
+  }
+  return { rattachees: rows.length, deja_classees: rows.length - aTraiter.length, a_traiter: aTraiter.length, pieces: p, ids: aTraiter.map((r) => r.id as string) };
 }
