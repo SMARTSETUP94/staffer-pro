@@ -40,7 +40,7 @@ export async function rendrePagesPdf(doc: PdfDoc, pagesDeja: Set<number>, onPage
     await deposerRenduPage({ data: { parentId: doc.id, affaireId: doc.affaire_id, page: i, base64: await enBase64(out), texte: texte || null } });
     faites++; onPage?.(i, total);
   }
-  await pdf.destroy();
+  await (pdf as unknown as { cleanup?: () => Promise<void> }).cleanup?.();
   return { pages: faites };
 }
 

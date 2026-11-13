@@ -67,7 +67,7 @@ export function DocumentsAffairePicker({ affaireId, devisId, ligneId }: { affair
                 const ok = estImageAjoutable(d.mime_type);
                 return (
                   <div key={d.id} className="rounded border p-1 text-xs space-y-1">
-                    {ok ? <img src={docs.data.urls[d.id] ?? undefined} alt={d.filename} className="h-24 w-full rounded object-cover" />
+                    {ok ? <img src={docs.data?.urls[d.id] ?? undefined} alt={d.filename} className="h-24 w-full rounded object-cover" />
                       : <div className="flex h-24 items-center justify-center rounded bg-muted text-muted-foreground">{d.mime_type === "application/pdf" ? "PDF" : "Fichier"}</div>}
                     <p className="truncate" title={d.filename}>{d.nom_lisible ?? d.filename}</p>
                     <Button size="sm" variant="outline" className="w-full" disabled={!ok || busy !== null} onClick={() => void choisir(d)}>
