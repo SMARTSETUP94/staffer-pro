@@ -39,7 +39,9 @@ export function DocumentsAffairePicker({ affaireId, devisId, ligneId, onAjout }:
       const up = await supabase.storage.from("devis-photos").upload(path, blob, { contentType: d.mime_type });
       if (up.error) throw new Error(up.error.message);
       const bmp = await createImageBitmap(blob).catch(() => null);
-      await onAjout({ storage_path: path, mime: d.mime_type, size_bytes: blob.size, width: bmp?.width ?? null, height: bmp?.height ?? null, legende: d.filename, source_document_id: d.id });
+      const r = await onAjout({ storage_path: path, mime: d.mime_type, size_bytes: blob.size, width: bmp?.width ?? null, height: bmp?.height ?? null, legende: d.filename, source_document_id: d.id });
+      // Échec de l'ajout (message déjà affiché par l'éditeur) : on retire la copie pour ne pas laisser d'image orpheline.
+      if (r === null) { await supabase.storage.from("devis-photos").remove([path]); setBusy(null); return; }
       toast.success("Image ajoutée à l'objet");
       setOpen(false);
     } catch (e) { toast.error("Ajout impossible", { description: (e as Error).message }); }
