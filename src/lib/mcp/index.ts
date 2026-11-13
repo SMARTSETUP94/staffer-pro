@@ -47,7 +47,7 @@ export default defineMcp({
   auth: auth.oauth.issuer({ issuer: `https://${projectRef}.supabase.co/auth/v1`, acceptedAudiences: "authenticated", requireOAuthClientClaim: true }),
   createAppContext,
   allowedOrigins: ["https://claude.ai", "https://claude.com", "https://staffing.setup.paris", "http://localhost:8080"],
-  tools: [rechercherAffaires, ficheAffaire, pipelineOpportunites, quiEstOu, chargeAtelier, heuresAffaire, echeances, demandesClients, monProfil,
+  tools: [rechercherAffaires, ficheAffaire, documentsAffaire, pipelineOpportunites, quiEstOu, chargeAtelier, heuresAffaire, echeances, demandesClients, monProfil,
     rechercherClients, planningLogistique, vehiculesDisponibles, propositionsLogistiques, planningPilotage,
     creerOpportunite, ajouterAction, mettreAJour, modifierChantier, ajouterNote, creerEtape, modifierEtape, deplacerEtape, annulerEtape, affecterRoleProjet, traiterDemande,
     devisLister, devisLire, devisReferentiel, materiauxRechercher, devisChargeBe, devisExporterPdf, devisCreerBrouillon, devisRemplir, devisModifierEntete, devisAjouterPhoto, devisNouvelleVersion, devisSoumettre, devisExporterProgbat, devisEnregistrerTransfert],

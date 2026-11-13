@@ -89,7 +89,8 @@ export const devisSchemas = {
     date_visite_technique: dateSchema.nullable().optional(), date_montage: dateSchema.nullable().optional(), date_evenement_debut: dateSchema.nullable().optional(), date_evenement_fin: dateSchema.nullable().optional(), date_demontage: dateSchema.nullable().optional(),
     remise: z.object({ mode: z.enum(["aucune", "montant", "pct", "net_cible"]), valeur: num.min(0).optional() }).strict().optional(),
   }).strict().refine(p => Object.keys(p).length > 0, "Modification vide"), mode, ...confirmationSchema },
-  devis_ajouter_photo: { devis_id: uuid, ligne_id: uuid.describe("Objet du devis."), fichier_base64: z.string().min(8).optional().describe("Petit fichier uniquement : contenu JPG, PNG ou PDF en base64. Pour une vraie photo, préférer url."),
+  devis_ajouter_photo: { devis_id: uuid, ligne_id: uuid.describe("Objet du devis."),
+    document_id: uuid.optional().describe("Image JPG/PNG de la boîte de documents de l'affaire du devis (voir documents_affaire) : copiée dans le devis."), fichier_base64: z.string().min(8).optional().describe("Petit fichier uniquement : contenu JPG, PNG ou PDF en base64. Pour une vraie photo, préférer url."),
     url: z.string().url().max(2000).optional().describe("Lien https récupéré par le serveur : partage OneDrive / SharePoint, staffing.setup.paris ou stockage de l'application. 10 Mo maximum."),
     mime: z.enum(["image/jpeg", "image/png", "application/pdf"]).optional().describe("Facultatif : détecté d'après le contenu."), legende: z.string().max(300).optional(), source: z.string().max(200).optional().describe("Origine : pièce jointe du mail de…, plan, référence…"), visible_client: z.boolean().default(false), mode, ...confirmationSchema },
   devis_nouvelle_version: { devis_id: uuid.describe("Devis envoyé / validé à reprendre ; l'original n'est jamais modifié."), note: z.string().max(4000).optional(), mode, ...confirmationSchema },
@@ -274,11 +275,17 @@ async function sha256(bytes: Uint8Array<ArrayBuffer>) {
 }
 
 /** Construit les arguments métier transmis à la base (jamais le fichier lui-même). */
-export async function devisPayload(name: DevisWriteName, args: Record<string, any>): Promise<{ payload: Record<string, unknown>; fichier?: { path: string; bytes: Uint8Array<ArrayBuffer>; mime: string } }> {
+export async function devisPayload(name: DevisWriteName, args: Record<string, any>, ctx?: { db: any; affaireId: string }): Promise<{ payload: Record<string, unknown>; fichier?: { path: string; bytes: Uint8Array<ArrayBuffer>; mime: string } }> {
   const { confirmation_id: _c, ...a } = args;
   if (name === "devis_ajouter_photo") {
-    if (!!a.fichier_base64 === !!a.url) throw new ToolError("Fournir soit url (recommandé), soit fichier_base64 (petits fichiers)");
+    if ([a.fichier_base64, a.url, a.document_id].filter(Boolean).length !== 1) throw new ToolError("Fournir soit url (recommandé), soit document_id (boîte de l'affaire), soit fichier_base64 (petits fichiers)");
     let bytes: Uint8Array<ArrayBuffer>, mime: Mime, source = a.source ?? null;
+    if (a.document_id) {
+      const doc = await lireDocumentAffaire(ctx, String(a.document_id));
+      bytes = doc.bytes; mime = doc.mime; source = source ?? `document de l'affaire ${doc.nom}`.slice(0, 200);
+      const path = `${a.devis_id}/mcp/${await sha256(bytes)}.${PHOTO_MIMES[mime]}`;
+      return { payload: { mode: a.mode, devis_id: a.devis_id, ligne_id: a.ligne_id, storage_path: path, mime, size_bytes: bytes.length, legende: a.legende ?? null, source, visible_client: a.visible_client ?? false, source_document_id: a.document_id }, fichier: { path, bytes, mime } };
+    }
     if (a.url) { const t = await telechargerFichier(String(a.url), a.mime); bytes = t.bytes; mime = t.mime; source = source ?? `lien ${t.hote}`; }
     else { bytes = controlerFichier(String(a.fichier_base64), a.mime); mime = detecterType(bytes) as Mime; }
     const path = `${a.devis_id}/mcp/${await sha256(bytes)}.${PHOTO_MIMES[mime]}`;
@@ -334,7 +341,7 @@ export async function runDevisWrite(context: McpAppContext, name: DevisWriteName
       if (etat.error || !etat.data) throw new ToolError("Devis introuvable ou accès refusé");
       affaireId = String((etat.data as any).affaire_id);
     }
-    const { payload, fichier } = await devisPayload(name, args);
+    const { payload, fichier } = await devisPayload(name, args, { db: context.db, affaireId });
     const hash = await argumentsHash(args);
     const sim = await context.db.rpc("devis_mcp_simuler", { _tool: name, _payload: payload as never, _affaire_id: affaireId });
     if (sim.error) throw new ToolError("Aperçu indisponible");
@@ -409,4 +416,18 @@ async function exporterProgbatMcp(context: McpAppContext, devisId: string) {
   const { photos: _p, devis_id: _d, ...fiche } = r.fiche;
   return { numero: lu.data.numero, version: lu.data.version, nom_fichier: r.nom, url_telechargement: url.data.signedUrl, expire_dans_secondes: 3600,
     fiche_controle: { ...fiche, photos }, rappel: "Importer dans un devis ProGBat neuf et vide, cocher « La première ligne contient les titres », faire les réglages, relire le total, laisser le devis ProGBat en brouillon, puis proposer devis_enregistrer_transfert." };
+}
+
+/** Image de la boîte de documents : lue avec les droits de l'appelant, active, de l'affaire du devis, JPG/PNG réel, 10 Mo max. */
+export async function lireDocumentAffaire(ctx: { db: any; affaireId: string } | undefined, documentId: string): Promise<{ bytes: Uint8Array<ArrayBuffer>; mime: Mime; nom: string }> {
+  if (!ctx) throw new ToolError("Document de l'affaire indisponible");
+  const { data: d } = await ctx.db.from("affaire_documents").select("id,affaire_id,storage_path,filename,mime_type,taille_bytes,deleted_at").eq("id", documentId).maybeSingle();
+  if (!d || d.deleted_at || d.affaire_id !== ctx.affaireId) throw new ToolError("Document introuvable dans l'affaire de ce devis");
+  if (Number(d.taille_bytes) > 10 * 1024 * 1024) throw new ToolError("Document trop volumineux (10 Mo maximum)");
+  const { data: blob, error } = await ctx.db.storage.from("affaires-photos").download(d.storage_path);
+  if (error || !blob) throw new ToolError("Lecture du document refusée");
+  const bytes = new Uint8Array(await blob.arrayBuffer());
+  const mime = detecterType(bytes);
+  if (mime !== "image/jpeg" && mime !== "image/png") throw new ToolError("Seules les images JPG ou PNG de la boîte peuvent être ajoutées comme photo");
+  return { bytes, mime: mime as Mime, nom: String(d.filename) };
 }
