@@ -236,8 +236,7 @@ export function ObjetPanel({ data, ligne, montants, calc, readOnly, call, patch,
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-semibold">Photos</h3>
           {!readOnly && (<div className="flex items-center gap-3">
-            {data.devis.affaire_id && <DocumentsAffairePicker affaireId={data.devis.affaire_id} devisId={devisId} ligneId={ligne.id}
-              onAjout={(p) => call("devis_photo_ajouter", { _ligne_id: ligne.id, _p: p })} />}
+            {data.devis.affaire_id && <DocumentsAffairePicker affaireId={data.devis.affaire_id} devisId={devisId} ligneId={ligne.id} />}
             <label className="inline-flex cursor-pointer items-center gap-1 text-sm text-primary">
               <ImagePlus className="h-4 w-4" />Ajouter
               <input type="file" multiple accept="image/jpeg,image/png,application/pdf" className="hidden" onChange={(e) => { void upload(e.target.files); e.target.value = ""; }} />
