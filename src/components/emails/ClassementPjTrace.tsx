@@ -42,7 +42,7 @@ export function ClassementPjTrace({ emailId }: { emailId: string }) {
           {b.pieces.map((p) => <li key={p.attachment_id}><span className="text-foreground">{p.nom}</span> — {libelleResultat(p)}</li>)}
         </ul>
       )}
-      {b?.pieces.some((p) => p.resultat === "ecartee_logo") && <p className="text-xs text-muted-foreground">Une image écartée peut être classée à la main : bouton « Classer » sur la pièce jointe ci-dessous.</p>}
+      {b?.pieces.some((p) => p.resultat === "ecartee_logo") && <p className="text-xs text-muted-foreground">Une image écartée peut être classée à la main : icône « Enregistrer dans une affaire » sur la pièce jointe ci-dessous.</p>}
     </div>
   );
 }
