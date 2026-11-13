@@ -8,10 +8,10 @@ import { dateSchema } from "./schemas";
 /** Écritures devis autorisées pour Claude. Toute autre action devis reste dans l'application. */
 export const DEVIS_WRITE_TOOLS = ["devis_creer_brouillon", "devis_remplir", "devis_modifier_entete", "devis_ajouter_photo", "devis_nouvelle_version", "devis_soumettre", "devis_enregistrer_transfert"] as const;
 export type DevisWriteName = typeof DEVIS_WRITE_TOOLS[number];
-export const DEVIS_READ_TOOLS = ["devis_lister", "devis_lire", "devis_referentiel", "materiaux_rechercher", "devis_charge_be", "devis_exporter_pdf", "devis_exporter_progbat"] as const;
+export const DEVIS_READ_TOOLS = ["devis_lister", "devis_lire", "devis_referentiel", "materiaux_rechercher", "devis_charge_be", "devis_exporter_pdf", "devis_exporter_progbat", "devis_proposer_photos"] as const;
 export type DevisReadName = typeof DEVIS_READ_TOOLS[number];
 export const DEVIS_READ_CAPS: Record<DevisReadName, string> = {
-  devis_lister: "devis.view", devis_lire: "devis.view", devis_referentiel: "devis.rediger", materiaux_rechercher: "devis.rediger", devis_charge_be: "devis.view", devis_exporter_pdf: "devis.view", devis_exporter_progbat: "devis.view",
+  devis_lister: "devis.view", devis_lire: "devis.view", devis_referentiel: "devis.rediger", materiaux_rechercher: "devis.rediger", devis_charge_be: "devis.view", devis_exporter_pdf: "devis.view", devis_exporter_progbat: "devis.view", devis_proposer_photos: "devis.rediger",
 };
 export const LOT_MAX = 300;
 export const PHOTO_MAX_OCTETS = 10 * 1024 * 1024;
@@ -70,6 +70,7 @@ const suppression = z.object({ cible: z.enum(["ligne", "heure", "materiau", "lib
 export const devisSchemas = {
   devis_lister: { affaire_id: uuid.optional(), recherche: z.string().max(120).optional(), statuts: z.array(z.enum(["brouillon", "a_valider", "valide", "transfere", "signe", "refuse"])).max(6).optional(), limit: z.number().int().min(1).max(100).default(25), offset: z.number().int().min(0).default(0) },
   devis_lire: { devis_id: uuid },
+  devis_proposer_photos: { devis_id: uuid.describe("Devis dont les zones et objets reçoivent des propositions d'images de la boîte de l'affaire.") },
   devis_referentiel: {},
   materiaux_rechercher: { q: z.string().min(1).max(200), familles: z.array(z.string().max(80)).max(20).optional(), fournisseurs: z.array(uuid).max(20).optional(), epaisseur: num.min(0).optional(), recent_seulement: z.boolean().default(false), limit: z.number().int().min(1).max(50).default(20) },
   devis_charge_be: { affaire_ids: z.array(uuid).min(1).max(50) },
@@ -185,6 +186,14 @@ export async function readDevis(context: McpAppContext, name: DevisReadName, arg
     } else if (name === "devis_exporter_progbat") {
       if (args.mode !== "conversation") { status = "refuse"; throw new ToolError("Export ProGBat refusé en autonomie : uniquement en conversation avec l'utilisateur"); }
       data = { rows: [1], ...(await exporterProgbatMcp(context, args.devis_id)) };
+    } else if (name === "devis_proposer_photos") {
+      const { proposerPhotos } = await import("@/lib/devis/images-ia.server");
+      let r;
+      try { r = await proposerPhotos(context.db, context.userId, args.devis_id, "mcp"); }
+      catch (e) { throw new ToolError(e instanceof Error ? e.message : "Proposition indisponible"); }
+      data = { rows: r.propositions, proposition_id: r.id, propositions: r.propositions.map(p => ({ ligne_id: p.ligne_id, zone_ou_objet: p.ligne_libelle, document_id: p.document_id, document: p.document_nom, confiance: p.confiance, justification: p.justification, visible_client: p.visible_client, legende: p.legende })),
+        pdf_sans_rendu_de_page: r.sans_rendu, cout_eur: r.cout_eur, appels_ia: r.appels,
+        consigne: "Lecture seule : rien n'est ajouté. Pour ajouter une image, devis_ajouter_photo avec document_id (aperçu puis confirmation)." };
     } else if (name === "devis_exporter_pdf") {
       data = { rows: [1], ...(await exporterPdfMcp(context, args.devis_id, args.niveau ?? "detaille", args.regenerer === true)) };
     } else {
@@ -193,7 +202,7 @@ export async function readDevis(context: McpAppContext, name: DevisReadName, arg
       data = { rows: ((r.data ?? []) as any[]).map(c => ({ ...c, jours_be: arrondi1(c.jours_be), heures_be: arrondi1(c.heures_be) })) };
     }
     count = (data.rows as unknown[]).length;
-    if (name === "devis_lire" || name === "devis_exporter_pdf" || name === "devis_exporter_progbat") { const { rows: _r, ...rest } = data; result = compactResult(rest); }
+    if (name === "devis_lire" || name === "devis_proposer_photos" || name === "devis_exporter_pdf" || name === "devis_exporter_progbat") { const { rows: _r, ...rest } = data; result = compactResult(rest); }
     else result = compactResult(data);
   } catch (error) {
     if (status !== "refuse") status = "erreur";
@@ -360,6 +369,10 @@ export async function runDevisWrite(context: McpAppContext, name: DevisWriteName
       const { data, error } = await context.db.rpc("mcp_execute_write_locked", { _confirmation_id: args.confirmation_id, _tool: name, _arguments_hash: hash, _payload: payload as never, _diff: vue as never });
       if (error) throw new ToolError("Confirmation indisponible");
       const out = data as Record<string, any>;
+      if (fichier && out?.error) {
+        const { retirerCopieOrpheline } = await import("@/lib/devis/images-ia.server");
+        await retirerCopieOrpheline(fichier.path).catch(() => false);
+      }
       return { ...compactResult({ ...out, totaux: resumeTotaux(out?.calcul), calcul: undefined }), ...(out?.error ? { isError: true } : {}) };
     }
     const { data, error } = await context.db.rpc("mcp_write_preview", { _tool: name, _arguments_hash: hash, _payload: payload as never, _affaire_id: affaireId, _etape_id: null as never, _snapshot: s.snapshot, _diff: {} });
