@@ -1,9 +1,14 @@
 /** Score pur du banc d'essai : compare les échéances proposées à ce que l'équipe a retenu. */
 export type LigneRetenue = { type: string; date: string; heure_debut?: string | null; heure_fin?: string | null; lieu?: string | null };
 export type LigneProposee = { type?: string | null; date: string; heure_debut?: string | null; lieu?: string | null };
-const hh = (s?: string | null) => (s ?? "").slice(0, 5);
+import { normaliserHeure, normaliserLieu } from "@/lib/logistique/extraction-regles";
+/** Heures équivalentes : « 7h » = « 07:00 » = « 07:00:00 ». */
+const hh = (s?: string | null) => normaliserHeure((s ?? "").slice(0, 5)) ?? (s ?? "").slice(0, 5);
 const mots = (s?: string | null) => new Set((s ?? "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").split(/[^a-z0-9]+/).filter((m) => m.length >= 4));
+/** Lieux équivalents : un mot significatif commun, ou l'un commence par l'autre (« Pecqueuse » / « Pecqueuse, atelier »). */
 export function lieuxProches(a?: string | null, b?: string | null): boolean {
+  const na = normaliserLieu(a); const nb = normaliserLieu(b);
+  if (na && nb && (na.startsWith(nb) || nb.startsWith(na))) return true;
   const A = mots(a); for (const m of mots(b)) if (A.has(m)) return true; return false;
 }
 export type ScoreCas = { nb_etapes: boolean; date: boolean; type: boolean; heures: boolean; lieu: boolean };
