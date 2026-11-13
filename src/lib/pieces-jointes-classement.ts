@@ -31,12 +31,14 @@ export function dimensionsImage(b: Uint8Array): { w: number; h: number } | null 
  * Logo de signature probable :
  * - image collée dans le mail de moins de 15 Ko, ou de moins de 200 px de large ou de haut ;
  * - ou image dont le nom ressemble à « logo », « signature », « image00x », de moins de 60 Ko ;
+ * - ou image sans nom (« noname ») de moins de 100 Ko ;
  * - ou image collée de moins de 100 Ko identique (même nom, même taille) à une image collée d'un autre mail du même expéditeur.
  */
 export function estLogoSignature(p: { nom: string; mime: string; taille: number; inline: boolean; dims?: { w: number; h: number } | null; repetee?: boolean }): boolean {
   if (!/^image\//i.test(p.mime)) return false;
   if (p.inline && p.repetee && p.taille < 100 * 1024) return true;
   if (p.inline && (p.taille < 15 * 1024 || (p.dims && (p.dims.w < 200 || p.dims.h < 200)))) return true;
+  if (/^noname$/i.test(p.nom.trim()) && p.taille < 100 * 1024) return true;
   return /(logo|signature|^image\d{3})/i.test(p.nom) && p.taille < 60 * 1024;
 }
 

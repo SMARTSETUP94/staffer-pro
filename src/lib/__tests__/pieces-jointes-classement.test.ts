@@ -43,6 +43,10 @@ describe("classement des pièces jointes", () => {
     expect(estLogoSignature({ nom: "ATT00001.png", mime: "image/png", taille: 66277, inline: true, repetee: false })).toBe(false);
     expect(estLogoSignature({ nom: "plan.png", mime: "image/png", taille: 400000, inline: true, repetee: true })).toBe(false);
   });
+  it("écarte une petite image sans nom (noname)", () => {
+    expect(estLogoSignature({ nom: "noname", mime: "image/png", taille: 66057, inline: false })).toBe(true);
+    expect(estLogoSignature({ nom: "noname", mime: "image/jpeg", taille: 900000, inline: false })).toBe(false);
+  });
   it("trace lisible d'un logo écarté", () => {
     expect(libelleResultat({ attachment_id: "x", nom: "image001.png", resultat: "ecartee_logo" })).toBe(MOTIF_LOGO);
   });
