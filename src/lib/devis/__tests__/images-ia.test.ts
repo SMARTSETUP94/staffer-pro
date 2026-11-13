@@ -44,7 +44,7 @@ describe("images des devis par l'IA", () => {
     expect(controlerAvantAppel(0, { appels: 1, cout: 0.11 })).toMatch(/plafond/);
     expect(controlerAvantAppel(0, { appels: 5, cout: 0.05 })).toMatch(/4 appels/);
     expect(controlerAvantAppel(4, estimerCout(36, 2000))).toBeNull();
-    expect(estimerCout(61, 0).appels).toBe(2);
+    expect(estimerCout(31, 0).appels).toBe(2);
   });
   it("rendu de page : type réel et dimensions revérifiés", () => {
     const px = new Uint8Array(200 * 150 * 3).fill(128);

@@ -62,7 +62,7 @@ export function filtrerPropositions(brut: unknown, ctx: { lignes: Set<string>; d
 export const MODELE_IA = "google/gemini-3-flash-preview";
 export const PLAFOND_EUR = 0.10;
 export const MAX_PAR_HEURE = 5;
-export const MAX_IMAGES_PAR_APPEL = 60;
+export const MAX_IMAGES_PAR_APPEL = 30; // la passerelle accepte 32 images par requête
 export const TOKENS_PAR_IMAGE = 1120;
 export function coutEur(entree: number, sortie: number): number {
   return Math.round(((entree * 0.5 + sortie * 3) / 1e6) * 0.87 * 10000) / 10000;
