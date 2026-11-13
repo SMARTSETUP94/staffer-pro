@@ -6,8 +6,9 @@
 - [x] L1 : règles heures/durée/année/lieux, pièces jointes log@ lues, étapes atelier décochées, exemples proches ; banc 2 (Haiku retenu) ; 7 alias de lieux sûrs.
 - [x] L2 : règles de tri + écran admin « Reclasser la file » (bilan, confirmation) ; non lancé sur données réelles.
 - [ ] Reclassement réel de la file : attend l'accord d'un admin.
-- [ ] Images des devis : plafond 0,10 € incompatible avec Sonnet au-delà de ~6 images ; décision de Gabin attendue.
-- [ ] M-L3 : texte à présenter pour relecture, puis L3/L4.
+- [x] Images des devis sur Haiku 4.5 (plafond 0,10 € inchangé) ; essai 9518 en mémoire : 9/9 sous le bon objet.
+- [ ] Lieux Canal One, Plateau Murat, Studio Lendit, Studio 128 : décision de Gabin.
+- [ ] M-L3 : SQL présenté, en attente de relecture ; puis code L3 et L4.
 
 ## Conditions de paiement clients — 11 novembre
 - [x] Compléter uniquement les 144 conditions NULL non fusionnées ; trace ajoutée, 90 conditions et remarques existantes préservées, empreinte de tous les autres champs identique hors updated_at.
