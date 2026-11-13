@@ -146,7 +146,7 @@ export function construireClassification(input: ClassifyInput, source: SharedSou
               },
             },
             required: ["categorie", "confiance", "metier", "poste_devine", "nom", "prenom", "resume", "opp_client", "opp_projet", "opp_taille", "opp_date_evenement", "opp_lieu", "opp_besoins", "echeances"],
-          },;
+          };
   return { systeme: sys, contenu, schema };
 }
 
