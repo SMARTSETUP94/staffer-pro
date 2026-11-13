@@ -64,8 +64,8 @@ export function filtrerPropositions(brut: unknown, ctx: { lignes: Set<string>; d
   return out.sort((a, b) => b.confiance - a.confiance);
 }
 
-/** Modèle des images de devis : Claude Sonnet 5 (décision du 13/11/2026), Gemini 3 Flash en secours. */
-export const MODELE_IA = "anthropic/claude-sonnet-5";
+/** Modèle des images de devis : Claude Haiku 4.5 (décision du 13/11/2026 : Sonnet dépassait le plafond de 0,10 €), Gemini 3 Flash en secours. */
+export const MODELE_IA = "anthropic/claude-haiku-4-5";
 /** Prix publics ($ par million de jetons, entrée/sortie), 1 $ ≈ 0,87 €. */
 const PRIX_USD: Record<string, [number, number]> = {
   "anthropic/claude-sonnet-5": [3, 15],
