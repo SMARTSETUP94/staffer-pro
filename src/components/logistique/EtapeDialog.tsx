@@ -92,7 +92,8 @@ export function EtapeDialog({ open, onOpenChange, etape, defaultDate, defaultAff
       note: f.note || null,
       commentaire_equipe: f.commentaire_equipe || null,
       // Besoins qualifiés : envoyés seulement s'ils sont renseignés ou déjà présents sur l'étape.
-      ...(f.nb_chefs_equipe || f.nb_vehicules || f.permis_requis || f.caces_requis || etape?.nb_chefs_equipe || etape?.nb_vehicules || etape?.permis_requis?.length || etape?.caces_requis?.length ? {
+      // Création : toujours envoyés (colonnes non nulles). Modification : seulement si renseignés ou déjà présents.
+      ...(!etape || f.nb_chefs_equipe || f.nb_vehicules || f.permis_requis || f.caces_requis || etape?.nb_chefs_equipe || etape?.nb_vehicules || etape?.permis_requis?.length || etape?.caces_requis?.length ? {
         // Champs facultatifs : vides = aucun besoin (colonnes non nulles côté base).
         nb_chefs_equipe: f.nb_chefs_equipe ? Number(f.nb_chefs_equipe) : 0,
         nb_vehicules: f.nb_vehicules ? Number(f.nb_vehicules) : null,
