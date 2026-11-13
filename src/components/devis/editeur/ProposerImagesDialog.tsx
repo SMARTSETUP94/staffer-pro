@@ -35,7 +35,7 @@ export function ProposerImagesDialog({ devisId, affaireId, lignes }: { devisId: 
     const t0 = performance.now();
     try {
       setEtape("Préparation des documents…");
-      const { preparerBoite } = await import("@/lib/devis/rendu-pages.client");
+      const { preparerBoite } = await import("@/lib/devis/rendu-pages-navigateur");
       const prep = await preparerBoite(affaireId, setEtape);
       setEtape("L'IA examine les images…");
       const r = await proposerImagesDevis({ data: { devisId } });
