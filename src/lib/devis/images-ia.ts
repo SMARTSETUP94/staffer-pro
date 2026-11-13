@@ -27,7 +27,7 @@ export const CATEGORIES_EXCLUES = new Set(["devis_setup", "offre_fournisseur", "
 /** Légende courte, sans prix ni information interne. */
 export function nettoyerLegende(s: string | null | undefined): string {
   let t = String(s ?? "").replace(/\s+/g, " ").trim();
-  t = t.replace(/\d[\d\s.,]*\s*(€|eur(os)?\b|ht\b|ttc\b)/gi, "").replace(/€/g, "");
+  t = t.replace(/\d[\d\s.,]*\s*(€|eur(os)?\b|ht\b|ttc\b)(\s*(ht|ttc)\b)?/gi, "").replace(/€/g, "");
   t = t.replace(/\b(prix|co[uû]ts?|marge|tarif|interne|confidentiel|achat)\b/gi, "").replace(/\s+/g, " ").trim();
   return t.slice(0, 80);
 }
