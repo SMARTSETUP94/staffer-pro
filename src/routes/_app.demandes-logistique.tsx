@@ -18,6 +18,7 @@ import { DemandeLogistiqueForm } from "@/components/logistique/DemandeLogistique
 import { EmailReaderDialog } from "@/components/emails/EmailReaderDialog";
 import { PiecesJointesMailSelection } from "@/components/logistique/PiecesJointesMailSelection";
 import { PageHeader } from "@/components/PageHeader";
+import { TriFileDialog } from "@/components/logistique/TriFileDialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -68,6 +69,7 @@ function DemandesLogistiquePage() {
   const [affaires, setAffaires] = useState<Aff[]>([]);
   const canEdit = useCapability("logistique.etape.edit");
   const isAdmin = useCapability("section.admin");
+  const [triOuvert, setTriOuvert] = useState(false);
   const reanalyse = useServerFn(reanalyseSharedInboxes);
   const [reanalysing, setReanalysing] = useState(false);
   const [nouvelle, setNouvelle] = useState(false);
@@ -146,7 +148,9 @@ function DemandesLogistiquePage() {
             {reanalysing ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-1" />}
             Relancer l'analyse IA
           </Button>)}
+          {isAdmin && <Button size="sm" variant="outline" onClick={() => setTriOuvert(true)}>Reclasser la file</Button>}
         </div>} />
+      {isAdmin && <TriFileDialog open={triOuvert} onOpenChange={setTriOuvert} onDone={() => void load()} />}
       <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
         <TabsList>
           <TabsTrigger value="todo">À traiter <span className="ml-1.5 text-xs opacity-60">{lists.todo.length}</span></TabsTrigger>
