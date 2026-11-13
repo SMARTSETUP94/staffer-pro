@@ -4,14 +4,15 @@ import { compactResult, safeAuditArguments, type McpAppContext } from "./policy"
 import { argumentsHash } from "./write-policy";
 import { confirmationSchema } from "./write-schemas";
 import { dateSchema } from "./schemas";
+import { extrait, noteApres } from "@/lib/devis/note";
 
 /** Écritures devis autorisées pour Claude. Toute autre action devis reste dans l'application. */
 export const DEVIS_WRITE_TOOLS = ["devis_creer_brouillon", "devis_remplir", "devis_modifier_entete", "devis_ajouter_photo", "devis_nouvelle_version", "devis_soumettre", "devis_enregistrer_transfert"] as const;
 export type DevisWriteName = typeof DEVIS_WRITE_TOOLS[number];
-export const DEVIS_READ_TOOLS = ["devis_lister", "devis_lire", "devis_referentiel", "materiaux_rechercher", "devis_charge_be", "devis_exporter_pdf", "devis_exporter_progbat", "devis_proposer_photos"] as const;
+export const DEVIS_READ_TOOLS = ["devis_lister", "devis_lire", "devis_referentiel", "materiaux_rechercher", "devis_charge_be", "devis_exporter_pdf", "devis_exporter_progbat", "devis_proposer_photos", "devis_note_version"] as const;
 export type DevisReadName = typeof DEVIS_READ_TOOLS[number];
 export const DEVIS_READ_CAPS: Record<DevisReadName, string> = {
-  devis_lister: "devis.view", devis_lire: "devis.view", devis_referentiel: "devis.rediger", materiaux_rechercher: "devis.rediger", devis_charge_be: "devis.view", devis_exporter_pdf: "devis.view", devis_exporter_progbat: "devis.view", devis_proposer_photos: "devis.rediger",
+  devis_lister: "devis.view", devis_lire: "devis.view", devis_referentiel: "devis.rediger", materiaux_rechercher: "devis.rediger", devis_charge_be: "devis.view", devis_exporter_pdf: "devis.view", devis_exporter_progbat: "devis.view", devis_proposer_photos: "devis.rediger", devis_note_version: "devis.view",
 };
 export const LOT_MAX = 300;
 export const PHOTO_MAX_OCTETS = 10 * 1024 * 1024;
@@ -70,6 +71,7 @@ const suppression = z.object({ cible: z.enum(["ligne", "heure", "materiau", "lib
 export const devisSchemas = {
   devis_lister: { affaire_id: uuid.optional(), recherche: z.string().max(120).optional(), statuts: z.array(z.enum(["brouillon", "a_valider", "valide", "transfere", "signe", "refuse"])).max(6).optional(), limit: z.number().int().min(1).max(100).default(25), offset: z.number().int().min(0).default(0) },
   devis_lire: { devis_id: uuid },
+  devis_note_version: { devis_id: uuid, version_id: uuid.describe("Identifiant d'une version lue dans note_historique de devis_lire.") },
   devis_proposer_photos: { devis_id: uuid.describe("Devis dont les zones et objets reçoivent des propositions d'images de la boîte de l'affaire.") },
   devis_referentiel: {},
   materiaux_rechercher: { q: z.string().min(1).max(200), familles: z.array(z.string().max(80)).max(20).optional(), fournisseurs: z.array(uuid).max(20).optional(), epaisseur: num.min(0).optional(), recent_seulement: z.boolean().default(false), limit: z.number().int().min(1).max(50).default(20) },
@@ -78,7 +80,7 @@ export const devisSchemas = {
     regenerer: z.boolean().default(false).describe("true : générer un nouveau PDF même si un export de la version en cours existe.") },
   devis_exporter_progbat: { devis_id: uuid.describe("Devis validé par un humain dans Staffing, pas encore transféré."),
     mode: z.enum(["autonomie", "conversation"]).describe("conversation obligatoire : transfert ProGBat uniquement en session avec l'utilisateur ; autonomie refusée.") },
-  devis_creer_brouillon: { affaire_id: uuid, modele_id: z.union([uuid, z.literal("vierge")]).optional().describe("Omettre = modèle par défaut ; « vierge » = sans modèle."), cle_externe: z.string().min(1).max(255).optional(), note: z.string().max(4000).optional().describe("Hypothèses à confirmer, affichées en tête de l'éditeur."), mode, ...confirmationSchema },
+  devis_creer_brouillon: { affaire_id: uuid, modele_id: z.union([uuid, z.literal("vierge")]).optional().describe("Omettre = modèle par défaut ; « vierge » = sans modèle."), cle_externe: z.string().min(1).max(255).optional(), note: z.string().max(8000).optional().describe("Hypothèses à confirmer, affichées en tête de l'éditeur."), mode, ...confirmationSchema },
   devis_remplir: { devis_id: uuid,
     lignes: z.array(element).max(LOT_MAX).refine(l => tailleLot(l) <= LOT_MAX, `${LOT_MAX} lignes maximum par appel (heures, matériaux et lignes libres comprises) : découper en plusieurs appels`).optional().describe("Ajouts ; avec ligne_id, complète la ligne existante (libellé, quantité, dimensions, descriptif appliqués)."),
     modifications: z.array(modification).max(LOT_MAX).optional().describe("Modifier des éléments existants du brouillon (id lus avec devis_lire)."),
@@ -89,18 +91,20 @@ export const devisSchemas = {
     date_devis: dateSchema.optional(), date_validite: dateSchema.nullable().optional(), validite_jours: z.number().int().min(1).max(365).optional(),
     date_visite_technique: dateSchema.nullable().optional(), date_montage: dateSchema.nullable().optional(), date_evenement_debut: dateSchema.nullable().optional(), date_evenement_fin: dateSchema.nullable().optional(), date_demontage: dateSchema.nullable().optional(),
     remise: z.object({ mode: z.enum(["aucune", "montant", "pct", "net_cible"]), valeur: num.min(0).optional() }).strict().optional(),
+    note: z.object({ mode: z.enum(["remplacer", "ajouter"]).describe("ajouter : en fin de note, après une ligne « — Mise à jour du JJ/MM/AAAA (Claude) — »."), texte: z.string().min(1).max(8000) }).strict().optional().describe("Note / hypothèses en tête de l'éditeur (8 000 caractères au maximum au total)."),
+    note_mcp_coches: z.array(z.string().min(1).max(2000)).max(200).optional().describe("Points de la note marqués comme traités (texte exact du point)."),
   }).strict().refine(p => Object.keys(p).length > 0, "Modification vide"), mode, ...confirmationSchema },
   devis_ajouter_photo: { devis_id: uuid, ligne_id: uuid.describe("Objet du devis."),
     document_id: uuid.optional().describe("Image JPG/PNG de la boîte de documents de l'affaire du devis (voir documents_affaire) : copiée dans le devis."), fichier_base64: z.string().min(8).optional().describe("Petit fichier uniquement : contenu JPG, PNG ou PDF en base64. Pour une vraie photo, préférer url."),
     url: z.string().url().max(2000).optional().describe("Lien https récupéré par le serveur : partage OneDrive / SharePoint, staffing.setup.paris ou stockage de l'application. 10 Mo maximum."),
     mime: z.enum(["image/jpeg", "image/png", "application/pdf"]).optional().describe("Facultatif : détecté d'après le contenu."), legende: z.string().max(300).optional(), source: z.string().max(200).optional().describe("Origine : pièce jointe du mail de…, plan, référence…"), visible_client: z.boolean().default(false), mode, ...confirmationSchema },
-  devis_nouvelle_version: { devis_id: uuid.describe("Devis envoyé / validé à reprendre ; l'original n'est jamais modifié."), note: z.string().max(4000).optional(), mode, ...confirmationSchema },
+  devis_nouvelle_version: { devis_id: uuid.describe("Devis envoyé / validé à reprendre ; l'original n'est jamais modifié."), note: z.string().max(8000).optional(), mode, ...confirmationSchema },
   devis_enregistrer_transfert: { devis_id: uuid,
     numero_progbat: z.string().trim().toUpperCase().regex(/^(S\d{6}|D-\d{6}-\d{4})$/, "Numéro ProGBat : S + 6 chiffres (brouillon) ou D-AAAAMM-NNNN (finalisé)").describe("S003800 juste après l'import (brouillon ProGBat) ; D-AAAAMM-NNNN une fois le devis finalisé par un humain."),
     total_progbat: num.min(0).describe("Total net HT relu dans ProGBat, en euros."),
     motif: z.string().trim().min(1).max(1000).optional().describe("Obligatoire si le total ProGBat diffère du net HT Staffing au centime."),
     mode: z.enum(["autonomie", "conversation"]).describe("conversation obligatoire, avec l'accord explicite de l'utilisateur ; autonomie refusée."), ...confirmationSchema },
-  devis_soumettre: { devis_id: uuid, note: z.string().max(4000).describe("Ce qui reste à confirmer par le chargé d'affaires."), mode, ...confirmationSchema },
+  devis_soumettre: { devis_id: uuid, note: z.string().max(8000).describe("Ce qui reste à confirmer par le chargé d'affaires."), mode, ...confirmationSchema },
 } as const;
 
 export function devisReadEnabled(context: McpAppContext, name: DevisReadName) { return context.caps.has(DEVIS_READ_CAPS[name]); }
@@ -167,7 +171,14 @@ export async function readDevis(context: McpAppContext, name: DevisReadName, arg
       const meta = await context.db.from("devis").select("cree_par_mcp,modifie_par_humain_le,note_mcp,cle_externe").eq("id", args.devis_id).maybeSingle();
       const lu = r.data as Record<string, any>;
       if (lu.calcul && typeof lu.calcul === "object") lu.calcul = { ...lu.calcul, ...margeFiable(lu.calcul) };
-      data = { rows: [1], devis: lu as never, redaction_claude: (meta.data ?? null) as never };
+      const hist = await context.db.from("devis_textes_historique").select("id,source,auteur_id,cree_le,apres").eq("devis_id", args.devis_id).eq("cible", "note").order("cree_le", { ascending: false }).limit(5);
+      const note_historique = (hist.data ?? []).map((h: any) => ({ version_id: h.id as string, source: h.source === "mcp" ? "Claude (MCP)" : h.source as string, auteur_id: h.auteur_id as string | null, date: h.cree_le as string, extrait: extrait(h.apres) }));
+      data = { rows: [1], devis: lu as never, redaction_claude: (meta.data ?? null) as never, note_historique, note_historique_consigne: "Extraits seulement : texte complet d'une version avec devis_note_version." };
+    } else if (name === "devis_note_version") {
+      const r = await context.db.from("devis_textes_historique").select("id,cible,source,cree_le,avant,apres").eq("id", args.version_id).eq("devis_id", args.devis_id).eq("cible", "note").maybeSingle();
+      if (r.error || !r.data) throw new ToolError("Version introuvable ou accès refusé");
+      const h = r.data as any;
+      data = { rows: [1], version_id: h.id, source: h.source === "mcp" ? "Claude (MCP)" : h.source, date: h.cree_le, texte: h.apres, texte_precedent: h.avant };
     } else if (name === "devis_referentiel") {
       const [taux, params, modeles, defaut] = await Promise.all([
         context.db.rpc("devis_taux_lister"),
@@ -357,6 +368,13 @@ export async function runDevisWrite(context: McpAppContext, name: DevisWriteName
     const s = sim.data as Record<string, any>;
     if (s?.error) throw new ToolError(String(s.error));
     let vue: Record<string, unknown> = apercu(s);
+    if (name === "devis_modifier_entete" && (args.champs?.note || args.champs?.note_mcp_coches)) {
+      const cur = await context.db.from("devis").select("note_mcp,note_mcp_coches").eq("id", args.devis_id).maybeSingle();
+      const avant = (cur.data?.note_mcp ?? null) as string | null;
+      let apres: string | null = avant;
+      if (args.champs.note) { try { apres = noteApres(avant, args.champs.note.mode, args.champs.note.texte, new Date()); } catch (e) { throw new ToolError(e instanceof Error ? e.message : "Note invalide"); } }
+      vue = { ...vue, note: { avant, apres, mode: args.champs.note?.mode ?? null }, ...(args.champs.note_mcp_coches ? { note_mcp_coches: { avant: cur.data?.note_mcp_coches ?? [], apres: args.champs.note_mcp_coches } } : {}) };
+    }
     if (name === "devis_remplir" && (args.modifications?.length || args.suppressions?.length || (args.lignes ?? []).some((e: any) => e.ligne_id))) {
       const lu = await context.db.rpc("devis_lire", { _devis_id: args.devis_id });
       vue = { ...vue, elements_vises: elementsVises((lu.data ?? null) as Record<string, any> | null, args) };
