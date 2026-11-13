@@ -76,7 +76,7 @@ export function AffaireDocumentsGallery({ affaireId, variant = "desktop", canUpl
   const preparer = async () => {
     setPrep("Préparation…");
     try {
-      const { preparerBoite } = await import("@/lib/devis/rendu-pages.client");
+      const { preparerBoite } = await import("@/lib/devis/rendu-pages-navigateur");
       const r = await preparerBoite(affaireId, setPrep);
       if (r.erreurs.length) toast.error("Préparation incomplète", { description: r.erreurs.join(" · ") }); else toast.success("Documents triés, pages et images extraites");
       await reloadDocs();
