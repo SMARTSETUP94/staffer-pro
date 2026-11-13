@@ -5,7 +5,7 @@ const uuid = "11111111-1111-4111-8111-111111111111", aff = "22222222-2222-4222-8
 const png = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, ...new Array(40).fill(0)]);
 const fakeDb = (row: any, bytes: Uint8Array = png) => ({
   from: () => ({ select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: row }) }) }) }),
-  storage: { from: () => ({ download: async () => ({ data: new Blob([bytes]), error: null }) }) },
+  storage: { from: () => ({ download: async () => ({ data: new Blob([bytes as Uint8Array<ArrayBuffer>]), error: null }) }) },
 });
 const row = { id: doc, affaire_id: aff, storage_path: `${aff}/x.png`, filename: "stand.png", mime_type: "image/png", taille_bytes: 48, deleted_at: null };
 const args = { devis_id: uuid, ligne_id: uuid, document_id: doc, mode: "conversation" };
