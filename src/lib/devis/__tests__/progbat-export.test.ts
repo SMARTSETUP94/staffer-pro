@@ -28,7 +28,7 @@ describe("Export ProGBat — arrondis", () => {
     expect(lame).toMatchObject({ n: "1.1", quantite: 18, unite: "u", pu: 319.88, temps: 36 });
     expect(r.lignes.find((l) => l.kind === "ligne" && l.n === "2.1")).toMatchObject({ unite: "ens", quantite: 1, pu: 1000.02, temps: 10 });
     expect(r.lignes.some((l) => l.kind === "ligne" && /Ajustement/.test(l.designation))).toBe(false);
-    expect(r.fiche.ajustement_arrondi).toEqual({ montant: 0.02, n: "2.1", designation: "Études et suivi de projet", mode: "absorbe" });
+    expect(r.fiche.ajustement_arrondi).toEqual({ montant: 0.02, n: "2.1", designation: "Suivi et plans", mode: "absorbe" });
     expect(r.fiche.total_fichier).toBe(6757.86);
     expect(r.fiche.controle_ok).toBe(true);
   });
