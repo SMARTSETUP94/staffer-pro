@@ -573,6 +573,7 @@ export type Database = {
       }
       affaire_etapes_logistiques: {
         Row: {
+          a_partir_de: boolean | null
           acces: string | null
           affaire_id: string
           besoins_postes: Json
@@ -586,12 +587,14 @@ export type Database = {
           created_by: string | null
           date_debut: string
           date_fin: string | null
+          duree_minutes: number | null
           equipe: string | null
           heure_debut: string | null
           heure_fin: string | null
           horaire_libre: string | null
           id: string
           immatriculation_libre: string | null
+          lieu_douteux: boolean | null
           lieu_id: string | null
           lieu_libre: string | null
           nb_chefs_equipe: number
@@ -613,6 +616,7 @@ export type Database = {
           vehicule_id: string | null
         }
         Insert: {
+          a_partir_de?: boolean | null
           acces?: string | null
           affaire_id: string
           besoins_postes?: Json
@@ -626,12 +630,14 @@ export type Database = {
           created_by?: string | null
           date_debut: string
           date_fin?: string | null
+          duree_minutes?: number | null
           equipe?: string | null
           heure_debut?: string | null
           heure_fin?: string | null
           horaire_libre?: string | null
           id?: string
           immatriculation_libre?: string | null
+          lieu_douteux?: boolean | null
           lieu_id?: string | null
           lieu_libre?: string | null
           nb_chefs_equipe?: number
@@ -653,6 +659,7 @@ export type Database = {
           vehicule_id?: string | null
         }
         Update: {
+          a_partir_de?: boolean | null
           acces?: string | null
           affaire_id?: string
           besoins_postes?: Json
@@ -666,12 +673,14 @@ export type Database = {
           created_by?: string | null
           date_debut?: string
           date_fin?: string | null
+          duree_minutes?: number | null
           equipe?: string | null
           heure_debut?: string | null
           heure_fin?: string | null
           horaire_libre?: string | null
           id?: string
           immatriculation_libre?: string | null
+          lieu_douteux?: boolean | null
           lieu_id?: string | null
           lieu_libre?: string | null
           nb_chefs_equipe?: number
@@ -5448,6 +5457,38 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      lieux_alias: {
+        Row: {
+          alias: string
+          created_at: string
+          created_by: string | null
+          id: string
+          lieu_id: string
+        }
+        Insert: {
+          alias: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          lieu_id: string
+        }
+        Update: {
+          alias?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          lieu_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lieux_alias_lieu_id_fkey"
+            columns: ["lieu_id"]
+            isOneToOne: false
+            referencedRelation: "lieux"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       logistique_parametres: {
         Row: {
