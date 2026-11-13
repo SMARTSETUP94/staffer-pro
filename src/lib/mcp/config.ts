@@ -9,6 +9,6 @@ export const TOOL_CAPS = {
   rechercher_affaires: "section.affaires", fiche_affaire: "section.affaires",
   pipeline_opportunites: "section.pipeline_opportunites", qui_est_ou: "planning.view",
   charge_atelier: "section.fabrication", heures_affaire: "heures.audit",
-  echeances: "section.affaires", demandes_clients: "demandes_clients.view", mon_profil: "api.mcp",
+  echeances: "section.affaires", documents_affaire: "section.affaires", demandes_clients: "demandes_clients.view", mon_profil: "api.mcp",
 } as const;
 export type ToolName = keyof typeof TOOL_CAPS;

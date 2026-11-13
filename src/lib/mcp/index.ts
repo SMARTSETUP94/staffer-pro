@@ -2,6 +2,7 @@ import { auth, defineMcp } from "@lovable.dev/mcp-js";
 import { createAppContext } from "./policy";
 import rechercherAffaires from "./tools/rechercher_affaires";
 import ficheAffaire from "./tools/fiche_affaire";
+import documentsAffaire from "./tools/documents_affaire";
 import pipelineOpportunites from "./tools/pipeline_opportunites";
 import quiEstOu from "./tools/qui_est_ou";
 import chargeAtelier from "./tools/charge_atelier";
