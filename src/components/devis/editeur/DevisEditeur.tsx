@@ -1,4 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
+import { trierRacines } from "@/lib/devis/arbre";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle, ArrowLeft, PanelLeft, CheckCircle2, Circle, Maximize2, Minimize2, Eye, FileDown, Mail, Library, MessageSquarePlus, PenLine, Plus, Trash2 } from "lucide-react";
@@ -411,7 +412,7 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
               {calc.options_ht > 0 && <Row label="Options (hors total)" value={eur(calc.options_ht)} />}
             </div>
             <div className="space-y-1 border-t pt-2">
-              {d.lignes.filter((l) => !l.parent_id && l.type !== "commentaire").sort((a, b) => a.ordre - b.ordre).map((z) => (
+              {trierRacines(d.lignes.filter((l) => !l.parent_id && l.type !== "commentaire")).map((z) => (
                 <Row key={z.id} label={`${z.libelle || TYPE_LABEL[z.type]}`} value={eur(calc.racines[z.id] ?? 0)} />
               ))}
             </div>

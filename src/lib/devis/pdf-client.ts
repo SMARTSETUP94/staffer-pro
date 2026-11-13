@@ -3,6 +3,7 @@
  * aucune heure, taux, coût, prix d'achat, coefficient, marge, ligne interne ni note de Claude n'y figure.
  * Module pur (navigateur et serveur) : les images sont passées en octets.
  */
+import { enfants as enfantsArbre, trierRacines, sansNumeroSaisi, ordreArbre } from "./arbre";
 import { jsPDF } from "jspdf";
 import autoTable, { type RowInput } from "jspdf-autotable";
 
@@ -66,7 +67,7 @@ export function detailObjet(l: LigneClient) {
   const d = [l.longueur_mm, l.largeur_mm, l.hauteur_mm].filter((x) => x != null && Number(x) > 0).map((x) => String(Number(x)));
   return [!aDims(desc) && d.length ? `${d.join(" × ")} mm` : "", !aFinition(desc) ? (l.finition ?? "").trim() : "", desc].filter(Boolean).join("\n");
 }
-const enfants = (vc: DevisClient, p: string) => vc.lignes.filter((l) => l.parent_id === p).sort((a, b) => a.ordre - b.ordre);
+const enfants = (vc: DevisClient, p: string) => enfantsArbre(vc.lignes, p);
 /** Montant d'une ligne : sous-total serveur, sinon montant propre + enfants (sous-zones sans sous-total). */
 function montantDeIn(vc: DevisClient | null, l: LigneClient): number {
   if (l.sous_total != null) return Number(l.sous_total);
@@ -83,9 +84,11 @@ export const totalAffiche = (vc: DevisClient, l: LigneClient) =>
 /** Titre client d'un chapitre : jamais le libellé interne. */
 export function titreCourt(r: Pick<LigneClient, "type" | "libelle">) {
   const lib = (r.libelle ?? "").trim();
-  if (r.type === "zone" || r.type === "objet") return lib || TYPE_RACINE[r.type];
+  if (r.type === "zone") return sansNumeroSaisi(lib) || lib || TYPE_RACINE[r.type];
+  if (r.type === "objet") return lib || TYPE_RACINE[r.type];
+  if (lib && r.type.startsWith("chapitre_")) return lib;
   if (r.type === "chapitre_suivi") return "Études et suivi de projet";
-  if (r.type === "chapitre_pose") return /^livraison/i.test(lib) ? "Livraison et mise en place" : "Pose et mise en place";
+  if (r.type === "chapitre_pose") return "Pose et mise en place";
   if (r.type === "chapitre_depose") return "Reprise";
   if (r.type === "option") return lib || "Option";
   return TYPE_RACINE[r.type] ?? (lib || "Chapitre");
@@ -128,19 +131,19 @@ export function lignesTableau(vc: DevisClient, racine: LigneClient, niveau: Nive
   const walk = (p: string, pre: string) => {
     let k = 0;
     for (const l of enfants(vc, p)) {
-      if (l.type === "option") continue;
+      if (l.type === "option" && !l.option_incluse) continue;
       if (l.type === "commentaire") { if (l.texte?.trim()) rows.push({ n: "", designation: l.texte.trim(), unite: "", qte: "", pu: "", total: "", style: "commentaire" }); continue; }
       k += 1; const n = pre ? `${pre}.${k}` : String(k);
       const q = Number(l.quantite ?? 1) || 1;
       const total = totalAffiche(vc, l);
-      const objet = l.type === "objet";
+      const objet = l.type === "objet", incl = l.type === "option";
       const prix = niveau === "detaille";
       rows.push({
-        n, designation: l.libelle ?? "", ligneId: l.id,
+        n, designation: l.type === "zone" ? titreCourt(l) : l.libelle ?? (incl ? "Option" : ""), ligneId: l.id,
         detail: prix ? (objet ? detailObjet(l) : (l.descriptif_client ?? "").trim()) : "",
         unite: objet ? "u" : l.type === "zone" ? "" : "ens", qte: l.type === "zone" ? "" : String(objet ? q : 1),
         pu: prix && l.type !== "zone" ? eurPdf(objet ? total / q : total) : "", total: prix || l.type === "zone" ? eurPdf(total) : "",
-        style: objet ? "objet" : "sous",
+        style: objet ? "objet" : incl ? "forfait" : "sous",
       });
       walk(l.id, n);
     }
@@ -152,7 +155,7 @@ export function lignesTableau(vc: DevisClient, racine: LigneClient, niveau: Nive
 /** Toutes les options (racine ou dans une zone), avec leur zone de rattachement. */
 export function optionsDevis(vc: DevisClient) {
   const parent = (l: LigneClient) => vc.lignes.find((x) => x.id === l.parent_id);
-  return vc.lignes.filter((l) => l.type === "option").sort((a, b) => a.ordre - b.ordre).map((o) => {
+  return ordreArbre(vc.lignes).filter((l) => l.type === "option" && !l.option_incluse).map((o) => {
     let z = parent(o); while (z && z.parent_id) z = parent(z);
     return { ligne: o, zone: z ? titreCourt(z) : null, montant: montantDe(o), incluse: !!o.option_incluse };
   });
@@ -273,7 +276,7 @@ export function construireDevisPdf(vc: DevisClient, niveau: NiveauPdf, images: R
   font("t", 8, C.gris); doc.text(lm, M + 5, y + 4.6); y += hm + 6;
 
   // ── Tableau
-  const racines = vc.lignes.filter((l) => !l.parent_id && l.type !== "commentaire" && l.type !== "option").sort((a, b) => a.ordre - b.ordre);
+  const racines = trierRacines(vc.lignes.filter((l) => !l.parent_id && l.type !== "commentaire" && !(l.type === "option" && !l.option_incluse)));
   const comRacine = vc.lignes.filter((l) => !l.parent_id && l.type === "commentaire" && l.texte?.trim()).sort((a, b) => a.ordre - b.ordre);
   const detaille = niveau === "detaille";
   const corps: any[] = [];
@@ -305,7 +308,7 @@ export function construireDevisPdf(vc: DevisClient, niveau: NiveauPdf, images: R
       corps.push([{ content: n }, { content: titreCourt(r), styles: { fontStyle: "bold", fillColor: C.bleuClair } }, "ens", "1", "", { content: eurPdf(totalAffiche(vc, r)), styles: { halign: "right", fontStyle: "bold" } }]);
       continue;
     }
-    const kids = enfants(vc, r.id).filter((k) => k.type !== "commentaire" && k.type !== "option");
+    const kids = enfants(vc, r.id).filter((k) => k.type !== "commentaire" && !(k.type === "option" && !k.option_incluse));
     const titre = titreCourt(r), total = totalAffiche(vc, r);
     const chap = r.type.startsWith("chapitre_");
     const dchap = chap ? descriptifClientChapitre(vc, r) : "";
@@ -359,7 +362,7 @@ export function construireDevisPdf(vc: DevisClient, niveau: NiveauPdf, images: R
     place(20); font("h", 10, C.bleu); doc.text("Options (non comprises dans le total)", M, y); y += 2;
     const corpsO: any[] = [];
     opts2.forEach((o, i) => {
-      corpsO.push([{ content: `O${i + 1}`, styles: { textColor: C.gris } }, { content: `${o.ligne.libelle ?? "Option"}${o.zone ? ` — ${o.zone}` : ""}${o.incluse ? " (incluse dans le total)" : ""}`, styles: { fontStyle: "bold" } }, "ens", "1",
+      corpsO.push([{ content: `O${i + 1}`, styles: { textColor: C.gris } }, { content: `${o.ligne.libelle ?? "Option"}${o.zone ? ` — ${o.zone}` : ""}`, styles: { fontStyle: "bold" } }, "ens", "1",
         detaille ? eurPdf(o.montant) : "", { content: eurPdf(o.montant), styles: { fontStyle: "bold" } }]);
       const d = (o.ligne.descriptif_client ?? "").trim(); if (detaille && d) corpsO.push([vide, { content: d, colSpan: 5, styles: { fontStyle: "italic", textColor: C.gris, fontSize: 8 } }]);
     });
