@@ -152,6 +152,13 @@ export function lignesTableau(vc: DevisClient, racine: LigneClient, niveau: Nive
   return rows;
 }
 
+/** Option incluse placée hors zone : une ligne forfait (désignation, ens, 1, prix), jamais un intertitre de zone vide. */
+export function ligneOptionRacine(vc: DevisClient, r: LigneClient, niveau: NiveauPdf, n: string): LigneTableau {
+  const total = totalAffiche(vc, r), prix = niveau === "detaille";
+  return { n, designation: r.libelle?.trim() || "Option", ligneId: r.id, detail: prix ? (r.descriptif_client ?? "").trim() : "",
+    unite: "ens", qte: "1", pu: prix ? eurPdf(total) : "", total: eurPdf(total), style: "forfait" };
+}
+
 /** Toutes les options (racine ou dans une zone), avec leur zone de rattachement. */
 export function optionsDevis(vc: DevisClient) {
   const parent = (l: LigneClient) => vc.lignes.find((x) => x.id === l.parent_id);
@@ -312,6 +319,11 @@ export function construireDevisPdf(vc: DevisClient, niveau: NiveauPdf, images: R
     const titre = titreCourt(r), total = totalAffiche(vc, r);
     const chap = r.type.startsWith("chapitre_");
     const dchap = chap ? descriptifClientChapitre(vc, r) : "";
+    if (r.type === "option") {
+      ligne(ligneOptionRacine(vc, r, niveau, n));
+      for (const row of lignesTableau(vc, r, niveau, n)) ligne(row);
+      continue;
+    }
     if (r.type === "objet") {
       const q = Number(r.quantite ?? 1) || 1;
       ligne({ n, designation: r.libelle ?? "", ligneId: r.id, detail: detaille ? detailObjet(r) : "", unite: "u", qte: String(q), pu: detaille ? eurPdf(total / q) : "", total: detaille ? eurPdf(total) : "", style: "objet" });
