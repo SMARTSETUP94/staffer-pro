@@ -86,7 +86,7 @@ export function titreCourt(r: Pick<LigneClient, "type" | "libelle">) {
   const lib = (r.libelle ?? "").trim();
   if (r.type === "zone") return sansNumeroSaisi(lib) || lib || TYPE_RACINE[r.type];
   if (r.type === "objet") return lib || TYPE_RACINE[r.type];
-  if (lib && r.type.startsWith("chapitre_")) return lib;
+  if (lib && r.type.startsWith("chapitre_")) return lib.split(/\s[–—]\s|\s*\(/)[0].trim() || lib;
   if (r.type === "chapitre_suivi") return "Études et suivi de projet";
   if (r.type === "chapitre_pose") return "Pose et mise en place";
   if (r.type === "chapitre_depose") return "Reprise";
