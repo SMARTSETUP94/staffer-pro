@@ -49,7 +49,8 @@ export function coutEstime(modele: string, entree: number, sortie: number): numb
 const GW = "https://ai.gateway.lovable.dev/v1";
 export type PartieImage = { type: "image"; mime: string; base64: string };
 export type PartiePdf = { type: "pdf"; base64: string; nom?: string };
-export type Partie = { type: "text"; text: string } | PartieImage | PartiePdf;
+export type PartieImageUrl = { type: "image_url"; url: string };
+export type Partie = { type: "text"; text: string } | PartieImage | PartiePdf | PartieImageUrl;
 export type Contenu = string | Partie[];
 export type AppelIA = {
   usage: UsageIA; systeme: string; contenu: Contenu;
@@ -96,6 +97,7 @@ async function appelClaude(key: string, modele: string, a: AppelIA) {
   const contenu = enveloppe(a.contenu);
   const content = typeof contenu === "string" ? contenu : contenu.map((p) => p.type === "text" ? p
     : p.type === "pdf" ? { type: "document", source: { type: "base64", media_type: "application/pdf", data: p.base64 } }
+    : p.type === "image_url" ? { type: "image", source: { type: "url", url: p.url } }
     : { type: "image", source: { type: "base64", media_type: p.mime, data: p.base64 } });
   const res = await fetch(`${GW}/messages`, {
     method: "POST",
@@ -125,6 +127,7 @@ async function appelChat(key: string, modele: string, a: AppelIA) {
   const contenu = enveloppe(a.contenu);
   const content = typeof contenu === "string" ? contenu : contenu.map((p) => p.type === "text" ? p
     : p.type === "pdf" ? { type: "file", file: { filename: p.nom ?? "document.pdf", file_data: `data:application/pdf;base64,${p.base64}` } }
+    : p.type === "image_url" ? { type: "image_url", image_url: { url: p.url } }
     : { type: "image_url", image_url: { url: `data:${p.mime};base64,${p.base64}` } });
   const res = await fetch(`${GW}/chat/completions`, {
     method: "POST",
@@ -142,6 +145,7 @@ async function appelResponses(key: string, modele: string, a: AppelIA) {
   const contenu = enveloppe(a.contenu);
   const input = typeof contenu === "string" ? contenu : [{ role: "user", content: contenu.map((p) => p.type === "text" ? { type: "input_text", text: p.text }
     : p.type === "pdf" ? { type: "input_file", filename: p.nom ?? "document.pdf", file_data: `data:application/pdf;base64,${p.base64}` }
+    : p.type === "image_url" ? { type: "input_image", image_url: p.url }
     : { type: "input_image", image_url: `data:${p.mime};base64,${p.base64}` }) }];
   const res = await fetch(`${GW}/responses`, {
     method: "POST",
