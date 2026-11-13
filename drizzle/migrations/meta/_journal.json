@@ -897,6 +897,13 @@
       "when": 1794596422014,
       "tag": "0127_document_extraction_noter",
       "breakpoints": true
+    },
+    {
+      "idx": 128,
+      "version": "7",
+      "when": 1794600023197,
+      "tag": "0128_devis_note_commentaires_historique",
+      "breakpoints": true
     }
   ]
 }
