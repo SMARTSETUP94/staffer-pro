@@ -67,8 +67,9 @@ describe("PDF client devis", () => {
     const c = { type: "chapitre_pose", libelle: "Livraison et mise en place – hôpital, veille ou matin du 02/12/2026 (1 chef + 1 monteur, camion 20 m³)" };
     expect(titreCourt(c)).toBe("Livraison et mise en place");
     expect(descriptifChapitre(c)).toBe(c.libelle);
-    expect(titreCourt({ type: "chapitre_depose", libelle: "Dépose" })).toBe("Reprise");
-    expect(titreCourt({ type: "chapitre_suivi", libelle: "Suivi et plans" })).toBe("Études et suivi de projet");
+    expect(titreCourt({ type: "chapitre_depose", libelle: "Dépose" })).toBe("Dépose");
+    expect(titreCourt({ type: "chapitre_depose", libelle: "" })).toBe("Reprise");
+    expect(titreCourt({ type: "chapitre_suivi", libelle: "Suivi et plans" })).toBe("Suivi et plans");
   });
   it("dimensions une seule fois quand le descriptif les contient", () => {
     const o = { ...base.lignes[1], descriptif_client: "Dimensions : Longueur 1200\nFinition : laqué" };
