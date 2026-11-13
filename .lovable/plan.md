@@ -1,113 +1,108 @@
-# Images des devis par l'IA, par zone et par objet — plan à relire
+# Lot « Note et commentaires des devis modifiables »
 
-Rien n'est appliqué. Migrations additives ; la seule ouverture de droit (M0) est signalée.
+## Analyse revérifiée en base (13/11)
+- 66 devis ont une note (max 2 016 car.), 113 commentaires sur 27 devis. Aucune contrainte de taille sur `devis.note_mcp`.
+- Écrivent la note aujourd'hui : `devis_mcp_marquer` (tronque à 4 000, **remet à zéro** `modifie_par_humain_le/_id`) et `devis_soumettre` (remplace, tronque à 4 000). Schémas MCP : `note` max 4 000.
+- Marque humaine sur `devis` : déclencheur `trg_devis_marquer_humain` (BEFORE UPDATE, humain hors MCP) — une modification de la note à la main pose donc déjà `modifie_par_humain_*` (point 10 confirmé pour la note) ; `trg_devis_lignes_humain` fait de même pour les commentaires.
+- Cases : `note_mcp_coches` (jsonb) contient **le texte des points**, pas leur position (1 devis concerné, vérifié). Le repérage est déjà par texte.
+- Aucun historique de note/commentaire n'existe.
 
-## Bibliothèque PDF côté serveur (Worker)
-- **unpdf** (build pdf.js « serverless », sans dépendance Node) : lecture du texte par page et **extraction des images incorporées** (pixels bruts), réencodées en PNG/JPEG avec **fflate + jpeg-js** (pur JS). Fonctionne dans le Worker.
-- **Rendu de page : impossible côté serveur** (pdf.js a besoin d'un canvas, absent du Worker). Proposition : la vignette de page est rendue **dans le navigateur** (pdf.js) par la personne qui ouvre la boîte ou l'éditeur, puis déposée comme document dérivé ; tant qu'elle n'existe pas, l'IA dispose des images extraites et du texte de la page. Si vous refusez ce rendu navigateur : images extraites seules, et l'IA lit aussi le PDF entier en direct (voir C).
-- Limites : 30 pages, 20 Mo par PDF, images < 300 px ou < 20 Ko ignorées, 40 images par PDF au plus. Échec lisible dans la boîte (« PDF trop lourd : 34 Mo, limite 20 Mo », « PDF protégé », « délai dépassé »).
+## Décisions sur les 10 points
+1. État : relu ci-dessus, aucun devis réel modifié.
+2. Note écrasée par Claude : `devis_soumettre` et `devis_mcp_marquer` **ajoutent** désormais en fin de note (séparateur « — Mise à jour du JJ/MM/AAAA (Claude) — ») au lieu de remplacer, sauf note vide ; tout changement passe aussi par l'historique (déclencheur), donc rien n'est perdu.
+3. Taille : 8 000 partout — contrainte `CHECK (char_length(note_mcp) <= 8000) NOT VALID` puis validée (max actuel 2 016), fonctions alignées, schémas MCP `max(8000)`, compteur dans l'éditeur. Un ajout qui dépasserait 8 000 est refusé (pas de troncature silencieuse).
+4. Cases : on garde le repérage **par texte de ligne** (déjà en place, robuste aux ajouts). Au remplacement, un déclencheur retire des coches les textes qui n'existent plus dans la note ; à l'ajout, les coches restent valides.
+5. `devis_mcp_marquer` ne remet plus à zéro la marque humaine quand le devis existe déjà repris (remise à zéro seulement à la création du brouillon, quand `cree_par_mcp` était faux). Le verrou d'autonomie tient.
+6. Nouvelle table `devis_textes_historique`, alimentée uniquement par déclencheurs sur `devis.note_mcp` et `devis_lignes.texte` (type commentaire). Auteur : `auth.uid()` + source `mcp` si `mcp_dispatch_actif()`, sinon `humain`.
+7. Nouvelle fonction `devis_texte_modifier` (note ou commentaire), autorisée en `brouillon` et `a_valider`, sans ouvrir le reste de l'en-tête ; `devis_entete_modifier` inchangée.
+8. `note` ajoutée à `devis_mcp_appliquer` (branche `devis_modifier_entete`, redéfinie depuis sa version relue) ; restauration = appel de `devis_texte_modifier` avec le texte d'une version → nouvelle entrée.
+9. `devis_lire` (MCP) renvoie `note_historique` : 5 dernières versions avec auteur, source, date et extrait de 200 caractères ; texte complet via un nouvel outil lecture seule `devis_note_version(version_id)`.
+10. Confirmé (voir analyse).
 
-## A. Pages et images des PDF
-- À la suite de chaque classement (manuel, automatique, ajout direct), une ligne « à extraire » est notée ; l'extraction tourne au relevé périodique (3 PDF par passage) ou à la demande (bouton « Extraire les images »), jamais dans le classement lui-même.
-- Chaque image ou page devient un **document dérivé** dans `affaire_documents` (même table, même stockage privé `affaires-photos`) : `document_parent_id`, `page`, `derive_type` (`page` | `image`), `texte_page` (texte brut tronqué à 4 000 caractères). Cachés par défaut dans la boîte (« Afficher les pages et images extraites »), ajoutables au devis. Choix justifié : les dérivés héritent de l'affaire, de la règle de lecture `section.affaires` et du retrait logique du parent, sans seconde table.
-- Retirer un PDF retire logiquement ses dérivés (trigger), jamais de suppression physique.
+## Lot 1 — Éditeur
+- Bandeau « Note / hypothèses » (`RedactionClaude.tsx`, affiché aussi pour les devis non rédigés par Claude) : bouton « Modifier » → zone multiligne, aperçu markdown simple (listes, gras, rendu sans HTML brut), compteur /8 000, Enregistrer / Annuler.
+- Commentaires : édition en place (double-clic ou crayon), Maj+Entrée saut de ligne, Échap annule, enregistrement à la perte du focus, via `devis_texte_modifier`.
+- Tiroir « Historique de la note » (et historique par commentaire) : auteur, date, avant/après, « Restaurer cette version ».
+- Lecture seule au-delà de « à valider » avec info-bulle « Devis validé : note figée ».
 
-## B. Tri de la boîte
-- Catégories : `brief`, `plan`, `visuel`, `reperage`, `offre_fournisseur`, `autre` (contrainte sur `categorie`, valeurs existantes : toutes NULL). Catégorie IA posée à l'entrée si vide, modifiable à la main ; `categorie_source` = `ia` | `humain` (l'IA ne réécrit jamais un choix humain).
-- `nom_lisible` proposé (ex. « Hermès — miroir — chiffrage »), `filename` d'origine conservé et affiché en dessous.
-- `empreinte_sha256` calculée à l'entrée (et rétro-calculée à l'extraction) ; doublons d'une même affaire regroupés à l'affichage (« reçu 3 fois »), aucun retrait automatique.
-- Filtres catégorie / origine (email, ajout manuel, extrait d'un PDF) / date ; vignettes signées 10 min.
+## Lot 2 — MCP
+- `devis_modifier_entete.champs.note` : `{ mode: "remplacer" | "ajouter", texte ≤ 8000 }` ; aperçu avant/après sans écriture, confirmation 10 min, mêmes règles brouillon / autonomie (refus si repris par un humain) / conversation.
+- `note_mcp_coches` optionnel (liste de textes de points présents dans la note), même circuit.
+- `devis_lire` : `note_historique` (extraits) ; nouvel outil lecture seule `devis_note_version`.
+- `devis_remplir` inchangé ; ses modifications de commentaires sont tracées par le déclencheur.
+- Le contenu de la note reste une donnée : aucun traitement ne s'en sert comme instruction.
 
-## C. « Proposer les images » dans l'éditeur
-- Données envoyées : arbre (zones, objets : libellé, descriptif client, dimensions, finition — **ni prix, ni coûts**), candidats (id, catégorie, nom lisible, page, texte de page, vignette réduite à 512 px). Images déjà dans le devis (`source_document_id`) exclues d'office.
-- Sortie en **schéma JSON strict** (outil `propositions` : `ligne_id`, `document_id`, `confiance` 0–100, `justification` ≤ 160 car., `legende` ≤ 80 car., `visible_client`) ; tout id inconnu, doublon sur un objet ou champ en trop est écarté côté serveur. Contenu des documents = donnée : le texte d'un PDF ne peut ni déclencher d'action ni modifier l'arbre.
-- Visible client par défaut : oui pour `visuel`, non pour `plan` et `reperage`, non sinon. Légende filtrée (pas de montant, pas d'€, pas de mot interne).
-- Écran de revue : arbre à gauche, propositions à droite, cases à cocher, glisser une image vers un autre objet, « Tout accepter au-dessus de 80 % ». À la validation, chaque image est copiée dans `devis-photos` puis ajoutée par `devis_photo_ajouter` avec `source_document_id` (copie retirée si l'ajout échoue, voir M0). Rien sans validation ; brouillon seulement (règles actuelles de l'éditeur).
-- **Modèle** : `google/gemini-3-flash-preview` via Lovable AI. **1 appel** par proposition (jusqu'à 60 vignettes), **2 appels** au-delà (lots), plafond **4 appels et 0,10 € par devis et par clic**, au plus 5 propositions par devis et par heure (compteur dans la table de propositions). Catégorisation : 1 appel par document à l'entrée (nom + type + vignette ou 1re page), environ 0,002 €.
-- Les propositions sont gardées 7 jours (`devis_propositions_photos`) pour la revue et l'outil Claude ; ce n'est pas un doublon de `devis_photos` (rien n'est ajouté au devis).
-
-## D. Outil Claude
-- `devis_proposer_photos(devis_id)` : lecture seule, même calcul, renvoie zone/objet, document, confiance, justification, visible client, légende ; audit et client de l'appelant ; compte dans le plafond.
-- `devis_ajouter_photo` accepte un `document_id` dérivé (même contrôle : même affaire, non retiré, JPG/PNG réels) ; aperçu puis confirmation, autonomie seulement sur brouillon créé par Claude et non repris, conversation sur demande explicite.
-
-## Essai prévu
-9518 Hermès, devis d'essai à trois objets (miroir, cimaise, paravent textile) : chaque PDF sur son objet ; écrans 390 et 1366 px ; temps mesuré ; devis d'essai et propositions effacés (retrait logique + nettoyage des copies d'essai) ; compte rendu écran / base / tests.
-
-## Migrations (texte à relire)
-
-**M0 — retrait des copies orphelines (ouvre un droit, limité)**
+## Migration N1 (montrée avant application)
 ```sql
-CREATE POLICY devis_photos_storage_delete_orphelin ON storage.objects FOR DELETE TO authenticated
-USING (bucket_id = 'devis-photos' AND name NOT LIKE 'entreprise-logo/%'
-  AND public.current_user_has_capability('devis.rediger')
-  AND owner_id = auth.uid()::text
-  AND NOT EXISTS (SELECT 1 FROM public.devis_photos p WHERE p.storage_path = storage.objects.name));
-```
-
-**M1 — boîte de documents**
-```sql
-ALTER TABLE public.affaire_documents
-  ADD COLUMN document_parent_id uuid REFERENCES public.affaire_documents(id) ON DELETE SET NULL,
-  ADD COLUMN page integer CHECK (page IS NULL OR page BETWEEN 1 AND 30),
-  ADD COLUMN derive_type text CHECK (derive_type IS NULL OR derive_type IN ('page','image')),
-  ADD COLUMN texte_page text CHECK (texte_page IS NULL OR length(texte_page) <= 4000),
-  ADD COLUMN empreinte_sha256 text CHECK (empreinte_sha256 IS NULL OR empreinte_sha256 ~ '^[0-9a-f]{64}$'),
-  ADD COLUMN nom_lisible text CHECK (nom_lisible IS NULL OR length(nom_lisible) <= 120),
-  ADD COLUMN categorie_source text CHECK (categorie_source IS NULL OR categorie_source IN ('ia','humain')),
-  ADD COLUMN extraction jsonb CHECK (extraction IS NULL OR jsonb_typeof(extraction) = 'object');
-ALTER TABLE public.affaire_documents ADD CONSTRAINT affaire_documents_categorie_chk
-  CHECK (categorie IS NULL OR categorie IN ('brief','plan','visuel','reperage','offre_fournisseur','autre'));
-ALTER TABLE public.affaire_documents ADD CONSTRAINT affaire_documents_derive_chk
-  CHECK ((document_parent_id IS NULL) = (derive_type IS NULL));
-CREATE UNIQUE INDEX affaire_documents_derive_uniq ON public.affaire_documents (document_parent_id, derive_type, page, empreinte_sha256)
-  WHERE document_parent_id IS NOT NULL AND deleted_at IS NULL;
-CREATE INDEX affaire_documents_empreinte_idx ON public.affaire_documents (affaire_id, empreinte_sha256) WHERE deleted_at IS NULL;
--- Un dérivé appartient à la même affaire que son parent ; retirer le parent retire ses dérivés.
-CREATE FUNCTION public.affaire_documents_derive_guard() RETURNS trigger LANGUAGE plpgsql SET search_path = public AS $$
-BEGIN
-  IF NEW.document_parent_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM affaire_documents p
-     WHERE p.id = NEW.document_parent_id AND p.affaire_id = NEW.affaire_id AND p.document_parent_id IS NULL) THEN
-    RAISE EXCEPTION 'Document parent invalide';
-  END IF;
-  RETURN NEW;
-END $$;
-CREATE TRIGGER trg_affaire_documents_derive_guard BEFORE INSERT OR UPDATE OF document_parent_id, affaire_id
-  ON public.affaire_documents FOR EACH ROW EXECUTE FUNCTION public.affaire_documents_derive_guard();
-CREATE FUNCTION public.affaire_documents_retrait_derives() RETURNS trigger LANGUAGE plpgsql SET search_path = public AS $$
-BEGIN
-  IF NEW.deleted_at IS NOT NULL AND OLD.deleted_at IS NULL THEN
-    UPDATE affaire_documents SET deleted_at = NEW.deleted_at, deleted_by = NEW.deleted_by
-     WHERE document_parent_id = NEW.id AND deleted_at IS NULL;
-  END IF;
-  RETURN NEW;
-END $$;
-CREATE TRIGGER trg_affaire_documents_retrait_derives AFTER UPDATE OF deleted_at ON public.affaire_documents
-  FOR EACH ROW EXECUTE FUNCTION public.affaire_documents_retrait_derives();
-```
-Triggers en invoker (pas de SECURITY DEFINER) : ils s'exécutent sous les droits de l'appelant et les règles existantes. Le rôle service (extraction périodique) insère avec `uploaded_by` = auteur du PDF parent.
-
-**M2 — propositions**
-```sql
-CREATE TABLE public.devis_propositions_photos (
+CREATE TABLE public.devis_textes_historique (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   devis_id uuid NOT NULL REFERENCES public.devis(id) ON DELETE CASCADE,
-  demande_par uuid NOT NULL,
-  canal text NOT NULL CHECK (canal IN ('app','mcp')),
-  modele text NOT NULL, appels smallint NOT NULL CHECK (appels BETWEEN 1 AND 4),
-  cout_estime_eur numeric(6,4) NOT NULL CHECK (cout_estime_eur <= 0.10),
-  duree_ms integer, propositions jsonb NOT NULL CHECK (jsonb_typeof(propositions) = 'array' AND jsonb_array_length(propositions) <= 300),
-  cree_le timestamptz NOT NULL DEFAULT now(), expire_le timestamptz NOT NULL DEFAULT now() + interval '7 days');
-GRANT SELECT, INSERT ON public.devis_propositions_photos TO authenticated;
-GRANT ALL ON public.devis_propositions_photos TO service_role;
-ALTER TABLE public.devis_propositions_photos ENABLE ROW LEVEL SECURITY;
-CREATE POLICY dpp_lecture ON public.devis_propositions_photos FOR SELECT TO authenticated
-  USING (public.devis_peut_lire(devis_id) AND public.current_user_has_capability('devis.rediger'));
-CREATE POLICY dpp_ajout ON public.devis_propositions_photos FOR INSERT TO authenticated
-  WITH CHECK (demande_par = auth.uid() AND public.devis_peut_lire(devis_id) AND public.current_user_has_capability('devis.rediger')
-    AND (SELECT count(*) FROM public.devis_propositions_photos x WHERE x.devis_id = devis_propositions_photos.devis_id AND x.cree_le > now() - interval '1 hour') < 5);
-```
-Pas de mise à jour ni de suppression par l'app ; aucune fonction SECURITY DEFINER nouvelle. `devis_mcp_appliquer` et `devis_photo_ajouter` inchangés (le dérivé est une ligne de `affaire_documents`, déjà contrôlée par affaire).
+  ligne_id uuid REFERENCES public.devis_lignes(id) ON DELETE SET NULL,
+  cible text NOT NULL CHECK (cible IN ('note','commentaire')),
+  avant text, apres text,
+  auteur_id uuid, source text NOT NULL CHECK (source IN ('humain','mcp','systeme')),
+  restaure_depuis uuid REFERENCES public.devis_textes_historique(id),
+  cree_le timestamptz NOT NULL DEFAULT now(),
+  CHECK ((cible='note') = (ligne_id IS NULL))
+);
+CREATE INDEX ON public.devis_textes_historique (devis_id, cree_le DESC);
+GRANT SELECT ON public.devis_textes_historique TO authenticated;
+GRANT ALL ON public.devis_textes_historique TO service_role;
+ALTER TABLE public.devis_textes_historique ENABLE ROW LEVEL SECURITY;
+CREATE POLICY hist_lecture ON public.devis_textes_historique FOR SELECT TO authenticated
+  USING (public.devis_peut_lire(devis_id));
+-- pas de politique d'écriture : seules les fonctions déclencheurs écrivent
 
-## Questions
-1. Rendu des pages dans le navigateur : d'accord, ou images extraites seules ?
-2. M0 : d'accord pour donner le retrait des copies orphelines à leur auteur ?
+ALTER TABLE public.devis ADD CONSTRAINT devis_note_mcp_len CHECK (char_length(note_mcp) <= 8000) NOT VALID;
+ALTER TABLE public.devis VALIDATE CONSTRAINT devis_note_mcp_len;
+
+CREATE FUNCTION public.devis_textes_tracer() RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$
+DECLARE v_src text := CASE WHEN public.mcp_dispatch_actif() THEN 'mcp' WHEN auth.uid() IS NULL THEN 'systeme' ELSE 'humain' END;
+BEGIN
+  IF TG_TABLE_NAME='devis' THEN
+    IF NEW.note_mcp IS DISTINCT FROM OLD.note_mcp THEN
+      INSERT INTO devis_textes_historique(devis_id,cible,avant,apres,auteur_id,source,restaure_depuis)
+      VALUES (NEW.id,'note',OLD.note_mcp,NEW.note_mcp,auth.uid(),v_src,NULLIF(current_setting('app.devis_restaure',true),'')::uuid);
+    END IF;
+  ELSIF NEW.type='commentaire' AND (TG_OP='INSERT' OR NEW.texte IS DISTINCT FROM OLD.texte) THEN
+    INSERT INTO devis_textes_historique(devis_id,ligne_id,cible,avant,apres,auteur_id,source,restaure_depuis)
+    VALUES (NEW.devis_id,NEW.id,'commentaire',CASE WHEN TG_OP='UPDATE' THEN OLD.texte END,NEW.texte,auth.uid(),v_src,NULLIF(current_setting('app.devis_restaure',true),'')::uuid);
+  END IF;
+  RETURN NULL;
+END $$;
+REVOKE EXECUTE ON FUNCTION public.devis_textes_tracer() FROM PUBLIC, anon;
+CREATE TRIGGER trg_devis_note_hist AFTER UPDATE OF note_mcp ON public.devis FOR EACH ROW EXECUTE FUNCTION public.devis_textes_tracer();
+CREATE TRIGGER trg_devis_comm_hist AFTER INSERT OR UPDATE OF texte ON public.devis_lignes FOR EACH ROW EXECUTE FUNCTION public.devis_textes_tracer();
+
+-- coches : retirer les points disparus quand la note change
+CREATE FUNCTION public.devis_coches_elaguer() RETURNS trigger ... -- BEFORE UPDATE OF note_mcp : garde les coches dont le texte figure encore dans pointsNote(NEW.note_mcp)
+REVOKE EXECUTE ... FROM PUBLIC, anon;
+
+CREATE FUNCTION public.devis_texte_modifier(_devis_id uuid, _cible text, _ligne_id uuid, _texte text, _mode text DEFAULT 'remplacer', _restaure_depuis uuid DEFAULT NULL)
+ RETURNS jsonb SECURITY DEFINER ...
+ -- devis_peut_ecrire ; statut_redaction IN ('brouillon','a_valider') sinon refus « devis figé » ;
+ -- sous MCP : brouillon seulement ; _mode ajouter = concat + séparateur daté ; longueur ≤ 8000 ;
+ -- commentaire : la ligne doit appartenir au devis et être de type commentaire ;
+ -- restauration : version du même devis/cible, pose app.devis_restaure ; set app.devis_rpc.
+REVOKE EXECUTE ON FUNCTION public.devis_texte_modifier(...) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.devis_texte_modifier(...) TO authenticated, service_role;
+
+-- redéfinitions explicites depuis leur texte relu (règle : pas de réécriture dynamique)
+CREATE OR REPLACE FUNCTION public.devis_mcp_marquer(...)  -- ajout au lieu de remplacer, 8000, marque humaine effacée seulement si cree_par_mcp était faux
+CREATE OR REPLACE FUNCTION public.devis_soumettre(...)    -- ajout au lieu de remplacer, 8000
+CREATE OR REPLACE FUNCTION public.devis_mcp_appliquer(...) -- branche devis_modifier_entete : champs note / note_mcp_coches → devis_texte_modifier / devis_note_mcp_cocher
+-- devis_note_mcp_cocher : ajout contrôle « chaque coche figure dans la note », ≤ 200
+```
+Le texte complet des corps redéfinis sera joint en différence avant application.
+
+## Fichiers
+- `src/components/devis/RedactionClaude.tsx`, nouveaux `NoteEditeur.tsx`, `HistoriqueTextesSheet.tsx`, édition en place dans le composant de ligne commentaire de l'éditeur ; `DevisEditeur.tsx` (montage, droits par statut).
+- `src/lib/devis/note.ts` (pur : ajout daté, élagage des coches, limite) + tests.
+- `src/lib/mcp/devis.ts` (schémas 8 000, `note`, `note_historique`), `tools/devis_modifier_entete.ts` (description), nouvel outil `tools/devis_note_version.ts`, `index.ts` ; extraction du manifeste.
+- `src/lib/devis/AGENTS.md` : une règle sur l'historique par déclencheurs.
+
+## Lot 3 — Essais
+Sur un devis d'essai (retiré logiquement ensuite, historique d'essai effacé) : note modifiée à la main puis restaurée ; commentaire édité en place ; MCP note « ajouter » puis « remplacer » (aperçu, confirmation, contenu, historique source mcp) ; refus note sur devis validé et autonomie sur brouillon repris ; non-régression remise/dates/client ; tests purs (ajout daté, élagage, 8 000) ; écrans 390 et 1366 px. Rien publié.
+
+## Point à trancher
+Le séparateur d'ajout de `devis_soumettre`/`devis_mcp_marquer` : je propose le même que `devis_modifier_entete` (« — Mise à jour du JJ/MM/AAAA (Claude) — »).
